@@ -1,0 +1,2112 @@
+{
+ "M_WhiteWall": {
+  "kind": "opaque",
+  "color": [
+   0.92,
+   0.91,
+   0.87
+  ],
+  "rough": 0.85,
+  "detail": "Plaster",
+  "tiling": 0.5,
+  "color_linear": [
+   0.8275708303626798,
+   0.8073459089125289,
+   0.7293470915734015
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_CreamWall": {
+  "kind": "opaque",
+  "color": [
+   0.9,
+   0.84,
+   0.68
+  ],
+  "rough": 0.9,
+  "detail": "Plaster",
+  "tiling": 0.5,
+  "color_linear": [
+   0.7874122893956174,
+   0.6738595407338318,
+   0.4200332886842154
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Marble": {
+  "kind": "opaque",
+  "color": [
+   0.93,
+   0.93,
+   0.91
+  ],
+  "rough": 0.25,
+  "detail": "Marble",
+  "tiling": 0.25,
+  "color_linear": [
+   0.8480882574948619,
+   0.8480882574948619,
+   0.8073459089125289
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_MarbleFloor": {
+  "kind": "opaque",
+  "color": [
+   0.82,
+   0.8,
+   0.76
+  ],
+  "rough": 0.15,
+  "detail": "FloorTiles",
+  "tiling": 0.5,
+  "color_linear": [
+   0.6382832153523972,
+   0.6038273388553378,
+   0.5382355236010181
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Concrete": {
+  "kind": "opaque",
+  "color": [
+   0.62,
+   0.62,
+   0.6
+  ],
+  "rough": 0.95,
+  "detail": "Concrete",
+  "tiling": 0.25,
+  "color_linear": [
+   0.34239163959260344,
+   0.34239163959260344,
+   0.31854677812509186
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_DarkConcrete": {
+  "kind": "opaque",
+  "color": [
+   0.38,
+   0.38,
+   0.38
+  ],
+  "rough": 0.95,
+  "detail": "Concrete",
+  "tiling": 0.25,
+  "color_linear": [
+   0.1192801876221121,
+   0.1192801876221121,
+   0.1192801876221121
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Paving": {
+  "kind": "opaque",
+  "color": [
+   0.78,
+   0.74,
+   0.68
+  ],
+  "rough": 0.9,
+  "detail": "Paving",
+  "tiling": 0.5,
+  "color_linear": [
+   0.5704815954749093,
+   0.5070785101492276,
+   0.4200332886842154
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Asphalt": {
+  "kind": "opaque",
+  "color": [
+   0.22,
+   0.22,
+   0.23
+  ],
+  "rough": 0.9,
+  "detail": "Concrete",
+  "tiling": 0.25,
+  "color_linear": [
+   0.039681909478526005,
+   0.039681909478526005,
+   0.0432336359153358
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Glass": {
+  "kind": "opaque",
+  "color": [
+   0.1,
+   0.17,
+   0.27
+  ],
+  "rough": 0.05,
+  "metallic": 0.6,
+  "detail": null,
+  "color_linear": [
+   0.010022825574869039,
+   0.024515013703524748,
+   0.05925352111727415
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_GlassClear": {
+  "kind": "glass",
+  "color": [
+   0.6,
+   0.75,
+   0.85
+  ],
+  "rough": 0.02,
+  "opacity": 0.25,
+  "detail": null,
+  "color_linear": [
+   0.31854677812509186,
+   0.5225215539683921,
+   0.692071056865372
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0
+ },
+ "M_WindowFrame": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.95,
+   0.95
+  ],
+  "rough": 0.6,
+  "detail": null,
+  "color_linear": [
+   0.8900054069935289,
+   0.8900054069935289,
+   0.8900054069935289
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Gold": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.72,
+   0.22
+  ],
+  "rough": 0.3,
+  "metallic": 1.0,
+  "detail": null,
+  "color_linear": [
+   0.8900054069935289,
+   0.47699978456654196,
+   0.039681909478526005
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Metal": {
+  "kind": "opaque",
+  "color": [
+   0.6,
+   0.62,
+   0.65
+  ],
+  "rough": 0.45,
+  "metallic": 1.0,
+  "detail": null,
+  "color_linear": [
+   0.31854677812509186,
+   0.34239163959260344,
+   0.38005633644979925
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_DarkMetal": {
+  "kind": "opaque",
+  "color": [
+   0.15,
+   0.16,
+   0.18
+  ],
+  "rough": 0.5,
+  "metallic": 1.0,
+  "detail": null,
+  "color_linear": [
+   0.01960664851623822,
+   0.021980947079887205,
+   0.027211780951381357
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_RustMetal": {
+  "kind": "opaque",
+  "color": [
+   0.42,
+   0.22,
+   0.12
+  ],
+  "rough": 0.9,
+  "metallic": 0.4,
+  "detail": "Grunge",
+  "tiling": 0.5,
+  "color_linear": [
+   0.147318999244498,
+   0.039681909478526005,
+   0.01341174889765847
+  ],
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Wood": {
+  "kind": "opaque",
+  "color": [
+   0.55,
+   0.38,
+   0.22
+  ],
+  "rough": 0.8,
+  "detail": "Planks",
+  "tiling": 0.5,
+  "color_linear": [
+   0.26327340845612224,
+   0.1192801876221121,
+   0.039681909478526005
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_DarkWood": {
+  "kind": "opaque",
+  "color": [
+   0.3,
+   0.2,
+   0.12
+  ],
+  "rough": 0.8,
+  "detail": "Planks",
+  "tiling": 0.5,
+  "color_linear": [
+   0.07323895587840543,
+   0.033104766570885055,
+   0.01341174889765847
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_RottenWood": {
+  "kind": "opaque",
+  "color": [
+   0.24,
+   0.2,
+   0.15
+  ],
+  "rough": 0.95,
+  "detail": "Planks",
+  "tiling": 0.5,
+  "color_linear": [
+   0.04696420068912289,
+   0.033104766570885055,
+   0.01960664851623822
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Fabric": {
+  "kind": "opaque",
+  "color": [
+   0.7,
+   0.12,
+   0.1
+  ],
+  "rough": 0.95,
+  "detail": null,
+  "color_linear": [
+   0.44798841244188325,
+   0.01341174889765847,
+   0.010022825574869039
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Black": {
+  "kind": "opaque",
+  "color": [
+   0.03,
+   0.03,
+   0.035
+  ],
+  "rough": 0.6,
+  "detail": null,
+  "color_linear": [
+   0.0023219814241486067,
+   0.0023219814241486067,
+   0.002708978328173375
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Rubber": {
+  "kind": "opaque",
+  "color": [
+   0.08,
+   0.08,
+   0.08
+  ],
+  "rough": 0.9,
+  "detail": null,
+  "color_linear": [
+   0.007194409291082934,
+   0.007194409291082934,
+   0.007194409291082934
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_AcademyWall": {
+  "kind": "opaque",
+  "color": [
+   0.94,
+   0.94,
+   0.92
+  ],
+  "rough": 0.7,
+  "detail": "Plaster",
+  "tiling": 0.4,
+  "color_linear": [
+   0.8688993866725532,
+   0.8688993866725532,
+   0.8275708303626798
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_AcademyBlue": {
+  "kind": "opaque",
+  "color": [
+   0.1,
+   0.25,
+   0.62
+  ],
+  "rough": 0.55,
+  "detail": null,
+  "color_linear": [
+   0.010022825574869039,
+   0.05087608817155679,
+   0.34239163959260344
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_AcademyRoof": {
+  "kind": "opaque",
+  "color": [
+   0.13,
+   0.32,
+   0.72
+  ],
+  "rough": 0.45,
+  "detail": "RoofTiles",
+  "tiling": 0.5,
+  "color_linear": [
+   0.01532520332062848,
+   0.0835351274258047,
+   0.47699978456654196
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_AcademyRed": {
+  "kind": "opaque",
+  "color": [
+   0.72,
+   0.1,
+   0.08
+  ],
+  "rough": 0.55,
+  "detail": null,
+  "color_linear": [
+   0.47699978456654196,
+   0.010022825574869039,
+   0.007194409291082934
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_AcademyYellow": {
+  "kind": "opaque",
+  "color": [
+   0.96,
+   0.78,
+   0.18
+  ],
+  "rough": 0.55,
+  "detail": null,
+  "color_linear": [
+   0.9114075004063535,
+   0.5704815954749093,
+   0.027211780951381357
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ArenaFloor": {
+  "kind": "opaque",
+  "color": [
+   0.1,
+   0.11,
+   0.15
+  ],
+  "rough": 0.3,
+  "detail": "FloorTiles",
+  "tiling": 0.25,
+  "color_linear": [
+   0.010022825574869039,
+   0.011645430905844125,
+   0.01960664851623822
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ArenaSeat": {
+  "kind": "opaque",
+  "color": [
+   0.12,
+   0.22,
+   0.55
+  ],
+  "rough": 0.7,
+  "detail": null,
+  "color_linear": [
+   0.01341174889765847,
+   0.039681909478526005,
+   0.26327340845612224
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_DuelFieldGlow": {
+  "kind": "emissive",
+  "color": [
+   0.25,
+   0.85,
+   1.0
+  ],
+  "strength": 12.0,
+  "color_linear": [
+   0.05087608817155679,
+   0.692071056865372,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
+ },
+ "M_EmblemGlow": {
+  "kind": "emissive",
+  "color": [
+   1.0,
+   0.75,
+   0.25
+  ],
+  "strength": 4.0,
+  "color_linear": [
+   1.0,
+   0.5225215539683921,
+   0.05087608817155679
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
+ },
+ "M_Screen": {
+  "kind": "emissive",
+  "color": [
+   0.3,
+   0.55,
+   0.95
+  ],
+  "strength": 3.0,
+  "color_linear": [
+   0.07323895587840543,
+   0.26327340845612224,
+   0.8900054069935289
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
+ },
+ "M_Carpet": {
+  "kind": "opaque",
+  "color": [
+   0.55,
+   0.08,
+   0.1
+  ],
+  "rough": 1.0,
+  "detail": "Fabric",
+  "tiling": 1.0,
+  "color_linear": [
+   0.26327340845612224,
+   0.007194409291082934,
+   0.010022825574869039
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ShopShelf": {
+  "kind": "opaque",
+  "color": [
+   0.82,
+   0.7,
+   0.52
+  ],
+  "rough": 0.6,
+  "detail": "Planks",
+  "tiling": 0.5,
+  "color_linear": [
+   0.6382832153523972,
+   0.44798841244188325,
+   0.23302199930143813
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_CardPack": {
+  "kind": "opaque",
+  "color": [
+   0.85,
+   0.45,
+   0.1
+  ],
+  "rough": 0.35,
+  "metallic": 0.3,
+  "detail": null,
+  "color_linear": [
+   0.692071056865372,
+   0.17064493581555268,
+   0.010022825574869039
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_SliferWall": {
+  "kind": "opaque",
+  "color": [
+   0.88,
+   0.8,
+   0.62
+  ],
+  "rough": 0.9,
+  "detail": "Siding",
+  "tiling": 0.5,
+  "color_linear": [
+   0.748414103499371,
+   0.6038273388553378,
+   0.34239163959260344
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_SliferRoof": {
+  "kind": "opaque",
+  "color": [
+   0.6,
+   0.07,
+   0.05
+  ],
+  "rough": 0.6,
+  "detail": "Corrugated",
+  "tiling": 0.5,
+  "color_linear": [
+   0.31854677812509186,
+   0.00598105957261676,
+   0.003935939504088967
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_SliferTrim": {
+  "kind": "opaque",
+  "color": [
+   0.5,
+   0.08,
+   0.06
+  ],
+  "rough": 0.7,
+  "detail": null,
+  "color_linear": [
+   0.21404114048223255,
+   0.007194409291082934,
+   0.004896310081623859
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_SliferDoor": {
+  "kind": "opaque",
+  "color": [
+   0.62,
+   0.12,
+   0.08
+  ],
+  "rough": 0.6,
+  "detail": null,
+  "color_linear": [
+   0.34239163959260344,
+   0.01341174889765847,
+   0.007194409291082934
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_RaWall": {
+  "kind": "opaque",
+  "color": [
+   0.97,
+   0.82,
+   0.3
+  ],
+  "rough": 0.85,
+  "detail": "Plaster",
+  "tiling": 0.5,
+  "color_linear": [
+   0.9331068418238677,
+   0.6382832153523972,
+   0.07323895587840543
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_RaRoof": {
+  "kind": "opaque",
+  "color": [
+   0.62,
+   0.3,
+   0.12
+  ],
+  "rough": 0.7,
+  "detail": "RoofTiles",
+  "tiling": 0.5,
+  "color_linear": [
+   0.34239163959260344,
+   0.07323895587840543,
+   0.01341174889765847
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_RaTrim": {
+  "kind": "opaque",
+  "color": [
+   0.96,
+   0.95,
+   0.9
+  ],
+  "rough": 0.6,
+  "detail": null,
+  "color_linear": [
+   0.9114075004063535,
+   0.8900054069935289,
+   0.7874122893956174
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ObeliskWall": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.95,
+   0.96
+  ],
+  "rough": 0.6,
+  "detail": "Plaster",
+  "tiling": 0.4,
+  "color_linear": [
+   0.8900054069935289,
+   0.8900054069935289,
+   0.9114075004063535
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ObeliskRoof": {
+  "kind": "opaque",
+  "color": [
+   0.1,
+   0.2,
+   0.55
+  ],
+  "rough": 0.45,
+  "detail": "RoofTiles",
+  "tiling": 0.5,
+  "color_linear": [
+   0.010022825574869039,
+   0.033104766570885055,
+   0.26327340845612224
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ObeliskTrim": {
+  "kind": "opaque",
+  "color": [
+   0.12,
+   0.28,
+   0.7
+  ],
+  "rough": 0.5,
+  "detail": null,
+  "color_linear": [
+   0.01341174889765847,
+   0.06372379528489175,
+   0.44798841244188325
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_GirlsRoof": {
+  "kind": "opaque",
+  "color": [
+   0.38,
+   0.58,
+   0.88
+  ],
+  "rough": 0.45,
+  "detail": "RoofTiles",
+  "tiling": 0.5,
+  "color_linear": [
+   0.1192801876221121,
+   0.29569980462568246,
+   0.748414103499371
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_GirlsTrim": {
+  "kind": "opaque",
+  "color": [
+   0.94,
+   0.66,
+   0.74
+  ],
+  "rough": 0.55,
+  "detail": null,
+  "color_linear": [
+   0.8688993866725532,
+   0.3931231302267222,
+   0.5070785101492276
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_OldStone": {
+  "kind": "opaque",
+  "color": [
+   0.36,
+   0.35,
+   0.37
+  ],
+  "rough": 0.95,
+  "detail": "Bricks",
+  "tiling": 0.5,
+  "color_linear": [
+   0.10653922395082352,
+   0.10048150993772331,
+   0.11280478678675158
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_OldRoof": {
+  "kind": "opaque",
+  "color": [
+   0.16,
+   0.16,
+   0.19
+  ],
+  "rough": 0.9,
+  "detail": "RoofTiles",
+  "tiling": 0.5,
+  "color_linear": [
+   0.021980947079887205,
+   0.021980947079887205,
+   0.030074104146591292
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Ivy": {
+  "kind": "foliage",
+  "color": [
+   0.16,
+   0.3,
+   0.12
+  ],
+  "rough": 0.9,
+  "detail": null,
+  "color_linear": [
+   0.021980947079887205,
+   0.07323895587840543,
+   0.01341174889765847
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Boards": {
+  "kind": "opaque",
+  "color": [
+   0.35,
+   0.28,
+   0.2
+  ],
+  "rough": 0.95,
+  "detail": "Planks",
+  "tiling": 0.5,
+  "color_linear": [
+   0.10048150993772331,
+   0.06372379528489175,
+   0.033104766570885055
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_HarborConcrete": {
+  "kind": "opaque",
+  "color": [
+   0.66,
+   0.65,
+   0.62
+  ],
+  "rough": 0.95,
+  "detail": "Concrete",
+  "tiling": 0.25,
+  "color_linear": [
+   0.3931231302267222,
+   0.38005633644979925,
+   0.34239163959260344
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_PierWood": {
+  "kind": "opaque",
+  "color": [
+   0.45,
+   0.34,
+   0.24
+  ],
+  "rough": 0.9,
+  "detail": "Planks",
+  "tiling": 0.5,
+  "color_linear": [
+   0.17064493581555268,
+   0.09462962659456918,
+   0.04696420068912289
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_LighthouseWhite": {
+  "kind": "opaque",
+  "color": [
+   0.96,
+   0.96,
+   0.94
+  ],
+  "rough": 0.6,
+  "detail": "Plaster",
+  "tiling": 0.5,
+  "color_linear": [
+   0.9114075004063535,
+   0.9114075004063535,
+   0.8688993866725532
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_LighthouseRed": {
+  "kind": "opaque",
+  "color": [
+   0.8,
+   0.1,
+   0.08
+  ],
+  "rough": 0.5,
+  "detail": null,
+  "color_linear": [
+   0.6038273388553378,
+   0.010022825574869039,
+   0.007194409291082934
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_LighthouseLamp": {
+  "kind": "emissive",
+  "color": [
+   1.0,
+   0.92,
+   0.65
+  ],
+  "strength": 25.0,
+  "color_linear": [
+   1.0,
+   0.8275708303626798,
+   0.38005633644979925
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
+ },
+ "M_WarehouseWall": {
+  "kind": "opaque",
+  "color": [
+   0.48,
+   0.56,
+   0.62
+  ],
+  "rough": 0.7,
+  "metallic": 0.3,
+  "detail": "Corrugated",
+  "tiling": 0.5,
+  "color_linear": [
+   0.19599417930148813,
+   0.27383841647314605,
+   0.34239163959260344
+  ],
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ShipHull": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.95,
+   0.96
+  ],
+  "rough": 0.4,
+  "detail": null,
+  "color_linear": [
+   0.8900054069935289,
+   0.8900054069935289,
+   0.9114075004063535
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ShipStripe": {
+  "kind": "opaque",
+  "color": [
+   0.08,
+   0.25,
+   0.7
+  ],
+  "rough": 0.4,
+  "detail": null,
+  "color_linear": [
+   0.007194409291082934,
+   0.05087608817155679,
+   0.44798841244188325
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ShipBottom": {
+  "kind": "opaque",
+  "color": [
+   0.55,
+   0.1,
+   0.08
+  ],
+  "rough": 0.6,
+  "detail": null,
+  "color_linear": [
+   0.26327340845612224,
+   0.010022825574869039,
+   0.007194409291082934
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_HelipadMark": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.85,
+   0.15
+  ],
+  "rough": 0.6,
+  "detail": null,
+  "color_linear": [
+   0.8900054069935289,
+   0.692071056865372,
+   0.01960664851623822
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_CrateRed": {
+  "kind": "opaque",
+  "color": [
+   0.6,
+   0.15,
+   0.1
+  ],
+  "rough": 0.7,
+  "metallic": 0.3,
+  "detail": "Corrugated",
+  "tiling": 1.0,
+  "color_linear": [
+   0.31854677812509186,
+   0.01960664851623822,
+   0.010022825574869039
+  ],
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_CrateBlue": {
+  "kind": "opaque",
+  "color": [
+   0.12,
+   0.3,
+   0.6
+  ],
+  "rough": 0.7,
+  "metallic": 0.3,
+  "detail": "Corrugated",
+  "tiling": 1.0,
+  "color_linear": [
+   0.01341174889765847,
+   0.07323895587840543,
+   0.31854677812509186
+  ],
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_CrateYellow": {
+  "kind": "opaque",
+  "color": [
+   0.85,
+   0.65,
+   0.12
+  ],
+  "rough": 0.7,
+  "metallic": 0.3,
+  "detail": "Corrugated",
+  "tiling": 1.0,
+  "color_linear": [
+   0.692071056865372,
+   0.38005633644979925,
+   0.01341174889765847
+  ],
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_GymRoof": {
+  "kind": "opaque",
+  "color": [
+   0.25,
+   0.55,
+   0.5
+  ],
+  "rough": 0.4,
+  "metallic": 0.5,
+  "detail": null,
+  "color_linear": [
+   0.05087608817155679,
+   0.26327340845612224,
+   0.21404114048223255
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_CourtFloor": {
+  "kind": "opaque",
+  "color": [
+   0.7,
+   0.48,
+   0.28
+  ],
+  "rough": 0.35,
+  "detail": "Planks",
+  "tiling": 0.5,
+  "color_linear": [
+   0.44798841244188325,
+   0.19599417930148813,
+   0.06372379528489175
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_CourtLine": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.95,
+   0.95
+  ],
+  "rough": 0.5,
+  "detail": null,
+  "color_linear": [
+   0.8900054069935289,
+   0.8900054069935289,
+   0.8900054069935289
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_HotWater": {
+  "kind": "water",
+  "color": [
+   0.45,
+   0.75,
+   0.72
+  ],
+  "rough": 0.05,
+  "detail": null,
+  "color_linear": [
+   0.17064493581555268,
+   0.5225215539683921,
+   0.47699978456654196
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_OnsenRock": {
+  "kind": "opaque",
+  "color": [
+   0.4,
+   0.38,
+   0.36
+  ],
+  "rough": 0.8,
+  "detail": "Rock",
+  "tiling": 0.5,
+  "color_linear": [
+   0.13286832155381798,
+   0.1192801876221121,
+   0.10653922395082352
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_ShojiPaper": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.92,
+   0.82
+  ],
+  "rough": 0.9,
+  "detail": null,
+  "color_linear": [
+   0.8900054069935289,
+   0.8275708303626798,
+   0.6382832153523972
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Bark": {
+  "kind": "opaque",
+  "color": [
+   0.36,
+   0.26,
+   0.18
+  ],
+  "rough": 0.95,
+  "detail": "Bark",
+  "tiling": 1.0,
+  "color_linear": [
+   0.10653922395082352,
+   0.0549717326875717,
+   0.027211780951381357
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_PalmBark": {
+  "kind": "opaque",
+  "color": [
+   0.55,
+   0.45,
+   0.32
+  ],
+  "rough": 0.95,
+  "detail": "Bark",
+  "tiling": 1.0,
+  "color_linear": [
+   0.26327340845612224,
+   0.17064493581555268,
+   0.0835351274258047
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_DeadBark": {
+  "kind": "opaque",
+  "color": [
+   0.3,
+   0.27,
+   0.24
+  ],
+  "rough": 0.95,
+  "detail": "Bark",
+  "tiling": 1.0,
+  "color_linear": [
+   0.07323895587840543,
+   0.05925352111727415,
+   0.04696420068912289
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_LeavesBroad": {
+  "kind": "foliage",
+  "color": [
+   0.2,
+   0.45,
+   0.14
+  ],
+  "rough": 0.8,
+  "detail": null,
+  "color_linear": [
+   0.033104766570885055,
+   0.17064493581555268,
+   0.017389102368488736
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_LeavesDark": {
+  "kind": "foliage",
+  "color": [
+   0.12,
+   0.32,
+   0.12
+  ],
+  "rough": 0.8,
+  "detail": null,
+  "color_linear": [
+   0.01341174889765847,
+   0.0835351274258047,
+   0.01341174889765847
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_LeavesPalm": {
+  "kind": "foliage",
+  "color": [
+   0.3,
+   0.55,
+   0.15
+  ],
+  "rough": 0.8,
+  "detail": null,
+  "color_linear": [
+   0.07323895587840543,
+   0.26327340845612224,
+   0.01960664851623822
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_LeavesPine": {
+  "kind": "foliage",
+  "color": [
+   0.1,
+   0.28,
+   0.16
+  ],
+  "rough": 0.85,
+  "detail": null,
+  "color_linear": [
+   0.010022825574869039,
+   0.06372379528489175,
+   0.021980947079887205
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_LeavesBush": {
+  "kind": "foliage",
+  "color": [
+   0.22,
+   0.48,
+   0.18
+  ],
+  "rough": 0.85,
+  "detail": null,
+  "color_linear": [
+   0.039681909478526005,
+   0.19599417930148813,
+   0.027211780951381357
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Hedge": {
+  "kind": "opaque",
+  "color": [
+   0.15,
+   0.38,
+   0.13
+  ],
+  "rough": 0.9,
+  "detail": "Leaves",
+  "tiling": 1.0,
+  "color_linear": [
+   0.01960664851623822,
+   0.1192801876221121,
+   0.01532520332062848
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Grass": {
+  "kind": "foliage",
+  "color": [
+   0.35,
+   0.58,
+   0.18
+  ],
+  "rough": 0.9,
+  "detail": null,
+  "color_linear": [
+   0.10048150993772331,
+   0.29569980462568246,
+   0.027211780951381357
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_FlowerRed": {
+  "kind": "foliage",
+  "color": [
+   0.9,
+   0.15,
+   0.2
+  ],
+  "rough": 0.7,
+  "detail": null,
+  "color_linear": [
+   0.7874122893956174,
+   0.01960664851623822,
+   0.033104766570885055
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_FlowerYellow": {
+  "kind": "foliage",
+  "color": [
+   0.98,
+   0.85,
+   0.2
+  ],
+  "rough": 0.7,
+  "detail": null,
+  "color_linear": [
+   0.9551045992337789,
+   0.692071056865372,
+   0.033104766570885055
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_FlowerBlue": {
+  "kind": "foliage",
+  "color": [
+   0.35,
+   0.45,
+   0.95
+  ],
+  "rough": 0.7,
+  "detail": null,
+  "color_linear": [
+   0.10048150993772331,
+   0.17064493581555268,
+   0.8900054069935289
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_FlowerWhite": {
+  "kind": "foliage",
+  "color": [
+   0.96,
+   0.96,
+   0.96
+  ],
+  "rough": 0.7,
+  "detail": null,
+  "color_linear": [
+   0.9114075004063535,
+   0.9114075004063535,
+   0.9114075004063535
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Rock": {
+  "kind": "opaque",
+  "color": [
+   0.48,
+   0.46,
+   0.43
+  ],
+  "rough": 0.9,
+  "detail": "Rock",
+  "tiling": 0.25,
+  "color_linear": [
+   0.19599417930148813,
+   0.1788675039555289,
+   0.15487248594976835
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_VolcanicRock": {
+  "kind": "opaque",
+  "color": [
+   0.2,
+   0.18,
+   0.18
+  ],
+  "rough": 0.9,
+  "detail": "Rock",
+  "tiling": 0.25,
+  "color_linear": [
+   0.033104766570885055,
+   0.027211780951381357,
+   0.027211780951381357
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Sand": {
+  "kind": "opaque",
+  "color": [
+   0.9,
+   0.82,
+   0.62
+  ],
+  "rough": 1.0,
+  "detail": "Sand",
+  "tiling": 0.5,
+  "color_linear": [
+   0.7874122893956174,
+   0.6382832153523972,
+   0.34239163959260344
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Soil": {
+  "kind": "opaque",
+  "color": [
+   0.35,
+   0.26,
+   0.18
+  ],
+  "rough": 1.0,
+  "detail": "Dirt",
+  "tiling": 0.5,
+  "color_linear": [
+   0.10048150993772331,
+   0.0549717326875717,
+   0.027211780951381357
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Ocean": {
+  "kind": "water",
+  "color": [
+   0.05,
+   0.35,
+   0.5
+  ],
+  "rough": 0.05,
+  "detail": null,
+  "color_linear": [
+   0.003935939504088967,
+   0.10048150993772331,
+   0.21404114048223255
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_LakeWater": {
+  "kind": "water",
+  "color": [
+   0.1,
+   0.45,
+   0.45
+  ],
+  "rough": 0.05,
+  "detail": null,
+  "color_linear": [
+   0.010022825574869039,
+   0.17064493581555268,
+   0.17064493581555268
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Lava": {
+  "kind": "lava",
+  "color": [
+   1.0,
+   0.35,
+   0.05
+  ],
+  "strength": 40.0,
+  "color_linear": [
+   1.0,
+   0.10048150993772331,
+   0.003935939504088967
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
+ },
+ "M_Waterfall": {
+  "kind": "waterfall",
+  "color": [
+   0.85,
+   0.95,
+   1.0
+  ],
+  "opacity": 0.8,
+  "color_linear": [
+   0.692071056865372,
+   0.8900054069935289,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "strength": 1.0
+ },
+ "M_Hologram": {
+  "kind": "hologram",
+  "color": [
+   0.3,
+   0.9,
+   1.0
+  ],
+  "strength": 6.0,
+  "color_linear": [
+   0.07323895587840543,
+   0.7874122893956174,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
+ },
+ "M_CardBack": {
+  "kind": "emissive",
+  "color": [
+   0.65,
+   0.4,
+   0.18
+  ],
+  "strength": 2.5,
+  "texture": "T_CardBack",
+  "color_linear": [
+   0.38005633644979925,
+   0.13286832155381798,
+   0.027211780951381357
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
+ },
+ "M_Smoke": {
+  "kind": "smoke",
+  "color": [
+   0.55,
+   0.55,
+   0.57
+  ],
+  "opacity": 0.5,
+  "color_linear": [
+   0.26327340845612224,
+   0.26327340845612224,
+   0.28464669032765505
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "strength": 1.0
+ },
+ "M_Steam": {
+  "kind": "smoke",
+  "color": [
+   0.95,
+   0.95,
+   0.97
+  ],
+  "opacity": 0.35,
+  "color_linear": [
+   0.8900054069935289,
+   0.8900054069935289,
+   0.9331068418238677
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "strength": 1.0
+ },
+ "M_LampGlow": {
+  "kind": "emissive",
+  "color": [
+   1.0,
+   0.85,
+   0.55
+  ],
+  "strength": 15.0,
+  "color_linear": [
+   1.0,
+   0.692071056865372,
+   0.26327340845612224
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
+ },
+ "M_Beam": {
+  "kind": "beam",
+  "color": [
+   1.0,
+   0.93,
+   0.7
+  ],
+  "strength": 1.5,
+  "color_linear": [
+   1.0,
+   0.8480882574948619,
+   0.44798841244188325
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
+ },
+ "M_Terrain": {
+  "kind": "terrain",
+  "color": [
+   0.4,
+   0.6,
+   0.3
+  ],
+  "rough": 0.95,
+  "detail": null,
+  "color_linear": [
+   0.13286832155381798,
+   0.31854677812509186,
+   0.07323895587840543
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Skin": {
+  "kind": "opaque",
+  "color": [
+   0.96,
+   0.8,
+   0.68
+  ],
+  "rough": 0.6,
+  "detail": null,
+  "color_linear": [
+   0.9114075004063535,
+   0.6038273388553378,
+   0.4200332886842154
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Hair": {
+  "kind": "opaque",
+  "color": [
+   0.35,
+   0.2,
+   0.1
+  ],
+  "rough": 0.6,
+  "detail": null,
+  "color_linear": [
+   0.10048150993772331,
+   0.033104766570885055,
+   0.010022825574869039
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Jacket": {
+  "kind": "opaque",
+  "color": [
+   0.75,
+   0.08,
+   0.06
+  ],
+  "rough": 0.8,
+  "detail": "Fabric",
+  "tiling": 2.0,
+  "color_linear": [
+   0.5225215539683921,
+   0.007194409291082934,
+   0.004896310081623859
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Shirt": {
+  "kind": "opaque",
+  "color": [
+   0.12,
+   0.12,
+   0.14
+  ],
+  "rough": 0.9,
+  "detail": "Fabric",
+  "tiling": 2.0,
+  "color_linear": [
+   0.01341174889765847,
+   0.01341174889765847,
+   0.017389102368488736
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Pants": {
+  "kind": "opaque",
+  "color": [
+   0.15,
+   0.17,
+   0.25
+  ],
+  "rough": 0.9,
+  "detail": "Fabric",
+  "tiling": 2.0,
+  "color_linear": [
+   0.01960664851623822,
+   0.024515013703524748,
+   0.05087608817155679
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Shoes": {
+  "kind": "opaque",
+  "color": [
+   0.25,
+   0.1,
+   0.06
+  ],
+  "rough": 0.5,
+  "detail": null,
+  "color_linear": [
+   0.05087608817155679,
+   0.010022825574869039,
+   0.004896310081623859
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_DuelDisk": {
+  "kind": "opaque",
+  "color": [
+   0.7,
+   0.72,
+   0.76
+  ],
+  "rough": 0.35,
+  "metallic": 0.8,
+  "detail": null,
+  "color_linear": [
+   0.44798841244188325,
+   0.47699978456654196,
+   0.5382355236010181
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_FlagRed": {
+  "kind": "foliage",
+  "color": [
+   0.8,
+   0.1,
+   0.08
+  ],
+  "rough": 0.9,
+  "detail": "Fabric",
+  "tiling": 1.0,
+  "color_linear": [
+   0.6038273388553378,
+   0.010022825574869039,
+   0.007194409291082934
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_FlagYellow": {
+  "kind": "foliage",
+  "color": [
+   0.98,
+   0.8,
+   0.15
+  ],
+  "rough": 0.9,
+  "detail": "Fabric",
+  "tiling": 1.0,
+  "color_linear": [
+   0.9551045992337789,
+   0.6038273388553378,
+   0.01960664851623822
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_FlagBlue": {
+  "kind": "foliage",
+  "color": [
+   0.12,
+   0.3,
+   0.78
+  ],
+  "rough": 0.9,
+  "detail": "Fabric",
+  "tiling": 1.0,
+  "color_linear": [
+   0.01341174889765847,
+   0.07323895587840543,
+   0.5704815954749093
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Coconut": {
+  "kind": "opaque",
+  "color": [
+   0.35,
+   0.25,
+   0.12
+  ],
+  "rough": 0.8,
+  "detail": null,
+  "color_linear": [
+   0.10048150993772331,
+   0.05087608817155679,
+   0.01341174889765847
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Umbrella": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.35,
+   0.25
+  ],
+  "rough": 0.8,
+  "detail": "Fabric",
+  "tiling": 1.0,
+  "color_linear": [
+   0.8900054069935289,
+   0.10048150993772331,
+   0.05087608817155679
+  ],
+  "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_Vending": {
+  "kind": "opaque",
+  "color": [
+   0.8,
+   0.12,
+   0.15
+  ],
+  "rough": 0.4,
+  "detail": null,
+  "color_linear": [
+   0.6038273388553378,
+   0.01341174889765847,
+   0.01960664851623822
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ }
+}
