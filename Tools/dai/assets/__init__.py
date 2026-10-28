@@ -51,9 +51,9 @@ class AssetSet:
         self.socket("prop", pos, yaw, asset=asset, scale=scale)
 
     def light(self, pos, color=(1.0, 0.85, 0.6), intensity=5000.0, radius=12.0, night_only=False,
-              spot_pitch=None, cone=None, shadows=False):
-        """Point light (or spot light when spot_pitch is given, degrees below horizon along yaw)."""
-        self.socket("light", pos, 0.0, color=list(color), intensity=intensity, radius=radius,
+              spot_pitch=None, cone=None, shadows=False, yaw=0.0):
+        """Point light (or spot light when spot_pitch is given: aimed along local yaw, pitched down)."""
+        self.socket("light", pos, yaw, color=list(color), intensity=intensity, radius=radius,
                     night_only=night_only, spot_pitch=spot_pitch, cone=cone, shadows=shadows)
 
     def text(self, text, pos, yaw=0.0, size=1.0, color=(1, 1, 1), emissive=False):
