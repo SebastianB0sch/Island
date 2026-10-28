@@ -131,8 +131,12 @@ class Graph:
                 C.warn(f"{self.name}: setting {k}: {e}")
 
     def finish(self):
-        # skeletal: the student's slots (PBR, plus the opaque/emissive duel disk) are instances of these masters
-        for flag in ("used_with_instanced_static_meshes", "used_with_nanite", "used_with_skeletal_mesh"):
+        # skeletal: only the masters the student's slots derive from (PBR body, opaque/emissive duel disk) -
+        # every other master would just compile unused GPU-skin permutations
+        flags = ["used_with_instanced_static_meshes", "used_with_nanite"]
+        if self.name in SKELETAL_MASTERS:
+            flags.append("used_with_skeletal_mesh")
+        for flag in flags:
             try:
                 self.mat.set_editor_property(flag, True)
             except Exception:  # noqa: BLE001
@@ -141,6 +145,9 @@ class Graph:
         MEL.recompile_material(self.mat)
         unreal.EditorAssetLibrary.save_loaded_asset(self.mat)
         return self.mat
+
+
+SKELETAL_MASTERS = {"M_DA_PBR", "M_DA_PBRFoliage", "M_DA_Master", "M_DA_Emissive"}
 
 
 def T(name):
