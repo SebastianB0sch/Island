@@ -111,7 +111,7 @@ def _shell(mb, nc):
                 h = o["z1"] - o["z0"]
                 mb.box((o["u"], WT / 2, o["z0"] + h / 2), (0.1, WT + 0.08, h), FRAME)
                 if h > 2.0:
-                    mb.box((o["u"], WT / 2, o["z0"] + h * 0.62), (o["w"], WT + 0.08, 0.1), FRAME)
+                    mb.box((o["u"], WT / 2, o["z0"] + h * 0.62), (o["w"], WT + 0.05, 0.1), FRAME)
 
     # gable infill under the barrel at both ends (outer + inner face)
     n = 24
@@ -146,7 +146,7 @@ def _shell(mb, nc):
             while k * step <= ln + 0.01:
                 u = k * step
                 if not (yaw == 0 and 14.5 < u < 45.5) and not (yaw == 180 and abs(u - 30.0) < 1.0):
-                    mb.box((u, -0.2, (EZ - 0.2) / 2), (0.8, 0.4, EZ - 0.2), CONC, skip=("+y",))
+                    mb.box((u, -0.21, (EZ - 0.2) / 2), (0.8, 0.42, EZ - 0.2), CONC, skip=("+y",))
                 k += 1
     # curtain wall frame posts at the glass edges
     for x in (-16.0, 16.0):

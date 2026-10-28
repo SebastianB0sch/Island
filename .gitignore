@@ -24,3 +24,6 @@ Docs/previews/
 # OS
 .DS_Store
 Thumbs.db
+
+# third-party asset staging (curated assets are copied into SourceAssets / Tools/thirdparty/<pack>)
+Tools/thirdparty/_staging/

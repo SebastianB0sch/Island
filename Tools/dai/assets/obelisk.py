@@ -454,7 +454,7 @@ def block_shell(mb, x0, y0, x1, y1, top, fl, bands, wall=WALL, base=MARBLE, band
     for z in bands:
         mb.box_mm((x0 - 0.1, y0 - 0.1, z - 0.14), (x1 + 0.1, y1 + 0.1, z + 0.14), band_mat)
     mb.box_mm((x0 - 0.22, y0 - 0.22, top - 0.95), (x1 + 0.22, y1 + 0.22, top - 0.6), cornice[0], skip=("+z",))
-    mb.box_mm((x0 - 0.5, y0 - 0.5, top - 0.6), (x1 + 0.5, y1 + 0.5, top), cornice[1], skip=("+z",))
+    mb.box_mm((x0 - 0.5, y0 - 0.5, top - 0.6), (x1 + 0.5, y1 + 0.5, top), cornice[1])
     if pilasters:
         for (cx, cy, sx, sy) in ((x0, y0, 1, 1), (x1, y0, -1, 1), (x1, y1, -1, -1), (x0, y1, 1, -1)):
             xa, xb = cx - sx * 0.12, cx + sx * 0.75
@@ -557,7 +557,7 @@ def _boys_windows(mb, p0, p1, n=None, us=None, rows=("gf", "f1", "f2"), balconet
 
 def _boys_building(mb, nc, aset):
     FL = B_FL
-    for k, (x0, y0, x1, y1, top) in B_BLOCKS.items():
+    for (x0, y0, x1, y1, top) in B_BLOCKS.values():
         block_shell(mb, x0, y0, x1, y1, top, FL, B_BANDS, base_band=TRIM)
 
     # --------------------------------------------------------------- facades
@@ -584,15 +584,14 @@ def _boys_building(mb, nc, aset):
             prism_yz(mb, [(-3.0, 5.6), (-3.0, 6.6), (-4.6, 6.6)], cx - 0.17, cx + 0.17, MARBLE)  # console
         balustrade(mb, [(bx0 + 0.2, -3.05), (bx0 + 0.2, -4.55), (bx1 - 0.2, -4.55), (bx1 - 0.2, -3.05)],
                    7.05, MARBLE, MARBLE, h=1.0, post_every=3.5)
-        # side faces of the centre block above / beside wings are plain
     # centre block: front behind the portico (GF + F1), back three floors
-    with facade(mb, (-13.0, -2.0), (13.0, -2.0)) as L:
+    with facade(mb, (-13.0, -2.0), (13.0, -2.0)):
         for x in (-9.0, -5.0, 5.0, 9.0):
             window(mb, x + 13.0, 2.65, 1.5, 2.55, FRAME, arch=True, keystone=GOLD, sill_mat=MARBLE)
             window(mb, x + 13.0, 7.65, 1.5, 2.55, FRAME, head="pediment", head_mat=TRIM, sill_mat=MARBLE)
-        door(mb, 13.0, FL, 3.2, 4.2, leaf=TRIM, surround=MARBLE, handle=GOLD)
+        door(mb, 13.0, FL, 2.8, 3.4, leaf=TRIM, surround=MARBLE, handle=GOLD)
         window(mb, 13.0, 8.6, 1.6, 1.6, FRAME, head="lintel", head_mat=TRIM, sill_mat=MARBLE)
-    with facade(mb, (13.0, 30.0), (-13.0, 30.0)) as L:
+    with facade(mb, (13.0, 30.0), (-13.0, 30.0)):
         for x in (-10.8, -7.2, -3.6, 3.6, 7.2, 10.8):
             u = 13.0 - x
             window(mb, u, 2.65, 1.5, 2.55, FRAME, arch=True, keystone=GOLD, sill_mat=MARBLE)
@@ -600,8 +599,7 @@ def _boys_building(mb, nc, aset):
             u = 13.0 - x
             window(mb, u, 7.65, 1.5, 2.55, FRAME, head="pediment", head_mat=TRIM, sill_mat=MARBLE)
             window(mb, u, 12.05, 1.4, 2.1, FRAME, head="lintel", head_mat=TRIM, sill_mat=MARBLE)
-        door(mb, 13.0, FL, 2.6, 3.6, leaf=TRIM, surround=MARBLE, handle=GOLD)
-    # attic oculi on the centre block above the wing roofs (front strip beside the pediment)
+        door(mb, 13.0, FL, 2.6, 3.4, leaf=TRIM, surround=MARBLE, handle=GOLD)
     # --------------------------------------------------------------- roofs
     for sx in (-1, 1):
         x0, x1 = (12.7, 29.3) if sx > 0 else (-29.3, -12.7)
@@ -698,7 +696,6 @@ def _boys_building(mb, nc, aset):
     for sx in (-1, 1):
         urn(mb, sx * 4.2, 36.8, FL + 1.1, 0.9, MARBLE)
     aset.light((0.0, 33.0, 6.0), WARM, 5000, 12, night_only=True)
-
 
 
 def _boys_dome(mb, nc, cx, cy, z0):
@@ -1223,9 +1220,12 @@ def _girls_building(mb, nc, aset):
     # ------------------------------------------------------------ front terrace + steps
     tx0, ty0, tx1, ty1 = -16.4, -10.0, 16.4, y0
     mb.box_mm((tx0, ty0, -4.0), (tx1, ty1, FL), WALL, skip=("-z",), mats={"+z": FLOOR})
-    mb.box_mm((tx0 - 0.12, ty0 - 0.12, FL - 0.22), (tx1 + 0.12, ty1, FL), GTRIM, skip=("-z", "+z"))
+    sw = 4.35                                              # half width of the front steps
+    for (a, b) in (((tx0 - 0.12, ty0 - 0.12), (-sw, ty0)), ((sw, ty0 - 0.12), (tx1 + 0.12, ty0)),
+                   ((tx0 - 0.12, ty0), (tx0, ty1)), ((tx1, ty0), (tx1 + 0.12, ty1))):  # pink coping strips
+        mb.box_mm((a[0], a[1], FL - 0.22), (b[0], b[1], FL), GTRIM)
     mb.box_mm((tx0 - 0.15, ty0 - 0.15, -4.0), (tx1 + 0.15, ty1, 0.3), MARBLE, skip=("-z",))
-    flight(mb, (0.0, ty0 - 5 * 0.5, 0.0), 90, 9.2, 5, 0.24, 0.5, MARBLE)
+    flight(mb, (0.0, ty0 - 5 * 0.5, 0.0), 90, 2 * sw, 5, 0.24, 0.5, MARBLE)
     balustrade(mb, [(-4.75, ty0 + 0.2), (tx0 + 0.2, ty0 + 0.2), (tx0 + 0.2, ty1 - 0.4)], FL, MARBLE, GTRIM,
                post_every=3.0, post_mat=MARBLE)
     balustrade(mb, [(tx1 - 0.2, ty1 - 0.4), (tx1 - 0.2, ty0 + 0.2), (4.75, ty0 + 0.2)], FL, MARBLE, GTRIM,
@@ -1236,10 +1236,10 @@ def _girls_building(mb, nc, aset):
         mb.cylinder((sx * 4.75, ty0 + 0.2, FL + 1.5), 0.08, 0.5, IRON, seg=8)
         nc.sphere((sx * 4.75, ty0 + 0.2, FL + 2.25), 0.3, GLOW, seg=12, rings=8)
         aset.light((sx * 4.75, ty0 + 0.2, FL + 2.3), WARM, 3500, 10, night_only=True)
-        xa, xb = sorted((sx * 4.35, sx * 4.85))
+        xa, xb = sorted((sx * sw, sx * (sw + 0.5)))
         mb.box_mm((xa, ty0 - 2.6, -0.5), (xb, ty0, FL - 0.1), WALL, skip=("-z",))
-        xa, xb = sorted((sx * 4.3, sx * 4.9))
-        mb.box_mm((xa, ty0 - 2.65, FL - 0.1), (xb, ty0, FL), GTRIM)
+        xa, xb = sorted((sx * (sw - 0.02), sx * (sw + 0.56)))
+        mb.box_mm((xa, ty0 - 2.65, FL - 0.1), (xb, ty0 - 0.12, FL), GTRIM)
     # back stoop + steps
     mb.box_mm((-2.6, py1, -4.0), (2.6, py1 + 2.0, FL), MARBLE, skip=("-z",), mats={"+z": FLOOR})
     flight(mb, (0.0, py1 + 2.0 + 5 * 0.5, 0.0), -90, 5.2, 5, 0.24, 0.5, MARBLE)
@@ -1476,9 +1476,9 @@ def _girls_jetty(mb, nc, aset):
             mb.box((0.0, y, dz - 0.04), (6.0 if y < head else 3.0, 0.26, 0.08), PIER)
         # stringers, cross beams (caps), posts down to z=-6, mooring posts through the deck edge
         for x in (-1.2, -0.4, 0.4, 1.2):
-            mb.box_mm((x - 0.08, -L, dz - 0.34), (x + 0.08, 0.0, dz - 0.08), PIER, skip=("-z",))
+            mb.box_mm((x - 0.08, -L, dz - 0.34), (x + 0.08, 0.0, dz - 0.08), PIER)
         for x in (-2.8, -2.0, 2.0, 2.8):
-            mb.box_mm((x - 0.08, -L, dz - 0.34), (x + 0.08, head, dz - 0.08), PIER, skip=("-z",))
+            mb.box_mm((x - 0.08, -L, dz - 0.34), (x + 0.08, head, dz - 0.08), PIER)
         for y in bents:
             wide = y < head + 0.01
             xs = (-2.85, -1.45, 1.45, 2.85) if wide else (-1.45, 1.45)

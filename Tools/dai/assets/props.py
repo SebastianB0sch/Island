@@ -637,20 +637,51 @@ def get(name):
     return _cache[name]
 
 
+def is_thirdparty(name):
+    from .. import thirdparty
+    return thirdparty.has_prop(name)
+
+
+def build_object(name, obj_name=None, collection=None):
+    """bpy object for a catalog entry: the curated third-party asset when one is registered
+    (Tools/thirdparty/registry.json), otherwise the procedural fallback."""
+    if is_thirdparty(name):
+        from .. import thirdparty
+        o = thirdparty.build_prop(name)
+        if obj_name:
+            o.name = obj_name
+        if collection is not None and collection not in o.users_collection:
+            for c in list(o.users_collection):
+                c.objects.unlink(o)
+            collection.objects.link(o)
+        return o
+    mb, _ = get(name)
+    return mb.build(obj_name or name, collection=collection)
+
+
+def collision_objects(name, obj):
+    if is_thirdparty(name):
+        from .. import thirdparty
+        return thirdparty.collision_meshes(obj, thirdparty.registry()["props"][name])
+    _, cols = get(name)
+    return [c.build("col") for c in cols]
+
+
 def export_all(out_dir, log=print):
     """Export every prop as SM_<name>.fbx with UCX collision hulls."""
     os.makedirs(out_dir, exist_ok=True)
+    n_tp = 0
     for name in REGISTRY:
-        mb, cols = get(name)
-        obj = mb.build(name)
+        obj = build_object(name, name)
         objs = [obj]
-        for i, c in enumerate(cols):
-            co = c.build(f"UCX_{name}_{i:02d}")
+        for i, co in enumerate(collision_objects(name, obj)):
+            co.name = f"UCX_{name}_{i:02d}"
             co.data.materials.clear()
             objs.append(co)
         blend.export_fbx(objs, os.path.join(out_dir, name + ".fbx"))
         blend.delete(objs)
-    log(f"  props: {len(REGISTRY)} meshes exported")
+        n_tp += is_thirdparty(name)
+    log(f"  props: {len(REGISTRY)} meshes exported ({n_tp} from curated third-party packs)")
 
 
 def instance_props_for_preview(aset):
@@ -666,8 +697,7 @@ def instance_props_for_preview(aset):
             print("   !! unknown prop", name)
             continue
         if name not in proto:
-            mb, _ = get(name)
-            proto[name] = mb.build(name + "_proto")
+            proto[name] = build_object(name, name + "_proto")
             proto[name].hide_render = True
         o = bpy.data.objects.new(name, proto[name].data)
         bpy.context.scene.collection.objects.link(o)

@@ -242,7 +242,7 @@ def emblem(mb, center, radius, yaw=0.0, depth=0.35, tilt=0.0, backing=True):
         mb.cylinder((0, 0, depth), R * 0.17, R * 0.14, "M_Gold", seg=16, cap_bottom=False)
         for i, m in enumerate(("M_AcademyBlue", "M_AcademyRed", "M_AcademyYellow")):
             gx, gy = polar(R * 0.92, 90 + 120 * i)
-            mb.cylinder((gx, gy, depth), R * 0.17, R * 0.11, "M_Gold", seg=16, cap_bottom=False)
+            mb.cylinder((gx, gy, depth), R * 0.17, R * 0.11, "M_Gold", seg=16)
             mb.cylinder((gx, gy, depth + R * 0.11), R * 0.12, R * 0.05, m, seg=16, cap_bottom=False)
 
 
@@ -301,7 +301,7 @@ def entry_steps(mb, pos, yaw, width, rise_total=FLOOR, landing=1.6, run=0.32, ma
     n = int(round(rise_total / 0.2))
     x, y = pos[0], pos[1]
     with mb.at((x, y, 0.0), rot=yaw):
-        mb.box_mm((-width / 2, -landing, -4.0), (width / 2, 0.2, rise_total), mat)
+        mb.box_mm((-width / 2, -landing, -4.0), (width / 2, 0.2, rise_total + 0.01), mat)
         mb.box_mm((-width / 2, -landing - n * run, -4.0), (width / 2, -landing, 0.0), mat)
         mb.stairs((0, -landing - n * run, 0), 90, width, n, rise_total / n, run, mat)
         for sx in (-1, 1):   # cheek walls
@@ -309,6 +309,40 @@ def entry_steps(mb, pos, yaw, width, rise_total=FLOOR, landing=1.6, run=0.32, ma
                       (sx * (width / 2 + 0.2) + 0.2, 0.2, rise_total + 0.9), "M_AcademyWall")
             mb.box_mm((sx * (width / 2 + 0.2) - 0.25, -landing - n * run - 0.05, rise_total + 0.9),
                       (sx * (width / 2 + 0.2) + 0.25, 0.2, rise_total + 1.0), "M_Gold")
+
+
+def dormer(mb, pos, yaw, eave, slope):
+    """Roof dormer on a hip roof slope. pos = point on the wall line at the eave, front = local -Y."""
+    with mb.at((pos[0], pos[1], 0.0), rot=yaw):
+        y0 = 2.2
+        zf = eave + slope * y0
+        ztop = zf + 2.1
+        y1 = (ztop + 1.0 - eave) / slope
+        mb.box_mm((-1.3, y0, zf - 0.8), (1.3, y1, ztop), "M_AcademyWall")
+        mb.box((0, y0 - 0.03, zf + 0.95), (1.3, 0.08, 1.4), "M_Glass", skip=("+y",))
+        mb.box((0, y0 - 0.06, zf + 0.2), (1.7, 0.14, 0.1), "M_WindowFrame", skip=("+y",))
+        mb.box((0, y0 - 0.06, zf + 1.72), (1.5, 0.12, 0.08), "M_WindowFrame", skip=("+y",))
+        mb.gable_roof((0, (y0 + y1) / 2, ztop), 2.6, y1 - y0, 1.0, "M_AcademyRoof",
+                      overhang=0.25, thick=0.12, gable_mat="M_AcademyWall", ridge_axis="y")
+
+
+def garden_bed(mb, aset, pts, flowers, tree="SM_BroadTree_C", palms=()):
+    """Raised garden: stone edging with marble cap, lawn, clipped hedge ring, flower rosette island."""
+    n = len(pts)
+    for i in range(n):
+        mb.wall(pts[i], pts[(i + 1) % n], -0.3, 0.85, 0.45, "M_AcademyStone", cap_mat="M_Marble")
+    mb.prism(inset_poly(pts, 0.44), -0.3, 0.38, "M_Soil", top_mat="M_PlazaLawn", cap_bottom=False)
+    mb.slab_ring(inset_poly(pts, 0.5), inset_poly(pts, 1.3), 0.38, 1.05, "M_Hedge")
+    cx = sum(p[0] for p in pts) / n
+    cy = sum(p[1] for p in pts) / n
+    ring_sector(mb, (cx, cy), 3.0, 3.4, 0.0, 360.0, 0.38, 0.75, "M_Marble", faces="tio", n=24)
+    mb.cylinder((cx, cy, 0.38), 3.0, 0.3, "M_Soil", seg=24, cap_bottom=False)
+    for k in range(12):
+        a0 = k * 30.0
+        ring_sector(mb, (cx, cy), 4.8, 7.2, a0 + 1.5, a0 + 28.5, 0.38, 0.6, flowers[k % 2], faces="tioab", n=4)
+    aset.prop(tree, (cx, cy, 0.68), 0.0)
+    for (px, py) in palms:
+        aset.prop("SM_PalmTree_B", (px, py, 0.38), (px * 7 + py * 3) % 360)
 
 
 # ============================================================================ ACADEMY
@@ -337,7 +371,6 @@ def _podium_and_steps(mb):
 
 
 def _lobby_shell(mb):
-    P = [(-LX, LY0), (LX, LY0), (LX, LY1), (-LX, LY1)]
     split = 9.0                       # wall built in two layers so windows can stack
     win = dict(glass="M_Glass", frame="M_WindowFrame")
     low = {0: [dict(u=LX, w=10.0, z0=0.0, z1=split)], 1: [], 2: [dict(u=LX, w=12.0, z0=0.0, z1=split)], 3: []}
@@ -347,14 +380,19 @@ def _lobby_shell(mb):
             w = 3.0 if x < 26 else 2.4
             low[0].append(dict(u=LX + sx * x, w=w, z0=1.6, z1=6.8, **win))
             up[0].append(dict(u=LX + sx * x, w=w, z0=0.6, z1=4.4, **win))
+    t = LWALL
     for y in (-51.0, -39.0):
-        low[1].append(dict(u=y - LY0, w=2.6, z0=1.6, z1=6.8, **win))
-        low[3].append(dict(u=LY1 - y, w=2.6, z0=1.6, z1=6.8, **win))
+        low[1].append(dict(u=y - (LY0 + t), w=2.6, z0=1.6, z1=6.8, **win))
+        low[3].append(dict(u=(LY1 - t) - y, w=2.6, z0=1.6, z1=6.8, **win))
     for y in (-57.0, -45.0, -33.0):
-        up[1].append(dict(u=y - LY0, w=2.6, z0=0.6, z1=4.4, **win))
-        up[3].append(dict(u=LY1 - y, w=2.6, z0=0.6, z1=4.4, **win))
-    mb.room(P, FLOOR, split, LWALL, "M_AcademyWall", openings=low)
-    mb.room(P, FLOOR + split, LTOP - FLOOR - split, LWALL, "M_AcademyWall", openings=up)
+        up[1].append(dict(u=y - (LY0 + t), w=2.6, z0=0.6, z1=4.4, **win))
+        up[3].append(dict(u=(LY1 - t) - y, w=2.6, z0=0.6, z1=4.4, **win))
+    # front/back walls run full width, side walls butt between them (no coplanar corner overlaps)
+    segs = [((-LX, LY0), (LX, LY0)), ((LX, LY0 + t), (LX, LY1 - t)), ((LX, LY1), (-LX, LY1)),
+            ((-LX, LY1 - t), (-LX, LY0 + t))]
+    for z0, hh, ops in ((FLOOR, split, low), (FLOOR + split, LTOP - FLOOR - split, up)):
+        for i, (a, b) in enumerate(segs):
+            mb.wall(a, b, z0, hh, t, "M_AcademyWall", openings=ops[i])
     # ceiling slab
     mb.box_mm((-LX + LWALL, LY0 + LWALL, LCEIL), (LX - LWALL, LY1 - LWALL, LCEIL + 1.0), "M_AcademyWall")
     # exterior trims: base band, gold line, blue cornice
@@ -526,11 +564,46 @@ def _wing_facade_common(mb, xa, xb, y0, y1, eave, roof_h, ridge_axis="x"):
 ROWS = [3.0, 7.5, 12.0, 16.5]
 
 
+RM = DR - DT / 2                  # drum mid-wall vertex radius (37.4)
+
+
+def drum_mid_x(y, face_mid):
+    """x on the drum mid-wall plane of the face centred at `face_mid` (deg) for a given y."""
+    ca, sa = math.cos(face_mid * D2R), math.sin(face_mid * D2R)
+    return DC[0] + (RM * COS_H - (y - DC[1]) * sa) / ca
+
+
+def drum_mid_y(x, face_mid):
+    ca, sa = math.cos(face_mid * D2R), math.sin(face_mid * D2R)
+    return DC[1] + (RM * COS_H - (x - DC[0]) * ca) / sa
+
+
 def _wings(mb, nocol):
-    y0, y1 = 2.0, 28.0
+    """Classroom wings E/W of the drum. Their inner end follows the drum mid-wall so nothing pokes
+    into the arena."""
+    y0, y1, xo, eave, rh = 2.0, 28.0, 88.5, 20.5, 6.5
+    xa_ = drum_mid_x(y0, -22.5)
+    v1 = polar(RM, -11.25, DC)
+    v2 = polar(RM, 11.25, DC)
+    base = [(xa_, y0), (xo, y0), (xo, y1), (xa_, y1), v2, v1]
     for s in (-1, 1):
-        xa, xb = sorted((s * 34.0, s * 88.5))
-        _wing_facade_common(mb, xa, xb, y0, y1, 20.5, 6.5)
+        pts = [(x * s, y) for x, y in base]
+        if s < 0:
+            pts.reverse()
+        mb.prism(pts, -4.0, eave - 1.4, "M_AcademyWall", cap_top=False, cap_bottom=False)
+        bx0, bx1 = sorted((s * 34.7, s * xo))
+        side_out = "e" if s > 0 else "w"
+        rect_band(mb, bx0, y0, bx1, y1, -4.0, FLOOR, 0.25, "M_AcademyStone", sides="sn" + side_out)
+        for z in (6.4, 10.9, 15.4):
+            rect_band(mb, bx0, y0, bx1, y1, z, z + 0.2, 0.16, "M_AcademyBlue", sides="sn" + side_out)
+        rect_band(mb, bx0, y0, bx1, y1, eave - 1.4, eave - 1.15, 0.3, "M_Gold", sides="sn" + side_out)
+        rect_band(mb, bx0, y0, bx1, y1, eave - 1.15, eave, 0.7, "M_AcademyBlue", sides="sn" + side_out)
+        # hip roof starts just inside the drum wall (overhang 1 m)
+        ra, rb = sorted((s * 37.2, s * xo))
+        cx, w = (ra + rb) / 2, rb - ra
+        mb.hip_roof((cx, (y0 + y1) / 2, eave), w, y1 - y0, rh, "M_AcademyRoof", overhang=1.0)
+        r = (w - (y1 - y0)) / 2
+        mb.beam((cx - r, (y0 + y1) / 2, eave + rh), (cx + r, (y0 + y1) / 2, eave + rh), 0.4, 0.4, "M_Gold")
         # windows (only on the free part of the facade)
         wa, wb = sorted((s * 40.0, s * 88.0))
         n = 14
@@ -541,6 +614,10 @@ def _wings(mb, nocol):
             x = wa + k * bay
             mb.box_mm((x - 0.45, y0 - 0.35, FLOOR), (x + 0.45, y0 + 0.1, 19.1), "M_AcademyWall")
             mb.box_mm((x - 0.45, y1 - 0.1, FLOOR), (x + 0.45, y1 + 0.35, 19.1), "M_AcademyWall")
+        # roof dormers on both long slopes
+        for x in (47.5, 54.4, 68.1, 75.0):
+            dormer(mb, (s * x, y0), 0.0, eave, rh / 13.0)
+            dormer(mb, (s * x, y1), 180.0, eave, rh / 13.0)
         # central door with steps
         xd = s * 64.0
         mb.box_mm((xd - 2.4, y0 - 0.3, FLOOR), (xd + 2.4, y0 + 0.1, 6.0), "M_AcademyBlue")
@@ -578,6 +655,12 @@ def _end_blocks(mb):
             y = y0 + k * (2.0 - y0) / 12
             xa_, xb_ = sorted((xi, xi - s * 0.35))
             mb.box_mm((xa_, y - 0.45, FLOOR), (xb_, y + 0.45, 21.0), "M_AcademyWall")
+        # roof dormers (outer slope + forecourt slope)
+        sl = 8.0 / 13.0
+        for y in (-26.0, -14.0, -2.0, 10.0, 22.0, 34.0):
+            dormer(mb, (xo, y), 90.0 * s, 22.4, sl)
+        for y in (-26.0, -12.0, 38.0):
+            dormer(mb, (xi, y), -90.0 * s, 22.4, sl)
         # side door into the forecourt
         yd = -19.0
         with mb.at((xi, yd, 0.0), rot=-90.0 * s):
@@ -587,18 +670,32 @@ def _end_blocks(mb):
 
 
 def _rear_annex(mb):
-    xa, xb, y0, y1 = -20.0, 20.0, 48.0, 76.0
-    mb.box_mm((xa, y0, -4.0), (xb, y1, 10.0), "M_AcademyWall")
-    rect_band(mb, xa, y0, xb, y1, -4.0, FLOOR, 0.25, "M_AcademyStone")
-    rect_band(mb, xa, y0, xb, y1, 6.4, 6.6, 0.16, "M_AcademyBlue")
-    rect_band(mb, xa, y0, xb, y1, 10.0, 10.25, 0.3, "M_Gold")
-    rect_band(mb, xa, y0, xb, y1, 10.25, 11.2, 0.7, "M_AcademyBlue")
-    mb.hip_roof((0.0, (y0 + y1) / 2, 11.2), xb - xa, y1 - y0, 4.5, "M_AcademyRoof", overhang=1.0)
+    """Two-storey service annex behind the arena (flat roof); its south side follows the drum wall."""
+    xa, xb, y1, top = -20.0, 20.0, 76.0, 10.0
+    ys = drum_mid_y(xb, 67.5)
+    w1, e1 = polar(RM, 101.25, DC), polar(RM, 78.75, DC)
+    pts = [(xa, ys), w1, e1, (xb, ys), (xb, y1), (xa, y1)]
+    mb.prism(pts, -4.0, top, "M_AcademyWall", cap_top=False, cap_bottom=False)
+    for piece in ([(xa, ys), w1, (w1[0], y1), (xa, y1)], [w1, e1, (e1[0], y1), (w1[0], y1)],
+                  [e1, (xb, ys), (xb, y1), (e1[0], y1)]):
+        mb.poly([(x, y, top) for x, y in piece], "M_AcademyRoof")
+    yb = 47.2
+    rect_band(mb, xa, yb, xb, y1, -4.0, FLOOR, 0.25, "M_AcademyStone", sides="enw")
+    rect_band(mb, xa, yb, xb, y1, 6.4, 6.6, 0.16, "M_AcademyBlue", sides="enw")
+    rect_band(mb, xa, yb, xb, y1, 8.6, 8.85, 0.3, "M_Gold", sides="enw")
+    rect_band(mb, xa, yb, xb, y1, 8.85, top + 1.0, 0.45, "M_AcademyBlue", sides="enw")
+    rect_band(mb, xa, yb, xb, y1, top + 1.0, top + 1.15, 0.5, "M_Gold", sides="enw")
+    # rooftop: parapet railing and plant
+    mb.railing([(xb - 0.3, yb + 1.0, top), (xb - 0.3, y1 - 0.3, top), (xa + 0.3, y1 - 0.3, top),
+                (xa + 0.3, yb + 1.0, top)], 1.1, "M_Metal", post_spacing=2.5)
+    for x, y in ((-10.0, 64.0), (10.0, 64.0), (0.0, 70.0)):
+        mb.box_mm((x - 2.0, y - 1.4, top), (x + 2.0, y + 1.4, top + 1.5), "M_Metal")
+        mb.box_mm((x - 1.3, y - 0.8, top + 1.5), (x + 1.3, y + 0.8, top + 1.8), "M_DarkMetal")
     mb.facade_windows((xb, y1), (3.2, y1), [3.0], 4, 1.7, 2.5)
     mb.facade_windows((-3.2, y1), (xa, y1), [3.0], 4, 1.7, 2.5)
-    mb.facade_windows((xb, y1), (xa, y1), [7.5], 9, 1.7, 2.5)
-    mb.facade_windows((xb, y0 + 6.0), (xb, y1), [3.0, 7.5], 5, 1.7, 2.5)
-    mb.facade_windows((xa, y1), (xa, y0 + 6.0), [3.0, 7.5], 5, 1.7, 2.5)
+    mb.facade_windows((xb, y1), (xa, y1), [7.0], 9, 1.7, 1.6)
+    mb.facade_windows((xb, 54.0), (xb, y1), [3.0, 7.0], 5, 1.7, 1.6 if False else 2.0)
+    mb.facade_windows((xa, y1), (xa, 54.0), [3.0, 7.0], 5, 1.7, 2.0)
     # rear entrance (closed) with canopy
     door(mb, (0.0, y1, FLOOR), 180.0, 2.8, 3.4)
     entry_steps(mb, (0.0, y1), 180.0, 5.0)
@@ -752,8 +849,8 @@ def _lobby_interior(mb, nocol, aset):
         mb.cylinder((x, -25.8, FLOOR + 0.9), 0.25, 0.25, "M_DarkWood", seg=8)
         mb.lathe([(0.12, FLOOR + 1.15), (0.1, FLOOR + 1.5), (0.35, FLOOR + 1.9), (0.3, FLOOR + 2.0)],
                  "M_Gold", seg=12, center=(x, -25.8, 0.0))
-    aset.prop("SM_VendingMachine", (24.0, -24.3, FLOOR), 180.0)
-    aset.prop("SM_VendingMachine", (21.5, -24.3, FLOOR), 180.0)
+    aset.prop("SM_VendingMachine", (24.0, -24.4, FLOOR), 0.0)
+    aset.prop("SM_VendingMachine", (21.5, -24.4, FLOOR), 0.0)
     aset.prop("SM_Bench", (-15.0, -55.0, FLOOR), 90.0)
     aset.prop("SM_Bench", (-15.0, -33.0, FLOOR), 90.0)
     aset.prop("SM_TrashBin", (16.0, -62.5, FLOOR), 0.0)
@@ -775,8 +872,8 @@ def _card_shop(mb, aset):
             openings=[dict(u=15.0, w=9.0, z0=0.0, z1=4.2),
                       dict(u=4.6, w=5.4, z0=0.9, z1=3.9, **clear),
                       dict(u=25.4, w=5.4, z0=0.9, z1=3.9, **clear)])
-    mb.wall((X1, Y1), (X0, Y1), FLOOR, SH, 0.5, "M_AcademyWall")
-    mb.wall((X0, Y0), (X1, Y0), FLOOR, SH, 0.5, "M_AcademyWall")
+    mb.wall((X1, Y1), (X0 + 0.5, Y1), FLOOR, SH, 0.5, "M_AcademyWall")
+    mb.wall((X0 + 0.5, Y0), (X1, Y0), FLOOR, SH, 0.5, "M_AcademyWall")
     mb.box_mm((X0, Y0, FLOOR + SH), (X1, Y1, FLOOR + SH + 0.4), "M_AcademyWall")
     # shop front fascia, sign and gold trims (lobby side faces -X)
     mb.box_mm((X0 - 0.35, Y0 - 0.3, 7.0), (X0, Y1 + 0.3, FLOOR + SH + 0.4), "M_AcademyBlue")
@@ -841,7 +938,7 @@ def _card_shop(mb, aset):
             mb.box((0, 0, 0.012), (0.17, 0.24, 0.024), packs[i % 4], skip=("-z",))
     # poster board on the north wall (inside)
     mb.box_mm((19.4, Y1 - 0.55, 4.9), (21.4, Y1 - 0.5, 6.2), "M_CardPack")
-    aset.text("NEW PACKS!", (20.4, Y1 - 0.58, 5.55), 180.0, size=0.28, color=(1, 1, 1))
+    aset.text("NEW PACKS!", (20.4, Y1 - 0.58, 5.55), 0.0, size=0.28, color=(1, 1, 1))
     # light panels
     for y in (-54.0, -45.0, -36.0):
         mb.box_mm((21.5, y - 1.5, FLOOR + SH - 0.08), (26.5, y + 1.5, FLOOR + SH), "M_LampGlow")
@@ -909,8 +1006,6 @@ def _arena(mb, nocol, aset):
             aset.light((px, py, FLOOR + 4.0), (0.4, 0.85, 1.0), 2500, 8)
     aset.interact("duel_field", (C[0], C[1], zf + 0.1), 0.0, title="Grand Duel Arena",
                   text="Step onto the field to start a holographic duel!", radius=6.0)
-    aset.special("duelist_spot", (C[0] - 10.6, C[1], zf), -90.0, side="west")
-    aset.special("duelist_spot", (C[0] + 10.6, C[1], zf), 90.0, side="east")
 
     # ---- stands
     gaps = [(252.0, 288.0), (-9.0, 9.0), (171.0, 189.0)]
@@ -1067,49 +1162,65 @@ def _arena(mb, nocol, aset):
     aset.light((C[0], C[1], 40.0), (1.0, 0.98, 0.95), 12000, 30)
     aset.audio("A_Crowd", (C[0], C[1], 8.0), radius=48.0)
     dorms = ("slifer", "ra", "obelisk")
-    seats_npc = [(30, 3), (42, 6), (60, 2), (75, 9), (100, 4), (118, 12), (142, 7), (160, 3),
-                 (200, 5), (232, 10), (300, 4), (330, 8), (338, 13), (205, 1)]
-    for i, (ang, k) in enumerate(seats_npc):
-        p = polar(tier_r(k) + 0.25, ang, C)
-        aset.npc((p[0], p[1], FLOOR + T_RISE * (k + 1)), ang - 90.0, dorm=dorms[i % 3], wander=1.5)
+    # spectators: on the upper concourse (2.7 m wide walkway) and around the arena floor
+    for i, ang in enumerate((25.0, 62.0, 105.0, 148.0, 200.0, 236.0, 305.0, 338.0, 120.0, 30.0)):
+        p = polar(34.6, ang, C)
+        aset.npc((p[0], p[1], z_top), ang - 90.0, dorm=dorms[i % 3], wander=2.0)
+    for i, ang in enumerate((40.0, 140.0, 215.0, 325.0, 95.0)):
+        p = polar(18.4, ang, C)
+        aset.npc((p[0], p[1], FLOOR), ang - 90.0, dorm=dorms[(i + 1) % 3], wander=2.5)
     aset.npc((C[0] - 10.6, C[1], zf), -90.0 + 180.0, dorm="obelisk", wander=0.5)
     aset.npc((C[0] - 3.0, C[1] - 12.0, FLOOR), 0.0, dorm="slifer", wander=3.0)
     aset.special("camera", (C[0] + 21.0, C[1] - 25.0, 12.5), target=(C[0], C[1], 4.0), lens=16)
     aset.special("camera", (C[0], C[1] - 33.5, 4.2), target=(C[0], C[1] + 20.0, 14.0), lens=16)
 
 
-def _academy_dressing(aset):
+def _academy_dressing(mb, aset):
     # entrance lighting (night)
     for x in (-9.0, 9.0, -17.0, 17.0):
         aset.light((x, LY0 - 1.0, 9.0), (1.0, 0.82, 0.55), 6000, 16, night_only=True)
-    aset.light((0.0, -71.0, 16.5), (1.0, 0.85, 0.6), 9000, 22, night_only=True)
-    aset.light((0.0, -82.0, 18.0), (1.0, 0.85, 0.55), 16000, 30, night_only=True, spot_pitch=-35.0, cone=30.0)
+    aset.light((0.0, -71.0, 14.0), (1.0, 0.85, 0.6), 9000, 22, night_only=True)
+    aset.light((0.0, -80.0, 12.0), (1.0, 0.85, 0.55), 14000, 30, night_only=True)
     for s in (-1, 1):
         aset.light((s * 27.25, -80.3, FLOOR + 7.0), (1.0, 0.8, 0.5), 5000, 14, night_only=True)
-        aset.light((s * 45.0, -60.0, 1.0), (0.9, 0.9, 1.0), 9000, 40, night_only=True, spot_pitch=-55.0)
+        aset.light((s * 33.0, -60.0, 2.0), (0.9, 0.9, 1.0), 7000, 24, night_only=True)
     aset.light((0.0, 15.0, 64.0), (1.0, 0.85, 0.5), 18000, 40, night_only=True)
-    # lamp posts / palms / benches in the forecourt and along the approach
+    # forecourt gardens between the entrance hall and the end pavilions
     for s in (-1, 1):
-        for x, y in ((14.0, -95.0), (32.0, -86.0), (45.0, -72.0), (45.0, -50.0), (70.0, -50.0),
-                     (45.0, -12.0), (70.0, -12.0), (118.0, -30.0), (118.0, 20.0), (60.0, 40.0),
-                     (30.0, 70.0), (60.0, 75.0)):
+        base = [(48.0, -34.0), (74.0, -34.0), (76.0, -32.0), (76.0, -14.0), (74.0, -12.0), (48.0, -12.0),
+                (46.0, -14.0), (46.0, -32.0)]
+        pts = [(x * s, y) for x, y in base]
+        if s < 0:
+            pts.reverse()
+        flowers = ("M_FlowerRed", "M_FlowerYellow") if s < 0 else ("M_FlowerBlue", "M_FlowerWhite")
+        garden_bed(mb, aset, pts, flowers, palms=((s * 49.5, -30.5), (s * 72.5, -15.5), (s * 72.5, -30.5),
+                                                  (s * 49.5, -15.5)))
+        for x in (43.0, 79.0):
+            for y in (-37.0, -9.0):
+                aset.prop("SM_LampPost", (s * x, y, 0.0), 0.0)
+        for x in (55.0, 67.0):
+            aset.prop("SM_Bench", (s * x, -37.0, 0.0), 180.0)
+            aset.prop("SM_Bench", (s * x, -9.0, 0.0), 0.0)
+        aset.prop("SM_TrashBin", (s * 61.0, -37.2, 0.0), 0.0)
+        # approach / perimeter lamps
+        for x, y in ((14.0, -89.0), (32.0, -86.0), (45.0, -72.0), (45.0, -50.0), (75.0, -50.0),
+                     (118.0, -30.0), (118.0, 20.0), (60.0, 40.0), (30.0, 70.0), (60.0, 75.0)):
             aset.prop("SM_LampPost", (s * x, y, 0.0), 0.0)
-        for x, y in ((38.0, -85.0), (52.0, -82.0), (58.0, -30.0), (80.0, -60.0), (118.0, -55.0),
-                     (120.0, 64.0), (40.0, 52.0)):
+        for x, y in ((38.0, -85.0), (52.0, -82.0), (62.0, -62.0), (82.0, -62.0), (118.0, -55.0),
+                     (120.0, 64.0), (40.0, 52.0), (75.0, 62.0)):
             aset.prop("SM_PalmTree_A" if (x + y) % 2 == 0 else "SM_PalmTree_B", (s * x, y, 0.0), s * 30.0)
-        for y in (-38.0, -22.0):
-            aset.prop("SM_Bench", (s * 52.0, y, 0.0), -90.0 * s)
-            aset.prop("SM_Bench", (s * 78.0, y, 0.0), 90.0 * s)
         aset.prop("SM_Planter", (s * 31.0, -84.0, 0.0), 0.0)
         aset.prop("SM_Planter", (s * 22.0, -84.0, 0.0), 0.0)
-        aset.prop("SM_TrashBin", (s * 52.0, -30.0, 0.0), -90.0 * s)
         aset.prop("SM_FlowerBush_Red" if s < 0 else "SM_FlowerBush_Blue", (s * 36.0, -64.0, 0.0), 0.0)
         aset.prop("SM_FlowerBush_Yellow", (s * 36.0, -58.0, 0.0), 0.0)
+        aset.prop("SM_FlowerBush_White", (s * 36.0, -40.0, 0.0), 0.0)
         aset.prop("SM_VendingMachine", (s * 86.6, -30.0, 0.0), -90.0 * s)
+        aset.prop("SM_VendingMachine", (s * 86.6, -32.0, 0.0), -90.0 * s)
     # students outside
-    for p, yaw, d in (((-6.0, -88.0), 0.0, "slifer"), ((8.0, -79.0), 180.0, "ra"), ((-60.0, -26.0), 90.0, "obelisk"),
-                      ((62.0, -35.0), -90.0, "ra"), ((0.0, 82.0), 0.0, "obelisk"), ((-90.0, -60.0), 45.0, "slifer")):
-        aset.npc((p[0], p[1], 0.0 if abs(p[1]) > 77 or abs(p[0]) > 40 else FLOOR), yaw, dorm=d, wander=6.0)
+    for p, yaw, d in (((-6.0, -88.0), 0.0, "slifer"), ((8.0, -79.0), 180.0, "ra"), ((-60.0, -38.5), 0.0, "obelisk"),
+                      ((62.0, -7.0), 180.0, "ra"), ((0.0, 84.0), 0.0, "obelisk"), ((-90.0, -60.0), 45.0, "slifer"),
+                      ((40.0, -24.0), -90.0, "obelisk"), ((-82.0, -22.0), 90.0, "ra")):
+        aset.npc((p[0], p[1], 0.0 if abs(p[1]) > 77 or abs(p[0]) > 32 else FLOOR), yaw, dorm=d, wander=6.0)
 
 
 def build_academy():
@@ -1131,7 +1242,7 @@ def build_academy():
     _lobby_interior(inter, nocol, aset)
     _card_shop(inter, aset)
     _arena(arena, nocol, aset)
-    _academy_dressing(aset)
+    _academy_dressing(main, aset)
     return aset
 
 
@@ -1300,7 +1411,7 @@ def build_plaza():
         mb.cylinder((x, y, -0.3), 1.2, 0.75, "M_Marble", seg=8, cap_bottom=False, smooth=False)
         mb.cylinder((x, y, 0.32), 1.25, 0.1, "M_Gold", seg=8, cap_bottom=False, smooth=False)
         aset.prop(f, (x, y, 0.45), 0.0)
-        aset.light((x, y - 2.0, 0.6), (1.0, 0.9, 0.7), 3000, 12, night_only=True, spot_pitch=-80.0, cone=20.0)
+        aset.light((x, y - 2.0, 1.0), (1.0, 0.9, 0.7), 2500, 10, night_only=True)
     # ---- direction board (west of the main axis, facing the arriving road)
     bo, byaw = (-15.0, -41.0, 0.0), 20.0
     with mb.at(bo, rot=byaw):
@@ -1336,8 +1447,7 @@ def build_plaza():
                        "E: Forest, Abandoned Dorm (off limits!)  |  NW: Obelisk Blue Dorm  |  "
                        "W: Slifer Red Dorm, West Cliffs  |  SW: Ra Yellow Dorm  |  "
                        "S: Harbor, Lighthouse, Heliport  |  SE: Beach & Duel Gym")
-    aset.light(local_to_world(bo, byaw, (0.0, -2.5, 5.5)), (1.0, 0.9, 0.75), 3000, 9, night_only=True,
-               spot_pitch=-50.0)
+    aset.light(local_to_world(bo, byaw, (0.0, -2.5, 5.5)), (1.0, 0.9, 0.75), 3000, 9, night_only=True)
     # ---- street furniture
     for s in (-1, 1):
         for y in (-44.0, -26.0, 24.0, 40.0):

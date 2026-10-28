@@ -128,15 +128,13 @@ def build_scene(log=print, scatter=True, detail_props=True):
             continue
         if asset not in P.REGISTRY:
             continue
-        mb, _ = P.get(asset)
-        proto = mb.build(asset + "_proto", collection=hidden)
+        proto = P.build_object(asset, asset + "_proto", collection=hidden)
         protos[asset] = proto
         _instance_object(asset + "_inst", proto, g["items"])
     for f in lay["floating"]:
         if f["mesh"] in P.REGISTRY:
             if f["mesh"] not in protos:
-                mb, _ = P.get(f["mesh"])
-                protos[f["mesh"]] = mb.build(f["mesh"] + "_proto", collection=hidden)
+                protos[f["mesh"]] = P.build_object(f["mesh"], f["mesh"] + "_proto", collection=hidden)
             o = bpy.data.objects.new(f["mesh"], protos[f["mesh"]].data)
             bpy.context.scene.collection.objects.link(o)
             o.location = _from_ue(f["loc"])

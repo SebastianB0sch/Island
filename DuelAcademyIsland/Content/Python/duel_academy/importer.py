@@ -18,9 +18,9 @@ UI = {"T_IslandMap"}
 
 
 def texture_kind(name):
-    if name.endswith("_N") or name == "T_WaterNormal":
+    if name.endswith("_N") or name in ("T_WaterNormal", "T_FlatNormal"):
         return "normal"
-    if name in MASKS:
+    if name in MASKS or name.endswith("_ORM") or name.endswith("_R") or name == "T_DefaultMask":
         return "masks"
     if name.endswith("_D") or name in LINEAR:
         return "linear"
@@ -54,14 +54,27 @@ def _import_tasks(files, dest, options=None, names=None):
 
 # --------------------------------------------------------------------------- textures
 def import_textures(slow=None):
+    """Imports Textures/*.png|jpg and Textures/<sub>/**/ (third-party PBR sets keep their sub folders)."""
     C.ensure_dir(C.TEX_DIR)
-    files = sorted(glob.glob(os.path.join(C.source_dir(), "Textures", "*.png")))
-    names = [os.path.splitext(os.path.basename(f))[0] for f in files]
-    _import_tasks(files, C.TEX_DIR, names=names)
-    for n in names:
-        tex = C.load(f"{C.TEX_DIR}/{n}")
+    root = os.path.join(C.source_dir(), "Textures")
+    by_dir = {}
+    for f in sorted(glob.glob(os.path.join(root, "**", "*.*"), recursive=True)):
+        if os.path.splitext(f)[1].lower() not in (".png", ".jpg", ".jpeg", ".tga"):
+            continue
+        rel = os.path.relpath(os.path.dirname(f), root).replace(os.sep, "/")
+        dest = C.TEX_DIR if rel in (".", "") else f"{C.TEX_DIR}/{rel}"
+        by_dir.setdefault(dest, []).append(f)
+    names = []
+    for dest, files in by_dir.items():
+        C.ensure_dir(dest)
+        base = [os.path.splitext(os.path.basename(f))[0] for f in files]
+        _import_tasks(files, dest, names=base)
+        names += [f"{dest[len(C.TEX_DIR) + 1:]}/{b}" if dest != C.TEX_DIR else b for b in base]
+    for rel in names:
+        n = rel.split("/")[-1]
+        tex = C.load(f"{C.TEX_DIR}/{rel}")
         if tex is None:
-            C.warn(f"texture {n} failed to import")
+            C.warn(f"texture {rel} failed to import")
             continue
         kind = texture_kind(n)
         if kind == "normal":

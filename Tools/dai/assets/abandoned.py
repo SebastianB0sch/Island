@@ -96,7 +96,7 @@ def window(mb, nc, u, z0, w, h, style, rng, dark=True, hood="key"):
         if dark:
             r = w / 2
             pts = [(u + math.cos(math.pi * k / 8) * r, -0.02, z0 + h + math.sin(math.pi * k / 8) * r) for k in range(9)]
-            mb.poly(list(reversed(pts)), VOID)
+            mb.poly(pts, VOID)
 
     if style == "boarded":
         n = rng.randint(3, 5)
@@ -156,9 +156,9 @@ def _shards(mb, u, z0, w, h, rng):
 def facade_trim(mb, origin, yaw, length, courses=(), cornice=None, quoins=(0.6, 11.4), q_ends=(True, True)):
     with mb.at(origin, rot=yaw):
         for z in courses:
-            mb.box((length / 2, -0.09, z), (length + 0.36, 0.18, 0.2), TRIM, skip=("+y",))
+            mb.box((length / 2, -0.09, z), (length + 0.32, 0.18, 0.2), TRIM, skip=("+y",))
         if cornice is not None:
-            mb.box((length / 2, -0.225, cornice - 0.25), (length + 0.9, 0.45, 0.5), TRIM, skip=("+y",))
+            mb.box((length / 2, -0.225, cornice - 0.25), (length + 0.86, 0.45, 0.5), TRIM, skip=("+y",))
             mb.box((length / 2, -0.13, cornice - 0.65), (length + 0.5, 0.26, 0.3), TRIM, skip=("+y",))
         if quoins:
             z, i = quoins[0], 0
@@ -169,7 +169,7 @@ def facade_trim(mb, origin, yaw, length, courses=(), cornice=None, quoins=(0.6, 
                     if not on:
                         continue
                     sg = 1 if end == 0.0 else -1
-                    mb.box((end + sg * (wq / 2 - 0.08), -0.04, z + hq / 2), (wq, 0.08, hq - 0.05), TRIM,
+                    mb.box((end + sg * (wq / 2 - 0.06), -0.04, z + hq / 2), (wq, 0.08, hq - 0.05), TRIM,
                            skip=("+y",))
                 z += hq
                 i += 1
@@ -208,8 +208,8 @@ def _shell(mb):
     mb.box_mm((-HX, TY1, HZ1), (HX, HY1, EAVE), STONE, mats={"-z": ROT, "+z": VOID})
     # wall plates closing the gap between wall top and roof underside
     zp = ROOF_Z + (Y0 - EAVE_YF) * TAN
-    mb.box_mm((X0, Y0, EAVE), (X1, Y0 + 0.5, zp), STONE)
-    mb.box_mm((X0, Y1 - 0.5, EAVE), (X1, Y1, zp), STONE)
+    mb.box_mm((X0 + 0.01, Y0, EAVE), (X1 - 0.01, Y0 + 0.5, zp), STONE)
+    mb.box_mm((X0 + 0.01, Y1 - 0.5, EAVE), (X1 - 0.01, Y1, zp), STONE)
     # gable walls
     for sx in (-1, 1):
         x = sx * X1
@@ -228,8 +228,8 @@ def _shell(mb):
             dict(u=TX - 3.0, w=1.2, z0=5.0, z1=6.8), dict(u=TX + 3.0, w=1.2, z0=5.0, z1=6.8),
             dict(u=TX, w=1.6, z0=5.1, z1=6.8)]
     mb.wall((-TX, TY0), (TX, TY0), FL, HZ1 - FL, 0.6, STONE, openings=[door] + wins, inner_mat=WALLP)
-    mb.wall((-TX, Y0), (-TX, TY0), FL, HZ1 - FL, 0.6, STONE, inner_mat=WALLP)
-    mb.wall((TX, TY0), (TX, Y0), FL, HZ1 - FL, 0.6, STONE, inner_mat=WALLP)
+    mb.wall((-TX, Y0), (-TX, HY0), FL, HZ1 - FL, 0.6, STONE, inner_mat=WALLP)
+    mb.wall((TX, HY0), (TX, Y0), FL, HZ1 - FL, 0.6, STONE, inner_mat=WALLP)
     mb.box_mm((-TX, TY0, HZ1), (TX, TY1, TTOP), STONE, mats={"-z": ROT})
 
 
@@ -943,7 +943,7 @@ def _sockets(aset, rng):
     by, byaw = fy - 1.6, -12.0
     nx, ny = math.sin(math.radians(byaw)), -math.cos(math.radians(byaw))
     aset.text("KEEP OUT", (5.6 + nx * 0.06, by + ny * 0.06, 1.2), byaw, size=0.42, color=(0.78, 0.08, 0.05))
-    aset.text("SPECIAL DORM", (0.0, TY0 - 0.32, FL + 3.4), 0.0, size=0.26, color=(0.32, 0.30, 0.33))
+    aset.text("SPECIAL DORM", (0.0, TY0 - 0.34 - 0.025, FL + 3.4), 0.0, size=0.26, color=(0.32, 0.30, 0.33))
     # lights: dim purple inside, a flickery lantern by the door
     aset.light((0.0, -6.5, HZ1 - 0.8), purple, 1300.0, 14.0)
     aset.light((0.0, 1.0, 3.0), purple, 900.0, 9.0)

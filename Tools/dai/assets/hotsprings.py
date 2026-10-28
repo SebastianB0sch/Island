@@ -558,11 +558,11 @@ def _washplace(mb, rng):
             stool(mb, (x, y + 1.3, DECK), rng.uniform(-10, 10))
             bucket(mb, (x + 0.25, y + 0.35, DECK + 0.62), r=0.14, h=0.2)
     # bucket stacks and stools by the pools
-    for (x, yy) in ((1.0, -1.5), (13.5, 13.2), (-3.4, 9.6), (13.0, -11.5)):
+    for (x, yy) in ((3.6, -2.6), (13.5, 13.2), (-3.4, 9.6), (13.0, -11.5)):
         bucket(mb, (x, yy, DECK))
         bucket(mb, (x + 0.38, yy + 0.1, DECK))
         bucket(mb, (x + 0.19, yy + 0.05, DECK + 0.24))
-    stool(mb, (2.0, -1.0, DECK), 20)
+    stool(mb, (4.5, -2.0, DECK), 20)
     stool(mb, (-4.0, 9.2, DECK), -15)
 
 
@@ -631,7 +631,7 @@ def _garden(mb, nc, rng):
 def _sockets(aset, rng, lanterns, spout):
     gy = -28.0
     # stone lanterns (lights are added automatically by the prop)
-    for (x, y, z) in ((-3.2, gy + 0.6, 0.0), (3.0, gy + 1.4, 0.0), (1.5, -3.2, DECK), (22.0, 2.5, DECK),
+    for (x, y, z) in ((-3.2, gy + 0.6, 0.0), (3.0, gy + 1.4, 0.0), (2.6, -4.2, DECK), (22.0, 2.5, DECK),
                       (-13.0, 9.0, DECK), (15.0, 16.0, DECK), (-0.2, -14.6, DECK), (-17.5, 0.5, DECK)):
         aset.prop("SM_StoneLantern", (x, y, z), rng.uniform(-20, 20))
     # garden planting outside the terrace and in corners

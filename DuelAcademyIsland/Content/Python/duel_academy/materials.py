@@ -393,6 +393,57 @@ def build_waterfall():
     return g.finish()
 
 
+def build_pbr(name, foliage=False):
+    """Textured PBR master for third-party assets (CC0 packs): BaseTex*Tint, NormalTex, ORM-style mask."""
+    g = Graph(name)
+    if foliage:
+        g.settings(blend_mode=unreal.BlendMode.BLEND_MASKED, two_sided=True)
+    uv = g.node(unreal.MaterialExpressionTextureCoordinate)
+    base = g.tex("BaseTex", T("T_White"), S_COL, uv)
+    tint = g.vector("Tint", (1, 1, 1))
+    g.out(g.mul(base, tint, "RGB", ""), unreal.MaterialProperty.MP_BASE_COLOR)
+    nrm = g.tex("NormalTex", T("T_FlatNormal"), S_NRM, uv)
+    g.out(nrm, unreal.MaterialProperty.MP_NORMAL, "RGB")
+    orm = g.tex("ORMTex", T("T_DefaultMask"), S_MSK, uv)
+    use = g.scalar("UseORM", 0.0)
+    rough_tex = g.node(unreal.MaterialExpressionDotProduct)
+    g.link(orm, "RGB", rough_tex, "A")
+    g.link(g.vector("RoughChannel", (0, 1, 0)), "", rough_tex, "B")
+    metal_tex = g.node(unreal.MaterialExpressionDotProduct)
+    g.link(orm, "RGB", metal_tex, "A")
+    g.link(g.vector("MetalChannel", (0, 0, 1)), "", metal_tex, "B")
+    rough = g.lerp(g.scalar("Roughness", 0.8), rough_tex, use)
+    metal = g.lerp(g.scalar("Metallic", 0.0), g.mul(metal_tex, g.scalar("MetalScale", 1.0)), use)
+    g.out(rough, unreal.MaterialProperty.MP_ROUGHNESS)
+    g.out(metal, unreal.MaterialProperty.MP_METALLIC)
+    if foliage:
+        g.out(base, unreal.MaterialProperty.MP_OPACITY_MASK, "A")
+        try:
+            g.settings(opacity_mask_clip_value=0.4)
+        except Exception:  # noqa: BLE001
+            pass
+        # same gentle wind sway as M_DA_Foliage
+        wp = g.node(unreal.MaterialExpressionWorldPosition)
+        obj = g.node(unreal.MaterialExpressionObjectPositionWS)
+        t = g.node(unreal.MaterialExpressionTime)
+        wpx = g.one_input(unreal.MaterialExpressionComponentMask, wp, r=True, g=False, b=False, a=False)
+        wpy = g.one_input(unreal.MaterialExpressionComponentMask, wp, r=False, g=True, b=False, a=False)
+        phase = g.add(g.mul(t, g.scalar("WindSpeed", 1.4)), g.mul(g.add(wpx, wpy), g.const(0.004)))
+        sway = g.mul(g.one_input(unreal.MaterialExpressionSine, phase), g.scalar("WindAmount", 6.0))
+        wpz = g.one_input(unreal.MaterialExpressionComponentMask, wp, r=False, g=False, b=True, a=False)
+        objz = g.one_input(unreal.MaterialExpressionComponentMask, obj, r=False, g=False, b=True, a=False)
+        height = g.one_input(unreal.MaterialExpressionSaturate, g.mul(g.sub(wpz, objz), g.const(0.0012)))
+        amt = g.mul(sway, height)
+        xy = g.node(unreal.MaterialExpressionAppendVector)
+        g.link(amt, "", xy, "A")
+        g.link(g.mul(amt, g.const(0.6)), "", xy, "B")
+        xyz = g.node(unreal.MaterialExpressionAppendVector)
+        g.link(xy, "", xyz, "A")
+        g.link(g.const(0.0), "", xyz, "B")
+        g.out(xyz, unreal.MaterialProperty.MP_WORLD_POSITION_OFFSET)
+    return g.finish()
+
+
 TERRAIN_LAYERS = [
     # name, detail texture, normal texture (or None), tint (linear-ish), splat (texture, channel)
     ("Grass", "T_Grass", "T_Grass_N", (0.085, 0.20, 0.035), None),
@@ -446,7 +497,10 @@ KIND_PARENT = {
     "opaque": "M_DA_Master", "foliage": "M_DA_Foliage", "glass": "M_DA_Glass", "emissive": "M_DA_Emissive",
     "water": "M_DA_Water", "lava": "M_DA_Lava", "hologram": "M_DA_Hologram", "smoke": "M_DA_Smoke",
     "beam": "M_DA_Beam", "waterfall": "M_DA_Waterfall", "terrain": "M_DA_Terrain",
+    "pbr": "M_DA_PBR", "pbr_foliage": "M_DA_PBRFoliage",
 }
+
+CHANNEL = {"R": (1, 0, 0), "G": (0, 1, 0), "B": (0, 0, 1), "A": (0, 0, 0)}
 
 NIGHT_ONLY_EMISSIVE = {"M_LampGlow", "M_LighthouseLamp"}
 
@@ -483,6 +537,23 @@ def build_instances(palette, masters):
                     else:
                         MEL.set_material_instance_scalar_parameter_value(mi, "DetailStrength", 0.0)
                         MEL.set_material_instance_scalar_parameter_value(mi, "NormalStrength", 0.0)
+            elif kind in ("pbr", "pbr_foliage"):
+                MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
+                MEL.set_material_instance_scalar_parameter_value(mi, "Roughness", float(spec.get("rough", 0.8)))
+                MEL.set_material_instance_scalar_parameter_value(mi, "Metallic", float(spec.get("metallic", 0.0)))
+                for key, param in (("base", "BaseTex"), ("normal", "NormalTex"), ("orm", "ORMTex")):
+                    if spec.get(key):
+                        tex = T(spec[key])
+                        if tex:
+                            MEL.set_material_instance_texture_parameter_value(mi, param, tex)
+                        else:
+                            C.warn(f"{mi_name}: texture {spec[key]} missing")
+                if spec.get("orm") and T(spec["orm"]):
+                    MEL.set_material_instance_scalar_parameter_value(mi, "UseORM", 1.0)
+                    rc = spec.get("rough_channel", "G")
+                    MEL.set_material_instance_vector_parameter_value(mi, "RoughChannel", C.lc(CHANNEL.get(rc, (0, 1, 0))))
+                    # glTF packs metallic in B next to roughness in G; single-channel roughness maps carry no metal
+                    MEL.set_material_instance_scalar_parameter_value(mi, "MetalScale", 1.0 if rc == "G" else 0.0)
             elif kind == "glass":
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
                 MEL.set_material_instance_scalar_parameter_value(mi, "Opacity", float(spec.get("opacity", 0.25)))
@@ -525,7 +596,9 @@ def build_all(palette):
     for name, fn in (("M_DA_Master", build_master), ("M_DA_Foliage", build_foliage), ("M_DA_Glass", build_glass),
                      ("M_DA_Emissive", lambda: build_emissive(mpc)), ("M_DA_Water", build_water),
                      ("M_DA_Lava", build_lava), ("M_DA_Hologram", build_hologram), ("M_DA_Smoke", build_smoke),
-                     ("M_DA_Beam", build_beam), ("M_DA_Waterfall", build_waterfall), ("M_DA_Terrain", build_terrain)):
+                     ("M_DA_Beam", build_beam), ("M_DA_Waterfall", build_waterfall), ("M_DA_Terrain", build_terrain),
+                     ("M_DA_PBR", lambda: build_pbr("M_DA_PBR")),
+                     ("M_DA_PBRFoliage", lambda: build_pbr("M_DA_PBRFoliage", foliage=True))):
         try:
             masters[name] = fn()
         except Exception as e:  # noqa: BLE001

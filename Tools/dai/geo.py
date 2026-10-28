@@ -273,6 +273,11 @@ class MeshBuilder:
     def hip_roof(self, center, w, d, h, mat, overhang=0.6, ridge_frac=None, thick=0.25):
         """Hipped roof. ridge_frac: ridge length as fraction of (w-d); 0 -> pyramid."""
         cx, cy, cz = center
+        if d > w:
+            # keep the ridge along the long side
+            with self.at((cx, cy, cz), rot=90):
+                self.hip_roof((0, 0, 0), d, w, h, mat, overhang, ridge_frac, thick)
+            return
         hw, hd = w / 2 + overhang, d / 2 + overhang
         if ridge_frac is None:
             ridge = max(0.0, (w - d) / 2)
