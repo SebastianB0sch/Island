@@ -131,7 +131,8 @@ class Graph:
                 C.warn(f"{self.name}: setting {k}: {e}")
 
     def finish(self):
-        for flag in ("used_with_instanced_static_meshes", "used_with_nanite"):
+        # skeletal: the student's slots (PBR, plus the opaque/emissive duel disk) are instances of these masters
+        for flag in ("used_with_instanced_static_meshes", "used_with_nanite", "used_with_skeletal_mesh"):
             try:
                 self.mat.set_editor_property(flag, True)
             except Exception:  # noqa: BLE001

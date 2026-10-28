@@ -1,0 +1,26 @@
+{
+ "mesh": "Meshes/Characters/SK_Student.fbx",
+ "anims": {
+  "Idle": "Meshes/Characters/A_Student_Idle.fbx",
+  "Walk": "Meshes/Characters/A_Student_Walk.fbx",
+  "Run": "Meshes/Characters/A_Student_Run.fbx",
+  "Jump": "Meshes/Characters/A_Student_Jump.fbx"
+ },
+ "height_m": 1.72,
+ "duel_disk_bone": "LowerArm.L",
+ "materials": [
+  "MT_Student_Shirt",
+  "MT_Student_Skin",
+  "MT_Student_Pants",
+  "MT_Student_Eyes",
+  "MT_Student_Socks",
+  "MT_Student_Hair",
+  "MT_Student_DuelDisk",
+  "MT_Student_DuelGold",
+  "MT_Student_DuelGlow"
+ ],
+ "ground_speed": {
+  "Walk": 148.8,
+  "Run": 394.3
+ }
+}

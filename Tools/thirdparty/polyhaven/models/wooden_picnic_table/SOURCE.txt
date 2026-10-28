@@ -1,0 +1,24 @@
+asset_id: polyhaven_wooden_picnic_table
+title: Wooden Picnic Table (weathered A-frame table with benches) (Poly Haven)
+category: props
+main_file: wooden_picnic_table_1k.gltf
+catalog_use: SM_PicnicTable (primary)
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/wooden_picnic_table
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/wooden_picnic_table/wooden_picnic_table_1k.gltf
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/wooden_picnic_table/textures/wooden_picnic_table_bottom_arm_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/wooden_picnic_table/textures/wooden_picnic_table_bottom_diff_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/wooden_picnic_table/textures/wooden_picnic_table_bottom_nor_gl_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/wooden_picnic_table/textures/wooden_picnic_table_top_arm_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/wooden_picnic_table/textures/wooden_picnic_table_top_diff_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/wooden_picnic_table/textures/wooden_picnic_table_top_nor_gl_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/wooden_picnic_table/wooden_picnic_table.bin
+mirror_note: Poly Haven original 1k glTF export (generator 'Khronos glTF Blender I/O'), mirrored unmodified in a public GitHub repo because polyhaven.com / dl.polyhaven.org are blocked from this container.
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- quoted from https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/public/llms.txt (Poly Haven's own website repo, fetched 2026-10-28); the site license page source https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/pages/license.tsx (fetched) links the CC0 deed.
+author_evidence: https://raw.githubusercontent.com/WendyAmahle/cgv-3D-game/main/docs/credits.md
+stats: 10210 triangles, 1 mesh objects, 2 materials, native bbox 2.241 x 3.022 x 0.746 (Blender units after glTF import, Z up)
+modifications: none (files byte-identical to the mirror)
+notes: 10.2k tris; ~2.2 x 3.0 m footprint (rotate 90 deg to put the long side on X).
+date_retrieved: 2026-10-28

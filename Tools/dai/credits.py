@@ -12,7 +12,7 @@ from . import thirdparty
 FIELDS = {
     "author": ("author", "authors", "creator", "artist"),
     "license": ("license", "licence"),
-    "source": ("upstream source page", "upstream asset", "source page", "upstream", "original source", "source", "source url",
+    "source": ("upstream source page", "upstream asset", "original_source_page", "source page", "upstream", "original source", "source", "source url",
                "source_url", "homepage"),
     "title": ("asset_id", "asset", "name", "title"),
 }
@@ -23,7 +23,7 @@ def parse_source(path):
     attribution, in_attr = [], False
     with open(path, encoding="utf-8", errors="replace") as fp:
         for line in fp:
-            if re.match(r"^(required )?(attribution|credit)( text| line)?\b", line, re.I):
+            if re.match(r"^(required )?(attribution|credit)([ _](text|line))?\s*(\(.*\))?\s*:", line, re.I):
                 in_attr = True
                 rest = line.split(":", 1)[1].strip() if ":" in line else ""
                 if rest and not rest.startswith("("):
@@ -42,7 +42,10 @@ def parse_source(path):
                 if key in names and field not in out:
                     out[field] = val
     if attribution:
-        out["attribution"] = " ".join(attribution).strip('"')
+        text = " ".join(attribution).strip()
+        if text.startswith('"') and text.endswith('"') and text.count('"') == 2:
+            text = text[1:-1]
+        out["attribution"] = text
     return out
 
 

@@ -268,6 +268,8 @@ def cleanup_imported_materials():
 
 # --------------------------------------------------------------------------- skeletal student
 CHAR_DIR = C.ROOT + "/Characters"
+# cm/s the Walk / Run clips cover at play rate 1 after import (keep in sync with UDAAvatarComponent)
+REF_SPEED = {"Walk": 300.0, "Run": 600.0}
 
 
 def _skeletal_options(skeleton=None):
@@ -276,7 +278,7 @@ def _skeletal_options(skeleton=None):
     anim_only = skeleton is not None
     C.set_props(ui, import_mesh=not anim_only, import_as_skeletal=True, import_materials=False,
                 import_textures=False, import_animations=anim_only, create_physics_asset=False,
-                automated_import_should_detect_type=False)
+                automated_import_should_detect_type=False, override_full_name=True)
     try:
         ui.set_editor_property("mesh_type_to_import",
                                unreal.FBXImportType.FBXIT_ANIMATION if anim_only else unreal.FBXImportType.FBXIT_SKELETAL_MESH)
@@ -323,7 +325,13 @@ def import_character(materials):
     _set_fbx_interchange(False)
     try:
         _import_tasks([os.path.join(C.source_dir(), info["mesh"])], CHAR_DIR, _skeletal_options(), ["SK_Student"])
-        mesh = C.load(f"{CHAR_DIR}/SK_Student") or _find_in(CHAR_DIR, "SkeletalMesh")
+        mesh = C.load(f"{CHAR_DIR}/SK_Student")
+        if mesh is None:
+            # the importer may have named it after the FBX node: rename so the C++ side finds it
+            found = _find_in(CHAR_DIR, "SkeletalMesh")
+            if found is not None:
+                unreal.EditorAssetLibrary.rename_asset(found.get_path_name().split(".")[0], f"{CHAR_DIR}/SK_Student")
+                mesh = C.load(f"{CHAR_DIR}/SK_Student")
         if mesh is None:
             C.error("character: SK_Student failed to import")
             return None
@@ -338,6 +346,17 @@ def import_character(materials):
                     unreal.EditorAssetLibrary.rename_asset(seq.get_path_name().split(".")[0], f"{CHAR_DIR}/{name}")
             if not C.exists(f"{CHAR_DIR}/{name}"):
                 C.warn(f"character: animation {state} failed to import")
+                continue
+            # normalise each locomotion clip to a reference ground speed (UDAAvatarComponent::WalkAnimSpeed /
+            # RunAnimSpeed) using the speed measured by Tools/dai/character.py, so play rates match any rig
+            speed = info.get("ground_speed", {}).get(state)
+            ref = REF_SPEED.get(state)
+            if speed and ref:
+                seq = C.load(f"{CHAR_DIR}/{name}")
+                try:
+                    seq.set_editor_property("rate_scale", max(0.2, min(5.0, ref / float(speed))))
+                except Exception as e:  # noqa: BLE001
+                    C.warn(f"character: rate scale for {state}: {e}")
     finally:
         _set_fbx_interchange(True)
 

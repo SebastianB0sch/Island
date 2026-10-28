@@ -1,0 +1,21 @@
+asset_id: khronos_Lantern
+title: Lantern (old wooden street light with hanging lantern) - Khronos glTF Sample Assets
+category: props
+main_file: Lantern.gltf
+catalog_use: SM_LampPost_Old (primary: old/weathered lamp for the abandoned dorm; add rust tint in material)
+author: Microsoft (artist: sbtron)
+license: CC0-1.0
+original_source_page: https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Lantern
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF/Lantern.gltf
+  https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF/Lantern.bin
+  https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF/Lantern_baseColor.png
+  https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF/Lantern_emissive.png
+  https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF/Lantern_normal.png
+  https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF/Lantern_roughnessMetallic.png
+mirror_note: Official Khronos repository (raw.githubusercontent.com), glTF (non-Draco) variant.
+license_evidence: Models/Lantern/metadata.json (fetched, included): "license": "CC0-1.0", "artist": "sbtron", "owner": "Microsoft"; README.md (included): "(c) 2017, Microsoft. Creative Commons Zero v1.0 Universal" - summary "Old wooden street light."
+stats: 5394 triangles, 3 mesh objects, 1 materials, native bbox 15.491 x 4.631 x 25.664 (Blender units after glTF import, Z up)
+modifications: textures downscaled with Pillow LANCZOS to keep game budgets (file names/format unchanged; full-res originals at the URLs above): Lantern_baseColor.png: 2048x2048 -> 1024x1024; Lantern_emissive.png: 2048x2048 -> 1024x1024; Lantern_normal.png: 2048x2048 -> 1024x1024; Lantern_roughnessMetallic.png: 2048x2048 -> 1024x1024
+notes: 5.4k tris, PBR + emissive (2k PNGs downscaled to 1k). Native ~25.7 units tall - scale to ~4 m.
+date_retrieved: 2026-10-28

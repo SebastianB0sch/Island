@@ -1,0 +1,20 @@
+asset_id: polyhaven_Barrel_01
+title: Barrel 01 (red 200 l oil drum with hazard label) (Poly Haven)
+category: props
+main_file: Barrel_01_1k.gltf
+catalog_use: SM_Barrel (harbor oil drum)
+author: Jorge Camacho
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/Barrel_01
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/EliteGamer007/6dof-drone-sim/main/assets/polyhaven/models/Barrel_01/Barrel_01_1k.gltf
+  https://raw.githubusercontent.com/EliteGamer007/6dof-drone-sim/main/assets/polyhaven/models/Barrel_01/Barrel_01.bin
+  https://raw.githubusercontent.com/EliteGamer007/6dof-drone-sim/main/assets/polyhaven/models/Barrel_01/textures/Barrel_01_explosive_arm_1k.jpg
+  https://raw.githubusercontent.com/EliteGamer007/6dof-drone-sim/main/assets/polyhaven/models/Barrel_01/textures/Barrel_01_explosive_diff_1k.jpg
+  https://raw.githubusercontent.com/EliteGamer007/6dof-drone-sim/main/assets/polyhaven/models/Barrel_01/textures/Barrel_01_explosive_nor_gl_1k.jpg
+mirror_note: Poly Haven original 1k glTF export (generator 'Khronos glTF Blender I/O'), mirrored unmodified (EliteGamer007/6dof-drone-sim; an earlier mirror btn0s/deadwater had 256 px textures and was rejected) in a public GitHub repo because polyhaven.com / dl.polyhaven.org are blocked from this container.
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- quoted from https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/public/llms.txt (Poly Haven's own website repo, fetched 2026-10-28); the site license page source https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/pages/license.tsx (fetched) links the CC0 deed.
+author_evidence: https://raw.githubusercontent.com/Paraxdev/GodotTrench/main/godot/models/CREDITS.md
+stats: 2682 triangles, 1 mesh objects, 1 materials, native bbox 0.563 x 0.563 x 0.88 (Blender units after glTF import, Z up)
+modifications: none (files byte-identical to the mirror)
+date_retrieved: 2026-10-28

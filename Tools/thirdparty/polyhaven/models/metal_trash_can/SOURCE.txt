@@ -1,0 +1,25 @@
+asset_id: polyhaven_metal_trash_can
+title: Metal Trash Can (galvanised bins, clean + rusty variant in one file) (Poly Haven)
+category: props
+main_file: metal_trash_can_1k.gltf
+catalog_use: SM_TrashBin (harbor / old dorm, rusty variant suits the abandoned dorm)
+author: GurJas Studios
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/metal_trash_can
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/metal_trash_can/metal_trash_can_1k.gltf
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/metal_trash_can/metal_trash_can.bin
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/metal_trash_can/textures/metal_trash_can_arm_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/metal_trash_can/textures/metal_trash_can_diff_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/metal_trash_can/textures/metal_trash_can_nor_gl_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/metal_trash_can/textures/metal_trash_can_rust_arm_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/metal_trash_can/textures/metal_trash_can_rust_diff_1k.jpg
+  https://raw.githubusercontent.com/TheMarco/liminal/main/models/cc0/metal_trash_can/textures/metal_trash_can_rust_nor_gl_1k.jpg
+mirror_note: Poly Haven original 1k glTF export (generator 'Khronos glTF Blender I/O'), mirrored unmodified in a public GitHub repo because polyhaven.com / dl.polyhaven.org are blocked from this container.
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- quoted from https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/public/llms.txt (Poly Haven's own website repo, fetched 2026-10-28); the site license page source https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/pages/license.tsx (fetched) links the CC0 deed.
+author_evidence: https://raw.githubusercontent.com/chmajster/WroclawTheGame/main/SourceAssets/Models/PolyHaven/metal_trash_can/asset.json and npm @jgengine/assets@0.50.0 dist/catalogs/modelLibraryEntries.js
+integrity: diffuse texture md5-identical to the dl.polyhaven.org original recorded in https://raw.githubusercontent.com/chmajster/WroclawTheGame/main/SourceAssets/Models/PolyHaven/metal_trash_can/asset.json
+stats: 13960 triangles, 8 mesh objects, 3 materials, native bbox 1.778 x 0.556 x 0.906 (Blender units after glTF import, Z up)
+modifications: none (files byte-identical to the mirror)
+notes: File holds two cans + lids side by side (~7k tris each); split by object in the pipeline.
+date_retrieved: 2026-10-28

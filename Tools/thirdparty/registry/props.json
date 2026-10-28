@@ -1,0 +1,29 @@
+{
+  "_comment": "Street furniture, harbor and beach props. CC0: Poly Haven, Khronos glTF Sample Assets. CC BY 4.0: Sketchfab authors listed in CREDITS.md. Not covered (procedural): bollard, flagpoles, planter with shrub, duel dummy.",
+  "props": {
+    "SM_LampPost":       {"file": "polyhaven/models/street_lamp_01/street_lamp_01_1k.gltf", "height": 4.5, "max_tris": 8000, "collision": "trunk", "trunk_radius": 0.18},
+    "SM_LampPost_Old":   {"file": "khronos/Lantern/Lantern.gltf", "height": 4.0, "collision": "trunk", "trunk_radius": 0.2,
+                          "material_overrides": {"LanternPost_Mat": {"color": [0.72, 0.56, 0.45]}}},
+    "SM_Bench":          {"file": "sketchfab/city_props_vol2/scene.gltf", "include": ["bench_M_bench_wood"], "width": 2.0, "collision": "box"},
+    "SM_Signpost":       {"file": "sketchfab/signpost/scene.gltf", "height": 2.8, "collision": "trunk", "trunk_radius": 0.12},
+    "SM_TrashBin":       {"file": "polyhaven/models/metal_trash_can/metal_trash_can_1k.gltf", "include": ["metal_trash_can"], "exclude": ["rust", "lid"],
+                          "height": 1.0, "collision": "hull"},
+    "SM_Fence_Wood":     {"file": "sketchfab/wooden_fence/scene.gltf", "include": ["Cube_1_Mat"], "fit": [4.0, null, 1.1], "collision": "box"},
+    "SM_Fence_Iron":     {"file": "sketchfab/iron_fence/scene.gltf", "fit": [4.0, null, 2.0], "collision": "box"},
+    "SM_Crate":          {"file": "sketchfab/wooden_crate/scene.gltf", "width": 1.2, "collision": "box"},
+    "SM_Barrel":         {"file": "polyhaven/models/Barrel_01/Barrel_01_1k.gltf", "height": 0.9, "collision": "hull"},
+    "SM_Container_Red":    {"file": "sketchfab/container_20ft/scene.gltf", "include": ["ContainerLow.001"], "rotate": 90, "fit": [6.0, 2.4, 2.6],
+                            "collision": "box", "material_overrides": {"ContainerLow": {"color": [0.78, 0.16, 0.12]}}},
+    "SM_Container_Blue":   {"file": "sketchfab/container_20ft/scene.gltf", "include": ["ContainerLow.001"], "rotate": 90, "fit": [6.0, 2.4, 2.6],
+                            "collision": "box", "material_overrides": {"ContainerLow": {"color": [0.12, 0.32, 0.72]}}},
+    "SM_Container_Yellow": {"file": "sketchfab/container_20ft/scene.gltf", "include": ["ContainerLow.001"], "rotate": 90, "fit": [6.0, 2.4, 2.6],
+                            "collision": "box", "material_overrides": {"ContainerLow": {"color": [0.92, 0.72, 0.12]}}},
+    "SM_Rowboat":        {"file": "sketchfab/old_rowboat/scene.gltf", "rotate": 90, "width": 4.0, "collision": "hull"},
+    "SM_Buoy":           {"file": "polyhaven/models/ocean_buoy/ocean_buoy_1k.gltf", "height": 1.5, "origin": "keep", "max_tris": 5000, "collision": "hull"},
+    "SM_BeachUmbrella":  {"file": "sketchfab/beach_umbrella/scene.gltf", "height": 2.6, "collision": "trunk", "trunk_radius": 0.06},
+    "SM_BeachChair":     {"file": "sketchfab/beach_chair/scene.gltf", "width": 1.6, "collision": "box"},
+    "SM_VendingMachine": {"file": "sketchfab/jpn_vending_machine/scene.gltf", "height": 1.9, "max_tris": 8000, "collision": "box"},
+    "SM_StoneLantern":   {"file": "sketchfab/old_japanese_lamp/scene.gltf", "height": 1.6, "collision": "hull"},
+    "SM_PicnicTable":    {"file": "polyhaven/models/wooden_picnic_table/wooden_picnic_table_1k.gltf", "max_tris": 6000, "collision": "box"}
+  }
+}

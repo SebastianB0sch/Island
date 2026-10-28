@@ -1,0 +1,22 @@
+asset_id: sketchfab_old_japanese_lamp_marchoogkamp
+title: Old Japanese Lamp (stone toro lantern)
+category: props
+main_file: scene.gltf
+catalog_use: SM_StoneLantern (primary - all-stone toro)
+author: MarcHoogkamp
+license: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED
+attribution_text: "Old Japanese Lamp" (https://sketchfab.com/models/2d95746c71724633baf24d8066ecf8db) by MarcHoogkamp (https://sketchfab.com/MarcHoogkamp) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+original_source_page: https://sketchfab.com/models/2d95746c71724633baf24d8066ecf8db
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/Go3DGoGodot/Godot3D_Waving_tree_and_falling_leaves/main/models/lamp/scene.gltf
+  https://raw.githubusercontent.com/Go3DGoGodot/Godot3D_Waving_tree_and_falling_leaves/main/models/lamp/scene.bin
+  https://raw.githubusercontent.com/Go3DGoGodot/Godot3D_Waving_tree_and_falling_leaves/main/models/lamp/textures/RootNode_baseColor.png
+  https://raw.githubusercontent.com/Go3DGoGodot/Godot3D_Waving_tree_and_falling_leaves/main/models/lamp/textures/RootNode_emissive.png
+  https://raw.githubusercontent.com/Go3DGoGodot/Godot3D_Waving_tree_and_falling_leaves/main/models/lamp/textures/RootNode_metallicRoughness.png
+  https://raw.githubusercontent.com/Go3DGoGodot/Godot3D_Waving_tree_and_falling_leaves/main/models/lamp/textures/RootNode_normal.png
+mirror_note: Sketchfab download (glTF + textures) mirrored in a public GitHub repo; sketchfab.com is blocked from this container.
+license_evidence: Sketchfab download metadata embedded in the delivered glTF (asset.extras written by Sketchfab at download time): {"author": "MarcHoogkamp (https://sketchfab.com/MarcHoogkamp)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/models/2d95746c71724633baf24d8066ecf8db", "title": "Old Japanese Lamp"}
+stats: 1100 triangles, 2 mesh objects, 1 materials, native bbox 5.294 x 5.294 x 12.669 (Blender units after glTF import, Z up)
+modifications: none (files byte-identical to the mirror)
+notes: 1.1k tris, PBR 1k textures incl. emissive for the light box. Native ~12.7 units tall - scale to ~1.6 m.
+date_retrieved: 2026-10-28

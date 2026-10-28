@@ -1,0 +1,22 @@
+asset_id: polyhaven_ocean_buoy
+title: Ocean Buoy (red navigation buoy with light cage, 2.7 m incl. counterweight) (Poly Haven)
+category: props
+main_file: ocean_buoy_1k.gltf
+catalog_use: SM_Buoy (harbor channel marker)
+author: Mateusz Sadek
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/ocean_buoy
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/2600th/web-ocean-3d/main/public/models/ocean_buoy/ocean_buoy_1k.gltf
+  https://raw.githubusercontent.com/2600th/web-ocean-3d/main/public/models/ocean_buoy/ocean_buoy.bin
+  https://raw.githubusercontent.com/2600th/web-ocean-3d/main/public/models/ocean_buoy/textures/ocean_buoy_arm_1k.jpg
+  https://raw.githubusercontent.com/2600th/web-ocean-3d/main/public/models/ocean_buoy/textures/ocean_buoy_diff_1k.jpg
+  https://raw.githubusercontent.com/2600th/web-ocean-3d/main/public/models/ocean_buoy/textures/ocean_buoy_emission_1k.jpg
+  https://raw.githubusercontent.com/2600th/web-ocean-3d/main/public/models/ocean_buoy/textures/ocean_buoy_nor_gl_1k.jpg
+mirror_note: Poly Haven original 1k glTF export (generator 'Khronos glTF Blender I/O'), mirrored unmodified in a public GitHub repo because polyhaven.com / dl.polyhaven.org are blocked from this container.
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- quoted from https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/public/llms.txt (Poly Haven's own website repo, fetched 2026-10-28); the site license page source https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/pages/license.tsx (fetched) links the CC0 deed.
+author_evidence: https://raw.githubusercontent.com/Paraxdev/GodotTrench/main/godot/models/CREDITS.md
+stats: 12240 triangles, 1 mesh objects, 1 materials, native bbox 1.067 x 0.952 x 2.656 (Blender units after glTF import, Z up)
+modifications: none (files byte-identical to the mirror)
+notes: 12.2k tris; origin at waterline (min z -0.81 = underwater counterweight). Catalog asks ~1.5 m: scale ~0.6 or use as large channel buoy.
+date_retrieved: 2026-10-28

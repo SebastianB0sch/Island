@@ -81,6 +81,18 @@ bool UDAAvatarComponent::SetupSkeletal()
 	SkelComp->SetCanEverAffectNavigation(false);
 	SkelComp->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 	SkelComp->RegisterComponent();
+	// the duel disk is skinned into the mesh (slots MT_Student_Duel*); hide it for students without one
+	if (!bShowDuelDisk)
+	{
+		const TArray<FName> Slots = SkelComp->GetMaterialSlotNames();
+		for (int32 i = 0; i < Slots.Num(); ++i)
+		{
+			if (Slots[i].ToString().Contains(TEXT("Duel")))
+			{
+				SkelComp->ShowMaterialSection(i, INDEX_NONE, false, 0);
+			}
+		}
+	}
 	SetRelativeScale3D(FVector(BodyScale));
 	return true;
 }
@@ -106,15 +118,15 @@ void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool b
 	{
 		Want = TEXT("Jump");
 	}
-	else if (GroundSpeed > 560.f && FindAnim(TEXT("Run")))
+	else if (GroundSpeed > RunThreshold && FindAnim(TEXT("Run")))
 	{
 		Want = TEXT("Run");
-		Rate = FMath::Clamp(GroundSpeed / 750.f, 0.8f, 1.4f);
+		Rate = FMath::Clamp(GroundSpeed / FMath::Max(RunAnimSpeed, 1.f), 0.7f, 2.0f);
 	}
 	else if (GroundSpeed > 20.f && FindAnim(TEXT("Walk")))
 	{
 		Want = TEXT("Walk");
-		Rate = FMath::Clamp(GroundSpeed / 320.f, 0.45f, 1.6f);
+		Rate = FMath::Clamp(GroundSpeed / FMath::Max(WalkAnimSpeed, 1.f), 0.45f, 2.0f);
 	}
 	else if (DuelPoseAlpha > 0.5f && FindAnim(TEXT("Wave")))
 	{
@@ -129,9 +141,12 @@ void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool b
 		}
 	}
 	SkelComp->SetPlayRate(Rate);
-	// lean the whole body forward while swimming
-	SkelComp->SetRelativeRotation(FRotator(0.f, 0.f, -70.f * SwimAlpha));
-	SkelComp->SetRelativeLocation(FVector(0.0, 0.0, 60.0 * SwimAlpha));
+	// Swimming: lay the body prone about the hips. The mesh faces +Y in avatar space and a positive roll tips
+	// +Z towards +Y (FRotationMatrix), i.e. forwards; then lift the hips to just under the water surface.
+	static const FVector Hip(0.0, 0.0, 95.0);
+	const FRotator Lean(0.f, 0.f, 80.f * SwimAlpha);
+	SkelComp->SetRelativeRotation(Lean);
+	SkelComp->SetRelativeLocation(Hip - Lean.RotateVector(Hip) + FVector(0.0, 0.0, 30.0 * SwimAlpha));
 }
 
 void UDAAvatarComponent::BeginPlay()

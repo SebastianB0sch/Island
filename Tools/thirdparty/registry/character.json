@@ -5,7 +5,7 @@
       "file": "quaternius/worker/worker.glb",
       "height": 1.72,
       "exclude": ["Icosphere"],
-      "anims": {"Idle": "Man_Idle", "Walk": "Man_Walk", "Run": "Man_Run", "Jump": "Man_Jump", "Wave": "Man_Clapping"},
+      "anims": {"Idle": "Man_Idle", "Walk": "Man_Walk", "Run": "Man_Run", "Jump": "Man_Jump"},
       "material_overrides": {"Shirt": {"color": [1.0, 1.0, 1.0]}}
     }
   }

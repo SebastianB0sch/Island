@@ -896,6 +896,30 @@
   "category": "prop"
  },
  {
+  "file": "Meshes/Props/SM_Driftwood_A.fbx",
+  "name": "SM_Driftwood_A",
+  "folder": "Props",
+  "collision": "simple",
+  "nanite": true,
+  "category": "prop"
+ },
+ {
+  "file": "Meshes/Props/SM_Stump_A.fbx",
+  "name": "SM_Stump_A",
+  "folder": "Props",
+  "collision": "simple",
+  "nanite": true,
+  "category": "prop"
+ },
+ {
+  "file": "Meshes/Props/SM_Pebbles_A.fbx",
+  "name": "SM_Pebbles_A",
+  "folder": "Props",
+  "collision": "simple",
+  "nanite": true,
+  "category": "prop"
+ },
+ {
   "file": "Meshes/Characters/SM_Avatar_Torso.fbx",
   "name": "SM_Avatar_Torso",
   "folder": "Characters",

@@ -69,6 +69,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	bool bPreferSkeletal = true;
 
+	/** Ground speed (cm/s) the Walk / Run clips cover at play rate 1. The editor import normalises every clip to
+	 *  these via its RateScale (measured per rig by Tools/dai/character.py), so feet don't skate. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float WalkAnimSpeed = 300.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float RunAnimSpeed = 600.f;
+
+	/** Above this ground speed (cm/s) the skeletal student runs instead of walking. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float RunThreshold = 560.f;
+
 	/** Material slot name fragments recoloured with the dorm colour on the skeletal student. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	TArray<FString> JacketSlotKeywords = { TEXT("jacket"), TEXT("blazer"), TEXT("coat"), TEXT("shirt"), TEXT("uniform"), TEXT("top") };
