@@ -1,4 +1,7 @@
 ASSET SET: Realistic procedural trees/bushes generated with EZ-Tree (headless) - Duel Academy Island
+AUTHOR: Daniel Greenheck (EZ-Tree generator and leaf textures); bark: Poly Haven (bark_brown_02, bark_willow_02), TextureCan (#588)
+LICENSE: MIT (EZ-Tree code + bundled leaf textures; keep generator/LICENSE_ez-tree_MIT.txt) + CC0 1.0 (bark textures)
+SOURCE PAGE: https://github.com/dgreenheck/ez-tree (npm @dgreenheck/ez-tree 1.1.0)
 CATEGORY: vegetation
   SM_BroadTree_A_ez.gltf      -> SM_BroadTree_A  round-canopy broadleaf, 12 m, 24,230 tris (oak leaves)
   SM_BroadTree_A_ash_ez.gltf  -> SM_BroadTree_A  alt: same shape family with pinnate "ash" leaves (more tropical look), 24,230 tris
@@ -13,7 +16,8 @@ CATEGORY: vegetation
    [R=AO,G=roughness,B=metal 0]) and MI_EzLeaves_<type> (alpha MASK, two-sided). Heights were normalised by the generator.)
 
 GENERATOR: @dgreenheck/ez-tree 1.1.0 by Daniel Greenheck - https://github.com/dgreenheck/ez-tree , https://eztree.dev
-  npm tarball: https://registry.npmjs.org/@dgreenheck/ez-tree/-/ez-tree-1.1.0.tgz (downloaded 2026-10-28)
+  npm tarball: https://registry.npmjs.org/@dgreenheck/ez-tree/-/ez-tree-1.1.0.tgz (downloaded 2026-10-28,
+    sha1 b3426d04d536825e067eb6292c909824dc942ac3 = registry dist.shasum)
   three.js 0.169.0 (MIT) from https://registry.npmjs.org/three/-/three-0.169.0.tgz used as runtime only.
   Ran headless in Node 22: generator/lib is ez-tree's src/lib with (a) '.js' import suffixes, (b) textures.js replaced
   by a stub (no image loading), (c) presets/index.js reading the JSON presets with fs. generator/gen.mjs (our code)
@@ -28,16 +32,19 @@ LICENSES / EVIDENCE:
     Permission is hereby granted, free of charge, ... to deal in the Software without restriction ...".
     The generated meshes are output of the tool (procedural geometry); keep the MIT notice with the generator files.
   * Leaf textures textures/{oak,ash,pine}_color.png: shipped in the MIT package (src/lib/assets/leaves/), no separate
-    source stated -> covered by the package's MIT license (record notice above).
+    source stated -> covered by the package's MIT license (record notice above). prep_eztex.py re-saves them from
+    palette PNG to RGBA PNG; pixels are identical to the package files (verified).
   * Bark textures (from src/lib/assets/bark/, README kept as textures/BARK_SOURCES_README.md):
       "Oak - https://polyhaven.com/a/bark_brown_02"     -> Poly Haven, CC0 1.0  (oak_color/normal/orm_1k)
       "Willow - https://polyhaven.com/a/bark_willow_02" -> Poly Haven, CC0 1.0  (willow_*; used for the dead tree)
       "Pine - https://www.texturecan.com/details/588/"  -> TextureCan, CC0 1.0  (pine_*; used for the pine)
     Poly Haven license quote (as recorded in raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md):
       "All assets on Poly Haven are licensed as CC0, which is the same as public domain ... without attribution or permission."
-    TextureCan terms (https://texturecan.com/terms/, via web search 2026-10-28): "All the PBR textures, graphics and photos
-      offered by TextureCan.com are under the Creative Commons CC0 1.0 Universe License ... can be used for any purposes,
-      including commercial use. Attribution isn't required".
+    TextureCan terms (https://www.texturecan.com/terms/ - blocked from this container), as quoted in
+      raw.githubusercontent.com/McFredward/GloomhavenVR/main/unity/GloomhavenVR.Assets/Assets/Bundle/Environments/License.md:
+      "All the PBR textures ... are under the Creative Commons CC0 1.0 Universe License ... The textures are allowed to be
+      redistributed together with your projects."  Also 117HD/RLHD textures/000_licenses.txt: "TextureCan. All textures on
+      this site are licensed as CC0."
   * ORM PNGs were packed by us from the package's *_ao_1k.jpg + *_roughness_1k.jpg (prep_eztex.py).
 
 TECH NOTES: all 9 files imported in Blender 5.2 without missing images; previews/ has Cycles renders.
@@ -45,3 +52,19 @@ TECH NOTES: all 9 files imported in Blender 5.2 without missing images; previews
   consider spherical (crown-centre) normals or a two-sided foliage shading model + subsurface. Leaf tint is applied
   as baseColorFactor (0xE8FFBF) - texture itself unchanged.
 DATE: 2026-10-28
+
+AUDIT (independent re-verification, 2026-10-28):
+  - Re-downloaded ez-tree-1.1.0.tgz from registry.npmjs.org: package.json "license": "MIT", "author": "Daniel Greenheck";
+    LICENSE identical to generator/LICENSE_ez-tree_MIT.txt; src/lib/assets/bark/README.md identical to
+    textures/BARK_SOURCES_README.md (Oak = polyhaven bark_brown_02, Willow = polyhaven bark_willow_02, Pine = texturecan 588).
+  - textures/*_color_1k.jpg and *_normal_1k.jpg byte-identical to the package; *_orm_1k.png exactly equal to
+    merge(ao, roughness, 0) of the package maps; leaf PNGs pixel-identical. Only oak/willow/pine bark and oak/ash/pine
+    leaves are referenced by the glTFs (birch/aspen not shipped).
+  - generator/lib: branch/enums/rng/trellis.js identical to the package; index/options/tree/textures.js locally modified
+    as described above.
+  - Blender 5.2 bpy import: BroadTree_A(+ash) 24,230 | BroadTree_B(+ash) 21,044 | BroadTree_C 12,750 | PineTree_A 19,392 |
+    DeadTree_A 3,910 | Bush_A 6,760 | Bush_B 4,160 tris; heights 12 / 16 / 6 / 14 / 9 / 1.6 / 1.0 m; all textures open.
+  VERDICT: ACCEPTED - MIT (keep the copyright + permission notice) + CC0 bark.
+CREDIT LINE:
+  Trees generated with EZ-Tree by Daniel Greenheck (https://github.com/dgreenheck/ez-tree), MIT License, Copyright (c) 2024
+  Daniel Greenheck. Bark textures: Poly Haven bark_brown_02 and bark_willow_02 (CC0), TextureCan #588 (CC0).

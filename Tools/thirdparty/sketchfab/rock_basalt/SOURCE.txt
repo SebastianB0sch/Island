@@ -32,3 +32,10 @@ files:
   - textures/Material.003_baseColor.png  4533234 bytes  sha256=16389081794b7133271025a549eeee8d3cd823051a33d1df970e08b55072d03f
   - textures/Material.003_metallicRoughness.png  1849377 bytes  sha256=90a9dd606e141e0ca45a5e9428d7a6c733d0bcdbc1ed4c1664cf2be427f0a855
   - textures/Material.003_normal.png  5328467 bytes  sha256=703e855d98020b95d07e4bc94affeca10034b4a29bec21baf20f06f0a4d182b8
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: scene.gltf 23,092.
+  license: CC-BY-4.0 CONFIRMED (attribution required). Re-fetched license.txt (identical) and scene.gltf (identical; Sketchfab-12.67.0 extras say CC-BY-4.0). Independent corroboration: MissionToPsyche/2022_01d_ar_webxr Experiences/materials-exp-src/src/models/iron/ holds a byte-identical scene.gltf (sha256 ad050737...) with the same CC-BY-4.0 license.txt; DriekvanderMeulen/cmd-speculative has the same license.txt too. Not Sketchfab Standard, not NC/ND.
+  verdict: ACCEPT (CC-BY-4.0). Exact credit line for CREDITS.md:
+    This work is based on "Rock - Basalt" (https://sketchfab.com/3d-models/rock-basalt-9c42ca8140994bfca5029cf61b431214) by yonimantz (https://sketchfab.com/yonimantz09) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

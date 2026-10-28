@@ -49,3 +49,11 @@ files:
   - textures/mountainside_arm_1k.jpg  791031 bytes  sha256=8e81fdefb8c3a64e763d266c3c4025cc4c04287b81f250dc777025a64caf5f75
   - textures/mountainside_diff_1k.jpg  942046 bytes  sha256=e4613465418060de6b5f536820d04e0e945a88d87168f3fa4ce9da662ebc1696
   - textures/mountainside_nor_gl_1k.jpg  1240239 bytes  sha256=1eec8a8f32a2e61fb3ca431ddb1f364ea49cfead59369da3e7466cf7ddcb49e9
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: mountainside_1k.gltf 153,472.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  Second mirror re-checked: .bin + diff MATCH Mainframe-Games/mainframe-engine; its .gltf differs only by edits (identical accessor counts 80,238 verts / 460,416 indices, bbox and bin byteLength 4,409,280).
+  note: the snapshot's last column (287,755) is Poly Haven's polycount metadata, not this 1k glTF's triangle count; the same kind of gap appears on assets whose glTF is byte-identical across independent mirrors, so it is not evidence of modification.
+  verdict: ACCEPT (CC0-1.0, no attribution required).

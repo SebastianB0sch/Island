@@ -55,3 +55,11 @@ files:
   - textures/coast_rocks_05_arm_1k.jpg  893696 bytes  sha256=26b851f13a6e00500440d964393bee8aa1865660777c05b9082bdb12c43a23b6
   - textures/coast_rocks_05_diff_1k.jpg  954605 bytes  sha256=2ec4ec09422a14d55cc890ad902486cf76df8e663688fbc32f78a15684646ee1
   - textures/coast_rocks_05_nor_gl_1k.jpg  1327762 bytes  sha256=5d32e03ea42abc05dd913e7ead4e915d9d60f27c8942f75128a87f84e7baee9d
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: coast_rocks_05_low.gltf 1,320, coast_rocks_05_mid.gltf 2,993, coast_rocks_05_web.gltf 29,903.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  rocket-mission-lab ATTRIBUTION.md re-fetched ('These assets are CC0'; meshoptimizer LODs). Raw index counts 29,985 / 2,995 / 1,322 tris match that file exactly (Blender drops a few degenerate tris -> 29,903 / 2,993 / 1,320). The LODs are mechanical simplifications (no new creative authorship); the host repo has no LICENSE file of its own. Second mirror re-checked: diff texture MATCH lychees/threejs-water-1.
+  note: the snapshot's last column (1,446,981) is Poly Haven's polycount metadata, not this 1k glTF's triangle count; the same kind of gap appears on assets whose glTF is byte-identical across independent mirrors, so it is not evidence of modification.
+  verdict: ACCEPT (CC0-1.0, no attribution required).

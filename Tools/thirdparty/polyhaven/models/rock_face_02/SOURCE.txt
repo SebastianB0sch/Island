@@ -51,3 +51,10 @@ files:
   - textures/rock_face_02_arm_1k.jpg  820389 bytes  sha256=0f3f64b9f56e3c5cecbb99e45d8fa0d4cbf025d4455439d1c5f6672a408365ee
   - textures/rock_face_02_diff_1k.jpg  920193 bytes  sha256=d777f2c9b598773c2143751c34913cf5eef0ae392af31fb73c28b98afab6fb7b
   - textures/rock_face_02_nor_gl_1k.jpg  1082942 bytes  sha256=a9dc200810f5488395fdc928b5a9441c007c33047d0375d946f33dcd2ff1c853
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: rock_face_02_1k.gltf 29,566.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  srijibbose asset-licenses.json re-fetched: {sourceUrl: polyhaven.com/a/rock_face_02, license: CC0}. Second mirror re-checked: .bin + diff/nor_gl/arm MATCH Mainframe-Games/mainframe-engine (LFS).
+  verdict: ACCEPT (CC0-1.0, no attribution required).

@@ -2,6 +2,7 @@ ASSET: Poly Haven "Anthurium Botany 01" (anthurium_botany_01), 1k glTF
 CATEGORY: vegetation -> tropical broadleaf undergrowth; scaled x2.5-3 it is a lush jungle bush (SM_Bush_A/B tropical alternative)
 AUTHOR: Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven)
 ORIGINAL PAGE: https://polyhaven.com/a/anthurium_botany_01   (polyhaven.com / dl.polyhaven.org are blocked from this container)
+SOURCE PAGE: https://polyhaven.com/a/anthurium_botany_01
 LICENSE: CC0 1.0 Universal (public domain). Attribution not required (credit appreciated).
 
 DOWNLOADED FROM (2026-10-28, all HTTP 200, non-HTML; byte-for-byte Poly Haven 1k glTF export mirrored on GitHub):
@@ -20,3 +21,16 @@ LICENSE EVIDENCE:
 
 TECH NOTES (Blender 5.2 import OK, no missing images): 6 variants (a-f) in one file, 7.7k-15.8k tris each (67k total), ~0.5 m tall. Leaves are cut geometry (no alpha needed). Leaves only - no flowers.
 DATE: 2026-10-28
+
+AUDIT (independent re-verification, 2026-10-28):
+  - Re-fetched the mirror files listed above: byte-identical to the files kept here (the .gltf differs only by the
+    documented LOCAL MODIFICATION, if any). Integrity vs Poly Haven: diff and nor_gl jpg match the Poly Haven API md5 values in yosnap/habiteka-app
+    public/models/habiteka/manifest/plantas.json (no published md5 found for the 1k gltf/bin/arm; same mirror
+    folder as fern_02/calathea/periwinkle, whose files all match).
+  - Licence: "All assets on Poly Haven are licensed as CC0, which is the same as public domain" (polyhaven.com/license,
+    quoted in 2600th/web-ocean-3d ASSET_LICENSES.md); Poly Haven API ToS: "our 3D assets themselves are published under
+    the CC0 license". Authors confirmed by the Poly Haven API snapshots cited above.
+  - Blender 5.2 bpy import: 67,152 tris, 6 objects, ~0.50 m tall; JPG diffuse (no alpha) and the preview shows cleanly cut leaves; all textures open.
+  VERDICT: ACCEPTED - CC0 1.0, no attribution required.
+CREDIT LINE (courtesy, optional):
+  "Anthurium Botany 01" by Rob Tuytel and Rico Cilliers, Poly Haven (https://polyhaven.com/a/anthurium_botany_01), CC0 1.0.

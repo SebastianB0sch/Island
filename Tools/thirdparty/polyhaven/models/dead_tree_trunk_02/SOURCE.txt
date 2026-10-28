@@ -47,3 +47,11 @@ files:
   - textures/dead_tree_trunk_02_arm_1k.jpg  805609 bytes  sha256=ea15561ce36572ebd0db3c997f70d68a76d4bcbfef7efb4f91c8fd3b5f766e62
   - textures/dead_tree_trunk_02_diff_1k.jpg  932059 bytes  sha256=fac23e81ab5639dcde93db605e5dd94c65e0aa2b1fb4a303f37de9afbb9af5b4
   - textures/dead_tree_trunk_02_nor_gl_1k.jpg  1192056 bytes  sha256=9b26c29b89afced0ddb91dbe6f917e59038bed5ba6076dfceb8d1b4b00ca04f7
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: dead_tree_trunk_02_1k.gltf 83,128.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  ayoub5550 CREDITS.md lists dead_tree_trunk_02 under 'Poly Haven (CC0)'. Second mirror re-checked: gltf + diff MATCH ayoub5550/inside-copy-.
+  note: the snapshot's last column (155,864) is Poly Haven's polycount metadata, not this 1k glTF's triangle count; the same kind of gap appears on assets whose glTF is byte-identical across independent mirrors, so it is not evidence of modification.
+  verdict: ACCEPT (CC0-1.0, no attribution required).

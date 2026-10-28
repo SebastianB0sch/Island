@@ -48,3 +48,11 @@ files:
   - textures/boulder_01_arm_1k.jpg  659386 bytes  sha256=c57187c5746b6be913fa53846cb44ff78743e7ca5000f131c9627b99563c2b87
   - textures/boulder_01_diff_1k.jpg  987467 bytes  sha256=c38f0e918f6dc16b8d386ba3cdd89805c78320c119a1ceec85856f82b09a65b8
   - textures/boulder_01_nor_gl_1k.jpg  1183552 bytes  sha256=0810cf6e89d89bb6eb065b4d2e2855288f5dcbd2c15c6e40ab90d462021b50aa
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: boulder_01_1k.gltf 66,122.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  long-wind CREDITS.md re-fetched: lists 'model: boulder_01' under Poly Haven CC0. Second mirror re-checked: gltf + diff MATCH awplanets/awplanet.
+  note: the snapshot's last column (123,976) is Poly Haven's polycount metadata, not this 1k glTF's triangle count; the same kind of gap appears on assets whose glTF is byte-identical across independent mirrors, so it is not evidence of modification.
+  verdict: ACCEPT (CC0-1.0, no attribution required).

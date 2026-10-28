@@ -46,3 +46,11 @@ files:
   - textures/rock_09_arm_1k.jpg  322950 bytes  sha256=594e2cec49e6bb40bd9bab2649e37dcc261079456cf4d6f680f56770c19db5ea
   - textures/rock_09_diff_1k.jpg  595103 bytes  sha256=afb7ae5ae82238d304aba589391ac6bc87f7cf1dbfe50980c21f762cfdd87efd
   - textures/rock_09_nor_gl_1k.jpg  757031 bytes  sha256=2195b5c7da3a23af2a5f93dbb20f38bc069028509b106397bc8d2aee0bc55729
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: rock_09_1k.gltf 12,416.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  long-wind CREDITS.md lists 'model: rock_09'. Second mirror re-checked: gltf + diff MATCH NeilGilani/sendit.
+  note: the snapshot's last column (23,280) is Poly Haven's polycount metadata, not this 1k glTF's triangle count; the same kind of gap appears on assets whose glTF is byte-identical across independent mirrors, so it is not evidence of modification.
+  verdict: ACCEPT (CC0-1.0, no attribution required).

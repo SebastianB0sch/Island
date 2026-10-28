@@ -48,3 +48,11 @@ files:
   - textures/stone_01_arm_1k.jpg  846334 bytes  sha256=1cb342823b2883e9885bf7bfe0ed12cd897d2f99a49d3c25b5e2c8f30f38263e
   - textures/stone_01_diff_1k.jpg  649135 bytes  sha256=c3171a6108bf1b3656b4a3576b329065d7acf6e337506a9e1a15511300c8fc88
   - textures/stone_01_nor_gl_1k.jpg  1012665 bytes  sha256=4d08a934f846913e96152260c824f7d5e642350ede76569ce82d6dc50c45f535
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: stone_01_1k.gltf 53,520.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  long-wind CREDITS.md and awplanet LICENSE.md list stone_01. Second mirror re-checked: gltf + diff MATCH awplanets/awplanet.
+  note: the snapshot's last column (71,916) is Poly Haven's polycount metadata, not this 1k glTF's triangle count; the same kind of gap appears on assets whose glTF is byte-identical across independent mirrors, so it is not evidence of modification.
+  verdict: ACCEPT (CC0-1.0, no attribution required).

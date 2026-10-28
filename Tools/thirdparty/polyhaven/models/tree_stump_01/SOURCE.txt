@@ -48,3 +48,10 @@ files:
   - textures/tree_stump_01_nor_gl_1k.jpg  1238404 bytes  sha256=425117514b0386bb6df41cb64a61a624d2596472e05777483d4021b3285e3ceb
   - tree_stump_01.bin  965380 bytes  sha256=b4d9ca70b3c908c4a638fbd6a23ed96c84055bbbf14cf44b89e31ad59fa21e0a
   - tree_stump_01_1k.gltf  2793 bytes  sha256=9c66ba87d693f35eb404acaa96e0eeff831c295b61a0a903795584cbcc3527c9
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: tree_stump_01_1k.gltf 41,046.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  awplanet polyhaven/LICENSE.md lists tree_stump_01. Second mirror re-checked: gltf + diff MATCH null-value7/Athernix (LFS).
+  verdict: ACCEPT (CC0-1.0, no attribution required).
