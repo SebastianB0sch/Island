@@ -131,10 +131,11 @@ class Graph:
                 C.warn(f"{self.name}: setting {k}: {e}")
 
     def finish(self):
-        try:
-            self.mat.set_editor_property("used_with_instanced_static_meshes", True)
-        except Exception:  # noqa: BLE001
-            pass
+        for flag in ("used_with_instanced_static_meshes", "used_with_nanite"):
+            try:
+                self.mat.set_editor_property(flag, True)
+            except Exception:  # noqa: BLE001
+                pass
         MEL.layout_material_expressions(self.mat)
         MEL.recompile_material(self.mat)
         unreal.EditorAssetLibrary.save_loaded_asset(self.mat)

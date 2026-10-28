@@ -11,6 +11,7 @@
 class USceneComponent;
 class UStaticMeshComponent;
 class UMaterialInstanceDynamic;
+class UMaterialInterface;
 class UPointLightComponent;
 class UBillboardComponent;
 

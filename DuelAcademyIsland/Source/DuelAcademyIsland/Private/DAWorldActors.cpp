@@ -13,6 +13,7 @@
 #include "Engine/CollisionProfile.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Sound/SoundBase.h"
@@ -174,6 +175,7 @@ void ADAEmitter::Tick(float DeltaSeconds)
 
 	// Wind: a slow lean so smoke plumes drift.
 	const FVector Wind(160.0, 60.0, 0.0);
+	Transforms.SetNum(Particles.Num(), EAllowShrinking::No);
 	for (int32 i = 0; i < Particles.Num(); ++i)
 	{
 		FPuff& P = Particles[i];
@@ -186,10 +188,11 @@ void ADAEmitter::Tick(float DeltaSeconds)
 		const FVector Pos = P.Start + P.Velocity * P.Age + Wind * (Kind == EDAEmitterKind::Smoke ? T * T * EffectScale : 0.f);
 		const float Size = FMath::Lerp(P.Size0, P.Size1, FMath::Sqrt(T));
 		const float Opacity = MaxOpacity * FMath::Pow(FMath::Sin(T * PI), 0.8f);
-		Puffs->UpdateInstanceTransform(i, FTransform(FQuat::Identity, Pos, FVector(Size)), false, false, true);
+		Transforms[i] = FTransform(FQuat::Identity, Pos, FVector(Size));
 		Puffs->SetCustomDataValue(i, 0, Opacity, false);
 	}
-	Puffs->MarkRenderStateDirty();
+	// one batched update per frame (marks the render state dirty once)
+	Puffs->BatchUpdateInstancesTransforms(0, Transforms, false, true, true);
 }
 
 // ======================================================================== ADALighthouseBeam

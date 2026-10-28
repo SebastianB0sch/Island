@@ -137,7 +137,11 @@ def _fbx_options(nanite):
 def _set_fbx_interchange(enabled):
     """UE 5.5+ routes FBX through Interchange; the legacy importer honours our explicit options."""
     try:
-        unreal.SystemLibrary.execute_console_command(None, f"Interchange.FeatureFlags.Import.FBX {1 if enabled else 0}")
+        world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
+    except Exception:  # noqa: BLE001
+        world = None
+    try:
+        unreal.SystemLibrary.execute_console_command(world, f"Interchange.FeatureFlags.Import.FBX {1 if enabled else 0}")
     except Exception:  # noqa: BLE001
         pass
 

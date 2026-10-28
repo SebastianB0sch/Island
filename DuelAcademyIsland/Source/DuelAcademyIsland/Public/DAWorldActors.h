@@ -129,6 +129,7 @@ private:
 	void Respawn(FPuff& P, bool bInitial);
 
 	TArray<FPuff> Particles;
+	TArray<FTransform> Transforms;
 	FRandomStream Rng;
 	float Rise = 300.f;
 	float Spread = 100.f;

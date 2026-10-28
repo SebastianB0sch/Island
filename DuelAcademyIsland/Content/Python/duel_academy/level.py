@@ -72,14 +72,14 @@ class Placer:
         sc = sun.get_component_by_class(unreal.DirectionalLightComponent)
         sc.set_mobility(unreal.ComponentMobility.MOVABLE)
         C.set_props(sc, intensity=10.0, atmosphere_sun_light=True, atmosphere_sun_light_index=0,
-                    light_color=unreal.Color(255, 244, 228, 255), dynamic_shadow_distance_movable_light=60000.0,
+                    light_color=unreal.Color(r=255, g=244, b=228, a=255), dynamic_shadow_distance_movable_light=60000.0,
                     light_source_angle=0.55)
         env["sun"] = sun
         moon = self.spawn(unreal.DirectionalLight, unreal.Vector(0, 0, 50000), 140.0, "Moon", "Environment", pitch=-40.0)
         mc = moon.get_component_by_class(unreal.DirectionalLightComponent)
         mc.set_mobility(unreal.ComponentMobility.MOVABLE)
         C.set_props(mc, intensity=0.6, atmosphere_sun_light=True, atmosphere_sun_light_index=1,
-                    light_color=unreal.Color(170, 190, 255, 255), cast_shadows=True)
+                    light_color=unreal.Color(r=170, g=190, b=255, a=255), cast_shadows=True)
         env["moon"] = moon
         self.spawn(unreal.SkyAtmosphere, unreal.Vector(0, 0, 0), 0.0, "SkyAtmosphere", "Environment")
         sky = self.spawn(unreal.SkyLight, unreal.Vector(0, 0, 20000), 0.0, "SkyLight", "Environment")

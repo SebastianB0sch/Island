@@ -385,7 +385,7 @@ void ADAInteractable::Tick(float DeltaSeconds)
 	}
 
 	// Scripted duel log
-	auto Step = [&](int32 Index, float At, const FString& Title, const FString& Body, const TCHAR* Sound)
+	auto Step = [&](int32 Index, float At, const FString& StepTitle, const FString& StepBody, const TCHAR* Sound)
 	{
 		if (DuelStep == Index && DuelTime >= At)
 		{
@@ -393,8 +393,8 @@ void ADAInteractable::Tick(float DeltaSeconds)
 			if (Sub)
 			{
 				FDAMessage Msg;
-				Msg.Title = Title;
-				Msg.Body = Body;
+				Msg.Title = StepTitle;
+				Msg.Body = StepBody;
 				Msg.Accent = FLinearColor(0.3f, 0.85f, 1.f);
 				Msg.Duration = 3.4f;
 				Sub->PushMessage(Msg);
