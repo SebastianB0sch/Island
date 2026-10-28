@@ -1,5 +1,405 @@
 [
  {
+  "file": "Meshes/Locations/academy/SM_Academy_Main.fbx",
+  "name": "SM_Academy_Main",
+  "folder": "Locations/academy",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/academy/SM_Academy_Interior.fbx",
+  "name": "SM_Academy_Interior",
+  "folder": "Locations/academy",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/academy/SM_Academy_Arena.fbx",
+  "name": "SM_Academy_Arena",
+  "folder": "Locations/academy",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/academy/SM_Academy_Towers.fbx",
+  "name": "SM_Academy_Towers",
+  "folder": "Locations/academy",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/academy/SM_Academy_NoCol.fbx",
+  "name": "SM_Academy_NoCol",
+  "folder": "Locations/academy",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/plaza/SM_Plaza_Main.fbx",
+  "name": "SM_Plaza_Main",
+  "folder": "Locations/plaza",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/plaza/SM_Plaza_NoCol.fbx",
+  "name": "SM_Plaza_NoCol",
+  "folder": "Locations/plaza",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/slifer/SM_Slifer_Main.fbx",
+  "name": "SM_Slifer_Main",
+  "folder": "Locations/slifer",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/slifer/SM_Slifer_Dining.fbx",
+  "name": "SM_Slifer_Dining",
+  "folder": "Locations/slifer",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/slifer/SM_Slifer_Yard.fbx",
+  "name": "SM_Slifer_Yard",
+  "folder": "Locations/slifer",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/slifer/SM_Slifer_NoCol.fbx",
+  "name": "SM_Slifer_NoCol",
+  "folder": "Locations/slifer",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/ra/SM_Ra_Main.fbx",
+  "name": "SM_Ra_Main",
+  "folder": "Locations/ra",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/ra/SM_Ra_Cafeteria.fbx",
+  "name": "SM_Ra_Cafeteria",
+  "folder": "Locations/ra",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/ra/SM_Ra_Grounds.fbx",
+  "name": "SM_Ra_Grounds",
+  "folder": "Locations/ra",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/ra/SM_Ra_NoCol.fbx",
+  "name": "SM_Ra_NoCol",
+  "folder": "Locations/ra",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Main.fbx",
+  "name": "SM_ObeliskBoys_Main",
+  "folder": "Locations/obelisk_boys",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Courtyard.fbx",
+  "name": "SM_ObeliskBoys_Courtyard",
+  "folder": "Locations/obelisk_boys",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Gate.fbx",
+  "name": "SM_ObeliskBoys_Gate",
+  "folder": "Locations/obelisk_boys",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_NoCol.fbx",
+  "name": "SM_ObeliskBoys_NoCol",
+  "folder": "Locations/obelisk_boys",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Main.fbx",
+  "name": "SM_ObeliskGirls_Main",
+  "folder": "Locations/obelisk_girls",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Garden.fbx",
+  "name": "SM_ObeliskGirls_Garden",
+  "folder": "Locations/obelisk_girls",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Gazebo.fbx",
+  "name": "SM_ObeliskGirls_Gazebo",
+  "folder": "Locations/obelisk_girls",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Jetty.fbx",
+  "name": "SM_ObeliskGirls_Jetty",
+  "folder": "Locations/obelisk_girls",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_NoCol.fbx",
+  "name": "SM_ObeliskGirls_NoCol",
+  "folder": "Locations/obelisk_girls",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/harbor/SM_Harbor_Quay.fbx",
+  "name": "SM_Harbor_Quay",
+  "folder": "Locations/harbor",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/harbor/SM_Harbor_NoCol.fbx",
+  "name": "SM_Harbor_NoCol",
+  "folder": "Locations/harbor",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/harbor/SM_Harbor_Pier.fbx",
+  "name": "SM_Harbor_Pier",
+  "folder": "Locations/harbor",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/harbor/SM_Harbor_Ferry.fbx",
+  "name": "SM_Harbor_Ferry",
+  "folder": "Locations/harbor",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/harbor/SM_Harbor_Warehouse.fbx",
+  "name": "SM_Harbor_Warehouse",
+  "folder": "Locations/harbor",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/harbor/SM_Harbor_Crane.fbx",
+  "name": "SM_Harbor_Crane",
+  "folder": "Locations/harbor",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/harbor/SM_Harbor_Terminal.fbx",
+  "name": "SM_Harbor_Terminal",
+  "folder": "Locations/harbor",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/harbor/SM_Harbor_Heliport.fbx",
+  "name": "SM_Harbor_Heliport",
+  "folder": "Locations/harbor",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/harbor/SM_Harbor_Breakwater.fbx",
+  "name": "SM_Harbor_Breakwater",
+  "folder": "Locations/harbor",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/lighthouse/SM_Lighthouse_Tower.fbx",
+  "name": "SM_Lighthouse_Tower",
+  "folder": "Locations/lighthouse",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/lighthouse/SM_Lighthouse_Platform.fbx",
+  "name": "SM_Lighthouse_Platform",
+  "folder": "Locations/lighthouse",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/lighthouse/SM_Lighthouse_NoCol.fbx",
+  "name": "SM_Lighthouse_NoCol",
+  "folder": "Locations/lighthouse",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/abandoned/SM_Abandoned_Dorm.fbx",
+  "name": "SM_Abandoned_Dorm",
+  "folder": "Locations/abandoned",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/abandoned/SM_Abandoned_Roof.fbx",
+  "name": "SM_Abandoned_Roof",
+  "folder": "Locations/abandoned",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/abandoned/SM_Abandoned_Hall.fbx",
+  "name": "SM_Abandoned_Hall",
+  "folder": "Locations/abandoned",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/abandoned/SM_Abandoned_Grounds.fbx",
+  "name": "SM_Abandoned_Grounds",
+  "folder": "Locations/abandoned",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/abandoned/SM_Abandoned_NoCol.fbx",
+  "name": "SM_Abandoned_NoCol",
+  "folder": "Locations/abandoned",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/gym/SM_Gym_Hall.fbx",
+  "name": "SM_Gym_Hall",
+  "folder": "Locations/gym",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/gym/SM_Gym_Roof.fbx",
+  "name": "SM_Gym_Roof",
+  "folder": "Locations/gym",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/gym/SM_Gym_Interior.fbx",
+  "name": "SM_Gym_Interior",
+  "folder": "Locations/gym",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/gym/SM_Gym_Grounds.fbx",
+  "name": "SM_Gym_Grounds",
+  "folder": "Locations/gym",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/gym/SM_Gym_NoCol.fbx",
+  "name": "SM_Gym_NoCol",
+  "folder": "Locations/gym",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/hotsprings/SM_Onsen_Terrace.fbx",
+  "name": "SM_Onsen_Terrace",
+  "folder": "Locations/hotsprings",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/hotsprings/SM_Onsen_Bathhouse.fbx",
+  "name": "SM_Onsen_Bathhouse",
+  "folder": "Locations/hotsprings",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/hotsprings/SM_Onsen_Garden.fbx",
+  "name": "SM_Onsen_Garden",
+  "folder": "Locations/hotsprings",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/hotsprings/SM_Onsen_NoCol.fbx",
+  "name": "SM_Onsen_NoCol",
+  "folder": "Locations/hotsprings",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Locations/volcano/SM_Volcano_Lava_NoCol.fbx",
   "name": "SM_Volcano_Lava_NoCol",
   "folder": "Locations/volcano",
