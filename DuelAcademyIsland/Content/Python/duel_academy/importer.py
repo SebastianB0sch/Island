@@ -264,3 +264,100 @@ def cleanup_imported_materials():
                 removed += 1
     if removed:
         C.log(f"removed {removed} importer-generated materials/textures")
+
+
+# --------------------------------------------------------------------------- skeletal student
+CHAR_DIR = C.ROOT + "/Characters"
+
+
+def _skeletal_options(skeleton=None):
+    """Legacy FBX options for the student mesh (skeleton None) or for one animation take."""
+    ui = unreal.FbxImportUI()
+    anim_only = skeleton is not None
+    C.set_props(ui, import_mesh=not anim_only, import_as_skeletal=True, import_materials=False,
+                import_textures=False, import_animations=anim_only, create_physics_asset=False,
+                automated_import_should_detect_type=False)
+    try:
+        ui.set_editor_property("mesh_type_to_import",
+                               unreal.FBXImportType.FBXIT_ANIMATION if anim_only else unreal.FBXImportType.FBXIT_SKELETAL_MESH)
+    except Exception:  # noqa: BLE001
+        pass
+    if anim_only:
+        ui.set_editor_property("skeleton", skeleton)
+        try:
+            ad = ui.get_editor_property("anim_sequence_import_data")
+            C.set_props(ad, remove_redundant_keys=True, import_bone_tracks=True, import_custom_attribute=False)
+            ad.set_editor_property("animation_length", unreal.FBXAnimationLengthImportType.FBXALIT_EXPORTED_TIME)
+        except Exception:  # noqa: BLE001
+            pass
+    else:
+        try:
+            sd = ui.get_editor_property("skeletal_mesh_import_data")
+            C.set_props(sd, import_morph_targets=False, update_skeleton_reference_pose=False)
+            sd.set_editor_property("normal_import_method", unreal.FBXNormalImportMethod.FBXNIM_IMPORT_NORMALS)
+        except Exception:  # noqa: BLE001
+            pass
+    return ui
+
+
+def _find_in(folder, cls_name, contains=None):
+    for path in unreal.EditorAssetLibrary.list_assets(folder, recursive=False, include_folder=False):
+        obj = unreal.EditorAssetLibrary.load_asset(path)
+        if obj is not None and obj.get_class().get_name() == cls_name:
+            if contains is None or contains.lower() in obj.get_name().lower():
+                return obj
+    return None
+
+
+def import_character(materials):
+    """SourceAssets/Data/character.json -> /Game/DuelAcademy/Characters/SK_Student + A_Student_<State>.
+
+    The C++ avatar component (UDAAvatarComponent::SetupSkeletal) picks these up by name and recolours
+    the jacket slot per dorm; without them the procedural avatar is used."""
+    try:
+        info = C.load_json("character.json")
+    except Exception:  # noqa: BLE001
+        C.log("character: none exported (procedural avatar will be used)")
+        return None
+    C.ensure_dir(CHAR_DIR)
+    _set_fbx_interchange(False)
+    try:
+        _import_tasks([os.path.join(C.source_dir(), info["mesh"])], CHAR_DIR, _skeletal_options(), ["SK_Student"])
+        mesh = C.load(f"{CHAR_DIR}/SK_Student") or _find_in(CHAR_DIR, "SkeletalMesh")
+        if mesh is None:
+            C.error("character: SK_Student failed to import")
+            return None
+        skeleton = mesh.get_editor_property("skeleton")
+        for state, rel in sorted(info.get("anims", {}).items()):
+            name = f"A_Student_{state}"
+            _import_tasks([os.path.join(C.source_dir(), rel)], CHAR_DIR, _skeletal_options(skeleton), [name])
+            if not C.exists(f"{CHAR_DIR}/{name}"):
+                # importer appended the take name: rename whatever sequence carries the state name
+                seq = _find_in(CHAR_DIR, "AnimSequence", name)
+                if seq is not None:
+                    unreal.EditorAssetLibrary.rename_asset(seq.get_path_name().split(".")[0], f"{CHAR_DIR}/{name}")
+            if not C.exists(f"{CHAR_DIR}/{name}"):
+                C.warn(f"character: animation {state} failed to import")
+    finally:
+        _set_fbx_interchange(True)
+
+    # material slots keep the source material names (e.g. MT_Student_Shirt) so the avatar component can
+    # find the jacket / hair slots; palette instances carry the textures
+    try:
+        mats = list(mesh.get_editor_property("materials"))
+        for sm in mats:
+            slot = str(sm.get_editor_property("material_slot_name"))
+            key = _palette_key(slot, materials) or _palette_key(slot.replace("MT_", "MT_Student_", 1), materials)
+            if key:
+                sm.set_editor_property("material_interface", materials[key])
+            else:
+                C.warn(f"SK_Student: no material for slot '{slot}'")
+        mesh.set_editor_property("materials", mats)
+    except Exception as e:  # noqa: BLE001
+        C.warn(f"SK_Student: material assignment failed: {e}")
+    for path in unreal.EditorAssetLibrary.list_assets(CHAR_DIR, recursive=False, include_folder=False):
+        obj = unreal.EditorAssetLibrary.load_asset(path)
+        if obj is not None and obj.get_class().get_name() in ("Material", "MaterialInstanceConstant", "Texture2D"):
+            unreal.EditorAssetLibrary.delete_asset(path)
+    C.log(f"character: SK_Student + {len(info.get('anims', {}))} animations")
+    return mesh

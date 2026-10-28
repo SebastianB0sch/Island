@@ -1,0 +1,32 @@
+asset_id: terrain_wetsand_damp_beach_sand_2k
+category: sky_textures
+description: Tileable PBR terrain set 2K (diff, nor_gl, rough, ao)
+upstream source page: https://polyhaven.com/a/damp_beach_sand
+author: Poly Haven artist (credited on the asset page)
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/damp_beach_sand/ (Git LFS)
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/m4tth1euNa0p1c/Tapao-Rush-Island docs/legal/CREDITS.md: "Textures, HDRI et modèles : Poly Haven et ambientCG, CC0 selon leurs politiques publiques ; références individuelles dans art/SOURCES.md." and art/SOURCES.md lists "`ground/damp_beach_sand` — sable mouillé, zone de ressac — https://polyhaven.com/a/damp_beach_sand".
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - damp_beach_sand_ao_2k.jpg  3407542 bytes  sha256=193ae4da0fab969339b0b154c64e7d84e3494ed7280fcd3b4bfb7ecbe555fd92
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/damp_beach_sand/damp_beach_sand_ao_2k.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - damp_beach_sand_diff_2k.jpg  3249410 bytes  sha256=d87190deb69254dea4722cb5a017b98f3e022185a9d67ddb53d1576e5416ddf8
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/damp_beach_sand/damp_beach_sand_diff_2k.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - damp_beach_sand_nor_gl_2k.jpg  3345218 bytes  sha256=ca664b7737f4c75093300407df6f2b0f476f577ac3bce2c7f013760e50269efa
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/damp_beach_sand/damp_beach_sand_nor_gl_2k.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - damp_beach_sand_rough_2k.jpg  2643271 bytes  sha256=9b96ef8971f7899dcaaa371b058eb6a855d2018ce4c73c03d309d2e457564d69
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/damp_beach_sand/damp_beach_sand_rough_2k.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+
+intended use: Alternative "WetSand" layer: realistic grey-brown photoscanned damp sand (darker than Ground092B).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

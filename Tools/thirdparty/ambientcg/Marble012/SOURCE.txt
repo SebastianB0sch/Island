@@ -1,0 +1,31 @@
+asset_id: bld_marble_ambientcg_marble012_2k
+category: sky_textures
+description: Tileable PBR set 2K, ambientCG layout (Color, NormalGL, Roughness) - light grey veined Carrara-like marble
+upstream source page: https://ambientcg.com/view?id=Marble012
+author: ambientCG (Lennart Demes)
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://media.githubusercontent.com/media/mercurypitch/mercurypitch/main/art/glass-adventure/v2/source-pbr/Marble012/2K-JPG/ (Git LFS)
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/mercurypitch/mercurypitch art/glass-adventure/v2/source-pbr/Marble012/manifest.json: "provider": "ambientCG", "providerUrl": "https://ambientcg.com/view?id=Marble012", "license": {"spdx": "CC0-1.0", "legalUrl": "https://creativecommons.org/publicdomain/zero/1.0/", "commercialUse": true, "redistribution": true, "attributionRequired": false}; per-file SHA-256 for 2K-JPG Color/NormalGL/Roughness (match).
+
+files (bytes, sha256, independent hash cross-check):
+  - Marble012_2K-JPG_Color.jpg  5139092 bytes  sha256=1e1ef2d556dcda237181590b4a7543a66ea49223ccf2d455000e05f37e8a8ec5
+      url: https://media.githubusercontent.com/media/mercurypitch/mercurypitch/main/art/glass-adventure/v2/source-pbr/Marble012/2K-JPG/Marble012_2K-JPG_Color.jpg
+      MATCH sha256 vs github.com/mercurypitch/mercurypitch art/glass-adventure/v2/source-pbr/Marble012/manifest.json (license CC0-1.0)
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Marble012_2K-JPG_NormalGL.jpg  1418258 bytes  sha256=0e295859c9e55ba2dd147aed37a674aba90decaf91d3622d5aa8386441020649
+      url: https://media.githubusercontent.com/media/mercurypitch/mercurypitch/main/art/glass-adventure/v2/source-pbr/Marble012/2K-JPG/Marble012_2K-JPG_NormalGL.jpg
+      MATCH sha256 vs github.com/mercurypitch/mercurypitch art/glass-adventure/v2/source-pbr/Marble012/manifest.json (license CC0-1.0)
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Marble012_2K-JPG_Roughness.jpg  2166701 bytes  sha256=d4a906a9739f30f386914a8b8393e64100f340851dc50328e5b91e24fa95ce7a
+      url: https://media.githubusercontent.com/media/mercurypitch/mercurypitch/main/art/glass-adventure/v2/source-pbr/Marble012/2K-JPG/Marble012_2K-JPG_Roughness.jpg
+      MATCH sha256 vs github.com/mercurypitch/mercurypitch art/glass-adventure/v2/source-pbr/Marble012/manifest.json (license CC0-1.0)
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+
+intended use: "Marble" detail (M_Marble: white veined marble for statues, columns, academy trims).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

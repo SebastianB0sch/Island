@@ -1,0 +1,8 @@
+{
+  "_comment": "CC0 Poly Haven pure-sky HDRIs (no ground). Used for the Blender preview renders; imported into Unreal as optional HDRI backdrops.",
+  "hdri": {
+    "day":    {"file": "polyhaven/hdri/kloofendal_48d_partly_cloudy_puresky/kloofendal_48d_partly_cloudy_puresky_2k.hdr", "strength": 1.0, "rotation": 0.0},
+    "sunset": {"file": "polyhaven/hdri/qwantani_sunset_puresky/qwantani_sunset_puresky_2k.hdr", "strength": 1.0, "rotation": 0.0},
+    "night":  {"file": "polyhaven/hdri/qwantani_night_puresky/qwantani_night_puresky_2k.hdr", "strength": 1.0, "rotation": 0.0}
+  }
+}

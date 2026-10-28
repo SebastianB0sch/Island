@@ -1,0 +1,29 @@
+asset_id: bld_metal_corrugated_iron_1k
+category: sky_textures
+description: Tileable PBR set 1K (diff, nor_gl, rough)
+upstream source page: https://polyhaven.com/a/corrugated_iron
+author: Poly Haven artist (credited on the asset page)
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/ceenguyen05/ACI-SND/main/public/textures/surfaces/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/ceenguyen05/ACI-SND public/textures/surfaces/manifest.json: {"id": "corrugated_iron", "source": "https://polyhaven.com/a/corrugated_iron", "license": "CC0-1.0", files corrugated_iron_{diff,nor_gl,rough}_1k.jpg with md5 + dl.polyhaven.org URLs} (md5 match).
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - corrugated_iron_diff_1k.jpg  719557 bytes  sha256=7f3649dd0d056a55a910146f09b1d5298370696a90f511a255fb4c5715bb4b58
+      url: https://raw.githubusercontent.com/ceenguyen05/ACI-SND/main/public/textures/surfaces/corrugated_iron_diff_1k.jpg
+      MATCH md5 vs github.com/ceenguyen05/ACI-SND public/textures/surfaces/manifest.json (license "CC0-1.0")
+  - corrugated_iron_nor_gl_1k.jpg  755185 bytes  sha256=e98b839ae681ba929eb80f07348c70d0731b48239abe69268effab18420cd271
+      url: https://raw.githubusercontent.com/ceenguyen05/ACI-SND/main/public/textures/surfaces/corrugated_iron_nor_gl_1k.jpg
+      MATCH md5 vs github.com/ceenguyen05/ACI-SND public/textures/surfaces/manifest.json (license "CC0-1.0")
+  - corrugated_iron_rough_1k.jpg  455677 bytes  sha256=1addcfc0210fc101f9f12c8e4dbd7a7d2642a5ef76699a8a485f00b5476af357
+      url: https://raw.githubusercontent.com/ceenguyen05/ACI-SND/main/public/textures/surfaces/corrugated_iron_rough_1k.jpg
+      MATCH md5 vs github.com/ceenguyen05/ACI-SND public/textures/surfaces/manifest.json (license "CC0-1.0")
+
+intended use: Corrugated metal (sheds, Slifer dorm roof, harbor buildings); combine with M_RustMetal grunge for rusty variants.
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

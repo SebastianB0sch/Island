@@ -1,0 +1,32 @@
+asset_id: terrain_dirt_dirt_floor_2k
+category: sky_textures
+description: Tileable PBR terrain set 2K (diff, nor_gl, arm)
+upstream source page: https://polyhaven.com/a/dirt_floor
+author: eye-candy.xyz / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://media.githubusercontent.com/media/DioPires/eternities-mtg-app/main/unity/Eternities/Assets/Kits/temperate/Terrain/ (Git LFS)
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/DioPires/eternities-mtg-app unity/Eternities/Assets/Kits/temperate/CREDITS.md: "Every binary asset of the `temperate` kit ... one row each. All are CC0 1.0. `sources.yaml` carries the same rows with each file's download URL and SHA-256."
+  - sources.yaml row: file Terrain/dirt_floor_diff_2k.jpg, url https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/dirt_floor/dirt_floor_diff_2k.jpg, sha256 1afaf974...f661, source https://polyhaven.com/a/dirt_floor, author eye-candy.xyz, licence "CC0 1.0", use "Dirt path terrain layer".
+
+files (bytes, sha256, independent hash cross-check):
+  - dirt_floor_arm_2k.jpg  2716388 bytes  sha256=e21fa527b3dc8d4ec3492b0f0b37b38bedd3ec4149aa91e406a93c545bfa0164
+      url: https://media.githubusercontent.com/media/DioPires/eternities-mtg-app/main/unity/Eternities/Assets/Kits/temperate/Terrain/dirt_floor_arm_2k.jpg
+      MATCH sha256 vs github.com/DioPires/eternities-mtg-app unity/Eternities/Assets/Kits/temperate/sources.yaml (licence "CC0 1.0")
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - dirt_floor_diff_2k.jpg  3944426 bytes  sha256=1afaf974bc016e5019f48f6590a53e3e3730f48ae2eb5a1717519ad89038f661
+      url: https://media.githubusercontent.com/media/DioPires/eternities-mtg-app/main/unity/Eternities/Assets/Kits/temperate/Terrain/dirt_floor_diff_2k.jpg
+      MATCH sha256 vs github.com/DioPires/eternities-mtg-app unity/Eternities/Assets/Kits/temperate/sources.yaml (licence "CC0 1.0")
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - dirt_floor_nor_gl_2k.jpg  4977831 bytes  sha256=da70ddc5c7d53d905d842ec189afbf7e2a7da84f281e94041346829b65f29786
+      url: https://media.githubusercontent.com/media/DioPires/eternities-mtg-app/main/unity/Eternities/Assets/Kits/temperate/Terrain/dirt_floor_nor_gl_2k.jpg
+      MATCH sha256 vs github.com/DioPires/eternities-mtg-app unity/Eternities/Assets/Kits/temperate/sources.yaml (licence "CC0 1.0")
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+
+intended use: TERRAIN_LAYERS "Dirt" (packed earth paths).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

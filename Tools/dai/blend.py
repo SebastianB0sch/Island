@@ -176,8 +176,18 @@ def setup_render(res=(1600, 900), samples=48, scene=None):
     return scene
 
 
-def setup_world(sun_elev=35.0, sun_azim=210.0, strength=1.0, sun_strength=4.0):
-    """Sky + sun. Uses the sky texture when available, falls back to a gradient."""
+def _hdri(key):
+    """Path of the third-party HDRI registered under `key` ("day", "sunset", "night"), or None."""
+    from . import thirdparty
+    spec = thirdparty.registry()["hdri"].get(key)
+    if not spec:
+        return None, None
+    path = thirdparty.tp_path(spec["file"])
+    return (path, spec) if os.path.exists(path) else (None, None)
+
+
+def setup_world(sun_elev=35.0, sun_azim=210.0, strength=1.0, sun_strength=4.0, hdri="day"):
+    """HDRI sky (third-party, CC0) + sun. Falls back to the procedural sky texture, then a gradient."""
     world = bpy.data.worlds.get("World") or bpy.data.worlds.new("World")
     bpy.context.scene.world = world
     world.use_nodes = True
@@ -188,23 +198,37 @@ def setup_world(sun_elev=35.0, sun_azim=210.0, strength=1.0, sun_strength=4.0):
     bg.inputs["Strength"].default_value = strength
     nt.links.new(bg.outputs[0], out.inputs[0])
     sky_ok = False
-    try:
-        sky = nt.nodes.new("ShaderNodeTexSky")
-        items = [i.identifier for i in sky.bl_rna.properties["sky_type"].enum_items]
-        for pref in ("MULTIPLE_SCATTERING", "SINGLE_SCATTERING", "NISHITA", "HOSEK_WILKIE", "PREETHAM"):
-            if pref in items:
-                sky.sky_type = pref
-                break
-        if hasattr(sky, "sun_elevation"):
-            sky.sun_elevation = math.radians(sun_elev)
-            sky.sun_rotation = math.radians(sun_azim)
-        if hasattr(sky, "sun_disc"):
-            sky.sun_disc = False
-        nt.links.new(sky.outputs[0], bg.inputs[0])
-        bg.inputs["Strength"].default_value = 0.35 * strength
+    path, spec = _hdri(hdri) if hdri else (None, None)
+    if path:
+        env = nt.nodes.new("ShaderNodeTexEnvironment")
+        env.image = bpy.data.images.load(path, check_existing=True)
+        mapping = nt.nodes.new("ShaderNodeMapping")
+        coords = nt.nodes.new("ShaderNodeTexCoord")
+        # rotate the HDRI so its (pure sky) sun glow sits roughly where our sun light is
+        mapping.inputs["Rotation"].default_value[2] = math.radians(spec.get("rotation", 0.0) - sun_azim)
+        nt.links.new(coords.outputs["Generated"], mapping.inputs["Vector"])
+        nt.links.new(mapping.outputs[0], env.inputs[0])
+        nt.links.new(env.outputs[0], bg.inputs[0])
+        bg.inputs["Strength"].default_value = spec.get("strength", 1.0) * strength
         sky_ok = True
-    except Exception:
-        sky_ok = False
+    if not sky_ok:
+        try:
+            sky = nt.nodes.new("ShaderNodeTexSky")
+            items = [i.identifier for i in sky.bl_rna.properties["sky_type"].enum_items]
+            for pref in ("MULTIPLE_SCATTERING", "SINGLE_SCATTERING", "NISHITA", "HOSEK_WILKIE", "PREETHAM"):
+                if pref in items:
+                    sky.sky_type = pref
+                    break
+            if hasattr(sky, "sun_elevation"):
+                sky.sun_elevation = math.radians(sun_elev)
+                sky.sun_rotation = math.radians(sun_azim)
+            if hasattr(sky, "sun_disc"):
+                sky.sun_disc = False
+            nt.links.new(sky.outputs[0], bg.inputs[0])
+            bg.inputs["Strength"].default_value = 0.35 * strength
+            sky_ok = True
+        except Exception:
+            sky_ok = False
     if not sky_ok:
         bg.inputs[0].default_value = (0.45, 0.65, 0.95, 1.0)
     sun_data = bpy.data.lights.new("Sun", "SUN")

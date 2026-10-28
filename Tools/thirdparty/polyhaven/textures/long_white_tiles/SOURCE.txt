@@ -1,0 +1,30 @@
+asset_id: bld_floortiles_long_white_tiles_1k
+category: sky_textures
+description: Tileable PBR set 1K (diff, nor_gl, arm = AO/rough/metal)
+upstream source page: https://polyhaven.com/a/long_white_tiles
+author: Jenelle van Heerden, Sergej Majboroda / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/long_white_tiles/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Every third-party file in this directory is **CC0 1.0** (public domain dedication), from two libraries. Nothing here carries an attribution requirement, a non-commercial clause, or a redistribution restriction." ... "### Poly Haven — https://polyhaven.com — CC0 1.0" ... "**Textures** — `assets/textures/<slug>/`, 1k JPG, `diff` + `nor_gl` + `arm`"
+  - github.com/yosnap/habiteka-app manifest: polyhaven:long_white_tiles, license "CC0-1.0", authors ["Jenelle van Heerden", "Sergej Majboroda"].
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - long_white_tiles_arm_1k.jpg  572011 bytes  sha256=6bbaa09ff62436dd839a211d946ea2b09a07f1b5430408a415fd37bec594f829
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/long_white_tiles/long_white_tiles_arm_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - long_white_tiles_diff_1k.jpg  619644 bytes  sha256=0aa70e14117e9b1fbf726868675f6afa8fd62a2691f7ba3964f47796df06cd9c
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/long_white_tiles/long_white_tiles_diff_1k.jpg
+      MATCH md5 vs github.com/yosnap/habiteka-app public/materials/polyhaven/manifest.json (license "CC0-1.0")
+  - long_white_tiles_nor_gl_1k.jpg  651009 bytes  sha256=a488ee3a2dbb81f334e191b51a43567f4ee6bb8adce5fd3ed85d5a6958fddfc1
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/long_white_tiles/long_white_tiles_nor_gl_1k.jpg
+      MATCH md5 vs github.com/yosnap/habiteka-app public/materials/polyhaven/manifest.json (license "CC0-1.0")
+
+intended use: White wall/floor tiles (bathrooms, shop, dorm interiors).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

@@ -1,0 +1,30 @@
+asset_id: bld_concrete_concrete_1k
+category: sky_textures
+description: Tileable PBR set 1K (diff, nor_gl, arm = AO/rough/metal)
+upstream source page: https://polyhaven.com/a/concrete
+author: Rob Tuytel / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/concrete/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Every third-party file in this directory is **CC0 1.0** (public domain dedication), from two libraries. Nothing here carries an attribution requirement, a non-commercial clause, or a redistribution restriction." ... "### Poly Haven — https://polyhaven.com — CC0 1.0" ... "**Textures** — `assets/textures/<slug>/`, 1k JPG, `diff` + `nor_gl` + `arm`"
+  - github.com/yosnap/habiteka-app manifest: polyhaven:concrete, license "CC0-1.0", authors ["Rob Tuytel"].
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - concrete_arm_1k.jpg  123414 bytes  sha256=98bd4ffb8ec52620b1053f6f576f1154caf20ee7a8786721724ea169b16582e0
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/concrete/concrete_arm_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - concrete_diff_1k.jpg  543902 bytes  sha256=046c0e2aebe31e6043a6bc074e779f6a345f1d823d0ca1c69446c5cabadefa8a
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/concrete/concrete_diff_1k.jpg
+      MATCH md5 vs github.com/yosnap/habiteka-app public/materials/polyhaven/manifest.json (license "CC0-1.0")
+  - concrete_nor_gl_1k.jpg  114447 bytes  sha256=298a0e93040c9d76d239a894bdf28a9787755ea5f22baa068ffa8075369ee428
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/concrete/concrete_nor_gl_1k.jpg
+      MATCH md5 vs github.com/yosnap/habiteka-app public/materials/polyhaven/manifest.json (license "CC0-1.0")
+
+intended use: "Concrete" detail texture (M_Concrete, M_DarkConcrete, M_Asphalt).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

@@ -1,0 +1,22 @@
+asset_id: hdri_qwantani_night_puresky
+category: sky_textures
+description: HDRI sky (2048x1024 .hdr), night with stars and Milky Way (some horizon light glow)
+upstream source page: https://polyhaven.com/a/qwantani_night_puresky
+author: Greg Zaal (photography), Jarod Guest (processing) / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/YvesZhou-hub/GTA-6-Sydney/main/game/assets/environment/qwantani_night_puresky_2k.hdr
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/YvesZhou-hub/GTA-6-Sydney licenses/DAYLIGHT_CYCLE.md (same statement as above). Row: Qwantani Night (Pure Sky) | Greg Zaal; Jarod Guest | qwantani_night_puresky_2k.hdr | 5,461,210 | d458fe7f...4cf0; "The night photograph contains stars and a Milky Way band; its long-exposure brightness is reduced in the game."
+
+files (bytes, sha256, independent hash cross-check):
+  - qwantani_night_puresky_2k.hdr  5461210 bytes  sha256=d458fe7f20969d89eedbb7ae12d346abf68c86d844235696e7d70baad3e04cf0
+      url: https://raw.githubusercontent.com/YvesZhou-hub/GTA-6-Sydney/main/game/assets/environment/qwantani_night_puresky_2k.hdr
+      MATCH sha256 vs github.com/YvesZhou-hub/GTA-6-Sydney licenses/DAYLIGHT_CYCLE.md (downloaded from dl.polyhaven.org, CC0 1.0)
+
+intended use: Optional night sky. Long exposure: scale intensity down (~0.1-0.3) in engine.
+
+notes: Equirectangular 2:1 Radiance HDR (linear). Blender: World > Environment Texture. UE: HDRI Backdrop actor or sky sphere (import as TextureCube/LongLat). Attribution is not required by CC0; credit kept voluntarily.

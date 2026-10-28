@@ -66,6 +66,8 @@ def main(argv):
             lay.scatter()
             layout.export_props(lay.manifest, log)
             layout.export_avatar(lay.manifest, log)
+            from dai import character
+            character.build(log)
             layout.terrain_manifest(lay.manifest)
             lay.minimap()
             lay.write()

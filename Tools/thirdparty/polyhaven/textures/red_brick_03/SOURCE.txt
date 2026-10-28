@@ -1,0 +1,29 @@
+asset_id: bld_brick_red_brick_03_1k
+category: sky_textures
+description: Tileable PBR set 1K (diff, nor_gl, arm = AO/rough/metal)
+upstream source page: https://polyhaven.com/a/red_brick_03
+author: Poly Haven artist (credited on the asset page)
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/red_brick_03/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Every third-party file in this directory is **CC0 1.0** (public domain dedication), from two libraries. Nothing here carries an attribution requirement, a non-commercial clause, or a redistribution restriction." ... "### Poly Haven — https://polyhaven.com — CC0 1.0" ... "**Textures** — `assets/textures/<slug>/`, 1k JPG, `diff` + `nor_gl` + `arm`"
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - red_brick_03_arm_1k.jpg  162734 bytes  sha256=31d8d33a9c44af49cd082eae8f49016aaca6d55f2fd80be2183e2ba9185bd8cf
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/red_brick_03/red_brick_03_arm_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - red_brick_03_diff_1k.jpg  694500 bytes  sha256=9c58254c099b2d211478f50a427fcdde622af24249ff2e94da41fb836f8c857f
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/red_brick_03/red_brick_03_diff_1k.jpg
+      MATCH md5 vs github.com/ceenguyen05/ACI-SND public/textures/surfaces/manifest.json (license "CC0-1.0")
+  - red_brick_03_nor_gl_1k.jpg  955430 bytes  sha256=9bfd45e24720d851017c1e1678b70219c72239b2ac6b25e11d57d458bdab8503
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/red_brick_03/red_brick_03_nor_gl_1k.jpg
+      MATCH md5 vs github.com/ceenguyen05/ACI-SND public/textures/surfaces/manifest.json (license "CC0-1.0")
+
+intended use: Bricks (abandoned dorm, lighthouse base, chimneys).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

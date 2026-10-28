@@ -1,0 +1,32 @@
+asset_id: terrain_grass_leafy_grass_2k
+category: sky_textures
+description: Tileable PBR terrain set 2K (diff sRGB, nor_gl = OpenGL normal, arm = R:AO G:roughness B:metal)
+upstream source page: https://polyhaven.com/a/leafy_grass
+author: Charlotte Baglioni / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/JakubSakar9/two-tech-demo/main/assets/textures/ (leafy_grass_*_2k.jpg)
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - The hosting repo has no texture credits; provenance is proven by hash: all three files are byte-identical (SHA-256) to the official Poly Haven downloads pinned in github.com/cb8010d6/sport-games tools/assets.lock.json ("provider": "Poly Haven", "license": "CC0-1.0", "sourcePage": "https://polyhaven.com/a/leafy_grass").
+  - github.com/lorenjerickson/age-of-wonders apps/web/public/terrain/v1/sources.json: {"asset": "leafy_grass", "source": "https://polyhaven.com/a/leafy_grass", "license": "CC0-1.0", "authors": ["Charlotte Baglioni"], color-2k source dl.polyhaven.org/.../leafy_grass_diff_2k.jpg sha256 8e1c6d21...b113} (same file).
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - leafy_grass_arm_2k.jpg  4116600 bytes  sha256=70d61c669fe9d186a84f5bb50e8a337083014d7e46534306a89d47d48fd5eb0e
+      url: https://raw.githubusercontent.com/JakubSakar9/two-tech-demo/main/assets/textures/leafy_grass_arm_2k.jpg
+      MATCH sha256 vs github.com/cb8010d6/sport-games tools/assets.lock.json (Poly Haven, license "CC0-1.0")
+  - leafy_grass_diff_2k.jpg  4766204 bytes  sha256=8e1c6d21365d4b89bc5a35ab664da98a78dbc3ab9ba6100474881c8619a5b113
+      url: https://raw.githubusercontent.com/JakubSakar9/two-tech-demo/main/assets/textures/leafy_grass_diff_2k.jpg
+      MATCH sha256 vs github.com/cb8010d6/sport-games tools/assets.lock.json (Poly Haven, license "CC0-1.0")
+      MATCH sha256 vs github.com/lorenjerickson/age-of-wonders apps/web/public/terrain/v1/sources.json (license "CC0-1.0")
+  - leafy_grass_nor_gl_2k.jpg  6047262 bytes  sha256=df0cf0ce96e653f033e5b934d5b12995464bda027aa53bd12e329be889aa9f45
+      url: https://raw.githubusercontent.com/JakubSakar9/two-tech-demo/main/assets/textures/leafy_grass_nor_gl_2k.jpg
+      MATCH sha256 vs github.com/cb8010d6/sport-games tools/assets.lock.json (Poly Haven, license "CC0-1.0")
+      MATCH sha256 vs github.com/lorenjerickson/age-of-wonders apps/web/public/terrain/v1/sources.json (license "CC0-1.0")
+
+intended use: TERRAIN_LAYERS "Grass" (lush lawn/meadow; green with small brown patches). Tint toward palette green for the anime look.
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

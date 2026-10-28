@@ -1,0 +1,29 @@
+asset_id: terrain_paving_cobblestone_floor_08_1k
+category: sky_textures
+description: Tileable PBR set 1K (diff, nor_gl, arm)
+upstream source page: https://polyhaven.com/a/cobblestone_floor_08
+author: Rob Tuytel / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/cobblestone_floor_08/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Every third-party file in this directory is **CC0 1.0** (public domain dedication), from two libraries. Nothing here carries an attribution requirement, a non-commercial clause, or a redistribution restriction." ... "### Poly Haven — https://polyhaven.com — CC0 1.0" ... "**Textures** — `assets/textures/<slug>/`, 1k JPG, `diff` + `nor_gl` + `arm`" ... "**Added 2026-10-06:** `cobblestone_floor_08` (Rob Tuytel), the grey setts of both pavements."
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - cobblestone_floor_08_arm_1k.jpg  198270 bytes  sha256=4b2548135784852f07befc3bb0abb7c83738a3c022997c30527a15d5caa7a389
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/cobblestone_floor_08/cobblestone_floor_08_arm_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - cobblestone_floor_08_diff_1k.jpg  585727 bytes  sha256=ec131f7a99a1e7f9df25d4725609c55a6dad1df487630685e9a66ecbf41ec33a
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/cobblestone_floor_08/cobblestone_floor_08_diff_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - cobblestone_floor_08_nor_gl_1k.jpg  1002410 bytes  sha256=26bfff70b266a4e86983814c7e56a9b48daf93cd34dcdc16a5db13e4fabcfbb6
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/cobblestone_floor_08/cobblestone_floor_08_nor_gl_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+
+intended use: TERRAIN_LAYERS "Paving" (stone setts for academy paths/plazas). Only 1K was reachable with clear provenance.
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

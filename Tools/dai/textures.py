@@ -377,6 +377,17 @@ def _dx_normal(arr, gl):
     return arr
 
 
+def _rough(spec, size):
+    """Roughness from a plain map ("rough") or the G channel of a packed AO/Rough/Metal map ("arm")."""
+    if spec.get("rough"):
+        r = _load_img(spec["rough"], size, "L")
+    elif spec.get("arm"):
+        r = _load_img(spec["arm"], size)[..., 1]
+    else:
+        return np.full((size, size), 0.85, np.float32)
+    return np.clip(r * spec.get("rough_scale", 1.0), 0.0, 1.0)
+
+
 def photo_detail(spec, size=1024, contrast=0.35):
     """Grayscale detail (mean 0.5) + DX normal from a photo texture set."""
     alb = _load_img(spec["albedo"], size)
@@ -397,7 +408,7 @@ def build_photo_textures(log=print):
                 save_rgb(arr, os.path.join(C.OUT_TEXTURES, "T_WaterNormal.png"))
                 n_detail += 1
                 continue
-            size = 1024 if name in TERRAIN_HIRES else 512
+            size = spec.get("size", 1024)
             d, nrm = photo_detail(spec, size, spec.get("contrast", 0.35))
             save_gray(d, os.path.join(C.OUT_TEXTURES, f"T_{name}_D.png"))
             if nrm is not None:
@@ -420,7 +431,7 @@ def build_photo_textures(log=print):
                 bc = _load_img(spec["albedo"], size) * np.array(spec.get("tint", [1, 1, 1]), np.float32)
                 nrm = _dx_normal(_load_img(spec["normal"], size), spec.get("normal_gl", True)) if spec.get("normal") \
                     else np.tile(np.array([0.5, 0.5, 1.0], np.float32), (size, size, 1))
-                rough = _load_img(spec["rough"], size, "L") if spec.get("rough") else np.full((size, size), 0.85, np.float32)
+                rough = _rough(spec, size)
                 source = "photo"
             else:
                 raise KeyError("no photo set")

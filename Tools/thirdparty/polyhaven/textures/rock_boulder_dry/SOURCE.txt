@@ -1,0 +1,31 @@
+asset_id: terrain_rock_rock_boulder_dry_2k
+category: sky_textures
+description: Tileable PBR terrain set 2K (diff, nor_gl, arm)
+upstream source page: https://polyhaven.com/a/rock_boulder_dry
+author: Dimitrios Savva (photography), Rico Cilliers (processing) / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/sayantanmandal1/AsterCoast/main/game/assets/vendor/polyhaven/rock_boulder_dry/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/sayantanmandal1/AsterCoast ASSET_LICENSES.md row: "Rock Boulder Dry — 2K diffuse | Dimitrios Savva (photography), Rico Cilliers (processing) / Poly Haven | https://polyhaven.com/a/rock_boulder_dry | CC0 1.0; unmodified JPEG" (likewise normal and ARM); tools/asset-lock.json pins the SHA-256 of each file.
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - rock_boulder_dry_arm_2k.jpg  3164814 bytes  sha256=9ef398eebef2a9477daa6a260ebe85003de0790bb7d8f7e5fd0d80b6943ea70e
+      url: https://raw.githubusercontent.com/sayantanmandal1/AsterCoast/main/game/assets/vendor/polyhaven/rock_boulder_dry/rock_boulder_dry_arm_2k.jpg
+      MATCH sha256 vs github.com/sayantanmandal1/AsterCoast tools/asset-lock.json (license "CC0-1.0", "unmodified source JPEG")
+  - rock_boulder_dry_diff_2k.jpg  3437626 bytes  sha256=c66de7f7b48ef1ba542c17af780787ca6d43da2160a46ff3544dd9fcdf65ca30
+      url: https://raw.githubusercontent.com/sayantanmandal1/AsterCoast/main/game/assets/vendor/polyhaven/rock_boulder_dry/rock_boulder_dry_diff_2k.jpg
+      MATCH sha256 vs github.com/sayantanmandal1/AsterCoast tools/asset-lock.json (license "CC0-1.0", "unmodified source JPEG")
+      MATCH sha256 vs github.com/ZyFou/ProceduralTerrains public/textures/terrain/pbr/catalog.json (license "CC0-1.0")
+  - rock_boulder_dry_nor_gl_2k.jpg  3307320 bytes  sha256=72a3c96d563fc17ac36c568802e106222e6480512d98e07318e1f431cea33dd6
+      url: https://raw.githubusercontent.com/sayantanmandal1/AsterCoast/main/game/assets/vendor/polyhaven/rock_boulder_dry/rock_boulder_dry_nor_gl_2k.jpg
+      MATCH sha256 vs github.com/sayantanmandal1/AsterCoast tools/asset-lock.json (license "CC0-1.0", "unmodified source JPEG")
+      MATCH sha256 vs github.com/ZyFou/ProceduralTerrains public/textures/terrain/pbr/catalog.json (license "CC0-1.0")
+
+intended use: TERRAIN_LAYERS "Rock" (cliffs / slopes). Pale weathered rock; tint to palette grey (0.45,0.43,0.40).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

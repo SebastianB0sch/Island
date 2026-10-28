@@ -1,0 +1,38 @@
+asset_id: terrain_sand_ambientcg_ground092a_2k
+category: sky_textures
+description: Tileable PBR terrain set 2K, ambientCG layout (Color, NormalGL, Roughness, AmbientOcclusion, Displacement + preview PNG)
+upstream source page: https://ambientcg.com/view?id=Ground092A
+author: ambientCG (Lennart Demes)
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/Ground092A/ (Git LFS)
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/m4tth1euNa0p1c/Tapao-Rush-Island docs/legal/CREDITS.md: "Textures, HDRI et modèles : Poly Haven et ambientCG, CC0 selon leurs politiques publiques ; références individuelles dans art/SOURCES.md." and art/SOURCES.md lists "`ground/Ground092A` — sable corallien blanc sec (plage lagon) — https://ambientcg.com/view?id=Ground092A". Tapao scripts/fetch_atoll_textures.py docstring: "Download CC0 PBR textures for the Tuamotu atoll look (Poly Haven + ambientCG)" (downloads ambientcg.com/get?file=Ground092A_2K-JPG.zip).
+  - ambientCG license as recorded in github.com/mercurypitch/mercurypitch art/glass-adventure/v2/source-pbr/Marble012/manifest.json: {"spdx": "CC0-1.0", "commercialUse": true, "redistribution": true, "attributionRequired": false, "providerLicenseUrl": "https://docs.ambientcg.com/license/"}
+
+files (bytes, sha256, independent hash cross-check):
+  - Ground092A.png  243583 bytes  sha256=cf7d3d85d8e8cfd357f2f0ac8037bec3bda7fe52471479e46b38237f524882f0
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/Ground092A/Ground092A.png
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Ground092A_2K-JPG_AmbientOcclusion.jpg  965461 bytes  sha256=e3f5699c1d29dcb8e42cdca3a2750bbf609f30cde718594115a5cebe8f4b5140
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/Ground092A/Ground092A_2K-JPG_AmbientOcclusion.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Ground092A_2K-JPG_Color.jpg  3239580 bytes  sha256=c1c43fe0b2a8d2632f657c02d8db7cd0c9673bd30a7aadddd9eaa72fc5aef930
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/Ground092A/Ground092A_2K-JPG_Color.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Ground092A_2K-JPG_Displacement.jpg  1068083 bytes  sha256=6623cec3906ae5f0803ea496c3d6a6910adbaa4d61d4c6172313691b6b00ec1c
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/Ground092A/Ground092A_2K-JPG_Displacement.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Ground092A_2K-JPG_NormalGL.jpg  5625816 bytes  sha256=7f3dffa2264afae7549c15d1bf83dd88a7c091f7c644801aba50572a5f9fe0a7
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/Ground092A/Ground092A_2K-JPG_NormalGL.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Ground092A_2K-JPG_Roughness.jpg  2761414 bytes  sha256=94dbbf371fad74375335ba646935f3c2790091e37f8c03c7ebbdca85f589def0
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/ground/Ground092A/Ground092A_2K-JPG_Roughness.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+
+intended use: TERRAIN_LAYERS "Sand" (dry white coral beach sand with wind ripples) - bright tropical look.
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

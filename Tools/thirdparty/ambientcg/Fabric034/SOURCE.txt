@@ -1,0 +1,38 @@
+asset_id: bld_fabric_ambientcg_fabric034_1k
+category: sky_textures
+description: Tileable PBR set 1K, ambientCG layout (Color, NormalGL, Roughness, Displacement, .mtlx, preview PNG) - grey felt
+upstream source page: https://ambientcg.com/view?id=Fabric034
+author: ambientCG (Lennart Demes)
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/characters/Fabric034/ (Git LFS)
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/m4tth1euNa0p1c/Tapao-Rush-Island art/SOURCES.md table: "`art/textures/characters/Fabric034/` → `T_Fabric_Felt_D/_N/_R` ... | ambientCG, Fabric 034 — https://ambientcg.com/view?id=Fabric034 | CC0 1.0 |".
+  - ambientCG license as recorded in github.com/mercurypitch/mercurypitch art/glass-adventure/v2/source-pbr/Marble012/manifest.json: {"spdx": "CC0-1.0", "commercialUse": true, "redistribution": true, "attributionRequired": false, "providerLicenseUrl": "https://docs.ambientcg.com/license/"}
+
+files (bytes, sha256, independent hash cross-check):
+  - Fabric034.png  258055 bytes  sha256=618161b7bd52c6c9588fa85ab4ec8f00f2fb975e4ec94e227fdd07ce3abf8bca
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/characters/Fabric034/Fabric034.png
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Fabric034_1K-JPG.mtlx  2272 bytes  sha256=f9dc9fb95b71f44089b03dc281b22305bbf99293090d1e1f29b065a125953480
+      url: https://raw.githubusercontent.com/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/characters/Fabric034/Fabric034_1K-JPG.mtlx
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Fabric034_1K-JPG_Color.jpg  1153031 bytes  sha256=23d4da86236b98235a493d5ab9a79f0345d041fc721544fd5f148a76d96d1f01
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/characters/Fabric034/Fabric034_1K-JPG_Color.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Fabric034_1K-JPG_Displacement.jpg  821665 bytes  sha256=a46cd53f5161256e902d6d34b82856792065829ea37f7d5411135a4bc8f919f8
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/characters/Fabric034/Fabric034_1K-JPG_Displacement.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Fabric034_1K-JPG_NormalGL.jpg  2096180 bytes  sha256=2e8bcb8be56ff6f1f529ac0d9f798120210e54d98adc7e3d437904cf9287ce94
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/characters/Fabric034/Fabric034_1K-JPG_NormalGL.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - Fabric034_1K-JPG_Roughness.jpg  686699 bytes  sha256=768c4d09770b4198a7525d406e30c3a4c1197846a14e4cd67132fa91c7065893
+      url: https://media.githubusercontent.com/media/m4tth1euNa0p1c/Tapao-Rush-Island/main/art/textures/characters/Fabric034/Fabric034_1K-JPG_Roughness.jpg
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+
+intended use: "Fabric" detail texture (M_Carpet, uniforms M_Jacket/M_Pants/M_Shirt - neutral grey, tint by base colour).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

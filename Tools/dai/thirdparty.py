@@ -229,6 +229,10 @@ def _srgb(c):
     return tuple(max(0.0, min(1.0, f(v))) for v in c[:3])
 
 
+def _safe(name):
+    return "".join(ch if ch.isalnum() else "_" for ch in name.split(".")[0]).strip("_") or "Mat"
+
+
 def extract_materials(obj, asset, spec):
     """Rename material slots to MT_<asset>_<n>, export their textures, register palette entries."""
     foliage = [f.lower() for f in spec.get("foliage", [])]
@@ -239,7 +243,8 @@ def extract_materials(obj, asset, spec):
         if mat is None:
             continue
         orig = mat.name
-        new_name = f"MT_{asset}_{i}"
+        # keep_names: slot names stay meaningful (e.g. MT_Student_Shirt) so gameplay code can find them
+        new_name = f"MT_{asset}_{_safe(orig)}" if spec.get("keep_names") else f"MT_{asset}_{i}"
         is_foliage = any(f in orig.lower() for f in foliage)
         entry = dict(kind="pbr_foliage" if is_foliage else "pbr", color=(1.0, 1.0, 1.0), rough=0.8, metallic=0.0,
                      detail=None, source_material=orig)

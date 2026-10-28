@@ -1,0 +1,33 @@
+asset_id: bld_siding_distressed_painted_planks_2k
+category: sky_textures
+description: Tileable PBR set 2K (renamed by host: *_diffuse_2k = diff, *_normal_2k = nor_gl OpenGL, *_arm_2k = AO/rough/metal)
+upstream source page: https://polyhaven.com/a/distressed_painted_planks
+author: Rob Tuytel / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/copperisbetter-lang/Wvlrp/main/world-creator/assets/building/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/copperisbetter-lang/Wvlrp world-creator/assets/building/building-sources.json: {"id": "distressed_painted_planks", "type": "texture", "license": "CC0", "source": "https://polyhaven.com/a/distressed_painted_planks", "resolutions": {"2k": {"diffuse": ..._diffuse_2k.jpg, "normal": ..._normal_2k.jpg, "arm": ..._arm_2k.jpg}}}.
+  - Author per github.com/wmehobbs/Abbott-game tools/content_factory/HARVEST_MANIFEST.json (slug distressed_painted_planks, source polyhaven, license "CC0 1.0").
+  - NOTE: no independent hash registry found for the 2K files; dimensions/normal-map statistics checked (2048x2048, OpenGL normal).
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - distressed_painted_planks_arm_2k.jpg  1449641 bytes  sha256=66b615472647f5d92971ba484bb2b89fcd7650dff6e8b581cf90febc51c5c734
+      url: https://raw.githubusercontent.com/copperisbetter-lang/Wvlrp/main/world-creator/assets/building/distressed_painted_planks_arm_2k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - distressed_painted_planks_diffuse_2k.jpg  1422193 bytes  sha256=d774c704ab449a860ae6620c4472fd75a01d48ac93a5bdd79d414b16e56bca30
+      original provider file name: distressed_painted_planks_diff_2k.jpg
+      url: https://raw.githubusercontent.com/copperisbetter-lang/Wvlrp/main/world-creator/assets/building/distressed_painted_planks_diffuse_2k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - distressed_painted_planks_normal_2k.jpg  1705372 bytes  sha256=e5ec24e42ca30f7b66d23d74b409ce0a66998bffd17929f1d751af7e47d275ef
+      original provider file name: distressed_painted_planks_nor_gl_2k.jpg
+      url: https://raw.githubusercontent.com/copperisbetter-lang/Wvlrp/main/world-creator/assets/building/distressed_painted_planks_normal_2k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+
+intended use: Painted wood siding (beach huts, boathouse, Slifer dorm walls). Grey-green paint with peeling rust-orange spots; vertical boards.
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

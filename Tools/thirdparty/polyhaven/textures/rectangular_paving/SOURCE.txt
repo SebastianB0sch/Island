@@ -1,0 +1,29 @@
+asset_id: bld_paving_rectangular_paving_1k
+category: sky_textures
+description: Tileable PBR set 1K (diff, nor_gl, arm = AO/rough/metal)
+upstream source page: https://polyhaven.com/a/rectangular_paving
+author: Poly Haven artist (credited on the asset page)
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/rectangular_paving/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Every third-party file in this directory is **CC0 1.0** (public domain dedication), from two libraries. Nothing here carries an attribution requirement, a non-commercial clause, or a redistribution restriction." ... "### Poly Haven — https://polyhaven.com — CC0 1.0" ... "**Textures** — `assets/textures/<slug>/`, 1k JPG, `diff` + `nor_gl` + `arm`"
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - rectangular_paving_arm_1k.jpg  670798 bytes  sha256=3d08e42a6c743c1c9c0e288cdf662f9462e412225fef0b622f703063d7c49f2c
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/rectangular_paving/rectangular_paving_arm_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - rectangular_paving_diff_1k.jpg  649580 bytes  sha256=23f3da5644a95fbcc1916165c8b03ac74d0836ce4b6f5bf2a28b0266dcdf84c5
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/rectangular_paving/rectangular_paving_diff_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - rectangular_paving_nor_gl_1k.jpg  637525 bytes  sha256=0c3a0b827ce1e240ae52f447b773d52d9712730c8b81a6aa323a4df4c84f1108
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/rectangular_paving/rectangular_paving_nor_gl_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+
+intended use: Alternative paving (brown rectangular pavers) for plazas / M_Paving detail.
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

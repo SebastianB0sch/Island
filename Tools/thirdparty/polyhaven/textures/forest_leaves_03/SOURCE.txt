@@ -1,0 +1,32 @@
+asset_id: terrain_forestfloor_forest_leaves_03_2k
+category: sky_textures
+description: Tileable PBR terrain set 2K (diff, nor_gl, arm)
+upstream source page: https://polyhaven.com/a/forest_leaves_03
+author: Dimitrios Savva, Rob Tuytel / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://media.githubusercontent.com/media/DioPires/eternities-mtg-app/main/unity/Eternities/Assets/Kits/temperate/Terrain/ (Git LFS)
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/DioPires/eternities-mtg-app unity/Eternities/Assets/Kits/temperate/CREDITS.md: "Every binary asset of the `temperate` kit ... one row each. All are CC0 1.0. `sources.yaml` carries the same rows with each file's download URL and SHA-256."
+  - sources.yaml row: file Terrain/forest_leaves_03_diff_2k.jpg, url https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_leaves_03/forest_leaves_03_diff_2k.jpg, sha256 638aa300...c651, author "Dimitrios Savva, Rob Tuytel", licence "CC0 1.0" (likewise nor_gl and arm).
+
+files (bytes, sha256, independent hash cross-check):
+  - forest_leaves_03_arm_2k.jpg  3600385 bytes  sha256=0a9141b7cad8a46ad7f56dcdfd351e06ab2f475af44abdd1311c913cff0bc2c3
+      url: https://media.githubusercontent.com/media/DioPires/eternities-mtg-app/main/unity/Eternities/Assets/Kits/temperate/Terrain/forest_leaves_03_arm_2k.jpg
+      MATCH sha256 vs github.com/DioPires/eternities-mtg-app unity/Eternities/Assets/Kits/temperate/sources.yaml (licence "CC0 1.0")
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - forest_leaves_03_diff_2k.jpg  3404048 bytes  sha256=638aa3006c508566fae0b78bb0f87ab8a3e7c89dd37d7a25966a4b8dd288c651
+      url: https://media.githubusercontent.com/media/DioPires/eternities-mtg-app/main/unity/Eternities/Assets/Kits/temperate/Terrain/forest_leaves_03_diff_2k.jpg
+      MATCH sha256 vs github.com/DioPires/eternities-mtg-app unity/Eternities/Assets/Kits/temperate/sources.yaml (licence "CC0 1.0")
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+  - forest_leaves_03_nor_gl_2k.jpg  5277984 bytes  sha256=d2d3194cacf1b7cc424304626bbf7d05d556633dae92cfeadd73c1f6b8c3d73f
+      url: https://media.githubusercontent.com/media/DioPires/eternities-mtg-app/main/unity/Eternities/Assets/Kits/temperate/Terrain/forest_leaves_03_nor_gl_2k.jpg
+      MATCH sha256 vs github.com/DioPires/eternities-mtg-app unity/Eternities/Assets/Kits/temperate/sources.yaml (licence "CC0 1.0")
+      MATCH sha256 vs git-lfs pointer oid in hosting repo
+
+intended use: TERRAIN_LAYERS "ForestFloor" (dense dark leaf litter under jungle canopy).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

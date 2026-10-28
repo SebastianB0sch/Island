@@ -1,0 +1,22 @@
+asset_id: hdri_qwantani_sunset_puresky
+category: sky_textures
+description: HDRI sky (2048x1024 .hdr), golden hour / sunset, low sun ~6deg
+upstream source page: https://polyhaven.com/a/qwantani_sunset_puresky
+author: Greg Zaal (photography), Jarod Guest (processing) / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/YvesZhou-hub/GTA-6-Sydney/main/game/assets/environment/qwantani_sunset_puresky_2k.hdr
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/YvesZhou-hub/GTA-6-Sydney licenses/DAYLIGHT_CYCLE.md: "The two new sky-only HDR panoramas below were downloaded directly from Poly Haven's official asset CDN on 2026-09-12. Both are CC0 1.0 Universal; they may be redistributed with this game. Their original pixels are unchanged." Table row: Qwantani Sunset (Pure Sky) | Greg Zaal — Photography; Jarod Guest — Processing | qwantani_sunset_puresky_2k.hdr | 4,171,959 | d66e0823...cabef
+
+files (bytes, sha256, independent hash cross-check):
+  - qwantani_sunset_puresky_2k.hdr  4171959 bytes  sha256=d66e08231e9c09ca40c6d035214ae8efb638782745c82addbb2a063fa32cabef
+      url: https://raw.githubusercontent.com/YvesZhou-hub/GTA-6-Sydney/main/game/assets/environment/qwantani_sunset_puresky_2k.hdr
+      MATCH sha256 vs github.com/YvesZhou-hub/GTA-6-Sydney licenses/DAYLIGHT_CYCLE.md (downloaded from dl.polyhaven.org, CC0 1.0)
+
+intended use: Golden-hour / sunset sky.
+
+notes: Equirectangular 2:1 Radiance HDR (linear). Blender: World > Environment Texture. UE: HDRI Backdrop actor or sky sphere (import as TextureCube/LongLat). Attribution is not required by CC0; credit kept voluntarily.

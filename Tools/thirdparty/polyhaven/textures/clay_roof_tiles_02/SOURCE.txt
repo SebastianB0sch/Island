@@ -1,0 +1,29 @@
+asset_id: bld_roof_clay_roof_tiles_02_1k
+category: sky_textures
+description: Tileable PBR set 1K (diff, nor_gl, arm = AO/rough/metal)
+upstream source page: https://polyhaven.com/a/clay_roof_tiles_02
+author: Poly Haven artist (credited on the asset page)
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/clay_roof_tiles_02/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Every third-party file in this directory is **CC0 1.0** (public domain dedication), from two libraries. Nothing here carries an attribution requirement, a non-commercial clause, or a redistribution restriction." ... "### Poly Haven — https://polyhaven.com — CC0 1.0" ... "**Textures** — `assets/textures/<slug>/`, 1k JPG, `diff` + `nor_gl` + `arm`"
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - clay_roof_tiles_02_arm_1k.jpg  564611 bytes  sha256=da94d4ce78607c4cb0450c669e8ca5d18852eb284def75445663f959cc1af63b
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/clay_roof_tiles_02/clay_roof_tiles_02_arm_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - clay_roof_tiles_02_diff_1k.jpg  903929 bytes  sha256=227a062b38b170e02c27eaa513dae45dc8bc893a62cbd8d0c08e2c32b381fc25
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/clay_roof_tiles_02/clay_roof_tiles_02_diff_1k.jpg
+      MATCH sha256 vs github.com/antonioperez/vallarta viewer/public/textures/sources.json (license "CC0-1.0")
+  - clay_roof_tiles_02_nor_gl_1k.jpg  990101 bytes  sha256=1548d3ebce335a4590d9e421556c4189a7b63852c793a568c71b9e533f8b62d5
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/clay_roof_tiles_02/clay_roof_tiles_02_nor_gl_1k.jpg
+      MATCH sha256 vs github.com/antonioperez/vallarta viewer/public/textures/sources.json (license "CC0-1.0")
+
+intended use: "RoofTiles" detail - terracotta pantiles (Ra/Slifer dorm roofs; tint blue for M_AcademyRoof).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

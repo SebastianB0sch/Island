@@ -1,0 +1,30 @@
+asset_id: bld_plaster_painted_plaster_wall_1k
+category: sky_textures
+description: Tileable PBR set 1K (diff, nor_gl, arm = AO/rough/metal)
+upstream source page: https://polyhaven.com/a/painted_plaster_wall
+author: Amal Kumar / Poly Haven
+license: CC0 1.0 Universal
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/painted_plaster_wall/
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Every third-party file in this directory is **CC0 1.0** (public domain dedication), from two libraries. Nothing here carries an attribution requirement, a non-commercial clause, or a redistribution restriction." ... "### Poly Haven — https://polyhaven.com — CC0 1.0" ... "**Textures** — `assets/textures/<slug>/`, 1k JPG, `diff` + `nor_gl` + `arm`"
+  - github.com/yosnap/habiteka-app public/materials/polyhaven/manifest.json: polyhaven:painted_plaster_wall, license "CC0-1.0", authors ["Amal Kumar"].
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - painted_plaster_wall_arm_1k.jpg  511105 bytes  sha256=2f13ed444e3e8f13087bca0890969d30795ed074bcfb11737d1ad6f5f0b53992
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/painted_plaster_wall/painted_plaster_wall_arm_1k.jpg
+      (no independent hash registry found; provenance per hosting repo documentation above)
+  - painted_plaster_wall_diff_1k.jpg  686726 bytes  sha256=440310f05af089f2c93353167573403cbc3f805948203237b5d26431eeb9e19c
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/painted_plaster_wall/painted_plaster_wall_diff_1k.jpg
+      MATCH md5 vs github.com/yosnap/habiteka-app public/materials/polyhaven/manifest.json (license "CC0-1.0")
+  - painted_plaster_wall_nor_gl_1k.jpg  900461 bytes  sha256=8eb01647d126eb5341e2c325821ad48c8ca11349dbef53447c95422c5d91cc9d
+      url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/painted_plaster_wall/painted_plaster_wall_nor_gl_1k.jpg
+      MATCH md5 vs github.com/yosnap/habiteka-app public/materials/polyhaven/manifest.json (license "CC0-1.0")
+
+intended use: Plaster/stucco detail ("Plaster" detail texture: M_WhiteWall, M_CreamWall, M_AcademyWall).
+
+notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.

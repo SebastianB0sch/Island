@@ -1,0 +1,24 @@
+asset_id: hdri_kloofendal_48d_partly_cloudy_puresky
+category: sky_textures
+description: HDRI sky (2048x1024 Radiance .hdr), sunny daytime with cumulus clouds, sun ~48deg elevation
+upstream source page: https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+author: Greg Zaal (photography), Jarod Guest (sky processing) / Poly Haven
+license: CC0 1.0 Universal (public domain dedication)
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
+  - https://raw.githubusercontent.com/r2d2m/Cogito/main/COGITO/Assets/hdris/kloofendal_48d_partly_cloudy_puresky_2k.hdr
+
+license evidence (quotes from files fetched on 2026-10-28):
+  - github.com/r2d2m/Cogito Readme.md (fork of the COGITO Godot template): "Cloud HDR (kloofendal_48d_partly_cloudy_puresky)2k.hdr by Greg Zaal, used under CC0."
+  - github.com/apich/cs2-web docs/MOVEMENT-AND-SKY.md: Poly Haven Kloofendal 48d Partly Cloudy (Pure Sky), Greg Zaal / Jarod Guest, CC0; original 2K HDR 5,451,493 bytes, SHA-256 5244534e...198 (same file).
+  - Poly Haven license, quoted verbatim in github.com/yuema137/MineWorld clients/3d-spike/ASSETS.md: "Our assets are all licensed as CC0"; "You can redistribute them, share them around, include them when sharing your own work, or even in a product you sell."
+
+files (bytes, sha256, independent hash cross-check):
+  - kloofendal_48d_partly_cloudy_puresky_2k.hdr  5451493 bytes  sha256=5244534e9cf5b606f2ff513aa00ddb161b0a4826ffd88a0d3bd03ac29247d198
+      url: https://raw.githubusercontent.com/r2d2m/Cogito/main/COGITO/Assets/hdris/kloofendal_48d_partly_cloudy_puresky_2k.hdr
+      MATCH sha256 vs github.com/ishtiaq-ahmed-dev/rocket-mission-lab scripts/install_native_sky.py (pins URL https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr) and github.com/Khyretos/kk-engine cmake/skies.cmake
+
+intended use: Primary sunny tropical daytime sky for Blender preview renders / optional UE HDRI backdrop. Bright, saturated blue with fluffy cumulus.
+
+notes: Equirectangular 2:1 Radiance HDR (linear). Blender: World > Environment Texture. UE: HDRI Backdrop actor or sky sphere (import as TextureCube/LongLat). Attribution is not required by CC0; credit kept voluntarily.
