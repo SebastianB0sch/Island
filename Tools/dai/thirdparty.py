@@ -189,6 +189,8 @@ def _normalise(obj, spec):
         off = Vector((0, 0, spec.get("z_offset", 0.0)))
     me.transform(Matrix.Translation(off))
     me.transform(Matrix.Diagonal((s, s, s, 1.0)))
+    if spec.get("sink"):            # metres below the origin after scaling (boats: origin at the waterline)
+        me.transform(Matrix.Translation((0.0, 0.0, -spec["sink"])))
     me.update()
 
 

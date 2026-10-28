@@ -18,6 +18,7 @@ Paths are relative to `Tools/thirdparty/`.
 | `ambientcg/Ground092A` | ambientCG (Lennart Demes) | CC0 1.0 Universal | <https://ambientcg.com/view?id=Ground092A> | terrain layer Sand, texture Sand |
 | `ambientcg/Marble012` | ambientCG (Lennart Demes) | CC0 1.0 Universal | <https://ambientcg.com/view?id=Marble012> | texture Marble |
 | `eztree/trees` | ? | ? |  | SM_BroadTree_A, SM_BroadTree_B, SM_Bush_B, SM_DeadTree_A, SM_PineTree_A |
+| `googlepoly/fishing_trawler` | Poly by Google (Google Poly archive) | CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_FishingBoat |
 | `khronos/Lantern` | Microsoft (artist: sbtron) | CC0-1.0 | <https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Lantern> | SM_LampPost_Old |
 | `polyhaven/hdri/kloofendal_48d_partly_cloudy_puresky` | Greg Zaal (photography), Jarod Guest (sky processing) / Poly Haven | CC0 1.0 Universal (public domain dedication) | <https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky> | sky (day) |
 | `polyhaven/hdri/qwantani_night_puresky` | Greg Zaal (photography), Jarod Guest (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/qwantani_night_puresky> | sky (night) |
@@ -77,6 +78,7 @@ Paths are relative to `Tools/thirdparty/`.
 
 ### CC-BY attributions
 
+- `googlepoly/fishing_trawler`: "Boat" by Poly by Google, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/), source https://poly.pizza/m/1ZuSXvhkRg_. Modified (rescaled, converted for Unreal Engine).
 - `sketchfab/beach_chair`: "Beach Chair" (https://sketchfab.com/3d-models/beach-chair-57e9477018d244378302070a8738b566) by stealth86 (https://sketchfab.com/stealth86) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 - `sketchfab/beach_umbrella`: "Beach Umbrella" (https://sketchfab.com/3d-models/beach-umbrella-1014ad7c8a4c4aa8ba5e88fc6151aa4f) by stealth86 (https://sketchfab.com/stealth86) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 - `sketchfab/city_props_vol2`: "City Props Collection (volume 2)" (https://sketchfab.com/3d-models/city-props-collection-volume-2-2f52ea53c58e455f9b69d11f58763c96) by TampaJoey (https://sketchfab.com/TampaJoey) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
