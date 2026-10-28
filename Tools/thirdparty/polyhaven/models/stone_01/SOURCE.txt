@@ -1,0 +1,50 @@
+asset_id: ph_stone_01
+category: rocks_terrain
+upstream asset: Poly Haven "stone_01" - https://polyhaven.com/a/stone_01  (polyhaven.com / dl.polyhaven.org are blocked from this container)
+author: Dario Barresi: Photography; Rico Cilliers: photography, processing (Poly Haven)
+license: CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily.
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copy of Poly Haven's 1k glTF export; HTTP 200, non-HTML, verified):
+  https://raw.githubusercontent.com/jbang2004/long-wind/main/public/assets/ph/models/stone_01/stone_01_1k.gltf
+  + the .bin and textures/*.jpg referenced by that .gltf (same folder)
+  Original Poly Haven file names and relative texture paths preserved; files unmodified.
+
+license evidence (files fetched 2026-10-28):
+  a) Poly Haven's own repository (first-party): https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md
+     "While our 3D assets themselves are published under the CC0 license, and the code for this API is licensed as AGPL,
+      access to this API through our servers (api.polyhaven.com) is covered separately by these terms of service."
+     "CC0 assets carry no attribution requirement whatsoever, now or ever."
+  b) Poly Haven license page, quoted verbatim in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
+     "All assets on Poly Haven are licensed as CC0, which is the same as public domain. This means you can use, modify and
+      redistribute our assets for any purpose, including commercial use, without attribution or permission."
+  (copies of these files: ../_license_evidence/PolyHaven_Public-API_ToS.md, ../_license_evidence/2600th_web-ocean-3d_ASSET_LICENSES.md)
+  c) Poly Haven API listing snapshot (api.polyhaven.com/assets?type=models, fetched 2026-10-10) at
+     https://raw.githubusercontent.com/nclamvn/duong-ve-sai-gon/master/docs/research/rung-truong-son/snapshots/K_polyhaven_models_rocks.md
+     row: "stone_01 | Stone 01 | rocks, nature, collection: verdant_trail | rock, stone, pebbles, dirt, terrain, gravel, quartz | Dario Barresi: Photography; Rico Cilliers: photography, processing | 71916"
+     (copy: ../_license_evidence/polyhaven_api_snapshot_rocks.md)
+  d) Hosting repo credits, https://raw.githubusercontent.com/jbang2004/long-wind/main/CREDITS.md :
+     "Scanned textures and rock models: [Poly Haven](https://polyhaven.com) — CC0 (public domain). Assets used: ... - model: stone_01"
+     (copy: ../_license_evidence/jbang2004_long-wind_CREDITS.md)
+
+integrity cross-check against an independent second mirror (sha256):
+  - stone_01_1k.gltf: MATCH sha256 vs https://raw.githubusercontent.com/awplanets/awplanet/main/public/models/nature/polyhaven/stone_01/stone_01_1k.gltf
+  - textures/stone_01_diff_1k.jpg: MATCH sha256 vs https://raw.githubusercontent.com/awplanets/awplanet/main/public/models/nature/polyhaven/stone_01/textures/stone_01_diff_1k.jpg
+
+intended use: Pebbles/small stones: single reddish quartz-veined stone 0.15 m. 53.5k tris -> decimate to ~2k for scatter.
+
+tech notes (verified 2026-10-28):
+  stone_01_1k.gltf: Blender 5.2 glTF import OK, missing images: 0; 53,520 tris; 1 mesh object(s); bbox (m, X/Y/Z-up) [0.147, 0.089, 0.072]; materials ['stone_01']; textures: stone_01_diff 1024x1024, stone_01_nor_gl 1024x1024, stone_01_rough 1024x1024
+  Normal map is OpenGL (+Y) -> tick "Flip Green Channel" in UE. *_arm_1k.jpg packs R=AO, G=roughness, B=metallic (linear, sRGB off).
+  Origin is not at base-centre/-Y-front per catalog convention: re-pivot in the dai pipeline.
+  Over the ~15k-tri budget for a non-Nanite mesh. Tested recipe (Blender 5.2): import glTF -> bmesh remove_doubles(dist=1e-5)
+  (Poly Haven exports are split at every UV seam; without welding, Decimate stalls at ~40% of the input) -> Decimate COLLAPSE
+  ratio = target/tris. boulder_01 66,122 -> 15,000 tris was visually indistinguishable at prop distance. Or keep full res for Nanite.
+
+files:
+  - _preview.png  245657 bytes  sha256=4a6736019f7b83ac00234f01f1f9e3627336c70f5fed1617f83e5d78826e1c98
+  - stone_01.bin  1213536 bytes  sha256=ad037d15be3619be6aa3ddb144d450aea43b5efb66b670ba756272bf839418e3
+  - stone_01_1k.gltf  2750 bytes  sha256=e06d59972ef910acde1cc64f9450ddb9c12dcd052031bc9982a7c46e108f6111
+  - textures/stone_01_arm_1k.jpg  846334 bytes  sha256=1cb342823b2883e9885bf7bfe0ed12cd897d2f99a49d3c25b5e2c8f30f38263e
+  - textures/stone_01_diff_1k.jpg  649135 bytes  sha256=c3171a6108bf1b3656b4a3576b329065d7acf6e337506a9e1a15511300c8fc88
+  - textures/stone_01_nor_gl_1k.jpg  1012665 bytes  sha256=4d08a934f846913e96152260c824f7d5e642350ede76569ce82d6dc50c45f535

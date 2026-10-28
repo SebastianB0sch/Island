@@ -491,6 +491,7 @@ void ADAHUD::DrawHelp()
 	static const TCHAR* Credits[] = {
 		TEXT("Art credits: textures, skies and plants from Poly Haven, ambientCG, 3dtextures.me (CC0); trees made with EZ-Tree (MIT)."),
 		TEXT("Palm, acacia, hydrangea and rose models by Space Mushrooms & Scopia (Sweet Home 3D library), CC BY 3.0, modified."),
+		TEXT("\"Rock - Basalt\" by yonimantz (sketchfab.com/yonimantz09), CC BY 4.0, decimated."),
 		TEXT("Further CC0 / CC-BY assets and their authors: see CREDITS.md. Unofficial fan project, not affiliated with Konami."),
 	};
 	const float W = 1000.f * S();

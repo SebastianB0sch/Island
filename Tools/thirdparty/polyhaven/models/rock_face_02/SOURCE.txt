@@ -1,0 +1,53 @@
+asset_id: ph_rock_face_02
+category: rocks_terrain
+upstream asset: Poly Haven "rock_face_02" - https://polyhaven.com/a/rock_face_02  (polyhaven.com / dl.polyhaven.org are blocked from this container)
+author: Dario Barresi: All; Rico Cilliers: processing (Poly Haven)
+license: CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily.
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copy of Poly Haven's 1k glTF export; HTTP 200, non-HTML, verified):
+  https://raw.githubusercontent.com/srijibbose/digital-museum/main/assets/source/becoming-human/rock_face_02/rock_face_02_1k.gltf
+  + the .bin and textures/*.jpg referenced by that .gltf (same folder)
+  Original Poly Haven file names and relative texture paths preserved; files unmodified.
+
+license evidence (files fetched 2026-10-28):
+  a) Poly Haven's own repository (first-party): https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md
+     "While our 3D assets themselves are published under the CC0 license, and the code for this API is licensed as AGPL,
+      access to this API through our servers (api.polyhaven.com) is covered separately by these terms of service."
+     "CC0 assets carry no attribution requirement whatsoever, now or ever."
+  b) Poly Haven license page, quoted verbatim in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
+     "All assets on Poly Haven are licensed as CC0, which is the same as public domain. This means you can use, modify and
+      redistribute our assets for any purpose, including commercial use, without attribution or permission."
+  (copies of these files: ../_license_evidence/PolyHaven_Public-API_ToS.md, ../_license_evidence/2600th_web-ocean-3d_ASSET_LICENSES.md)
+  c) Poly Haven API listing snapshot (api.polyhaven.com/assets?type=models, fetched 2026-10-10) at
+     https://raw.githubusercontent.com/nclamvn/duong-ve-sai-gon/master/docs/research/rung-truong-son/snapshots/K_polyhaven_models_rocks.md
+     row: "rock_face_02 | Rock Face 02 | rocks, nature, collection: verdant_trail | cliff, landscape, rock face, rock, formation, geology, rocks, weathered, lichen, rugged, outdoors, natural, environment, rocky surface | Dario Barresi: All; Rico Cilliers: processing | 29566"
+     (copy: ../_license_evidence/polyhaven_api_snapshot_rocks.md)
+  d) Hosting repo licence manifest, https://raw.githubusercontent.com/srijibbose/digital-museum/main/content/becoming-human-asset-licenses.json :
+     {"creator": "Loupe composition using rock_face_02 by Poly Haven", "sourceUrl": "https://polyhaven.com/a/rock_face_02",
+      "license": "CC0", "licenseUrl": "https://polyhaven.com/license", "attributionRequired": false, "commercialUse": true}
+     (copy: ../_license_evidence/srijibbose_digital-museum_asset-licenses.json)
+
+integrity cross-check against an independent second mirror (sha256):
+  - rock_face_02.bin and textures/rock_face_02_{diff,nor_gl,arm}_1k.jpg: MATCH sha256 vs the independent copy at
+    https://media.githubusercontent.com/media/Mainframe-Games/mainframe-engine/main/Examples/Forest/Assets/Art/Props/rock_face_02/ (Git LFS)
+  - rock_face_02_1k.gltf: that Mainframe-Games copy has an EDITED .gltf (adds occlusionTexture, renames image 'rough'->'arm');
+    the copy staged here is the unmodified Blender-exporter .gltf (images named *_rough as in every other Poly Haven 1k export).
+
+intended use: SM_Rock_C (tall rock ~4 m) - PRIMARY. Upright layered rock pillar with yellow-green lichen, 2.5 m tall -> scale x1.6. 29.6k tris (decimate to 15k).
+
+tech notes (verified 2026-10-28):
+  rock_face_02_1k.gltf: Blender 5.2 glTF import OK, missing images: 0; 29,566 tris; 1 mesh object(s); bbox (m, X/Y/Z-up) [2.711, 2.127, 2.472]; materials ['rock_face_02']; textures: rock_face_02_diff 1024x1024, rock_face_02_nor_gl 1024x1024, rock_face_02_rough 1024x1024
+  Normal map is OpenGL (+Y) -> tick "Flip Green Channel" in UE. *_arm_1k.jpg packs R=AO, G=roughness, B=metallic (linear, sRGB off).
+  Origin is not at base-centre/-Y-front per catalog convention: re-pivot in the dai pipeline.
+  Over the ~15k-tri budget for a non-Nanite mesh. Tested recipe (Blender 5.2): import glTF -> bmesh remove_doubles(dist=1e-5)
+  (Poly Haven exports are split at every UV seam; without welding, Decimate stalls at ~40% of the input) -> Decimate COLLAPSE
+  ratio = target/tris. boulder_01 66,122 -> 15,000 tris was visually indistinguishable at prop distance. Or keep full res for Nanite.
+
+files:
+  - _preview.png  297426 bytes  sha256=73a0cd4cf3dad3d5cbb524432bd39818927181b32ad0cafea3deaee578ecaf84
+  - rock_face_02.bin  702068 bytes  sha256=cfa3dea8f0f91525b5dfe93d889acacf961d20f7174aae100eae2c6e101edf31
+  - rock_face_02_1k.gltf  2794 bytes  sha256=ebeab82d463c89eb5f894b85807da111280a73b552d694257118f3f2d47bf760
+  - textures/rock_face_02_arm_1k.jpg  820389 bytes  sha256=0f3f64b9f56e3c5cecbb99e45d8fa0d4cbf025d4455439d1c5f6672a408365ee
+  - textures/rock_face_02_diff_1k.jpg  920193 bytes  sha256=d777f2c9b598773c2143751c34913cf5eef0ae392af31fb73c28b98afab6fb7b
+  - textures/rock_face_02_nor_gl_1k.jpg  1082942 bytes  sha256=a9dc200810f5488395fdc928b5a9441c007c33047d0375d946f33dcd2ff1c853

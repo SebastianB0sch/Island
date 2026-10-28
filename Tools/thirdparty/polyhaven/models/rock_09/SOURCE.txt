@@ -1,0 +1,48 @@
+asset_id: ph_rock_09
+category: rocks_terrain
+upstream asset: Poly Haven "rock_09" - https://polyhaven.com/a/rock_09  (polyhaven.com / dl.polyhaven.org are blocked from this container)
+author: Jenelle van Heerden: All (Poly Haven)
+license: CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily.
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copy of Poly Haven's 1k glTF export; HTTP 200, non-HTML, verified):
+  https://raw.githubusercontent.com/jbang2004/long-wind/main/public/assets/ph/models/rock_09/rock_09_1k.gltf
+  + the .bin and textures/*.jpg referenced by that .gltf (same folder)
+  Original Poly Haven file names and relative texture paths preserved; files unmodified.
+
+license evidence (files fetched 2026-10-28):
+  a) Poly Haven's own repository (first-party): https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md
+     "While our 3D assets themselves are published under the CC0 license, and the code for this API is licensed as AGPL,
+      access to this API through our servers (api.polyhaven.com) is covered separately by these terms of service."
+     "CC0 assets carry no attribution requirement whatsoever, now or ever."
+  b) Poly Haven license page, quoted verbatim in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
+     "All assets on Poly Haven are licensed as CC0, which is the same as public domain. This means you can use, modify and
+      redistribute our assets for any purpose, including commercial use, without attribution or permission."
+  (copies of these files: ../_license_evidence/PolyHaven_Public-API_ToS.md, ../_license_evidence/2600th_web-ocean-3d_ASSET_LICENSES.md)
+  c) Poly Haven API listing snapshot (api.polyhaven.com/assets?type=models, fetched 2026-10-10) at
+     https://raw.githubusercontent.com/nclamvn/duong-ve-sai-gon/master/docs/research/rung-truong-son/snapshots/K_polyhaven_models_rocks.md
+     row: "rock_09 | Rock 09 | nature, rocks, collection: verdant_trail | rock, landscape, geology, formation, weathered, stone, dirt, boulder, terrain | Jenelle van Heerden: All | 23280"
+     (copy: ../_license_evidence/polyhaven_api_snapshot_rocks.md)
+  d) Hosting repo credits, https://raw.githubusercontent.com/jbang2004/long-wind/main/CREDITS.md :
+     "Scanned textures and rock models: [Poly Haven](https://polyhaven.com) — CC0 (public domain). Assets used: ... - model: rock_09"
+     (copy: ../_license_evidence/jbang2004_long-wind_CREDITS.md)
+
+integrity cross-check against an independent second mirror (sha256):
+  - rock_09_1k.gltf: MATCH sha256 vs https://raw.githubusercontent.com/NeilGilani/sendit/main/assets/models/rocks/rock_09/rock_09_1k.gltf
+  - textures/rock_09_diff_1k.jpg: MATCH sha256 vs https://raw.githubusercontent.com/NeilGilani/sendit/main/assets/models/rocks/rock_09/textures/rock_09_diff_1k.jpg
+
+intended use: SM_Rock_B (flat slab ~3 m) - PRIMARY. Thin layered slab (0.145 x 0.074 x 0.033 m as scanned) -> scale ~x20 for a 3 m slab (1k texture is then ~3 px/cm; fine at gameplay distance). 12.4k tris, game-ready.
+
+tech notes (verified 2026-10-28):
+  rock_09_1k.gltf: Blender 5.2 glTF import OK, missing images: 0; 12,416 tris; 1 mesh object(s); bbox (m, X/Y/Z-up) [0.074, 0.145, 0.033]; materials ['rock_09']; textures: rock_09_diff 1024x1024, rock_09_nor_gl 1024x1024, rock_09_rough 1024x1024
+  Normal map is OpenGL (+Y) -> tick "Flip Green Channel" in UE. *_arm_1k.jpg packs R=AO, G=roughness, B=metallic (linear, sRGB off).
+  Origin is not at base-centre/-Y-front per catalog convention: re-pivot in the dai pipeline.
+  Within the ~15k-tri budget as-is (or per object).
+
+files:
+  - _preview.png  231570 bytes  sha256=0204bce03a9c7adacc6e23ed19f0770da0e6035c6d9e22efac6ee04200467924
+  - rock_09.bin  286592 bytes  sha256=780c37d6fc11ca3a01c3763535ef883908b6007271a46bd446d2289ded820751
+  - rock_09_1k.gltf  2745 bytes  sha256=636e57eb0090889627da18edaec202ff9f65f83101b94f91b7da4d21dc080ab9
+  - textures/rock_09_arm_1k.jpg  322950 bytes  sha256=594e2cec49e6bb40bd9bab2649e37dcc261079456cf4d6f680f56770c19db5ea
+  - textures/rock_09_diff_1k.jpg  595103 bytes  sha256=afb7ae5ae82238d304aba589391ac6bc87f7cf1dbfe50980c21f762cfdd87efd
+  - textures/rock_09_nor_gl_1k.jpg  757031 bytes  sha256=2195b5c7da3a23af2a5f93dbb20f38bc069028509b106397bc8d2aee0bc55729

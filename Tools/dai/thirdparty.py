@@ -343,6 +343,12 @@ def _decimate(obj, max_tris):
     tris = sum(len(p.vertices) - 2 for p in obj.data.polygons)
     if tris <= max_tris:
         return
+    # scans are split at every UV seam; weld first or Collapse stalls at ~40% (UVs live on loops, so they survive)
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-5)
+    bm.to_mesh(obj.data)
+    bm.free()
     mod = obj.modifiers.new("decimate", "DECIMATE")
     mod.decimate_type = "COLLAPSE"
     mod.ratio = max_tris / tris

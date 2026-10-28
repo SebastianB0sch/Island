@@ -1,0 +1,57 @@
+asset_id: ph_coast_rocks_05_lods
+category: rocks_terrain
+upstream asset: Poly Haven "coast_rocks_05" - https://polyhaven.com/a/coast_rocks_05 (scan has ~0.77M tris at full res)
+author: Rob Tuytel (Poly Haven); game LODs derived by ishtiaq-ahmed-dev/rocket-mission-lab with meshoptimizer (UVs + Poly Haven 1k textures retained)
+license: CC0 1.0 Universal (public domain). No attribution required.
+downloaded: 2026-10-28
+
+downloaded from (HTTP 200, non-HTML, verified):
+  https://raw.githubusercontent.com/ishtiaq-ahmed-dev/rocket-mission-lab/master/frontend/public/assets/models/coast_rocks_05/coast_rocks_05_web.gltf (+ coast_rocks_05_web.bin)
+  https://raw.githubusercontent.com/ishtiaq-ahmed-dev/rocket-mission-lab/master/frontend/public/assets/models/coast_rocks_05/coast_rocks_05_mid.gltf (+ .bin)
+  https://raw.githubusercontent.com/ishtiaq-ahmed-dev/rocket-mission-lab/master/frontend/public/assets/models/coast_rocks_05/coast_rocks_05_low.gltf (+ .bin)
+  + textures/coast_rocks_05_{diff,nor_gl,arm}_1k.jpg (identical across the three downloads; shared by all three LODs)
+  Files unmodified. The full-resolution 1k glTF (771,724 tris, ~30 MB .bin) was deliberately not downloaded.
+
+license evidence (files fetched 2026-10-28):
+  a) Poly Haven's own repository (first-party): https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md
+     "While our 3D assets themselves are published under the CC0 license, and the code for this API is licensed as AGPL,
+      access to this API through our servers (api.polyhaven.com) is covered separately by these terms of service."
+     "CC0 assets carry no attribution requirement whatsoever, now or ever."
+  b) Poly Haven license page, quoted verbatim in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
+     "All assets on Poly Haven are licensed as CC0, which is the same as public domain. This means you can use, modify and
+      redistribute our assets for any purpose, including commercial use, without attribution or permission."
+  (copies of these files: ../_license_evidence/PolyHaven_Public-API_ToS.md, ../_license_evidence/2600th_web-ocean-3d_ASSET_LICENSES.md)
+  c) Poly Haven API listing snapshot (rocks category) at
+     https://raw.githubusercontent.com/nclamvn/duong-ve-sai-gon/master/docs/research/rung-truong-son/snapshots/K_polyhaven_models_rocks.md
+     row: "coast_rocks_05 | Coast Rocks 05 | nature, rocks, collection: smugglers_cove, collection: verdant_trail | rocks, coastal, maritime, ocean, stone, reef, formation, landscape, seaside, shore, geology, pebbles, seaweed, weathered | Rob Tuytel: All | 1446981"
+  d) Hosting repo attribution, https://raw.githubusercontent.com/ishtiaq-ahmed-dev/rocket-mission-lab/master/frontend/public/assets/ATTRIBUTION.md :
+     "Downloaded 19 October 2026 from Poly Haven. These assets are CC0 ..." / "- **Coast Rocks 05**, Rob Tuytel. Scanned glTF mesh
+      with 1K PBR textures. [Source](https://polyhaven.com/a/coast_rocks_05). Local meshoptimizer derivatives contain 29,985 / 2,995 /
+      1,322 triangles for near/mid/far detail. Unused vertices are compacted ... UVs and PBR maps are retained."
+     (copy: ../_license_evidence/ishtiaq-ahmed-dev_rocket-mission-lab_ATTRIBUTION.md)
+
+integrity cross-check (sha256): textures/coast_rocks_05_diff_1k.jpg MATCH vs
+  https://raw.githubusercontent.com/lychees/threejs-water-1/main/public/models/coast/coast_rocks_05/textures/coast_rocks_05_diff_1k.jpg
+  and vs https://raw.githubusercontent.com/whoami22888/isles-of-mythos/main/client-godot/assets/external/polyhaven/coast_rocks_05/ (same bytes).
+
+intended use: SM_Rock_D (rock cluster ~5 m) - PRIMARY. Low, flat cluster of weathered tan shore rocks with seaweed/sand patches,
+  4.0 x 3.7 x 1.3 m (scale x1.2-1.3 for 5 m). Best fit for beaches / shoreline. Ready-made LODs: web = LOD0 (29.9k), mid = LOD1 (3.0k),
+  low = LOD2 (1.3k). For a <=15k LOD0, decimate "web" or use "mid" + normal map.
+
+tech notes (verified 2026-10-28):
+  coast_rocks_05_low.gltf: Blender 5.2 glTF import OK, missing images: 0; 1,320 tris; 1 mesh object(s); bbox (m, X/Y/Z-up) [4.027, 3.746, 1.272]; materials ['coast_rocks_05']; textures: coast_rocks_05_diff 1024x1024, coast_rocks_05_nor_gl 1024x1024, coast_rocks_05_rough 1024x1024
+  coast_rocks_05_mid.gltf: Blender 5.2 glTF import OK, missing images: 0; 2,993 tris; 1 mesh object(s); bbox (m, X/Y/Z-up) [4.033, 3.746, 1.306]; materials ['coast_rocks_05']; textures: coast_rocks_05_diff 1024x1024, coast_rocks_05_nor_gl 1024x1024, coast_rocks_05_rough 1024x1024
+  coast_rocks_05_web.gltf: Blender 5.2 glTF import OK, missing images: 0; 29,903 tris; 1 mesh object(s); bbox (m, X/Y/Z-up) [4.034, 3.746, 1.328]; materials ['coast_rocks_05']; textures: coast_rocks_05_diff 1024x1024, coast_rocks_05_nor_gl 1024x1024, coast_rocks_05_rough 1024x1024
+  Normal map OpenGL (+Y) -> flip green in UE. ARM = AO/rough/metal. Re-pivot to base-centre in the dai pipeline.
+
+files:
+  - _preview.png  251976 bytes  sha256=16dc220a8f480549d24b975cba6e2ae698da6b2dd6fe44215fac012cea5ae4a1
+  - coast_rocks_05_low.bin  63128 bytes  sha256=0576025558bc86ac6a173bfd7ebe6346c6911872981309af9a5afd089df6be35
+  - coast_rocks_05_low.gltf  1706 bytes  sha256=a2d16f3a819b51e489f1089c1ef77697bd4edfc430c7cb7a1efd209eab040262
+  - coast_rocks_05_mid.bin  120132 bytes  sha256=005e310c4e76e6b7f7b287b44c10b7fc01d294167f9b78038d6bf308084fd8f8
+  - coast_rocks_05_mid.gltf  1707 bytes  sha256=f09daf109a238685a9ab07ee84a75ce0a65d70ec21afd4c7a186a3e77ecca4a4
+  - coast_rocks_05_web.bin  945356 bytes  sha256=39e61b616acc875e56d31d2c79c3a42def50c108afcee85190b3765bdfc979b5
+  - coast_rocks_05_web.gltf  1718 bytes  sha256=b5dd9aedbf01f227262630e2d333e54c112a86d58a04df7ae80b68457fea1c91
+  - textures/coast_rocks_05_arm_1k.jpg  893696 bytes  sha256=26b851f13a6e00500440d964393bee8aa1865660777c05b9082bdb12c43a23b6
+  - textures/coast_rocks_05_diff_1k.jpg  954605 bytes  sha256=2ec4ec09422a14d55cc890ad902486cf76df8e663688fbc32f78a15684646ee1
+  - textures/coast_rocks_05_nor_gl_1k.jpg  1327762 bytes  sha256=5d32e03ea42abc05dd913e7ead4e915d9d60f27c8942f75128a87f84e7baee9d
