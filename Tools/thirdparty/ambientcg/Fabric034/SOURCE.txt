@@ -35,4 +35,10 @@ files (bytes, sha256, independent hash cross-check):
 
 intended use: "Fabric" detail texture (M_Carpet, uniforms M_Jacket/M_Pants/M_Shirt - neutral grey, tint by base colour).
 
-notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.
+notes: NormalGL is OpenGL convention (+Y up); for Unreal flip the green channel. Roughness/Displacement are linear data (sRGB off). Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+- ambientCG assets are CC0 1.0 (https://docs.ambientcg.com/license/); Tapao-Rush-Island art/SOURCES.md row re-read: "ambientCG, Fabric 034 - https://ambientcg.com/view?id=Fabric034 | CC0 1.0".
+- No independent hash registry exists for these files (residual). The .mtlx is ambientCG's own OpenPBR MaterialX file referencing exactly these maps; MorePET/mat-vis catalog lists Fabric034 with color/displacement/normal/roughness.

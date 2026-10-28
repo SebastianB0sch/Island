@@ -13,24 +13,24 @@ Paths are relative to `Tools/thirdparty/`.
 
 | Asset folder | Author | License | Source | Used for |
 |---|---|---|---|---|
-| `3dtextures/Water_001` | 3dtextures.me (Joao Paulo) | CC0 (public domain) as stated by the hosting repo | <https://3dtextures.me/> | texture WaterNormal |
+| `3dtextures/Water_001` | Joao Paulo ("Katsukagi") / 3dtextures.me | CC0 1.0 (3dtextures.me dedicates all its textures to CC0; stated by the hosting repo and corroborated independently) | <https://3dtextures.me/tag/water/> | texture WaterNormal |
 | `ambientcg/Fabric034` | ambientCG (Lennart Demes) | CC0 1.0 Universal | <https://ambientcg.com/view?id=Fabric034> | texture Fabric |
 | `ambientcg/Ground092A` | ambientCG (Lennart Demes) | CC0 1.0 Universal | <https://ambientcg.com/view?id=Ground092A> | terrain layer Sand, texture Sand |
 | `ambientcg/Marble012` | ambientCG (Lennart Demes) | CC0 1.0 Universal | <https://ambientcg.com/view?id=Marble012> | texture Marble |
-| `eztree/trees` | ? | ? |  | SM_BroadTree_A, SM_BroadTree_B, SM_Bush_B, SM_DeadTree_A, SM_PineTree_A |
-| `googlepoly/fishing_trawler` | Poly by Google (Google Poly archive) | CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_FishingBoat |
+| `eztree/trees` | Daniel Greenheck (EZ-Tree generator); bark textures Poly Haven / TextureCan | MIT (generator + bundled leaf textures); bark textures CC0 1.0 | <https://github.com/dgreenheck/ez-tree> | SM_BroadTree_A, SM_BroadTree_B, SM_Bush_B, SM_DeadTree_A, SM_PineTree_A |
+| `googlepoly/fishing_trawler` | Poly by Google (Google Poly archive) | CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://poly.pizza/m/1ZuSXvhkRg_> | SM_FishingBoat |
 | `khronos/Lantern` | Microsoft (artist: sbtron) | CC0-1.0 | <https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Lantern> | SM_LampPost_Old |
 | `polyhaven/hdri/kloofendal_48d_partly_cloudy_puresky` | Greg Zaal (photography), Jarod Guest (sky processing) / Poly Haven | CC0 1.0 Universal (public domain dedication) | <https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky> | sky (day) |
 | `polyhaven/hdri/qwantani_night_puresky` | Greg Zaal (photography), Jarod Guest (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/qwantani_night_puresky> | sky (night) |
 | `polyhaven/hdri/qwantani_sunset_puresky` | Greg Zaal (photography), Jarod Guest (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/qwantani_sunset_puresky> | sky (sunset) |
 | `polyhaven/models/Barrel_01` | Jorge Camacho | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/Barrel_01> | SM_Barrel |
-| `polyhaven/models/anthurium_botany_01` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). |  | SM_Bush_A |
+| `polyhaven/models/anthurium_botany_01` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). | <https://polyhaven.com/a/anthurium_botany_01> | SM_Bush_A |
 | `polyhaven/models/boulder_01` | Rico Cilliers: All (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "boulder_01" - https://polyhaven.com/a/boulder_01  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_Rock_A |
-| `polyhaven/models/calathea_orbifolia_01` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). |  | - |
+| `polyhaven/models/calathea_orbifolia_01` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). | <https://polyhaven.com/a/calathea_orbifolia_01> | - |
 | `polyhaven/models/coast_rocks_05` | Rob Tuytel (Poly Haven); game LODs derived by ishtiaq-ahmed-dev/rocket-mission-lab with meshoptimizer (UVs + Poly Haven 1k textures retained) | CC0 1.0 Universal (public domain). No attribution required. | Poly Haven "coast_rocks_05" - https://polyhaven.com/a/coast_rocks_05 (scan has ~0.77M tris at full res) | SM_Rock_D |
 | `polyhaven/models/dead_tree_trunk_02` | Jenelle van Heerden (Photography); Rico Cilliers (processing) (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "dead_tree_trunk_02" - https://polyhaven.com/a/dead_tree_trunk_02  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_Driftwood_A |
-| `polyhaven/models/fern_02` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). |  | SM_Fern_A |
-| `polyhaven/models/grass_medium_01` | Rob Tuytel (photography), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). |  | SM_GrassClump_A |
+| `polyhaven/models/fern_02` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). | <https://polyhaven.com/a/fern_02> | SM_Fern_A |
+| `polyhaven/models/grass_medium_01` | Rob Tuytel (photography), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). | <https://polyhaven.com/a/grass_medium_01> | SM_GrassClump_A |
 | `polyhaven/models/metal_trash_can` | GurJas Studios | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/metal_trash_can> | SM_TrashBin |
 | `polyhaven/models/mountainside` | Dario Barresi: Photography; Rico Cilliers: processing (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "mountainside" - https://polyhaven.com/a/mountainside  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_CliffRock_A |
 | `polyhaven/models/ocean_buoy` | Mateusz Sadek | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/ocean_buoy> | SM_Buoy |
@@ -40,21 +40,21 @@ Paths are relative to `Tools/thirdparty/`.
 | `polyhaven/models/street_lamp_01` | Josh Dean | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/street_lamp_01> | SM_LampPost |
 | `polyhaven/models/tree_stump_01` | Rob Tuytel (All) (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "tree_stump_01" - https://polyhaven.com/a/tree_stump_01  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_Stump_A |
 | `polyhaven/models/wooden_picnic_table` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_picnic_table> | SM_PicnicTable |
-| `polyhaven/textures/brown_planks_09` | Poly Haven artist (credited on the asset page) | CC0 1.0 Universal | <https://polyhaven.com/a/brown_planks_09> | texture Planks |
-| `polyhaven/textures/clay_roof_tiles_02` | Poly Haven artist (credited on the asset page) | CC0 1.0 Universal | <https://polyhaven.com/a/clay_roof_tiles_02> | texture RoofTiles |
+| `polyhaven/textures/brown_planks_09` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/brown_planks_09> | texture Planks |
+| `polyhaven/textures/clay_roof_tiles_02` | Amal Kumar / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/clay_roof_tiles_02> | texture RoofTiles |
 | `polyhaven/textures/cobblestone_floor_08` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/cobblestone_floor_08> | terrain layer Paving |
 | `polyhaven/textures/concrete` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/concrete> | texture Concrete |
-| `polyhaven/textures/corrugated_iron` | Poly Haven artist (credited on the asset page) | CC0 1.0 Universal | <https://polyhaven.com/a/corrugated_iron> | texture Corrugated |
-| `polyhaven/textures/damp_beach_sand` | Poly Haven artist (credited on the asset page) | CC0 1.0 Universal | <https://polyhaven.com/a/damp_beach_sand> | terrain layer WetSand |
+| `polyhaven/textures/corrugated_iron` | Dimitrios Savva (photography), Jenelle van Heerden (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/corrugated_iron> | texture Corrugated |
+| `polyhaven/textures/damp_beach_sand` | Dimitrios Savva / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/damp_beach_sand> | terrain layer WetSand |
 | `polyhaven/textures/dark_rock` | Amal Kumar / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/dark_rock> | terrain layer Ash |
 | `polyhaven/textures/dirt_floor` | eye-candy.xyz / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/dirt_floor> | terrain layer Dirt, texture Dirt |
 | `polyhaven/textures/distressed_painted_planks` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/distressed_painted_planks> | texture Siding |
-| `polyhaven/textures/forest_leaves_03` | Dimitrios Savva, Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/forest_leaves_03> | terrain layer ForestFloor |
+| `polyhaven/textures/forest_leaves_03` | Rob Tuytel, Dimitrios Savva / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/forest_leaves_03> | terrain layer ForestFloor |
 | `polyhaven/textures/leafy_grass` | Charlotte Baglioni / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/leafy_grass> | terrain layer Grass, texture Grass |
 | `polyhaven/textures/long_white_tiles` | Jenelle van Heerden, Sergej Majboroda / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/long_white_tiles> | texture FloorTiles |
 | `polyhaven/textures/painted_plaster_wall` | Amal Kumar / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/painted_plaster_wall> | texture Plaster |
-| `polyhaven/textures/rectangular_paving` | Poly Haven artist (credited on the asset page) | CC0 1.0 Universal | <https://polyhaven.com/a/rectangular_paving> | texture Paving |
-| `polyhaven/textures/red_brick_03` | Poly Haven artist (credited on the asset page) | CC0 1.0 Universal | <https://polyhaven.com/a/red_brick_03> | texture Bricks |
+| `polyhaven/textures/rectangular_paving` | Dimitrios Savva / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/rectangular_paving> | texture Paving |
+| `polyhaven/textures/red_brick_03` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/red_brick_03> | texture Bricks |
 | `polyhaven/textures/rock_boulder_dry` | Dimitrios Savva (photography), Rico Cilliers (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/rock_boulder_dry> | terrain layer Rock, texture Rock |
 | `polyhaven/textures/white_plaster_02` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/white_plaster_02> | texture Grunge |
 | `quaternius/worker` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/u/Quaternius> | SK_Student |
@@ -70,11 +70,11 @@ Paths are relative to `Tools/thirdparty/`.
 | `sketchfab/signpost` | Tetiana_Denysenko | CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED | <https://sketchfab.com/3d-models/signpost-493bcedc8b344a38a9a67587b14bfcff> | SM_Signpost |
 | `sketchfab/wooden_crate` | Memorie | CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED | <https://sketchfab.com/3d-models/wooden-crate-2a3ac54357bb4b92bfbc119111c09fd1> | SM_Crate |
 | `sketchfab/wooden_fence` | adventurer (ahmagh2e) | CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED | <https://sketchfab.com/3d-models/wooden-fence-building-farm-3a1e2a4bcbcf4a66a465e34e8ac5fb8f> | SM_Fence_Wood |
-| `sweethome3d/acacia` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_BroadTree_C |
-| `sweethome3d/coconut_palms` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_PalmTree_A, SM_PalmTree_B |
-| `sweethome3d/hedge` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | texture Leaves |
-| `sweethome3d/hydrangea` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_FlowerBush_Blue, SM_FlowerBush_White |
-| `sweethome3d/roses_bush` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_FlowerBush_Red, SM_FlowerBush_Yellow |
+| `sweethome3d/acacia` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_BroadTree_C |
+| `sweethome3d/coconut_palms` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_PalmTree_A, SM_PalmTree_B |
+| `sweethome3d/hedge` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | texture Leaves |
+| `sweethome3d/hydrangea` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_FlowerBush_Blue, SM_FlowerBush_White |
+| `sweethome3d/roses_bush` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_FlowerBush_Red, SM_FlowerBush_Yellow |
 
 ### CC-BY attributions
 

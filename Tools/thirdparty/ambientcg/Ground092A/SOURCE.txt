@@ -35,4 +35,12 @@ files (bytes, sha256, independent hash cross-check):
 
 intended use: TERRAIN_LAYERS "Sand" (dry white coral beach sand with wind ripples) - bright tropical look.
 
-notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.
+notes: NormalGL is OpenGL convention (+Y up); for Unreal flip the green channel. Roughness/AO/Displacement are linear data (sRGB off). Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+- ambientCG assets are CC0 1.0 (https://docs.ambientcg.com/license/); corroborated by mercurypitch Marble012 manifest {"spdx": "CC0-1.0", "redistribution": true, "attributionRequired": false}.
+- Provenance: Tapao-Rush-Island scripts/fetch_atoll_textures.py downloads https://ambientcg.com/get?file=Ground092A_2K-JPG.zip and extracts the .jpg/.png unchanged; art/SOURCES.md lists ground/Ground092A -> ambientcg.com/view?id=Ground092A.
+- No independent hash registry exists for these files (residual). File set (AO, Color, Displacement, NormalGL, Roughness + <id>.png preview) and Adobe-XMP JPEG metadata match ambientCG packaging; MorePET/mat-vis docs/catalog.md lists Ground092A with exactly these maps.
+- Note: Tapao docs/legal/CREDITS.md is marked as an unpublished draft; it is not relied on for the license, only for provenance.

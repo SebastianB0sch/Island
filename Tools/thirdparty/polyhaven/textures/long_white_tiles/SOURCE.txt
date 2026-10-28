@@ -17,7 +17,7 @@ license evidence (quotes from files fetched on 2026-10-28):
 files (bytes, sha256, independent hash cross-check):
   - long_white_tiles_arm_1k.jpg  572011 bytes  sha256=6bbaa09ff62436dd839a211d946ea2b09a07f1b5430408a415fd37bec594f829
       url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/long_white_tiles/long_white_tiles_arm_1k.jpg
-      (no independent hash registry found; provenance per hosting repo documentation above)
+      (no independent hash registry; same direct-from-provider fetch as its sibling maps, see AUDIT below)
   - long_white_tiles_diff_1k.jpg  619644 bytes  sha256=0aa70e14117e9b1fbf726868675f6afa8fd62a2691f7ba3964f47796df06cd9c
       url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/long_white_tiles/long_white_tiles_diff_1k.jpg
       MATCH md5 vs github.com/yosnap/habiteka-app public/materials/polyhaven/manifest.json (license "CC0-1.0")
@@ -28,3 +28,8 @@ files (bytes, sha256, independent hash cross-check):
 intended use: White wall/floor tiles (bathrooms, shop, dorm interiors).
 
 notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+- diff + nor_gl match habiteka-app manifest (md5 pinned to dl.polyhaven.org, CC0-1.0, authors ["Jenelle van Heerden", "Sergej Majboroda"]). ARM from the same direct dl.polyhaven.org fetch (MineWorld tools/fetch_slice_assets.sh).

@@ -1,9 +1,9 @@
 asset_id: water_normal_3dtextures_water_001
 category: sky_textures
 description: Tileable water normal map 1024x1024 (OpenGL-style, blue-dominant)
-upstream source page: https://3dtextures.me/ (Water 0001)
-author: 3dtextures.me (Joao Paulo)
-license: CC0 (public domain) as stated by the hosting repo
+upstream source page: https://3dtextures.me/tag/water/ (Water 001, "Water_001_SD" pack)
+author: Joao Paulo ("Katsukagi") / 3dtextures.me
+license: CC0 1.0 (3dtextures.me dedicates all its textures to CC0; stated by the hosting repo and corroborated independently)
 downloaded: 2026-10-28
 
 downloaded from (exact hosted copies, HTTP 200, non-HTML, verified):
@@ -15,8 +15,16 @@ license evidence (quotes from files fetched on 2026-10-28):
 files (bytes, sha256, independent hash cross-check):
   - Water_001_NORM.jpg  111566 bytes  sha256=93986ced051352f87ec059b827069a20789d0e850d902f7bb8f4fd03fd681e1d
       url: https://raw.githubusercontent.com/belzecue/eldskald_3d-toon-resources/master/source/assets/water/pool/Water_001_NORM.jpg
-      (no independent hash registry found; provenance per hosting repo documentation above)
+      MATCH sha256 vs 4 independent copies (Valeron-T/airplane-game, Emaleth/Anathema-World-Forge, shoyguer/godot_shaders_101, patrickelectric/bluesim)
 
 intended use: Soft pool-style ripples - lake / calm lagoon / ocean detail normal (M_Ocean, M_LakeWater).
 
 notes: Tangent-space normal map (blue-dominant, mean ~(0.5,0.5,1.0)); the provider does not state the green-channel convention - verify visually and flip green in UE if ripples look inverted. Pan two copies at different scales/directions for water.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+author source: Unity "Lowpoly Style" Third-Party Notice ("https://3dtextures.me/2018/11/29/water-002/ by Joao Paulo"); 0GreenClover0/VRP Dragon Water notice ("Water textures by Katsukagi https://3dtextures.me/tag/water/ License: CC0")
+- Byte-identical (SHA-256 93986ced...1e1d, 111,566 bytes) to 4 independent copies: Valeron-T/airplane-game, Emaleth/Anathema-World-Forge, shoyguer/godot_shaders_101 and patrickelectric/bluesim (imports/Water_001_SD/) - i.e. the unmodified 3dtextures.me "Water 001" (SD pack) file.
+- 3dtextures.me license corroborated independently: 117HD/RLHD 000_licenses.txt "All textures on this site are licensed as CC0."; Unity "Lowpoly Style" Third-Party Notice "WaterNormal.png under CC0 license ... original source is: https://3dtextures.me/2018/11/29/water-002/ by Joao Paulo"; Dragon Water notice "Water textures by Katsukagi https://3dtextures.me/tag/water/ License: CC0".
+- The original eldskald/3d-toon-resources repo is gone (404); belzecue fork README is the host statement.

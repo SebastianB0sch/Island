@@ -139,6 +139,7 @@ DuelAcademyIsland/          the Unreal Engine 5.8 project
 
 ```bash
 python3.13 -m venv .venv && .venv/bin/pip install bpy numpy scipy pillow   # Blender 5.2 as a module
+npm install -g @gltf-transform/cli                 # optional: decodes meshopt-compressed glTF downloads
 .venv/bin/python Tools/build_island.py            # terrain, meshes, textures, audio, layout
 .venv/bin/python Tools/build_island.py render     # preview renders -> Docs/renders
 .venv/bin/python Tools/preview_asset.py academy   # iterate on one location
@@ -152,6 +153,25 @@ Edit `Tools/dai/config.py` (positions, heights, paths), a location module in `To
 `SourceAssets/Heightmap/T_IslandHeight16.png` (2017 × 2017, 16 bit) matches the mesh terrain exactly.
 In Landscape mode → *Import from file*: **Location** X = -153600, Y = -153600, Z = 19200;
 **Scale** X = Y = 152.381, Z = 100. Then hide the `Island/terrain` actors.
+
+## Asset sources
+
+| What | Source (license) |
+|---|---|
+| Terrain layers (grass, forest floor, sand, wet sand, volcanic ash, rock, dirt, paving) | Poly Haven / ambientCG photo-scanned PBR sets (CC0) |
+| Building surface detail (plaster, marble, tiles, concrete, planks, siding, roof tiles, bricks, corrugated metal, fabric) | Poly Haven / ambientCG (CC0) |
+| Skies for the preview renders | Poly Haven pure-sky HDRIs (CC0) |
+| Palms, acacia, hydrangea and rose bushes | Sweet Home 3D library by Space Mushrooms & Scopia (CC BY 3.0) |
+| Broadleaf, pine and dead trees, bushes | generated with EZ-Tree (MIT) with Poly Haven / TextureCan bark (CC0) |
+| Fern, grass clumps, tropical undergrowth | Poly Haven photoscans (CC0) |
+| Boulders, rock faces, cliffs, coastal rocks, driftwood, stumps, pebbles | Poly Haven photoscans (CC0); basalt by yonimantz (CC BY 4.0) |
+| Street lamps, bins, drums, buoys, picnic tables | Poly Haven (CC0), Khronos glTF samples (CC0) |
+| Benches, signposts, fences, crates, containers, rowboats, beach umbrellas and chairs, vending machine, stone lanterns | Sketchfab authors (CC BY 4.0) |
+| Fishing trawlers | Poly by Google (CC BY 3.0) |
+| Duel Academy buildings, dorms, arena, harbor, lighthouse, ferry, volcano/waterfall features, flagpoles, bollards, duel dummies, sounds | original, built by the pipeline in `Tools/` |
+
+Every third-party folder under `Tools/thirdparty/` has a `SOURCE.txt`; [CREDITS.md](CREDITS.md) lists all of
+them with the required CC BY attribution text (also shown in-game on the F1 controls panel).
 
 ## Notes & limitations
 

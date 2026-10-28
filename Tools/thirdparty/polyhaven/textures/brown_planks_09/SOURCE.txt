@@ -2,7 +2,7 @@ asset_id: bld_wood_brown_planks_09_1k
 category: sky_textures
 description: Tileable PBR set 1K (diff, nor_gl, arm = AO/rough/metal)
 upstream source page: https://polyhaven.com/a/brown_planks_09
-author: Poly Haven artist (credited on the asset page)
+author: Rob Tuytel / Poly Haven
 license: CC0 1.0 Universal
 downloaded: 2026-10-28
 
@@ -16,14 +16,22 @@ license evidence (quotes from files fetched on 2026-10-28):
 files (bytes, sha256, independent hash cross-check):
   - brown_planks_09_arm_1k.jpg  489387 bytes  sha256=138c82a68cb4739c33994ddfcdf2eb2ef41cf5ac1e8be2132b9eed754d898d43
       url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/brown_planks_09/brown_planks_09_arm_1k.jpg
-      (no independent hash registry found; provenance per hosting repo documentation above)
+      (no independent hash registry; same direct-from-provider fetch as its sibling maps, see AUDIT below)
   - brown_planks_09_diff_1k.jpg  763538 bytes  sha256=6a890d75d48787518ccf32cb44e7557d1695e8a9180e813f79f7bfed075896ed
       url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/brown_planks_09/brown_planks_09_diff_1k.jpg
-      (no independent hash registry found; provenance per hosting repo documentation above)
+      MATCH independent copy/registry found during audit (see AUDIT below)
   - brown_planks_09_nor_gl_1k.jpg  730600 bytes  sha256=a42c35ecd2104765e1e06e7370be6673c6c7b8527d9abf3f34cf3cd444ea9e16
       url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/brown_planks_09/brown_planks_09_nor_gl_1k.jpg
-      (no independent hash registry found; provenance per hosting repo documentation above)
+      MATCH independent copy/registry found during audit (see AUDIT below)
 
 intended use: "Planks" detail (M_Wood, M_DarkWood, M_ShopShelf, docks).
 
 notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+author source: github.com/omarrayyann/tabletask assets/sources/polyhaven-looks.md; Poly Haven API info snapshot in github.com/Dragyn85/GameDevTVJam2024
+- diff byte-identical to independent copies in Northwest-Passage-Game-Studios/WhatFearsTheLight and Albertoolci/rushE2 (Poly Haven glTF package); nor_gl byte-identical to the rushE2 copy. ARM from the same direct dl.polyhaven.org fetch (MineWorld tools/fetch_slice_assets.sh).
+- Note: an older Poly Haven API snapshot (Dragyn85/GameDevTVJam2024, 2024) lists different md5/sizes for brown_planks_09 1k, i.e. Poly Haven has re-issued this asset since; the files here are the current release.
+- Author corrected from "Poly Haven artist" to Rob Tuytel.

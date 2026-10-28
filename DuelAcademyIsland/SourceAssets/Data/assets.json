@@ -896,6 +896,14 @@
   "category": "prop"
  },
  {
+  "file": "Meshes/Props/SM_FishingBoat.fbx",
+  "name": "SM_FishingBoat",
+  "folder": "Props",
+  "collision": "simple",
+  "nanite": false,
+  "category": "prop"
+ },
+ {
   "file": "Meshes/Props/SM_Driftwood_A.fbx",
   "name": "SM_Driftwood_A",
   "folder": "Props",

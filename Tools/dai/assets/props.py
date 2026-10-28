@@ -674,9 +674,12 @@ def get(name):
     return _cache[name]
 
 
+_tp_failed = set()
+
+
 def is_thirdparty(name):
     from .. import thirdparty
-    return thirdparty.has_prop(name)
+    return name not in _tp_failed and thirdparty.has_prop(name)
 
 
 def build_object(name, obj_name=None, collection=None):
@@ -684,7 +687,12 @@ def build_object(name, obj_name=None, collection=None):
     (Tools/thirdparty/registry.json), otherwise the procedural fallback."""
     if is_thirdparty(name):
         from .. import thirdparty
-        o = thirdparty.build_prop(name)
+        try:
+            o = thirdparty.build_prop(name)
+        except Exception as e:  # noqa: BLE001 - e.g. meshopt glTF without gltf-transform: use the procedural prop
+            print(f"  !! {name}: third-party import failed ({e}); using the procedural version")
+            _tp_failed.add(name)
+            return build_object(name, obj_name, collection)
         if obj_name:
             o.name = obj_name
         if collection is not None and collection not in o.users_collection:

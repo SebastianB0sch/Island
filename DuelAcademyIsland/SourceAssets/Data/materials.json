@@ -4470,6 +4470,27 @@
   "strength": 1.0,
   "opacity": 1.0
  },
+ "MT_FishingBoat_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 1.0,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "lambert3SG",
+  "base": "ThirdParty/FishingBoat/T_FishingBoat_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
  "MT_Driftwood_A_0": {
   "kind": "pbr",
   "color": [

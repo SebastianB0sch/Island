@@ -2,7 +2,7 @@ asset_id: bld_metal_corrugated_iron_1k
 category: sky_textures
 description: Tileable PBR set 1K (diff, nor_gl, rough)
 upstream source page: https://polyhaven.com/a/corrugated_iron
-author: Poly Haven artist (credited on the asset page)
+author: Dimitrios Savva (photography), Jenelle van Heerden (processing) / Poly Haven
 license: CC0 1.0 Universal
 downloaded: 2026-10-28
 
@@ -26,4 +26,11 @@ files (bytes, sha256, independent hash cross-check):
 
 intended use: Corrugated metal (sheds, Slifer dorm roof, harbor buildings); combine with M_RustMetal grunge for rusty variants.
 
-notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.
+notes: nor_gl is OpenGL convention (+Y up); for Unreal flip the green channel. rough is a separate linear map (no ARM pack in this set; sRGB off). Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+author source: github.com/RRG314/WorldExplorer3D app/assets/textures/ATTRIBUTION.md (same md5 fabb629c... as our diff) and github.com/AetherRadar/operation-steel-tide assets/textures/LICENSE.md
+- All 3 files match ceenguyen05/ACI-SND manifest (md5 pinned to dl.polyhaven.org, CC0-1.0) and GameMog sources.lock.json; diff md5 also listed in RRG314/WorldExplorer3D ATTRIBUTION.md.
+- Author corrected from "Poly Haven artist" to Dimitrios Savva (photography), Jenelle van Heerden (processing).
