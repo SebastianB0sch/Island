@@ -1,0 +1,57 @@
+"""
+Shared prop catalog - mesh names that location modules may place with
+`AssetSet.prop("<name>", pos, yaw, scale)`. Geometry lives in assets/props.py.
+
+Every prop: origin at the base centre, front facing -Y, metres.
+"""
+
+CATALOG = {
+    # ------------------------------------------------------------ vegetation
+    "SM_PalmTree_A":      "Coconut palm, curved trunk, ~11 m",
+    "SM_PalmTree_B":      "Coconut palm, straighter, ~8 m",
+    "SM_BroadTree_A":     "Tropical broadleaf tree, round canopy, ~12 m",
+    "SM_BroadTree_B":     "Tall broadleaf tree, layered canopy, ~16 m",
+    "SM_BroadTree_C":     "Small ornamental tree (garden), ~6 m",
+    "SM_PineTree_A":      "Conifer, ~14 m",
+    "SM_DeadTree_A":      "Leafless twisted dead tree, ~9 m (abandoned dorm)",
+    "SM_Bush_A":          "Round bush ~1.6 m",
+    "SM_Bush_B":          "Wide low bush ~1.0 m",
+    "SM_FlowerBush_Red":  "Hibiscus-style flowering bush ~1.2 m (red)",
+    "SM_FlowerBush_Yellow": "Flowering bush ~1.2 m (yellow)",
+    "SM_FlowerBush_Blue": "Hydrangea-style bush ~1.2 m (blue)",
+    "SM_FlowerBush_White": "Flowering bush ~1.2 m (white)",
+    "SM_Fern_A":          "Fern clump ~0.8 m",
+    "SM_GrassClump_A":    "Tall grass clump ~0.6 m",
+    "SM_Rock_A":          "Boulder ~2 m",
+    "SM_Rock_B":          "Flat rock slab ~3 m",
+    "SM_Rock_C":          "Tall rock ~4 m",
+    "SM_Rock_D":          "Rock cluster ~5 m",
+    "SM_CliffRock_A":     "Large cliff rock ~14 m",
+    "SM_VolcanicRock_A":  "Dark jagged volcanic rock ~4 m",
+    # ------------------------------------------------------------ street furniture
+    "SM_LampPost":        "Classic street lamp ~4.5 m, lamp head at z=4.2 (light added automatically)",
+    "SM_LampPost_Old":    "Rusty broken lamp post ~4 m (abandoned)",
+    "SM_Bench":           "Park bench 2 m wide, seat faces -Y",
+    "SM_Signpost":        "Wooden direction signpost ~2.8 m",
+    "SM_TrashBin":        "Trash bin ~1 m",
+    "SM_Fence_Wood":      "Wooden fence segment 4 m long along local X, 1.1 m high",
+    "SM_Fence_Iron":      "Wrought iron fence segment 4 m along X, 2 m high",
+    "SM_Bollard":         "Mooring bollard ~0.7 m",
+    "SM_Crate":           "Wooden crate 1.2 m",
+    "SM_Barrel":          "Oil barrel ~0.9 m",
+    "SM_Container_Red":   "Shipping container 6 x 2.4 x 2.6 m (long side along X)",
+    "SM_Container_Blue":  "Shipping container 6 x 2.4 x 2.6 m",
+    "SM_Container_Yellow": "Shipping container 6 x 2.4 x 2.6 m",
+    "SM_Rowboat":         "Rowing boat 4 m long along X (floats when placed on water)",
+    "SM_Buoy":            "Red/white buoy ~1.5 m",
+    "SM_BeachUmbrella":   "Beach umbrella ~2.6 m",
+    "SM_BeachChair":      "Deck chair ~1.6 m",
+    "SM_Flagpole_Red":    "Flagpole 10 m, Slifer red flag",
+    "SM_Flagpole_Yellow": "Flagpole 10 m, Ra yellow flag",
+    "SM_Flagpole_Blue":   "Flagpole 10 m, Obelisk blue flag",
+    "SM_VendingMachine":  "Drink vending machine ~1.9 m, front -Y",
+    "SM_StoneLantern":    "Japanese stone lantern ~1.6 m (light added automatically)",
+    "SM_PicnicTable":     "Picnic table ~1.8 m",
+    "SM_Planter":         "Square stone planter 1.5 m with shrub",
+    "SM_DuelDummy":       "Duel practice stand (duel disk on a post) ~1.4 m",
+}
