@@ -95,7 +95,7 @@ LOCATIONS = {
         name="Volcano Falls", subtitle="Lake Waterfall",
         desc="Snowmelt? No - spring water, warmed by the volcano, tumbling into the lake.",
         pos=(345.0, 905.0), yaw=0.0, height=74.0, pad=(30.0, 25.0), color=(0.6, 0.85, 0.95),
-        zone=(70.0, 60.0, 80.0), spawn=(270.0, 840.0, 0.0)),
+        zone=(70.0, 60.0, 80.0), spawn=(278.0, 765.0, 0.0)),
     "volcano": dict(
         name="Duel Academy Volcano", subtitle="Still Active",
         desc="The island's smoking heart. The crater glows at night.",
@@ -174,8 +174,8 @@ PATHS = [
         (-190.0, 860.0)]),
     # Lake shore walk to waterfall viewpoint
     dict(id="lake_walk", width=4.0, surface="dirt", lamps=False, pts=[
-        (-150.0, 700.0), (-30.0, 640.0), (110.0, 600.0), (230.0, 640.0), (300.0, 730.0),
-        (290.0, 830.0)]),
+        (-150.0, 700.0), (-30.0, 640.0), (110.0, 600.0), (230.0, 640.0), (285.0, 715.0),
+        (282.0, 772.0)]),
     # Academy east -> forest -> abandoned dorm
     dict(id="to_abandoned", width=5.0, surface="dirt", lamps=False, pts=[
         (175.0, 60.0), (300.0, 40.0), (430.0, 0.0), (560.0, -30.0), (700.0, -60.0), (800.0, -62.0),

@@ -446,50 +446,60 @@ def build_pbr(name, foliage=False):
 
 
 TERRAIN_LAYERS = [
-    # name, detail texture, normal texture (or None), tint (linear-ish), splat (texture, channel)
-    ("Grass", "T_Grass", "T_Grass_N", (0.085, 0.20, 0.035), None),
-    ("ForestFloor", "T_Leaves", None, (0.04, 0.065, 0.015), ("B", "G")),
-    ("Sand", "T_Sand", "T_Sand_N", (0.72, 0.58, 0.33), ("A", "R")),
-    ("WetSand", "T_Sand", "T_Sand_N", (0.32, 0.24, 0.13), ("B", "B")),
-    ("Ash", "T_Rock", "T_Rock_N", (0.035, 0.03, 0.03), ("B", "R")),
-    ("Rock", "T_Rock", "T_Rock_N", (0.18, 0.165, 0.15), ("A", "G")),
-    ("Dirt", "T_Dirt", "T_Dirt_N", (0.2, 0.12, 0.06), ("A", "B")),
-    ("Paving", "T_Paving", "T_Paving_N", (0.5, 0.46, 0.4), ("A", "A")),
+    # layer, splat (texture, channel) - Grass is the base layer (weight = whatever the others leave)
+    ("Grass", None),
+    ("ForestFloor", ("B", "G")),
+    ("Sand", ("A", "R")),
+    ("WetSand", ("B", "B")),
+    ("Ash", ("B", "R")),
+    ("Rock", ("A", "G")),
+    ("Dirt", ("A", "B")),
+    ("Paving", ("A", "A")),
 ]
 
 
 def build_terrain():
+    """8-layer splat terrain with full-colour (photo or procedural) layer textures:
+    T_Terrain_<Layer>_BC / _N / _R, per-layer tiling from Data/terrain_layers.json."""
+    try:
+        info = C.load_json("terrain_layers.json")
+    except Exception:  # noqa: BLE001
+        info = {}
     g = Graph("M_DA_Terrain")
     uv = g.node(unreal.MaterialExpressionTextureCoordinate)
     splat_a = g.tex("SplatA", T("T_TerrainSplatA"), S_MSK, uv)
     splat_b = g.tex("SplatB", T("T_TerrainSplatB"), S_MSK, uv)
-    tiles = g.scalar("DetailTiles", 768.0)       # 3072 m / 768 = 4 m per repeat
-    duv = g.mul(uv, tiles)
-    color = None
-    normal = None
-    for name, dtex, ntex, tint, splat in TERRAIN_LAYERS:
-        d = g.tex(f"{name}Detail", T(f"{dtex}_D"), S_LIN, duv)
-        c = g.mul(g.vector(f"{name}Tint", tint), g.mul(d, g.const(2.0), "R"))
-        if ntex:
-            nrm = g.tex(f"{name}Normal", T(ntex), S_NRM, duv)
-        else:
-            nrm = g.const3((0, 0, 1))
+    world_m = 3072.0
+    # large-scale brightness variation breaks up visible tiling
+    var = g.tex("VariationNoise", T("T_Noise"), S_LIN, g.mul(uv, g.const(6.0)))
+    var2 = g.tex("VariationNoise2", T("T_Noise"), S_LIN, g.mul(uv, g.const(41.0)), param=False)
+    vmix = g.add(g.mul(var, g.const(0.6), "R"), g.mul(var2, g.const(0.4), "R"))
+    brightness = g.lerp(g.const(0.82), g.const(1.15), vmix)
+    color = normal = rough = None
+    for name, splat in TERRAIN_LAYERS:
+        tile_m = float(info.get(name, {}).get("tile_m", 4.0))
+        luv = g.mul(uv, g.scalar(f"{name}Tiles", world_m / tile_m))
+        c = g.mul(g.tex(f"{name}Albedo", T(f"T_Terrain_{name}_BC"), S_COL, luv), g.vector(f"{name}Tint", (1, 1, 1)), "RGB", "")
+        n = g.tex(f"{name}Normal", T(f"T_Terrain_{name}_N"), S_NRM, luv)
+        r = g.tex(f"{name}Rough", T(f"T_Terrain_{name}_R"), S_MSK, luv)
         if splat is None:
-            color, normal = c, nrm
+            color, normal, rough = c, n, r
+            n_out, r_out = "RGB", "R"
             continue
         tex_node = splat_a if splat[0] == "A" else splat_b
         color = g.lerp(color, c, tex_node, "", "", splat[1])
-        normal = g.lerp(normal, nrm, tex_node, "", "RGB" if ntex else "", splat[1])
+        normal = g.lerp(normal, n, tex_node, n_out, "RGB", splat[1])
+        rough = g.lerp(rough, r, tex_node, r_out, "R", splat[1])
+        n_out, r_out = "", ""
+    color = g.mul(color, brightness)
     # far distance: blend to the baked colour map so the island reads well from afar
     macro = g.tex("ColorMap", T("T_TerrainColor"), S_COL, uv)
     depth = g.node(unreal.MaterialExpressionPixelDepth)
-    far = g.one_input(unreal.MaterialExpressionSaturate, g.mul(g.sub(depth, g.const(9000.0)), g.const(1.0 / 40000.0)))
-    macro_lin = g.mul(macro, g.const(0.9), "RGB")
-    final = g.lerp(color, macro_lin, g.mul(far, g.scalar("MacroBlend", 0.85)))
+    far = g.one_input(unreal.MaterialExpressionSaturate, g.mul(g.sub(depth, g.const(12000.0)), g.const(1.0 / 50000.0)))
+    final = g.lerp(color, macro, g.mul(far, g.scalar("MacroBlend", 0.75)), "", "RGB")
     g.out(final, unreal.MaterialProperty.MP_BASE_COLOR)
-    g.out(g.lerp(g.const3((0, 0, 1)), normal, g.scalar("NormalStrength", 0.8)), unreal.MaterialProperty.MP_NORMAL)
-    rough = g.lerp(g.const(0.92), g.const(0.55), splat_b, "", "", "B")   # wet sand is shinier
-    g.out(rough, unreal.MaterialProperty.MP_ROUGHNESS)
+    g.out(g.lerp(g.const3((0, 0, 1)), normal, g.scalar("NormalStrength", 1.0)), unreal.MaterialProperty.MP_NORMAL)
+    g.out(g.mul(rough, g.scalar("RoughnessScale", 1.0)), unreal.MaterialProperty.MP_ROUGHNESS)
     return g.finish()
 
 

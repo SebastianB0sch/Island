@@ -34,8 +34,8 @@ import os
 import shutil
 import subprocess
 
+import bpy  # must come before bmesh (bmesh is provided by the Blender module)
 import bmesh
-import bpy
 import numpy as np
 from mathutils import Matrix, Vector
 
@@ -54,22 +54,37 @@ GLTF_TRANSFORM_CANDIDATES = [
 _registry = None
 
 
+REG_DIR = os.path.join(TP_DIR, "registry")
+SECTIONS = ("props", "materials", "textures", "terrain", "hdri", "character")
+
+
 def registry():
+    """Merged view of Tools/thirdparty/registry.json + Tools/thirdparty/registry/*.json
+    (one fragment per category so curators never edit the same file)."""
     global _registry
     if _registry is None:
+        _registry = {k: {} for k in SECTIONS}
+        files = []
         if os.path.exists(REG_PATH):
-            with open(REG_PATH, encoding="utf-8") as fp:
-                _registry = json.load(fp)
-        else:
-            _registry = {}
-        _registry.setdefault("props", {})
-        _registry.setdefault("materials", {})
+            files.append(REG_PATH)
+        if os.path.isdir(REG_DIR):
+            files += sorted(os.path.join(REG_DIR, f) for f in os.listdir(REG_DIR) if f.endswith(".json"))
+        for f in files:
+            with open(f, encoding="utf-8") as fp:
+                data = json.load(fp)
+            for k, v in data.items():
+                if k in SECTIONS and isinstance(v, dict):
+                    _registry[k].update(v)
     return _registry
+
+
+def tp_path(rel):
+    return rel if os.path.isabs(rel) else os.path.join(TP_DIR, rel)
 
 
 def has_prop(name):
     spec = registry()["props"].get(name)
-    return bool(spec) and os.path.exists(os.path.join(TP_DIR, spec["file"]))
+    return bool(spec) and os.path.exists(tp_path(spec["file"]))
 
 
 # --------------------------------------------------------------------------- import
@@ -323,7 +338,7 @@ def build_prop(name):
         except ReferenceError:   # object was deleted (e.g. after an export)
             pass
     spec = registry()["props"][name]
-    path = os.path.join(TP_DIR, spec["file"])
+    path = tp_path(spec["file"])
     objs = import_file(path)
     asset = name.replace("SM_", "")
     obj = _join_static(objs, name, spec.get("exclude", ()))

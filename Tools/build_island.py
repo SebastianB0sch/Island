@@ -7,9 +7,9 @@ Usage (Blender 5.x as a Python module:  pip install bpy  ->  Python 3.13):
     python Tools/build_island.py terrain layout  # selected stages
 
 Stages (in order):
+    textures  procedural tileable textures + curated photo texture sets (third-party CC0)
     terrain   heightfield, splat maps, colour map, heightmap PNG, caches
     meshes    terrain chunk FBX + ocean / sea floor / lake surfaces
-    textures  procedural tileable textures
     audio     synthesised ambience + UI sounds
     layout    location meshes, props, avatar, roads, vegetation scatter,
               layout.json / materials.json / assets.json, minimap
@@ -25,7 +25,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-STAGES = ["terrain", "meshes", "textures", "audio", "layout", "render"]
+STAGES = ["textures", "terrain", "meshes", "audio", "layout", "render"]
 
 
 def main(argv):

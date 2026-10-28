@@ -9,6 +9,7 @@ Procedural, tileable textures (numpy + Pillow).
 Everything is periodic so it tiles seamlessly.
 """
 
+import json
 import math
 import os
 
@@ -332,4 +333,114 @@ def build_textures(log=print):
     save_rgb(np.tile(np.array([0.5, 0.5, 1.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_FlatNormal.png"))
     save_rgb(np.tile(np.array([1.0, 1.0, 0.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_DefaultMask.png"))
     log(f"  textures: {len(sets_lo) * 2 + 4} written")
+    os.makedirs(C.OUT_DATA, exist_ok=True)
+    build_photo_textures(log)
     return sorted(sets_lo)
+
+
+# =========================================================================== third-party photo texture sets
+# Registry sections (Tools/thirdparty/registry/*.json):
+#   "textures": {"<DetailName>": {"albedo": "...", "normal": "...", "normal_gl": true, "rough": "..."}}
+#       replaces T_<DetailName>_D (luminance detail of the photo) and T_<DetailName>_N
+#   "terrain":  {"<Layer>": {"albedo": ..., "normal": ..., "normal_gl": ..., "rough": ..., "tile_m": 4.0,
+#                            "tint": [1, 1, 1]}}
+#       -> T_Terrain_<Layer>_BC / _N / _R  (full colour layers for M_DA_Terrain)
+TERRAIN_LAYER_NAMES = ["Grass", "ForestFloor", "Sand", "WetSand", "Ash", "Rock", "Dirt", "Paving"]
+TERRAIN_FALLBACK_DETAIL = {"Grass": "Grass", "ForestFloor": "Leaves", "Sand": "Sand", "WetSand": "Sand",
+                           "Ash": "Rock", "Rock": "Rock", "Dirt": "Dirt", "Paving": "Paving"}
+TERRAIN_DEFAULT_TILE_M = {"Grass": 4.0, "ForestFloor": 4.0, "Sand": 4.0, "WetSand": 4.0, "Ash": 6.0,
+                          "Rock": 8.0, "Dirt": 4.0, "Paving": 3.0}
+
+
+def _tp():
+    from . import thirdparty
+    return thirdparty
+
+
+def _load_img(rel, size, mode="RGB"):
+    path = _tp().tp_path(rel)
+    img = Image.open(path)
+    if img.mode in ("I;16", "I", "F") and mode != "L":
+        arr = np.asarray(img, dtype=np.float32)
+        arr = arr / max(arr.max(), 1.0)
+        img = Image.fromarray((arr * 255).astype(np.uint8))
+    img = img.convert(mode)
+    if size and img.size != (size, size):
+        img = img.resize((size, size), Image.LANCZOS)
+    return np.asarray(img).astype(np.float32) / 255.0
+
+
+def _dx_normal(arr, gl):
+    arr = arr.copy()
+    if gl:
+        arr[..., 1] = 1.0 - arr[..., 1]
+    return arr
+
+
+def photo_detail(spec, size=1024, contrast=0.35):
+    """Grayscale detail (mean 0.5) + DX normal from a photo texture set."""
+    alb = _load_img(spec["albedo"], size)
+    lum = alb[..., 0] * 0.2126 + alb[..., 1] * 0.7152 + alb[..., 2] * 0.0722
+    d = detail_from(lum, 0.5, contrast)
+    nrm = _dx_normal(_load_img(spec["normal"], size), spec.get("normal_gl", True)) if spec.get("normal") else None
+    return d, nrm
+
+
+def build_photo_textures(log=print):
+    """Overrides detail / normal textures with registered photo sets and writes the terrain layer sets."""
+    reg = _tp().registry()
+    n_detail = 0
+    for name, spec in reg.get("textures", {}).items():
+        try:
+            if name == "WaterNormal":
+                arr = _dx_normal(_load_img(spec["normal"], 1024), spec.get("normal_gl", True))
+                save_rgb(arr, os.path.join(C.OUT_TEXTURES, "T_WaterNormal.png"))
+                n_detail += 1
+                continue
+            size = 1024 if name in TERRAIN_HIRES else 512
+            d, nrm = photo_detail(spec, size, spec.get("contrast", 0.35))
+            save_gray(d, os.path.join(C.OUT_TEXTURES, f"T_{name}_D.png"))
+            if nrm is not None:
+                save_rgb(nrm, os.path.join(C.OUT_TEXTURES, f"T_{name}_N.png"))
+            n_detail += 1
+        except Exception as e:  # noqa: BLE001
+            log(f"  !! texture set {name}: {e}")
+
+    from . import palette
+    tints = dict(palette.TERRAIN_LAYERS)
+    layer_info = {}
+    for layer in TERRAIN_LAYER_NAMES:
+        spec = reg.get("terrain", {}).get(layer)
+        bc_path = os.path.join(C.OUT_TEXTURES, f"T_Terrain_{layer}_BC.jpg")
+        n_path = os.path.join(C.OUT_TEXTURES, f"T_Terrain_{layer}_N.png")
+        r_path = os.path.join(C.OUT_TEXTURES, f"T_Terrain_{layer}_R.png")
+        try:
+            if spec:
+                size = spec.get("size", 1024)
+                bc = _load_img(spec["albedo"], size) * np.array(spec.get("tint", [1, 1, 1]), np.float32)
+                nrm = _dx_normal(_load_img(spec["normal"], size), spec.get("normal_gl", True)) if spec.get("normal") \
+                    else np.tile(np.array([0.5, 0.5, 1.0], np.float32), (size, size, 1))
+                rough = _load_img(spec["rough"], size, "L") if spec.get("rough") else np.full((size, size), 0.85, np.float32)
+                source = "photo"
+            else:
+                raise KeyError("no photo set")
+        except Exception:  # noqa: BLE001  - procedural fallback (tint * detail)
+            det = TERRAIN_FALLBACK_DETAIL[layer]
+            d = np.asarray(Image.open(os.path.join(C.OUT_TEXTURES, f"T_{det}_D.png")).convert("L")).astype(np.float32) / 255.0
+            bc = np.clip(np.array(tints[layer], np.float32)[None, None, :] * (d[..., None] * 2.0), 0, 1)
+            nrm = np.asarray(Image.open(os.path.join(C.OUT_TEXTURES, f"T_{det}_N.png")).convert("RGB")).astype(np.float32) / 255.0
+            rough = np.full(d.shape, 0.9, np.float32)
+            source = "procedural"
+        Image.fromarray((np.clip(bc, 0, 1) * 255).astype(np.uint8), "RGB").save(bc_path, quality=92)
+        save_rgb(nrm, n_path)
+        save_gray(rough, r_path)
+        mean = bc.reshape(-1, 3).mean(0)
+        layer_info[layer] = dict(mean_srgb=[float(x) for x in mean], source=source,
+                                 tile_m=float((spec or {}).get("tile_m", TERRAIN_DEFAULT_TILE_M[layer])))
+    os.makedirs(C.CACHE_DIR, exist_ok=True)
+    with open(os.path.join(C.CACHE_DIR, "terrain_layers.json"), "w") as fp:
+        json.dump(layer_info, fp, indent=1)
+    with open(os.path.join(C.OUT_DATA, "terrain_layers.json"), "w") as fp:
+        json.dump(layer_info, fp, indent=1)
+    n_photo = sum(1 for v in layer_info.values() if v["source"] == "photo")
+    log(f"  photo textures: {n_detail} detail sets, terrain layers {n_photo}/{len(layer_info)} from photo sets")

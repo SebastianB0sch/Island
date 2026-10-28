@@ -533,6 +533,11 @@ class Terrain:
         res = self.splat_res
         col = np.zeros((res, res, 3), np.float32)
         tints = dict(palette.TERRAIN_LAYERS)
+        info_path = os.path.join(C.CACHE_DIR, "terrain_layers.json")
+        if os.path.exists(info_path):
+            with open(info_path) as fp:
+                for k, v in json.load(fp).items():
+                    tints[k] = tuple(v["mean_srgb"])
         rng_n = fbm(res, 25.0, 3, seed=C.SEED + 40)
         for name, w in layers.items():
             c = np.array(tints[name], np.float32)
