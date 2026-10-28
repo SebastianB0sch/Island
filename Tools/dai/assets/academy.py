@@ -452,7 +452,7 @@ def _portico(mb, aset):
     for s in (-1, 1):
         xa, xb = sorted((s * 11.5, s * 18.0))
         mb.prism([(xa, -75.6), (xb, -75.6), (xb, LY0), (xa, LY0)], za, za + 0.9, "M_AcademyWall")
-        mb.box_mm((xa if s > 0 else xa, -75.7, za + 0.9), (xb, LY0, za + 1.05), "M_Gold")
+        mb.box_mm((xa, -75.7, za + 0.9), (xb, LY0, za + 1.05), "M_Gold")
     aset.text("DUEL ACADEMY", (0.0, -75.63, ze + 1.85), 0.0, size=1.1, color=(1.0, 0.82, 0.35), emissive=True)
     aset.text("WELCOME, DUELISTS", (0.0, LY0 - 0.33, 12.9), 0.0, size=0.55, color=(1.0, 0.85, 0.4))
 
@@ -637,7 +637,7 @@ def _end_blocks(mb):
         xo, xi = s * 114.0, s * 88.0
         rows = ROWS + [19.6]
         if s > 0:
-            mb.facade_windows((xo, y0), (xo, y1), rows, 26, 1.7, 2.5 if True else 1.2)
+            mb.facade_windows((xo, y0), (xo, y1), rows, 26, 1.7, 2.5)
             mb.facade_windows((xi, 2.0), (xi, y0), rows, 12, 1.7, 2.5)
             mb.facade_windows((xi, y1), (xi, 28.0), rows, 6, 1.7, 2.5)
             segs_s = [((88.0, y0), (94.0, y0)), ((108.0, y0), (114.0, y0))]
@@ -694,7 +694,7 @@ def _rear_annex(mb):
     mb.facade_windows((xb, y1), (3.2, y1), [3.0], 4, 1.7, 2.5)
     mb.facade_windows((-3.2, y1), (xa, y1), [3.0], 4, 1.7, 2.5)
     mb.facade_windows((xb, y1), (xa, y1), [7.0], 9, 1.7, 1.6)
-    mb.facade_windows((xb, 54.0), (xb, y1), [3.0, 7.0], 5, 1.7, 1.6 if False else 2.0)
+    mb.facade_windows((xb, 54.0), (xb, y1), [3.0, 7.0], 5, 1.7, 2.0)
     mb.facade_windows((xa, y1), (xa, 54.0), [3.0, 7.0], 5, 1.7, 2.0)
     # rear entrance (closed) with canopy
     door(mb, (0.0, y1, FLOOR), 180.0, 2.8, 3.4)
@@ -926,8 +926,8 @@ def _card_shop(mb, aset):
                            skip=("-z", "+y"))
             mb.box((0, -depth - 0.01, 0.17), (length - 0.1, 0.02, 0.3), "M_Gold", skip=("+y",))
 
-    for yc in (-55.5, -48.5, -41.5, -34.5):
-        shelf_unit((X1, yc, FLOOR), 90.0, 6.2)
+    for yc, ln in ((-55.4, 5.2), (-45.0, 8.6), (-34.6, 5.2)):     # leaves the east windows free
+        shelf_unit((X1, yc, FLOOR), -90.0, ln)
     shelf_unit((22.6, Y0 + 0.5, FLOOR), 180.0, 7.0, levels=3, height=2.2)
     shelf_unit((25.0, Y1 - 0.5, FLOOR), 0.0, 6.0, levels=3, height=2.2)
     # display table with fanned packs
