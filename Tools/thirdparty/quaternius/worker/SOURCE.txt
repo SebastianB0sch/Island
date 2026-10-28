@@ -1,0 +1,22 @@
+asset_id: quaternius_worker
+category: characters
+description: Rigged + animated low-poly man (31 bones; Idle, Walk, Run, Jump, Clapping, ... 11 takes). Used as the
+             student (SK_Student): the "Shirt" material becomes the dorm-coloured jacket in Unreal.
+author: Quaternius (https://quaternius.com)
+license: CC0 1.0 Universal (public domain dedication)
+upstream source page: https://poly.pizza/u/Quaternius
+downloaded: 2026-10-28
+
+downloaded from:
+  - npm package @netforge/asset-library-files@0.2.0
+    https://registry.npmjs.org/@netforge/asset-library-files/-/asset-library-files-0.2.0.tgz
+    file: package/library/lowpoly/worker.glb  (meshopt-compressed GLB, decoded by the pipeline with glTF-Transform)
+    sha256 ba034a087e5f26c43da0f8213dd3cb5cbcee057bf195fde4f66f5aa2951b7727 (matches library/index.json: "lowpoly/worker.glb", sha256 ba034a08...7727, 1852 triangles, 11 animations)
+
+license evidence (package/NOTICE, fetched 2026-10-28):
+  "The files in library/ are optimized copies (meshopt, resized textures) of third-party art under CC0 1.0
+   (public domain dedication), listed per pack below."
+  "Quaternius (https://quaternius.com), CC0 1.0 - Animated characters, ... Files: per-model GLBs on Poly Pizza
+   uploaded by Quaternius (https://poly.pizza/u/Quaternius); each asset's model page ... states Public Domain (CC0).
+   Quaternius's pack pages (https://quaternius.com/packs/*) state "License CC0". Models Poly Pizza lists under
+   CC-BY are not used."

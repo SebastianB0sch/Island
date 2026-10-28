@@ -124,9 +124,12 @@ def import_file(path):
     return [o for o in bpy.data.objects if o not in before]
 
 
-def _join_static(objs, name, exclude=()):
+def _join_static(objs, name, exclude=(), include=()):
+    """Bake + join the imported meshes. `include` (object-name substrings) picks one variant out of
+    multi-variant files (Poly Haven plants ship 4-17 variants side by side)."""
     meshes = [o for o in objs if o.type == "MESH" and len(o.data.polygons) > 0
-              and len(o.data.materials) > 0 and not any(x.lower() in o.name.lower() for x in exclude)]
+              and len(o.data.materials) > 0 and not any(x.lower() in o.name.lower() for x in exclude)
+              and (not include or any(x.lower() in o.name.lower() for x in include))]
     if not meshes:
         raise RuntimeError(f"{name}: no usable meshes")
     depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -346,7 +349,7 @@ def build_prop(name):
     path = tp_path(spec["file"])
     objs = import_file(path)
     asset = name.replace("SM_", "")
-    obj = _join_static(objs, name, spec.get("exclude", ()))
+    obj = _join_static(objs, name, spec.get("exclude", ()), spec.get("include", ()))
     for m in list(obj.modifiers):
         obj.modifiers.remove(m)
     _normalise(obj, spec)

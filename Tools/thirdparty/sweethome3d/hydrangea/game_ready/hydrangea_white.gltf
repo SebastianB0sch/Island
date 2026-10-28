@@ -1,0 +1,426 @@
+{
+ "asset": {
+  "generator": "Khronos glTF Blender I/O v5.2.41",
+  "version": "2.0"
+ },
+ "extensionsUsed": [
+  "KHR_materials_specular",
+  "KHR_materials_ior"
+ ],
+ "scene": 0,
+ "scenes": [
+  {
+   "name": "Scene",
+   "nodes": [
+    0
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "mesh": 0,
+   "name": "hydrangea_white"
+  }
+ ],
+ "materials": [
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.06870199739933014
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "PinkFlowers",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 0
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 0.9292893409729004
+   },
+   "alphaMode": "MASK",
+   "alphaCutoff": 0.5
+  },
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.0973460003733635
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Trunk",
+   "pbrMetallicRoughness": {
+    "baseColorFactor": [
+     0.07331400364637375,
+     0.22978700697422028,
+     0.08084200322628021,
+     1
+    ],
+    "metallicFactor": 0,
+    "roughnessFactor": 0.9292893409729004
+   }
+  },
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.0973460003733635
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Stem",
+   "pbrMetallicRoughness": {
+    "baseColorFactor": [
+     0.1412629932165146,
+     0.25015801191329956,
+     0.06300999969244003,
+     1
+    ],
+    "metallicFactor": 0,
+    "roughnessFactor": 0.8999999761581421
+   }
+  },
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.0973460003733635
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "HydrangeaLeaf",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 1
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 0.8999999761581421
+   },
+   "alphaMode": "MASK",
+   "alphaCutoff": 0.5
+  }
+ ],
+ "meshes": [
+  {
+   "name": "Hydrangea1",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "TEXCOORD_0": 2
+     },
+     "indices": 3,
+     "material": 0
+    },
+    {
+     "attributes": {
+      "POSITION": 4,
+      "NORMAL": 5,
+      "TEXCOORD_0": 6
+     },
+     "indices": 7,
+     "material": 1
+    },
+    {
+     "attributes": {
+      "POSITION": 8,
+      "NORMAL": 9,
+      "TEXCOORD_0": 10
+     },
+     "indices": 11,
+     "material": 2
+    },
+    {
+     "attributes": {
+      "POSITION": 12,
+      "NORMAL": 13,
+      "TEXCOORD_0": 14
+     },
+     "indices": 15,
+     "material": 3
+    }
+   ]
+  }
+ ],
+ "textures": [
+  {
+   "sampler": 0,
+   "source": 0
+  },
+  {
+   "sampler": 0,
+   "source": 1
+  }
+ ],
+ "images": [
+  {
+   "mimeType": "image/png",
+   "name": "hydrangeaFlower_white",
+   "uri": "textures/hydrangeaFlower_white.png"
+  },
+  {
+   "mimeType": "image/png",
+   "name": "hydrangeaLeaf",
+   "uri": "textures/hydrangeaLeaf.png"
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 728,
+   "max": [
+    0.2826499938964844,
+    0.649399995803833,
+    0.3357999920845032
+   ],
+   "min": [
+    -0.3989499807357788,
+    0.3748999834060669,
+    -0.2638000249862671
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 728,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 728,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5123,
+   "count": 3840,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5126,
+   "count": 593,
+   "max": [
+    0.29124999046325684,
+    0.6132999658584595,
+    0.29339998960494995
+   ],
+   "min": [
+    -0.31894999742507935,
+    0,
+    -0.28720003366470337
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 5,
+   "componentType": 5126,
+   "count": 593,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 6,
+   "componentType": 5126,
+   "count": 593,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 7,
+   "componentType": 5123,
+   "count": 2472,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 8,
+   "componentType": 5126,
+   "count": 2414,
+   "max": [
+    0.3088499903678894,
+    0.5898000001907349,
+    0.28999996185302734
+   ],
+   "min": [
+    -0.31325000524520874,
+    0.05970001220703125,
+    -0.31360000371932983
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 9,
+   "componentType": 5126,
+   "count": 2414,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 10,
+   "componentType": 5126,
+   "count": 2414,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 11,
+   "componentType": 5123,
+   "count": 8520,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 12,
+   "componentType": 5126,
+   "count": 3456,
+   "max": [
+    0.3989499807357788,
+    0.5412999987602234,
+    0.39100003242492676
+   ],
+   "min": [
+    -0.3414499759674072,
+    0.10109996795654297,
+    -0.39100003242492676
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 13,
+   "componentType": 5126,
+   "count": 3456,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 14,
+   "componentType": 5126,
+   "count": 3456,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 15,
+   "componentType": 5123,
+   "count": 14256,
+   "type": "SCALAR"
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteLength": 8736,
+   "byteOffset": 0,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 8736,
+   "byteOffset": 8736,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 5824,
+   "byteOffset": 17472,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 7680,
+   "byteOffset": 23296,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteLength": 7116,
+   "byteOffset": 30976,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 7116,
+   "byteOffset": 38092,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 4744,
+   "byteOffset": 45208,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 4944,
+   "byteOffset": 49952,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteLength": 28968,
+   "byteOffset": 54896,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 28968,
+   "byteOffset": 83864,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 19312,
+   "byteOffset": 112832,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 17040,
+   "byteOffset": 132144,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteLength": 41472,
+   "byteOffset": 149184,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 41472,
+   "byteOffset": 190656,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 27648,
+   "byteOffset": 232128,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 28512,
+   "byteOffset": 259776,
+   "target": 34963
+  }
+ ],
+ "samplers": [
+  {
+   "magFilter": 9729,
+   "minFilter": 9987
+  }
+ ],
+ "buffers": [
+  {
+   "byteLength": 288288,
+   "uri": "hydrangea_white.bin"
+  }
+ ]
+}

@@ -1,0 +1,40 @@
+ASSET: Sweet Home 3D / Scopia "Coconut tree" (coconutTree, straight, 11.0 m) and "Coconut tree bended" (coconutTreeBended, curved, 10.0 m)
+CATEGORY: vegetation -> SM_PalmTree_A (coconutTreeBended, curved ~10-11 m) and SM_PalmTree_B (coconutTree, straighter; scale to ~8 m)
+          Most realistic palm found: fully modelled fronds with individual leaflets (no alpha cards), coconuts, 512px texture atlas.
+DOWNLOADED FROM (2026-10-28, all HTTP 200, non-HTML):
+  https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/scopia/coconutTree/coconutTree.obj  (+ coconutTree.mtl, coconutTreeTexture.jpg)
+  https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/scopia/coconutTreeBended/coconutTreeBended.obj  (+ coconutTreeBended.mtl, coconutTreeTexture.jpg - byte-identical to the one above)
+AUTHOR: Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es)
+        (Sweet Home 3D default furniture library "Scopia.sh3f", https://www.sweethome3d.com)
+LICENSE: CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED.
+REQUIRED ATTRIBUTION TEXT (put in the game credits / THIRD_PARTY notices):
+  "Coconut palm 3D model(s) by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l.
+   (http://www.scopia.es), from the Sweet Home 3D furniture library, licensed under CC BY 3.0
+   (https://creativecommons.org/licenses/by/3.0/). Modified (decimated / re-coloured / converted to glTF)."
+
+LICENSE EVIDENCE (files fetched 2026-10-28, HTTP 200):
+  1) https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/LICENSE.TXT
+     (kept here as LICENSE_Scopia_CC-BY-3.0.txt; identical text in
+      https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/SweetHome3D/THIRDPARTY-LICENSE-SCOPIA.TXT):
+     "The sh3f file and its content are under the Creative Commons Attribution 3.0 Unported license:
+      http://creativecommons.org/licenses/by/3.0/ ... for any purpose, even commercially. ...
+      Attribution: If you want distribute this work, or derivates, you must attribute it to Space Mushrooms
+      <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es)
+      (C) Copyright 2024 Space Mushrooms ... and Scopia ... for the icons and the 370 following models:"
+     and the model list explicitly contains: "- coconutTree" and "- coconutTreeBended"
+  2) The mirror (arxistence/sweethome3d-git-mirror) carries the Sweet Home 3D source tree layout: 3DModels/scopia/scopia/<model>/
+     are the per-model sources of the Scopia.sh3f library, and SweetHome3D/THIRDPARTY-LICENSE-SCOPIA.TXT is the
+     third-party notice that ships with Sweet Home 3D ("The following additional provisions apply to Scopia.sh3f
+     third party furniture library included as part of this product.").
+
+FILES:
+  original/   unmodified OBJ/MTL/JPG as downloaded (units cm, Y-up; 81,006 tris each; 3 materials Coconut/Leaves/Trunk
+              all mapped onto coconutTreeTexture.jpg 512x512; leaves are cut geometry -> opaque, no alpha needed).
+  game_ready/ coconutTree_20k.gltf, coconutTreeBended_20k.gltf: our derivative (Blender 5.2): meshes joined, Decimate
+              (collapse) 81k -> 20,000 tris (visually identical at game distances, see previews/), scaled to metres,
+              origin at trunk base centre, glTF 2.0 Y-up, double-sided materials.
+              Sizes: coconutTree 7.8 x 8.0 x 11.0 m; coconutTreeBended 7.3 x 7.5 x 10.0 m.
+  previews/   Cycles renders of the game-ready files.
+TECH NOTES: Blender 5.2 import OK (OBJ + glTF), no missing images. Texture is low-res (512) - consider a UE material
+  with detail normal / colour tweak (trunk reads very pale grey; tint warmer brown in the material).
+DATE: 2026-10-28

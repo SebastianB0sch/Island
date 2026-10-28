@@ -1,0 +1,220 @@
+{
+ "asset": {
+  "version": "2.0",
+  "generator": "ez-tree 1.1.0 (headless, Duel Academy Island tools)",
+  "extras": {
+   "generator": "@dgreenheck/ez-tree@1.1.0 (MIT)",
+   "preset": "Oak Medium",
+   "overrides": {
+    "seed": 666,
+    "bark": {
+     "type": "willow",
+     "textureScale": {
+      "x": 1,
+      "y": 6
+     }
+    },
+    "branch": {
+     "gnarliness": {
+      "0": 0.12,
+      "1": 0.3,
+      "2": 0.35,
+      "3": 0.3
+     },
+     "twist": {
+      "0": 0.15,
+      "1": 0.3,
+      "2": 0.2,
+      "3": 0
+     },
+     "children": {
+      "0": 6,
+      "1": 4,
+      "2": 3
+     },
+     "segments": {
+      "0": 10,
+      "1": 6,
+      "2": 4,
+      "3": 3
+     },
+     "taper": {
+      "0": 0.75,
+      "1": 0.8,
+      "2": 0.85,
+      "3": 0.9
+     },
+     "length": {
+      "0": 37,
+      "1": 18,
+      "2": 10,
+      "3": 4
+     }
+    },
+    "leaves": {
+     "count": 0
+    }
+   },
+   "seed": 666,
+   "scale": 0.18227238953875036
+  }
+ },
+ "scene": 0,
+ "scenes": [
+  {
+   "nodes": [
+    0
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "name": "SM_DeadTree_A_ez",
+   "mesh": 0
+  }
+ ],
+ "meshes": [
+  {
+   "name": "SM_DeadTree_A_ez",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "TEXCOORD_0": 2
+     },
+     "indices": 3,
+     "material": 0
+    }
+   ]
+  }
+ ],
+ "materials": [
+  {
+   "name": "MI_EzBark_willow",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 0
+    },
+    "baseColorFactor": [
+     0.6038273388553378,
+     0.6038273388553378,
+     0.6038273388553378,
+     1
+    ],
+    "metallicRoughnessTexture": {
+     "index": 2
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 1
+   },
+   "normalTexture": {
+    "index": 1
+   },
+   "occlusionTexture": {
+    "index": 2
+   }
+  }
+ ],
+ "textures": [
+  {
+   "sampler": 0,
+   "source": 0
+  },
+  {
+   "sampler": 0,
+   "source": 1
+  },
+  {
+   "sampler": 0,
+   "source": 2
+  }
+ ],
+ "images": [
+  {
+   "uri": "textures/willow_color_1k.jpg"
+  },
+  {
+   "uri": "textures/willow_normal_1k.jpg"
+  },
+  {
+   "uri": "textures/willow_orm_1k.png"
+  }
+ ],
+ "samplers": [
+  {
+   "magFilter": 9729,
+   "minFilter": 9987,
+   "wrapS": 10497,
+   "wrapT": 10497
+  }
+ ],
+ "buffers": [
+  {
+   "uri": "SM_DeadTree_A_ez.bin",
+   "byteLength": 150536
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteOffset": 0,
+   "byteLength": 38856,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 38856,
+   "byteLength": 38856,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 77712,
+   "byteLength": 25904,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 103616,
+   "byteLength": 46920,
+   "target": 34963
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 3238,
+   "type": "VEC3",
+   "min": [
+    -3.409319424226155,
+    0,
+    -5.180275905464541
+   ],
+   "max": [
+    3.7538263582729936,
+    9,
+    2.5569601847776293
+   ]
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 3238,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 3238,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5125,
+   "count": 11730,
+   "type": "SCALAR"
+  }
+ ]
+}

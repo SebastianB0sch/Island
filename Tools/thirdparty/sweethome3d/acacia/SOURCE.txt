@@ -1,0 +1,34 @@
+ASSET: Sweet Home 3D / Scopia "Acacia" (acacia) - small tree with pinnate (fern-like) foliage, tropical look
+CATEGORY: vegetation -> SM_BroadTree_C (small ornamental/garden tree ~6 m; 7.7 x 6.5 x 6.5 m as authored) or a tropical
+          alternative for SM_BroadTree_A when scaled up.
+DOWNLOADED FROM (2026-10-28, all HTTP 200, non-HTML):
+  https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/scopia/acacia/acacia.obj  (+ acacia.mtl, leaves-for-twigs-combined.jpg 512)
+AUTHOR: Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es)
+        (Sweet Home 3D default furniture library "Scopia.sh3f", https://www.sweethome3d.com)
+LICENSE: CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED.
+REQUIRED ATTRIBUTION TEXT (put in the game credits / THIRD_PARTY notices):
+  "Acacia 3D model(s) by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l.
+   (http://www.scopia.es), from the Sweet Home 3D furniture library, licensed under CC BY 3.0
+   (https://creativecommons.org/licenses/by/3.0/). Modified (decimated / re-coloured / converted to glTF)."
+
+LICENSE EVIDENCE (files fetched 2026-10-28, HTTP 200):
+  1) https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/LICENSE.TXT
+     (kept here as LICENSE_Scopia_CC-BY-3.0.txt; identical text in
+      https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/SweetHome3D/THIRDPARTY-LICENSE-SCOPIA.TXT):
+     "The sh3f file and its content are under the Creative Commons Attribution 3.0 Unported license:
+      http://creativecommons.org/licenses/by/3.0/ ... for any purpose, even commercially. ...
+      Attribution: If you want distribute this work, or derivates, you must attribute it to Space Mushrooms
+      <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es)
+      (C) Copyright 2024 Space Mushrooms ... and Scopia ... for the icons and the 370 following models:"
+     and the model list explicitly contains: "- acacia"
+  2) The mirror (arxistence/sweethome3d-git-mirror) carries the Sweet Home 3D source tree layout: 3DModels/scopia/scopia/<model>/
+     are the per-model sources of the Scopia.sh3f library, and SweetHome3D/THIRDPARTY-LICENSE-SCOPIA.TXT is the
+     third-party notice that ships with Sweet Home 3D ("The following additional provisions apply to Scopia.sh3f
+     third party furniture library included as part of this product.").
+
+FILES:
+  original/   unmodified OBJ/MTL/JPG (103,164 tris, cm, Y-up; leaves are cut geometry, texture opaque).
+  game_ready/ acacia_20k.gltf: joined, decimated 103k -> 20,000 tris (visually identical, see previews), metres,
+              origin at trunk base, opaque, double-sided.
+  previews/   Cycles render.
+DATE: 2026-10-28

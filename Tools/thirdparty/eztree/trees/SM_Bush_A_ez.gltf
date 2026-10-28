@@ -1,0 +1,284 @@
+{
+ "asset": {
+  "version": "2.0",
+  "generator": "ez-tree 1.1.0 (headless, Duel Academy Island tools)",
+  "extras": {
+   "generator": "@dgreenheck/ez-tree@1.1.0 (MIT)",
+   "preset": "Bush 1",
+   "overrides": {
+    "seed": 21,
+    "branch": {
+     "segments": {
+      "0": 5,
+      "1": 4,
+      "2": 3,
+      "3": 3
+     },
+     "sections": {
+      "0": 4,
+      "1": 5,
+      "2": 4,
+      "3": 3
+     }
+    },
+    "leaves": {
+     "count": 8,
+     "size": 3
+    }
+   },
+   "seed": 21,
+   "scale": 0.048875728857856876
+  }
+ },
+ "scene": 0,
+ "scenes": [
+  {
+   "nodes": [
+    0
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "name": "SM_Bush_A_ez",
+   "mesh": 0
+  }
+ ],
+ "meshes": [
+  {
+   "name": "SM_Bush_A_ez",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "TEXCOORD_0": 2
+     },
+     "indices": 3,
+     "material": 0
+    },
+    {
+     "attributes": {
+      "POSITION": 4,
+      "NORMAL": 5,
+      "TEXCOORD_0": 6
+     },
+     "indices": 7,
+     "material": 1
+    }
+   ]
+  }
+ ],
+ "materials": [
+  {
+   "name": "MI_EzBark_oak",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 0
+    },
+    "baseColorFactor": [
+     0.6172065624196511,
+     0.6038273388553378,
+     0.5149176653765214,
+     1
+    ],
+    "metallicRoughnessTexture": {
+     "index": 2
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 1
+   },
+   "normalTexture": {
+    "index": 1
+   },
+   "occlusionTexture": {
+    "index": 2
+   }
+  },
+  {
+   "name": "MI_EzLeaves_ash",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 3
+    },
+    "baseColorFactor": [
+     0.8069522576692516,
+     1,
+     0.5209955732043543,
+     1
+    ],
+    "metallicFactor": 0,
+    "roughnessFactor": 0.8
+   },
+   "alphaMode": "MASK",
+   "alphaCutoff": 0.5,
+   "doubleSided": true
+  }
+ ],
+ "textures": [
+  {
+   "sampler": 0,
+   "source": 0
+  },
+  {
+   "sampler": 0,
+   "source": 1
+  },
+  {
+   "sampler": 0,
+   "source": 2
+  },
+  {
+   "sampler": 0,
+   "source": 3
+  }
+ ],
+ "images": [
+  {
+   "uri": "textures/oak_color_1k.jpg"
+  },
+  {
+   "uri": "textures/oak_normal_1k.jpg"
+  },
+  {
+   "uri": "textures/oak_orm_1k.png"
+  },
+  {
+   "uri": "textures/ash_color.png"
+  }
+ ],
+ "samplers": [
+  {
+   "magFilter": 9729,
+   "minFilter": 9987,
+   "wrapS": 10497,
+   "wrapT": 10497
+  }
+ ],
+ "buffers": [
+  {
+   "uri": "SM_Bush_A_ez.bin",
+   "byteLength": 389792
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteOffset": 0,
+   "byteLength": 32808,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 32808,
+   "byteLength": 32808,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 65616,
+   "byteLength": 21872,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 87488,
+   "byteLength": 39648,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 127136,
+   "byteLength": 82944,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 210080,
+   "byteLength": 82944,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 293024,
+   "byteLength": 55296,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 348320,
+   "byteLength": 41472,
+   "target": 34963
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 2734,
+   "type": "VEC3",
+   "min": [
+    -0.7610700753320154,
+    -0.0063806159891445415,
+    -0.5016601915118
+   ],
+   "max": [
+    0.49697186461932513,
+    1.1930332073739787,
+    0.8791807314308204
+   ]
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 2734,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 2734,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5125,
+   "count": 9912,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5126,
+   "count": 6912,
+   "type": "VEC3",
+   "min": [
+    -0.974231921704558,
+    -0.2106691415193915,
+    -0.7091922498240156
+   ],
+   "max": [
+    0.7473850698138818,
+    1.3893308584806083,
+    1.0733157422833324
+   ]
+  },
+  {
+   "bufferView": 5,
+   "componentType": 5126,
+   "count": 6912,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 6,
+   "componentType": 5126,
+   "count": 6912,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 7,
+   "componentType": 5125,
+   "count": 10368,
+   "type": "SCALAR"
+  }
+ ]
+}

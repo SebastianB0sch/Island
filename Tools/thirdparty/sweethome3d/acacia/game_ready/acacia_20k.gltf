@@ -1,0 +1,239 @@
+{
+ "asset": {
+  "generator": "Khronos glTF Blender I/O v5.2.41",
+  "version": "2.0"
+ },
+ "extensionsUsed": [
+  "KHR_materials_specular",
+  "KHR_materials_ior"
+ ],
+ "scene": 0,
+ "scenes": [
+  {
+   "name": "Scene",
+   "nodes": [
+    0
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "mesh": 0,
+   "name": "acacia_20k"
+  }
+ ],
+ "materials": [
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Trunk",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 0
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 0.9292893409729004
+   }
+  },
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.20000000298023224
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Leaves",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 1
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 0.8418861031532288
+   }
+  }
+ ],
+ "meshes": [
+  {
+   "name": "tree",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "TEXCOORD_0": 2
+     },
+     "indices": 3,
+     "material": 0
+    },
+    {
+     "attributes": {
+      "POSITION": 4,
+      "NORMAL": 5,
+      "TEXCOORD_0": 6
+     },
+     "indices": 7,
+     "material": 1
+    }
+   ]
+  }
+ ],
+ "textures": [
+  {
+   "sampler": 0,
+   "source": 0
+  },
+  {
+   "sampler": 0,
+   "source": 0
+  }
+ ],
+ "images": [
+  {
+   "mimeType": "image/jpeg",
+   "name": "leaves-for-twigs-combined",
+   "uri": "textures/leaves-for-twigs-combined.jpg"
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 823,
+   "max": [
+    2.153282642364502,
+    4.752911567687988,
+    0.8204183578491211
+   ],
+   "min": [
+    -2.2536392211914062,
+    0,
+    -1.5990415811538696
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 823,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 823,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5123,
+   "count": 1905,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5126,
+   "count": 37224,
+   "max": [
+    3.866661787033081,
+    6.497654914855957,
+    3.2321059703826904
+   ],
+   "min": [
+    -3.866661787033081,
+    0.02874251827597618,
+    -3.2321059703826904
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 5,
+   "componentType": 5126,
+   "count": 37224,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 6,
+   "componentType": 5126,
+   "count": 37224,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 7,
+   "componentType": 5123,
+   "count": 58095,
+   "type": "SCALAR"
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteLength": 9876,
+   "byteOffset": 0,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 9876,
+   "byteOffset": 9876,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 6584,
+   "byteOffset": 19752,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 3810,
+   "byteOffset": 26336,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteLength": 446688,
+   "byteOffset": 30148,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 446688,
+   "byteOffset": 476836,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 297792,
+   "byteOffset": 923524,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 116190,
+   "byteOffset": 1221316,
+   "target": 34963
+  }
+ ],
+ "samplers": [
+  {
+   "magFilter": 9729,
+   "minFilter": 9987
+  }
+ ],
+ "buffers": [
+  {
+   "byteLength": 1337508,
+   "uri": "acacia_20k.bin"
+  }
+ ]
+}

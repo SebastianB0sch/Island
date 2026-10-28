@@ -1,22 +1,110 @@
 {
-  "_comment": "Photo detail sets (CC0, Poly Haven / ambientCG / 3dtextures.me) replacing the procedural T_<Name>_D/_N detail textures used by the building palette. See each folder's SOURCE.txt.",
-  "textures": {
-    "Plaster":    {"albedo": "polyhaven/textures/painted_plaster_wall/painted_plaster_wall_diff_1k.jpg", "normal": "polyhaven/textures/painted_plaster_wall/painted_plaster_wall_nor_gl_1k.jpg", "normal_gl": true, "contrast": 0.22},
-    "Grunge":     {"albedo": "polyhaven/textures/white_plaster_02/color.jpg", "normal": "polyhaven/textures/white_plaster_02/normal.jpg", "normal_gl": true, "contrast": 0.4},
-    "Marble":     {"albedo": "ambientcg/Marble012/Marble012_2K-JPG_Color.jpg", "normal": "ambientcg/Marble012/Marble012_2K-JPG_NormalGL.jpg", "normal_gl": true, "contrast": 0.3},
-    "FloorTiles": {"albedo": "polyhaven/textures/long_white_tiles/long_white_tiles_diff_1k.jpg", "normal": "polyhaven/textures/long_white_tiles/long_white_tiles_nor_gl_1k.jpg", "normal_gl": true, "contrast": 0.3},
-    "Concrete":   {"albedo": "polyhaven/textures/concrete/concrete_diff_1k.jpg", "normal": "polyhaven/textures/concrete/concrete_nor_gl_1k.jpg", "normal_gl": true, "contrast": 0.3},
-    "Paving":     {"albedo": "polyhaven/textures/rectangular_paving/rectangular_paving_diff_1k.jpg", "normal": "polyhaven/textures/rectangular_paving/rectangular_paving_nor_gl_1k.jpg", "normal_gl": true, "contrast": 0.35},
-    "Planks":     {"albedo": "polyhaven/textures/brown_planks_09/brown_planks_09_diff_1k.jpg", "normal": "polyhaven/textures/brown_planks_09/brown_planks_09_nor_gl_1k.jpg", "normal_gl": true, "contrast": 0.4},
-    "Siding":     {"albedo": "polyhaven/textures/distressed_painted_planks/distressed_painted_planks_diffuse_2k.jpg", "normal": "polyhaven/textures/distressed_painted_planks/distressed_painted_planks_normal_2k.jpg", "normal_gl": true, "contrast": 0.35},
-    "Corrugated": {"albedo": "polyhaven/textures/corrugated_iron/corrugated_iron_diff_1k.jpg", "normal": "polyhaven/textures/corrugated_iron/corrugated_iron_nor_gl_1k.jpg", "normal_gl": true, "contrast": 0.35},
-    "RoofTiles":  {"albedo": "polyhaven/textures/clay_roof_tiles_02/clay_roof_tiles_02_diff_1k.jpg", "normal": "polyhaven/textures/clay_roof_tiles_02/clay_roof_tiles_02_nor_gl_1k.jpg", "normal_gl": true, "contrast": 0.4},
-    "Bricks":     {"albedo": "polyhaven/textures/red_brick_03/red_brick_03_diff_1k.jpg", "normal": "polyhaven/textures/red_brick_03/red_brick_03_nor_gl_1k.jpg", "normal_gl": true, "contrast": 0.4},
-    "Rock":       {"albedo": "polyhaven/textures/rock_boulder_dry/rock_boulder_dry_diff_2k.jpg", "normal": "polyhaven/textures/rock_boulder_dry/rock_boulder_dry_nor_gl_2k.jpg", "normal_gl": true, "contrast": 0.4},
-    "Sand":       {"albedo": "ambientcg/Ground092A/Ground092A_2K-JPG_Color.jpg", "normal": "ambientcg/Ground092A/Ground092A_2K-JPG_NormalGL.jpg", "normal_gl": true, "contrast": 0.3},
-    "Dirt":       {"albedo": "polyhaven/textures/dirt_floor/dirt_floor_diff_2k.jpg", "normal": "polyhaven/textures/dirt_floor/dirt_floor_nor_gl_2k.jpg", "normal_gl": true, "contrast": 0.35},
-    "Fabric":     {"albedo": "ambientcg/Fabric034/Fabric034_1K-JPG_Color.jpg", "normal": "ambientcg/Fabric034/Fabric034_1K-JPG_NormalGL.jpg", "normal_gl": true, "contrast": 0.25},
-    "Grass":      {"albedo": "polyhaven/textures/leafy_grass/leafy_grass_diff_2k.jpg", "normal": "polyhaven/textures/leafy_grass/leafy_grass_nor_gl_2k.jpg", "normal_gl": true, "contrast": 0.4},
-    "WaterNormal": {"normal": "3dtextures/Water_001/Water_001_NORM.jpg", "normal_gl": true}
+ "_comment": "Photo detail sets (CC0, Poly Haven / ambientCG / 3dtextures.me) replacing the procedural T_<Name>_D/_N detail textures used by the building palette. See each folder's SOURCE.txt.",
+ "textures": {
+  "Plaster": {
+   "albedo": "polyhaven/textures/painted_plaster_wall/painted_plaster_wall_diff_1k.jpg",
+   "normal": "polyhaven/textures/painted_plaster_wall/painted_plaster_wall_nor_gl_1k.jpg",
+   "normal_gl": true,
+   "contrast": 0.22
+  },
+  "Grunge": {
+   "albedo": "polyhaven/textures/white_plaster_02/color.jpg",
+   "normal": "polyhaven/textures/white_plaster_02/normal.jpg",
+   "normal_gl": true,
+   "contrast": 0.4
+  },
+  "Marble": {
+   "albedo": "ambientcg/Marble012/Marble012_2K-JPG_Color.jpg",
+   "normal": "ambientcg/Marble012/Marble012_2K-JPG_NormalGL.jpg",
+   "normal_gl": true,
+   "contrast": 0.3
+  },
+  "FloorTiles": {
+   "albedo": "polyhaven/textures/long_white_tiles/long_white_tiles_diff_1k.jpg",
+   "normal": "polyhaven/textures/long_white_tiles/long_white_tiles_nor_gl_1k.jpg",
+   "normal_gl": true,
+   "contrast": 0.3
+  },
+  "Concrete": {
+   "albedo": "polyhaven/textures/concrete/concrete_diff_1k.jpg",
+   "normal": "polyhaven/textures/concrete/concrete_nor_gl_1k.jpg",
+   "normal_gl": true,
+   "contrast": 0.3
+  },
+  "Paving": {
+   "albedo": "polyhaven/textures/rectangular_paving/rectangular_paving_diff_1k.jpg",
+   "normal": "polyhaven/textures/rectangular_paving/rectangular_paving_nor_gl_1k.jpg",
+   "normal_gl": true,
+   "contrast": 0.35
+  },
+  "Planks": {
+   "albedo": "polyhaven/textures/brown_planks_09/brown_planks_09_diff_1k.jpg",
+   "normal": "polyhaven/textures/brown_planks_09/brown_planks_09_nor_gl_1k.jpg",
+   "normal_gl": true,
+   "contrast": 0.4
+  },
+  "Siding": {
+   "albedo": "polyhaven/textures/distressed_painted_planks/distressed_painted_planks_diffuse_2k.jpg",
+   "normal": "polyhaven/textures/distressed_painted_planks/distressed_painted_planks_normal_2k.jpg",
+   "normal_gl": true,
+   "contrast": 0.35
+  },
+  "Corrugated": {
+   "albedo": "polyhaven/textures/corrugated_iron/corrugated_iron_diff_1k.jpg",
+   "normal": "polyhaven/textures/corrugated_iron/corrugated_iron_nor_gl_1k.jpg",
+   "normal_gl": true,
+   "contrast": 0.35
+  },
+  "RoofTiles": {
+   "albedo": "polyhaven/textures/clay_roof_tiles_02/clay_roof_tiles_02_diff_1k.jpg",
+   "normal": "polyhaven/textures/clay_roof_tiles_02/clay_roof_tiles_02_nor_gl_1k.jpg",
+   "normal_gl": true,
+   "contrast": 0.4
+  },
+  "Bricks": {
+   "albedo": "polyhaven/textures/red_brick_03/red_brick_03_diff_1k.jpg",
+   "normal": "polyhaven/textures/red_brick_03/red_brick_03_nor_gl_1k.jpg",
+   "normal_gl": true,
+   "contrast": 0.4
+  },
+  "Rock": {
+   "albedo": "polyhaven/textures/rock_boulder_dry/rock_boulder_dry_diff_2k.jpg",
+   "normal": "polyhaven/textures/rock_boulder_dry/rock_boulder_dry_nor_gl_2k.jpg",
+   "normal_gl": true,
+   "contrast": 0.4
+  },
+  "Sand": {
+   "albedo": "ambientcg/Ground092A/Ground092A_2K-JPG_Color.jpg",
+   "normal": "ambientcg/Ground092A/Ground092A_2K-JPG_NormalGL.jpg",
+   "normal_gl": true,
+   "contrast": 0.3
+  },
+  "Dirt": {
+   "albedo": "polyhaven/textures/dirt_floor/dirt_floor_diff_2k.jpg",
+   "normal": "polyhaven/textures/dirt_floor/dirt_floor_nor_gl_2k.jpg",
+   "normal_gl": true,
+   "contrast": 0.35
+  },
+  "Fabric": {
+   "albedo": "ambientcg/Fabric034/Fabric034_1K-JPG_Color.jpg",
+   "normal": "ambientcg/Fabric034/Fabric034_1K-JPG_NormalGL.jpg",
+   "normal_gl": true,
+   "contrast": 0.25
+  },
+  "Grass": {
+   "albedo": "polyhaven/textures/leafy_grass/leafy_grass_diff_2k.jpg",
+   "normal": "polyhaven/textures/leafy_grass/leafy_grass_nor_gl_2k.jpg",
+   "normal_gl": true,
+   "contrast": 0.4
+  },
+  "WaterNormal": {
+   "normal": "3dtextures/Water_001/Water_001_NORM.jpg",
+   "normal_gl": true
+  },
+  "Leaves": {
+   "albedo": "sweethome3d/hedge/original/hedge-displacement-texture.jpg",
+   "contrast": 0.45,
+   "size": 512
   }
+ }
 }

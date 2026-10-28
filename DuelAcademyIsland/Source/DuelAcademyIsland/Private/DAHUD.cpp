@@ -487,9 +487,16 @@ void ADAHUD::DrawHelp()
 		TEXT("N ........................ Skip 3 hours"),
 		TEXT("F1 / H ................... Toggle this help"),
 	};
-	const float W = 760.f * S();
+	// CC-BY 3.0 models require visible attribution; the full list is in CREDITS.md
+	static const TCHAR* Credits[] = {
+		TEXT("Art credits: textures, skies and plants from Poly Haven, ambientCG, 3dtextures.me (CC0); trees made with EZ-Tree (MIT)."),
+		TEXT("Palm, acacia, hydrangea and rose models by Space Mushrooms & Scopia (Sweet Home 3D library), CC BY 3.0, modified."),
+		TEXT("Further CC0 / CC-BY assets and their authors: see CREDITS.md. Unofficial fan project, not affiliated with Konami."),
+	};
+	const float W = 1000.f * S();
 	const float LineH = 30.f * S();
-	const float H = 90.f * S() + UE_ARRAY_COUNT(Lines) * LineH;
+	const float CreditH = 22.f * S();
+	const float H = 110.f * S() + UE_ARRAY_COUNT(Lines) * LineH + UE_ARRAY_COUNT(Credits) * CreditH;
 	const float X = Canvas->ClipX * 0.5f - W * 0.5f;
 	const float Y = Canvas->ClipY * 0.5f - H * 0.5f;
 	Panel(X, Y, W, H, Gold, 0.85f);
@@ -499,6 +506,12 @@ void ADAHUD::DrawHelp()
 	{
 		Text(L, X + 28.f * S(), LY, Paper, 0.95f);
 		LY += LineH;
+	}
+	LY += 14.f * S();
+	for (const TCHAR* L : Credits)
+	{
+		Text(L, X + 28.f * S(), LY, WithAlpha(Paper, 0.6f), 0.68f);
+		LY += CreditH;
 	}
 }
 

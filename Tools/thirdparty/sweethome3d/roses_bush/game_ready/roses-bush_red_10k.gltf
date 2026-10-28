@@ -1,0 +1,335 @@
+{
+ "asset": {
+  "generator": "Khronos glTF Blender I/O v5.2.41",
+  "version": "2.0"
+ },
+ "extensionsUsed": [
+  "KHR_materials_specular",
+  "KHR_materials_ior"
+ ],
+ "scene": 0,
+ "scenes": [
+  {
+   "name": "Scene",
+   "nodes": [
+    0
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "mesh": 0,
+   "name": "roses-bush_red_10k"
+  }
+ ],
+ "materials": [
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.07633599638938904
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Leaves",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 0
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 0.8999999761581421
+   },
+   "alphaMode": "MASK",
+   "alphaCutoff": 0.5
+  },
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.03053399920463562
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Rose",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 1
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 0.9292893409729004
+   }
+  },
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.20000000298023224
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Stem",
+   "pbrMetallicRoughness": {
+    "baseColorFactor": [
+     0.1412629932165146,
+     0.1746470034122467,
+     0.10224200040102005,
+     1
+    ],
+    "metallicFactor": 0,
+    "roughnessFactor": 0.9292893409729004
+   }
+  }
+ ],
+ "meshes": [
+  {
+   "name": "Leaves",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "TEXCOORD_0": 2
+     },
+     "indices": 3,
+     "material": 0
+    },
+    {
+     "attributes": {
+      "POSITION": 4,
+      "NORMAL": 5,
+      "TEXCOORD_0": 6
+     },
+     "indices": 7,
+     "material": 1
+    },
+    {
+     "attributes": {
+      "POSITION": 8,
+      "NORMAL": 9,
+      "TEXCOORD_0": 10
+     },
+     "indices": 11,
+     "material": 2
+    }
+   ]
+  }
+ ],
+ "textures": [
+  {
+   "sampler": 0,
+   "source": 0
+  },
+  {
+   "sampler": 0,
+   "source": 1
+  }
+ ],
+ "images": [
+  {
+   "mimeType": "image/png",
+   "name": "textureLeaves",
+   "uri": "textures/textureLeaves.png"
+  },
+  {
+   "mimeType": "image/jpeg",
+   "name": "rose_petal",
+   "uri": "textures/rose_petal.jpg"
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 3808,
+   "max": [
+    0.1976500004529953,
+    0.270177960395813,
+    0.22537077963352203
+   ],
+   "min": [
+    -0.1976500004529953,
+    0.018377937376499176,
+    -0.21292921900749207
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 3808,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 3808,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5123,
+   "count": 10752,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5126,
+   "count": 3195,
+   "max": [
+    0.19590364396572113,
+    0.36074501276016235,
+    0.22582921385765076
+   ],
+   "min": [
+    -0.16177289187908173,
+    0.22587791085243225,
+    -0.22582921385765076
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 5,
+   "componentType": 5126,
+   "count": 3195,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 6,
+   "componentType": 5126,
+   "count": 3195,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 7,
+   "componentType": 5123,
+   "count": 16206,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 8,
+   "componentType": 5126,
+   "count": 555,
+   "max": [
+    0.18368862569332123,
+    0.3241352140903473,
+    0.21236176788806915
+   ],
+   "min": [
+    -0.15241742134094238,
+    0,
+    -0.20989717543125153
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 9,
+   "componentType": 5126,
+   "count": 555,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 10,
+   "componentType": 5126,
+   "count": 555,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 11,
+   "componentType": 5123,
+   "count": 3042,
+   "type": "SCALAR"
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteLength": 45696,
+   "byteOffset": 0,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 45696,
+   "byteOffset": 45696,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 30464,
+   "byteOffset": 91392,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 21504,
+   "byteOffset": 121856,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteLength": 38340,
+   "byteOffset": 143360,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 38340,
+   "byteOffset": 181700,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 25560,
+   "byteOffset": 220040,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 32412,
+   "byteOffset": 245600,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteLength": 6660,
+   "byteOffset": 278012,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 6660,
+   "byteOffset": 284672,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 4440,
+   "byteOffset": 291332,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 6084,
+   "byteOffset": 295772,
+   "target": 34963
+  }
+ ],
+ "samplers": [
+  {
+   "magFilter": 9729,
+   "minFilter": 9987
+  }
+ ],
+ "buffers": [
+  {
+   "byteLength": 301856,
+   "uri": "roses-bush_red_10k.bin"
+  }
+ ]
+}

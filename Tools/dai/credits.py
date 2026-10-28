@@ -20,8 +20,20 @@ FIELDS = {
 
 def parse_source(path):
     out = {}
+    attribution, in_attr = [], False
     with open(path, encoding="utf-8", errors="replace") as fp:
         for line in fp:
+            if re.match(r"^(required )?attribution( text)?\b", line, re.I):
+                in_attr = True
+                rest = line.split(":", 1)[1].strip() if ":" in line else ""
+                if rest and not rest.startswith("("):
+                    attribution.append(rest)
+                continue
+            if in_attr:
+                if line.strip() and line.startswith((" ", "\t")):
+                    attribution.append(line.strip())
+                    continue
+                in_attr = False
             m = re.match(r"^\s*([A-Za-z_ ]+?)\s*:\s*(.+?)\s*$", line)
             if not m:
                 continue
@@ -29,6 +41,8 @@ def parse_source(path):
             for field, names in FIELDS.items():
                 if key in names and field not in out:
                     out[field] = val
+    if attribution:
+        out["attribution"] = " ".join(attribution).strip('"')
     return out
 
 
@@ -97,6 +111,16 @@ def write(path=None, log=print):
             src = f"<{src.split()[0]}>"
         lines.append(f"| `{folder}` | {info.get('author', '?')} | {info.get('license', '?')} | {src} | "
                      f"{', '.join(used) if used else '-'} |")
+    by = [(f, i) for f, i, _ in rows if re.search(r"CC[- ]?BY", i.get("license", ""), re.I)]
+    if by:
+        lines += ["", "### CC-BY attributions", ""]
+        seen = set()
+        for folder, info in by:
+            text = info.get("attribution") or f"{folder} by {info.get('author', '?')}, {info.get('license', '')}"
+            if text in seen:
+                continue
+            seen.add(text)
+            lines.append(f"- `{folder}`: {text}")
     lines += [
         "",
         "## Tools",

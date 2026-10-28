@@ -1,0 +1,34 @@
+ASSET: Sweet Home 3D / Scopia "Hedge (textured)" (hedgeTextured) - clipped box hedge block + seamless hedge-leaf texture
+CATEGORY: vegetation -> hedge mesh (1.53 x 0.59 x 1.0 m block) and M_Hedge texture: hedge-displacement-texture.jpg
+          (512x512, tiles seamlessly - checked 2x2) for palette M_Hedge (opaque, "Leaves" detail).
+DOWNLOADED FROM (2026-10-28, all HTTP 200, non-HTML):
+  https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/scopia/hedgeTextured/hedgeTextured.obj  (+ hedgeTextured.mtl, hedge-displacement-texture.jpg)
+AUTHOR: Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es)
+        (Sweet Home 3D default furniture library "Scopia.sh3f", https://www.sweethome3d.com)
+LICENSE: CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED.
+REQUIRED ATTRIBUTION TEXT (put in the game credits / THIRD_PARTY notices):
+  "Hedge 3D model(s) by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l.
+   (http://www.scopia.es), from the Sweet Home 3D furniture library, licensed under CC BY 3.0
+   (https://creativecommons.org/licenses/by/3.0/). Modified (decimated / re-coloured / converted to glTF)."
+
+LICENSE EVIDENCE (files fetched 2026-10-28, HTTP 200):
+  1) https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/LICENSE.TXT
+     (kept here as LICENSE_Scopia_CC-BY-3.0.txt; identical text in
+      https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/SweetHome3D/THIRDPARTY-LICENSE-SCOPIA.TXT):
+     "The sh3f file and its content are under the Creative Commons Attribution 3.0 Unported license:
+      http://creativecommons.org/licenses/by/3.0/ ... for any purpose, even commercially. ...
+      Attribution: If you want distribute this work, or derivates, you must attribute it to Space Mushrooms
+      <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es)
+      (C) Copyright 2024 Space Mushrooms ... and Scopia ... for the icons and the 370 following models:"
+     and the model list explicitly contains: "- hedgeTextured"
+  2) The mirror (arxistence/sweethome3d-git-mirror) carries the Sweet Home 3D source tree layout: 3DModels/scopia/scopia/<model>/
+     are the per-model sources of the Scopia.sh3f library, and SweetHome3D/THIRDPARTY-LICENSE-SCOPIA.TXT is the
+     third-party notice that ships with Sweet Home 3D ("The following additional provisions apply to Scopia.sh3f
+     third party furniture library included as part of this product.").
+
+FILES:
+  original/   unmodified OBJ/MTL/JPG (19,456 tris, displaced leafy surface, cm, Y-up).
+  game_ready/ hedgeTextured_6k.gltf: decimated 19.5k -> 6,000 tris, metres, origin at base.
+  previews/   Cycles render.
+NOTE: ivy texture not found with acceptable evidenced license (optional item).
+DATE: 2026-10-28

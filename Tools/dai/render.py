@@ -64,6 +64,92 @@ def _instance_object(name, proto, items):
     return ob
 
 
+# same layer -> splat channel mapping as the Unreal terrain material (materials.TERRAIN_LAYERS)
+TERRAIN_SPLAT = [("Grass", None), ("ForestFloor", ("B", 1)), ("Sand", ("A", 0)), ("WetSand", ("B", 2)),
+                 ("Ash", ("B", 0)), ("Rock", ("A", 1)), ("Dirt", ("A", 2)), ("Paving", ("A", 3))]
+
+
+def _terrain_material(mat):
+    """Preview version of M_DA_Terrain: photo layers blended by the splat maps, fading to the baked
+    colour map with camera distance (avoids tiling / moire in the aerial shots)."""
+    nt = mat.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
+    tex = os.path.join(C.OUT_TEXTURES, "{}")
+    with open(os.path.join(C.OUT_DATA, "terrain_layers.json")) as fp:
+        info = json.load(fp)
+    uv = nt.nodes.new("ShaderNodeUVMap")
+
+    def image(name, vector, colour=True, alpha=False):
+        n = nt.nodes.new("ShaderNodeTexImage")
+        n.image = bpy.data.images.load(tex.format(name), check_existing=True)
+        if not colour:
+            n.image.colorspace_settings.name = "Non-Color"
+        if alpha:
+            n.image.alpha_mode = "CHANNEL_PACKED"
+        nt.links.new(vector, n.inputs["Vector"])
+        return n
+
+    def scaled(tiles):
+        m = nt.nodes.new("ShaderNodeVectorMath")
+        m.operation = "SCALE"
+        nt.links.new(uv.outputs["UV"], m.inputs[0])
+        m.inputs["Scale"].default_value = tiles
+        return m.outputs[0]
+
+    def mix(a, b, fac, kind="RGBA"):
+        m = nt.nodes.new("ShaderNodeMix")
+        m.data_type = kind
+        nt.links.new(fac, m.inputs["Factor"])
+        nt.links.new(a, m.inputs[6 if kind == "RGBA" else 0])
+        nt.links.new(b, m.inputs[7 if kind == "RGBA" else 1])
+        return m.outputs[2 if kind == "RGBA" else 0]
+
+    splat = {}
+    for key, fname in (("A", "T_TerrainSplatA.png"), ("B", "T_TerrainSplatB.png")):
+        img = image(fname, uv.outputs["UV"], colour=False, alpha=True)
+        sep = nt.nodes.new("ShaderNodeSeparateColor")
+        nt.links.new(img.outputs["Color"], sep.inputs[0])
+        splat[key] = [sep.outputs[0], sep.outputs[1], sep.outputs[2], img.outputs["Alpha"]]
+    color = normal = rough = None
+    for layer, ch in TERRAIN_SPLAT:
+        vec = scaled(C.WORLD_SIZE / info.get(layer, {}).get("tile_m", 4.0))
+        c = image(f"T_Terrain_{layer}_BC.jpg", vec).outputs["Color"]
+        n = image(f"T_Terrain_{layer}_N.png", vec, colour=False).outputs["Color"]
+        r = image(f"T_Terrain_{layer}_R.png", vec, colour=False).outputs["Color"]
+        if ch is None:
+            color, normal, rough = c, n, r
+            continue
+        fac = splat[ch[0]][ch[1]]
+        color, normal, rough = mix(color, c, fac), mix(normal, n, fac), mix(rough, r, fac)
+    # far blend to the colour map
+    cam = nt.nodes.new("ShaderNodeCameraData")
+    far = nt.nodes.new("ShaderNodeMapRange")
+    far.inputs["From Min"].default_value = 150.0
+    far.inputs["From Max"].default_value = 900.0
+    far.inputs["To Max"].default_value = 0.85
+    nt.links.new(cam.outputs["View Distance"], far.inputs["Value"])
+    macro = image("T_TerrainColor.png", uv.outputs["UV"]).outputs["Color"]
+    nt.links.new(mix(color, macro, far.outputs[0]), bsdf.inputs["Base Color"])
+    rm = nt.nodes.new("ShaderNodeSeparateColor")
+    nt.links.new(rough, rm.inputs[0])
+    nt.links.new(rm.outputs[0], bsdf.inputs["Roughness"])
+    # the layer normals are DirectX (green down) for Unreal - flip green back for Blender
+    sep = nt.nodes.new("ShaderNodeSeparateColor")
+    nt.links.new(normal, sep.inputs[0])
+    inv = nt.nodes.new("ShaderNodeMath")
+    inv.operation = "SUBTRACT"
+    inv.inputs[0].default_value = 1.0
+    nt.links.new(sep.outputs[1], inv.inputs[1])
+    comb = nt.nodes.new("ShaderNodeCombineColor")
+    nt.links.new(sep.outputs[0], comb.inputs[0])
+    nt.links.new(inv.outputs[0], comb.inputs[1])
+    nt.links.new(sep.outputs[2], comb.inputs[2])
+    nm = nt.nodes.new("ShaderNodeNormalMap")
+    nm.inputs["Strength"].default_value = 0.8
+    nt.links.new(comb.outputs[0], nm.inputs["Color"])
+    nt.links.new(nm.outputs[0], bsdf.inputs["Normal"])
+
+
 def build_scene(log=print, scatter=True, detail_props=True):
     blend.reset_scene()
     with open(os.path.join(C.OUT_DATA, "layout.json")) as fp:
@@ -71,12 +157,7 @@ def build_scene(log=print, scatter=True, detail_props=True):
     h = np.load(os.path.join(C.CACHE_DIR, "height.npy"))
     # terrain with baked colour map
     t = terrain_mesh.build_preview_terrain(h, quads=1008)
-    mat = blend.material("M_Terrain")
-    nt = mat.node_tree
-    img = bpy.data.images.load(os.path.join(C.OUT_TEXTURES, "T_TerrainColor.png"))
-    tex = nt.nodes.new("ShaderNodeTexImage")
-    tex.image = img
-    nt.links.new(tex.outputs[0], nt.nodes["Principled BSDF"].inputs["Base Color"])
+    _terrain_material(blend.material("M_Terrain"))
     terrain_mesh.build_water(h, export=False, log=lambda *_: None)
     for wname in ("M_Ocean", "M_LakeWater"):
         m = blend.material(wname)

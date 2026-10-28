@@ -1,0 +1,26 @@
+ASSET: Poly Haven "Grass Medium 01" (grass_medium_01), 1k glTF
+CATEGORY: vegetation -> SM_GrassClump_A (realistic option)
+AUTHOR: Rob Tuytel (photography), Rico Cilliers (modeling) (Poly Haven)
+ORIGINAL PAGE: https://polyhaven.com/a/grass_medium_01   (polyhaven.com / dl.polyhaven.org are blocked from this container)
+LICENSE: CC0 1.0 Universal (public domain). Attribution not required (credit appreciated).
+
+DOWNLOADED FROM (2026-10-28, all HTTP 200, non-HTML; byte-for-byte Poly Haven 1k glTF export mirrored on GitHub):
+  https://raw.githubusercontent.com/darkyboys/Drunk-Driving-Simulator/main/assets/models/polyhaven/nature/grass_medium_01_1k.gltf/grass_medium_01_1k.gltf
+  + the .bin and textures/* referenced by that .gltf (same folder)
+  Alpha mask: https://media.githubusercontent.com/media/ConcordDev/concord-cognitive-engine/main/apps/concordia-living-world/unity-client/Assets/Concordia/PolyHaven/Models/grass_medium_01/textures/grass_medium_01_alpha_1k.png
+  LOCAL MODIFICATION: textures/grass_medium_01_diff_alpha_1k.png (diff RGB + alpha) referenced by the gltf, alphaMode BLEND->MASK.
+  (A Draco-compressed copy from another mirror was rejected; this one is uncompressed.)
+LICENSE EVIDENCE:
+  1) Poly Haven license, quoted in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
+     "Poly Haven's licence terms: https://polyhaven.com/license - 'All assets on Poly Haven are licensed as CC0, which is the
+      same as public domain. This means you can use, modify and redistribute our assets for any purpose, including commercial
+      use, without attribution or permission.'"
+  2) Poly Haven API snapshot of the plants category (https://api.polyhaven.com/assets?type=models&categories=plants, fetched
+     2026-10-10) at https://raw.githubusercontent.com/nclamvn/duong-ve-sai-gon/master/docs/research/rung-truong-son/snapshots/K_polyhaven_models_plants.md
+     (grass category, not in that snapshot) - instead the Poly Haven API dump
+     https://raw.githubusercontent.com/Akshay25798/VFX-Houdini-Asset_Browser/main/downloads/json/models.json lists
+     "grass_medium_01": categories [grass, nature, ground cover, collection: pine_forest], authors {"Rob Tuytel": "Photography", "Rico Cilliers": "Modeling"}, polycount 42932
+  3) npm @jgengine/assets@0.50.0 dist/catalogs/modelLibraryEntries.js: "Poly Haven models are CC0-1.0; authors are as Poly Haven credits them."
+
+TECH NOTES (Blender 5.2 import OK, no missing images): 17 objects: grass clumps of several sizes + card impostors, 24.7k tris total (~0.3-2k per clump), 0.15-0.35 m tall (scale x2 for 0.6 m).
+DATE: 2026-10-28

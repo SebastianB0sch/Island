@@ -39,8 +39,9 @@ Egyptian-god theming), not a copy of any copyrighted asset. All card names in th
 
 ## Gameplay features
 
-* Third-person student with a procedurally animated avatar (walk, run, jump, **swim**) — switch your
-  **dorm jacket** (Slifer Red / Ra Yellow / Obelisk Blue / Society of Light white) with **J**.
+* Third-person student — a rigged, skeletal-animated CC0 character (idle, walk, run, jump, wave and
+  **swimming**; a procedural avatar is the fallback when no character is imported) — switch your **dorm jacket**
+  (Slifer Red / Ra Yellow / Obelisk Blue / Society of Light white) with **J**; NPC students wear theirs.
 * Location banners + "**New location discovered**" tracking (17 named locations), compass, minimap.
 * **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker.
 * **Holographic duels** on the Grand Duel Arena field, the gym practice fields and the beach court.
@@ -101,7 +102,11 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/palette.py            material palette (slot names -> UE material instances)
   dai/assets/*.py           one module per location (academy, dorms, harbor, ...) + props + avatar
   dai/layout.py             places everything, scatters vegetation, writes layout.json
-  dai/textures.py           tileable procedural textures (detail + normal maps, water, lava, card back)
+  dai/textures.py           detail/normal maps from the photo sets (procedural fallback), terrain layers
+  dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction
+  dai/character.py          rigged third-party student -> SK_Student + A_Student_<State> FBX
+  dai/credits.py            CREDITS.md from the SOURCE.txt files
+  thirdparty/               curated CC0 / CC-BY source assets + registry/*.json
   dai/audio.py              synthesized seamless ambience loops and UI sounds
   dai/render.py             Cycles preview renders (Docs/renders)
 DuelAcademyIsland/          the Unreal Engine 5.8 project
@@ -117,6 +122,14 @@ DuelAcademyIsland/          the Unreal Engine 5.8 project
 * **Buildings**: modelled procedurally in Python with a small modelling kit; every face carries a
   palette material name that becomes a Material Instance in Unreal; walkable interiors use per-poly
   collision.
+* **Third-party art (CC0 / CC-BY)**: generic assets come from free, openly licensed libraries instead of
+  being modelled by hand — Poly Haven / ambientCG photo-scanned PBR textures for every terrain layer
+  and building surface, Poly Haven pure-sky HDRIs, and curated vegetation, rocks, props and an
+  animated student character (see [CREDITS.md](CREDITS.md)). Each asset lives in
+  `Tools/thirdparty/<source>/<asset>/` with a `SOURCE.txt` (URLs, license evidence, hashes) and is
+  mapped onto the catalog by `Tools/thirdparty/registry/*.json`; the pipeline imports, normalises
+  and re-exports it with PBR material instances (`M_DA_PBR`, `M_DA_PBRFoliage`). Anything not
+  registered falls back to the procedural version, so the build never breaks on a missing asset.
 * **Unreal side**: no binary assets are committed. `init_unreal.py` registers the menu; the build script
   creates master materials node-by-node (terrain splat blend, single-layer water, hologram, smoke, lava,
   foliage wind …), imports meshes/textures/sounds and spawns ~1 500 actors + ~90 000 instances.

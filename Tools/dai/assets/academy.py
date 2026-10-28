@@ -23,7 +23,7 @@ palette.register({
     "M_AcademyStone":   dict(kind="opaque", color=(0.80, 0.78, 0.73), rough=0.8, detail="Concrete", tiling=0.25),
     "M_CardPackBlue":   dict(kind="opaque", color=(0.18, 0.35, 0.85), rough=0.35, metallic=0.3, detail=None),
     "M_CardPackPurple": dict(kind="opaque", color=(0.50, 0.22, 0.72), rough=0.35, metallic=0.3, detail=None),
-    "M_PlazaLawn":      dict(kind="opaque", color=(0.30, 0.52, 0.18), rough=0.95, detail="Leaves", tiling=1.0),
+    "M_PlazaLawn":      dict(kind="opaque", color=(0.30, 0.52, 0.18), rough=0.95, detail="Grass", tiling=1.0),
 })
 
 D2R = math.pi / 180.0

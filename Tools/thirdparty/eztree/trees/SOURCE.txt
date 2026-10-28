@@ -1,0 +1,47 @@
+ASSET SET: Realistic procedural trees/bushes generated with EZ-Tree (headless) - Duel Academy Island
+CATEGORY: vegetation
+  SM_BroadTree_A_ez.gltf      -> SM_BroadTree_A  round-canopy broadleaf, 12 m, 24,230 tris (oak leaves)
+  SM_BroadTree_A_ash_ez.gltf  -> SM_BroadTree_A  alt: same shape family with pinnate "ash" leaves (more tropical look), 24,230 tris
+  SM_BroadTree_B_ez.gltf      -> SM_BroadTree_B  tall spreading/layered jungle canopy tree, 16 m, 21,044 tris
+  SM_BroadTree_B_ash_ez.gltf  -> SM_BroadTree_B  alt with pinnate leaves, 21,044 tris
+  SM_BroadTree_C_ez.gltf      -> SM_BroadTree_C  small garden tree, 6 m, 12,750 tris
+  SM_PineTree_A_ez.gltf       -> SM_PineTree_A   conifer, 14 m, 19,392 tris
+  SM_DeadTree_A_ez.gltf       -> SM_DeadTree_A   leafless gnarled grey tree, 9 m, 3,910 tris
+  SM_Bush_A_ez.gltf           -> SM_Bush_A       round bush, 1.6 m, 6,760 tris
+  SM_Bush_B_ez.gltf           -> SM_Bush_B       wide low bush, 1.0 m, 4,160 tris
+  (Each glTF: Y-up, metres, origin at trunk base; 2 materials: MI_EzBark_<type> (baseColor + OpenGL normal + ORM
+   [R=AO,G=roughness,B=metal 0]) and MI_EzLeaves_<type> (alpha MASK, two-sided). Heights were normalised by the generator.)
+
+GENERATOR: @dgreenheck/ez-tree 1.1.0 by Daniel Greenheck - https://github.com/dgreenheck/ez-tree , https://eztree.dev
+  npm tarball: https://registry.npmjs.org/@dgreenheck/ez-tree/-/ez-tree-1.1.0.tgz (downloaded 2026-10-28)
+  three.js 0.169.0 (MIT) from https://registry.npmjs.org/three/-/three-0.169.0.tgz used as runtime only.
+  Ran headless in Node 22: generator/lib is ez-tree's src/lib with (a) '.js' import suffixes, (b) textures.js replaced
+  by a stub (no image loading), (c) presets/index.js reading the JSON presets with fs. generator/gen.mjs (our code)
+  walks Tree.branches / Tree.leaves arrays and writes glTF 2.0 (uint32 indices, bark UV repeat baked into UVs).
+  Parameters for every tree: generator/final_cfg.json (preset + overrides + seed). Reproduce:
+     node generator/gen.mjs generator/final_cfg.json <outdir>   (with three@0.169.0 in node_modules)
+     python generator/prep_eztex.py <ez-tree/src/lib/assets> <outdir>/textures
+
+LICENSES / EVIDENCE:
+  * EZ-Tree code + bundled assets: MIT. Evidence: package.json "license": "MIT", "author": "Daniel Greenheck";
+    LICENSE file (kept as generator/LICENSE_ez-tree_MIT.txt): "MIT License Copyright (c) 2024 Daniel Greenheck
+    Permission is hereby granted, free of charge, ... to deal in the Software without restriction ...".
+    The generated meshes are output of the tool (procedural geometry); keep the MIT notice with the generator files.
+  * Leaf textures textures/{oak,ash,pine}_color.png: shipped in the MIT package (src/lib/assets/leaves/), no separate
+    source stated -> covered by the package's MIT license (record notice above).
+  * Bark textures (from src/lib/assets/bark/, README kept as textures/BARK_SOURCES_README.md):
+      "Oak - https://polyhaven.com/a/bark_brown_02"     -> Poly Haven, CC0 1.0  (oak_color/normal/orm_1k)
+      "Willow - https://polyhaven.com/a/bark_willow_02" -> Poly Haven, CC0 1.0  (willow_*; used for the dead tree)
+      "Pine - https://www.texturecan.com/details/588/"  -> TextureCan, CC0 1.0  (pine_*; used for the pine)
+    Poly Haven license quote (as recorded in raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md):
+      "All assets on Poly Haven are licensed as CC0, which is the same as public domain ... without attribution or permission."
+    TextureCan terms (https://texturecan.com/terms/, via web search 2026-10-28): "All the PBR textures, graphics and photos
+      offered by TextureCan.com are under the Creative Commons CC0 1.0 Universe License ... can be used for any purposes,
+      including commercial use. Attribution isn't required".
+  * ORM PNGs were packed by us from the package's *_ao_1k.jpg + *_roughness_1k.jpg (prep_eztex.py).
+
+TECH NOTES: all 9 files imported in Blender 5.2 without missing images; previews/ has Cycles renders.
+  Leaf cards are double billboards (4 tris/leaf); leaf normals are the card normals - for nicer foliage shading in UE
+  consider spherical (crown-centre) normals or a two-sided foliage shading model + subsurface. Leaf tint is applied
+  as baseColorFactor (0xE8FFBF) - texture itself unchanged.
+DATE: 2026-10-28

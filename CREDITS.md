@@ -17,9 +17,14 @@ Paths are relative to `Tools/thirdparty/`.
 | `ambientcg/Fabric034` | ambientCG (Lennart Demes) | CC0 1.0 Universal | <https://ambientcg.com/view?id=Fabric034> | texture Fabric |
 | `ambientcg/Ground092A` | ambientCG (Lennart Demes) | CC0 1.0 Universal | <https://ambientcg.com/view?id=Ground092A> | terrain layer Sand, texture Sand |
 | `ambientcg/Marble012` | ambientCG (Lennart Demes) | CC0 1.0 Universal | <https://ambientcg.com/view?id=Marble012> | texture Marble |
+| `eztree/trees` | ? | ? |  | SM_BroadTree_A, SM_BroadTree_B, SM_Bush_B, SM_DeadTree_A, SM_PineTree_A |
 | `polyhaven/hdri/kloofendal_48d_partly_cloudy_puresky` | Greg Zaal (photography), Jarod Guest (sky processing) / Poly Haven | CC0 1.0 Universal (public domain dedication) | <https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky> | sky (day) |
 | `polyhaven/hdri/qwantani_night_puresky` | Greg Zaal (photography), Jarod Guest (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/qwantani_night_puresky> | sky (night) |
 | `polyhaven/hdri/qwantani_sunset_puresky` | Greg Zaal (photography), Jarod Guest (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/qwantani_sunset_puresky> | sky (sunset) |
+| `polyhaven/models/anthurium_botany_01` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). |  | SM_Bush_A |
+| `polyhaven/models/calathea_orbifolia_01` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). |  | - |
+| `polyhaven/models/fern_02` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). |  | SM_Fern_A |
+| `polyhaven/models/grass_medium_01` | Rob Tuytel (photography), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). |  | SM_GrassClump_A |
 | `polyhaven/textures/brown_planks_09` | Poly Haven artist (credited on the asset page) | CC0 1.0 Universal | <https://polyhaven.com/a/brown_planks_09> | texture Planks |
 | `polyhaven/textures/clay_roof_tiles_02` | Poly Haven artist (credited on the asset page) | CC0 1.0 Universal | <https://polyhaven.com/a/clay_roof_tiles_02> | texture RoofTiles |
 | `polyhaven/textures/cobblestone_floor_08` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/cobblestone_floor_08> | terrain layer Paving |
@@ -37,6 +42,20 @@ Paths are relative to `Tools/thirdparty/`.
 | `polyhaven/textures/red_brick_03` | Poly Haven artist (credited on the asset page) | CC0 1.0 Universal | <https://polyhaven.com/a/red_brick_03> | texture Bricks |
 | `polyhaven/textures/rock_boulder_dry` | Dimitrios Savva (photography), Rico Cilliers (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/rock_boulder_dry> | terrain layer Rock, texture Rock |
 | `polyhaven/textures/white_plaster_02` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/white_plaster_02> | texture Grunge |
+| `quaternius/worker` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/u/Quaternius> | SK_Student |
+| `sweethome3d/acacia` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_BroadTree_C |
+| `sweethome3d/coconut_palms` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_PalmTree_A, SM_PalmTree_B |
+| `sweethome3d/hedge` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | texture Leaves |
+| `sweethome3d/hydrangea` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_FlowerBush_Blue, SM_FlowerBush_White |
+| `sweethome3d/roses_bush` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. |  | SM_FlowerBush_Red, SM_FlowerBush_Yellow |
+
+### CC-BY attributions
+
+- `sweethome3d/acacia`: Acacia 3D model(s) by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es), from the Sweet Home 3D furniture library, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Modified (decimated / re-coloured / converted to glTF).
+- `sweethome3d/coconut_palms`: Coconut palm 3D model(s) by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es), from the Sweet Home 3D furniture library, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Modified (decimated / re-coloured / converted to glTF).
+- `sweethome3d/hedge`: Hedge 3D model(s) by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es), from the Sweet Home 3D furniture library, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Modified (decimated / re-coloured / converted to glTF).
+- `sweethome3d/hydrangea`: Hydrangea 3D model(s) by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es), from the Sweet Home 3D furniture library, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Modified (decimated / re-coloured / converted to glTF).
+- `sweethome3d/roses_bush`: Roses bush 3D model(s) by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es), from the Sweet Home 3D furniture library, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Modified (decimated / re-coloured / converted to glTF).
 
 ## Tools
 

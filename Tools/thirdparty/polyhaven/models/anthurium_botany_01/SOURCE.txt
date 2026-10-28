@@ -1,0 +1,22 @@
+ASSET: Poly Haven "Anthurium Botany 01" (anthurium_botany_01), 1k glTF
+CATEGORY: vegetation -> tropical broadleaf undergrowth; scaled x2.5-3 it is a lush jungle bush (SM_Bush_A/B tropical alternative)
+AUTHOR: Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven)
+ORIGINAL PAGE: https://polyhaven.com/a/anthurium_botany_01   (polyhaven.com / dl.polyhaven.org are blocked from this container)
+LICENSE: CC0 1.0 Universal (public domain). Attribution not required (credit appreciated).
+
+DOWNLOADED FROM (2026-10-28, all HTTP 200, non-HTML; byte-for-byte Poly Haven 1k glTF export mirrored on GitHub):
+  https://raw.githubusercontent.com/Joshkaki00/godotmark/main/art/nature-benchmark-archive-20260311_173846/anthurium_botany_01_1k.gltf/anthurium_botany_01_1k.gltf
+  + the .bin and textures/* referenced by that .gltf (same folder)
+
+LICENSE EVIDENCE:
+  1) Poly Haven license, quoted in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
+     "Poly Haven's licence terms: https://polyhaven.com/license - 'All assets on Poly Haven are licensed as CC0, which is the
+      same as public domain. This means you can use, modify and redistribute our assets for any purpose, including commercial
+      use, without attribution or permission.'"
+  2) Poly Haven API snapshot of the plants category (https://api.polyhaven.com/assets?type=models&categories=plants, fetched
+     2026-10-10) at https://raw.githubusercontent.com/nclamvn/duong-ve-sai-gon/master/docs/research/rung-truong-son/snapshots/K_polyhaven_models_plants.md
+     lists: anthurium_botany_01 | Anthurium Botany 01 | plants, nature, collection: the_shed, collection: smugglers_cove | Rob Tuytel (scanning); Rico Cilliers (modeling) | 4134 | 1651017600
+  3) npm @jgengine/assets@0.50.0 dist/catalogs/modelLibraryEntries.js: "Poly Haven models are CC0-1.0; authors are as Poly Haven credits them."
+
+TECH NOTES (Blender 5.2 import OK, no missing images): 6 variants (a-f) in one file, 7.7k-15.8k tris each (67k total), ~0.5 m tall. Leaves are cut geometry (no alpha needed). Leaves only - no flowers.
+DATE: 2026-10-28

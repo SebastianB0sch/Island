@@ -2174,7 +2174,7 @@
    0.18
   ],
   "rough": 0.95,
-  "detail": "Leaves",
+  "detail": "Grass",
   "tiling": 1.0,
   "color_linear": [
    0.07323895587840543,
@@ -2695,6 +2695,754 @@
    0.010022825574869039
   ],
   "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.7999999523162842,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Coconut",
+  "base": "ThirdParty/PalmTree_A/T_PalmTree_A_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_A_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8418861031532288,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/PalmTree_A/T_PalmTree_A_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_A_2": {
+  "kind": "pbr",
+  "color": [
+   0.86,
+   0.74,
+   0.6
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "base": "ThirdParty/PalmTree_A/T_PalmTree_A_2_BC",
+  "color_linear": [
+   0.7105664902244221,
+   0.5070785101492276,
+   0.31854677812509186
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_B_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Coconut",
+  "base": "ThirdParty/PalmTree_B/T_PalmTree_B_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_B_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8418861031532288,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/PalmTree_B/T_PalmTree_B_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PalmTree_B_2": {
+  "kind": "pbr",
+  "color": [
+   0.86,
+   0.74,
+   0.6
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "base": "ThirdParty/PalmTree_B/T_PalmTree_B_2_BC",
+  "color_linear": [
+   0.7105664902244221,
+   0.5070785101492276,
+   0.31854677812509186
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_oak",
+  "base": "ThirdParty/BroadTree_A/T_BroadTree_A_0_BC",
+  "normal": "ThirdParty/BroadTree_A/T_BroadTree_A_0_N",
+  "orm": "ThirdParty/BroadTree_A/T_BroadTree_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_A_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzLeaves_ash",
+  "base": "ThirdParty/BroadTree_A/T_BroadTree_A_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_B_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_oak",
+  "base": "ThirdParty/BroadTree_B/T_BroadTree_B_0_BC",
+  "normal": "ThirdParty/BroadTree_B/T_BroadTree_B_0_N",
+  "orm": "ThirdParty/BroadTree_B/T_BroadTree_B_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_B_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzLeaves_ash",
+  "base": "ThirdParty/BroadTree_B/T_BroadTree_B_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_C_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "base": "ThirdParty/BroadTree_C/T_BroadTree_C_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BroadTree_C_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8418861031532288,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/BroadTree_C/T_BroadTree_C_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PineTree_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_pine",
+  "base": "ThirdParty/PineTree_A/T_PineTree_A_0_BC",
+  "normal": "ThirdParty/PineTree_A/T_PineTree_A_0_N",
+  "orm": "ThirdParty/PineTree_A/T_PineTree_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PineTree_A_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzLeaves_pine",
+  "base": "ThirdParty/PineTree_A/T_PineTree_A_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_DeadTree_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_willow",
+  "base": "ThirdParty/DeadTree_A/T_DeadTree_A_0_BC",
+  "normal": "ThirdParty/DeadTree_A/T_DeadTree_A_0_N",
+  "orm": "ThirdParty/DeadTree_A/T_DeadTree_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Bush_A_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "anthurium_botany_01",
+  "base": "ThirdParty/Bush_A/T_Bush_A_0_BC",
+  "masked": true,
+  "normal": "ThirdParty/Bush_A/T_Bush_A_0_N",
+  "orm": "ThirdParty/Bush_A/T_Bush_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Bush_B_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzBark_oak",
+  "base": "ThirdParty/Bush_B/T_Bush_B_0_BC",
+  "normal": "ThirdParty/Bush_B/T_Bush_B_0_N",
+  "orm": "ThirdParty/Bush_B/T_Bush_B_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Bush_B_1": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "MI_EzLeaves_ash",
+  "base": "ThirdParty/Bush_B/T_Bush_B_1_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Red_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/FlowerBush_Red/T_FlowerBush_Red_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Red_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Rose",
+  "base": "ThirdParty/FlowerBush_Red/T_FlowerBush_Red_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Red_2": {
+  "kind": "pbr",
+  "color": [
+   0.41176429571333667,
+   0.4549014738866293,
+   0.35294162087433983
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Stem",
+  "color_linear": [
+   0.1412629932165146,
+   0.17464700341224668,
+   0.10224200040102006
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Yellow_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Leaves",
+  "base": "ThirdParty/FlowerBush_Yellow/T_FlowerBush_Yellow_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Yellow_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Rose",
+  "base": "ThirdParty/FlowerBush_Yellow/T_FlowerBush_Yellow_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Yellow_2": {
+  "kind": "pbr",
+  "color": [
+   0.41176429571333667,
+   0.4549014738866293,
+   0.35294162087433983
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Stem",
+  "color_linear": [
+   0.1412629932165146,
+   0.17464700341224668,
+   0.10224200040102006
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Blue_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "PinkFlowers",
+  "base": "ThirdParty/FlowerBush_Blue/T_FlowerBush_Blue_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Blue_1": {
+  "kind": "pbr",
+  "color": [
+   0.3001515245491554,
+   0.5166603507852228,
+   0.3149143996173181
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "color_linear": [
+   0.07331400364637375,
+   0.22978700697422022,
+   0.08084200322628021
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Blue_2": {
+  "kind": "pbr",
+  "color": [
+   0.41176429571333667,
+   0.537254632836091,
+   0.2784313329477071
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Stem",
+  "color_linear": [
+   0.1412629932165146,
+   0.2501580119132995,
+   0.06300999969244005
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_Blue_3": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "HydrangeaLeaf",
+  "base": "ThirdParty/FlowerBush_Blue/T_FlowerBush_Blue_3_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_White_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "PinkFlowers",
+  "base": "ThirdParty/FlowerBush_White/T_FlowerBush_White_0_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_White_1": {
+  "kind": "pbr",
+  "color": [
+   0.3001515245491554,
+   0.5166603507852228,
+   0.3149143996173181
+  ],
+  "rough": 0.9292893409729004,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Trunk",
+  "color_linear": [
+   0.07331400364637375,
+   0.22978700697422022,
+   0.08084200322628021
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_White_2": {
+  "kind": "pbr",
+  "color": [
+   0.41176429571333667,
+   0.537254632836091,
+   0.2784313329477071
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Stem",
+  "color_linear": [
+   0.1412629932165146,
+   0.2501580119132995,
+   0.06300999969244005
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FlowerBush_White_3": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8999999761581421,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "HydrangeaLeaf",
+  "base": "ThirdParty/FlowerBush_White/T_FlowerBush_White_3_BC",
+  "masked": true,
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Fern_A_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "fern_02",
+  "base": "ThirdParty/Fern_A/T_Fern_A_0_BC",
+  "masked": true,
+  "normal": "ThirdParty/Fern_A/T_Fern_A_0_N",
+  "orm": "ThirdParty/Fern_A/T_Fern_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_GrassClump_A_0": {
+  "kind": "pbr_foliage",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "grass_medium_01",
+  "base": "ThirdParty/GrassClump_A/T_GrassClump_A_0_BC",
+  "masked": true,
+  "normal": "ThirdParty/GrassClump_A/T_GrassClump_A_0_N",
+  "orm": "ThirdParty/GrassClump_A/T_GrassClump_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
   "strength": 1.0,
   "opacity": 1.0
  }

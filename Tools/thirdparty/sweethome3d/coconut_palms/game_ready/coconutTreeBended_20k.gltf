@@ -1,0 +1,329 @@
+{
+ "asset": {
+  "generator": "Khronos glTF Blender I/O v5.2.41",
+  "version": "2.0"
+ },
+ "extensionsUsed": [
+  "KHR_materials_specular",
+  "KHR_materials_ior"
+ ],
+ "scene": 0,
+ "scenes": [
+  {
+   "name": "Scene",
+   "nodes": [
+    0
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "mesh": 0,
+   "name": "coconutTreeBended_20k"
+  }
+ ],
+ "materials": [
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.03937000036239624
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Coconut",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 0
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 0.7999999523162842
+   }
+  },
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0.023622000589966774
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Leaves",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 1
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 0.8418861031532288
+   }
+  },
+  {
+   "doubleSided": true,
+   "extensions": {
+    "KHR_materials_specular": {
+     "specularFactor": 0
+    },
+    "KHR_materials_ior": {
+     "ior": 1.4500000476837158
+    }
+   },
+   "name": "Trunk",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 2
+    },
+    "metallicFactor": 0,
+    "roughnessFactor": 0.9292893409729004
+   }
+  }
+ ],
+ "meshes": [
+  {
+   "name": "Coconuts",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "TEXCOORD_0": 2
+     },
+     "indices": 3,
+     "material": 0
+    },
+    {
+     "attributes": {
+      "POSITION": 4,
+      "NORMAL": 5,
+      "TEXCOORD_0": 6
+     },
+     "indices": 7,
+     "material": 1
+    },
+    {
+     "attributes": {
+      "POSITION": 8,
+      "NORMAL": 9,
+      "TEXCOORD_0": 10
+     },
+     "indices": 11,
+     "material": 2
+    }
+   ]
+  }
+ ],
+ "textures": [
+  {
+   "sampler": 0,
+   "source": 0
+  },
+  {
+   "sampler": 0,
+   "source": 0
+  },
+  {
+   "sampler": 0,
+   "source": 0
+  }
+ ],
+ "images": [
+  {
+   "mimeType": "image/jpeg",
+   "name": "coconutTreeTexture",
+   "uri": "textures/coconutTreeTexture.jpg"
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 472,
+   "max": [
+    0.8544524908065796,
+    7.5072736740112305,
+    0.8442456722259521
+   ],
+   "min": [
+    -0.4440796375274658,
+    6.765347480773926,
+    -0.32889068126678467
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 472,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 472,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5123,
+   "count": 1224,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5126,
+   "count": 41777,
+   "max": [
+    3.6514437198638916,
+    10.004196166992188,
+    3.7371764183044434
+   ],
+   "min": [
+    -3.6514434814453125,
+    3.891911745071411,
+    -3.7371764183044434
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 5,
+   "componentType": 5126,
+   "count": 41777,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 6,
+   "componentType": 5126,
+   "count": 41777,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 7,
+   "componentType": 5123,
+   "count": 58434,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 8,
+   "componentType": 5126,
+   "count": 99,
+   "max": [
+    2.847963571548462,
+    7.26076602935791,
+    0.6209888458251953
+   ],
+   "min": [
+    0.045148611068725586,
+    0,
+    0.142178475856781
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 9,
+   "componentType": 5126,
+   "count": 99,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 10,
+   "componentType": 5126,
+   "count": 99,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 11,
+   "componentType": 5123,
+   "count": 342,
+   "type": "SCALAR"
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteLength": 5664,
+   "byteOffset": 0,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 5664,
+   "byteOffset": 5664,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 3776,
+   "byteOffset": 11328,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 2448,
+   "byteOffset": 15104,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteLength": 501324,
+   "byteOffset": 17552,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 501324,
+   "byteOffset": 518876,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 334216,
+   "byteOffset": 1020200,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 116868,
+   "byteOffset": 1354416,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteLength": 1188,
+   "byteOffset": 1471284,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 1188,
+   "byteOffset": 1472472,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 792,
+   "byteOffset": 1473660,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 684,
+   "byteOffset": 1474452,
+   "target": 34963
+  }
+ ],
+ "samplers": [
+  {
+   "magFilter": 9729,
+   "minFilter": 9987
+  }
+ ],
+ "buffers": [
+  {
+   "byteLength": 1475136,
+   "uri": "coconutTreeBended_20k.bin"
+  }
+ ]
+}
