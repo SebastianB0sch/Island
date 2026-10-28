@@ -57,6 +57,9 @@ class Layout:
         self.log = log
         self.hf, self.ff, self.sf, self.meta = terrain.load_cached()
         self.occ, self.din = terrain.load_extra()
+        from scipy import ndimage
+        # "near built-up area" mask: paths/pads/lake dilated by ~30 m (keeps cliff boulders off quays and dikes)
+        self.near = terrain.Field(ndimage.maximum_filter(self.occ.a, size=21))
         self.info = self.meta["info"]
         self.static = []
         self.floating = []
@@ -419,7 +422,10 @@ class Layout:
         x, y = jitter_grid(24.0)
         h = self.hf(x, y)
         din = self.din(x, y)
-        ok = (h > -4) & (h < 6) & (self.sf(x, y) > 22) & (rng.random(x.size) < 0.6)
+        ok = (h > -4) & (h < 6) & (self.sf(x, y) > 22) & (rng.random(x.size) < 0.6) & (self.near(x, y) < 0.1)
+        for key in ("harbor", "lighthouse"):
+            px, py = C.LOCATIONS[key]["pos"]
+            ok &= np.hypot(x - px, y - py) > (420.0 if key == "harbor" else 120.0)
         emit("SM_CliffRock_A", x[ok], y[ok], h[ok], 0.6, 1.4, sink=2.0)
         # volcanic rocks
         x, y = jitter_grid(14.0)
