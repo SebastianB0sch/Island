@@ -28,6 +28,9 @@ CATALOG = {
     "SM_Rock_D":          "Rock cluster ~5 m",
     "SM_CliffRock_A":     "Large cliff rock ~14 m",
     "SM_VolcanicRock_A":  "Dark jagged volcanic rock ~4 m",
+    "SM_Driftwood_A":     "Weathered fallen trunk / driftwood ~4.5 m along X",
+    "SM_Stump_A":         "Tree stump ~1 m",
+    "SM_Pebbles_A":       "Scatter of small stones ~1.5 m",
     # ------------------------------------------------------------ street furniture
     "SM_LampPost":        "Classic street lamp ~4.5 m, lamp head at z=4.2 (light added automatically)",
     "SM_LampPost_Old":    "Rusty broken lamp post ~4 m (abandoned)",

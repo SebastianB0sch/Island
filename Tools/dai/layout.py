@@ -440,6 +440,24 @@ class Layout:
         ok = (h > -1.5) & (h < 2.5) & (rng.random(x.size) < 0.12) & free(x, y, 6.0)
         emit("SM_Rock_B", x[ok], y[ok], h[ok], 0.6, 1.5, sink=0.3)
 
+        # driftwood + pebbles on the beaches, stumps and fallen trunks in the forest
+        x, y = jitter_grid(26.0)
+        h = self.hf(x, y)
+        ok = (h > 0.4) & (h < 3.0) & (self.sf(x, y) < 12) & (self.occ(x, y) < 0.05) & (rng.random(x.size) < 0.18)
+        ok &= free(x, y, 4.0)
+        emit("SM_Driftwood_A", x[ok], y[ok], h[ok], 0.7, 1.2, sink=0.1)
+        x, y = jitter_grid(17.0)
+        h = self.hf(x, y)
+        ok = (h > -0.5) & (h < 4.0) & (self.occ(x, y) < 0.05) & (rng.random(x.size) < 0.2) & free(x, y, 2.0)
+        emit("SM_Pebbles_A", x[ok], y[ok], h[ok], 0.7, 1.5, sink=0.03)
+        x, y = jitter_grid(15.0)
+        f = self.ff(x, y)
+        ok = (rng.random(x.size) < f * 0.12) & (self.occ(x, y) < 0.1) & (self.hf(x, y) > 3.0) & free(x, y, 2.5)
+        r = rng.random(ok.sum())
+        xs, ys = x[ok], y[ok]
+        emit("SM_Stump_A", xs[r < 0.6], ys[r < 0.6], self.hf(xs[r < 0.6], ys[r < 0.6]), 0.7, 1.3, sink=0.1)
+        emit("SM_Driftwood_A", xs[r >= 0.6], ys[r >= 0.6], self.hf(xs[r >= 0.6], ys[r >= 0.6]), 0.8, 1.3, sink=0.15)
+
         # ---------------- dead trees around the abandoned dorm
         ax, ay = C.LOCATIONS["abandoned"]["pos"]
         n = 26
@@ -532,9 +550,10 @@ class Layout:
             "SM_GrassClump_A": [3000, 6000], "SM_Fern_A": [4000, 8000], "SM_Bush_A": [12000, 20000],
             "SM_Bush_B": [12000, 20000], "SM_FlowerBush_Red": [8000, 14000], "SM_FlowerBush_Yellow": [8000, 14000],
             "SM_FlowerBush_Blue": [8000, 14000], "SM_FlowerBush_White": [8000, 14000],
+            "SM_Pebbles_A": [4000, 7000], "SM_Stump_A": [9000, 15000],
         }
         nocol = {"SM_GrassClump_A", "SM_Fern_A", "SM_FlowerBush_Red", "SM_FlowerBush_Yellow", "SM_FlowerBush_Blue",
-                 "SM_FlowerBush_White", "SM_Bush_A", "SM_Bush_B"}
+                 "SM_FlowerBush_White", "SM_Bush_A", "SM_Bush_B", "SM_Pebbles_A"}
         inst = {}
         for k, v in sorted(self.instances.items()):
             inst[k] = dict(folder="Props", collision=k not in nocol, cull=cull.get(k, [0, 0]),
@@ -573,7 +592,7 @@ class Layout:
 def export_props(manifest, log=print):
     out = os.path.join(C.OUT_MESHES, "Props")
     P.export_all(out, log)
-    nanite = {n for n in P.REGISTRY if any(t in n for t in ("Tree", "Palm", "Bush", "Rock", "Fern", "Grass"))}
+    nanite = {n for n in P.REGISTRY if any(t in n for t in ("Tree", "Palm", "Bush", "Rock", "Fern", "Grass", "Driftwood", "Stump", "Pebbles"))}
     for n in P.REGISTRY:
         manifest.append(dict(file=f"Meshes/Props/{n}.fbx", name=n, folder="Props", collision="simple",
                              nanite=n in nanite, category="prop"))

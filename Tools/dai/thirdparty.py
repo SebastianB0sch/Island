@@ -336,6 +336,27 @@ def collision_meshes(obj, spec):
 _built = {}
 
 
+def _decimate(obj, max_tris):
+    """Photoscans ship at 60k-150k triangles; collapse-decimate to a per-asset budget (keeps UVs)."""
+    if not max_tris:
+        return
+    tris = sum(len(p.vertices) - 2 for p in obj.data.polygons)
+    if tris <= max_tris:
+        return
+    mod = obj.modifiers.new("decimate", "DECIMATE")
+    mod.decimate_type = "COLLAPSE"
+    mod.ratio = max_tris / tris
+    mod.use_collapse_triangulate = True
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    me = bpy.data.meshes.new_from_object(obj.evaluated_get(depsgraph), preserve_all_data_layers=True,
+                                         depsgraph=depsgraph)
+    obj.modifiers.remove(mod)
+    old = obj.data
+    obj.data = me
+    me.name = old.name
+    bpy.data.meshes.remove(old)
+
+
 def build_prop(name):
     """Import + normalise the third-party asset mapped to catalog `name`. Returns the bpy object."""
     cached = _built.get(name)
@@ -352,6 +373,7 @@ def build_prop(name):
     obj = _join_static(objs, name, spec.get("exclude", ()), spec.get("include", ()))
     for m in list(obj.modifiers):
         obj.modifiers.remove(m)
+    _decimate(obj, spec.get("max_tris"))
     _normalise(obj, spec)
     extract_materials(obj, asset, spec)
     _built[name] = obj

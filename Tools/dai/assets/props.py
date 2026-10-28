@@ -409,6 +409,30 @@ def crate():
     return mb, [box_col((-0.6, -0.6, 0), (0.6, 0.6, 1.2))]
 
 
+def driftwood():
+    mb = MeshBuilder("driftwood")
+    mb.beam((-2.2, 0, 0.22), (2.2, 0.15, 0.3), 0.42, 0.4, "M_Bark")
+    mb.beam((0.8, 0.05, 0.3), (1.6, 0.7, 0.45), 0.16, 0.14, "M_Bark")
+    return mb, [box_col((-2.3, -0.25, 0.0), (2.3, 0.4, 0.5))]
+
+
+def stump():
+    mb = MeshBuilder("stump")
+    mb.lathe([(0.55, 0.0), (0.42, 0.12), (0.38, 0.7), (0.36, 0.85)], "M_Bark", seg=12)
+    return mb, [cyl_col((0, 0, 0), 0.45, 0.85)]
+
+
+def pebbles():
+    mb = MeshBuilder("pebbles")
+    rnd = random.Random(7)
+    for k in range(7):
+        a, r = rnd.uniform(0, TAU), rnd.uniform(0.0, 0.7)
+        s = rnd.uniform(0.12, 0.3)
+        blob(mb, (math.cos(a) * r, math.sin(a) * r, s * 0.25), s, "M_Rock", 40 + k, seg=8, rings=5,
+             scale=(1, 0.8, 0.55), rough=0.3, flat_bottom=0.2)
+    return mb, []
+
+
 def barrel():
     mb = MeshBuilder("barrel")
     mb.lathe([(0.29, 0.0), (0.31, 0.45), (0.29, 0.9)], "M_CrateBlue", seg=14)
@@ -610,6 +634,9 @@ def _registry():
         "SM_PicnicTable": picnic_table,
         "SM_Planter": planter,
         "SM_DuelDummy": duel_dummy,
+        "SM_Driftwood_A": driftwood,
+        "SM_Stump_A": stump,
+        "SM_Pebbles_A": pebbles,
     }
     missing = set(CATALOG) - set(R)
     assert not missing, f"catalog entries without geometry: {missing}"
