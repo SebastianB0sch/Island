@@ -451,8 +451,10 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
         first = next(o for o in scene.objects if o.type == "ARMATURE")
         bpy.context.view_layer.update()
         head = first.matrix_world @ first.pose.bones["head"].head          # posed (the take moves the hips)
-        tgt = (head.x, head.y, head.z + 0.08 * first.scale.z)      # the head bone sits at the jaw
-        cam = blend.camera("cam", (tgt[0] + math.sin(a) * 0.9, -math.cos(a) * 0.9, tgt[2]), tgt, lens=50.0)
+        bust = portrait == "bust"                    # head and chest (uniform details) instead of the face
+        tgt = (head.x, head.y, head.z + (-0.12 if bust else 0.08) * first.scale.z)   # the head bone sits at the jaw
+        d = 1.45 if bust else 0.9
+        cam = blend.camera("cam", (tgt[0] + math.sin(a) * d, -math.cos(a) * d, tgt[2]), tgt, lens=50.0)
     else:
         cam = blend.camera("cam", (math.sin(a) * dist, -math.cos(a) * dist, 1.25), (0.0, 0.0, 0.92), lens=50.0)
     blend.render(cam, path)

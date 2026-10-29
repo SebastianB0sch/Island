@@ -49,33 +49,30 @@ designs, with a cel-style material and ink outline in Unreal:
 
 * **Uniforms are tailored onto the models' bodies** (`Tools/dai/anime/outfit.py`): the base outfits are
   replaced by Duel Academy jackets and long coats cut from the body itself (they share its bone weights, so
-  they deform with it), with stand-up collars, painted trims, shoulder and cuff bands and buttons, plus
-  shirts, trousers, pleated skirts and boots. The designs follow the dorm and character descriptions on
-  Yugipedia and the Yu-Gi-Oh! Wiki: waist-length Slifer Red / Ra Yellow jackets with white trimmings, a white
-  band round the shoulders and a dorm-coloured cuff band; Obelisk Blue boys' blue long-tailed jackets with
-  white trimmings (Zane: pointed tails at the back); the Obelisk girls' sleeveless white jacket with blue
-  markings, blue miniskirt with a light blue belt and royal blue boots; Jaden's open jacket over a black
-  shirt with white uniform trousers and red sneakers; Syrus's yellow shirt; Chumley's inverted, mostly
-  white Slifer uniform; Chazz's black coat with grey trim over a purple shirt, dark blue trousers, brown
-  shoes; Crowler's regal Obelisk coat with gold trim and pink ruffles.
-* **Checked against official art** where it was reachable from the build environment (public GitHub mod /
-  fan-site repositories; used as references only, not redistributed here): Konami's *Tag Force* portraits
-  of Alexis, Syrus, Zane and the generic Slifer student, the *Tag Force* cover art of Jaden and Chazz,
-  Chumley's in-game duel portrait and the *Duel Links* portraits of Bastion and Crowler. Colours were sampled
-  from them (Slifer red, the periwinkle Obelisk edging, hair and eye colours) and they set the flared,
-  white-lined collars, the black / grey / green turtlenecks, Jaden's orange-over-brown two-layer hair,
-  Chazz's mauve shirt, Chumley's koala puffs and round nose, Bastion's swept-up hair and gold collar and
-  Crowler's blond bob, crescent earrings and purple lipstick. No official art of Jasmine or Mindy was
-  reachable; they follow the written descriptions. `Tools/preview_anime.py <id> --portrait` renders the
-  head-and-shoulders close-up used for the comparison.
+  they deform with it), with stand-up collars, capelets, painted trims, chest panels, cuffs and buttons,
+  plus turtlenecks, trousers, pleated skirts, boots and gloves.
+* **Matched to the official art** (Konami's *Tag Force Special* and *Duel Links* character art on
+  Yugipedia's media server, the *Tag Force* cover and portraits from public GitHub mod repositories; used as
+  references only, nothing redistributed here). Colours were sampled from the art and it sets the designs:
+  every Duel Academy jacket has a white shield-shaped chest panel bordered in a darker dorm colour; Slifer
+  Red and Ra Yellow jackets are waist-length with white-lined stand-up collars (Jaden wears his open over a
+  dark shirt with white trousers and red sneakers, Syrus a yellow turtleneck, Bastion a green one under his
+  pale yellow jacket, Chumley the inverted white-and-red uniform); Zane wears the white Obelisk jacket with
+  a royal blue capelet yoke and long coat tails at the back; the Obelisk girls a sleeveless white top with a
+  navy capelet edged periwinkle and white, black turtleneck, blue miniskirt with a light blue belt and
+  royal blue boots (Alexis also her blue fingerless gloves); Chazz his black coat with grey trim over a
+  mauve shirt; Crowler his blue frock coat with gold trim, pink ruffles, crescent earrings and purple
+  lipstick. `Tools/preview_anime.py <id> --portrait` / `--bust` render the close-ups used for the
+  side-by-side comparison.
 * **Faces**: each character's resting expression is baked from the VRoid face blendshapes after the art
   (Chazz's scowl, Zane's stern eyes, Bastion's confident smile, Syrus's worried look, Crowler's grin), and
   the face is reshaped towards it (longer faces and pointed chins for Zane, Chazz, Bastion and Jaden,
   Crowler's long narrow face, Chumley's round one).
-* **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's spiky two-layer mop, Syrus's
-  cyan spikes, Zane's long slate-teal hair, Chazz's black spikes, Chumley's puffed sides, long olive-blond
-  hair for Alexis, shoulder-length brown (Jasmine) and black (Mindy) hair, Crowler's blond ponytail with a
-  black band, plus Syrus's round glasses and Chumley's nose; eye colours per character. The spiky manes
+* **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's spiky orange-over-brown mop,
+  Syrus's cyan spikes, Zane's long slate-teal hair, Chazz's black spikes, Bastion's swept-up grey hair,
+  Chumley's black koala puffs, long olive-blond hair for Alexis, Jasmine's auburn flared cut, Mindy's grey
+  bob with flipped wings, Crowler's blond bob and ponytail with a black band, plus Syrus's round glasses and
+  Chumley's round nose; eye colours per character. The spiky manes
   (Jaden, Chazz, Syrus) are thickened with turned copies of the strands, which brings those meshes to about
   80k triangles.
 

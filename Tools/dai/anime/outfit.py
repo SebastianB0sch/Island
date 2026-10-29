@@ -16,11 +16,13 @@ Outfit spec (cast.py "outfit"), every part optional, colours sRGB:
            knee | calf), open (0 closed .. 1 wide open), sleeves (long | none), collar (height m or 0),
            flare, buttons {color, n}, tint (Unreal recolours it), loose (offset from the body, m),
            collar_flare, collar_color, collar_trim, lining (inside of the collar), cuff_color, shoulder {color, w},
-           tails (front hem fraction), drop}
+           tails (front hem fraction), drop, capelet {color, trim, trim2, drop, open, wide, deep},
+           shield {color, border, w, below, side, point, border_w} (the chest panel)}
   shirt   {color, sleeves (short | long | none), length (waist | hip), turtleneck}
   pants   {color, width (hem half width, m)}
   skirt   {color, length (m below the crotch), pleats, trim}
   boots   {color, top (fraction from ankle to knee)}
+  gloves  {color, trim, from (fraction along the forearm)} - fingerless
   belly   0..1 (Chumley)
 """
 
@@ -262,6 +264,82 @@ class Tailor:
             prev = nset
         return new_faces
 
+    def capelet(self, spec):
+        """Wide collar lying over the shoulders (the Obelisk girls' navy capelet in their Tag Force portraits):
+        a cone from the neck base out to the shoulders, draped over the jacket / shirt underneath (pushed out
+        radially wherever they reach further), open at the front."""
+        idx, mname = self.material("Capelet", spec.get("tint", False))
+        g = self.garments.setdefault("Capelet", dict(mat=mname, idx=idx, spec=spec))
+        r = self.rig
+        rx, ry = r.neck_r
+        cy = r.neck_c.y
+        top, drop = r.neck + 0.006, spec.get("drop", 0.075)
+        sx, sy = r.shoulder_x + spec.get("wide", 0.06) - rx, spec.get("deep", 0.065)
+        # what the capelet lies on: max distance from the neck axis per direction / height
+        under = [self.garments[n]["idx"] for n in ("Jacket", "Shirt") if n in self.garments]
+        pts = np.array([v.co[:] for f in self.bm.faces if f.material_index in under for v in f.verts])
+        reach = {}
+        if len(pts):
+            pts = pts[(pts[:, 2] > top - drop - 0.04) & (np.abs(pts[:, 0]) < r.shoulder_x + 0.08)]   # not the sleeves
+            ang = np.degrees(np.arctan2(pts[:, 0], -(pts[:, 1] - cy)))
+            rad = np.hypot(pts[:, 0], pts[:, 1] - cy)
+            for a_, z_, r_ in zip(np.round(ang / 8).astype(int), np.round(pts[:, 2] / 0.01).astype(int), rad):
+                k = (a_, z_)
+                reach[k] = max(reach.get(k, 0.0), r_)
+
+        def clearance(a_deg, z):
+            best = 0.0
+            for da in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    best = max(best, reach.get((int(round(a_deg / 8)) + da, int(round(z / 0.01)) + dz), 0.0))
+            return best
+
+        seg, rows = 36, 6
+        a0 = math.radians(spec.get("open", 36) * 0.5)
+        angs = [a0 + (2 * math.pi - 2 * a0) * i / seg for i in range(seg + 1)]
+        s3, cl, cr = self.gi("spine_03"), self.gi("clavicle_l"), self.gi("clavicle_r")
+        ul, ur = self.gi("upperarm_l"), self.gi("upperarm_r")
+        grid = {}
+        for wall, extra in (("o", 0.0), ("i", -0.004)):
+            for j in range(rows + 1):
+                t = j / rows
+                z = top - drop * t
+                for i, a in enumerate(angs):
+                    ex, ey = rx + 0.012 + sx * t ** 0.8, ry + 0.012 + sy * t ** 0.8
+                    x, y = math.sin(a) * ex, cy - math.cos(a) * ey
+                    rad = math.hypot(x, y - cy)
+                    need = clearance(math.degrees(math.atan2(x, -(y - cy))), z) + 0.010
+                    if rad < need:
+                        x, y = x * need / rad, cy + (y - cy) * need / rad
+                    # the outer part rides on the shoulder: clavicle, then upper arm (it was built over the
+                    # T-pose's level arms and has to drape down with them)
+                    side = abs(math.sin(a)) * t
+                    k_cl = 0.5 * side
+                    k_ua = 0.55 * _smooth((abs(x) - r.shoulder_x + 0.02) / 0.06) * side
+                    v = self.bm.verts.new((x * (1 + extra / max(ex, 1e-3)), cy + (y - cy) * (1 + extra / max(ey, 1e-3)), z))
+                    self.set_weights(v, {s3: max(0.0, 1 - k_cl - k_ua), (cl if x > 0 else cr): k_cl,
+                                         (ul if x > 0 else ur): k_ua})
+                    grid[wall, j, i] = v
+        faces = []
+
+        def quad(*vs):
+            f = self.bm.faces.new(vs)
+            f.material_index = idx
+            f.smooth = True
+            faces.append(f)
+        for j in range(rows):
+            for i in range(seg):
+                quad(grid["o", j, i + 1], grid["o", j, i], grid["o", j + 1, i], grid["o", j + 1, i + 1])
+                quad(grid["i", j, i], grid["i", j, i + 1], grid["i", j + 1, i + 1], grid["i", j + 1, i])
+        for i in range(seg):
+            quad(grid["o", rows, i + 1], grid["o", rows, i], grid["i", rows, i], grid["i", rows, i + 1])
+        for i in (0, seg):
+            for j in range(rows):
+                vs = (grid["o", j, i], grid["o", j + 1, i], grid["i", j + 1, i], grid["i", j, i])
+                quad(*(vs if i == seg else tuple(reversed(vs))))
+        g["hem"] = top - drop
+        return faces
+
     def collar(self, spec, height, open_deg, flare=0.016, lift=0.012):
         """Stand-up collar round the neck base (outer + inner wall + rim), open at the front and flaring out by
         `flare` at the top; its own garment, so the lining can differ (the portraits: white-lined collars)."""
@@ -363,6 +441,8 @@ class Tailor:
             self.collar(cspec, spec.get("collar", 0.05), 70 + 80 * opening, spec.get("collar_flare", 0.016))
         g = self.garments["Jacket"]
         g["cuff_x"], g["hem"], g["gap"] = cuff_x, hem - drop, gap
+        if spec.get("capelet"):
+            self.capelet(spec["capelet"])
 
     def shirt(self, spec):
         r = self.rig
@@ -452,6 +532,20 @@ class Tailor:
         self.cut("Boots", (0, 0, lo), (0, 0, -1))
         self.garments["Boots"]["top"] = hi
 
+    def gloves(self, spec):
+        """Fingerless gloves from the forearm to the knuckles (Alexis's duel gloves in her Duel Links art)."""
+        r = self.rig
+        x0 = r.elbow_x + (r.wrist_x - r.elbow_x) * spec.get("from", 0.35)
+        x1 = abs(r.h["middle_01_l"].x) - 0.005 if "middle_01_l" in r.h else r.wrist_x + 0.06
+
+        def inside(co):
+            return x0 < abs(co.x) < x1
+
+        self.shell(self.select(inside), 0.004, "Gloves", spec, self.select(inside, every=True))
+        for sgn in (1, -1):
+            self.cut("Gloves", (sgn * x0, 0, 0), (-sgn, 0, 0), region=lambda c, sgn=sgn: c.x * sgn > 0)
+            self.cut("Gloves", (sgn * x1, 0, 0), (sgn, 0, 0), region=lambda c, sgn=sgn: c.x * sgn > 0)
+
     def shoe_top(self):
         n = len(self.roles)
         zs = [v.co.z for f in self.bm.faces if f.material_index < n and self.roles[f.material_index] == "shoes"
@@ -474,7 +568,7 @@ class Tailor:
             paint(self.me, idx_of[name], g, self.rig, os.path.join(C.OUT_TEXTURES, rel + ".png"))
             # two-sided (the masked toon variant): the inside of an open jacket / coat tail / skirt is seen
             palette.register({g["mat"]: dict(kind="toon", color=(1.0, 1.0, 1.0), rough=0.85, fill=0.45, base=rel,
-                                             masked=name in ("Jacket", "Skirt"))})
+                                             masked=name in ("Jacket", "Skirt", "Capelet"))})
             from .build import preview_material
             old = self.me.materials[idx_of[name]]
             bpy.data.materials.remove(old)
@@ -557,7 +651,7 @@ def _edge_points(me, mat_idx, step=0.003):
     by_pos = {}
     for ek, n in count.items():
         a, b = co[ek[0]], co[ek[1]]
-        key = tuple(sorted((tuple(round(x, 4) for x in a), tuple(round(x, 4) for x in b))))
+        key = tuple(sorted((tuple(round(x, 3) for x in a), tuple(round(x, 3) for x in b))))   # 1 mm: plane cuts
         by_pos[key] = by_pos.get(key, 0) + n
     for key, n in by_pos.items():
         if n != 1:
@@ -590,6 +684,8 @@ def paint(me, mat_idx, g, rig, path, size=None):
             sel = np.isin(kind, list(trims))
             if sel.any():
                 d, _ = cKDTree(pts[sel]).query(P)
+                if spec.get("trim2") is not None:          # a second, inner line along the trim
+                    col[(d >= tw) & (d < tw + spec.get("trim2_w", 0.006))] = spec["trim2"]
                 col[d < tw] = tc
         if "collar" in trims and g.get("collar_top"):
             col[P[:, 2] > g["collar_top"] - tw * 0.8] = tc
@@ -616,6 +712,22 @@ def paint(me, mat_idx, g, rig, path, size=None):
     if spec.get("panel"):                           # two-tone: a coloured band (Obelisk coats)
         pz0, pz1, pc = spec["panel"]
         col[(P[:, 2] > pz0) & (P[:, 2] < pz1)] = pc
+    sd = spec.get("shield")
+    if sd and len(P):
+        # the Duel Academy chest panel: a shield (pentagon) from below the collar to a point on the chest, in
+        # its own colour with a border (Tag Force Special / Duel Links art)
+        top = rig.neck - sd.get("below", 0.02)
+        W = sd.get("w", 0.11)
+        side_z = top - sd.get("side", 0.07)
+        point = side_z - sd.get("point", 0.08)
+        ax = np.abs(P[:, 0])
+        zb = point + (side_z - point) * np.clip(ax / W, 0, 1)
+        d = np.minimum(np.minimum(top - P[:, 2], W - ax), (P[:, 2] - zb) * W / math.hypot(W, side_z - point))
+        front = (P[:, 1] < rig.neck_c.y) & (P[:, 2] < rig.shoulder_z + 0.06)
+        inside = front & (d > 0)
+        bw = sd.get("border_w", 0.012)
+        col[inside] = sd.get("color", (0.96, 0.96, 0.95))
+        col[inside & (d < bw)] = sd.get("border", tc)
     if spec.get("belt") and g.get("belt") and len(P):
         col[P[:, 2] > g["belt"] - spec.get("belt_w", 0.03)] = spec["belt"]
     b = spec.get("buttons")
@@ -678,6 +790,8 @@ def tailor(arm, body, entry, key, log=print):
         t.jacket(spec["jacket"])
     if "boots" in spec:
         t.boots(spec["boots"])
+    if "gloves" in spec:
+        t.gloves(spec["gloves"])
     t.finish()
     return t
 

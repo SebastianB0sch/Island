@@ -500,6 +500,7 @@
     "M_Anime_Zane_Shirt",
     "M_Anime_Zane_Jacket",
     "M_Anime_Zane_Collar",
+    "M_Anime_Zane_Capelet",
     "M_Anime_Outline",
     "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
     "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
@@ -567,7 +568,9 @@
     "M_Anime_Alexis_Shirt",
     "M_Anime_Alexis_Jacket",
     "M_Anime_Alexis_Collar",
+    "M_Anime_Alexis_Capelet",
     "M_Anime_Alexis_Boots",
+    "M_Anime_Alexis_Gloves",
     "M_Anime_Outline",
     "M_Anime_VroidA_F00_000_00_FaceMouth_00_FACE",
     "M_Anime_VroidA_F00_000_00_EyeWhite_00_EYE",
@@ -606,6 +609,7 @@
     "M_Anime_Jasmine_Shirt",
     "M_Anime_Jasmine_Jacket",
     "M_Anime_Jasmine_Collar",
+    "M_Anime_Jasmine_Capelet",
     "M_Anime_Jasmine_Boots",
     "M_Anime_Outline",
     "M_Anime_VroidA_F00_000_00_FaceMouth_00_FACE",
@@ -639,6 +643,7 @@
     "M_Anime_Mindy_Shirt",
     "M_Anime_Mindy_Jacket",
     "M_Anime_Mindy_Collar",
+    "M_Anime_Mindy_Capelet",
     "M_Anime_Mindy_Boots",
     "M_Anime_Outline",
     "M_Anime_VroidA_F00_000_00_FaceMouth_00_FACE",
@@ -653,13 +658,7 @@
     "M_Anime_Mindy_F00_000_Hair_00_HAIR_01",
     "M_Anime_Mindy_F00_000_Hair_00_HAIR_02",
     "M_Anime_Mindy_F00_000_Hair_00_HAIR_03",
-    "M_Anime_Mindy_F00_000_Hair_00_HAIR_04",
-    "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_01",
-    "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_02",
-    "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_03",
-    "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_04",
-    "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_05",
-    "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_06"
+    "M_Anime_Mindy_F00_000_Hair_00_HAIR_04"
    ],
    "file": "Meshes/Characters/Anime/SK_Anime_Mindy.fbx"
   },
@@ -680,6 +679,7 @@
     "M_Anime_StudentF1_Shirt",
     "M_Anime_StudentF1_Jacket",
     "M_Anime_StudentF1_Collar",
+    "M_Anime_StudentF1_Capelet",
     "M_Anime_StudentF1_Boots",
     "M_Anime_Outline",
     "M_Anime_VroidA_F00_000_00_FaceMouth_00_FACE",
@@ -715,6 +715,7 @@
     "M_Anime_StudentF2_Shirt",
     "M_Anime_StudentF2_Jacket",
     "M_Anime_StudentF2_Collar",
+    "M_Anime_StudentF2_Capelet",
     "M_Anime_StudentF2_Boots",
     "M_Anime_Outline",
     "M_Anime_VroidB_F00_000_00_FaceMouth_00_FACE",
@@ -748,6 +749,28 @@
    "fill": 0.45,
    "base": "Characters/Alexis/T_Alexis_Boots",
    "masked": false,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
+  "M_Anime_Alexis_Capelet": {
+   "kind": "toon",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Alexis/T_Alexis_Capelet",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -908,6 +931,28 @@
    "source_material": "F00_001_01_Shoes_01_CLOTH",
    "base": "Characters/Alexis/T_Alexis_F00_001_01_Shoes_01_CLOTH",
    "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
+  "M_Anime_Alexis_Gloves": {
+   "kind": "toon",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Alexis/T_Alexis_Gloves",
+   "masked": false,
    "color_linear": [
     1.0,
     1.0,
@@ -2227,6 +2272,28 @@
    "strength": 1.0,
    "opacity": 1.0
   },
+  "M_Anime_Jasmine_Capelet": {
+   "kind": "toon",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Jasmine/T_Jasmine_Capelet",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
   "M_Anime_Jasmine_Collar": {
    "kind": "toon",
    "color": [
@@ -2475,6 +2542,28 @@
    "strength": 1.0,
    "opacity": 1.0
   },
+  "M_Anime_Mindy_Capelet": {
+   "kind": "toon",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Mindy/T_Mindy_Capelet",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
   "M_Anime_Mindy_Collar": {
    "kind": "toon",
    "color": [
@@ -2701,138 +2790,6 @@
    "strength": 1.0,
    "opacity": 1.0
   },
-  "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_01": {
-   "kind": "toon",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.45,
-   "source_material": "vroid_b_F00_000_Hair_00_HAIR_01",
-   "base": "Characters/Mindy/T_Mindy_vroid_b_F00_000_Hair_00_HAIR_01",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0
-  },
-  "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_02": {
-   "kind": "toon",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.45,
-   "source_material": "vroid_b_F00_000_Hair_00_HAIR_02",
-   "base": "Characters/Mindy/T_Mindy_vroid_b_F00_000_Hair_00_HAIR_02",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0
-  },
-  "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_03": {
-   "kind": "toon",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.45,
-   "source_material": "vroid_b_F00_000_Hair_00_HAIR_03",
-   "base": "Characters/Mindy/T_Mindy_vroid_b_F00_000_Hair_00_HAIR_03",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0
-  },
-  "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_04": {
-   "kind": "toon",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.45,
-   "source_material": "vroid_b_F00_000_Hair_00_HAIR_04",
-   "base": "Characters/Mindy/T_Mindy_vroid_b_F00_000_Hair_00_HAIR_04",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0
-  },
-  "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_05": {
-   "kind": "toon",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.45,
-   "source_material": "vroid_b_F00_000_Hair_00_HAIR_05",
-   "base": "Characters/Mindy/T_Mindy_vroid_b_F00_000_Hair_00_HAIR_05",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0
-  },
-  "M_Anime_Mindy_vroid_b_F00_000_Hair_00_HAIR_06": {
-   "kind": "toon",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.45,
-   "source_material": "vroid_b_F00_000_Hair_00_HAIR_06",
-   "base": "Characters/Mindy/T_Mindy_vroid_b_F00_000_Hair_00_HAIR_06",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0
-  },
   "M_Anime_Outline": {
    "kind": "outline",
    "color": [
@@ -2863,6 +2820,28 @@
    "fill": 0.45,
    "base": "Characters/StudentF1/T_StudentF1_Boots",
    "masked": false,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
+  "M_Anime_StudentF1_Capelet": {
+   "kind": "toon",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/StudentF1/T_StudentF1_Capelet",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -3111,6 +3090,28 @@
    "fill": 0.45,
    "base": "Characters/StudentF2/T_StudentF2_Boots",
    "masked": false,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
+  "M_Anime_StudentF2_Capelet": {
+   "kind": "toon",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/StudentF2/T_StudentF2_Capelet",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -4329,6 +4330,28 @@
    "fill": 0.45,
    "source_material": "M00_000_00_Face_00_SKIN",
    "base": "Characters/VroidC/T_VroidC_M00_000_00_Face_00_SKIN",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
+  "M_Anime_Zane_Capelet": {
+   "kind": "toon",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Zane/T_Zane_Capelet",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,

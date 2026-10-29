@@ -29,7 +29,9 @@ All colours are sRGB 0..1.
 SKIN = (1.0, 0.87, 0.76)
 WHITE = (0.96, 0.96, 0.95)
 SLIFER_RED = (0.78, 0.20, 0.21)         # sampled from the official Tag Force portraits (see README)
-RA_YELLOW = (0.98, 0.80, 0.14)
+SLIFER_DARK = (0.50, 0.08, 0.10)
+RA_DARK = (0.56, 0.49, 0.22)
+RA_YELLOW = (0.95, 0.85, 0.46)          # the pale yellow of the Tag Force Special / Duel Links art
 OBELISK_BLUE = (0.10, 0.24, 0.66)
 OBELISK_TRIM = (0.33, 0.37, 0.75)       # the periwinkle edging on the Obelisk collars in the portraits
 TINT_BASE = (0.92, 0.92, 0.92)      # white-ish base under a runtime Tint
@@ -50,13 +52,13 @@ UNIFORM_PANTS = (0.90, 0.90, 0.88)    # white uniform trousers (Jaden until seas
 BLACK_SHIRT = (0.08, 0.08, 0.09)
 
 
-def _academy(jacket, cuff, shirt, pants, open_=0.15, trim=WHITE, **kw):
-    """Slifer Red / Ra Yellow uniform after the dorm designs (Yugipedia / Yu-Gi-Oh! Wiki): a jacket reaching the
-    waist with white trimmings, a white band round the shoulders, a band in the dorm colour at the cuffs and a
-    stand-up collar; worn over a shirt, with trousers."""
-    j = dict(color=jacket, trim=trim, trims=("front", "hem", "cuff", "collar"), open=open_, length="waist",
-             drop=0.06, collar=0.05, collar_flare=0.03, lining=WHITE, cuff_color=cuff, shoulder=dict(color=trim),
-             trim_w=0.012)
+def _academy(jacket, dark, shirt, pants, open_=0.15, panel=WHITE, **kw):
+    """Slifer Red / Ra Yellow uniform after the Tag Force Special / Duel Links art: a waist-length jacket in the
+    dorm colour edged in a darker shade, a white shield-shaped panel on the chest bordered in that shade, a
+    stand-up collar lined white and turned-back cuffs; worn over a (turtleneck) shirt, with trousers."""
+    j = dict(color=jacket, trim=dark, trims=("front", "hem", "cuff", "collar"), open=open_, length="waist",
+             drop=0.06, collar=0.05, collar_flare=0.03, lining=WHITE, cuff_color=jacket, cuff_w=0.05,
+             trim_w=0.008, shield=dict(color=panel, border=dark, w=0.12, side=0.085, point=0.09))
     j.update(kw.pop("coat", {}))
     out = dict(jacket=j, shirt=dict(color=shirt, sleeves="short", length="waist"), pants=dict(color=pants, width=kw.pop("width", 0.053)))
     out.update(kw)
@@ -88,8 +90,12 @@ def _girl(jacket=None, trim=None, skirt=None, boots=None, **kw):
     """Obelisk Blue girls' uniform (Yugipedia / Yu-Gi-Oh! Wiki): sleeveless white jacket with blue markings at
     the collar and chest, blue miniskirt with a light blue belt, royal blue boots."""
     jacket, trim = jacket or WHITE, trim or OBELISK_TRIM
-    j = dict(color=jacket, trim=trim, trims=("front", "hem", "cuff", "collar"), open=0.2, length="waist",
-             sleeves="none", collar=0.045, collar_flare=0.04, lining=WHITE, trim_w=0.014)
+    j = dict(color=jacket, trim=trim, trims=("front", "hem", "cuff", "collar"), open=0.0, length="waist",
+             sleeves="none", collar=0.045, collar_flare=0.04, lining=WHITE, trim_w=0.014,
+             shield=dict(color=WHITE, border=OBELISK_TRIM, w=0.10, side=0.10, point=0.08, border_w=0.009),
+             # the navy capelet over the shoulders, edged periwinkle with a white inner line (Tag Force portraits)
+             capelet=dict(color=(0.29, 0.32, 0.56), trim=(0.55, 0.59, 0.94), trim2=WHITE, trim_w=0.008,
+                          trims=("front", "hem", "collar"), drop=0.055, open=28, wide=0.10, deep=0.085))
     j.update(kw.pop("jacket", {}))
     # black turtleneck under the jacket (Alexis's portrait)
     out = dict(jacket=j, shirt=dict(color=(0.07, 0.07, 0.08), sleeves="none", length="waist", turtleneck=True),
@@ -104,7 +110,8 @@ CAST = {
     "jaden": dict(
         name="Jaden Yuki", dorm="slifer", scale=1.0, model="vroid_c",
         body=dict(open=1.0),
-        outfit=dict(_academy(SLIFER_RED, (0.58, 0.12, 0.13), (0.20, 0.20, 0.23), UNIFORM_PANTS, open_=1.0)),
+        outfit=dict(_academy(SLIFER_RED, SLIFER_DARK, (0.20, 0.20, 0.23), UNIFORM_PANTS, open_=1.0,
+                             coat=dict(shield=dict(color=WHITE, border=SLIFER_DARK, w=0.15, side=0.09, point=0.07)))),
         # Tag Force cover art: orange-brown top layer over dark brown, big outward spikes
         hairdo=dict(spike=dict(lift=0.35, up=0.0, length=1.45, front_lift=0.12, front_length=1.2, crown_lift=0.15, volume=1.1),
                     thicken=dict(copies=2, angle=8.0, scale=1.04), top_layer=-0.005),
@@ -124,7 +131,7 @@ CAST = {
     "syrus": dict(
         name="Syrus Truesdale", dorm="slifer", scale=0.84, model="vroid_c",
         body=dict(open=0.75),
-        outfit=dict(_academy(SLIFER_RED, (0.58, 0.12, 0.13), (0.98, 0.84, 0.22), UNIFORM_PANTS, open_=0.25)),
+        outfit=dict(_academy(SLIFER_RED, SLIFER_DARK, (0.98, 0.84, 0.22), UNIFORM_PANTS, open_=0.0)),
         hairdo=dict(spike=dict(lift=0.45, up=0.1, length=1.45, front_lift=0.25, front_length=1.2, crown_lift=0.3, volume=1.08),
                     thicken=dict(copies=2, angle=8.0, scale=1.04),
                     glasses=(0.30, 0.30, 0.32)),
@@ -144,7 +151,8 @@ CAST = {
     "chumley": dict(
         name="Chumley Huffington", dorm="slifer", scale=1.02, model="vroid_c",
         body=dict(open=0.9, belly=1.0),
-        outfit=dict(_academy(WHITE, SLIFER_RED, (0.94, 0.93, 0.88), (0.30, 0.30, 0.34), open_=0.85,
+        outfit=dict(_academy(WHITE, SLIFER_RED, (0.94, 0.93, 0.88), (0.30, 0.30, 0.34), open_=0.0,
+                              coat=dict(collar_color=SLIFER_RED),
                               trim=SLIFER_RED, belly=1.0)),
         # Tag Force portrait: dark brown hair puffed out over the ears (koala), round pink nose
         hairdo=dict(spike=dict(lift=0.0, up=0.2, length=1.1, front_lift=0.0, front_length=1.0, crown_lift=0.0,
@@ -154,7 +162,7 @@ CAST = {
         expression=dict(BRW_Angry=0.5, EYE_Joy=0.2),
         colors=dict(jacket=SLIFER_RED, trim=WHITE, inner=(0.92, 0.90, 0.84),
                     pants=(0.30, 0.30, 0.34), shoes=(0.35, 0.25, 0.18), sole=(0.8, 0.78, 0.7)),
-        hair=dict(style="chumley", color=(0.30, 0.20, 0.19)),
+        hair=dict(style="chumley", color=(0.15, 0.15, 0.17)),
         face=_face(eyes=dict(iris=(0.36, 0.22, 0.12), w=0.24, h=0.26, shape="sleepy", spacing=0.36),
                    brows=dict(color=(0.25, 0.15, 0.10), thick=0.045), mouth=dict(kind="smile", w=0.14), blush=0.35),
         lines=["Ugh... is it lunchtime yet? I could go for a grilled cheese sandwich.",
@@ -168,9 +176,8 @@ CAST = {
         name="Bastion Misawa", dorm="ra", scale=1.04, model="vroid_c",
         body=dict(open=0.35),
         # Duel Links portrait: green turtleneck under a gold-collared Ra Yellow jacket
-        outfit=dict(_academy(RA_YELLOW, RA_YELLOW, (0.36, 0.58, 0.30), (0.22, 0.24, 0.30), open_=0.3,
-                              coat=dict(collar_color=(0.86, 0.74, 0.40), lining=(0.86, 0.74, 0.40),
-                                        collar_flare=0.04)),
+        outfit=dict(_academy(RA_YELLOW, RA_DARK, (0.36, 0.58, 0.30), (0.22, 0.24, 0.30), open_=0.0,
+                              coat=dict(lining=RA_YELLOW, collar_flare=0.04, buttons=dict(color=WHITE, n=1))),
                     shirt=dict(color=(0.36, 0.58, 0.30), sleeves="short", length="waist", turtleneck=True)),
         hairdo=dict(spike=dict(lift=0.3, up=1.2, length=1.2, front_lift=0.85, front_length=1.05, crown_lift=0.2,
                                volume=1.06)),
@@ -212,8 +219,12 @@ CAST = {
     "zane": dict(
         name="Zane Truesdale", dorm="obelisk", scale=1.1, model="vroid_c",
         body=dict(open=0.3, coat="long"),
-        outfit=dict(_coat(OBELISK_BLUE, WHITE, (0.07, 0.07, 0.08), (0.12, 0.13, 0.20), open_=0.6, collar=0.08,
-                          coat=dict(tails=0.25, loose=0.012, collar_color=WHITE, collar_trim=OBELISK_TRIM)),
+        outfit=dict(_coat(WHITE, (0.22, 0.30, 0.72), (0.07, 0.07, 0.08), (0.12, 0.13, 0.20), open_=0.0, collar=0.08,
+                          coat=dict(tails=0.25, loose=0.012, collar_color=WHITE, collar_trim=OBELISK_TRIM,
+                                    shield=dict(color=WHITE, border=(0.22, 0.30, 0.72), w=0.12, side=0.09, point=0.09),
+                                    capelet=dict(color=(0.22, 0.30, 0.72), trim=OBELISK_TRIM, trim2=WHITE,
+                                                 trim_w=0.008, trims=("front", "hem", "collar"), drop=0.06,
+                                                 open=30, wide=0.11, deep=0.09))),
                     shirt=dict(color=(0.07, 0.07, 0.08), sleeves="short", turtleneck=True)),
         hairdo=dict(spike=dict(lift=0.0, up=0.0, length=1.6, front_lift=0.0, front_length=1.15, crown_lift=0.0)),
         face_shape=dict(chin=0.014, jaw=-0.08),
@@ -232,7 +243,7 @@ CAST = {
     "alexis": dict(
         name="Alexis Rhodes", dorm="obelisk", scale=1.0, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
-        outfit=_girl(),
+        outfit=_girl(gloves=dict(color=(0.22, 0.30, 0.72), trim=OBELISK_TRIM, trims=("front",), trim_w=0.006)),
         hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
         face_shape=dict(chin=0.006, jaw=-0.04),
         expression=dict(MTH_Fun=0.3),
@@ -252,11 +263,13 @@ CAST = {
         name="Jasmine", dorm="obelisk", scale=0.98, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
-        hairdo=dict(),
+        # Tag Force Special portrait: auburn shoulder-length hair flaring out in points, a tuft on top
+        hairdo=dict(spike=dict(lift=0.3, up=-0.55, length=1.35, front_lift=0.05, front_length=1.05, crown_lift=0.3,
+                               volume=1.06)),
         expression=dict(MTH_Fun=0.3),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
-        hair=dict(style="long_wavy", color=(0.40, 0.24, 0.13)),
+        hair=dict(style="long_wavy", color=(0.62, 0.36, 0.27)),
         face=_face(eyes=dict(_EYES_GIRL, iris=(0.45, 0.47, 0.52)), brows=dict(color=(0.35, 0.10, 0.10)),
                    mouth=dict(kind="smile", w=0.08), blush=0.3),
         lines=["Alexis is the Queen of Obelisk Blue. Everybody knows that.",
@@ -267,11 +280,13 @@ CAST = {
         name="Mindy", dorm="obelisk", scale=0.97, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
-        hairdo=dict(source="vroid_b", long_only=True, trim="shoulder", drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
+        # Tag Force Special portrait / anime: charcoal bob flipping out in wings at the shoulders
+        hairdo=dict(spike=dict(lift=0.12, up=0.0, length=1.25, front_lift=0.0, front_length=1.0, crown_lift=0.0,
+                               side_lift=0.32, volume=1.05)),
         expression=dict(MTH_Fun=0.35, EYE_Surprised=0.2),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
-        hair=dict(style="long_straight", color=(0.06, 0.06, 0.08)),
+        hair=dict(style="long_straight", color=(0.46, 0.44, 0.45)),
         face=_face(eyes=dict(_EYES_GIRL, iris=(0.38, 0.24, 0.14)), brows=dict(color=(0.05, 0.05, 0.07)),
                    mouth=dict(kind="open", w=0.08), blush=0.3),
         lines=["Ooh, are you new? Which dorm are you in? Wait, let me guess...",
@@ -282,9 +297,10 @@ CAST = {
     "crowler": dict(
         name="Dr. Vellian Crowler", dorm="teacher", scale=1.12, model="vroid_c",
         body=dict(open=0.2, coat="long"),
-        outfit=dict(_coat((0.16, 0.30, 0.66), (0.92, 0.78, 0.30), WHITE, (0.16, 0.30, 0.66), open_=0.15, collar=0.0,
+        outfit=dict(_coat((0.16, 0.30, 0.66), (0.92, 0.78, 0.30), WHITE, (0.16, 0.30, 0.66), open_=0.0, collar=0.0,
                              cuff=(0.96, 0.62, 0.78), width=0.05,
                              coat=dict(buttons=dict(color=(0.92, 0.78, 0.30), n=4),
+                                       shield=dict(color=WHITE, border=(0.92, 0.78, 0.30), w=0.12),
                                        shoulder=dict(color=(0.96, 0.62, 0.78), w=0.04)))),
         hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"),
                     ponytail=dict(k=0.3, band=(0.06, 0.06, 0.07)), ruff=(0.96, 0.62, 0.78),
@@ -341,7 +357,7 @@ def student_entry(key):
         outfit = _girl()
     else:   # white jacket, grey trims: Unreal multiplies it with the dorm colour ("JacketTint")
         # the generic Slifer student of the Tag Force portraits: grey turtleneck under the dorm jacket
-        outfit = _academy(WHITE, (0.72, 0.72, 0.72), (0.62, 0.65, 0.69), (0.22, 0.24, 0.30), open_=0.45,
+        outfit = _academy(WHITE, (0.72, 0.72, 0.72), (0.62, 0.65, 0.69), (0.22, 0.24, 0.30), open_=0.0,
                           trim=(0.55, 0.55, 0.55), coat=dict(tint=True))
         outfit["shirt"]["turtleneck"] = True
     return dict(name="Student", dorm="any", scale=1.0, body=body, colors=colors, model=s.get("model"), outfit=outfit,
