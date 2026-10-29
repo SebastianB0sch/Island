@@ -14,11 +14,12 @@ class USkeletalMeshComponent;
 class UAnimSequence;
 
 /**
- * Student avatar. If the curated CC0 character (SK_Student + A_Student_* animation
- * sequences, imported by the editor build script) is present, it is used with real
- * skeletal animation driven from the owner's velocity. Otherwise the avatar is built
- * from the procedural SM_Avatar_* part meshes and animated in code
- * (walk/run/idle/jump/swim) - no animation assets required.
+ * Student avatar, best available first:
+ *  1. the anime cast (Tools/dai/anime, imported by the editor build script): SK_Anime_<Name> with the
+ *     A_Anime_<Group>_<State> takes of its skeleton group and the group's duel disk;
+ *  2. the curated CC0 student (SK_Student + A_Student_* sequences);
+ *  3. the procedural SM_Avatar_* part meshes animated in code - no assets required.
+ * Skeletal avatars are driven from the owner's velocity.
  *
  * Attach it at the bottom of the capsule; it faces the owner's +X.
  */
@@ -65,9 +66,29 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	FLinearColor HairColor = FLinearColor(0.12f, 0.035f, 0.01f);
 
-	/** Use the skeletal student (SK_Student) when it has been imported. */
+	/** Use a skeletal character (anime cast / SK_Student) when one has been imported. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	bool bPreferSkeletal = true;
+
+	/** Anime cast mesh in /Game/DuelAcademy/Characters (SK_Anime_<Name>, see SourceAssets/Data/cast.json). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	FString CastMesh = TEXT("SK_Anime_StudentM1");
+
+	/** Skeleton group of CastMesh: its takes are A_Anime_<AnimGroup>_<State>, its disk SK_Anime_<AnimGroup>_DuelDisk. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	FString AnimGroup = TEXT("VroidC");
+
+	/** Recolour the cast mesh's "JacketTint" slots by dorm and "HairTint" slots with HairColor (generic
+	 *  students); named characters keep their own colours. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	bool bDormTint = true;
+
+	/** Ground speed (cm/s) at which the walk / run takes play at rate 1 (no foot sliding). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float WalkAnimSpeed = 200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float RunAnimSpeed = 320.f;
 
 	/** Material slot name fragments recoloured with the dorm colour on the skeletal student. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
@@ -76,8 +97,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy")
 	bool IsSkeletal() const { return SkelComp != nullptr; }
 
+	UFUNCTION(BlueprintPure, Category = "Duel Academy")
+	bool IsAnimeCast() const { return bAnimeCast; }
+
 private:
 	bool SetupSkeletal();
+	bool SetupCast();
+	void FinishSkeletal(class USkeletalMesh* Mesh);
 	void TickSkeletal(float DeltaTime, float GroundSpeed, bool bInAir);
 	UAnimSequence* FindAnim(FName State) const;
 	UStaticMeshComponent* MakePart(const TCHAR* MeshName, USceneComponent* Parent, const FVector& Offset);
@@ -114,7 +140,12 @@ private:
 	TObjectPtr<USkeletalMeshComponent> SkelComp;
 
 	UPROPERTY(Transient)
+	TObjectPtr<USkeletalMeshComponent> DiskComp;
+
+	UPROPERTY(Transient)
 	TMap<FName, TObjectPtr<UAnimSequence>> Anims;
+
+	bool bAnimeCast = false;
 
 	FName CurrentAnim = NAME_None;
 

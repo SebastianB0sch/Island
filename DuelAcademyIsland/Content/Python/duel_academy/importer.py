@@ -361,3 +361,114 @@ def import_character(materials):
             unreal.EditorAssetLibrary.delete_asset(path)
     C.log(f"character: SK_Student + {len(info.get('anims', {}))} animations")
     return mesh
+
+
+# --------------------------------------------------------------------------- anime cast
+def _skeletal_mesh_options(skeleton=None):
+    """Legacy FBX options for a cast mesh; with `skeleton` the mesh joins an existing Skeleton asset."""
+    ui = _skeletal_options()
+    if skeleton is not None:
+        ui.set_editor_property("skeleton", skeleton)
+    return ui
+
+
+def _import_one(rel, name, options):
+    _import_tasks([os.path.join(C.source_dir(), rel)], CHAR_DIR, options, [name])
+    return C.load(f"{CHAR_DIR}/{name}")
+
+
+def _assign_slots(mesh, lookup, instances, label):
+    """Set every material slot of a skeletal mesh: lookup(slot name) -> palette name -> instance."""
+    try:
+        mats = list(mesh.get_editor_property("materials"))
+        for sm in mats:
+            slot = str(sm.get_editor_property("material_slot_name"))
+            key = lookup(slot) or lookup(_palette_key(slot, instances) or "")
+            mi = instances.get(key) if key else None
+            if mi is not None:
+                sm.set_editor_property("material_interface", mi)
+            else:
+                C.warn(f"{label}: no material for slot '{slot}'")
+        mesh.set_editor_property("materials", mats)
+    except Exception as e:  # noqa: BLE001
+        C.warn(f"{label}: material assignment failed: {e}")
+
+
+def _lods(mesh, count=3):
+    """Auto LODs - the cast models are 45-50k triangles and dozens of students walk around."""
+    try:
+        unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem).regenerate_lod(mesh, count)
+    except Exception as e:  # noqa: BLE001
+        C.warn(f"{mesh.get_name()}: LOD generation skipped ({e})")
+
+
+def import_cast(masters):
+    """SourceAssets/Data/cast.json -> /Game/DuelAcademy/Characters: the anime cast.
+
+    Per skeleton group (one per base anime model, plus the procedural fallback rig): the base mesh creates
+    the Skeleton, the A_Anime_<Group>_<State> takes and SK_Anime_<Group>_DuelDisk use it; every cast member
+    SK_Anime_<Name> is a copy of the base mesh with its own material slots (or its own FBX for procedural
+    characters). UDAAvatarComponent loads them by name (CastMesh / AnimGroup)."""
+    from . import materials as MAT
+    try:
+        info = C.load_json("cast.json")
+    except Exception:  # noqa: BLE001
+        C.log("cast: none exported (SK_Student / procedural avatar will be used)")
+        return {}
+    instances = MAT.build_instances(info.get("materials", {}), masters)
+    C.ensure_dir(CHAR_DIR)
+    meshes = {}
+    _set_fbx_interchange(False)
+    try:
+        for group, g in info.get("groups", {}).items():
+            members = {cid: m for cid, m in info["meshes"].items() if m.get("group") == group}
+            base = g.get("base_mesh")
+            if base:
+                base_mesh = _import_one(base["file"], base["name"], _skeletal_mesh_options())
+            else:   # procedural group: the first member's FBX creates the skeleton
+                first = next(iter(members.values()))
+                base_mesh = _import_one(first["file"], first["name"], _skeletal_mesh_options())
+            if base_mesh is None:
+                C.error(f"cast: {group} base mesh failed to import")
+                continue
+            skeleton = base_mesh.get_editor_property("skeleton")
+            for state, a in sorted(g.get("anims", {}).items()):
+                _import_tasks([os.path.join(C.source_dir(), a["file"])], CHAR_DIR, _skeletal_options(skeleton), [a["name"]])
+                if not C.exists(f"{CHAR_DIR}/{a['name']}"):
+                    seq = _find_in(CHAR_DIR, "AnimSequence", a["name"])
+                    if seq is not None:
+                        unreal.EditorAssetLibrary.rename_asset(seq.get_path_name().split(".")[0], f"{CHAR_DIR}/{a['name']}")
+                if not C.exists(f"{CHAR_DIR}/{a['name']}"):
+                    C.warn(f"cast: animation {a['name']} failed to import")
+            disk = g.get("duel_disk")
+            if disk:
+                dm = _import_one(disk["file"], disk["name"], _skeletal_mesh_options(skeleton))
+                if dm is not None:
+                    _assign_slots(dm, lambda s: s, instances, disk["name"])
+            for cid, m in members.items():
+                path = f"{CHAR_DIR}/{m['name']}"
+                if "file" in m:
+                    mesh = base_mesh if m["name"] == base_mesh.get_name() else _import_one(
+                        m["file"], m["name"], _skeletal_mesh_options(skeleton))
+                    lookup = (lambda s: s)
+                else:
+                    if C.exists(path):
+                        unreal.EditorAssetLibrary.delete_asset(path)
+                    mesh = unreal.EditorAssetLibrary.duplicate_asset(base_mesh.get_path_name().split(".")[0], path)
+                    slots = m.get("slots", {})
+                    lookup = (lambda s, slots=slots: slots.get(s))
+                if mesh is None:
+                    C.error(f"cast: {m['name']} failed")
+                    continue
+                _assign_slots(mesh, lookup, instances, m["name"])
+                _lods(mesh)
+                unreal.EditorAssetLibrary.save_loaded_asset(mesh)
+                meshes[cid] = mesh
+    finally:
+        _set_fbx_interchange(True)
+    for path in unreal.EditorAssetLibrary.list_assets(CHAR_DIR, recursive=False, include_folder=False):
+        obj = unreal.EditorAssetLibrary.load_asset(path)
+        if obj is not None and obj.get_class().get_name() in ("Material", "MaterialInstanceConstant", "Texture2D"):
+            unreal.EditorAssetLibrary.delete_asset(path)
+    C.log(f"cast: {len(meshes)} characters in {len(info.get('groups', {}))} skeleton groups")
+    return meshes

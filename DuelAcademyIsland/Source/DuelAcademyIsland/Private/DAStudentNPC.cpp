@@ -43,7 +43,13 @@ void ADAStudentNPC::BeginPlay()
 	if (Avatar)
 	{
 		Avatar->Dorm = Dorm;
-		Avatar->BodyScale = Rng.FRandRange(0.93f, 1.05f);
+		Avatar->BodyScale = BodyScale > 0.f ? BodyScale : Rng.FRandRange(0.93f, 1.05f);
+		if (!CastMesh.IsEmpty())
+		{
+			Avatar->CastMesh = CastMesh;
+			Avatar->AnimGroup = AnimGroup;
+		}
+		Avatar->bDormTint = bDormTint;
 		static const FLinearColor Hair[] = {
 			FLinearColor(0.05f, 0.025f, 0.01f), FLinearColor(0.20f, 0.07f, 0.02f), FLinearColor(0.01f, 0.01f, 0.012f),
 			FLinearColor(0.55f, 0.35f, 0.08f), FLinearColor(0.02f, 0.05f, 0.25f), FLinearColor(0.45f, 0.05f, 0.03f) };
@@ -74,20 +80,20 @@ void ADAStudentNPC::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 FString ADAStudentNPC::GetInteractName() const
 {
-	return DuelAcademy::DormName(Dorm) + TEXT(" student");
+	return DisplayName.IsEmpty() ? DuelAcademy::DormName(Dorm) + TEXT(" student") : DisplayName;
 }
 
 void ADAStudentNPC::Interact(ADAStudentCharacter* By)
 {
-	const TArray<FString>& Lines = DuelAcademy::NpcLines(Dorm);
-	if (Lines.Num() == 0)
+	const TArray<FString>& Said = Lines.Num() > 0 ? Lines : DuelAcademy::NpcLines(Dorm);
+	if (Said.Num() == 0)
 	{
 		return;
 	}
 	TalkTime = GetWorld()->GetTimeSeconds();
-	FString Line = Lines[LineIndex % Lines.Num()];
+	FString Line = Said[LineIndex % Said.Num()];
 	++LineIndex;
-	if (By && By->GetDorm() != Dorm && Dorm == EDADorm::Obelisk && By->GetDorm() == EDADorm::Slifer && Rng.FRand() < 0.5f)
+	if (Lines.Num() == 0 && By && By->GetDorm() != Dorm && Dorm == EDADorm::Obelisk && By->GetDorm() == EDADorm::Slifer && Rng.FRand() < 0.5f)
 	{
 		Line = TEXT("A Slifer Slacker talking to an Obelisk? How bold. ...Fine, what do you want?");
 	}

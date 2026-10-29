@@ -55,7 +55,7 @@ _registry = None
 
 
 REG_DIR = os.path.join(TP_DIR, "registry")
-SECTIONS = ("props", "materials", "textures", "terrain", "hdri", "character")
+SECTIONS = ("props", "materials", "textures", "terrain", "hdri", "character", "anime", "anime_models")
 
 
 def registry():

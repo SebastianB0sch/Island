@@ -13,6 +13,8 @@ Stages (in order):
     audio     synthesised ambience + UI sounds
     layout    location meshes, props, avatar, roads, vegetation scatter,
               layout.json / materials.json / assets.json, minimap
+    cast      anime cast: skeletal SK_Anime_* meshes, A_Anime_* takes (CC0, retargeted), face textures,
+              cast.json; assigns the cast to layout.json's NPC markers
     render    Cycles preview renders of the whole island -> Docs/renders/
 
 Outputs go to DuelAcademyIsland/SourceAssets/, which the Unreal editor script
@@ -25,7 +27,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-STAGES = ["textures", "terrain", "meshes", "audio", "layout", "render"]
+STAGES = ["textures", "terrain", "meshes", "audio", "layout", "cast", "render"]
 
 
 def main(argv):
@@ -71,6 +73,9 @@ def main(argv):
             layout.terrain_manifest(lay.manifest)
             lay.minimap()
             lay.write()
+        elif st == "cast":
+            from dai.anime import build as cast_build
+            cast_build.build(log)
         elif st == "render":
             from dai import render
             render.render_island(log)

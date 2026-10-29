@@ -32,6 +32,29 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float StrollSpeed = 140.f;
 
+	/** Anime cast mesh / skeleton group (set by the editor build from layout.json + cast.json). Empty: the
+	 *  avatar component's defaults. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	FString CastMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	FString AnimGroup;
+
+	/** Generic students wear their dorm's jacket colour; named characters keep their own look. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	bool bDormTint = true;
+
+	/** Uniform size of the figure; 0 = a random student size. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float BodyScale = 0.f;
+
+	/** Named characters (Jaden, Alexis, ...): HUD name and what they say. Empty: a generic student of the dorm. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	FString DisplayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	TArray<FString> Lines;
+
 	// IDAInteractableInterface
 	virtual FString GetInteractPrompt() const override { return TEXT("Talk"); }
 	virtual FString GetInteractName() const override;

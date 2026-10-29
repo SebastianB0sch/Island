@@ -1,0 +1,22 @@
+asset_id: vroid_avatar_sample_a
+category: characters (anime base model)
+description: AvatarSample_A - one of the official VRoid Studio sample avatars (VRM 0.x, humanoid rig, anime face /
+             hair / outfit). Used as an anime base model for the cast (Tools/dai/anime/models.py): bones are renamed
+             to the UE5 Mannequin scheme, the CC0 animation takes are retargeted onto it and the outfit / hair
+             textures are recoloured into Duel Academy dorm colours. Modified.
+author: VRoid Project (pixiv Inc.)
+license: VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required
+upstream source page: https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604 (VRoid Project sample avatars)
+downloaded: 2026-10-29
+
+downloaded from:
+  - npm package @v-idol/vidol-agent-sample-a@1.0.0, file package/model.vrm
+    https://registry.npmjs.org/@v-idol/vidol-agent-sample-a/-/vidol-agent-sample-a-1.0.0.tgz
+    sha256 82754e287e0b26b5d7a1fd223ed0fd5debcabed81f36549fb2c16b201f3e5ca9
+    (the npm package's own "MIT" label covers the packaging; the model's terms are the ones embedded in the file)
+
+license evidence (VRM meta embedded in the file, extensions.VRM.meta):
+  title: AvatarSample_A, author: VRoid Project
+  allowedUserName: Everyone, commercialUssageName: Allow, licenseName: Other
+  otherLicenseUrl: https://hub.vroid.com/license?allowed_to_use_user=everyone&characterization_allowed_user=everyone&corporate_commercial_use=allow&credit=unnecessary&modification=allow&personal_commercial_use=profit&redistribution=allow&sexual_expression=allow&version=1&violent_expression=allow
+  -> modification=allow, redistribution=allow, credit=unnecessary, corporate_commercial_use=allow
