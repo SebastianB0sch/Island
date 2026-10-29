@@ -424,10 +424,11 @@ def _lods(mesh, count=3):
 def import_cast(masters):
     """SourceAssets/Data/cast.json -> /Game/DuelAcademy/Characters: the anime cast.
 
-    Per skeleton group (one per base anime model, plus the procedural fallback rig): the base mesh creates
-    the Skeleton, the A_Anime_<Group>_<State> takes and SK_Anime_<Group>_DuelDisk use it; every cast member
-    SK_Anime_<Name> is a copy of the base mesh with its own material slots (or its own FBX for procedural
-    characters). UDAAvatarComponent loads them by name (CastMesh / AnimGroup)."""
+    Per skeleton group (one per base anime model, plus the procedural fallback rig): the first member's FBX
+    creates the Skeleton, the A_Anime_<Group>_<State> takes, SK_Anime_<Group>_DuelDisk and every other cast
+    member SK_Anime_<Name> (own FBX: individually tailored uniform / hairstyle) use it. Older exports with a
+    shared base mesh + per-member material slot maps still import. UDAAvatarComponent loads them by name
+    (CastMesh / AnimGroup)."""
     from . import materials as MAT
     try:
         info = C.load_json("cast.json")
