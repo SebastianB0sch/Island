@@ -1,0 +1,25 @@
+asset_id: sketchfab_signpost_tetiana_denysenko
+title: Signpost (weathered wooden direction signpost with 3 arrows)
+category: props
+main_file: scene.gltf
+catalog_use: SM_Signpost (primary)
+author: Tetiana_Denysenko
+license: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED
+attribution_text: "Signpost" (https://sketchfab.com/3d-models/signpost-493bcedc8b344a38a9a67587b14bfcff) by Tetiana_Denysenko (https://sketchfab.com/tetiana_denysenko) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+original_source_page: https://sketchfab.com/3d-models/signpost-493bcedc8b344a38a9a67587b14bfcff
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/adrientremblay/dark-altar-2/master/assets/models/signpost/scene.gltf
+  https://raw.githubusercontent.com/adrientremblay/dark-altar-2/master/assets/models/signpost/scene.bin
+  https://raw.githubusercontent.com/adrientremblay/dark-altar-2/master/assets/models/signpost/textures/Material.002_baseColor.jpeg
+  https://raw.githubusercontent.com/adrientremblay/dark-altar-2/master/assets/models/signpost/textures/Material.002_metallicRoughness.png
+  https://raw.githubusercontent.com/adrientremblay/dark-altar-2/master/assets/models/signpost/textures/Material.002_normal.png
+  https://raw.githubusercontent.com/adrientremblay/dark-altar-2/master/assets/models/signpost/textures/Material.005_baseColor.png
+  https://raw.githubusercontent.com/adrientremblay/dark-altar-2/master/assets/models/signpost/textures/Material.005_metallicRoughness.png
+  https://raw.githubusercontent.com/adrientremblay/dark-altar-2/master/assets/models/signpost/license.txt
+mirror_note: Sketchfab download (glTF + textures) mirrored in a public GitHub repo; sketchfab.com is blocked from this container.
+license_evidence: Sketchfab download metadata embedded in the delivered glTF (asset.extras written by Sketchfab at download time): {"author": "Tetiana_Denysenko (https://sketchfab.com/tetiana_denysenko)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/signpost-493bcedc8b344a38a9a67587b14bfcff", "title": "Signpost"} ; plus the Sketchfab "license.txt" shipped next to the model in the mirror (included in this folder): "* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)"
+stats: 2156 triangles, 2 mesh objects, 2 materials, native bbox 554.37 x 377.44 x 994.67 (Blender units after glTF import, Z up)
+modifications: textures downscaled with Pillow LANCZOS to keep game budgets (file names/format unchanged; full-res originals at the URLs above): textures/Material.002_baseColor.jpeg: 2048x2048 -> 1024x1024; textures/Material.002_metallicRoughness.png: 2048x2048 -> 1024x1024; textures/Material.002_normal.png: 2048x2048 -> 1024x1024; textures/Material.005_baseColor.png: 2048x2048 -> 1024x1024; textures/Material.005_metallicRoughness.png: 2048x2048 -> 1024x1024
+notes: 2.2k tris, PBR. Arrow boards are blank (add decals/text in UE). Includes a small grass tuft at the base (separate material, can be dropped). Native ~995 units tall - scale to 2.8 m.
+date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF and the mirror ships the Sketchfab license.txt (identical); textures verified as downscales.

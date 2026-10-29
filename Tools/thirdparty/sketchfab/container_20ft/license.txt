@@ -1,0 +1,11 @@
+Model Information:
+* title:	Container 20FT
+* source:	https://sketchfab.com/3d-models/container-20ft-623de0e3ed6b47878c6b280969971743
+* author:	Ashkelon (https://sketchfab.com/Ashkelon)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Container 20FT" (https://sketchfab.com/3d-models/container-20ft-623de0e3ed6b47878c6b280969971743) by Ashkelon (https://sketchfab.com/Ashkelon) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

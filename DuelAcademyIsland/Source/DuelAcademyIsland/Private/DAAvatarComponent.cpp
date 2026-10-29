@@ -74,6 +74,18 @@ void UDAAvatarComponent::FinishSkeletal(USkeletalMesh* Mesh)
 	SkelComp->SetCanEverAffectNavigation(false);
 	SkelComp->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 	SkelComp->RegisterComponent();
+	// the duel disk is skinned into the mesh (slots MT_Student_Duel*); hide it for students without one
+	if (!bShowDuelDisk)
+	{
+		const TArray<FName> Slots = SkelComp->GetMaterialSlotNames();
+		for (int32 i = 0; i < Slots.Num(); ++i)
+		{
+			if (Slots[i].ToString().Contains(TEXT("Duel")))
+			{
+				SkelComp->ShowMaterialSection(i, INDEX_NONE, false, 0);
+			}
+		}
+	}
 	SetRelativeScale3D(FVector(BodyScale));
 }
 
@@ -143,9 +155,13 @@ bool UDAAvatarComponent::SetupSkeletal()
 		return false;   // a mesh without animations would T-pose; keep the procedural avatar
 	}
 	FinishSkeletal(Mesh);
-	// SK_Student's walk / run cycles were tuned for these speeds
-	WalkAnimSpeed = 320.f;
-	RunAnimSpeed = 750.f;
+	// the editor import scales SK_Student's walk / run clips to these speeds (importer.py REF_SPEED)
+	WalkAnimSpeed = 300.f;
+	RunAnimSpeed = 600.f;
+	if (RunThreshold <= 0.f)
+	{
+		RunThreshold = 560.f;   // the player walks at 450, sprints at 950
+	}
 	return true;
 }
 
@@ -180,15 +196,15 @@ void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool b
 		Want = (VerticalSpeed < -50.f && FindAnim(NameFall)) ? NameFall : NameJump;
 		bLoop = Want == NameFall;
 	}
-	else if (GroundSpeed > (WalkAnimSpeed + RunAnimSpeed) * 0.5f + 60.f && FindAnim(NameRun))
+	else if (GroundSpeed > (RunThreshold > 0.f ? RunThreshold : (WalkAnimSpeed + RunAnimSpeed) * 0.5f + 60.f) && FindAnim(NameRun))
 	{
 		Want = NameRun;
-		Rate = FMath::Clamp(GroundSpeed / RunAnimSpeed, 0.8f, 3.f);   // the player sprints at 950 cm/s
+		Rate = FMath::Clamp(GroundSpeed / FMath::Max(RunAnimSpeed, 1.f), 0.8f, 3.f);   // the player sprints at 950 cm/s
 	}
 	else if (GroundSpeed > 20.f && FindAnim(NameWalk))
 	{
 		Want = NameWalk;
-		Rate = FMath::Clamp(GroundSpeed / WalkAnimSpeed, 0.45f, 2.0f);
+		Rate = FMath::Clamp(GroundSpeed / FMath::Max(WalkAnimSpeed, 1.f), 0.45f, 2.0f);
 	}
 	else if (DuelPoseAlpha > 0.5f && (FindAnim(NameDuel) || FindAnim(NameWave)))
 	{
@@ -204,9 +220,12 @@ void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool b
 		}
 	}
 	SkelComp->SetPlayRate(Rate);
-	// lean the whole body forward while swimming
-	SkelComp->SetRelativeRotation(FRotator(0.f, 0.f, -70.f * SwimAlpha));
-	SkelComp->SetRelativeLocation(FVector(0.0, 0.0, 60.0 * SwimAlpha));
+	// Swimming: lay the body prone about the hips. The mesh faces +Y in avatar space and a positive roll tips
+	// +Z towards +Y (FRotationMatrix), i.e. forwards; then lift the hips to just under the water surface.
+	static const FVector Hip(0.0, 0.0, 95.0);
+	const FRotator Lean(0.f, 0.f, 80.f * SwimAlpha);
+	SkelComp->SetRelativeRotation(Lean);
+	SkelComp->SetRelativeLocation(Hip - Lean.RotateVector(Hip) + FVector(0.0, 0.0, 30.0 * SwimAlpha));
 }
 
 void UDAAvatarComponent::BeginPlay()
@@ -381,7 +400,9 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	float ArmLAngle = -S * StrideAmp * 0.8f;
 	float ArmRAngle = S * StrideAmp * 0.8f;
 	float ArmSpread = 4.f + Breath * 1.f;
-	float TorsoLean = -4.f * FMath::Min(Move01, 1.4f);
+	// Angles are "forward swing". The figure faces +Y in avatar space and a positive roll tips +Z towards +Y
+	// (FRotationMatrix): hanging limbs swing forward with a NEGATIVE roll, the torso leans forward with a POSITIVE one.
+	float TorsoLean = 4.f * FMath::Min(Move01, 1.4f);
 
 	// Jump / fall pose
 	LegLAngle = FMath::Lerp(LegLAngle, -25.f, AirAlpha);
@@ -404,17 +425,17 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		ArmSpread = FMath::Lerp(ArmSpread, 12.f, SwimAlpha);
 	}
 
-	LegL->SetRelativeRotation(FRotator(0.f, 0.f, LegLAngle));
-	LegR->SetRelativeRotation(FRotator(0.f, 0.f, LegRAngle));
-	ArmL->SetRelativeRotation(FRotator(-ArmSpread, 0.f, ArmLAngle));
-	ArmR->SetRelativeRotation(FRotator(ArmSpread, 0.f, ArmRAngle));
+	LegL->SetRelativeRotation(FRotator(0.f, 0.f, -LegLAngle));
+	LegR->SetRelativeRotation(FRotator(0.f, 0.f, -LegRAngle));
+	ArmL->SetRelativeRotation(FRotator(-ArmSpread, 0.f, -ArmLAngle));
+	ArmR->SetRelativeRotation(FRotator(ArmSpread, 0.f, -ArmRAngle));
 
 	// ---- body
 	const float SwimPitch = 80.f * SwimAlpha;
-	Pelvis->SetRelativeLocation(HipHeight + FVector(0.0, 0.0, Bob - 2.0 * Breath * (1.f - Move01) * 0.5f - 60.0 * SwimAlpha));
-	Pelvis->SetRelativeRotation(FRotator(0.f, 0.f, TorsoLean * 0.4f - SwimPitch));
+	Pelvis->SetRelativeLocation(HipHeight + FVector(0.0, 0.0, Bob - 2.0 * Breath * (1.f - Move01) * 0.5f + 32.0 * SwimAlpha));
+	Pelvis->SetRelativeRotation(FRotator(0.f, 0.f, TorsoLean * 0.4f + SwimPitch));
 	Torso->SetRelativeRotation(FRotator(0.f, 0.f, TorsoLean + FMath::Sin(Phase * 2.f) * 1.5f * Move01));
 	Torso->SetRelativeScale3D(FVector(1.0, 1.0 + 0.012 * Breath, 1.0 + 0.008 * Breath));
 	Head->SetRelativeRotation(FRotator(0.f, FMath::Sin(Time * 0.37f + BreathPhase) * 8.f * (1.f - Move01 * 0.7f),
-		-TorsoLean * 0.6f + SwimPitch * 0.6f));
+		-TorsoLean * 0.6f - SwimPitch * 0.6f));
 }

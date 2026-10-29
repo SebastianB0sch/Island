@@ -3,6 +3,7 @@ CREDITS.md generator: one row per curated third-party asset folder (Tools/thirdp
 plus the catalog names each asset replaces (from the registry).
 """
 
+import json
 import os
 import re
 
@@ -10,9 +11,9 @@ from . import config as C
 from . import thirdparty
 
 FIELDS = {
-    "author": ("author", "authors", "creator", "artist"),
-    "license": ("license", "licence"),
-    "source": ("upstream source page", "source page", "upstream", "original source", "source", "source url",
+    "author": ("author", "authors", "creator", "artist", "generator"),
+    "license": ("license", "licence", "licenses / evidence", "licenses"),
+    "source": ("upstream source page", "upstream asset", "original_source_page", "original page", "source page", "upstream", "original source", "source", "source url",
                "source_url", "homepage"),
     "title": ("asset_id", "asset", "name", "title"),
 }
@@ -23,7 +24,7 @@ def parse_source(path):
     attribution, in_attr = [], False
     with open(path, encoding="utf-8", errors="replace") as fp:
         for line in fp:
-            if re.match(r"^(required )?attribution( text)?\b", line, re.I):
+            if re.match(r"^(required )?(attribution|credit)([ _](text|line))?\s*(\(.*\))?\s*:", line, re.I):
                 in_attr = True
                 rest = line.split(":", 1)[1].strip() if ":" in line else ""
                 if rest and not rest.startswith("("):
@@ -34,7 +35,7 @@ def parse_source(path):
                     attribution.append(line.strip())
                     continue
                 in_attr = False
-            m = re.match(r"^\s*([A-Za-z_ ]+?)\s*:\s*(.+?)\s*$", line)
+            m = re.match(r"^\s*([A-Za-z_ /]+?)\s*:\s*(.+?)\s*$", line)
             if not m:
                 continue
             key, val = m.group(1).lower(), m.group(2)
@@ -42,7 +43,10 @@ def parse_source(path):
                 if key in names and field not in out:
                     out[field] = val
     if attribution:
-        out["attribution"] = " ".join(attribution).strip('"')
+        text = " ".join(attribution).strip()
+        if text.startswith('"') and text.endswith('"') and text.count('"') == 2:
+            text = text[1:-1]
+        out["attribution"] = text
     return out
 
 
@@ -85,8 +89,14 @@ def write(path=None, log=print):
     asset_folders_cache = list(asset_folders())
     uses = usage()
     rows = []
+    overrides = {}
+    opath = os.path.join(thirdparty.REG_DIR, "credits_overrides.json")
+    if os.path.exists(opath):
+        with open(opath, encoding="utf-8") as fp:
+            overrides = json.load(fp).get("credits", {})
     for folder in asset_folders_cache:
         info = parse_source(os.path.join(thirdparty.TP_DIR, folder, "SOURCE.txt"))
+        info.update(overrides.get(folder, {}))
         rows.append((folder, info, uses.get(folder, [])))
     lines = [
         "# Credits",

@@ -1,0 +1,29 @@
+asset_id: poly_fishing_trawler
+category: characters_vehicles  ->  fishing boat for the harbour (and a nice background vessel)
+description: "Boat" (small fishing trawler) by Poly by Google: white/grey hull with tyre fenders, wheelhouse with
+             windows and door, exhaust stack, two masts with rope rigging, crane boom with block and hook, propeller.
+             1 mesh, 1 material (lambert3SG) with a 1024x1024 base-colour texture ("Boat texture", PNG, embedded).
+             4,486 triangles. Units are centimetres: 929 x 410 x 558 -> ~9.3 m long trawler at scale 0.01.
+author: Poly by Google (Google Poly archive)
+license: CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED.
+REQUIRED ATTRIBUTION TEXT:
+  "Boat" by Poly by Google, licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/),
+  source https://poly.pizza/m/1ZuSXvhkRg_. Modified (rescaled, converted for Unreal Engine).
+downloaded: 2026-10-28 (HTTP 200, binary glTF, not HTML):
+  https://raw.githubusercontent.com/daforce1984/deepsea/main/assets/models/raw/boat_fishing.glb
+sha256: 15c3a16e3eae04ab2738c8456f9c00a292890e478913bb371f7e6e43bc4da01f  boat_fishing.glb
+license evidence (copies in evidence/):
+  1) https://raw.githubusercontent.com/daforce1984/deepsea/main/assets/models/raw/REPORT.md (the hosting folder's
+     source table): "| boat_fishing.glb | trawler | CC-BY 3.0, Poly by Google, https://poly.pizza/m/1ZuSXvhkRg_ |"
+  2) independent second source, https://raw.githubusercontent.com/JamesStudd/Jetpack/master/Assets/Assets/Prefabs/Attributions/AttributionsData.asset :
+     "Boat by Poly by Google [CC-BY] (https://creativecommons.org/licenses/by/3.0/) via Poly Pizza https://poly.pizza/m/1ZuSXvhkRg_"
+  (The same deepsea folder's "boat.glb" (houseboat, Poly by Google CC-BY) was inspected and not kept.)
+verification (bpy 5.2): imports cleanly (obj2gltf export); previews/boat_fishing.png.
+date: 2026-10-28
+
+INDEPENDENT AUDIT (2026-10-29):
+  - boat_fishing.glb re-downloaded: sha256 identical. 4,486 tris, 1024x1024 texture decodes; obj2gltf export with
+    material lambert3SG, consistent with the poly.pizza conversions of Google Poly models.
+  - Re-fetched deepsea REPORT.md and JamesStudd/Jetpack AttributionsData.asset ("Boat by Poly by Google [CC-BY 3.0]
+    via Poly Pizza https://poly.pizza/m/1ZuSXvhkRg_") - quotes correct. poly.pizza itself is blocked here.
+  - Verdict: CC BY 3.0 - OK WITH ATTRIBUTION (text above).

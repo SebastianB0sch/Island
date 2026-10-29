@@ -1,0 +1,57 @@
+asset_id: ph_tree_stump_01
+category: rocks_terrain
+upstream asset: Poly Haven "tree_stump_01" - https://polyhaven.com/a/tree_stump_01  (polyhaven.com / dl.polyhaven.org are blocked from this container)
+author: Rob Tuytel (All) (Poly Haven)
+license: CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily.
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copy of Poly Haven's 1k glTF export; HTTP 200, non-HTML, verified):
+  https://raw.githubusercontent.com/awplanets/awplanet/main/public/models/nature/polyhaven/tree_stump_01/tree_stump_01_1k.gltf
+  + the .bin and textures/*.jpg referenced by that .gltf (same folder)
+  Original Poly Haven file names and relative texture paths preserved; files unmodified.
+
+license evidence (files fetched 2026-10-28):
+  a) Poly Haven's own repository (first-party): https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md
+     "While our 3D assets themselves are published under the CC0 license, and the code for this API is licensed as AGPL,
+      access to this API through our servers (api.polyhaven.com) is covered separately by these terms of service."
+     "CC0 assets carry no attribution requirement whatsoever, now or ever."
+  b) Poly Haven license page, quoted verbatim in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
+     "All assets on Poly Haven are licensed as CC0, which is the same as public domain. This means you can use, modify and
+      redistribute our assets for any purpose, including commercial use, without attribution or permission."
+  (copies of these files: ../_license_evidence/PolyHaven_Public-API_ToS.md, ../_license_evidence/2600th_web-ocean-3d_ASSET_LICENSES.md)
+  c) Poly Haven API listing snapshot (api.polyhaven.com/assets?type=models, fetched 2026-10-10) at
+     https://raw.githubusercontent.com/nclamvn/duong-ve-sai-gon/master/docs/research/rung-truong-son/snapshots/K_polyhaven_models_plants.md
+     row: "tree_stump_01 | Tree Stump 01 | nature, plants, ground cover, trees, collection: pine_forest | Rob Tuytel (All) | 41046 | 1688515200"
+     (copy: ../_license_evidence/polyhaven_api_snapshot_plants.md)
+  d) Hosting repo licence file, https://raw.githubusercontent.com/awplanets/awplanet/main/public/models/nature/polyhaven/LICENSE.md :
+     "Poly Haven nature assets ... Source: https://polyhaven.com/ License: CC0 / public domain  Downloaded 1k glTF versions for
+      local real-time placement: ... - https://polyhaven.com/a/tree_stump_01"  (copy: ../_license_evidence/awplanets_awplanet_polyhaven_LICENSE.md)
+
+integrity cross-check against an independent second mirror (sha256):
+  - tree_stump_01_1k.gltf: MATCH sha256 vs https://media.githubusercontent.com/media/null-value7/Athernix/main/public/models/ph/tree_stump_01/tree_stump_01_1k.gltf
+  - textures/tree_stump_01_diff_1k.jpg: MATCH sha256 vs https://media.githubusercontent.com/media/null-value7/Athernix/main/public/models/ph/tree_stump_01/textures/tree_stump_01_diff_1k.jpg
+
+intended use: Stumps: mossy cut stump with spreading roots, 1.4 x 1.6 x 0.57 m. 41k tris -> decimate to ~8k.
+
+tech notes (verified 2026-10-28):
+  tree_stump_01_1k.gltf: Blender 5.2 glTF import OK, missing images: 0; 41,046 tris; 1 mesh object(s); bbox (m, X/Y/Z-up) [1.426, 1.59, 0.573]; materials ['tree_stump_01']; textures: tree_stump_01_diff 1024x1024, tree_stump_01_nor_gl 1024x1024, tree_stump_01_rough 1024x1024
+  Normal map is OpenGL (+Y) -> tick "Flip Green Channel" in UE. *_arm_1k.jpg packs R=AO, G=roughness, B=metallic (linear, sRGB off).
+  Origin is not at base-centre/-Y-front per catalog convention: re-pivot in the dai pipeline.
+  Over the ~15k-tri budget for a non-Nanite mesh. Tested recipe (Blender 5.2): import glTF -> bmesh remove_doubles(dist=1e-5)
+  (Poly Haven exports are split at every UV seam; without welding, Decimate stalls at ~40% of the input) -> Decimate COLLAPSE
+  ratio = target/tris. boulder_01 66,122 -> 15,000 tris was visually indistinguishable at prop distance. Or keep full res for Nanite.
+
+files:
+  - _preview.png  250644 bytes  sha256=b814d6d7cf667db8dddce36677351cfb73c42b83911eabb9a6a2114899c30b53
+  - textures/tree_stump_01_arm_1k.jpg  825646 bytes  sha256=d845cd6ab45288c546267d059ebe1f8a737e174330fe9375e5f99e753f2f95d8
+  - textures/tree_stump_01_diff_1k.jpg  907451 bytes  sha256=781ebe420ac4d84f2e44b9e9937a596e3d5d90711d978a1392f8bf3771b5bf31
+  - textures/tree_stump_01_nor_gl_1k.jpg  1238404 bytes  sha256=425117514b0386bb6df41cb64a61a624d2596472e05777483d4021b3285e3ceb
+  - tree_stump_01.bin  965380 bytes  sha256=b4d9ca70b3c908c4a638fbd6a23ed96c84055bbbf14cf44b89e31ad59fa21e0a
+  - tree_stump_01_1k.gltf  2793 bytes  sha256=9c66ba87d693f35eb404acaa96e0eeff831c295b61a0a903795584cbcc3527c9
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: tree_stump_01_1k.gltf 41,046.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  awplanet polyhaven/LICENSE.md lists tree_stump_01. Second mirror re-checked: gltf + diff MATCH null-value7/Athernix (LFS).
+  verdict: ACCEPT (CC0-1.0, no attribution required).

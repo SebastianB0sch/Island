@@ -1,0 +1,31 @@
+asset_id: sketchfab_beach_chair_stealth86
+title: Beach Chair (striped canvas deck chair, bamboo-look frame)
+category: props
+main_file: scene.gltf
+catalog_use: SM_BeachChair (primary)
+author: stealth86
+license: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED
+attribution_text: "Beach Chair" (https://sketchfab.com/3d-models/beach-chair-57e9477018d244378302070a8738b566) by stealth86 (https://sketchfab.com/stealth86) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+original_source_page: https://sketchfab.com/3d-models/beach-chair-57e9477018d244378302070a8738b566
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/scene.gltf
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/scene.bin
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Cloth_baseColor.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Hemi_baseColor.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Hemi_metallicRoughness.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Hemi_normal.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Side_Support_baseColor.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Side_Support_metallicRoughness.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Side_Support_normal.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Side_rail_baseColor.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Side_rail_metallicRoughness.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Side_rail_normal.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/textures/Support_baseColor.png
+  https://raw.githubusercontent.com/TiagoRibeiro25/Jumper/main/assets/Island/beach_chair/license.txt
+mirror_note: Sketchfab download (glTF + textures) mirrored in a public GitHub repo; sketchfab.com is blocked from this container.
+license_evidence: Sketchfab download metadata embedded in the delivered glTF (asset.extras written by Sketchfab at download time): {"author": "stealth86 (https://sketchfab.com/stealth86)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/beach-chair-57e9477018d244378302070a8738b566", "title": "Beach Chair"} ; plus the Sketchfab "license.txt" shipped next to the model in the mirror (included in this folder): "* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)"
+stats: 7376 triangles, 6 mesh objects, 6 materials, native bbox 7.723 x 13.784 x 9.377 (Blender units after glTF import, Z up)
+modifications: none (files byte-identical to the mirror)
+notes: 7.4k tris, PBR 1k textures. Native ~9.4 units tall - scale to ~1.0 m tall / 1.6 m long.
+date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF and the mirror ships the Sketchfab license.txt (identical to the included copy).

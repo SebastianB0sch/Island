@@ -69,7 +69,13 @@ def main(argv):
             layout.export_props(lay.manifest, log)
             layout.export_avatar(lay.manifest, log)
             from dai import character
-            character.build(log)
+            try:
+                character.build(log)
+            except Exception as e:  # noqa: BLE001 - never lose the layout over the optional skeletal student
+                log(f"  !! character export failed ({e}); the procedural avatar will be used")
+                stale = os.path.join(C.OUT_DATA, "character.json")
+                if os.path.exists(stale):
+                    os.remove(stale)
             layout.terrain_manifest(lay.manifest)
             lay.minimap()
             lay.write()

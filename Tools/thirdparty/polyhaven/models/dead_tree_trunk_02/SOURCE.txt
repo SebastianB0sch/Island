@@ -1,0 +1,57 @@
+asset_id: ph_dead_tree_trunk_02
+category: rocks_terrain
+upstream asset: Poly Haven "dead_tree_trunk_02" - https://polyhaven.com/a/dead_tree_trunk_02  (polyhaven.com / dl.polyhaven.org are blocked from this container)
+author: Jenelle van Heerden (Photography); Rico Cilliers (processing) (Poly Haven)
+license: CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily.
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copy of Poly Haven's 1k glTF export; HTTP 200, non-HTML, verified):
+  https://raw.githubusercontent.com/Joshkaki00/godotmark/main/art/nature-benchmark-archive-20260311_173846/dead_tree_trunk_02_1k.gltf/dead_tree_trunk_02_1k.gltf
+  + the .bin and textures/*.jpg referenced by that .gltf (same folder)
+  Original Poly Haven file names and relative texture paths preserved; files unmodified.
+
+license evidence (files fetched 2026-10-28):
+  a) Poly Haven's own repository (first-party): https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md
+     "While our 3D assets themselves are published under the CC0 license, and the code for this API is licensed as AGPL,
+      access to this API through our servers (api.polyhaven.com) is covered separately by these terms of service."
+     "CC0 assets carry no attribution requirement whatsoever, now or ever."
+  b) Poly Haven license page, quoted verbatim in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
+     "All assets on Poly Haven are licensed as CC0, which is the same as public domain. This means you can use, modify and
+      redistribute our assets for any purpose, including commercial use, without attribution or permission."
+  (copies of these files: ../_license_evidence/PolyHaven_Public-API_ToS.md, ../_license_evidence/2600th_web-ocean-3d_ASSET_LICENSES.md)
+  c) Poly Haven API listing snapshot (api.polyhaven.com/assets?type=models, fetched 2026-10-10) at
+     https://raw.githubusercontent.com/nclamvn/duong-ve-sai-gon/master/docs/research/rung-truong-son/snapshots/K_polyhaven_models_plants.md
+     row: "dead_tree_trunk_02 | Dead Tree Trunk 02 | nature, plants, trees, collection: verdant_trail | Jenelle van Heerden (Photography); Rico Cilliers (processing) | 155864 | 1707177600"
+     (copy: ../_license_evidence/polyhaven_api_snapshot_plants.md)
+  d) Hosting repo inventory, https://raw.githubusercontent.com/Joshkaki00/godotmark/main/art/ASSET_INVENTORY.md :
+     "All assets are sourced from Poly Haven (CC0 license)"  (copy: ../_license_evidence/Joshkaki00_godotmark_ASSET_INVENTORY.md)
+
+integrity cross-check against an independent second mirror (sha256):
+  - dead_tree_trunk_02_1k.gltf: MATCH sha256 vs https://raw.githubusercontent.com/ayoub5550/inside-copy-/main/assets/ph/models/dead_tree_trunk_02/dead_tree_trunk_02_1k.gltf
+  - textures/dead_tree_trunk_02_diff_1k.jpg: MATCH sha256 vs https://raw.githubusercontent.com/ayoub5550/inside-copy-/main/assets/ph/models/dead_tree_trunk_02/textures/dead_tree_trunk_02_diff_1k.jpg
+
+intended use: Driftwood log - PRIMARY for beaches: 4.05 m weathered, partly bark-stripped trunk with a branch stub. 83.1k tris -> decimate to ~10k.
+
+tech notes (verified 2026-10-28):
+  dead_tree_trunk_02_1k.gltf: Blender 5.2 glTF import OK, missing images: 0; 83,128 tris; 1 mesh object(s); bbox (m, X/Y/Z-up) [4.051, 1.056, 1.055]; materials ['dead_tree_trunk_02']; textures: dead_tree_trunk_02_diff 1024x1024, dead_tree_trunk_02_nor_gl 1024x1024, dead_tree_trunk_02_rough 1024x1024
+  Normal map is OpenGL (+Y) -> tick "Flip Green Channel" in UE. *_arm_1k.jpg packs R=AO, G=roughness, B=metallic (linear, sRGB off).
+  Origin is not at base-centre/-Y-front per catalog convention: re-pivot in the dai pipeline.
+  Over the ~15k-tri budget for a non-Nanite mesh. Tested recipe (Blender 5.2): import glTF -> bmesh remove_doubles(dist=1e-5)
+  (Poly Haven exports are split at every UV seam; without welding, Decimate stalls at ~40% of the input) -> Decimate COLLAPSE
+  ratio = target/tris. boulder_01 66,122 -> 15,000 tris was visually indistinguishable at prop distance. Or keep full res for Nanite.
+
+files:
+  - _preview.png  214433 bytes  sha256=1c902a1137f0944691e0b5776921321fbfd6b022c436232368006dd6ea4dea65
+  - dead_tree_trunk_02.bin  1974352 bytes  sha256=2b1b7ca07d98396ddc1987e367dcff9734df16b62e997c14837512d134687ded
+  - dead_tree_trunk_02_1k.gltf  2849 bytes  sha256=b486ab1f0c7f4972e0eec97b19de53b26a34d09f07da5f9c2a70f8621f9e574c
+  - textures/dead_tree_trunk_02_arm_1k.jpg  805609 bytes  sha256=ea15561ce36572ebd0db3c997f70d68a76d4bcbfef7efb4f91c8fd3b5f766e62
+  - textures/dead_tree_trunk_02_diff_1k.jpg  932059 bytes  sha256=fac23e81ab5639dcde93db605e5dd94c65e0aa2b1fb4a303f37de9afbb9af5b4
+  - textures/dead_tree_trunk_02_nor_gl_1k.jpg  1192056 bytes  sha256=9b26c29b89afced0ddb91dbe6f917e59038bed5ba6076dfceb8d1b4b00ca04f7
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: dead_tree_trunk_02_1k.gltf 83,128.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  ayoub5550 CREDITS.md lists dead_tree_trunk_02 under 'Poly Haven (CC0)'. Second mirror re-checked: gltf + diff MATCH ayoub5550/inside-copy-.
+  note: the snapshot's last column (155,864) is Poly Haven's polycount metadata, not this 1k glTF's triangle count; the same kind of gap appears on assets whose glTF is byte-identical across independent mirrors, so it is not evidence of modification.
+  verdict: ACCEPT (CC0-1.0, no attribution required).

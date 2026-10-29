@@ -1,0 +1,23 @@
+asset_id: polyhaven_street_lamp_01
+title: Street Lamp 01 (cast-iron Victorian street lamp, ~3.9 m) (Poly Haven)
+category: props
+main_file: street_lamp_01_1k.gltf
+catalog_use: SM_LampPost (primary, hero quality)
+author: Josh Dean
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/street_lamp_01
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/rawprogress/fable-cities/main/public/assets/shared/models/street_lamp_01/street_lamp_01_1k.gltf
+  https://raw.githubusercontent.com/rawprogress/fable-cities/main/public/assets/shared/models/street_lamp_01/street_lamp_01.bin
+  https://raw.githubusercontent.com/rawprogress/fable-cities/main/public/assets/shared/models/street_lamp_01/textures/street_lamp_01_arm_1k.jpg
+  https://raw.githubusercontent.com/rawprogress/fable-cities/main/public/assets/shared/models/street_lamp_01/textures/street_lamp_01_diff_1k.jpg
+  https://raw.githubusercontent.com/rawprogress/fable-cities/main/public/assets/shared/models/street_lamp_01/textures/street_lamp_01_nor_gl_1k.jpg
+mirror_note: Poly Haven original 1k glTF export (generator 'Khronos glTF Blender I/O'), mirrored unmodified in a public GitHub repo because polyhaven.com / dl.polyhaven.org are blocked from this container.
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- quoted from https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/public/llms.txt (Poly Haven's own website repo, fetched 2026-10-28); the site license page source https://raw.githubusercontent.com/Poly-Haven/polyhaven.com/master/pages/license.tsx (fetched) links the CC0 deed.
+author_evidence: https://raw.githubusercontent.com/chmajster/WroclawTheGame/main/SourceAssets/Models/PolyHaven/street_lamp_01/asset.json ("authors": {"Josh Dean": "All"}) and npm @jgengine/assets@0.50.0 dist/catalogs/modelLibraryEntries.js
+integrity: diffuse texture md5-identical to the dl.polyhaven.org original recorded in https://raw.githubusercontent.com/chmajster/WroclawTheGame/main/SourceAssets/Models/PolyHaven/street_lamp_01/asset.json
+stats: 30610 triangles, 1 mesh objects, 3 materials, native bbox 0.704 x 0.386 x 3.871 (Blender units after glTF import, Z up)
+modifications: none (files byte-identical to the mirror)
+notes: 30.6k tris - over the 5k prop budget: decimate / build LODs in the pipeline, or use the 1.7k-tri lamp0/lamp1 from sketchfab_city_props_vol2_tampajoey as the game-ready variant. Lamp head ~3.6 m; scale ~1.1 to hit the catalog 4.2 m head height.
+date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS. all files re-downloaded from the mirror URLs and compared byte-for-byte; mesh imported in Blender, triangle count and all textures confirmed; Poly Haven CC0 statement re-fetched from Poly-Haven/polyhaven.com llms.txt. All 5 files md5-identical to dl.polyhaven.org originals (WroclawTheGame diffuse + https://raw.githubusercontent.com/GameMog/GameMog/main/assets-src/sources.json).

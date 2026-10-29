@@ -46,6 +46,7 @@ CATALOG = {
     "SM_Container_Blue":  "Shipping container 6 x 2.4 x 2.6 m",
     "SM_Container_Yellow": "Shipping container 6 x 2.4 x 2.6 m",
     "SM_Rowboat":         "Rowing boat 4 m long along X (floats when placed on water)",
+    "SM_FishingBoat":     "Small fishing trawler ~10 m long along X, origin at the waterline (floats)",
     "SM_Buoy":            "Red/white buoy ~1.5 m",
     "SM_BeachUmbrella":   "Beach umbrella ~2.6 m",
     "SM_BeachChair":      "Deck chair ~1.6 m",

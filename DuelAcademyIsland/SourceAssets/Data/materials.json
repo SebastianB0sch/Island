@@ -3445,5 +3445,1195 @@
   "tiling": 1.0,
   "strength": 1.0,
   "opacity": 1.0
+ },
+ "MT_Rock_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "boulder_01",
+  "base": "ThirdParty/Rock_A/T_Rock_A_0_BC",
+  "normal": "ThirdParty/Rock_A/T_Rock_A_0_N",
+  "orm": "ThirdParty/Rock_A/T_Rock_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Rock_B_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "rock_09",
+  "base": "ThirdParty/Rock_B/T_Rock_B_0_BC",
+  "normal": "ThirdParty/Rock_B/T_Rock_B_0_N",
+  "orm": "ThirdParty/Rock_B/T_Rock_B_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Rock_C_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "rock_face_02",
+  "base": "ThirdParty/Rock_C/T_Rock_C_0_BC",
+  "normal": "ThirdParty/Rock_C/T_Rock_C_0_N",
+  "orm": "ThirdParty/Rock_C/T_Rock_C_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Rock_D_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "coast_rocks_05",
+  "base": "ThirdParty/Rock_D/T_Rock_D_0_BC",
+  "normal": "ThirdParty/Rock_D/T_Rock_D_0_N",
+  "orm": "ThirdParty/Rock_D/T_Rock_D_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_CliffRock_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "mountainside",
+  "base": "ThirdParty/CliffRock_A/T_CliffRock_A_0_BC",
+  "normal": "ThirdParty/CliffRock_A/T_CliffRock_A_0_N",
+  "orm": "ThirdParty/CliffRock_A/T_CliffRock_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_VolcanicRock_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Material.003",
+  "base": "ThirdParty/VolcanicRock_A/T_VolcanicRock_A_0_BC",
+  "normal": "ThirdParty/VolcanicRock_A/T_VolcanicRock_A_0_N",
+  "orm": "ThirdParty/VolcanicRock_A/T_VolcanicRock_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_LampPost_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "street_lamp_01",
+  "base": "ThirdParty/LampPost/T_LampPost_0_BC",
+  "normal": "ThirdParty/LampPost/T_LampPost_0_N",
+  "orm": "ThirdParty/LampPost/T_LampPost_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_LampPost_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "street_lamp_01_glass",
+  "base": "ThirdParty/LampPost/T_LampPost_1_BC",
+  "masked": true,
+  "normal": "ThirdParty/LampPost/T_LampPost_1_N",
+  "orm": "ThirdParty/LampPost/T_LampPost_1_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_LampPost_2": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "street_lamp_01_bulb",
+  "base": "ThirdParty/LampPost/T_LampPost_2_BC",
+  "normal": "ThirdParty/LampPost/T_LampPost_2_N",
+  "orm": "ThirdParty/LampPost/T_LampPost_2_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_LampPost_Old_0": {
+  "kind": "pbr",
+  "color": [
+   0.72,
+   0.56,
+   0.45
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "LanternPost_Mat",
+  "base": "ThirdParty/LampPost_Old/T_LampPost_Old_0_BC",
+  "normal": "ThirdParty/LampPost_Old/T_LampPost_Old_0_N",
+  "orm": "ThirdParty/LampPost_Old/T_LampPost_Old_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   0.47699978456654196,
+   0.27383841647314605,
+   0.17064493581555268
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Bench_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "M_bench_wood",
+  "base": "ThirdParty/Bench/T_Bench_0_BC",
+  "normal": "ThirdParty/Bench/T_Bench_0_N",
+  "orm": "ThirdParty/Bench/T_Bench_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Signpost_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Material.002",
+  "base": "ThirdParty/Signpost/T_Signpost_0_BC",
+  "normal": "ThirdParty/Signpost/T_Signpost_0_N",
+  "orm": "ThirdParty/Signpost/T_Signpost_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Signpost_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Material.005",
+  "base": "ThirdParty/Signpost/T_Signpost_1_BC",
+  "masked": true,
+  "orm": "ThirdParty/Signpost/T_Signpost_1_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_TrashBin_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "metal_trash_can",
+  "base": "ThirdParty/TrashBin/T_TrashBin_0_BC",
+  "normal": "ThirdParty/TrashBin/T_TrashBin_0_N",
+  "orm": "ThirdParty/TrashBin/T_TrashBin_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Fence_Wood_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "material",
+  "base": "ThirdParty/Fence_Wood/T_Fence_Wood_0_BC",
+  "normal": "ThirdParty/Fence_Wood/T_Fence_Wood_0_N",
+  "orm": "ThirdParty/Fence_Wood/T_Fence_Wood_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Fence_Iron_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "IronFence",
+  "base": "ThirdParty/Fence_Iron/T_Fence_Iron_0_BC",
+  "normal": "ThirdParty/Fence_Iron/T_Fence_Iron_0_N",
+  "orm": "ThirdParty/Fence_Iron/T_Fence_Iron_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Crate_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Scene_-_Root",
+  "base": "ThirdParty/Crate/T_Crate_0_BC",
+  "normal": "ThirdParty/Crate/T_Crate_0_N",
+  "orm": "ThirdParty/Crate/T_Crate_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Barrel_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Barrel_01",
+  "base": "ThirdParty/Barrel/T_Barrel_0_BC",
+  "normal": "ThirdParty/Barrel/T_Barrel_0_N",
+  "orm": "ThirdParty/Barrel/T_Barrel_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Container_Red_0": {
+  "kind": "pbr",
+  "color": [
+   0.78,
+   0.16,
+   0.12
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ContainerLow",
+  "base": "ThirdParty/Container_Red/T_Container_Red_0_BC",
+  "normal": "ThirdParty/Container_Red/T_Container_Red_0_N",
+  "orm": "ThirdParty/Container_Red/T_Container_Red_0_ORM",
+  "rough_channel": "R",
+  "color_linear": [
+   0.5704815954749093,
+   0.021980947079887205,
+   0.01341174889765847
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Container_Blue_0": {
+  "kind": "pbr",
+  "color": [
+   0.12,
+   0.32,
+   0.72
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ContainerLow",
+  "base": "ThirdParty/Container_Blue/T_Container_Blue_0_BC",
+  "normal": "ThirdParty/Container_Blue/T_Container_Blue_0_N",
+  "orm": "ThirdParty/Container_Blue/T_Container_Blue_0_ORM",
+  "rough_channel": "R",
+  "color_linear": [
+   0.01341174889765847,
+   0.0835351274258047,
+   0.47699978456654196
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Container_Yellow_0": {
+  "kind": "pbr",
+  "color": [
+   0.92,
+   0.72,
+   0.12
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "ContainerLow",
+  "base": "ThirdParty/Container_Yellow/T_Container_Yellow_0_BC",
+  "normal": "ThirdParty/Container_Yellow/T_Container_Yellow_0_N",
+  "orm": "ThirdParty/Container_Yellow/T_Container_Yellow_0_ORM",
+  "rough_channel": "R",
+  "color_linear": [
+   0.8275708303626798,
+   0.47699978456654196,
+   0.01341174889765847
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Rowboat_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Material",
+  "base": "ThirdParty/Rowboat/T_Rowboat_0_BC",
+  "normal": "ThirdParty/Rowboat/T_Rowboat_0_N",
+  "orm": "ThirdParty/Rowboat/T_Rowboat_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Buoy_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "buoy",
+  "base": "ThirdParty/Buoy/T_Buoy_0_BC",
+  "normal": "ThirdParty/Buoy/T_Buoy_0_N",
+  "orm": "ThirdParty/Buoy/T_Buoy_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_0": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.11075758188962936,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "stand",
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_1": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.9063317593127924,
+   0.9063317593127924
+  ],
+  "rough": 0.13500000536441803,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "screw",
+  "color_linear": [
+   0.8000000119209288,
+   0.8000000119209288,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_2": {
+  "kind": "pbr",
+  "color": [
+   0.18406681046398857,
+   0.3140098931576252,
+   0.9063317593127924
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade1",
+  "color_linear": [
+   0.028355700895190235,
+   0.08036839962005617,
+   0.8000000119209288
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_3": {
+  "kind": "pbr",
+  "color": [
+   0.19882323415303244,
+   0.9063317593127924,
+   0.17562115349480917
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade2",
+  "color_linear": [
+   0.032739300280809396,
+   0.8000000119209288,
+   0.026010699570178986
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_4": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.28758518195704935,
+   0.34785684119306537
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade3",
+  "color_linear": [
+   0.8000000119209288,
+   0.06724169850349426,
+   0.09921009838581084
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_5": {
+  "kind": "pbr",
+  "color": [
+   0.2200493416627608,
+   0.9063317593127924,
+   0.8460798030432162
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade4",
+  "color_linear": [
+   0.0396989993751049,
+   0.8000000119209288,
+   0.6848980188369751
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_6": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.15308005641303873,
+   0.8099037218788577
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade5",
+  "color_linear": [
+   0.8000000119209288,
+   0.020321099087595943,
+   0.6207500100135802
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachUmbrella_7": {
+  "kind": "pbr",
+  "color": [
+   0.9063317593127924,
+   0.7983053699117362,
+   0.34323859068152984
+  ],
+  "rough": 0.5,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "shade6",
+  "color_linear": [
+   0.8000000119209288,
+   0.6009590029716493,
+   0.09650240093469618
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Side_Support",
+  "base": "ThirdParty/BeachChair/T_BeachChair_0_BC",
+  "normal": "ThirdParty/BeachChair/T_BeachChair_0_N",
+  "orm": "ThirdParty/BeachChair/T_BeachChair_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.800000011920929,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Cloth",
+  "base": "ThirdParty/BeachChair/T_BeachChair_1_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_2": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Side_rail",
+  "base": "ThirdParty/BeachChair/T_BeachChair_2_BC",
+  "normal": "ThirdParty/BeachChair/T_BeachChair_2_N",
+  "orm": "ThirdParty/BeachChair/T_BeachChair_2_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_3": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.6000000238418579,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Support",
+  "base": "ThirdParty/BeachChair/T_BeachChair_3_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_4": {
+  "kind": "pbr",
+  "color": [
+   0.906331789156457,
+   0.6582362817712929,
+   0.14984373191093786
+  ],
+  "rough": 1.0,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Fittings",
+  "color_linear": [
+   0.8000000715255737,
+   0.3907997906208038,
+   0.01957079768180847
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_BeachChair_5": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "Hemi",
+  "base": "ThirdParty/BeachChair/T_BeachChair_5_BC",
+  "normal": "ThirdParty/BeachChair/T_BeachChair_5_N",
+  "orm": "ThirdParty/BeachChair/T_BeachChair_5_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_StoneLantern_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "RootNode",
+  "base": "ThirdParty/StoneLantern/T_StoneLantern_0_BC",
+  "masked": true,
+  "normal": "ThirdParty/StoneLantern/T_StoneLantern_0_N",
+  "orm": "ThirdParty/StoneLantern/T_StoneLantern_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PicnicTable_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_picnic_table_bottom",
+  "base": "ThirdParty/PicnicTable/T_PicnicTable_0_BC",
+  "normal": "ThirdParty/PicnicTable/T_PicnicTable_0_N",
+  "orm": "ThirdParty/PicnicTable/T_PicnicTable_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_PicnicTable_1": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "wooden_picnic_table_table",
+  "base": "ThirdParty/PicnicTable/T_PicnicTable_1_BC",
+  "normal": "ThirdParty/PicnicTable/T_PicnicTable_1_N",
+  "orm": "ThirdParty/PicnicTable/T_PicnicTable_1_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_FishingBoat_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 1.0,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "lambert3SG",
+  "base": "ThirdParty/FishingBoat/T_FishingBoat_0_BC",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Driftwood_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "dead_tree_trunk_02",
+  "base": "ThirdParty/Driftwood_A/T_Driftwood_A_0_BC",
+  "normal": "ThirdParty/Driftwood_A/T_Driftwood_A_0_N",
+  "orm": "ThirdParty/Driftwood_A/T_Driftwood_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Stump_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "tree_stump_01",
+  "base": "ThirdParty/Stump_A/T_Stump_A_0_BC",
+  "normal": "ThirdParty/Stump_A/T_Stump_A_0_N",
+  "orm": "ThirdParty/Stump_A/T_Stump_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Pebbles_A_0": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "source_material": "stone_01",
+  "base": "ThirdParty/Pebbles_A/T_Pebbles_A_0_BC",
+  "normal": "ThirdParty/Pebbles_A/T_Pebbles_A_0_N",
+  "orm": "ThirdParty/Pebbles_A/T_Pebbles_A_0_ORM",
+  "rough_channel": "G",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Shirt": {
+  "kind": "pbr",
+  "color": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Shirt",
+  "color_linear": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Skin": {
+  "kind": "pbr",
+  "color": [
+   0.6633344740609,
+   0.5418334502192549,
+   0.4000753190457139
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Skin",
+  "color_linear": [
+   0.3975375890731812,
+   0.25482478737831116,
+   0.13292111456394196
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Pants": {
+  "kind": "pbr",
+  "color": [
+   0.2441719643793559,
+   0.2275670424458473,
+   0.2275670424458473
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Pants",
+  "color_linear": [
+   0.04857404157519339,
+   0.04235314950346947,
+   0.04235314950346947
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Eyes": {
+  "kind": "pbr",
+  "color": [
+   0.15305068147032913,
+   0.15305068147032913,
+   0.15305068147032913
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Eyes",
+  "color_linear": [
+   0.02031421475112438,
+   0.02031421475112438,
+   0.02031421475112438
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Socks": {
+  "kind": "pbr",
+  "color": [
+   0.6694089943006795,
+   0.6244500664351115,
+   0.6244500664351115
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Socks",
+  "color_linear": [
+   0.40565356612205505,
+   0.3478341400623321,
+   0.3478341400623321
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_Hair": {
+  "kind": "pbr",
+  "color": [
+   0.22594812176040074,
+   0.18274126792350773,
+   0.18568417627112957
+  ],
+  "rough": 0.41508710384368896,
+  "metallic": 0.10000000149011612,
+  "detail": null,
+  "source_material": "Hair",
+  "color_linear": [
+   0.04177311062812805,
+   0.027979830279946324,
+   0.028818288818001747
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_DuelDisk": {
+  "kind": "opaque",
+  "color": [
+   0.7,
+   0.72,
+   0.76
+  ],
+  "rough": 0.35,
+  "metallic": 0.8,
+  "detail": null,
+  "color_linear": [
+   0.44798841244188325,
+   0.47699978456654196,
+   0.5382355236010181
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_DuelGold": {
+  "kind": "opaque",
+  "color": [
+   0.95,
+   0.72,
+   0.22
+  ],
+  "rough": 0.3,
+  "metallic": 1.0,
+  "detail": null,
+  "color_linear": [
+   0.8900054069935289,
+   0.47699978456654196,
+   0.039681909478526005
+  ],
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "MT_Student_DuelGlow": {
+  "kind": "emissive",
+  "color": [
+   0.25,
+   0.85,
+   1.0
+  ],
+  "strength": 12.0,
+  "color_linear": [
+   0.05087608817155679,
+   0.692071056865372,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "opacity": 1.0
  }
 }

@@ -17,7 +17,7 @@ license evidence (quotes from files fetched on 2026-10-28):
 files (bytes, sha256, independent hash cross-check):
   - concrete_arm_1k.jpg  123414 bytes  sha256=98bd4ffb8ec52620b1053f6f576f1154caf20ee7a8786721724ea169b16582e0
       url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/concrete/concrete_arm_1k.jpg
-      (no independent hash registry found; provenance per hosting repo documentation above)
+      (no independent hash registry; same direct-from-provider fetch as its sibling maps, see AUDIT below)
   - concrete_diff_1k.jpg  543902 bytes  sha256=046c0e2aebe31e6043a6bc074e779f6a345f1d823d0ca1c69446c5cabadefa8a
       url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/concrete/concrete_diff_1k.jpg
       MATCH md5 vs github.com/yosnap/habiteka-app public/materials/polyhaven/manifest.json (license "CC0-1.0")
@@ -28,3 +28,8 @@ files (bytes, sha256, independent hash cross-check):
 intended use: "Concrete" detail texture (M_Concrete, M_DarkConcrete, M_Asphalt).
 
 notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+- diff + nor_gl match habiteka-app manifest (md5 pinned to dl.polyhaven.org, CC0-1.0, authors ["Rob Tuytel"]). ARM from the same direct dl.polyhaven.org fetch (MineWorld tools/fetch_slice_assets.sh).

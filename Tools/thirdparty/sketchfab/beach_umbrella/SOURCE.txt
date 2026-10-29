@@ -1,0 +1,20 @@
+asset_id: sketchfab_beach_umbrella_stealth86
+title: Beach Umbrella (rainbow segments)
+category: props
+main_file: scene.gltf
+catalog_use: SM_BeachUmbrella (primary)
+author: stealth86
+license: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED
+attribution_text: "Beach Umbrella" (https://sketchfab.com/3d-models/beach-umbrella-1014ad7c8a4c4aa8ba5e88fc6151aa4f) by stealth86 (https://sketchfab.com/stealth86) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+original_source_page: https://sketchfab.com/3d-models/beach-umbrella-1014ad7c8a4c4aa8ba5e88fc6151aa4f
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/Julien-Turcotte/BongBongAdventure/master/customassests/beach_umbrella/scene.gltf
+  https://raw.githubusercontent.com/Julien-Turcotte/BongBongAdventure/master/customassests/beach_umbrella/scene.bin
+  https://raw.githubusercontent.com/Julien-Turcotte/BongBongAdventure/master/customassests/beach_umbrella/license.txt
+mirror_note: Sketchfab download (glTF + textures) mirrored in a public GitHub repo; sketchfab.com is blocked from this container.
+license_evidence: Sketchfab download metadata embedded in the delivered glTF (asset.extras written by Sketchfab at download time): {"author": "stealth86 (https://sketchfab.com/stealth86)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/beach-umbrella-1014ad7c8a4c4aa8ba5e88fc6151aa4f", "title": "Beach Umbrella"} ; plus the Sketchfab "license.txt" shipped next to the model in the mirror (included in this folder): "* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)"
+stats: 3832 triangles, 12 mesh objects, 8 materials, native bbox 254.043 x 292.405 x 324.547 (Blender units after glTF import, Z up)
+modifications: none (files byte-identical to the mirror)
+notes: 3.8k tris, material colours only (no textures; uses KHR_materials_clearcoat). Native ~325 units tall - scale to ~2.6 m.
+date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF and the mirror ships the Sketchfab license.txt (identical).

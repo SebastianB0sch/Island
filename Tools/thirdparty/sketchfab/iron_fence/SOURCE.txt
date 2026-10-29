@@ -1,0 +1,22 @@
+asset_id: sketchfab_iron_fence_plaggy
+title: Iron Fence (spiked wrought-iron panel)
+category: props
+main_file: scene.gltf
+catalog_use: SM_Fence_Iron (primary)
+author: plaggy
+license: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED
+attribution_text: "Iron Fence" (https://sketchfab.com/3d-models/iron-fence-9c5ad29c104c48e69a1227927655d489) by plaggy (https://sketchfab.com/plaggy) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+original_source_page: https://sketchfab.com/3d-models/iron-fence-9c5ad29c104c48e69a1227927655d489
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/kriman/ktu_vr_modelling_lab/main/models/gate/scene.gltf
+  https://raw.githubusercontent.com/kriman/ktu_vr_modelling_lab/main/models/gate/scene.bin
+  https://raw.githubusercontent.com/kriman/ktu_vr_modelling_lab/main/models/gate/textures/IronFence_baseColor.png
+  https://raw.githubusercontent.com/kriman/ktu_vr_modelling_lab/main/models/gate/textures/IronFence_metallicRoughness.png
+  https://raw.githubusercontent.com/kriman/ktu_vr_modelling_lab/main/models/gate/textures/IronFence_normal.png
+mirror_note: Sketchfab download mirrored in kriman/ktu_vr_modelling_lab (models/gate/); identical copies exist in JoeyVanBekkum/JoeysKeoelUnityGame and dorian921/gameproject-stijn-dorian.
+license_evidence: Sketchfab download metadata embedded in the delivered glTF (asset.extras written by Sketchfab at download time): {"author": "plaggy (https://sketchfab.com/plaggy)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/iron-fence-9c5ad29c104c48e69a1227927655d489", "title": "Iron Fence"}
+stats: 3768 triangles, 1 mesh objects, 1 materials, native bbox 2.853 x 0.039 x 1.763 (Blender units after glTF import, Z up)
+modifications: textures downscaled with Pillow LANCZOS to keep game budgets (file names/format unchanged; full-res originals at the URLs above): textures/IronFence_baseColor.png: 4096x4096 -> 1024x1024; textures/IronFence_metallicRoughness.png: 4096x4096 -> 1024x1024; textures/IronFence_normal.png: 4096x4096 -> 1024x1024
+notes: 3.8k tris, PBR (4k textures downscaled to 1k). Panel ~2.85 x 1.76 m; origin below ground (min z -0.88) - rebase. Bars are real geometry (no alpha).
+date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF (no license.txt in the mirror); corroborated by two further independent copies of the same Sketchfab export (JoeyVanBekkum/JoeysKeoelUnityGame and dorian921/gameproject-stijn-dorian scene.gltf) carrying identical CC-BY-4.0 extras; textures verified as downscales.

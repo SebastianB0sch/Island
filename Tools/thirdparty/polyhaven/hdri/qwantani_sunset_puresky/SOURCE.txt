@@ -20,3 +20,9 @@ files (bytes, sha256, independent hash cross-check):
 intended use: Golden-hour / sunset sky.
 
 notes: Equirectangular 2:1 Radiance HDR (linear). Blender: World > Environment Texture. UE: HDRI Backdrop actor or sky sphere (import as TextureCube/LongLat). Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+- SHA-256 d66e0823...cabef independently pinned by Khyretos/kk-engine cmake/skies.cmake (dl.polyhaven.org URL, CC0) and GameMog/GameMog assets-src/sources.lock.json, in addition to the host GTA-6-Sydney licenses/DAYLIGHT_CYCLE.md (re-read: "Both are CC0 1.0 Universal; they may be redistributed with this game. Their original pixels are unchanged.").
+- Decoded with Blender 5.2 (2048x1024); preview: low sun at the horizon, warm band. Matches description.

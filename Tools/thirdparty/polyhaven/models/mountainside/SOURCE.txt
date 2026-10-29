@@ -1,0 +1,59 @@
+asset_id: ph_mountainside
+category: rocks_terrain
+upstream asset: Poly Haven "mountainside" - https://polyhaven.com/a/mountainside  (polyhaven.com / dl.polyhaven.org are blocked from this container)
+author: Dario Barresi: Photography; Rico Cilliers: processing (Poly Haven)
+license: CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily.
+downloaded: 2026-10-28
+
+downloaded from (exact hosted copy of Poly Haven's 1k glTF export; HTTP 200, non-HTML, verified):
+  https://media.githubusercontent.com/media/null-value7/Athernix/main/public/models/ph/mountainside/mountainside_1k.gltf
+  + the .bin and textures/*.jpg referenced by that .gltf (same folder; Git LFS objects via media.githubusercontent.com)
+  Original Poly Haven file names and relative texture paths preserved; files unmodified.
+
+license evidence (files fetched 2026-10-28):
+  a) Poly Haven's own repository (first-party): https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md
+     "While our 3D assets themselves are published under the CC0 license, and the code for this API is licensed as AGPL,
+      access to this API through our servers (api.polyhaven.com) is covered separately by these terms of service."
+     "CC0 assets carry no attribution requirement whatsoever, now or ever."
+  b) Poly Haven license page, quoted verbatim in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
+     "All assets on Poly Haven are licensed as CC0, which is the same as public domain. This means you can use, modify and
+      redistribute our assets for any purpose, including commercial use, without attribution or permission."
+  (copies of these files: ../_license_evidence/PolyHaven_Public-API_ToS.md, ../_license_evidence/2600th_web-ocean-3d_ASSET_LICENSES.md)
+  c) Poly Haven API listing snapshot (api.polyhaven.com/assets?type=models, fetched 2026-10-10) at
+     https://raw.githubusercontent.com/nclamvn/duong-ve-sai-gon/master/docs/research/rung-truong-son/snapshots/K_polyhaven_models_rocks.md
+     row: "mountainside | Mountainside | nature, rocks, collection: verdant_trail | cliff, rock face, formation, landscape, geology, rock, weathered, lichen, rocky surface, boulder, terrain, mountain | Dario Barresi: Photography; Rico Cilliers: processing | 287755"
+     (copy: ../_license_evidence/polyhaven_api_snapshot_rocks.md)
+  d) Hosting repo (null-value7/Athernix) source comments, components/modules/scenes/*.tsx:
+     "/* ── Assets reales (CC0 Poly Haven, 1k) ── */ const PH = '/models/ph/';"  (supplementary; primary evidence is a-c + hash match)
+
+integrity cross-check against an independent second mirror (sha256):
+  - mountainside_1k.gltf: DIFFERS sha256 vs https://raw.githubusercontent.com/Mainframe-Games/mainframe-engine/main/Examples/Forest/Assets/Art/Props/mountainside/mountainside_1k.gltf
+  - textures/mountainside_diff_1k.jpg: MATCH sha256 vs https://media.githubusercontent.com/media/Mainframe-Games/mainframe-engine/main/Examples/Forest/Assets/Art/Props/mountainside/textures/mountainside_diff_1k.jpg
+    note: the second copy's .gltf is an edited variant (Mainframe-Games adds occlusionTexture and renames image 'rough'->'arm');
+    accessor counts (80,238 verts / 460,416 indices) and .bin byteLength (4,409,280) are identical; the copy staged here is the unedited export.
+
+intended use: SM_CliffRock_A (large cliff rock 10-20 m) - PRIMARY. Weathered grey-brown rock face with lichen/moss, 10.2 x 5.2 x 10.5 m -> scale x1.4 for 14 m.
+
+tech notes (verified 2026-10-28):
+  mountainside_1k.gltf: Blender 5.2 glTF import OK, missing images: 0; 153,472 tris; 1 mesh object(s); bbox (m, X/Y/Z-up) [10.209, 5.247, 10.522]; materials ['mountainside']; textures: mountainside_diff 1024x1024, mountainside_nor_gl 1024x1024, mountainside_rough 1024x1024
+  Normal map is OpenGL (+Y) -> tick "Flip Green Channel" in UE. *_arm_1k.jpg packs R=AO, G=roughness, B=metallic (linear, sRGB off).
+  Origin is not at base-centre/-Y-front per catalog convention: re-pivot in the dai pipeline.
+  Over the ~15k-tri budget for a non-Nanite mesh. Tested recipe (Blender 5.2): import glTF -> bmesh remove_doubles(dist=1e-5)
+  (Poly Haven exports are split at every UV seam; without welding, Decimate stalls at ~40% of the input) -> Decimate COLLAPSE
+  ratio = target/tris. boulder_01 66,122 -> 15,000 tris was visually indistinguishable at prop distance. Or keep full res for Nanite.
+
+files:
+  - _preview.png  288666 bytes  sha256=7310ffa84524d14d1b6ee91768d7f94537af1050d13567dc90132a259a03e35e
+  - mountainside.bin  4409280 bytes  sha256=08e4ca60e050045de8224d12d23af84f9406bc558943038114d81e184158d953
+  - mountainside_1k.gltf  2776 bytes  sha256=73241a50748582e6a13b2462afbd57d18a1bae5ffef777b3119d064709604fcd
+  - textures/mountainside_arm_1k.jpg  791031 bytes  sha256=8e81fdefb8c3a64e763d266c3c4025cc4c04287b81f250dc777025a64caf5f75
+  - textures/mountainside_diff_1k.jpg  942046 bytes  sha256=e4613465418060de6b5f536820d04e0e945a88d87168f3fa4ce9da662ebc1696
+  - textures/mountainside_nor_gl_1k.jpg  1240239 bytes  sha256=1eec8a8f32a2e61fb3ca431ddb1f364ea49cfead59369da3e7466cf7ddcb49e9
+
+INDEPENDENT AUDIT (re-verified 2026-10-28 by license/integrity auditor):
+  integrity: every .gltf/.bin/texture re-downloaded from the 'downloaded from' URL(s) above and compared by sha256 -> all MATCH.
+  geometry: Blender 5.2 import OK, 0 missing images, every texture decodes fully (Pillow); tris: mountainside_1k.gltf 153,472.
+  license: CC0-1.0 CONFIRMED. Re-fetched myself: Poly-Haven/Public-API ToS.md (first-party; byte-identical to ../_license_evidence copy) states "our 3D assets themselves are published under the CC0 license" and "CC0 assets carry no attribution requirement whatsoever"; Poly Haven API snapshot row re-fetched and author credits match the author line above.
+  Second mirror re-checked: .bin + diff MATCH Mainframe-Games/mainframe-engine; its .gltf differs only by edits (identical accessor counts 80,238 verts / 460,416 indices, bbox and bin byteLength 4,409,280).
+  note: the snapshot's last column (287,755) is Poly Haven's polycount metadata, not this 1k glTF's triangle count; the same kind of gap appears on assets whose glTF is byte-identical across independent mirrors, so it is not evidence of modification.
+  verdict: ACCEPT (CC0-1.0, no attribution required).

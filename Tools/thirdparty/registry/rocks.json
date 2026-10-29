@@ -1,0 +1,14 @@
+{
+  "_comment": "Rocks, cliffs, driftwood. CC0 Poly Haven photoscans (decimated to max_tris on import); CC BY 4.0 basalt scan by yonimantz (see CREDITS.md).",
+  "props": {
+    "SM_Rock_A":         {"file": "polyhaven/models/boulder_01/boulder_01_1k.gltf", "height": 2.0, "max_tris": 15000, "collision": "hull"},
+    "SM_Rock_B":         {"file": "polyhaven/models/rock_09/rock_09_1k.gltf", "width": 3.0, "collision": "hull"},
+    "SM_Rock_C":         {"file": "polyhaven/models/rock_face_02/rock_face_02_1k.gltf", "height": 4.0, "max_tris": 15000, "collision": "hull"},
+    "SM_Rock_D":         {"file": "polyhaven/models/coast_rocks_05/coast_rocks_05_web.gltf", "width": 5.0, "max_tris": 15000, "collision": "hull"},
+    "SM_CliffRock_A":    {"file": "polyhaven/models/mountainside/mountainside_1k.gltf", "height": 14.0, "max_tris": 25000, "collision": "hull"},
+    "SM_VolcanicRock_A": {"file": "sketchfab/rock_basalt/scene.gltf", "height": 4.0, "max_tris": 15000, "collision": "hull"},
+    "SM_Driftwood_A":    {"file": "polyhaven/models/dead_tree_trunk_02/dead_tree_trunk_02_1k.gltf", "width": 4.5, "max_tris": 10000, "collision": "box"},
+    "SM_Stump_A":        {"file": "polyhaven/models/tree_stump_01/tree_stump_01_1k.gltf", "width": 1.5, "max_tris": 8000, "collision": "hull"},
+    "SM_Pebbles_A":      {"file": "polyhaven/models/stone_01/stone_01_1k.gltf", "width": 0.6, "max_tris": 2000, "collision": "none"}
+  }
+}

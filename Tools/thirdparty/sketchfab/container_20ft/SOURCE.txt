@@ -1,0 +1,24 @@
+asset_id: sketchfab_container_20ft_ashkelon
+title: Container 20FT (two white 20 ft shipping containers, baked normal map)
+category: props
+main_file: scene.gltf
+catalog_use: SM_Container_Red/Blue/Yellow (tint the base colour per variant)
+author: Ashkelon
+license: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED
+attribution_text: "Container 20FT" (https://sketchfab.com/3d-models/container-20ft-623de0e3ed6b47878c6b280969971743) by Ashkelon (https://sketchfab.com/Ashkelon) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+original_source_page: https://sketchfab.com/3d-models/container-20ft-623de0e3ed6b47878c6b280969971743
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/AzixSall/eBaplie/master/Assets/container_20ft/scene.gltf
+  https://raw.githubusercontent.com/AzixSall/eBaplie/master/Assets/container_20ft/scene.bin
+  https://raw.githubusercontent.com/AzixSall/eBaplie/master/Assets/container_20ft/textures/ContainerLow_diffuse.png
+  https://raw.githubusercontent.com/AzixSall/eBaplie/master/Assets/container_20ft/textures/ContainerLow_normal.png
+  https://raw.githubusercontent.com/AzixSall/eBaplie/master/Assets/container_20ft/textures/ContainerLow_occlusion.png
+  https://raw.githubusercontent.com/AzixSall/eBaplie/master/Assets/container_20ft/textures/ContainerLow_specularGlossiness.png
+  https://raw.githubusercontent.com/AzixSall/eBaplie/master/Assets/container_20ft/license.txt
+mirror_note: Sketchfab download (glTF + textures) mirrored in a public GitHub repo; sketchfab.com is blocked from this container.
+license_evidence: Sketchfab download metadata embedded in the delivered glTF (asset.extras written by Sketchfab at download time): {"author": "Ashkelon (https://sketchfab.com/Ashkelon)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/container-20ft-623de0e3ed6b47878c6b280969971743", "title": "Container 20FT"} ; plus the Sketchfab "license.txt" shipped next to the model in the mirror (included in this folder): "* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)"
+stats: 24 triangles, 2 mesh objects, 1 materials, native bbox 7.99 x 8.899 x 2.35 (Blender units after glTF import, Z up)
+modifications: textures downscaled with Pillow LANCZOS to keep game budgets (file names/format unchanged; full-res originals at the URLs above): textures/ContainerLow_diffuse.png: 4096x4096 -> 2048x2048; textures/ContainerLow_normal.png: 4096x4096 -> 2048x2048; textures/ContainerLow_occlusion.png: 4096x4096 -> 2048x2048; textures/ContainerLow_specularGlossiness.png: 4096x4096 -> 2048x2048
+notes: 24 tris (box + baked high-poly normal/AO maps, spec-gloss workflow via KHR_materials_pbrSpecularGlossiness - convert to metal/rough in the pipeline). 4k textures downscaled to 2k. Two containers in the file; white paint takes a tint well for red/blue/yellow.
+date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF and the mirror ships the Sketchfab license.txt (identical); textures verified as downscales; no third-party logos on the container texture.

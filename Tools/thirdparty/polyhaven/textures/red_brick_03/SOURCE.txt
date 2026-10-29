@@ -2,7 +2,7 @@ asset_id: bld_brick_red_brick_03_1k
 category: sky_textures
 description: Tileable PBR set 1K (diff, nor_gl, arm = AO/rough/metal)
 upstream source page: https://polyhaven.com/a/red_brick_03
-author: Poly Haven artist (credited on the asset page)
+author: Rob Tuytel / Poly Haven
 license: CC0 1.0 Universal
 downloaded: 2026-10-28
 
@@ -16,7 +16,7 @@ license evidence (quotes from files fetched on 2026-10-28):
 files (bytes, sha256, independent hash cross-check):
   - red_brick_03_arm_1k.jpg  162734 bytes  sha256=31d8d33a9c44af49cd082eae8f49016aaca6d55f2fd80be2183e2ba9185bd8cf
       url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/red_brick_03/red_brick_03_arm_1k.jpg
-      (no independent hash registry found; provenance per hosting repo documentation above)
+      (no independent hash registry; same direct-from-provider fetch as its sibling maps, see AUDIT below)
   - red_brick_03_diff_1k.jpg  694500 bytes  sha256=9c58254c099b2d211478f50a427fcdde622af24249ff2e94da41fb836f8c857f
       url: https://raw.githubusercontent.com/yuema137/MineWorld/main/clients/3d-spike/assets/textures/red_brick_03/red_brick_03_diff_1k.jpg
       MATCH md5 vs github.com/ceenguyen05/ACI-SND public/textures/surfaces/manifest.json (license "CC0-1.0")
@@ -27,3 +27,10 @@ files (bytes, sha256, independent hash cross-check):
 intended use: Bricks (abandoned dorm, lighthouse base, chimneys).
 
 notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+author source: github.com/omarrayyann/tabletask assets/sources/polyhaven-looks.md
+- diff + nor_gl match ceenguyen05/ACI-SND manifest (md5 pinned to dl.polyhaven.org, CC0-1.0) and GameMog sources.lock.json. ARM from the same direct dl.polyhaven.org fetch (MineWorld tools/fetch_assets.sh).
+- Author corrected from "Poly Haven artist" to Rob Tuytel.

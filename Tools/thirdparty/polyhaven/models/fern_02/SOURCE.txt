@@ -2,6 +2,7 @@ ASSET: Poly Haven "Fern 02" (fern_02), 1k glTF
 CATEGORY: vegetation -> SM_Fern_A (tropical/jungle fern clump; 4 variants a-d laid out side by side in one file -> split by object)
 AUTHOR: Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven)
 ORIGINAL PAGE: https://polyhaven.com/a/fern_02   (polyhaven.com / dl.polyhaven.org are blocked from this container)
+SOURCE PAGE: https://polyhaven.com/a/fern_02
 LICENSE: CC0 1.0 Universal (public domain). Attribution not required (credit appreciated).
 
 DOWNLOADED FROM (2026-10-28, all HTTP 200, non-HTML; byte-for-byte Poly Haven 1k glTF export mirrored on GitHub):
@@ -9,7 +10,7 @@ DOWNLOADED FROM (2026-10-28, all HTTP 200, non-HTML; byte-for-byte Poly Haven 1k
   + the .bin and textures/* referenced by that .gltf (same folder)
   Alpha mask (Poly Haven ships it separately from the glTF): https://media.githubusercontent.com/media/ConcordDev/concord-cognitive-engine/main/apps/concordia-living-world/unity-client/Assets/Concordia/PolyHaven/Models/fern_02/textures/fern_02_alpha_1k.png
   LOCAL MODIFICATION: textures/fern_02_diff_alpha_1k.png = diff jpg RGB + alpha png (16->8 bit); fern_02_1k.gltf baseColor image
-  URI switched to it and alphaMode=MASK (original jpg + alpha kept).
+  URI switched to it (alphaMode was already MASK upstream; original jpg + alpha kept).
 LICENSE EVIDENCE:
   1) Poly Haven license, quoted in https://raw.githubusercontent.com/2600th/web-ocean-3d/main/ASSET_LICENSES.md :
      "Poly Haven's licence terms: https://polyhaven.com/license - 'All assets on Poly Haven are licensed as CC0, which is the
@@ -22,3 +23,16 @@ LICENSE EVIDENCE:
 
 TECH NOTES (Blender 5.2 import OK, no missing images): 6,232 tris total for 4 fern variants (~0.8-2.4k each), ~0.4 m tall (scale x2 for the 0.8 m catalog fern). One material, MASK, two-sided, 1k diff/ARM/normal(GL).
 DATE: 2026-10-28
+
+AUDIT (independent re-verification, 2026-10-28):
+  - Re-fetched the mirror files listed above: byte-identical to the files kept here (the .gltf differs only by the
+    documented LOCAL MODIFICATION, if any). Integrity vs Poly Haven: all 6 files (gltf, bin, diff/arm/nor_gl jpg, alpha png) match the Poly Haven API md5 values recorded in
+    mk-tdev/village-of-shadows unreal/SourceAssets/fern_02/provenance.json and mariojgt/featherEngine provenance json.
+  - Licence: "All assets on Poly Haven are licensed as CC0, which is the same as public domain" (polyhaven.com/license,
+    quoted in 2600th/web-ocean-3d ASSET_LICENSES.md); Poly Haven API ToS: "our 3D assets themselves are published under
+    the CC0 license". Authors confirmed by the Poly Haven API snapshots cited above.
+  - Blender 5.2 bpy import: 6,232 tris, 4 objects, ~0.43 m tall; all textures open.
+  - fern_02_diff_alpha_1k.png = diff RGB + alpha (alpha within 1/255 of the 16-bit mask).
+  VERDICT: ACCEPTED - CC0 1.0, no attribution required.
+CREDIT LINE (courtesy, optional):
+  "Fern 02" by Rob Tuytel and Rico Cilliers, Poly Haven (https://polyhaven.com/a/fern_02), CC0 1.0.

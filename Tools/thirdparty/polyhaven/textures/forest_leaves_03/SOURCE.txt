@@ -2,7 +2,7 @@ asset_id: terrain_forestfloor_forest_leaves_03_2k
 category: sky_textures
 description: Tileable PBR terrain set 2K (diff, nor_gl, arm)
 upstream source page: https://polyhaven.com/a/forest_leaves_03
-author: Dimitrios Savva, Rob Tuytel / Poly Haven
+author: Rob Tuytel, Dimitrios Savva / Poly Haven
 license: CC0 1.0 Universal
 downloaded: 2026-10-28
 
@@ -30,3 +30,9 @@ files (bytes, sha256, independent hash cross-check):
 intended use: TERRAIN_LAYERS "ForestFloor" (dense dark leaf litter under jungle canopy).
 
 notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+author source: eternities-mtg-app CREDITS.md/sources.yaml; github.com/omarrayyann/tabletask polyhaven-looks.md
+- All 3 files match DioPires/eternities-mtg-app .../temperate/sources.yaml (url dl.polyhaven.org/.../forest_leaves_03_*_2k.jpg, licence "CC0 1.0"); CREDITS.md re-read: "All are CC0 1.0."

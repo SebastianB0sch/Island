@@ -2,7 +2,7 @@ asset_id: terrain_wetsand_damp_beach_sand_2k
 category: sky_textures
 description: Tileable PBR terrain set 2K (diff, nor_gl, rough, ao)
 upstream source page: https://polyhaven.com/a/damp_beach_sand
-author: Poly Haven artist (credited on the asset page)
+author: Dimitrios Savva / Poly Haven
 license: CC0 1.0 Universal
 downloaded: 2026-10-28
 
@@ -29,4 +29,11 @@ files (bytes, sha256, independent hash cross-check):
 
 intended use: Alternative "WetSand" layer: realistic grey-brown photoscanned damp sand (darker than Ground092B).
 
-notes: Normal maps are OpenGL convention (+Y up); for Unreal flip the green channel (or tick "Flip Green Channel"). ARM maps pack R=ambient occlusion, G=roughness, B=metallic (import as linear / sRGB off). Roughness/AO/Displacement are linear data. Attribution is not required by CC0; credit kept voluntarily.
+notes: nor_gl is OpenGL convention (+Y up); for Unreal flip the green channel. rough/ao are separate linear maps (no ARM pack in this set; sRGB off). Attribution is not required by CC0; credit kept voluntarily.
+
+========== AUDIT 2026-10-28 (independent license/integrity audit) ==========
+verdict: ACCEPTED - CC0 1.0 Universal (public domain dedication); no attribution legally required.
+integrity: every file re-downloaded from its stated URL on 2026-10-28 and SHA-256-identical to the staged copy; every image decoded in Blender 5.2 bpy (sizes as listed, no read errors); content visually checked (matches description, no logos/watermarks/signatures seen).
+author source: github.com/omarrayyann/tabletask polyhaven-looks.md; github.com/VincentAZ/dino-pals web/public/assets/env/credits.json (from api.polyhaven.com/info: "Dimitrios Savva": "All")
+- diff, nor_gl and rough match (md5) the dl.polyhaven.org-pinned list in Devsignerr/ProjectE Scripts/DemoAssets.json ("License": "CC0 (Poly Haven)"). The AO map has no independent registry but comes from the same Tapao fetch (scripts/fetch_atoll_textures.py, Poly Haven API, unmodified).
+- Author corrected from "Poly Haven artist" to Dimitrios Savva.

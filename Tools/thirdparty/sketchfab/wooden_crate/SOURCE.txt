@@ -1,0 +1,23 @@
+asset_id: sketchfab_wooden_crate_memorie
+title: Wooden Crate (slatted crate with cross braces, 1.1 m)
+category: props
+main_file: scene.gltf
+catalog_use: SM_Crate (primary)
+author: Memorie
+license: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED
+attribution_text: "Wooden Crate" (https://sketchfab.com/3d-models/wooden-crate-2a3ac54357bb4b92bfbc119111c09fd1) by Memorie (https://sketchfab.com/Memorie) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+original_source_page: https://sketchfab.com/3d-models/wooden-crate-2a3ac54357bb4b92bfbc119111c09fd1
+downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
+  https://raw.githubusercontent.com/LynxEko/Billar_VGI/main/models/wooden_crate/scene.gltf
+  https://raw.githubusercontent.com/LynxEko/Billar_VGI/main/models/wooden_crate/scene.bin
+  https://raw.githubusercontent.com/LynxEko/Billar_VGI/main/models/wooden_crate/textures/Scene_-_Root_baseColor.png
+  https://raw.githubusercontent.com/LynxEko/Billar_VGI/main/models/wooden_crate/textures/Scene_-_Root_metallicRoughness.png
+  https://raw.githubusercontent.com/LynxEko/Billar_VGI/main/models/wooden_crate/textures/Scene_-_Root_normal.png
+  https://raw.githubusercontent.com/LynxEko/Billar_VGI/main/models/wooden_crate/license.txt
+mirror_note: Sketchfab download (glTF + textures) mirrored in a public GitHub repo; sketchfab.com is blocked from this container.
+license_evidence: Sketchfab download metadata embedded in the delivered glTF (asset.extras written by Sketchfab at download time): {"author": "Memorie (https://sketchfab.com/Memorie)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/wooden-crate-2a3ac54357bb4b92bfbc119111c09fd1", "title": "Wooden Crate"} ; plus the Sketchfab "license.txt" shipped next to the model in the mirror (included in this folder): "* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)"
+stats: 2020 triangles, 1 mesh objects, 1 materials, native bbox 1.1 x 1.1 x 0.879 (Blender units after glTF import, Z up)
+modifications: none (files byte-identical to the mirror)
+notes: 2.0k tris, PBR 1k. 1.1 x 1.1 x 0.88 m - close to the 1.2 m catalog size.
+date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF and the mirror ships the Sketchfab license.txt (identical).

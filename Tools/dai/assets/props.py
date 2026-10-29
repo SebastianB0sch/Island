@@ -409,6 +409,15 @@ def crate():
     return mb, [box_col((-0.6, -0.6, 0), (0.6, 0.6, 1.2))]
 
 
+def fishing_boat():
+    mb = MeshBuilder("fishing_boat")
+    mb.lathe([(0.2, -1.0), (1.4, -0.4), (1.7, 0.6), (1.75, 1.3)], "M_WhiteWall", seg=12, sx=2.9, sy=1.0)
+    mb.box((0.8, 0, 2.3), (2.4, 2.0, 2.0), "M_WhiteWall")
+    mb.box((0.8, 0, 3.4), (2.6, 2.2, 0.2), "M_AcademyBlue")
+    mb.cylinder((-2.5, 0, 1.3), 0.08, 5.5, "M_DarkMetal", seg=6)
+    return mb, [box_col((-4.8, -1.6, -1.0), (4.8, 1.6, 3.5))]
+
+
 def driftwood():
     mb = MeshBuilder("driftwood")
     mb.beam((-2.2, 0, 0.22), (2.2, 0.15, 0.3), 0.42, 0.4, "M_Bark")
@@ -634,6 +643,7 @@ def _registry():
         "SM_PicnicTable": picnic_table,
         "SM_Planter": planter,
         "SM_DuelDummy": duel_dummy,
+        "SM_FishingBoat": fishing_boat,
         "SM_Driftwood_A": driftwood,
         "SM_Stump_A": stump,
         "SM_Pebbles_A": pebbles,
@@ -653,7 +663,7 @@ PROP_LIGHTS = {
 }
 
 # Props that bob on water in UE
-FLOATING_PROPS = {"SM_Rowboat", "SM_Buoy"}
+FLOATING_PROPS = {"SM_Rowboat", "SM_Buoy", "SM_FishingBoat"}
 
 _cache = {}
 
@@ -664,9 +674,12 @@ def get(name):
     return _cache[name]
 
 
+_tp_failed = set()
+
+
 def is_thirdparty(name):
     from .. import thirdparty
-    return thirdparty.has_prop(name)
+    return name not in _tp_failed and thirdparty.has_prop(name)
 
 
 def build_object(name, obj_name=None, collection=None):
@@ -674,7 +687,12 @@ def build_object(name, obj_name=None, collection=None):
     (Tools/thirdparty/registry.json), otherwise the procedural fallback."""
     if is_thirdparty(name):
         from .. import thirdparty
-        o = thirdparty.build_prop(name)
+        try:
+            o = thirdparty.build_prop(name)
+        except Exception as e:  # noqa: BLE001 - e.g. meshopt glTF without gltf-transform: use the procedural prop
+            print(f"  !! {name}: third-party import failed ({e}); using the procedural version")
+            _tp_failed.add(name)
+            return build_object(name, obj_name, collection)
         if obj_name:
             o.name = obj_name
         if collection is not None and collection not in o.users_collection:

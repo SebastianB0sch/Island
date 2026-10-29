@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f905b211da91488bb1fb987d99ac7f35, type: 3}
+  m_Name: AttributionsData
+  m_EditorClassIdentifier: 
+  _text: 'Plant - White Pot by Jakers_H <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/7ig0HcyfT93">Poly Pizza</link></u></color>
+
+    
+
+    Voting
+    machine by jeremy <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/aT0tlNvHr4f">Poly Pizza</link></u></color>
+
+    
+
+    Scuba
+    equipment by Steren Giannini <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/7igrHLjaQlW">Poly Pizza</link></u></color>
+
+    
+
+    Toolbox
+    by jeremy <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/20JcnkCnbAc">Poly Pizza</link></u></color>
+
+    
+
+    Hammer
+    by jeremy <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/cOizz1RJnb3">Poly Pizza</link></u></color>
+
+    
+
+    Ladder
+    by jeremy <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/0qIo_9At1d7">Poly Pizza</link></u></color>
+
+    
+
+    Screwdriver
+    by Poly by Google <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/4873ED-rB3o">Poly Pizza</link></u></color>
+
+    
+
+    Paper
+    by Poly by Google <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/a6kuHAjWdYP">Poly Pizza</link></u></color>
+
+    
+
+    clipboard
+    by William Murphy <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/8H5SDxwMnEA">Poly Pizza</link></u></color>
+
+    
+
+    Fishing
+    pole by jeremy <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/8Qlm_vnWl11">Poly Pizza</link></u></color>
+
+    
+
+    Boat
+    by Poly by Google <color=#47D6D9><u><link="https://creativecommons.org/licenses/by/3.0/">[CC-BY]</link></u></color>
+    via <color=#47D6D9><u><link="https://poly.pizza/m/1ZuSXvhkRg_">Poly Pizza</link></u></color>'

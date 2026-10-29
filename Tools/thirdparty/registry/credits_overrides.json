@@ -1,0 +1,14 @@
+{
+  "_comment": "CREDITS.md fields for folders whose SOURCE.txt (kept verbatim from sourcing/verification) has no single-line author / license / source entry.",
+  "credits": {
+    "eztree/trees": {"author": "Daniel Greenheck (EZ-Tree generator); bark textures Poly Haven / TextureCan",
+                     "license": "MIT (generator + bundled leaf textures); bark textures CC0 1.0",
+                     "source": "https://github.com/dgreenheck/ez-tree"},
+    "sweethome3d/acacia": {"source": "https://www.sweethome3d.com/"},
+    "sweethome3d/coconut_palms": {"source": "https://www.sweethome3d.com/"},
+    "sweethome3d/hedge": {"source": "https://www.sweethome3d.com/"},
+    "sweethome3d/hydrangea": {"source": "https://www.sweethome3d.com/"},
+    "sweethome3d/roses_bush": {"source": "https://www.sweethome3d.com/"},
+    "googlepoly/fishing_trawler": {"source": "https://poly.pizza/m/1ZuSXvhkRg_"}
+  }
+}

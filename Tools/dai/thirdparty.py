@@ -164,6 +164,19 @@ def _normalise(obj, spec):
     co = co.reshape(-1, 3)
     mn, mx = co.min(0), co.max(0)
     s = 1.0
+    if spec.get("fit"):
+        # exact target size per axis [x, y, z] in metres (null = follow the mean of the given axes) -
+        # for modular pieces like fence segments and containers that must tile at catalog dimensions
+        ext = mx - mn
+        r = [t / max(e, 1e-6) if t else None for t, e in zip(spec["fit"], ext)]
+        given = [v for v in r if v]
+        k = sum(given) / len(given)
+        r = [v or k for v in r]
+        off = Vector((-(mn[0] + mx[0]) / 2, -(mn[1] + mx[1]) / 2, -mn[2]))
+        me.transform(Matrix.Translation(off))
+        me.transform(Matrix.Diagonal((r[0], r[1], r[2], 1.0)))
+        me.update()
+        return
     if spec.get("height"):
         s = spec["height"] / max(mx[2] - mn[2], 1e-6)
     elif spec.get("width"):
@@ -176,6 +189,8 @@ def _normalise(obj, spec):
         off = Vector((0, 0, spec.get("z_offset", 0.0)))
     me.transform(Matrix.Translation(off))
     me.transform(Matrix.Diagonal((s, s, s, 1.0)))
+    if spec.get("sink"):            # metres below the origin after scaling (boats: origin at the waterline)
+        me.transform(Matrix.Translation((0.0, 0.0, -spec["sink"])))
     me.update()
 
 
@@ -230,6 +245,24 @@ def _srgb(c):
     def f(x):
         return x * 12.92 if x <= 0.0031308 else 1.055 * (x ** (1 / 2.4)) - 0.055
     return tuple(max(0.0, min(1.0, f(v))) for v in c[:3])
+
+
+def _tint_preview(mat, bsdf, srgb):
+    """Mirror the Unreal 'Tint' (BaseTex * Tint) in the Blender material so previews match."""
+    nt = mat.node_tree
+    lin = list(palette.srgb_to_linear(srgb[:3])) + [1.0]
+    sock = bsdf.inputs["Base Color"]
+    if not sock.is_linked:
+        sock.default_value = lin
+        return
+    src = sock.links[0].from_socket
+    mix = nt.nodes.new("ShaderNodeMix")
+    mix.data_type = "RGBA"
+    mix.blend_type = "MULTIPLY"
+    mix.inputs["Factor"].default_value = 1.0
+    nt.links.new(src, mix.inputs[6])
+    mix.inputs[7].default_value = lin
+    nt.links.new(mix.outputs[2], sock)
 
 
 def _safe(name):
@@ -288,7 +321,10 @@ def extract_materials(obj, asset, spec):
                 if not any(w in orig.lower() for w in metal_words):
                     m = 0.0 if m > 0.5 else m * 0.25
                 entry["metallic"] = m
-        entry.update(spec.get("material_overrides", {}).get(orig, {}))
+        override = spec.get("material_overrides", {}).get(orig.split(".")[0], {})
+        entry.update(override)
+        if "color" in override and bsdf is not None:
+            _tint_preview(mat, bsdf, override["color"])
         mat.name = new_name
         palette.register({new_name: entry})
 
@@ -343,6 +379,12 @@ def _decimate(obj, max_tris):
     tris = sum(len(p.vertices) - 2 for p in obj.data.polygons)
     if tris <= max_tris:
         return
+    # scans are split at every UV seam; weld first or Collapse stalls at ~40% (UVs live on loops, so they survive)
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-5)
+    bm.to_mesh(obj.data)
+    bm.free()
     mod = obj.modifiers.new("decimate", "DECIMATE")
     mod.decimate_type = "COLLAPSE"
     mod.ratio = max_tris / tris
@@ -376,6 +418,7 @@ def build_prop(name):
     _decimate(obj, spec.get("max_tris"))
     _normalise(obj, spec)
     extract_materials(obj, asset, spec)
+    bpy.context.view_layer.update()   # refresh obj.dimensions / bounds after the mesh-level transforms
     _built[name] = obj
     return obj
 

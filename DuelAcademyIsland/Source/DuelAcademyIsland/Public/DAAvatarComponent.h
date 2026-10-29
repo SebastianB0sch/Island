@@ -83,12 +83,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	bool bDormTint = true;
 
-	/** Ground speed (cm/s) at which the walk / run takes play at rate 1 (no foot sliding). */
+	/** Ground speed (cm/s) at which the walk / run takes play at rate 1 (no foot sliding). The defaults fit the
+	 *  anime cast's takes; the SK_Student fallback switches to the speeds its import normalises its clips to
+	 *  (RateScale, measured per rig by Tools/dai/character.py). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float WalkAnimSpeed = 200.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float RunAnimSpeed = 320.f;
+
+	/** Above this ground speed (cm/s) the skeletal student runs instead of walking; 0 = halfway between
+	 *  WalkAnimSpeed and RunAnimSpeed plus 60. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float RunThreshold = 0.f;
 
 	/** Material slot name fragments recoloured with the dorm colour on the skeletal student. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")

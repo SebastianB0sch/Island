@@ -4,17 +4,18 @@ CATEGORY: vegetation -> hedge mesh (1.53 x 0.59 x 1.0 m block) and M_Hedge textu
 DOWNLOADED FROM (2026-10-28, all HTTP 200, non-HTML):
   https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/scopia/hedgeTextured/hedgeTextured.obj  (+ hedgeTextured.mtl, hedge-displacement-texture.jpg)
 AUTHOR: Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es)
+SOURCE PAGE: https://github.com/arxistence/sweethome3d-git-mirror/tree/master/3DModels/scopia/scopia/hedgeTextured (Sweet Home 3D 7.5 source mirror, Scopia.sh3f library)
         (Sweet Home 3D default furniture library "Scopia.sh3f", https://www.sweethome3d.com)
 LICENSE: CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED.
 REQUIRED ATTRIBUTION TEXT (put in the game credits / THIRD_PARTY notices):
-  "Hedge 3D model(s) by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l.
-   (http://www.scopia.es), from the Sweet Home 3D furniture library, licensed under CC BY 3.0
-   (https://creativecommons.org/licenses/by/3.0/). Modified (decimated / re-coloured / converted to glTF)."
+  "Hedge" (hedgeTextured) 3D model and texture by Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es), from the Sweet Home 3D Scopia furniture library (https://www.sweethome3d.com), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Modified: decimated from 19.5k to 6k triangles, rescaled to metres, converted to glTF.
 
 LICENSE EVIDENCE (files fetched 2026-10-28, HTTP 200):
-  1) https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/LICENSE.TXT
-     (kept here as LICENSE_Scopia_CC-BY-3.0.txt; identical text in
-      https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/SweetHome3D/THIRDPARTY-LICENSE-SCOPIA.TXT):
+  1) https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/SweetHome3D/THIRDPARTY-LICENSE-SCOPIA.TXT
+     (kept here byte-for-byte as LICENSE_Scopia_CC-BY-3.0.txt,
+      sha256 3c9154e7c27dadbc42ee5c2328f965e78f190100022420c1c96aeaa9503ac9d6; the same licence text, with CRLF
+      line endings and without the 2-line "additional provisions" header, is
+      https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/LICENSE.TXT):
      "The sh3f file and its content are under the Creative Commons Attribution 3.0 Unported license:
       http://creativecommons.org/licenses/by/3.0/ ... for any purpose, even commercially. ...
       Attribution: If you want distribute this work, or derivates, you must attribute it to Space Mushrooms
@@ -28,7 +29,22 @@ LICENSE EVIDENCE (files fetched 2026-10-28, HTTP 200):
 
 FILES:
   original/   unmodified OBJ/MTL/JPG (19,456 tris, displaced leafy surface, cm, Y-up).
-  game_ready/ hedgeTextured_6k.gltf: decimated 19.5k -> 6,000 tris, metres, origin at base.
+  game_ready/ hedgeTextured_6k.gltf: decimated 19.5k -> 5,998 tris, metres, origin at base.
   previews/   Cycles render.
 NOTE: ivy texture not found with acceptable evidenced license (optional item).
 DATE: 2026-10-28
+
+AUDIT (independent re-verification, 2026-10-28):
+  - Re-fetched https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/SweetHome3D/THIRDPARTY-LICENSE-SCOPIA.TXT and .../3DModels/scopia/LICENSE.TXT (HTTP 200):
+    CC BY 3.0 Unported, "for any purpose, even commercially"; "- hedgeTextured" is in the 370-model list
+    credited to Space Mushrooms and Scopia.
+  - Per-model catalog entry in https://raw.githubusercontent.com/arxistence/sweethome3d-git-mirror/master/3DModels/scopia/PluginFurnitureCatalog.properties
+    (header: "license=Creative Commons Attribution 3.0 Unported license (c) Space Mushrooms and Scopia Visual Interfaces Systems"):
+      id#347=Scopia#hedgeTextured | creator#347=Scopia | license#347=CC-BY
+  - Mirror provenance: SweetHome3D/README.TXT in the mirror is the "SWEET HOME 3D v 7.5" source release
+    (svn https://svn.code.sf.net/p/sweethome3d/code/tags/V_7_5).
+  - original/ OBJ/MTL/texture files re-downloaded from the mirror: all byte-identical (sha256) to the files kept here.
+  - Blender 5.2 bpy import: original OBJ 19,456 tris; game_ready hedgeTextured_6k 5,998 tris, 1.53 x 0.59 x 1.00 m; hedge-displacement-texture.jpg 512px wraps without a seam (edge difference no larger than neighbouring pixels). All textures open (PIL verify + Blender load).
+  VERDICT: ACCEPTED - CC BY 3.0, attribution REQUIRED (use the REQUIRED ATTRIBUTION TEXT above).
+  NOTE: CC BY 3.0 s.4(a) forbids technological measures that stop recipients exercising the licence; this repo
+        ships the glTF/OBJ sources openly, so keep them in the public repo next to the credits.

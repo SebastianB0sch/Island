@@ -29,6 +29,7 @@ import os
 
 import bpy
 import numpy as np
+from mathutils import Matrix
 
 from . import config as C
 from . import thirdparty
@@ -95,6 +96,80 @@ def _scale_locations(action, s):
                 kp.co[1] *= s
                 kp.handle_left[1] *= s
                 kp.handle_right[1] *= s
+
+
+def _left_forearm(arm):
+    """Name of the left forearm bone (name heuristics, then position: the student faces -Y, so its left is +X)."""
+    bones = list(arm.data.bones)
+    cands = [b for b in bones if any(k in b.name.lower().replace("_", "").replace(" ", "")
+                                     for k in ("lowerarm", "forearm", "elbow"))] or bones
+    left = [b for b in cands if b.name.lower().endswith((".l", "_l", "left", " l")) or b.name.lower().startswith(("l_", "left"))]
+    pick = left or [b for b in cands if b.head_local.x > 0.05]
+    return max(pick or cands, key=lambda b: b.head_local.x).name
+
+
+def _add_duel_disk(arm, mesh):
+    """Skin the duel disk (procedural, Tools/dai/assets/avatar.py) to the left forearm of the rest pose so it
+    follows every animation. Its slots are named MT_Student_Duel*; UDAAvatarComponent hides them for students
+    without a disk."""
+    from . import palette
+    from .assets import avatar
+    bone = arm.data.bones[_left_forearm(arm)]
+    disk = avatar.duel_disk().build("StudentDuelDisk")
+    # avatar.py authors the disk for an arm hanging along -Z with its outside at -X; the T-pose left forearm
+    # runs along +X (elbow -> wrist) with the back of the hand (outside) up: map +Z -> -X, -X -> +Z, Y -> -Y
+    rot = Matrix(((0, 0, -1, 0), (0, -1, 0, 0), (-1, 0, 0, 0), (0, 0, 0, 1)))
+    # glTF imports leave bone tails meaningless (LowerArm.L is ~3 mm long): the wrist is the hand joint
+    kids = list(bone.children)
+    hand = next((c for c in kids if any(k in c.name.lower() for k in ("hand", "palm", "wrist"))), None) \
+        or (max(kids, key=lambda c: (c.head_local - bone.head_local).length) if kids else None)
+    end = hand.head_local if hand else bone.tail_local
+    wrist = end - (end - bone.head_local).normalized() * 0.03
+    disk.data.transform(Matrix.Translation(wrist) @ rot)
+    for slot in disk.material_slots:
+        src = slot.material.name.split(".")[0]
+        new = "MT_Student_" + {"M_DuelDisk": "DuelDisk", "M_Gold": "DuelGold", "M_DuelFieldGlow": "DuelGlow"}.get(src, "Duel" + src)
+        if new not in palette.MATERIALS:
+            palette.register({new: dict(palette.MATERIALS[src])})
+        mat = slot.material.copy()
+        mat.name = new
+        slot.material = mat
+    vg = disk.vertex_groups.new(name=bone.name)
+    vg.add(list(range(len(disk.data.vertices))), 1.0, "REPLACE")
+    _select([mesh, disk], mesh)
+    bpy.ops.object.join()
+    return bone.name
+
+
+def _ground_speed(arm, action):
+    """cm/s a locomotion clip covers at play rate 1 (rig in metres): root motion if the hips travel,
+    otherwise the median backwards speed of whichever foot is planted (in-place cycles)."""
+    scene = bpy.context.scene
+    _assign(arm, action)
+    f0, f1 = (int(round(v)) for v in action.frame_range)
+    fps = scene.render.fps / scene.render.fps_base
+    names = [b.name for b in arm.pose.bones]
+    feet = [n for n in names if any(k in n.lower() for k in ("foot", "toe", "ankle"))] or names
+    hips = next((n for n in names if any(k in n.lower() for k in ("hip", "pelvis"))), names[0])
+    track = {n: [] for n in feet + [hips]}
+    for f in range(f0, f1 + 1):
+        scene.frame_set(f)
+        for n in track:
+            track[n].append(np.array(arm.matrix_world @ arm.pose.bones[n].head))
+    dur = max(f1 - f0, 1) / fps
+    hp = np.array(track[hips])
+    travel = np.linalg.norm(hp[-1, :2] - hp[0, :2]) / dur
+    if travel > 0.2:
+        return float(travel * 100.0)
+    speeds = []
+    for n in feet:
+        p = np.array(track[n])
+        if len(p) < 3:
+            continue
+        planted = p[:, 2] < p[:, 2].min() + 0.03
+        v = np.linalg.norm(np.diff(p[:, :2], axis=0), axis=1) * fps
+        speeds += list(v[planted[:-1] & planted[1:]])
+    return float(np.median(speeds) * 100.0) if speeds else None
 
 
 def export_skeletal(objs, active, path, types, anim=None, simplify=0.0):
@@ -177,10 +252,11 @@ def build(log=print):
     spec_m["keep_names"] = True
     spec_m.setdefault("max_texture", 2048)
     thirdparty.extract_materials(mesh, "Student", spec_m)
+    disk_bone = _add_duel_disk(arm, mesh) if s.get("duel_disk", True) else None
 
     out = os.path.join(C.OUT_MESHES, "Characters")
     export_skeletal([arm, mesh], arm, os.path.join(out, "SK_Student.fbx"), {"ARMATURE", "MESH"})
-    info = dict(mesh=f"{OUT_REL}/SK_Student.fbx", anims={}, height_m=s.get("height", 1.72),
+    info = dict(mesh=f"{OUT_REL}/SK_Student.fbx", anims={}, height_m=s.get("height", 1.72), duel_disk_bone=disk_bone,
                 materials=[sl.material.name for sl in mesh.material_slots if sl.material])
     scene = bpy.context.scene
     for state, key in s.get("anims", {}).items():
@@ -188,6 +264,10 @@ def build(log=print):
         if act is None:
             log(f"  !! character: no action matching '{key}' for {state}")
             continue
+        if state in ("Walk", "Run"):
+            speed = _ground_speed(arm, act)
+            if speed:
+                info.setdefault("ground_speed", {})[state] = round(speed, 1)
         _assign(arm, act)
         f0, f1 = (int(round(v)) for v in act.frame_range)
         scene.frame_start, scene.frame_end = f0, max(f1, f0 + 1)
@@ -199,7 +279,8 @@ def build(log=print):
     with open(os.path.join(C.OUT_DATA, "character.json"), "w") as fp:
         json.dump(info, fp, indent=1)
     tris = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
-    log(f"  character: SK_Student {tris} tris, {len(arm.data.bones)} bones, anims {sorted(info['anims'])}")
+    log(f"  character: SK_Student {tris} tris, {len(arm.data.bones)} bones, anims {sorted(info['anims'])}, "
+        f"ground speed {info.get('ground_speed', {})} cm/s")
     bpy.data.objects.remove(mesh, do_unlink=True)
     bpy.data.objects.remove(arm, do_unlink=True)
     return info
