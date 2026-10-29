@@ -328,7 +328,6 @@ def build(log=print, only=None):
                               materials=[s.material.name for s in disk.material_slots if s.material])
         used.update(g["duel_disk"]["materials"])
         bpy.data.objects.remove(disk, do_unlink=True)
-        base_slots = None
         for cid in cids:
             e = entries[cid]
             if group == PROCEDURAL:
@@ -340,22 +339,12 @@ def build(log=print, only=None):
             used.update(mats)
             entry = dict(name=name, group=group, display=e["name"], dorm=e["dorm"], scale=e.get("scale", 1.0),
                          tint=e.get("tint", []), female=bool(e.get("body", {}).get("female")), materials=mats)
-            if group == PROCEDURAL or base_slots is None:
-                # the procedural characters differ in geometry: one FBX each; on a base model only the first
-                # member is exported (SK_Anime_<Group>) and the others are material variants of it
-                fbx = name if group == PROCEDURAL else f"SK_Anime_{group}"
-                obj.name = obj.data.name = fbx
-                export_skeletal([a, obj], a, os.path.join(out_dir, f"{fbx}.fbx"), {"ARMATURE", "MESH"})
-                if group != PROCEDURAL:
-                    base_slots = mats
-                    g["base_mesh"] = dict(name=fbx, file=f"{OUT_REL}/{fbx}.fbx")
-                else:
-                    entry["file"] = f"{OUT_REL}/{fbx}.fbx"
-            if group != PROCEDURAL:
-                # slot name in the shared base mesh -> this character's material
-                entry["slots"] = dict(zip(base_slots, mats))
+            # every member is tailored / restyled individually: one FBX each, all on the group's skeleton (the
+            # first member's import creates it in Unreal, the others and the takes reuse it)
+            export_skeletal([a, obj], a, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE", "MESH"})
+            entry["file"] = f"{OUT_REL}/{name}.fbx"
             info["meshes"][cid] = entry
-            g["skeleton_mesh"] = g["skeleton_mesh"] or (name if group == PROCEDURAL else f"SK_Anime_{group}")
+            g["skeleton_mesh"] = g["skeleton_mesh"] or name
             log(f"  anime: {name:24s} [{group}] {K.tri_count(obj):6d} tris, {len(mats)} materials")
             bpy.data.objects.remove(obj, do_unlink=True)
             if a is not arm:

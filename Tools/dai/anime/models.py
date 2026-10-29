@@ -9,7 +9,8 @@ an Unreal-ready skeletal mesh:
   * the humanoid bones (VRM humanoid map, or common Mixamo / VRoid names) are renamed to the UE5
     Mannequin scheme (pelvis, spine_01.., upperarm_l, ..), so the same CC0 takes drive every model
     and Unreal's IK Retargeter auto-maps it; hair / skirt / finger helper bones keep their names
-  * outfit, hair and eye textures are recoloured per cast member (dorm jacket colours, hair colour);
+  * the base outfit is replaced by a tailored Duel Academy uniform (outfit.py) and the hair restyled
+    (hairdo.py) after each character's official design; hair, eye and shoe textures are recoloured;
     generic students get a neutral jacket / hair that Unreal tints at runtime ("JacketTint" /
     "HairTint" slots)
   * an inverted-hull ink outline is added to the body and hair
@@ -215,9 +216,10 @@ def load(path, log=print):
 
 
 # --------------------------------------------------------------------------- textures
-def _recolor(src_png, dst_png, target, keep=0.0):
+def _recolor(src_png, dst_png, target, keep=0.0, gradient=None):
     """Recolour a texture to `target` (sRGB) keeping its light / dark detail (luminance normalised to the
-    dominant tone). keep blends some of the original colour back in."""
+    dominant tone). keep blends some of the original colour back in. gradient = (colour, v, soft): below
+    texture v (VRoid hair strands run from v=1 at the root to v=0 at the tip) blend into a second colour."""
     img = Image.open(src_png).convert("RGBA")
     a = np.asarray(img).astype(np.float32) / 255.0
     rgb, al = a[..., :3], a[..., 3]
@@ -226,6 +228,13 @@ def _recolor(src_png, dst_png, target, keep=0.0):
     ref = np.percentile(lum[mask], 65) if mask.any() else 0.5
     k = np.clip(lum / max(ref, 0.03), 0.0, 1.3)[..., None]
     out = k * np.array(target, np.float32)
+    if gradient:
+        col2, v0, soft = gradient
+        h = out.shape[0]
+        v = 1.0 - (np.arange(h, dtype=np.float32) + 0.5) / h
+        t = np.clip((v0 + soft * 0.5 - v) / max(soft, 1e-3), 0, 1)
+        t = (t * t * (3 - 2 * t))[:, None, None]
+        out = out * (1 - t) + k * np.array(col2, np.float32) * t
     if keep:
         out = out * (1 - keep) + rgb * keep
     a[..., :3] = np.clip(out, 0, 1)
@@ -251,8 +260,9 @@ def _base_image(mat, alpha_mode=None):
     return img, masked
 
 
-def materials(key, base, entry, meshes, alpha=None, log=print):
-    """Recolour / extract every material of the base model and rename the slots to palette materials."""
+def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None):
+    """Recolour / extract every material of the base model and rename the slots to palette materials
+    (skip: names of materials that are already palette materials, e.g. the tailored uniform)."""
     tint = set(entry.get("tint", []))
     col = entry.get("colors", {})
     hair = entry.get("hair", {})
@@ -266,9 +276,9 @@ def materials(key, base, entry, meshes, alpha=None, log=print):
     neutral = {"tops": "jacket" in tint, "hair": "hair" in tint}
     done = {}
     for obj in meshes:
-        for slot in obj.material_slots:
+        for slot_idx, slot in enumerate(obj.material_slots):
             mat = slot.material
-            if mat is None:
+            if mat is None or mat.name in skip:
                 continue
             if mat.name in done:
                 slot.material = done[mat.name]
@@ -276,17 +286,26 @@ def materials(key, base, entry, meshes, alpha=None, log=print):
             role = role_of(mat.name)
             safe = thirdparty._safe(mat.name)
             # a model imported twice gets "<name>.001" materials: look the alpha mode up by the file's name
-            img, masked = _base_image(mat, (alpha or {}).get(re.sub(r"\.\d+$", "", mat.name)))
+            src_name = re.sub(r"\.\d+$", "", mat.name)
+            img, masked = _base_image(mat, (alpha or {}).get(src_name))
             base_png = None
             if img is not None:
                 base_png = thirdparty._save_image(img, os.path.join(C.CACHE_DIR, "vrm_tex", base, f"{safe}.png"),
                                                   2048, mode="RGBA")
+            if base_png and rig is not None and role == "skin" and "body" in mat.name.lower():
+                from .outfit import fix_skin
+                base_png = fix_skin(obj, slot_idx, base_png, base_png[:-4] + "_bare.png", rig,
+                                    legs=bool(entry.get("body", {}).get("female")))
             target = recolor.get(role)
             if neutral.get(role):
                 target = (0.94, 0.94, 0.94)
             if base_png and target is not None:
                 rel = f"{TEX_REL}/{key}/T_{key}_{safe}"
-                _recolor(base_png, os.path.join(C.OUT_TEXTURES, rel + ".png"), target)
+                grad = None
+                g = (entry.get("hairdo") or {}).get("gradient")
+                if role == "hair" and g and hair.get("color2") and not neutral["hair"]:
+                    grad = (hair["color2"], g[0], g[1])
+                _recolor(base_png, os.path.join(C.OUT_TEXTURES, rel + ".png"), target, gradient=grad)
                 # "JacketTint" / "HairTint" in the slot name: Unreal recolours these per dorm / NPC
                 suffix = {"tops": "_JacketTint" if neutral["tops"] else "",
                           "hair": "_HairTint" if neutral["hair"] else ""}.get(role, "")
@@ -390,15 +409,39 @@ def build_model(cid, entry, key_name, log=print):
     key = key_name(cid)
     palette.register({K.OUTLINE_MAT: dict(kind="outline", color=OUTLINE_COLOR)})
     preview_material(K.OUTLINE_MAT)
-    materials(key, key_name(base), entry, meshes, alpha_modes(path), log)
+    from . import hairdo, outfit
+    tailored = set()
+    body = next((m for m in meshes if any(role_of(s.material.name) == "skin" and "body" in s.material.name.lower()
+                                          for s in m.material_slots if s.material)), None)
+    rig = None
+    if body is not None:
+        skin = {i for i, s in enumerate(body.material_slots) if s.material and role_of(s.material.name) == "skin"}
+        rig = outfit.Rig(arm, body, skin)
+        if entry.get("outfit"):
+            t = outfit.tailor(arm, body, entry, key, log)
+            tailored = {g["mat"] for g in t.garments.values()}
+            _drop_unused_slots(body)
+    alpha = alpha_modes(path)
+    extra = []
+    if rig is not None and (entry.get("hairdo")):
+        more, extra = hairdo.restyle(arm, meshes, entry, key, rig, log)
+        alpha.update(more)
+        tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
+    materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig)
+    meshes += extra
     for m in meshes:
-        add_outline(m, entry.get("outline", 0.0022))
+        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses"))
     _select(meshes, meshes[0])
     if len(meshes) > 1:
         bpy.ops.object.join()
     mesh = meshes[0]
     mesh.name = mesh.data.name = f"SK_Anime_{key}"
     return arm, mesh
+
+
+def _drop_unused_slots(obj):
+    _select([obj], obj)
+    bpy.ops.object.material_slot_remove_unused()
 
 
 def model_available(entry):

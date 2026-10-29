@@ -44,19 +44,30 @@ Egyptian-god theming), not a copy of any copyrighted asset. All card names in th
 *Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy and Dr. Crowler (Cycles preview).*
 
 Everyone on the island is an **anime character model**: the VRoid sample avatars (VRoid Project / pixiv,
-whose terms allow modification and redistribution), dressed by the pipeline in Duel Academy colours —
-dorm jackets, hair and eye colours per character — with a cel-style material and ink outline in Unreal. The
-GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra Yellow,
-Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on the
-arena field) and have their own lines; every other student gets a generic look tinted by dorm.
+whose terms allow modification and redistribution) restyled by the pipeline after the characters' official
+designs, with a cel-style material and ink outline in Unreal:
+
+* **Uniforms are tailored onto the models' bodies** (`Tools/dai/anime/outfit.py`): the base outfits are
+  replaced by Duel Academy blazers and long coats cut from the body itself (they share its bone weights, so
+  they deform with it), with stand-up collars, painted trims, cuffs and buttons, plus shirts, trousers,
+  pleated skirts and boots — Jaden's open Slifer jacket over a black shirt, Bastion's buttoned Ra Yellow
+  blazer with white cuffs, Zane's white Obelisk coat with blue trims, Chazz's black coat, Crowler's blue
+  frock coat, the Obelisk girls' sleeveless white top, blue skirt and knee boots.
+* **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): strand-by-strand spikes (Jaden, Chazz),
+  Jaden's dark-brown-to-orange two-tone, long straight hair for Alexis, Jasmine, Mindy and Crowler, plus
+  Syrus's glasses and Crowler's ruff.
+
+The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra
+Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on
+the arena field) and have their own lines; every other student gets a generic look tinted by dorm.
 
 The bones are renamed to the **UE5 Mannequin** scheme (`pelvis`, `spine_01`, `upperarm_l` …), so the cast plays
 CC0 Quaternius animation takes retargeted onto each model (idle, walk, run, jump / fall / land, wave, yes / no,
 sit, clap, interact) plus hand-authored duel-stance and swim takes — and Unreal's IK Retargeter auto-maps the
 skeletons to Manny/Quinn if you want the engine's own animations.
 
-**Using your own models.** The likenesses are limited by what is freely redistributable: the base models'
-hairstyles and outfits are only recoloured. Any rigged humanoid **VRM / glTF / FBX** (VRoid Hub, Sketchfab,
+**Using your own models.** The likenesses are limited by what is freely redistributable: faces are the
+VRoid samples' own and hairstyles are restyled from their cuts. Any rigged humanoid **VRM / glTF / FBX** (VRoid Hub, Sketchfab,
 Fab, a model you made in VRoid Studio …) can replace them: put it in `Tools/thirdparty/<pack>/<asset>/` with
 a `SOURCE.txt`, register it under `"anime_models"` in `Tools/thirdparty/registry/anime.json`, point the
 character's `model` at it in `Tools/dai/anime/cast.py` and run `Tools/build_island.py cast`. Check the
@@ -130,8 +141,9 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/textures.py           detail/normal maps from the photo sets (procedural fallback), terrain layers
   dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction
   dai/character.py          rigged third-party student -> SK_Student + A_Student_<State> FBX
-  dai/anime/                anime cast: VRM/glTF base models -> UE5-Mannequin-named skeletons, dorm
-                            recolours, ink outlines, CC0 takes retargeted onto every skeleton, cast.json
+  dai/anime/                anime cast: VRM/glTF base models -> UE5-Mannequin-named skeletons, tailored
+                            uniforms (outfit.py), restyled hair (hairdo.py), ink outlines, CC0 takes
+                            retargeted onto every skeleton, cast.json
                             (cast.py = who is who; a procedural fallback builds anyone without a model)
   dai/credits.py            CREDITS.md from the SOURCE.txt files
   thirdparty/               curated CC0 / CC-BY source assets + registry/*.json

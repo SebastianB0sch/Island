@@ -2,7 +2,8 @@
 The cast: named Yu-Gi-Oh! GX characters (fan-made, original geometry) and generic students.
 
 Each entry names the existing anime base model it is built from ("model": a key of the "anime_models"
-registry, see models.py) and how to dress it (outfit / hair / eye colours). Without a model file the
+registry, see models.py), the Duel Academy uniform tailored onto it ("outfit"), how its hair is restyled
+("hairdo") and the hair / eye / shoe colours, after the characters' official designs. Without a model file the
 procedural fallback (head.py / hair.py / body.py / face.py) builds the character instead:
 
   name       display name (HUD dialogue title)
@@ -13,6 +14,9 @@ procedural fallback (head.py / hair.py / body.py / face.py) builds the character
   hair       {"style": hair.STYLES key, "color", "color2" (second tone), ...style params}
   face       face.py spec (eyes / brows / mouth / blush)
   extras     accessories: "glasses", "ruff", "bow"
+  outfit     the uniform tailored onto a base model's body (outfit.py: jacket / shirt / pants / skirt / boots)
+  hairdo     restyle of the base model's hair (hairdo.py: spike, source + long_only, gradient, glasses,
+             ruff)
   tint       generic students: which materials Unreal recolours at runtime ("jacket" by dorm, "hair")
   lines      what they say when you talk to them (original lines)
   spawn      which layout.json NPC marker they take over: {"group", "dorm", "nth", "max_wander"}
@@ -39,11 +43,35 @@ def _face(eyes=None, brows=None, mouth=None, **kw):
     return out
 
 
+def _boy(jacket, trim, shirt, pants, open_=0.2, length="hip", trims=("front", "cuff", "collar"), **kw):
+    """Duel Academy blazer (or long coat) over a shirt, with trousers."""
+    j = dict(color=jacket, trim=trim, trims=trims, open=open_, length=length, collar=kw.pop("collar", 0.05))
+    j.update(kw.pop("coat", {}))
+    out = dict(jacket=j, shirt=dict(color=shirt, sleeves="short"), pants=dict(color=pants, width=kw.pop("width", 0.053)))
+    out.update(kw)
+    return out
+
+
+def _girl(jacket=None, trim=None, skirt=None, boots=None, **kw):
+    """Obelisk Blue girls' uniform: white sleeveless jacket with blue trims, pleated skirt, knee boots."""
+    jacket, trim = jacket or WHITE, trim or OBELISK_BLUE
+    j = dict(color=jacket, trim=trim, trims=("front", "hem", "cuff", "collar"), open=0.2, length="waist",
+             sleeves="none", collar=0.03, trim_w=0.014)
+    j.update(kw.pop("jacket", {}))
+    out = dict(jacket=j, shirt=dict(color=OBELISK_BLUE, sleeves="none", length="waist"),
+               skirt=dict(color=skirt or OBELISK_BLUE, length=0.15, pleats=18),
+               boots=dict(color=boots or (0.12, 0.20, 0.50), top=0.86))
+    out.update(kw)
+    return out
+
+
 CAST = {
     # ------------------------------------------------------------------ Slifer Red
     "jaden": dict(
         name="Jaden Yuki", dorm="slifer", scale=1.0, model="vroid_c",
         body=dict(open=1.0),
+        outfit=_boy(SLIFER_RED, (0.09, 0.09, 0.11), (0.08, 0.08, 0.09), (0.26, 0.28, 0.33), open_=1.0),
+        hairdo=dict(spike=dict(lift=0.12, up=0.0, length=1.35, front_lift=0.1, front_length=1.2), gradient=(0.3, 0.16)),
         colors=dict(jacket=SLIFER_RED, trim=(0.10, 0.10, 0.12), inner=(0.08, 0.08, 0.09),
                     pants=(0.26, 0.28, 0.33), shoes=(0.55, 0.18, 0.10), sole=(0.95, 0.93, 0.88)),
         hair=dict(style="jaden", color=(0.36, 0.17, 0.07), color2=(0.85, 0.42, 0.13)),
@@ -58,6 +86,8 @@ CAST = {
     "syrus": dict(
         name="Syrus Truesdale", dorm="slifer", scale=0.9, model="vroid_c",
         body=dict(open=0.75),
+        outfit=_boy(SLIFER_RED, (0.09, 0.09, 0.11), (0.30, 0.55, 0.85), (0.70, 0.66, 0.55), open_=0.25),
+        hairdo=dict(glasses=(0.18, 0.18, 0.22)),
         colors=dict(jacket=SLIFER_RED, trim=WHITE, inner=(0.30, 0.55, 0.85),
                     pants=(0.70, 0.66, 0.55), shoes=(0.20, 0.30, 0.55), sole=WHITE),
         hair=dict(style="syrus", color=(0.55, 0.82, 0.92), color2=(0.38, 0.66, 0.82)),
@@ -73,6 +103,8 @@ CAST = {
     "chumley": dict(
         name="Chumley Huffington", dorm="slifer", scale=1.02, model="vroid_c",
         body=dict(open=0.9, belly=1.0),
+        outfit=_boy(SLIFER_RED, (0.09, 0.09, 0.11), (0.94, 0.93, 0.88), (0.30, 0.30, 0.34), open_=0.85, belly=1.0),
+        hairdo=dict(spike=dict(lift=0.2, up=0.0, length=1.15, front_lift=0.05, front_length=1.0)),
         colors=dict(jacket=SLIFER_RED, trim=WHITE, inner=(0.92, 0.90, 0.84),
                     pants=(0.30, 0.30, 0.34), shoes=(0.35, 0.25, 0.18), sole=(0.8, 0.78, 0.7)),
         hair=dict(style="chumley", color=(0.30, 0.18, 0.14)),
@@ -88,6 +120,8 @@ CAST = {
     "bastion": dict(
         name="Bastion Misawa", dorm="ra", scale=1.04, model="vroid_c",
         body=dict(open=0.35),
+        outfit=_boy(RA_YELLOW, WHITE, (0.95, 0.95, 0.95), (0.22, 0.24, 0.30), open_=0.15, trims=("cuff",),
+                      coat=dict(buttons=dict(color=(0.85, 0.85, 0.82), n=3))),
         colors=dict(jacket=RA_YELLOW, trim=WHITE, inner=(0.95, 0.95, 0.95),
                     pants=(0.22, 0.24, 0.30), shoes=(0.20, 0.16, 0.14), sole=(0.25, 0.22, 0.2)),
         hair=dict(style="bastion", color=(0.10, 0.09, 0.12)),
@@ -103,6 +137,9 @@ CAST = {
     "chazz": dict(
         name="Chazz Princeton", dorm="obelisk", scale=1.03, model="vroid_c",
         body=dict(open=0.6, coat="long"),
+        outfit=_boy((0.07, 0.07, 0.09), (0.26, 0.26, 0.30), (0.10, 0.10, 0.12), (0.08, 0.08, 0.10), open_=0.7,
+                      length="knee", trims=("front", "hem", "cuff", "collar"), collar=0.07),
+        hairdo=dict(spike=dict(lift=0.1, up=-0.3, length=1.3, front_lift=0.05, front_length=1.15)),
         colors=dict(jacket=(0.07, 0.07, 0.09), trim=(0.30, 0.30, 0.34), inner=(0.10, 0.10, 0.12),
                     pants=(0.08, 0.08, 0.10), shoes=(0.05, 0.05, 0.06), sole=(0.2, 0.2, 0.22)),
         hair=dict(style="chazz", color=(0.07, 0.07, 0.10), color2=(0.16, 0.16, 0.22)),
@@ -117,6 +154,9 @@ CAST = {
     "zane": dict(
         name="Zane Truesdale", dorm="obelisk", scale=1.1, model="vroid_c",
         body=dict(open=0.3, coat="long"),
+        outfit=_boy(WHITE, OBELISK_BLUE, (0.14, 0.16, 0.24), (0.12, 0.13, 0.18), open_=0.6, length="knee",
+                      trims=("front", "hem", "cuff", "collar"), collar=0.06),
+        hairdo=dict(spike=dict(lift=0.0, up=0.0, length=1.3, front_lift=0.0, front_length=1.1)),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=(0.16, 0.18, 0.24),
                     pants=(0.12, 0.13, 0.18), shoes=(0.10, 0.10, 0.12), sole=(0.3, 0.3, 0.32)),
         hair=dict(style="zane", color=(0.20, 0.36, 0.40), color2=(0.13, 0.25, 0.30)),
@@ -129,8 +169,10 @@ CAST = {
         spawn=dict(group="lighthouse", dorm="obelisk", nth=0),
     ),
     "alexis": dict(
-        name="Alexis Rhodes", dorm="obelisk", scale=1.0, model="vroid_b",
+        name="Alexis Rhodes", dorm="obelisk", scale=1.0, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
+        outfit=_girl(),
+        hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.12, 0.20, 0.50), boots=(0.12, 0.20, 0.50), sole=(0.08, 0.1, 0.25)),
         hair=dict(style="alexis", color=(0.93, 0.76, 0.42), color2=(0.85, 0.64, 0.30)),
@@ -146,6 +188,8 @@ CAST = {
     "jasmine": dict(
         name="Jasmine", dorm="obelisk", scale=0.98, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
+        outfit=_girl(),
+        hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.12, 0.20, 0.50), boots=(0.12, 0.20, 0.50), sole=(0.08, 0.1, 0.25)),
         hair=dict(style="long_wavy", color=(0.42, 0.13, 0.12)),
@@ -158,6 +202,8 @@ CAST = {
     "mindy": dict(
         name="Mindy", dorm="obelisk", scale=0.97, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
+        outfit=_girl(),
+        hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.12, 0.20, 0.50), boots=(0.12, 0.20, 0.50), sole=(0.08, 0.1, 0.25)),
         hair=dict(style="long_straight", color=(0.06, 0.06, 0.08)),
@@ -171,6 +217,10 @@ CAST = {
     "crowler": dict(
         name="Dr. Vellian Crowler", dorm="teacher", scale=1.12, model="vroid_c",
         body=dict(open=0.2, coat="long"),
+        outfit=_boy((0.16, 0.30, 0.66), WHITE, WHITE, (0.16, 0.30, 0.66), open_=0.15, length="knee", collar=0.0,
+                        trims=("front", "hem", "cuff"), width=0.05,
+                        coat=dict(buttons=dict(color=(0.92, 0.80, 0.30), n=4))),
+        hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"), ruff=WHITE),
         colors=dict(jacket=(0.16, 0.30, 0.66), trim=(0.92, 0.80, 0.30), inner=WHITE,
                     pants=(0.16, 0.30, 0.66), shoes=(0.10, 0.10, 0.12), sole=(0.3, 0.3, 0.3)),
         hair=dict(style="crowler", color=(0.92, 0.82, 0.52), color2=(0.80, 0.68, 0.38)),
@@ -216,7 +266,12 @@ def student_entry(key):
     # boys wear their dorm's jacket (tinted in Unreal); the girls are all Obelisk Blue, as in the show
     if female:
         colors["jacket"] = WHITE
-    return dict(name="Student", dorm="any", scale=1.0, body=body, colors=colors, model=s.get("model"),
+    if female:
+        outfit = _girl()
+    else:   # white jacket with dark trims: Unreal multiplies it with the dorm colour ("JacketTint")
+        outfit = _boy(WHITE, (0.30, 0.30, 0.32), (0.10, 0.10, 0.12), (0.22, 0.24, 0.30), open_=0.55,
+                      coat=dict(tint=True))
+    return dict(name="Student", dorm="any", scale=1.0, body=body, colors=colors, model=s.get("model"), outfit=outfit,
                 hair=dict(s["hair"], color=TINT_BASE), face=face, extras=s.get("extras", []),
                 tint=["hair"] if female else ["jacket", "hair"], lines=[])
 
