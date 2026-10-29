@@ -374,8 +374,10 @@ def annotate_layout(log=print):
 
 
 # --------------------------------------------------------------------------- preview render
-def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), samples=32, view=0.0, log=print):
-    """Cycles toon render of the cast standing in a row (for Docs/renders and quick iteration)."""
+def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), samples=32, view=0.0, log=print,
+                  portrait=False):
+    """Cycles toon render of the cast standing in a row (for Docs/renders and quick iteration). portrait: a
+    head-and-shoulders close-up of the first character instead (to compare with official portraits)."""
     import math
     from .. import blend
     blend.reset_scene()
@@ -445,6 +447,13 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
     width = len(ids) * spacing
     dist = max(3.6, width * 1.45)
     a = math.radians(view)
-    cam = blend.camera("cam", (math.sin(a) * dist, -math.cos(a) * dist, 1.25), (0.0, 0.0, 0.92), lens=50.0)
+    if portrait:
+        first = next(o for o in scene.objects if o.type == "ARMATURE")
+        bpy.context.view_layer.update()
+        head = first.matrix_world @ first.pose.bones["head"].head          # posed (the take moves the hips)
+        tgt = (head.x, head.y, head.z + 0.08 * first.scale.z)      # the head bone sits at the jaw
+        cam = blend.camera("cam", (tgt[0] + math.sin(a) * 0.9, -math.cos(a) * 0.9, tgt[2]), tgt, lens=50.0)
+    else:
+        cam = blend.camera("cam", (math.sin(a) * dist, -math.cos(a) * dist, 1.25), (0.0, 0.0, 0.92), lens=50.0)
     blend.render(cam, path)
     log(f"  lineup -> {path}")

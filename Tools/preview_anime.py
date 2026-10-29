@@ -21,12 +21,13 @@ def main():
     ap.add_argument("--res", default="1800x720")
     ap.add_argument("--samples", type=int, default=32)
     ap.add_argument("--view", type=float, default=0.0, help="camera azimuth (deg): 0 front, 35 three-quarter, 180 back")
+    ap.add_argument("--portrait", action="store_true", help="head-and-shoulders close-up of the first id")
     a = ap.parse_args()
     from dai import config as C
     from dai.anime import build
     out = a.out or os.path.join(C.DOCS_DIR, "previews", "cast.png")
     w, h = (int(v) for v in a.res.split("x"))
-    build.render_lineup(out, a.ids or None, a.state, a.frame, (w, h), a.samples, a.view)
+    build.render_lineup(out, a.ids or None, a.state, a.frame, (w, h), a.samples, a.view, portrait=a.portrait)
 
 
 if __name__ == "__main__":

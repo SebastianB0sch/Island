@@ -216,7 +216,7 @@ def load(path, log=print):
 
 
 # --------------------------------------------------------------------------- textures
-def _recolor(src_png, dst_png, target, keep=0.0, gradient=None):
+def _recolor(src_png, dst_png, target, keep=0.0, gradient=None, contrast=1.0):
     """Recolour a texture to `target` (sRGB) keeping its light / dark detail (luminance normalised to the
     dominant tone). keep blends some of the original colour back in. gradient = (colour, v, soft): below
     texture v (VRoid hair strands run from v=1 at the root to v=0 at the tip) blend into a second colour."""
@@ -226,7 +226,8 @@ def _recolor(src_png, dst_png, target, keep=0.0, gradient=None):
     lum = rgb @ np.array([0.299, 0.587, 0.114], np.float32)
     mask = al > 0.5
     ref = np.percentile(lum[mask], 65) if mask.any() else 0.5
-    k = np.clip(lum / max(ref, 0.03), 0.0, 1.3)[..., None]
+    k = np.clip(lum / max(ref, 0.03), 0.0, 1.3)
+    k = (1.0 + (k - 1.0) * contrast)[..., None]          # contrast < 1: flatter (anime hair is near flat)
     out = k * np.array(target, np.float32)
     if gradient:
         col2, v0, soft = gradient
@@ -305,7 +306,8 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
                 g = (entry.get("hairdo") or {}).get("gradient")
                 if role == "hair" and g and hair.get("color2") and not neutral["hair"]:
                     grad = (hair["color2"], g[0], g[1])
-                _recolor(base_png, os.path.join(C.OUT_TEXTURES, rel + ".png"), target, gradient=grad)
+                _recolor(base_png, os.path.join(C.OUT_TEXTURES, rel + ".png"), target, gradient=grad,
+                         contrast=0.55 if role == "hair" else 1.0)
                 # "JacketTint" / "HairTint" in the slot name: Unreal recolours these per dorm / NPC
                 suffix = {"tops": "_JacketTint" if neutral["tops"] else "",
                           "hair": "_HairTint" if neutral["hair"] else ""}.get(role, "")

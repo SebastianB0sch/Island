@@ -61,17 +61,40 @@ def head_center(face):
 
 
 # --------------------------------------------------------------------------- strand edits
+def _head_weight(obj):
+    """Per vertex weight on the head bone: VRoid strands are rigid on the head at the root and hand over to
+    their spring (HairJoint) bones towards the tip."""
+    gi = obj.vertex_groups.get("head")
+    out = np.zeros(len(obj.data.vertices))
+    if gi is None:
+        return out
+    for v in obj.data.vertices:
+        for g in v.groups:
+            if g.group == gi.index:
+                out[v.index] = g.weight
+    return out
+
+
+def _root_tip(p, hw, hc):
+    """Root and tip of one strand: the most head-bound end (or, for strands rigid on the head, the end
+    nearest the head centre) and the point farthest from it."""
+    if hw.max() - hw.min() > 0.2:
+        root = p[hw >= hw.max() - 0.02].mean(0)
+    else:
+        d = np.linalg.norm(p - np.array(hc), axis=1)
+        root = p[np.argsort(d)[:max(3, len(p) // 12)]].mean(0)
+    far = p[np.argmax(np.linalg.norm(p - root, axis=1))]
+    return root, far
 def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1.1, min_len=0.03,
-          back_only=False):
+          back_only=False, crown_lift=None):
     me = obj.data
     co, lab = islands(me)
+    hw = _head_weight(obj)
     new = co.copy()
     for i in range(lab.max() + 1):
         idx = np.where(lab == i)[0]
         p = co[idx]
-        d = np.linalg.norm(p - np.array(hc), axis=1)
-        root = p[np.argsort(d)[:max(3, len(idx) // 12)]].mean(0)
-        far = p[np.argmax(np.linalg.norm(p - root, axis=1))]
+        root, far = _root_tip(p, hw[idx], hc)
         axis = Vector(far - root)
         L = axis.length
         if L < min_len:
@@ -85,6 +108,8 @@ def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1
         tgt = (out + Vector((0, 0, up))).normalized()
         q = a.rotation_difference(tgt)
         f, k = (front_lift, front_length) if front else (lift, length)
+        if crown_lift is not None and out.z > 0.35:         # strands on top of the head: keep them lying flat
+            f, k = crown_lift, 1.0
         q = Quaternion().slerp(q, f)
         for j, vi in enumerate(idx):
             rel = Vector(p[j] - root)
@@ -254,14 +279,14 @@ def glasses(arm, face, color, name="Glasses"):
     from ..assets.props import tube
     eyes = _eyes(face)
     _, w, lo, hi = head_frame(face)
-    rad = w * 0.15
+    rad = w * 0.12
     mb = MeshBuilder(name)
     centers = []
     for e in eyes:
         c = Vector((e.x * 1.08, lo.y - 0.006, e.z - rad * 0.12))
         centers.append(c)
         with mb.at(tuple(c), rot_x=90):
-            mb.torus((0, 0, 0), rad, 0.0022, color, seg=22, tube_seg=5)
+            mb.torus((0, 0, 0), rad, 0.0016, color, seg=22, tube_seg=5)
     a, b = sorted(centers, key=lambda c: c.x)
     a, b = a + Vector((rad, 0, 0.002)), b - Vector((rad, 0, -0.002))
     tube(mb, [a, (a + b) * 0.5 + Vector((0, -0.002, 0.005)), b], [0.002] * 3, color, seg=5)

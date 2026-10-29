@@ -58,6 +58,11 @@ designs, with a cel-style material and ink outline in Unreal:
   shirt with white uniform trousers and red sneakers; Syrus's yellow shirt; Chumley's inverted, mostly
   white Slifer uniform; Chazz's black coat with grey trim over a purple shirt, dark blue trousers, brown
   shoes; Crowler's regal Obelisk coat with gold trim and pink ruffles.
+* **Checked against official art** where it was reachable: Konami's *Tag Force* portraits of Alexis,
+  Syrus, Zane and the generic Slifer student (from a public PPSSPP texture-remaster repository; not
+  redistributed here). Colours were sampled from them (Slifer red, the periwinkle Obelisk edging, hair
+  colours) and they show the flared, white-lined collars and the black / grey turtlenecks under the
+  jackets. `Tools/preview_anime.py <id> --portrait` renders the matching head-and-shoulders close-up.
 * **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's two-layer brown mop (lighter
   ends, spiky at the back), long dark-blond hair for Alexis, shoulder-length brown (Jasmine) and black
   (Mindy) hair, blue hair for the Truesdale brothers, Crowler's blond ponytail with a black band, plus

@@ -14,8 +14,10 @@ opening, hem and cuffs and the buttons are plain distance tests, independent of 
 Outfit spec (cast.py "outfit"), every part optional, colours sRGB:
   jacket  {color, trim, trims (front / hem / cuff / collar / arm), trim_w, length (waist | hip | thigh |
            knee | calf), open (0 closed .. 1 wide open), sleeves (long | none), collar (height m or 0),
-           flare, buttons {color, n}, tint (Unreal recolours it), loose (offset from the body, m)}
-  shirt   {color, sleeves (short | long | none), length (waist | hip)}
+           flare, buttons {color, n}, tint (Unreal recolours it), loose (offset from the body, m),
+           collar_flare, collar_color, collar_trim, lining (inside of the collar), cuff_color, shoulder {color, w},
+           tails (front hem fraction), drop}
+  shirt   {color, sleeves (short | long | none), length (waist | hip), turtleneck}
   pants   {color, width (hem half width, m)}
   skirt   {color, length (m below the crotch), pleats, trim}
   boots   {color, top (fraction from ankle to knee)}
@@ -260,9 +262,11 @@ class Tailor:
             prev = nset
         return new_faces
 
-    def collar(self, name, height, open_deg, lift=0.012):
-        """Stand-up collar round the neck base (outer + inner wall + rim), open at the front."""
-        g = self.garments[name]
+    def collar(self, spec, height, open_deg, flare=0.016, lift=0.012):
+        """Stand-up collar round the neck base (outer + inner wall + rim), open at the front and flaring out by
+        `flare` at the top; its own garment, so the lining can differ (the portraits: white-lined collars)."""
+        idx, mname = self.material("Collar", spec.get("tint", False))
+        g = self.garments.setdefault("Collar", dict(mat=mname, idx=idx, spec=spec))
         r = self.rig
         rx, ry = r.neck_r
         z0, z1 = r.neck - 0.035, r.neck + height
@@ -275,7 +279,7 @@ class Tailor:
             for j in range(rows + 1):
                 t = j / rows
                 z = z0 + (z1 - z0) * t
-                grow = lift + 0.006 + 0.016 * t + extra
+                grow = lift + 0.006 + flare * t + extra
                 for i, a in enumerate(angs):
                     x = math.sin(a) * (rx + grow)
                     y = r.neck_c.y - math.cos(a) * (ry + grow)
@@ -300,6 +304,7 @@ class Tailor:
                 vs = (grid["o", j, i], grid["o", j + 1, i], grid["i", j + 1, i], grid["i", j, i])
                 quad(*(vs if i == 0 else tuple(reversed(vs))))
         g["collar_top"] = z1
+        g["collar"] = dict(rx=rx, ry=ry, cy=r.neck_c.y, z0=z0, z1=z1, grow=lift + 0.006, flare=flare)
         return faces
 
     # ------------------------------------------------------------------ the uniform
@@ -351,7 +356,11 @@ class Tailor:
             self.extend("Jacket", self.edges_at("Jacket", hem), drop, spec.get("flare", 0.035 if not long else 0.07),
                         rings=3 if not long else 6, thigh=0.45 if not long else 0.8, front=spec.get("tails", 1.0))
         if spec.get("collar", 0.05):
-            self.collar("Jacket", spec.get("collar", 0.05), 70 + 80 * opening)
+            trim = spec.get("trim", spec.get("color"))
+            cspec = dict(color=spec.get("collar_color", spec.get("color")), trim=spec.get("collar_trim", trim),
+                         lining=spec.get("lining", spec.get("color")), tint=spec.get("tint", False),
+                         trims=("collar",) if "collar" in spec.get("trims", ()) else (), trim_w=spec.get("trim_w", 0.012))
+            self.collar(cspec, spec.get("collar", 0.05), 70 + 80 * opening, spec.get("collar_flare", 0.016))
         g = self.garments["Jacket"]
         g["cuff_x"], g["hem"], g["gap"] = cuff_x, hem - drop, gap
 
@@ -360,7 +369,8 @@ class Tailor:
         sleeves = spec.get("sleeves", "short")
         sx = {"short": r.shoulder_x + 0.10, "long": r.wrist_x - 0.04, "none": r.shoulder_x - 0.01}[sleeves]
         hem = r.hem_z(spec.get("length", "hip"))
-        neck = r.neck - 0.012
+        turtle = spec.get("turtleneck", False)
+        neck = r.neck + 0.05 if turtle else r.neck - 0.012
 
         def inside(co):
             if abs(co.x) < r.neck_r[0] + 0.035 and co.z > neck:
@@ -371,6 +381,8 @@ class Tailor:
         self.cut("Shirt", (sx, 0, 0), (1, 0, 0))
         self.cut("Shirt", (-sx, 0, 0), (-1, 0, 0))
         self.cut("Shirt", (0, 0, hem), (0, 0, -1))
+        if turtle:
+            self.cut("Shirt", (0, 0, neck), (0, 0, 1), region=lambda c: abs(c.x) < r.neck_r[0] + 0.04)
         if spec.get("length", "hip") == "hip":
             self.extend("Shirt", self.edges_at("Shirt", hem), 0.03, 0.012, rings=1, thigh=0.3)
 
@@ -588,6 +600,13 @@ def paint(me, mat_idx, g, rig, path, size=None):
             on_arm = P[:, 2] > rig.shoulder_z - 0.15
             col[(ax > g["cuff_x"] - cw - tw * 0.45) & on_arm] = tc
             col[(ax > g["cuff_x"] - cw) & on_arm] = spec.get("cuff_color", tc)
+    cg = g.get("collar")
+    if cg and spec.get("lining") is not None and len(P):
+        # inner wall of the collar: inside the outer wall's ellipse at that height
+        t = np.clip((P[:, 2] - cg["z0"]) / (cg["z1"] - cg["z0"]), 0, 1)
+        go = cg["grow"] + cg["flare"] * t
+        rho = np.hypot(P[:, 0] / (cg["rx"] + go), (P[:, 1] - cg["cy"]) / (cg["ry"] + go))
+        col[rho < 0.985] = spec["lining"]
     sh = spec.get("shoulder")                         # band round the top of the sleeves
     if sh and len(P) and spec.get("sleeves", "long") != "none":
         ax = np.abs(P[:, 0])
