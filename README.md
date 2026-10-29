@@ -58,15 +58,18 @@ designs, with a cel-style material and ink outline in Unreal:
   shirt with white uniform trousers and red sneakers; Syrus's yellow shirt; Chumley's inverted, mostly
   white Slifer uniform; Chazz's black coat with grey trim over a purple shirt, dark blue trousers, brown
   shoes; Crowler's regal Obelisk coat with gold trim and pink ruffles.
-* **Checked against official art** where it was reachable: Konami's *Tag Force* portraits of Alexis,
-  Syrus, Zane and the generic Slifer student (from a public PPSSPP texture-remaster repository; not
-  redistributed here). Colours were sampled from them (Slifer red, the periwinkle Obelisk edging, hair
-  colours) and they show the flared, white-lined collars and the black / grey turtlenecks under the
-  jackets. `Tools/preview_anime.py <id> --portrait` renders the matching head-and-shoulders close-up.
-* **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's two-layer brown mop (lighter
-  ends, spiky at the back), long dark-blond hair for Alexis, shoulder-length brown (Jasmine) and black
-  (Mindy) hair, blue hair for the Truesdale brothers, Crowler's blond ponytail with a black band, plus
-  Syrus's round glasses; eye colours per character.
+* **Checked against official art** where it was reachable from the build environment: Konami's *Tag Force*
+  portraits of Alexis, Syrus, Zane and the generic Slifer student, Chumley's in-game duel portrait and the
+  *Tag Force* cover art of Jaden and Chazz (found in public GitHub mod / recompilation repositories; used as
+  references only, not redistributed here). Colours were sampled from them (Slifer red, the periwinkle
+  Obelisk edging, hair and eye colours) and they set the flared, white-lined collars, the black / grey
+  turtlenecks, Jaden's orange-over-brown two-layer hair, Chazz's mauve shirt and Chumley's koala puffs and
+  round nose. Bastion, Jasmine, Mindy and Crowler follow the written design descriptions only.
+  `Tools/preview_anime.py <id> --portrait` renders a head-and-shoulders close-up for the comparison.
+* **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's spiky two-layer mop, Syrus's
+  cyan spikes, Zane's long slate-teal hair, Chazz's black spikes, Chumley's puffed sides, long olive-blond
+  hair for Alexis, shoulder-length brown (Jasmine) and black (Mindy) hair, Crowler's blond ponytail with a
+  black band, plus Syrus's round glasses and Chumley's nose; eye colours per character.
 
 The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on

@@ -287,7 +287,7 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
             role = role_of(mat.name)
             safe = thirdparty._safe(mat.name)
             # a model imported twice gets "<name>.001" materials: look the alpha mode up by the file's name
-            src_name = re.sub(r"\.\d+$", "", mat.name)
+            src_name = re.sub(r"\.\d+$", "", re.sub(r"_Top$", "", mat.name))
             img, masked = _base_image(mat, (alpha or {}).get(src_name))
             base_png = None
             if img is not None:
@@ -300,6 +300,8 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
             target = recolor.get(role)
             if neutral.get(role):
                 target = (0.94, 0.94, 0.94)
+            elif role == "hair" and mat.name.endswith("_Top") and hair.get("color2"):
+                target = hair["color2"]                  # hairdo.top_layer
             if base_png and target is not None:
                 rel = f"{TEX_REL}/{key}/T_{key}_{safe}"
                 grad = None

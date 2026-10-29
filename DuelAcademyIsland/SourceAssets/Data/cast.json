@@ -422,7 +422,8 @@
     "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE",
     "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE",
     "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE",
-    "M_Anime_Chumley_F00_000_Hair_00_HAIR"
+    "M_Anime_Chumley_F00_000_Hair_00_HAIR",
+    "M_Anime_Chumley_Nose"
    ],
    "file": "Meshes/Characters/Anime/SK_Anime_Chumley.fbx"
   },
@@ -1540,6 +1541,26 @@
     1.0,
     1.0,
     1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
+  "M_Anime_Chumley_Nose": {
+   "kind": "toon",
+   "color": [
+    1.0,
+    0.66,
+    0.52
+   ],
+   "rough": 0.6,
+   "fill": 0.45,
+   "color_linear": [
+    1.0,
+    0.3931231302267222,
+    0.23302199930143813
    ],
    "metallic": 0.0,
    "detail": null,

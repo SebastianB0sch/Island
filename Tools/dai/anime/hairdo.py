@@ -13,10 +13,11 @@ VRoid hair is built from separate strands (one mesh island each), so a style is 
   trim       cut the borrowed hair off at a height (shoulder-length hair)
   ponytail   gather the borrowed long hair into a tail tied at the nape ({k, back, tie, band colour})
   gradient   (v, softness): two-tone hair, a texture gradient along the strands into hair "color2"
-             (Jaden's orange ends; applied in models.materials)
+             (applied in models.materials)
+  top_layer  dz: two-layer hair, everything above the head centre + dz in hair "color2" (Jaden)
 
-plus accessories built in place from the face landmarks: round glasses (Syrus) and a frilled ruff
-(Crowler).
+plus accessories built in place from the face landmarks: round glasses (Syrus), a round nose (Chumley), a
+frilled ruff and a ponytail band (Crowler).
 """
 
 import math
@@ -86,7 +87,7 @@ def _root_tip(p, hw, hc):
     far = p[np.argmax(np.linalg.norm(p - root, axis=1))]
     return root, far
 def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1.1, min_len=0.03,
-          back_only=False, crown_lift=None):
+          back_only=False, crown_lift=None, side_lift=None, volume=1.0):
     me = obj.data
     co, lab = islands(me)
     hw = _head_weight(obj)
@@ -110,15 +111,42 @@ def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1
         f, k = (front_lift, front_length) if front else (lift, length)
         if crown_lift is not None and out.z > 0.35:         # strands on top of the head: keep them lying flat
             f, k = crown_lift, 1.0
+        elif side_lift is not None and abs(out.x) > 0.6:    # over the ears (Chumley's koala puffs)
+            f = side_lift
         q = Quaternion().slerp(q, f)
         for j, vi in enumerate(idx):
             rel = Vector(p[j] - root)
             along = rel.dot(a)
             rel = rel + a * along * (k - 1.0)
             new[vi] = (Vector(root) + q @ rel)[:]
+    if volume != 1.0:                                     # a bigger silhouette without opening gaps
+        new = np.array(hc)[None] + (new - np.array(hc)[None]) * volume
     for v, c in zip(me.vertices, new):
         v.co = c
     me.update()
+
+
+TOP = "_Top"
+
+
+def top_layer(obj, hc, dz=0.0):
+    """Two-layer hair (Jaden: an orange-brown top layer over dark brown, as on the Tag Force cover art): faces
+    above hc.z + dz get a "<material>_Top" copy of their material, recoloured with hair "color2"."""
+    me = obj.data
+    co = np.array([v.co[:] for v in me.vertices])
+    top = {}
+    for poly in me.polygons:
+        if co[list(poly.vertices), 2].mean() < hc.z + dz:
+            continue
+        m = me.materials[poly.material_index]
+        if m is None or m.name.endswith(TOP):
+            continue
+        if m.name not in top:
+            c = m.copy()
+            c.name = m.name + TOP
+            me.materials.append(c)
+            top[m.name] = len(me.materials) - 1
+        poly.material_index = top[m.name]
 
 
 # --------------------------------------------------------------------------- borrowed hair
@@ -298,6 +326,20 @@ def glasses(arm, face, color, name="Glasses"):
     return _attach(mb, arm, {"head": 1.0})
 
 
+def nose(arm, face, color, size=0.012, name="Nose"):
+    """Round nose on the face (Chumley's koala nose in his Tag Force portrait), rigid on the head."""
+    from ..geo import MeshBuilder
+    co = np.array([v.co[:] for v in face.data.vertices])
+    eyes = _eyes(face)
+    ez = (eyes[0].z + eyes[1].z) / 2
+    band = co[(np.abs(co[:, 0]) < 0.01) & (co[:, 2] < ez - 0.01) & (co[:, 2] > ez - 0.05)]
+    tip = band[np.argmin(band[:, 1])]
+    mb = MeshBuilder(name)
+    mb.sphere((float(tip[0]), float(tip[1]) - size * 0.35, float(tip[2])), size, color, seg=14, rings=10,
+              scale=(1.15, 0.85, 0.95))
+    return _attach(mb, arm, {"head": 1.0})
+
+
 def hair_band(arm, at, color, name="HairBand"):
     """Band round a ponytail (horizontal torus at `at`), following the head."""
     from ..geo import MeshBuilder
@@ -360,6 +402,8 @@ def restyle(arm, meshes, entry, key, rig, log=print):
     hc = head_center(face)
     if spec.get("spike"):
         spike(hair, hc, **spec["spike"])
+    if spec.get("top_layer") is not None:
+        top_layer(hair, hc, spec["top_layer"])
     extra = []
     if spec.get("glasses"):
         mat = register_accessory_material(f"M_Anime_{key}_Glasses", spec["glasses"])
@@ -368,6 +412,9 @@ def restyle(arm, meshes, entry, key, rig, log=print):
         mat = register_accessory_material(f"M_Anime_{key}_HairBand", spec["ponytail"]["band"])
         p = spec["ponytail"]
         extra.append(hair_band(arm, Vector((0.0, hc.y + p.get("back", 0.10), rig.neck + p.get("tie", 0.06))), mat))
+    if spec.get("nose"):
+        mat = register_accessory_material(f"M_Anime_{key}_Nose", spec["nose"])
+        extra.append(nose(arm, face, mat))
     if spec.get("ruff"):
         mat = register_accessory_material(f"M_Anime_{key}_Ruff", spec["ruff"])
         extra.append(ruff(arm, rig, mat))
