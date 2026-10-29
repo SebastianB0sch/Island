@@ -466,7 +466,7 @@ def build_model(cid, entry, key_name, log=print):
             _drop_unused_slots(body)
     alpha = alpha_modes(path)
     extra = []
-    if rig is not None and (entry.get("hairdo")):
+    if rig is not None and (entry.get("hairdo") or entry.get("face_shape")):
         more, extra = hairdo.restyle(arm, meshes, entry, key, rig, log)
         alpha.update(more)
         tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}

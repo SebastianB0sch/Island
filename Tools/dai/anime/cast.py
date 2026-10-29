@@ -18,6 +18,7 @@ procedural fallback (head.py / hair.py / body.py / face.py) builds the character
   hairdo     restyle of the base model's hair and head accessories (hairdo.py: spike, source + long_only,
              trim, ponytail, gradient, top_layer, glasses, nose, earrings, ruff)
   expression resting expression baked from the VRoid face blendshapes ({"BRW_Angry": 0.6, ...})
+  face_shape {chin, jaw, cheeks}: longer / narrower / rounder face than the VRoid base (hairdo.reshape_face)
   tint       generic students: which materials Unreal recolours at runtime ("jacket" by dorm, "hair")
   lines      what they say when you talk to them (original lines)
   spawn      which layout.json NPC marker they take over: {"group", "dorm", "nth", "max_wander"}
@@ -107,6 +108,7 @@ CAST = {
         # Tag Force cover art: orange-brown top layer over dark brown, big outward spikes
         hairdo=dict(spike=dict(lift=0.35, up=0.0, length=1.45, front_lift=0.12, front_length=1.2, crown_lift=0.15, volume=1.1),
                     thicken=dict(copies=2, angle=8.0, scale=1.04), top_layer=-0.005),
+        face_shape=dict(chin=0.008, jaw=-0.04),
         expression=dict(MTH_Fun=0.35, BRW_Angry=0.25),
         colors=dict(jacket=SLIFER_RED, trim=(0.10, 0.10, 0.12), inner=(0.08, 0.08, 0.09),
                     pants=UNIFORM_PANTS, shoes=(0.80, 0.10, 0.08), sole=(0.95, 0.93, 0.88)),
@@ -148,6 +150,7 @@ CAST = {
         hairdo=dict(spike=dict(lift=0.0, up=0.2, length=1.1, front_lift=0.0, front_length=1.0, crown_lift=0.0,
                                side_lift=0.55, volume=1.1),
                     nose=(1.0, 0.66, 0.52)),
+        face_shape=dict(cheeks=0.12, jaw=0.06),
         expression=dict(BRW_Angry=0.5, EYE_Joy=0.2),
         colors=dict(jacket=SLIFER_RED, trim=WHITE, inner=(0.92, 0.90, 0.84),
                     pants=(0.30, 0.30, 0.34), shoes=(0.35, 0.25, 0.18), sole=(0.8, 0.78, 0.7)),
@@ -171,6 +174,7 @@ CAST = {
                     shirt=dict(color=(0.36, 0.58, 0.30), sleeves="short", length="waist", turtleneck=True)),
         hairdo=dict(spike=dict(lift=0.3, up=1.2, length=1.2, front_lift=0.85, front_length=1.05, crown_lift=0.2,
                                volume=1.06)),
+        face_shape=dict(chin=0.012, jaw=-0.07),
         expression=dict(BRW_Angry=0.3, EYE_Angry=0.3, MTH_Fun=0.4),
         colors=dict(jacket=RA_YELLOW, trim=WHITE, inner=(0.95, 0.95, 0.95),
                     pants=(0.22, 0.24, 0.30), shoes=(0.20, 0.16, 0.14), sole=(0.25, 0.22, 0.2)),
@@ -192,6 +196,7 @@ CAST = {
         # Tag Force cover art: big black spikes standing up and back
         hairdo=dict(spike=dict(lift=0.25, up=0.3, length=1.45, front_lift=0.0, front_length=1.15, crown_lift=0.25, volume=1.12),
                     thicken=dict(copies=2, angle=8.0, scale=1.04)),
+        face_shape=dict(chin=0.012, jaw=-0.08),
         expression=dict(BRW_Angry=0.9, EYE_Angry=0.5, MTH_Angry=0.25),
         colors=dict(jacket=(0.07, 0.07, 0.09), trim=(0.30, 0.30, 0.34), inner=(0.10, 0.10, 0.12),
                     pants=(0.08, 0.08, 0.10), shoes=(0.36, 0.22, 0.12), sole=(0.2, 0.2, 0.22)),
@@ -211,6 +216,7 @@ CAST = {
                           coat=dict(tails=0.25, loose=0.012, collar_color=WHITE, collar_trim=OBELISK_TRIM)),
                     shirt=dict(color=(0.07, 0.07, 0.08), sleeves="short", turtleneck=True)),
         hairdo=dict(spike=dict(lift=0.0, up=0.0, length=1.6, front_lift=0.0, front_length=1.15, crown_lift=0.0)),
+        face_shape=dict(chin=0.014, jaw=-0.08),
         expression=dict(BRW_Angry=0.5, EYE_Angry=0.45),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=(0.16, 0.18, 0.24),
                     pants=(0.12, 0.13, 0.18), shoes=(0.10, 0.10, 0.12), sole=(0.3, 0.3, 0.32)),
@@ -228,6 +234,7 @@ CAST = {
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
+        face_shape=dict(chin=0.006, jaw=-0.04),
         expression=dict(MTH_Fun=0.3),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
@@ -282,6 +289,7 @@ CAST = {
         hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"),
                     ponytail=dict(k=0.3, band=(0.06, 0.06, 0.07)), ruff=(0.96, 0.62, 0.78),
                     earrings=((0.82, 0.84, 0.88), (0.20, 0.74, 0.70))),
+        face_shape=dict(chin=0.024, jaw=-0.10),
         expression=dict(EYE_Joy=0.5, MTH_Fun=0.6, BRW_Angry=0.3),
         colors=dict(jacket=(0.16, 0.30, 0.66), trim=(0.92, 0.80, 0.30), inner=WHITE,
                     pants=(0.16, 0.30, 0.66), shoes=(0.10, 0.10, 0.12), sole=(0.3, 0.3, 0.3),

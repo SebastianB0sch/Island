@@ -69,7 +69,9 @@ designs, with a cel-style material and ink outline in Unreal:
   reachable; they follow the written descriptions. `Tools/preview_anime.py <id> --portrait` renders the
   head-and-shoulders close-up used for the comparison.
 * **Faces**: each character's resting expression is baked from the VRoid face blendshapes after the art
-  (Chazz's scowl, Zane's stern eyes, Bastion's confident smile, Syrus's worried look, Crowler's grin).
+  (Chazz's scowl, Zane's stern eyes, Bastion's confident smile, Syrus's worried look, Crowler's grin), and
+  the face is reshaped towards it (longer faces and pointed chins for Zane, Chazz, Bastion and Jaden,
+  Crowler's long narrow face, Chumley's round one).
 * **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's spiky two-layer mop, Syrus's
   cyan spikes, Zane's long slate-teal hair, Chazz's black spikes, Chumley's puffed sides, long olive-blond
   hair for Alexis, shoulder-length brown (Jasmine) and black (Mindy) hair, Crowler's blond ponytail with a

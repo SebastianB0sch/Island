@@ -127,6 +127,38 @@ def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1
     me.update()
 
 
+def reshape_face(face, chin=0.0, jaw=0.0, cheeks=0.0):
+    """Face shape after the art (VRoid faces are round and soft; GX faces are longer with pointed chins):
+    chin lengthens the face below the eyes (m), jaw narrows (<0) or widens (>0) the lower face (fraction),
+    cheeks puffs the face out sideways around the mouth (Chumley). Weighted to zero at the face mesh's open
+    edge so it stays sealed to the neck."""
+    from scipy.spatial import cKDTree
+    me = face.data
+    co = np.array([v.co[:] for v in me.vertices])
+    count = {}
+    for p in me.polygons:
+        for ek in p.edge_keys:
+            count[ek] = count.get(ek, 0) + 1
+    rim = sorted({i for ek, n in count.items() if n == 1 for i in ek})
+    # only the skin's outer rim counts (eye / mouth parts are separate open shells): keep the lowest ring
+    rim_co = co[rim]
+    rim_co = rim_co[rim_co[:, 2] < np.percentile(co[:, 2], 25)]
+    d, _ = cKDTree(rim_co).query(co) if len(rim_co) else (np.full(len(co), 1.0), None)
+    w = np.clip(d / 0.035, 0, 1)
+    w = w * w * (3 - 2 * w)
+    eyes = _eyes(face)
+    ez = (eyes[0].z + eyes[1].z) / 2
+    lo = co[:, 2].min()
+    t = np.clip((ez - co[:, 2]) / max(ez - lo, 1e-3), 0, 1)          # 0 at the eyes .. 1 at the chin
+    new = co.copy()
+    new[:, 2] -= chin * t * w
+    new[:, 0] *= 1 + (jaw * t ** 1.5 + cheeks * np.sin(np.pi * np.clip(t * 1.3, 0, 1))) * w
+    if cheeks:
+        new[:, 1] -= cheeks * 0.25 * np.sin(np.pi * np.clip(t * 1.3, 0, 1)) * w * np.abs(co[:, 0]) / 0.09
+    me.vertices.foreach_set("co", new.ravel())
+    me.update()
+
+
 def thicken(obj, hc, copies=1, angle=9.0, scale=1.05):
     """Fuller hair: add copies of every strand turned about the head's vertical axis (alternating sides) and a
     little bigger, so the gaps between the spread strands close (the art's dense spiky manes)."""
@@ -427,6 +459,8 @@ def restyle(arm, meshes, entry, key, rig, log=print):
     alpha = {}
     face = next(m for m in meshes if m.name.startswith("Face"))
     hair = next(m for m in meshes if m.name.startswith("Hair"))
+    if entry.get("face_shape"):
+        reshape_face(face, **entry["face_shape"])
     if spec.get("source"):
         trim = spec.get("trim")
         if isinstance(trim, str):                    # named heights on this skeleton
