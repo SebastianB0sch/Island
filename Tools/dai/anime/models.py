@@ -58,6 +58,7 @@ for _s, _side in (("left", "l"), ("right", "r")):
 
 # material role from VRoid-style material names (…_Tops_01_CLOTH, …_HAIR, …_EyeIris_00_EYE, …)
 ROLES = (("tops", ("tops",)), ("bottoms", ("bottoms",)), ("shoes", ("shoes",)), ("iris", ("eyeiris",)),
+         ("mouth", ("facemouth",)),
          ("hair", ("_hair", "hair_")), ("skin", ("_skin",)))
 
 
@@ -128,8 +129,38 @@ def _select(objs, active):
     bpy.context.view_layer.objects.active = active
 
 
-def load(path, log=print):
-    """Import a base model. Returns (armature 'root', [meshes]) - T-pose, metres, facing -Y, UE bone names."""
+def target_names(path):
+    """{mesh name: [blendshape name per glTF morph target]} (VRoid keeps them in the mesh extras)."""
+    j = _gltf_json(path) or {}
+    out = {}
+    for m in j.get("meshes", []):
+        names = (m.get("extras") or {}).get("targetNames") or (m["primitives"][0].get("extras") or {}).get("targetNames")
+        if names:
+            out[m.get("name", "").split(".")[0]] = names
+    return out
+
+
+def _bake_expression(obj, names, expression):
+    """Mix VRoid blendshapes into the face's rest shape: {"BRW_Angry": 0.6, "EYE_Angry": 0.3, ...} (names after
+    "Fcl_", case-insensitive) - a character's resting expression (Chazz's scowl, Crowler's grin)."""
+    kb = obj.data.shape_keys.key_blocks
+    n = len(obj.data.vertices)
+    base = np.empty(n * 3)
+    kb[0].data.foreach_get("co", base)
+    co = base.copy()
+    for key, w in expression.items():
+        i = next((i for i, nm in enumerate(names) if nm.lower().endswith("fcl_" + key.lower())), None)
+        if i is None or i + 1 >= len(kb):
+            continue
+        tgt = np.empty(n * 3)
+        kb[i + 1].data.foreach_get("co", tgt)
+        co += (tgt - base) * w
+    return co
+
+
+def load(path, log=print, expression=None):
+    """Import a base model. Returns (armature 'root', [meshes]) - T-pose, metres, facing -Y, UE bone names.
+    expression: blendshape mix baked into the face (see _bake_expression)."""
     version, human = read_vrm(path)
     src = path
     if path.lower().endswith(".vrm"):
@@ -209,9 +240,16 @@ def load(path, log=print):
         p = nxt
     bpy.ops.object.mode_set(mode="OBJECT")
     arm.name = arm.data.name = "root"
+    names = target_names(path)
     for m in meshes:
         if m.data.shape_keys:
+            co = None
+            if expression and m.name.split(".")[0] in names:
+                co = _bake_expression(m, names[m.name.split(".")[0]], expression)
             m.shape_key_clear()
+            if co is not None:
+                m.data.vertices.foreach_set("co", co)
+                m.data.update()
     return arm, meshes
 
 
@@ -273,6 +311,7 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
         "shoes": col.get("boots") or col.get("shoes"),
         "hair": None if "hair" in tint else hair.get("color"),
         "iris": entry.get("face", {}).get("eyes", {}).get("iris"),
+        "mouth": col.get("lips"),                       # lipstick (Crowler)
     }
     neutral = {"tops": "jacket" in tint, "hair": "hair" in tint}
     done = {}
@@ -309,7 +348,7 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
                 if role == "hair" and g and hair.get("color2") and not neutral["hair"]:
                     grad = (hair["color2"], g[0], g[1])
                 _recolor(base_png, os.path.join(C.OUT_TEXTURES, rel + ".png"), target, gradient=grad,
-                         contrast=0.55 if role == "hair" else 1.0)
+                         contrast=0.55 if role == "hair" else 1.0, keep=0.35 if role == "mouth" else 0.0)
                 # "JacketTint" / "HairTint" in the slot name: Unreal recolours these per dorm / NPC
                 suffix = {"tops": "_JacketTint" if neutral["tops"] else "",
                           "hair": "_HairTint" if neutral["hair"] else ""}.get(role, "")
@@ -409,7 +448,7 @@ def build_model(cid, entry, key_name, log=print):
     base = entry["model"]
     spec = thirdparty.registry()["anime_models"][base]
     path = thirdparty.tp_path(spec["file"])
-    arm, meshes = load(path, log)
+    arm, meshes = load(path, log, entry.get("expression"))
     key = key_name(cid)
     palette.register({K.OUTLINE_MAT: dict(kind="outline", color=OUTLINE_COLOR)})
     preview_material(K.OUTLINE_MAT)

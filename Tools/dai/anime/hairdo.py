@@ -17,7 +17,7 @@ VRoid hair is built from separate strands (one mesh island each), so a style is 
   top_layer  dz: two-layer hair, everything above the head centre + dz in hair "color2" (Jaden)
 
 plus accessories built in place from the face landmarks: round glasses (Syrus), a round nose (Chumley), a
-frilled ruff and a ponytail band (Crowler).
+frilled ruff, crescent earrings and a ponytail band (Crowler).
 """
 
 import math
@@ -340,6 +340,22 @@ def nose(arm, face, color, size=0.012, name="Nose"):
     return _attach(mb, arm, {"head": 1.0})
 
 
+def earrings(arm, face, metal, stone, name="Earrings"):
+    """Crescent earrings with a round stone hanging from the ear lobes (Crowler's Duel Links portrait)."""
+    from ..geo import MeshBuilder
+    eyes = _eyes(face)
+    _, w, lo, hi = head_frame(face)
+    ez = (eyes[0].z + eyes[1].z) / 2
+    mb = MeshBuilder(name)
+    for s in (-1, 1):
+        c = (s * w * 0.50, hi.y - w * 0.12, ez - w * 0.40)
+        with mb.at(c, rot_x=90, rot=s * 75):
+            mb.torus((0, 0, 0), 0.011, 0.0022, metal, seg=16, tube_seg=5)
+        mb.sphere((c[0], c[1], c[2]), 0.0045, stone, seg=10, rings=8)
+        mb.cylinder((c[0], c[1], c[2] + 0.011), 0.001, 0.012, metal, seg=6)
+    return _attach(mb, arm, {"head": 1.0})
+
+
 def hair_band(arm, at, color, name="HairBand"):
     """Band round a ponytail (horizontal torus at `at`), following the head."""
     from ..geo import MeshBuilder
@@ -412,6 +428,10 @@ def restyle(arm, meshes, entry, key, rig, log=print):
         mat = register_accessory_material(f"M_Anime_{key}_HairBand", spec["ponytail"]["band"])
         p = spec["ponytail"]
         extra.append(hair_band(arm, Vector((0.0, hc.y + p.get("back", 0.10), rig.neck + p.get("tie", 0.06))), mat))
+    if spec.get("earrings"):
+        metal, stone = spec["earrings"]
+        extra.append(earrings(arm, face, register_accessory_material(f"M_Anime_{key}_EarringMetal", metal),
+                              register_accessory_material(f"M_Anime_{key}_EarringStone", stone)))
     if spec.get("nose"):
         mat = register_accessory_material(f"M_Anime_{key}_Nose", spec["nose"])
         extra.append(nose(arm, face, mat))

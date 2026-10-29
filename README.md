@@ -58,14 +58,18 @@ designs, with a cel-style material and ink outline in Unreal:
   shirt with white uniform trousers and red sneakers; Syrus's yellow shirt; Chumley's inverted, mostly
   white Slifer uniform; Chazz's black coat with grey trim over a purple shirt, dark blue trousers, brown
   shoes; Crowler's regal Obelisk coat with gold trim and pink ruffles.
-* **Checked against official art** where it was reachable from the build environment: Konami's *Tag Force*
-  portraits of Alexis, Syrus, Zane and the generic Slifer student, Chumley's in-game duel portrait and the
-  *Tag Force* cover art of Jaden and Chazz (found in public GitHub mod / recompilation repositories; used as
-  references only, not redistributed here). Colours were sampled from them (Slifer red, the periwinkle
-  Obelisk edging, hair and eye colours) and they set the flared, white-lined collars, the black / grey
-  turtlenecks, Jaden's orange-over-brown two-layer hair, Chazz's mauve shirt and Chumley's koala puffs and
-  round nose. Bastion, Jasmine, Mindy and Crowler follow the written design descriptions only.
-  `Tools/preview_anime.py <id> --portrait` renders a head-and-shoulders close-up for the comparison.
+* **Checked against official art** where it was reachable from the build environment (public GitHub mod /
+  fan-site repositories; used as references only, not redistributed here): Konami's *Tag Force* portraits
+  of Alexis, Syrus, Zane and the generic Slifer student, the *Tag Force* cover art of Jaden and Chazz,
+  Chumley's in-game duel portrait and the *Duel Links* portraits of Bastion and Crowler. Colours were sampled
+  from them (Slifer red, the periwinkle Obelisk edging, hair and eye colours) and they set the flared,
+  white-lined collars, the black / grey / green turtlenecks, Jaden's orange-over-brown two-layer hair,
+  Chazz's mauve shirt, Chumley's koala puffs and round nose, Bastion's swept-up hair and gold collar and
+  Crowler's blond bob, crescent earrings and purple lipstick. No official art of Jasmine or Mindy was
+  reachable; they follow the written descriptions. `Tools/preview_anime.py <id> --portrait` renders the
+  head-and-shoulders close-up used for the comparison.
+* **Faces**: each character's resting expression is baked from the VRoid face blendshapes after the art
+  (Chazz's scowl, Zane's stern eyes, Bastion's confident smile, Syrus's worried look, Crowler's grin).
 * **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's spiky two-layer mop, Syrus's
   cyan spikes, Zane's long slate-teal hair, Chazz's black spikes, Chumley's puffed sides, long olive-blond
   hair for Alexis, shoulder-length brown (Jasmine) and black (Mindy) hair, Crowler's blond ponytail with a

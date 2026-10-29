@@ -15,8 +15,9 @@ procedural fallback (head.py / hair.py / body.py / face.py) builds the character
   face       face.py spec (eyes / brows / mouth / blush)
   extras     accessories: "glasses", "ruff", "bow"
   outfit     the uniform tailored onto a base model's body (outfit.py: jacket / shirt / pants / skirt / boots)
-  hairdo     restyle of the base model's hair (hairdo.py: spike, source + long_only, gradient, glasses,
-             ruff)
+  hairdo     restyle of the base model's hair and head accessories (hairdo.py: spike, source + long_only,
+             trim, ponytail, gradient, top_layer, glasses, nose, earrings, ruff)
+  expression resting expression baked from the VRoid face blendshapes ({"BRW_Angry": 0.6, ...})
   tint       generic students: which materials Unreal recolours at runtime ("jacket" by dorm, "hair")
   lines      what they say when you talk to them (original lines)
   spawn      which layout.json NPC marker they take over: {"group", "dorm", "nth", "max_wander"}
@@ -106,6 +107,7 @@ CAST = {
         # Tag Force cover art: orange-brown top layer over dark brown, big outward spikes
         hairdo=dict(spike=dict(lift=0.35, up=0.0, length=1.45, front_lift=0.12, front_length=1.2, crown_lift=0.15, volume=1.1),
                     top_layer=-0.005),
+        expression=dict(MTH_Fun=0.35, BRW_Angry=0.25),
         colors=dict(jacket=SLIFER_RED, trim=(0.10, 0.10, 0.12), inner=(0.08, 0.08, 0.09),
                     pants=UNIFORM_PANTS, shoes=(0.80, 0.10, 0.08), sole=(0.95, 0.93, 0.88)),
         hair=dict(style="jaden", color=(0.27, 0.19, 0.15), color2=(0.90, 0.49, 0.15)),
@@ -123,6 +125,7 @@ CAST = {
         outfit=dict(_academy(SLIFER_RED, (0.58, 0.12, 0.13), (0.98, 0.84, 0.22), UNIFORM_PANTS, open_=0.25)),
         hairdo=dict(spike=dict(lift=0.45, up=0.1, length=1.45, front_lift=0.25, front_length=1.2, crown_lift=0.3, volume=1.08),
                     glasses=(0.30, 0.30, 0.32)),
+        expression=dict(BRW_Sorrow=0.45, EYE_Surprised=0.3),
         colors=dict(jacket=SLIFER_RED, trim=WHITE, inner=(0.30, 0.55, 0.85),
                     pants=(0.70, 0.66, 0.55), shoes=(0.20, 0.30, 0.55), sole=WHITE),
         hair=dict(style="syrus", color=(0.68, 0.92, 0.95), color2=(0.44, 0.70, 0.72)),
@@ -144,6 +147,7 @@ CAST = {
         hairdo=dict(spike=dict(lift=0.0, up=0.2, length=1.1, front_lift=0.0, front_length=1.0, crown_lift=0.0,
                                side_lift=0.55, volume=1.1),
                     nose=(1.0, 0.66, 0.52)),
+        expression=dict(BRW_Angry=0.5, EYE_Joy=0.2),
         colors=dict(jacket=SLIFER_RED, trim=WHITE, inner=(0.92, 0.90, 0.84),
                     pants=(0.30, 0.30, 0.34), shoes=(0.35, 0.25, 0.18), sole=(0.8, 0.78, 0.7)),
         hair=dict(style="chumley", color=(0.30, 0.20, 0.19)),
@@ -159,12 +163,18 @@ CAST = {
     "bastion": dict(
         name="Bastion Misawa", dorm="ra", scale=1.04, model="vroid_c",
         body=dict(open=0.35),
-        outfit=dict(_academy(RA_YELLOW, RA_YELLOW, (0.95, 0.95, 0.95), (0.22, 0.24, 0.30), open_=0.1,
-                              coat=dict(buttons=dict(color=WHITE, n=1)))),
+        # Duel Links portrait: green turtleneck under a gold-collared Ra Yellow jacket
+        outfit=dict(_academy(RA_YELLOW, RA_YELLOW, (0.36, 0.58, 0.30), (0.22, 0.24, 0.30), open_=0.3,
+                              coat=dict(collar_color=(0.86, 0.74, 0.40), lining=(0.86, 0.74, 0.40),
+                                        collar_flare=0.04)),
+                    shirt=dict(color=(0.36, 0.58, 0.30), sleeves="short", length="waist", turtleneck=True)),
+        hairdo=dict(spike=dict(lift=0.3, up=1.2, length=1.2, front_lift=0.85, front_length=1.05, crown_lift=0.2,
+                               volume=1.06)),
+        expression=dict(BRW_Angry=0.3, EYE_Angry=0.3, MTH_Fun=0.4),
         colors=dict(jacket=RA_YELLOW, trim=WHITE, inner=(0.95, 0.95, 0.95),
                     pants=(0.22, 0.24, 0.30), shoes=(0.20, 0.16, 0.14), sole=(0.25, 0.22, 0.2)),
-        hair=dict(style="bastion", color=(0.10, 0.09, 0.12)),
-        face=_face(eyes=dict(iris=(0.30, 0.30, 0.34), w=0.29, h=0.36),
+        hair=dict(style="bastion", color=(0.34, 0.34, 0.37)),
+        face=_face(eyes=dict(iris=(0.45, 0.48, 0.52), w=0.29, h=0.36),
                    brows=dict(color=(0.08, 0.07, 0.09), angle=2.0), mouth=dict(kind="smile", w=0.10)),
         lines=["I've built six decks, one for every attribute. Statistically, one of them should beat you.",
                "My dorm room walls are covered in equations. The cleaning staff have given up.",
@@ -180,6 +190,7 @@ CAST = {
                            open_=0.7, collar=0.09)),
         # Tag Force cover art: big black spikes standing up and back
         hairdo=dict(spike=dict(lift=0.25, up=0.3, length=1.45, front_lift=0.0, front_length=1.15, crown_lift=0.25, volume=1.12)),
+        expression=dict(BRW_Angry=0.9, EYE_Angry=0.5, MTH_Angry=0.25),
         colors=dict(jacket=(0.07, 0.07, 0.09), trim=(0.30, 0.30, 0.34), inner=(0.10, 0.10, 0.12),
                     pants=(0.08, 0.08, 0.10), shoes=(0.36, 0.22, 0.12), sole=(0.2, 0.2, 0.22)),
         hair=dict(style="chazz", color=(0.12, 0.12, 0.14), color2=(0.16, 0.16, 0.22)),
@@ -198,6 +209,7 @@ CAST = {
                           coat=dict(tails=0.25, loose=0.012, collar_color=WHITE, collar_trim=OBELISK_TRIM)),
                     shirt=dict(color=(0.07, 0.07, 0.08), sleeves="short", turtleneck=True)),
         hairdo=dict(spike=dict(lift=0.0, up=0.0, length=1.6, front_lift=0.0, front_length=1.15, crown_lift=0.0)),
+        expression=dict(BRW_Angry=0.5, EYE_Angry=0.45),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=(0.16, 0.18, 0.24),
                     pants=(0.12, 0.13, 0.18), shoes=(0.10, 0.10, 0.12), sole=(0.3, 0.3, 0.32)),
         hair=dict(style="zane", color=(0.25, 0.34, 0.40), color2=(0.26, 0.42, 0.52)),
@@ -214,6 +226,7 @@ CAST = {
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
+        expression=dict(MTH_Fun=0.3),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
         hair=dict(style="alexis", color=(0.88, 0.78, 0.46), color2=(0.74, 0.65, 0.40)),
@@ -231,6 +244,7 @@ CAST = {
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         hairdo=dict(),
+        expression=dict(MTH_Fun=0.3),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
         hair=dict(style="long_wavy", color=(0.40, 0.24, 0.13)),
@@ -245,6 +259,7 @@ CAST = {
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         hairdo=dict(source="vroid_b", long_only=True, trim="shoulder", drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
+        expression=dict(MTH_Fun=0.35, EYE_Surprised=0.2),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
         hair=dict(style="long_straight", color=(0.06, 0.06, 0.08)),
@@ -263,10 +278,13 @@ CAST = {
                              coat=dict(buttons=dict(color=(0.92, 0.78, 0.30), n=4),
                                        shoulder=dict(color=(0.96, 0.62, 0.78), w=0.04)))),
         hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"),
-                    ponytail=dict(k=0.3, band=(0.06, 0.06, 0.07)), ruff=(0.96, 0.62, 0.78)),
+                    ponytail=dict(k=0.3, band=(0.06, 0.06, 0.07)), ruff=(0.96, 0.62, 0.78),
+                    earrings=((0.82, 0.84, 0.88), (0.20, 0.74, 0.70))),
+        expression=dict(EYE_Joy=0.5, MTH_Fun=0.6, BRW_Angry=0.3),
         colors=dict(jacket=(0.16, 0.30, 0.66), trim=(0.92, 0.80, 0.30), inner=WHITE,
-                    pants=(0.16, 0.30, 0.66), shoes=(0.10, 0.10, 0.12), sole=(0.3, 0.3, 0.3)),
-        hair=dict(style="crowler", color=(0.92, 0.82, 0.52), color2=(0.80, 0.68, 0.38)),
+                    pants=(0.16, 0.30, 0.66), shoes=(0.10, 0.10, 0.12), sole=(0.3, 0.3, 0.3),
+                    lips=(0.50, 0.30, 0.62)),
+        hair=dict(style="crowler", color=(0.96, 0.88, 0.58), color2=(0.80, 0.68, 0.38)),
         face=_face(eyes=dict(iris=(0.38, 0.30, 0.52), w=0.26, h=0.26, shape="sharp", spacing=0.35),
                    brows=dict(color=(0.75, 0.62, 0.35), angle=-6.0, arch=1.6),
                    mouth=dict(kind="lips", w=0.09, lip_color=(0.70, 0.18, 0.45)), face_extras=["eyeshadow", "nose"]),

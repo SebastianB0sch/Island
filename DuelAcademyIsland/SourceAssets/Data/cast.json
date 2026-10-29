@@ -530,7 +530,7 @@
     "M_Anime_Crowler_Jacket",
     "M_Anime_Outline",
     "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
-    "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
+    "M_Anime_Crowler_M00_000_00_FaceMouth_00_FACE",
     "M_Anime_Crowler_M00_000_00_EyeIris_00_EYE",
     "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE",
     "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE",
@@ -546,6 +546,8 @@
     "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_05",
     "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_06",
     "M_Anime_Crowler_HairBand",
+    "M_Anime_Crowler_EarringMetal",
+    "M_Anime_Crowler_EarringStone",
     "M_Anime_Crowler_Ruff"
    ],
    "file": "Meshes/Characters/Anime/SK_Anime_Crowler.fbx"
@@ -1612,6 +1614,46 @@
    "strength": 1.0,
    "opacity": 1.0
   },
+  "M_Anime_Crowler_EarringMetal": {
+   "kind": "toon",
+   "color": [
+    0.82,
+    0.84,
+    0.88
+   ],
+   "rough": 0.6,
+   "fill": 0.45,
+   "color_linear": [
+    0.6382832153523972,
+    0.6738595407338318,
+    0.748414103499371
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
+  "M_Anime_Crowler_EarringStone": {
+   "kind": "toon",
+   "color": [
+    0.2,
+    0.74,
+    0.7
+   ],
+   "rough": 0.6,
+   "fill": 0.45,
+   "color_linear": [
+    0.033104766570885055,
+    0.5070785101492276,
+    0.44798841244188325
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
   "M_Anime_Crowler_F00_000_Hair_00_HAIR": {
    "kind": "toon",
    "color": [
@@ -1689,6 +1731,28 @@
    "source_material": "M00_000_00_EyeIris_00_EYE",
    "base": "Characters/Crowler/T_Crowler_M00_000_00_EyeIris_00_EYE",
    "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0
+  },
+  "M_Anime_Crowler_M00_000_00_FaceMouth_00_FACE": {
+   "kind": "toon",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_FaceMouth_00_FACE",
+   "base": "Characters/Crowler/T_Crowler_M00_000_00_FaceMouth_00_FACE",
    "color_linear": [
     1.0,
     1.0,
