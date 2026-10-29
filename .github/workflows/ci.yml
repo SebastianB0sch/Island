@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Pipeline checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: No merge conflict markers
+        run: |
+          if git grep -nI -E '^(<<<<<<< |>>>>>>> |=======$)' -- . ':!*.md'; then
+            echo "::error::merge conflict markers found"; exit 1
+          fi
+      - name: Python compiles (pipeline + editor scripts)
+        run: python -m compileall -q Tools DuelAcademyIsland/Content/Python
+      - name: JSON data and registry parse
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          bad = 0
+          for p in list(pathlib.Path("Tools/thirdparty/registry").glob("*.json")) + list(pathlib.Path("DuelAcademyIsland/SourceAssets/Data").glob("*.json")):
+              try:
+                  json.loads(p.read_text(encoding="utf-8"))
+              except Exception as e:
+                  print(f"::error file={p}::{e}"); bad += 1
+          sys.exit(bad)
+          PY

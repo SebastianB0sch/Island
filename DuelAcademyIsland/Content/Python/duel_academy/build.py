@@ -56,7 +56,7 @@ def build_island(import_assets=True, interactive=True):
                "Compile the project (open the .uproject and accept the rebuild prompt) and rebuild.")
 
     n_inst = len(layout["instances"])
-    work = (7 + len(manifest) + n_inst + 12) if import_assets else (n_inst + 12)
+    work = (8 + len(manifest) + n_inst + 12) if import_assets else (n_inst + 12)
     with unreal.ScopedSlowTask(work, "Building Duel Academy Island...") as slow:
         slow.make_dialog(True)
 
@@ -78,6 +78,8 @@ def build_island(import_assets=True, interactive=True):
             importer.cleanup_imported_materials()
             slow.enter_progress_frame(1, "Importing the student character")
             importer.import_character(instances)
+            slow.enter_progress_frame(1, "Importing the anime cast")
+            importer.import_cast(masters)
             unreal.EditorAssetLibrary.save_directory(C.ROOT, only_if_is_dirty=True, recursive=True)
         else:
             mpc = C.load(f"{C.MAT_DIR}/MPC_DuelAcademy")

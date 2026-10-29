@@ -3,3 +3,5 @@
 *.wav binary
 *.uasset binary
 *.umap binary
+*.vrm binary
+*.glb binary

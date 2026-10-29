@@ -545,6 +545,8 @@ class Layout:
     # ------------------------------------------------------------------ write
     def write(self):
         os.makedirs(C.OUT_DATA, exist_ok=True)
+        from .anime import cast as anime_cast
+        anime_cast.assign_npcs(self.npcs)          # who stands where (named cast + generic looks)
         hx = C.HALF
         cull = {
             "SM_GrassClump_A": [3000, 6000], "SM_Fern_A": [4000, 8000], "SM_Bush_A": [12000, 20000],

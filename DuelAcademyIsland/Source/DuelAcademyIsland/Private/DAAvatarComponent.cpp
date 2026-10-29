@@ -53,26 +53,19 @@ UStaticMeshComponent* UDAAvatarComponent::MakePart(const TCHAR* MeshName, UScene
 	return C;
 }
 
-bool UDAAvatarComponent::SetupSkeletal()
+namespace
 {
-	const FString Folder = TEXT("/Game/DuelAcademy/Characters/");
-	USkeletalMesh* Mesh = LoadObject<USkeletalMesh>(nullptr, *(Folder + TEXT("SK_Student.SK_Student")), nullptr, LOAD_NoWarn | LOAD_Quiet);
-	if (!Mesh)
+	const TCHAR* CharacterFolder = TEXT("/Game/DuelAcademy/Characters/");
+
+	template <typename T>
+	T* LoadCharacterAsset(const FString& Name)
 	{
-		return false;
+		return LoadObject<T>(nullptr, *FString::Printf(TEXT("%s%s.%s"), CharacterFolder, *Name, *Name), nullptr, LOAD_NoWarn | LOAD_Quiet);
 	}
-	for (const TCHAR* State : { TEXT("Idle"), TEXT("Walk"), TEXT("Run"), TEXT("Jump"), TEXT("Swim"), TEXT("Wave") })
-	{
-		const FString Name = FString::Printf(TEXT("A_Student_%s"), State);
-		if (UAnimSequence* Seq = LoadObject<UAnimSequence>(nullptr, *(Folder + Name + TEXT(".") + Name), nullptr, LOAD_NoWarn | LOAD_Quiet))
-		{
-			Anims.Add(FName(State), Seq);
-		}
-	}
-	if (!Anims.Contains(TEXT("Idle")))
-	{
-		return false;   // a mesh without animations would T-pose; keep the procedural avatar
-	}
+}
+
+void UDAAvatarComponent::FinishSkeletal(USkeletalMesh* Mesh)
+{
 	SkelComp = NewObject<USkeletalMeshComponent>(GetOwner(), NAME_None, RF_Transient);
 	SkelComp->SetupAttachment(this);
 	SkelComp->SetSkeletalMeshAsset(Mesh);
@@ -94,6 +87,81 @@ bool UDAAvatarComponent::SetupSkeletal()
 		}
 	}
 	SetRelativeScale3D(FVector(BodyScale));
+}
+
+bool UDAAvatarComponent::SetupCast()
+{
+	if (CastMesh.IsEmpty() || AnimGroup.IsEmpty())
+	{
+		return false;
+	}
+	USkeletalMesh* Mesh = LoadCharacterAsset<USkeletalMesh>(CastMesh);
+	if (!Mesh)
+	{
+		return false;
+	}
+	for (const TCHAR* State : { TEXT("Idle"), TEXT("Walk"), TEXT("Run"), TEXT("Jump"), TEXT("Fall"), TEXT("Land"), TEXT("Swim"),
+		TEXT("Wave"), TEXT("Duel"), TEXT("Sit"), TEXT("Yes"), TEXT("No"), TEXT("Clap"), TEXT("Interact") })
+	{
+		if (UAnimSequence* Seq = LoadCharacterAsset<UAnimSequence>(FString::Printf(TEXT("A_Anime_%s_%s"), *AnimGroup, State)))
+		{
+			Anims.Add(FName(State), Seq);
+		}
+	}
+	if (!Anims.Contains(TEXT("Idle")))
+	{
+		Anims.Reset();
+		return false;
+	}
+	FinishSkeletal(Mesh);
+	bAnimeCast = true;
+	if (bShowDuelDisk)
+	{
+		if (USkeletalMesh* DiskMesh = LoadCharacterAsset<USkeletalMesh>(FString::Printf(TEXT("SK_Anime_%s_DuelDisk"), *AnimGroup)))
+		{
+			// same skeleton: the disk follows the body's pose
+			DiskComp = NewObject<USkeletalMeshComponent>(GetOwner(), NAME_None, RF_Transient);
+			DiskComp->SetupAttachment(SkelComp);
+			DiskComp->SetSkeletalMeshAsset(DiskMesh);
+			DiskComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			DiskComp->SetCanEverAffectNavigation(false);
+			DiskComp->RegisterComponent();
+			DiskComp->SetLeaderPoseComponent(SkelComp);
+		}
+	}
+	return true;
+}
+
+bool UDAAvatarComponent::SetupSkeletal()
+{
+	if (SetupCast())
+	{
+		return true;
+	}
+	USkeletalMesh* Mesh = LoadCharacterAsset<USkeletalMesh>(TEXT("SK_Student"));
+	if (!Mesh)
+	{
+		return false;
+	}
+	for (const TCHAR* State : { TEXT("Idle"), TEXT("Walk"), TEXT("Run"), TEXT("Jump"), TEXT("Swim"), TEXT("Wave") })
+	{
+		if (UAnimSequence* Seq = LoadCharacterAsset<UAnimSequence>(FString::Printf(TEXT("A_Student_%s"), State)))
+		{
+			Anims.Add(FName(State), Seq);
+		}
+	}
+	if (!Anims.Contains(TEXT("Idle")))
+	{
+		return false;   // a mesh without animations would T-pose; keep the procedural avatar
+	}
+	FinishSkeletal(Mesh);
+	// the editor import scales SK_Student's walk / run clips to these speeds (importer.py REF_SPEED)
+	WalkAnimSpeed = 300.f;
+	RunAnimSpeed = 600.f;
+	if (RunThreshold <= 0.f)
+	{
+		RunThreshold = 560.f;   // the player walks at 450, sprints at 950
+	}
 	return true;
 }
 
@@ -105,38 +173,49 @@ UAnimSequence* UDAAvatarComponent::FindAnim(FName State) const
 
 void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool bInAir)
 {
+	static const FName NameIdle(TEXT("Idle"));
+	static const FName NameWalk(TEXT("Walk"));
+	static const FName NameRun(TEXT("Run"));
 	static const FName NameJump(TEXT("Jump"));
+	static const FName NameFall(TEXT("Fall"));
+	static const FName NameSwim(TEXT("Swim"));
 	static const FName NameWave(TEXT("Wave"));
-	FName Want = TEXT("Idle");
+	static const FName NameDuel(TEXT("Duel"));
+	const float VerticalSpeed = GetOwner() ? GetOwner()->GetVelocity().Z : 0.f;
+	FName Want = NameIdle;
 	float Rate = 1.f;
+	bool bLoop = true;
 	if (SwimAlpha > 0.5f)
 	{
-		Want = FindAnim(TEXT("Swim")) ? FName(TEXT("Swim")) : FName(TEXT("Walk"));
-		Rate = 0.7f;
+		Want = FindAnim(NameSwim) ? NameSwim : NameWalk;
+		Rate = FindAnim(NameSwim) ? 1.f : 0.7f;
 	}
-	else if (bInAir && FindAnim(TEXT("Jump")))
+	else if (bInAir && FindAnim(NameJump))
 	{
-		Want = TEXT("Jump");
+		// rising: the jump take (once); falling: the fall loop when there is one
+		Want = (VerticalSpeed < -50.f && FindAnim(NameFall)) ? NameFall : NameJump;
+		bLoop = Want == NameFall;
 	}
-	else if (GroundSpeed > RunThreshold && FindAnim(TEXT("Run")))
+	else if (GroundSpeed > (RunThreshold > 0.f ? RunThreshold : (WalkAnimSpeed + RunAnimSpeed) * 0.5f + 60.f) && FindAnim(NameRun))
 	{
-		Want = TEXT("Run");
-		Rate = FMath::Clamp(GroundSpeed / FMath::Max(RunAnimSpeed, 1.f), 0.7f, 2.0f);
+		Want = NameRun;
+		Rate = FMath::Clamp(GroundSpeed / FMath::Max(RunAnimSpeed, 1.f), 0.8f, 3.f);   // the player sprints at 950 cm/s
 	}
-	else if (GroundSpeed > 20.f && FindAnim(TEXT("Walk")))
+	else if (GroundSpeed > 20.f && FindAnim(NameWalk))
 	{
-		Want = TEXT("Walk");
+		Want = NameWalk;
 		Rate = FMath::Clamp(GroundSpeed / FMath::Max(WalkAnimSpeed, 1.f), 0.45f, 2.0f);
 	}
-	else if (DuelPoseAlpha > 0.5f && FindAnim(TEXT("Wave")))
+	else if (DuelPoseAlpha > 0.5f && (FindAnim(NameDuel) || FindAnim(NameWave)))
 	{
-		Want = TEXT("Wave");
+		Want = FindAnim(NameDuel) ? NameDuel : NameWave;
+		bLoop = Want == NameDuel;
 	}
 	if (Want != CurrentAnim)
 	{
 		if (UAnimSequence* Seq = FindAnim(Want))
 		{
-			SkelComp->PlayAnimation(Seq, Want != NameJump && Want != NameWave);
+			SkelComp->PlayAnimation(Seq, bLoop);
 			CurrentAnim = Want;
 		}
 	}
@@ -189,14 +268,20 @@ void UDAAvatarComponent::ApplyColours()
 {
 	if (SkelComp)
 	{
+		if (bAnimeCast && !bDormTint)
+		{
+			return;   // named characters keep their own colours
+		}
 		if (JacketMaterials.Num() == 0)
 		{
 			const TArray<FName> Slots = SkelComp->GetMaterialSlotNames();
 			for (int32 i = 0; i < Slots.Num(); ++i)
 			{
 				const FString SlotName = Slots[i].ToString().ToLower();
-				const bool bJacket = JacketSlotKeywords.ContainsByPredicate([&SlotName](const FString& K) { return SlotName.Contains(K); });
-				const bool bHair = SlotName.Contains(TEXT("hair"));
+				// anime cast: only the neutral "...JacketTint" / "...HairTint" slots; SK_Student: keyword match
+				const bool bJacket = bAnimeCast ? SlotName.Contains(TEXT("jackettint"))
+					: JacketSlotKeywords.ContainsByPredicate([&SlotName](const FString& K) { return SlotName.Contains(K); });
+				const bool bHair = bAnimeCast ? SlotName.Contains(TEXT("hairtint")) : SlotName.Contains(TEXT("hair"));
 				if (!bJacket && !bHair)
 				{
 					continue;

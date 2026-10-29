@@ -76,7 +76,7 @@ def usage():
             for key in ("file", "albedo", "normal", "arm", "rough"):
                 if isinstance(spec.get(key), str):
                     label = {"textures": f"texture {name}", "terrain": f"terrain layer {name}",
-                             "hdri": f"sky ({name})"}.get(section, name)
+                             "hdri": f"sky ({name})", "anime_models": f"anime cast base model {name}"}.get(section, name)
                     add(spec[key], label)
     return {k: sorted(v) for k, v in uses.items()}
 
@@ -108,7 +108,9 @@ def write(path=None, log=print):
         "",
         "## Third-party assets",
         "",
-        "All third-party art below is **CC0 / public domain** or **CC-BY** (attribution given here).",
+        "All third-party art below is **CC0 / public domain**, **CC-BY** (attribution given here) or, for the",
+        "VRoid sample avatars the anime cast is built from, the **VRoid Hub conditions of use** embedded in each",
+        "model (modification and redistribution allowed, credit not required).",
         "Every folder keeps a `SOURCE.txt` with the download URLs, license evidence and file hashes.",
         "Paths are relative to `Tools/thirdparty/`.",
         "",

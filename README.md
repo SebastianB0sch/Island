@@ -37,11 +37,36 @@ The exact architecture of the anime's buildings was never published, so every bu
 faithful-in-spirit interpretation of the show's style (colours, silhouettes, dorm hierarchy, the
 Egyptian-god theming), not a copy of any copyrighted asset. All card names in the card shop are original.
 
+## The cast
+
+![Anime cast](Docs/renders/cast.jpg)
+
+*Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy and Dr. Crowler (Cycles preview).*
+
+Everyone on the island is an **anime character model**: the VRoid sample avatars (VRoid Project / pixiv,
+whose terms allow modification and redistribution), dressed by the pipeline in Duel Academy colours —
+dorm jackets, hair and eye colours per character — with a cel-style material and ink outline in Unreal. The
+GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra Yellow,
+Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on the
+arena field) and have their own lines; every other student gets a generic look tinted by dorm.
+
+The bones are renamed to the **UE5 Mannequin** scheme (`pelvis`, `spine_01`, `upperarm_l` …), so the cast plays
+CC0 Quaternius animation takes retargeted onto each model (idle, walk, run, jump / fall / land, wave, yes / no,
+sit, clap, interact) plus hand-authored duel-stance and swim takes — and Unreal's IK Retargeter auto-maps the
+skeletons to Manny/Quinn if you want the engine's own animations.
+
+**Using your own models.** The likenesses are limited by what is freely redistributable: the base models'
+hairstyles and outfits are only recoloured. Any rigged humanoid **VRM / glTF / FBX** (VRoid Hub, Sketchfab,
+Fab, a model you made in VRoid Studio …) can replace them: put it in `Tools/thirdparty/<pack>/<asset>/` with
+a `SOURCE.txt`, register it under `"anime_models"` in `Tools/thirdparty/registry/anime.json`, point the
+character's `model` at it in `Tools/dai/anime/cast.py` and run `Tools/build_island.py cast`. Check the
+model's license allows redistribution before committing it.
+
 ## Gameplay features
 
-* Third-person student — a rigged, skeletal-animated CC0 character (idle, walk, run, jump, wave and
-  **swimming**; a procedural avatar is the fallback when no character is imported) — switch your **dorm jacket**
-  (Slifer Red / Ra Yellow / Obelisk Blue / Society of Light white) with **J**; NPC students wear theirs.
+* Third-person anime student (the cast's generic boy) — switch your **dorm jacket**
+  (Slifer Red / Ra Yellow / Obelisk Blue / Society of Light white) with **J**; NPC students wear theirs. The
+  older CC0 low-poly student and a procedural avatar remain as fallbacks when no cast is imported.
 * Location banners + "**New location discovered**" tracking (17 named locations), compass, minimap.
 * **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker.
 * **Holographic duels** on the Grand Duel Arena field, the gym practice fields and the beach court.
@@ -105,6 +130,9 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/textures.py           detail/normal maps from the photo sets (procedural fallback), terrain layers
   dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction
   dai/character.py          rigged third-party student -> SK_Student + A_Student_<State> FBX
+  dai/anime/                anime cast: VRM/glTF base models -> UE5-Mannequin-named skeletons, dorm
+                            recolours, ink outlines, CC0 takes retargeted onto every skeleton, cast.json
+                            (cast.py = who is who; a procedural fallback builds anyone without a model)
   dai/credits.py            CREDITS.md from the SOURCE.txt files
   thirdparty/               curated CC0 / CC-BY source assets + registry/*.json
   dai/audio.py              synthesized seamless ambience loops and UI sounds
@@ -140,9 +168,11 @@ DuelAcademyIsland/          the Unreal Engine 5.8 project
 ```bash
 python3.13 -m venv .venv && .venv/bin/pip install bpy numpy scipy pillow   # Blender 5.2 as a module
 npm install -g @gltf-transform/cli                 # optional: decodes meshopt-compressed glTF downloads
-.venv/bin/python Tools/build_island.py            # terrain, meshes, textures, audio, layout
+.venv/bin/python Tools/build_island.py            # textures, terrain, meshes, audio, layout, cast
 .venv/bin/python Tools/build_island.py render     # preview renders -> Docs/renders
 .venv/bin/python Tools/preview_asset.py academy   # iterate on one location
+.venv/bin/python Tools/build_island.py cast       # rebuild the anime cast only
+.venv/bin/python Tools/preview_anime.py jaden alexis --state Walk --frame 10   # cast preview render
 ```
 
 Edit `Tools/dai/config.py` (positions, heights, paths), a location module in `Tools/dai/assets/`, or

@@ -288,9 +288,21 @@ class Placer:
         enum = getattr(unreal, "DADorm", None)
         if cls is None or enum is None:
             return
+        try:
+            cast = C.load_json("cast.json").get("meshes", {})
+        except Exception:  # noqa: BLE001
+            cast = {}
         for n in self.layout["npcs"]:
-            a = self.spawn(cls, self.loc(n["loc"]), self.yaw(n["yaw"]), f"Student_{n['dorm']}", f"Gameplay/npcs")
+            c = cast.get(n.get("cast", ""), {})
+            label = n.get("name", f"Student_{n['dorm']}").replace(" ", "_").replace(".", "")
+            a = self.spawn(cls, self.loc(n["loc"]), self.yaw(n["yaw"]), label, "Gameplay/npcs")
             C.set_props(a, dorm=getattr(enum, n["dorm"].upper(), enum.SLIFER), wander_radius=float(n.get("wander", 800.0)))
+            if c:
+                # anime cast member (see Tools/dai/anime): mesh, skeleton group, name and dialogue
+                C.set_props(a, cast_mesh=c["name"], anim_group=c["group"], dorm_tint=bool(n.get("tint", True)),
+                            body_scale=float(n.get("scale", c.get("scale", 1.0))))
+                if n.get("name"):
+                    C.set_props(a, display_name=n["name"], lines=list(n.get("lines", [])))
 
     def specials(self):
         beam_cls = C.native_class("DALighthouseBeam")

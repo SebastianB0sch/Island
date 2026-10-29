@@ -1,0 +1,28 @@
+asset_id: quaternius_astronaut
+category: characters (animation source)
+description: Rigged + animated low-poly astronaut from Quaternius's Ultimate Animated Character pack (43-bone humanoid
+             rig; Idle, Walk, Run, Jump, Jump_Idle, Jump_Land, Wave, Yes, No, Duck, Punch, HitReact, Death, ... 18 takes).
+             Only the skeleton motion is used: the takes are retargeted onto the chibi cast skeleton
+             (Tools/dai/chibi/retarget.py); the astronaut mesh itself is not exported.
+author: Quaternius (https://quaternius.com)
+license: CC0 1.0 Universal (public domain dedication)
+upstream source page: https://poly.pizza/m/0D54W8yfrA
+upstream file: https://static.poly.pizza/f06659f2-e505-43df-a3db-84faec811a57.glb
+               (sha256 9127bc1c51a8b63d2f9c9c119e26824d0811cd113d9a79f6cda65f0787e8a91f, as recorded by the mirror below)
+downloaded: 2026-10-28
+
+downloaded from:
+  - npm package @netforge/asset-library-files@0.2.0
+    https://registry.npmjs.org/@netforge/asset-library-files/-/asset-library-files-0.2.0.tgz
+    file: package/library/lowpoly/astronaut.glb  (meshopt-compressed GLB, decoded by the pipeline with glTF-Transform)
+    sha256 0a669622994b8de6fc0c577fd480f0e393798525bb4c5e052c7a245b0baa203c (matches library/index.json:
+    "lowpoly/astronaut.glb", 8606 triangles, 18 animations)
+  - per-asset upstream page and file: npm package @netforge/asset-library@0.2.0, manifest/lowpoly.json,
+    id "style.lowpoly.astronaut" (pack "quaternius_poly_pizza")
+
+license evidence (package/NOTICE and manifest/packs.json, fetched 2026-10-28):
+  "Quaternius (https://quaternius.com), CC0 1.0 - Animated characters, ... Files: per-model GLBs on Poly Pizza
+   uploaded by Quaternius (https://poly.pizza/u/Quaternius); each asset's model page ... states Public Domain (CC0).
+   Quaternius's pack pages (https://quaternius.com/packs/*) state "License CC0". Models Poly Pizza lists under
+   CC-BY are not used."
+  packs.json "quaternius_poly_pizza": license CC0-1.0, verified 2026-10-16.
