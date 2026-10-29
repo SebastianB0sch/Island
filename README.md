@@ -73,7 +73,9 @@ designs, with a cel-style material and ink outline in Unreal:
 * **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's spiky two-layer mop, Syrus's
   cyan spikes, Zane's long slate-teal hair, Chazz's black spikes, Chumley's puffed sides, long olive-blond
   hair for Alexis, shoulder-length brown (Jasmine) and black (Mindy) hair, Crowler's blond ponytail with a
-  black band, plus Syrus's round glasses and Chumley's nose; eye colours per character.
+  black band, plus Syrus's round glasses and Chumley's nose; eye colours per character. The spiky manes
+  (Jaden, Chazz, Syrus) are thickened with turned copies of the strands, which brings those meshes to about
+  80k triangles.
 
 The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on

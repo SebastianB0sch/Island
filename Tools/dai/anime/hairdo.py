@@ -15,6 +15,7 @@ VRoid hair is built from separate strands (one mesh island each), so a style is 
   gradient   (v, softness): two-tone hair, a texture gradient along the strands into hair "color2"
              (applied in models.materials)
   top_layer  dz: two-layer hair, everything above the head centre + dz in hair "color2" (Jaden)
+  thicken    {copies, angle, scale}: turned, slightly bigger copies of the strands for a denser mane
 
 plus accessories built in place from the face landmarks: round glasses (Syrus), a round nose (Chumley), a
 frilled ruff, crescent earrings and a ponytail band (Crowler).
@@ -124,6 +125,25 @@ def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1
     for v, c in zip(me.vertices, new):
         v.co = c
     me.update()
+
+
+def thicken(obj, hc, copies=1, angle=9.0, scale=1.05):
+    """Fuller hair: add copies of every strand turned about the head's vertical axis (alternating sides) and a
+    little bigger, so the gaps between the spread strands close (the art's dense spiky manes)."""
+    from mathutils import Matrix
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    src = list(bm.faces)
+    for i in range(copies):
+        a = math.radians(angle) * (1 if i % 2 == 0 else -1) * (1 + i // 2)
+        k = scale ** (1 + i // 2)
+        m = (Matrix.Translation(hc) @ Matrix.Rotation(a, 4, "Z") @ Matrix.Scale(k, 4) @ Matrix.Translation(-hc))
+        ret = bmesh.ops.duplicate(bm, geom=src)
+        verts = [g for g in ret["geom"] if isinstance(g, bmesh.types.BMVert)]
+        bmesh.ops.transform(bm, matrix=m, verts=verts)
+    bm.to_mesh(obj.data)
+    bm.free()
+    obj.data.update()
 
 
 TOP = "_Top"
@@ -418,6 +438,8 @@ def restyle(arm, meshes, entry, key, rig, log=print):
     hc = head_center(face)
     if spec.get("spike"):
         spike(hair, hc, **spec["spike"])
+    if spec.get("thicken"):
+        thicken(hair, hc, **spec["thicken"])
     if spec.get("top_layer") is not None:
         top_layer(hair, hc, spec["top_layer"])
     extra = []

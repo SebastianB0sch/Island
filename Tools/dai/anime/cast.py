@@ -106,7 +106,7 @@ CAST = {
         outfit=dict(_academy(SLIFER_RED, (0.58, 0.12, 0.13), (0.20, 0.20, 0.23), UNIFORM_PANTS, open_=1.0)),
         # Tag Force cover art: orange-brown top layer over dark brown, big outward spikes
         hairdo=dict(spike=dict(lift=0.35, up=0.0, length=1.45, front_lift=0.12, front_length=1.2, crown_lift=0.15, volume=1.1),
-                    top_layer=-0.005),
+                    thicken=dict(copies=2, angle=8.0, scale=1.04), top_layer=-0.005),
         expression=dict(MTH_Fun=0.35, BRW_Angry=0.25),
         colors=dict(jacket=SLIFER_RED, trim=(0.10, 0.10, 0.12), inner=(0.08, 0.08, 0.09),
                     pants=UNIFORM_PANTS, shoes=(0.80, 0.10, 0.08), sole=(0.95, 0.93, 0.88)),
@@ -124,6 +124,7 @@ CAST = {
         body=dict(open=0.75),
         outfit=dict(_academy(SLIFER_RED, (0.58, 0.12, 0.13), (0.98, 0.84, 0.22), UNIFORM_PANTS, open_=0.25)),
         hairdo=dict(spike=dict(lift=0.45, up=0.1, length=1.45, front_lift=0.25, front_length=1.2, crown_lift=0.3, volume=1.08),
+                    thicken=dict(copies=2, angle=8.0, scale=1.04),
                     glasses=(0.30, 0.30, 0.32)),
         expression=dict(BRW_Sorrow=0.45, EYE_Surprised=0.3),
         colors=dict(jacket=SLIFER_RED, trim=WHITE, inner=(0.30, 0.55, 0.85),
@@ -189,7 +190,8 @@ CAST = {
         outfit=dict(_coat((0.07, 0.07, 0.09), (0.40, 0.40, 0.44), (0.45, 0.32, 0.42), (0.10, 0.12, 0.26),
                            open_=0.7, collar=0.09)),
         # Tag Force cover art: big black spikes standing up and back
-        hairdo=dict(spike=dict(lift=0.25, up=0.3, length=1.45, front_lift=0.0, front_length=1.15, crown_lift=0.25, volume=1.12)),
+        hairdo=dict(spike=dict(lift=0.25, up=0.3, length=1.45, front_lift=0.0, front_length=1.15, crown_lift=0.25, volume=1.12),
+                    thicken=dict(copies=2, angle=8.0, scale=1.04)),
         expression=dict(BRW_Angry=0.9, EYE_Angry=0.5, MTH_Angry=0.25),
         colors=dict(jacket=(0.07, 0.07, 0.09), trim=(0.30, 0.30, 0.34), inner=(0.10, 0.10, 0.12),
                     pants=(0.08, 0.08, 0.10), shoes=(0.36, 0.22, 0.12), sole=(0.2, 0.2, 0.22)),
