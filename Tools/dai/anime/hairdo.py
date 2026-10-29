@@ -10,6 +10,8 @@ VRoid hair is built from separate strands (one mesh island each), so a style is 
              tucked under this model's own cut (long straight hair for Alexis / Jasmine / Mindy / Crowler
              from VRoid B's tails under VRoid A's / C's own fringe)
   drop       materials of the borrowed hair to leave out (hair clips, ribbons)
+  trim       cut the borrowed hair off at a height (shoulder-length hair)
+  ponytail   gather the borrowed long hair into a tail tied at the nape ({k, back, tie, band colour})
   gradient   (v, softness): two-tone hair, a texture gradient along the strands into hair "color2"
              (Jaden's orange ends; applied in models.materials)
 
@@ -59,7 +61,8 @@ def head_center(face):
 
 
 # --------------------------------------------------------------------------- strand edits
-def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1.1, min_len=0.03):
+def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1.1, min_len=0.03,
+          back_only=False):
     me = obj.data
     co, lab = islands(me)
     new = co.copy()
@@ -77,6 +80,8 @@ def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1
         out = (Vector(root) - hc)
         out = out.normalized() if out.length > 1e-6 else Vector((0, 0, 1))
         front = out.y < -0.45 and far[2] < hc.z + 0.04
+        if back_only and out.y < 0.25:
+            continue
         tgt = (out + Vector((0, 0, up))).normalized()
         q = a.rotation_difference(tgt)
         f, k = (front_lift, front_length) if front else (lift, length)
@@ -92,7 +97,8 @@ def spike(obj, hc, lift=0.4, up=0.5, length=1.3, front_lift=0.15, front_length=1
 
 
 # --------------------------------------------------------------------------- borrowed hair
-def borrow(src_key, arm, meshes, rig_neck, rig_chest, drop=(), log=print, long_only=False, bury=0.75):
+def borrow(src_key, arm, meshes, rig_neck, rig_chest, drop=(), log=print, long_only=False, bury=0.75,
+           ponytail=None, trim_z=None):
     """Replace the model's hair with base model src_key's hair (long_only: keep this model's own cut and add
     just the borrowed strands that reach below the neck, their tied-up tops pulled in under the own hair).
     Returns the new hair object and the alpha modes of its materials (for models.materials)."""
@@ -152,12 +158,23 @@ def borrow(src_key, arm, meshes, rig_neck, rig_chest, drop=(), log=print, long_o
             if r > lim:
                 d *= lim / r
                 v.co.x, v.co.y = float(ax[0] + d[0]), float(ax[1] + d[1])
+        if ponytail:
+            # gather the long hair into one tight tail tied at the nape
+            c = np.array((0.0, hc.y + ponytail.get("back", 0.10)))
+            tie = rig_neck + ponytail.get("tie", 0.06)
+            for v, l in zip(me.vertices, long_isl):
+                if int(l) not in low or v.co.z > tie:
+                    continue
+                k = ponytail.get("k", 0.3) + (1 - ponytail.get("k", 0.3)) * _smooth((tie - v.co.z) / 0.5) * 0.4
+                v.co.x = float(c[0] + (v.co.x - c[0]) * k)
+                v.co.y = float(c[1] + (v.co.y - c[1]) * k)
     # leave out clips / ribbons (and with long_only everything that does not reach below the neck)
     bm = bmesh.new()
     bm.from_mesh(me)
     bm.verts.ensure_lookup_table()
     names = [mt.name if mt else "" for mt in me.materials]
     kill = [f for f in bm.faces if any(d in names[f.material_index] for d in drop)
+            or (trim_z is not None and f.calc_center_median().z < trim_z)
             or (long_isl is not None and (int(long_isl[f.verts[0].index]) not in low
                                           or f.calc_center_median().z > hc.z - 0.10))]
     bmesh.ops.delete(bm, geom=kill, context="FACES")
@@ -256,6 +273,14 @@ def glasses(arm, face, color, name="Glasses"):
     return _attach(mb, arm, {"head": 1.0})
 
 
+def hair_band(arm, at, color, name="HairBand"):
+    """Band round a ponytail (horizontal torus at `at`), following the head."""
+    from ..geo import MeshBuilder
+    mb = MeshBuilder(name)
+    mb.torus(tuple(at), 0.026, 0.009, color, seg=16, tube_seg=6)
+    return _attach(mb, arm, {"head": 0.6, "neck_01": 0.4})
+
+
 def ruff(arm, rig, color, name="Ruff"):
     """Frilled collar of puffs round the neck base (spine_03 / neck_01)."""
     from ..geo import MeshBuilder
@@ -300,8 +325,11 @@ def restyle(arm, meshes, entry, key, rig, log=print):
     face = next(m for m in meshes if m.name.startswith("Face"))
     hair = next(m for m in meshes if m.name.startswith("Hair"))
     if spec.get("source"):
+        trim = spec.get("trim")
+        if isinstance(trim, str):                    # named heights on this skeleton
+            trim = {"shoulder": rig.shoulder_z - 0.03, "chest": rig.chest, "waist": rig.waist}[trim]
         new, alpha = borrow(spec["source"], arm, meshes, rig.neck, rig.chest, spec.get("drop", ()), log,
-                            long_only=spec.get("long_only", False))
+                            long_only=spec.get("long_only", False), ponytail=spec.get("ponytail"), trim_z=trim)
         if not spec.get("long_only"):
             hair = new
     hc = head_center(face)
@@ -311,6 +339,10 @@ def restyle(arm, meshes, entry, key, rig, log=print):
     if spec.get("glasses"):
         mat = register_accessory_material(f"M_Anime_{key}_Glasses", spec["glasses"])
         extra.append(glasses(arm, face, mat))
+    if spec.get("ponytail") and spec["ponytail"].get("band"):
+        mat = register_accessory_material(f"M_Anime_{key}_HairBand", spec["ponytail"]["band"])
+        p = spec["ponytail"]
+        extra.append(hair_band(arm, Vector((0.0, hc.y + p.get("back", 0.10), rig.neck + p.get("tie", 0.06))), mat))
     if spec.get("ruff"):
         mat = register_accessory_material(f"M_Anime_{key}_Ruff", spec["ruff"])
         extra.append(ruff(arm, rig, mat))

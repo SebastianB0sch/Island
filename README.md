@@ -48,14 +48,20 @@ whose terms allow modification and redistribution) restyled by the pipeline afte
 designs, with a cel-style material and ink outline in Unreal:
 
 * **Uniforms are tailored onto the models' bodies** (`Tools/dai/anime/outfit.py`): the base outfits are
-  replaced by Duel Academy blazers and long coats cut from the body itself (they share its bone weights, so
-  they deform with it), with stand-up collars, painted trims, cuffs and buttons, plus shirts, trousers,
-  pleated skirts and boots — Jaden's open Slifer jacket over a black shirt, Bastion's buttoned Ra Yellow
-  blazer with white cuffs, Zane's white Obelisk coat with blue trims, Chazz's black coat, Crowler's blue
-  frock coat, the Obelisk girls' sleeveless white top, blue skirt and knee boots.
-* **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): strand-by-strand spikes (Jaden, Chazz),
-  Jaden's dark-brown-to-orange two-tone, long straight hair for Alexis, Jasmine, Mindy and Crowler, plus
-  Syrus's glasses and Crowler's ruff.
+  replaced by Duel Academy jackets and long coats cut from the body itself (they share its bone weights, so
+  they deform with it), with stand-up collars, painted trims, shoulder and cuff bands and buttons, plus
+  shirts, trousers, pleated skirts and boots. The designs follow the dorm and character descriptions on
+  Yugipedia and the Yu-Gi-Oh! Wiki: waist-length Slifer Red / Ra Yellow jackets with white trimmings, a white
+  band round the shoulders and a dorm-coloured cuff band; Obelisk Blue boys' blue long-tailed jackets with
+  white trimmings (Zane: pointed tails at the back); the Obelisk girls' sleeveless white jacket with blue
+  markings, blue miniskirt with a light blue belt and royal blue boots; Jaden's open jacket over a black
+  shirt with white uniform trousers and red sneakers; Syrus's yellow shirt; Chumley's inverted, mostly
+  white Slifer uniform; Chazz's black coat with grey trim over a purple shirt, dark blue trousers, brown
+  shoes; Crowler's regal Obelisk coat with gold trim and pink ruffles.
+* **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's two-layer brown mop (lighter
+  ends, spiky at the back), long dark-blond hair for Alexis, shoulder-length brown (Jasmine) and black
+  (Mindy) hair, blue hair for the Truesdale brothers, Crowler's blond ponytail with a black band, plus
+  Syrus's round glasses; eye colours per character.
 
 The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on

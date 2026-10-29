@@ -210,7 +210,7 @@ class Tailor:
                     out.append(e)
         return list(dict.fromkeys(out))
 
-    def extend(self, name, edges, drop, flare, rings=4, thigh=0.75, pleats=0):
+    def extend(self, name, edges, drop, flare, rings=4, thigh=0.75, pleats=0, front=1.0):
         """Hang a tube below the boundary `edges`: drop metres down, flaring outwards, weights blending from
         the hem vertices' own weights into the thighs (so coat tails and skirts follow the legs)."""
         g = self.garments[name]
@@ -242,7 +242,10 @@ class Tailor:
                 if pleats:
                     phi = math.atan2(rad.x, -rad.y)
                     fl += 0.012 * t * abs(math.sin(pleats * phi * 0.5))
-                nv.co = p0 + rad * fl + Vector((0, 0, -drop * t))
+                # front < 1: tails - the hem rises towards the front
+                back = _smooth((rad.y + 0.35) / 1.1)
+                d = drop * (front + (1 - front) * back)
+                nv.co = p0 + rad * fl * (0.5 + 0.5 * d / drop) + Vector((0, 0, -d * t))
                 ks = thigh * _smooth(t * 1.2)
                 side = _smooth((p0.x + 0.05) / 0.10)
                 w = {gk: x * (1 - ks) for gk, x in w0.items()}
@@ -342,11 +345,11 @@ class Tailor:
                     no = -no
                 self.cut("Jacket", (sgn * x0, 0, z0), no,
                          region=lambda c, sgn=sgn: c.y < r.neck_c.y and c.x * sgn > -0.002 and c.z > z0 - 0.02)
-        drop = r.hem_drop(length)
+        drop = spec.get("drop", r.hem_drop(length))
         if drop > 0:
             long = drop > 0.15
             self.extend("Jacket", self.edges_at("Jacket", hem), drop, spec.get("flare", 0.035 if not long else 0.07),
-                        rings=3 if not long else 6, thigh=0.45 if not long else 0.8)
+                        rings=3 if not long else 6, thigh=0.45 if not long else 0.8, front=spec.get("tails", 1.0))
         if spec.get("collar", 0.05):
             self.collar("Jacket", spec.get("collar", 0.05), 70 + 80 * opening)
         g = self.garments["Jacket"]
@@ -422,6 +425,7 @@ class Tailor:
         self.extend("Skirt", self.edges_at("Skirt", cut), spec.get("length", 0.17), 0.06, rings=4, thigh=0.55,
                     pleats=spec.get("pleats", 16))
         self.garments["Skirt"]["hem"] = cut - spec.get("length", 0.17)
+        self.garments["Skirt"]["belt"] = top
 
     def boots(self, spec):
         r = self.rig
@@ -578,10 +582,23 @@ def paint(me, mat_idx, g, rig, path, size=None):
         if "collar" in trims and g.get("collar_top"):
             col[P[:, 2] > g["collar_top"] - tw * 0.8] = tc
         if "cuff" in trims and g.get("cuff_x") and spec.get("sleeves", "long") != "none":
-            col[np.abs(P[:, 0]) > g["cuff_x"] - spec.get("cuff_w", 0.045)] = tc
+            # cuff band (its own colour, e.g. the dorm colour) edged with a trim line
+            cw = spec.get("cuff_w", 0.045)
+            ax = np.abs(P[:, 0])
+            on_arm = P[:, 2] > rig.shoulder_z - 0.15
+            col[(ax > g["cuff_x"] - cw - tw * 0.45) & on_arm] = tc
+            col[(ax > g["cuff_x"] - cw) & on_arm] = spec.get("cuff_color", tc)
+    sh = spec.get("shoulder")                         # band round the top of the sleeves
+    if sh and len(P) and spec.get("sleeves", "long") != "none":
+        ax = np.abs(P[:, 0])
+        x0 = rig.shoulder_x + sh.get("at", 0.035)
+        on_arm = P[:, 2] > rig.shoulder_z - 0.15
+        col[(ax > x0) & (ax < x0 + sh.get("w", 0.03)) & on_arm] = sh.get("color", tc)
     if spec.get("panel"):                           # two-tone: a coloured band (Obelisk coats)
         pz0, pz1, pc = spec["panel"]
         col[(P[:, 2] > pz0) & (P[:, 2] < pz1)] = pc
+    if spec.get("belt") and g.get("belt") and len(P):
+        col[P[:, 2] > g["belt"] - spec.get("belt_w", 0.03)] = spec["belt"]
     b = spec.get("buttons")
     if b and len(P):
         gapf = g.get("gap")
@@ -606,7 +623,15 @@ def _edge_kind(pts, g, rig):
     if cx:
         kind[np.abs(pts[:, 0]) > cx - 0.02] = "cuff"
     if hem is not None:
-        kind[(pts[:, 2] < hem + 0.02) & (kind == "front")] = "hem"
+        # the bottom edge: lowest open edge in each direction round the body (coat tails hang lower at the
+        # back than in front, so no single height)
+        phi = np.arctan2(pts[:, 0], -(pts[:, 1] - rig.neck_c.y))
+        sector = np.round(phi / math.radians(8)).astype(int)
+        low = {}
+        for sct, z in zip(sector, pts[:, 2]):
+            low[sct] = min(low.get(sct, 1e9), z)
+        lowest = np.array([low[sct] for sct in sector])
+        kind[(pts[:, 2] < lowest + 0.02) & (pts[:, 2] < hem + 0.35) & (kind == "front")] = "hem"
     if g.get("top") is not None:
         kind[pts[:, 2] > g["top"] - 0.01] = "top"
     if g.get("collar_top"):
