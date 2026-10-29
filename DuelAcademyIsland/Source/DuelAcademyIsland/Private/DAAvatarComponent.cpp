@@ -315,7 +315,9 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	float ArmLAngle = -S * StrideAmp * 0.8f;
 	float ArmRAngle = S * StrideAmp * 0.8f;
 	float ArmSpread = 4.f + Breath * 1.f;
-	float TorsoLean = -4.f * FMath::Min(Move01, 1.4f);
+	// Angles are "forward swing". The figure faces +Y in avatar space and a positive roll tips +Z towards +Y
+	// (FRotationMatrix): hanging limbs swing forward with a NEGATIVE roll, the torso leans forward with a POSITIVE one.
+	float TorsoLean = 4.f * FMath::Min(Move01, 1.4f);
 
 	// Jump / fall pose
 	LegLAngle = FMath::Lerp(LegLAngle, -25.f, AirAlpha);
@@ -338,17 +340,17 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		ArmSpread = FMath::Lerp(ArmSpread, 12.f, SwimAlpha);
 	}
 
-	LegL->SetRelativeRotation(FRotator(0.f, 0.f, LegLAngle));
-	LegR->SetRelativeRotation(FRotator(0.f, 0.f, LegRAngle));
-	ArmL->SetRelativeRotation(FRotator(-ArmSpread, 0.f, ArmLAngle));
-	ArmR->SetRelativeRotation(FRotator(ArmSpread, 0.f, ArmRAngle));
+	LegL->SetRelativeRotation(FRotator(0.f, 0.f, -LegLAngle));
+	LegR->SetRelativeRotation(FRotator(0.f, 0.f, -LegRAngle));
+	ArmL->SetRelativeRotation(FRotator(-ArmSpread, 0.f, -ArmLAngle));
+	ArmR->SetRelativeRotation(FRotator(ArmSpread, 0.f, -ArmRAngle));
 
 	// ---- body
 	const float SwimPitch = 80.f * SwimAlpha;
-	Pelvis->SetRelativeLocation(HipHeight + FVector(0.0, 0.0, Bob - 2.0 * Breath * (1.f - Move01) * 0.5f - 60.0 * SwimAlpha));
-	Pelvis->SetRelativeRotation(FRotator(0.f, 0.f, TorsoLean * 0.4f - SwimPitch));
+	Pelvis->SetRelativeLocation(HipHeight + FVector(0.0, 0.0, Bob - 2.0 * Breath * (1.f - Move01) * 0.5f + 32.0 * SwimAlpha));
+	Pelvis->SetRelativeRotation(FRotator(0.f, 0.f, TorsoLean * 0.4f + SwimPitch));
 	Torso->SetRelativeRotation(FRotator(0.f, 0.f, TorsoLean + FMath::Sin(Phase * 2.f) * 1.5f * Move01));
 	Torso->SetRelativeScale3D(FVector(1.0, 1.0 + 0.012 * Breath, 1.0 + 0.008 * Breath));
 	Head->SetRelativeRotation(FRotator(0.f, FMath::Sin(Time * 0.37f + BreathPhase) * 8.f * (1.f - Move01 * 0.7f),
-		-TorsoLean * 0.6f + SwimPitch * 0.6f));
+		-TorsoLean * 0.6f - SwimPitch * 0.6f));
 }

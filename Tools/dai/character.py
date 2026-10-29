@@ -119,7 +119,12 @@ def _add_duel_disk(arm, mesh):
     # avatar.py authors the disk for an arm hanging along -Z with its outside at -X; the T-pose left forearm
     # runs along +X (elbow -> wrist) with the back of the hand (outside) up: map +Z -> -X, -X -> +Z, Y -> -Y
     rot = Matrix(((0, 0, -1, 0), (0, -1, 0, 0), (-1, 0, 0, 0), (0, 0, 0, 1)))
-    wrist = bone.tail_local - (bone.tail_local - bone.head_local).normalized() * 0.03
+    # glTF imports leave bone tails meaningless (LowerArm.L is ~3 mm long): the wrist is the hand joint
+    kids = list(bone.children)
+    hand = next((c for c in kids if any(k in c.name.lower() for k in ("hand", "palm", "wrist"))), None) \
+        or (max(kids, key=lambda c: (c.head_local - bone.head_local).length) if kids else None)
+    end = hand.head_local if hand else bone.tail_local
+    wrist = end - (end - bone.head_local).normalized() * 0.03
     disk.data.transform(Matrix.Translation(wrist) @ rot)
     for slot in disk.material_slots:
         src = slot.material.name.split(".")[0]
