@@ -1,5 +1,5 @@
 {
- "_comment": "Street furniture, harbor and beach props. CC0: Poly Haven, Khronos glTF Sample Assets. CC BY 4.0: Sketchfab authors listed in CREDITS.md. Not covered (procedural): bollard, flagpoles, planter with shrub, duel dummy. CC BY 3.0: fishing trawler by Poly by Google.",
+ "_comment": "Street furniture, harbor and beach props. CC0: Poly Haven, Khronos glTF Sample Assets. CC BY 4.0: Sketchfab authors listed in CREDITS.md. Not covered (procedural): bollard, flagpoles, planter with shrub, duel dummy. CC BY 3.0: fishing trawler by Poly by Google. The Sketchfab vending machine was dropped: its texture shows real drink brands.",
  "props": {
   "SM_LampPost": {
    "file": "polyhaven/models/street_lamp_01/street_lamp_01_1k.gltf",
@@ -168,12 +168,6 @@
   "SM_BeachChair": {
    "file": "sketchfab/beach_chair/scene.gltf",
    "width": 1.6,
-   "collision": "box"
-  },
-  "SM_VendingMachine": {
-   "file": "sketchfab/jpn_vending_machine/scene.gltf",
-   "height": 1.9,
-   "max_tris": 8000,
    "collision": "box"
   },
   "SM_StoneLantern": {

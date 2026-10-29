@@ -23,3 +23,4 @@ stats: 13960 triangles, 8 mesh objects, 3 materials, native bbox 1.778 x 0.556 x
 modifications: none (files byte-identical to the mirror)
 notes: File holds two cans + lids side by side (~7k tris each); split by object in the pipeline.
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS. all files re-downloaded from the mirror URLs and compared byte-for-byte; mesh imported in Blender, triangle count and all textures confirmed; Poly Haven CC0 statement re-fetched from Poly-Haven/polyhaven.com llms.txt. All 8 files md5-identical to dl.polyhaven.org originals (WroclawTheGame asset.json diffuse + https://raw.githubusercontent.com/GameMog/GameMog/main/assets-src/sources.json / feather fetch_assets.py).

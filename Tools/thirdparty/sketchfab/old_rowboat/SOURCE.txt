@@ -9,7 +9,6 @@ attribution_text: "Old Rowboat" (https://sketchfab.com/3d-models/old-rowboat-992
 original_source_page: https://sketchfab.com/3d-models/old-rowboat-9922d5678af84adeb1c9b479856446ca
 downloaded_from (exact files, HTTP 200, verified non-HTML / non-LFS):
   https://raw.githubusercontent.com/willmadd/react-three-fiber-island-2/main/public/models/scene.gltf
-  https://raw.githubusercontent.com/willmadd/react-three-fiber-island-2/main/public/models/scene.bin
   https://raw.githubusercontent.com/willmadd/react-three-fiber-island-2/main/public/models/textures/Material_baseColor.png
   https://raw.githubusercontent.com/willmadd/react-three-fiber-island-2/main/public/models/textures/Material_metallicRoughness.png
   https://raw.githubusercontent.com/willmadd/react-three-fiber-island-2/main/public/models/textures/Material_normal.png
@@ -21,3 +20,4 @@ stats: 5484 triangles, 18 mesh objects, 1 materials, native bbox 658.625 x 671.5
 modifications: textures downscaled with Pillow LANCZOS to keep game budgets (file names/format unchanged; full-res originals at the URLs above): textures/Material_baseColor.png: 2048x2048 -> 1024x1024; textures/Material_metallicRoughness.png: 2048x2048 -> 1024x1024; textures/Material_normal.png: 2048x2048 -> 1024x1024
 notes: 5.5k tris, PBR. Sketchfab root scale - normalise to 4 m length along X.
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF and the mirror ships the Sketchfab license.txt (identical). scene.bin taken from public/old_rowboat/ (the public/models/scene.bin URL previously listed returns 404 and was removed); bin byteLength matches the glTF buffer and the mesh imports cleanly. Textures verified as downscales.

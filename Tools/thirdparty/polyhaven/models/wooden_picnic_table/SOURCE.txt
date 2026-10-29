@@ -22,3 +22,4 @@ stats: 10210 triangles, 1 mesh objects, 2 materials, native bbox 2.241 x 3.022 x
 modifications: none (files byte-identical to the mirror)
 notes: 10.2k tris; ~2.2 x 3.0 m footprint (rotate 90 deg to put the long side on X).
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS. all files re-downloaded from the mirror URLs and compared byte-for-byte; mesh imported in Blender, triangle count and all textures confirmed; Poly Haven CC0 statement re-fetched from Poly-Haven/polyhaven.com llms.txt. gltf + all 6 textures sha256-identical to the dl.polyhaven.org 1k files listed in https://raw.githubusercontent.com/raisimTech/raisim2Lib/HEAD/rsc/offroad_buggy/sources.json; .bin md5-identical per https://raw.githubusercontent.com/Devsignerr/ProjectE/HEAD/Scripts/DemoAssets.json. Author Ulan Cabanilla per WendyAmahle/cgv-3D-game docs/credits.md.

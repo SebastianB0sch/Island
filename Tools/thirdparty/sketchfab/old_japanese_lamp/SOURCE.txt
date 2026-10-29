@@ -20,3 +20,4 @@ stats: 1100 triangles, 2 mesh objects, 1 materials, native bbox 5.294 x 5.294 x 
 modifications: none (files byte-identical to the mirror)
 notes: 1.1k tris, PBR 1k textures incl. emissive for the light box. Native ~12.7 units tall - scale to ~1.6 m.
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF (old exporter Sketchfab-3.19.3; no license.txt in the mirror). Weakest evidence of the set: only the embedded Sketchfab extras plus a credit link in zlimez/As-above-so-below README; accepted because the extras are written by Sketchfab at download time and CC BY grants are irrevocable.

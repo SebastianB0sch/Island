@@ -166,9 +166,9 @@ In Landscape mode → *Import from file*: **Location** X = -153600, Y = -153600,
 | Fern, grass clumps, tropical undergrowth | Poly Haven photoscans (CC0) |
 | Boulders, rock faces, cliffs, coastal rocks, driftwood, stumps, pebbles | Poly Haven photoscans (CC0); basalt by yonimantz (CC BY 4.0) |
 | Street lamps, bins, drums, buoys, picnic tables | Poly Haven (CC0), Khronos glTF samples (CC0) |
-| Benches, signposts, fences, crates, containers, rowboats, beach umbrellas and chairs, vending machine, stone lanterns | Sketchfab authors (CC BY 4.0) |
+| Benches, signposts, fences, crates, containers, rowboats, beach umbrellas and chairs, stone lanterns | Sketchfab authors (CC BY 4.0) |
 | Fishing trawlers | Poly by Google (CC BY 3.0) |
-| Duel Academy buildings, dorms, arena, harbor, lighthouse, ferry, volcano/waterfall features, flagpoles, bollards, duel dummies, sounds | original, built by the pipeline in `Tools/` |
+| Duel Academy buildings, dorms, arena, harbor, lighthouse, ferry, volcano/waterfall features, flagpoles, bollards, duel dummies, vending machines, sounds | original, built by the pipeline in `Tools/` |
 
 Every third-party folder under `Tools/thirdparty/` has a `SOURCE.txt`; [CREDITS.md](CREDITS.md) lists all of
 them with the required CC BY attribution text (also shown in-game on the F1 controls panel).

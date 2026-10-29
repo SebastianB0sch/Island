@@ -20,3 +20,4 @@ stats: 30610 triangles, 1 mesh objects, 3 materials, native bbox 0.704 x 0.386 x
 modifications: none (files byte-identical to the mirror)
 notes: 30.6k tris - over the 5k prop budget: decimate / build LODs in the pipeline, or use the 1.7k-tri lamp0/lamp1 from sketchfab_city_props_vol2_tampajoey as the game-ready variant. Lamp head ~3.6 m; scale ~1.1 to hit the catalog 4.2 m head height.
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS. all files re-downloaded from the mirror URLs and compared byte-for-byte; mesh imported in Blender, triangle count and all textures confirmed; Poly Haven CC0 statement re-fetched from Poly-Haven/polyhaven.com llms.txt. All 5 files md5-identical to dl.polyhaven.org originals (WroclawTheGame diffuse + https://raw.githubusercontent.com/GameMog/GameMog/main/assets-src/sources.json).

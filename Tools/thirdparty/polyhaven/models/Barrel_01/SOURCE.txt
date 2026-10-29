@@ -18,3 +18,4 @@ author_evidence: https://raw.githubusercontent.com/Paraxdev/GodotTrench/main/god
 stats: 2682 triangles, 1 mesh objects, 1 materials, native bbox 0.563 x 0.563 x 0.88 (Blender units after glTF import, Z up)
 modifications: none (files byte-identical to the mirror)
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS. all files re-downloaded from the mirror URLs and compared byte-for-byte; mesh imported in Blender, triangle count and all textures confirmed; Poly Haven CC0 statement re-fetched from Poly-Haven/polyhaven.com llms.txt. All 5 files md5-identical to dl.polyhaven.org originals listed in https://raw.githubusercontent.com/GameMog/GameMog/main/assets-src/sources.json (author Jorge Camacho there).

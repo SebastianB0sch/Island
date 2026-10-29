@@ -20,3 +20,10 @@ license evidence (copies in evidence/):
   (The same deepsea folder's "boat.glb" (houseboat, Poly by Google CC-BY) was inspected and not kept.)
 verification (bpy 5.2): imports cleanly (obj2gltf export); previews/boat_fishing.png.
 date: 2026-10-28
+
+INDEPENDENT AUDIT (2026-10-29):
+  - boat_fishing.glb re-downloaded: sha256 identical. 4,486 tris, 1024x1024 texture decodes; obj2gltf export with
+    material lambert3SG, consistent with the poly.pizza conversions of Google Poly models.
+  - Re-fetched deepsea REPORT.md and JamesStudd/Jetpack AttributionsData.asset ("Boat by Poly by Google [CC-BY 3.0]
+    via Poly Pizza https://poly.pizza/m/1ZuSXvhkRg_") - quotes correct. poly.pizza itself is blocked here.
+  - Verdict: CC BY 3.0 - OK WITH ATTRIBUTION (text above).

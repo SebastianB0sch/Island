@@ -17,3 +17,4 @@ stats: 3832 triangles, 12 mesh objects, 8 materials, native bbox 254.043 x 292.4
 modifications: none (files byte-identical to the mirror)
 notes: 3.8k tris, material colours only (no textures; uses KHR_materials_clearcoat). Native ~325 units tall - scale to ~2.6 m.
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF and the mirror ships the Sketchfab license.txt (identical).

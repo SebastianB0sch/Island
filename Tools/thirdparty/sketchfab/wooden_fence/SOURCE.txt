@@ -20,3 +20,4 @@ stats: 3510 triangles, 3 mesh objects, 1 materials, native bbox 6.947 x 0.1 x 1.
 modifications: textures downscaled with Pillow LANCZOS to keep game budgets (file names/format unchanged; full-res originals at the URLs above): textures/material_baseColor.png: 2048x2048 -> 1024x1024; textures/material_metallicRoughness.png: 2048x2048 -> 1024x1024; textures/material_normal.png: 2048x2048 -> 1024x1024
 notes: 3.5k tris, PBR. Two rail segments ~6.9 m total x 1.0 m high (metres) - split / tile to the 4 m x 1.1 m catalog segment.
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS (CC-BY-4.0, attribution required). all files re-downloaded from the mirror and compared; mesh imported in Blender (triangle count confirmed, all textures load); Sketchfab asset.extras (author/license/source/title) present in the glTF and the mirror ships the Sketchfab license.txt (identical); textures verified as downscales.

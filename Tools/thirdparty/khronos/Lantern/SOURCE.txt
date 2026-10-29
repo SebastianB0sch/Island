@@ -19,3 +19,4 @@ stats: 5394 triangles, 3 mesh objects, 1 materials, native bbox 15.491 x 4.631 x
 modifications: textures downscaled with Pillow LANCZOS to keep game budgets (file names/format unchanged; full-res originals at the URLs above): Lantern_baseColor.png: 2048x2048 -> 1024x1024; Lantern_emissive.png: 2048x2048 -> 1024x1024; Lantern_normal.png: 2048x2048 -> 1024x1024; Lantern_roughnessMetallic.png: 2048x2048 -> 1024x1024
 notes: 5.4k tris, PBR + emissive (2k PNGs downscaled to 1k). Native ~25.7 units tall - scale to ~4 m.
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS. gltf/bin byte-identical to KhronosGroup/glTF-Sample-Assets main; metadata.json and README.md re-fetched and byte-identical (CC0-1.0, (c) 2017 Microsoft, artist sbtron); 4 textures confirmed to be LANCZOS 1024 downscales of the upstream 2048 originals (mean abs diff 0.0); 5394 tris in Blender.

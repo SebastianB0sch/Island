@@ -20,3 +20,4 @@ stats: 12240 triangles, 1 mesh objects, 1 materials, native bbox 1.067 x 0.952 x
 modifications: none (files byte-identical to the mirror)
 notes: 12.2k tris; origin at waterline (min z -0.81 = underwater counterweight). Catalog asks ~1.5 m: scale ~0.6 or use as large channel buoy.
 date_retrieved: 2026-10-28
+audit (independent re-verification 2026-10-29): PASS. all files re-downloaded from the mirror URLs and compared byte-for-byte; mesh imported in Blender, triangle count and all textures confirmed; Poly Haven CC0 statement re-fetched from Poly-Haven/polyhaven.com llms.txt. All 6 files hash-identical to the Poly Haven 1k download recorded in https://raw.githubusercontent.com/w3joe/horizon/HEAD/assets/maritime/ocean-buoy.asset.json (sha256, author Mateusz Sadek) and bin md5 in https://raw.githubusercontent.com/Devsignerr/ProjectE/HEAD/Scripts/DemoAssets.json.
