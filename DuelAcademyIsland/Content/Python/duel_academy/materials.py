@@ -14,6 +14,9 @@ Masters (in /Game/DuelAcademy/Materials):
   M_DA_Beam        additive light beam
   M_DA_Waterfall   translucent panning water sheet
   M_DA_Terrain     splat-mapped terrain (8 layers)
+  M_DA_Toon        anime cast: BaseTex * Tint with a flat "fill" light (cel look), dimmer at night
+  M_DA_ToonMasked  same, alpha-masked + two-sided (hair cards, eyelashes, cut-out clothes)
+  M_DA_Outline     unlit ink line of the cast's inverted-hull outlines
   MPC_DuelAcademy  NightFactor / TimeOfDay (driven by ADAIslandManager)
 """
 
@@ -453,6 +456,39 @@ def build_pbr(name, foliage=False):
     return g.finish()
 
 
+def build_toon(name, mpc, masked=False):
+    """Anime cast shading: lit base colour plus an emissive 'fill' of the same colour, which flattens the
+    shadow side the way cel shading does. The fill fades at night (MPC NightFactor) so nobody glows."""
+    g = Graph(name)
+    if masked:
+        g.settings(blend_mode=unreal.BlendMode.BLEND_MASKED, two_sided=True)
+    uv = g.node(unreal.MaterialExpressionTextureCoordinate)
+    base = g.tex("BaseTex", T("T_White"), S_COL, uv)
+    col = g.mul(base, g.vector("Tint", (1, 1, 1)), "RGB", "")
+    g.out(col, unreal.MaterialProperty.MP_BASE_COLOR)
+    day = g.sub(g.const(1.0), g.mul(night_factor(g, mpc), g.const(0.75)))
+    g.out(g.mul(g.mul(col, g.scalar("Fill", 0.45)), day), unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    g.out(g.scalar("Roughness", 0.85), unreal.MaterialProperty.MP_ROUGHNESS)
+    g.out(g.const(0.15), unreal.MaterialProperty.MP_SPECULAR)
+    if masked:
+        g.out(base, unreal.MaterialProperty.MP_OPACITY_MASK, "A")
+        try:
+            g.settings(opacity_mask_clip_value=0.5)
+        except Exception:  # noqa: BLE001
+            pass
+    g.settings(used_with_skeletal_mesh=True)
+    return g.finish()
+
+
+def build_outline(mpc):
+    """Ink line: unlit, one-sided (the inverted hull only shows around the silhouette)."""
+    g = Graph("M_DA_Outline")
+    g.settings(shading_model=unreal.MaterialShadingModel.MSM_UNLIT, used_with_skeletal_mesh=True)
+    day = g.sub(g.const(1.0), g.mul(night_factor(g, mpc), g.const(0.5)))
+    g.out(g.mul(g.vector("Tint", (0.09, 0.06, 0.07)), day), unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    return g.finish()
+
+
 TERRAIN_LAYERS = [
     # layer, splat (texture, channel) - Grass is the base layer (weight = whatever the others leave)
     ("Grass", None),
@@ -517,6 +553,7 @@ KIND_PARENT = {
     "water": "M_DA_Water", "lava": "M_DA_Lava", "hologram": "M_DA_Hologram", "smoke": "M_DA_Smoke",
     "beam": "M_DA_Beam", "waterfall": "M_DA_Waterfall", "terrain": "M_DA_Terrain",
     "pbr": "M_DA_PBR", "pbr_foliage": "M_DA_PBRFoliage",
+    "toon": "M_DA_Toon", "toon_masked": "M_DA_ToonMasked", "outline": "M_DA_Outline",
 }
 
 CHANNEL = {"R": (1, 0, 0), "G": (0, 1, 0), "B": (0, 0, 1), "A": (0, 0, 0)}
@@ -528,6 +565,8 @@ def build_instances(palette, masters):
     out = {}
     for name, spec in palette.items():
         kind = spec.get("kind", "opaque")
+        if kind == "toon" and spec.get("masked"):
+            kind = "toon_masked"
         parent = masters.get(KIND_PARENT.get(kind, "M_DA_Master"))
         if parent is None:
             continue
@@ -573,6 +612,18 @@ def build_instances(palette, masters):
                     MEL.set_material_instance_vector_parameter_value(mi, "RoughChannel", C.lc(CHANNEL.get(rc, (0, 1, 0))))
                     # glTF packs metallic in B next to roughness in G; single-channel roughness maps carry no metal
                     MEL.set_material_instance_scalar_parameter_value(mi, "MetalScale", 1.0 if rc == "G" else 0.0)
+            elif kind in ("toon", "toon_masked"):
+                MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
+                MEL.set_material_instance_scalar_parameter_value(mi, "Fill", float(spec.get("fill", 0.45)))
+                MEL.set_material_instance_scalar_parameter_value(mi, "Roughness", float(spec.get("rough", 0.85)))
+                if spec.get("base"):
+                    tex = T(spec["base"])
+                    if tex:
+                        MEL.set_material_instance_texture_parameter_value(mi, "BaseTex", tex)
+                    else:
+                        C.warn(f"{mi_name}: texture {spec['base']} missing")
+            elif kind == "outline":
+                MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
             elif kind == "glass":
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
                 MEL.set_material_instance_scalar_parameter_value(mi, "Opacity", float(spec.get("opacity", 0.25)))
@@ -617,7 +668,10 @@ def build_all(palette):
                      ("M_DA_Lava", build_lava), ("M_DA_Hologram", build_hologram), ("M_DA_Smoke", build_smoke),
                      ("M_DA_Beam", build_beam), ("M_DA_Waterfall", build_waterfall), ("M_DA_Terrain", build_terrain),
                      ("M_DA_PBR", lambda: build_pbr("M_DA_PBR")),
-                     ("M_DA_PBRFoliage", lambda: build_pbr("M_DA_PBRFoliage", foliage=True))):
+                     ("M_DA_PBRFoliage", lambda: build_pbr("M_DA_PBRFoliage", foliage=True)),
+                     ("M_DA_Toon", lambda: build_toon("M_DA_Toon", mpc)),
+                     ("M_DA_ToonMasked", lambda: build_toon("M_DA_ToonMasked", mpc, masked=True)),
+                     ("M_DA_Outline", lambda: build_outline(mpc))):
         try:
             masters[name] = fn()
         except Exception as e:  # noqa: BLE001

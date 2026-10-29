@@ -1,0 +1,75 @@
+{
+  "_comment": "Animation takes for the anime cast (Tools/dai/anime): CC0 Quaternius takes retargeted onto the shared anime cast skeleton. 'take' = source action name (after the last '|'); optional 'frames' [first, last], 'speed' (playback multiplier) and 'arm_drop' (degrees: the astronaut's bulky suit holds the arms away from the body). 'anime_models': existing anime base models (VRM / glTF / FBX humanoids) the cast is built from (Tools/dai/anime/models.py); drop your own in Tools/thirdparty/<pack>/<asset>/ with a SOURCE.txt and register them here.",
+  "anime": {
+    "A_Anime_Idle": {
+      "file": "quaternius/astronaut/astronaut.glb",
+      "take": "Idle",
+      "arm_drop": 22
+    },
+    "A_Anime_Walk": {
+      "file": "quaternius/astronaut/astronaut.glb",
+      "take": "Walk",
+      "arm_drop": 22
+    },
+    "A_Anime_Run": {
+      "file": "quaternius/astronaut/astronaut.glb",
+      "take": "Run",
+      "arm_drop": 22
+    },
+    "A_Anime_Jump": {
+      "file": "quaternius/astronaut/astronaut.glb",
+      "take": "Jump",
+      "arm_drop": 22
+    },
+    "A_Anime_Fall": {
+      "file": "quaternius/astronaut/astronaut.glb",
+      "take": "Jump_Idle",
+      "arm_drop": 22
+    },
+    "A_Anime_Land": {
+      "file": "quaternius/astronaut/astronaut.glb",
+      "take": "Jump_Land",
+      "arm_drop": 22
+    },
+    "A_Anime_Wave": {
+      "file": "quaternius/astronaut/astronaut.glb",
+      "take": "Wave"
+    },
+    "A_Anime_Yes": {
+      "file": "quaternius/astronaut/astronaut.glb",
+      "take": "Yes",
+      "arm_drop": 22
+    },
+    "A_Anime_No": {
+      "file": "quaternius/astronaut/astronaut.glb",
+      "take": "No",
+      "arm_drop": 22
+    },
+    "A_Anime_Sit": {
+      "file": "quaternius/worker/worker.glb",
+      "take": "Man_Sitting"
+    },
+    "A_Anime_Clap": {
+      "file": "quaternius/worker/worker.glb",
+      "take": "Man_Clapping"
+    },
+    "A_Anime_Interact": {
+      "file": "quaternius/adventurer/adventurer.glb",
+      "take": "Interact"
+    }
+  },
+  "anime_models": {
+    "vroid_a": {
+      "file": "vroid/avatar_sample_a/AvatarSample_A.vrm",
+      "female": true
+    },
+    "vroid_b": {
+      "file": "vroid/avatar_sample_b/AvatarSample_B.vrm",
+      "female": true
+    },
+    "vroid_c": {
+      "file": "vroid/avatar_sample_c/AvatarSample_C.vrm",
+      "female": false
+    }
+  }
+}

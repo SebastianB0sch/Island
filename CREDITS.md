@@ -7,7 +7,9 @@ procedural pipeline in `Tools/`.
 
 ## Third-party assets
 
-All third-party art below is **CC0 / public domain** or **CC-BY** (attribution given here).
+All third-party art below is **CC0 / public domain**, **CC-BY** (attribution given here) or, for the
+VRoid sample avatars the anime cast is built from, the **VRoid Hub conditions of use** embedded in each
+model (modification and redistribution allowed, credit not required).
 Every folder keeps a `SOURCE.txt` with the download URLs, license evidence and file hashes.
 Paths are relative to `Tools/thirdparty/`.
 
@@ -57,7 +59,9 @@ Paths are relative to `Tools/thirdparty/`.
 | `polyhaven/textures/red_brick_03` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/red_brick_03> | texture Bricks |
 | `polyhaven/textures/rock_boulder_dry` | Dimitrios Savva (photography), Rico Cilliers (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/rock_boulder_dry> | terrain layer Rock, texture Rock |
 | `polyhaven/textures/white_plaster_02` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/white_plaster_02> | texture Grunge |
-| `quaternius/worker` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/u/Quaternius> | SK_Student |
+| `quaternius/adventurer` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/m/5EGWBMpuXq> | A_Anime_Interact |
+| `quaternius/astronaut` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/m/0D54W8yfrA> | A_Anime_Fall, A_Anime_Idle, A_Anime_Jump, A_Anime_Land, A_Anime_No, A_Anime_Run, A_Anime_Walk, A_Anime_Wave, A_Anime_Yes |
+| `quaternius/worker` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/u/Quaternius> | A_Anime_Clap, A_Anime_Sit, SK_Student |
 | `sketchfab/beach_chair` | stealth86 | CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED | <https://sketchfab.com/3d-models/beach-chair-57e9477018d244378302070a8738b566> | SM_BeachChair |
 | `sketchfab/beach_umbrella` | stealth86 | CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED | <https://sketchfab.com/3d-models/beach-umbrella-1014ad7c8a4c4aa8ba5e88fc6151aa4f> | SM_BeachUmbrella |
 | `sketchfab/city_props_vol2` | TampaJoey | CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED | <https://sketchfab.com/3d-models/city-props-collection-volume-2-2f52ea53c58e455f9b69d11f58763c96> | SM_Bench |
@@ -74,6 +78,9 @@ Paths are relative to `Tools/thirdparty/`.
 | `sweethome3d/hedge` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | texture Leaves |
 | `sweethome3d/hydrangea` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_FlowerBush_Blue, SM_FlowerBush_White |
 | `sweethome3d/roses_bush` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_FlowerBush_Red, SM_FlowerBush_Yellow |
+| `vroid/avatar_sample_a` | VRoid Project (pixiv Inc.) | VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required | <https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604> | anime cast base model vroid_a |
+| `vroid/avatar_sample_b` | VRoid Project (pixiv Inc.) | VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required | <https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604> | anime cast base model vroid_b |
+| `vroid/avatar_sample_c` | VRoid Project (pixiv Inc.) | VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required | <https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604> | anime cast base model vroid_c |
 
 ### CC-BY attributions
 

@@ -172,7 +172,9 @@ def _ground_speed(arm, action):
     return float(np.median(speeds) * 100.0) if speeds else None
 
 
-def _export(objs, active, path, types, anim=None):
+def export_skeletal(objs, active, path, types, anim=None, simplify=0.0):
+    """FBX for Unreal: skinned mesh + armature (anim None) or an armature-only animation take
+    (simplify > 0 drops redundant keys - unanimated helper bones shrink to a couple of keys)."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     _select(objs, active)
     kw = dict(filepath=path, use_selection=True, object_types=types, apply_scale_options="FBX_SCALE_ALL",
@@ -185,7 +187,7 @@ def _export(objs, active, path, types, anim=None):
     else:
         kw.update(bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=False,
                   bake_anim_use_all_actions=False, bake_anim_force_startend_keying=True,
-                  bake_anim_simplify_factor=0.0)
+                  bake_anim_simplify_factor=simplify)
     bpy.ops.export_scene.fbx(**kw)
 
 
@@ -253,7 +255,7 @@ def build(log=print):
     disk_bone = _add_duel_disk(arm, mesh) if s.get("duel_disk", True) else None
 
     out = os.path.join(C.OUT_MESHES, "Characters")
-    _export([arm, mesh], arm, os.path.join(out, "SK_Student.fbx"), {"ARMATURE", "MESH"})
+    export_skeletal([arm, mesh], arm, os.path.join(out, "SK_Student.fbx"), {"ARMATURE", "MESH"})
     info = dict(mesh=f"{OUT_REL}/SK_Student.fbx", anims={}, height_m=s.get("height", 1.72), duel_disk_bone=disk_bone,
                 materials=[sl.material.name for sl in mesh.material_slots if sl.material])
     scene = bpy.context.scene
@@ -270,7 +272,7 @@ def build(log=print):
         f0, f1 = (int(round(v)) for v in act.frame_range)
         scene.frame_start, scene.frame_end = f0, max(f1, f0 + 1)
         name = f"A_Student_{state}"
-        _export([arm], arm, os.path.join(out, f"{name}.fbx"), {"ARMATURE"}, anim=act)
+        export_skeletal([arm], arm, os.path.join(out, f"{name}.fbx"), {"ARMATURE"}, anim=act)
         info["anims"][state] = f"{OUT_REL}/{name}.fbx"
     _assign(arm, None)
     os.makedirs(C.OUT_DATA, exist_ok=True)

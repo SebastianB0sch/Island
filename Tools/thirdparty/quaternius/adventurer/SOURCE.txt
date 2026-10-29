@@ -1,0 +1,28 @@
+asset_id: quaternius_adventurer
+category: characters (animation source)
+description: Rigged + animated low-poly adventurer from Quaternius's Ultimate Modular Characters (62-bone humanoid rig
+             with fingers; Idle, Idle_Neutral, Walk, Run, Wave, Interact, Roll, ... 24 takes). Only the skeleton motion
+             is used: selected takes (Interact, Idle_Neutral) are retargeted onto the chibi cast skeleton
+             (Tools/dai/chibi/retarget.py); the adventurer mesh itself is not exported.
+author: Quaternius (https://quaternius.com)
+license: CC0 1.0 Universal (public domain dedication)
+upstream source page: https://poly.pizza/m/5EGWBMpuXq
+upstream file: https://static.poly.pizza/bbe369ee-a686-42c7-adad-14356f5f2f15.glb
+               (sha256 4a8639cd8eee9d8a150464edc25eb0536ced464790704a64e40c8620d99f66db, as recorded by the mirror below)
+downloaded: 2026-10-28
+
+downloaded from:
+  - npm package @netforge/asset-library-files@0.2.0
+    https://registry.npmjs.org/@netforge/asset-library-files/-/asset-library-files-0.2.0.tgz
+    file: package/library/lowpoly/adventurer.glb  (meshopt-compressed GLB, decoded by the pipeline with glTF-Transform)
+    sha256 05a9210725e5e6c154b4c0bcba6ac1ae8d185501e85a196c69f3b8a92ba3194d (matches library/index.json:
+    "lowpoly/adventurer.glb", 10198 triangles, 24 animations)
+  - per-asset upstream page and file: npm package @netforge/asset-library@0.2.0, manifest/lowpoly.json,
+    id "style.lowpoly.adventurer" (pack "quaternius_poly_pizza")
+
+license evidence (package/NOTICE and manifest/packs.json, fetched 2026-10-28):
+  "Quaternius (https://quaternius.com), CC0 1.0 - Animated characters, ... Files: per-model GLBs on Poly Pizza
+   uploaded by Quaternius (https://poly.pizza/u/Quaternius); each asset's model page ... states Public Domain (CC0).
+   Quaternius's pack pages (https://quaternius.com/packs/*) state "License CC0". Models Poly Pizza lists under
+   CC-BY are not used."
+  packs.json "quaternius_poly_pizza": license CC0-1.0, verified 2026-10-16.
