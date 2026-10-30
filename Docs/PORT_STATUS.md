@@ -1,10 +1,8 @@
 # Duel Academy port status
 
 > **Snapshot:** 2026-10-30 (final Gate 1 integration pass).
-> **Branch:** `port/baseline`; initial baseline `b4d8bb0`; lane commits land
-> continuously (HEAD observed at final validation: `e42b2f4`).
-> **Working tree:** lane work is still present/uncommitted after the latest
-> commits. A10 did not edit C++ or run a UE build for this pass.
+> **Branch:** `port/baseline`; initial baseline `b4d8bb0`; final Gate 1 HEAD `fe734ca`.
+> **Working tree:** local-only CardArt/Portraits/SourceAssets remain untracked by policy.
 > **Gatekeeper:** A10. This is the single status source.
 
 ---
@@ -18,7 +16,9 @@
 | `-DAEconomySelfTest` | **119 passed, 0 failed** |
 | `-DADuelRulesSelfTest` | **57 passed, 0 failed** (chains, targeting, timing, banlist, scenarios, ante) |
 | `-DAStorySelfTest` | **14/14 PASS** (E01/E01b, 3,000 DP, Oct 7 AM, shop/save/free-roam) |
+| `-DAFullStorySelfTest` | **20/20 PASS** (35 events, 35 scenes, 161 lines, 6 emails, 82 duel refs, 35/35 reachable with progress) |
 | `-DAUITest` | **10 screenshots**: 8 PDA + 2 dialogue at 1920x1080 |
+| `-DATitleTest` / `-DANewGameTest` | title + new-game opening screenshots at 1920x1080 |
 | `-DADuelSelfTest` | **24 iterations, 12 player wins, 12 opponent wins, 0 stalls, average 11.7 turns** |
 | Runtime data | 1,200 cards / 100 puzzles / 12 exam cycles / 25 duelists / 31 decks / 48 packs / 37 events / 56 scenes / 161 dialogue lines / 6 emails |
 
@@ -71,9 +71,9 @@ the lane directories. Canon is reference; runtime is what the game loads.
 | Opponents / AI | A07 | **works** | 25 duelists, 31 decks, 27 AI profiles; 100 puzzles, 12 exams. |
 | Exams | A07 | **works / partial** | 12 cycles / 30 questions / 7 objectives; lifecycle, retries and title/dorm outcomes still need an engine run. |
 | Puzzles | A07 | **works / partial** | 100 definitions across levels 1-5; `Tools/puzzles/validate.py` 141 checks, 0 failures. Scripted engine proof still pending. |
-| Story / events / dialogue | A03 | **partial** | 37 events, 56 scenes and 161 dialogue lines validate; opening self-test 14/14. E02-E33 runtime playthrough and full dialogue integration are not yet proven. |
-| Interiors / portals / anchors | A08 | **partial** | 46 locations, 83 anchors, 10 interior cells, 20 portals, 28 spawns; generation and entry/exit tests pending. |
-| HUD / dialogue / PDA / shop / deck / exam UI | A09 | **partial** | 8 PDA + 2 dialogue screenshots at 1920x1080; shop/deck/exam interaction wiring remains. |
+| Story / events / dialogue | A03 | **works / partial** | 37 events, 56 scenes and 161 dialogue lines; opening 14/14 and full-campaign 20/20 self-tests pass, 35/35 reachable with progress. Exact dialogue/local-only text and event-specific minigames still pending. |
+| Interiors / portals / anchors | A08 | **partial** | 46 locations, 89 anchors, 10 interior cells, 20 portals, 28 spawns; generation and entry/exit tests pending. |
+| HUD / dialogue / PDA / title / shop / deck / exam UI | A09 | **works / partial** | Title/New Game/Continue, PDA, dialogue and credits verified by screenshots; shop/deck/exam interaction wiring remains. |
 | Integration/QA | A10 | **works** | Contracts, validator, puzzle validator, smoke runner, golden saves, final status. |
 
 ---
