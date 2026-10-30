@@ -1,0 +1,380 @@
+{
+  "schema": 1,
+  "canon_status": "canon_year_1",
+  "source": "Content/Data/Canon/banned_list.json (A01, Yugipedia GX1 banned list), year_1 statuses.",
+  "notes": "Year 1 list is applied to deck construction. Year 2/3 lists remain in Canon/banned_list.json for later story phases.",
+  "max_owned_copies": 3,
+  "rules": {
+    "min_main": 40,
+    "max_main": 60,
+    "max_extra": 20,
+    "max_copies": 3,
+    "max_side": 0,
+    "max_player_decks": 24,
+    "deck_name_min_length": 1,
+    "deck_name_max_length": 24
+  },
+  "banned": [
+    {
+      "card_id": 141,
+      "name": "Dark Hole",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 142,
+      "name": "Raigeki",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 257,
+      "name": "Witch of the Black Forest",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 292,
+      "name": "Harpie's Feather Duster",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 385,
+      "name": "Monster Reborn",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 401,
+      "name": "Change of Heart",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 430,
+      "name": "Confiscation",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 434,
+      "name": "The Forceful Sentry",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 438,
+      "name": "Painful Choice",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 472,
+      "name": "Imperial Order",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 675,
+      "name": "Fiber Jar",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 678,
+      "name": "Yata-Garasu",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 789,
+      "name": "Magical Scientist",
+      "reason": "GX1 year 1 Forbidden"
+    },
+    {
+      "card_id": 886,
+      "name": "Chaos Emperor Dragon - Envoy of the End",
+      "reason": "GX1 year 1 Forbidden"
+    }
+  ],
+  "limited": [
+    {
+      "card_id": 13,
+      "limit": 1,
+      "name": "Right Leg of the Forbidden One",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 14,
+      "limit": 1,
+      "name": "Left Leg of the Forbidden One",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 15,
+      "limit": 1,
+      "name": "Right Arm of the Forbidden One",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 16,
+      "limit": 1,
+      "name": "Left Arm of the Forbidden One",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 17,
+      "limit": 1,
+      "name": "Exodia the Forbidden One",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 29,
+      "limit": 1,
+      "name": "Sangan",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 153,
+      "limit": 1,
+      "name": "Swords of Revealing Light",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 209,
+      "limit": 1,
+      "name": "Sinister Serpent",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 259,
+      "limit": 1,
+      "name": "Morphing Jar",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 348,
+      "limit": 1,
+      "name": "Jinzo",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 350,
+      "limit": 1,
+      "name": "Reflect Bounder",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 370,
+      "limit": 1,
+      "name": "Graceful Charity",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 375,
+      "limit": 1,
+      "name": "Card Destruction",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 387,
+      "limit": 1,
+      "name": "Pot of Greed",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 421,
+      "limit": 1,
+      "name": "Mirror Force",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 422,
+      "limit": 1,
+      "name": "Heavy Storm",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 428,
+      "limit": 1,
+      "name": "Snatch Steal",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 431,
+      "limit": 1,
+      "name": "Delinquent Duo",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 436,
+      "limit": 1,
+      "name": "Mystical Space Typhoon",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 440,
+      "limit": 1,
+      "name": "Cyber Jar",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 469,
+      "limit": 1,
+      "name": "Ceasefire",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 477,
+      "limit": 1,
+      "name": "Premature Burial",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 497,
+      "limit": 1,
+      "name": "Call of the Haunted",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 503,
+      "limit": 1,
+      "name": "Ring of Destruction",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 516,
+      "limit": 1,
+      "name": "Injection Fairy Lily",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 547,
+      "limit": 1,
+      "name": "Torrential Tribute",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 552,
+      "limit": 1,
+      "name": "Magic Cylinder",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 593,
+      "limit": 1,
+      "name": "United We Stand",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 594,
+      "limit": 1,
+      "name": "Mage Power",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 597,
+      "limit": 1,
+      "name": "Lightning Vortex",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 651,
+      "limit": 1,
+      "name": "Exiled Force",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 671,
+      "limit": 1,
+      "name": "Reversal of Graves",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 706,
+      "limit": 1,
+      "name": "Reckless Greed",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 787,
+      "limit": 1,
+      "name": "Breaker the Magical Warrior",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 792,
+      "limit": 1,
+      "name": "Tribe-Infecting Virus",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 820,
+      "limit": 1,
+      "name": "D. D. Warrior Lady",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 868,
+      "limit": 1,
+      "name": "Black Luster Soldier - Envoy of the Beginning",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 896,
+      "limit": 1,
+      "name": "Dark Magician of Chaos",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 963,
+      "limit": 1,
+      "name": "Marshmallon",
+      "reason": "GX1 year 1 Limited"
+    },
+    {
+      "card_id": 976,
+      "limit": 1,
+      "name": "Protector of the Sanctuary",
+      "reason": "GX1 year 1 Limited"
+    }
+  ],
+  "semi_limited": [
+    {
+      "card_id": 425,
+      "limit": 2,
+      "name": "Upstart Goblin",
+      "reason": "GX1 year 1 Semi-Limited"
+    },
+    {
+      "card_id": 474,
+      "limit": 2,
+      "name": "Nobleman of Crossout",
+      "reason": "GX1 year 1 Semi-Limited"
+    },
+    {
+      "card_id": 557,
+      "limit": 2,
+      "name": "Gravity Bind",
+      "reason": "GX1 year 1 Semi-Limited"
+    },
+    {
+      "card_id": 649,
+      "limit": 2,
+      "name": "Marauding Captain",
+      "reason": "GX1 year 1 Semi-Limited"
+    },
+    {
+      "card_id": 653,
+      "limit": 2,
+      "name": "Reinforcement of the Army",
+      "reason": "GX1 year 1 Semi-Limited"
+    },
+    {
+      "card_id": 664,
+      "limit": 2,
+      "name": "Emergency Provisions",
+      "reason": "GX1 year 1 Semi-Limited"
+    },
+    {
+      "card_id": 1098,
+      "limit": 2,
+      "name": "Good Goblin Housekeeping",
+      "reason": "GX1 year 1 Semi-Limited"
+    }
+  ],
+  "schema_notes": {
+    "banned": "Array of card ids or {card_id, name, reason}. Forbidden in year 1.",
+    "limited": "Array of {card_id, limit, name, reason}; limit is 1.",
+    "semi_limited": "Array of {card_id, limit, name, reason}; limit is 2."
+  }
+}
