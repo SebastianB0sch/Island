@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "card_id": 849,
+  "name": "Sakuretsu Armor",
+  "card_type": "Trap",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "You can only activate this card when your opponent declares an attack. Destroy the attacking monster.",
+  "notes": [
+    "Demonstrates a battle-timing Normal Trap with an attacking-monster selector."
+  ],
+  "scripts": [
+    {
+      "id": "sakuretsu_destroy_attacker",
+      "trigger": "on_attack_declared",
+      "condition": {
+        "controller": "opponent",
+        "custom": "attack_declared_against_controller"
+      },
+      "target": {
+        "zone": "attacking_monster",
+        "count": 1
+      },
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Sakuretsu Armor"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "source_text": "You can only activate this card when your opponent declares an attack. Destroy the attacking monster."
+    }
+  ]
+}

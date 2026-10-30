@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "card_id": 639,
+  "name": "Amazoness Swords Woman",
+  "card_type": "Effect Monster",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "The opponent takes all Battle Damage to this card's controller that he/she takes from a battle involving this monster.",
+  "notes": [
+    "Demonstrates a continuous battle-damage redirection effect and a battle event hook."
+  ],
+  "scripts": [
+    {
+      "id": "amazoness_redirect_battle_damage",
+      "trigger": "continuous",
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "battle_involving_self"
+      },
+      "operations": [
+        {
+          "op": "redirect_battle_damage",
+          "target": "$self",
+          "to": "opponent"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "The opponent takes all Battle Damage to this card's controller..."
+    }
+  ]
+}

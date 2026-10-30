@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 651,
+  "name": "Exiled Force",
+  "card_type": "Effect Monster",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "Offer this face-up card on your side of the field as a Tribute to destroy 1 monster on the field. If this card is used for a Tribute Summon or this card is offered as a Tribute due to other cards' effects, this card's effect is not activated.",
+  "notes": [
+    "Demonstrates an ignition effect whose cost is the source itself, plus a field-wide target."
+  ],
+  "scripts": [
+    {
+      "id": "exiled_force_destroy",
+      "trigger": "manual",
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "tribute",
+          "target": "$self"
+        }
+      ],
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "chooser": "controller"
+      },
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Exiled Force"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": true,
+      "source_text": "Offer this face-up card on your side of the field as a Tribute to destroy 1 monster on the field."
+    }
+  ]
+}

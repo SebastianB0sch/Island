@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "description": "Cards reserved for the first vertical slice. Tier 1 is deliberately small in this pass: every entry is a schema demonstrator with a hand-authored script. Add cards here only when they are part of the opening slice and have a script.",
+  "cards": [
+    29,
+    259,
+    348,
+    436,
+    637,
+    639,
+    651,
+    686,
+    787,
+    849
+  ]
+}

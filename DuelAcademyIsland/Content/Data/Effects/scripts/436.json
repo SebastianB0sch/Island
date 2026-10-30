@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "card_id": 436,
+  "name": "Mystical Space Typhoon",
+  "card_type": "Spell",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "Destroy 1 Spell or Trap Card on the field.",
+  "notes": [
+    "Demonstrates a Quick-Play Spell (spell speed 2) with a single Spell/Trap target."
+  ],
+  "scripts": [
+    {
+      "id": "mst_destroy_spell_trap",
+      "trigger": "on_activate",
+      "target": {
+        "zone": "any_spell_trap",
+        "count": 1,
+        "chooser": "controller"
+      },
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Mystical Space Typhoon"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "source_text": "Destroy 1 Spell or Trap Card on the field."
+    }
+  ]
+}

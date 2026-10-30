@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "card_id": 637,
+  "name": "Fusion Gate",
+  "card_type": "Spell",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "As long as this card remains face-up on the field, a Fusion Monster can be Special Summoned without using \"Polymerization\". The Fusion-Material monsters used in the Fusion are not sent to the Graveyard, but are removed from play.",
+  "notes": [
+    "Demonstrates a Field Spell continuous effect that registers a new fusion procedure and changes the material destination."
+  ],
+  "scripts": [
+    {
+      "id": "fusion_gate_allow_fusion",
+      "trigger": "field_continuous",
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_field"
+      },
+      "operations": [
+        {
+          "op": "allow_fusion",
+          "fusion_type": "Fusion Gate",
+          "banish_materials": true
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "As long as this card remains face-up on the field, a Fusion Monster can be Special Summoned without using \"Polymerization\"."
+    }
+  ]
+}

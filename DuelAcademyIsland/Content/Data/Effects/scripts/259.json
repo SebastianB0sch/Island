@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "card_id": 259,
+  "name": "Morphing Jar",
+  "card_type": "Effect Monster",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "FLIP: Both you and your opponent discard all cards in your hands and draw 5 cards from your respective Decks.",
+  "notes": [
+    "Demonstrates a FLIP trigger that affects both players and performs discard then draw in order."
+  ],
+  "scripts": [
+    {
+      "id": "morphing_jar_flip",
+      "trigger": "on_flip",
+      "condition": {
+        "controller": "self",
+        "zone": "self_monster"
+      },
+      "operations": [
+        {
+          "op": "discard",
+          "target": {
+            "zone": "all_hands",
+            "count": "all"
+          },
+          "player": "both",
+          "reason": "Morphing Jar"
+        },
+        {
+          "op": "draw",
+          "player": "both",
+          "count": 5,
+          "reason": "Morphing Jar"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "FLIP: Both you and your opponent discard all cards in your hands and draw 5 cards..."
+    }
+  ]
+}

@@ -1,14 +1,1904 @@
 [
   {
+    "result": 11,
+    "materials": [
+      58,
+      103
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Flame Swordsman",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 11,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Flame Manipulator",
+      "Masaki the Legendary Swordsman"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 21,
+    "materials": [
+      19,
+      48
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Zombie Warrior",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 21,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Skull Servant",
+      "Battle Warrior"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 25,
+    "materials": [
+      26,
+      27
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
+    ],
+    "name": "Gaia the Dragon Champion",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 25,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Gaia The Fierce Knight",
+      "Curse of Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 28,
+    "materials": [
+      65,
+      66
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Karbonala Warrior",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 28,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "M-Warrior #1",
+      "M-Warrior #2"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 36,
+    "materials": [
+      12,
+      3
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
+    ],
+    "name": "Thousand Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 36,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Time Wizard",
+      "Baby Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 41,
+    "materials": [
+      78,
+      4
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Barox",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 41,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Frenzied Panda",
+      "Ryu-Kishin"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 44,
+    "materials": [
+      20,
+      43
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Rabid Horseman",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 44,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Battle Ox",
+      "Mystic Horseman"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 53,
+    "materials": [
+      2,
+      51
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Kamionwizard",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 53,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Mystical Elf",
+      "Curtain of the Dark Ones"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 56,
+    "materials": [
+      60,
+      81
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Charubin the Fire Knight",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 56,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Monster Egg",
+      "Hinotama Soul"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 69,
+    "materials": [
+      64,
+      77
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
+    ],
+    "name": "Darkfire Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 69,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Firegrass",
+      "Petit Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 75,
+    "materials": [
+      80,
+      100
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Fusionist",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 75,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Petit Angel",
+      "Mystical Sheep #2"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 83,
+    "materials": [
+      19,
+      92
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Flame Ghost",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 83,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Skull Servant",
+      "Dissolverock"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 85,
+    "materials": [
+      18,
+      40
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
+    ],
+    "name": "B. Skull Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 85,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Summoned Skull",
+      "Red-Eyes B. Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 86,
+    "materials": [
+      169,
+      277
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Roaring Ocean Snake",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 86,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Mystic Lamp",
+      "Hyosube"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 88,
+    "materials": [
+      75,
+      93
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Rare Fish",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 88,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Fusionist",
+      "Enchanting Mermaid"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 97,
+    "materials": [
+      10,
+      49
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Mavelus",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 97,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Tyhone",
+      "Wings of Wicked Flame"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 104,
+    "materials": [
+      72,
+      105
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Dragoness the Wicked Knight",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 104,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Armaill",
+      "One-Eyed Shield Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 164,
+    "materials": [
+      183,
+      225
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Power Bond",
+      "Fusion Gate"
+    ],
+    "name": "Labyrinth Tank",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 164,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Giga-Tech Wolf",
+      "Cannon Soldier"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 166,
+    "materials": [
+      1,
+      1,
+      1
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
+    ],
+    "name": "Blue-Eyes Ultimate Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 166,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Blue-Eyes White Dragon",
+      "Blue-Eyes White Dragon",
+      "Blue-Eyes White Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 167,
+    "materials": [
+      45,
+      54
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Bickuribox",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 167,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Crass Clown",
+      "Dream Clown"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 170,
+    "materials": [
+      91,
+      99
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Giltia the D. Knight",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 170,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Guardian of the Labyrinth",
+      "Protector of the Throne"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 181,
+    "materials": [
+      248,
+      250
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Power Bond",
+      "Fusion Gate"
+    ],
+    "name": "Metal Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 181,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Steel Ogre Grotto #1",
+      "Lesser Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 189,
+    "materials": [
+      6,
+      263
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
+    ],
+    "name": "Kaiser Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 189,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Winged Dragon,Guardian of the Fortress #1",
+      "Fairy Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 193,
+    "materials": [
+      194,
+      240
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Deepsea Shark",
+    "confidence": "medium",
+    "source": {
+      "type": "card_text",
+      "card_id": 193,
+      "field": "description",
+      "method": "manual_override",
+      "override": true
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Bottom Dweller",
+      "Tongyo"
+    ],
+    "engineReady": true,
+    "notes": [
+      "cards.json contains a corrupted '+' separator in the material line; material names were resolved from the two quoted names."
+    ]
+  },
+  {
+    "result": 196,
+    "materials": [
+      263,
+      270,
+      174
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Aqua Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 196,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Fairy Dragon",
+      "Amazon of the Seas",
+      "Zone Eater"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 201,
+    "materials": [
+      175,
+      236
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Kaminari Attack",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 201,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Ocubeam",
+      "Mega Thunderball"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 202,
+    "materials": [
+      273,
+      237
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Punished Eagle",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 202,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Blue-Winged Crown",
+      "Niwatori"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 204,
+    "materials": [
+      55,
+      203
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Crimson Sunbird",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 204,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Faith Bird",
+      "Skull Red Bird"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 206,
+    "materials": [
+      61,
+      249
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Soul Hunter",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 206,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Lord of the Lamp",
+      "Invader from Another Dimension"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 207,
+    "materials": [
+      62,
+      102
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Vermillion Sparrow",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 207,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Rhaimundos of the Red Sword",
+      "Fireyarou"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 213,
+    "materials": [
+      255,
+      275
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Pragtical",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 213,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Trakadon",
+      "Flame Viper"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 214,
+    "materials": [
+      34,
+      254
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Flower Wolf",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 214,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Silver Fang",
+      "Darkworld Thorns"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 219,
+    "materials": [
+      257,
+      265
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Musician King",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 219,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Witch of the Black Forest",
+      "Lady of Faith"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 223,
+    "materials": [
+      185,
+      22
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Power Bond",
+      "Fusion Gate"
+    ],
+    "name": "Cyber Saurus",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 223,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Blast Juggler",
+      "Two-Headed King Rex"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 224,
+    "materials": [
+      22,
+      39
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Bracchio-raidus",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 224,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Two-Headed King Rex",
+      "Crawling Dragon #2"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 228,
+    "materials": [
+      258,
+      59
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Skullbird",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 228,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Takuhee",
+      "Temple of Skulls"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 233,
+    "materials": [
+      37,
+      192
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Mystical Sand",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 233,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Giant Soldier of Stone",
+      "Ancient Elf"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 235,
+    "materials": [
+      212,
+      30
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Kwagar Hercules",
+    "confidence": "medium",
+    "source": {
+      "type": "card_text",
+      "card_id": 235,
+      "field": "description",
+      "method": "normalized_name_match",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Kuwagata ò¤",
+      "Hercules Beetle"
+    ],
+    "engineReady": true,
+    "notes": [
+      "Material name contains a non-ASCII corruption in cards.json; resolved by normalized comparison."
+    ]
+  },
+  {
+    "result": 241,
+    "materials": [
+      24,
+      8
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Skelgon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 241,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "The Snake Hair",
+      "Blackland Fire Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 252,
+    "materials": [
+      24,
+      46
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Great Mammoth of Goldfine",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 252,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "The Snake Hair",
+      "Dragon Zombie"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 253,
+    "materials": [
+      208,
+      276,
+      270
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Man-eating Black Shark",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 253,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Sea Kamen",
+      "Gruesome Goo",
+      "Amazon of the Seas"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 256,
+    "materials": [
+      272,
+      278
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Empress Judge",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 256,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Queen's Double",
+      "Hibikime"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 260,
+    "materials": [
+      5,
+      269
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Rose Spectre of Dunn",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 260,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Feral Imp",
+      "Snakeyashi"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 266,
+    "materials": [
+      188,
+      188
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Twin-Headed Thunder Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 266,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Thunder Dragon",
+      "Thunder Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 267,
+    "materials": [
+      191,
+      243
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Marine Beast",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 267,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Water Magician",
+      "Behegon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 268,
+    "materials": [
+      106,
+      89
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Warrior of Tradition",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 268,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Sonic Maid",
+      "Beautiful Headhuntress"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 274,
+    "materials": [
+      98,
+      197
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Amphibious Bugroth",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 274,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Ground Attacker Bugroth",
+      "Guardian of the Sea"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 313,
+    "materials": [
+      67,
+      73
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Skull Knight",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 313,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Tainted Wisdom",
+      "Ancient Brain"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
     "result": 319,
     "materials": [
       40,
       318
     ],
     "fusionTypes": [
-      "Polymerization"
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
     ],
-    "name": "Meteor B. Dragon"
+    "name": "Meteor B. Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 319,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Red-Eyes B. Dragon",
+      "Meteor Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 334,
+    "materials": [
+      332,
+      333
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Thousand-Eyes Restrict",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 334,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Relinquished",
+      "Thousand-Eyes Idol"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 346,
+    "materials": [
+      343,
+      345
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Chimera the Flying Mythical Beast",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 346,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Gazelle the King of Mythical Beasts",
+      "Berfomet"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 359,
+    "materials": [
+      615,
+      627
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "The Last Warrior from Another Planet",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 359,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Zombyra the Dark",
+      "Maryokutai"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 501,
+    "materials": [
+      3,
+      353
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
+    ],
+    "name": "Alligator's Sword Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 501,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Baby Dragon",
+      "Alligator's Sword"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 529,
+    "materials": [
+      528,
+      527
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Humanoid Worm Drake",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 529,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Worm Drake",
+      "Humanoid Slime"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 589,
+    "materials": [
+      588,
+      590
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "St. Joan",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 589,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "The Forgiving Maiden",
+      "Marie the Fallen One"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 721,
+    "materials": [
+      160,
+      166
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
+    ],
+    "name": "Master of Dragon Soldier",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 721,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Black Luster Soldier",
+      "Blue-Eyes Ultimate Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 722,
+    "materials": [],
+    "fusionTypes": [
+      "Polymerization",
+      "Dragon's Mirror",
+      "Fusion Gate"
+    ],
+    "name": "F.G.D.",
+    "confidence": "medium",
+    "source": {
+      "type": "card_text",
+      "card_id": 722,
+      "field": "description",
+      "method": "generic_type_count",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "5 Dragon monsters"
+    ],
+    "engineReady": true,
+    "notes": [
+      "Card text defines a class of materials, not five named cards. The recipe is intentionally generic."
+    ],
+    "materialsType": "Dragon",
+    "anyCount": 5
+  },
+  {
+    "result": 745,
+    "materials": [
+      724,
+      744
+    ],
+    "fusionTypes": [
+      "Contact Fusion"
+    ],
+    "name": "XY-Dragon Cannon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 745,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "X-Head Cannon",
+      "Y-Dragon Head"
+    ],
+    "engineReady": false,
+    "notes": [
+      "Requires a banish-from-field contact-fusion primitive; the current engine does not implement it yet.",
+      "No fusion type in this recipe is currently resolved by DADuelEngine.cpp; A04 support is tracked in RUNTIME_INTERFACE.md."
+    ]
+  },
+  {
+    "result": 747,
+    "materials": [
+      724,
+      744,
+      746
+    ],
+    "fusionTypes": [
+      "Contact Fusion"
+    ],
+    "name": "XYZ-Dragon Cannon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 747,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "X-Head Cannon",
+      "Y-Dragon Head",
+      "Z-Metal Tank"
+    ],
+    "engineReady": false,
+    "notes": [
+      "Requires a banish-from-field contact-fusion primitive; the current engine does not implement it yet.",
+      "No fusion type in this recipe is currently resolved by DADuelEngine.cpp; A04 support is tracked in RUNTIME_INTERFACE.md."
+    ]
+  },
+  {
+    "result": 774,
+    "materials": [
+      724,
+      746
+    ],
+    "fusionTypes": [
+      "Contact Fusion"
+    ],
+    "name": "XZ-Tank Cannon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 774,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "X-Head Cannon",
+      "Z-Metal Tank"
+    ],
+    "engineReady": false,
+    "notes": [
+      "Requires a banish-from-field contact-fusion primitive; the current engine does not implement it yet.",
+      "No fusion type in this recipe is currently resolved by DADuelEngine.cpp; A04 support is tracked in RUNTIME_INTERFACE.md."
+    ]
+  },
+  {
+    "result": 775,
+    "materials": [
+      744,
+      746
+    ],
+    "fusionTypes": [
+      "Contact Fusion"
+    ],
+    "name": "YZ-Tank Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 775,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Y-Dragon Head",
+      "Z-Metal Tank"
+    ],
+    "engineReady": false,
+    "notes": [
+      "Requires a banish-from-field contact-fusion primitive; the current engine does not implement it yet.",
+      "No fusion type in this recipe is currently resolved by DADuelEngine.cpp; A04 support is tracked in RUNTIME_INTERFACE.md."
+    ]
+  },
+  {
+    "result": 776,
+    "materials": [
+      23,
+      493
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Dark Paladin",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 776,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Dark Magician",
+      "Buster Blader"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 813,
+    "materials": [
+      23,
+      11
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Dark Flare Knight",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 813,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Dark Magician",
+      "Flame Swordsman"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 1018,
+    "materials": [
+      835,
+      851,
+      852
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Ojama King",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1018,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Ojama Green",
+      "Ojama Yellow",
+      "Ojama Black"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 1019,
+    "materials": [
+      854,
+      855
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Master of Oz",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1019,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Big Koala",
+      "Des Kangaroo"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 1020,
+    "materials": [
+      29,
+      257
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Sanwitch",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1020,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Sangan",
+      "Witch of the Black Forest"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 1060,
+    "materials": [
+      754,
+      755
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Dark Blade the Dragon Knight",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1060,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Dark Blade",
+      "Pitch-Dark Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 1061,
+    "materials": [
+      967,
+      967,
+      967
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Fusion Gate"
+    ],
+    "name": "Mokey Mokey King",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1061,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Mokey Mokey",
+      "Mokey Mokey",
+      "Mokey Mokey"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 1088,
+    "materials": [
+      340,
+      940
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Power Bond",
+      "Fusion Gate"
+    ],
+    "name": "Gatling Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1088,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Barrel Dragon",
+      "Blowback Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
   },
   {
     "result": 1129,
@@ -18,9 +1908,25 @@
     ],
     "fusionTypes": [
       "Polymerization",
-      "Miracle Fusion"
+      "Miracle Fusion",
+      "Fusion Gate"
     ],
-    "name": "Elemental Hero Flame Wingman"
+    "name": "Elemental Hero Flame Wingman",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1129,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Elemental Hero Avian",
+      "Elemental Hero Burstinatrix"
+    ],
+    "engineReady": true,
+    "notes": []
   },
   {
     "result": 1130,
@@ -30,9 +1936,139 @@
     ],
     "fusionTypes": [
       "Polymerization",
-      "Miracle Fusion"
+      "Miracle Fusion",
+      "Fusion Gate"
     ],
-    "name": "Elemental Hero Thunder Giant"
+    "name": "Elemental Hero Thunder Giant",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1130,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Elemental Hero Sparkman",
+      "Elemental Hero Clayman"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 1155,
+    "materials": [
+      1148,
+      1149
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Power Bond",
+      "Fusion Gate"
+    ],
+    "name": "Steam Gyroid",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1155,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Gyroid",
+      "Steamroid"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 1156,
+    "materials": [],
+    "fusionTypes": [
+      "Polymerization",
+      "Power Bond",
+      "Fusion Gate"
+    ],
+    "name": "UFOroid Fighter",
+    "confidence": "unresolved",
+    "source": {
+      "type": "card_text",
+      "card_id": 1156,
+      "field": "description",
+      "method": "unresolved",
+      "override": false
+    },
+    "status": "unresolved",
+    "materialNames": [
+      "UFOroid",
+      "1 Warrior-Type monster"
+    ],
+    "engineReady": false,
+    "notes": [
+      "Mixed specific/generic material slot is not representable by the current engine recipe model: 1 Warrior-Type monster"
+    ],
+    "reason": "Mixed specific/generic material slot is not representable by the current engine recipe model: 1 Warrior-Type monster"
+  },
+  {
+    "result": 1157,
+    "materials": [
+      1152,
+      1152
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Power Bond",
+      "Fusion Gate"
+    ],
+    "name": "Cyber Twin Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1157,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Cyber Dragon",
+      "Cyber Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
+  },
+  {
+    "result": 1158,
+    "materials": [
+      1152,
+      1152,
+      1152
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Power Bond",
+      "Fusion Gate"
+    ],
+    "name": "Cyber End Dragon",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1158,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Cyber Dragon",
+      "Cyber Dragon",
+      "Cyber Dragon"
+    ],
+    "engineReady": true,
+    "notes": []
   },
   {
     "result": 1200,
@@ -42,24 +2078,24 @@
     ],
     "fusionTypes": [
       "Polymerization",
-      "Miracle Fusion"
+      "Miracle Fusion",
+      "Fusion Gate"
     ],
-    "name": "Elemental Hero Shining Flare Wingman"
-  },
-  {
-    "result": 722,
-    "materials": [
-      363,
-      666,
-      655,
-      655,
-      780
+    "name": "Elemental Hero Shining Flare Wingman",
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "card_id": 1200,
+      "field": "description",
+      "method": "explicit_materials",
+      "override": false
+    },
+    "status": "resolved",
+    "materialNames": [
+      "Elemental Hero Flame Wingman",
+      "Elemental Hero Sparkman"
     ],
-    "materialsType": "Dragon",
-    "anyCount": 5,
-    "fusionTypes": [
-      "Dragon's Mirror"
-    ],
-    "name": "F.G.D."
+    "engineReady": true,
+    "notes": []
   }
 ]

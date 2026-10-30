@@ -1,0 +1,578 @@
+[
+  {
+    "monster": 156,
+    "name": "Super War-Lion",
+    "level": 7,
+    "ritual_spell": 293,
+    "ritual_spell_name": "War-Lion Ritual",
+    "level_requirement": 7,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 7,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "medium",
+    "source": {
+      "type": "card_text",
+      "monster_id": 156,
+      "spell_id": 293,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": [
+      "Ritual Spell text says total Level 6; the printed Level is 7. The printed Level is used."
+    ]
+  },
+  {
+    "monster": 158,
+    "name": "Zera The Mant",
+    "level": 8,
+    "ritual_spell": 291,
+    "ritual_spell_name": "Zera Ritual",
+    "level_requirement": 8,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 8,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "medium",
+    "source": {
+      "type": "card_text",
+      "monster_id": 158,
+      "spell_id": 291,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": [
+      "Monster description says total Level 7; the printed Level is 8. The printed Level is used."
+    ]
+  },
+  {
+    "monster": 160,
+    "name": "Black Luster Soldier",
+    "level": 8,
+    "ritual_spell": 290,
+    "ritual_spell_name": "Black Luster Ritual",
+    "level_requirement": 8,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 8,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 160,
+      "spell_id": 290,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 161,
+    "name": "Fiend's Mirror",
+    "level": 6,
+    "ritual_spell": 294,
+    "ritual_spell_name": "Beastly Mirror Ritual",
+    "level_requirement": 6,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 6,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 161,
+      "spell_id": 294,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 307,
+    "name": "Performance of Sword",
+    "level": 6,
+    "ritual_spell": 295,
+    "ritual_spell_name": "Commencement Dance",
+    "level_requirement": 6,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 6,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 307,
+      "spell_id": 295,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 308,
+    "name": "Hungry Burger",
+    "level": 6,
+    "ritual_spell": 296,
+    "ritual_spell_name": "Hamburger Recipe",
+    "level_requirement": 6,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 6,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 308,
+      "spell_id": 296,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 310,
+    "name": "Skull Guardian",
+    "level": 7,
+    "ritual_spell": 297,
+    "ritual_spell_name": "Novox's Prayer",
+    "level_requirement": 7,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 7,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 310,
+      "spell_id": 297,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 315,
+    "name": "Chakra",
+    "level": 7,
+    "ritual_spell": 302,
+    "ritual_spell_name": "Resurrection of Chakra",
+    "level_requirement": 7,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 7,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 315,
+      "spell_id": 302,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 316,
+    "name": "Crab Turtle",
+    "level": 8,
+    "ritual_spell": 301,
+    "ritual_spell_name": "Turtle Oath",
+    "level_requirement": 8,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 8,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 316,
+      "spell_id": 301,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 321,
+    "name": "Garma Sword",
+    "level": 7,
+    "ritual_spell": 304,
+    "ritual_spell_name": "Garma Sword Oath",
+    "level_requirement": 7,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 7,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 321,
+      "spell_id": 304,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 322,
+    "name": "Javelin Beetle",
+    "level": 8,
+    "ritual_spell": 303,
+    "ritual_spell_name": "Javelin Beetle Pact",
+    "level_requirement": 8,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 8,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 322,
+      "spell_id": 303,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 323,
+    "name": "Fortress Whale",
+    "level": 7,
+    "ritual_spell": 306,
+    "ritual_spell_name": "Fortress Whale's Oath",
+    "level_requirement": 7,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 7,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 323,
+      "spell_id": 306,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 324,
+    "name": "Dokurorider",
+    "level": 6,
+    "ritual_spell": 305,
+    "ritual_spell_name": "Revival of Dokurorider",
+    "level_requirement": 6,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 6,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 324,
+      "spell_id": 305,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 326,
+    "name": "Magician of Black Chaos",
+    "level": 8,
+    "ritual_spell": 325,
+    "ritual_spell_name": "Dark Magic Ritual",
+    "level_requirement": 8,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 8,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 326,
+      "spell_id": 325,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 332,
+    "name": "Relinquished",
+    "level": 1,
+    "ritual_spell": 367,
+    "ritual_spell_name": "Black Illusion Ritual",
+    "level_requirement": 1,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 1,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 332,
+      "spell_id": 367,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 537,
+    "name": "The Masked Beast",
+    "level": 8,
+    "ritual_spell": 540,
+    "ritual_spell_name": "Curse of the Masked Beast",
+    "level_requirement": 8,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 8,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 537,
+      "spell_id": 540,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 763,
+    "name": "Paladin of White Dragon",
+    "level": 4,
+    "ritual_spell": 764,
+    "ritual_spell_name": "White Dragon Ritual",
+    "level_requirement": 4,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 4,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 763,
+      "spell_id": 764,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 812,
+    "name": "Shinato, King of a Higher Plane",
+    "level": 8,
+    "ritual_spell": 822,
+    "ritual_spell_name": "Shinato's Ark",
+    "level_requirement": 8,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 8,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 812,
+      "spell_id": 822,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 841,
+    "name": "Legendary Flame Lord",
+    "level": 7,
+    "ritual_spell": 843,
+    "ritual_spell_name": "Incandescent Ordeal",
+    "level_requirement": 7,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 7,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 841,
+      "spell_id": 843,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 842,
+    "name": "Dark Master - Zorc",
+    "level": 8,
+    "ritual_spell": 845,
+    "ritual_spell_name": "Contract with the Dark Master",
+    "level_requirement": 8,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 8,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 842,
+      "spell_id": 845,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 1127,
+    "name": "Reshef the Dark Being",
+    "level": 8,
+    "ritual_spell": 1134,
+    "ritual_spell_name": "Final Ritual of the Ancients",
+    "level_requirement": 8,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 8,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 1127,
+      "spell_id": 1134,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  },
+  {
+    "monster": 1128,
+    "name": "Elemental Mistress Doriado",
+    "level": 3,
+    "ritual_spell": 1133,
+    "ritual_spell_name": "Doriado's Blessing",
+    "level_requirement": 3,
+    "materials": {
+      "mode": "level_sum",
+      "min_total_level": 3,
+      "tribute": true,
+      "zones": [
+        "hand",
+        "field"
+      ]
+    },
+    "confidence": "high",
+    "source": {
+      "type": "card_text",
+      "monster_id": 1128,
+      "spell_id": 1133,
+      "method": "monster_and_spell_text"
+    },
+    "status": "resolved",
+    "notes": []
+  }
+]

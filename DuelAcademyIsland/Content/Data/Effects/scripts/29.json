@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 29,
+  "name": "Sangan",
+  "card_type": "Effect Monster",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "When this card is sent from the field to the Graveyard, select 1 monster with an ATK of 1500 or less from your Deck, show it to your opponent, and add it to your hand. Then shuffle your Deck.",
+  "notes": [
+    "Demonstrates a public-zone trigger, a filtered deck search, a reveal and a shuffle."
+  ],
+  "scripts": [
+    {
+      "id": "sangan_search",
+      "trigger": "on_sent_to_graveyard",
+      "condition": {
+        "controller": "self",
+        "zone": "self_monster",
+        "custom": "sent_from_field_to_graveyard"
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "card_type": "Monster",
+          "atk_max": 1500
+        },
+        "chooser": "controller",
+        "reveal": true
+      },
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is sent from the field to the Graveyard..."
+    }
+  ]
+}
