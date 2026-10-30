@@ -33,7 +33,7 @@ namespace
 	const FLinearColor HudInk(0.02f, 0.03f, 0.06f);
 	const FLinearColor HudPaper(0.95f, 0.95f, 0.97f);
 
-	FLinearColor WithAlpha(FLinearColor C, float A)
+	FLinearColor HudAlpha(FLinearColor C, float A)
 	{
 		C.A = A;
 		return C;
@@ -557,9 +557,9 @@ TArray<FString> ADAHUD::Wrap(const FString& Str, float MaxWidth, float Scale, UF
 
 void ADAHUD::Panel(float X, float Y, float W, float H, const FLinearColor& Accent, float Alpha)
 {
-	DrawRect(WithAlpha(HudInk, Alpha), X, Y, W, H);
-	DrawRect(WithAlpha(Accent, 0.95f), X, Y, 5.f * S(), H);
-	DrawRect(WithAlpha(Accent, 0.5f), X, Y + H - 2.f * S(), W, 2.f * S());
+	DrawRect(HudAlpha(HudInk, Alpha), X, Y, W, H);
+	DrawRect(HudAlpha(Accent, 0.95f), X, Y, 5.f * S(), H);
+	DrawRect(HudAlpha(Accent, 0.5f), X, Y + H - 2.f * S(), W, 2.f * S());
 }
 
 void ADAHUD::Diamond(const FVector2D& C, float R, const FLinearColor& Color)
@@ -801,9 +801,9 @@ void ADAHUD::DrawIntro(float T)
 	const float A = FMath::Clamp(T / 0.8f, 0.f, 1.f) * FMath::Clamp((9.f - T) / 1.5f, 0.f, 1.f);
 	const float CX = Canvas->ClipX * 0.5f;
 	const float Y = Canvas->ClipY * 0.2f;
-	Text(TEXT("DUEL ACADEMY"), CX, Y, WithAlpha(HudGold, A), 3.2f, true, BigFont);
-	Text(TEXT("ISLAND"), CX, Y + 92.f * S(), WithAlpha(HudPaper, A), 1.8f, true, BigFont);
-	Text(TEXT("Explore the island  -  M: map  -  P: PDA  -  E: interact  -  F1: controls"), CX, Y + 150.f * S(), WithAlpha(HudPaper, A * 0.9f), 1.0f, true);
+	Text(TEXT("DUEL ACADEMY"), CX, Y, HudAlpha(HudGold, A), 3.2f, true, BigFont);
+	Text(TEXT("ISLAND"), CX, Y + 92.f * S(), HudAlpha(HudPaper, A), 1.8f, true, BigFont);
+	Text(TEXT("Explore the island  -  M: map  -  P: PDA  -  E: interact  -  F1: controls"), CX, Y + 150.f * S(), HudAlpha(HudPaper, A * 0.9f), 1.0f, true);
 }
 
 void ADAHUD::DrawBanner(UDAIslandSubsystem* Sub, float Time)
@@ -821,14 +821,14 @@ void ADAHUD::DrawBanner(UDAIslandSubsystem* Sub, float Time)
 	const FVector2D Size = Measure(Name, 2.2f, BigFont);
 	const float W = FMath::Max(Size.X + 120.f * S(), 420.f * S());
 	DrawRect(FLinearColor(0.f, 0.f, 0.f, 0.45f * A), CX - W * 0.5f, Y - 18.f * S(), W, 140.f * S());
-	DrawRect(WithAlpha(Zone->ThemeColor, 0.95f * A), CX - W * 0.5f, Y - 18.f * S(), W, 4.f * S());
-	DrawRect(WithAlpha(Zone->ThemeColor, 0.95f * A), CX - W * 0.5f, Y + 118.f * S(), W, 4.f * S());
+	DrawRect(HudAlpha(Zone->ThemeColor, 0.95f * A), CX - W * 0.5f, Y - 18.f * S(), W, 4.f * S());
+	DrawRect(HudAlpha(Zone->ThemeColor, 0.95f * A), CX - W * 0.5f, Y + 118.f * S(), W, 4.f * S());
 	if (Sub->WasFirstVisit())
 	{
-		Text(TEXT("NEW LOCATION DISCOVERED"), CX, Y - 8.f * S(), WithAlpha(HudGold, A), 0.9f, true);
+		Text(TEXT("NEW LOCATION DISCOVERED"), CX, Y - 8.f * S(), HudAlpha(HudGold, A), 0.9f, true);
 	}
-	Text(Name, CX, Y + 14.f * S(), WithAlpha(HudPaper, A), 2.2f, true, BigFont);
-	Text(Zone->Subtitle, CX, Y + 80.f * S(), WithAlpha(Zone->ThemeColor, A), 1.1f, true);
+	Text(Name, CX, Y + 14.f * S(), HudAlpha(HudPaper, A), 2.2f, true, BigFont);
+	Text(Zone->Subtitle, CX, Y + 80.f * S(), HudAlpha(Zone->ThemeColor, A), 1.1f, true);
 }
 
 void ADAHUD::DrawCompass(UDAIslandSubsystem* Sub)
@@ -856,7 +856,7 @@ void ADAHUD::DrawCompass(UDAIslandSubsystem* Sub)
 		if (FMath::Abs(D) < 88.f)
 		{
 			const bool bMajor = FCString::Strlen(Mk.Label) == 1;
-			Text(Mk.Label, CX + D * PxPerDeg, Y + 6.f * S(), bMajor ? (Mk.Yaw == -90.f ? HudGold : HudPaper) : WithAlpha(HudPaper, 0.6f), bMajor ? 1.0f : 0.75f, true);
+			Text(Mk.Label, CX + D * PxPerDeg, Y + 6.f * S(), bMajor ? (Mk.Yaw == -90.f ? HudGold : HudPaper) : HudAlpha(HudPaper, 0.6f), bMajor ? 1.0f : 0.75f, true);
 		}
 	}
 	for (int32 Deg = -180; Deg < 180; Deg += 15)
@@ -864,7 +864,7 @@ void ADAHUD::DrawCompass(UDAIslandSubsystem* Sub)
 		const float D = FMath::FindDeltaAngleDegrees(Yaw, static_cast<float>(Deg));
 		if (FMath::Abs(D) < 88.f && Deg % 45 != 0)
 		{
-			DrawRect(WithAlpha(HudPaper, 0.5f), CX + D * PxPerDeg - 1.f, Y + 22.f * S(), 2.f, 8.f * S());
+			DrawRect(HudAlpha(HudPaper, 0.5f), CX + D * PxPerDeg - 1.f, Y + 22.f * S(), 2.f, 8.f * S());
 		}
 	}
 	// Location markers within 1 km
@@ -883,7 +883,7 @@ void ADAHUD::DrawCompass(UDAIslandSubsystem* Sub)
 			const float D = FMath::FindDeltaAngleDegrees(Yaw, ZYaw);
 			if (FMath::Abs(D) < 85.f)
 			{
-				Diamond(FVector2D(CX + D * PxPerDeg, Y + 44.f * S()), 6.f * S(), WithAlpha(Z->ThemeColor, 0.95f));
+				Diamond(FVector2D(CX + D * PxPerDeg, Y + 44.f * S()), 6.f * S(), HudAlpha(Z->ThemeColor, 0.95f));
 			}
 		}
 	}
@@ -932,7 +932,7 @@ void ADAHUD::DrawMinimap(UDAIslandSubsystem* Sub)
 		{
 			continue;
 		}
-		Diamond(FVector2D(X0 + Rel.X * Size, Y0 + Rel.Y * Size), 6.f * S(), WithAlpha(Z->ThemeColor, Sub->IsDiscovered(Z) ? 1.f : 0.45f));
+		Diamond(FVector2D(X0 + Rel.X * Size, Y0 + Rel.Y * Size), 6.f * S(), HudAlpha(Z->ThemeColor, Sub->IsDiscovered(Z) ? 1.f : 0.45f));
 	}
 	Arrow(FVector2D(X0 + Size * 0.5f, Y0 + Size * 0.5f), 9.f * S(), Pawn->GetActorRotation().Yaw, HudGold);
 	Text(TEXT("N"), X0 + Size * 0.5f, Y0 + 4.f * S(), HudGold, 0.9f, true);
@@ -946,7 +946,7 @@ void ADAHUD::DrawMinimap(UDAIslandSubsystem* Sub)
 	{
 		Progress += FString::Printf(TEXT("    Cards %d"), Student->GetCollectionSize());
 	}
-	Text(Progress, X0 + Size * 0.5f, Y0 + Size + 30.f * S(), WithAlpha(HudPaper, 0.7f), 0.75f, true);
+	Text(Progress, X0 + Size * 0.5f, Y0 + Size + 30.f * S(), HudAlpha(HudPaper, 0.7f), 0.75f, true);
 }
 
 void ADAHUD::DrawClock(ADAIslandManager* M)
@@ -967,7 +967,7 @@ void ADAHUD::DrawClock(ADAIslandManager* M)
 	}
 	const FVector2D Sz = Measure(Clock, 1.0f);
 	Text(Clock, X - Sz.X, 22.f * S(), HudPaper, 1.0f);
-	Text(M->IsNight() ? TEXT("Night") : TEXT("Day"), X - Measure(M->IsNight() ? TEXT("Night") : TEXT("Day"), 0.75f).X, 48.f * S(), WithAlpha(HudGold, 0.85f), 0.75f);
+	Text(M->IsNight() ? TEXT("Night") : TEXT("Day"), X - Measure(M->IsNight() ? TEXT("Night") : TEXT("Day"), 0.75f).X, 48.f * S(), HudAlpha(HudGold, 0.85f), 0.75f);
 }
 
 void ADAHUD::DrawPrompt()
@@ -1004,14 +1004,14 @@ void ADAHUD::DrawMessage(UDAIslandSubsystem* Sub)
 	const float X = 40.f * S();
 	const float Y = Canvas->ClipY - H - 60.f * S();
 	Panel(X, Y, W, H, Msg->Accent, 0.78f * A);
-	Text(Msg->Title, X + 24.f * S(), Y + 14.f * S(), WithAlpha(Msg->Accent, A), 1.35f, false, BigFont);
+	Text(Msg->Title, X + 24.f * S(), Y + 14.f * S(), HudAlpha(Msg->Accent, A), 1.35f, false, BigFont);
 	float LY = Y + 60.f * S();
 	for (const FString& L : Lines)
 	{
-		Text(L, X + 24.f * S(), LY, WithAlpha(HudPaper, A), 0.95f);
+		Text(L, X + 24.f * S(), LY, HudAlpha(HudPaper, A), 0.95f);
 		LY += LineH;
 	}
-	Text(TEXT("[E] close"), X + W - 110.f * S(), Y + H - 26.f * S(), WithAlpha(HudPaper, 0.5f * A), 0.7f);
+	Text(TEXT("[E] close"), X + W - 110.f * S(), Y + H - 26.f * S(), HudAlpha(HudPaper, 0.5f * A), 0.7f);
 }
 
 void ADAHUD::DrawHelp()
@@ -1058,7 +1058,7 @@ void ADAHUD::DrawHelp()
 	LY += 14.f * S();
 	for (const TCHAR* L : Credits)
 	{
-		Text(L, X + 28.f * S(), LY, WithAlpha(HudPaper, 0.6f), 0.68f);
+		Text(L, X + 28.f * S(), LY, HudAlpha(HudPaper, 0.6f), 0.68f);
 		LY += CreditH;
 	}
 }
@@ -1113,8 +1113,8 @@ void ADAHUD::DrawMap(UDAIslandSubsystem* Sub)
 		const bool bSel = i == MapSelection || Z == HoveredZone.Get();
 		const bool bKnown = Sub->IsDiscovered(Z);
 		Diamond(Pt, (bSel ? 13.f : 9.f) * S(), FLinearColor(0.f, 0.f, 0.f, 0.8f));
-		Diamond(Pt, (bSel ? 10.f : 7.f) * S(), WithAlpha(Z->ThemeColor, bKnown ? 1.f : 0.55f));
-		Text(Z->DisplayName, Pt.X, Pt.Y + 12.f * S(), bSel ? HudGold : WithAlpha(HudPaper, bKnown ? 0.95f : 0.6f), bSel ? 0.9f : 0.72f, true);
+		Diamond(Pt, (bSel ? 10.f : 7.f) * S(), HudAlpha(Z->ThemeColor, bKnown ? 1.f : 0.55f));
+		Text(Z->DisplayName, Pt.X, Pt.Y + 12.f * S(), bSel ? HudGold : HudAlpha(HudPaper, bKnown ? 0.95f : 0.6f), bSel ? 0.9f : 0.72f, true);
 	}
 	if (const APlayerController* PC = GetOwningPlayerController())
 	{
@@ -1129,7 +1129,7 @@ void ADAHUD::DrawMap(UDAIslandSubsystem* Sub)
 	const float LX = MX + Side + 40.f * S();
 	const float LW = CW - LX - 40.f * S();
 	Text(TEXT("ISLAND MAP"), LX, MY, HudGold, 2.0f, false, BigFont);
-	Text(TEXT("Up / Down select    Enter travel    Click a marker    M close"), LX, MY + 62.f * S(), WithAlpha(HudPaper, 0.7f), 0.8f);
+	Text(TEXT("Up / Down select    Enter travel    Click a marker    M close"), LX, MY + 62.f * S(), HudAlpha(HudPaper, 0.7f), 0.8f);
 	float LY = MY + 100.f * S();
 	const float RowH = 30.f * S();
 	for (int32 i = 0; i < Zones.Num(); ++i)
@@ -1138,11 +1138,11 @@ void ADAHUD::DrawMap(UDAIslandSubsystem* Sub)
 		const bool bSel = i == MapSelection;
 		if (bSel)
 		{
-			DrawRect(WithAlpha(Z->ThemeColor, 0.35f), LX - 8.f * S(), LY - 3.f * S(), LW, RowH);
+			DrawRect(HudAlpha(Z->ThemeColor, 0.35f), LX - 8.f * S(), LY - 3.f * S(), LW, RowH);
 		}
-		DrawRect(WithAlpha(Z->ThemeColor, 1.f), LX - 8.f * S(), LY - 3.f * S(), 4.f * S(), RowH);
+		DrawRect(HudAlpha(Z->ThemeColor, 1.f), LX - 8.f * S(), LY - 3.f * S(), 4.f * S(), RowH);
 		const FString Label = Sub->IsDiscovered(Z) ? Z->DisplayName : Z->DisplayName + TEXT("  (unexplored)");
-		Text(Label, LX + 6.f * S(), LY, bSel ? HudPaper : WithAlpha(HudPaper, 0.75f), 0.95f);
+		Text(Label, LX + 6.f * S(), LY, bSel ? HudPaper : HudAlpha(HudPaper, 0.75f), 0.95f);
 		LY += RowH;
 	}
 	if (ADALocationVolume* Sel = Zones.IsValidIndex(MapSelection) ? Zones[MapSelection] : nullptr)
@@ -1150,7 +1150,7 @@ void ADAHUD::DrawMap(UDAIslandSubsystem* Sub)
 		LY += 16.f * S();
 		Text(Sel->DisplayName, LX, LY, Sel->ThemeColor, 1.3f, false, BigFont);
 		LY += 46.f * S();
-		Text(Sel->Subtitle, LX, LY, WithAlpha(HudPaper, 0.8f), 0.9f);
+		Text(Sel->Subtitle, LX, LY, HudAlpha(HudPaper, 0.8f), 0.9f);
 		LY += 32.f * S();
 		for (const FString& L : Wrap(Sel->Description, LW - 10.f * S(), 0.9f))
 		{

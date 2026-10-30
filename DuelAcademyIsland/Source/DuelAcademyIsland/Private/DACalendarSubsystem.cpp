@@ -108,7 +108,7 @@ namespace
 		return Fallback;
 	}
 
-	int32 ReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default)
+	int32 CalendarReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default)
 	{
 		int32 Value = Default;
 		if (Object.IsValid())
@@ -192,9 +192,9 @@ bool UDACalendarSubsystem::LoadCalendarData()
 	const TSharedPtr<FJsonObject>* Start = nullptr;
 	if (Root->TryGetObjectField(TEXT("start"), Start) && Start && Start->IsValid())
 	{
-		const int32 StartYear = FMath::Max(1, ReadInt(*Start, TEXT("year"), 1));
-		const int32 StartMonth = FMath::Clamp(ReadInt(*Start, TEXT("month_index"), 0), 0, 11);
-		const int32 StartDay = FMath::Max(1, ReadInt(*Start, TEXT("day"), 7));
+		const int32 StartYear = FMath::Max(1, CalendarReadInt(*Start, TEXT("year"), 1));
+		const int32 StartMonth = FMath::Clamp(CalendarReadInt(*Start, TEXT("month_index"), 0), 0, 11);
+		const int32 StartDay = FMath::Max(1, CalendarReadInt(*Start, TEXT("day"), 7));
 		EDADayPeriod StartPeriod = EDADayPeriod::AM;
 		FString PeriodText;
 		if ((*Start)->TryGetStringField(TEXT("period"), PeriodText))
@@ -208,9 +208,9 @@ bool UDACalendarSubsystem::LoadCalendarData()
 	if (Root->TryGetObjectField(TEXT("period_hours"), PeriodHoursObject) && PeriodHoursObject && PeriodHoursObject->IsValid())
 	{
 		PeriodHours.SetNum(3);
-		PeriodHours[0] = FMath::Clamp(ReadInt(*PeriodHoursObject, TEXT("AM"), 8), 0, 23);
-		PeriodHours[1] = FMath::Clamp(ReadInt(*PeriodHoursObject, TEXT("PM"), 14), 0, 23);
-		PeriodHours[2] = FMath::Clamp(ReadInt(*PeriodHoursObject, TEXT("Night"), 20), 0, 23);
+		PeriodHours[0] = FMath::Clamp(CalendarReadInt(*PeriodHoursObject, TEXT("AM"), 8), 0, 23);
+		PeriodHours[1] = FMath::Clamp(CalendarReadInt(*PeriodHoursObject, TEXT("PM"), 14), 0, 23);
+		PeriodHours[2] = FMath::Clamp(CalendarReadInt(*PeriodHoursObject, TEXT("Night"), 20), 0, 23);
 		Hour = GetPeriodStartHour(Period);
 	}
 
@@ -227,7 +227,7 @@ bool UDACalendarSubsystem::LoadCalendarData()
 		{
 			ExamWeekRule = StringToExamWeek(WeekText, EDAExamWeekRule::Last);
 		}
-		ExamPassMark = FMath::Max(0, ReadInt(*Exam, TEXT("pass_mark"), 300));
+		ExamPassMark = FMath::Max(0, CalendarReadInt(*Exam, TEXT("pass_mark"), 300));
 	}
 
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded school calendar: year %d, month %s, day %d, exam weekday %s (%s)."),

@@ -1,4 +1,9 @@
-// Duel Academy Island - the academy card shop's (original, fan-made) card list + NPC lines.
+// Duel Academy Island - legacy 32-card fan list + NPC lines.
+//
+// This list is retained only as the fallback for the existing DAInteractable
+// card-shop prop. The real 1,200-card trunk, 48-pack catalogue and deck rules
+// live in UDAInventorySubsystem / UDAShopSubsystem / UDADeckLogic and
+// Content/Data/Shop + Content/Data/Rules. Do not add canon cards here.
 
 #pragma once
 

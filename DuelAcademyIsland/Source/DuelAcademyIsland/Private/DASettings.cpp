@@ -15,7 +15,7 @@
 
 namespace
 {
-	FString JsonKeyToString(const FJsonObject::FStringType& Key)
+	FString SettingsJsonKeyToString(const FJsonObject::FStringType& Key)
 	{
 		return FString(*Key);
 	}
@@ -385,7 +385,7 @@ bool UDASettings::ReadJson(const TSharedPtr<FJsonObject>& Root, FString& OutErro
 				const FString KeyText = Pair.Value->AsString().TrimStartAndEnd();
 				if (!KeyText.IsEmpty())
 				{
-					Controls.Add(JsonKeyToString(Pair.Key), KeyText);
+					Controls.Add(SettingsJsonKeyToString(Pair.Key), KeyText);
 				}
 			}
 		}
