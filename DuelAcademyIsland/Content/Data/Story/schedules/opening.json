@@ -1,0 +1,1509 @@
+{
+  "schema_version": 1,
+  "story_id": "opening",
+  "weekdays": [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
+  ],
+  "periods": [
+    "AM",
+    "PM",
+    "Night"
+  ],
+  "defaults": {
+    "priority": 100,
+    "conditions": {
+      "all": []
+    }
+  },
+  "npcs": {
+    "banner": {
+      "display_name": "Lyman Banner",
+      "speaker_id": "banner",
+      "dorm": "slifer",
+      "home_location": "slifer",
+      "role": "Slifer Red headmaster; alchemy teacher",
+      "entries": [
+        {
+          "id": "banner.weekday.am",
+          "npc": "banner",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_counter",
+          "activity": "Breakfast duty and dorm check-in",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "banner.weekday.pm",
+          "npc": "banner",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_banner_room_desk",
+          "activity": "Office hours and alchemy preparation",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "banner.weekday.night",
+          "npc": "banner",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_counter",
+          "activity": "Dinner and dorm supervision",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        },
+        {
+          "id": "banner.weekend.am",
+          "npc": "banner",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_counter",
+          "activity": "Weekend breakfast and dorm check-in",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "banner.weekend.pm",
+          "npc": "banner",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_banner_room_desk",
+          "activity": "Weekend office hours",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "banner.weekend.night",
+          "npc": "banner",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_counter",
+          "activity": "Dinner and dorm supervision",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        }
+      ],
+      "date_overrides": [
+        {
+          "id": "banner.oct1.assembly",
+          "npc": "banner",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "AM"
+          ],
+          "location": "gym",
+          "anchor": "gym_assembly_staff",
+          "activity": "Opening assembly staff row",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        },
+        {
+          "id": "banner.oct1.dorm",
+          "npc": "banner",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "PM",
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_counter",
+          "activity": "Dorm welcome and dinner",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        },
+        {
+          "id": "banner.oct7.cafeteria",
+          "npc": "banner",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 7
+          },
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_counter",
+          "activity": "First free-day breakfast",
+          "conditions": {
+            "all": []
+          },
+          "priority": 450,
+          "event_id": "E01b",
+          "source": "mixed",
+          "confidence": "high",
+          "event": "E01b"
+        }
+      ],
+      "source": "original"
+    },
+    "jaden": {
+      "display_name": "Jaden Yuki",
+      "speaker_id": "jaden",
+      "dorm": "slifer",
+      "home_location": "slifer",
+      "role": "Slifer Red student; free-duel opponent",
+      "entries": [
+        {
+          "id": "jaden.weekday.am",
+          "npc": "jaden",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_dorm_front_jaden",
+          "activity": "Lounge outside the dorm",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "jaden.weekday.pm",
+          "npc": "jaden",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_01",
+          "activity": "Lunch and deck tinkering",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "jaden.weekday.night",
+          "npc": "jaden",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_jaden_room_jaden",
+          "activity": "Pickup duels in the common room",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        },
+        {
+          "id": "jaden.weekend.am",
+          "npc": "jaden",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_dorm_front_jaden",
+          "activity": "Lounge outside the dorm",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "jaden.weekend.pm",
+          "npc": "jaden",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_yard_practice",
+          "activity": "Practice duels in the yard",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "jaden.weekend.night",
+          "npc": "jaden",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_jaden_room_jaden",
+          "activity": "Pickup duels in the common room",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        }
+      ],
+      "date_overrides": [
+        {
+          "id": "jaden.oct1.assembly",
+          "npc": "jaden",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "AM"
+          ],
+          "location": "gym",
+          "anchor": "gym_assembly_student_02",
+          "activity": "Opening assembly, Slifer row",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        },
+        {
+          "id": "jaden.oct1.dorm",
+          "npc": "jaden",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "PM",
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_01",
+          "activity": "Dorm welcome and dinner",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        },
+        {
+          "id": "jaden.oct7.first_duel",
+          "npc": "jaden",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 7
+          },
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_dorm_front_jaden",
+          "activity": "Waiting for the player's first optional free duel",
+          "conditions": {
+            "all": [
+              {
+                "type": "flag",
+                "flag": "jaden_first_duel_done",
+                "value": false
+              }
+            ]
+          },
+          "priority": 470,
+          "event_id": "FJ01",
+          "source": "mixed",
+          "confidence": "high",
+          "event": "FJ01"
+        }
+      ],
+      "source": "original"
+    },
+    "syrus": {
+      "display_name": "Syrus Truesdale",
+      "speaker_id": "syrus",
+      "dorm": "slifer",
+      "home_location": "slifer",
+      "role": "Slifer Red student; tutorial guide",
+      "entries": [
+        {
+          "id": "syrus.weekday.am",
+          "npc": "syrus",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_02",
+          "activity": "Breakfast and keeping Jaden out of trouble",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "syrus.weekday.pm",
+          "npc": "syrus",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "academy",
+          "anchor": "academy_card_shop_player",
+          "activity": "Errands and card-shop browsing",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "syrus.weekday.night",
+          "npc": "syrus",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_jaden_room_syrus",
+          "activity": "Homework and deck practice",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        },
+        {
+          "id": "syrus.weekend.am",
+          "npc": "syrus",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_02",
+          "activity": "Weekend breakfast",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "syrus.weekend.pm",
+          "npc": "syrus",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_yard_practice",
+          "activity": "Practice duels and tutorial help",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "syrus.weekend.night",
+          "npc": "syrus",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_jaden_room_syrus",
+          "activity": "Deck practice",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        }
+      ],
+      "date_overrides": [
+        {
+          "id": "syrus.oct1.assembly",
+          "npc": "syrus",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "AM"
+          ],
+          "location": "gym",
+          "anchor": "gym_assembly_student_03",
+          "activity": "Opening assembly, Slifer row",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        },
+        {
+          "id": "syrus.oct1.dorm",
+          "npc": "syrus",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "PM",
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_02",
+          "activity": "Dorm welcome, dinner and tutorial",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        }
+      ],
+      "source": "original"
+    },
+    "chumley": {
+      "display_name": "Chumley Huffington",
+      "speaker_id": "chumley",
+      "dorm": "slifer",
+      "home_location": "slifer",
+      "role": "Slifer Red student",
+      "entries": [
+        {
+          "id": "chumley.weekday.am",
+          "npc": "chumley",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_03",
+          "activity": "Breakfast, second breakfast",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "chumley.weekday.pm",
+          "npc": "chumley",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_03",
+          "activity": "Lunch and card art",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "chumley.weekday.night",
+          "npc": "chumley",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_jaden_room_chumley",
+          "activity": "Snacks and deck building",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        },
+        {
+          "id": "chumley.weekend.am",
+          "npc": "chumley",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_03",
+          "activity": "Weekend breakfast",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "chumley.weekend.pm",
+          "npc": "chumley",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_03",
+          "activity": "Long lunch",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "chumley.weekend.night",
+          "npc": "chumley",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_jaden_room_chumley",
+          "activity": "Snacks and card art",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        }
+      ],
+      "date_overrides": [
+        {
+          "id": "chumley.oct1.assembly",
+          "npc": "chumley",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "AM"
+          ],
+          "location": "gym",
+          "anchor": "gym_assembly_crowd",
+          "activity": "Opening assembly, Slifer row",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        },
+        {
+          "id": "chumley.oct1.dorm",
+          "npc": "chumley",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "PM",
+            "Night"
+          ],
+          "location": "slifer",
+          "anchor": "slifer_cafeteria_seat_03",
+          "activity": "Dorm welcome and dinner",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        }
+      ],
+      "source": "original"
+    },
+    "sheppard": {
+      "display_name": "Chancellor Sheppard",
+      "speaker_id": "sheppard",
+      "dorm": "teacher",
+      "home_location": "academy",
+      "role": "Chancellor of Duel Academy",
+      "entries": [
+        {
+          "id": "sheppard.weekday.am",
+          "npc": "sheppard",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "academy",
+          "anchor": "chancellor_office_desk",
+          "activity": "Chancellor's office",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "sheppard.weekday.pm",
+          "npc": "sheppard",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "academy",
+          "anchor": "chancellor_office_desk",
+          "activity": "Meetings and paperwork",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "sheppard.weekday.night",
+          "npc": "sheppard",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "academy",
+          "anchor": "chancellor_office_desk",
+          "activity": "Late paperwork",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        },
+        {
+          "id": "sheppard.weekend.am",
+          "npc": "sheppard",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "academy",
+          "anchor": "chancellor_office_desk",
+          "activity": "Weekend paperwork",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "sheppard.weekend.pm",
+          "npc": "sheppard",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "plaza",
+          "anchor": "academy_front_steps",
+          "activity": "Walk around campus",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "sheppard.weekend.night",
+          "npc": "sheppard",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "academy",
+          "anchor": "chancellor_office_desk",
+          "activity": "Late paperwork",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        }
+      ],
+      "date_overrides": [
+        {
+          "id": "sheppard.oct1.assembly",
+          "npc": "sheppard",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "AM"
+          ],
+          "location": "gym",
+          "anchor": "gym_assembly_stage",
+          "activity": "Opening ceremony speech",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        },
+        {
+          "id": "sheppard.oct1.office",
+          "npc": "sheppard",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "PM",
+            "Night"
+          ],
+          "location": "academy",
+          "anchor": "chancellor_office_desk",
+          "activity": "Chancellor's office",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        }
+      ],
+      "source": "original"
+    },
+    "mimicry": {
+      "display_name": "Professor Mimicry",
+      "speaker_id": "mimicry",
+      "dorm": "teacher",
+      "home_location": "academy",
+      "role": "Practical dueling instructor; registration and exams",
+      "entries": [
+        {
+          "id": "mimicry.weekday.am",
+          "npc": "mimicry",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "academy",
+          "anchor": "academy_test_room_proctor",
+          "activity": "Exam preparation",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "mimicry.weekday.pm",
+          "npc": "mimicry",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "gym",
+          "anchor": "gym_practice_field_a",
+          "activity": "Practical exam instruction",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "mimicry.weekday.night",
+          "npc": "mimicry",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "academy",
+          "anchor": "academy_registration_desk",
+          "activity": "Registration desk and paperwork",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        },
+        {
+          "id": "mimicry.weekend.am",
+          "npc": "mimicry",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "academy",
+          "anchor": "academy_test_room_proctor",
+          "activity": "Weekend exam preparation",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "mimicry.weekend.pm",
+          "npc": "mimicry",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "gym",
+          "anchor": "gym_practice_field_a",
+          "activity": "Weekend practical review",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "mimicry.weekend.night",
+          "npc": "mimicry",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "academy",
+          "anchor": "academy_registration_desk",
+          "activity": "Registration desk and paperwork",
+          "conditions": {
+            "all": []
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        }
+      ],
+      "date_overrides": [
+        {
+          "id": "mimicry.oct1.registration",
+          "npc": "mimicry",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "location": "academy",
+          "anchor": "academy_registration_desk",
+          "activity": "New-student registration",
+          "conditions": {
+            "all": []
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        },
+        {
+          "id": "mimicry.oct7.day",
+          "npc": "mimicry",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 7
+          },
+          "periods": [
+            "AM"
+          ],
+          "location": "academy",
+          "anchor": "academy_test_room_proctor",
+          "activity": "Exam preparation",
+          "conditions": {
+            "all": []
+          },
+          "priority": 450,
+          "event_id": "E01b",
+          "source": "mixed",
+          "confidence": "high",
+          "event": "E01b"
+        },
+        {
+          "id": "mimicry.oct7.pm",
+          "npc": "mimicry",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 7
+          },
+          "periods": [
+            "PM"
+          ],
+          "location": "gym",
+          "anchor": "gym_practice_field_a",
+          "activity": "Practical review",
+          "conditions": {
+            "all": []
+          },
+          "priority": 450,
+          "event_id": "E01b",
+          "source": "mixed",
+          "confidence": "high",
+          "event": "E01b"
+        }
+      ],
+      "source": "original"
+    },
+    "dorothy": {
+      "display_name": "Miss Dorothy",
+      "speaker_id": "dorothy",
+      "dorm": "teacher",
+      "home_location": "academy",
+      "role": "Card shop keeper",
+      "entries": [
+        {
+          "id": "dorothy.weekday.am",
+          "npc": "dorothy",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "academy",
+          "anchor": "academy_card_shop_keeper",
+          "activity": "Card shop open",
+          "conditions": {
+            "all": [
+              {
+                "type": "flag",
+                "flag": "shop_unlocked",
+                "value": true
+              }
+            ]
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "dorothy.weekday.pm",
+          "npc": "dorothy",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "academy",
+          "anchor": "academy_card_shop_keeper",
+          "activity": "Card shop open",
+          "conditions": {
+            "all": [
+              {
+                "type": "flag",
+                "flag": "shop_unlocked",
+                "value": true
+              }
+            ]
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "dorothy.weekday.night",
+          "npc": "dorothy",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "academy",
+          "anchor": "academy_card_shop_keeper",
+          "activity": "Closing and restocking",
+          "conditions": {
+            "all": [
+              {
+                "type": "flag",
+                "flag": "shop_unlocked",
+                "value": true
+              }
+            ]
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        },
+        {
+          "id": "dorothy.weekend.am",
+          "npc": "dorothy",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "location": "academy",
+          "anchor": "academy_card_shop_keeper",
+          "activity": "Card shop open",
+          "conditions": {
+            "all": [
+              {
+                "type": "flag",
+                "flag": "shop_unlocked",
+                "value": true
+              }
+            ]
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "AM"
+        },
+        {
+          "id": "dorothy.weekend.pm",
+          "npc": "dorothy",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "location": "academy",
+          "anchor": "academy_card_shop_keeper",
+          "activity": "Card shop open",
+          "conditions": {
+            "all": [
+              {
+                "type": "flag",
+                "flag": "shop_unlocked",
+                "value": true
+              }
+            ]
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "PM"
+        },
+        {
+          "id": "dorothy.weekend.night",
+          "npc": "dorothy",
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "location": "academy",
+          "anchor": "academy_card_shop_keeper",
+          "activity": "Closing and restocking",
+          "conditions": {
+            "all": [
+              {
+                "type": "flag",
+                "flag": "shop_unlocked",
+                "value": true
+              }
+            ]
+          },
+          "priority": 100,
+          "source": "port-original",
+          "confidence": "high",
+          "period": "Night"
+        }
+      ],
+      "date_overrides": [
+        {
+          "id": "dorothy.oct1.stockroom",
+          "npc": "dorothy",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 1
+          },
+          "periods": [
+            "PM",
+            "Night"
+          ],
+          "location": "academy",
+          "anchor": "academy_card_shop_keeper",
+          "activity": "Unpacking the first stock; shop closed",
+          "conditions": {
+            "all": [
+              {
+                "type": "flag",
+                "flag": "shop_unlocked",
+                "value": false
+              }
+            ]
+          },
+          "priority": 500,
+          "event_id": "E01",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01"
+        },
+        {
+          "id": "dorothy.oct7.opening",
+          "npc": "dorothy",
+          "date": {
+            "year": 1,
+            "month": 10,
+            "day": 7
+          },
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "location": "academy",
+          "anchor": "academy_card_shop_keeper",
+          "activity": "Card shop opening day",
+          "conditions": {
+            "all": [
+              {
+                "type": "flag",
+                "flag": "shop_unlocked",
+                "value": true
+              }
+            ]
+          },
+          "priority": 500,
+          "event_id": "E01b",
+          "source": "guide",
+          "confidence": "high",
+          "event": "E01b"
+        }
+      ],
+      "source": "original"
+    }
+  },
+  "version": 1
+}

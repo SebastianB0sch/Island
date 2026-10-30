@@ -1,0 +1,2911 @@
+{
+  "schema_version": 1,
+  "story_id": "opening",
+  "scenes": {
+    "opening.b01_new_game": {
+      "id": "opening.b01_new_game",
+      "event_id": "E01",
+      "beat": "B01",
+      "title": "Arrival at Duel Academy",
+      "location": "plaza",
+      "interior": false,
+      "anchor": "academy_front_steps",
+      "camera_anchor": "academy_front_camera",
+      "cast": [
+        "player"
+      ],
+      "required_anchors": [
+        "academy_front_camera",
+        "academy_front_steps"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "music",
+          "track": "BGM_Academy_Arrival",
+          "mode": "play",
+          "fade": 2.0,
+          "command_id": "opening.b01_new_game.cmd000",
+          "skippable": true,
+          "args": [
+            "BGM_Academy_Arrival"
+          ]
+        },
+        {
+          "type": "fade",
+          "mode": "in",
+          "color": "#000000",
+          "duration": 2.0,
+          "command_id": "opening.b01_new_game.cmd001",
+          "skippable": true,
+          "args": [
+            "in"
+          ]
+        },
+        {
+          "type": "camera",
+          "anchor": "academy_front_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b01_new_game.cmd002",
+          "skippable": true,
+          "args": [
+            "academy_front_camera"
+          ]
+        },
+        {
+          "type": "banner",
+          "title": "DUEL ACADEMY",
+          "subtitle": "FRESHMAN ORIENTATION - SUNDAY, OCTOBER 1",
+          "style": "chapter",
+          "duration": 4.0,
+          "command_id": "opening.b01_new_game.cmd003",
+          "skippable": true,
+          "args": [
+            "DUEL ACADEMY"
+          ]
+        },
+        {
+          "type": "wait",
+          "duration": 1.0,
+          "command_id": "opening.b01_new_game.cmd004",
+          "skippable": true,
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b01_arrival_01",
+          "skippable": true,
+          "command_id": "opening.b01_new_game.cmd005",
+          "text_key": "E01.b01_arrival_01",
+          "speaker": "narrator",
+          "portrait": "none",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b01_arrival_02",
+          "skippable": true,
+          "command_id": "opening.b01_new_game.cmd006",
+          "text_key": "E01.b01_arrival_02",
+          "speaker": "player",
+          "portrait": "player_neutral",
+          "args": []
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_Bell_School",
+          "volume": 0.8,
+          "command_id": "opening.b01_new_game.cmd007",
+          "skippable": true,
+          "args": [
+            "A_Bell_School"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b01_arrival_03",
+          "skippable": true,
+          "command_id": "opening.b01_new_game.cmd008",
+          "text_key": "E01.b01_arrival_03",
+          "speaker": "narrator",
+          "portrait": "none",
+          "args": []
+        },
+        {
+          "type": "banner",
+          "title": "OBJECTIVE",
+          "subtitle": "Attend the opening assembly in the Duel Gym",
+          "style": "objective",
+          "duration": 3.0,
+          "command_id": "opening.b01_new_game.cmd009",
+          "skippable": true,
+          "args": [
+            "OBJECTIVE"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b01_arrival_04",
+          "skippable": true,
+          "command_id": "opening.b01_new_game.cmd010",
+          "text_key": "E01.b01_arrival_04",
+          "speaker": "player",
+          "portrait": "player_determined",
+          "args": []
+        },
+        {
+          "type": "end",
+          "next_scene": "opening.b02_sheppard_speech",
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b01_new_game.cmd011",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Port-original arrival framing. The GBA opens directly with Sheppard's gym speech.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b02_sheppard_speech": {
+      "id": "opening.b02_sheppard_speech",
+      "event_id": "E01",
+      "beat": "B02",
+      "title": "Sheppard's Opening Speech",
+      "location": "gym",
+      "interior": true,
+      "anchor": "gym_assembly_stage",
+      "camera_anchor": "gym_assembly_camera",
+      "cast": [
+        "sheppard",
+        "jaden",
+        "syrus",
+        "chumley",
+        "player"
+      ],
+      "required_anchors": [
+        "gym_assembly_camera",
+        "gym_assembly_crowd",
+        "gym_assembly_stage",
+        "gym_assembly_student_02",
+        "gym_assembly_student_03"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "fade",
+          "mode": "out",
+          "color": "#000000",
+          "duration": 0.5,
+          "command_id": "opening.b02_sheppard_speech.cmd000",
+          "skippable": true,
+          "args": [
+            "out"
+          ]
+        },
+        {
+          "type": "music",
+          "track": "BGM_Assembly",
+          "mode": "play",
+          "fade": 1.5,
+          "command_id": "opening.b02_sheppard_speech.cmd001",
+          "skippable": true,
+          "args": [
+            "BGM_Assembly"
+          ]
+        },
+        {
+          "type": "fade",
+          "mode": "in",
+          "color": "#000000",
+          "duration": 0.5,
+          "command_id": "opening.b02_sheppard_speech.cmd002",
+          "skippable": true,
+          "args": [
+            "in"
+          ]
+        },
+        {
+          "type": "camera",
+          "anchor": "gym_assembly_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b02_sheppard_speech.cmd003",
+          "skippable": true,
+          "args": [
+            "gym_assembly_camera"
+          ]
+        },
+        {
+          "type": "banner",
+          "title": "DUEL GYM",
+          "subtitle": "OPENING CEREMONY",
+          "style": "location",
+          "duration": 3.0,
+          "command_id": "opening.b02_sheppard_speech.cmd004",
+          "skippable": true,
+          "args": [
+            "DUEL GYM"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "sheppard",
+          "anchor": "gym_assembly_stage",
+          "walk": true,
+          "duration": 2.0,
+          "command_id": "opening.b02_sheppard_speech.cmd005",
+          "skippable": true,
+          "args": [
+            "sheppard",
+            "gym_assembly_stage"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "jaden",
+          "anchor": "gym_assembly_student_02",
+          "walk": true,
+          "duration": 2.0,
+          "command_id": "opening.b02_sheppard_speech.cmd006",
+          "skippable": true,
+          "args": [
+            "jaden",
+            "gym_assembly_student_02"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "syrus",
+          "anchor": "gym_assembly_student_03",
+          "walk": true,
+          "duration": 2.0,
+          "command_id": "opening.b02_sheppard_speech.cmd007",
+          "skippable": true,
+          "args": [
+            "syrus",
+            "gym_assembly_student_03"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "chumley",
+          "anchor": "gym_assembly_crowd",
+          "walk": true,
+          "duration": 2.0,
+          "command_id": "opening.b02_sheppard_speech.cmd008",
+          "skippable": true,
+          "args": [
+            "chumley",
+            "gym_assembly_crowd"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_01",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd009",
+          "text_key": "E01.b02_sheppard_01",
+          "speaker": "sheppard",
+          "portrait": "sheppard_proud",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_02",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd010",
+          "text_key": "E01.b02_sheppard_02",
+          "speaker": "sheppard",
+          "portrait": "sheppard_neutral",
+          "args": []
+        },
+        {
+          "type": "camera",
+          "anchor": "gym_assembly_crowd",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b02_sheppard_speech.cmd011",
+          "skippable": true,
+          "args": [
+            "gym_assembly_crowd"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_jaden_01",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd012",
+          "text_key": "E01.b02_jaden_01",
+          "speaker": "jaden",
+          "portrait": "jaden_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_syrus_01",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd013",
+          "text_key": "E01.b02_syrus_01",
+          "speaker": "syrus",
+          "portrait": "syrus_nervous",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_chumley_01",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd014",
+          "text_key": "E01.b02_chumley_01",
+          "speaker": "chumley",
+          "portrait": "chumley_sleepy",
+          "args": []
+        },
+        {
+          "type": "camera",
+          "anchor": "gym_assembly_stage",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b02_sheppard_speech.cmd015",
+          "skippable": true,
+          "args": [
+            "gym_assembly_stage"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_03",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd016",
+          "text_key": "E01.b02_sheppard_03",
+          "speaker": "sheppard",
+          "portrait": "sheppard_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_04",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd017",
+          "text_key": "E01.b02_sheppard_04",
+          "speaker": "sheppard",
+          "portrait": "sheppard_stern",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_05",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd018",
+          "text_key": "E01.b02_sheppard_05",
+          "speaker": "sheppard",
+          "portrait": "sheppard_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_06",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd019",
+          "text_key": "E01.b02_sheppard_06",
+          "speaker": "sheppard",
+          "portrait": "sheppard_proud",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_player_01",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd020",
+          "text_key": "E01.b02_player_01",
+          "speaker": "player",
+          "portrait": "player_determined",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_07",
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd021",
+          "text_key": "E01.b02_sheppard_07",
+          "speaker": "sheppard",
+          "portrait": "sheppard_happy",
+          "args": []
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_Applause",
+          "volume": 0.9,
+          "command_id": "opening.b02_sheppard_speech.cmd022",
+          "skippable": true,
+          "args": [
+            "A_Applause"
+          ]
+        },
+        {
+          "type": "banner",
+          "title": "REGISTRATION",
+          "subtitle": "Academy Lobby - Professor Mimicry",
+          "style": "objective",
+          "duration": 3.0,
+          "command_id": "opening.b02_sheppard_speech.cmd023",
+          "skippable": true,
+          "args": [
+            "REGISTRATION"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": "opening.b03_registration",
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b02_sheppard_speech.cmd024",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Canon beat: Sheppard's speech in the gym. Prose is port-original.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b03_registration": {
+      "id": "opening.b03_registration",
+      "event_id": "E01",
+      "beat": "B03",
+      "title": "Registration with Mimicry",
+      "location": "academy",
+      "interior": true,
+      "anchor": "academy_registration_desk",
+      "camera_anchor": "academy_registration_desk",
+      "cast": [
+        "mimicry",
+        "player"
+      ],
+      "required_anchors": [
+        "academy_registration_desk",
+        "academy_registration_player"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_registration_desk",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b03_registration.cmd000",
+          "skippable": true,
+          "args": [
+            "academy_registration_desk"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "mimicry",
+          "anchor": "academy_registration_desk",
+          "walk": true,
+          "duration": 1.5,
+          "command_id": "opening.b03_registration.cmd001",
+          "skippable": true,
+          "args": [
+            "mimicry",
+            "academy_registration_desk"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "player",
+          "anchor": "academy_registration_player",
+          "walk": true,
+          "duration": 1.0,
+          "command_id": "opening.b03_registration.cmd002",
+          "skippable": true,
+          "args": [
+            "player",
+            "academy_registration_player"
+          ]
+        },
+        {
+          "type": "music",
+          "track": "BGM_Registration",
+          "mode": "play",
+          "fade": 1.0,
+          "command_id": "opening.b03_registration.cmd003",
+          "skippable": true,
+          "args": [
+            "BGM_Registration"
+          ]
+        },
+        {
+          "type": "banner",
+          "title": "REGISTRATION",
+          "subtitle": "Academy Lobby",
+          "style": "location",
+          "duration": 2.5,
+          "command_id": "opening.b03_registration.cmd004",
+          "skippable": true,
+          "args": [
+            "REGISTRATION"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b03_mimicry_01",
+          "skippable": true,
+          "command_id": "opening.b03_registration.cmd005",
+          "text_key": "E01.b03_mimicry_01",
+          "speaker": "mimicry",
+          "portrait": "mimicry_smug",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b03_mimicry_02",
+          "skippable": true,
+          "command_id": "opening.b03_registration.cmd006",
+          "text_key": "E01.b03_mimicry_02",
+          "speaker": "mimicry",
+          "portrait": "mimicry_neutral",
+          "args": []
+        },
+        {
+          "type": "end",
+          "next_scene": "opening.b03_name_entry",
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b03_registration.cmd007",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Canon beat: registration with Mimicry. Name entry follows the GBA manual's eight-letter limit.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b03_name_entry": {
+      "id": "opening.b03_name_entry",
+      "event_id": "E01",
+      "beat": "B03",
+      "title": "Name Entry",
+      "location": "academy",
+      "interior": true,
+      "anchor": "academy_registration_desk",
+      "camera_anchor": "academy_registration_desk",
+      "cast": [
+        "mimicry",
+        "player"
+      ],
+      "required_anchors": [
+        "academy_registration_desk"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_registration_desk",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b03_name_entry.cmd000",
+          "skippable": true,
+          "args": [
+            "academy_registration_desk"
+          ]
+        },
+        {
+          "type": "choice",
+          "key": "E01.b03_name_prompt",
+          "input": {
+            "kind": "text",
+            "min_length": 1,
+            "max_length": 8,
+            "charset": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+            "store_as": "profile.name",
+            "confirm_label": "END",
+            "delete_label": "DELETE",
+            "default": "",
+            "source": "guide",
+            "confidence": "high",
+            "note": "GBA manual: the player may enter a name of up to eight letters; END confirms."
+          },
+          "command_id": "opening.b03_name_entry.cmd001",
+          "skippable": true,
+          "text_key": "E01.b03_name_prompt",
+          "speaker": "mimicry",
+          "portrait": "mimicry_neutral",
+          "args": []
+        },
+        {
+          "type": "choice",
+          "key": "E01.b03_name_confirm_prompt",
+          "command_id": "opening.b03_name_entry.cmd002",
+          "skippable": true,
+          "text_key": "E01.b03_name_confirm_prompt",
+          "speaker": "mimicry",
+          "portrait": "mimicry_smug",
+          "args": [
+            "yes",
+            "no"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b03_name_entry.cmd003",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Text entry is modeled as a Choice command with input metadata, keeping the 13-command enum intact.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b03_name_accepted": {
+      "id": "opening.b03_name_accepted",
+      "event_id": "E01",
+      "beat": "B03",
+      "title": "Registration Complete",
+      "location": "academy",
+      "interior": true,
+      "anchor": "academy_registration_desk",
+      "camera_anchor": "academy_registration_desk",
+      "cast": [
+        "mimicry",
+        "player"
+      ],
+      "required_anchors": [
+        "academy_registration_desk"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_registration_desk",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b03_name_accepted.cmd000",
+          "skippable": true,
+          "args": [
+            "academy_registration_desk"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b03_mimicry_04",
+          "skippable": true,
+          "command_id": "opening.b03_name_accepted.cmd001",
+          "text_key": "E01.b03_mimicry_04",
+          "speaker": "mimicry",
+          "portrait": "mimicry_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b03_mimicry_05",
+          "skippable": true,
+          "command_id": "opening.b03_name_accepted.cmd002",
+          "text_key": "E01.b03_mimicry_05",
+          "speaker": "mimicry",
+          "portrait": "mimicry_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b03_mimicry_07",
+          "skippable": true,
+          "command_id": "opening.b03_name_accepted.cmd003",
+          "text_key": "E01.b03_mimicry_07",
+          "speaker": "mimicry",
+          "portrait": "mimicry_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b03_mimicry_08",
+          "skippable": true,
+          "command_id": "opening.b03_name_accepted.cmd004",
+          "text_key": "E01.b03_mimicry_08",
+          "speaker": "mimicry",
+          "portrait": "mimicry_thoughtful",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b03_player_01",
+          "skippable": true,
+          "command_id": "opening.b03_name_accepted.cmd005",
+          "text_key": "E01.b03_player_01",
+          "speaker": "player",
+          "portrait": "player_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b03_mimicry_09",
+          "skippable": true,
+          "command_id": "opening.b03_name_accepted.cmd006",
+          "text_key": "E01.b03_mimicry_09",
+          "speaker": "mimicry",
+          "portrait": "mimicry_smug",
+          "args": []
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_UIConfirm",
+          "volume": 0.8,
+          "command_id": "opening.b03_name_accepted.cmd007",
+          "skippable": true,
+          "args": [
+            "A_UIConfirm"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "registered",
+          "value": true,
+          "command_id": "opening.b03_name_accepted.cmd008",
+          "skippable": true,
+          "args": [
+            "registered"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_mimicry",
+          "value": true,
+          "command_id": "opening.b03_name_accepted.cmd009",
+          "skippable": true,
+          "args": [
+            "met_mimicry"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "name_confirmed",
+          "value": true,
+          "command_id": "opening.b03_name_accepted.cmd010",
+          "skippable": true,
+          "args": [
+            "name_confirmed"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": "opening.b04_dorm_welcome",
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b03_name_accepted.cmd011",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [
+        {
+          "id": "autosave_registered",
+          "trigger": "after_registration",
+          "autosave": true,
+          "manual": false
+        }
+      ],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Registration complete; the shop opening is announced for next Saturday (October 7). The starter-deck choice happens in new-game setup.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b04_dorm_welcome": {
+      "id": "opening.b04_dorm_welcome",
+      "event_id": "E01",
+      "beat": "B04",
+      "title": "Slifer Red Dorm Welcome",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_front_gate",
+      "camera_anchor": "slifer_front_camera",
+      "cast": [
+        "jaden",
+        "syrus",
+        "chumley",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_dorm_front_chumley",
+        "slifer_dorm_front_jaden",
+        "slifer_dorm_front_syrus",
+        "slifer_front_camera",
+        "slifer_front_gate"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "fade",
+          "mode": "out",
+          "color": "#000000",
+          "duration": 0.8,
+          "command_id": "opening.b04_dorm_welcome.cmd000",
+          "skippable": true,
+          "args": [
+            "out"
+          ]
+        },
+        {
+          "type": "music",
+          "track": "BGM_Slifer_Dorm",
+          "mode": "play",
+          "fade": 1.5,
+          "command_id": "opening.b04_dorm_welcome.cmd001",
+          "skippable": true,
+          "args": [
+            "BGM_Slifer_Dorm"
+          ]
+        },
+        {
+          "type": "fade",
+          "mode": "in",
+          "color": "#000000",
+          "duration": 0.8,
+          "command_id": "opening.b04_dorm_welcome.cmd002",
+          "skippable": true,
+          "args": [
+            "in"
+          ]
+        },
+        {
+          "type": "camera",
+          "anchor": "slifer_front_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b04_dorm_welcome.cmd003",
+          "skippable": true,
+          "args": [
+            "slifer_front_camera"
+          ]
+        },
+        {
+          "type": "banner",
+          "title": "SLIFER RED DORM",
+          "subtitle": "West Cliff - Home of the Red",
+          "style": "location",
+          "duration": 3.0,
+          "command_id": "opening.b04_dorm_welcome.cmd004",
+          "skippable": true,
+          "args": [
+            "SLIFER RED DORM"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b04_narrator_01",
+          "skippable": true,
+          "command_id": "opening.b04_dorm_welcome.cmd005",
+          "text_key": "E01.b04_narrator_01",
+          "speaker": "narrator",
+          "portrait": "none",
+          "args": []
+        },
+        {
+          "type": "move_npc",
+          "npc": "jaden",
+          "anchor": "slifer_dorm_front_jaden",
+          "walk": true,
+          "duration": 1.5,
+          "command_id": "opening.b04_dorm_welcome.cmd006",
+          "skippable": true,
+          "args": [
+            "jaden",
+            "slifer_dorm_front_jaden"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "syrus",
+          "anchor": "slifer_dorm_front_syrus",
+          "walk": true,
+          "duration": 1.5,
+          "command_id": "opening.b04_dorm_welcome.cmd007",
+          "skippable": true,
+          "args": [
+            "syrus",
+            "slifer_dorm_front_syrus"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "chumley",
+          "anchor": "slifer_dorm_front_chumley",
+          "walk": true,
+          "duration": 1.5,
+          "command_id": "opening.b04_dorm_welcome.cmd008",
+          "skippable": true,
+          "args": [
+            "chumley",
+            "slifer_dorm_front_chumley"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b04_jaden_01",
+          "skippable": true,
+          "command_id": "opening.b04_dorm_welcome.cmd009",
+          "text_key": "E01.b04_jaden_01",
+          "speaker": "jaden",
+          "portrait": "jaden_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b04_syrus_01",
+          "skippable": true,
+          "command_id": "opening.b04_dorm_welcome.cmd010",
+          "text_key": "E01.b04_syrus_01",
+          "speaker": "syrus",
+          "portrait": "syrus_nervous",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b04_chumley_01",
+          "skippable": true,
+          "command_id": "opening.b04_dorm_welcome.cmd011",
+          "text_key": "E01.b04_chumley_01",
+          "speaker": "chumley",
+          "portrait": "chumley_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b04_player_01",
+          "skippable": true,
+          "command_id": "opening.b04_dorm_welcome.cmd012",
+          "text_key": "E01.b04_player_01",
+          "speaker": "player",
+          "portrait": "player_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b04_jaden_02",
+          "skippable": true,
+          "command_id": "opening.b04_dorm_welcome.cmd013",
+          "text_key": "E01.b04_jaden_02",
+          "speaker": "jaden",
+          "portrait": "jaden_laugh",
+          "args": []
+        },
+        {
+          "type": "fade",
+          "mode": "out",
+          "color": "#000000",
+          "duration": 0.5,
+          "command_id": "opening.b04_dorm_welcome.cmd014",
+          "skippable": true,
+          "args": [
+            "out"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": "opening.b05_banner_dp",
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b04_dorm_welcome.cmd015",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Canon beat: meet Banner, Jaden, Syrus and Chumley at the Slifer Red dorm.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b05_banner_dp": {
+      "id": "opening.b05_banner_dp",
+      "event_id": "E01",
+      "beat": "B05",
+      "title": "Banner's 3,000 DP and the Card Shop",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_cafeteria_table",
+      "camera_anchor": "slifer_cafeteria_table",
+      "cast": [
+        "banner",
+        "jaden",
+        "syrus",
+        "chumley",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_cafeteria_counter",
+        "slifer_cafeteria_seat_01",
+        "slifer_cafeteria_seat_02",
+        "slifer_cafeteria_seat_03",
+        "slifer_cafeteria_table"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "fade",
+          "mode": "in",
+          "color": "#000000",
+          "duration": 0.5,
+          "command_id": "opening.b05_banner_dp.cmd000",
+          "skippable": true,
+          "args": [
+            "in"
+          ]
+        },
+        {
+          "type": "camera",
+          "anchor": "slifer_cafeteria_table",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b05_banner_dp.cmd001",
+          "skippable": true,
+          "args": [
+            "slifer_cafeteria_table"
+          ]
+        },
+        {
+          "type": "banner",
+          "title": "SLIFER RED CAFETERIA",
+          "subtitle": "Dinner is almost ready",
+          "style": "location",
+          "duration": 2.5,
+          "command_id": "opening.b05_banner_dp.cmd002",
+          "skippable": true,
+          "args": [
+            "SLIFER RED CAFETERIA"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "banner",
+          "anchor": "slifer_cafeteria_counter",
+          "walk": true,
+          "duration": 1.0,
+          "command_id": "opening.b05_banner_dp.cmd003",
+          "skippable": true,
+          "args": [
+            "banner",
+            "slifer_cafeteria_counter"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "jaden",
+          "anchor": "slifer_cafeteria_seat_01",
+          "walk": true,
+          "duration": 1.0,
+          "command_id": "opening.b05_banner_dp.cmd004",
+          "skippable": true,
+          "args": [
+            "jaden",
+            "slifer_cafeteria_seat_01"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "syrus",
+          "anchor": "slifer_cafeteria_seat_02",
+          "walk": true,
+          "duration": 1.0,
+          "command_id": "opening.b05_banner_dp.cmd005",
+          "skippable": true,
+          "args": [
+            "syrus",
+            "slifer_cafeteria_seat_02"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "chumley",
+          "anchor": "slifer_cafeteria_seat_03",
+          "walk": true,
+          "duration": 1.0,
+          "command_id": "opening.b05_banner_dp.cmd006",
+          "skippable": true,
+          "args": [
+            "chumley",
+            "slifer_cafeteria_seat_03"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_01",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd007",
+          "text_key": "E01.b05_banner_01",
+          "speaker": "banner",
+          "portrait": "banner_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_08",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd008",
+          "text_key": "E01.b05_banner_08",
+          "speaker": "banner",
+          "portrait": "banner_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_09",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd009",
+          "text_key": "E01.b05_banner_09",
+          "speaker": "banner",
+          "portrait": "banner_thoughtful",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_jaden_04",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd010",
+          "text_key": "E01.b05_jaden_04",
+          "speaker": "jaden",
+          "portrait": "jaden_laugh",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_10",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd011",
+          "text_key": "E01.b05_banner_10",
+          "speaker": "banner",
+          "portrait": "banner_happy",
+          "args": []
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_Cat_Meow",
+          "volume": 0.7,
+          "command_id": "opening.b05_banner_dp.cmd012",
+          "skippable": true,
+          "args": [
+            "A_Cat_Meow"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_02",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd013",
+          "text_key": "E01.b05_banner_02",
+          "speaker": "banner",
+          "portrait": "banner_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_player_02",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd014",
+          "text_key": "E01.b05_player_02",
+          "speaker": "player",
+          "portrait": "player_shocked",
+          "args": []
+        },
+        {
+          "type": "reward",
+          "reward_id": "opening_starting_dp",
+          "once": true,
+          "dp": 3000,
+          "source": "guide",
+          "command_id": "opening.b05_banner_dp.cmd015",
+          "skippable": true,
+          "args": [
+            "reward_id:opening_starting_dp",
+            "dp:3000"
+          ]
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_Coin",
+          "volume": 0.9,
+          "command_id": "opening.b05_banner_dp.cmd016",
+          "skippable": true,
+          "args": [
+            "A_Coin"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_03",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd017",
+          "text_key": "E01.b05_banner_03",
+          "speaker": "banner",
+          "portrait": "banner_thoughtful",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_syrus_02",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd018",
+          "text_key": "E01.b05_syrus_02",
+          "speaker": "syrus",
+          "portrait": "syrus_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_chumley_02",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd019",
+          "text_key": "E01.b05_chumley_02",
+          "speaker": "chumley",
+          "portrait": "chumley_hungry",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_04",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd020",
+          "text_key": "E01.b05_banner_04",
+          "speaker": "banner",
+          "portrait": "banner_stern",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_jaden_03",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd021",
+          "text_key": "E01.b05_jaden_03",
+          "speaker": "jaden",
+          "portrait": "jaden_laugh",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_05",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd022",
+          "text_key": "E01.b05_banner_05",
+          "speaker": "banner",
+          "portrait": "banner_neutral",
+          "args": []
+        },
+        {
+          "type": "reward",
+          "reward_id": "opening_email_contacts",
+          "once": true,
+          "emails": [
+            "jaden",
+            "syrus",
+            "chumley"
+          ],
+          "source": "guide",
+          "command_id": "opening.b05_banner_dp.cmd023",
+          "skippable": true,
+          "args": [
+            "reward_id:opening_email_contacts"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_06",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd024",
+          "text_key": "E01.b05_banner_06",
+          "speaker": "banner",
+          "portrait": "banner_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_syrus_03",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd025",
+          "text_key": "E01.b05_syrus_03",
+          "speaker": "syrus",
+          "portrait": "syrus_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_player_03",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd026",
+          "text_key": "E01.b05_player_03",
+          "speaker": "player",
+          "portrait": "player_determined",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_banner_07",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd027",
+          "text_key": "E01.b05_banner_07",
+          "speaker": "banner",
+          "portrait": "banner_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b05_syrus_04",
+          "skippable": true,
+          "command_id": "opening.b05_banner_dp.cmd028",
+          "text_key": "E01.b05_syrus_04",
+          "speaker": "syrus",
+          "portrait": "syrus_nervous",
+          "args": []
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_banner",
+          "value": true,
+          "command_id": "opening.b05_banner_dp.cmd029",
+          "skippable": true,
+          "args": [
+            "met_banner"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_jaden",
+          "value": true,
+          "command_id": "opening.b05_banner_dp.cmd030",
+          "skippable": true,
+          "args": [
+            "met_jaden"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_syrus",
+          "value": true,
+          "command_id": "opening.b05_banner_dp.cmd031",
+          "skippable": true,
+          "args": [
+            "met_syrus"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_chumley",
+          "value": true,
+          "command_id": "opening.b05_banner_dp.cmd032",
+          "skippable": true,
+          "args": [
+            "met_chumley"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "banner_dp_granted",
+          "value": true,
+          "command_id": "opening.b05_banner_dp.cmd033",
+          "skippable": true,
+          "args": [
+            "banner_dp_granted"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "emails_unlocked",
+          "value": true,
+          "command_id": "opening.b05_banner_dp.cmd034",
+          "skippable": true,
+          "args": [
+            "emails_unlocked"
+          ]
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_UIConfirm",
+          "volume": 0.8,
+          "command_id": "opening.b05_banner_dp.cmd035",
+          "skippable": true,
+          "args": [
+            "A_UIConfirm"
+          ]
+        },
+        {
+          "type": "fade",
+          "mode": "out",
+          "color": "#000000",
+          "duration": 0.4,
+          "command_id": "opening.b05_banner_dp.cmd036",
+          "skippable": true,
+          "args": [
+            "out"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": "opening.b06_tutorial",
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b05_banner_dp.cmd037",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [
+        {
+          "id": "autosave_banner_dp",
+          "trigger": "after_banner_dp_grant",
+          "autosave": true,
+          "manual": false
+        }
+      ],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Canon beat: Banner grants 3,000 DP and explains DP and the card shop. Email contacts unlock here.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b06_tutorial": {
+      "id": "opening.b06_tutorial",
+      "event_id": "E01",
+      "beat": "B06",
+      "title": "Syrus's Duel Tutorial",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_cafeteria_table",
+      "camera_anchor": "slifer_cafeteria_table",
+      "cast": [
+        "syrus",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_cafeteria_table"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "fade",
+          "mode": "in",
+          "color": "#000000",
+          "duration": 0.4,
+          "command_id": "opening.b06_tutorial.cmd000",
+          "skippable": true,
+          "args": [
+            "in"
+          ]
+        },
+        {
+          "type": "camera",
+          "anchor": "slifer_cafeteria_table",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b06_tutorial.cmd001",
+          "skippable": true,
+          "args": [
+            "slifer_cafeteria_table"
+          ]
+        },
+        {
+          "type": "music",
+          "track": "BGM_Tutorial",
+          "mode": "play",
+          "fade": 1.5,
+          "command_id": "opening.b06_tutorial.cmd002",
+          "skippable": true,
+          "args": [
+            "BGM_Tutorial"
+          ]
+        },
+        {
+          "type": "banner",
+          "title": "DUEL TUTORIAL",
+          "subtitle": "Syrus Truesdale",
+          "style": "tutorial",
+          "duration": 3.0,
+          "command_id": "opening.b06_tutorial.cmd003",
+          "skippable": true,
+          "args": [
+            "DUEL TUTORIAL"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_01",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial.cmd004",
+          "text_key": "E01.b06_syrus_01",
+          "speaker": "syrus",
+          "portrait": "syrus_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_02",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial.cmd005",
+          "text_key": "E01.b06_syrus_02",
+          "speaker": "syrus",
+          "portrait": "syrus_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_03",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial.cmd006",
+          "text_key": "E01.b06_syrus_03",
+          "speaker": "syrus",
+          "portrait": "syrus_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_04",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial.cmd007",
+          "text_key": "E01.b06_syrus_04",
+          "speaker": "syrus",
+          "portrait": "syrus_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_05",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial.cmd008",
+          "text_key": "E01.b06_syrus_05",
+          "speaker": "syrus",
+          "portrait": "syrus_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_player_01",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial.cmd009",
+          "text_key": "E01.b06_player_01",
+          "speaker": "player",
+          "portrait": "player_determined",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_06",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial.cmd010",
+          "text_key": "E01.b06_syrus_06",
+          "speaker": "syrus",
+          "portrait": "syrus_happy",
+          "args": []
+        },
+        {
+          "type": "choice",
+          "key": "E01.b06_tutorial_ready",
+          "command_id": "opening.b06_tutorial.cmd011",
+          "skippable": true,
+          "text_key": "E01.b06_tutorial_ready",
+          "speaker": "syrus",
+          "portrait": "syrus_nervous",
+          "args": [
+            "ready",
+            "explain"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b06_tutorial.cmd012",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [
+        {
+          "id": "autosave_tutorial_start",
+          "trigger": "before_tutorial_duel",
+          "autosave": true,
+          "manual": false
+        }
+      ],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Teaches deck size, LP, summon/set/tribute, battle positions, spells/traps and win conditions.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b06_tutorial_phases": {
+      "id": "opening.b06_tutorial_phases",
+      "event_id": "E01",
+      "beat": "B06",
+      "title": "Tutorial - Phases",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_cafeteria_table",
+      "camera_anchor": "slifer_cafeteria_table",
+      "cast": [
+        "syrus",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_cafeteria_table"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_phases",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial_phases.cmd000",
+          "text_key": "E01.b06_syrus_phases",
+          "speaker": "syrus",
+          "portrait": "syrus_neutral",
+          "args": []
+        },
+        {
+          "type": "choice",
+          "key": "E01.b06_tutorial_ready",
+          "command_id": "opening.b06_tutorial_phases.cmd001",
+          "skippable": true,
+          "text_key": "E01.b06_tutorial_ready",
+          "speaker": "syrus",
+          "portrait": "syrus_nervous",
+          "args": [
+            "ready",
+            "explain"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b06_tutorial_phases.cmd002",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Optional rules refresher loop; returns to the tutorial prompt.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b06_tutorial_duel": {
+      "id": "opening.b06_tutorial_duel",
+      "event_id": "E01",
+      "beat": "B06",
+      "title": "Tutorial Duel - Practice Match",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_yard_practice",
+      "camera_anchor": "slifer_yard_practice",
+      "cast": [
+        "syrus",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_yard_practice"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_yard_practice",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b06_tutorial_duel.cmd000",
+          "skippable": true,
+          "args": [
+            "slifer_yard_practice"
+          ]
+        },
+        {
+          "type": "music",
+          "track": "BGM_Duel_Tutorial",
+          "mode": "play",
+          "fade": 1.0,
+          "command_id": "opening.b06_tutorial_duel.cmd001",
+          "skippable": true,
+          "args": [
+            "BGM_Duel_Tutorial"
+          ]
+        },
+        {
+          "type": "banner",
+          "title": "TUTORIAL DUEL",
+          "subtitle": "PRACTICE MATCH - NO DP",
+          "style": "duel",
+          "duration": 3.0,
+          "command_id": "opening.b06_tutorial_duel.cmd002",
+          "skippable": true,
+          "args": [
+            "TUTORIAL DUEL"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_duel_start",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial_duel.cmd003",
+          "text_key": "E01.b06_syrus_duel_start",
+          "speaker": "syrus",
+          "portrait": "syrus_determined",
+          "args": []
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_DuelStart",
+          "volume": 1.0,
+          "command_id": "opening.b06_tutorial_duel.cmd004",
+          "skippable": true,
+          "args": [
+            "A_DuelStart"
+          ]
+        },
+        {
+          "type": "duel",
+          "opponent_id": "syrus",
+          "opponent_name": "Syrus Truesdale",
+          "opponent_deck_id": "syrus_roids",
+          "player_deck": "selected_starter",
+          "mode": "free",
+          "starting_lp": {
+            "player": 4000,
+            "opponent": 4000
+          },
+          "on_win": "opening.b06_tutorial_win",
+          "on_lose": "opening.b06_tutorial_lose",
+          "on_draw": "opening.b06_tutorial_lose",
+          "retryable": true,
+          "story_critical": false,
+          "optional": false,
+          "counts_as_win": false,
+          "award_dp": "none",
+          "tutorial": true,
+          "scenario_id": "TUTORIAL_SYRUS_01",
+          "turn_limit": 10,
+          "tutorial_objectives": [
+            "normal_summon",
+            "set_spell_or_trap",
+            "attack_and_destroy"
+          ],
+          "command_id": "opening.b06_tutorial_duel.cmd005",
+          "skippable": true,
+          "args": [
+            "syrus",
+            "syrus_roids",
+            "free",
+            "TUTORIAL_SYRUS_01"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b06_tutorial_duel.cmd006",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Practice duel only: no DP, no win counter, loss does not block progression. Uses A07's syrus_roids deck in free mode with tutorial metadata.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b06_tutorial_win": {
+      "id": "opening.b06_tutorial_win",
+      "event_id": "E01",
+      "beat": "B06",
+      "title": "Tutorial Duel - Won",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_yard_practice",
+      "camera_anchor": "slifer_yard_practice",
+      "cast": [
+        "syrus",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_yard_practice"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "music",
+          "track": "BGM_Slifer_Dorm",
+          "mode": "play",
+          "fade": 1.0,
+          "command_id": "opening.b06_tutorial_win.cmd000",
+          "skippable": true,
+          "args": [
+            "BGM_Slifer_Dorm"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_win_01",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial_win.cmd001",
+          "text_key": "E01.b06_syrus_win_01",
+          "speaker": "syrus",
+          "portrait": "syrus_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_player_win_01",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial_win.cmd002",
+          "text_key": "E01.b06_player_win_01",
+          "speaker": "player",
+          "portrait": "player_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_win_02",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial_win.cmd003",
+          "text_key": "E01.b06_syrus_win_02",
+          "speaker": "syrus",
+          "portrait": "syrus_happy",
+          "args": []
+        },
+        {
+          "type": "set_flag",
+          "flag": "tutorial_complete",
+          "value": true,
+          "command_id": "opening.b06_tutorial_win.cmd004",
+          "skippable": true,
+          "args": [
+            "tutorial_complete"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "tutorial_duel_played",
+          "value": true,
+          "command_id": "opening.b06_tutorial_win.cmd005",
+          "skippable": true,
+          "args": [
+            "tutorial_duel_played"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "tutorial_duel_won",
+          "value": true,
+          "command_id": "opening.b06_tutorial_win.cmd006",
+          "skippable": true,
+          "args": [
+            "tutorial_duel_won"
+          ]
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_UIConfirm",
+          "volume": 0.8,
+          "command_id": "opening.b06_tutorial_win.cmd007",
+          "skippable": true,
+          "args": [
+            "A_UIConfirm"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b06_tutorial_win.cmd008",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [
+        {
+          "id": "autosave_tutorial_win",
+          "trigger": "after_tutorial_duel",
+          "autosave": true,
+          "manual": false
+        }
+      ],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Completes E01. Event outcomes advance the calendar to Saturday, October 7 AM.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b06_tutorial_lose": {
+      "id": "opening.b06_tutorial_lose",
+      "event_id": "E01",
+      "beat": "B06",
+      "title": "Tutorial Duel - Lost",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_yard_practice",
+      "camera_anchor": "slifer_yard_practice",
+      "cast": [
+        "syrus",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_yard_practice"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_loss_01",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial_lose.cmd000",
+          "text_key": "E01.b06_syrus_loss_01",
+          "speaker": "syrus",
+          "portrait": "syrus_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b06_player_loss_01",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial_lose.cmd001",
+          "text_key": "E01.b06_player_loss_01",
+          "speaker": "player",
+          "portrait": "player_sad",
+          "args": []
+        },
+        {
+          "type": "choice",
+          "key": "E01.b06_syrus_loss_02",
+          "command_id": "opening.b06_tutorial_lose.cmd002",
+          "skippable": true,
+          "text_key": "E01.b06_syrus_loss_02",
+          "speaker": "syrus",
+          "portrait": "syrus_happy",
+          "args": [
+            "retry",
+            "continue"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b06_tutorial_lose.cmd003",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Loss is a valid tutorial outcome. The player may retry or continue; neither blocks the story.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b06_tutorial_continue": {
+      "id": "opening.b06_tutorial_continue",
+      "event_id": "E01",
+      "beat": "B06",
+      "title": "Tutorial - Continue After Loss",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_yard_practice",
+      "camera_anchor": "slifer_yard_practice",
+      "cast": [
+        "syrus",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_yard_practice"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "dialogue",
+          "key": "E01.b06_syrus_loss_ok",
+          "skippable": true,
+          "command_id": "opening.b06_tutorial_continue.cmd000",
+          "text_key": "E01.b06_syrus_loss_ok",
+          "speaker": "syrus",
+          "portrait": "syrus_happy",
+          "args": []
+        },
+        {
+          "type": "set_flag",
+          "flag": "tutorial_complete",
+          "value": true,
+          "command_id": "opening.b06_tutorial_continue.cmd001",
+          "skippable": true,
+          "args": [
+            "tutorial_complete"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "tutorial_duel_played",
+          "value": true,
+          "command_id": "opening.b06_tutorial_continue.cmd002",
+          "skippable": true,
+          "args": [
+            "tutorial_duel_played"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "tutorial_duel_lost",
+          "value": true,
+          "command_id": "opening.b06_tutorial_continue.cmd003",
+          "skippable": true,
+          "args": [
+            "tutorial_duel_lost"
+          ]
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_UIConfirm",
+          "volume": 0.8,
+          "command_id": "opening.b06_tutorial_continue.cmd004",
+          "skippable": true,
+          "args": [
+            "A_UIConfirm"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b06_tutorial_continue.cmd005",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [
+        {
+          "id": "autosave_tutorial_loss",
+          "trigger": "after_tutorial_duel",
+          "autosave": true,
+          "manual": false
+        }
+      ],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Completes E01 after a practice loss. No penalty, no softlock.",
+      "version": 1,
+      "event": "E01"
+    },
+    "opening.b07_first_free_roam": {
+      "id": "opening.b07_first_free_roam",
+      "event_id": "E01b",
+      "beat": "B07",
+      "title": "First Free-Roam Day",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_player_room_bed",
+      "camera_anchor": "slifer_player_room_bed",
+      "cast": [
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_player_room_bed"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "fade",
+          "mode": "in",
+          "color": "#000000",
+          "duration": 1.0,
+          "command_id": "opening.b07_first_free_roam.cmd000",
+          "skippable": true,
+          "args": [
+            "in"
+          ]
+        },
+        {
+          "type": "music",
+          "track": "BGM_Free_Roam",
+          "mode": "play",
+          "fade": 1.5,
+          "command_id": "opening.b07_first_free_roam.cmd001",
+          "skippable": true,
+          "args": [
+            "BGM_Free_Roam"
+          ]
+        },
+        {
+          "type": "camera",
+          "anchor": "slifer_player_room_bed",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b07_first_free_roam.cmd002",
+          "skippable": true,
+          "args": [
+            "slifer_player_room_bed"
+          ]
+        },
+        {
+          "type": "banner",
+          "title": "SATURDAY, OCTOBER 7",
+          "subtitle": "8:00 AM - FIRST FREE DAY",
+          "style": "chapter",
+          "duration": 4.0,
+          "command_id": "opening.b07_first_free_roam.cmd003",
+          "skippable": true,
+          "args": [
+            "SATURDAY, OCTOBER 7"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "E01b.b07_narrator_01",
+          "skippable": true,
+          "command_id": "opening.b07_first_free_roam.cmd004",
+          "text_key": "E01b.b07_narrator_01",
+          "speaker": "narrator",
+          "portrait": "none",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01b.b07_player_01",
+          "skippable": true,
+          "command_id": "opening.b07_first_free_roam.cmd005",
+          "text_key": "E01b.b07_player_01",
+          "speaker": "player",
+          "portrait": "player_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01b.b07_pda_01",
+          "skippable": true,
+          "command_id": "opening.b07_first_free_roam.cmd006",
+          "text_key": "E01b.b07_pda_01",
+          "speaker": "pda",
+          "portrait": "ui_pda",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01b.b07_dorothy_01",
+          "skippable": true,
+          "command_id": "opening.b07_first_free_roam.cmd007",
+          "text_key": "E01b.b07_dorothy_01",
+          "speaker": "dorothy",
+          "portrait": "dorothy_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01b.b07_narrator_02",
+          "skippable": true,
+          "command_id": "opening.b07_first_free_roam.cmd008",
+          "text_key": "E01b.b07_narrator_02",
+          "speaker": "narrator",
+          "portrait": "none",
+          "args": []
+        },
+        {
+          "type": "set_flag",
+          "flag": "first_free_roam",
+          "value": true,
+          "command_id": "opening.b07_first_free_roam.cmd009",
+          "skippable": true,
+          "args": [
+            "first_free_roam"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "shop_unlocked",
+          "value": true,
+          "command_id": "opening.b07_first_free_roam.cmd010",
+          "skippable": true,
+          "args": [
+            "shop_unlocked"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "save_unlocked",
+          "value": true,
+          "command_id": "opening.b07_first_free_roam.cmd011",
+          "skippable": true,
+          "args": [
+            "save_unlocked"
+          ]
+        },
+        {
+          "type": "choice",
+          "key": "E01b.b07_save_prompt",
+          "command_id": "opening.b07_first_free_roam.cmd012",
+          "skippable": true,
+          "text_key": "E01b.b07_save_prompt",
+          "speaker": "pda",
+          "portrait": "ui_pda",
+          "args": [
+            "save",
+            "later"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b07_first_free_roam.cmd013",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [
+        {
+          "id": "autosave_first_free_roam",
+          "trigger": "on_first_free_roam",
+          "autosave": true,
+          "manual": false
+        }
+      ],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "The card shop announced for 'next Saturday' is open today. Manual save unlocks here.",
+      "version": 1,
+      "event": "E01b"
+    },
+    "opening.b07_save": {
+      "id": "opening.b07_save",
+      "event_id": "E01b",
+      "beat": "B07",
+      "title": "Save Prompt",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_player_room_bed",
+      "camera_anchor": "slifer_player_room_bed",
+      "cast": [
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_player_room_bed"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "dialogue",
+          "key": "E01b.b07_save_01",
+          "skippable": true,
+          "command_id": "opening.b07_save.cmd000",
+          "text_key": "E01b.b07_save_01",
+          "speaker": "narrator",
+          "portrait": "none",
+          "args": []
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_Save",
+          "volume": 0.9,
+          "command_id": "opening.b07_save.cmd001",
+          "skippable": true,
+          "args": [
+            "A_Save"
+          ]
+        },
+        {
+          "type": "wait",
+          "duration": 1.0,
+          "command_id": "opening.b07_save.cmd002",
+          "skippable": true,
+          "args": []
+        },
+        {
+          "type": "banner",
+          "title": "SAVED",
+          "subtitle": "Progress saved to slot 1",
+          "style": "system",
+          "duration": 2.0,
+          "command_id": "opening.b07_save.cmd003",
+          "skippable": true,
+          "args": [
+            "SAVED"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": "opening.b07_free_roam",
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b07_save.cmd004",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [
+        {
+          "id": "manual_save_first_free_roam",
+          "trigger": "player_selected_save",
+          "autosave": false,
+          "manual": true
+        }
+      ],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Demonstrates the PDA save flow. A02 owns the actual slot write.",
+      "version": 1,
+      "event": "E01b"
+    },
+    "opening.b07_free_roam": {
+      "id": "opening.b07_free_roam",
+      "event_id": "E01b",
+      "beat": "B07",
+      "title": "Free Roam Begins",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_player_room_bed",
+      "camera_anchor": "slifer_player_room_bed",
+      "cast": [
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_player_room_bed"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "dialogue",
+          "key": "E01b.b07_free_roam_01",
+          "skippable": true,
+          "command_id": "opening.b07_free_roam.cmd000",
+          "text_key": "E01b.b07_free_roam_01",
+          "speaker": "player",
+          "portrait": "player_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "E01b.b07_free_roam_02",
+          "skippable": true,
+          "command_id": "opening.b07_free_roam.cmd001",
+          "text_key": "E01b.b07_free_roam_02",
+          "speaker": "pda",
+          "portrait": "ui_pda",
+          "args": []
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": true,
+          "complete_event": true,
+          "command_id": "opening.b07_free_roam.cmd002",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "E01b completes here. The player regains control; Jaden's optional duel is available outside.",
+      "version": 1,
+      "event": "E01b"
+    },
+    "opening.b08_jaden_intro": {
+      "id": "opening.b08_jaden_intro",
+      "event_id": "FJ01",
+      "beat": "B08",
+      "title": "Optional Jaden Free Duel",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_dorm_front_jaden",
+      "camera_anchor": "slifer_front_camera",
+      "cast": [
+        "jaden",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_dorm_front_jaden",
+        "slifer_front_camera"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_front_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "command_id": "opening.b08_jaden_intro.cmd000",
+          "skippable": true,
+          "args": [
+            "slifer_front_camera"
+          ]
+        },
+        {
+          "type": "music",
+          "track": "BGM_Free_Roam",
+          "mode": "play",
+          "fade": 1.0,
+          "command_id": "opening.b08_jaden_intro.cmd001",
+          "skippable": true,
+          "args": [
+            "BGM_Free_Roam"
+          ]
+        },
+        {
+          "type": "move_npc",
+          "npc": "jaden",
+          "anchor": "slifer_dorm_front_jaden",
+          "walk": true,
+          "duration": 1.0,
+          "command_id": "opening.b08_jaden_intro.cmd002",
+          "skippable": true,
+          "args": [
+            "jaden",
+            "slifer_dorm_front_jaden"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_jaden_01",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_intro.cmd003",
+          "text_key": "FJ01.b08_jaden_01",
+          "speaker": "jaden",
+          "portrait": "jaden_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_player_01",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_intro.cmd004",
+          "text_key": "FJ01.b08_player_01",
+          "speaker": "player",
+          "portrait": "player_happy",
+          "args": []
+        },
+        {
+          "type": "choice",
+          "key": "FJ01.b08_jaden_02",
+          "command_id": "opening.b08_jaden_intro.cmd005",
+          "skippable": true,
+          "text_key": "FJ01.b08_jaden_02",
+          "speaker": "jaden",
+          "portrait": "jaden_determined",
+          "args": [
+            "accept",
+            "decline"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b08_jaden_intro.cmd006",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Optional free duel, clearly separated from the Syrus tutorial. Declining leaves the event available.",
+      "version": 1,
+      "event": "FJ01"
+    },
+    "opening.b08_jaden_decline": {
+      "id": "opening.b08_jaden_decline",
+      "event_id": "FJ01",
+      "beat": "B08",
+      "title": "Jaden Duel - Declined",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_dorm_front_jaden",
+      "camera_anchor": "slifer_front_camera",
+      "cast": [
+        "jaden",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_dorm_front_jaden"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_jaden_decline_01",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_decline.cmd000",
+          "text_key": "FJ01.b08_jaden_decline_01",
+          "speaker": "jaden",
+          "portrait": "jaden_happy",
+          "args": []
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_available",
+          "value": true,
+          "command_id": "opening.b08_jaden_decline.cmd001",
+          "skippable": true,
+          "args": [
+            "jaden_first_duel_available"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": true,
+          "complete_event": false,
+          "command_id": "opening.b08_jaden_decline.cmd002",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Decline path: do not complete FJ01. The player can talk to Jaden again.",
+      "version": 1,
+      "event": "FJ01"
+    },
+    "opening.b08_jaden_duel_setup": {
+      "id": "opening.b08_jaden_duel_setup",
+      "event_id": "FJ01",
+      "beat": "B08",
+      "title": "Jaden Duel - Setup",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_dorm_front_jaden",
+      "camera_anchor": "slifer_front_camera",
+      "cast": [
+        "jaden",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_dorm_front_jaden"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "banner",
+          "title": "OPTIONAL FREE DUEL",
+          "subtitle": "JADEN YUKI - ELEMENTAL HERO",
+          "style": "duel",
+          "duration": 3.0,
+          "command_id": "opening.b08_jaden_duel_setup.cmd000",
+          "skippable": true,
+          "args": [
+            "OPTIONAL FREE DUEL"
+          ]
+        },
+        {
+          "type": "music",
+          "track": "BGM_Duel_Jaden",
+          "mode": "play",
+          "fade": 1.0,
+          "command_id": "opening.b08_jaden_duel_setup.cmd001",
+          "skippable": true,
+          "args": [
+            "BGM_Duel_Jaden"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_jaden_setup_01",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_duel_setup.cmd002",
+          "text_key": "FJ01.b08_jaden_setup_01",
+          "speaker": "jaden",
+          "portrait": "jaden_determined",
+          "args": []
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_DuelStart",
+          "volume": 1.0,
+          "command_id": "opening.b08_jaden_duel_setup.cmd003",
+          "skippable": true,
+          "args": [
+            "A_DuelStart"
+          ]
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden",
+          "player_deck": "active",
+          "mode": "free",
+          "starting_lp": {
+            "player": 8000,
+            "opponent": 8000
+          },
+          "on_win": "opening.b08_jaden_win",
+          "on_lose": "opening.b08_jaden_lose",
+          "on_draw": "opening.b08_jaden_lose",
+          "retryable": false,
+          "story_critical": false,
+          "optional": true,
+          "counts_as_win": true,
+          "award_dp": "formula",
+          "command_id": "opening.b08_jaden_duel_setup.cmd004",
+          "skippable": true,
+          "args": [
+            "jaden",
+            "jaden",
+            "free"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": false,
+          "complete_event": true,
+          "command_id": "opening.b08_jaden_duel_setup.cmd005",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Free duel mode. Loss is a valid outcome; no story gate, no forced retry.",
+      "version": 1,
+      "event": "FJ01"
+    },
+    "opening.b08_jaden_win": {
+      "id": "opening.b08_jaden_win",
+      "event_id": "FJ01",
+      "beat": "B08",
+      "title": "Jaden Duel - Won",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_dorm_front_jaden",
+      "camera_anchor": "slifer_front_camera",
+      "cast": [
+        "jaden",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_dorm_front_jaden"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "music",
+          "track": "BGM_Free_Roam",
+          "mode": "play",
+          "fade": 1.0,
+          "command_id": "opening.b08_jaden_win.cmd000",
+          "skippable": true,
+          "args": [
+            "BGM_Free_Roam"
+          ]
+        },
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_jaden_win_01",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_win.cmd001",
+          "text_key": "FJ01.b08_jaden_win_01",
+          "speaker": "jaden",
+          "portrait": "jaden_shocked",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_player_win_01",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_win.cmd002",
+          "text_key": "FJ01.b08_player_win_01",
+          "speaker": "player",
+          "portrait": "player_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_jaden_win_02",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_win.cmd003",
+          "text_key": "FJ01.b08_jaden_win_02",
+          "speaker": "jaden",
+          "portrait": "jaden_laugh",
+          "args": []
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_done",
+          "value": true,
+          "command_id": "opening.b08_jaden_win.cmd004",
+          "skippable": true,
+          "args": [
+            "jaden_first_duel_done"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_won",
+          "value": true,
+          "command_id": "opening.b08_jaden_win.cmd005",
+          "skippable": true,
+          "args": [
+            "jaden_first_duel_won"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_available",
+          "value": false,
+          "command_id": "opening.b08_jaden_win.cmd006",
+          "skippable": true,
+          "args": [
+            "jaden_first_duel_available"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_free_duel_unlocked",
+          "value": true,
+          "command_id": "opening.b08_jaden_win.cmd007",
+          "skippable": true,
+          "args": [
+            "jaden_free_duel_unlocked"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": true,
+          "complete_event": true,
+          "command_id": "opening.b08_jaden_win.cmd008",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [
+        {
+          "id": "autosave_jaden_first_win",
+          "trigger": "after_duel_result",
+          "autosave": true,
+          "manual": true
+        }
+      ],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Win path. A02 awards DP from the duel result formula; event outcomes add wins/duels counters.",
+      "version": 1,
+      "event": "FJ01"
+    },
+    "opening.b08_jaden_lose": {
+      "id": "opening.b08_jaden_lose",
+      "event_id": "FJ01",
+      "beat": "B08",
+      "title": "Jaden Duel - Lost",
+      "location": "slifer",
+      "interior": true,
+      "anchor": "slifer_dorm_front_jaden",
+      "camera_anchor": "slifer_front_camera",
+      "cast": [
+        "jaden",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_dorm_front_jaden"
+      ],
+      "entry_conditions": [],
+      "commands": [
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_jaden_loss_01",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_lose.cmd000",
+          "text_key": "FJ01.b08_jaden_loss_01",
+          "speaker": "jaden",
+          "portrait": "jaden_happy",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_player_loss_01",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_lose.cmd001",
+          "text_key": "FJ01.b08_player_loss_01",
+          "speaker": "player",
+          "portrait": "player_neutral",
+          "args": []
+        },
+        {
+          "type": "dialogue",
+          "key": "FJ01.b08_jaden_loss_02",
+          "skippable": true,
+          "command_id": "opening.b08_jaden_lose.cmd002",
+          "text_key": "FJ01.b08_jaden_loss_02",
+          "speaker": "jaden",
+          "portrait": "jaden_laugh",
+          "args": []
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_done",
+          "value": true,
+          "command_id": "opening.b08_jaden_lose.cmd003",
+          "skippable": true,
+          "args": [
+            "jaden_first_duel_done"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_lost",
+          "value": true,
+          "command_id": "opening.b08_jaden_lose.cmd004",
+          "skippable": true,
+          "args": [
+            "jaden_first_duel_lost"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_available",
+          "value": false,
+          "command_id": "opening.b08_jaden_lose.cmd005",
+          "skippable": true,
+          "args": [
+            "jaden_first_duel_available"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_free_duel_unlocked",
+          "value": true,
+          "command_id": "opening.b08_jaden_lose.cmd006",
+          "skippable": true,
+          "args": [
+            "jaden_free_duel_unlocked"
+          ]
+        },
+        {
+          "type": "end",
+          "next_scene": null,
+          "enter_free_roam": true,
+          "complete_event": true,
+          "command_id": "opening.b08_jaden_lose.cmd007",
+          "skippable": true,
+          "args": []
+        }
+      ],
+      "save_points": [
+        {
+          "id": "autosave_jaden_first_loss",
+          "trigger": "after_duel_result",
+          "autosave": true,
+          "manual": true
+        }
+      ],
+      "source": "port-original",
+      "confidence": "high",
+      "notes": "Loss path. The event completes; Jaden remains available for repeatable free duels.",
+      "version": 1,
+      "event": "FJ01"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,2076 @@
+{
+  "schema_version": 1,
+  "story_id": "opening",
+  "language": "en",
+  "defaults": {
+    "typewriter": true,
+    "skippable": true,
+    "default_expression": "neutral",
+    "fallback_portrait": "portrait_fallback_student"
+  },
+  "placeholders": {
+    "player_name": "The confirmed profile name.",
+    "player_name_spelled": "The confirmed profile name with spaces between letters, for Mimicry's confirmation line."
+  },
+  "speakers": {
+    "player": {
+      "display_name": "{player_name}",
+      "portrait_base": "player",
+      "expressions": [
+        "neutral",
+        "happy",
+        "shocked",
+        "sad",
+        "determined"
+      ],
+      "fallback": "player_neutral",
+      "color": "#6fc9dd",
+      "source": "existing"
+    },
+    "jaden": {
+      "display_name": "Jaden Yuki",
+      "portrait_base": "jaden",
+      "expressions": [
+        "neutral",
+        "happy",
+        "laugh",
+        "angry",
+        "shocked",
+        "sad",
+        "determined"
+      ],
+      "fallback": "jaden_neutral",
+      "color": "#d99a4e",
+      "source": "existing"
+    },
+    "syrus": {
+      "display_name": "Syrus Truesdale",
+      "portrait_base": "syrus",
+      "expressions": [
+        "neutral",
+        "nervous",
+        "happy",
+        "shocked",
+        "determined"
+      ],
+      "fallback": "syrus",
+      "color": "#79cfe0",
+      "source": "base portrait exists; expression frames required"
+    },
+    "chumley": {
+      "display_name": "Chumley Huffington",
+      "portrait_base": "chumley",
+      "expressions": [
+        "neutral",
+        "happy",
+        "sleepy",
+        "hungry"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#b48a5a",
+      "source": "required"
+    },
+    "banner": {
+      "display_name": "Lyman Banner",
+      "portrait_base": "banner",
+      "expressions": [
+        "neutral",
+        "happy",
+        "thoughtful",
+        "stern"
+      ],
+      "fallback": "portrait_fallback_teacher",
+      "color": "#8fae6a",
+      "source": "required"
+    },
+    "sheppard": {
+      "display_name": "Chancellor Sheppard",
+      "portrait_base": "sheppard",
+      "expressions": [
+        "neutral",
+        "proud",
+        "stern",
+        "happy"
+      ],
+      "fallback": "portrait_fallback_chancellor",
+      "color": "#d8c27a",
+      "source": "required"
+    },
+    "mimicry": {
+      "display_name": "Professor Mimicry",
+      "portrait_base": "mimicry",
+      "expressions": [
+        "neutral",
+        "smug",
+        "confused",
+        "happy",
+        "thoughtful"
+      ],
+      "fallback": "portrait_fallback_teacher",
+      "color": "#c78fd8",
+      "source": "required"
+    },
+    "dorothy": {
+      "display_name": "Miss Dorothy",
+      "portrait_base": "dorothy",
+      "expressions": [
+        "neutral",
+        "happy",
+        "apologetic"
+      ],
+      "fallback": "portrait_fallback_shopkeeper",
+      "color": "#e0a25c",
+      "source": "required"
+    },
+    "narrator": {
+      "display_name": "",
+      "portrait_base": null,
+      "expressions": [],
+      "fallback": null,
+      "color": "#c9c9c9",
+      "source": "ui"
+    },
+    "pda": {
+      "display_name": "PDA",
+      "portrait_base": "ui_pda",
+      "expressions": [
+        "neutral"
+      ],
+      "fallback": "ui_pda",
+      "color": "#7ad4b0",
+      "source": "ui"
+    }
+  },
+  "version": 1,
+  "lines": {
+    "E01.b01_arrival_01": {
+      "key": "E01.b01_arrival_01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "The ferry horn fades behind you. Ahead, Duel Academy rises out of the morning mist, all white stone and red roofs.",
+      "next": "E01.b01_arrival_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b01",
+        "arrival"
+      ],
+      "text_key": "E01.b01_arrival_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b01_arrival_02": {
+      "key": "E01.b01_arrival_02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "So this is Duel Academy. Okay. First day. Don't screw it up.",
+      "next": "E01.b01_arrival_03",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b01",
+        "player"
+      ],
+      "text_key": "E01.b01_arrival_02",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b01_arrival_03": {
+      "key": "E01.b01_arrival_03",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "A bell rings across the plaza. Upperclassmen wave the new students toward the gym.",
+      "next": "E01.b01_arrival_04",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b01",
+        "assembly"
+      ],
+      "text_key": "E01.b01_arrival_03",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b01_arrival_04": {
+      "key": "E01.b01_arrival_04",
+      "speaker": "player",
+      "portrait": "player_determined",
+      "expression": "determined",
+      "text": "The opening assembly. Right. Let's go.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b01",
+        "player"
+      ],
+      "text_key": "E01.b01_arrival_04",
+      "source_detail": "port-original",
+      "emotion": "determined"
+    },
+    "E01.b02_sheppard_01": {
+      "key": "E01.b02_sheppard_01",
+      "speaker": "sheppard",
+      "portrait": "sheppard_proud",
+      "expression": "proud",
+      "text": "Welcome, everyone. I am Chancellor Sheppard, and this is Duel Academy.",
+      "next": "E01.b02_sheppard_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech"
+      ],
+      "text_key": "E01.b02_sheppard_01",
+      "source_detail": "port-original",
+      "emotion": "proud"
+    },
+    "E01.b02_sheppard_02": {
+      "key": "E01.b02_sheppard_02",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "You came here to become duelists. Some of you will become champions. All of you will learn what it feels like to lose.",
+      "next": "E01.b02_jaden_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech"
+      ],
+      "text_key": "E01.b02_sheppard_02",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b02_jaden_01": {
+      "key": "E01.b02_jaden_01",
+      "speaker": "jaden",
+      "portrait": "jaden_happy",
+      "expression": "happy",
+      "text": "Yeah! Slifer Red, represent!",
+      "next": "E01.b02_syrus_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "jaden"
+      ],
+      "text_key": "E01.b02_jaden_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b02_syrus_01": {
+      "key": "E01.b02_syrus_01",
+      "speaker": "syrus",
+      "portrait": "syrus_nervous",
+      "expression": "nervous",
+      "text": "J-Jaden, not so loud. Everyone's looking...",
+      "next": "E01.b02_chumley_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "syrus"
+      ],
+      "text_key": "E01.b02_syrus_01",
+      "source_detail": "port-original",
+      "emotion": "nervous"
+    },
+    "E01.b02_chumley_01": {
+      "key": "E01.b02_chumley_01",
+      "speaker": "chumley",
+      "portrait": "chumley_sleepy",
+      "expression": "sleepy",
+      "text": "Wake me up when the dueling starts.",
+      "next": "E01.b02_sheppard_03",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "chumley"
+      ],
+      "text_key": "E01.b02_chumley_01",
+      "source_detail": "port-original",
+      "emotion": "sleepy"
+    },
+    "E01.b02_sheppard_03": {
+      "key": "E01.b02_sheppard_03",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "Duel Academy is not only about winning. You will study rules, card lore, strategy, and the history of the game.",
+      "next": "E01.b02_sheppard_04",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech"
+      ],
+      "text_key": "E01.b02_sheppard_03",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b02_sheppard_04": {
+      "key": "E01.b02_sheppard_04",
+      "speaker": "sheppard",
+      "portrait": "sheppard_stern",
+      "expression": "stern",
+      "text": "A duel, like life, is not over until the very end. There is always a combo that opens new possibilities. Remember that.",
+      "next": "E01.b02_sheppard_05",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech"
+      ],
+      "text_key": "E01.b02_sheppard_04",
+      "source_detail": "port-original",
+      "emotion": "stern"
+    },
+    "E01.b02_sheppard_05": {
+      "key": "E01.b02_sheppard_05",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "Registration is at the reception desk in the academy lobby. Professor Mimicry is waiting. After that, report to your dorm headmaster.",
+      "next": "E01.b02_sheppard_06",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech"
+      ],
+      "text_key": "E01.b02_sheppard_05",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b02_sheppard_06": {
+      "key": "E01.b02_sheppard_06",
+      "speaker": "sheppard",
+      "portrait": "sheppard_proud",
+      "expression": "proud",
+      "text": "One more thing. A duel is a conversation. Listen to your opponent. Respect your deck. And never forget why you play.",
+      "next": "E01.b02_player_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech"
+      ],
+      "text_key": "E01.b02_sheppard_06",
+      "source_detail": "port-original",
+      "emotion": "proud"
+    },
+    "E01.b02_player_01": {
+      "key": "E01.b02_player_01",
+      "speaker": "player",
+      "portrait": "player_determined",
+      "expression": "determined",
+      "text": "Right. Let's do this.",
+      "next": "E01.b02_sheppard_07",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "player"
+      ],
+      "text_key": "E01.b02_player_01",
+      "source_detail": "port-original",
+      "emotion": "determined"
+    },
+    "E01.b02_sheppard_07": {
+      "key": "E01.b02_sheppard_07",
+      "speaker": "sheppard",
+      "portrait": "sheppard_happy",
+      "expression": "happy",
+      "text": "That is the spirit. Welcome to Duel Academy!",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech"
+      ],
+      "text_key": "E01.b02_sheppard_07",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b03_mimicry_01": {
+      "key": "E01.b03_mimicry_01",
+      "speaker": "mimicry",
+      "portrait": "mimicry_smug",
+      "expression": "smug",
+      "text": "Ah! A new face. Welcome, welcome! I am Professor Mimicry. Practical dueling, exam coordination, and a little of everything else.",
+      "next": "E01.b03_mimicry_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "mimicry"
+      ],
+      "text_key": "E01.b03_mimicry_01",
+      "source_detail": "port-original",
+      "emotion": "smug"
+    },
+    "E01.b03_mimicry_02": {
+      "key": "E01.b03_mimicry_02",
+      "speaker": "mimicry",
+      "portrait": "mimicry_neutral",
+      "expression": "neutral",
+      "text": "First, your name. Spell it out for me, one letter at a time. I will write it exactly as you say it.",
+      "next": "E01.b03_name_prompt",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "name"
+      ],
+      "text_key": "E01.b03_mimicry_02",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b03_name_prompt": {
+      "key": "E01.b03_name_prompt",
+      "speaker": "mimicry",
+      "portrait": "mimicry_neutral",
+      "expression": "neutral",
+      "text": "Go on. One letter at a time. Press END when you are finished.",
+      "next": "E01.b03_name_confirm_prompt",
+      "choices": [],
+      "input": {
+        "kind": "text",
+        "min_length": 1,
+        "max_length": 8,
+        "charset": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "store_as": "profile.name",
+        "confirm_label": "END",
+        "delete_label": "DELETE",
+        "default": "",
+        "source": "guide",
+        "confidence": "high",
+        "note": "GBA manual: the player may enter a name of up to eight letters; END confirms."
+      },
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "name",
+        "input"
+      ],
+      "text_key": "E01.b03_name_prompt",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b03_name_confirm_prompt": {
+      "key": "E01.b03_name_confirm_prompt",
+      "speaker": "mimicry",
+      "portrait": "mimicry_smug",
+      "expression": "smug",
+      "text": "Let me make sure I have it. {player_name_spelled}. That is {player_name}, yes?",
+      "next": null,
+      "choices": [
+        {
+          "id": "yes",
+          "text": "Yes, that's me.",
+          "next_scene": "opening.b03_name_accepted",
+          "next_key": "E01.b03_mimicry_04",
+          "requirements": [],
+          "outcomes": []
+        },
+        {
+          "id": "no",
+          "text": "No - let me spell it again.",
+          "next_scene": "opening.b03_name_entry",
+          "next_key": "E01.b03_name_prompt",
+          "requirements": [],
+          "outcomes": []
+        }
+      ],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "name",
+        "choice"
+      ],
+      "text_key": "E01.b03_name_confirm_prompt",
+      "source_detail": "port-original",
+      "emotion": "smug"
+    },
+    "E01.b03_mimicry_04": {
+      "key": "E01.b03_mimicry_04",
+      "speaker": "mimicry",
+      "portrait": "mimicry_happy",
+      "expression": "happy",
+      "text": "{player_name}! A fine name. It will look good on the exam roster. Or terrible, if you do not study. We will see!",
+      "next": "E01.b03_mimicry_05",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "name"
+      ],
+      "text_key": "E01.b03_mimicry_04",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b03_mimicry_05": {
+      "key": "E01.b03_mimicry_05",
+      "speaker": "mimicry",
+      "portrait": "mimicry_neutral",
+      "expression": "neutral",
+      "text": "Here is your student PDA. Map, calendar, deck, mail, save - everything you need. Try not to lose it. The replacement fee is 500 DP.",
+      "next": "E01.b03_mimicry_07",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "pda"
+      ],
+      "text_key": "E01.b03_mimicry_05",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b03_mimicry_07": {
+      "key": "E01.b03_mimicry_07",
+      "speaker": "mimicry",
+      "portrait": "mimicry_neutral",
+      "expression": "neutral",
+      "text": "Registration complete. Your dorm is Slifer Red - next to the bridge leading to the harbor. Your orientation continues there. Good luck!",
+      "next": "E01.b03_mimicry_08",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "registration"
+      ],
+      "text_key": "E01.b03_mimicry_07",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b03_mimicry_08": {
+      "key": "E01.b03_mimicry_08",
+      "speaker": "mimicry",
+      "portrait": "mimicry_thoughtful",
+      "expression": "thoughtful",
+      "text": "Oh, and the card shop opens next Saturday. Miss Dorothy has been unpacking boxes all week. Basic packs, 100 DP. Save your DP until then.",
+      "next": "E01.b03_player_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "shop"
+      ],
+      "text_key": "E01.b03_mimicry_08",
+      "source_detail": "port-original",
+      "emotion": "thoughtful"
+    },
+    "E01.b03_player_01": {
+      "key": "E01.b03_player_01",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Got it. Slifer Red. Thank you, Professor.",
+      "next": "E01.b03_mimicry_09",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "player"
+      ],
+      "text_key": "E01.b03_player_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b03_mimicry_09": {
+      "key": "E01.b03_mimicry_09",
+      "speaker": "mimicry",
+      "portrait": "mimicry_smug",
+      "expression": "smug",
+      "text": "Do not thank me yet. Wait until you see the exams.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b03",
+        "mimicry"
+      ],
+      "text_key": "E01.b03_mimicry_09",
+      "source_detail": "port-original",
+      "emotion": "smug"
+    },
+    "E01.b04_narrator_01": {
+      "key": "E01.b04_narrator_01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "The west path ends at a creaky red building perched above the ocean. The sign reads SLIFER RED DORM.",
+      "next": "E01.b04_jaden_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b04",
+        "dorm"
+      ],
+      "text_key": "E01.b04_narrator_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b04_jaden_01": {
+      "key": "E01.b04_jaden_01",
+      "speaker": "jaden",
+      "portrait": "jaden_happy",
+      "expression": "happy",
+      "text": "Hey! You must be the new Slifer. I'm Jaden. This is Syrus, and that's Chumley.",
+      "next": "E01.b04_syrus_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b04",
+        "jaden"
+      ],
+      "text_key": "E01.b04_jaden_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b04_syrus_01": {
+      "key": "E01.b04_syrus_01",
+      "speaker": "syrus",
+      "portrait": "syrus_nervous",
+      "expression": "nervous",
+      "text": "H-hi. I'm Syrus. Welcome to Slifer Red. It's... not much, but it's home.",
+      "next": "E01.b04_chumley_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b04",
+        "syrus"
+      ],
+      "text_key": "E01.b04_syrus_01",
+      "source_detail": "port-original",
+      "emotion": "nervous"
+    },
+    "E01.b04_chumley_01": {
+      "key": "E01.b04_chumley_01",
+      "speaker": "chumley",
+      "portrait": "chumley_happy",
+      "expression": "happy",
+      "text": "Chumley Huffington. If you're hungry, the cafeteria is this way. Priorities.",
+      "next": "E01.b04_player_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b04",
+        "chumley"
+      ],
+      "text_key": "E01.b04_chumley_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b04_player_01": {
+      "key": "E01.b04_player_01",
+      "speaker": "player",
+      "portrait": "player_happy",
+      "expression": "happy",
+      "text": "Nice to meet you all. I'm {player_name}.",
+      "next": "E01.b04_jaden_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b04",
+        "player"
+      ],
+      "text_key": "E01.b04_player_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b04_jaden_02": {
+      "key": "E01.b04_jaden_02",
+      "speaker": "jaden",
+      "portrait": "jaden_laugh",
+      "expression": "laugh",
+      "text": "Professor Banner is inside. He's got your starting DP and probably a lecture. Come on!",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b04",
+        "jaden"
+      ],
+      "text_key": "E01.b04_jaden_02",
+      "source_detail": "port-original",
+      "emotion": "laugh"
+    },
+    "E01.b05_banner_01": {
+      "key": "E01.b05_banner_01",
+      "speaker": "banner",
+      "portrait": "banner_happy",
+      "expression": "happy",
+      "text": "Ah, our new student! Welcome. I am Lyman Banner, head of Slifer Red. I teach alchemy, and I keep an eye on this lot.",
+      "next": "E01.b05_banner_08",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "banner"
+      ],
+      "text_key": "E01.b05_banner_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b05_banner_08": {
+      "key": "E01.b05_banner_08",
+      "speaker": "banner",
+      "portrait": "banner_neutral",
+      "expression": "neutral",
+      "text": "Duel Academy has three levels: Slifer Red, Ra Yellow, and Obelisk Blue. Your entrance exam placed you here in Slifer Red with us.",
+      "next": "E01.b05_banner_09",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "dorm"
+      ],
+      "text_key": "E01.b05_banner_08",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b05_banner_09": {
+      "key": "E01.b05_banner_09",
+      "speaker": "banner",
+      "portrait": "banner_thoughtful",
+      "expression": "thoughtful",
+      "text": "Every month there is an exam. Score well and you can change levels. You also carry a duelist title. The top rank is King of Games.",
+      "next": "E01.b05_jaden_04",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "exam",
+        "title"
+      ],
+      "text_key": "E01.b05_banner_09",
+      "source_detail": "port-original",
+      "emotion": "thoughtful"
+    },
+    "E01.b05_jaden_04": {
+      "key": "E01.b05_jaden_04",
+      "speaker": "jaden",
+      "portrait": "jaden_laugh",
+      "expression": "laugh",
+      "text": "I'm going to be King of Games! Just you watch.",
+      "next": "E01.b05_banner_10",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "jaden"
+      ],
+      "text_key": "E01.b05_jaden_04",
+      "source_detail": "port-original",
+      "emotion": "laugh"
+    },
+    "E01.b05_banner_10": {
+      "key": "E01.b05_banner_10",
+      "speaker": "banner",
+      "portrait": "banner_happy",
+      "expression": "happy",
+      "text": "And this little buddy is Pharaoh. He has been with me since my alchemy days.",
+      "next": "E01.b05_banner_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "pharaoh"
+      ],
+      "text_key": "E01.b05_banner_10",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b05_banner_02": {
+      "key": "E01.b05_banner_02",
+      "speaker": "banner",
+      "portrait": "banner_neutral",
+      "expression": "neutral",
+      "text": "Before we eat, business. Every new student receives a starting budget of 3,000 DP.",
+      "next": "E01.b05_player_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "dp"
+      ],
+      "text_key": "E01.b05_banner_02",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b05_player_02": {
+      "key": "E01.b05_player_02",
+      "speaker": "player",
+      "portrait": "player_shocked",
+      "expression": "shocked",
+      "text": "3,000 DP? That's... a lot, right?",
+      "next": "E01.b05_banner_03",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "dp"
+      ],
+      "text_key": "E01.b05_player_02",
+      "source_detail": "port-original",
+      "emotion": "shocked"
+    },
+    "E01.b05_banner_03": {
+      "key": "E01.b05_banner_03",
+      "speaker": "banner",
+      "portrait": "banner_thoughtful",
+      "expression": "thoughtful",
+      "text": "DP - Duelist Points. You earn them by dueling. You spend them at the card shop on booster packs. A pack costs 100 to 200 DP, depending on the set.",
+      "next": "E01.b05_syrus_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "dp",
+        "shop"
+      ],
+      "text_key": "E01.b05_banner_03",
+      "source_detail": "port-original",
+      "emotion": "thoughtful"
+    },
+    "E01.b05_syrus_02": {
+      "key": "E01.b05_syrus_02",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "The shop opens next Saturday. Miss Dorothy has been unpacking boxes all week.",
+      "next": "E01.b05_chumley_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "shop"
+      ],
+      "text_key": "E01.b05_syrus_02",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b05_chumley_02": {
+      "key": "E01.b05_chumley_02",
+      "speaker": "chumley",
+      "portrait": "chumley_hungry",
+      "expression": "hungry",
+      "text": "I'm saving for a Master Fusions pack. Or lunch. Probably lunch.",
+      "next": "E01.b05_banner_04",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "chumley"
+      ],
+      "text_key": "E01.b05_chumley_02",
+      "source_detail": "port-original",
+      "emotion": "hungry"
+    },
+    "E01.b05_banner_04": {
+      "key": "E01.b05_banner_04",
+      "speaker": "banner",
+      "portrait": "banner_stern",
+      "expression": "stern",
+      "text": "Spend wisely. A bigger deck is not always a better deck. And do not blow it all on one pack.",
+      "next": "E01.b05_jaden_03",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "dp"
+      ],
+      "text_key": "E01.b05_banner_04",
+      "source_detail": "port-original",
+      "emotion": "stern"
+    },
+    "E01.b05_jaden_03": {
+      "key": "E01.b05_jaden_03",
+      "speaker": "jaden",
+      "portrait": "jaden_laugh",
+      "expression": "laugh",
+      "text": "Or do! Pack opening is the best part!",
+      "next": "E01.b05_banner_05",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "jaden"
+      ],
+      "text_key": "E01.b05_jaden_03",
+      "source_detail": "port-original",
+      "emotion": "laugh"
+    },
+    "E01.b05_banner_05": {
+      "key": "E01.b05_banner_05",
+      "speaker": "banner",
+      "portrait": "banner_neutral",
+      "expression": "neutral",
+      "text": "Ignore him. Mostly.",
+      "next": "E01.b05_banner_06",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "banner"
+      ],
+      "text_key": "E01.b05_banner_05",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b05_banner_06": {
+      "key": "E01.b05_banner_06",
+      "speaker": "banner",
+      "portrait": "banner_happy",
+      "expression": "happy",
+      "text": "You can reach these three through your PDA mail. They are good people. Mostly.",
+      "next": "E01.b05_syrus_03",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "email"
+      ],
+      "text_key": "E01.b05_banner_06",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b05_syrus_03": {
+      "key": "E01.b05_syrus_03",
+      "speaker": "syrus",
+      "portrait": "syrus_happy",
+      "expression": "happy",
+      "text": "I can show you the basics of dueling after this. If you want.",
+      "next": "E01.b05_player_03",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "syrus",
+        "tutorial"
+      ],
+      "text_key": "E01.b05_syrus_03",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b05_player_03": {
+      "key": "E01.b05_player_03",
+      "speaker": "player",
+      "portrait": "player_determined",
+      "expression": "determined",
+      "text": "I'd appreciate that.",
+      "next": "E01.b05_banner_07",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "player"
+      ],
+      "text_key": "E01.b05_player_03",
+      "source_detail": "port-original",
+      "emotion": "determined"
+    },
+    "E01.b05_banner_07": {
+      "key": "E01.b05_banner_07",
+      "speaker": "banner",
+      "portrait": "banner_happy",
+      "expression": "happy",
+      "text": "Good. Syrus, do not let them leave until they know a summon from a set.",
+      "next": "E01.b05_syrus_04",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "tutorial"
+      ],
+      "text_key": "E01.b05_banner_07",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b05_syrus_04": {
+      "key": "E01.b05_syrus_04",
+      "speaker": "syrus",
+      "portrait": "syrus_nervous",
+      "expression": "nervous",
+      "text": "I-I'll do my best!",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b05",
+        "syrus"
+      ],
+      "text_key": "E01.b05_syrus_04",
+      "source_detail": "port-original",
+      "emotion": "nervous"
+    },
+    "E01.b06_syrus_01": {
+      "key": "E01.b06_syrus_01",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "Okay! First, the absolute basics. Your deck has 40 to 60 cards. You start with 8,000 Life Points.",
+      "next": "E01.b06_syrus_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial"
+      ],
+      "text_key": "E01.b06_syrus_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b06_syrus_02": {
+      "key": "E01.b06_syrus_02",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "Each turn you draw one card. You can Normal Summon or Set one monster. Level 4 or lower needs no tribute. Level 5 or 6 needs one tribute. Level 7 or higher needs two.",
+      "next": "E01.b06_syrus_03",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial"
+      ],
+      "text_key": "E01.b06_syrus_02",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b06_syrus_03": {
+      "key": "E01.b06_syrus_03",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "Monsters in Attack Position battle with ATK. Monsters in Defense Position protect with DEF. Destroyed monsters go to the Graveyard.",
+      "next": "E01.b06_syrus_04",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial"
+      ],
+      "text_key": "E01.b06_syrus_03",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b06_syrus_04": {
+      "key": "E01.b06_syrus_04",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "Spell Cards do things right away. Trap Cards must be Set first, then activated later - usually on your opponent's turn.",
+      "next": "E01.b06_syrus_05",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial"
+      ],
+      "text_key": "E01.b06_syrus_04",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b06_syrus_05": {
+      "key": "E01.b06_syrus_05",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "To win, reduce your opponent's Life Points to zero. If they cannot draw a card, they lose too.",
+      "next": "E01.b06_player_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial"
+      ],
+      "text_key": "E01.b06_syrus_05",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b06_player_01": {
+      "key": "E01.b06_player_01",
+      "speaker": "player",
+      "portrait": "player_determined",
+      "expression": "determined",
+      "text": "Summon, set, battle. Got it.",
+      "next": "E01.b06_syrus_06",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "player"
+      ],
+      "text_key": "E01.b06_player_01",
+      "source_detail": "port-original",
+      "emotion": "determined"
+    },
+    "E01.b06_syrus_06": {
+      "key": "E01.b06_syrus_06",
+      "speaker": "syrus",
+      "portrait": "syrus_happy",
+      "expression": "happy",
+      "text": "Let's try it. I've set up a practice duel. No DP on the line, no story stuff - just a few turns so you can see how it feels.",
+      "next": "E01.b06_tutorial_ready",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial"
+      ],
+      "text_key": "E01.b06_syrus_06",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b06_tutorial_ready": {
+      "key": "E01.b06_tutorial_ready",
+      "speaker": "syrus",
+      "portrait": "syrus_nervous",
+      "expression": "nervous",
+      "text": "Ready to give it a try?",
+      "next": null,
+      "choices": [
+        {
+          "id": "ready",
+          "text": "I'm ready.",
+          "next_scene": "opening.b06_tutorial_duel",
+          "next_key": "E01.b06_syrus_duel_start",
+          "requirements": [],
+          "outcomes": []
+        },
+        {
+          "id": "explain",
+          "text": "Can you explain the phases again?",
+          "next_scene": "opening.b06_tutorial_phases",
+          "next_key": "E01.b06_syrus_phases",
+          "requirements": [],
+          "outcomes": []
+        }
+      ],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "choice"
+      ],
+      "text_key": "E01.b06_tutorial_ready",
+      "source_detail": "port-original",
+      "emotion": "nervous"
+    },
+    "E01.b06_syrus_phases": {
+      "key": "E01.b06_syrus_phases",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "Draw, Standby, Main, Battle, End. In Main you summon and set. In Battle you attack. That's the short version.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "phases"
+      ],
+      "text_key": "E01.b06_syrus_phases",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b06_syrus_duel_start": {
+      "key": "E01.b06_syrus_duel_start",
+      "speaker": "syrus",
+      "portrait": "syrus_determined",
+      "expression": "determined",
+      "text": "Here we go! Remember: summon a monster, set a card if you have one, then attack when the lane is clear.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "duel"
+      ],
+      "text_key": "E01.b06_syrus_duel_start",
+      "source_detail": "port-original",
+      "emotion": "determined"
+    },
+    "E01.b06_syrus_win_01": {
+      "key": "E01.b06_syrus_win_01",
+      "speaker": "syrus",
+      "portrait": "syrus_happy",
+      "expression": "happy",
+      "text": "You did it! See? Summon, set, battle. That's the whole game.",
+      "next": "E01.b06_player_win_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "win"
+      ],
+      "text_key": "E01.b06_syrus_win_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b06_player_win_01": {
+      "key": "E01.b06_player_win_01",
+      "speaker": "player",
+      "portrait": "player_happy",
+      "expression": "happy",
+      "text": "That was fun. I think I'm getting it.",
+      "next": "E01.b06_syrus_win_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "win"
+      ],
+      "text_key": "E01.b06_player_win_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b06_syrus_win_02": {
+      "key": "E01.b06_syrus_win_02",
+      "speaker": "syrus",
+      "portrait": "syrus_happy",
+      "expression": "happy",
+      "text": "You're a natural. Jaden is going to want a duel next.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "win"
+      ],
+      "text_key": "E01.b06_syrus_win_02",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b06_syrus_loss_01": {
+      "key": "E01.b06_syrus_loss_01",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "Don't worry! Losing is part of learning. You lasted longer than my first practice duel.",
+      "next": "E01.b06_player_loss_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "loss"
+      ],
+      "text_key": "E01.b06_syrus_loss_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b06_player_loss_01": {
+      "key": "E01.b06_player_loss_01",
+      "speaker": "player",
+      "portrait": "player_sad",
+      "expression": "sad",
+      "text": "I'll get you next time.",
+      "next": "E01.b06_syrus_loss_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "loss"
+      ],
+      "text_key": "E01.b06_player_loss_01",
+      "source_detail": "port-original",
+      "emotion": "sad"
+    },
+    "E01.b06_syrus_loss_02": {
+      "key": "E01.b06_syrus_loss_02",
+      "speaker": "syrus",
+      "portrait": "syrus_happy",
+      "expression": "happy",
+      "text": "That's the spirit! Want to run it back, or keep exploring?",
+      "next": null,
+      "choices": [
+        {
+          "id": "retry",
+          "text": "Run it back.",
+          "next_scene": "opening.b06_tutorial_duel",
+          "next_key": "E01.b06_syrus_duel_start",
+          "requirements": [],
+          "outcomes": []
+        },
+        {
+          "id": "continue",
+          "text": "I'm good - let's keep going.",
+          "next_scene": "opening.b06_tutorial_continue",
+          "next_key": "E01.b06_syrus_loss_ok",
+          "requirements": [],
+          "outcomes": []
+        }
+      ],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "loss",
+        "choice"
+      ],
+      "text_key": "E01.b06_syrus_loss_02",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b06_syrus_loss_ok": {
+      "key": "E01.b06_syrus_loss_ok",
+      "speaker": "syrus",
+      "portrait": "syrus_happy",
+      "expression": "happy",
+      "text": "All right! You know where to find me. And remember: a practice loss doesn't count against you.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b06",
+        "tutorial",
+        "loss"
+      ],
+      "text_key": "E01.b06_syrus_loss_ok",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01b.b07_narrator_01": {
+      "key": "E01b.b07_narrator_01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "A week of orientation, class schedules, and cafeteria curry later...",
+      "next": "E01b.b07_player_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b07",
+        "timeskip"
+      ],
+      "text_key": "E01b.b07_narrator_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01b.b07_player_01": {
+      "key": "E01b.b07_player_01",
+      "speaker": "player",
+      "portrait": "player_happy",
+      "expression": "happy",
+      "text": "Saturday. Finally. No classes. The card shop opens today.",
+      "next": "E01b.b07_pda_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b07",
+        "player"
+      ],
+      "text_key": "E01b.b07_player_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01b.b07_pda_01": {
+      "key": "E01b.b07_pda_01",
+      "speaker": "pda",
+      "portrait": "ui_pda",
+      "expression": "neutral",
+      "text": "NEW OBJECTIVE: Explore Duel Academy. The Card Shop is open. Save your progress from the PDA at any time.",
+      "next": "E01b.b07_dorothy_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b07",
+        "pda"
+      ],
+      "text_key": "E01b.b07_pda_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01b.b07_dorothy_01": {
+      "key": "E01b.b07_dorothy_01",
+      "speaker": "dorothy",
+      "portrait": "dorothy_happy",
+      "expression": "happy",
+      "text": "CARD SHOP: OPEN. Basic packs 100 DP. - Miss Dorothy",
+      "next": "E01b.b07_narrator_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b07",
+        "shop"
+      ],
+      "text_key": "E01b.b07_dorothy_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01b.b07_narrator_02": {
+      "key": "E01b.b07_narrator_02",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "Outside your window, the island is waking up. The gym, the harbor, the dorm roofs - all yours to explore.",
+      "next": "E01b.b07_save_prompt",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b07",
+        "free_roam"
+      ],
+      "text_key": "E01b.b07_narrator_02",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01b.b07_save_prompt": {
+      "key": "E01b.b07_save_prompt",
+      "speaker": "pda",
+      "portrait": "ui_pda",
+      "expression": "neutral",
+      "text": "Save your game now?",
+      "next": null,
+      "choices": [
+        {
+          "id": "save",
+          "text": "Save now.",
+          "next_scene": "opening.b07_save",
+          "next_key": "E01b.b07_save_01",
+          "requirements": [],
+          "outcomes": []
+        },
+        {
+          "id": "later",
+          "text": "Later.",
+          "next_scene": "opening.b07_free_roam",
+          "next_key": "E01b.b07_free_roam_01",
+          "requirements": [],
+          "outcomes": []
+        }
+      ],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b07",
+        "save",
+        "choice"
+      ],
+      "text_key": "E01b.b07_save_prompt",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01b.b07_save_01": {
+      "key": "E01b.b07_save_01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "Saving...",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b07",
+        "save"
+      ],
+      "text_key": "E01b.b07_save_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01b.b07_free_roam_01": {
+      "key": "E01b.b07_free_roam_01",
+      "speaker": "player",
+      "portrait": "player_happy",
+      "expression": "happy",
+      "text": "All right. Let's see what this island has to offer.",
+      "next": "E01b.b07_free_roam_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b07",
+        "free_roam"
+      ],
+      "text_key": "E01b.b07_free_roam_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01b.b07_free_roam_02": {
+      "key": "E01b.b07_free_roam_02",
+      "speaker": "pda",
+      "portrait": "ui_pda",
+      "expression": "neutral",
+      "text": "Tip: Jaden is waiting outside the dorm. He's always up for a duel.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b07",
+        "free_roam"
+      ],
+      "text_key": "E01b.b07_free_roam_02",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "FJ01.b08_jaden_01": {
+      "key": "FJ01.b08_jaden_01",
+      "speaker": "jaden",
+      "portrait": "jaden_happy",
+      "expression": "happy",
+      "text": "Hey, {player_name}! Syrus says you survived his tutorial. How did it go?",
+      "next": "FJ01.b08_player_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "jaden"
+      ],
+      "text_key": "FJ01.b08_jaden_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "FJ01.b08_player_01": {
+      "key": "FJ01.b08_player_01",
+      "speaker": "player",
+      "portrait": "player_happy",
+      "expression": "happy",
+      "text": "Pretty good. I think I'm getting the hang of it.",
+      "next": "FJ01.b08_jaden_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "player"
+      ],
+      "text_key": "FJ01.b08_player_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "FJ01.b08_jaden_02": {
+      "key": "FJ01.b08_jaden_02",
+      "speaker": "jaden",
+      "portrait": "jaden_determined",
+      "expression": "determined",
+      "text": "Then you're ready for a real duel. No story, no pressure - just you and me. What do you say?",
+      "next": null,
+      "choices": [
+        {
+          "id": "accept",
+          "text": "Let's duel!",
+          "next_scene": "opening.b08_jaden_duel_setup",
+          "next_key": "FJ01.b08_jaden_setup_01",
+          "requirements": [],
+          "outcomes": []
+        },
+        {
+          "id": "decline",
+          "text": "Not right now.",
+          "next_scene": "opening.b08_jaden_decline",
+          "next_key": "FJ01.b08_jaden_decline_01",
+          "requirements": [],
+          "outcomes": []
+        }
+      ],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "jaden",
+        "choice"
+      ],
+      "text_key": "FJ01.b08_jaden_02",
+      "source_detail": "port-original",
+      "emotion": "determined"
+    },
+    "FJ01.b08_jaden_decline_01": {
+      "key": "FJ01.b08_jaden_decline_01",
+      "speaker": "jaden",
+      "portrait": "jaden_happy",
+      "expression": "happy",
+      "text": "No worries! I'll be here. The dorm, the beach, wherever. Come find me when you're ready.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "jaden",
+        "decline"
+      ],
+      "text_key": "FJ01.b08_jaden_decline_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "FJ01.b08_jaden_setup_01": {
+      "key": "FJ01.b08_jaden_setup_01",
+      "speaker": "jaden",
+      "portrait": "jaden_determined",
+      "expression": "determined",
+      "text": "Get your game on!",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "jaden",
+        "duel"
+      ],
+      "text_key": "FJ01.b08_jaden_setup_01",
+      "source_detail": "port-original",
+      "emotion": "determined"
+    },
+    "FJ01.b08_jaden_win_01": {
+      "key": "FJ01.b08_jaden_win_01",
+      "speaker": "jaden",
+      "portrait": "jaden_shocked",
+      "expression": "shocked",
+      "text": "Whoa! That was awesome! You've got game, {player_name}.",
+      "next": "FJ01.b08_player_win_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "jaden",
+        "win"
+      ],
+      "text_key": "FJ01.b08_jaden_win_01",
+      "source_detail": "port-original",
+      "emotion": "shocked"
+    },
+    "FJ01.b08_player_win_01": {
+      "key": "FJ01.b08_player_win_01",
+      "speaker": "player",
+      "portrait": "player_happy",
+      "expression": "happy",
+      "text": "That was a great duel. Thanks, Jaden.",
+      "next": "FJ01.b08_jaden_win_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "player",
+        "win"
+      ],
+      "text_key": "FJ01.b08_player_win_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "FJ01.b08_jaden_win_02": {
+      "key": "FJ01.b08_jaden_win_02",
+      "speaker": "jaden",
+      "portrait": "jaden_laugh",
+      "expression": "laugh",
+      "text": "Come back anytime. I want a rematch.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "jaden",
+        "win"
+      ],
+      "text_key": "FJ01.b08_jaden_win_02",
+      "source_detail": "port-original",
+      "emotion": "laugh"
+    },
+    "FJ01.b08_jaden_loss_01": {
+      "key": "FJ01.b08_jaden_loss_01",
+      "speaker": "jaden",
+      "portrait": "jaden_happy",
+      "expression": "happy",
+      "text": "Good duel! You've got the basics down. Keep at it.",
+      "next": "FJ01.b08_player_loss_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "jaden",
+        "loss"
+      ],
+      "text_key": "FJ01.b08_jaden_loss_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "FJ01.b08_player_loss_01": {
+      "key": "FJ01.b08_player_loss_01",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "I will. Thanks, Jaden.",
+      "next": "FJ01.b08_jaden_loss_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "player",
+        "loss"
+      ],
+      "text_key": "FJ01.b08_player_loss_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "FJ01.b08_jaden_loss_02": {
+      "key": "FJ01.b08_jaden_loss_02",
+      "speaker": "jaden",
+      "portrait": "jaden_laugh",
+      "expression": "laugh",
+      "text": "That's what dorm-mates are for. Now go get some curry before Chumley eats it all.",
+      "next": null,
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b08",
+        "jaden",
+        "loss"
+      ],
+      "text_key": "FJ01.b08_jaden_loss_02",
+      "source_detail": "port-original",
+      "emotion": "laugh"
+    }
+  }
+}

@@ -1,0 +1,1481 @@
+{
+  "schema_version": 1,
+  "story_id": "opening",
+  "title": "Duel Academy: Opening Vertical Slice",
+  "subtitle": "New game to the first free-roam day",
+  "content_version": "0.1.0",
+  "status": "ready_for_implementation",
+  "branch": "port/baseline",
+  "owner": "A03",
+  "contract": {
+    "shape": "a03_legacy_bundle_v1",
+    "validator": "Tools/validate/validate_all.py",
+    "validator_status": "PASS (0 errors; schema-drift warnings for the bundle/legacy shape)",
+    "canonical_target": "one scene per file plus Story/events.json, Story/dialogue.json and Story/schedules.json",
+    "note": "The frozen A10 validator explicitly supports this bundle shape. Split/merge before the full 33-event graph."
+  },
+  "source_legend": {
+    "rom": "Verified against the GBA ROM or ROM-derived tables in the masterplan.",
+    "guide": "Public event guide, manual or Yugipedia page.",
+    "port-original": "Written or staged for this port; faithful to the canon beat, not a ROM text copy.",
+    "mixed": "Canon beat from a guide plus port-original prose/staging."
+  },
+  "canon_basis": [
+    {
+      "claim": "Opening beats: Sheppard's speech, registration with Mimicry, Slifer dorm, Banner's 3,000 DP, Syrus tutorial.",
+      "source": "guide",
+      "confidence": "high",
+      "ref": "Yugipedia Events, Event 1: School Registration"
+    },
+    {
+      "claim": "The first free moves are Saturday, October 7.",
+      "source": "guide",
+      "confidence": "high",
+      "ref": "Yugipedia Events, Event 1"
+    },
+    {
+      "claim": "The game starts with Sheppard's speech in the gym.",
+      "source": "guide",
+      "confidence": "high",
+      "ref": "Yugipedia Events, Event 1"
+    },
+    {
+      "claim": "The player spells their name to Mimicry; the manual allows up to eight letters.",
+      "source": "guide",
+      "confidence": "high",
+      "ref": "Yugipedia Events Event 1; GBA manual name-entry page"
+    },
+    {
+      "claim": "The player chooses one of three starter decks: Fire, Water or Wind.",
+      "source": "guide",
+      "confidence": "high",
+      "ref": "Yugipedia Starter Decks"
+    },
+    {
+      "claim": "Banner grants a 3,000 DP starting budget; the card shop opens next Saturday.",
+      "source": "guide",
+      "confidence": "high",
+      "ref": "Yugipedia Events, Event 1; PORT_MASTERPLAN DP section"
+    },
+    {
+      "claim": "Jaden, Syrus and Chumley become email contacts after the dorm introduction.",
+      "source": "guide",
+      "confidence": "high",
+      "ref": "Yugipedia Events, Event 1"
+    },
+    {
+      "claim": "Jaden is a free-duel opponent from the start.",
+      "source": "guide",
+      "confidence": "high",
+      "ref": "Yugipedia Opponents (GX1-VG), Slifer Red"
+    },
+    {
+      "claim": "8,000 LP, 40-60 card main deck, one Normal Summon/Set per turn, tribute rules for Level 5+.",
+      "source": "rom",
+      "confidence": "high",
+      "ref": "PORT_MASTERPLAN duel rules; GBA manual"
+    },
+    {
+      "claim": "A01 published the canon dialogue index during this pass; exact text is local-only, so all runtime prose here remains port-original.",
+      "source": "port-original",
+      "confidence": "high",
+      "ref": "Content/Data/Canon/text/dialogue_index.json; full_text_committed=false"
+    },
+    {
+      "claim": "A01's canon dialogue index was published during this pass; the opening registration and dorm entries confirm the player is assigned to Slifer Red and starts as an Apprentice Duelist.",
+      "source": "guide",
+      "confidence": "high",
+      "ref": "Content/Data/Canon/text/dialogue_index.json, entries 1159-1218 (full text local-only; full_text_committed=false)"
+    },
+    {
+      "claim": "Exact GBA story text is local-only in A01's output and must not be committed; runtime prose stays port-original.",
+      "source": "port-original",
+      "confidence": "high",
+      "ref": "Content/Data/Canon/text/dialogue_index.json: full_text_committed=false, full_text_local_only set"
+    }
+  ],
+  "calendar": {
+    "prologue_date": {
+      "year": 1,
+      "month": 10,
+      "day": 1,
+      "weekday": "Sunday",
+      "period": "AM",
+      "source": "guide",
+      "confidence": "high",
+      "note": "Yugipedia Event 1: School Registration on Sunday, October 1."
+    },
+    "free_roam_start": {
+      "year": 1,
+      "month": 10,
+      "day": 7,
+      "weekday": "Saturday",
+      "period": "AM",
+      "source": "mixed",
+      "confidence": "high",
+      "note": "Guide: first free moves on Saturday, October 7. Masterplan/save schema: year 1, month 10, day 7, AM."
+    },
+    "shop_open": {
+      "year": 1,
+      "month": 10,
+      "day": 7,
+      "period": "AM",
+      "source": "guide",
+      "confidence": "medium",
+      "note": "Announced as 'next Saturday' during registration on October 1; see open question Q4."
+    },
+    "week_skip": {
+      "from": "October 1",
+      "to": "October 7",
+      "mode": "montage",
+      "source": "port-original",
+      "confidence": "high",
+      "note": "Orientation week montage; not playable in the vertical slice."
+    },
+    "exam_days": {
+      "weekday": "Friday",
+      "in_this_slice": false,
+      "source": "rom",
+      "confidence": "high"
+    }
+  },
+  "player_setup": {
+    "name": {
+      "min_length": 1,
+      "max_length": 8,
+      "charset": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+      "confirm_label": "END",
+      "delete_label": "DELETE",
+      "default": "",
+      "source": "guide",
+      "confidence": "high",
+      "note": "GBA manual: up to eight letters; END confirms."
+    },
+    "gender": "unspecified",
+    "starting_dorm": "Slifer",
+    "starting_title": "apprentice_duelist",
+    "starting_title_name": "Apprentice Duelist",
+    "starting_title_source": "guide",
+    "starting_title_confidence": "high",
+    "starting_dp": 0,
+    "starting_dp_note": "Banner's 3,000 DP reward is applied in B05.",
+    "starter_decks": [
+      "fire",
+      "water",
+      "wind"
+    ],
+    "starter_deck_source": "guide",
+    "starter_deck_confidence": "high",
+    "new_game_setup": {
+      "applies_before_event": "E01",
+      "steps": [
+        "starter_deck"
+      ],
+      "name_entry": {
+        "handled_by": "opening.b03_name_entry",
+        "source": "guide",
+        "confidence": "high",
+        "note": "The name is captured during Mimicry's registration scene, matching the GBA."
+      },
+      "starter_deck": {
+        "choice_id": "new_game.starter_deck",
+        "required": true,
+        "default": null,
+        "options": [
+          {
+            "id": "fire",
+            "label": "Fire - Red-Eyes and Meteor",
+            "deck_id": "fire",
+            "reward_id": "opening_starter_deck_fire",
+            "flag": "starter_deck_fire"
+          },
+          {
+            "id": "water",
+            "label": "Water - Umi control",
+            "deck_id": "water",
+            "reward_id": "opening_starter_deck_water",
+            "flag": "starter_deck_water"
+          },
+          {
+            "id": "wind",
+            "label": "Wind - Harpies and dragons",
+            "deck_id": "wind",
+            "reward_id": "opening_starter_deck_wind",
+            "flag": "starter_deck_wind"
+          }
+        ],
+        "source": "guide",
+        "confidence": "high",
+        "note": "Yugipedia Starter Decks: the GBA offers Fire, Water or Wind to begin with. The port presents the choice as a new-game setup step before the opening cinematic and uses the existing target decks."
+      }
+    }
+  },
+  "files": {
+    "scenes": "scenes/opening.json",
+    "dialogue": "dialogue/opening.json",
+    "schedules": "schedules/opening.json"
+  },
+  "beats": [
+    {
+      "id": "B01",
+      "order": 1,
+      "title": "New Game / Arrival",
+      "event_id": "E01",
+      "scene_ids": [
+        "opening.b01_new_game"
+      ],
+      "summary": "New-game setup selects one of the three starter decks; a short plaza arrival follows, then the walk to the gym.",
+      "source": "port-original",
+      "confidence": "high",
+      "canon_note": "The GBA opens with Sheppard's speech; the plaza arrival is a 3D-port framing beat so the island reads before the cutscene.",
+      "player_goal": "Choose a starter deck and attend the opening assembly in the Duel Gym."
+    },
+    {
+      "id": "B02",
+      "order": 2,
+      "title": "Sheppard's Speech",
+      "event_id": "E01",
+      "scene_ids": [
+        "opening.b02_sheppard_speech"
+      ],
+      "summary": "Chancellor Sheppard welcomes the freshmen, explains the three dorms and monthly exams, and points them to registration.",
+      "source": "guide",
+      "confidence": "high",
+      "canon_note": "Yugipedia Event 1: the game starts with Sheppard's speech in the gym.",
+      "player_goal": "Listen to the speech, then register."
+    },
+    {
+      "id": "B03",
+      "order": 3,
+      "title": "Registration and Name Entry",
+      "event_id": "E01",
+      "scene_ids": [
+        "opening.b03_registration",
+        "opening.b03_name_entry",
+        "opening.b03_name_accepted"
+      ],
+      "summary": "Mimicry registers the player, captures and confirms a name of up to eight letters, and sends them to Slifer Red.",
+      "source": "guide",
+      "confidence": "high",
+      "canon_note": "A01 dialogue index (opening entries around 0x13FE2DE-0x13FE34E): registration writes the player's name, then assigns them to Slifer Red. The starter deck is a new-game setup choice, not part of Mimicry's registration dialogue.",
+      "player_goal": "Register with Mimicry and confirm your name."
+    },
+    {
+      "id": "B04",
+      "order": 4,
+      "title": "Slifer Red Dorm Meeting",
+      "event_id": "E01",
+      "scene_ids": [
+        "opening.b04_dorm_welcome"
+      ],
+      "summary": "The player walks to Slifer Red and meets Jaden, Syrus and Chumley outside the dorm.",
+      "source": "guide",
+      "confidence": "high",
+      "canon_note": "Yugipedia Event 1: the professor and dorm mates introduce themselves at the Slifer Red cafeteria.",
+      "player_goal": "Meet the dorm mates and go inside."
+    },
+    {
+      "id": "B05",
+      "order": 5,
+      "title": "Banner's 3,000 DP, Dorms, Titles and the Card Shop",
+      "event_id": "E01",
+      "scene_ids": [
+        "opening.b05_banner_dp"
+      ],
+      "summary": "Banner introduces himself and Pharaoh, explains the three levels, monthly exams, duelist titles and King of Games, grants the 3,000 DP starting budget, explains DP and booster packs, announces the shop opening next Saturday, and unlocks the three dorm-mate email contacts.",
+      "source": "guide",
+      "confidence": "high",
+      "canon_note": "Yugipedia Event 1: Banner grants a 3,000 DP starting budget and the shopkeepers announce the upcoming Saturday opening. A01 dialogue index entries 1206-1218 confirm Banner's dorm/title introduction and Pharaoh. The guide says the player can email Jaden, Syrus and Chumley after meeting them.",
+      "player_goal": "Learn how DP and the card shop work."
+    },
+    {
+      "id": "B06",
+      "order": 6,
+      "title": "Syrus's Tutorial",
+      "event_id": "E01",
+      "scene_ids": [
+        "opening.b06_tutorial",
+        "opening.b06_tutorial_phases",
+        "opening.b06_tutorial_duel",
+        "opening.b06_tutorial_win",
+        "opening.b06_tutorial_lose",
+        "opening.b06_tutorial_continue"
+      ],
+      "summary": "Syrus teaches deck size, LP, summon/set/tribute rules, battle positions, spells/traps and win conditions, then runs a short no-stakes practice duel.",
+      "source": "guide",
+      "confidence": "medium",
+      "canon_note": "Yugipedia Event 1: Syrus gives the player a tutorial. A01 dialogue index entries 1230-1232 show an offer to explain the controls; the exact steps and whether it includes a practice duel are not documented. The practice duel is a port-original adaptation.",
+      "player_goal": "Complete the tutorial and practice duel."
+    },
+    {
+      "id": "B07",
+      "order": 7,
+      "title": "First Free-Roam Day",
+      "event_id": "E01b",
+      "scene_ids": [
+        "opening.b07_first_free_roam",
+        "opening.b07_save",
+        "opening.b07_free_roam"
+      ],
+      "summary": "A one-week montage ends on Saturday, October 7 at 8:00 AM. The shop is open, manual save unlocks, and the player regains control.",
+      "source": "mixed",
+      "confidence": "high",
+      "canon_note": "Yugipedia: the first free moves are Saturday, October 7; the masterplan and save schema start at October 7 AM. The week between October 1 and October 7 is a port-original orientation montage.",
+      "player_goal": "Explore the island, visit the card shop, and save."
+    },
+    {
+      "id": "B08",
+      "order": 8,
+      "title": "Optional First Jaden Free Duel",
+      "event_id": "FJ01",
+      "scene_ids": [
+        "opening.b08_jaden_intro",
+        "opening.b08_jaden_decline",
+        "opening.b08_jaden_duel_setup",
+        "opening.b08_jaden_win",
+        "opening.b08_jaden_lose"
+      ],
+      "summary": "Jaden offers a no-pressure free duel outside the dorm. The player can accept, decline, win or lose without blocking the opening.",
+      "source": "mixed",
+      "confidence": "high",
+      "canon_note": "Jaden is a free-duel opponent from the start in the GBA. The one-time intro framing is port-original; repeatable free duels continue through A07.",
+      "player_goal": "Optional: duel Jaden for fun and DP."
+    }
+  ],
+  "events": [
+    {
+      "id": "E01",
+      "title": "School Registration",
+      "arc": "opening",
+      "canon_event": true,
+      "canon_number": 1,
+      "order": 1,
+      "priority": 1000,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "trigger": {
+        "type": "new_game"
+      },
+      "requirements": [],
+      "scene": "opening.b01_new_game",
+      "scene_queue": [
+        "opening.b01_new_game",
+        "opening.b02_sheppard_speech",
+        "opening.b03_registration",
+        "opening.b03_name_entry",
+        "opening.b03_name_accepted",
+        "opening.b04_dorm_welcome",
+        "opening.b05_banner_dp",
+        "opening.b06_tutorial",
+        "opening.b06_tutorial_phases|opening.b06_tutorial_duel",
+        "opening.b06_tutorial_win|opening.b06_tutorial_lose|opening.b06_tutorial_continue"
+      ],
+      "outcomes": [
+        {
+          "type": "set_flag",
+          "flag": "new_game_started",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "sheppard_speech_seen",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "registered",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "name_confirmed",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "starter_deck_chosen",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_mimicry",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_banner",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_jaden",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_syrus",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_chumley",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "banner_dp_granted",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "emails_unlocked",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "tutorial_complete",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "tutorial_duel_played",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "shop_announced",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_01_cleared",
+          "value": true
+        },
+        {
+          "type": "add_counter",
+          "counter": "tutorial_duels_played",
+          "amount": 1,
+          "conditions": [
+            {
+              "type": "flag",
+              "flag": "tutorial_duel_played",
+              "value": true
+            }
+          ]
+        },
+        {
+          "type": "add_counter",
+          "counter": "tutorial_duels_won",
+          "amount": 1,
+          "conditions": [
+            {
+              "type": "flag",
+              "flag": "tutorial_duel_won",
+              "value": true
+            }
+          ]
+        },
+        {
+          "type": "reward",
+          "reward_id": "opening_starting_dp"
+        },
+        {
+          "type": "reward",
+          "reward_id": "opening_email_contacts"
+        },
+        {
+          "type": "set_calendar",
+          "year": 1,
+          "month": 10,
+          "day": 7,
+          "period": "AM",
+          "reason": "Port-original time skip: orientation week ends; first free-roam day is Saturday, October 7."
+        },
+        {
+          "type": "complete_event",
+          "event": "E01"
+        }
+      ],
+      "fail_forward": true,
+      "source": "mixed",
+      "confidence": "high",
+      "canon_note": "Canon Event 1: School Registration. The guide places the opening on Sunday, October 1 and the first free moves on Saturday, October 7; the port plays the prologue on October 1 and time-skips to October 7.",
+      "version": 1,
+      "requires": [],
+      "trace_id": "E01",
+      "fallback": "continue",
+      "scene_id": "opening.b01_new_game",
+      "scene_file": "scenes/opening.json",
+      "on_complete": {
+        "flags": [
+          "new_game_started",
+          "sheppard_speech_seen",
+          "registered",
+          "name_confirmed",
+          "starter_deck_chosen",
+          "met_mimicry",
+          "met_banner",
+          "met_jaden",
+          "met_syrus",
+          "met_chumley",
+          "banner_dp_granted",
+          "emails_unlocked",
+          "tutorial_complete",
+          "tutorial_duel_played",
+          "shop_announced",
+          "event_01_cleared"
+        ],
+        "counters": {}
+      }
+    },
+    {
+      "id": "E01b",
+      "title": "First Free-Roam Day",
+      "arc": "opening",
+      "canon_event": false,
+      "order": 2,
+      "priority": 950,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "trigger": {
+        "type": "date",
+        "year": 1,
+        "month": 10,
+        "day": 7,
+        "period": "AM",
+        "weekday": "Saturday"
+      },
+      "requirements": [
+        {
+          "type": "event_complete",
+          "event": "E01"
+        },
+        {
+          "type": "flag",
+          "flag": "tutorial_complete",
+          "value": true
+        }
+      ],
+      "scene": "opening.b07_first_free_roam",
+      "scene_queue": [
+        "opening.b07_first_free_roam",
+        "opening.b07_save|opening.b07_free_roam"
+      ],
+      "outcomes": [
+        {
+          "type": "set_flag",
+          "flag": "first_free_roam",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "shop_unlocked",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "save_unlocked",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "fast_travel_unlocked",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_available",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "opening_complete",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_01b_cleared",
+          "value": true
+        },
+        {
+          "type": "set_objective",
+          "id": "explore_island",
+          "text": "Explore Duel Academy. The Card Shop is open. Save your progress from the PDA."
+        },
+        {
+          "type": "set_objective",
+          "id": "duel_jaden",
+          "text": "Optional: find Jaden outside the Slifer Red dorm for a free duel."
+        },
+        {
+          "type": "complete_event",
+          "event": "E01b"
+        }
+      ],
+      "fail_forward": true,
+      "source": "mixed",
+      "confidence": "high",
+      "canon_note": "Port-internal checkpoint after canon Event 1. The guide's first free moves are Saturday, October 7; the masterplan/save schema start at October 7 AM.",
+      "version": 1,
+      "requires": [
+        {
+          "type": "event",
+          "id": "E01",
+          "state": "complete"
+        },
+        {
+          "type": "flag",
+          "id": "tutorial_complete",
+          "value": true
+        }
+      ],
+      "trace_id": "E01b",
+      "fallback": "continue",
+      "scene_id": "opening.b07_first_free_roam",
+      "scene_file": "scenes/opening.json",
+      "date": {
+        "calendar_month": 10,
+        "day": 7,
+        "weekday": "Saturday",
+        "period": "AM"
+      },
+      "on_complete": {
+        "flags": [
+          "first_free_roam",
+          "shop_unlocked",
+          "save_unlocked",
+          "fast_travel_unlocked",
+          "jaden_first_duel_available",
+          "opening_complete",
+          "event_01b_cleared"
+        ],
+        "counters": {}
+      }
+    },
+    {
+      "id": "FJ01",
+      "title": "First Optional Jaden Free Duel",
+      "arc": "opening",
+      "canon_event": false,
+      "order": 3,
+      "priority": 900,
+      "once": true,
+      "repeatable": false,
+      "optional": true,
+      "story_critical": false,
+      "trigger": {
+        "type": "talk",
+        "npc": "jaden",
+        "location": "slifer",
+        "anchor": "slifer_dorm_front_jaden"
+      },
+      "requirements": [
+        {
+          "type": "event_complete",
+          "event": "E01b"
+        },
+        {
+          "type": "flag",
+          "flag": "first_free_roam",
+          "value": true
+        },
+        {
+          "type": "date_at_least",
+          "year": 1,
+          "month": 10,
+          "day": 7
+        }
+      ],
+      "scene": "opening.b08_jaden_intro",
+      "scene_queue": [
+        "opening.b08_jaden_intro",
+        "opening.b08_jaden_decline|opening.b08_jaden_duel_setup",
+        "opening.b08_jaden_win|opening.b08_jaden_lose"
+      ],
+      "outcomes": [
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_done",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_first_duel_available",
+          "value": false
+        },
+        {
+          "type": "set_flag",
+          "flag": "jaden_free_duel_unlocked",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_fj01_cleared",
+          "value": true
+        },
+        {
+          "type": "add_counter",
+          "counter": "duels_total",
+          "amount": 1,
+          "conditions": [
+            {
+              "type": "flag",
+              "flag": "jaden_first_duel_done",
+              "value": true
+            }
+          ]
+        },
+        {
+          "type": "add_counter",
+          "counter": "wins_jaden",
+          "amount": 1,
+          "conditions": [
+            {
+              "type": "flag",
+              "flag": "jaden_first_duel_won",
+              "value": true
+            }
+          ]
+        },
+        {
+          "type": "add_counter",
+          "counter": "wins_total",
+          "amount": 1,
+          "conditions": [
+            {
+              "type": "flag",
+              "flag": "jaden_first_duel_won",
+              "value": true
+            }
+          ]
+        },
+        {
+          "type": "set_objective",
+          "id": "explore_island",
+          "text": "Explore Duel Academy. Jaden remains available for repeatable free duels."
+        },
+        {
+          "type": "complete_event",
+          "event": "FJ01"
+        }
+      ],
+      "fail_forward": true,
+      "source": "mixed",
+      "confidence": "high",
+      "canon_note": "Jaden is a free-duel opponent from the start in the GBA. The port frames the first meeting as a one-time optional intro duel; repeatable free duels continue through A07's free-duel system.",
+      "version": 1,
+      "requires": [
+        {
+          "type": "event",
+          "id": "E01b",
+          "state": "complete"
+        },
+        {
+          "type": "flag",
+          "id": "first_free_roam",
+          "value": true
+        },
+        {
+          "type": "date",
+          "calendar_month": 10,
+          "day": 7,
+          "op": ">="
+        }
+      ],
+      "trace_id": "FJ01",
+      "fallback": "end",
+      "scene_id": "opening.b08_jaden_intro",
+      "scene_file": "scenes/opening.json",
+      "location": "slifer",
+      "anchor": "slifer_dorm_front_jaden",
+      "on_complete": {
+        "flags": [
+          "jaden_first_duel_done",
+          "jaden_free_duel_unlocked",
+          "event_fj01_cleared"
+        ],
+        "counters": {}
+      }
+    }
+  ],
+  "flags": {
+    "new_game_started": false,
+    "sheppard_speech_seen": false,
+    "registered": false,
+    "name_confirmed": false,
+    "starter_deck_chosen": false,
+    "starter_deck_fire": false,
+    "starter_deck_water": false,
+    "starter_deck_wind": false,
+    "met_mimicry": false,
+    "met_banner": false,
+    "met_jaden": false,
+    "met_syrus": false,
+    "met_chumley": false,
+    "banner_dp_granted": false,
+    "emails_unlocked": false,
+    "shop_announced": false,
+    "tutorial_complete": false,
+    "tutorial_duel_played": false,
+    "tutorial_duel_won": false,
+    "tutorial_duel_lost": false,
+    "first_free_roam": false,
+    "shop_unlocked": false,
+    "save_unlocked": false,
+    "fast_travel_unlocked": false,
+    "opening_complete": false,
+    "jaden_first_duel_available": false,
+    "jaden_first_duel_done": false,
+    "jaden_first_duel_won": false,
+    "jaden_first_duel_lost": false,
+    "jaden_free_duel_unlocked": false,
+    "event_01_cleared": false,
+    "event_01b_cleared": false,
+    "event_fj01_cleared": false
+  },
+  "counters": {
+    "wins_total": 0,
+    "wins_jaden": 0,
+    "wins_syrus": 0,
+    "wins_chumley": 0,
+    "duels_total": 0,
+    "tutorial_duels_played": 0,
+    "tutorial_duels_won": 0,
+    "dp_earned_total": 0,
+    "timed_clears": 0,
+    "written_correct": 0
+  },
+  "rewards": {
+    "opening_starting_dp": {
+      "id": "opening_starting_dp",
+      "type": "dp",
+      "amount": 3000,
+      "once": true,
+      "applied_at": "opening.b05_banner_dp",
+      "source": "guide",
+      "confidence": "high",
+      "note": "Banner's new-student budget. Exact canon value from the masterplan and Yugipedia Event 1."
+    },
+    "opening_email_contacts": {
+      "id": "opening_email_contacts",
+      "type": "email_unlock",
+      "contacts": [
+        "jaden",
+        "syrus",
+        "chumley"
+      ],
+      "once": true,
+      "applied_at": "opening.b05_banner_dp",
+      "source": "guide",
+      "confidence": "high",
+      "note": "The guide says the player can email Jaden, Syrus and Chumley after the dorm introduction."
+    },
+    "opening_starter_deck_fire": {
+      "id": "opening_starter_deck_fire",
+      "type": "deck_grant",
+      "deck_id": "fire",
+      "set_active": true,
+      "once": true,
+      "applied_at": "new_game_setup",
+      "source": "guide",
+      "confidence": "high",
+      "note": "Existing target starter deck; canon offers three starter decks."
+    },
+    "opening_starter_deck_water": {
+      "id": "opening_starter_deck_water",
+      "type": "deck_grant",
+      "deck_id": "water",
+      "set_active": true,
+      "once": true,
+      "applied_at": "new_game_setup",
+      "source": "guide",
+      "confidence": "high",
+      "note": "Existing target starter deck; canon offers three starter decks."
+    },
+    "opening_starter_deck_wind": {
+      "id": "opening_starter_deck_wind",
+      "type": "deck_grant",
+      "deck_id": "wind",
+      "set_active": true,
+      "once": true,
+      "applied_at": "new_game_setup",
+      "source": "guide",
+      "confidence": "high",
+      "note": "Existing target starter deck; canon offers three starter decks."
+    }
+  },
+  "save_points": [
+    {
+      "id": "autosave_registered",
+      "scene": "opening.b03_name_accepted",
+      "trigger": "after_registration",
+      "autosave": true,
+      "manual": false
+    },
+    {
+      "id": "autosave_banner_dp",
+      "scene": "opening.b05_banner_dp",
+      "trigger": "after_banner_dp_grant",
+      "autosave": true,
+      "manual": false
+    },
+    {
+      "id": "autosave_tutorial_start",
+      "scene": "opening.b06_tutorial",
+      "trigger": "before_tutorial_duel",
+      "autosave": true,
+      "manual": false
+    },
+    {
+      "id": "autosave_tutorial_win",
+      "scene": "opening.b06_tutorial_win",
+      "trigger": "after_tutorial_duel",
+      "autosave": true,
+      "manual": false
+    },
+    {
+      "id": "autosave_tutorial_loss",
+      "scene": "opening.b06_tutorial_continue",
+      "trigger": "after_tutorial_duel",
+      "autosave": true,
+      "manual": false
+    },
+    {
+      "id": "autosave_first_free_roam",
+      "scene": "opening.b07_first_free_roam",
+      "trigger": "on_first_free_roam",
+      "autosave": true,
+      "manual": false
+    },
+    {
+      "id": "manual_save_first_free_roam",
+      "scene": "opening.b07_save",
+      "trigger": "player_selected_save",
+      "autosave": false,
+      "manual": true
+    },
+    {
+      "id": "autosave_jaden_first_win",
+      "scene": "opening.b08_jaden_win",
+      "trigger": "after_duel_result",
+      "autosave": true,
+      "manual": true
+    },
+    {
+      "id": "autosave_jaden_first_loss",
+      "scene": "opening.b08_jaden_lose",
+      "trigger": "after_duel_result",
+      "autosave": true,
+      "manual": true
+    }
+  ],
+  "objectives": [
+    {
+      "id": "attend_assembly",
+      "text": "Attend the opening assembly in the Duel Gym.",
+      "set_at": "opening.b01_new_game",
+      "clear_at": "opening.b02_sheppard_speech"
+    },
+    {
+      "id": "register",
+      "text": "Register with Professor Mimicry in the gym lobby.",
+      "set_at": "opening.b02_sheppard_speech",
+      "clear_at": "opening.b03_name_accepted"
+    },
+    {
+      "id": "meet_banner",
+      "text": "Report to Professor Banner at the Slifer Red dorm.",
+      "set_at": "opening.b03_name_accepted",
+      "clear_at": "opening.b05_banner_dp"
+    },
+    {
+      "id": "tutorial",
+      "text": "Complete Syrus's duel tutorial.",
+      "set_at": "opening.b05_banner_dp",
+      "clear_at": "opening.b06_tutorial_win|opening.b06_tutorial_continue"
+    },
+    {
+      "id": "explore_island",
+      "text": "Explore Duel Academy. The Card Shop is open. Save your progress from the PDA.",
+      "set_at": "opening.b07_first_free_roam",
+      "clear_at": null
+    },
+    {
+      "id": "duel_jaden",
+      "text": "Optional: find Jaden outside the Slifer Red dorm for a free duel.",
+      "set_at": "opening.b07_first_free_roam",
+      "clear_at": "opening.b08_jaden_win|opening.b08_jaden_lose"
+    }
+  ],
+  "tutorial": {
+    "id": "TUTORIAL_SYRUS_01",
+    "mode": "free",
+    "tutorial": true,
+    "opponent_id": "syrus",
+    "opponent_deck_id": "syrus_roids",
+    "player_deck": "selected_starter",
+    "starting_lp": {
+      "player": 4000,
+      "opponent": 4000
+    },
+    "turn_limit": 10,
+    "counts_as_win": false,
+    "dp_reward": "none",
+    "story_critical": false,
+    "retry_on_loss": true,
+    "objectives": [
+      "normal_summon",
+      "set_spell_or_trap",
+      "attack_and_destroy"
+    ],
+    "source": "guide",
+    "confidence": "medium",
+    "notes": "Practice only. Uses A07's syrus_roids deck in free mode with tutorial metadata because the frozen duel-mode enum has no tutorial value. A04/A07 must honor tutorial=true, the 4,000 LP/10-turn overrides and the optional objective tracking."
+  },
+  "optional_duel": {
+    "id": "FJ01",
+    "mode": "free",
+    "opponent_id": "jaden",
+    "opponent_deck_id": "jaden",
+    "player_deck": "active",
+    "starting_lp": {
+      "player": 8000,
+      "opponent": 8000
+    },
+    "counts_as_win": true,
+    "dp_reward": "formula",
+    "story_critical": false,
+    "optional": true,
+    "retry_on_loss": false,
+    "source": "mixed",
+    "confidence": "high",
+    "notes": "The first Jaden meeting is a one-time optional intro event. After it completes (win or loss), Jaden remains available for repeatable free duels through A07. Declining does not complete the event."
+  },
+  "runtime_notes": [
+    "The scene command list is authoritative. Dialogue node 'next' fields are validation/trace metadata and match the intended linear reading; they do not override the scene queue.",
+    "Choice commands with no input present the referenced node's prompt and choices. Choice options jump to next_scene + next_key; if next_key is omitted, the target scene starts at its first command.",
+    "Choice commands with input capture text, store it at input.store_as, and advance to the next command in the same scene. Name entry uses this variant so the 13-command enum is unchanged.",
+    "Duels jump to on_win/on_lose/on_draw scenes. Duel command extensions: starting_lp, turn_limit, tutorial_objectives, award_dp, optional, story_critical, counts_as_win.",
+    "Rewards are idempotent by reward_id. Scene reward commands apply at the narrative beat; event outcomes reference the same reward_id for save/audit. Apply once per id.",
+    "player_deck 'selected_starter' resolves to the deck granted in B03; 'active' resolves to the player's active deck.",
+    "Placeholders {player_name} and {player_name_spelled} are expanded by A09/A02. {player_name_spelled} is the name with spaces between letters (for Mimicry's confirmation line).",
+    "E01b and FJ01 are port-internal events, not numbered canon events. They must not consume E02-E33 canon IDs.",
+    "The 'banner' command is a UI title card; it is unrelated to the character Lyman Banner.",
+    "Autosaves during the prologue are system saves; manual PDA save unlocks at B07. Save/load mid-scene must serialize the current scene id, command index and dialogue key."
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "question": "Does the GBA prologue play on Sunday, October 1, or does the playable game begin on Saturday, October 7?",
+      "evidence": "Yugipedia Event 1 lists Sunday, October 1; the same page says the first free moves are Saturday, October 7. The masterplan and save schema start at October 7 AM.",
+      "port_decision": "Play the prologue on October 1, montage the orientation week, and start free roam on October 7 AM.",
+      "owner": "A01/A02"
+    },
+    {
+      "id": "Q2",
+      "question": "What is the new student's starting title?",
+      "evidence": "A01 dialogue index entry 1217 (0x13FE6AA) names 'Apprentice Duelist' as the first title rank. A02's Profile/titles.json defaults to apprentice_duelist.",
+      "port_decision": "Use apprentice_duelist / 'Apprentice Duelist' as the starting title.",
+      "owner": "A01/A02"
+    },
+    {
+      "id": "Q3",
+      "question": "Do the target's fire/water/wind deck lists replace the GBA's canonical three starter decks for the vertical slice?",
+      "evidence": "Yugipedia lists the GBA's Fire/Water/Wind deck lists; Content/Data/decks.json contains different 40-card target decks with the same ids.",
+      "port_decision": "Use the existing target decks for the slice; A06/A01 reconcile the canonical lists later.",
+      "owner": "A01/A06"
+    },
+    {
+      "id": "Q4",
+      "question": "Is the card shop open on Saturday, October 7, or only announced then?",
+      "evidence": "Yugipedia says the shopkeepers announce the upcoming shop opening next Saturday; the Booster Pack List says Basic packs are unlocked from the beginning.",
+      "port_decision": "Open the shop on October 7 so the vertical slice can buy a pack at Gate 1.",
+      "owner": "A01/A06"
+    },
+    {
+      "id": "Q5",
+      "question": "What characters and length limits does the GBA name entry allow?",
+      "evidence": "The manual says up to eight letters; the exact allowed punctuation/spaces is not documented.",
+      "port_decision": "Allow A-Z and 0-9, 1-8 characters, END to confirm, DELETE to erase.",
+      "owner": "A01/A09"
+    },
+    {
+      "id": "Q6",
+      "question": "Does the GBA Syrus tutorial include a practice duel?",
+      "evidence": "Yugipedia Event 1 says Syrus gives a tutorial but does not describe its steps. A01 dialogue index entries 1230-1232 show an offer to explain the controls; no practice-duel setup is documented.",
+      "port_decision": "Teach the rules in dialogue, then run a short 4,000 LP practice duel with no DP and no win counter.",
+      "owner": "A01/A07"
+    },
+    {
+      "id": "Q7",
+      "question": "Is there a one-time first Jaden duel in the GBA, or only repeatable free duels?",
+      "evidence": "The Opponents page lists Jaden as available from the start; the Events page does not define a first-Jaden event.",
+      "port_decision": "Frame the first meeting as an optional one-time intro duel; after it, A07's repeatable free-duel system takes over.",
+      "owner": "A01/A07"
+    },
+    {
+      "id": "Q8",
+      "question": "Where are the exact GBA dialogue lines?",
+      "evidence": "A01 published a 4,527-entry dialogue index. The opening registration/dorm entries are at 0x13FE2DE-0x13FE8BA. The full text is local-only (full_text_committed=false), not committed.",
+      "port_decision": "All prose in this slice is port-original, faithful to the A01-confirmed beats. Do not commit the extracted script; if the owner clears it, a later pass can replace the prose while keeping the stable keys.",
+      "owner": "A01/A03"
+    },
+    {
+      "id": "Q9",
+      "question": "Should the Alexis/Crowler classroom introduction from Event 1 be in this slice?",
+      "evidence": "Yugipedia Event 1 says the player finally meets Alexis and Crowler in the classroom after the tutorial.",
+      "port_decision": "Deferred out of the opening vertical slice per the assignment's beat list; add it as the first post-slice event.",
+      "owner": "A03"
+    }
+  ],
+  "version": 1,
+  "required_anchors": [
+    {
+      "id": "academy_card_shop_keeper",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "dorothy.oct1.stockroom",
+        "dorothy.oct7.opening",
+        "dorothy.weekday.am",
+        "dorothy.weekday.night",
+        "dorothy.weekday.pm",
+        "dorothy.weekend.am",
+        "dorothy.weekend.night",
+        "dorothy.weekend.pm"
+      ]
+    },
+    {
+      "id": "academy_card_shop_player",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "syrus.weekday.pm"
+      ]
+    },
+    {
+      "id": "academy_front_camera",
+      "locations": [
+        "plaza"
+      ],
+      "used_by": [
+        "opening.b01_new_game"
+      ]
+    },
+    {
+      "id": "academy_front_steps",
+      "locations": [
+        "plaza"
+      ],
+      "used_by": [
+        "opening.b01_new_game",
+        "sheppard.weekend.pm"
+      ]
+    },
+    {
+      "id": "academy_registration_desk",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "mimicry.oct1.registration",
+        "mimicry.weekday.night",
+        "mimicry.weekend.night",
+        "opening.b03_name_accepted",
+        "opening.b03_name_entry",
+        "opening.b03_registration"
+      ]
+    },
+    {
+      "id": "academy_registration_player",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b03_registration"
+      ]
+    },
+    {
+      "id": "academy_test_room_proctor",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "mimicry.oct7.day",
+        "mimicry.weekday.am",
+        "mimicry.weekend.am"
+      ]
+    },
+    {
+      "id": "chancellor_office_desk",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "sheppard.oct1.office",
+        "sheppard.weekday.am",
+        "sheppard.weekday.night",
+        "sheppard.weekday.pm",
+        "sheppard.weekend.am",
+        "sheppard.weekend.night"
+      ]
+    },
+    {
+      "id": "gym_assembly_camera",
+      "locations": [
+        "gym"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "gym_assembly_crowd",
+      "locations": [
+        "gym"
+      ],
+      "used_by": [
+        "chumley.oct1.assembly",
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "gym_assembly_staff",
+      "locations": [
+        "gym"
+      ],
+      "used_by": [
+        "banner.oct1.assembly"
+      ]
+    },
+    {
+      "id": "gym_assembly_stage",
+      "locations": [
+        "gym"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech",
+        "sheppard.oct1.assembly"
+      ]
+    },
+    {
+      "id": "gym_assembly_student_02",
+      "locations": [
+        "gym"
+      ],
+      "used_by": [
+        "jaden.oct1.assembly",
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "gym_assembly_student_03",
+      "locations": [
+        "gym"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech",
+        "syrus.oct1.assembly"
+      ]
+    },
+    {
+      "id": "gym_practice_field_a",
+      "locations": [
+        "gym"
+      ],
+      "used_by": [
+        "mimicry.oct7.pm",
+        "mimicry.weekday.pm",
+        "mimicry.weekend.pm"
+      ]
+    },
+    {
+      "id": "slifer_banner_room_desk",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "banner.weekday.pm",
+        "banner.weekend.pm"
+      ]
+    },
+    {
+      "id": "slifer_cafeteria_counter",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "banner.oct1.dorm",
+        "banner.oct7.cafeteria",
+        "banner.weekday.am",
+        "banner.weekday.night",
+        "banner.weekend.am",
+        "banner.weekend.night",
+        "opening.b05_banner_dp"
+      ]
+    },
+    {
+      "id": "slifer_cafeteria_seat_01",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "jaden.oct1.dorm",
+        "jaden.weekday.pm",
+        "opening.b05_banner_dp"
+      ]
+    },
+    {
+      "id": "slifer_cafeteria_seat_02",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "opening.b05_banner_dp",
+        "syrus.oct1.dorm",
+        "syrus.weekday.am",
+        "syrus.weekend.am"
+      ]
+    },
+    {
+      "id": "slifer_cafeteria_seat_03",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "chumley.oct1.dorm",
+        "chumley.weekday.am",
+        "chumley.weekday.pm",
+        "chumley.weekend.am",
+        "chumley.weekend.pm",
+        "opening.b05_banner_dp"
+      ]
+    },
+    {
+      "id": "slifer_cafeteria_table",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "opening.b05_banner_dp",
+        "opening.b06_tutorial",
+        "opening.b06_tutorial_phases"
+      ]
+    },
+    {
+      "id": "slifer_dorm_front_chumley",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "opening.b04_dorm_welcome"
+      ]
+    },
+    {
+      "id": "slifer_dorm_front_jaden",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "jaden.oct7.first_duel",
+        "jaden.weekday.am",
+        "jaden.weekend.am",
+        "opening.b04_dorm_welcome",
+        "opening.b08_jaden_decline",
+        "opening.b08_jaden_duel_setup",
+        "opening.b08_jaden_intro",
+        "opening.b08_jaden_lose",
+        "opening.b08_jaden_win"
+      ]
+    },
+    {
+      "id": "slifer_dorm_front_syrus",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "opening.b04_dorm_welcome"
+      ]
+    },
+    {
+      "id": "slifer_front_camera",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "opening.b04_dorm_welcome",
+        "opening.b08_jaden_intro"
+      ]
+    },
+    {
+      "id": "slifer_front_gate",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "opening.b04_dorm_welcome"
+      ]
+    },
+    {
+      "id": "slifer_jaden_room_chumley",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "chumley.weekday.night",
+        "chumley.weekend.night"
+      ]
+    },
+    {
+      "id": "slifer_jaden_room_jaden",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "jaden.weekday.night",
+        "jaden.weekend.night"
+      ]
+    },
+    {
+      "id": "slifer_jaden_room_syrus",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "syrus.weekday.night",
+        "syrus.weekend.night"
+      ]
+    },
+    {
+      "id": "slifer_player_room_bed",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "opening.b07_first_free_roam",
+        "opening.b07_free_roam",
+        "opening.b07_save"
+      ]
+    },
+    {
+      "id": "slifer_yard_practice",
+      "locations": [
+        "slifer"
+      ],
+      "used_by": [
+        "jaden.weekend.pm",
+        "opening.b06_tutorial_continue",
+        "opening.b06_tutorial_duel",
+        "opening.b06_tutorial_lose",
+        "opening.b06_tutorial_win",
+        "syrus.weekend.pm"
+      ]
+    }
+  ]
+}
