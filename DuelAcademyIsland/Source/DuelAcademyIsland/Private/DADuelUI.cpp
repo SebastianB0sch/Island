@@ -111,7 +111,7 @@ namespace
 	const FLinearColor GoldSoft(0.74f, 0.61f, 0.34f, 1.0f);
 	const FLinearColor Ink(0.027f, 0.043f, 0.067f, 0.88f);
 	const FLinearColor InkSoft(0.04f, 0.065f, 0.09f, 0.78f);
-	const FLinearColor Line(0.58f, 0.45f, 0.20f, 0.55f);
+	const FLinearColor DuelLine(0.58f, 0.45f, 0.20f, 0.55f);
 	const FLinearColor Paper(0.94f, 0.92f, 0.85f, 1.0f);
 	const FLinearColor Muted(0.55f, 0.66f, 0.70f, 1.0f);
 	const FLinearColor AccentCyan(0.38f, 0.82f, 0.94f, 1.0f);
@@ -1823,7 +1823,7 @@ void FDADuelUI::DrawDuelDeckSelect()
 		Muted, DX(158.0f), DY(104.0f), GetFont(false), 0.8f * DuelScale, false);
 
 	DrawPanel(DX(1130.0f), DY(26.0f), DS(430.0f), DS(98.0f),
-		FLinearColor(0.035f, 0.055f, 0.075f, 0.95f), Line);
+		FLinearColor(0.035f, 0.055f, 0.075f, 0.95f), DuelLine);
 	DrawDuelPortrait(DuelOpponentId, DX(1142.0f), DY(35.0f), DS(80.0f), DS(80.0f),
 		FLinearColor(0.88f, 0.58f, 0.26f), 1.0f, true);
 	DrawShadowText(DuelOpponentName.ToUpper(), Gold, DX(1238.0f), DY(38.0f), GetFont(false), 0.95f * DuelScale, false);
@@ -1858,7 +1858,7 @@ void FDADuelUI::DrawDuelDeckSelect()
 		FLinearColor Accent = FLinearColor::FromSRGBColor(FColor::FromHex(Deck.Accent.Replace(TEXT("#"), TEXT(""))));
 		Accent.A = 1.0f;
 		FLinearColor PanelFill = bHover ? FLinearColor(0.055f, 0.09f, 0.125f, 0.98f) : FLinearColor(0.028f, 0.05f, 0.072f, 0.96f);
-		DrawPanel(AX, AY, AW, AH, PanelFill, bHover ? Accent : Line);
+		DrawPanel(AX, AY, AW, AH, PanelFill, bHover ? Accent : DuelLine);
 		if (bHover)
 		{
 			DrawRect(Accent, AX, AY, AW, 4.0f);
@@ -1891,7 +1891,7 @@ void FDADuelUI::DrawDuelDeckSelect()
 		DrawWrappedText(Deck.Description, DX(PX + 22.0f), DY(PY + 258.0f), DS(PW - 44.0f),
 			GetFont(false), 0.68f * DuelScale, Paper, 3.0f);
 
-		DrawPanel(DX(PX + 20.0f), DY(PY + 382.0f), DS(PW - 40.0f), DS(1.0f), FLinearColor(0.0f, 0.0f, 0.0f, 0.0f), Line);
+		DrawPanel(DX(PX + 20.0f), DY(PY + 382.0f), DS(PW - 40.0f), DS(1.0f), FLinearColor(0.0f, 0.0f, 0.0f, 0.0f), DuelLine);
 		DrawShadowText(TEXT("KEY CARDS"), Muted, DX(PX + 22.0f), DY(PY + 400.0f), GetFont(false), 0.62f * DuelScale, false);
 		float NameY = PY + 426.0f;
 		for (int32 NameIndex = 0; NameIndex < PreviewCards.Num() && NameIndex < 5; ++NameIndex)
@@ -2673,9 +2673,9 @@ void FDADuelUI::DrawDuelActive()
 	}
 
 	// Left duel log.
-	DrawPanel(DX(24.0f), DY(110.0f), DS(340.0f), DS(760.0f), FLinearColor(0.018f, 0.032f, 0.05f, 0.94f), Line);
+	DrawPanel(DX(24.0f), DY(110.0f), DS(340.0f), DS(760.0f), FLinearColor(0.018f, 0.032f, 0.05f, 0.94f), DuelLine);
 	DrawShadowText(TEXT("DUEL LOG"), Gold, DX(42.0f), DY(126.0f), GetFont(false), 0.78f * DuelScale, false);
-	DrawRect(Line, DX(42.0f), DY(150.0f), DS(304.0f), 1.0f);
+	DrawRect(DuelLine, DX(42.0f), DY(150.0f), DS(304.0f), 1.0f);
 	const TArray<FDuelLogEntry>& Entries = DuelEngine->GetLog();
 	const int32 FirstEntry = FMath::Max(0, Entries.Num() - 17);
 	float LogY = 162.0f;
@@ -2733,7 +2733,7 @@ void FDADuelUI::DrawDuelActive()
 		const bool bHover = DuelMousePosition.X >= DX(X) && DuelMousePosition.X <= DX(X + W)
 			&& DuelMousePosition.Y >= DY(Y) && DuelMousePosition.Y <= DY(Y + H);
 		DrawPanel(DX(X), DY(Y), DS(W), DS(H), bHover ? FLinearColor(0.06f, 0.1f, 0.14f, 0.98f)
-			: FLinearColor(0.02f, 0.04f, 0.06f, 0.92f), bHover ? GoldSoft : Line);
+			: FLinearColor(0.02f, 0.04f, 0.06f, 0.92f), bHover ? GoldSoft : DuelLine);
 		DrawShadowText(FString::Printf(TEXT("%s %d"), *Label, Count), Paper, DX(X + 10.0f), DY(Y + 9.0f),
 			GetFont(false), 0.6f * DuelScale, false);
 		AddDuelHit(TEXT("pile"), (PileOwner == EDuelOwner::Player ? 0 : 10) + Type, DX(X), DY(Y), DS(W), DS(H));
@@ -2877,7 +2877,7 @@ void FDADuelUI::DrawDuelActive()
 	const float RY = 110.0f;
 	const float RW = 360.0f;
 	const float RH = 760.0f;
-	DrawPanel(DX(RX), DY(RY), DS(RW), DS(RH), FLinearColor(0.022f, 0.04f, 0.058f, 0.96f), Line);
+	DrawPanel(DX(RX), DY(RY), DS(RW), DS(RH), FLinearColor(0.022f, 0.04f, 0.058f, 0.96f), DuelLine);
 
 	DrawShadowText(Selected ? TEXT("CARD DETAIL") : TEXT("DUEL COMMAND"), Gold,
 		DX(RX + 20.0f), DY(RY + 14.0f), GetFont(false), 0.68f * DuelScale, false);
@@ -2892,12 +2892,12 @@ void FDADuelUI::DrawDuelActive()
 		DrawWrappedText(
 			TEXT("Click a hand card to inspect it. Summon or Set it from the action list. Select a monster in the Battle Phase to see its attack targets."),
 			DX(RX + 20.0f), DY(RY + 72.0f), DS(RW - 40.0f), GetFont(false), 0.64f * DuelScale, Paper, 3.0f);
-		DrawRect(Line, DX(RX + 20.0f), DY(RY + 206.0f), DS(RW - 40.0f), 1.0f);
+		DrawRect(DuelLine, DX(RX + 20.0f), DY(RY + 206.0f), DS(RW - 40.0f), 1.0f);
 		DrawShadowText(TEXT("SHORTCUTS"), Muted, DX(RX + 20.0f), DY(RY + 222.0f), GetFont(false), 0.62f * DuelScale, false);
 		DrawShadowText(TEXT("B   Battle Phase"), Paper, DX(RX + 20.0f), DY(RY + 248.0f), GetFont(false), 0.64f * DuelScale, false);
 		DrawShadowText(TEXT("N   End Turn"), Paper, DX(RX + 20.0f), DY(RY + 274.0f), GetFont(false), 0.64f * DuelScale, false);
 		DrawShadowText(TEXT("Esc  Deselect / close pile"), Paper, DX(RX + 20.0f), DY(RY + 300.0f), GetFont(false), 0.64f * DuelScale, false);
-		DrawRect(Line, DX(RX + 20.0f), DY(RY + 338.0f), DS(RW - 40.0f), 1.0f);
+		DrawRect(DuelLine, DX(RX + 20.0f), DY(RY + 338.0f), DS(RW - 40.0f), 1.0f);
 		DrawShadowText(TEXT("FIELD STATUS"), Muted, DX(RX + 20.0f), DY(RY + 354.0f), GetFont(false), 0.62f * DuelScale, false);
 		DrawShadowText(FString::Printf(TEXT("Your monsters: %d / 5"), PlayerMonsterCount), Paper,
 			DX(RX + 20.0f), DY(RY + 380.0f), GetFont(false), 0.62f * DuelScale, false);
@@ -3062,7 +3062,7 @@ void FDADuelUI::DrawDuelActive()
 	{
 		Hint = DuelMessage;
 	}
-	DrawPanel(DX(540.0f), DY(872.0f), DS(480.0f), DS(22.0f), FLinearColor(0.018f, 0.035f, 0.05f, 0.95f), Line);
+	DrawPanel(DX(540.0f), DY(872.0f), DS(480.0f), DS(22.0f), FLinearColor(0.018f, 0.035f, 0.05f, 0.95f), DuelLine);
 	DrawShadowText(DuelTrim(Hint, 62), DuelMessageTimer > 0.0f ? FLinearColor(0.95f, 0.74f, 0.38f) : Muted,
 		DX(780.0f), DY(876.0f), GetFont(false), 0.52f * DuelScale, true);
 
@@ -3216,7 +3216,7 @@ void FDADuelUI::DrawDuelPile()
 	const float Y = 90.0f;
 	const float W = 1080.0f;
 	const float H = 720.0f;
-	DrawPanel(DX(X), DY(Y), DS(W), DS(H), FLinearColor(0.02f, 0.038f, 0.058f, 0.99f), Line);
+	DrawPanel(DX(X), DY(Y), DS(W), DS(H), FLinearColor(0.02f, 0.038f, 0.058f, 0.99f), DuelLine);
 	DrawShadowText(FString::Printf(TEXT("%s  -  %s  (%d)"),
 		*Side.Name.ToUpper(), *Title, Cards->Num()), Gold, DX(X + 26.0f), DY(Y + 20.0f), GetFont(false), 0.9f * DuelScale, false);
 	DrawShadowText(bContentsHidden ? TEXT("Contents are face-down.") : TEXT("Click close to return to the duel."),
