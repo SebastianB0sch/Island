@@ -1,0 +1,100 @@
+COMMAND: C:\Users\Sebas\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\dev\GX\Tools\validate\validate_all.py --report C:\dev\GX\Content\Data\Integration\reports\validate-20261030-181920.json
+RETURNCODE: 0
+
+--- stdout ---
+Duel Academy port validation (validate_all 1.1.0)
+  root:      C:\dev\GX
+  data:      C:\dev\GX\DuelAcademyIsland\Content\Data
+  contracts: C:\dev\GX\Docs\Contracts
+
+  GAP  canon_decks: 31 decks; 4 complete [A01]
+  GAP  canon_packs: 48 packs; pool union 1200 [A01]
+  GAP  canon_puzzles: 100 puzzles; levels {1: 20, 2: 20, 3: 20, 4: 20, 5: 20} [A01]
+  GAP  puzzles: 20 puzzles; levels {1: 20} [A07]
+  GAP  exams: no exams [A07]
+  GAP  events: 3 events; 3 requirement edges [A03]
+  GAP  emails: no emails [A03]
+  GAP  effects: no effect manifest [A05]
+
+Findings:
+  GAP     canon_deck_incomplete: 27/31 canon decks are incomplete: banner_year1, pharaoh_year1, syrus_year1, chumley_year1, blair_year1, gerard_year1, sartyr_year1, bastion_year1, dimitri_year1, brier_year1 ... [A01]
+          at Content/Data/Canon/decks.json
+          hint: canon deck lists are unknown in the public guides; A01 must either prove or mark them fallback
+  GAP     canon_pack_empty: pack(s) with no pool: dorothys_gift [A01]
+          at Content/Data/Canon/packs.json
+  WARNING canon_event_duel_ref: event E08 duel references opponent 'jinzo' not in Canon/opponents.json [A01]
+          at Content/Data/Canon/events.json
+  GAP     canon_event_deck_ref: event E08 duel references canon deck 'jinzo_spirit' not in Canon/decks.json [A01]
+          at Content/Data/Canon/events.json
+  WARNING canon_event_duel_ref: event E09 duel references opponent 'festival_bracket' not in Canon/opponents.json [A01]
+          at Content/Data/Canon/events.json
+  WARNING canon_event_duel_ref: event E17 duel references opponent 'goblin_king' not in Canon/opponents.json [A01]
+          at Content/Data/Canon/events.json
+  GAP     canon_event_deck_ref: event E22 duel references canon deck 'damon_exodia' not in Canon/decks.json [A01]
+          at Content/Data/Canon/events.json
+  GAP     canon_event_deck_ref: event E23 duel references canon deck 'yugi_deck' not in Canon/decks.json [A01]
+          at Content/Data/Canon/events.json
+  GAP     canon_event_deck_ref: event E26 duel references canon deck 'bastion_seventh' not in Canon/decks.json [A01]
+          at Content/Data/Canon/events.json
+  WARNING canon_event_duel_ref: event E28 duel references opponent 'chocolate_bracket' not in Canon/opponents.json [A01]
+          at Content/Data/Canon/events.json
+  WARNING canon_event_duel_ref: event E31 duel references opponent 'walk_home_partner' not in Canon/opponents.json [A01]
+          at Content/Data/Canon/events.json
+  GAP     canon_puzzle_setup: 100/100 canon puzzles have no decoded setup; runtime puzzles must supply one [A01]
+          at Content/Data/Canon/puzzles.json
+          hint: ROM puzzle table not decoded; A07 authors runtime setups
+  GAP     canon_puzzle_timer: 100/100 canon puzzles have no decoded time limit [A01]
+          at Content/Data/Canon/puzzles.json
+  GAP     canon_exam_week: canon exam week rule is unresolved [A01]
+          at Content/Data/Canon/exams.json
+  WARNING fusion_duplicate_material: recipe 166 repeats material(s) [1]; check generic-material handling [A05]
+          at DuelAcademyIsland/Content/Data/fusions.json $.fusions[18]
+  WARNING fusion_duplicate_material: recipe 266 repeats material(s) [188]; check generic-material handling [A05]
+          at DuelAcademyIsland/Content/Data/fusions.json $.fusions[43]
+  WARNING fusion_generic_material: recipe 722 uses a generic material type 'Dragon' with 5 slots [A05]
+          at DuelAcademyIsland/Content/Data/fusions.json $.fusions[56]
+  WARNING fusion_duplicate_material: recipe 1061 repeats material(s) [967]; check generic-material handling [A05]
+          at DuelAcademyIsland/Content/Data/fusions.json $.fusions[67]
+  WARNING fusion_unresolved: recipe 1156 has no concrete materials [A05]
+          at DuelAcademyIsland/Content/Data/fusions.json $.fusions[72]
+  WARNING fusion_duplicate_material: recipe 1157 repeats material(s) [1152]; check generic-material handling [A05]
+          at DuelAcademyIsland/Content/Data/fusions.json $.fusions[73]
+  WARNING fusion_duplicate_material: recipe 1158 repeats material(s) [1152]; check generic-material handling [A05]
+          at DuelAcademyIsland/Content/Data/fusions.json $.fusions[74]
+  WARNING limitations_schema_drift: banlist uses the pre-contract schema; canonical form is {version, forbidden, limited, semi_limited} [A01]
+          at DuelAcademyIsland/Content/Data/Rules/banned_limited.json
+  GAP     pack_pool: pack dorothys_gift has an empty pool [A06]
+          at DuelAcademyIsland/Content/Data/Shop/packs.json $.packs[37]
+  WARNING opponent_schema_drift: roster uses duelists[]; canonical v1 wrapper is opponents[] [A07]
+          at DuelAcademyIsland/Content/Data/Opponents/roster.json
+  WARNING puzzle_schema_drift: 20 puzzle file(s) use a single object with embedded opponent state; canonical v1 uses puzzles[] [A07]
+          at DuelAcademyIsland/Content/Data/Puzzles/P001.json
+  GAP     puzzle_coverage: 20/100 puzzles; missing 80, unexpected 0 [A07]
+          hint: canon is P001..P100, 20 per level
+  GAP     exams_missing: no exam definitions found [A07]
+          hint: expected Content/Data/Exams/exams.json and questions.json
+  WARNING anchor_schema_drift: anchors use position_ue/location_id and implicit locations; canonical v1 uses locations[], position{x,y,z} [A08]
+          at DuelAcademyIsland/Content/Data/World/anchors.json
+  WARNING event_schema_drift: events use trigger/requirements/outcomes and scene ids; canonical v1 uses date/requires/rewards and scene paths [A03]
+          at DuelAcademyIsland/Content/Data/Story/opening.json
+  GAP     event_coverage: 3 events; missing numbered events: E02, E03, E04, E05, E06, E07, E08, E09, E10, E11, E12, E13, E14, E15, E16, E17, E18, E19, E20, E21, E22, E23, E24, E25, E26, E27, E28, E29, E30, E31, E32, E33 [A03]
+          at DuelAcademyIsland/Content/Data/Story/opening.json
+          hint: canon is E01..E33 plus E28b and event-only variants
+  WARNING scene_schema_drift: scene bundle uses scenes{} and lowercase commands; canonical v1 is one file per scene with FStoryCommand types [A03]
+          at DuelAcademyIsland/Content/Data/Story/scenes/opening.json
+  GAP     emails_missing: no PDA email table found [A03]
+          hint: expected Content/Data/Story/emails.json
+  WARNING schedule_schema_drift: schedules use npcs{} with periods[]; canonical v1 is schedules[] with period [A03]
+          at DuelAcademyIsland/Content/Data/Story/schedules/opening.json
+  GAP     effects_missing: no effect coverage manifest found [A05]
+          hint: expected Content/Data/Effects/manifest.json with one entry per card
+  GAP     anchor_coverage: 6 anchor id(s) referenced by story/schedules are missing from World/anchors.json: gym_assembly_staff, slifer_cafeteria_seat_03, slifer_dorm_front_chumley, slifer_dorm_front_jaden, slifer_dorm_front_syrus, slifer_yard_practice [A08]
+          hint: publish the anchors or retarget the scene/schedule references before Gate 1
+
+Summary: 0 error(s), 19 warning(s), 16 gap(s), 40 info; 74 file(s) read
+Result: PASS
+Report: C:\dev\GX\Content\Data\Integration\reports\validate-20261030-181920.json
+
+
+--- stderr ---
+

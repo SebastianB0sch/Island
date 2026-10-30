@@ -3,11 +3,15 @@
 #include "DAPDAUI.h"
 
 #include "CanvasItem.h"
+#include "DACalendarSubsystem.h"
 #include "DACardRecords.h"
 #include "DADialogueUI.h"
 #include "DAHUD.h"
 #include "DAIslandSubsystem.h"
 #include "DALocationVolume.h"
+#include "DAProfileSubsystem.h"
+#include "DASaveGame.h"
+#include "DASettings.h"
 #include "DAStudentCharacter.h"
 #include "DuelAcademyIsland.h"
 #include "Engine/Canvas.h"
@@ -240,37 +244,77 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 {
 	APlayerController* PC = OwnerHUD.IsValid() ? OwnerHUD->GetOwningPlayerController() : nullptr;
 	ADAStudentCharacter* Student = PC ? Cast<ADAStudentCharacter>(PC->GetPawn()) : nullptr;
+	UGameInstance* GameInstance = GetGameInstance();
+	UDAProfileSubsystem* Profile = GameInstance ? GameInstance->GetSubsystem<UDAProfileSubsystem>() : nullptr;
+	UDACalendarSubsystem* Calendar = GameInstance ? GameInstance->GetSubsystem<UDACalendarSubsystem>() : nullptr;
+	UDASaveSubsystem* Save = GameInstance ? GameInstance->GetSubsystem<UDASaveSubsystem>() : nullptr;
+	UDASettings* Settings = GameInstance ? GameInstance->GetSubsystem<UDASettings>() : nullptr;
+	const bool bLiveProfile = Profile && Profile->IsInitialized();
 
 	ViewModel = FDAPDAViewModel();
-	ViewModel.Profile.bPlaceholder = true;
-	ViewModel.Profile.Cards = Student ? Student->GetCollectionSize() : 0;
-	if (Student)
+	ViewModel.Profile.bPlaceholder = !bLiveProfile;
+	if (bLiveProfile)
 	{
-		ViewModel.Profile.DormName = DuelAcademy::DormName(Student->GetDorm());
+		ViewModel.Profile.PlayerName = Profile->GetPlayerName().IsEmpty() ? FString(TEXT("New Student")) : Profile->GetPlayerName();
+		ViewModel.Profile.DormName = DuelAcademy::DormName(Profile->GetDorm());
+		ViewModel.Profile.TitleName = Profile->GetTitle().IsEmpty() ? FString(TEXT("Apprentice Duelist")) : Profile->GetTitle();
+		ViewModel.Profile.DP = Profile->GetDP();
+		ViewModel.Profile.Cards = Profile->GetDistinctCardsOwned();
+	}
+	else
+	{
+		ViewModel.Profile.Cards = Student ? Student->GetCollectionSize() : 0;
+		if (Student)
+		{
+			ViewModel.Profile.DormName = DuelAcademy::DormName(Student->GetDorm());
+		}
 	}
 
-	// Calendar placeholder: October, Year 1, first day Sunday (GBA week order).
+	// Calendar: live A02 data when available, otherwise the pass-1 sample month.
 	ViewModel.Calendar = FDAPDACalendarView();
-	ViewModel.Calendar.MonthName = DAUIData::Label(TEXT("pda.calendar.month"), TEXT("October"));
-	ViewModel.Calendar.Year = 1;
-	ViewModel.Calendar.FirstWeekday = 0;
-	ViewModel.Calendar.bPlaceholder = true;
-	for (int32 Day = 1; Day <= 31; ++Day)
+	if (Calendar)
 	{
-		FDAPDACalendarCell Cell;
-		Cell.Day = Day;
-		Cell.bExam = ((Day - 6) % 7 == 0); // Sample Fridays; A02 supplies the real exam days.
-		Cell.bEvent = (Day == 7);
-		Cell.bToday = (Day == 7);
-		if (Cell.bExam)
+		ViewModel.Profile.DateLine = Calendar->GetFullDateText();
+		ViewModel.Profile.Period = Calendar->GetPeriodName(Calendar->GetPeriod());
+		const int32 Year = Calendar->GetYear();
+		const int32 MonthIndex = FMath::Clamp(Calendar->GetMonthIndex(), 0, 11);
+		const int32 DaysInMonth = FMath::Max(28, Calendar->GetDaysInMonth(Year, MonthIndex));
+		ViewModel.Calendar.MonthName = Calendar->GetMonthName(MonthIndex);
+		ViewModel.Calendar.Year = Year;
+		ViewModel.Calendar.FirstWeekday = static_cast<int32>(Calendar->GetWeekdayForDate(Year, MonthIndex, 1));
+		ViewModel.Calendar.bPlaceholder = !bLiveProfile;
+		for (int32 Day = 1; Day <= DaysInMonth; ++Day)
 		{
-			Cell.Note = DAUIData::Label(TEXT("pda.calendar.exam"), TEXT("Sample exam day (placeholder)"));
+			FDAPDACalendarCell Cell;
+			Cell.Day = Day;
+			Cell.bExam = Calendar->IsExamDayFor(Year, MonthIndex, Day);
+			Cell.bToday = Day == Calendar->GetDay();
+			if (Cell.bExam)
+			{
+				Cell.Note = DAUIData::Label(TEXT("pda.calendar.exam"), TEXT("Exam day"));
+			}
+			else if (Cell.bToday)
+			{
+				Cell.Note = DAUIData::Label(TEXT("pda.calendar.today"), TEXT("Today"));
+			}
+			ViewModel.Calendar.Days.Add(Cell);
 		}
-		else if (Cell.bEvent)
+	}
+	else
+	{
+		ViewModel.Calendar.MonthName = DAUIData::Label(TEXT("pda.calendar.month"), TEXT("October"));
+		ViewModel.Calendar.Year = 1;
+		ViewModel.Calendar.FirstWeekday = 0;
+		ViewModel.Calendar.bPlaceholder = true;
+		for (int32 Day = 1; Day <= 31; ++Day)
 		{
-			Cell.Note = DAUIData::Label(TEXT("pda.calendar.event"), TEXT("Sample event marker (placeholder)"));
+			FDAPDACalendarCell Cell;
+			Cell.Day = Day;
+			Cell.bExam = ((Day - 6) % 7 == 0);
+			Cell.bEvent = (Day == 7);
+			Cell.bToday = (Day == 7);
+			ViewModel.Calendar.Days.Add(Cell);
 		}
-		ViewModel.Calendar.Days.Add(Cell);
 	}
 
 	// Deck tab: read the existing starter decks; A06 replaces this with player decks.
@@ -292,41 +336,83 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 	}
 	ViewModel.Deck.Note = TEXT("Open the deck editor once A06's DADeckUI is connected.");
 
-	// Save slots: three manual + autosave.
-	for (int32 Slot = 1; Slot <= 3; ++Slot)
+	// Save slots: A02 is the source of truth (0 = autosave, 1..3 = manual).
+	const auto MakeSlotDate = [Calendar](const FDASaveSlotInfo& Info) -> FString
 	{
-		FDAPDASaveSlotView View;
-		View.Id = FString::Printf(TEXT("slot_%d"), Slot);
-		View.Label = FString::Printf(TEXT("SLOT %d"), Slot);
-		View.Date = TEXT("Empty");
-		View.bOccupied = false;
-		ViewModel.SaveSlots.Add(View);
+		if (!Info.bExists)
+		{
+			return FString(TEXT("EMPTY SLOT"));
+		}
+		if (Info.bCorrupt)
+		{
+			return FString(TEXT("CORRUPT SAVE"));
+		}
+		const FString Month = Calendar
+			? Calendar->GetMonthShortName(FMath::Clamp(Info.MonthIndex, 0, 11))
+			: FString::Printf(TEXT("%d"), Info.MonthIndex + 1);
+		const FString Period = Calendar
+			? Calendar->GetPeriodName(Info.Period)
+			: FString(Info.Period == EDADayPeriod::AM ? TEXT("AM") : (Info.Period == EDADayPeriod::PM ? TEXT("PM") : TEXT("Night")));
+		FString Date = FString::Printf(TEXT("%s %d, Year %d  -  %s"), *Month, Info.Day, Info.Year, *Period);
+		if (Info.bUsingBackup)
+		{
+			Date += TEXT("  (backup)");
+		}
+		return Date;
+	};
+
+	if (Save)
+	{
+		for (const FDASaveSlotInfo& Info : Save->EnumerateSlots())
+		{
+			FDAPDASaveSlotView View;
+			View.Id = Info.SlotName;
+			View.Label = Info.bIsAutosave ? FString(TEXT("AUTOSAVE")) : FString::Printf(TEXT("SLOT %d"), Info.SlotIndex);
+			View.Date = MakeSlotDate(Info);
+			View.PlayerName = Info.PlayerName.IsEmpty() ? FString(TEXT("New Student")) : Info.PlayerName;
+			View.Dorm = DuelAcademy::DormName(Info.Dorm);
+			View.Title = Info.Title.IsEmpty() ? FString(TEXT("No title")) : Info.Title;
+			View.DP = Info.DP;
+			View.bOccupied = Info.bExists && !Info.bCorrupt;
+			View.bAutosave = Info.bIsAutosave;
+			View.bCorrupt = Info.bCorrupt;
+			View.bUsingBackup = Info.bUsingBackup;
+			ViewModel.SaveSlots.Add(View);
+		}
 	}
+	if (ViewModel.SaveSlots.Num() == 0)
 	{
-		FDAPDASaveSlotView View;
-		View.Id = TEXT("autosave");
-		View.Label = TEXT("AUTOSAVE");
-		View.Date = TEXT("Empty");
-		View.bOccupied = false;
-		View.bAutosave = true;
-		ViewModel.SaveSlots.Add(View);
+		for (int32 Slot = 0; Slot < 4; ++Slot)
+		{
+			FDAPDASaveSlotView View;
+			View.Id = Slot == 0 ? FString(TEXT("autosave")) : FString::Printf(TEXT("slot_%d"), Slot);
+			View.Label = Slot == 0 ? FString(TEXT("AUTOSAVE")) : FString::Printf(TEXT("SLOT %d"), Slot);
+			View.Date = TEXT("EMPTY SLOT");
+			View.bAutosave = Slot == 0;
+			ViewModel.SaveSlots.Add(View);
+		}
 	}
 
-	// Options: only the two that the dialogue box can honour today.
+	// Options: backed by UDASettings (A02) so the title/PDA/dialogue agree.
 	FDAPDAOptionRow TextSpeed;
 	TextSpeed.Id = TEXT("text_speed");
 	TextSpeed.Label = TEXT("Text Speed");
 	TextSpeed.Values.Add(TEXT("Slow"));
 	TextSpeed.Values.Add(TEXT("Normal"));
 	TextSpeed.Values.Add(TEXT("Fast"));
+	TextSpeed.Values.Add(TEXT("Instant"));
 	TextSpeed.ValueIndex = 1;
-	TextSpeed.Help = TEXT("Applied to the dialogue box immediately. A02 owns persistence.");
-	if (OwnerHUD.IsValid())
+	TextSpeed.Help = TEXT("Applied to the dialogue box immediately; stored by UDASettings.");
+	if (Settings)
+	{
+		TextSpeed.ValueIndex = FMath::Clamp(static_cast<int32>(Settings->GetTextSpeed()), 0, 3);
+	}
+	else if (OwnerHUD.IsValid())
 	{
 		if (FDADialogueUI* Dialogue = OwnerHUD->GetDialogueUI())
 		{
 			const float Speed = Dialogue->GetTextSpeed();
-			TextSpeed.ValueIndex = Speed < 35.f ? 0 : (Speed > 65.f ? 2 : 1);
+			TextSpeed.ValueIndex = Speed < 35.f ? 0 : (Speed > 500.f ? 3 : (Speed > 65.f ? 2 : 1));
 		}
 	}
 	ViewModel.Options.Add(TextSpeed);
@@ -338,7 +424,11 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 	Auto.Values.Add(TEXT("On"));
 	Auto.ValueIndex = 0;
 	Auto.Help = TEXT("Advances fully revealed dialogue lines automatically.");
-	if (OwnerHUD.IsValid())
+	if (Settings)
+	{
+		Auto.ValueIndex = Settings->GetControl(TEXT("AutoAdvance")).Equals(TEXT("On"), ESearchCase::IgnoreCase) ? 1 : 0;
+	}
+	else if (OwnerHUD.IsValid())
 	{
 		if (FDADialogueUI* Dialogue = OwnerHUD->GetDialogueUI())
 		{
@@ -347,7 +437,24 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 	}
 	ViewModel.Options.Add(Auto);
 
-	// Records: live profile basics, placeholders for A02 counters.
+	auto AddVolumeRow = [this, Settings](const TCHAR* Id, const TCHAR* Label, bool bBgm)
+	{
+		FDAPDAOptionRow Row;
+		Row.Id = Id;
+		Row.Label = Label;
+		for (int32 Percent = 0; Percent <= 100; Percent += 10)
+		{
+			Row.Values.Add(FString::Printf(TEXT("%d%%"), Percent));
+		}
+		const float Volume = Settings ? (bBgm ? Settings->GetBgmVolume() : Settings->GetSfxVolume()) : 0.8f;
+		Row.ValueIndex = FMath::Clamp(FMath::RoundToInt(Volume * 10.f), 0, 10);
+		Row.Help = TEXT("Stored in UDASettings; consumed by the audio mix in a later pass.");
+		ViewModel.Options.Add(Row);
+	};
+	AddVolumeRow(TEXT("bgm_volume"), TEXT("BGM Volume"), true);
+	AddVolumeRow(TEXT("sfx_volume"), TEXT("SFX Volume"), false);
+
+	// Records: live A02 profile counters where available.
 	ViewModel.Records.Reset();
 	auto AddRecord = [this](const TCHAR* Label, const FString& Value, bool bHighlight)
 	{
@@ -361,11 +468,22 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 	AddRecord(TEXT("Dorm"), ViewModel.Profile.DormName, false);
 	AddRecord(TEXT("DP"), FString::Printf(TEXT("%d"), ViewModel.Profile.DP), true);
 	AddRecord(TEXT("Cards Collected"), FString::Printf(TEXT("%d"), ViewModel.Profile.Cards), false);
-	AddRecord(TEXT("Duels Won"), TEXT("0  (placeholder)"), false);
-	AddRecord(TEXT("Timed Clears"), TEXT("0  (placeholder)"), false);
+	if (bLiveProfile)
+	{
+		AddRecord(TEXT("Duels Won"), FString::Printf(TEXT("%d"), Profile->GetCounter(TEXT("wins_total"))), false);
+		AddRecord(TEXT("Timed Clears"), FString::Printf(TEXT("%d"), Profile->GetCounter(TEXT("timed_clears"))), false);
+		AddRecord(TEXT("Exam Correct"), FString::Printf(TEXT("%d"), Profile->GetCounter(TEXT("written_correct"))), false);
+	}
+	else
+	{
+		AddRecord(TEXT("Duels Won"), TEXT("0  (placeholder)"), false);
+		AddRecord(TEXT("Timed Clears"), TEXT("0  (placeholder)"), false);
+	}
 
-	ViewModel.FooterNote = DAUIData::Label(TEXT("pda.footer.placeholder"),
-		TEXT("PDA shell - panes marked placeholder await A02/A03/A06/A07."));
+	ViewModel.FooterNote = bLiveProfile
+		? FString(TEXT("Live A02 profile, calendar, settings and save data."))
+		: DAUIData::Label(TEXT("pda.footer.placeholder"),
+			TEXT("PDA shell - panes marked placeholder await A02/A03/A06/A07."));
 }
 
 void FDAPDAUI::NormalizeViewModel()
@@ -406,17 +524,19 @@ void FDAPDAUI::NormalizeViewModel()
 		TextSpeed.Values.Add(TEXT("Slow"));
 		TextSpeed.Values.Add(TEXT("Normal"));
 		TextSpeed.Values.Add(TEXT("Fast"));
+		TextSpeed.Values.Add(TEXT("Instant"));
 		TextSpeed.ValueIndex = 1;
 		ViewModel.Options.Add(TextSpeed);
 	}
 	if (ViewModel.SaveSlots.Num() == 0)
 	{
-		for (int32 Slot = 1; Slot <= 3; ++Slot)
+		for (int32 Slot = 0; Slot < 4; ++Slot)
 		{
 			FDAPDASaveSlotView View;
-			View.Id = FString::Printf(TEXT("slot_%d"), Slot);
-			View.Label = FString::Printf(TEXT("SLOT %d"), Slot);
-			View.Date = TEXT("Empty");
+			View.Id = Slot == 0 ? FString(TEXT("autosave")) : FString::Printf(TEXT("slot_%d"), Slot);
+			View.Label = Slot == 0 ? FString(TEXT("AUTOSAVE")) : FString::Printf(TEXT("SLOT %d"), Slot);
+			View.Date = TEXT("EMPTY SLOT");
+			View.bAutosave = Slot == 0;
 			ViewModel.SaveSlots.Add(View);
 		}
 	}
@@ -511,8 +631,9 @@ FString FDAPDAUI::RowLabel(int32 Index, FString& OutSubtitle, FLinearColor& OutA
 		if (ViewModel.SaveSlots.IsValidIndex(Index))
 		{
 			const FDAPDASaveSlotView& Slot = ViewModel.SaveSlots[Index];
-			OutSubtitle = Slot.bOccupied ? Slot.Date : FString(TEXT("Empty"));
-			OutAccent = Slot.bAutosave ? PdaCyan : PdaGold;
+			OutSubtitle = Slot.Date;
+			OutAccent = Slot.bCorrupt ? PdaRed : (Slot.bAutosave ? PdaCyan : (Slot.bOccupied ? PdaGold : PdaMuted));
+			bOutDisabled = !Slot.bOccupied && !Slot.bCorrupt;
 			return Slot.Label;
 		}
 		break;
@@ -685,15 +806,24 @@ FString FDAPDAUI::RowDetailBody(int32 Index) const
 		{
 			const FDAPDASaveSlotView& Slot = ViewModel.SaveSlots[Index];
 			FString Body;
-			if (Slot.bOccupied)
+			if (Slot.bCorrupt)
 			{
-				Body = FString::Printf(TEXT("%s\n%s\n%s\nDP %d"), *Slot.Date, *Slot.Dorm, *Slot.Title, Slot.DP);
+				Body = TEXT("This save is corrupt and cannot be loaded.");
+			}
+			else if (Slot.bOccupied)
+			{
+				Body = FString::Printf(TEXT("%s\n%s\n%s\n%s\nDP %d"),
+					*Slot.PlayerName, *Slot.Date, *Slot.Dorm, *Slot.Title, Slot.DP);
+				if (Slot.bUsingBackup)
+				{
+					Body += TEXT("\nRecovered from the backup copy.");
+				}
 			}
 			else
 			{
-				Body = TEXT("Empty slot.");
+				Body = TEXT("Empty slot. Start a new game or save here later.");
 			}
-			Body += TEXT("\n\nSave/load is handled by A02's SaveSubsystem; this shell emits save.slot.");
+			Body += TEXT("\n\nSave/load is handled by A02's SaveSubsystem; this shell shows live slot metadata.");
 			return Body;
 		}
 		break;
@@ -927,7 +1057,18 @@ void FDAPDAUI::ActivateRow(int32 Index)
 		{
 			return;
 		}
-		OnAction.Broadcast(FName(TEXT("save.slot")), ViewModel.SaveSlots[Index].Id);
+		const FDAPDASaveSlotView& Slot = ViewModel.SaveSlots[Index];
+		if (Slot.bCorrupt)
+		{
+			ViewModel.FooterNote = TEXT("This save is corrupt and cannot be loaded.");
+			return;
+		}
+		if (!Slot.bOccupied)
+		{
+			ViewModel.FooterNote = TEXT("Empty slot.");
+			return;
+		}
+		OnAction.Broadcast(FName(TEXT("save.slot")), Slot.Id);
 		return;
 	}
 	case EDAPDATab::Options:
@@ -1369,7 +1510,7 @@ void FDAPDAUI::DrawDetailPanel(float X, float Y, float W, float H)
 	case EDAPDATab::Map:       Hint = TEXT("Enter / click: fast travel"); break;
 	case EDAPDATab::Deck:      Hint = TEXT("Enter / click: open deck editor hook (A06)"); break;
 	case EDAPDATab::Mail:      Hint = TEXT("Enter / click: read message (A03 hook)"); break;
-	case EDAPDATab::Save:      Hint = TEXT("Enter / click: save/load slot (A02 hook)"); break;
+	case EDAPDATab::Save:      Hint = TEXT("Live A02 slots. Load/save UI is a later pass."); break;
 	case EDAPDATab::Options:   Hint = TEXT("Enter / click: cycle value"); break;
 	case EDAPDATab::Records:   Hint = TEXT("A02/A07 counters will replace the placeholders"); break;
 	case EDAPDATab::Limitation: Hint = TEXT("A01/A07 limitation data will populate this list"); break;

@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "story_id": "full_campaign",
+  "source": "A01 contacts/unlocks; message bodies are port-scaffold because A01 keeps exact text local-only.",
+  "canon_status": "contacts and unlock events canon; message/duel-request text scaffold",
+  "contacts": [
+    {
+      "contact": "alexis",
+      "unlocked_by": [
+        "E19"
+      ],
+      "messages": [
+        {
+          "id": "alexis_01",
+          "subject": "About the card thief",
+          "body": "Thanks for clearing things up. If you see anything strange near the girls' dorm, tell me.",
+          "source": "port-scaffold"
+        }
+      ],
+      "duel_requests": [
+        {
+          "id": "alexis_request_01",
+          "opponent": "alexis",
+          "deck": "alexis_cyber",
+          "source": "port-scaffold"
+        }
+      ]
+    },
+    {
+      "contact": "chazz",
+      "unlocked_by": [
+        "E12",
+        "E15"
+      ],
+      "messages": [
+        {
+          "id": "chazz_01",
+          "subject": "Don't get used to it",
+          "body": "You got lucky. My next deck will bury you. - Chazz",
+          "source": "port-scaffold"
+        }
+      ],
+      "duel_requests": [
+        {
+          "id": "chazz_request_01",
+          "opponent": "chazz",
+          "deck": "chazz_ojama",
+          "source": "port-scaffold"
+        }
+      ]
+    },
+    {
+      "contact": "chumley",
+      "unlocked_by": [
+        "E01"
+      ],
+      "messages": [
+        {
+          "id": "chumley_01",
+          "subject": "Lunch?",
+          "body": "The cafeteria has curry today. If you're not busy dueling, come eat.",
+          "source": "port-scaffold"
+        }
+      ],
+      "duel_requests": [
+        {
+          "id": "chumley_request_01",
+          "opponent": "chumley",
+          "deck": "chumley_koala",
+          "source": "port-scaffold"
+        }
+      ]
+    },
+    {
+      "contact": "jaden",
+      "unlocked_by": [
+        "E01"
+      ],
+      "messages": [
+        {
+          "id": "jaden_01",
+          "subject": "Duel later?",
+          "body": "Get your game on! I found a new combo and I want to try it on you.",
+          "source": "port-scaffold"
+        }
+      ],
+      "duel_requests": [
+        {
+          "id": "jaden_request_01",
+          "opponent": "jaden",
+          "deck": "jaden_year1",
+          "source": "port-scaffold"
+        }
+      ]
+    },
+    {
+      "contact": "syrus",
+      "unlocked_by": [
+        "E01"
+      ],
+      "messages": [
+        {
+          "id": "syrus_01",
+          "subject": "Deck tips",
+          "body": "I wrote down a few combos for your deck. Let me know if they help!",
+          "source": "port-scaffold"
+        }
+      ],
+      "duel_requests": [
+        {
+          "id": "syrus_request_01",
+          "opponent": "syrus",
+          "deck": "syrus_roids",
+          "source": "port-scaffold"
+        }
+      ]
+    },
+    {
+      "contact": "zane",
+      "unlocked_by": [
+        "E04b"
+      ],
+      "messages": [
+        {
+          "id": "zane_01",
+          "subject": "Respect",
+          "body": "A duel is a conversation. You listened well. - Zane",
+          "source": "port-scaffold"
+        }
+      ],
+      "duel_requests": [
+        {
+          "id": "zane_request_01",
+          "opponent": "zane",
+          "deck": "zane_cyber",
+          "source": "port-scaffold"
+        }
+      ]
+    }
+  ]
+}

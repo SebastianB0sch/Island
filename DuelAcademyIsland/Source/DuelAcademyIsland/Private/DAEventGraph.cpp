@@ -27,6 +27,29 @@ namespace
 		return Fallback;
 	}
 
+	/** Maps "Slifer Red", "Slifer" and save keys onto one comparable token. */
+	FString NormalizeDormKey(const FString& Value)
+	{
+		const FString Lower = Value.ToLower();
+		if (Lower.Contains(TEXT("slifer")))
+		{
+			return TEXT("slifer");
+		}
+		if (Lower.Contains(TEXT("obelisk")))
+		{
+			return TEXT("obelisk");
+		}
+		if (Lower.Contains(TEXT("yellow")) || Lower == TEXT("ra"))
+		{
+			return TEXT("ra");
+		}
+		if (Lower.Contains(TEXT("white")) || Lower.Contains(TEXT("society")))
+		{
+			return TEXT("white");
+		}
+		return Lower;
+	}
+
 	int32 StoryReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Fallback = 0)
 	{
 		int32 Value = Fallback;
@@ -79,6 +102,15 @@ bool FDAEventGraph::LoadFromJson(const TSharedPtr<FJsonObject>& Root, FString& O
 {
 	Events.Reset();
 	EventIndex.Reset();
+
+	int32 Added = 0;
+	return MergeFromJson(Root, TSet<FString>(), OutError, Added);
+}
+
+bool FDAEventGraph::MergeFromJson(const TSharedPtr<FJsonObject>& Root, const TSet<FString>& ExcludedIds,
+	FString& OutError, int32& OutAdded)
+{
+	OutAdded = 0;
 
 	if (!Root.IsValid())
 	{
@@ -142,6 +174,11 @@ bool FDAEventGraph::LoadFromJson(const TSharedPtr<FJsonObject>& Root, FString& O
 			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: event without id skipped."));
 			continue;
 		}
+		if (ExcludedIds.Contains(Event.Id))
+		{
+			UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: event %s excluded from merge."), *Event.Id);
+			continue;
+		}
 		if (EventIndex.Contains(Event.Id))
 		{
 			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: duplicate event id %s skipped."), *Event.Id);
@@ -150,10 +187,11 @@ bool FDAEventGraph::LoadFromJson(const TSharedPtr<FJsonObject>& Root, FString& O
 
 		EventIndex.Add(Event.Id, Events.Num());
 		Events.Add(Event);
+		++OutAdded;
 	}
 
 	OutError.Reset();
-	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: loaded %d event definitions."), Events.Num());
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: merged %d event definitions (%d total)."), OutAdded, Events.Num());
 	return true;
 }
 
@@ -322,11 +360,20 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 		const int32 MonthNumber = StoryReadInt(Condition, TEXT("month"),
 			StoryReadInt(Condition, TEXT("calendar_month"), Calendar->GetMonthNumber()));
 		const int32 TargetMonthIndex = StoryReadInt(Condition, TEXT("month_index"), MonthNumberToIndex(MonthNumber));
-		const int32 TargetDay = StoryReadInt(Condition, TEXT("day"), Calendar->GetDay());
+		const bool bHasDay = Condition->HasField(TEXT("day"));
+		const int32 TargetDay = StoryReadInt(Condition, TEXT("day"), 1);
 		const int32 TargetAbsolute = Calendar->GetAbsoluteDayFor(TargetYear, TargetMonthIndex, TargetDay);
 		const int32 CurrentAbsolute = Calendar->GetAbsoluteDay();
 		const FString Op = StoryReadString(Condition, TEXT("op"), Kind == TEXT("date_at_least") ? TEXT(">=") : TEXT("=="));
-		bResult = CompareInt(CurrentAbsolute, Op, TargetAbsolute);
+		if (!bHasDay && Op == TEXT("=="))
+		{
+			// A date without a day means "any time in this month" (E09 festival).
+			bResult = Calendar->GetYear() == TargetYear && Calendar->GetMonthIndex() == TargetMonthIndex;
+		}
+		else
+		{
+			bResult = CompareInt(CurrentAbsolute, Op, TargetAbsolute);
+		}
 
 		const FString ExpectedWeekday = StoryReadString(Condition, TEXT("weekday"));
 		if (bResult && !ExpectedWeekday.IsEmpty())
@@ -363,12 +410,20 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("dorm"))
 	{
-		const FString Expected = StoryReadString(Condition, TEXT("value"));
-		const FString Actual = Profile ? DuelAcademyProfile::DormToSaveKey(Profile->GetDorm()) : FString();
+		const FString Expected = NormalizeDormKey(StoryReadString(Condition, TEXT("value")));
+		const FString Actual = NormalizeDormKey(Profile ? DuelAcademyProfile::DormToSaveKey(Profile->GetDorm()) : FString());
 		bResult = Actual.Equals(Expected, ESearchCase::IgnoreCase);
 		if (!bResult)
 		{
 			OutReason = FString::Printf(TEXT("dorm is %s, expected %s"), *Actual, *Expected);
+		}
+	}
+	else if (Kind == TEXT("exam_day"))
+	{
+		bResult = Calendar && Calendar->IsExamDay();
+		if (!bResult)
+		{
+			OutReason = TEXT("today is not an exam day");
 		}
 	}
 	else if (Kind == TEXT("title"))
@@ -395,10 +450,9 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 					Count = Inventory->GetCount(CardId);
 				}
 			}
-			else
-			{
-				Count = Profile->GetCounter(FString::Printf(TEXT("card_%d"), CardId));
-			}
+			// The profile counter is a fallback for headless tests and for lanes
+			// that have not registered the A06 inventory provider yet.
+			Count = FMath::Max(Count, Profile->GetCounter(FString::Printf(TEXT("card_%d"), CardId)));
 		}
 		bResult = Count >= MinCount;
 		if (!bResult)
@@ -456,7 +510,8 @@ bool FDAEventGraph::EvaluateTrigger(const FDAEventDefinition& Event, const UDAPr
 		}
 		return bStarted;
 	}
-	if (Kind == TEXT("date") || Kind == TEXT("flag") || Kind == TEXT("event") || Kind == TEXT("event_complete"))
+	if (Kind == TEXT("date") || Kind == TEXT("flag") || Kind == TEXT("event") || Kind == TEXT("event_complete")
+		|| Kind == TEXT("weekday") || Kind == TEXT("period") || Kind == TEXT("exam_day"))
 	{
 		return EvaluateCondition(Event.Trigger, Profile, Calendar, OutReason);
 	}

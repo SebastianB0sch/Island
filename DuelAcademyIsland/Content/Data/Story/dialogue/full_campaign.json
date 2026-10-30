@@ -1,0 +1,1497 @@
+{
+  "schema_version": 1,
+  "story_id": "full_campaign",
+  "language": "en",
+  "version": 1,
+  "defaults": {
+    "typewriter": true,
+    "skippable": true,
+    "default_expression": "neutral",
+    "fallback_portrait": "portrait_fallback_student"
+  },
+  "source": "Event summaries from A01; all lines are port-scaffold paraphrases.",
+  "speakers": {
+    "alexis": {
+      "display_name": "Alexis Rhodes",
+      "portrait_base": "alexis",
+      "expressions": [
+        "neutral",
+        "happy",
+        "angry"
+      ],
+      "fallback": "alexis",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "banner": {
+      "display_name": "Lyman Banner",
+      "portrait_base": "banner",
+      "expressions": [
+        "neutral",
+        "happy",
+        "thoughtful"
+      ],
+      "fallback": "portrait_fallback_teacher",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "bastion": {
+      "display_name": "Bastion Misawa",
+      "portrait_base": "bastion",
+      "expressions": [
+        "neutral",
+        "happy",
+        "thoughtful"
+      ],
+      "fallback": "bastion",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "beauregard": {
+      "display_name": "Beauregard",
+      "portrait_base": "beauregard",
+      "expressions": [
+        "neutral",
+        "happy"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "blair": {
+      "display_name": "Blair Flannigan",
+      "portrait_base": "blair",
+      "expressions": [
+        "neutral",
+        "happy"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "brier": {
+      "display_name": "Brier",
+      "portrait_base": "brier",
+      "expressions": [
+        "neutral",
+        "angry"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "chazz": {
+      "display_name": "Chazz Princeton",
+      "portrait_base": "chazz",
+      "expressions": [
+        "neutral",
+        "smug",
+        "angry"
+      ],
+      "fallback": "chazz",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "chumley": {
+      "display_name": "Chumley Huffington",
+      "portrait_base": "chumley",
+      "expressions": [
+        "neutral",
+        "happy",
+        "sleepy"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "crowler": {
+      "display_name": "Dr. Vellian Crowler",
+      "portrait_base": "crowler",
+      "expressions": [
+        "neutral",
+        "smug",
+        "shocked"
+      ],
+      "fallback": "portrait_fallback_teacher",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "dimitri": {
+      "display_name": "Dimitri",
+      "portrait_base": "dimitri",
+      "expressions": [
+        "neutral",
+        "happy"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "dorothy": {
+      "display_name": "Miss Dorothy",
+      "portrait_base": "dorothy",
+      "expressions": [
+        "neutral",
+        "happy"
+      ],
+      "fallback": "portrait_fallback_shopkeeper",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "fontaine": {
+      "display_name": "Fonda Fontaine",
+      "portrait_base": "fontaine",
+      "expressions": [
+        "neutral",
+        "happy",
+        "stern"
+      ],
+      "fallback": "portrait_fallback_teacher",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "gerard": {
+      "display_name": "Gerard",
+      "portrait_base": "gerard",
+      "expressions": [
+        "neutral",
+        "sad"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "jaden": {
+      "display_name": "Jaden Yuki",
+      "portrait_base": "jaden",
+      "expressions": [
+        "neutral",
+        "happy",
+        "laugh",
+        "angry",
+        "shocked",
+        "sad",
+        "determined"
+      ],
+      "fallback": "jaden_neutral",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "mimicry": {
+      "display_name": "Professor Mimicry",
+      "portrait_base": "mimicry",
+      "expressions": [
+        "neutral",
+        "smug",
+        "confused"
+      ],
+      "fallback": "portrait_fallback_teacher",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "narrator": {
+      "display_name": "",
+      "portrait_base": "none",
+      "expressions": [],
+      "fallback": "none",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "player": {
+      "display_name": "{player_name}",
+      "portrait_base": "player",
+      "expressions": [
+        "neutral",
+        "happy",
+        "shocked",
+        "sad",
+        "determined"
+      ],
+      "fallback": "player_neutral",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "sartyr": {
+      "display_name": "Sartyr",
+      "portrait_base": "sartyr",
+      "expressions": [
+        "neutral",
+        "happy"
+      ],
+      "fallback": "portrait_fallback_teacher",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "shadow_duelist": {
+      "display_name": "Titan",
+      "portrait_base": "shadow_duelist",
+      "expressions": [
+        "neutral",
+        "smug"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "sheppard": {
+      "display_name": "Chancellor Sheppard",
+      "portrait_base": "sheppard",
+      "expressions": [
+        "neutral",
+        "proud",
+        "stern"
+      ],
+      "fallback": "portrait_fallback_chancellor",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "syrus": {
+      "display_name": "Syrus Truesdale",
+      "portrait_base": "syrus",
+      "expressions": [
+        "neutral",
+        "nervous",
+        "happy"
+      ],
+      "fallback": "syrus",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "topher": {
+      "display_name": "Topher",
+      "portrait_base": "topher",
+      "expressions": [
+        "neutral",
+        "smug"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "torrey": {
+      "display_name": "Torrey",
+      "portrait_base": "torrey",
+      "expressions": [
+        "neutral",
+        "smug"
+      ],
+      "fallback": "portrait_fallback_student",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "zane": {
+      "display_name": "Zane Truesdale",
+      "portrait_base": "zane",
+      "expressions": [
+        "neutral",
+        "stern",
+        "happy"
+      ],
+      "fallback": "zane",
+      "color": "#d9c27a",
+      "source": "existing"
+    }
+  },
+  "lines": {
+    "E01.01": {
+      "key": "E01.01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "Orientation day at Duel Academy. The gym is packed with new students.",
+      "next": "E01.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E01"
+      ]
+    },
+    "E01.02": {
+      "key": "E01.02",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "Welcome. Your first test is not a duel; it is learning how to become a duelist.",
+      "next": "E01.03",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E01"
+      ]
+    },
+    "E01.03": {
+      "key": "E01.03",
+      "speaker": "mimicry",
+      "portrait": "mimicry_neutral",
+      "expression": "neutral",
+      "text": "Registration is this way. Spell your name clearly, please.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E01"
+      ]
+    },
+    "E02.01": {
+      "key": "E02.01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "Banner's room smells of dust, tea, and something alchemical.",
+      "next": "E02.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E02"
+      ]
+    },
+    "E02.02": {
+      "key": "E02.02",
+      "speaker": "banner",
+      "portrait": "banner_neutral",
+      "expression": "neutral",
+      "text": "Pharaoh has been watching your duels. He wants a turn.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E02"
+      ]
+    },
+    "E03.01": {
+      "key": "E03.01",
+      "speaker": "jaden",
+      "portrait": "jaden_neutral",
+      "expression": "neutral",
+      "text": "Syrus says you've been tearing through the dorm. Let's see how you handle a HERO.",
+      "next": "E03.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E03"
+      ]
+    },
+    "E03.02": {
+      "key": "E03.02",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "Jaden upgraded his deck again. Be careful.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E03"
+      ]
+    },
+    "E04.01": {
+      "key": "E04.01",
+      "speaker": "syrus",
+      "portrait": "syrus_neutral",
+      "expression": "neutral",
+      "text": "You wanted a real test. This one is a one-turn puzzle.",
+      "next": "E04.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E04"
+      ]
+    },
+    "E04.02": {
+      "key": "E04.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Then I'll find the line. Jaden's deck, right?",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E04"
+      ]
+    },
+    "E04b.01": {
+      "key": "E04b.01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "The tide is loud below the lighthouse. A familiar silhouette waits by the water.",
+      "next": "E04b.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E04b"
+      ]
+    },
+    "E04b.02": {
+      "key": "E04b.02",
+      "speaker": "zane",
+      "portrait": "zane_neutral",
+      "expression": "neutral",
+      "text": "Show me what you learned from my brother.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E04b"
+      ]
+    },
+    "E05.01": {
+      "key": "E05.01",
+      "speaker": "crowler",
+      "portrait": "crowler_neutral",
+      "expression": "neutral",
+      "text": "I don't believe it. Beat the Kaiser again, in front of me.",
+      "next": "E05.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E05"
+      ]
+    },
+    "E05.02": {
+      "key": "E05.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Gladly. One more duel.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E05"
+      ]
+    },
+    "E06.01": {
+      "key": "E06.01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "Crowler's hired duelist waits where the harbor lights end.",
+      "next": "E06.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E06"
+      ]
+    },
+    "E06.02": {
+      "key": "E06.02",
+      "speaker": "shadow_duelist",
+      "portrait": "shadow_duelist_neutral",
+      "expression": "neutral",
+      "text": "A shadow game, then. Your cards against mine.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E06"
+      ]
+    },
+    "E07.01": {
+      "key": "E07.01",
+      "speaker": "torrey",
+      "portrait": "torrey_neutral",
+      "expression": "neutral",
+      "text": "A Jinzo in your deck? Interesting. Join my seance.",
+      "next": "E07.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E07"
+      ]
+    },
+    "E07.02": {
+      "key": "E07.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "I'll accept your challenge.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E07"
+      ]
+    },
+    "E08.01": {
+      "key": "E08.01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "A spirit rattles the window of your room.",
+      "next": "E08.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E08"
+      ]
+    },
+    "E08.02": {
+      "key": "E08.02",
+      "speaker": "torrey",
+      "portrait": "torrey_neutral",
+      "expression": "neutral",
+      "text": "Jinzo followed me! Please, duel it!",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E08"
+      ]
+    },
+    "E09.01": {
+      "key": "E09.01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "The Duel Festival fills the arena with noise and light.",
+      "next": "E09.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E09"
+      ]
+    },
+    "E09.02": {
+      "key": "E09.02",
+      "speaker": "crowler",
+      "portrait": "crowler_neutral",
+      "expression": "neutral",
+      "text": "Win, and the DP is yours. Try not to embarrass the academy.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E09"
+      ]
+    },
+    "E10.01": {
+      "key": "E10.01",
+      "speaker": "banner",
+      "portrait": "banner_neutral",
+      "expression": "neutral",
+      "text": "Merry Christmas. A small gift from the dorm.",
+      "next": "E10.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E10"
+      ]
+    },
+    "E10.02": {
+      "key": "E10.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "A pack? Thanks, Professor.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E10"
+      ]
+    },
+    "E11.01": {
+      "key": "E11.01",
+      "speaker": "jaden",
+      "portrait": "jaden_neutral",
+      "expression": "neutral",
+      "text": "New Year's duel! You and me, right now.",
+      "next": "E11.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E11"
+      ]
+    },
+    "E11.02": {
+      "key": "E11.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Let's start the year with a win.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E11"
+      ]
+    },
+    "E12.01": {
+      "key": "E12.01",
+      "speaker": "chazz",
+      "portrait": "chazz_neutral",
+      "expression": "neutral",
+      "text": "You? A Slifer? Don't waste my time.",
+      "next": "E12.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E12"
+      ]
+    },
+    "E12.02": {
+      "key": "E12.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Your lackeys can go first.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E12"
+      ]
+    },
+    "E13.01": {
+      "key": "E13.01",
+      "speaker": "crowler",
+      "portrait": "crowler_neutral",
+      "expression": "neutral",
+      "text": "Defeat Chazz here and Obelisk Blue is yours.",
+      "next": "E13.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E13"
+      ]
+    },
+    "E13.02": {
+      "key": "E13.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "I'll take that challenge.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E13"
+      ]
+    },
+    "E14.01": {
+      "key": "E14.01",
+      "speaker": "topher",
+      "portrait": "topher_neutral",
+      "expression": "neutral",
+      "text": "Jaden's been bragging again. Knock him down a peg.",
+      "next": "E14.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E14"
+      ]
+    },
+    "E14.02": {
+      "key": "E14.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "I'll duel him.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E14"
+      ]
+    },
+    "E15.01": {
+      "key": "E15.01",
+      "speaker": "chazz",
+      "portrait": "chazz_neutral",
+      "expression": "neutral",
+      "text": "My new deck is flawless. Ojamas, assemble!",
+      "next": "E15.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E15"
+      ]
+    },
+    "E15.02": {
+      "key": "E15.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Let's see it.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E15"
+      ]
+    },
+    "E16.01": {
+      "key": "E16.01",
+      "speaker": "brier",
+      "portrait": "brier_neutral",
+      "expression": "neutral",
+      "text": "You've been beating on Ra students. Time for payback.",
+      "next": "E16.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E16"
+      ]
+    },
+    "E16.02": {
+      "key": "E16.02",
+      "speaker": "beauregard",
+      "portrait": "beauregard_neutral",
+      "expression": "neutral",
+      "text": "Both of us.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E16"
+      ]
+    },
+    "E17.01": {
+      "key": "E17.01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "A giant in a goblin mask stalks the night duels.",
+      "next": "E17.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E17"
+      ]
+    },
+    "E17.02": {
+      "key": "E17.02",
+      "speaker": "chumley",
+      "portrait": "chumley_neutral",
+      "expression": "neutral",
+      "text": "Crowler wants us to catch him. That sounds like work.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E17"
+      ]
+    },
+    "E18.01": {
+      "key": "E18.01",
+      "speaker": "sartyr",
+      "portrait": "sartyr_neutral",
+      "expression": "neutral",
+      "text": "You listened to my curry lecture. No one does that.",
+      "next": "E18.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E18"
+      ]
+    },
+    "E18.02": {
+      "key": "E18.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "It was... educational.",
+      "next": "E18.03",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E18"
+      ]
+    },
+    "E18.03": {
+      "key": "E18.03",
+      "speaker": "sartyr",
+      "portrait": "sartyr_neutral",
+      "expression": "neutral",
+      "text": "Then take these cards. A small reward for patience.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E18"
+      ]
+    },
+    "E19.01": {
+      "key": "E19.01",
+      "speaker": "alexis",
+      "portrait": "alexis_neutral",
+      "expression": "neutral",
+      "text": "Someone's been stealing cards near the girls' dorm.",
+      "next": "E19.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E19"
+      ]
+    },
+    "E19.02": {
+      "key": "E19.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "I'll clear my name.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E19"
+      ]
+    },
+    "E20.01": {
+      "key": "E20.01",
+      "speaker": "shadow_duelist",
+      "portrait": "shadow_duelist_neutral",
+      "expression": "neutral",
+      "text": "Three places. Three duels. Ante rules.",
+      "next": "E20.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E20"
+      ]
+    },
+    "E20.02": {
+      "key": "E20.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "I accept.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E20"
+      ]
+    },
+    "E21.01": {
+      "key": "E21.01",
+      "speaker": "gerard",
+      "portrait": "gerard_neutral",
+      "expression": "neutral",
+      "text": "Nine questions. Get them right and the DP is yours.",
+      "next": "E21.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E21"
+      ]
+    },
+    "E21.02": {
+      "key": "E21.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Ask away.",
+      "next": "E21.03",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E21"
+      ]
+    },
+    "E21.03": {
+      "key": "E21.03",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "The quiz itself is a future A07/A09 content hook.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E21"
+      ]
+    },
+    "E22.01": {
+      "key": "E22.01",
+      "speaker": "dorothy",
+      "portrait": "dorothy_neutral",
+      "expression": "neutral",
+      "text": "Damon went missing in the woods. Please help.",
+      "next": "E22.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E22"
+      ]
+    },
+    "E22.02": {
+      "key": "E22.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "I'll find him.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E22"
+      ]
+    },
+    "E23.01": {
+      "key": "E23.01",
+      "speaker": "dimitri",
+      "portrait": "dimitri_neutral",
+      "expression": "neutral",
+      "text": "Yugi's deck... I can feel its power.",
+      "next": "E23.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E23"
+      ]
+    },
+    "E23.02": {
+      "key": "E23.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "That deck belongs to the academy.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E23"
+      ]
+    },
+    "E24.01": {
+      "key": "E24.01",
+      "speaker": "jaden",
+      "portrait": "jaden_neutral",
+      "expression": "neutral",
+      "text": "Blair's been following me around. I don't get it.",
+      "next": "E24.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E24"
+      ]
+    },
+    "E24.02": {
+      "key": "E24.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Let's talk about it.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E24"
+      ]
+    },
+    "E25.01": {
+      "key": "E25.01",
+      "speaker": "blair",
+      "portrait": "blair_neutral",
+      "expression": "neutral",
+      "text": "You know my secret now. Duel me!",
+      "next": "E25.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E25"
+      ]
+    },
+    "E25.02": {
+      "key": "E25.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "All right.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E25"
+      ]
+    },
+    "E26.01": {
+      "key": "E26.01",
+      "speaker": "bastion",
+      "portrait": "bastion_neutral",
+      "expression": "neutral",
+      "text": "My seventh deck is ready. Test it.",
+      "next": "E26.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E26"
+      ]
+    },
+    "E26.02": {
+      "key": "E26.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Let's see your formula.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E26"
+      ]
+    },
+    "E27.01": {
+      "key": "E27.01",
+      "speaker": "gerard",
+      "portrait": "gerard_neutral",
+      "expression": "neutral",
+      "text": "The truth is, I'm not much of a duelist.",
+      "next": "E27.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E27"
+      ]
+    },
+    "E27.02": {
+      "key": "E27.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "You still helped.",
+      "next": "E27.03",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E27"
+      ]
+    },
+    "E27.03": {
+      "key": "E27.03",
+      "speaker": "gerard",
+      "portrait": "gerard_neutral",
+      "expression": "neutral",
+      "text": "Then take this. It suits a hero.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E27"
+      ]
+    },
+    "E28.01": {
+      "key": "E28.01",
+      "speaker": "alexis",
+      "portrait": "alexis_neutral",
+      "expression": "neutral",
+      "text": "The chocolate tournament is about to start. Four rounds, no breaks.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E28"
+      ]
+    },
+    "E28b.01": {
+      "key": "E28b.01",
+      "speaker": "alexis",
+      "portrait": "alexis_neutral",
+      "expression": "neutral",
+      "text": "White Day. Will you give the Queen a gift?",
+      "next": "E28b.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E28b"
+      ]
+    },
+    "E28b.02": {
+      "key": "E28b.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "I have something in mind.",
+      "next": "E28b.03",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E28b"
+      ]
+    },
+    "E28b.03": {
+      "key": "E28b.03",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "Gift selection is a future A06/A09 flow.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E28b"
+      ]
+    },
+    "E29.01": {
+      "key": "E29.01",
+      "speaker": "fontaine",
+      "portrait": "fontaine_neutral",
+      "expression": "neutral",
+      "text": "Dropout Boy, hm? Let's see if you can recover.",
+      "next": "E29.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E29"
+      ]
+    },
+    "E29.02": {
+      "key": "E29.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "I'll prove I belong.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E29"
+      ]
+    },
+    "E30.01": {
+      "key": "E30.01",
+      "speaker": "chumley",
+      "portrait": "chumley_neutral",
+      "expression": "neutral",
+      "text": "You haven't left your room in three weekends. Duel me.",
+      "next": "E30.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E30"
+      ]
+    },
+    "E30.02": {
+      "key": "E30.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Fine. Fresh air and cards.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E30"
+      ]
+    },
+    "E31.01": {
+      "key": "E31.01",
+      "speaker": "jaden",
+      "portrait": "jaden_neutral",
+      "expression": "neutral",
+      "text": "Walk home with me? Same route as always.",
+      "next": "E31.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E31"
+      ]
+    },
+    "E31.02": {
+      "key": "E31.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Let's go.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E31"
+      ]
+    },
+    "E32.01": {
+      "key": "E32.01",
+      "speaker": "dorothy",
+      "portrait": "dorothy_neutral",
+      "expression": "neutral",
+      "text": "My delivery truck broke down. Can you help?",
+      "next": "E32.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E32"
+      ]
+    },
+    "E32.02": {
+      "key": "E32.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Show me what to carry.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E32"
+      ]
+    },
+    "E33.01": {
+      "key": "E33.01",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "You've done it. King of Games.",
+      "next": "E33.02",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E33"
+      ]
+    },
+    "E33.02": {
+      "key": "E33.02",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "It's been a long year.",
+      "next": "E33.03",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E33"
+      ]
+    },
+    "E33.03": {
+      "key": "E33.03",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "The island is yours to enjoy. Or change your name, if you like.",
+      "next": null,
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E33"
+      ]
+    }
+  }
+}

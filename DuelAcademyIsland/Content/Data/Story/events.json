@@ -1,0 +1,4283 @@
+{
+  "schema_version": 1,
+  "story_id": "full_campaign",
+  "version": 1,
+  "source": "A01 Content/Data/Canon/events.json; runtime ids mapped to A07 roster/decks.",
+  "event_count": 35,
+  "events": [
+    {
+      "id": "E01",
+      "title": "School Registration",
+      "canon_event": true,
+      "canon_number": 1,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 1,
+      "priority": 1000,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "date": {
+          "year": 1,
+          "month": 10,
+          "day": 1
+        },
+        "weekday": "Sunday"
+      },
+      "where": [
+        "Gym",
+        "Slifer Red cafeteria",
+        "Shop",
+        "Classroom"
+      ],
+      "location": "gym",
+      "anchor": "gym_assembly_stage",
+      "trigger": {
+        "type": "new_game"
+      },
+      "requirements": [],
+      "canon_requirements": [
+        {
+          "type": "new_game"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_dp",
+          "amount": 3000
+        },
+        {
+          "type": "unlock_email",
+          "contacts": [
+            "jaden",
+            "syrus",
+            "chumley"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_01_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 3000,
+          "source": "Lyman Banner"
+        },
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "jaden",
+            "syrus",
+            "chumley"
+          ]
+        },
+        {
+          "type": "tutorial",
+          "topic": "duel basics",
+          "teacher": "syrus"
+        }
+      ],
+      "duels": [],
+      "scene": "full.E01",
+      "dialogue_keys": [
+        "E01.01",
+        "E01.02",
+        "E01.03"
+      ],
+      "notes": "Opening is implemented by opening.json; this record keeps the 35-event canon set complete."
+    },
+    {
+      "id": "E02",
+      "title": "Pharaoh's True Power",
+      "canon_event": true,
+      "canon_number": 2,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 2,
+      "priority": 992,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Saturday"
+      },
+      "where": [
+        "Lyman Banner's Room"
+      ],
+      "location": "slifer",
+      "anchor": "slifer_banner_room_desk",
+      "trigger": {
+        "type": "talk",
+        "npc": "banner"
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "counter",
+          "counter": "wins_jaden",
+          "op": ">=",
+          "value": 3
+        },
+        {
+          "type": "counter",
+          "counter": "wins_syrus",
+          "op": ">=",
+          "value": 3
+        },
+        {
+          "type": "counter",
+          "counter": "wins_chumley",
+          "op": ">=",
+          "value": 3
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "jaden",
+          "count": 3
+        },
+        {
+          "type": "wins_against",
+          "opponent": "syrus",
+          "count": 3
+        },
+        {
+          "type": "wins_against",
+          "opponent": "chumley",
+          "count": 3
+        },
+        {
+          "type": "talk",
+          "npc": "banner"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 342,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_02_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_pharaoh",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card_by_result",
+          "win": "Panther Warrior",
+          "lose": "Bone Mouse",
+          "draw": "Outstanding Dog Marron",
+          "cards": [
+            {
+              "name": "Panther Warrior",
+              "card_id": 342,
+              "resolved": true
+            },
+            {
+              "name": "Bone Mouse",
+              "card_id": 242,
+              "resolved": true
+            },
+            {
+              "name": "Outstanding Dog Marron",
+              "card_id": 837,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "pharaoh",
+          "opponent_name": "Pharaoh",
+          "opponent_deck_id": "pharaoh_guardian",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E02",
+      "dialogue_keys": [
+        "E02.01",
+        "E02.02"
+      ],
+      "notes": "Win reward card is scaffolded; loss/draw rewards are not conditional yet."
+    },
+    {
+      "id": "E03",
+      "title": "A New Hero Summoned",
+      "canon_event": true,
+      "canon_number": 3,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 3,
+      "priority": 984,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "where": [
+        "Jaden's Room"
+      ],
+      "location": "slifer",
+      "anchor": "slifer_jaden_room_jaden",
+      "trigger": {
+        "type": "event",
+        "event": "E02",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "counter",
+          "counter": "wins_syrus",
+          "op": ">=",
+          "value": 10
+        },
+        {
+          "type": "counter",
+          "counter": "wins_jaden",
+          "op": ">=",
+          "value": 5
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "syrus",
+          "count": 10
+        },
+        {
+          "type": "wins_against",
+          "opponent": "jaden",
+          "count": 5
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 1129,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_03_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Elemental Hero Flame Wingman",
+          "cards": [
+            {
+              "name": "Elemental Hero Flame Wingman",
+              "card_id": 1129,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E03",
+      "dialogue_keys": [
+        "E03.01",
+        "E03.02"
+      ],
+      "notes": "A01's improved Jaden deck is mapped to the runtime jaden_year1 deck until A07 adds jaden_improved."
+    },
+    {
+      "id": "E04",
+      "title": "Old Memories, Part 1",
+      "canon_event": true,
+      "canon_number": 4,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 4,
+      "priority": 976,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Sunday",
+        "period": "AM"
+      },
+      "where": [
+        "Anywhere"
+      ],
+      "location": "beach",
+      "anchor": "beach_shore",
+      "trigger": {
+        "type": "talk",
+        "npc": "syrus"
+      },
+      "requirements": [
+        {
+          "type": "counter",
+          "counter": "wins_total",
+          "op": ">=",
+          "value": 10
+        },
+        {
+          "type": "flag",
+          "flag": "met_syrus",
+          "value": true
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Average Duelist"
+        },
+        {
+          "type": "talk",
+          "npc": "syrus"
+        },
+        {
+          "type": "duel_trigger",
+          "opponent": "syrus",
+          "chance": "1/3",
+          "period": "AM"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 1159,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_04_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Power Bond",
+          "cards": [
+            {
+              "name": "Power Bond",
+              "card_id": 1159,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "syrus",
+          "opponent_name": "Syrus Truesdale",
+          "opponent_deck_id": "syrus_roids",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula",
+          "scenario_id": "E04_ONETURN",
+          "turn_limit": 1
+        }
+      ],
+      "scene": "full.E04",
+      "dialogue_keys": [
+        "E04.01",
+        "E04.02"
+      ],
+      "notes": "One-turn puzzle setup/solution is not implemented in the scaffold; the duel is a normal story duel."
+    },
+    {
+      "id": "E04b",
+      "title": "Old Memories, Part 2",
+      "canon_event": true,
+      "canon_number": 4.5,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 5,
+      "priority": 968,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Sunday",
+        "period": "Night",
+        "automatic": true
+      },
+      "where": [
+        "Next to Ocean"
+      ],
+      "location": "beach",
+      "anchor": "beach_shore",
+      "trigger": {
+        "type": "event",
+        "event": "E04",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E04",
+          "state": "complete"
+        },
+        {
+          "type": "weekday",
+          "value": "Sunday"
+        },
+        {
+          "type": "period",
+          "value": "Night"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E04"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "unlock_email",
+          "contacts": [
+            "zane"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_04b_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_zane",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "zane"
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "zane",
+          "opponent_name": "Zane Truesdale",
+          "opponent_deck_id": "zane_cyber",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E04b",
+      "dialogue_keys": [
+        "E04b.01",
+        "E04b.02"
+      ],
+      "notes": "Zane email unlocks regardless of result."
+    },
+    {
+      "id": "E05",
+      "title": "The Power of the Kaiser",
+      "canon_event": true,
+      "canon_number": 5,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 6,
+      "priority": 960,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "where": [
+        "Anywhere"
+      ],
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "trigger": {
+        "type": "event",
+        "event": "E04b",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E04",
+          "state": "complete"
+        },
+        {
+          "type": "counter",
+          "counter": "wins_zane",
+          "op": ">=",
+          "value": 1
+        },
+        {
+          "type": "dorm",
+          "value": "Obelisk Blue"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E04"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "zane",
+          "count": 1
+        },
+        {
+          "type": "dorm",
+          "value": "Obelisk Blue"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_dp",
+          "amount": 3000
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_05_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 3000
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "zane",
+          "opponent_name": "Zane Truesdale",
+          "opponent_deck_id": "zane_cyber",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E05",
+      "dialogue_keys": [
+        "E05.01",
+        "E05.02"
+      ],
+      "notes": "Dorm requirement is Obelisk Blue per A01."
+    },
+    {
+      "id": "E06",
+      "title": "Dark Fiend Deck",
+      "canon_event": true,
+      "canon_number": 6,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 7,
+      "priority": 952,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "where": [
+        "Harbor",
+        "Ocean"
+      ],
+      "location": "harbor",
+      "anchor": "harbor_dock",
+      "trigger": {
+        "type": "event",
+        "event": "E05",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "counter",
+          "counter": "wins_total",
+          "op": ">=",
+          "value": 30
+        },
+        {
+          "type": "any",
+          "conditions": [
+            {
+              "type": "dorm",
+              "value": "Slifer Red"
+            },
+            {
+              "type": "dorm",
+              "value": "Ra Yellow"
+            }
+          ]
+        },
+        {
+          "type": "counter",
+          "counter": "wins_total",
+          "op": ">=",
+          "value": 10
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Fiery Duelist"
+        },
+        {
+          "type": "dorm_in",
+          "values": [
+            "Slifer Red",
+            "Ra Yellow"
+          ]
+        },
+        {
+          "type": "wins_against_group",
+          "group": "Obelisk Blue students",
+          "count": 10
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 348,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_06_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_titan",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_torrey",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Jinzo",
+          "cards": [
+            {
+              "name": "Jinzo",
+              "card_id": 348,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E06",
+      "dialogue_keys": [
+        "E06.01",
+        "E06.02"
+      ],
+      "notes": "Group win condition is approximated by wins_total; Torrey met flag is scaffolded here."
+    },
+    {
+      "id": "E07",
+      "title": "Occult Recommendation",
+      "canon_event": true,
+      "canon_number": 7,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 8,
+      "priority": 944,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "where": [
+        "Classroom"
+      ],
+      "location": "academy",
+      "anchor": "academy_classroom_teacher",
+      "trigger": {
+        "type": "event",
+        "event": "E06",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E06",
+          "state": "complete"
+        },
+        {
+          "type": "card",
+          "id": 348,
+          "min_count": 1
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E06"
+        },
+        {
+          "type": "card_in_main_deck",
+          "name": "Jinzo"
+        },
+        {
+          "type": "met_npc",
+          "npc": "torrey"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 602,
+          "count": 1
+        },
+        {
+          "type": "set_title",
+          "title": "Occult Duelist"
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_07_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "occult_duelist",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Destiny Board",
+          "cards": [
+            {
+              "name": "Destiny Board",
+              "card_id": 602,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "temporary_title",
+          "value": "Occult Duelist"
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "torrey",
+          "opponent_name": "Torrey",
+          "opponent_deck_id": "torrey_insect",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E07",
+      "dialogue_keys": [
+        "E07.01",
+        "E07.02"
+      ],
+      "notes": "Card-in-main-deck is approximated by card ownership; temporary title has no restore stack yet."
+    },
+    {
+      "id": "E08",
+      "title": "Jinzo",
+      "canon_event": true,
+      "canon_number": 8,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 9,
+      "priority": 936,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "period": "PM",
+        "after_event": "E07",
+        "automatic": true
+      },
+      "where": [
+        "Your Room"
+      ],
+      "location": "slifer",
+      "anchor": "slifer_player_room_bed",
+      "trigger": {
+        "type": "event",
+        "event": "E07",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E07",
+          "state": "complete"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E07"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 846,
+          "count": 1
+        },
+        {
+          "type": "set_title",
+          "title": "Apprentice Duelist"
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_08_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "jinzo_saved",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Final Countdown",
+          "cards": [
+            {
+              "name": "Final Countdown",
+              "card_id": 846,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "restore_title"
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E08",
+      "dialogue_keys": [
+        "E08.01",
+        "E08.02"
+      ],
+      "notes": "Jinzo spirit is mapped to the shadow_duelist runtime opponent until a story-only opponent exists."
+    },
+    {
+      "id": "E09",
+      "title": "Duel Festival",
+      "canon_event": true,
+      "canon_number": 9,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 10,
+      "priority": 928,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Friday",
+        "rule": "third Friday of November"
+      },
+      "where": [
+        "Classroom",
+        "Duel Arena"
+      ],
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "trigger": {
+        "type": "date",
+        "year": 1,
+        "month": 11,
+        "weekday": "Friday"
+      },
+      "requirements": [],
+      "canon_requirements": [
+        {
+          "type": "date_rule",
+          "rule": "third Friday of November"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_dp",
+          "amount": 15000
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_09_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_09_won",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "duel_festival_won",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 15000
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E09",
+      "dialogue_keys": [
+        "E09.01",
+        "E09.02"
+      ],
+      "notes": "Third-Friday rule is scaffolded as a November Friday; tournament bracket is a placeholder single duel."
+    },
+    {
+      "id": "E10",
+      "title": "Merry Christmas",
+      "canon_event": true,
+      "canon_number": 10,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 11,
+      "priority": 920,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "date": {
+          "year": 1,
+          "month": 12,
+          "day": 25
+        }
+      },
+      "where": [
+        "Headmaster's Room (current dorm)"
+      ],
+      "location": "slifer",
+      "anchor": "slifer_banner_room_desk",
+      "trigger": {
+        "type": "date",
+        "year": 1,
+        "month": 12,
+        "day": 25
+      },
+      "requirements": [
+        {
+          "type": "counter",
+          "counter": "wins_total",
+          "op": ">=",
+          "value": 10
+        },
+        {
+          "type": "flag",
+          "flag": "met_banner",
+          "value": true
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Average Duelist"
+        },
+        {
+          "type": "visit",
+          "npc": "dorm_headmaster"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_pack",
+          "pack_id": "master_fusions",
+          "conditions": [
+            {
+              "type": "dorm",
+              "value": "Slifer Red"
+            }
+          ]
+        },
+        {
+          "type": "grant_pack",
+          "pack_id": "special_ways",
+          "conditions": [
+            {
+              "type": "dorm",
+              "value": "Ra Yellow"
+            }
+          ]
+        },
+        {
+          "type": "grant_pack",
+          "pack_id": "basic_1a",
+          "conditions": [
+            {
+              "type": "dorm",
+              "value": "Obelisk Blue"
+            }
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_10_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "pack_by_dorm",
+          "Slifer Red": "master_fusions",
+          "Ra Yellow": "special_ways",
+          "Obelisk Blue": "basic_1a"
+        }
+      ],
+      "duels": [],
+      "scene": "full.E10",
+      "dialogue_keys": [
+        "E10.01",
+        "E10.02"
+      ],
+      "notes": "Dorm-dependent packs are conditional outcomes; only the current dorm's pack should apply."
+    },
+    {
+      "id": "E11",
+      "title": "New Year's Duel",
+      "canon_event": true,
+      "canon_number": 11,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 12,
+      "priority": 912,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "date": {
+          "year": 2,
+          "month": 1,
+          "day": 1
+        }
+      },
+      "where": [
+        "Your Room"
+      ],
+      "location": "slifer",
+      "anchor": "slifer_player_room_bed",
+      "trigger": {
+        "type": "date",
+        "year": 2,
+        "month": 1,
+        "day": 1
+      },
+      "requirements": [],
+      "canon_requirements": [
+        {
+          "type": "date",
+          "month": 1,
+          "day": 1
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "set_flag",
+          "flag": "event_11_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_bastion",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "new_year_duel",
+          "value": true
+        }
+      ],
+      "rewards": [],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E11",
+      "dialogue_keys": [
+        "E11.01",
+        "E11.02"
+      ],
+      "notes": "Dorm-dependent visitor is scaffolded as Jaden; Ra/Obelisk branches need A08/A03 scene variants."
+    },
+    {
+      "id": "E12",
+      "title": "Pride of the Elite",
+      "canon_event": true,
+      "canon_number": 12,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 13,
+      "priority": 904,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "where": [
+        "Front of Obelisk Blue Boys' Dorm"
+      ],
+      "location": "obelisk_boys",
+      "anchor": "obelisk_front_gate",
+      "trigger": {
+        "type": "weekday",
+        "value": "Monday"
+      },
+      "requirements": [
+        {
+          "type": "counter",
+          "counter": "wins_total",
+          "op": ">=",
+          "value": 50
+        },
+        {
+          "type": "counter",
+          "counter": "timed_clears",
+          "op": ">=",
+          "value": 50
+        },
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Superior Duelist"
+        },
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 965,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 727,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 516,
+          "count": 1
+        },
+        {
+          "type": "unlock_email",
+          "contacts": [
+            "chazz"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_12_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_chazz",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Return Zombie",
+          "cards": [
+            {
+              "name": "Return Zombie",
+              "card_id": 965,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Inpachi",
+          "cards": [
+            {
+              "name": "Inpachi",
+              "card_id": 727,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Injection Fairy Lily",
+          "cards": [
+            {
+              "name": "Injection Fairy Lily",
+              "card_id": 516,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "chazz"
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "topher",
+          "opponent_name": "Topher",
+          "opponent_deck_id": "topher_goblin",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "conklin",
+          "opponent_name": "Conklin",
+          "opponent_deck_id": "conklin_dino",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "chazz",
+          "opponent_name": "Chazz Princeton",
+          "opponent_deck_id": "chazz_ojama",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E12",
+      "dialogue_keys": [
+        "E12.01",
+        "E12.02"
+      ],
+      "notes": "Three sequential duels; runtime continues after each duel when no result scene is set."
+    },
+    {
+      "id": "E13",
+      "title": "Battle against Chazz",
+      "canon_event": true,
+      "canon_number": 13,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 14,
+      "priority": 896,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "where": [
+        "Classroom",
+        "Duel Arena",
+        "Harbor"
+      ],
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "trigger": {
+        "type": "event",
+        "event": "E12",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "any",
+          "conditions": [
+            {
+              "type": "dorm",
+              "value": "Slifer Red"
+            },
+            {
+              "type": "dorm",
+              "value": "Ra Yellow"
+            }
+          ]
+        },
+        {
+          "type": "counter",
+          "counter": "wins_chazz",
+          "op": ">=",
+          "value": 10
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "dorm_in",
+          "values": [
+            "Slifer Red",
+            "Ra Yellow"
+          ]
+        },
+        {
+          "type": "wins_against",
+          "opponent": "chazz",
+          "count": 10
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "set_dorm",
+          "dorm": "Obelisk Blue"
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_13_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "exam_exempt_monthly",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dorm_unlock",
+          "value": "Obelisk Blue"
+        },
+        {
+          "type": "exam_exemption",
+          "scope": "monthly exams"
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "chazz",
+          "opponent_name": "Chazz Princeton",
+          "opponent_deck_id": "chazz_ojama",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E13",
+      "dialogue_keys": [
+        "E13.01",
+        "E13.02"
+      ],
+      "notes": "Dorm promotion and exam exemption are scaffolded as flags."
+    },
+    {
+      "id": "E14",
+      "title": "Revenge of the Obelisk Blues",
+      "canon_event": true,
+      "canon_number": 14,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 15,
+      "priority": 888,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "where": [
+        "Obelisk Blue Boys' Lobby",
+        "Duel Arena"
+      ],
+      "location": "obelisk_boys",
+      "anchor": "obelisk_dining_player",
+      "trigger": {
+        "type": "event",
+        "event": "E13",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E13",
+          "state": "complete"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E13"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 724,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 744,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 746,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_14_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_topher",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_conklin",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "X-Head Cannon",
+          "cards": [
+            {
+              "name": "X-Head Cannon",
+              "card_id": 724,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Y-Dragon Head",
+          "cards": [
+            {
+              "name": "Y-Dragon Head",
+              "card_id": 744,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Z-Metal Tank",
+          "cards": [
+            {
+              "name": "Z-Metal Tank",
+              "card_id": 746,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E14",
+      "dialogue_keys": [
+        "E14.01",
+        "E14.02"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "E15",
+      "title": "Chazz Reborn",
+      "canon_event": true,
+      "canon_number": 15,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 16,
+      "priority": 880,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "where": [
+        "Chancellor's Office",
+        "Duel Arena"
+      ],
+      "location": "academy",
+      "anchor": "chancellor_office_desk",
+      "trigger": {
+        "type": "event",
+        "event": "E14",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E14",
+          "state": "complete"
+        },
+        {
+          "type": "counter",
+          "counter": "written_correct",
+          "op": ">=",
+          "value": 40
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E14"
+        },
+        {
+          "type": "title_at_least",
+          "value": "Honored Duelist"
+        },
+        {
+          "type": "written_correct",
+          "count": 40
+        },
+        {
+          "type": "calendar_since_event",
+          "event": "E14",
+          "days": 21
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 851,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 835,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 852,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 828,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 871,
+          "count": 1
+        },
+        {
+          "type": "unlock_email",
+          "contacts": [
+            "chazz"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_15_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Ojama Yellow",
+          "cards": [
+            {
+              "name": "Ojama Yellow",
+              "card_id": 851,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ojama Green",
+          "cards": [
+            {
+              "name": "Ojama Green",
+              "card_id": 835,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ojama Black",
+          "cards": [
+            {
+              "name": "Ojama Black",
+              "card_id": 852,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ojama Trio",
+          "cards": [
+            {
+              "name": "Ojama Trio",
+              "card_id": 828,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ojama Delta Hurricane!!",
+          "cards": [
+            {
+              "name": "Ojama Delta Hurricane!!",
+              "card_id": 871,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "chazz"
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "chazz",
+          "opponent_name": "Chazz Princeton",
+          "opponent_deck_id": "chazz_ojama",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E15",
+      "dialogue_keys": [
+        "E15.01",
+        "E15.02"
+      ],
+      "notes": "A01's 21-day wait is omitted; the title/written gate is kept."
+    },
+    {
+      "id": "E16",
+      "title": "Brier and Beauregard",
+      "canon_event": true,
+      "canon_number": 16,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 17,
+      "priority": 872,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Saturday",
+        "period": "PM"
+      },
+      "where": [
+        "Duel Arena"
+      ],
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "trigger": {
+        "type": "talk",
+        "npc": "brier"
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Ra Yellow"
+        },
+        {
+          "type": "counter",
+          "counter": "wins_brier",
+          "op": ">=",
+          "value": 5
+        },
+        {
+          "type": "counter",
+          "counter": "wins_beauregard",
+          "op": ">=",
+          "value": 5
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "dorm",
+          "value": "Ra Yellow"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "brier",
+          "count": 5
+        },
+        {
+          "type": "wins_against",
+          "opponent": "beauregard",
+          "count": 5
+        },
+        {
+          "type": "see_npc",
+          "npc": "brier",
+          "location": "Duel Arena"
+        },
+        {
+          "type": "talk",
+          "npc": "brier"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 414,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 955,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_16_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_brier",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_beauregard",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Robbin' Goblin",
+          "cards": [
+            {
+              "name": "Robbin' Goblin",
+              "card_id": 414,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Goblin Thief",
+          "cards": [
+            {
+              "name": "Goblin Thief",
+              "card_id": 955,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "brier",
+          "opponent_name": "Brier",
+          "opponent_deck_id": "brier_quiz",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "beauregard",
+          "opponent_name": "Beauregard",
+          "opponent_deck_id": "beauregard_rock",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E16",
+      "dialogue_keys": [
+        "E16.01",
+        "E16.02"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "E17",
+      "title": "The Goblin King",
+      "canon_event": true,
+      "canon_number": 17,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 18,
+      "priority": 864,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM/Night",
+        "automatic": true
+      },
+      "where": [
+        "Classroom",
+        "Front of Duel Academy",
+        "Harbor"
+      ],
+      "location": "academy",
+      "anchor": "academy_front_steps",
+      "trigger": {
+        "type": "event",
+        "event": "E16",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E16",
+          "state": "complete"
+        },
+        {
+          "type": "counter",
+          "counter": "wins_total",
+          "op": ">=",
+          "value": 50
+        },
+        {
+          "type": "counter",
+          "counter": "timed_clears",
+          "op": ">=",
+          "value": 50
+        },
+        {
+          "type": "dorm",
+          "value": "Ra Yellow"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E16"
+        },
+        {
+          "type": "title_at_least",
+          "value": "Superior Duelist"
+        },
+        {
+          "type": "dorm",
+          "value": "Ra Yellow"
+        },
+        {
+          "type": "calendar_since_event",
+          "event": "E16",
+          "days": 30
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 566,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 1170,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_17_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Goblin Attack Force",
+          "cards": [
+            {
+              "name": "Goblin Attack Force",
+              "card_id": 566,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Goblin Elite Attack Force",
+          "cards": [
+            {
+              "name": "Goblin Elite Attack Force",
+              "card_id": 1170,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "brier",
+          "opponent_name": "Brier",
+          "opponent_deck_id": "brier_quiz",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula",
+          "scenario_id": "E17_GOBLIN_KING",
+          "turn_limit": 1
+        },
+        {
+          "type": "duel",
+          "opponent_id": "brier",
+          "opponent_name": "Brier",
+          "opponent_deck_id": "brier_quiz",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E17",
+      "dialogue_keys": [
+        "E17.01",
+        "E17.02"
+      ],
+      "notes": "Goblin King is not a runtime opponent yet; both duels use Brier as a placeholder. Timed/ante rules are pending A04/A07."
+    },
+    {
+      "id": "E18",
+      "title": "Who Are You?",
+      "canon_event": true,
+      "canon_number": 18,
+      "confidence": "medium",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 19,
+      "priority": 856,
+      "once": true,
+      "repeatable": false,
+      "optional": true,
+      "story_critical": false,
+      "when": {
+        "note": "Talk to Sartyr once, wait 60 days, then talk again."
+      },
+      "where": [
+        "Your Room",
+        "Next to Ocean",
+        "Ra Yellow Cafeteria",
+        "Duel Arena"
+      ],
+      "location": "ra",
+      "anchor": "ra_cafeteria_table",
+      "trigger": {
+        "type": "talk",
+        "npc": "sartyr"
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Ra Yellow"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "dorm",
+          "value": "Ra Yellow"
+        },
+        {
+          "type": "talk",
+          "npc": "sartyr"
+        },
+        {
+          "type": "calendar_since_talk",
+          "npc": "sartyr",
+          "days": 60
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 1165,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 778,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 794,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_18_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "sartyr_talked",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Soitsu",
+          "cards": [
+            {
+              "name": "Soitsu",
+              "card_id": 1165,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Aitsu",
+          "confidence": "medium",
+          "cards": [
+            {
+              "name": "Aitsu",
+              "card_id": 778,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Koitsu",
+          "confidence": "medium",
+          "cards": [
+            {
+              "name": "Koitsu",
+              "card_id": 794,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [],
+      "scene": "full.E18",
+      "dialogue_keys": [
+        "E18.01",
+        "E18.02",
+        "E18.03"
+      ],
+      "notes": "60-day wait is omitted; the Sartyr talk trigger is kept."
+    },
+    {
+      "id": "E19",
+      "title": "A Suspicious Character",
+      "canon_event": true,
+      "canon_number": 19,
+      "confidence": "medium",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 20,
+      "priority": 848,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Saturday",
+        "period": "Night"
+      },
+      "where": [
+        "Classroom",
+        "Front of Obelisk Blue Girls' Dorm"
+      ],
+      "location": "obelisk_girls",
+      "anchor": "obelisk_girls_gate",
+      "trigger": {
+        "type": "talk",
+        "npc": "alexis"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E11",
+          "state": "complete"
+        },
+        {
+          "type": "weekday",
+          "value": "Saturday"
+        },
+        {
+          "type": "period",
+          "value": "Night"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "talk",
+          "npc": "alexis",
+          "location": "Front of Obelisk Blue Girls' Dorm"
+        },
+        {
+          "type": "calendar_since_visit",
+          "location": "Front of Obelisk Blue Girls' Dorm",
+          "days": 90
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "unlock_email",
+          "contacts": [
+            "alexis"
+          ]
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_19_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_alexis",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_jasmine",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_mindy",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "unlocked_jasmine",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "unlocked_mindy",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "alexis"
+          ]
+        },
+        {
+          "type": "unlock_duel",
+          "opponents": [
+            "jasmine",
+            "mindy"
+          ],
+          "requires_title": "Prince of Games"
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "alexis",
+          "opponent_name": "Alexis Rhodes",
+          "opponent_deck_id": "alexis_cyber",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jasmine",
+          "opponent_name": "Jasmine",
+          "opponent_deck_id": "jasmine_amazoness",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "mindy",
+          "opponent_name": "Mindy",
+          "opponent_deck_id": "mindy_fairy",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E19",
+      "dialogue_keys": [
+        "E19.01",
+        "E19.02"
+      ],
+      "notes": "Three-month visit wait is approximated by E11; exact timing is ambiguous in A01."
+    },
+    {
+      "id": "E20",
+      "title": "A Shadow Game",
+      "canon_event": true,
+      "canon_number": 20,
+      "confidence": "medium",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 21,
+      "priority": 840,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekend",
+        "period": "PM"
+      },
+      "where": [
+        "Ocean",
+        "Volcano",
+        "Gym"
+      ],
+      "location": "beach",
+      "anchor": "beach_shore",
+      "trigger": {
+        "type": "talk",
+        "npc": "shadow_duelist"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E19",
+          "state": "complete"
+        },
+        {
+          "type": "period",
+          "value": "PM"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E19"
+        },
+        {
+          "type": "talk",
+          "npc": "shadow_duelist"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "double_dp"
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_20_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "shadow_game_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp_multiplier",
+          "multiplier": 2,
+          "note": "double current DP on clear"
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "ante",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "ante",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "ante",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E20",
+      "dialogue_keys": [
+        "E20.01",
+        "E20.02"
+      ],
+      "notes": "Ante rules and location sequence are scaffolded; double DP is implemented as an outcome."
+    },
+    {
+      "id": "E21",
+      "title": "Suspicious Classmate",
+      "canon_event": true,
+      "canon_number": 21,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 22,
+      "priority": 832,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "where": [
+        "Your Room"
+      ],
+      "location": "slifer",
+      "anchor": "slifer_player_room_bed",
+      "trigger": {
+        "type": "event",
+        "event": "E19",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E19",
+          "state": "complete"
+        },
+        {
+          "type": "flag",
+          "flag": "met_jaden",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "flag": "met_syrus",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "flag": "met_chumley",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "flag": "met_bastion",
+          "value": true
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E19"
+        },
+        {
+          "type": "met_npcs",
+          "npcs": [
+            "jaden",
+            "syrus",
+            "chumley",
+            "bastion",
+            "dimitri",
+            "brier",
+            "beauregard",
+            "blair",
+            "gerard"
+          ]
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_dp",
+          "amount": 1000
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_21_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "gerard_quiz_passed",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 1000
+        }
+      ],
+      "duels": [],
+      "scene": "full.E21",
+      "dialogue_keys": [
+        "E21.01",
+        "E21.02",
+        "E21.03"
+      ],
+      "notes": "A01 requires all met NPCs; Dmitri/Blair/Gerard flags are deferred to avoid a circular scaffold."
+    },
+    {
+      "id": "E22",
+      "title": "Draw, Draw, Draw",
+      "canon_event": true,
+      "canon_number": 22,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 23,
+      "priority": 824,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "where": [
+        "Shop",
+        "Front of Obelisk Blue Boys' Dorm"
+      ],
+      "location": "academy",
+      "anchor": "academy_card_shop_player",
+      "trigger": {
+        "type": "event",
+        "event": "E17",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "counter",
+          "counter": "wins_total",
+          "op": ">=",
+          "value": 100
+        },
+        {
+          "type": "dorm",
+          "value": "Obelisk Blue"
+        },
+        {
+          "type": "counter",
+          "counter": "wins_damon",
+          "op": ">=",
+          "value": 5
+        },
+        {
+          "type": "event",
+          "event": "E17",
+          "state": "complete"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Shrewd Duelist"
+        },
+        {
+          "type": "dorm",
+          "value": "Obelisk Blue"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "damon",
+          "count": 5
+        },
+        {
+          "type": "event_cleared",
+          "event": "E17"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 1178,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 52,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 879,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_22_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_damon",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Poison Draw Frog",
+          "cards": [
+            {
+              "name": "Poison Draw Frog",
+              "card_id": 1178,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "White Magical Hat",
+          "cards": [
+            {
+              "name": "White Magical Hat",
+              "card_id": 52,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Reload",
+          "cards": [
+            {
+              "name": "Reload",
+              "card_id": 879,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "damon",
+          "opponent_name": "Damon",
+          "opponent_deck_id": "damon_exodia",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E22",
+      "dialogue_keys": [
+        "E22.01",
+        "E22.02"
+      ],
+      "notes": "Both sides use Damon's draw deck in A01; runtime deck select is left to the player for now."
+    },
+    {
+      "id": "E23",
+      "title": "Yugi's Legendary Deck",
+      "canon_event": true,
+      "canon_number": 23,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 24,
+      "priority": 816,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "where": [
+        "Your Room",
+        "Next to Ocean"
+      ],
+      "location": "beach",
+      "anchor": "beach_shore",
+      "trigger": {
+        "type": "event",
+        "event": "E22",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E04",
+          "state": "complete"
+        },
+        {
+          "type": "event",
+          "event": "E22",
+          "state": "complete"
+        },
+        {
+          "type": "any",
+          "conditions": [
+            {
+              "type": "dorm",
+              "value": "Ra Yellow"
+            },
+            {
+              "type": "dorm",
+              "value": "Obelisk Blue"
+            }
+          ]
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E04"
+        },
+        {
+          "type": "event_cleared",
+          "event": "E22"
+        },
+        {
+          "type": "dorm_in",
+          "values": [
+            "Ra Yellow",
+            "Obelisk Blue"
+          ]
+        },
+        {
+          "type": "calendar_since_met",
+          "npc": "dimitri",
+          "days": 30
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 31,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 369,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "exam_exempt_next",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_23_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_dimitri",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Kuriboh",
+          "cards": [
+            {
+              "name": "Kuriboh",
+              "card_id": 31,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Multiply",
+          "cards": [
+            {
+              "name": "Multiply",
+              "card_id": 369,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "exam_exemption",
+          "scope": "next monthly exam"
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "dimitri",
+          "opponent_name": "Dimitri",
+          "opponent_deck_id": "dimitri_copycat",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E23",
+      "dialogue_keys": [
+        "E23.01",
+        "E23.02"
+      ],
+      "notes": "One-month met wait is omitted; exam exemption is a flag."
+    },
+    {
+      "id": "E24",
+      "title": "Missing Hero",
+      "canon_event": true,
+      "canon_number": 24,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 25,
+      "priority": 808,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Saturday"
+      },
+      "where": [
+        "Harbor"
+      ],
+      "location": "harbor",
+      "anchor": "harbor_dock",
+      "trigger": {
+        "type": "talk",
+        "npc": "jaden"
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "event",
+          "event": "E19",
+          "state": "complete"
+        },
+        {
+          "type": "counter",
+          "counter": "wins_jaden",
+          "op": ">=",
+          "value": 1
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "calendar_since_met",
+          "npc": "blair",
+          "days": 30
+        },
+        {
+          "type": "win_rate_against",
+          "opponent": "jaden",
+          "percent": 50
+        },
+        {
+          "type": "meet_npc",
+          "npc": "jaden",
+          "location": "Harbor"
+        },
+        {
+          "type": "choice",
+          "value": "Insist on talking"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 921,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_24_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "blair_revealed",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "A Hero Emerges",
+          "cards": [
+            {
+              "name": "A Hero Emerges",
+              "card_id": 921,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "flag",
+          "value": "blair_revealed"
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E24",
+      "dialogue_keys": [
+        "E24.01",
+        "E24.02"
+      ],
+      "notes": "Blair's one-month appearance and exact win-rate gate are approximated by E19/wins_jaden."
+    },
+    {
+      "id": "E25",
+      "title": "The Power of a Maiden's Love",
+      "canon_event": true,
+      "canon_number": 25,
+      "confidence": "medium",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 26,
+      "priority": 800,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Saturday",
+        "period": "PM"
+      },
+      "where": [
+        "Front of Obelisk Blue Boys' Dorm",
+        "Your Room",
+        "Harbor"
+      ],
+      "location": "obelisk_boys",
+      "anchor": "obelisk_front_gate",
+      "trigger": {
+        "type": "event",
+        "event": "E24",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E24",
+          "state": "complete"
+        },
+        {
+          "type": "event",
+          "event": "E23",
+          "state": "complete"
+        },
+        {
+          "type": "counter",
+          "counter": "wins_total",
+          "op": ">=",
+          "value": 100
+        },
+        {
+          "type": "period",
+          "value": "PM"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E24"
+        },
+        {
+          "type": "event_cleared",
+          "event": "E23"
+        },
+        {
+          "type": "not_same_day",
+          "events": [
+            "E24"
+          ]
+        },
+        {
+          "type": "title_at_least",
+          "value": "Shrewd Duelist"
+        },
+        {
+          "type": "go_to",
+          "location": "Front of Obelisk Blue Boys' Dorm"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 948,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 1181,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 1194,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_25_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_blair",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "White Magician Pikeru",
+          "cards": [
+            {
+              "name": "White Magician Pikeru",
+              "card_id": 948,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ebon Magician Curran",
+          "cards": [
+            {
+              "name": "Ebon Magician Curran",
+              "card_id": 1181,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "A Rival Appears!",
+          "cards": [
+            {
+              "name": "A Rival Appears!",
+              "card_id": 1194,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "blair",
+          "opponent_name": "Blair Flannigan",
+          "opponent_deck_id": "blair_toon",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E25",
+      "dialogue_keys": [
+        "E25.01",
+        "E25.02"
+      ],
+      "notes": "Exact timing is ambiguous in A01; not_same_day is omitted."
+    },
+    {
+      "id": "E26",
+      "title": "The 7th Deck",
+      "canon_event": true,
+      "canon_number": 26,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 27,
+      "priority": 792,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Saturday"
+      },
+      "where": [
+        "Classroom"
+      ],
+      "location": "academy",
+      "anchor": "academy_classroom_teacher",
+      "trigger": {
+        "type": "event",
+        "event": "E25",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E25",
+          "state": "complete"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E25"
+        },
+        {
+          "type": "go_to",
+          "location": "Classroom"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 1139,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_26_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Mispolymerization",
+          "cards": [
+            {
+              "name": "Mispolymerization",
+              "card_id": 1139,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "bastion",
+          "opponent_name": "Bastion Misawa",
+          "opponent_deck_id": "bastion_chem",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E26",
+      "dialogue_keys": [
+        "E26.01",
+        "E26.02"
+      ],
+      "notes": "A01's bastion_seventh deck is mapped to bastion_chem."
+    },
+    {
+      "id": "E27",
+      "title": "The Truth Behind Gerard",
+      "canon_event": true,
+      "canon_number": 27,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 28,
+      "priority": 784,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "automatic": true
+      },
+      "where": [
+        "Front of Slifer Red Dorm"
+      ],
+      "location": "slifer",
+      "anchor": "slifer_front_gate",
+      "trigger": {
+        "type": "event",
+        "event": "E09",
+        "state": "complete"
+      },
+      "requirements": [
+        {
+          "type": "flag",
+          "flag": "event_09_won",
+          "value": true
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_won",
+          "event": "E09"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 1160,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_27_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "met_gerard",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "gerard_truth",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Skyscraper",
+          "cards": [
+            {
+              "name": "Skyscraper",
+              "card_id": 1160,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [],
+      "scene": "full.E27",
+      "dialogue_keys": [
+        "E27.01",
+        "E27.02",
+        "E27.03"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "E28",
+      "title": "Battle for the Chocolate!",
+      "canon_event": true,
+      "canon_number": 28,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 29,
+      "priority": 776,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "date": {
+          "year": 2,
+          "month": 2,
+          "day": 14
+        }
+      },
+      "where": [
+        "Classroom",
+        "Duel Arena"
+      ],
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "trigger": {
+        "type": "date",
+        "year": 2,
+        "month": 2,
+        "day": 14
+      },
+      "requirements": [
+        {
+          "type": "flag",
+          "flag": "met_alexis",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "flag": "met_jasmine",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "flag": "met_mindy",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "flag": "met_blair",
+          "value": true
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "met_npcs",
+          "npcs": [
+            "fontaine",
+            "alexis",
+            "jasmine",
+            "mindy",
+            "blair"
+          ]
+        },
+        {
+          "type": "participate"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_dp",
+          "amount": 10000
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_28_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "queens_chocolate",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_28_participated",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 10000
+        },
+        {
+          "type": "item",
+          "name": "Queen's chocolate"
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "alexis",
+          "opponent_name": "Alexis Rhodes",
+          "opponent_deck_id": "alexis_cyber",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jasmine",
+          "opponent_name": "Jasmine",
+          "opponent_deck_id": "jasmine_amazoness",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "mindy",
+          "opponent_name": "Mindy",
+          "opponent_deck_id": "mindy_fairy",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "chazz",
+          "opponent_name": "Chazz Princeton",
+          "opponent_deck_id": "chazz_ojama",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E28",
+      "dialogue_keys": [
+        "E28.01"
+      ],
+      "notes": "Four-round bracket is scaffolded with four sequential duels; exact bracket order is pending A01."
+    },
+    {
+      "id": "E28b",
+      "title": "Reversal Valentine's Day",
+      "canon_event": true,
+      "canon_number": 28.2,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 30,
+      "priority": 768,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "date": {
+          "year": 2,
+          "month": 3,
+          "day": 14
+        }
+      },
+      "where": [
+        "Obelisk Blue Girls' Dorm"
+      ],
+      "location": "obelisk_girls",
+      "anchor": "obelisk_girls_gate",
+      "trigger": {
+        "type": "date",
+        "year": 2,
+        "month": 3,
+        "day": 14
+      },
+      "requirements": [
+        {
+          "type": "event",
+          "event": "E28",
+          "state": "complete"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "event_participated",
+          "event": "E28"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "set_flag",
+          "flag": "event_28b_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "valentine_reversal",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "valentine_gift_given",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "choice_reward",
+          "note": "Give the Queen one Level 4+ monster not in your Deck."
+        }
+      ],
+      "duels": [],
+      "scene": "full.E28b",
+      "dialogue_keys": [
+        "E28b.01",
+        "E28b.02",
+        "E28b.03"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "E29",
+      "title": "Helping the Dropout",
+      "canon_event": true,
+      "canon_number": 29,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 31,
+      "priority": 760,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Saturday",
+        "period": "PM"
+      },
+      "where": [
+        "Gym"
+      ],
+      "location": "gym",
+      "anchor": "gym_practice_field_a",
+      "trigger": {
+        "type": "talk",
+        "npc": "fontaine"
+      },
+      "requirements": [
+        {
+          "type": "title",
+          "value": "Dropout Boy"
+        },
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "title",
+          "value": "Dropout Boy"
+        },
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "talk",
+          "npc": "fontaine"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_dp",
+          "amount": 1000
+        },
+        {
+          "type": "set_title",
+          "title": "Apprentice Duelist"
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_29_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "dropout_recovered",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp_equal_remaining_lp"
+        },
+        {
+          "type": "title",
+          "value": "Apprentice Duelist"
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "fontaine",
+          "opponent_name": "Fonda Fontaine",
+          "opponent_deck_id": "fontaine_nurse",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E29",
+      "dialogue_keys": [
+        "E29.01",
+        "E29.02"
+      ],
+      "notes": "DP equal to remaining LP is scaffolded as 1,000 DP until A02 exposes the result LP."
+    },
+    {
+      "id": "E30",
+      "title": "A Friend's Concern",
+      "canon_event": true,
+      "canon_number": 30,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 32,
+      "priority": 752,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "where": [
+        "Your Room (Slifer Red)"
+      ],
+      "location": "slifer",
+      "anchor": "slifer_player_room_bed",
+      "trigger": {
+        "type": "flag",
+        "flag": "stayed_in_room_three_weekends",
+        "value": true
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "stay_in_room_weekends",
+          "count": 3
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 1019,
+          "count": 1
+        },
+        {
+          "type": "grant_card",
+          "card_id": 855,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_30_cleared",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Master of Oz",
+          "cards": [
+            {
+              "name": "Master of Oz",
+              "card_id": 1019,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Des Kangaroo",
+          "confidence": "medium",
+          "cards": [
+            {
+              "name": "Des Kangaroo",
+              "card_id": 855,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "chumley",
+          "opponent_name": "Chumley Huffington",
+          "opponent_deck_id": "chumley_koala",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E30",
+      "dialogue_keys": [
+        "E30.01",
+        "E30.02"
+      ],
+      "notes": "The stay-in-room counter is a future A02/A08 hook; the flag starts false."
+    },
+    {
+      "id": "E31",
+      "title": "The Walk Home",
+      "canon_event": true,
+      "canon_number": 31,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 33,
+      "priority": 744,
+      "once": true,
+      "repeatable": false,
+      "optional": true,
+      "story_critical": false,
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "where": [
+        "Front of Duel Academy",
+        "Next to Ocean"
+      ],
+      "location": "plaza",
+      "anchor": "academy_front_steps",
+      "trigger": {
+        "type": "flag",
+        "flag": "walk_home_partner_3",
+        "value": true
+      },
+      "requirements": [
+        {
+          "type": "flag",
+          "flag": "walk_home_partner_3",
+          "value": true
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "walk_home_same_character",
+          "count": 3
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_card",
+          "card_id": 1153,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_31_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "walk_home_completed",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card_by_partner",
+          "cards": [
+            {
+              "partner": "jaden",
+              "name": "Wroughtweiler",
+              "card_id": 1153,
+              "resolved": true
+            },
+            {
+              "partner": "syrus",
+              "name": "Patroid",
+              "card_id": 1147,
+              "resolved": true
+            },
+            {
+              "partner": "chumley",
+              "name": "Des Wombat",
+              "card_id": 1125,
+              "resolved": true
+            },
+            {
+              "partner": "bastion",
+              "name": "Ring of Destruction",
+              "card_id": 503,
+              "resolved": true
+            },
+            {
+              "partner": "alexis",
+              "name": "Fusion Weapon",
+              "card_id": 1025,
+              "resolved": true
+            },
+            {
+              "partner": "chazz",
+              "name": "Mefist the Infernal General",
+              "card_id": 839,
+              "resolved": true
+            },
+            {
+              "partner": "zane",
+              "name": "Cyber Dragon",
+              "card_id": 1152,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
+      "scene": "full.E31",
+      "dialogue_keys": [
+        "E31.01",
+        "E31.02"
+      ],
+      "notes": "Partner-dependent duel/reward is scaffolded as Jaden/Wroughtweiler; other partner branches are future content."
+    },
+    {
+      "id": "E32",
+      "title": "Help Miss Dorothy",
+      "canon_event": true,
+      "canon_number": 32,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 34,
+      "priority": 736,
+      "once": true,
+      "repeatable": false,
+      "optional": true,
+      "story_critical": false,
+      "when": {
+        "weekday": "Friday",
+        "exam_day": true,
+        "chance": "2/5"
+      },
+      "where": [
+        "Front of Duel Academy"
+      ],
+      "location": "plaza",
+      "anchor": "academy_front_steps",
+      "trigger": {
+        "type": "weekday",
+        "value": "Friday"
+      },
+      "requirements": [
+        {
+          "type": "exam_day"
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "exam_day"
+        },
+        {
+          "type": "random_chance",
+          "value": "2/5"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "grant_pack",
+          "pack_id": "dorothys_gift"
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_32_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "dorothy_helped",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "pack",
+          "pack": "dorothys_gift",
+          "note": "free pack from the shop afterwards"
+        }
+      ],
+      "duels": [],
+      "scene": "full.E32",
+      "dialogue_keys": [
+        "E32.01",
+        "E32.02"
+      ],
+      "notes": "2/5 chance is not simulated; the event is available on any exam Friday in the scaffold."
+    },
+    {
+      "id": "E33",
+      "title": "The Duel King",
+      "canon_event": true,
+      "canon_number": 33,
+      "confidence": "high",
+      "source": "canon",
+      "arc": "full_campaign",
+      "order": 35,
+      "priority": 728,
+      "once": true,
+      "repeatable": false,
+      "optional": false,
+      "story_critical": true,
+      "when": {
+        "weekday": "Saturday",
+        "post_game": true
+      },
+      "where": [
+        "Chancellor's Office"
+      ],
+      "location": "academy",
+      "anchor": "chancellor_office_desk",
+      "trigger": {
+        "type": "flag",
+        "flag": "post_game",
+        "value": true
+      },
+      "requirements": [
+        {
+          "type": "counter",
+          "counter": "wins_total",
+          "op": ">=",
+          "value": 200
+        },
+        {
+          "type": "counter",
+          "counter": "written_correct",
+          "op": ">=",
+          "value": 120
+        },
+        {
+          "type": "flag",
+          "flag": "post_game",
+          "value": true
+        }
+      ],
+      "canon_requirements": [
+        {
+          "type": "wins_total",
+          "count": 200
+        },
+        {
+          "type": "wins_against_each",
+          "count": 10,
+          "duelists": 20
+        },
+        {
+          "type": "written_correct_percent",
+          "percent": 60
+        },
+        {
+          "type": "after_ending"
+        }
+      ],
+      "outcomes": [
+        {
+          "type": "set_title",
+          "title": "King of Games"
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_33_cleared",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "name_change_unlocked",
+          "value": true
+        }
+      ],
+      "rewards": [
+        {
+          "type": "title",
+          "value": "King of Games"
+        },
+        {
+          "type": "name_change"
+        }
+      ],
+      "duels": [],
+      "scene": "full.E33",
+      "dialogue_keys": [
+        "E33.01",
+        "E33.02",
+        "E33.03"
+      ],
+      "notes": "Per-duelist 10-win requirement is approximated by wins_total; post_game flag is set by the ending flow."
+    }
+  ]
+}

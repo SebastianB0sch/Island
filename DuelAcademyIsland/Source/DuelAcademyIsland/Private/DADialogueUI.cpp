@@ -259,11 +259,11 @@ void FDADialogueUI::SkipConversation()
 	Close();
 }
 
-void FDADialogueUI::SetAutoAdvance(bool bEnabled)
+void FDADialogueUI::SetAutoAdvance(bool bEnabled, bool bPlaySound)
 {
 	bAuto = bEnabled;
 	AutoTimer = 0.f;
-	if (bAuto)
+	if (bAuto && bPlaySound)
 	{
 		PlaySfx(TEXT("A_UIClick"), 0.35f);
 	}
@@ -289,7 +289,7 @@ void FDADialogueUI::ScrollHistory(int32 Delta)
 
 void FDADialogueUI::SetTextSpeed(float InCharsPerSecond)
 {
-	CharsPerSecond = FMath::Clamp(InCharsPerSecond, 10.f, 200.f);
+	CharsPerSecond = FMath::Clamp(InCharsPerSecond, 10.f, 10000.f);
 }
 
 // ------------------------------------------------------------------------ update
@@ -946,6 +946,7 @@ namespace
 		bool bAttempted = false;
 		TMap<FString, FString> Labels;
 		TMap<FString, TArray<FDADialogueLine>> Samples;
+		TArray<FString> Credits;
 	};
 
 	FDAUIDataCache& GetUIDataCache()
@@ -1048,6 +1049,19 @@ namespace
 			}
 		}
 
+		const TArray<TSharedPtr<FJsonValue>>* CreditsArray = nullptr;
+		if (Root->TryGetArrayField(TEXT("credits"), CreditsArray) && CreditsArray)
+		{
+			for (const TSharedPtr<FJsonValue>& CreditValue : *CreditsArray)
+			{
+				FString CreditLine;
+				if (CreditValue.IsValid() && CreditValue->TryGetString(CreditLine))
+				{
+					Cache.Credits.Add(CreditLine);
+				}
+			}
+		}
+
 		return Cache;
 	}
 }
@@ -1069,5 +1083,16 @@ bool DAUIData::LoadDialogueSample(const FString& SampleId, TArray<FDADialogueLin
 		return false;
 	}
 	OutLines = *Found;
+	return true;
+}
+
+bool DAUIData::LoadCredits(TArray<FString>& OutLines)
+{
+	const TArray<FString>& Credits = GetUIDataCache().Credits;
+	if (Credits.Num() == 0)
+	{
+		return false;
+	}
+	OutLines = Credits;
 	return true;
 }

@@ -1,0 +1,2273 @@
+{
+  "schema_version": 1,
+  "story_id": "full_campaign",
+  "version": 1,
+  "source": "Port-scaffold scenes for A01's 35 canonical events.",
+  "scenes": {
+    "full.E01": {
+      "id": "full.E01",
+      "event_id": "E01",
+      "title": "School Registration",
+      "location": "gym",
+      "anchor": "gym_assembly_stage",
+      "camera_anchor": "gym_assembly_camera",
+      "cast": [
+        "mimicry",
+        "narrator",
+        "sheppard"
+      ],
+      "required_anchors": [
+        "gym_assembly_camera",
+        "gym_assembly_stage"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "gym_assembly_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "School Registration",
+          "subtitle": "E01",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.02"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.03"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Opening is implemented by opening.json; this record keeps the 35-event canon set complete."
+    },
+    "full.E02": {
+      "id": "full.E02",
+      "event_id": "E02",
+      "title": "Pharaoh's True Power",
+      "location": "slifer",
+      "anchor": "slifer_banner_room_desk",
+      "camera_anchor": "slifer_banner_room_camera",
+      "cast": [
+        "banner",
+        "narrator"
+      ],
+      "required_anchors": [
+        "slifer_banner_room_camera",
+        "slifer_banner_room_desk"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_banner_room_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Pharaoh's True Power",
+          "subtitle": "E02",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E02.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E02.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "pharaoh",
+          "opponent_name": "Pharaoh",
+          "opponent_deck_id": "pharaoh_guardian",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Win reward card is scaffolded; loss/draw rewards are not conditional yet."
+    },
+    "full.E03": {
+      "id": "full.E03",
+      "event_id": "E03",
+      "title": "A New Hero Summoned",
+      "location": "slifer",
+      "anchor": "slifer_jaden_room_jaden",
+      "camera_anchor": "slifer_jaden_room_camera",
+      "cast": [
+        "jaden",
+        "syrus"
+      ],
+      "required_anchors": [
+        "slifer_jaden_room_camera",
+        "slifer_jaden_room_jaden"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_jaden_room_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "A New Hero Summoned",
+          "subtitle": "E03",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E03.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E03.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "A01's improved Jaden deck is mapped to the runtime jaden_year1 deck until A07 adds jaden_improved."
+    },
+    "full.E04": {
+      "id": "full.E04",
+      "event_id": "E04",
+      "title": "Old Memories, Part 1",
+      "location": "beach",
+      "anchor": "beach_shore",
+      "camera_anchor": "beach_shore",
+      "cast": [
+        "player",
+        "syrus"
+      ],
+      "required_anchors": [
+        "beach_shore"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "beach_shore",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Old Memories, Part 1",
+          "subtitle": "E04",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E04.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E04.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "syrus",
+          "opponent_name": "Syrus Truesdale",
+          "opponent_deck_id": "syrus_roids",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula",
+          "scenario_id": "E04_ONETURN",
+          "turn_limit": 1
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "One-turn puzzle setup/solution is not implemented in the scaffold; the duel is a normal story duel."
+    },
+    "full.E04b": {
+      "id": "full.E04b",
+      "event_id": "E04b",
+      "title": "Old Memories, Part 2",
+      "location": "beach",
+      "anchor": "beach_shore",
+      "camera_anchor": "beach_shore",
+      "cast": [
+        "narrator",
+        "zane"
+      ],
+      "required_anchors": [
+        "beach_shore"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "beach_shore",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Old Memories, Part 2",
+          "subtitle": "E04b",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E04b.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E04b.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "zane",
+          "opponent_name": "Zane Truesdale",
+          "opponent_deck_id": "zane_cyber",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Zane email unlocks regardless of result."
+    },
+    "full.E05": {
+      "id": "full.E05",
+      "event_id": "E05",
+      "title": "The Power of the Kaiser",
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "camera_anchor": "academy_arena_camera",
+      "cast": [
+        "crowler",
+        "player"
+      ],
+      "required_anchors": [
+        "academy_arena_camera",
+        "academy_arena_field_player"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_arena_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "The Power of the Kaiser",
+          "subtitle": "E05",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E05.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E05.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "zane",
+          "opponent_name": "Zane Truesdale",
+          "opponent_deck_id": "zane_cyber",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Dorm requirement is Obelisk Blue per A01."
+    },
+    "full.E06": {
+      "id": "full.E06",
+      "event_id": "E06",
+      "title": "Dark Fiend Deck",
+      "location": "harbor",
+      "anchor": "harbor_dock",
+      "camera_anchor": "harbor_dock",
+      "cast": [
+        "narrator",
+        "shadow_duelist"
+      ],
+      "required_anchors": [
+        "harbor_dock"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "harbor_dock",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Dark Fiend Deck",
+          "subtitle": "E06",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E06.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E06.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Group win condition is approximated by wins_total; Torrey met flag is scaffolded here."
+    },
+    "full.E07": {
+      "id": "full.E07",
+      "event_id": "E07",
+      "title": "Occult Recommendation",
+      "location": "academy",
+      "anchor": "academy_classroom_teacher",
+      "camera_anchor": "academy_classroom_camera",
+      "cast": [
+        "player",
+        "torrey"
+      ],
+      "required_anchors": [
+        "academy_classroom_camera",
+        "academy_classroom_teacher"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_classroom_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Occult Recommendation",
+          "subtitle": "E07",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E07.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E07.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "torrey",
+          "opponent_name": "Torrey",
+          "opponent_deck_id": "torrey_insect",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Card-in-main-deck is approximated by card ownership; temporary title has no restore stack yet."
+    },
+    "full.E08": {
+      "id": "full.E08",
+      "event_id": "E08",
+      "title": "Jinzo",
+      "location": "slifer",
+      "anchor": "slifer_player_room_bed",
+      "camera_anchor": "slifer_player_room_camera",
+      "cast": [
+        "narrator",
+        "torrey"
+      ],
+      "required_anchors": [
+        "slifer_player_room_bed",
+        "slifer_player_room_camera"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_player_room_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Jinzo",
+          "subtitle": "E08",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E08.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E08.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Jinzo spirit is mapped to the shadow_duelist runtime opponent until a story-only opponent exists."
+    },
+    "full.E09": {
+      "id": "full.E09",
+      "event_id": "E09",
+      "title": "Duel Festival",
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "camera_anchor": "academy_arena_camera",
+      "cast": [
+        "crowler",
+        "narrator"
+      ],
+      "required_anchors": [
+        "academy_arena_camera",
+        "academy_arena_field_player"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_arena_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Duel Festival",
+          "subtitle": "E09",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E09.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E09.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Third-Friday rule is scaffolded as a November Friday; tournament bracket is a placeholder single duel."
+    },
+    "full.E10": {
+      "id": "full.E10",
+      "event_id": "E10",
+      "title": "Merry Christmas",
+      "location": "slifer",
+      "anchor": "slifer_banner_room_desk",
+      "camera_anchor": "slifer_banner_room_camera",
+      "cast": [
+        "banner",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_banner_room_camera",
+        "slifer_banner_room_desk"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_banner_room_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Merry Christmas",
+          "subtitle": "E10",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E10.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E10.02"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Dorm-dependent packs are conditional outcomes; only the current dorm's pack should apply."
+    },
+    "full.E11": {
+      "id": "full.E11",
+      "event_id": "E11",
+      "title": "New Year's Duel",
+      "location": "slifer",
+      "anchor": "slifer_player_room_bed",
+      "camera_anchor": "slifer_player_room_camera",
+      "cast": [
+        "jaden",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_player_room_bed",
+        "slifer_player_room_camera"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_player_room_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "New Year's Duel",
+          "subtitle": "E11",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E11.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E11.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Dorm-dependent visitor is scaffolded as Jaden; Ra/Obelisk branches need A08/A03 scene variants."
+    },
+    "full.E12": {
+      "id": "full.E12",
+      "event_id": "E12",
+      "title": "Pride of the Elite",
+      "location": "obelisk_boys",
+      "anchor": "obelisk_front_gate",
+      "camera_anchor": "obelisk_front_gate",
+      "cast": [
+        "chazz",
+        "player"
+      ],
+      "required_anchors": [
+        "obelisk_front_gate"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "obelisk_front_gate",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Pride of the Elite",
+          "subtitle": "E12",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E12.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E12.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "topher",
+          "opponent_name": "Topher",
+          "opponent_deck_id": "topher_goblin",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "conklin",
+          "opponent_name": "Conklin",
+          "opponent_deck_id": "conklin_dino",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "chazz",
+          "opponent_name": "Chazz Princeton",
+          "opponent_deck_id": "chazz_ojama",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Three sequential duels; runtime continues after each duel when no result scene is set."
+    },
+    "full.E13": {
+      "id": "full.E13",
+      "event_id": "E13",
+      "title": "Battle against Chazz",
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "camera_anchor": "academy_arena_camera",
+      "cast": [
+        "crowler",
+        "player"
+      ],
+      "required_anchors": [
+        "academy_arena_camera",
+        "academy_arena_field_player"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_arena_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Battle against Chazz",
+          "subtitle": "E13",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E13.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E13.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "chazz",
+          "opponent_name": "Chazz Princeton",
+          "opponent_deck_id": "chazz_ojama",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Dorm promotion and exam exemption are scaffolded as flags."
+    },
+    "full.E14": {
+      "id": "full.E14",
+      "event_id": "E14",
+      "title": "Revenge of the Obelisk Blues",
+      "location": "obelisk_boys",
+      "anchor": "obelisk_dining_player",
+      "camera_anchor": "obelisk_dining_camera",
+      "cast": [
+        "player",
+        "topher"
+      ],
+      "required_anchors": [
+        "obelisk_dining_camera",
+        "obelisk_dining_player"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "obelisk_dining_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Revenge of the Obelisk Blues",
+          "subtitle": "E14",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E14.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E14.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": ""
+    },
+    "full.E15": {
+      "id": "full.E15",
+      "event_id": "E15",
+      "title": "Chazz Reborn",
+      "location": "academy",
+      "anchor": "chancellor_office_desk",
+      "camera_anchor": "chancellor_office_camera",
+      "cast": [
+        "chazz",
+        "player"
+      ],
+      "required_anchors": [
+        "chancellor_office_camera",
+        "chancellor_office_desk"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "chancellor_office_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Chazz Reborn",
+          "subtitle": "E15",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E15.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E15.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "chazz",
+          "opponent_name": "Chazz Princeton",
+          "opponent_deck_id": "chazz_ojama",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "A01's 21-day wait is omitted; the title/written gate is kept."
+    },
+    "full.E16": {
+      "id": "full.E16",
+      "event_id": "E16",
+      "title": "Brier and Beauregard",
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "camera_anchor": "academy_arena_camera",
+      "cast": [
+        "beauregard",
+        "brier"
+      ],
+      "required_anchors": [
+        "academy_arena_camera",
+        "academy_arena_field_player"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_arena_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Brier and Beauregard",
+          "subtitle": "E16",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E16.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E16.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "brier",
+          "opponent_name": "Brier",
+          "opponent_deck_id": "brier_quiz",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "beauregard",
+          "opponent_name": "Beauregard",
+          "opponent_deck_id": "beauregard_rock",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": ""
+    },
+    "full.E17": {
+      "id": "full.E17",
+      "event_id": "E17",
+      "title": "The Goblin King",
+      "location": "academy",
+      "anchor": "academy_front_steps",
+      "camera_anchor": "academy_front_camera",
+      "cast": [
+        "chumley",
+        "narrator"
+      ],
+      "required_anchors": [
+        "academy_front_camera",
+        "academy_front_steps"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_front_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "The Goblin King",
+          "subtitle": "E17",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E17.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E17.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "brier",
+          "opponent_name": "Brier",
+          "opponent_deck_id": "brier_quiz",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula",
+          "scenario_id": "E17_GOBLIN_KING",
+          "turn_limit": 1
+        },
+        {
+          "type": "duel",
+          "opponent_id": "brier",
+          "opponent_name": "Brier",
+          "opponent_deck_id": "brier_quiz",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Goblin King is not a runtime opponent yet; both duels use Brier as a placeholder. Timed/ante rules are pending A04/A07."
+    },
+    "full.E18": {
+      "id": "full.E18",
+      "event_id": "E18",
+      "title": "Who Are You?",
+      "location": "ra",
+      "anchor": "ra_cafeteria_table",
+      "camera_anchor": "ra_cafeteria_table",
+      "cast": [
+        "player",
+        "sartyr"
+      ],
+      "required_anchors": [
+        "ra_cafeteria_table"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "ra_cafeteria_table",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Who Are You?",
+          "subtitle": "E18",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E18.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E18.02"
+        },
+        {
+          "type": "dialogue",
+          "key": "E18.03"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "60-day wait is omitted; the Sartyr talk trigger is kept."
+    },
+    "full.E19": {
+      "id": "full.E19",
+      "event_id": "E19",
+      "title": "A Suspicious Character",
+      "location": "obelisk_girls",
+      "anchor": "obelisk_girls_gate",
+      "camera_anchor": "obelisk_girls_gate",
+      "cast": [
+        "alexis",
+        "player"
+      ],
+      "required_anchors": [
+        "obelisk_girls_gate"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "obelisk_girls_gate",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "A Suspicious Character",
+          "subtitle": "E19",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E19.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E19.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "alexis",
+          "opponent_name": "Alexis Rhodes",
+          "opponent_deck_id": "alexis_cyber",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jasmine",
+          "opponent_name": "Jasmine",
+          "opponent_deck_id": "jasmine_amazoness",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "mindy",
+          "opponent_name": "Mindy",
+          "opponent_deck_id": "mindy_fairy",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "Three-month visit wait is approximated by E11; exact timing is ambiguous in A01."
+    },
+    "full.E20": {
+      "id": "full.E20",
+      "event_id": "E20",
+      "title": "A Shadow Game",
+      "location": "beach",
+      "anchor": "beach_shore",
+      "camera_anchor": "beach_shore",
+      "cast": [
+        "player",
+        "shadow_duelist"
+      ],
+      "required_anchors": [
+        "beach_shore"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "beach_shore",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "A Shadow Game",
+          "subtitle": "E20",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E20.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E20.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "ante",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "ante",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "ante",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "Ante rules and location sequence are scaffolded; double DP is implemented as an outcome."
+    },
+    "full.E21": {
+      "id": "full.E21",
+      "event_id": "E21",
+      "title": "Suspicious Classmate",
+      "location": "slifer",
+      "anchor": "slifer_player_room_bed",
+      "camera_anchor": "slifer_player_room_camera",
+      "cast": [
+        "gerard",
+        "narrator",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_player_room_bed",
+        "slifer_player_room_camera"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_player_room_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Suspicious Classmate",
+          "subtitle": "E21",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E21.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E21.02"
+        },
+        {
+          "type": "dialogue",
+          "key": "E21.03"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "A01 requires all met NPCs; Dmitri/Blair/Gerard flags are deferred to avoid a circular scaffold."
+    },
+    "full.E22": {
+      "id": "full.E22",
+      "event_id": "E22",
+      "title": "Draw, Draw, Draw",
+      "location": "academy",
+      "anchor": "academy_card_shop_player",
+      "camera_anchor": "academy_card_shop_camera",
+      "cast": [
+        "dorothy",
+        "player"
+      ],
+      "required_anchors": [
+        "academy_card_shop_camera",
+        "academy_card_shop_player"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_card_shop_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Draw, Draw, Draw",
+          "subtitle": "E22",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E22.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E22.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "damon",
+          "opponent_name": "Damon",
+          "opponent_deck_id": "damon_exodia",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Both sides use Damon's draw deck in A01; runtime deck select is left to the player for now."
+    },
+    "full.E23": {
+      "id": "full.E23",
+      "event_id": "E23",
+      "title": "Yugi's Legendary Deck",
+      "location": "beach",
+      "anchor": "beach_shore",
+      "camera_anchor": "beach_shore",
+      "cast": [
+        "dimitri",
+        "player"
+      ],
+      "required_anchors": [
+        "beach_shore"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "beach_shore",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Yugi's Legendary Deck",
+          "subtitle": "E23",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E23.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E23.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "dimitri",
+          "opponent_name": "Dimitri",
+          "opponent_deck_id": "dimitri_copycat",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "One-month met wait is omitted; exam exemption is a flag."
+    },
+    "full.E24": {
+      "id": "full.E24",
+      "event_id": "E24",
+      "title": "Missing Hero",
+      "location": "harbor",
+      "anchor": "harbor_dock",
+      "camera_anchor": "harbor_dock",
+      "cast": [
+        "jaden",
+        "player"
+      ],
+      "required_anchors": [
+        "harbor_dock"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "harbor_dock",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Missing Hero",
+          "subtitle": "E24",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E24.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E24.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Blair's one-month appearance and exact win-rate gate are approximated by E19/wins_jaden."
+    },
+    "full.E25": {
+      "id": "full.E25",
+      "event_id": "E25",
+      "title": "The Power of a Maiden's Love",
+      "location": "obelisk_boys",
+      "anchor": "obelisk_front_gate",
+      "camera_anchor": "obelisk_front_gate",
+      "cast": [
+        "blair",
+        "player"
+      ],
+      "required_anchors": [
+        "obelisk_front_gate"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "obelisk_front_gate",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "The Power of a Maiden's Love",
+          "subtitle": "E25",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E25.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E25.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "blair",
+          "opponent_name": "Blair Flannigan",
+          "opponent_deck_id": "blair_toon",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "Exact timing is ambiguous in A01; not_same_day is omitted."
+    },
+    "full.E26": {
+      "id": "full.E26",
+      "event_id": "E26",
+      "title": "The 7th Deck",
+      "location": "academy",
+      "anchor": "academy_classroom_teacher",
+      "camera_anchor": "academy_classroom_camera",
+      "cast": [
+        "bastion",
+        "player"
+      ],
+      "required_anchors": [
+        "academy_classroom_camera",
+        "academy_classroom_teacher"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_classroom_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "The 7th Deck",
+          "subtitle": "E26",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E26.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E26.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "bastion",
+          "opponent_name": "Bastion Misawa",
+          "opponent_deck_id": "bastion_chem",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "A01's bastion_seventh deck is mapped to bastion_chem."
+    },
+    "full.E27": {
+      "id": "full.E27",
+      "event_id": "E27",
+      "title": "The Truth Behind Gerard",
+      "location": "slifer",
+      "anchor": "slifer_front_gate",
+      "camera_anchor": "slifer_front_camera",
+      "cast": [
+        "gerard",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_front_camera",
+        "slifer_front_gate"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_front_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "The Truth Behind Gerard",
+          "subtitle": "E27",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E27.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E27.02"
+        },
+        {
+          "type": "dialogue",
+          "key": "E27.03"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": ""
+    },
+    "full.E28": {
+      "id": "full.E28",
+      "event_id": "E28",
+      "title": "Battle for the Chocolate!",
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "camera_anchor": "academy_arena_camera",
+      "cast": [
+        "alexis"
+      ],
+      "required_anchors": [
+        "academy_arena_camera",
+        "academy_arena_field_player"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_arena_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Battle for the Chocolate!",
+          "subtitle": "E28",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E28.01"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "alexis",
+          "opponent_name": "Alexis Rhodes",
+          "opponent_deck_id": "alexis_cyber",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jasmine",
+          "opponent_name": "Jasmine",
+          "opponent_deck_id": "jasmine_amazoness",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "mindy",
+          "opponent_name": "Mindy",
+          "opponent_deck_id": "mindy_fairy",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "chazz",
+          "opponent_name": "Chazz Princeton",
+          "opponent_deck_id": "chazz_ojama",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Four-round bracket is scaffolded with four sequential duels; exact bracket order is pending A01."
+    },
+    "full.E28b": {
+      "id": "full.E28b",
+      "event_id": "E28b",
+      "title": "Reversal Valentine's Day",
+      "location": "obelisk_girls",
+      "anchor": "obelisk_girls_gate",
+      "camera_anchor": "obelisk_girls_gate",
+      "cast": [
+        "alexis",
+        "narrator",
+        "player"
+      ],
+      "required_anchors": [
+        "obelisk_girls_gate"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "obelisk_girls_gate",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Reversal Valentine's Day",
+          "subtitle": "E28b",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E28b.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E28b.02"
+        },
+        {
+          "type": "dialogue",
+          "key": "E28b.03"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": ""
+    },
+    "full.E29": {
+      "id": "full.E29",
+      "event_id": "E29",
+      "title": "Helping the Dropout",
+      "location": "gym",
+      "anchor": "gym_practice_field_a",
+      "camera_anchor": "gym_assembly_camera",
+      "cast": [
+        "fontaine",
+        "player"
+      ],
+      "required_anchors": [
+        "gym_assembly_camera",
+        "gym_practice_field_a"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "gym_assembly_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Helping the Dropout",
+          "subtitle": "E29",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E29.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E29.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "fontaine",
+          "opponent_name": "Fonda Fontaine",
+          "opponent_deck_id": "fontaine_nurse",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "DP equal to remaining LP is scaffolded as 1,000 DP until A02 exposes the result LP."
+    },
+    "full.E30": {
+      "id": "full.E30",
+      "event_id": "E30",
+      "title": "A Friend's Concern",
+      "location": "slifer",
+      "anchor": "slifer_player_room_bed",
+      "camera_anchor": "slifer_player_room_camera",
+      "cast": [
+        "chumley",
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_player_room_bed",
+        "slifer_player_room_camera"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_player_room_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "A Friend's Concern",
+          "subtitle": "E30",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E30.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E30.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "chumley",
+          "opponent_name": "Chumley Huffington",
+          "opponent_deck_id": "chumley_koala",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "The stay-in-room counter is a future A02/A08 hook; the flag starts false."
+    },
+    "full.E31": {
+      "id": "full.E31",
+      "event_id": "E31",
+      "title": "The Walk Home",
+      "location": "plaza",
+      "anchor": "academy_front_steps",
+      "camera_anchor": "academy_front_camera",
+      "cast": [
+        "jaden",
+        "player"
+      ],
+      "required_anchors": [
+        "academy_front_camera",
+        "academy_front_steps"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_front_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "The Walk Home",
+          "subtitle": "E31",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E31.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E31.02"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "jaden",
+          "opponent_name": "Jaden Yuki",
+          "opponent_deck_id": "jaden_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Partner-dependent duel/reward is scaffolded as Jaden/Wroughtweiler; other partner branches are future content."
+    },
+    "full.E32": {
+      "id": "full.E32",
+      "event_id": "E32",
+      "title": "Help Miss Dorothy",
+      "location": "plaza",
+      "anchor": "academy_front_steps",
+      "camera_anchor": "academy_front_camera",
+      "cast": [
+        "dorothy",
+        "player"
+      ],
+      "required_anchors": [
+        "academy_front_camera",
+        "academy_front_steps"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_front_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "Help Miss Dorothy",
+          "subtitle": "E32",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E32.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E32.02"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "2/5 chance is not simulated; the event is available on any exam Friday in the scaffold."
+    },
+    "full.E33": {
+      "id": "full.E33",
+      "event_id": "E33",
+      "title": "The Duel King",
+      "location": "academy",
+      "anchor": "chancellor_office_desk",
+      "camera_anchor": "chancellor_office_camera",
+      "cast": [
+        "player",
+        "sheppard"
+      ],
+      "required_anchors": [
+        "chancellor_office_camera",
+        "chancellor_office_desk"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "chancellor_office_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "The Duel King",
+          "subtitle": "E33",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E33.01"
+        },
+        {
+          "type": "dialogue",
+          "key": "E33.02"
+        },
+        {
+          "type": "dialogue",
+          "key": "E33.03"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Per-duelist 10-win requirement is approximated by wins_total; post_game flag is set by the ending flow."
+    }
+  }
+}

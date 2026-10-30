@@ -1,0 +1,94 @@
+{
+  "tool": "run_smoke",
+  "tool_version": "1.0.0",
+  "generated_at": "2026-10-30T17:36:58.142716+00:00",
+  "result": "PASS",
+  "editor": "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
+  "uproject": "C:\\dev\\GX\\DuelAcademyIsland\\DuelAcademyIsland.uproject",
+  "steps": [
+    {
+      "name": "duel-selftest",
+      "command": [
+        "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
+        "C:\\dev\\GX\\DuelAcademyIsland\\DuelAcademyIsland.uproject",
+        "-game",
+        "-nullrhi",
+        "-nosound",
+        "-unattended",
+        "-nop4",
+        "-DADuelSelfTest",
+        "-log",
+        "-stdout",
+        "-FullStdOutLogOutput"
+      ],
+      "status": "pass",
+      "returncode": 0,
+      "duration_seconds": 12.858,
+      "log": "C:\\dev\\GX\\Content\\Data\\Integration\\reports\\logs\\duel-selftest-20261030-183658.log",
+      "note": "[2026.10.30-17.37.07:854][580]LogDuelAcademyIsland: Duel self-test: 24 iterations, 12 player wins, 12 opponent wins, 0 stalls, average turns 11.7"
+    },
+    {
+      "name": "profile-selftest",
+      "command": [
+        "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
+        "C:\\dev\\GX\\DuelAcademyIsland\\DuelAcademyIsland.uproject",
+        "-game",
+        "-nullrhi",
+        "-nosound",
+        "-unattended",
+        "-nop4",
+        "-DAProfileSelfTest",
+        "-log",
+        "-stdout",
+        "-FullStdOutLogOutput"
+      ],
+      "status": "pass",
+      "returncode": 0,
+      "duration_seconds": 10.332,
+      "log": "C:\\dev\\GX\\Content\\Data\\Integration\\reports\\logs\\profile-selftest-20261030-183711.log",
+      "note": "[2026.10.30-17.37.19:396][ 78]LogDuelAcademyIsland: Display: DAProfileSelfTest PASSED."
+    },
+    {
+      "name": "duelrules-selftest",
+      "command": [
+        "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
+        "C:\\dev\\GX\\DuelAcademyIsland\\DuelAcademyIsland.uproject",
+        "-game",
+        "-nullrhi",
+        "-nosound",
+        "-unattended",
+        "-nop4",
+        "-DADuelRulesSelfTest",
+        "-log",
+        "-stdout",
+        "-FullStdOutLogOutput"
+      ],
+      "status": "pass",
+      "returncode": 0,
+      "duration_seconds": 12.874,
+      "log": "C:\\dev\\GX\\Content\\Data\\Integration\\reports\\logs\\duelrules-selftest-20261030-183721.log",
+      "note": "[2026.10.30-17.37.30:985][577]LogDuelAcademyIsland: Duel rules self-test: 58 passed, 0 failed. ALL PASS"
+    },
+    {
+      "name": "economy-selftest",
+      "command": [
+        "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
+        "C:\\dev\\GX\\DuelAcademyIsland\\DuelAcademyIsland.uproject",
+        "-game",
+        "-nullrhi",
+        "-nosound",
+        "-unattended",
+        "-nop4",
+        "-DAEconomySelfTest",
+        "-log",
+        "-stdout",
+        "-FullStdOutLogOutput"
+      ],
+      "status": "pass",
+      "returncode": 0,
+      "duration_seconds": 12.365,
+      "log": "C:\\dev\\GX\\Content\\Data\\Integration\\reports\\logs\\economy-selftest-20261030-183734.log",
+      "note": "[2026.10.30-17.37.44:351][268]LogDuelAcademyIsland: Display: DAEconomySelfTest: 119 passed, 0 failed."
+    }
+  ]
+}
