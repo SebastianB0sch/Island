@@ -2,14 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "DACardRecords.h"
+#include "DADuelRules.h"
 
 class UCardDatabaseSubsystem;
-
-enum class EDuelOwner : uint8
-{
-	Player,
-	Opponent
-};
 
 enum class EDuelPhase : uint8
 {
@@ -220,6 +215,9 @@ public:
 	bool ActivateSpell(int32 Uid, FString& OutError);
 	bool SetSpellTrap(int32 Uid, FString& OutError);
 	bool ActivateSetTrap(int32 Uid, FString& OutError);
+	/** Quick-Play support: activate from hand during Main/Battle, or from a Set card. */
+	bool ActivateQuickPlayFromHand(int32 Uid, FString& OutError);
+	bool ActivateSetSpell(int32 Uid, FString& OutError);
 	bool FlipSummon(int32 Uid, FString& OutError);
 	bool ChangePosition(int32 Uid, FString& OutError);
 	bool ActivateMonsterEffect(int32 Uid, FString& OutError);
@@ -237,10 +235,147 @@ public:
 	/** Debug/self-test helper: simulate a complete AI-vs-AI duel. */
 	static FString RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterations);
 
+	// -----------------------------------------------------------------------
+	// Choices / targeting (additive; no pending choice means legacy auto-play)
+	// -----------------------------------------------------------------------
+
+	bool HasPendingChoice() const { return PendingChoices.Num() > 0; }
+	bool HasPendingChoiceFor(EDuelOwner Side) const;
+	const FDuelChoiceRequest* GetPendingChoice() const;
+	const TArray<FDuelChoiceRequest>& GetPendingChoices() const { return PendingChoices; }
+
+	/** Queue a question.  RequestId is assigned when <= 0.  Returns the id. */
+	int32 RequestChoice(const FDuelChoiceRequest& Request,
+		TFunction<void(const FDuelChoiceRequest&, const TArray<int32>&)> OnResolved = nullptr);
+	bool AnswerChoice(int32 RequestId, const TArray<int32>& OptionIds, FString& OutError);
+	bool AutoAnswerPendingChoice(FString* OutError = nullptr);
+	bool CancelChoice(int32 RequestId, FString& OutError);
+	void ClearPendingChoices();
+
+	/** Convenience wrapper for "you may activate this optional effect" prompts. */
+	int32 RequestOptionalTrigger(const FDuelCard& SourceCard, const FString& Prompt, bool bDefaultYes,
+		TFunction<void(bool)> OnResolved = nullptr);
+
+	/** AI-side choices are answered at RequestChoice time while this is true. */
+	void SetAutoAnswerAiChoices(bool bEnable) { bAutoAnswerAiChoices = bEnable; }
+	bool GetAutoAnswerAiChoices() const { return bAutoAnswerAiChoices; }
+	void SetAutoAnswerAllChoices(bool bEnable) { bAutoAnswerAllChoices = bEnable; }
+
+	// -----------------------------------------------------------------------
+	// Chain stack
+	// -----------------------------------------------------------------------
+
+	bool IsChainOpen() const { return ChainLinks.Num() > 0; }
+	const TArray<FDuelChainLink>& GetChainLinks() const { return ChainLinks; }
+	const TArray<FDuelChainLink>& GetLastResolvedChain() const { return LastResolvedChain; }
+	const TArray<int32>& GetResolvedChainOrder() const { return ResolvedChainOrder; }
+	bool CanAddChainLink(EDuelSpellSpeed Speed, FString* OutReason = nullptr) const;
+
+	/** Start a chain / add a response.  Returns the 1-based link number, 0 on failure. */
+	int32 StartChain(const FDuelChainLink& Link, FString& OutError);
+	int32 AddChainLink(const FDuelChainLink& Link, FString& OutError);
+	bool NegateChainLink(int32 ChainLinkNumber, FString& OutError);
+	int32 ResolveChain(FString& OutError);
+	void ClearChain();
+	EDuelSpellSpeed GetSpellSpeed(const FDuelCard& Card) const;
+
+	/** A05 hook for EffectId != 0 links.  Card effects (EffectId == 0) use the legacy resolver. */
+	void SetChainEffectResolver(TFunction<void(const FDuelChainLink&)> InResolver) { ChainEffectResolver = MoveTemp(InResolver); }
+	void SetEnforceChainSpellSpeeds(bool bEnable) { bEnforceChainSpellSpeeds = bEnable; }
+	bool IsEnforcingChainSpellSpeeds() const { return bEnforceChainSpellSpeeds; }
+
+	// -----------------------------------------------------------------------
+	// Activation windows / timing
+	// -----------------------------------------------------------------------
+
+	EDuelTimingWindow GetCurrentTimingWindow() const;
+	EDuelActivationMode GetActivationMode(const FDuelCard& Card) const;
+	bool IsAutomaticActivation(const FDuelCard& Card) const { return GetActivationMode(Card) == EDuelActivationMode::Automatic; }
+	FDuelActivationRule GetActivationRule(const FDuelCard& Card) const { return ResolveActivationRule(Card); }
+	FDuelActivationRule ResolveActivationRule(const FDuelCard& Card) const;
+	bool IsActivationLegal(const FDuelCard& Card, EDuelTimingWindow Window, FString* OutReason = nullptr) const;
+	void SetActivationRule(int32 CardId, const FDuelActivationRule& Rule) { ActivationRules.Add(CardId, Rule); }
+	void SetActivationMode(const FDuelCard& Card, EDuelActivationMode Mode)
+	{
+		FDuelActivationRule Rule = ResolveActivationRule(Card);
+		Rule.Mode = Mode;
+		ActivationRules.Add(Card.Data.Id, Rule);
+	}
+	void ClearActivationRules() { ActivationRules.Reset(); }
+	void SetEnforceActivationTiming(bool bEnable) { bEnforceActivationTiming = bEnable; }
+	bool IsEnforcingActivationTiming() const { return bEnforceActivationTiming; }
+
+	/** Compatibility flag: true keeps the shipped automatic Trap behaviour. */
+	void SetLegacyAutomaticTraps(bool bEnable) { bLegacyAutomaticTraps = bEnable; }
+	bool AreLegacyAutomaticTrapsEnabled() const { return bLegacyAutomaticTraps; }
+
+	/** Activate a Counter Trap as a chain response.  Scaffolding for A05/A09. */
+	bool ActivateCounterTrapResponse(int32 TrapUid, int32 TargetChainLinkNumber, FString& OutError);
+
+	// -----------------------------------------------------------------------
+	// Deck validation / banned list
+	// -----------------------------------------------------------------------
+
+	FDuelDeckValidationResult ValidateDeck(const TArray<int32>& Main, const TArray<int32>& Extra) const;
+	const FDuelBannedListRuleset& GetBannedList() const { return BannedList; }
+	void SetBannedList(const FDuelBannedListRuleset& InRuleset) { BannedList = InRuleset; }
+	bool LoadBannedListFromJson(const FString& JsonText, FString& OutError);
+	bool LoadBannedListFromFile(const FString& FilePath, FString& OutError);
+	/** Loads Content/Data/Rules/banned_limited.json (A06's provisional file). */
+	bool LoadDefaultBannedList(FString& OutError);
+
+	// -----------------------------------------------------------------------
+	// Scenario / puzzle / exam setup
+	// -----------------------------------------------------------------------
+
+	bool StartScenario(const FDuelScenario& Scenario, FString& OutError);
+	bool IsScenarioActive() const { return bScenarioActive; }
+	const FDuelScenario& GetActiveScenario() const { return ActiveScenario; }
+	int32 GetScenarioPlayerTurnsTaken() const { return ScenarioPlayerTurns; }
+	int32 GetScenarioTurnsRemaining() const;
+	float GetScenarioElapsedSeconds() const { return ScenarioElapsedSeconds; }
+	bool CheckScenarioTimeout(float ElapsedSeconds);
+	bool IsScenarioObjectiveComplete() const;
+	void Surrender();
+
+	// -----------------------------------------------------------------------
+	// Ante
+	// -----------------------------------------------------------------------
+
+	void ConfigureAnte(bool bEnabled, int32 InPlayerCardId = 0, int32 InOpponentCardId = 0);
+	const FDuelAnteState& GetAnteState() const { return AnteState; }
+	bool SelectAnteCard(EDuelOwner Side, int32 CardId, FString& OutError);
+	bool FinalizeAnteSelection(FString& OutError);
+	void SetAnteResultHook(TFunction<void(const FDuelAnteState&)> InHook) { AnteResultHook = MoveTemp(InHook); }
+
+	// -----------------------------------------------------------------------
+	// Result statistics (A02 / A07 contract)
+	// -----------------------------------------------------------------------
+
+	const FDuelResultStats& GetResultStats() const { return ResultStats; }
+	void ResetResultStats() { ResultStats.Reset(); }
+	/** Mark story/exam/ante mode; call after Start/StartScenario. */
+	void SetDuelMode(const FString& InMode) { ResultStats.Mode = InMode; }
+
 	/** Debug helper used by the -DADuelResultWin / -DADuelResultLoss screenshots. */
 	void DebugFinishDuel(bool bPlayerWins);
 
 private:
+	// ---- shared reset / rules plumbing ----
+	void ResetDuelState();
+	void ResetTransientRulesState();
+	void FinalizeResultStats();
+	void ResolveAnteOnDuelEnd();
+	bool BuildAutoChoiceAnswer(const FDuelChoiceRequest& Request, TArray<int32>& OutOptionIds) const;
+	void InvokeChoiceResolver(int32 RequestId, const FDuelChoiceRequest& Request, const TArray<int32>& OptionIds);
+	bool IsChoiceAnswerValid(const FDuelChoiceRequest& Request, const TArray<int32>& OptionIds, FString& OutError) const;
+	bool IsAutomaticTrapTimingAllowed(const FDuelCard& Card, EDuelTimingWindow Window) const;
+	void ExecuteChainLinkCard(FDuelChainLink& Link);
+	void CleanupResolvedChainCard(int32 CardUid);
+	bool SetupScenarioSide(EDuelOwner Side, const FDuelScenario& Scenario, FString& OutError);
+	void CheckScenarioCompletion();
+	bool IsCardInSideDeck(EDuelOwner Side, int32 CardId) const;
+
 	// ---- setup and turn flow ----
 	void SetupSide(EDuelOwner Side, const FString& DeckId);
 	FDuelCard MakeCard(int32 CardId, EDuelOwner Owner, bool bExtra);
@@ -384,6 +519,37 @@ private:
 	bool bAiTurnPending = false;
 	bool bAiRunning = false;
 	FString LastAiMessage;
+
+	// ---- rules architecture (additive, A04) ----
+	TArray<FDuelChoiceRequest> PendingChoices;
+	TMap<int32, TFunction<void(const FDuelChoiceRequest&, const TArray<int32>&)>> ChoiceResolvers;
+	int32 NextChoiceRequestId = 1;
+	bool bAutoAnswerAiChoices = true;
+	bool bAutoAnswerAllChoices = false;
+
+	TArray<FDuelChainLink> ChainLinks;
+	TArray<FDuelChainLink> LastResolvedChain;
+	TArray<int32> ResolvedChainOrder;
+	TFunction<void(const FDuelChainLink&)> ChainEffectResolver;
+	bool bEnforceChainSpellSpeeds = true;
+
+	TMap<int32, FDuelActivationRule> ActivationRules;
+	bool bEnforceActivationTiming = false;
+	bool bLegacyAutomaticTraps = true;
+
+	FDuelBannedListRuleset BannedList;
+
+	bool bScenarioActive = false;
+	FDuelScenario ActiveScenario;
+	int32 ScenarioPlayerTurns = 0;
+	float ScenarioElapsedSeconds = 0.f;
+	bool bScenarioObjectiveComplete = false;
+
+	FDuelAnteState AnteState;
+	TFunction<void(const FDuelAnteState&)> AnteResultHook;
+
+	FDuelResultStats ResultStats;
+	bool bApplyingBattleDamage = false;
 
 	FString PlayerDeckId = TEXT("fire");
 	FString OpponentDeckId = TEXT("jaden");

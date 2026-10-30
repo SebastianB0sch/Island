@@ -7,6 +7,12 @@
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "Math/RandomStream.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 namespace
 {
@@ -82,6 +88,72 @@ FDuelEngine::FDuelEngine(UCardDatabaseSubsystem* InDatabase, int32 InSeed)
 	Player.Name = TEXT("You");
 	Opponent.Owner = EDuelOwner::Opponent;
 	Opponent.Name = TEXT("Jaden Yuki");
+}
+
+// ---------------------------------------------------------------------------
+// Rules state reset
+// ---------------------------------------------------------------------------
+
+void FDuelEngine::ResetTransientRulesState()
+{
+	PendingChoices.Reset();
+	ChoiceResolvers.Reset();
+	NextChoiceRequestId = 1;
+
+	ChainLinks.Reset();
+	LastResolvedChain.Reset();
+	ResolvedChainOrder.Reset();
+	ChainEffectResolver.Reset();
+
+	ResultStats.Reset();
+	bScenarioObjectiveComplete = false;
+}
+
+void FDuelEngine::ResetDuelState()
+{
+	Player = FDuelSide();
+	Player.Owner = EDuelOwner::Player;
+	Player.Name = TEXT("You");
+	Player.LP = StartingLP;
+	Player.Monsters.SetNum(5);
+	Player.Spells.SetNum(5);
+
+	Opponent = FDuelSide();
+	Opponent.Owner = EDuelOwner::Opponent;
+	Opponent.Name = OpponentDisplayName;
+	Opponent.LP = StartingLP;
+	Opponent.Monsters.SetNum(5);
+	Opponent.Spells.SetNum(5);
+
+	ActiveSide = EDuelOwner::Player;
+	Phase = EDuelPhase::Main1;
+	TurnNumber = 0;
+	bStarted = false;
+	bWinnerSet = false;
+	Winner = EDuelOwner::Player;
+	bAwaitingDiscard = false;
+	bAiTurnPending = false;
+	bAiRunning = false;
+	LastAiMessage.Reset();
+	UidCounter = 0;
+
+	LogEntries.Reset();
+	VisualEvents.Reset();
+	ResetTransientRulesState();
+	bApplyingBattleDamage = false;
+
+	bScenarioActive = false;
+	ActiveScenario = FDuelScenario();
+	ScenarioPlayerTurns = 0;
+	ScenarioElapsedSeconds = 0.f;
+
+	AnteState.bTransferred = false;
+	AnteState.bPlayerWon = false;
+	AnteState.WinnerCardId = 0;
+	AnteState.LoserCardId = 0;
+	AnteState.PlayerCardUid = 0;
+	AnteState.OpponentCardUid = 0;
+	AnteState.Note.Reset();
 }
 
 // ---------------------------------------------------------------------------
@@ -163,6 +235,7 @@ void FDuelEngine::Start(const FString& InPlayerDeckId, const FString& InOpponent
 	{
 		return;
 	}
+	ResetDuelState();
 	bStarted = true;
 	PlayerDeckId = InPlayerDeckId.IsEmpty() ? TEXT("fire") : InPlayerDeckId;
 	OpponentDeckId = InOpponentDeckId.IsEmpty() ? TEXT("jaden") : InOpponentDeckId;
@@ -173,6 +246,22 @@ void FDuelEngine::Start(const FString& InPlayerDeckId, const FString& InOpponent
 	Log(TEXT("Duel start. Both duelists draw five cards."), TEXT("turn"));
 	SetupSide(EDuelOwner::Player, PlayerDeckId);
 	SetupSide(EDuelOwner::Opponent, OpponentDeckId);
+
+	// Resolve any ante selections made before the decks were built.
+	if (AnteState.bEnabled)
+	{
+		auto FindAnteUid = [this](EDuelOwner Side, int32 CardId) -> int32
+		{
+			if (CardId <= 0) return 0;
+			for (const FDuelCard& Card : SideRef(Side).Deck)
+			{
+				if (Card.Data.Id == CardId) return Card.Uid;
+			}
+			return 0;
+		};
+		AnteState.PlayerCardUid = FindAnteUid(EDuelOwner::Player, AnteState.PlayerCardId);
+		AnteState.OpponentCardUid = FindAnteUid(EDuelOwner::Opponent, AnteState.OpponentCardId);
+	}
 
 	if (Player.Deck.Num() == 0 || Opponent.Deck.Num() == 0)
 	{
@@ -197,6 +286,18 @@ void FDuelEngine::StartTurn(EDuelOwner Side)
 	ActiveSide = Side;
 	++TurnNumber;
 	Phase = EDuelPhase::Main1;
+
+	// Puzzle/exam turn limits count player turns only, which is how the GBA
+	// timed duels describe their limit.
+	if (bScenarioActive && Side == EDuelOwner::Player)
+	{
+		++ScenarioPlayerTurns;
+		if (ActiveScenario.TurnLimit > 0 && ScenarioPlayerTurns > ActiveScenario.TurnLimit)
+		{
+			EndDuel(EDuelOwner::Opponent, TEXT("The turn limit was reached."));
+			return;
+		}
+	}
 	// Turn-scoped flags expire when the next turn begins, even if the card that
 	// created them belonged to the side that just finished.
 	Player.bBattleDamageZeroThisTurn = false;
@@ -329,6 +430,10 @@ void FDuelEngine::Draw(EDuelOwner Side, int32 Count, bool bSilent)
 		}
 		FDuelCard Card = State.Deck.Pop();
 		State.Hand.Add(Card);
+		if (Side == EDuelOwner::Player)
+		{
+			++ResultStats.CardsDrawn;
+		}
 		if (!bSilent)
 		{
 			Log(FString::Printf(TEXT("%s %s %s."),
@@ -342,7 +447,7 @@ void FDuelEngine::Draw(EDuelOwner Side, int32 Count, bool bSilent)
 
 void FDuelEngine::EndTurn()
 {
-	if (bWinnerSet || !IsPlayerTurn() || bAwaitingDiscard)
+	if (bWinnerSet || !IsPlayerTurn() || bAwaitingDiscard || HasPendingChoice())
 	{
 		return;
 	}
@@ -416,7 +521,12 @@ void FDuelEngine::RunOpponentTurn()
 	}
 	bAiTurnPending = false;
 	bAiRunning = true;
-	StartTurn(EDuelOwner::Opponent);
+	const bool bTurnAlreadyStarted = ActiveSide == EDuelOwner::Opponent
+		&& Phase == EDuelPhase::Main1 && TurnNumber > 0;
+	if (!bTurnAlreadyStarted)
+	{
+		StartTurn(EDuelOwner::Opponent);
+	}
 	if (!bWinnerSet)
 	{
 		AiPlayMainPhase();
@@ -435,6 +545,19 @@ void FDuelEngine::RunOpponentTurn()
 		TriggerEndPhaseEffects(EDuelOwner::Opponent);
 		Log(FString::Printf(TEXT("%s ends their turn."), *OpponentDisplayName), TEXT("phase"));
 		StartTurn(EDuelOwner::Player);
+	}
+	while (!bWinnerSet && HasPendingChoiceFor(EDuelOwner::Opponent))
+	{
+		const FDuelChoiceRequest* HeadChoice = GetPendingChoice();
+		if (!HeadChoice || HeadChoice->Side != EDuelOwner::Opponent)
+		{
+			break;
+		}
+		FString ChoiceError;
+		if (!AutoAnswerPendingChoice(&ChoiceError))
+		{
+			break;
+		}
 	}
 	bAiRunning = false;
 	if (!bWinnerSet)
@@ -462,6 +585,10 @@ void FDuelEngine::EndDuel(EDuelOwner WinnerSide, const FString& Reason)
 	EmitVisual(EDuelVisualEventType::Win, WinnerSide, nullptr, 0, Reason);
 	LastAiMessage = FString::Printf(TEXT("%s %s."), *SideRef(WinnerSide).Name,
 		WinnerSide == EDuelOwner::Player ? TEXT("win") : TEXT("wins"));
+	ResultStats.EndReason = Reason;
+	FinalizeResultStats();
+	ResolveAnteOnDuelEnd();
+	ClearPendingChoices();
 }
 
 void FDuelEngine::CheckWinner()
@@ -469,6 +596,14 @@ void FDuelEngine::CheckWinner()
 	if (bWinnerSet)
 	{
 		return;
+	}
+	if (bScenarioActive)
+	{
+		CheckScenarioCompletion();
+		if (bWinnerSet)
+		{
+			return;
+		}
 	}
 	if (Player.LP <= 0 && Opponent.LP <= 0)
 	{
@@ -530,7 +665,8 @@ bool FDuelEngine::IsMainPhase() const
 
 bool FDuelEngine::CanPlayerAct() const
 {
-	return !bWinnerSet && ActiveSide == EDuelOwner::Player && !bAwaitingDiscard && !bAiTurnPending;
+	return !bWinnerSet && ActiveSide == EDuelOwner::Player && !bAwaitingDiscard && !bAiTurnPending
+		&& !HasPendingChoice();
 }
 
 FString FDuelEngine::GetWinnerName() const
@@ -726,6 +862,10 @@ void FDuelEngine::RemoveFromGrave(EDuelOwner Side, int32 Uid)
 
 void FDuelEngine::DiscardCard(FDuelCard Card, const FString& Reason)
 {
+	if (Card.Owner == EDuelOwner::Player)
+	{
+		++ResultStats.CardsDiscarded;
+	}
 	FDuelCard* Found = FindCard(Card.Uid);
 	FDuelCard Discarded = Found ? *Found : Card;
 	EmitVisual(EDuelVisualEventType::Discard, Discarded.Owner, &Discarded, 0,
@@ -1507,6 +1647,13 @@ TArray<FDuelActionInfo> FDuelEngine::GetHandActions(int32 Uid)
 			Activate.Label = IsFieldSpellName(Card->Data.Name) ? TEXT("Activate Field Spell") : TEXT("Activate");
 			Actions.Add(Activate);
 		}
+		if (Card->Data.Subtype == TEXT("Quick-Play") && EmptySpellZone(EDuelOwner::Player) != INDEX_NONE)
+		{
+			FDuelActionInfo Set;
+			Set.Action = EDuelAction::SetSpellTrap;
+			Set.Label = TEXT("Set Quick-Play");
+			Actions.Add(Set);
+		}
 	}
 	else if (Card->IsTrap())
 	{
@@ -1580,6 +1727,17 @@ TArray<FDuelActionInfo> FDuelEngine::GetSpellTrapActions(int32 Uid)
 	{
 		return Actions;
 	}
+	if (Card->IsSpell())
+	{
+		if (Card->Data.Subtype == TEXT("Quick-Play"))
+		{
+			FDuelActionInfo Action;
+			Action.Action = EDuelAction::ActivateSpell;
+			Action.Label = TEXT("Activate Quick-Play");
+			Actions.Add(Action);
+		}
+		return Actions;
+	}
 	if (!IsManualTrapName(Card->Data.Name))
 	{
 		return Actions;
@@ -1622,6 +1780,10 @@ TArray<FDuelActionInfo> FDuelEngine::GetSpellTrapActions(int32 Uid)
 TArray<FDuelAttackTarget> FDuelEngine::GetAttackTargets(int32 AttackerUid) const
 {
 	TArray<FDuelAttackTarget> Targets;
+	if (HasPendingChoice())
+	{
+		return Targets;
+	}
 	const FDuelCard* Attacker = FindMonster(AttackerUid);
 	if (!Attacker || Attacker->Controller != EDuelOwner::Player || !CanAttack(*Attacker))
 	{
@@ -1905,6 +2067,7 @@ bool FDuelEngine::SpecialSummon(int32 Uid, FString& OutError)
 	OnSummon(*Summoned, true);
 	TriggerSummonTraps(*Summoned, false);
 	if (bWinnerSet) return true;
+	CheckWinner();
 	return true;
 }
 
@@ -1912,6 +2075,10 @@ void FDuelEngine::OnSummon(FDuelCard& Card, bool bSpecial, int32 TributeCount, b
 {
 	EDuelOwner Side = Card.Controller;
 	FDuelSide& State = SideRef(Side);
+	if (bSpecial && Side == EDuelOwner::Player)
+	{
+		++ResultStats.SpecialSummons;
+	}
 	Card.SummonedTurn = TurnNumber;
 	Card.SetTurn = -1;
 	FDuelVisualEvent& SummonEvent = EmitVisual(EDuelVisualEventType::Summon, Side, &Card, TributeCount, CardName(Card), false);
@@ -2255,6 +2422,11 @@ bool FDuelEngine::Attack(int32 AttackerUid, int32 TargetUid, FString& OutError)
 
 bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int32 TargetUid, FString& OutError)
 {
+	if (HasPendingChoice())
+	{
+		OutError = TEXT("Answer the pending choice first.");
+		return false;
+	}
 	if (bWinnerSet || Phase != EDuelPhase::Battle || ActiveSide != AttackerSide)
 	{
 		OutError = TEXT("You cannot attack right now.");
@@ -2415,6 +2587,10 @@ FDuelCard* FDuelEngine::PickAttackTrap(EDuelOwner Defender, FDuelCard& Attacker,
 	for (FDuelCard& Spell : DefenderSide.Spells)
 	{
 		if (!Spell.IsValid() || Spell.bFaceUp || Spell.SetTurn >= TurnNumber)
+		{
+			continue;
+		}
+		if (!IsAutomaticTrapTimingAllowed(Spell, EDuelTimingWindow::ResponseToAttack))
 		{
 			continue;
 		}
@@ -2761,6 +2937,7 @@ void FDuelEngine::TriggerSummonTraps(FDuelCard& Summoned, bool bNormalSummon)
 	for (FDuelCard& Spell : Defender.Spells)
 	{
 		if (!Spell.IsValid() || Spell.bFaceUp || Spell.SetTurn >= TurnNumber) continue;
+		if (!IsAutomaticTrapTimingAllowed(Spell, EDuelTimingWindow::ResponseToSummon)) continue;
 		if (IsName(Spell, TEXT("Trap Hole"))) TrapHole = &Spell;
 		else if (IsName(Spell, TEXT("Torrential Tribute"))) Torrential = &Spell;
 	}
@@ -2985,6 +3162,17 @@ void FDuelEngine::DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Att
 	const bool bWasFaceUp = Dead.bFaceUp && !bWasFaceDown;
 	const EDuelOwner Controller = Dead.Controller;
 	const int32 Zone = FindMonsterZone(Controller, Uid);
+	if (bByBattle)
+	{
+		if (Dead.Owner == EDuelOwner::Opponent)
+		{
+			++ResultStats.MonstersDestroyedByBattle;
+		}
+		else if (Dead.Owner == EDuelOwner::Player)
+		{
+			++ResultStats.MonstersLostByBattle;
+		}
+	}
 
 	RemoveFromZone(Dead, Uid);
 	CleanupEquips(Dead);
@@ -3344,6 +3532,10 @@ void FDuelEngine::InflictDamage(EDuelOwner Side, int32 Amount, const FString& Re
 	{
 		return;
 	}
+	if (!bApplyingBattleDamage && Side == EDuelOwner::Opponent)
+	{
+		ResultStats.EffectDamageDealt += Amount;
+	}
 	FDuelSide& State = SideRef(Side);
 	State.LP -= Amount;
 	Log(FString::Printf(TEXT("%s %s %d damage%s."), *State.Name,
@@ -3355,7 +3547,7 @@ void FDuelEngine::InflictDamage(EDuelOwner Side, int32 Amount, const FString& Re
 
 void FDuelEngine::InflictBattleDamage(EDuelOwner Side, int32 Amount, const FString& Reason)
 {
-	if (Amount <= 0)
+	if (Amount <= 0 || bWinnerSet)
 	{
 		return;
 	}
@@ -3364,7 +3556,17 @@ void FDuelEngine::InflictBattleDamage(EDuelOwner Side, int32 Amount, const FStri
 		Log(FString::Printf(TEXT("%s's battle damage becomes 0."), *SideRef(Side).Name), TEXT("effect"));
 		return;
 	}
+	if (Side == EDuelOwner::Opponent)
+	{
+		ResultStats.BattleDamageDealt += Amount;
+	}
+	else if (Side == EDuelOwner::Player)
+	{
+		ResultStats.BattleDamageTaken += Amount;
+	}
+	bApplyingBattleDamage = true;
 	InflictDamage(Side, Amount, Reason);
+	bApplyingBattleDamage = false;
 }
 
 void FDuelEngine::GainLp(EDuelOwner Side, int32 Amount, const FString& Reason)
@@ -3577,6 +3779,14 @@ bool FDuelEngine::CanActivateSpellCard(const FDuelCard& Card)
 	if (!Card.IsSpell() || bWinnerSet || !IsMainPhase() || Card.Controller != ActiveSide)
 	{
 		return false;
+	}
+	if (bEnforceActivationTiming)
+	{
+		FString Reason;
+		if (!IsActivationLegal(Card, GetCurrentTimingWindow(), &Reason))
+		{
+			return false;
+		}
 	}
 	const FDuelSide& State = SideRef(Card.Controller);
 	const bool bInHand = State.Hand.ContainsByPredicate([&Card](const FDuelCard& C) { return C.Uid == Card.Uid; });
@@ -4122,6 +4332,15 @@ bool FDuelEngine::ActivateSpell(int32 Uid, FString& OutError)
 		OutError = TEXT("That Spell cannot be activated right now.");
 		return false;
 	}
+	if (bEnforceActivationTiming)
+	{
+		FString Reason;
+		if (!IsActivationLegal(*HandCard, GetCurrentTimingWindow(), &Reason))
+		{
+			OutError = Reason.IsEmpty() ? TEXT("That Spell cannot be activated in this timing window.") : Reason;
+			return false;
+		}
+	}
 	const FString Name = HandCard->Data.Name;
 	const bool bFieldSpell = IsFieldSpellName(Name);
 	const bool bStays = bFieldSpell || IsEquipName(Name);
@@ -4151,6 +4370,7 @@ bool FDuelEngine::ActivateSpell(int32 Uid, FString& OutError)
 		FDuelVisualEvent& SpellEvent = EmitVisual(EDuelVisualEventType::Spell, EDuelOwner::Player, Placed, 0, Name);
 		SpellEvent.Zone = FindSpellZone(EDuelOwner::Player, Uid);
 		OnSpellActivated();
+		++ResultStats.SpellsActivated;
 		ResolveSpell(*Placed);
 	}
 	CheckWinner();
@@ -4179,12 +4399,14 @@ bool FDuelEngine::SetSpellTrap(int32 Uid, FString& OutError)
 	{
 		if (Card.Uid == Uid) { HandCard = &Card; break; }
 	}
-	if (!HandCard || !HandCard->IsTrap() || EmptySpellZone(EDuelOwner::Player) == INDEX_NONE)
+	if (!HandCard || (!HandCard->IsTrap() && !(HandCard->IsSpell() && HandCard->Data.Subtype == TEXT("Quick-Play")))
+		|| EmptySpellZone(EDuelOwner::Player) == INDEX_NONE)
 	{
 		OutError = TEXT("That card cannot be Set.");
 		return false;
 	}
 	const FString Name = HandCard->Data.Name;
+	(void)Name;
 	FDuelCard Copy;
 	if (!RemoveFromZone(Copy, Uid))
 	{
@@ -4217,12 +4439,158 @@ bool FDuelEngine::ActivateSetTrap(int32 Uid, FString& OutError)
 		OutError = TEXT("That Trap cannot be activated right now.");
 		return false;
 	}
+	if (bEnforceActivationTiming)
+	{
+		FString Reason;
+		if (!IsActivationLegal(*Trap, GetCurrentTimingWindow(), &Reason))
+		{
+			OutError = Reason.IsEmpty() ? TEXT("That Trap cannot be activated in this timing window.") : Reason;
+			return false;
+		}
+	}
 	if (!IsManualTrapName(Trap->Data.Name))
 	{
 		OutError = TEXT("That Trap activates automatically at the correct timing.");
 		return false;
 	}
 	return ActivateTrapInternal(*Trap, EDuelOwner::Player, false);
+}
+
+bool FDuelEngine::ActivateQuickPlayFromHand(int32 Uid, FString& OutError)
+{
+	if (!CanPlayerAct() || (!IsMainPhase() && Phase != EDuelPhase::Battle))
+	{
+		OutError = TEXT("A Quick-Play Spell cannot be activated right now.");
+		return false;
+	}
+	FDuelCard* HandCard = nullptr;
+	for (FDuelCard& Card : Player.Hand)
+	{
+		if (Card.Uid == Uid)
+		{
+			HandCard = &Card;
+			break;
+		}
+	}
+	if (!HandCard || !HandCard->IsSpell() || HandCard->Data.Subtype != TEXT("Quick-Play"))
+	{
+		OutError = TEXT("That card is not a Quick-Play Spell in your hand.");
+		return false;
+	}
+	if (EmptySpellZone(EDuelOwner::Player) == INDEX_NONE)
+	{
+		OutError = TEXT("There is no room in your Spell & Trap Zone.");
+		return false;
+	}
+	FString Reason;
+	if (!IsActivationLegal(*HandCard, GetCurrentTimingWindow(), &Reason))
+	{
+		OutError = Reason.IsEmpty() ? TEXT("That Quick-Play Spell cannot be activated in this timing window.") : Reason;
+		return false;
+	}
+	// During the Main Phase the card-specific legality checks are still applied.
+	// During the Battle Phase the legacy validator does not run, so the timing
+	// layer plus the Quick-Play type check are the only guards.
+	if (IsMainPhase() && !CanActivateSpellCard(*HandCard))
+	{
+		OutError = TEXT("That Quick-Play Spell cannot be activated right now.");
+		return false;
+	}
+
+	const FString Name = HandCard->Data.Name;
+	FDuelCard Copy;
+	if (!RemoveFromZone(Copy, Uid))
+	{
+		OutError = TEXT("The card is no longer in your hand.");
+		return false;
+	}
+	if (TryCounterSpell(EDuelOwner::Player, EDuelOwner::Opponent))
+	{
+		MoveToGrave(Copy);
+		return true;
+	}
+	Log(FString::Printf(TEXT("You activate %s."), *Name), TEXT("spell"));
+	if (!PlaceSpellTrap(EDuelOwner::Player, Copy, true, false))
+	{
+		MoveToGrave(Copy);
+		OutError = TEXT("There is no room in your Spell & Trap Zone.");
+		return false;
+	}
+	if (FDuelCard* Placed = FindSpellTrap(Uid))
+	{
+		FDuelVisualEvent& SpellEvent = EmitVisual(EDuelVisualEventType::Spell, EDuelOwner::Player, Placed, 0, Name);
+		SpellEvent.Zone = FindSpellZone(EDuelOwner::Player, Uid);
+		OnSpellActivated();
+		++ResultStats.SpellsActivated;
+		ResolveSpell(*Placed);
+	}
+	CheckWinner();
+	if (bWinnerSet)
+	{
+		return true;
+	}
+	if (FDuelCard* Done = FindSpellTrap(Uid))
+	{
+		if (!Done->bFaceUp || Done->Data.Subtype != TEXT("Continuous"))
+		{
+			FDuelCard Remove;
+			if (RemoveFromZone(Remove, Uid))
+			{
+				MoveToGrave(Remove);
+			}
+		}
+	}
+	return true;
+}
+
+bool FDuelEngine::ActivateSetSpell(int32 Uid, FString& OutError)
+{
+	if (!CanPlayerAct() || (!IsMainPhase() && Phase != EDuelPhase::Battle))
+	{
+		OutError = TEXT("A Set Quick-Play Spell cannot be activated right now.");
+		return false;
+	}
+	FDuelCard* Card = FindSpellTrap(Uid);
+	if (!Card || Card->Controller != EDuelOwner::Player || Card->bFaceUp
+		|| Card->SetTurn >= TurnNumber || !Card->IsSpell()
+		|| Card->Data.Subtype != TEXT("Quick-Play"))
+	{
+		OutError = TEXT("That Set card is not an activatable Quick-Play Spell.");
+		return false;
+	}
+	FString Reason;
+	if (!IsActivationLegal(*Card, GetCurrentTimingWindow(), &Reason))
+	{
+		OutError = Reason.IsEmpty() ? TEXT("That Quick-Play Spell cannot be activated in this timing window.") : Reason;
+		return false;
+	}
+
+	const FString Name = Card->Data.Name;
+	Card->bFaceUp = true;
+	if (TryCounterSpell(EDuelOwner::Player, EDuelOwner::Opponent))
+	{
+		if (FDuelCard* Negated = FindSpellTrap(Uid))
+		{
+			DestroySpellTrap(*Negated, true);
+		}
+		return true;
+	}
+	Log(FString::Printf(TEXT("You activate %s."), *Name), TEXT("spell"));
+	if (FDuelCard* Placed = FindSpellTrap(Uid))
+	{
+		FDuelVisualEvent& SpellEvent = EmitVisual(EDuelVisualEventType::Spell, EDuelOwner::Player, Placed, 0, Name);
+		SpellEvent.Zone = FindSpellZone(EDuelOwner::Player, Uid);
+		OnSpellActivated();
+		++ResultStats.SpellsActivated;
+		ResolveSpell(*Placed);
+	}
+	CheckWinner();
+	if (bWinnerSet)
+	{
+		return true;
+	}
+	CleanupResolvedChainCard(Uid);
+	return true;
 }
 
 bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bAutomatic)
@@ -4253,6 +4621,10 @@ bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bA
 	Log(FString::Printf(TEXT("%s activates %s."), *SideRef(Side).Name, *Name), TEXT("trap"));
 	FDuelVisualEvent& TrapEvent = EmitVisual(EDuelVisualEventType::Trap, Side, &Trap, 0, Name);
 	TrapEvent.Zone = FindSpellZone(Side, Uid);
+	if (Side == EDuelOwner::Player)
+	{
+		++ResultStats.TrapsActivated;
+	}
 
 	FDuelCard* Placed = FindSpellTrap(Uid);
 	if (!Placed)
@@ -4683,6 +5055,10 @@ bool FDuelEngine::PerformFusion(const FString& FusionType)
 	if (FDuelCard* Placed = FindMonster(ResultCard.Uid))
 	{
 		Placed->bSpecialSummoned = true;
+		if (Side == EDuelOwner::Player)
+		{
+			++ResultStats.FusionSummons;
+		}
 		Log(FString::Printf(TEXT("%s Fusion Summons %s using %s."), *SideRef(Side).Name, *CardName(*Placed),
 			*FString::Join(MaterialNames, TEXT(", "))), TEXT("summon"));
 		OnSummon(*Placed, true);
@@ -4755,6 +5131,10 @@ bool FDuelEngine::ActivateRitual()
 	if (FDuelCard* Placed = FindMonster(RitualUid))
 	{
 		Placed->bSpecialSummoned = true;
+		if (Side == EDuelOwner::Player)
+		{
+			++ResultStats.RitualSummons;
+		}
 		Log(FString::Printf(TEXT("%s Ritual Summons Legendary Flame Lord."), *SideRef(Side).Name), TEXT("summon"));
 		OnSummon(*Placed, true);
 		TriggerSummonTraps(*Placed, false);
@@ -4866,6 +5246,11 @@ bool FDuelEngine::CanActivateMonsterEffect(const FDuelCard& Card)
 
 bool FDuelEngine::ActivateMonsterEffect(int32 Uid, FString& OutError)
 {
+	if (HasPendingChoice())
+	{
+		OutError = TEXT("Answer the pending choice first.");
+		return false;
+	}
 	FDuelCard* Card = FindMonster(Uid);
 	if (!Card || Card->Controller != ActiveSide)
 	{
@@ -4876,6 +5261,15 @@ bool FDuelEngine::ActivateMonsterEffect(int32 Uid, FString& OutError)
 	{
 		OutError = TEXT("That effect cannot be activated right now.");
 		return false;
+	}
+	if (bEnforceActivationTiming)
+	{
+		FString Reason;
+		if (!IsActivationLegal(*Card, GetCurrentTimingWindow(), &Reason))
+		{
+			OutError = Reason.IsEmpty() ? TEXT("That monster effect cannot be activated in this timing window.") : Reason;
+			return false;
+		}
 	}
 	const EDuelOwner Side = Card->Controller;
 	const EDuelOwner Opp = Other(Side);
@@ -5273,6 +5667,10 @@ void FDuelEngine::AiActivateSpellCard(FDuelCard& Card)
 		FDuelVisualEvent& SpellEvent = EmitVisual(EDuelVisualEventType::Spell, Side, Placed, 0, Name);
 		SpellEvent.Zone = FindSpellZone(Side, Uid);
 		OnSpellActivated();
+		if (Side == EDuelOwner::Player)
+		{
+			++ResultStats.SpellsActivated;
+		}
 		ResolveSpell(*Placed);
 	}
 	CheckWinner();
@@ -5583,6 +5981,1464 @@ void FDuelEngine::DebugFinishDuel(bool bPlayerWins)
 				? FString::Printf(TEXT("%s's Life Points reached 0."), *OpponentDisplayName)
 				: FString(TEXT("Your Life Points reached 0.")));
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Rules architecture: choices, chain, timing, deck validation, scenario/ante
+// ---------------------------------------------------------------------------
+
+namespace
+{
+	bool IsResponseTimingWindow(EDuelTimingWindow Window)
+	{
+		return Window == EDuelTimingWindow::ResponseToActivation
+			|| Window == EDuelTimingWindow::ResponseToTrap
+			|| Window == EDuelTimingWindow::ResponseToSummon
+			|| Window == EDuelTimingWindow::ResponseToAttack;
+	}
+
+	bool IsMainTimingWindow(EDuelTimingWindow Window)
+	{
+		return Window == EDuelTimingWindow::Main1 || Window == EDuelTimingWindow::Main2;
+	}
+
+	bool IsWindowInList(const TArray<EDuelTimingWindow>& Windows, EDuelTimingWindow Window)
+	{
+		return Windows.Contains(Window) || Windows.Contains(EDuelTimingWindow::Any);
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Choices / targeting
+// ---------------------------------------------------------------------------
+
+bool FDuelEngine::HasPendingChoiceFor(EDuelOwner Side) const
+{
+	for (const FDuelChoiceRequest& Request : PendingChoices)
+	{
+		if (Request.Side == Side)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+const FDuelChoiceRequest* FDuelEngine::GetPendingChoice() const
+{
+	return PendingChoices.Num() > 0 ? &PendingChoices[0] : nullptr;
+}
+
+int32 FDuelEngine::RequestChoice(const FDuelChoiceRequest& Request,
+	TFunction<void(const FDuelChoiceRequest&, const TArray<int32>&)> OnResolved)
+{
+	if (bWinnerSet)
+	{
+		Log(TEXT("A choice was requested after the duel ended."), TEXT("error"));
+		return 0;
+	}
+	FDuelChoiceRequest Stored = Request;
+	if (Stored.Options.Num() == 0)
+	{
+		Log(TEXT("A choice request had no options and was ignored."), TEXT("error"));
+		return 0;
+	}
+	if (Stored.RequestId <= 0
+		|| PendingChoices.ContainsByPredicate([&Stored](const FDuelChoiceRequest& Existing)
+		{
+			return Existing.RequestId == Stored.RequestId;
+		})
+		|| ChoiceResolvers.Contains(Stored.RequestId))
+	{
+		Stored.RequestId = NextChoiceRequestId++;
+	}
+	else
+	{
+		NextChoiceRequestId = FMath::Max(NextChoiceRequestId, Stored.RequestId + 1);
+	}
+	if (Stored.MinSelections < 0)
+	{
+		Stored.MinSelections = 0;
+	}
+	Stored.MinSelections = FMath::Min(Stored.MinSelections, Stored.Options.Num());
+	if (Stored.MaxSelections <= 0)
+	{
+		Stored.MaxSelections = 1;
+	}
+	if (Stored.MaxSelections < Stored.MinSelections)
+	{
+		Stored.MaxSelections = Stored.MinSelections;
+	}
+	Stored.MaxSelections = FMath::Min(Stored.MaxSelections, Stored.Options.Num());
+
+	const int32 RequestId = Stored.RequestId;
+	if (OnResolved)
+	{
+		ChoiceResolvers.Add(RequestId, MoveTemp(OnResolved));
+	}
+	const bool bAutoAnswer = bAutoAnswerAllChoices
+		|| (bAutoAnswerAiChoices && Stored.Side == EDuelOwner::Opponent);
+	if (bAutoAnswer)
+	{
+		TArray<int32> OptionIds;
+		BuildAutoChoiceAnswer(Stored, OptionIds);
+		Log(FString::Printf(TEXT("AI answers: %s"), *Stored.Prompt), TEXT("choice"));
+		InvokeChoiceResolver(RequestId, Stored, OptionIds);
+		return RequestId;
+	}
+
+	PendingChoices.Add(Stored);
+	Log(FString::Printf(TEXT("Choice pending: %s"), *Stored.Prompt), TEXT("choice"));
+	return RequestId;
+}
+
+bool FDuelEngine::BuildAutoChoiceAnswer(const FDuelChoiceRequest& Request, TArray<int32>& OutOptionIds) const
+{
+	OutOptionIds.Reset();
+	TSet<int32> Chosen;
+
+	auto AddIfLegal = [&Request, &OutOptionIds, &Chosen](int32 OptionId) -> bool
+	{
+		if (OutOptionIds.Num() >= Request.MaxSelections)
+		{
+			return false;
+		}
+		const FDuelChoiceOption* Option = Request.Options.FindByPredicate([OptionId](const FDuelChoiceOption& Candidate)
+		{
+			return Candidate.Id == OptionId;
+		});
+		if (!Option || !Option->bEnabled || Chosen.Contains(OptionId))
+		{
+			return false;
+		}
+		Chosen.Add(OptionId);
+		OutOptionIds.Add(OptionId);
+		return true;
+	};
+
+	for (int32 OptionId : Request.DefaultOptionIds)
+	{
+		AddIfLegal(OptionId);
+	}
+	if (OutOptionIds.Num() < Request.MinSelections)
+	{
+		for (const FDuelChoiceOption& Option : Request.Options)
+		{
+			if (OutOptionIds.Num() >= Request.MinSelections)
+			{
+				break;
+			}
+			AddIfLegal(Option.Id);
+		}
+	}
+	return OutOptionIds.Num() >= Request.MinSelections;
+}
+
+bool FDuelEngine::IsChoiceAnswerValid(const FDuelChoiceRequest& Request, const TArray<int32>& OptionIds, FString& OutError) const
+{
+	if (OptionIds.Num() < Request.MinSelections)
+	{
+		OutError = FString::Printf(TEXT("At least %d option(s) must be selected."), Request.MinSelections);
+		return false;
+	}
+	if (OptionIds.Num() > Request.MaxSelections)
+	{
+		OutError = FString::Printf(TEXT("At most %d option(s) may be selected."), Request.MaxSelections);
+		return false;
+	}
+	TSet<int32> Seen;
+	for (int32 OptionId : OptionIds)
+	{
+		const FDuelChoiceOption* Option = Request.Options.FindByPredicate([OptionId](const FDuelChoiceOption& Candidate)
+		{
+			return Candidate.Id == OptionId;
+		});
+		if (!Option)
+		{
+			OutError = FString::Printf(TEXT("Option %d is not part of this choice."), OptionId);
+			return false;
+		}
+		if (!Option->bEnabled)
+		{
+			OutError = Option->DisabledReason.IsEmpty()
+				? FString::Printf(TEXT("Option %d is not legal."), OptionId)
+				: Option->DisabledReason;
+			return false;
+		}
+		if (Seen.Contains(OptionId))
+		{
+			OutError = FString::Printf(TEXT("Option %d was selected twice."), OptionId);
+			return false;
+		}
+		Seen.Add(OptionId);
+	}
+	return true;
+}
+
+void FDuelEngine::InvokeChoiceResolver(int32 RequestId, const FDuelChoiceRequest& Request, const TArray<int32>& OptionIds)
+{
+	TFunction<void(const FDuelChoiceRequest&, const TArray<int32>&)> Resolver;
+	if (TFunction<void(const FDuelChoiceRequest&, const TArray<int32>&)>* Found = ChoiceResolvers.Find(RequestId))
+	{
+		Resolver = MoveTemp(*Found);
+		ChoiceResolvers.Remove(RequestId);
+	}
+	if (Resolver)
+	{
+		Resolver(Request, OptionIds);
+	}
+}
+
+bool FDuelEngine::AnswerChoice(int32 RequestId, const TArray<int32>& OptionIds, FString& OutError)
+{
+	if (PendingChoices.Num() == 0)
+	{
+		OutError = TEXT("There is no pending choice.");
+		return false;
+	}
+	if (PendingChoices[0].RequestId != RequestId)
+	{
+		OutError = TEXT("That is not the active choice.");
+		return false;
+	}
+
+	const FDuelChoiceRequest Request = PendingChoices[0];
+	if (!IsChoiceAnswerValid(Request, OptionIds, OutError))
+	{
+		return false;
+	}
+
+	PendingChoices.RemoveAt(0);
+	InvokeChoiceResolver(Request.RequestId, Request, OptionIds);
+
+	FString Labels;
+	for (int32 OptionId : OptionIds)
+	{
+		for (const FDuelChoiceOption& Option : Request.Options)
+		{
+			if (Option.Id == OptionId && !Option.Label.IsEmpty())
+			{
+				Labels += Labels.IsEmpty() ? Option.Label : FString::Printf(TEXT(", %s"), *Option.Label);
+				break;
+			}
+		}
+	}
+	Log(FString::Printf(TEXT("Choice answered: %s%s"), *Request.Prompt,
+		Labels.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" -> %s"), *Labels)), TEXT("choice"));
+
+	// If the player's answer uncovered an opponent-side question, drain it now
+	// so the AI cannot stall behind the player queue.
+	if (bAutoAnswerAiChoices)
+	{
+		while (!bWinnerSet)
+		{
+			const FDuelChoiceRequest* HeadChoice = GetPendingChoice();
+			if (!HeadChoice || HeadChoice->Side != EDuelOwner::Opponent)
+			{
+				break;
+			}
+			FString AutoError;
+			if (!AutoAnswerPendingChoice(&AutoError))
+			{
+				break;
+			}
+		}
+	}
+	return true;
+}
+
+bool FDuelEngine::AutoAnswerPendingChoice(FString* OutError)
+{
+	if (PendingChoices.Num() == 0)
+	{
+		if (OutError) *OutError = TEXT("There is no pending choice.");
+		return false;
+	}
+	const FDuelChoiceRequest Request = PendingChoices[0];
+	TArray<int32> OptionIds;
+	BuildAutoChoiceAnswer(Request, OptionIds);
+	FString Error;
+	if (!AnswerChoice(Request.RequestId, OptionIds, Error))
+	{
+		if (OutError) *OutError = Error;
+		return false;
+	}
+	return true;
+}
+
+bool FDuelEngine::CancelChoice(int32 RequestId, FString& OutError)
+{
+	if (PendingChoices.Num() == 0)
+	{
+		OutError = TEXT("There is no pending choice.");
+		return false;
+	}
+	if (PendingChoices[0].RequestId != RequestId)
+	{
+		OutError = TEXT("That is not the active choice.");
+		return false;
+	}
+	if (!PendingChoices[0].bCancellable)
+	{
+		OutError = TEXT("That choice cannot be cancelled.");
+		return false;
+	}
+	const FDuelChoiceRequest Request = PendingChoices[0];
+	PendingChoices.RemoveAt(0);
+	InvokeChoiceResolver(Request.RequestId, Request, TArray<int32>());
+	Log(FString::Printf(TEXT("Choice cancelled: %s"), *Request.Prompt), TEXT("choice"));
+	return true;
+}
+
+void FDuelEngine::ClearPendingChoices()
+{
+	PendingChoices.Reset();
+	ChoiceResolvers.Reset();
+}
+
+int32 FDuelEngine::RequestOptionalTrigger(const FDuelCard& SourceCard, const FString& Prompt, bool bDefaultYes,
+	TFunction<void(bool)> OnResolved)
+{
+	FDuelChoiceRequest Request;
+	Request.Type = EDuelChoiceType::YesNo;
+	Request.Prompt = Prompt;
+	Request.Side = EDuelOwner::Player;
+	Request.MinSelections = 1;
+	Request.MaxSelections = 1;
+	Request.SourceCardUid = SourceCard.Uid;
+	Request.SourceCardId = SourceCard.Data.Id;
+	Request.DefaultOptionIds.Add(bDefaultYes ? 1 : 2);
+
+	FDuelChoiceOption Yes;
+	Yes.Id = 1;
+	Yes.Label = TEXT("Activate");
+	Request.Options.Add(Yes);
+
+	FDuelChoiceOption No;
+	No.Id = 2;
+	No.Label = TEXT("Do not activate");
+	Request.Options.Add(No);
+
+	return RequestChoice(Request, [OnResolved](const FDuelChoiceRequest&, const TArray<int32>& OptionIds)
+	{
+		if (OnResolved)
+		{
+			OnResolved(OptionIds.Num() > 0 && OptionIds[0] == 1);
+		}
+	});
+}
+
+// ---------------------------------------------------------------------------
+// Chain stack
+// ---------------------------------------------------------------------------
+
+EDuelSpellSpeed FDuelEngine::GetSpellSpeed(const FDuelCard& Card) const
+{
+	const FDuelActivationRule Rule = ResolveActivationRule(Card);
+	if (Rule.SpellSpeedOverride >= 1 && Rule.SpellSpeedOverride <= 3)
+	{
+		return static_cast<EDuelSpellSpeed>(Rule.SpellSpeedOverride);
+	}
+	if (Card.IsTrap())
+	{
+		return Card.Data.Subtype == TEXT("Counter") ? EDuelSpellSpeed::Speed3 : EDuelSpellSpeed::Speed2;
+	}
+	if (Card.IsSpell())
+	{
+		return Card.Data.Subtype == TEXT("Quick-Play") ? EDuelSpellSpeed::Speed2 : EDuelSpellSpeed::Speed1;
+	}
+	if (Card.IsMonster() && Rule.bQuickEffect)
+	{
+		return EDuelSpellSpeed::Speed2;
+	}
+	return EDuelSpellSpeed::Speed1;
+}
+
+bool FDuelEngine::CanAddChainLink(EDuelSpellSpeed Speed, FString* OutReason) const
+{
+	if (ChainLinks.Num() == 0)
+	{
+		if (OutReason) *OutReason = TEXT("No chain is open.");
+		return false;
+	}
+	if (!bEnforceChainSpellSpeeds)
+	{
+		return true;
+	}
+	const EDuelSpellSpeed Top = ChainLinks.Last().Speed;
+	if (Top == EDuelSpellSpeed::Speed3 && Speed != EDuelSpellSpeed::Speed3)
+	{
+		if (OutReason) *OutReason = TEXT("Only a Spell Speed 3 card can respond to a Counter Trap.");
+		return false;
+	}
+	if (static_cast<uint8>(Speed) < static_cast<uint8>(Top))
+	{
+		if (OutReason) *OutReason = TEXT("A chain link cannot be slower than the previous link.");
+		return false;
+	}
+	return true;
+}
+
+int32 FDuelEngine::StartChain(const FDuelChainLink& Link, FString& OutError)
+{
+	if (ChainLinks.Num() > 0)
+	{
+		OutError = TEXT("A chain is already open.");
+		return 0;
+	}
+	return AddChainLink(Link, OutError);
+}
+
+int32 FDuelEngine::AddChainLink(const FDuelChainLink& Link, FString& OutError)
+{
+	if (bWinnerSet)
+	{
+		OutError = TEXT("The duel is over.");
+		return 0;
+	}
+	if (ChainLinks.Num() > 0 && !CanAddChainLink(Link.Speed, &OutError))
+	{
+		return 0;
+	}
+
+	FDuelChainLink Stored = Link;
+	if (Stored.CardUid > 0)
+	{
+		const FDuelCard* Card = FindCard(Stored.CardUid);
+		if (!Card)
+		{
+			OutError = TEXT("That chain card is no longer on the field or in a known zone.");
+			return 0;
+		}
+		if (Stored.CardId <= 0)
+		{
+			Stored.CardId = Card->Data.Id;
+		}
+		if (Stored.Label.IsEmpty())
+		{
+			Stored.Label = Card->Data.Name;
+		}
+	}
+	Stored.LinkIndex = ChainLinks.Num() + 1;
+	Stored.bResolved = false;
+	ChainLinks.Add(Stored);
+	Log(FString::Printf(TEXT("Chain link %d: %s (Spell Speed %d)."), Stored.LinkIndex,
+		Stored.Label.IsEmpty() ? TEXT("effect") : *Stored.Label, static_cast<int32>(Stored.Speed)), TEXT("chain"));
+	EmitVisual(EDuelVisualEventType::Effect, Stored.Controller, FindCard(Stored.CardUid), Stored.LinkIndex,
+		Stored.Label.IsEmpty() ? TEXT("CHAIN") : Stored.Label);
+	return Stored.LinkIndex;
+}
+
+bool FDuelEngine::NegateChainLink(int32 ChainLinkNumber, FString& OutError)
+{
+	for (FDuelChainLink& Link : ChainLinks)
+	{
+		if (Link.LinkIndex == ChainLinkNumber)
+		{
+			if (Link.bResolved)
+			{
+				OutError = TEXT("That chain link has already resolved.");
+				return false;
+			}
+			Link.bNegated = true;
+			Log(FString::Printf(TEXT("Chain link %d (%s) is negated."), Link.LinkIndex,
+				Link.Label.IsEmpty() ? TEXT("effect") : *Link.Label), TEXT("chain"));
+			return true;
+		}
+	}
+	OutError = TEXT("That chain link does not exist.");
+	return false;
+}
+
+void FDuelEngine::ExecuteChainLinkCard(FDuelChainLink& Link)
+{
+	if (!Link.bCardEffect || Link.CardUid <= 0)
+	{
+		return;
+	}
+	FDuelCard* Card = FindCard(Link.CardUid);
+	if (!Card)
+	{
+		return;
+	}
+	Card->bFaceUp = true;
+	if (Card->IsSpell())
+	{
+		ResolveSpell(*Card);
+	}
+	else if (Card->IsTrap())
+	{
+		ResolveTrap(*Card);
+	}
+}
+
+void FDuelEngine::CleanupResolvedChainCard(int32 CardUid)
+{
+	FDuelCard* Card = FindSpellTrap(CardUid);
+	if (!Card || !Card->bFaceUp)
+	{
+		return;
+	}
+	const FString& Subtype = Card->Data.Subtype;
+	const bool bStays = Subtype == TEXT("Continuous") || Subtype == TEXT("Equip") || Subtype == TEXT("Field");
+	if (bStays)
+	{
+		return;
+	}
+	FDuelCard Copy;
+	if (RemoveFromZone(Copy, CardUid))
+	{
+		MoveToGrave(Copy);
+	}
+}
+
+int32 FDuelEngine::ResolveChain(FString& OutError)
+{
+	if (ChainLinks.Num() == 0)
+	{
+		OutError = TEXT("There is no chain to resolve.");
+		return 0;
+	}
+
+	TArray<FDuelChainLink> Pending = ChainLinks;
+	ChainLinks.Reset();
+	LastResolvedChain.Reset();
+	ResolvedChainOrder.Reset();
+
+	for (int32 I = Pending.Num() - 1; I >= 0; --I)
+	{
+		FDuelChainLink Link = Pending[I];
+		Link.bResolved = true;
+		LastResolvedChain.Add(Link);
+		ResolvedChainOrder.Add(Link.CardUid);
+		if (Link.bNegated)
+		{
+			Log(FString::Printf(TEXT("Chain link %d (%s) resolves negated."), Link.LinkIndex,
+				Link.Label.IsEmpty() ? TEXT("effect") : *Link.Label), TEXT("chain"));
+			continue;
+		}
+
+		ExecuteChainLinkCard(Link);
+		if (Link.EffectId != 0 && ChainEffectResolver)
+		{
+			ChainEffectResolver(Link);
+		}
+		else if (Link.EffectId != 0)
+		{
+			Log(FString::Printf(TEXT("Chain link %d resolves effect %d."), Link.LinkIndex, Link.EffectId), TEXT("chain"));
+		}
+		if (Link.bCardEffect)
+		{
+			CleanupResolvedChainCard(Link.CardUid);
+		}
+		if (!bWinnerSet)
+		{
+			CheckWinner();
+		}
+
+		if (bWinnerSet)
+		{
+			break;
+		}
+	}
+
+	Log(FString::Printf(TEXT("Chain resolved in reverse order (%d link(s))."), LastResolvedChain.Num()), TEXT("chain"));
+	return LastResolvedChain.Num();
+}
+
+void FDuelEngine::ClearChain()
+{
+	ChainLinks.Reset();
+}
+
+// ---------------------------------------------------------------------------
+// Activation windows / timing
+// ---------------------------------------------------------------------------
+
+EDuelTimingWindow FDuelEngine::GetCurrentTimingWindow() const
+{
+	if (bWinnerSet)
+	{
+		return EDuelTimingWindow::None;
+	}
+	switch (Phase)
+	{
+	case EDuelPhase::Main1: return EDuelTimingWindow::Main1;
+	case EDuelPhase::Main2: return EDuelTimingWindow::Main2;
+	case EDuelPhase::Battle: return EDuelTimingWindow::Battle;
+	default: return EDuelTimingWindow::None;
+	}
+}
+
+FDuelActivationRule FDuelEngine::ResolveActivationRule(const FDuelCard& Card) const
+{
+	if (const FDuelActivationRule* Found = ActivationRules.Find(Card.Data.Id))
+	{
+		return *Found;
+	}
+	FDuelActivationRule Rule;
+	Rule.Mode = Card.IsTrap() ? EDuelActivationMode::Automatic : EDuelActivationMode::Manual;
+	Rule.bQuickEffect = Card.IsSpell() && Card.Data.Subtype == TEXT("Quick-Play");
+	Rule.bCounterTrap = Card.IsTrap() && Card.Data.Subtype == TEXT("Counter");
+	return Rule;
+}
+
+EDuelActivationMode FDuelEngine::GetActivationMode(const FDuelCard& Card) const
+{
+	return ResolveActivationRule(Card).Mode;
+}
+
+bool FDuelEngine::IsActivationLegal(const FDuelCard& Card, EDuelTimingWindow Window, FString* OutReason) const
+{
+	auto Fail = [OutReason](const TCHAR* Reason)
+	{
+		if (OutReason) *OutReason = Reason;
+		return false;
+	};
+
+	if (Window == EDuelTimingWindow::None)
+	{
+		return Fail(TEXT("There is no timing window for that activation."));
+	}
+
+	const FDuelActivationRule Rule = ResolveActivationRule(Card);
+	const bool bResponseWindow = IsResponseTimingWindow(Window);
+	const bool bMainWindow = IsMainTimingWindow(Window);
+	const bool bQuickPlay = Rule.bQuickEffect
+		|| (Card.IsSpell() && Card.Data.Subtype == TEXT("Quick-Play"));
+	const bool bCounterTrap = Rule.bCounterTrap
+		|| (Card.IsTrap() && Card.Data.Subtype == TEXT("Counter"));
+
+	if (Rule.AllowedWindows.Num() > 0)
+	{
+		if (!IsWindowInList(Rule.AllowedWindows, Window))
+		{
+			return Fail(TEXT("That card cannot be activated in this timing window."));
+		}
+	}
+	else if (Card.IsSpell())
+	{
+		if (bQuickPlay)
+		{
+			if (!bMainWindow && Window != EDuelTimingWindow::Battle && !bResponseWindow)
+			{
+				return Fail(TEXT("Quick-Play Spells can be activated from the hand during your Main or Battle Phase, or as a chain response."));
+			}
+		}
+		else if (!bMainWindow)
+		{
+			return Fail(TEXT("Normal Spells can only be activated during your Main Phase."));
+		}
+	}
+	else if (Card.IsTrap())
+	{
+		if (bCounterTrap)
+		{
+			if (!bResponseWindow)
+			{
+				return Fail(TEXT("Counter Traps can only be activated in response to an activation, Summon or attack."));
+			}
+		}
+		else if (!bMainWindow && !bResponseWindow)
+		{
+			return Fail(TEXT("That Trap cannot be activated in this timing window."));
+		}
+	}
+	else if (Card.IsMonster())
+	{
+		if (!bMainWindow && !(Rule.bQuickEffect && (Window == EDuelTimingWindow::Battle || bResponseWindow)))
+		{
+			return Fail(TEXT("That monster effect cannot be activated in this timing window."));
+		}
+	}
+	else
+	{
+		return Fail(TEXT("That card has no activatable effect."));
+	}
+
+	if (bCounterTrap && !bResponseWindow)
+	{
+		return Fail(TEXT("Counter Traps can only be activated in a response window."));
+	}
+	if (Window == EDuelTimingWindow::DamageStep
+		&& !Rule.AllowedWindows.Contains(EDuelTimingWindow::DamageStep)
+		&& !Rule.AllowedWindows.Contains(EDuelTimingWindow::Any))
+	{
+		return Fail(TEXT("Cards cannot normally be activated during the Damage Step."));
+	}
+	return true;
+}
+
+bool FDuelEngine::IsAutomaticTrapTimingAllowed(const FDuelCard& Card, EDuelTimingWindow Window) const
+{
+	if (!bEnforceActivationTiming)
+	{
+		return true;
+	}
+	if (bLegacyAutomaticTraps)
+	{
+		return true;
+	}
+	if (GetActivationMode(Card) == EDuelActivationMode::Manual)
+	{
+		return false;
+	}
+	return IsActivationLegal(Card, Window, nullptr);
+}
+
+bool FDuelEngine::ActivateCounterTrapResponse(int32 TrapUid, int32 TargetChainLinkNumber, FString& OutError)
+{
+	FDuelCard* Trap = FindSpellTrap(TrapUid);
+	if (!Trap || !Trap->IsTrap())
+	{
+		OutError = TEXT("That Counter Trap is not available.");
+		return false;
+	}
+	const bool bCounter = Trap->Data.Subtype == TEXT("Counter") || ResolveActivationRule(*Trap).bCounterTrap;
+	if (!bCounter)
+	{
+		OutError = TEXT("That card is not a Counter Trap.");
+		return false;
+	}
+	if (Trap->bFaceUp || Trap->SetTurn >= TurnNumber)
+	{
+		OutError = TEXT("That Counter Trap cannot be activated yet.");
+		return false;
+	}
+	if (!IsActivationLegal(*Trap, EDuelTimingWindow::ResponseToActivation, &OutError))
+	{
+		return false;
+	}
+	if (ChainLinks.Num() == 0 || ChainLinks.Last().LinkIndex != TargetChainLinkNumber)
+	{
+		OutError = TEXT("A Counter Trap must respond to the most recent chain link.");
+		return false;
+	}
+
+	FDuelChainLink Link;
+	Link.CardUid = Trap->Uid;
+	Link.CardId = Trap->Data.Id;
+	Link.Controller = Trap->Controller;
+	Link.Speed = EDuelSpellSpeed::Speed3;
+	Link.LinkType = EDuelChainLinkType::Trap;
+	Link.Label = Trap->Data.Name;
+	Link.bCardEffect = true;
+	if (AddChainLink(Link, OutError) == 0)
+	{
+		return false;
+	}
+	if (!NegateChainLink(TargetChainLinkNumber, OutError))
+	{
+		return false;
+	}
+	Trap->bFaceUp = true;
+	if (Trap->Controller == EDuelOwner::Player)
+	{
+		++ResultStats.TrapsActivated;
+	}
+	Log(FString::Printf(TEXT("%s activates %s in response to chain link %d."),
+		*SideRef(Trap->Controller).Name, *Trap->Data.Name, TargetChainLinkNumber), TEXT("trap"));
+	return true;
+}
+
+// ---------------------------------------------------------------------------
+// Deck validation / banned list
+// ---------------------------------------------------------------------------
+
+FDuelDeckValidationResult FDuelEngine::ValidateDeck(const TArray<int32>& Main, const TArray<int32>& Extra) const
+{
+	FDuelDeckValidationResult Result;
+	Result.MainCount = Main.Num();
+	Result.ExtraCount = Extra.Num();
+
+	if (Main.Num() < BannedList.MinMain)
+	{
+		Result.AddError(FString::Printf(TEXT("Main Deck has %d cards; at least %d are required."), Main.Num(), BannedList.MinMain));
+	}
+	if (Main.Num() > BannedList.MaxMain)
+	{
+		Result.AddError(FString::Printf(TEXT("Main Deck has %d cards; at most %d are allowed."), Main.Num(), BannedList.MaxMain));
+	}
+	if (Extra.Num() > BannedList.MaxExtra)
+	{
+		Result.AddError(FString::Printf(TEXT("Extra Deck has %d cards; at most %d are allowed."), Extra.Num(), BannedList.MaxExtra));
+	}
+	if (!Database)
+	{
+		Result.AddWarning(TEXT("Card database is not available; card existence was not checked."));
+	}
+
+	TMap<int32, int32> MainCounts;
+	TMap<int32, int32> ExtraCounts;
+	TMap<int32, int32> CombinedCounts;
+	for (int32 CardId : Main)
+	{
+		++MainCounts.FindOrAdd(CardId);
+		++CombinedCounts.FindOrAdd(CardId);
+		if (CardId <= 0)
+		{
+			Result.AddError(TEXT("Main Deck contains an invalid card id."));
+		}
+		else if (Database && !Database->FindCard(CardId))
+		{
+			Result.AddError(FString::Printf(TEXT("Main Deck contains unknown card %d."), CardId));
+		}
+		else if (Database)
+		{
+			const FCardRecord* Record = Database->FindCard(CardId);
+			if (Record && Record->CardType.Contains(TEXT("Fusion")))
+			{
+				Result.AddError(FString::Printf(TEXT("Main Deck contains Fusion Monster %s (%d); Fusion Monsters belong in the Extra Deck."),
+					*Record->Name, CardId));
+			}
+		}
+	}
+	for (int32 CardId : Extra)
+	{
+		++ExtraCounts.FindOrAdd(CardId);
+		++CombinedCounts.FindOrAdd(CardId);
+		if (CardId <= 0)
+		{
+			Result.AddError(TEXT("Extra Deck contains an invalid card id."));
+			continue;
+		}
+		if (Database)
+		{
+			const FCardRecord* Record = Database->FindCard(CardId);
+			if (!Record)
+			{
+				Result.AddError(FString::Printf(TEXT("Extra Deck contains unknown card %d."), CardId));
+			}
+			else if (!Record->CardType.Contains(TEXT("Fusion")))
+			{
+				Result.AddError(FString::Printf(TEXT("Extra Deck card %s (%d) is not a Fusion Monster."),
+					*Record->Name, CardId));
+			}
+		}
+	}
+
+	auto CheckCopies = [&Result, this](const TMap<int32, int32>& Counts, const TCHAR* ZoneName)
+	{
+		for (const TPair<int32, int32>& Pair : Counts)
+		{
+			const int32 CardId = Pair.Key;
+			const int32 Count = Pair.Value;
+			const int32 Limit = BannedList.GetLimit(CardId);
+			const int32 CopyLimit = FMath::Min(Limit, BannedList.MaxCopies);
+			if (Limit == 0)
+			{
+				Result.AddError(FString::Printf(TEXT("%s contains banned card %d."), ZoneName, CardId));
+			}
+			else if (Count > CopyLimit)
+			{
+				const FString Reason = BannedList.GetReason(CardId);
+				Result.AddError(FString::Printf(TEXT("%s contains %d copies of card %d; the limit is %d%s."),
+					ZoneName, Count, CardId, CopyLimit,
+					Reason.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" (%s)"), *Reason)));
+			}
+			if (Count > BannedList.MaxCopies)
+			{
+				Result.AddError(FString::Printf(TEXT("%s contains %d copies of card %d; at most %d are allowed."),
+					ZoneName, Count, CardId, BannedList.MaxCopies));
+			}
+		}
+	};
+	CheckCopies(MainCounts, TEXT("Main Deck"));
+	CheckCopies(ExtraCounts, TEXT("Extra Deck"));
+
+	for (const TPair<int32, int32>& Pair : CombinedCounts)
+	{
+		if (Pair.Value > BannedList.MaxCopies)
+		{
+			Result.AddError(FString::Printf(TEXT("Card %d appears %d times across the Main and Extra Decks; at most %d are allowed."),
+				Pair.Key, Pair.Value, BannedList.MaxCopies));
+		}
+	}
+	return Result;
+}
+
+bool FDuelEngine::LoadBannedListFromJson(const FString& JsonText, FString& OutError)
+{
+	TSharedPtr<FJsonValue> RootValue;
+	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonText);
+	if (!FJsonSerializer::Deserialize(Reader, RootValue) || !RootValue.IsValid())
+	{
+		OutError = TEXT("The banned-list JSON could not be parsed.");
+		return false;
+	}
+
+	FDuelBannedListRuleset NewRules;
+	auto ReadIdAndLimit = [&NewRules, &OutError](const TSharedPtr<FJsonObject>& Object) -> bool
+	{
+		if (!Object.IsValid())
+		{
+			OutError = TEXT("A banned-list entry must be an object.");
+			return false;
+		}
+		double IdNumber = 0.0;
+		double LimitNumber = 3.0;
+		if (!Object->TryGetNumberField(TEXT("id"), IdNumber)
+			&& !Object->TryGetNumberField(TEXT("card_id"), IdNumber)
+			&& !Object->TryGetNumberField(TEXT("cardId"), IdNumber))
+		{
+			OutError = TEXT("A banned-list entry is missing its card id.");
+			return false;
+		}
+		Object->TryGetNumberField(TEXT("limit"), LimitNumber);
+		const int32 CardId = static_cast<int32>(IdNumber);
+		const int32 Limit = FMath::Clamp(static_cast<int32>(LimitNumber), 0, 3);
+		if (CardId <= 0)
+		{
+			OutError = TEXT("A banned-list entry has an invalid card id.");
+			return false;
+		}
+		FString Reason;
+		Object->TryGetStringField(TEXT("reason"), Reason);
+		NewRules.SetLimit(CardId, Limit, Reason);
+		return true;
+	};
+
+	auto ReadIdArray = [&NewRules](const TArray<TSharedPtr<FJsonValue>>* Values, int32 DefaultLimit)
+	{
+		if (!Values)
+		{
+			return;
+		}
+		for (const TSharedPtr<FJsonValue>& Value : *Values)
+		{
+			if (!Value.IsValid())
+			{
+				continue;
+			}
+			double IdNumber = 0.0;
+			if (Value->TryGetNumber(IdNumber))
+			{
+				const int32 CardId = static_cast<int32>(IdNumber);
+				if (CardId > 0)
+				{
+					NewRules.SetLimit(CardId, DefaultLimit);
+				}
+				continue;
+			}
+			const TSharedPtr<FJsonObject> Object = Value->AsObject();
+			if (!Object.IsValid())
+			{
+				continue;
+			}
+			if (!Object->TryGetNumberField(TEXT("card_id"), IdNumber)
+				&& !Object->TryGetNumberField(TEXT("id"), IdNumber))
+			{
+				continue;
+			}
+			double LimitNumber = static_cast<double>(DefaultLimit);
+			Object->TryGetNumberField(TEXT("limit"), LimitNumber);
+			FString Reason;
+			Object->TryGetStringField(TEXT("reason"), Reason);
+			const int32 CardId = static_cast<int32>(IdNumber);
+			if (CardId > 0)
+			{
+				NewRules.SetLimit(CardId,
+					FMath::Clamp(static_cast<int32>(LimitNumber), 0, 3), Reason);
+			}
+		}
+	};
+
+	if (RootValue->Type == EJson::Array)
+	{
+		const TArray<TSharedPtr<FJsonValue>>& RootArray = RootValue->AsArray();
+		for (const TSharedPtr<FJsonValue>& Value : RootArray)
+		{
+			if (!Value.IsValid() || !Value->AsObject().IsValid())
+			{
+				OutError = TEXT("A banned-list array entry must be an object.");
+				return false;
+			}
+			if (!ReadIdAndLimit(Value->AsObject()))
+			{
+				return false;
+			}
+		}
+	}
+	else
+	{
+		const TSharedPtr<FJsonObject> Root = RootValue->AsObject();
+		if (!Root.IsValid())
+		{
+			OutError = TEXT("The banned-list JSON must be an object or an array.");
+			return false;
+		}
+		Root->TryGetStringField(TEXT("ruleset_id"), NewRules.RulesetId);
+		const TSharedPtr<FJsonObject>* RulesObject = nullptr;
+		if (Root->TryGetObjectField(TEXT("rules"), RulesObject) && RulesObject && RulesObject->IsValid())
+		{
+			double Number = 0.0;
+			if ((*RulesObject)->TryGetNumberField(TEXT("min_main"), Number))
+			{
+				NewRules.MinMain = FMath::Clamp(static_cast<int32>(Number), 1, 200);
+			}
+			if ((*RulesObject)->TryGetNumberField(TEXT("max_main"), Number))
+			{
+				NewRules.MaxMain = FMath::Clamp(static_cast<int32>(Number), 1, 200);
+			}
+			if ((*RulesObject)->TryGetNumberField(TEXT("max_extra"), Number))
+			{
+				NewRules.MaxExtra = FMath::Clamp(static_cast<int32>(Number), 0, 100);
+			}
+			if ((*RulesObject)->TryGetNumberField(TEXT("max_copies"), Number))
+			{
+				NewRules.MaxCopies = FMath::Clamp(static_cast<int32>(Number), 1, 10);
+			}
+			if (NewRules.MaxMain < NewRules.MinMain)
+			{
+				NewRules.MaxMain = NewRules.MinMain;
+			}
+		}
+		const TArray<TSharedPtr<FJsonValue>>* Entries = nullptr;
+		if (Root->TryGetArrayField(TEXT("cards"), Entries))
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *Entries)
+			{
+				const TSharedPtr<FJsonObject> Object = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
+				if (!ReadIdAndLimit(Object))
+				{
+					return false;
+				}
+			}
+		}
+		const TArray<TSharedPtr<FJsonValue>>* Banned = nullptr;
+		const TArray<TSharedPtr<FJsonValue>>* Limited = nullptr;
+		const TArray<TSharedPtr<FJsonValue>>* SemiLimited = nullptr;
+		Root->TryGetArrayField(TEXT("banned"), Banned);
+		Root->TryGetArrayField(TEXT("limited"), Limited);
+		Root->TryGetArrayField(TEXT("semi_limited"), SemiLimited);
+		ReadIdArray(Banned, 0);
+		ReadIdArray(Limited, 1);
+		ReadIdArray(SemiLimited, 2);
+		if (!Entries && !Banned && !Limited && !SemiLimited)
+		{
+			OutError = TEXT("The banned-list JSON has no 'cards', 'banned', 'limited' or 'semi_limited' data.");
+			return false;
+		}
+	}
+
+	BannedList = NewRules;
+	return true;
+}
+
+bool FDuelEngine::LoadBannedListFromFile(const FString& FilePath, FString& OutError)
+{
+	FString JsonText;
+	if (!FFileHelper::LoadFileToString(JsonText, *FilePath))
+	{
+		OutError = FString::Printf(TEXT("Could not read banned-list file '%s'."), *FilePath);
+		return false;
+	}
+	return LoadBannedListFromJson(JsonText, OutError);
+}
+
+bool FDuelEngine::LoadDefaultBannedList(FString& OutError)
+{
+	const FString Path = FPaths::ProjectContentDir() / TEXT("Data/Rules/banned_limited.json");
+	return LoadBannedListFromFile(Path, OutError);
+}
+
+// ---------------------------------------------------------------------------
+// Scenario / puzzle / exam setup
+// ---------------------------------------------------------------------------
+
+bool FDuelEngine::SetupScenarioSide(EDuelOwner Side, const FDuelScenario& Scenario, FString& OutError)
+{
+	FDuelSide& State = SideRef(Side);
+	State = FDuelSide();
+	State.Owner = Side;
+	State.Name = Side == EDuelOwner::Player ? TEXT("You") : OpponentDisplayName;
+	State.LP = Side == EDuelOwner::Player ? Scenario.PlayerLp : Scenario.OpponentLp;
+	State.Monsters.SetNum(5);
+	State.Spells.SetNum(5);
+
+	const TArray<int32>& DeckCards = Side == EDuelOwner::Player ? Scenario.PlayerDeck : Scenario.OpponentDeck;
+	for (int32 I = DeckCards.Num() - 1; I >= 0; --I)
+	{
+		if (DeckCards[I] > 0)
+		{
+			State.Deck.Add(MakeCard(DeckCards[I], Side, false));
+		}
+	}
+	const TArray<int32>& HandCards = Side == EDuelOwner::Player ? Scenario.PlayerHand : Scenario.OpponentHand;
+	for (int32 CardId : HandCards)
+	{
+		if (CardId > 0) State.Hand.Add(MakeCard(CardId, Side, false));
+	}
+	const TArray<int32>& GraveCards = Side == EDuelOwner::Player ? Scenario.PlayerGraveyard : Scenario.OpponentGraveyard;
+	for (int32 CardId : GraveCards)
+	{
+		if (CardId > 0)
+		{
+			FDuelCard Card = MakeCard(CardId, Side, false);
+			Card.bFaceUp = true;
+			State.Graveyard.Add(Card);
+		}
+	}
+	const TArray<int32>& ExtraCards = Side == EDuelOwner::Player ? Scenario.PlayerExtra : Scenario.OpponentExtra;
+	for (int32 CardId : ExtraCards)
+	{
+		if (CardId > 0) State.Extra.Add(MakeCard(CardId, Side, true));
+	}
+
+	const TArray<FDuelScenarioCard>& FieldCards = Side == EDuelOwner::Player ? Scenario.PlayerField : Scenario.OpponentField;
+	for (const FDuelScenarioCard& Spec : FieldCards)
+	{
+		if (Spec.CardId <= 0)
+		{
+			continue;
+		}
+		if (Spec.Zone == EDuelZone::Monster)
+		{
+			FDuelCard Card = MakeCard(Spec.CardId, Side, false);
+			const EDuelPosition Position = (Spec.bDefense || Spec.bFaceDown) ? EDuelPosition::Defense : EDuelPosition::Attack;
+			if (!PlaceMonster(Side, Card, !Spec.bFaceDown, Position, Spec.ZoneIndex))
+			{
+				OutError = FString::Printf(TEXT("Scenario monster %d could not be placed."), Spec.CardId);
+				return false;
+			}
+		}
+		else if (Spec.Zone == EDuelZone::SpellTrap)
+		{
+			FDuelCard Card = MakeCard(Spec.CardId, Side, false);
+			if (Spec.ZoneIndex >= 0 && Spec.ZoneIndex < State.Spells.Num())
+			{
+				if (State.Spells[Spec.ZoneIndex].IsValid())
+				{
+					OutError = FString::Printf(TEXT("Scenario Spell/Trap zone %d is already occupied."), Spec.ZoneIndex);
+					return false;
+				}
+				Card.Controller = Side;
+				Card.bFaceUp = !Spec.bFaceDown;
+				Card.Position = EDuelPosition::Attack;
+				Card.SetTurn = Card.bFaceUp ? -1 : TurnNumber;
+				State.Spells[Spec.ZoneIndex] = Card;
+			}
+			else if (!PlaceSpellTrap(Side, Card, !Spec.bFaceDown, false))
+			{
+				OutError = FString::Printf(TEXT("Scenario Spell/Trap %d could not be placed."), Spec.CardId);
+				return false;
+			}
+		}
+		else if (Spec.Zone == EDuelZone::Field)
+		{
+			FDuelCard Card = MakeCard(Spec.CardId, Side, false);
+			if (!PlaceSpellTrap(Side, Card, !Spec.bFaceDown, true))
+			{
+				OutError = FString::Printf(TEXT("Scenario Field Spell %d could not be placed."), Spec.CardId);
+				return false;
+			}
+		}
+		else if (Spec.Zone == EDuelZone::Hand)
+		{
+			State.Hand.Add(MakeCard(Spec.CardId, Side, false));
+		}
+		else if (Spec.Zone == EDuelZone::Deck)
+		{
+			State.Deck.Insert(MakeCard(Spec.CardId, Side, false), 0);
+		}
+		else if (Spec.Zone == EDuelZone::Graveyard)
+		{
+			State.Graveyard.Add(MakeCard(Spec.CardId, Side, false));
+		}
+		else if (Spec.Zone == EDuelZone::Banished)
+		{
+			State.Banished.Add(MakeCard(Spec.CardId, Side, false));
+		}
+		else if (Spec.Zone == EDuelZone::Extra)
+		{
+			State.Extra.Add(MakeCard(Spec.CardId, Side, true));
+		}
+	}
+	return true;
+}
+
+bool FDuelEngine::StartScenario(const FDuelScenario& Scenario, FString& OutError)
+{
+	OutError.Reset();
+	if (!Database)
+	{
+		OutError = TEXT("A card database is required to start a scenario.");
+		return false;
+	}
+
+	ResetDuelState();
+	bStarted = true;
+	bScenarioActive = true;
+	ActiveScenario = Scenario;
+	ScenarioPlayerTurns = 0;
+	ScenarioElapsedSeconds = 0.f;
+	bScenarioObjectiveComplete = false;
+	ResultStats.Mode = Scenario.Mode.IsEmpty() ? TEXT("puzzle") : Scenario.Mode;
+	if (Scenario.Seed != 0)
+	{
+		Random.Initialize(Scenario.Seed);
+	}
+
+	PlayerDeckId = Scenario.Id.IsEmpty() ? TEXT("scenario") : FString::Printf(TEXT("scenario:%s"), *Scenario.Id);
+	OpponentDeckId = PlayerDeckId;
+	OpponentCharacterId = Scenario.Id.IsEmpty() ? TEXT("puzzle") : Scenario.Id;
+	OpponentDisplayName = Scenario.Name.IsEmpty() ? TEXT("Opponent") : Scenario.Name;
+	Opponent.Name = OpponentDisplayName;
+	Player.Name = TEXT("You");
+
+	if (!SetupScenarioSide(EDuelOwner::Player, Scenario, OutError)
+		|| !SetupScenarioSide(EDuelOwner::Opponent, Scenario, OutError))
+	{
+		bStarted = false;
+		bScenarioActive = false;
+		return false;
+	}
+
+	// Resolve ante UIDs against the fixed decks.
+	if (AnteState.bEnabled)
+	{
+		for (const FDuelCard& Card : Player.Deck)
+		{
+			if (Card.Data.Id == AnteState.PlayerCardId)
+			{
+				AnteState.PlayerCardUid = Card.Uid;
+				break;
+			}
+		}
+		for (const FDuelCard& Card : Opponent.Deck)
+		{
+			if (Card.Data.Id == AnteState.OpponentCardId)
+			{
+				AnteState.OpponentCardUid = Card.Uid;
+				break;
+			}
+		}
+	}
+
+	const EDuelOwner FirstSide = Scenario.bPlayerGoesFirst ? EDuelOwner::Player : EDuelOwner::Opponent;
+	if (!Scenario.bDrawOnFirstTurn)
+	{
+		SideRef(FirstSide).bSkipDraw = true;
+	}
+	Log(FString::Printf(TEXT("Scenario '%s' begins. %s"), *Scenario.Id,
+		Scenario.TurnLimit > 0 ? *FString::Printf(TEXT("Turn limit: %d."), Scenario.TurnLimit) : TEXT("")), TEXT("turn"));
+	StartTurn(FirstSide);
+	if (FirstSide == EDuelOwner::Opponent && !bWinnerSet)
+	{
+		bAiTurnPending = true;
+		LastAiMessage = FString::Printf(TEXT("%s is taking their turn."), *OpponentDisplayName);
+	}
+	return true;
+}
+
+int32 FDuelEngine::GetScenarioTurnsRemaining() const
+{
+	if (!bScenarioActive || ActiveScenario.TurnLimit <= 0)
+	{
+		return 0;
+	}
+	return FMath::Max(0, ActiveScenario.TurnLimit - ScenarioPlayerTurns);
+}
+
+bool FDuelEngine::CheckScenarioTimeout(float ElapsedSeconds)
+{
+	if (!bScenarioActive || bWinnerSet)
+	{
+		return false;
+	}
+	ScenarioElapsedSeconds = FMath::Max(ScenarioElapsedSeconds, ElapsedSeconds);
+	if (ActiveScenario.TimeLimitSeconds > 0.f && ScenarioElapsedSeconds > ActiveScenario.TimeLimitSeconds)
+	{
+		EndDuel(EDuelOwner::Opponent, TEXT("The time limit was reached."));
+		return true;
+	}
+	return false;
+}
+
+bool FDuelEngine::IsScenarioObjectiveComplete() const
+{
+	if (!bScenarioActive || !ActiveScenario.HasObjective())
+	{
+		return false;
+	}
+	const FDuelScenario& S = ActiveScenario;
+	if (S.RequiredBattleDamage > 0 && ResultStats.BattleDamageDealt < S.RequiredBattleDamage) return false;
+	if (S.RequiredMonstersDestroyed > 0 && ResultStats.MonstersDestroyedByBattle < S.RequiredMonstersDestroyed) return false;
+	if (S.RequiredFusionSummons > 0 && ResultStats.FusionSummons < S.RequiredFusionSummons) return false;
+	if (S.RequiredRitualSummons > 0 && ResultStats.RitualSummons < S.RequiredRitualSummons) return false;
+	if (S.RequiredSpecialSummons > 0 && ResultStats.SpecialSummons < S.RequiredSpecialSummons) return false;
+	if (S.RequiredSpellsActivated > 0 && ResultStats.SpellsActivated < S.RequiredSpellsActivated) return false;
+	if (S.RequiredTrapsActivated > 0 && ResultStats.TrapsActivated < S.RequiredTrapsActivated) return false;
+	return true;
+}
+
+void FDuelEngine::CheckScenarioCompletion()
+{
+	if (!bScenarioActive || bWinnerSet || bScenarioObjectiveComplete)
+	{
+		return;
+	}
+	if (IsScenarioObjectiveComplete())
+	{
+		bScenarioObjectiveComplete = true;
+		EndDuel(EDuelOwner::Player, TEXT("The scenario objective was completed."));
+	}
+}
+
+void FDuelEngine::Surrender()
+{
+	if (!bWinnerSet)
+	{
+		EndDuel(EDuelOwner::Opponent, TEXT("You surrendered."));
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Ante
+// ---------------------------------------------------------------------------
+
+void FDuelEngine::ConfigureAnte(bool bEnabled, int32 InPlayerCardId, int32 InOpponentCardId)
+{
+	AnteState = FDuelAnteState();
+	AnteState.bEnabled = bEnabled;
+	if (bEnabled)
+	{
+		AnteState.PlayerCardId = InPlayerCardId;
+		AnteState.OpponentCardId = InOpponentCardId;
+		AnteState.bPlayerSelected = InPlayerCardId > 0;
+		AnteState.bOpponentSelected = InOpponentCardId > 0;
+	}
+}
+
+bool FDuelEngine::IsCardInSideDeck(EDuelOwner Side, int32 CardId) const
+{
+	for (const FDuelCard& Card : SideRef(Side).Deck)
+	{
+		if (Card.Data.Id == CardId)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool FDuelEngine::SelectAnteCard(EDuelOwner Side, int32 CardId, FString& OutError)
+{
+	if (!AnteState.bEnabled)
+	{
+		OutError = TEXT("Ante is not enabled for this duel.");
+		return false;
+	}
+	if (CardId <= 0)
+	{
+		OutError = TEXT("Choose a valid card to ante.");
+		return false;
+	}
+	if (Database && !Database->FindCard(CardId))
+	{
+		OutError = FString::Printf(TEXT("Card %d does not exist."), CardId);
+		return false;
+	}
+
+	int32 FoundUid = 0;
+	for (const FDuelCard& Card : SideRef(Side).Deck)
+	{
+		if (Card.Data.Id == CardId)
+		{
+			FoundUid = Card.Uid;
+			break;
+		}
+	}
+	if (bStarted && FoundUid == 0)
+	{
+		OutError = FString::Printf(TEXT("Card %d is not in that duelist's Deck."), CardId);
+		return false;
+	}
+
+	if (Side == EDuelOwner::Player)
+	{
+		AnteState.PlayerCardId = CardId;
+		AnteState.PlayerCardUid = FoundUid;
+		AnteState.bPlayerSelected = true;
+	}
+	else
+	{
+		AnteState.OpponentCardId = CardId;
+		AnteState.OpponentCardUid = FoundUid;
+		AnteState.bOpponentSelected = true;
+	}
+	return true;
+}
+
+bool FDuelEngine::FinalizeAnteSelection(FString& OutError)
+{
+	if (!AnteState.bEnabled)
+	{
+		OutError = TEXT("Ante is not enabled for this duel.");
+		return false;
+	}
+	if (!AnteState.bPlayerSelected || !AnteState.bOpponentSelected)
+	{
+		OutError = TEXT("Both duelists must select an ante card.");
+		return false;
+	}
+	return true;
+}
+
+void FDuelEngine::ResolveAnteOnDuelEnd()
+{
+	if (!AnteState.bEnabled)
+	{
+		return;
+	}
+	if (!bStarted || TurnNumber <= 0)
+	{
+		AnteState.Note = TEXT("Ante was not resolved because the duel did not start.");
+		return;
+	}
+	AnteState.bTransferred = false;
+	AnteState.bPlayerWon = false;
+	AnteState.WinnerCardId = 0;
+	AnteState.LoserCardId = 0;
+
+	if (ResultStats.bDraw)
+	{
+		AnteState.Note = TEXT("Ante cards were returned because the duel was a draw.");
+	}
+	else if (AnteState.bPlayerSelected && AnteState.bOpponentSelected)
+	{
+		const bool bPlayerWon = Winner == EDuelOwner::Player;
+		AnteState.bTransferred = true;
+		AnteState.bPlayerWon = bPlayerWon;
+		AnteState.WinnerCardId = bPlayerWon ? AnteState.OpponentCardId : AnteState.PlayerCardId;
+		AnteState.LoserCardId = bPlayerWon ? AnteState.PlayerCardId : AnteState.OpponentCardId;
+		AnteState.Note = bPlayerWon
+			? FString::Printf(TEXT("You win the ante card %d."), AnteState.WinnerCardId)
+			: FString::Printf(TEXT("You lose the ante card %d."), AnteState.LoserCardId);
+	}
+	else
+	{
+		AnteState.Note = TEXT("Ante was not transferred because a selection was missing.");
+	}
+	if (AnteResultHook)
+	{
+		AnteResultHook(AnteState);
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Result statistics
+// ---------------------------------------------------------------------------
+
+void FDuelEngine::FinalizeResultStats()
+{
+	ResultStats.Turns = TurnNumber;
+	ResultStats.PlayerLp = Player.LP;
+	ResultStats.OpponentLp = Opponent.LP;
+	ResultStats.bPlayerWon = bWinnerSet && Winner == EDuelOwner::Player;
+	ResultStats.bDraw = bWinnerSet && Player.LP <= 0 && Opponent.LP <= 0;
+	ResultStats.OpponentId = OpponentCharacterId;
+	ResultStats.bWentSecond = bScenarioActive && !ActiveScenario.bPlayerGoesFirst;
 }
 
 FString FDuelEngine::RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterations){
