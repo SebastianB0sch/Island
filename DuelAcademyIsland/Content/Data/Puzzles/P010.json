@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "id": "P010",
+  "level": 1,
+  "title": "Moon over the Alligator",
+  "opponent": "mimicry",
+  "seed": 1010,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      702
+    ],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 800,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 363,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 702
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": 363
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "confidence": "high",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "Book of Moon turns Cyber-Tech Alligator into 1600 DEF; Red-Eyes deals exactly 800 battle damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_010",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      18,
+      110,
+      141,
+      397,
+      460,
+      902,
+      963,
+      1195
+    ],
+    "solution_card_names": [
+      "Axe of Despair",
+      "Dark Driceratops",
+      "Dark Hole",
+      "Magical Explosion",
+      "Marshmallon",
+      "Mystic Plasma Zone",
+      "Summoned Skull",
+      "Tribute to the Doomed"
+    ],
+    "solution_steps": [
+      "Summon Summoned Skull by tributing Dark Driceratops from the field.",
+      "Equip him with Axe of Despair.",
+      "Use Mystic Plasma Zone.",
+      "Activate Tribute to the Doomed, discard Dark Hole and destroy Marshmallon.",
+      "Activate Magical Explosion.",
+      "Enter Battle Phase and attack with Summoned Skull."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}

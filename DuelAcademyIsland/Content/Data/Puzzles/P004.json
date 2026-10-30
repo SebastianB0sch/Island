@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "id": "P004",
+  "level": 1,
+  "title": "Tribute for Power",
+  "opponent": "mimicry",
+  "seed": 1004,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      1
+    ],
+    "field": [
+      {
+        "card_id": 1106,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 1107,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "normal_summon",
+      "card_id": 1,
+      "tribute_card_ids": [
+        1106,
+        1107
+      ]
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 120,
+    "cards": []
+  },
+  "confidence": "high",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "Level 8 Blue-Eyes needs two tributes. Avian and Burstinatrix are the materials.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_004",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      334,
+      349,
+      762,
+      789,
+      1025
+    ],
+    "solution_card_names": [
+      "Fusion Weapon",
+      "Magical Scientist",
+      "Spell Canceller",
+      "The Fiend Megacyber",
+      "Thousand-Eyes Restrict"
+    ],
+    "solution_steps": [
+      "Summon Magical Scientist and activate his effect, choosing Thousand-Eyes Restrict.",
+      "Activate Thousand-Eyes Restrict's effect and choose Spell Canceller.",
+      "Use Fusion Weapon and equip it in Thousand-Eyes.",
+      "Attack The Fiend Megacyber with Thousand-Eyes."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}

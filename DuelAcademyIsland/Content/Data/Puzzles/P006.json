@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "id": "P006",
+  "level": 1,
+  "title": "Snatch and Swing",
+  "opponent": "mimicry",
+  "seed": 1006,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      428
+    ],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 2400,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 428
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 120,
+    "cards": []
+  },
+  "confidence": "medium",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "Snatch Steal takes the only opposing monster, clearing the field for Red-Eyes.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_006",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      598,
+      649,
+      728,
+      811,
+      902,
+      917
+    ],
+    "solution_card_names": [
+      "Dark Driceratops",
+      "Granadora",
+      "Gravekeeper's Spy",
+      "Marauding Captain",
+      "The Portrait's Secret",
+      "Ultra Evolution Pill"
+    ],
+    "solution_steps": [
+      "Summon Marauding Captain and use his effect to Special Summon Granadora.",
+      "Use Ultra Evolution Pill, select Granadora as the sacrifice and Dark Driceratops as the monster to be summoned.",
+      "Enter Battle Phase.",
+      "Attack Gravekeeper's Spy with your Marauding Captain.",
+      "Attack The Portrait's Secret with Dark Driceratops."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}
