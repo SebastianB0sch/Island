@@ -1,0 +1,3769 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:03+00:00",
+  "source": {
+    "rom": "C:\\dev\\argh\\Yu-Gi-Oh! - GX Duel Academy (U).gba",
+    "text_base": "0x1430F10",
+    "text_range": [
+      "0x1430F2C",
+      "0x1434600"
+    ],
+    "guide": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events"
+  },
+  "written": {
+    "questions_per_exam": 10,
+    "question_templates_count": 89,
+    "question_templates": [
+      {
+        "offset": "0x1430F92",
+        "template": "Which monster has a Flip Effect?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x1431014",
+        "template": "What do you need to Ritual Summon \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x143109C",
+        "template": "Which monster's effect does not require a coin toss?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x14310EE",
+        "template": "Which %1 monster has the highest ATK?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x143121E",
+        "template": "Which monster can be equipped with \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14312EC",
+        "template": "Which %1 monster has the highest DEF?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14313D8",
+        "template": "Which Spell is a Quick-Play Spell?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x143145C",
+        "template": "Which Spell is a Continuous Spell?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x14314E0",
+        "template": "Which Trap is a Continuous Trap?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x1431562",
+        "template": "Which Trap is a Counter Trap?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x14315E0",
+        "template": "All these cards deal damage to your opponent.  Which one deals the most damage?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x143164C",
+        "template": "All these cards restore LP.  Which one restores the most LP?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x14316A6",
+        "template": "Which monster can be equipped with \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431752",
+        "template": "Which is not Fusion-Material needed to Fusion Summon \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14317EE",
+        "template": "Due to the effect of \"%1\", which monster can you add to your hand?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431870",
+        "template": "Which monster can attack even if \"%1\" is on the field?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14318C4",
+        "template": "You activate \"%1\" when you have 3 monsters on your field.  How much does the equipped monster's DEF increase?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x143195C",
+        "template": "You activate \"%1\" when you have 2 Spell/Trap Cards Set on your field.  How much does the equipped monster's ATK increase?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431A02",
+        "template": "What cost must you pay to activate \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431ACA",
+        "template": "Which effect activates when \"%1\" is sent from the field to the Graveyard?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431B90",
+        "template": "After \"%1\" activates, which card will you play first due to its effect?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431BF4",
+        "template": "Which monster can destroy \"%1\" in battle?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431C3A",
+        "template": "If \"%1\" destroyed 2 of your opponent's monsters in battle, what is the ATK of \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431CBC",
+        "template": "Due to the effect of \"%1\", which card can you add from your Deck to your hand?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431D28",
+        "template": "Due to the effect of \"%1\", which monster can you Special Summon?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431D86",
+        "template": "At least how many cards must you have in your Graveyard to activate \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431E0A",
+        "template": "Which is the correct effect of \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1431F42",
+        "template": "If your \"%1\" attacks your opponent's \"%2\" while it is in Attack Position, how much damage is dealt to your opponent?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      },
+      {
+        "offset": "0x1431FE0",
+        "template": "If \"%1\" is on the field, which monster can be summoned without a Tribute?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432046",
+        "template": "Which monsters are destroyed when \"%1\" is summoned?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x143215A",
+        "template": "Which effect activates when \"%1\" deals battle damage to your opponent?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x143227E",
+        "template": "Which monster is an Effect Monster?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x14322BE",
+        "template": "If you offer \"%1\" to activate \"%2\", which monster can you Special Summon from your Fusion Deck?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      },
+      {
+        "offset": "0x14323AC",
+        "template": "Due to the effect of \"%1\", which monster can you Special Summon from your hand/Deck/Graveyard?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x143244A",
+        "template": "Due to the effect of \"%1\", which monster can you Special Summon from your Fusion Deck?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14324BE",
+        "template": "If you activate the effect of \"%1\" when your opponent has 4 cards in hand, how much damage can you deal to your opponent?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432566",
+        "template": "If your \"%1\" attacks and destroys your opponent's \"%2\" while it is in Attack Position, how much damage is dealt to your opponent?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      },
+      {
+        "offset": "0x1432614",
+        "template": "Which has an effect that can destroy \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x143265C",
+        "template": "If you activate \"%1\" while you have 3 \"Ojama Tokens\" on your field, how much LP is restored?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14326E6",
+        "template": "Due to the effect of \"%1\", which card can you add from your Deck to your hand?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432752",
+        "template": "Due to the effect of \"%1\", which effect activates if you roll a 1?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432830",
+        "template": "Which combination of monsters in your Graveyard can you remove from play to Special Summon \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432926",
+        "template": "If \"%1\" is Summoned/Flip Summoned, which card in your Deck can you add to your hand?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432998",
+        "template": "Which card allows you to Special Summon \"%1\" from your Deck?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14329F2",
+        "template": "When adding ATK and DEF together, which monster has the greatest total?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x1432A56",
+        "template": "\"%2\" and which monster are Fusion-Material for \"%1\"?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      },
+      {
+        "offset": "0x1432AA8",
+        "template": "Which card allows you to retrieve \"%1\" from your Graveyard to your hand?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432B0E",
+        "template": "Which Level 6 %1 monster has the highest ATK?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432B58",
+        "template": "Which Spell Card does not require \"%1\" to activate?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432BA8",
+        "template": "Of the three types of \"Gaia,\" which has the highest ATK?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x1432BFE",
+        "template": "Which monster can you not add to your hand due to the effect of \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432CD8",
+        "template": "Which has the effect to summon \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432D1A",
+        "template": "Which monster does not use \"%1\" as Fusion-Material?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432D6A",
+        "template": "Due to the effect of \"%1\", if you offer \"%1\" itself, how much damage is dealt to the opponent?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432DF6",
+        "template": "When equipped with \"%1\", which monster will deal the most direct damage to your opponent?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432ED8",
+        "template": "Which allows you to Special Summon \"%1\" from your Fusion Deck?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432F34",
+        "template": "Which increases the ATK and DEF of \"%1\" when it is on the field?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1432F92",
+        "template": "If \"%1\" and \"%2\" are on your field, what is the ATK of \"%1\"?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      },
+      {
+        "offset": "0x1432FFE",
+        "template": "Which Level 6-or-below Fusion Monster has the highest ATK?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x1433056",
+        "template": "If you have 1 card in your hand, which has the fewest ATK?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x143311C",
+        "template": "These cards have the following effect: Return cards to the owner's hand.  Which one allows you to retrieve the most cards?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x14331B4",
+        "template": "You have 1 \"%1\" in your hand, 1 in your Deck and 1 in your Graveyard.  If you use the effect of \"%1\", how many \"%1\" will you have in your hand?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1433266",
+        "template": "Which monster is destroyed by the effect of \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14332B4",
+        "template": "Which can be offered for \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1433302",
+        "template": "Which monster can you Ritual Summon with \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x143334E",
+        "template": "Which monster can you destroy with \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14333B6",
+        "template": "Which card allows you to Special Summon \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1433400",
+        "template": "\"%2\" and which monster are Fusion-Material for \"%1\"?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      },
+      {
+        "offset": "0x1433452",
+        "template": "Which monster is a Normal Monster?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x1433492",
+        "template": "Which monster has the highest DEF?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x14334D2",
+        "template": "When does the effect of \"%1\" activate?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14335FC",
+        "template": "The ATK of \"%1\" increases when \"%2\" or which other card is in your Graveyard?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      },
+      {
+        "offset": "0x1433666",
+        "template": "Due to the effect of \"%1\", which %2 monster can you Special Summon?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      },
+      {
+        "offset": "0x14336C6",
+        "template": "Which monster can attack on the turn it is summoned?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x1433718",
+        "template": "When activating \"%1\", which monster must you offer?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1433768",
+        "template": "Due to the effect of \"%1\", what is the maximum ATK increase?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14337D2",
+        "template": "If you have 4050 LP, how many LP will you have remaining after using \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x143384A",
+        "template": "Your opponent has \"%1\" and \"%2\" face-up on the field and 1 face-down Defense Position monster on the field.  Which monster can you destroy with \"%3\"?",
+        "placeholders": [
+          "%1",
+          "%2",
+          "%3"
+        ]
+      },
+      {
+        "offset": "0x1433946",
+        "template": "Your opponent has 2 cards in his hand.  You have \"%1\", \"%2\" and \"%3\" in your hand.  Which one will deal the most damage to your opponent?",
+        "placeholders": [
+          "%1",
+          "%2",
+          "%3"
+        ]
+      },
+      {
+        "offset": "0x14339EC",
+        "template": "Due to the effect of \"%1\", which monster can you Special Summon from your Deck?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1433B02",
+        "template": "Which monster cannot be added from the Graveyard to your hand by using \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1433B6C",
+        "template": "When \"%1\" activates, up to how many cards will be removed from play?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x1433BE6",
+        "template": "You have 1 %2 in your Graveyard,  2 on your opponent's field and 1 in your opponent's Graveyard.  What is the ATK of your \"%1\"?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      },
+      {
+        "offset": "0x1433C94",
+        "template": "Which monster can receive the effect of \"%1\"?",
+        "placeholders": [
+          "%1"
+        ]
+      },
+      {
+        "offset": "0x14343DE",
+        "template": "Which card does not use dice for its effect?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x1434428",
+        "template": "Which card cannot have a Spell Counter placed on it?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x143449C",
+        "template": "Which monster is not a Union Monster?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x14344DE",
+        "template": "Which monster is not a Spirit Monster?",
+        "placeholders": []
+      },
+      {
+        "offset": "0x1434522",
+        "template": "If you only have 2 \"%1\" in Defense Position and \"%2\" in Attack Position on your field, what is the ATK of \"%2\"?",
+        "placeholders": [
+          "%1",
+          "%2"
+        ]
+      }
+    ],
+    "answer_option_pool_count": 161,
+    "answer_option_pool": [
+      {
+        "offset": "0x1430FD0",
+        "text": "^001"
+      },
+      {
+        "offset": "0x1430FF2",
+        "text": "^001"
+      },
+      {
+        "offset": "0x1430FF8",
+        "text": "1\"x"
+      },
+      {
+        "offset": "0x143103C",
+        "text": "1\"A"
+      },
+      {
+        "offset": "0x1431058",
+        "text": "^004"
+      },
+      {
+        "offset": "0x143107A",
+        "text": "^004"
+      },
+      {
+        "offset": "0x14310D2",
+        "text": "1\"g"
+      },
+      {
+        "offset": "0x1431114",
+        "text": "1\"g"
+      },
+      {
+        "offset": "0x1431130",
+        "text": "^008"
+      },
+      {
+        "offset": "0x1431136",
+        "text": "1\"u"
+      },
+      {
+        "offset": "0x1431152",
+        "text": "^008"
+      },
+      {
+        "offset": "0x1431174",
+        "text": "^008"
+      },
+      {
+        "offset": "0x143117A",
+        "text": "1\"v"
+      },
+      {
+        "offset": "0x1431196",
+        "text": "^008"
+      },
+      {
+        "offset": "0x143119C",
+        "text": "1\"j"
+      },
+      {
+        "offset": "0x14311B8",
+        "text": "^008"
+      },
+      {
+        "offset": "0x14311DA",
+        "text": "^008"
+      },
+      {
+        "offset": "0x14311FC",
+        "text": "^008"
+      },
+      {
+        "offset": "0x1431264",
+        "text": "^016"
+      },
+      {
+        "offset": "0x1431286",
+        "text": "^016"
+      },
+      {
+        "offset": "0x14312A8",
+        "text": "^016"
+      },
+      {
+        "offset": "0x14312CA",
+        "text": "^016"
+      },
+      {
+        "offset": "0x143132E",
+        "text": "^021"
+      },
+      {
+        "offset": "0x1431334",
+        "text": "1\"k"
+      },
+      {
+        "offset": "0x1431350",
+        "text": "^021"
+      },
+      {
+        "offset": "0x1431356",
+        "text": "1\"j"
+      },
+      {
+        "offset": "0x1431372",
+        "text": "^021"
+      },
+      {
+        "offset": "0x1431394",
+        "text": "^021"
+      },
+      {
+        "offset": "0x143139A",
+        "text": "1\"o"
+      },
+      {
+        "offset": "0x14313B6",
+        "text": "^021"
+      },
+      {
+        "offset": "0x1431418",
+        "text": "^027"
+      },
+      {
+        "offset": "0x143143A",
+        "text": "^027"
+      },
+      {
+        "offset": "0x143149C",
+        "text": "^030"
+      },
+      {
+        "offset": "0x14314BE",
+        "text": "^030"
+      },
+      {
+        "offset": "0x143151E",
+        "text": "^033"
+      },
+      {
+        "offset": "0x1431540",
+        "text": "^033"
+      },
+      {
+        "offset": "0x143159C",
+        "text": "^036"
+      },
+      {
+        "offset": "0x14315BE",
+        "text": "^036"
+      },
+      {
+        "offset": "0x14316EC",
+        "text": "^041"
+      },
+      {
+        "offset": "0x143170E",
+        "text": "^041"
+      },
+      {
+        "offset": "0x1431730",
+        "text": "^041"
+      },
+      {
+        "offset": "0x14317AA",
+        "text": "^045"
+      },
+      {
+        "offset": "0x14317CC",
+        "text": "^045"
+      },
+      {
+        "offset": "0x143184E",
+        "text": "^048"
+      },
+      {
+        "offset": "0x14318A8",
+        "text": "1#\\"
+      },
+      {
+        "offset": "0x1431932",
+        "text": "2400"
+      },
+      {
+        "offset": "0x1431938",
+        "text": "1600"
+      },
+      {
+        "offset": "0x1431940",
+        "text": "1#]"
+      },
+      {
+        "offset": "0x14319D6",
+        "text": "1500"
+      },
+      {
+        "offset": "0x14319DC",
+        "text": "800"
+      },
+      {
+        "offset": "0x14319E0",
+        "text": "1000"
+      },
+      {
+        "offset": "0x14319E6",
+        "text": "1!a"
+      },
+      {
+        "offset": "0x1431A2C",
+        "text": "Discard 1 card from your hand"
+      },
+      {
+        "offset": "0x1431A4A",
+        "text": "Remove 1 Spell Card in your Graveyard from play"
+      },
+      {
+        "offset": "0x1431A7A",
+        "text": "Send the top 2 cards in your Deck to the Graveyard"
+      },
+      {
+        "offset": "0x1431AAE",
+        "text": "1!g"
+      },
+      {
+        "offset": "0x1431B14",
+        "text": "Regain 1000 LP"
+      },
+      {
+        "offset": "0x1431B24",
+        "text": "Remove 1 monster on your opponent's field from play"
+      },
+      {
+        "offset": "0x1431B58",
+        "text": "Draw 1 card from your Deck"
+      },
+      {
+        "offset": "0x1431B74",
+        "text": "1\"h"
+      },
+      {
+        "offset": "0x1431BD8",
+        "text": "1\"|"
+      },
+      {
+        "offset": "0x1431C1E",
+        "text": "1#}"
+      },
+      {
+        "offset": "0x1431C8E",
+        "text": "1700"
+      },
+      {
+        "offset": "0x1431C94",
+        "text": "1900"
+      },
+      {
+        "offset": "0x1431C9A",
+        "text": "1500"
+      },
+      {
+        "offset": "0x1431DD0",
+        "text": "15 cards"
+      },
+      {
+        "offset": "0x1431DDA",
+        "text": "10 cards"
+      },
+      {
+        "offset": "0x1431DE4",
+        "text": "18 cards"
+      },
+      {
+        "offset": "0x1431E30",
+        "text": "If you deal battle damage to your opponent, skip your opponent's next Draw Phase"
+      },
+      {
+        "offset": "0x1431E82",
+        "text": "If you deal battle damage to your opponent, skip your opponent's next Battle Phase"
+      },
+      {
+        "offset": "0x1431ED6",
+        "text": "If you deal battle damage to your opponent, regain LP equal to the damage dealt"
+      },
+      {
+        "offset": "0x1431FB8",
+        "text": "100"
+      },
+      {
+        "offset": "0x1431FBC",
+        "text": "150"
+      },
+      {
+        "offset": "0x1431FC0",
+        "text": "200"
+      },
+      {
+        "offset": "0x143202A",
+        "text": "1!&"
+      },
+      {
+        "offset": "0x143207A",
+        "text": "All face-up monsters on the field, other than \"Dark Dust Spirit\""
+      },
+      {
+        "offset": "0x14320BC",
+        "text": "All monsters on the field, other than \"Dark Dust Spirit\""
+      },
+      {
+        "offset": "0x14320F6",
+        "text": "All monsters on your opponent's field"
+      },
+      {
+        "offset": "0x143211C",
+        "text": "1\"/"
+      },
+      {
+        "offset": "0x1432138",
+        "text": "^059"
+      },
+      {
+        "offset": "0x143213E",
+        "text": "1!2"
+      },
+      {
+        "offset": "0x14321A2",
+        "text": "Your opponent sends the top 2 cards in his Deck to the Graveyard"
+      },
+      {
+        "offset": "0x14321E4",
+        "text": "Your opponent selects and discards 1 card from his hand"
+      },
+      {
+        "offset": "0x143221C",
+        "text": "Your opponent selects and removes 3 cards in his Graveyard from play"
+      },
+      {
+        "offset": "0x143233A",
+        "text": "Which has the following effect: Destroy 1 face-down monster on your opponent's field."
+      },
+      {
+        "offset": "0x1432428",
+        "text": "^070"
+      },
+      {
+        "offset": "0x1432538",
+        "text": "1600"
+      },
+      {
+        "offset": "0x143253E",
+        "text": "2000"
+      },
+      {
+        "offset": "0x1432544",
+        "text": "2400"
+      },
+      {
+        "offset": "0x143254A",
+        "text": "1#A"
+      },
+      {
+        "offset": "0x14325E8",
+        "text": "300"
+      },
+      {
+        "offset": "0x14325EC",
+        "text": "1250"
+      },
+      {
+        "offset": "0x14325F2",
+        "text": "1800"
+      },
+      {
+        "offset": "0x14325F8",
+        "text": "1\"E"
+      },
+      {
+        "offset": "0x1432640",
+        "text": "1#e"
+      },
+      {
+        "offset": "0x14326BA",
+        "text": "1500"
+      },
+      {
+        "offset": "0x14326C0",
+        "text": "900"
+      },
+      {
+        "offset": "0x14326C4",
+        "text": "2400"
+      },
+      {
+        "offset": "0x1432796",
+        "text": "Destroy all monsters on your opponent's field"
+      },
+      {
+        "offset": "0x14327C4",
+        "text": "Destroy 1 monster on your opponent's field"
+      },
+      {
+        "offset": "0x14327F0",
+        "text": "Destroy all monsters on your field"
+      },
+      {
+        "offset": "0x1432892",
+        "text": "\"Blue-Eyes White Dragon\" + \"Dark Magician\""
+      },
+      {
+        "offset": "0x14328BE",
+        "text": "\"Shining Angel\" + \"Reflect Bounder\""
+      },
+      {
+        "offset": "0x14328E2",
+        "text": "\"Witch of the Black Forest\" + \"Sangan\""
+      },
+      {
+        "offset": "0x1432AF2",
+        "text": "1\"g"
+      },
+      {
+        "offset": "0x1432C60",
+        "text": "Which has the following effect: For one time only, all battle damage you receive becomes 0."
+      },
+      {
+        "offset": "0x1432DCA",
+        "text": "500"
+      },
+      {
+        "offset": "0x1432DCE",
+        "text": "1000"
+      },
+      {
+        "offset": "0x1432DD4",
+        "text": "2000"
+      },
+      {
+        "offset": "0x1432E6C",
+        "text": "Which has the following effect: Destroy all monsters on your opponent's field."
+      },
+      {
+        "offset": "0x1432EBC",
+        "text": "1\"\""
+      },
+      {
+        "offset": "0x1432F18",
+        "text": "1\"("
+      },
+      {
+        "offset": "0x1432F76",
+        "text": "1#="
+      },
+      {
+        "offset": "0x1432FD0",
+        "text": "2800"
+      },
+      {
+        "offset": "0x1432FD6",
+        "text": "2600"
+      },
+      {
+        "offset": "0x1432FDC",
+        "text": "2700"
+      },
+      {
+        "offset": "0x14330AE",
+        "text": "Which has the following effect: Add a Spell Card in your Graveyard to your hand."
+      },
+      {
+        "offset": "0x1433198",
+        "text": "1#O"
+      },
+      {
+        "offset": "0x143324A",
+        "text": "1\"3"
+      },
+      {
+        "offset": "0x14332D4",
+        "text": "4550"
+      },
+      {
+        "offset": "0x14332DA",
+        "text": "5750"
+      },
+      {
+        "offset": "0x14332E0",
+        "text": "3550"
+      },
+      {
+        "offset": "0x14332E6",
+        "text": "1\"D"
+      },
+      {
+        "offset": "0x1433332",
+        "text": "1\"O"
+      },
+      {
+        "offset": "0x1433378",
+        "text": "1\"P"
+      },
+      {
+        "offset": "0x1433394",
+        "text": "^106"
+      },
+      {
+        "offset": "0x14334FA",
+        "text": "When your opponent's monster attacks \"Reflect Bounder\" while it is in Attack Position"
+      },
+      {
+        "offset": "0x1433550",
+        "text": "When \"Reflect Bounder\" attacks your opponent's monster"
+      },
+      {
+        "offset": "0x1433588",
+        "text": "When your opponent's monster attacks \"Reflect Bounder\" while it is in Defense Position"
+      },
+      {
+        "offset": "0x14337A6",
+        "text": "600"
+      },
+      {
+        "offset": "0x14337AA",
+        "text": "1200"
+      },
+      {
+        "offset": "0x14337B0",
+        "text": "1800"
+      },
+      {
+        "offset": "0x143381E",
+        "text": "2025"
+      },
+      {
+        "offset": "0x1433824",
+        "text": "2050"
+      },
+      {
+        "offset": "0x14338E0",
+        "text": "Total Defense Shogun"
+      },
+      {
+        "offset": "0x14338F6",
+        "text": "Summoned Skull"
+      },
+      {
+        "offset": "0x1433906",
+        "text": "Face-down Defense Position monster"
+      },
+      {
+        "offset": "0x14339D0",
+        "text": "1\"3"
+      },
+      {
+        "offset": "0x1433A3C",
+        "text": "1\"5"
+      },
+      {
+        "offset": "0x1433A58",
+        "text": "^121"
+      },
+      {
+        "offset": "0x1433A5E",
+        "text": "1\"<"
+      },
+      {
+        "offset": "0x1433A7A",
+        "text": "^121"
+      },
+      {
+        "offset": "0x1433A80",
+        "text": "1\">"
+      },
+      {
+        "offset": "0x1433A9C",
+        "text": "^121"
+      },
+      {
+        "offset": "0x1433AA2",
+        "text": "1\"?"
+      },
+      {
+        "offset": "0x1433ABE",
+        "text": "^121"
+      },
+      {
+        "offset": "0x1433AC4",
+        "text": "1\"B"
+      },
+      {
+        "offset": "0x1433AE0",
+        "text": "^121"
+      },
+      {
+        "offset": "0x1433AE6",
+        "text": "1\"Y"
+      },
+      {
+        "offset": "0x1433B50",
+        "text": "1#c"
+      },
+      {
+        "offset": "0x1433BB2",
+        "text": "6 cards"
+      },
+      {
+        "offset": "0x1433BBA",
+        "text": "4 cards"
+      },
+      {
+        "offset": "0x1433BC2",
+        "text": "2 cards"
+      },
+      {
+        "offset": "0x1433BCA",
+        "text": "1#w"
+      },
+      {
+        "offset": "0x1433C66",
+        "text": "4100"
+      },
+      {
+        "offset": "0x1433C6C",
+        "text": "3100"
+      },
+      {
+        "offset": "0x1433C72",
+        "text": "4600"
+      },
+      {
+        "offset": "0x143447A",
+        "text": "^196"
+      },
+      {
+        "offset": "0x1434592",
+        "text": "2400"
+      },
+      {
+        "offset": "0x1434598",
+        "text": "3400"
+      },
+      {
+        "offset": "0x143459E",
+        "text": "4400"
+      }
+    ],
+    "mapping_status": "templates extracted; per-question correct-answer mapping not proven",
+    "confidence": "high for templates, low for individual answer keys"
+  },
+  "question_card_pool": {
+    "raw_entry_count": 136,
+    "valid_card_id_count": 27,
+    "cards": [
+      {
+        "offset": "0x1430BE4",
+        "card_id": 102
+      },
+      {
+        "offset": "0x1430BE8",
+        "card_id": 164
+      },
+      {
+        "offset": "0x1430BEC",
+        "card_id": 198
+      },
+      {
+        "offset": "0x1430BF0",
+        "card_id": 232
+      },
+      {
+        "offset": "0x1430BF4",
+        "card_id": 300
+      },
+      {
+        "offset": "0x1430BF8",
+        "card_id": 334
+      },
+      {
+        "offset": "0x1430BFC",
+        "card_id": 368
+      },
+      {
+        "offset": "0x1430C00",
+        "card_id": 450
+      },
+      {
+        "offset": "0x1430C04",
+        "card_id": 516
+      },
+      {
+        "offset": "0x1430C08",
+        "card_id": 550
+      },
+      {
+        "offset": "0x1430C0C",
+        "card_id": 584
+      },
+      {
+        "offset": "0x1430C10",
+        "card_id": 618
+      },
+      {
+        "offset": "0x1430C14",
+        "card_id": 652
+      },
+      {
+        "offset": "0x1430C18",
+        "card_id": 686
+      },
+      {
+        "offset": "0x1430C1C",
+        "card_id": 720
+      },
+      {
+        "offset": "0x1430C20",
+        "card_id": 754
+      },
+      {
+        "offset": "0x1430C24",
+        "card_id": 824
+      },
+      {
+        "offset": "0x1430C28",
+        "card_id": 858
+      },
+      {
+        "offset": "0x1430C2C",
+        "card_id": 892
+      },
+      {
+        "offset": "0x1430C30",
+        "card_id": 926
+      },
+      {
+        "offset": "0x1430C34",
+        "card_id": 960
+      },
+      {
+        "offset": "0x1430C38",
+        "card_id": 1026
+      },
+      {
+        "offset": "0x1430C3C",
+        "card_id": 1060
+      },
+      {
+        "offset": "0x1430C40",
+        "card_id": 1094
+      },
+      {
+        "offset": "0x1430C44",
+        "card_id": 1128
+      },
+      {
+        "offset": "0x1430C48",
+        "card_id": 1162
+      },
+      {
+        "offset": "0x1430C4C",
+        "card_id": 1196
+      }
+    ],
+    "raw_entries": [
+      {
+        "offset": "0x1430BE0",
+        "value": 0,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430BE4",
+        "value": 102,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430BE8",
+        "value": 164,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430BEC",
+        "value": 198,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430BF0",
+        "value": 232,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430BF4",
+        "value": 300,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430BF8",
+        "value": 334,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430BFC",
+        "value": 368,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C00",
+        "value": 450,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C04",
+        "value": 516,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C08",
+        "value": 550,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C0C",
+        "value": 584,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C10",
+        "value": 618,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C14",
+        "value": 652,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C18",
+        "value": 686,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C1C",
+        "value": 720,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C20",
+        "value": 754,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C24",
+        "value": 824,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C28",
+        "value": 858,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C2C",
+        "value": 892,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C30",
+        "value": 926,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C34",
+        "value": 960,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C38",
+        "value": 1026,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C3C",
+        "value": 1060,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C40",
+        "value": 1094,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C44",
+        "value": 1128,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C48",
+        "value": 1162,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C4C",
+        "value": 1196,
+        "valid_card_id": true
+      },
+      {
+        "offset": "0x1430C50",
+        "value": 1260,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C54",
+        "value": 1294,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C58",
+        "value": 1328,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C5C",
+        "value": 1392,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C60",
+        "value": 1426,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C64",
+        "value": 1460,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C68",
+        "value": 1522,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C6C",
+        "value": 1556,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C70",
+        "value": 1590,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C74",
+        "value": 1648,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C78",
+        "value": 1682,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C7C",
+        "value": 1716,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C80",
+        "value": 1824,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C84",
+        "value": 1914,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C88",
+        "value": 1984,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C8C",
+        "value": 2018,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C90",
+        "value": 2052,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C94",
+        "value": 2086,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C98",
+        "value": 2174,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430C9C",
+        "value": 2208,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CA0",
+        "value": 2242,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CA4",
+        "value": 2338,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CA8",
+        "value": 2372,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CAC",
+        "value": 2456,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CB0",
+        "value": 2608,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CB4",
+        "value": 2774,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CB8",
+        "value": 2974,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CBC",
+        "value": 3172,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CC0",
+        "value": 3272,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CC4",
+        "value": 3342,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CC8",
+        "value": 3472,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CCC",
+        "value": 3580,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CD0",
+        "value": 3674,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CD4",
+        "value": 3806,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CD8",
+        "value": 4118,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CDC",
+        "value": 4276,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CE0",
+        "value": 4378,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CE4",
+        "value": 4620,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CE8",
+        "value": 4654,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CEC",
+        "value": 4946,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CF0",
+        "value": 5010,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CF4",
+        "value": 5134,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CF8",
+        "value": 5248,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430CFC",
+        "value": 5372,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D00",
+        "value": 5406,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D04",
+        "value": 5522,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D08",
+        "value": 5690,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D0C",
+        "value": 5864,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D10",
+        "value": 5936,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D14",
+        "value": 6074,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D18",
+        "value": 6182,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D1C",
+        "value": 6404,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D20",
+        "value": 6650,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D24",
+        "value": 6764,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D28",
+        "value": 6854,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D2C",
+        "value": 6954,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D30",
+        "value": 7036,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D34",
+        "value": 7138,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D38",
+        "value": 7212,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D3C",
+        "value": 7292,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D40",
+        "value": 7378,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D44",
+        "value": 7476,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D48",
+        "value": 7596,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D4C",
+        "value": 7662,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D50",
+        "value": 7742,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D54",
+        "value": 7882,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D58",
+        "value": 8000,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D5C",
+        "value": 8108,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D60",
+        "value": 8200,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D64",
+        "value": 8294,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D68",
+        "value": 8402,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D6C",
+        "value": 8490,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D70",
+        "value": 8578,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D74",
+        "value": 8688,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D78",
+        "value": 8840,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D7C",
+        "value": 9018,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D80",
+        "value": 9096,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D84",
+        "value": 9174,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D88",
+        "value": 9250,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D8C",
+        "value": 9320,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D90",
+        "value": 9354,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D94",
+        "value": 9428,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D98",
+        "value": 9510,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430D9C",
+        "value": 9574,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DA0",
+        "value": 9638,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DA4",
+        "value": 9936,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DA8",
+        "value": 10042,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DAC",
+        "value": 10138,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DB0",
+        "value": 10220,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DB4",
+        "value": 10300,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DB8",
+        "value": 10406,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DBC",
+        "value": 10526,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DC0",
+        "value": 10778,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DC4",
+        "value": 10944,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DC8",
+        "value": 11052,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DCC",
+        "value": 11086,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DD0",
+        "value": 11120,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DD4",
+        "value": 11154,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DD8",
+        "value": 11188,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DDC",
+        "value": 11222,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DE0",
+        "value": 11328,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DE4",
+        "value": 11450,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DE8",
+        "value": 11624,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DEC",
+        "value": 11698,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DF0",
+        "value": 11726,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DF4",
+        "value": 11754,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DF8",
+        "value": 11782,
+        "valid_card_id": false
+      },
+      {
+        "offset": "0x1430DFC",
+        "value": 11810,
+        "valid_card_id": false
+      }
+    ],
+    "confidence": "medium",
+    "note": "Contiguous uint32 array at 0x1430BE0; 27 of 136 entries are valid card ids, the rest are parameters or pointers."
+  },
+  "binary_question_records": {
+    "count": 64,
+    "records": [
+      {
+        "index": 0,
+        "table_offset": "0x1430E00",
+        "relative_offset": "0x002E3E",
+        "absolute_offset": "0x1433D4E",
+        "raw_hex": "3112ab0f6f1000000000fc0fea0f6310000000000000000000000000",
+        "uint16": [
+          4657,
+          4011,
+          4207,
+          0,
+          0,
+          4092,
+          4074,
+          4195,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 1,
+        "table_offset": "0x1430E04",
+        "relative_offset": "0x002E5A",
+        "absolute_offset": "0x1433D6A",
+        "raw_hex": "3112c00f011000000000021093125116000000000000000000000000",
+        "uint16": [
+          4657,
+          4032,
+          4097,
+          0,
+          0,
+          4098,
+          4755,
+          5713,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 2,
+        "table_offset": "0x1430E08",
+        "relative_offset": "0x002E76",
+        "absolute_offset": "0x1433D86",
+        "raw_hex": "3112a80f0e1000000000191052106912000000000000000000000000",
+        "uint16": [
+          4657,
+          4008,
+          4110,
+          0,
+          0,
+          4121,
+          4178,
+          4713,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 3,
+        "table_offset": "0x1430E0C",
+        "relative_offset": "0x002E92",
+        "absolute_offset": "0x1433DA2",
+        "raw_hex": "311239107810000000002b10b50f3410000000000000000000000000",
+        "uint16": [
+          4657,
+          4153,
+          4216,
+          0,
+          0,
+          4139,
+          4021,
+          4148,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 4,
+        "table_offset": "0x1430E10",
+        "relative_offset": "0x002EAE",
+        "absolute_offset": "0x1433DBE",
+        "raw_hex": "311243106e10000000004e10c9106812000000000000000000000000",
+        "uint16": [
+          4657,
+          4163,
+          4206,
+          0,
+          0,
+          4174,
+          4297,
+          4712,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 5,
+        "table_offset": "0x1430E14",
+        "relative_offset": "0x002ECA",
+        "absolute_offset": "0x1433DDA",
+        "raw_hex": "31127610c010000000006310b6109f13000000000000000000000000",
+        "uint16": [
+          4657,
+          4214,
+          4288,
+          0,
+          0,
+          4195,
+          4278,
+          5023,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 6,
+        "table_offset": "0x1430E18",
+        "relative_offset": "0x002EE6",
+        "absolute_offset": "0x1433DF6",
+        "raw_hex": "3112be0f9a10000000007d103410c910000000000000000000000000",
+        "uint16": [
+          4657,
+          4030,
+          4250,
+          0,
+          0,
+          4221,
+          4148,
+          4297,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 7,
+        "table_offset": "0x1430E1C",
+        "relative_offset": "0x002F02",
+        "absolute_offset": "0x1433E12",
+        "raw_hex": "3112bc0ff80f000000007f106f128c12000000000000000000000000",
+        "uint16": [
+          4657,
+          4028,
+          4088,
+          0,
+          0,
+          4223,
+          4719,
+          4748,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 8,
+        "table_offset": "0x1430E20",
+        "relative_offset": "0x002F1E",
+        "absolute_offset": "0x1433E2E",
+        "raw_hex": "311229112d120000000085105d116311000000000000000000000000",
+        "uint16": [
+          4657,
+          4393,
+          4653,
+          0,
+          0,
+          4229,
+          4445,
+          4451,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 9,
+        "table_offset": "0x1430E24",
+        "relative_offset": "0x002F3A",
+        "absolute_offset": "0x1433E4A",
+        "raw_hex": "31126310a110000000008c100f121812000000000000000000000000",
+        "uint16": [
+          4657,
+          4195,
+          4257,
+          0,
+          0,
+          4236,
+          4623,
+          4632,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 10,
+        "table_offset": "0x1430E28",
+        "relative_offset": "0x002F56",
+        "absolute_offset": "0x1433E66",
+        "raw_hex": "3112b30f0b1000000000b61063100615000000000000000000000000",
+        "uint16": [
+          4657,
+          4019,
+          4107,
+          0,
+          0,
+          4278,
+          4195,
+          5382,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 11,
+        "table_offset": "0x1430E2C",
+        "relative_offset": "0x002F72",
+        "absolute_offset": "0x1433E82",
+        "raw_hex": "31125210ce1000000000cc10cb0f8b13000000000000000000000000",
+        "uint16": [
+          4657,
+          4178,
+          4302,
+          0,
+          0,
+          4300,
+          4043,
+          5003,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 12,
+        "table_offset": "0x1430E30",
+        "relative_offset": "0x002F8E",
+        "absolute_offset": "0x1433E9E",
+        "raw_hex": "31124211a6110000000018114c112512000000000000000000000000",
+        "uint16": [
+          4657,
+          4418,
+          4518,
+          0,
+          0,
+          4376,
+          4428,
+          4645,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 13,
+        "table_offset": "0x1430E34",
+        "relative_offset": "0x002FAA",
+        "absolute_offset": "0x1433EBA",
+        "raw_hex": "311205101e1000000000271108109511000000000000000000000000",
+        "uint16": [
+          4657,
+          4101,
+          4126,
+          0,
+          0,
+          4391,
+          4104,
+          4501,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 14,
+        "table_offset": "0x1430E38",
+        "relative_offset": "0x002FC6",
+        "absolute_offset": "0x1433ED6",
+        "raw_hex": "31129210be10000000002b117f116312000000000000000000000000",
+        "uint16": [
+          4657,
+          4242,
+          4286,
+          0,
+          0,
+          4395,
+          4479,
+          4707,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 15,
+        "table_offset": "0x1430E3C",
+        "relative_offset": "0x002FE2",
+        "absolute_offset": "0x1433EF2",
+        "raw_hex": "3112d311d711000000003f1151116c11000000000000000000000000",
+        "uint16": [
+          4657,
+          4563,
+          4567,
+          0,
+          0,
+          4415,
+          4433,
+          4460,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 16,
+        "table_offset": "0x1430E40",
+        "relative_offset": "0x002FFE",
+        "absolute_offset": "0x1433F0E",
+        "raw_hex": "3112ad0f01120000000051113f116c13000000000000000000000000",
+        "uint16": [
+          4657,
+          4013,
+          4609,
+          0,
+          0,
+          4433,
+          4415,
+          4972,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 17,
+        "table_offset": "0x1430E44",
+        "relative_offset": "0x00301A",
+        "absolute_offset": "0x1433F2A",
+        "raw_hex": "31125d11c511000000005b116011db11000000000000000000000000",
+        "uint16": [
+          4657,
+          4445,
+          4549,
+          0,
+          0,
+          4443,
+          4448,
+          4571,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 18,
+        "table_offset": "0x1430E48",
+        "relative_offset": "0x003036",
+        "absolute_offset": "0x1433F46",
+        "raw_hex": "31123211bf1100000000701156100b12000000000000000000000000",
+        "uint16": [
+          4657,
+          4402,
+          4543,
+          0,
+          0,
+          4464,
+          4182,
+          4619,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 19,
+        "table_offset": "0x1430E4C",
+        "relative_offset": "0x003052",
+        "absolute_offset": "0x1433F62",
+        "raw_hex": "31122212c0110000000077110b107911000000000000000000000000",
+        "uint16": [
+          4657,
+          4642,
+          4544,
+          0,
+          0,
+          4471,
+          4107,
+          4473,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 20,
+        "table_offset": "0x1430E50",
+        "relative_offset": "0x00306E",
+        "absolute_offset": "0x1433F7E",
+        "raw_hex": "311223107811000000007911b6107711000000000000000000000000",
+        "uint16": [
+          4657,
+          4131,
+          4472,
+          0,
+          0,
+          4473,
+          4278,
+          4471,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 21,
+        "table_offset": "0x1430E54",
+        "relative_offset": "0x00308A",
+        "absolute_offset": "0x1433F9A",
+        "raw_hex": "31123b10d611000000007d1145117811000000000000000000000000",
+        "uint16": [
+          4657,
+          4155,
+          4566,
+          0,
+          0,
+          4477,
+          4421,
+          4472,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 22,
+        "table_offset": "0x1430E58",
+        "relative_offset": "0x0030A6",
+        "absolute_offset": "0x1433FB6",
+        "raw_hex": "31123d10c910000000007f11b7116b13000000000000000000000000",
+        "uint16": [
+          4657,
+          4157,
+          4297,
+          0,
+          0,
+          4479,
+          4535,
+          4971,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 23,
+        "table_offset": "0x1430E5C",
+        "relative_offset": "0x0030C2",
+        "absolute_offset": "0x1433FD2",
+        "raw_hex": "3112e0112a120000000088118d110117000000000000000000000000",
+        "uint16": [
+          4657,
+          4576,
+          4650,
+          0,
+          0,
+          4488,
+          4493,
+          5889,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 24,
+        "table_offset": "0x1430E60",
+        "relative_offset": "0x0030DE",
+        "absolute_offset": "0x1433FEE",
+        "raw_hex": "3112e70fdd11000000008d1194129a13000000000000000000000000",
+        "uint16": [
+          4657,
+          4071,
+          4573,
+          0,
+          0,
+          4493,
+          4756,
+          5018,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 25,
+        "table_offset": "0x1430E64",
+        "relative_offset": "0x0030FA",
+        "absolute_offset": "0x143400A",
+        "raw_hex": "31120a12e411000000009511b9116312000000000000000000000000",
+        "uint16": [
+          4657,
+          4618,
+          4580,
+          0,
+          0,
+          4501,
+          4537,
+          4707,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 26,
+        "table_offset": "0x1430E68",
+        "relative_offset": "0x003116",
+        "absolute_offset": "0x1434026",
+        "raw_hex": "3112c60f471100000000a21188148315000000000000000000000000",
+        "uint16": [
+          4657,
+          4038,
+          4423,
+          0,
+          0,
+          4514,
+          5256,
+          5507,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 27,
+        "table_offset": "0x1430E6C",
+        "relative_offset": "0x003132",
+        "absolute_offset": "0x1434042",
+        "raw_hex": "3112c60ff70f00000000a3118811af11000000000000000000000000",
+        "uint16": [
+          4657,
+          4038,
+          4087,
+          0,
+          0,
+          4515,
+          4488,
+          4527,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 28,
+        "table_offset": "0x1430E70",
+        "relative_offset": "0x00314E",
+        "absolute_offset": "0x143405E",
+        "raw_hex": "31123810eb1100000000af110b11da11000000000000000000000000",
+        "uint16": [
+          4657,
+          4152,
+          4587,
+          0,
+          0,
+          4527,
+          4363,
+          4570,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 29,
+        "table_offset": "0x1430E74",
+        "relative_offset": "0x00316A",
+        "absolute_offset": "0x143407A",
+        "raw_hex": "3112f00f571100000000b911cd111a12000000000000000000000000",
+        "uint16": [
+          4657,
+          4080,
+          4439,
+          0,
+          0,
+          4537,
+          4557,
+          4634,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 30,
+        "table_offset": "0x1430E78",
+        "relative_offset": "0x003186",
+        "absolute_offset": "0x1434096",
+        "raw_hex": "3112da0f861100000000bb1173121014000000000000000000000000",
+        "uint16": [
+          4657,
+          4058,
+          4486,
+          0,
+          0,
+          4539,
+          4723,
+          5136,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 31,
+        "table_offset": "0x1430E7C",
+        "relative_offset": "0x0031A2",
+        "absolute_offset": "0x14340B2",
+        "raw_hex": "3112b00fca0f00000000c7110b11da11000000000000000000000000",
+        "uint16": [
+          4657,
+          4016,
+          4042,
+          0,
+          0,
+          4551,
+          4363,
+          4570,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 32,
+        "table_offset": "0x1430E80",
+        "relative_offset": "0x0031BE",
+        "absolute_offset": "0x14340CE",
+        "raw_hex": "3112ca0f071000000000da116011c711000000000000000000000000",
+        "uint16": [
+          4657,
+          4042,
+          4103,
+          0,
+          0,
+          4570,
+          4448,
+          4551,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 33,
+        "table_offset": "0x1430E84",
+        "relative_offset": "0x0031DA",
+        "absolute_offset": "0x14340EA",
+        "raw_hex": "311221122f1200000000e2117f11b911000000000000000000000000",
+        "uint16": [
+          4657,
+          4641,
+          4655,
+          0,
+          0,
+          4578,
+          4479,
+          4537,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 34,
+        "table_offset": "0x1430E88",
+        "relative_offset": "0x0031F6",
+        "absolute_offset": "0x1434106",
+        "raw_hex": "3112ac0f121200000000f811dd110217000000000000000000000000",
+        "uint16": [
+          4657,
+          4012,
+          4626,
+          0,
+          0,
+          4600,
+          4573,
+          5890,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 35,
+        "table_offset": "0x1430E8C",
+        "relative_offset": "0x003212",
+        "absolute_offset": "0x1434122",
+        "raw_hex": "31124f114f11000000000b125111db14000000000000000000000000",
+        "uint16": [
+          4657,
+          4431,
+          4431,
+          0,
+          0,
+          4619,
+          4433,
+          5339,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 36,
+        "table_offset": "0x1430E90",
+        "relative_offset": "0x00322E",
+        "absolute_offset": "0x143413E",
+        "raw_hex": "31125411cc11000000000f128c101812000000000000000000000000",
+        "uint16": [
+          4657,
+          4436,
+          4556,
+          0,
+          0,
+          4623,
+          4236,
+          4632,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 37,
+        "table_offset": "0x1430E94",
+        "relative_offset": "0x00324A",
+        "absolute_offset": "0x143415A",
+        "raw_hex": "31129010d1100000000010122f126612000000000000000000000000",
+        "uint16": [
+          4657,
+          4240,
+          4305,
+          0,
+          0,
+          4624,
+          4655,
+          4710,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 38,
+        "table_offset": "0x1430E98",
+        "relative_offset": "0x003266",
+        "absolute_offset": "0x1434176",
+        "raw_hex": "3112b910631100000000251275130517000000000000000000000000",
+        "uint16": [
+          4657,
+          4281,
+          4451,
+          0,
+          0,
+          4645,
+          4981,
+          5893,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 39,
+        "table_offset": "0x1430E9C",
+        "relative_offset": "0x003282",
+        "absolute_offset": "0x1434192",
+        "raw_hex": "31124810551000000000691295117212000000000000000000000000",
+        "uint16": [
+          4657,
+          4168,
+          4181,
+          0,
+          0,
+          4713,
+          4501,
+          4722,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 40,
+        "table_offset": "0x1430EA0",
+        "relative_offset": "0x00329E",
+        "absolute_offset": "0x14341AE",
+        "raw_hex": "3112f80f6e12000000006f127f108c12000000000000000000000000",
+        "uint16": [
+          4657,
+          4088,
+          4718,
+          0,
+          0,
+          4719,
+          4223,
+          4748,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 41,
+        "table_offset": "0x1430EA4",
+        "relative_offset": "0x0032BA",
+        "absolute_offset": "0x14341CA",
+        "raw_hex": "3112811283120000000084128c13c313000000000000000000000000",
+        "uint16": [
+          4657,
+          4737,
+          4739,
+          0,
+          0,
+          4740,
+          5004,
+          5059,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 42,
+        "table_offset": "0x1430EA8",
+        "relative_offset": "0x0032D6",
+        "absolute_offset": "0x14341E6",
+        "raw_hex": "311293129112000000009412d9158016000000000000000000000000",
+        "uint16": [
+          4657,
+          4755,
+          4753,
+          0,
+          0,
+          4756,
+          5593,
+          5760,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 43,
+        "table_offset": "0x1430EAC",
+        "relative_offset": "0x0032F2",
+        "absolute_offset": "0x1434202",
+        "raw_hex": "31127d148c1400000000b1128f12b512000000000000000000000000",
+        "uint16": [
+          4657,
+          5245,
+          5260,
+          0,
+          0,
+          4785,
+          4751,
+          4789,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 44,
+        "table_offset": "0x1430EB0",
+        "relative_offset": "0x00330E",
+        "absolute_offset": "0x143421E",
+        "raw_hex": "3112aa0f9f12000000008b137d113c18000000000000000000000000",
+        "uint16": [
+          4657,
+          4010,
+          4767,
+          0,
+          0,
+          5003,
+          4477,
+          6204,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 45,
+        "table_offset": "0x1430EB4",
+        "relative_offset": "0x00332A",
+        "absolute_offset": "0x143423A",
+        "raw_hex": "3112c413c51300000000c613ca133616000000000000000000000000",
+        "uint16": [
+          4657,
+          5060,
+          5061,
+          0,
+          0,
+          5062,
+          5066,
+          5686,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 46,
+        "table_offset": "0x1430EB8",
+        "relative_offset": "0x003346",
+        "absolute_offset": "0x1434256",
+        "raw_hex": "31125714591400000000581456140b17000000000000000000000000",
+        "uint16": [
+          4657,
+          5207,
+          5209,
+          0,
+          0,
+          5208,
+          5206,
+          5899,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 47,
+        "table_offset": "0x1430EBC",
+        "relative_offset": "0x003362",
+        "absolute_offset": "0x1434272",
+        "raw_hex": "311212112211000000007d157e15e015000000000000000000000000",
+        "uint16": [
+          4657,
+          4370,
+          4386,
+          0,
+          0,
+          5501,
+          5502,
+          5600,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 48,
+        "table_offset": "0x1430EC0",
+        "relative_offset": "0x00337E",
+        "absolute_offset": "0x143428E",
+        "raw_hex": "3112c90f771300000000fc1542167c16000000000000000000000000",
+        "uint16": [
+          4657,
+          4041,
+          4983,
+          0,
+          0,
+          5628,
+          5698,
+          5756,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 49,
+        "table_offset": "0x1430EC4",
+        "relative_offset": "0x00339A",
+        "absolute_offset": "0x14342AA",
+        "raw_hex": "3112b50fc90f000000004216fc154316000000000000000000000000",
+        "uint16": [
+          4657,
+          4021,
+          4041,
+          0,
+          0,
+          5698,
+          5628,
+          5699,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 50,
+        "table_offset": "0x1430EC8",
+        "relative_offset": "0x0033B6",
+        "absolute_offset": "0x14342C6",
+        "raw_hex": "3112b616b71600000000ef171d166618000000000000000000000000",
+        "uint16": [
+          4657,
+          5814,
+          5815,
+          0,
+          0,
+          6127,
+          5661,
+          6246,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 51,
+        "table_offset": "0x1430ECC",
+        "relative_offset": "0x0033D2",
+        "absolute_offset": "0x14342E2",
+        "raw_hex": "3112d60fe41100000000f017ef17aa18000000000000000000000000",
+        "uint16": [
+          4657,
+          4054,
+          4580,
+          0,
+          0,
+          6128,
+          6127,
+          6314,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 52,
+        "table_offset": "0x1430ED0",
+        "relative_offset": "0x0033EE",
+        "absolute_offset": "0x14342FE",
+        "raw_hex": "3112cd15ce15000000003c182217c417000000000000000000000000",
+        "uint16": [
+          4657,
+          5581,
+          5582,
+          0,
+          0,
+          6204,
+          5922,
+          6084,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 53,
+        "table_offset": "0x1430ED4",
+        "relative_offset": "0x00340A",
+        "absolute_offset": "0x143431A",
+        "raw_hex": "31128d124c17000000007818b415ab18000000000000000000000000",
+        "uint16": [
+          4657,
+          4749,
+          5964,
+          0,
+          0,
+          6264,
+          5556,
+          6315,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 54,
+        "table_offset": "0x1430ED8",
+        "relative_offset": "0x003426",
+        "absolute_offset": "0x1434336",
+        "raw_hex": "3112a618a71800000000c818c918fb18000000000000000000000000",
+        "uint16": [
+          4657,
+          6310,
+          6311,
+          0,
+          0,
+          6344,
+          6345,
+          6395,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 55,
+        "table_offset": "0x1430EDC",
+        "relative_offset": "0x003442",
+        "absolute_offset": "0x1434352",
+        "raw_hex": "3112a818a91800000000c918c818fb18000000000000000000000000",
+        "uint16": [
+          4657,
+          6312,
+          6313,
+          0,
+          0,
+          6345,
+          6344,
+          6395,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 56,
+        "table_offset": "0x1430EE0",
+        "relative_offset": "0x00345E",
+        "absolute_offset": "0x143436E",
+        "raw_hex": "3112f118f21800000000fa18f318f418000000000000000000000000",
+        "uint16": [
+          4657,
+          6385,
+          6386,
+          0,
+          0,
+          6394,
+          6387,
+          6388,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 57,
+        "table_offset": "0x1430EE4",
+        "relative_offset": "0x00347A",
+        "absolute_offset": "0x143438A",
+        "raw_hex": "3112a618f41800000000fb18c818fa18000000000000000000000000",
+        "uint16": [
+          4657,
+          6310,
+          6388,
+          0,
+          0,
+          6395,
+          6344,
+          6394,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 58,
+        "table_offset": "0x1430EE8",
+        "relative_offset": "0x003496",
+        "absolute_offset": "0x14343A6",
+        "raw_hex": "3112f618f61800000000fc182211fd18000000000000000000000000",
+        "uint16": [
+          4657,
+          6390,
+          6390,
+          0,
+          0,
+          6396,
+          4386,
+          6397,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 59,
+        "table_offset": "0x1430EEC",
+        "relative_offset": "0x0034B2",
+        "absolute_offset": "0x14343C2",
+        "raw_hex": "312200000000000000006913cf12f61400001c000000000000000000",
+        "uint16": [
+          8753,
+          0,
+          0,
+          0,
+          0,
+          4969,
+          4815,
+          5366,
+          0,
+          28,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 60,
+        "table_offset": "0x1430EF0",
+        "relative_offset": "0x0034FC",
+        "absolute_offset": "0x143440C",
+        "raw_hex": "312200000000000000002d168e12241600001c000000000000000000",
+        "uint16": [
+          8753,
+          0,
+          0,
+          0,
+          0,
+          5677,
+          4750,
+          5668,
+          0,
+          28,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 61,
+        "table_offset": "0x1430EF4",
+        "relative_offset": "0x00354E",
+        "absolute_offset": "0x143445E",
+        "raw_hex": "3122000000000000000012161016111600001c000000000000000000",
+        "uint16": [
+          8753,
+          0,
+          0,
+          0,
+          0,
+          5650,
+          5648,
+          5649,
+          0,
+          28,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 62,
+        "table_offset": "0x1430EF8",
+        "relative_offset": "0x003570",
+        "absolute_offset": "0x1434480",
+        "raw_hex": "312200000000000000008015b015b31500001c000000000000000000",
+        "uint16": [
+          8753,
+          0,
+          0,
+          0,
+          0,
+          5504,
+          5552,
+          5555,
+          0,
+          28,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      },
+      {
+        "index": 63,
+        "table_offset": "0x1430EFC",
+        "relative_offset": "0x0035B2",
+        "absolute_offset": "0x14344C2",
+        "raw_hex": "312200000000000000000d179416261500001c000000000000000000",
+        "uint16": [
+          8753,
+          0,
+          0,
+          0,
+          0,
+          5901,
+          5780,
+          5414,
+          0,
+          28,
+          0,
+          0,
+          0,
+          0
+        ],
+        "confidence": "low",
+        "note": "28-byte record; 16-bit fields look like text/card ids but the mapping is not yet proven."
+      }
+    ],
+    "confidence": "low"
+  },
+  "practical": {
+    "objectives": [
+      {
+        "id": "practical_1",
+        "name": "Practical Exam 1 - Battle",
+        "theme": "Battle"
+      },
+      {
+        "id": "practical_2",
+        "name": "Practical Exam 2 - Spells",
+        "theme": "Spells"
+      },
+      {
+        "id": "practical_3",
+        "name": "Practical Exam 3 - Traps",
+        "theme": "Traps"
+      },
+      {
+        "id": "practical_4",
+        "name": "Practical Exam 4 - Damage",
+        "theme": "Damage"
+      },
+      {
+        "id": "practical_5",
+        "name": "Practical Exam 5 - Fusion",
+        "theme": "Fusion"
+      },
+      {
+        "id": "practical_6",
+        "name": "Practical Exam 6 - Ritual",
+        "theme": "Ritual"
+      },
+      {
+        "id": "practical_7",
+        "name": "Practical Exam 7 - Special Summon",
+        "theme": "Special Summon"
+      }
+    ],
+    "opponent": "mimicry",
+    "confidence": "high",
+    "source": "ROM strings at 0x146C23E..0x146C2DA; opponent from guide"
+  },
+  "scoring": {
+    "max_score": 500,
+    "components": [
+      "written",
+      "timed_duel",
+      "practical"
+    ],
+    "pass_mark": null,
+    "pass_mark_notes": "Guide sources disagree between 250 and 300; verify in-game before freezing.",
+    "confidence": "low"
+  },
+  "gerard_quiz": {
+    "questions": [
+      {
+        "q": "What is Jaden's dorm?",
+        "a": "Slifer Red"
+      },
+      {
+        "q": "What is Lyman Banner always hugging?",
+        "a": "A cat (Pharaoh)"
+      },
+      {
+        "q": "Who was the first person you met in this game?",
+        "a": "Sheppard"
+      },
+      {
+        "q": "Who can you challenge via e-mail?",
+        "a": "Chumley Huffington (guide also lists Bastion in one translation)"
+      },
+      {
+        "q": "How many hairs does Sheppard have?",
+        "a": "0 (zero)"
+      },
+      {
+        "q": "Who is Syrus' brother?",
+        "a": "Zane Truesdale"
+      },
+      {
+        "q": "Who is Jaden's favorite monster?",
+        "a": "Winged Kuriboh"
+      },
+      {
+        "q": "What is the name of this game?",
+        "a": "Yu-Gi-Oh! GX Duel Academy"
+      },
+      {
+        "q": "What do you air out on a fine day?",
+        "a": "Deck"
+      }
+    ],
+    "reward_dp": 1000,
+    "source": "Yugipedia Events (Event 21) and GameFAQs Event FAQ",
+    "confidence": "medium"
+  },
+  "cycle": {
+    "exams_per_year": 12,
+    "exam_day": "Friday",
+    "exam_week_rule": "unresolved; monthly Friday, exact week not proven",
+    "confidence": "medium"
+  }
+}

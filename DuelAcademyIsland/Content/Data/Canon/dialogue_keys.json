@@ -1,0 +1,2264 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:04+00:00",
+  "key_format": "DLG_<four-digit string index>",
+  "total_lines": 4527,
+  "full_index": "DuelAcademyIsland/Content/Data/Canon/text/dialogue_index.json",
+  "notes": [
+    "Keys are stable for this ROM and index table (0x14280A0, 4,527 entries).",
+    "Event candidates are keyword matches, not final scene keys; A03 must confirm.",
+    "The text itself is local-only; see Docs/Canon/LOCAL_ONLY.md."
+  ],
+  "events": [
+    {
+      "event": "E01",
+      "title": "School Registration",
+      "lines": [
+        {
+          "key": "DLG_0018",
+          "index": 18,
+          "offset": "0x13F7024",
+          "sha256": "4f5cf3f571f2f40a6fda8b70893bd8d8bba694fd3abd87de29e18a30b4fc6767",
+          "text_preview": "Slifer Red Dorm",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0051",
+          "index": 51,
+          "offset": "0x13F7186",
+          "sha256": "38ee99351092e7e4ec4c87b6f3b1d9fb795c711328e14799a4096e7ba4328d67",
+          "text_preview": "Slifer Red",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1151",
+          "index": 1151,
+          "offset": "0x13FE1D4",
+          "sha256": "a92edec5aa6d481167062dcfc9fe3b39182f51d027490d00d5ebc184b02efb66",
+          "text_preview": "(No one's standing outside the $C3Slifer Red dorm$C1.)",
+          "tokens": [
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_1205",
+          "index": 1205,
+          "offset": "0x13FE34E",
+          "sha256": "094176cae023b947aac6a4a2649b86bac9c5aa3b23ef015a8632d4acc2650900",
+          "text_preview": "So you're $p00.#kLet me see, you're part of... Slifer Red.#rThe Slifer dorm is n",
+          "tokens": [
+            "#k",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_1206",
+          "index": 1206,
+          "offset": "0x13FE3F6",
+          "sha256": "f8385afb4835de3a1d294fadef38e4e4b706d29adbae33f018ecf99aacc36bfb",
+          "text_preview": "Welcome to Slifer Red!",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1207",
+          "index": 1207,
+          "offset": "0x13FE40E",
+          "sha256": "f443d18a24d1e641a0aaf1efd349cf0aa36a8c51d1a426a299ac1e3460c40ab3",
+          "text_preview": "I'm the headmaster of Slifer Red, Professor Lyman Banner.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1211",
+          "index": 1211,
+          "offset": "0x13FE4C6",
+          "sha256": "5df3d4a14febdf598cf18fe47fc54688d6bee3cd5107c5a88e2571026247932d",
+          "text_preview": "I'm Chumley.  I've been at Slifer Red the longest, like for years.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1212",
+          "index": 1212,
+          "offset": "0x13FE50A",
+          "sha256": "f1f25d4411a4ee11ef04e17fb754185a742f2211c339caed3b509b0fe09ad8ce",
+          "text_preview": "Duel Academy is separated into 3 levels: Slifer Red, Ra Yellow and Obelisk Blue.",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E02",
+      "title": "Pharaoh's True Power",
+      "lines": [
+        {
+          "key": "DLG_1207",
+          "index": 1207,
+          "offset": "0x13FE40E",
+          "sha256": "f443d18a24d1e641a0aaf1efd349cf0aa36a8c51d1a426a299ac1e3460c40ab3",
+          "text_preview": "I'm the headmaster of Slifer Red, Professor Lyman Banner.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1208",
+          "index": 1208,
+          "offset": "0x13FE448",
+          "sha256": "ead56ab59c4b61436ac6da87b830064f74b4ab48c81bf7194724f9de788df614",
+          "text_preview": "And this little buddy is $C4Pharaoh$C1.",
+          "tokens": [
+            "$C1",
+            "$C4"
+          ]
+        },
+        {
+          "key": "DLG_1610",
+          "index": 1610,
+          "offset": "0x13FF2E0",
+          "sha256": "45ebd6182042306ea46ee911b1e7acd6cb7e1494aef92c2c5e14057242befd4d",
+          "text_preview": "To become $l01, you need to prepare well for your tests.#rRight, @1 Pharaoh @7?",
+          "tokens": [
+            "#r",
+            "$l01",
+            "@1",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_2239",
+          "index": 2239,
+          "offset": "0x1405C4A",
+          "sha256": "4a9e9b5124ea3c6f65ee4fb59c640aab413b2f37496b558ee2b64240ff560be6",
+          "text_preview": "Oh, you don't want to?#nThat is unfortunate.#rDon't you agree, $C4Pharaoh$C1?",
+          "tokens": [
+            "#n",
+            "#r",
+            "$C1",
+            "$C4"
+          ]
+        },
+        {
+          "key": "DLG_2241",
+          "index": 2241,
+          "offset": "0x1405D88",
+          "sha256": "029ac305740523027b3392a6744ece979b384f335e02ddd7a1bcde52a7025459",
+          "text_preview": "A fabulous duel worthy of your $L rank.#rRight, $C4Pharaoh$C1?",
+          "tokens": [
+            "#r",
+            "$C1",
+            "$C4",
+            "$L"
+          ]
+        },
+        {
+          "key": "DLG_3008",
+          "index": 3008,
+          "offset": "0x1409E42",
+          "sha256": "ead56ab59c4b61436ac6da87b830064f74b4ab48c81bf7194724f9de788df614",
+          "text_preview": "And this little buddy is $C4Pharaoh$C1.",
+          "tokens": [
+            "$C1",
+            "$C4"
+          ]
+        },
+        {
+          "key": "DLG_3820",
+          "index": 3820,
+          "offset": "0x141A958",
+          "sha256": "c564bbb9aef7224f9c77b6a9f92496d9360cebf3e13a6bbaf9c1c1f5dfa633db",
+          "text_preview": "The duel is over.#r#>0_092Ooh, so you defeated $C4Pharaoh$C1.  Nicely done.#r#>0",
+          "tokens": [
+            "#>0_091",
+            "#>0_092",
+            "#k",
+            "#n",
+            "#r",
+            "$C1",
+            "$C4"
+          ]
+        },
+        {
+          "key": "DLG_3822",
+          "index": 3822,
+          "offset": "0x141AA98",
+          "sha256": "9b271eddb81864559a4b64e613853dd7990626e5c37871784535e6d29a2fe370",
+          "text_preview": "The duel is over.#r#>0_094Ooh, $C4Pharaoh$C1 won.#nHow unfortunate, $p00.#r#>0_0",
+          "tokens": [
+            "#>0_091",
+            "#>0_092",
+            "#>0_094",
+            "#k",
+            "#n",
+            "#r",
+            "$C1",
+            "$C4",
+            "$p00"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E03",
+      "title": "A New Hero Summoned",
+      "lines": []
+    },
+    {
+      "event": "E04",
+      "title": "Old Memories, Part 1",
+      "lines": []
+    },
+    {
+      "event": "E04b",
+      "title": "Old Memories, Part 2",
+      "lines": [
+        {
+          "key": "DLG_0019",
+          "index": 19,
+          "offset": "0x13F7034",
+          "sha256": "fed12611d2d8c162e34719e368f2b823bd4051762b171196a55fd975745d726f",
+          "text_preview": "Ocean",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0046",
+          "index": 46,
+          "offset": "0x13F714C",
+          "sha256": "e60ccdae551fd3ca5ec2a52b9dcbe1a5d0841bed2c5d708d0e4dcd853c25cd8f",
+          "text_preview": "Next to Ocean",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0052",
+          "index": 52,
+          "offset": "0x13F7192",
+          "sha256": "17f61b7f29e75832f566cfa00f1a48ab654b6e2aca4498828b260b3b0a85cf4f",
+          "text_preview": "Zane's Room",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1684",
+          "index": 1684,
+          "offset": "0x1401206",
+          "sha256": "ba15c255673dce72fd58f5b0ddb7c4619eddf15418a2a6fc0d63f16503e2a9cf",
+          "text_preview": "Oh Zane!  You want to go out with me?  Of course I will!",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3110",
+          "index": 3110,
+          "offset": "0x140C3CE",
+          "sha256": "55bc3e765c5d168033a205e78ba68cda51b2252d695a2d07a6c1d2426edd29cf",
+          "text_preview": "Zane...",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3122",
+          "index": 3122,
+          "offset": "0x140C83A",
+          "sha256": "878018bf281bfc603a9596af1416b16b04608c2c05e432f2d6fc4e7e31039e2d",
+          "text_preview": "Zane, I'm not giving up anymore!#rI will master using \"$c6398!\"#rWatch out Zane.",
+          "tokens": [
+            "#n",
+            "#r",
+            "$c6398"
+          ]
+        },
+        {
+          "key": "DLG_3358",
+          "index": 3358,
+          "offset": "0x1410230",
+          "sha256": "1d5e6fc3aa9deefdf51c19d498438f71aa8140829d608e023307027656aef4f8",
+          "text_preview": "Zane?!?#kWhat are you doing here?",
+          "tokens": [
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_3400",
+          "index": 3400,
+          "offset": "0x1410F74",
+          "sha256": "c6dc1cb0ac146858f795640f6d0f37823c997c3816b7dbc6ec7221595fa57529",
+          "text_preview": "...I understand, Zane.#r#>0_161Sorry, $p00.  I promise to return the Deck.#n#>0_",
+          "tokens": [
+            "#>0_161",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E05",
+      "title": "The Power of the Kaiser",
+      "lines": [
+        {
+          "key": "DLG_0031",
+          "index": 31,
+          "offset": "0x13F7098",
+          "sha256": "1e6066f0b92c457acd344893fbf02fed7c05a60a98a69a6644ff7e155466ddd3",
+          "text_preview": "Dr. Crowler's Room",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0052",
+          "index": 52,
+          "offset": "0x13F7192",
+          "sha256": "17f61b7f29e75832f566cfa00f1a48ab654b6e2aca4498828b260b3b0a85cf4f",
+          "text_preview": "Zane's Room",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1684",
+          "index": 1684,
+          "offset": "0x1401206",
+          "sha256": "ba15c255673dce72fd58f5b0ddb7c4619eddf15418a2a6fc0d63f16503e2a9cf",
+          "text_preview": "Oh Zane!  You want to go out with me?  Of course I will!",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3110",
+          "index": 3110,
+          "offset": "0x140C3CE",
+          "sha256": "55bc3e765c5d168033a205e78ba68cda51b2252d695a2d07a6c1d2426edd29cf",
+          "text_preview": "Zane...",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3122",
+          "index": 3122,
+          "offset": "0x140C83A",
+          "sha256": "878018bf281bfc603a9596af1416b16b04608c2c05e432f2d6fc4e7e31039e2d",
+          "text_preview": "Zane, I'm not giving up anymore!#rI will master using \"$c6398!\"#rWatch out Zane.",
+          "tokens": [
+            "#n",
+            "#r",
+            "$c6398"
+          ]
+        },
+        {
+          "key": "DLG_3125",
+          "index": 3125,
+          "offset": "0x140CA7E",
+          "sha256": "e06cdf992cc8f212d94ad3590168863256970efde1a7a381782dad6373c121ee",
+          "text_preview": "Sorry.#r#>0_071I tried explaining the truth to Dr. Crowler.#rBut he doesn't beli",
+          "tokens": [
+            "#>0_071",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_3358",
+          "index": 3358,
+          "offset": "0x1410230",
+          "sha256": "1d5e6fc3aa9deefdf51c19d498438f71aa8140829d608e023307027656aef4f8",
+          "text_preview": "Zane?!?#kWhat are you doing here?",
+          "tokens": [
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_3400",
+          "index": 3400,
+          "offset": "0x1410F74",
+          "sha256": "c6dc1cb0ac146858f795640f6d0f37823c997c3816b7dbc6ec7221595fa57529",
+          "text_preview": "...I understand, Zane.#r#>0_161Sorry, $p00.  I promise to return the Deck.#n#>0_",
+          "tokens": [
+            "#>0_161",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E06",
+      "title": "Dark Fiend Deck",
+      "lines": [
+        {
+          "key": "DLG_2425",
+          "index": 2425,
+          "offset": "0x14081AA",
+          "sha256": "5a7f7dab699ea39e36a248081ce8373904ddccfd564b492e6a43540307382834",
+          "text_preview": "#>0_182Thank you, my guardian \"$C2Jinzo$C1!\"#r#>0_181Did you feel it?#nDid you f",
+          "tokens": [
+            "#>0_181",
+            "#>0_182",
+            "#n",
+            "#r",
+            "$C1",
+            "$C2"
+          ]
+        },
+        {
+          "key": "DLG_2431",
+          "index": 2431,
+          "offset": "0x140834A",
+          "sha256": "9000eec79d12c93aa4e61a3e201262e1d67b9c55ddc31423cd76949a4a0093b9",
+          "text_preview": "Alright, I'll show you what I learned through my mystic studies.#r\"$C2Jinzo$C1!\"",
+          "tokens": [
+            "#n",
+            "#r",
+            "$C1",
+            "$C2"
+          ]
+        },
+        {
+          "key": "DLG_3521",
+          "index": 3521,
+          "offset": "0x1412D8C",
+          "sha256": "419b4980cf25a577ad0461bbe4a16a727b6b43688c8ca286448ded9d28fd0b53",
+          "text_preview": "Pant pant...#kI-It's horrible, $p00!#nHelp me!#rIt's J-J-\"$C2Jinzo$C1!\"",
+          "tokens": [
+            "#k",
+            "#n",
+            "#r",
+            "$C1",
+            "$C2",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_3531",
+          "index": 3531,
+          "offset": "0x14131C2",
+          "sha256": "b9638c7149e1a891c7c86228f8d93572de2c6a622c5970d0ed8bf9263a697a12",
+          "text_preview": "Y-Yes sir!#nYes, Master \"$C2Jinzo$C1!\"#r$p00!#nS-Sorry about this!",
+          "tokens": [
+            "#n",
+            "#r",
+            "$C1",
+            "$C2",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_3533",
+          "index": 3533,
+          "offset": "0x14132B4",
+          "sha256": "b9638c7149e1a891c7c86228f8d93572de2c6a622c5970d0ed8bf9263a697a12",
+          "text_preview": "Y-Yes sir!#nYes, Master \"$C2Jinzo$C1!\"#r$p00!#nS-Sorry about this!",
+          "tokens": [
+            "#n",
+            "#r",
+            "$C1",
+            "$C2",
+            "$p00"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E07",
+      "title": "Occult Recommendation",
+      "lines": [
+        {
+          "key": "DLG_1088",
+          "index": 1088,
+          "offset": "0x13FC9F6",
+          "sha256": "ac540a577f68f32c9501ecb2088ca2d7a2cbad7f860fe236663ab972cd1f701c",
+          "text_preview": "The nuances of seances $t#kWhat was I singing?#r#>0_182It's the $p18 Seance Crew",
+          "tokens": [
+            "#>0_181",
+            "#>0_182",
+            "#k",
+            "#n",
+            "#r",
+            "$p18",
+            "$t"
+          ]
+        },
+        {
+          "key": "DLG_1089",
+          "index": 1089,
+          "offset": "0x13FC9F6",
+          "sha256": "ac540a577f68f32c9501ecb2088ca2d7a2cbad7f860fe236663ab972cd1f701c",
+          "text_preview": "The nuances of seances $t#kWhat was I singing?#r#>0_182It's the $p18 Seance Crew",
+          "tokens": [
+            "#>0_181",
+            "#>0_182",
+            "#k",
+            "#n",
+            "#r",
+            "$p18",
+            "$t"
+          ]
+        },
+        {
+          "key": "DLG_1629",
+          "index": 1629,
+          "offset": "0x13FFB3E",
+          "sha256": "3fc4bd2cc7f27f540a12b6d5cf4172ca3575d6b28c578c90ee11a77d7e2c72aa",
+          "text_preview": "#>0_132Hey!#nHave you heard of the \"$p18 Seance Crew?\"",
+          "tokens": [
+            "#>0_132",
+            "#n",
+            "$p18"
+          ]
+        },
+        {
+          "key": "DLG_1836",
+          "index": 1836,
+          "offset": "0x1402674",
+          "sha256": "8d0466ff4c8c205c92293577f35234d471322e81dce5b42e7bf4b5c79b0acf8f",
+          "text_preview": "#>0_181Sorry for the quick notice, but we're having a seance tomorrow night.#rCo",
+          "tokens": [
+            "#>0_181",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_2413",
+          "index": 2413,
+          "offset": "0x1407EB4",
+          "sha256": "98640c157ecf1ce357becaa92dc0cefc7857be0342eba7d6b4551cfd1bb93897",
+          "text_preview": "I'm $p18, the leader of the $p18 Seance Crew.#rI'm researching card spirits.  Hi",
+          "tokens": [
+            "#r",
+            "$p18"
+          ]
+        },
+        {
+          "key": "DLG_2414",
+          "index": 2414,
+          "offset": "0x1407EB4",
+          "sha256": "98640c157ecf1ce357becaa92dc0cefc7857be0342eba7d6b4551cfd1bb93897",
+          "text_preview": "I'm $p18, the leader of the $p18 Seance Crew.#rI'm researching card spirits.  Hi",
+          "tokens": [
+            "#r",
+            "$p18"
+          ]
+        },
+        {
+          "key": "DLG_2415",
+          "index": 2415,
+          "offset": "0x1407F50",
+          "sha256": "9d3ab186cac629cca605d797fb787ad37175500d6eea97ac5d5d876ba7edf3f4",
+          "text_preview": "Thank you!#rIf a $L joins the Seance Crew, others would surely follow, and...#r#",
+          "tokens": [
+            "#>0_183",
+            "#n",
+            "#r",
+            "$L"
+          ]
+        },
+        {
+          "key": "DLG_2418",
+          "index": 2418,
+          "offset": "0x1407FF6",
+          "sha256": "3210feb15f89b630401d9c28fa01e70c3692d4ef46ccfc3842c2e06a59d34fee",
+          "text_preview": "If you want to join the $p18 Seance Crew, you're welcome anytime.",
+          "tokens": [
+            "$p18"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E08",
+      "title": "Jinzo",
+      "lines": [
+        {
+          "key": "DLG_0222",
+          "index": 222,
+          "offset": "0x13F8E4E",
+          "sha256": "413658df68e3212b8c7ab05a6107e14706230ccbb81c2e1eba675fff52636e6b",
+          "text_preview": "Nice!#nThat's the spirit!#rHowever, to break the \"$l07\" barrier, you need to $C3",
+          "tokens": [
+            "#n",
+            "#r",
+            "$C1",
+            "$C3",
+            "$l07",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_1090",
+          "index": 1090,
+          "offset": "0x13FCA8A",
+          "sha256": "4bae212817199f195768b0a1a7653326d190c08f9c0a73f5e767e0451912bf78",
+          "text_preview": "Spiritual girl with the spiritual eyes $t#kWhat was I singing?#r#>0_182It's the ",
+          "tokens": [
+            "#>0_181",
+            "#>0_182",
+            "#k",
+            "#n",
+            "#r",
+            "$p18",
+            "$t"
+          ]
+        },
+        {
+          "key": "DLG_1120",
+          "index": 1120,
+          "offset": "0x13FD7B4",
+          "sha256": "afe03fa86c25fb0eedf633c4ca5a4d080bf5bf033796feffc6ff8e4d2297a4f6",
+          "text_preview": "#>0_312Ha ha ha, I like your spirit!#r#>0_311If you have so much energy left, ma",
+          "tokens": [
+            "#>0_311",
+            "#>0_312",
+            "#k",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_2026",
+          "index": 2026,
+          "offset": "0x14033A2",
+          "sha256": "58f999de86662dacc2162f5e878cb8a7c554303322eab6091a2301897de36298",
+          "text_preview": "Yeah!#nThat's the spirit!#r#>0_011Even my partner's anxious to duel you!",
+          "tokens": [
+            "#>0_011",
+            "#n",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_2413",
+          "index": 2413,
+          "offset": "0x1407EB4",
+          "sha256": "98640c157ecf1ce357becaa92dc0cefc7857be0342eba7d6b4551cfd1bb93897",
+          "text_preview": "I'm $p18, the leader of the $p18 Seance Crew.#rI'm researching card spirits.  Hi",
+          "tokens": [
+            "#r",
+            "$p18"
+          ]
+        },
+        {
+          "key": "DLG_2414",
+          "index": 2414,
+          "offset": "0x1407EB4",
+          "sha256": "98640c157ecf1ce357becaa92dc0cefc7857be0342eba7d6b4551cfd1bb93897",
+          "text_preview": "I'm $p18, the leader of the $p18 Seance Crew.#rI'm researching card spirits.  Hi",
+          "tokens": [
+            "#r",
+            "$p18"
+          ]
+        },
+        {
+          "key": "DLG_2416",
+          "index": 2416,
+          "offset": "0x1407FC2",
+          "sha256": "1eb85999387cd670505a723d66d55cc7f68f87b45d7c1af4e7505002cd3174ee",
+          "text_preview": "Would you like to research duel spirits with us?",
+          "tokens": []
+        },
+        {
+          "key": "DLG_2425",
+          "index": 2425,
+          "offset": "0x14081AA",
+          "sha256": "5a7f7dab699ea39e36a248081ce8373904ddccfd564b492e6a43540307382834",
+          "text_preview": "#>0_182Thank you, my guardian \"$C2Jinzo$C1!\"#r#>0_181Did you feel it?#nDid you f",
+          "tokens": [
+            "#>0_181",
+            "#>0_182",
+            "#n",
+            "#r",
+            "$C1",
+            "$C2"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E09",
+      "title": "Duel Festival",
+      "lines": [
+        {
+          "key": "DLG_1663",
+          "index": 1663,
+          "offset": "0x14006AA",
+          "sha256": "470f5741301e5fee76816da2313f4cdfb5cde358a565368f60a7d047945d5807",
+          "text_preview": "Hey, guess what!  There's gonna be the#n\"@3Duel Academy Festival @7!\"#nThe party",
+          "tokens": [
+            "#>0_022",
+            "#n",
+            "#r",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_1664",
+          "index": 1664,
+          "offset": "0x14007A8",
+          "sha256": "e6d68ef0c4f8c7a329646501098192aa955d3eca97f0768a7e133c278f4040f6",
+          "text_preview": "Oh my?  The \"@3 Duel Academy Festival @7\" is already next month!#nThe year passe",
+          "tokens": [
+            "#>0_102",
+            "#k",
+            "#n",
+            "#r",
+            "$p00",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_1665",
+          "index": 1665,
+          "offset": "0x140086E",
+          "sha256": "f439e080f4f1e5132dc591271682d4e1b4c44a18a95176a1a78e06ca3e7f9303",
+          "text_preview": "Finally, next month will be the long-awaited \"@3 Duel Academy Festival @7.\"#k$p0",
+          "tokens": [
+            "#>0_092",
+            "#k",
+            "#r",
+            "$p00",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_1666",
+          "index": 1666,
+          "offset": "0x1400964",
+          "sha256": "2bbebec17c4d4398a4411f7fa422513be60a4edcb9791295363b72836e131f5c",
+          "text_preview": "It's time for the \"@3 Duel Academy Festival @7!\"  Everyone knows Obelisk Blue ha",
+          "tokens": [
+            "#n",
+            "#r",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_1672",
+          "index": 1672,
+          "offset": "0x1400C14",
+          "sha256": "2856745b5efe12d7ba833029d34cafeefdfa404c416bc13f72e2bc4c4a53b762",
+          "text_preview": "During the Duel Academy Festival, $p21 was really cheering $p00 on!  I've never ",
+          "tokens": [
+            "#>0_032",
+            "#r",
+            "$p00",
+            "$p21",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_3909",
+          "index": 3909,
+          "offset": "0x141D0DE",
+          "sha256": "75f457548d205f7c6d73cc08d822d2784da3ebf576e38b1c83ddf060f24644dc",
+          "text_preview": "This is the main event of the Duel Academy Festival!#rCommence the \"Interdorm Du",
+          "tokens": [
+            "#>0_311",
+            "#r",
+            "$p08"
+          ]
+        },
+        {
+          "key": "DLG_4296",
+          "index": 4296,
+          "offset": "0x1423E82",
+          "sha256": "4a5c3ca0a354990147e66a886f9f369ecdbed3eda67461f720e9b3ae828ff67c",
+          "text_preview": "Now then...#rThis ends the \"Duel Academy Festival: Interdorm Duel!\"#r#>0_082Good",
+          "tokens": [
+            "#>0_082",
+            "#n",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_4320",
+          "index": 4320,
+          "offset": "0x1424872",
+          "sha256": "4a5c3ca0a354990147e66a886f9f369ecdbed3eda67461f720e9b3ae828ff67c",
+          "text_preview": "Now then...#rThis ends the \"Duel Academy Festival: Interdorm Duel!\"#r#>0_082Good",
+          "tokens": [
+            "#>0_082",
+            "#n",
+            "#r"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E10",
+      "title": "Merry Christmas",
+      "lines": [
+        {
+          "key": "DLG_1517",
+          "index": 1517,
+          "offset": "0x13FEF80",
+          "sha256": "f9cdd46a1969c983f197bcd502562954fcec0deecec1f6c1556f5a6905244611",
+          "text_preview": "I accept.#nI will wait for you at $m.  I hope you present a challenge, $p.",
+          "tokens": [
+            "#n",
+            "$m",
+            "$p"
+          ]
+        },
+        {
+          "key": "DLG_1640",
+          "index": 1640,
+          "offset": "0x13FFF74",
+          "sha256": "be9bccf928c5639041f8dfef343fcec26b6f9552c3cead5e254564abe763fa38",
+          "text_preview": "The school representative is gonna be-",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1674",
+          "index": 1674,
+          "offset": "0x1400D3C",
+          "sha256": "aed87d58ac3063336156d5ba39f484f19e68cd565fcafcf639651cd7f80ec2ec",
+          "text_preview": "#>0_022Hooray!  $C3Christmas$C1!#nI wonder what Santa has for me this year!",
+          "tokens": [
+            "#>0_022",
+            "#n",
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_1677",
+          "index": 1677,
+          "offset": "0x1400E9C",
+          "sha256": "8956c5a3e563c1545c70456bdc5c1e906892cfe29526b0231e7bffc3211a14ff",
+          "text_preview": "What should I give $p02 as a $C3Christmas$C1 present...  How about this\"$c6314\" ",
+          "tokens": [
+            "$C1",
+            "$C3",
+            "$c6314",
+            "$p02"
+          ]
+        },
+        {
+          "key": "DLG_1832",
+          "index": 1832,
+          "offset": "0x1402576",
+          "sha256": "149187fab7acd6d1370df0b27cd0d53a4fc2736db76d8b831bd2c654f8a7b3c7",
+          "text_preview": "What?#nToday is Christmas?#r#>0_112I completely forgot until you told me.",
+          "tokens": [
+            "#>0_112",
+            "#n",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_1833",
+          "index": 1833,
+          "offset": "0x14025C0",
+          "sha256": "6faea8dbb2b327f6520c8d558d76d53cb2b3c1c6460b23825eaccffdc94e6d76",
+          "text_preview": "#>0_114Sniff... How kind of you to wish me a Merry Christmas.#rI'm so so so so s",
+          "tokens": [
+            "#>0_112",
+            "#>0_114",
+            "#k",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_2038",
+          "index": 2038,
+          "offset": "0x140347C",
+          "sha256": "9dc636aab9432f61a3efdda991d5a7e586ce4760e45d98e1d6c0c01bb757f267",
+          "text_preview": "I understand...#kI wouldn't present much of a challenge.",
+          "tokens": [
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_3226",
+          "index": 3226,
+          "offset": "0x140E86A",
+          "sha256": "73f10a545bdbb5488eae966139b1b6ca14913aca35a9497319e1433e8cabc2dc",
+          "text_preview": "Wonderful!#r#>0_311That was a fabulous duel worthy of the school representatives",
+          "tokens": [
+            "#>0_311",
+            "#>0_312",
+            "#k",
+            "#n",
+            "#r",
+            "$p00",
+            "$p06"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E11",
+      "title": "New Year's Duel",
+      "lines": [
+        {
+          "key": "DLG_1679",
+          "index": 1679,
+          "offset": "0x1400F2C",
+          "sha256": "f57aef07b1f1c04a73f1f1310680804524e0b249fd30fa74da434374e52ea555",
+          "text_preview": "It's almost @3 New Year's #nDay @7.#rI gotta make a New Year's resolution.  I pr",
+          "tokens": [
+            "#n",
+            "#r",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_3748",
+          "index": 3748,
+          "offset": "0x141846C",
+          "sha256": "8463c693beee4f6fb9ce08d62af753da7a231f5a17afe5c1c6e365b2ccd2fa7e",
+          "text_preview": "Hey!#n#>0_011Here's to a sweet new year, $p00!#k#>0_011Twelve new months of duel",
+          "tokens": [
+            "#>0_011",
+            "#>0_012",
+            "#k",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_3751",
+          "index": 3751,
+          "offset": "0x14185C8",
+          "sha256": "174b1a5e8f82f6d7ce36c675549ee3b6332e3636e3b81e2cb34dad911bd527d4",
+          "text_preview": "Hey!#kHere's to a sweet new year, $p00!#n#>0_011Twelve new months of dueling!#r#",
+          "tokens": [
+            "#>0_011",
+            "#>0_012",
+            "#k",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_3753",
+          "index": 3753,
+          "offset": "0x14186E2",
+          "sha256": "200a6bd8a73d0c323c7a0aee0001d8c8154ac0e1c6afca9073c51dbf464a1146",
+          "text_preview": "Hi, $p00!  Happy New Year!#n#>0_031Make any resolutions?#r#>0_031#n#>0_034I reso",
+          "tokens": [
+            "#>0_031",
+            "#>0_032",
+            "#>0_034",
+            "#k",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_3757",
+          "index": 3757,
+          "offset": "0x1418A28",
+          "sha256": "0bc50acf284118729d5f2ef49f15bd05339fa3c5a14c4e63d88cf003ddb68e12",
+          "text_preview": "I made my resolution.#n#>0_041I resolve to become a great duelist!",
+          "tokens": [
+            "#>0_041",
+            "#n"
+          ]
+        },
+        {
+          "key": "DLG_3759",
+          "index": 3759,
+          "offset": "0x1418AD8",
+          "sha256": "f28de16dda3530a28acebe2c876b411f061016fd13ed152744e0bcbb67c04913",
+          "text_preview": "Happy New Year, $p00!#k#>0_051A new year, new opportunities, new adven-#r#>0_054",
+          "tokens": [
+            "#>0_051",
+            "#>0_053",
+            "#>0_054",
+            "#k",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_3762",
+          "index": 3762,
+          "offset": "0x1418C16",
+          "sha256": "b34f334d2151514835a6843faaddbf50db79496fbc4821f35642889137dd2099",
+          "text_preview": "Hey, $p00.#nHappy New Year!#kI hope it'll be lishus for ya!#r#>0_034Yaaawn...#k#",
+          "tokens": [
+            "#>0_031",
+            "#>0_033",
+            "#>0_034",
+            "#k",
+            "#n",
+            "#r",
+            "$p00",
+            "$p01"
+          ]
+        },
+        {
+          "key": "DLG_4248",
+          "index": 4248,
+          "offset": "0x1422D16",
+          "sha256": "b993352783062137b8e4bc27c94b1f08b9b479cb624bc43c4d3a4d4277822a2d",
+          "text_preview": "Happy New Year, $p00!#k#>0_051A new year, new opportunities, new adven-#r#>0_054",
+          "tokens": [
+            "#>0_051",
+            "#>0_053",
+            "#>0_054",
+            "#k",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E12",
+      "title": "Pride of the Elite",
+      "lines": [
+        {
+          "key": "DLG_3617",
+          "index": 3617,
+          "offset": "0x14153AC",
+          "sha256": "769c53100a1f9e6da4b96089082dc3f7c50e18145c13b4daa47191e4e3e5ae14",
+          "text_preview": "Wait, Topher.#k$p00 beat $p06 couple times before.",
+          "tokens": [
+            "#k",
+            "$p00",
+            "$p06"
+          ]
+        },
+        {
+          "key": "DLG_3621",
+          "index": 3621,
+          "offset": "0x14154A6",
+          "sha256": "49d82833390b4cfef7e975fff2787e8de00ffbf7267105dcc86b572ee7a00fb3",
+          "text_preview": "Conklin!  Shh!  That's no way to ask!#kI mean, uh, we're not asking you to defea",
+          "tokens": [
+            "#>0_232",
+            "#k",
+            "#r"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E13",
+      "title": "Battle against Chazz",
+      "lines": [
+        {
+          "key": "DLG_0015",
+          "index": 15,
+          "offset": "0x13F6FDE",
+          "sha256": "eb537b4525c3a03c82d27a15c21458fc0227ef79a77559174ff72bc429f3436a",
+          "text_preview": "Obelisk Blue - Boys' Dorm",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0016",
+          "index": 16,
+          "offset": "0x13F6FF8",
+          "sha256": "2464e7a9049efc42a04221d2fa957db0864b7b7211e9a3b08def7f658e7218a5",
+          "text_preview": "Obelisk Blue - Girls' Dorm",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0049",
+          "index": 49,
+          "offset": "0x13F716E",
+          "sha256": "ea9e393f034c53f1d15d6f22cf4875f7a53d12f5a9f1c14325421b4806c4387a",
+          "text_preview": "Obelisk Blue",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1142",
+          "index": 1142,
+          "offset": "0x13FE0A4",
+          "sha256": "5a242ed241089e138b096d843ee111514bd703654d15677549ba9d4b55ad6338",
+          "text_preview": "(This is the $C3boys' dorm for Obelisk Blue$C1.)",
+          "tokens": [
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_1145",
+          "index": 1145,
+          "offset": "0x13FE120",
+          "sha256": "af867c5603822b12c42f39c0ee0f01da8a558a2ea6d8ce0e0c769d6f938e9652",
+          "text_preview": "(This is the $C3girls' dorm for Obelisk Blue$C1.)",
+          "tokens": [
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_1212",
+          "index": 1212,
+          "offset": "0x13FE50A",
+          "sha256": "f1f25d4411a4ee11ef04e17fb754185a742f2211c339caed3b509b0fe09ad8ce",
+          "text_preview": "Duel Academy is separated into 3 levels: Slifer Red, Ra Yellow and Obelisk Blue.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1657",
+          "index": 1657,
+          "offset": "0x140031E",
+          "sha256": "ee0dbc002c6bf0afc9182397bbc99ffe72fe7be92bd21ff0215691d34eaff007",
+          "text_preview": "Yeah, I totally saw $p19 go to $C3 Obelisk Blue's boys' dorm $C1.#rSomething's u",
+          "tokens": [
+            "#>0_032",
+            "#k",
+            "#r",
+            "$C1",
+            "$C3",
+            "$p19"
+          ]
+        },
+        {
+          "key": "DLG_1666",
+          "index": 1666,
+          "offset": "0x1400964",
+          "sha256": "2bbebec17c4d4398a4411f7fa422513be60a4edcb9791295363b72836e131f5c",
+          "text_preview": "It's time for the \"@3 Duel Academy Festival @7!\"  Everyone knows Obelisk Blue ha",
+          "tokens": [
+            "#n",
+            "#r",
+            "@3",
+            "@7"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E14",
+      "title": "Revenge of the Obelisk Blues",
+      "lines": [
+        {
+          "key": "DLG_3617",
+          "index": 3617,
+          "offset": "0x14153AC",
+          "sha256": "769c53100a1f9e6da4b96089082dc3f7c50e18145c13b4daa47191e4e3e5ae14",
+          "text_preview": "Wait, Topher.#k$p00 beat $p06 couple times before.",
+          "tokens": [
+            "#k",
+            "$p00",
+            "$p06"
+          ]
+        },
+        {
+          "key": "DLG_3621",
+          "index": 3621,
+          "offset": "0x14154A6",
+          "sha256": "49d82833390b4cfef7e975fff2787e8de00ffbf7267105dcc86b572ee7a00fb3",
+          "text_preview": "Conklin!  Shh!  That's no way to ask!#kI mean, uh, we're not asking you to defea",
+          "tokens": [
+            "#>0_232",
+            "#k",
+            "#r"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E15",
+      "title": "Chazz Reborn",
+      "lines": []
+    },
+    {
+      "event": "E16",
+      "title": "Brier and Beauregard",
+      "lines": [
+        {
+          "key": "DLG_2367",
+          "index": 2367,
+          "offset": "0x1407644",
+          "sha256": "d92051f1d343a3a4d3520e19c78deb9ec89340c3dc9b99136f670bfe960cef32",
+          "text_preview": "A draw against $L...#rHee hee, I wish I coulda shown Brier.",
+          "tokens": [
+            "#r",
+            "$L"
+          ]
+        },
+        {
+          "key": "DLG_2370",
+          "index": 2370,
+          "offset": "0x14076E2",
+          "sha256": "f1180bc4492aac0168569c39154e44d7f2feca48c6cd21e558ea427176123595",
+          "text_preview": "W-What should I do?#nBrier?#nHelp me, Brier!",
+          "tokens": [
+            "#n"
+          ]
+        },
+        {
+          "key": "DLG_3346",
+          "index": 3346,
+          "offset": "0x140FFE6",
+          "sha256": "0b5931ce57b02af5f2762341ad2f43cd3bfaae90667915eafc69a2647e852d37",
+          "text_preview": "#>0_141Beauregard...",
+          "tokens": [
+            "#>0_141"
+          ]
+        },
+        {
+          "key": "DLG_4008",
+          "index": 4008,
+          "offset": "0x141F414",
+          "sha256": "3f02b1b327c1eeb170ef72d9d673947e4118e092d6c4f6b3cea989e362eec10b",
+          "text_preview": "#>0_141Don't freak out, Beauregard!#rHey, $p00!#nDuel me right here, right now!#",
+          "tokens": [
+            "#>0_141",
+            "#>0_143",
+            "#k",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E17",
+      "title": "The Goblin King",
+      "lines": []
+    },
+    {
+      "event": "E18",
+      "title": "Who Are You?",
+      "lines": [
+        {
+          "key": "DLG_3362",
+          "index": 3362,
+          "offset": "0x1410332",
+          "sha256": "18c75e823e45dfb2a2e6c07a32432e551c9d453f9b10ba9798031f0c7425a58e",
+          "text_preview": "Everyone...#k#>0_161Even Professor Sartyr!",
+          "tokens": [
+            "#>0_161",
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_3393",
+          "index": 3393,
+          "offset": "0x1410CD2",
+          "sha256": "18c75e823e45dfb2a2e6c07a32432e551c9d453f9b10ba9798031f0c7425a58e",
+          "text_preview": "Everyone...#k#>0_161Even Professor Sartyr!",
+          "tokens": [
+            "#>0_161",
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_4026",
+          "index": 4026,
+          "offset": "0x141FB9E",
+          "sha256": "18c75e823e45dfb2a2e6c07a32432e551c9d453f9b10ba9798031f0c7425a58e",
+          "text_preview": "Everyone...#k#>0_161Even Professor Sartyr!",
+          "tokens": [
+            "#>0_161",
+            "#k"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E19",
+      "title": "A Suspicious Character",
+      "lines": [
+        {
+          "key": "DLG_1624",
+          "index": 1624,
+          "offset": "0x13FF8F4",
+          "sha256": "15b89e1c7104d30c85c5b19e0730825a7fdcbd111d6fb7cd32c681e1d6183012",
+          "text_preview": "#>0_122I'm kidding, Mindy!",
+          "tokens": [
+            "#>0_122"
+          ]
+        },
+        {
+          "key": "DLG_1632",
+          "index": 1632,
+          "offset": "0x13FFC72",
+          "sha256": "e99aec8ad99f91975fa78cfef70528b18a9cb4a28292a6c71dfc9315508baf46",
+          "text_preview": "Uhh, Mindy?  How do you find out things like this?",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1660",
+          "index": 1660,
+          "offset": "0x1400516",
+          "sha256": "24aa1fd96d37c2b1658a0a5a3ad9154f97bf6db974c5654deda48b57b871fdff",
+          "text_preview": "#>0_054Umm, that wasn't the point of my story, Jasmine.",
+          "tokens": [
+            "#>0_054"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E20",
+      "title": "A Shadow Game",
+      "lines": [
+        {
+          "key": "DLG_1041",
+          "index": 1041,
+          "offset": "0x13FB2FC",
+          "sha256": "8f382d9c88306760af1b79de7e84abff8438d44525806724d86e63bd4009c71c",
+          "text_preview": "Shadow Games?#kHumph, those are nothing but fairy tales and myths.#rJust because",
+          "tokens": [
+            "#k",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_1052",
+          "index": 1052,
+          "offset": "0x13FB8D8",
+          "sha256": "6b4d2dfc7b18da5f660ab7499c5c52d5cf92f77946f776a9db560188c154c08a",
+          "text_preview": "$p00.#nWas my last test difficult?#rI wanted to give an easier exam so everyone ",
+          "tokens": [
+            "#>0_102",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_1634",
+          "index": 1634,
+          "offset": "0x13FFD40",
+          "sha256": "85a2b30c7019163ab318ad33e8cb84d5588c9c8ca34d67e32bd5b59563a3ba11",
+          "text_preview": "Shadow Games?#nThose have to do with the Millennium Items or something, right?#r",
+          "tokens": [
+            "#n",
+            "#r",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_1837",
+          "index": 1837,
+          "offset": "0x14026DE",
+          "sha256": "e3ad10e32fccec9466c58746eaa8ae054c1fd132be508f48492f4cdc94017fdb",
+          "text_preview": "What?#kYou lack a card to ante?#rThen there is no point in dueling!#r#>0_251Fine",
+          "tokens": [
+            "#>0_251",
+            "#>0_252",
+            "#k",
+            "#n",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_2025",
+          "index": 2025,
+          "offset": "0x1403336",
+          "sha256": "21b9aba758a8a4cd89b107a983259722f3cb2744e8a0887018f96cf3487b333f",
+          "text_preview": "Listen, check this out:#nI always wanted to know how good $L actually is.#rAnd n",
+          "tokens": [
+            "#n",
+            "#r",
+            "$L"
+          ]
+        },
+        {
+          "key": "DLG_2069",
+          "index": 2069,
+          "offset": "0x1403A74",
+          "sha256": "ad1333dffa963145ff5d3c38dbdefd114a17adc69426beef9577e19c83dffd50",
+          "text_preview": "#>0_034Oh, I thought you actually wanted to...",
+          "tokens": [
+            "#>0_034"
+          ]
+        },
+        {
+          "key": "DLG_2270",
+          "index": 2270,
+          "offset": "0x14066B0",
+          "sha256": "cae8fb8ee39c3e59c334370fb847245da02bca2b73b3919f6f267d1ccc71da79",
+          "text_preview": "Actually, I wanted to see how strong you are now.#rI hope you surprise me!",
+          "tokens": [
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_2440",
+          "index": 2440,
+          "offset": "0x14084EC",
+          "sha256": "c4ab5e04816afaca743c2f69c98ef203d4eb426b9c4f1f3f3e1ede5c472d4db2",
+          "text_preview": "If all you wanted was a duel, I was willing to hang out...",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E21",
+      "title": "Suspicious Classmate",
+      "lines": [
+        {
+          "key": "DLG_0208",
+          "index": 208,
+          "offset": "0x13F8684",
+          "sha256": "65845539a8e7ab3091464870fb327d2b76e1eec63cef95496e0e872f5e5c6499",
+          "text_preview": "You answered a lot of written exam questions.#rYou deserve to be called \"$l05!\"",
+          "tokens": [
+            "#r",
+            "$l05"
+          ]
+        },
+        {
+          "key": "DLG_1027",
+          "index": 1027,
+          "offset": "0x13FACD0",
+          "sha256": "fcd667cf6351d38cc448630a24a9eb5f8aa7c4f952b813c73a04302e0b1b215f",
+          "text_preview": "My favorite card?#kThat's a strange question to ask.#rI guess it'll be \"$c5767.\"",
+          "tokens": [
+            "#>0_053",
+            "#k",
+            "#n",
+            "#r",
+            "$c5767",
+            "$c6095"
+          ]
+        },
+        {
+          "key": "DLG_3856",
+          "index": 3856,
+          "offset": "0x141BA14",
+          "sha256": "e0073155abf2077c632e73c542fcce319c9b07af2a4f4d6e736f8a21abe56d1a",
+          "text_preview": "Yes, you there.  Do you have a question?",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E22",
+      "title": "Draw, Draw, Draw",
+      "lines": [
+        {
+          "key": "DLG_1086",
+          "index": 1086,
+          "offset": "0x13FC916",
+          "sha256": "b6f5a60f2747cffb900cf9dffce45134fb4ccb5e454d6bd37d118c0749417356",
+          "text_preview": "#>0_172Ahhh ahhh ahhh ah ah ahhh!#r#>0_171Me name not Tarzan.#rMe Damon.#nDamon ",
+          "tokens": [
+            "#>0_171",
+            "#>0_172",
+            "#n",
+            "#r"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E23",
+      "title": "Yugi's Legendary Deck",
+      "lines": [
+        {
+          "key": "DLG_1652",
+          "index": 1652,
+          "offset": "0x1400238",
+          "sha256": "32ecf116ffafcd3409c451457d880186d4e591d43487cafdd9b2fd867d438d08",
+          "text_preview": "Oh sweet!  Duel Academy is hosting a special exhibit on  $C4Yugi Muto's$C1 Deck!",
+          "tokens": [
+            "$C1",
+            "$C4"
+          ]
+        },
+        {
+          "key": "DLG_1653",
+          "index": 1653,
+          "offset": "0x140028A",
+          "sha256": "d072bbc77fc53d93dc0eba9218cf77299d4b18a376a98a6a8b35618fa1f4976d",
+          "text_preview": "Yugi Muto?  THE Yugi Muto?  The first King of Games?#nAre you serious?",
+          "tokens": [
+            "#n"
+          ]
+        },
+        {
+          "key": "DLG_3364",
+          "index": 3364,
+          "offset": "0x141041E",
+          "sha256": "e93b78577a4d8ef8cab34c585c816df40f31651f84e4998bc6f4e91ce715854c",
+          "text_preview": "I can't believe you were able to use $C4Yugi Muto's$C1 Deck!  I mean, he's the K",
+          "tokens": [
+            "$C1",
+            "$C4"
+          ]
+        },
+        {
+          "key": "DLG_3365",
+          "index": 3365,
+          "offset": "0x141047C",
+          "sha256": "a206fbf3a74da8801c9541615983407535f632af1a5165a390e7eff29f7b9103",
+          "text_preview": "That was incredible, Dimitri!",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3380",
+          "index": 3380,
+          "offset": "0x14108C8",
+          "sha256": "437b67166118276387fe505dbdbed66a94e48f479e14aade0b7c400e62d7dedc",
+          "text_preview": "You were amazing, Dimitri!",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3391",
+          "index": 3391,
+          "offset": "0x1410C70",
+          "sha256": "d7fff5c2d8c4ad94dd6c783b690a048b60f882696a318ded3de16d4f170347fb",
+          "text_preview": "You handled yourself pretty well, Dimitri!",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3395",
+          "index": 3395,
+          "offset": "0x1410DBE",
+          "sha256": "e93b78577a4d8ef8cab34c585c816df40f31651f84e4998bc6f4e91ce715854c",
+          "text_preview": "I can't believe you were able to use $C4Yugi Muto's$C1 Deck!  I mean, he's the K",
+          "tokens": [
+            "$C1",
+            "$C4"
+          ]
+        },
+        {
+          "key": "DLG_3396",
+          "index": 3396,
+          "offset": "0x1410E1C",
+          "sha256": "a206fbf3a74da8801c9541615983407535f632af1a5165a390e7eff29f7b9103",
+          "text_preview": "That was incredible, Dimitri!",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E24",
+      "title": "Missing Hero",
+      "lines": [
+        {
+          "key": "DLG_0021",
+          "index": 21,
+          "offset": "0x13F7042",
+          "sha256": "8a8c65415401f7ed0a6828f3da318b887524e488c8e0e3287e44a6c244a49f28",
+          "text_preview": "Harbor",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0048",
+          "index": 48,
+          "offset": "0x13F7166",
+          "sha256": "8a8c65415401f7ed0a6828f3da318b887524e488c8e0e3287e44a6c244a49f28",
+          "text_preview": "Harbor",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1158",
+          "index": 1158,
+          "offset": "0x13FE2BC",
+          "sha256": "220ac49fb17a790c9709f654e7c04df78e159464f0eb4938a8dbc11d07f43b71",
+          "text_preview": "(I see no boats in the harbor...)",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3445",
+          "index": 3445,
+          "offset": "0x14119EE",
+          "sha256": "f3c494757d3003ea0054225e3de939ff65e782c4cf4ff5ef0b1f788905bd4d3b",
+          "text_preview": "Blair!#k#>0_071I understand how you feel, but there's only one love in my life: ",
+          "tokens": [
+            "#>0_071",
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_3447",
+          "index": 3447,
+          "offset": "0x1411A50",
+          "sha256": "726efd0ce1084b560cdc367e22184d53205a541758d99aad688bbba06cdd727a",
+          "text_preview": "Blair, go home.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3450",
+          "index": 3450,
+          "offset": "0x1411ACE",
+          "sha256": "5fd43c10d889bb4d1a05563c1d60fb0b5dcf7dffd894ebfea0527464541b2f7d",
+          "text_preview": "No.  Blair is still in elementary school.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3471",
+          "index": 3471,
+          "offset": "0x1411E92",
+          "sha256": "f3c494757d3003ea0054225e3de939ff65e782c4cf4ff5ef0b1f788905bd4d3b",
+          "text_preview": "Blair!#k#>0_071I understand how you feel, but there's only one love in my life: ",
+          "tokens": [
+            "#>0_071",
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_3473",
+          "index": 3473,
+          "offset": "0x1411EF4",
+          "sha256": "726efd0ce1084b560cdc367e22184d53205a541758d99aad688bbba06cdd727a",
+          "text_preview": "Blair, go home.",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E25",
+      "title": "The Power of a Maiden's Love",
+      "lines": [
+        {
+          "key": "DLG_3445",
+          "index": 3445,
+          "offset": "0x14119EE",
+          "sha256": "f3c494757d3003ea0054225e3de939ff65e782c4cf4ff5ef0b1f788905bd4d3b",
+          "text_preview": "Blair!#k#>0_071I understand how you feel, but there's only one love in my life: ",
+          "tokens": [
+            "#>0_071",
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_3447",
+          "index": 3447,
+          "offset": "0x1411A50",
+          "sha256": "726efd0ce1084b560cdc367e22184d53205a541758d99aad688bbba06cdd727a",
+          "text_preview": "Blair, go home.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3450",
+          "index": 3450,
+          "offset": "0x1411ACE",
+          "sha256": "5fd43c10d889bb4d1a05563c1d60fb0b5dcf7dffd894ebfea0527464541b2f7d",
+          "text_preview": "No.  Blair is still in elementary school.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3471",
+          "index": 3471,
+          "offset": "0x1411E92",
+          "sha256": "f3c494757d3003ea0054225e3de939ff65e782c4cf4ff5ef0b1f788905bd4d3b",
+          "text_preview": "Blair!#k#>0_071I understand how you feel, but there's only one love in my life: ",
+          "tokens": [
+            "#>0_071",
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_3473",
+          "index": 3473,
+          "offset": "0x1411EF4",
+          "sha256": "726efd0ce1084b560cdc367e22184d53205a541758d99aad688bbba06cdd727a",
+          "text_preview": "Blair, go home.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_3476",
+          "index": 3476,
+          "offset": "0x1411F72",
+          "sha256": "5fd43c10d889bb4d1a05563c1d60fb0b5dcf7dffd894ebfea0527464541b2f7d",
+          "text_preview": "No.  Blair is still in elementary school.",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E26",
+      "title": "The 7th Deck",
+      "lines": [
+        {
+          "key": "DLG_1662",
+          "index": 1662,
+          "offset": "0x140061C",
+          "sha256": "ad2e5304fc746a44f791fa9f4abd6075d00e694068e1d456088c4c93a02522c7",
+          "text_preview": "$p04 is saying that he's creating a special \"Seventh Deck\" to beat me.#r#>0_012I",
+          "tokens": [
+            "#>0_012",
+            "#n",
+            "#r",
+            "$p04"
+          ]
+        },
+        {
+          "key": "DLG_4230",
+          "index": 4230,
+          "offset": "0x1422A8A",
+          "sha256": "11bb7bed42a9f56a949839cc2e3b6c06f91f06d3d1094926fe3228883f95fa5c",
+          "text_preview": "My seventh Deck is near completion  Watch out, $P01!",
+          "tokens": [
+            "$P01"
+          ]
+        },
+        {
+          "key": "DLG_4424",
+          "index": 4424,
+          "offset": "0x14268AC",
+          "sha256": "863cf03d3363b90e8991e431cbef4c2836d868ca80cf3abaf8f67fc775a73716",
+          "text_preview": "Bastion",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E27",
+      "title": "The Truth Behind Gerard",
+      "lines": []
+    },
+    {
+      "event": "E28",
+      "title": "Battle for the Chocolate!",
+      "lines": [
+        {
+          "key": "DLG_1680",
+          "index": 1680,
+          "offset": "0x1400FBA",
+          "sha256": "a7308adfed2881830b242c8e262265f93c4d307a7ca9b0a4ec4a882519597492",
+          "text_preview": "It's almost $C3Valentine's Day$C1.#kAll the girls are gonna give me chocolate, b",
+          "tokens": [
+            "#>0_033",
+            "#k",
+            "#n",
+            "#r",
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_1681",
+          "index": 1681,
+          "offset": "0x140106C",
+          "sha256": "86b63b4a715c329df0ad029023e3c894fe739c3b0a048ee7a83b8baa4655cfd8",
+          "text_preview": "$C3Valentine's Day$C1?#kNo thanks!#nI'm too busy solving duel formulas to talk w",
+          "tokens": [
+            "#k",
+            "#n",
+            "#r",
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_1682",
+          "index": 1682,
+          "offset": "0x140112C",
+          "sha256": "9857ecaffe79a17913527ab86f14a62031331abb54e0b9a0c822cebd6d7e7e24",
+          "text_preview": "This chocolate is for $p04 and this one's for $p06.#k#>0_132And this gourmet bar",
+          "tokens": [
+            "#>0_132",
+            "#k",
+            "#n",
+            "$p04",
+            "$p06",
+            "$p07"
+          ]
+        },
+        {
+          "key": "DLG_1683",
+          "index": 1683,
+          "offset": "0x14011A4",
+          "sha256": "68311b748a88552b28389ddde112568de5cc0f13ba6b08038e409c20a3c397d1",
+          "text_preview": "Oh yeah.  It's almost $C3Valentine's Day$C1.#rI wonder who $p05 is going to give",
+          "tokens": [
+            "#r",
+            "$C1",
+            "$C3",
+            "$p05"
+          ]
+        },
+        {
+          "key": "DLG_1686",
+          "index": 1686,
+          "offset": "0x1401268",
+          "sha256": "829f5ce5e1eddc413446e0c71fa9323b550c76ca177bf731545577eda46926ca",
+          "text_preview": "Huh?#n$C3Reverse Valentine's Day$C1?#r#>0_063I give candy to the girls who gave ",
+          "tokens": [
+            "#>0_063",
+            "#k",
+            "#n",
+            "#r",
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_1690",
+          "index": 1690,
+          "offset": "0x1401380",
+          "sha256": "7f00740d1360c73195f0ef4b06e6098fe6c5d34ecd142a451debc52e5624f84b",
+          "text_preview": "It's almost @3 Reverse Valentine's Day @7.  You give gifts to the girls who gave",
+          "tokens": [
+            "#>0_022",
+            "#r",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_4334",
+          "index": 4334,
+          "offset": "0x1424DE2",
+          "sha256": "d416fa111ea04c0581ca1888cc0561e8f50798b0116affc2101bcf46ec3dc224",
+          "text_preview": "Oh, you're not entering, $p00?#r#>0_332Then I'll give you my homemade chocolate.",
+          "tokens": [
+            "#>0_332",
+            "#r",
+            "$p00",
+            "$t"
+          ]
+        },
+        {
+          "key": "DLG_4335",
+          "index": 4335,
+          "offset": "0x1424E38",
+          "sha256": "a1792dedeb9f2572877ed1204c59c051303e5d9279db58eb73fd0d5a819a9b5e",
+          "text_preview": "Received \"$C3Sadie Chocolate$C1!\"",
+          "tokens": [
+            "$C1",
+            "$C3"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E28b",
+      "title": "Reversal Valentine's Day",
+      "lines": [
+        {
+          "key": "DLG_1680",
+          "index": 1680,
+          "offset": "0x1400FBA",
+          "sha256": "a7308adfed2881830b242c8e262265f93c4d307a7ca9b0a4ec4a882519597492",
+          "text_preview": "It's almost $C3Valentine's Day$C1.#kAll the girls are gonna give me chocolate, b",
+          "tokens": [
+            "#>0_033",
+            "#k",
+            "#n",
+            "#r",
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_1682",
+          "index": 1682,
+          "offset": "0x140112C",
+          "sha256": "9857ecaffe79a17913527ab86f14a62031331abb54e0b9a0c822cebd6d7e7e24",
+          "text_preview": "This chocolate is for $p04 and this one's for $p06.#k#>0_132And this gourmet bar",
+          "tokens": [
+            "#>0_132",
+            "#k",
+            "#n",
+            "$p04",
+            "$p06",
+            "$p07"
+          ]
+        },
+        {
+          "key": "DLG_1686",
+          "index": 1686,
+          "offset": "0x1401268",
+          "sha256": "829f5ce5e1eddc413446e0c71fa9323b550c76ca177bf731545577eda46926ca",
+          "text_preview": "Huh?#n$C3Reverse Valentine's Day$C1?#r#>0_063I give candy to the girls who gave ",
+          "tokens": [
+            "#>0_063",
+            "#k",
+            "#n",
+            "#r",
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_1690",
+          "index": 1690,
+          "offset": "0x1401380",
+          "sha256": "7f00740d1360c73195f0ef4b06e6098fe6c5d34ecd142a451debc52e5624f84b",
+          "text_preview": "It's almost @3 Reverse Valentine's Day @7.  You give gifts to the girls who gave",
+          "tokens": [
+            "#>0_022",
+            "#r",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_4334",
+          "index": 4334,
+          "offset": "0x1424DE2",
+          "sha256": "d416fa111ea04c0581ca1888cc0561e8f50798b0116affc2101bcf46ec3dc224",
+          "text_preview": "Oh, you're not entering, $p00?#r#>0_332Then I'll give you my homemade chocolate.",
+          "tokens": [
+            "#>0_332",
+            "#r",
+            "$p00",
+            "$t"
+          ]
+        },
+        {
+          "key": "DLG_4335",
+          "index": 4335,
+          "offset": "0x1424E38",
+          "sha256": "a1792dedeb9f2572877ed1204c59c051303e5d9279db58eb73fd0d5a819a9b5e",
+          "text_preview": "Received \"$C3Sadie Chocolate$C1!\"",
+          "tokens": [
+            "$C1",
+            "$C3"
+          ]
+        },
+        {
+          "key": "DLG_4354",
+          "index": 4354,
+          "offset": "0x1425598",
+          "sha256": "da1ae59a6ba19bff58b6cd6af3fc00370c8067bff1f743f0a2a84970546878f7",
+          "text_preview": "Here's your chocolate prize.#rI can't believe you were so fired up over this.#r#",
+          "tokens": [
+            "#>0_052",
+            "#n",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_4361",
+          "index": 4361,
+          "offset": "0x1425838",
+          "sha256": "3cd7c3996d6dfb34ea2872c686974db87836e9c9bd0d4bf71dc789772043a981",
+          "text_preview": "Lishus.#nIf I win the tournament, I'll get chocolate from the queen.#kIt's no gr",
+          "tokens": [
+            "#k",
+            "#n",
+            "#r"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E29",
+      "title": "Helping the Dropout",
+      "lines": [
+        {
+          "key": "DLG_1617",
+          "index": 1617,
+          "offset": "0x13FF616",
+          "sha256": "3e5ce31cc68408838aa9720a4c95e96fbf3fe7a686dacd669dfe592d4aa12217",
+          "text_preview": "The P.E. teacher Professor $p10 is @3 really nice to us dropouts@7.#nHee hee!",
+          "tokens": [
+            "#n",
+            "$p10",
+            "@3",
+            "@7"
+          ]
+        },
+        {
+          "key": "DLG_2217",
+          "index": 2217,
+          "offset": "0x14056A0",
+          "sha256": "552e7f63bbf7ad9b66a5aa93d6ce625d293e94bdc7e402ff235b0e369d42ec7c",
+          "text_preview": "You can't be serious!#kA dropout has no right to duel me, much less speak to me!",
+          "tokens": [
+            "#k",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_2484",
+          "index": 2484,
+          "offset": "0x1408F8A",
+          "sha256": "40d63c8ee3cd20acdf1fd227ca064bcd9a350e17041dda3bc622b96cac418f0e",
+          "text_preview": "\"$L Loses to High School Dropout\"#rThat would make a great headline!",
+          "tokens": [
+            "#r",
+            "$L"
+          ]
+        },
+        {
+          "key": "DLG_3095",
+          "index": 3095,
+          "offset": "0x140BDA0",
+          "sha256": "16bd1396eb490e9bb285b3d0d5ea9743f36239649a6a1aa5921a4cb4cf7091e7",
+          "text_preview": "$p06 lost to a dropout?",
+          "tokens": [
+            "$p06"
+          ]
+        },
+        {
+          "key": "DLG_3101",
+          "index": 3101,
+          "offset": "0x140BF12",
+          "sha256": "b4645deb421e62bc86ad20b25c15e660d9a22e56110d058a03f30f21fe0d5967",
+          "text_preview": "That's why you're $p06!#nThat's why you're champ!#k#>0_242See ya, you dropout!",
+          "tokens": [
+            "#>0_242",
+            "#k",
+            "#n",
+            "$p06"
+          ]
+        },
+        {
+          "key": "DLG_3546",
+          "index": 3546,
+          "offset": "0x1413A2E",
+          "sha256": "e8d5442f4b0e60f8a7bd59056517579825bba4152c53ecb35a8d12f974c7ef0e",
+          "text_preview": "How can the $y2 students lose to a dropout like $p00!#rI'm so angry!  Furious!#r",
+          "tokens": [
+            "#>0_081",
+            "#k",
+            "#r",
+            "$p00",
+            "$y2"
+          ]
+        },
+        {
+          "key": "DLG_3595",
+          "index": 3595,
+          "offset": "0x1414E54",
+          "sha256": "922988eeb4a56cd19fda5de9d40905deec5d5eaa0baa4a1537c5b1ee7fc9fa1b",
+          "text_preview": "I can do anything!#k#>0_081I think the rank \"Dropout Boy\" suits you perfectly!!#",
+          "tokens": [
+            "#>0_081",
+            "#k",
+            "#r"
+          ]
+        },
+        {
+          "key": "DLG_4128",
+          "index": 4128,
+          "offset": "0x142130E",
+          "sha256": "4437246cc4f1f914366cd4941088e78e592ce31e817020356892d6916b3ba672",
+          "text_preview": "Sniff!#kThank you, slackers!#rYou dropouts are the only ones I can count on!",
+          "tokens": [
+            "#k",
+            "#r"
+          ]
+        }
+      ]
+    },
+    {
+      "event": "E30",
+      "title": "A Friend's Concern",
+      "lines": [
+        {
+          "key": "DLG_0026",
+          "index": 26,
+          "offset": "0x13F7066",
+          "sha256": "95e81dc99e5f407fae2030dd20f06364483382a6b0eb63667074ea9b0e4a73d9",
+          "text_preview": "Test Room",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0027",
+          "index": 27,
+          "offset": "0x13F7070",
+          "sha256": "5b547053395f200730a98acb9b3cb3c66d3e77b8b4bec165634cd6585d4cddbc",
+          "text_preview": "Classroom",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0031",
+          "index": 31,
+          "offset": "0x13F7098",
+          "sha256": "1e6066f0b92c457acd344893fbf02fed7c05a60a98a69a6644ff7e155466ddd3",
+          "text_preview": "Dr. Crowler's Room",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0034",
+          "index": 34,
+          "offset": "0x13F70C0",
+          "sha256": "fda7d8cae4271ee91a5084eec610e4ed1c0f5511bb1efce12dd8833e7df6fb1f",
+          "text_preview": "Your Room",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0037",
+          "index": 37,
+          "offset": "0x13F70DE",
+          "sha256": "fda7d8cae4271ee91a5084eec610e4ed1c0f5511bb1efce12dd8833e7df6fb1f",
+          "text_preview": "Your Room",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0040",
+          "index": 40,
+          "offset": "0x13F7100",
+          "sha256": "fda7d8cae4271ee91a5084eec610e4ed1c0f5511bb1efce12dd8833e7df6fb1f",
+          "text_preview": "Your Room",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0043",
+          "index": 43,
+          "offset": "0x13F7122",
+          "sha256": "fda7d8cae4271ee91a5084eec610e4ed1c0f5511bb1efce12dd8833e7df6fb1f",
+          "text_preview": "Your Room",
+          "tokens": []
+        },
+        {
+          "key": "DLG_0044",
+          "index": 44,
+          "offset": "0x13F712C",
+          "sha256": "d9efcc8068f692d104b0e64477a4d838d3181e519755b8227dee8e835b31036d",
+          "text_preview": "Headmaster's Room",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E31",
+      "title": "The Walk Home",
+      "lines": [
+        {
+          "key": "DLG_3193",
+          "index": 3193,
+          "offset": "0x140DBFA",
+          "sha256": "286233844df4d89c30f18f034ec22137f974c8989b1ced64eb10849939d35258",
+          "text_preview": "Heh, that was cool.#r#>0_191Let's go home too!#n$p00!",
+          "tokens": [
+            "#>0_191",
+            "#n",
+            "#r",
+            "$p00"
+          ]
+        },
+        {
+          "key": "DLG_3915",
+          "index": 3915,
+          "offset": "0x141D244",
+          "sha256": "4c07df64956c9e368a75dc267a2e78538025844f17350e390b0f55d75fa3b76c",
+          "text_preview": "Let's go home and eat!  My treat!",
+          "tokens": []
+        },
+        {
+          "key": "DLG_4216",
+          "index": 4216,
+          "offset": "0x142253A",
+          "sha256": "213e9700917326399d057f277bf0e9a080aec3ce94d92c45268cbb6ac58483cf",
+          "text_preview": "C'mon, Jaden.  There's nothing.#kLet's go home.",
+          "tokens": [
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_4452",
+          "index": 4452,
+          "offset": "0x1426A88",
+          "sha256": "f6afdb65966f62d39d31c3a8f7981fc9610091296be6d9e4ef1697b6b1441b4e",
+          "text_preview": "Let's go home together",
+          "tokens": []
+        },
+        {
+          "key": "DLG_4455",
+          "index": 4455,
+          "offset": "0x1426ADA",
+          "sha256": "f6afdb65966f62d39d31c3a8f7981fc9610091296be6d9e4ef1697b6b1441b4e",
+          "text_preview": "Let's go home together",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E32",
+      "title": "Help Miss Dorothy",
+      "lines": [
+        {
+          "key": "DLG_4425",
+          "index": 4425,
+          "offset": "0x14268B4",
+          "sha256": "0d98d78bdba916ee6b556c2a39abd55f1adda467d319f8d492ea3df9c662671d",
+          "text_preview": "Dorothy",
+          "tokens": []
+        },
+        {
+          "key": "DLG_4437",
+          "index": 4437,
+          "offset": "0x1426960",
+          "sha256": "0d98d78bdba916ee6b556c2a39abd55f1adda467d319f8d492ea3df9c662671d",
+          "text_preview": "Dorothy",
+          "tokens": []
+        },
+        {
+          "key": "DLG_4445",
+          "index": 4445,
+          "offset": "0x14269F8",
+          "sha256": "0d98d78bdba916ee6b556c2a39abd55f1adda467d319f8d492ea3df9c662671d",
+          "text_preview": "Dorothy",
+          "tokens": []
+        }
+      ]
+    },
+    {
+      "event": "E33",
+      "title": "The Duel King",
+      "lines": [
+        {
+          "key": "DLG_1040",
+          "index": 1040,
+          "offset": "0x13FB26A",
+          "sha256": "95c4ce696057eb5219e6be002291dbcad3098f3ba9248d2119cea9efcefa7c24",
+          "text_preview": "Duel Academy is for the dueling elite.#rSo why does Chancellor $p31 think highly",
+          "tokens": [
+            "#n",
+            "#r",
+            "$p31"
+          ]
+        },
+        {
+          "key": "DLG_1140",
+          "index": 1140,
+          "offset": "0x13FE060",
+          "sha256": "92363830277daed7674deaec779238d8e29639aec5aa4a4ea818c4a2a817d876",
+          "text_preview": "(Chancellor Sheppard is out.)",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1218",
+          "index": 1218,
+          "offset": "0x13FE70C",
+          "sha256": "74580e527d5ac6e55238776e9a4cd7968fc92cc177c49085cba9a93fdd45a4a6",
+          "text_preview": "The top rank is \"King of Games!\"  Only one person in the entire school can get t",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1220",
+          "index": 1220,
+          "offset": "0x13FE794",
+          "sha256": "4d25d7e045d2cee54cd0da59ea167ab35329240395ac817b01565cd2e2977fa6",
+          "text_preview": "I'm gonna be King of Games like tomorrow!",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1221",
+          "index": 1221,
+          "offset": "0x13FE7BE",
+          "sha256": "c5a755d5a75f825f3baca50d345617383f20138929163140f361d91117e4638b",
+          "text_preview": "Yeah, if anyone can become King of Games, I think it'll be you.",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1222",
+          "index": 1222,
+          "offset": "0x13FE7FE",
+          "sha256": "46f5b6851d9c74ade9f0cda31334332a59f4edd38f173e02e5f1d90bc531df7d",
+          "text_preview": "I don't \"think.\"  I \"know!\" I KNOW I'll be King of Games!",
+          "tokens": []
+        },
+        {
+          "key": "DLG_1224",
+          "index": 1224,
+          "offset": "0x13FE844",
+          "sha256": "b311b139e59bbd0bf2f1ee0dc779e07cf1d83ff80006a11a0ab976469d385013",
+          "text_preview": "But to become King of Games, there's more to it than winning lots of duels.#kThe",
+          "tokens": [
+            "#k"
+          ]
+        },
+        {
+          "key": "DLG_1225",
+          "index": 1225,
+          "offset": "0x13FE8BA",
+          "sha256": "b91bc4d2b6583d2e8e320302af20b1bb0c4bb57238508076b2c36815a4ddd99e",
+          "text_preview": "Hundreds and thousands of duelists have tried to become the King of Games, but i",
+          "tokens": []
+        }
+      ]
+    }
+  ]
+}

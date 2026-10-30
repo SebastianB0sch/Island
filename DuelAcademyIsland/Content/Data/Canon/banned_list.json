@@ -1,0 +1,724 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:03+00:00",
+  "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+  "notes": [
+    "Three school years are tracked separately; the list changes between years.",
+    "Status values are Forbidden, Limited, Semi-Limited or Unlimited."
+  ],
+  "count": 63,
+  "status_counts": {
+    "year_1": {
+      "Limited": 40,
+      "Forbidden": 14,
+      "Unlimited": 2,
+      "Semi-Limited": 7
+    },
+    "year_2": {
+      "Limited": 49,
+      "Forbidden": 8,
+      "Semi-Limited": 6
+    },
+    "year_3": {
+      "Limited": 43,
+      "Forbidden": 12,
+      "Unlimited": 2,
+      "Semi-Limited": 6
+    }
+  },
+  "cards": [
+    {
+      "card_id": 13,
+      "name": "Right Leg of the Forbidden One",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 14,
+      "name": "Left Leg of the Forbidden One",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 15,
+      "name": "Right Arm of the Forbidden One",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 16,
+      "name": "Left Arm of the Forbidden One",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 17,
+      "name": "Exodia the Forbidden One",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 29,
+      "name": "Sangan",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 141,
+      "name": "Dark Hole",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 142,
+      "name": "Raigeki",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Forbidden",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 153,
+      "name": "Swords of Revealing Light",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 209,
+      "name": "Sinister Serpent",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 257,
+      "name": "Witch of the Black Forest",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 259,
+      "name": "Morphing Jar",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 292,
+      "name": "Harpie's Feather Duster",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 348,
+      "name": "Jinzo",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 350,
+      "name": "Reflect Bounder",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 370,
+      "name": "Graceful Charity",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 375,
+      "name": "Card Destruction",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 385,
+      "name": "Monster Reborn",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 387,
+      "name": "Pot of Greed",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Forbidden",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 401,
+      "name": "Change of Heart",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 405,
+      "name": "Royal Decree",
+      "status": {
+        "year_1": "Unlimited",
+        "year_2": "Limited",
+        "year_3": "Unlimited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 421,
+      "name": "Mirror Force",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 422,
+      "name": "Heavy Storm",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Forbidden",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 425,
+      "name": "Upstart Goblin",
+      "status": {
+        "year_1": "Semi-Limited",
+        "year_2": "Semi-Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 428,
+      "name": "Snatch Steal",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Forbidden",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 430,
+      "name": "Confiscation",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 431,
+      "name": "Delinquent Duo",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Forbidden",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 434,
+      "name": "The Forceful Sentry",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 436,
+      "name": "Mystical Space Typhoon",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 438,
+      "name": "Painful Choice",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 440,
+      "name": "Cyber Jar",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 469,
+      "name": "Ceasefire",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 472,
+      "name": "Imperial Order",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 474,
+      "name": "Nobleman of Crossout",
+      "status": {
+        "year_1": "Semi-Limited",
+        "year_2": "Semi-Limited",
+        "year_3": "Semi-Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 477,
+      "name": "Premature Burial",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Forbidden",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 497,
+      "name": "Call of the Haunted",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 503,
+      "name": "Ring of Destruction",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 516,
+      "name": "Injection Fairy Lily",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 547,
+      "name": "Torrential Tribute",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 552,
+      "name": "Magic Cylinder",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 557,
+      "name": "Gravity Bind",
+      "status": {
+        "year_1": "Semi-Limited",
+        "year_2": "Limited",
+        "year_3": "Semi-Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 593,
+      "name": "United We Stand",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 594,
+      "name": "Mage Power",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 597,
+      "name": "Lightning Vortex",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 649,
+      "name": "Marauding Captain",
+      "status": {
+        "year_1": "Semi-Limited",
+        "year_2": "Semi-Limited",
+        "year_3": "Semi-Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 651,
+      "name": "Exiled Force",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 653,
+      "name": "Reinforcement of the Army",
+      "status": {
+        "year_1": "Semi-Limited",
+        "year_2": "Semi-Limited",
+        "year_3": "Semi-Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 664,
+      "name": "Emergency Provisions",
+      "status": {
+        "year_1": "Semi-Limited",
+        "year_2": "Semi-Limited",
+        "year_3": "Semi-Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 671,
+      "name": "Reversal of Graves",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 675,
+      "name": "Fiber Jar",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 678,
+      "name": "Yata-Garasu",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 706,
+      "name": "Reckless Greed",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 762,
+      "name": "Spell Canceller",
+      "status": {
+        "year_1": "Unlimited",
+        "year_2": "Limited",
+        "year_3": "Unlimited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 787,
+      "name": "Breaker the Magical Warrior",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 789,
+      "name": "Magical Scientist",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Forbidden"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 792,
+      "name": "Tribe-Infecting Virus",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Forbidden",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 820,
+      "name": "D. D. Warrior Lady",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 868,
+      "name": "Black Luster Soldier - Envoy of the Beginning",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Forbidden",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 886,
+      "name": "Chaos Emperor Dragon - Envoy of the End",
+      "status": {
+        "year_1": "Forbidden",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 896,
+      "name": "Dark Magician of Chaos",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 963,
+      "name": "Marshmallon",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 976,
+      "name": "Protector of the Sanctuary",
+      "status": {
+        "year_1": "Limited",
+        "year_2": "Limited",
+        "year_3": "Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    },
+    {
+      "card_id": 1098,
+      "name": "Good Goblin Housekeeping",
+      "status": {
+        "year_1": "Semi-Limited",
+        "year_2": "Semi-Limited",
+        "year_3": "Semi-Limited"
+      },
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List",
+      "confidence": "high"
+    }
+  ]
+}

@@ -1,0 +1,2912 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:04+00:00",
+  "source": {
+    "primary": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+    "secondary": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41359",
+    "notes": "Yugipedia numbering is authoritative; GameFAQs ordering differs."
+  },
+  "summary": {
+    "count": 35,
+    "numbered_1_to_33": 33,
+    "extra_records": [
+      "E04b",
+      "E28b"
+    ]
+  },
+  "events": [
+    {
+      "id": "E01",
+      "number": 1,
+      "title": "School Registration",
+      "where": [
+        "Gym",
+        "Slifer Red cafeteria",
+        "Shop",
+        "Classroom"
+      ],
+      "when": {
+        "date": {
+          "year": 1,
+          "month": 10,
+          "day": 1
+        },
+        "weekday": "Sunday",
+        "note": "Opening ceremony; first free-roam day is Saturday, October 7."
+      },
+      "requirements": [
+        {
+          "type": "new_game"
+        }
+      ],
+      "duels": [],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 3000,
+          "source": "Lyman Banner"
+        },
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "jaden",
+            "syrus",
+            "chumley"
+          ]
+        },
+        {
+          "type": "tutorial",
+          "topic": "duel basics",
+          "teacher": "syrus"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Opening: Sheppard speech, name entry, registration, dorm intro, Banner grant, Syrus tutorial.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 18,
+          "preview": "Slifer Red Dorm"
+        },
+        {
+          "index": 51,
+          "preview": "Slifer Red"
+        },
+        {
+          "index": 1151,
+          "preview": "(No one's standing outside the $C3Slifer Red dorm$C1.)"
+        },
+        {
+          "index": 1205,
+          "preview": "So you're $p00.#kLet me see, you're part of... Slifer Red.#rThe Slifer dorm is n"
+        },
+        {
+          "index": 1206,
+          "preview": "Welcome to Slifer Red!"
+        },
+        {
+          "index": 1207,
+          "preview": "I'm the headmaster of Slifer Red, Professor Lyman Banner."
+        },
+        {
+          "index": 1211,
+          "preview": "I'm Chumley.  I've been at Slifer Red the longest, like for years."
+        },
+        {
+          "index": 1212,
+          "preview": "Duel Academy is separated into 3 levels: Slifer Red, Ra Yellow and Obelisk Blue."
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E02",
+      "number": 2,
+      "title": "Pharaoh's True Power",
+      "where": [
+        "Lyman Banner's Room"
+      ],
+      "when": {
+        "weekday": "Saturday"
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "jaden",
+          "count": 3
+        },
+        {
+          "type": "wins_against",
+          "opponent": "syrus",
+          "count": 3
+        },
+        {
+          "type": "wins_against",
+          "opponent": "chumley",
+          "count": 3
+        },
+        {
+          "type": "talk",
+          "npc": "banner"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "pharaoh",
+          "deck": "pharaoh_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card_by_result",
+          "win": "Panther Warrior",
+          "lose": "Bone Mouse",
+          "draw": "Outstanding Dog Marron",
+          "cards": [
+            {
+              "name": "Panther Warrior",
+              "card_id": 342,
+              "resolved": true
+            },
+            {
+              "name": "Bone Mouse",
+              "card_id": 242,
+              "resolved": true
+            },
+            {
+              "name": "Outstanding Dog Marron",
+              "card_id": 837,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Banner's cat duel; reward depends on result.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1207,
+          "preview": "I'm the headmaster of Slifer Red, Professor Lyman Banner."
+        },
+        {
+          "index": 1208,
+          "preview": "And this little buddy is $C4Pharaoh$C1."
+        },
+        {
+          "index": 1610,
+          "preview": "To become $l01, you need to prepare well for your tests.#rRight, @1 Pharaoh @7?"
+        },
+        {
+          "index": 2239,
+          "preview": "Oh, you don't want to?#nThat is unfortunate.#rDon't you agree, $C4Pharaoh$C1?"
+        },
+        {
+          "index": 2241,
+          "preview": "A fabulous duel worthy of your $L rank.#rRight, $C4Pharaoh$C1?"
+        },
+        {
+          "index": 3008,
+          "preview": "And this little buddy is $C4Pharaoh$C1."
+        },
+        {
+          "index": 3820,
+          "preview": "The duel is over.#r#>0_092Ooh, so you defeated $C4Pharaoh$C1.  Nicely done.#r#>0"
+        },
+        {
+          "index": 3822,
+          "preview": "The duel is over.#r#>0_094Ooh, $C4Pharaoh$C1 won.#nHow unfortunate, $p00.#r#>0_0"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E03",
+      "number": 3,
+      "title": "A New Hero Summoned",
+      "where": [
+        "Jaden's Room"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "syrus",
+          "count": 10
+        },
+        {
+          "type": "wins_against",
+          "opponent": "jaden",
+          "count": 5
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "jaden",
+          "deck": "jaden_improved",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Elemental Hero Flame Wingman",
+          "cards": [
+            {
+              "name": "Elemental Hero Flame Wingman",
+              "card_id": 1129,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Jaden debuts an improved Elemental HERO deck.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [],
+      "dialogue_match": "none"
+    },
+    {
+      "id": "E04",
+      "number": 4,
+      "title": "Old Memories, Part 1",
+      "where": [
+        "Anywhere"
+      ],
+      "when": {
+        "weekday": "Sunday",
+        "period": "AM"
+      },
+      "requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Average Duelist"
+        },
+        {
+          "type": "talk",
+          "npc": "syrus"
+        },
+        {
+          "type": "duel_trigger",
+          "opponent": "syrus",
+          "chance": "1/3",
+          "period": "AM"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "syrus",
+          "deck": "syrus_year1",
+          "mode": "story_special",
+          "player_deck_override": "jaden_year1",
+          "objective": "one_turn_win",
+          "solution": "Summon Elemental Hero Thunder Giant, destroy Steam Gyroid, attack directly."
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Power Bond",
+          "cards": [
+            {
+              "name": "Power Bond",
+              "card_id": 1159,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Uses Jaden's deck and a fixed one-turn puzzle; no incorrect solution allowed.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [],
+      "dialogue_match": "none"
+    },
+    {
+      "id": "E04b",
+      "number": 4.5,
+      "title": "Old Memories, Part 2",
+      "where": [
+        "Next to Ocean"
+      ],
+      "when": {
+        "weekday": "Sunday",
+        "period": "Night",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E04"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "zane",
+          "deck": "zane_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "zane"
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Zane email unlocks regardless of result.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 19,
+          "preview": "Ocean"
+        },
+        {
+          "index": 46,
+          "preview": "Next to Ocean"
+        },
+        {
+          "index": 52,
+          "preview": "Zane's Room"
+        },
+        {
+          "index": 1684,
+          "preview": "Oh Zane!  You want to go out with me?  Of course I will!"
+        },
+        {
+          "index": 3110,
+          "preview": "Zane..."
+        },
+        {
+          "index": 3122,
+          "preview": "Zane, I'm not giving up anymore!#rI will master using \"$c6398!\"#rWatch out Zane."
+        },
+        {
+          "index": 3358,
+          "preview": "Zane?!?#kWhat are you doing here?"
+        },
+        {
+          "index": 3400,
+          "preview": "...I understand, Zane.#r#>0_161Sorry, $p00.  I promise to return the Deck.#n#>0_"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E05",
+      "number": 5,
+      "title": "The Power of the Kaiser",
+      "where": [
+        "Anywhere"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E04"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "zane",
+          "count": 1
+        },
+        {
+          "type": "dorm",
+          "value": "Obelisk Blue"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "zane",
+          "deck": "zane_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 3000
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Crowler wants to see you beat Zane again.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 31,
+          "preview": "Dr. Crowler's Room"
+        },
+        {
+          "index": 52,
+          "preview": "Zane's Room"
+        },
+        {
+          "index": 1684,
+          "preview": "Oh Zane!  You want to go out with me?  Of course I will!"
+        },
+        {
+          "index": 3110,
+          "preview": "Zane..."
+        },
+        {
+          "index": 3122,
+          "preview": "Zane, I'm not giving up anymore!#rI will master using \"$c6398!\"#rWatch out Zane."
+        },
+        {
+          "index": 3125,
+          "preview": "Sorry.#r#>0_071I tried explaining the truth to Dr. Crowler.#rBut he doesn't beli"
+        },
+        {
+          "index": 3358,
+          "preview": "Zane?!?#kWhat are you doing here?"
+        },
+        {
+          "index": 3400,
+          "preview": "...I understand, Zane.#r#>0_161Sorry, $p00.  I promise to return the Deck.#n#>0_"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E06",
+      "number": 6,
+      "title": "Dark Fiend Deck",
+      "where": [
+        "Harbor",
+        "Ocean"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Fiery Duelist"
+        },
+        {
+          "type": "dorm_in",
+          "values": [
+            "Slifer Red",
+            "Ra Yellow"
+          ]
+        },
+        {
+          "type": "wins_against_group",
+          "group": "Obelisk Blue students",
+          "count": 10
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "shadow_duelist",
+          "deck": "shadow_duelist_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Jinzo",
+          "cards": [
+            {
+              "name": "Jinzo",
+              "card_id": 348,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Crowler hires Titan; Jaden and friends escort you to the ocean.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 2425,
+          "preview": "#>0_182Thank you, my guardian \"$C2Jinzo$C1!\"#r#>0_181Did you feel it?#nDid you f"
+        },
+        {
+          "index": 2431,
+          "preview": "Alright, I'll show you what I learned through my mystic studies.#r\"$C2Jinzo$C1!\""
+        },
+        {
+          "index": 3521,
+          "preview": "Pant pant...#kI-It's horrible, $p00!#nHelp me!#rIt's J-J-\"$C2Jinzo$C1!\""
+        },
+        {
+          "index": 3531,
+          "preview": "Y-Yes sir!#nYes, Master \"$C2Jinzo$C1!\"#r$p00!#nS-Sorry about this!"
+        },
+        {
+          "index": 3533,
+          "preview": "Y-Yes sir!#nYes, Master \"$C2Jinzo$C1!\"#r$p00!#nS-Sorry about this!"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E07",
+      "number": 7,
+      "title": "Occult Recommendation",
+      "where": [
+        "Classroom"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E06"
+        },
+        {
+          "type": "card_in_main_deck",
+          "name": "Jinzo"
+        },
+        {
+          "type": "met_npc",
+          "npc": "torrey"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "torrey",
+          "deck": "torrey_year1",
+          "mode": "story",
+          "player_deck_override": "torrey_special"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Destiny Board",
+          "cards": [
+            {
+              "name": "Destiny Board",
+              "card_id": 602,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "temporary_title",
+          "value": "Occult Duelist"
+        }
+      ],
+      "choices": [
+        {
+          "id": "accept",
+          "options": [
+            "Accept",
+            "Refuse"
+          ]
+        }
+      ],
+      "once": true,
+      "confidence": "high",
+      "notes": "Temporary title reverts after E08.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1088,
+          "preview": "The nuances of seances $t#kWhat was I singing?#r#>0_182It's the $p18 Seance Crew"
+        },
+        {
+          "index": 1089,
+          "preview": "The nuances of seances $t#kWhat was I singing?#r#>0_182It's the $p18 Seance Crew"
+        },
+        {
+          "index": 1629,
+          "preview": "#>0_132Hey!#nHave you heard of the \"$p18 Seance Crew?\""
+        },
+        {
+          "index": 1836,
+          "preview": "#>0_181Sorry for the quick notice, but we're having a seance tomorrow night.#rCo"
+        },
+        {
+          "index": 2413,
+          "preview": "I'm $p18, the leader of the $p18 Seance Crew.#rI'm researching card spirits.  Hi"
+        },
+        {
+          "index": 2414,
+          "preview": "I'm $p18, the leader of the $p18 Seance Crew.#rI'm researching card spirits.  Hi"
+        },
+        {
+          "index": 2415,
+          "preview": "Thank you!#rIf a $L joins the Seance Crew, others would surely follow, and...#r#"
+        },
+        {
+          "index": 2418,
+          "preview": "If you want to join the $p18 Seance Crew, you're welcome anytime."
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E08",
+      "number": 8,
+      "title": "Jinzo",
+      "where": [
+        "Your Room"
+      ],
+      "when": {
+        "period": "PM",
+        "after_event": "E07",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E07"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "jinzo",
+          "deck": "jinzo_spirit",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Final Countdown",
+          "cards": [
+            {
+              "name": "Final Countdown",
+              "card_id": 846,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "restore_title"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Torrey's pursuer is the spirit of Jinzo.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 222,
+          "preview": "Nice!#nThat's the spirit!#rHowever, to break the \"$l07\" barrier, you need to $C3"
+        },
+        {
+          "index": 1090,
+          "preview": "Spiritual girl with the spiritual eyes $t#kWhat was I singing?#r#>0_182It's the "
+        },
+        {
+          "index": 1120,
+          "preview": "#>0_312Ha ha ha, I like your spirit!#r#>0_311If you have so much energy left, ma"
+        },
+        {
+          "index": 2026,
+          "preview": "Yeah!#nThat's the spirit!#r#>0_011Even my partner's anxious to duel you!"
+        },
+        {
+          "index": 2413,
+          "preview": "I'm $p18, the leader of the $p18 Seance Crew.#rI'm researching card spirits.  Hi"
+        },
+        {
+          "index": 2414,
+          "preview": "I'm $p18, the leader of the $p18 Seance Crew.#rI'm researching card spirits.  Hi"
+        },
+        {
+          "index": 2416,
+          "preview": "Would you like to research duel spirits with us?"
+        },
+        {
+          "index": 2425,
+          "preview": "#>0_182Thank you, my guardian \"$C2Jinzo$C1!\"#r#>0_181Did you feel it?#nDid you f"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E09",
+      "number": 9,
+      "title": "Duel Festival",
+      "where": [
+        "Classroom",
+        "Duel Arena"
+      ],
+      "when": {
+        "weekday": "Friday",
+        "rule": "third Friday of November"
+      },
+      "requirements": [
+        {
+          "type": "date_rule",
+          "rule": "third Friday of November"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "festival_bracket",
+          "mode": "story_tournament"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 15000
+        }
+      ],
+      "choices": [],
+      "once": false,
+      "repeatable_yearly": true,
+      "confidence": "high",
+      "notes": "Dueling extravaganza; 15,000 DP on win.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1663,
+          "preview": "Hey, guess what!  There's gonna be the#n\"@3Duel Academy Festival @7!\"#nThe party"
+        },
+        {
+          "index": 1664,
+          "preview": "Oh my?  The \"@3 Duel Academy Festival @7\" is already next month!#nThe year passe"
+        },
+        {
+          "index": 1665,
+          "preview": "Finally, next month will be the long-awaited \"@3 Duel Academy Festival @7.\"#k$p0"
+        },
+        {
+          "index": 1666,
+          "preview": "It's time for the \"@3 Duel Academy Festival @7!\"  Everyone knows Obelisk Blue ha"
+        },
+        {
+          "index": 1672,
+          "preview": "During the Duel Academy Festival, $p21 was really cheering $p00 on!  I've never "
+        },
+        {
+          "index": 3909,
+          "preview": "This is the main event of the Duel Academy Festival!#rCommence the \"Interdorm Du"
+        },
+        {
+          "index": 4296,
+          "preview": "Now then...#rThis ends the \"Duel Academy Festival: Interdorm Duel!\"#r#>0_082Good"
+        },
+        {
+          "index": 4320,
+          "preview": "Now then...#rThis ends the \"Duel Academy Festival: Interdorm Duel!\"#r#>0_082Good"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E10",
+      "number": 10,
+      "title": "Merry Christmas",
+      "where": [
+        "Headmaster's Room (current dorm)"
+      ],
+      "when": {
+        "date": {
+          "year": 1,
+          "month": 12,
+          "day": 25
+        }
+      },
+      "requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Average Duelist"
+        },
+        {
+          "type": "visit",
+          "npc": "dorm_headmaster"
+        }
+      ],
+      "duels": [],
+      "rewards": [
+        {
+          "type": "pack_by_dorm",
+          "Slifer Red": "master_fusions",
+          "Ra Yellow": "special_ways",
+          "Obelisk Blue": "basic_1a"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Free pack from your dorm headmaster.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1517,
+          "preview": "I accept.#nI will wait for you at $m.  I hope you present a challenge, $p."
+        },
+        {
+          "index": 1640,
+          "preview": "The school representative is gonna be-"
+        },
+        {
+          "index": 1674,
+          "preview": "#>0_022Hooray!  $C3Christmas$C1!#nI wonder what Santa has for me this year!"
+        },
+        {
+          "index": 1677,
+          "preview": "What should I give $p02 as a $C3Christmas$C1 present...  How about this\"$c6314\" "
+        },
+        {
+          "index": 1832,
+          "preview": "What?#nToday is Christmas?#r#>0_112I completely forgot until you told me."
+        },
+        {
+          "index": 1833,
+          "preview": "#>0_114Sniff... How kind of you to wish me a Merry Christmas.#rI'm so so so so s"
+        },
+        {
+          "index": 2038,
+          "preview": "I understand...#kI wouldn't present much of a challenge."
+        },
+        {
+          "index": 3226,
+          "preview": "Wonderful!#r#>0_311That was a fabulous duel worthy of the school representatives"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E11",
+      "number": 11,
+      "title": "New Year's Duel",
+      "where": [
+        "Your Room"
+      ],
+      "when": {
+        "date": {
+          "year": 2,
+          "month": 1,
+          "day": 1
+        }
+      },
+      "requirements": [
+        {
+          "type": "date",
+          "month": 1,
+          "day": 1
+        }
+      ],
+      "duels": [
+        {
+          "opponent_by_dorm": {
+            "Slifer Red": [
+              "jaden",
+              "syrus",
+              "chumley"
+            ],
+            "Ra Yellow": [
+              "bastion"
+            ],
+            "Obelisk Blue": [
+              "zane",
+              "alexis",
+              "chazz"
+            ]
+          },
+          "mode": "story"
+        }
+      ],
+      "rewards": [],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "A friend visits and duels you.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1679,
+          "preview": "It's almost @3 New Year's #nDay @7.#rI gotta make a New Year's resolution.  I pr"
+        },
+        {
+          "index": 3748,
+          "preview": "Hey!#n#>0_011Here's to a sweet new year, $p00!#k#>0_011Twelve new months of duel"
+        },
+        {
+          "index": 3751,
+          "preview": "Hey!#kHere's to a sweet new year, $p00!#n#>0_011Twelve new months of dueling!#r#"
+        },
+        {
+          "index": 3753,
+          "preview": "Hi, $p00!  Happy New Year!#n#>0_031Make any resolutions?#r#>0_031#n#>0_034I reso"
+        },
+        {
+          "index": 3757,
+          "preview": "I made my resolution.#n#>0_041I resolve to become a great duelist!"
+        },
+        {
+          "index": 3759,
+          "preview": "Happy New Year, $p00!#k#>0_051A new year, new opportunities, new adven-#r#>0_054"
+        },
+        {
+          "index": 3762,
+          "preview": "Hey, $p00.#nHappy New Year!#kI hope it'll be lishus for ya!#r#>0_034Yaaawn...#k#"
+        },
+        {
+          "index": 4248,
+          "preview": "Happy New Year, $p00!#k#>0_051A new year, new opportunities, new adven-#r#>0_054"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E12",
+      "number": 12,
+      "title": "Pride of the Elite",
+      "where": [
+        "Front of Obelisk Blue Boys' Dorm"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Superior Duelist"
+        },
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "topher",
+          "mode": "story"
+        },
+        {
+          "opponent": "conklin",
+          "mode": "story"
+        },
+        {
+          "opponent": "chazz",
+          "deck": "chazz_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Return Zombie",
+          "cards": [
+            {
+              "name": "Return Zombie",
+              "card_id": 965,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Inpachi",
+          "cards": [
+            {
+              "name": "Inpachi",
+              "card_id": 727,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Injection Fairy Lily",
+          "cards": [
+            {
+              "name": "Injection Fairy Lily",
+              "card_id": 516,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "chazz"
+          ]
+        }
+      ],
+      "choices": [
+        {
+          "id": "refuse_duel",
+          "options": [
+            "Accept",
+            "Refuse"
+          ],
+          "note": "A refusal can still escalate with a 1/3 chance."
+        }
+      ],
+      "once": true,
+      "confidence": "high",
+      "notes": "Chazz and his two lackeys.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 3617,
+          "preview": "Wait, Topher.#k$p00 beat $p06 couple times before."
+        },
+        {
+          "index": 3621,
+          "preview": "Conklin!  Shh!  That's no way to ask!#kI mean, uh, we're not asking you to defea"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E13",
+      "number": 13,
+      "title": "Battle against Chazz",
+      "where": [
+        "Classroom",
+        "Duel Arena",
+        "Harbor"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "dorm_in",
+          "values": [
+            "Slifer Red",
+            "Ra Yellow"
+          ]
+        },
+        {
+          "type": "wins_against",
+          "opponent": "chazz",
+          "count": 10
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "chazz",
+          "deck": "chazz_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dorm_unlock",
+          "value": "Obelisk Blue"
+        },
+        {
+          "type": "exam_exemption",
+          "scope": "monthly exams"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Beating Chazz in front of Crowler admits you to Obelisk Blue.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 15,
+          "preview": "Obelisk Blue - Boys' Dorm"
+        },
+        {
+          "index": 16,
+          "preview": "Obelisk Blue - Girls' Dorm"
+        },
+        {
+          "index": 49,
+          "preview": "Obelisk Blue"
+        },
+        {
+          "index": 1142,
+          "preview": "(This is the $C3boys' dorm for Obelisk Blue$C1.)"
+        },
+        {
+          "index": 1145,
+          "preview": "(This is the $C3girls' dorm for Obelisk Blue$C1.)"
+        },
+        {
+          "index": 1212,
+          "preview": "Duel Academy is separated into 3 levels: Slifer Red, Ra Yellow and Obelisk Blue."
+        },
+        {
+          "index": 1657,
+          "preview": "Yeah, I totally saw $p19 go to $C3 Obelisk Blue's boys' dorm $C1.#rSomething's u"
+        },
+        {
+          "index": 1666,
+          "preview": "It's time for the \"@3 Duel Academy Festival @7!\"  Everyone knows Obelisk Blue ha"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E14",
+      "number": 14,
+      "title": "Revenge of the Obelisk Blues",
+      "where": [
+        "Obelisk Blue Boys' Lobby",
+        "Duel Arena"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E13"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "jaden",
+          "deck": "jaden_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "X-Head Cannon",
+          "cards": [
+            {
+              "name": "X-Head Cannon",
+              "card_id": 724,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Y-Dragon Head",
+          "cards": [
+            {
+              "name": "Y-Dragon Head",
+              "card_id": 744,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Z-Metal Tank",
+          "cards": [
+            {
+              "name": "Z-Metal Tank",
+              "card_id": 746,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [
+        {
+          "id": "help_lackeys",
+          "options": [
+            "Accept",
+            "Refuse"
+          ]
+        }
+      ],
+      "once": true,
+      "confidence": "high",
+      "notes": "Topher and Conklin ask you to beat Jaden for them.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 3617,
+          "preview": "Wait, Topher.#k$p00 beat $p06 couple times before."
+        },
+        {
+          "index": 3621,
+          "preview": "Conklin!  Shh!  That's no way to ask!#kI mean, uh, we're not asking you to defea"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E15",
+      "number": 15,
+      "title": "Chazz Reborn",
+      "where": [
+        "Chancellor's Office",
+        "Duel Arena"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E14"
+        },
+        {
+          "type": "title_at_least",
+          "value": "Honored Duelist"
+        },
+        {
+          "type": "written_correct",
+          "count": 40
+        },
+        {
+          "type": "calendar_since_event",
+          "event": "E14",
+          "days": 21
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "chazz",
+          "deck": "chazz_ojama",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Ojama Yellow",
+          "cards": [
+            {
+              "name": "Ojama Yellow",
+              "card_id": 851,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ojama Green",
+          "cards": [
+            {
+              "name": "Ojama Green",
+              "card_id": 835,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ojama Black",
+          "cards": [
+            {
+              "name": "Ojama Black",
+              "card_id": 852,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ojama Trio",
+          "cards": [
+            {
+              "name": "Ojama Trio",
+              "card_id": 828,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ojama Delta Hurricane!!",
+          "cards": [
+            {
+              "name": "Ojama Delta Hurricane!!",
+              "card_id": 871,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "chazz"
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Chazz's Ojama deck; Honored requires 40 written answers (20%).",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [],
+      "dialogue_match": "none"
+    },
+    {
+      "id": "E16",
+      "number": 16,
+      "title": "Brier and Beauregard",
+      "where": [
+        "Duel Arena"
+      ],
+      "when": {
+        "weekday": "Saturday",
+        "period": "PM"
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Ra Yellow"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "brier",
+          "count": 5
+        },
+        {
+          "type": "wins_against",
+          "opponent": "beauregard",
+          "count": 5
+        },
+        {
+          "type": "see_npc",
+          "npc": "brier",
+          "location": "Duel Arena"
+        },
+        {
+          "type": "talk",
+          "npc": "brier"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "brier",
+          "deck": "brier_year1",
+          "mode": "story"
+        },
+        {
+          "opponent": "beauregard",
+          "deck": "beauregard_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Robbin' Goblin",
+          "cards": [
+            {
+              "name": "Robbin' Goblin",
+              "card_id": 414,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Goblin Thief",
+          "cards": [
+            {
+              "name": "Goblin Thief",
+              "card_id": 955,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 2367,
+          "preview": "A draw against $L...#rHee hee, I wish I coulda shown Brier."
+        },
+        {
+          "index": 2370,
+          "preview": "W-What should I do?#nBrier?#nHelp me, Brier!"
+        },
+        {
+          "index": 3346,
+          "preview": "#>0_141Beauregard..."
+        },
+        {
+          "index": 4008,
+          "preview": "#>0_141Don't freak out, Beauregard!#rHey, $p00!#nDuel me right here, right now!#"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E17",
+      "number": 17,
+      "title": "The Goblin King",
+      "where": [
+        "Classroom",
+        "Front of Duel Academy",
+        "Harbor"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM/Night",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E16"
+        },
+        {
+          "type": "title_at_least",
+          "value": "Superior Duelist"
+        },
+        {
+          "type": "dorm",
+          "value": "Ra Yellow"
+        },
+        {
+          "type": "calendar_since_event",
+          "event": "E16",
+          "days": 30
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "goblin_king",
+          "mode": "story_timed",
+          "solution": "Use Change of Heart on Toon Goblin Attack Force and attack directly."
+        },
+        {
+          "opponent": "brier",
+          "deck": "brier_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Goblin Attack Force",
+          "cards": [
+            {
+              "name": "Goblin Attack Force",
+              "card_id": 566,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Goblin Elite Attack Force",
+          "cards": [
+            {
+              "name": "Goblin Elite Attack Force",
+              "card_id": 1170,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Ante/forbidden-rules timed duel, then Brier.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [],
+      "dialogue_match": "none"
+    },
+    {
+      "id": "E18",
+      "number": 18,
+      "title": "Who Are You?",
+      "where": [
+        "Your Room",
+        "Next to Ocean",
+        "Ra Yellow Cafeteria",
+        "Duel Arena"
+      ],
+      "when": {
+        "note": "Talk to Sartyr once, wait 60 days, then talk again."
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Ra Yellow"
+        },
+        {
+          "type": "talk",
+          "npc": "sartyr"
+        },
+        {
+          "type": "calendar_since_talk",
+          "npc": "sartyr",
+          "days": 60
+        }
+      ],
+      "duels": [],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Soitsu",
+          "cards": [
+            {
+              "name": "Soitsu",
+              "card_id": 1165,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Aitsu",
+          "confidence": "medium",
+          "cards": [
+            {
+              "name": "Aitsu",
+              "card_id": 778,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Koitsu",
+          "confidence": "medium",
+          "cards": [
+            {
+              "name": "Koitsu",
+              "card_id": 794,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "medium",
+      "notes": "Yugipedia lists Soitsu only; GameFAQs adds Aitsu/Koitsu.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 3362,
+          "preview": "Everyone...#k#>0_161Even Professor Sartyr!"
+        },
+        {
+          "index": 3393,
+          "preview": "Everyone...#k#>0_161Even Professor Sartyr!"
+        },
+        {
+          "index": 4026,
+          "preview": "Everyone...#k#>0_161Even Professor Sartyr!"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E19",
+      "number": 19,
+      "title": "A Suspicious Character",
+      "where": [
+        "Classroom",
+        "Front of Obelisk Blue Girls' Dorm"
+      ],
+      "when": {
+        "weekday": "Saturday",
+        "period": "Night"
+      },
+      "requirements": [
+        {
+          "type": "talk",
+          "npc": "alexis",
+          "location": "Front of Obelisk Blue Girls' Dorm"
+        },
+        {
+          "type": "calendar_since_visit",
+          "location": "Front of Obelisk Blue Girls' Dorm",
+          "days": 90
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "alexis",
+          "deck": "alexis_year1",
+          "mode": "story"
+        },
+        {
+          "opponent": "jasmine",
+          "deck": "jasmine_year1",
+          "mode": "story"
+        },
+        {
+          "opponent": "mindy",
+          "deck": "mindy_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "email_unlock",
+          "contacts": [
+            "alexis"
+          ]
+        },
+        {
+          "type": "unlock_duel",
+          "opponents": [
+            "jasmine",
+            "mindy"
+          ],
+          "requires_title": "Prince of Games"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "medium",
+      "notes": "Guide says 3 months; exact trigger ambiguity flagged.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1624,
+          "preview": "#>0_122I'm kidding, Mindy!"
+        },
+        {
+          "index": 1632,
+          "preview": "Uhh, Mindy?  How do you find out things like this?"
+        },
+        {
+          "index": 1660,
+          "preview": "#>0_054Umm, that wasn't the point of my story, Jasmine."
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E20",
+      "number": 20,
+      "title": "A Shadow Game",
+      "where": [
+        "Ocean",
+        "Volcano",
+        "Gym"
+      ],
+      "when": {
+        "weekday": "Weekend",
+        "period": "PM"
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E19"
+        },
+        {
+          "type": "talk",
+          "npc": "shadow_duelist"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "shadow_duelist",
+          "deck": "shadow_duelist_year1",
+          "mode": "ante",
+          "count": 3
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp_multiplier",
+          "multiplier": 2,
+          "note": "double current DP on clear"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "medium",
+      "notes": "Visit three locations; ante rule; exact order not fixed.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1041,
+          "preview": "Shadow Games?#kHumph, those are nothing but fairy tales and myths.#rJust because"
+        },
+        {
+          "index": 1052,
+          "preview": "$p00.#nWas my last test difficult?#rI wanted to give an easier exam so everyone "
+        },
+        {
+          "index": 1634,
+          "preview": "Shadow Games?#nThose have to do with the Millennium Items or something, right?#r"
+        },
+        {
+          "index": 1837,
+          "preview": "What?#kYou lack a card to ante?#rThen there is no point in dueling!#r#>0_251Fine"
+        },
+        {
+          "index": 2025,
+          "preview": "Listen, check this out:#nI always wanted to know how good $L actually is.#rAnd n"
+        },
+        {
+          "index": 2069,
+          "preview": "#>0_034Oh, I thought you actually wanted to..."
+        },
+        {
+          "index": 2270,
+          "preview": "Actually, I wanted to see how strong you are now.#rI hope you surprise me!"
+        },
+        {
+          "index": 2440,
+          "preview": "If all you wanted was a duel, I was willing to hang out..."
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E21",
+      "number": 21,
+      "title": "Suspicious Classmate",
+      "where": [
+        "Your Room"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E19"
+        },
+        {
+          "type": "met_npcs",
+          "npcs": [
+            "jaden",
+            "syrus",
+            "chumley",
+            "bastion",
+            "dimitri",
+            "brier",
+            "beauregard",
+            "blair",
+            "gerard"
+          ]
+        }
+      ],
+      "duels": [],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 1000
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Gerard's 9-question quiz; answers in exams.json.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 208,
+          "preview": "You answered a lot of written exam questions.#rYou deserve to be called \"$l05!\""
+        },
+        {
+          "index": 1027,
+          "preview": "My favorite card?#kThat's a strange question to ask.#rI guess it'll be \"$c5767.\""
+        },
+        {
+          "index": 3856,
+          "preview": "Yes, you there.  Do you have a question?"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E22",
+      "number": 22,
+      "title": "Draw, Draw, Draw",
+      "where": [
+        "Shop",
+        "Front of Obelisk Blue Boys' Dorm"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "title_at_least",
+          "value": "Shrewd Duelist"
+        },
+        {
+          "type": "dorm",
+          "value": "Obelisk Blue"
+        },
+        {
+          "type": "wins_against",
+          "opponent": "damon",
+          "count": 5
+        },
+        {
+          "type": "event_cleared",
+          "event": "E17"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "damon",
+          "deck": "damon_exodia",
+          "mode": "story",
+          "player_deck_override": "damon_exodia"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Poison Draw Frog",
+          "cards": [
+            {
+              "name": "Poison Draw Frog",
+              "card_id": 1178,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "White Magical Hat",
+          "cards": [
+            {
+              "name": "White Magical Hat",
+              "card_id": 52,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Reload",
+          "cards": [
+            {
+              "name": "Reload",
+              "card_id": 879,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "Both sides use Damon's draw/Exodia deck.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1086,
+          "preview": "#>0_172Ahhh ahhh ahhh ah ah ahhh!#r#>0_171Me name not Tarzan.#rMe Damon.#nDamon "
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E23",
+      "number": 23,
+      "title": "Yugi's Legendary Deck",
+      "where": [
+        "Your Room",
+        "Next to Ocean"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E04"
+        },
+        {
+          "type": "event_cleared",
+          "event": "E22"
+        },
+        {
+          "type": "dorm_in",
+          "values": [
+            "Ra Yellow",
+            "Obelisk Blue"
+          ]
+        },
+        {
+          "type": "calendar_since_met",
+          "npc": "dimitri",
+          "days": 30
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "dimitri",
+          "deck": "yugi_deck",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Kuriboh",
+          "cards": [
+            {
+              "name": "Kuriboh",
+              "card_id": 31,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Multiply",
+          "cards": [
+            {
+              "name": "Multiply",
+              "card_id": 369,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "exam_exemption",
+          "scope": "next monthly exam"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1652,
+          "preview": "Oh sweet!  Duel Academy is hosting a special exhibit on  $C4Yugi Muto's$C1 Deck!"
+        },
+        {
+          "index": 1653,
+          "preview": "Yugi Muto?  THE Yugi Muto?  The first King of Games?#nAre you serious?"
+        },
+        {
+          "index": 3364,
+          "preview": "I can't believe you were able to use $C4Yugi Muto's$C1 Deck!  I mean, he's the K"
+        },
+        {
+          "index": 3365,
+          "preview": "That was incredible, Dimitri!"
+        },
+        {
+          "index": 3380,
+          "preview": "You were amazing, Dimitri!"
+        },
+        {
+          "index": 3391,
+          "preview": "You handled yourself pretty well, Dimitri!"
+        },
+        {
+          "index": 3395,
+          "preview": "I can't believe you were able to use $C4Yugi Muto's$C1 Deck!  I mean, he's the K"
+        },
+        {
+          "index": 3396,
+          "preview": "That was incredible, Dimitri!"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E24",
+      "number": 24,
+      "title": "Missing Hero",
+      "where": [
+        "Harbor"
+      ],
+      "when": {
+        "weekday": "Saturday"
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "calendar_since_met",
+          "npc": "blair",
+          "days": 30
+        },
+        {
+          "type": "win_rate_against",
+          "opponent": "jaden",
+          "percent": 50
+        },
+        {
+          "type": "meet_npc",
+          "npc": "jaden",
+          "location": "Harbor"
+        },
+        {
+          "type": "choice",
+          "value": "Insist on talking"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "jaden",
+          "deck": "jaden_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "A Hero Emerges",
+          "cards": [
+            {
+              "name": "A Hero Emerges",
+              "card_id": 921,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "flag",
+          "value": "blair_revealed"
+        }
+      ],
+      "choices": [
+        {
+          "id": "insist",
+          "options": [
+            "Insist",
+            "Leave"
+          ]
+        }
+      ],
+      "once": true,
+      "confidence": "high",
+      "notes": "Blair reveals herself after the duel.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 21,
+          "preview": "Harbor"
+        },
+        {
+          "index": 48,
+          "preview": "Harbor"
+        },
+        {
+          "index": 1158,
+          "preview": "(I see no boats in the harbor...)"
+        },
+        {
+          "index": 3445,
+          "preview": "Blair!#k#>0_071I understand how you feel, but there's only one love in my life: "
+        },
+        {
+          "index": 3447,
+          "preview": "Blair, go home."
+        },
+        {
+          "index": 3450,
+          "preview": "No.  Blair is still in elementary school."
+        },
+        {
+          "index": 3471,
+          "preview": "Blair!#k#>0_071I understand how you feel, but there's only one love in my life: "
+        },
+        {
+          "index": 3473,
+          "preview": "Blair, go home."
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E25",
+      "number": 25,
+      "title": "The Power of a Maiden's Love",
+      "where": [
+        "Front of Obelisk Blue Boys' Dorm",
+        "Your Room",
+        "Harbor"
+      ],
+      "when": {
+        "weekday": "Saturday",
+        "period": "PM"
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E24"
+        },
+        {
+          "type": "event_cleared",
+          "event": "E23"
+        },
+        {
+          "type": "not_same_day",
+          "events": [
+            "E24"
+          ]
+        },
+        {
+          "type": "title_at_least",
+          "value": "Shrewd Duelist"
+        },
+        {
+          "type": "go_to",
+          "location": "Front of Obelisk Blue Boys' Dorm"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "blair",
+          "deck": "blair_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "White Magician Pikeru",
+          "cards": [
+            {
+              "name": "White Magician Pikeru",
+              "card_id": 948,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Ebon Magician Curran",
+          "cards": [
+            {
+              "name": "Ebon Magician Curran",
+              "card_id": 1181,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "A Rival Appears!",
+          "cards": [
+            {
+              "name": "A Rival Appears!",
+              "card_id": 1194,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "medium",
+      "notes": "Exact timing is ambiguous in the guide.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 3445,
+          "preview": "Blair!#k#>0_071I understand how you feel, but there's only one love in my life: "
+        },
+        {
+          "index": 3447,
+          "preview": "Blair, go home."
+        },
+        {
+          "index": 3450,
+          "preview": "No.  Blair is still in elementary school."
+        },
+        {
+          "index": 3471,
+          "preview": "Blair!#k#>0_071I understand how you feel, but there's only one love in my life: "
+        },
+        {
+          "index": 3473,
+          "preview": "Blair, go home."
+        },
+        {
+          "index": 3476,
+          "preview": "No.  Blair is still in elementary school."
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E26",
+      "number": 26,
+      "title": "The 7th Deck",
+      "where": [
+        "Classroom"
+      ],
+      "when": {
+        "weekday": "Saturday"
+      },
+      "requirements": [
+        {
+          "type": "event_cleared",
+          "event": "E25"
+        },
+        {
+          "type": "go_to",
+          "location": "Classroom"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "bastion",
+          "deck": "bastion_seventh",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Mispolymerization",
+          "cards": [
+            {
+              "name": "Mispolymerization",
+              "card_id": 1139,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1662,
+          "preview": "$p04 is saying that he's creating a special \"Seventh Deck\" to beat me.#r#>0_012I"
+        },
+        {
+          "index": 4230,
+          "preview": "My seventh Deck is near completion  Watch out, $P01!"
+        },
+        {
+          "index": 4424,
+          "preview": "Bastion"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E27",
+      "number": 27,
+      "title": "The Truth Behind Gerard",
+      "where": [
+        "Front of Slifer Red Dorm"
+      ],
+      "when": {
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "event_won",
+          "event": "E09"
+        }
+      ],
+      "duels": [],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Skyscraper",
+          "cards": [
+            {
+              "name": "Skyscraper",
+              "card_id": 1160,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [],
+      "dialogue_match": "none"
+    },
+    {
+      "id": "E28",
+      "number": 28,
+      "title": "Battle for the Chocolate!",
+      "where": [
+        "Classroom",
+        "Duel Arena"
+      ],
+      "when": {
+        "date": {
+          "year": 2,
+          "month": 2,
+          "day": 14
+        }
+      },
+      "requirements": [
+        {
+          "type": "met_npcs",
+          "npcs": [
+            "fontaine",
+            "alexis",
+            "jasmine",
+            "mindy",
+            "blair"
+          ]
+        },
+        {
+          "type": "participate"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "chocolate_bracket",
+          "mode": "story_tournament",
+          "rounds": 4
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp",
+          "amount": 10000
+        },
+        {
+          "type": "item",
+          "name": "Queen's chocolate"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1680,
+          "preview": "It's almost $C3Valentine's Day$C1.#kAll the girls are gonna give me chocolate, b"
+        },
+        {
+          "index": 1681,
+          "preview": "$C3Valentine's Day$C1?#kNo thanks!#nI'm too busy solving duel formulas to talk w"
+        },
+        {
+          "index": 1682,
+          "preview": "This chocolate is for $p04 and this one's for $p06.#k#>0_132And this gourmet bar"
+        },
+        {
+          "index": 1683,
+          "preview": "Oh yeah.  It's almost $C3Valentine's Day$C1.#rI wonder who $p05 is going to give"
+        },
+        {
+          "index": 1686,
+          "preview": "Huh?#n$C3Reverse Valentine's Day$C1?#r#>0_063I give candy to the girls who gave "
+        },
+        {
+          "index": 1690,
+          "preview": "It's almost @3 Reverse Valentine's Day @7.  You give gifts to the girls who gave"
+        },
+        {
+          "index": 4334,
+          "preview": "Oh, you're not entering, $p00?#r#>0_332Then I'll give you my homemade chocolate."
+        },
+        {
+          "index": 4335,
+          "preview": "Received \"$C3Sadie Chocolate$C1!\""
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E28b",
+      "number": 28.2,
+      "title": "Reversal Valentine's Day",
+      "where": [
+        "Obelisk Blue Girls' Dorm"
+      ],
+      "when": {
+        "date": {
+          "year": 2,
+          "month": 3,
+          "day": 14
+        }
+      },
+      "requirements": [
+        {
+          "type": "event_participated",
+          "event": "E28"
+        }
+      ],
+      "duels": [],
+      "rewards": [
+        {
+          "type": "choice_reward",
+          "note": "Give the Queen one Level 4+ monster not in your Deck."
+        }
+      ],
+      "choices": [
+        {
+          "id": "give_gift",
+          "options": [
+            "Give gift",
+            "Do not give gift"
+          ]
+        }
+      ],
+      "once": true,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1680,
+          "preview": "It's almost $C3Valentine's Day$C1.#kAll the girls are gonna give me chocolate, b"
+        },
+        {
+          "index": 1682,
+          "preview": "This chocolate is for $p04 and this one's for $p06.#k#>0_132And this gourmet bar"
+        },
+        {
+          "index": 1686,
+          "preview": "Huh?#n$C3Reverse Valentine's Day$C1?#r#>0_063I give candy to the girls who gave "
+        },
+        {
+          "index": 1690,
+          "preview": "It's almost @3 Reverse Valentine's Day @7.  You give gifts to the girls who gave"
+        },
+        {
+          "index": 4334,
+          "preview": "Oh, you're not entering, $p00?#r#>0_332Then I'll give you my homemade chocolate."
+        },
+        {
+          "index": 4335,
+          "preview": "Received \"$C3Sadie Chocolate$C1!\""
+        },
+        {
+          "index": 4354,
+          "preview": "Here's your chocolate prize.#rI can't believe you were so fired up over this.#r#"
+        },
+        {
+          "index": 4361,
+          "preview": "Lishus.#nIf I win the tournament, I'll get chocolate from the queen.#kIt's no gr"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E29",
+      "number": 29,
+      "title": "Helping the Dropout",
+      "where": [
+        "Gym"
+      ],
+      "when": {
+        "weekday": "Saturday",
+        "period": "PM"
+      },
+      "requirements": [
+        {
+          "type": "title",
+          "value": "Dropout Boy"
+        },
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "talk",
+          "npc": "fontaine"
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "fontaine",
+          "deck": "fontaine_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "dp_equal_remaining_lp"
+        },
+        {
+          "type": "title",
+          "value": "Apprentice Duelist"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1617,
+          "preview": "The P.E. teacher Professor $p10 is @3 really nice to us dropouts@7.#nHee hee!"
+        },
+        {
+          "index": 2217,
+          "preview": "You can't be serious!#kA dropout has no right to duel me, much less speak to me!"
+        },
+        {
+          "index": 2484,
+          "preview": "\"$L Loses to High School Dropout\"#rThat would make a great headline!"
+        },
+        {
+          "index": 3095,
+          "preview": "$p06 lost to a dropout?"
+        },
+        {
+          "index": 3101,
+          "preview": "That's why you're $p06!#nThat's why you're champ!#k#>0_242See ya, you dropout!"
+        },
+        {
+          "index": 3546,
+          "preview": "How can the $y2 students lose to a dropout like $p00!#rI'm so angry!  Furious!#r"
+        },
+        {
+          "index": 3595,
+          "preview": "I can do anything!#k#>0_081I think the rank \"Dropout Boy\" suits you perfectly!!#"
+        },
+        {
+          "index": 4128,
+          "preview": "Sniff!#kThank you, slackers!#rYou dropouts are the only ones I can count on!"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E30",
+      "number": 30,
+      "title": "A Friend's Concern",
+      "where": [
+        "Your Room (Slifer Red)"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "dorm",
+          "value": "Slifer Red"
+        },
+        {
+          "type": "stay_in_room_weekends",
+          "count": 3
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "chumley",
+          "deck": "chumley_year1",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card",
+          "name": "Master of Oz",
+          "cards": [
+            {
+              "name": "Master of Oz",
+              "card_id": 1019,
+              "resolved": true
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "name": "Des Kangaroo",
+          "confidence": "medium",
+          "cards": [
+            {
+              "name": "Des Kangaroo",
+              "card_id": 855,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 26,
+          "preview": "Test Room"
+        },
+        {
+          "index": 27,
+          "preview": "Classroom"
+        },
+        {
+          "index": 31,
+          "preview": "Dr. Crowler's Room"
+        },
+        {
+          "index": 34,
+          "preview": "Your Room"
+        },
+        {
+          "index": 37,
+          "preview": "Your Room"
+        },
+        {
+          "index": 40,
+          "preview": "Your Room"
+        },
+        {
+          "index": 43,
+          "preview": "Your Room"
+        },
+        {
+          "index": 44,
+          "preview": "Headmaster's Room"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E31",
+      "number": 31,
+      "title": "The Walk Home",
+      "where": [
+        "Front of Duel Academy",
+        "Next to Ocean"
+      ],
+      "when": {
+        "weekday": "Weekdays",
+        "period": "PM",
+        "automatic": true
+      },
+      "requirements": [
+        {
+          "type": "walk_home_same_character",
+          "count": 3
+        }
+      ],
+      "duels": [
+        {
+          "opponent": "walk_home_partner",
+          "mode": "story"
+        }
+      ],
+      "rewards": [
+        {
+          "type": "card_by_partner",
+          "cards": [
+            {
+              "partner": "jaden",
+              "name": "Wroughtweiler",
+              "card_id": 1153,
+              "resolved": true
+            },
+            {
+              "partner": "syrus",
+              "name": "Patroid",
+              "card_id": 1147,
+              "resolved": true
+            },
+            {
+              "partner": "chumley",
+              "name": "Des Wombat",
+              "card_id": 1125,
+              "resolved": true
+            },
+            {
+              "partner": "bastion",
+              "name": "Ring of Destruction",
+              "card_id": 503,
+              "resolved": true
+            },
+            {
+              "partner": "alexis",
+              "name": "Fusion Weapon",
+              "card_id": 1025,
+              "resolved": true
+            },
+            {
+              "partner": "chazz",
+              "name": "Mefist the Infernal General",
+              "card_id": 839,
+              "resolved": true
+            },
+            {
+              "partner": "zane",
+              "name": "Cyber Dragon",
+              "card_id": 1152,
+              "resolved": true
+            }
+          ]
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 3193,
+          "preview": "Heh, that was cool.#r#>0_191Let's go home too!#n$p00!"
+        },
+        {
+          "index": 3915,
+          "preview": "Let's go home and eat!  My treat!"
+        },
+        {
+          "index": 4216,
+          "preview": "C'mon, Jaden.  There's nothing.#kLet's go home."
+        },
+        {
+          "index": 4452,
+          "preview": "Let's go home together"
+        },
+        {
+          "index": 4455,
+          "preview": "Let's go home together"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E32",
+      "number": 32,
+      "title": "Help Miss Dorothy",
+      "where": [
+        "Front of Duel Academy"
+      ],
+      "when": {
+        "weekday": "Friday",
+        "exam_day": true,
+        "chance": "2/5"
+      },
+      "requirements": [
+        {
+          "type": "exam_day"
+        },
+        {
+          "type": "random_chance",
+          "value": "2/5"
+        }
+      ],
+      "duels": [],
+      "rewards": [
+        {
+          "type": "pack",
+          "pack": "dorothys_gift",
+          "note": "free pack from the shop afterwards"
+        }
+      ],
+      "choices": [],
+      "once": false,
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 4425,
+          "preview": "Dorothy"
+        },
+        {
+          "index": 4437,
+          "preview": "Dorothy"
+        },
+        {
+          "index": 4445,
+          "preview": "Dorothy"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    },
+    {
+      "id": "E33",
+      "number": 33,
+      "title": "The Duel King",
+      "where": [
+        "Chancellor's Office"
+      ],
+      "when": {
+        "weekday": "Saturday",
+        "post_game": true
+      },
+      "requirements": [
+        {
+          "type": "wins_total",
+          "count": 200
+        },
+        {
+          "type": "wins_against_each",
+          "count": 10,
+          "duelists": 20
+        },
+        {
+          "type": "written_correct_percent",
+          "percent": 60
+        },
+        {
+          "type": "after_ending"
+        }
+      ],
+      "duels": [],
+      "rewards": [
+        {
+          "type": "title",
+          "value": "King of Games"
+        },
+        {
+          "type": "name_change"
+        }
+      ],
+      "choices": [],
+      "once": true,
+      "confidence": "high",
+      "notes": "King of Games ending; name change and continued play.",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
+      "dialogue_candidates": [
+        {
+          "index": 1040,
+          "preview": "Duel Academy is for the dueling elite.#rSo why does Chancellor $p31 think highly"
+        },
+        {
+          "index": 1140,
+          "preview": "(Chancellor Sheppard is out.)"
+        },
+        {
+          "index": 1218,
+          "preview": "The top rank is \"King of Games!\"  Only one person in the entire school can get t"
+        },
+        {
+          "index": 1220,
+          "preview": "I'm gonna be King of Games like tomorrow!"
+        },
+        {
+          "index": 1221,
+          "preview": "Yeah, if anyone can become King of Games, I think it'll be you."
+        },
+        {
+          "index": 1222,
+          "preview": "I don't \"think.\"  I \"know!\" I KNOW I'll be King of Games!"
+        },
+        {
+          "index": 1224,
+          "preview": "But to become King of Games, there's more to it than winning lots of duels.#kThe"
+        },
+        {
+          "index": 1225,
+          "preview": "Hundreds and thousands of duelists have tried to become the King of Games, but i"
+        }
+      ],
+      "dialogue_match": "keyword-preview"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "source": "0x146C858",
+  "titles": [
+    {
+      "offset": 21416024,
+      "offset_hex": "0x146C858",
+      "text": "Title"
+    },
+    {
+      "offset": 21416030,
+      "offset_hex": "0x146C85E",
+      "text": "King of Games"
+    },
+    {
+      "offset": 21416044,
+      "offset_hex": "0x146C86C",
+      "text": "Prince of Games"
+    },
+    {
+      "offset": 21416060,
+      "offset_hex": "0x146C87C",
+      "text": "Celebrity Duelist"
+    },
+    {
+      "offset": 21416078,
+      "offset_hex": "0x146C88E",
+      "text": "Elite Duelist"
+    },
+    {
+      "offset": 21416092,
+      "offset_hex": "0x146C89C",
+      "text": "Honored Duelist"
+    },
+    {
+      "offset": 21416108,
+      "offset_hex": "0x146C8AC",
+      "text": "Shrewd Duelist"
+    },
+    {
+      "offset": 21416124,
+      "offset_hex": "0x146C8BC",
+      "text": "Superior Duelist"
+    },
+    {
+      "offset": 21416142,
+      "offset_hex": "0x146C8CE",
+      "text": "Calm Duelist"
+    },
+    {
+      "offset": 21416156,
+      "offset_hex": "0x146C8DC",
+      "text": "Fiery Duelist"
+    },
+    {
+      "offset": 21416170,
+      "offset_hex": "0x146C8EA",
+      "text": "Average Duelist"
+    },
+    {
+      "offset": 21416186,
+      "offset_hex": "0x146C8FA",
+      "text": "Novice Duelist"
+    },
+    {
+      "offset": 21416202,
+      "offset_hex": "0x146C90A",
+      "text": "Apprentice Duelist"
+    },
+    {
+      "offset": 21416222,
+      "offset_hex": "0x146C91E",
+      "text": "Dropout Boy"
+    },
+    {
+      "offset": 21416234,
+      "offset_hex": "0x146C92A",
+      "text": "Occult Duelist"
+    },
+    {
+      "offset": 21416250,
+      "offset_hex": "0x146C93A",
+      "text": "Duel Points"
+    }
+  ]
+}

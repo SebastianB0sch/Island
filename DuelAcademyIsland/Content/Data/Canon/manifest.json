@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:04+00:00",
+  "project": "DuelAcademyIsland / Yu-Gi-Oh! GX: Duel Academy GBA port",
+  "source": {
+    "rom_sha256": "0c2f606986c84d584510d0b80e7cb8e2970f9c15c71d29f9bb9d5f67ceef2afe",
+    "rom_size": 33554432,
+    "rom_header": "YUGIOHGXDA\u0000\u0000BYGE",
+    "target_cards": "DuelAcademyIsland/Content/Data/cards.json",
+    "target_cards_sha256": "0526c194a3cecba58167e0bb0444471b9c7ca34be2b9146df86a83f52954a871"
+  },
+  "coverage": {
+    "cards": 1200,
+    "packs": 48,
+    "pack_unique_cards": 1200,
+    "events": 35,
+    "opponents": 25,
+    "decks": 31,
+    "complete_decks": 4,
+    "puzzles": 100,
+    "puzzles_with_solution": 100,
+    "banned_limited_cards": 63,
+    "titles": 14,
+    "written_question_templates": 89,
+    "dialogue_strings": 4527
+  },
+  "confidence": {
+    "cards": "exact (ROM byte comparison)",
+    "packs": "high for price/pool, low for odds",
+    "events": "high/medium (public guide + ROM text evidence)",
+    "opponents": "medium (roster/archetype), low (full deck lists)",
+    "puzzles": "high for solutions, unknown for setups",
+    "titles": "mixed; see per-title confidence",
+    "banned_list": "high (public three-year table)",
+    "text": "high for offsets/control codes; answer-key mapping still open"
+  },
+  "files": [
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/cards_manifest.json",
+      "sha256": "b20c0b634e66d3642358bf2283c5e04a5e5c9916df78c2d63f09832db8e7b445",
+      "bytes": 97886,
+      "records": 1200
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/card_name_overrides.json",
+      "sha256": "ceda93130a2b32326df2761e65bef96dfa5ee9478b3a1b6f102f1c9dfaa4721e",
+      "bytes": 412,
+      "records": null
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/calendar.json",
+      "sha256": "845a1d5e9c6606022c7698c806d53a761a874ca0dfb8051eaf5bd5918e48dd9d",
+      "bytes": 8143,
+      "records": 12
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/titles.json",
+      "sha256": "57f6dba682a8c4227bc1cc2b34d801efda55f4549162490fa2ae4f3cccc07147",
+      "bytes": 5535,
+      "records": 14
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/packs.json",
+      "sha256": "a3e035415aaf988df5b5f4c36d2a5ac6c012b871ffc8f03f8ef7699e4fbc1f9a",
+      "bytes": 357471,
+      "records": 48
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/opponents.json",
+      "sha256": "f2d063858a4e682649a1cde37a71640eef1be688aeb58bbd8510b7be67957ff8",
+      "bytes": 21179,
+      "records": 25
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/decks.json",
+      "sha256": "b2a772ce82886879220d739736b958417a7de9f302be9fa795baebdaaef7c841",
+      "bytes": 26554,
+      "records": 31
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/puzzles.json",
+      "sha256": "cdf831b16f611035ff4d32a7259fa03d4ffc6e1a98fe934cbaa511288f412eeb",
+      "bytes": 177534,
+      "records": 100
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/exams.json",
+      "sha256": "c37952937a11a05c196542415388dbedd4b319e54c0cae0ca9f2c81622eadf73",
+      "bytes": 87359,
+      "records": 89
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/events.json",
+      "sha256": "9f0401a4dbaaf61584a5d7b164d9ba03b698b9e3d48979cffd5f8cbb3254314e",
+      "bytes": 72283,
+      "records": 35
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/banned_list.json",
+      "sha256": "b96f9d5ac10e1ecfa7ccc2fc96ec2b6e40cfc4b1e3b8787729b1707bff621abb",
+      "bytes": 19417,
+      "records": 63
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/dp_rules.json",
+      "sha256": "6a5f7dd6af20a9348a21cb958369c2842a11297a101bb303d1c964256ca4b847",
+      "bytes": 1231,
+      "records": null
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/emails.json",
+      "sha256": "bce8a5abab84a240d11c6d713f1702580b95d7192b5ea020507b25f7020e1675",
+      "bytes": 784,
+      "records": null
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/locations.json",
+      "sha256": "ab72d348b439a8c0628347593271dd0d28915876fccbf44f234f0cdcba061069",
+      "bytes": 9142,
+      "records": null
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/dialogue_keys.json",
+      "sha256": "6347eea89e9d442810d51b461c0c437de99bd4ccdf3c2928fe8a7977bbdd8faa",
+      "bytes": 70211,
+      "records": null
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/text/dialogue_index.json",
+      "sha256": "8e1d55f4c42b73a460d43dd70dbd1fdf899369382f5834b3f612f03a168ecb98",
+      "bytes": 2025298,
+      "records": 4527
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/text/name_table.json",
+      "sha256": "b7f4ecbefcd926a3e15260481cab02c4c7186261cac0f00534769827a6fd4652",
+      "bytes": 10202,
+      "records": null
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/text/ui_strings.json",
+      "sha256": "653cc7348e2ad13afb7c7d7eb880433fbea5d0d592a07928d26d9186b187e2e5",
+      "bytes": 36779,
+      "records": null
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/text/title_strings.json",
+      "sha256": "79ee0a7a1db90f690567b22d895d0dffac2e31ac580fafc43cde7eb35a112c85",
+      "bytes": 1709,
+      "records": null
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/text/dialogue_control_codes.json",
+      "sha256": "84777870f33fe004acff213c26aedd8dbfbe545b3cc54514a3fc62e20f3ee91c",
+      "bytes": 27074,
+      "records": null
+    },
+    {
+      "path": "DuelAcademyIsland/Content/Data/Canon/text/script_segments.json",
+      "sha256": "354bc1dc5c3db99e21b7b59d2d6521c3df989b264743c7e025a5e338de0110e7",
+      "bytes": 196443,
+      "records": 232
+    }
+  ],
+  "legal": {
+    "rom_committed": false,
+    "save_committed": false,
+    "full_dialogue_committed": false,
+    "local_only_note": "Full dialogue and sample scenes are written outside the repository by extract_text.py."
+  }
+}

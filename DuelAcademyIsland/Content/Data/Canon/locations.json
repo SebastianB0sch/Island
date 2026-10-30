@@ -1,0 +1,402 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:04+00:00",
+  "source": {
+    "rom": "0x13F6FD0 location-name pool",
+    "mapping": "Docs/PORT_MASTERPLAN.md Appendix B"
+  },
+  "rom_strings": [
+    {
+      "offset": 20934608,
+      "offset_hex": "0x13F6FD0",
+      "text": "Duel Academy"
+    },
+    {
+      "offset": 20934622,
+      "offset_hex": "0x13F6FDE",
+      "text": "Obelisk Blue - Boys' Dorm"
+    },
+    {
+      "offset": 20934648,
+      "offset_hex": "0x13F6FF8",
+      "text": "Obelisk Blue - Girls' Dorm"
+    },
+    {
+      "offset": 20934676,
+      "offset_hex": "0x13F7014",
+      "text": "Ra Yellow Dorm"
+    },
+    {
+      "offset": 20934692,
+      "offset_hex": "0x13F7024",
+      "text": "Slifer Red Dorm"
+    },
+    {
+      "offset": 20934708,
+      "offset_hex": "0x13F7034",
+      "text": "Ocean"
+    },
+    {
+      "offset": 20934714,
+      "offset_hex": "0x13F703A",
+      "text": "Volcano"
+    },
+    {
+      "offset": 20934722,
+      "offset_hex": "0x13F7042",
+      "text": "Harbor"
+    },
+    {
+      "offset": 20934730,
+      "offset_hex": "0x13F704A",
+      "text": "Front of School"
+    },
+    {
+      "offset": 20934746,
+      "offset_hex": "0x13F705A",
+      "text": "Duel Arena"
+    },
+    {
+      "offset": 20934758,
+      "offset_hex": "0x13F7066",
+      "text": "Test Room"
+    },
+    {
+      "offset": 20934768,
+      "offset_hex": "0x13F7070",
+      "text": "Classroom"
+    },
+    {
+      "offset": 20934782,
+      "offset_hex": "0x13F707E",
+      "text": "Shop"
+    },
+    {
+      "offset": 20934788,
+      "offset_hex": "0x13F7084",
+      "text": "Principal's Office"
+    },
+    {
+      "offset": 20934808,
+      "offset_hex": "0x13F7098",
+      "text": "Dr. Crowler's Room"
+    },
+    {
+      "offset": 20934828,
+      "offset_hex": "0x13F70AC",
+      "text": "Front of Dorm"
+    },
+    {
+      "offset": 20934842,
+      "offset_hex": "0x13F70BA",
+      "text": "Lobby"
+    },
+    {
+      "offset": 20934848,
+      "offset_hex": "0x13F70C0",
+      "text": "Your Room"
+    },
+    {
+      "offset": 20934858,
+      "offset_hex": "0x13F70CA",
+      "text": "Front of Dorm"
+    },
+    {
+      "offset": 20934872,
+      "offset_hex": "0x13F70D8",
+      "text": "Lobby"
+    },
+    {
+      "offset": 20934878,
+      "offset_hex": "0x13F70DE",
+      "text": "Your Room"
+    },
+    {
+      "offset": 20934888,
+      "offset_hex": "0x13F70E8",
+      "text": "Front of Dorm"
+    },
+    {
+      "offset": 20934902,
+      "offset_hex": "0x13F70F6",
+      "text": "Cafeteria"
+    },
+    {
+      "offset": 20934912,
+      "offset_hex": "0x13F7100",
+      "text": "Your Room"
+    },
+    {
+      "offset": 20934922,
+      "offset_hex": "0x13F710A",
+      "text": "Front of Dorm"
+    },
+    {
+      "offset": 20934936,
+      "offset_hex": "0x13F7118",
+      "text": "Cafeteria"
+    },
+    {
+      "offset": 20934946,
+      "offset_hex": "0x13F7122",
+      "text": "Your Room"
+    },
+    {
+      "offset": 20934956,
+      "offset_hex": "0x13F712C",
+      "text": "Headmaster's Room"
+    },
+    {
+      "offset": 20934974,
+      "offset_hex": "0x13F713E",
+      "text": "Jaden's Room"
+    },
+    {
+      "offset": 20934988,
+      "offset_hex": "0x13F714C",
+      "text": "Next to Ocean"
+    },
+    {
+      "offset": 20935002,
+      "offset_hex": "0x13F715A",
+      "text": "Near Crater"
+    },
+    {
+      "offset": 20935014,
+      "offset_hex": "0x13F7166",
+      "text": "Harbor"
+    },
+    {
+      "offset": 20935022,
+      "offset_hex": "0x13F716E",
+      "text": "Obelisk Blue"
+    },
+    {
+      "offset": 20935036,
+      "offset_hex": "0x13F717C",
+      "text": "Ra Yellow"
+    },
+    {
+      "offset": 20935046,
+      "offset_hex": "0x13F7186",
+      "text": "Slifer Red"
+    },
+    {
+      "offset": 20935058,
+      "offset_hex": "0x13F7192",
+      "text": "Zane's Room"
+    },
+    {
+      "offset": 20935070,
+      "offset_hex": "0x13F719E",
+      "text": "(Tomorrow is Saturday.)"
+    },
+    {
+      "offset": 20935094,
+      "offset_hex": "0x13F71B6",
+      "text": "(Tomorrow is Sunday.)"
+    },
+    {
+      "offset": 20935116,
+      "offset_hex": "0x13F71CC",
+      "text": "(I'm so tired...)"
+    },
+    {
+      "offset": 20935134,
+      "offset_hex": "0x13F71DE",
+      "text": "(Where should I go today?)"
+    },
+    {
+      "offset": 20935162,
+      "offset_hex": "0x13F71FA",
+      "text": "(Another week, another adventure!)"
+    },
+    {
+      "offset": 20935198,
+      "offset_hex": "0x13F721E",
+      "text": "Use PDA"
+    },
+    {
+      "offset": 20935206,
+      "offset_hex": "0x13F7226",
+      "text": "Look at tutorial"
+    },
+    {
+      "offset": 20935224,
+      "offset_hex": "0x13F7238",
+      "text": "Go to sleep"
+    },
+    {
+      "offset": 20935236,
+      "offset_hex": "0x13F7244",
+      "text": "You can now send mail to @4%s@7!"
+    },
+    {
+      "offset": 20935270,
+      "offset_hex": "0x13F7266",
+      "text": "(Time to start school!)"
+    },
+    {
+      "offset": 20935294,
+      "offset_hex": "0x13F727E",
+      "text": "You have mail."
+    },
+    {
+      "offset": 20935310,
+      "offset_hex": "0x13F728E",
+      "text": "Do \"Timed Duel\""
+    },
+    {
+      "offset": 20935326,
+      "offset_hex": "0x13F729E",
+      "text": "(Select new $C3dorm$C1.)"
+    },
+    {
+      "offset": 20935352,
+      "offset_hex": "0x13F72B8",
+      "text": "(First, it's the written exam.)"
+    },
+    {
+      "offset": 20935384,
+      "offset_hex": "0x13F72D8",
+      "text": "(Next, it's the skill exam.)"
+    },
+    {
+      "offset": 20935414,
+      "offset_hex": "0x13F72F6",
+      "text": "\"Timed Duel\" Rules#r1) The Duel starts on your turn.#r2) You must win during your turn.#r3) If you do not win within the time limit, you fail.#r4) You will also fail if you and your opponent's LP become 0 at#kthe same time or you are unable to draw a card.#r5) Unlike a normal Duel, you can look at"
+    }
+  ],
+  "mapping": [
+    {
+      "gba_name": "Duel Academy",
+      "gx_zone": "Academy plaza / main entrance",
+      "zone_id": "academy_plaza"
+    },
+    {
+      "gba_name": "Front of School",
+      "gx_zone": "Academy plaza / main entrance",
+      "zone_id": "academy_plaza"
+    },
+    {
+      "gba_name": "Classroom",
+      "gx_zone": "Academy interior classroom",
+      "zone_id": "academy_classroom"
+    },
+    {
+      "gba_name": "Test Room",
+      "gx_zone": "Academy interior exam room",
+      "zone_id": "academy_test_room"
+    },
+    {
+      "gba_name": "Duel Arena",
+      "gx_zone": "Grand Duel Arena",
+      "zone_id": "duel_arena"
+    },
+    {
+      "gba_name": "Gym",
+      "gx_zone": "Duel Gym & Beach",
+      "zone_id": "gym"
+    },
+    {
+      "gba_name": "Shop",
+      "gx_zone": "Academy Card Shop",
+      "zone_id": "card_shop"
+    },
+    {
+      "gba_name": "Principal's Office",
+      "gx_zone": "Chancellor's office",
+      "zone_id": "chancellors_office"
+    },
+    {
+      "gba_name": "Dr. Crowler's Room",
+      "gx_zone": "Academy staff office",
+      "zone_id": "crowler_office"
+    },
+    {
+      "gba_name": "Slifer Red Dorm",
+      "gx_zone": "Slifer Red Dorm exterior",
+      "zone_id": "slifer_dorm"
+    },
+    {
+      "gba_name": "Front of Dorm",
+      "gx_zone": "Dorm exterior (context-specific)",
+      "zone_id": "dorm_front"
+    },
+    {
+      "gba_name": "Lobby",
+      "gx_zone": "Dorm lobby (context-specific)",
+      "zone_id": "dorm_lobby"
+    },
+    {
+      "gba_name": "Cafeteria",
+      "gx_zone": "Dorm cafeteria (context-specific)",
+      "zone_id": "dorm_cafeteria"
+    },
+    {
+      "gba_name": "Your Room",
+      "gx_zone": "Dorm room (context-specific)",
+      "zone_id": "dorm_room"
+    },
+    {
+      "gba_name": "Headmaster's Room",
+      "gx_zone": "Dorm headmaster room (context-specific)",
+      "zone_id": "dorm_headmaster"
+    },
+    {
+      "gba_name": "Jaden's Room",
+      "gx_zone": "Slifer interior bunk room",
+      "zone_id": "slifer_jaden_room"
+    },
+    {
+      "gba_name": "Zane's Room",
+      "gx_zone": "Obelisk interior room",
+      "zone_id": "obelisk_zane_room"
+    },
+    {
+      "gba_name": "Ra Yellow Dorm",
+      "gx_zone": "Ra Yellow Dorm exterior",
+      "zone_id": "ra_dorm"
+    },
+    {
+      "gba_name": "Obelisk Blue - Boys' Dorm",
+      "gx_zone": "Obelisk Blue Dorm exterior",
+      "zone_id": "obelisk_boys_dorm"
+    },
+    {
+      "gba_name": "Obelisk Blue - Girls' Dorm",
+      "gx_zone": "Obelisk Blue Girls' Dorm exterior",
+      "zone_id": "obelisk_girls_dorm"
+    },
+    {
+      "gba_name": "Ocean",
+      "gx_zone": "Beach / shore / lake overlook",
+      "zone_id": "ocean"
+    },
+    {
+      "gba_name": "Next to Ocean",
+      "gx_zone": "Beach / shore / lake overlook",
+      "zone_id": "ocean"
+    },
+    {
+      "gba_name": "Volcano",
+      "gx_zone": "Volcano viewpoint / crater",
+      "zone_id": "volcano"
+    },
+    {
+      "gba_name": "Near Crater",
+      "gx_zone": "Volcano viewpoint / crater",
+      "zone_id": "volcano_crater"
+    },
+    {
+      "gba_name": "Harbor",
+      "gx_zone": "Harbor & Lighthouse",
+      "zone_id": "harbor"
+    },
+    {
+      "gba_name": "Abandoned Dorm",
+      "gx_zone": "Abandoned Dorm",
+      "zone_id": "abandoned_dorm"
+    }
+  ]
+}

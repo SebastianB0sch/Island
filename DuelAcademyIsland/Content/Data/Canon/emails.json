@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:04+00:00",
+  "source": "Derived from events.json email_unlock rewards",
+  "note": "Message bodies live in the local-only dialogue dump; only contact/unlock facts are committed.",
+  "contacts": [
+    {
+      "contact": "alexis",
+      "unlocked_by": [
+        "E19"
+      ]
+    },
+    {
+      "contact": "chazz",
+      "unlocked_by": [
+        "E12",
+        "E15"
+      ]
+    },
+    {
+      "contact": "chumley",
+      "unlocked_by": [
+        "E01"
+      ]
+    },
+    {
+      "contact": "jaden",
+      "unlocked_by": [
+        "E01"
+      ]
+    },
+    {
+      "contact": "syrus",
+      "unlocked_by": [
+        "E01"
+      ]
+    },
+    {
+      "contact": "zane",
+      "unlocked_by": [
+        "E04b"
+      ]
+    }
+  ]
+}
