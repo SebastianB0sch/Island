@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:04+00:00",
+  "source": {
+    "rom": "0x146C858..0x146C92A",
+    "guide": "Yugipedia Events + GameFAQs board list"
+  },
+  "permanent_count_excluding_dropout": 12,
+  "temporary_count": 1,
+  "titles": [
+    {
+      "order": 1,
+      "id": "dropout_boy",
+      "name": "Dropout Boy",
+      "permanent": false,
+      "conditions": [
+        {
+          "type": "fail_exam"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Penalty state after failing a monthly exam.",
+      "rom_offset": "0x146C91E"
+    },
+    {
+      "order": 2,
+      "id": "apprentice_duelist",
+      "name": "Apprentice Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "start"
+        },
+        {
+          "type": "recover_from_dropout",
+          "event": "E29"
+        }
+      ],
+      "confidence": "high",
+      "rom_offset": "0x146C90A"
+    },
+    {
+      "order": 3,
+      "id": "novice_duelist",
+      "name": "Novice Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 5
+        }
+      ],
+      "confidence": "low",
+      "notes": "Threshold is not stated in the public guide; 5 wins is a working assumption.",
+      "rom_offset": "0x146C8FA"
+    },
+    {
+      "order": 4,
+      "id": "average_duelist",
+      "name": "Average Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 10
+        }
+      ],
+      "confidence": "high",
+      "rom_offset": "0x146C8EA"
+    },
+    {
+      "order": 5,
+      "id": "fiery_duelist",
+      "name": "Fiery Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 30
+        }
+      ],
+      "confidence": "high",
+      "rom_offset": "0x146C8DC"
+    },
+    {
+      "order": 6,
+      "id": "calm_duelist",
+      "name": "Calm Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 30
+        },
+        {
+          "type": "timed_clears",
+          "count": 25
+        }
+      ],
+      "confidence": "medium",
+      "notes": "GameFAQs board list; not corroborated by the official event page.",
+      "rom_offset": "0x146C8CE"
+    },
+    {
+      "order": 7,
+      "id": "superior_duelist",
+      "name": "Superior Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 50
+        },
+        {
+          "type": "timed_clears",
+          "count": 50
+        }
+      ],
+      "confidence": "high",
+      "rom_offset": "0x146C8BC"
+    },
+    {
+      "order": 8,
+      "id": "shrewd_duelist",
+      "name": "Shrewd Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 100
+        }
+      ],
+      "confidence": "high",
+      "notes": "Used by E22 gate.",
+      "rom_offset": "0x146C8AC"
+    },
+    {
+      "order": 9,
+      "id": "honored_duelist",
+      "name": "Honored Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 100
+        },
+        {
+          "type": "written_correct",
+          "count": 40
+        }
+      ],
+      "confidence": "medium",
+      "notes": "Guide says 40 written answers (20%); GameFAQs says 100 wins.",
+      "rom_offset": "0x146C89C"
+    },
+    {
+      "order": 10,
+      "id": "elite_duelist",
+      "name": "Elite Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 100
+        },
+        {
+          "type": "timed_clears",
+          "count": 100
+        }
+      ],
+      "confidence": "medium",
+      "rom_offset": "0x146C88E"
+    },
+    {
+      "order": 11,
+      "id": "celebrity_duelist",
+      "name": "Celebrity Duelist",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 150
+        }
+      ],
+      "confidence": "low",
+      "notes": "No public threshold found; 150 wins is a placeholder that must be verified.",
+      "rom_offset": "0x146C87C"
+    },
+    {
+      "order": 12,
+      "id": "prince_of_games",
+      "name": "Prince of Games",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "collection",
+          "count": 1200
+        },
+        {
+          "type": "written_correct_percent",
+          "percent": 40
+        }
+      ],
+      "confidence": "medium",
+      "notes": "Event 19 also calls 200 wins 'Duel Prince'; reconcile in game.",
+      "rom_offset": "0x146C86C"
+    },
+    {
+      "order": 13,
+      "id": "king_of_games",
+      "name": "King of Games",
+      "permanent": true,
+      "conditions": [
+        {
+          "type": "wins_total",
+          "count": 200
+        },
+        {
+          "type": "wins_against_each",
+          "count": 10,
+          "duelists": 20
+        },
+        {
+          "type": "written_correct_percent",
+          "percent": 60
+        },
+        {
+          "type": "after_ending"
+        }
+      ],
+      "confidence": "high",
+      "rom_offset": "0x146C85E"
+    },
+    {
+      "order": 14,
+      "id": "occult_duelist",
+      "name": "Occult Duelist",
+      "permanent": false,
+      "conditions": [
+        {
+          "type": "event",
+          "event": "E07"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Temporary story title; reverts after E08.",
+      "rom_offset": "0x146C92A"
+    }
+  ]
+}

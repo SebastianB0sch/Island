@@ -1,0 +1,516 @@
+{
+  "schema_version": 1,
+  "string_pool_checks": {
+    "full_base_expected": "0x146CB14",
+    "full_first_pointer": "0x0946CB14",
+    "full_first_pointer_matches": true,
+    "short_base_expected": "0x146CC32",
+    "short_first_pointer": "0x0946CC32",
+    "short_first_pointer_matches": true
+  },
+  "notes": [
+    "Dialogue uses $pNN, 1-based: NN=01 -> full_names[0] (Jaden), NN=31 -> full_names[30] (Sheppard).",
+    "NN=00 is the player name supplied at registration.",
+    "Unused slots point at the literal string 'reserved.'.",
+    "Blair appears twice (disguise and reveal); the engine selects by story state."
+  ],
+  "full_name_table": "0x17F0BCC",
+  "short_name_table": "0x17F0C5C",
+  "entry_count": 35,
+  "full_names": [
+    {
+      "index": 0,
+      "offset": "0x146CB14",
+      "name": "Jaden Yuki",
+      "reserved": false,
+      "raw": "Jaden Yuki"
+    },
+    {
+      "index": 1,
+      "offset": "0x146CB20",
+      "name": "Syrus Truesdale",
+      "reserved": false,
+      "raw": "Syrus Truesdale"
+    },
+    {
+      "index": 2,
+      "offset": "0x146CB30",
+      "name": "Chumley Huffington",
+      "reserved": false,
+      "raw": "Chumley Huffington"
+    },
+    {
+      "index": 3,
+      "offset": "0x146CB44",
+      "name": "Bastion Misawa",
+      "reserved": false,
+      "raw": "Bastion Misawa"
+    },
+    {
+      "index": 4,
+      "offset": "0x146CB54",
+      "name": "Alexis Rhodes",
+      "reserved": false,
+      "raw": "Alexis Rhodes"
+    },
+    {
+      "index": 5,
+      "offset": "0x146CB62",
+      "name": "Chazz Princeton",
+      "reserved": false,
+      "raw": "Chazz Princeton"
+    },
+    {
+      "index": 6,
+      "offset": "0x146CB72",
+      "name": "Zane Truesdale",
+      "reserved": false,
+      "raw": "Zane Truesdale"
+    },
+    {
+      "index": 7,
+      "offset": "0x146CB82",
+      "name": "Vellian Crowler",
+      "reserved": false,
+      "raw": "Vellian Crowler"
+    },
+    {
+      "index": 8,
+      "offset": "0x146CB92",
+      "name": "Lyman Banner",
+      "reserved": false,
+      "raw": "Lyman Banner"
+    },
+    {
+      "index": 9,
+      "offset": "0x146CBA0",
+      "name": "Fonda Fontaine",
+      "reserved": false,
+      "raw": "Fonda Fontaine"
+    },
+    {
+      "index": 10,
+      "offset": "0x146CBB0",
+      "name": "Sartyr",
+      "reserved": false,
+      "raw": "Sartyr"
+    },
+    {
+      "index": 11,
+      "offset": "0x146CBB8",
+      "name": "Jasmine",
+      "reserved": false,
+      "raw": "Jasmine"
+    },
+    {
+      "index": 12,
+      "offset": "0x146CBC0",
+      "name": "Mindy",
+      "reserved": false,
+      "raw": "Mindy"
+    },
+    {
+      "index": 13,
+      "offset": "0x146CBC6",
+      "name": "Brier",
+      "reserved": false,
+      "raw": "Brier"
+    },
+    {
+      "index": 14,
+      "offset": "0x146CBCC",
+      "name": "Beauregard",
+      "reserved": false,
+      "raw": "Beauregard"
+    },
+    {
+      "index": 15,
+      "offset": "0x146CBD8",
+      "name": "Dimitri",
+      "reserved": false,
+      "raw": "Dimitri"
+    },
+    {
+      "index": 16,
+      "offset": "0x146CBE0",
+      "name": "Damon",
+      "reserved": false,
+      "raw": "Damon"
+    },
+    {
+      "index": 17,
+      "offset": "0x146CBE6",
+      "name": "Torrey",
+      "reserved": false,
+      "raw": "Torrey"
+    },
+    {
+      "index": 18,
+      "offset": "0x146CBEE",
+      "name": "Blair",
+      "reserved": false,
+      "raw": "Blair"
+    },
+    {
+      "index": 19,
+      "offset": "0x146CBF4",
+      "name": "Blair",
+      "reserved": false,
+      "raw": "Blair"
+    },
+    {
+      "index": 20,
+      "offset": "0x146CBFA",
+      "name": "Gerard",
+      "reserved": false,
+      "raw": "Gerard"
+    },
+    {
+      "index": 21,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 22,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 23,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 24,
+      "offset": "0x146CC02",
+      "name": "Shadow Duelist",
+      "reserved": false,
+      "raw": "Shadow Duelist"
+    },
+    {
+      "index": 25,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 26,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 27,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 28,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 29,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 30,
+      "offset": "0x146CC12",
+      "name": "Sheppard",
+      "reserved": false,
+      "raw": "Sheppard"
+    },
+    {
+      "index": 31,
+      "offset": "0x146CC1C",
+      "name": "Dorothy",
+      "reserved": false,
+      "raw": "Dorothy"
+    },
+    {
+      "index": 32,
+      "offset": "0x146CC24",
+      "name": "Sadie",
+      "reserved": false,
+      "raw": "Sadie"
+    },
+    {
+      "index": 33,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 34,
+      "offset": "0x146CC2A",
+      "name": "Proctor",
+      "reserved": false,
+      "raw": "Proctor"
+    }
+  ],
+  "short_names": [
+    {
+      "index": 0,
+      "offset": "0x146CC32",
+      "name": "Jaden",
+      "reserved": false,
+      "raw": "Jaden"
+    },
+    {
+      "index": 1,
+      "offset": "0x146CC38",
+      "name": "Syrus",
+      "reserved": false,
+      "raw": "Syrus"
+    },
+    {
+      "index": 2,
+      "offset": "0x146CC3E",
+      "name": "Chumley",
+      "reserved": false,
+      "raw": "Chumley"
+    },
+    {
+      "index": 3,
+      "offset": "0x146CC46",
+      "name": "Bastion",
+      "reserved": false,
+      "raw": "Bastion"
+    },
+    {
+      "index": 4,
+      "offset": "0x146CC4E",
+      "name": "Alexis",
+      "reserved": false,
+      "raw": "Alexis"
+    },
+    {
+      "index": 5,
+      "offset": "0x146CC56",
+      "name": "Chazz",
+      "reserved": false,
+      "raw": "Chazz"
+    },
+    {
+      "index": 6,
+      "offset": "0x146CC5C",
+      "name": "Zane",
+      "reserved": false,
+      "raw": "Zane"
+    },
+    {
+      "index": 7,
+      "offset": "0x146CC62",
+      "name": "Crowler",
+      "reserved": false,
+      "raw": "Crowler"
+    },
+    {
+      "index": 8,
+      "offset": "0x146CC6A",
+      "name": "Banner",
+      "reserved": false,
+      "raw": "Banner"
+    },
+    {
+      "index": 9,
+      "offset": "0x146CC72",
+      "name": "Fontaine",
+      "reserved": false,
+      "raw": "Fontaine"
+    },
+    {
+      "index": 10,
+      "offset": "0x146CC7C",
+      "name": "Sartyr",
+      "reserved": false,
+      "raw": "Sartyr"
+    },
+    {
+      "index": 11,
+      "offset": "0x146CC84",
+      "name": "Jasmine",
+      "reserved": false,
+      "raw": "Jasmine"
+    },
+    {
+      "index": 12,
+      "offset": "0x146CC8C",
+      "name": "Mindy",
+      "reserved": false,
+      "raw": "Mindy"
+    },
+    {
+      "index": 13,
+      "offset": "0x146CC92",
+      "name": "Brier",
+      "reserved": false,
+      "raw": "Brier"
+    },
+    {
+      "index": 14,
+      "offset": "0x146CC98",
+      "name": "Beauregard",
+      "reserved": false,
+      "raw": "Beauregard"
+    },
+    {
+      "index": 15,
+      "offset": "0x146CBD8",
+      "name": "Dimitri",
+      "reserved": false,
+      "raw": "Dimitri"
+    },
+    {
+      "index": 16,
+      "offset": "0x146CCA4",
+      "name": "Damon",
+      "reserved": false,
+      "raw": "Damon"
+    },
+    {
+      "index": 17,
+      "offset": "0x146CBE6",
+      "name": "Torrey",
+      "reserved": false,
+      "raw": "Torrey"
+    },
+    {
+      "index": 18,
+      "offset": "0x146CCAA",
+      "name": "Blair",
+      "reserved": false,
+      "raw": "Blair"
+    },
+    {
+      "index": 19,
+      "offset": "0x146CCB0",
+      "name": "Blair",
+      "reserved": false,
+      "raw": "Blair"
+    },
+    {
+      "index": 20,
+      "offset": "0x146CCB6",
+      "name": "Gerard",
+      "reserved": false,
+      "raw": "Gerard"
+    },
+    {
+      "index": 21,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 22,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 23,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 24,
+      "offset": "0x146CC02",
+      "name": "Shadow Duelist",
+      "reserved": false,
+      "raw": "Shadow Duelist"
+    },
+    {
+      "index": 25,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 26,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 27,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 28,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 29,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 30,
+      "offset": "0x146CCBE",
+      "name": "Sheppard",
+      "reserved": false,
+      "raw": "Sheppard"
+    },
+    {
+      "index": 31,
+      "offset": "0x146CCC8",
+      "name": "Dorothy",
+      "reserved": false,
+      "raw": "Dorothy"
+    },
+    {
+      "index": 32,
+      "offset": "0x146CC24",
+      "name": "Sadie",
+      "reserved": false,
+      "raw": "Sadie"
+    },
+    {
+      "index": 33,
+      "offset": "0x1467B80",
+      "name": null,
+      "reserved": true,
+      "raw": "reserved."
+    },
+    {
+      "index": 34,
+      "offset": "0x146CC2A",
+      "name": "Proctor",
+      "reserved": false,
+      "raw": "Proctor"
+    }
+  ],
+  "named_full_count": 26,
+  "named_short_count": 26
+}

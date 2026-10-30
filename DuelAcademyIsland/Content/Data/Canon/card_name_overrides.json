@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "notes": [
+    "Display-only overrides. The runtime database keeps ROM bytes for byte-stable verification.",
+    "Only apply these in UI/text rendering, never in card identity matching."
+  ],
+  "overrides": [
+    {
+      "card_id": 212,
+      "rom_name": "Kuwagata ò¤",
+      "display_name": "Kuwagata α",
+      "reason": "non-ASCII alpha rendered as U+FFFD by latin-1"
+    }
+  ]
+}

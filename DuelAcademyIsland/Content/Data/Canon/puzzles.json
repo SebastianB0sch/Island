@@ -1,0 +1,6591 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:03+00:00",
+  "source": {
+    "list": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Timed_Duel_List",
+    "solutions": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_NNN"
+  },
+  "summary": {
+    "count": 100,
+    "by_level": {
+      "1": 20,
+      "2": 20,
+      "3": 20,
+      "4": 20,
+      "5": 20
+    },
+    "with_solution": 100,
+    "without_solution": [],
+    "setup_status": "unknown for all records; ROM puzzle table not decoded"
+  },
+  "puzzles": [
+    {
+      "id": "P001",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Autonomous Action Unit from your hand.",
+          "card_names": [
+            "Autonomous Action Unit"
+          ]
+        },
+        {
+          "text": "Choose Exodia the Forbidden One as the target.",
+          "card_names": [
+            "Exodia the Forbidden One"
+          ]
+        },
+        {
+          "text": "Summon Piranha Army.",
+          "card_names": [
+            "Piranha Army"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with both monsters.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Autonomous Action Unit",
+        "Exodia the Forbidden One",
+        "Piranha Army"
+      ],
+      "solution_card_ids": [
+        17,
+        766,
+        944
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_001",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "00da1a64ba5e0ee30423a789ec57e33c6496b68407068cebef5ff521c866e4bb",
+      "gap": null
+    },
+    {
+      "id": "P002",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Special Summon Gilasaurus from your hand in attack position.",
+          "card_names": [
+            "Gilasaurus"
+          ]
+        },
+        {
+          "text": "Summon Dark Dust Spirit by tributing Gilasaurus.",
+          "card_names": [
+            "Dark Dust Spirit"
+          ]
+        },
+        {
+          "text": "Use Autonomous Action Unit and select Invader of Darkness as its target.",
+          "card_names": [
+            "Autonomous Action Unit",
+            "Invader of Darkness"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with both monsters.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Autonomous Action Unit",
+        "Dark Dust Spirit",
+        "Gilasaurus",
+        "Invader of Darkness"
+      ],
+      "solution_card_ids": [
+        625,
+        691,
+        766,
+        928
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_002",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "4e873f4f58397b29e6116c336262736ca7e2e16d566cab85055f18ac3a8a28b9",
+      "gap": null
+    },
+    {
+      "id": "P003",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Piranha Army.",
+          "card_names": [
+            "Piranha Army"
+          ]
+        },
+        {
+          "text": "Activate Snatch Steal and choose Master of Oz as the target.",
+          "card_names": [
+            "Snatch Steal",
+            "Master of Oz"
+          ]
+        },
+        {
+          "text": "Counter your opponent's Imperial Order with Royal Surrender.",
+          "card_names": [
+            "Imperial Order",
+            "Royal Surrender"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with both monsters.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Imperial Order",
+        "Master of Oz",
+        "Piranha Army",
+        "Royal Surrender",
+        "Snatch Steal"
+      ],
+      "solution_card_ids": [
+        428,
+        472,
+        944,
+        1019,
+        1143
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_003",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "8710908c678be3a21a862f3bbd7c1424695d2216760a01e1e9f33c8add20c381",
+      "gap": null
+    },
+    {
+      "id": "P004",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Magical Scientist and activate his effect, choosing Thousand-Eyes Restrict.",
+          "card_names": [
+            "Magical Scientist",
+            "Thousand-Eyes Restrict"
+          ]
+        },
+        {
+          "text": "Activate Thousand-Eyes Restrict's effect and choose Spell Canceller.",
+          "card_names": [
+            "Spell Canceller"
+          ]
+        },
+        {
+          "text": "Use Fusion Weapon and equip it in Thousand-Eyes.",
+          "card_names": [
+            "Fusion Weapon"
+          ]
+        },
+        {
+          "text": "Attack The Fiend Megacyber with Thousand-Eyes.",
+          "card_names": [
+            "The Fiend Megacyber"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Fusion Weapon",
+        "Magical Scientist",
+        "Spell Canceller",
+        "The Fiend Megacyber",
+        "Thousand-Eyes Restrict"
+      ],
+      "solution_card_ids": [
+        334,
+        349,
+        762,
+        789,
+        1025
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_004",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "e01d04ecfa89e6ca0ae4b770e57c8a182dad077a6fb134e85415958367e55028",
+      "gap": null
+    },
+    {
+      "id": "P005",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Call of the Haunted and bring back Cannon Soldier.",
+          "card_names": [
+            "Call of the Haunted",
+            "Cannon Soldier"
+          ]
+        },
+        {
+          "text": "Summon Gearfried the Iron Knight and use Cannon Soldier's effect to sacrifice",
+          "card_names": [
+            "Gearfried the Iron Knight"
+          ]
+        },
+        {
+          "text": "Use Cannon Soldier's effect again, this time sacrificing Cannon Soldier",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Call of the Haunted",
+        "Cannon Soldier",
+        "Gearfried the Iron Knight"
+      ],
+      "solution_card_ids": [
+        225,
+        497,
+        526
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_005",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "629914b52cd17b199da358a130485ee4a3a55f18fd2cb7ac9934b9ea5c818400",
+      "gap": null
+    },
+    {
+      "id": "P006",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Marauding Captain and use his effect to Special Summon Granadora.",
+          "card_names": [
+            "Marauding Captain",
+            "Granadora"
+          ]
+        },
+        {
+          "text": "Use Ultra Evolution Pill, select Granadora as the sacrifice and Dark Driceratops as the monster to be summoned.",
+          "card_names": [
+            "Ultra Evolution Pill",
+            "Dark Driceratops"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase.",
+          "card_names": []
+        },
+        {
+          "text": "Attack Gravekeeper's Spy with your Marauding Captain.",
+          "card_names": [
+            "Gravekeeper's Spy"
+          ]
+        },
+        {
+          "text": "Attack The Portrait's Secret with Dark Driceratops.",
+          "card_names": [
+            "The Portrait's Secret"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Dark Driceratops",
+        "Granadora",
+        "Gravekeeper's Spy",
+        "Marauding Captain",
+        "The Portrait's Secret",
+        "Ultra Evolution Pill"
+      ],
+      "solution_card_ids": [
+        598,
+        649,
+        728,
+        811,
+        902,
+        917
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_006",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "e99b57a599d7ef2055d7ccc3ddec2e3b67e4c3afa714f837422e9583af1c7d7b",
+      "gap": null
+    },
+    {
+      "id": "P007",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Use Book of Taiyou to flip Balloon Lizard up.",
+          "card_names": [
+            "Book of Taiyou",
+            "Balloon Lizard"
+          ]
+        },
+        {
+          "text": "Use Change of Heart on Balloon Lizard.",
+          "card_names": [
+            "Change of Heart"
+          ]
+        },
+        {
+          "text": "Use Ultra Evolution Pill sacrificing Balloon Lizard to summon Dark Driceratops.",
+          "card_names": [
+            "Ultra Evolution Pill",
+            "Dark Driceratops"
+          ]
+        },
+        {
+          "text": "Summon Man-Eater Bug.",
+          "card_names": [
+            "Man-Eater Bug"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with both monsters.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Balloon Lizard",
+        "Book of Taiyou",
+        "Change of Heart",
+        "Dark Driceratops",
+        "Man-Eater Bug",
+        "Ultra Evolution Pill"
+      ],
+      "solution_card_ids": [
+        221,
+        401,
+        701,
+        901,
+        902,
+        917
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_007",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "37cd66e57b51b3510a516e80ba7d9b3c2cc056aae4f2485047f1a95049fe573b",
+      "gap": null
+    },
+    {
+      "id": "P008",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Tsukuyomi and flip Spell Canceller face-down.",
+          "card_names": [
+            "Tsukuyomi",
+            "Spell Canceller"
+          ]
+        },
+        {
+          "text": "Activate Tribute to the Doomed, discard Lightning Vortex and destroy Spell Canceller.",
+          "card_names": [
+            "Tribute to the Doomed",
+            "Lightning Vortex"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with both of your monsters.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Lightning Vortex",
+        "Spell Canceller",
+        "Tribute to the Doomed",
+        "Tsukuyomi"
+      ],
+      "solution_card_ids": [
+        397,
+        597,
+        762,
+        840
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_008",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "16bb63c2d85d03f08cf74684fb5829e50909a49db7ccd9a459c5aacafdf8c62b",
+      "gap": null
+    },
+    {
+      "id": "P009",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Jinzo by tributing Blue-Eyes White Dragon.",
+          "card_names": [
+            "Jinzo",
+            "Blue-Eyes White Dragon"
+          ]
+        },
+        {
+          "text": "Activate Back to Square One, discard any card, and choose your opponent's",
+          "card_names": [
+            "Back to Square One"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with Jinzo.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Back to Square One",
+        "Blue-Eyes White Dragon",
+        "Jinzo"
+      ],
+      "solution_card_ids": [
+        1,
+        348,
+        1064
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_009",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "fca585a906ed7b19edfd5da4c864e0fffa1d49f2b341564bc87e5c99595fd91e",
+      "gap": null
+    },
+    {
+      "id": "P010",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Summoned Skull by tributing Dark Driceratops from the field.",
+          "card_names": [
+            "Summoned Skull",
+            "Dark Driceratops"
+          ]
+        },
+        {
+          "text": "Equip him with Axe of Despair.",
+          "card_names": [
+            "Axe of Despair"
+          ]
+        },
+        {
+          "text": "Use Mystic Plasma Zone.",
+          "card_names": [
+            "Mystic Plasma Zone"
+          ]
+        },
+        {
+          "text": "Activate Tribute to the Doomed, discard Dark Hole and destroy Marshmallon.",
+          "card_names": [
+            "Tribute to the Doomed",
+            "Dark Hole",
+            "Marshmallon"
+          ]
+        },
+        {
+          "text": "Activate Magical Explosion.",
+          "card_names": [
+            "Magical Explosion"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with Summoned Skull.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Axe of Despair",
+        "Dark Driceratops",
+        "Dark Hole",
+        "Magical Explosion",
+        "Marshmallon",
+        "Mystic Plasma Zone",
+        "Summoned Skull",
+        "Tribute to the Doomed"
+      ],
+      "solution_card_ids": [
+        18,
+        110,
+        141,
+        397,
+        460,
+        902,
+        963,
+        1195
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_010",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "7414193ef621bcef49b49d2fd36feed5e77f28ac9e88d8970a867d477d1be9a9",
+      "gap": null
+    },
+    {
+      "id": "P011",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Enter Battle Phase and attack \"Kycoo the Ghost Destroyer\" with \"Kangaroo Champ\".",
+          "card_names": [
+            "Kycoo the Ghost Destroyer",
+            "Kangaroo Champ"
+          ]
+        },
+        {
+          "text": "Activate \"Tragedy\".",
+          "card_names": [
+            "Tragedy"
+          ]
+        },
+        {
+          "text": "Attack with \"Gemini Elf\".",
+          "card_names": [
+            "Gemini Elf"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Gemini Elf",
+        "Kangaroo Champ",
+        "Kycoo the Ghost Destroyer",
+        "Tragedy"
+      ],
+      "solution_card_ids": [
+        234,
+        376,
+        617,
+        1079
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_011",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "ddce77fa90198a78a5c6cff17b3c0cdd3ba760ce40ad6f52cad9fbba6b71c37f",
+      "gap": null
+    },
+    {
+      "id": "P012",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Order to Charge, offer Mad Dog of Darkness and destroy Blue-Eyes Ultimate Dragon.",
+          "card_names": [
+            "Order to Charge",
+            "Mad Dog of Darkness",
+            "Blue-Eyes Ultimate Dragon"
+          ]
+        },
+        {
+          "text": "Use Premature Burial to bring back Mad Dog of Darkness.",
+          "card_names": [
+            "Premature Burial"
+          ]
+        },
+        {
+          "text": "Equip him with both Megamorph and Axe of Despair.",
+          "card_names": [
+            "Megamorph",
+            "Axe of Despair"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Axe of Despair",
+        "Blue-Eyes Ultimate Dragon",
+        "Mad Dog of Darkness",
+        "Megamorph",
+        "Order to Charge",
+        "Premature Burial"
+      ],
+      "solution_card_ids": [
+        110,
+        166,
+        282,
+        477,
+        888,
+        984
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_012",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "e8e8b73d3c3c8b70ebdde57d8932aff9a3ab4f62e97ab003ba9e248e7d1c67db",
+      "gap": null
+    },
+    {
+      "id": "P013",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Breaker the Magical Warrior and activate his effect to destroy Premature Burial, which will take Jinzo down with it.",
+          "card_names": [
+            "Breaker the Magical Warrior",
+            "Premature Burial",
+            "Jinzo"
+          ]
+        },
+        {
+          "text": "Set Kozaky's Self-Destruct Button on the field.",
+          "card_names": [
+            "Kozaky's Self-Destruct Button"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack the face-down monster with Breaker.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Breaker the Magical Warrior",
+        "Jinzo",
+        "Kozaky's Self-Destruct Button",
+        "Premature Burial"
+      ],
+      "solution_card_ids": [
+        348,
+        477,
+        787,
+        1138
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_013",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "a5c39af9eaaee653a75e6eab8c2f92288cbdf4f0ed79bfa431c0e41b8ec896c9",
+      "gap": null
+    },
+    {
+      "id": "P014",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip Summon Penguin Soldier and return both him and Jack's Knight to the respective owners' hands.",
+          "card_names": [
+            "Penguin Soldier",
+            "Jack's Knight"
+          ]
+        },
+        {
+          "text": "Summon Cave Dragon.",
+          "card_names": [
+            "Cave Dragon"
+          ]
+        },
+        {
+          "text": "Use Premature Burial on Divine Dragon Ragnarok.",
+          "card_names": [
+            "Premature Burial",
+            "Divine Dragon Ragnarok"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with both monsters.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Cave Dragon",
+        "Divine Dragon Ragnarok",
+        "Jack's Knight",
+        "Penguin Soldier",
+        "Premature Burial"
+      ],
+      "solution_card_ids": [
+        262,
+        477,
+        658,
+        749,
+        1074
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_014",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "7c8bbeddcadb728ca62ad4013aaebac32a1c0af54b2f885e664a766f90ab06e4",
+      "gap": null
+    },
+    {
+      "id": "P015",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Gearfried the Iron Knight.",
+          "card_names": [
+            "Gearfried the Iron Knight"
+          ]
+        },
+        {
+          "text": "Activate Release Restraint, sacrifce Iron Knight and summon Gearfried the Swordmaster.",
+          "card_names": [
+            "Release Restraint",
+            "Gearfried the Swordmaster"
+          ]
+        },
+        {
+          "text": "Equip Swordmaster with Lightning Blade and destroy Maiden of the Aqua with his effect.",
+          "card_names": [
+            "Lightning Blade",
+            "Maiden of the Aqua"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Crab Turtle.",
+          "card_names": [
+            "Crab Turtle"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Crab Turtle",
+        "Gearfried the Iron Knight",
+        "Gearfried the Swordmaster",
+        "Lightning Blade",
+        "Maiden of the Aqua",
+        "Release Restraint"
+      ],
+      "solution_card_ids": [
+        316,
+        513,
+        526,
+        545,
+        1084,
+        1092
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_015",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "b937b9d080a0dddc4df8b394815bb3214396188c182bfffc5867f80e208af7e5",
+      "gap": null
+    },
+    {
+      "id": "P016",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Amphibious Bugroth MK-3.",
+          "card_names": [
+            "Amphibious Bugroth MK-3"
+          ]
+        },
+        {
+          "text": "Activate Premature Burial to summon Dark Elf.",
+          "card_names": [
+            "Premature Burial",
+            "Dark Elf"
+          ]
+        },
+        {
+          "text": "Equip Megamorph on Bugroth.",
+          "card_names": [
+            "Megamorph"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Empress Mantis with Dark Elf.",
+          "card_names": [
+            "Empress Mantis"
+          ]
+        },
+        {
+          "text": "Attack directly with Bugroth.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Amphibious Bugroth MK-3",
+        "Dark Elf",
+        "Empress Mantis",
+        "Megamorph",
+        "Premature Burial"
+      ],
+      "solution_card_ids": [
+        244,
+        282,
+        477,
+        584,
+        905
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_016",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "bb9700edebb163334a0229bb6ebc220f2d175ca075392f5296893e6f59f04ff5",
+      "gap": null
+    },
+    {
+      "id": "P017",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Tribe-Infecting Virus.",
+          "card_names": [
+            "Tribe-Infecting Virus"
+          ]
+        },
+        {
+          "text": "Change Crass Clown to attack position and choose Jinzo as the effect victim.",
+          "card_names": [
+            "Crass Clown",
+            "Jinzo"
+          ]
+        },
+        {
+          "text": "Activate DNA Surgery and select any type among the given, and remember it.",
+          "card_names": [
+            "DNA Surgery"
+          ]
+        },
+        {
+          "text": "Activate Tribe-Infecting Virus's effect, discard Mage Power and choose that same type you chose for DNA Surgery.",
+          "card_names": [
+            "Mage Power"
+          ]
+        },
+        {
+          "text": "Activate Call of the Haunted and bring back Tribe-Infecting Virus.",
+          "card_names": [
+            "Call of the Haunted"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Call of the Haunted",
+        "Crass Clown",
+        "DNA Surgery",
+        "Jinzo",
+        "Mage Power",
+        "Tribe-Infecting Virus"
+      ],
+      "solution_card_ids": [
+        45,
+        348,
+        466,
+        497,
+        594,
+        792
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_017",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "c5fabf5596938bf21ec746ac21908354306288c09ef9ca8d14f5fb563256ec30",
+      "gap": null
+    },
+    {
+      "id": "P018",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Offerings to the Doomed and destroy Marauding Captain.",
+          "card_names": [
+            "Offerings to the Doomed",
+            "Marauding Captain"
+          ]
+        },
+        {
+          "text": "Activate Mystic Plasma Zone.",
+          "card_names": [
+            "Mystic Plasma Zone"
+          ]
+        },
+        {
+          "text": "Summon Drillago.",
+          "card_names": [
+            "Drillago"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack directly.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Drillago",
+        "Marauding Captain",
+        "Mystic Plasma Zone",
+        "Offerings to the Doomed"
+      ],
+      "solution_card_ids": [
+        460,
+        595,
+        649,
+        750
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_018",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "c463c720a9a9b25cbf23c1d2108f4ce6a16a4e9479807cb709c59e9f36667d35",
+      "gap": null
+    },
+    {
+      "id": "P019",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Cathedral of the Nobles.",
+          "card_names": [
+            "Cathedral of the Nobles"
+          ]
+        },
+        {
+          "text": "Summon Mystical Beast Serket by tributing Vorse Raider.",
+          "card_names": [
+            "Mystical Beast Serket",
+            "Vorse Raider"
+          ]
+        },
+        {
+          "text": "Activate Cathedral of the Nobles' effect, chain Call of the Haunted to bring Raider back, and Special Summon Blue-Eyes Ultimate Dragon.",
+          "card_names": [
+            "Call of the Haunted",
+            "Blue-Eyes Ultimate Dragon"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase, attack St. Joan with BEUD and attack directly with Vorse",
+          "card_names": [
+            "St. Joan"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Blue-Eyes Ultimate Dragon",
+        "Call of the Haunted",
+        "Cathedral of the Nobles",
+        "Mystical Beast Serket",
+        "St. Joan",
+        "Vorse Raider"
+      ],
+      "solution_card_ids": [
+        166,
+        497,
+        502,
+        589,
+        612
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_019",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "17aa9d6416498939f5c19aa5d4b7f490fbd134f209456a6dacd395d2cb106e7a",
+      "gap": null
+    },
+    {
+      "id": "P020",
+      "level": 1,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Card Destruction.",
+          "card_names": [
+            "Card Destruction"
+          ]
+        },
+        {
+          "text": "Activate Tribute to the Doomed, discard Skull Servant and destroy Blue-Eyes Ultimate Dragon.",
+          "card_names": [
+            "Tribute to the Doomed",
+            "Skull Servant",
+            "Blue-Eyes Ultimate Dragon"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with King of the Skull Servants.",
+          "card_names": [
+            "King of the Skull Servants"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Blue-Eyes Ultimate Dragon",
+        "Card Destruction",
+        "King of the Skull Servants",
+        "Skull Servant",
+        "Tribute to the Doomed"
+      ],
+      "solution_card_ids": [
+        19,
+        166,
+        375,
+        397,
+        1126
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_020",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "2a6de7e218af760a2918271b9a1dc49214e52e1c183877f17384efa4e8a5c9a6",
+      "gap": null
+    },
+    {
+      "id": "P021",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Toon World.",
+          "card_names": [
+            "Toon World"
+          ]
+        },
+        {
+          "text": "Activate Graceful Charity and discard the two Dark Magicians.",
+          "card_names": [
+            "Graceful Charity",
+            "Dark Magician"
+          ]
+        },
+        {
+          "text": "Special Summon Gilasaurus.",
+          "card_names": [
+            "Gilasaurus"
+          ]
+        },
+        {
+          "text": "Special Summon Toon Dark Magician Girl by tributing Gilasaurus.",
+          "card_names": [
+            "Toon Dark Magician Girl"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack directly with Toon DM Girl.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Dark Magician",
+        "Gilasaurus",
+        "Graceful Charity",
+        "Toon Dark Magician Girl",
+        "Toon World"
+      ],
+      "solution_card_ids": [
+        23,
+        366,
+        370,
+        625,
+        707
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_021",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "a5d412e69fd51080fecc249aa17f640727f7eb23db7f922f44ccfc9cdf0d5579",
+      "gap": null
+    },
+    {
+      "id": "P022",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Tsukuyomi and turn Blue-Eyes Ultimate Dragon face-down.",
+          "card_names": [
+            "Tsukuyomi",
+            "Blue-Eyes Ultimate Dragon"
+          ]
+        },
+        {
+          "text": "Fusion Summon Elemental Hero Flame Wingman.",
+          "card_names": [
+            "Elemental Hero Flame Wingman"
+          ]
+        },
+        {
+          "text": "Equip him with both Fusion Weapon and Big Bang Shot.",
+          "card_names": [
+            "Fusion Weapon",
+            "Big Bang Shot"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack BEUD with Flame Wingman.",
+          "card_names": []
+        },
+        {
+          "text": "Attack with Tsukuyomi.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Big Bang Shot",
+        "Blue-Eyes Ultimate Dragon",
+        "Elemental Hero Flame Wingman",
+        "Fusion Weapon",
+        "Tsukuyomi"
+      ],
+      "solution_card_ids": [
+        166,
+        796,
+        840,
+        1025,
+        1129
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_022",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "6d7e4f64ce311801e2a76d4aaaff72b88983ed2e66ad3782d610e3ffdfaab079",
+      "gap": null
+    },
+    {
+      "id": "P023",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip Summon Guardian Sphinx.",
+          "card_names": [
+            "Guardian Sphinx"
+          ]
+        },
+        {
+          "text": "Activate Delinquent Duo.",
+          "card_names": [
+            "Delinquent Duo"
+          ]
+        },
+        {
+          "text": "Summon Don Zaloog.",
+          "card_names": [
+            "Don Zaloog"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack directly with Don, then with Sphinx.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Delinquent Duo",
+        "Don Zaloog",
+        "Guardian Sphinx"
+      ],
+      "solution_card_ids": [
+        431,
+        696,
+        699
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_023",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "716625c29fee61ed6d77950e709561bb05516070180a58ebe82665cd7e9bf352",
+      "gap": null
+    },
+    {
+      "id": "P024",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Scapegoat.",
+          "card_names": [
+            "Scapegoat"
+          ]
+        },
+        {
+          "text": "Equip Cannon Soldier with United We Stand.",
+          "card_names": [
+            "Cannon Soldier",
+            "United We Stand"
+          ]
+        },
+        {
+          "text": "Activate Limiter Removal.",
+          "card_names": [
+            "Limiter Removal"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Master of Dragon Soldier with Cannon Soldier.",
+          "card_names": [
+            "Master of Dragon Soldier"
+          ]
+        },
+        {
+          "text": "Enter Main Phase 2, and use Cannon Soldier's effect to sacrifice all of the monsters, including Cannon Soldier (but sacrifice him last, of course).",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Cannon Soldier",
+        "Limiter Removal",
+        "Master of Dragon Soldier",
+        "Scapegoat",
+        "United We Stand"
+      ],
+      "solution_card_ids": [
+        225,
+        374,
+        556,
+        593,
+        721
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_024",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "a31c2df6e117b51a6f319fd376bc9e6a7a9b8735c29fad18f6343192c989c730",
+      "gap": null
+    },
+    {
+      "id": "P025",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Call of the Haunted to bring back Mystic Tomato.",
+          "card_names": [
+            "Call of the Haunted",
+            "Mystic Tomato"
+          ]
+        },
+        {
+          "text": "Summon Marie the Fallen One by tributing Tomato.",
+          "card_names": [
+            "Marie the Fallen One"
+          ]
+        },
+        {
+          "text": "Equip Black Pendant on Newdoria.",
+          "card_names": [
+            "Black Pendant",
+            "Newdoria"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Blowback Dragon with Newdoria, then destroy Blowback with Newdoria's effect.",
+          "card_names": [
+            "Blowback Dragon"
+          ]
+        },
+        {
+          "text": "Attack with Marie the Fallen One.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Black Pendant",
+        "Blowback Dragon",
+        "Call of the Haunted",
+        "Marie the Fallen One",
+        "Mystic Tomato",
+        "Newdoria"
+      ],
+      "solution_card_ids": [
+        117,
+        454,
+        497,
+        590,
+        715,
+        940
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_025",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "72a92c7fa524318956bb4561866bde96bcf72086ded5c2642ccc910286250b25",
+      "gap": null
+    },
+    {
+      "id": "P026",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Special Summon Cyber Dragon.",
+          "card_names": [
+            "Cyber Dragon"
+          ]
+        },
+        {
+          "text": "Activate Call of the Haunted to bring Byser Shock to the field.",
+          "card_names": [
+            "Call of the Haunted",
+            "Byser Shock"
+          ]
+        },
+        {
+          "text": "Activate Snatch Steal and get Mechanical Hound.",
+          "card_names": [
+            "Snatch Steal",
+            "Mechanical Hound"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with everybody.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Byser Shock",
+        "Call of the Haunted",
+        "Cyber Dragon",
+        "Mechanical Hound",
+        "Snatch Steal"
+      ],
+      "solution_card_ids": [
+        428,
+        497,
+        643,
+        1152,
+        1169
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_026",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "b0a21cce3265bd3a6135a809538ae5013eb13f818f861f291028e7f24cde5069",
+      "gap": null
+    },
+    {
+      "id": "P027",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Maji-Gire Panda.",
+          "card_names": [
+            "Maji-Gire Panda"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase.",
+          "card_names": []
+        },
+        {
+          "text": "Attack Gearfried the Iron Knight with Giant Rat, then select another Giant Rat to Special Summon from the Deck.",
+          "card_names": [
+            "Gearfried the Iron Knight",
+            "Giant Rat"
+          ]
+        },
+        {
+          "text": "Repeat above step.",
+          "card_names": []
+        },
+        {
+          "text": "Repeat above step, but this time select a Hyena to Special Summon.",
+          "card_names": [
+            "Hyena"
+          ]
+        },
+        {
+          "text": "Attack Gearfried with the Hyena, then select another Hyena to Special Summon.",
+          "card_names": []
+        },
+        {
+          "text": "Repeat above step.",
+          "card_names": []
+        },
+        {
+          "text": "Now attack Gearfried with Maji-Gire Panda.",
+          "card_names": []
+        },
+        {
+          "text": "Attack directly with Hyena.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Gearfried the Iron Knight",
+        "Giant Rat",
+        "Hyena",
+        "Maji-Gire Panda"
+      ],
+      "solution_card_ids": [
+        442,
+        526,
+        1078,
+        1080
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_027",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "7a7e648d772140690c948df366925e2379910619c14be8ad0fbfd6a002b23b5e",
+      "gap": null
+    },
+    {
+      "id": "P028",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Poison of the Old Man to decrease the opponent's LP by 800.",
+          "card_names": [
+            "Poison of the Old Man"
+          ]
+        },
+        {
+          "text": "Activate The Warrior Returning Alive and choose Elemental Hero Bubbleman.",
+          "card_names": [
+            "The Warrior Returning Alive",
+            "Elemental Hero Bubbleman"
+          ]
+        },
+        {
+          "text": "Special Summon Bubbleman and draw two cards.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Skyscraper.",
+          "card_names": [
+            "Skyscraper"
+          ]
+        },
+        {
+          "text": "Summon Elemental Hero Sparkman.",
+          "card_names": [
+            "Elemental Hero Sparkman"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Mad Dog of Darkness with Sparkman.",
+          "card_names": [
+            "Mad Dog of Darkness"
+          ]
+        },
+        {
+          "text": "Attack with Bubbleman.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Elemental Hero Bubbleman",
+        "Elemental Hero Sparkman",
+        "Mad Dog of Darkness",
+        "Poison of the Old Man",
+        "Skyscraper",
+        "The Warrior Returning Alive"
+      ],
+      "solution_card_ids": [
+        654,
+        767,
+        888,
+        1109,
+        1154,
+        1160
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_028",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "3cd8d7fd39fa82d18619066d5191eea96a47220d798a5369ec528fed5c4eefbb",
+      "gap": null
+    },
+    {
+      "id": "P029",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Giant Trunade.",
+          "card_names": [
+            "Giant Trunade"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Dark Magician Girl with Giant Rat, then Special Summon Enraged Muka Muka.",
+          "card_names": [
+            "Dark Magician Girl",
+            "Giant Rat",
+            "Enraged Muka Muka"
+          ]
+        },
+        {
+          "text": "Attack DMG with Enraged Muka Muka.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Dark Magician Girl",
+        "Enraged Muka Muka",
+        "Giant Rat",
+        "Giant Trunade"
+      ],
+      "solution_card_ids": [
+        352,
+        437,
+        442,
+        1015
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_029",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "a9783a96248471eb5d2d64d8f2b5bf56254426c568948c963649337aef76e371",
+      "gap": null
+    },
+    {
+      "id": "P030",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Upstart Goblin.",
+          "card_names": [
+            "Upstart Goblin"
+          ]
+        },
+        {
+          "text": "Activate Mystic Plasma Zone.",
+          "card_names": [
+            "Mystic Plasma Zone"
+          ]
+        },
+        {
+          "text": "Summon Archfiend Soldier.",
+          "card_names": [
+            "Archfiend Soldier"
+          ]
+        },
+        {
+          "text": "Activate Limiter Removal.",
+          "card_names": [
+            "Limiter Removal"
+          ]
+        },
+        {
+          "text": "Attack Reshef the Dark Being with KA-2 Des Scissors.",
+          "card_names": [
+            "Reshef the Dark Being",
+            "KA-2 Des Scissors"
+          ]
+        },
+        {
+          "text": "Attack Mecha-Dog Marron with Archfiend Soldier.",
+          "card_names": [
+            "Mecha-Dog Marron"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Archfiend Soldier",
+        "KA-2 Des Scissors",
+        "Limiter Removal",
+        "Mecha-Dog Marron",
+        "Mystic Plasma Zone",
+        "Reshef the Dark Being",
+        "Upstart Goblin"
+      ],
+      "solution_card_ids": [
+        425,
+        460,
+        556,
+        836,
+        938,
+        1082,
+        1127
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_030",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "5ee303b63b141877a134d4f69c61cee82e7277b0724f5f5623d2f8c631e5d872",
+      "gap": null
+    },
+    {
+      "id": "P031",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Enter Battle Phase and attack Steel Ogre Grotto with Airknight Parshath.",
+          "card_names": [
+            "Steel Ogre Grotto",
+            "Airknight Parshath"
+          ]
+        },
+        {
+          "text": "Attack with Kuriboh.",
+          "card_names": [
+            "Kuriboh"
+          ]
+        },
+        {
+          "text": "Activate Multiply.",
+          "card_names": [
+            "Multiply"
+          ]
+        },
+        {
+          "text": "Activate Token Feastevil.",
+          "card_names": [
+            "Token Feastevil"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Airknight Parshath",
+        "Kuriboh",
+        "Multiply",
+        "Steel Ogre Grotto",
+        "Token Feastevil"
+      ],
+      "solution_card_ids": [
+        31,
+        369,
+        511,
+        1141
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_031",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "22caf3b51bf07f86e6c437d27c46efcf478e9a36fbe74128f821c70db84fa197",
+      "gap": null
+    },
+    {
+      "id": "P032",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Lesser Dragon.",
+          "card_names": [
+            "Lesser Dragon"
+          ]
+        },
+        {
+          "text": "Flip Summon Armed Ninja and destroy Insect Barrier.",
+          "card_names": [
+            "Armed Ninja",
+            "Insect Barrier"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Cockroach Knight with Lesser Dragon.",
+          "card_names": [
+            "Cockroach Knight"
+          ]
+        },
+        {
+          "text": "Activate Conscription.",
+          "card_names": [
+            "Conscription"
+          ]
+        },
+        {
+          "text": "Attack with everyone.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Armed Ninja",
+        "Cockroach Knight",
+        "Conscription",
+        "Insect Barrier",
+        "Lesser Dragon"
+      ],
+      "solution_card_ids": [
+        205,
+        211,
+        250,
+        378,
+        1198
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_032",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "b16f6c7af660e48ab75d444a20d7e267c6cf2fcf42ff8d6e18a47895409ff149",
+      "gap": null
+    },
+    {
+      "id": "P033",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Special Summon The Tricky by discarding Premature Burial.",
+          "card_names": [
+            "The Tricky",
+            "Premature Burial"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Hibikime with UFO Turtle, then choose to bring Masked Dragon to the field.",
+          "card_names": [
+            "Hibikime",
+            "UFO Turtle",
+            "Masked Dragon"
+          ]
+        },
+        {
+          "text": "Attack Hibikime with Masked Dragon and choose to bring back Element Dragon.",
+          "card_names": [
+            "Element Dragon"
+          ]
+        },
+        {
+          "text": "Attack Hibikime with Element Dragon, then choose to attack again.",
+          "card_names": []
+        },
+        {
+          "text": "Attack with Tricky.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Element Dragon",
+        "Hibikime",
+        "Masked Dragon",
+        "Premature Burial",
+        "The Tricky",
+        "UFO Turtle"
+      ],
+      "solution_card_ids": [
+        278,
+        444,
+        477,
+        1011,
+        1013,
+        1031
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_033",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "5cd733af0a9a6135ed4e18e0959b88f185b9b1c407cae22dde086a6bda875689",
+      "gap": null
+    },
+    {
+      "id": "P034",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Tribute to the Doomed and discard Rare Metal Dragon from your hand, choosing Kycoo the Ghost Destroyer as the effect victim.",
+          "card_names": [
+            "Tribute to the Doomed",
+            "Rare Metal Dragon",
+            "Kycoo the Ghost Destroyer"
+          ]
+        },
+        {
+          "text": "Activate Phoenix Wing Wind Blast and discard Ninja Grandmaster Sasuke, choosing Gravity Bind as the effect victim.",
+          "card_names": [
+            "Phoenix Wing Wind Blast",
+            "Ninja Grandmaster Sasuke",
+            "Gravity Bind"
+          ]
+        },
+        {
+          "text": "Special Summon Black Luster Soldier - Envoy of the Beginning.",
+          "card_names": [
+            "Black Luster Soldier - Envoy of the Beginning"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Black Luster Soldier - Envoy of the Beginning",
+        "Gravity Bind",
+        "Kycoo the Ghost Destroyer",
+        "Ninja Grandmaster Sasuke",
+        "Phoenix Wing Wind Blast",
+        "Rare Metal Dragon",
+        "Tribute to the Doomed"
+      ],
+      "solution_card_ids": [
+        397,
+        557,
+        617,
+        868,
+        997,
+        1008,
+        1097
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_034",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "d68fdc9c8de7530b1d3ee5ec5b5e5d96ac5d14203037a8f7a8cd349a63367994",
+      "gap": null
+    },
+    {
+      "id": "P035",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Special Summon Lava Golem by tributing two Sheep Tokens.",
+          "card_names": [
+            "Lava Golem",
+            "Sheep Tokens"
+          ]
+        },
+        {
+          "text": "Special Summon the other Lava Golem by tributing the Lava Golem you summoned before and one Sheep Token.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Change of Heart and select Lava Golem.",
+          "card_names": [
+            "Change of Heart"
+          ]
+        },
+        {
+          "text": "Equip Axe of Despair on Lava Golem.",
+          "card_names": [
+            "Axe of Despair"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and destroy the Sheep Token with Summoned Skull.",
+          "card_names": [
+            "Summoned Skull"
+          ]
+        },
+        {
+          "text": "Attack with Lava Golem.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Axe of Despair",
+        "Change of Heart",
+        "Lava Golem",
+        "Sheep Tokens",
+        "Summoned Skull"
+      ],
+      "solution_card_ids": [
+        18,
+        110,
+        401,
+        720
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_035",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "e028e7b2d3fd2749e426a913f59ac97532a72ee5f58fdb0be4923a4edb7e09d8",
+      "gap": null
+    },
+    {
+      "id": "P036",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Tribute to the Doomed, discard Black Pendant and destroy Marshmallon.",
+          "card_names": [
+            "Tribute to the Doomed",
+            "Black Pendant",
+            "Marshmallon"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with everyone.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Mystical Space Typhoon and destroy Snatch Steal.",
+          "card_names": [
+            "Mystical Space Typhoon",
+            "Snatch Steal"
+          ]
+        },
+        {
+          "text": "Enter Main Phase 2 and Summon Red-Eyes B. Dragon by tributing Kozaky and Burning Algae.",
+          "card_names": [
+            "Red-Eyes B. Dragon",
+            "Kozaky",
+            "Burning Algae"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Black Pendant",
+        "Burning Algae",
+        "Kozaky",
+        "Marshmallon",
+        "Mystical Space Typhoon",
+        "Red-Eyes B. Dragon",
+        "Snatch Steal",
+        "Tribute to the Doomed"
+      ],
+      "solution_card_ids": [
+        40,
+        117,
+        397,
+        428,
+        436,
+        893,
+        963,
+        969
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_036",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "dfebb089dc849841742d63ecee4406c00c926de52b1701e44ad3d2fe768788da",
+      "gap": null
+    },
+    {
+      "id": "P037",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip Summon Mysterious Puppeteer.",
+          "card_names": [
+            "Mysterious Puppeteer"
+          ]
+        },
+        {
+          "text": "Summon Granadora.",
+          "card_names": [
+            "Granadora"
+          ]
+        },
+        {
+          "text": "Flip Summon Cyber-Stein.",
+          "card_names": [
+            "Cyber-Stein"
+          ]
+        },
+        {
+          "text": "Flip Summon Hade-Hane, then switch Hane-Hane's effect to the first spot in the list. Choose to return Hade-Hane, Puppeteer and Granadora.",
+          "card_names": [
+            "Hade-Hane"
+          ]
+        },
+        {
+          "text": "Activate Emergency Provisions and target Spring of Rebirth.",
+          "card_names": [
+            "Emergency Provisions",
+            "Spring of Rebirth"
+          ]
+        },
+        {
+          "text": "Activate Cyber-Stein's effect to Special Summon Blue-Eyes Ultimate Dragon.",
+          "card_names": [
+            "Blue-Eyes Ultimate Dragon"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with both.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Blue-Eyes Ultimate Dragon",
+        "Cyber-Stein",
+        "Emergency Provisions",
+        "Granadora",
+        "Hade-Hane",
+        "Mysterious Puppeteer",
+        "Spring of Rebirth"
+      ],
+      "solution_card_ids": [
+        68,
+        166,
+        186,
+        574,
+        664,
+        811,
+        1016
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_037",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "63bca8a71d274cbbe9ff6eb9d38423daa470487b8160542b7de6469a5c2d4b5b",
+      "gap": null
+    },
+    {
+      "id": "P038",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate DNA Transplant and select Light as the attribute of choice.",
+          "card_names": [
+            "DNA Transplant",
+            "Light"
+          ]
+        },
+        {
+          "text": "Equip Axe of Despair on Penumbral Soldier Lady.",
+          "card_names": [
+            "Axe of Despair",
+            "Penumbral Soldier Lady"
+          ]
+        },
+        {
+          "text": "Summon Amazoness Swords Woman.",
+          "card_names": [
+            "Amazoness Swords Woman"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Soldier Lady with Swords Woman.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Amazoness Swords Woman",
+        "Axe of Despair",
+        "DNA Transplant",
+        "Light",
+        "Penumbral Soldier Lady"
+      ],
+      "solution_card_ids": [
+        110,
+        639,
+        925,
+        1017
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_038",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "447394a9432ddcdf2ee19df70bbca63f07cf855826ad102c4e9a156e4db6fa12",
+      "gap": null
+    },
+    {
+      "id": "P039",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Graceful Charity and discard the two T.A.D.P.O.L.E.s.",
+          "card_names": [
+            "Graceful Charity",
+            "T.A.D.P.O.L.E."
+          ]
+        },
+        {
+          "text": "Summon a Des Frog by tributing Mother Grizzly, then select to also summon the two remaining Des Frogs in your hand.",
+          "card_names": [
+            "Des Frog",
+            "Mother Grizzly"
+          ]
+        },
+        {
+          "text": "Activate Des Croaking.",
+          "card_names": [
+            "Des Croaking"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack with all the Des Frogs.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Des Croaking",
+        "Des Frog",
+        "Graceful Charity",
+        "Mother Grizzly",
+        "T.A.D.P.O.L.E."
+      ],
+      "solution_card_ids": [
+        370,
+        450,
+        1176,
+        1177,
+        1187
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_039",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "0a1ee2ebaf4f70d46722974b816efe6beb2cb4b8f8cd5f04e54ce5e148107611",
+      "gap": null
+    },
+    {
+      "id": "P040",
+      "level": 2,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Mystic Tomato.",
+          "card_names": [
+            "Mystic Tomato"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Mad Sword Beast with Mystic Tomato, then choose to Special Summon Cannon Soldier.",
+          "card_names": [
+            "Mad Sword Beast",
+            "Cannon Soldier"
+          ]
+        },
+        {
+          "text": "Attack Mad Lobster with Indomitable Fighter Lei Lei, and then attack directly with Cannon Soldier.",
+          "card_names": [
+            "Mad Lobster",
+            "Indomitable Fighter Lei Lei"
+          ]
+        },
+        {
+          "text": "Enter Main Phase 2 and activate Protective Soul Ailin's effect and choose to Special Summon her.",
+          "card_names": [
+            "Protective Soul Ailin"
+          ]
+        },
+        {
+          "text": "Activate Cannon Soldier's effect and sacrifice everybody, himself last.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Cannon Soldier",
+        "Indomitable Fighter Lei Lei",
+        "Mad Lobster",
+        "Mad Sword Beast",
+        "Mystic Tomato",
+        "Protective Soul Ailin"
+      ],
+      "solution_card_ids": [
+        225,
+        454,
+        563,
+        1166,
+        1173,
+        1174
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_040",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "1f09e0be0f21e000059246ab476ffe0684f0387d576293e82c0bb1f18ffae45a",
+      "gap": null
+    },
+    {
+      "id": "P041",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Premature Burial to bring a Mine Golem from the Graveyard.",
+          "card_names": [
+            "Premature Burial",
+            "Mine Golem"
+          ]
+        },
+        {
+          "text": "Summon Giant Rat.",
+          "card_names": [
+            "Giant Rat"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Valkyrion the Magna Warrior with your Rat, then choose to bring another Mine Golem to the field.",
+          "card_names": [
+            "Valkyrion the Magna Warrior"
+          ]
+        },
+        {
+          "text": "Activate Minefield Eruption.",
+          "card_names": [
+            "Minefield Eruption"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Giant Rat",
+        "Mine Golem",
+        "Minefield Eruption",
+        "Premature Burial",
+        "Valkyrion the Magna Warrior"
+      ],
+      "solution_card_ids": [
+        442,
+        477,
+        500,
+        1118,
+        1137
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_041",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "7f59fe303c2e7e4e320acd2eb940688b4f79a503e9a1a32439101f0522635174",
+      "gap": null
+    },
+    {
+      "id": "P042",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon King of the Skull Servants.",
+          "card_names": [
+            "King of the Skull Servants"
+          ]
+        },
+        {
+          "text": "Activate Dark Factory of Mass Production to get two Skull Servants.",
+          "card_names": [
+            "Dark Factory of Mass Production"
+          ]
+        },
+        {
+          "text": "Activate Back to Square One, discard one of the Skull Servants and choose a Blue-Eyes White Dragon as the effect victim.",
+          "card_names": [
+            "Back to Square One",
+            "Blue-Eyes White Dragon"
+          ]
+        },
+        {
+          "text": "Activate Tribute to the Doomed, discard Skull Servant and destroy BEWD.",
+          "card_names": [
+            "Tribute to the Doomed"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack BEWD with the King.",
+          "card_names": []
+        },
+        {
+          "text": "Choose to return the King by removing one Skull Servant from play.",
+          "card_names": []
+        },
+        {
+          "text": "Attack with the King again.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Back to Square One",
+        "Blue-Eyes White Dragon",
+        "Dark Factory of Mass Production",
+        "King of the Skull Servants",
+        "Tribute to the Doomed"
+      ],
+      "solution_card_ids": [
+        1,
+        397,
+        1021,
+        1064,
+        1126
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_042",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "79bced4eb77140d1b1fa020be741a8b35339e43f68219f3511e110ff8f019d4a",
+      "gap": null
+    },
+    {
+      "id": "P043",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Book of Moon and choose Meteor B. Dragon as the victim.",
+          "card_names": [
+            "Book of Moon",
+            "Meteor B. Dragon"
+          ]
+        },
+        {
+          "text": "Summon Mad Dog of Darkness.",
+          "card_names": [
+            "Mad Dog of Darkness"
+          ]
+        },
+        {
+          "text": "Use Snatch Steal on B. Skull Dragon.",
+          "card_names": [
+            "Snatch Steal",
+            "B. Skull Dragon"
+          ]
+        },
+        {
+          "text": "Use Shinato's Ark and offer B. Skull Dragon as the sacrifice.",
+          "card_names": [
+            "Shinato's Ark"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack the face-down Dragon with Shinato, King of a Higher Plane.",
+          "card_names": [
+            "Shinato, King of a Higher Plane"
+          ]
+        },
+        {
+          "text": "Attack with Mad Dog of Darkness.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "B. Skull Dragon",
+        "Book of Moon",
+        "Mad Dog of Darkness",
+        "Meteor B. Dragon",
+        "Shinato's Ark",
+        "Shinato, King of a Higher Plane",
+        "Snatch Steal"
+      ],
+      "solution_card_ids": [
+        85,
+        319,
+        428,
+        702,
+        812,
+        822,
+        888
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_043",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "db3c15d47583bad0a85c13fce3d150a2b7218f2a57de208410728d3447afc411",
+      "gap": null
+    },
+    {
+      "id": "P044",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Swords of Revealing Light.",
+          "card_names": [
+            "Swords of Revealing Light"
+          ]
+        },
+        {
+          "text": "Special Summon Gilasaurus.",
+          "card_names": [
+            "Gilasaurus"
+          ]
+        },
+        {
+          "text": "Summon Dark Dust Spirit by tributing Gilasaurus.",
+          "card_names": [
+            "Dark Dust Spirit"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Dark Dust Spirit",
+        "Gilasaurus",
+        "Swords of Revealing Light"
+      ],
+      "solution_card_ids": [
+        153,
+        625,
+        691
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_044",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "cafa6fab399612914143abd93be48606b37143dbe35074961430ea2b927e7a44",
+      "gap": null
+    },
+    {
+      "id": "P045",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Pitch-Dark Dragon and activate his effect. Equip him on any Dark Blade.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Man-Thro' Tro''s effect and sacrifice the Dark Blade that is NOT equipped with Pitch-Dark Dragon.",
+          "card_names": [
+            "Man-Thro' Tro'",
+            "Dark Blade",
+            "Pitch-Dark Dragon"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack one of the Pandas with Dark Blade.",
+          "card_names": []
+        },
+        {
+          "text": "Enter Main Phase 2 and activate Man-Thro' Tro'<nowiki>'s effect again, this time sacrificing the remaining, Pitch-Dark Dragon equipped Dark Blade.</nowiki>",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Dark Blade",
+        "Man-Thro' Tro'",
+        "Pitch-Dark Dragon"
+      ],
+      "solution_card_ids": [
+        754,
+        755,
+        982
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_045",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "0124369232da770b04e29beb722999c48fb11874ef8cdf150fb109fb38019660",
+      "gap": null
+    },
+    {
+      "id": "P046",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Salvage. Return Mother Grizzly and Amphibious Bugroth MK-3 to hand",
+          "card_names": [
+            "Salvage",
+            "Mother Grizzly",
+            "Amphibious Bugroth MK-3"
+          ]
+        },
+        {
+          "text": "Summon Amphibious Bugroth MK-3 and equip it with Axe of Despair",
+          "card_names": [
+            "Axe of Despair"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack Blue-Eyes White Dragon with Mother Grizzly",
+          "card_names": [
+            "Blue-Eyes White Dragon"
+          ]
+        },
+        {
+          "text": "Special Summon Maiden of the Aqua",
+          "card_names": [
+            "Maiden of the Aqua"
+          ]
+        },
+        {
+          "text": "Direct Attack with Amphibious Bugroth MK-3",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Amphibious Bugroth MK-3",
+        "Axe of Despair",
+        "Blue-Eyes White Dragon",
+        "Maiden of the Aqua",
+        "Mother Grizzly",
+        "Salvage"
+      ],
+      "solution_card_ids": [
+        1,
+        110,
+        450,
+        513,
+        905,
+        916
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_046",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "c37518c5d064f2ae4c24550fb488dfbafdb95f2b9e8a05dd830ca831db738d4a",
+      "gap": null
+    },
+    {
+      "id": "P047",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Black Illusion Ritual. Offer Zombyra the Dark",
+          "card_names": [
+            "Black Illusion Ritual",
+            "Zombyra the Dark"
+          ]
+        },
+        {
+          "text": "Activate the effect of Relinquished and absorb Jinzo",
+          "card_names": [
+            "Relinquished",
+            "Jinzo"
+          ]
+        },
+        {
+          "text": "Equip Ritual Weapon to Relinquished",
+          "card_names": [
+            "Ritual Weapon"
+          ]
+        },
+        {
+          "text": "Activate Call of the Haunted and Special Summon Zombyra the Dark",
+          "card_names": [
+            "Call of the Haunted"
+          ]
+        },
+        {
+          "text": "Attack Spear Dragon with Zombyra the Dark. Direct Attack with Relinquished",
+          "card_names": [
+            "Spear Dragon"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Black Illusion Ritual",
+        "Call of the Haunted",
+        "Jinzo",
+        "Relinquished",
+        "Ritual Weapon",
+        "Spear Dragon",
+        "Zombyra the Dark"
+      ],
+      "solution_card_ids": [
+        332,
+        348,
+        367,
+        497,
+        615,
+        655,
+        1026
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_047",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "bb04c4889110e2fc50f0a6db961b09df733afd476490e01f7994e707fd5e58f4",
+      "gap": null
+    },
+    {
+      "id": "P048",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon \"Manju of the Ten Thousand Hands\"",
+          "card_names": [
+            "Manju of the Ten Thousand Hands"
+          ]
+        },
+        {
+          "text": "Use Manju's effect to get \"Final Ritual of the Ancients\"",
+          "card_names": [
+            "Final Ritual of the Ancients"
+          ]
+        },
+        {
+          "text": "Activate \"Final Ritual of the Ancients\", offering both copies of \"Manju of the Ten Thousand Hands\"",
+          "card_names": []
+        },
+        {
+          "text": "Special Summon \"Soul of Purity and Light\"",
+          "card_names": [
+            "Soul of Purity and Light"
+          ]
+        },
+        {
+          "text": "Activate \"Reshef the Dark Being's\" effect",
+          "card_names": [
+            "Reshef the Dark Being"
+          ]
+        },
+        {
+          "text": "Attack with all",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Final Ritual of the Ancients",
+        "Manju of the Ten Thousand Hands",
+        "Reshef the Dark Being",
+        "Soul of Purity and Light"
+      ],
+      "solution_card_ids": [
+        620,
+        909,
+        1127,
+        1134
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_048",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "d6be8961c9782e10f219745ae4dc5763502e7a534a518b15cecb989ef3530c2e",
+      "gap": null
+    },
+    {
+      "id": "P049",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Metalmorph and equip to Zoa",
+          "card_names": [
+            "Metalmorph"
+          ]
+        },
+        {
+          "text": "Activate Pot of Generosity and send Metalzoa and Alpha the Magnet Warrior back to the deck.",
+          "card_names": []
+        },
+        {
+          "text": "Use Zoa's ability to special summon Metalzoa",
+          "card_names": []
+        },
+        {
+          "text": "Activate Limit Removal",
+          "card_names": []
+        },
+        {
+          "text": "Attack with Metalzoa",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Metalmorph"
+      ],
+      "solution_card_ids": [
+        283
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_049",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "b625dee006febea3651575906b0c3d02b6a905ea7738fffc4937bcb68956d240",
+      "gap": null
+    },
+    {
+      "id": "P050",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Book of Moon and flip Blue Eyes White Dragon face down.",
+          "card_names": [
+            "Book of Moon",
+            "Blue Eyes White Dragon"
+          ]
+        },
+        {
+          "text": "Summon Great Angus",
+          "card_names": [
+            "Great Angus"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase and attack face down Blue Eyes with Sasuke Samurai",
+          "card_names": [
+            "Sasuke Samurai"
+          ]
+        },
+        {
+          "text": "Attack Kuriboh with Element Dragon. Attack once more with Element Dragon.",
+          "card_names": [
+            "Kuriboh",
+            "Element Dragon"
+          ]
+        },
+        {
+          "text": "Attack with Great Angus.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Blue Eyes White Dragon",
+        "Book of Moon",
+        "Element Dragon",
+        "Great Angus",
+        "Kuriboh",
+        "Sasuke Samurai"
+      ],
+      "solution_card_ids": [
+        1,
+        31,
+        689,
+        702,
+        777,
+        1011
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_050",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "879effed0c0ef55c9b3eeb6018e6df859cfd0d5364dd171de6007ebd9c91f3a0",
+      "gap": null
+    },
+    {
+      "id": "P051",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon '''Decayed Commander''' face up attack position.",
+          "card_names": []
+        },
+        {
+          "text": "Activiate '''Decayed Commander''' special effect to summon '''Zombie Tiger''' from your hand to the field.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Zombie Tiger's special effect, equip to Decayed Commander.",
+          "card_names": [
+            "Zombie Tiger"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase.",
+          "card_names": []
+        },
+        {
+          "text": "Attack Vorse Raider with Giant Rat. Activate special effect. Summon Milus Radiant from your deck.",
+          "card_names": []
+        },
+        {
+          "text": "Have Decayed Commander attack Vorse Raider. Have Milus Radiant attack LP directly.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Zombie Tiger"
+      ],
+      "solution_card_ids": [
+        757
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_051",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "db61a70617b6c6ac4120133da28d4208605ae0fef2a405acc364202f810b0f20",
+      "gap": null
+    },
+    {
+      "id": "P052",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Breaker the Magical Warrior and activate its effect to destroy Chain Burst",
+          "card_names": [
+            "Breaker the Magical Warrior",
+            "Chain Burst"
+          ]
+        },
+        {
+          "text": "Activate Swords of Revealing Light.",
+          "card_names": [
+            "Swords of Revealing Light"
+          ]
+        },
+        {
+          "text": "Activate Ring of Destruction and destroy Breaker.",
+          "card_names": [
+            "Ring of Destruction"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Breaker the Magical Warrior",
+        "Chain Burst",
+        "Ring of Destruction",
+        "Swords of Revealing Light"
+      ],
+      "solution_card_ids": [
+        153,
+        503,
+        787,
+        1070
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_052",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "b6e62f3eb8ac38b357537861993b3d34eb17d1b822c74b5ae571d803850d324f",
+      "gap": null
+    },
+    {
+      "id": "P053",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Marauding Captain and use his effect to special summon Mataza the Zapper.",
+          "card_names": [
+            "Marauding Captain",
+            "Mataza the Zapper"
+          ]
+        },
+        {
+          "text": "By discarding Vorse Raider, activate Curse of Aging.",
+          "card_names": [
+            "Vorse Raider",
+            "Curse of Aging"
+          ]
+        },
+        {
+          "text": "Equip Mataza with Lightning Blade, then use him to attack both opponents Dragon Zombies.",
+          "card_names": [
+            "Lightning Blade",
+            "Dragon Zombie"
+          ]
+        },
+        {
+          "text": "Finally, finish the puzzle with Marauding's direct attack.",
+          "card_names": []
+        },
+        {
+          "text": "Ring of destruction is not used.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Curse of Aging",
+        "Dragon Zombie",
+        "Lightning Blade",
+        "Marauding Captain",
+        "Mataza the Zapper",
+        "Vorse Raider"
+      ],
+      "solution_card_ids": [
+        46,
+        502,
+        545,
+        649,
+        741,
+        907
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_053",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "a746ed5e96c7ecbc62dac347e4287e6631c38ff322665f5e68495bc093b17643",
+      "gap": null
+    },
+    {
+      "id": "P054",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Cyber Stein's effect to summon Cyber End Dragon",
+          "card_names": [
+            "Cyber Stein",
+            "Cyber End Dragon"
+          ]
+        },
+        {
+          "text": "Offer Mystical Beast Serket and Cyber Stein to summon Ancient Gear Golem.",
+          "card_names": [
+            "Mystical Beast Serket",
+            "Ancient Gear Golem"
+          ]
+        },
+        {
+          "text": "Attack Marshmallon with both Ancient Gear and Cyber End",
+          "card_names": []
+        },
+        {
+          "text": "Victory is Sweet!",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Ancient Gear Golem",
+        "Cyber End Dragon",
+        "Cyber Stein",
+        "Mystical Beast Serket"
+      ],
+      "solution_card_ids": [
+        186,
+        612,
+        1111,
+        1158
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_054",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "76bc9d90999abc981d46c348e5ce3b1b0157f0886ec9f11e385957e3a939374d",
+      "gap": null
+    },
+    {
+      "id": "P055",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "'''Tribute summon''' the Creator by Tributing the Creator Incarnate and Marshmallon to the graveyard.",
+          "card_names": [
+            "Marshmallon"
+          ]
+        },
+        {
+          "text": "Activate the Creator's effect. Bring '''Creator Incarnate''' back from the graveyard by discarding '''Bazoo the Soul Eater'''.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Premature Burial. Bring '''Bazoo the Soul Eater''' to the field in face up attack position.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Bazoo the Soul Eater's special effect. Remove from play '''Marshmallon''' and '''Divine Dragon Ragnarok'''.",
+          "card_names": []
+        },
+        {
+          "text": "Enter battle phase, and attack '''first''' with '''Bazoo the Soul Eater'''.",
+          "card_names": []
+        },
+        {
+          "text": "Attack '''directly''' with '''The Creator-Incarnate''' and '''The Creator''' untill opponent's lifepoints reach 0.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Marshmallon"
+      ],
+      "solution_card_ids": [
+        963
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_055",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "4a329c8b056eeaf399e439e655be5c41c3ee1325aa871a913cc839399728fc20",
+      "gap": null
+    },
+    {
+      "id": "P056",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip summon Iron Blacksmith Kotetsu.",
+          "card_names": [
+            "Iron Blacksmith Kotetsu"
+          ]
+        },
+        {
+          "text": "Select Black Pendant from your Deck, add it to your Hand.",
+          "card_names": []
+        },
+        {
+          "text": "Summon Gearfried the Iron Knight.",
+          "card_names": []
+        },
+        {
+          "text": "Equip Gearfriend the Iron Knight with all 3 black pendants.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Iron Blacksmith Kotetsu"
+      ],
+      "solution_card_ids": [
+        838
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_056",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "83e542b826a60242aec7cbe98445e40c97611f2480187db1d01aaccdf4ab2713",
+      "gap": null
+    },
+    {
+      "id": "P057",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Tribute to the Doomed. Discard Summoned Skull and destroy Marauding Captain.",
+          "card_names": [
+            "Tribute to the Doomed"
+          ]
+        },
+        {
+          "text": "Chain activate Scapegoat.",
+          "card_names": []
+        },
+        {
+          "text": "Use Amazon Archer's effect, sacrificing all 4 scapegoats to inflict 2400 damage to opponent's lifepoints.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Tribute to the Doomed"
+      ],
+      "solution_card_ids": [
+        397
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_057",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "0250da48e609c4930aa522827d50aab81944618f39669e15f86e24a895bfc81f",
+      "gap": null
+    },
+    {
+      "id": "P058",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon \"Copycat\" and copy \"Luminous Soldier\"'s ATK/DEF.",
+          "card_names": [
+            "Copycat",
+            "Luminous Soldier"
+          ]
+        },
+        {
+          "text": "Enter Battle Phase.",
+          "card_names": []
+        },
+        {
+          "text": "Attack \"Mystical Elf\" with \"Archfiend Soldier\" and attack \"Luminous Soldier\" with \"Copycat\".",
+          "card_names": [
+            "Mystical Elf",
+            "Archfiend Soldier"
+          ]
+        },
+        {
+          "text": "Attack with \"Giant Orc\". Victory is sweet!",
+          "card_names": [
+            "Giant Orc"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Archfiend Soldier",
+        "Copycat",
+        "Giant Orc",
+        "Luminous Soldier",
+        "Mystical Elf"
+      ],
+      "solution_card_ids": [
+        2,
+        365,
+        506,
+        758,
+        836
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_058",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "88b22dc3f86bff4bb85f084f294953f0ff1abe3cc8c3a6f4405ec4aeebb952fe",
+      "gap": null
+    },
+    {
+      "id": "P059",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Premature Burial, bring back Mermaid Knight.",
+          "card_names": [
+            "Premature Burial"
+          ]
+        },
+        {
+          "text": "Sacrifice Moving Fortress, summon Catapult Turtle.",
+          "card_names": []
+        },
+        {
+          "text": "Play Umi face up.",
+          "card_names": []
+        },
+        {
+          "text": "Use Catapult Turtle's effect to sacrifice Mermaid Knight first, then Catapult Turtle.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Premature Burial"
+      ],
+      "solution_card_ids": [
+        477
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_059",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "d77352158d177fdb9a8572ff9ee2e2aa40d3eaa4dfa3629226fc6be47e9bddb8",
+      "gap": null
+    },
+    {
+      "id": "P060",
+      "level": 3,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Set Book of Taiyou and Penguin Soldier on the field.",
+          "card_names": [
+            "Book of Taiyou"
+          ]
+        },
+        {
+          "text": "Play Card Destruction.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Hane-Hane's effect by flip summoning. Return one of Exodia's limbs or Exodia, the Forbidden One to your hand.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Book of Taiyou, flip Penguin Soldier face up with its effect. Send the remaining two pieces of Exodia back to your hand.",
+          "card_names": []
+        },
+        {
+          "text": "Exodia's effect automatically activates, victory!",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Book of Taiyou"
+      ],
+      "solution_card_ids": [
+        701
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_060",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "fec6f442c729ca34f010c55a0d1d086f472d1082fd7748bb3471c73f62229da3",
+      "gap": null
+    },
+    {
+      "id": "P061",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal summon The Creator Incarnate.",
+          "card_names": [
+            "The Creator Incarnate"
+          ]
+        },
+        {
+          "text": "Use his effect to Special summon The Creator from your hand.",
+          "card_names": [
+            "The Creator"
+          ]
+        },
+        {
+          "text": "By discarding Dark Driceratops, special summon The Tricky.",
+          "card_names": [
+            "Dark Driceratops",
+            "The Tricky"
+          ]
+        },
+        {
+          "text": "Use Creators effect to summon Dark Driceratops (Monster Reincarnation serves as the discard cost).",
+          "card_names": [
+            "Dark Driceratops",
+            "Monster Reincarnation"
+          ]
+        },
+        {
+          "text": "Attack Gear Golem the Moving Fortress with Driceratops for 200 piercing damage.",
+          "card_names": [
+            "Gear Golem the Moving Fortress"
+          ]
+        },
+        {
+          "text": "Your other monsters direct attacks make the finishing move.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Dark Driceratops",
+        "Gear Golem the Moving Fortress",
+        "Monster Reincarnation",
+        "The Creator",
+        "The Creator Incarnate",
+        "The Tricky"
+      ],
+      "solution_card_ids": [
+        347,
+        902,
+        1031,
+        1041,
+        1042,
+        1065
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_061",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "add3e6e7c8fd036a1fa2ea82ce1f3c4c767a77ccd5484d9c8486555edcd727a9",
+      "gap": null
+    },
+    {
+      "id": "P062",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal summon Magical Scientist.",
+          "card_names": [
+            "Magical Scientist"
+          ]
+        },
+        {
+          "text": "Use his effect to get out Thousand-Eyes Restrict.",
+          "card_names": [
+            "Thousand-Eyes Restrict"
+          ]
+        },
+        {
+          "text": "Absorb one of the Blue-Eyes White Dragons with Thousand-eyes effect.",
+          "card_names": [
+            "Blue-Eyes White Dragon"
+          ]
+        },
+        {
+          "text": "Activate Black Illusion Ritual and Tribute Thousand-eyes to summon Relinquished.",
+          "card_names": [
+            "Black Illusion Ritual",
+            "Relinquished"
+          ]
+        },
+        {
+          "text": "Absorb the second Blue-eyes.",
+          "card_names": []
+        },
+        {
+          "text": "Attack directly for game.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Black Illusion Ritual",
+        "Blue-Eyes White Dragon",
+        "Magical Scientist",
+        "Relinquished",
+        "Thousand-Eyes Restrict"
+      ],
+      "solution_card_ids": [
+        1,
+        332,
+        334,
+        367,
+        789
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_062",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "5d29d6a907289b6ee57855cbc18f80fe4ba224b04fd7efd07ecd67f9068368f8",
+      "gap": null
+    },
+    {
+      "id": "P063",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal summon Monk Fighter.",
+          "card_names": [
+            "Monk Fighter"
+          ]
+        },
+        {
+          "text": "Special summon Master Monk by tributing Monk Fighter.",
+          "card_names": [
+            "Master Monk",
+            "Monk Fighter"
+          ]
+        },
+        {
+          "text": "Equip Master Monk with Legendary Black Belt.",
+          "card_names": [
+            "Legendary Black Belt"
+          ]
+        },
+        {
+          "text": "Activate Meteorain.",
+          "card_names": [
+            "Meteorain"
+          ]
+        },
+        {
+          "text": "Attack the face-down monster with Master monk, and attack directly three times.",
+          "card_names": []
+        },
+        {
+          "text": "The puzzle can not be solved if you activate Ojama Trio. That is because Tokens do not go to grave when destroyed by battle, and therefore do not trigger the effect of Legendary Black Belt.",
+          "card_names": [
+            "Ojama Trio",
+            "Token",
+            "Legendary Black Belt"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Legendary Black Belt",
+        "Master Monk",
+        "Meteorain",
+        "Monk Fighter",
+        "Ojama Trio",
+        "Token"
+      ],
+      "solution_card_ids": [
+        772,
+        828,
+        1119,
+        1120,
+        1135
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_063",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "205b47e75fba76941322f0677ac0c0cc88cc6a7696f90a4734d282decc5ecefa",
+      "gap": null
+    },
+    {
+      "id": "P064",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal Summon Vampire Orchis and use its effect to special summon Des Dendle.",
+          "card_names": [
+            "Vampire Orchis",
+            "Des Dendle"
+          ]
+        },
+        {
+          "text": "Equip the Orchis with the union card.",
+          "card_names": []
+        },
+        {
+          "text": "Revive Cannon Soldier with Premature Burial.",
+          "card_names": [
+            "Cannon Soldier",
+            "Premature Burial"
+          ]
+        },
+        {
+          "text": "Attack your opponents Silpheed with your Orchis. Silpheed will be destroyed, but the Orchis will be protected by its union card. You will still get the Wicked Plant Token.",
+          "card_names": [
+            "Silpheed",
+            "Wicked Plant Token"
+          ]
+        },
+        {
+          "text": "Have your remaining monsters attack directly.",
+          "card_names": []
+        },
+        {
+          "text": "Tribute all monsters (and finally, Cannon soldier himself) to inflict direct damage for game.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Cannon Soldier",
+        "Des Dendle",
+        "Premature Burial",
+        "Silpheed",
+        "Vampire Orchis",
+        "Wicked Plant Token"
+      ],
+      "solution_card_ids": [
+        225,
+        477,
+        759,
+        760,
+        865
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_064",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "d32b6a1b00029d5faf178cf9253736fa5b551f3686d9aec20c1e8d1377b751e9",
+      "gap": null
+    },
+    {
+      "id": "P065",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal summon Pinch Hopper.",
+          "card_names": [
+            "Pinch Hopper"
+          ]
+        },
+        {
+          "text": "Use Multiplication of Ants to exchange him for two Army Ant Tokens and an Arsenal Bug, all in attack mode.",
+          "card_names": [
+            "Multiplication of Ants",
+            "Army Ant Token",
+            "Arsenal Bug"
+          ]
+        },
+        {
+          "text": "Run Mystic Tomato into Gemini Elf to summon Cannon Soldier from your deck.",
+          "card_names": [
+            "Mystic Tomato",
+            "Gemini Elf",
+            "Cannon Soldier"
+          ]
+        },
+        {
+          "text": "Attack the elf with your Arsenal bug, then attack directly with the other monsters.",
+          "card_names": []
+        },
+        {
+          "text": "Finally tribute all your monsters as fodder for Cannon Soldier (finally, himself). Game!",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Army Ant Token",
+        "Arsenal Bug",
+        "Cannon Soldier",
+        "Gemini Elf",
+        "Multiplication of Ants",
+        "Mystic Tomato",
+        "Pinch Hopper"
+      ],
+      "solution_card_ids": [
+        225,
+        234,
+        356,
+        454,
+        518,
+        548
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_065",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "302771e94985675267d80bdf860f70b3bad10686c8c0ad823775e7132ddac819",
+      "gap": null
+    },
+    {
+      "id": "P066",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Get rid of Jinzo by returning him to the top of your opponents deck with Back to Square One. Use Total Defense Shogun as discard cost.",
+          "card_names": [
+            "Jinzo",
+            "Back to Square One",
+            "Total Defense Shogun"
+          ]
+        },
+        {
+          "text": "Activate The Shallow Grave and have your Shogun return. Your opponent will pick Penumbral Soldier Lady.",
+          "card_names": [
+            "The Shallow Grave",
+            "Penumbral Soldier Lady"
+          ]
+        },
+        {
+          "text": "Normal summon Mataza the Zapper.",
+          "card_names": [
+            "Mataza the Zapper"
+          ]
+        },
+        {
+          "text": "Activate Ceasefire for 1500 damage. Shogun and Soldier lady will now be face-up.",
+          "card_names": [
+            "Ceasefire"
+          ]
+        },
+        {
+          "text": "Have Shogun destroy the Soldier Lady by battle (he can attack in defense mode) - Fatal Abacus will add in some extra damage.",
+          "card_names": [
+            "Fatal Abacus"
+          ]
+        },
+        {
+          "text": "Finally, make Mataza attack twice.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Back to Square One",
+        "Ceasefire",
+        "Fatal Abacus",
+        "Jinzo",
+        "Mataza the Zapper",
+        "Penumbral Soldier Lady",
+        "The Shallow Grave",
+        "Total Defense Shogun"
+      ],
+      "solution_card_ids": [
+        348,
+        361,
+        469,
+        476,
+        647,
+        907,
+        1017,
+        1064
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_066",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "6bb3810a82f9c904edea24fa88b2b9881fdf044ddf9bbe93189585d138c1fb83",
+      "gap": null
+    },
+    {
+      "id": "P067",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip summon Granadora to gain 1000 LP.",
+          "card_names": [
+            "Granadora"
+          ]
+        },
+        {
+          "text": "Use Back to Square One to return Granadora to the top of your deck. Discard Monster Reincarnation as a cost.",
+          "card_names": [
+            "Back to Square One",
+            "Monster Reincarnation"
+          ]
+        },
+        {
+          "text": "Use Premature Burial to return Sacred Crane to the field and draw Granadora again.",
+          "card_names": [
+            "Premature Burial",
+            "Sacred Crane"
+          ]
+        },
+        {
+          "text": "Normal summon Granadora (another 1000 LP).",
+          "card_names": []
+        },
+        {
+          "text": "Now flip Cyber-Stein and activate his effect to get Blue-Eyes Ultimate Dragon.",
+          "card_names": [
+            "Cyber-Stein",
+            "Blue-Eyes Ultimate Dragon"
+          ]
+        },
+        {
+          "text": "Attack Des Lacooda with Cyber-Stein, then have your monsters attack directly.",
+          "card_names": [
+            "Des Lacooda"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Back to Square One",
+        "Blue-Eyes Ultimate Dragon",
+        "Cyber-Stein",
+        "Des Lacooda",
+        "Granadora",
+        "Monster Reincarnation",
+        "Premature Burial",
+        "Sacred Crane"
+      ],
+      "solution_card_ids": [
+        166,
+        186,
+        477,
+        700,
+        811,
+        898,
+        1064,
+        1065
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_067",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "f4c8e61c3a542c3d1a74c9aaa1830500e2dae3dae0c0f665b65895052eaa48b1",
+      "gap": null
+    },
+    {
+      "id": "P068",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Exchange the Thunder Dragon in your hand for two copies from your deck.",
+          "card_names": [
+            "Thunder Dragon"
+          ]
+        },
+        {
+          "text": "Use The Shallow Grave to return X-Head Cannon to your field.",
+          "card_names": [
+            "The Shallow Grave",
+            "X-Head Cannon"
+          ]
+        },
+        {
+          "text": "Normal summon Z-Metal Tank and use X, Y, and Z to Special summon XYZ-Dragon Cannon from your Extra deck in attack position.",
+          "card_names": [
+            "Z-Metal Tank",
+            "XYZ-Dragon Cannon"
+          ]
+        },
+        {
+          "text": "Use its effect three times to empty your opponent's field, then attack directly.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "The Shallow Grave",
+        "Thunder Dragon",
+        "X-Head Cannon",
+        "XYZ-Dragon Cannon",
+        "Z-Metal Tank"
+      ],
+      "solution_card_ids": [
+        188,
+        476,
+        724,
+        746,
+        747
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_068",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "6f99106e4a66216ab2934160a3523b9715ceef43ff75309ce019aadf8721040b",
+      "gap": null
+    },
+    {
+      "id": "P069",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal Summon Marauding Captain, use his effect to Special summon Throwstone Unit.",
+          "card_names": [
+            "Marauding Captain",
+            "Throwstone Unit"
+          ]
+        },
+        {
+          "text": "Use Rush Recklessly to increase Throwstones ATK to 1600.",
+          "card_names": [
+            "Rush Recklessly"
+          ]
+        },
+        {
+          "text": "Now Tribute Marauding to destroy your opponents Jinzo with Throwstone's effect.",
+          "card_names": [
+            "Jinzo"
+          ]
+        },
+        {
+          "text": "Use your your face-down Call of the Haunted to revive Dark Driceratops and attack for game.",
+          "card_names": [
+            "Call of the Haunted",
+            "Dark Driceratops"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Call of the Haunted",
+        "Dark Driceratops",
+        "Jinzo",
+        "Marauding Captain",
+        "Rush Recklessly",
+        "Throwstone Unit"
+      ],
+      "solution_card_ids": [
+        348,
+        432,
+        497,
+        648,
+        649,
+        902
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_069",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "85b0c1af2e24f72bbff1ae49022ae355c551ff38744eb2d9955b19059ced11ee",
+      "gap": null
+    },
+    {
+      "id": "P070",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Cathedral of Nobles.",
+          "card_names": [
+            "Cathedral of Nobles"
+          ]
+        },
+        {
+          "text": "Set Stronghold the Moving Fortress and activate it immediately (which you can due to the Cathedrals effect).",
+          "card_names": [
+            "Stronghold the Moving Fortress"
+          ]
+        },
+        {
+          "text": "Now tribute the Trap Monster to summon Catapult Turtle.",
+          "card_names": [
+            "Trap Monster",
+            "Catapult Turtle"
+          ]
+        },
+        {
+          "text": "First catapult all the gadgets into your opponents LP, then finish him with turtles self-sacrifice.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Catapult Turtle",
+        "Cathedral of Nobles",
+        "Stronghold the Moving Fortress",
+        "Trap Monster"
+      ],
+      "solution_card_ids": [
+        42,
+        607
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_070",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "f0c524886800e7beef15d4dbf8244d6bdd0bd6fc131947ff1529d408e103d284",
+      "gap": null
+    },
+    {
+      "id": "P071",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Mokey Mokey.",
+          "card_names": [
+            "Mokey Mokey"
+          ]
+        },
+        {
+          "text": "Activate Ring of Destruction and use it on Mokey-Mokey.",
+          "card_names": [
+            "Ring of Destruction"
+          ]
+        },
+        {
+          "text": "Activate Special Hurricane by discarding Sangan.",
+          "card_names": [
+            "Special Hurricane"
+          ]
+        },
+        {
+          "text": "Special summon Black Luster Soldier - Envoy of the Beginning by removing Mokey and Sangan.",
+          "card_names": [
+            "Black Luster Soldier - Envoy of the Beginning"
+          ]
+        },
+        {
+          "text": "Attack.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Black Luster Soldier - Envoy of the Beginning",
+        "Mokey Mokey",
+        "Ring of Destruction",
+        "Special Hurricane"
+      ],
+      "solution_card_ids": [
+        503,
+        868,
+        967,
+        983
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_071",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "2cca822dfd8b7acab4ec0dfc51bcee7b21c6d2f001183cb3a2ad4855ec1f7b0a",
+      "gap": null
+    },
+    {
+      "id": "P072",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Monster Reincarnation. Discard Summoned Skull to return Mataza the Zapper to your hand.",
+          "card_names": [
+            "Monster Reincarnation",
+            "Summoned Skull",
+            "Mataza the Zapper"
+          ]
+        },
+        {
+          "text": "Flip summon Magician of Faith and return Axe of Despair to your hand.",
+          "card_names": [
+            "Magician of Faith",
+            "Axe of Despair"
+          ]
+        },
+        {
+          "text": "Summon Mataza, equip him with the Axe and attack Giant Orc, then attack directly for game.",
+          "card_names": [
+            "Giant Orc"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Axe of Despair",
+        "Giant Orc",
+        "Magician of Faith",
+        "Mataza the Zapper",
+        "Monster Reincarnation",
+        "Summoned Skull"
+      ],
+      "solution_card_ids": [
+        18,
+        110,
+        190,
+        758,
+        907,
+        1065
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_072",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "46d1f7a4ebe34cc8fccfdad3bf781be05e00f78f9cac9941bf1e2ca67c92f8e0",
+      "gap": null
+    },
+    {
+      "id": "P073",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon \"Tsukuyomi\" and use its effect to flip \"Des Koala\" face-down.",
+          "card_names": [
+            "Tsukuyomi",
+            "Des Koala"
+          ]
+        },
+        {
+          "text": "Use \"Premature Burial\" to revive \"Sasuke Samurai #3\" from your grave.",
+          "card_names": [
+            "Premature Burial",
+            "Sasuke Samurai #3"
+          ]
+        },
+        {
+          "text": "Attack \"Gora Turtle\" with \"Tsukuyomi\", then attack directly with Sasuke.",
+          "card_names": [
+            "Gora Turtle",
+            "Tsukuyomi",
+            "Sasuke"
+          ]
+        },
+        {
+          "text": "In Main Phase 2, flip \"Des Koala\" to inflict 2800 direct damage and solve the puzzle.",
+          "card_names": [
+            "Des Koala"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Des Koala",
+        "Gora Turtle",
+        "Premature Burial",
+        "Sasuke",
+        "Sasuke Samurai #3",
+        "Tsukuyomi"
+      ],
+      "solution_card_ids": [
+        477,
+        688,
+        793,
+        840,
+        859
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_073",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "5eb884d8d175131b513b367532addb154284bb68b1c9d99271e0e629f663a01b",
+      "gap": null
+    },
+    {
+      "id": "P074",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip Catapult Turtle, and set Statue of the Wicked.",
+          "card_names": [
+            "Catapult Turtle",
+            "Statue of the Wicked"
+          ]
+        },
+        {
+          "text": "Activate Ojama Trio.",
+          "card_names": [
+            "Ojama Trio"
+          ]
+        },
+        {
+          "text": "Attack Kangaroo Champ with Gyaku-Gire Panda. (2800 ATK - 800 ATK = 2000)",
+          "card_names": [
+            "Kangaroo Champ",
+            "Gyaku-Gire Panda"
+          ]
+        },
+        {
+          "text": "Activate Mystical Space Typhoon to destroy your facedown Statue of the Wicked.",
+          "card_names": [
+            "Mystical Space Typhoon",
+            "Statue of the Wicked"
+          ]
+        },
+        {
+          "text": "When the Wicked Token is summoned, activate Token Feastevil. (300 x 4 + 300 x 3 = 2100)",
+          "card_names": [
+            "Wicked Token",
+            "Token Feastevil"
+          ]
+        },
+        {
+          "text": "Attack directly with the Turtle (1000)",
+          "card_names": []
+        },
+        {
+          "text": "finish the game by sacrificing your monsters for Turtles effect in Main Phase 2 (1/2 x (800+1000) = 900) for a total of 6000 damage.",
+          "card_names": []
+        },
+        {
+          "text": "Flip Catapult Turtle, and set Statue of the Wicked.",
+          "card_names": [
+            "Catapult Turtle",
+            "Statue of the Wicked"
+          ]
+        },
+        {
+          "text": "Activate Mystical Space Typhoon to destroy your facedown Statue of the Wicked and summon the Wicked Token",
+          "card_names": [
+            "Mystical Space Typhoon",
+            "Statue of the Wicked",
+            "Wicked Token"
+          ]
+        },
+        {
+          "text": "Attack Kangaroo Champ with Gyaku-Gire Panda (1300 ATK - 800 ATK = 500)",
+          "card_names": [
+            "Kangaroo Champ",
+            "Gyaku-Gire Panda"
+          ]
+        },
+        {
+          "text": "Attack directly with the Turtle and the token (1000 ATK + 1000 ATK = 2000)",
+          "card_names": []
+        },
+        {
+          "text": "sacrifice your monsters for Turtles effect in Main Phase 2 (1/2 x (800+1000+1000) = 1400)",
+          "card_names": []
+        },
+        {
+          "text": "Activate Ojama Trio",
+          "card_names": [
+            "Ojama Trio"
+          ]
+        },
+        {
+          "text": "When the Ojama Tokens are summoned, activate Token Feastevil (300 x 3 + 300 x 3 = 1800)",
+          "card_names": [
+            "Ojama Token",
+            "Token Feastevil"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Catapult Turtle",
+        "Gyaku-Gire Panda",
+        "Kangaroo Champ",
+        "Mystical Space Typhoon",
+        "Ojama Token",
+        "Ojama Trio",
+        "Statue of the Wicked",
+        "Token Feastevil",
+        "Wicked Token"
+      ],
+      "solution_card_ids": [
+        42,
+        436,
+        704,
+        819,
+        828,
+        1079,
+        1141
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_074",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "ed3f20de62901dc4ebf4328a9527ac15cfb74ed2a83c2734673f07f33e7f4ccd",
+      "gap": null
+    },
+    {
+      "id": "P075",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal Summon X-Head Cannon.",
+          "card_names": [
+            "X-Head Cannon"
+          ]
+        },
+        {
+          "text": "Activate Pot of Generosity and select Y-Dragon Head and Z-Metal Tank to your deck.",
+          "card_names": []
+        },
+        {
+          "text": "Ram your Shining Angels into your opponents Granadora to summon Z and Y.",
+          "card_names": [
+            "Shining Angel",
+            "Granadora"
+          ]
+        },
+        {
+          "text": "In Main Phase 2, special summon XYZ-Dragon Cannon and use it to destroy Granadora. Granadoras effect will make your opponent lose.",
+          "card_names": [
+            "XYZ-Dragon Cannon"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Granadora",
+        "Shining Angel",
+        "X-Head Cannon",
+        "XYZ-Dragon Cannon"
+      ],
+      "solution_card_ids": [
+        449,
+        724,
+        747,
+        811
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_075",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "2eb2331e6f2304a8ead440295721327ea08427c7ce7efa3d99d2482ab4b818e5",
+      "gap": null
+    },
+    {
+      "id": "P076",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip White Ninja to destroy Castle Gate.",
+          "card_names": [
+            "White Ninja",
+            "Castle Gate"
+          ]
+        },
+        {
+          "text": "Activate Ninjitsu Art of Transformation and summon Big Koala from your hand.",
+          "card_names": [
+            "Ninjitsu Art of Transformation",
+            "Big Koala"
+          ]
+        },
+        {
+          "text": "Normal summon Bazoo the Soul-Eater and use his effect to remove White Ninja from game.",
+          "card_names": [
+            "Bazoo the Soul-Eater"
+          ]
+        },
+        {
+          "text": "Activate The Big March of Animals and attack directly.",
+          "card_names": [
+            "The Big March of Animals"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Bazoo the Soul-Eater",
+        "Big Koala",
+        "Castle Gate",
+        "Ninjitsu Art of Transformation",
+        "The Big March of Animals",
+        "White Ninja"
+      ],
+      "solution_card_ids": [
+        619,
+        854,
+        959,
+        1072,
+        1095,
+        1123
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_076",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "64ea68370c3e0242dea007231dac497d693a8d236539aca027f79d390f9c2577",
+      "gap": null
+    },
+    {
+      "id": "P077",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Destroy Red Gadget - Stronghold with Mystical Space Typhoon.",
+          "card_names": [
+            "Mystical Space Typhoon"
+          ]
+        },
+        {
+          "text": "Use Shield Crush on one of the defensive monsters.",
+          "card_names": [
+            "Shield Crush"
+          ]
+        },
+        {
+          "text": "Summon Drillroid, revive Rare Metal Dragon with Premature Burial.",
+          "card_names": [
+            "Drillroid",
+            "Rare Metal Dragon",
+            "Premature Burial"
+          ]
+        },
+        {
+          "text": "Attack the last defender with Drillroid (destroyed by effect) and attack directly with the dragon.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Drillroid",
+        "Mystical Space Typhoon",
+        "Premature Burial",
+        "Rare Metal Dragon",
+        "Shield Crush"
+      ],
+      "solution_card_ids": [
+        436,
+        477,
+        997,
+        1150
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_077",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "04176a261613d506de5b61bbb1908dfd516b5a38b9f3ed3d9edc89883a03e0b8",
+      "gap": null
+    },
+    {
+      "id": "P078",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Ram Mystic Tomato into Luster Dragon to summon Sangan from your deck.",
+          "card_names": [
+            "Mystic Tomato",
+            "Luster Dragon",
+            "Sangan"
+          ]
+        },
+        {
+          "text": "Tribute Sangan with the Catapult Turtle, take Z-Metal Tank to your hand.",
+          "card_names": [
+            "Z-Metal Tank"
+          ]
+        },
+        {
+          "text": "Normal summon Z-Metal Tank, then Special summon XZ-Tank Cannon from your extra deck.",
+          "card_names": [
+            "XZ-Tank Cannon"
+          ]
+        },
+        {
+          "text": "Catapult the Tank Cannon and then Catapult turtle.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Luster Dragon",
+        "Mystic Tomato",
+        "Sangan",
+        "XZ-Tank Cannon",
+        "Z-Metal Tank"
+      ],
+      "solution_card_ids": [
+        29,
+        454,
+        746,
+        774,
+        780
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_078",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "4408ed1a0bd0f5e19845bffc3bbcdf23844c624b3f65f25e9ce7a722ce84bba6",
+      "gap": null
+    },
+    {
+      "id": "P079",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Use Mystical Space Typhoon on Call of the Haunted to destroy Shinato, King of a Higher Plane.",
+          "card_names": [
+            "Mystical Space Typhoon",
+            "Call of the Haunted",
+            "Shinato, King of a Higher Plane"
+          ]
+        },
+        {
+          "text": "Flip Hane-Hane and return Guardian Angel Joan.",
+          "card_names": [
+            "Hane-Hane",
+            "Guardian Angel Joan"
+          ]
+        },
+        {
+          "text": "Tribute Summon Thestalos the Firestorm Monarch.",
+          "card_names": [
+            "Thestalos the Firestorm Monarch"
+          ]
+        },
+        {
+          "text": "Activate Premature Burial and revive Blue-Eyes White Dragon.",
+          "card_names": [
+            "Premature Burial",
+            "Blue-Eyes White Dragon"
+          ]
+        },
+        {
+          "text": "Attack for game.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Blue-Eyes White Dragon",
+        "Call of the Haunted",
+        "Guardian Angel Joan",
+        "Hane-Hane",
+        "Mystical Space Typhoon",
+        "Premature Burial",
+        "Shinato, King of a Higher Plane",
+        "Thestalos the Firestorm Monarch"
+      ],
+      "solution_card_ids": [
+        1,
+        239,
+        436,
+        477,
+        497,
+        812,
+        908,
+        1049
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_079",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "d7a5b14da47575b9be93337782bb7311629cce5a0eb4bf021c93f0b736f7d987",
+      "gap": null
+    },
+    {
+      "id": "P080",
+      "level": 4,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal summon Tsukuyomi. Use its effect to flip Magician of Faith face-down.",
+          "card_names": [
+            "Tsukuyomi",
+            "Magician of Faith"
+          ]
+        },
+        {
+          "text": "Flip Magician of Faith face-up again and reclaim Swords of Revealing Light from your graveyard.",
+          "card_names": [
+            "Swords of Revealing Light"
+          ]
+        },
+        {
+          "text": "Activate the Swords to flip your opponents face-downs.",
+          "card_names": []
+        },
+        {
+          "text": "Then use Lightning Vortex by discarding any card from your hand, and attack for game.",
+          "card_names": [
+            "Lightning Vortex"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Lightning Vortex",
+        "Magician of Faith",
+        "Swords of Revealing Light",
+        "Tsukuyomi"
+      ],
+      "solution_card_ids": [
+        153,
+        190,
+        597,
+        840
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_080",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "50b0cdaf193e01b8ecbf371c38f8f9b4e1a2f3fbb3b128fdf24ef1911a069e0d",
+      "gap": null
+    },
+    {
+      "id": "P081",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip summon \"Penguin Soldier\", and use its effect to return both enemy monsters to his hand.",
+          "card_names": [
+            "Penguin Soldier"
+          ]
+        },
+        {
+          "text": "Normal Summon \"Banisher of the Light\" in attack mode.",
+          "card_names": [
+            "Banisher of the Light"
+          ]
+        },
+        {
+          "text": "Activate \"Soul Release\" and remove from play all cards in your opponents graveyard.",
+          "card_names": [
+            "Soul Release"
+          ]
+        },
+        {
+          "text": "Flip \"Needle Worm\".",
+          "card_names": [
+            "Needle Worm"
+          ]
+        },
+        {
+          "text": "Activate \"Card Destruction\".",
+          "card_names": [
+            "Card Destruction"
+          ]
+        },
+        {
+          "text": "Activate \"D.D. Dynamite\".",
+          "card_names": [
+            "D.D. Dynamite"
+          ]
+        },
+        {
+          "text": "Attack directly",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Banisher of the Light",
+        "Card Destruction",
+        "D.D. Dynamite",
+        "Needle Worm",
+        "Penguin Soldier",
+        "Soul Release"
+      ],
+      "solution_card_ids": [
+        251,
+        262,
+        375,
+        398,
+        441,
+        1100
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_081",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "d4453cf9f3eab95af2e1de931f5de973fd8a2edb9f55f474c9bc9696597eb5d7",
+      "gap": null
+    },
+    {
+      "id": "P082",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip Molten Behemoth.",
+          "card_names": [
+            "Molten Behemoth"
+          ]
+        },
+        {
+          "text": "Normal summon UFO Turtle.",
+          "card_names": [
+            "UFO Turtle"
+          ]
+        },
+        {
+          "text": "Ram UFO Turtle into Buster Blader to summon one fire monster after another from your deck, first the UFO Turtles, later Masked Dragons. Do NOT ram the last Masked Dragon!!",
+          "card_names": [
+            "Buster Blader",
+            "Masked Dragon"
+          ]
+        },
+        {
+          "text": "Activate Ring of Destruction to destroy Buster Blader.",
+          "card_names": [
+            "Ring of Destruction"
+          ]
+        },
+        {
+          "text": "Attack directly",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Buster Blader",
+        "Masked Dragon",
+        "Molten Behemoth",
+        "Ring of Destruction",
+        "UFO Turtle"
+      ],
+      "solution_card_ids": [
+        444,
+        493,
+        503,
+        515,
+        1013
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_082",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "0d7c0753d1e6b85b2db8b8ed4ee01d71f39f0524cc67e2b00c397fee40319e19",
+      "gap": null
+    },
+    {
+      "id": "P083",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Flip Summon Catapult Turtle.",
+          "card_names": [
+            "Catapult Turtle"
+          ]
+        },
+        {
+          "text": "Fusion summon Mokey Mokey King using the three Mokey Mokeys in your hand and Polymerization.",
+          "card_names": [
+            "Mokey Mokey King",
+            "Mokey Mokey",
+            "Polymerization"
+          ]
+        },
+        {
+          "text": "Run Mokey Mokey King into Big Koala.",
+          "card_names": [
+            "Mokey Mokey King",
+            "Big Koala"
+          ]
+        },
+        {
+          "text": "Run one of the Mokey Mokeys summoned into Big Koala - the remaining Mokey Mokeys should now attack first Big Koala, then directly.",
+          "card_names": [
+            "Mokey Mokey"
+          ]
+        },
+        {
+          "text": "Activate Call of the Haunted to get Mokey Mokey (not the King) back.",
+          "card_names": [
+            "Call of the Haunted"
+          ]
+        },
+        {
+          "text": "Attack directly with the last Mokey Mokey and with Catapult Turtle.",
+          "card_names": []
+        },
+        {
+          "text": "Catapult all monsters on the field (and finally Catapult Turtle) for game.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Big Koala",
+        "Call of the Haunted",
+        "Catapult Turtle",
+        "Mokey Mokey",
+        "Mokey Mokey King",
+        "Polymerization"
+      ],
+      "solution_card_ids": [
+        42,
+        381,
+        497,
+        854,
+        967,
+        1061
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_083",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "17b87c0ebee73fe8a8f6dc8a0c25adab5bc9799e4acc32a9cdf69a044768e0fc",
+      "gap": null
+    },
+    {
+      "id": "P084",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Use Premature Burial to revive Exiled Force.",
+          "card_names": [
+            "Premature Burial",
+            "Exiled Force"
+          ]
+        },
+        {
+          "text": "Use Exile's effect to destroy Giant Germ.",
+          "card_names": [
+            "Giant Germ"
+          ]
+        },
+        {
+          "text": "Return Marauding Captain to your hand using The Warrior Returning Alive.",
+          "card_names": [
+            "Marauding Captain",
+            "The Warrior Returning Alive"
+          ]
+        },
+        {
+          "text": "Summon Marauding Captain and then, using his effect, Mataza the Zapper.",
+          "card_names": [
+            "Marauding Captain",
+            "Mataza the Zapper"
+          ]
+        },
+        {
+          "text": "Equip Mataza with Axe of Despair.",
+          "card_names": [
+            "Axe of Despair"
+          ]
+        },
+        {
+          "text": "Attack the face-down Giant Axe Mummy with Mataza, then attack directly for game.",
+          "card_names": [
+            "Giant Axe Mummy"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Axe of Despair",
+        "Exiled Force",
+        "Giant Axe Mummy",
+        "Giant Germ",
+        "Marauding Captain",
+        "Mataza the Zapper",
+        "Premature Burial",
+        "The Warrior Returning Alive"
+      ],
+      "solution_card_ids": [
+        110,
+        447,
+        477,
+        649,
+        651,
+        654,
+        694,
+        907
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_084",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "82a87228677faa525a4a92895903a2934023bc1750d259475f68c680320c2f01",
+      "gap": null
+    },
+    {
+      "id": "P085",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal summon Tsukuyomi in attack mode and flip Spell Canceller face-down.",
+          "card_names": [
+            "Tsukuyomi",
+            "Spell Canceller"
+          ]
+        },
+        {
+          "text": "Activate Monster Reincarnation. By discarding United Resistance, return Bokoichi the Freightening Car to your hand.",
+          "card_names": [
+            "Monster Reincarnation",
+            "United Resistance",
+            "Bokoichi the Freightening Car"
+          ]
+        },
+        {
+          "text": "Use Call of the Haunted to revive People Running About in attack mode.",
+          "card_names": [
+            "Call of the Haunted",
+            "People Running About"
+          ]
+        },
+        {
+          "text": "Revive United Resistance with Premature Burial",
+          "card_names": [
+            "Premature Burial"
+          ]
+        },
+        {
+          "text": "Activate Huge Revolution.",
+          "card_names": [
+            "Huge Revolution"
+          ]
+        },
+        {
+          "text": "Switch the Oppressed People to attack mode and attack directly.",
+          "card_names": [
+            "Oppressed People"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Bokoichi the Freightening Car",
+        "Call of the Haunted",
+        "Huge Revolution",
+        "Monster Reincarnation",
+        "Oppressed People",
+        "People Running About",
+        "Premature Burial",
+        "Spell Canceller",
+        "Tsukuyomi",
+        "United Resistance"
+      ],
+      "solution_card_ids": [
+        477,
+        497,
+        751,
+        752,
+        753,
+        762,
+        770,
+        840,
+        1039,
+        1065
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_085",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "2271c200e87406dc72e1a78ab243ac14b33e30f694ee34f396853a3df5be1047",
+      "gap": null
+    },
+    {
+      "id": "P086",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Pyramid Turtle in attack mode.",
+          "card_names": [
+            "Pyramid Turtle"
+          ]
+        },
+        {
+          "text": "Run Giant Germ into White Magical Hat and summon another two.",
+          "card_names": [
+            "Giant Germ",
+            "White Magical Hat"
+          ]
+        },
+        {
+          "text": "Run Pyramid Turtle into Shining Angel consecutively and summon another Pyramid turtle. If there is none left, summon Shadow Ghoul.",
+          "card_names": [
+            "Shining Angel",
+            "Shadow Ghoul"
+          ]
+        },
+        {
+          "text": "Activate Offerings to the Doomed from your hand to destroy Shining Angel.",
+          "card_names": [
+            "Offerings to the Doomed"
+          ]
+        },
+        {
+          "text": "Attack directly.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Giant Germ",
+        "Offerings to the Doomed",
+        "Pyramid Turtle",
+        "Shadow Ghoul",
+        "Shining Angel",
+        "White Magical Hat"
+      ],
+      "solution_card_ids": [
+        52,
+        163,
+        447,
+        449,
+        595,
+        697
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_086",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "230b03e3b49b0b70ffd5e90621fea22b0d7357d18038650c1072a4e7f7b5291b",
+      "gap": null
+    },
+    {
+      "id": "P087",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Normal Summon Theban Nightmare in attack mode.",
+          "card_names": [
+            "Theban Nightmare"
+          ]
+        },
+        {
+          "text": "Revive a second Theban Nightmare using Premature Burial.",
+          "card_names": [
+            "Premature Burial"
+          ]
+        },
+        {
+          "text": "Special Summon Gilasaurus.",
+          "card_names": [
+            "Gilasaurus"
+          ]
+        },
+        {
+          "text": "Activate Emergency Provisions and tribute Premature Burial. Since it was not destroyed, but tributed, you will keep Theban Nightmare.",
+          "card_names": [
+            "Emergency Provisions",
+            "destroyed",
+            "tribute"
+          ]
+        },
+        {
+          "text": "Use Smashing Ground against one of the Metal Armored Bugs.",
+          "card_names": [
+            "Smashing Ground",
+            "Metal Armored Bug"
+          ]
+        },
+        {
+          "text": "Attack the second bug with Injection Fairy Lily, using her ATK boost, and the third one with a boosted Theban Nightmare.",
+          "card_names": [
+            "Injection Fairy Lily"
+          ]
+        },
+        {
+          "text": "Then attack directly with the rest of your monsters.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Emergency Provisions",
+        "Gilasaurus",
+        "Injection Fairy Lily",
+        "Metal Armored Bug",
+        "Premature Burial",
+        "Smashing Ground",
+        "Theban Nightmare",
+        "destroyed",
+        "tribute"
+      ],
+      "solution_card_ids": [
+        477,
+        516,
+        625,
+        664,
+        914,
+        937,
+        974
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_087",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "cba3011796e738253fe3b8ca91c0ee7b480a4d2893d766e4324e67351c65ba8f",
+      "gap": null
+    },
+    {
+      "id": "P088",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Run Mystic Tomato into Blue-Eyes White Dragon to Summon Exodia the Forbidden One.",
+          "card_names": [
+            "Mystic Tomato",
+            "Blue-Eyes White Dragon",
+            "Exodia the Forbidden One"
+          ]
+        },
+        {
+          "text": "Attack Wall of Illusion with Exodia to return it to your hand.",
+          "card_names": [
+            "Wall of Illusion"
+          ]
+        },
+        {
+          "text": "Activate Painful Choice and select the arms and legs of Exodia + Skull Servant.",
+          "card_names": [
+            "Painful Choice",
+            "Skull Servant"
+          ]
+        },
+        {
+          "text": "Activate Backup Soldier and add three Exodia parts to your hand.",
+          "card_names": [
+            "Backup Soldier"
+          ]
+        },
+        {
+          "text": "Get the last card with Monster Reincarnation, if Skull Servant was chosen when Painful Choice was played.",
+          "card_names": [
+            "Monster Reincarnation"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Backup Soldier",
+        "Blue-Eyes White Dragon",
+        "Exodia the Forbidden One",
+        "Monster Reincarnation",
+        "Mystic Tomato",
+        "Painful Choice",
+        "Skull Servant",
+        "Wall of Illusion"
+      ],
+      "solution_card_ids": [
+        1,
+        17,
+        19,
+        415,
+        438,
+        454,
+        467,
+        1065
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_088",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "a0e5ede26e2dd50a5c36bbbaa79b0ea8fcd96507251aaf4dcab45464933b5d9f",
+      "gap": null
+    },
+    {
+      "id": "P089",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Use The Shallow Grave to summon Gravekeeper's Spy from your Graveyard.",
+          "card_names": [
+            "The Shallow Grave",
+            "Gravekeeper's Spy"
+          ]
+        },
+        {
+          "text": "Activate Book of Taiyou to flip Gravekeeper's Spy and Summon Gravekeeper's Spear Soldier from your deck.",
+          "card_names": [
+            "Book of Taiyou",
+            "Gravekeeper's Spy",
+            "Gravekeeper's Spear Soldier"
+          ]
+        },
+        {
+          "text": "Then Normal Summon Mystic Tomato.",
+          "card_names": [
+            "Mystic Tomato"
+          ]
+        },
+        {
+          "text": "Activate Nobleman of Crossout to remove Giant Axe Mummy.",
+          "card_names": [
+            "Nobleman of Crossout",
+            "Giant Axe Mummy"
+          ]
+        },
+        {
+          "text": "Kill Don Zaloog with Mystic Tomato. The Summoning effect will grant you Gravekeeper's Cannonholder.",
+          "card_names": [
+            "Don Zaloog",
+            "Gravekeeper's Cannonholder"
+          ]
+        },
+        {
+          "text": "Attack the face-down Slate Warrior with Spear Soldier, and attack directly twice.",
+          "card_names": [
+            "Slate Warrior"
+          ]
+        },
+        {
+          "text": "Tribute the other Gravekeeper's monsters for Cannonholder's effect.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Book of Taiyou",
+        "Don Zaloog",
+        "Giant Axe Mummy",
+        "Gravekeeper's Cannonholder",
+        "Gravekeeper's Spear Soldier",
+        "Gravekeeper's Spy",
+        "Mystic Tomato",
+        "Nobleman of Crossout",
+        "Slate Warrior",
+        "The Shallow Grave"
+      ],
+      "solution_card_ids": [
+        454,
+        474,
+        476,
+        521,
+        694,
+        699,
+        701,
+        728,
+        731,
+        733
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_089",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "a6cd459239987365ca329972d678f24b95be6445811b9d9036f1a61f97812fb3",
+      "gap": null
+    },
+    {
+      "id": "P090",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Graceful Charity, and discard Mataza the Zapper and Total Defense Shogun.",
+          "card_names": [
+            "Graceful Charity",
+            "Mataza the Zapper",
+            "Total Defense Shogun"
+          ]
+        },
+        {
+          "text": "Normal Summon Marauding Captain and use his effect to Special summon Exiled Force.",
+          "card_names": [
+            "Marauding Captain",
+            "Exiled Force"
+          ]
+        },
+        {
+          "text": "Destroy one Millennium Shield with Exiled Force's effect.",
+          "card_names": [
+            "Millennium Shield"
+          ]
+        },
+        {
+          "text": "Summon Mataza with Premature Burial.",
+          "card_names": [
+            "Premature Burial"
+          ]
+        },
+        {
+          "text": "Equip Mataza with Mage Power and Big Bang Shot.",
+          "card_names": [
+            "Mage Power",
+            "Big Bang Shot"
+          ]
+        },
+        {
+          "text": "Have Mataza destroy the remaining two Millennium shields, inflicting 400 Piercing Damage.",
+          "card_names": []
+        },
+        {
+          "text": "Attack with Marauding Captain.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Big Bang Shot",
+        "Exiled Force",
+        "Graceful Charity",
+        "Mage Power",
+        "Marauding Captain",
+        "Mataza the Zapper",
+        "Millennium Shield",
+        "Premature Burial",
+        "Total Defense Shogun"
+      ],
+      "solution_card_ids": [
+        159,
+        361,
+        370,
+        477,
+        594,
+        649,
+        651,
+        796,
+        907
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_090",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "e15bf2560fd65745ddc4e51d9e4934bb360e2105d87448a91b1e5a41a38dbddf",
+      "gap": null
+    },
+    {
+      "id": "P091",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Return Fenrir and Star Boy to your hand using Salvage.",
+          "card_names": [
+            "Fenrir",
+            "Star Boy",
+            "Salvage"
+          ]
+        },
+        {
+          "text": "Special Summon Fenrir by removing Granadora and Mother Grizzly.",
+          "card_names": [
+            "Granadora",
+            "Mother Grizzly"
+          ]
+        },
+        {
+          "text": "Use Call of the Haunted on Amphibian Beast.",
+          "card_names": [
+            "Call of the Haunted",
+            "Amphibian Beast"
+          ]
+        },
+        {
+          "text": "Activate A Legendary Ocean.",
+          "card_names": [
+            "A Legendary Ocean"
+          ]
+        },
+        {
+          "text": "Summon Star Boy.",
+          "card_names": [
+            "Star Boy"
+          ]
+        },
+        {
+          "text": "Ram Mother Grizzly into Blue-Eyes White Dragon, and summon Catapult Turtle.",
+          "card_names": [
+            "Blue-Eyes White Dragon",
+            "Catapult Turtle"
+          ]
+        },
+        {
+          "text": "Attack Blue-Eyes with Amphibian Beast, then attack directly.",
+          "card_names": []
+        },
+        {
+          "text": "Catapult first Amphibian Beast and Fenrir, then Starboy, then Catapult Turtle.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "A Legendary Ocean",
+        "Amphibian Beast",
+        "Blue-Eyes White Dragon",
+        "Call of the Haunted",
+        "Catapult Turtle",
+        "Fenrir",
+        "Granadora",
+        "Mother Grizzly",
+        "Salvage",
+        "Star Boy"
+      ],
+      "solution_card_ids": [
+        1,
+        42,
+        230,
+        450,
+        497,
+        531,
+        684,
+        811,
+        863,
+        916
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_091",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "67dc1ff718936330e0a0b37fe40fdee7b032a21299a25274d751f17e4e70e6e6",
+      "gap": null
+    },
+    {
+      "id": "P092",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Back to Square One and, by discarding Summoned Skull, return the Summoned Skull on your opponents side of the field to his deck.",
+          "card_names": [
+            "Back to Square One",
+            "Summoned Skull"
+          ]
+        },
+        {
+          "text": "Activate Conscription to get this Summoned Skull back.",
+          "card_names": [
+            "Conscription"
+          ]
+        },
+        {
+          "text": "Activate Polymerization to Fuse Summoned Skull on the field and Red-Eyes B. Dragon in your hand and form B. Skull Dragon.",
+          "card_names": [
+            "Polymerization",
+            "Summoned Skull",
+            "Red-Eyes B. Dragon",
+            "B. Skull Dragon"
+          ]
+        },
+        {
+          "text": "Activate Dragon's Mirror and get out another B. Skull Dragon by removing from play the Fusion Materials in your graveyard.",
+          "card_names": [
+            "Dragon's Mirror"
+          ]
+        },
+        {
+          "text": "Attack.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "B. Skull Dragon",
+        "Back to Square One",
+        "Conscription",
+        "Dragon's Mirror",
+        "Polymerization",
+        "Red-Eyes B. Dragon",
+        "Summoned Skull"
+      ],
+      "solution_card_ids": [
+        18,
+        40,
+        85,
+        381,
+        1064,
+        1185,
+        1198
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_092",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "23c465fa22e745a44998990888c5e173c7e59d5f68b77c8ff6a38c4e1f0f2b41",
+      "gap": null
+    },
+    {
+      "id": "P093",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Card of Safe Return.",
+          "card_names": [
+            "Card of Safe Return"
+          ]
+        },
+        {
+          "text": "Use A Feather of the Phoenix and discard Dark Magician to return Thousand Knives to your Deck.",
+          "card_names": [
+            "A Feather of the Phoenix",
+            "Dark Magician",
+            "Thousand Knives"
+          ]
+        },
+        {
+          "text": "Activate Upstart Goblin.",
+          "card_names": [
+            "Upstart Goblin"
+          ]
+        },
+        {
+          "text": "Activate Skilled Dark Magicians effect to summon Dark Magician from your grave. You will draw a card.",
+          "card_names": [
+            "Skilled Dark Magician"
+          ]
+        },
+        {
+          "text": "Activate Thousand Knives.",
+          "card_names": []
+        },
+        {
+          "text": "Use Dedication through Light and Darkness to Summon Dark Magician of Chaos. Get Upstart Goblin back to your hand.",
+          "card_names": [
+            "Dedication through Light and Darkness",
+            "Dark Magician of Chaos"
+          ]
+        },
+        {
+          "text": "Use Upstart Goblin again.",
+          "card_names": []
+        },
+        {
+          "text": "Activate Tremendous Fire.",
+          "card_names": [
+            "Tremendous Fire"
+          ]
+        },
+        {
+          "text": "Use Megamorph on your Dark Magician of Chaos and attack.",
+          "card_names": [
+            "Megamorph"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "A Feather of the Phoenix",
+        "Card of Safe Return",
+        "Dark Magician",
+        "Dark Magician of Chaos",
+        "Dedication through Light and Darkness",
+        "Megamorph",
+        "Skilled Dark Magician",
+        "Thousand Knives",
+        "Tremendous Fire",
+        "Upstart Goblin"
+      ],
+      "solution_card_ids": [
+        23,
+        152,
+        282,
+        425,
+        551,
+        575,
+        783,
+        896,
+        915,
+        1089
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_093",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "9156e74665a83050fa281106e327e8b95a31eee00d4a8f94007ed86cb0937f4f",
+      "gap": null
+    },
+    {
+      "id": "P094",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Use Dark Hole.",
+          "card_names": [
+            "Dark Hole"
+          ]
+        },
+        {
+          "text": "When Andro Sphinx and Sphinx Teleia are destroyed by Dark Hole, summon Theinen the Great Sphinx from your hand by paying 500 points. Chain Emergency Provisions to Theinens summoning effect (Exactly at this time!) and tribute Pyramid of Light.",
+          "card_names": [
+            "Theinen the Great Sphinx",
+            "Emergency Provisions",
+            "Pyramid of Light"
+          ]
+        },
+        {
+          "text": "Activate Theinens boost effect and equip him with Big Bang Shot. Then attack.",
+          "card_names": [
+            "Big Bang Shot"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Big Bang Shot",
+        "Dark Hole",
+        "Emergency Provisions",
+        "Pyramid of Light",
+        "Theinen the Great Sphinx"
+      ],
+      "solution_card_ids": [
+        141,
+        664,
+        796,
+        996,
+        1001
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_094",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "c8762779b4529ed1851ff0edce4103b835c55f25a4ba65590ed8232db89d7485",
+      "gap": null
+    },
+    {
+      "id": "P095",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Set Dark Hole.",
+          "card_names": [
+            "Dark Hole"
+          ]
+        },
+        {
+          "text": "Summon Injection Fairy Lily.",
+          "card_names": [
+            "Injection Fairy Lily"
+          ]
+        },
+        {
+          "text": "Attack Wall of Illusion with Blue-Eyes Ultimate Dragon. Chain Emergency Provisions to Wall of Illusion's effect, and send both Spell Cards to the Graveyard. Blue-Eyes Ultimate Dragon will change over to your opponent's side of the field, as Snatch Steal is no longer on the field, but will then return to their Extra Deck because of Wall of Illusion.",
+          "card_names": [
+            "Wall of Illusion",
+            "Blue-Eyes Ultimate Dragon",
+            "Emergency Provisions",
+            "Snatch Steal"
+          ]
+        },
+        {
+          "text": "The field is now free for a direct attack using Lily's effect (for which you have enough Life points now).",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Blue-Eyes Ultimate Dragon",
+        "Dark Hole",
+        "Emergency Provisions",
+        "Injection Fairy Lily",
+        "Snatch Steal",
+        "Wall of Illusion"
+      ],
+      "solution_card_ids": [
+        141,
+        166,
+        415,
+        428,
+        516,
+        664
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_095",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "838609b86d5bc890030bc5686d9f548a1a0acee00353ff38d16becf8f2292081",
+      "gap": null
+    },
+    {
+      "id": "P096",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Activate Giant Trunade. All monsters except for Giga Gagagigo and Wingweaver will be destroyed because they require their summoning card to remain on the field.",
+          "card_names": [
+            "Giant Trunade",
+            "Giga Gagagigo",
+            "Wingweaver"
+          ]
+        },
+        {
+          "text": "Then, use Special Hurricane by discarding Breaker the Magical Warrior. Since both monsters on the field were Special summoned, they are destroyed.",
+          "card_names": [
+            "Special Hurricane",
+            "Breaker the Magical Warrior"
+          ]
+        },
+        {
+          "text": "Next, Summon Chaos Emperor Dragon - Envoy of the End by removing Breaker and Wingweaver in your grave from play.",
+          "card_names": [
+            "Chaos Emperor Dragon - Envoy of the End"
+          ]
+        },
+        {
+          "text": "Use Premature Burial to revive Kycoo the Ghost Destroyer.",
+          "card_names": [
+            "Premature Burial",
+            "Kycoo the Ghost Destroyer"
+          ]
+        },
+        {
+          "text": "Attack directly twice.",
+          "card_names": []
+        },
+        {
+          "text": "In Main Phase 2, use Chaos Empereror Dragons effect to solve the puzzle.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Breaker the Magical Warrior",
+        "Chaos Emperor Dragon - Envoy of the End",
+        "Giant Trunade",
+        "Giga Gagagigo",
+        "Kycoo the Ghost Destroyer",
+        "Premature Burial",
+        "Special Hurricane",
+        "Wingweaver"
+      ],
+      "solution_card_ids": [
+        437,
+        477,
+        568,
+        617,
+        787,
+        886,
+        887,
+        983
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_096",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "9a0abd2152b3f77b48617ac7b729cacd71e6f2a4e9484897ac6069107b6d519d",
+      "gap": null
+    },
+    {
+      "id": "P097",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Use Reinforcement of the Army to get Gearfried the Iron Knight from your deck.",
+          "card_names": [
+            "Reinforcement of the Army",
+            "Gearfried the Iron Knight"
+          ]
+        },
+        {
+          "text": "Activate The Warrior Returning Alive to get Marauding Captain from your graveyard to your hand.",
+          "card_names": [
+            "The Warrior Returning Alive",
+            "Marauding Captain"
+          ]
+        },
+        {
+          "text": "With Toon Table of Contents, first get the other two Toon tables from your deck, then Toon World.",
+          "card_names": [
+            "Toon Table of Contents",
+            "Toon World"
+          ]
+        },
+        {
+          "text": "Summon Marauding Captain and use him to get out Gearfried.",
+          "card_names": []
+        },
+        {
+          "text": "Use Upstart Goblin to draw the last card from your deck (Upstart Goblin).",
+          "card_names": [
+            "Upstart Goblin"
+          ]
+        },
+        {
+          "text": "With this done, equip Sword of Deep-Seated to Gearfried. It will be destroyed and return to the top of your deck.",
+          "card_names": [
+            "Sword of Deep-Seated"
+          ]
+        },
+        {
+          "text": "Now activate the second Upstart Goblin to draw Sword of Deep-Seated again.",
+          "card_names": []
+        },
+        {
+          "text": "This time, equip it to any other monster (not Gearfried).",
+          "card_names": []
+        },
+        {
+          "text": "Activate Toon World.",
+          "card_names": [
+            "Toon World"
+          ]
+        },
+        {
+          "text": "Use Blast Magicians effect to destroy both your opponents monsters, and attack directly.",
+          "card_names": [
+            "Blast Magician"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Blast Magician",
+        "Gearfried the Iron Knight",
+        "Marauding Captain",
+        "Reinforcement of the Army",
+        "Sword of Deep-Seated",
+        "The Warrior Returning Alive",
+        "Toon Table of Contents",
+        "Toon World",
+        "Upstart Goblin"
+      ],
+      "solution_card_ids": [
+        366,
+        411,
+        425,
+        526,
+        649,
+        653,
+        654,
+        709,
+        1083
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_097",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "e6f816eb17910b85a88abb050fcbb7d9953aa8ae215738c3fe3ddb7150773fc0",
+      "gap": null
+    },
+    {
+      "id": "P098",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Summon Sonic Bird in attack mode and use its effect to get Incandescent Ordeal.",
+          "card_names": [
+            "Sonic Bird",
+            "Incandescent Ordeal"
+          ]
+        },
+        {
+          "text": "Ritual summon Legendary Flame Lord by Tributing Sonic Bird and Mother Grizzly.",
+          "card_names": [
+            "Legendary Flame Lord",
+            "Mother Grizzly"
+          ]
+        },
+        {
+          "text": "Destroy Swords of Revealing Light with Mystical Space Typhoon.",
+          "card_names": [
+            "Swords of Revealing Light",
+            "Mystical Space Typhoon"
+          ]
+        },
+        {
+          "text": "Use Graceful Charity and discard Autonomous Action Unit and Salvage.",
+          "card_names": [
+            "Graceful Charity",
+            "Autonomous Action Unit",
+            "Salvage"
+          ]
+        },
+        {
+          "text": "Use Legendary Flame Lord's effect.",
+          "card_names": []
+        },
+        {
+          "text": "Special summon Fenrir and go for direct attacks.",
+          "card_names": [
+            "Fenrir"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Autonomous Action Unit",
+        "Fenrir",
+        "Graceful Charity",
+        "Incandescent Ordeal",
+        "Legendary Flame Lord",
+        "Mother Grizzly",
+        "Mystical Space Typhoon",
+        "Salvage",
+        "Sonic Bird",
+        "Swords of Revealing Light"
+      ],
+      "solution_card_ids": [
+        153,
+        370,
+        436,
+        450,
+        453,
+        766,
+        841,
+        843,
+        863,
+        916
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_098",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "13972cfbed067166d796e5e9fe26ff852a5a4845a3b3c254211bb3dfd29c2004",
+      "gap": null
+    },
+    {
+      "id": "P099",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Use Monster Reincarnation and discard Rare Metal Dragon to return Blue-Eyes White Dragon to your hand.",
+          "card_names": [
+            "Monster Reincarnation",
+            "Rare Metal Dragon",
+            "Blue-Eyes White Dragon"
+          ]
+        },
+        {
+          "text": "Tribute summon Blue-eyes by tributing Kaiser Glider and Breaker the Magical Warrior",
+          "card_names": [
+            "Kaiser Glider",
+            "Breaker the Magical Warrior"
+          ]
+        },
+        {
+          "text": "Revive Rare Metal Dragon and Kaiser Glider using Premature Burial and Monster Reborn.",
+          "card_names": [
+            "Premature Burial",
+            "Monster Reborn"
+          ]
+        },
+        {
+          "text": "Attack Big Koala with Kaiser Glider. Then use Kaisers effect to return Master of Oz to the Extra deck.",
+          "card_names": [
+            "Big Koala",
+            "Master of Oz"
+          ]
+        },
+        {
+          "text": "Attack Jinzo with Rare Metal Dragon.",
+          "card_names": []
+        },
+        {
+          "text": "Attack Big Koala with Blue-Eyes.",
+          "card_names": []
+        },
+        {
+          "text": "Finally, let Reflect Bounder attack directly.",
+          "card_names": [
+            "Reflect Bounder"
+          ]
+        }
+      ],
+      "solution_card_names": [
+        "Big Koala",
+        "Blue-Eyes White Dragon",
+        "Breaker the Magical Warrior",
+        "Kaiser Glider",
+        "Master of Oz",
+        "Monster Reborn",
+        "Monster Reincarnation",
+        "Premature Burial",
+        "Rare Metal Dragon",
+        "Reflect Bounder"
+      ],
+      "solution_card_ids": [
+        1,
+        350,
+        385,
+        477,
+        666,
+        787,
+        854,
+        997,
+        1019,
+        1065
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_099",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "d40ff46ed7882ac24c0ecb3b50292dee8786d7bf383fff74b1c204bd51ea30e9",
+      "gap": null
+    },
+    {
+      "id": "P100",
+      "level": 5,
+      "opponent": "mimicry",
+      "turn_limit": 1,
+      "time_limit_seconds": null,
+      "setup": null,
+      "objective": "win_during_your_turn",
+      "solution_steps": [
+        {
+          "text": "Tribute Summon Spell Canceller by tributing Invader of Darkness.",
+          "card_names": [
+            "Spell Canceller",
+            "Invader of Darkness"
+          ]
+        },
+        {
+          "text": "When summoning, activate Torrential Tribute.",
+          "card_names": [
+            "Torrential Tribute"
+          ]
+        },
+        {
+          "text": "Now use Monster Reborn to revive Invader of Darkness from your Graveyard.",
+          "card_names": [
+            "Monster Reborn",
+            "Invader of Darkness"
+          ]
+        },
+        {
+          "text": "Revive Spell Canceller with Call of the Haunted.",
+          "card_names": [
+            "Call of the Haunted"
+          ]
+        },
+        {
+          "text": "Attack.",
+          "card_names": []
+        }
+      ],
+      "solution_card_names": [
+        "Call of the Haunted",
+        "Invader of Darkness",
+        "Monster Reborn",
+        "Spell Canceller",
+        "Torrential Tribute"
+      ],
+      "solution_card_ids": [
+        385,
+        497,
+        547,
+        762,
+        928
+      ],
+      "reward": null,
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_100",
+      "confidence": {
+        "solution": "high",
+        "setup": "unknown",
+        "limits": "low",
+        "reward": "low"
+      },
+      "sha256": "4a362ae6933e34edf744bc94ad684d6b30ffdf1969ed5d0569d04490b0d69357",
+      "gap": null
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-30T17:24:04+00:00",
+  "source": "Docs/PORT_MASTERPLAN.md section 2.3 plus event guide",
+  "starting_dp": 3000,
+  "win": {
+    "base": 100,
+    "per_100_lp_lost": 1,
+    "per_100_battle_damage": 1,
+    "per_monster_destroyed_by_battle": 50,
+    "notes": [
+      "Masterplan formula: 100 base + 1 per 100 LP lost + 1 per 100 battle damage + 50 per battle-destroyed monster.",
+      "LP/damage branch wording is ambiguous; verify whether 'lost' means player LP lost or opponent LP lost."
+    ]
+  },
+  "special_victory_bonuses": {
+    "exodia": "unresolved amount",
+    "deck_out": "unresolved amount",
+    "final_countdown": "unresolved amount",
+    "destiny_board": "unresolved amount"
+  },
+  "turn_multiplier": {
+    "status": "unresolved",
+    "notes": "Turn-count multiplier exists per masterplan but exact table is not extracted."
+  },
+  "event_rewards": {
+    "E01": {
+      "dp": 3000
+    },
+    "E05": {
+      "dp": 3000
+    },
+    "E09": {
+      "dp": 15000
+    },
+    "E20": {
+      "dp_multiplier": 2
+    },
+    "E21": {
+      "dp": 1000
+    },
+    "E28": {
+      "dp": 10000
+    },
+    "E29": {
+      "dp_equal_remaining_lp": true
+    }
+  },
+  "confidence": "medium"
+}

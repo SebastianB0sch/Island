@@ -1,0 +1,1784 @@
+{
+  "schema_version": 1,
+  "source": {
+    "base": "0x146C000",
+    "end": "0x146D600"
+  },
+  "strings": [
+    {
+      "offset": 21413888,
+      "offset_hex": "0x146C000",
+      "text": "le"
+    },
+    {
+      "offset": 21413892,
+      "offset_hex": "0x146C004",
+      "text": "# of opponent's monsters destroyed"
+    },
+    {
+      "offset": 21413928,
+      "offset_hex": "0x146C028",
+      "text": "# of monsters destroyed in battle"
+    },
+    {
+      "offset": 21413962,
+      "offset_hex": "0x146C04A",
+      "text": "# of effects activated"
+    },
+    {
+      "offset": 21413986,
+      "offset_hex": "0x146C062",
+      "text": "# of turns"
+    },
+    {
+      "offset": 21413998,
+      "offset_hex": "0x146C06E",
+      "text": "The effect of @5%s@7 decided the victory"
+    },
+    {
+      "offset": 21414040,
+      "offset_hex": "0x146C098",
+      "text": "Your opponent has 0 LP."
+    },
+    {
+      "offset": 21414064,
+      "offset_hex": "0x146C0B0",
+      "text": "Your opponent's deck is empty."
+    },
+    {
+      "offset": 21414096,
+      "offset_hex": "0x146C0D0",
+      "text": "Victory Conditions"
+    },
+    {
+      "offset": 21414116,
+      "offset_hex": "0x146C0E4",
+      "text": "DP Earned"
+    },
+    {
+      "offset": 21414126,
+      "offset_hex": "0x146C0EE",
+      "text": "Mid-Duel Progress"
+    },
+    {
+      "offset": 21414144,
+      "offset_hex": "0x146C100",
+      "text": "Effects that can be used during turn"
+    },
+    {
+      "offset": 21414182,
+      "offset_hex": "0x146C126",
+      "text": "Spells used during turn"
+    },
+    {
+      "offset": 21414206,
+      "offset_hex": "0x146C13E",
+      "text": "Traps used during turn"
+    },
+    {
+      "offset": 21414230,
+      "offset_hex": "0x146C156",
+      "text": "# of Fusion Summons"
+    },
+    {
+      "offset": 21414250,
+      "offset_hex": "0x146C16A",
+      "text": "# of Ritual Summons"
+    },
+    {
+      "offset": 21414270,
+      "offset_hex": "0x146C17E",
+      "text": "# of Special Summons"
+    },
+    {
+      "offset": 21414292,
+      "offset_hex": "0x146C194",
+      "text": "Non-battle damage dealt"
+    },
+    {
+      "offset": 21414316,
+      "offset_hex": "0x146C1AC",
+      "text": "Timed Duel Results"
+    },
+    {
+      "offset": 21414338,
+      "offset_hex": "0x146C1C2",
+      "text": "Practical Exam - Grade"
+    },
+    {
+      "offset": 21414362,
+      "offset_hex": "0x146C1DA",
+      "text": "Timed Duel Score"
+    },
+    {
+      "offset": 21414380,
+      "offset_hex": "0x146C1EC",
+      "text": "Correct"
+    },
+    {
+      "offset": 21414388,
+      "offset_hex": "0x146C1F4",
+      "text": "Incorrect"
+    },
+    {
+      "offset": 21414398,
+      "offset_hex": "0x146C1FE",
+      "text": "Time Passed"
+    },
+    {
+      "offset": 21414410,
+      "offset_hex": "0x146C20A",
+      "text": "Practical Exam - Progress"
+    },
+    {
+      "offset": 21414436,
+      "offset_hex": "0x146C224",
+      "text": "Practical Exam - Decision"
+    },
+    {
+      "offset": 21414462,
+      "offset_hex": "0x146C23E",
+      "text": "Practical Exam 1 - Battle"
+    },
+    {
+      "offset": 21414488,
+      "offset_hex": "0x146C258",
+      "text": "Practical Exam 2 - Spells"
+    },
+    {
+      "offset": 21414514,
+      "offset_hex": "0x146C272",
+      "text": "Practical Exam 3 - Traps"
+    },
+    {
+      "offset": 21414540,
+      "offset_hex": "0x146C28C",
+      "text": "Practical Exam 4 - Damage"
+    },
+    {
+      "offset": 21414566,
+      "offset_hex": "0x146C2A6",
+      "text": "Practical Exam 5 - Fusion"
+    },
+    {
+      "offset": 21414592,
+      "offset_hex": "0x146C2C0",
+      "text": "Practical Exam 6 - Ritual"
+    },
+    {
+      "offset": 21414618,
+      "offset_hex": "0x146C2DA",
+      "text": "Practical Exam 7 - Special Summon"
+    },
+    {
+      "offset": 21414652,
+      "offset_hex": "0x146C2FC",
+      "text": "Remaining LP"
+    },
+    {
+      "offset": 21414666,
+      "offset_hex": "0x146C30A",
+      "text": "# of Retries"
+    },
+    {
+      "offset": 21414680,
+      "offset_hex": "0x146C318",
+      "text": "Points"
+    },
+    {
+      "offset": 21414688,
+      "offset_hex": "0x146C320",
+      "text": "Cannot be used in duel."
+    },
+    {
+      "offset": 21414712,
+      "offset_hex": "0x146C338",
+      "text": "This is not a card."
+    },
+    {
+      "offset": 21414732,
+      "offset_hex": "0x146C34C",
+      "text": "Restriction"
+    },
+    {
+      "offset": 21414744,
+      "offset_hex": "0x146C358",
+      "text": "Change"
+    },
+    {
+      "offset": 21414752,
+      "offset_hex": "0x146C360",
+      "text": "Name"
+    },
+    {
+      "offset": 21414758,
+      "offset_hex": "0x146C366",
+      "text": "Number"
+    },
+    {
+      "offset": 21414766,
+      "offset_hex": "0x146C36E",
+      "text": "Category"
+    },
+    {
+      "offset": 21414776,
+      "offset_hex": "0x146C378",
+      "text": "Type"
+    },
+    {
+      "offset": 21414782,
+      "offset_hex": "0x146C37E",
+      "text": "Attribute"
+    },
+    {
+      "offset": 21414792,
+      "offset_hex": "0x146C388",
+      "text": "Level"
+    },
+    {
+      "offset": 21414798,
+      "offset_hex": "0x146C38E",
+      "text": "3 cards"
+    },
+    {
+      "offset": 21414806,
+      "offset_hex": "0x146C396",
+      "text": "2 cards"
+    },
+    {
+      "offset": 21414814,
+      "offset_hex": "0x146C39E",
+      "text": "1 card"
+    },
+    {
+      "offset": 21414822,
+      "offset_hex": "0x146C3A6",
+      "text": "Deck-1"
+    },
+    {
+      "offset": 21414830,
+      "offset_hex": "0x146C3AE",
+      "text": "Deck-2"
+    },
+    {
+      "offset": 21414838,
+      "offset_hex": "0x146C3B6",
+      "text": "Deck-3"
+    },
+    {
+      "offset": 21414846,
+      "offset_hex": "0x146C3BE",
+      "text": "Deck requires 40 or more cards."
+    },
+    {
+      "offset": 21414878,
+      "offset_hex": "0x146C3DE",
+      "text": "ATK"
+    },
+    {
+      "offset": 21414882,
+      "offset_hex": "0x146C3E2",
+      "text": "DEF"
+    },
+    {
+      "offset": 21414886,
+      "offset_hex": "0x146C3E6",
+      "text": "Deck can hold up to 60 cards."
+    },
+    {
+      "offset": 21414916,
+      "offset_hex": "0x146C404",
+      "text": "Fusion Deck can hold up to 20 cards."
+    },
+    {
+      "offset": 21414954,
+      "offset_hex": "0x146C42A",
+      "text": "Where will you copy the Deck?"
+    },
+    {
+      "offset": 21414984,
+      "offset_hex": "0x146C448",
+      "text": "The Deck will be overwritten.  OK?"
+    },
+    {
+      "offset": 21415020,
+      "offset_hex": "0x146C46C",
+      "text": "This Deck will be erased.  OK?"
+    },
+    {
+      "offset": 21415052,
+      "offset_hex": "0x146C48C",
+      "text": "COPY"
+    },
+    {
+      "offset": 21415058,
+      "offset_hex": "0x146C492",
+      "text": "CLEAR"
+    },
+    {
+      "offset": 21415064,
+      "offset_hex": "0x146C498",
+      "text": "STATIC"
+    },
+    {
+      "offset": 21415072,
+      "offset_hex": "0x146C4A0",
+      "text": "Sorting now."
+    },
+    {
+      "offset": 21415086,
+      "offset_hex": "0x146C4AE",
+      "text": "STATIC"
+    },
+    {
+      "offset": 21415094,
+      "offset_hex": "0x146C4B6",
+      "text": "Starting a new game will erase previously saved data. Press START to erase data and begin a new game, or press the B Button to cancel."
+    },
+    {
+      "offset": 21415236,
+      "offset_hex": "0x146C544",
+      "text": "Warning"
+    },
+    {
+      "offset": 21415250,
+      "offset_hex": "0x146C552",
+      "text": "The game is saving now. Do not turn the power off."
+    },
+    {
+      "offset": 21415302,
+      "offset_hex": "0x146C586",
+      "text": "New Game"
+    },
+    {
+      "offset": 21415312,
+      "offset_hex": "0x146C590",
+      "text": "Continue"
+    },
+    {
+      "offset": 21415322,
+      "offset_hex": "0x146C59A",
+      "text": "Yes"
+    },
+    {
+      "offset": 21415326,
+      "offset_hex": "0x146C59E",
+      "text": "No"
+    },
+    {
+      "offset": 21415330,
+      "offset_hex": "0x146C5A2",
+      "text": "Push Start"
+    },
+    {
+      "offset": 21415342,
+      "offset_hex": "0x146C5AE",
+      "text": "ATK"
+    },
+    {
+      "offset": 21415346,
+      "offset_hex": "0x146C5B2",
+      "text": "DEF"
+    },
+    {
+      "offset": 21415350,
+      "offset_hex": "0x146C5B6",
+      "text": "Win"
+    },
+    {
+      "offset": 21415354,
+      "offset_hex": "0x146C5BA",
+      "text": "Loss"
+    },
+    {
+      "offset": 21415360,
+      "offset_hex": "0x146C5C0",
+      "text": "Draw"
+    },
+    {
+      "offset": 21415366,
+      "offset_hex": "0x146C5C6",
+      "text": "Card Details"
+    },
+    {
+      "offset": 21415380,
+      "offset_hex": "0x146C5D4",
+      "text": "End"
+    },
+    {
+      "offset": 21415384,
+      "offset_hex": "0x146C5D8",
+      "text": "SORT"
+    },
+    {
+      "offset": 21415390,
+      "offset_hex": "0x146C5DE",
+      "text": "OK"
+    },
+    {
+      "offset": 21415394,
+      "offset_hex": "0x146C5E2",
+      "text": "EDIT"
+    },
+    {
+      "offset": 21415400,
+      "offset_hex": "0x146C5E8",
+      "text": "SELECT"
+    },
+    {
+      "offset": 21415408,
+      "offset_hex": "0x146C5F0",
+      "text": "LICENSED BY NINTENDO"
+    },
+    {
+      "offset": 21415430,
+      "offset_hex": "0x146C606",
+      "text": "Your Graveyard"
+    },
+    {
+      "offset": 21415446,
+      "offset_hex": "0x146C616",
+      "text": "Opponent's Graveyard"
+    },
+    {
+      "offset": 21415468,
+      "offset_hex": "0x146C62C",
+      "text": "Your cards removed from play"
+    },
+    {
+      "offset": 21415498,
+      "offset_hex": "0x146C64A",
+      "text": "Opponent's cards removed from play"
+    },
+    {
+      "offset": 21415534,
+      "offset_hex": "0x146C66E",
+      "text": "Fusion Deck"
+    },
+    {
+      "offset": 21415546,
+      "offset_hex": "0x146C67A",
+      "text": "Select card."
+    },
+    {
+      "offset": 21415560,
+      "offset_hex": "0x146C688",
+      "text": "Select to go first or second."
+    },
+    {
+      "offset": 21415590,
+      "offset_hex": "0x146C6A6",
+      "text": "Go First"
+    },
+    {
+      "offset": 21415600,
+      "offset_hex": "0x146C6B0",
+      "text": "Go Second"
+    },
+    {
+      "offset": 21415610,
+      "offset_hex": "0x146C6BA",
+      "text": "You"
+    },
+    {
+      "offset": 21415614,
+      "offset_hex": "0x146C6BE",
+      "text": "Opponent"
+    },
+    {
+      "offset": 21415624,
+      "offset_hex": "0x146C6C8",
+      "text": "Ready"
+    },
+    {
+      "offset": 21415630,
+      "offset_hex": "0x146C6CE",
+      "text": "Opponent is processing"
+    },
+    {
+      "offset": 21415656,
+      "offset_hex": "0x146C6E8",
+      "text": "Not enough cards in Deck."
+    },
+    {
+      "offset": 21415682,
+      "offset_hex": "0x146C702",
+      "text": "Trade Card"
+    },
+    {
+      "offset": 21415694,
+      "offset_hex": "0x146C70E",
+      "text": "Select Card"
+    },
+    {
+      "offset": 21415706,
+      "offset_hex": "0x146C71A",
+      "text": "Start Trade"
+    },
+    {
+      "offset": 21415718,
+      "offset_hex": "0x146C726",
+      "text": "Transmitting"
+    },
+    {
+      "offset": 21415734,
+      "offset_hex": "0x146C736",
+      "text": "Transmission Error"
+    },
+    {
+      "offset": 21415754,
+      "offset_hex": "0x146C74A",
+      "text": "Check Game Link cable connection."
+    },
+    {
+      "offset": 21415788,
+      "offset_hex": "0x146C76C",
+      "text": "You cannot hold more copies of this card."
+    },
+    {
+      "offset": 21415830,
+      "offset_hex": "0x146C796",
+      "text": "Before Duel, select card to ante."
+    },
+    {
+      "offset": 21415864,
+      "offset_hex": "0x146C7B8",
+      "text": "Are these settings OK?"
+    },
+    {
+      "offset": 21415888,
+      "offset_hex": "0x146C7D0",
+      "text": "You go first."
+    },
+    {
+      "offset": 21415902,
+      "offset_hex": "0x146C7DE",
+      "text": "You go second."
+    },
+    {
+      "offset": 21415918,
+      "offset_hex": "0x146C7EE",
+      "text": "Campaign"
+    },
+    {
+      "offset": 21415928,
+      "offset_hex": "0x146C7F8",
+      "text": "Link Battle"
+    },
+    {
+      "offset": 21415940,
+      "offset_hex": "0x146C804",
+      "text": "Edit Deck"
+    },
+    {
+      "offset": 21415950,
+      "offset_hex": "0x146C80E",
+      "text": "Options"
+    },
+    {
+      "offset": 21415958,
+      "offset_hex": "0x146C816",
+      "text": "Main Menu"
+    },
+    {
+      "offset": 21415968,
+      "offset_hex": "0x146C820",
+      "text": "Complete:"
+    },
+    {
+      "offset": 21415978,
+      "offset_hex": "0x146C82A",
+      "text": "Limitation"
+    },
+    {
+      "offset": 21415990,
+      "offset_hex": "0x146C836",
+      "text": "Custom"
+    },
+    {
+      "offset": 21415998,
+      "offset_hex": "0x146C83E",
+      "text": "Basic"
+    },
+    {
+      "offset": 21416004,
+      "offset_hex": "0x146C844",
+      "text": "Language Selection"
+    },
+    {
+      "offset": 21416024,
+      "offset_hex": "0x146C858",
+      "text": "Title"
+    },
+    {
+      "offset": 21416030,
+      "offset_hex": "0x146C85E",
+      "text": "King of Games"
+    },
+    {
+      "offset": 21416044,
+      "offset_hex": "0x146C86C",
+      "text": "Prince of Games"
+    },
+    {
+      "offset": 21416060,
+      "offset_hex": "0x146C87C",
+      "text": "Celebrity Duelist"
+    },
+    {
+      "offset": 21416078,
+      "offset_hex": "0x146C88E",
+      "text": "Elite Duelist"
+    },
+    {
+      "offset": 21416092,
+      "offset_hex": "0x146C89C",
+      "text": "Honored Duelist"
+    },
+    {
+      "offset": 21416108,
+      "offset_hex": "0x146C8AC",
+      "text": "Shrewd Duelist"
+    },
+    {
+      "offset": 21416124,
+      "offset_hex": "0x146C8BC",
+      "text": "Superior Duelist"
+    },
+    {
+      "offset": 21416142,
+      "offset_hex": "0x146C8CE",
+      "text": "Calm Duelist"
+    },
+    {
+      "offset": 21416156,
+      "offset_hex": "0x146C8DC",
+      "text": "Fiery Duelist"
+    },
+    {
+      "offset": 21416170,
+      "offset_hex": "0x146C8EA",
+      "text": "Average Duelist"
+    },
+    {
+      "offset": 21416186,
+      "offset_hex": "0x146C8FA",
+      "text": "Novice Duelist"
+    },
+    {
+      "offset": 21416202,
+      "offset_hex": "0x146C90A",
+      "text": "Apprentice Duelist"
+    },
+    {
+      "offset": 21416222,
+      "offset_hex": "0x146C91E",
+      "text": "Dropout Boy"
+    },
+    {
+      "offset": 21416234,
+      "offset_hex": "0x146C92A",
+      "text": "Occult Duelist"
+    },
+    {
+      "offset": 21416250,
+      "offset_hex": "0x146C93A",
+      "text": "Duel Points"
+    },
+    {
+      "offset": 21416272,
+      "offset_hex": "0x146C950",
+      "text": "Status"
+    },
+    {
+      "offset": 21416280,
+      "offset_hex": "0x146C958",
+      "text": "Limitation"
+    },
+    {
+      "offset": 21416292,
+      "offset_hex": "0x146C964",
+      "text": "Calendar"
+    },
+    {
+      "offset": 21416302,
+      "offset_hex": "0x146C96E",
+      "text": "Edit Deck"
+    },
+    {
+      "offset": 21416312,
+      "offset_hex": "0x146C978",
+      "text": "Save"
+    },
+    {
+      "offset": 21416318,
+      "offset_hex": "0x146C97E",
+      "text": "Send Mail"
+    },
+    {
+      "offset": 21416328,
+      "offset_hex": "0x146C988",
+      "text": "Option"
+    },
+    {
+      "offset": 21416336,
+      "offset_hex": "0x146C990",
+      "text": "Transmit"
+    },
+    {
+      "offset": 21416346,
+      "offset_hex": "0x146C99A",
+      "text": "Look at current record."
+    },
+    {
+      "offset": 21416370,
+      "offset_hex": "0x146C9B2",
+      "text": "Look at current limitation rule."
+    },
+    {
+      "offset": 21416404,
+      "offset_hex": "0x146C9D4",
+      "text": "Look at schedule."
+    },
+    {
+      "offset": 21416422,
+      "offset_hex": "0x146C9E6",
+      "text": "Edit your Deck."
+    },
+    {
+      "offset": 21416438,
+      "offset_hex": "0x146C9F6",
+      "text": "Save game data."
+    },
+    {
+      "offset": 21416454,
+      "offset_hex": "0x146CA06",
+      "text": "Request a Duel against a rival."
+    },
+    {
+      "offset": 21416486,
+      "offset_hex": "0x146CA26",
+      "text": "Change options, such as animation speed and so on."
+    },
+    {
+      "offset": 21416538,
+      "offset_hex": "0x146CA5A",
+      "text": "Use the Game Boy Advance Game Link cable to trade cards or link battle."
+    },
+    {
+      "offset": 21416610,
+      "offset_hex": "0x146CAA2",
+      "text": "Duel against another GBA via Game Link cable."
+    },
+    {
+      "offset": 21416656,
+      "offset_hex": "0x146CAD0",
+      "text": "Trade cards with another GBA via Game Link cable."
+    },
+    {
+      "offset": 21416706,
+      "offset_hex": "0x146CB02",
+      "text": "Saving data now."
+    },
+    {
+      "offset": 21416724,
+      "offset_hex": "0x146CB14",
+      "text": "Jaden Yuki"
+    },
+    {
+      "offset": 21416736,
+      "offset_hex": "0x146CB20",
+      "text": "Syrus Truesdale"
+    },
+    {
+      "offset": 21416752,
+      "offset_hex": "0x146CB30",
+      "text": "Chumley Huffington"
+    },
+    {
+      "offset": 21416772,
+      "offset_hex": "0x146CB44",
+      "text": "Bastion Misawa"
+    },
+    {
+      "offset": 21416788,
+      "offset_hex": "0x146CB54",
+      "text": "Alexis Rhodes"
+    },
+    {
+      "offset": 21416802,
+      "offset_hex": "0x146CB62",
+      "text": "Chazz Princeton"
+    },
+    {
+      "offset": 21416818,
+      "offset_hex": "0x146CB72",
+      "text": "Zane Truesdale"
+    },
+    {
+      "offset": 21416834,
+      "offset_hex": "0x146CB82",
+      "text": "Vellian Crowler"
+    },
+    {
+      "offset": 21416850,
+      "offset_hex": "0x146CB92",
+      "text": "Lyman Banner"
+    },
+    {
+      "offset": 21416864,
+      "offset_hex": "0x146CBA0",
+      "text": "Fonda Fontaine"
+    },
+    {
+      "offset": 21416880,
+      "offset_hex": "0x146CBB0",
+      "text": "Sartyr"
+    },
+    {
+      "offset": 21416888,
+      "offset_hex": "0x146CBB8",
+      "text": "Jasmine"
+    },
+    {
+      "offset": 21416896,
+      "offset_hex": "0x146CBC0",
+      "text": "Mindy"
+    },
+    {
+      "offset": 21416902,
+      "offset_hex": "0x146CBC6",
+      "text": "Brier"
+    },
+    {
+      "offset": 21416908,
+      "offset_hex": "0x146CBCC",
+      "text": "Beauregard"
+    },
+    {
+      "offset": 21416920,
+      "offset_hex": "0x146CBD8",
+      "text": "Dimitri"
+    },
+    {
+      "offset": 21416928,
+      "offset_hex": "0x146CBE0",
+      "text": "Damon"
+    },
+    {
+      "offset": 21416934,
+      "offset_hex": "0x146CBE6",
+      "text": "Torrey"
+    },
+    {
+      "offset": 21416942,
+      "offset_hex": "0x146CBEE",
+      "text": "Blair"
+    },
+    {
+      "offset": 21416948,
+      "offset_hex": "0x146CBF4",
+      "text": "Blair"
+    },
+    {
+      "offset": 21416954,
+      "offset_hex": "0x146CBFA",
+      "text": "Gerard"
+    },
+    {
+      "offset": 21416962,
+      "offset_hex": "0x146CC02",
+      "text": "Shadow Duelist"
+    },
+    {
+      "offset": 21416978,
+      "offset_hex": "0x146CC12",
+      "text": "Sheppard"
+    },
+    {
+      "offset": 21416988,
+      "offset_hex": "0x146CC1C",
+      "text": "Dorothy"
+    },
+    {
+      "offset": 21416996,
+      "offset_hex": "0x146CC24",
+      "text": "Sadie"
+    },
+    {
+      "offset": 21417002,
+      "offset_hex": "0x146CC2A",
+      "text": "Proctor"
+    },
+    {
+      "offset": 21417010,
+      "offset_hex": "0x146CC32",
+      "text": "Jaden"
+    },
+    {
+      "offset": 21417016,
+      "offset_hex": "0x146CC38",
+      "text": "Syrus"
+    },
+    {
+      "offset": 21417022,
+      "offset_hex": "0x146CC3E",
+      "text": "Chumley"
+    },
+    {
+      "offset": 21417030,
+      "offset_hex": "0x146CC46",
+      "text": "Bastion"
+    },
+    {
+      "offset": 21417038,
+      "offset_hex": "0x146CC4E",
+      "text": "Alexis"
+    },
+    {
+      "offset": 21417046,
+      "offset_hex": "0x146CC56",
+      "text": "Chazz"
+    },
+    {
+      "offset": 21417052,
+      "offset_hex": "0x146CC5C",
+      "text": "Zane"
+    },
+    {
+      "offset": 21417058,
+      "offset_hex": "0x146CC62",
+      "text": "Crowler"
+    },
+    {
+      "offset": 21417066,
+      "offset_hex": "0x146CC6A",
+      "text": "Banner"
+    },
+    {
+      "offset": 21417074,
+      "offset_hex": "0x146CC72",
+      "text": "Fontaine"
+    },
+    {
+      "offset": 21417084,
+      "offset_hex": "0x146CC7C",
+      "text": "Sartyr"
+    },
+    {
+      "offset": 21417092,
+      "offset_hex": "0x146CC84",
+      "text": "Jasmine"
+    },
+    {
+      "offset": 21417100,
+      "offset_hex": "0x146CC8C",
+      "text": "Mindy"
+    },
+    {
+      "offset": 21417106,
+      "offset_hex": "0x146CC92",
+      "text": "Brier"
+    },
+    {
+      "offset": 21417112,
+      "offset_hex": "0x146CC98",
+      "text": "Beauregard"
+    },
+    {
+      "offset": 21417124,
+      "offset_hex": "0x146CCA4",
+      "text": "Damon"
+    },
+    {
+      "offset": 21417130,
+      "offset_hex": "0x146CCAA",
+      "text": "Blair"
+    },
+    {
+      "offset": 21417136,
+      "offset_hex": "0x146CCB0",
+      "text": "Blair"
+    },
+    {
+      "offset": 21417142,
+      "offset_hex": "0x146CCB6",
+      "text": "Gerard"
+    },
+    {
+      "offset": 21417150,
+      "offset_hex": "0x146CCBE",
+      "text": "Sheppard"
+    },
+    {
+      "offset": 21417160,
+      "offset_hex": "0x146CCC8",
+      "text": "Dorothy"
+    },
+    {
+      "offset": 21417168,
+      "offset_hex": "0x146CCD0",
+      "text": "Option"
+    },
+    {
+      "offset": 21417176,
+      "offset_hex": "0x146CCD8",
+      "text": "Sunday"
+    },
+    {
+      "offset": 21417184,
+      "offset_hex": "0x146CCE0",
+      "text": "Monday"
+    },
+    {
+      "offset": 21417192,
+      "offset_hex": "0x146CCE8",
+      "text": "Tuesday"
+    },
+    {
+      "offset": 21417200,
+      "offset_hex": "0x146CCF0",
+      "text": "Wednesday"
+    },
+    {
+      "offset": 21417210,
+      "offset_hex": "0x146CCFA",
+      "text": "Thursday"
+    },
+    {
+      "offset": 21417220,
+      "offset_hex": "0x146CD04",
+      "text": "Friday"
+    },
+    {
+      "offset": 21417228,
+      "offset_hex": "0x146CD0C",
+      "text": "Saturday"
+    },
+    {
+      "offset": 21417238,
+      "offset_hex": "0x146CD16",
+      "text": "AM"
+    },
+    {
+      "offset": 21417242,
+      "offset_hex": "0x146CD1A",
+      "text": "PM"
+    },
+    {
+      "offset": 21417246,
+      "offset_hex": "0x146CD1E",
+      "text": "Night"
+    },
+    {
+      "offset": 21417252,
+      "offset_hex": "0x146CD24",
+      "text": "@6%d@7"
+    },
+    {
+      "offset": 21417260,
+      "offset_hex": "0x146CD2C",
+      "text": "Sunday"
+    },
+    {
+      "offset": 21417268,
+      "offset_hex": "0x146CD34",
+      "text": "Monday"
+    },
+    {
+      "offset": 21417276,
+      "offset_hex": "0x146CD3C",
+      "text": "Tuesday"
+    },
+    {
+      "offset": 21417284,
+      "offset_hex": "0x146CD44",
+      "text": "Wednesday"
+    },
+    {
+      "offset": 21417294,
+      "offset_hex": "0x146CD4E",
+      "text": "Thursday"
+    },
+    {
+      "offset": 21417304,
+      "offset_hex": "0x146CD58",
+      "text": "Friday"
+    },
+    {
+      "offset": 21417312,
+      "offset_hex": "0x146CD60",
+      "text": "Saturday"
+    },
+    {
+      "offset": 21417322,
+      "offset_hex": "0x146CD6A",
+      "text": "January"
+    },
+    {
+      "offset": 21417330,
+      "offset_hex": "0x146CD72",
+      "text": "February"
+    },
+    {
+      "offset": 21417340,
+      "offset_hex": "0x146CD7C",
+      "text": "March"
+    },
+    {
+      "offset": 21417346,
+      "offset_hex": "0x146CD82",
+      "text": "April"
+    },
+    {
+      "offset": 21417352,
+      "offset_hex": "0x146CD88",
+      "text": "May"
+    },
+    {
+      "offset": 21417356,
+      "offset_hex": "0x146CD8C",
+      "text": "June"
+    },
+    {
+      "offset": 21417362,
+      "offset_hex": "0x146CD92",
+      "text": "July"
+    },
+    {
+      "offset": 21417368,
+      "offset_hex": "0x146CD98",
+      "text": "August"
+    },
+    {
+      "offset": 21417376,
+      "offset_hex": "0x146CDA0",
+      "text": "September"
+    },
+    {
+      "offset": 21417386,
+      "offset_hex": "0x146CDAA",
+      "text": "October"
+    },
+    {
+      "offset": 21417394,
+      "offset_hex": "0x146CDB2",
+      "text": "November"
+    },
+    {
+      "offset": 21417404,
+      "offset_hex": "0x146CDBC",
+      "text": "December"
+    },
+    {
+      "offset": 21417414,
+      "offset_hex": "0x146CDC6",
+      "text": "SUN"
+    },
+    {
+      "offset": 21417418,
+      "offset_hex": "0x146CDCA",
+      "text": "MON"
+    },
+    {
+      "offset": 21417422,
+      "offset_hex": "0x146CDCE",
+      "text": "TUE"
+    },
+    {
+      "offset": 21417426,
+      "offset_hex": "0x146CDD2",
+      "text": "WED"
+    },
+    {
+      "offset": 21417430,
+      "offset_hex": "0x146CDD6",
+      "text": "THU"
+    },
+    {
+      "offset": 21417434,
+      "offset_hex": "0x146CDDA",
+      "text": "FRI"
+    },
+    {
+      "offset": 21417438,
+      "offset_hex": "0x146CDDE",
+      "text": "SAT"
+    },
+    {
+      "offset": 21417442,
+      "offset_hex": "0x146CDE2",
+      "text": "JAN"
+    },
+    {
+      "offset": 21417446,
+      "offset_hex": "0x146CDE6",
+      "text": "FEB"
+    },
+    {
+      "offset": 21417450,
+      "offset_hex": "0x146CDEA",
+      "text": "MAR"
+    },
+    {
+      "offset": 21417454,
+      "offset_hex": "0x146CDEE",
+      "text": "APR"
+    },
+    {
+      "offset": 21417458,
+      "offset_hex": "0x146CDF2",
+      "text": "MAY"
+    },
+    {
+      "offset": 21417462,
+      "offset_hex": "0x146CDF6",
+      "text": "JUN"
+    },
+    {
+      "offset": 21417466,
+      "offset_hex": "0x146CDFA",
+      "text": "JUL"
+    },
+    {
+      "offset": 21417470,
+      "offset_hex": "0x146CDFE",
+      "text": "AUG"
+    },
+    {
+      "offset": 21417474,
+      "offset_hex": "0x146CE02",
+      "text": "SEP"
+    },
+    {
+      "offset": 21417478,
+      "offset_hex": "0x146CE06",
+      "text": "OCT"
+    },
+    {
+      "offset": 21417482,
+      "offset_hex": "0x146CE0A",
+      "text": "NOV"
+    },
+    {
+      "offset": 21417486,
+      "offset_hex": "0x146CE0E",
+      "text": "DEC"
+    },
+    {
+      "offset": 21417490,
+      "offset_hex": "0x146CE12",
+      "text": "Gained @2@6%d@7@7 "
+    },
+    {
+      "offset": 21417516,
+      "offset_hex": "0x146CE2C",
+      "text": "Acquired @5%s@7!"
+    },
+    {
+      "offset": 21417534,
+      "offset_hex": "0x146CE3E",
+      "text": "Your DP decreased to half."
+    },
+    {
+      "offset": 21417562,
+      "offset_hex": "0x146CE5A",
+      "text": "You lost \"@5%s@7\"!"
+    },
+    {
+      "offset": 21417582,
+      "offset_hex": "0x146CE6E",
+      "text": "Acquired @2@5%s@7@7 card!"
+    },
+    {
+      "offset": 21417608,
+      "offset_hex": "0x146CE88",
+      "text": "The Harpies in your Deck have gone away."
+    },
+    {
+      "offset": 21417650,
+      "offset_hex": "0x146CEB2",
+      "text": "Lost @2@6%d@7@7 "
+    },
+    {
+      "offset": 21417669,
+      "offset_hex": "0x146CEC5",
+      "text": "o!"
+    },
+    {
+      "offset": 21417672,
+      "offset_hex": "0x146CEC8",
+      "text": "Your title is now \"@5%s@7.\""
+    },
+    {
+      "offset": 21417700,
+      "offset_hex": "0x146CEE4",
+      "text": "Your dorm is now \"@5%s@7!\""
+    },
+    {
+      "offset": 21417728,
+      "offset_hex": "0x146CF00",
+      "text": "Animation Speed"
+    },
+    {
+      "offset": 21417744,
+      "offset_hex": "0x146CF10",
+      "text": "Confirm Activation"
+    },
+    {
+      "offset": 21417764,
+      "offset_hex": "0x146CF24",
+      "text": "Auto"
+    },
+    {
+      "offset": 21417770,
+      "offset_hex": "0x146CF2A",
+      "text": "Manual"
+    },
+    {
+      "offset": 21417778,
+      "offset_hex": "0x146CF32",
+      "text": "Enter the password."
+    },
+    {
+      "offset": 21417798,
+      "offset_hex": "0x146CF46",
+      "text": "Analyzing now."
+    },
+    {
+      "offset": 21417814,
+      "offset_hex": "0x146CF56",
+      "text": "Incorrect Password."
+    },
+    {
+      "offset": 21417834,
+      "offset_hex": "0x146CF6A",
+      "text": "All Spell."
+    },
+    {
+      "offset": 21417846,
+      "offset_hex": "0x146CF76",
+      "text": "All Field Spell."
+    },
+    {
+      "offset": 21417864,
+      "offset_hex": "0x146CF88",
+      "text": "All Equip Spell."
+    },
+    {
+      "offset": 21417882,
+      "offset_hex": "0x146CF9A",
+      "text": "All Infinite Spell."
+    },
+    {
+      "offset": 21417902,
+      "offset_hex": "0x146CFAE",
+      "text": "Request Duel with"
+    },
+    {
+      "offset": 21417920,
+      "offset_hex": "0x146CFC0",
+      "text": "All Spell."
+    },
+    {
+      "offset": 21417932,
+      "offset_hex": "0x146CFCC",
+      "text": "All Trap."
+    },
+    {
+      "offset": 21417942,
+      "offset_hex": "0x146CFD6",
+      "text": "All Counter Trap."
+    },
+    {
+      "offset": 21417960,
+      "offset_hex": "0x146CFE8",
+      "text": "All Infinite Trap."
+    },
+    {
+      "offset": 21417980,
+      "offset_hex": "0x146CFFC",
+      "text": "All Effect Monsters."
+    },
+    {
+      "offset": 21418002,
+      "offset_hex": "0x146D012",
+      "text": "Written Exam"
+    },
+    {
+      "offset": 21418016,
+      "offset_hex": "0x146D020",
+      "text": "All Ritual Monsters."
+    },
+    {
+      "offset": 21418038,
+      "offset_hex": "0x146D036",
+      "text": "All Fusion Monsters."
+    },
+    {
+      "offset": 21418060,
+      "offset_hex": "0x146D04C",
+      "text": "All High Level Monsters."
+    },
+    {
+      "offset": 21418086,
+      "offset_hex": "0x146D066",
+      "text": "All Middle Level Monsters."
+    },
+    {
+      "offset": 21418114,
+      "offset_hex": "0x146D082",
+      "text": "All Level 5 or above Monsters."
+    },
+    {
+      "offset": 21418146,
+      "offset_hex": "0x146D0A2",
+      "text": "Remove Forbidden/Limited cards."
+    },
+    {
+      "offset": 21418178,
+      "offset_hex": "0x146D0C2",
+      "text": "Forbidden Cards"
+    },
+    {
+      "offset": 21418194,
+      "offset_hex": "0x146D0D2",
+      "text": "Limited Cards"
+    },
+    {
+      "offset": 21418208,
+      "offset_hex": "0x146D0E0",
+      "text": "Semi-Limited Cards"
+    },
+    {
+      "offset": 21418228,
+      "offset_hex": "0x146D0F4",
+      "text": "Remove"
+    },
+    {
+      "offset": 21418236,
+      "offset_hex": "0x146D0FC",
+      "text": "Selected Cards"
+    },
+    {
+      "offset": 21418252,
+      "offset_hex": "0x146D10C",
+      "text": "Your card"
+    },
+    {
+      "offset": 21418262,
+      "offset_hex": "0x146D116",
+      "text": "Opponent's card"
+    },
+    {
+      "offset": 21418278,
+      "offset_hex": "0x146D126",
+      "text": "Traded Cards"
+    },
+    {
+      "offset": 21418292,
+      "offset_hex": "0x146D134",
+      "text": "Are you sure you want to start trading?"
+    },
+    {
+      "offset": 21418332,
+      "offset_hex": "0x146D15C",
+      "text": "Details of opponent's card"
+    },
+    {
+      "offset": 21418360,
+      "offset_hex": "0x146D178",
+      "text": "Returning to card selection because the opponent cancelled trading."
+    },
+    {
+      "offset": 21418428,
+      "offset_hex": "0x146D1BC",
+      "text": "Trade completed."
+    },
+    {
+      "offset": 21418446,
+      "offset_hex": "0x146D1CE",
+      "text": "End Trade"
+    },
+    {
+      "offset": 21418456,
+      "offset_hex": "0x146D1D8",
+      "text": "Completion Ratio:"
+    },
+    {
+      "offset": 21418474,
+      "offset_hex": "0x146D1EA",
+      "text": "In which Deck do you want to set \"@5%s@7\"?"
+    },
+    {
+      "offset": 21418518,
+      "offset_hex": "0x146D216",
+      "text": "No Deck"
+    },
+    {
+      "offset": 21418526,
+      "offset_hex": "0x146D21E",
+      "text": "Pack"
+    },
+    {
+      "offset": 21418532,
+      "offset_hex": "0x146D224",
+      "text": "FAVOURITES"
+    },
+    {
+      "offset": 21418544,
+      "offset_hex": "0x146D230",
+      "text": "Number of cards"
+    },
+    {
+      "offset": 21418560,
+      "offset_hex": "0x146D240",
+      "text": "MAIN DECK"
+    },
+    {
+      "offset": 21418570,
+      "offset_hex": "0x146D24A",
+      "text": "SIDE DECK"
+    },
+    {
+      "offset": 21418580,
+      "offset_hex": "0x146D254",
+      "text": "FILTER"
+    },
+    {
+      "offset": 21418588,
+      "offset_hex": "0x146D25C",
+      "text": "All Packs"
+    },
+    {
+      "offset": 21418598,
+      "offset_hex": "0x146D266",
+      "text": "Prohibited/Limited for the \"@5%s@7\""
+    },
+    {
+      "offset": 21418634,
+      "offset_hex": "0x146D28A",
+      "text": "This week"
+    },
+    {
+      "offset": 21418644,
+      "offset_hex": "0x146D294",
+      "text": "Status"
+    },
+    {
+      "offset": 21418652,
+      "offset_hex": "0x146D29C",
+      "text": "Duel Point"
+    },
+    {
+      "offset": 21418664,
+      "offset_hex": "0x146D2A8",
+      "text": "Return to original screen without changing name."
+    },
+    {
+      "offset": 21418714,
+      "offset_hex": "0x146D2DA",
+      "text": "Today/@5%s@7"
+    },
+    {
+      "offset": 21418728,
+      "offset_hex": "0x146D2E8",
+      "text": "Result Record"
+    },
+    {
+      "offset": 21418742,
+      "offset_hex": "0x146D2F6",
+      "text": "Duel Type"
+    },
+    {
+      "offset": 21418752,
+      "offset_hex": "0x146D300",
+      "text": "Single"
+    },
+    {
+      "offset": 21418760,
+      "offset_hex": "0x146D308",
+      "text": "Match"
+    },
+    {
+      "offset": 21418766,
+      "offset_hex": "0x146D30E",
+      "text": "Time Limit"
+    },
+    {
+      "offset": 21418778,
+      "offset_hex": "0x146D31A",
+      "text": "None"
+    },
+    {
+      "offset": 21418784,
+      "offset_hex": "0x146D320",
+      "text": "@6%d@7 Minutes"
+    },
+    {
+      "offset": 21418800,
+      "offset_hex": "0x146D330",
+      "text": "Start Duel"
+    },
+    {
+      "offset": 21418812,
+      "offset_hex": "0x146D33C",
+      "text": "Linked as @6%d@7"
+    },
+    {
+      "offset": 21418830,
+      "offset_hex": "0x146D34E",
+      "text": "Another player is selecting now"
+    },
+    {
+      "offset": 21418864,
+      "offset_hex": "0x146D370",
+      "text": "There are words unsuitable in a name."
+    },
+    {
+      "offset": 21418902,
+      "offset_hex": "0x146D396",
+      "text": "All"
+    },
+    {
+      "offset": 21418906,
+      "offset_hex": "0x146D39A",
+      "text": "Effect Monster"
+    },
+    {
+      "offset": 21418922,
+      "offset_hex": "0x146D3AA",
+      "text": "Normal Monster"
+    },
+    {
+      "offset": 21418938,
+      "offset_hex": "0x146D3BA",
+      "text": "New"
+    },
+    {
+      "offset": 21418942,
+      "offset_hex": "0x146D3BE",
+      "text": "Rare"
+    },
+    {
+      "offset": 21418948,
+      "offset_hex": "0x146D3C4",
+      "text": "Icon"
+    },
+    {
+      "offset": 21418954,
+      "offset_hex": "0x146D3CA",
+      "text": "Spell"
+    },
+    {
+      "offset": 21418960,
+      "offset_hex": "0x146D3D0",
+      "text": "High Level"
+    },
+    {
+      "offset": 21418972,
+      "offset_hex": "0x146D3DC",
+      "text": "Middle Level"
+    },
+    {
+      "offset": 21418986,
+      "offset_hex": "0x146D3EA",
+      "text": "Low Level"
+    },
+    {
+      "offset": 21418996,
+      "offset_hex": "0x146D3F4",
+      "text": "Fusion Monster"
+    },
+    {
+      "offset": 21419012,
+      "offset_hex": "0x146D404",
+      "text": "Ritual Monster"
+    },
+    {
+      "offset": 21419028,
+      "offset_hex": "0x146D414",
+      "text": "First or Second?"
+    },
+    {
+      "offset": 21419046,
+      "offset_hex": "0x146D426",
+      "text": "Opponent chooses First or Second."
+    },
+    {
+      "offset": 21419080,
+      "offset_hex": "0x146D448",
+      "text": "Opponent is choosing a card now."
+    },
+    {
+      "offset": 21419114,
+      "offset_hex": "0x146D46A",
+      "text": "Opponent cancelled the Duel."
+    },
+    {
+      "offset": 21419144,
+      "offset_hex": "0x146D488",
+      "text": "DECK IN USE"
+    },
+    {
+      "offset": 21419156,
+      "offset_hex": "0x146D494",
+      "text": "Slifer Red"
+    },
+    {
+      "offset": 21419168,
+      "offset_hex": "0x146D4A0",
+      "text": "Ra Yellow"
+    },
+    {
+      "offset": 21419178,
+      "offset_hex": "0x146D4AA",
+      "text": "Obelisk Blue"
+    },
+    {
+      "offset": 21419192,
+      "offset_hex": "0x146D4B8",
+      "text": "This Deck cannot be edited."
+    },
+    {
+      "offset": 21419220,
+      "offset_hex": "0x146D4D4",
+      "text": "There are not enough related cards."
+    },
+    {
+      "offset": 21419256,
+      "offset_hex": "0x146D4F8",
+      "text": "Cannot move all related cards."
+    },
+    {
+      "offset": 21419288,
+      "offset_hex": "0x146D518",
+      "text": "There are not enough cards in the Deck.  The Deck must have at least 40 cards."
+    },
+    {
+      "offset": 21419368,
+      "offset_hex": "0x146D568",
+      "text": "You cannot change the number of cards in the Deck during a Duel."
+    },
+    {
+      "offset": 21419434,
+      "offset_hex": "0x146D5AA",
+      "text": "You can't get the card any more."
+    },
+    {
+      "offset": 21419468,
+      "offset_hex": "0x146D5CC",
+      "text": "Select card"
+    },
+    {
+      "offset": 21419480,
+      "offset_hex": "0x146D5D8",
+      "text": "Select remaining @6%d@7 cards"
+    },
+    {
+      "offset": 21419510,
+      "offset_hex": "0x146D5F6",
+      "text": "Save game "
+    }
+  ]
+}
