@@ -1,0 +1,970 @@
+{
+  "schema_version": 1,
+  "owner": "A08",
+  "coordinate_space": "UE centimetres",
+  "portal_pairs": 10,
+  "portals": [
+    {
+      "id": "portal_academy_classroom_entrance",
+      "display_name": "Classroom",
+      "zone_id": "academy",
+      "location_id": "academy_classroom",
+      "interior_id": "academy_classroom",
+      "role": "entrance",
+      "location_ue": [
+        6400,
+        -15200,
+        3700
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        300000,
+        295250,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_academy_classroom_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Classroom",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "registered",
+        "fail_closed": false,
+        "reason": "Register at the academy reception first."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_academy_classroom_exit",
+      "display_name": "Classroom (Exit)",
+      "zone_id": "academy",
+      "location_id": "academy_classroom",
+      "interior_id": "academy_classroom",
+      "role": "exit",
+      "location_ue": [
+        300000,
+        295100,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        6400,
+        -14700,
+        3700
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_academy_classroom_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Classroom",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    },
+    {
+      "id": "portal_academy_test_room_entrance",
+      "display_name": "Exam Room",
+      "zone_id": "academy",
+      "location_id": "academy_test_room",
+      "interior_id": "academy_test_room",
+      "role": "entrance",
+      "location_ue": [
+        -6400,
+        -15200,
+        3700
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        300000,
+        320750,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_academy_test_room_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Exam Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "exam_day",
+        "fail_closed": false,
+        "reason": "The exam room opens on exam day."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_academy_test_room_exit",
+      "display_name": "Exam Room (Exit)",
+      "zone_id": "academy",
+      "location_id": "academy_test_room",
+      "interior_id": "academy_test_room",
+      "role": "exit",
+      "location_ue": [
+        300000,
+        320600,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        -6400,
+        -14700,
+        3700
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_academy_test_room_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Exam Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    },
+    {
+      "id": "portal_crowler_office_entrance",
+      "display_name": "Crowler's Office",
+      "zone_id": "academy",
+      "location_id": "academy_crowler_office",
+      "interior_id": "academy_crowler_office",
+      "role": "entrance",
+      "location_ue": [
+        -8770,
+        -13100,
+        3700
+      ],
+      "yaw": 0.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        300000,
+        343750,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_crowler_office_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Crowler's Office",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "crowler_office_unlocked",
+        "fail_closed": false,
+        "reason": "Dr. Crowler is not seeing students."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_crowler_office_exit",
+      "display_name": "Crowler's Office (Exit)",
+      "zone_id": "academy",
+      "location_id": "academy_crowler_office",
+      "interior_id": "academy_crowler_office",
+      "role": "exit",
+      "location_ue": [
+        300000,
+        343600,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        -8270,
+        -13100,
+        3700
+      ],
+      "target_yaw": 0.0,
+      "target_portal_id": "portal_crowler_office_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Crowler's Office",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    },
+    {
+      "id": "portal_chancellor_office_entrance",
+      "display_name": "Chancellor's Office",
+      "zone_id": "academy",
+      "location_id": "academy_chancellor_office",
+      "interior_id": "academy_chancellor_office",
+      "role": "entrance",
+      "location_ue": [
+        8770,
+        -13100,
+        3700
+      ],
+      "yaw": 180.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        300000,
+        361250,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_chancellor_office_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Chancellor's Office",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "chancellor_office_unlocked",
+        "fail_closed": false,
+        "reason": "The Chancellor's office is closed."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_chancellor_office_exit",
+      "display_name": "Chancellor's Office (Exit)",
+      "zone_id": "academy",
+      "location_id": "academy_chancellor_office",
+      "interior_id": "academy_chancellor_office",
+      "role": "exit",
+      "location_ue": [
+        300000,
+        361100,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        8270,
+        -13100,
+        3700
+      ],
+      "target_yaw": 180.0,
+      "target_portal_id": "portal_chancellor_office_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Chancellor's Office",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    },
+    {
+      "id": "portal_slifer_player_room_entrance",
+      "display_name": "Your Room",
+      "zone_id": "slifer",
+      "location_id": "slifer_player_room",
+      "interior_id": "slifer_player_room",
+      "role": "entrance",
+      "location_ue": [
+        -106800,
+        24505,
+        3025
+      ],
+      "yaw": 180.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        330000,
+        297750,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_slifer_player_room_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Your Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "registered",
+        "fail_closed": false,
+        "reason": "You have not been assigned a room yet."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_slifer_player_room_exit",
+      "display_name": "Your Room (Exit)",
+      "zone_id": "slifer",
+      "location_id": "slifer_player_room",
+      "interior_id": "slifer_player_room",
+      "role": "exit",
+      "location_ue": [
+        330000,
+        297600,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        -107300,
+        24505,
+        3025
+      ],
+      "target_yaw": 180.0,
+      "target_portal_id": "portal_slifer_player_room_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Your Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    },
+    {
+      "id": "portal_slifer_banner_room_entrance",
+      "display_name": "Banner's Room",
+      "zone_id": "slifer",
+      "location_id": "slifer_banner_room",
+      "interior_id": "slifer_banner_room",
+      "role": "entrance",
+      "location_ue": [
+        -106800,
+        26671.7,
+        3025
+      ],
+      "yaw": 180.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        330000,
+        312500,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_slifer_banner_room_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Banner's Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "met_banner",
+        "fail_closed": false,
+        "reason": "Banner is not in his room right now."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_slifer_banner_room_exit",
+      "display_name": "Banner's Room (Exit)",
+      "zone_id": "slifer",
+      "location_id": "slifer_banner_room",
+      "interior_id": "slifer_banner_room",
+      "role": "exit",
+      "location_ue": [
+        330000,
+        312350,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        -107300,
+        26671.7,
+        3025
+      ],
+      "target_yaw": 180.0,
+      "target_portal_id": "portal_slifer_banner_room_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Banner's Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    },
+    {
+      "id": "portal_slifer_jaden_room_entrance",
+      "display_name": "Jaden's Room",
+      "zone_id": "slifer",
+      "location_id": "slifer_jaden_room",
+      "interior_id": "slifer_jaden_room",
+      "role": "entrance",
+      "location_ue": [
+        -106800,
+        24505,
+        3300
+      ],
+      "yaw": 180.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        330000,
+        327500,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_slifer_jaden_room_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Jaden's Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "met_jaden",
+        "fail_closed": false,
+        "reason": "Jaden's room is empty."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_slifer_jaden_room_exit",
+      "display_name": "Jaden's Room (Exit)",
+      "zone_id": "slifer",
+      "location_id": "slifer_jaden_room",
+      "interior_id": "slifer_jaden_room",
+      "role": "exit",
+      "location_ue": [
+        330000,
+        327350,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        -107300,
+        24505,
+        3300
+      ],
+      "target_yaw": 180.0,
+      "target_portal_id": "portal_slifer_jaden_room_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Jaden's Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    },
+    {
+      "id": "portal_ra_player_room_entrance",
+      "display_name": "Ra Room",
+      "zone_id": "ra",
+      "location_id": "ra_player_room",
+      "interior_id": "ra_player_room",
+      "role": "entrance",
+      "location_ue": [
+        -68013.6,
+        65835.6,
+        2425
+      ],
+      "yaw": -130.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        360000,
+        297500,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_ra_player_room_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Ra Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "dorm_ra",
+        "fail_closed": false,
+        "reason": "Ra Yellow students only."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_ra_player_room_exit",
+      "display_name": "Ra Room (Exit)",
+      "zone_id": "ra",
+      "location_id": "ra_player_room",
+      "interior_id": "ra_player_room",
+      "role": "exit",
+      "location_ue": [
+        360000,
+        297350,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        -68335.1,
+        65452.6,
+        2425
+      ],
+      "target_yaw": -130.0,
+      "target_portal_id": "portal_ra_player_room_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Ra Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    },
+    {
+      "id": "portal_obelisk_dining_entrance",
+      "display_name": "Obelisk Dining",
+      "zone_id": "obelisk_boys",
+      "location_id": "obelisk_dining",
+      "interior_id": "obelisk_dining",
+      "role": "entrance",
+      "location_ue": [
+        -59846.8,
+        -51871.4,
+        3150
+      ],
+      "yaw": 140.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        390000,
+        295750,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_obelisk_dining_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Obelisk Dining",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "dorm_obelisk",
+        "fail_closed": false,
+        "reason": "Obelisk Blue students only."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_obelisk_dining_exit",
+      "display_name": "Obelisk Dining (Exit)",
+      "zone_id": "obelisk_boys",
+      "location_id": "obelisk_dining",
+      "interior_id": "obelisk_dining",
+      "role": "exit",
+      "location_ue": [
+        390000,
+        295600,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        -60229.8,
+        -51549.9,
+        3150
+      ],
+      "target_yaw": 140.0,
+      "target_portal_id": "portal_obelisk_dining_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Obelisk Dining",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    },
+    {
+      "id": "portal_obelisk_player_room_entrance",
+      "display_name": "Obelisk Room",
+      "zone_id": "obelisk_boys",
+      "location_id": "obelisk_player_room",
+      "interior_id": "obelisk_player_room",
+      "role": "entrance",
+      "location_ue": [
+        -57649,
+        -54335.1,
+        3150
+      ],
+      "yaw": 140.0,
+      "trigger_extent": [
+        110,
+        110,
+        120
+      ],
+      "target_location_ue": [
+        390000,
+        317250,
+        -29900
+      ],
+      "target_yaw": 90.0,
+      "target_portal_id": "portal_obelisk_player_room_exit",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Enter Obelisk Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "dorm_obelisk",
+        "fail_closed": false,
+        "reason": "Obelisk Blue students only."
+      },
+      "return_portal": false,
+      "notes": "Exterior door trigger. Arrival is 2.5 m inside the cell, past the exit trigger."
+    },
+    {
+      "id": "portal_obelisk_player_room_exit",
+      "display_name": "Obelisk Room (Exit)",
+      "zone_id": "obelisk_boys",
+      "location_id": "obelisk_player_room",
+      "interior_id": "obelisk_player_room",
+      "role": "exit",
+      "location_ue": [
+        390000,
+        317100,
+        -29900
+      ],
+      "yaw": 90.0,
+      "trigger_extent": [
+        90,
+        60,
+        120
+      ],
+      "target_location_ue": [
+        -58032,
+        -54013.6,
+        3150
+      ],
+      "target_yaw": 140.0,
+      "target_portal_id": "portal_obelisk_player_room_entrance",
+      "auto_trigger": true,
+      "interactable": true,
+      "prompt": "Leave Obelisk Room",
+      "fade": {
+        "out": 0.35,
+        "in": 0.35,
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "cooldown": 1.5,
+      "lock": {
+        "locked": false,
+        "required_flag": "",
+        "fail_closed": false,
+        "reason": ""
+      },
+      "return_portal": true,
+      "notes": "Interior exit trigger at the inside face of the door. Arrival is 5 m outside the building door."
+    }
+  ],
+  "load_budget_ms": 2000,
+  "notes": "Interior portals are paired entrance/exit records. Doors marked locked are configured but not enforced until A02 binds ADAInteriorPortal::FlagQuery."
+}

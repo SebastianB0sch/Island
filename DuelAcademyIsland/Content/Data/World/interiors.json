@@ -1,0 +1,597 @@
+{
+  "schema_version": 1,
+  "owner": "A08",
+  "coordinate_space": "UE centimetres; portal cells are below the island at Z=-30000",
+  "cell_origin_note": "Each cell is an independent floor slab and wall set. Portal cells are not visible from the island and are entered only through portals.",
+  "cells": [
+    {
+      "id": "academy_classroom",
+      "display_name": "Academy Classroom",
+      "location_id": "academy_classroom",
+      "zone_id": "academy",
+      "kind": "classroom",
+      "status": "planned",
+      "origin_ue": [
+        300000,
+        300000,
+        -30000
+      ],
+      "size_m": [
+        14.0,
+        10.0,
+        4.0
+      ],
+      "bounds_ue": [
+        293000,
+        295000,
+        -30000,
+        307000,
+        305000,
+        -29600
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29600,
+      "entrance_portal_id": "portal_academy_classroom_exit",
+      "exterior_portal_id": "portal_academy_classroom_entrance",
+      "capacity": 30,
+      "lighting": "warm classroom fluorescents + north blackboard wash",
+      "nav": "single convex room, no islands",
+      "reuse": [
+        "academy lobby columns",
+        "academy banners",
+        "SM_Desk",
+        "SM_Chair",
+        "blackboard material"
+      ],
+      "props": [
+        "30 student desks",
+        "teacher desk",
+        "blackboard",
+        "dorm banners",
+        "clock",
+        "notice board"
+      ],
+      "notes": "Stage for E02 and the first class beat. Camera at the back wall, teacher at the board.",
+      "interior_exit_ue": [
+        300000,
+        295100,
+        -29900
+      ],
+      "arrival_ue": [
+        300000,
+        295250,
+        -29900
+      ]
+    },
+    {
+      "id": "academy_test_room",
+      "display_name": "Academy Exam Room",
+      "location_id": "academy_test_room",
+      "zone_id": "academy",
+      "kind": "exam",
+      "status": "planned",
+      "origin_ue": [
+        300000,
+        325000,
+        -30000
+      ],
+      "size_m": [
+        12.0,
+        9.0,
+        3.8
+      ],
+      "bounds_ue": [
+        294000,
+        320500,
+        -30000,
+        306000,
+        329500,
+        -29620
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29620,
+      "entrance_portal_id": "portal_academy_test_room_exit",
+      "exterior_portal_id": "portal_academy_test_room_entrance",
+      "capacity": 24,
+      "lighting": "neutral exam lighting, no window glare",
+      "nav": "two desk rows + proctor aisle",
+      "reuse": [
+        "academy lobby trim",
+        "SM_Desk",
+        "SM_Chair",
+        "exam paper props"
+      ],
+      "props": [
+        "24 exam desks",
+        "proctor desk",
+        "clock",
+        "written-exam board",
+        "card-tray props"
+      ],
+      "notes": "Written exam UI is A07/A09; this room only supplies the space and marks.",
+      "interior_exit_ue": [
+        300000,
+        320600,
+        -29900
+      ],
+      "arrival_ue": [
+        300000,
+        320750,
+        -29900
+      ]
+    },
+    {
+      "id": "academy_crowler_office",
+      "display_name": "Crowler's Staff Office",
+      "location_id": "academy_crowler_office",
+      "zone_id": "academy",
+      "kind": "office",
+      "status": "planned",
+      "origin_ue": [
+        300000,
+        347000,
+        -30000
+      ],
+      "size_m": [
+        9.0,
+        7.0,
+        3.5
+      ],
+      "bounds_ue": [
+        295500,
+        343500,
+        -30000,
+        304500,
+        350500,
+        -29650
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29650,
+      "entrance_portal_id": "portal_crowler_office_exit",
+      "exterior_portal_id": "portal_crowler_office_entrance",
+      "capacity": 4,
+      "lighting": "warm desk lamp + cool window fill",
+      "nav": "desk island with 1.2 m clearance",
+      "reuse": [
+        "academy blue/gold trim",
+        "SM_Desk",
+        "SM_Bookshelf",
+        "portrait frame"
+      ],
+      "props": [
+        "executive desk",
+        "Crowler chair",
+        "display cabinet",
+        "trophy shelf",
+        "rug"
+      ],
+      "notes": "Crowler scenes. Desk faces the door; camera over the player's shoulder.",
+      "interior_exit_ue": [
+        300000,
+        343600,
+        -29900
+      ],
+      "arrival_ue": [
+        300000,
+        343750,
+        -29900
+      ]
+    },
+    {
+      "id": "academy_chancellor_office",
+      "display_name": "Chancellor Sheppard's Office",
+      "location_id": "academy_chancellor_office",
+      "zone_id": "academy",
+      "kind": "office",
+      "status": "planned",
+      "origin_ue": [
+        300000,
+        365000,
+        -30000
+      ],
+      "size_m": [
+        10.0,
+        8.0,
+        3.6
+      ],
+      "bounds_ue": [
+        295000,
+        361000,
+        -30000,
+        305000,
+        369000,
+        -29640
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29640,
+      "entrance_portal_id": "portal_chancellor_office_exit",
+      "exterior_portal_id": "portal_chancellor_office_entrance",
+      "capacity": 5,
+      "lighting": "large window fill + warm desk lamp",
+      "nav": "desk island, clear ending-mark path",
+      "reuse": [
+        "academy blue/gold trim",
+        "academy crest",
+        "SM_Desk",
+        "SM_Bookshelf",
+        "globe"
+      ],
+      "props": [
+        "chancellor desk",
+        "crest wall",
+        "bookshelves",
+        "ending trigger mark",
+        "guest chairs"
+      ],
+      "notes": "Ending/King of Games trigger. Keep a 2 m clear circle around the ending mark.",
+      "interior_exit_ue": [
+        300000,
+        361100,
+        -29900
+      ],
+      "arrival_ue": [
+        300000,
+        361250,
+        -29900
+      ]
+    },
+    {
+      "id": "slifer_player_room",
+      "display_name": "Slifer Room 101 (Player)",
+      "location_id": "slifer_player_room",
+      "zone_id": "slifer",
+      "kind": "dorm_room",
+      "status": "planned",
+      "origin_ue": [
+        330000,
+        300000,
+        -30000
+      ],
+      "size_m": [
+        6.0,
+        5.0,
+        3.2
+      ],
+      "bounds_ue": [
+        327000,
+        297500,
+        -30000,
+        333000,
+        302500,
+        -29680
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29680,
+      "entrance_portal_id": "portal_slifer_player_room_exit",
+      "exterior_portal_id": "portal_slifer_player_room_entrance",
+      "capacity": 2,
+      "lighting": "warm ceiling lamp + window bounce",
+      "nav": "bed/desk perimeter, no blockers at door",
+      "reuse": [
+        "Slifer wood/cream palette",
+        "SM_Bed",
+        "SM_Desk",
+        "SM_Chair",
+        "SM_Wardrobe"
+      ],
+      "props": [
+        "single bed",
+        "desk",
+        "chair",
+        "wardrobe",
+        "card trunk",
+        "save/sleep mark",
+        "window"
+      ],
+      "notes": "Vertical-slice room. Bed is the sleep/save interaction; keep 1.2 m clear at the door.",
+      "interior_exit_ue": [
+        330000,
+        297600,
+        -29900
+      ],
+      "arrival_ue": [
+        330000,
+        297750,
+        -29900
+      ]
+    },
+    {
+      "id": "slifer_banner_room",
+      "display_name": "Banner's Room",
+      "location_id": "slifer_banner_room",
+      "zone_id": "slifer",
+      "kind": "headmaster_room",
+      "status": "planned",
+      "origin_ue": [
+        330000,
+        315000,
+        -30000
+      ],
+      "size_m": [
+        6.5,
+        5.5,
+        3.2
+      ],
+      "bounds_ue": [
+        326750,
+        312250,
+        -30000,
+        333250,
+        317750,
+        -29680
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29680,
+      "entrance_portal_id": "portal_slifer_banner_room_exit",
+      "exterior_portal_id": "portal_slifer_banner_room_entrance",
+      "capacity": 3,
+      "lighting": "warm desk lamp + dim tank glow",
+      "nav": "desk/tank perimeter, clear center",
+      "reuse": [
+        "Slifer wood/cream palette",
+        "SM_Desk",
+        "SM_Bookshelf",
+        "Pharaoh tank kit"
+      ],
+      "props": [
+        "headmaster desk",
+        "bookshelf",
+        "Pharaoh tank",
+        "card binders",
+        "guest chair"
+      ],
+      "notes": "Pharaoh/E14 scenes. Tank is a lit prop anchor; no animal AI in this pass.",
+      "interior_exit_ue": [
+        330000,
+        312350,
+        -29900
+      ],
+      "arrival_ue": [
+        330000,
+        312500,
+        -29900
+      ]
+    },
+    {
+      "id": "slifer_jaden_room",
+      "display_name": "Jaden / Syrus / Chumley Bunk Room",
+      "location_id": "slifer_jaden_room",
+      "zone_id": "slifer",
+      "kind": "dorm_room",
+      "status": "planned",
+      "origin_ue": [
+        330000,
+        330000,
+        -30000
+      ],
+      "size_m": [
+        7.0,
+        5.5,
+        3.2
+      ],
+      "bounds_ue": [
+        326500,
+        327250,
+        -30000,
+        333500,
+        332750,
+        -29680
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29680,
+      "entrance_portal_id": "portal_slifer_jaden_room_exit",
+      "exterior_portal_id": "portal_slifer_jaden_room_entrance",
+      "capacity": 4,
+      "lighting": "warm ceiling lamp + window bounce",
+      "nav": "bunk perimeter, no blockers at door",
+      "reuse": [
+        "Slifer wood/cream palette",
+        "SM_BunkBed",
+        "SM_Desk",
+        "SM_Chair",
+        "card posters"
+      ],
+      "props": [
+        "bunk bed",
+        "second bunk",
+        "desk",
+        "duel disk stand",
+        "card posters",
+        "messy clothes"
+      ],
+      "notes": "E03 and Chumley room beats. Three NPC marks: Jaden, Syrus, Chumley.",
+      "interior_exit_ue": [
+        330000,
+        327350,
+        -29900
+      ],
+      "arrival_ue": [
+        330000,
+        327500,
+        -29900
+      ]
+    },
+    {
+      "id": "ra_player_room",
+      "display_name": "Ra Room (Player)",
+      "location_id": "ra_player_room",
+      "zone_id": "ra",
+      "kind": "dorm_room",
+      "status": "planned",
+      "origin_ue": [
+        360000,
+        300000,
+        -30000
+      ],
+      "size_m": [
+        6.5,
+        5.5,
+        3.4
+      ],
+      "bounds_ue": [
+        356750,
+        297250,
+        -30000,
+        363250,
+        302750,
+        -29660
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29660,
+      "entrance_portal_id": "portal_ra_player_room_exit",
+      "exterior_portal_id": "portal_ra_player_room_entrance",
+      "capacity": 2,
+      "lighting": "warm ceiling lamp + window fill",
+      "nav": "bed/desk perimeter",
+      "reuse": [
+        "Ra ochre/cream palette",
+        "SM_Bed",
+        "SM_Desk",
+        "SM_Wardrobe"
+      ],
+      "props": [
+        "bed",
+        "desk",
+        "wardrobe",
+        "card trunk",
+        "save/sleep mark"
+      ],
+      "notes": "Promotion room. Shares the Slifer room kit with a Ra material swap.",
+      "interior_exit_ue": [
+        360000,
+        297350,
+        -29900
+      ],
+      "arrival_ue": [
+        360000,
+        297500,
+        -29900
+      ]
+    },
+    {
+      "id": "obelisk_dining",
+      "display_name": "Obelisk Dining Room",
+      "location_id": "obelisk_dining",
+      "zone_id": "obelisk_boys",
+      "kind": "dining",
+      "status": "planned",
+      "origin_ue": [
+        390000,
+        300000,
+        -30000
+      ],
+      "size_m": [
+        14.0,
+        9.0,
+        4.2
+      ],
+      "bounds_ue": [
+        383000,
+        295500,
+        -30000,
+        397000,
+        304500,
+        -29580
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29580,
+      "entrance_portal_id": "portal_obelisk_dining_exit",
+      "exterior_portal_id": "portal_obelisk_dining_entrance",
+      "capacity": 12,
+      "lighting": "marble bounce + warm chandeliers",
+      "nav": "long table island with 1.4 m aisles",
+      "reuse": [
+        "Obelisk marble/gold palette",
+        "SM_LongTable",
+        "SM_Chair",
+        "chandelier kit"
+      ],
+      "props": [
+        "long dining table",
+        "12 chairs",
+        "chandelier",
+        "serving sideboard",
+        "portrait",
+        "crest"
+      ],
+      "notes": "Obelisk social/dining scenes. Also serves as the dorm common room.",
+      "interior_exit_ue": [
+        390000,
+        295600,
+        -29900
+      ],
+      "arrival_ue": [
+        390000,
+        295750,
+        -29900
+      ]
+    },
+    {
+      "id": "obelisk_player_room",
+      "display_name": "Obelisk Room (Player)",
+      "location_id": "obelisk_player_room",
+      "zone_id": "obelisk_boys",
+      "kind": "dorm_room",
+      "status": "planned",
+      "origin_ue": [
+        390000,
+        320000,
+        -30000
+      ],
+      "size_m": [
+        7.0,
+        6.0,
+        3.6
+      ],
+      "bounds_ue": [
+        386500,
+        317000,
+        -30000,
+        393500,
+        323000,
+        -29640
+      ],
+      "floor_z": -30000,
+      "ceiling_z": -29640,
+      "entrance_portal_id": "portal_obelisk_player_room_exit",
+      "exterior_portal_id": "portal_obelisk_player_room_entrance",
+      "capacity": 2,
+      "lighting": "cool window fill + warm bedside lamp",
+      "nav": "bed/desk perimeter",
+      "reuse": [
+        "Obelisk marble/gold palette",
+        "SM_Bed",
+        "SM_Desk",
+        "SM_Wardrobe"
+      ],
+      "props": [
+        "large bed",
+        "desk",
+        "wardrobe",
+        "card trunk",
+        "save/sleep mark",
+        "balcony door"
+      ],
+      "notes": "Promotion room. Material swap on the Ra/Slifer room kit plus marble trim.",
+      "interior_exit_ue": [
+        390000,
+        317100,
+        -29900
+      ],
+      "arrival_ue": [
+        390000,
+        317250,
+        -29900
+      ]
+    }
+  ],
+  "cell_block": {
+    "origin_ue": [
+      300000,
+      300000,
+      -30000
+    ],
+    "grid_spacing_cm": 2000,
+    "isolation": "below the sea floor but above the -50000 kill plane"
+  }
+}

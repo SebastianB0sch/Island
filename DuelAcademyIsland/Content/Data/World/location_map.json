@@ -1,0 +1,1176 @@
+{
+  "schema_version": 1,
+  "owner": "A08",
+  "source": "Docs/PORT_MASTERPLAN.md Appendix B + GX island layout",
+  "coordinate_space": "UE centimetres: X east, Y south (Blender +Y is negated), Z up",
+  "status_legend": {
+    "existing": "Geometry already exists and is reachable/walk-in; only anchors/portals are added.",
+    "needs_interior": "A new portal-cell interior is required; exterior door/marker and data exist.",
+    "merged": "Intentionally represented by another location; rationale recorded.",
+    "missing": "No credible GX mapping yet; release blocker."
+  },
+  "summary": {
+    "total": 36,
+    "existing": 20,
+    "needs_interior": 10,
+    "merged": 6,
+    "missing": 0,
+    "new_interiors": 10
+  },
+  "locations": [
+    {
+      "id": "academy_front",
+      "gba_name": "Duel Academy front",
+      "gx_name": "Duel Academy - Main Entrance / Plaza",
+      "gx_zone": "plaza",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "academy_front_steps",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        0,
+        -6500,
+        3400
+      ],
+      "bounds_ue": [
+        -9500,
+        -4000,
+        -1600,
+        9500,
+        6000,
+        8400
+      ],
+      "story_uses": [
+        "opening",
+        "E01"
+      ],
+      "required_interiors": [],
+      "rationale": "The plaza and academy portico already exist. Only a named arrival/cutscene mark is needed."
+    },
+    {
+      "id": "academy_lobby",
+      "gba_name": "Duel Academy front (registration)",
+      "gx_name": "Academy Lobby / Registration",
+      "gx_zone": "academy",
+      "status": "existing",
+      "category": "interior",
+      "anchor_id": "academy_registration_player",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        -1500,
+        -10500,
+        3600
+      ],
+      "bounds_ue": [
+        -3000,
+        -12773,
+        3600,
+        3000,
+        -8400,
+        5250
+      ],
+      "story_uses": [
+        "opening",
+        "E01"
+      ],
+      "required_interiors": [],
+      "rationale": "The lobby is fully modelled and walk-in from the portico; reception and the arena threshold are already in the mesh."
+    },
+    {
+      "id": "academy_classroom",
+      "gba_name": "Classroom",
+      "gx_name": "Academy Classroom",
+      "gx_zone": "academy",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "academy_classroom_teacher",
+      "interior_id": "academy_classroom",
+      "portal_id": "portal_academy_classroom_entrance",
+      "merged_into": null,
+      "ue_location": [
+        6400,
+        -15200,
+        3600
+      ],
+      "bounds_ue": [
+        293000,
+        295000,
+        -30000,
+        307000,
+        305000,
+        -29600
+      ],
+      "story_uses": [
+        "E02",
+        "class",
+        "exam"
+      ],
+      "required_interiors": [
+        "academy_classroom"
+      ],
+      "rationale": "The east classroom wing is a solid shell. A portal cell gives a 14 x 10 m room without touching the exterior mesh."
+    },
+    {
+      "id": "academy_test_room",
+      "gba_name": "Test room",
+      "gx_name": "Academy Exam Room",
+      "gx_zone": "academy",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "academy_test_room_proctor",
+      "interior_id": "academy_test_room",
+      "portal_id": "portal_academy_test_room_entrance",
+      "merged_into": null,
+      "ue_location": [
+        -6400,
+        -15200,
+        3600
+      ],
+      "bounds_ue": [
+        294000,
+        320500,
+        -30000,
+        306000,
+        329500,
+        -29620
+      ],
+      "story_uses": [
+        "exam"
+      ],
+      "required_interiors": [
+        "academy_test_room"
+      ],
+      "rationale": "Written exams need a controlled room. The west wing door is the natural entrance; the exam UI is A07/A09."
+    },
+    {
+      "id": "academy_arena",
+      "gba_name": "Duel Arena",
+      "gx_name": "Grand Duel Arena",
+      "gx_zone": "academy",
+      "status": "existing",
+      "category": "interior",
+      "anchor_id": "academy_arena_field_player",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        0,
+        -16500,
+        3650
+      ],
+      "bounds_ue": [
+        -3800,
+        -18800,
+        3600,
+        3800,
+        -11200,
+        6600
+      ],
+      "story_uses": [
+        "E01",
+        "practical_exam",
+        "story_duels"
+      ],
+      "required_interiors": [],
+      "rationale": "The arena is a finished walk-in interior with a duel field and 15 tiers. Add field/podium/camera marks only."
+    },
+    {
+      "id": "academy_gym",
+      "gba_name": "Gym",
+      "gx_name": "Duel Gym - Assembly Hall",
+      "gx_zone": "gym",
+      "status": "existing",
+      "category": "interior",
+      "anchor_id": "gym_assembly_stage",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        67711,
+        72547,
+        620
+      ],
+      "bounds_ue": [
+        65840,
+        68223,
+        600,
+        72566,
+        75606,
+        2100
+      ],
+      "story_uses": [
+        "opening",
+        "Sheppard speech",
+        "practical_exam"
+      ],
+      "required_interiors": [],
+      "rationale": "The 60 x 40 m gym hall already has a court, bleachers and two practice fields. It is the best stand-in for the opening assembly."
+    },
+    {
+      "id": "academy_crowler_office",
+      "gba_name": "Dr. Crowler's room",
+      "gx_name": "Crowler's Staff Office",
+      "gx_zone": "academy",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "crowler_office_desk",
+      "interior_id": "academy_crowler_office",
+      "portal_id": "portal_crowler_office_entrance",
+      "merged_into": null,
+      "ue_location": [
+        -8770,
+        -13100,
+        3600
+      ],
+      "bounds_ue": [
+        295500,
+        343500,
+        -30000,
+        304500,
+        350500,
+        -29650
+      ],
+      "story_uses": [
+        "E02",
+        "E05",
+        "staff scenes"
+      ],
+      "required_interiors": [
+        "academy_crowler_office"
+      ],
+      "rationale": "The west end block has a side door. A portal cell avoids carving the existing academy shell."
+    },
+    {
+      "id": "academy_chancellor_office",
+      "gba_name": "Chancellor's office",
+      "gx_name": "Chancellor Sheppard's Office",
+      "gx_zone": "academy",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "chancellor_office_desk",
+      "interior_id": "academy_chancellor_office",
+      "portal_id": "portal_chancellor_office_entrance",
+      "merged_into": null,
+      "ue_location": [
+        8770,
+        -13100,
+        3600
+      ],
+      "bounds_ue": [
+        295000,
+        361000,
+        -30000,
+        305000,
+        369000,
+        -29640
+      ],
+      "story_uses": [
+        "E01",
+        "ending",
+        "King of Games"
+      ],
+      "required_interiors": [
+        "academy_chancellor_office"
+      ],
+      "rationale": "Top-floor office and ending trigger. The east end block side door is a sensible entrance; the cell can be dressed as a top-floor room."
+    },
+    {
+      "id": "academy_card_shop",
+      "gba_name": "Card shop",
+      "gx_name": "Academy Card Shop",
+      "gx_zone": "academy",
+      "status": "existing",
+      "category": "interior",
+      "anchor_id": "academy_card_shop_player",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        2130,
+        -10500,
+        3600
+      ],
+      "bounds_ue": [
+        1800,
+        -12000,
+        3600,
+        2900,
+        -9000,
+        4250
+      ],
+      "story_uses": [
+        "shop",
+        "Dorothy",
+        "packs"
+      ],
+      "required_interiors": [],
+      "rationale": "Dorothy's shop is already modelled inside the lobby (x 18-29 m local). Economy work is A06/A09; the room exists."
+    },
+    {
+      "id": "slifer_front",
+      "gba_name": "Slifer Red - front",
+      "gx_name": "Slifer Red Dorm Exterior",
+      "gx_zone": "slifer",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "slifer_front_gate",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        -103300,
+        26200,
+        2900
+      ],
+      "bounds_ue": [
+        -107140,
+        24205,
+        2900,
+        -105940,
+        28325,
+        3600
+      ],
+      "story_uses": [
+        "opening",
+        "E03",
+        "walk_home"
+      ],
+      "required_interiors": [],
+      "rationale": "The two-storey dorm block and its dining annex already exist on the west cliff."
+    },
+    {
+      "id": "slifer_cafeteria",
+      "gba_name": "Slifer Red - cafeteria",
+      "gx_name": "Slifer Dining Hall",
+      "gx_zone": "slifer",
+      "status": "existing",
+      "category": "interior",
+      "anchor_id": "slifer_cafeteria_player",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        -106500,
+        27800,
+        2945
+      ],
+      "bounds_ue": [
+        -106950,
+        27350,
+        2945,
+        -105550,
+        28250,
+        3365
+      ],
+      "story_uses": [
+        "breakfast",
+        "E03",
+        "Banner DP"
+      ],
+      "required_interiors": [],
+      "rationale": "The 9 x 8 m dining annex is a real interior room with tables, a serving counter and a kitchen. Reuse it."
+    },
+    {
+      "id": "slifer_common_room",
+      "gba_name": "Slifer Red - common room",
+      "gx_name": "Slifer Common Room",
+      "gx_zone": "slifer",
+      "status": "merged",
+      "category": "interior",
+      "anchor_id": "slifer_cafeteria_player",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": "slifer_cafeteria",
+      "ue_location": [
+        -106500,
+        27800,
+        2945
+      ],
+      "bounds_ue": [
+        -106950,
+        27350,
+        2945,
+        -105550,
+        28250,
+        3365
+      ],
+      "story_uses": [
+        "social",
+        "dorm scenes"
+      ],
+      "required_interiors": [],
+      "rationale": "GBA common-room beats are staged in the existing dining hall and covered deck; a second lounge would duplicate the only Slifer social space."
+    },
+    {
+      "id": "slifer_player_room",
+      "gba_name": "Slifer Red - your room",
+      "gx_name": "Slifer Room 101 (Player)",
+      "gx_zone": "slifer",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "slifer_player_room_save",
+      "interior_id": "slifer_player_room",
+      "portal_id": "portal_slifer_player_room_entrance",
+      "merged_into": null,
+      "ue_location": [
+        -106800,
+        24505,
+        3025
+      ],
+      "bounds_ue": [
+        327000,
+        297500,
+        -30000,
+        333000,
+        302500,
+        -29680
+      ],
+      "story_uses": [
+        "opening",
+        "sleep",
+        "save",
+        "walk_home"
+      ],
+      "required_interiors": [
+        "slifer_player_room"
+      ],
+      "rationale": "Ground-floor room 101 door exists on the seaward facade but the block is solid. Portal cell carries bed, desk, save/sleep point."
+    },
+    {
+      "id": "slifer_banner_room",
+      "gba_name": "Slifer Red - Banner's room",
+      "gx_name": "Banner's Room",
+      "gx_zone": "slifer",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "slifer_banner_room_desk",
+      "interior_id": "slifer_banner_room",
+      "portal_id": "portal_slifer_banner_room_entrance",
+      "merged_into": null,
+      "ue_location": [
+        -106800,
+        26671.7,
+        3025
+      ],
+      "bounds_ue": [
+        326750,
+        312250,
+        -30000,
+        333250,
+        317750,
+        -29680
+      ],
+      "story_uses": [
+        "E14",
+        "Pharaoh",
+        "Banner scenes"
+      ],
+      "required_interiors": [
+        "slifer_banner_room"
+      ],
+      "rationale": "Ground-floor east room by the dining passage. New cell holds the headmaster desk, bookshelf and Pharaoh tank."
+    },
+    {
+      "id": "slifer_jaden_room",
+      "gba_name": "Slifer Red - Jaden's room",
+      "gx_name": "Jaden / Syrus / Chumley Bunk Room",
+      "gx_zone": "slifer",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "slifer_jaden_room_jaden",
+      "interior_id": "slifer_jaden_room",
+      "portal_id": "portal_slifer_jaden_room_entrance",
+      "merged_into": null,
+      "ue_location": [
+        -106800,
+        24505,
+        3300
+      ],
+      "bounds_ue": [
+        326500,
+        327250,
+        -30000,
+        333500,
+        332750,
+        -29680
+      ],
+      "story_uses": [
+        "E03",
+        "Chumley room",
+        "social"
+      ],
+      "required_interiors": [
+        "slifer_jaden_room"
+      ],
+      "rationale": "Upper-floor room directly above the player room. New 7 x 5.5 m bunk room for Jaden, Syrus and Chumley scenes."
+    },
+    {
+      "id": "ra_front",
+      "gba_name": "Ra Yellow - front",
+      "gx_name": "Ra Yellow Dorm Exterior",
+      "gx_zone": "ra",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "ra_front_gate",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        -63000,
+        60000,
+        2365.5
+      ],
+      "bounds_ue": [
+        -72284,
+        62794,
+        2250,
+        -65471,
+        68915,
+        3900
+      ],
+      "story_uses": [
+        "dorm visit",
+        "Bastion"
+      ],
+      "required_interiors": [],
+      "rationale": "The three-storey Ra block and its cafeteria wing already exist."
+    },
+    {
+      "id": "ra_cafeteria",
+      "gba_name": "Ra Yellow - cafeteria",
+      "gx_name": "Ra Cafeteria",
+      "gx_zone": "ra",
+      "status": "existing",
+      "category": "interior",
+      "anchor_id": "ra_cafeteria_player",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        -71259.8,
+        64103.8,
+        2295
+      ],
+      "bounds_ue": [
+        -71500,
+        63800,
+        2295,
+        -71000,
+        64400,
+        2715
+      ],
+      "story_uses": [
+        "lunch",
+        "Bastion",
+        "dorm scenes"
+      ],
+      "required_interiors": [],
+      "rationale": "The cafeteria wing is a real interior room with serving counter and windows. Reuse it."
+    },
+    {
+      "id": "ra_common_room",
+      "gba_name": "Ra Yellow - common room",
+      "gx_name": "Ra Common Room",
+      "gx_zone": "ra",
+      "status": "merged",
+      "category": "interior",
+      "anchor_id": "ra_cafeteria_player",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": "ra_cafeteria",
+      "ue_location": [
+        -71259.8,
+        64103.8,
+        2295
+      ],
+      "bounds_ue": [
+        -71500,
+        63800,
+        2295,
+        -71000,
+        64400,
+        2715
+      ],
+      "story_uses": [
+        "social"
+      ],
+      "required_interiors": [],
+      "rationale": "No GBA Appendix B row; the existing cafeteria doubles as Ra's common room. Keep one social space per dorm in the vertical slice."
+    },
+    {
+      "id": "ra_player_room",
+      "gba_name": "Ra Yellow - your room",
+      "gx_name": "Ra Room (Player)",
+      "gx_zone": "ra",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "ra_player_room_bed",
+      "interior_id": "ra_player_room",
+      "portal_id": "portal_ra_player_room_entrance",
+      "merged_into": null,
+      "ue_location": [
+        -68013.6,
+        65835.6,
+        2425
+      ],
+      "bounds_ue": [
+        356750,
+        297250,
+        -30000,
+        363250,
+        302750,
+        -29660
+      ],
+      "story_uses": [
+        "dorm promotion",
+        "sleep",
+        "save"
+      ],
+      "required_interiors": [
+        "ra_player_room"
+      ],
+      "rationale": "Ra's main block is solid. A portal cell at the front bay gives the promoted player a room without rebuilding the facade."
+    },
+    {
+      "id": "obelisk_boys_front",
+      "gba_name": "Obelisk Blue boys - front",
+      "gx_name": "Obelisk Blue Boys' Dorm Exterior",
+      "gx_zone": "obelisk_boys",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "obelisk_front_gate",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        -50000,
+        -44000,
+        3413.5
+      ],
+      "bounds_ue": [
+        -65470,
+        -57519,
+        2850,
+        -56254,
+        -47927,
+        5250
+      ],
+      "story_uses": [
+        "dorm visit",
+        "Chazz",
+        "Zane"
+      ],
+      "required_interiors": [],
+      "rationale": "The palace-scale Obelisk boys' block, courtyard and gate already exist."
+    },
+    {
+      "id": "obelisk_dining",
+      "gba_name": "Obelisk Blue boys - dining",
+      "gx_name": "Obelisk Dining Room",
+      "gx_zone": "obelisk_boys",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "obelisk_dining_player",
+      "interior_id": "obelisk_dining",
+      "portal_id": "portal_obelisk_dining_entrance",
+      "merged_into": null,
+      "ue_location": [
+        -59846.8,
+        -51871.4,
+        3150
+      ],
+      "bounds_ue": [
+        383000,
+        295500,
+        -30000,
+        397000,
+        304500,
+        -29580
+      ],
+      "story_uses": [
+        "dining",
+        "Obelisk social",
+        "Zane"
+      ],
+      "required_interiors": [
+        "obelisk_dining"
+      ],
+      "rationale": "The main block is a solid shell. A 14 x 9 m portal cell gives the five-star dining room a stage."
+    },
+    {
+      "id": "obelisk_common_room",
+      "gba_name": "Obelisk Blue boys - common room",
+      "gx_name": "Obelisk Common Room",
+      "gx_zone": "obelisk_boys",
+      "status": "merged",
+      "category": "interior",
+      "anchor_id": "obelisk_dining_player",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": "obelisk_dining",
+      "ue_location": [
+        -59846.8,
+        -51871.4,
+        3150
+      ],
+      "bounds_ue": [
+        383000,
+        295500,
+        -30000,
+        397000,
+        304500,
+        -29580
+      ],
+      "story_uses": [
+        "social"
+      ],
+      "required_interiors": [],
+      "rationale": "Merged into the planned Obelisk dining room to keep one large social cell instead of two half-used rooms."
+    },
+    {
+      "id": "obelisk_player_room",
+      "gba_name": "Obelisk Blue boys - your room",
+      "gx_name": "Obelisk Room (Player)",
+      "gx_zone": "obelisk_boys",
+      "status": "needs_interior",
+      "category": "interior",
+      "anchor_id": "obelisk_player_room_bed",
+      "interior_id": "obelisk_player_room",
+      "portal_id": "portal_obelisk_player_room_entrance",
+      "merged_into": null,
+      "ue_location": [
+        -57649,
+        -54335.1,
+        3150
+      ],
+      "bounds_ue": [
+        386500,
+        317000,
+        -30000,
+        393500,
+        323000,
+        -29640
+      ],
+      "story_uses": [
+        "dorm promotion",
+        "sleep",
+        "save"
+      ],
+      "required_interiors": [
+        "obelisk_player_room"
+      ],
+      "rationale": "East pavilion front has a first-floor door; the room cell is dressed as an elite dorm suite."
+    },
+    {
+      "id": "obelisk_girls_front",
+      "gba_name": "Obelisk Blue girls - front",
+      "gx_name": "Obelisk Blue Girls' Dorm",
+      "gx_zone": "obelisk_girls",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "obelisk_girls_gate",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        -12000,
+        -84000,
+        2945.3
+      ],
+      "bounds_ue": [
+        -32500,
+        -99750,
+        3300,
+        -10500,
+        -81250,
+        8300
+      ],
+      "story_uses": [
+        "Alexis",
+        "girls' dorm gate",
+        "story trigger"
+      ],
+      "required_interiors": [],
+      "rationale": "Exterior and garden exist. Appendix B only needs a story trigger here; no enterable girls' dorm is required in this pass."
+    },
+    {
+      "id": "harbor",
+      "gba_name": "Harbor",
+      "gx_name": "Duel Academy Harbor",
+      "gx_zone": "harbor",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "harbor_dock",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        4000,
+        104000,
+        420
+      ],
+      "bounds_ue": [
+        -27000,
+        90500,
+        -5700,
+        39000,
+        124500,
+        6300
+      ],
+      "story_uses": [
+        "arrival",
+        "ferry",
+        "Dorothy truck"
+      ],
+      "required_interiors": [],
+      "rationale": "Quay, terminal, warehouse, breakwater and heliport already exist. The terminal/warehouse covers harbor-office scenes."
+    },
+    {
+      "id": "ocean_shore",
+      "gba_name": "Ocean / next to ocean",
+      "gx_name": "Shoreline / Lake Overlook",
+      "gx_zone": "beach",
+      "status": "merged",
+      "category": "exterior",
+      "anchor_id": "beach_shore",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": "beach",
+      "ue_location": [
+        82000,
+        56000,
+        911
+      ],
+      "bounds_ue": [
+        60000,
+        33000,
+        -3513,
+        112000,
+        79000,
+        4487
+      ],
+      "story_uses": [
+        "walk_home",
+        "beach scenes"
+      ],
+      "required_interiors": [],
+      "rationale": "The island's beach, lake shore and cliff overlook already cover the GBA 'next to the ocean' scenes; use location-specific anchors."
+    },
+    {
+      "id": "beach",
+      "gba_name": "Ocean / next to ocean (beach)",
+      "gx_name": "South-East Beach",
+      "gx_zone": "beach",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "beach_shore",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        82000,
+        56000,
+        911
+      ],
+      "bounds_ue": [
+        60000,
+        33000,
+        -3513,
+        112000,
+        79000,
+        4487
+      ],
+      "story_uses": [
+        "beach duel",
+        "walk_home"
+      ],
+      "required_interiors": [],
+      "rationale": "Existing beach zone with a duel court and shore anchors."
+    },
+    {
+      "id": "lake",
+      "gba_name": "Ocean / next to ocean (lake)",
+      "gx_name": "Academy Lake",
+      "gx_zone": "lake",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "lake_shore",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        -4000,
+        -76000,
+        2824.5
+      ],
+      "bounds_ue": [
+        -7000,
+        -94500,
+        -2758,
+        33000,
+        -61500,
+        7241
+      ],
+      "story_uses": [
+        "Alexis",
+        "rowboat",
+        "walk_home"
+      ],
+      "required_interiors": [],
+      "rationale": "Existing lake zone; the girls' dorm jetty and lake walk are already modelled."
+    },
+    {
+      "id": "volcano_crater",
+      "gba_name": "Volcano - near crater",
+      "gx_name": "Volcano Crater Rim",
+      "gx_zone": "volcano",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "volcano_crater",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        90500,
+        -64000,
+        12719.2
+      ],
+      "bounds_ue": [
+        30000,
+        -112000,
+        425,
+        114000,
+        -28000,
+        52425
+      ],
+      "story_uses": [
+        "Titan",
+        "Shadow Game",
+        "E24"
+      ],
+      "required_interiors": [],
+      "rationale": "Crater rim and trail already exist. Add a Titan/Shadow Game anchor on the rim."
+    },
+    {
+      "id": "abandoned_dorm",
+      "gba_name": "Abandoned dorm",
+      "gx_name": "Abandoned Dorm",
+      "gx_zone": "abandoned",
+      "status": "existing",
+      "category": "interior",
+      "anchor_id": "abandoned_dorm_hall",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        91930,
+        6000,
+        1960
+      ],
+      "bounds_ue": [
+        91900,
+        4000,
+        1900,
+        94000,
+        8000,
+        4100
+      ],
+      "story_uses": [
+        "Titan",
+        "Shadow Game",
+        "E24"
+      ],
+      "required_interiors": [],
+      "rationale": "The entrance hall, broken staircase and gallery are already modelled as a walk-in interior. Add hall/Titan marks."
+    },
+    {
+      "id": "hot_springs",
+      "gba_name": "Hot springs",
+      "gx_name": "Volcanic Hot Springs",
+      "gx_zone": "hotsprings",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "hot_springs",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        103500,
+        -30000,
+        5971.7
+      ],
+      "bounds_ue": [
+        101500,
+        -39000,
+        1900,
+        114500,
+        -27000,
+        9900
+      ],
+      "story_uses": [
+        "social",
+        "optional"
+      ],
+      "required_interiors": [],
+      "rationale": "Existing onsen zone; flavor and optional schedules only."
+    },
+    {
+      "id": "forest",
+      "gba_name": "Forest",
+      "gx_name": "Duel Academy Forest",
+      "gx_zone": "forest",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "forest_shrine",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        71392.8,
+        -35029.8,
+        12865.1
+      ],
+      "bounds_ue": [
+        30000,
+        -47000,
+        -6071,
+        82000,
+        1000,
+        17929
+      ],
+      "story_uses": [
+        "optional",
+        "forest shrine"
+      ],
+      "required_interiors": [],
+      "rationale": "Existing forest zone and shrine; optional schedules and flavor."
+    },
+    {
+      "id": "lighthouse",
+      "gba_name": "Lighthouse",
+      "gx_name": "Harbor Lighthouse",
+      "gx_zone": "lighthouse",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "lighthouse_view",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        25500,
+        119500,
+        500
+      ],
+      "bounds_ue": [
+        25500,
+        119000,
+        -5600,
+        34500,
+        128000,
+        6400
+      ],
+      "story_uses": [
+        "Zane",
+        "optional"
+      ],
+      "required_interiors": [],
+      "rationale": "Existing breakwater lighthouse; a view anchor covers the Kaiser scene."
+    },
+    {
+      "id": "cliffs",
+      "gba_name": "West cliffs / sunset point",
+      "gx_name": "West Cliffs - Sunset Point",
+      "gx_zone": "cliffs",
+      "status": "existing",
+      "category": "exterior",
+      "anchor_id": "cliffs_sunset",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": null,
+      "ue_location": [
+        -105850,
+        -15350,
+        3084.1
+      ],
+      "bounds_ue": [
+        -131000,
+        -41000,
+        -9005,
+        -99000,
+        11000,
+        14994
+      ],
+      "story_uses": [
+        "walk_home",
+        "optional"
+      ],
+      "required_interiors": [],
+      "rationale": "Existing cliff zone; useful for quiet character beats and sunset shots."
+    },
+    {
+      "id": "academy_arena_backstage",
+      "gba_name": "Duel Arena - backstage",
+      "gx_name": "Arena Backstage / Threshold",
+      "gx_zone": "academy",
+      "status": "merged",
+      "category": "interior",
+      "anchor_id": "academy_arena_field_player",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": "academy_arena",
+      "ue_location": [
+        0,
+        -12773,
+        3700
+      ],
+      "bounds_ue": [
+        -3800,
+        -18800,
+        3600,
+        3800,
+        -11200,
+        6600
+      ],
+      "story_uses": [
+        "duel entrances"
+      ],
+      "required_interiors": [],
+      "rationale": "The lobby-to-arena threshold and the field steps already provide entrance staging; a separate corridor is deferred."
+    },
+    {
+      "id": "harbor_office",
+      "gba_name": "Harbor office",
+      "gx_name": "Harbor Terminal / Warehouse Office",
+      "gx_zone": "harbor",
+      "status": "merged",
+      "category": "interior",
+      "anchor_id": "harbor_office",
+      "interior_id": null,
+      "portal_id": null,
+      "merged_into": "harbor",
+      "ue_location": [
+        6000,
+        107000,
+        300
+      ],
+      "bounds_ue": [
+        -27000,
+        90500,
+        -5700,
+        39000,
+        124500,
+        6300
+      ],
+      "story_uses": [
+        "Dorothy truck",
+        "ferry"
+      ],
+      "required_interiors": [],
+      "rationale": "The harbor terminal and warehouse are existing shells; use their interior volumes for office beats instead of a new cell."
+    }
+  ]
+}
