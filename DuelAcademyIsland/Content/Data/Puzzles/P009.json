@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "id": "P009",
+  "level": 1,
+  "title": "Storm the Backrow",
+  "opponent": "mimicry",
+  "seed": 1009,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      422
+    ],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [
+      {
+        "card_id": 421,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 422
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "confidence": "high",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "Heavy Storm clears a set Mirror Force before the direct attack.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_009",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      1,
+      348,
+      1064
+    ],
+    "solution_card_names": [
+      "Back to Square One",
+      "Blue-Eyes White Dragon",
+      "Jinzo"
+    ],
+    "solution_steps": [
+      "Summon Jinzo by tributing Blue-Eyes White Dragon.",
+      "Activate Back to Square One, discard any card, and choose your opponent's",
+      "Enter Battle Phase and attack with Jinzo."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}

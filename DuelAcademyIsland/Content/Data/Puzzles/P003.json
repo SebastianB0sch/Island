@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "id": "P003",
+  "level": 1,
+  "title": "Summon and Strike",
+  "opponent": "mimicry",
+  "seed": 1003,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      234
+    ],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 1900,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "normal_summon",
+      "card_id": 234
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 234,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 100,
+    "cards": []
+  },
+  "confidence": "high",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "One Normal Summon of a Level 4 monster, one direct attack. Gemini Elf has 1900 ATK.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_003",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      428,
+      472,
+      944,
+      1019,
+      1143
+    ],
+    "solution_card_names": [
+      "Imperial Order",
+      "Master of Oz",
+      "Piranha Army",
+      "Royal Surrender",
+      "Snatch Steal"
+    ],
+    "solution_steps": [
+      "Summon Piranha Army.",
+      "Activate Snatch Steal and choose Master of Oz as the target.",
+      "Counter your opponent's Imperial Order with Royal Surrender.",
+      "Enter Battle Phase and attack with both monsters."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}

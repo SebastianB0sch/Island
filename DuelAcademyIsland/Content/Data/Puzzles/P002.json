@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "id": "P002",
+  "level": 1,
+  "title": "Two Beats",
+  "opponent": "mimicry",
+  "seed": 1002,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 363,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 4900,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 363,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 100,
+    "cards": []
+  },
+  "confidence": "high",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "2400 + 2500 = 4900 exact. Teaches attack sequencing.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_002",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      625,
+      691,
+      766,
+      928
+    ],
+    "solution_card_names": [
+      "Autonomous Action Unit",
+      "Dark Dust Spirit",
+      "Gilasaurus",
+      "Invader of Darkness"
+    ],
+    "solution_steps": [
+      "Special Summon Gilasaurus from your hand in attack position.",
+      "Summon Dark Dust Spirit by tributing Gilasaurus.",
+      "Use Autonomous Action Unit and select Invader of Darkness as its target.",
+      "Enter Battle Phase and attack with both monsters."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}

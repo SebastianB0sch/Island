@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "id": "P014",
+  "level": 1,
+  "title": "United Front",
+  "opponent": "mimicry",
+  "seed": 1014,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      593
+    ],
+    "field": [
+      {
+        "card_id": 1106,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 1107,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3800,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 593
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1106,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1107,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "confidence": "medium",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "United We Stand gives +1600 to the equipped monster; either attacker order totals 3800.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_014",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      262,
+      477,
+      658,
+      749,
+      1074
+    ],
+    "solution_card_names": [
+      "Cave Dragon",
+      "Divine Dragon Ragnarok",
+      "Jack's Knight",
+      "Penguin Soldier",
+      "Premature Burial"
+    ],
+    "solution_steps": [
+      "Flip Summon Penguin Soldier and return both him and Jack's Knight to the respective owners' hands.",
+      "Summon Cave Dragon.",
+      "Use Premature Burial on Divine Dragon Ragnarok.",
+      "Enter Battle Phase and attack with both monsters."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}

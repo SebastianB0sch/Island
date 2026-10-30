@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "id": "P005",
+  "level": 1,
+  "title": "Fissure the Wall",
+  "opponent": "mimicry",
+  "seed": 1005,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      379
+    ],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 2400,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 379
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 120,
+    "cards": []
+  },
+  "confidence": "high",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "Fissure removes the only opposing monster; Red-Eyes then attacks directly.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_005",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      225,
+      497,
+      526
+    ],
+    "solution_card_names": [
+      "Call of the Haunted",
+      "Cannon Soldier",
+      "Gearfried the Iron Knight"
+    ],
+    "solution_steps": [
+      "Activate Call of the Haunted and bring back Cannon Soldier.",
+      "Summon Gearfried the Iron Knight and use Cannon Soldier's effect to sacrifice",
+      "Use Cannon Soldier's effect again, this time sacrificing Cannon Soldier"
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}

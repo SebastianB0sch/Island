@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "spellcaster",
+  "label": "Spellcaster",
+  "strategy": "spellcaster",
+  "difficulty": 3,
+  "deterministic": true,
+  "aggression": 0.55,
+  "weights": {
+    "summon": 1.0,
+    "attack": 0.5,
+    "direct_attack": 0.8,
+    "removal": 0.6,
+    "equip": 0.5,
+    "set_trap": 0.7,
+    "field_spell": 0.7,
+    "fusion": 0.3,
+    "ritual": 0.6,
+    "burn": 0.1,
+    "stall": 0.1,
+    "draw": 0.7,
+    "search": 0.4,
+    "heal": 0.2,
+    "swarm": 0.5,
+    "big_monster": 0.6,
+    "control": 0.8
+  },
+  "thresholds": {
+    "attack_into_set_atk": 1900,
+    "tribute_min_gain": 200,
+    "save_removal_for_atk": 1600,
+    "hold_trap_lp": 2500,
+    "direct_attack_when_lethal": true,
+    "respect_face_down": true
+  },
+  "preferred_card_names": [
+    "Dark Magician",
+    "Dark Magician Girl",
+    "Skilled Dark Magician",
+    "Maha Vailo",
+    "Mage Power"
+  ],
+  "avoid_card_names": [],
+  "notes": "",
+  "confidence": "medium",
+  "source": "A07 design derived from game3d engine.js runAiTurn heuristics"
+}

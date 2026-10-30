@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "description": "Practical exam definitions: seven objectives demonstrated against Mimicry's stall deck.",
+  "opponent": "mimicry",
+  "deck": "mimicry_stall",
+  "player_lp": 8000,
+  "opponent_lp": 8000,
+  "turn_limit": 10,
+  "time_limit": 600,
+  "objectives": [
+    {
+      "id": "battle",
+      "label": "Destroy 3 monsters by battle",
+      "event": "monster_destroyed_by_battle",
+      "target": 3,
+      "points": 30,
+      "repeatable": true,
+      "canon_name": "Practical Exam 1 - Battle"
+    },
+    {
+      "id": "spells",
+      "label": "Activate 3 Spell Cards",
+      "event": "spell_activated",
+      "target": 3,
+      "points": 30,
+      "repeatable": true,
+      "canon_name": "Practical Exam 2 - Spells"
+    },
+    {
+      "id": "traps",
+      "label": "Activate 2 Trap Cards",
+      "event": "trap_activated",
+      "target": 2,
+      "points": 30,
+      "repeatable": true,
+      "canon_name": "Practical Exam 3 - Traps"
+    },
+    {
+      "id": "damage",
+      "label": "Inflict 3000 battle damage",
+      "event": "battle_damage_dealt",
+      "target": 3000,
+      "points": 30,
+      "repeatable": true,
+      "canon_name": "Practical Exam 4 - Damage"
+    },
+    {
+      "id": "fusion",
+      "label": "Perform 1 Fusion Summon",
+      "event": "fusion_summoned",
+      "target": 1,
+      "points": 30,
+      "repeatable": false,
+      "canon_name": "Practical Exam 5 - Fusion"
+    },
+    {
+      "id": "ritual",
+      "label": "Perform 1 Ritual Summon",
+      "event": "ritual_summoned",
+      "target": 1,
+      "points": 25,
+      "repeatable": false,
+      "canon_name": "Practical Exam 6 - Ritual"
+    },
+    {
+      "id": "special_summon",
+      "label": "Perform 2 Special Summons",
+      "event": "special_summoned",
+      "target": 2,
+      "points": 25,
+      "repeatable": true,
+      "canon_name": "Practical Exam 7 - Special Summon"
+    }
+  ],
+  "pass_points": 120,
+  "max_points": 200,
+  "retry": {
+    "attempts": 1,
+    "recovery_opponent": "fontaine",
+    "recovery_deck": "fontaine_nurse"
+  },
+  "confidence": "medium",
+  "source": "Masterplan \u00a72.3/\u00a75.7 lists the seven practical objectives and Mimicry; exact thresholds are A07-authored.",
+  "notes": "A09 displays objective progress; A04 emits the objective events. The player's own deck is used; the practical does not supply a deck.",
+  "canon_source": "DuelAcademyIsland/Content/Data/Canon/exams.json (A01 extraction)",
+  "canon_confidence": "high",
+  "canon_note": "A01 confirms the seven practical themes and Mimicry; exact thresholds remain A07-authored."
+}

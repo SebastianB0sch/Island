@@ -1,0 +1,3807 @@
+{
+  "schema_version": 1,
+  "generated": "2026-10-30",
+  "description": "Duel Academy GBA roster. Ranked 1-20 plus event/exam-only opponents. Decks live in Opponents/decks; AI profiles in Opponents/ai.",
+  "dorms": [
+    "Slifer",
+    "Ra",
+    "Obelisk",
+    "Staff",
+    "Event",
+    "Exam"
+  ],
+  "periods": [
+    "AM",
+    "PM",
+    "Night"
+  ],
+  "weekdays": [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
+  ],
+  "duelists": [
+    {
+      "id": "jaden",
+      "name": "Jaden Yuki",
+      "aliases": [
+        "Judai Yuki"
+      ],
+      "role": "ranked",
+      "rank": 1,
+      "dorm": "Slifer",
+      "year": 1,
+      "title": "Slifer Red",
+      "ai_profile": "fusion",
+      "decks": [
+        "jaden_year1"
+      ],
+      "default_deck": "jaden_year1",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "slifer",
+          "interior": "slifer_common",
+          "name": "Slifer common room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_arena",
+          "name": "Duel Arena"
+        },
+        {
+          "zone": "slifer",
+          "interior": "slifer_jaden_room",
+          "name": "Jaden's room"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_arena"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_common"
+        },
+        {
+          "weekdays": [
+            "Saturday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_common"
+        },
+        {
+          "weekdays": [
+            "Saturday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_jaden_room"
+        },
+        {
+          "weekdays": [
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_common"
+        },
+        {
+          "weekdays": [
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_jaden_room"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_jaden",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_jaden",
+        "address": "jaden.yuki@duelacademy.edu",
+        "threads": [
+          {
+            "id": "jaden_01",
+            "subject": "Duel me!",
+            "unlock_flag": "met_jaden"
+          },
+          {
+            "id": "jaden_02",
+            "subject": "New fusion idea",
+            "unlock_flag": "event_04_cleared"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_jaden",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "jaden_christmas",
+          "type": "dp",
+          "amount": 500,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA Christmas gift scene; exact amount unverified"
+        }
+      ],
+      "ante": [
+        1106,
+        1107,
+        1109
+      ],
+      "walk_home": {
+        "enabled": true,
+        "zone": "slifer",
+        "weekdays": [
+          "Friday"
+        ],
+        "period": "Night",
+        "flag": "walk_home_jaden",
+        "confidence": "low",
+        "source": "Yugipedia event outline"
+      },
+      "confidence": "high",
+      "source": "GBA main cast; existing portrait/cast list; Jaden deck from game3d decklists.js",
+      "notes": "Starting rival and tutorial-adjacent duelist. Deck is the existing canonical 53-card Jaden list.",
+      "signature_card_ids": [
+        363,
+        381,
+        655,
+        663,
+        666,
+        722,
+        780,
+        1025,
+        1129,
+        1130,
+        1160,
+        1161,
+        1184,
+        1185
+      ],
+      "signature_cards": [
+        "Cyber-Tech Alligator",
+        "Polymerization",
+        "Spear Dragon",
+        "Luster Dragon",
+        "Kaiser Glider",
+        "F.G.D.",
+        "Luster Dragon",
+        "Fusion Weapon",
+        "Elemental Hero Flame Wingman",
+        "Elemental Hero Thunder Giant",
+        "Skyscraper",
+        "Winged Kuriboh LV10",
+        "Miracle Fusion",
+        "Dragon's Mirror"
+      ],
+      "canon_gift_card_ids": [
+        1129
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "syrus",
+      "name": "Syrus Truesdale",
+      "aliases": [
+        "Sho Marufuji"
+      ],
+      "role": "ranked",
+      "rank": 8,
+      "dorm": "Slifer",
+      "year": 1,
+      "title": "Slifer Red",
+      "ai_profile": "machine",
+      "decks": [
+        "syrus_roids",
+        "syrus_roids_plus"
+      ],
+      "default_deck": "syrus_roids",
+      "evolution_rules": [
+        {
+          "id": "syrus_roid_mk2",
+          "after_wins": 3,
+          "counter": "wins_syrus",
+          "deck": "syrus_roids_plus",
+          "confidence": "low",
+          "source": "A07 authored evolution"
+        }
+      ],
+      "locations": [
+        {
+          "zone": "slifer",
+          "interior": "slifer_common",
+          "name": "Slifer common room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        },
+        {
+          "zone": "gym",
+          "interior": "gym_main",
+          "name": "Duel Gym"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "zone": "academy",
+          "interior": "academy_classroom"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "zone": "gym",
+          "interior": "gym_main"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_syrus",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_syrus",
+        "address": "syrus.truesdale@duelacademy.edu",
+        "threads": [
+          {
+            "id": "syrus_01",
+            "subject": "Big brother tips",
+            "unlock_flag": "met_syrus"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_syrus",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "syrus_christmas",
+          "type": "card",
+          "card_id": 1149,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; card choice unverified"
+        }
+      ],
+      "ante": [
+        1146,
+        1148,
+        1149
+      ],
+      "walk_home": {
+        "enabled": true,
+        "zone": "slifer",
+        "weekdays": [
+          "Monday"
+        ],
+        "period": "Night",
+        "flag": "walk_home_syrus",
+        "confidence": "low",
+        "source": "Yugipedia event outline"
+      },
+      "confidence": "medium",
+      "source": "GBA main cast; Vehicroid theme from cards 1146-1158",
+      "notes": "Roid deck. Steam Gyroid/UFOroid Fighter recipes are not in fusions.json yet.",
+      "signature_card_ids": [
+        117,
+        556,
+        1040,
+        1056,
+        1155
+      ],
+      "signature_cards": [
+        "Black Pendant",
+        "Limiter Removal",
+        "Harpie Girl",
+        "Big Core",
+        "Steam Gyroid"
+      ],
+      "canon_gift_card_ids": [
+        1147,
+        1159
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "chumley",
+      "name": "Chumley Huffington",
+      "aliases": [
+        "Hayato Maeda"
+      ],
+      "role": "ranked",
+      "rank": 9,
+      "dorm": "Slifer",
+      "year": 1,
+      "title": "Slifer Red",
+      "ai_profile": "beast",
+      "decks": [
+        "chumley_koala"
+      ],
+      "default_deck": "chumley_koala",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "slifer",
+          "interior": "slifer_cafeteria",
+          "name": "Slifer cafeteria"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_shop",
+          "name": "Card Shop"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_shop"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_cafeteria"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_cafeteria"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_cafeteria"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_chumley",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_chumley",
+        "address": "chumley.huffington@duelacademy.edu",
+        "threads": [
+          {
+            "id": "chumley_01",
+            "subject": "Koala time",
+            "unlock_flag": "met_chumley"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_chumley",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "chumley_christmas",
+          "type": "dp",
+          "amount": 300,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; amount unverified"
+        }
+      ],
+      "ante": [
+        793,
+        854,
+        855
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "medium",
+      "source": "GBA main cast; Koala theme from cards 793/854/855",
+      "notes": "Beast deck. Big Koala fusion recipe is pending A05.",
+      "signature_card_ids": [
+        114,
+        793,
+        1019,
+        1090
+      ],
+      "signature_cards": [
+        "Beast Fangs",
+        "Des Koala",
+        "Master of Oz",
+        "Poison Fangs"
+      ],
+      "canon_gift_card_ids": [
+        1019,
+        1125
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "bastion",
+      "name": "Bastion Misawa",
+      "aliases": [
+        "Daichi Misawa"
+      ],
+      "role": "ranked",
+      "rank": 5,
+      "dorm": "Ra",
+      "year": 1,
+      "title": "Ra Yellow",
+      "ai_profile": "spellcaster",
+      "decks": [
+        "bastion_chem",
+        "bastion_chem_plus"
+      ],
+      "default_deck": "bastion_chem",
+      "evolution_rules": [
+        {
+          "id": "bastion_chaos",
+          "after_wins": 4,
+          "counter": "wins_bastion",
+          "deck": "bastion_chem_plus",
+          "confidence": "low",
+          "source": "A07 authored evolution"
+        }
+      ],
+      "locations": [
+        {
+          "zone": "ra",
+          "interior": "ra_common",
+          "name": "Ra common room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_library",
+          "name": "Library"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_classroom"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_library"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_bastion",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_bastion",
+        "address": "bastion.misawa@duelacademy.edu",
+        "threads": [
+          {
+            "id": "bastion_01",
+            "subject": "A calculated duel",
+            "unlock_flag": "met_bastion"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_bastion",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "bastion_christmas",
+          "type": "card",
+          "card_id": 783,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; card choice unverified"
+        }
+      ],
+      "ante": [
+        783,
+        218,
+        234
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "medium",
+      "source": "GBA main cast; spellcaster/attribute theme; exact GBA list unknown",
+      "notes": "Water Dragon line is not in the 1,200-card DB. Uses a supported spellcaster/attribute build.",
+      "signature_card_ids": [
+        29,
+        262,
+        337,
+        338,
+        351,
+        364,
+        467,
+        500,
+        502,
+        1021
+      ],
+      "signature_cards": [
+        "Sangan",
+        "Penguin Soldier",
+        "Hyozanryu",
+        "Alpha The Magnet Warrior",
+        "Beta The Magnet Warrior",
+        "Gamma The Magnet Warrior",
+        "Backup Soldier",
+        "Valkyrion the Magna Warrior",
+        "Vorse Raider",
+        "Dark Factory of Mass Production"
+      ],
+      "canon_gift_card_ids": [
+        503
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "chazz",
+      "name": "Chazz Princeton",
+      "aliases": [
+        "Jun Manjoume"
+      ],
+      "role": "ranked",
+      "rank": 3,
+      "dorm": "Obelisk",
+      "year": 1,
+      "title": "Obelisk Blue",
+      "ai_profile": "ojama",
+      "decks": [
+        "chazz_ojama",
+        "chazz_ojama_plus"
+      ],
+      "default_deck": "chazz_ojama",
+      "evolution_rules": [
+        {
+          "id": "chazz_ojama_king",
+          "after_wins": 5,
+          "counter": "wins_chazz",
+          "deck": "chazz_ojama_plus",
+          "confidence": "low",
+          "source": "A07 authored evolution; Ojama King is card 1018"
+        }
+      ],
+      "locations": [
+        {
+          "zone": "obelisk_boys",
+          "interior": "obelisk_common",
+          "name": "Obelisk common room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_arena",
+          "name": "Duel Arena"
+        },
+        {
+          "zone": "obelisk_boys",
+          "interior": "obelisk_dining",
+          "name": "Obelisk dining room"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_arena"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "obelisk_boys",
+          "interior": "obelisk_dining"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "obelisk_boys",
+          "interior": "obelisk_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "obelisk_boys",
+          "interior": "obelisk_dining"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_chazz",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_chazz",
+        "address": "chazz.princeton@duelacademy.edu",
+        "threads": [
+          {
+            "id": "chazz_01",
+            "subject": "Ojama revolution",
+            "unlock_flag": "met_chazz"
+          },
+          {
+            "id": "chazz_02",
+            "subject": "Rematch",
+            "unlock_flag": "wins_chazz_3"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_chazz",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "chazz_christmas",
+          "type": "card",
+          "card_id": 828,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; card choice unverified"
+        }
+      ],
+      "ante": [
+        835,
+        851,
+        852
+      ],
+      "walk_home": {
+        "enabled": true,
+        "zone": "obelisk_boys",
+        "weekdays": [
+          "Friday"
+        ],
+        "period": "Night",
+        "flag": "walk_home_chazz",
+        "confidence": "low",
+        "source": "Yugipedia event outline"
+      },
+      "confidence": "medium",
+      "source": "GBA main cast; Ojama theme (835/851/852/871/828/1018)",
+      "notes": "Ojama King fusion recipe pending A05.",
+      "signature_card_ids": [
+        708,
+        715,
+        725,
+        756,
+        757,
+        839,
+        1102
+      ],
+      "signature_cards": [
+        "Legendary Fiend",
+        "Newdoria",
+        "Master Kyonshee",
+        "Decayed Commander",
+        "Zombie Tiger",
+        "Mefist the Infernal General",
+        "Blood Sucker"
+      ],
+      "canon_gift_card_ids": [
+        839
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "alexis",
+      "name": "Alexis Rhodes",
+      "aliases": [
+        "Asuka Tenjoin"
+      ],
+      "role": "ranked",
+      "rank": 4,
+      "dorm": "Obelisk",
+      "year": 1,
+      "title": "Obelisk Blue",
+      "ai_profile": "cyber",
+      "decks": [
+        "alexis_cyber",
+        "alexis_cyber_plus"
+      ],
+      "default_deck": "alexis_cyber",
+      "evolution_rules": [
+        {
+          "id": "alexis_cyber_angel",
+          "after_wins": 5,
+          "counter": "wins_alexis",
+          "deck": "alexis_cyber_plus",
+          "confidence": "low",
+          "source": "A07 authored evolution; Cyber Angel cards absent from DB"
+        }
+      ],
+      "locations": [
+        {
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common",
+          "name": "Girls' dorm common room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        },
+        {
+          "zone": "lake",
+          "interior": "",
+          "name": "Lakeshore"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "zone": "academy",
+          "interior": "academy_classroom"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM"
+          ],
+          "zone": "lake",
+          "interior": ""
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_alexis",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_alexis",
+        "address": "alexis.rhodes@duelacademy.edu",
+        "threads": [
+          {
+            "id": "alexis_01",
+            "subject": "Girls' dorm duel",
+            "unlock_flag": "met_alexis"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_alexis",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "alexis_christmas",
+          "type": "dp",
+          "amount": 400,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; amount unverified"
+        }
+      ],
+      "ante": [
+        611,
+        350,
+        358
+      ],
+      "walk_home": {
+        "enabled": true,
+        "zone": "obelisk_girls",
+        "weekdays": [
+          "Friday"
+        ],
+        "period": "Night",
+        "flag": "walk_home_alexis",
+        "confidence": "low",
+        "source": "Yugipedia event outline"
+      },
+      "confidence": "low",
+      "source": "GBA main cast; Cyber Angel theme unavailable in DB; Cyber/Fairy hybrid",
+      "notes": "Cyber Angel ritual cards are not in the 1,200-card DB. Low-confidence reconstruction.",
+      "signature_card_ids": [
+        360,
+        443,
+        463,
+        499,
+        586,
+        589,
+        668,
+        673,
+        674,
+        812,
+        837,
+        908,
+        909,
+        934,
+        949,
+        953
+      ],
+      "signature_cards": [
+        "Dunames Dark Witch",
+        "Senju of the Thousand Hands",
+        "Numinous Healer",
+        "Enchanted Javelin",
+        "Hysteric Fairy",
+        "St. Joan",
+        "Mudora",
+        "Zolga",
+        "Agido",
+        "Shinato, King of a Higher Plane",
+        "Outstanding Dog Marron",
+        "Guardian Angel Joan",
+        "Manju of the Ten Thousand Hands",
+        "Warrior of Zera",
+        "Archlord Zerato",
+        "The Sanctuary in the Sky"
+      ],
+      "canon_gift_card_ids": [
+        1025
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "zane",
+      "name": "Zane Truesdale",
+      "aliases": [
+        "Ryo Marufuji",
+        "Kaiser"
+      ],
+      "role": "ranked",
+      "rank": 2,
+      "dorm": "Obelisk",
+      "year": 2,
+      "title": "Obelisk Blue",
+      "ai_profile": "cyber",
+      "decks": [
+        "zane_cyber",
+        "zane_cyber_end"
+      ],
+      "default_deck": "zane_cyber",
+      "evolution_rules": [
+        {
+          "id": "zane_cyber_end",
+          "after_wins": 8,
+          "counter": "wins_zane",
+          "deck": "zane_cyber_end",
+          "confidence": "medium",
+          "source": "A07 authored evolution; Cyber End Dragon is card 1158"
+        }
+      ],
+      "locations": [
+        {
+          "zone": "obelisk_boys",
+          "interior": "obelisk_common",
+          "name": "Obelisk common room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_arena",
+          "name": "Duel Arena"
+        },
+        {
+          "zone": "lighthouse",
+          "interior": "",
+          "name": "Lighthouse"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_arena"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "lighthouse",
+          "interior": ""
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "obelisk_boys",
+          "interior": "obelisk_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "lighthouse",
+          "interior": ""
+        }
+      ],
+      "access": {
+        "requires_flag": "met_zane",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_zane",
+        "address": "zane.truesdale@duelacademy.edu",
+        "threads": [
+          {
+            "id": "zane_01",
+            "subject": "The Kaiser's challenge",
+            "unlock_flag": "met_zane"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_zane",
+        "min_wins": 10,
+        "cooldown_days": 2,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "zane_christmas",
+          "type": "card",
+          "card_id": 1157,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; card choice unverified"
+        }
+      ],
+      "ante": [
+        1152,
+        1157,
+        1158
+      ],
+      "walk_home": {
+        "enabled": true,
+        "zone": "obelisk_boys",
+        "weekdays": [
+          "Friday"
+        ],
+        "period": "Night",
+        "flag": "walk_home_zane",
+        "confidence": "low",
+        "source": "Yugipedia event outline"
+      },
+      "confidence": "high",
+      "source": "GBA main cast; Cyber Dragon theme (1152/1157/1158); Cyber End is the canonical ace",
+      "notes": "Cyber Twin/End fusion recipes pending A05.",
+      "signature_card_ids": [
+        160,
+        180,
+        184,
+        186,
+        350,
+        381,
+        556,
+        615,
+        637,
+        816,
+        907,
+        1088,
+        1151,
+        1152,
+        1155,
+        1157,
+        1158,
+        1159
+      ],
+      "signature_cards": [
+        "Black Luster Soldier",
+        "Machine King",
+        "Mechanicalchaser",
+        "Cyber-Stein",
+        "Reflect Bounder",
+        "Polymerization",
+        "Limiter Removal",
+        "Zombyra the Dark",
+        "Fusion Gate",
+        "Battle Footballer",
+        "Mataza the Zapper",
+        "Gatling Dragon",
+        "UFOroid",
+        "Cyber Dragon",
+        "Steam Gyroid",
+        "Cyber Twin Dragon",
+        "Cyber End Dragon",
+        "Power Bond"
+      ],
+      "canon_gift_card_ids": [
+        1152
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "crowler",
+      "name": "Vellian Crowler",
+      "aliases": [
+        "Chronos de Medici"
+      ],
+      "role": "ranked",
+      "rank": 6,
+      "dorm": "Staff",
+      "year": 3,
+      "title": "Professor",
+      "ai_profile": "ancient_gear",
+      "decks": [
+        "crowler_ancient_gear",
+        "crowler_ancient_gear_plus"
+      ],
+      "default_deck": "crowler_ancient_gear",
+      "evolution_rules": [
+        {
+          "id": "crowler_ultimate_gear",
+          "after_wins": 6,
+          "counter": "wins_crowler",
+          "deck": "crowler_ancient_gear_plus",
+          "confidence": "low",
+          "source": "A07 authored evolution"
+        }
+      ],
+      "locations": [
+        {
+          "zone": "academy",
+          "interior": "academy_office",
+          "name": "Crowler's office"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_arena",
+          "name": "Duel Arena"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_classroom"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "academy",
+          "interior": "academy_office"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_office"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "academy",
+          "interior": "academy_office"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_crowler",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_crowler",
+        "address": "vellian.crowler@duelacademy.edu",
+        "threads": [
+          {
+            "id": "crowler_01",
+            "subject": "Detention duel",
+            "unlock_flag": "met_crowler"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_crowler",
+        "min_wins": 5,
+        "cooldown_days": 2,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "crowler_christmas",
+          "type": "dp",
+          "amount": 800,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; amount unverified"
+        }
+      ],
+      "ante": [
+        1111,
+        1112,
+        1113
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "medium",
+      "source": "GBA main cast; Ancient Gear cards 1111-1113",
+      "notes": "Staff duelist; Ancient Gear is his canonical theme.",
+      "signature_card_ids": [
+        514,
+        546,
+        556,
+        703,
+        1076,
+        1111,
+        1112,
+        1113,
+        1155,
+        1159
+      ],
+      "signature_cards": [
+        "Robotic Knight",
+        "Fairy Box",
+        "Limiter Removal",
+        "Bottomless Shifting Sand",
+        "Insect Knight",
+        "Ancient Gear Golem",
+        "Ancient Gear Beast",
+        "Ancient Gear Soldier",
+        "Steam Gyroid",
+        "Power Bond"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "banner",
+      "name": "Lyman Banner",
+      "aliases": [
+        "Daitokuji"
+      ],
+      "role": "ranked",
+      "rank": 7,
+      "dorm": "Staff",
+      "year": 3,
+      "title": "Professor",
+      "ai_profile": "spellcaster",
+      "decks": [
+        "banner_alchemy"
+      ],
+      "default_deck": "banner_alchemy",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "slifer",
+          "interior": "slifer_banner_room",
+          "name": "Banner's room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        },
+        {
+          "zone": "slifer",
+          "interior": "slifer_common",
+          "name": "Slifer common room"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM"
+          ],
+          "zone": "academy",
+          "interior": "academy_classroom"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "PM",
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_banner_room"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM",
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_banner_room"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_banner",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_banner",
+        "address": "lyman.banner@duelacademy.edu",
+        "threads": [
+          {
+            "id": "banner_01",
+            "subject": "Alchemy lesson",
+            "unlock_flag": "met_banner"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_banner",
+        "min_wins": 5,
+        "cooldown_days": 2,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "banner_christmas",
+          "type": "card",
+          "card_id": 332,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; card choice unverified"
+        }
+      ],
+      "ante": [
+        332,
+        326,
+        601
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA main cast; alchemy/spellcaster theme; exact list unknown",
+      "notes": "Slifer headmaster. Pharaoh the cat is a separate event-only opponent.",
+      "signature_card_ids": [
+        25,
+        82,
+        189,
+        888
+      ],
+      "signature_cards": [
+        "Gaia the Dragon Champion",
+        "Aqua Madoor",
+        "Kaiser Dragon",
+        "Mad Dog of Darkness"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "pharaoh",
+      "name": "Pharaoh",
+      "aliases": [
+        "Banner's cat"
+      ],
+      "role": "event",
+      "rank": 0,
+      "dorm": "Event",
+      "year": 0,
+      "title": "Campus Cat",
+      "ai_profile": "rock",
+      "decks": [
+        "pharaoh_guardian"
+      ],
+      "default_deck": "pharaoh_guardian",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "slifer",
+          "interior": "slifer_banner_room",
+          "name": "Banner's room"
+        },
+        {
+          "zone": "slifer",
+          "interior": "slifer_common",
+          "name": "Slifer common room"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_banner_room"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_pharaoh",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": true
+      },
+      "email": {
+        "unlock_flag": "",
+        "address": "",
+        "threads": []
+      },
+      "duel_request": {
+        "unlock_flag": "met_pharaoh",
+        "min_wins": 0,
+        "cooldown_days": 3,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        854,
+        793,
+        1086
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA event-only opponent (Banner's cat); exact list unknown",
+      "notes": "Event-only. Uses a rock/beast guardian build.",
+      "signature_card_ids": [
+        1112,
+        1169
+      ],
+      "signature_cards": [
+        "Ancient Gear Beast",
+        "Mechanical Hound"
+      ],
+      "canon_gift_card_ids": [
+        242,
+        342,
+        837
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "fontaine",
+      "name": "Fonda Fontaine",
+      "aliases": [
+        "Nurse Fontaine"
+      ],
+      "role": "ranked",
+      "rank": 19,
+      "dorm": "Staff",
+      "year": 3,
+      "title": "Nurse",
+      "ai_profile": "fairy",
+      "decks": [
+        "fontaine_nurse"
+      ],
+      "default_deck": "fontaine_nurse",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "academy",
+          "interior": "academy_infirmary",
+          "name": "Infirmary"
+        },
+        {
+          "zone": "gym",
+          "interior": "gym_main",
+          "name": "Duel Gym"
+        },
+        {
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common",
+          "name": "Girls' dorm"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_infirmary"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "gym",
+          "interior": "gym_main"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "academy",
+          "interior": "academy_infirmary"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_fontaine",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_fontaine",
+        "address": "fonda.fontaine@duelacademy.edu",
+        "threads": [
+          {
+            "id": "fontaine_01",
+            "subject": "Recovery duel",
+            "unlock_flag": "met_fontaine"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_fontaine",
+        "min_wins": 0,
+        "cooldown_days": 2,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "fontaine_christmas",
+          "type": "dp",
+          "amount": 300,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; amount unverified"
+        }
+      ],
+      "ante": [
+        583,
+        582,
+        586
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA recovery opponent; Fairy/heal theme; exact list unknown",
+      "notes": "Runs the Dropout Boy recovery duel after a failed exam.",
+      "signature_card_ids": [
+        32,
+        33,
+        55,
+        168,
+        509,
+        779,
+        1043,
+        1045,
+        1046,
+        1047,
+        1050,
+        1062
+      ],
+      "signature_cards": [
+        "Harpie Lady",
+        "Harpie Lady Sisters",
+        "Faith Bird",
+        "Harpie's Pet Dragon",
+        "Birdface",
+        "Sonic Duck",
+        "Roc from the Valley of Haze",
+        "Harpie Lady 1",
+        "Harpie Lady 2",
+        "Harpie Lady 3",
+        "Eagle Eye",
+        "Harpies' Hunting Ground"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "blair",
+      "name": "Blair Flannigan",
+      "aliases": [
+        "Rei Saotome"
+      ],
+      "role": "ranked",
+      "rank": 10,
+      "dorm": "Slifer",
+      "year": 1,
+      "title": "Slifer Red",
+      "ai_profile": "toon",
+      "decks": [
+        "blair_toon"
+      ],
+      "default_deck": "blair_toon",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "slifer",
+          "interior": "slifer_common",
+          "name": "Slifer common room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        },
+        {
+          "zone": "slifer",
+          "interior": "slifer_cafeteria",
+          "name": "Slifer cafeteria"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_classroom"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_cafeteria"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "slifer",
+          "interior": "slifer_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_blair",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_blair",
+        "address": "blair.flannigan@duelacademy.edu",
+        "threads": [
+          {
+            "id": "blair_01",
+            "subject": "A secret",
+            "unlock_flag": "met_blair"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_blair",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [
+        {
+          "id": "blair_christmas",
+          "type": "card",
+          "card_id": 366,
+          "event": "E_CHRISTMAS",
+          "confidence": "low",
+          "source": "GBA gift scene; card choice unverified"
+        }
+      ],
+      "ante": [
+        366,
+        711,
+        710
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA main cast; Toon/Spellcaster theme; exact list unknown",
+      "notes": "Blair reveal event requires a story flag. Toon effects are outside the current 137-card tier.",
+      "signature_card_ids": [
+        352,
+        366,
+        582,
+        583,
+        711,
+        948,
+        1152
+      ],
+      "signature_cards": [
+        "Dark Magician Girl",
+        "Toon World",
+        "Spirit of the Breeze",
+        "Dancing Fairy",
+        "Toon Gemini Elf",
+        "White Magician Pikeru",
+        "Cyber Dragon"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "brier",
+      "name": "Brier",
+      "aliases": [],
+      "role": "ranked",
+      "rank": 11,
+      "dorm": "Ra",
+      "year": 1,
+      "title": "Ra Yellow",
+      "ai_profile": "control",
+      "decks": [
+        "brier_quiz"
+      ],
+      "default_deck": "brier_quiz",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "ra",
+          "interior": "ra_common",
+          "name": "Ra common room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        },
+        {
+          "zone": "ra",
+          "interior": "ra_cafeteria",
+          "name": "Ra cafeteria"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_classroom"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "ra",
+          "interior": "ra_cafeteria"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_brier",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_brier",
+        "address": "brier@duelacademy.edu",
+        "threads": [
+          {
+            "id": "brier_01",
+            "subject": "Quiz duel",
+            "unlock_flag": "met_brier"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_brier",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        218,
+        234,
+        783
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA Ra Yellow quiz rival; exact list unknown",
+      "notes": "Control/quiz build.",
+      "signature_card_ids": [
+        251,
+        414,
+        566,
+        758,
+        839,
+        926,
+        1170
+      ],
+      "signature_cards": [
+        "Needle Worm",
+        "Robbin' Goblin",
+        "Goblin Attack Force",
+        "Giant Orc",
+        "Mefist the Infernal General",
+        "Robbin' Zombie",
+        "Goblin Elite Attack Force"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "beauregard",
+      "name": "Beauregard",
+      "aliases": [],
+      "role": "ranked",
+      "rank": 12,
+      "dorm": "Ra",
+      "year": 2,
+      "title": "Ra Yellow",
+      "ai_profile": "rock",
+      "decks": [
+        "beauregard_rock"
+      ],
+      "default_deck": "beauregard_rock",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "ra",
+          "interior": "ra_common",
+          "name": "Ra common room"
+        },
+        {
+          "zone": "gym",
+          "interior": "gym_main",
+          "name": "Duel Gym"
+        },
+        {
+          "zone": "ra",
+          "interior": "ra_cafeteria",
+          "name": "Ra cafeteria"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "gym",
+          "interior": "gym_main"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "ra",
+          "interior": "ra_cafeteria"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_beauregard",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_beauregard",
+        "address": "beauregard@duelacademy.edu",
+        "threads": [
+          {
+            "id": "beauregard_01",
+            "subject": "Rock solid",
+            "unlock_flag": "met_beauregard"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_beauregard",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        37,
+        1086,
+        1117
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA Ra Yellow heavy duelist; exact list unknown",
+      "notes": "Rock defense deck.",
+      "signature_card_ids": [
+        145,
+        455,
+        555,
+        566,
+        583,
+        739,
+        758,
+        796,
+        955,
+        1077,
+        1170
+      ],
+      "signature_cards": [
+        "Goblin's Secret Remedy",
+        "Gaia Power",
+        "Fairy Meteor Crush",
+        "Goblin Attack Force",
+        "Dancing Fairy",
+        "Banner of Courage",
+        "Giant Orc",
+        "Big Bang Shot",
+        "Goblin Thief",
+        "Granmarg the Rock Monarch",
+        "Goblin Elite Attack Force"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "dimitri",
+      "name": "Dimitri",
+      "aliases": [
+        "Dimitrius"
+      ],
+      "role": "ranked",
+      "rank": 13,
+      "dorm": "Ra",
+      "year": 1,
+      "title": "Ra Yellow",
+      "ai_profile": "copycat",
+      "decks": [
+        "dimitri_copycat"
+      ],
+      "default_deck": "dimitri_copycat",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "ra",
+          "interior": "ra_common",
+          "name": "Ra common room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_shop",
+          "name": "Card Shop"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_classroom"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_shop"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_dimitri",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_dimitri",
+        "address": "dimitri@duelacademy.edu",
+        "threads": [
+          {
+            "id": "dimitri_01",
+            "subject": "Borrowed deck",
+            "unlock_flag": "met_dimitri"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_dimitri",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        23,
+        352,
+        1
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA copycat duelist; exact copied deck unknown",
+      "notes": "Uses iconic Dark Magician/Blue-Eyes/Red-Eyes cards as a copycat deck.",
+      "signature_card_ids": [
+        3,
+        40,
+        85,
+        365,
+        372,
+        373,
+        374,
+        381,
+        501,
+        526,
+        546,
+        614,
+        947,
+        1104
+      ],
+      "signature_cards": [
+        "Baby Dragon",
+        "Red-Eyes B. Dragon",
+        "B. Skull Dragon",
+        "Copycat",
+        "Graceful Dice",
+        "Skull Dice",
+        "Scapegoat",
+        "Polymerization",
+        "Alligator's Sword Dragon",
+        "Gearfried the Iron Knight",
+        "Fairy Box",
+        "Obnoxious Celtic Guard",
+        "Lady Ninja Yae",
+        "Red-Eyes Darkness Dragon"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "jasmine",
+      "name": "Jasmine",
+      "aliases": [],
+      "role": "ranked",
+      "rank": 14,
+      "dorm": "Obelisk",
+      "year": 2,
+      "title": "Obelisk Blue",
+      "ai_profile": "amazoness",
+      "decks": [
+        "jasmine_amazoness"
+      ],
+      "default_deck": "jasmine_amazoness",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common",
+          "name": "Girls' dorm"
+        },
+        {
+          "zone": "lake",
+          "interior": "",
+          "name": "Lakeshore"
+        },
+        {
+          "zone": "gym",
+          "interior": "gym_main",
+          "name": "Duel Gym"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "lake",
+          "interior": ""
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "gym",
+          "interior": "gym_main"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_jasmine",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_jasmine",
+        "address": "jasmine@duelacademy.edu",
+        "threads": [
+          {
+            "id": "jasmine_01",
+            "subject": "Amazoness duel",
+            "unlock_flag": "met_jasmine"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_jasmine",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        639,
+        641,
+        781
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "medium",
+      "source": "GBA Obelisk girls' duelist; Amazoness cards in DB",
+      "notes": "Amazoness beatdown.",
+      "signature_card_ids": [
+        89,
+        649,
+        723,
+        771,
+        947,
+        1017,
+        1070
+      ],
+      "signature_cards": [
+        "Beautiful Headhuntress",
+        "Marauding Captain",
+        "Queen's Knight",
+        "Thunder of Ruler",
+        "Lady Ninja Yae",
+        "Penumbral Soldier Lady",
+        "Chain Burst"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "mindy",
+      "name": "Mindy",
+      "aliases": [],
+      "role": "ranked",
+      "rank": 15,
+      "dorm": "Obelisk",
+      "year": 2,
+      "title": "Obelisk Blue",
+      "ai_profile": "fairy",
+      "decks": [
+        "mindy_fairy"
+      ],
+      "default_deck": "mindy_fairy",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common",
+          "name": "Girls' dorm"
+        },
+        {
+          "zone": "lake",
+          "interior": "",
+          "name": "Lakeshore"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_shop",
+          "name": "Card Shop"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_shop"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "lake",
+          "interior": ""
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "obelisk_girls",
+          "interior": "obelisk_girls_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_mindy",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_mindy",
+        "address": "mindy@duelacademy.edu",
+        "threads": [
+          {
+            "id": "mindy_01",
+            "subject": "Fairy duel",
+            "unlock_flag": "met_mindy"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_mindy",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        360,
+        583,
+        586
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA Obelisk girls' duelist; exact list unknown",
+      "notes": "Fairy heal/control.",
+      "signature_card_ids": [
+        23,
+        95,
+        377,
+        512,
+        614,
+        830,
+        831,
+        910
+      ],
+      "signature_cards": [
+        "Dark Magician",
+        "Dimensional Warrior",
+        "Dark Magic Curtain",
+        "Fairy King Truesdale",
+        "Obnoxious Celtic Guard",
+        "Dark Magician Knight",
+        "Knight's Title",
+        "Getsu Fuhma"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "torrey",
+      "name": "Torrey",
+      "aliases": [],
+      "role": "ranked",
+      "rank": 16,
+      "dorm": "Ra",
+      "year": 1,
+      "title": "Ra Yellow",
+      "ai_profile": "insect",
+      "decks": [
+        "torrey_insect"
+      ],
+      "default_deck": "torrey_insect",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "ra",
+          "interior": "ra_common",
+          "name": "Ra common room"
+        },
+        {
+          "zone": "forest",
+          "interior": "",
+          "name": "Forest"
+        },
+        {
+          "zone": "gym",
+          "interior": "gym_main",
+          "name": "Duel Gym"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "forest",
+          "interior": ""
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "gym",
+          "interior": "gym_main"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "ra",
+          "interior": "ra_common"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_torrey",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_torrey",
+        "address": "torrey@duelacademy.edu",
+        "threads": [
+          {
+            "id": "torrey_01",
+            "subject": "Bug collection",
+            "unlock_flag": "met_torrey"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_torrey",
+        "min_wins": 0,
+        "cooldown_days": 1,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        1076,
+        1114,
+        559
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA Ra Yellow insect duelist; exact list unknown",
+      "notes": "Insect swarm.",
+      "signature_card_ids": [
+        348,
+        600,
+        602,
+        604,
+        605
+      ],
+      "signature_cards": [
+        "Jinzo",
+        "Headless Knight",
+        "Destiny Board",
+        "Earthbound Spirit",
+        "The Earl of Demise"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "damon",
+      "name": "Damon",
+      "aliases": [],
+      "role": "ranked",
+      "rank": 17,
+      "dorm": "Event",
+      "year": 2,
+      "title": "Wanderer",
+      "ai_profile": "exodia",
+      "decks": [
+        "damon_exodia"
+      ],
+      "default_deck": "damon_exodia",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "forest",
+          "interior": "",
+          "name": "Forest"
+        },
+        {
+          "zone": "cliffs",
+          "interior": "",
+          "name": "West Cliffs"
+        },
+        {
+          "zone": "abandoned",
+          "interior": "abandoned_hall",
+          "name": "Abandoned Dorm"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "forest",
+          "interior": ""
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "cliffs",
+          "interior": ""
+        }
+      ],
+      "access": {
+        "requires_flag": "met_damon",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": true
+      },
+      "email": {
+        "unlock_flag": "met_damon",
+        "address": "damon@duelacademy.edu",
+        "threads": [
+          {
+            "id": "damon_01",
+            "subject": "The forest calls",
+            "unlock_flag": "met_damon"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_damon",
+        "min_wins": 0,
+        "cooldown_days": 7,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        17,
+        16,
+        15
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA forest wanderer / Exodia duel; exact list unknown",
+      "notes": "Event-only Exodia draw deck. Current engine has no Exodia win check.",
+      "signature_card_ids": [
+        52,
+        226,
+        238,
+        381,
+        387,
+        425,
+        511,
+        553,
+        591,
+        706,
+        1015,
+        1020,
+        1178
+      ],
+      "signature_cards": [
+        "White Magical Hat",
+        "Muka Muka",
+        "Skelengel",
+        "Polymerization",
+        "Pot of Greed",
+        "Upstart Goblin",
+        "Airknight Parshath",
+        "Solemn Wishes",
+        "Jar of Greed",
+        "Reckless Greed",
+        "Enraged Muka Muka",
+        "Sanwitch",
+        "Poison Draw Frog"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "sartyr",
+      "name": "Sartyr",
+      "aliases": [
+        "Professor Sartyr"
+      ],
+      "role": "ranked",
+      "rank": 18,
+      "dorm": "Staff",
+      "year": 3,
+      "title": "Ra Yellow Headmaster",
+      "ai_profile": "burn",
+      "decks": [
+        "sartyr_curry"
+      ],
+      "default_deck": "sartyr_curry",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "ra",
+          "interior": "ra_cafeteria",
+          "name": "Ra cafeteria"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_classroom",
+          "name": "Classroom"
+        },
+        {
+          "zone": "hotsprings",
+          "interior": "",
+          "name": "Hot Springs"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "ra",
+          "interior": "ra_cafeteria"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "hotsprings",
+          "interior": ""
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "ra",
+          "interior": "ra_cafeteria"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "hotsprings",
+          "interior": ""
+        }
+      ],
+      "access": {
+        "requires_flag": "met_sartyr",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": false
+      },
+      "email": {
+        "unlock_flag": "met_sartyr",
+        "address": "sartyr@duelacademy.edu",
+        "threads": [
+          {
+            "id": "sartyr_01",
+            "subject": "Curry and cards",
+            "unlock_flag": "met_sartyr"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_sartyr",
+        "min_wins": 5,
+        "cooldown_days": 2,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        736,
+        596,
+        893
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA Ra Yellow headmaster; curry/burn theme; exact list unknown",
+      "notes": "Pyro/burn.",
+      "signature_card_ids": [
+        67,
+        73,
+        562,
+        627,
+        632,
+        676,
+        778,
+        794,
+        1165,
+        1175
+      ],
+      "signature_cards": [
+        "Tainted Wisdom",
+        "Ancient Brain",
+        "Gradius",
+        "Maryokutai",
+        "Cyclon Laser",
+        "Gradius' Option",
+        "Aitsu",
+        "Koitsu",
+        "Soitsu",
+        "Doitsu"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "gerard",
+      "name": "Gerard",
+      "aliases": [
+        "Gerard the quiz master"
+      ],
+      "role": "ranked",
+      "rank": 20,
+      "dorm": "Event",
+      "year": 0,
+      "title": "Quiz Master",
+      "ai_profile": "control",
+      "decks": [
+        "gerard_quiz"
+      ],
+      "default_deck": "gerard_quiz",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "academy",
+          "interior": "academy_exam_room",
+          "name": "Test room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_office",
+          "name": "Staff office"
+        },
+        {
+          "zone": "plaza",
+          "interior": "",
+          "name": "Academy Plaza"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_exam_room"
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "academy",
+          "interior": "academy_office"
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "plaza",
+          "interior": ""
+        },
+        {
+          "weekdays": [
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "academy",
+          "interior": "academy_office"
+        }
+      ],
+      "access": {
+        "requires_flag": "met_gerard",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": true
+      },
+      "email": {
+        "unlock_flag": "met_gerard",
+        "address": "gerard@duelacademy.edu",
+        "threads": [
+          {
+            "id": "gerard_01",
+            "subject": "Quiz answers",
+            "unlock_flag": "met_gerard"
+          }
+        ]
+      },
+      "duel_request": {
+        "unlock_flag": "met_gerard",
+        "min_wins": 0,
+        "cooldown_days": 3,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        234,
+        218,
+        783
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA quiz event opponent; exact list unknown",
+      "notes": "Event-only quiz duel; questions live in Exams/questions.json.",
+      "signature_card_ids": [
+        9,
+        245,
+        308,
+        315,
+        1199
+      ],
+      "signature_cards": [
+        "Swamp Battleguard",
+        "Lava Battleguard",
+        "Hungry Burger",
+        "Chakra",
+        "Wasteland Amazon"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "topher",
+      "name": "Topher",
+      "aliases": [
+        "Goblin King"
+      ],
+      "role": "event",
+      "rank": 0,
+      "dorm": "Event",
+      "year": 0,
+      "title": "Goblin King",
+      "ai_profile": "goblin",
+      "decks": [
+        "topher_goblin"
+      ],
+      "default_deck": "topher_goblin",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "forest",
+          "interior": "",
+          "name": "Forest"
+        },
+        {
+          "zone": "volcano",
+          "interior": "",
+          "name": "Volcano"
+        },
+        {
+          "zone": "abandoned",
+          "interior": "abandoned_hall",
+          "name": "Abandoned Dorm"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM",
+            "Night"
+          ],
+          "zone": "forest",
+          "interior": ""
+        }
+      ],
+      "access": {
+        "requires_flag": "event_goblin_king",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": true
+      },
+      "email": {
+        "unlock_flag": "",
+        "address": "",
+        "threads": []
+      },
+      "duel_request": {
+        "unlock_flag": "event_goblin_king",
+        "min_wins": 0,
+        "cooldown_days": 30,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        566,
+        1170,
+        713
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA event-only Goblin King opponent; exact list unknown",
+      "notes": "Event-only goblin swarm deck.",
+      "signature_card_ids": [
+        336,
+        447
+      ],
+      "signature_cards": [
+        "Blast Sphere",
+        "Giant Germ"
+      ],
+      "canon_gift_card_ids": [
+        724,
+        744,
+        746
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "conklin",
+      "name": "Conklin",
+      "aliases": [
+        "Fossil Conklin"
+      ],
+      "role": "event",
+      "rank": 0,
+      "dorm": "Event",
+      "year": 0,
+      "title": "Fossil Hunter",
+      "ai_profile": "dinosaur",
+      "decks": [
+        "conklin_dino"
+      ],
+      "default_deck": "conklin_dino",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "forest",
+          "interior": "",
+          "name": "Forest"
+        },
+        {
+          "zone": "beach",
+          "interior": "",
+          "name": "Beach"
+        },
+        {
+          "zone": "hotsprings",
+          "interior": "",
+          "name": "Hot Springs"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "forest",
+          "interior": ""
+        },
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "beach",
+          "interior": ""
+        }
+      ],
+      "access": {
+        "requires_flag": "event_fossil",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": true
+      },
+      "email": {
+        "unlock_flag": "",
+        "address": "",
+        "threads": []
+      },
+      "duel_request": {
+        "unlock_flag": "event_fossil",
+        "min_wins": 0,
+        "cooldown_days": 30,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        22,
+        39,
+        903
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA event-only fossil opponent; Fossil cards absent from DB",
+      "notes": "Event-only dinosaur substitute deck.",
+      "signature_card_ids": [
+        444,
+        892
+      ],
+      "signature_cards": [
+        "UFO Turtle",
+        "Blazing Inpachi"
+      ],
+      "canon_gift_card_ids": [
+        724,
+        744,
+        746
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "mimicry",
+      "name": "Mimicry",
+      "aliases": [
+        "Exam proctor"
+      ],
+      "role": "exam",
+      "rank": 0,
+      "dorm": "Exam",
+      "year": 0,
+      "title": "Exam Proctor",
+      "ai_profile": "exam_stall",
+      "decks": [
+        "mimicry_stall"
+      ],
+      "default_deck": "mimicry_stall",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "academy",
+          "interior": "academy_exam_room",
+          "name": "Test room"
+        },
+        {
+          "zone": "academy",
+          "interior": "academy_arena",
+          "name": "Duel Arena"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Friday"
+          ],
+          "periods": [
+            "AM",
+            "PM"
+          ],
+          "zone": "academy",
+          "interior": "academy_exam_room"
+        },
+        {
+          "weekdays": [
+            "Friday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "academy",
+          "interior": "academy_arena"
+        }
+      ],
+      "access": {
+        "requires_flag": "exam_day",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": true
+      },
+      "email": {
+        "unlock_flag": "",
+        "address": "",
+        "threads": []
+      },
+      "duel_request": {
+        "unlock_flag": "exam_day",
+        "min_wins": 0,
+        "cooldown_days": 0,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "medium",
+      "source": "GBA practical exam opponent Mimicry; exact list unknown",
+      "notes": "Exam-only stall deck. Never a free-roam duel request.",
+      "signature_card_ids": [
+        448,
+        463,
+        486,
+        499,
+        579,
+        590,
+        669,
+        796,
+        811,
+        812,
+        908
+      ],
+      "signature_cards": [
+        "Nimble Momonga",
+        "Numinous Healer",
+        "Kiseitai",
+        "Enchanted Javelin",
+        "Fire Princess",
+        "Marie the Fallen One",
+        "Cestus of Dagla",
+        "Big Bang Shot",
+        "Granadora",
+        "Shinato, King of a Higher Plane",
+        "Guardian Angel Joan"
+      ],
+      "canon_gift_card_ids": [],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    },
+    {
+      "id": "shadow_duelist",
+      "name": "Titan",
+      "aliases": [
+        "Shadow Duelist",
+        "Titan the Shadow Duelist"
+      ],
+      "role": "event",
+      "rank": 0,
+      "dorm": "Event",
+      "year": 0,
+      "title": "Shadow Duelist",
+      "ai_profile": "shadow",
+      "decks": [
+        "shadow_duelist_fiend"
+      ],
+      "default_deck": "shadow_duelist_fiend",
+      "evolution_rules": [],
+      "locations": [
+        {
+          "zone": "abandoned",
+          "interior": "abandoned_hall",
+          "name": "Abandoned Dorm"
+        },
+        {
+          "zone": "volcano",
+          "interior": "",
+          "name": "Volcano crater"
+        },
+        {
+          "zone": "forest",
+          "interior": "",
+          "name": "Forest"
+        }
+      ],
+      "schedule": [
+        {
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "periods": [
+            "Night"
+          ],
+          "zone": "abandoned",
+          "interior": "abandoned_hall"
+        }
+      ],
+      "access": {
+        "requires_flag": "event_shadow_game",
+        "requires_title": "",
+        "requires_dorm": "",
+        "event_only": true
+      },
+      "email": {
+        "unlock_flag": "",
+        "address": "",
+        "threads": []
+      },
+      "duel_request": {
+        "unlock_flag": "event_shadow_game",
+        "min_wins": 0,
+        "cooldown_days": 30,
+        "max_per_day": 1
+      },
+      "gifts": [],
+      "ante": [
+        886,
+        537,
+        315
+      ],
+      "walk_home": {
+        "enabled": false
+      },
+      "confidence": "low",
+      "source": "GBA Titan/Shadow Game event; exact list unknown",
+      "notes": "Event-only Fiend deck for the Shadow Game/Titan event. No shadow-game rules in engine.",
+      "signature_card_ids": [
+        18,
+        50,
+        110,
+        127,
+        140,
+        229,
+        362,
+        373,
+        419,
+        460,
+        836,
+        885,
+        1021,
+        1060,
+        1085,
+        1126
+      ],
+      "signature_cards": [
+        "Summoned Skull",
+        "Mask of Darkness",
+        "Axe of Despair",
+        "Malevolent Nuzzler",
+        "Yami",
+        "The Bistro Butcher",
+        "Beast of Talwar",
+        "Skull Dice",
+        "Sorcerer of the Doomed",
+        "Mystic Plasma Zone",
+        "Archfiend Soldier",
+        "Dark Mirror Force",
+        "Dark Factory of Mass Production",
+        "Dark Blade the Dragon Knight",
+        "Shadowslayer",
+        "King of the Skull Servants"
+      ],
+      "canon_gift_card_ids": [
+        19,
+        348
+      ],
+      "canon_source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "canon_confidence": "medium"
+    }
+  ]
+}

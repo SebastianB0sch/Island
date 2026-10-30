@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "description": "500-point monthly exam scoring, pass mark and retry policy. Exact canon threshold is unverified.",
+  "max_points": 500,
+  "sections": {
+    "written": {
+      "max_points": 200,
+      "questions": 10,
+      "points_per_correct": 20,
+      "partial_credit": false
+    },
+    "timed": {
+      "max_points": 100,
+      "solved_points": 100,
+      "failed_points": 0,
+      "time_bonus": false
+    },
+    "practical": {
+      "max_points": 200,
+      "points_from": "practicals.json",
+      "pass_points": 120
+    }
+  },
+  "pass_mark": 300,
+  "pass_mark_candidates": [
+    250,
+    300
+  ],
+  "grade_bands": [
+    {
+      "min_points": 450,
+      "grade": "S",
+      "label": "Perfect"
+    },
+    {
+      "min_points": 400,
+      "grade": "A",
+      "label": "Excellent"
+    },
+    {
+      "min_points": 350,
+      "grade": "B",
+      "label": "Good"
+    },
+    {
+      "min_points": 300,
+      "grade": "C",
+      "label": "Pass"
+    },
+    {
+      "min_points": 0,
+      "grade": "F",
+      "label": "Fail"
+    }
+  ],
+  "retry": {
+    "written_attempts": 1,
+    "timed_attempts": 3,
+    "practical_attempts": 1,
+    "whole_exam_attempts": 1,
+    "failed_exam_title": "Dropout Boy",
+    "recovery_opponent": "fontaine",
+    "recovery_deck": "fontaine_nurse",
+    "recovery_win_restores_title": true
+  },
+  "exemptions": [
+    {
+      "id": "story_exemption",
+      "description": "A story event may exempt the player from one exam; A03 supplies the flag.",
+      "flag": "exam_exempt"
+    }
+  ],
+  "confidence": "low",
+  "source": "Masterplan \u00a72.3/\u00a75.7: 500 points, pass threshold around 250-300, seven practical objectives. Exact weights and pass mark require A01 verification.",
+  "notes": "Changing pass_mark or section weights is a data-only change. DAExamSubsystem reads this file.",
+  "canon_source": "DuelAcademyIsland/Content/Data/Canon/exams.json (A01 extraction)",
+  "canon_note": "A01 confirms 500 points and the 250/300 pass-mark dispute; exact component weights remain A07-authored."
+}

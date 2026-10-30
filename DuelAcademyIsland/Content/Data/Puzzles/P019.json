@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "id": "P019",
+  "level": 1,
+  "title": "Miracle Fusion",
+  "opponent": "mimicry",
+  "seed": 1019,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      1184
+    ],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [
+      1106,
+      1107
+    ],
+    "deck": [],
+    "extra": [
+      1129
+    ]
+  },
+  "opponent_state": {
+    "lp": 2100,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 1184
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1129,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "confidence": "medium",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "Miracle Fusion banishes the two HERO materials from the Graveyard for Flame Wingman.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_019",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      166,
+      497,
+      502,
+      589,
+      612
+    ],
+    "solution_card_names": [
+      "Blue-Eyes Ultimate Dragon",
+      "Call of the Haunted",
+      "Cathedral of the Nobles",
+      "Mystical Beast Serket",
+      "St. Joan",
+      "Vorse Raider"
+    ],
+    "solution_steps": [
+      "Activate Cathedral of the Nobles.",
+      "Summon Mystical Beast Serket by tributing Vorse Raider.",
+      "Activate Cathedral of the Nobles' effect, chain Call of the Haunted to bring Raider back, and Special Summon Blue-Eyes Ultimate Dragon.",
+      "Enter Battle Phase, attack St. Joan with BEUD and attack directly with Vorse"
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}
