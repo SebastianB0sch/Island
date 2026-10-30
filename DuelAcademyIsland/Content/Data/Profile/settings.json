@@ -1,0 +1,24 @@
+{
+  "animation_speed": "normal",
+  "confirm_activation": true,
+  "text_speed": "normal",
+  "bgm_volume": 0.8,
+  "sfx_volume": 0.8,
+  "subtitles": true,
+  "language": "en",
+  "controls": {
+    "MoveForward": "W",
+    "MoveBack": "S",
+    "MoveLeft": "A",
+    "MoveRight": "D",
+    "Look": "Mouse",
+    "Interact": "E",
+    "Jump": "Space",
+    "Sprint": "Left Shift",
+    "PDA": "Tab",
+    "DuelDisk": "J",
+    "Pause": "Escape",
+    "DuelConfirm": "Enter",
+    "DuelCancel": "Escape"
+  }
+}

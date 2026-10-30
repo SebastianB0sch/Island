@@ -1,0 +1,175 @@
+{
+  "default_title": "apprentice_duelist",
+  "dorm_rules": {
+    "promotion_score": 400,
+    "demote_on_fail": true,
+    "dropout_title": "dropout_boy",
+    "dropout_flag": "dropout_boy",
+    "recovery_opponent": "fonda_fontaine",
+    "note": "Provisional thresholds until A01 publishes the canon title table."
+  },
+  "titles": [
+    {
+      "id": "dropout_boy",
+      "name": "Dropout Boy",
+      "description": "Failed an exam. Win the recovery duel to return to the academy.",
+      "order": 0,
+      "permanent": true,
+      "fail_state": true
+    },
+    {
+      "id": "apprentice_duelist",
+      "name": "Apprentice Duelist",
+      "description": "A new student finding their feet at Duel Academy.",
+      "order": 10,
+      "permanent": true,
+      "min_wins_total": 0
+    },
+    {
+      "id": "rookie_duelist",
+      "name": "Rookie Duelist",
+      "description": "A promising first-year with a few wins.",
+      "order": 20,
+      "permanent": true,
+      "min_wins_total": 3,
+      "min_duels_total": 3
+    },
+    {
+      "id": "intermediate_duelist",
+      "name": "Intermediate Duelist",
+      "description": "Consistent in free duels and timed challenges.",
+      "order": 30,
+      "permanent": true,
+      "min_wins_total": 8,
+      "min_duels_total": 10,
+      "min_timed_clears": 1
+    },
+    {
+      "id": "advanced_duelist",
+      "name": "Advanced Duelist",
+      "description": "A regular winner with exam experience.",
+      "order": 40,
+      "permanent": true,
+      "min_wins_total": 15,
+      "min_duels_total": 20,
+      "min_timed_clears": 3
+    },
+    {
+      "id": "expert_duelist",
+      "name": "Expert Duelist",
+      "description": "Strong written scores and a growing collection.",
+      "order": 50,
+      "permanent": true,
+      "min_wins_total": 25,
+      "min_duels_total": 32,
+      "min_timed_clears": 5,
+      "min_written_correct": 20
+    },
+    {
+      "id": "veteran_duelist",
+      "name": "Veteran Duelist",
+      "description": "A seasoned duelist with a respectable card trunk.",
+      "order": 60,
+      "permanent": true,
+      "min_wins_total": 40,
+      "min_duels_total": 50,
+      "min_timed_clears": 10,
+      "min_written_correct": 40,
+      "min_cards_owned": 100
+    },
+    {
+      "id": "elite_duelist",
+      "name": "Elite Duelist",
+      "description": "Among the strongest students on the island.",
+      "order": 70,
+      "permanent": true,
+      "min_wins_total": 60,
+      "min_duels_total": 75,
+      "min_timed_clears": 15,
+      "min_written_correct": 60,
+      "min_cards_owned": 250
+    },
+    {
+      "id": "champion_duelist",
+      "name": "Champion Duelist",
+      "description": "A title reserved for tournament-level play.",
+      "order": 80,
+      "permanent": true,
+      "min_wins_total": 80,
+      "min_duels_total": 100,
+      "min_timed_clears": 25,
+      "min_written_correct": 80,
+      "min_cards_owned": 400
+    },
+    {
+      "id": "duel_academy_champion",
+      "name": "Duel Academy Champion",
+      "description": "Passed the monthly exams and dominates the academy.",
+      "order": 90,
+      "permanent": true,
+      "min_wins_total": 100,
+      "min_duels_total": 125,
+      "min_timed_clears": 40,
+      "min_written_correct": 100,
+      "min_cards_owned": 600,
+      "requires_exam_passed": true
+    },
+    {
+      "id": "duel_king",
+      "name": "Duel King",
+      "description": "Cleared most of the story and built a world-class collection.",
+      "order": 100,
+      "permanent": true,
+      "min_wins_total": 150,
+      "min_duels_total": 180,
+      "min_timed_clears": 60,
+      "min_written_correct": 140,
+      "min_cards_owned": 800,
+      "min_story_events": 20,
+      "requires_exam_passed": true
+    },
+    {
+      "id": "king_of_games",
+      "name": "King of Games",
+      "description": "The final title. Complete the school year and claim the crown.",
+      "order": 110,
+      "permanent": true,
+      "min_wins_total": 200,
+      "min_duels_total": 240,
+      "min_timed_clears": 80,
+      "min_written_correct": 180,
+      "min_cards_owned": 1000,
+      "min_story_events": 33,
+      "requires_exam_passed": true,
+      "requires_king_of_games": true
+    },
+    {
+      "id": "novice_duelist",
+      "name": "Novice Duelist",
+      "description": "Temporary tutorial title.",
+      "order": 5,
+      "permanent": false
+    },
+    {
+      "id": "occult_duelist",
+      "name": "Occult Duelist",
+      "description": "Temporary title from the abandoned dorm events.",
+      "order": 15,
+      "permanent": false
+    },
+    {
+      "id": "shadow_duelist",
+      "name": "Shadow Duelist",
+      "description": "Temporary title from a shadow game.",
+      "order": 25,
+      "permanent": false
+    },
+    {
+      "id": "society_duelist",
+      "name": "Society Duelist",
+      "description": "Temporary title while aligned with the Society of Light.",
+      "order": 35,
+      "permanent": false
+    }
+  ]
+}
