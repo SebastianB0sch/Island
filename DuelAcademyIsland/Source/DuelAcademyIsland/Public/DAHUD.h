@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+#include "DADialogueUI.h"
 #include "DADuelUI.h"
+#include "DAPDAUI.h"
 #include "DAHUD.generated.h"
 
 class ADALocationVolume;
@@ -27,7 +29,9 @@ public:
 
 	bool IsMapOpen() const { return bMapOpen; }
 	bool IsDuelOpen() const { return DuelUI.IsValid() && DuelUI->IsOpen(); }
-	bool IsModalOpen() const { return bMapOpen || bHelpOpen || IsDuelOpen(); }
+	bool IsPDAOpen() const { return PDAUI.IsValid() && PDAUI->IsOpen(); }
+	bool IsDialogueOpen() const { return DialogueUI.IsValid() && DialogueUI->IsOpen(); }
+	bool IsModalOpen() const { return bMapOpen || bHelpOpen || IsDuelOpen() || IsPDAOpen() || IsDialogueOpen(); }
 
 	/** Opens the starter-deck picker for a duel against the given opponent. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
@@ -53,13 +57,38 @@ public:
 	UFont* GetBigFont() const { return BigFont; }
 
 	void ToggleMap();
-	void ToggleHelp() { bHelpOpen = !bHelpOpen; }
+	void ToggleHelp();
 	void MoveMapSelection(int32 Delta);
 	ADALocationVolume* GetSelectedZone() const;
 	ADALocationVolume* PickZoneUnderCursor() const { return HoveredZone.Get(); }
 	ADALocationVolume* PickZoneRowUnderCursor() const;
 	/** Closes the map and sends the player to Zone (or the highlighted entry). */
 	void TravelToZone(ADALocationVolume* Zone = nullptr);
+
+	// ---------------------------------------------------------------- dialogue / PDA
+	/** Opens the dialogue box. A03 calls this with a resolved story command queue. */
+	void BeginDialogue(const TArray<FDADialogueLine>& Lines, const FString& ConversationId = FString());
+
+	/** Convenience for a single line (interaction barks, debug). */
+	void BeginDialogueLine(const FDADialogueLine& Line);
+
+	void CloseDialogue();
+
+	void OpenPDA(EDAPDATab Tab = EDAPDATab::Map);
+
+	void ClosePDA();
+
+	void TogglePDA(EDAPDATab Tab = EDAPDATab::Map);
+
+	FDADialogueUI* GetDialogueUI() const { return DialogueUI.Get(); }
+	FDAPDAUI* GetPDAUI() const { return PDAUI.Get(); }
+
+private:
+	// ---------------------------------------------------------------- UI hosting
+	void UpdateInputMode();
+	void HandlePDAAction(FName ActionId, const FString& Payload);
+	void HandlePDAClosed();
+	void HandleDialogueClosed(const FString& ConversationId);
 
 private:
 	// drawing helpers
@@ -100,5 +129,7 @@ private:
 	float UIScale = 1.f;
 	float StartTime = 0.f;
 	TUniquePtr<FDADuelUI> DuelUI;
+	TUniquePtr<FDADialogueUI> DialogueUI;
+	TUniquePtr<FDAPDAUI> PDAUI;
 	TWeakObjectPtr<ADALocationVolume> HoveredZone;
 };
