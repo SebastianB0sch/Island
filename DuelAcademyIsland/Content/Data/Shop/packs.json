@@ -1,0 +1,5619 @@
+{
+  "schema": 1,
+  "canon_status": "provisional",
+  "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slot/odds overlay.",
+  "notes": [
+    "Pack ids, names, categories, prices, pack sizes and pools come from A01's Canon/packs.json.",
+    "Rarity/slot layout and rare-plus weights remain provisional; A01 marks odds_status unresolved.",
+    "Unlock descriptions are A01 canon raw text; structured condition keys are port integration hooks.",
+    "Calendar packs use month_at_least until A02 exposes exact last-week/day windows."
+  ],
+  "defaults": {
+    "max_owned_copies": 3,
+    "duplicate_policy": "convert_dp",
+    "duplicate_dp_per_card": 25,
+    "allow_duplicates_in_pack": false,
+    "rare_plus_weights": [
+      {
+        "rarity": "Rare",
+        "weight": 70
+      },
+      {
+        "rarity": "SuperRare",
+        "weight": 22
+      },
+      {
+        "rarity": "UltraRare",
+        "weight": 6
+      },
+      {
+        "rarity": "SecretRare",
+        "weight": 2
+      }
+    ]
+  },
+  "packs": [
+    {
+      "id": "basic_1a",
+      "name": "Basic 1-A",
+      "category": "Basic",
+      "price": 100,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 30,
+      "unlock": {
+        "description": "Beginning",
+        "conditions": [
+          {
+            "type": "start"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            10,
+            28,
+            34,
+            53,
+            55,
+            57,
+            63,
+            64,
+            65,
+            66,
+            70,
+            72,
+            77,
+            80,
+            92,
+            97,
+            104,
+            105,
+            116,
+            128,
+            132,
+            144,
+            145,
+            148,
+            150,
+            386
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            107,
+            109,
+            111,
+            114,
+            129,
+            131,
+            134,
+            379
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            2,
+            27,
+            380
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            26
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            23,
+            385
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_1b",
+      "name": "Basic 1-B",
+      "category": "Basic",
+      "price": 100,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Beginning",
+        "conditions": [
+          {
+            "type": "start"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            6,
+            32,
+            37,
+            41,
+            78,
+            88,
+            98,
+            102,
+            122,
+            175,
+            181,
+            192,
+            193,
+            199,
+            200,
+            201,
+            203,
+            205,
+            213,
+            214,
+            236,
+            238,
+            240,
+            247,
+            248,
+            254,
+            255,
+            258,
+            275
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            126,
+            279,
+            284,
+            285,
+            286,
+            287,
+            388
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            25,
+            239
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            18
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            387
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_2a",
+      "name": "Basic 2-A",
+      "category": "Basic",
+      "price": 120,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Beginning",
+        "conditions": [
+          {
+            "type": "start"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            119,
+            127,
+            295,
+            296,
+            298,
+            301,
+            307,
+            308,
+            316,
+            335,
+            424,
+            425,
+            427,
+            429,
+            433,
+            439,
+            442,
+            444,
+            449,
+            450,
+            451,
+            454,
+            463,
+            484,
+            485,
+            490
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            281,
+            426,
+            428,
+            437,
+            448,
+            461,
+            476
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            120,
+            218,
+            443
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            110,
+            477,
+            493
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            348
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_2b",
+      "name": "Basic 2-B",
+      "category": "Basic",
+      "price": 120,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Beginning",
+        "conditions": [
+          {
+            "type": "start"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            465,
+            473,
+            480,
+            488,
+            491,
+            492,
+            524,
+            525,
+            527,
+            528,
+            529,
+            532,
+            533,
+            540,
+            545,
+            550,
+            554,
+            559,
+            565,
+            566,
+            568,
+            572,
+            582,
+            583,
+            585,
+            598,
+            632,
+            637
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            462,
+            464,
+            468,
+            556,
+            590,
+            615
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            526,
+            547,
+            579
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            1,
+            349,
+            537
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_3a",
+      "name": "Basic 3-A",
+      "category": "Basic",
+      "price": 150,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "for purchase during the last week of October",
+        "conditions": [
+          {
+            "type": "month_at_least",
+            "key": "",
+            "value": 1
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            641,
+            725,
+            726,
+            727,
+            734,
+            737,
+            739,
+            741,
+            742,
+            751,
+            752,
+            753,
+            755,
+            764,
+            765,
+            768,
+            770,
+            771,
+            777,
+            778,
+            779,
+            780,
+            781,
+            792,
+            793,
+            794,
+            797,
+            799,
+            804
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            40,
+            738,
+            766,
+            796
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            639,
+            715,
+            754
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            642,
+            762,
+            763
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            643
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_3b",
+      "name": "Basic 3-B",
+      "category": "Basic",
+      "price": 150,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "for purchase during the last week of November",
+        "conditions": [
+          {
+            "type": "month_at_least",
+            "key": "",
+            "value": 2
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            665,
+            667,
+            669,
+            672,
+            673,
+            674,
+            811,
+            816,
+            817,
+            818,
+            821,
+            822,
+            824,
+            825,
+            826,
+            828,
+            829,
+            833,
+            834,
+            835,
+            846,
+            848,
+            849,
+            851,
+            852,
+            853,
+            854,
+            855,
+            858,
+            870,
+            871
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            819,
+            836,
+            837,
+            838,
+            839,
+            859
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            668,
+            812
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            670
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_4a",
+      "name": "Basic 4-A",
+      "category": "Basic",
+      "price": 150,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 20,
+      "unlock": {
+        "description": "for purchase on January 23rd of the second year",
+        "conditions": [
+          {
+            "type": "month_at_least",
+            "key": "",
+            "value": 4
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            1004,
+            1005,
+            1006,
+            1007,
+            1012,
+            1013,
+            1015,
+            1016,
+            1020,
+            1021,
+            1025,
+            1026,
+            1037,
+            1038,
+            1039,
+            1042,
+            1043,
+            1045,
+            1046,
+            1047,
+            1048,
+            1050,
+            1051,
+            1052,
+            1053,
+            1054,
+            1055
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            1003,
+            1014,
+            1018,
+            1022,
+            1027,
+            1057,
+            1060,
+            1070
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            1010,
+            1017
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            1024,
+            1041
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            1065
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_4b",
+      "name": "Basic 4-B",
+      "category": "Basic",
+      "price": 150,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 20,
+      "unlock": {
+        "description": "for purchase on February 20th of the second year",
+        "conditions": [
+          {
+            "type": "month_at_least",
+            "key": "",
+            "value": 5
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            1073,
+            1074,
+            1075,
+            1078,
+            1079,
+            1080,
+            1081,
+            1082,
+            1086,
+            1090,
+            1093,
+            1094,
+            1095,
+            1096,
+            1100,
+            1106,
+            1107,
+            1108,
+            1109,
+            1116,
+            1118,
+            1119,
+            1121,
+            1122,
+            1132,
+            1133,
+            1137
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            596,
+            1085,
+            1091,
+            1097,
+            1099,
+            1128,
+            1135,
+            1136
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            597,
+            1077,
+            1089,
+            1120
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": []
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            1083
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_1c",
+      "name": "Basic 1-C",
+      "category": "Basic",
+      "price": 150,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 20,
+      "unlock": {
+        "description": "for purchase during March 20th",
+        "conditions": [
+          {
+            "type": "month_at_least",
+            "key": "",
+            "value": 6
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            5,
+            9,
+            22,
+            39,
+            43,
+            44,
+            91,
+            94,
+            99,
+            170,
+            177,
+            183,
+            187,
+            215,
+            219,
+            225,
+            237,
+            245,
+            256,
+            260,
+            265,
+            269,
+            272,
+            273,
+            277,
+            278,
+            398
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            96,
+            152,
+            244,
+            396,
+            400,
+            412,
+            413
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            3,
+            31,
+            402,
+            403
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            85
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            401
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_2c",
+      "name": "Basic 2-C",
+      "category": "Basic",
+      "price": 150,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 20,
+      "unlock": {
+        "description": "for purchase on April 24th of the second year",
+        "conditions": [
+          {
+            "type": "month_at_least",
+            "key": "",
+            "value": 7
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            507,
+            508,
+            510,
+            514,
+            515,
+            520,
+            522,
+            523,
+            574,
+            645,
+            650,
+            651,
+            656,
+            657,
+            658,
+            661,
+            662,
+            676,
+            684,
+            685,
+            686,
+            687,
+            690,
+            697,
+            701,
+            702,
+            706
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            18,
+            26,
+            85,
+            644,
+            646,
+            647,
+            655,
+            675
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            663,
+            689
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            511,
+            699
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            516
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_3c",
+      "name": "Basic 3-C",
+      "category": "Basic",
+      "price": 150,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 20,
+      "unlock": {
+        "description": "for purchase on May 22nd",
+        "conditions": [
+          {
+            "type": "month_at_least",
+            "key": "",
+            "value": 8
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            355,
+            356,
+            889,
+            892,
+            893,
+            895,
+            898,
+            902,
+            904,
+            909,
+            910,
+            911,
+            912,
+            919,
+            934,
+            938,
+            948,
+            950,
+            955,
+            970,
+            972,
+            985,
+            989,
+            990
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            344,
+            913,
+            923,
+            926,
+            935,
+            939,
+            961,
+            969,
+            974
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            347,
+            908,
+            951,
+            991
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            903,
+            988
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            973
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "basic_4c",
+      "name": "Basic 4-C",
+      "category": "Basic",
+      "price": 150,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "for purchase during the last week of June",
+        "conditions": [
+          {
+            "type": "month_at_least",
+            "key": "",
+            "value": 9
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            1123,
+            1124,
+            1125,
+            1126,
+            1131,
+            1165,
+            1166,
+            1167,
+            1168,
+            1169,
+            1172,
+            1173,
+            1174,
+            1175,
+            1176,
+            1177,
+            1178,
+            1180,
+            1181,
+            1183,
+            1185,
+            1187,
+            1188,
+            1198
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            1138,
+            1142,
+            1143,
+            1153,
+            1154,
+            1163,
+            1164,
+            1182,
+            1184,
+            1195
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            1152,
+            1157,
+            1160,
+            1170
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            1158
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            1110
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "effect_monsters",
+      "name": "Effect Monsters",
+      "category": "Medium",
+      "price": 150,
+      "pack_size": 7,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Effect Monster\" Tutorial (1-2)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "effect_monster"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            45,
+            52,
+            54,
+            67,
+            68,
+            71,
+            90,
+            95,
+            101,
+            169,
+            174,
+            176,
+            178,
+            180,
+            182,
+            185,
+            205,
+            210,
+            211,
+            216,
+            217,
+            220,
+            230,
+            231,
+            251,
+            261,
+            264,
+            271,
+            345
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            12,
+            31,
+            33,
+            50,
+            87,
+            163,
+            168,
+            188,
+            209,
+            226,
+            259,
+            262,
+            336,
+            352
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            29,
+            173,
+            221,
+            257,
+            440
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            190,
+            340
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "various_fields",
+      "name": "Various Fields",
+      "category": "Medium",
+      "price": 150,
+      "pack_size": 3,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Field Spell\" Tutorial (7-7)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "field_spell"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            135,
+            136,
+            137,
+            138,
+            139,
+            140,
+            429,
+            455,
+            456,
+            457,
+            458,
+            459,
+            460,
+            513,
+            637,
+            738
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": []
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            684,
+            1062,
+            1160
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            953
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "equipments",
+      "name": "Equipments",
+      "category": "Medium",
+      "price": 100,
+      "pack_size": 3,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Equip Spell\" Tutorial (7-3)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "equip_spell"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            107,
+            108,
+            109,
+            111,
+            112,
+            113,
+            114,
+            115,
+            116,
+            117,
+            118,
+            119,
+            121,
+            122,
+            123,
+            125,
+            127,
+            128,
+            129,
+            130,
+            131,
+            132,
+            133,
+            134,
+            280,
+            282,
+            288,
+            389,
+            390,
+            428,
+            543,
+            544,
+            545,
+            555,
+            592,
+            601,
+            632,
+            765,
+            766,
+            825,
+            869,
+            1025,
+            1026,
+            1093,
+            1094,
+            1135
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            120,
+            411,
+            669,
+            796,
+            1164
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            110,
+            477
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            593,
+            594
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "fusions",
+      "name": "Fusions",
+      "category": "Medium",
+      "price": 100,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Fusion Monster\" Tutorial (1-4)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "fusion_monster"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            11,
+            21,
+            28,
+            41,
+            44,
+            53,
+            56,
+            69,
+            75,
+            83,
+            86,
+            88,
+            97,
+            104,
+            164,
+            167,
+            170,
+            179,
+            181,
+            189,
+            193,
+            196,
+            201,
+            202,
+            204,
+            206,
+            207,
+            213,
+            214,
+            219,
+            222,
+            223,
+            224,
+            228,
+            233,
+            241,
+            252,
+            253,
+            256,
+            260,
+            266,
+            267,
+            268,
+            274,
+            313,
+            381,
+            410,
+            529,
+            1020
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            25,
+            36,
+            346,
+            589,
+            637,
+            1155
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            85,
+            319,
+            1019
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            166,
+            721
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            186
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "rituals",
+      "name": "Rituals",
+      "category": "Medium",
+      "price": 100,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Ritual Monster\" Tutorial (1-3)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "ritual_monster"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            156,
+            161,
+            290,
+            291,
+            293,
+            294,
+            295,
+            296,
+            297,
+            301,
+            302,
+            303,
+            304,
+            305,
+            306,
+            307,
+            308,
+            310,
+            315,
+            316,
+            321,
+            322,
+            323,
+            324,
+            325,
+            367,
+            443,
+            453,
+            540,
+            763,
+            764,
+            822,
+            843,
+            844,
+            845,
+            909,
+            918,
+            1026,
+            1093,
+            1133,
+            1134
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            158,
+            332,
+            537,
+            841,
+            1128
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            160,
+            326,
+            812,
+            842
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            1127
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "continuous_effects",
+      "name": "Continuous Effects",
+      "category": "Medium",
+      "price": 100,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "\"Continuous Spell\" (7-4) and \"Continuous Trap\" Tutorials (7-11)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "continuous_spell"
+          },
+          {
+            "type": "tutorial",
+            "key": "continuous_trap"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            289,
+            378,
+            400,
+            408,
+            424,
+            435,
+            464,
+            466,
+            470,
+            471,
+            473,
+            478,
+            504,
+            541,
+            542,
+            550,
+            551,
+            553,
+            554,
+            573,
+            574,
+            603,
+            629,
+            631,
+            642,
+            647,
+            661,
+            703,
+            705,
+            736,
+            737,
+            739,
+            769,
+            797,
+            798,
+            802,
+            824,
+            827,
+            870,
+            874,
+            875,
+            880,
+            923,
+            924,
+            926,
+            932,
+            956,
+            959,
+            986,
+            993,
+            994,
+            995,
+            1028,
+            1063,
+            1070,
+            1090
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            154,
+            414,
+            426,
+            546,
+            576,
+            608,
+            633,
+            634,
+            635,
+            636,
+            718,
+            768,
+            809,
+            925,
+            1027,
+            1091
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            461,
+            497,
+            996
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            405,
+            472,
+            557,
+            602,
+            628
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "spell_collection_1",
+      "name": "Spell Collection 1",
+      "category": "Spell/Trap",
+      "price": 100,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Spell\" Tutorial (1-5)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "spell"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            126,
+            143,
+            144,
+            145,
+            146,
+            147,
+            148,
+            149,
+            150,
+            151,
+            152,
+            155,
+            279,
+            281,
+            284,
+            285,
+            286,
+            287,
+            382,
+            409,
+            432,
+            433,
+            914,
+            964
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            374,
+            375,
+            425,
+            437,
+            474,
+            475
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            142,
+            153
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            292
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "spell_collection_2",
+      "name": "Spell Collection 2",
+      "category": "Spell/Trap",
+      "price": 100,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Spell\" Tutorial (1-5)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "spell"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            372,
+            379,
+            383,
+            384,
+            386,
+            393,
+            399,
+            406,
+            407,
+            412,
+            427,
+            476,
+            572,
+            596,
+            609,
+            916,
+            917,
+            954,
+            955,
+            1021,
+            1022,
+            1064,
+            1095,
+            1131
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            369,
+            422,
+            430,
+            549,
+            575,
+            653
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            141,
+            436
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            401
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "trap_collection_1",
+      "name": "Trap Collection 1",
+      "category": "Spell/Trap",
+      "price": 100,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Trap\" Tutorial (1-6)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "trap"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            298,
+            299,
+            300,
+            373,
+            376,
+            391,
+            392,
+            394,
+            395,
+            396,
+            404,
+            423,
+            439,
+            462,
+            494,
+            742,
+            771,
+            847,
+            848,
+            919,
+            927,
+            992,
+            1030,
+            1195
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            371,
+            420
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            368,
+            402
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": []
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "trap_collection_2",
+      "name": "Trap Collection 2",
+      "category": "Spell/Trap",
+      "price": 100,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Trap\" Tutorial (1-6)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "trap"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            463,
+            495,
+            499,
+            591,
+            772,
+            773,
+            920,
+            962,
+            1068,
+            1071,
+            1096,
+            1097,
+            1098,
+            1099,
+            1137,
+            1138,
+            1139,
+            1190,
+            1191,
+            1192,
+            1193,
+            1196,
+            1198
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            467,
+            922,
+            1136
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            380,
+            403
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": []
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "spell_special_1",
+      "name": "Spell Special 1",
+      "category": "Spell/Trap",
+      "price": 150,
+      "pack_size": 3,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Get 90% Collection Rate on \"Spell Collection 1\" Pack",
+        "conditions": [
+          {
+            "type": "pack_completion",
+            "key": "spell_collection_1",
+            "value": 90
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            505,
+            701,
+            799,
+            832,
+            871,
+            872,
+            873,
+            877,
+            878,
+            912,
+            913,
+            952,
+            983,
+            987,
+            1103,
+            1132,
+            1183,
+            1184,
+            1185,
+            1186,
+            1187,
+            1188
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            397,
+            438,
+            597,
+            876,
+            1092
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            124,
+            385,
+            714,
+            951
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            370,
+            1065
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "spell_special_2",
+      "name": "Spell Special 2",
+      "category": "Spell/Trap",
+      "price": 150,
+      "pack_size": 3,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Get 90% Collection Rate on \"Spell Collection 2\" Pack",
+        "conditions": [
+          {
+            "type": "pack_completion",
+            "key": "spell_collection_2",
+            "value": 90
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            388,
+            398,
+            548,
+            595,
+            610,
+            638,
+            640,
+            667,
+            702,
+            740,
+            767,
+            800,
+            801,
+            826,
+            831,
+            984,
+            985,
+            1002,
+            1023,
+            1036,
+            1066
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            377,
+            434,
+            654,
+            664,
+            846,
+            879,
+            950
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            556,
+            988,
+            1024
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            387,
+            431
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "trap_special_1",
+      "name": "Trap Special 1",
+      "category": "Spell/Trap",
+      "price": 150,
+      "pack_size": 3,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Get 90% Collection Rate on \"Trap Collection 1\" Pack",
+        "conditions": [
+          {
+            "type": "pack_completion",
+            "key": "trap_collection_1",
+            "value": 90
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            465,
+            539,
+            630,
+            662,
+            671,
+            685,
+            687,
+            741,
+            743,
+            803,
+            804,
+            805,
+            921,
+            957,
+            958,
+            960,
+            1029,
+            1067,
+            1100,
+            1101
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            468,
+            686,
+            807,
+            885,
+            1069,
+            1142
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            503
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            421
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "trap_special_2",
+      "name": "Trap Special 2",
+      "category": "Spell/Trap",
+      "price": 150,
+      "pack_size": 3,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Get 90% Collection Rate on \"Trap Collection 2\" Pack",
+        "conditions": [
+          {
+            "type": "pack_completion",
+            "key": "trap_collection_2",
+            "value": 90
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            283,
+            496,
+            498,
+            558,
+            706,
+            716,
+            719,
+            770,
+            806,
+            808,
+            828,
+            829,
+            850,
+            881,
+            1033,
+            1140,
+            1189,
+            1194,
+            1197
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            469,
+            704,
+            883,
+            961,
+            1141,
+            1143
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            547,
+            966
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            552
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "expert_1",
+      "name": "Expert I",
+      "category": "Expert",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 28,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "\"Excellent Duelist\" Rank",
+        "conditions": [
+          {
+            "type": "title",
+            "key": "excellent_duelist"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            509,
+            517,
+            563,
+            600,
+            604,
+            625,
+            641,
+            665,
+            667,
+            669,
+            670,
+            672,
+            673,
+            674,
+            725,
+            726,
+            727,
+            728,
+            729,
+            730,
+            731,
+            732,
+            733,
+            734,
+            735,
+            736,
+            737,
+            738,
+            739,
+            740,
+            741,
+            742,
+            743,
+            751,
+            752,
+            753,
+            754,
+            755,
+            756,
+            757,
+            758,
+            759,
+            760,
+            761,
+            764,
+            765,
+            766,
+            767,
+            768,
+            769,
+            770,
+            771,
+            837,
+            848
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            479,
+            668,
+            715,
+            724,
+            744,
+            745,
+            746,
+            774,
+            775
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            350,
+            639,
+            718,
+            763
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            642,
+            643,
+            666,
+            720,
+            747
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "expert_2",
+      "name": "Expert II",
+      "category": "Expert",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 28,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "\"Excellent Duelist\" Rank",
+        "conditions": [
+          {
+            "type": "title",
+            "key": "excellent_duelist"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            607,
+            621,
+            622,
+            623,
+            624,
+            772,
+            773,
+            778,
+            779,
+            780,
+            781,
+            784,
+            785,
+            786,
+            788,
+            790,
+            791,
+            794,
+            795,
+            797,
+            798,
+            799,
+            800,
+            801,
+            803,
+            804,
+            805,
+            806,
+            807,
+            808,
+            816,
+            817,
+            818,
+            819,
+            821,
+            822,
+            823,
+            824,
+            825,
+            826,
+            828,
+            829,
+            833,
+            834,
+            835,
+            836,
+            838,
+            839,
+            843,
+            844,
+            845,
+            846,
+            851,
+            852,
+            871,
+            889
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            782,
+            783,
+            792,
+            793,
+            796,
+            841
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            612,
+            812,
+            813,
+            814,
+            820,
+            842
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            776,
+            787,
+            789,
+            815
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "expert_3",
+      "name": "Expert III",
+      "category": "Expert",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 28,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "\"Excellent Duelist\" Rank",
+        "conditions": [
+          {
+            "type": "title",
+            "key": "excellent_duelist"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            355,
+            356,
+            548,
+            561,
+            573,
+            694,
+            698,
+            700,
+            810,
+            811,
+            853,
+            854,
+            855,
+            856,
+            857,
+            858,
+            859,
+            860,
+            861,
+            862,
+            864,
+            865,
+            866,
+            867,
+            869,
+            870,
+            872,
+            873,
+            874,
+            875,
+            876,
+            877,
+            878,
+            880,
+            881,
+            882,
+            884,
+            887,
+            888,
+            890,
+            891,
+            892,
+            893,
+            894,
+            895,
+            898,
+            899,
+            900,
+            901,
+            902,
+            904,
+            909,
+            910,
+            986,
+            1040
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            344,
+            696,
+            750,
+            863,
+            883,
+            897,
+            905,
+            907
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            347,
+            879,
+            885,
+            908,
+            911
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            868,
+            903,
+            906,
+            1144
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "expert_4",
+      "name": "Expert IV",
+      "category": "Expert",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 28,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "\"Excellent Duelist\" Rank",
+        "conditions": [
+          {
+            "type": "title",
+            "key": "excellent_duelist"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            912,
+            914,
+            916,
+            917,
+            918,
+            919,
+            922,
+            924,
+            925,
+            933,
+            934,
+            935,
+            936,
+            937,
+            938,
+            942,
+            944,
+            945,
+            946,
+            947,
+            950,
+            952,
+            954,
+            955,
+            956,
+            957,
+            958,
+            959,
+            960,
+            962,
+            967,
+            968,
+            969,
+            970,
+            971,
+            972,
+            975,
+            977,
+            978,
+            979,
+            980,
+            981,
+            982,
+            984,
+            989,
+            990,
+            1059,
+            1072,
+            1115,
+            1179
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            913,
+            920,
+            923,
+            926,
+            927,
+            939,
+            943,
+            974,
+            976,
+            1008
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            915,
+            941,
+            951,
+            991,
+            1117
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            886,
+            896,
+            928,
+            940,
+            949,
+            973,
+            988
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "power_destructions",
+      "name": "Power Destructions",
+      "category": "Special",
+      "price": 250,
+      "pack_size": 3,
+      "restock_days": 14,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Change dorms at least once",
+        "conditions": [
+          {
+            "type": "dorm_changes",
+            "value": 1
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            165,
+            184,
+            195,
+            198,
+            229,
+            244,
+            342,
+            360,
+            362,
+            363,
+            490,
+            526,
+            531,
+            566,
+            586,
+            611,
+            615,
+            617,
+            646,
+            658,
+            717,
+            724,
+            754,
+            758,
+            777,
+            811,
+            817,
+            833,
+            889,
+            890,
+            891,
+            902,
+            911,
+            1149,
+            1172
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            18,
+            162,
+            234,
+            502,
+            655,
+            663,
+            780,
+            836,
+            864,
+            887,
+            888,
+            997,
+            1076,
+            1170
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            521
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            666
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            348,
+            973
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "effect_monsters_special",
+      "name": "Effect Monsters Special",
+      "category": "Special",
+      "price": 150,
+      "pack_size": 3,
+      "restock_days": 14,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Housed in each dorm at least once",
+        "conditions": [
+          {
+            "type": "visited_all_dorms"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            329,
+            330,
+            366,
+            677,
+            681,
+            683,
+            691,
+            709,
+            710,
+            711,
+            712,
+            713,
+            724,
+            754,
+            755,
+            756,
+            757,
+            759,
+            760,
+            778,
+            794,
+            840,
+            1165,
+            1173,
+            1174,
+            1175
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            331,
+            679,
+            680,
+            744,
+            746
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            357,
+            678,
+            707,
+            966
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            682
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "master_fusions",
+      "name": "Master Fusions",
+      "category": "Special",
+      "price": 200,
+      "pack_size": 3,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Get 90% Collection Rate on \"Fusions\" Pack",
+        "conditions": [
+          {
+            "type": "pack_completion",
+            "key": "fusions",
+            "value": 90
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            166,
+            319,
+            346,
+            359,
+            501,
+            618,
+            626,
+            740,
+            745,
+            774,
+            775,
+            1018,
+            1019,
+            1025,
+            1060,
+            1061,
+            1088,
+            1139,
+            1153,
+            1183
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            334,
+            776,
+            813,
+            1094,
+            1129,
+            1130,
+            1157,
+            1184,
+            1185
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            747,
+            1156,
+            1158
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            721,
+            722,
+            1159
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            789
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "the_hero",
+      "name": "The HERO",
+      "category": "Special",
+      "price": 400,
+      "pack_size": 3,
+      "restock_days": 14,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "\"New Hero Summoning!\" Event (Be on Slifer Red Dorm + Beat Syrus 10 times + Beat Jaden 5 times)",
+        "conditions": [
+          {
+            "type": "event",
+            "key": "new_hero_summoning"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            381,
+            410,
+            654,
+            664,
+            768,
+            921,
+            1106,
+            1107,
+            1108,
+            1109
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            637,
+            961,
+            1136,
+            1153,
+            1154,
+            1162,
+            1163,
+            1164,
+            1184
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            1065,
+            1110,
+            1160
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            1129,
+            1130,
+            1161
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            1200
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "live_vehicles",
+      "name": "Live Vehicles",
+      "category": "Special",
+      "price": 400,
+      "pack_size": 3,
+      "restock_days": 14,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Beat Syrus 10 times",
+        "conditions": [
+          {
+            "type": "counter",
+            "key": "wins_syrus",
+            "value": 10
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            381,
+            556,
+            1146,
+            1147,
+            1148,
+            1149,
+            1150,
+            1155
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": []
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            964,
+            1151
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            1156
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": [
+            1159
+          ]
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "be_quick",
+      "name": "Be Quick",
+      "category": "Special",
+      "price": 700,
+      "pack_size": 3,
+      "restock_days": 28,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Read \"Combos\" Tutorial (11-1~4)",
+        "conditions": [
+          {
+            "type": "tutorial",
+            "key": "combos"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            33,
+            42,
+            124,
+            166,
+            196,
+            204,
+            282,
+            338,
+            351,
+            364,
+            458,
+            611
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": []
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            142,
+            497,
+            500,
+            789
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            186,
+            292,
+            385
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "special_ways",
+      "name": "Special Ways",
+      "category": "Special",
+      "price": 400,
+      "pack_size": 3,
+      "restock_days": 21,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Duel with Sartyr once",
+        "conditions": [
+          {
+            "type": "counter",
+            "key": "wins_sartyr",
+            "value": 1
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            338,
+            341,
+            351,
+            364,
+            369,
+            374,
+            548,
+            550,
+            608,
+            633,
+            634,
+            635,
+            636,
+            704,
+            735,
+            760,
+            782,
+            783,
+            784,
+            786,
+            788,
+            790,
+            791,
+            795,
+            801,
+            803,
+            805,
+            807,
+            809,
+            823,
+            826,
+            828,
+            882,
+            901,
+            913,
+            1036,
+            1056,
+            1141,
+            1171
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            13,
+            14,
+            15,
+            16,
+            602,
+            787,
+            846,
+            1033,
+            1083
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            17,
+            354,
+            500,
+            841
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            815
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "dorothys_gift",
+      "name": "Dorothy's Gift",
+      "category": "Special",
+      "price": 1000,
+      "pack_size": 7,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Get 90% Collection Rate",
+        "conditions": [
+          {
+            "type": "collection_percent",
+            "value": 90
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "any"
+        },
+        {
+          "type": "any"
+        },
+        {
+          "type": "any"
+        },
+        {
+          "type": "any"
+        },
+        {
+          "type": "any"
+        },
+        {
+          "type": "any"
+        },
+        {
+          "type": "any"
+        }
+      ],
+      "pools": [],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds",
+      "all_cards": true,
+      "prefer_unowned": true
+    },
+    {
+      "id": "residents_of_the_sea",
+      "name": "Residents of the Sea",
+      "category": "Attribute",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Duel at the Harbor once",
+        "conditions": [
+          {
+            "type": "location_duels",
+            "key": "harbor",
+            "value": 1
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            82,
+            86,
+            88,
+            93,
+            115,
+            134,
+            139,
+            174,
+            177,
+            191,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            208,
+            209,
+            224,
+            227,
+            230,
+            240,
+            243,
+            253,
+            267,
+            270,
+            274,
+            276,
+            277,
+            287,
+            301,
+            306,
+            316,
+            323,
+            327,
+            330,
+            450,
+            456,
+            512,
+            513,
+            520,
+            523,
+            524,
+            527,
+            529,
+            530,
+            532,
+            564,
+            567,
+            585,
+            622,
+            627,
+            684,
+            688,
+            726,
+            734,
+            752,
+            792,
+            794,
+            811,
+            833,
+            857,
+            863,
+            887,
+            890,
+            891,
+            900,
+            905,
+            916,
+            943,
+            944,
+            968,
+            1004,
+            1053,
+            1073,
+            1166,
+            1171,
+            1176,
+            1177,
+            1178,
+            1187,
+            1191
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            262,
+            531,
+            933
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            906,
+            1010
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            547,
+            1145
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "invitation_to_the_dark",
+      "name": "Invitation to the Dark",
+      "category": "Attribute",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Clear \"Shadow Demon Deck\" Event",
+        "conditions": [
+          {
+            "type": "event",
+            "key": "shadow_demon_deck"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            4,
+            5,
+            7,
+            19,
+            21,
+            24,
+            31,
+            41,
+            45,
+            46,
+            47,
+            50,
+            51,
+            53,
+            57,
+            59,
+            61,
+            63,
+            67,
+            69,
+            71,
+            73,
+            76,
+            79,
+            83,
+            101,
+            108,
+            140,
+            161,
+            163,
+            164,
+            165,
+            167,
+            169,
+            172,
+            179,
+            184,
+            187,
+            206,
+            216,
+            220,
+            225,
+            229,
+            241,
+            242,
+            244,
+            247,
+            249,
+            252,
+            260,
+            271,
+            291,
+            294,
+            296,
+            302,
+            304,
+            305,
+            308,
+            311,
+            312,
+            313,
+            315,
+            317,
+            321,
+            324,
+            325,
+            331,
+            333,
+            336,
+            341,
+            345,
+            361,
+            362,
+            367,
+            415,
+            417,
+            418,
+            419,
+            445,
+            447,
+            454,
+            460,
+            486,
+            502,
+            508,
+            510,
+            522,
+            536,
+            538,
+            540,
+            569,
+            570,
+            590,
+            599,
+            605,
+            606,
+            613,
+            615,
+            617,
+            644,
+            645,
+            646,
+            670,
+            681,
+            692,
+            693,
+            695,
+            708,
+            710,
+            712,
+            716,
+            717,
+            750,
+            758,
+            810,
+            834,
+            836,
+            839,
+            840,
+            844,
+            845,
+            855,
+            860,
+            861,
+            866,
+            888,
+            897,
+            907,
+            910,
+            911,
+            929,
+            935,
+            938,
+            939,
+            965,
+            969,
+            971,
+            975,
+            997,
+            998,
+            1006,
+            1014,
+            1017,
+            1020,
+            1039,
+            1054,
+            1056,
+            1057,
+            1060,
+            1085,
+            1088,
+            1102,
+            1126,
+            1172,
+            1181
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            18,
+            29,
+            158,
+            173,
+            257,
+            314,
+            332,
+            349,
+            440,
+            537,
+            699,
+            715,
+            940
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            85,
+            326,
+            334,
+            340,
+            643,
+            813,
+            830,
+            842,
+            928
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": []
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "pyrogen",
+      "name": "Pyrogen",
+      "category": "Attribute",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "for purchase by finishing a Duel at the Volcano",
+        "conditions": [
+          {
+            "type": "location_duels",
+            "key": "volcano",
+            "value": 1
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            11,
+            35,
+            49,
+            56,
+            58,
+            74,
+            81,
+            102,
+            148,
+            149,
+            150,
+            151,
+            152,
+            157,
+            171,
+            183,
+            185,
+            204,
+            207,
+            227,
+            232,
+            246,
+            261,
+            275,
+            280,
+            328,
+            329,
+            389,
+            444,
+            457,
+            481,
+            482,
+            483,
+            484,
+            485,
+            514,
+            515,
+            525,
+            535,
+            554,
+            571,
+            579,
+            580,
+            581,
+            621,
+            680,
+            683,
+            751,
+            777,
+            778,
+            816,
+            838,
+            843,
+            862,
+            892,
+            893,
+            894,
+            895,
+            977,
+            1003,
+            1009,
+            1013,
+            1037,
+            1048,
+            1049,
+            1052,
+            1058,
+            1089,
+            1097,
+            1192
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            319,
+            320,
+            682,
+            867,
+            1083
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            841
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            720
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "fairy_dance",
+      "name": "Fairy Dance",
+      "category": "Type",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 25,
+      "unlock": {
+        "description": "for purchase by beating the event A Suspicious Person!?",
+        "conditions": [
+          {
+            "type": "event",
+            "key": "a_suspicious_person"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            70,
+            80,
+            118,
+            175,
+            217,
+            238,
+            360,
+            372,
+            429,
+            441,
+            443,
+            449,
+            534,
+            568,
+            582,
+            583,
+            586,
+            587,
+            588,
+            589,
+            620,
+            665,
+            672,
+            673,
+            674,
+            778,
+            794,
+            822,
+            858,
+            865,
+            909,
+            936,
+            953,
+            957,
+            963,
+            967,
+            980,
+            1061,
+            1063,
+            1165,
+            1174,
+            1175
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            668,
+            669
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            511,
+            812,
+            908,
+            949
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            370
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "insects_nest",
+      "name": "Insect's Nest",
+      "category": "Type",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Clear \"Draw! Draw! Draw!\" Event (In order to do this, you have to be at the \"Talented Duelist\" Rank + Beat Damon 5 times + already unlocked \"Invitation to the Dark\" Pack)",
+        "conditions": [
+          {
+            "type": "event",
+            "key": "draw_draw_draw"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            30,
+            111,
+            112,
+            135,
+            176,
+            210,
+            211,
+            212,
+            222,
+            235,
+            251,
+            264,
+            285,
+            303,
+            322,
+            356,
+            378,
+            451,
+            489,
+            518,
+            548,
+            559,
+            692,
+            693,
+            695,
+            889,
+            937,
+            942,
+            970,
+            1012,
+            1076
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            162,
+            221,
+            355,
+            561,
+            584,
+            1114
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": []
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            354
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "dragons_in_flight",
+      "name": "Dragons in Flight",
+      "category": "Type",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Beat Bastion 10 times",
+        "conditions": [
+          {
+            "type": "counter",
+            "key": "wins_bastion",
+            "value": 10
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            3,
+            6,
+            8,
+            25,
+            27,
+            36,
+            69,
+            77,
+            105,
+            121,
+            137,
+            157,
+            189,
+            246,
+            250,
+            263,
+            311,
+            312,
+            317,
+            318,
+            328,
+            329,
+            337,
+            501,
+            655,
+            656,
+            657,
+            658,
+            659,
+            660,
+            661,
+            662,
+            663,
+            680,
+            755,
+            764,
+            780,
+            997,
+            1007,
+            1011,
+            1013,
+            1055,
+            1074,
+            1185
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            166,
+            168,
+            319,
+            357,
+            763,
+            951,
+            1024
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            1,
+            40,
+            85,
+            1104
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            666,
+            721,
+            722,
+            886
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "beasts_in_fight",
+      "name": "Beasts in Fight",
+      "category": "Type",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Indoor Duel\" Event (Be in Slifer Red Dorm + Stay in your room for 3 weeks)",
+        "conditions": [
+          {
+            "type": "event",
+            "key": "indoor_duel"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            20,
+            34,
+            35,
+            43,
+            44,
+            75,
+            78,
+            94,
+            100,
+            114,
+            125,
+            135,
+            214,
+            231,
+            261,
+            293,
+            342,
+            343,
+            346,
+            353,
+            432,
+            442,
+            448,
+            450,
+            480,
+            502,
+            507,
+            565,
+            619,
+            677,
+            681,
+            761,
+            777,
+            793,
+            817,
+            819,
+            821,
+            835,
+            837,
+            838,
+            851,
+            852,
+            853,
+            855,
+            863,
+            888,
+            899,
+            945,
+            978,
+            982,
+            1005,
+            1016,
+            1019,
+            1054,
+            1075,
+            1078,
+            1079,
+            1080,
+            1081,
+            1087,
+            1090,
+            1095,
+            1125,
+            1168,
+            1173
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            156,
+            239,
+            309,
+            320,
+            854,
+            1018
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            999,
+            1000,
+            1001
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": []
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "the_warriors",
+      "name": "The Warriors",
+      "category": "Type",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Duel with Gerard once",
+        "conditions": [
+          {
+            "type": "counter",
+            "key": "wins_gerard",
+            "value": 1
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            9,
+            11,
+            28,
+            38,
+            48,
+            54,
+            60,
+            62,
+            65,
+            66,
+            68,
+            72,
+            87,
+            89,
+            90,
+            91,
+            95,
+            96,
+            99,
+            103,
+            104,
+            106,
+            107,
+            138,
+            159,
+            170,
+            178,
+            205,
+            245,
+            256,
+            268,
+            272,
+            278,
+            279,
+            290,
+            295,
+            296,
+            297,
+            304,
+            307,
+            308,
+            310,
+            321,
+            359,
+            433,
+            446,
+            506,
+            526,
+            545,
+            560,
+            564,
+            566,
+            569,
+            577,
+            578,
+            613,
+            614,
+            615,
+            626,
+            639,
+            641,
+            648,
+            649,
+            650,
+            651,
+            652,
+            653,
+            654,
+            689,
+            713,
+            723,
+            749,
+            754,
+            781,
+            799,
+            805,
+            820,
+            856,
+            859,
+            869,
+            907,
+            910,
+            931,
+            934,
+            946,
+            947,
+            977,
+            1008,
+            1009,
+            1017,
+            1042,
+            1044,
+            1051,
+            1060,
+            1092,
+            1105,
+            1123,
+            1199
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            26,
+            160,
+            349,
+            361,
+            699,
+            748,
+            1091
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            493,
+            813,
+            814
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            593,
+            868,
+            1084,
+            1144
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "the_machines",
+      "name": "The Machines",
+      "category": "Type",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 7,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Clear \"An Old Memory\" Event (Be \"Average Duelist\" Rank + On Saturday Morning, Duel with Syrus + On Saturday Night, go to the Harbor",
+        "conditions": [
+          {
+            "type": "event",
+            "key": "an_old_memory"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            98,
+            131,
+            164,
+            171,
+            180,
+            181,
+            182,
+            183,
+            184,
+            185,
+            187,
+            223,
+            225,
+            248,
+            284,
+            335,
+            336,
+            358,
+            363,
+            444,
+            487,
+            491,
+            492,
+            514,
+            519,
+            522,
+            535,
+            562,
+            632,
+            676,
+            712,
+            724,
+            727,
+            744,
+            745,
+            746,
+            750,
+            774,
+            775,
+            810,
+            816,
+            818,
+            905,
+            930,
+            938,
+            939,
+            1021,
+            1032,
+            1034,
+            1035,
+            1037,
+            1038,
+            1039,
+            1056,
+            1057,
+            1058,
+            1082,
+            1088,
+            1112,
+            1113,
+            1131,
+            1169,
+            1171,
+            1186
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            173,
+            283,
+            347,
+            350,
+            556,
+            762,
+            940,
+            1152
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            339,
+            340,
+            747,
+            1157
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            186,
+            348,
+            1111,
+            1158,
+            1159
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    },
+    {
+      "id": "spellcasters_dance",
+      "name": "Spellcaster's Dance",
+      "category": "Type",
+      "price": 200,
+      "pack_size": 5,
+      "restock_days": 14,
+      "purchase_limit": 1,
+      "stock": 0,
+      "unlock": {
+        "description": "Clear \"VS Yugi Deck\" Event (Dimitri available for more than a month + Unlocked \"The Machines\" Pack + Unlocked \"Insect's Next\" Pack)",
+        "conditions": [
+          {
+            "type": "event",
+            "key": "vs_yugi_deck"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Common"
+        },
+        {
+          "type": "fixed",
+          "rarity": "Rare"
+        },
+        {
+          "type": "rare_plus"
+        }
+      ],
+      "pools": [
+        {
+          "rarity": "Common",
+          "cards": [
+            2,
+            51,
+            52,
+            53,
+            58,
+            82,
+            84,
+            129,
+            140,
+            169,
+            192,
+            219,
+            234,
+            244,
+            265,
+            271,
+            313,
+            325,
+            333,
+            341,
+            365,
+            367,
+            377,
+            406,
+            413,
+            416,
+            419,
+            452,
+            495,
+            508,
+            575,
+            581,
+            601,
+            606,
+            616,
+            617,
+            618,
+            707,
+            710,
+            711,
+            728,
+            729,
+            730,
+            731,
+            732,
+            733,
+            782,
+            783,
+            784,
+            785,
+            786,
+            788,
+            790,
+            805,
+            832,
+            840,
+            843,
+            860,
+            866,
+            915,
+            935,
+            948,
+            979,
+            981,
+            998,
+            1004,
+            1014,
+            1020,
+            1031,
+            1128,
+            1133,
+            1181,
+            1182
+          ]
+        },
+        {
+          "rarity": "Rare",
+          "cards": [
+            12,
+            190,
+            218,
+            257,
+            314,
+            332,
+            352,
+            787,
+            988,
+            1083
+          ]
+        },
+        {
+          "rarity": "SuperRare",
+          "cards": [
+            23,
+            326,
+            334,
+            516,
+            776,
+            841
+          ]
+        },
+        {
+          "rarity": "UltraRare",
+          "cards": [
+            594,
+            896
+          ]
+        },
+        {
+          "rarity": "SecretRare",
+          "cards": []
+        }
+      ],
+      "canon_status": "provisional",
+      "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds"
+    }
+  ]
+}

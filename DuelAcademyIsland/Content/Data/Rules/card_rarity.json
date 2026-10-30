@@ -1,0 +1,4808 @@
+{
+  "schema": 1,
+  "canon_status": "provisional",
+  "source": "Derived from Content/Data/Canon/packs.json pools (highest rarity per card).",
+  "notes": "Global rarity is only a collection/filter hint. A card can have different rarities in different packs.",
+  "rarities": [
+    {
+      "card_id": 1,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 2,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 3,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 4,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 5,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 6,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 7,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 8,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 9,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 10,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 11,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 12,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 13,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 14,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 15,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 16,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 17,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 18,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 19,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 20,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 21,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 22,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 23,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 24,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 25,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 26,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 27,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 28,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 29,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 30,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 31,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 32,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 33,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 34,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 35,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 36,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 37,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 38,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 39,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 40,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 41,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 42,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 43,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 44,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 45,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 46,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 47,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 48,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 49,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 50,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 51,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 52,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 53,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 54,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 55,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 56,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 57,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 58,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 59,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 60,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 61,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 62,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 63,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 64,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 65,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 66,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 67,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 68,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 69,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 70,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 71,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 72,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 73,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 74,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 75,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 76,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 77,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 78,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 79,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 80,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 81,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 82,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 83,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 84,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 85,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 86,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 87,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 88,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 89,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 90,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 91,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 92,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 93,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 94,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 95,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 96,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 97,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 98,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 99,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 100,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 101,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 102,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 103,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 104,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 105,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 106,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 107,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 108,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 109,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 110,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 111,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 112,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 113,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 114,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 115,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 116,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 117,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 118,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 119,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 120,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 121,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 122,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 123,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 124,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 125,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 126,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 127,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 128,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 129,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 130,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 131,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 132,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 133,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 134,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 135,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 136,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 137,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 138,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 139,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 140,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 141,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 142,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 143,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 144,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 145,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 146,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 147,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 148,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 149,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 150,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 151,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 152,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 153,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 154,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 155,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 156,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 157,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 158,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 159,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 160,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 161,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 162,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 163,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 164,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 165,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 166,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 167,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 168,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 169,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 170,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 171,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 172,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 173,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 174,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 175,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 176,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 177,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 178,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 179,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 180,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 181,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 182,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 183,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 184,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 185,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 186,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 187,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 188,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 189,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 190,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 191,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 192,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 193,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 194,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 195,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 196,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 197,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 198,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 199,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 200,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 201,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 202,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 203,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 204,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 205,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 206,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 207,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 208,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 209,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 210,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 211,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 212,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 213,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 214,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 215,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 216,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 217,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 218,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 219,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 220,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 221,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 222,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 223,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 224,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 225,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 226,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 227,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 228,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 229,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 230,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 231,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 232,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 233,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 234,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 235,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 236,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 237,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 238,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 239,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 240,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 241,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 242,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 243,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 244,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 245,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 246,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 247,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 248,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 249,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 250,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 251,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 252,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 253,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 254,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 255,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 256,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 257,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 258,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 259,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 260,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 261,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 262,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 263,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 264,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 265,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 266,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 267,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 268,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 269,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 270,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 271,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 272,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 273,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 274,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 275,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 276,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 277,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 278,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 279,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 280,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 281,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 282,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 283,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 284,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 285,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 286,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 287,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 288,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 289,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 290,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 291,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 292,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 293,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 294,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 295,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 296,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 297,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 298,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 299,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 300,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 301,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 302,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 303,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 304,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 305,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 306,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 307,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 308,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 309,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 310,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 311,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 312,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 313,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 314,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 315,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 316,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 317,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 318,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 319,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 320,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 321,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 322,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 323,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 324,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 325,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 326,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 327,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 328,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 329,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 330,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 331,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 332,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 333,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 334,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 335,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 336,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 337,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 338,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 339,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 340,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 341,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 342,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 343,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 344,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 345,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 346,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 347,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 348,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 349,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 350,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 351,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 352,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 353,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 354,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 355,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 356,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 357,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 358,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 359,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 360,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 361,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 362,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 363,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 364,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 365,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 366,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 367,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 368,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 369,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 370,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 371,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 372,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 373,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 374,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 375,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 376,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 377,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 378,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 379,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 380,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 381,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 382,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 383,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 384,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 385,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 386,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 387,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 388,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 389,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 390,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 391,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 392,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 393,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 394,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 395,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 396,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 397,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 398,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 399,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 400,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 401,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 402,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 403,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 404,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 405,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 406,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 407,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 408,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 409,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 410,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 411,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 412,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 413,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 414,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 415,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 416,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 417,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 418,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 419,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 420,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 421,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 422,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 423,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 424,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 425,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 426,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 427,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 428,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 429,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 430,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 431,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 432,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 433,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 434,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 435,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 436,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 437,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 438,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 439,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 440,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 441,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 442,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 443,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 444,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 445,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 446,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 447,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 448,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 449,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 450,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 451,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 452,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 453,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 454,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 455,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 456,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 457,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 458,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 459,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 460,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 461,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 462,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 463,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 464,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 465,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 466,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 467,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 468,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 469,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 470,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 471,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 472,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 473,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 474,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 475,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 476,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 477,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 478,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 479,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 480,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 481,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 482,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 483,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 484,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 485,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 486,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 487,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 488,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 489,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 490,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 491,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 492,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 493,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 494,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 495,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 496,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 497,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 498,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 499,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 500,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 501,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 502,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 503,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 504,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 505,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 506,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 507,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 508,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 509,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 510,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 511,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 512,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 513,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 514,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 515,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 516,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 517,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 518,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 519,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 520,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 521,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 522,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 523,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 524,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 525,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 526,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 527,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 528,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 529,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 530,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 531,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 532,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 533,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 534,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 535,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 536,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 537,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 538,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 539,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 540,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 541,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 542,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 543,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 544,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 545,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 546,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 547,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 548,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 549,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 550,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 551,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 552,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 553,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 554,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 555,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 556,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 557,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 558,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 559,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 560,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 561,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 562,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 563,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 564,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 565,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 566,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 567,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 568,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 569,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 570,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 571,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 572,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 573,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 574,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 575,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 576,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 577,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 578,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 579,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 580,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 581,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 582,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 583,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 584,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 585,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 586,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 587,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 588,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 589,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 590,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 591,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 592,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 593,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 594,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 595,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 596,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 597,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 598,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 599,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 600,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 601,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 602,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 603,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 604,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 605,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 606,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 607,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 608,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 609,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 610,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 611,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 612,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 613,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 614,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 615,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 616,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 617,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 618,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 619,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 620,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 621,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 622,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 623,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 624,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 625,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 626,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 627,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 628,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 629,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 630,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 631,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 632,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 633,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 634,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 635,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 636,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 637,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 638,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 639,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 640,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 641,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 642,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 643,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 644,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 645,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 646,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 647,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 648,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 649,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 650,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 651,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 652,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 653,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 654,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 655,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 656,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 657,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 658,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 659,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 660,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 661,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 662,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 663,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 664,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 665,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 666,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 667,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 668,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 669,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 670,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 671,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 672,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 673,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 674,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 675,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 676,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 677,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 678,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 679,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 680,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 681,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 682,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 683,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 684,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 685,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 686,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 687,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 688,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 689,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 690,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 691,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 692,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 693,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 694,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 695,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 696,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 697,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 698,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 699,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 700,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 701,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 702,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 703,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 704,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 705,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 706,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 707,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 708,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 709,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 710,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 711,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 712,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 713,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 714,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 715,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 716,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 717,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 718,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 719,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 720,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 721,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 722,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 723,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 724,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 725,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 726,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 727,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 728,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 729,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 730,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 731,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 732,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 733,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 734,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 735,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 736,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 737,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 738,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 739,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 740,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 741,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 742,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 743,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 744,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 745,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 746,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 747,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 748,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 749,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 750,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 751,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 752,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 753,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 754,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 755,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 756,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 757,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 758,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 759,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 760,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 761,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 762,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 763,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 764,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 765,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 766,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 767,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 768,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 769,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 770,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 771,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 772,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 773,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 774,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 775,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 776,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 777,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 778,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 779,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 780,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 781,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 782,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 783,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 784,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 785,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 786,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 787,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 788,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 789,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 790,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 791,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 792,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 793,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 794,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 795,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 796,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 797,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 798,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 799,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 800,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 801,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 802,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 803,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 804,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 805,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 806,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 807,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 808,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 809,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 810,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 811,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 812,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 813,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 814,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 815,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 816,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 817,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 818,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 819,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 820,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 821,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 822,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 823,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 824,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 825,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 826,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 827,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 828,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 829,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 830,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 831,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 832,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 833,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 834,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 835,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 836,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 837,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 838,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 839,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 840,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 841,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 842,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 843,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 844,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 845,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 846,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 847,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 848,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 849,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 850,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 851,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 852,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 853,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 854,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 855,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 856,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 857,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 858,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 859,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 860,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 861,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 862,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 863,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 864,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 865,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 866,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 867,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 868,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 869,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 870,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 871,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 872,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 873,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 874,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 875,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 876,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 877,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 878,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 879,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 880,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 881,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 882,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 883,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 884,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 885,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 886,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 887,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 888,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 889,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 890,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 891,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 892,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 893,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 894,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 895,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 896,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 897,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 898,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 899,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 900,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 901,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 902,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 903,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 904,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 905,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 906,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 907,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 908,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 909,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 910,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 911,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 912,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 913,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 914,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 915,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 916,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 917,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 918,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 919,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 920,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 921,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 922,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 923,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 924,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 925,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 926,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 927,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 928,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 929,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 930,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 931,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 932,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 933,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 934,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 935,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 936,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 937,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 938,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 939,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 940,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 941,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 942,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 943,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 944,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 945,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 946,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 947,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 948,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 949,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 950,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 951,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 952,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 953,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 954,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 955,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 956,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 957,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 958,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 959,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 960,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 961,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 962,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 963,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 964,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 965,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 966,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 967,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 968,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 969,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 970,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 971,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 972,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 973,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 974,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 975,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 976,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 977,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 978,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 979,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 980,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 981,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 982,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 983,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 984,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 985,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 986,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 987,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 988,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 989,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 990,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 991,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 992,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 993,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 994,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 995,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 996,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 997,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 998,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 999,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1000,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1001,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1002,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1003,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1004,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1005,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1006,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1007,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1008,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1009,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1010,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1011,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1012,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1013,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1014,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1015,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1016,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1017,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1018,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1019,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1020,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1021,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1022,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1023,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1024,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1025,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1026,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1027,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1028,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1029,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1030,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1031,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1032,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1033,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1034,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1035,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1036,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1037,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1038,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1039,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1040,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1041,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1042,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1043,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1044,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1045,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1046,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1047,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1048,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1049,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1050,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1051,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1052,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1053,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1054,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1055,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1056,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1057,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1058,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1059,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1060,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1061,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1062,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1063,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1064,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1065,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 1066,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1067,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1068,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1069,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1070,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1071,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1072,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1073,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1074,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1075,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1076,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1077,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1078,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1079,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1080,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1081,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1082,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1083,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 1084,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1085,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1086,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1087,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1088,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1089,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1090,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1091,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1092,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1093,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1094,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1095,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1096,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1097,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1098,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1099,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1100,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1101,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1102,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1103,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1104,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1105,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1106,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1107,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1108,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1109,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1110,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 1111,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1112,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1113,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1114,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1115,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1116,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1117,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1118,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1119,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1120,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1121,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1122,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1123,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1124,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1125,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1126,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1127,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1128,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1129,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1130,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1131,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1132,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1133,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1134,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1135,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1136,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1137,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1138,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1139,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1140,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1141,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1142,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1143,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1144,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1145,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1146,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1147,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1148,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1149,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1150,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1151,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1152,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1153,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1154,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1155,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1156,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1157,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1158,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1159,
+      "rarity": "SecretRare"
+    },
+    {
+      "card_id": 1160,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1161,
+      "rarity": "UltraRare"
+    },
+    {
+      "card_id": 1162,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1163,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1164,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1165,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1166,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1167,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1168,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1169,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1170,
+      "rarity": "SuperRare"
+    },
+    {
+      "card_id": 1171,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1172,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1173,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1174,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1175,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1176,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1177,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1178,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1179,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1180,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1181,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1182,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1183,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1184,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1185,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1186,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1187,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1188,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1189,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1190,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1191,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1192,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1193,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1194,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1195,
+      "rarity": "Rare"
+    },
+    {
+      "card_id": 1196,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1197,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1198,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1199,
+      "rarity": "Common"
+    },
+    {
+      "card_id": 1200,
+      "rarity": "SecretRare"
+    }
+  ]
+}
