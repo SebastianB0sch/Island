@@ -133,7 +133,7 @@ public:
 	/** Immediately closes the conversation (skip button / debug). */
 	void SkipConversation();
 
-	void SetAutoAdvance(bool bEnabled);
+	void SetAutoAdvance(bool bEnabled, bool bPlaySound = true);
 	void ToggleAutoAdvance();
 	bool IsAutoAdvance() const { return bAuto; }
 
@@ -215,4 +215,5 @@ namespace DAUIData
 {
 	FString Label(const FString& Key, const FString& Fallback);
 	bool LoadDialogueSample(const FString& SampleId, TArray<FDADialogueLine>& OutLines);
+	bool LoadCredits(TArray<FString>& OutLines);
 }

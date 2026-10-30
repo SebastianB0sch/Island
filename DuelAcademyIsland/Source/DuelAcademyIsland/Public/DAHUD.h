@@ -7,6 +7,7 @@
 #include "DADialogueUI.h"
 #include "DADuelUI.h"
 #include "DAPDAUI.h"
+#include "DATitleScreen.h"
 #include "DAHUD.generated.h"
 
 class ADALocationVolume;
@@ -31,7 +32,8 @@ public:
 	bool IsDuelOpen() const { return DuelUI.IsValid() && DuelUI->IsOpen(); }
 	bool IsPDAOpen() const { return PDAUI.IsValid() && PDAUI->IsOpen(); }
 	bool IsDialogueOpen() const { return DialogueUI.IsValid() && DialogueUI->IsOpen(); }
-	bool IsModalOpen() const { return bMapOpen || bHelpOpen || IsDuelOpen() || IsPDAOpen() || IsDialogueOpen(); }
+	bool IsTitleOpen() const { return TitleScreen.IsValid() && TitleScreen->IsOpen(); }
+	bool IsModalOpen() const { return bMapOpen || bHelpOpen || IsDuelOpen() || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen(); }
 
 	/** Opens the starter-deck picker for a duel against the given opponent. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
@@ -80,15 +82,25 @@ public:
 
 	void TogglePDA(EDAPDATab Tab = EDAPDATab::Map);
 
+	// ---------------------------------------------------------------- title / new game
+	void OpenTitle();
+	void CloseTitle();
+
 	FDADialogueUI* GetDialogueUI() const { return DialogueUI.Get(); }
 	FDAPDAUI* GetPDAUI() const { return PDAUI.Get(); }
+	FDATitleScreen* GetTitleScreen() const { return TitleScreen.Get(); }
 
 private:
 	// ---------------------------------------------------------------- UI hosting
 	void UpdateInputMode();
+	void ApplySettingsToUI();
 	void HandlePDAAction(FName ActionId, const FString& Payload);
 	void HandlePDAClosed();
 	void HandleDialogueClosed(const FString& ConversationId);
+	void HandleTitleNewGame();
+	void HandleTitleContinue(int32 SlotIndex);
+	void HandleTitleOptionsChanged();
+	void HandleTitleClosed();
 
 private:
 	// drawing helpers
@@ -125,11 +137,13 @@ private:
 
 	bool bMapOpen = false;
 	bool bHelpOpen = false;
+	bool bTitleWasShown = false;
 	int32 MapSelection = 0;
 	float UIScale = 1.f;
 	float StartTime = 0.f;
 	TUniquePtr<FDADuelUI> DuelUI;
 	TUniquePtr<FDADialogueUI> DialogueUI;
 	TUniquePtr<FDAPDAUI> PDAUI;
+	TUniquePtr<FDATitleScreen> TitleScreen;
 	TWeakObjectPtr<ADALocationVolume> HoveredZone;
 };

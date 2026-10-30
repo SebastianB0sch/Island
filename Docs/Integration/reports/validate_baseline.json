@@ -1,0 +1,984 @@
+{
+  "tool": "validate_all",
+  "tool_version": "1.1.0",
+  "generated_at": "2026-10-30T18:07:24.113252+00:00",
+  "root": "C:\\dev\\GX",
+  "data_dir": "C:\\dev\\GX\\DuelAcademyIsland\\Content\\Data",
+  "contracts_dir": "C:\\dev\\GX\\Docs\\Contracts",
+  "strict": false,
+  "fail_on_gaps": false,
+  "result": "PASS",
+  "counts": {
+    "errors": 0,
+    "warnings": 20,
+    "gaps": 11,
+    "infos": 58,
+    "checks": 25,
+    "files_read": 176
+  },
+  "checks": [
+    {
+      "key": "cards",
+      "status": "pass",
+      "summary": "1200 unique cards; ids 1..1200 complete",
+      "owner": "A01"
+    },
+    {
+      "key": "canon_opponents",
+      "status": "pass",
+      "summary": "25 opponents",
+      "owner": "A01"
+    },
+    {
+      "key": "canon_decks",
+      "status": "gap",
+      "summary": "31 decks; 4 complete",
+      "owner": "A01"
+    },
+    {
+      "key": "canon_packs",
+      "status": "gap",
+      "summary": "48 packs; pool union 1200",
+      "owner": "A01"
+    },
+    {
+      "key": "canon_events",
+      "status": "pass",
+      "summary": "35 events; 0 numbered missing",
+      "owner": "A01"
+    },
+    {
+      "key": "canon_puzzles",
+      "status": "gap",
+      "summary": "100 puzzles; levels {1: 20, 2: 20, 3: 20, 4: 20, 5: 20}",
+      "owner": "A01"
+    },
+    {
+      "key": "canon_exams",
+      "status": "pass",
+      "summary": "12-cycle exam definition",
+      "owner": "A01"
+    },
+    {
+      "key": "canon_titles",
+      "status": "pass",
+      "summary": "14 titles",
+      "owner": "A01"
+    },
+    {
+      "key": "canon_calendar",
+      "status": "pass",
+      "summary": "12-month calendar; 3 periods",
+      "owner": "A01"
+    },
+    {
+      "key": "canon_banlist",
+      "status": "pass",
+      "summary": "63 listed cards",
+      "owner": "A01"
+    },
+    {
+      "key": "fusions",
+      "status": "pass",
+      "summary": "76 recipes for 76 fusion monsters",
+      "owner": "A05"
+    },
+    {
+      "key": "decks",
+      "status": "pass",
+      "summary": "36 decks; 305 distinct cards",
+      "owner": "A06"
+    },
+    {
+      "key": "limitations",
+      "status": "pass",
+      "summary": "forbidden=14, limited=40, semi=7",
+      "owner": "A01"
+    },
+    {
+      "key": "packs",
+      "status": "pass",
+      "summary": "48 packs; pool union 1200 cards",
+      "owner": "A06"
+    },
+    {
+      "key": "opponents",
+      "status": "pass",
+      "summary": "25 opponents",
+      "owner": "A07"
+    },
+    {
+      "key": "puzzles",
+      "status": "pass",
+      "summary": "100 puzzles; levels {1: 20, 2: 20, 3: 20, 4: 20, 5: 20}",
+      "owner": "A07"
+    },
+    {
+      "key": "exams",
+      "status": "pass",
+      "summary": "12 exams; 30 questions",
+      "owner": "A07"
+    },
+    {
+      "key": "anchors",
+      "status": "pass",
+      "summary": "46 locations, 89 anchors, 10 interiors, 20 portals, 28 spawns",
+      "owner": "A08"
+    },
+    {
+      "key": "events",
+      "status": "pass",
+      "summary": "37 events; 37 requirement edges",
+      "owner": "A03"
+    },
+    {
+      "key": "dialogue",
+      "status": "pass",
+      "summary": "161 dialogue lines; 0 referenced by scenes",
+      "owner": "A03"
+    },
+    {
+      "key": "scenes",
+      "status": "pass",
+      "summary": "56 scene queues",
+      "owner": "A03"
+    },
+    {
+      "key": "emails",
+      "status": "pass",
+      "summary": "6 contacts; 6 messages",
+      "owner": "A03"
+    },
+    {
+      "key": "schedules",
+      "status": "pass",
+      "summary": "7 schedules",
+      "owner": "A03"
+    },
+    {
+      "key": "effects",
+      "status": "gap",
+      "summary": "1200 manifest entries; scripted=119, vanilla=321, pending=760, unsupported=0",
+      "owner": "A05"
+    },
+    {
+      "key": "saves",
+      "status": "pass",
+      "summary": "2 save fixture(s)",
+      "owner": "A02"
+    }
+  ],
+  "findings": [
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "cards schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/cards.json"
+    },
+    {
+      "level": "gap",
+      "code": "canon_deck_incomplete",
+      "message": "27/31 canon decks are incomplete: banner_year1, pharaoh_year1, syrus_year1, chumley_year1, blair_year1, gerard_year1, sartyr_year1, bastion_year1, dimitri_year1, brier_year1 ...",
+      "owner": "A01",
+      "file": "Content/Data/Canon/decks.json",
+      "hint": "canon deck lists are unknown in the public guides; A01 must either prove or mark them fallback"
+    },
+    {
+      "level": "gap",
+      "code": "canon_pack_empty",
+      "message": "pack(s) with no pool: dorothys_gift",
+      "owner": "A01",
+      "file": "Content/Data/Canon/packs.json"
+    },
+    {
+      "level": "warning",
+      "code": "canon_event_duel_ref",
+      "message": "event E08 duel references opponent 'jinzo' not in Canon/opponents.json",
+      "owner": "A01",
+      "file": "Content/Data/Canon/events.json"
+    },
+    {
+      "level": "gap",
+      "code": "canon_event_deck_ref",
+      "message": "event E08 duel references canon deck 'jinzo_spirit' not in Canon/decks.json",
+      "owner": "A01",
+      "file": "Content/Data/Canon/events.json"
+    },
+    {
+      "level": "warning",
+      "code": "canon_event_duel_ref",
+      "message": "event E09 duel references opponent 'festival_bracket' not in Canon/opponents.json",
+      "owner": "A01",
+      "file": "Content/Data/Canon/events.json"
+    },
+    {
+      "level": "warning",
+      "code": "canon_event_duel_ref",
+      "message": "event E17 duel references opponent 'goblin_king' not in Canon/opponents.json",
+      "owner": "A01",
+      "file": "Content/Data/Canon/events.json"
+    },
+    {
+      "level": "gap",
+      "code": "canon_event_deck_ref",
+      "message": "event E22 duel references canon deck 'damon_exodia' not in Canon/decks.json",
+      "owner": "A01",
+      "file": "Content/Data/Canon/events.json"
+    },
+    {
+      "level": "gap",
+      "code": "canon_event_deck_ref",
+      "message": "event E23 duel references canon deck 'yugi_deck' not in Canon/decks.json",
+      "owner": "A01",
+      "file": "Content/Data/Canon/events.json"
+    },
+    {
+      "level": "gap",
+      "code": "canon_event_deck_ref",
+      "message": "event E26 duel references canon deck 'bastion_seventh' not in Canon/decks.json",
+      "owner": "A01",
+      "file": "Content/Data/Canon/events.json"
+    },
+    {
+      "level": "warning",
+      "code": "canon_event_duel_ref",
+      "message": "event E28 duel references opponent 'chocolate_bracket' not in Canon/opponents.json",
+      "owner": "A01",
+      "file": "Content/Data/Canon/events.json"
+    },
+    {
+      "level": "warning",
+      "code": "canon_event_duel_ref",
+      "message": "event E31 duel references opponent 'walk_home_partner' not in Canon/opponents.json",
+      "owner": "A01",
+      "file": "Content/Data/Canon/events.json"
+    },
+    {
+      "level": "gap",
+      "code": "canon_puzzle_setup",
+      "message": "100/100 canon puzzles have no decoded setup; runtime puzzles must supply one",
+      "owner": "A01",
+      "file": "Content/Data/Canon/puzzles.json",
+      "hint": "ROM puzzle table not decoded; A07 authors runtime setups"
+    },
+    {
+      "level": "gap",
+      "code": "canon_puzzle_timer",
+      "message": "100/100 canon puzzles have no decoded time limit",
+      "owner": "A01",
+      "file": "Content/Data/Canon/puzzles.json"
+    },
+    {
+      "level": "gap",
+      "code": "canon_exam_week",
+      "message": "canon exam week rule is unresolved",
+      "owner": "A01",
+      "file": "Content/Data/Canon/exams.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "fusions schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/fusions.json"
+    },
+    {
+      "level": "warning",
+      "code": "fusion_duplicate_material",
+      "message": "recipe 166 repeats material(s) [1]; check generic-material handling",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/fusions.json",
+      "path": "$.fusions[18]"
+    },
+    {
+      "level": "warning",
+      "code": "fusion_duplicate_material",
+      "message": "recipe 266 repeats material(s) [188]; check generic-material handling",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/fusions.json",
+      "path": "$.fusions[43]"
+    },
+    {
+      "level": "warning",
+      "code": "fusion_generic_material",
+      "message": "recipe 722 uses a generic material type 'Dragon' with 5 slots",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/fusions.json",
+      "path": "$.fusions[56]",
+      "hint": "ensure DAEffectRuntime supports type-count fusion recipes"
+    },
+    {
+      "level": "warning",
+      "code": "fusion_duplicate_material",
+      "message": "recipe 1061 repeats material(s) [967]; check generic-material handling",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/fusions.json",
+      "path": "$.fusions[67]"
+    },
+    {
+      "level": "warning",
+      "code": "fusion_unresolved",
+      "message": "recipe 1156 has no concrete materials",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/fusions.json",
+      "path": "$.fusions[72]"
+    },
+    {
+      "level": "warning",
+      "code": "fusion_duplicate_material",
+      "message": "recipe 1157 repeats material(s) [1152]; check generic-material handling",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/fusions.json",
+      "path": "$.fusions[73]"
+    },
+    {
+      "level": "warning",
+      "code": "fusion_duplicate_material",
+      "message": "recipe 1158 repeats material(s) [1152]; check generic-material handling",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/fusions.json",
+      "path": "$.fusions[74]"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/decks.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Decks/player_decks.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/alexis_cyber.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/alexis_cyber_plus.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/banner_alchemy.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/bastion_chem.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/bastion_chem_plus.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/beauregard_rock.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/blair_toon.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/brier_quiz.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/chazz_ojama.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/chazz_ojama_plus.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/chumley_koala.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/conklin_dino.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/crowler_ancient_gear.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/crowler_ancient_gear_plus.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/damon_exodia.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/dimitri_copycat.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/fontaine_nurse.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/gerard_quiz.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/jaden_year1.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/jasmine_amazoness.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/mimicry_stall.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/mindy_fairy.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/pharaoh_guardian.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/sartyr_curry.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/shadow_duelist_fiend.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/syrus_roids.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/syrus_roids_plus.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/topher_goblin.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/torrey_insect.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/zane_cyber.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "decks schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/decks/zane_cyber_end.json"
+    },
+    {
+      "level": "warning",
+      "code": "limitations_schema_drift",
+      "message": "banlist uses the pre-contract schema; canonical form is {version, forbidden, limited, semi_limited}",
+      "owner": "A01",
+      "file": "DuelAcademyIsland/Content/Data/Rules/banned_limited.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "packs schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Shop/packs.json"
+    },
+    {
+      "level": "gap",
+      "code": "pack_pool",
+      "message": "pack dorothys_gift has an empty pool",
+      "owner": "A06",
+      "file": "DuelAcademyIsland/Content/Data/Shop/packs.json",
+      "path": "$.packs[37]"
+    },
+    {
+      "level": "warning",
+      "code": "opponent_schema_drift",
+      "message": "roster uses duelists[]; canonical v1 wrapper is opponents[]",
+      "owner": "A07",
+      "file": "DuelAcademyIsland/Content/Data/Opponents/roster.json"
+    },
+    {
+      "level": "info",
+      "code": "puzzle_shape",
+      "message": "100 puzzle file(s) use A07's accepted single-object shape with embedded opponent state; wrapping them in puzzles[] is optional, not a blocker",
+      "owner": "A07",
+      "file": "DuelAcademyIsland/Content/Data/Puzzles/P001.json"
+    },
+    {
+      "level": "info",
+      "code": "exam_shape",
+      "message": "exams use A07's accepted cycles[] shape (question_ids/timed_puzzle_id/practical_objective_id); validator normalizes it, v1 exams[] wrapper is optional",
+      "owner": "A07",
+      "file": "DuelAcademyIsland/Content/Data/Exams/exams.json"
+    },
+    {
+      "level": "info",
+      "code": "exam_question_shape",
+      "message": "questions use A07's accepted Qxxx/options/answer_index shape; validator normalizes it, v1 Wxxx/answers/correct_index wrapper is optional",
+      "owner": "A07",
+      "file": "DuelAcademyIsland/Content/Data/Exams/questions.json"
+    },
+    {
+      "level": "warning",
+      "code": "anchor_schema_drift",
+      "message": "anchors use position_ue/location_id and implicit locations; canonical v1 uses locations[], position{x,y,z}",
+      "owner": "A08",
+      "file": "DuelAcademyIsland/Content/Data/World/anchors.json"
+    },
+    {
+      "level": "info",
+      "code": "event_shape",
+      "message": "events use A03's accepted when/requirements/outcomes/rewards-array shape and scene ids; validator normalizes them, v1 date/requires/rewards wrapper is optional",
+      "owner": "A03",
+      "file": "DuelAcademyIsland/Content/Data/Story/events.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "dialogue schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Story/dialogue/full_campaign.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "dialogue schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Story/dialogue/opening.json"
+    },
+    {
+      "level": "warning",
+      "code": "scene_schema_drift",
+      "message": "scene bundle uses scenes{} and lowercase commands; canonical v1 is one file per scene with FStoryCommand types",
+      "owner": "A03",
+      "file": "DuelAcademyIsland/Content/Data/Story/scenes/full_campaign.json"
+    },
+    {
+      "level": "warning",
+      "code": "scene_schema_drift",
+      "message": "scene bundle uses scenes{} and lowercase commands; canonical v1 is one file per scene with FStoryCommand types",
+      "owner": "A03",
+      "file": "DuelAcademyIsland/Content/Data/Story/scenes/opening.json"
+    },
+    {
+      "level": "info",
+      "code": "email_shape",
+      "message": "emails use A03's accepted contacts[].messages shape; validator normalizes them, v1 emails[] wrapper is optional",
+      "owner": "A03",
+      "file": "DuelAcademyIsland/Content/Data/Story/emails.json"
+    },
+    {
+      "level": "warning",
+      "code": "schedule_schema_drift",
+      "message": "schedules use npcs{} with periods[]; canonical v1 is schedules[] with period",
+      "owner": "A03",
+      "file": "DuelAcademyIsland/Content/Data/Story/schedules/opening.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_manifest_shape",
+      "message": "effect manifest uses {schema_version, cards[]} (A05); canonical v1 wrapper is {version, entries[]}",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/card_effect_manifest.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/259.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/29.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/348.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/436.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/637.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/639.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/651.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/686.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/787.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/849.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_status_counts",
+      "message": "scripted=119, vanilla=321, pending=760, unsupported=0",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/card_effect_manifest.json"
+    },
+    {
+      "level": "gap",
+      "code": "effects_pending",
+      "message": "760 card(s) are pending effect implementation (tier 2); scripted=119, vanilla=321, unsupported=0",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/card_effect_manifest.json",
+      "hint": "Tier 2 effect coverage is the remaining content gap; pending cards must not appear in story/puzzle decks until scripted or classified vanilla"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "save.v1 schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Integration/saves/golden_new_game.json"
+    },
+    {
+      "level": "info",
+      "code": "schema_ok",
+      "message": "save.v1 schema passed",
+      "owner": "",
+      "file": "DuelAcademyIsland/Content/Data/Integration/saves/golden_runtime_v1.json"
+    },
+    {
+      "level": "info",
+      "code": "card_obtainability",
+      "message": "all 1200 cards are obtainable from packs/rewards",
+      "owner": "A06"
+    },
+    {
+      "level": "warning",
+      "code": "flag_unwritten",
+      "message": "2 flag(s) are read but never written by events/defaults: ['post_game', 'walk_home_partner_3']",
+      "owner": "A03/A02",
+      "hint": "check initial flags, exam/title/duel outcomes and event rewards"
+    },
+    {
+      "level": "warning",
+      "code": "counter_unwritten",
+      "message": "9 counter(s) are read but never written: ['timed_clears', 'wins_beauregard', 'wins_brier', 'wins_chazz', 'wins_chumley', 'wins_damon', 'wins_syrus', 'wins_zane', 'written_correct']",
+      "owner": "A03/A02"
+    }
+  ],
+  "files": [
+    "DuelAcademyIsland/Content/Data/cards.json",
+    "DuelAcademyIsland/Content/Data/Canon/opponents.json",
+    "DuelAcademyIsland/Content/Data/Canon/decks.json",
+    "DuelAcademyIsland/Content/Data/Canon/packs.json",
+    "DuelAcademyIsland/Content/Data/Canon/events.json",
+    "DuelAcademyIsland/Content/Data/Canon/puzzles.json",
+    "DuelAcademyIsland/Content/Data/Canon/exams.json",
+    "DuelAcademyIsland/Content/Data/Canon/titles.json",
+    "DuelAcademyIsland/Content/Data/Canon/calendar.json",
+    "DuelAcademyIsland/Content/Data/Canon/banned_list.json",
+    "DuelAcademyIsland/Content/Data/fusions.json",
+    "DuelAcademyIsland/Content/Data/decks.json",
+    "DuelAcademyIsland/Content/Data/Decks/player_decks.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/alexis_cyber.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/alexis_cyber_plus.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/banner_alchemy.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/bastion_chem.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/bastion_chem_plus.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/beauregard_rock.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/blair_toon.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/brier_quiz.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/chazz_ojama.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/chazz_ojama_plus.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/chumley_koala.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/conklin_dino.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/crowler_ancient_gear.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/crowler_ancient_gear_plus.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/damon_exodia.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/dimitri_copycat.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/fontaine_nurse.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/gerard_quiz.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/jaden_year1.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/jasmine_amazoness.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/mimicry_stall.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/mindy_fairy.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/pharaoh_guardian.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/sartyr_curry.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/shadow_duelist_fiend.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/syrus_roids.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/syrus_roids_plus.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/topher_goblin.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/torrey_insect.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/zane_cyber.json",
+    "DuelAcademyIsland/Content/Data/Opponents/decks/zane_cyber_end.json",
+    "DuelAcademyIsland/Content/Data/Rules/banned_limited.json",
+    "DuelAcademyIsland/Content/Data/Shop/packs.json",
+    "DuelAcademyIsland/Content/Data/Opponents/roster.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P001.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P002.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P003.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P004.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P005.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P006.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P007.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P008.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P009.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P010.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P011.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P012.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P013.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P014.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P015.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P016.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P017.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P018.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P019.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P020.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P021.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P022.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P023.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P024.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P025.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P026.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P027.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P028.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P029.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P030.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P031.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P032.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P033.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P034.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P035.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P036.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P037.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P038.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P039.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P040.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P041.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P042.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P043.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P044.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P045.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P046.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P047.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P048.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P049.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P050.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P051.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P052.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P053.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P054.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P055.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P056.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P057.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P058.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P059.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P060.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P061.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P062.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P063.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P064.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P065.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P066.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P067.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P068.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P069.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P070.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P071.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P072.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P073.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P074.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P075.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P076.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P077.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P078.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P079.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P080.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P081.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P082.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P083.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P084.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P085.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P086.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P087.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P088.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P089.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P090.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P091.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P092.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P093.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P094.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P095.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P096.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P097.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P098.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P099.json",
+    "DuelAcademyIsland/Content/Data/Puzzles/P100.json",
+    "DuelAcademyIsland/Content/Data/Exams/exams.json",
+    "DuelAcademyIsland/Content/Data/Exams/practicals.json",
+    "DuelAcademyIsland/Content/Data/Exams/questions.json",
+    "DuelAcademyIsland/Content/Data/World/anchors.json",
+    "DuelAcademyIsland/Content/Data/World/location_map.json",
+    "DuelAcademyIsland/Content/Data/World/portals.json",
+    "DuelAcademyIsland/Content/Data/World/spawns.json",
+    "DuelAcademyIsland/Content/Data/World/interiors.json",
+    "DuelAcademyIsland/Content/Data/Story/events.json",
+    "DuelAcademyIsland/Content/Data/Story/opening.json",
+    "DuelAcademyIsland/Content/Data/Story/dialogue/full_campaign.json",
+    "DuelAcademyIsland/Content/Data/Story/dialogue/opening.json",
+    "DuelAcademyIsland/Content/Data/Story/scenes/full_campaign.json",
+    "DuelAcademyIsland/Content/Data/Story/scenes/opening.json",
+    "DuelAcademyIsland/Content/Data/Story/emails.json",
+    "DuelAcademyIsland/Content/Data/Story/schedules/opening.json",
+    "DuelAcademyIsland/Content/Data/Effects/card_effect_manifest.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/259.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/29.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/348.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/436.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/637.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/639.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/651.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/686.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/787.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/849.json",
+    "DuelAcademyIsland/Content/Data/Integration/saves/golden_new_game.json",
+    "DuelAcademyIsland/Content/Data/Integration/saves/golden_runtime_v1.json"
+  ]
+}

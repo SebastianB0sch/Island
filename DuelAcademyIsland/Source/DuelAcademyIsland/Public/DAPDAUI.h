@@ -112,11 +112,14 @@ struct FDAPDASaveSlotView
 	FString Id;
 	FString Label;
 	FString Date;
+	FString PlayerName;
 	FString Dorm;
 	FString Title;
 	int32 DP = 0;
 	bool bOccupied = false;
 	bool bAutosave = false;
+	bool bCorrupt = false;
+	bool bUsingBackup = false;
 };
 
 /** One option row. Activating cycles Values and emits options.changed. */

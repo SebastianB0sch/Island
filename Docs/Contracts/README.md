@@ -100,12 +100,12 @@ Content/Data/
 ├─ Puzzles/puzzles.json           A07   P001..P100
 ├─ Exams/exams.json               A07   12 exam cycles
 ├─ Exams/questions.json           A07   written question bank
-├─ Effects/manifest.json          A05   one entry per card, 1..1200
-├─ Effects/<card_id>.json         A05   effect scripts
+├─ Effects/card_effect_manifest.json A05  one entry per card, 1..1200
+├─ Effects/scripts/<card_id>.json A05   effect scripts
 ├─ World/anchors.json             A08   locations, anchors, portals, spawns
 ├─ Profile/                       A02   titles, defaults, migrations
 ├─ UI/                            A09   portrait fallbacks, localization keys
-└─ Integration/                   A10   fixtures, golden saves, reports
+└─ Integration/saves/             A10   golden save payloads (reports: Docs/Integration)
 ```
 
 Existing `cards.json`, `decks.json` and `fusions.json` stay in their current
@@ -301,7 +301,9 @@ v1 fixture in `Content/Data/Integration/saves/`, and prove the migration in
   endpoints exist, spawn refs valid.
 - **Effects**: exactly one manifest entry per card; scripted entries have a
   script with non-empty operations; unsupported entries have a reason; no
-  unsupported card appears in a deck, pack, puzzle or exam.
+  unsupported card appears in a deck, pack, puzzle or exam. `pending` is a
+  first-class coverage status and is reported as `GAP effects_pending`, not a
+  schema error.
 
 ---
 
@@ -320,7 +322,7 @@ Sole owner = only that agent edits. Shared files change only through A10.
 | `DAOpponentSubsystem.*`, `DADuelistAI.*`, `DAExamSubsystem.*`, `Content/Data/Opponents/**`, `Puzzles/**`, `Exams/**`, `Tools/puzzles/**` | A07 |
 | `Tools/dai/assets/**`, `Tools/dai/layout.py`, `Tools/dai/config.py`, `Content/Python/duel_academy/level.py`, `DAInterior*`, `DADoor*`, `DASceneAnchor*`, `DANpcSpawnPoint*`, `DANpcDirector*`, `DAWorldActors.*`, `DAStudentNPC.*`, `DAInteractable.*`, `Content/Data/World/**` | A08 |
 | `DAHUD.*`, `DADuelUI.*`, `DADialogueUI.*`, `DAPDAUI.*`, `DAShopUI.*`, `DADeckUI.*`, `DAExamUI.*`, `DASaveUI.*`, `DACutscene.*`, `DACardArtSubsystem.*`, `DACharacterPortraitSubsystem.*`, `Content/Data/UI/**` | A09 |
-| `Tools/validate/**`, `Tools/integration/**`, `.github/workflows/**`, `Docs/PORT_STATUS.md`, `Docs/Contracts/**`, `Content/Data/Integration/**`, build scripts | A10 |
+| `Tools/validate/**`, `Tools/integration/**`, `.github/workflows/**`, `Docs/PORT_STATUS.md`, `Docs/Contracts/**`, `Docs/Integration/**`, `Content/Data/Integration/**`, build scripts | A10 |
 
 Shared files (A10 only): `DAGameMode.*`, `DATypes.h`, `DAIslandSubsystem.*`,
 `DAStudentCharacter.*`, `DuelAcademyIsland.Build.cs`, `Config/*.ini`,
@@ -403,15 +405,16 @@ Counts at the Gate 0 snapshot:
   questions and 12 sets; `scoring.json` and `practicals.json` define the
   500-point model and 7 objectives. The exam lifecycle still needs an engine
   test.
-- `Story/opening.json`, `Story/scenes/opening.json`,
-  `Story/dialogue/opening.json`, `Story/schedules/opening.json`: 3 runtime
-  events (E01, E01b, FJ01), 21 scenes, 86 dialogue lines, 7 schedules. Canon
-  has 35 events (E01..E33, E04b, E28b); the runtime E02..E33 wiring is missing.
+- `Story/`: 37 runtime events (full 35 plus opening E01b/FJ01), 56 scenes,
+  161 dialogue lines, 6 email contacts/messages and 7 schedules. The data
+  validates; the E02-E33 in-engine playthrough and full dialogue/email UI
+  integration are still pending.
 - `World/`: 46 locations, 83 anchors, 10 interior cells, 20 portals and 28
-  spawns. The opening scenes/schedules now resolve against the published
-  anchor set; the validator reports no missing anchor ids.
-- `Effects/`: 10 Tier-1 scripts and the 137-card engine regression baseline;
-  `manifest.json` (1,200 entries) is missing.
+  spawns. Story/schedule anchors resolve; interior generation and entry/exit
+  tests are still pending.
+- `Effects/`: `card_effect_manifest.json` has all 1,200 entries - 119 scripted,
+  321 vanilla and 760 pending; `pending` is reported as a GAP, not a schema
+  error.
 - `Integration/saves/golden_new_game.json`: v1 golden save passes.
 - The current duel engine exposes `Start`/`RunSelfTest` and the 137-card
   regression baseline; the `FDuelRequest`/`FDuelResult` adapter is target work
@@ -422,8 +425,9 @@ Counts at the Gate 0 snapshot:
 ### Pre-contract data shapes
 
 The following files were authored before the v1 wrappers landed. The validator
-normalizes and validates them but emits `*_schema_drift` warnings so the owning
-lane migrates at its gate:
+normalizes and validates them. A03/A07 accepted shapes are INFO with an
+optional migration note; the remaining shapes emit `*_schema_drift` warnings
+until the owning lane migrates:
 
 | File | Current shape | v1 target |
 | --- | --- | --- |

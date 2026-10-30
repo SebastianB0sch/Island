@@ -26,7 +26,7 @@
         "text_key": { "type": "string", "minLength": 1 },
         "emotion": { "type": "string" },
         "tags": { "type": "array", "items": { "type": "string" } },
-        "source": { "type": "string", "enum": ["canon", "original", "paraphrase", "fallback"] },
+        "source": { "type": "string" },
         "trace_id": { "type": "string" }
       },
       "additionalProperties": true

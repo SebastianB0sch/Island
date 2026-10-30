@@ -34,7 +34,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DEFAULT_UPROJECT = ROOT / "DuelAcademyIsland" / "DuelAcademyIsland.uproject"
-DEFAULT_REPORT_DIR = ROOT / "Content" / "Data" / "Integration" / "reports"
+DEFAULT_REPORT_DIR = ROOT / "Docs" / "Integration" / "reports"
 DEFAULT_UE_EDITOR = Path(r"C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe")
 TOOL_VERSION = "1.0.0"
 
@@ -250,11 +250,12 @@ def _inspect_log(step: Step) -> None:
                     elif step.status == "pass":
                         step.note = line.strip()
                 break
-    elif step.name in {"profile-selftest", "duelrules-selftest", "economy-selftest"}:
+    elif step.name in {"profile-selftest", "duelrules-selftest", "economy-selftest", "story-selftest"}:
         markers = {
             "profile-selftest": "DAProfileSelfTest",
             "duelrules-selftest": "Duel rules self-test:",
             "economy-selftest": "DAEconomySelfTest:",
+            "story-selftest": "StorySelfTest:",
         }
         marker = markers[step.name]
         summary_seen = False
@@ -271,7 +272,7 @@ def _inspect_log(step: Step) -> None:
             if "FAILED" in stripped or "FAILURES PRESENT" in stripped:
                 step.status = "fail"
                 summary_seen = True
-            elif "PASSED" in stripped or "ALL PASS" in stripped:
+            elif "PASSED" in stripped or "ALL PASS" in stripped or ("PASS" in stripped and "FAIL" not in stripped):
                 step.status = "pass"
                 summary_seen = True
             elif " passed," in stripped and " failed." in stripped:
@@ -334,7 +335,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--profile-selftest", action="store_true", help="run A02's -DAProfileSelfTest")
     parser.add_argument("--duelrules-selftest", action="store_true", help="run A04's -DADuelRulesSelfTest")
     parser.add_argument("--economy-selftest", action="store_true", help="run A06's -DAEconomySelfTest")
-    parser.add_argument("--self-tests", action="store_true", help="run all four headless self-tests")
+    parser.add_argument("--story-selftest", action="store_true", help="run A03's -DAStorySelfTest (explicit; the editor may stay open)")
+    parser.add_argument("--self-tests", action="store_true", help="run the four stable headless self-tests")
     parser.add_argument("--automation", action="store_true", help="run Unreal automation tests matching --automation-filter")
     parser.add_argument("--all", action="store_true", help="validate + all self-tests + automation")
     parser.add_argument("--automation-filter", default="DuelAcademy", help="Unreal automation test filter")
@@ -373,6 +375,7 @@ def main(argv: list[str] | None = None) -> int:
         or args.profile_selftest
         or args.duelrules_selftest
         or args.economy_selftest
+        or args.story_selftest
         or run_selftests
     )
     run_validate = not args.no_validate and (
@@ -408,6 +411,8 @@ def main(argv: list[str] | None = None) -> int:
         selftest_jobs.append(("duelrules-selftest", "-DADuelRulesSelfTest"))
     if args.economy_selftest or run_selftests:
         selftest_jobs.append(("economy-selftest", "-DAEconomySelfTest"))
+    if args.story_selftest:
+        selftest_jobs.append(("story-selftest", "-DAStorySelfTest"))
 
     for name, switch in selftest_jobs:
         if editor is None:

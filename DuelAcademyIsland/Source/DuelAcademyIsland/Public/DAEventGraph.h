@@ -42,6 +42,13 @@ class DUELACADEMYISLAND_API FDAEventGraph
 public:
 	bool LoadFromJson(const TSharedPtr<FJsonObject>& Root, FString& OutError);
 
+	/**
+	 * Add events from another manifest without clearing the graph. Existing or
+	 * excluded ids are skipped, which keeps opening.json authoritative for E01.
+	 */
+	bool MergeFromJson(const TSharedPtr<FJsonObject>& Root, const TSet<FString>& ExcludedIds,
+		FString& OutError, int32& OutAdded);
+
 	const FDAEventDefinition* FindEvent(const FString& EventId) const;
 	const TArray<FDAEventDefinition>& GetEvents() const { return Events; }
 

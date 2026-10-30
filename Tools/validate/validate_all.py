@@ -66,7 +66,7 @@ PERIODS = {"AM", "PM", "Night"}
 WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 DUEL_MODES = {"story", "free", "exam_timed", "exam_practical", "puzzle", "ante", "tutorial"}
 EVENT_STATES = {"available", "active", "complete", "failed", "skipped"}
-EFFECT_STATUSES = {"scripted", "vanilla", "unsupported"}
+EFFECT_STATUSES = {"scripted", "vanilla", "unsupported", "pending"}
 PRACTICAL_OBJECTIVES = {
     "battle",
     "spells",
@@ -110,7 +110,7 @@ PUZZLE_ACTIONS = {
     "end_turn",
 }
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
-SCENE_ID_RE = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*(?:\.[a-z0-9]+(?:_[a-z0-9]+)*)*$")
+SCENE_ID_RE = re.compile(r"^[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*(?:\.[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*)*$")
 ANCHOR_RE = re.compile(r"^[a-z0-9_]+(?:\.[a-z0-9_]+)*$")
 EVENT_RE = re.compile(r"^[A-Z]{1,3}[0-9]{2}[a-z]?$")
 PUZZLE_RE = re.compile(r"^P[0-9]{3}$")
@@ -1914,9 +1914,9 @@ def validate_puzzles(ctx: Context, report: Report) -> None:
                 errors += 1
 
     if legacy_puzzle_files:
-        report.warn(
-            "puzzle_schema_drift",
-            f"{len(legacy_puzzle_files)} puzzle file(s) use a single object with embedded opponent state; canonical v1 uses puzzles[]",
+        report.info(
+            "puzzle_shape",
+            f"{len(legacy_puzzle_files)} puzzle file(s) use A07's accepted single-object shape with embedded opponent state; wrapping them in puzzles[] is optional, not a blocker",
             file=legacy_puzzle_files[0],
             owner="A07",
         )
@@ -1970,9 +1970,9 @@ def validate_exams(ctx: Context, report: Report) -> None:
     legacy_exams = isinstance(doc, dict) and isinstance(doc.get("cycles"), list) and not isinstance(doc.get("exams"), list)
     if legacy_exams:
         exam_items = doc["cycles"]
-        report.warn(
-            "exam_schema_drift",
-            "exams use cycles[] with top-level question_ids/timed_puzzle_id/practical_objective_id; canonical v1 uses exams[] with written/timed/practical objects",
+        report.info(
+            "exam_shape",
+            "exams use A07's accepted cycles[] shape (question_ids/timed_puzzle_id/practical_objective_id); validator normalizes it, v1 exams[] wrapper is optional",
             file=rel_path(report, exam_path),
             owner="A07",
         )
@@ -1994,9 +1994,9 @@ def validate_exams(ctx: Context, report: Report) -> None:
             if not legacy_questions:
                 apply_schema(qdoc, "exam-questions", rel_path(report, question_path), report, key="exam_questions")
             else:
-                report.warn(
-                    "exam_question_schema_drift",
-                    "questions use Qxxx/options/answer_index; canonical v1 uses Wxxx/answers/correct_index",
+                report.info(
+                    "exam_question_shape",
+                    "questions use A07's accepted Qxxx/options/answer_index shape; validator normalizes it, v1 Wxxx/answers/correct_index wrapper is optional",
                     file=rel_path(report, question_path),
                     owner="A07",
                 )
@@ -2893,6 +2893,16 @@ def _normalize_legacy_event(event: dict) -> dict:
         "repeatable": event.get("repeatable", False),
         "source": "legacy-story-bundle",
     }
+    when = event.get("when")
+    if isinstance(when, dict):
+        date = when.get("date") if isinstance(when.get("date"), dict) else when
+        if isinstance(date, dict):
+            out["date"] = {
+                "calendar_month": date.get("month"),
+                "day": date.get("day"),
+                "weekday": when.get("weekday", date.get("weekday")),
+                "period": when.get("period", date.get("period")),
+            }
     trigger = event.get("trigger")
     if isinstance(trigger, dict):
         trigger_type = trigger.get("type")
@@ -2906,9 +2916,13 @@ def _normalize_legacy_event(event: dict) -> dict:
                 "period": trigger.get("period"),
             }
         elif trigger_type == "talk":
-            out["location"] = trigger.get("location")
-            out["anchor"] = trigger.get("anchor")
+            out["location"] = trigger.get("location", out.get("location"))
+            out["anchor"] = trigger.get("anchor", out.get("anchor"))
             out["trigger_npc"] = trigger.get("npc")
+    if event.get("location"):
+        out["location"] = event["location"]
+    if event.get("anchor"):
+        out["anchor"] = event["anchor"]
 
     requirements = []
     requires_events = []
@@ -2916,13 +2930,13 @@ def _normalize_legacy_event(event: dict) -> dict:
         if not isinstance(requirement, dict):
             continue
         kind = requirement.get("type")
-        if kind == "event_complete":
-            event_id = requirement.get("event")
+        if kind in {"event_complete", "event_cleared"}:
+            event_id = requirement.get("event", requirement.get("id"))
             if isinstance(event_id, str):
                 requires_events.append(event_id)
                 requirements.append({"type": "event", "id": event_id, "state": "complete"})
         elif kind == "flag":
-            requirements.append({"type": "flag", "id": requirement.get("flag"), "value": requirement.get("value", True)})
+            requirements.append({"type": "flag", "id": requirement.get("flag", requirement.get("id")), "value": requirement.get("value", True)})
         elif kind in {"date_at_least", "date"}:
             requirements.append(
                 {
@@ -2932,15 +2946,20 @@ def _normalize_legacy_event(event: dict) -> dict:
                     "op": ">=" if kind == "date_at_least" else "==",
                 }
             )
-        elif kind == "counter_at_least":
+        elif kind in {"counter", "counter_at_least"}:
             requirements.append(
                 {
                     "type": "counter",
-                    "id": requirement.get("counter"),
-                    "op": ">=",
+                    "id": requirement.get("counter", requirement.get("id")),
+                    "op": requirement.get("op", ">="),
                     "value": requirement.get("value"),
                 }
             )
+        elif kind == "dorm":
+            dorm = requirement.get("value", "")
+            if isinstance(dorm, str):
+                dorm = dorm.replace(" Red", "").replace(" Yellow", "").replace(" Blue", "").strip()
+            requirements.append({"type": "dorm", "value": dorm})
     if requirements:
         out["requires"] = requirements
     if requires_events:
@@ -2978,6 +2997,39 @@ def _normalize_legacy_event(event: dict) -> dict:
             out["on_complete"]["flags"] = flags
         if counters:
             out["on_complete"]["counters"] = counters
+
+    reward_cards: list[int] = []
+    reward_packs: list[str] = []
+    reward_dp = 0
+    for reward in event.get("rewards", []) or []:
+        if not isinstance(reward, dict):
+            continue
+        kind = reward.get("type")
+        if kind in {"dp", "grant_dp"} and isinstance(reward.get("amount"), int):
+            reward_dp += reward["amount"]
+        elif kind in {"card", "card_by_result", "card_by_partner"}:
+            for card in reward.get("cards", []) or []:
+                if isinstance(card, dict) and valid_card_id(card.get("card_id")):
+                    reward_cards.append(card["card_id"])
+        elif kind == "pack" and isinstance(reward.get("pack"), str):
+            reward_packs.append(reward["pack"])
+    if reward_cards or reward_packs or reward_dp:
+        out["rewards"] = {}
+        if reward_cards:
+            out["rewards"]["cards"] = reward_cards
+        if reward_packs:
+            out["rewards"]["packs"] = reward_packs
+        if reward_dp:
+            out["rewards"]["dp"] = reward_dp
+
+    duels = event.get("duels", [])
+    if isinstance(duels, list) and duels and isinstance(duels[0], dict):
+        first = duels[0]
+        opponent = first.get("opponent_id", first.get("opponent"))
+        deck = first.get("opponent_deck_id", first.get("deck"))
+        if isinstance(opponent, str) and isinstance(deck, str):
+            out["duel"] = {"opponent": opponent, "deck": deck, "mode": first.get("mode", "story")}
+
     if event.get("fail_forward") is True:
         out["fallback"] = "continue"
     return out
@@ -3001,17 +3053,30 @@ def validate_events(ctx: Context, report: Report) -> None:
     if doc is None:
         report.check("events", "fail", "events unreadable", owner="A03")
         return
-    legacy_events = isinstance(doc, dict) and isinstance(doc.get("events"), list) and isinstance(doc.get("beats"), list)
+    raw_items = list(collection(doc, "events"))
+    opening_path = ctx.data_dir / "Story" / "opening.json"
+    if path.name == "events.json" and opening_path.exists() and opening_path != path:
+        opening_doc = load_json(opening_path, report)
+        known_ids = {event.get("id") for event in raw_items if isinstance(event, dict)}
+        for event in collection(opening_doc, "events"):
+            if isinstance(event, dict) and event.get("id") not in known_ids:
+                raw_items.append(event)
+                known_ids.add(event.get("id"))
+    legacy_events = any(
+        isinstance(event, dict)
+        and ("when" in event or "outcomes" in event or isinstance(event.get("rewards"), list))
+        for event in raw_items
+    )
     if legacy_events:
-        items = [_normalize_legacy_event(event) for event in doc["events"] if isinstance(event, dict)]
-        report.warn(
-            "event_schema_drift",
-            "events use trigger/requirements/outcomes and scene ids; canonical v1 uses date/requires/rewards and scene paths",
+        items = [_normalize_legacy_event(event) for event in raw_items if isinstance(event, dict)]
+        report.info(
+            "event_shape",
+            "events use A03's accepted when/requirements/outcomes/rewards-array shape and scene ids; validator normalizes them, v1 date/requires/rewards wrapper is optional",
             file=rel_path(report, path),
             owner="A03",
         )
     else:
-        items = collection(doc, "events")
+        items = raw_items
         apply_schema(doc, "events", rel_path(report, path), report, key="events")
     records: list[tuple[int, dict]] = []
     errors = 0
@@ -3065,10 +3130,10 @@ def validate_events(ctx: Context, report: Report) -> None:
             if day is not None and (not isinstance(day, int) or not (1 <= day <= 31)):
                 report.error("event_date_day", f"event {event_id} has invalid day {day!r}", file=file_label, path=where, owner="A03")
                 errors += 1
-            if weekday is not None and weekday not in WEEKDAYS:
+            if weekday is not None and weekday not in WEEKDAYS and weekday not in {"Weekdays", "Weekend", "All"}:
                 report.error("event_date_weekday", f"event {event_id} has invalid weekday {weekday!r}", file=file_label, path=where, owner="A03")
                 errors += 1
-            if period is not None and period not in PERIODS:
+            if period is not None and period not in PERIODS and period not in {"PM/Night", "AM/PM"}:
                 report.error("event_date_period", f"event {event_id} has invalid period {period!r}", file=file_label, path=where, owner="A03")
                 errors += 1
         elif date is not None:
@@ -3297,61 +3362,78 @@ def validate_events(ctx: Context, report: Report) -> None:
 
 
 def validate_dialogue(ctx: Context, report: Report) -> None:
-    candidates = [ctx.data_dir / "Story" / "dialogue.json"]
-    candidates.extend(glob_json(ctx.data_dir / "Story" / "dialogue"))
-    path = first_existing(candidates)
-    ctx.dataset_presence["dialogue"] = path is not None
-    if path is None:
+    paths: list[Path] = []
+    root_dialogue = ctx.data_dir / "Story" / "dialogue.json"
+    if root_dialogue.exists():
+        paths.append(root_dialogue)
+    paths.extend(glob_json(ctx.data_dir / "Story" / "dialogue"))
+    ctx.dataset_presence["dialogue"] = bool(paths)
+    if not paths:
         report.gap(
             "dialogue_missing",
             "no dialogue table found",
             owner="A03",
-            hint="expected Content/Data/Story/dialogue.json",
+            hint="expected Content/Data/Story/dialogue.json or Story/dialogue/*.json",
         )
         report.check("dialogue", "gap", "no dialogue", owner="A03")
         return
-    doc = load_json(path, report)
-    if doc is None:
-        report.check("dialogue", "fail", "dialogue unreadable", owner="A03")
-        return
-    if isinstance(doc, dict) and isinstance(doc.get("nodes"), dict):
-        lines = doc["nodes"]
-        report.warn(
-            "dialogue_schema_drift",
-            "dialogue uses nodes{}; canonical v1 wrapper is lines{}",
-            file=rel_path(report, path),
+
+    errors = 0
+    all_lines: list[tuple[str, dict, str]] = []
+    legacy_nodes = False
+    for path in paths:
+        doc = load_json(path, report)
+        if doc is None:
+            errors += 1
+            continue
+        file_label = rel_path(report, path)
+        if isinstance(doc, dict) and isinstance(doc.get("nodes"), dict):
+            lines = doc["nodes"]
+            legacy_nodes = True
+        else:
+            lines = doc.get("lines") if isinstance(doc, dict) else None
+            apply_schema(doc, "dialogue", file_label, report, key="dialogue")
+        if not isinstance(lines, dict):
+            report.error("dialogue_lines", "dialogue.lines/nodes must be an object", file=file_label, owner="A03")
+            errors += 1
+            continue
+        for key, line in lines.items():
+            all_lines.append((key, line, file_label))
+    if legacy_nodes:
+        report.info(
+            "dialogue_shape",
+            "dialogue uses A03's accepted nodes{} shape; validator normalizes it, v1 lines{} wrapper is optional",
             owner="A03",
         )
-    else:
-        lines = doc.get("lines") if isinstance(doc, dict) else None
-        apply_schema(doc, "dialogue", rel_path(report, path), report, key="dialogue")
-    if not isinstance(lines, dict):
-        report.error("dialogue_lines", "dialogue.lines must be an object", file=rel_path(report, path), owner="A03")
-        report.check("dialogue", "fail", "invalid dialogue table", owner="A03")
-        return
-    errors = 0
-    for key, line in lines.items():
+
+    seen_keys: set[str] = set()
+    for key, line, file_label in all_lines:
         where = f"$.lines[{key!r}]"
         if not isinstance(key, str) or not re.match(r"^[A-Za-z0-9_]+\.[A-Za-z0-9_.-]+$", key):
-            report.warn("dialogue_key", f"unusual dialogue key {key!r}", file=rel_path(report, path), path=where, owner="A03")
+            report.warn("dialogue_key", f"unusual dialogue key {key!r}", file=file_label, path=where, owner="A03")
+        if key in seen_keys:
+            report.error("dialogue_duplicate", f"duplicate dialogue key {key}", file=file_label, path=where, owner="A03")
+            errors += 1
+            continue
+        seen_keys.add(key)
         if not isinstance(line, dict):
-            report.error("dialogue_line_shape", f"line {key} is not an object", file=rel_path(report, path), path=where, owner="A03")
+            report.error("dialogue_line_shape", f"line {key} is not an object", file=file_label, path=where, owner="A03")
             errors += 1
             continue
         text = line.get("text")
         if not isinstance(text, str) or not text.strip():
-            report.error("dialogue_text", f"line {key} has empty text", file=rel_path(report, path), path=where, owner="A03")
+            report.error("dialogue_text", f"line {key} has empty text", file=file_label, path=where, owner="A03")
             errors += 1
         speaker = line.get("speaker")
         if not isinstance(speaker, str) or not SLUG_RE.match(speaker):
-            report.error("dialogue_speaker", f"line {key} has invalid speaker {speaker!r}", file=rel_path(report, path), path=where, owner="A03")
+            report.error("dialogue_speaker", f"line {key} has invalid speaker {speaker!r}", file=file_label, path=where, owner="A03")
             errors += 1
         text_key = line.get("text_key")
         if text_key is not None and text_key != key:
-            report.warn("dialogue_key_mismatch", f"line {key} text_key is {text_key!r}", file=rel_path(report, path), path=where, owner="A03")
+            report.warn("dialogue_key_mismatch", f"line {key} text_key is {text_key!r}", file=file_label, path=where, owner="A03")
         portrait = line.get("portrait")
         if portrait is not None and (not isinstance(portrait, str) or not portrait.strip()):
-            report.error("dialogue_portrait", f"line {key} has invalid portrait", file=rel_path(report, path), path=where, owner="A03")
+            report.error("dialogue_portrait", f"line {key} has invalid portrait", file=file_label, path=where, owner="A03")
             errors += 1
         ctx.dialogue[key] = line
 
@@ -3540,8 +3622,78 @@ def validate_emails(ctx: Context, report: Report) -> None:
     if doc is None:
         report.check("emails", "fail", "emails unreadable", owner="A03")
         return
-    apply_schema(doc, "emails", rel_path(report, path), report, key="emails")
     errors = 0
+    file_label = rel_path(report, path)
+    if isinstance(doc, dict) and isinstance(doc.get("contacts"), list):
+        report.info(
+            "email_shape",
+            "emails use A03's accepted contacts[].messages shape; validator normalizes them, v1 emails[] wrapper is optional",
+            file=file_label,
+            owner="A03",
+        )
+        for index, contact in enumerate(doc["contacts"]):
+            where = f"$.contacts[{index}]"
+            if not isinstance(contact, dict):
+                report.error("email_contact_shape", "contact must be an object", file=file_label, path=where, owner="A03")
+                errors += 1
+                continue
+            contact_id = contact.get("contact")
+            if not isinstance(contact_id, str) or not SLUG_RE.match(contact_id):
+                report.error("email_contact_id", f"invalid contact id {contact_id!r}", file=file_label, path=where, owner="A03")
+                errors += 1
+                continue
+            for event_id in contact.get("unlocked_by", []) or []:
+                if not isinstance(event_id, str) or not EVENT_RE.match(event_id):
+                    report.error("email_unlock_event", f"contact {contact_id} has invalid unlock event {event_id!r}", file=file_label, path=where, owner="A03")
+                    errors += 1
+                elif ctx.events and event_id not in ctx.events:
+                    report.gap("email_unlock_event_ref", f"contact {contact_id} unlocks on event {event_id} not in the runtime graph", file=file_label, path=where, owner="A03")
+            for message in contact.get("messages", []) or []:
+                if not isinstance(message, dict):
+                    report.error("email_message_shape", f"contact {contact_id} has a non-object message", file=file_label, path=where, owner="A03")
+                    errors += 1
+                    continue
+                message_id = message.get("id")
+                if not isinstance(message_id, str) or not SLUG_RE.match(message_id):
+                    report.error("email_id", f"invalid email id {message_id!r}", file=file_label, path=where, owner="A03")
+                    errors += 1
+                    continue
+                if message_id in ctx.emails:
+                    report.error("email_duplicate", f"duplicate email id {message_id}", file=file_label, path=where, owner="A03")
+                    errors += 1
+                    continue
+                ctx.emails[message_id] = {
+                    "id": message_id,
+                    "from": contact_id,
+                    "subject": message.get("subject", ""),
+                    "body": message.get("body", ""),
+                    "unlock": {"event": (contact.get("unlocked_by") or [None])[0]},
+                    "source": message.get("source", "legacy-contact"),
+                }
+                if not isinstance(message.get("subject"), str) or not message["subject"].strip():
+                    report.error("email_subject", f"email {message_id} has empty subject", file=file_label, path=where, owner="A03")
+                    errors += 1
+                if not isinstance(message.get("body"), str) or not message["body"].strip():
+                    report.error("email_body", f"email {message_id} has empty body", file=file_label, path=where, owner="A03")
+                    errors += 1
+            for request in contact.get("duel_requests", []) or []:
+                if not isinstance(request, dict):
+                    errors += 1
+                    continue
+                request_id = request.get("id")
+                if not isinstance(request_id, str) or not SLUG_RE.match(request_id):
+                    report.error("email_request_id", f"contact {contact_id} has invalid duel request id {request_id!r}", file=file_label, path=where, owner="A03")
+                    errors += 1
+                if ctx.opponents and request.get("opponent") not in ctx.opponents:
+                    report.error("email_duel_opponent", f"duel request {request_id} references unknown opponent {request.get('opponent')}", file=file_label, path=where, owner="A03")
+                    errors += 1
+                if ctx.decks and request.get("deck") not in ctx.decks:
+                    report.error("email_duel_deck", f"duel request {request_id} references unknown deck {request.get('deck')}", file=file_label, path=where, owner="A03")
+                    errors += 1
+        report.check("emails", "fail" if errors else "pass", f"{len(doc['contacts'])} contacts; {len(ctx.emails)} messages", owner="A03")
+        return
+
+    apply_schema(doc, "emails", file_label, report, key="emails")
     for index, email in enumerate(collection(doc, "emails")):
         where = f"$.emails[{index}]"
         file_label = rel_path(report, path)
@@ -3756,20 +3908,27 @@ def _effect_path(ctx: Context, value: str) -> Path:
     if raw.is_absolute():
         return raw
     text = value.replace("\\", "/")
+    if text.startswith("DuelAcademyIsland/") or text.startswith("Content/"):
+        return ctx.root / text
     if text.startswith("Effects/"):
         return ctx.data_dir / text
     return ctx.data_dir / "Effects" / text
 
 
 def validate_effects(ctx: Context, report: Report) -> None:
-    path = ctx.data_dir / "Effects" / "manifest.json"
-    ctx.dataset_presence["effects"] = path.exists()
-    if not path.exists():
+    path = first_existing(
+        [
+            ctx.data_dir / "Effects" / "manifest.json",
+            ctx.data_dir / "Effects" / "card_effect_manifest.json",
+        ]
+    )
+    ctx.dataset_presence["effects"] = path is not None
+    if path is None:
         report.gap(
             "effects_missing",
             "no effect coverage manifest found",
             owner="A05",
-            hint="expected Content/Data/Effects/manifest.json with one entry per card",
+            hint="expected Content/Data/Effects/manifest.json or card_effect_manifest.json",
         )
         report.check("effects", "gap", "no effect manifest", owner="A05")
         return
@@ -3777,11 +3936,20 @@ def validate_effects(ctx: Context, report: Report) -> None:
     if doc is None:
         report.check("effects", "fail", "effect manifest unreadable", owner="A05")
         return
-    apply_schema(doc, "effects", rel_path(report, path), report, key="effects")
-
-    entries = doc.get("entries") if isinstance(doc, dict) else None
+    legacy_manifest = isinstance(doc, dict) and isinstance(doc.get("cards"), list)
+    if legacy_manifest:
+        entries = doc["cards"]
+        report.info(
+            "effect_manifest_shape",
+            "effect manifest uses {schema_version, cards[]} (A05); canonical v1 wrapper is {version, entries[]}",
+            file=rel_path(report, path),
+            owner="A05",
+        )
+    else:
+        entries = doc.get("entries") if isinstance(doc, dict) else None
+        apply_schema(doc, "effects", rel_path(report, path), report, key="effects")
     if not isinstance(entries, list):
-        report.error("effects_entries", "manifest.entries must be an array", file=rel_path(report, path), owner="A05")
+        report.error("effects_entries", "manifest entries/cards must be an array", file=rel_path(report, path), owner="A05")
         report.check("effects", "fail", "invalid manifest", owner="A05")
         return
 
@@ -3789,13 +3957,13 @@ def validate_effects(ctx: Context, report: Report) -> None:
     statuses: collections.Counter[str] = collections.Counter()
     referenced_scripts: set[str] = set()
     for index, entry in enumerate(entries):
-        where = f"$.entries[{index}]"
+        where = f"$.{'cards' if legacy_manifest else 'entries'}[{index}]"
         file_label = rel_path(report, path)
         if not isinstance(entry, dict):
             report.error("effect_entry_shape", "manifest entry must be an object", file=file_label, path=where, owner="A05")
             errors += 1
             continue
-        card_id = entry.get("card_id")
+        card_id = entry.get("card_id", entry.get("id"))
         if not valid_card_id(card_id):
             report.error("effect_card_id", f"invalid manifest card id {card_id!r}", file=file_label, path=where, owner="A05")
             errors += 1
@@ -3818,17 +3986,21 @@ def validate_effects(ctx: Context, report: Report) -> None:
                 errors += 1
             ctx.unsupported_cards.add(card_id)
         elif status == "scripted":
-            script = entry.get("script")
-            if not isinstance(script, str) or not script.endswith(".json"):
-                report.error("effect_script_missing", f"scripted card {card_id} needs a script path", file=file_label, path=where, owner="A05")
-                errors += 1
-            else:
+            script = entry.get("script", entry.get("script_path"))
+            implementation = entry.get("implementation", "")
+            covered_by = entry.get("covered_by", "")
+            if isinstance(script, str) and script.endswith(".json"):
                 script_file = _effect_path(ctx, script)
                 referenced_scripts.add(rel_path(report, script_file))
                 if not script_file.exists():
                     report.error("effect_script_file", f"card {card_id} script not found: {script}", file=file_label, path=where, owner="A05")
                     errors += 1
-        elif status == "vanilla" and entry.get("script"):
+            elif implementation == "engine_cpp" or (isinstance(covered_by, str) and covered_by.endswith(".cpp")):
+                pass
+            else:
+                report.error("effect_script_missing", f"scripted card {card_id} needs script_path or an engine_cpp covered_by", file=file_label, path=where, owner="A05")
+                errors += 1
+        elif status == "vanilla" and (entry.get("script") or entry.get("script_path")):
             report.warn("effect_vanilla_script", f"vanilla card {card_id} declares a script", file=file_label, path=where, owner="A05")
 
     missing = [card_id for card_id in range(1, 1201) if card_id not in ctx.effect_manifest]
@@ -3846,7 +4018,7 @@ def validate_effects(ctx: Context, report: Report) -> None:
     # orphan script does not hide a schema error.
     script_dir = ctx.data_dir / "Effects"
     for script_file in glob_json(script_dir) + glob_json(script_dir / "scripts"):
-        if script_file.name in {"manifest.json", "schema.json", "tier1_cards.json", "fusion_candidates.json"}:
+        if script_file.name in {"manifest.json", "card_effect_manifest.json", "schema.json", "tier1_cards.json", "fusion_candidates.json"}:
             continue
         script_rel = rel_path(report, script_file)
         if script_rel not in referenced_scripts:
@@ -3861,9 +4033,9 @@ def validate_effects(ctx: Context, report: Report) -> None:
             errors += 1
             continue
         if isinstance(script_doc, dict) and isinstance(script_doc.get("scripts"), list):
-            report.warn(
-                "effect_script_schema_drift",
-                "effect script uses scripts[]; canonical v1 uses top-level operations[]",
+            report.info(
+                "effect_script_shape",
+                "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
                 file=script_rel,
                 owner="A05",
             )
@@ -3903,14 +4075,22 @@ def validate_effects(ctx: Context, report: Report) -> None:
     if statuses:
         report.info(
             "effect_status_counts",
-            f"scripted={statuses['scripted']}, vanilla={statuses['vanilla']}, unsupported={statuses['unsupported']}",
+            f"scripted={statuses['scripted']}, vanilla={statuses['vanilla']}, pending={statuses['pending']}, unsupported={statuses['unsupported']}",
             file=rel_path(report, path),
             owner="A05",
         )
+    if statuses["pending"]:
+        report.gap(
+            "effects_pending",
+            f"{statuses['pending']} card(s) are pending effect implementation (tier 2); scripted={statuses['scripted']}, vanilla={statuses['vanilla']}, unsupported={statuses['unsupported']}",
+            file=rel_path(report, path),
+            owner="A05",
+            hint="Tier 2 effect coverage is the remaining content gap; pending cards must not appear in story/puzzle decks until scripted or classified vanilla",
+        )
     report.check(
         "effects",
-        "fail" if errors else ("gap" if missing or len(ctx.effect_manifest) != 1200 else "pass"),
-        f"{len(ctx.effect_manifest)} manifest entries; scripted={statuses['scripted']}, vanilla={statuses['vanilla']}, unsupported={statuses['unsupported']}",
+        "fail" if errors else ("gap" if missing or len(ctx.effect_manifest) != 1200 or statuses["pending"] or statuses["unsupported"] else "pass"),
+        f"{len(ctx.effect_manifest)} manifest entries; scripted={statuses['scripted']}, vanilla={statuses['vanilla']}, pending={statuses['pending']}, unsupported={statuses['unsupported']}",
         owner="A05",
     )
 

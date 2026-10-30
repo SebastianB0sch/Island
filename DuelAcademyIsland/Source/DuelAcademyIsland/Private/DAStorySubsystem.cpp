@@ -24,6 +24,7 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
+#include "Templates/Function.h"
 
 namespace
 {
@@ -197,11 +198,13 @@ void UDAStorySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	bAutoOpeningRequested = FParse::Param(FCommandLine::Get(), TEXT("DAOpeningTest"));
 	bAutoSelfTestRequested = FParse::Param(FCommandLine::Get(), TEXT("DAStorySelfTest"));
+	bAutoFullSelfTestRequested = FParse::Param(FCommandLine::Get(), TEXT("DAFullStorySelfTest"));
 
 	TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
 		FTickerDelegate::CreateUObject(this, &UDAStorySubsystem::Tick));
 
 	LoadOpeningData();
+	LoadFullCampaignData();
 	TryRegisterSaveProvider();
 }
 
@@ -294,6 +297,14 @@ void UDAStorySubsystem::TryRegisterSaveProvider()
 bool UDAStorySubsystem::LoadJsonObject(const FString& RelativePath, TSharedPtr<FJsonObject>& Out, FString& OutError) const
 {
 	const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Story"), RelativePath);
+	return LoadContentJsonObject(Path, Out, OutError);
+}
+
+bool UDAStorySubsystem::LoadContentJsonObject(const FString& RelativeToContentData, TSharedPtr<FJsonObject>& Out, FString& OutError) const
+{
+	const FString Path = FPaths::IsRelative(RelativeToContentData)
+		? FPaths::Combine(FPaths::ProjectContentDir(), RelativeToContentData)
+		: RelativeToContentData;
 	FString Raw;
 	if (!FFileHelper::LoadFileToString(Raw, *Path))
 	{
@@ -326,7 +337,7 @@ bool UDAStorySubsystem::LoadOpeningData()
 	}
 
 	ParseEvents(OpeningRoot);
-	ParseRewards(OpeningRoot);
+	ParseRewards(OpeningRoot, false);
 
 	FString ScenesPath = TEXT("scenes/opening.json");
 	FString DialoguePath = TEXT("dialogue/opening.json");
@@ -342,7 +353,7 @@ bool UDAStorySubsystem::LoadOpeningData()
 	TSharedPtr<FJsonObject> ScenesRoot;
 	if (LoadJsonObject(ScenesPath, ScenesRoot, Error))
 	{
-		ParseScenes(ScenesRoot);
+		ParseScenes(ScenesRoot, false);
 	}
 	else
 	{
@@ -352,7 +363,7 @@ bool UDAStorySubsystem::LoadOpeningData()
 	TSharedPtr<FJsonObject> DialogueRoot;
 	if (LoadJsonObject(DialoguePath, DialogueRoot, Error))
 	{
-		ParseDialogue(DialogueRoot);
+		ParseDialogue(DialogueRoot, false);
 	}
 	else
 	{
@@ -375,6 +386,93 @@ bool UDAStorySubsystem::LoadOpeningData()
 	return bLoaded;
 }
 
+bool UDAStorySubsystem::LoadFullCampaignData()
+{
+	if (bFullCampaignLoaded)
+	{
+		return true;
+	}
+	if (!bLoaded && !LoadOpeningData())
+	{
+		UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: full campaign cannot load before the opening bundle."));
+		return false;
+	}
+
+	FString Error;
+	TSharedPtr<FJsonObject> EventsRoot;
+	if (!LoadJsonObject(TEXT("events.json"), EventsRoot, Error))
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: full campaign events unavailable: %s"), *Error);
+		return false;
+	}
+
+	const TArray<TSharedPtr<FJsonValue>>* EventValues = nullptr;
+	if (EventsRoot->TryGetArrayField(TEXT("events"), EventValues) && EventValues)
+	{
+		FullCampaignEventIds.Reset();
+		FullCampaignEventDocs.Reset();
+		for (const TSharedPtr<FJsonValue>& Value : *EventValues)
+		{
+			const TSharedPtr<FJsonObject> EventJson = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
+			if (EventJson.IsValid())
+			{
+				const FString EventId = ReadString(EventJson, TEXT("id"));
+				if (!EventId.IsEmpty())
+				{
+					FullCampaignEventIds.Add(EventId);
+					FullCampaignEventDocs.Add(EventId, EventJson);
+				}
+			}
+		}
+	}
+
+	// opening.json is authoritative for E01: keep its trigger, scene and outcomes.
+	TSet<FString> Excluded;
+	Excluded.Add(TEXT("E01"));
+	int32 Added = 0;
+	if (!EventGraph.MergeFromJson(EventsRoot, Excluded, Error, Added))
+	{
+		UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: full campaign event merge failed: %s"), *Error);
+		return false;
+	}
+
+	TSharedPtr<FJsonObject> ScenesRoot;
+	if (LoadJsonObject(TEXT("scenes/full_campaign.json"), ScenesRoot, Error))
+	{
+		ParseScenes(ScenesRoot, true);
+	}
+	else
+	{
+		UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: %s"), *Error);
+	}
+
+	TSharedPtr<FJsonObject> DialogueRoot;
+	if (LoadJsonObject(TEXT("dialogue/full_campaign.json"), DialogueRoot, Error))
+	{
+		ParseDialogue(DialogueRoot, true);
+	}
+	else
+	{
+		UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: %s"), *Error);
+	}
+
+	TSharedPtr<FJsonObject> EmailsRoot;
+	if (LoadJsonObject(TEXT("emails.json"), EmailsRoot, Error))
+	{
+		ParseEmails(EmailsRoot);
+	}
+	else
+	{
+		UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: %s"), *Error);
+	}
+
+	bFullCampaignLoaded = Added > 0 && FullCampaignEventIds.Num() > 0;
+	UE_LOG(LogDuelAcademyIsland, Log,
+		TEXT("Story: loaded full campaign (%d canonical ids, %d merged events, %d scenes, %d lines, %d email contacts)."),
+		FullCampaignEventIds.Num(), Added, Scenes.Num(), Lines.Num(), EmailContacts.Num());
+	return bFullCampaignLoaded;
+}
+
 void UDAStorySubsystem::ParseEvents(const TSharedPtr<FJsonObject>& Root)
 {
 	FString Error;
@@ -384,9 +482,12 @@ void UDAStorySubsystem::ParseEvents(const TSharedPtr<FJsonObject>& Root)
 	}
 }
 
-void UDAStorySubsystem::ParseScenes(const TSharedPtr<FJsonObject>& Root)
+void UDAStorySubsystem::ParseScenes(const TSharedPtr<FJsonObject>& Root, bool bMerge)
 {
-	Scenes.Reset();
+	if (!bMerge)
+	{
+		Scenes.Reset();
+	}
 	const TSharedPtr<FJsonObject>* SceneObject = nullptr;
 	if (!Root->TryGetObjectField(TEXT("scenes"), SceneObject) || !SceneObject)
 	{
@@ -480,11 +581,14 @@ void UDAStorySubsystem::ParseScenes(const TSharedPtr<FJsonObject>& Root)
 	}
 }
 
-void UDAStorySubsystem::ParseDialogue(const TSharedPtr<FJsonObject>& Root)
+void UDAStorySubsystem::ParseDialogue(const TSharedPtr<FJsonObject>& Root, bool bMerge)
 {
-	Lines.Reset();
-	SpeakerNames.Reset();
-	SpeakerColors.Reset();
+	if (!bMerge)
+	{
+		Lines.Reset();
+		SpeakerNames.Reset();
+		SpeakerColors.Reset();
+	}
 
 	const TSharedPtr<FJsonObject>* SpeakersObject = nullptr;
 	if (Root->TryGetObjectField(TEXT("speakers"), SpeakersObject) && SpeakersObject)
@@ -597,9 +701,12 @@ void UDAStorySubsystem::ParseSchedules(const TSharedPtr<FJsonObject>& Root)
 	}
 }
 
-void UDAStorySubsystem::ParseRewards(const TSharedPtr<FJsonObject>& Root)
+void UDAStorySubsystem::ParseRewards(const TSharedPtr<FJsonObject>& Root, bool bMerge)
 {
-	Rewards.Reset();
+	if (!bMerge)
+	{
+		Rewards.Reset();
+	}
 	const TSharedPtr<FJsonObject>* RewardsObject = nullptr;
 	if (Root->TryGetObjectField(TEXT("rewards"), RewardsObject) && RewardsObject)
 	{
@@ -609,6 +716,41 @@ void UDAStorySubsystem::ParseRewards(const TSharedPtr<FJsonObject>& Root)
 			if (RewardJson.IsValid())
 			{
 				Rewards.Add(FString(*Pair.Key), RewardJson);
+			}
+		}
+	}
+}
+
+void UDAStorySubsystem::ParseEmails(const TSharedPtr<FJsonObject>& Root)
+{
+	EmailContacts.Reset();
+	const TArray<TSharedPtr<FJsonValue>>* ContactValues = nullptr;
+	if (Root->TryGetArrayField(TEXT("contacts"), ContactValues) && ContactValues)
+	{
+		for (const TSharedPtr<FJsonValue>& Value : *ContactValues)
+		{
+			const TSharedPtr<FJsonObject> ContactJson = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
+			if (!ContactJson.IsValid())
+			{
+				continue;
+			}
+			const FString ContactId = ReadString(ContactJson, TEXT("contact"), ReadString(ContactJson, TEXT("id")));
+			if (!ContactId.IsEmpty())
+			{
+				EmailContacts.Add(ContactId, ContactJson);
+			}
+		}
+	}
+
+	const TSharedPtr<FJsonObject>* MessagesObject = nullptr;
+	if (Root->TryGetObjectField(TEXT("messages"), MessagesObject) && MessagesObject)
+	{
+		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : (*MessagesObject)->Values)
+		{
+			const FString ContactId(*Pair.Key);
+			if (!EmailContacts.Contains(ContactId) && Pair.Value.IsValid() && Pair.Value->AsObject().IsValid())
+			{
+				EmailContacts.Add(ContactId, Pair.Value->AsObject());
 			}
 		}
 	}
@@ -627,6 +769,7 @@ void UDAStorySubsystem::ResetRuntimeState()
 
 	CompletedEvents.Reset();
 	AppliedRewardIds.Reset();
+	UnlockedDuels.Reset();
 	Objectives.Reset();
 
 	bRunning = false;
@@ -644,6 +787,7 @@ void UDAStorySubsystem::ResetRuntimeState()
 	ActiveChoiceLineKey.Reset();
 	PendingTextInputKey.Reset();
 	SelectedStarterDeck.Reset();
+	PreviousTitle.Reset();
 	PendingDuel = FDAStoryPendingDuel();
 }
 
@@ -764,37 +908,16 @@ void UDAStorySubsystem::StartOpeningFresh()
 
 void UDAStorySubsystem::StartEvent(const FString& EventId)
 {
-	if (!bLoaded && !LoadOpeningData())
+	FString Reason;
+	if (!CanStartEvent(EventId, Reason))
 	{
-		return;
-	}
-	if (bRunning)
-	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: cannot start %s while %s is running."), *EventId, *CurrentEventId);
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: cannot start %s: %s"), *EventId, *Reason);
 		return;
 	}
 
 	const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
 	if (!Event)
 	{
-		UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: unknown event %s."), *EventId);
-		return;
-	}
-	if (Event->bOnce && IsEventCompleteRuntime(EventId))
-	{
-		UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: event %s is already complete."), *EventId);
-		return;
-	}
-
-	FString Reason;
-	if (!EventGraph.EvaluateRequirements(*Event, ResolveProfile(), ResolveCalendar(), Reason))
-	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: event %s requirements not met: %s"), *EventId, *Reason);
-		return;
-	}
-	if (!EventGraph.EvaluateTrigger(*Event, ResolveProfile(), ResolveCalendar(), Reason))
-	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: event %s trigger not met: %s"), *EventId, *Reason);
 		return;
 	}
 
@@ -807,6 +930,48 @@ void UDAStorySubsystem::StartEvent(const FString& EventId)
 
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: starting event %s (%s), scene %s."), *EventId, *Event->Title, *Event->Scene);
 	StartScene(Event->Scene, 0);
+}
+
+bool UDAStorySubsystem::CanStartEvent(const FString& EventId, FString& OutReason)
+{
+	if (!bLoaded && !LoadOpeningData())
+	{
+		OutReason = TEXT("story data is not loaded");
+		return false;
+	}
+	if (bRunning)
+	{
+		OutReason = FString::Printf(TEXT("event %s is already running"), *CurrentEventId);
+		return false;
+	}
+
+	const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
+	if (!Event)
+	{
+		OutReason = FString::Printf(TEXT("unknown event %s"), *EventId);
+		return false;
+	}
+	if (Event->bOnce && IsEventCompleteRuntime(EventId))
+	{
+		OutReason = FString::Printf(TEXT("event %s is already complete"), *EventId);
+		return false;
+	}
+	if (!Scenes.Contains(Event->Scene))
+	{
+		OutReason = FString::Printf(TEXT("scene %s is not loaded"), *Event->Scene);
+		return false;
+	}
+	if (!EventGraph.EvaluateRequirements(*Event, ResolveProfile(), ResolveCalendar(), OutReason))
+	{
+		return false;
+	}
+	if (!EventGraph.EvaluateTrigger(*Event, ResolveProfile(), ResolveCalendar(), OutReason))
+	{
+		return false;
+	}
+
+	OutReason.Reset();
+	return true;
 }
 
 void UDAStorySubsystem::TryStartNextAvailableEvent()
@@ -931,6 +1096,17 @@ bool UDAStorySubsystem::Tick(float DeltaSeconds)
 		{
 			bAutoSelfTestStarted = true;
 			RunSelfTest();
+		}
+		return true;
+	}
+
+	if (bAutoFullSelfTestRequested && !bAutoFullSelfTestStarted)
+	{
+		AutoStartDelay -= DeltaSeconds;
+		if (AutoStartDelay <= 0.f)
+		{
+			bAutoFullSelfTestStarted = true;
+			RunFullStorySelfTest();
 		}
 		return true;
 	}
@@ -1743,12 +1919,73 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 		{
 			if (Profile) Profile->SetTitle(ReadString(Outcome, TEXT("title")));
 		}
-		else if (Type == TEXT("set_dorm"))
+		else if (Type == TEXT("set_dorm") || Type == TEXT("dorm_unlock"))
 		{
 			if (Profile)
 			{
 				Profile->SetDorm(DuelAcademyProfile::ParseDorm(ReadString(Outcome, TEXT("dorm"), ReadString(Outcome, TEXT("value")))));
 			}
+		}
+		else if (Type == TEXT("double_dp") || Type == TEXT("dp_multiplier"))
+		{
+			if (Profile)
+			{
+				const int32 CurrentDP = Profile->GetDP();
+				const int32 Multiplier = FMath::Max(1, ReadInt(Outcome, TEXT("multiplier"), 2));
+				Profile->AwardDP(CurrentDP * (Multiplier - 1));
+				UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: DP multiplied by %d (now %d)."), Multiplier, Profile->GetDP());
+			}
+		}
+		else if (Type == TEXT("exam_exemption"))
+		{
+			const FString Scope = ReadString(Outcome, TEXT("scope"), ReadString(Outcome, TEXT("value"), TEXT("next")));
+			ApplySetFlag(FString::Printf(TEXT("exam_exempt_%s"), *DuelAcademyProfile::NormalizeId(Scope)), true);
+			ApplySetFlag(TEXT("exam_exempt_next"), true);
+			UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: exam exemption granted (%s)."), *Scope);
+		}
+		else if (Type == TEXT("unlock_duel"))
+		{
+			const TArray<FString> Duels = ReadStringArray(Outcome, TEXT("opponents"));
+			TArray<FString> Ids = Duels;
+			if (Ids.Num() == 0)
+			{
+				Ids = ReadStringArray(Outcome, TEXT("duels"));
+			}
+			if (Ids.Num() == 0)
+			{
+				Ids.Add(ReadString(Outcome, TEXT("id"), ReadString(Outcome, TEXT("opponent"))));
+			}
+			for (const FString& DuelId : Ids)
+			{
+				UnlockDuel(DuelId);
+			}
+		}
+		else if (Type == TEXT("item"))
+		{
+			const FString ItemName = ReadString(Outcome, TEXT("name"), ReadString(Outcome, TEXT("id")));
+			const FString ItemKey = DuelAcademyProfile::NormalizeId(ItemName);
+			if (!ItemKey.IsEmpty())
+			{
+				ApplySetFlag(FString::Printf(TEXT("item_%s"), *ItemKey), true);
+				if (Profile)
+				{
+					Profile->IncrementCounter(FString::Printf(TEXT("item_%s"), *ItemKey), 1);
+				}
+				UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: item '%s' recorded."), *ItemName);
+			}
+		}
+		else if (Type == TEXT("name_change"))
+		{
+			ApplySetFlag(TEXT("name_change_unlocked"), true);
+			UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: name change unlocked."));
+		}
+		else if (Type == TEXT("temporary_title"))
+		{
+			ApplyTemporaryTitle(ReadString(Outcome, TEXT("value"), ReadString(Outcome, TEXT("title"))));
+		}
+		else if (Type == TEXT("restore_title"))
+		{
+			RestorePreviousTitle();
 		}
 		else if (Type == TEXT("next_event"))
 		{
@@ -1907,6 +2144,46 @@ void UDAStorySubsystem::ApplySetFlag(const FString& Flag, bool bValue)
 	{
 		Profile->SetFlag(Flag, bValue);
 	}
+}
+
+void UDAStorySubsystem::ApplyTemporaryTitle(const FString& Title)
+{
+	if (Title.IsEmpty())
+	{
+		return;
+	}
+	if (UDAProfileSubsystem* Profile = ResolveProfile())
+	{
+		PreviousTitle = Profile->GetTitle();
+		Profile->SetTemporaryTitle(Title, 30);
+	}
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: temporary title '%s' (previous '%s')."), *Title, *PreviousTitle);
+}
+
+void UDAStorySubsystem::RestorePreviousTitle()
+{
+	UDAProfileSubsystem* Profile = ResolveProfile();
+	if (!Profile)
+	{
+		return;
+	}
+	const FString Restored = PreviousTitle.IsEmpty() ? FString(TEXT("Apprentice Duelist")) : PreviousTitle;
+	Profile->SetTitle(Restored);
+	Profile->ClearTemporaryTitle();
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: title restored to '%s'."), *Restored);
+	PreviousTitle.Reset();
+}
+
+void UDAStorySubsystem::UnlockDuel(const FString& DuelId)
+{
+	const FString Key = DuelAcademyProfile::NormalizeId(DuelId);
+	if (Key.IsEmpty())
+	{
+		return;
+	}
+	UnlockedDuels.Add(Key);
+	ApplySetFlag(FString::Printf(TEXT("duel_unlocked_%s"), *Key), true);
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: duel request '%s' unlocked."), *Key);
 }
 
 void UDAStorySubsystem::ApplyDeckGrant(const FString& DeckId)
@@ -2073,7 +2350,10 @@ void UDAStorySubsystem::ResolvePendingDuel(bool bWon, bool bDraw)
 	}
 	else
 	{
-		FinishEvent(true, false);
+		// Multi-duel events chain duel commands with no branch scene. Continue
+		// with the next command instead of ending the event after one duel.
+		++CommandIndex;
+		bPendingContinue = true;
 	}
 	bPendingContinue = true;
 }
@@ -2287,6 +2567,14 @@ FString UDAStorySubsystem::SaveState() const
 	}
 	Root->SetArrayField(TEXT("applied_rewards"), Applied);
 
+	TArray<TSharedPtr<FJsonValue>> Unlocked;
+	for (const FString& DuelId : UnlockedDuels)
+	{
+		Unlocked.Add(MakeShared<FJsonValueString>(DuelId));
+	}
+	Root->SetArrayField(TEXT("unlocked_duels"), Unlocked);
+	Root->SetStringField(TEXT("previous_title"), PreviousTitle);
+
 	TSharedPtr<FJsonObject> ObjectiveObject = MakeShared<FJsonObject>();
 	for (const TPair<FString, FString>& Pair : Objectives)
 	{
@@ -2340,6 +2628,17 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 			if (Value.IsValid()) AppliedRewardIds.Add(Value->AsString());
 		}
 	}
+
+	UnlockedDuels.Reset();
+	const TArray<TSharedPtr<FJsonValue>>* Unlocked = nullptr;
+	if (Root->TryGetArrayField(TEXT("unlocked_duels"), Unlocked) && Unlocked)
+	{
+		for (const TSharedPtr<FJsonValue>& Value : *Unlocked)
+		{
+			if (Value.IsValid()) UnlockedDuels.Add(Value->AsString());
+		}
+	}
+	Root->TryGetStringField(TEXT("previous_title"), PreviousTitle);
 
 	Objectives.Reset();
 	const TSharedPtr<FJsonObject>* ObjectiveObject = nullptr;
@@ -2511,8 +2810,721 @@ bool UDAStorySubsystem::RunSelfTest()
 }
 
 // ---------------------------------------------------------------------------
-// Debug
+// Full-campaign audit
 // ---------------------------------------------------------------------------
+
+void UDAStorySubsystem::CollectConditionState(const TSharedPtr<FJsonObject>& Condition,
+	TSet<FString>& OutFlags, TSet<FString>& OutCounters, TSet<FString>& OutEvents) const
+{
+	if (!Condition.IsValid())
+	{
+		return;
+	}
+
+	const FString Kind = ReadString(Condition, TEXT("type"));
+	if (Kind == TEXT("flag"))
+	{
+		const FString Flag = ReadString(Condition, TEXT("flag"), ReadString(Condition, TEXT("id")));
+		if (!Flag.IsEmpty())
+		{
+			OutFlags.Add(Flag);
+		}
+	}
+	else if (Kind == TEXT("counter"))
+	{
+		const FString Counter = ReadString(Condition, TEXT("counter"), ReadString(Condition, TEXT("id")));
+		if (!Counter.IsEmpty())
+		{
+			OutCounters.Add(Counter);
+		}
+	}
+	else if (Kind == TEXT("event") || Kind == TEXT("event_complete"))
+	{
+		const FString EventId = ReadString(Condition, TEXT("id"), ReadString(Condition, TEXT("event")));
+		if (!EventId.IsEmpty())
+		{
+			OutEvents.Add(EventId);
+		}
+	}
+
+	const TCHAR* NestedFields[] = { TEXT("conditions"), TEXT("all"), TEXT("any") };
+	for (const TCHAR* Field : NestedFields)
+	{
+		for (const TSharedPtr<FJsonObject>& Child : ReadObjectArray(Condition, Field))
+		{
+			CollectConditionState(Child, OutFlags, OutCounters, OutEvents);
+		}
+	}
+}
+
+void UDAStorySubsystem::CollectEventState(const FDAEventDefinition& Event, TSet<FString>& OutFlags,
+	TSet<FString>& OutCounters, TSet<FString>& OutEvents) const
+{
+	CollectConditionState(Event.Trigger, OutFlags, OutCounters, OutEvents);
+	for (const TSharedPtr<FJsonObject>& Requirement : Event.Requirements)
+	{
+		CollectConditionState(Requirement, OutFlags, OutCounters, OutEvents);
+	}
+}
+
+bool UDAStorySubsystem::RunFullStorySelfTest()
+{
+	TArray<FString> Report;
+	auto AddCheck = [&Report](const FString& Label, bool bPass, const FString& Detail)
+	{
+		FString Suffix;
+		if (!Detail.IsEmpty())
+		{
+			Suffix = FString::Printf(TEXT(" (%s)"), *Detail);
+		}
+		Report.Add(FString::Printf(TEXT("%s %s%s"), bPass ? TEXT("PASS") : TEXT("FAIL"), *Label, *Suffix));
+	};
+	auto AddSimpleCheck = [&AddCheck](const FString& Label, bool bPass)
+	{
+		AddCheck(Label, bPass, FString());
+	};
+	auto AddInfo = [&Report](const FString& Text)
+	{
+		Report.Add(FString::Printf(TEXT("INFO %s"), *Text));
+	};
+
+	const double StartTime = FPlatformTime::Seconds();
+
+	if (bRunning)
+	{
+		LastFullSelfTestReport = FString::Printf(TEXT("FAIL cannot run the audit while %s is running"), *CurrentEventId);
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("FullStorySelfTest: %s"), *LastFullSelfTestReport);
+		return false;
+	}
+
+	if (!LoadFullCampaignData())
+	{
+		LastFullSelfTestReport = TEXT("FAIL full campaign data did not load");
+		UE_LOG(LogDuelAcademyIsland, Error, TEXT("FullStorySelfTest: %s"), *LastFullSelfTestReport);
+		return false;
+	}
+
+	UDAProfileSubsystem* Profile = ResolveProfile();
+	UDACalendarSubsystem* Calendar = ResolveCalendar();
+	if (!Profile || !Calendar)
+	{
+		LastFullSelfTestReport = TEXT("FAIL profile/calendar subsystems are unavailable");
+		UE_LOG(LogDuelAcademyIsland, Error, TEXT("FullStorySelfTest: %s"), *LastFullSelfTestReport);
+		return false;
+	}
+
+	AddSimpleCheck(TEXT("full campaign loaded"), bFullCampaignLoaded);
+	AddCheck(TEXT("35 canonical event ids"), FullCampaignEventIds.Num() == 35,
+		FString::FromInt(FullCampaignEventIds.Num()));
+	AddSimpleCheck(TEXT("opening E01 remains loaded"), EventGraph.FindEvent(TEXT("E01")) != nullptr);
+
+	int32 FullSceneCount = 0;
+	for (const TPair<FString, FDAStoryScene>& Pair : Scenes)
+	{
+		if (Pair.Key.StartsWith(TEXT("full.")))
+		{
+			++FullSceneCount;
+		}
+	}
+	AddInfo(FString::Printf(TEXT("%d canonical events, %d full scenes, %d total dialogue lines, %d email contacts"),
+		FullCampaignEventIds.Num(), FullSceneCount, Lines.Num(), EmailContacts.Num()));
+
+	// Compare against the read-only A01 canon manifest when it is available.
+	TSharedPtr<FJsonObject> CanonRoot;
+	FString CanonError;
+	TSet<FString> CanonIds;
+	if (LoadContentJsonObject(TEXT("Data/Canon/events.json"), CanonRoot, CanonError))
+	{
+		const TArray<TSharedPtr<FJsonValue>>* CanonValues = nullptr;
+		if (CanonRoot->TryGetArrayField(TEXT("events"), CanonValues) && CanonValues)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *CanonValues)
+			{
+				const TSharedPtr<FJsonObject> CanonEvent = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
+				FString CanonId;
+				if (CanonEvent.IsValid() && CanonEvent->TryGetStringField(TEXT("id"), CanonId))
+				{
+					CanonIds.Add(CanonId);
+				}
+			}
+		}
+	}
+	TArray<FString> CanonMismatch;
+	if (CanonIds.Num() > 0)
+	{
+		for (const FString& CanonId : CanonIds)
+		{
+			if (!FullCampaignEventIds.Contains(CanonId))
+			{
+				CanonMismatch.Add(CanonId);
+			}
+		}
+		for (const FString& FullId : FullCampaignEventIds)
+		{
+			if (!CanonIds.Contains(FullId))
+			{
+				CanonMismatch.Add(FullId);
+			}
+		}
+		AddCheck(TEXT("ids match A01 canon"), CanonMismatch.Num() == 0,
+			FString::Join(CanonMismatch, TEXT(", ")));
+	}
+	else
+	{
+		AddInfo(FString::Printf(TEXT("A01 canon manifest unavailable: %s"), *CanonError));
+	}
+
+	TSet<FString> SeenIds;
+	bool bUniqueIds = true;
+	for (const FDAEventDefinition& Event : EventGraph.GetEvents())
+	{
+		if (SeenIds.Contains(Event.Id))
+		{
+			bUniqueIds = false;
+		}
+		SeenIds.Add(Event.Id);
+	}
+	AddCheck(TEXT("unique event ids"), bUniqueIds, FString::FromInt(SeenIds.Num()));
+
+	// ---------------------------------------------------------------- structure
+	TArray<FString> MissingScenes;
+	TArray<FString> MissingLines;
+	TArray<FString> MissingAnchorScenes;
+	int32 BadCommandCounts = 0;
+	int32 UnknownCommands = 0;
+	int32 MissingAnchorCount = 0;
+
+	TSharedPtr<FJsonObject> AnchorRoot;
+	FString AnchorError;
+	TSet<FString> AnchorIds;
+	if (LoadContentJsonObject(TEXT("Data/World/anchors.json"), AnchorRoot, AnchorError))
+	{
+		TFunction<void(const TSharedPtr<FJsonValue>&)> WalkAnchors;
+		WalkAnchors = [&AnchorIds, &WalkAnchors](const TSharedPtr<FJsonValue>& Value)
+		{
+			if (!Value.IsValid())
+			{
+				return;
+			}
+			if (Value->Type == EJson::Object)
+			{
+				const TSharedPtr<FJsonObject> Object = Value->AsObject();
+				FString Id;
+				if (Object.IsValid() && Object->TryGetStringField(TEXT("id"), Id) && !Id.IsEmpty())
+				{
+					AnchorIds.Add(Id);
+				}
+				for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : Object->Values)
+				{
+					WalkAnchors(Pair.Value);
+				}
+			}
+			else if (Value->Type == EJson::Array)
+			{
+				for (const TSharedPtr<FJsonValue>& Child : Value->AsArray())
+				{
+					WalkAnchors(Child);
+				}
+			}
+		};
+		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : AnchorRoot->Values)
+		{
+			WalkAnchors(Pair.Value);
+		}
+	}
+	else
+	{
+		AddInfo(FString::Printf(TEXT("A08 anchors unavailable: %s"), *AnchorError));
+	}
+
+	for (const FString& EventId : FullCampaignEventIds)
+	{
+		const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
+		if (!Event)
+		{
+			MissingScenes.Add(EventId);
+			continue;
+		}
+
+		// The audit checks the full-bundle scene (full.E01 is intentionally not
+		// merged as the runtime scene because opening.json owns E01).
+		const FString BundleSceneId = FString::Printf(TEXT("full.%s"), *EventId);
+		const FDAStoryScene* Scene = Scenes.Find(BundleSceneId);
+		if (!Scene)
+		{
+			MissingScenes.Add(EventId);
+			continue;
+		}
+		if (!Scenes.Contains(Event->Scene))
+		{
+			MissingScenes.Add(FString::Printf(TEXT("%s:runtime:%s"), *EventId, *Event->Scene));
+		}
+
+		const TSharedPtr<FJsonObject>* FullDocPtr = FullCampaignEventDocs.Find(EventId);
+		const TSharedPtr<FJsonObject>& EventRaw = (FullDocPtr && FullDocPtr->IsValid()) ? *FullDocPtr : Event->Raw;
+
+		if (Scene->Commands.Num() < 3 || Scene->Commands.Num() > 8)
+		{
+			++BadCommandCounts;
+		}
+
+		for (const FString& Key : ReadStringArray(EventRaw, TEXT("dialogue_keys")))
+		{
+			if (!Lines.Contains(Key))
+			{
+				MissingLines.Add(FString::Printf(TEXT("%s:%s"), *EventId, *Key));
+			}
+		}
+
+		for (const FDAStoryCommand& Command : Scene->Commands)
+		{
+			if (Command.Type == EDAStoryCommandType::Unknown)
+			{
+				++UnknownCommands;
+			}
+			if (Command.Type == EDAStoryCommandType::Dialogue && !Lines.Contains(Command.Key))
+			{
+				MissingLines.Add(FString::Printf(TEXT("%s:%s"), *Scene->Id, *Command.Key));
+			}
+			if (Command.Type == EDAStoryCommandType::Camera && !Command.Anchor.IsEmpty()
+				&& AnchorIds.Num() > 0 && !AnchorIds.Contains(Command.Anchor))
+			{
+				++MissingAnchorCount;
+				MissingAnchorScenes.Add(FString::Printf(TEXT("%s:%s"), *Scene->Id, *Command.Anchor));
+			}
+		}
+
+		const FString EventAnchor = ReadString(EventRaw, TEXT("anchor"));
+		if (!EventAnchor.IsEmpty() && AnchorIds.Num() > 0 && !AnchorIds.Contains(EventAnchor))
+		{
+			++MissingAnchorCount;
+			MissingAnchorScenes.Add(FString::Printf(TEXT("%s:event_anchor:%s"), *EventId, *EventAnchor));
+		}
+	}
+
+	AddCheck(TEXT("every event has a loaded scene"), MissingScenes.Num() == 0,
+		FString::Join(MissingScenes, TEXT(", ")));
+	AddCheck(TEXT("scene command counts are 3-8"), BadCommandCounts == 0, FString::FromInt(BadCommandCounts));
+	AddCheck(TEXT("all scene commands are known"), UnknownCommands == 0, FString::FromInt(UnknownCommands));
+	AddCheck(TEXT("all dialogue keys resolve"), MissingLines.Num() == 0,
+		FString::Join(MissingLines, TEXT(", ")));
+	AddCheck(TEXT("A08 anchors resolve"), MissingAnchorCount == 0,
+		FString::Join(MissingAnchorScenes, TEXT(", ")));
+
+	// ---------------------------------------------------------------- rewards
+	TSharedPtr<FJsonObject> ShopRoot;
+	FString ShopError;
+	TSet<FString> PackIds;
+	if (LoadContentJsonObject(TEXT("Data/Shop/packs.json"), ShopRoot, ShopError))
+	{
+		const TArray<TSharedPtr<FJsonValue>>* PackValues = nullptr;
+		if (ShopRoot->TryGetArrayField(TEXT("packs"), PackValues) && PackValues)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *PackValues)
+			{
+				const TSharedPtr<FJsonObject> Pack = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
+				FString PackId;
+				if (Pack.IsValid() && Pack->TryGetStringField(TEXT("id"), PackId))
+				{
+					PackIds.Add(PackId);
+				}
+			}
+		}
+	}
+	else
+	{
+		AddInfo(FString::Printf(TEXT("A06 shop packs unavailable: %s"), *ShopError));
+	}
+
+	static const TSet<FString> KnownRewardTypes = {
+		TEXT("dp"), TEXT("email_unlock"), TEXT("card"), TEXT("card_by_result"), TEXT("tutorial"),
+		TEXT("temporary_title"), TEXT("restore_title"), TEXT("pack_by_dorm"), TEXT("dorm_unlock"),
+		TEXT("exam_exemption"), TEXT("unlock_duel"), TEXT("dp_multiplier"), TEXT("flag"), TEXT("item"),
+		TEXT("choice_reward"), TEXT("dp_equal_remaining_lp"), TEXT("card_by_partner"), TEXT("pack"),
+		TEXT("name_change"), TEXT("title")
+	};
+	static const TSet<FString> KnownOutcomeTypes = {
+		TEXT("set_flag"), TEXT("flag"), TEXT("add_counter"), TEXT("counter"), TEXT("reward"),
+		TEXT("grant_reward"), TEXT("set_calendar"), TEXT("set_objective"), TEXT("complete_event"),
+		TEXT("unlock_email"), TEXT("grant_dp"), TEXT("grant_card"), TEXT("grant_pack"),
+		TEXT("grant_deck"), TEXT("set_title"), TEXT("set_dorm"), TEXT("dorm_unlock"), TEXT("double_dp"),
+		TEXT("dp_multiplier"), TEXT("exam_exemption"), TEXT("unlock_duel"), TEXT("item"),
+		TEXT("name_change"), TEXT("temporary_title"), TEXT("restore_title"), TEXT("next_event")
+	};
+
+	TArray<FString> BadRewards;
+	TArray<FString> BadOutcomes;
+	TArray<FString> BadPacks;
+	TArray<FString> MissingRewardIds;
+	int32 RewardCount = 0;
+	for (const FString& EventId : FullCampaignEventIds)
+	{
+		const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
+		const TSharedPtr<FJsonObject>* FullDocPtr = FullCampaignEventDocs.Find(EventId);
+		const TSharedPtr<FJsonObject> EventRaw = (FullDocPtr && FullDocPtr->IsValid()) ? *FullDocPtr : (Event ? Event->Raw : TSharedPtr<FJsonObject>());
+		if (!EventRaw.IsValid())
+		{
+			continue;
+		}
+
+		const TArray<TSharedPtr<FJsonValue>>* RewardValues = nullptr;
+		if (EventRaw->TryGetArrayField(TEXT("rewards"), RewardValues) && RewardValues)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *RewardValues)
+			{
+				const TSharedPtr<FJsonObject> Reward = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
+				if (!Reward.IsValid())
+				{
+					continue;
+				}
+				++RewardCount;
+				const FString Type = ReadString(Reward, TEXT("type"));
+				if (!KnownRewardTypes.Contains(Type))
+				{
+					BadRewards.Add(FString::Printf(TEXT("%s:%s"), *EventId, *Type));
+				}
+				if (Type == TEXT("pack"))
+				{
+					const FString PackId = ReadString(Reward, TEXT("pack"), ReadString(Reward, TEXT("pack_id")));
+					if (!PackIds.Contains(PackId))
+					{
+						BadPacks.Add(FString::Printf(TEXT("%s:%s"), *EventId, *PackId));
+					}
+				}
+				else if (Type == TEXT("pack_by_dorm"))
+				{
+					for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : Reward->Values)
+					{
+						const FString Key(*Pair.Key);
+						if (Key.Equals(TEXT("type"), ESearchCase::IgnoreCase)
+							|| Key.Equals(TEXT("note"), ESearchCase::IgnoreCase)
+							|| Key.Equals(TEXT("source"), ESearchCase::IgnoreCase))
+						{
+							continue;
+						}
+						if (Pair.Value.IsValid() && Pair.Value->Type == EJson::String)
+						{
+							const FString PackId = Pair.Value->AsString();
+							if (!PackIds.Contains(PackId))
+							{
+								BadPacks.Add(FString::Printf(TEXT("%s:%s"), *EventId, *PackId));
+							}
+						}
+					}
+				}
+			}
+		}
+
+		for (const TSharedPtr<FJsonObject>& Outcome : Event->Outcomes)
+		{
+			const FString Type = ReadString(Outcome, TEXT("type"));
+			if (!KnownOutcomeTypes.Contains(Type))
+			{
+				BadOutcomes.Add(FString::Printf(TEXT("%s:%s"), *EventId, *Type));
+			}
+			if (Type == TEXT("reward") || Type == TEXT("grant_reward"))
+			{
+				const FString RewardId = ReadString(Outcome, TEXT("reward_id"), ReadString(Outcome, TEXT("id")));
+				if (!Rewards.Contains(RewardId))
+				{
+					MissingRewardIds.Add(FString::Printf(TEXT("%s:%s"), *EventId, *RewardId));
+				}
+			}
+		}
+	}
+
+	AddCheck(TEXT("reward types are known"), BadRewards.Num() == 0,
+		FString::Join(BadRewards, TEXT(", ")));
+	AddCheck(TEXT("reward packs exist in A06 shop"), BadPacks.Num() == 0,
+		FString::Join(BadPacks, TEXT(", ")));
+	AddCheck(TEXT("outcome types are supported"), BadOutcomes.Num() == 0,
+		FString::Join(BadOutcomes, TEXT(", ")));
+	AddCheck(TEXT("reward ids resolve"), MissingRewardIds.Num() == 0,
+		FString::Join(MissingRewardIds, TEXT(", ")));
+	AddInfo(FString::Printf(TEXT("%d canon reward records audited"), RewardCount));
+
+	// ---------------------------------------------------------------- A07 duels
+	TSharedPtr<FJsonObject> RosterRoot;
+	FString RosterError;
+	TMap<FString, TSet<FString>> OpponentDecks;
+	if (LoadContentJsonObject(TEXT("Data/Opponents/roster.json"), RosterRoot, RosterError))
+	{
+		const TArray<TSharedPtr<FJsonValue>>* DuelistValues = nullptr;
+		if (RosterRoot->TryGetArrayField(TEXT("duelists"), DuelistValues) && DuelistValues)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *DuelistValues)
+			{
+				const TSharedPtr<FJsonObject> Duelist = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
+				FString OpponentId;
+				if (!Duelist.IsValid() || !Duelist->TryGetStringField(TEXT("id"), OpponentId))
+				{
+					continue;
+				}
+				TSet<FString>& Decks = OpponentDecks.Add(OpponentId);
+				for (const FString& DeckId : ReadStringArray(Duelist, TEXT("decks")))
+				{
+					Decks.Add(DeckId);
+				}
+			}
+		}
+	}
+	else
+	{
+		AddInfo(FString::Printf(TEXT("A07 roster unavailable: %s"), *RosterError));
+	}
+
+	TArray<FString> BadOpponents;
+	TArray<FString> BadDecks;
+	int32 DuelCount = 0;
+	auto ValidateDuel = [&](const FString& Source, const FString& OpponentId, const FString& DeckId)
+	{
+		++DuelCount;
+		const TSet<FString>* Decks = OpponentDecks.Find(OpponentId);
+		if (!Decks)
+		{
+			BadOpponents.Add(FString::Printf(TEXT("%s:%s"), *Source, *OpponentId));
+			return;
+		}
+		if (!DeckId.IsEmpty() && !Decks->Contains(DeckId))
+		{
+			BadDecks.Add(FString::Printf(TEXT("%s:%s/%s"), *Source, *OpponentId, *DeckId));
+		}
+	};
+
+	for (const FString& EventId : FullCampaignEventIds)
+	{
+		const TSharedPtr<FJsonObject>* FullDocPtr = FullCampaignEventDocs.Find(EventId);
+		if (!FullDocPtr || !FullDocPtr->IsValid())
+		{
+			continue;
+		}
+		const TArray<TSharedPtr<FJsonValue>>* DuelValues = nullptr;
+		if ((*FullDocPtr)->TryGetArrayField(TEXT("duels"), DuelValues) && DuelValues)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *DuelValues)
+			{
+				const TSharedPtr<FJsonObject> Duel = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
+				if (Duel.IsValid())
+				{
+					ValidateDuel(EventId, ReadString(Duel, TEXT("opponent_id"), ReadString(Duel, TEXT("opponent"))),
+						ReadString(Duel, TEXT("opponent_deck_id"), ReadString(Duel, TEXT("deck"))));
+				}
+			}
+		}
+	}
+
+	for (const TPair<FString, FDAStoryScene>& Pair : Scenes)
+	{
+		if (!Pair.Key.StartsWith(TEXT("full.")))
+		{
+			continue;
+		}
+		for (const FDAStoryCommand& Command : Pair.Value.Commands)
+		{
+			if (Command.Type == EDAStoryCommandType::Duel)
+			{
+				ValidateDuel(Pair.Key, Command.OpponentId, Command.OpponentDeckId);
+			}
+		}
+	}
+
+	for (const TPair<FString, TSharedPtr<FJsonObject>>& Pair : EmailContacts)
+	{
+		const TArray<TSharedPtr<FJsonValue>>* RequestValues = nullptr;
+		if (Pair.Value.IsValid() && Pair.Value->TryGetArrayField(TEXT("duel_requests"), RequestValues) && RequestValues)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *RequestValues)
+			{
+				const TSharedPtr<FJsonObject> Request = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
+				if (Request.IsValid())
+				{
+					ValidateDuel(FString::Printf(TEXT("email:%s"), *Pair.Key),
+						ReadString(Request, TEXT("opponent")), ReadString(Request, TEXT("deck")));
+				}
+			}
+		}
+	}
+
+	AddCheck(TEXT("A07 opponent ids resolve"), BadOpponents.Num() == 0,
+		FString::Join(BadOpponents, TEXT(", ")));
+	AddCheck(TEXT("A07 opponent decks resolve"), BadDecks.Num() == 0,
+		FString::Join(BadDecks, TEXT(", ")));
+	AddInfo(FString::Printf(TEXT("%d duel references audited"), DuelCount));
+	AddCheck(TEXT("email contacts loaded"), EmailContacts.Num() == 6, FString::FromInt(EmailContacts.Num()));
+
+	// ---------------------------------------------------------------- availability
+	// Snapshot and restore so the audit does not overwrite a live profile.
+	TSharedPtr<FJsonObject> ProfileSnapshot = MakeShared<FJsonObject>();
+	TSharedPtr<FJsonObject> CalendarSnapshot = MakeShared<FJsonObject>();
+	Profile->WriteSaveData(ProfileSnapshot);
+	Calendar->WriteSaveData(CalendarSnapshot);
+
+	UDAInventorySubsystem* Inventory = GetGameInstance() ? GetGameInstance()->GetSubsystem<UDAInventorySubsystem>() : nullptr;
+	int32 AddedCard348 = 0;
+
+	auto SetOpeningBaseline = [Profile]()
+	{
+		Profile->ResetToDefaults();
+		Profile->SetFlag(TEXT("new_game"), true);
+		Profile->SetFlag(TEXT("new_game_started"), true);
+		Profile->SetFlag(TEXT("registered"), true);
+		Profile->SetFlag(TEXT("tutorial_complete"), true);
+		Profile->SetFlag(TEXT("first_free_roam"), true);
+		Profile->SetFlag(TEXT("opening_complete"), true);
+		Profile->SetFlag(TEXT("shop_unlocked"), true);
+		Profile->SetFlag(TEXT("save_unlocked"), true);
+		Profile->SetFlag(FDAEventGraph::EventCompletionFlag(TEXT("E01")), true);
+		Profile->SetFlag(FDAEventGraph::EventCompletionFlag(TEXT("E01b")), true);
+	};
+
+	auto WalkTwelveMonths = [this, Profile, Calendar](TSet<FString>& OutAvailable)
+	{
+		const EDADayPeriod Periods[] = { EDADayPeriod::AM, EDADayPeriod::PM, EDADayPeriod::Night };
+		for (int32 MonthIndex = 0; MonthIndex < 12; ++MonthIndex)
+		{
+			const int32 Year = MonthIndex < 3 ? 1 : 2;
+			const int32 Days = Calendar->GetDaysInMonth(Year, MonthIndex);
+			for (int32 Day = 1; Day <= Days; ++Day)
+			{
+				for (EDADayPeriod Period : Periods)
+				{
+					Calendar->SetDate(Year, MonthIndex, Day, Period);
+					for (const FString& EventId : FullCampaignEventIds)
+					{
+						const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
+						if (!Event)
+						{
+							continue;
+						}
+						FString Reason;
+						if (EventGraph.EvaluateTrigger(*Event, Profile, Calendar, Reason)
+							&& EventGraph.EvaluateRequirements(*Event, Profile, Calendar, Reason))
+						{
+							OutAvailable.Add(EventId);
+						}
+					}
+				}
+			}
+		}
+	};
+
+	TSet<FString> CounterlessAvailable;
+	SetOpeningBaseline();
+	Calendar->SetDate(1, 0, 1, EDADayPeriod::AM);
+	WalkTwelveMonths(CounterlessAvailable);
+
+	TArray<FString> Unreachable = FullCampaignEventIds.Array();
+	Unreachable.Sort();
+	for (int32 Index = Unreachable.Num() - 1; Index >= 0; --Index)
+	{
+		if (CounterlessAvailable.Contains(Unreachable[Index]))
+		{
+			Unreachable.RemoveAt(Index);
+		}
+	}
+	AddInfo(FString::Printf(TEXT("%d/%d events reachable without counters"), CounterlessAvailable.Num(), FullCampaignEventIds.Num()));
+	AddInfo(FString::Printf(TEXT("unreachable without counters: %s"),
+		Unreachable.Num() > 0 ? *FString::Join(Unreachable, TEXT(", ")) : TEXT("<none>")));
+
+	// Maxed-progress pass: proves every event is reachable once its gates are met.
+	TSet<FString> AllFlags;
+	TSet<FString> AllCounters;
+	TSet<FString> AllEvents;
+	for (const FString& EventId : FullCampaignEventIds)
+	{
+		if (const FDAEventDefinition* Event = EventGraph.FindEvent(EventId))
+		{
+			CollectEventState(*Event, AllFlags, AllCounters, AllEvents);
+		}
+	}
+
+	TSet<FString> MaxedAvailable;
+	SetOpeningBaseline();
+	for (const FString& Counter : AllCounters)
+	{
+		Profile->SetCounter(Counter, 9999);
+	}
+	for (const FString& Flag : AllFlags)
+	{
+		Profile->SetFlag(Flag, true);
+	}
+	for (const FString& EventId : AllEvents)
+	{
+		Profile->SetFlag(FDAEventGraph::EventCompletionFlag(EventId), true);
+	}
+	Profile->SetTitle(TEXT("Dropout Boy"));
+	Profile->SetCounter(TEXT("card_348"), 1);
+	if (Inventory && Inventory->GetCount(348) <= 0)
+	{
+		AddedCard348 = Inventory->AddCard(348, 1);
+	}
+
+	const EDADorm Dorms[] = { EDADorm::Slifer, EDADorm::Ra, EDADorm::Obelisk };
+	for (EDADorm Dorm : Dorms)
+	{
+		Profile->SetDorm(Dorm);
+		Calendar->SetDate(1, 0, 1, EDADayPeriod::AM);
+		WalkTwelveMonths(MaxedAvailable);
+	}
+
+	TArray<FString> MaxedMissing = FullCampaignEventIds.Array();
+	MaxedMissing.Sort();
+	for (int32 Index = MaxedMissing.Num() - 1; Index >= 0; --Index)
+	{
+		if (MaxedAvailable.Contains(MaxedMissing[Index]))
+		{
+			MaxedMissing.RemoveAt(Index);
+		}
+	}
+	AddCheck(TEXT("all 35 events reachable with progress"), MaxedMissing.Num() == 0,
+		FString::Join(MaxedMissing, TEXT(", ")));
+
+	// Restore the live profile/calendar and inventory.
+	if (AddedCard348 > 0 && Inventory)
+	{
+		Inventory->RemoveCard(348, AddedCard348);
+	}
+	FString RestoreError;
+	Profile->ReadSaveData(ProfileSnapshot, RestoreError);
+	Calendar->ReadSaveData(CalendarSnapshot, RestoreError);
+	if (!RestoreError.IsEmpty())
+	{
+		AddInfo(FString::Printf(TEXT("snapshot restore warning: %s"), *RestoreError));
+	}
+
+	// StartEvent availability is structural for every canon id.
+	TArray<FString> NoScene;
+	for (const FString& EventId : FullCampaignEventIds)
+	{
+		const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
+		if (!Event || !Scenes.Contains(Event->Scene))
+		{
+			NoScene.Add(EventId);
+		}
+	}
+	AddCheck(TEXT("StartEvent can resolve every id"), NoScene.Num() == 0,
+		FString::Join(NoScene, TEXT(", ")));
+
+	const double Elapsed = FPlatformTime::Seconds() - StartTime;
+	bool bAllPass = true;
+	for (const FString& Line : Report)
+	{
+		if (Line.StartsWith(TEXT("FAIL")))
+		{
+			bAllPass = false;
+		}
+		UE_LOG(LogDuelAcademyIsland, Log, TEXT("FullStorySelfTest: %s"), *Line);
+	}
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("FullStorySelfTest: %s in %.3fs"),
+		bAllPass ? TEXT("PASS") : TEXT("FAIL"), Elapsed);
+
+	LastFullSelfTestReport = FString::Join(Report, TEXT("\n"));
+	LastFullSelfTestReport += FString::Printf(TEXT("\n%s in %.3fs"),
+		bAllPass ? TEXT("PASS") : TEXT("FAIL"), Elapsed);
+	return bAllPass;
+}
+
+
 
 void UDAStorySubsystem::DebugLogState() const
 {
@@ -2563,6 +3575,21 @@ static FAutoConsoleCommandWithWorldAndArgs GDAStorySelfTestCommand(
 		else
 		{
 			UE_LOG(LogDuelAcademyIsland, Error, TEXT("da.StorySelfTest: story subsystem not found."));
+		}
+	}));
+
+static FAutoConsoleCommandWithWorldAndArgs GDAFullStorySelfTestCommand(
+	TEXT("da.FullStorySelfTest"),
+	TEXT("Run the headless 35-event full-campaign audit."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>&, UWorld* World)
+	{
+		if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(World))
+		{
+			Story->RunFullStorySelfTest();
+		}
+		else
+		{
+			UE_LOG(LogDuelAcademyIsland, Error, TEXT("da.FullStorySelfTest: story subsystem not found."));
 		}
 	}));
 

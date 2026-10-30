@@ -1,4 +1,4 @@
-// Duel Academy Island - story runtime for the opening vertical slice.
+// Duel Academy Island - story runtime for the opening and full campaign scaffold.
 //
 // UDAStorySubsystem owns the serializable scene queue, resolves dialogue keys
 // through A09's dialogue UI, applies A02/A06 outcomes, and starts duels through
@@ -156,6 +156,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
 	bool LoadOpeningData();
 
+	/**
+	 * Additive loader for the 35-event campaign scaffold. Merges events, scenes,
+	 * dialogue and the email table into the opening maps. Full E01 is skipped so
+	 * opening.json stays authoritative. Safe to call more than once.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
+	bool LoadFullCampaignData();
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	bool IsFullCampaignLoaded() const { return bFullCampaignLoaded; }
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	int32 GetLoadedEventCount() const { return EventGraph.GetEvents().Num(); }
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	int32 GetEmailContactCount() const { return EmailContacts.Num(); }
+
 	/** Continue/resume the opening. Uses the current profile name if initialized. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
 	void StartOpening();
@@ -165,6 +182,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
 	void StartEvent(const FString& EventId);
+
+	/** Whether StartEvent would accept the id (exists and has a loaded scene). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
+	bool CanStartEvent(const FString& EventId, FString& OutReason);
 
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
 	void Advance();
@@ -215,6 +236,16 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
 	FString GetLastSelfTestReport() const { return LastSelfTestReport; }
 
+	/**
+	 * Headless full-campaign audit: 35 events, unique ids, scene/dialogue/reward
+	 * resolution, A07 opponent/deck validation and 12-month availability.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
+	bool RunFullStorySelfTest();
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	FString GetLastFullSelfTestReport() const { return LastFullSelfTestReport; }
+
 	/** Log the current scene/queue state to the output log. */
 	void DebugLogState() const;
 
@@ -235,11 +266,13 @@ private:
 	UDACalendarSubsystem* ResolveCalendar() const;
 
 	bool LoadJsonObject(const FString& RelativePath, TSharedPtr<FJsonObject>& Out, FString& OutError) const;
+	bool LoadContentJsonObject(const FString& RelativeToContentData, TSharedPtr<FJsonObject>& Out, FString& OutError) const;
 	void ParseEvents(const TSharedPtr<FJsonObject>& Root);
-	void ParseScenes(const TSharedPtr<FJsonObject>& Root);
-	void ParseDialogue(const TSharedPtr<FJsonObject>& Root);
+	void ParseScenes(const TSharedPtr<FJsonObject>& Root, bool bMerge = false);
+	void ParseDialogue(const TSharedPtr<FJsonObject>& Root, bool bMerge = false);
 	void ParseSchedules(const TSharedPtr<FJsonObject>& Root);
-	void ParseRewards(const TSharedPtr<FJsonObject>& Root);
+	void ParseRewards(const TSharedPtr<FJsonObject>& Root, bool bMerge = false);
+	void ParseEmails(const TSharedPtr<FJsonObject>& Root);
 
 	void BindDialogueDelegates(ADAHUD* HUD);
 	void HandleDialogueClosed(const FString& ConversationId);
@@ -281,6 +314,9 @@ private:
 	void SetObjective(const FString& Id, const FString& Text);
 	void CompleteEvent(const FString& EventId);
 	bool IsEventCompleteRuntime(const FString& EventId) const;
+	void ApplyTemporaryTitle(const FString& Title);
+	void RestorePreviousTitle();
+	void UnlockDuel(const FString& DuelId);
 
 	void ResetRuntimeState();
 	void LogState(const FString& Prefix) const;
@@ -291,6 +327,12 @@ private:
 	bool MatchSchedulePeriod(const TSharedPtr<FJsonObject>& Object, const FString& Period) const;
 	bool MatchScheduleWeekday(const TSharedPtr<FJsonObject>& Object, const FString& Weekday) const;
 
+	/** Recursively gathers flag ids / counters from event conditions for the audit. */
+	void CollectConditionState(const TSharedPtr<FJsonObject>& Condition, TSet<FString>& OutFlags,
+		TSet<FString>& OutCounters, TSet<FString>& OutEvents) const;
+	void CollectEventState(const FDAEventDefinition& Event, TSet<FString>& OutFlags,
+		TSet<FString>& OutCounters, TSet<FString>& OutEvents) const;
+
 private:
 	FDAEventGraph EventGraph;
 	TMap<FString, FDAStoryScene> Scenes;
@@ -299,10 +341,14 @@ private:
 	TMap<FString, FLinearColor> SpeakerColors;
 	TMap<FString, TSharedPtr<FJsonObject>> Rewards;
 	TMap<FString, TSharedPtr<FJsonObject>> ScheduledNpcs;
+	TMap<FString, TSharedPtr<FJsonObject>> EmailContacts;
+	TMap<FString, TSharedPtr<FJsonObject>> FullCampaignEventDocs;
 	TMap<FString, FString> Objectives;
 
 	TSet<FString> CompletedEvents;
 	TSet<FString> AppliedRewardIds;
+	TSet<FString> FullCampaignEventIds;
+	TSet<FString> UnlockedDuels;
 
 	FString CurrentEventId;
 	FString CurrentSceneId;
@@ -310,6 +356,7 @@ private:
 	int32 CommandIndex = 0;
 
 	bool bLoaded = false;
+	bool bFullCampaignLoaded = false;
 	bool bRunning = false;
 	bool bHeadless = false;
 	bool bFastForward = false;
@@ -327,6 +374,8 @@ private:
 	bool bAutoOpeningStarted = false;
 	bool bAutoSelfTestRequested = false;
 	bool bAutoSelfTestStarted = false;
+	bool bAutoFullSelfTestRequested = false;
+	bool bAutoFullSelfTestStarted = false;
 
 	FString PendingTextInputKey;
 	TArray<FDAStoryChoice> ActiveChoices;
@@ -335,6 +384,8 @@ private:
 	FDAStoryPendingDuel PendingDuel;
 	FString SelectedStarterDeck;
 	FString LastSelfTestReport;
+	FString LastFullSelfTestReport;
+	FString PreviousTitle;
 
 	float WaitRemaining = 0.f;
 	float AutoStartDelay = 2.f;

@@ -7,7 +7,11 @@
 #include "DAIslandManager.h"
 #include "DAIslandSubsystem.h"
 #include "DALocationVolume.h"
+#include "DAProfileSubsystem.h"
+#include "DASaveGame.h"
+#include "DASettings.h"
 #include "DAStudentCharacter.h"
+#include "DAStorySubsystem.h"
 #include "DACardRecords.h"
 #include "DADuelEngine.h"
 #include "DuelAcademyIsland.h"
@@ -53,6 +57,29 @@ namespace
 			OutLines.Add(Line);
 		}
 	}
+
+	/** Harnesses that bring up their own screen/opening; the title must stay out of their way. */
+	bool HasStartupHarness()
+	{
+		static const TCHAR* Params[] = {
+			TEXT("DAOpeningTest"),
+			TEXT("DAStorySelfTest"),
+			TEXT("DANewGameTest"),
+			TEXT("DADuelScreenshot"),
+			TEXT("DADuelSelfTest"),
+			TEXT("DADialogueTest"),
+			TEXT("DAPDATest"),
+			TEXT("DAUITest")
+		};
+		for (const TCHAR* Param : Params)
+		{
+			if (FParse::Param(FCommandLine::Get(), Param))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 }
 
 ADAHUD::ADAHUD()
@@ -73,6 +100,13 @@ void ADAHUD::BeginPlay()
 	PDAUI->OnAction.AddUObject(this, &ADAHUD::HandlePDAAction);
 	PDAUI->OnClosed.AddUObject(this, &ADAHUD::HandlePDAClosed);
 	DialogueUI->OnDialogueClosed.AddUObject(this, &ADAHUD::HandleDialogueClosed);
+
+	TitleScreen = MakeUnique<FDATitleScreen>(this);
+	TitleScreen->OnNewGame.AddUObject(this, &ADAHUD::HandleTitleNewGame);
+	TitleScreen->OnContinue.AddUObject(this, &ADAHUD::HandleTitleContinue);
+	TitleScreen->OnOptionsChanged.AddUObject(this, &ADAHUD::HandleTitleOptionsChanged);
+	TitleScreen->OnClosed.AddUObject(this, &ADAHUD::HandleTitleClosed);
+	ApplySettingsToUI();
 
 	// Debug harnesses (only active with the matching command-line switch):
 	//   -DADuelSelfTest   run the AI-vs-AI rules self-test after the world settles
@@ -207,10 +241,53 @@ void ADAHUD::BeginPlay()
 		After(T + 2.4f, [](ADAHUD* HUD) { HUD->CloseDialogue(); });
 		After(T + 3.0f, [](ADAHUD* HUD) { FPlatformMisc::RequestExit(false); });
 	}
+
+	// Title flow:
+	//   -DATitleTest       force the title screen on launch; capture DATitle.png
+	//   -DANewGameTest     start a fresh opening (alias of -DAOpeningTest) + capture
+	// A normal launch with no story/UI harness opens the title screen.
+	const bool bTitleTest = FParse::Param(FCommandLine::Get(), TEXT("DATitleTest"));
+	const bool bNewGameTest = FParse::Param(FCommandLine::Get(), TEXT("DANewGameTest"));
+	const bool bOpeningTest = FParse::Param(FCommandLine::Get(), TEXT("DAOpeningTest"));
+
+	if (bTitleTest)
+	{
+		OpenTitle();
+		FTimerHandle TitleShotTimer;
+		GetWorldTimerManager().SetTimer(TitleShotTimer, FTimerDelegate::CreateWeakLambda(this, []()
+		{
+			FScreenshotRequest::RequestScreenshot(TEXT("DATitle.png"), false, false);
+		}), 1.6f, false);
+	}
+	else if (!HasStartupHarness())
+	{
+		OpenTitle();
+	}
+
+	if (bNewGameTest && !bTitleTest)
+	{
+		if (!bOpeningTest)
+		{
+			FTimerHandle NewGameTimer;
+			GetWorldTimerManager().SetTimer(NewGameTimer, FTimerDelegate::CreateWeakLambda(this, [this]()
+			{
+				HandleTitleNewGame();
+			}), 1.5f, false);
+		}
+		FTimerHandle NewGameShotTimer;
+		GetWorldTimerManager().SetTimer(NewGameShotTimer, FTimerDelegate::CreateWeakLambda(this, []()
+		{
+			FScreenshotRequest::RequestScreenshot(TEXT("DANewGameOpening.png"), false, false);
+		}), 4.0f, false);
+	}
 }
 
 void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& OpponentName, const FString& OpponentDeckId)
 {
+	if (IsTitleOpen())
+	{
+		return;
+	}
 	if (!DuelUI.IsValid())
 	{
 		DuelUI = MakeUnique<FDADuelUI>(this);
@@ -262,7 +339,7 @@ void ADAHUD::DebugFinishDuelWin()
 
 void ADAHUD::BeginDialogue(const TArray<FDADialogueLine>& Lines, const FString& ConversationId)
 {
-	if (IsDuelOpen())
+	if (IsDuelOpen() || IsTitleOpen())
 	{
 		return;
 	}
@@ -298,7 +375,7 @@ void ADAHUD::CloseDialogue()
 
 void ADAHUD::OpenPDA(EDAPDATab Tab)
 {
-	if (IsDuelOpen() || IsDialogueOpen())
+	if (IsDuelOpen() || IsDialogueOpen() || IsTitleOpen())
 	{
 		return;
 	}
@@ -328,7 +405,7 @@ void ADAHUD::ClosePDA()
 
 void ADAHUD::TogglePDA(EDAPDATab Tab)
 {
-	if (IsDialogueOpen() || IsDuelOpen())
+	if (IsDialogueOpen() || IsDuelOpen() || IsTitleOpen())
 	{
 		return;
 	}
@@ -354,7 +431,7 @@ void ADAHUD::UpdateInputMode()
 	{
 		return;
 	}
-	const bool bWantCursor = bMapOpen || IsPDAOpen() || IsDialogueOpen();
+	const bool bWantCursor = bMapOpen || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen();
 	PC->bShowMouseCursor = bWantCursor;
 	if (bWantCursor)
 	{
@@ -386,15 +463,38 @@ void ADAHUD::HandlePDAAction(FName ActionId, const FString& Payload)
 	{
 		FString OptionId;
 		FString Value;
-		if (Payload.Split(TEXT("="), &OptionId, &Value) && DialogueUI.IsValid())
+		if (Payload.Split(TEXT("="), &OptionId, &Value))
 		{
-			if (OptionId == TEXT("text_speed"))
+			if (UDASettings* Settings = GetGameInstance() ? GetGameInstance()->GetSubsystem<UDASettings>() : nullptr)
 			{
-				DialogueUI->SetTextSpeed(Value == TEXT("Slow") ? 28.f : (Value == TEXT("Fast") ? 90.f : 48.f));
-			}
-			else if (OptionId == TEXT("auto_advance"))
-			{
-				DialogueUI->SetAutoAdvance(Value == TEXT("On"));
+				if (OptionId == TEXT("text_speed"))
+				{
+					EDATextSpeed Speed = EDATextSpeed::Normal;
+					if (Value.Equals(TEXT("Slow"), ESearchCase::IgnoreCase)) Speed = EDATextSpeed::Slow;
+					else if (Value.Equals(TEXT("Fast"), ESearchCase::IgnoreCase)) Speed = EDATextSpeed::Fast;
+					else if (Value.Equals(TEXT("Instant"), ESearchCase::IgnoreCase)) Speed = EDATextSpeed::Instant;
+					Settings->SetTextSpeed(Speed);
+					ApplySettingsToUI();
+				}
+				else if (OptionId == TEXT("auto_advance"))
+				{
+					Settings->SetControl(TEXT("AutoAdvance"), Value.Equals(TEXT("On"), ESearchCase::IgnoreCase) ? TEXT("On") : TEXT("Off"));
+					ApplySettingsToUI();
+				}
+				else if (OptionId == TEXT("bgm_volume") || OptionId == TEXT("sfx_volume"))
+				{
+					const FString Number = Value.Replace(TEXT("%"), TEXT("")).TrimStartAndEnd();
+					const float Volume = FMath::Clamp(FCString::Atof(*Number) / 100.f, 0.f, 1.f);
+					if (OptionId == TEXT("bgm_volume"))
+					{
+						Settings->SetBgmVolume(Volume);
+					}
+					else
+					{
+						Settings->SetSfxVolume(Volume);
+					}
+				}
+				Settings->Save();
 			}
 		}
 		return;
@@ -411,7 +511,7 @@ void ADAHUD::HandlePDAAction(FName ActionId, const FString& Payload)
 	}
 	else if (Action == TEXT("save.slot"))
 	{
-		Body = TEXT("Save/load hook: A02's SaveSubsystem is not connected yet.");
+		Body = TEXT("Save/load from the PDA is a later pass. Continue from the title screen for now.");
 	}
 	if (!Body.IsEmpty())
 	{
@@ -427,9 +527,161 @@ void ADAHUD::HandlePDAAction(FName ActionId, const FString& Payload)
 	}
 }
 
+// ------------------------------------------------------------------------ title / new game
+
+void ADAHUD::ApplySettingsToUI()
+{
+	if (!DialogueUI.IsValid())
+	{
+		return;
+	}
+	UDASettings* Settings = GetGameInstance() ? GetGameInstance()->GetSubsystem<UDASettings>() : nullptr;
+	if (!Settings)
+	{
+		return;
+	}
+	DialogueUI->SetTextSpeed(Settings->GetTextSpeedCps());
+	DialogueUI->SetAutoAdvance(
+		Settings->GetControl(TEXT("AutoAdvance")).Equals(TEXT("On"), ESearchCase::IgnoreCase),
+		false);
+}
+
+void ADAHUD::OpenTitle()
+{
+	if (IsDuelOpen())
+	{
+		return;
+	}
+	bTitleWasShown = true;
+	if (!TitleScreen.IsValid())
+	{
+		TitleScreen = MakeUnique<FDATitleScreen>(this);
+		TitleScreen->OnNewGame.AddUObject(this, &ADAHUD::HandleTitleNewGame);
+		TitleScreen->OnContinue.AddUObject(this, &ADAHUD::HandleTitleContinue);
+		TitleScreen->OnOptionsChanged.AddUObject(this, &ADAHUD::HandleTitleOptionsChanged);
+		TitleScreen->OnClosed.AddUObject(this, &ADAHUD::HandleTitleClosed);
+	}
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	if (IsPDAOpen())
+	{
+		ClosePDA();
+	}
+	if (IsDialogueOpen())
+	{
+		CloseDialogue();
+	}
+	bHelpOpen = false;
+	TitleScreen->Open();
+	UpdateInputMode();
+}
+
+void ADAHUD::CloseTitle()
+{
+	if (TitleScreen.IsValid())
+	{
+		TitleScreen->Close();
+	}
+	UpdateInputMode();
+}
+
+void ADAHUD::HandleTitleNewGame()
+{
+	bTitleWasShown = true;
+	UDAStorySubsystem* Story = UDAStorySubsystem::Get(this);
+	if (!Story)
+	{
+		if (TitleScreen.IsValid())
+		{
+			TitleScreen->SetStatusMessage(TEXT("Story subsystem unavailable; cannot start the opening."), true);
+		}
+		return;
+	}
+
+	// Close the overlay before the opening starts: A03 may open a dialogue
+	// immediately, and dialogue/PDA/title are mutually exclusive modal layers.
+	CloseTitle();
+	Story->StartOpeningFresh();
+	ApplySettingsToUI();
+
+	if (UDASaveSubsystem* Save = GetGameInstance() ? GetGameInstance()->GetSubsystem<UDASaveSubsystem>() : nullptr)
+	{
+		FString SaveError;
+		if (!Save->SaveSlot(UDASaveSubsystem::AutosaveSlotIndex, SaveError))
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Title: new-game autosave failed: %s"), *SaveError);
+		}
+	}
+}
+
+void ADAHUD::HandleTitleContinue(int32 SlotIndex)
+{
+	UDAStorySubsystem* Story = UDAStorySubsystem::Get(this);
+	if (!Story)
+	{
+		if (TitleScreen.IsValid())
+		{
+			TitleScreen->SetStatusMessage(TEXT("Story subsystem unavailable; cannot resume the opening."), true);
+		}
+		return;
+	}
+	UDASaveSubsystem* Save = GetGameInstance() ? GetGameInstance()->GetSubsystem<UDASaveSubsystem>() : nullptr;
+	if (!Save)
+	{
+		if (TitleScreen.IsValid())
+		{
+			TitleScreen->SetStatusMessage(TEXT("Save subsystem unavailable."), true);
+		}
+		return;
+	}
+
+	FString Error;
+	if (!Save->LoadSlot(SlotIndex, Error))
+	{
+		if (TitleScreen.IsValid())
+		{
+			TitleScreen->SetStatusMessage(FString::Printf(TEXT("Could not load save: %s"), *Error), true);
+		}
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Title: load slot %d failed: %s"), SlotIndex, *Error);
+		return;
+	}
+
+	ApplySettingsToUI();
+	CloseTitle();
+
+	// A save mid-scene restores bRunning + the pending command; the story ticker
+	// resumes it. Free-roam/opening-complete saves need StartOpening() to set
+	// the free-roam state (and start E01b if that is where the save sits).
+	if (!Story->IsRunning())
+	{
+		Story->StartOpening();
+	}
+}
+
+void ADAHUD::HandleTitleOptionsChanged()
+{
+	ApplySettingsToUI();
+}
+
+void ADAHUD::HandleTitleClosed()
+{
+	UpdateInputMode();
+}
+
 void ADAHUD::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	// The title screen is the top-most modal layer: it owns input until the
+	// player starts a new game or loads a save.
+	if (IsTitleOpen())
+	{
+		TitleScreen->Update(DeltaSeconds);
+		return;
+	}
+
 	if (DuelUI.IsValid())
 	{
 		DuelUI->Update(DeltaSeconds);
@@ -606,7 +858,7 @@ FVector2D ADAHUD::WorldToMapUV(const FVector& World) const
 
 void ADAHUD::ToggleMap()
 {
-	if (IsDuelOpen() || IsDialogueOpen() || IsPDAOpen())
+	if (IsDuelOpen() || IsDialogueOpen() || IsPDAOpen() || IsTitleOpen())
 	{
 		return;
 	}
@@ -640,7 +892,7 @@ void ADAHUD::ToggleMap()
 
 void ADAHUD::ToggleHelp()
 {
-	if (IsDuelOpen() || IsPDAOpen() || IsDialogueOpen())
+	if (IsDuelOpen() || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen())
 	{
 		return;
 	}
@@ -742,6 +994,13 @@ void ADAHUD::DrawHUD()
 		return;
 	}
 	UIScale = FMath::Clamp(Canvas->ClipY / 1080.f, 0.6f, 2.5f);
+
+	if (TitleScreen.IsValid() && TitleScreen->IsOpen())
+	{
+		TitleScreen->Draw(Canvas);
+		return;
+	}
+
 	UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this);
 	ADAIslandManager* M = Sub ? Sub->GetManager() : nullptr;
 	if (M)
@@ -775,7 +1034,10 @@ void ADAHUD::DrawHUD()
 	if (!IsPDAOpen() && !IsDialogueOpen())
 	{
 		DrawPrompt();
-		DrawIntro(Time - StartTime);
+		if (!bTitleWasShown)
+		{
+			DrawIntro(Time - StartTime);
+		}
 	}
 
 	if (PDAUI.IsValid() && PDAUI->IsOpen())

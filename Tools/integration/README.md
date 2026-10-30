@@ -15,8 +15,11 @@ python Tools\integration\run_smoke.py --validate
 # Validator + the existing -DADuelSelfTest smoke
 python Tools\integration\run_smoke.py --validate --duel-selftest
 
-# All four headless self-tests (duel, profile, rules, economy)
+# Four stable headless self-tests (duel, profile, rules, economy)
 python Tools\integration\run_smoke.py --self-tests
+
+# Opening story self-test (explicit; the editor harness may stay open)
+python Tools\integration\run_smoke.py --story-selftest
 
 # Full gate: validator + self-tests + automation tests
 python Tools\integration\run_smoke.py --all --automation-filter DuelAcademy
@@ -25,7 +28,7 @@ python Tools\integration\run_smoke.py --all --automation-filter DuelAcademy
 python Tools\integration\run_smoke.py --all --dry-run
 ```
 
-Reports and logs land in `Content/Data/Integration/reports/`:
+Reports and logs land in `Docs/Integration/reports/`:
 
 ```text
 reports/
@@ -50,7 +53,7 @@ editor executable; the default is
 ```powershell
 python Tools\validate\validate_all.py
 python Tools\validate\validate_all.py --strict
-python Tools\validate\validate_all.py --json --report Content\Data\Integration\reports\validate.json
+python Tools\validate\validate_all.py --json --report Docs\Integration\reports\validate.json
 ```
 
 `--strict` promotes known gaps and warnings to failures. Use baseline mode for
@@ -92,7 +95,7 @@ PIE/console use, not the headless switch.
 "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" `
   "C:\dev\GX\DuelAcademyIsland\DuelAcademyIsland.uproject" `
   "-ExecCmds=Automation RunTests DuelAcademy; Quit" `
-  "-ReportExportPath=C:\dev\GX\Content\Data\Integration\reports\automation" `
+  "-ReportExportPath=C:\dev\GX\Docs\Integration\reports\automation" `
   -unattended -nop4 -nullrhi -nosound -log -stdout -FullStdOutLogOutput
 ```
 
@@ -136,9 +139,9 @@ tests under their own module/unit names and give A10 the filter string:
 
 ## Current limitations
 
-- All four headless self-tests pass on the 18:35 rebuild: duel 24/0 stalls,
-  profile PASSED, duel rules 58/58, economy 119/119. An earlier profile run
-  hit a backup-save assertion; keep the log as regression evidence.
+- All four stable headless self-tests pass: duel 24/0 stalls, profile 182/182,
+  duel rules 57/57, economy 119/119. A03 reports story 14/14 and A09 generated
+  10 UI screenshots; those are recorded in `Docs/PORT_STATUS.md`.
 - The duel self-test switch runs a fixed 24 duels; 1,000-duel proof is pending A04.
 - No automation tests exist yet; the filter currently skips.
 - The runner does not package; the BuildCookRun command above is the release
