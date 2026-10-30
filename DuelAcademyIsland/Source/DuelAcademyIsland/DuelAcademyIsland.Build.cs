@@ -16,7 +16,9 @@ public class DuelAcademyIsland : ModuleRules
 			"AIModule",
 			"RenderCore",
 			"Slate",
-			"SlateCore"
+			"SlateCore",
+			"Json",
+			"JsonUtilities"
 		});
 	}
 }

@@ -55,11 +55,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	TArray<FString> Lines;
 
+	/** Named cast members can be challenged to a duel after the first conversation. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Duel")
+	bool bDuelist = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Duel")
+	FString DuelOpponentId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Duel")
+	FString DuelDeckId = TEXT("jaden");
+
 	// IDAInteractableInterface
-	virtual FString GetInteractPrompt() const override { return TEXT("Talk"); }
+	virtual FString GetInteractPrompt() const override { return bDuelist && bHasTalked ? TEXT("Duel") : TEXT("Talk"); }
 	virtual FString GetInteractName() const override;
 	virtual FVector GetInteractLocation() const override { return GetActorLocation(); }
 	virtual float GetInteractRadius() const override { return 260.f; }
+	virtual bool CanInteract(const ADAStudentCharacter* By) const override;
 	virtual void Interact(ADAStudentCharacter* By) override;
 
 protected:
@@ -76,5 +87,6 @@ private:
 	float StuckTime = 0.f;
 	float TalkTime = -100.f;
 	int32 LineIndex = 0;
+	bool bHasTalked = false;
 	FRandomStream Rng;
 };

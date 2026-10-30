@@ -35,10 +35,29 @@ def register():
     menus.refresh_all_widgets()
 
 
+def _map_exists_on_disk():
+    """Avoid EditorAssetLibrary here: this tick also runs in editor -game sessions,
+    where editor-only asset helpers can fault. The .umap is a plain file."""
+    try:
+        rel = C.MAP_PATH
+        if rel.startswith("/Game/"):
+            rel = rel[len("/Game/"):]
+        return os.path.exists(os.path.join(C.project_dir(), "Content", rel.replace("/", os.sep) + ".umap"))
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _first_run_tick(delta):
     global _ticks, _tick_handle
     _ticks += 1
     if _ticks < 90:
+        return
+    # If the level is already built there is nothing to prompt for. Check the
+    # file before touching the asset registry: the registry helper is editor-
+    # only in practice and can crash when the editor is running with -game.
+    if _map_exists_on_disk():
+        unreal.unregister_slate_post_tick_callback(_tick_handle)
+        _tick_handle = None
         return
     try:
         if unreal.AssetRegistryHelpers.get_asset_registry().is_loading_assets():
@@ -47,8 +66,6 @@ def _first_run_tick(delta):
         pass
     unreal.unregister_slate_post_tick_callback(_tick_handle)
     _tick_handle = None
-    if C.exists(C.MAP_PATH):
-        return
     if not os.path.exists(C.data_path("layout.json")):
         C.warn("SourceAssets/Data/layout.json missing - run Tools/build_island.py (see README)")
         return

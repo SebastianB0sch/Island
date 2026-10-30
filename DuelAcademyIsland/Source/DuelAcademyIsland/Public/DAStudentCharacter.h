@@ -91,6 +91,8 @@ private:
 	void CreateInput();
 	void AddMappingContext();
 	ADAHUD* GetDAHUD() const;
+	bool IsDuelOpen() const;
+	bool IsMovementBlocked() const;
 	void UpdateFocus();
 	void UpdateSwimming(float DeltaSeconds);
 

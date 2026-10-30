@@ -8,14 +8,24 @@
 #include "DAIslandSubsystem.h"
 #include "DALocationVolume.h"
 #include "DAStudentCharacter.h"
+#include "DACardRecords.h"
+#include "DADuelEngine.h"
+#include "DuelAcademyIsland.h"
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Engine/Font.h"
+#include "Engine/GameInstance.h"
 #include "Engine/Texture2D.h"
+#include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
+#include "HAL/PlatformMisc.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "RenderUtils.h"
 #include "TextureResource.h"
+#include "TimerManager.h"
+#include "UnrealClient.h"
 
 namespace
 {
@@ -32,6 +42,8 @@ namespace
 
 ADAHUD::ADAHUD()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
 }
 
 void ADAHUD::BeginPlay()
@@ -40,6 +52,155 @@ void ADAHUD::BeginPlay()
 	SmallFont = GEngine ? GEngine->GetMediumFont() : nullptr;
 	BigFont = GEngine ? GEngine->GetLargeFont() : nullptr;
 	StartTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.f;
+	DuelUI = MakeUnique<FDADuelUI>(this);
+
+	// Debug harnesses (only active with the matching command-line switch):
+	//   -DADuelSelfTest   run the AI-vs-AI rules self-test after the world settles
+	//   -DADuelScreenshot capture the deck picker and an active duel board
+	if (FParse::Param(FCommandLine::Get(), TEXT("DADuelSelfTest")))
+	{
+		FTimerHandle Timer;
+		GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			UCardDatabaseSubsystem* Cards = GetGameInstance() ? GetGameInstance()->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
+			const FString Summary = FDuelEngine::RunSelfTest(Cards, 24);
+			UE_LOG(LogDuelAcademyIsland, Log, TEXT("%s"), *Summary);
+			FTimerHandle ExitTimer;
+			GetWorldTimerManager().SetTimer(ExitTimer, FTimerDelegate::CreateWeakLambda(this, []()
+			{
+				FPlatformMisc::RequestExit(false);
+			}), 1.0f, false);
+		}), 2.0f, false);
+	}
+
+	if (FParse::Param(FCommandLine::Get(), TEXT("DADuelScreenshot")))
+	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
+		After(1.0f, [](ADAHUD* HUD) { HUD->OpenDuelDeckSelect(TEXT("jaden"), TEXT("Jaden Yuki"), TEXT("jaden")); });
+		After(2.2f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelDeck.png"), false, false); });
+		After(3.0f, [](ADAHUD* HUD) { HUD->StartDuelWithDeck(TEXT("fire")); });
+		After(5.6f, [](ADAHUD* HUD) { HUD->DebugAutoPlayOpening(); });
+		After(6.3f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelBoard.png"), false, false); });
+		After(7.1f, [](ADAHUD* HUD) { HUD->DebugSelectFirstHandCard(); });
+		After(7.9f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelSelect.png"), false, false); });
+		After(8.6f, [](ADAHUD* HUD) { HUD->DebugFinishDuelWin(); });
+		After(13.0f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelResult.png"), false, false); });
+		After(14.2f, [](ADAHUD* HUD) { FPlatformMisc::RequestExit(false); });
+	}
+}
+
+void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& OpponentName, const FString& OpponentDeckId)
+{
+	if (!DuelUI.IsValid())
+	{
+		DuelUI = MakeUnique<FDADuelUI>(this);
+	}
+	DuelUI->OpenDeckSelect(OpponentId, OpponentName, OpponentDeckId);
+}
+
+void ADAHUD::CloseDuel()
+{
+	if (DuelUI.IsValid())
+	{
+		DuelUI->CloseDuel();
+	}
+}
+
+void ADAHUD::StartDuelWithDeck(const FString& DeckId)
+{
+	if (DuelUI.IsValid())
+	{
+		DuelUI->StartDuelWithDeck(DeckId);
+	}
+}
+
+void ADAHUD::DebugAutoPlayOpening()
+{
+	if (DuelUI.IsValid())
+	{
+		DuelUI->DebugAutoPlayOpening();
+	}
+}
+
+void ADAHUD::DebugSelectFirstHandCard()
+{
+	if (DuelUI.IsValid())
+	{
+		DuelUI->DebugSelectFirstHandCard();
+	}
+}
+
+void ADAHUD::DebugFinishDuelWin()
+{
+	if (DuelUI.IsValid())
+	{
+		DuelUI->DebugFinishDuelWin();
+	}
+}
+
+void ADAHUD::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	if (DuelUI.IsValid())
+	{
+		DuelUI->Update(DeltaSeconds);
+	}
+
+	// The island map is drawn with the mouse cursor visible (GameAndUI input mode). In that mode the
+	// Enhanced Input bindings for Enter and the mouse click can be swallowed, so poll the map keys here,
+	// exactly like the duel UI does.
+	if (bMapOpen && !IsDuelOpen())
+	{
+		if (APlayerController* PC = GetOwningPlayerController())
+		{
+			if (PC->WasInputKeyJustPressed(EKeys::Up) || PC->WasInputKeyJustPressed(EKeys::Gamepad_DPad_Up))
+			{
+				MoveMapSelection(-1);
+			}
+			if (PC->WasInputKeyJustPressed(EKeys::Down) || PC->WasInputKeyJustPressed(EKeys::Gamepad_DPad_Down))
+			{
+				MoveMapSelection(1);
+			}
+			if (PC->WasInputKeyJustPressed(EKeys::Enter) || PC->WasInputKeyJustPressed(EKeys::SpaceBar)
+				|| PC->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Right))
+			{
+				TravelToZone();
+			}
+			else if (PC->WasInputKeyJustPressed(EKeys::Escape))
+			{
+				ToggleMap();
+			}
+			else if (PC->WasInputKeyJustPressed(EKeys::LeftMouseButton))
+			{
+				ADALocationVolume* Clicked = PickZoneUnderCursor();
+				ADALocationVolume* Row = Clicked ? nullptr : PickZoneRowUnderCursor();
+				if (Clicked)
+				{
+					TravelToZone(Clicked);
+				}
+				else if (Row)
+				{
+					TravelToZone(Row);
+				}
+			}
+		}
+	}
 }
 
 // ------------------------------------------------------------------------ helpers
@@ -148,6 +309,10 @@ FVector2D ADAHUD::WorldToMapUV(const FVector& World) const
 
 void ADAHUD::ToggleMap()
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	bMapOpen = !bMapOpen;
 	if (APlayerController* PC = GetOwningPlayerController())
 	{
@@ -206,6 +371,61 @@ ADALocationVolume* ADAHUD::GetSelectedZone() const
 	return nullptr;
 }
 
+void ADAHUD::TravelToZone(ADALocationVolume* Zone)
+{
+	ADALocationVolume* Target = Zone ? Zone : GetSelectedZone();
+	if (!Target || !Target->bFastTravel)
+	{
+		return;
+	}
+	// Close the map first so the camera/input mode is back to gameplay before the teleport.
+	ToggleMap();
+	if (APlayerController* PC = GetOwningPlayerController())
+	{
+		if (ADAStudentCharacter* Character = Cast<ADAStudentCharacter>(PC->GetPawn()))
+		{
+			Character->FastTravelTo(Target);
+		}
+	}
+}
+
+ADALocationVolume* ADAHUD::PickZoneRowUnderCursor() const
+{
+	APlayerController* PC = GetOwningPlayerController();
+	const UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this);
+	if (!PC || !Sub)
+	{
+		return nullptr;
+	}
+	int32 ViewW = 0;
+	int32 ViewH = 0;
+	PC->GetViewportSize(ViewW, ViewH);
+	const TArray<ADALocationVolume*> Zones = Sub->GetZones();
+	if (ViewW <= 0 || ViewH <= 0 || Zones.Num() == 0)
+	{
+		return nullptr;
+	}
+	// Mirror the side-list layout from DrawMap, using the live viewport rather than the last canvas.
+	const float CW = static_cast<float>(ViewW);
+	const float CH = static_cast<float>(ViewH);
+	const float S = FMath::Clamp(CH / 1080.f, 0.6f, 2.5f);
+	const float Side = FMath::Min(CH * 0.86f, CW * 0.58f);
+	const float MX = CW * 0.04f;
+	const float MY = (CH - Side) * 0.5f;
+	const float LX = MX + Side + 40.f * S;
+	const float RowH = 30.f * S;
+	const float LW = CW - LX - 40.f * S;
+	float MouseX = -1.f;
+	float MouseY = -1.f;
+	PC->GetMousePosition(MouseX, MouseY);
+	if (MouseX < LX - 8.f * S || MouseX > LX - 8.f * S + LW)
+	{
+		return nullptr;
+	}
+	const int32 Index = FMath::FloorToInt((MouseY - (MY + 97.f * S)) / FMath::Max(RowH, 1.f));
+	return Zones.IsValidIndex(Index) ? Zones[Index] : nullptr;
+}
+
 // ------------------------------------------------------------------------ main draw
 
 void ADAHUD::DrawHUD()
@@ -225,6 +445,12 @@ void ADAHUD::DrawHUD()
 		MapMax = M->MapMax;
 	}
 	const float Time = GetWorld()->GetTimeSeconds();
+
+	if (DuelUI.IsValid() && DuelUI->IsOpen())
+	{
+		DuelUI->Draw(Canvas);
+		return;
+	}
 
 	if (bMapOpen && Sub)
 	{
@@ -547,7 +773,7 @@ void ADAHUD::DrawMap(UDAIslandSubsystem* Sub)
 
 	const TArray<ADALocationVolume*> Zones = Sub->GetZones();
 	HoveredZone.Reset();
-	float BestHover = 22.f * S();
+	float BestHover = 30.f * S();
 	for (int32 i = 0; i < Zones.Num(); ++i)
 	{
 		const FVector2D UV = WorldToMapUV(Zones[i]->GetActorLocation());
