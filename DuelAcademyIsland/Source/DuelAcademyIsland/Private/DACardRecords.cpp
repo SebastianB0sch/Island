@@ -9,7 +9,7 @@
 
 namespace
 {
-	FString ReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	FString CardReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
 	{
 		FString Value;
 		if (Object.IsValid())
@@ -19,7 +19,7 @@ namespace
 		return Value;
 	}
 
-	int32 ReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
+	int32 CardReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
 	{
 		int32 Value = Default;
 		if (Object.IsValid())
@@ -74,16 +74,16 @@ void UCardDatabaseSubsystem::LoadCards(const FString& Path)
 			continue;
 		}
 		FCardRecord Card;
-		Card.Id = ReadInt(Object, TEXT("id"));
-		Card.Name = ReadString(Object, TEXT("name"));
-		Card.CardType = ReadString(Object, TEXT("card_type"));
-		Card.MonsterType = ReadString(Object, TEXT("monster_type"));
-		Card.Subtype = ReadString(Object, TEXT("subtype"));
-		Card.Attribute = ReadString(Object, TEXT("attribute"));
-		Card.Level = ReadInt(Object, TEXT("level"));
-		Card.Atk = ReadInt(Object, TEXT("atk"));
-		Card.Def = ReadInt(Object, TEXT("def"));
-		Card.Description = ReadString(Object, TEXT("description"));
+		Card.Id = CardReadInt(Object, TEXT("id"));
+		Card.Name = CardReadString(Object, TEXT("name"));
+		Card.CardType = CardReadString(Object, TEXT("card_type"));
+		Card.MonsterType = CardReadString(Object, TEXT("monster_type"));
+		Card.Subtype = CardReadString(Object, TEXT("subtype"));
+		Card.Attribute = CardReadString(Object, TEXT("attribute"));
+		Card.Level = CardReadInt(Object, TEXT("level"));
+		Card.Atk = CardReadInt(Object, TEXT("atk"));
+		Card.Def = CardReadInt(Object, TEXT("def"));
+		Card.Description = CardReadString(Object, TEXT("description"));
 		if (Card.Id > 0)
 		{
 			CardsById.Add(Card.Id, MoveTemp(Card));
@@ -126,11 +126,11 @@ void UCardDatabaseSubsystem::LoadDecks(const FString& Path)
 		}
 
 		FStarterDeckDef Deck;
-		Deck.Id = ReadString(Object, TEXT("id"));
-		Deck.Name = ReadString(Object, TEXT("name"));
-		Deck.Subtitle = ReadString(Object, TEXT("subtitle"));
-		Deck.Description = ReadString(Object, TEXT("description"));
-		Deck.Accent = ReadString(Object, TEXT("accent"));
+		Deck.Id = CardReadString(Object, TEXT("id"));
+		Deck.Name = CardReadString(Object, TEXT("name"));
+		Deck.Subtitle = CardReadString(Object, TEXT("subtitle"));
+		Deck.Description = CardReadString(Object, TEXT("description"));
+		Deck.Accent = CardReadString(Object, TEXT("accent"));
 
 		const TArray<TSharedPtr<FJsonValue>>* Cards = nullptr;
 		if (Object->TryGetArrayField(TEXT("cards"), Cards))
@@ -190,10 +190,10 @@ void UCardDatabaseSubsystem::LoadFusions(const FString& Path)
 		}
 
 		FFusionRecipeDef Recipe;
-		Recipe.Result = ReadInt(Object, TEXT("result"));
-		Recipe.Name = ReadString(Object, TEXT("name"));
-		Recipe.MaterialsType = ReadString(Object, TEXT("materialsType"));
-		Recipe.AnyCount = ReadInt(Object, TEXT("anyCount"));
+		Recipe.Result = CardReadInt(Object, TEXT("result"));
+		Recipe.Name = CardReadString(Object, TEXT("name"));
+		Recipe.MaterialsType = CardReadString(Object, TEXT("materialsType"));
+		Recipe.AnyCount = CardReadInt(Object, TEXT("anyCount"));
 
 		const TArray<TSharedPtr<FJsonValue>>* Materials = nullptr;
 		if (Object->TryGetArrayField(TEXT("materials"), Materials))

@@ -30,7 +30,7 @@ namespace
 	const FLinearColor DlgPaper(0.95f, 0.95f, 0.97f);
 	const FLinearColor DlgMuted(0.62f, 0.66f, 0.72f);
 
-	FLinearColor WithAlpha(FLinearColor C, float A)
+	FLinearColor DialogueAlpha(FLinearColor C, float A)
 	{
 		C.A = A;
 		return C;
@@ -604,8 +604,8 @@ void FDADialogueUI::DrawTexture(UTexture2D* Texture, float X, float Y, float W, 
 void FDADialogueUI::DrawPanel(float X, float Y, float W, float H, const FLinearColor& Fill, const FLinearColor& Accent)
 {
 	DrawRect(Fill, X, Y, W, H);
-	DrawRect(WithAlpha(Accent, 0.95f), X, Y, 5.f * UIScale, H);
-	DrawRect(WithAlpha(Accent, 0.45f), X, Y + H - 2.f * UIScale, W, 2.f * UIScale);
+	DrawRect(DialogueAlpha(Accent, 0.95f), X, Y, 5.f * UIScale, H);
+	DrawRect(DialogueAlpha(Accent, 0.45f), X, Y + H - 2.f * UIScale, W, 2.f * UIScale);
 }
 
 void FDADialogueUI::Diamond(const FVector2D& C, float R, const FLinearColor& Color)
@@ -702,7 +702,7 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	const float X = (CW - W) * 0.5f;
 	const float Y = CH - H - 46.f * S;
 
-	DrawPanel(X, Y, W, H, WithAlpha(DlgInk, 0.96f), Accent);
+	DrawPanel(X, Y, W, H, DialogueAlpha(DlgInk, 0.96f), Accent);
 	AddHit(TEXT("advance"), INDEX_NONE, X, Y, W, H);
 
 	// Portrait / fallback silhouette.
@@ -717,7 +717,7 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	{
 		DrawText(Line.SpeakerTitle, TX, Y + 52.f * S, DlgMuted, 0.8f);
 	}
-	DrawRect(WithAlpha(Accent, 0.55f), TX, Y + 80.f * S, TextW, 2.f * S);
+	DrawRect(DialogueAlpha(Accent, 0.55f), TX, Y + 80.f * S, TextW, 2.f * S);
 
 	// Text body.
 	float TextY = Y + 96.f * S;
@@ -731,7 +731,7 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	}
 	if (bTyping && Wrapped.Num() > MaxTextLines)
 	{
-		DrawText(TEXT("..."), TX, Y + 96.f * S + MaxTextLines * LineH, WithAlpha(DlgPaper, 0.6f), 1.0f);
+		DrawText(TEXT("..."), TX, Y + 96.f * S + MaxTextLines * LineH, DialogueAlpha(DlgPaper, 0.6f), 1.0f);
 	}
 
 	// Choice buttons.
@@ -755,12 +755,12 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 				&& Mouse.Y >= OY && Mouse.Y <= OY + OptionH;
 			if (bSelected || bHovered)
 			{
-				DrawRect(WithAlpha(Accent, bSelected ? 0.28f : 0.16f), OptionX, OY, OptionW, OptionH);
-				DrawRect(WithAlpha(Accent, 1.f), OptionX, OY, 4.f * S, OptionH);
+				DrawRect(DialogueAlpha(Accent, bSelected ? 0.28f : 0.16f), OptionX, OY, OptionW, OptionH);
+				DrawRect(DialogueAlpha(Accent, 1.f), OptionX, OY, 4.f * S, OptionH);
 			}
 			const FString Label = FString::Printf(TEXT("%d.  %s"), Index + 1, *Line.Options[Index]);
 			DrawText(Label, OptionX + 14.f * S, OY + 7.f * S,
-				bSelected ? DlgPaper : WithAlpha(DlgPaper, 0.82f), 0.95f);
+				bSelected ? DlgPaper : DialogueAlpha(DlgPaper, 0.82f), 0.95f);
 			AddHit(TEXT("choice"), Index, OptionX, OY, OptionW, OptionH);
 		}
 	}
@@ -772,10 +772,10 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	auto DrawDialogueButton = [&](const FString& Label, const FString& Action, float ButtonW, bool bActive)
 	{
 		ButtonX -= ButtonW;
-		DrawRect(WithAlpha(bActive ? Accent : FLinearColor(0.f, 0.f, 0.f), bActive ? 0.35f : 0.42f),
+		DrawRect(DialogueAlpha(bActive ? Accent : FLinearColor(0.f, 0.f, 0.f), bActive ? 0.35f : 0.42f),
 			ButtonX, ButtonY, ButtonW, ButtonH);
 		DrawText(Label, ButtonX + 10.f * S, ButtonY + 4.f * S,
-			bActive ? Accent : WithAlpha(DlgPaper, 0.7f), 0.68f);
+			bActive ? Accent : DialogueAlpha(DlgPaper, 0.7f), 0.68f);
 		AddHit(Action, INDEX_NONE, ButtonX, ButtonY, ButtonW, ButtonH);
 		ButtonX -= 8.f * S;
 	};
@@ -805,7 +805,7 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	const float HintAlpha = 0.55f + 0.35f * FMath::Abs(FMath::Sin(Elapsed * 3.f));
 	const float HintX = NumOptions > 0 ? X : X + W - HintSize.X - 24.f * S;
 	const float HintY = NumOptions > 0 ? Y - 28.f * S : Y + H - 28.f * S;
-	DrawText(Hint, HintX, HintY, WithAlpha(Accent, HintAlpha), 0.72f);
+	DrawText(Hint, HintX, HintY, DialogueAlpha(Accent, HintAlpha), 0.72f);
 
 	if (bHistoryOpen)
 	{
@@ -818,7 +818,7 @@ void FDADialogueUI::DrawPortrait(float X, float Y, float Size, const FDADialogue
 	const float S = UIScale;
 	const FLinearColor Accent = Line.Accent;
 
-	DrawRect(WithAlpha(FLinearColor(0.025f, 0.04f, 0.065f), Alpha), X, Y, Size, Size);
+	DrawRect(DialogueAlpha(FLinearColor(0.025f, 0.04f, 0.065f), Alpha), X, Y, Size, Size);
 
 	UTexture2D* Portrait = nullptr;
 	if (UCharacterPortraitSubsystem* Art = GetPortraitArt())
@@ -846,9 +846,9 @@ void FDADialogueUI::DrawPortrait(float X, float Y, float Size, const FDADialogue
 	else
 	{
 		// Colored monogram + simple bust silhouette fallback.
-		DrawRect(WithAlpha(Accent, 0.09f * Alpha), X, Y, Size, Size);
-		Diamond(FVector2D(X + Size * 0.5f, Y + Size * 0.40f), Size * 0.20f, WithAlpha(Accent, 0.30f * Alpha));
-		DrawRect(WithAlpha(Accent, 0.22f * Alpha), X + Size * 0.18f, Y + Size * 0.58f,
+		DrawRect(DialogueAlpha(Accent, 0.09f * Alpha), X, Y, Size, Size);
+		Diamond(FVector2D(X + Size * 0.5f, Y + Size * 0.40f), Size * 0.20f, DialogueAlpha(Accent, 0.30f * Alpha));
+		DrawRect(DialogueAlpha(Accent, 0.22f * Alpha), X + Size * 0.18f, Y + Size * 0.58f,
 			Size * 0.64f, Size * 0.34f);
 
 		FString Initial = Line.GetDisplayName().Left(1).ToUpper();
@@ -856,22 +856,22 @@ void FDADialogueUI::DrawPortrait(float X, float Y, float Size, const FDADialogue
 		{
 			Initial = TEXT("?");
 		}
-		DrawText(Initial, X + Size * 0.5f, Y + Size * 0.22f, WithAlpha(Accent, 0.92f * Alpha),
+		DrawText(Initial, X + Size * 0.5f, Y + Size * 0.22f, DialogueAlpha(Accent, 0.92f * Alpha),
 			2.4f, true, GetFont(true));
 		DrawText(TEXT("NO PORTRAIT"), X + Size * 0.5f, Y + Size - 24.f * S,
-			WithAlpha(DlgMuted, 0.75f * Alpha), 0.55f, true);
+			DialogueAlpha(DlgMuted, 0.75f * Alpha), 0.55f, true);
 	}
 
 	// Accent corner brackets.
-	DrawRect(WithAlpha(Accent, 0.95f * Alpha), X, Y, Size, 2.f * S);
-	DrawRect(WithAlpha(Accent, 0.95f * Alpha), X, Y + Size - 2.f * S, Size, 2.f * S);
-	DrawRect(WithAlpha(Accent, 0.95f * Alpha), X, Y, 2.f * S, Size);
-	DrawRect(WithAlpha(Accent, 0.95f * Alpha), X + Size - 2.f * S, Y, 2.f * S, Size);
+	DrawRect(DialogueAlpha(Accent, 0.95f * Alpha), X, Y, Size, 2.f * S);
+	DrawRect(DialogueAlpha(Accent, 0.95f * Alpha), X, Y + Size - 2.f * S, Size, 2.f * S);
+	DrawRect(DialogueAlpha(Accent, 0.95f * Alpha), X, Y, 2.f * S, Size);
+	DrawRect(DialogueAlpha(Accent, 0.95f * Alpha), X + Size - 2.f * S, Y, 2.f * S, Size);
 
 	if (!Line.Expression.IsEmpty())
 	{
 		DrawText(Line.Expression.ToUpper(), X + 8.f * S, Y + Size - 22.f * S,
-			WithAlpha(Accent, 0.85f * Alpha), 0.6f);
+			DialogueAlpha(Accent, 0.85f * Alpha), 0.6f);
 	}
 }
 
@@ -889,13 +889,13 @@ void FDADialogueUI::DrawHistoryOverlay()
 	const float H = FMath::Min(CH - 140.f * S, 640.f * S);
 	const float X = (CW - W) * 0.5f;
 	const float Y = (CH - H) * 0.5f;
-	DrawPanel(X, Y, W, H, WithAlpha(DlgInk, 0.98f), DlgGold);
+	DrawPanel(X, Y, W, H, DialogueAlpha(DlgInk, 0.98f), DlgGold);
 
 	DrawText(DAUIData::Label(TEXT("dialogue.history.title"), TEXT("DIALOGUE LOG")),
 		X + 28.f * S, Y + 20.f * S, DlgGold, 1.4f, false, GetFont(true));
 	DrawText(FString::Printf(TEXT("%d entries"), History.Num()), X + W - 130.f * S, Y + 26.f * S,
 		DlgMuted, 0.72f);
-	DrawRect(WithAlpha(DlgGold, 0.4f), X + 28.f * S, Y + 60.f * S, W - 56.f * S, 1.f * S);
+	DrawRect(DialogueAlpha(DlgGold, 0.4f), X + 28.f * S, Y + 60.f * S, W - 56.f * S, 1.f * S);
 
 	const float LineH = Measure(TEXT("Ag"), 0.82f).Y + 3.f * S;
 	float DrawY = Y + 74.f * S;
@@ -933,8 +933,8 @@ void FDADialogueUI::DrawHistoryOverlay()
 	}
 
 	DrawText(TEXT("H / ESC close    Up / Down scroll"), X + 28.f * S, Y + H - 32.f * S,
-		WithAlpha(DlgMuted, 0.9f), 0.72f);
-	DrawText(TEXT("CLOSE"), X + W - 96.f * S, Y + H - 34.f * S, WithAlpha(DlgGold, 0.9f), 0.75f);
+		DialogueAlpha(DlgMuted, 0.9f), 0.72f);
+	DrawText(TEXT("CLOSE"), X + W - 96.f * S, Y + H - 34.f * S, DialogueAlpha(DlgGold, 0.9f), 0.75f);
 }
 
 // ------------------------------------------------------------------------ ui.json

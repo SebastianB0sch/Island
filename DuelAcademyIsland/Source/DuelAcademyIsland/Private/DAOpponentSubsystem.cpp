@@ -12,7 +12,7 @@
 
 namespace
 {
-	FString ReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	FString OppReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
 	{
 		FString Value;
 		if (Object.IsValid())
@@ -22,7 +22,7 @@ namespace
 		return Value;
 	}
 
-	int32 ReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
+	int32 OppReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
 	{
 		int32 Value = Default;
 		if (Object.IsValid())
@@ -32,7 +32,7 @@ namespace
 		return Value;
 	}
 
-	bool ReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bDefault = false)
+	bool OppReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bDefault = false)
 	{
 		bool bValue = bDefault;
 		if (Object.IsValid())
@@ -207,30 +207,30 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 		}
 
 		FDAOpponentDef Duelist;
-		Duelist.Id = ReadString(Object, TEXT("id"));
+		Duelist.Id = OppReadString(Object, TEXT("id"));
 		if (Duelist.Id.IsEmpty())
 		{
 			continue;
 		}
-		Duelist.Name = ReadString(Object, TEXT("name"));
+		Duelist.Name = OppReadString(Object, TEXT("name"));
 		ReadStringArray(Object, TEXT("aliases"), Duelist.Aliases);
-		Duelist.Role = ReadString(Object, TEXT("role"));
-		Duelist.Rank = ReadInt(Object, TEXT("rank"));
-		Duelist.Dorm = ReadString(Object, TEXT("dorm"));
-		Duelist.Year = ReadInt(Object, TEXT("year"), 1);
-		Duelist.Title = ReadString(Object, TEXT("title"));
-		Duelist.AIProfile = ReadString(Object, TEXT("ai_profile"));
+		Duelist.Role = OppReadString(Object, TEXT("role"));
+		Duelist.Rank = OppReadInt(Object, TEXT("rank"));
+		Duelist.Dorm = OppReadString(Object, TEXT("dorm"));
+		Duelist.Year = OppReadInt(Object, TEXT("year"), 1);
+		Duelist.Title = OppReadString(Object, TEXT("title"));
+		Duelist.AIProfile = OppReadString(Object, TEXT("ai_profile"));
 		ReadStringArray(Object, TEXT("decks"), Duelist.Decks);
 		ReadIntArray(Object, TEXT("signature_card_ids"), Duelist.SignatureCardIds);
 		ReadStringArray(Object, TEXT("signature_cards"), Duelist.SignatureCards);
 		ReadIntArray(Object, TEXT("canon_gift_card_ids"), Duelist.CanonGiftCardIds);
-		Duelist.CanonSource = ReadString(Object, TEXT("canon_source"));
-		Duelist.CanonConfidence = ReadString(Object, TEXT("canon_confidence"));
-		Duelist.DefaultDeck = ReadString(Object, TEXT("default_deck"));
+		Duelist.CanonSource = OppReadString(Object, TEXT("canon_source"));
+		Duelist.CanonConfidence = OppReadString(Object, TEXT("canon_confidence"));
+		Duelist.DefaultDeck = OppReadString(Object, TEXT("default_deck"));
 		ReadIntArray(Object, TEXT("ante"), Duelist.Ante);
-		Duelist.Confidence = ReadString(Object, TEXT("confidence"));
-		Duelist.Source = ReadString(Object, TEXT("source"));
-		Duelist.Notes = ReadString(Object, TEXT("notes"));
+		Duelist.Confidence = OppReadString(Object, TEXT("confidence"));
+		Duelist.Source = OppReadString(Object, TEXT("source"));
+		Duelist.Notes = OppReadString(Object, TEXT("notes"));
 
 		const TArray<TSharedPtr<FJsonValue>>* EvolutionValues = nullptr;
 		if (Object->TryGetArrayField(TEXT("evolution_rules"), EvolutionValues))
@@ -243,13 +243,13 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 					continue;
 				}
 				FDAOpponentEvolutionRule Rule;
-				Rule.Id = ReadString(EvolutionObject, TEXT("id"));
-				Rule.AfterWins = ReadInt(EvolutionObject, TEXT("after_wins"), 1);
-				Rule.Counter = ReadString(EvolutionObject, TEXT("counter"));
-				Rule.Deck = ReadString(EvolutionObject, TEXT("deck"));
-				Rule.Description = ReadString(EvolutionObject, TEXT("description"));
-				Rule.Confidence = ReadString(EvolutionObject, TEXT("confidence"));
-				Rule.Source = ReadString(EvolutionObject, TEXT("source"));
+				Rule.Id = OppReadString(EvolutionObject, TEXT("id"));
+				Rule.AfterWins = OppReadInt(EvolutionObject, TEXT("after_wins"), 1);
+				Rule.Counter = OppReadString(EvolutionObject, TEXT("counter"));
+				Rule.Deck = OppReadString(EvolutionObject, TEXT("deck"));
+				Rule.Description = OppReadString(EvolutionObject, TEXT("description"));
+				Rule.Confidence = OppReadString(EvolutionObject, TEXT("confidence"));
+				Rule.Source = OppReadString(EvolutionObject, TEXT("source"));
 				Duelist.EvolutionRules.Add(MoveTemp(Rule));
 			}
 		}
@@ -265,9 +265,9 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 					continue;
 				}
 				FDAOpponentLocation Location;
-				Location.Zone = ReadString(LocationObject, TEXT("zone"));
-				Location.Interior = ReadString(LocationObject, TEXT("interior"));
-				Location.Name = ReadString(LocationObject, TEXT("name"));
+				Location.Zone = OppReadString(LocationObject, TEXT("zone"));
+				Location.Interior = OppReadString(LocationObject, TEXT("interior"));
+				Location.Name = OppReadString(LocationObject, TEXT("name"));
 				Duelist.Locations.Add(MoveTemp(Location));
 			}
 		}
@@ -285,25 +285,25 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 				FDAOpponentScheduleSlot Slot;
 				ReadStringArray(ScheduleObject, TEXT("weekdays"), Slot.Weekdays);
 				ReadStringArray(ScheduleObject, TEXT("periods"), Slot.Periods);
-				Slot.Zone = ReadString(ScheduleObject, TEXT("zone"));
-				Slot.Interior = ReadString(ScheduleObject, TEXT("interior"));
+				Slot.Zone = OppReadString(ScheduleObject, TEXT("zone"));
+				Slot.Interior = OppReadString(ScheduleObject, TEXT("interior"));
 				Duelist.Schedule.Add(MoveTemp(Slot));
 			}
 		}
 
 		if (const TSharedPtr<FJsonObject> AccessObject = ReadObject(Object, TEXT("access")))
 		{
-			Duelist.Access.RequiresFlag = ReadString(AccessObject, TEXT("requires_flag"));
-			Duelist.Access.RequiresTitle = ReadString(AccessObject, TEXT("requires_title"));
-			Duelist.Access.RequiresDorm = ReadString(AccessObject, TEXT("requires_dorm"));
-			Duelist.Access.bEventOnly = ReadBool(AccessObject, TEXT("event_only"));
-			Duelist.Access.MinDay = ReadInt(AccessObject, TEXT("min_day"));
+			Duelist.Access.RequiresFlag = OppReadString(AccessObject, TEXT("requires_flag"));
+			Duelist.Access.RequiresTitle = OppReadString(AccessObject, TEXT("requires_title"));
+			Duelist.Access.RequiresDorm = OppReadString(AccessObject, TEXT("requires_dorm"));
+			Duelist.Access.bEventOnly = OppReadBool(AccessObject, TEXT("event_only"));
+			Duelist.Access.MinDay = OppReadInt(AccessObject, TEXT("min_day"));
 		}
 
 		if (const TSharedPtr<FJsonObject> EmailObject = ReadObject(Object, TEXT("email")))
 		{
-			Duelist.Email.UnlockFlag = ReadString(EmailObject, TEXT("unlock_flag"));
-			Duelist.Email.Address = ReadString(EmailObject, TEXT("address"));
+			Duelist.Email.UnlockFlag = OppReadString(EmailObject, TEXT("unlock_flag"));
+			Duelist.Email.Address = OppReadString(EmailObject, TEXT("address"));
 			const TArray<TSharedPtr<FJsonValue>>* ThreadValues = nullptr;
 			if (EmailObject->TryGetArrayField(TEXT("threads"), ThreadValues))
 			{
@@ -315,9 +315,9 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 						continue;
 					}
 					FDAOpponentEmailThread Thread;
-					Thread.Id = ReadString(ThreadObject, TEXT("id"));
-					Thread.Subject = ReadString(ThreadObject, TEXT("subject"));
-					Thread.UnlockFlag = ReadString(ThreadObject, TEXT("unlock_flag"));
+					Thread.Id = OppReadString(ThreadObject, TEXT("id"));
+					Thread.Subject = OppReadString(ThreadObject, TEXT("subject"));
+					Thread.UnlockFlag = OppReadString(ThreadObject, TEXT("unlock_flag"));
 					Duelist.Email.Threads.Add(MoveTemp(Thread));
 				}
 			}
@@ -325,10 +325,10 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 
 		if (const TSharedPtr<FJsonObject> RequestObject = ReadObject(Object, TEXT("duel_request")))
 		{
-			Duelist.DuelRequest.UnlockFlag = ReadString(RequestObject, TEXT("unlock_flag"));
-			Duelist.DuelRequest.MinWins = ReadInt(RequestObject, TEXT("min_wins"));
-			Duelist.DuelRequest.CooldownDays = ReadInt(RequestObject, TEXT("cooldown_days"), 1);
-			Duelist.DuelRequest.MaxPerDay = ReadInt(RequestObject, TEXT("max_per_day"), 1);
+			Duelist.DuelRequest.UnlockFlag = OppReadString(RequestObject, TEXT("unlock_flag"));
+			Duelist.DuelRequest.MinWins = OppReadInt(RequestObject, TEXT("min_wins"));
+			Duelist.DuelRequest.CooldownDays = OppReadInt(RequestObject, TEXT("cooldown_days"), 1);
+			Duelist.DuelRequest.MaxPerDay = OppReadInt(RequestObject, TEXT("max_per_day"), 1);
 		}
 
 		const TArray<TSharedPtr<FJsonValue>>* GiftValues = nullptr;
@@ -342,26 +342,26 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 					continue;
 				}
 				FDAOpponentGift Gift;
-				Gift.Id = ReadString(GiftObject, TEXT("id"));
-				Gift.Type = ReadString(GiftObject, TEXT("type"));
-				Gift.Amount = ReadInt(GiftObject, TEXT("amount"));
-				Gift.CardId = ReadInt(GiftObject, TEXT("card_id"));
-				Gift.Event = ReadString(GiftObject, TEXT("event"));
-				Gift.Confidence = ReadString(GiftObject, TEXT("confidence"));
-				Gift.Source = ReadString(GiftObject, TEXT("source"));
+				Gift.Id = OppReadString(GiftObject, TEXT("id"));
+				Gift.Type = OppReadString(GiftObject, TEXT("type"));
+				Gift.Amount = OppReadInt(GiftObject, TEXT("amount"));
+				Gift.CardId = OppReadInt(GiftObject, TEXT("card_id"));
+				Gift.Event = OppReadString(GiftObject, TEXT("event"));
+				Gift.Confidence = OppReadString(GiftObject, TEXT("confidence"));
+				Gift.Source = OppReadString(GiftObject, TEXT("source"));
 				Duelist.Gifts.Add(MoveTemp(Gift));
 			}
 		}
 
 		if (const TSharedPtr<FJsonObject> WalkObject = ReadObject(Object, TEXT("walk_home")))
 		{
-			Duelist.WalkHome.bEnabled = ReadBool(WalkObject, TEXT("enabled"));
-			Duelist.WalkHome.Zone = ReadString(WalkObject, TEXT("zone"));
+			Duelist.WalkHome.bEnabled = OppReadBool(WalkObject, TEXT("enabled"));
+			Duelist.WalkHome.Zone = OppReadString(WalkObject, TEXT("zone"));
 			ReadStringArray(WalkObject, TEXT("weekdays"), Duelist.WalkHome.Weekdays);
-			Duelist.WalkHome.Period = ReadString(WalkObject, TEXT("period"));
-			Duelist.WalkHome.Flag = ReadString(WalkObject, TEXT("flag"));
-			Duelist.WalkHome.Confidence = ReadString(WalkObject, TEXT("confidence"));
-			Duelist.WalkHome.Source = ReadString(WalkObject, TEXT("source"));
+			Duelist.WalkHome.Period = OppReadString(WalkObject, TEXT("period"));
+			Duelist.WalkHome.Flag = OppReadString(WalkObject, TEXT("flag"));
+			Duelist.WalkHome.Confidence = OppReadString(WalkObject, TEXT("confidence"));
+			Duelist.WalkHome.Source = OppReadString(WalkObject, TEXT("source"));
 		}
 
 		if (!OpponentIndex.Contains(Duelist.Id))
@@ -393,18 +393,18 @@ bool UDAOpponentSubsystem::LoadDeckFile(const FString& Path, FString& OutError)
 	}
 
 	FDAOpponentDeckDef Deck;
-	Deck.Id = ReadString(Object, TEXT("id"));
+	Deck.Id = OppReadString(Object, TEXT("id"));
 	if (Deck.Id.IsEmpty())
 	{
 		OutError = FString::Printf(TEXT("Deck has no id: %s"), *Path);
 		return false;
 	}
-	Deck.Opponent = ReadString(Object, TEXT("opponent"));
-	Deck.Name = ReadString(Object, TEXT("name"));
-	Deck.Variant = ReadString(Object, TEXT("variant"));
-	Deck.Confidence = ReadString(Object, TEXT("confidence"));
-	Deck.Source = ReadString(Object, TEXT("source"));
-	Deck.Notes = ReadString(Object, TEXT("notes"));
+	Deck.Opponent = OppReadString(Object, TEXT("opponent"));
+	Deck.Name = OppReadString(Object, TEXT("name"));
+	Deck.Variant = OppReadString(Object, TEXT("variant"));
+	Deck.Confidence = OppReadString(Object, TEXT("confidence"));
+	Deck.Source = OppReadString(Object, TEXT("source"));
+	Deck.Notes = OppReadString(Object, TEXT("notes"));
 	ReadIntArray(Object, TEXT("cards"), Deck.Cards);
 	ReadIntArray(Object, TEXT("extra"), Deck.Extra);
 	ReadIntArray(Object, TEXT("side"), Deck.Side);
@@ -457,15 +457,15 @@ void UDAOpponentSubsystem::LoadAIProfileDirectory(const FString& Directory, TArr
 		}
 
 		FDAIProfileDef Profile;
-		Profile.Id = ReadString(Object, TEXT("id"));
+		Profile.Id = OppReadString(Object, TEXT("id"));
 		if (Profile.Id.IsEmpty() || AIProfileIndex.Contains(Profile.Id))
 		{
 			OutWarnings.Add(FString::Printf(TEXT("AI profile missing/duplicate id: %s"), *Path));
 			continue;
 		}
-		Profile.Label = ReadString(Object, TEXT("label"));
-		Profile.Strategy = ReadString(Object, TEXT("strategy"));
-		Profile.Difficulty = ReadInt(Object, TEXT("difficulty"), 2);
+		Profile.Label = OppReadString(Object, TEXT("label"));
+		Profile.Strategy = OppReadString(Object, TEXT("strategy"));
+		Profile.Difficulty = OppReadInt(Object, TEXT("difficulty"), 2);
 		double Aggression = 0.7;
 		Object->TryGetNumberField(TEXT("aggression"), Aggression);
 		Profile.Aggression = static_cast<float>(Aggression);
@@ -474,9 +474,9 @@ void UDAOpponentSubsystem::LoadAIProfileDirectory(const FString& Directory, TArr
 		ReadBoolMap(Object, TEXT("thresholds"), Profile.BoolThresholds);
 		ReadStringArray(Object, TEXT("preferred_card_names"), Profile.PreferredCardNames);
 		ReadStringArray(Object, TEXT("avoid_card_names"), Profile.AvoidCardNames);
-		Profile.Confidence = ReadString(Object, TEXT("confidence"));
-		Profile.Source = ReadString(Object, TEXT("source"));
-		Profile.Notes = ReadString(Object, TEXT("notes"));
+		Profile.Confidence = OppReadString(Object, TEXT("confidence"));
+		Profile.Source = OppReadString(Object, TEXT("source"));
+		Profile.Notes = OppReadString(Object, TEXT("notes"));
 
 		AIProfileIndex.Add(Profile.Id, AIProfileList.Num());
 		AIProfileList.Add(MoveTemp(Profile));

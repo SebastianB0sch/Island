@@ -446,4 +446,6 @@ All default to `false` except none; `jaden_first_duel_available` is set true by 
 | `DuelAcademyIsland/Content/Data/Story/schedules/opening.json` | Written |
 | `Docs/Story/OPENING.md` | Written |
 
-No C++, UI, world, save or other lane files were modified. Nothing was committed.
+No C++, UI, world, save or other lane files were modified in the data pass. Nothing was committed.
+
+**Runtime layer:** see [`RUNTIME.md`](RUNTIME.md) for `UDAStorySubsystem` / `FDAEventGraph`, the `-DAOpeningTest` runner, console commands, save/load behavior and integration hooks.

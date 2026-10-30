@@ -39,7 +39,7 @@ namespace
 		return Names[((Weekday % 7) + 7) % 7];
 	}
 
-	FLinearColor WithAlpha(FLinearColor C, float A)
+	FLinearColor PdaAlpha(FLinearColor C, float A)
 	{
 		C.A = A;
 		return C;
@@ -1064,8 +1064,8 @@ void FDAPDAUI::DrawText(const FString& Str, float X, float Y, const FLinearColor
 void FDAPDAUI::DrawPanel(float X, float Y, float W, float H, const FLinearColor& Fill, const FLinearColor& Accent)
 {
 	DrawRect(Fill, X, Y, W, H);
-	DrawRect(WithAlpha(Accent, 0.95f), X, Y, 3.f * UIScale, H);
-	DrawRect(WithAlpha(Accent, 0.35f), X, Y, W, 1.f * UIScale);
+	DrawRect(PdaAlpha(Accent, 0.95f), X, Y, 3.f * UIScale, H);
+	DrawRect(PdaAlpha(Accent, 0.35f), X, Y, W, 1.f * UIScale);
 }
 
 void FDAPDAUI::Diamond(const FVector2D& C, float R, const FLinearColor& Color)
@@ -1172,12 +1172,12 @@ void FDAPDAUI::DrawHeader()
 	const float CW = Canvas->ClipX;
 	const float H = 86.f * S;
 	DrawRect(FLinearColor(0.012f, 0.022f, 0.04f, 0.96f), 0.f, 0.f, CW, H);
-	DrawRect(WithAlpha(PdaGold, 0.55f), 0.f, H - 2.f * S, CW, 2.f * S);
+	DrawRect(PdaAlpha(PdaGold, 0.55f), 0.f, H - 2.f * S, CW, 2.f * S);
 
 	const FString Title = DAUIData::Label(TEXT("pda.title"), TEXT("DUEL ACADEMY PDA"));
 	DrawText(Title, 32.f * S, 12.f * S, PdaGold, 1.6f, false, GetFont(true));
 	DrawText(DAUIData::Label(TEXT("pda.subtitle"), TEXT("STUDENT TERMINAL")), 34.f * S, 52.f * S,
-		WithAlpha(PdaMuted, 0.9f), 0.72f);
+		PdaAlpha(PdaMuted, 0.9f), 0.72f);
 
 	const FDAPDAProfileView& Profile = ViewModel.Profile;
 	const FString Line1 = FString::Printf(TEXT("%s  -  %s"), *Profile.PlayerName, *Profile.DormName);
@@ -1192,7 +1192,7 @@ void FDAPDAUI::DrawHeader()
 	};
 	RightText(Line1, 10.f * S, PdaPaper, 1.0f, GetFont(true));
 	RightText(Line2, 36.f * S, PdaGold, 0.82f, nullptr);
-	RightText(Line3, 58.f * S, WithAlpha(PdaMuted, 0.95f), 0.72f, nullptr);
+	RightText(Line3, 58.f * S, PdaAlpha(PdaMuted, 0.95f), 0.72f, nullptr);
 }
 
 void FDAPDAUI::DrawTabBar()
@@ -1213,18 +1213,18 @@ void FDAPDAUI::DrawTabBar()
 		const float X = Margin + Index * TabW;
 		if (bSelected)
 		{
-			DrawRect(WithAlpha(PdaGold, 0.20f), X + 2.f * S, Y + 4.f * S, TabW - 4.f * S, H - 8.f * S);
-			DrawRect(WithAlpha(PdaGold, 0.95f), X + 2.f * S, Y + H - 3.f * S, TabW - 4.f * S, 3.f * S);
+			DrawRect(PdaAlpha(PdaGold, 0.20f), X + 2.f * S, Y + 4.f * S, TabW - 4.f * S, H - 8.f * S);
+			DrawRect(PdaAlpha(PdaGold, 0.95f), X + 2.f * S, Y + H - 3.f * S, TabW - 4.f * S, 3.f * S);
 		}
 		else if (bHovered)
 		{
-			DrawRect(WithAlpha(PdaGold, 0.08f), X + 2.f * S, Y + 4.f * S, TabW - 4.f * S, H - 8.f * S);
+			DrawRect(PdaAlpha(PdaGold, 0.08f), X + 2.f * S, Y + 4.f * S, TabW - 4.f * S, H - 8.f * S);
 		}
 		DrawText(TabLabel(Tab), X + TabW * 0.5f, Y + 14.f * S,
-			bSelected ? PdaGold : WithAlpha(PdaPaper, 0.72f), 0.78f, true);
+			bSelected ? PdaGold : PdaAlpha(PdaPaper, 0.72f), 0.78f, true);
 		AddHit(TEXT("tab"), Index, X, Y, TabW, H);
 	}
-	DrawRect(WithAlpha(PdaMuted, 0.25f), 0.f, Y + H, CW, 1.f * S);
+	DrawRect(PdaAlpha(PdaMuted, 0.25f), 0.f, Y + H, CW, 1.f * S);
 }
 
 void FDAPDAUI::DrawContent()
@@ -1248,14 +1248,14 @@ void FDAPDAUI::DrawContent()
 void FDAPDAUI::DrawListPanel(float X, float Y, float W, float H)
 {
 	const float S = UIScale;
-	DrawPanel(X, Y, W, H, WithAlpha(PdaInk, 0.9f), WithAlpha(PdaGold, 0.7f));
+	DrawPanel(X, Y, W, H, PdaAlpha(PdaInk, 0.9f), PdaAlpha(PdaGold, 0.7f));
 
 	const int32 Count = RowCountForTab(ActiveTab);
 	const FString Title = TabLabel(ActiveTab);
 	DrawText(Title, X + 20.f * S, Y + 14.f * S, PdaGold, 1.05f, false, GetFont(true));
 	DrawText(FString::Printf(TEXT("%d"), Count), X + W - 46.f * S, Y + 18.f * S,
-		WithAlpha(PdaMuted, 0.9f), 0.8f);
-	DrawRect(WithAlpha(PdaMuted, 0.3f), X + 20.f * S, Y + 44.f * S, W - 40.f * S, 1.f * S);
+		PdaAlpha(PdaMuted, 0.9f), 0.8f);
+	DrawRect(PdaAlpha(PdaMuted, 0.3f), X + 20.f * S, Y + 44.f * S, W - 40.f * S, 1.f * S);
 
 	const float RowH = 46.f * S;
 	const float Top = Y + 54.f * S;
@@ -1265,7 +1265,7 @@ void FDAPDAUI::DrawListPanel(float X, float Y, float W, float H)
 	if (Count == 0)
 	{
 		const FString Empty = DAUIData::Label(TEXT("pda.empty"), TEXT("No entries yet."));
-		DrawText(Empty, X + 20.f * S, Top + 8.f * S, WithAlpha(PdaMuted, 0.9f), 0.9f);
+		DrawText(Empty, X + 20.f * S, Top + 8.f * S, PdaAlpha(PdaMuted, 0.9f), 0.9f);
 		const FString Note = ActiveTab == EDAPDATab::Mail
 			? FString(TEXT("Contacts and messages arrive with A03's mailbox."))
 			: (ActiveTab == EDAPDATab::Limitation
@@ -1274,7 +1274,7 @@ void FDAPDAUI::DrawListPanel(float X, float Y, float W, float H)
 		float NoteY = Top + 42.f * S;
 		for (const FString& Line : WrapText(Note, W - 40.f * S, 0.75f))
 		{
-			DrawText(Line, X + 20.f * S, NoteY, WithAlpha(PdaMuted, 0.7f), 0.75f);
+			DrawText(Line, X + 20.f * S, NoteY, PdaAlpha(PdaMuted, 0.7f), 0.75f);
 			NoteY += Measure(TEXT("Ag"), 0.75f).Y + 4.f * S;
 		}
 		return;
@@ -1292,18 +1292,18 @@ void FDAPDAUI::DrawListPanel(float X, float Y, float W, float H)
 
 		if (bSelected)
 		{
-			DrawRect(WithAlpha(Accent, 0.26f), X + 10.f * S, RY, W - 20.f * S, RowH - 4.f * S);
+			DrawRect(PdaAlpha(Accent, 0.26f), X + 10.f * S, RY, W - 20.f * S, RowH - 4.f * S);
 		}
 		else if (bHovered)
 		{
-			DrawRect(WithAlpha(Accent, 0.12f), X + 10.f * S, RY, W - 20.f * S, RowH - 4.f * S);
+			DrawRect(PdaAlpha(Accent, 0.12f), X + 10.f * S, RY, W - 20.f * S, RowH - 4.f * S);
 		}
-		DrawRect(WithAlpha(Accent, bDisabled ? 0.4f : 1.f), X + 10.f * S, RY, 4.f * S, RowH - 4.f * S);
+		DrawRect(PdaAlpha(Accent, bDisabled ? 0.4f : 1.f), X + 10.f * S, RY, 4.f * S, RowH - 4.f * S);
 		DrawText(Label, X + 24.f * S, RY + 5.f * S,
-			bDisabled ? WithAlpha(PdaMuted, 0.8f) : (bSelected ? PdaPaper : WithAlpha(PdaPaper, 0.88f)), 0.92f);
+			bDisabled ? PdaAlpha(PdaMuted, 0.8f) : (bSelected ? PdaPaper : PdaAlpha(PdaPaper, 0.88f)), 0.92f);
 		if (!Subtitle.IsEmpty())
 		{
-			DrawText(Subtitle, X + 24.f * S, RY + 25.f * S, WithAlpha(PdaMuted, 0.9f), 0.68f);
+			DrawText(Subtitle, X + 24.f * S, RY + 25.f * S, PdaAlpha(PdaMuted, 0.9f), 0.68f);
 		}
 		AddHit(TEXT("row"), Index, X + 10.f * S, RY, W - 20.f * S, RowH - 4.f * S);
 	}
@@ -1315,20 +1315,20 @@ void FDAPDAUI::DrawListPanel(float X, float Y, float W, float H)
 		const float ThumbH = FMath::Max(24.f * S, TrackH * static_cast<float>(VisibleRows) / static_cast<float>(Count));
 		const int32 MaxScroll = FMath::Max(1, Count - VisibleRows);
 		const float ThumbY = TrackY + (TrackH - ThumbH) * static_cast<float>(ListScroll) / static_cast<float>(MaxScroll);
-		DrawRect(WithAlpha(PdaMuted, 0.18f), X + W - 10.f * S, TrackY, 3.f * S, TrackH);
-		DrawRect(WithAlpha(PdaGold, 0.8f), X + W - 10.f * S, ThumbY, 3.f * S, ThumbH);
+		DrawRect(PdaAlpha(PdaMuted, 0.18f), X + W - 10.f * S, TrackY, 3.f * S, TrackH);
+		DrawRect(PdaAlpha(PdaGold, 0.8f), X + W - 10.f * S, ThumbY, 3.f * S, ThumbH);
 	}
 }
 
 void FDAPDAUI::DrawDetailPanel(float X, float Y, float W, float H)
 {
 	const float S = UIScale;
-	DrawPanel(X, Y, W, H, WithAlpha(PdaInk, 0.82f), WithAlpha(PdaMuted, 0.4f));
+	DrawPanel(X, Y, W, H, PdaAlpha(PdaInk, 0.82f), PdaAlpha(PdaMuted, 0.4f));
 
 	const int32 Count = RowCountForTab(ActiveTab);
 	const FString Title = (Count > 0) ? RowDetailTitle(Selection) : TabLabel(ActiveTab);
 	DrawText(Title, X + 24.f * S, Y + 18.f * S, PdaGold, 1.35f, false, GetFont(true));
-	DrawRect(WithAlpha(PdaGold, 0.35f), X + 24.f * S, Y + 56.f * S, W - 48.f * S, 1.f * S);
+	DrawRect(PdaAlpha(PdaGold, 0.35f), X + 24.f * S, Y + 56.f * S, W - 48.f * S, 1.f * S);
 
 	if (ActiveTab == EDAPDATab::Calendar)
 	{
@@ -1343,7 +1343,7 @@ void FDAPDAUI::DrawDetailPanel(float X, float Y, float W, float H)
 		{
 			Empty = DAUIData::Label(TEXT("pda.detail.empty"), TEXT("No data connected yet."));
 		}
-		DrawText(Empty, X + 24.f * S, Y + 78.f * S, WithAlpha(PdaMuted, 0.9f), 0.9f);
+		DrawText(Empty, X + 24.f * S, Y + 78.f * S, PdaAlpha(PdaMuted, 0.9f), 0.9f);
 		return;
 	}
 
@@ -1355,7 +1355,7 @@ void FDAPDAUI::DrawDetailPanel(float X, float Y, float W, float H)
 	{
 		if (TextY + LineH > MaxY)
 		{
-			DrawText(TEXT("..."), X + 24.f * S, TextY, WithAlpha(PdaMuted, 0.8f), 0.92f);
+			DrawText(TEXT("..."), X + 24.f * S, TextY, PdaAlpha(PdaMuted, 0.8f), 0.92f);
 			break;
 		}
 		DrawText(Line, X + 24.f * S, TextY, PdaPaper, 0.92f);
@@ -1377,7 +1377,7 @@ void FDAPDAUI::DrawDetailPanel(float X, float Y, float W, float H)
 	}
 	if (!Hint.IsEmpty())
 	{
-		DrawText(Hint, X + 24.f * S, Y + H - 28.f * S, WithAlpha(PdaMuted, 0.75f), 0.72f);
+		DrawText(Hint, X + 24.f * S, Y + H - 28.f * S, PdaAlpha(PdaMuted, 0.75f), 0.72f);
 	}
 }
 
@@ -1389,7 +1389,7 @@ void FDAPDAUI::DrawCalendarGrid(float X, float Y, float W, float H)
 	for (int32 Column = 0; Column < 7; ++Column)
 	{
 		DrawText(WeekdayShort(Column), X + (Column + 0.5f) * (W / 7.f), Y,
-			WithAlpha(PdaMuted, 0.9f), 0.68f, true);
+			PdaAlpha(PdaMuted, 0.9f), 0.68f, true);
 	}
 
 	const float GridY = Y + HeaderH + 6.f * S;
@@ -1425,34 +1425,34 @@ void FDAPDAUI::DrawCalendarGrid(float X, float Y, float W, float H)
 			Accent = PdaCyan;
 		}
 
-		DrawRect(WithAlpha(Accent, bSelected ? 0.35f : 0.10f), CX + Gap, CY + Gap,
+		DrawRect(PdaAlpha(Accent, bSelected ? 0.35f : 0.10f), CX + Gap, CY + Gap,
 			CellW - Gap * 2.f, CellH - Gap * 2.f);
 		if (Cell.bToday)
 		{
-			DrawRect(WithAlpha(PdaCyan, 0.9f), CX + Gap, CY + Gap, CellW - Gap * 2.f, 2.f * S);
+			DrawRect(PdaAlpha(PdaCyan, 0.9f), CX + Gap, CY + Gap, CellW - Gap * 2.f, 2.f * S);
 		}
 		DrawText(FString::FromInt(Cell.Day), CX + 10.f * S, CY + 8.f * S,
-			bSelected ? PdaPaper : WithAlpha(PdaPaper, 0.85f), 0.9f, false, GetFont(true));
+			bSelected ? PdaPaper : PdaAlpha(PdaPaper, 0.85f), 0.9f, false, GetFont(true));
 		if (Cell.bExam || Cell.bEvent)
 		{
-			DrawRect(WithAlpha(Accent, 0.95f), CX + CellW - 16.f * S, CY + CellH - 14.f * S, 6.f * S, 6.f * S);
+			DrawRect(PdaAlpha(Accent, 0.95f), CX + CellW - 16.f * S, CY + CellH - 14.f * S, 6.f * S, 6.f * S);
 		}
 		AddHit(TEXT("calendar.day"), DayIndex, CX + Gap, CY + Gap, CellW - Gap * 2.f, CellH - Gap * 2.f);
 	}
 
 	// Legend + placeholder note.
 	const float LegendY = GridY + 6.f * CellH + 10.f * S;
-	DrawRect(WithAlpha(PdaRed, 0.95f), X, LegendY + 2.f * S, 8.f * S, 8.f * S);
-	DrawText(TEXT("EXAM"), X + 14.f * S, LegendY, WithAlpha(PdaPaper, 0.8f), 0.68f);
-	DrawRect(WithAlpha(PdaGold, 0.95f), X + 92.f * S, LegendY + 2.f * S, 8.f * S, 8.f * S);
-	DrawText(TEXT("EVENT"), X + 106.f * S, LegendY, WithAlpha(PdaPaper, 0.8f), 0.68f);
-	DrawRect(WithAlpha(PdaCyan, 0.95f), X + 190.f * S, LegendY + 2.f * S, 8.f * S, 8.f * S);
-	DrawText(TEXT("TODAY"), X + 204.f * S, LegendY, WithAlpha(PdaPaper, 0.8f), 0.68f);
+	DrawRect(PdaAlpha(PdaRed, 0.95f), X, LegendY + 2.f * S, 8.f * S, 8.f * S);
+	DrawText(TEXT("EXAM"), X + 14.f * S, LegendY, PdaAlpha(PdaPaper, 0.8f), 0.68f);
+	DrawRect(PdaAlpha(PdaGold, 0.95f), X + 92.f * S, LegendY + 2.f * S, 8.f * S, 8.f * S);
+	DrawText(TEXT("EVENT"), X + 106.f * S, LegendY, PdaAlpha(PdaPaper, 0.8f), 0.68f);
+	DrawRect(PdaAlpha(PdaCyan, 0.95f), X + 190.f * S, LegendY + 2.f * S, 8.f * S, 8.f * S);
+	DrawText(TEXT("TODAY"), X + 204.f * S, LegendY, PdaAlpha(PdaPaper, 0.8f), 0.68f);
 
 	if (ViewModel.Calendar.bPlaceholder)
 	{
 		DrawText(TEXT("Sample month - A02 replaces this with the live calendar."),
-			X, LegendY + 26.f * S, WithAlpha(PdaMuted, 0.8f), 0.72f);
+			X, LegendY + 26.f * S, PdaAlpha(PdaMuted, 0.8f), 0.72f);
 	}
 }
 
@@ -1463,11 +1463,11 @@ void FDAPDAUI::DrawFooter()
 	const float CH = Canvas->ClipY;
 	const float H = 34.f * S;
 	DrawRect(FLinearColor(0.006f, 0.012f, 0.024f, 0.92f), 0.f, CH - H, CW, H);
-	DrawRect(WithAlpha(PdaMuted, 0.25f), 0.f, CH - H, CW, 1.f * S);
+	DrawRect(PdaAlpha(PdaMuted, 0.25f), 0.f, CH - H, CW, 1.f * S);
 
 	const FString Hints = DAUIData::Label(TEXT("pda.footer.hints"),
 		TEXT("Q / E or 1-8: tabs    Up / Down: select    Enter: activate    P / Esc: close"));
-	DrawText(Hints, 32.f * S, CH - H + 9.f * S, WithAlpha(PdaPaper, 0.78f), 0.72f);
+	DrawText(Hints, 32.f * S, CH - H + 9.f * S, PdaAlpha(PdaPaper, 0.78f), 0.72f);
 
 	FString Note = ViewModel.FooterNote;
 	const float MaxW = CW * 0.34f;
@@ -1478,6 +1478,6 @@ void FDAPDAUI::DrawFooter()
 	if (!Note.IsEmpty())
 	{
 		const FVector2D Size = Measure(Note, 0.62f);
-		DrawText(Note, CW - 32.f * S - Size.X, CH - H + 11.f * S, WithAlpha(PdaMuted, 0.65f), 0.62f);
+		DrawText(Note, CW - 32.f * S - Size.X, CH - H + 11.f * S, PdaAlpha(PdaMuted, 0.65f), 0.62f);
 	}
 }

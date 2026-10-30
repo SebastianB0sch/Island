@@ -17,7 +17,7 @@ namespace
 		return ((MonthNumber - 10) % 12 + 12) % 12;
 	}
 
-	FString ReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, const FString& Fallback = FString())
+	FString StoryReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, const FString& Fallback = FString())
 	{
 		FString Value;
 		if (Object.IsValid() && Object->TryGetStringField(Field, Value))
@@ -27,7 +27,7 @@ namespace
 		return Fallback;
 	}
 
-	int32 ReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Fallback = 0)
+	int32 StoryReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Fallback = 0)
 	{
 		int32 Value = Fallback;
 		if (Object.IsValid())
@@ -37,7 +37,7 @@ namespace
 		return Value;
 	}
 
-	bool ReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bFallback = false)
+	bool StoryReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bFallback = false)
 	{
 		bool bValue = bFallback;
 		if (Object.IsValid())
@@ -102,14 +102,14 @@ bool FDAEventGraph::LoadFromJson(const TSharedPtr<FJsonObject>& Root, FString& O
 		}
 
 		FDAEventDefinition Event;
-		Event.Id = ReadString(Object, TEXT("id"));
-		Event.Title = ReadString(Object, TEXT("title"), Event.Id);
-		Event.Scene = ReadString(Object, TEXT("scene"));
-		Event.Priority = ReadInt(Object, TEXT("priority"), 0);
-		Event.bOnce = ReadBool(Object, TEXT("once"), true);
-		Event.bRepeatable = ReadBool(Object, TEXT("repeatable"), false);
-		Event.bOptional = ReadBool(Object, TEXT("optional"), false);
-		Event.bCanonEvent = ReadBool(Object, TEXT("canon_event"), false);
+		Event.Id = StoryReadString(Object, TEXT("id"));
+		Event.Title = StoryReadString(Object, TEXT("title"), Event.Id);
+		Event.Scene = StoryReadString(Object, TEXT("scene"));
+		Event.Priority = StoryReadInt(Object, TEXT("priority"), 0);
+		Event.bOnce = StoryReadBool(Object, TEXT("once"), true);
+		Event.bRepeatable = StoryReadBool(Object, TEXT("repeatable"), false);
+		Event.bOptional = StoryReadBool(Object, TEXT("optional"), false);
+		Event.bCanonEvent = StoryReadBool(Object, TEXT("canon_event"), false);
 		Event.Raw = Object;
 
 		const TSharedPtr<FJsonObject>* TriggerObject = nullptr;
@@ -201,8 +201,8 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 		return true;
 	}
 
-	const bool bNegate = ReadBool(Condition, TEXT("negate"), false);
-	const FString Kind = ReadString(Condition, TEXT("type"));
+	const bool bNegate = StoryReadBool(Condition, TEXT("negate"), false);
+	const FString Kind = StoryReadString(Condition, TEXT("type"));
 
 	bool bResult = false;
 
@@ -275,11 +275,11 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	{
 		const FString Flag = Kind == TEXT("new_game")
 			? TEXT("new_game")
-			: ReadString(Condition, TEXT("id"), ReadString(Condition, TEXT("flag")));
+			: StoryReadString(Condition, TEXT("id"), StoryReadString(Condition, TEXT("flag")));
 		bool bExpected = true;
 		if (Kind == TEXT("flag"))
 		{
-			bExpected = ReadBool(Condition, TEXT("value"), true);
+			bExpected = StoryReadBool(Condition, TEXT("value"), true);
 		}
 		const bool bHasFlag = Profile && (Profile->GetFlag(Flag) || (Kind == TEXT("new_game") && Profile->GetFlag(TEXT("new_game_started"))));
 		bResult = bHasFlag == bExpected;
@@ -290,10 +290,10 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("counter"))
 	{
-		const FString Counter = ReadString(Condition, TEXT("id"), ReadString(Condition, TEXT("counter")));
+		const FString Counter = StoryReadString(Condition, TEXT("id"), StoryReadString(Condition, TEXT("counter")));
 		const int32 Value = Profile ? Profile->GetCounter(Counter) : 0;
-		const int32 Expected = ReadInt(Condition, TEXT("value"), 0);
-		const FString Op = ReadString(Condition, TEXT("op"), TEXT(">="));
+		const int32 Expected = StoryReadInt(Condition, TEXT("value"), 0);
+		const FString Op = StoryReadString(Condition, TEXT("op"), TEXT(">="));
 		bResult = CompareInt(Value, Op, Expected);
 		if (!bResult)
 		{
@@ -302,9 +302,9 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("event") || Kind == TEXT("event_complete"))
 	{
-		const FString EventId = ReadString(Condition, TEXT("id"), ReadString(Condition, TEXT("event")));
+		const FString EventId = StoryReadString(Condition, TEXT("id"), StoryReadString(Condition, TEXT("event")));
 		const bool bComplete = Profile && Profile->GetFlag(EventCompletionFlag(EventId));
-		const FString State = ReadString(Condition, TEXT("state"), TEXT("complete"));
+		const FString State = StoryReadString(Condition, TEXT("state"), TEXT("complete"));
 		bResult = State.IsEmpty() || State == TEXT("complete") ? bComplete : true;
 		if (!bResult)
 		{
@@ -318,22 +318,22 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 			OutReason = TEXT("calendar is unavailable");
 			return false;
 		}
-		const int32 TargetYear = ReadInt(Condition, TEXT("year"), Calendar->GetYear());
-		const int32 MonthNumber = ReadInt(Condition, TEXT("month"),
-			ReadInt(Condition, TEXT("calendar_month"), Calendar->GetMonthNumber()));
-		const int32 TargetMonthIndex = ReadInt(Condition, TEXT("month_index"), MonthNumberToIndex(MonthNumber));
-		const int32 TargetDay = ReadInt(Condition, TEXT("day"), Calendar->GetDay());
+		const int32 TargetYear = StoryReadInt(Condition, TEXT("year"), Calendar->GetYear());
+		const int32 MonthNumber = StoryReadInt(Condition, TEXT("month"),
+			StoryReadInt(Condition, TEXT("calendar_month"), Calendar->GetMonthNumber()));
+		const int32 TargetMonthIndex = StoryReadInt(Condition, TEXT("month_index"), MonthNumberToIndex(MonthNumber));
+		const int32 TargetDay = StoryReadInt(Condition, TEXT("day"), Calendar->GetDay());
 		const int32 TargetAbsolute = Calendar->GetAbsoluteDayFor(TargetYear, TargetMonthIndex, TargetDay);
 		const int32 CurrentAbsolute = Calendar->GetAbsoluteDay();
-		const FString Op = ReadString(Condition, TEXT("op"), Kind == TEXT("date_at_least") ? TEXT(">=") : TEXT("=="));
+		const FString Op = StoryReadString(Condition, TEXT("op"), Kind == TEXT("date_at_least") ? TEXT(">=") : TEXT("=="));
 		bResult = CompareInt(CurrentAbsolute, Op, TargetAbsolute);
 
-		const FString ExpectedWeekday = ReadString(Condition, TEXT("weekday"));
+		const FString ExpectedWeekday = StoryReadString(Condition, TEXT("weekday"));
 		if (bResult && !ExpectedWeekday.IsEmpty())
 		{
 			bResult = Calendar->GetWeekdayName(Calendar->GetWeekday()).Equals(ExpectedWeekday, ESearchCase::IgnoreCase);
 		}
-		const FString ExpectedPeriod = ReadString(Condition, TEXT("period"));
+		const FString ExpectedPeriod = StoryReadString(Condition, TEXT("period"));
 		if (bResult && !ExpectedPeriod.IsEmpty())
 		{
 			bResult = Calendar->GetPeriodName(Calendar->GetPeriod()).Equals(ExpectedPeriod, ESearchCase::IgnoreCase);
@@ -345,7 +345,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("weekday"))
 	{
-		const FString Expected = ReadString(Condition, TEXT("value"));
+		const FString Expected = StoryReadString(Condition, TEXT("value"));
 		bResult = Calendar && Calendar->GetWeekdayName(Calendar->GetWeekday()).Equals(Expected, ESearchCase::IgnoreCase);
 		if (!bResult)
 		{
@@ -354,7 +354,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("period"))
 	{
-		const FString Expected = ReadString(Condition, TEXT("value"));
+		const FString Expected = StoryReadString(Condition, TEXT("value"));
 		bResult = Calendar && Calendar->GetPeriodName(Calendar->GetPeriod()).Equals(Expected, ESearchCase::IgnoreCase);
 		if (!bResult)
 		{
@@ -363,7 +363,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("dorm"))
 	{
-		const FString Expected = ReadString(Condition, TEXT("value"));
+		const FString Expected = StoryReadString(Condition, TEXT("value"));
 		const FString Actual = Profile ? DuelAcademyProfile::DormToSaveKey(Profile->GetDorm()) : FString();
 		bResult = Actual.Equals(Expected, ESearchCase::IgnoreCase);
 		if (!bResult)
@@ -373,7 +373,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("title"))
 	{
-		const FString Expected = ReadString(Condition, TEXT("value"));
+		const FString Expected = StoryReadString(Condition, TEXT("value"));
 		const FString Actual = Profile ? Profile->GetTitle() : FString();
 		bResult = Actual.Equals(Expected, ESearchCase::IgnoreCase) || Actual.Contains(Expected, ESearchCase::IgnoreCase);
 		if (!bResult)
@@ -383,8 +383,8 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("card"))
 	{
-		const int32 CardId = ReadInt(Condition, TEXT("id"), ReadInt(Condition, TEXT("card_id"), 0));
-		const int32 MinCount = ReadInt(Condition, TEXT("min_count"), 1);
+		const int32 CardId = StoryReadInt(Condition, TEXT("id"), StoryReadInt(Condition, TEXT("card_id"), 0));
+		const int32 MinCount = StoryReadInt(Condition, TEXT("min_count"), 1);
 		int32 Count = 0;
 		if (Profile)
 		{
@@ -446,7 +446,7 @@ bool FDAEventGraph::EvaluateTrigger(const FDAEventDefinition& Event, const UDAPr
 		return true;
 	}
 
-	const FString Kind = ReadString(Event.Trigger, TEXT("type"));
+	const FString Kind = StoryReadString(Event.Trigger, TEXT("type"));
 	if (Kind == TEXT("new_game"))
 	{
 		const bool bStarted = Profile && (Profile->GetFlag(TEXT("new_game")) || Profile->GetFlag(TEXT("new_game_started")));

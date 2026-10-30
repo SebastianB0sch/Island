@@ -18,7 +18,7 @@ namespace
 {
 	const TCHAR* const DefaultTitle = TEXT("Apprentice Duelist");
 
-	FString JsonKeyToString(const FJsonObject::FStringType& Key)
+	FString ProfileJsonKeyToString(const FJsonObject::FStringType& Key)
 	{
 		return FString(*Key);
 	}
@@ -819,7 +819,7 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 		{
 			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::Boolean && Pair.Value->AsBool())
 			{
-				Flags.Add(JsonKeyToString(Pair.Key), true);
+				Flags.Add(ProfileJsonKeyToString(Pair.Key), true);
 			}
 		}
 	}
@@ -832,7 +832,7 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 		{
 			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::Number)
 			{
-				Counters.Add(JsonKeyToString(Pair.Key), FMath::Max(0, static_cast<int32>(Pair.Value->AsNumber())));
+				Counters.Add(ProfileJsonKeyToString(Pair.Key), FMath::Max(0, static_cast<int32>(Pair.Value->AsNumber())));
 			}
 		}
 	}
@@ -856,7 +856,7 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 			ContactObject->TryGetBoolField(TEXT("unlocked"), State.bUnlocked);
 			ReadStringArray(ContactObject, TEXT("read"), State.ReadIds);
 			ReadStringArray(ContactObject, TEXT("requests"), State.PendingDuelRequests);
-			Emails.Add(JsonKeyToString(Pair.Key), MoveTemp(State));
+			Emails.Add(ProfileJsonKeyToString(Pair.Key), MoveTemp(State));
 		}
 	}
 

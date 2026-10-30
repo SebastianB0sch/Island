@@ -230,8 +230,8 @@ change only through A10.
 3. A07: prove the 12-exam lifecycle (written/timed/practical, retries,
    exemptions, title/dorm outcomes) and run the engine scripted-solution proof
    over all 100 puzzle definitions.
-4. A08: publish the 6 missing story anchors; merge `location_map.json` into the
-   anchors contract or expose it to the validator.
+4. A08: run automated interior entry/exit and anchor coverage tests; the 46
+   locations / 83 anchors / 10 cells / 20 portals / 28 spawns now validate.
 5. A06: fill Dorothy's Gift and confirm the runtime inventory/deck save
    provider section names.
 6. A04: add `-DADuelSelfTest=N` and run the 1,000-duel gate.

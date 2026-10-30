@@ -649,6 +649,19 @@ void UDAStorySubsystem::ResetRuntimeState()
 
 void UDAStorySubsystem::StartOpening()
 {
+	if (bRunning)
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: StartOpening ignored; %s is already running."), *CurrentEventId);
+		return;
+	}
+	if (ADAHUD* HUD = ResolveHUD())
+	{
+		if (HUD->IsDuelOpen())
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: StartOpening ignored; a duel is open."));
+			return;
+		}
+	}
 	if (!bLoaded && !LoadOpeningData())
 	{
 		return;
@@ -674,7 +687,7 @@ void UDAStorySubsystem::StartOpening()
 		Profile->SetPlayerName(DefaultPlayerName);
 	}
 
-	if (!IsEventCompleteRuntime(TEXT("E01")) && Calendar->GetMonthIndex() == 0 && Calendar->GetDay() == 7)
+	if (!IsEventCompleteRuntime(TEXT("E01")))
 	{
 		Calendar->SetDate(1, 0, 1, EDADayPeriod::AM);
 	}
@@ -690,6 +703,10 @@ void UDAStorySubsystem::StartOpening()
 
 	Profile->SetFlag(TEXT("new_game_started"), true);
 	bOpeningStarted = true;
+	if (ADAHUD* HUD = ResolveHUD())
+	{
+		HUD->CloseDialogue();
+	}
 
 	if (IsEventCompleteRuntime(TEXT("E01b")))
 	{
@@ -710,6 +727,14 @@ void UDAStorySubsystem::StartOpening()
 
 void UDAStorySubsystem::StartOpeningFresh()
 {
+	if (ADAHUD* HUD = ResolveHUD())
+	{
+		if (HUD->IsDuelOpen())
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: StartOpeningFresh ignored; a duel is open."));
+			return;
+		}
+	}
 	if (!bLoaded && !LoadOpeningData())
 	{
 		return;
@@ -724,6 +749,10 @@ void UDAStorySubsystem::StartOpeningFresh()
 	}
 
 	ResetRuntimeState();
+	if (ADAHUD* HUD = ResolveHUD())
+	{
+		HUD->CloseDialogue();
+	}
 	bHeadless = ResolveHUD() == nullptr;
 	Profile->InitializeNewGame(DefaultPlayerName);
 	Calendar->SetDate(1, 0, 1, EDADayPeriod::AM);
@@ -837,6 +866,11 @@ void UDAStorySubsystem::StartScene(const FString& SceneId, int32 StartIndex)
 	bWaitingForChoice = false;
 	bWaitingForDuel = false;
 	bWaitingForTimer = false;
+	bPendingTextInput = false;
+	WaitRemaining = 0.f;
+	ActiveChoices.Reset();
+	ActiveChoiceConversationId.Reset();
+	ActiveChoiceLineKey.Reset();
 	bPendingContinue = true;
 
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: scene %s (%d commands), start %d."),
@@ -1571,7 +1605,16 @@ void UDAStorySubsystem::SelectStarterDeck(const FString& DeckId)
 
 void UDAStorySubsystem::SetPlayerName(const FString& NewName)
 {
-	FString Clean = NewName.TrimStartAndEnd().ToUpper();
+	const FString Upper = NewName.TrimStartAndEnd().ToUpper();
+	FString Clean;
+	for (const TCHAR Character : Upper)
+	{
+		if ((Character >= TEXT('A') && Character <= TEXT('Z'))
+			|| (Character >= TEXT('0') && Character <= TEXT('9')))
+		{
+			Clean.AppendChar(Character);
+		}
+	}
 	Clean = Clean.Left(8);
 	if (Clean.IsEmpty())
 	{
@@ -2496,7 +2539,7 @@ void UDAStorySubsystem::LogState(const FString& Prefix) const
 static FAutoConsoleCommandWithWorldAndArgs GDAOpeningTestCommand(
 	TEXT("da.OpeningTest"),
 	TEXT("Start the A03 opening vertical slice on a fresh profile."),
-	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>&, UWorld* World)
 	{
 		if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(World))
 		{
@@ -2511,7 +2554,7 @@ static FAutoConsoleCommandWithWorldAndArgs GDAOpeningTestCommand(
 static FAutoConsoleCommandWithWorldAndArgs GDAStorySelfTestCommand(
 	TEXT("da.StorySelfTest"),
 	TEXT("Run the headless opening story self-test."),
-	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>&, UWorld* World)
 	{
 		if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(World))
 		{
@@ -2568,7 +2611,7 @@ static FAutoConsoleCommandWithWorldAndArgs GDAStoryDeckCommand(
 static FAutoConsoleCommandWithWorldAndArgs GDAStoryAdvanceCommand(
 	TEXT("da.StoryAdvance"),
 	TEXT("Advance the current dialogue/queue for automation."),
-	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>&, UWorld* World)
 	{
 		if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(World))
 		{
@@ -2593,7 +2636,7 @@ static FAutoConsoleCommandWithWorldAndArgs GDAStoryChooseCommand(
 static FAutoConsoleCommandWithWorldAndArgs GDAStoryStateCommand(
 	TEXT("da.StoryState"),
 	TEXT("Log the current story state."),
-	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>&, UWorld* World)
 	{
 		if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(World))
 		{
