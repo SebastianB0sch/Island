@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "card_id": 787,
+  "name": "Breaker the Magical Warrior",
+  "card_type": "Effect Monster",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "When this card is Normal Summoned successfully, put 1 Spell Counter on it (max. 1). Increase the ATK of this card by 300 points for each Spell Counter on this card. Also, remove 1 Spell Counter from this card to destroy 1 Spell or Trap Card on the field.",
+  "notes": [
+    "Demonstrates counters, a summon trigger, a continuous ATK modifier and a counter-removal ignition cost."
+  ],
+  "scripts": [
+    {
+      "id": "breaker_place_counter",
+      "trigger": "on_normal_summon",
+      "condition": {
+        "controller": "self",
+        "zone": "self_monster"
+      },
+      "operations": [
+        {
+          "op": "add_counter",
+          "target": "$self",
+          "counter": "spell",
+          "amount": 1,
+          "max": 1
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is Normal Summoned successfully, put 1 Spell Counter on it (max. 1)."
+    },
+    {
+      "id": "breaker_counter_atk",
+      "trigger": "continuous",
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 300,
+          "counter": "spell",
+          "mode": "per_counter"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Increase the ATK of this card by 300 points for each Spell Counter on this card."
+    },
+    {
+      "id": "breaker_pop_counter",
+      "trigger": "manual",
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "has_counter": {
+          "counter": "spell",
+          "min": 1
+        },
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "remove_counter",
+          "target": "$self",
+          "counter": "spell",
+          "count": 1
+        }
+      ],
+      "target": {
+        "zone": "any_spell_trap",
+        "count": 1,
+        "chooser": "controller"
+      },
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Breaker the Magical Warrior"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Also, remove 1 Spell Counter from this card to destroy 1 Spell or Trap Card on the field."
+    }
+  ]
+}

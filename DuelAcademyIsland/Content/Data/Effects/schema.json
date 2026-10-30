@@ -1,0 +1,647 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://duelacademy.local/schemas/effect-script.schema.json",
+  "title": "Duel Academy Island card effect script",
+  "description": "One file per card. Scripts are declarative, serializable and contain no engine pointers. The runtime resolves selectors and operations through the primitives listed in Docs/Effects/RUNTIME_INTERFACE.md.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "card_id",
+    "name",
+    "card_type",
+    "tier",
+    "status",
+    "source_text",
+    "scripts"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "card_id": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1200
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "card_type": {
+      "enum": [
+        "Normal Monster",
+        "Effect Monster",
+        "Fusion Monster",
+        "Ritual Monster",
+        "Spell",
+        "Trap"
+      ]
+    },
+    "tier": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "status": {
+      "enum": [
+        "scripted",
+        "vanilla",
+        "unsupported",
+        "pending"
+      ]
+    },
+    "source_text": {
+      "type": "string",
+      "description": "Verbatim card description from cards.json. Used for traceability and hashing."
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scripts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/script"
+      }
+    }
+  },
+  "$defs": {
+    "script": {
+      "type": "object",
+      "required": [
+        "id",
+        "trigger",
+        "operations"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "trigger": {
+          "$ref": "#/$defs/trigger"
+        },
+        "condition": {
+          "$ref": "#/$defs/condition"
+        },
+        "cost": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cost"
+          }
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        },
+        "duration": {
+          "$ref": "#/$defs/duration"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "spell_speed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "once_per_turn": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "duel"
+            }
+          ]
+        },
+        "source_text": {
+          "type": "string",
+          "description": "The sentence or clause this script implements."
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "trigger": {
+      "enum": [
+        "on_activate",
+        "on_normal_summon",
+        "on_special_summon",
+        "on_flip_summon",
+        "on_summon",
+        "on_flip",
+        "on_battle_start",
+        "on_attack_declared",
+        "on_attack_target",
+        "on_damage_calculated",
+        "on_battle_destroy",
+        "on_destroy",
+        "on_sent_to_graveyard",
+        "on_removed_from_field",
+        "on_draw",
+        "on_standby",
+        "on_main",
+        "on_end",
+        "on_chain",
+        "on_ritual_summon",
+        "on_fusion_summon",
+        "continuous",
+        "equip_continuous",
+        "field_continuous",
+        "manual"
+      ]
+    },
+    "duration": {
+      "enum": [
+        "instant",
+        "until_end_of_turn",
+        "until_end_of_battle_phase",
+        "until_next_standby",
+        "while_face_up",
+        "until_leave_field",
+        "permanent",
+        "lingering"
+      ]
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "all": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        },
+        "any": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        },
+        "not": {
+          "$ref": "#/$defs/condition"
+        },
+        "controller": {
+          "enum": [
+            "self",
+            "opponent",
+            "any"
+          ]
+        },
+        "face_up": {
+          "type": "boolean"
+        },
+        "position": {
+          "enum": [
+            "attack",
+            "defense",
+            "face_down",
+            "any"
+          ]
+        },
+        "zone": {
+          "$ref": "#/$defs/zone"
+        },
+        "card_type": {
+          "enum": [
+            "Monster",
+            "Normal Monster",
+            "Effect Monster",
+            "Fusion Monster",
+            "Ritual Monster",
+            "Spell",
+            "Trap"
+          ]
+        },
+        "subtype": {
+          "type": "string"
+        },
+        "attribute": {
+          "enum": [
+            "LIGHT",
+            "DARK",
+            "EARTH",
+            "WATER",
+            "FIRE",
+            "WIND",
+            "DIVINE"
+          ]
+        },
+        "monster_type": {
+          "type": "string"
+        },
+        "level_min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
+        "level_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
+        "atk_min": {
+          "type": "integer"
+        },
+        "atk_max": {
+          "type": "integer"
+        },
+        "def_min": {
+          "type": "integer"
+        },
+        "def_max": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "has_counter": {
+          "type": "object",
+          "required": [
+            "counter",
+            "min"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "counter": {
+              "type": "string"
+            },
+            "min": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "lp_min": {
+          "type": "integer"
+        },
+        "lp_max": {
+          "type": "integer"
+        },
+        "hand_min": {
+          "type": "integer"
+        },
+        "hand_max": {
+          "type": "integer"
+        },
+        "field_spell": {
+          "type": "string"
+        },
+        "summon_type": {
+          "enum": [
+            "normal",
+            "flip",
+            "special",
+            "fusion",
+            "ritual",
+            "any"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "custom": {
+          "type": "string",
+          "description": "Named engine predicate. Must be implemented by A04; unknown names fail validation."
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "zone"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "zone": {
+          "$ref": "#/$defs/zone"
+        },
+        "count": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20
+            },
+            {
+              "const": "all"
+            },
+            {
+              "type": "object",
+              "required": [
+                "min",
+                "max"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "min": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 20
+                },
+                "max": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 20
+                }
+              }
+            }
+          ]
+        },
+        "filter": {
+          "$ref": "#/$defs/condition"
+        },
+        "chooser": {
+          "enum": [
+            "controller",
+            "opponent",
+            "random"
+          ]
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "reveal": {
+          "type": "boolean"
+        }
+      }
+    },
+    "zone": {
+      "enum": [
+        "self",
+        "self_monster",
+        "self_spell_trap",
+        "self_field",
+        "self_hand",
+        "self_deck",
+        "self_graveyard",
+        "self_banished",
+        "self_extra",
+        "opponent",
+        "opponent_monster",
+        "opponent_spell_trap",
+        "opponent_field",
+        "opponent_hand",
+        "opponent_deck",
+        "opponent_graveyard",
+        "opponent_banished",
+        "opponent_extra",
+        "any_monster",
+        "any_spell_trap",
+        "all_monsters",
+        "all_spell_traps",
+        "all_cards",
+        "all_hands",
+        "attacking_monster",
+        "attack_target",
+        "trigger_source",
+        "chain_link",
+        "banished",
+        "graveyard",
+        "deck",
+        "hand",
+        "extra"
+      ]
+    },
+    "operation": {
+      "type": "object",
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/op"
+        },
+        "target": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/target"
+            },
+            {
+              "enum": [
+                "$self",
+                "$target",
+                "$cost",
+                "$trigger",
+                "$attacker",
+                "$attack_target"
+              ]
+            }
+          ]
+        },
+        "player": {
+          "enum": [
+            "self",
+            "opponent",
+            "both"
+          ]
+        },
+        "amount": {
+          "type": "integer"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "destination": {
+          "$ref": "#/$defs/zone"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "position": {
+          "enum": [
+            "attack",
+            "defense",
+            "face_down",
+            "face_up"
+          ]
+        },
+        "attribute": {
+          "enum": [
+            "LIGHT",
+            "DARK",
+            "EARTH",
+            "WATER",
+            "FIRE",
+            "WIND",
+            "DIVINE"
+          ]
+        },
+        "monster_type": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "card_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1200
+        },
+        "counter": {
+          "type": "string"
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fusion_type": {
+          "type": "string"
+        },
+        "banish_materials": {
+          "type": "boolean"
+        },
+        "reveal": {
+          "type": "boolean"
+        },
+        "shuffle": {
+          "type": "boolean"
+        },
+        "to": {
+          "enum": [
+            "self",
+            "opponent",
+            "both"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "enum": [
+            "pay_lp",
+            "discard",
+            "discard_random",
+            "tribute",
+            "send_to_graveyard",
+            "banish",
+            "return_to_hand",
+            "return_to_deck",
+            "reveal",
+            "mill",
+            "remove_counter",
+            "change_position",
+            "skip_draw",
+            "destroy_self",
+            "shuffle"
+          ]
+        },
+        "target": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/target"
+            },
+            {
+              "enum": [
+                "$self",
+                "$target",
+                "$trigger"
+              ]
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "amount": {
+          "type": "integer"
+        },
+        "counter": {
+          "type": "string"
+        },
+        "zone": {
+          "$ref": "#/$defs/zone"
+        },
+        "filter": {
+          "$ref": "#/$defs/condition"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "op": {
+      "enum": [
+        "add_counter",
+        "allow_fusion",
+        "attack_directly",
+        "banish",
+        "battle_damage_zero",
+        "change_position",
+        "copy",
+        "declare_name",
+        "destroy",
+        "discard",
+        "draw",
+        "equip",
+        "excavate",
+        "extra_attack",
+        "gain_lp",
+        "inflict_damage",
+        "lock_activation",
+        "look_at_deck",
+        "mill",
+        "modify_atk",
+        "modify_def",
+        "negate",
+        "place_counter",
+        "prevent_battle_damage",
+        "redirect_attack",
+        "redirect_battle_damage",
+        "remove_counter",
+        "return_to_extra",
+        "return_to_hand",
+        "return_to_deck",
+        "reveal",
+        "roll_die",
+        "search",
+        "set",
+        "shuffle",
+        "skip_phase",
+        "special_summon",
+        "summon",
+        "take_control",
+        "toss_coin"
+      ]
+    }
+  }
+}

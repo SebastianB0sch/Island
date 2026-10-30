@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "card_id": 348,
+  "name": "Jinzo",
+  "card_type": "Effect Monster",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "As long as this card remains face-up on the field, all Trap Cards cannot be activated. The effects of all face-up Trap Cards are also negated.",
+  "notes": [
+    "Demonstrates a continuous, face-up-only lock that is recomputed as zones change."
+  ],
+  "scripts": [
+    {
+      "id": "jinzo_trap_lock",
+      "trigger": "continuous",
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "operations": [
+        {
+          "op": "lock_activation",
+          "target": {
+            "zone": "all_spell_traps",
+            "filter": {
+              "card_type": "Trap"
+            }
+          },
+          "mode": "trap_activation_and_effects"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "As long as this card remains face-up on the field, all Trap Cards cannot be activated."
+    }
+  ]
+}
