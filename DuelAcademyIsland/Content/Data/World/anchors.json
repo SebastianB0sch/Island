@@ -1,0 +1,1837 @@
+{
+  "schema_version": 1,
+  "owner": "A08",
+  "coordinate_space": "UE centimetres",
+  "anchor_kinds": [
+    "camera",
+    "player",
+    "npc",
+    "look_at",
+    "stage",
+    "prop"
+  ],
+  "anchors": [
+    {
+      "id": "academy_front_steps",
+      "name": "Academy Front Steps",
+      "location_id": "academy_front",
+      "zone_id": "plaza",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        0,
+        -6500,
+        3400
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01"
+      ],
+      "notes": "Arrival mark facing the portico."
+    },
+    {
+      "id": "academy_front_camera",
+      "name": "Academy Front Camera",
+      "location_id": "academy_front",
+      "zone_id": "plaza",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        2500,
+        -4500,
+        5200
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": [
+        0,
+        -8400,
+        4400
+      ],
+      "tags": [
+        "opening",
+        "E01"
+      ],
+      "notes": "Wide establishing shot of the portico."
+    },
+    {
+      "id": "academy_registration_player",
+      "name": "Registration Player",
+      "location_id": "academy_lobby",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -1500,
+        -10500,
+        3600
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "registration"
+      ],
+      "notes": "Player stands at the reception counter."
+    },
+    {
+      "id": "academy_registration_camera",
+      "name": "Registration Camera",
+      "location_id": "academy_lobby",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        -700,
+        -7600,
+        5000
+      ],
+      "yaw": 0.0,
+      "fov": 45.0,
+      "look_at_ue": [
+        -2200,
+        -10500,
+        4200
+      ],
+      "tags": [
+        "opening",
+        "registration"
+      ],
+      "notes": "Over-the-shoulder registration shot."
+    },
+    {
+      "id": "academy_registration_desk",
+      "name": "Registration Desk",
+      "location_id": "academy_lobby",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -2260,
+        -10500,
+        3600
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "registration"
+      ],
+      "notes": "Receptionist mark behind the desk."
+    },
+    {
+      "id": "academy_classroom_teacher",
+      "name": "Classroom Teacher",
+      "location_id": "academy_classroom",
+      "zone_id": "academy",
+      "interior_id": "academy_classroom",
+      "kind": "npc",
+      "position_ue": [
+        300000,
+        303000,
+        -29900
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "class",
+        "E02"
+      ],
+      "notes": "Teacher at the blackboard."
+    },
+    {
+      "id": "academy_classroom_student",
+      "name": "Classroom Student",
+      "location_id": "academy_classroom",
+      "zone_id": "academy",
+      "interior_id": "academy_classroom",
+      "kind": "player",
+      "position_ue": [
+        300000,
+        298000,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "class",
+        "E02"
+      ],
+      "notes": "Player desk at the back of the room."
+    },
+    {
+      "id": "academy_classroom_student_02",
+      "name": "Classroom Student 02",
+      "location_id": "academy_classroom",
+      "zone_id": "academy",
+      "interior_id": "academy_classroom",
+      "kind": "npc",
+      "position_ue": [
+        300300,
+        298300,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "class"
+      ],
+      "notes": "Second student desk."
+    },
+    {
+      "id": "academy_classroom_camera",
+      "name": "Classroom Camera",
+      "location_id": "academy_classroom",
+      "zone_id": "academy",
+      "interior_id": "academy_classroom",
+      "kind": "camera",
+      "position_ue": [
+        300000,
+        295500,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 55.0,
+      "look_at_ue": [
+        300000,
+        303000,
+        -29750
+      ],
+      "tags": [
+        "class",
+        "E02"
+      ],
+      "notes": "Back-of-room camera."
+    },
+    {
+      "id": "academy_test_room_desk",
+      "name": "Exam Desk",
+      "location_id": "academy_test_room",
+      "zone_id": "academy",
+      "interior_id": "academy_test_room",
+      "kind": "player",
+      "position_ue": [
+        300000,
+        320750,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "exam"
+      ],
+      "notes": "Player exam desk."
+    },
+    {
+      "id": "academy_test_room_proctor",
+      "name": "Exam Proctor",
+      "location_id": "academy_test_room",
+      "zone_id": "academy",
+      "interior_id": "academy_test_room",
+      "kind": "npc",
+      "position_ue": [
+        300000,
+        328000,
+        -29900
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "exam"
+      ],
+      "notes": "Proctor desk."
+    },
+    {
+      "id": "academy_test_room_camera",
+      "name": "Exam Room Camera",
+      "location_id": "academy_test_room",
+      "zone_id": "academy",
+      "interior_id": "academy_test_room",
+      "kind": "camera",
+      "position_ue": [
+        300000,
+        321000,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": [
+        300000,
+        328000,
+        -29750
+      ],
+      "tags": [
+        "exam"
+      ],
+      "notes": "Exam room establishing shot."
+    },
+    {
+      "id": "academy_arena_field_player",
+      "name": "Arena Duelist",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -1060,
+        -16500,
+        3650
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E01",
+        "duel",
+        "practical_exam"
+      ],
+      "notes": "Player duelist circle on the arena field."
+    },
+    {
+      "id": "academy_arena_field_opponent",
+      "name": "Arena Opponent",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        1060,
+        -16500,
+        3650
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E01",
+        "duel"
+      ],
+      "notes": "Opponent duelist circle."
+    },
+    {
+      "id": "academy_arena_podium",
+      "name": "Arena Podium",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "stage",
+      "position_ue": [
+        0,
+        -21500,
+        3650
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E01",
+        "assembly"
+      ],
+      "notes": "Podium at the north edge of the field."
+    },
+    {
+      "id": "academy_arena_camera",
+      "name": "Arena Camera",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        0,
+        -9500,
+        6000
+      ],
+      "yaw": 0.0,
+      "fov": 45.0,
+      "look_at_ue": [
+        0,
+        -16500,
+        3900
+      ],
+      "tags": [
+        "E01",
+        "duel"
+      ],
+      "notes": "High wide shot of the field."
+    },
+    {
+      "id": "academy_card_shop_player",
+      "name": "Card Shop Player",
+      "location_id": "academy_card_shop",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        1500,
+        -10500,
+        3600
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "shop",
+        "packs"
+      ],
+      "notes": "Player at the shop counter."
+    },
+    {
+      "id": "academy_card_shop_keeper",
+      "name": "Card Shop Keeper",
+      "location_id": "academy_card_shop",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        2500,
+        -10500,
+        3600
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "shop",
+        "Dorothy"
+      ],
+      "notes": "Dorothy behind the counter."
+    },
+    {
+      "id": "academy_card_shop_camera",
+      "name": "Card Shop Camera",
+      "location_id": "academy_card_shop",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        1000,
+        -7800,
+        4900
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": [
+        2300,
+        -10500,
+        4100
+      ],
+      "tags": [
+        "shop"
+      ],
+      "notes": "Shop establishing shot."
+    },
+    {
+      "id": "crowler_office_player",
+      "name": "Crowler Office Player",
+      "location_id": "academy_crowler_office",
+      "zone_id": "academy",
+      "interior_id": "academy_crowler_office",
+      "kind": "player",
+      "position_ue": [
+        300000,
+        344500,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E02",
+        "staff"
+      ],
+      "notes": "Player in front of Crowler's desk."
+    },
+    {
+      "id": "crowler_office_desk",
+      "name": "Crowler Desk",
+      "location_id": "academy_crowler_office",
+      "zone_id": "academy",
+      "interior_id": "academy_crowler_office",
+      "kind": "npc",
+      "position_ue": [
+        300000,
+        349000,
+        -29900
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E02",
+        "staff"
+      ],
+      "notes": "Crowler behind his desk."
+    },
+    {
+      "id": "crowler_office_camera",
+      "name": "Crowler Office Camera",
+      "location_id": "academy_crowler_office",
+      "zone_id": "academy",
+      "interior_id": "academy_crowler_office",
+      "kind": "camera",
+      "position_ue": [
+        300000,
+        343800,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 48.0,
+      "look_at_ue": [
+        300000,
+        349000,
+        -29750
+      ],
+      "tags": [
+        "E02",
+        "staff"
+      ],
+      "notes": "Office two-shot."
+    },
+    {
+      "id": "chancellor_office_player",
+      "name": "Chancellor Office Player",
+      "location_id": "academy_chancellor_office",
+      "zone_id": "academy",
+      "interior_id": "academy_chancellor_office",
+      "kind": "player",
+      "position_ue": [
+        300000,
+        362500,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "ending",
+        "E01"
+      ],
+      "notes": "Player before the Chancellor's desk."
+    },
+    {
+      "id": "chancellor_office_desk",
+      "name": "Chancellor Desk",
+      "location_id": "academy_chancellor_office",
+      "zone_id": "academy",
+      "interior_id": "academy_chancellor_office",
+      "kind": "npc",
+      "position_ue": [
+        300000,
+        367000,
+        -29900
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "ending",
+        "E01"
+      ],
+      "notes": "Sheppard behind his desk."
+    },
+    {
+      "id": "chancellor_office_ending",
+      "name": "King of Games Ending Mark",
+      "location_id": "academy_chancellor_office",
+      "zone_id": "academy",
+      "interior_id": "academy_chancellor_office",
+      "kind": "stage",
+      "position_ue": [
+        300000,
+        364000,
+        -29900
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "ending",
+        "king_of_games"
+      ],
+      "notes": "Ending trigger / crest presentation mark."
+    },
+    {
+      "id": "chancellor_office_camera",
+      "name": "Chancellor Office Camera",
+      "location_id": "academy_chancellor_office",
+      "zone_id": "academy",
+      "interior_id": "academy_chancellor_office",
+      "kind": "camera",
+      "position_ue": [
+        300000,
+        361500,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 48.0,
+      "look_at_ue": [
+        300000,
+        367000,
+        -29750
+      ],
+      "tags": [
+        "ending"
+      ],
+      "notes": "Ending two-shot."
+    },
+    {
+      "id": "gym_assembly_stage",
+      "name": "Gym Assembly Stage",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "stage",
+      "position_ue": [
+        68263.6,
+        72312.6,
+        620
+      ],
+      "yaw": -23.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly"
+      ],
+      "notes": "Sheppard's opening speech position at the front court."
+    },
+    {
+      "id": "gym_assembly_crowd",
+      "name": "Gym Assembly Crowd",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        69552.3,
+        71765.6,
+        620
+      ],
+      "yaw": 157.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly"
+      ],
+      "notes": "Player stands with the freshman crowd."
+    },
+    {
+      "id": "gym_assembly_student_02",
+      "name": "Gym Assembly Student 02",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        69650,
+        71680,
+        620
+      ],
+      "yaw": 157.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "assembly"
+      ],
+      "notes": "Crowd mark 2."
+    },
+    {
+      "id": "gym_assembly_student_03",
+      "name": "Gym Assembly Student 03",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        69750,
+        71800,
+        620
+      ],
+      "yaw": 157.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "assembly"
+      ],
+      "notes": "Crowd mark 3."
+    },
+    {
+      "id": "gym_assembly_camera",
+      "name": "Gym Assembly Camera",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        70400,
+        71250,
+        2200
+      ],
+      "yaw": 0.0,
+      "fov": 55.0,
+      "look_at_ue": [
+        68263,
+        72312,
+        900
+      ],
+      "tags": [
+        "opening",
+        "E01"
+      ],
+      "notes": "Wide assembly shot from the bleacher side."
+    },
+    {
+      "id": "gym_practice_field_a",
+      "name": "Gym Practice Field A",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        68722.2,
+        70705.7,
+        720
+      ],
+      "yaw": 67.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "practical_exam",
+        "practice"
+      ],
+      "notes": "West practice court."
+    },
+    {
+      "id": "gym_practice_field_b",
+      "name": "Gym Practice Field B",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        69738.1,
+        73099,
+        720
+      ],
+      "yaw": 67.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "practical_exam",
+        "practice"
+      ],
+      "notes": "East practice court."
+    },
+    {
+      "id": "gym_entrance",
+      "name": "Gym Entrance",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        67711.3,
+        72547,
+        720
+      ],
+      "yaw": -23.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "assembly"
+      ],
+      "notes": "Inside the gym front doors."
+    },
+    {
+      "id": "slifer_front_gate",
+      "name": "Slifer Front Gate",
+      "location_id": "slifer_front",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -103300,
+        26200,
+        2900
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E03",
+        "walk_home"
+      ],
+      "notes": "Arrival from the academy path, facing the dorm."
+    },
+    {
+      "id": "slifer_front_camera",
+      "name": "Slifer Front Camera",
+      "location_id": "slifer_front",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        -102000,
+        24000,
+        4500
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": [
+        -106500,
+        26200,
+        3200
+      ],
+      "tags": [
+        "opening",
+        "E03"
+      ],
+      "notes": "Dorm establishing shot from the cliff path."
+    },
+    {
+      "id": "slifer_cafeteria_player",
+      "name": "Slifer Cafeteria Player",
+      "location_id": "slifer_cafeteria",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -106500,
+        27800,
+        2945
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "breakfast",
+        "E03",
+        "Banner DP"
+      ],
+      "notes": "Player at a dining table."
+    },
+    {
+      "id": "slifer_cafeteria_table",
+      "name": "Slifer Cafeteria Table",
+      "location_id": "slifer_cafeteria",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "prop",
+      "position_ue": [
+        -106500,
+        27600,
+        2945
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "breakfast",
+        "social"
+      ],
+      "notes": "Table prop mark."
+    },
+    {
+      "id": "slifer_cafeteria_counter",
+      "name": "Slifer Serving Counter",
+      "location_id": "slifer_cafeteria",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -106180,
+        27800,
+        2945
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "notes": "Attendant behind the serving window."
+    },
+    {
+      "id": "slifer_cafeteria_seat_01",
+      "name": "Slifer Cafeteria Seat 01",
+      "location_id": "slifer_cafeteria",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -106650,
+        27600,
+        2945
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "notes": "Student seat 1."
+    },
+    {
+      "id": "slifer_cafeteria_seat_02",
+      "name": "Slifer Cafeteria Seat 02",
+      "location_id": "slifer_cafeteria",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -106350,
+        27900,
+        2945
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "notes": "Student seat 2."
+    },
+    {
+      "id": "slifer_cafeteria_camera",
+      "name": "Slifer Cafeteria Camera",
+      "location_id": "slifer_cafeteria",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        -107200,
+        27100,
+        4300
+      ],
+      "yaw": 0.0,
+      "fov": 52.0,
+      "look_at_ue": [
+        -106500,
+        27800,
+        3100
+      ],
+      "tags": [
+        "breakfast",
+        "E03"
+      ],
+      "notes": "Cafeteria two-shot."
+    },
+    {
+      "id": "slifer_player_room_bed",
+      "name": "Player Room Bed",
+      "location_id": "slifer_player_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_player_room",
+      "kind": "prop",
+      "position_ue": [
+        329000,
+        301200,
+        -29900
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "sleep",
+        "save"
+      ],
+      "notes": "Bed / sleep interaction mark."
+    },
+    {
+      "id": "slifer_player_room_save",
+      "name": "Player Room Save Point",
+      "location_id": "slifer_player_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_player_room",
+      "kind": "player",
+      "position_ue": [
+        329500,
+        300500,
+        -29900
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "sleep",
+        "save"
+      ],
+      "notes": "Player stands beside the bed to sleep/save."
+    },
+    {
+      "id": "slifer_player_room_camera",
+      "name": "Player Room Camera",
+      "location_id": "slifer_player_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_player_room",
+      "kind": "camera",
+      "position_ue": [
+        330000,
+        297700,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 55.0,
+      "look_at_ue": [
+        330000,
+        301000,
+        -29750
+      ],
+      "tags": [
+        "opening",
+        "sleep"
+      ],
+      "notes": "Room establishing shot."
+    },
+    {
+      "id": "slifer_banner_room_desk",
+      "name": "Banner Desk",
+      "location_id": "slifer_banner_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_banner_room",
+      "kind": "npc",
+      "position_ue": [
+        330000,
+        317000,
+        -29900
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E14",
+        "Pharaoh"
+      ],
+      "notes": "Banner behind his desk."
+    },
+    {
+      "id": "slifer_banner_room_player",
+      "name": "Banner Room Player",
+      "location_id": "slifer_banner_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_banner_room",
+      "kind": "player",
+      "position_ue": [
+        330000,
+        313500,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E14"
+      ],
+      "notes": "Player in front of Banner's desk."
+    },
+    {
+      "id": "slifer_banner_room_pharaoh",
+      "name": "Pharaoh Tank",
+      "location_id": "slifer_banner_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_banner_room",
+      "kind": "prop",
+      "position_ue": [
+        331300,
+        316200,
+        -29900
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "Pharaoh",
+        "E14"
+      ],
+      "notes": "Pharaoh's tank / event prop."
+    },
+    {
+      "id": "slifer_banner_room_camera",
+      "name": "Banner Room Camera",
+      "location_id": "slifer_banner_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_banner_room",
+      "kind": "camera",
+      "position_ue": [
+        330000,
+        312600,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": [
+        330000,
+        316800,
+        -29750
+      ],
+      "tags": [
+        "E14"
+      ],
+      "notes": "Banner office two-shot."
+    },
+    {
+      "id": "slifer_jaden_room_bunk",
+      "name": "Jaden Room Bunk",
+      "location_id": "slifer_jaden_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_jaden_room",
+      "kind": "prop",
+      "position_ue": [
+        329000,
+        330500,
+        -29900
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E03",
+        "Chumley"
+      ],
+      "notes": "Bunk bed prop mark."
+    },
+    {
+      "id": "slifer_jaden_room_jaden",
+      "name": "Jaden Room Jaden",
+      "location_id": "slifer_jaden_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_jaden_room",
+      "kind": "npc",
+      "position_ue": [
+        329500,
+        330000,
+        -29900
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E03"
+      ],
+      "notes": "Jaden mark."
+    },
+    {
+      "id": "slifer_jaden_room_syrus",
+      "name": "Jaden Room Syrus",
+      "location_id": "slifer_jaden_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_jaden_room",
+      "kind": "npc",
+      "position_ue": [
+        330500,
+        329000,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E03"
+      ],
+      "notes": "Syrus mark."
+    },
+    {
+      "id": "slifer_jaden_room_chumley",
+      "name": "Jaden Room Chumley",
+      "location_id": "slifer_jaden_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_jaden_room",
+      "kind": "npc",
+      "position_ue": [
+        331000,
+        331000,
+        -29900
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "E03",
+        "Chumley"
+      ],
+      "notes": "Chumley mark."
+    },
+    {
+      "id": "slifer_jaden_room_camera",
+      "name": "Jaden Room Camera",
+      "location_id": "slifer_jaden_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_jaden_room",
+      "kind": "camera",
+      "position_ue": [
+        330000,
+        327500,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 55.0,
+      "look_at_ue": [
+        330000,
+        330500,
+        -29750
+      ],
+      "tags": [
+        "E03"
+      ],
+      "notes": "Bunk room establishing shot."
+    },
+    {
+      "id": "ra_front_gate",
+      "name": "Ra Front Gate",
+      "location_id": "ra_front",
+      "zone_id": "ra",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -63000,
+        60000,
+        2365.5
+      ],
+      "yaw": 135.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "dorm_visit",
+        "Bastion"
+      ],
+      "notes": "Arrival from the academy path."
+    },
+    {
+      "id": "ra_cafeteria_player",
+      "name": "Ra Cafeteria Player",
+      "location_id": "ra_cafeteria",
+      "zone_id": "ra",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -71131.3,
+        63950.6,
+        2295
+      ],
+      "yaw": 130.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "lunch",
+        "Bastion"
+      ],
+      "notes": "Player at the Ra cafeteria table."
+    },
+    {
+      "id": "ra_cafeteria_table",
+      "name": "Ra Cafeteria Table",
+      "location_id": "ra_cafeteria",
+      "zone_id": "ra",
+      "interior_id": null,
+      "kind": "prop",
+      "position_ue": [
+        -71259.8,
+        64103.8,
+        2295
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "lunch",
+        "social"
+      ],
+      "notes": "Table prop mark."
+    },
+    {
+      "id": "ra_cafeteria_seat_01",
+      "name": "Ra Cafeteria Seat 01",
+      "location_id": "ra_cafeteria",
+      "zone_id": "ra",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -71100,
+        64250,
+        2295
+      ],
+      "yaw": 130.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "lunch",
+        "dinner"
+      ],
+      "notes": "Student seat 1."
+    },
+    {
+      "id": "ra_cafeteria_seat_02",
+      "name": "Ra Cafeteria Seat 02",
+      "location_id": "ra_cafeteria",
+      "zone_id": "ra",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -71050,
+        63850,
+        2295
+      ],
+      "yaw": 130.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "lunch",
+        "dinner"
+      ],
+      "notes": "Student seat 2."
+    },
+    {
+      "id": "ra_player_room_bed",
+      "name": "Ra Room Bed",
+      "location_id": "ra_player_room",
+      "zone_id": "ra",
+      "interior_id": "ra_player_room",
+      "kind": "prop",
+      "position_ue": [
+        359000,
+        301000,
+        -29900
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "sleep",
+        "save"
+      ],
+      "notes": "Bed / sleep mark."
+    },
+    {
+      "id": "ra_player_room_player",
+      "name": "Ra Room Player",
+      "location_id": "ra_player_room",
+      "zone_id": "ra",
+      "interior_id": "ra_player_room",
+      "kind": "player",
+      "position_ue": [
+        360000,
+        298500,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "dorm_promotion",
+        "sleep"
+      ],
+      "notes": "Player room arrival mark."
+    },
+    {
+      "id": "ra_player_room_camera",
+      "name": "Ra Room Camera",
+      "location_id": "ra_player_room",
+      "zone_id": "ra",
+      "interior_id": "ra_player_room",
+      "kind": "camera",
+      "position_ue": [
+        360000,
+        297600,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 55.0,
+      "look_at_ue": [
+        360000,
+        301000,
+        -29750
+      ],
+      "tags": [
+        "dorm_promotion"
+      ],
+      "notes": "Room establishing shot."
+    },
+    {
+      "id": "obelisk_front_gate",
+      "name": "Obelisk Front Gate",
+      "location_id": "obelisk_boys_front",
+      "zone_id": "obelisk_boys",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -50000,
+        -44000,
+        3413.5
+      ],
+      "yaw": -141.34,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "dorm_visit",
+        "Chazz",
+        "Zane"
+      ],
+      "notes": "Arrival at the gate."
+    },
+    {
+      "id": "obelisk_dining_player",
+      "name": "Obelisk Dining Player",
+      "location_id": "obelisk_dining",
+      "zone_id": "obelisk_boys",
+      "interior_id": "obelisk_dining",
+      "kind": "player",
+      "position_ue": [
+        390000,
+        297000,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "dining",
+        "social"
+      ],
+      "notes": "Player at the dining table."
+    },
+    {
+      "id": "obelisk_dining_table",
+      "name": "Obelisk Dining Table",
+      "location_id": "obelisk_dining",
+      "zone_id": "obelisk_boys",
+      "interior_id": "obelisk_dining",
+      "kind": "prop",
+      "position_ue": [
+        390000,
+        300000,
+        -29900
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "dining",
+        "social"
+      ],
+      "notes": "Long table prop mark."
+    },
+    {
+      "id": "obelisk_dining_seat_01",
+      "name": "Obelisk Dining Seat 01",
+      "location_id": "obelisk_dining",
+      "zone_id": "obelisk_boys",
+      "interior_id": "obelisk_dining",
+      "kind": "npc",
+      "position_ue": [
+        388000,
+        300000,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "dining",
+        "dinner"
+      ],
+      "notes": "Student seat 1."
+    },
+    {
+      "id": "obelisk_dining_seat_02",
+      "name": "Obelisk Dining Seat 02",
+      "location_id": "obelisk_dining",
+      "zone_id": "obelisk_boys",
+      "interior_id": "obelisk_dining",
+      "kind": "npc",
+      "position_ue": [
+        392000,
+        300000,
+        -29900
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "dining",
+        "dinner"
+      ],
+      "notes": "Student seat 2."
+    },
+    {
+      "id": "obelisk_dining_camera",
+      "name": "Obelisk Dining Camera",
+      "location_id": "obelisk_dining",
+      "zone_id": "obelisk_boys",
+      "interior_id": "obelisk_dining",
+      "kind": "camera",
+      "position_ue": [
+        390000,
+        295800,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 55.0,
+      "look_at_ue": [
+        390000,
+        300000,
+        -29750
+      ],
+      "tags": [
+        "dining"
+      ],
+      "notes": "Dining room establishing shot."
+    },
+    {
+      "id": "obelisk_player_room_bed",
+      "name": "Obelisk Room Bed",
+      "location_id": "obelisk_player_room",
+      "zone_id": "obelisk_boys",
+      "interior_id": "obelisk_player_room",
+      "kind": "prop",
+      "position_ue": [
+        389000,
+        321000,
+        -29900
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "sleep",
+        "save"
+      ],
+      "notes": "Bed / sleep mark."
+    },
+    {
+      "id": "obelisk_player_room_player",
+      "name": "Obelisk Room Player",
+      "location_id": "obelisk_player_room",
+      "zone_id": "obelisk_boys",
+      "interior_id": "obelisk_player_room",
+      "kind": "player",
+      "position_ue": [
+        390000,
+        318000,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "dorm_promotion",
+        "sleep"
+      ],
+      "notes": "Player room arrival mark."
+    },
+    {
+      "id": "obelisk_player_room_camera",
+      "name": "Obelisk Room Camera",
+      "location_id": "obelisk_player_room",
+      "zone_id": "obelisk_boys",
+      "interior_id": "obelisk_player_room",
+      "kind": "camera",
+      "position_ue": [
+        390000,
+        317600,
+        -29700
+      ],
+      "yaw": 0.0,
+      "fov": 55.0,
+      "look_at_ue": [
+        390000,
+        321000,
+        -29750
+      ],
+      "tags": [
+        "dorm_promotion"
+      ],
+      "notes": "Room establishing shot."
+    },
+    {
+      "id": "harbor_dock",
+      "name": "Harbor Dock",
+      "location_id": "harbor",
+      "zone_id": "harbor",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        4000,
+        104000,
+        420
+      ],
+      "yaw": -92.2,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "arrival",
+        "ferry"
+      ],
+      "notes": "Ferry arrival mark."
+    },
+    {
+      "id": "harbor_office",
+      "name": "Harbor Office",
+      "location_id": "harbor_office",
+      "zone_id": "harbor",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        6000,
+        107000,
+        300
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "Dorothy truck",
+        "ferry"
+      ],
+      "notes": "Terminal/warehouse office mark."
+    },
+    {
+      "id": "beach_shore",
+      "name": "Beach Shore",
+      "location_id": "beach",
+      "zone_id": "beach",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        82000,
+        56000,
+        911
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "walk_home",
+        "beach"
+      ],
+      "notes": "Shoreline mark."
+    },
+    {
+      "id": "lake_shore",
+      "name": "Lake Shore",
+      "location_id": "lake",
+      "zone_id": "lake",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -4000,
+        -76000,
+        2824.5
+      ],
+      "yaw": -6.71,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "walk_home",
+        "Alexis"
+      ],
+      "notes": "Lakeshore mark."
+    },
+    {
+      "id": "volcano_crater",
+      "name": "Volcano Crater",
+      "location_id": "volcano_crater",
+      "zone_id": "volcano",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        90500,
+        -64000,
+        12719.2
+      ],
+      "yaw": -162.03,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "Titan",
+        "E24",
+        "Shadow Game"
+      ],
+      "notes": "Crater rim mark."
+    },
+    {
+      "id": "abandoned_dorm_hall",
+      "name": "Abandoned Dorm Hall",
+      "location_id": "abandoned_dorm",
+      "zone_id": "abandoned",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        92680,
+        6000,
+        1960
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "Titan",
+        "E24"
+      ],
+      "notes": "Entrance hall mark."
+    },
+    {
+      "id": "abandoned_dorm_camera",
+      "name": "Abandoned Dorm Camera",
+      "location_id": "abandoned_dorm",
+      "zone_id": "abandoned",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        92150,
+        6000,
+        2750
+      ],
+      "yaw": 0.0,
+      "fov": 55.0,
+      "look_at_ue": [
+        93200,
+        6000,
+        2200
+      ],
+      "tags": [
+        "Titan",
+        "E24"
+      ],
+      "notes": "Hall establishing shot."
+    },
+    {
+      "id": "hot_springs",
+      "name": "Hot Springs",
+      "location_id": "hot_springs",
+      "zone_id": "hotsprings",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        103500,
+        -30000,
+        5971.7
+      ],
+      "yaw": -33.69,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "optional",
+        "social"
+      ],
+      "notes": "Onsen mark."
+    },
+    {
+      "id": "forest_shrine",
+      "name": "Forest Shrine",
+      "location_id": "forest",
+      "zone_id": "forest",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        71392.8,
+        -35029.8,
+        12865.1
+      ],
+      "yaw": 40.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "optional",
+        "shrine"
+      ],
+      "notes": "Forest shrine mark."
+    },
+    {
+      "id": "lighthouse_view",
+      "name": "Lighthouse View",
+      "location_id": "lighthouse",
+      "zone_id": "lighthouse",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        25500,
+        119500,
+        500
+      ],
+      "yaw": 41.63,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "Zane",
+        "optional"
+      ],
+      "notes": "Lighthouse view mark."
+    },
+    {
+      "id": "cliffs_sunset",
+      "name": "Sunset Point",
+      "location_id": "cliffs",
+      "zone_id": "cliffs",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -105850,
+        -15350,
+        3084.1
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "walk_home",
+        "optional"
+      ],
+      "notes": "Cliff sunset mark."
+    },
+    {
+      "id": "obelisk_girls_gate",
+      "name": "Obelisk Girls Gate",
+      "location_id": "obelisk_girls_front",
+      "zone_id": "obelisk_girls",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -12000,
+        -84000,
+        2945.3
+      ],
+      "yaw": -145.62,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "Alexis",
+        "story_trigger"
+      ],
+      "notes": "Girls' dorm gate story trigger."
+    }
+  ],
+  "opening_anchor_requirements": [
+    "gym_assembly_stage",
+    "academy_registration_player",
+    "slifer_cafeteria_player",
+    "slifer_player_room_save",
+    "slifer_banner_room_desk",
+    "slifer_jaden_room_jaden",
+    "academy_classroom_teacher",
+    "academy_card_shop_player",
+    "academy_arena_field_player"
+  ]
+}
