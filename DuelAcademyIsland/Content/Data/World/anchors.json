@@ -1821,6 +1821,144 @@
         "story_trigger"
       ],
       "notes": "Girls' dorm gate story trigger."
+    },
+    {
+      "id": "gym_assembly_staff",
+      "name": "Gym Assembly Staff Mark",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        69552.3,
+        71765.6,
+        620
+      ],
+      "yaw": 157.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "gym",
+        "staff"
+      ],
+      "notes": "Integration alias for the opening staff row."
+    },
+    {
+      "id": "slifer_cafeteria_seat_03",
+      "name": "Slifer Cafeteria Seat 03",
+      "location_id": "slifer_cafeteria",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -106350,
+        27900,
+        2945
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "slifer",
+        "cafeteria"
+      ],
+      "notes": "Integration alias for the third cafeteria seat."
+    },
+    {
+      "id": "slifer_dorm_front_jaden",
+      "name": "Slifer Front - Jaden Mark",
+      "location_id": "slifer_front",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -103300,
+        26200,
+        2900
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "slifer",
+        "jaden"
+      ],
+      "notes": "Integration alias for Jaden outside the Slifer dorm."
+    },
+    {
+      "id": "slifer_dorm_front_syrus",
+      "name": "Slifer Front - Syrus Mark",
+      "location_id": "slifer_front",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -103300,
+        26200,
+        2900
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "slifer",
+        "syrus"
+      ],
+      "notes": "Integration alias for Syrus outside the Slifer dorm."
+    },
+    {
+      "id": "slifer_dorm_front_chumley",
+      "name": "Slifer Front - Chumley Mark",
+      "location_id": "slifer_front",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -103300,
+        26200,
+        2900
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "slifer",
+        "chumley"
+      ],
+      "notes": "Integration alias for Chumley outside the Slifer dorm."
+    },
+    {
+      "id": "slifer_yard_practice",
+      "name": "Slifer Yard Practice Table",
+      "location_id": "slifer_front",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        -103300,
+        26200,
+        2900
+      ],
+      "yaw": 180.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "slifer",
+        "tutorial"
+      ],
+      "notes": "Integration alias for the Syrus tutorial practice table."
     }
   ],
   "opening_anchor_requirements": [
