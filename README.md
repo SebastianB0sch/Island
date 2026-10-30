@@ -20,6 +20,49 @@ volumetric clouds and a full day/night cycle.)*
 *The ported duel board: hand, field, card detail, piles, duel log and AI opponent. The deck picker and
 result screen are in `Docs/renders/duel_deck.png` and `duel_result.png`.*
 
+## GBA campaign port (Gate 1)
+
+This branch (`port/baseline`) ports the single-player campaign of the GBA game into the 3D island. The masterplan is [Docs/PORT_MASTERPLAN.md](Docs/PORT_MASTERPLAN.md); live status is [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md).
+
+| ![Title](Docs/renders/port/title.png) | ![Opening](Docs/renders/port/opening.png) |
+|---|---|
+| **Title / New Game / Continue** | **Opening ceremony → Slifer dorm → first free roam** |
+| ![PDA map](Docs/renders/port/pda_map.png) | ![Dialogue](Docs/renders/port/dialogue_choice.png) |
+| **PDA map, calendar, deck, mail, save, options, records, limit** | **Dialogue with portraits, typewriter, choices and history** |
+
+Implemented so far:
+
+- **Campaign backbone:** 37 event definitions (35 canon + the opening checkpoint/free duel), 56 scenes, 161 dialogue lines, 6 email contacts, schedules, flags and rewards. The opening (`E01`/`E01b`) is fully runnable; the 35-event campaign scaffold validates and is reachable with progress.
+- **Progression:** profile, 12-month calendar, DP, titles, dorm promotion/demotion, Dropout Boy recovery, flags, counters and settings.
+- **Save/load:** 3 slots + autosave, atomic writes, checksum trailer, backup recovery, corruption detection and v0→v1 migration.
+- **Duel content:** 25 duelists / 31 decks, 100 timed puzzles, 12 exam cycles, 48 booster packs, the full 1,200-card database, 76 Fusion recipes and 22 Ritual procedures.
+- **Rules:** chain stack, targeting/choice queue, activation timing, Quick-Play/Counter Trap scaffolding, banned/limited list, deck validation, ante, scenarios and result statistics.
+- **Economy:** 1,200-card inventory, 3-copy ownership, deterministic pack opening, 48-pack shop, deck construction/validation.
+- **UI:** title/new game/continue, PDA, dialogue, choices, history, credits, options and debug screenshot harnesses.
+- **World data:** 36 mapped GBA locations, 89 scene anchors, 10 planned interior cells and 20 portal pairs.
+
+Run the runtime suites from the editor/game command line:
+
+```text
+-DAProfileSelfTest        # 182/182
+-DAEconomySelfTest        # 119/119
+-DADuelRulesSelfTest      # 57/57
+-DAStorySelfTest          # 14/14
+-DAFullStorySelfTest      # 20/20, 35/35 reachable with progress
+-DAUITest                 # 8 PDA + 2 dialogue screenshots
+-DATitleTest / -DANewGameTest
+```
+
+Data validators:
+
+```text
+python Tools/validate/validate_all.py      # PASS, known gaps listed
+python Tools/puzzles/validate.py           # 141 checks, 0 failures
+python Tools/effects/audit.py              # PASS; 119 scripted + 321 vanilla, 760 pending
+```
+
+Still open before calling the port complete: the 760 pending card effects, an in-engine playthrough of events E02–E33 (the data and self-test are in, but not a full scripted run), interior cell generation/entry tests, shop/deck/exam UI interaction wiring, exact GBA dialogue (the full text is local-only), and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md).
+
 ## What's on the island
 
 | Location | What you'll find |
