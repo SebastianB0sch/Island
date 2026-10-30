@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/effects.schema.json",
+  "title": "Card effect coverage manifest",
+  "description": "Exactly one entry per card id 1..1200. status=scripted must point at an effect script; status=unsupported must state a reason and is a release blocker if the card is obtainable.",
+  "type": "object",
+  "required": ["version", "entries"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string" },
+    "source": { "type": "string" },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/entry" }
+    }
+  },
+  "additionalProperties": true,
+  "definitions": {
+    "cardId": { "type": "integer", "minimum": 1, "maximum": 1200 },
+    "entry": {
+      "type": "object",
+      "required": ["card_id", "status"],
+      "properties": {
+        "card_id": { "$ref": "#/definitions/cardId" },
+        "status": { "type": "string", "enum": ["scripted", "vanilla", "unsupported"] },
+        "script": { "type": "string", "pattern": "^[A-Za-z0-9_./-]+\\.json$" },
+        "reason": { "type": "string" },
+        "tier": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "source": { "type": "string", "enum": ["engine", "canon", "original", "fallback"] },
+        "handler": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

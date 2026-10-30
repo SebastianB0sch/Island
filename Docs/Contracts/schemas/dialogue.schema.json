@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/dialogue.schema.json",
+  "title": "Dialogue line table",
+  "description": "Dialogue keys are <event>.<node> (for example E01.sheppard_01). Story commands reference only the key; A09 resolves speaker, portrait and text. Exact GBA text remains local-only.",
+  "type": "object",
+  "required": ["lines"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "lines": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/line" }
+    },
+    "source": { "type": "string" }
+  },
+  "additionalProperties": true,
+  "definitions": {
+    "line": {
+      "type": "object",
+      "required": ["speaker", "text"],
+      "properties": {
+        "speaker": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+        "portrait": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "portrait_fallback": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "text": { "type": "string", "minLength": 1 },
+        "text_key": { "type": "string", "minLength": 1 },
+        "emotion": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "source": { "type": "string", "enum": ["canon", "original", "paraphrase", "fallback"] },
+        "trace_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

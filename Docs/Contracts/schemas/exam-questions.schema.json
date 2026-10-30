@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/exam-questions.schema.json",
+  "title": "Written exam question bank",
+  "description": "Questions are referenced by id from exams.json. Text is addressed by localization key so exact GBA text can stay local-only.",
+  "oneOf": [
+    {
+      "type": "array",
+      "items": { "$ref": "#/definitions/question" }
+    },
+    {
+      "type": "object",
+      "required": ["questions"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "questions": { "type": "array", "items": { "$ref": "#/definitions/question" } },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  ],
+  "definitions": {
+    "question": {
+      "type": "object",
+      "required": ["id", "prompt_key", "answers", "correct_index"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[QW][0-9]{3}$" },
+        "prompt_key": { "type": "string", "minLength": 1 },
+        "answers": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "correct_index": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "topic": {
+          "type": "string",
+          "enum": ["rules", "cards", "canon", "timing", "deck", "exam"]
+        },
+        "explanation_key": { "type": "string" },
+        "source": { "type": "string", "enum": ["canon", "original", "fallback"] },
+        "trace_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/anchors.schema.json",
+  "title": "World locations, anchors, portals and NPC spawns",
+  "description": "The spatial contract between A03/A08/A09. Scene cameras and MoveNpc commands reference anchor ids; schedule entries reference locations and anchors.",
+  "type": "object",
+  "required": ["locations", "anchors"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "locations": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/location" }
+    },
+    "anchors": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/anchor" }
+    },
+    "portals": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/portal" }
+    },
+    "spawns": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/spawn" }
+    },
+    "source": { "type": "string" }
+  },
+  "additionalProperties": true,
+  "definitions": {
+    "locationId": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "anchorId": { "type": "string", "pattern": "^[a-z0-9_]+(?:\\.[a-z0-9_]+)*$" },
+    "npcId": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "vector": {
+      "type": "object",
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      },
+      "additionalProperties": true
+    },
+    "location": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "$ref": "#/definitions/locationId" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "zone": { "type": "string" },
+        "interior": { "type": "boolean" },
+        "parent": { "$ref": "#/definitions/locationId" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "anchor": {
+      "type": "object",
+      "required": ["id", "location", "position"],
+      "properties": {
+        "id": { "$ref": "#/definitions/anchorId" },
+        "location": { "$ref": "#/definitions/locationId" },
+        "position": { "$ref": "#/definitions/vector" },
+        "yaw": { "type": "number" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "note": { "type": "string" },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "portal": {
+      "type": "object",
+      "required": ["id", "from", "to"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+        "from": { "$ref": "#/definitions/anchorId" },
+        "to": { "$ref": "#/definitions/anchorId" },
+        "bidirectional": { "type": "boolean" },
+        "kind": { "type": "string", "enum": ["door", "stairs", "elevator", "fast_travel", "trigger"] },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "spawn": {
+      "type": "object",
+      "required": ["id", "npc", "location"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+        "npc": { "$ref": "#/definitions/npcId" },
+        "location": { "$ref": "#/definitions/locationId" },
+        "anchor": { "$ref": "#/definitions/anchorId" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    }
+  }
+}

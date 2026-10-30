@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/duel-request.schema.json",
+  "title": "FDuelRequest payload",
+  "description": "Serialized form of Docs/Contracts/headers/DADuelContract.h FDuelRequest. Mode is one of story, free, exam_timed, exam_practical, puzzle, ante.",
+  "type": "object",
+  "required": ["opponentId", "opponentDeckId", "playerDeckId", "mode", "seed"],
+  "properties": {
+    "opponentId": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "opponentDeckId": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "playerDeckId": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "mode": {
+      "type": "string",
+      "enum": ["story", "free", "tutorial", "exam_timed", "exam_practical", "puzzle", "ante"]
+    },
+    "puzzleId": { "type": "string", "pattern": "^P[0-9]{3}$" },
+    "bAnte": { "type": "boolean" },
+    "seed": { "type": "integer", "minimum": 0 },
+    "turnLimit": { "type": "integer", "minimum": 0, "maximum": 99 },
+    "timeLimitSeconds": { "type": "integer", "minimum": 0, "maximum": 9999 }
+  },
+  "additionalProperties": false
+}

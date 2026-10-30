@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/schedules.schema.json",
+  "title": "NPC schedules",
+  "description": "Who is where on which weekday and period. Locations and anchors are defined in World/anchors.json; event overrides temporarily move an NPC for a story scene.",
+  "oneOf": [
+    {
+      "type": "array",
+      "items": { "$ref": "#/definitions/schedule" }
+    },
+    {
+      "type": "object",
+      "required": ["schedules"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "schedules": { "type": "array", "items": { "$ref": "#/definitions/schedule" } },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  ],
+  "definitions": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "anchorId": { "type": "string", "pattern": "^[a-z0-9_]+(?:\\.[a-z0-9_]+)*$" },
+    "weekday": {
+      "type": "string",
+      "enum": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "all"]
+    },
+    "period": { "type": "string", "enum": ["AM", "PM", "Night"] },
+    "entry": {
+      "type": "object",
+      "required": ["weekdays", "period", "location"],
+      "properties": {
+        "weekdays": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/weekday" }
+        },
+        "period": { "$ref": "#/definitions/period" },
+        "location": { "$ref": "#/definitions/slug" },
+        "anchor": { "$ref": "#/definitions/anchorId" },
+        "activity": { "type": "string" },
+        "priority": { "type": "integer" },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "override": {
+      "type": "object",
+      "required": ["event"],
+      "properties": {
+        "event": { "type": "string", "pattern": "^E[0-9]{2}[a-z]?$" },
+        "weekday": { "$ref": "#/definitions/weekday" },
+        "period": { "$ref": "#/definitions/period" },
+        "location": { "$ref": "#/definitions/slug" },
+        "anchor": { "$ref": "#/definitions/anchorId" },
+        "activity": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "schedule": {
+      "type": "object",
+      "required": ["id", "npc", "entries"],
+      "properties": {
+        "id": { "$ref": "#/definitions/slug" },
+        "npc": { "$ref": "#/definitions/slug" },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/entry" }
+        },
+        "overrides": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/override" }
+        },
+        "source": { "type": "string", "enum": ["canon", "original", "fallback"] },
+        "trace_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

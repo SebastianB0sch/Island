@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/decks.schema.json",
+  "title": "Deck definitions",
+  "description": "Player starters, opponent decks, puzzle decks and exam decks. Existing decks.json uses {id,name,cards,extra}; save decks use {id,name,main,extra}. Both are accepted.",
+  "oneOf": [
+    {
+      "type": "array",
+      "items": { "$ref": "#/definitions/deck" }
+    },
+    {
+      "type": "object",
+      "required": ["decks"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "decks": { "type": "array", "items": { "$ref": "#/definitions/deck" } },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  ],
+  "definitions": {
+    "cardId": { "type": "integer", "minimum": 1, "maximum": 1200 },
+    "deck": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "subtitle": { "type": "string" },
+        "description": { "type": "string" },
+        "accent": { "type": "string", "pattern": "^#?[0-9A-Fa-f]{6}$" },
+        "kind": {
+          "type": "string",
+          "enum": ["starter", "player", "opponent", "puzzle", "exam", "event"]
+        },
+        "owner": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+        "cards": {
+          "type": "array",
+          "minItems": 40,
+          "maxItems": 60,
+          "items": { "$ref": "#/definitions/cardId" }
+        },
+        "main": {
+          "type": "array",
+          "minItems": 40,
+          "maxItems": 60,
+          "items": { "$ref": "#/definitions/cardId" }
+        },
+        "extra": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/definitions/cardId" }
+        },
+        "side": {
+          "type": "array",
+          "maxItems": 15,
+          "items": { "$ref": "#/definitions/cardId" }
+        },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "source": { "type": "string" },
+        "trace_id": { "type": "string" }
+      },
+      "oneOf": [
+        { "required": ["cards"] },
+        { "required": ["main"] }
+      ],
+      "additionalProperties": true
+    }
+  }
+}

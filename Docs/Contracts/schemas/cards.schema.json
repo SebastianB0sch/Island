@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/cards.schema.json",
+  "title": "Duel Academy card database",
+  "description": "Canonical card records. cards.json is an array; new canon wrappers may use {version, cards}.",
+  "oneOf": [
+    {
+      "type": "array",
+      "items": { "$ref": "#/definitions/card" }
+    },
+    {
+      "type": "object",
+      "required": ["cards"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "cards": { "type": "array", "items": { "$ref": "#/definitions/card" } },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  ],
+  "definitions": {
+    "cardId": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1200
+    },
+    "card": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "card_type",
+        "monster_type",
+        "subtype",
+        "attribute",
+        "level",
+        "atk",
+        "def",
+        "description"
+      ],
+      "properties": {
+        "id": { "$ref": "#/definitions/cardId" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "card_type": {
+          "type": "string",
+          "enum": [
+            "Normal Monster",
+            "Effect Monster",
+            "Fusion Monster",
+            "Ritual Monster",
+            "Spell",
+            "Trap"
+          ]
+        },
+        "monster_type": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "subtype": {
+          "type": "string",
+          "enum": [
+            "Normal",
+            "Effect",
+            "Fusion",
+            "Ritual",
+            "Continuous",
+            "Equip",
+            "Quick-Play",
+            "Field",
+            "Counter"
+          ]
+        },
+        "attribute": {
+          "type": "string",
+          "enum": ["DARK", "EARTH", "FIRE", "LIGHT", "WATER", "WIND", "NONE"]
+        },
+        "level": { "type": "integer", "minimum": 0, "maximum": 12 },
+        "atk": { "type": "integer", "minimum": 0, "maximum": 99999 },
+        "def": { "type": "integer", "minimum": 0, "maximum": 99999 },
+        "description": { "type": "string", "minLength": 1 },
+        "alias_of": { "$ref": "#/definitions/cardId" },
+        "banlist": {
+          "type": "string",
+          "enum": ["forbidden", "limited", "semi_limited", "unlimited"]
+        },
+        "source": { "type": "string" },
+        "trace_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}
