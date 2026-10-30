@@ -236,7 +236,7 @@ bool ADAStudentCharacter::IsDuelOpen() const
 bool ADAStudentCharacter::IsMovementBlocked() const
 {
 	const ADAHUD* HUD = GetDAHUD();
-	return HUD && (HUD->IsDuelOpen() || HUD->IsMapOpen());
+	return HUD && (HUD->IsDuelOpen() || HUD->IsMapOpen() || HUD->IsDialogueOpen() || HUD->IsPDAOpen());
 }
 
 // ------------------------------------------------------------------------ movement / camera

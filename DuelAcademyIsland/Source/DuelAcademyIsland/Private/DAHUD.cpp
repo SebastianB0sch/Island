@@ -38,6 +38,21 @@ namespace
 		C.A = A;
 		return C;
 	}
+
+	/** Sample payload from Content/Data/UI/ui.json, with a diagnostic fallback. */
+	void LoadDialogueTestLines(TArray<FDADialogueLine>& OutLines)
+	{
+		if (!DAUIData::LoadDialogueSample(TEXT("opening_test"), OutLines) || OutLines.Num() == 0)
+		{
+			FDADialogueLine Line;
+			Line.SpeakerId = TEXT("sheppard");
+			Line.SpeakerName = TEXT("Chancellor Sheppard");
+			Line.Portrait = TEXT("sheppard");
+			Line.Text = TEXT("Sample dialogue unavailable: Content/Data/UI/ui.json was not found. (Placeholder.)");
+			Line.TextKey = TEXT("PLACEHOLDER.UI.missing_data");
+			OutLines.Add(Line);
+		}
+	}
 }
 
 ADAHUD::ADAHUD()
@@ -53,6 +68,11 @@ void ADAHUD::BeginPlay()
 	BigFont = GEngine ? GEngine->GetLargeFont() : nullptr;
 	StartTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.f;
 	DuelUI = MakeUnique<FDADuelUI>(this);
+	DialogueUI = MakeUnique<FDADialogueUI>(this);
+	PDAUI = MakeUnique<FDAPDAUI>(this);
+	PDAUI->OnAction.AddUObject(this, &ADAHUD::HandlePDAAction);
+	PDAUI->OnClosed.AddUObject(this, &ADAHUD::HandlePDAClosed);
+	DialogueUI->OnDialogueClosed.AddUObject(this, &ADAHUD::HandleDialogueClosed);
 
 	// Debug harnesses (only active with the matching command-line switch):
 	//   -DADuelSelfTest   run the AI-vs-AI rules self-test after the world settles
@@ -102,6 +122,90 @@ void ADAHUD::BeginPlay()
 		After(8.6f, [](ADAHUD* HUD) { HUD->DebugFinishDuelWin(); });
 		After(13.0f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelResult.png"), false, false); });
 		After(14.2f, [](ADAHUD* HUD) { FPlatformMisc::RequestExit(false); });
+	}
+
+	// UI debug harnesses:
+	//   -DADialogueTest  open the sample dialogue from Content/Data/UI/ui.json
+	//   -DAPDATest       open the PDA on the Map tab on launch
+	//   -DAUITest        cycle every PDA tab + dialogue, capture screenshots, exit
+	if (FParse::Param(FCommandLine::Get(), TEXT("DADialogueTest")))
+	{
+		FTimerHandle Timer;
+		GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			TArray<FDADialogueLine> Lines;
+			LoadDialogueTestLines(Lines);
+			BeginDialogue(Lines, TEXT("ui_test"));
+		}), 1.2f, false);
+	}
+
+	if (FParse::Param(FCommandLine::Get(), TEXT("DAPDATest")))
+	{
+		FTimerHandle Timer;
+		GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(this, [this]()
+		{
+			OpenPDA(EDAPDATab::Map);
+		}), 1.2f, false);
+	}
+
+	if (FParse::Param(FCommandLine::Get(), TEXT("DAUITest")))
+	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
+
+		float T = 1.0f;
+		for (int32 Index = 0; Index < DAPDATabCount; ++Index)
+		{
+			const EDAPDATab Tab = static_cast<EDAPDATab>(Index);
+			const FString FileName = FString::Printf(TEXT("DAPDA_%s.png"), FDAPDAUI::TabSlug(Tab));
+			After(T, [Tab](ADAHUD* HUD) { HUD->OpenPDA(Tab); });
+			After(T + 0.6f, [FileName](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(FileName, false, false); });
+			T += 1.0f;
+		}
+
+		After(T, [](ADAHUD* HUD)
+		{
+			HUD->ClosePDA();
+			TArray<FDADialogueLine> Lines;
+			LoadDialogueTestLines(Lines);
+			HUD->BeginDialogue(Lines, TEXT("ui_test"));
+		});
+		After(T + 0.6f, [](ADAHUD* HUD)
+		{
+			if (FDADialogueUI* Dialogue = HUD->GetDialogueUI())
+			{
+				Dialogue->Advance(); // reveal line 1
+			}
+		});
+		After(T + 0.9f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADialogue.png"), false, false); });
+		After(T + 1.1f, [](ADAHUD* HUD)
+		{
+			if (FDADialogueUI* Dialogue = HUD->GetDialogueUI())
+			{
+				Dialogue->Advance(); // line 2
+				Dialogue->Advance(); // reveal line 2
+				Dialogue->Advance(); // line 3 (choice)
+				Dialogue->Advance(); // reveal choice text
+			}
+		});
+		After(T + 1.6f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADialogueChoice.png"), false, false); });
+		After(T + 2.4f, [](ADAHUD* HUD) { HUD->CloseDialogue(); });
+		After(T + 3.0f, [](ADAHUD* HUD) { FPlatformMisc::RequestExit(false); });
 	}
 }
 
@@ -154,6 +258,175 @@ void ADAHUD::DebugFinishDuelWin()
 	}
 }
 
+// ------------------------------------------------------------------------ dialogue / PDA hosting
+
+void ADAHUD::BeginDialogue(const TArray<FDADialogueLine>& Lines, const FString& ConversationId)
+{
+	if (IsDuelOpen())
+	{
+		return;
+	}
+	if (!DialogueUI.IsValid())
+	{
+		DialogueUI = MakeUnique<FDADialogueUI>(this);
+		DialogueUI->OnDialogueClosed.AddUObject(this, &ADAHUD::HandleDialogueClosed);
+	}
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	bHelpOpen = false;
+	DialogueUI->Begin(Lines, ConversationId);
+	UpdateInputMode();
+}
+
+void ADAHUD::BeginDialogueLine(const FDADialogueLine& Line)
+{
+	TArray<FDADialogueLine> Lines;
+	Lines.Add(Line);
+	BeginDialogue(Lines, TEXT("single"));
+}
+
+void ADAHUD::CloseDialogue()
+{
+	if (DialogueUI.IsValid())
+	{
+		DialogueUI->Close();
+	}
+	UpdateInputMode();
+}
+
+void ADAHUD::OpenPDA(EDAPDATab Tab)
+{
+	if (IsDuelOpen() || IsDialogueOpen())
+	{
+		return;
+	}
+	if (!PDAUI.IsValid())
+	{
+		PDAUI = MakeUnique<FDAPDAUI>(this);
+		PDAUI->OnAction.AddUObject(this, &ADAHUD::HandlePDAAction);
+		PDAUI->OnClosed.AddUObject(this, &ADAHUD::HandlePDAClosed);
+	}
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	bHelpOpen = false;
+	PDAUI->Open(Tab);
+	UpdateInputMode();
+}
+
+void ADAHUD::ClosePDA()
+{
+	if (PDAUI.IsValid())
+	{
+		PDAUI->Close();
+	}
+	UpdateInputMode();
+}
+
+void ADAHUD::TogglePDA(EDAPDATab Tab)
+{
+	if (IsDialogueOpen() || IsDuelOpen())
+	{
+		return;
+	}
+	if (IsPDAOpen())
+	{
+		ClosePDA();
+	}
+	else
+	{
+		OpenPDA(Tab);
+	}
+}
+
+void ADAHUD::UpdateInputMode()
+{
+	APlayerController* PC = GetOwningPlayerController();
+	if (!PC)
+	{
+		return;
+	}
+	// The duel UI owns its input mode (deck select/board/result); never fight it.
+	if (IsDuelOpen())
+	{
+		return;
+	}
+	const bool bWantCursor = bMapOpen || IsPDAOpen() || IsDialogueOpen();
+	PC->bShowMouseCursor = bWantCursor;
+	if (bWantCursor)
+	{
+		FInputModeGameAndUI Mode;
+		Mode.SetHideCursorDuringCapture(false);
+		PC->SetInputMode(Mode);
+	}
+	else
+	{
+		PC->SetInputMode(FInputModeGameOnly());
+	}
+}
+
+void ADAHUD::HandlePDAClosed()
+{
+	UpdateInputMode();
+}
+
+void ADAHUD::HandleDialogueClosed(const FString& ConversationId)
+{
+	UpdateInputMode();
+}
+
+void ADAHUD::HandlePDAAction(FName ActionId, const FString& Payload)
+{
+	const FString Action = ActionId.ToString();
+
+	if (Action == TEXT("options.changed"))
+	{
+		FString OptionId;
+		FString Value;
+		if (Payload.Split(TEXT("="), &OptionId, &Value) && DialogueUI.IsValid())
+		{
+			if (OptionId == TEXT("text_speed"))
+			{
+				DialogueUI->SetTextSpeed(Value == TEXT("Slow") ? 28.f : (Value == TEXT("Fast") ? 90.f : 48.f));
+			}
+			else if (OptionId == TEXT("auto_advance"))
+			{
+				DialogueUI->SetAutoAdvance(Value == TEXT("On"));
+			}
+		}
+		return;
+	}
+
+	FString Body;
+	if (Action == TEXT("deck.open"))
+	{
+		Body = TEXT("Deck editor hook: A06's DADeckUI is not connected yet.");
+	}
+	else if (Action == TEXT("mail.open"))
+	{
+		Body = TEXT("Mail reader hook: A03's mailbox is not connected yet.");
+	}
+	else if (Action == TEXT("save.slot"))
+	{
+		Body = TEXT("Save/load hook: A02's SaveSubsystem is not connected yet.");
+	}
+	if (!Body.IsEmpty())
+	{
+		if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+		{
+			FDAMessage Msg;
+			Msg.Title = TEXT("PDA");
+			Msg.Body = Body;
+			Msg.Accent = HudGold;
+			Msg.Duration = 3.5f;
+			Sub->PushMessage(Msg);
+		}
+	}
+}
+
 void ADAHUD::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -162,10 +435,34 @@ void ADAHUD::Tick(float DeltaSeconds)
 		DuelUI->Update(DeltaSeconds);
 	}
 
+	// Exactly one modal UI consumes input at a time: dialogue sits above the PDA.
+	if (IsDialogueOpen())
+	{
+		DialogueUI->Update(DeltaSeconds);
+	}
+	else if (IsPDAOpen())
+	{
+		PDAUI->Update(DeltaSeconds);
+	}
+
+	// P is polled here (like the map keys) so it works in GameAndUI mode and
+	// does not need a new Enhanced Input action in the shared student pawn.
+	if (!IsDuelOpen() && !IsDialogueOpen())
+	{
+		if (APlayerController* PC = GetOwningPlayerController())
+		{
+			if (PC->WasInputKeyJustPressed(EKeys::P)
+				|| PC->WasInputKeyJustPressed(EKeys::Gamepad_Special_Left))
+			{
+				TogglePDA();
+			}
+		}
+	}
+
 	// The island map is drawn with the mouse cursor visible (GameAndUI input mode). In that mode the
 	// Enhanced Input bindings for Enter and the mouse click can be swallowed, so poll the map keys here,
 	// exactly like the duel UI does.
-	if (bMapOpen && !IsDuelOpen())
+	if (bMapOpen && !IsDuelOpen() && !IsPDAOpen() && !IsDialogueOpen())
 	{
 		if (APlayerController* PC = GetOwningPlayerController())
 		{
@@ -309,7 +606,7 @@ FVector2D ADAHUD::WorldToMapUV(const FVector& World) const
 
 void ADAHUD::ToggleMap()
 {
-	if (IsDuelOpen())
+	if (IsDuelOpen() || IsDialogueOpen() || IsPDAOpen())
 	{
 		return;
 	}
@@ -339,6 +636,15 @@ void ADAHUD::ToggleMap()
 			PC->SetInputMode(FInputModeGameOnly());
 		}
 	}
+}
+
+void ADAHUD::ToggleHelp()
+{
+	if (IsDuelOpen() || IsPDAOpen() || IsDialogueOpen())
+	{
+		return;
+	}
+	bHelpOpen = !bHelpOpen;
 }
 
 void ADAHUD::MoveMapSelection(int32 Delta)
@@ -466,8 +772,20 @@ void ADAHUD::DrawHUD()
 		DrawMessage(Sub);
 	}
 	DrawClock(M);
-	DrawPrompt();
-	DrawIntro(Time - StartTime);
+	if (!IsPDAOpen() && !IsDialogueOpen())
+	{
+		DrawPrompt();
+		DrawIntro(Time - StartTime);
+	}
+
+	if (PDAUI.IsValid() && PDAUI->IsOpen())
+	{
+		PDAUI->Draw(Canvas);
+	}
+	if (DialogueUI.IsValid() && DialogueUI->IsOpen())
+	{
+		DialogueUI->Draw(Canvas);
+	}
 	if (bHelpOpen)
 	{
 		DrawHelp();
@@ -485,7 +803,7 @@ void ADAHUD::DrawIntro(float T)
 	const float Y = Canvas->ClipY * 0.2f;
 	Text(TEXT("DUEL ACADEMY"), CX, Y, WithAlpha(HudGold, A), 3.2f, true, BigFont);
 	Text(TEXT("ISLAND"), CX, Y + 92.f * S(), WithAlpha(HudPaper, A), 1.8f, true, BigFont);
-	Text(TEXT("Explore the island  -  M: map & fast travel  -  E: interact  -  F1: controls"), CX, Y + 150.f * S(), WithAlpha(HudPaper, A * 0.9f), 1.0f, true);
+	Text(TEXT("Explore the island  -  M: map  -  P: PDA  -  E: interact  -  F1: controls"), CX, Y + 150.f * S(), WithAlpha(HudPaper, A * 0.9f), 1.0f, true);
 }
 
 void ADAHUD::DrawBanner(UDAIslandSubsystem* Sub, float Time)
@@ -705,12 +1023,14 @@ void ADAHUD::DrawHelp()
 		TEXT("Shift / L3 ............... Sprint"),
 		TEXT("Space / A ................ Jump"),
 		TEXT("E / X .................... Interact (signs, card shop, duel fields, students)"),
-		TEXT("M / Tab .................. Island map & fast travel"),
+		TEXT("M / Tab ................. Island map & fast travel"),
+		TEXT("P ....................... PDA (map, calendar, deck, mail, save, options, records)"),
 		TEXT("J ........................ Switch dorm jacket"),
 		TEXT("F ........................ Raise duel disk"),
 		TEXT("T ........................ Pause / resume time"),
 		TEXT("[  ] ..................... Slower / faster time"),
 		TEXT("N ........................ Skip 3 hours"),
+		TEXT("Dialogue: E/SPACE advance   H log   A auto   Ctrl skip"),
 		TEXT("F1 / H ................... Toggle this help"),
 	};
 	// CC-BY 3.0 models require visible attribution; the full list is in CREDITS.md

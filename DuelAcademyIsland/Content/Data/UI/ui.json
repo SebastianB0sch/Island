@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "_comment": "UI labels and clearly marked sample payloads only. Canon story text belongs in Content/Data/Story (A03); card/pack/deck data belongs to A01/A06. This file is loaded by DADialogueUI.cpp / DAPDAUI.cpp at runtime.",
+  "labels": {
+    "pda.title": "DUEL ACADEMY PDA",
+    "pda.subtitle": "STUDENT TERMINAL",
+    "pda.tab.map": "MAP",
+    "pda.tab.calendar": "CALENDAR",
+    "pda.tab.deck": "DECK",
+    "pda.tab.mail": "MAIL",
+    "pda.tab.save": "SAVE",
+    "pda.tab.options": "OPTIONS",
+    "pda.tab.records": "RECORDS",
+    "pda.tab.limitation": "LIMIT",
+    "pda.calendar.month": "October",
+    "pda.calendar.exam": "Sample exam day (placeholder)",
+    "pda.calendar.event": "Sample event marker (placeholder)",
+    "pda.empty": "No entries yet.",
+    "pda.detail.empty": "No data connected yet.",
+    "pda.footer.hints": "Q / E or 1-8: tabs    Up / Down: select    Enter: activate    P / Esc: close",
+    "pda.footer.placeholder": "PDA shell - panes marked placeholder await A02/A03/A06/A07.",
+    "dialogue.history.title": "DIALOGUE LOG",
+    "dialogue.hint.continue": "E / SPACE  CONTINUE",
+    "dialogue.hint.reveal": "E / SPACE  REVEAL",
+    "dialogue.hint.finish": "E / SPACE  FINISH",
+    "dialogue.hint.choice": "Choose an option  -  1-9 / click",
+    "dialogue.button.log": "LOG (H)",
+    "dialogue.button.auto": "AUTO",
+    "dialogue.button.skip": "SKIP",
+    "dialogue.continue.prompt": "[E]"
+  },
+  "dialogueSamples": {
+    "opening_test": [
+      {
+        "speakerId": "sheppard",
+        "speakerName": "Chancellor Sheppard",
+        "portrait": "sheppard",
+        "expression": "neutral",
+        "speakerTitle": "Chancellor",
+        "text": "Welcome to Duel Academy. This line is a placeholder from Content/Data/UI/ui.json; A03 will supply the real opening dialogue.",
+        "textKey": "PLACEHOLDER.E01.sheppard_01",
+        "nodeId": "E01.sheppard_01",
+        "autoAdvanceDelay": 3.0
+      },
+      {
+        "speakerId": "jaden",
+        "speakerName": "Jaden Yuki",
+        "portrait": "jaden",
+        "expression": "happy",
+        "speakerTitle": "Slifer Red",
+        "text": "Hey! I'm Jaden. This is a UI sample, not story text.",
+        "textKey": "PLACEHOLDER.E01.jaden_01",
+        "nodeId": "E01.jaden_01",
+        "autoAdvanceDelay": 2.4
+      },
+      {
+        "speakerId": "sheppard",
+        "speakerName": "Chancellor Sheppard",
+        "portrait": "sheppard",
+        "expression": "neutral",
+        "speakerTitle": "Chancellor",
+        "text": "Choice buttons are live. Pick an option to test the flow. (Placeholder.)",
+        "textKey": "PLACEHOLDER.E01.choice_01",
+        "nodeId": "E01.choice_01",
+        "bChoice": true,
+        "options": [
+          "Fire Deck",
+          "Water Deck",
+          "Wind Deck"
+        ]
+      },
+      {
+        "speakerId": "syrus",
+        "speakerName": "Syrus Truesdale",
+        "portrait": "syrus",
+        "expression": "happy",
+        "speakerTitle": "Slifer Red",
+        "text": "The next line appears after a choice. (Placeholder.)",
+        "textKey": "PLACEHOLDER.E01.syrus_01",
+        "nodeId": "E01.syrus_01"
+      }
+    ],
+    "portrait_fallback": [
+      {
+        "speakerId": "unknown_student",
+        "speakerName": "Unknown Student",
+        "expression": "",
+        "text": "This speaker has no portrait asset, so the colored monogram/silhouette fallback is shown. (Placeholder.)",
+        "textKey": "PLACEHOLDER.UI.fallback_01",
+        "nodeId": "UI.fallback_01"
+      }
+    ]
+  }
+}
