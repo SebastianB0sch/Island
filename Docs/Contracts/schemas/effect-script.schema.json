@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/effect-script.schema.json",
+  "title": "Per-card effect script",
+  "description": "A05's data-driven effect DSL. The operation vocabulary is extensible; DAEffectRuntime owns the authoritative op list. Every scripted card must declare at least one operation.",
+  "type": "object",
+  "required": ["card_id", "operations"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "card_id": { "type": "integer", "minimum": 1, "maximum": 1200 },
+    "name": { "type": "string" },
+    "effect_type": {
+      "type": "string",
+      "enum": ["ignition", "trigger", "continuous", "flip", "quick", "activation", "summon", "battle", "end_phase"]
+    },
+    "spell_speed": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["event"],
+        "properties": {
+          "event": { "type": "string", "minLength": 1 },
+          "condition": { "type": "string" },
+          "optional": { "type": "boolean" },
+          "timing": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "cost": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["op"],
+        "properties": {
+          "op": { "type": "string", "minLength": 1 },
+          "count": { "type": "integer", "minimum": 0 },
+          "card": { "type": "integer", "minimum": 1, "maximum": 1200 },
+          "zone": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["op"],
+        "properties": {
+          "op": { "type": "string", "minLength": 1 },
+          "zone": { "type": "string" },
+          "count": { "type": "integer", "minimum": 0 },
+          "controller": { "type": "string" },
+          "filter": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["op"],
+        "properties": {
+          "op": { "type": "string", "minLength": 1 },
+          "count": { "type": "integer", "minimum": 0 },
+          "amount": { "type": "integer" },
+          "card": { "type": "integer", "minimum": 1, "maximum": 1200 },
+          "zone": { "type": "string" },
+          "target": { "type": "string" },
+          "duration": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "duration": { "type": "string" },
+    "source": { "type": "string", "enum": ["canon", "original", "fallback"] },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "setup": { "type": "object" },
+          "expect": { "type": "object" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "notes": { "type": "string" },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": true
+}

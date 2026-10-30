@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/duel-result.schema.json",
+  "title": "FDuelResult payload",
+  "description": "Serialized form of Docs/Contracts/headers/DADuelContract.h FDuelResult. A02 converts statistics to DP/title/counters; A03 consumes story outcomes; A07 consumes exam/puzzle results.",
+  "type": "object",
+  "required": [
+    "opponentId",
+    "mode",
+    "bPlayerWon",
+    "bDraw",
+    "turns",
+    "playerLp",
+    "opponentLp",
+    "battleDamageDealt",
+    "monstersDestroyedByBattle",
+    "dpEarned",
+    "flagsSet",
+    "seed"
+  ],
+  "properties": {
+    "opponentId": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "mode": {
+      "type": "string",
+      "enum": ["story", "free", "tutorial", "exam_timed", "exam_practical", "puzzle", "ante"]
+    },
+    "bPlayerWon": { "type": "boolean" },
+    "bDraw": { "type": "boolean" },
+    "turns": { "type": "integer", "minimum": 0 },
+    "playerLp": { "type": "integer", "minimum": 0 },
+    "opponentLp": { "type": "integer", "minimum": 0 },
+    "battleDamageDealt": { "type": "integer", "minimum": 0 },
+    "monstersDestroyedByBattle": { "type": "integer", "minimum": 0 },
+    "dpEarned": { "type": "integer", "minimum": 0 },
+    "flagsSet": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" }
+    },
+    "seed": { "type": "integer", "minimum": 0 },
+    "reason": { "type": "string" },
+    "puzzleSolved": { "type": "boolean" },
+    "timeRemainingSeconds": { "type": "integer", "minimum": 0 },
+    "bWentSecond": { "type": "boolean" },
+    "battleDamageTaken": { "type": "integer", "minimum": 0 },
+    "effectDamageDealt": { "type": "integer", "minimum": 0 },
+    "monstersLostByBattle": { "type": "integer", "minimum": 0 },
+    "fusionSummons": { "type": "integer", "minimum": 0 },
+    "ritualSummons": { "type": "integer", "minimum": 0 },
+    "specialSummons": { "type": "integer", "minimum": 0 },
+    "spellsActivated": { "type": "integer", "minimum": 0 },
+    "trapsActivated": { "type": "integer", "minimum": 0 },
+    "cardsDrawn": { "type": "integer", "minimum": 0 },
+    "cardsDiscarded": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

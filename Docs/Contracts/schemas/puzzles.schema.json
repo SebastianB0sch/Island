@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://duelacademy.local/contracts/puzzles.schema.json",
+  "title": "Timed duel puzzles",
+  "description": "100 fixed one-turn (or stated turn-limit) puzzles, P001..P100. The setup is authoritative; solution steps are validated by the puzzle runner and by validate_all.py.",
+  "oneOf": [
+    {
+      "type": "array",
+      "items": { "$ref": "#/definitions/puzzle" }
+    },
+    {
+      "type": "object",
+      "required": ["puzzles"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "puzzles": { "type": "array", "items": { "$ref": "#/definitions/puzzle" } },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  ],
+  "definitions": {
+    "cardId": { "type": "integer", "minimum": 1, "maximum": 1200 },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "zoneCard": {
+      "oneOf": [
+        { "$ref": "#/definitions/cardId" },
+        {
+          "type": "object",
+          "required": ["card"],
+          "properties": {
+            "card": { "$ref": "#/definitions/cardId" },
+            "count": { "type": "integer", "minimum": 1, "maximum": 20 },
+            "position": { "type": "string", "enum": ["attack", "defense"] },
+            "face_up": { "type": "boolean" },
+            "set": { "type": "boolean" },
+            "zone": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "mode": { "type": "string", "enum": ["normal", "effect", "fusion", "ritual", "set"] }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "lp": { "type": "integer", "minimum": 0, "maximum": 999999 },
+        "hand": { "type": "array", "items": { "$ref": "#/definitions/zoneCard" } },
+        "field": { "type": "array", "items": { "$ref": "#/definitions/zoneCard" } },
+        "spells": { "type": "array", "items": { "$ref": "#/definitions/zoneCard" } },
+        "graveyard": { "type": "array", "items": { "$ref": "#/definitions/zoneCard" } },
+        "banished": { "type": "array", "items": { "$ref": "#/definitions/zoneCard" } },
+        "deck": { "type": "array", "items": { "$ref": "#/definitions/zoneCard" } },
+        "extra": { "type": "array", "items": { "$ref": "#/definitions/zoneCard" } }
+      },
+      "additionalProperties": true
+    },
+    "solutionStep": {
+      "type": "object",
+      "required": ["action"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "normal_summon",
+            "tribute_summon",
+            "set_monster",
+            "special_summon",
+            "activate_spell",
+            "set_spell_trap",
+            "activate_trap",
+            "flip_summon",
+            "change_position",
+            "activate_effect",
+            "attack",
+            "direct_attack",
+            "fusion_summon",
+            "ritual_summon",
+            "discard",
+            "end_turn"
+          ]
+        },
+        "card": { "$ref": "#/definitions/cardId" },
+        "target": { "$ref": "#/definitions/cardId" },
+        "tribute": { "type": "array", "items": { "$ref": "#/definitions/cardId" } },
+        "zone": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "puzzle": {
+      "type": "object",
+      "required": [
+        "id",
+        "level",
+        "opponent",
+        "objective",
+        "time_limit_seconds",
+        "turn_limit",
+        "player",
+        "opponent_state",
+        "solution"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^P[0-9]{3}$" },
+        "level": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "opponent": { "$ref": "#/definitions/slug" },
+        "opponent_deck": { "$ref": "#/definitions/slug" },
+        "objective": {
+          "type": "string",
+          "enum": [
+            "win",
+            "win_this_turn",
+            "reduce_lp_to_zero",
+            "deal_damage",
+            "destroy_monster",
+            "special_summon",
+            "fusion_summon",
+            "ritual_summon",
+            "survive_turns"
+          ]
+        },
+        "time_limit_seconds": { "type": "integer", "minimum": 1, "maximum": 9999 },
+        "turn_limit": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "seed": { "type": "integer", "minimum": 0 },
+        "player": { "$ref": "#/definitions/state" },
+        "opponent_state": { "$ref": "#/definitions/state" },
+        "solution": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/solutionStep" }
+        },
+        "reward_dp": { "type": "integer", "minimum": 0 },
+        "canon_source": { "type": "string" },
+        "trace_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}
