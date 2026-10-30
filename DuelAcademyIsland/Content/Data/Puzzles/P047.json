@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "id": "P047",
+  "level": 3,
+  "title": "Ritual Summon L3-1",
+  "template": "ritual_summon",
+  "opponent": "mimicry",
+  "seed": 2047,
+  "turn_limit": 1,
+  "time_limit": 65,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      843,
+      841,
+      2,
+      165
+    ],
+    "field": [
+      {
+        "card_id": 234,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 4300,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 843
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 841,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 234,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 160,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'ritual_summon', level 3, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Ritual Summon Legendary Flame Lord with Incandescent Ordeal, then attack for exact LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_047",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      332,
+      348,
+      367,
+      497,
+      615,
+      655,
+      1026
+    ],
+    "solution_card_names": [
+      "Black Illusion Ritual",
+      "Call of the Haunted",
+      "Jinzo",
+      "Relinquished",
+      "Ritual Weapon",
+      "Spear Dragon",
+      "Zombyra the Dark"
+    ],
+    "solution_steps": [
+      "Activate Black Illusion Ritual. Offer Zombyra the Dark",
+      "Activate the effect of Relinquished and absorb Jinzo",
+      "Equip Ritual Weapon to Relinquished",
+      "Activate Call of the Haunted and Special Summon Zombyra the Dark",
+      "Attack Spear Dragon with Zombyra the Dark. Direct Attack with Relinquished"
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

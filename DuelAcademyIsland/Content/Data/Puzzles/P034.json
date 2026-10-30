@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "id": "P034",
+  "level": 2,
+  "title": "Position Switch L2-2",
+  "template": "position_switch",
+  "opponent": "mimicry",
+  "seed": 2034,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 780,
+        "position": "defense",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 1900,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "change_position",
+      "card_id": 780,
+      "position": "attack"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 780,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'position_switch', level 2, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Both monsters begin in Defense Position; change to Attack, then attack directly.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_034",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      397,
+      557,
+      617,
+      868,
+      997,
+      1008,
+      1097
+    ],
+    "solution_card_names": [
+      "Black Luster Soldier - Envoy of the Beginning",
+      "Gravity Bind",
+      "Kycoo the Ghost Destroyer",
+      "Ninja Grandmaster Sasuke",
+      "Phoenix Wing Wind Blast",
+      "Rare Metal Dragon",
+      "Tribute to the Doomed"
+    ],
+    "solution_steps": [
+      "Activate Tribute to the Doomed and discard Rare Metal Dragon from your hand, choosing Kycoo the Ghost Destroyer as the effect victim.",
+      "Activate Phoenix Wing Wind Blast and discard Ninja Grandmaster Sasuke, choosing Gravity Bind as the effect victim.",
+      "Special Summon Black Luster Soldier - Envoy of the Beginning.",
+      "Enter Battle Phase and attack."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

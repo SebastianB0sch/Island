@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "id": "P067",
+  "level": 4,
+  "title": "Ritual Summon L4-1",
+  "template": "ritual_summon",
+  "opponent": "mimicry",
+  "seed": 2067,
+  "turn_limit": 1,
+  "time_limit": 80,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      843,
+      841,
+      2,
+      165
+    ],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 5400,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 843
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 841,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'ritual_summon', level 4, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Ritual Summon Legendary Flame Lord with Incandescent Ordeal, then attack for exact LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_067",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      166,
+      186,
+      477,
+      700,
+      811,
+      898,
+      1064,
+      1065
+    ],
+    "solution_card_names": [
+      "Back to Square One",
+      "Blue-Eyes Ultimate Dragon",
+      "Cyber-Stein",
+      "Des Lacooda",
+      "Granadora",
+      "Monster Reincarnation",
+      "Premature Burial",
+      "Sacred Crane"
+    ],
+    "solution_steps": [
+      "Flip summon Granadora to gain 1000 LP.",
+      "Use Back to Square One to return Granadora to the top of your deck. Discard Monster Reincarnation as a cost.",
+      "Use Premature Burial to return Sacred Crane to the field and draw Granadora again.",
+      "Normal summon Granadora (another 1000 LP).",
+      "Now flip Cyber-Stein and activate his effect to get Blue-Eyes Ultimate Dragon.",
+      "Attack Des Lacooda with Cyber-Stein, then have your monsters attack directly."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

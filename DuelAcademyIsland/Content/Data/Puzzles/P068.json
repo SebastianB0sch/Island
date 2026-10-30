@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "id": "P068",
+  "level": 4,
+  "title": "Ritual Summon L4-2",
+  "template": "ritual_summon",
+  "opponent": "mimicry",
+  "seed": 2068,
+  "turn_limit": 1,
+  "time_limit": 80,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      843,
+      841,
+      234,
+      195
+    ],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 4800,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 843
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 841,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'ritual_summon', level 4, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Ritual Summon Legendary Flame Lord with Incandescent Ordeal, then attack for exact LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_068",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      188,
+      476,
+      724,
+      746,
+      747
+    ],
+    "solution_card_names": [
+      "The Shallow Grave",
+      "Thunder Dragon",
+      "X-Head Cannon",
+      "XYZ-Dragon Cannon",
+      "Z-Metal Tank"
+    ],
+    "solution_steps": [
+      "Exchange the Thunder Dragon in your hand for two copies from your deck.",
+      "Use The Shallow Grave to return X-Head Cannon to your field.",
+      "Normal summon Z-Metal Tank and use X, Y, and Z to Special summon XYZ-Dragon Cannon from your Extra deck in attack position.",
+      "Use its effect three times to empty your opponent's field, then attack directly."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

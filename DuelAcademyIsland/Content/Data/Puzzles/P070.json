@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "id": "P070",
+  "level": 4,
+  "title": "Spell Removal L4-2",
+  "template": "spell_removal",
+  "opponent": "mimicry",
+  "seed": 2070,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      397,
+      2
+    ],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1111,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 397
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'spell_removal', level 4, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Tribute to the Doomed discards the spare card and destroys the opposing monster.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_070",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      42,
+      607
+    ],
+    "solution_card_names": [
+      "Catapult Turtle",
+      "Cathedral of Nobles",
+      "Stronghold the Moving Fortress",
+      "Trap Monster"
+    ],
+    "solution_steps": [
+      "Activate Cathedral of Nobles.",
+      "Set Stronghold the Moving Fortress and activate it immediately (which you can due to the Cathedrals effect).",
+      "Now tribute the Trap Monster to summon Catapult Turtle.",
+      "First catapult all the gadgets into your opponents LP, then finish him with turtles self-sacrifice."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

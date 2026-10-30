@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "id": "P089",
+  "level": 5,
+  "title": "Spell Removal L5-1",
+  "template": "spell_removal",
+  "opponent": "mimicry",
+  "seed": 2089,
+  "turn_limit": 1,
+  "time_limit": 90,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      428
+    ],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 5400,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 428
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'spell_removal', level 5, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Snatch Steal takes Blue-Eyes; both monsters attack directly for exact LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_089",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      454,
+      474,
+      476,
+      521,
+      694,
+      699,
+      701,
+      728,
+      731,
+      733
+    ],
+    "solution_card_names": [
+      "Book of Taiyou",
+      "Don Zaloog",
+      "Giant Axe Mummy",
+      "Gravekeeper's Cannonholder",
+      "Gravekeeper's Spear Soldier",
+      "Gravekeeper's Spy",
+      "Mystic Tomato",
+      "Nobleman of Crossout",
+      "Slate Warrior",
+      "The Shallow Grave"
+    ],
+    "solution_steps": [
+      "Use The Shallow Grave to summon Gravekeeper's Spy from your Graveyard.",
+      "Activate Book of Taiyou to flip Gravekeeper's Spy and Summon Gravekeeper's Spear Soldier from your deck.",
+      "Then Normal Summon Mystic Tomato.",
+      "Activate Nobleman of Crossout to remove Giant Axe Mummy.",
+      "Kill Don Zaloog with Mystic Tomato. The Summoning effect will grant you Gravekeeper's Cannonholder.",
+      "Attack the face-down Slate Warrior with Spear Soldier, and attack directly twice.",
+      "Tribute the other Gravekeeper's monsters for Cannonholder's effect."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "id": "P045",
+  "level": 3,
+  "title": "Fusion Summon L3-1",
+  "template": "fusion_summon",
+  "opponent": "mimicry",
+  "seed": 2045,
+  "turn_limit": 1,
+  "time_limit": 65,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      1184
+    ],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [
+      1106,
+      1107
+    ],
+    "deck": [],
+    "extra": [
+      1129
+    ]
+  },
+  "opponent_state": {
+    "lp": 2100,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 1184
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1129,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 160,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'fusion_summon', level 3, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Fusion Summon Elemental Hero Flame Wingman with Miracle Fusion, then attack for exactly 2100.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_045",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      754,
+      755,
+      982
+    ],
+    "solution_card_names": [
+      "Dark Blade",
+      "Man-Thro' Tro'",
+      "Pitch-Dark Dragon"
+    ],
+    "solution_steps": [
+      "Summon Pitch-Dark Dragon and activate his effect. Equip him on any Dark Blade.",
+      "Activate Man-Thro' Tro''s effect and sacrifice the Dark Blade that is NOT equipped with Pitch-Dark Dragon.",
+      "Enter Battle Phase and attack one of the Pandas with Dark Blade.",
+      "Enter Main Phase 2 and activate Man-Thro' Tro'<nowiki>'s effect again, this time sacrificing the remaining, Pitch-Dark Dragon equipped Dark Blade.</nowiki>"
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

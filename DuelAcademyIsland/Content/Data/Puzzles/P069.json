@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "id": "P069",
+  "level": 4,
+  "title": "Spell Removal L4-1",
+  "template": "spell_removal",
+  "opponent": "mimicry",
+  "seed": 2069,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      422
+    ],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [
+      {
+        "card_id": 421,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 422
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'spell_removal', level 4, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Heavy Storm clears the set backrow, then the direct attacks finish the duel.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_069",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      348,
+      432,
+      497,
+      648,
+      649,
+      902
+    ],
+    "solution_card_names": [
+      "Call of the Haunted",
+      "Dark Driceratops",
+      "Jinzo",
+      "Marauding Captain",
+      "Rush Recklessly",
+      "Throwstone Unit"
+    ],
+    "solution_steps": [
+      "Normal Summon Marauding Captain, use his effect to Special summon Throwstone Unit.",
+      "Use Rush Recklessly to increase Throwstones ATK to 1600.",
+      "Now Tribute Marauding to destroy your opponents Jinzo with Throwstone's effect.",
+      "Use your your face-down Call of the Haunted to revive Dark Driceratops and attack for game."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "id": "P061",
+  "level": 4,
+  "title": "Direct Attack L4-1",
+  "template": "direct_attack",
+  "opponent": "mimicry",
+  "seed": 2061,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'direct_attack', level 4, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Direct attack with Blue-Eyes White Dragon for exactly 3000 damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_061",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      347,
+      902,
+      1031,
+      1041,
+      1042,
+      1065
+    ],
+    "solution_card_names": [
+      "Dark Driceratops",
+      "Gear Golem the Moving Fortress",
+      "Monster Reincarnation",
+      "The Creator",
+      "The Creator Incarnate",
+      "The Tricky"
+    ],
+    "solution_steps": [
+      "Normal summon The Creator Incarnate.",
+      "Use his effect to Special summon The Creator from your hand.",
+      "By discarding Dark Driceratops, special summon The Tricky.",
+      "Use Creators effect to summon Dark Driceratops (Monster Reincarnation serves as the discard cost).",
+      "Attack Gear Golem the Moving Fortress with Driceratops for 200 piercing damage.",
+      "Your other monsters direct attacks make the finishing move."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

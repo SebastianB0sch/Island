@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "id": "P066",
+  "level": 4,
+  "title": "Fusion Summon L4-2",
+  "template": "fusion_summon",
+  "opponent": "mimicry",
+  "seed": 2066,
+  "turn_limit": 1,
+  "time_limit": 80,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      1184
+    ],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [
+      1106,
+      1107
+    ],
+    "deck": [],
+    "extra": [
+      1129
+    ]
+  },
+  "opponent_state": {
+    "lp": 5100,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 1184
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1129,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'fusion_summon', level 4, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Fusion Summon Elemental Hero Flame Wingman with Miracle Fusion, then attack for exactly 5100.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_066",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      348,
+      361,
+      469,
+      476,
+      647,
+      907,
+      1017,
+      1064
+    ],
+    "solution_card_names": [
+      "Back to Square One",
+      "Ceasefire",
+      "Fatal Abacus",
+      "Jinzo",
+      "Mataza the Zapper",
+      "Penumbral Soldier Lady",
+      "The Shallow Grave",
+      "Total Defense Shogun"
+    ],
+    "solution_steps": [
+      "Get rid of Jinzo by returning him to the top of your opponents deck with Back to Square One. Use Total Defense Shogun as discard cost.",
+      "Activate The Shallow Grave and have your Shogun return. Your opponent will pick Penumbral Soldier Lady.",
+      "Normal summon Mataza the Zapper.",
+      "Activate Ceasefire for 1500 damage. Shogun and Soldier lady will now be face-up.",
+      "Have Shogun destroy the Soldier Lady by battle (he can attack in defense mode) - Fatal Abacus will add in some extra damage.",
+      "Finally, make Mataza attack twice."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

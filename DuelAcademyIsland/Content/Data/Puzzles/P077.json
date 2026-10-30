@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "id": "P077",
+  "level": 4,
+  "title": "Burn L4-1",
+  "template": "burn",
+  "opponent": "mimicry",
+  "seed": 2077,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 11,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [
+      {
+        "card_id": 1192,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 4800,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_trap",
+      "card_id": 1192
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'burn', level 4, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Burn with Sparks / Spiritual Fire Art - Kurenai, then attack for the remaining LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_077",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      436,
+      477,
+      997,
+      1150
+    ],
+    "solution_card_names": [
+      "Drillroid",
+      "Mystical Space Typhoon",
+      "Premature Burial",
+      "Rare Metal Dragon",
+      "Shield Crush"
+    ],
+    "solution_steps": [
+      "Destroy Red Gadget - Stronghold with Mystical Space Typhoon.",
+      "Use Shield Crush on one of the defensive monsters.",
+      "Summon Drillroid, revive Rare Metal Dragon with Premature Burial.",
+      "Attack the last defender with Drillroid (destroyed by effect) and attack directly with the dragon."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

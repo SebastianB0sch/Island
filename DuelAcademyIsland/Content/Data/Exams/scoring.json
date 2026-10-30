@@ -74,5 +74,16 @@
   "source": "Masterplan \u00a72.3/\u00a75.7: 500 points, pass threshold around 250-300, seven practical objectives. Exact weights and pass mark require A01 verification.",
   "notes": "Changing pass_mark or section weights is a data-only change. DAExamSubsystem reads this file.",
   "canon_source": "DuelAcademyIsland/Content/Data/Canon/exams.json (A01 extraction)",
-  "canon_note": "A01 confirms 500 points and the 250/300 pass-mark dispute; exact component weights remain A07-authored."
+  "canon_note": "A01 confirms 500 points and the 250/300 pass-mark dispute; exact component weights and monthly assignments remain A07-authored.",
+  "exam_cycles": 12,
+  "cycle_scoring": {
+    "max_points": 500,
+    "pass_mark": 300,
+    "sections": {
+      "written": 200,
+      "timed": 100,
+      "practical": 200
+    }
+  },
+  "cycle_source": "Exams/exams.json (A07)"
 }

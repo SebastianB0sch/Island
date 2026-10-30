@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "id": "P094",
+  "level": 5,
+  "title": "Position Switch L5-2",
+  "template": "position_switch",
+  "opponent": "mimicry",
+  "seed": 2094,
+  "turn_limit": 1,
+  "time_limit": 90,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "defense",
+        "face_up": true
+      },
+      {
+        "card_id": 363,
+        "position": "defense",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 5500,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "change_position",
+      "card_id": 1,
+      "position": "attack"
+    },
+    {
+      "action": "change_position",
+      "card_id": 363,
+      "position": "attack"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 363,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'position_switch', level 5, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Both monsters begin in Defense Position; change to Attack, then attack directly.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_094",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      141,
+      664,
+      796,
+      996,
+      1001
+    ],
+    "solution_card_names": [
+      "Big Bang Shot",
+      "Dark Hole",
+      "Emergency Provisions",
+      "Pyramid of Light",
+      "Theinen the Great Sphinx"
+    ],
+    "solution_steps": [
+      "Use Dark Hole.",
+      "When Andro Sphinx and Sphinx Teleia are destroyed by Dark Hole, summon Theinen the Great Sphinx from your hand by paying 500 points. Chain Emergency Provisions to Theinens summoning effect (Exactly at this time!) and tribute Pyramid of Light.",
+      "Activate Theinens boost effect and equip him with Big Bang Shot. Then attack."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

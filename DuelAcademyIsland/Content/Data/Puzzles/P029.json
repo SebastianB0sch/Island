@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "id": "P029",
+  "level": 2,
+  "title": "Spell Removal L2-1",
+  "template": "spell_removal",
+  "opponent": "mimicry",
+  "seed": 2029,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      379
+    ],
+    "field": [
+      {
+        "card_id": 234,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 1900,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 379
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 234,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'spell_removal', level 2, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Fissure removes the only opposing monster; Gemini Elf attacks directly.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_029",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      352,
+      437,
+      442,
+      1015
+    ],
+    "solution_card_names": [
+      "Dark Magician Girl",
+      "Enraged Muka Muka",
+      "Giant Rat",
+      "Giant Trunade"
+    ],
+    "solution_steps": [
+      "Activate Giant Trunade.",
+      "Enter Battle Phase and attack Dark Magician Girl with Giant Rat, then Special Summon Enraged Muka Muka.",
+      "Attack DMG with Enraged Muka Muka."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

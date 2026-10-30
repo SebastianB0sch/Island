@@ -322,11 +322,361 @@ def _check_zone(v: Validator, label: str, side_name: str, side: dict, cards: dic
         v.warn(label, f"{side_name} hand has {len(hand)} cards; puzzle setups may exceed the normal hand limit")
 
 
+class PuzzleSimError(Exception):
+    pass
+
+
+class PuzzleSim:
+    """Small deterministic replay model for the port-authored templates.
+
+    It covers the actions/cards used by P021-P100: Normal/Tribute Summon,
+    position changes, direct/attack/defense battles, Fissure/Tribute/Snatch/
+    Heavy Storm/Book of Moon/Sparks, Polymerization/Miracle Fusion,
+    Incandescent Ordeal, the three generic ATK equips, Premature Burial,
+    Autonomous Action Unit and Spiritual Fire Art - Kurenai. It also models the
+    automatic Mirror Force + Seven Tools of the Bandit interaction.
+    """
+
+    def __init__(self, puzzle: dict, cards: dict[int, dict], fusions: list[dict]):
+        self.puzzle = puzzle
+        self.cards = cards
+        self.fusions = fusions
+        self._uid = 1
+        self.p = self._make_side(puzzle["player"])
+        self.o = self._make_side(puzzle["opponent_state"])
+        self.normal_summoned = False
+        self.attacked: set[int] = set()
+
+    def _next_uid(self) -> int:
+        uid = self._uid
+        self._uid += 1
+        return uid
+
+    def _make_side(self, spec: dict) -> dict:
+        side = {
+            "lp": spec["lp"],
+            "hand": list(spec.get("hand", [])),
+            "field": [],
+            "st": [],
+            "grave": list(spec.get("graveyard", [])),
+            "extra": list(spec.get("extra", [])),
+            "deck": list(spec.get("deck", [])),
+        }
+        for entry in spec.get("field", []):
+            side["field"].append({
+                "uid": self._next_uid(),
+                "id": entry["card_id"],
+                "pos": entry.get("position", "attack"),
+                "face_up": entry.get("face_up", True),
+                "bonus": 0,
+            })
+        for entry in spec.get("spell_traps", []):
+            side["st"].append({
+                "uid": self._next_uid(),
+                "id": entry["card_id"],
+                "face_up": entry.get("face_up", False),
+                "set_turn": entry.get("set_turn", 0),
+            })
+        return side
+
+    def _name(self, cid: int) -> str:
+        return self.cards[cid]["name"]
+
+    def _atk(self, entry: dict) -> int:
+        return int(self.cards[entry["id"]].get("atk", 0)) + int(entry.get("bonus", 0))
+
+    def _def(self, entry: dict) -> int:
+        return int(self.cards[entry["id"]].get("def", 0))
+
+    def _level(self, cid: int) -> int:
+        return int(self.cards[cid].get("level", 0))
+
+    def _find_field(self, side: dict, cid: int) -> dict:
+        for entry in side["field"]:
+            if entry["id"] == cid:
+                return entry
+        raise PuzzleSimError(f"card {cid} is not on the field")
+
+    def _remove_hand(self, side: dict, cid: int) -> None:
+        try:
+            side["hand"].remove(cid)
+        except ValueError as exc:
+            raise PuzzleSimError(f"card {cid} is not in hand") from exc
+
+    def _destroy(self, side: dict, entry: dict) -> None:
+        if entry in side["field"]:
+            side["field"].remove(entry)
+            side["grave"].append(entry["id"])
+
+    def _strongest(self, side: dict, face_up_only: bool = False, attr: str | None = None):
+        candidates = [m for m in side["field"] if m["face_up"] or not face_up_only]
+        if attr:
+            candidates = [m for m in candidates if self.cards[m["id"]].get("attribute") == attr]
+        return max(candidates, key=self._atk) if candidates else None
+
+    def _lowest(self, side: dict, face_up_only: bool = False):
+        candidates = [m for m in side["field"] if m["face_up"] or not face_up_only]
+        return min(candidates, key=self._atk) if candidates else None
+
+    def _revive(self, grave: list[int], to_side: dict) -> int:
+        candidates = [cid for cid in grave if "Monster" in self.cards[cid].get("card_type", "")]
+        if not candidates:
+            raise PuzzleSimError("no monster to revive")
+        cid = max(candidates, key=lambda c: int(self.cards[c].get("atk", 0)))
+        grave.remove(cid)
+        to_side["field"].append({"uid": self._next_uid(), "id": cid, "pos": "attack", "face_up": True, "bonus": 0})
+        return cid
+
+    def _discard_lowest(self, side: dict) -> None:
+        if not side["hand"]:
+            raise PuzzleSimError("cannot discard from an empty hand")
+        cid = min(side["hand"], key=lambda c: int(self.cards[c].get("atk", 0)) + self._level(c) * 10)
+        side["hand"].remove(cid)
+        side["grave"].append(cid)
+
+    def _fuse(self, spell_name: str) -> None:
+        poly = spell_name == "Polymerization"
+        pool = list(self.p["hand"]) + [m["id"] for m in self.p["field"]] if poly else \
+            list(self.p["grave"]) + [m["id"] for m in self.p["field"]]
+        for recipe in self.fusions:
+            if spell_name not in recipe.get("fusionTypes", []):
+                continue
+            materials = list(recipe.get("materials", []))
+            if not materials or recipe.get("result") not in self.p["extra"]:
+                continue
+            available = list(pool)
+            if all(materials.count(cid) <= available.count(cid) for cid in set(materials)):
+                for cid in materials:
+                    if cid in self.p["hand"]:
+                        self.p["hand"].remove(cid)
+                    elif cid in self.p["grave"]:
+                        self.p["grave"].remove(cid)
+                    else:
+                        entry = next((m for m in self.p["field"] if m["id"] == cid), None)
+                        if entry:
+                            self._destroy(self.p, entry)
+                        else:
+                            raise PuzzleSimError(f"fusion material {cid} unavailable")
+                self.p["extra"].remove(recipe["result"])
+                self.p["field"].append({
+                    "uid": self._next_uid(), "id": recipe["result"], "pos": "attack", "face_up": True, "bonus": 0,
+                })
+                return
+        raise PuzzleSimError(f"no legal {spell_name} recipe/extra target")
+
+    def _ritual(self) -> None:
+        if 841 not in self.p["hand"]:
+            raise PuzzleSimError("Legendary Flame Lord is not in hand")
+        self.p["hand"].remove(841)
+        candidates = [("hand", cid) for cid in list(self.p["hand"]) if "Monster" in self.cards[cid]["card_type"]]
+        candidates += [("field", m) for m in list(self.p["field"])]
+        candidates.sort(key=lambda item: self._level(item[1]["id"] if isinstance(item[1], dict) else item[1]))
+        total = 0
+        for source, item in candidates:
+            if total >= 7:
+                break
+            if source == "hand":
+                cid = item
+                self.p["hand"].remove(cid)
+                self.p["grave"].append(cid)
+                total += self._level(cid)
+            else:
+                total += self._level(item["id"])
+                self._destroy(self.p, item)
+        if total < 7:
+            raise PuzzleSimError("ritual tributes do not reach level 7")
+        self.p["field"].append({"uid": self._next_uid(), "id": 841, "pos": "attack", "face_up": True, "bonus": 0})
+
+    def _equip(self, cid: int) -> None:
+        target = self._strongest(self.p)
+        if not target:
+            raise PuzzleSimError("no equip target")
+        name = self._name(cid)
+        if name == "Black Pendant":
+            target["bonus"] += 500
+        elif name == "United We Stand":
+            target["bonus"] += 800 * sum(1 for m in self.p["field"] if m["face_up"])
+        elif name == "Mage Power":
+            target["bonus"] += 500 * (len(self.p["st"]) + 1)
+        else:
+            raise PuzzleSimError(f"unsupported equip {name}")
+        self.p["st"].append({"uid": self._next_uid(), "id": cid, "face_up": True, "set_turn": 0})
+
+    def _activate_spell(self, cid: int) -> None:
+        self._remove_hand(self.p, cid)
+        name = self._name(cid)
+        if name == "Fissure":
+            target = self._lowest(self.o, face_up_only=True)
+            if not target:
+                raise PuzzleSimError("Fissure has no target")
+            self._destroy(self.o, target)
+        elif name == "Tribute to the Doomed":
+            self._discard_lowest(self.p)
+            target = self._strongest(self.o)
+            if not target:
+                raise PuzzleSimError("Tribute to the Doomed has no target")
+            self._destroy(self.o, target)
+        elif name == "Snatch Steal":
+            target = self._strongest(self.o, face_up_only=True)
+            if not target:
+                raise PuzzleSimError("Snatch Steal has no target")
+            self.o["field"].remove(target)
+            target["pos"] = "attack"
+            target["face_up"] = True
+            self.p["field"].append(target)
+        elif name == "Premature Burial":
+            self.p["lp"] -= 800
+            self._revive(self.p["grave"], self.p)
+        elif name == "Autonomous Action Unit":
+            self.p["lp"] -= 1500
+            self._revive(self.o["grave"], self.p)
+        elif name == "Heavy Storm":
+            self.p["st"].clear()
+            self.o["st"].clear()
+        elif name == "Book of Moon":
+            target = self._strongest(self.o, face_up_only=True)
+            if not target:
+                raise PuzzleSimError("Book of Moon has no target")
+            target["pos"] = "defense"
+            target["face_up"] = False
+        elif name == "Sparks":
+            self.o["lp"] -= 200
+        elif name in {"Polymerization", "Miracle Fusion"}:
+            self._fuse(name)
+        elif name == "Incandescent Ordeal":
+            self._ritual()
+        elif name in {"Black Pendant", "United We Stand", "Mage Power"}:
+            self._equip(cid)
+        else:
+            raise PuzzleSimError(f"unsupported spell {name}")
+
+    def _activate_trap(self, cid: int) -> None:
+        entry = next((s for s in self.p["st"] if s["id"] == cid), None)
+        if not entry:
+            raise PuzzleSimError(f"trap {cid} is not Set")
+        self.p["st"].remove(entry)
+        name = self._name(cid)
+        if name == "Spiritual Fire Art - Kurenai":
+            target = self._strongest(self.p, face_up_only=True, attr="FIRE")
+            if not target:
+                raise PuzzleSimError("Kurenai has no FIRE monster")
+            damage = int(self.cards[target["id"]].get("atk", 0))
+            self._destroy(self.p, target)
+            self.o["lp"] -= damage
+        else:
+            raise PuzzleSimError(f"unsupported trap {name}")
+
+    def _normal_summon(self, cid: int, tributes: list[int]) -> None:
+        if self.normal_summoned:
+            raise PuzzleSimError("second Normal Summon")
+        level = self._level(cid)
+        required = 0 if level <= 4 else 1 if level <= 6 else 2
+        if len(tributes) != required:
+            raise PuzzleSimError(f"card {cid} needs {required} tributes, got {len(tributes)}")
+        if cid not in self.p["hand"]:
+            raise PuzzleSimError(f"summon card {cid} is not in hand")
+        for tribute in tributes:
+            entry = next((m for m in self.p["field"] if m["id"] == tribute), None)
+            if not entry:
+                raise PuzzleSimError(f"tribute {tribute} is not on the field")
+            self._destroy(self.p, entry)
+        self.p["hand"].remove(cid)
+        self.p["field"].append({"uid": self._next_uid(), "id": cid, "pos": "attack", "face_up": True, "bonus": 0})
+        self.normal_summoned = True
+
+    def _change_position(self, cid: int, position: str) -> None:
+        entry = self._find_field(self.p, cid)
+        if position not in {"attack", "defense"}:
+            raise PuzzleSimError(f"invalid position {position}")
+        entry["pos"] = position
+        entry["face_up"] = True
+
+    def _mirror_force(self, incoming: int) -> None:
+        mirror = next((s for s in self.o["st"] if s["id"] == 421 and not s["face_up"]), None)
+        if not mirror:
+            return
+        attackers = sum(1 for m in self.p["field"] if m["pos"] == "attack" and m["face_up"])
+        if not (attackers >= 2 or incoming >= self.o["lp"]):
+            return
+        seven = next((s for s in self.p["st"] if s["id"] == 403 and not s["face_up"]), None)
+        if not seven or self.p["lp"] <= 1000:
+            for entry in list(self.p["field"]):
+                if entry["pos"] == "attack":
+                    self._destroy(self.p, entry)
+            raise PuzzleSimError("Mirror Force resolved without Seven Tools")
+        self.p["lp"] -= 1000
+        self.p["st"].remove(seven)
+        self.o["st"].remove(mirror)
+
+    def _attack(self, attacker_cid: int, target) -> None:
+        attacker = self._find_field(self.p, attacker_cid)
+        if attacker["pos"] != "attack" or not attacker["face_up"]:
+            raise PuzzleSimError("attacker is not a face-up Attack Position monster")
+        if attacker["uid"] in self.attacked:
+            raise PuzzleSimError("attacker already attacked")
+        atk = self._atk(attacker)
+        self._mirror_force(atk)
+        if target == "direct":
+            if self.o["field"]:
+                raise PuzzleSimError("cannot attack directly while the opponent has monsters")
+            self.o["lp"] -= atk
+        else:
+            defender = self._find_field(self.o, int(target))
+            if defender["pos"] == "defense":
+                defense = self._def(defender)
+                if atk > defense:
+                    self._destroy(self.o, defender)
+                    if self._name(attacker["id"]) == "Spear Dragon":
+                        self.o["lp"] -= atk - defense
+                elif atk < defense:
+                    self.p["lp"] -= defense - atk
+                    self._destroy(self.p, attacker)
+            else:
+                defense = int(self.cards[defender["id"]].get("atk", 0))
+                if atk > defense:
+                    self.o["lp"] -= atk - defense
+                    self._destroy(self.o, defender)
+                elif atk == defense:
+                    self._destroy(self.o, defender)
+                    self._destroy(self.p, attacker)
+                else:
+                    self.p["lp"] -= defense - atk
+                    self._destroy(self.p, attacker)
+        self.attacked.add(attacker["uid"])
+
+    def run(self) -> None:
+        for step in self.puzzle["solution"]:
+            action = step.get("action")
+            if action == "attack":
+                self._attack(int(step["attacker_card_id"]), step.get("target"))
+            elif action == "normal_summon":
+                self._normal_summon(int(step["card_id"]), [int(c) for c in step.get("tribute_card_ids", [])])
+            elif action == "activate_spell":
+                self._activate_spell(int(step["card_id"]))
+            elif action == "activate_trap":
+                self._activate_trap(int(step["card_id"]))
+            elif action == "change_position":
+                self._change_position(int(step["card_id"]), str(step.get("position", "attack")))
+            else:
+                raise PuzzleSimError(f"simulator does not implement action {action}")
+            if self.p["lp"] <= 0:
+                raise PuzzleSimError("player LP reached 0")
+        if self.o["lp"] > 0:
+            raise PuzzleSimError(f"opponent still has {self.o['lp']} LP")
+
+
 def validate_puzzles(v: Validator, root: str, cards: dict[int, dict], roster: dict | None) -> list[dict]:
     puzzle_dir = data_path(root, "Puzzles")
     files = sorted(f for f in os.listdir(puzzle_dir) if f.endswith(".json"))
-    v.require(len(files) == 20, "puzzles", f"{len(files)} puzzle files (this pass targets P001-P020)")
+    v.require(len(files) == 100, "puzzles", f"{len(files)} puzzle files (need P001-P100)")
+    fusions_path = data_path(root, "fusions.json")
+    try:
+        fusions = load_json(fusions_path) if os.path.exists(fusions_path) else []
+    except Exception:  # noqa: BLE001
+        fusions = []
     ids: set[str] = set()
+    levels: Counter[int] = Counter()
+    simulated = 0
     opponent_ids = {d.get("id") for d in (roster or {}).get("duelists", [])}
     puzzles: list[dict] = []
     for filename in files:
@@ -345,8 +695,11 @@ def validate_puzzles(v: Validator, root: str, cards: dict[int, dict], roster: di
         ids.add(pid)
         puzzles.append(puzzle)
 
-        if puzzle.get("level") != 1:
-            v.fail(label, f"level {puzzle.get('level')!r} (this pass is level 1)")
+        level = puzzle.get("level")
+        if level not in (1, 2, 3, 4, 5):
+            v.fail(label, f"level {level!r} (need 1-5)")
+        else:
+            levels[level] += 1
         if opponent_ids and puzzle.get("opponent") not in opponent_ids:
             v.fail(label, f"unknown opponent {puzzle.get('opponent')!r}")
         if not isinstance(puzzle.get("seed"), int):
@@ -414,6 +767,8 @@ def validate_puzzles(v: Validator, root: str, cards: dict[int, dict], roster: di
                         v.fail(label, f"solution step {step_index} card is not available to the player")
                 if action in {"normal_summon", "special_summon", "activate_spell", "activate_trap", "activate_effect"}:
                     has_finisher = has_finisher or action in {"activate_spell", "activate_trap", "activate_effect"}
+            if action == "change_position" and step.get("position") not in {"attack", "defense"}:
+                v.fail(label, f"solution step {step_index} has invalid position")
         if not has_finisher:
             v.warn(label, "solution has no attack or activatable finisher")
         reward = puzzle.get("reward")
@@ -441,15 +796,39 @@ def validate_puzzles(v: Validator, root: str, cards: dict[int, dict], roster: di
                 v.warn(label, "canon_reference has no solution steps")
         else:
             v.warn(label, "no canon_reference attached")
+
+        # Replay the port-authored templates. P001-P020 are kept as the
+        # original authored fallback and are structurally validated only.
+        if puzzle.get("template"):
+            try:
+                PuzzleSim(puzzle, cards, fusions).run()
+                simulated += 1
+            except PuzzleSimError as exc:
+                v.fail(label, f"solution simulation failed: {exc}")
+            except Exception as exc:  # noqa: BLE001
+                v.fail(label, f"solution simulation crashed: {exc}")
+
+    expected_ids = {f"P{i:03d}" for i in range(1, 101)}
+    missing_ids = sorted(expected_ids - ids)
+    extra_ids = sorted(ids - expected_ids)
+    if missing_ids:
+        v.fail("puzzles", f"missing ids: {', '.join(missing_ids[:12])}")
+    if extra_ids:
+        v.fail("puzzles", f"unexpected ids: {', '.join(extra_ids[:12])}")
+    for level in (1, 2, 3, 4, 5):
+        if levels[level] != 20:
+            v.fail("puzzles", f"level {level} has {levels[level]} puzzles (need 20)")
+    v.require(simulated == 80, "puzzles", f"{simulated} template puzzles replay-validated (need 80)")
     return puzzles
 
 
 def validate_exams(v: Validator, root: str, cards: dict[int, dict], decks: dict[str, dict],
-                   roster: dict | None) -> tuple[dict, dict, dict]:
+                   roster: dict | None) -> tuple[dict, dict, dict, dict]:
     exam_dir = data_path(root, "Exams")
     questions = load_json(os.path.join(exam_dir, "questions.json"))
     practicals = load_json(os.path.join(exam_dir, "practicals.json"))
     scoring = load_json(os.path.join(exam_dir, "scoring.json"))
+    exams = load_json(os.path.join(exam_dir, "exams.json"))
 
     qlist = questions.get("questions", [])
     v.require(len(qlist) >= 10, "exams", f"{len(qlist)} written questions (need at least 10)")
@@ -523,12 +902,79 @@ def validate_exams(v: Validator, root: str, cards: dict[int, dict], decks: dict[
             v.fail("scoring", "grade band has no integer min_points")
     if not scoring.get("confidence"):
         v.warn("scoring", "missing confidence")
-    return questions, practicals, scoring
+
+    set_by_id = {s.get("exam_id"): s for s in sets}
+    puzzle_ids = {os.path.splitext(name)[0] for name in os.listdir(data_path(root, "Puzzles")) if name.endswith(".json")}
+    v.require(exams.get("max_points") == 500, "exams", f"global max_points {exams.get('max_points')!r} (need 500)")
+    if not isinstance(exams.get("pass_mark"), int) or not (0 <= exams.get("pass_mark", -1) <= 500):
+        v.fail("exams", f"invalid global pass_mark {exams.get('pass_mark')!r}")
+    cycles = exams.get("cycles", [])
+    v.require(len(cycles) == 12, "exams", f"{len(cycles)} exam cycles (need 12)")
+    seen_exam_ids: set[str] = set()
+    seen_months: set[int] = set()
+    for expected_index, cycle in enumerate(cycles, start=1):
+        label = f"exam cycle {cycle.get('exam_id', expected_index)}"
+        exam_id = cycle.get("exam_id")
+        if exam_id in seen_exam_ids:
+            v.fail(label, "duplicate exam_id")
+        seen_exam_ids.add(exam_id)
+        if exam_id != f"EXAM_{expected_index:02d}":
+            v.fail(label, f"exam_id {exam_id!r} does not match sequence EXAM_{expected_index:02d}")
+        month = cycle.get("month_index")
+        if not isinstance(month, int) or not (1 <= month <= 12):
+            v.fail(label, f"invalid month_index {month!r}")
+        elif month in seen_months:
+            v.fail(label, "duplicate month_index")
+        else:
+            seen_months.add(month)
+        if month != expected_index:
+            v.fail(label, f"month_index {month!r} does not match cycle {expected_index}")
+        written_set_id = cycle.get("written_set_id")
+        written_set = set_by_id.get(written_set_id)
+        if not written_set:
+            v.fail(label, f"unknown written_set_id {written_set_id!r}")
+        qids_for_cycle = cycle.get("question_ids", [])
+        if len(qids_for_cycle) != 10:
+            v.fail(label, f"{len(qids_for_cycle)} question_ids (need 10)")
+        if len(set(qids_for_cycle)) != len(qids_for_cycle):
+            v.fail(label, "duplicate question_ids")
+        for qid in qids_for_cycle:
+            if qid not in qids:
+                v.fail(label, f"unknown question {qid!r}")
+        if written_set and qids_for_cycle != written_set.get("question_ids", []):
+            v.fail(label, "question_ids do not match the referenced written set")
+        timed_id = cycle.get("timed_puzzle_id")
+        if timed_id not in puzzle_ids:
+            v.fail(label, f"unknown timed_puzzle_id {timed_id!r}")
+        practical_id = cycle.get("practical_objective_id")
+        if practical_id not in objective_ids:
+            v.fail(label, f"unknown practical_objective_id {practical_id!r}")
+        cycle_scoring = cycle.get("scoring", {})
+        if not isinstance(cycle_scoring, dict):
+            v.fail(label, "scoring must be an object")
+            continue
+        if cycle_scoring.get("max_points") != 500:
+            v.fail(label, f"max_points {cycle_scoring.get('max_points')!r} (need 500)")
+        cycle_pass = cycle_scoring.get("pass_mark", cycle.get("pass_mark"))
+        if not isinstance(cycle_pass, int) or not (0 <= cycle_pass <= 500):
+            v.fail(label, f"invalid pass_mark {cycle_pass!r}")
+        cycle_sections = cycle_scoring.get("sections", {})
+        cycle_total = sum(cycle_sections.get(key, 0) for key in ("written", "timed", "practical"))
+        if cycle_total != 500:
+            v.fail(label, f"section scoring totals {cycle_total} (need 500)")
+        if cycle.get("pass_mark") != cycle_pass:
+            v.fail(label, "top-level pass_mark does not match scoring.pass_mark")
+        if not cycle.get("confidence"):
+            v.warn(label, "missing confidence")
+        if not cycle.get("source"):
+            v.warn(label, "missing source")
+    v.require(len(seen_months) == 12, "exams", f"{len(seen_months)} unique months (need 12)")
+    return questions, practicals, scoring, exams
 
 
 def build_report(root: str, v: Validator, cards: dict[int, dict], decks: list[dict],
                  roster: dict | None, ai: dict[str, dict], puzzles: list[dict],
-                 questions: dict, practicals: dict, scoring: dict) -> str:
+                 questions: dict, practicals: dict, scoring: dict, exams: dict) -> str:
     lines = [
         "# Opponents / Exams / Puzzles — Validation Report",
         "",
@@ -544,12 +990,16 @@ def build_report(root: str, v: Validator, cards: dict[int, dict], decks: list[di
         f"({sum(1 for d in (roster or {}).get('duelists', []) if d.get('role') == 'ranked')} ranked)",
         f"- Opponent decks: {len(decks)}",
         f"- AI profiles: {len(ai)}",
-        f"- Puzzles: {len(puzzles)} (level 1, P001-P020)",
+        f"- Puzzles: {len(puzzles)} (P001-P100; "
+        f"L1 {sum(1 for p in puzzles if p.get('level') == 1)}, L2 {sum(1 for p in puzzles if p.get('level') == 2)}, "
+        f"L3 {sum(1 for p in puzzles if p.get('level') == 3)}, L4 {sum(1 for p in puzzles if p.get('level') == 4)}, "
+        f"L5 {sum(1 for p in puzzles if p.get('level') == 5)})",
         f"- Canon puzzle references attached: {sum(1 for p in puzzles if p.get('canon_reference'))}/{len(puzzles)}",
         f"- Engine-ready fallback lines: {sum(1 for p in puzzles if p.get('engine_ready'))}/{len(puzzles)}",
         f"- Written questions: {len(questions.get('questions', []))}; exam sets: {len(questions.get('exam_sets', []))}",
         f"- Practical objectives: {len(practicals.get('objectives', []))}",
         f"- Scoring: {scoring.get('max_points')} points, pass mark {scoring.get('pass_mark')}",
+        f"- Exam cycles: {len(exams.get('cycles', []))}",
         "",
         "## Card support",
         "",
@@ -610,6 +1060,17 @@ def build_report(root: str, v: Validator, cards: dict[int, dict], decks: list[di
             f"| `{pid}` | {puzzle.get('time_limit')}s | {puzzle.get('reward', {}).get('dp', 0)} | "
             f"{'FAIL' if bad else 'PASS'} |"
         )
+    lines += ["", "## Exam cycles", "", "| Exam | Month | Written set | Timed puzzle | Practical | Points | Pass | Result |",
+              "| --- | ---: | --- | --- | --- | ---: | ---: | --- |"]
+    for cycle in sorted(exams.get("cycles", []), key=lambda c: c.get("month_index", 0)):
+        eid = cycle.get("exam_id")
+        bad = [f for f in v.failures if f.startswith(f"exam cycle {eid}:")]
+        cycle_scoring = cycle.get("scoring", {})
+        lines.append(
+            f"| `{eid}` | {cycle.get('month_index')} | {cycle.get('written_set_id')} | "
+            f"{cycle.get('timed_puzzle_id')} | {cycle.get('practical_objective_id')} | "
+            f"{cycle_scoring.get('max_points')} | {cycle_scoring.get('pass_mark')} | {'FAIL' if bad else 'PASS'} |"
+        )
     lines += ["", "## Failures", ""]
     lines += [f"- {item}" for item in v.failures] or ["None."]
     lines += ["", "## Warnings", ""]
@@ -656,10 +1117,10 @@ def main() -> int:
         roster, _duelists = validate_roster(v, root, deck_by_id, ai, cards)
     puzzles = validate_puzzles(v, root, cards, roster or roster_raw)
     try:
-        questions, practicals, scoring = validate_exams(v, root, cards, deck_by_id, roster or roster_raw)
+        questions, practicals, scoring, exams = validate_exams(v, root, cards, deck_by_id, roster or roster_raw)
     except Exception as exc:  # noqa: BLE001
         v.fail("exams", f"cannot load exam data: {exc}")
-        questions, practicals, scoring = {}, {}, {}
+        questions, practicals, scoring, exams = {}, {}, {}, {}
 
     for label, success, detail in v.sections:
         print(f"{'PASS' if success else 'FAIL'} {label}" + (f": {detail}" if detail else ""))
@@ -672,14 +1133,14 @@ def main() -> int:
           f"{len(v.failures)} failures, {len(v.warnings)} warnings")
     print(f"duelists={(roster or roster_raw or {}).get('duelists', []) and len((roster or roster_raw).get('duelists', []))} "
           f"decks={len(decks)} ai={len(ai)} puzzles={len(puzzles)} "
-          f"questions={len(questions.get('questions', []))}")
+          f"questions={len(questions.get('questions', []))} cycles={len(exams.get('cycles', []))}")
 
     if args.report:
         report_path = os.path.abspath(args.report)
         os.makedirs(os.path.dirname(report_path), exist_ok=True)
         with open(report_path, "w", encoding="utf-8") as handle:
             handle.write(build_report(root, v, cards, decks, roster or roster_raw, ai, puzzles,
-                                      questions, practicals, scoring))
+                                      questions, practicals, scoring, exams))
         print(f"report={report_path}")
 
     return 1 if failed else 0

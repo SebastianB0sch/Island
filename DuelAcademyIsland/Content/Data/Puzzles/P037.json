@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "id": "P037",
+  "level": 2,
+  "title": "Burn L2-1",
+  "template": "burn",
+  "opponent": "mimicry",
+  "seed": 2037,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      148
+    ],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 200,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 148
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'burn', level 2, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Burn with Sparks / Spiritual Fire Art - Kurenai, then attack for the remaining LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_037",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      68,
+      166,
+      186,
+      574,
+      664,
+      811,
+      1016
+    ],
+    "solution_card_names": [
+      "Blue-Eyes Ultimate Dragon",
+      "Cyber-Stein",
+      "Emergency Provisions",
+      "Granadora",
+      "Hade-Hane",
+      "Mysterious Puppeteer",
+      "Spring of Rebirth"
+    ],
+    "solution_steps": [
+      "Flip Summon Mysterious Puppeteer.",
+      "Summon Granadora.",
+      "Flip Summon Cyber-Stein.",
+      "Flip Summon Hade-Hane, then switch Hane-Hane's effect to the first spot in the list. Choose to return Hade-Hane, Puppeteer and Granadora.",
+      "Activate Emergency Provisions and target Spring of Rebirth.",
+      "Activate Cyber-Stein's effect to Special Summon Blue-Eyes Ultimate Dragon.",
+      "Enter Battle Phase and attack with both."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

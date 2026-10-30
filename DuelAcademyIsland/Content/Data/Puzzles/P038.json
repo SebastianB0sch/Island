@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "id": "P038",
+  "level": 2,
+  "title": "Burn L2-2",
+  "template": "burn",
+  "opponent": "mimicry",
+  "seed": 2038,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 11,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [
+      {
+        "card_id": 1192,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 1800,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_trap",
+      "card_id": 1192
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'burn', level 2, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Burn with Sparks / Spiritual Fire Art - Kurenai, then attack for the remaining LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_038",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      110,
+      639,
+      925,
+      1017
+    ],
+    "solution_card_names": [
+      "Amazoness Swords Woman",
+      "Axe of Despair",
+      "DNA Transplant",
+      "Light",
+      "Penumbral Soldier Lady"
+    ],
+    "solution_steps": [
+      "Activate DNA Transplant and select Light as the attribute of choice.",
+      "Equip Axe of Despair on Penumbral Soldier Lady.",
+      "Summon Amazoness Swords Woman.",
+      "Enter Battle Phase and attack Soldier Lady with Swords Woman."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

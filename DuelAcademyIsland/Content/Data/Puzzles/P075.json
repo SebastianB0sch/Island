@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "id": "P075",
+  "level": 4,
+  "title": "Piercing L4-1",
+  "template": "piercing",
+  "opponent": "mimicry",
+  "seed": 2075,
+  "turn_limit": 1,
+  "time_limit": 80,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      117,
+      593
+    ],
+    "field": [
+      {
+        "card_id": 655,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 1200,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 37,
+        "position": "defense",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 117
+    },
+    {
+      "action": "activate_spell",
+      "card_id": 593
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 655,
+      "target": 37
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'piercing', level 4, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Spear Dragon's built-in piercing damage, boosted by the equipped cards, deals exact battle damage to the Defense Position monster.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_075",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      449,
+      724,
+      747,
+      811
+    ],
+    "solution_card_names": [
+      "Granadora",
+      "Shining Angel",
+      "X-Head Cannon",
+      "XYZ-Dragon Cannon"
+    ],
+    "solution_steps": [
+      "Normal Summon X-Head Cannon.",
+      "Activate Pot of Generosity and select Y-Dragon Head and Z-Metal Tank to your deck.",
+      "Ram your Shining Angels into your opponents Granadora to summon Z and Y.",
+      "In Main Phase 2, special summon XYZ-Dragon Cannon and use it to destroy Granadora. Granadoras effect will make your opponent lose."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}
