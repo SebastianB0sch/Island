@@ -11,6 +11,8 @@
 #include "Engine/ExponentialHeightFog.h"
 #include "Engine/Light.h"
 #include "Engine/SkyLight.h"
+#include "Engine/SkeletalMesh.h"
+#include "Animation/Skeleton.h"
 #include "EngineUtils.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Materials/MaterialParameterCollection.h"
@@ -191,4 +193,29 @@ FString ADAIslandManager::GetClockText() const
 	const int32 H = FMath::FloorToInt(Hour);
 	const int32 M = FMath::FloorToInt((Hour - H) * 60.f);
 	return FString::Printf(TEXT("Day %d  %02d:%02d"), Day, H, M);
+}
+
+bool ADAIslandManager::MergeSkeletonBones(USkeletalMesh* Mesh)
+{
+#if WITH_EDITOR
+	if (!Mesh)
+	{
+		return false;
+	}
+	USkeleton* Skeleton = Mesh->GetSkeleton();
+	if (!Skeleton)
+	{
+		return false;
+	}
+	const bool bMerged = Skeleton->MergeAllBonesToBoneTree(Mesh, false);
+	const bool bChanged = bMerged || Skeleton->RecreateBoneTree(Mesh);
+	if (bChanged)
+	{
+		Skeleton->Modify();
+		Skeleton->MarkPackageDirty();
+	}
+	return bChanged;
+#else
+	return false;
+#endif
 }

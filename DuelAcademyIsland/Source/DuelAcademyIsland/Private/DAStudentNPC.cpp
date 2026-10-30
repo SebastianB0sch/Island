@@ -6,11 +6,39 @@
 #include "Components/CapsuleComponent.h"
 #include "DAAvatarComponent.h"
 #include "DACardDatabase.h"
+#include "DAHUD.h"
 #include "DAIslandSubsystem.h"
 #include "DAStudentCharacter.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+
+
+namespace
+{
+	ADAHUD* GetDuelHUD(const AActor* Context)
+	{
+		if (const UWorld* World = Context ? Context->GetWorld() : nullptr)
+		{
+			if (APlayerController* PC = World->GetFirstPlayerController())
+			{
+				return Cast<ADAHUD>(PC->GetHUD());
+			}
+		}
+		return nullptr;
+	}
+
+	FString DuelistIdFromName(const FString& Name)
+	{
+		FString First = Name;
+		int32 Space = INDEX_NONE;
+		if (Name.FindChar(TEXT(' '), Space))
+		{
+			First = Name.Left(Space);
+		}
+		return First.ToLower();
+	}
+}
 
 ADAStudentNPC::ADAStudentNPC()
 {
@@ -58,6 +86,26 @@ void ADAStudentNPC::BeginPlay()
 	}
 	Super::BeginPlay();
 
+	if (!DisplayName.IsEmpty())
+	{
+		const FString Id = DuelistIdFromName(DisplayName);
+		static const TMap<FString, FString> DuelistDecks = {
+			{ TEXT("jaden"), TEXT("jaden") },
+			{ TEXT("syrus"), TEXT("water") },
+			{ TEXT("bastion"), TEXT("water") },
+			{ TEXT("chazz"), TEXT("wind") },
+			{ TEXT("alexis"), TEXT("water") },
+			{ TEXT("zane"), TEXT("fire") },
+			{ TEXT("dr."), TEXT("wind") }
+		};
+		if (const FString* Deck = DuelistDecks.Find(Id))
+		{
+			bDuelist = true;
+			DuelOpponentId = Id.StartsWith(TEXT("dr.")) ? TEXT("crowler") : Id;
+			DuelDeckId = *Deck;
+		}
+	}
+
 	Home = GetActorLocation();
 	Target = Home;
 	IdleTime = Rng.FRandRange(0.5f, 4.f);
@@ -83,14 +131,34 @@ FString ADAStudentNPC::GetInteractName() const
 	return DisplayName.IsEmpty() ? DuelAcademy::DormName(Dorm) + TEXT(" student") : DisplayName;
 }
 
+bool ADAStudentNPC::CanInteract(const ADAStudentCharacter* By) const
+{
+	const ADAHUD* HUD = GetDuelHUD(this);
+	return !HUD || !HUD->IsDuelOpen();
+}
+
 void ADAStudentNPC::Interact(ADAStudentCharacter* By)
 {
+	if (bDuelist && bHasTalked)
+	{
+		if (ADAHUD* HUD = GetDuelHUD(this))
+		{
+			HUD->OpenDuelDeckSelect(DuelOpponentId, GetInteractName(), DuelDeckId);
+			if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+			{
+				Sub->PlayUISound(TEXT("A_DuelStart"), 1.f);
+			}
+			return;
+		}
+	}
+
 	const TArray<FString>& Said = Lines.Num() > 0 ? Lines : DuelAcademy::NpcLines(Dorm);
 	if (Said.Num() == 0)
 	{
 		return;
 	}
 	TalkTime = GetWorld()->GetTimeSeconds();
+	bHasTalked = true;
 	FString Line = Said[LineIndex % Said.Num()];
 	++LineIndex;
 	if (Lines.Num() == 0 && By && By->GetDorm() != Dorm && Dorm == EDADorm::Obelisk && By->GetDorm() == EDADorm::Slifer && Rng.FRand() < 0.5f)

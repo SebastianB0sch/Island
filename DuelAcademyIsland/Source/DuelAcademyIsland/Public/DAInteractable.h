@@ -1,4 +1,4 @@
-// Duel Academy Island - signs, card shop, holographic duel fields.
+// Duel Academy Island - signs, card shop, duel fields.
 
 #pragma once
 
@@ -12,33 +12,13 @@ class USceneComponent;
 class UStaticMeshComponent;
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
-class UPointLightComponent;
 class UBillboardComponent;
-
-/** One holographic element of a running duel (card or monster part). */
-USTRUCT()
-struct FDAHoloPiece
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Transient)
-	TObjectPtr<UStaticMeshComponent> Mesh;
-
-	FVector BaseLocation = FVector::ZeroVector;
-	FVector BaseScale = FVector::OneVector;
-	FRotator BaseRotation = FRotator::ZeroRotator;
-	float Delay = 0.f;
-	float Spin = 0.f;
-	float Bob = 0.f;
-	/** 0 = card, 1 = the player's monster, 2 = the rival's monster. */
-	int32 Group = 0;
-};
 
 /**
  * Interactable point placed by the build script.
  *   Sign      - shows Title / Text in the dialogue panel
  *   CardShop  - opens a booster pack (5 random cards from the academy card list)
- *   DuelField - starts a short holographic duel show on the field
+ *   DuelField - opens the starter-deck picker and starts a full duel
  *   Info      - like Sign, but no world marker
  */
 UCLASS(Blueprintable)
@@ -69,6 +49,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	bool bShowMarker = true;
 
+	/** Duel field opponent (portrait id, display name and AI deck id). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Duel")
+	FString OpponentId = TEXT("jaden");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Duel")
+	FString OpponentName = TEXT("Jaden Yuki");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Duel")
+	FString OpponentDeckId = TEXT("jaden");
+
 	// IDAInteractableInterface
 	virtual FString GetInteractPrompt() const override;
 	virtual FString GetInteractName() const override;
@@ -77,14 +67,9 @@ public:
 	virtual bool CanInteract(const ADAStudentCharacter* By) const override;
 	virtual void Interact(ADAStudentCharacter* By) override;
 
-	UFUNCTION(BlueprintPure, Category = "Duel Academy")
-	bool IsDuelRunning() const { return DuelTime >= 0.f; }
-
 private:
 	void OpenBoosterPack(ADAStudentCharacter* By);
 	void StartDuel(ADAStudentCharacter* By);
-	void EndDuel();
-	UStaticMeshComponent* AddHoloMesh(const TCHAR* EngineShape, UMaterialInterface* Material);
 
 	UPROPERTY(VisibleAnywhere, Category = "Duel Academy")
 	TObjectPtr<USceneComponent> Root;
@@ -97,20 +82,6 @@ private:
 	TObjectPtr<UBillboardComponent> EditorIcon;
 #endif
 
-	UPROPERTY(Transient)
-	TObjectPtr<UPointLightComponent> HoloLight;
-
-	UPROPERTY(Transient)
-	TArray<FDAHoloPiece> HoloPieces;
-
-	UPROPERTY(Transient)
-	TObjectPtr<UMaterialInstanceDynamic> HoloMID;
-
-	TWeakObjectPtr<ADAStudentCharacter> Duelist;
-	float DuelTime = -1.f;
 	float MarkerTime = 0.f;
-	int32 LifePointsA = 4000;
-	int32 LifePointsB = 4000;
-	int32 DuelStep = 0;
 	int32 PacksOpened = 0;
 };

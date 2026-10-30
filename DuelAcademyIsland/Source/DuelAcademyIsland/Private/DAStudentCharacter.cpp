@@ -210,10 +210,8 @@ void ADAStudentCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	EIC->BindAction(A(TEXT("Sprint")), ETriggerEvent::Completed, this, &ThisClass::OnSprintStop);
 	EIC->BindAction(A(TEXT("Interact")), ETriggerEvent::Started, this, &ThisClass::OnInteract);
 	EIC->BindAction(A(TEXT("Map")), ETriggerEvent::Started, this, &ThisClass::OnMap);
-	EIC->BindAction(A(TEXT("MenuUp")), ETriggerEvent::Started, this, &ThisClass::OnMenuUp);
-	EIC->BindAction(A(TEXT("MenuDown")), ETriggerEvent::Started, this, &ThisClass::OnMenuDown);
-	EIC->BindAction(A(TEXT("MenuSelect")), ETriggerEvent::Started, this, &ThisClass::OnMenuSelect);
-	EIC->BindAction(A(TEXT("Click")), ETriggerEvent::Started, this, &ThisClass::OnClick);
+	// Map navigation and travel are polled by ADAHUD::Tick while the map is open: Enhanced Input can swallow
+	// Enter / clicks in the map's GameAndUI input mode.
 	EIC->BindAction(A(TEXT("Jacket")), ETriggerEvent::Started, this, &ThisClass::OnJacket);
 	EIC->BindAction(A(TEXT("DuelDisk")), ETriggerEvent::Started, this, &ThisClass::OnDuelDisk);
 	EIC->BindAction(A(TEXT("Help")), ETriggerEvent::Started, this, &ThisClass::OnHelp);
@@ -229,20 +227,25 @@ ADAHUD* ADAStudentCharacter::GetDAHUD() const
 	return PC ? Cast<ADAHUD>(PC->GetHUD()) : nullptr;
 }
 
+bool ADAStudentCharacter::IsDuelOpen() const
+{
+	const ADAHUD* HUD = GetDAHUD();
+	return HUD && HUD->IsDuelOpen();
+}
+
+bool ADAStudentCharacter::IsMovementBlocked() const
+{
+	const ADAHUD* HUD = GetDAHUD();
+	return HUD && (HUD->IsDuelOpen() || HUD->IsMapOpen());
+}
+
 // ------------------------------------------------------------------------ movement / camera
 
 void ADAStudentCharacter::MoveInput(float Forward, float Right)
 {
-	if (!Controller)
+	if (!Controller || IsMovementBlocked())
 	{
 		return;
-	}
-	if (const ADAHUD* HUD = GetDAHUD())
-	{
-		if (HUD->IsMapOpen())
-		{
-			return;
-		}
 	}
 	const FRotator YawRot(0.f, Controller->GetControlRotation().Yaw, 0.f);
 	const FRotationMatrix M(YawRot);
@@ -258,12 +261,9 @@ void ADAStudentCharacter::OnMoveStick(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnLook(const FInputActionValue& V)
 {
-	if (const ADAHUD* HUD = GetDAHUD())
+	if (IsMovementBlocked())
 	{
-		if (HUD->IsMapOpen())
-		{
-			return;
-		}
+		return;
 	}
 	const FVector2D Axis = V.Get<FVector2D>();
 	AddControllerYawInput(Axis.X);
@@ -272,6 +272,10 @@ void ADAStudentCharacter::OnLook(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnLookStick(const FInputActionValue& V)
 {
+	if (IsMovementBlocked())
+	{
+		return;
+	}
 	const FVector2D Axis = V.Get<FVector2D>();
 	const float Dt = GetWorld() ? GetWorld()->GetDeltaSeconds() : 0.016f;
 	AddControllerYawInput(Axis.X * 140.f * Dt);
@@ -280,12 +284,16 @@ void ADAStudentCharacter::OnLookStick(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnZoom(const FInputActionValue& V)
 {
+	if (IsMovementBlocked())
+	{
+		return;
+	}
 	TargetZoom = FMath::Clamp(TargetZoom - V.Get<float>() * 70.f, MinZoom, MaxZoom);
 }
 
 void ADAStudentCharacter::OnJump(const FInputActionValue& V)
 {
-	if (!bSwimming)
+	if (!bSwimming && !IsMovementBlocked())
 	{
 		Jump();
 	}
@@ -298,7 +306,7 @@ void ADAStudentCharacter::OnJumpReleased(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnSprintStart(const FInputActionValue& V)
 {
-	bSprinting = true;
+	bSprinting = !IsMovementBlocked();
 }
 
 void ADAStudentCharacter::OnSprintStop(const FInputActionValue& V)
@@ -310,6 +318,10 @@ void ADAStudentCharacter::OnSprintStop(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnInteract(const FInputActionValue& V)
 {
+	if (IsMovementBlocked())
+	{
+		return;
+	}
 	UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this);
 	if (Sub && Sub->GetActiveMessage() && Sub->GetActiveMessageAge() > 0.3f && !FocusedInteractable.IsValid())
 	{
@@ -334,6 +346,10 @@ void ADAStudentCharacter::OnInteract(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnMap(const FInputActionValue& V)
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	if (ADAHUD* HUD = GetDAHUD())
 	{
 		HUD->ToggleMap();
@@ -373,6 +389,10 @@ void ADAStudentCharacter::OnMenuSelect(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnClick(const FInputActionValue& V)
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	if (ADAHUD* HUD = GetDAHUD())
 	{
 		if (HUD->IsMapOpen())
@@ -388,6 +408,10 @@ void ADAStudentCharacter::OnClick(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnJacket(const FInputActionValue& V)
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	const EDADorm Next = static_cast<EDADorm>((static_cast<uint8>(GetDorm()) + 1) % 4);
 	SetDorm(Next);
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
@@ -404,11 +428,19 @@ void ADAStudentCharacter::OnJacket(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnDuelDisk(const FInputActionValue& V)
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	bManualDuelPose = !bManualDuelPose;
 }
 
 void ADAStudentCharacter::OnHelp(const FInputActionValue& V)
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	if (ADAHUD* HUD = GetDAHUD())
 	{
 		HUD->ToggleHelp();
@@ -417,6 +449,10 @@ void ADAStudentCharacter::OnHelp(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimePause(const FInputActionValue& V)
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
 		if (ADAIslandManager* M = Sub->GetManager())
@@ -428,6 +464,10 @@ void ADAStudentCharacter::OnTimePause(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeFaster(const FInputActionValue& V)
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
 		if (ADAIslandManager* M = Sub->GetManager())
@@ -439,6 +479,10 @@ void ADAStudentCharacter::OnTimeFaster(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeSlower(const FInputActionValue& V)
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
 		if (ADAIslandManager* M = Sub->GetManager())
@@ -450,6 +494,10 @@ void ADAStudentCharacter::OnTimeSlower(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeSkip(const FInputActionValue& V)
 {
+	if (IsDuelOpen())
+	{
+		return;
+	}
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
 		if (ADAIslandManager* M = Sub->GetManager())

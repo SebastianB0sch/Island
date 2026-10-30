@@ -1,9 +1,21 @@
 # Credits
 
 Duel Academy Island is an unofficial, non-commercial fan project inspired by *Yu-Gi-Oh! GX*.
-Yu-Gi-Oh! and all related names are trademarks of their respective owners; no copyrighted
-game or anime assets are included. Buildings are original interpretations modelled by the
-procedural pipeline in `Tools/`.
+Yu-Gi-Oh! and all related names are trademarks of their respective owners. The island's buildings,
+terrain and vegetation are original interpretations modelled by the procedural pipeline in `Tools/`.
+The anime cast is built from the VRoid sample avatars listed below and restyled by the same pipeline.
+
+## Duel data and portraits
+
+The playable duel database (`DuelAcademyIsland/Content/Data/`) contains card names, rules text, card
+scans and starter-deck/fusion data ported from the reference UE5 duel engine. Yu-Gi-Oh! card names,
+text and artwork are the property of Konami/Shueisha; they are included here for a non-commercial,
+fan-made project and must not be redistributed as a commercial product. The scans are the same
+YGOPRODeck-sourced images used by the reference project.
+
+`Content/Data/Portraits/` contains the reference project's character busts and expression frames
+(Konami *Duel Links* renders). They are fan-project reference assets and are **not** redistributable.
+The in-world cast does not use them: it is the project's own VRoid-derived model set, described below.
 
 ## Third-party assets
 

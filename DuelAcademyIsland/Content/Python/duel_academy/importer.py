@@ -121,8 +121,10 @@ def _fbx_options(nanite):
     except Exception:  # noqa: BLE001
         pass
     sm = ui.get_editor_property("static_mesh_import_data")
+    # convert_scene_unit defaults to False on programmatically created import options in UE 5.8; the FBX
+    # files are exported in metres, so without it every mesh imports 100x too small.
     C.set_props(sm, combine_meshes=True, auto_generate_collision=False, generate_lightmap_u_vs=False,
-                remove_degenerates=True, one_convex_hull_per_ucx=True)
+                remove_degenerates=True, one_convex_hull_per_ucx=True, convert_scene_unit=True)
     try:
         sm.set_editor_property("normal_import_method", unreal.FBXNormalImportMethod.FBXNIM_IMPORT_NORMALS)
     except Exception:  # noqa: BLE001
@@ -288,18 +290,54 @@ def _skeletal_options(skeleton=None):
         ui.set_editor_property("skeleton", skeleton)
         try:
             ad = ui.get_editor_property("anim_sequence_import_data")
-            C.set_props(ad, remove_redundant_keys=True, import_bone_tracks=True, import_custom_attribute=False)
+            C.set_props(ad, remove_redundant_keys=True, import_bone_tracks=True,
+                        import_custom_attribute=False, convert_scene_unit=True)
             ad.set_editor_property("animation_length", unreal.FBXAnimationLengthImportType.FBXALIT_EXPORTED_TIME)
         except Exception:  # noqa: BLE001
             pass
     else:
         try:
             sd = ui.get_editor_property("skeletal_mesh_import_data")
-            C.set_props(sd, import_morph_targets=False, update_skeleton_reference_pose=False)
+            C.set_props(sd, import_morph_targets=False, update_skeleton_reference_pose=False,
+                        convert_scene_unit=True)
             sd.set_editor_property("normal_import_method", unreal.FBXNormalImportMethod.FBXNIM_IMPORT_NORMALS)
         except Exception:  # noqa: BLE001
             pass
     return ui
+
+
+def _cast_anim_path(rel):
+    """Source path for a cast animation.
+
+    The pipeline's takes are armature-only, which UE 5.8's legacy FBX animation importer rejects. The
+    mirrored `Combined/<name>.fbx` files carry the group's skinned mesh as well (mesh + armature) and are
+    retargeted from the take's own rest pose onto that mesh's T-pose skeleton; without the retarget the
+    clips replay as a T-pose. They also include the root -> root_001 -> pelvis chain the VroidB skeleton
+    needs. Prefer them over the raw takes."""
+    rel = rel.replace("\\", "/")
+    folder, name = os.path.split(rel)
+    combined = os.path.join(C.source_dir(), folder, "Combined", name)
+    return combined if os.path.exists(combined) else os.path.join(C.source_dir(), rel)
+
+
+def _interchange_animation(file, name, skeleton):
+    """Fallback for armature-only animation FBX files.
+
+    UE 5.8's legacy FBX animation importer looks for a skinned mesh bound to the skeleton's root bone and
+    rejects files that only contain the armature ("Mesh contains root_001 bone as root but animation
+    doesn't contain the root track"). Interchange binds the take to an existing skeleton directly."""
+    _set_fbx_interchange(True)
+    try:
+        pipe = unreal.new_object(unreal.InterchangeGenericAssetsPipeline)
+        common = pipe.get_editor_property("common_skeletal_meshes_and_animations_properties")
+        C.set_props(common, skeleton=skeleton, import_only_animations=True, try_auto_select_skeleton=False)
+        anim_pipe = pipe.get_editor_property("animation_pipeline")
+        C.set_props(anim_pipe, import_animations=True, import_bone_tracks=True)
+        override = unreal.new_object(unreal.InterchangePipelineStackOverride)
+        override.add_pipeline(pipe)
+        _import_tasks([file], CHAR_DIR, override, [name])
+    finally:
+        _set_fbx_interchange(False)
 
 
 def _find_in(folder, cls_name, contains=None):
@@ -338,7 +376,11 @@ def import_character(materials):
         skeleton = mesh.get_editor_property("skeleton")
         for state, rel in sorted(info.get("anims", {}).items()):
             name = f"A_Student_{state}"
-            _import_tasks([os.path.join(C.source_dir(), rel)], CHAR_DIR, _skeletal_options(skeleton), [name])
+            file = os.path.join(C.source_dir(), rel)
+            _import_tasks([file], CHAR_DIR, _skeletal_options(skeleton), [name])
+            if not C.exists(f"{CHAR_DIR}/{name}"):
+                # armature-only FBX: legacy importer cannot find the root track, use Interchange
+                _interchange_animation(file, name, skeleton)
             if not C.exists(f"{CHAR_DIR}/{name}"):
                 # importer appended the take name: rename whatever sequence carries the state name
                 seq = _find_in(CHAR_DIR, "AnimSequence", name)
@@ -453,7 +495,11 @@ def import_cast(masters):
                 continue
             skeleton = base_mesh.get_editor_property("skeleton")
             for state, a in sorted(g.get("anims", {}).items()):
-                _import_tasks([os.path.join(C.source_dir(), a["file"])], CHAR_DIR, _skeletal_options(skeleton), [a["name"]])
+                file = _cast_anim_path(a["file"])
+                _import_tasks([file], CHAR_DIR, _skeletal_options(skeleton), [a["name"]])
+                if not C.exists(f"{CHAR_DIR}/{a['name']}"):
+                    # armature-only FBX: legacy importer cannot find the root track, use Interchange
+                    _interchange_animation(file, a["name"], skeleton)
                 if not C.exists(f"{CHAR_DIR}/{a['name']}"):
                     seq = _find_in(CHAR_DIR, "AnimSequence", a["name"])
                     if seq is not None:

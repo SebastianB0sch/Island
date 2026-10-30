@@ -15,11 +15,16 @@ the Unreal Editor's own Python + C++.
 *(Cycles previews of the generated island. In Unreal it is lit by Lumen, a dynamic sky atmosphere,
 volumetric clouds and a full day/night cycle.)*
 
+![Duel board](Docs/renders/duel.png)
+
+*The ported duel board: hand, field, card detail, piles, duel log and AI opponent. The deck picker and
+result screen are in `Docs/renders/duel_deck.png` and `duel_result.png`.*
+
 ## What's on the island
 
 | Location | What you'll find |
 |---|---|
-| **Duel Academy** (main building) | The landmark: classroom wings, four obelisk towers, a stepped-pyramid **Grand Duel Arena** you can walk into (holographic duels), lobby and **Card Shop** (booster packs). |
+| **Duel Academy** (main building) | The landmark: classroom wings, four obelisk towers, a stepped-pyramid **Grand Duel Arena** you can walk into (full duels), lobby and **Card Shop** (booster packs). |
 | **Academy Plaza** | Fountain courtyard, dorm flags, the direction board and the gate where the harbor road arrives. |
 | **Slifer Red Dorm** | The humble two-storey cliff-top shack with the outdoor walkway, curry-scented dining hall and the best sunset view. |
 | **Ra Yellow Dorm** | Tidy yellow dormitory with its famous cafeteria and sea-side balconies. |
@@ -99,7 +104,11 @@ model's license allows redistribution before committing it.
   older CC0 low-poly student and a procedural avatar remain as fallbacks when no cast is imported.
 * Location banners + "**New location discovered**" tracking (17 named locations), compass, minimap.
 * **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker.
-* **Holographic duels** on the Grand Duel Arena field, the gym practice fields and the beach court.
+* **A full duel system**: a deterministic 1,200-card rules engine (summons, tributes, Fusion and Ritual
+  summons, chains, traps, hand-limit discards and a duelist AI), a Canvas board with hand, field,
+  deck/extra/graveyard/banish piles, card detail, duel log, animations and a result/rematch screen.
+  Duel fields pick a resident opponent; named students (Jaden, Syrus, Bastion, Chazz, Alexis, Zane and
+  Crowler) can also be challenged after talking to them once. Card scans are shown on the board.
 * **Card Shop**: open booster packs (32 original cards, rarities from Common to Ultra Rare), track your collection.
 * Signs with lore everywhere, students from all three dorms who wander around and chat (E).
 * **Day/night cycle** (Lumen GI, sky atmosphere, moon): lamps, windows and the lighthouse turn on at
@@ -122,6 +131,12 @@ model's license allows redistribution before committing it.
 | F | Raise duel disk |
 | T, [ ], N | Pause time, slower / faster, skip 3 hours |
 | F1 or H | Controls overlay |
+| **In a duel** | |
+| Mouse | Select a card, use the action buttons, inspect piles |
+| B | Enter the Battle Phase |
+| N / End | End the turn |
+| Esc | Deselect / close a pile / leave the duel |
+| 1, 2, 3 | Pick a starter deck in the deck picker |
 
 ## Getting started
 
@@ -230,6 +245,8 @@ In Landscape mode → *Import from file*: **Location** X = -153600, Y = -153600,
 | Benches, signposts, fences, crates, containers, rowboats, beach umbrellas and chairs, stone lanterns | Sketchfab authors (CC BY 4.0) |
 | Fishing trawlers | Poly by Google (CC BY 3.0) |
 | Duel Academy buildings, dorms, arena, harbor, lighthouse, ferry, volcano/waterfall features, flagpoles, bollards, duel dummies, vending machines, sounds | original, built by the pipeline in `Tools/` |
+| Duel card names, card text, card scans, fusion recipes and starter deck lists | Yu-Gi-Oh! TCG, Konami/Shueisha - non-commercial fan reference; scans via YGOPRODeck, data ported from the reference UE5 duel engine |
+| Duel character busts / expression frames (`Content/Data/Portraits`) | Konami *Duel Links* character renders (fan-project reference set); not redistributable. The in-world island cast remains the project's own VRoid-derived models |
 
 Every third-party folder under `Tools/thirdparty/` has a `SOURCE.txt`; [CREDITS.md](CREDITS.md) lists all of
 them with the required CC BY attribution text (also shown in-game on the F1 controls panel).
@@ -242,4 +259,7 @@ them with the required CC BY attribution text (also shown in-game on the F1 cont
 * Performance: the island uses Nanite foliage, MegaLights for ~300 small lights and Lumen; on low-end
   GPUs lower *Settings → Engine Scalability*.
 * Non-commercial fan project. *Yu-Gi-Oh! GX* and its characters, names and settings belong to their
-  respective owners; this project contains no assets from the show or the games.
+  respective owners. The duel card database uses card names and scans for identification and commentary;
+  the character busts in `Content/Data/Portraits` are Konami *Duel Links* fan-reference renders and must
+  be kept out of any public build. The island's in-world cast is built from the licensed VRoid sample
+  avatars (see [CREDITS.md](CREDITS.md)).

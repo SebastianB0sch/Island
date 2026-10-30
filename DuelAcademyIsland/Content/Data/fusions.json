@@ -1,0 +1,65 @@
+[
+  {
+    "result": 319,
+    "materials": [
+      40,
+      318
+    ],
+    "fusionTypes": [
+      "Polymerization"
+    ],
+    "name": "Meteor B. Dragon"
+  },
+  {
+    "result": 1129,
+    "materials": [
+      1106,
+      1107
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Miracle Fusion"
+    ],
+    "name": "Elemental Hero Flame Wingman"
+  },
+  {
+    "result": 1130,
+    "materials": [
+      1109,
+      1108
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Miracle Fusion"
+    ],
+    "name": "Elemental Hero Thunder Giant"
+  },
+  {
+    "result": 1200,
+    "materials": [
+      1129,
+      1109
+    ],
+    "fusionTypes": [
+      "Polymerization",
+      "Miracle Fusion"
+    ],
+    "name": "Elemental Hero Shining Flare Wingman"
+  },
+  {
+    "result": 722,
+    "materials": [
+      363,
+      666,
+      655,
+      655,
+      780
+    ],
+    "materialsType": "Dragon",
+    "anyCount": 5,
+    "fusionTypes": [
+      "Dragon's Mirror"
+    ],
+    "name": "F.G.D."
+  }
+]

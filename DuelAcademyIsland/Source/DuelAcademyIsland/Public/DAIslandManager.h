@@ -13,6 +13,7 @@ class UTexture2D;
 class UMaterialParameterCollection;
 class ULightComponent;
 class UBillboardComponent;
+class USkeletalMesh;
 
 /**
  * One per level (spawned by the editor build script). Drives the sun/moon,
@@ -30,6 +31,10 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnConstruction(const FTransform& Transform) override;
+
+	/** Editor repair: merge every bone of Mesh into its skeleton's bone tree (saves the skeleton). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Editor")
+	static bool MergeSkeletonBones(USkeletalMesh* Mesh);
 
 	// ---------------------------------------------------------------- scene references
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Sky")

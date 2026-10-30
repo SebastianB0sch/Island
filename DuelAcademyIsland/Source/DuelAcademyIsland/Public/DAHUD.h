@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+#include "DADuelUI.h"
 #include "DAHUD.generated.h"
 
 class ADALocationVolume;
@@ -21,14 +22,44 @@ public:
 	ADAHUD();
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void DrawHUD() override;
 
 	bool IsMapOpen() const { return bMapOpen; }
+	bool IsDuelOpen() const { return DuelUI.IsValid() && DuelUI->IsOpen(); }
+	bool IsModalOpen() const { return bMapOpen || bHelpOpen || IsDuelOpen(); }
+
+	/** Opens the starter-deck picker for a duel against the given opponent. */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
+	void OpenDuelDeckSelect(const FString& OpponentId = TEXT("jaden"),
+		const FString& OpponentName = TEXT("Jaden Yuki"), const FString& OpponentDeckId = TEXT("jaden"));
+
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
+	void StartDuelWithDeck(const FString& DeckId);
+
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
+	void CloseDuel();
+
+	/** Debug-only: summon the first legal monster in the player's opening hand. */
+	void DebugAutoPlayOpening();
+
+	/** Debug-only: select the first card in the player's hand. */
+	void DebugSelectFirstHandCard();
+
+	/** Debug-only: finish the current duel with a player win. */
+	void DebugFinishDuelWin();
+
+	UFont* GetSmallFont() const { return SmallFont; }
+	UFont* GetBigFont() const { return BigFont; }
+
 	void ToggleMap();
 	void ToggleHelp() { bHelpOpen = !bHelpOpen; }
 	void MoveMapSelection(int32 Delta);
 	ADALocationVolume* GetSelectedZone() const;
 	ADALocationVolume* PickZoneUnderCursor() const { return HoveredZone.Get(); }
+	ADALocationVolume* PickZoneRowUnderCursor() const;
+	/** Closes the map and sends the player to Zone (or the highlighted entry). */
+	void TravelToZone(ADALocationVolume* Zone = nullptr);
 
 private:
 	// drawing helpers
@@ -68,5 +99,6 @@ private:
 	int32 MapSelection = 0;
 	float UIScale = 1.f;
 	float StartTime = 0.f;
+	TUniquePtr<FDADuelUI> DuelUI;
 	TWeakObjectPtr<ADALocationVolume> HoveredZone;
 };
