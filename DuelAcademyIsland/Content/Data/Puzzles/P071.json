@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "id": "P071",
+  "level": 4,
+  "title": "Trap Negation L4-1",
+  "template": "trap_negation",
+  "opponent": "mimicry",
+  "seed": 2071,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [
+      {
+        "card_id": 403,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [
+      {
+        "card_id": 421,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'trap_negation', level 4, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Seven Tools of the Bandit is already Set; the engine auto-negates Mirror Force when the lethal direct attack is declared.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_071",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      503,
+      868,
+      967,
+      983
+    ],
+    "solution_card_names": [
+      "Black Luster Soldier - Envoy of the Beginning",
+      "Mokey Mokey",
+      "Ring of Destruction",
+      "Special Hurricane"
+    ],
+    "solution_steps": [
+      "Summon Mokey Mokey.",
+      "Activate Ring of Destruction and use it on Mokey-Mokey.",
+      "Activate Special Hurricane by discarding Sangan.",
+      "Special summon Black Luster Soldier - Envoy of the Beginning by removing Mokey and Sangan.",
+      "Attack."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

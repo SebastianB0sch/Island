@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "id": "P062",
+  "level": 4,
+  "title": "Direct Attack L4-2",
+  "template": "direct_attack",
+  "opponent": "mimicry",
+  "seed": 2062,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 18,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 234,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 4400,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 18,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 234,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'direct_attack', level 4, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Direct attack with Summoned Skull, Gemini Elf for exactly 4400 damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_062",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      1,
+      332,
+      334,
+      367,
+      789
+    ],
+    "solution_card_names": [
+      "Black Illusion Ritual",
+      "Blue-Eyes White Dragon",
+      "Magical Scientist",
+      "Relinquished",
+      "Thousand-Eyes Restrict"
+    ],
+    "solution_steps": [
+      "Normal summon Magical Scientist.",
+      "Use his effect to get out Thousand-Eyes Restrict.",
+      "Absorb one of the Blue-Eyes White Dragons with Thousand-eyes effect.",
+      "Activate Black Illusion Ritual and Tribute Thousand-eyes to summon Relinquished.",
+      "Absorb the second Blue-eyes.",
+      "Attack directly for game."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

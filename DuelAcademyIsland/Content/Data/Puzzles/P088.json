@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "id": "P088",
+  "level": 5,
+  "title": "Ritual Summon L5-2",
+  "template": "ritual_summon",
+  "opponent": "mimicry",
+  "seed": 2088,
+  "turn_limit": 1,
+  "time_limit": 95,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      843,
+      841,
+      234,
+      195
+    ],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 363,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 7900,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 843
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 841,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 363,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'ritual_summon', level 5, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Ritual Summon Legendary Flame Lord with Incandescent Ordeal, then attack for exact LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_088",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      1,
+      17,
+      19,
+      415,
+      438,
+      454,
+      467,
+      1065
+    ],
+    "solution_card_names": [
+      "Backup Soldier",
+      "Blue-Eyes White Dragon",
+      "Exodia the Forbidden One",
+      "Monster Reincarnation",
+      "Mystic Tomato",
+      "Painful Choice",
+      "Skull Servant",
+      "Wall of Illusion"
+    ],
+    "solution_steps": [
+      "Run Mystic Tomato into Blue-Eyes White Dragon to Summon Exodia the Forbidden One.",
+      "Attack Wall of Illusion with Exodia to return it to your hand.",
+      "Activate Painful Choice and select the arms and legs of Exodia + Skull Servant.",
+      "Activate Backup Soldier and add three Exodia parts to your hand.",
+      "Get the last card with Monster Reincarnation, if Skull Servant was chosen when Painful Choice was played."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

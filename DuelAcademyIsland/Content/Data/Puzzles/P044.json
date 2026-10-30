@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "id": "P044",
+  "level": 3,
+  "title": "Tribute Summon L3-2",
+  "template": "tribute_summon",
+  "opponent": "mimicry",
+  "seed": 2044,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      23
+    ],
+    "field": [
+      {
+        "card_id": 2,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 165,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 2500,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "normal_summon",
+      "card_id": 23,
+      "tribute_card_ids": [
+        2,
+        165
+      ]
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 23,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 160,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'tribute_summon', level 3, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Tribute Mystical Elf, La Jinn the Mystical Genie of the Lamp for Dark Magician, then attack for exactly 2500.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_044",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      153,
+      625,
+      691
+    ],
+    "solution_card_names": [
+      "Dark Dust Spirit",
+      "Gilasaurus",
+      "Swords of Revealing Light"
+    ],
+    "solution_steps": [
+      "Activate Swords of Revealing Light.",
+      "Special Summon Gilasaurus.",
+      "Summon Dark Dust Spirit by tributing Gilasaurus.",
+      "Enter Battle Phase and attack."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

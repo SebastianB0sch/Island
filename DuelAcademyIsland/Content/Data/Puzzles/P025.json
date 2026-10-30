@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "id": "P025",
+  "level": 2,
+  "title": "Fusion Summon L2-1",
+  "template": "fusion_summon",
+  "opponent": "mimicry",
+  "seed": 2025,
+  "turn_limit": 1,
+  "time_limit": 50,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      381,
+      1106,
+      1107
+    ],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": [
+      1129
+    ]
+  },
+  "opponent_state": {
+    "lp": 2100,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 381
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1129,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'fusion_summon', level 2, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Fusion Summon Elemental Hero Flame Wingman with Polymerization, then attack for exactly 2100.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_025",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      117,
+      454,
+      497,
+      590,
+      715,
+      940
+    ],
+    "solution_card_names": [
+      "Black Pendant",
+      "Blowback Dragon",
+      "Call of the Haunted",
+      "Marie the Fallen One",
+      "Mystic Tomato",
+      "Newdoria"
+    ],
+    "solution_steps": [
+      "Activate Call of the Haunted to bring back Mystic Tomato.",
+      "Summon Marie the Fallen One by tributing Tomato.",
+      "Equip Black Pendant on Newdoria.",
+      "Enter Battle Phase and attack Blowback Dragon with Newdoria, then destroy Blowback with Newdoria's effect.",
+      "Attack with Marie the Fallen One."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "id": "P024",
+  "level": 2,
+  "title": "Tribute Summon L2-2",
+  "template": "tribute_summon",
+  "opponent": "mimicry",
+  "seed": 2024,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      18
+    ],
+    "field": [
+      {
+        "card_id": 2,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 2500,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "normal_summon",
+      "card_id": 18,
+      "tribute_card_ids": [
+        2
+      ]
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 18,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'tribute_summon', level 2, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Tribute Mystical Elf for Summoned Skull, then attack for exactly 2500.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_024",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      225,
+      374,
+      556,
+      593,
+      721
+    ],
+    "solution_card_names": [
+      "Cannon Soldier",
+      "Limiter Removal",
+      "Master of Dragon Soldier",
+      "Scapegoat",
+      "United We Stand"
+    ],
+    "solution_steps": [
+      "Activate Scapegoat.",
+      "Equip Cannon Soldier with United We Stand.",
+      "Activate Limiter Removal.",
+      "Enter Battle Phase and attack Master of Dragon Soldier with Cannon Soldier.",
+      "Enter Main Phase 2, and use Cannon Soldier's effect to sacrifice all of the monsters, including Cannon Soldier (but sacrifice him last, of course)."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "id": "P092",
+  "level": 5,
+  "title": "Trap Negation L5-2",
+  "template": "trap_negation",
+  "opponent": "mimicry",
+  "seed": 2092,
+  "turn_limit": 1,
+  "time_limit": 90,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 363,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [
+      {
+        "card_id": 403,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 5500,
+    "hand": [],
+    "field": [],
+    "spell_traps": [
+      {
+        "card_id": 421,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 363,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'trap_negation', level 5, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Seven Tools of the Bandit is already Set; the engine auto-negates Mirror Force when the lethal direct attack is declared.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_092",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      18,
+      40,
+      85,
+      381,
+      1064,
+      1185,
+      1198
+    ],
+    "solution_card_names": [
+      "B. Skull Dragon",
+      "Back to Square One",
+      "Conscription",
+      "Dragon's Mirror",
+      "Polymerization",
+      "Red-Eyes B. Dragon",
+      "Summoned Skull"
+    ],
+    "solution_steps": [
+      "Activate Back to Square One and, by discarding Summoned Skull, return the Summoned Skull on your opponents side of the field to his deck.",
+      "Activate Conscription to get this Summoned Skull back.",
+      "Activate Polymerization to Fuse Summoned Skull on the field and Red-Eyes B. Dragon in your hand and form B. Skull Dragon.",
+      "Activate Dragon's Mirror and get out another B. Skull Dragon by removing from play the Fusion Materials in your graveyard.",
+      "Attack."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

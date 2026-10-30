@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "id": "P079",
+  "level": 4,
+  "title": "Special Summon L4-1",
+  "template": "special_summon",
+  "opponent": "mimicry",
+  "seed": 2079,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      477
+    ],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [
+      1
+    ],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 5400,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 477
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'special_summon', level 4, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Premature Burial / Autonomous Action Unit revives a monster, then all available attackers deal exact damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_079",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      1,
+      239,
+      436,
+      477,
+      497,
+      812,
+      908,
+      1049
+    ],
+    "solution_card_names": [
+      "Blue-Eyes White Dragon",
+      "Call of the Haunted",
+      "Guardian Angel Joan",
+      "Hane-Hane",
+      "Mystical Space Typhoon",
+      "Premature Burial",
+      "Shinato, King of a Higher Plane",
+      "Thestalos the Firestorm Monarch"
+    ],
+    "solution_steps": [
+      "Use Mystical Space Typhoon on Call of the Haunted to destroy Shinato, King of a Higher Plane.",
+      "Flip Hane-Hane and return Guardian Angel Joan.",
+      "Tribute Summon Thestalos the Firestorm Monarch.",
+      "Activate Premature Burial and revive Blue-Eyes White Dragon.",
+      "Attack for game."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

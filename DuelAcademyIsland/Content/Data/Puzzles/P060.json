@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "id": "P060",
+  "level": 3,
+  "title": "Special Summon L3-2",
+  "template": "special_summon",
+  "opponent": "mimicry",
+  "seed": 2060,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      477
+    ],
+    "field": [
+      {
+        "card_id": 234,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [
+      1
+    ],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 4900,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 477
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 234,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 160,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'special_summon', level 3, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Premature Burial / Autonomous Action Unit revives a monster, then all available attackers deal exact damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_060",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      701
+    ],
+    "solution_card_names": [
+      "Book of Taiyou"
+    ],
+    "solution_steps": [
+      "Set Book of Taiyou and Penguin Soldier on the field.",
+      "Play Card Destruction.",
+      "Activate Hane-Hane's effect by flip summoning. Return one of Exodia's limbs or Exodia, the Forbidden One to your hand.",
+      "Activate Book of Taiyou, flip Penguin Soldier face up with its effect. Send the remaining two pieces of Exodia back to your hand.",
+      "Exodia's effect automatically activates, victory!"
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

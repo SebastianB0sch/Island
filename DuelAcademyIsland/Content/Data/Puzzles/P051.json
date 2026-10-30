@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "id": "P051",
+  "level": 3,
+  "title": "Trap Negation L3-1",
+  "template": "trap_negation",
+  "opponent": "mimicry",
+  "seed": 2051,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [
+      {
+        "card_id": 403,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 2400,
+    "hand": [],
+    "field": [],
+    "spell_traps": [
+      {
+        "card_id": 421,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 160,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'trap_negation', level 3, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Seven Tools of the Bandit is already Set; the engine auto-negates Mirror Force when the lethal direct attack is declared.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_051",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      757
+    ],
+    "solution_card_names": [
+      "Zombie Tiger"
+    ],
+    "solution_steps": [
+      "Summon '''Decayed Commander''' face up attack position.",
+      "Activiate '''Decayed Commander''' special effect to summon '''Zombie Tiger''' from your hand to the field.",
+      "Activate Zombie Tiger's special effect, equip to Decayed Commander.",
+      "Enter Battle Phase.",
+      "Attack Vorse Raider with Giant Rat. Activate special effect. Summon Milus Radiant from your deck.",
+      "Have Decayed Commander attack Vorse Raider. Have Milus Radiant attack LP directly."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

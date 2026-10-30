@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "id": "P039",
+  "level": 2,
+  "title": "Special Summon L2-1",
+  "template": "special_summon",
+  "opponent": "mimicry",
+  "seed": 2039,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      477
+    ],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [
+      1
+    ],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 477
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'special_summon', level 2, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Premature Burial / Autonomous Action Unit revives a monster, then all available attackers deal exact damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_039",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      370,
+      450,
+      1176,
+      1177,
+      1187
+    ],
+    "solution_card_names": [
+      "Des Croaking",
+      "Des Frog",
+      "Graceful Charity",
+      "Mother Grizzly",
+      "T.A.D.P.O.L.E."
+    ],
+    "solution_steps": [
+      "Activate Graceful Charity and discard the two T.A.D.P.O.L.E.s.",
+      "Summon a Des Frog by tributing Mother Grizzly, then select to also summon the two remaining Des Frogs in your hand.",
+      "Activate Des Croaking.",
+      "Enter Battle Phase and attack with all the Des Frogs."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

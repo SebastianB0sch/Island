@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "id": "P023",
+  "level": 2,
+  "title": "Tribute Summon L2-1",
+  "template": "tribute_summon",
+  "opponent": "mimicry",
+  "seed": 2023,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      363
+    ],
+    "field": [
+      {
+        "card_id": 2,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 2500,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "normal_summon",
+      "card_id": 363,
+      "tribute_card_ids": [
+        2
+      ]
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 363,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'tribute_summon', level 2, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Tribute Mystical Elf for Cyber-Tech Alligator, then attack for exactly 2500.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_023",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      431,
+      696,
+      699
+    ],
+    "solution_card_names": [
+      "Delinquent Duo",
+      "Don Zaloog",
+      "Guardian Sphinx"
+    ],
+    "solution_steps": [
+      "Flip Summon Guardian Sphinx.",
+      "Activate Delinquent Duo.",
+      "Summon Don Zaloog.",
+      "Enter Battle Phase and attack directly with Don, then with Sphinx."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "id": "P084",
+  "level": 5,
+  "title": "Tribute Summon L5-2",
+  "template": "tribute_summon",
+  "opponent": "mimicry",
+  "seed": 2084,
+  "turn_limit": 1,
+  "time_limit": 90,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      1
+    ],
+    "field": [
+      {
+        "card_id": 2,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 165,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 363,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 5500,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "normal_summon",
+      "card_id": 1,
+      "tribute_card_ids": [
+        2,
+        165
+      ]
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 363,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'tribute_summon', level 5, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Tribute Mystical Elf, La Jinn the Mystical Genie of the Lamp for Blue-Eyes White Dragon, then attack for exactly 5500.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_084",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      110,
+      447,
+      477,
+      649,
+      651,
+      654,
+      694,
+      907
+    ],
+    "solution_card_names": [
+      "Axe of Despair",
+      "Exiled Force",
+      "Giant Axe Mummy",
+      "Giant Germ",
+      "Marauding Captain",
+      "Mataza the Zapper",
+      "Premature Burial",
+      "The Warrior Returning Alive"
+    ],
+    "solution_steps": [
+      "Use Premature Burial to revive Exiled Force.",
+      "Use Exile's effect to destroy Giant Germ.",
+      "Return Marauding Captain to your hand using The Warrior Returning Alive.",
+      "Summon Marauding Captain and then, using his effect, Mataza the Zapper.",
+      "Equip Mataza with Axe of Despair.",
+      "Attack the face-down Giant Axe Mummy with Mataza, then attack directly for game."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

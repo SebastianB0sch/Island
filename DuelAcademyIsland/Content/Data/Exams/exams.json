@@ -1,0 +1,405 @@
+{
+  "schema_version": 1,
+  "description": "12 monthly exam cycles linking written sets, timed puzzles and practical objectives.",
+  "max_points": 500,
+  "pass_mark": 300,
+  "scoring_ref": "scoring.json",
+  "cycles": [
+    {
+      "exam_id": "EXAM_01",
+      "month_index": 1,
+      "written_set_id": "EXAM_01",
+      "question_ids": [
+        "Q001",
+        "Q004",
+        "Q007",
+        "Q010",
+        "Q013",
+        "Q016",
+        "Q019",
+        "Q022",
+        "Q025",
+        "Q028"
+      ],
+      "timed_puzzle_id": "P001",
+      "practical_objective_id": "battle",
+      "practical_focus": "Destroy 3 monsters by battle",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_02",
+      "month_index": 2,
+      "written_set_id": "EXAM_02",
+      "question_ids": [
+        "Q008",
+        "Q011",
+        "Q014",
+        "Q017",
+        "Q020",
+        "Q023",
+        "Q026",
+        "Q029",
+        "Q002",
+        "Q005"
+      ],
+      "timed_puzzle_id": "P006",
+      "practical_objective_id": "spells",
+      "practical_focus": "Activate 3 Spell Cards",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_03",
+      "month_index": 3,
+      "written_set_id": "EXAM_03",
+      "question_ids": [
+        "Q015",
+        "Q018",
+        "Q021",
+        "Q024",
+        "Q027",
+        "Q030",
+        "Q003",
+        "Q006",
+        "Q009",
+        "Q012"
+      ],
+      "timed_puzzle_id": "P021",
+      "practical_objective_id": "traps",
+      "practical_focus": "Activate 2 Trap Cards",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_04",
+      "month_index": 4,
+      "written_set_id": "EXAM_04",
+      "question_ids": [
+        "Q022",
+        "Q025",
+        "Q028",
+        "Q001",
+        "Q004",
+        "Q007",
+        "Q010",
+        "Q013",
+        "Q016",
+        "Q019"
+      ],
+      "timed_puzzle_id": "P026",
+      "practical_objective_id": "damage",
+      "practical_focus": "Inflict 3000 battle damage",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_05",
+      "month_index": 5,
+      "written_set_id": "EXAM_05",
+      "question_ids": [
+        "Q029",
+        "Q002",
+        "Q005",
+        "Q008",
+        "Q011",
+        "Q014",
+        "Q017",
+        "Q020",
+        "Q023",
+        "Q026"
+      ],
+      "timed_puzzle_id": "P041",
+      "practical_objective_id": "fusion",
+      "practical_focus": "Perform 1 Fusion Summon",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_06",
+      "month_index": 6,
+      "written_set_id": "EXAM_06",
+      "question_ids": [
+        "Q006",
+        "Q009",
+        "Q012",
+        "Q015",
+        "Q018",
+        "Q021",
+        "Q024",
+        "Q027",
+        "Q030",
+        "Q003"
+      ],
+      "timed_puzzle_id": "P046",
+      "practical_objective_id": "ritual",
+      "practical_focus": "Perform 1 Ritual Summon",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_07",
+      "month_index": 7,
+      "written_set_id": "EXAM_07",
+      "question_ids": [
+        "Q013",
+        "Q016",
+        "Q019",
+        "Q022",
+        "Q025",
+        "Q028",
+        "Q001",
+        "Q004",
+        "Q007",
+        "Q010"
+      ],
+      "timed_puzzle_id": "P061",
+      "practical_objective_id": "special_summon",
+      "practical_focus": "Perform 2 Special Summons",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_08",
+      "month_index": 8,
+      "written_set_id": "EXAM_08",
+      "question_ids": [
+        "Q020",
+        "Q023",
+        "Q026",
+        "Q029",
+        "Q002",
+        "Q005",
+        "Q008",
+        "Q011",
+        "Q014",
+        "Q017"
+      ],
+      "timed_puzzle_id": "P066",
+      "practical_objective_id": "battle",
+      "practical_focus": "Destroy 3 monsters by battle",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_09",
+      "month_index": 9,
+      "written_set_id": "EXAM_09",
+      "question_ids": [
+        "Q027",
+        "Q030",
+        "Q003",
+        "Q006",
+        "Q009",
+        "Q012",
+        "Q015",
+        "Q018",
+        "Q021",
+        "Q024"
+      ],
+      "timed_puzzle_id": "P081",
+      "practical_objective_id": "spells",
+      "practical_focus": "Activate 3 Spell Cards",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_10",
+      "month_index": 10,
+      "written_set_id": "EXAM_10",
+      "question_ids": [
+        "Q004",
+        "Q007",
+        "Q010",
+        "Q013",
+        "Q016",
+        "Q019",
+        "Q022",
+        "Q025",
+        "Q028",
+        "Q001"
+      ],
+      "timed_puzzle_id": "P086",
+      "practical_objective_id": "traps",
+      "practical_focus": "Activate 2 Trap Cards",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_11",
+      "month_index": 11,
+      "written_set_id": "EXAM_11",
+      "question_ids": [
+        "Q011",
+        "Q014",
+        "Q017",
+        "Q020",
+        "Q023",
+        "Q026",
+        "Q029",
+        "Q002",
+        "Q005",
+        "Q008"
+      ],
+      "timed_puzzle_id": "P070",
+      "practical_objective_id": "damage",
+      "practical_focus": "Inflict 3000 battle damage",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    },
+    {
+      "exam_id": "EXAM_12",
+      "month_index": 12,
+      "written_set_id": "EXAM_12",
+      "question_ids": [
+        "Q018",
+        "Q021",
+        "Q024",
+        "Q027",
+        "Q030",
+        "Q003",
+        "Q006",
+        "Q009",
+        "Q012",
+        "Q015"
+      ],
+      "timed_puzzle_id": "P100",
+      "practical_objective_id": "fusion",
+      "practical_focus": "Perform 1 Fusion Summon",
+      "scoring": {
+        "max_points": 500,
+        "pass_mark": 300,
+        "sections": {
+          "written": 200,
+          "timed": 100,
+          "practical": 200
+        }
+      },
+      "pass_mark": 300,
+      "confidence": "low",
+      "source": "A07 cycle assembly from questions.json sets, practicals.json objectives and the generated puzzle catalog; exact GBA monthly assignment is not extracted.",
+      "notes": "500-point cycle: 10 written questions (200), one timed puzzle (100), one practical objective (200)."
+    }
+  ]
+}

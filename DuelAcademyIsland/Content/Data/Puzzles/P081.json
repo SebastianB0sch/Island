@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "id": "P081",
+  "level": 5,
+  "title": "Direct Attack L5-1",
+  "template": "direct_attack",
+  "opponent": "mimicry",
+  "seed": 2081,
+  "turn_limit": 1,
+  "time_limit": 90,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 5400,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'direct_attack', level 5, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Direct attack with Blue-Eyes White Dragon, Red-Eyes B. Dragon for exactly 5400 damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_081",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      251,
+      262,
+      375,
+      398,
+      441,
+      1100
+    ],
+    "solution_card_names": [
+      "Banisher of the Light",
+      "Card Destruction",
+      "D.D. Dynamite",
+      "Needle Worm",
+      "Penguin Soldier",
+      "Soul Release"
+    ],
+    "solution_steps": [
+      "Flip summon \"Penguin Soldier\", and use its effect to return both enemy monsters to his hand.",
+      "Normal Summon \"Banisher of the Light\" in attack mode.",
+      "Activate \"Soul Release\" and remove from play all cards in your opponents graveyard.",
+      "Flip \"Needle Worm\".",
+      "Activate \"Card Destruction\".",
+      "Activate \"D.D. Dynamite\".",
+      "Attack directly"
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "id": "P065",
+  "level": 4,
+  "title": "Fusion Summon L4-1",
+  "template": "fusion_summon",
+  "opponent": "mimicry",
+  "seed": 2065,
+  "turn_limit": 1,
+  "time_limit": 80,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      381,
+      40,
+      318
+    ],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": [
+      319
+    ]
+  },
+  "opponent_state": {
+    "lp": 6500,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 381
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 319,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'fusion_summon', level 4, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Fusion Summon Meteor B. Dragon with Polymerization, then attack for exactly 6500.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_065",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      225,
+      234,
+      356,
+      454,
+      518,
+      548
+    ],
+    "solution_card_names": [
+      "Army Ant Token",
+      "Arsenal Bug",
+      "Cannon Soldier",
+      "Gemini Elf",
+      "Multiplication of Ants",
+      "Mystic Tomato",
+      "Pinch Hopper"
+    ],
+    "solution_steps": [
+      "Normal summon Pinch Hopper.",
+      "Use Multiplication of Ants to exchange him for two Army Ant Tokens and an Arsenal Bug, all in attack mode.",
+      "Run Mystic Tomato into Gemini Elf to summon Cannon Soldier from your deck.",
+      "Attack the elf with your Arsenal bug, then attack directly with the other monsters.",
+      "Finally tribute all your monsters as fodder for Cannon Soldier (finally, himself). Game!"
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

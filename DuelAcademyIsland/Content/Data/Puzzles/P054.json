@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "id": "P054",
+  "level": 3,
+  "title": "Position Switch L3-2",
+  "template": "position_switch",
+  "opponent": "mimicry",
+  "seed": 2054,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 363,
+        "position": "defense",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 2500,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "change_position",
+      "card_id": 363,
+      "position": "attack"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 363,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 160,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'position_switch', level 3, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Both monsters begin in Defense Position; change to Attack, then attack directly.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_054",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      186,
+      612,
+      1111,
+      1158
+    ],
+    "solution_card_names": [
+      "Ancient Gear Golem",
+      "Cyber End Dragon",
+      "Cyber Stein",
+      "Mystical Beast Serket"
+    ],
+    "solution_steps": [
+      "Activate Cyber Stein's effect to summon Cyber End Dragon",
+      "Offer Mystical Beast Serket and Cyber Stein to summon Ancient Gear Golem.",
+      "Attack Marshmallon with both Ancient Gear and Cyber End",
+      "Victory is Sweet!"
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

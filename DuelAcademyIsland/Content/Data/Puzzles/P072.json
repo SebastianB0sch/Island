@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "id": "P072",
+  "level": 4,
+  "title": "Trap Negation L4-2",
+  "template": "trap_negation",
+  "opponent": "mimicry",
+  "seed": 2072,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 18,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 234,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [
+      {
+        "card_id": 403,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 4400,
+    "hand": [],
+    "field": [],
+    "spell_traps": [
+      {
+        "card_id": 421,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 18,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 234,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'trap_negation', level 4, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Seven Tools of the Bandit is already Set; the engine auto-negates Mirror Force when the lethal direct attack is declared.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_072",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      18,
+      110,
+      190,
+      758,
+      907,
+      1065
+    ],
+    "solution_card_names": [
+      "Axe of Despair",
+      "Giant Orc",
+      "Magician of Faith",
+      "Mataza the Zapper",
+      "Monster Reincarnation",
+      "Summoned Skull"
+    ],
+    "solution_steps": [
+      "Activate Monster Reincarnation. Discard Summoned Skull to return Mataza the Zapper to your hand.",
+      "Flip summon Magician of Faith and return Axe of Despair to your hand.",
+      "Summon Mataza, equip him with the Axe and attack Giant Orc, then attack directly for game."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "id": "P085",
+  "level": 5,
+  "title": "Fusion Summon L5-1",
+  "template": "fusion_summon",
+  "opponent": "mimicry",
+  "seed": 2085,
+  "turn_limit": 1,
+  "time_limit": 95,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      381,
+      1106,
+      1107
+    ],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": [
+      1129
+    ]
+  },
+  "opponent_state": {
+    "lp": 7500,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 381
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1129,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'fusion_summon', level 5, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Fusion Summon Elemental Hero Flame Wingman with Polymerization, then attack for exactly 7500.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_085",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      477,
+      497,
+      751,
+      752,
+      753,
+      762,
+      770,
+      840,
+      1039,
+      1065
+    ],
+    "solution_card_names": [
+      "Bokoichi the Freightening Car",
+      "Call of the Haunted",
+      "Huge Revolution",
+      "Monster Reincarnation",
+      "Oppressed People",
+      "People Running About",
+      "Premature Burial",
+      "Spell Canceller",
+      "Tsukuyomi",
+      "United Resistance"
+    ],
+    "solution_steps": [
+      "Normal summon Tsukuyomi in attack mode and flip Spell Canceller face-down.",
+      "Activate Monster Reincarnation. By discarding United Resistance, return Bokoichi the Freightening Car to your hand.",
+      "Use Call of the Haunted to revive People Running About in attack mode.",
+      "Revive United Resistance with Premature Burial",
+      "Activate Huge Revolution.",
+      "Switch the Oppressed People to attack mode and attack directly."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

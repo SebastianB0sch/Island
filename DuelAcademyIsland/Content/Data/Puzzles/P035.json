@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "id": "P035",
+  "level": 2,
+  "title": "Piercing L2-1",
+  "template": "piercing",
+  "opponent": "mimicry",
+  "seed": 2035,
+  "turn_limit": 1,
+  "time_limit": 50,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 655,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 900,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 165,
+        "position": "defense",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 655,
+      "target": 165
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'piercing', level 2, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Spear Dragon's built-in piercing damage, boosted by the equipped cards, deals exact battle damage to the Defense Position monster.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_035",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      18,
+      110,
+      401,
+      720
+    ],
+    "solution_card_names": [
+      "Axe of Despair",
+      "Change of Heart",
+      "Lava Golem",
+      "Sheep Tokens",
+      "Summoned Skull"
+    ],
+    "solution_steps": [
+      "Special Summon Lava Golem by tributing two Sheep Tokens.",
+      "Special Summon the other Lava Golem by tributing the Lava Golem you summoned before and one Sheep Token.",
+      "Activate Change of Heart and select Lava Golem.",
+      "Equip Axe of Despair on Lava Golem.",
+      "Enter Battle Phase and destroy the Sheep Token with Summoned Skull.",
+      "Attack with Lava Golem."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

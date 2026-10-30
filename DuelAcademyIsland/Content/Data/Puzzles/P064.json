@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "id": "P064",
+  "level": 4,
+  "title": "Tribute Summon L4-2",
+  "template": "tribute_summon",
+  "opponent": "mimicry",
+  "seed": 2064,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      1111
+    ],
+    "field": [
+      {
+        "card_id": 2,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 165,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "normal_summon",
+      "card_id": 1111,
+      "tribute_card_ids": [
+        2,
+        165
+      ]
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1111,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'tribute_summon', level 4, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Tribute Mystical Elf, La Jinn the Mystical Genie of the Lamp for Ancient Gear Golem, then attack for exactly 3000.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_064",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      225,
+      477,
+      759,
+      760,
+      865
+    ],
+    "solution_card_names": [
+      "Cannon Soldier",
+      "Des Dendle",
+      "Premature Burial",
+      "Silpheed",
+      "Vampire Orchis",
+      "Wicked Plant Token"
+    ],
+    "solution_steps": [
+      "Normal Summon Vampire Orchis and use its effect to special summon Des Dendle.",
+      "Equip the Orchis with the union card.",
+      "Revive Cannon Soldier with Premature Burial.",
+      "Attack your opponents Silpheed with your Orchis. Silpheed will be destroyed, but the Orchis will be protected by its union card. You will still get the Wicked Plant Token.",
+      "Have your remaining monsters attack directly.",
+      "Tribute all monsters (and finally, Cannon soldier himself) to inflict direct damage for game."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

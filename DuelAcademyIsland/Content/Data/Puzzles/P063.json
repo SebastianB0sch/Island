@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "id": "P063",
+  "level": 4,
+  "title": "Tribute Summon L4-1",
+  "template": "tribute_summon",
+  "opponent": "mimicry",
+  "seed": 2063,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      1
+    ],
+    "field": [
+      {
+        "card_id": 2,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 165,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "normal_summon",
+      "card_id": 1,
+      "tribute_card_ids": [
+        2,
+        165
+      ]
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 180,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'tribute_summon', level 4, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Tribute Mystical Elf, La Jinn the Mystical Genie of the Lamp for Blue-Eyes White Dragon, then attack for exactly 3000.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_063",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      772,
+      828,
+      1119,
+      1120,
+      1135
+    ],
+    "solution_card_names": [
+      "Legendary Black Belt",
+      "Master Monk",
+      "Meteorain",
+      "Monk Fighter",
+      "Ojama Trio",
+      "Token"
+    ],
+    "solution_steps": [
+      "Normal summon Monk Fighter.",
+      "Special summon Master Monk by tributing Monk Fighter.",
+      "Equip Master Monk with Legendary Black Belt.",
+      "Activate Meteorain.",
+      "Attack the face-down monster with Master monk, and attack directly three times.",
+      "The puzzle can not be solved if you activate Ojama Trio. That is because Tokens do not go to grave when destroyed by battle, and therefore do not trigger the effect of Legendary Black Belt."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}
