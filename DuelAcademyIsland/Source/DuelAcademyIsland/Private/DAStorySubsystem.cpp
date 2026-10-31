@@ -60,7 +60,7 @@ namespace
 		return bValue;
 	}
 
-	float ReadFloat(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float Fallback = 0.f)
+	float StoryReadFloat(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float Fallback = 0.f)
 	{
 		double Value = Fallback;
 		if (Object.IsValid())
@@ -553,7 +553,7 @@ void UDAStorySubsystem::ParseScenes(const TSharedPtr<FJsonObject>& Root, bool bM
 				Command.bCompleteEvent = ReadBool(CommandJson, TEXT("complete_event"), true);
 				Command.bEnterFreeRoam = ReadBool(CommandJson, TEXT("enter_free_roam"), false);
 				Command.bSkippable = ReadBool(CommandJson, TEXT("skippable"), true);
-				Command.Duration = ReadFloat(CommandJson, TEXT("duration"), 0.f);
+				Command.Duration = StoryReadFloat(CommandJson, TEXT("duration"), 0.f);
 
 				const TArray<FString> Args = ReadStringArray(CommandJson, TEXT("args"));
 				if (Command.Anchor.IsEmpty()) Command.Anchor = ReadArg(Args, 0);

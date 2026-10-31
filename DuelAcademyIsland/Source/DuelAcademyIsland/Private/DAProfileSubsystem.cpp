@@ -23,7 +23,7 @@ namespace
 		return FString(*Key);
 	}
 
-	void ReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& OutValues)
+	void ProfileReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& OutValues)
 	{
 		OutValues.Reset();
 		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
@@ -854,8 +854,8 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 			}
 			FDAEmailState State;
 			ContactObject->TryGetBoolField(TEXT("unlocked"), State.bUnlocked);
-			ReadStringArray(ContactObject, TEXT("read"), State.ReadIds);
-			ReadStringArray(ContactObject, TEXT("requests"), State.PendingDuelRequests);
+			ProfileReadStringArray(ContactObject, TEXT("read"), State.ReadIds);
+			ProfileReadStringArray(ContactObject, TEXT("requests"), State.PendingDuelRequests);
 			Emails.Add(ProfileJsonKeyToString(Pair.Key), MoveTemp(State));
 		}
 	}
