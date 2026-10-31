@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "card_id": 561,
+  "name": "4-Starred Ladybug of Doom",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Destroys all face-up Level 4 monsters on your opponent's side of the field.",
+  "notes": [
+    "Level 4 is checked through the effective level."
+  ],
+  "scripts": [
+    {
+      "id": "561_flip_destroy_level_four",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "4-Starred Ladybug of Doom"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "opponent_monster",
+        "count": "all",
+        "filter": {
+          "all": [
+            {
+              "face_up": true
+            },
+            {
+              "level_min": 4
+            },
+            {
+              "level_max": 4
+            }
+          ]
+        }
+      },
+      "source_text": "FLIP: Destroys all face-up Level 4 monsters on your opponent's side of the field."
+    }
+  ]
+}

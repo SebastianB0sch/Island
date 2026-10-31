@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "card_id": 1122,
+  "name": "Medusa Worm",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "You can flip this card into face-down Defense Position once per turn during your Main Phase. When this card is Flip Summoned successfully, destroy 1 monster on your opponent's side of the field.",
+  "notes": [
+    "One ignition set-self script plus one Flip Summon trigger."
+  ],
+  "scripts": [
+    {
+      "id": "1122_manual_set_self",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "change_position",
+          "target": "$self",
+          "position": "face_down"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": true,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "source_text": "You can flip this card into face-down Defense Position once per turn during your Main Phase."
+    },
+    {
+      "id": "1122_flip_summon_destroy",
+      "trigger": "on_flip_summon",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Medusa Worm"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true,
+            "zone": "self_monster"
+          },
+          {
+            "name": "Medusa Worm"
+          }
+        ]
+      },
+      "target": {
+        "zone": "opponent_monster",
+        "count": 1
+      },
+      "source_text": "When this card is Flip Summoned successfully, destroy 1 monster on your opponent's side of the field."
+    }
+  ]
+}

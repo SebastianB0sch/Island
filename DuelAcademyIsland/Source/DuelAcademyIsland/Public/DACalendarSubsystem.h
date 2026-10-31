@@ -60,6 +60,9 @@ class DUELACADEMYISLAND_API UDACalendarSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
+	/** Upper bound for save-driven dates. Keeps absolute-day math and exam scans bounded. */
+	static constexpr int32 MaxSupportedYear = 9999;
+
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 

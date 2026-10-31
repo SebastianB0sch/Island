@@ -23,6 +23,7 @@ STEPS = [
     "build_dialogue_keys.py",
     "build_manifest.py",
     "build_traceability.py",
+    "build_deck_report.py",
     "validate_canon.py",
 ]
 

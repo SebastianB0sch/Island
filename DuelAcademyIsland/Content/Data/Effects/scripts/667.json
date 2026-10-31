@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 667,
+  "name": "Spell Reproduction",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Send 2 Spell Cards from your hand to the Graveyard. Select 1 Spell Card from your Graveyard and add it to your hand.",
+  "notes": [
+    "Two hand Spells are the cost; one Graveyard Spell returns to the hand."
+  ],
+  "scripts": [
+    {
+      "id": "667_recycle_spell",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "Spell Reproduction"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "cost": [
+        {
+          "op": "discard",
+          "target": {
+            "zone": "self_hand",
+            "count": 2,
+            "filter": {
+              "card_type": "Spell"
+            }
+          }
+        }
+      ],
+      "target": {
+        "zone": "self_graveyard",
+        "count": 1,
+        "filter": {
+          "card_type": "Spell"
+        }
+      },
+      "source_text": "Send 2 Spell Cards from your hand to the Graveyard. Select 1 Spell Card from your Graveyard and add it to your hand."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "card_id": 964,
+  "name": "Shield Crash",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select 1 Monster in Defense Position on the Field and destroy it.",
+  "notes": [
+    "Targets a face-up Defense Position monster."
+  ],
+  "scripts": [
+    {
+      "id": "964_destroy_defense_monster",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Shield Crash"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "position": "defense"
+            },
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "Select 1 Monster in Defense Position on the Field and destroy it."
+    }
+  ]
+}

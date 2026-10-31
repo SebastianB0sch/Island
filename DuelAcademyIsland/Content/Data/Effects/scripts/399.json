@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "card_id": 399,
+  "name": "The Cheerful Coffin",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "You can discard up to 3 Monster Cards from your hand to the Graveyard.",
+  "notes": [
+    "Up to three monsters; zero is legal."
+  ],
+  "scripts": [
+    {
+      "id": "399_discard_up_to_three_monsters",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "discard",
+          "target": "$target",
+          "player": "self",
+          "reason": "The Cheerful Coffin"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_hand",
+        "count": {
+          "min": 0,
+          "max": 3
+        },
+        "filter": {
+          "card_type": "Monster"
+        },
+        "optional": true
+      },
+      "source_text": "You can discard up to 3 Monster Cards from your hand to the Graveyard."
+    }
+  ]
+}

@@ -43,6 +43,35 @@ namespace
 		return Default;
 	}
 
+	/** Triggers that belong to the card the event happened to.  A script on a
+	 *  different copy of the same card must not fire for another copy's event.
+	 *  Spell/Trap field responses are still scanned (Bottomless, Sakuretsu). */
+	bool IsSourceBoundTrigger(EDEffectTrigger Trigger)
+	{
+		switch (Trigger)
+		{
+		case EDEffectTrigger::OnSummon:
+		case EDEffectTrigger::OnNormalSummon:
+		case EDEffectTrigger::OnSpecialSummon:
+		case EDEffectTrigger::OnFlipSummon:
+		case EDEffectTrigger::OnFlip:
+		case EDEffectTrigger::OnFusionSummon:
+		case EDEffectTrigger::OnRitualSummon:
+		case EDEffectTrigger::OnActivate:
+		case EDEffectTrigger::OnChain:
+		case EDEffectTrigger::OnAttackDeclared:
+		case EDEffectTrigger::OnAttackTarget:
+		case EDEffectTrigger::OnDamageCalculated:
+		case EDEffectTrigger::OnBattleDestroy:
+		case EDEffectTrigger::OnDestroy:
+		case EDEffectTrigger::OnSentToGraveyard:
+		case EDEffectTrigger::OnRemovedFromField:
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	bool IsKnownOp(const FString& Op)
 	{
 		static const TSet<FString> Known = {
@@ -54,7 +83,7 @@ namespace
 			TEXT("modify_def"), TEXT("negate"), TEXT("place_counter"), TEXT("prevent_battle_damage"),
 			TEXT("redirect_attack"), TEXT("redirect_battle_damage"), TEXT("remove_counter"),
 			TEXT("return_to_extra"), TEXT("return_to_hand"), TEXT("return_to_deck"), TEXT("reveal"),
-			TEXT("ritual"), TEXT("roll_die"), TEXT("search"), TEXT("send_to_grave"), TEXT("set"),
+			TEXT("ritual"), TEXT("roll_die"), TEXT("search"), TEXT("send_to_grave"), TEXT("send_to_graveyard"), TEXT("set"),
 			TEXT("shuffle"), TEXT("skip_phase"), TEXT("special_summon"), TEXT("summon"),
 			TEXT("take_control"), TEXT("control"), TEXT("toss_coin"), TEXT("damage")
 		};
@@ -890,8 +919,24 @@ int32 FDAEffectRuntime::FireEvent(const FDEffectEvent& Event)
 
 	int32 Started = 0;
 	TSet<FString> Seen;
+	const bool bSourceBoundTrigger = IsSourceBoundTrigger(LocalEvent.Trigger);
 	auto ConsiderCard = [&](const FDuelCard& Source)
 	{
+		// Self triggers bind to the exact event source uid.  Another copy of
+		// the same card id never fires for the event; different cards can
+		// still be field-wide responses (summon/destroy/attack responses).
+		// Activation and chain links are strictly source-only because every
+		// set card's own script would otherwise react to another activation.
+		if (bSourceBoundTrigger && Source.Uid != LocalEvent.SourceCard.Uid)
+		{
+			const bool bStrictSourceOnly = LocalEvent.Trigger == EDEffectTrigger::OnActivate
+				|| LocalEvent.Trigger == EDEffectTrigger::OnChain;
+			if (bStrictSourceOnly || Source.Data.Id == LocalEvent.SourceCard.Data.Id)
+			{
+				return;
+			}
+		}
+
 		const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(Source.Data.Id);
 		if (!Scripts)
 		{

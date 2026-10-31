@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "card_id": 1071,
+  "name": "Spell Purification",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Discard 1 card from your hand. Destroy all face-up Continuous Spell Cards on the field.",
+  "notes": [
+    "Discard cost, then all face-up Continuous Spells are destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "1071_discard_cost_effect",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Spell Purification"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "cost": [
+        {
+          "op": "discard",
+          "target": {
+            "zone": "self_hand",
+            "count": 1
+          }
+        }
+      ],
+      "target": {
+        "zone": "all_spell_traps",
+        "count": "all",
+        "filter": {
+          "all": [
+            {
+              "card_type": "Spell"
+            },
+            {
+              "subtype": "Continuous"
+            },
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "Discard 1 card from your hand. Destroy all face-up Continuous Spell Cards on the field."
+    }
+  ]
+}

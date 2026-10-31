@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 1007,
+  "name": "Red-Eyes B. Chick",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Send this face-up card on your side of the field to the Graveyard to Special Summon 1 \"Red-Eyes B. Dragon\" from your hand.",
+  "notes": [
+    "Sending the source to the Graveyard is the cost for summoning 'Red-Eyes B. Dragon'."
+  ],
+  "scripts": [
+    {
+      "id": "1007_send_self_summon_named",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "send_to_graveyard",
+          "target": "$self"
+        }
+      ],
+      "target": {
+        "zone": "self_hand",
+        "count": 1,
+        "filter": {
+          "name": "Red-Eyes B. Dragon"
+        }
+      },
+      "source_text": "Send this face-up card on your side of the field to the Graveyard to Special Summon 1 \"Red-Eyes B. Dragon\" from your hand."
+    }
+  ]
+}

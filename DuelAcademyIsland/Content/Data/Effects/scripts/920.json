@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 920,
+  "name": "Compulsory Evacuation Device",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Return 1 monster on the field to its owner's hand.",
+  "notes": [
+    "One monster, regardless of position."
+  ],
+  "scripts": [
+    {
+      "id": "920_bounce_monster",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "Compulsory Evacuation Device"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1
+      },
+      "source_text": "Return 1 monster on the field to its owner's hand."
+    }
+  ]
+}

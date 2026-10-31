@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 146,
+  "name": "Soul of the Pure",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases your Life Points by 800 points.",
+  "notes": [
+    "Single-clause Life Point gain."
+  ],
+  "scripts": [
+    {
+      "id": "146_gain_life_points",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 800,
+          "player": "self",
+          "reason": "Soul of the Pure"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Increases your Life Points by 800 points."
+    }
+  ]
+}

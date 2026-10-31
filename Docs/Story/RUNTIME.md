@@ -22,7 +22,9 @@
 - save/load of the story section;
 - the `-DAOpeningTest` / `da.OpeningTest` opening runner;
 - the headless `da.StorySelfTest` opening check;
-- the headless `-DAFullStorySelfTest` / `da.FullStorySelfTest` 35-event audit.
+- the headless `-DAFullStorySelfTest` / `da.FullStorySelfTest` 35-event audit;
+- the in-engine `-DAStoryPlaythroughTest` / `da.StoryPlaythroughTest` E02-E33
+  playthrough harness (see `Docs/Story/CAMPAIGN_PLAYTHROUGH.md`).
 
 It does **not** draw UI, move NPCs, start cameras, or implement duel rules. Camera/MoveNpc/Fade/Banner/PlaySfx/Music are emitted as log/presentation cues until A08/A09 bind them; dialogue and duel entry use the existing A09 APIs.
 
@@ -66,6 +68,17 @@ bool GetScheduledNpcLocationNow(const FString& NpcId,
 // Save state (also registered as IDASavePayloadProvider section "story")
 FString SaveState() const;
 bool LoadState(const FString& Json, FString& OutError);
+
+// Campaign playthrough / reward handoffs
+bool RunStoryPlaythroughTest();
+FString GetLastPlaythroughReport() const;
+TArray<FString> GetPendingPackGrants() const;
+bool ConsumePendingPackGrant(const FString& PackId);
+TArray<FString> GetEmailContactIds() const;
+TArray<FString> GetEmailMessageIds(const FString& ContactId) const;
+TArray<FString> GetEmailDuelRequestIds(const FString& ContactId) const;
+TArray<FString> GetUnlockedDuelIds() const;
+bool IsDuelUnlocked(const FString& DuelId) const;
 ```
 
 `StartOpeningFresh()` is not a `UFUNCTION`; the console/debug runner calls it. `StartOpening()` is the normal new-game/continue entry point.
@@ -133,7 +146,7 @@ The full campaign is **additive**: `Initialize()` calls `LoadOpeningData()` and 
 
 - A01 `wins_against` is translated to A02 counters (`wins_jaden`, `wins_syrus`, `wins_chumley`, etc.).
 - Title/dorm conditions use the normalized A02 values (`Slifer Red`, `Ra Yellow`, `Obelisk Blue`).
-- Month/day/period gates use `date`, `weekday`, `period`; a `date` without `day` means “any time in that month” (Duel Festival).
+- Month/day/period gates use `date`, `weekday`, `period`; a `date` without `day` means “any time in that month” (Duel Festival). A02's `Year` is the school year (October–September), so January–September after the opening are still Year 1.
 - `exam_day` uses `UDACalendarSubsystem::IsExamDay()`.
 - Card ownership uses `UDAInventorySubsystem` (`card` condition).
 - `talk` events still need an external interaction caller (`StartEvent`), and are skipped by the auto-start path.
@@ -268,7 +281,11 @@ Persistent grants are idempotent by `reward_id` or `cmd:<command_id>` and are st
 
 A02-owned duel counters (`wins_total`, `wins_jaden`, `wins_syrus`, `wins_chumley`, `duels_total`, etc.) are **not** applied by story outcomes; A02's `RecordDuelResult` owns them. Story-owned tutorial counters (`tutorial_duels_played`, `tutorial_duels_won`) are applied by E01 outcomes.
 
-Cards are granted through `UDAInventorySubsystem::AddCard` when available. Packs currently log a warning because A06 has no unopened-pack inventory hook; the opening slice has no pack reward.
+Cards are granted through `UDAInventorySubsystem::AddCard` when available (with
+the profile `card_<id>` counter as a fallback). Packs are queued as unopened
+grants in story state (`GetPendingPackGrants()` / `ConsumePendingPackGrant()`)
+because A06 does not yet expose an unopened-pack inventory; the opening slice has
+no pack reward.
 
 Full-campaign outcomes additionally handle:
 
@@ -278,7 +295,7 @@ Full-campaign outcomes additionally handle:
 - `item` — sets `item_<name>` and increments a matching counter;
 - `temporary_title` / `restore_title` — uses A02 `SetTemporaryTitle` / `ClearTemporaryTitle` and remembers the previous title;
 - `name_change` — sets `name_change_unlocked`;
-- `grant_pack` — logs the pack id until A06 exposes an unopened-pack hook.
+- `grant_pack` - queues an unopened pack grant in `GetPendingPackGrants()` until A06 exposes an inventory hook.
 
 ---
 
@@ -364,7 +381,7 @@ Load restores the current scene command array and index. Waiting flags are clear
   -game -windowed -ResX=1920 -ResY=1080 -DAOpeningTest
 ```
 
-`-DAOpeningTest` waits for the local player/HUD, then after ~2 seconds calls `StartOpeningFresh()`. It resets profile/calendar, selects Fire, and plays the opening. Do not combine it with `-DADuelScreenshot`, `-DADuelSelfTest`, `-DAUITest`, `-DAStorySelfTest` or `-DAFullStorySelfTest` in one process.
+`-DAOpeningTest` waits for the local player/HUD, then after ~2 seconds calls `StartOpeningFresh()`. It resets profile/calendar, selects Fire, and plays the opening. Do not combine it with `-DADuelScreenshot`, `-DADuelSelfTest`, `-DAUITest`, `-DAStorySelfTest`, `-DAFullStorySelfTest` or `-DAStoryPlaythroughTest` in one process.
 
 `-DAFullStorySelfTest` is the headless audit-only switch: it waits ~2 seconds, then runs the 35-event audit without starting a scene. It does not need a HUD, so it works with `-nullrhi -game`.
 
@@ -375,6 +392,7 @@ Load restores the current scene command array and index. Waiting flags are clear
 | `da.OpeningTest` | Start the opening on a fresh profile/calendar. |
 | `da.StorySelfTest` | Run the headless opening self-test and log PASS/FAIL checks. |
 | `da.FullStorySelfTest` | Run the headless 35-event full-campaign audit. |
+| `da.StoryPlaythroughTest` | Run the in-engine E02-E33 playthrough harness. |
 | `da.StoryStart E01` | Start a specific event (opening or full campaign). |
 | `da.StoryName Alex` | Set the profile name (max 8, uppercased). |
 | `da.StoryDeck fire` | Select/activate a starter deck (`fire`, `water`, `wind`). |
@@ -447,6 +465,29 @@ The static bundle audit (run outside UE on 2026-10-30) found:
 
 `Tools/validate/validate_all.py` also returns PASS for the bundle. Its remaining A03 warnings are the known `flag_unwritten` hooks (`post_game`, `walk_home_partner_3`) and `counter_unwritten` counters owned by A02/A04; the scene-bundle warnings are the same pre-contract bundle shape used by the opening.
 
+### In-engine campaign playthrough
+
+`-DAStoryPlaythroughTest` (console `da.StoryPlaythroughTest`) runs the real
+E02-E33 scene queues, not just the data audit. It starts a fresh profile, plays
+E01/E01b, advances A02 for 365 simulated days, starts every event when its
+data gates are valid, drives `Advance`/`Choose(0)` and
+`NotifyDuelResult(true, false)`, checks flags/DP/cards/emails/packs, and restores
+the live save. See `Docs/Story/CAMPAIGN_PLAYTHROUGH.md` for the coverage table,
+expected log lines and remaining blockers.
+
+```powershell
+& "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe" `
+  "C:\dev\GX\DuelAcademyIsland\DuelAcademyIsland.uproject" `
+  /Game/DuelAcademy/Maps/DuelAcademyIsland `
+  -game -nullrhi -DAStoryPlaythroughTest
+```
+
+Expected aggregate result: **35/35 events started, 35/35 completed, 38/38
+full-campaign duel commands plus the E01 tutorial (39/39 story duels), 0 missing
+scenes/dialogue/commands, 6/6 email contacts**. E11/E28/E28b are canonically
+Year 2 and are reported as beyond the first 365 days before the forced runtime
+pass advances A02 to Year 2.
+
 ---
 
 ## 11. Integration hooks / current gaps
@@ -457,7 +498,7 @@ The static bundle audit (run outside UE on 2026-10-30) found:
 | **A09** | `BeginDialogue`, `BeginDialogueLine`, `GetDialogueUI`, `OnDialogueClosed`, `OnChoiceMade` | Connected. Name entry has no text-entry UI yet; runtime auto-fills the current/default name. Choice Escape-close is disabled. |
 | **A08** | `GetScheduledNpcLocation`; camera/move cues are logged only | Schedule query ready. Six anchors are still requests: `gym_assembly_staff`, `slifer_cafeteria_seat_03`, `slifer_dorm_front_jaden`, `slifer_dorm_front_syrus`, `slifer_dorm_front_chumley`, `slifer_yard_practice`. NPC movement is intentionally not done here. |
 | **A04/A07** | `NotifyDuelResult`; `OpenDuelDeckSelect` | Start connected. Result callback is missing on the HUD; current fallback infers from A02 counters. Tutorial uses `free` + `tutorial: true`, `syrus_roids`, 4,000 LP/10 turns. |
-| **A06** | Deck provider `SetActiveDeckId`; `UDAInventorySubsystem::AddCard` | Deck activation works when A06 registers the provider. Unopened pack rewards need a hook. Starter deck UI should call `SelectStarterDeck`. |
+| **A06** | Deck provider `SetActiveDeckId`; `UDAInventorySubsystem::AddCard` | Deck activation works when A06 registers the provider. Story pack grants are queued in `GetPendingPackGrants()`; A06/A09 must consume them into an unopened-pack inventory. Starter deck UI should call `SelectStarterDeck`. |
 | **A01 canon** | `Content/Data/Canon/*` | Read-only input. 35 event records and 6 email contacts are reflected in the scaffold; exact dialogue/message bodies remain local-only. |
 | **A10** | `-DAOpeningTest`, `-DAStorySelfTest`, `-DAFullStorySelfTest`, console commands, save section `story` | Ready for the combined build. The full campaign is a bundle (one scene object per event inside `scenes/full_campaign.json`), not one file per event. |
 
@@ -473,5 +514,7 @@ The static bundle audit (run outside UE on 2026-10-30) found:
 8. **Exact dialogue / email bodies (A01):** the scaffold is faithful paraphrase only; exact canon text stays local-only.
 9. **Story-only characters / minigames (A01/A07/A09):** Goblin King, Jinzo spirit, the Gerard quiz, the E04 one-turn puzzle, E20 ante rules, E28 bracket order, E29 LP-based DP and E31 partner-specific routes are placeholders.
 10. **Exact anchors (A08):** the scaffold uses existing anchors only; event-specific anchor requests are listed in the data notes rather than silently retargeted.
+11. **World progress flags (A08/A09/A10):** `stayed_in_room_three_weekends`, `walk_home_partner_3` and `post_game` still have no gameplay producer; the playthrough harness simulates them through A02 and logs them.
+12. **Unopened pack inventory (A06):** story now queues pack grants in `GetPendingPackGrants()`; A06/A09 must consume them.
 
 No shared C++/UI/world/save files were modified. No UE build was run in this pass.

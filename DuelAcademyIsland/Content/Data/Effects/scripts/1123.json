@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 1123,
+  "name": "White Ninja",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Destroy 1 Defense Position monster on the field.",
+  "notes": [
+    "Targets a face-up Defense Position monster."
+  ],
+  "scripts": [
+    {
+      "id": "1123_flip_destroy_defense",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "White Ninja"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "position": "defense"
+            },
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "FLIP: Destroy 1 Defense Position monster on the field."
+    }
+  ]
+}

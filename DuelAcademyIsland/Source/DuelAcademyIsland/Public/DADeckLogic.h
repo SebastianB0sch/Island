@@ -69,7 +69,7 @@ struct FDAEDeckRules
 {
 	int32 MinMain = 40;
 	int32 MaxMain = 60;
-	int32 MaxExtra = 20;
+	int32 MaxExtra = 15;
 	int32 MaxCopies = 3;
 	int32 MaxSide = 0;
 	int32 MaxPlayerDecks = 24;

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "card_id": 279,
+  "name": "Warrior Elimination",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys all Warrior-Type monsters on the field.",
+  "notes": [
+    "All Warrior monsters are destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "279_destroy_type",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Warrior Elimination"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "all_monsters",
+        "count": "all",
+        "filter": {
+          "monster_type": "Warrior",
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "Destroys all Warrior-Type monsters on the field."
+    }
+  ]
+}

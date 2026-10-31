@@ -771,6 +771,7 @@ void UDAStorySubsystem::ResetRuntimeState()
 	AppliedRewardIds.Reset();
 	UnlockedDuels.Reset();
 	Objectives.Reset();
+	PendingPackGrants.Reset();
 
 	bRunning = false;
 	bFreeRoam = false;
@@ -976,6 +977,10 @@ bool UDAStorySubsystem::CanStartEvent(const FString& EventId, FString& OutReason
 
 void UDAStorySubsystem::TryStartNextAvailableEvent()
 {
+	if (bSuppressAutoStart)
+	{
+		return;
+	}
 	if (bRunning)
 	{
 		return;
@@ -1018,8 +1023,9 @@ void UDAStorySubsystem::StartScene(const FString& SceneId, int32 StartIndex)
 	const FDAStoryScene* Scene = Scenes.Find(SceneId);
 	if (!Scene)
 	{
+		++PlaythroughMissingScene;
 		UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: missing scene %s."), *SceneId);
-		FinishEvent(true, false);
+		FinishEvent(false, false);
 		return;
 	}
 
@@ -1251,6 +1257,20 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 	{
 	case EDAStoryCommandType::Dialogue:
 	{
+		++PlaythroughDialogueCommands;
+		const FDAStoryLine* Line = FindLine(Command.Key);
+		if (!Line)
+		{
+			++PlaythroughMissingDialogue;
+			UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: missing dialogue line %s."), *Command.Key);
+			return true;
+		}
+		if (bManualAudience)
+		{
+			bWaitingForDialogue = true;
+			bOutBlocked = true;
+			return false;
+		}
 		if (bHeadless)
 		{
 			return true;
@@ -1259,12 +1279,6 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 		if (!HUD)
 		{
 			bHeadless = true;
-			return true;
-		}
-		const FDAStoryLine* Line = FindLine(Command.Key);
-		if (!Line)
-		{
-			UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: missing dialogue line %s."), *Command.Key);
 			return true;
 		}
 		FDADialogueLine UILine;
@@ -1278,15 +1292,25 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 
 	case EDAStoryCommandType::Choice:
 	{
+		++PlaythroughChoiceCommands;
 		const FDAStoryLine* Line = FindLine(Command.Key);
 		if (!Line)
 		{
+			++PlaythroughMissingDialogue;
 			UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: missing choice line %s."), *Command.Key);
 			return true;
 		}
 
 		if (Line->Input.IsValid())
 		{
+			if (bManualAudience)
+			{
+				bPendingTextInput = true;
+				PendingTextInputKey = Line->Key;
+				bWaitingForDialogue = true;
+				bOutBlocked = true;
+				return false;
+			}
 			if (bHeadless)
 			{
 				SetPlayerName(GetPlayerNameForDisplay());
@@ -1322,6 +1346,15 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 		{
 			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: choice line %s has no valid options."), *Command.Key);
 			return true;
+		}
+
+		if (bManualAudience)
+		{
+			ActiveChoiceLineKey = Line->Key;
+			ActiveChoiceConversationId = FString::Printf(TEXT("%s.choice.%d"), *CurrentSceneId, CommandIndex);
+			bWaitingForChoice = true;
+			bOutBlocked = true;
+			return false;
 		}
 
 		if (bHeadless)
@@ -1394,7 +1427,16 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 
 	case EDAStoryCommandType::Duel:
 	{
+		++PlaythroughDuelCommands;
 		CapturePendingDuel(Command);
+		if (bManualAudience)
+		{
+			bWaitingForDuel = true;
+			PendingDuel.bOpened = false;
+			PendingDuel.Elapsed = 0.f;
+			bOutBlocked = true;
+			return false;
+		}
 		if (bHeadless)
 		{
 			SimulateDuelResult(true, false);
@@ -1422,10 +1464,12 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 	}
 
 	case EDAStoryCommandType::Reward:
+		++PlaythroughRewardCommands;
 		ApplyRewardCommand(Command);
 		return true;
 
 	case EDAStoryCommandType::SetFlag:
+		++PlaythroughFlagCommands;
 		ApplySetFlag(Command.FlagName, Command.bFlagValue);
 		return true;
 
@@ -1441,6 +1485,7 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 		return false;
 
 	default:
+		++PlaythroughUnknownCommand;
 		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: unsupported command type %s."), *CommandTypeName(Command.Type));
 		return true;
 	}
@@ -1450,14 +1495,25 @@ void UDAStorySubsystem::Advance()
 {
 	if (bWaitingForDialogue)
 	{
-		if (ADAHUD* HUD = ResolveHUD())
+		if (bPendingTextInput)
 		{
-			if (FDADialogueUI* Dialogue = HUD->GetDialogueUI())
+			// Automation/headless path: no text-entry widget exists, so confirm
+			// the current profile name exactly like HandleDialogueClosed does.
+			SetPlayerName(GetPlayerNameForDisplay());
+			bPendingTextInput = false;
+			PendingTextInputKey.Reset();
+		}
+		if (!bManualAudience)
+		{
+			if (ADAHUD* HUD = ResolveHUD())
 			{
-				if (Dialogue->IsOpen())
+				if (FDADialogueUI* Dialogue = HUD->GetDialogueUI())
 				{
-					Dialogue->Advance();
-					return;
+					if (Dialogue->IsOpen())
+					{
+						Dialogue->Advance();
+						return;
+					}
 				}
 			}
 		}
@@ -1494,14 +1550,17 @@ void UDAStorySubsystem::Choose(int32 OptionIndex)
 		return;
 	}
 
-	if (ADAHUD* HUD = ResolveHUD())
+	if (!bManualAudience)
 	{
-		if (FDADialogueUI* Dialogue = HUD->GetDialogueUI())
+		if (ADAHUD* HUD = ResolveHUD())
 		{
-			if (Dialogue->IsOpen())
+			if (FDADialogueUI* Dialogue = HUD->GetDialogueUI())
 			{
-				Dialogue->Choose(OptionIndex);
-				return;
+				if (Dialogue->IsOpen())
+				{
+					Dialogue->Choose(OptionIndex);
+					return;
+				}
 			}
 		}
 	}
@@ -1601,7 +1660,13 @@ void UDAStorySubsystem::ApplyChoiceInternal(int32 OptionIndex)
 
 	if (!Choice.NextScene.IsEmpty())
 	{
-		StartScene(Choice.NextScene, FindCommandIndexForKey(Choice.NextScene, Choice.NextKey));
+		const int32 FoundIndex = FindCommandIndexForKey(Choice.NextScene, Choice.NextKey);
+		if (FoundIndex == INDEX_NONE && !Choice.NextKey.IsEmpty())
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: choice next_key %s was not found in %s; starting at the top."),
+				*Choice.NextKey, *Choice.NextScene);
+		}
+		StartScene(Choice.NextScene, FoundIndex);
 	}
 	else if (!Choice.NextKey.IsEmpty())
 	{
@@ -1657,7 +1722,7 @@ int32 UDAStorySubsystem::FindCommandIndexForKey(const FString& SceneId, const FS
 			}
 		}
 	}
-	return 0;
+	return INDEX_NONE;
 }
 
 FDAStoryLine* UDAStorySubsystem::FindLine(const FString& Key)
@@ -1841,6 +1906,7 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 			continue;
 		}
 
+		++PlaythroughOutcomesApplied;
 		const FString Type = ReadString(Outcome, TEXT("type"));
 		if (Type == TEXT("set_flag") || Type == TEXT("flag"))
 		{
@@ -1897,19 +1963,35 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 		}
 		else if (Type == TEXT("grant_card"))
 		{
+			const int32 CardId = ReadInt(Outcome, TEXT("card_id"), ReadInt(Outcome, TEXT("card"), 0));
+			const int32 Count = FMath::Max(1, ReadInt(Outcome, TEXT("count"), 1));
+			bool bAdded = false;
 			if (UGameInstance* GI = GetGameInstance())
 			{
 				if (UDAInventorySubsystem* Inventory = GI->GetSubsystem<UDAInventorySubsystem>())
 				{
-					const int32 CardId = ReadInt(Outcome, TEXT("card_id"), ReadInt(Outcome, TEXT("card"), 0));
-					Inventory->AddCard(CardId, ReadInt(Outcome, TEXT("count"), 1));
+					Inventory->AddCard(CardId, Count);
+					bAdded = true;
 				}
+			}
+			if (!bAdded && Profile)
+			{
+				Profile->IncrementCounter(FString::Printf(TEXT("card_%d"), CardId), Count);
 			}
 		}
 		else if (Type == TEXT("grant_pack"))
 		{
-			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: pack reward '%s' needs an A06 unopened-pack hook."),
-				*ReadString(Outcome, TEXT("pack_id"), ReadString(Outcome, TEXT("pack"))));
+			const FString PackId = ReadString(Outcome, TEXT("pack_id"), ReadString(Outcome, TEXT("pack")));
+			if (PackId.IsEmpty())
+			{
+				UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: grant_pack outcome has no pack id."));
+			}
+			else
+			{
+				const int32 Count = FMath::Max(1, ReadInt(Outcome, TEXT("count"), 1));
+				PendingPackGrants.FindOrAdd(PackId) += Count;
+				UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: pack '%s' queued as an unopened grant (x%d)."), *PackId, Count);
+			}
 		}
 		else if (Type == TEXT("grant_deck"))
 		{
@@ -1917,7 +1999,18 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 		}
 		else if (Type == TEXT("set_title"))
 		{
-			if (Profile) Profile->SetTitle(ReadString(Outcome, TEXT("title")));
+			if (Profile)
+			{
+				const FString Title = ReadString(Outcome, TEXT("title"));
+				Profile->SetTitle(Title);
+				if (!Title.Equals(TEXT("Dropout Boy"), ESearchCase::IgnoreCase))
+				{
+					// E29 recovers from the exam fail state by setting a normal
+					// title. A later A02 title refresh must not resurrect Dropout.
+					Profile->SetFlag(TEXT("dropout_boy"), false);
+					Profile->SetFlag(TEXT("dropout"), false);
+				}
+			}
 		}
 		else if (Type == TEXT("set_dorm") || Type == TEXT("dorm_unlock"))
 		{
@@ -1994,7 +2087,8 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 		}
 		else
 		{
-			UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: unknown outcome type '%s'."), *Type);
+			++PlaythroughUnknownOutcome;
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: unknown outcome type '%s'."), *Type);
 		}
 	}
 }
@@ -2040,6 +2134,11 @@ void UDAStorySubsystem::ApplyRewardById(const FString& RewardId)
 			{
 				Profile->UnlockEmail(Contact);
 			}
+			const FString SingleContact = ReadString(Reward, TEXT("contact"));
+			if (!SingleContact.IsEmpty())
+			{
+				Profile->UnlockEmail(SingleContact);
+			}
 		}
 	}
 	else if (Type == TEXT("deck_grant"))
@@ -2048,19 +2147,31 @@ void UDAStorySubsystem::ApplyRewardById(const FString& RewardId)
 	}
 	else if (Type == TEXT("card") || Type == TEXT("card_grant"))
 	{
+		const int32 CardId = ReadInt(Reward, TEXT("card_id"), ReadInt(Reward, TEXT("card"), 0));
+		const int32 Count = FMath::Max(1, ReadInt(Reward, TEXT("count"), 1));
+		bool bAdded = false;
 		if (UGameInstance* GI = GetGameInstance())
 		{
 			if (UDAInventorySubsystem* Inventory = GI->GetSubsystem<UDAInventorySubsystem>())
 			{
-				const int32 CardId = ReadInt(Reward, TEXT("card_id"), ReadInt(Reward, TEXT("card"), 0));
-				Inventory->AddCard(CardId, ReadInt(Reward, TEXT("count"), 1));
+				Inventory->AddCard(CardId, Count);
+				bAdded = true;
 			}
+		}
+		if (!bAdded && Profile)
+		{
+			Profile->IncrementCounter(FString::Printf(TEXT("card_%d"), CardId), Count);
 		}
 	}
 	else if (Type == TEXT("pack") || Type == TEXT("pack_grant"))
 	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: pack reward '%s' needs an A06 unopened-pack hook."),
-			*ReadString(Reward, TEXT("pack_id"), ReadString(Reward, TEXT("pack"))));
+		const FString PackId = ReadString(Reward, TEXT("pack_id"), ReadString(Reward, TEXT("pack")));
+		if (!PackId.IsEmpty())
+		{
+			const int32 Count = FMath::Max(1, ReadInt(Reward, TEXT("count"), 1));
+			PendingPackGrants.FindOrAdd(PackId) += Count;
+			UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: pack '%s' queued as an unopened grant (x%d)."), *PackId, Count);
+		}
 	}
 	else if (Type == TEXT("flag"))
 	{
@@ -2068,7 +2179,16 @@ void UDAStorySubsystem::ApplyRewardById(const FString& RewardId)
 	}
 	else if (Type == TEXT("title"))
 	{
-		if (Profile) Profile->SetTitle(ReadString(Reward, TEXT("title")));
+		if (Profile)
+		{
+			const FString Title = ReadString(Reward, TEXT("title"));
+			Profile->SetTitle(Title);
+			if (!Title.Equals(TEXT("Dropout Boy"), ESearchCase::IgnoreCase))
+			{
+				Profile->SetFlag(TEXT("dropout_boy"), false);
+				Profile->SetFlag(TEXT("dropout"), false);
+			}
+		}
 	}
 	else if (Type == TEXT("dorm"))
 	{
@@ -2121,7 +2241,9 @@ void UDAStorySubsystem::ApplyRewardCommand(const FDAStoryCommand& Command)
 		const FString PackId = ReadString(Command.Raw, TEXT("pack_id"));
 		if (!PackId.IsEmpty())
 		{
-			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: pack reward '%s' needs an A06 unopened-pack hook."), *PackId);
+			const int32 Count = FMath::Max(1, ReadInt(Command.Raw, TEXT("count"), 1));
+			PendingPackGrants.FindOrAdd(PackId) += Count;
+			UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: pack '%s' queued as an unopened grant (x%d)."), *PackId, Count);
 		}
 
 		const TArray<FString> Flags = ReadStringArray(Command.Raw, TEXT("flags"));
@@ -2288,6 +2410,36 @@ void UDAStorySubsystem::CompleteEvent(const FString& EventId)
 	if (UDAProfileSubsystem* Profile = ResolveProfile())
 	{
 		Profile->SetFlag(FDAEventGraph::EventCompletionFlag(EventId), true);
+
+		// Data-only email hooks: emails.json owns unlocked_by and duel_requests.
+		// Apply them through A02 so the PDA and A07 can consume the same state.
+		for (const TPair<FString, TSharedPtr<FJsonObject>>& Pair : EmailContacts)
+		{
+			if (!Pair.Value.IsValid())
+			{
+				continue;
+			}
+			const TArray<FString> UnlockedBy = ReadStringArray(Pair.Value, TEXT("unlocked_by"));
+			if (!UnlockedBy.Contains(EventId))
+			{
+				continue;
+			}
+
+			Profile->UnlockEmail(Pair.Key);
+			for (const TSharedPtr<FJsonObject>& Request : ReadObjectArray(Pair.Value, TEXT("duel_requests")))
+			{
+				const FString RequestId = ReadString(Request, TEXT("id"));
+				const FString OpponentId = ReadString(Request, TEXT("opponent"));
+				if (!RequestId.IsEmpty())
+				{
+					Profile->AddDuelRequest(Pair.Key, RequestId);
+				}
+				if (!OpponentId.IsEmpty())
+				{
+					UnlockDuel(OpponentId);
+				}
+			}
+		}
 	}
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: event %s marked complete."), *EventId);
 }
@@ -2303,6 +2455,83 @@ bool UDAStorySubsystem::IsEventCompleteRuntime(const FString& EventId) const
 		return Profile->GetFlag(FDAEventGraph::EventCompletionFlag(EventId));
 	}
 	return false;
+}
+
+TArray<FString> UDAStorySubsystem::GetEmailContactIds() const
+{
+	TArray<FString> Ids;
+	EmailContacts.GetKeys(Ids);
+	Ids.Sort();
+	return Ids;
+}
+
+TArray<FString> UDAStorySubsystem::GetEmailMessageIds(const FString& ContactId) const
+{
+	TArray<FString> Ids;
+	if (const TSharedPtr<FJsonObject>* Contact = EmailContacts.Find(ContactId))
+	{
+		for (const TSharedPtr<FJsonObject>& Message : ReadObjectArray(*Contact, TEXT("messages")))
+		{
+			const FString Id = ReadString(Message, TEXT("id"));
+			if (!Id.IsEmpty())
+			{
+				Ids.Add(Id);
+			}
+		}
+	}
+	return Ids;
+}
+
+TArray<FString> UDAStorySubsystem::GetEmailDuelRequestIds(const FString& ContactId) const
+{
+	TArray<FString> Ids;
+	if (const TSharedPtr<FJsonObject>* Contact = EmailContacts.Find(ContactId))
+	{
+		for (const TSharedPtr<FJsonObject>& Request : ReadObjectArray(*Contact, TEXT("duel_requests")))
+		{
+			const FString Id = ReadString(Request, TEXT("id"));
+			if (!Id.IsEmpty())
+			{
+				Ids.Add(Id);
+			}
+		}
+	}
+	return Ids;
+}
+
+TArray<FString> UDAStorySubsystem::GetUnlockedDuelIds() const
+{
+	TArray<FString> Ids = UnlockedDuels.Array();
+	Ids.Sort();
+	return Ids;
+}
+
+bool UDAStorySubsystem::IsDuelUnlocked(const FString& DuelId) const
+{
+	return UnlockedDuels.Contains(DuelAcademyProfile::NormalizeId(DuelId));
+}
+
+TArray<FString> UDAStorySubsystem::GetPendingPackGrants() const
+{
+	TArray<FString> Ids;
+	PendingPackGrants.GetKeys(Ids);
+	Ids.Sort();
+	return Ids;
+}
+
+bool UDAStorySubsystem::ConsumePendingPackGrant(const FString& PackId)
+{
+	int32* Count = PendingPackGrants.Find(PackId);
+	if (!Count || *Count <= 0)
+	{
+		return false;
+	}
+	--(*Count);
+	if (*Count <= 0)
+	{
+		PendingPackGrants.Remove(PackId);
+	}
+	return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -2333,6 +2562,7 @@ void UDAStorySubsystem::CapturePendingDuel(const FDAStoryCommand& Command)
 
 void UDAStorySubsystem::ResolvePendingDuel(bool bWon, bool bDraw)
 {
+	++PlaythroughDuelResolved;
 	const FString SceneId = bDraw ? PendingDuel.OnDraw : (bWon ? PendingDuel.OnWin : PendingDuel.OnLose);
 	const FString Opponent = PendingDuel.OpponentId;
 
@@ -2575,6 +2805,13 @@ FString UDAStorySubsystem::SaveState() const
 	Root->SetArrayField(TEXT("unlocked_duels"), Unlocked);
 	Root->SetStringField(TEXT("previous_title"), PreviousTitle);
 
+	TSharedPtr<FJsonObject> PackObject = MakeShared<FJsonObject>();
+	for (const TPair<FString, int32>& Pair : PendingPackGrants)
+	{
+		PackObject->SetNumberField(Pair.Key, Pair.Value);
+	}
+	Root->SetObjectField(TEXT("pending_packs"), PackObject);
+
 	TSharedPtr<FJsonObject> ObjectiveObject = MakeShared<FJsonObject>();
 	for (const TPair<FString, FString>& Pair : Objectives)
 	{
@@ -2639,6 +2876,20 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 		}
 	}
 	Root->TryGetStringField(TEXT("previous_title"), PreviousTitle);
+
+	PendingPackGrants.Reset();
+	const TSharedPtr<FJsonObject>* PackObject = nullptr;
+	if (Root->TryGetObjectField(TEXT("pending_packs"), PackObject) && PackObject)
+	{
+		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : (*PackObject)->Values)
+		{
+			double CountNumber = 0.0;
+			if (Pair.Value.IsValid() && Pair.Value->TryGetNumber(CountNumber) && CountNumber > 0.0)
+			{
+				PendingPackGrants.Add(FString(*Pair.Key), FMath::Max(1, FMath::RoundToInt(CountNumber)));
+			}
+		}
+	}
 
 	Objectives.Reset();
 	const TSharedPtr<FJsonObject>* ObjectiveObject = nullptr;

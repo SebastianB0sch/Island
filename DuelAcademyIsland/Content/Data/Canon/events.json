@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-10-30T17:24:04+00:00",
+  "generated_utc": "2026-10-31T09:20:51+00:00",
   "source": {
     "primary": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
     "secondary": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41359",
@@ -757,8 +757,15 @@
       ],
       "duels": [
         {
-          "opponent": "festival_bracket",
-          "mode": "story_tournament"
+          "mode": "story_tournament",
+          "tournament": {
+            "id": "festival_bracket",
+            "kind": "bracket",
+            "participants_source": "ranked_roster",
+            "rounds": null,
+            "deck_source": "opponent year1 decks",
+            "note": "Interdorm Duel; exact bracket and rounds are not published."
+          }
         }
       ],
       "rewards": [
@@ -990,10 +997,12 @@
       "duels": [
         {
           "opponent": "topher",
+          "deck": "topher_year1",
           "mode": "story"
         },
         {
           "opponent": "conklin",
+          "deck": "conklin_year1",
           "mode": "story"
         },
         {
@@ -1481,8 +1490,10 @@
       "duels": [
         {
           "opponent": "goblin_king",
+          "deck_kind": "timed_puzzle",
           "mode": "story_timed",
-          "solution": "Use Change of Heart on Toon Goblin Attack Force and attack directly."
+          "solution": "Use Change of Heart on Toon Goblin Attack Force and attack directly.",
+          "note": "Timed puzzle: fixed opposing field, not a 40-card deck. Full setup is not extracted."
         },
         {
           "opponent": "brier",
@@ -2373,9 +2384,21 @@
       ],
       "duels": [
         {
-          "opponent": "chocolate_bracket",
           "mode": "story_tournament",
-          "rounds": 4
+          "tournament": {
+            "id": "chocolate_bracket",
+            "kind": "bracket",
+            "participants": [
+              "fontaine",
+              "alexis",
+              "jasmine",
+              "mindy",
+              "blair"
+            ],
+            "rounds": 4,
+            "deck_source": "opponent year1 decks",
+            "note": "Four-round Valentine tournament; the event requires the five female characters."
+          }
         }
       ],
       "rewards": [
@@ -2698,8 +2721,21 @@
       ],
       "duels": [
         {
-          "opponent": "walk_home_partner",
-          "mode": "story"
+          "mode": "story",
+          "partner_pool": {
+            "id": "walk_home_partner",
+            "participants": [
+              "jaden",
+              "syrus",
+              "chumley",
+              "bastion",
+              "alexis",
+              "chazz",
+              "zane"
+            ],
+            "deck_source": "opponent year1 decks",
+            "note": "Duel the character walked home with three times; the reward table names the pool."
+          }
         }
       ],
       "rewards": [
@@ -2857,7 +2893,14 @@
           "type": "after_ending"
         }
       ],
-      "duels": [],
+      "duels": [
+        {
+          "opponent": "sheppard",
+          "deck": "sheppard_year1",
+          "mode": "story",
+          "note": "Promotion duel; win -> King of Games, lose -> Prince of Games."
+        }
+      ],
       "rewards": [
         {
           "type": "title",

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "card_id": 729,
+  "name": "Gravekeeper's Curse",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this monster is Normal Summoned, Flip Summoned, or Special Summoned, inflict 500 points of Direct Damage to your opponent's Life Points.",
+  "notes": [
+    "Fires on Normal, Flip and Special Summon."
+  ],
+  "scripts": [
+    {
+      "id": "729_summon_damage",
+      "trigger": "on_summon",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 500,
+          "player": "opponent",
+          "reason": "Gravekeeper's Curse"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Gravekeeper's Curse"
+          }
+        ]
+      },
+      "source_text": "When this monster is Normal Summoned, Flip Summoned, or Special Summoned, inflict 500 points of Direct Damage to your opponent's Life Points."
+    }
+  ]
+}

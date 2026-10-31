@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 591,
+  "name": "Jar of Greed",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Draw 1 card from your Deck.",
+  "notes": [
+    "Fixed draw."
+  ],
+  "scripts": [
+    {
+      "id": "591_draw_cards",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "draw",
+          "count": 1,
+          "player": "self",
+          "reason": "Jar of Greed"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "source_text": "Draw 1 card from your Deck."
+    }
+  ]
+}

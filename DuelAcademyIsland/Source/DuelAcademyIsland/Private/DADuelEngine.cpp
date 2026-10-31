@@ -5,10 +5,14 @@
 #include "DACardRecords.h"
 
 #include "HAL/IConsoleManager.h"
+#include "HAL/FileManager.h"
+#include "HAL/PlatformTime.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "Math/RandomStream.h"
+#include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
+#include "Misc/Parse.h"
 #include "Misc/Paths.h"
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
@@ -923,6 +927,14 @@ void FDuelEngine::MoveToDeckBottom(FDuelCard Card)
 	Card.EquippedToUid = 0;
 	Card.TiedToUid = 0;
 	Card.Counters = 0;
+	if (Card.bExtra || Card.IsFusion())
+	{
+		// Fusion/Extra Deck monsters never enter the Main Deck.
+		Card.bExtra = true;
+		EmitVisual(EDuelVisualEventType::Return, Card.Owner, &Card, 0, TEXT("EXTRA DECK"));
+		SideRef(Card.Owner).Extra.Add(Card);
+		return;
+	}
 	EmitVisual(EDuelVisualEventType::Return, Card.Owner, &Card, 0, TEXT("DECK BOTTOM"));
 	SideRef(Card.Owner).Deck.Insert(Card, 0);
 }
@@ -952,9 +964,11 @@ void FDuelEngine::DiscardCard(FDuelCard Card, const FString& Reason)
 		Reason.IsEmpty() ? CardName(Discarded) : Reason);
 	if (Found)
 	{
-		FDuelCard Copy = *Found;
-		RemoveFromZone(Copy, Card.Uid);
-		MoveToGrave(Copy);
+		FDuelCard Copy;
+		if (RemoveFromZone(Copy, Card.Uid))
+		{
+			MoveToGrave(Copy);
+		}
 	}
 	else
 	{
@@ -2236,6 +2250,12 @@ void FDuelEngine::OnSummon(FDuelCard& Card, bool bSpecial, int32 TributeCount, b
 				Log(FString::Printf(TEXT("%s Special Summons Des Frog from the %s."), *State.Name,
 					bFromDeck ? TEXT("Deck") : TEXT("hand")), TEXT("effect"));
 			}
+			else
+			{
+				// The card was removed from its zone, so never drop it if the
+				// field filled up between the check and placement.
+				MoveToGrave(SummonCopy);
+			}
 		}
 	}
 	else if ((IsName(Card, TEXT("Harpie Lady")) || IsName(Card, TEXT("Harpie Lady Sisters")) || IsName(Card, TEXT("Cyber Harpie Lady"))) && !bFlipSummon)
@@ -2821,6 +2841,10 @@ bool FDuelEngine::ResolveAttackTrap(FDuelCard& Trap, EDuelOwner Defender, FDuelC
 						OnSummon(*Placed, true);
 					}
 				}
+				else
+				{
+					MoveToGrave(Revealed);
+				}
 			}
 			else
 			{
@@ -3313,12 +3337,15 @@ void FDuelEngine::TriggerFlipEffect(FDuelCard& Card, EDuelOwner Side)
 			}
 			for (const FDuelCard& PickedCard : Picked)
 			{
+				// Picked cards were popped from the Deck and are not in a zone
+				// yet.  Place the local copy directly; RemoveFromZone would fail
+				// and silently discard the card.
+				bool bSummoned = false;
 				if (PickedCard.IsMonster() && CanBeSpecialSummonedByEffect(PickedCard)
 					&& GetEffectiveLevel(PickedCard) <= 4 && EmptyMonsterZone(PickSide) != INDEX_NONE)
 				{
-					FDuelCard Copy;
-					RemoveFromZone(Copy, PickedCard.Uid);
-					if (PlaceMonster(PickSide, Copy, true, EDuelPosition::Attack))
+					bSummoned = PlaceMonster(PickSide, PickedCard, true, EDuelPosition::Attack);
+					if (bSummoned)
 					{
 						if (FDuelCard* Placed = FindMonster(PickedCard.Uid))
 						{
@@ -3331,7 +3358,7 @@ void FDuelEngine::TriggerFlipEffect(FDuelCard& Card, EDuelOwner Side)
 						}
 					}
 				}
-				else
+				if (!bSummoned)
 				{
 					State.Hand.Add(PickedCard);
 				}
@@ -3364,7 +3391,10 @@ void FDuelEngine::DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Att
 		}
 	}
 
-	RemoveFromZone(Dead, Uid);
+	if (!RemoveFromZone(Dead, Uid))
+	{
+		return;
+	}
 	CleanupEquips(Dead);
 	MoveToGrave(Dead);
 	Log(FString::Printf(TEXT("%s is destroyed%s."), *CardName(Dead),
@@ -3497,14 +3527,21 @@ void FDuelEngine::DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Att
 		if (PyroUid != 0)
 		{
 			FDuelCard Copy;
-			if (RemoveFromZone(Copy, PyroUid) && PlaceMonster(Controller, Copy, true, EDuelPosition::Attack))
+			if (RemoveFromZone(Copy, PyroUid))
 			{
-				if (FDuelCard* Placed = FindMonster(PyroUid))
+				if (PlaceMonster(Controller, Copy, true, EDuelPosition::Attack))
 				{
-					Placed->bSpecialSummoned = true;
-					OnSummon(*Placed, true);
+					if (FDuelCard* Placed = FindMonster(PyroUid))
+					{
+						Placed->bSpecialSummoned = true;
+						OnSummon(*Placed, true);
+					}
+					Log(FString::Printf(TEXT("The Thing in the Crater Special Summons %s."), *CardName(Copy)), TEXT("effect"));
 				}
-				Log(FString::Printf(TEXT("The Thing in the Crater Special Summons %s."), *CardName(Copy)), TEXT("effect"));
+				else
+				{
+					MoveToGrave(Copy);
+				}
 			}
 		}
 	}
@@ -3739,7 +3776,9 @@ void FDuelEngine::InflictDamage(EDuelOwner Side, int32 Amount, const FString& Re
 		ResultStats.EffectDamageDealt += Amount;
 	}
 	FDuelSide& State = SideRef(Side);
-	State.LP -= Amount;
+	// Life Points are a count, not a signed total: overkill damage clamps at 0
+	// so every consumer (HUD, result stats, save) observes a legal value.
+	State.LP = FMath::Max(0, State.LP - Amount);
 	Log(FString::Printf(TEXT("%s %s %d damage%s."), *State.Name,
 		State.Owner == EDuelOwner::Player ? TEXT("take") : TEXT("takes"), Amount,
 		Reason.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" (%s)"), *Reason)), TEXT("damage"));
@@ -3788,7 +3827,7 @@ void FDuelEngine::GainLp(EDuelOwner Side, int32 Amount, const FString& Reason)
 void FDuelEngine::PayLp(EDuelOwner Side, int32 Amount, const FString& Reason)
 {
 	if (Amount <= 0 || bWinnerSet) return;
-	SideRef(Side).LP -= Amount;
+	SideRef(Side).LP = FMath::Max(0, SideRef(Side).LP - Amount);
 	Log(FString::Printf(TEXT("%s pays %d LP%s."), *SideRef(Side).Name, Amount,
 		Reason.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" (%s)"), *Reason)), TEXT("lp"));
 	EmitVisual(EDuelVisualEventType::Cost, Side, nullptr, Amount, Reason.IsEmpty() ? TEXT("COST") : Reason);
@@ -3806,6 +3845,10 @@ bool FDuelEngine::IsContinuousTrap(const FString& Name) const
 
 void FDuelEngine::SpecialSummonAttributeFromDeck(EDuelOwner Side, const FString& Attribute, int32 MaxAtk)
 {
+	if (EmptyMonsterZone(Side) == INDEX_NONE)
+	{
+		return;
+	}
 	FDuelCard* Candidate = FindMonsterInDeck(Side, [&Attribute, MaxAtk, this](const FDuelCard& Card)
 	{
 		return Card.Data.Attribute == Attribute && Card.Data.Atk <= MaxAtk
@@ -3826,8 +3869,13 @@ void FDuelEngine::SpecialSummonAttributeFromDeck(EDuelOwner Side, const FString&
 	}
 	const int32 Uid = Candidate->Uid;
 	FDuelCard Copy;
-	if (!RemoveFromZone(Copy, Uid) || !PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
+	if (!RemoveFromZone(Copy, Uid))
 	{
+		return;
+	}
+	if (!PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
+	{
+		MoveToGrave(Copy);
 		return;
 	}
 	if (FDuelCard* Placed = FindMonster(Uid))
@@ -3887,7 +3935,12 @@ void FDuelEngine::SpecialSummonElementalHero(EDuelOwner Side)
 	if (!Candidate) return;
 	const int32 Uid = Candidate->Uid;
 	FDuelCard Copy;
-	if (!RemoveFromZone(Copy, Uid) || !PlaceMonster(Side, Copy, true, EDuelPosition::Attack)) return;
+	if (!RemoveFromZone(Copy, Uid)) return;
+	if (!PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
+	{
+		MoveToGrave(Copy);
+		return;
+	}
 	if (FDuelCard* Placed = FindMonster(Uid))
 	{
 		Placed->bSpecialSummoned = true;
@@ -3928,7 +3981,12 @@ void FDuelEngine::SpecialSummonHarpieSisters(EDuelOwner Side)
 	const int32 Uid = Candidate->Uid;
 	const FString SummonedName = Candidate->Data.Name;
 	FDuelCard Copy;
-	if (!RemoveFromZone(Copy, Uid) || !PlaceMonster(Side, Copy, true, EDuelPosition::Attack)) return;
+	if (!RemoveFromZone(Copy, Uid)) return;
+	if (!PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
+	{
+		MoveToGrave(Copy);
+		return;
+	}
 	if (FDuelCard* Placed = FindMonster(Uid))
 	{
 		Placed->bSpecialSummoned = true;
@@ -4275,16 +4333,23 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 		{
 			const int32 TargetUid = Target->Uid;
 			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid) && PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
+			if (RemoveFromZone(Copy, TargetUid))
 			{
-				Copy.bSpecialSummoned = true;
-				if (FDuelCard* Placed = FindMonster(TargetUid))
+				if (PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
 				{
-					Placed->bSpecialSummoned = true;
-					Card.EquippedToUid = TargetUid;
-					Card.TiedToUid = TargetUid;
-					Log(FString::Printf(TEXT("Premature Burial revives %s."), *CardName(*Placed)), TEXT("spell"));
-					OnSummon(*Placed, true);
+					Copy.bSpecialSummoned = true;
+					if (FDuelCard* Placed = FindMonster(TargetUid))
+					{
+						Placed->bSpecialSummoned = true;
+						Card.EquippedToUid = TargetUid;
+						Card.TiedToUid = TargetUid;
+						Log(FString::Printf(TEXT("Premature Burial revives %s."), *CardName(*Placed)), TEXT("spell"));
+						OnSummon(*Placed, true);
+					}
+				}
+				else
+				{
+					MoveToGrave(Copy);
 				}
 			}
 		}
@@ -4303,6 +4368,10 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 					Card.EquippedToUid = TargetUid;
 					Log(FString::Printf(TEXT("Snatch Steal takes control of %s."), *CardName(Copy)), TEXT("spell"));
 				}
+				else
+				{
+					MoveToGrave(Copy);
+				}
 			}
 		}
 	}
@@ -4320,15 +4389,22 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 		{
 			const int32 TargetUid = Target->Uid;
 			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid) && PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
+			if (RemoveFromZone(Copy, TargetUid))
 			{
-				if (FDuelCard* Placed = FindMonster(TargetUid))
+				if (PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
 				{
-					Placed->bSpecialSummoned = true;
-					Card.EquippedToUid = TargetUid;
-					Card.TiedToUid = TargetUid;
-					Log(FString::Printf(TEXT("Autonomous Action Unit revives %s."), *CardName(*Placed)), TEXT("spell"));
-					OnSummon(*Placed, true);
+					if (FDuelCard* Placed = FindMonster(TargetUid))
+					{
+						Placed->bSpecialSummoned = true;
+						Card.EquippedToUid = TargetUid;
+						Card.TiedToUid = TargetUid;
+						Log(FString::Printf(TEXT("Autonomous Action Unit revives %s."), *CardName(*Placed)), TEXT("spell"));
+						OnSummon(*Placed, true);
+					}
+				}
+				else
+				{
+					MoveToGrave(Copy);
 				}
 			}
 		}
@@ -4476,14 +4552,21 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 				MoveToGrave(TributeCopy);
 			}
 			FDuelCard SummonCopy;
-			if (Lv10Uid != 0 && RemoveFromZone(SummonCopy, Lv10Uid) && PlaceMonster(Side, SummonCopy, true, EDuelPosition::Attack))
+			if (Lv10Uid != 0 && RemoveFromZone(SummonCopy, Lv10Uid))
 			{
-				if (FDuelCard* Placed = FindMonster(Lv10Uid))
+				if (PlaceMonster(Side, SummonCopy, true, EDuelPosition::Attack))
 				{
-					Placed->bSpecialSummoned = true;
-					Log(FString::Printf(TEXT("Transcendent Wings Special Summons Winged Kuriboh LV10 from the %s."),
-						bFromDeck ? TEXT("Deck") : TEXT("hand")), TEXT("spell"));
-					OnSummon(*Placed, true);
+					if (FDuelCard* Placed = FindMonster(Lv10Uid))
+					{
+						Placed->bSpecialSummoned = true;
+						Log(FString::Printf(TEXT("Transcendent Wings Special Summons Winged Kuriboh LV10 from the %s."),
+							bFromDeck ? TEXT("Deck") : TEXT("hand")), TEXT("spell"));
+						OnSummon(*Placed, true);
+					}
+				}
+				else
+				{
+					MoveToGrave(SummonCopy);
 				}
 			}
 		}
@@ -4904,14 +4987,21 @@ void FDuelEngine::ResolveTrap(FDuelCard& Trap)
 		{
 			const int32 TargetUid = Target->Uid;
 			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid) && PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
+			if (RemoveFromZone(Copy, TargetUid))
 			{
-				if (FDuelCard* Placed = FindMonster(TargetUid))
+				if (PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
 				{
-					Placed->bSpecialSummoned = true;
-					Trap.TiedToUid = TargetUid;
-					Log(FString::Printf(TEXT("Call of the Haunted revives %s."), *CardName(*Placed)), TEXT("trap"));
-					OnSummon(*Placed, true);
+					if (FDuelCard* Placed = FindMonster(TargetUid))
+					{
+						Placed->bSpecialSummoned = true;
+						Trap.TiedToUid = TargetUid;
+						Log(FString::Printf(TEXT("Call of the Haunted revives %s."), *CardName(*Placed)), TEXT("trap"));
+						OnSummon(*Placed, true);
+					}
+				}
+				else
+				{
+					MoveToGrave(Copy);
 				}
 			}
 		}
@@ -5915,11 +6005,18 @@ void FDuelEngine::AiSetTraps()
 			continue;
 		}
 		FDuelCard Copy;
-		if (RemoveFromZone(Copy, Uid) && PlaceSpellTrap(Side, Copy, false, false))
+		if (RemoveFromZone(Copy, Uid))
 		{
-			Log(FString::Printf(TEXT("%s Sets a card face-down."), *State.Name), TEXT("set"));
-			FDuelVisualEvent& SetEvent = EmitVisual(EDuelVisualEventType::SetCard, Side, &Copy, 0, TEXT("Set Card"), true);
-			SetEvent.Zone = FindSpellZone(Side, Uid);
+			if (PlaceSpellTrap(Side, Copy, false, false))
+			{
+				Log(FString::Printf(TEXT("%s Sets a card face-down."), *State.Name), TEXT("set"));
+				FDuelVisualEvent& SetEvent = EmitVisual(EDuelVisualEventType::SetCard, Side, &Copy, 0, TEXT("Set Card"), true);
+				SetEvent.Zone = FindSpellZone(Side, Uid);
+			}
+			else
+			{
+				MoveToHand(Copy);
+			}
 		}
 	}
 }
@@ -7159,10 +7256,13 @@ FDuelDeckValidationResult FDuelEngine::ValidateDeck(const TArray<int32>& Main, c
 
 	for (const TPair<int32, int32>& Pair : CombinedCounts)
 	{
-		if (Pair.Value > BannedList.MaxCopies)
+		const int32 CopyLimit = FMath::Min(BannedList.GetLimit(Pair.Key), BannedList.MaxCopies);
+		if (Pair.Value > CopyLimit)
 		{
-			Result.AddError(FString::Printf(TEXT("Card %d appears %d times across the Main and Extra Decks; at most %d are allowed."),
-				Pair.Key, Pair.Value, BannedList.MaxCopies));
+			const FString Reason = BannedList.GetReason(Pair.Key);
+			Result.AddError(FString::Printf(TEXT("Card %d appears %d times across the Main and Extra Decks; the combined limit is %d%s."),
+				Pair.Key, Pair.Value, CopyLimit,
+				Reason.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" (%s)"), *Reason)));
 		}
 	}
 	return Result;
@@ -7293,7 +7393,9 @@ bool FDuelEngine::LoadBannedListFromJson(const FString& JsonText, FString& OutEr
 			}
 			if ((*RulesObject)->TryGetNumberField(TEXT("max_extra"), Number))
 			{
-				NewRules.MaxExtra = FMath::Clamp(static_cast<int32>(Number), 0, 100);
+				// The release gate follows the 2006 Fusion Deck cap (15), even
+				// when an older A06 rules file still advertises 20.
+				NewRules.MaxExtra = FMath::Clamp(static_cast<int32>(Number), 0, 15);
 			}
 			if ((*RulesObject)->TryGetNumberField(TEXT("max_copies"), Number))
 			{
@@ -7756,42 +7858,895 @@ void FDuelEngine::FinalizeResultStats()
 	ResultStats.bWentSecond = bScenarioActive && !ActiveScenario.bPlayerGoesFirst;
 }
 
-FString FDuelEngine::RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterations){
+namespace
+{
+	int32 SelfTestCountOwnedCards(const FDuelSide& First, const FDuelSide& Second, EDuelOwner Owner);
+}
+
+bool FDuelEngine::CheckDuelStateInvariants(int32 ExpectedPlayerCards, int32 ExpectedOpponentCards,
+	TArray<FString>& OutErrors) const
+{
+	const int32 StartErrorCount = OutErrors.Num();
+	auto AddError = [&OutErrors](const FString& Message)
+	{
+		OutErrors.Add(Message);
+	};
+
+	if (Player.Monsters.Num() != 5 || Opponent.Monsters.Num() != 5)
+	{
+		AddError(TEXT("Monster Zone arrays must always contain five slots."));
+	}
+	if (Player.Spells.Num() != 5 || Opponent.Spells.Num() != 5)
+	{
+		AddError(TEXT("Spell & Trap Zone arrays must always contain five slots."));
+	}
+	if (Player.LP < 0 || Opponent.LP < 0)
+	{
+		AddError(FString::Printf(TEXT("Life Points went negative (player %d, opponent %d)."), Player.LP, Opponent.LP));
+	}
+	if (bWinnerSet)
+	{
+		if (Phase != EDuelPhase::Over)
+		{
+			AddError(TEXT("A finished duel must be in the Over phase."));
+		}
+	}
+	else if (Phase == EDuelPhase::Over)
+	{
+		AddError(TEXT("The Over phase is only legal after a winner is set."));
+	}
+	if (bStarted && TurnNumber <= 0)
+	{
+		AddError(TEXT("A started duel must have a positive turn number."));
+	}
+	if (ActiveSide != EDuelOwner::Player && ActiveSide != EDuelOwner::Opponent)
+	{
+		AddError(TEXT("Active side is not a valid duelist."));
+	}
+	if (bAwaitingDiscard && Player.Hand.Num() <= HandLimit)
+	{
+		AddError(TEXT("A discard is pending even though the player is at or below the hand limit."));
+	}
+	if (HasPendingChoice())
+	{
+		AddError(TEXT("A pending choice was left unanswered after a completed step."));
+	}
+	if (IsChainOpen())
+	{
+		AddError(FString::Printf(TEXT("A chain was left open (%d link(s))."), ChainLinks.Num()));
+	}
+
+	TSet<int32> SeenUids;
+	TArray<int32> EquipTargets;
+	TArray<int32> TiedTargets;
+
+	auto CheckCard = [&](const FDuelCard& Card, EDuelOwner Side, const TCHAR* Zone,
+		bool bFieldZone, bool bExtraZone, bool bMainDeckZone)
+	{
+		const TCHAR* SideName = Side == EDuelOwner::Player ? TEXT("Player") : TEXT("Opponent");
+		if (Card.Uid <= 0)
+		{
+			AddError(FString::Printf(TEXT("%s %s contains a card with no instance uid."), SideName, Zone));
+			return;
+		}
+		if (Card.Data.Id <= 0)
+		{
+			AddError(FString::Printf(TEXT("%s %s uid %d has no card id."), SideName, Zone, Card.Uid));
+		}
+		if (!bFieldZone && Card.Owner != Side)
+		{
+			AddError(FString::Printf(TEXT("%s %s uid %d is owned by the other duelist."), SideName, Zone, Card.Uid));
+		}
+		if (Card.Controller != EDuelOwner::Player && Card.Controller != EDuelOwner::Opponent)
+		{
+			AddError(FString::Printf(TEXT("%s %s uid %d has an invalid controller."), SideName, Zone, Card.Uid));
+		}
+		if (SeenUids.Contains(Card.Uid))
+		{
+			AddError(FString::Printf(TEXT("Duplicate card instance uid %d."), Card.Uid));
+		}
+		else
+		{
+			SeenUids.Add(Card.Uid);
+		}
+		if (bExtraZone && !Card.bExtra)
+		{
+			AddError(FString::Printf(TEXT("Extra Deck uid %d is not marked as an Extra Deck card."), Card.Uid));
+		}
+		if (bMainDeckZone && Card.bExtra)
+		{
+			AddError(FString::Printf(TEXT("Main Deck uid %d is marked as an Extra Deck card."), Card.Uid));
+		}
+		if (Card.Counters < 0 || Card.AttacksUsed < 0 || Card.ExtraAttacks < 0)
+		{
+			AddError(FString::Printf(TEXT("Card uid %d has a negative counter/attack value."), Card.Uid));
+		}
+		if (Card.EquippedToUid < 0 || Card.TiedToUid < 0)
+		{
+			AddError(FString::Printf(TEXT("Card uid %d has a negative equipment/tie target."), Card.Uid));
+		}
+		if (Card.SummonedTurn > TurnNumber || Card.PositionChangedTurn > TurnNumber
+			|| Card.SetTurn > TurnNumber || Card.EffectUsedTurn > TurnNumber)
+		{
+			AddError(FString::Printf(TEXT("Card uid %d has a turn stamp from the future."), Card.Uid));
+		}
+		if (Card.EquippedToUid != 0)
+		{
+			EquipTargets.Add(Card.EquippedToUid);
+		}
+		if (Card.TiedToUid != 0)
+		{
+			TiedTargets.Add(Card.TiedToUid);
+		}
+	};
+
+	for (EDuelOwner Side : { EDuelOwner::Player, EDuelOwner::Opponent })
+	{
+		const FDuelSide& State = SideRef(Side);
+		const TCHAR* SideName = Side == EDuelOwner::Player ? TEXT("Player") : TEXT("Opponent");
+
+		auto VisitArray = [&](const TArray<FDuelCard>& Cards, const TCHAR* Zone,
+			bool bExtraZone, bool bMainDeckZone)
+		{
+			for (const FDuelCard& Card : Cards)
+			{
+				if (Card.Uid <= 0)
+				{
+					AddError(FString::Printf(TEXT("%s %s contains an invalid card entry."), SideName, Zone));
+					continue;
+				}
+				CheckCard(Card, Side, Zone, false, bExtraZone, bMainDeckZone);
+			}
+		};
+
+		VisitArray(State.Deck, TEXT("Deck"), false, true);
+		VisitArray(State.Hand, TEXT("Hand"), false, false);
+		VisitArray(State.Graveyard, TEXT("Graveyard"), false, false);
+		VisitArray(State.Banished, TEXT("Banished"), false, false);
+		VisitArray(State.Extra, TEXT("Extra Deck"), true, false);
+
+		for (int32 I = 0; I < State.Monsters.Num(); ++I)
+		{
+			const FDuelCard& Card = State.Monsters[I];
+			if (!Card.IsValid())
+			{
+				continue;
+			}
+			CheckCard(Card, Side, TEXT("Monster Zone"), true, false, false);
+			if (!Card.IsMonster())
+			{
+				AddError(FString::Printf(TEXT("%s Monster Zone %d contains a non-monster card uid %d."),
+					SideName, I, Card.Uid));
+			}
+		}
+		for (int32 I = 0; I < State.Spells.Num(); ++I)
+		{
+			const FDuelCard& Card = State.Spells[I];
+			if (!Card.IsValid())
+			{
+				continue;
+			}
+			CheckCard(Card, Side, TEXT("Spell & Trap Zone"), true, false, false);
+			if (!Card.IsSpell() && !Card.IsTrap())
+			{
+				AddError(FString::Printf(TEXT("%s Spell & Trap Zone %d contains a non-Spell/Trap uid %d."),
+					SideName, I, Card.Uid));
+			}
+		}
+		if (State.Field.IsValid())
+		{
+			CheckCard(State.Field, Side, TEXT("Field Zone"), true, false, false);
+			if (!State.Field.IsSpell())
+			{
+				AddError(FString::Printf(TEXT("%s Field Zone contains a non-Spell uid %d."), SideName, State.Field.Uid));
+			}
+		}
+	}
+
+	for (int32 Uid : EquipTargets)
+	{
+		if (!SeenUids.Contains(Uid))
+		{
+			AddError(FString::Printf(TEXT("Equipment points at missing card uid %d."), Uid));
+		}
+	}
+	for (int32 Uid : TiedTargets)
+	{
+		if (!SeenUids.Contains(Uid))
+		{
+			AddError(FString::Printf(TEXT("Card tie points at missing card uid %d."), Uid));
+		}
+	}
+
+	if (ExpectedPlayerCards >= 0)
+	{
+		const int32 Actual = SelfTestCountOwnedCards(Player, Opponent, EDuelOwner::Player);
+		if (Actual != ExpectedPlayerCards)
+		{
+			AddError(FString::Printf(TEXT("Player card count changed from %d to %d."), ExpectedPlayerCards, Actual));
+		}
+	}
+	if (ExpectedOpponentCards >= 0)
+	{
+		const int32 Actual = SelfTestCountOwnedCards(Player, Opponent, EDuelOwner::Opponent);
+		if (Actual != ExpectedOpponentCards)
+		{
+			AddError(FString::Printf(TEXT("Opponent card count changed from %d to %d."), ExpectedOpponentCards, Actual));
+		}
+	}
+
+	return OutErrors.Num() == StartErrorCount;
+}
+
+namespace
+{
+	constexpr int32 SelfTestMaxIterations = 10000;
+	constexpr int32 SelfTestMaxSteps = 240;
+	constexpr int32 SelfTestMaxTurns = 120;
+
+	FString SelfTestJoinErrors(const TArray<FString>& Errors)
+	{
+		return Errors.Num() > 0 ? FString::Join(Errors, TEXT(" | ")) : FString();
+	}
+
+	bool SelfTestLoadJsonObject(const FString& Path, TSharedPtr<FJsonObject>& OutObject, FString& OutError)
+	{
+		OutObject.Reset();
+		FString Raw;
+		if (!FFileHelper::LoadFileToString(Raw, *Path))
+		{
+			OutError = FString::Printf(TEXT("cannot read %s"), *Path);
+			return false;
+		}
+		TSharedPtr<FJsonValue> Root;
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
+		if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid() || !Root->AsObject().IsValid())
+		{
+			OutError = FString::Printf(TEXT("invalid JSON object in %s"), *Path);
+			return false;
+		}
+		OutObject = Root->AsObject();
+		return true;
+	}
+
+	FString SelfTestReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, const FString& Default = FString())
+	{
+		FString Value;
+		if (Object.IsValid() && Object->TryGetStringField(Field, Value))
+		{
+			return Value;
+		}
+		return Default;
+	}
+
+	int32 SelfTestReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
+	{
+		int32 Value = Default;
+		if (Object.IsValid())
+		{
+			Object->TryGetNumberField(Field, Value);
+		}
+		return Value;
+	}
+
+	bool SelfTestReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bDefault = false)
+	{
+		bool bValue = bDefault;
+		if (Object.IsValid())
+		{
+			Object->TryGetBoolField(Field, bValue);
+		}
+		return bValue;
+	}
+
+	void SelfTestReadIntArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<int32>& OutValues)
+	{
+		OutValues.Reset();
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values) || !Values)
+		{
+			return;
+		}
+		for (const TSharedPtr<FJsonValue>& Value : *Values)
+		{
+			if (Value.IsValid() && Value->Type == EJson::Number)
+			{
+				OutValues.Add(static_cast<int32>(Value->AsNumber()));
+			}
+		}
+	}
+
+	int32 SelfTestCountOwnedCards(const FDuelSide& First, const FDuelSide& Second, EDuelOwner Owner)
+	{
+		int32 Count = 0;
+		auto CountSide = [&Count, Owner](const FDuelSide& Side)
+		{
+			auto CountArray = [&Count, Owner](const TArray<FDuelCard>& Cards)
+			{
+				for (const FDuelCard& Card : Cards)
+				{
+					if (Card.IsValid() && Card.Owner == Owner)
+					{
+						++Count;
+					}
+				}
+			};
+			CountArray(Side.Deck);
+			CountArray(Side.Hand);
+			CountArray(Side.Graveyard);
+			CountArray(Side.Banished);
+			CountArray(Side.Extra);
+			for (const FDuelCard& Card : Side.Monsters)
+			{
+				if (Card.IsValid() && Card.Owner == Owner)
+				{
+					++Count;
+				}
+			}
+			for (const FDuelCard& Card : Side.Spells)
+			{
+				if (Card.IsValid() && Card.Owner == Owner)
+				{
+					++Count;
+				}
+			}
+			if (Side.Field.IsValid() && Side.Field.Owner == Owner)
+			{
+				++Count;
+			}
+		};
+		CountSide(First);
+		CountSide(Second);
+		return Count;
+	}
+
+	bool SelfTestHasWinCondition(UCardDatabaseSubsystem* Database, const TArray<int32>& CardIds)
+	{
+		if (!Database)
+		{
+			return false;
+		}
+		for (int32 CardId : CardIds)
+		{
+			const FCardRecord* Card = Database->FindCard(CardId);
+			if (!Card)
+			{
+				continue;
+			}
+			if (Card->IsMonster() && Card->Atk > 0)
+			{
+				return true;
+			}
+			if (Card->Name.Contains(TEXT("Exodia"), ESearchCase::IgnoreCase)
+				|| Card->Name.Contains(TEXT("Final Countdown"), ESearchCase::IgnoreCase)
+				|| Card->Name.Contains(TEXT("Destiny Board"), ESearchCase::IgnoreCase)
+				|| Card->Name.Contains(TEXT("Last Turn"), ESearchCase::IgnoreCase))
+			{
+				return true;
+			}
+			if (!Card->IsMonster()
+				&& (Card->Description.Contains(TEXT("inflict"), ESearchCase::IgnoreCase)
+					|| Card->Description.Contains(TEXT("damage to your opponent"), ESearchCase::IgnoreCase)
+					|| Card->Description.Contains(TEXT("damage to both players"), ESearchCase::IgnoreCase)))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	FDuelScenario SelfTestBuildPuzzleScenario(const TSharedPtr<FJsonObject>& Puzzle)
+	{
+		FDuelScenario Scenario;
+		Scenario.Id = SelfTestReadString(Puzzle, TEXT("id"));
+		Scenario.Name = SelfTestReadString(Puzzle, TEXT("title"));
+		Scenario.Mode = TEXT("puzzle");
+		Scenario.Seed = SelfTestReadInt(Puzzle, TEXT("seed"));
+		Scenario.TurnLimit = SelfTestReadInt(Puzzle, TEXT("turn_limit"));
+		Scenario.TimeLimitSeconds = static_cast<float>(SelfTestReadInt(Puzzle, TEXT("time_limit")));
+		Scenario.bPlayerGoesFirst = true;
+		Scenario.bDrawOnFirstTurn = false;
+
+		auto ReadSide = [&](const TCHAR* SideField, int32& OutLp, TArray<int32>& Hand,
+			TArray<int32>& Deck, TArray<int32>& Graveyard, TArray<int32>& Extra,
+			TArray<FDuelScenarioCard>& OutField)
+		{
+			const TSharedPtr<FJsonObject>* SideObject = nullptr;
+			if (!Puzzle.IsValid() || !Puzzle->TryGetObjectField(SideField, SideObject)
+				|| !SideObject || !SideObject->IsValid())
+			{
+				return;
+			}
+			const TSharedPtr<FJsonObject> Side = *SideObject;
+			OutLp = SelfTestReadInt(Side, TEXT("lp"), OutLp);
+			SelfTestReadIntArray(Side, TEXT("hand"), Hand);
+			SelfTestReadIntArray(Side, TEXT("deck"), Deck);
+			SelfTestReadIntArray(Side, TEXT("graveyard"), Graveyard);
+			SelfTestReadIntArray(Side, TEXT("extra"), Extra);
+
+			const TArray<TSharedPtr<FJsonValue>>* FieldValues = nullptr;
+			if (Side->TryGetArrayField(TEXT("field"), FieldValues) && FieldValues)
+			{
+				for (int32 I = 0; I < FieldValues->Num(); ++I)
+				{
+					const TSharedPtr<FJsonValue>& Value = (*FieldValues)[I];
+					const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
+					if (!Entry.IsValid())
+					{
+						continue;
+					}
+					FDuelScenarioCard Spec;
+					Spec.CardId = SelfTestReadInt(Entry, TEXT("card_id"));
+					Spec.Zone = EDuelZone::Monster;
+					Spec.ZoneIndex = I;
+					Spec.bFaceDown = !SelfTestReadBool(Entry, TEXT("face_up"), true);
+					Spec.bDefense = SelfTestReadString(Entry, TEXT("position"), TEXT("attack")).Equals(
+						TEXT("defense"), ESearchCase::IgnoreCase);
+					OutField.Add(Spec);
+				}
+			}
+
+			const TArray<TSharedPtr<FJsonValue>>* SpellValues = nullptr;
+			if (Side->TryGetArrayField(TEXT("spell_traps"), SpellValues) && SpellValues)
+			{
+				for (int32 I = 0; I < SpellValues->Num(); ++I)
+				{
+					const TSharedPtr<FJsonValue>& Value = (*SpellValues)[I];
+					const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
+					if (!Entry.IsValid())
+					{
+						continue;
+					}
+					FDuelScenarioCard Spec;
+					Spec.CardId = SelfTestReadInt(Entry, TEXT("card_id"));
+					Spec.Zone = EDuelZone::SpellTrap;
+					Spec.ZoneIndex = I;
+					Spec.bFaceDown = !SelfTestReadBool(Entry, TEXT("face_up"), false);
+					OutField.Add(Spec);
+				}
+			}
+		};
+
+		ReadSide(TEXT("player"), Scenario.PlayerLp, Scenario.PlayerHand, Scenario.PlayerDeck,
+			Scenario.PlayerGraveyard, Scenario.PlayerExtra, Scenario.PlayerField);
+		ReadSide(TEXT("opponent_state"), Scenario.OpponentLp, Scenario.OpponentHand, Scenario.OpponentDeck,
+			Scenario.OpponentGraveyard, Scenario.OpponentExtra, Scenario.OpponentField);
+		return Scenario;
+	}
+}
+
+FString FDuelEngine::RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterations)
+{
+	const double StartSeconds = FPlatformTime::Seconds();
 	if (!Database)
 	{
 		return TEXT("Duel self-test: card database missing.");
 	}
+
+	// -DADuelSelfTest=N, on top of the legacy -DADuelSelfTest switch handled by
+	// the HUD.  The static function also owns the parse so console callers and
+	// the HUD call site share one implementation.
+	int32 RequestedIterations = FMath::Clamp(Iterations, 1, SelfTestMaxIterations);
+	FString CountText;
+	const TCHAR* CommandLine = FCommandLine::Get();
+	if (FParse::Value(CommandLine, TEXT("DADuelSelfTest="), CountText))
+	{
+		const int32 Parsed = FCString::Atoi(*CountText);
+		if (Parsed > 0)
+		{
+			RequestedIterations = FMath::Clamp(Parsed, 1, SelfTestMaxIterations);
+		}
+	}
+
+	// Load the A06/Judge list once; every gate duel and every deck audit below
+	// shares the same ruleset.
+	FDuelEngine RulesEngine(Database, 0);
+	FString BanlistError;
+	const bool bBanlistLoaded = RulesEngine.LoadDefaultBannedList(BanlistError);
+	if (!bBanlistLoaded)
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning,
+			TEXT("[DeckLegality] banned_limited.json unavailable (%s); only copy/size checks are authoritative."),
+			*BanlistError);
+	}
+	const FDuelBannedListRuleset GateBanned = RulesEngine.GetBannedList();
+
+	int32 ConstructedTotal = 0;
+	int32 ConstructedPass = 0;
+	int32 PuzzleTotal = 0;
+	int32 PuzzlePass = 0;
+
+	auto AuditConstructedDeck = [&](const FString& DeckId, const TCHAR* Source,
+		const TArray<int32>& Main, const TArray<int32>& Extra)
+	{
+		++ConstructedTotal;
+		FDuelDeckValidationResult Result = RulesEngine.ValidateDeck(Main, Extra);
+		TArray<int32> AllCards = Main;
+		AllCards.Append(Extra);
+		if (!SelfTestHasWinCondition(Database, AllCards))
+		{
+			Result.AddError(TEXT("no legal win condition (no attack-capable monster or damage/alternate-win card)"));
+		}
+		if (Result.bValid)
+		{
+			++ConstructedPass;
+			UE_LOG(LogDuelAcademyIsland, Log,
+				TEXT("[DeckLegality] PASS %s (%s, main=%d extra=%d)"), *DeckId, Source, Main.Num(), Extra.Num());
+		}
+		else
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("[DeckLegality] FAIL %s (%s, main=%d extra=%d): %s"),
+				*DeckId, Source, Main.Num(), Extra.Num(), *SelfTestJoinErrors(Result.Errors));
+		}
+	};
+
+	// Starter/shop decks owned by A06 and consumed by FDuelEngine::Start.
+	for (const FStarterDeckDef& Deck : Database->GetDecks())
+	{
+		AuditConstructedDeck(Deck.Id, TEXT("Data/decks.json"), Deck.Cards, Deck.Extra);
+	}
+
+	// A06's saved player-deck catalogue (one deck per object in "decks").
+	{
+		const FString PlayerDeckPath = FPaths::ProjectContentDir() / TEXT("Data/Decks/player_decks.json");
+		TSharedPtr<FJsonObject> Root;
+		FString LoadError;
+		if (SelfTestLoadJsonObject(PlayerDeckPath, Root, LoadError))
+		{
+			const TArray<TSharedPtr<FJsonValue>>* Decks = nullptr;
+			if (Root->TryGetArrayField(TEXT("decks"), Decks) && Decks)
+			{
+				for (const TSharedPtr<FJsonValue>& Value : *Decks)
+				{
+					const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
+					if (!Entry.IsValid())
+					{
+						continue;
+					}
+					TArray<int32> Main;
+					TArray<int32> Extra;
+					SelfTestReadIntArray(Entry, TEXT("main"), Main);
+					SelfTestReadIntArray(Entry, TEXT("extra"), Extra);
+					AuditConstructedDeck(SelfTestReadString(Entry, TEXT("id"), TEXT("player_deck")),
+						TEXT("Data/Decks/player_decks.json"), Main, Extra);
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("[DeckLegality] %s"), *LoadError);
+		}
+	}
+
+	// A07/A06 opponent decks.  FDuelEngine itself does not register these in
+	// UCardDatabaseSubsystem yet, so the gate reads the same files the opponent
+	// loader ships and validates the lists the port will hand to the engine.
+	{
+		const FString OpponentDeckDir = FPaths::ProjectContentDir() / TEXT("Data/Opponents/decks");
+		TArray<FString> Files;
+		IFileManager::Get().FindFiles(Files, *OpponentDeckDir, TEXT("*.json"));
+		Files.Sort();
+		for (const FString& File : Files)
+		{
+			const FString Path = OpponentDeckDir / File;
+			TSharedPtr<FJsonObject> Root;
+			FString LoadError;
+			if (!SelfTestLoadJsonObject(Path, Root, LoadError))
+			{
+				++ConstructedTotal;
+				UE_LOG(LogDuelAcademyIsland, Warning, TEXT("[DeckLegality] FAIL %s: %s"), *File, *LoadError);
+				continue;
+			}
+			TArray<int32> Main;
+			TArray<int32> Extra;
+			SelfTestReadIntArray(Root, TEXT("cards"), Main);
+			if (Main.Num() == 0)
+			{
+				SelfTestReadIntArray(Root, TEXT("main"), Main);
+			}
+			SelfTestReadIntArray(Root, TEXT("extra"), Extra);
+			AuditConstructedDeck(SelfTestReadString(Root, TEXT("id"), FPaths::GetBaseFilename(File)),
+				TEXT("Data/Opponents/decks"), Main, Extra);
+		}
+	}
+
+	// Puzzle boards are fixed scenarios, not 40-card constructed decks.  They
+	// are still checked for known ids, copy/limit legality and a legal win
+	// condition, then actually constructed through StartScenario.
+	{
+		const FString PuzzleDir = FPaths::ProjectContentDir() / TEXT("Data/Puzzles");
+		TArray<FString> Files;
+		IFileManager::Get().FindFiles(Files, *PuzzleDir, TEXT("P*.json"));
+		Files.Sort();
+		FDuelEngine PuzzleProbe(Database, 1);
+		PuzzleProbe.SetBannedList(GateBanned);
+		PuzzleProbe.SetAutoAnswerAllChoices(true);
+		for (const FString& File : Files)
+		{
+			++PuzzleTotal;
+			TSharedPtr<FJsonObject> Root;
+			FString LoadError;
+			TArray<FString> Errors;
+			if (!SelfTestLoadJsonObject(PuzzleDir / File, Root, LoadError))
+			{
+				Errors.Add(LoadError);
+			}
+			else
+			{
+				const FDuelScenario Scenario = SelfTestBuildPuzzleScenario(Root);
+				TArray<int32> PlayerIds = Scenario.PlayerHand;
+				PlayerIds.Append(Scenario.PlayerDeck);
+				PlayerIds.Append(Scenario.PlayerGraveyard);
+				PlayerIds.Append(Scenario.PlayerExtra);
+				for (const FDuelScenarioCard& Spec : Scenario.PlayerField)
+				{
+					PlayerIds.Add(Spec.CardId);
+				}
+				TArray<int32> AllIds = PlayerIds;
+				AllIds.Append(Scenario.OpponentHand);
+				AllIds.Append(Scenario.OpponentDeck);
+				AllIds.Append(Scenario.OpponentGraveyard);
+				AllIds.Append(Scenario.OpponentExtra);
+				for (const FDuelScenarioCard& Spec : Scenario.OpponentField)
+				{
+					AllIds.Add(Spec.CardId);
+				}
+
+				TMap<int32, int32> Counts;
+				for (int32 CardId : AllIds)
+				{
+					if (CardId <= 0)
+					{
+						Errors.Add(TEXT("board contains an invalid card id"));
+						continue;
+					}
+					if (!Database->FindCard(CardId))
+					{
+						Errors.Add(FString::Printf(TEXT("unknown card %d"), CardId));
+					}
+					++Counts.FindOrAdd(CardId);
+				}
+				for (const TPair<int32, int32>& Pair : Counts)
+				{
+					const int32 Limit = FMath::Min(GateBanned.GetLimit(Pair.Key), GateBanned.MaxCopies);
+					if (Limit == 0)
+					{
+						Errors.Add(FString::Printf(TEXT("banned card %d"), Pair.Key));
+					}
+					else if (Pair.Value > Limit)
+					{
+						Errors.Add(FString::Printf(TEXT("card %d has %d copies; limit %d"), Pair.Key, Pair.Value, Limit));
+					}
+				}
+				if (Scenario.PlayerExtra.Num() > GateBanned.MaxExtra)
+				{
+					Errors.Add(FString::Printf(TEXT("player Extra Deck has %d cards; limit %d"),
+						Scenario.PlayerExtra.Num(), GateBanned.MaxExtra));
+				}
+				if (Scenario.OpponentExtra.Num() > GateBanned.MaxExtra)
+				{
+					Errors.Add(FString::Printf(TEXT("opponent Extra Deck has %d cards; limit %d"),
+						Scenario.OpponentExtra.Num(), GateBanned.MaxExtra));
+				}
+				// Fixed puzzle boards may win through the opponent's Graveyard
+				// (Autonomous Action Unit, Premature Burial, etc.), so the
+				// player-only win-condition heuristic is not meaningful here.
+				// A07's PuzzleSelfTest replays every authored solution instead.
+				if (Errors.Num() == 0)
+				{
+					FString StartError;
+					if (!PuzzleProbe.StartScenario(Scenario, StartError))
+					{
+						Errors.Add(FString::Printf(TEXT("StartScenario failed: %s"), *StartError));
+					}
+					else
+					{
+						TArray<FString> StateErrors;
+						PuzzleProbe.CheckDuelStateInvariants(-1, -1, StateErrors);
+						Errors.Append(StateErrors);
+					}
+				}
+			}
+
+			if (Errors.Num() == 0)
+			{
+				++PuzzlePass;
+				UE_LOG(LogDuelAcademyIsland, Log, TEXT("[PuzzleLegality] PASS %s"), *File);
+			}
+			else
+			{
+				UE_LOG(LogDuelAcademyIsland, Warning, TEXT("[PuzzleLegality] FAIL %s: %s"),
+					*File, *SelfTestJoinErrors(Errors));
+			}
+		}
+	}
+
 	const TCHAR* Starters[] = { TEXT("fire"), TEXT("water"), TEXT("wind") };
 	int32 PlayerWins = 0;
 	int32 OpponentWins = 0;
 	int32 Stalls = 0;
 	int32 TotalTurns = 0;
+	int32 GamesWithErrors = 0;
+	int32 DeckGameFailures = 0;
+	TArray<FString> FailureDetails;
 
-	for (int32 Iteration = 0; Iteration < Iterations; ++Iteration)
+	for (int32 Iteration = 0; Iteration < RequestedIterations; ++Iteration)
 	{
-		FDuelEngine Duel(Database, 1200 + Iteration * 37);
-		Duel.Start(Starters[Iteration % 3], TEXT("jaden"));
+		const int32 Seed = 1200 + Iteration * 37;
+		const FString PlayerDeckId = Starters[Iteration % 3];
+		FDuelEngine Duel(Database, Seed);
+		Duel.SetBannedList(GateBanned);
+		Duel.SetAutoAnswerAllChoices(true);
+
+		TArray<FString> Errors;
+		const FStarterDeckDef* PlayerDeck = Database->FindDeck(PlayerDeckId);
+		const FStarterDeckDef* OpponentDeck = Database->FindDeck(TEXT("jaden"));
+		if (!PlayerDeck || !OpponentDeck)
+		{
+			Errors.Add(TEXT("gate starter deck is missing from the card database"));
+		}
+		else
+		{
+			const FDuelDeckValidationResult PlayerValid = Duel.ValidateDeck(PlayerDeck->Cards, PlayerDeck->Extra);
+			const FDuelDeckValidationResult OpponentValid = Duel.ValidateDeck(OpponentDeck->Cards, OpponentDeck->Extra);
+			if (!PlayerValid.bValid || !OpponentValid.bValid)
+			{
+				++DeckGameFailures;
+				if (!PlayerValid.bValid)
+				{
+					Errors.Add(FString::Printf(TEXT("player deck '%s': %s"), *PlayerDeckId,
+						*SelfTestJoinErrors(PlayerValid.Errors)));
+				}
+				if (!OpponentValid.bValid)
+				{
+					Errors.Add(FString::Printf(TEXT("opponent deck 'jaden': %s"),
+						*SelfTestJoinErrors(OpponentValid.Errors)));
+				}
+			}
+		}
+
+		Duel.Start(PlayerDeckId, TEXT("jaden"));
+		if (!Duel.IsStarted())
+		{
+			Errors.Add(TEXT("duel did not start"));
+		}
+
+		const int32 InitialPlayerCards = SelfTestCountOwnedCards(
+			Duel.GetSide(EDuelOwner::Player), Duel.GetSide(EDuelOwner::Opponent), EDuelOwner::Player);
+		const int32 InitialOpponentCards = SelfTestCountOwnedCards(
+			Duel.GetSide(EDuelOwner::Player), Duel.GetSide(EDuelOwner::Opponent), EDuelOwner::Opponent);
+
+		EDuelPhase LastPhase = Duel.GetPhase();
+		int32 LastTurn = Duel.GetTurnNumber();
+		auto PhaseName = [](EDuelPhase InPhase) -> FString
+		{
+			switch (InPhase)
+			{
+			case EDuelPhase::Main1: return TEXT("Main1");
+			case EDuelPhase::Battle: return TEXT("Battle");
+			case EDuelPhase::Main2: return TEXT("Main2");
+			case EDuelPhase::Over: return TEXT("Over");
+			default: return TEXT("Unknown");
+			}
+		};
+		auto ObservePhase = [&]()
+		{
+			const EDuelPhase CurrentPhase = Duel.GetPhase();
+			const int32 CurrentTurn = Duel.GetTurnNumber();
+			const bool bTurnAdvanced = CurrentTurn > LastTurn;
+			bool bLegal = false;
+			if (CurrentPhase == LastPhase && CurrentTurn == LastTurn)
+			{
+				bLegal = true;
+			}
+			else if (Duel.IsOver() && CurrentPhase == EDuelPhase::Over)
+			{
+				bLegal = true;
+			}
+			else if (bTurnAdvanced)
+			{
+				bLegal = CurrentPhase == EDuelPhase::Main1;
+			}
+			else
+			{
+				switch (LastPhase)
+				{
+				case EDuelPhase::Main1:
+					bLegal = CurrentPhase == EDuelPhase::Battle || CurrentPhase == EDuelPhase::Main2;
+					break;
+				case EDuelPhase::Battle:
+					bLegal = CurrentPhase == EDuelPhase::Main2;
+					break;
+				default:
+					bLegal = false;
+					break;
+				}
+			}
+			if (!bLegal)
+			{
+				Errors.Add(FString::Printf(TEXT("illegal phase transition turn %d: %s -> %s"),
+					CurrentTurn, *PhaseName(LastPhase), *PhaseName(CurrentPhase)));
+			}
+			LastPhase = CurrentPhase;
+			LastTurn = CurrentTurn;
+		};
+
+		auto AnswerPending = [&]()
+		{
+			int32 Guard = 0;
+			while (Duel.HasPendingChoice() && Guard++ < 64)
+			{
+				FString ChoiceError;
+				if (!Duel.AutoAnswerPendingChoice(&ChoiceError))
+				{
+					Errors.Add(FString::Printf(TEXT("could not answer pending choice: %s"), *ChoiceError));
+					break;
+				}
+			}
+			if (Duel.HasPendingChoice())
+			{
+				Errors.Add(TEXT("pending choice remained after auto-answer"));
+			}
+		};
+
+		auto FlushChain = [&]()
+		{
+			if (Duel.IsChainOpen())
+			{
+				Errors.Add(FString::Printf(TEXT("open chain of %d link(s) left after a step"), Duel.GetChainLinks().Num()));
+				FString ChainError;
+				Duel.ResolveChain(ChainError);
+			}
+		};
+
+		auto CheckState = [&]()
+		{
+			TArray<FString> StateErrors;
+			Duel.CheckDuelStateInvariants(InitialPlayerCards, InitialOpponentCards, StateErrors);
+			Errors.Append(StateErrors);
+		};
+
+		CheckState();
+		ObservePhase();
 		int32 Steps = 0;
-		while (!Duel.bWinnerSet && Steps < 120)
+		while (!Duel.IsOver() && Steps < SelfTestMaxSteps && Duel.GetTurnNumber() <= SelfTestMaxTurns)
 		{
 			++Steps;
-			if (Duel.ActiveSide == EDuelOwner::Player)
+			if (Duel.GetActiveSide() == EDuelOwner::Player)
 			{
 				Duel.AiPlayMainPhase();
-				if (!Duel.bWinnerSet)
+				AnswerPending();
+				FlushChain();
+				ObservePhase();
+				CheckState();
+				if (!Duel.IsOver())
 				{
 					Duel.Phase = EDuelPhase::Battle;
+					ObservePhase();
 					Duel.AiPlayBattlePhase();
+					AnswerPending();
+					FlushChain();
+					ObservePhase();
+					CheckState();
 				}
-				if (Duel.bWinnerSet) break;
+				if (Duel.IsOver())
+				{
+					break;
+				}
 				Duel.Phase = EDuelPhase::Main2;
+				ObservePhase();
 				if (Duel.Player.Hand.Num() > HandLimit)
 				{
 					Duel.bAwaitingDiscard = true;
 					while (Duel.bAwaitingDiscard && Duel.Player.Hand.Num() > HandLimit)
 					{
-						FString Error;
-						Duel.DiscardFromHand(Duel.Player.Hand[0].Uid, Error);
+						FString DiscardError;
+						if (!Duel.DiscardFromHand(Duel.Player.Hand[0].Uid, DiscardError))
+						{
+							Errors.Add(FString::Printf(TEXT("hand-limit discard failed: %s"), *DiscardError));
+							break;
+						}
 					}
 				}
 				Duel.bAiTurnPending = true;
@@ -7802,13 +8757,19 @@ FString FDuelEngine::RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterati
 				Duel.bAiTurnPending = true;
 				Duel.RunOpponentTurn();
 			}
+			AnswerPending();
+			FlushChain();
+			ObservePhase();
+			CheckState();
 		}
-		TotalTurns += Duel.TurnNumber;
-		if (!Duel.bWinnerSet)
+
+		TotalTurns += Duel.GetTurnNumber();
+		if (!Duel.IsOver())
 		{
 			++Stalls;
+			Errors.Add(FString::Printf(TEXT("stalled after %d step(s), turn %d"), Steps, Duel.GetTurnNumber()));
 		}
-		else if (Duel.Winner == EDuelOwner::Player)
+		else if (Duel.GetWinner() == EDuelOwner::Player)
 		{
 			++PlayerWins;
 		}
@@ -7816,10 +8777,53 @@ FString FDuelEngine::RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterati
 		{
 			++OpponentWins;
 		}
+
+		if (Duel.IsOver())
+		{
+			if (Duel.GetResultStats().Turns != Duel.GetTurnNumber())
+			{
+				Errors.Add(TEXT("result stats did not finalize the turn count"));
+			}
+			if (Duel.GetResultStats().PlayerLp != Duel.GetSide(EDuelOwner::Player).LP
+				|| Duel.GetResultStats().OpponentLp != Duel.GetSide(EDuelOwner::Opponent).LP)
+			{
+				Errors.Add(TEXT("result stats do not match the final Life Points"));
+			}
+		}
+		AnswerPending();
+		FlushChain();
+		CheckState();
+
+		if (Errors.Num() > 0)
+		{
+			++GamesWithErrors;
+			if (FailureDetails.Num() < 40)
+			{
+				FailureDetails.Add(FString::Printf(TEXT("game %d (deck %s, seed %d, turn %d): %s"),
+					Iteration, *PlayerDeckId, Seed, Duel.GetTurnNumber(), *SelfTestJoinErrors(Errors)));
+			}
+		}
 	}
 
-	return FString::Printf(TEXT("Duel self-test: %d iterations, %d player wins, %d opponent wins, %d stalls, average turns %.1f"),
-		Iterations, PlayerWins, OpponentWins, Stalls, Iterations > 0 ? static_cast<float>(TotalTurns) / Iterations : 0.0f);
+	for (const FString& Detail : FailureDetails)
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("[DuelSelfTest] %s"), *Detail);
+	}
+	if (GamesWithErrors > FailureDetails.Num())
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("[DuelSelfTest] %d additional failing game(s) not shown."),
+			GamesWithErrors - FailureDetails.Num());
+	}
+
+	const double ElapsedSeconds = FPlatformTime::Seconds() - StartSeconds;
+	const bool bEnginePass = Stalls == 0 && GamesWithErrors == 0;
+	return FString::Printf(
+		TEXT("Duel self-test: %d iterations, %d player wins, %d opponent wins, %d stalls, average turns %.1f, ")
+		TEXT("invariant failures %d, gate deck failures %d, deck audit %d/%d, puzzle audit %d/%d, elapsed %.1fs, RESULT %s"),
+		RequestedIterations, PlayerWins, OpponentWins, Stalls,
+		RequestedIterations > 0 ? static_cast<float>(TotalTurns) / RequestedIterations : 0.0f,
+		GamesWithErrors, DeckGameFailures, ConstructedPass, ConstructedTotal, PuzzlePass, PuzzleTotal, ElapsedSeconds,
+		bEnginePass ? TEXT("PASS") : TEXT("FAIL"));
 }
 
 
@@ -7827,7 +8831,7 @@ namespace
 {
 	FAutoConsoleCommandWithWorldAndArgs GDADuelSelfTestCommand(
 		TEXT("da.DuelSelfTest"),
-		TEXT("Run N AI-vs-AI duels through the card engine and log the result summary. Usage: da.DuelSelfTest [iterations]"),
+		TEXT("Run N AI-vs-AI duels through the card engine and log the result summary. Usage: da.DuelSelfTest [iterations] (1-10000; default 24). Launch switch: -DADuelSelfTest=N"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 		{
 			if (!World || !World->GetGameInstance())
@@ -7836,7 +8840,7 @@ namespace
 				return;
 			}
 			UCardDatabaseSubsystem* Database = World->GetGameInstance()->GetSubsystem<UCardDatabaseSubsystem>();
-			const int32 Iterations = Args.Num() > 0 ? FMath::Clamp(FCString::Atoi(*Args[0]), 1, 500) : 24;
+			const int32 Iterations = Args.Num() > 0 ? FMath::Clamp(FCString::Atoi(*Args[0]), 1, 10000) : 24;
 			const FString Summary = FDuelEngine::RunSelfTest(Database, Iterations);
 			UE_LOG(LogDuelAcademyIsland, Log, TEXT("%s"), *Summary);
 		}));

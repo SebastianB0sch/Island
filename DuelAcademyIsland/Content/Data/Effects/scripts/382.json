@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "card_id": 382,
+  "name": "Remove Trap",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys 1 face-up Trap Card on the field.",
+  "notes": [
+    "Targets a face-up Trap."
+  ],
+  "scripts": [
+    {
+      "id": "382_destroy_trap",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Remove Trap"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_spell_trap",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Trap"
+            },
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "Destroys 1 face-up Trap Card on the field."
+    }
+  ]
+}

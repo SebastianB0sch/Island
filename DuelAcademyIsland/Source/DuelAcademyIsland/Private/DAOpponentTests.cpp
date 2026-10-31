@@ -27,7 +27,14 @@ bool FDAOpponentRosterTest::RunTest(const FString& Parameters)
 	}
 
 	TestTrue(TEXT("At least 25 duelists"), Opponents->GetOpponents().Num() >= 25);
-	TestTrue(TEXT("At least 20 decks"), Opponents->GetDecks().Num() >= 20);
+	TestEqual(TEXT("Thirty-one runtime opponent decks"), Opponents->GetDecks().Num(), 31);
+	for (const FDAOpponentDeckDef& RuntimeDeck : Opponents->GetDecks())
+	{
+		TestTrue(FString::Printf(TEXT("Deck %s has a 40-60 main deck"), *RuntimeDeck.Id),
+			RuntimeDeck.Cards.Num() >= 40 && RuntimeDeck.Cards.Num() <= 60);
+		TestTrue(FString::Printf(TEXT("Deck %s has at most 15 Extra Deck cards"), *RuntimeDeck.Id),
+			RuntimeDeck.Extra.Num() <= 15);
+	}
 	TestTrue(TEXT("At least 20 AI profiles"), Opponents->GetAIProfiles().Num() >= 20);
 	TestNotNull(TEXT("Jaden exists"), Opponents->FindOpponent(TEXT("jaden")));
 	TestNotNull(TEXT("Chazz exists"), Opponents->FindOpponent(TEXT("chazz")));

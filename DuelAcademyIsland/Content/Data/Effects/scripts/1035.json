@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "card_id": 1035,
+  "name": "Yellow Gadget",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is Summoned or Special Summoned successfully, you may add one \"Green Gadget\" card from your Deck to your Hand.",
+  "notes": [
+    "Searches 'Green Gadget' from the Deck."
+  ],
+  "scripts": [
+    {
+      "id": "1035_summon_search_named",
+      "trigger": "on_summon",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Yellow Gadget"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "name": "Green Gadget"
+        }
+      },
+      "source_text": "When this card is Summoned or Special Summoned successfully, you may add one \"Green Gadget\" card from your Deck to your Hand."
+    }
+  ]
+}

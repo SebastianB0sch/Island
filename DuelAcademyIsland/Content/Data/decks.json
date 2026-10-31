@@ -167,7 +167,7 @@
       1109,
       780,
       780,
-      663,
+      1109,
       663,
       440,
       1154,
@@ -217,6 +217,9 @@
       722
     ],
     "accent": "#c9d96f",
-    "description": "Jaden Yuki's first-year Elemental HERO deck. Fusion summons, HERO support, and a few hard-hitting dragons. Used by the story duel against Jaden."
+    "description": "Jaden Yuki's first-year Elemental HERO deck. Fusion summons, HERO support, and a few hard-hitting dragons. Used by the story duel against Jaden.",
+    "runtime_adjustments": [
+      "663->1109:Luster Dragon name cap -> Sparkman"
+    ]
   }
 ]

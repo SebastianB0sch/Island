@@ -1,16 +1,97 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-10-30T17:24:03+00:00",
+  "generated_utc": "2026-10-31T09:24:44+00:00",
   "source": {
     "starters": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Starter_Decks",
     "opponents": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-    "jaden_donor": "C:/dev/argh/game3d/src/duel/decklists.js"
+    "opponent_decks": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382",
+    "opponent_decks_title": "Character Deck List FAQ v1.4 (Tracy_Smith, 2006-03-11)",
+    "jaden_donor": "game3d/src/duel/decklists.js (local donor; not committed)",
+    "rom_deck_table": "not located: raw u16 sequence scan (find_decks.py logic) and GBA LZ77/RLE block scan found no contiguous 40-card deck table at the known card-id encoding"
   },
   "summary": {
-    "total": 31,
-    "complete": 4,
-    "incomplete": 27
+    "total": 37,
+    "complete": 16,
+    "incomplete": 21,
+    "unknown": 6,
+    "partial": 15
   },
+  "generic_shell": {
+    "year": 1,
+    "cards": [
+      375,
+      370,
+      422,
+      387,
+      477,
+      428,
+      497,
+      552,
+      402,
+      402,
+      421,
+      403,
+      403,
+      547,
+      348
+    ],
+    "unique_count": 13,
+    "count": 15,
+    "notes": [
+      "The FAQ lists 15 or 16 shared generic cards. This file uses the 15-card Year 1 legal selection.",
+      "The optional 16th slot is tracked as a global unresolved shell slot, not silently added to decks."
+    ],
+    "confidence": "medium"
+  },
+  "event_constructs": [
+    {
+      "id": "festival_bracket",
+      "name": "Duel Festival bracket",
+      "kind": "tournament",
+      "note": "E09 Interdorm Duel; exact bracket and rounds are not published.",
+      "participants_source": "ranked_roster",
+      "rounds": null,
+      "deck_source": "opponent year1 decks",
+      "confidence": "low",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_9:_Duel_Festival"
+    },
+    {
+      "id": "chocolate_bracket",
+      "name": "Chocolate tournament bracket",
+      "kind": "tournament",
+      "note": "E28 four-round Valentine tournament; the event requires the five female characters.",
+      "participants": [
+        "fontaine",
+        "alexis",
+        "jasmine",
+        "mindy",
+        "blair"
+      ],
+      "rounds": 4,
+      "deck_source": "opponent year1 decks",
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_28:_Battle_for_the_Chocolate!"
+    },
+    {
+      "id": "walk_home_partner",
+      "name": "Walk-home partner",
+      "kind": "partner_pool",
+      "note": "E31 duel against the character walked home with three times; reward table names the pool.",
+      "participants": [
+        "jaden",
+        "syrus",
+        "chumley",
+        "bastion",
+        "alexis",
+        "chazz",
+        "zane"
+      ],
+      "rounds": 1,
+      "deck_source": "opponent year1 decks",
+      "confidence": "high",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_31:_The_Walk_Home"
+    }
+  ],
   "decks": [
     {
       "id": "fire",
@@ -67,7 +148,9 @@
       "unresolved": [],
       "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Starter_Decks",
       "confidence": "high",
-      "sha256": "5ae249d29bdeb98cec3e98fa213044ddb5f0f9ff6339402e1c0c306198eb5748"
+      "status": "complete",
+      "unresolved_slots": 0,
+      "unresolved_reason": ""
     },
     {
       "id": "water",
@@ -122,7 +205,9 @@
       "unresolved": [],
       "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Starter_Decks",
       "confidence": "high",
-      "sha256": "0cf4a654b90faa9d1262638b5824fcd4ec19adb69d053623eca2aaac9b83ed3e"
+      "status": "complete",
+      "unresolved_slots": 0,
+      "unresolved_reason": ""
     },
     {
       "id": "wind",
@@ -177,15 +262,5479 @@
       "unresolved": [],
       "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Starter_Decks",
       "confidence": "high",
-      "sha256": "775786ac2fcc54e2a2462be3d195fc9fcb7d51b81671b3cd41a6c8b6278b35ab"
+      "status": "complete",
+      "unresolved_slots": 0,
+      "unresolved_reason": ""
+    },
+    {
+      "id": "alexis_year1",
+      "name": "Alexis Rhodes - Year 1",
+      "type": "opponent",
+      "opponent": "alexis",
+      "archetype": "Fairy",
+      "main": [
+        796,
+        669,
+        594,
+        381,
+        953,
+        822,
+        593,
+        499,
+        463,
+        463,
+        463,
+        958,
+        980,
+        674,
+        360,
+        360,
+        360,
+        586,
+        586,
+        586,
+        672,
+        909,
+        668,
+        837,
+        588,
+        934,
+        673,
+        590,
+        620,
+        620,
+        620,
+        949,
+        908,
+        812,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [
+        589
+      ],
+      "main_count": 49,
+      "extra_count": 1,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#a",
+      "faq_section": "a",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Big Bang Shot",
+          "card_id": 796,
+          "canon_name": "Big Bang Shot",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Cestus of Dagla",
+          "card_id": 669,
+          "canon_name": "Cestus of Dagla",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Mage Power",
+          "card_id": 594,
+          "canon_name": "Mage Power",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Polymerization",
+          "card_id": 381,
+          "canon_name": "Polymerization",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Sanctuary in the Sky",
+          "card_id": 953,
+          "canon_name": "The Sanctuary in the Sky",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Shinato's Ark",
+          "card_id": 822,
+          "canon_name": "Shinato's Ark",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "United We Stand",
+          "card_id": 593,
+          "canon_name": "United We Stand",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Enchanted Javelin",
+          "card_id": 499,
+          "canon_name": "Enchanted Javelin",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Numinous Healer",
+          "card_id": 463,
+          "canon_name": "Numinous Healer",
+          "count": 3,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Solar Ray",
+          "card_id": 958,
+          "canon_name": "Solar Ray",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Absorbing Kid From The Sky",
+          "card_id": 980,
+          "canon_name": "Absorbing Kid from the Sky",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Agido",
+          "card_id": 674,
+          "canon_name": "Agido",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Dunames Dark Witch",
+          "card_id": 360,
+          "canon_name": "Dunames Dark Witch",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Hysteric Fairy",
+          "card_id": 586,
+          "canon_name": "Hysteric Fairy",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Kelbek",
+          "card_id": 672,
+          "canon_name": "Kelbek",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Manju of the Ten Thousand Hands",
+          "card_id": 909,
+          "canon_name": "Manju of the Ten Thousand Hands",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mudora",
+          "card_id": 668,
+          "canon_name": "Mudora",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Outstanding Dog Marron",
+          "card_id": 837,
+          "canon_name": "Outstanding Dog Marron",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "The Forgiving Maiden",
+          "card_id": 588,
+          "canon_name": "The Forgiving Maiden",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Warrior of Zera",
+          "card_id": 934,
+          "canon_name": "Warrior of Zera",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Zolga",
+          "card_id": 673,
+          "canon_name": "Zolga",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Marie the Fallen One",
+          "card_id": 590,
+          "canon_name": "Marie the Fallen One",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Soul of Purity and Light",
+          "card_id": 620,
+          "canon_name": "Soul of Purity and Light",
+          "count": 3,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Archlord Zerato",
+          "card_id": 949,
+          "canon_name": "Archlord Zerato",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Guardian Angel Joan",
+          "card_id": 908,
+          "canon_name": "Guardian Angel Joan",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Shinato, Ruler Of A Higher Plane",
+          "card_id": 812,
+          "canon_name": "Shinato, King of a Higher Plane",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "St. Joan",
+          "card_id": 589,
+          "canon_name": "St. Joan",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 4,
+      "unresolved_reason": "FAQ v1.4: 'Missing: 4 or so (I suspect it is a Magic Jammer, two Seven Tools of the Bandit, and a Trap Hole)'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "a4507254932faadf67c6cedd62e09f26ed763c4cea50c6ac4ecd82c9e8b2e2fe"
+    },
+    {
+      "id": "banner_year1",
+      "name": "Lyman Banner - Year 1",
+      "type": "opponent",
+      "opponent": "banner",
+      "archetype": "Retro",
+      "main": [
+        110,
+        117,
+        117,
+        381,
+        381,
+        381,
+        402,
+        368,
+        368,
+        368,
+        403,
+        82,
+        20,
+        8,
+        239,
+        239,
+        263,
+        190,
+        190,
+        221,
+        221,
+        262,
+        262,
+        27,
+        26,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [
+        25,
+        44
+      ],
+      "main_count": 40,
+      "extra_count": 2,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#b",
+      "faq_section": "b",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Axe of Despair",
+          "card_id": 110,
+          "canon_name": "Axe of Despair",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Black Pendant",
+          "card_id": 117,
+          "canon_name": "Black Pendant",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Polymerization",
+          "card_id": 381,
+          "canon_name": "Polymerization",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Magic Jammer",
+          "card_id": 402,
+          "canon_name": "Magic Jammer",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Negate Attack",
+          "card_id": 368,
+          "canon_name": "Negate Attack",
+          "count": 3,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Seven Tools of the Bandit",
+          "card_id": 403,
+          "canon_name": "Seven Tools of the Bandit",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Aqua Madoor",
+          "card_id": 82,
+          "canon_name": "Aqua Madoor",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Battle Ox",
+          "card_id": 20,
+          "canon_name": "Battle Ox",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Blackland Fire Dragon",
+          "card_id": 8,
+          "canon_name": "Blackland Fire Dragon",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Hane-Hane",
+          "card_id": 239,
+          "canon_name": "Hane-Hane",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Fairy Dragon",
+          "card_id": 263,
+          "canon_name": "Fairy Dragon",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Magician of Faith",
+          "card_id": 190,
+          "canon_name": "Magician of Faith",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Man-Eater Bug",
+          "card_id": 221,
+          "canon_name": "Man-Eater Bug",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Penguin Soldier",
+          "card_id": 262,
+          "canon_name": "Penguin Soldier",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Curse of Dragon",
+          "card_id": 27,
+          "canon_name": "Curse of Dragon",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Gaia the Fierce Knight",
+          "card_id": 26,
+          "canon_name": "Gaia The Fierce Knight",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Gaia the Dragon Champion",
+          "card_id": 25,
+          "canon_name": "Gaia the Dragon Champion",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        },
+        {
+          "name": "Rabid Horseman",
+          "card_id": 44,
+          "canon_name": "Rabid Horseman",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 2,
+      "unresolved_reason": "FAQ v1.4: 'Missing: 2 or so (most likely Mystic Horseman and Trap Hole)'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "eb72f57ec0ee0d8c10abc35377cc0555c7e6ea88a25079f4617071b3a9050b0d"
+    },
+    {
+      "id": "bastion_year1",
+      "name": "Bastion Misawa - Year 1",
+      "type": "opponent",
+      "opponent": "bastion",
+      "archetype": "Magnet",
+      "main": [
+        1021,
+        436,
+        153,
+        467,
+        368,
+        503,
+        338,
+        338,
+        338,
+        351,
+        351,
+        351,
+        364,
+        364,
+        364,
+        251,
+        251,
+        262,
+        262,
+        29,
+        502,
+        502,
+        948,
+        663,
+        663,
+        337,
+        337,
+        500,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 43,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#c",
+      "faq_section": "c",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Dark Factory of Mass Production",
+          "card_id": 1021,
+          "canon_name": "Dark Factory of Mass Production",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Mystical Space Typhoon",
+          "card_id": 436,
+          "canon_name": "Mystical Space Typhoon",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Swords of Revealing Light",
+          "card_id": 153,
+          "canon_name": "Swords of Revealing Light",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Backup Soldier",
+          "card_id": 467,
+          "canon_name": "Backup Soldier",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Negate Attack",
+          "card_id": 368,
+          "canon_name": "Negate Attack",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Ring of Destruction",
+          "card_id": 503,
+          "canon_name": "Ring of Destruction",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Trap Hole",
+          "card_id": 380,
+          "canon_name": "Trap Hole",
+          "count": 3,
+          "category": "trap",
+          "optional": true
+        },
+        {
+          "name": "Alpha the Magnet Warrior",
+          "card_id": 338,
+          "canon_name": "Alpha The Magnet Warrior",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Beta the Magnet Warrior",
+          "card_id": 351,
+          "canon_name": "Beta The Magnet Warrior",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Gamma the Magnet Warrior",
+          "card_id": 364,
+          "canon_name": "Gamma The Magnet Warrior",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Hane-Hane",
+          "card_id": 239,
+          "canon_name": "Hane-Hane",
+          "count": 1,
+          "category": "monster14",
+          "optional": true
+        },
+        {
+          "name": "Needle Worm",
+          "card_id": 251,
+          "canon_name": "Needle Worm",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Penguin Soldier",
+          "card_id": 262,
+          "canon_name": "Penguin Soldier",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Sangan",
+          "card_id": 29,
+          "canon_name": "Sangan",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Sapphire Dragon",
+          "card_id": 780,
+          "canon_name": "Luster Dragon",
+          "count": 1,
+          "category": "monster14",
+          "optional": true
+        },
+        {
+          "name": "Vorse Raider",
+          "card_id": 502,
+          "canon_name": "Vorse Raider",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Vorse Raider",
+          "card_id": 502,
+          "canon_name": "Vorse Raider",
+          "count": 1,
+          "category": "monster14",
+          "optional": true
+        },
+        {
+          "name": "White Magician Pikeru",
+          "card_id": 948,
+          "canon_name": "White Magician Pikeru",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Witch of the Black Forest",
+          "card_id": 257,
+          "canon_name": "Witch of the Black Forest",
+          "count": 1,
+          "category": "monster14",
+          "optional": true
+        },
+        {
+          "name": "Emerald Dragon",
+          "card_id": 663,
+          "canon_name": "Luster Dragon",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Hyozanryu",
+          "card_id": 337,
+          "canon_name": "Hyozanryu",
+          "count": 2,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Valkyrion the Magnet Warrior",
+          "card_id": 500,
+          "canon_name": "Valkyrion the Magna Warrior",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 3,
+      "unresolved_reason": "FAQ v1.4: 'Missing: As complete as I can get it'; three dorm-dependent slots (Trap Hole x3 or the parenthesised cards).",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "e3157a75084593bdac4ac5e024da1172092bad3d645d264cf0bb2778d3dbccf6"
+    },
+    {
+      "id": "beauregard_year1",
+      "name": "Beauregard - Year 1",
+      "type": "opponent",
+      "opponent": "beauregard",
+      "archetype": "Goblin",
+      "main": [
+        739,
+        739,
+        796,
+        796,
+        555,
+        555,
+        455,
+        455,
+        955,
+        955,
+        145,
+        425,
+        425,
+        20,
+        20,
+        20,
+        834,
+        834,
+        834,
+        583,
+        758,
+        758,
+        758,
+        566,
+        566,
+        566,
+        1170,
+        1170,
+        1170,
+        1006,
+        1006,
+        1006,
+        563,
+        563,
+        982,
+        982,
+        1077,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 52,
+      "extra_count": 0,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#d",
+      "faq_section": "d",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Banner of Courage",
+          "card_id": 739,
+          "canon_name": "Banner of Courage",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Big Bang Shot",
+          "card_id": 796,
+          "canon_name": "Big Bang Shot",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Fairy Meteor Crush",
+          "card_id": 555,
+          "canon_name": "Fairy Meteor Crush",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Gaia Power",
+          "card_id": 455,
+          "canon_name": "Gaia Power",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Goblin Thief",
+          "card_id": 955,
+          "canon_name": "Goblin Thief",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Goblin's Secret Remedy",
+          "card_id": 145,
+          "canon_name": "Goblin's Secret Remedy",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Upstart Goblin",
+          "card_id": 425,
+          "canon_name": "Upstart Goblin",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Magic Jammer",
+          "card_id": 402,
+          "canon_name": "Magic Jammer",
+          "count": 1,
+          "category": "trap",
+          "optional": true
+        },
+        {
+          "name": "Seven Tools of the Bandit",
+          "card_id": 403,
+          "canon_name": "Seven Tools of the Bandit",
+          "count": 1,
+          "category": "trap",
+          "optional": true
+        },
+        {
+          "name": "Battle Ox",
+          "card_id": 20,
+          "canon_name": "Battle Ox",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "D.D. Trainer",
+          "card_id": 834,
+          "canon_name": "D. D. Trainer",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Dancing Fairy",
+          "card_id": 583,
+          "canon_name": "Dancing Fairy",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Giant Orc",
+          "card_id": 758,
+          "canon_name": "Giant Orc",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Goblin Attack Force",
+          "card_id": 566,
+          "canon_name": "Goblin Attack Force",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Goblin Elite Attack Force",
+          "card_id": 1170,
+          "canon_name": "Goblin Elite Attack Force",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Goblin Calligrapher",
+          "card_id": 1006,
+          "canon_name": "Goblin Calligrapher",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mad Sword Beast",
+          "card_id": 563,
+          "canon_name": "Mad Sword Beast",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Man-Thro' Tro'",
+          "card_id": 982,
+          "canon_name": "Man-Thro' Tro'",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Witch of the Black Forest",
+          "card_id": 257,
+          "canon_name": "Witch of the Black Forest",
+          "count": 1,
+          "category": "monster14",
+          "optional": true
+        },
+        {
+          "name": "Granmarg the Rock Monarch",
+          "card_id": 1077,
+          "canon_name": "Granmarg the Rock Monarch",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Complete'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "50dda08d1cdc849aebfe8de5a48dd77e44927d2415d81481c06213180aca9a75"
+    },
+    {
+      "id": "blair_year1",
+      "name": "Blair Flannigan - Year 1",
+      "type": "opponent",
+      "opponent": "blair",
+      "archetype": "Maiden",
+      "main": [
+        558,
+        373,
+        373,
+        913,
+        913,
+        127,
+        366,
+        192,
+        583,
+        244,
+        360,
+        360,
+        1181,
+        234,
+        234,
+        513,
+        1040,
+        1040,
+        413,
+        711,
+        711,
+        330,
+        191,
+        948,
+        1152,
+        352,
+        707,
+        314,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 43,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#e",
+      "faq_section": "e",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Shadow of Eyes",
+          "card_id": 558,
+          "canon_name": "Shadow of Eyes",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Skull Dice",
+          "card_id": 373,
+          "canon_name": "Skull Dice",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Stray Lambs",
+          "card_id": 913,
+          "canon_name": "Stray Lambs",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Malevolent Nuzzler",
+          "card_id": 127,
+          "canon_name": "Malevolent Nuzzler",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Toon World",
+          "card_id": 366,
+          "canon_name": "Toon World",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Ancient Elf",
+          "card_id": 192,
+          "canon_name": "Ancient Elf",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Dancing Fairy",
+          "card_id": 583,
+          "canon_name": "Dancing Fairy",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Dark Elf",
+          "card_id": 244,
+          "canon_name": "Dark Elf",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Dunames Dark Witch",
+          "card_id": 360,
+          "canon_name": "Dunames Dark Witch",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Ebon Magician Curran",
+          "card_id": 1181,
+          "canon_name": "Ebon Magician Curran",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Gemini Elf",
+          "card_id": 234,
+          "canon_name": "Gemini Elf",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Maiden of the Aqua",
+          "card_id": 513,
+          "canon_name": "Maiden of the Aqua",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Harpie Girl",
+          "card_id": 1040,
+          "canon_name": "Harpie Girl",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "The Unhappy Maiden",
+          "card_id": 413,
+          "canon_name": "The Unhappy Maiden",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Toon Gemini Elf",
+          "card_id": 711,
+          "canon_name": "Toon Gemini Elf",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Toon Mermaid",
+          "card_id": 330,
+          "canon_name": "Toon Mermaid",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Water Magician",
+          "card_id": 191,
+          "canon_name": "Water Magician",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "White Magician Pikeru",
+          "card_id": 948,
+          "canon_name": "White Magician Pikeru",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Cyber Dragon",
+          "card_id": 1152,
+          "canon_name": "Cyber Dragon",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Dark Magician Girl",
+          "card_id": 352,
+          "canon_name": "Dark Magician Girl",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Toon Dark Magician Girl",
+          "card_id": 707,
+          "canon_name": "Toon Dark Magician Girl",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Cosmo Queen",
+          "card_id": 314,
+          "canon_name": "Cosmo Queen",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 1,
+      "unresolved_reason": "FAQ v1.4: 'Missing: 1, and I'm almost positive it's a Harpie Girl'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "a9ab93b182b849891080886c32b7d914f556bdf2bdeebb96b321c5e515f003c2"
+    },
+    {
+      "id": "brier_year1",
+      "name": "Brier - Year 1",
+      "type": "opponent",
+      "opponent": "brier",
+      "archetype": "Goblin",
+      "main": [
+        718,
+        718,
+        464,
+        368,
+        414,
+        414,
+        926,
+        926,
+        834,
+        834,
+        834,
+        758,
+        758,
+        566,
+        566,
+        566,
+        1170,
+        1170,
+        1170,
+        1006,
+        1006,
+        1006,
+        777,
+        777,
+        777,
+        563,
+        563,
+        251,
+        251,
+        839,
+        839,
+        1017,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 47,
+      "extra_count": 0,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#f",
+      "faq_section": "f",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Coffin Seller",
+          "card_id": 718,
+          "canon_name": "Coffin Seller",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Minor Goblin Official",
+          "card_id": 464,
+          "canon_name": "Minor Goblin Official",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Negate Attack",
+          "card_id": 368,
+          "canon_name": "Negate Attack",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Robbin' Goblin",
+          "card_id": 414,
+          "canon_name": "Robbin' Goblin",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Robbin' Zombie",
+          "card_id": 926,
+          "canon_name": "Robbin' Zombie",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "D.D. Trainer",
+          "card_id": 834,
+          "canon_name": "D. D. Trainer",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Giant Orc",
+          "card_id": 758,
+          "canon_name": "Giant Orc",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Goblin Attack Force",
+          "card_id": 566,
+          "canon_name": "Goblin Attack Force",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Goblin Elite Attack Force",
+          "card_id": 1170,
+          "canon_name": "Goblin Elite Attack Force",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Goblin Calligrapher",
+          "card_id": 1006,
+          "canon_name": "Goblin Calligrapher",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Great Angus",
+          "card_id": 777,
+          "canon_name": "Great Angus",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mad Sword Beast",
+          "card_id": 563,
+          "canon_name": "Mad Sword Beast",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Needle Worm",
+          "card_id": 251,
+          "canon_name": "Needle Worm",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Witch of the Black Forest",
+          "card_id": 257,
+          "canon_name": "Witch of the Black Forest",
+          "count": 1,
+          "category": "monster14",
+          "optional": true
+        },
+        {
+          "name": "Mefist the Infernal General",
+          "card_id": 839,
+          "canon_name": "Mefist the Infernal General",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Penumberal Soldier Lady",
+          "card_id": 1017,
+          "canon_name": "Penumbral Soldier Lady",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Completely done'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "b9b82ae5ae244da56b4670be19c190b8fdb82061e15a94bb61dcfdad8f53563c"
+    },
+    {
+      "id": "chazz_year1",
+      "name": "Chazz Princeton - Year 1",
+      "type": "opponent",
+      "opponent": "chazz",
+      "archetype": "Dark",
+      "main": [
+        1021,
+        1021,
+        460,
+        460,
+        436,
+        153,
+        716,
+        716,
+        402,
+        926,
+        926,
+        403,
+        380,
+        1102,
+        47,
+        47,
+        756,
+        725,
+        725,
+        725,
+        715,
+        715,
+        757,
+        887,
+        887,
+        839,
+        839,
+        708,
+        163,
+        163,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 45,
+      "extra_count": 0,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#g",
+      "faq_section": "g",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Dark Factory of Mass Production",
+          "card_id": 1021,
+          "canon_name": "Dark Factory of Mass Production",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Mystic Plasma Zone",
+          "card_id": 460,
+          "canon_name": "Mystic Plasma Zone",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Mystical Space Typhoon",
+          "card_id": 436,
+          "canon_name": "Mystical Space Typhoon",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Swords of Revealing Light",
+          "card_id": 153,
+          "canon_name": "Swords of Revealing Light",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Hidden Soldier",
+          "card_id": 716,
+          "canon_name": "Hidden Soldier",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Magic Jammer",
+          "card_id": 402,
+          "canon_name": "Magic Jammer",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Robbin' Zombie",
+          "card_id": 926,
+          "canon_name": "Robbin' Zombie",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Seven Tools of the Bandit",
+          "card_id": 403,
+          "canon_name": "Seven Tools of the Bandit",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Trap Hole",
+          "card_id": 380,
+          "canon_name": "Trap Hole",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Blood Sucker",
+          "card_id": 1102,
+          "canon_name": "Blood Sucker",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Clown Zombie",
+          "card_id": 47,
+          "canon_name": "Clown Zombie",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Decayed Commander",
+          "card_id": 756,
+          "canon_name": "Decayed Commander",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Master Kyonshee",
+          "card_id": 725,
+          "canon_name": "Master Kyonshee",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Newdoria",
+          "card_id": 715,
+          "canon_name": "Newdoria",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Zombie Tiger",
+          "card_id": 757,
+          "canon_name": "Zombie Tiger",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Giga Gagagigo",
+          "card_id": 887,
+          "canon_name": "Giga Gagagigo",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Mefist the Infernal General",
+          "card_id": 839,
+          "canon_name": "Mefist the Infernal General",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Legendary Fiend",
+          "card_id": 708,
+          "canon_name": "Legendary Fiend",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Shadow Ghoul",
+          "card_id": 163,
+          "canon_name": "Shadow Ghoul",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Complete'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "c0c7b82e40c2ac134ab853651eae67fb49a5693db5d1de95c53fc14dab05cd12"
+    },
+    {
+      "id": "chumley_year1",
+      "name": "Chumley Huffington - Year 1",
+      "type": "opponent",
+      "opponent": "chumley",
+      "archetype": "Burn Beast",
+      "main": [
+        114,
+        147,
+        637,
+        410,
+        455,
+        1090,
+        1090,
+        381,
+        855,
+        855,
+        855,
+        793,
+        793,
+        793,
+        1125,
+        1125,
+        1125,
+        78,
+        78,
+        819,
+        819,
+        1080,
+        1080,
+        1080,
+        1079,
+        1079,
+        1079,
+        1078,
+        1078,
+        448,
+        448,
+        448,
+        854,
+        854,
+        854,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [
+        1019
+      ],
+      "main_count": 50,
+      "extra_count": 1,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#h",
+      "faq_section": "h",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Beast Fangs",
+          "card_id": 114,
+          "canon_name": "Beast Fangs",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Dian Keto the Cure Master",
+          "card_id": 147,
+          "canon_name": "Dian Keto the Cure Master",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Fusion Gate",
+          "card_id": 637,
+          "canon_name": "Fusion Gate",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Fusion Sage",
+          "card_id": 410,
+          "canon_name": "Fusion Sage",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Gaia Power",
+          "card_id": 455,
+          "canon_name": "Gaia Power",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Poison Fangs",
+          "card_id": 1090,
+          "canon_name": "Poison Fangs",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Polymerization",
+          "card_id": 381,
+          "canon_name": "Polymerization",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Des Kangaroo",
+          "card_id": 855,
+          "canon_name": "Des Kangaroo",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Des Koala",
+          "card_id": 793,
+          "canon_name": "Des Koala",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Des Wombat",
+          "card_id": 1125,
+          "canon_name": "Des Wombat",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Frenzied Panda",
+          "card_id": 78,
+          "canon_name": "Frenzied Panda",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Gyaku-Gire Panda",
+          "card_id": 819,
+          "canon_name": "Gyaku-Gire Panda",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Hyena",
+          "card_id": 1080,
+          "canon_name": "Hyena",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Kangaroo Champ",
+          "card_id": 1079,
+          "canon_name": "Kangaroo Champ",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Maji-Gire Panda",
+          "card_id": 1078,
+          "canon_name": "Maji-Gire Panda",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Nimble Momonga",
+          "card_id": 448,
+          "canon_name": "Nimble Momonga",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Big Koala",
+          "card_id": 854,
+          "canon_name": "Big Koala",
+          "count": 3,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Master of Oz",
+          "card_id": 1019,
+          "canon_name": "Master of Oz",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Complete...whew...'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "af5f1b774679a52243848944ebd7e894fed287a4f2bfbf5f91b7b24654ebd9f8"
+    },
+    {
+      "id": "crowler_year1",
+      "name": "Vellian Crowler - Year 1",
+      "type": "opponent",
+      "opponent": "crowler",
+      "archetype": "Ancient Gear",
+      "main": [
+        556,
+        436,
+        1159,
+        1159,
+        703,
+        703,
+        703,
+        546,
+        402,
+        1033,
+        1033,
+        403,
+        1113,
+        1113,
+        1113,
+        1170,
+        1170,
+        1032,
+        1148,
+        1076,
+        1076,
+        1076,
+        1038,
+        1034,
+        514,
+        1149,
+        1035,
+        1112,
+        180,
+        1111,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 45,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#i",
+      "faq_section": "i",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Limiter Removal",
+          "card_id": 556,
+          "canon_name": "Limiter Removal",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Mystical Space Typhoon",
+          "card_id": 436,
+          "canon_name": "Mystical Space Typhoon",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Power Bond",
+          "card_id": 1159,
+          "canon_name": "Power Bond",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Bottomless Shifting Sand",
+          "card_id": 703,
+          "canon_name": "Bottomless Shifting Sand",
+          "count": 3,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Fairy Box",
+          "card_id": 546,
+          "canon_name": "Fairy Box",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Magic Jammer",
+          "card_id": 402,
+          "canon_name": "Magic Jammer",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Red Gadget - Stronghold",
+          "card_id": 1033,
+          "canon_name": "Red Gadget - Stronghold",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Seven Tools of the Bandit",
+          "card_id": 403,
+          "canon_name": "Seven Tools of the Bandit",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Ancient Gear Soldier",
+          "card_id": 1113,
+          "canon_name": "Ancient Gear Soldier",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Goblin Elite Attack Force",
+          "card_id": 1170,
+          "canon_name": "Goblin Elite Attack Force",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Green Gadget",
+          "card_id": 1032,
+          "canon_name": "Green Gadget",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Gyroid",
+          "card_id": 1148,
+          "canon_name": "Gyroid",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Insect Knight",
+          "card_id": 1076,
+          "canon_name": "Insect Knight",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mighty Guard",
+          "card_id": 1038,
+          "canon_name": "Mighty Guard",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Red Gadget",
+          "card_id": 1034,
+          "canon_name": "Red Gadget",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Robotic Knight",
+          "card_id": 514,
+          "canon_name": "Robotic Knight",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Steamroid",
+          "card_id": 1149,
+          "canon_name": "Steamroid",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Yellow Gadget",
+          "card_id": 1035,
+          "canon_name": "Yellow Gadget",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Ancient Gear Beast",
+          "card_id": 1112,
+          "canon_name": "Ancient Gear Beast",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Machine King",
+          "card_id": 180,
+          "canon_name": "Machine King",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Ancient Gear Golem",
+          "card_id": 1111,
+          "canon_name": "Ancient Gear Golem",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 4,
+      "unresolved_reason": "FAQ v1.4: 'Missing: 4. I hate you, Crowler.'",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "6822587d28587b33141406f359f2038c1a822af16519a3fd9320d725a798549b"
+    },
+    {
+      "id": "damon_year1",
+      "name": "Damon - Year 1",
+      "type": "opponent",
+      "opponent": "damon",
+      "archetype": "Draw",
+      "main": [
+        381,
+        381,
+        425,
+        425,
+        591,
+        591,
+        591,
+        706,
+        553,
+        553,
+        1006,
+        1006,
+        1006,
+        226,
+        226,
+        226,
+        646,
+        646,
+        1178,
+        1178,
+        1178,
+        327,
+        327,
+        327,
+        29,
+        238,
+        238,
+        24,
+        650,
+        650,
+        52,
+        1015,
+        1015,
+        511,
+        511,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [
+        1020
+      ],
+      "main_count": 50,
+      "extra_count": 1,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#j",
+      "faq_section": "j",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Polymerization",
+          "card_id": 381,
+          "canon_name": "Polymerization",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Upstart Goblin",
+          "card_id": 425,
+          "canon_name": "Upstart Goblin",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Jar of Greed",
+          "card_id": 591,
+          "canon_name": "Jar of Greed",
+          "count": 3,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Reckless Greed",
+          "card_id": 706,
+          "canon_name": "Reckless Greed",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Solemn Wishes",
+          "card_id": 553,
+          "canon_name": "Solemn Wishes",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Goblin Calligrapher",
+          "card_id": 1006,
+          "canon_name": "Goblin Calligrapher",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Muka Muka",
+          "card_id": 226,
+          "canon_name": "Muka Muka",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Opticlops",
+          "card_id": 646,
+          "canon_name": "Opticlops",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Poison Draw Frog",
+          "card_id": 1178,
+          "canon_name": "Poison Draw Frog",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Red Archery Girl",
+          "card_id": 327,
+          "canon_name": "Red Archery Girl",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Sangan",
+          "card_id": 29,
+          "canon_name": "Sangan",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Skelengel",
+          "card_id": 238,
+          "canon_name": "Skelengel",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "The Snake Hair",
+          "card_id": 24,
+          "canon_name": "The Snake Hair",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Warrior Dai Grephyr",
+          "card_id": 650,
+          "canon_name": "Warrior Dai Grepher",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "White Magical Hat",
+          "card_id": 52,
+          "canon_name": "White Magical Hat",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Enraged Muka Muka",
+          "card_id": 1015,
+          "canon_name": "Enraged Muka Muka",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Airknight Parshath",
+          "card_id": 511,
+          "canon_name": "Airknight Parshath",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Sanwitch",
+          "card_id": 1020,
+          "canon_name": "Sanwitch",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Complete'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "e09b25554b8d86d5bf8577d797d90f633ed106cf68c1f2255601e6ef10861c75"
+    },
+    {
+      "id": "dimitri_year1",
+      "name": "Dimitri - Year 1",
+      "type": "opponent",
+      "opponent": "dimitri",
+      "archetype": "Red-Eyes",
+      "main": [
+        546,
+        546,
+        503,
+        373,
+        373,
+        373,
+        372,
+        372,
+        436,
+        381,
+        381,
+        381,
+        374,
+        374,
+        353,
+        38,
+        3,
+        3,
+        3,
+        20,
+        48,
+        365,
+        365,
+        526,
+        526,
+        947,
+        2,
+        614,
+        1007,
+        502,
+        18,
+        18,
+        26,
+        40,
+        40,
+        1104,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [
+        501,
+        501,
+        85,
+        85
+      ],
+      "main_count": 51,
+      "extra_count": 4,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#k",
+      "faq_section": "k",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Fairy Box",
+          "card_id": 546,
+          "canon_name": "Fairy Box",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Ring of Destruction",
+          "card_id": 503,
+          "canon_name": "Ring of Destruction",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Skull Dice",
+          "card_id": 373,
+          "canon_name": "Skull Dice",
+          "count": 3,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Graceful Dice",
+          "card_id": 372,
+          "canon_name": "Graceful Dice",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Mystical Space Typhoon",
+          "card_id": 436,
+          "canon_name": "Mystical Space Typhoon",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Polymerization",
+          "card_id": 381,
+          "canon_name": "Polymerization",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Scapegoat",
+          "card_id": 374,
+          "canon_name": "Scapegoat",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Alligator's Sword",
+          "card_id": 353,
+          "canon_name": "Alligator's Sword",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Axe Raider",
+          "card_id": 38,
+          "canon_name": "Axe Raider",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Baby Dragon",
+          "card_id": 3,
+          "canon_name": "Baby Dragon",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Battle Ox",
+          "card_id": 20,
+          "canon_name": "Battle Ox",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Battle Warrior",
+          "card_id": 48,
+          "canon_name": "Battle Warrior",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Copycat",
+          "card_id": 365,
+          "canon_name": "Copycat",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Gearfried the Iron Knight",
+          "card_id": 526,
+          "canon_name": "Gearfried the Iron Knight",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Lady Ninja Yae",
+          "card_id": 947,
+          "canon_name": "Lady Ninja Yae",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mystical Elf",
+          "card_id": 2,
+          "canon_name": "Mystical Elf",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Obnoxious Celtic Guardian",
+          "card_id": 614,
+          "canon_name": "Obnoxious Celtic Guard",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Red Eyes Black Chick",
+          "card_id": 1007,
+          "canon_name": "Red-Eyes B. Chick",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Vorse Raider",
+          "card_id": 502,
+          "canon_name": "Vorse Raider",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Summoned Skull",
+          "card_id": 18,
+          "canon_name": "Summoned Skull",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Gaia the Fierce Knight",
+          "card_id": 26,
+          "canon_name": "Gaia The Fierce Knight",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Red Eyes Black Dragon",
+          "card_id": 40,
+          "canon_name": "Red-Eyes B. Dragon",
+          "count": 2,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Red Eyes Darkness Dragon",
+          "card_id": 1104,
+          "canon_name": "Red-Eyes Darkness Dragon",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Alligator's Sword Dragon",
+          "card_id": 501,
+          "canon_name": "Alligator's Sword Dragon",
+          "count": 2,
+          "category": "extra",
+          "optional": false
+        },
+        {
+          "name": "Black Skull Dragon",
+          "card_id": 85,
+          "canon_name": "B. Skull Dragon",
+          "count": 2,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Nothing'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "cbbefee442f3e5db27d89bcb7a23cb20414587a88548965bd84a2fbcb1273d4f"
+    },
+    {
+      "id": "fontaine_year1",
+      "name": "Fonda Fontaine - Year 1",
+      "type": "opponent",
+      "opponent": "fontaine",
+      "archetype": "Winged Beast",
+      "main": [
+        123,
+        123,
+        124,
+        124,
+        124,
+        1062,
+        1062,
+        1062,
+        368,
+        368,
+        509,
+        509,
+        1050,
+        1050,
+        624,
+        1045,
+        1046,
+        1047,
+        1040,
+        1040,
+        1040,
+        779,
+        779,
+        258,
+        258,
+        258,
+        33,
+        33,
+        1043,
+        168,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 45,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#l",
+      "faq_section": "l",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Cyber Shield",
+          "card_id": 123,
+          "canon_name": "Cyber Shield",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Elegant Egotist",
+          "card_id": 124,
+          "canon_name": "Elegant Egotist",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Harpie's Hunting Ground",
+          "card_id": 1062,
+          "canon_name": "Harpies' Hunting Ground",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Negate Attack",
+          "card_id": 368,
+          "canon_name": "Negate Attack",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Birdface",
+          "card_id": 509,
+          "canon_name": "Birdface",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Eagle Eye",
+          "card_id": 1050,
+          "canon_name": "Eagle Eye",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Garuda the Wind Spirit",
+          "card_id": 624,
+          "canon_name": "Garuda the Wind Spirit",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Harpie Lady #1",
+          "card_id": 1045,
+          "canon_name": "Harpie Lady 1",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Harpie Lady #2",
+          "card_id": 1046,
+          "canon_name": "Harpie Lady 2",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Harpie Lady #3",
+          "card_id": 1047,
+          "canon_name": "Harpie Lady 3",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Harpie Girl",
+          "card_id": 1040,
+          "canon_name": "Harpie Girl",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Sonic Duck",
+          "card_id": 779,
+          "canon_name": "Sonic Duck",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Takuhee",
+          "card_id": 258,
+          "canon_name": "Takuhee",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Harpie Lady Sisters",
+          "card_id": 33,
+          "canon_name": "Harpie Lady Sisters",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Roc from the Valley of Haze",
+          "card_id": 1043,
+          "canon_name": "Roc from the Valley of Haze",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Harpie's Pet Dragon",
+          "card_id": 168,
+          "canon_name": "Harpie's Pet Dragon",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 2,
+      "unresolved_reason": "FAQ v1.4: 'Missing: 2 (most likely a Seven Tools and a Trap Hole)'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "0bee6f755773155d3f03cce4ece44055ce4b5de204402e44fffbd27ab37ee3f9"
+    },
+    {
+      "id": "gerard_year1",
+      "name": "Gerard - Year 1",
+      "type": "opponent",
+      "opponent": "gerard",
+      "archetype": "Normal/Ritual",
+      "main": [
+        844,
+        296,
+        143,
+        381,
+        381,
+        302,
+        299,
+        298,
+        300,
+        73,
+        72,
+        243,
+        76,
+        65,
+        66,
+        237,
+        62,
+        208,
+        240,
+        10,
+        1199,
+        49,
+        194,
+        35,
+        308,
+        245,
+        175,
+        9,
+        315,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [
+        28,
+        193
+      ],
+      "main_count": 44,
+      "extra_count": 2,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#m",
+      "faq_section": "m",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Contract with the Abyss",
+          "card_id": 844,
+          "canon_name": "Contract with the Abyss",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Hamburger Recipe",
+          "card_id": 296,
+          "canon_name": "Hamburger Recipe",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Mooyan Curry",
+          "card_id": 143,
+          "canon_name": "Mooyan Curry",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Polymerization",
+          "card_id": 381,
+          "canon_name": "Polymerization",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Resurrection of Chakra",
+          "card_id": 302,
+          "canon_name": "Resurrection of Chakra",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Eatgaboon",
+          "card_id": 299,
+          "canon_name": "Eatgaboon",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "House of Adhesive Tape",
+          "card_id": 298,
+          "canon_name": "House of Adhesive Tape",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Widespread Ruin",
+          "card_id": 300,
+          "canon_name": "Widespread Ruin",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Ancient Brain",
+          "card_id": 73,
+          "canon_name": "Ancient Brain",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Armaill",
+          "card_id": 72,
+          "canon_name": "Armaill",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Behegon",
+          "card_id": 243,
+          "canon_name": "Behegon",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mech-Mole Zombie",
+          "card_id": 76,
+          "canon_name": "Mech Mole Zombie",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "M-Warrior #1",
+          "card_id": 65,
+          "canon_name": "M-Warrior #1",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "M-Warrior #2",
+          "card_id": 66,
+          "canon_name": "M-Warrior #2",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Niwatori",
+          "card_id": 237,
+          "canon_name": "Niwatori",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Rhaimundos of the Red Sword",
+          "card_id": 62,
+          "canon_name": "Rhaimundos of the Red Sword",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Sea Kamen",
+          "card_id": 208,
+          "canon_name": "Sea Kamen",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Tongyo",
+          "card_id": 240,
+          "canon_name": "Tongyo",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Tyhone",
+          "card_id": 10,
+          "canon_name": "Tyhone",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Wasteland Amazon",
+          "card_id": 1199,
+          "canon_name": "Wasteland Amazon",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Wings of Wicked Flame",
+          "card_id": 49,
+          "canon_name": "Wings of Wicked Flame",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Bottom Dweller",
+          "card_id": 194,
+          "canon_name": "Bottom Dweller",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Garoozis",
+          "card_id": 35,
+          "canon_name": "Garoozis",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Hungry Burger",
+          "card_id": 308,
+          "canon_name": "Hungry Burger",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Lava Battleguard",
+          "card_id": 245,
+          "canon_name": "Lava Battleguard",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Ocubeam",
+          "card_id": 175,
+          "canon_name": "Ocubeam",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Swamp Battleguard",
+          "card_id": 9,
+          "canon_name": "Swamp Battleguard",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Chakra",
+          "card_id": 315,
+          "canon_name": "Chakra",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Karbonala Warrior",
+          "card_id": 28,
+          "canon_name": "Karbonala Warrior",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        },
+        {
+          "name": "Deepsea Shark",
+          "card_id": 193,
+          "canon_name": "Deepsea Shark",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 1,
+      "unresolved_reason": "FAQ v1.4: 'Missing: At most, 1'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "e24962d5921495c6248fa2a5b6bd28923c91a80a475fb4656451c07c89f5bf78"
+    },
+    {
+      "id": "jasmine_year1",
+      "name": "Jasmine - Year 1",
+      "type": "opponent",
+      "opponent": "jasmine",
+      "archetype": "Warrior",
+      "main": [
+        739,
+        739,
+        107,
+        107,
+        545,
+        545,
+        545,
+        653,
+        653,
+        138,
+        138,
+        138,
+        654,
+        654,
+        1070,
+        1070,
+        1070,
+        771,
+        578,
+        578,
+        641,
+        641,
+        781,
+        781,
+        639,
+        639,
+        639,
+        89,
+        89,
+        278,
+        278,
+        947,
+        649,
+        96,
+        272,
+        723,
+        723,
+        723,
+        577,
+        577,
+        1199,
+        1199,
+        1199,
+        1017,
+        1017,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 60,
+      "extra_count": 0,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#o",
+      "faq_section": "o",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Banner of Courage",
+          "card_id": 739,
+          "canon_name": "Banner of Courage",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Legendary Sword",
+          "card_id": 107,
+          "canon_name": "Legendary Sword",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Lightning Blade",
+          "card_id": 545,
+          "canon_name": "Lightning Blade",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Reinforcements of the Army",
+          "card_id": 653,
+          "canon_name": "Reinforcement of the Army",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Sogen",
+          "card_id": 138,
+          "canon_name": "Sogen",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "The Warrior Returning Alive",
+          "card_id": 654,
+          "canon_name": "The Warrior Returning Alive",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Chain Burst",
+          "card_id": 1070,
+          "canon_name": "Chain Burst",
+          "count": 3,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Thunder of Ruler",
+          "card_id": 771,
+          "canon_name": "Thunder of Ruler",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Amazon Archer",
+          "card_id": 578,
+          "canon_name": "Amazon Archer",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Amazoness Fighter",
+          "card_id": 641,
+          "canon_name": "Amazoness Fighter",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Amazoness Paladin",
+          "card_id": 781,
+          "canon_name": "Amazoness Paladin",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Amazoness Swords Woman",
+          "card_id": 639,
+          "canon_name": "Amazoness Swords Woman",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Beautiful Headhuntress",
+          "card_id": 89,
+          "canon_name": "Beautiful Headhuntress",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Hibikime",
+          "card_id": 278,
+          "canon_name": "Hibikime",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Lady Ninja Yae",
+          "card_id": 947,
+          "canon_name": "Lady Ninja Yae",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Maurading Captain",
+          "card_id": 649,
+          "canon_name": "Marauding Captain",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Princess of Tsurugi",
+          "card_id": 96,
+          "canon_name": "Princess of Tsurugi",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Queen's Double",
+          "card_id": 272,
+          "canon_name": "Queen's Double",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Queen's Knight",
+          "card_id": 723,
+          "canon_name": "Queen's Knight",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "The Unfriendly Amazon",
+          "card_id": 577,
+          "canon_name": "The Unfriendly Amazon",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Wasteland Amazon",
+          "card_id": 1199,
+          "canon_name": "Wasteland Amazon",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Penumbral Soldier Lady",
+          "card_id": 1017,
+          "canon_name": "Penumbral Soldier Lady",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: ...it's complete'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "dba8ecfb49e513e725d0135572d3a8deb07714b4a19cdae89aaebf5fbb85dcde"
+    },
+    {
+      "id": "mindy_year1",
+      "name": "Mindy - Year 1",
+      "type": "opponent",
+      "opponent": "mindy",
+      "archetype": "Beatdown",
+      "main": [
+        377,
+        831,
+        95,
+        910,
+        490,
+        416,
+        614,
+        979,
+        935,
+        1051,
+        512,
+        23,
+        830,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 28,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#p",
+      "faq_section": "p",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Dark Magic Curtain",
+          "card_id": 377,
+          "canon_name": "Dark Magic Curtain",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Knight's Title",
+          "card_id": 831,
+          "canon_name": "Knight's Title",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Dimension Warrior",
+          "card_id": 95,
+          "canon_name": "Dimensional Warrior",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Getsu Fuhma",
+          "card_id": 910,
+          "canon_name": "Getsu Fuhma",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Harpie's Brother",
+          "card_id": 490,
+          "canon_name": "Harpie's Brother",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Neo the Magic Swordsman",
+          "card_id": 416,
+          "canon_name": "Neo the Magic Swordsman",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Obnoxious Celtic Guardian",
+          "card_id": 614,
+          "canon_name": "Obnoxious Celtic Guard",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Sand Gambler",
+          "card_id": 979,
+          "canon_name": "Sand Gambler",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Sealmaster Meisei",
+          "card_id": 935,
+          "canon_name": "Sealmaster Meisei",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Tactical Espionage Expert",
+          "card_id": 1051,
+          "canon_name": "Tactical Espionage Expert",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Fairy King Truesdale",
+          "card_id": 512,
+          "canon_name": "Fairy King Truesdale",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Dark Magician",
+          "card_id": 23,
+          "canon_name": "Dark Magician",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Dark Magician Knight",
+          "card_id": 830,
+          "canon_name": "Dark Magician Knight",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 12,
+      "unresolved_reason": "FAQ v1.4: fixed cards plus a 20-card random normal-monster pool; deck is not a fixed 40-card list.",
+      "random_pool": [
+        {
+          "name": "Armaill",
+          "card_id": 72
+        },
+        {
+          "name": "Bone Mouse",
+          "card_id": 242
+        },
+        {
+          "name": "Enchanting Mermaid",
+          "card_id": 93
+        },
+        {
+          "name": "Fire Eye",
+          "card_id": 74
+        },
+        {
+          "name": "Flame Manipulator",
+          "card_id": 58
+        },
+        {
+          "name": "Flying Fish",
+          "card_id": 530
+        },
+        {
+          "name": "Frenzied Panda",
+          "card_id": 78
+        },
+        {
+          "name": "Mystical Elf",
+          "card_id": 2
+        },
+        {
+          "name": "Oppressed People",
+          "card_id": 752
+        },
+        {
+          "name": "Petit Dragon",
+          "card_id": 77
+        },
+        {
+          "name": "People Running About",
+          "card_id": 751
+        },
+        {
+          "name": "Red Archery Girl",
+          "card_id": 327
+        },
+        {
+          "name": "Ryu-Kishin",
+          "card_id": 4
+        },
+        {
+          "name": "Snakeyashi",
+          "card_id": 269
+        },
+        {
+          "name": "Sonic Duck",
+          "card_id": 779
+        },
+        {
+          "name": "Souleater",
+          "card_id": 520
+        },
+        {
+          "name": "Spherous Lady",
+          "card_id": 533
+        },
+        {
+          "name": "Trakadon",
+          "card_id": 255
+        },
+        {
+          "name": "United Resistance",
+          "card_id": 753
+        },
+        {
+          "name": "Wings of Wickid Flame",
+          "card_id": null
+        }
+      ],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "0303e1f182644ecf62cd5f2466e2f10a754174725a81137a7bfc982d291a8978"
+    },
+    {
+      "id": "pharaoh_year1",
+      "name": "Pharaoh - Year 1",
+      "type": "opponent",
+      "opponent": "pharaoh",
+      "archetype": "Beast",
+      "main": [
+        114,
+        120,
+        1090,
+        1095,
+        242,
+        1075,
+        442,
+        183,
+        838,
+        888,
+        909,
+        1082,
+        100,
+        837,
+        342,
+        1054,
+        34,
+        1005,
+        853,
+        565,
+        507,
+        757,
+        1112,
+        1169,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 39,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#q",
+      "faq_section": "q",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Beast Fangs",
+          "card_id": 114,
+          "canon_name": "Beast Fangs",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Horn Of The Unicorn",
+          "card_id": 120,
+          "canon_name": "Horn of the Unicorn",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Poison Fangs",
+          "card_id": 1090,
+          "canon_name": "Poison Fangs",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "The Big March Of Animals",
+          "card_id": 1095,
+          "canon_name": "The Big March of Animals",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Bone Mouse",
+          "card_id": 242,
+          "canon_name": "Bone Mouse",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Chu-Ske The Mouse Fighter",
+          "card_id": 1075,
+          "canon_name": "Chu-Ske the Mouse Fighter",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Giant Rat",
+          "card_id": 442,
+          "canon_name": "Giant Rat",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Giga-Tech Wolf",
+          "card_id": 183,
+          "canon_name": "Giga-Tech Wolf",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Iron Blacksmith Kotetsu",
+          "card_id": 838,
+          "canon_name": "Iron Blacksmith Kotetsu",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mad Dog of Darkness",
+          "card_id": 888,
+          "canon_name": "Mad Dog of Darkness",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Manju of the Ten Thousand Hands",
+          "card_id": 909,
+          "canon_name": "Manju of the Ten Thousand Hands",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mecha-Dog Marron",
+          "card_id": 1082,
+          "canon_name": "Mecha-Dog Marron",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mystical Sheep #2",
+          "card_id": 100,
+          "canon_name": "Mystical Sheep #2",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Outstanding Dog Marron",
+          "card_id": 837,
+          "canon_name": "Outstanding Dog Marron",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Panther Warrior",
+          "card_id": 342,
+          "canon_name": "Panther Warrior",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Pitch-Black Warwolf",
+          "card_id": 1054,
+          "canon_name": "Pitch-Black Warwolf",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Silver Fang",
+          "card_id": 34,
+          "canon_name": "Silver Fang",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Skull Dog Marron",
+          "card_id": 1005,
+          "canon_name": "Skull Dog Marron",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Soul Tiger",
+          "card_id": 853,
+          "canon_name": "Soul Tiger",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "The All-Seeing White Tiger",
+          "card_id": 565,
+          "canon_name": "The All-Seeing White Tiger",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Wolf Axewielder",
+          "card_id": 507,
+          "canon_name": "Wolf Axwielder",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Zombie Tiger",
+          "card_id": 757,
+          "canon_name": "Zombie Tiger",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Ancient Gear Beast",
+          "card_id": 1112,
+          "canon_name": "Ancient Gear Beast",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Mechanical Hound",
+          "card_id": 1169,
+          "canon_name": "Mechanical Hound",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 1,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Nothing'. Known fixed cards + 15-card Year 1 generic shell = 39; the FAQ's optional 16th generic slot is not identified.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "2545203bed2218829e8b3654613c080775ef6bc0d115d6017de05725ddc5f512"
+    },
+    {
+      "id": "sartyr_year1",
+      "name": "Sartyr - Year 1",
+      "type": "opponent",
+      "opponent": "sartyr",
+      "archetype": "Knowledge",
+      "main": [
+        632,
+        632,
+        1058,
+        1058,
+        910,
+        910,
+        562,
+        562,
+        562,
+        676,
+        676,
+        676,
+        1116,
+        1116,
+        262,
+        262,
+        262,
+        1165,
+        1165,
+        1165,
+        1073,
+        1073,
+        1073,
+        67,
+        67,
+        778,
+        778,
+        778,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 43,
+      "extra_count": 0,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#r",
+      "faq_section": "r",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Cyclon Laser",
+          "card_id": 632,
+          "canon_name": "Cyclon Laser",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "A-Team: Trap Disposal Unit",
+          "card_id": 1058,
+          "canon_name": "A-Team: Trap Disposal Unit",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Getsu Fuhma",
+          "card_id": 910,
+          "canon_name": "Getsu Fuhma",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Gradius",
+          "card_id": 562,
+          "canon_name": "Gradius",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Gradius' Option",
+          "card_id": 676,
+          "canon_name": "Gradius' Option",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Moai Interceptor Cannons",
+          "card_id": 1116,
+          "canon_name": "Moai Interceptor Cannons",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Penguin Soldier",
+          "card_id": 262,
+          "canon_name": "Penguin Soldier",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Soitsu",
+          "card_id": 1165,
+          "canon_name": "Soitsu",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Space Mambo",
+          "card_id": 1073,
+          "canon_name": "Space Mambo",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Tainted Wisdom",
+          "card_id": 67,
+          "canon_name": "Tainted Wisdom",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Aitsu",
+          "card_id": 778,
+          "canon_name": "Aitsu",
+          "count": 3,
+          "category": "monster56",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Complete'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "1cc22ea63897d162bd055a12e73b3dff223711c017c0c22110dd18829184bc73"
+    },
+    {
+      "id": "syrus_year1",
+      "name": "Syrus Truesdale - Year 1",
+      "type": "opponent",
+      "opponent": "syrus",
+      "archetype": "Vehicroid",
+      "main": [
+        117,
+        117,
+        117,
+        637,
+        637,
+        410,
+        1025,
+        556,
+        556,
+        381,
+        964,
+        368,
+        1058,
+        1039,
+        1039,
+        1039,
+        1057,
+        1057,
+        1057,
+        1150,
+        1146,
+        1148,
+        1148,
+        1040,
+        1147,
+        1149,
+        1149,
+        1056,
+        1151,
+        1151,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [
+        1155
+      ],
+      "main_count": 45,
+      "extra_count": 1,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#s",
+      "faq_section": "s",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Black Pendant",
+          "card_id": 117,
+          "canon_name": "Black Pendant",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Fusion Gate",
+          "card_id": 637,
+          "canon_name": "Fusion Gate",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Fusion Sage",
+          "card_id": 410,
+          "canon_name": "Fusion Sage",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Fusion Weapon",
+          "card_id": 1025,
+          "canon_name": "Fusion Weapon",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Limiter Removal",
+          "card_id": 556,
+          "canon_name": "Limiter Removal",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Polymerization",
+          "card_id": 381,
+          "canon_name": "Polymerization",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Shield Crash",
+          "card_id": 964,
+          "canon_name": "Shield Crash",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Negate Attack",
+          "card_id": 368,
+          "canon_name": "Negate Attack",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "A-Team: Trap Disposal Unit",
+          "card_id": 1058,
+          "canon_name": "A-Team: Trap Disposal Unit",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Bokoichi the Freightening Car",
+          "card_id": 1039,
+          "canon_name": "Bokoichi the Freightening Car",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Dekoichi the Battlechained Locotmotive",
+          "card_id": 1057,
+          "canon_name": "Dekoichi the Battlechanted Locomotive",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Drilloid",
+          "card_id": 1150,
+          "canon_name": "Drillroid",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Cycroid",
+          "card_id": 1146,
+          "canon_name": "Cycroid",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Gyroid",
+          "card_id": 1148,
+          "canon_name": "Gyroid",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Harpie Girl",
+          "card_id": 1040,
+          "canon_name": "Harpie Girl",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Patroid",
+          "card_id": 1147,
+          "canon_name": "Patroid",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Steamroid",
+          "card_id": 1149,
+          "canon_name": "Steamroid",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Big Core",
+          "card_id": 1056,
+          "canon_name": "Big Core",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "UFOroid",
+          "card_id": 1151,
+          "canon_name": "UFOroid",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Steam Gyroid",
+          "card_id": 1155,
+          "canon_name": "Steam Gyroid",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Complete'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "a5e924334552c52ea5e0cef60fbf4b135583a97e632ceca942374583b8f4c2ea"
+    },
+    {
+      "id": "torrey_year1",
+      "name": "Torrey - Year 1",
+      "type": "opponent",
+      "opponent": "torrey",
+      "archetype": "Occult",
+      "main": [
+        603,
+        476,
+        476,
+        402,
+        403,
+        380,
+        380,
+        975,
+        975,
+        571,
+        604,
+        604,
+        600,
+        600,
+        725,
+        725,
+        725,
+        2,
+        79,
+        570,
+        570,
+        981,
+        599,
+        599,
+        598,
+        247,
+        247,
+        974,
+        974,
+        786,
+        786,
+        605,
+        605,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 48,
+      "extra_count": 0,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#t",
+      "faq_section": "t",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "The Dark Door",
+          "card_id": 603,
+          "canon_name": "The Dark Door",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "The Shallow Grave",
+          "card_id": 476,
+          "canon_name": "The Shallow Grave",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Magic Jammer",
+          "card_id": 402,
+          "canon_name": "Magic Jammer",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Seven Tools of the Bandit",
+          "card_id": 403,
+          "canon_name": "Seven Tools of the Bandit",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Trap Hole",
+          "card_id": 380,
+          "canon_name": "Trap Hole",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Aswan Apparition",
+          "card_id": 975,
+          "canon_name": "Aswan Apparition",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Dokuroyaiba",
+          "card_id": 571,
+          "canon_name": "Dokuroyaiba",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Earthbound Spirit",
+          "card_id": 604,
+          "canon_name": "Earthbound Spirit",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Headless Knight",
+          "card_id": 600,
+          "canon_name": "Headless Knight",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Master Kyonshee",
+          "card_id": 725,
+          "canon_name": "Master Kyonshee",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mystical Elf",
+          "card_id": 2,
+          "canon_name": "Mystical Elf",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Phantom Ghost",
+          "card_id": 79,
+          "canon_name": "Phantom Ghost",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Souls of the Forgotten",
+          "card_id": 570,
+          "canon_name": "Souls of the Forgotten",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Spirit Caller",
+          "card_id": 981,
+          "canon_name": "Spirit Caller",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "The Gross Ghost of Fled Dreams",
+          "card_id": 599,
+          "canon_name": "The Gross Ghost of Fled Dreams",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "The Portrait's Secret",
+          "card_id": 598,
+          "canon_name": "The Portrait's Secret",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "The Wandering Doomed",
+          "card_id": 247,
+          "canon_name": "The Wandering Doomed",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Theban Nightmare",
+          "card_id": 974,
+          "canon_name": "Theban Nightmare",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Magical Marionette",
+          "card_id": 786,
+          "canon_name": "Magical Marionette",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "The Earl of Demise",
+          "card_id": 605,
+          "canon_name": "The Earl of Demise",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Complete'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "3efbeccb414d559db67d55a23477a35d78129b24d9433d783069138e9f55f4c0"
+    },
+    {
+      "id": "zane_year1",
+      "name": "Zane Truesdale - Year 1",
+      "type": "opponent",
+      "opponent": "zane",
+      "archetype": "Cyber Dragon / Fusion",
+      "main": [
+        290,
+        1185,
+        1185,
+        637,
+        556,
+        556,
+        556,
+        436,
+        1159,
+        1159,
+        1159,
+        153,
+        546,
+        503,
+        816,
+        816,
+        816,
+        440,
+        186,
+        1148,
+        907,
+        184,
+        184,
+        184,
+        350,
+        1149,
+        615,
+        940,
+        1152,
+        1152,
+        1152,
+        180,
+        1151,
+        340,
+        160,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [
+        1158,
+        1157
+      ],
+      "main_count": 50,
+      "extra_count": 2,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#v",
+      "faq_section": "v",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Black Luster Ritual",
+          "card_id": 290,
+          "canon_name": "Black Luster Ritual",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Dragon's Mirror",
+          "card_id": 1185,
+          "canon_name": "Dragon's Mirror",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Fusion Gate",
+          "card_id": 637,
+          "canon_name": "Fusion Gate",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Limiter Removal",
+          "card_id": 556,
+          "canon_name": "Limiter Removal",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Mystical Space Typhoon",
+          "card_id": 436,
+          "canon_name": "Mystical Space Typhoon",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Power Bond",
+          "card_id": 1159,
+          "canon_name": "Power Bond",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Swords Of Revealing Light",
+          "card_id": 153,
+          "canon_name": "Swords of Revealing Light",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Fairy Box",
+          "card_id": 546,
+          "canon_name": "Fairy Box",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Ring Of Destruction",
+          "card_id": 503,
+          "canon_name": "Ring of Destruction",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Battle Footballer",
+          "card_id": 816,
+          "canon_name": "Battle Footballer",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Cyber Jar",
+          "card_id": 440,
+          "canon_name": "Cyber Jar",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Cyber-Stein",
+          "card_id": 186,
+          "canon_name": "Cyber-Stein",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Gyroid",
+          "card_id": 1148,
+          "canon_name": "Gyroid",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mataza the Zapper",
+          "card_id": 907,
+          "canon_name": "Mataza the Zapper",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Mechanicalchaser",
+          "card_id": 184,
+          "canon_name": "Mechanicalchaser",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Reflect Bounder",
+          "card_id": 350,
+          "canon_name": "Reflect Bounder",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Steamroid",
+          "card_id": 1149,
+          "canon_name": "Steamroid",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Zombyra The Dark",
+          "card_id": 615,
+          "canon_name": "Zombyra the Dark",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Blowback Dragon",
+          "card_id": 940,
+          "canon_name": "Blowback Dragon",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Cyber Dragon",
+          "card_id": 1152,
+          "canon_name": "Cyber Dragon",
+          "count": 3,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Machine King",
+          "card_id": 180,
+          "canon_name": "Machine King",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "UFOroid",
+          "card_id": 1151,
+          "canon_name": "UFOroid",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Barrel Dragon",
+          "card_id": 340,
+          "canon_name": "Barrel Dragon",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Black Luster Soldier",
+          "card_id": 160,
+          "canon_name": "Black Luster Soldier",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Black Luster Soldier - Envoy Of The Beginning",
+          "card_id": 868,
+          "canon_name": "Black Luster Soldier - Envoy of the Beginning",
+          "count": 1,
+          "category": "monster7",
+          "optional": true
+        },
+        {
+          "name": "Chaos Emperor Dragon - Envoy Of The End",
+          "card_id": 886,
+          "canon_name": "Chaos Emperor Dragon - Envoy of the End",
+          "count": 1,
+          "category": "monster7",
+          "optional": true
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Cyber End Dragon",
+          "card_id": 1158,
+          "canon_name": "Cyber End Dragon",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        },
+        {
+          "name": "Cyber Twin Dragon",
+          "card_id": 1157,
+          "canon_name": "Cyber Twin Dragon",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        },
+        {
+          "name": "Gatling Dragon",
+          "card_id": 1088,
+          "canon_name": "Gatling Dragon",
+          "count": 1,
+          "category": "extra",
+          "optional": true
+        },
+        {
+          "name": "Steam Gyroid",
+          "card_id": 1155,
+          "canon_name": "Steam Gyroid",
+          "count": 1,
+          "category": "extra",
+          "optional": true
+        }
+      ],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Complete (pain-in-the-rear)'.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "f6eba83b1bc75495710d4d88a1f6ab8d5677e563804353bc30b93587e60e4baf"
+    },
+    {
+      "id": "shadow_duelist_year1",
+      "name": "The Shadow Duelist - Year 1",
+      "type": "opponent",
+      "opponent": "shadow_duelist",
+      "archetype": "Archfiend",
+      "main": [
+        836,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 16,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#w",
+      "faq_section": "w",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Archfiend Soldier",
+          "card_id": 836,
+          "canon_name": "Archfiend Soldier",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 24,
+      "unresolved_reason": "FAQ v1.4: only Archfiend Soldier remembered ('Yep...that's all I remember...'). 24 unknown slots remain after the known card and the 15-card generic shell.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "308402b6ab7cb053f951df13b3cc2da5021d045adfdf4ee258b2d57b79176228"
+    },
+    {
+      "id": "mimicry_year1",
+      "name": "Mimicry / Test Proctor - Year 1",
+      "type": "opponent",
+      "opponent": "mimicry",
+      "archetype": "Life-gain",
+      "main": [
+        796,
+        796,
+        796,
+        822,
+        822,
+        411,
+        411,
+        499,
+        499,
+        499,
+        463,
+        463,
+        463,
+        579,
+        579,
+        579,
+        811,
+        811,
+        811,
+        486,
+        486,
+        486,
+        448,
+        448,
+        448,
+        590,
+        590,
+        908,
+        908,
+        812,
+        812,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 46,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#x",
+      "faq_section": "x",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Big Bang Shot",
+          "card_id": 796,
+          "canon_name": "Big Bang Shot",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Shinato's Ark",
+          "card_id": 822,
+          "canon_name": "Shinato's Ark",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Sword of the Deep-Seated",
+          "card_id": 411,
+          "canon_name": "Sword of Deep-Seated",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Enchanted Javelin",
+          "card_id": 499,
+          "canon_name": "Enchanted Javelin",
+          "count": 3,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Numinous Healer",
+          "card_id": 463,
+          "canon_name": "Numinous Healer",
+          "count": 3,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Fire Princess",
+          "card_id": 579,
+          "canon_name": "Fire Princess",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Granadora",
+          "card_id": 811,
+          "canon_name": "Granadora",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Kiseitai",
+          "card_id": 486,
+          "canon_name": "Kiseitai",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Nimble Momonga",
+          "card_id": 448,
+          "canon_name": "Nimble Momonga",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Marie the Fallen One",
+          "card_id": 590,
+          "canon_name": "Marie the Fallen One",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Guardian Angel Joan",
+          "card_id": 908,
+          "canon_name": "Guardian Angel Joan",
+          "count": 2,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Shinato, King of a Higher Plane",
+          "card_id": 812,
+          "canon_name": "Shinato, King of a Higher Plane",
+          "count": 2,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: I've gotta see if I memorized this correctly...' (author unverified).",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "b739a82d62750dffcddb317ed60bb3c3133ef820954ae356343f837fe83e3311"
+    },
+    {
+      "id": "topher_year1",
+      "name": "Topher - Year 1",
+      "type": "opponent",
+      "opponent": "topher",
+      "archetype": "Burn",
+      "main": [
+        336,
+        447,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 17,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#event",
+      "faq_section": "event",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Blast Sphere",
+          "card_id": 336,
+          "canon_name": "Blast Sphere",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Giant Germ",
+          "card_id": 447,
+          "canon_name": "Giant Germ",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 23,
+      "unresolved_reason": "Yugipedia Opponents page gives only Blast Sphere and Giant Germ; the rest of the deck is undocumented. 23 slots remain after the two signature cards and the 15-card generic shell.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "0a57473288d78bfc120dc7a0c387d03a33761a8ffbacdbc705f7a882b01cc9e4"
+    },
+    {
+      "id": "conklin_year1",
+      "name": "Conklin - Year 1",
+      "type": "opponent",
+      "opponent": "conklin",
+      "archetype": "basic Fire",
+      "main": [
+        444,
+        892,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [],
+      "main_count": 17,
+      "extra_count": 0,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#event",
+      "faq_section": "event",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "UFO Turtle",
+          "card_id": 444,
+          "canon_name": "UFO Turtle",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Blazing Inpachi",
+          "card_id": 892,
+          "canon_name": "Blazing Inpachi",
+          "count": 1,
+          "category": "monster14",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 23,
+      "unresolved_reason": "Yugipedia Opponents page gives only UFO Turtle and Blazing Inpachi; the rest of the deck is undocumented. 23 slots remain after the two signature cards and the 15-card generic shell.",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "db70ac9c3ff8b9dc7e5e27f009f10a8bb7f7c194dfed88c4483f8ca87456fd05"
+    },
+    {
+      "id": "sheppard_year1",
+      "name": "Chancellor Sheppard - Year 1",
+      "type": "opponent",
+      "opponent": "sheppard",
+      "archetype": "Dragon",
+      "main": [
+        951,
+        951,
+        121,
+        121,
+        1185,
+        1185,
+        282,
+        282,
+        505,
+        505,
+        505,
+        662,
+        661,
+        503,
+        186,
+        186,
+        186,
+        165,
+        165,
+        165,
+        655,
+        655,
+        656,
+        656,
+        656,
+        502,
+        502,
+        502,
+        663,
+        663,
+        1,
+        1,
+        1,
+        375,
+        370,
+        422,
+        387,
+        477,
+        428,
+        497,
+        552,
+        402,
+        402,
+        421,
+        403,
+        403,
+        547,
+        348
+      ],
+      "extra": [
+        166,
+        166,
+        166
+      ],
+      "main_count": 48,
+      "extra_count": 3,
+      "complete": true,
+      "status": "complete",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#y",
+      "faq_section": "y",
+      "use_generic_shell": true,
+      "fixed_cards": [
+        {
+          "name": "Burst Stream of Destruction",
+          "card_id": 951,
+          "canon_name": "Burst Stream of Destruction",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Dragon Treasure",
+          "card_id": 121,
+          "canon_name": "Dragon Treasure",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Dragon's Mirror",
+          "card_id": 1185,
+          "canon_name": "Dragon's Mirror",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Megamorph",
+          "card_id": 282,
+          "canon_name": "Megamorph",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Sebek's Blessing",
+          "card_id": 505,
+          "canon_name": "Sebek's Blessing",
+          "count": 3,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Burst Breath",
+          "card_id": 662,
+          "canon_name": "Burst Breath",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Dragon's Rage",
+          "card_id": 661,
+          "canon_name": "Dragon's Rage",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Ring of Destruction",
+          "card_id": 503,
+          "canon_name": "Ring of Destruction",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Cyber-Stein",
+          "card_id": 186,
+          "canon_name": "Cyber-Stein",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "La Jinn the Mystical Genie",
+          "card_id": 165,
+          "canon_name": "La Jinn the Mystical Genie of the Lamp",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Spear Dragon",
+          "card_id": 655,
+          "canon_name": "Spear Dragon",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "The Dragon Dwelling in the Cave",
+          "card_id": 656,
+          "canon_name": "The Dragon dwelling in the Cave",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Vorse Raider",
+          "card_id": 502,
+          "canon_name": "Vorse Raider",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Emerald Dragon",
+          "card_id": 663,
+          "canon_name": "Luster Dragon",
+          "count": 2,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Blue-Eyes White Dragon",
+          "card_id": 1,
+          "canon_name": "Blue-Eyes White Dragon",
+          "count": 3,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Blue-Eyes Ultimate Dragon",
+          "card_id": 166,
+          "canon_name": "Blue-Eyes Ultimate Dragon",
+          "count": 3,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 0,
+      "unresolved_reason": "FAQ v1.4: 'Missing: Complete, unless this guy's got a F.G.D., too.'",
+      "random_pool": [],
+      "notes": [
+        "Fixed cards and counts transcribed from the named FAQ section.",
+        "Year 1 generic shell appended where use_generic_shell is true."
+      ],
+      "sha256": "25c4005179fc74f48dc1c7200ad7bc0479946bf0a2bed57e717db4133cfb1056"
     },
     {
       "id": "jaden_year1",
       "name": "Jaden Yuki - Year 1",
       "type": "opponent",
       "opponent": "jaden",
+      "archetype": "Elemental HERO / Dragon",
       "main": [
-        25,
         363,
         1106,
         1106,
@@ -211,7 +5760,6 @@
         655,
         1110,
         1161,
-        16,
         375,
         1185,
         1025,
@@ -228,7 +5776,6 @@
         428,
         1162,
         593,
-        12,
         921,
         497,
         1136,
@@ -248,653 +5795,886 @@
         1200,
         722
       ],
-      "main_count": 56,
+      "main_count": 53,
       "extra_count": 4,
       "complete": true,
-      "source": "C:/dev/argh/game3d/src/duel/decklists.js (donor implementation)",
+      "status": "complete",
       "confidence": "medium",
+      "source": "game3d/src/duel/decklists.js (local donor; not committed) + https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#n",
+      "faq_section": "n",
+      "use_generic_shell": false,
+      "fixed_cards": [
+        {
+          "name": "Cyber-Tech Alligator",
+          "card_id": 363,
+          "canon_name": "Cyber-Tech Alligator",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Avian",
+          "card_id": 1106,
+          "canon_name": "Elemental Hero Avian",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Avian",
+          "card_id": 1106,
+          "canon_name": "Elemental Hero Avian",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Burstinatrix",
+          "card_id": 1107,
+          "canon_name": "Elemental Hero Burstinatrix",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Burstinatrix",
+          "card_id": 1107,
+          "canon_name": "Elemental Hero Burstinatrix",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Clayman",
+          "card_id": 1108,
+          "canon_name": "Elemental Hero Clayman",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Clayman",
+          "card_id": 1108,
+          "canon_name": "Elemental Hero Clayman",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Sparkman",
+          "card_id": 1109,
+          "canon_name": "Elemental Hero Sparkman",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Sparkman",
+          "card_id": 1109,
+          "canon_name": "Elemental Hero Sparkman",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Luster Dragon",
+          "card_id": 780,
+          "canon_name": "Luster Dragon",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Luster Dragon",
+          "card_id": 780,
+          "canon_name": "Luster Dragon",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Luster Dragon",
+          "card_id": 663,
+          "canon_name": "Luster Dragon",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Luster Dragon",
+          "card_id": 663,
+          "canon_name": "Luster Dragon",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Cyber Jar",
+          "card_id": 440,
+          "canon_name": "Cyber Jar",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Bubbleman",
+          "card_id": 1154,
+          "canon_name": "Elemental Hero Bubbleman",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Bubbleman",
+          "card_id": 1154,
+          "canon_name": "Elemental Hero Bubbleman",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Hane-Hane",
+          "card_id": 239,
+          "canon_name": "Hane-Hane",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Kaiser Glider",
+          "card_id": 666,
+          "canon_name": "Kaiser Glider",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Man-Eater Bug",
+          "card_id": 221,
+          "canon_name": "Man-Eater Bug",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Penguin Soldier",
+          "card_id": 262,
+          "canon_name": "Penguin Soldier",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Spear Dragon",
+          "card_id": 655,
+          "canon_name": "Spear Dragon",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Spear Dragon",
+          "card_id": 655,
+          "canon_name": "Spear Dragon",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Spear Dragon",
+          "card_id": 655,
+          "canon_name": "Spear Dragon",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Winged Kuriboh",
+          "card_id": 1110,
+          "canon_name": "Winged Kuriboh",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Winged Kuriboh LV10",
+          "card_id": 1161,
+          "canon_name": "Winged Kuriboh LV10",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Card Destruction",
+          "card_id": 375,
+          "canon_name": "Card Destruction",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Dragon's Mirror",
+          "card_id": 1185,
+          "canon_name": "Dragon's Mirror",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Fusion Weapon",
+          "card_id": 1025,
+          "canon_name": "Fusion Weapon",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Fusion Weapon",
+          "card_id": 1025,
+          "canon_name": "Fusion Weapon",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Graceful Charity",
+          "card_id": 370,
+          "canon_name": "Graceful Charity",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Heavy Storm",
+          "card_id": 422,
+          "canon_name": "Heavy Storm",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Mage Power",
+          "card_id": 594,
+          "canon_name": "Mage Power",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Miracle Fusion",
+          "card_id": 1184,
+          "canon_name": "Miracle Fusion",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Monster Reincarnation",
+          "card_id": 1065,
+          "canon_name": "Monster Reincarnation",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Polymerization",
+          "card_id": 381,
+          "canon_name": "Polymerization",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Pot of Greed",
+          "card_id": 387,
+          "canon_name": "Pot of Greed",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Premature Burial",
+          "card_id": 477,
+          "canon_name": "Premature Burial",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Skyscraper",
+          "card_id": 1160,
+          "canon_name": "Skyscraper",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Snatch Steal",
+          "card_id": 428,
+          "canon_name": "Snatch Steal",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Transcendent Wings",
+          "card_id": 1162,
+          "canon_name": "Transcendent Wings",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "United We Stand",
+          "card_id": 593,
+          "canon_name": "United We Stand",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "A Hero Emerges",
+          "card_id": 921,
+          "canon_name": "A Hero Emerges",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Call of the Haunted",
+          "card_id": 497,
+          "canon_name": "Call of the Haunted",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Hero Signal",
+          "card_id": 1136,
+          "canon_name": "Hero Signal",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Magic Cylinder",
+          "card_id": 552,
+          "canon_name": "Magic Cylinder",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Magic Jammer",
+          "card_id": 402,
+          "canon_name": "Magic Jammer",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Magic Jammer",
+          "card_id": 402,
+          "canon_name": "Magic Jammer",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Mirror Force",
+          "card_id": 421,
+          "canon_name": "Mirror Force",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Negate Attack",
+          "card_id": 368,
+          "canon_name": "Negate Attack",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Seven Tools of the Bandit",
+          "card_id": 403,
+          "canon_name": "Seven Tools of the Bandit",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Seven Tools of the Bandit",
+          "card_id": 403,
+          "canon_name": "Seven Tools of the Bandit",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Torrential Tribute",
+          "card_id": 547,
+          "canon_name": "Torrential Tribute",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        },
+        {
+          "name": "Trap Hole",
+          "card_id": 380,
+          "canon_name": "Trap Hole",
+          "count": 1,
+          "category": "donor",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Elemental Hero Flame Wingman",
+          "card_id": 1129,
+          "canon_name": "Elemental Hero Flame Wingman",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Thunder Giant",
+          "card_id": 1130,
+          "canon_name": "Elemental Hero Thunder Giant",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        },
+        {
+          "name": "Elemental Hero Shining Flare Wingman",
+          "card_id": 1200,
+          "canon_name": "Elemental Hero Shining Flare Wingman",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        },
+        {
+          "name": "F.G.D.",
+          "card_id": 722,
+          "canon_name": "F.G.D.",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 0,
+      "unresolved_reason": "",
+      "random_pool": [],
       "notes": [
-        "Donor list, not independently verified against the ROM deck table."
+        "Donor implementation list (game3d/src/duel/decklists.js), not independently verified against a ROM deck table.",
+        "FAQ section n independently lists the same archetype; its character-specific list totals 34 cards before the generic shell and says a few cards are missing."
       ],
-      "sha256": "d6c93d62cc1c1a7af6158fc7110953862322b6fd5e42b8c08b9a70abc2a86d61"
+      "sha256": "34420c472d004ca7d3abe358b73397120648378c3bc2d2419f7113345c44fe3e"
     },
     {
-      "id": "banner_year1",
-      "name": "Lyman Banner - Year 1",
-      "type": "opponent",
-      "opponent": "banner",
-      "archetype": "Retro",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Gaia the Dragon Champion",
-        "Aqua Madoor",
-        "Kaiser Dragon",
-        "Mad Dog of Darkness"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "c7b98f08ed5c70a6558f62072ba4ea335ccbfb9f1c33f6342da9593e9afa71a8"
-    },
-    {
-      "id": "pharaoh_year1",
-      "name": "Pharaoh - Year 1",
-      "type": "opponent",
-      "opponent": "pharaoh",
+      "id": "jinzo_spirit",
+      "name": "Jinzo - Spirit Deck",
+      "type": "event",
+      "opponent": "jinzo",
       "archetype": "unclassified",
       "main": [],
       "extra": [],
       "main_count": 0,
       "extra_count": 0,
       "complete": false,
-      "signature_cards": [
-        "Ancient Gear Beast",
-        "Mechanical Hound"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "status": "unknown",
       "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "4907427f2706ab5897582d6db13a292d7dc9881f622dd09864ad8c05f1769a80"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_8:_Jinzo",
+      "faq_section": null,
+      "use_generic_shell": false,
+      "fixed_cards": [],
+      "extra_cards": [],
+      "unresolved_slots": 40,
+      "unresolved_reason": "E08 identifies the opponent as the spirit of Jinzo, but no deck list is published or extracted. Do not infer a 40-card list from the ace card.",
+      "random_pool": [],
+      "notes": [],
+      "sha256": "0ace799b6b5c21127d4a115244648f58c5d00fab8dbae22da364c1e99adf5619"
     },
     {
-      "id": "syrus_year1",
-      "name": "Syrus Truesdale - Year 1",
-      "type": "opponent",
-      "opponent": "syrus",
-      "archetype": "Vehicroid",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Black Pendant",
-        "Limiter Removal",
-        "Harpie Girl",
-        "Big Core",
-        "Steam Gyroid"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "dc56077eb990bf2caf5d4ef19cbc1ce655478fa2e79ebb82c0fd864caec2e4fa"
-    },
-    {
-      "id": "chumley_year1",
-      "name": "Chumley Huffington - Year 1",
-      "type": "opponent",
-      "opponent": "chumley",
-      "archetype": "Burn Beast",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Beast Fangs",
-        "Des Koala",
-        "Master of Oz",
-        "Poison Fangs"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "d5e42fe59b557fdcd0aab519c35aefb59015ac7357139b233ba7a887c11b75cd"
-    },
-    {
-      "id": "blair_year1",
-      "name": "Blair Flannigan - Year 1",
-      "type": "opponent",
-      "opponent": "blair",
-      "archetype": "Maiden",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Dark Magician Girl",
-        "Toon World",
-        "Spirit of the Breeze",
-        "Dancing Fairy",
-        "Toon Gemini Elf",
-        "White Magician Pikeru",
-        "Cyber Dragon"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "447b328bb09e587b6d3bf932fa19a3b476b7ca1c83c6cd57a80948d637ce1ec1"
-    },
-    {
-      "id": "gerard_year1",
-      "name": "Gerard - Year 1",
-      "type": "opponent",
-      "opponent": "gerard",
+      "id": "damon_exodia",
+      "name": "Damon - Exodia Draw (Event)",
+      "type": "event",
+      "opponent": "damon",
       "archetype": "unclassified",
-      "main": [],
+      "main": [
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
       "extra": [],
-      "main_count": 0,
+      "main_count": 5,
       "extra_count": 0,
       "complete": false,
-      "signature_cards": [
-        "Swamp Battleguard",
-        "Lava Battleguard",
-        "Hungry Burger",
-        "Chakra",
-        "Wasteland Amazon"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "status": "partial",
       "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "2244b9437db3f8814a8fe441dc450319e2b4c9beee7f747b320960d0937772ba"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_22:_Draw,_draw,_draw",
+      "faq_section": null,
+      "use_generic_shell": false,
+      "fixed_cards": [
+        {
+          "name": "Right Leg of the Forbidden One",
+          "card_id": 13,
+          "canon_name": "Right Leg of the Forbidden One",
+          "count": 1,
+          "category": "monster",
+          "optional": false
+        },
+        {
+          "name": "Left Leg of the Forbidden One",
+          "card_id": 14,
+          "canon_name": "Left Leg of the Forbidden One",
+          "count": 1,
+          "category": "monster",
+          "optional": false
+        },
+        {
+          "name": "Right Arm of the Forbidden One",
+          "card_id": 15,
+          "canon_name": "Right Arm of the Forbidden One",
+          "count": 1,
+          "category": "monster",
+          "optional": false
+        },
+        {
+          "name": "Left Arm of the Forbidden One",
+          "card_id": 16,
+          "canon_name": "Left Arm of the Forbidden One",
+          "count": 1,
+          "category": "monster",
+          "optional": false
+        },
+        {
+          "name": "Exodia the Forbidden One",
+          "card_id": 17,
+          "canon_name": "Exodia the Forbidden One",
+          "count": 1,
+          "category": "monster",
+          "optional": false
+        }
+      ],
+      "extra_cards": [],
+      "unresolved_slots": 35,
+      "unresolved_reason": "E22 says both sides use Damon's draw/Exodia deck, but no exact list is published. Only the five Exodia pieces are explicitly evidenced. The FAQ's complete Damon deck is a different draw deck with no Exodia pieces; the event deck therefore remains unresolved.",
+      "random_pool": [],
+      "notes": [],
+      "sha256": "0007d777c524f90dce6e8fde35ef108e931ef2d2f6744ea3eceb554c7ea114c4"
     },
     {
-      "id": "sartyr_year1",
-      "name": "Sartyr - Year 1",
-      "type": "opponent",
-      "opponent": "sartyr",
-      "archetype": "Knowledge",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Tainted Wisdom",
-        "Ancient Brain",
-        "Gradius",
-        "Maryokutai",
-        "Cyclon Laser",
-        "Gradius' Option",
-        "Aitsu",
-        "Koitsu",
-        "Soitsu",
-        "Doitsu"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "ced5ef7d230e7b81539f6c7de0bc2a420aeb607facc83664cf5291234795fedc"
-    },
-    {
-      "id": "bastion_year1",
-      "name": "Bastion Misawa - Year 1",
-      "type": "opponent",
-      "opponent": "bastion",
-      "archetype": "Magnet",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Sangan",
-        "Penguin Soldier",
-        "Hyozanryu",
-        "Alpha The Magnet Warrior",
-        "Beta The Magnet Warrior",
-        "Gamma The Magnet Warrior",
-        "Backup Soldier",
-        "Valkyrion the Magna Warrior",
-        "Vorse Raider",
-        "Dark Factory of Mass Production"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "cfb76df1479bbf10e86e97e0142889f7f1877d70761865e1b82da95e2d5da117"
-    },
-    {
-      "id": "dimitri_year1",
-      "name": "Dimitri - Year 1",
-      "type": "opponent",
+      "id": "yugi_deck",
+      "name": "Yugi Muto - Legendary Deck (Event)",
+      "type": "event",
       "opponent": "dimitri",
       "archetype": "unclassified",
+      "main": [
+        983,
+        983,
+        986,
+        986,
+        985,
+        381,
+        984,
+        153,
+        153,
+        575,
+        1036,
+        552,
+        552,
+        552,
+        402,
+        403,
+        403,
+        345,
+        345,
+        748,
+        748,
+        748,
+        31,
+        31,
+        723,
+        723,
+        723,
+        352,
+        749,
+        749,
+        749,
+        1031,
+        1086,
+        493,
+        493,
+        23,
+        23,
+        23,
+        896
+      ],
+      "extra": [
+        346,
+        776
+      ],
+      "main_count": 39,
+      "extra_count": 2,
+      "complete": false,
+      "status": "partial",
+      "confidence": "medium",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#u",
+      "faq_section": null,
+      "use_generic_shell": false,
+      "fixed_cards": [
+        {
+          "name": "Dark Magic Attack",
+          "card_id": 983,
+          "canon_name": "Special Hurricane",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Dark Magician's Tome of Black Magic",
+          "card_id": 986,
+          "canon_name": "7",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Dedication through Light and Darkness",
+          "card_id": 985,
+          "canon_name": "Soul Reversal",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Polymerization",
+          "card_id": 381,
+          "canon_name": "Polymerization",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Sage's Stone",
+          "card_id": 984,
+          "canon_name": "Order to Charge",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Swords of Revealing Light",
+          "card_id": 153,
+          "canon_name": "Swords of Revealing Light",
+          "count": 2,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Thousand Knives",
+          "card_id": 575,
+          "canon_name": "Thousand Knives",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Tricky's Magic 4",
+          "card_id": 1036,
+          "canon_name": "Tricky's Magic 4",
+          "count": 1,
+          "category": "spell",
+          "optional": false
+        },
+        {
+          "name": "Magic Cylinder",
+          "card_id": 552,
+          "canon_name": "Magic Cylinder",
+          "count": 3,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Magic Jammer",
+          "card_id": 402,
+          "canon_name": "Magic Jammer",
+          "count": 1,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Seven Tools of the Bandit",
+          "card_id": 403,
+          "canon_name": "Seven Tools of the Bandit",
+          "count": 2,
+          "category": "trap",
+          "optional": false
+        },
+        {
+          "name": "Berfomet",
+          "card_id": 345,
+          "canon_name": "Berfomet",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "King's Knight",
+          "card_id": 748,
+          "canon_name": "King's Knight",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Kuriboh",
+          "card_id": 31,
+          "canon_name": "Kuriboh",
+          "count": 2,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Queen's Knight",
+          "card_id": 723,
+          "canon_name": "Queen's Knight",
+          "count": 3,
+          "category": "monster14",
+          "optional": false
+        },
+        {
+          "name": "Dark Magician Girl",
+          "card_id": 352,
+          "canon_name": "Dark Magician Girl",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Jack's Knight",
+          "card_id": 749,
+          "canon_name": "Jack's Knight",
+          "count": 3,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "The Tricky",
+          "card_id": 1031,
+          "canon_name": "Tricky",
+          "count": 1,
+          "category": "monster56",
+          "optional": false
+        },
+        {
+          "name": "Black Luster Soldier - Envoy of the Beginning",
+          "card_id": 1086,
+          "canon_name": "Golem Sentry",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Buster Blader",
+          "card_id": 493,
+          "canon_name": "Buster Blader",
+          "count": 2,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Dark Magician",
+          "card_id": 23,
+          "canon_name": "Dark Magician",
+          "count": 3,
+          "category": "monster7",
+          "optional": false
+        },
+        {
+          "name": "Dark Magician of Chaos",
+          "card_id": 896,
+          "canon_name": "Dark Magician of Chaos",
+          "count": 1,
+          "category": "monster7",
+          "optional": false
+        }
+      ],
+      "extra_cards": [
+        {
+          "name": "Chimera the Flying Mythical Beast",
+          "card_id": 346,
+          "canon_name": "Chimera the Flying Mythical Beast",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        },
+        {
+          "name": "Dark Paladin",
+          "card_id": 776,
+          "canon_name": "Dark Paladin",
+          "count": 1,
+          "category": "extra",
+          "optional": false
+        }
+      ],
+      "unresolved_slots": 5,
+      "unresolved_reason": "FAQ v1.4: 'Missing: 5 or so (my guess is Gazelle x2, Magic Jammer, Swords of Revealing Light, and perhaps a Fusion Gate)'. The five cards are not encoded as facts.",
+      "random_pool": [],
+      "notes": [],
+      "sha256": "06964fbce10b9da6c9bbf59db0d4502ecf042bf4e6dbaacd0ebf38d50ca5b02b"
+    },
+    {
+      "id": "bastion_seventh",
+      "name": "Bastion Misawa - Seventh Deck",
+      "type": "event",
+      "opponent": "bastion",
+      "archetype": "unclassified",
       "main": [],
       "extra": [],
       "main_count": 0,
       "extra_count": 0,
       "complete": false,
-      "signature_cards": [
-        "Baby Dragon",
-        "Red-Eyes B. Dragon",
-        "B. Skull Dragon",
-        "Copycat",
-        "Graceful Dice",
-        "Skull Dice",
-        "Scapegoat",
-        "Polymerization",
-        "Alligator's Sword Dragon",
-        "Gearfried the Iron Knight",
-        "Fairy Box",
-        "Obnoxious Celtic Guard",
-        "Lady Ninja Yae",
-        "Red-Eyes Darkness Dragon"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "status": "unknown",
       "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "8cbe4ac02c752195dccded7618d15d78d9f0133645fa9a6ab33fdcfd44dafae8"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_26:_The_7th_Deck + dialogue index 4230",
+      "faq_section": null,
+      "use_generic_shell": false,
+      "fixed_cards": [],
+      "extra_cards": [],
+      "unresolved_slots": 40,
+      "unresolved_reason": "E26/Dialogue call it a new \"Seventh Deck\" built to beat Jaden, but no list or archetype is documented. Do not substitute Bastion's normal Magnet deck.",
+      "random_pool": [],
+      "notes": [],
+      "sha256": "fedbbdef68b09455bb816c6c66d606257d6b9c45f530e8da896292517fc79151"
     },
     {
-      "id": "brier_year1",
-      "name": "Brier - Year 1",
-      "type": "opponent",
-      "opponent": "brier",
-      "archetype": "Goblin",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Needle Worm",
-        "Robbin' Goblin",
-        "Goblin Attack Force",
-        "Giant Orc",
-        "Mefist the Infernal General",
-        "Robbin' Zombie",
-        "Goblin Elite Attack Force"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "9072414a0409013ba6a1537c14368e030b4e3c86d8462fa05db8974d76701269"
-    },
-    {
-      "id": "beauregard_year1",
-      "name": "Beauregard - Year 1",
-      "type": "opponent",
-      "opponent": "beauregard",
-      "archetype": "Goblin",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Goblin's Secret Remedy",
-        "Gaia Power",
-        "Fairy Meteor Crush",
-        "Goblin Attack Force",
-        "Dancing Fairy",
-        "Banner of Courage",
-        "Giant Orc",
-        "Big Bang Shot",
-        "Goblin Thief",
-        "Granmarg the Rock Monarch",
-        "Goblin Elite Attack Force"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "0ab0c30dcfc3ed31087bb29c177299c658265ce4a661b30218643bb5e7d4ca00"
-    },
-    {
-      "id": "crowler_year1",
-      "name": "Vellian Crowler - Year 1",
-      "type": "opponent",
-      "opponent": "crowler",
-      "archetype": "Ancient Gear",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Robotic Knight",
-        "Fairy Box",
-        "Limiter Removal",
-        "Bottomless Shifting Sand",
-        "Insect Knight",
-        "Ancient Gear Golem",
-        "Ancient Gear Beast",
-        "Ancient Gear Soldier",
-        "Steam Gyroid",
-        "Power Bond"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "c96ac6ad26ebd32b3b19dabba1c83b712c2ba814fa92872e4e04b4f6157319c7"
-    },
-    {
-      "id": "fontaine_year1",
-      "name": "Fonda Fontaine - Year 1",
-      "type": "opponent",
-      "opponent": "fontaine",
-      "archetype": "Winged Beast",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Harpie Lady",
-        "Harpie Lady Sisters",
-        "Faith Bird",
-        "Harpie's Pet Dragon",
-        "Birdface",
-        "Sonic Duck",
-        "Roc from the Valley of Haze",
-        "Harpie Lady 1",
-        "Harpie Lady 2",
-        "Harpie Lady 3",
-        "Eagle Eye",
-        "Harpies' Hunting Ground"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "f48cec2322578cf97044956f254e8d692b24cf87c52ddfe88215a23da84f229f"
-    },
-    {
-      "id": "zane_year1",
-      "name": "Zane Truesdale - Year 1",
-      "type": "opponent",
-      "opponent": "zane",
-      "archetype": "Cyber Dragon / Fusion",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Black Luster Soldier",
-        "Machine King",
-        "Mechanicalchaser",
-        "Cyber-Stein",
-        "Reflect Bounder",
-        "Polymerization",
-        "Limiter Removal",
-        "Zombyra the Dark",
-        "Fusion Gate",
-        "Battle Footballer",
-        "Mataza the Zapper",
-        "Gatling Dragon",
-        "UFOroid",
-        "Cyber Dragon",
-        "Steam Gyroid",
-        "Cyber Twin Dragon",
-        "Cyber End Dragon",
-        "Power Bond"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "ba7f596dc513a1cdf57b033435f6d04413fb077339c4643aa5e4239f477ed5fb"
-    },
-    {
-      "id": "chazz_year1",
-      "name": "Chazz Princeton - Year 1",
-      "type": "opponent",
-      "opponent": "chazz",
-      "archetype": "Dark",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Legendary Fiend",
-        "Newdoria",
-        "Master Kyonshee",
-        "Decayed Commander",
-        "Zombie Tiger",
-        "Mefist the Infernal General",
-        "Blood Sucker"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "4dbc4532120e44954979d3ad6570654302c0a039c7274d8989a2a6189e65341f"
-    },
-    {
-      "id": "topher_year1",
-      "name": "Topher - Year 1",
-      "type": "opponent",
-      "opponent": "topher",
-      "archetype": "Burn",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Blast Sphere",
-        "Giant Germ"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "91001e32b478c8bffae604f80e74e1d89175f3848e77e6db8d7383de572899ed"
-    },
-    {
-      "id": "conklin_year1",
-      "name": "Conklin - Year 1",
-      "type": "opponent",
-      "opponent": "conklin",
-      "archetype": "basic Fire",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "UFO Turtle",
-        "Blazing Inpachi"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "73b4a48dda7464a98b9a53bbda4fca7d21f10105f350e0481da02e71b33b57b8"
-    },
-    {
-      "id": "alexis_year1",
-      "name": "Alexis Rhodes - Year 1",
-      "type": "opponent",
-      "opponent": "alexis",
-      "archetype": "Fairy",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Dunames Dark Witch",
-        "Senju of the Thousand Hands",
-        "Numinous Healer",
-        "Enchanted Javelin",
-        "Hysteric Fairy",
-        "St. Joan",
-        "Mudora",
-        "Zolga",
-        "Agido",
-        "Shinato, King of a Higher Plane",
-        "Outstanding Dog Marron",
-        "Guardian Angel Joan",
-        "Manju of the Ten Thousand Hands",
-        "Warrior of Zera",
-        "Archlord Zerato",
-        "The Sanctuary in the Sky"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "92ba52b859fce25a06b7a01e7ffe439a43105488da7b6669d08175788d9901df"
-    },
-    {
-      "id": "mindy_year1",
-      "name": "Mindy - Year 1",
-      "type": "opponent",
-      "opponent": "mindy",
-      "archetype": "Beatdown",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Dark Magician",
-        "Dimensional Warrior",
-        "Dark Magic Curtain",
-        "Fairy King Truesdale",
-        "Obnoxious Celtic Guard",
-        "Dark Magician Knight",
-        "Knight's Title",
-        "Getsu Fuhma"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "175d603cabf2de520f34f9775399e27e654040e1e2ac4ce697fe635dde1ddba9"
-    },
-    {
-      "id": "jasmine_year1",
-      "name": "Jasmine - Year 1",
-      "type": "opponent",
-      "opponent": "jasmine",
-      "archetype": "Warrior",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Beautiful Headhuntress",
-        "Marauding Captain",
-        "Queen's Knight",
-        "Thunder of Ruler",
-        "Lady Ninja Yae",
-        "Penumbral Soldier Lady",
-        "Chain Burst"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "178be3383406c76a3b41684c387c14a05aa329ef0b94809bcf95b767a7bbccc5"
-    },
-    {
-      "id": "torrey_year1",
-      "name": "Torrey - Year 1",
-      "type": "opponent",
+      "id": "torrey_special",
+      "name": "Torrey - Special Player Deck",
+      "type": "player_override",
       "opponent": "torrey",
-      "archetype": "Fiend",
+      "archetype": "unclassified",
       "main": [],
       "extra": [],
       "main_count": 0,
       "extra_count": 0,
       "complete": false,
-      "signature_cards": [
-        "Jinzo",
-        "Headless Knight",
-        "Destiny Board",
-        "Earthbound Spirit",
-        "The Earl of Demise"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "status": "unknown",
       "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "70265a982f292d80c144e68b78d14ce7f4fdc5a9dc170f27477c20cfb683a620"
-    },
-    {
-      "id": "damon_year1",
-      "name": "Damon - Year 1",
-      "type": "opponent",
-      "opponent": "damon",
-      "archetype": "Draw",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "White Magical Hat",
-        "Muka Muka",
-        "Skelengel",
-        "Polymerization",
-        "Pot of Greed",
-        "Upstart Goblin",
-        "Airknight Parshath",
-        "Solemn Wishes",
-        "Jar of Greed",
-        "Reckless Greed",
-        "Enraged Muka Muka",
-        "Sanwitch",
-        "Poison Draw Frog"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "8bc871b78d7d5f46c8db9867ece01eb0774372a883ddd00d703ce46434dc0007"
-    },
-    {
-      "id": "mimicry_year1",
-      "name": "Mimicry - Year 1",
-      "type": "opponent",
-      "opponent": "mimicry",
-      "archetype": "Cure/Burn/Piercing",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Nimble Momonga",
-        "Numinous Healer",
-        "Kiseitai",
-        "Enchanted Javelin",
-        "Fire Princess",
-        "Marie the Fallen One",
-        "Cestus of Dagla",
-        "Big Bang Shot",
-        "Granadora",
-        "Shinato, King of a Higher Plane",
-        "Guardian Angel Joan"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "a698b316de51c772eacc594c0cfcafbaf5ce254354955305e033971e7253fed1"
-    },
-    {
-      "id": "shadow_duelist_year1",
-      "name": "The Shadow Duelist - Year 1",
-      "type": "opponent",
-      "opponent": "shadow_duelist",
-      "archetype": "Archfiend",
-      "main": [],
-      "extra": [],
-      "main_count": 0,
-      "extra_count": 0,
-      "complete": false,
-      "signature_cards": [
-        "Summoned Skull",
-        "Mask of Darkness",
-        "Axe of Despair",
-        "Malevolent Nuzzler",
-        "Yami",
-        "The Bistro Butcher",
-        "Beast of Talwar",
-        "Skull Dice",
-        "Sorcerer of the Doomed",
-        "Mystic Plasma Zone",
-        "Archfiend Soldier",
-        "Dark Mirror Force",
-        "Dark Factory of Mass Production",
-        "Dark Blade the Dragon Knight",
-        "Shadowslayer",
-        "King of the Skull Servants"
-      ],
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "low",
-      "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
-      "sha256": "72bf73e89bc7f4d0791a0bf243756a0af7f8c68a6c74cc50dc8f5e9844249848"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_7:_Occult_Recommendation",
+      "faq_section": null,
+      "use_generic_shell": false,
+      "fixed_cards": [],
+      "extra_cards": [],
+      "unresolved_slots": 40,
+      "unresolved_reason": "E07 makes the player use a special deck made by Torrey; no list is published. E07 still references this override; it is not an opponent deck.",
+      "random_pool": [],
+      "notes": [],
+      "sha256": "e38a5e49131d77be5c5b845b410907d215a3b91a4ba314ae1504b1070a93ef37"
     },
     {
       "id": "chazz_ojama",
@@ -907,6 +6687,9 @@
       "main_count": 0,
       "extra_count": 0,
       "complete": false,
+      "status": "unknown",
+      "unresolved_slots": 40,
+      "unresolved_reason": "Event 15 deck; full list not published.",
       "signature_cards": [
         "Ojama Yellow",
         "Ojama Green",
@@ -915,8 +6698,7 @@
         "Ojama Delta Hurricane!!"
       ],
       "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
-      "confidence": "medium",
-      "gap": "Event 15 deck; full list not published.",
+      "confidence": "low",
       "sha256": "860f0a150dc939a5528d9b0c4ffdf5ef7f2344039ab35ed6bd24bc6e82a57a8f"
     },
     {
@@ -930,18 +6712,20 @@
       "main_count": 0,
       "extra_count": 0,
       "complete": false,
+      "status": "unknown",
+      "unresolved_slots": 40,
+      "unresolved_reason": "Event 3 upgrade; full list not published.",
       "signature_cards": [
         "Elemental Hero Flame Wingman"
       ],
       "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",
-      "confidence": "medium",
-      "gap": "Event 3 upgrade; full list not published.",
+      "confidence": "low",
       "sha256": "82e8a4e2ae1469f912bbd5046385ef4956d24cc7ec687fba1c670e55a9932029"
     },
     {
       "id": "bastion_magnet",
       "name": "Bastion Misawa - Magnet",
-      "type": "opponent",
+      "type": "opponent_variant",
       "opponent": "bastion",
       "archetype": "Magnet Warrior",
       "main": [],
@@ -949,6 +6733,9 @@
       "main_count": 0,
       "extra_count": 0,
       "complete": false,
+      "status": "unknown",
+      "unresolved_slots": 40,
+      "unresolved_reason": "One of six Bastion decks; only signature cards documented.",
       "signature_cards": [
         "Alpha The Magnet Warrior",
         "Beta The Magnet Warrior",
@@ -956,9 +6743,8 @@
         "Valkyrion the Magna Warrior"
       ],
       "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
-      "confidence": "medium",
-      "gap": "One of six Bastion decks; only signature cards documented.",
-      "sha256": "80ef413b70f19eb43e82f961bc5b0323941097e31cc300f8da5397e0e7db092a"
+      "confidence": "low",
+      "sha256": "da9e4377b21e3752a93693285f8b17a9253f18d7f99f28a56079c3f827e7ebe2"
     }
   ]
 }

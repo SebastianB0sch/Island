@@ -19,7 +19,7 @@
     ],
     "field": [
       {
-        "card_id": 234,
+        "card_id": 749,
         "position": "attack",
         "face_up": true
       }
@@ -50,7 +50,7 @@
     },
     {
       "action": "attack",
-      "attacker_card_id": 234,
+      "attacker_card_id": 749,
       "target": "direct"
     }
   ],
@@ -60,8 +60,8 @@
   },
   "engine_ready": true,
   "confidence": "low",
-  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'ritual_summon', level 3, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
-  "notes": "Ritual Summon Legendary Flame Lord with Incandescent Ordeal, then attack for exact LP.",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'ritual_summon', level 3, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction. P047's field body is Level 5 so A04's lowest-level ritual tribute selection cannot consume it.",
+  "notes": "Ritual Summon Legendary Flame Lord with Incandescent Ordeal, then attack for exact LP. The field body is Level 5; the two Level 4 hand monsters are the deterministic ritual tributes.",
   "canon_reference": {
     "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
     "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_047",

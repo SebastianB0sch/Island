@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 864,
+  "name": "Gigantes",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card can only be Special Summoned by removing 1 EARTH monster in your Graveyard from play. When this card is destroyed and sent to the Graveyard as a result of battle, destroy all Spell and Trap Cards on the field.",
+  "notes": [
+    "The summoning condition is rules text; the script covers the destruction trigger."
+  ],
+  "scripts": [
+    {
+      "id": "864_battle_destroy_spell_traps",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Gigantes"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "all_spell_traps",
+        "count": "all"
+      },
+      "source_text": "This card can only be Special Summoned by removing 1 EARTH monster in your Graveyard from play. When this card is destroyed and sent to the Graveyard as a result of battle, destroy all Spell and Trap Cards on the field.",
+      "condition": {
+        "name": "Gigantes"
+      }
+    }
+  ]
+}

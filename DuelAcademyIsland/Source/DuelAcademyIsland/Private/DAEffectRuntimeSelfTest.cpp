@@ -70,6 +70,19 @@ namespace
 		return 0;
 	}
 
+	int32 CountCardsInArray(const TArray<FDuelCard>& Cards, int32 CardId)
+	{
+		int32 Count = 0;
+		for (const FDuelCard& Card : Cards)
+		{
+			if (Card.IsValid() && Card.Data.Id == CardId)
+			{
+				++Count;
+			}
+		}
+		return Count;
+	}
+
 	int32 FindUidInSide(const FDuelSide& Side, int32 CardId)
 	{
 		int32 Uid = FindUidInArray(Side.Monsters, CardId);
@@ -176,6 +189,66 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 				[SearchedUid](const FDuelCard& Card) { return Card.Uid == SearchedUid; }),
 				TEXT("Sangan searches a <=1500 ATK monster into the hand"));
 			Report.Check(Runtime->GetPromptCount() > 0, TEXT("Sangan target search prompted for a choice"));
+		}
+	}
+
+	// ---- self trigger binds to the event source uid, not the card name ----
+	{
+		FDuelEngine Duel(Database, 83);
+		Duel.SetAutoAnswerAllChoices(true);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_SELF_TRIGGER_TWO_COPIES"));
+		Scenario.PlayerField.Add(MakeMonster(1032, 0));
+		Scenario.PlayerHand = TArray<int32>{ 1032 };
+		Scenario.PlayerDeck = TArray<int32>{ 1034, 1034 };
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error),
+			TEXT("two-copy Green Gadget scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 HandGadgetUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Hand, 1032);
+		const int32 FieldGadgetUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Monsters, 1032);
+		Report.Check(Runtime != nullptr && HandGadgetUid != 0 && FieldGadgetUid != 0,
+			TEXT("two copies of Green Gadget are in hand and on the field"));
+		if (Runtime && HandGadgetUid != 0 && FieldGadgetUid != 0)
+		{
+			Runtime->ResetTestStats();
+			FString SummonError;
+			const bool bSummoned = Duel.NormalSummon(HandGadgetUid, TArray<int32>(), false, SummonError);
+			Report.Check(bSummoned && Duel.FindMonster(HandGadgetUid) != nullptr,
+				TEXT("the hand copy of Green Gadget is Normal Summoned"));
+			Report.Check(Runtime->GetExecutedScriptCount() == 1,
+				TEXT("only the summoned copy's on_summon script executes"));
+			Report.Check(CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Hand, 1034) == 1,
+				TEXT("the other Green Gadget copy does not search a second Red Gadget"));
+		}
+	}
+
+	// ---- destroyed copy is the only on_sent_to_graveyard source -----------
+	{
+		FDuelEngine Duel(Database, 84);
+		Duel.SetAutoAnswerAllChoices(true);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_SENT_TWO_COPIES"));
+		Scenario.PlayerField.Add(MakeMonster(29, 0));
+		Scenario.PlayerGraveyard = TArray<int32>{ 29 };
+		Scenario.PlayerDeck = TArray<int32>{ 2, 2 };
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error),
+			TEXT("two-copy Sangan scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 GraveSanganUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Graveyard, 29);
+		const FDuelCard* GraveSangan = Duel.FindCard(GraveSanganUid);
+		Report.Check(Runtime != nullptr && GraveSangan != nullptr
+			&& FindUidInArray(Duel.GetSide(EDuelOwner::Player).Monsters, 29) != 0,
+			TEXT("two copies of Sangan are in the Graveyard and on the field"));
+		if (Runtime && GraveSangan)
+		{
+			Runtime->ResetTestStats();
+			FDEffectEvent Event = MakeSourceEvent(EDEffectTrigger::OnSentToGraveyard, *GraveSangan);
+			Event.Reason = TEXT("battle");
+			Runtime->FireEvent(Event);
+			Report.Check(Runtime->GetExecutedScriptCount() == 1,
+				TEXT("only the sent copy's on_sent_to_graveyard script executes"));
+			Report.Check(CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Hand, 2) == 1,
+				TEXT("the field Sangan copy does not search a second target"));
 		}
 	}
 

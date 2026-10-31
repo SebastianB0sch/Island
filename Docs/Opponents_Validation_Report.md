@@ -1,6 +1,6 @@
 # Opponents / Exams / Puzzles — Validation Report
 
-- Generated: 2026-10-30
+- Generated: 2026-10-31
 - Root: `C:\dev\GX`
 - Result: **PASS**
 - Checks: 141 · Failures: 0 · Warnings: 1
@@ -21,44 +21,44 @@
 
 ## Card support
 
-- Referenced card ids: 380 unique; unknown ids: 0
+- Referenced card ids: 468 unique; unknown ids: 0
 - Extra Deck cards without a `fusions.json` recipe: 0
 
 ## Deck results
 
 | Deck | Opponent | Main | Extra | Confidence | Result |
 | --- | --- | ---: | ---: | --- | --- |
-| `alexis_cyber` | alexis | 40 | 2 | low | PASS |
-| `alexis_cyber_plus` | alexis | 40 | 2 | low | PASS |
-| `banner_alchemy` | banner | 40 | 0 | low | PASS |
-| `bastion_chem` | bastion | 40 | 0 | medium | PASS |
-| `bastion_chem_plus` | bastion | 40 | 0 | low | PASS |
-| `beauregard_rock` | beauregard | 40 | 0 | low | PASS |
-| `blair_toon` | blair | 40 | 0 | low | PASS |
-| `brier_quiz` | brier | 40 | 0 | low | PASS |
-| `chazz_ojama` | chazz | 40 | 3 | medium | PASS |
-| `chazz_ojama_plus` | chazz | 40 | 3 | low | PASS |
-| `chumley_koala` | chumley | 40 | 1 | medium | PASS |
-| `conklin_dino` | conklin | 40 | 2 | low | PASS |
-| `crowler_ancient_gear` | crowler | 40 | 0 | medium | PASS |
-| `crowler_ancient_gear_plus` | crowler | 40 | 0 | low | PASS |
+| `alexis_cyber` | alexis | 53 | 1 | medium | PASS |
+| `alexis_cyber_plus` | alexis | 53 | 1 | medium | PASS |
+| `banner_alchemy` | banner | 42 | 2 | medium | PASS |
+| `bastion_chem` | bastion | 46 | 0 | medium | PASS |
+| `bastion_chem_plus` | bastion | 46 | 0 | medium | PASS |
+| `beauregard_rock` | beauregard | 52 | 0 | high | PASS |
+| `blair_toon` | blair | 44 | 0 | medium | PASS |
+| `brier_quiz` | brier | 47 | 0 | high | PASS |
+| `chazz_ojama` | chazz | 40 | 0 | low | PASS |
+| `chazz_ojama_plus` | chazz | 40 | 0 | low | PASS |
+| `chumley_koala` | chumley | 50 | 1 | high | PASS |
+| `conklin_dino` | conklin | 40 | 0 | medium | PASS |
+| `crowler_ancient_gear` | crowler | 49 | 0 | medium | PASS |
+| `crowler_ancient_gear_plus` | crowler | 49 | 0 | medium | PASS |
 | `damon_exodia` | damon | 40 | 0 | low | PASS |
-| `dimitri_copycat` | dimitri | 40 | 0 | low | PASS |
-| `fontaine_nurse` | fontaine | 40 | 0 | low | PASS |
-| `gerard_quiz` | gerard | 40 | 0 | low | PASS |
-| `jaden_year1` | jaden | 53 | 4 | high | PASS |
-| `jasmine_amazoness` | jasmine | 40 | 0 | medium | PASS |
-| `mimicry_stall` | mimicry | 40 | 0 | medium | PASS |
-| `mindy_fairy` | mindy | 40 | 0 | low | PASS |
-| `pharaoh_guardian` | pharaoh | 40 | 0 | low | PASS |
-| `sartyr_curry` | sartyr | 40 | 0 | low | PASS |
-| `shadow_duelist_fiend` | shadow_duelist | 40 | 0 | low | PASS |
-| `syrus_roids` | syrus | 42 | 4 | medium | PASS |
-| `syrus_roids_plus` | syrus | 40 | 4 | low | PASS |
-| `topher_goblin` | topher | 40 | 0 | low | PASS |
-| `torrey_insect` | torrey | 40 | 1 | low | PASS |
-| `zane_cyber` | zane | 40 | 4 | high | PASS |
-| `zane_cyber_end` | zane | 40 | 4 | medium | PASS |
+| `dimitri_copycat` | dimitri | 51 | 4 | high | PASS |
+| `fontaine_nurse` | fontaine | 47 | 0 | medium | PASS |
+| `gerard_quiz` | gerard | 45 | 2 | medium | PASS |
+| `jaden_year1` | jaden | 53 | 4 | medium | PASS |
+| `jasmine_amazoness` | jasmine | 60 | 0 | high | PASS |
+| `mimicry_stall` | mimicry | 46 | 0 | medium | PASS |
+| `mindy_fairy` | mindy | 40 | 0 | medium | PASS |
+| `pharaoh_guardian` | pharaoh | 40 | 0 | medium | PASS |
+| `sartyr_curry` | sartyr | 43 | 0 | high | PASS |
+| `shadow_duelist_fiend` | shadow_duelist | 40 | 0 | medium | PASS |
+| `syrus_roids` | syrus | 45 | 1 | high | PASS |
+| `syrus_roids_plus` | syrus | 45 | 1 | high | PASS |
+| `topher_goblin` | topher | 40 | 0 | medium | PASS |
+| `torrey_insect` | torrey | 48 | 0 | high | PASS |
+| `zane_cyber` | zane | 50 | 2 | high | PASS |
+| `zane_cyber_end` | zane | 50 | 2 | high | PASS |
 
 ## Puzzle results
 

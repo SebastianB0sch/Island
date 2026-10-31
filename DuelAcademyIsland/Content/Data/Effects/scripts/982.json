@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 982,
+  "name": "Man-Thro' Tro'",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Offer 1 Normal Monster (except a Token) on your side of the field as a Tribute to inflict 800 points of damage to your opponent's Life Points.",
+  "notes": [
+    "Tributing a Normal Monster is the cost for 800 damage."
+  ],
+  "scripts": [
+    {
+      "id": "982_tribute_normal_burn",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 800,
+          "player": "opponent",
+          "reason": "Man-Thro' Tro'"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "tribute",
+          "target": {
+            "zone": "self_monster",
+            "count": 1,
+            "filter": {
+              "card_type": "Normal Monster"
+            }
+          }
+        }
+      ],
+      "source_text": "Offer 1 Normal Monster (except a Token) on your side of the field as a Tribute to inflict 800 points of damage to your opponent's Life Points."
+    }
+  ]
+}

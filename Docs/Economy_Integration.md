@@ -12,19 +12,24 @@ UI drawing, duel rules or the profile/save schema; those are A09, A04 and A02.
 | Path | Purpose |
 | --- | --- |
 | `Public/DAEconomyTypes.h` | Shared USTRUCTs/enums: rarity, pack definitions, reveal payload, collection stats, filters, save payloads. |
-| `Public/DAInventorySubsystem.h` / `Private/DAInventorySubsystem.cpp` | `UDAInventorySubsystem`: collection counts, ownership copy cap, stats/filters, pack opening, ante, save JSON. |
+| `Public/DAInventorySubsystem.h` / `Private/DAInventorySubsystem.cpp` | `UDAInventorySubsystem`: collection counts, ownership copy cap, stats/filters, pack opening, pending story grants, ante, save JSON. |
 | `Public/DAShopSubsystem.h` / `Private/DAShopSubsystem.cpp` | `UDAShopSubsystem`: 48-pack catalogue, unlock evaluation, atomic DP purchase, restock clock, save JSON. |
-| `Public/DADeckLogic.h` / `Private/DADeckLogic.cpp` | `UDADeckLogic`: deck slots, 40–60/20/3 validation, banned/limited, edit/copy/erase/rename, sorting/filtering, starter decks, save JSON. |
+| `Public/DADeckLogic.h` / `Private/DADeckLogic.cpp` | `UDADeckLogic`: deck slots, 40–60/15/3 validation, banned/limited, edit/copy/erase/rename, sorting/filtering, starter decks, save JSON. |
 | `Private/DAEconomyTests.*` | `-DAEconomySelfTest` suite (inventory, pack odds, deck legality, DP atomicity, round-trip payloads). |
-| `Content/Data/Shop/packs.json` | 48 packs: ids, categories, prices, pack sizes, restock periods, unlock conditions, rarity pools, slots. |
+| `Content/Data/Shop/packs.json` | 48 packs: ids, categories, prices, pack sizes, restock periods, unlock conditions, rarity pools, slots. Dorothy's Gift materialises the canon full pool as all 1,200 ids at copy weight 1. |
 | `Content/Data/Decks/player_decks.json` | Default player deck slot(s) and the starter collection list. |
-| `Content/Data/Rules/banned_limited.json` | Rule limits + banned/limited/semi-limited schema. Empty list pending canon. |
+| `Content/Data/Rules/banned_limited.json` | Year 1 limits + banned/limited/semi-limited lists. `max_extra` is 15. |
 | `Content/Data/Rules/card_rarity.json` | Global rarity hint for trunk filters/stats; derived from pack pools, provisional. |
-| `Tools/economy/sync_canon.py` | Re-syncs `Shop/packs.json`, `Rules/card_rarity.json` and the year 1 banned list from A01's read-only `Canon/` data. Never edits `Canon/`. |
+| `Tools/economy/sync_canon.py` | Re-syncs `Shop/packs.json`, `Rules/card_rarity.json` and the year 1 banned list from A01's read-only `Canon/` data. Never edits `Canon/`. Materialises Dorothy's full pool. |
+| `Tools/economy/validate_packs.py` | A06 catalogue validator: 48 packs, pools/card ids, slots/weights, metadata, unlock refs and Dorothy full-pool checks. |
+| `Tools/economy/validate_decks.py` | A06 deck validator: all starter/player decks against Year 1 rules, 15-card Extra, and 3-copy id/printed-name limits. |
+| `Docs/Economy/ECO_Notes.md` | Gate 3 A06 pack fix, validation/test coverage and remaining gaps. |
 
-The existing `cards.json`, `decks.json` and `fusions.json` are unchanged.
-`DACardDatabase.h`'s 32-card list remains only as the legacy `DAInteractable`
-fallback; the real 1,200-card catalogue is the inventory + `Shop/packs.json`.
+`cards.json` and `fusions.json` are unchanged. `decks.json` keeps the four
+starter decks, with Jaden's fourth printed `Luster Dragon` normalised to
+Sparkman as described in section 4. `DACardDatabase.h`'s 32-card list remains
+only as the legacy `DAInteractable` fallback; the real 1,200-card catalogue is
+the inventory + `Shop/packs.json`.
 
 ## 2. `UDAInventorySubsystem`
 
@@ -73,6 +78,7 @@ DEF, level, card type, attribute, monster type, rarity.
 FDAEPackOpenResult OpenPack(const FString& PackId, int32 Seed);
 FDAEPackOpenResult PreviewPack(const FString& PackId, int32 Seed);
 FDAEPackOpenResult OpenPackDefinition(const FDAEPackDef&, int32 Seed, bool bAddToCollection = true);
+FDAEPackOpenResult ConsumePendingPackGrant(const FString& PackId, int32 Seed = 0);
 ```
 
 * A non-zero seed is fully deterministic: same pack definition + same seed =
@@ -86,6 +92,23 @@ FDAEPackOpenResult OpenPackDefinition(const FDAEPackDef&, int32 Seed, bool bAddT
 * `FDAEPackOpenResult::Cards` is the complete reveal payload for A09:
   `CardId`, `Name`, `Rarity`, `bNew`, `bDuplicate`, `OwnedBefore`, `OwnedAfter`,
   `DuplicateDP`.
+
+### Pending story pack grants
+
+A03 queues unopened story pack rewards on `UDAStorySubsystem`
+(`GetPendingPackGrants()` / `ConsumePendingPackGrant()`). A06 exposes:
+
+```cpp
+FDAEPackOpenResult ConsumePendingPackGrant(const FString& PackId, int32 Seed = 0);
+```
+
+It opens the pack through the shop catalogue and adds the cards to the trunk.
+The story grant is consumed only after a successful open; a missing pack or a
+failed open leaves the grant queued. Repeated calls with no grant return
+`no_pending_grant` and add nothing, so each grant is applied exactly once. If
+the grant is taken by another caller between the open and the consume, the
+added copies are rolled back before returning `grant_consume_failed`. No DP is
+spent or credited by this free-grant path.
 
 ### Ante
 
@@ -134,6 +157,8 @@ bool GetPackDef(const FString& PackId, FDAEPackDef& OutPack) const;
 FString GetUnlockReason(const FString& PackId) const;
 float GetPackCompletionPercent(const FString& PackId) const;
 float GetCollectionPercent() const;
+int32 GetPurchaseCount(const FString& PackId) const;   // stock consumption counter
+int32 GetRemainingStock(const FString& PackId) const;   // -1 = unlimited/unknown
 ```
 
 `FDAEPackView` is the shop row payload: `PackId`, `Name`, `Category`, `Price`,
@@ -209,7 +234,9 @@ cadence. The shop stores `LastPurchaseDay` per pack and blocks a repeat until
 `DayNumber - LastPurchaseDay >= restock_days`. A02 must update `DayNumber` in
 the unlock snapshot when the calendar advances. Packs with a positive `stock`
 from A01 canon also have a lifetime purchase cap; once `PurchaseCounts` reaches
-`stock`, the row reports `SoldOut`.
+`stock`, the row reports `SoldOut`. `GetPurchaseCount` exposes that counter and
+`GetRemainingStock` returns the remaining cap (`-1` for unlimited packs such as
+Dorothy's Gift).
 
 ### Shop save payload
 
@@ -237,7 +264,7 @@ Loaded from `Rules/banned_limited.json`:
 {
   "max_owned_copies": 3,
   "rules": {
-    "min_main": 40, "max_main": 60, "max_extra": 20,
+    "min_main": 40, "max_main": 60, "max_extra": 15,
     "max_copies": 3, "max_side": 0, "max_player_decks": 24,
     "deck_name_min_length": 1, "deck_name_max_length": 24
   },
@@ -249,6 +276,16 @@ Loaded from `Rules/banned_limited.json`:
 
 `banned` accepts raw ids or `{card_id}` objects. `limited` accepts raw ids
 (limit 1) or `{card_id, limit, reason}`. `semi_limited` defaults to limit 2.
+
+The shared file and A06 now agree on `max_extra: 15` (the 2006 Fusion Deck
+cap). `Tools/economy/sync_canon.py` generates 15, `DADeckLogic`'s fallback is 15,
+and the self-test proves 15 is legal while 16 is rejected.
+
+Player decks are also checked against the Year 1 banlist and the 3-copy printed
+name rule. Jaden's four extracted `Luster Dragon` copies (2 x 663 + 2 x 780) are
+normalised to three by replacing one 663 with Elemental HERO Sparkman (1109),
+matching A07's runtime deck. `Content/Data/decks.json` records this as
+`runtime_adjustments: ["663->1109:Luster Dragon name cap -> Sparkman"]`.
 
 ### Validation API
 
@@ -269,7 +306,7 @@ bool ValidateDeckWithoutOwnership(const FDAEDeck&, TArray<FDAEDeckError>&) const
 | --- | --- |
 | `main_too_small` | `Your Main Deck must contain at least 40 cards.` |
 | `main_too_large` | `Your Main Deck cannot contain more than 60 cards.` |
-| `extra_too_large` | `Your Fusion Deck cannot contain more than 20 cards.` |
+| `extra_too_large` | `Your Fusion Deck cannot contain more than 15 cards.` |
 | `copy_limit` | `You cannot have more than 3 copies of the same card in your Deck.` |
 | `banned_card` | `This card is forbidden and cannot be used in your Deck.` |
 | `limited_card` | `This card is limited to 1 copy.` / `... 2 copies.` |
@@ -297,7 +334,7 @@ bool SetActiveDeck(DeckId, FString& OutError);
 
 `AddCardToDeck` allows an incomplete deck while editing (so the UI can build up
 to 40), but enforces zone type, ownership, copy limit, banned/limited and the
-60/20 hard caps. `SetActiveDeck` requires a fully legal deck because it is the
+60/15 hard caps. `SetActiveDeck` requires a fully legal deck because it is the
 deck a duel will use.
 
 Starter decks from `decks.json` are exposed through `GetStarterDecks()` and
@@ -364,8 +401,9 @@ All three providers register themselves in `Initialize`.
 
 * Card reward: `Inventory->AddCard(CardId, Count)` (respects the cap; use
   `GrantStarterCollection` for a bundle).
-* Pack reward: `Shop->PurchasePack` is a *paid* path; story grants should call
-  `Inventory->OpenPack(PackId, Seed)` directly and skip the wallet.
+* Pack reward: A03 queues the unopened pack grant; call
+  `Inventory->ConsumePendingPackGrant(PackId, Seed)` to apply it exactly once.
+  `Shop->PurchasePack` is the *paid* path and must not be used for grants.
 * Event completion: add the event key to `FDAEUnlockContext::CompletedEvents`;
   the shop will unlock the matching pack.
 * Ante event: `RemoveCardForAnte` before the duel; `ReturnAnteCard` on a win or
@@ -413,19 +451,35 @@ Run the editor/game with:
 -DAEconomySelfTest
 ```
 
-The suite loads after the game instance settles and exits the process. It
-checks:
+The suite loads after the game instance settles and exits the process. The
+current expected result is **213 passed, 0 failed** (119 existing checks plus 94
+A06 Gate 3 checks). It checks:
 
 * 1,200-card add/remove and 100% collection stats.
 * Ownership copy cap (3 by default), refill and unlimited mode.
 * Ante remove/return/loss.
-* 48-pack catalogue, prices, slot counts and all-1,200 obtainability.
+* 48-pack catalogue, prices, slot counts, non-empty pools, card-id existence,
+  fixed/rare-plus pool sanity, metadata/unlock presence and all-1,200
+  obtainability.
 * Seeded pack determinism (same seed = identical reveal), variation across
   seeds, no card outside the printed pool.
 * 20,000-open rarity distribution for `basic_1a` (70/22/6/2 within tolerance).
 * Every pack opens 50 times with the correct card count.
-* Dorothy's Gift all-cards / prefer-unowned behaviour.
-* Default deck legality, 40/60/39/61 main-deck boundaries, 20/21 extra,
+* Dorothy's Gift: 1,200-id full pool, 90% unlock gate, purchase, 7-card reveal,
+  1,000 DP deduction, inventory counts, weekly restock boundary, duplicate
+  conversion to DP and unlimited-stock semantics.
+* Finite-stock control: a purchase decrements remaining stock and increments the
+  purchase counter (Dorothy itself has unlimited canon stock).
+* Bulk economy: every pack previewed and purchased 10 times with fixed seeds
+  (480 preview pairs, 480 purchases), valid ids, deterministic reveals,
+  non-negative DP/stock and a balanced DP ledger.
+* Pending story pack grants: queue -> consume -> inventory, exactly-once
+  rejection on a duplicate consume, unknown-pack failure leaves the grant
+  queued, and no DP is spent.
+* All starter and player decks validated under the Year 1 banlist, 15-card
+  Extra Deck and 3-copy printed-name limit (including Jaden's normalised
+  `Luster Dragon` / Sparkman counts).
+* Default deck legality, 40/60/39/61 main-deck boundaries, 15/16 extra,
   3/4 copies, banned/limited/semi-limited, unowned card rejection.
 * Add/remove/swap/rename/copy/erase and deck JSON round-trip.
 * DP purchase success, insufficient DP, restock, wallet rejection, locked-pack
@@ -470,6 +524,10 @@ the report string without requesting exit.
    month rather than the exact week/day.
 10. **Dorothy's Gift** is implemented as all 1,200 cards, preferring unowned
     cards. Canon says it contains all cards; exact pull weights are not known.
+    A06 materialises the canon `full_pool: true` as 1,200 pool entries at copy
+    weight 1, so the catalogue is non-empty and auditable. The separate A01
+    `canon_pack_empty` gap remains until `Canon/packs.json` represents the full
+    pool itself (see `Docs/Economy/ECO_Notes.md`).
 11. **Restock cadence** uses the canon/A01 text. The GBA's exact in-game day
     reset semantics need verification.
 12. **Stock** from A01 canon is treated as a lifetime purchase cap. This is an

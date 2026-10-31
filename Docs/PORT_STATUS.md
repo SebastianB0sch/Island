@@ -11,19 +11,24 @@
 
 | Item | Result |
 | --- | --- |
-| Build | **Succeeded** - all lanes build green after Gate 2 (effect runtime, UI screens, interior spawn) |
+| Build | **Succeeded** - Gate 3 combined build green after integration fixes |
 | `-DAProfileSelfTest` | **182 checks, 0 failures** (save round-trip, backup recovery, corruption, migration) |
-| `-DAEconomySelfTest` | **119 passed, 0 failed** |
-| `-DADuelRulesSelfTest` | **57 passed, 0 failed** (chains, targeting, timing, banlist, scenarios, ante) |
-| `-DAEffectRuntimeSelfTest` | **44 passed, 0 failed** (10 scripts: Sangan, Morphing Jar, Breaker, Exiled Force, MST, Bottomless, Sakuretsu, Jinzo, Fusion Gate, Amazoness) |
+| `-DASaveFuzz=10000` | **10,000 states, 1,000 corruption cases, 200 migrations, 1,800,212 checks, 0 failures**, max save 5,634 bytes |
+| `-DATwelveMonthTest` | **365 days / 12 months, 10,947 checks, 0 failures**; leap year and month rollover verified |
+| `-DAEconomySelfTest` | **213 passed, 0 failed** (packs, Dorothy's Gift, bulk purchase/preview, pending grants) |
+| `-DADuelRulesSelfTest` | **58 passed, 0 failed** (chains, targeting, timing, banlist, scenarios, ante) |
+| `-DAEffectRuntimeSelfTest` | **53 passed, 0 failed** (155 scripts loaded; source-UID trigger isolation) |
 | `-DAStorySelfTest` | **14/14 PASS** (E01/E01b, 3,000 DP, Oct 7 AM, shop/save/free-roam) |
-| `-DAFullStorySelfTest` | **20/20 PASS** (35 events, 35 scenes, 161 lines, 6 emails, 82 duel refs, 35/35 reachable with progress) |
+| `-DAFullStorySelfTest` | **20/20 PASS** (35 events, 37 scenes, 161 lines, 6 emails, 82 duel refs, 35/35 reachable) |
+| `-DAStoryPlaythroughTest` | **35/35 events completed, 39/39 story duels resolved, 0 failures** |
+| `-DAPuzzleExamSelfTest` | **Puzzle 102/102 PASS, Exam 104/104 PASS, both suites PASS** |
+| `-DANpcScheduleTest` | **414 passed, 0 failed** (week schedules, events, spawn/despawn, refresh) |
+| `-DADuelSelfTest=1000` | **1,000 duels, 457 player wins, 543 opponent wins, 0 stalls, 0 invariant failures, deck audit 36/36, puzzle audit 100/100, 11.3s** |
 | `-DAUITest` / `-DAGameplayUITest` | 8 PDA + 2 dialogue + shop/deck/exam/PDA gameplay screenshots at 1920x1080 |
 | `-DATitleTest` / `-DANewGameTest` | title + new-game opening screenshots at 1920x1080 |
-| `-DADuelSelfTest` | **24 iterations, 12 player wins, 12 opponent wins, 0 stalls, average 11.7 turns** |
 | `-DAPortalTest` | **188 passed, 0 failed** (all 20 portals paired; ten interior entries and classroom return teleport; screenshot captured) |
-| World actors | 20 portals / 89 anchors / 28 spawn points / 1 director / 88 NPCs / 45 interactables; 1,134 level actors |
-| Runtime data | 1,200 cards / 100 puzzles / 12 exam cycles / 25 duelists / 31 decks / 48 packs / 37 events / 56 scenes / 161 dialogue lines / 6 emails |
+| World actors | 20 portals / 89 anchors / 28 spawn points / 1 director / 88 NPCs / 45 interactables / 10 nav volumes; 1,144 level actors |
+| Runtime data | 1,200 cards / 100 puzzles / 12 exam cycles / 25 duelists / 37 canon decks / 48 packs / 37 events / 56 scenes / 161 dialogue lines / 6 emails |
 
 The earlier profile self-test crash (backup-save assertion) is resolved; keep
 the old log under `Docs/Integration/reports/logs/` as regression evidence.
@@ -39,20 +44,20 @@ the lane directories. Canon is reference; runtime is what the game loads.
 | --- | --- | --- | --- |
 | Cards | 1,200 | 1,200 | **complete** |
 | Fusions | 76 records | 76 records, 75 usable | **partial** (F.G.D. generic, UFOroid unresolved) |
-| Decks | 31 (4 complete, 27 unknown) | 36, all legal | **runtime complete; canon gaps** |
-| Packs | 48, pool union 1,200 | 48, pool union 1,200 | **runtime complete**; Dorothy's Gift empty |
+| Decks | 37 (16 complete, 15 partial, 6 unknown) | 36, all legal | **runtime complete; canon gaps** |
+| Packs | 48, pool union 1,200 | 48, pool union 1,200 | **runtime complete**; Dorothy's Gift full pool |
 | Opponents | 25 | 25 (20 ranked + event/exam) | **complete** |
-| Events | 35 (E01..E33, E04b, E28b) | 37 (full 35 + opening E01b/FJ01) | **runtime definitions complete; playthrough pending** |
-| Scenes | n/a | 56 (21 opening + 35 full campaign) | **runtime definitions complete; playthrough pending** |
-| Dialogue | n/a | 161 lines (opening + full campaign) | **data complete; integration test pending** |
-| Schedules | n/a | 7 opening NPC schedules | **opening only** |
-| Puzzles | 100 (5 levels x 20), setups/timers unknown | 100 definitions across levels 1-5 | **runtime definitions complete; engine proof pending** |
-| Exams | 12-cycle definition, 10 written, 7 practical, 500 pts | 12 cycles, 30 questions, 7 objectives | **runtime definitions complete; lifecycle test pending** |
-| Emails | 6 contacts | 6 contacts / 6 messages | **runtime data present; PDA wiring pending** |
+| Events | 35 (E01..E33, E04b, E28b) | 37 (full 35 + opening E01b/FJ01) | **runtime complete; 35/35 playthrough PASS** |
+| Scenes | n/a | 56 (21 opening + 35 full campaign) | **runtime complete; playthrough PASS** |
+| Dialogue | n/a | 161 lines (opening + full campaign) | **data complete; headless playthrough PASS** |
+| Schedules | n/a | 7 opening NPC schedules | **opening only; director schedule test PASS** |
+| Puzzles | 100 (5 levels x 20), setups/timers unknown | 100 definitions across levels 1-5 | **runtime complete; 100/100 engine replay PASS** |
+| Exams | 12-cycle definition, 10 written, 7 practical, 500 pts | 12 cycles, 30 questions, 7 objectives | **runtime complete; 12/12 lifecycle PASS** |
+| Emails | 6 contacts | 6 contacts / 6 messages | **unlock/read/request PASS in story playthrough** |
 | Titles | 14 | 16 runtime definitions | **complete** |
 | Banlist | 63 cards | 14 forbidden, 40 limited, 7 semi | **complete** |
-| World | 36 mapped locations | 46 locations, 89 anchors, 10 generated interior cells, 20 portals, 28 spawns | **generated/spawned; PIE portal bounce pending** |
-| Effects | manifest 1,200 entries | 119 scripted, 321 vanilla, **760 pending** | runtime implemented; 10 scripts exercised by self-test |
+| World | 36 mapped locations | 46 locations, 89 anchors, 10 generated interior cells, 20 portals, 28 spawns, 10 nav volumes | **generated/spawned; PIE portal 188/188 PASS** |
+| Effects | manifest 1,200 entries | **264 scripted, 345 vanilla, 591 pending** | runtime implemented; 155 scripts loaded; Tier-2 gap remains |
 
 ---
 
@@ -62,20 +67,20 @@ the lane directories. Canon is reference; runtime is what the game loads.
 | --- | --- | --- | --- |
 | Island, sky, day/night, fast travel | A08 | **works** | Generated by `Tools/`; no manual `.umap` edits. |
 | Card database (1,200) | A01/A06 | **works** | Loads in editor/headless. |
-| Duel rules engine | A04 | **works / partial** | 57/57 rules self-test; 24-duel AI self-test 0 stalls. Full chain/target UI and 1,000-duel gate still pending. |
-| Effect layer | A04/A05 | **works / partial** | Data-driven runtime loads scripts, handles triggers/costs/targets/operations and passes 44/44 checks; 119 scripted, 321 vanilla, **760 pending**. |
-| Profile, DP, titles, counters | A02 | **works** | 182/182 profile/save checks; golden saves validate. |
-| Calendar | A02 | **works** | 12-month calendar, AM/PM/Night; exam-Friday week rule unresolved. |
-| Save/load/migration | A02 | **works** | Round-trip, backup recovery, corruption and migration tested. Large-scale fuzz still pending. |
+| Duel rules engine | A04 | **works** | 58/58 rules self-test; 1,000-duel gate 0 stalls, 0 invariant failures; 36/36 decks and 100/100 puzzles legal. |
+| Effect layer | A04/A05 | **works / partial** | 155 data scripts load; 53/53 runtime checks; **264 scripted, 345 vanilla, 591 pending** Tier-2 cards. |
+| Profile, DP, titles, counters | A02 | **works** | 182/182 profile/save checks; 10,000-state fuzz clean. |
+| Calendar | A02 | **works** | 12-month simulation 10,947 checks / 0 failures; exam-Friday week rule still unproven. |
+| Save/load/migration | A02 | **works** | Round-trip, backup, corruption, migration; 10,000-state fuzz + 1,000 corruption cases clean. |
 | Settings | A02 | **works** | Animation speed, activation confirmation, volumes. |
-| Inventory / card trunk | A06 | **works** | 1,200-card inventory, 3-copy ownership, economy tests 119/119. |
-| Shop / packs | A06 | **works / partial** | 48 packs load and cover 1,200 cards; Dorothy's Gift empty; prices/odds provisional. |
-| Deck construction | A06 | **works** | 36 decks validate (40-60 main, <=20 extra, <=3 copies, banlist legal). |
-| Opponents / AI | A07 | **works** | 25 duelists, 31 decks, 27 AI profiles; 100 puzzles, 12 exams. |
-| Exams | A07 | **works / partial** | 12 cycles / 30 questions / 7 objectives; lifecycle, retries and title/dorm outcomes still need an engine run. |
-| Puzzles | A07 | **works / partial** | 100 definitions across levels 1-5; `Tools/puzzles/validate.py` 141 checks, 0 failures. Scripted engine proof still pending. |
-| Story / events / dialogue | A03 | **works / partial** | 37 events, 56 scenes and 161 dialogue lines; opening 14/14 and full-campaign 20/20 self-tests pass, 35/35 reachable with progress. Exact dialogue/local-only text and event-specific minigames still pending. |
-| Interiors / portals / anchors | A08 | **works / partial** | 10 cells generated and spawned (30 meshes), 20 portals, 89 anchors, 28 spawns, 1 director; portal routes validate, PIE bounce test pending. |
+| Inventory / card trunk | A06 | **works** | 1,200-card inventory, 3-copy ownership; economy 213/213. |
+| Shop / packs | A06 | **works** | 48 packs cover 1,200 cards; Dorothy's Gift full pool; bulk purchase/preview tests pass. |
+| Deck construction | A06 | **works** | 36 decks legal (40-60 main, <=15 Extra, <=3 copies, Year-1 banlist). |
+| Opponents / AI | A07 | **works** | 25 duelists, 31 runtime opponent decks, 27 AI profiles; runtime decks all legal. |
+| Exams | A07 | **works** | 12 cycles / 30 questions / 7 objectives; 104/104 engine lifecycle checks. |
+| Puzzles | A07 | **works** | 100 definitions; 102/102 engine replay checks; authored fallbacks where canon setup is unknown. |
+| Story / events / dialogue | A03 | **works / partial** | 35/35 events play through in-engine; 39/39 duels resolve; exact dialogue/local-only text and event minigames still pending. |
+| Interiors / portals / anchors | A08 | **works** | 10 cells, 20 portals, 89 anchors, 28 spawns, 1 director, 10 nav volumes; portal 188/188, NPC schedule 414/414. |
 | HUD / dialogue / PDA / title / shop / deck / exam UI | A09 | **works / partial** | Title/New Game/Continue, PDA, dialogue, shop, deck editor and exam screens verified by screenshots; deeper interaction QA remains. |
 | Integration/QA | A10 | **works** | Contracts, validator, puzzle validator, smoke runner, golden saves, final status. |
 
@@ -85,43 +90,39 @@ the lane directories. Canon is reference; runtime is what the game loads.
 
 ### P0 - remaining content blockers
 
-1. **E02-E33 runtime playthrough:** 37 event/scene definitions now validate, but
-   only the opening is covered by the story self-test. The remaining events,
-   rewards and duel hooks need an in-engine playthrough (A03).
-2. **760 pending effects:** manifest is complete, but 760 Tier-2 cards are
-   `pending`. No pending card should appear in a story/puzzle deck until it is
-   scripted or classified vanilla (A05/A04).
-3. **Full dialogue integration:** 161 lines validate (opening + full campaign),
-   but only the opening is exercised by the story self-test. All choices,
-   portraits/fallbacks and history need UI integration (A03/A09).
-4. **Dorothy's Gift:** empty pack pool (A06).
+1. **591 pending effects:** 264 cards are scripted, 345 vanilla, and 591 Tier-2
+   cards remain `pending`; 92 of them are reachable in story-event decks. No
+   pending card should enter a story/puzzle deck until scripted or classified
+   vanilla (A05/A04).
+2. **Full dialogue integration:** the 35-event playthrough resolves every scene
+   and key, but exact GBA text remains local-only; runtime uses the paraphrased
+   scaffold and the deepest choice/history/portrait presentation still needs an
+   A09 pass.
+3. **Release audits:** packaged build, performance profile, legal/credits audit
+   and the strict validator gate have not been run (A10).
 
 ### P1 - integration debt
 
-- 27/31 canon decks are incomplete/unknown; four canon event duels reference
-  decks absent from `Canon/decks.json`; five reference opponents absent from
-  the canon roster. A01 must reconcile.
-- All 100 canon puzzles lack decoded setups/timers; runtime puzzles supply
-  authored states, but the engine has not proven every solution.
+- 21/37 canon decks remain incomplete (15 partial, 6 unknown); runtime decks
+  fill 226 slots from the generic shell/theme/legal pool and record the fills.
+- All 100 canon puzzles still lack decoded setups/timers; runtime uses authored
+  fallbacks. The engine replays 100/100, but the canon data gap remains.
 - Canon exam week rule is unresolved (monthly Friday, exact week unknown).
 - Validator warnings: 5 duplicate-material fusion recipes, F.G.D. generic
-  Dragon-count, UFOroid unresolved, 5 canon event opponent refs, 6 remaining
-  pre-contract shapes (roster `duelists[]`, banlist entry objects,
-  `position_ue` anchors, two `scenes{}` bundles, `npcs{}` schedules), and
-  unwritten flag/counter references (`post_game`, `walk_home_partner_3`,
-  several `wins_*`, `timed_clears`, `written_correct`). A03 event/dialogue and
-  A07 puzzle/exam shapes are accepted as INFO with optional migration notes.
-- PDA email wiring: contacts/messages are now filled from `emails.json` and
-  filtered by unlock/read state; open/read and pending-duel-request behavior
-  still needs an in-engine interaction pass.
-- Interior portals are generated, paired, locked behind A02 flags and verified in PIE: `-DAPortalTest` passes all ten entries and the classroom return (188/188). Interior screenshot: `Docs/renders/port/interior_classroom.png`.
-- Shop, deck editor and exam screens are wired to the A06/A07 APIs and captured
-  at 1920x1080; purchase/confirm, rename/copy/erase and exam-result paths still
-  need deeper interaction QA.
+  Dragon-count, UFOroid unresolved, and 6 pre-contract shapes (roster
+  `duelists[]`, banlist entry objects, `position_ue` anchors, two `scenes{}`
+  bundles, `npcs{}` schedules); unwritten flags/counters remain
+  (`post_game`, `walk_home_partner_3`, several `wins_*`, `timed_clears`,
+  `written_correct`).
+- PDA email backend is exercised by the campaign playthrough; the UI open/read/
+  request interaction still needs a manual pass.
+- Interior nav volumes exist, but the level currently rebuilds navigation at
+  runtime (no saved navmesh); bake and resave before profiling/packaging.
+- Shop, deck editor and exam screens are wired and screenshot-verified;
+  purchase/confirm, rename/copy/erase and exam-result paths still need deeper
+  interaction QA.
 - No `IMPLEMENT_SIMPLE_AUTOMATION_TEST` suites; the smoke runner reports
   automation SKIP.
-- 1,000 seeded AI duels, 12-month playthrough, large-scale save fuzz, packaged
-  build, performance and legal audits are not yet run.
 - A05/A07 script/exam shapes are accepted by the validator; migration to the v1
   wrappers is optional and tracked as INFO, not a blocker.
 
@@ -131,10 +132,10 @@ the lane directories. Canon is reference; runtime is what the game loads.
 
 | Gate | Criteria | Status | Evidence / blocker |
 | --- | --- | --- | --- |
-| **Gate 0** | Build green; Jaden duel/self-test; contracts; clean-tree merge discipline | **partial** | Build green; duel 24/0 stalls; profile/economy/rules/story self-tests green. Working tree still has lane WIP and pre-contract shapes. |
-| **Gate 1** | Opening -> registration -> Slifer -> Banner DP -> Syrus tutorial -> free-roam save | **partial** | Story 14/14 covers the opening; 10 UI screenshots; interiors, shop, deck editor and exam screens now exist. Full dialogue integration remains. |
-| **Gate 2** | Systems testable; 12-month fast-forward; 1,000 AI duels; 100 puzzles; save fuzz | **partial** | 100 puzzle definitions validate; 12 exams; save self-test 182/0; effect runtime 44/44; interiors and gameplay UI generated. 1,000 AI, 12-month and scale fuzz not run. |
-| **Gate 3** | 33+ events, 48 packs, 100 puzzles, 12 exams, 1,200 cards, Tier-2 effects | **not met** | Canon and runtime definitions largely complete; 760 pending effects, E02-E33 playthrough proof and full dialogue integration remain. |
+| **Gate 0** | Build green; Jaden duel/self-test; contracts; clean-tree merge discipline | **met** | Build green; 1,000 duels 0 stalls; 182/213/58/53/14/20 suites green; validators PASS. Gate 3 changes committed. |
+| **Gate 1** | Opening -> registration -> Slifer -> Banner DP -> Syrus tutorial -> free-roam save | **partial** | Opening 14/14, 35/35 campaign playthrough, interiors/portal 188/188, gameplay UI screenshots. Exact dialogue presentation remains. |
+| **Gate 2** | Systems testable; 12-month fast-forward; 1,000 AI duels; 100 puzzles; save fuzz | **met** | 1,000 duels 0 stalls/0 invariants, 100/100 puzzles, 12/12 exams, 10,000-state fuzz, 12-month 10,947 checks. |
+| **Gate 3** | 33+ events, 48 packs, 100 puzzles, 12 exams, 1,200 cards, Tier-2 effects | **not met** | All content counts met; 591 effects remain pending. E02-E33 playthrough, 100 puzzles, 12 exams and 48 packs are proven. |
 | **Gate 4** | RC criteria, no P0/P1, playthrough, performance | **not started** | - |
 | **Gate 5** | Packaged build, legal audit, credits, tag | **not started** | - |
 
@@ -145,13 +146,27 @@ the lane directories. Canon is reference; runtime is what the game loads.
 ```text
 python Tools/validate/validate_all.py
 Result: PASS
-0 errors, 20 warnings, 11 gaps, 58 info, 25 checks, 176 files read
+0 errors, 15 warnings, 6 gaps, 205 info; 321 files read
+```
+
+```text
+python Tools/canon/validate_canon.py
+checks: 290  errors: 0  warnings: 1
 ```
 
 ```text
 python Tools/puzzles/validate.py
 PASS summary: 141 checks, 0 failures, 1 warning
 duelists=25 decks=31 ai=27 puzzles=100 questions=30 cycles=12
+```
+
+```text
+python Tools/economy/validate_packs.py
+RESULT: PASS - 1342 checks, 0 failures
+python Tools/economy/validate_decks.py
+RESULT: PASS - 81 checks, 0 failures
+python Tools/effects/validate_effects.py
+OK: 155 effect script(s), fusion 75/76 resolved, ritual 22/22 resolved, 0 warning(s)
 ```
 
 The single puzzle-validator warning is the duplicate `Luster Dragon` name (two
@@ -164,13 +179,13 @@ Reports:
   until gaps are closed)
 - `Docs/Integration/reports/smoke_selftests.json`
 - `Docs/Integration/reports/GATE1_TEST_RESULTS.md`
+- `Docs/Integration/reports/GATE3_TEST_RESULTS.md`
 - `Docs/Integration/baseline.json`
 
-Remaining validator gaps: 27 incomplete canon decks, empty Dorothy's Gift pool,
-four canon event deck refs, 100 unknown canon puzzle setups/timers, unresolved
-canon exam week, and 760 pending effects. Runtime E02-E33/emails are now data
-complete and covered by pass checks; their in-engine playthrough is the
-remaining Gate 3 proof.
+Remaining validator gaps: 21 incomplete canon decks, 100 unknown canon puzzle
+setups/timers, unresolved canon exam week, 591 pending effects, and the canon
+pack source still expresses Dorothy's Gift as an empty `full_pool` list (the
+runtime pack is complete). E02-E33/emails are data complete and proven.
 
 ---
 
@@ -181,11 +196,21 @@ remaining Gate 3 proof.
 python Tools\validate\validate_all.py
 python Tools\validate\validate_all.py --report Docs\Integration\reports\validate.json
 
-# A07 roster/puzzle/exam validator
+# A01/A06/A07/A05 data validators
+python Tools\canon\validate_canon.py
 python Tools\puzzles\validate.py
+python Tools\economy\validate_packs.py
+python Tools\economy\validate_decks.py
+python Tools\effects\validate_effects.py
 
-# UE self-tests (current build: all green)
-python Tools\integration\run_smoke.py --self-tests --report Docs\Integration\reports\smoke_selftests.json
+# UE Gate 3 suites (run one switch per process)
+UnrealEditor-Cmd.exe <uproject> -game -nullrhi -nosound -unattended -DADuelSelfTest=1000
+UnrealEditor-Cmd.exe <uproject> -game -nullrhi -nosound -unattended -DAPuzzleExamSelfTest
+UnrealEditor-Cmd.exe <uproject> -game -nullrhi -nosound -unattended -DAStoryPlaythroughTest
+UnrealEditor-Cmd.exe <uproject> -game -nullrhi -nosound -unattended -DASaveFuzz=10000
+UnrealEditor-Cmd.exe <uproject> -game -nullrhi -nosound -unattended -DATwelveMonthTest
+UnrealEditor-Cmd.exe <uproject> -game -nullrhi -nosound -unattended -DANpcScheduleTest
+UnrealEditor-Cmd.exe <uproject> -game -windowed -DAPortalTest
 
 # Strict gate (warnings/gaps fail; currently expected red)
 python Tools\validate\validate_all.py --strict
@@ -216,19 +241,21 @@ change only through A10.
 
 ## 9. Next actions
 
-1. A03/A09: run the E02-E33 campaign playthrough and integrate the validated
-   dialogue/choices end-to-end; exercise PDA email open/read and pending duels.
-2. A05: reduce the 760 pending effects; script or classify every card used by
-   story/puzzle/shop content first.
-3. A08: verify the NPC director schedule application and add interior nav coverage.
+1. A05: reduce the 591 pending effects; script or classify every card used by
+   story/puzzle/shop content first (92 story-event cards are highest impact).
+2. A03/A09: replace the paraphrased dialogue scaffold with the local exact text
+   and finish choice/history/portrait presentation; manually exercise PDA email
+   open/read and pending duels.
+3. A08/A10: bake and save the interior navmesh, then profile interior traversal
+   and remove the runtime nav rebuild warning.
 4. A09/A06/A07: deeper interaction QA for shop purchase, deck rename/copy/erase
    and exam lifecycle/result/DP feedback.
-5. A01: reconcile incomplete canon decks and four event deck refs; decide the
-   exam week rule.
-6. A04: add `-DADuelSelfTest=N` and run the 1,000-duel gate.
-7. A02: run large-scale save fuzz (10,000 states) and migration/corruption fuzz.
-8. A10: 12-month playthrough, packaged build, performance/legal audits, strict
-   validator gate.
+5. A01: fill the remaining 21 incomplete canon decks and resolve the exam-week
+   rule; keep runtime deck fills traceable.
+6. A10: packaged build, performance and legal/credits audit, strict validator
+   gate, then freeze Gate 4/5 evidence.
+7. A02/A04/A07: optionally add `IMPLEMENT_SIMPLE_AUTOMATION_TEST` wrappers around
+   the existing switch-driven suites for CI.
 
 ---
 
@@ -242,3 +269,4 @@ change only through A10.
 | 2026-10-31 | Gate 2: data-driven effect runtime 44/44; shop/deck/exam/PDA screens; 10 interior cells + 20 portals / 89 anchors / 28 spawns / 1 director / 88 NPCs / 45 interactables; gameplay UI screenshots; duel 24/0 stalls. | A10 |
 | 2026-10-31 | Fixed unity-build JSON helper collisions, effect-trigger enum mismatch, Python native class names and bool property names; rebuilt the level (1,134 actors). | A10 |
 | 2026-10-31 | Added `-DAPortalTest`; fixed the fall-out-of-world rescue swallowing interior arrivals; 188/188 portal checks pass and the classroom screenshot is captured. | A10 |
+| 2026-10-31 | Gate 3: canon decks 37/16 complete, 155 effect scripts, runtime decks 36/36 legal, 1,000 duels 0 stalls, 35/35 campaign events, 100/100 puzzles, 12/12 exams, NPC 414/414, 10k save fuzz and 12-month sim clean. | A10 |

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "card_id": 742,
+  "name": "Raigeki Break",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Discard 1 card from your hand to the Graveyard to destroy 1 card on the field.",
+  "notes": [
+    "Discard cost, then one field card is destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "742_discard_cost_effect",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Raigeki Break"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "cost": [
+        {
+          "op": "discard",
+          "target": {
+            "zone": "self_hand",
+            "count": 1
+          }
+        }
+      ],
+      "target": {
+        "zone": "all_cards",
+        "count": 1
+      },
+      "source_text": "Discard 1 card from your hand to the Graveyard to destroy 1 card on the field."
+    }
+  ]
+}

@@ -634,6 +634,7 @@
         "reveal",
         "roll_die",
         "search",
+        "send_to_graveyard",
         "set",
         "shuffle",
         "skip_phase",

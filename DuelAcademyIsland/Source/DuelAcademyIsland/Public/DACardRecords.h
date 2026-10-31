@@ -113,6 +113,14 @@ public:
 	const FCardRecord* FindCard(int32 CardId) const;
 	const FStarterDeckDef* FindDeck(const FString& DeckId) const;
 
+	/**
+	 * Narrow registration hook for A07 opponent decks.  Keeps the card database
+	 * as the single deck-id resolver used by FDuelEngine::Start without making
+	 * the A06 economy/deck-editor code learn the Opponents directory.
+	 * Re-registering the same id replaces the previous entry.
+	 */
+	bool RegisterDeck(const FStarterDeckDef& Deck);
+
 	const TMap<int32, FCardRecord>& GetCards() const { return CardsById; }
 	const TArray<FStarterDeckDef>& GetDecks() const { return Decks; }
 	const TArray<FFusionRecipeDef>& GetFusions() const { return Fusions; }
@@ -127,6 +135,8 @@ private:
 
 	TMap<int32, FCardRecord> CardsById;
 	TArray<FStarterDeckDef> Decks;
+	/** Non-starter decks registered by A07; FindDeck resolves these but GetDecks() does not expose them as starters. */
+	TArray<FStarterDeckDef> RegisteredDecks;
 	TArray<FFusionRecipeDef> Fusions;
 	bool bLoaded = false;
 	FString LoadError;

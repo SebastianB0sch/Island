@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 143,
+  "name": "Mooyan Curry",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases your Life Points by 200 points.",
+  "notes": [
+    "Single-clause Life Point gain."
+  ],
+  "scripts": [
+    {
+      "id": "143_gain_life_points",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 200,
+          "player": "self",
+          "reason": "Mooyan Curry"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Increases your Life Points by 200 points."
+    }
+  ]
+}

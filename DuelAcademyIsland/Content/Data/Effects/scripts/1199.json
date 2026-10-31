@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "card_id": 1199,
+  "name": "Wasteland Amazon",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is destroyed in battle and sent to the Graveyard, you may Special Summon an EARTH Warrior type Monster with 1500 ATK or less from the Deck to be placed face up on your field.  Shuffle your Deck afterwards.",
+  "notes": [
+    "Recruits an EARTH Warrior with ATK <= 1500."
+  ],
+  "scripts": [
+    {
+      "id": "1199_battle_recruit",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "attribute": "EARTH"
+            },
+            {
+              "monster_type": "Warrior"
+            },
+            {
+              "atk_max": 1500
+            }
+          ]
+        }
+      },
+      "source_text": "When this card is destroyed in battle and sent to the Graveyard, you may Special Summon an EARTH Warrior type Monster with 1500 ATK or less from the Deck to be placed face up on your field. Shuffle your Deck afterwards.",
+      "condition": {
+        "name": "Wasteland Amazon"
+      }
+    }
+  ]
+}

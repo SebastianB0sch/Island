@@ -97,6 +97,10 @@ The text system is **uncompressed ASCII**, not a compressed script archive.
    1,036 unique string indices.
 4. `0x146CB14` / `0x146CC32` hold the speaker names used by `$pNN` tokens.
    `$p00` is the player; `$p01` maps to `Jaden Yuki`, and so on.
+5. Exam-week warning strings are in the same pool: `Next Friday is the Dorm
+   Switch Exam.` at `0x13F7548` (index 74) and `Next Friday will be the Dorm
+   Switch Exam.` at `0x13F7FE2` (index 93). They prove a one-week warning, not
+   which Friday of the month is the exam.
 
 `extract_text.py` writes the full text to a **local-only** directory outside the
 repository, and a committed index containing hashes, lengths, control tokens
@@ -118,13 +122,26 @@ the pass mark (sources disagree between 250 and 300 out of 500).
 
 ---
 
-## 5. Pack text
+## 5. Packs and opponent decks
 
 `0x14EDD78` begins the shop pack text (`Basic 1-A`, description, `Basic 1-B`,
 ...). The 48 pack names/prices/pools in `packs.json` come from the public set
 pages; the ROM text confirms the pack-name pool and gives a cross-check for the
 shop strings. Rarity odds and the exact rarity-slot model are not published and
 remain a gap.
+
+Opponent deck lists are **not** a contiguous ROM table at the card-id encoding
+used by `cards.json`. Gate 3 ran two read-only searches on the verified US ROM:
+
+1. raw little-endian `u16` sequence scan for the known starter and Jaden lists
+   (the `romhack/research/find_decks.py` method);
+2. scan of every valid GBA BIOS LZ77/RLE block followed by a search of the
+   decompressed output.
+
+Neither found the starter or Jaden sequences. The deck lists therefore come from
+the public GameFAQs Character Deck List FAQ v1.4 (Tracy_Smith, 2006-03-11) and
+the shared Year 1 generic shell. This is recorded as negative ROM evidence, not
+as an exact extraction. See `DECK_TRACEABILITY.md`.
 
 ---
 
@@ -142,6 +159,7 @@ python Tools/canon/build_events.py
 python Tools/canon/build_curated.py
 python Tools/canon/build_manifest.py
 python Tools/canon/build_traceability.py
+python Tools/canon/build_deck_report.py
 python Tools/canon/validate_canon.py
 ```
 
@@ -165,12 +183,14 @@ wikitext snapshot. The normal validation path requires no network.
 
 - Pack prices, pools, rarities and unlock conditions.
 - Event conditions, locations, choices and rewards.
-- Starter deck lists; opponent archetypes and signature cards.
+- Starter deck lists; opponent deck lists from Character Deck List FAQ v1.4 and
+  the Year 1 generic shell (16/37 complete, 15 partial, 6 unknown).
+- Opponent archetypes and signature cards; event bracket/partner constructs.
 - Puzzle solution steps; title thresholds; banned/limited list.
 
 **Still unknown (see `GAPS.md`)**
 
-- Full 40-card opponent deck lists and deck evolution.
+- 15 partial and 6 fully unknown opponent/event decks; exact deck evolution.
 - 100 puzzle setups, time limits and clear rewards.
 - Per-question written-exam answer key and the 250/300 pass mark.
 - Script VM jump/condition/choice/duel opcodes.

@@ -105,6 +105,41 @@ struct FDAExamPracticalProgress
 	bool bComplete = false;
 };
 
+/** One authored monthly cycle from Exams/exams.json. */
+USTRUCT(BlueprintType)
+struct FDAExamCycle
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	FString ExamId;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	int32 MonthIndex = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	FString WrittenSetId;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	TArray<FString> QuestionIds;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	FString TimedPuzzleId;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	FString PracticalObjectiveId;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	int32 PassMark = 300;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	int32 MaxPoints = 500;
+
+	/** Canon data has no verified exam DP reward; kept explicit for A02. */
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	int32 DPReward = 0;
+};
+
 USTRUCT(BlueprintType)
 struct FDAGradeBand
 {
@@ -144,6 +179,10 @@ struct FDAExamResult
 	UPROPERTY(BlueprintReadOnly, Category = "Exam")
 	int32 PracticalPoints = 0;
 
+	/** Exam DP reward is data-driven; the current A01/A07 content is zero. */
+	UPROPERTY(BlueprintReadOnly, Category = "Exam")
+	int32 DPReward = 0;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Exam")
 	int32 TotalPoints = 0;
 
@@ -174,8 +213,10 @@ struct FDAExamResult
  *   StartExam -> Written -> FinishWritten -> BeginTimed -> SubmitTimedResult
  *   -> BeginPractical -> RecordPracticalEvent* -> FinishPractical -> FinishExam.
  *
- * All selection is deterministic from (MonthIndex, Seed). Data lives in
- * Content/Data/Exams/questions.json, practicals.json and scoring.json.
+ * Authored cycle selection comes from Content/Data/Exams/exams.json; the
+ * seeded catalog formula remains only as a fallback. Data lives in
+ * Content/Data/Exams/questions.json, practicals.json, scoring.json and
+ * exams.json.
  */
 UCLASS()
 class DUELACADEMYISLAND_API UDAExamSubsystem : public UGameInstanceSubsystem
@@ -219,6 +260,9 @@ public:
 
 	const TArray<FString>& GetCurrentQuestionIds() const { return CurrentQuestionIds; }
 	const TArray<FString>& GetPuzzleIds() const { return PuzzleIds; }
+	const TArray<FDAExamCycle>& GetCycles() const { return Cycles; }
+	const FDAExamCycle* GetCycle(int32 InMonthIndex) const { return CyclesByMonth.Find(InMonthIndex); }
+	int32 GetCycleCount() const { return Cycles.Num(); }
 	const FDAExamQuestion* GetQuestion(const FString& QuestionId) const;
 	const FDAExamQuestion* GetCurrentQuestion() const;
 	int32 GetCurrentQuestionIndex() const { return CurrentQuestionIndex; }
@@ -248,13 +292,14 @@ public:
 	bool HasResult() const { return bResultValid; }
 	const FDAExamResult& GetResult() const { return Result; }
 
-	/** Deterministic timed-puzzle choice for a month, using the current seed. */
+	/** Authored timed-puzzle choice for a month, with a seeded catalog fallback. */
 	FString PickTimedPuzzle(int32 InMonthIndex) const;
 
 private:
 	bool LoadQuestionsFile(const FString& Path, FString& OutError);
 	bool LoadPracticalsFile(const FString& Path, FString& OutError);
 	bool LoadScoringFile(const FString& Path, FString& OutError);
+	bool LoadCyclesFile(const FString& Path, FString& OutError);
 	void LoadPuzzleCatalog(const FString& Directory);
 
 	int32 ScoreWritten() const;
@@ -265,6 +310,8 @@ private:
 	TMap<int32, TArray<FString>> ExamSets;
 	TArray<FDAExamPracticalObjective> PracticalObjectives;
 	TArray<FDAGradeBand> GradeBands;
+	TArray<FDAExamCycle> Cycles;
+	TMap<int32, FDAExamCycle> CyclesByMonth;
 	TArray<FString> PuzzleIds;
 
 	TArray<FString> CurrentQuestionIds;

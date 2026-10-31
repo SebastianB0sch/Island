@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 572,
+  "name": "Rain of Mercy",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases the Life Points of both players by 1000 points.",
+  "notes": [
+    "Symmetric Life Point gain."
+  ],
+  "scripts": [
+    {
+      "id": "572_gain_life_points_both",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 1000,
+          "player": "both",
+          "reason": "Rain of Mercy"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Increases the Life Points of both players by 1000 points."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 388,
+  "name": "Gravedigger Ghoul",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select 2 Monster Cards from your opponent's Graveyard. These Monster Cards are removed from play for the remainder of the Duel.",
+  "notes": [
+    "Two monster cards from the opponent Graveyard are banished."
+  ],
+  "scripts": [
+    {
+      "id": "388_banish_grave_monsters",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "banish",
+          "target": "$target",
+          "reason": "Gravedigger Ghoul"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "opponent_graveyard",
+        "count": 2,
+        "filter": {
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "Select 2 Monster Cards from your opponent's Graveyard. These Monster Cards are removed from play for the remainder of the Duel."
+    }
+  ]
+}

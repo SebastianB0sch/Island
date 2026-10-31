@@ -235,6 +235,22 @@ def main() -> int:
         "exam_rule": {
             "day": "Friday",
             "week": "unresolved; last Friday is the working default",
+            "question": "Which Friday of each month is the Dorm Switch Exam?",
+            "evidence": {
+                "confirmed": [
+                    "Monthly exam day is Friday (Yugipedia Events; GameFAQs Written Examination Guide).",
+                    "12 exams in the 12-month school year (E33: 120 questions = 12 exams = 12 months).",
+                    "ROM strings 'Next Friday is the Dorm Switch Exam.' (index 74) and 'Next Friday will be the Dorm Switch Exam.' (index 93) establish a one-week warning.",
+                    "A raw byte/u16 search for the 2006-2007 first/second/third/fourth/last-Friday day sequences found no 12-entry exam-date table.",
+                ],
+                "conflicting": [
+                    "No public guide identifies the week of the month.",
+                    "The 'third Friday of November' rule belongs to E09 Duel Festival, not the monthly exam.",
+                    "The ROM calendar/exam routine and save-file date layout are not decoded.",
+                ],
+            },
+            "fallback": "last Friday",
+            "fallback_status": "unproven",
             "confidence": "low",
         },
         "fixed_dates": [

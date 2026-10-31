@@ -11,7 +11,7 @@
   "player": {
     "lp": 8000,
     "hand": [
-      117,
+      403,
       594
     ],
     "field": [
@@ -38,7 +38,7 @@
   "solution": [
     {
       "action": "set_spell_trap",
-      "card_id": 117
+      "card_id": 403
     },
     {
       "action": "activate_spell",
@@ -55,8 +55,8 @@
     "cards": []
   },
   "confidence": "medium",
-  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
-  "notes": "Set Black Pendant, then Mage Power counts two own Spell/Trap Cards: 1600 + 1000 = 2600.",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored. P015 uses a Trap for the Set step because the current A04 SetSpellTrap API only accepts Traps and Quick-Play Spells.",
+  "notes": "Set Seven Tools of the Bandit, then Mage Power counts two own Spell/Trap Cards: 1600 + 1000 = 2600. The Set card is deliberately a Trap so the authored set_spell_trap action is legal in the engine.",
   "canon_reference": {
     "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
     "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_015",

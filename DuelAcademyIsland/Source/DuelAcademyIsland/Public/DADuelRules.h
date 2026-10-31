@@ -181,7 +181,8 @@ struct FDuelBannedListRuleset
 	TMap<int32, FString> Reasons;
 	int32 MinMain = 40;
 	int32 MaxMain = 60;
-	int32 MaxExtra = 20;
+	/** 2006-era Fusion/Extra Deck cap.  A06 data may still say 20; the engine clamps to 15. */
+	int32 MaxExtra = 15;
 	int32 MaxCopies = 3;
 
 	static FDuelBannedListRuleset MakeDefault() { return FDuelBannedListRuleset(); }

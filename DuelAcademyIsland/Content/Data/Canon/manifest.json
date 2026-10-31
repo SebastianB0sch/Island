@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-10-30T17:24:04+00:00",
+  "generated_utc": "2026-10-31T09:25:41+00:00",
   "project": "DuelAcademyIsland / Yu-Gi-Oh! GX: Duel Academy GBA port",
   "source": {
     "rom_sha256": "0c2f606986c84d584510d0b80e7cb8e2970f9c15c71d29f9bb9d5f67ceef2afe",
@@ -14,9 +14,9 @@
     "packs": 48,
     "pack_unique_cards": 1200,
     "events": 35,
-    "opponents": 25,
-    "decks": 31,
-    "complete_decks": 4,
+    "opponents": 28,
+    "decks": 37,
+    "complete_decks": 16,
     "puzzles": 100,
     "puzzles_with_solution": 100,
     "banned_limited_cards": 63,
@@ -28,7 +28,8 @@
     "cards": "exact (ROM byte comparison)",
     "packs": "high for price/pool, low for odds",
     "events": "high/medium (public guide + ROM text evidence)",
-    "opponents": "medium (roster/archetype), low (full deck lists)",
+    "opponents": "medium (roster/archetype); 25 named + 3 event duelists",
+    "decks": "mixed: 16 complete, 15 partial (14 with explicit unknown slots, 1 unverified), 6 fully unknown",
     "puzzles": "high for solutions, unknown for setups",
     "titles": "mixed; see per-title confidence",
     "banned_list": "high (public three-year table)",
@@ -37,7 +38,7 @@
   "files": [
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/cards_manifest.json",
-      "sha256": "b20c0b634e66d3642358bf2283c5e04a5e5c9916df78c2d63f09832db8e7b445",
+      "sha256": "4f6368b0f955ddfe373f246241fd87464892c918e20414fec5c539134a69d08e",
       "bytes": 97886,
       "records": 1200
     },
@@ -49,79 +50,79 @@
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/calendar.json",
-      "sha256": "845a1d5e9c6606022c7698c806d53a761a874ca0dfb8051eaf5bd5918e48dd9d",
-      "bytes": 8143,
+      "sha256": "f8a1069a24220cede240cd23a55186f52a0ae720a255413c2a3f39077f2aa85b",
+      "bytes": 9095,
       "records": 12
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/titles.json",
-      "sha256": "57f6dba682a8c4227bc1cc2b34d801efda55f4549162490fa2ae4f3cccc07147",
+      "sha256": "8bc9aa50d014d665fff3ba73be935872b0219f2db0901d344099262b2de12c08",
       "bytes": 5535,
       "records": 14
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/packs.json",
-      "sha256": "a3e035415aaf988df5b5f4c36d2a5ac6c012b871ffc8f03f8ef7699e4fbc1f9a",
+      "sha256": "ecd80dcdd6583546f50683d142038c404b22e9c8da6dafb3c690f612432d5fa8",
       "bytes": 357471,
       "records": 48
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/opponents.json",
-      "sha256": "f2d063858a4e682649a1cde37a71640eef1be688aeb58bbd8510b7be67957ff8",
-      "bytes": 21179,
-      "records": 25
+      "sha256": "40a7d5cad2f354c7d21fb948b7d602169440d94561971dc1a0cc3f5a5cb5a673",
+      "bytes": 26562,
+      "records": 28
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/decks.json",
-      "sha256": "b2a772ce82886879220d739736b958417a7de9f302be9fa795baebdaaef7c841",
-      "bytes": 26554,
-      "records": 31
+      "sha256": "73559d205f3b13960c2b93d80f2b39297c795b1d4fde28860cbc6f8b6679b04b",
+      "bytes": 167536,
+      "records": 37
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/puzzles.json",
-      "sha256": "cdf831b16f611035ff4d32a7259fa03d4ffc6e1a98fe934cbaa511288f412eeb",
+      "sha256": "352db640b64b58a55373e802a235eb237a40160011dc695ccb3a3cb737bddb10",
       "bytes": 177534,
       "records": 100
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/exams.json",
-      "sha256": "c37952937a11a05c196542415388dbedd4b319e54c0cae0ca9f2c81622eadf73",
-      "bytes": 87359,
+      "sha256": "6da155602e5d21cff27f4c253e2467974cf46347af86e410d67fdb5641a19458",
+      "bytes": 88779,
       "records": 89
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/events.json",
-      "sha256": "9f0401a4dbaaf61584a5d7b164d9ba03b698b9e3d48979cffd5f8cbb3254314e",
-      "bytes": 72283,
+      "sha256": "67506ee2ac422eec099e66ecbab6280e05ff518713951e0c3810f56ea74d6cc3",
+      "bytes": 73770,
       "records": 35
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/banned_list.json",
-      "sha256": "b96f9d5ac10e1ecfa7ccc2fc96ec2b6e40cfc4b1e3b8787729b1707bff621abb",
+      "sha256": "c490071228537f6b47fbb5b38787082b03e74dd49839498c87eea1ca8cf23846",
       "bytes": 19417,
       "records": 63
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/dp_rules.json",
-      "sha256": "6a5f7dd6af20a9348a21cb958369c2842a11297a101bb303d1c964256ca4b847",
+      "sha256": "c5bfed49a270023eaedfb7d9f0a49655ad4dc4e76bb398083d7b7b0544563235",
       "bytes": 1231,
       "records": null
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/emails.json",
-      "sha256": "bce8a5abab84a240d11c6d713f1702580b95d7192b5ea020507b25f7020e1675",
+      "sha256": "5415be140236636a2372b04830e4d7ee686f8a696c04c720a2ce22eebc660e13",
       "bytes": 784,
       "records": null
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/locations.json",
-      "sha256": "ab72d348b439a8c0628347593271dd0d28915876fccbf44f234f0cdcba061069",
+      "sha256": "4026ba84a8909c3e1e4d478ef212aa74e0db99b71bd2dd5d10a10ace05d4822b",
       "bytes": 9142,
       "records": null
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/dialogue_keys.json",
-      "sha256": "6347eea89e9d442810d51b461c0c437de99bd4ccdf3c2928fe8a7977bbdd8faa",
+      "sha256": "8cd43115c11ed527ef8011d1fa449a94ced5d008e4f0dfc64f8d27b841ef8bda",
       "bytes": 70211,
       "records": null
     },

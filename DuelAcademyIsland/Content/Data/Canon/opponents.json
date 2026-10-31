@@ -1,13 +1,78 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-10-30T17:24:03+00:00",
-  "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+  "generated_utc": "2026-10-31T09:24:44+00:00",
+  "source": {
+    "roster": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+    "decks": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382",
+    "rom_names": "0x146CB14 / 0x146CC32"
+  },
   "notes": [
     "Roster names come from the verified ROM name pool at 0x146CB14/0x146CC32.",
-    "Guide roles and archetypes are secondary; full deck lists are not published."
+    "25 named duelists are the original extraction; jinzo, goblin_king and sheppard are event-only additions reconciled in Gate 3.",
+    "Tournament/partner constructs (festival_bracket, chocolate_bracket, walk_home_partner) are NOT roster duelists; they live in decks.json event_constructs and events.json duel objects.",
+    "Mimicry is the practical-exam proctor; the Character Deck FAQ calls the same role 'Test Proctor'."
   ],
-  "count": 25,
+  "count": 28,
+  "named_duelists": 25,
+  "event_duelists": 3,
   "opponents": [
+    {
+      "id": "alexis",
+      "name": "Alexis Rhodes",
+      "guide_name": "Alexis Rhodes",
+      "section": "Obelisk Blue",
+      "note": "",
+      "signature_card_ids": [
+        360,
+        443,
+        463,
+        499,
+        586,
+        589,
+        668,
+        673,
+        674,
+        812,
+        837,
+        908,
+        909,
+        934,
+        949,
+        953
+      ],
+      "signature_cards": [
+        "Dunames Dark Witch",
+        "Senju of the Thousand Hands",
+        "Numinous Healer",
+        "Enchanted Javelin",
+        "Hysteric Fairy",
+        "St. Joan",
+        "Mudora",
+        "Zolga",
+        "Agido",
+        "Shinato, King of a Higher Plane",
+        "Outstanding Dog Marron",
+        "Guardian Angel Joan",
+        "Manju of the Ten Thousand Hands",
+        "Warrior of Zera",
+        "Archlord Zerato",
+        "The Sanctuary in the Sky"
+      ],
+      "archetype": "Fairy",
+      "gift_card_ids": [
+        1025
+      ],
+      "gift_cards": [
+        "Fusion Weapon"
+      ],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "alexis_year1"
+      ],
+      "default_deck": "alexis_year1"
+    },
     {
       "id": "banner",
       "name": "Lyman Banner",
@@ -30,35 +95,495 @@
       "gift_card_ids": [],
       "gift_cards": [],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "banner_year1"
+      ],
+      "default_deck": "banner_year1"
     },
     {
-      "id": "pharaoh",
-      "name": "Pharaoh",
-      "guide_name": "Pharaoh",
-      "section": "Slifer Red",
-      "note": "Teacher's cat",
+      "id": "bastion",
+      "name": "Bastion Misawa",
+      "guide_name": "Bastion Misawa",
+      "section": "Ra Yellow",
+      "note": "",
       "signature_card_ids": [
-        1112,
-        1169
+        29,
+        262,
+        337,
+        338,
+        351,
+        364,
+        467,
+        500,
+        502,
+        1021
       ],
       "signature_cards": [
-        "Ancient Gear Beast",
-        "Mechanical Hound"
+        "Sangan",
+        "Penguin Soldier",
+        "Hyozanryu",
+        "Alpha The Magnet Warrior",
+        "Beta The Magnet Warrior",
+        "Gamma The Magnet Warrior",
+        "Backup Soldier",
+        "Valkyrion the Magna Warrior",
+        "Vorse Raider",
+        "Dark Factory of Mass Production"
       ],
-      "archetype": "unclassified",
+      "archetype": "Magnet",
       "gift_card_ids": [
-        242,
-        342,
-        837
+        503
       ],
       "gift_cards": [
-        "Bone Mouse",
-        "Panther Warrior",
-        "Outstanding Dog Marron"
+        "Ring of Destruction"
       ],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "bastion_magnet",
+        "bastion_seventh",
+        "bastion_year1"
+      ],
+      "default_deck": "bastion_year1"
+    },
+    {
+      "id": "beauregard",
+      "name": "Beauregard",
+      "guide_name": "Beauregard",
+      "section": "Ra Yellow",
+      "note": "Only when you are in Ra Yellow",
+      "signature_card_ids": [
+        145,
+        455,
+        555,
+        566,
+        583,
+        739,
+        758,
+        796,
+        955,
+        1077,
+        1170
+      ],
+      "signature_cards": [
+        "Goblin's Secret Remedy",
+        "Gaia Power",
+        "Fairy Meteor Crush",
+        "Goblin Attack Force",
+        "Dancing Fairy",
+        "Banner of Courage",
+        "Giant Orc",
+        "Big Bang Shot",
+        "Goblin Thief",
+        "Granmarg the Rock Monarch",
+        "Goblin Elite Attack Force"
+      ],
+      "archetype": "Goblin",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "beauregard_year1"
+      ],
+      "default_deck": "beauregard_year1"
+    },
+    {
+      "id": "blair",
+      "name": "Blair Flannigan",
+      "guide_name": "Blair Flannigan",
+      "section": "Slifer Red",
+      "note": "Only when you are in Slifer Red",
+      "signature_card_ids": [
+        352,
+        366,
+        582,
+        583,
+        711,
+        948,
+        1152
+      ],
+      "signature_cards": [
+        "Dark Magician Girl",
+        "Toon World",
+        "Spirit of the Breeze",
+        "Dancing Fairy",
+        "Toon Gemini Elf",
+        "White Magician Pikeru",
+        "Cyber Dragon"
+      ],
+      "archetype": "Maiden",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "blair_year1"
+      ],
+      "default_deck": "blair_year1"
+    },
+    {
+      "id": "brier",
+      "name": "Brier",
+      "guide_name": "Brier",
+      "section": "Ra Yellow",
+      "note": "Only when you are in Ra Yellow",
+      "signature_card_ids": [
+        251,
+        414,
+        566,
+        758,
+        839,
+        926,
+        1170
+      ],
+      "signature_cards": [
+        "Needle Worm",
+        "Robbin' Goblin",
+        "Goblin Attack Force",
+        "Giant Orc",
+        "Mefist the Infernal General",
+        "Robbin' Zombie",
+        "Goblin Elite Attack Force"
+      ],
+      "archetype": "Goblin",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "brier_year1"
+      ],
+      "default_deck": "brier_year1"
+    },
+    {
+      "id": "chazz",
+      "name": "Chazz Princeton",
+      "guide_name": "Chazz Princeton",
+      "section": "Obelisk Blue",
+      "note": "",
+      "signature_card_ids": [
+        708,
+        715,
+        725,
+        756,
+        757,
+        839,
+        1102
+      ],
+      "signature_cards": [
+        "Legendary Fiend",
+        "Newdoria",
+        "Master Kyonshee",
+        "Decayed Commander",
+        "Zombie Tiger",
+        "Mefist the Infernal General",
+        "Blood Sucker"
+      ],
+      "archetype": "Dark",
+      "gift_card_ids": [
+        839
+      ],
+      "gift_cards": [
+        "Mefist the Infernal General"
+      ],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "chazz_ojama",
+        "chazz_year1"
+      ],
+      "default_deck": "chazz_year1"
+    },
+    {
+      "id": "chumley",
+      "name": "Chumley Huffington",
+      "guide_name": "Chumley Huffington",
+      "section": "Slifer Red",
+      "note": "",
+      "signature_card_ids": [
+        114,
+        793,
+        1019,
+        1090
+      ],
+      "signature_cards": [
+        "Beast Fangs",
+        "Des Koala",
+        "Master of Oz",
+        "Poison Fangs"
+      ],
+      "archetype": "Burn Beast",
+      "gift_card_ids": [
+        1019,
+        1125
+      ],
+      "gift_cards": [
+        "Master of Oz",
+        "Des Wombat"
+      ],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "chumley_year1"
+      ],
+      "default_deck": "chumley_year1"
+    },
+    {
+      "id": "conklin",
+      "name": "Conklin",
+      "guide_name": "Conklin",
+      "section": "Obelisk Blue",
+      "note": "Only in [[Chazz]]' [[Yu-Gi-Oh! GX Duel Academy/Events|Event]]",
+      "signature_card_ids": [
+        444,
+        892
+      ],
+      "signature_cards": [
+        "UFO Turtle",
+        "Blazing Inpachi"
+      ],
+      "archetype": "basic Fire",
+      "gift_card_ids": [
+        724,
+        744,
+        746
+      ],
+      "gift_cards": [
+        "X-Head Cannon",
+        "Y-Dragon Head",
+        "Z-Metal Tank"
+      ],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "conklin_year1"
+      ],
+      "default_deck": "conklin_year1"
+    },
+    {
+      "id": "crowler",
+      "name": "Vellian Crowler",
+      "guide_name": "Vellian Crowler",
+      "section": "Obelisk Blue",
+      "note": "teacher",
+      "signature_card_ids": [
+        514,
+        546,
+        556,
+        703,
+        1076,
+        1111,
+        1112,
+        1113,
+        1155,
+        1159
+      ],
+      "signature_cards": [
+        "Robotic Knight",
+        "Fairy Box",
+        "Limiter Removal",
+        "Bottomless Shifting Sand",
+        "Insect Knight",
+        "Ancient Gear Golem",
+        "Ancient Gear Beast",
+        "Ancient Gear Soldier",
+        "Steam Gyroid",
+        "Power Bond"
+      ],
+      "archetype": "Ancient Gear",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "crowler_year1"
+      ],
+      "default_deck": "crowler_year1"
+    },
+    {
+      "id": "damon",
+      "name": "Damon",
+      "guide_name": "Damon",
+      "section": "Obelisk Blue",
+      "note": "Only when you are in Obelisk Blue",
+      "signature_card_ids": [
+        52,
+        226,
+        238,
+        381,
+        387,
+        425,
+        511,
+        553,
+        591,
+        706,
+        1015,
+        1020,
+        1178
+      ],
+      "signature_cards": [
+        "White Magical Hat",
+        "Muka Muka",
+        "Skelengel",
+        "Polymerization",
+        "Pot of Greed",
+        "Upstart Goblin",
+        "Airknight Parshath",
+        "Solemn Wishes",
+        "Jar of Greed",
+        "Reckless Greed",
+        "Enraged Muka Muka",
+        "Sanwitch",
+        "Poison Draw Frog"
+      ],
+      "archetype": "Draw",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "damon_exodia",
+        "damon_year1"
+      ],
+      "default_deck": "damon_year1"
+    },
+    {
+      "id": "dimitri",
+      "name": "Dimitri",
+      "guide_name": "Dimitri",
+      "section": "Ra Yellow",
+      "note": "Only when you are in Ra Yellow",
+      "signature_card_ids": [
+        3,
+        40,
+        85,
+        365,
+        372,
+        373,
+        374,
+        381,
+        501,
+        526,
+        546,
+        614,
+        947,
+        1104
+      ],
+      "signature_cards": [
+        "Baby Dragon",
+        "Red-Eyes B. Dragon",
+        "B. Skull Dragon",
+        "Copycat",
+        "Graceful Dice",
+        "Skull Dice",
+        "Scapegoat",
+        "Polymerization",
+        "Alligator's Sword Dragon",
+        "Gearfried the Iron Knight",
+        "Fairy Box",
+        "Obnoxious Celtic Guard",
+        "Lady Ninja Yae",
+        "Red-Eyes Darkness Dragon"
+      ],
+      "archetype": "unclassified",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "dimitri_year1",
+        "yugi_deck"
+      ],
+      "default_deck": "dimitri_year1"
+    },
+    {
+      "id": "fontaine",
+      "name": "Fonda Fontaine",
+      "guide_name": "Fonda Fontaine",
+      "section": "Obelisk Blue",
+      "note": "teacher; special event: Fail at exams",
+      "signature_card_ids": [
+        32,
+        33,
+        55,
+        168,
+        509,
+        779,
+        1043,
+        1045,
+        1046,
+        1047,
+        1050,
+        1062
+      ],
+      "signature_cards": [
+        "Harpie Lady",
+        "Harpie Lady Sisters",
+        "Faith Bird",
+        "Harpie's Pet Dragon",
+        "Birdface",
+        "Sonic Duck",
+        "Roc from the Valley of Haze",
+        "Harpie Lady 1",
+        "Harpie Lady 2",
+        "Harpie Lady 3",
+        "Eagle Eye",
+        "Harpies' Hunting Ground"
+      ],
+      "archetype": "Winged Beast",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "fontaine_year1"
+      ],
+      "default_deck": "fontaine_year1"
+    },
+    {
+      "id": "gerard",
+      "name": "Gerard",
+      "guide_name": "Gerard",
+      "section": "Slifer Red",
+      "note": "Only when you are in Slifer Red",
+      "signature_card_ids": [
+        9,
+        245,
+        308,
+        315,
+        1199
+      ],
+      "signature_cards": [
+        "Swamp Battleguard",
+        "Lava Battleguard",
+        "Hungry Burger",
+        "Chakra",
+        "Wasteland Amazon"
+      ],
+      "archetype": "unclassified",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "gerard_year1"
+      ],
+      "default_deck": "gerard_year1"
     },
     {
       "id": "jaden",
@@ -106,125 +631,161 @@
         "Elemental Hero Flame Wingman"
       ],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "jaden_improved",
+        "jaden_year1"
+      ],
+      "default_deck": "jaden_year1"
     },
     {
-      "id": "syrus",
-      "name": "Syrus Truesdale",
-      "guide_name": "Syrus Truesdale",
-      "section": "Slifer Red",
-      "note": "",
+      "id": "jasmine",
+      "name": "Jasmine",
+      "guide_name": "Jasmine",
+      "section": "Obelisk Blue",
+      "note": "First in [[Alexis]]' Event, later on regularly once you entered Obelisk Blue Dorm",
       "signature_card_ids": [
-        117,
-        556,
-        1040,
-        1056,
-        1155
+        89,
+        649,
+        723,
+        771,
+        947,
+        1017,
+        1070
       ],
       "signature_cards": [
-        "Black Pendant",
-        "Limiter Removal",
-        "Harpie Girl",
-        "Big Core",
-        "Steam Gyroid"
+        "Beautiful Headhuntress",
+        "Marauding Captain",
+        "Queen's Knight",
+        "Thunder of Ruler",
+        "Lady Ninja Yae",
+        "Penumbral Soldier Lady",
+        "Chain Burst"
       ],
-      "archetype": "Vehicroid",
-      "gift_card_ids": [
-        1147,
-        1159
-      ],
-      "gift_cards": [
-        "Patroid",
-        "Power Bond"
-      ],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "chumley",
-      "name": "Chumley Huffington",
-      "guide_name": "Chumley Huffington",
-      "section": "Slifer Red",
-      "note": "",
-      "signature_card_ids": [
-        114,
-        793,
-        1019,
-        1090
-      ],
-      "signature_cards": [
-        "Beast Fangs",
-        "Des Koala",
-        "Master of Oz",
-        "Poison Fangs"
-      ],
-      "archetype": "Burn Beast",
-      "gift_card_ids": [
-        1019,
-        1125
-      ],
-      "gift_cards": [
-        "Master of Oz",
-        "Des Wombat"
-      ],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "blair",
-      "name": "Blair Flannigan",
-      "guide_name": "Blair Flannigan",
-      "section": "Slifer Red",
-      "note": "Only when you are in Slifer Red",
-      "signature_card_ids": [
-        352,
-        366,
-        582,
-        583,
-        711,
-        948,
-        1152
-      ],
-      "signature_cards": [
-        "Dark Magician Girl",
-        "Toon World",
-        "Spirit of the Breeze",
-        "Dancing Fairy",
-        "Toon Gemini Elf",
-        "White Magician Pikeru",
-        "Cyber Dragon"
-      ],
-      "archetype": "Maiden",
+      "archetype": "Warrior",
       "gift_card_ids": [],
       "gift_cards": [],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "jasmine_year1"
+      ],
+      "default_deck": "jasmine_year1"
     },
     {
-      "id": "gerard",
-      "name": "Gerard",
-      "guide_name": "Gerard",
-      "section": "Slifer Red",
-      "note": "Only when you are in Slifer Red",
+      "id": "mimicry",
+      "name": "Mimicry",
+      "guide_name": "Mimicry",
+      "section": "Others",
+      "note": "Only in the Exams",
       "signature_card_ids": [
-        9,
-        245,
-        308,
-        315,
-        1199
+        448,
+        463,
+        486,
+        499,
+        579,
+        590,
+        669,
+        796,
+        811,
+        812,
+        908
       ],
       "signature_cards": [
-        "Swamp Battleguard",
-        "Lava Battleguard",
-        "Hungry Burger",
-        "Chakra",
-        "Wasteland Amazon"
+        "Nimble Momonga",
+        "Numinous Healer",
+        "Kiseitai",
+        "Enchanted Javelin",
+        "Fire Princess",
+        "Marie the Fallen One",
+        "Cestus of Dagla",
+        "Big Bang Shot",
+        "Granadora",
+        "Shinato, King of a Higher Plane",
+        "Guardian Angel Joan"
+      ],
+      "archetype": "Cure/Burn/Piercing",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "mimicry_year1"
+      ],
+      "default_deck": "mimicry_year1"
+    },
+    {
+      "id": "mindy",
+      "name": "Mindy",
+      "guide_name": "Mindy",
+      "section": "Obelisk Blue",
+      "note": "First in [[Alexis]]' Event, later on regularly once you entered Obelisk Blue Dorm",
+      "signature_card_ids": [
+        23,
+        95,
+        377,
+        512,
+        614,
+        830,
+        831,
+        910
+      ],
+      "signature_cards": [
+        "Dark Magician",
+        "Dimensional Warrior",
+        "Dark Magic Curtain",
+        "Fairy King Truesdale",
+        "Obnoxious Celtic Guard",
+        "Dark Magician Knight",
+        "Knight's Title",
+        "Getsu Fuhma"
+      ],
+      "archetype": "Beatdown",
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "mindy_year1"
+      ],
+      "default_deck": "mindy_year1"
+    },
+    {
+      "id": "pharaoh",
+      "name": "Pharaoh",
+      "guide_name": "Pharaoh",
+      "section": "Slifer Red",
+      "note": "Teacher's cat",
+      "signature_card_ids": [
+        1112,
+        1169
+      ],
+      "signature_cards": [
+        "Ancient Gear Beast",
+        "Mechanical Hound"
       ],
       "archetype": "unclassified",
-      "gift_card_ids": [],
-      "gift_cards": [],
+      "gift_card_ids": [
+        242,
+        342,
+        837
+      ],
+      "gift_cards": [
+        "Bone Mouse",
+        "Panther Warrior",
+        "Outstanding Dog Marron"
+      ],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "pharaoh_year1"
+      ],
+      "default_deck": "pharaoh_year1"
     },
     {
       "id": "sartyr",
@@ -260,235 +821,172 @@
       "gift_card_ids": [],
       "gift_cards": [],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "sartyr_year1"
+      ],
+      "default_deck": "sartyr_year1"
     },
     {
-      "id": "bastion",
-      "name": "Bastion Misawa",
-      "guide_name": "Bastion Misawa",
-      "section": "Ra Yellow",
-      "note": "",
+      "id": "shadow_duelist",
+      "name": "The Shadow Duelist",
+      "guide_name": "The Shadow Duelist",
+      "section": "Others",
+      "note": "Twice, one random in the Volcano and in his Event",
       "signature_card_ids": [
-        29,
-        262,
-        337,
-        338,
-        351,
-        364,
-        467,
-        500,
-        502,
-        1021
+        18,
+        50,
+        110,
+        127,
+        140,
+        229,
+        362,
+        373,
+        419,
+        460,
+        836,
+        885,
+        1021,
+        1060,
+        1085,
+        1126
       ],
       "signature_cards": [
-        "Sangan",
-        "Penguin Soldier",
-        "Hyozanryu",
-        "Alpha The Magnet Warrior",
-        "Beta The Magnet Warrior",
-        "Gamma The Magnet Warrior",
-        "Backup Soldier",
-        "Valkyrion the Magna Warrior",
-        "Vorse Raider",
-        "Dark Factory of Mass Production"
+        "Summoned Skull",
+        "Mask of Darkness",
+        "Axe of Despair",
+        "Malevolent Nuzzler",
+        "Yami",
+        "The Bistro Butcher",
+        "Beast of Talwar",
+        "Skull Dice",
+        "Sorcerer of the Doomed",
+        "Mystic Plasma Zone",
+        "Archfiend Soldier",
+        "Dark Mirror Force",
+        "Dark Factory of Mass Production",
+        "Dark Blade the Dragon Knight",
+        "Shadowslayer",
+        "King of the Skull Servants"
       ],
-      "archetype": "Magnet",
+      "archetype": "Archfiend",
       "gift_card_ids": [
-        503
+        19,
+        348
       ],
       "gift_cards": [
-        "Ring of Destruction"
+        "Skull Servant",
+        "Jinzo"
       ],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "shadow_duelist_year1"
+      ],
+      "default_deck": "shadow_duelist_year1"
     },
     {
-      "id": "dimitri",
-      "name": "Dimitri",
-      "guide_name": "Dimitri",
-      "section": "Ra Yellow",
-      "note": "Only when you are in Ra Yellow",
+      "id": "syrus",
+      "name": "Syrus Truesdale",
+      "guide_name": "Syrus Truesdale",
+      "section": "Slifer Red",
+      "note": "",
       "signature_card_ids": [
-        3,
-        40,
-        85,
-        365,
-        372,
-        373,
-        374,
-        381,
-        501,
-        526,
-        546,
-        614,
-        947,
-        1104
-      ],
-      "signature_cards": [
-        "Baby Dragon",
-        "Red-Eyes B. Dragon",
-        "B. Skull Dragon",
-        "Copycat",
-        "Graceful Dice",
-        "Skull Dice",
-        "Scapegoat",
-        "Polymerization",
-        "Alligator's Sword Dragon",
-        "Gearfried the Iron Knight",
-        "Fairy Box",
-        "Obnoxious Celtic Guard",
-        "Lady Ninja Yae",
-        "Red-Eyes Darkness Dragon"
-      ],
-      "archetype": "unclassified",
-      "gift_card_ids": [],
-      "gift_cards": [],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "brier",
-      "name": "Brier",
-      "guide_name": "Brier",
-      "section": "Ra Yellow",
-      "note": "Only when you are in Ra Yellow",
-      "signature_card_ids": [
-        251,
-        414,
-        566,
-        758,
-        839,
-        926,
-        1170
-      ],
-      "signature_cards": [
-        "Needle Worm",
-        "Robbin' Goblin",
-        "Goblin Attack Force",
-        "Giant Orc",
-        "Mefist the Infernal General",
-        "Robbin' Zombie",
-        "Goblin Elite Attack Force"
-      ],
-      "archetype": "Goblin",
-      "gift_card_ids": [],
-      "gift_cards": [],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "beauregard",
-      "name": "Beauregard",
-      "guide_name": "Beauregard",
-      "section": "Ra Yellow",
-      "note": "Only when you are in Ra Yellow",
-      "signature_card_ids": [
-        145,
-        455,
-        555,
-        566,
-        583,
-        739,
-        758,
-        796,
-        955,
-        1077,
-        1170
-      ],
-      "signature_cards": [
-        "Goblin's Secret Remedy",
-        "Gaia Power",
-        "Fairy Meteor Crush",
-        "Goblin Attack Force",
-        "Dancing Fairy",
-        "Banner of Courage",
-        "Giant Orc",
-        "Big Bang Shot",
-        "Goblin Thief",
-        "Granmarg the Rock Monarch",
-        "Goblin Elite Attack Force"
-      ],
-      "archetype": "Goblin",
-      "gift_card_ids": [],
-      "gift_cards": [],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "crowler",
-      "name": "Vellian Crowler",
-      "guide_name": "Vellian Crowler",
-      "section": "Obelisk Blue",
-      "note": "teacher",
-      "signature_card_ids": [
-        514,
-        546,
+        117,
         556,
-        703,
-        1076,
-        1111,
-        1112,
-        1113,
-        1155,
+        1040,
+        1056,
+        1155
+      ],
+      "signature_cards": [
+        "Black Pendant",
+        "Limiter Removal",
+        "Harpie Girl",
+        "Big Core",
+        "Steam Gyroid"
+      ],
+      "archetype": "Vehicroid",
+      "gift_card_ids": [
+        1147,
         1159
       ],
-      "signature_cards": [
-        "Robotic Knight",
-        "Fairy Box",
-        "Limiter Removal",
-        "Bottomless Shifting Sand",
-        "Insect Knight",
-        "Ancient Gear Golem",
-        "Ancient Gear Beast",
-        "Ancient Gear Soldier",
-        "Steam Gyroid",
+      "gift_cards": [
+        "Patroid",
         "Power Bond"
       ],
-      "archetype": "Ancient Gear",
-      "gift_card_ids": [],
-      "gift_cards": [],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "syrus_year1"
+      ],
+      "default_deck": "syrus_year1"
     },
     {
-      "id": "fontaine",
-      "name": "Fonda Fontaine",
-      "guide_name": "Fonda Fontaine",
+      "id": "topher",
+      "name": "Topher",
+      "guide_name": "Topher",
       "section": "Obelisk Blue",
-      "note": "teacher; special event: Fail at exams",
+      "note": "Only in [[Chazz]]' Event",
       "signature_card_ids": [
-        32,
-        33,
-        55,
-        168,
-        509,
-        779,
-        1043,
-        1045,
-        1046,
-        1047,
-        1050,
-        1062
+        336,
+        447
       ],
       "signature_cards": [
-        "Harpie Lady",
-        "Harpie Lady Sisters",
-        "Faith Bird",
-        "Harpie's Pet Dragon",
-        "Birdface",
-        "Sonic Duck",
-        "Roc from the Valley of Haze",
-        "Harpie Lady 1",
-        "Harpie Lady 2",
-        "Harpie Lady 3",
-        "Eagle Eye",
-        "Harpies' Hunting Ground"
+        "Blast Sphere",
+        "Giant Germ"
       ],
-      "archetype": "Winged Beast",
+      "archetype": "Burn",
+      "gift_card_ids": [
+        724,
+        744,
+        746
+      ],
+      "gift_cards": [
+        "X-Head Cannon",
+        "Y-Dragon Head",
+        "Z-Metal Tank"
+      ],
+      "confidence": "medium",
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "topher_year1"
+      ],
+      "default_deck": "topher_year1"
+    },
+    {
+      "id": "torrey",
+      "name": "Torrey",
+      "guide_name": "Torrey",
+      "section": "Obelisk Blue",
+      "note": "Only when you are in Obelisk Blue",
+      "signature_card_ids": [
+        348,
+        600,
+        602,
+        604,
+        605
+      ],
+      "signature_cards": [
+        "Jinzo",
+        "Headless Knight",
+        "Destiny Board",
+        "Earthbound Spirit",
+        "The Earl of Demise"
+      ],
+      "archetype": "Fiend",
       "gift_card_ids": [],
       "gift_cards": [],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "torrey_year1"
+      ],
+      "default_deck": "torrey_year1"
     },
     {
       "id": "zane",
@@ -544,371 +1042,80 @@
         "Cyber Dragon"
       ],
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
+      "role": "named",
+      "decks": [
+        "zane_year1"
+      ],
+      "default_deck": "zane_year1"
     },
     {
-      "id": "chazz",
-      "name": "Chazz Princeton",
-      "guide_name": "Chazz Princeton",
-      "section": "Obelisk Blue",
-      "note": "",
+      "id": "goblin_king",
+      "name": "Goblin King / Duel Giant",
+      "section": "Event",
+      "role": "event",
+      "note": "E17 timed duel; the Duel Giant is Brier and Beauregard under a mask.",
       "signature_card_ids": [
-        708,
-        715,
-        725,
-        756,
-        757,
-        839,
-        1102
+        713
       ],
       "signature_cards": [
-        "Legendary Fiend",
-        "Newdoria",
-        "Master Kyonshee",
-        "Decayed Commander",
-        "Zombie Tiger",
-        "Mefist the Infernal General",
-        "Blood Sucker"
+        "Toon Goblin Attack Force"
       ],
-      "archetype": "Dark",
-      "gift_card_ids": [
-        839
-      ],
-      "gift_cards": [
-        "Mefist the Infernal General"
-      ],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "topher",
-      "name": "Topher",
-      "guide_name": "Topher",
-      "section": "Obelisk Blue",
-      "note": "Only in [[Chazz]]' Event",
-      "signature_card_ids": [
-        336,
-        447
-      ],
-      "signature_cards": [
-        "Blast Sphere",
-        "Giant Germ"
-      ],
-      "archetype": "Burn",
-      "gift_card_ids": [
-        724,
-        744,
-        746
-      ],
-      "gift_cards": [
-        "X-Head Cannon",
-        "Y-Dragon Head",
-        "Z-Metal Tank"
-      ],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "conklin",
-      "name": "Conklin",
-      "guide_name": "Conklin",
-      "section": "Obelisk Blue",
-      "note": "Only in [[Chazz]]' [[Yu-Gi-Oh! GX Duel Academy/Events|Event]]",
-      "signature_card_ids": [
-        444,
-        892
-      ],
-      "signature_cards": [
-        "UFO Turtle",
-        "Blazing Inpachi"
-      ],
-      "archetype": "basic Fire",
-      "gift_card_ids": [
-        724,
-        744,
-        746
-      ],
-      "gift_cards": [
-        "X-Head Cannon",
-        "Y-Dragon Head",
-        "Z-Metal Tank"
-      ],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "alexis",
-      "name": "Alexis Rhodes",
-      "guide_name": "Alexis Rhodes",
-      "section": "Obelisk Blue",
-      "note": "",
-      "signature_card_ids": [
-        360,
-        443,
-        463,
-        499,
-        586,
-        589,
-        668,
-        673,
-        674,
-        812,
-        837,
-        908,
-        909,
-        934,
-        949,
-        953
-      ],
-      "signature_cards": [
-        "Dunames Dark Witch",
-        "Senju of the Thousand Hands",
-        "Numinous Healer",
-        "Enchanted Javelin",
-        "Hysteric Fairy",
-        "St. Joan",
-        "Mudora",
-        "Zolga",
-        "Agido",
-        "Shinato, King of a Higher Plane",
-        "Outstanding Dog Marron",
-        "Guardian Angel Joan",
-        "Manju of the Ten Thousand Hands",
-        "Warrior of Zera",
-        "Archlord Zerato",
-        "The Sanctuary in the Sky"
-      ],
-      "archetype": "Fairy",
-      "gift_card_ids": [
-        1025
-      ],
-      "gift_cards": [
-        "Fusion Weapon"
-      ],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "mindy",
-      "name": "Mindy",
-      "guide_name": "Mindy",
-      "section": "Obelisk Blue",
-      "note": "First in [[Alexis]]' Event, later on regularly once you entered Obelisk Blue Dorm",
-      "signature_card_ids": [
-        23,
-        95,
-        377,
-        512,
-        614,
-        830,
-        831,
-        910
-      ],
-      "signature_cards": [
-        "Dark Magician",
-        "Dimensional Warrior",
-        "Dark Magic Curtain",
-        "Fairy King Truesdale",
-        "Obnoxious Celtic Guard",
-        "Dark Magician Knight",
-        "Knight's Title",
-        "Getsu Fuhma"
-      ],
-      "archetype": "Beatdown",
       "gift_card_ids": [],
       "gift_cards": [],
+      "deck": null,
+      "deck_kind": "timed_puzzle",
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_17:_The_Goblin_King",
+      "decks": []
     },
     {
-      "id": "jasmine",
-      "name": "Jasmine",
-      "guide_name": "Jasmine",
-      "section": "Obelisk Blue",
-      "note": "First in [[Alexis]]' Event, later on regularly once you entered Obelisk Blue Dorm",
+      "id": "jinzo",
+      "name": "Jinzo (spirit)",
+      "section": "Event",
+      "role": "event",
+      "note": "Spirit possessing Torrey; E08 opponent.",
       "signature_card_ids": [
-        89,
-        649,
-        723,
-        771,
-        947,
-        1017,
-        1070
-      ],
-      "signature_cards": [
-        "Beautiful Headhuntress",
-        "Marauding Captain",
-        "Queen's Knight",
-        "Thunder of Ruler",
-        "Lady Ninja Yae",
-        "Penumbral Soldier Lady",
-        "Chain Burst"
-      ],
-      "archetype": "Warrior",
-      "gift_card_ids": [],
-      "gift_cards": [],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "torrey",
-      "name": "Torrey",
-      "guide_name": "Torrey",
-      "section": "Obelisk Blue",
-      "note": "Only when you are in Obelisk Blue",
-      "signature_card_ids": [
-        348,
-        600,
-        602,
-        604,
-        605
-      ],
-      "signature_cards": [
-        "Jinzo",
-        "Headless Knight",
-        "Destiny Board",
-        "Earthbound Spirit",
-        "The Earl of Demise"
-      ],
-      "archetype": "Fiend",
-      "gift_card_ids": [],
-      "gift_cards": [],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "damon",
-      "name": "Damon",
-      "guide_name": "Damon",
-      "section": "Obelisk Blue",
-      "note": "Only when you are in Obelisk Blue",
-      "signature_card_ids": [
-        52,
-        226,
-        238,
-        381,
-        387,
-        425,
-        511,
-        553,
-        591,
-        706,
-        1015,
-        1020,
-        1178
-      ],
-      "signature_cards": [
-        "White Magical Hat",
-        "Muka Muka",
-        "Skelengel",
-        "Polymerization",
-        "Pot of Greed",
-        "Upstart Goblin",
-        "Airknight Parshath",
-        "Solemn Wishes",
-        "Jar of Greed",
-        "Reckless Greed",
-        "Enraged Muka Muka",
-        "Sanwitch",
-        "Poison Draw Frog"
-      ],
-      "archetype": "Draw",
-      "gift_card_ids": [],
-      "gift_cards": [],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "mimicry",
-      "name": "Mimicry",
-      "guide_name": "Mimicry",
-      "section": "Others",
-      "note": "Only in the Exams",
-      "signature_card_ids": [
-        448,
-        463,
-        486,
-        499,
-        579,
-        590,
-        669,
-        796,
-        811,
-        812,
-        908
-      ],
-      "signature_cards": [
-        "Nimble Momonga",
-        "Numinous Healer",
-        "Kiseitai",
-        "Enchanted Javelin",
-        "Fire Princess",
-        "Marie the Fallen One",
-        "Cestus of Dagla",
-        "Big Bang Shot",
-        "Granadora",
-        "Shinato, King of a Higher Plane",
-        "Guardian Angel Joan"
-      ],
-      "archetype": "Cure/Burn/Piercing",
-      "gift_card_ids": [],
-      "gift_cards": [],
-      "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
-    },
-    {
-      "id": "shadow_duelist",
-      "name": "The Shadow Duelist",
-      "guide_name": "The Shadow Duelist",
-      "section": "Others",
-      "note": "Twice, one random in the Volcano and in his Event",
-      "signature_card_ids": [
-        18,
-        50,
-        110,
-        127,
-        140,
-        229,
-        362,
-        373,
-        419,
-        460,
-        836,
-        885,
-        1021,
-        1060,
-        1085,
-        1126
-      ],
-      "signature_cards": [
-        "Summoned Skull",
-        "Mask of Darkness",
-        "Axe of Despair",
-        "Malevolent Nuzzler",
-        "Yami",
-        "The Bistro Butcher",
-        "Beast of Talwar",
-        "Skull Dice",
-        "Sorcerer of the Doomed",
-        "Mystic Plasma Zone",
-        "Archfiend Soldier",
-        "Dark Mirror Force",
-        "Dark Factory of Mass Production",
-        "Dark Blade the Dragon Knight",
-        "Shadowslayer",
-        "King of the Skull Servants"
-      ],
-      "archetype": "Archfiend",
-      "gift_card_ids": [
-        19,
         348
       ],
-      "gift_cards": [
-        "Skull Servant",
+      "signature_cards": [
         "Jinzo"
       ],
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "deck": "jinzo_spirit",
       "confidence": "medium",
-      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents"
+      "source": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_8:_Jinzo",
+      "decks": [
+        "jinzo_spirit"
+      ],
+      "default_deck": "jinzo_spirit"
+    },
+    {
+      "id": "sheppard",
+      "name": "Chancellor Sheppard",
+      "section": "Staff",
+      "role": "event",
+      "note": "E33 King of Games promotion duel; complete deck in Character Deck List FAQ v1.4 section y.",
+      "signature_card_ids": [
+        1,
+        166,
+        951
+      ],
+      "signature_cards": [
+        "Blue-Eyes White Dragon",
+        "Blue-Eyes Ultimate Dragon",
+        "Burst Stream of Destruction"
+      ],
+      "gift_card_ids": [],
+      "gift_cards": [],
+      "deck": "sheppard_year1",
+      "confidence": "high",
+      "source": "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#y",
+      "decks": [
+        "sheppard_year1"
+      ],
+      "default_deck": "sheppard_year1"
     }
   ]
 }

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 904,
+  "name": "Anti-Aircraft Flower",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Offer 1 Insect-Type monster on your side of the field as a Tribute to inflict 800 points of damage to your opponent's Life Points.",
+  "notes": [
+    "Tributing a Insect monster is the cost for 800 damage."
+  ],
+  "scripts": [
+    {
+      "id": "904_tribute_typed_burn",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 800,
+          "player": "opponent",
+          "reason": "Anti-Aircraft Flower"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "tribute",
+          "target": {
+            "zone": "self_monster",
+            "count": 1,
+            "filter": {
+              "monster_type": "Insect"
+            }
+          }
+        }
+      ],
+      "source_text": "Offer 1 Insect-Type monster on your side of the field as a Tribute to inflict 800 points of damage to your opponent's Life Points."
+    }
+  ]
+}

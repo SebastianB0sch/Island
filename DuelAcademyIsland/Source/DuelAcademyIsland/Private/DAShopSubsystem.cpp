@@ -633,6 +633,21 @@ int32 UDAShopSubsystem::GetNextAvailableDay(const FString& PackId) const
 	return Last + FMath::Max(1, Pack->RestockDays);
 }
 
+int32 UDAShopSubsystem::GetPurchaseCount(const FString& PackId) const
+{
+	return PurchaseCounts.FindRef(PackId);
+}
+
+int32 UDAShopSubsystem::GetRemainingStock(const FString& PackId) const
+{
+	const FDAEPackDef* Pack = FindPack(PackId);
+	if (!Pack || Pack->Stock <= 0)
+	{
+		return -1;
+	}
+	return FMath::Max(0, Pack->Stock - GetPurchaseCount(PackId));
+}
+
 bool UDAShopSubsystem::CheckPurchase(const FString& PackId, FString& OutReason, EDAEPurchaseBlock& OutBlock) const
 {
 	OutReason.Reset();
@@ -868,34 +883,108 @@ TArray<FString> UDAShopSubsystem::ValidateCatalogue() const
 	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
 	TSet<int32> Obtainable;
 	TSet<FString> SeenIds;
+	static const TSet<FString> KnownCategories = {
+		TEXT("Basic"),
+		TEXT("Medium"),
+		TEXT("Special"),
+		TEXT("Attribute"),
+		TEXT("Type"),
+		TEXT("Spell/Trap"),
+		TEXT("Expert")
+	};
 
 	for (const FDAEPackDef& Pack : Packs)
 	{
 		if (Pack.Id.IsEmpty()) Issues.Add(TEXT("A pack has an empty id."));
+		if (Pack.Name.IsEmpty()) Issues.Add(FString::Printf(TEXT("Pack '%s' has an empty name."), *Pack.Id));
 		if (SeenIds.Contains(Pack.Id)) Issues.Add(FString::Printf(TEXT("Duplicate pack id '%s'."), *Pack.Id));
 		SeenIds.Add(Pack.Id);
+		if (Pack.Category.IsEmpty() || !KnownCategories.Contains(Pack.Category))
+		{
+			Issues.Add(FString::Printf(TEXT("Pack '%s' references missing set/category '%s'."), *Pack.Id, *Pack.Category));
+		}
+		if (Pack.Source.IsEmpty()) Issues.Add(FString::Printf(TEXT("Pack '%s' has no data source."), *Pack.Id));
 		if (Pack.Price <= 0) Issues.Add(FString::Printf(TEXT("Pack '%s' has a non-positive price."), *Pack.Id));
 		if (Pack.PackSize <= 0) Issues.Add(FString::Printf(TEXT("Pack '%s' has a non-positive pack size."), *Pack.Id));
+		if (Pack.RestockDays <= 0) Issues.Add(FString::Printf(TEXT("Pack '%s' has a non-positive restock period."), *Pack.Id));
+		if (Pack.PurchaseLimit <= 0) Issues.Add(FString::Printf(TEXT("Pack '%s' has a non-positive purchase limit."), *Pack.Id));
+		if (Pack.Stock < 0) Issues.Add(FString::Printf(TEXT("Pack '%s' has negative stock."), *Pack.Id));
+		if (Pack.DuplicateDPPerCard < 0) Issues.Add(FString::Printf(TEXT("Pack '%s' has negative duplicate DP."), *Pack.Id));
 		if (Pack.Slots.Num() != Pack.PackSize) Issues.Add(FString::Printf(TEXT("Pack '%s' slot count %d != pack size %d."), *Pack.Id, Pack.Slots.Num(), Pack.PackSize));
 		if (!Pack.HasAnyPool()) Issues.Add(FString::Printf(TEXT("Pack '%s' has no pools."), *Pack.Id));
-
-		bool bHasFixedOrWeighted = false;
-		for (const FDAEPackSlot& Slot : Pack.Slots)
+		if (Pack.bAllCards && Pack.Pools.Num() == 0)
 		{
-			if (Slot.Type != EDAEPackSlotType::AnyCard)
+			Issues.Add(FString::Printf(TEXT("Pack '%s' is all-cards but has no materialised pool."), *Pack.Id));
+		}
+		if (Pack.UnlockDescription.IsEmpty()) Issues.Add(FString::Printf(TEXT("Pack '%s' has no unlock description."), *Pack.Id));
+		if (Pack.UnlockConditions.Num() == 0) Issues.Add(FString::Printf(TEXT("Pack '%s' has no unlock conditions."), *Pack.Id));
+
+		int32 DefaultWeightTotal = 0;
+		for (const FDAERarityWeight& Weight : Pack.RarePlusWeights)
+		{
+			if (Weight.Weight <= 0)
 			{
-				bHasFixedOrWeighted = true;
+				Issues.Add(FString::Printf(TEXT("Pack '%s' has a non-positive default rare-plus weight."), *Pack.Id));
+			}
+			else
+			{
+				DefaultWeightTotal += Weight.Weight;
 			}
 		}
-		if (bHasFixedOrWeighted && !Pack.bAllCards && !Pack.HasAnyPool())
+		if (DefaultWeightTotal != 100)
 		{
-			Issues.Add(FString::Printf(TEXT("Pack '%s' has slot types but no pools."), *Pack.Id));
+			Issues.Add(FString::Printf(TEXT("Pack '%s' default rare-plus weights sum to %d (expected 100)."), *Pack.Id, DefaultWeightTotal));
 		}
 
+		for (int32 SlotIndex = 0; SlotIndex < Pack.Slots.Num(); ++SlotIndex)
+		{
+			const FDAEPackSlot& Slot = Pack.Slots[SlotIndex];
+			if (Slot.Type == EDAEPackSlotType::FixedRarity)
+			{
+				if (!Pack.FindPool(Slot.Rarity))
+				{
+					Issues.Add(FString::Printf(TEXT("Pack '%s' slot %d has no %s pool."), *Pack.Id, SlotIndex, *DAEconomy::RarityToString(Slot.Rarity)));
+				}
+			}
+			else if (Slot.Type == EDAEPackSlotType::RarePlus)
+			{
+				const TArray<FDAERarityWeight>& Weights = Slot.Weights.Num() > 0 ? Slot.Weights : Pack.RarePlusWeights;
+				int32 TotalWeight = 0;
+				bool bHasUsablePool = false;
+				for (const FDAERarityWeight& Weight : Weights)
+				{
+					if (Weight.Weight <= 0)
+					{
+						Issues.Add(FString::Printf(TEXT("Pack '%s' slot %d has a non-positive rare-plus weight."), *Pack.Id, SlotIndex));
+						continue;
+					}
+					TotalWeight += Weight.Weight;
+					if (Pack.FindPool(Weight.Rarity))
+					{
+						bHasUsablePool = true;
+					}
+				}
+				if (TotalWeight <= 0)
+				{
+					Issues.Add(FString::Printf(TEXT("Pack '%s' slot %d has no usable rare-plus weight."), *Pack.Id, SlotIndex));
+				}
+				if (!bHasUsablePool)
+				{
+					Issues.Add(FString::Printf(TEXT("Pack '%s' slot %d has no non-empty rarity pool."), *Pack.Id, SlotIndex));
+				}
+			}
+		}
+
+		TSet<int32> PackPool;
 		for (const FDAERarityPool& Pool : Pack.Pools)
 		{
 			for (const int32 CardId : Pool.Cards)
 			{
+				if (PackPool.Contains(CardId))
+				{
+					Issues.Add(FString::Printf(TEXT("Pack '%s' lists card %d more than once."), *Pack.Id, CardId));
+				}
+				PackPool.Add(CardId);
 				Obtainable.Add(CardId);
 				if (Database && !Database->FindCard(CardId))
 				{

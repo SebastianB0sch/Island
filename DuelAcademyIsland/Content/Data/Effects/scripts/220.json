@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "card_id": 220,
+  "name": "Dragon Seeker",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is Summoned (excluding Special Summon), destroy 1 face-up Dragon-Type monster on the field.",
+  "notes": [
+    "Destroys a face-up Dragon."
+  ],
+  "scripts": [
+    {
+      "id": "220_on_normal_summon_destroy_dragon",
+      "trigger": "on_normal_summon",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Dragon Seeker"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Dragon Seeker"
+          }
+        ]
+      },
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "face_up": true
+            },
+            {
+              "monster_type": "Dragon"
+            }
+          ]
+        }
+      },
+      "source_text": "When this card is Summoned (excluding Special Summon), destroy 1 face-up Dragon-Type monster on the field."
+    },
+    {
+      "id": "220_on_flip_summon_destroy_dragon",
+      "trigger": "on_flip_summon",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Dragon Seeker"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Dragon Seeker"
+          }
+        ]
+      },
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "face_up": true
+            },
+            {
+              "monster_type": "Dragon"
+            }
+          ]
+        }
+      },
+      "source_text": "When this card is Summoned (excluding Special Summon), destroy 1 face-up Dragon-Type monster on the field."
+    }
+  ]
+}

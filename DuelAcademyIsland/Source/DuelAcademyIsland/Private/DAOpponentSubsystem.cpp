@@ -2,8 +2,10 @@
 
 #include "DAOpponentSubsystem.h"
 
+#include "DACardRecords.h"
 #include "DuelAcademyIsland.h"
 #include "Dom/JsonObject.h"
+#include "Engine/GameInstance.h"
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -163,6 +165,39 @@ bool UDAOpponentSubsystem::Reload(FString& OutError)
 	for (const FString& Warning : Warnings)
 	{
 		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("[Opponents] %s"), *Warning);
+	}
+
+	// A04's FDuelEngine::Start resolves both sides through
+	// UCardDatabaseSubsystem::FindDeck, which historically only knew the
+	// A06 starter list in Data/decks.json.  Register the A07 opponent decks
+	// through the narrow card-database hook rather than teaching A06 economy
+	// code about Content/Data/Opponents.
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (UCardDatabaseSubsystem* CardDatabase = GameInstance->GetSubsystem<UCardDatabaseSubsystem>())
+		{
+			int32 Registered = 0;
+			for (const FDAOpponentDeckDef& OpponentDeck : DeckList)
+			{
+				FStarterDeckDef RegisteredDeck;
+				RegisteredDeck.Id = OpponentDeck.Id;
+				RegisteredDeck.Name = OpponentDeck.Name;
+				RegisteredDeck.Cards = OpponentDeck.Cards;
+				RegisteredDeck.Extra = OpponentDeck.Extra;
+				if (CardDatabase->RegisterDeck(RegisteredDeck))
+				{
+					++Registered;
+				}
+			}
+			UE_LOG(LogDuelAcademyIsland, Log,
+				TEXT("[Opponents] Registered %d/%d opponent decks with the card database."),
+				Registered, DeckList.Num());
+		}
+		else
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("[Opponents] Card database unavailable; opponent deck ids will not resolve in FDuelEngine::Start."));
+		}
 	}
 
 	bLoaded = Opponents.Num() > 0;

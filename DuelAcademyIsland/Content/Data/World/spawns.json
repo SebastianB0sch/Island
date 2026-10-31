@@ -2,7 +2,7 @@
   "schema_version": 1,
   "owner": "A08",
   "coordinate_space": "UE centimetres; positions come from anchor_id, not duplicated coordinates",
-  "schedule_contract": "Director queries (schedule_id, weekday, period). A spawn point matches when any of its tags or its schedule_id equals any query value; EventOverride wins.",
+  "schedule_contract": "Director queries (schedule_id, weekday, period). A spawn point matches when any of its tags or its schedule_id equals any query value; EventOverride wins. Weekday names derive weekday/weekday_am/weekday_pm, Saturday/Sunday derive weekend.",
   "spawns": [
     {
       "id": "academy_receptionist",

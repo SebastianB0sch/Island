@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 142,
+  "name": "Raigeki",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys all of your opponent's monsters on the field.",
+  "notes": [
+    "Board wipe against the opponent."
+  ],
+  "scripts": [
+    {
+      "id": "142_destroy_opponent_monsters",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Raigeki"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "opponent_monster",
+        "count": "all"
+      },
+      "source_text": "Destroys all of your opponent's monsters on the field."
+    }
+  ]
+}

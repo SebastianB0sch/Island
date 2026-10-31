@@ -173,6 +173,33 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
 	int32 GetEmailContactCount() const { return EmailContacts.Num(); }
 
+	/** Contact ids loaded from Content/Data/Story/emails.json (sorted). */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	TArray<FString> GetEmailContactIds() const;
+
+	/** Message ids declared for a contact (data order). */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	TArray<FString> GetEmailMessageIds(const FString& ContactId) const;
+
+	/** Duel-request ids declared for a contact (data order). */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	TArray<FString> GetEmailDuelRequestIds(const FString& ContactId) const;
+
+	/** Story duel requests unlocked by events/emails (sorted). */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	TArray<FString> GetUnlockedDuelIds() const;
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	bool IsDuelUnlocked(const FString& DuelId) const;
+
+	/** Unopened packs granted by story data until A06 exposes a pack inventory. */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	TArray<FString> GetPendingPackGrants() const;
+
+	/** Consume one pending pack grant (A06/A09 handoff). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
+	bool ConsumePendingPackGrant(const FString& PackId);
+
 	/** Continue/resume the opening. Uses the current profile name if initialized. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
 	void StartOpening();
@@ -245,6 +272,17 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
 	FString GetLastFullSelfTestReport() const { return LastFullSelfTestReport; }
+
+	/**
+	 * Headless in-engine playthrough: fresh profile/opening, 365 simulated days,
+	 * every E02-E33 event started and driven through its real scene queue, with
+	 * manual Advance/Choose and NotifyDuelResult(true, false).
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
+	bool RunStoryPlaythroughTest();
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	FString GetLastPlaythroughReport() const { return LastPlaythroughReport; }
 
 	/** Log the current scene/queue state to the output log. */
 	void DebugLogState() const;
@@ -344,6 +382,7 @@ private:
 	TMap<FString, TSharedPtr<FJsonObject>> EmailContacts;
 	TMap<FString, TSharedPtr<FJsonObject>> FullCampaignEventDocs;
 	TMap<FString, FString> Objectives;
+	TMap<FString, int32> PendingPackGrants;
 
 	TSet<FString> CompletedEvents;
 	TSet<FString> AppliedRewardIds;
@@ -376,6 +415,21 @@ private:
 	bool bAutoSelfTestStarted = false;
 	bool bAutoFullSelfTestRequested = false;
 	bool bAutoFullSelfTestStarted = false;
+	bool bSuppressAutoStart = false;
+	bool bManualAudience = false;
+
+	// Diagnostics reset by the playthrough harness before each event.
+	int32 PlaythroughMissingDialogue = 0;
+	int32 PlaythroughMissingScene = 0;
+	int32 PlaythroughUnknownCommand = 0;
+	int32 PlaythroughUnknownOutcome = 0;
+	int32 PlaythroughDialogueCommands = 0;
+	int32 PlaythroughChoiceCommands = 0;
+	int32 PlaythroughDuelCommands = 0;
+	int32 PlaythroughDuelResolved = 0;
+	int32 PlaythroughRewardCommands = 0;
+	int32 PlaythroughFlagCommands = 0;
+	int32 PlaythroughOutcomesApplied = 0;
 
 	FString PendingTextInputKey;
 	TArray<FDAStoryChoice> ActiveChoices;
@@ -385,6 +439,7 @@ private:
 	FString SelectedStarterDeck;
 	FString LastSelfTestReport;
 	FString LastFullSelfTestReport;
+	FString LastPlaythroughReport;
 	FString PreviousTitle;
 
 	float WaitRemaining = 0.f;

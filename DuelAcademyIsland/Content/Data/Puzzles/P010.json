@@ -15,7 +15,7 @@
     ],
     "field": [
       {
-        "card_id": 40,
+        "card_id": 655,
         "position": "attack",
         "face_up": true
       }
@@ -26,7 +26,7 @@
     "extra": []
   },
   "opponent_state": {
-    "lp": 800,
+    "lp": 300,
     "hand": [],
     "field": [
       {
@@ -47,7 +47,7 @@
     },
     {
       "action": "attack",
-      "attacker_card_id": 40,
+      "attacker_card_id": 655,
       "target": 363
     }
   ],
@@ -56,8 +56,8 @@
     "cards": []
   },
   "confidence": "high",
-  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
-  "notes": "Book of Moon turns Cyber-Tech Alligator into 1600 DEF; Red-Eyes deals exactly 800 battle damage.",
+  "source": "Port-authored engine-ready setup for this pass; canonical A01 setup is unknown. The fixed board is a legal one-turn line, not a GBA reconstruction.",
+  "notes": "Book of Moon turns Cyber-Tech Alligator into 1600 DEF; Spear Dragon pierces for exactly 300 battle damage.",
   "canon_reference": {
     "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
     "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_010",

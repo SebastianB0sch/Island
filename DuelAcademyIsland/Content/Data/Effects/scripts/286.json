@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "card_id": 286,
+  "name": "Breath of Light",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys all Rock-Type monsters on the field.",
+  "notes": [
+    "All Rock monsters are destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "286_destroy_type",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Breath of Light"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "all_monsters",
+        "count": "all",
+        "filter": {
+          "monster_type": "Rock",
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "Destroys all Rock-Type monsters on the field."
+    }
+  ]
+}

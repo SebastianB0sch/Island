@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "card_id": 897,
+  "name": "Stealth Bird",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "You can flip this card into face-down Defense Position once per turn during your Main Phase. When this card is Flip Summoned successfully, inflict 1000 points of damage to your opponent's Life Points.",
+  "notes": [
+    "One ignition set-self script plus one Flip Summon trigger."
+  ],
+  "scripts": [
+    {
+      "id": "897_manual_set_self",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "change_position",
+          "target": "$self",
+          "position": "face_down"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": true,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "source_text": "You can flip this card into face-down Defense Position once per turn during your Main Phase."
+    },
+    {
+      "id": "897_flip_summon_damage",
+      "trigger": "on_flip_summon",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 1000,
+          "player": "opponent",
+          "reason": "Stealth Bird"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true,
+            "zone": "self_monster"
+          },
+          {
+            "name": "Stealth Bird"
+          }
+        ]
+      },
+      "source_text": "When this card is Flip Summoned successfully, inflict 1000 points of damage to your opponent's Life Points."
+    }
+  ]
+}

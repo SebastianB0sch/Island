@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "card_id": 449,
+  "name": "Shining Angel",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent to the Graveyard as a result of battle, you can select 1 LIGHT monster with an ATK of 1500 or less from your Deck and Special Summon it to the field in face-up Attack Position (no Tribute is required for monsters of Level 5 or more). The Deck is then shuffled.",
+  "notes": [
+    "Recruits a LIGHT monster with ATK <= 1500 in face-up Attack Position."
+  ],
+  "scripts": [
+    {
+      "id": "449_battle_recruit",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "attribute": "LIGHT"
+            },
+            {
+              "atk_max": 1500
+            }
+          ]
+        }
+      },
+      "source_text": "When this card is sent to the Graveyard as a result of battle, you can select 1 LIGHT monster with an ATK of 1500 or less from your Deck and Special Summon it to the field in face-up Attack Position (no Tribute is required for monsters of Level 5 or more). The Deck is then shuffled.",
+      "condition": {
+        "name": "Shining Angel"
+      }
+    }
+  ]
+}

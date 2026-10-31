@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 179,
+  "name": "Monster Eye",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "At the cost of 1000 Life Points, you can return \"Polymerization\" from the Graveyard to your hand.",
+  "notes": [
+    "Pays 1000 LP to return 'Polymerization'."
+  ],
+  "scripts": [
+    {
+      "id": "179_pay_life_return_named",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "Monster Eye"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "pay_lp",
+          "amount": 1000
+        }
+      ],
+      "target": {
+        "zone": "self_graveyard",
+        "count": 1,
+        "filter": {
+          "name": "Polymerization"
+        }
+      },
+      "source_text": "At the cost of 1000 Life Points, you can return \"Polymerization\" from the Graveyard to your hand."
+    }
+  ]
+}

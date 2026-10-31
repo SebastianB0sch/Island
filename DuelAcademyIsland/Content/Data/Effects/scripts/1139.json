@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 1139,
+  "name": "Mispolymerization",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "You can only activate this card when a Fusion Monster is Special Summoned. Return all face-up Fusion Monsters on the field to their respective Fusion Decks.",
+  "notes": [
+    "Uses the set-trap-safe on_summon response path and requires a Special Summon event."
+  ],
+  "scripts": [
+    {
+      "id": "1139_return_fusion_monsters",
+      "trigger": "on_summon",
+      "operations": [
+        {
+          "op": "return_to_extra",
+          "target": "$target",
+          "reason": "Mispolymerization"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "any",
+        "summon_type": "special",
+        "card_type": "Fusion Monster"
+      },
+      "target": {
+        "zone": "all_monsters",
+        "count": "all",
+        "filter": {
+          "all": [
+            {
+              "card_type": "Fusion Monster"
+            },
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "You can only activate this card when a Fusion Monster is Special Summoned. Return all face-up Fusion Monsters on the field to their respective Fusion Decks."
+    }
+  ]
+}

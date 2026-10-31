@@ -485,7 +485,21 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 void UDADuelRulesSelfTestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	if (FParse::Param(FCommandLine::Get(), TEXT("DADuelRulesSelfTest")))
+	const TCHAR* CommandLine = FCommandLine::Get();
+	FString DuelCountText;
+	if (FParse::Value(CommandLine, TEXT("DADuelSelfTest="), DuelCountText))
+	{
+		// The legacy HUD only recognises a bare -DADuelSelfTest token; owning
+		// the counted form here keeps -DADuelSelfTest=N working without a UI
+		// dependency and gives the release gate a headless entry point.
+		const int32 Parsed = FCString::Atoi(*DuelCountText);
+		bRunDuelGate = true;
+		DuelGateIterations = FMath::Clamp(Parsed > 0 ? Parsed : 24, 1, 10000);
+		UE_LOG(LogDuelAcademyIsland, Log, TEXT("DADuelSelfTest=%d: waiting for the card database."), DuelGateIterations);
+		TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
+			FTickerDelegate::CreateUObject(this, &UDADuelRulesSelfTestSubsystem::Tick), 2.0f);
+	}
+	else if (FParse::Param(CommandLine, TEXT("DADuelRulesSelfTest")))
 	{
 		TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
 			FTickerDelegate::CreateUObject(this, &UDADuelRulesSelfTestSubsystem::Tick), 2.0f);
@@ -529,8 +543,16 @@ bool UDADuelRulesSelfTestSubsystem::Tick(float DeltaTime)
 		return true;
 	}
 
-	const FDuelRulesSelfTestReport Report = FDuelRulesSelfTest::Run(Database);
-	(void)Report;
+	if (bRunDuelGate)
+	{
+		const FString Summary = FDuelEngine::RunSelfTest(Database, DuelGateIterations);
+		UE_LOG(LogDuelAcademyIsland, Log, TEXT("%s"), *Summary);
+	}
+	else
+	{
+		const FDuelRulesSelfTestReport Report = FDuelRulesSelfTest::Run(Database);
+		(void)Report;
+	}
 	bFinished = true;
 	if (TickerHandle.IsValid())
 	{

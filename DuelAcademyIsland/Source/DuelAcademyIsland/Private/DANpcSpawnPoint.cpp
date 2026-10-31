@@ -97,6 +97,42 @@ bool ADANpcSpawnPoint::MatchesSchedule(const FString& InScheduleId, const FStrin
 		return true;
 	}
 
+	// The schedule data uses compact weekly tags. Derive them from the date the
+	// same way the calendar does so "Monday"/"AM" reaches a weekday_am row.
+	const bool bWeekday = InWeekday.Equals(TEXT("Monday"), ESearchCase::IgnoreCase)
+		|| InWeekday.Equals(TEXT("Tuesday"), ESearchCase::IgnoreCase)
+		|| InWeekday.Equals(TEXT("Wednesday"), ESearchCase::IgnoreCase)
+		|| InWeekday.Equals(TEXT("Thursday"), ESearchCase::IgnoreCase)
+		|| InWeekday.Equals(TEXT("Friday"), ESearchCase::IgnoreCase);
+	const bool bWeekend = InWeekday.Equals(TEXT("Saturday"), ESearchCase::IgnoreCase)
+		|| InWeekday.Equals(TEXT("Sunday"), ESearchCase::IgnoreCase);
+
+	if (bWeekday)
+	{
+		Query.Add(TEXT("weekday"));
+		if (InPeriod.Equals(TEXT("AM"), ESearchCase::IgnoreCase))
+		{
+			Query.Add(TEXT("weekday_am"));
+		}
+		else if (InPeriod.Equals(TEXT("PM"), ESearchCase::IgnoreCase))
+		{
+			Query.Add(TEXT("weekday_pm"));
+		}
+	}
+	else if (bWeekend)
+	{
+		Query.Add(TEXT("weekend"));
+	}
+
+	if (InScheduleId.Equals(TEXT("weekday"), ESearchCase::IgnoreCase))
+	{
+		Query.Add(TEXT("weekday"));
+	}
+	else if (InScheduleId.Equals(TEXT("weekend"), ESearchCase::IgnoreCase))
+	{
+		Query.Add(TEXT("weekend"));
+	}
+
 	for (const FString& Tag : ScheduleTags)
 	{
 		for (const FString& Value : Query)
@@ -150,6 +186,9 @@ AActor* ADANpcSpawnPoint::SpawnNpc(ADANpcDirector* Director)
 	{
 		return nullptr;
 	}
+	// SpawnActor's Owner parameter is not always preserved for characters in
+	// all engine paths; the director relies on ownership for its NPC census.
+	Npc->SetOwner(Director);
 
 	if (ADAStudentNPC* Student = Cast<ADAStudentNPC>(Npc))
 	{

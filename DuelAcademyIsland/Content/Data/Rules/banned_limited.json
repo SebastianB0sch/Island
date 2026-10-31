@@ -7,7 +7,7 @@
   "rules": {
     "min_main": 40,
     "max_main": 60,
-    "max_extra": 20,
+    "max_extra": 15,
     "max_copies": 3,
     "max_side": 0,
     "max_player_decks": 24,

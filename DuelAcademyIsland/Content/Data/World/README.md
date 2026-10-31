@@ -51,11 +51,19 @@ Until it is bound, `fail_closed: false` keeps development doors open. Once A02 i
 `ADANpcDirector::ApplySchedule(ScheduleId, Weekday, Period)` matches each spawn point if:
 
 - its `event_override` equals the director's active event (event overrides win), or
-- `event_override` is empty and `bEventOnly` is false, and
+- `event_override` is empty and `bEventOnly` is false (or an event is active), and
 - any `schedule_tags` or the point's `schedule_id` equals any query value; a point with no tags/id is always active.
 
-`SetActiveEvent("E24")` re-applies the current schedule. The director is an actor, does not tick, and
-only does work when a schedule/event changes.
+Weekday/period queries also derive the compact data tags: Monday-Friday add `weekday` plus
+`weekday_am`/`weekday_pm`; Saturday/Sunday add `weekend`. The `weekday`/`weekend` schedule ids add the
+same aliases. `SetActiveEvent("E24")` re-applies the current schedule. `RefreshSpawnPoints()` rebuilds
+the registration map, releases NPCs for removed points, destroys unreachable orphans and re-applies the
+current schedule/event (or the `spawn_on_begin_play` set before any schedule). The director is an actor,
+does not tick, and only does work when a schedule/event changes or a refresh is requested.
+
+Runtime coverage: `-DANpcScheduleTest` validates all 28 rows against this file, applies Monday-Sunday
+AM/PM, exercises `E01`/`E24`/`tutorial_duel` and runs refresh/spawn leak cycles. See
+`Docs/World/NPC_SCHEDULES.md`.
 
 ## Loading (implemented)
 

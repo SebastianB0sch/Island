@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "card_id": 427,
+  "name": "Final Destiny",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Discard 5 cards from your hand to destroy all the cards on the field.",
+  "notes": [
+    "Five-card discard cost, then every field card is destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "427_final_destiny",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Final Destiny"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "cost": [
+        {
+          "op": "discard",
+          "target": {
+            "zone": "self_hand",
+            "count": 5
+          }
+        }
+      ],
+      "target": {
+        "zone": "all_cards",
+        "count": "all"
+      },
+      "source_text": "Discard 5 cards from your hand to destroy all the cards on the field."
+    }
+  ]
+}

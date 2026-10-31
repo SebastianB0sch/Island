@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 719,
+  "name": "Calamity of the Wicked",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Can be activated when your opponent's Monster attacks. Destroys all Spell and Trap cards on the Field.",
+  "notes": [
+    "Triggers on the opponent's attack declaration."
+  ],
+  "scripts": [
+    {
+      "id": "719_calamity",
+      "trigger": "on_attack_declared",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Calamity of the Wicked"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "opponent"
+      },
+      "target": {
+        "zone": "all_spell_traps",
+        "count": "all"
+      },
+      "source_text": "Can be activated when your opponent's Monster attacks. Destroys all Spell and Trap cards on the Field."
+    }
+  ]
+}

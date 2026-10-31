@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "card_id": 1116,
+  "name": "Moai Interceptor Cannons",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "You can flip this card into face-down Defense Position once per turn during your Main Phase.",
+  "notes": [
+    "One ignition script; the runtime enforces once-per-turn."
+  ],
+  "scripts": [
+    {
+      "id": "1116_manual_set_self",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "change_position",
+          "target": "$self",
+          "position": "face_down"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": true,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "source_text": "You can flip this card into face-down Defense Position once per turn during your Main Phase."
+    }
+  ]
+}

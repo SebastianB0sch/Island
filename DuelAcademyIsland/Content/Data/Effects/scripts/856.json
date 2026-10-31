@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "card_id": 856,
+  "name": "Crimson Ninja",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Select 1 Trap Card on the field and destroy it. If the selected card is Set, pick up and see the card. If it is a Trap Card, it is destroyed. If it is a Spell Card, return it to its original position.",
+  "notes": [
+    "The engine knows the printed type, so only a Trap is selectable."
+  ],
+  "scripts": [
+    {
+      "id": "856_flip_destroy_trap",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Crimson Ninja"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "any_spell_trap",
+        "count": 1,
+        "filter": {
+          "card_type": "Trap"
+        }
+      },
+      "source_text": "FLIP: Select 1 Trap Card on the field and destroy it. If the selected card is Set, pick up and see the card. If it is a Trap Card, it is destroyed. If it is a Spell Card, return it to its original position."
+    }
+  ]
+}

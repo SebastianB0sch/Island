@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 222,
+  "name": "Gale Dogra",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "At the cost of 3000 Life Points, you can discard 1 monster from your Fusion Deck to the Graveyard.",
+  "notes": [
+    "Pays 3000 LP and sends one Extra Deck monster to the Graveyard."
+  ],
+  "scripts": [
+    {
+      "id": "222_pay_life_send_extra_monster",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "send_to_graveyard",
+          "target": "$target",
+          "reason": "Gale Dogra"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "pay_lp",
+          "amount": 3000
+        }
+      ],
+      "target": {
+        "zone": "self_extra",
+        "count": 1,
+        "filter": {
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "At the cost of 3000 Life Points, you can discard 1 monster from your Fusion Deck to the Graveyard."
+    }
+  ]
+}

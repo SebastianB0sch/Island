@@ -314,9 +314,10 @@ class Placer:
                     C.set_props(a, display_name=n["name"], lines=list(n.get("lines", [])))
 
     def world_actors(self):
-        """Spawn the A08 world data: portals, anchors, NPC spawn points and director."""
+        """Spawn the A08 world data: portals, anchors, interior nav, NPC spawn points and director."""
         self.portals()
         self.scene_anchors()
+        self.interior_nav()
         self.npc_spawn_points()
         self.npc_director()
 
@@ -389,6 +390,57 @@ class Placer:
                 props["look_at_target"] = self.loc(look_at)
             C.set_props(a, **props)
 
+    def interior_nav(self):
+        """Place one NavMeshBoundsVolume over each generated interior cell.
+
+        The cells sit far below the island, so without an explicit volume the
+        runtime navmesh would stop at the exterior terrain. Each volume covers
+        the cell's bounds_ue plus a 1.5 m XY margin and 2.5 m of Z headroom,
+        which keeps the floor, door path and every spawn anchor inside.
+        """
+        try:
+            data = world_json("interiors.json")
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"interiors.json unavailable for interior nav: {e}")
+            return
+        cls = getattr(unreal, "NavMeshBoundsVolume", None)
+        if cls is None:
+            C.warn("NavMeshBoundsVolume missing - interior nav skipped")
+            return
+
+        placed = 0
+        for cell in data.get("cells", []):
+            box = cell.get("bounds_ue")
+            if not isinstance(box, (list, tuple)) or len(box) != 6:
+                C.warn(f"interior nav: cell {cell.get('id')} has no valid bounds_ue")
+                continue
+            center = unreal.Vector((box[0] + box[3]) * 0.5, (box[1] + box[4]) * 0.5, (box[2] + box[5]) * 0.5)
+            desired = unreal.Vector((box[3] - box[0]) * 0.5 + 150.0,
+                                    (box[4] - box[1]) * 0.5 + 150.0,
+                                    (box[5] - box[2]) * 0.5 + 250.0)
+            a = self.spawn(cls, center, 0.0, f"Nav_{cell['id']}", "Gameplay/nav")
+            if a is None:
+                continue
+
+            try:
+                origin, extent = a.get_actor_bounds(False)
+            except Exception as e:  # noqa: BLE001
+                C.warn(f"interior nav: {cell['id']} bounds query failed: {e}")
+                origin, extent = center, unreal.Vector(100.0, 100.0, 100.0)
+            if extent.x < 1.0 or extent.y < 1.0 or extent.z < 1.0:
+                # A class-spawned volume can report an empty brush until its
+                # default cube is realized; UE's default volume extent is 100.
+                origin, extent = center, unreal.Vector(100.0, 100.0, 100.0)
+
+            scale = unreal.Vector(desired.x / extent.x, desired.y / extent.y, desired.z / extent.z)
+            a.set_actor_scale3d(scale)
+            offset = origin - a.get_actor_location()
+            offset = unreal.Vector(offset.x * scale.x, offset.y * scale.y, offset.z * scale.z)
+            a.set_actor_location(center - offset, False, False)
+            placed += 1
+
+        C.log(f"placed {placed} interior nav bounds volumes")
+
     def npc_spawn_points(self):
         cls = C.native_class("DANpcSpawnPoint")
         if cls is None:
@@ -418,7 +470,8 @@ class Placer:
                          spawn_role=s.get("role", "student"),
                          wander_radius=float(s.get("wander_radius_cm", 500.0)),
                          event_override=s.get("event_override", ""),
-                         enabled=True,
+                         enabled=bool(s.get("enabled", True)),
+                         event_only=bool(s.get("event_only", False)),
                          spawn_on_begin_play=bool(s.get("spawn_on_begin_play", False)),
                          spawn_z_offset=float(s.get("spawn_z_offset_cm", 90.0)),
                          display_name=s.get("display_name", ""))

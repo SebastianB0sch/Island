@@ -1,7 +1,7 @@
 {
   "tool": "validate_all",
   "tool_version": "1.1.0",
-  "generated_at": "2026-10-30T18:07:24.113252+00:00",
+  "generated_at": "2026-10-31T09:27:45.497673+00:00",
   "root": "C:\\dev\\GX",
   "data_dir": "C:\\dev\\GX\\DuelAcademyIsland\\Content\\Data",
   "contracts_dir": "C:\\dev\\GX\\Docs\\Contracts",
@@ -10,11 +10,11 @@
   "result": "PASS",
   "counts": {
     "errors": 0,
-    "warnings": 20,
-    "gaps": 11,
-    "infos": 58,
+    "warnings": 15,
+    "gaps": 6,
+    "infos": 205,
     "checks": 25,
-    "files_read": 176
+    "files_read": 321
   },
   "checks": [
     {
@@ -26,13 +26,13 @@
     {
       "key": "canon_opponents",
       "status": "pass",
-      "summary": "25 opponents",
+      "summary": "28 opponents",
       "owner": "A01"
     },
     {
       "key": "canon_decks",
       "status": "gap",
-      "summary": "31 decks; 4 complete",
+      "summary": "37 decks; 16 complete; 15 partial; 6 unknown",
       "owner": "A01"
     },
     {
@@ -158,7 +158,7 @@
     {
       "key": "effects",
       "status": "gap",
-      "summary": "1200 manifest entries; scripted=119, vanilla=321, pending=760, unsupported=0",
+      "summary": "1200 manifest entries; scripted=264, vanilla=343, pending=593, unsupported=0",
       "owner": "A05"
     },
     {
@@ -179,10 +179,10 @@
     {
       "level": "gap",
       "code": "canon_deck_incomplete",
-      "message": "27/31 canon decks are incomplete: banner_year1, pharaoh_year1, syrus_year1, chumley_year1, blair_year1, gerard_year1, sartyr_year1, bastion_year1, dimitri_year1, brier_year1 ...",
+      "message": "21/37 canon decks are incomplete (15 partial records, 6 fully unknown): alexis_year1, banner_year1, bastion_year1, blair_year1, crowler_year1, fontaine_year1, gerard_year1, mindy_year1, pharaoh_year1, shadow_duelist_year1 ...",
       "owner": "A01",
       "file": "Content/Data/Canon/decks.json",
-      "hint": "canon deck lists are unknown in the public guides; A01 must either prove or mark them fallback"
+      "hint": "partial decks list every evidenced card and an explicit unresolved_slots count; unknown decks are intentional event/variant placeholders"
     },
     {
       "level": "gap",
@@ -192,65 +192,9 @@
       "file": "Content/Data/Canon/packs.json"
     },
     {
-      "level": "warning",
-      "code": "canon_event_duel_ref",
-      "message": "event E08 duel references opponent 'jinzo' not in Canon/opponents.json",
-      "owner": "A01",
-      "file": "Content/Data/Canon/events.json"
-    },
-    {
-      "level": "gap",
-      "code": "canon_event_deck_ref",
-      "message": "event E08 duel references canon deck 'jinzo_spirit' not in Canon/decks.json",
-      "owner": "A01",
-      "file": "Content/Data/Canon/events.json"
-    },
-    {
-      "level": "warning",
-      "code": "canon_event_duel_ref",
-      "message": "event E09 duel references opponent 'festival_bracket' not in Canon/opponents.json",
-      "owner": "A01",
-      "file": "Content/Data/Canon/events.json"
-    },
-    {
-      "level": "warning",
-      "code": "canon_event_duel_ref",
-      "message": "event E17 duel references opponent 'goblin_king' not in Canon/opponents.json",
-      "owner": "A01",
-      "file": "Content/Data/Canon/events.json"
-    },
-    {
-      "level": "gap",
-      "code": "canon_event_deck_ref",
-      "message": "event E22 duel references canon deck 'damon_exodia' not in Canon/decks.json",
-      "owner": "A01",
-      "file": "Content/Data/Canon/events.json"
-    },
-    {
-      "level": "gap",
-      "code": "canon_event_deck_ref",
-      "message": "event E23 duel references canon deck 'yugi_deck' not in Canon/decks.json",
-      "owner": "A01",
-      "file": "Content/Data/Canon/events.json"
-    },
-    {
-      "level": "gap",
-      "code": "canon_event_deck_ref",
-      "message": "event E26 duel references canon deck 'bastion_seventh' not in Canon/decks.json",
-      "owner": "A01",
-      "file": "Content/Data/Canon/events.json"
-    },
-    {
-      "level": "warning",
-      "code": "canon_event_duel_ref",
-      "message": "event E28 duel references opponent 'chocolate_bracket' not in Canon/opponents.json",
-      "owner": "A01",
-      "file": "Content/Data/Canon/events.json"
-    },
-    {
-      "level": "warning",
-      "code": "canon_event_duel_ref",
-      "message": "event E31 duel references opponent 'walk_home_partner' not in Canon/opponents.json",
+      "level": "info",
+      "code": "canon_event_construct_source",
+      "message": "event E09 festival_bracket draws from the ranked roster",
       "owner": "A01",
       "file": "Content/Data/Canon/events.json"
     },
@@ -272,7 +216,15 @@
     {
       "level": "gap",
       "code": "canon_exam_week",
-      "message": "canon exam week rule is unresolved",
+      "message": "Which Friday of each month is the Dorm Switch Exam? (fallback: last Friday of the month (unproven working default); conflicting evidence recorded: True)",
+      "owner": "A01",
+      "file": "Content/Data/Canon/exams.json",
+      "hint": "exam week is an explicit canon question until the ROM calendar routine or a dated save is decoded"
+    },
+    {
+      "level": "info",
+      "code": "canon_exam_week_evidence",
+      "message": "exam week evidence is recorded in Canon/exams.json cycle.exam_week_evidence",
       "owner": "A01",
       "file": "Content/Data/Canon/exams.json"
     },
@@ -586,14 +538,6 @@
       "file": "DuelAcademyIsland/Content/Data/Shop/packs.json"
     },
     {
-      "level": "gap",
-      "code": "pack_pool",
-      "message": "pack dorothys_gift has an empty pool",
-      "owner": "A06",
-      "file": "DuelAcademyIsland/Content/Data/Shop/packs.json",
-      "path": "$.packs[37]"
-    },
-    {
       "level": "warning",
       "code": "opponent_schema_drift",
       "message": "roster uses duelists[]; canonical v1 wrapper is opponents[]",
@@ -689,7 +633,399 @@
       "code": "effect_script_shape",
       "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
       "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1007.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1012.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1013.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1016.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1021.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1032.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1034.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1035.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1041.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1042.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1066.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1071.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1080.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1086.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1099.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1105.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1116.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1118.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1119.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1121.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1122.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1123.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1139.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1140.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1151.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1168.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1182.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1186.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1188.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1196.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/1199.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/141.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/142.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/143.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/144.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/145.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/146.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/147.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/149.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/150.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/151.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/152.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/179.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/186.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/205.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/216.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/220.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/222.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/225.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/238.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/257.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
       "file": "DuelAcademyIsland/Content/Data/Effects/scripts/259.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/279.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/284.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/285.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/286.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/287.json"
     },
     {
       "level": "info",
@@ -703,6 +1039,27 @@
       "code": "effect_script_shape",
       "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
       "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/292.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/341.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/345.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
       "file": "DuelAcademyIsland/Content/Data/Effects/scripts/348.json"
     },
     {
@@ -710,7 +1067,259 @@
       "code": "effect_script_shape",
       "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
       "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/355.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/356.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/382.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/383.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/384.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/386.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/388.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/391.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/392.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/398.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/399.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/405.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/406.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/407.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/410.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/412.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/427.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/430.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/432.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/433.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/434.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
       "file": "DuelAcademyIsland/Content/Data/Effects/scripts/436.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/439.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/442.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/443.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/449.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/454.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/50.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/539.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/561.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/572.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/578.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/586.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/591.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/595.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/597.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/609.json"
     },
     {
       "level": "info",
@@ -731,7 +1340,63 @@
       "code": "effect_script_shape",
       "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
       "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/641.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/643.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
       "file": "DuelAcademyIsland/Content/Data/Effects/scripts/651.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/653.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/654.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/665.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/667.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/670.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/685.json"
     },
     {
       "level": "info",
@@ -745,7 +1410,140 @@
       "code": "effect_script_shape",
       "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
       "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/690.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/692.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/693.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/696.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/700.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/715.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/719.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/729.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/730.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/738.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/741.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/742.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/759.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/785.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
       "file": "DuelAcademyIsland/Content/Data/Effects/scripts/787.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/804.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/806.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/830.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/837.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/838.json"
     },
     {
       "level": "info",
@@ -756,15 +1554,176 @@
     },
     {
       "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/850.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/856.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/860.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/864.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/87.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/885.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/893.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/897.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/898.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/900.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/904.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/909.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/917.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/919.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/920.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/954.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/955.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/964.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/973.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/978.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/981.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/982.json"
+    },
+    {
+      "level": "info",
+      "code": "effect_script_shape",
+      "message": "effect script uses A05's accepted scripts[] shape; canonical v1 operations[] wrapper is optional",
+      "owner": "A05",
+      "file": "DuelAcademyIsland/Content/Data/Effects/scripts/992.json"
+    },
+    {
+      "level": "info",
       "code": "effect_status_counts",
-      "message": "scripted=119, vanilla=321, pending=760, unsupported=0",
+      "message": "scripted=264, vanilla=343, pending=593, unsupported=0",
       "owner": "A05",
       "file": "DuelAcademyIsland/Content/Data/Effects/card_effect_manifest.json"
     },
     {
       "level": "gap",
       "code": "effects_pending",
-      "message": "760 card(s) are pending effect implementation (tier 2); scripted=119, vanilla=321, unsupported=0",
+      "message": "593 card(s) are pending effect implementation (tier 2); scripted=264, vanilla=343, unsupported=0",
       "owner": "A05",
       "file": "DuelAcademyIsland/Content/Data/Effects/card_effect_manifest.json",
       "hint": "Tier 2 effect coverage is the remaining content gap; pending cards must not appear in story/puzzle decks until scripted or classified vanilla"
@@ -968,16 +1927,161 @@
     "DuelAcademyIsland/Content/Data/Story/emails.json",
     "DuelAcademyIsland/Content/Data/Story/schedules/opening.json",
     "DuelAcademyIsland/Content/Data/Effects/card_effect_manifest.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1007.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1012.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1013.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1016.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1021.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1032.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1034.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1035.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1041.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1042.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1066.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1071.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1080.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1086.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1099.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1105.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1116.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1118.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1119.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1121.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1122.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1123.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1139.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1140.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1151.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1168.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1182.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1186.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1188.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1196.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/1199.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/141.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/142.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/143.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/144.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/145.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/146.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/147.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/149.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/150.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/151.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/152.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/179.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/186.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/205.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/216.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/220.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/222.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/225.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/238.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/257.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/259.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/279.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/284.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/285.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/286.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/287.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/29.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/292.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/341.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/345.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/348.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/355.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/356.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/382.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/383.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/384.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/386.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/388.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/391.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/392.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/398.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/399.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/405.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/406.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/407.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/410.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/412.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/427.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/430.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/432.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/433.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/434.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/436.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/439.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/442.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/443.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/449.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/454.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/50.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/539.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/561.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/572.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/578.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/586.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/591.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/595.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/597.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/609.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/637.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/639.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/641.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/643.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/651.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/653.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/654.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/665.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/667.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/670.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/685.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/686.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/690.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/692.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/693.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/696.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/700.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/715.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/719.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/729.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/730.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/738.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/741.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/742.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/759.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/785.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/787.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/804.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/806.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/830.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/837.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/838.json",
     "DuelAcademyIsland/Content/Data/Effects/scripts/849.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/850.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/856.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/860.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/864.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/87.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/885.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/893.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/897.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/898.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/900.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/904.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/909.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/917.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/919.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/920.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/954.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/955.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/964.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/973.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/978.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/981.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/982.json",
+    "DuelAcademyIsland/Content/Data/Effects/scripts/992.json",
     "DuelAcademyIsland/Content/Data/Integration/saves/golden_new_game.json",
     "DuelAcademyIsland/Content/Data/Integration/saves/golden_runtime_v1.json"
   ]

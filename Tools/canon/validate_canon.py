@@ -89,27 +89,89 @@ def main() -> int:
                     unresolved_rewards.append((event["id"], ref["name"]))
     report.warn("events.reward_cards_resolved", not unresolved_rewards, str(unresolved_rewards[:5]))
 
-    opponents = read_json(CANON_DIR / "opponents.json")["opponents"]
+    opponents_doc = read_json(CANON_DIR / "opponents.json")
+    opponents = opponents_doc["opponents"]
     opponent_ids = {o["id"] for o in opponents}
-    report.check("opponents.count", len(opponents) >= 20, str(len(opponents)))
+    report.check("opponents.count", len(opponents) == 28, str(len(opponents)))
     report.check("opponents.ids_unique", len(opponent_ids) == len(opponents), "")
+    report.check("opponents.named_duelists", opponents_doc.get("named_duelists") == 25,
+                 str(opponents_doc.get("named_duelists")))
+    report.check("opponents.event_duelists", opponents_doc.get("event_duelists") == 3,
+                 str(opponents_doc.get("event_duelists")))
+    event_opponent_ids = {"jinzo", "goblin_king", "sheppard"}
+    report.check("opponents.event_ids", event_opponent_ids <= opponent_ids,
+                 str(sorted(event_opponent_ids - opponent_ids)))
 
-    decks = read_json(CANON_DIR / "decks.json")["decks"]
+    decks_doc = read_json(CANON_DIR / "decks.json")
+    decks = decks_doc["decks"]
     deck_ids = {d["id"] for d in decks}
-    report.check("decks.count", len(decks) >= 20, str(len(decks)))
+    report.check("decks.count", len(decks) == 37, str(len(decks)))
     report.check("decks.ids_unique", len(deck_ids) == len(decks), "")
+    statuses = Counter(d.get("status", "unknown") for d in decks)
+    report.check("decks.statuses", statuses["complete"] + statuses["partial"] + statuses["unknown"] == len(decks),
+                 str(dict(statuses)))
+    generic_shell = decks_doc.get("generic_shell", {}).get("cards", [])
     for deck in decks:
         for cid in deck["main"] + deck["extra"]:
             if cid not in CARD_IDS:
                 report.errors.append(f"deck {deck['id']} references invalid card {cid}")
+        report.check(f"decks.{deck['id']}.counts",
+                     deck["main_count"] == len(deck["main"]) and deck["extra_count"] == len(deck["extra"]),
+                     f"main {deck['main_count']}/{len(deck['main'])}, extra {deck['extra_count']}/{len(deck['extra'])}")
+        report.check(f"decks.{deck['id']}.size_bounds", 0 <= deck["main_count"] <= 60,
+                     f"main {deck['main_count']}")
+        report.check(f"decks.{deck['id']}.extra", deck["extra_count"] <= 20,
+                     f"extra {deck['extra_count']}")
         if deck["complete"]:
             report.check(f"decks.{deck['id']}.size", 40 <= deck["main_count"] <= 60,
                          f"main {deck['main_count']}")
-            report.check(f"decks.{deck['id']}.extra", deck["extra_count"] <= 20,
-                         f"extra {deck['extra_count']}")
-            counts = Counter(deck["main"])
-            report.warn(f"decks.{deck['id']}.copies", max(counts.values(), default=0) <= 3,
-                        "copy limit check is against the 3-copy rule, not the year list")
+            report.check(f"decks.{deck['id']}.resolved", deck.get("unresolved_slots", 0) == 0,
+                         f"unresolved {deck.get('unresolved_slots', 0)}")
+        else:
+            unresolved = deck.get("unresolved_slots", 0)
+            report.check(f"decks.{deck['id']}.unresolved", unresolved >= 0, f"unresolved {unresolved}")
+            if deck.get("status") == "partial" and deck["main_count"] > 0:
+                report.check(f"decks.{deck['id']}.reachable", deck["main_count"] + unresolved >= 40,
+                             f"{deck['main_count']} known + {unresolved} unknown")
+        counts = Counter(deck["main"])
+        report.warn(f"decks.{deck['id']}.copies", max(counts.values(), default=0) <= 3,
+                    "copy limit check is against the 3-copy rule, not the year list")
+        if deck.get("use_generic_shell"):
+            missing = Counter(generic_shell) - Counter(deck["main"])
+            report.check(f"decks.{deck['id']}.generic_shell", not missing,
+                         f"missing generic cards {dict(missing)}")
+    unknown_decks = [d["id"] for d in decks if d.get("status") == "unknown"]
+    report.warn("decks.unknown_explicit", True, f"{len(unknown_decks)} decks explicitly unknown: {unknown_decks}")
+
+    # Event references: opponents, decks, tournament/partner constructs.
+    for event in events:
+        for duel in event.get("duels", []):
+            if not isinstance(duel, dict):
+                continue
+            opponent = duel.get("opponent")
+            if opponent and opponent not in opponent_ids:
+                report.errors.append(f"{event['id']} duel references unknown opponent {opponent}")
+            deck_id = duel.get("deck")
+            if deck_id and deck_id not in deck_ids:
+                report.errors.append(f"{event['id']} duel references unknown deck {deck_id}")
+            if duel.get("deck_kind") == "timed_puzzle":
+                if deck_id:
+                    report.errors.append(f"{event['id']} timed puzzle must not reference a 40-card deck")
+            for construct_key in ("tournament", "partner_pool"):
+                construct = duel.get(construct_key)
+                if not isinstance(construct, dict):
+                    continue
+                participants = construct.get("participants", [])
+                if participants and not set(participants) <= opponent_ids:
+                    report.errors.append(f"{event['id']} {construct_key} has unknown participants "
+                                         f"{sorted(set(participants) - opponent_ids)}")
+                if construct.get("participants_source") == "ranked_roster":
+                    report.check(f"events.{event['id']}.{construct_key}.source", True, "ranked roster")
+    for construct in decks_doc.get("event_constructs", []):
+        participants = construct.get("participants", [])
+        if participants and not set(participants) <= opponent_ids:
+            report.errors.append(f"event construct {construct['id']} has unknown participants "
+                                 f"{sorted(set(participants) - opponent_ids)}")
 
     puzzles = read_json(CANON_DIR / "puzzles.json")["puzzles"]
     report.check("puzzles.count", len(puzzles) == 100, str(len(puzzles)))
@@ -141,6 +203,12 @@ def main() -> int:
     report.check("exams.templates", exams["written"]["question_templates_count"] >= 80,
                  str(exams["written"]["question_templates_count"]))
     report.check("exams.practical", len(exams["practical"]["objectives"]) == 7, "")
+    cycle = exams.get("cycle", {})
+    evidence = cycle.get("exam_week_evidence", {})
+    report.warn("exams.exam_week",
+                cycle.get("exam_week_rule", "").startswith("unresolved")
+                and bool(evidence.get("confirmed")) and bool(evidence.get("conflicting")),
+                cycle.get("exam_week_question", "exam week question missing"))
 
     text = read_json(CANON_DIR / "text" / "dialogue_index.json")
     report.check("text.index", len(text["entries"]) == 4527, str(len(text["entries"])))

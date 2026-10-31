@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 383,
+  "name": "Blue Medicine",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increase both your and your opponent's Life Points by 400 points.",
+  "notes": [
+    "Symmetric Life Point gain."
+  ],
+  "scripts": [
+    {
+      "id": "383_gain_life_points_both",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 400,
+          "player": "both",
+          "reason": "Blue Medicine"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Increase both your and your opponent's Life Points by 400 points."
+    }
+  ]
+}

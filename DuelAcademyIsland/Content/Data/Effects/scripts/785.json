@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "card_id": 785,
+  "name": "Old Vindictive Magician",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Destroys 1 monster on the field (regardless of position).",
+  "notes": [
+    "Any monster, regardless of position."
+  ],
+  "scripts": [
+    {
+      "id": "785_flip_destroy_monster",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Old Vindictive Magician"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "any_monster",
+        "count": 1
+      },
+      "source_text": "FLIP: Destroys 1 monster on the field (regardless of position)."
+    }
+  ]
+}

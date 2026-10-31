@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "card_id": 900,
+  "name": "Don Turtle",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is Normal Summoned or Flip Summoned successfully, you can Special Summon any number of \"Don Turtle\"(s) from your hand.",
+  "notes": [
+    "Summons any number of 'Don Turtle'."
+  ],
+  "scripts": [
+    {
+      "id": "900_on_normal_summon_special_all_named",
+      "trigger": "on_normal_summon",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Don Turtle"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_hand",
+        "count": {
+          "min": 0,
+          "max": 10
+        },
+        "filter": {
+          "name": "Don Turtle"
+        },
+        "optional": true
+      },
+      "source_text": "When this card is Normal Summoned or Flip Summoned successfully, you can Special Summon any number of \"Don Turtle\"(s) from your hand."
+    },
+    {
+      "id": "900_on_flip_summon_special_all_named",
+      "trigger": "on_flip_summon",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Don Turtle"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_hand",
+        "count": {
+          "min": 0,
+          "max": 10
+        },
+        "filter": {
+          "name": "Don Turtle"
+        },
+        "optional": true
+      },
+      "source_text": "When this card is Normal Summoned or Flip Summoned successfully, you can Special Summon any number of \"Don Turtle\"(s) from your hand."
+    }
+  ]
+}

@@ -133,7 +133,7 @@ def validate_decks(v: Validator, root: str, cards: dict[int, dict], names: dict[
         side = deck.get("side", [])
         v.require(isinstance(main, list), f"deck {deck_id}", "cards is an array")
         v.require(40 <= len(main) <= 60, f"deck {deck_id}", f"main deck size {len(main)} (need 40-60)")
-        v.require(len(extra) <= 20, f"deck {deck_id}", f"extra deck size {len(extra)} (max 20)")
+        v.require(len(extra) <= 15, f"deck {deck_id}", f"extra deck size {len(extra)} (max 15)")
         v.require(len(side) <= 15, f"deck {deck_id}", f"side deck size {len(side)} (max 15)")
 
         id_counts = Counter(main + extra + side)
@@ -769,6 +769,11 @@ def validate_puzzles(v: Validator, root: str, cards: dict[int, dict], roster: di
                     has_finisher = has_finisher or action in {"activate_spell", "activate_trap", "activate_effect"}
             if action == "change_position" and step.get("position") not in {"attack", "defense"}:
                 v.fail(label, f"solution step {step_index} has invalid position")
+            if action == "set_spell_trap":
+                card = cards.get(step.get("card_id"), {})
+                if card and card.get("card_type") != "Trap" and card.get("subtype") != "Quick-Play":
+                    v.warn(label, f"solution step {step_index} Sets a non-Trap/non-Quick-Play card; "
+                                  f"A04's SetSpellTrap rejects it")
         if not has_finisher:
             v.warn(label, "solution has no attack or activatable finisher")
         reward = puzzle.get("reward")

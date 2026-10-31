@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "card_id": 670,
+  "name": "Des Feral Imp",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Select 1 card from your Graveyard and add it to your Deck. Then shuffle your Deck.",
+  "notes": [
+    "Bottom placement followed by a shuffle."
+  ],
+  "scripts": [
+    {
+      "id": "670_flip_recycle_grave",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "return_to_deck",
+          "target": "$target",
+          "reason": "Des Feral Imp"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "self_graveyard",
+        "count": 1
+      },
+      "source_text": "FLIP: Select 1 card from your Graveyard and add it to your Deck. Then shuffle your Deck."
+    }
+  ]
+}

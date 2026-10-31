@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "card_id": 539,
+  "name": "Mask of Weakness",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card can only be activated in the Battle Phase. Select 1 attacking monster and decrease the selected monster's ATK by 700 points during the turn this card is activated.",
+  "notes": [
+    "Selects the attacking monster and reduces ATK until the end of the turn."
+  ],
+  "scripts": [
+    {
+      "id": "539_weaken_attacker",
+      "trigger": "on_attack_declared",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$target",
+          "amount": -700,
+          "mode": "flat"
+        }
+      ],
+      "duration": "until_end_of_turn",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "attacking_monster",
+        "count": 1
+      },
+      "source_text": "This card can only be activated in the Battle Phase. Select 1 attacking monster and decrease the selected monster's ATK by 700 points during the turn this card is activated."
+    }
+  ]
+}

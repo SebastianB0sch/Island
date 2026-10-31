@@ -1,9 +1,10 @@
 # Effect runtime interface (A05 → A04)
 
-Status: **contract request**, not implemented. A04 owns `DAEffectRuntime.*` and
-`DADuelEngine.*`; A05 owns the JSON scripts described here. This document is the
-minimum API the scripts in `Content/Data/Effects/` need. Nothing in this file
-authorises a C++ edit by A05.
+Status: **A04 implementation in progress; A05 consumes the implemented subset.**
+A04 owns `DAEffectRuntime.*` and `DADuelEngine.*`; A05 owns the JSON scripts
+described here. This document remains the contract for the primitives the
+scripts in `Content/Data/Effects/` need. Nothing in this file authorises a C++
+edit by A05.
 
 ## 1. Contract summary
 
@@ -79,7 +80,7 @@ existing engine helpers (`Draw`, `MoveToGrave`, `MoveToBanished`,
 | `ReturnToHand(card)` / `ReturnToDeck(card, top/bottom/shuffle)` | Owner-aware. |
 | `ReturnToExtra(card)` | Fusion/Synchro-style Extra Deck return. |
 | `Destroy(card, byBattle, reason)` | Runs destruction replacement/negation and `on_destroy`. |
-| `SendToGraveyard(card, reason)` | Non-destruction send; must not trigger destruction effects. |
+| `SendToGraveyard(card, reason)` | Non-destruction send; must not trigger destruction effects. Exposed by `schema.json` as `send_to_graveyard` (the runtime also accepts `send_to_grave`). |
 | `Search(side, filter, destination, reveal, shuffle)` | Deck search with reveal and mandatory shuffle. |
 | `Excavate(side, count, filter, destination)` | Pick up, reveal, split into summoned/sent-to-grave groups. Used by Cyber Jar. |
 | `Reveal(card)` / `RevealAndReturn(card)` | Visual event and opponent information. |
@@ -153,6 +154,27 @@ Continuous effects are not one-shot hooks: they register a predicate and are
 recomputed whenever the relevant zone, position, face-up state, counter or
 controller changes. The runtime must expose `RecomputeContinuous()` and call it
 after every state mutation.
+
+**Gate 3 source-UID rule (implemented).** `FireEvent` always considers the
+event's `SourceCard` first. For source-bound triggers (`on_summon`,
+`on_normal_summon`, `on_special_summon`, `on_flip_summon`, `on_flip`,
+`on_fusion_summon`, `on_ritual_summon`, `on_activate`, `on_chain`,
+`on_attack_declared`, `on_attack_target`, `on_damage_calculated`,
+`on_battle_destroy`, `on_destroy`, `on_sent_to_graveyard`,
+`on_removed_from_field`), another copy of the same card id does not fire merely
+because it shares the card name or id: the script on the source instance is the
+only copy that runs. Two copies of the same card therefore do not both trigger
+when only one is summoned/destroyed.
+
+Field-wide response scans are preserved for different cards: Spell/Trap cards
+on the field are still considered for summon, destroy, leave-field and attack
+responses (for example Bottomless Trap Hole on `on_summon` and Sakuretsu Armor
+on `on_attack_declared`), and different-card monster triggers still participate
+in those field scans. `on_activate` and `on_chain` are strictly source-only
+because they identify the card whose activation/link is being processed.
+Continuous and replacement effects continue to use `RecomputeContinuous()` and
+the field-wide timing scans; name guards in A05 scripts are now redundant safety
+conditions, not the mechanism that selects the correct copy.
 
 ## 6. Selector and prompt contract
 

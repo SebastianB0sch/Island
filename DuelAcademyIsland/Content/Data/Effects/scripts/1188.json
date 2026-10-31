@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "card_id": 1188,
+  "name": "Pot of Generosity",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Return 2 cards from your hand to your Deck. Then shuffle your Deck.",
+  "notes": [
+    "Bottom placement followed by a shuffle is equivalent to the printed effect."
+  ],
+  "scripts": [
+    {
+      "id": "1188_return_hand_to_deck",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "return_to_deck",
+          "target": "$target",
+          "shuffle": true
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_hand",
+        "count": 2
+      },
+      "source_text": "Return 2 cards from your hand to your Deck. Then shuffle your Deck."
+    }
+  ]
+}

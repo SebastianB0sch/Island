@@ -743,6 +743,8 @@ def validate_canon_reference(ctx: Context, report: Report) -> None:
     decks_doc, decks = items("decks.json", "decks")
     deck_ids: set[str] = set()
     incomplete_decks: list[str] = []
+    partial_decks: list[str] = []
+    unknown_decks: list[str] = []
     deck_errors = 0
     for index, deck in enumerate(decks):
         if not isinstance(deck, dict):
@@ -759,15 +761,35 @@ def validate_canon_reference(ctx: Context, report: Report) -> None:
         deck_ids.add(deck_id)
         main = deck.get("main", [])
         extra = deck.get("extra", [])
+        status = deck.get("status", "complete" if deck.get("complete", True) else "unknown")
         complete = deck.get("complete", True)
         if not complete:
             incomplete_decks.append(deck_id)
-            continue
-        if not isinstance(main, list) or not (40 <= len(main) <= 60):
-            report.error("canon_deck_size", f"complete deck {deck_id} has invalid main size", file="Content/Data/Canon/decks.json", owner="A01")
+            if status == "partial":
+                partial_decks.append(deck_id)
+            elif status == "unknown":
+                unknown_decks.append(deck_id)
+        if not isinstance(main, list) or len(main) > 60:
+            report.error("canon_deck_size", f"deck {deck_id} has invalid main size", file="Content/Data/Canon/decks.json", owner="A01")
             deck_errors += 1
-        if not isinstance(extra, list) or len(extra) > 20:
-            report.error("canon_deck_extra", f"complete deck {deck_id} has invalid extra size", file="Content/Data/Canon/decks.json", owner="A01")
+        if not isinstance(extra, list) or len(extra) > 15:
+            report.error("canon_deck_extra", f"deck {deck_id} has invalid extra size", file="Content/Data/Canon/decks.json", owner="A01")
+            deck_errors += 1
+        if isinstance(main, list) and deck.get("main_count") is not None and deck["main_count"] != len(main):
+            report.error("canon_deck_main_count", f"deck {deck_id} main_count {deck['main_count']} != {len(main)}", file="Content/Data/Canon/decks.json", owner="A01")
+            deck_errors += 1
+        if isinstance(extra, list) and deck.get("extra_count") is not None and deck["extra_count"] != len(extra):
+            report.error("canon_deck_extra_count", f"deck {deck_id} extra_count {deck['extra_count']} != {len(extra)}", file="Content/Data/Canon/decks.json", owner="A01")
+            deck_errors += 1
+        if complete and (not isinstance(main, list) or not (40 <= len(main) <= 60)):
+            report.error("canon_deck_complete_size", f"complete deck {deck_id} has invalid main size", file="Content/Data/Canon/decks.json", owner="A01")
+            deck_errors += 1
+        unresolved = deck.get("unresolved_slots", 0)
+        if not isinstance(unresolved, int) or isinstance(unresolved, bool) or unresolved < 0:
+            report.error("canon_deck_unresolved", f"deck {deck_id} has invalid unresolved_slots {unresolved!r}", file="Content/Data/Canon/decks.json", owner="A01")
+            deck_errors += 1
+        elif not complete and status == "partial" and isinstance(main, list) and main and len(main) + unresolved < 40:
+            report.error("canon_deck_unreachable", f"partial deck {deck_id} cannot reach 40 cards ({len(main)} + {unresolved})", file="Content/Data/Canon/decks.json", owner="A01")
             deck_errors += 1
         for card_id in (main if isinstance(main, list) else []) + (extra if isinstance(extra, list) else []):
             if not valid_card_id(card_id) or (ctx.cards and card_id not in ctx.cards):
@@ -777,15 +799,18 @@ def validate_canon_reference(ctx: Context, report: Report) -> None:
         if incomplete_decks:
             report.gap(
                 "canon_deck_incomplete",
-                f"{len(incomplete_decks)}/{len(deck_ids)} canon decks are incomplete: {', '.join(incomplete_decks[:10])}{' ...' if len(incomplete_decks) > 10 else ''}",
+                f"{len(incomplete_decks)}/{len(deck_ids)} canon decks are incomplete "
+                f"({len(partial_decks)} partial records, {len(unknown_decks)} fully unknown): "
+                f"{', '.join(incomplete_decks[:10])}{' ...' if len(incomplete_decks) > 10 else ''}",
                 file="Content/Data/Canon/decks.json",
                 owner="A01",
-                hint="canon deck lists are unknown in the public guides; A01 must either prove or mark them fallback",
+                hint="partial decks list every evidenced card and an explicit unresolved_slots count; unknown decks are intentional event/variant placeholders",
             )
         report.check(
             "canon_decks",
             "fail" if deck_errors else ("gap" if incomplete_decks else "pass"),
-            f"{len(deck_ids)} decks; {len(deck_ids) - len(incomplete_decks)} complete",
+            f"{len(deck_ids)} decks; {len(deck_ids) - len(incomplete_decks)} complete; "
+            f"{len(partial_decks)} partial; {len(unknown_decks)} unknown",
             owner="A01",
         )
 
@@ -892,12 +917,48 @@ def validate_canon_reference(ctx: Context, report: Report) -> None:
         for duel in event.get("duels", []) or []:
             if not isinstance(duel, dict):
                 continue
+            by_dorm = duel.get("opponent_by_dorm")
+            if isinstance(by_dorm, dict):
+                unknown = [p for pool in by_dorm.values() if isinstance(pool, list) for p in pool if p not in opponent_ids]
+                if unknown:
+                    report.warn(
+                        "canon_event_dorm_ref",
+                        f"event {event_id} dorm opponent pool references unknown opponents {sorted(set(unknown))}",
+                        file="Content/Data/Canon/events.json",
+                        owner="A01",
+                    )
+                continue
+            constructs = [duel.get("tournament"), duel.get("partner_pool")]
+            constructs = [c for c in constructs if isinstance(c, dict)]
+            if constructs:
+                for construct in constructs:
+                    participants = construct.get("participants", []) or []
+                    unknown = [p for p in participants if p not in opponent_ids]
+                    if unknown:
+                        report.warn(
+                            "canon_event_construct_ref",
+                            f"event {event_id} {construct.get('id', 'construct')} references unknown participants {unknown}",
+                            file="Content/Data/Canon/events.json",
+                            owner="A01",
+                        )
+                    if construct.get("participants_source") == "ranked_roster":
+                        report.info(
+                            "canon_event_construct_source",
+                            f"event {event_id} {construct.get('id', 'construct')} draws from the ranked roster",
+                            file="Content/Data/Canon/events.json",
+                            owner="A01",
+                        )
+                continue
             opponent = duel.get("opponent")
             if opponent and opponent not in opponent_ids:
                 report.warn("canon_event_duel_ref", f"event {event_id} duel references opponent {opponent!r} not in Canon/opponents.json", file="Content/Data/Canon/events.json", owner="A01")
+            if not opponent:
+                report.warn("canon_event_duel_shape", f"event {event_id} duel has neither opponent nor tournament/partner construct", file="Content/Data/Canon/events.json", owner="A01")
             deck_id = duel.get("deck")
             if deck_id and deck_ids and deck_id not in deck_ids:
                 report.gap("canon_event_deck_ref", f"event {event_id} duel references canon deck {deck_id!r} not in Canon/decks.json", file="Content/Data/Canon/events.json", owner="A01")
+            if deck_id is None and duel.get("deck_kind") not in {"timed_puzzle", "tournament", "partner_pool"}:
+                report.warn("canon_event_deck_shape", f"event {event_id} opponent duel has no deck or deck_kind", file="Content/Data/Canon/events.json", owner="A01")
     if events_doc is not None:
         expected = {f"E{index:02d}" for index in range(1, 34)}
         missing = sorted(expected - event_ids)
@@ -1010,7 +1071,23 @@ def validate_canon_reference(ctx: Context, report: Report) -> None:
                 report.error("canon_exams_scoring", "canon exam scoring must be 500 points", file="Content/Data/Canon/exams.json", owner="A01")
                 exam_errors += 1
             if isinstance(cycle, dict) and cycle.get("exam_week_rule", "").startswith("unresolved"):
-                report.gap("canon_exam_week", "canon exam week rule is unresolved", file="Content/Data/Canon/exams.json", owner="A01")
+                evidence = cycle.get("exam_week_evidence", {})
+                question = cycle.get("exam_week_question", "canon exam week rule is unresolved")
+                has_evidence = bool(evidence.get("confirmed")) and bool(evidence.get("conflicting"))
+                report.gap(
+                    "canon_exam_week",
+                    f"{question} (fallback: {cycle.get('exam_week_fallback', 'none')}; conflicting evidence recorded: {has_evidence})",
+                    file="Content/Data/Canon/exams.json",
+                    owner="A01",
+                    hint="exam week is an explicit canon question until the ROM calendar routine or a dated save is decoded",
+                )
+                if has_evidence:
+                    report.info(
+                        "canon_exam_week_evidence",
+                        "exam week evidence is recorded in Canon/exams.json cycle.exam_week_evidence",
+                        file="Content/Data/Canon/exams.json",
+                        owner="A01",
+                    )
         report.check("canon_exams", "fail" if exam_errors else "pass", "12-cycle exam definition", owner="A01")
     else:
         report.gap("canon_exams_missing", "Canon/exams.json is missing", owner="A01")
@@ -1345,10 +1422,10 @@ def validate_decks(ctx: Context, report: Report) -> None:
                     owner="A06",
                 )
                 errors += 1
-            if isinstance(extra, list) and len(extra) > 20:
+            if isinstance(extra, list) and len(extra) > 15:
                 report.error(
                     "deck_extra_size",
-                    f"deck {deck_id} has {len(extra)} extra-deck cards (max 20)",
+                    f"deck {deck_id} has {len(extra)} extra-deck cards (max 15)",
                     file=rel_path(report, path),
                     owner="A06",
                 )
@@ -4018,7 +4095,12 @@ def validate_effects(ctx: Context, report: Report) -> None:
     # orphan script does not hide a schema error.
     script_dir = ctx.data_dir / "Effects"
     for script_file in glob_json(script_dir) + glob_json(script_dir / "scripts"):
-        if script_file.name in {"manifest.json", "card_effect_manifest.json", "schema.json", "tier1_cards.json", "fusion_candidates.json"}:
+        if script_file.name in {
+            "manifest.json", "card_effect_manifest.json", "schema.json",
+            "tier1_cards.json", "fusion_candidates.json", "coverage_by_deck.json",
+            "coverage.json", "effect_coverage.json",
+        }:
+            # Coverage reports are data summaries, not executable card scripts.
             continue
         script_rel = rel_path(report, script_file)
         if script_rel not in referenced_scripts:
@@ -4202,8 +4284,8 @@ def _validate_save_semantics(
             if isinstance(main, list) and not (40 <= len(main) <= 60):
                 report.error("save_deck_size", f"save deck {deck_id} main size {len(main)} is outside 40..60", file=file, owner="A02")
                 errors += 1
-            if isinstance(extra, list) and len(extra) > 20:
-                report.error("save_deck_extra", f"save deck {deck_id} extra size {len(extra)} exceeds 20", file=file, owner="A02")
+            if isinstance(extra, list) and len(extra) > 15:
+                report.error("save_deck_extra", f"save deck {deck_id} extra size {len(extra)} exceeds 15", file=file, owner="A02")
                 errors += 1
             if isinstance(side, list) and len(side) > 15:
                 report.error("save_deck_side", f"save deck {deck_id} side size {len(side)} exceeds 15", file=file, owner="A02")

@@ -54,7 +54,7 @@
         },
         "extra": {
           "type": "array",
-          "maxItems": 20,
+          "maxItems": 15,
           "items": { "$ref": "#/definitions/cardId" }
         },
         "side": {

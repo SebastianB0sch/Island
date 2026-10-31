@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 147,
+  "name": "Dian Keto the Cure Master",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases your Life Points by 1000 points.",
+  "notes": [
+    "Single-clause Life Point gain."
+  ],
+  "scripts": [
+    {
+      "id": "147_gain_life_points",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 1000,
+          "player": "self",
+          "reason": "Dian Keto the Cure Master"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Increases your Life Points by 1000 points."
+    }
+  ]
+}

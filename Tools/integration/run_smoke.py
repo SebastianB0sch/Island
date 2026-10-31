@@ -172,9 +172,8 @@ def _validator_step(report_path: Path, *, strict: bool) -> Step:
 
 
 def _duel_selftest_step(editor: Path, uproject: Path, iterations: int) -> Step:
-    # The current DAHUD switch runs a fixed 24-duel batch. A04 owns extending it
-    # to -DADuelSelfTest=N; until then the runner invokes the switch and reports
-    # the actual batch size from the log.
+    # A04: the counted form is owned by UDADuelRulesSelfTestSubsystem so it also
+    # works when the HUD is not the launch path.
     command = [
         str(editor),
         str(uproject),
@@ -183,15 +182,12 @@ def _duel_selftest_step(editor: Path, uproject: Path, iterations: int) -> Step:
         "-nosound",
         "-unattended",
         "-nop4",
-        "-DADuelSelfTest",
+        f"-DADuelSelfTest={iterations}",
         "-log",
         "-stdout",
         "-FullStdOutLogOutput",
     ]
-    step = Step(name="duel-selftest", command=command)
-    if iterations != 24:
-        step.note = f"requested {iterations} iterations; current C++ switch runs 24 until A04 adds -DADuelSelfTest=N"
-    return step
+    return Step(name="duel-selftest", command=command)
 
 
 def _selftest_step(name: str, switch: str, editor: Path, uproject: Path) -> Step:
@@ -247,15 +243,21 @@ def _inspect_log(step: Step) -> None:
                     if stalls > 0:
                         step.status = "fail"
                         step.note = f"{line.strip()} (stalls > 0)"
+                    elif "RESULT FAIL" in line:
+                        step.status = "fail"
+                        step.note = line.strip()
                     elif step.status == "pass":
                         step.note = line.strip()
                 break
-    elif step.name in {"profile-selftest", "duelrules-selftest", "economy-selftest", "story-selftest"}:
+    elif step.name in {"profile-selftest", "duelrules-selftest", "economy-selftest", "story-selftest",
+                       "puzzle-selftest", "exam-selftest"}:
         markers = {
             "profile-selftest": "DAProfileSelfTest",
             "duelrules-selftest": "Duel rules self-test:",
             "economy-selftest": "DAEconomySelfTest:",
             "story-selftest": "StorySelfTest:",
+            "puzzle-selftest": "PuzzleSelfTest:",
+            "exam-selftest": "ExamSelfTest:",
         }
         marker = markers[step.name]
         summary_seen = False
@@ -290,6 +292,26 @@ def _inspect_log(step: Step) -> None:
                     step.status = "fail"
                     step.note = line.strip()
                     break
+    elif step.name == "a07-selftest":
+        required = {"PuzzleSelfTest:", "ExamSelfTest:"}
+        seen: set[str] = set()
+        for line in text.splitlines():
+            stripped = line.strip()
+            for marker in required:
+                if marker in stripped and "scheduled" not in stripped:
+                    step.note = stripped
+                    seen.add(marker)
+                    if "FAILURES PRESENT" in stripped:
+                        step.status = "fail"
+        if "A07SelfTest: BOTH SUITES PASS" in text and len(seen) == 2 and step.status != "fail":
+            step.status = "pass"
+            step.note = "A07SelfTest: BOTH SUITES PASS"
+        elif "A07SelfTest: FAILURES PRESENT" in text:
+            step.status = "fail"
+            step.note = "A07SelfTest: FAILURES PRESENT"
+        elif step.status == "pass":
+            step.status = "fail"
+            step.note = "missing one or both A07 suite summaries"
     elif step.name == "automation":
         failures = [line for line in text.splitlines() if "Automation Test Failed" in line or "Result: Failed" in line]
         if failures:
@@ -336,11 +358,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--duelrules-selftest", action="store_true", help="run A04's -DADuelRulesSelfTest")
     parser.add_argument("--economy-selftest", action="store_true", help="run A06's -DAEconomySelfTest")
     parser.add_argument("--story-selftest", action="store_true", help="run A03's -DAStorySelfTest (explicit; the editor may stay open)")
+    parser.add_argument("--puzzle-selftest", action="store_true", help="run A07's -DAPuzzleSelfTest (100 authored puzzles)")
+    parser.add_argument("--exam-selftest", action="store_true", help="run A07's -DAExamSelfTest (12 exam cycles)")
+    parser.add_argument("--a07-selftest", action="store_true", help="run both A07 suites with -DAPuzzleExamSelfTest")
     parser.add_argument("--self-tests", action="store_true", help="run the four stable headless self-tests")
     parser.add_argument("--automation", action="store_true", help="run Unreal automation tests matching --automation-filter")
     parser.add_argument("--all", action="store_true", help="validate + all self-tests + automation")
     parser.add_argument("--automation-filter", default="DuelAcademy", help="Unreal automation test filter")
-    parser.add_argument("--iterations", type=int, default=24, help="requested duel self-test iterations (current C++ switch is 24)")
+    parser.add_argument("--iterations", type=int, default=24, help="requested duel self-test iterations (passed as -DADuelSelfTest=N)")
     parser.add_argument("--ue-editor", default="", help="path to UnrealEditor-Cmd.exe (or set UE_EDITOR)")
     parser.add_argument("--uproject", default=str(DEFAULT_UPROJECT), help="path to the .uproject")
     parser.add_argument("--report", default="", help="smoke JSON report path (default: reports/smoke-<timestamp>.json)")
@@ -361,7 +386,8 @@ def main(argv: list[str] | None = None) -> int:
     report_dir = Path(args.report_dir).expanduser().resolve()
     report_dir.mkdir(parents=True, exist_ok=True)
 
-    if not uproject.exists() and (args.duel_selftest or args.automation or args.all):
+    if not uproject.exists() and (args.duel_selftest or args.automation or args.all
+                                  or args.puzzle_selftest or args.exam_selftest or args.a07_selftest):
         print(f"error: uproject not found: {uproject}", file=sys.stderr)
         return 2
     if args.iterations < 1:
@@ -376,6 +402,9 @@ def main(argv: list[str] | None = None) -> int:
         or args.duelrules_selftest
         or args.economy_selftest
         or args.story_selftest
+        or args.puzzle_selftest
+        or args.exam_selftest
+        or args.a07_selftest
         or run_selftests
     )
     run_validate = not args.no_validate and (
@@ -413,6 +442,15 @@ def main(argv: list[str] | None = None) -> int:
         selftest_jobs.append(("economy-selftest", "-DAEconomySelfTest"))
     if args.story_selftest:
         selftest_jobs.append(("story-selftest", "-DAStorySelfTest"))
+    if run_all and not args.a07_selftest and not args.puzzle_selftest and not args.exam_selftest:
+        selftest_jobs.append(("a07-selftest", "-DAPuzzleExamSelfTest"))
+    if args.a07_selftest:
+        selftest_jobs.append(("a07-selftest", "-DAPuzzleExamSelfTest"))
+    else:
+        if args.puzzle_selftest:
+            selftest_jobs.append(("puzzle-selftest", "-DAPuzzleSelfTest"))
+        if args.exam_selftest:
+            selftest_jobs.append(("exam-selftest", "-DAExamSelfTest"))
 
     for name, switch in selftest_jobs:
         if editor is None:

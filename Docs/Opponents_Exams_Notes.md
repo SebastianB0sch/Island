@@ -256,13 +256,26 @@ Twelve cycles, `EXAM_01`..`EXAM_12`. Each cycle links:
 }
 ```
 
-`Tools/puzzles/generate_exams.py` builds the file deterministically from the existing `questions.json` sets, `practicals.json` objectives and P001-P100 catalog. The timed puzzles rotate levels 1-5; the practical objective rotates through the seven themes. Exact GBA month-to-puzzle/objective assignments are not extracted, hence `confidence: low`.
+`Tools/puzzles/generate_exams.py` builds the file deterministically from the existing `questions.json` sets, `practicals.json` objectives and P001-P100 catalog. The timed puzzles rotate levels 1-5; the practical objective rotates through the seven themes. Exact GBA month-to-puzzle/objective assignments are not extracted, hence `confidence: low`. `UDAExamSubsystem::Reload` now loads this file and uses its authored question/timed-puzzle/practical ids instead of the old formula-only selection.
+
+### 2.9 Runtime opponent decks and canon import
+
+The 31 runtime files in `Content/Data/Opponents/decks/*.json` were rebuilt from the 37 reconciled canonical records in `Content/Data/Canon/decks.json`. The importer is `Tools/opponents/import_canon_decks.py`; the full before/after table and remaining canon gaps are in `Docs/Opponents_Deck_Report.md`.
+
+Before the import, 30/36 constructed decks failed A04's static audit because the old shells contained banned `Monster Reborn` (385), `Imperial Order` (472), `Chaos Emperor Dragon` (886), and excess copies of limited `Jinzo` (348), `Reflect Bounder` (350), `MST` (436), `Injection Fairy Lily` (516), etc. After the import, 226 unresolved/variant slots were deterministically filled across the 31 runtime files and every runtime opponent deck and player/starter deck passes the audit:
+
+```text
+PASS: 31/31 runtime opponent decks legal (full name/copy/year-1 audit)
+PASS: 36/36 constructed decks legal under A04 static audit
+```
+
+Canonical ids map to runtime ids as aliases, e.g. `alexis_year1 -> alexis_cyber`/`alexis_cyber_plus`, `syrus_year1 -> syrus_roids`/`syrus_roids_plus`, `zane_year1 -> zane_cyber`/`zane_cyber_end`. Runtime ids used by `events.json` are preserved (`chazz_ojama`, `damon_exodia`, etc.). The only known runtime adjustment is Jaden's fourth `Luster Dragon` name copy (canon 2x 663 + 2x 780) swapped to Elemental Hero Sparkman (1109) to satisfy the player-deck name-copy rule; this is recorded per-file as `runtime_adjustments`.
 
 ## 3. C++ APIs
 
 ### 3.1 `UDAOpponentSubsystem` (`DAOpponentSubsystem.h/.cpp`)
 
-Game-instance subsystem. Loads `roster.json`, every `decks/*.json` and every `ai/*.json` on `Initialize`; `Reload(FString&)` is idempotent for tests.
+Game-instance subsystem. Loads `roster.json`, every `decks/*.json` and every `ai/*.json` on `Initialize`; `Reload(FString&)` is idempotent for tests. `Reload` also registers every loaded opponent deck with `UCardDatabaseSubsystem::RegisterDeck`, making the ids resolvable by `FDuelEngine::Start`.
 
 Key calls:
 
@@ -319,9 +332,13 @@ total   = written + timed + practical
 pass    = total >= pass_mark
 ```
 
-`FDAExamResult` contains `MonthIndex`, `WrittenCorrect/Points`, `bTimedSolved`, `TimedPoints`, `PracticalPoints`, `TotalPoints`, `bPassed`, `Grade`, `TitleOutcome`, `DormOutcome`, completed/failed objective ids and `Flags` (`exam_passed`, `exam_failed`, `practical_passed`, `practical_failed`, `dropout_boy`). A02 consumes this payload; A09 renders it.
+`FDAExamResult` contains `MonthIndex`, `WrittenCorrect/Points`, `bTimedSolved`, `TimedPoints`, `PracticalPoints`, `DPReward`, `TotalPoints`, `bPassed`, `Grade`, `TitleOutcome`, `DormOutcome`, completed/failed objective ids and `Flags` (`exam_passed`, `exam_failed`, `practical_passed`, `practical_failed`, `dropout_boy`). `DPReward` is 0 in current content because no canonical exam DP amount is extracted; A02/A03 own any actual DP grant. A09 renders the payload.
 
-Data selectors: `GetCurrentQuestionIds`, `GetQuestion`, `GetCurrentQuestion`, `GetQuestionCount`, `GetPracticalProgress`, `GetPracticalObjectives`, `GetPassMark`, `PickTimedPuzzle(month)`. `RecordPracticalStats(...)` is the seven-counter adapter for `FDuelResultStats`.
+Data selectors: `GetCurrentQuestionIds`, `GetQuestion`, `GetCurrentQuestion`, `GetQuestionCount`, `GetPracticalProgress`, `GetPracticalObjectives`, `GetPassMark`, `PickTimedPuzzle(month)`, `GetCycles`, `GetCycle(month)`, `GetCycleCount`. `RecordPracticalStats(...)` is the seven-counter adapter for `FDuelResultStats`.
+
+`Reload` now also reads `Exams/exams.json` into `FDAExamCycle` records. `StartExam(month)` uses the authored question set, `PickTimedPuzzle(month)` returns the authored `timed_puzzle_id` (falling back to the old formula only if the cycle data is absent), and `FinishExam` uses the cycle pass mark and optional `dp_reward`. `FDAExamResult::DPReward` is 0 in the current content because no canonical exam DP amount has been extracted; A02/A03 remain the authorities for any DP grant.
+
+Exam/dorm/title outcomes are still recommendations in `FDAExamResult`; A02's `UDATitleSystem::ApplyExamOutcome` remains the state owner.
 
 `GetPhase()` states: `None`, `Written`, `WrittenDone`, `Timed`, `TimedDone`, `Practical`, `PracticalDone`, `Finished`.
 
@@ -364,19 +381,16 @@ A04 now exposes the scenario and result contracts this lane needs:
 
 The replay adapter should apply `solution` steps through the existing engine actions and fail the puzzle if any step is rejected. A04 owns `StartScenario`; A07 owns the JSON and solution data.
 
-**Opponent deck handoff (still missing):** `FDuelEngine::Start` currently resolves deck ids through `UCardDatabaseSubsystem`/`Content/Data/decks.json`. The 31 roster decks live in `Content/Data/Opponents/decks/*.json` and are loaded only by `UDAOpponentSubsystem`. A04/A06 need one of:
+**Opponent deck handoff (resolved):** `FDuelEngine::Start` still resolves both sides through `UCardDatabaseSubsystem::FindDeck`, but the card database now has a narrow `RegisterDeck(const FStarterDeckDef&)` hook. `UDAOpponentSubsystem::Reload` registers all 31 runtime opponent decks after loading `Content/Data/Opponents/decks/*.json`, so story/UI deck ids from `events.json` and `roster.json` resolve without teaching A06's economy code about the Opponents directory.
 
-```cpp
-// Preferred: explicit deck override on the duel service/engine:
-bool StartWithDecks(const TArray<int32>& PlayerMain, const TArray<int32>& PlayerExtra,
-                    const TArray<int32>& OpponentMain, const TArray<int32>& OpponentExtra,
-                    const FString& OpponentId, const FString& Mode, int32 Seed, FString& OutError);
+The 31 runtime deck files are regenerated from A01's reconciled `Canon/decks.json` by:
 
-// Alternative: register opponent decks in UCardDatabaseSubsystem at startup.
-bool RegisterDeck(const FStarterDeckDef& Deck);
+```powershell
+python Tools/opponents/import_canon_decks.py
+python Tools/opponents/import_canon_decks.py --check
 ```
 
-`UDAOpponentSubsystem::GetDeckCards(DeckId, OutMain, OutExtra)` supplies the arrays without any engine dependency, so either adapter is a small change. Until this exists, only decks present in `decks.json` (the four starters + Jaden) can actually be used by `FDuelEngine::Start`.
+Known canon lists are copied exactly; unresolved/unknown slots are filled from the canon generic shell, then signature/theme cards, then a legal fallback pool. Each output records `canon_deck_id`, `aliases`, `generated_fill`, `generated_fill_sources`, `generated_fill_cards` and any `runtime_adjustments`. The audit mirrors A04's static deck audit (40-60 main, <=15 extra, known ids, Fusion-only Extra, Year 1 banned/limited, win condition); A06/validator name-copy limits are also checked for the 31 opponent decks.
 
 **AI policy (still missing):**
 
@@ -471,6 +485,7 @@ Run:
 
 ```powershell
 python Tools/puzzles/validate.py --report Docs/Opponents_Validation_Report.md
+python Tools/opponents/import_canon_decks.py --check
 ```
 
 It checks:
@@ -481,20 +496,58 @@ It checks:
 * puzzle files P001â€“P100, 20 per level, card references, zones, solution/action presence, solution cards present in the fixed setup, time/turn limits, rewards;
 * deterministic replay of the 80 generated template puzzles (summon/tribute levels, equips, fusion/ritual, burn, piercing, Mirror Force + Seven Tools);
 * 30 questions, 4 options, valid answers, 12 sets Ã— 10 unique ids, 7 practicals, 500-point scoring;
-* 12 exam cycles: month 1â€“12, written set, 10 question ids, timed puzzle id, practical objective id, 500-point section sum and pass mark.
+* 12 exam cycles: month 1â€“12, written set, 10 question ids, timed puzzle id, practical objective id, 500-point section sum and pass mark;
+* 31 runtime opponent decks against the Year 1 banlist, 40-60 main, <=15 extra, known ids, Fusion-only Extra, copy/name limits and roster/event references (`Tools/opponents/import_canon_decks.py --check`).
 
-Current result: **PASS**, 141 checks, 0 failures, 1 warning (duplicate `Luster Dragon` name in the baseline card DB).
+Current result: `validate.py` **PASS**, 141 checks, 0 failures, 1 warning (duplicate `Luster Dragon` name in the baseline card DB); deck audit **PASS**, 31/31 runtime opponent decks and 36/36 constructed decks under A04 rules.
 
 ## 7. Blockers / next pass
 
 1. **A04 AI policy hook** â€” the scenario/result APIs are present, but policy injection is not. Without it the 27 AI profiles remain data-only and 1,000-duel self-play cannot exercise them. Suggested signatures are in Â§4.1.
-2. **Opponent deck handoff** â€” `FDuelEngine::Start` only sees `decks.json`; A04/A06 need `StartWithDecks` or a deck registry, or the 31 roster decks stay unusable in-engine. `GetDeckCards` is ready for the adapter.
-3. **A04 puzzle replay adapter** â€” `StartScenario` exists; A10/A07 still need the small JSONâ†’`FDuelScenario` loader and scripted-solution replay to prove 100/100 puzzles in-engine.
+2. **Opponent deck handoff** â€” resolved for A07: `UDAOpponentSubsystem::Reload` registers the 31 runtime decks through `UCardDatabaseSubsystem::RegisterDeck`, so `FDuelEngine::Start` resolves them. Remaining canon-unknown fills are tracked in `Docs/Opponents_Deck_Report.md`.
+3. **A04 puzzle replay adapter** â€” resolved for A07: `DAPuzzleRuntime` loads the JSON into `FDuelScenario` and replays the authored line through `FDuelEngine` (`-DAPuzzleSelfTest`, `da.PuzzleSelfTest`). The remaining gap is canon board fidelity, not the adapter.
 4. **A05 effect coverage** â€” all deck Extra Deck recipes now exist; the remaining A05 work is scripting the non-Tier-1 card effects used by archetype decks (Toon, Ojama, Exodia, Cyber Dragon, etc.).
 5. **A01 canon extraction** â€” exact GBA deck lists, fixed puzzle boards, exam weights/pass mark, banned list, gifts/emails. A01 solution metadata is attached, but boards remain port-authored.
 6. **A02 save schema** â€” fold `FDAOpponentRuntimeState` and exam history into the versioned save; this pass keeps them transient.
 7. **A08 interior ids** â€” reconcile the proposed schedule interiors with the actual interior cells.
-8. **Engine replay** â€” the Python simulator proves the 80 generated lines, but A04's scenario replay is still required for true engine acceptance.
+8. **Engine replay** â€” resolved for A07: `-DAPuzzleSelfTest` replays all 100 authored lines in-engine; `-DAExamSelfTest` drives all 12 cycles through `UDAExamSubsystem`. See `Docs/Puzzles/PUZZLE_ENGINE_TESTS.md`.
 9. **Canonical puzzle boards** â€” A01 has solution steps but no fixed setups; replace the P001â€“P100 authored boards/time limits/rewards when A01/A04 publish the original scenario data.
 10. **AI self-play** â€” 1,000 seeded duels and per-profile behaviour tests, once A04's AI hook exists.
+11. **A06 max-extra coordination** â€” shared rules data is now `max_extra: 15` and `DADeckLogic` reads it, but A06's `Tools/economy/sync_canon.py` still writes 20 and `DAEconomyTests.cpp` still asserts 20-card Extra Deck legality. Those A06-owned files must be updated before the next sync/test gate. `Data/decks.json` `jaden` also has four cards named `Luster Dragon`; the runtime opponent copy is normalised to three, but the A06 player deck data still needs the same name-cap cleanup.
+
+## 8. Engine self-tests (A07 Gate 3)
+
+Two headless suites prove the authored content through the real engine:
+
+```text
+-DAPuzzleSelfTest       all 100 puzzles load, start, verify seed/turn/time limits
+                        and the authored board, then replay every solution step to
+                        a player win.
+-DAExamSelfTest         all 12 cycles: 10/10 written + authored timed puzzle solve
+                        + seven practical objectives -> 500/S, and a 6/10 failing
+                        mix -> 120/F/Dropout Boy; includes retry, month 12->1
+                        rollover, invalid-month and partial-pass (330/C) checks.
+-DAPuzzleExamSelfTest   both suites in one process; prints
+                        "A07SelfTest: BOTH SUITES PASS".
+```
+
+Console equivalents are `da.PuzzleSelfTest`, `da.ExamSelfTest` and
+`da.PuzzleExamSelfTest`. The suites use a transient `UDAExamSubsystem` and never
+touch UI/save/profile state.
+
+Expected stable markers:
+
+```text
+PuzzleSelfTest: 102 passed, 0 failed. ALL PASS
+ExamSelfTest: <N> passed, 0 failed. ALL PASS
+A07SelfTest: BOTH SUITES PASS
+```
+
+A dedicated runner and the integration smoke flags are documented in
+[`Docs/Puzzles/PUZZLE_ENGINE_TESTS.md`](Puzzles/PUZZLE_ENGINE_TESTS.md).
+Current content changes made for engine replay: P015 Sets `Seven Tools of the
+Bandit` instead of an Equip Spell (A04's `SetSpellTrap` only accepts Traps and
+Quick-Play Spells), and P047 uses a Level 5 field body so A04's level-sorted
+ritual tribute selection cannot consume it. Canon board/time-limit data and a
+canonical exam DP amount remain A01 blockers.
 

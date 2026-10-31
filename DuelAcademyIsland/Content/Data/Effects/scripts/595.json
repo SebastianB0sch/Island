@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "card_id": 595,
+  "name": "Offerings to the Doomed",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys 1 face-up monster. Skip your next Draw Phase.",
+  "notes": [
+    "The runtime's skip_phase currently implements the next Draw Phase skip."
+  ],
+  "scripts": [
+    {
+      "id": "595_destroy_and_skip_draw",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Offerings to the Doomed"
+        },
+        {
+          "op": "skip_phase",
+          "player": "self",
+          "mode": "draw"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "face_up": true
+        }
+      },
+      "source_text": "Destroys 1 face-up monster. Skip your next Draw Phase."
+    }
+  ]
+}

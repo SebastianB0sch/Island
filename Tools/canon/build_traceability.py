@@ -35,8 +35,8 @@ def main() -> int:
         f"| Cards | {len(cards)} | ROM 0xF243CC / 0xF2A68C / 0xF58294 | exact | A05, A06 |",
         f"| Packs | {len(packs)} | Yugipedia set pages + ROM pack names | high price/pool, low odds | A06 |",
         f"| Events | {len(events)} | Yugipedia Events + ROM dialogue | high/medium | A03 |",
-        f"| Opponents | {len(opponents)} | Yugipedia Opponents + ROM name pool | medium | A07 |",
-        f"| Decks | {len(decks)} | starter guide + donor/guide archetypes | high starters, low opponents | A06, A07 |",
+        f"| Opponents | {len(opponents)} ({sum(1 for o in opponents if o.get('role') != 'event')} named + {sum(1 for o in opponents if o.get('role') == 'event')} event) | Yugipedia Opponents + ROM name pool | medium | A07 |",
+        f"| Decks | {len(decks)} ({sum(1 for d in decks if d.get('complete'))} complete) | starter guide + Character Deck FAQ v1.4 + donor Jaden | high starters, mixed opponents | A06, A07 |",
         f"| Puzzles | {len(puzzles)} | Yugipedia puzzle pages | high solution, unknown setup | A07 |",
         f"| Titles | {len(titles)} | ROM 0x146C858 + guides | mixed | A02 |",
         f"| Banned/Limited | {len(banned)} | Yugipedia Banned List | high | A04, A06 |",
@@ -83,13 +83,29 @@ def main() -> int:
             f"{opponent.get('confidence', '')} |"
         )
 
-    lines += ["", "## Decks", "", "| ID | Name | Type | Main | Extra | Complete | Confidence |",
-              "| --- | --- | --- | ---: | ---: | --- | --- |"]
+    lines += ["", "## Decks", "",
+              "| ID | Name | Type | Main | Extra | Status | Unresolved slots | Complete | Confidence | Source |",
+              "| --- | --- | --- | ---: | ---: | --- | ---: | --- | --- | --- |"]
     for deck in decks:
+        source = deck.get("source", "")
+        if source.startswith("http"):
+            source = f"[guide]({source})"
         lines.append(
             f"| {deck['id']} | {deck['name']} | {deck['type']} | {deck['main_count']} | "
-            f"{deck['extra_count']} | {deck['complete']} | {deck.get('confidence', '')} |"
+            f"{deck['extra_count']} | {deck.get('status', '')} | {deck.get('unresolved_slots', 0)} | "
+            f"{deck['complete']} | {deck.get('confidence', '')} | {source} |"
         )
+    constructs = read_json(CANON_DIR / "decks.json").get("event_constructs", [])
+    if constructs:
+        lines += ["", "### Event constructs", "",
+                  "| ID | Kind | Participants | Rounds | Source |",
+                  "| --- | --- | --- | ---: | --- |"]
+        for construct in constructs:
+            participants = construct.get("participants") or [construct.get("participants_source", "")]
+            lines.append(
+                f"| {construct['id']} | {construct['kind']} | {', '.join(participants)} | "
+                f"{construct.get('rounds')} | [Events]({construct.get('source', '')}) |"
+            )
 
     lines += ["", "## Puzzles", "", "| ID | Level | Solution steps | Setup | Confidence | Source |",
               "| --- | ---: | ---: | --- | --- | --- |"]
@@ -119,7 +135,7 @@ def main() -> int:
               f"| written_exam_bank | question templates | ROM 0x1430F2C | high templates / low keys |",
               f"| practical_exam_1..7 | practical definitions | ROM 0x146C23E | high |",
               f"| dialogue_index | 4,527 strings | ROM 0x13F6DF0 / 0x14280A0 | high offsets, local-only text |",
-              f"| name_table | 26 full / 21 short names | ROM 0x146CB14 / 0x146CC32 | exact |",
+              f"| name_table | 26 full / 26 short names | ROM 0x146CB14 / 0x146CC32 | exact |",
               ""]
 
     write_text(DOCS_DIR / "TRACEABILITY.md", "\n".join(lines) + "\n")

@@ -384,6 +384,9 @@ private:
 
 	// ---- setup and turn flow ----
 	void SetupSide(EDuelOwner Side, const FString& DeckId);
+	/** Release-gate helper: structural checks shared by the AI smoke test and scenario probes. */
+	bool CheckDuelStateInvariants(int32 ExpectedPlayerCards, int32 ExpectedOpponentCards,
+		TArray<FString>& OutErrors) const;
 	FDuelCard MakeCard(int32 CardId, EDuelOwner Owner, bool bExtra);
 	void ShuffleSide(FDuelSide& Side);
 	void StartTurn(EDuelOwner Side);
