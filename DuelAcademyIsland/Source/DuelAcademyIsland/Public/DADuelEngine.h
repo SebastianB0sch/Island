@@ -483,6 +483,8 @@ private:
 
 	// ---- spells, traps, effects ----
 	bool CanActivateSpellCard(const FDuelCard& Card);
+	bool IsLegalEquipTarget(const FDuelCard& Card, EDuelOwner Side, const FString& Name) const;
+	void QueueEquipTargetChoice(FDuelCard& Equip, EDuelOwner Side, const FString& Name);
 	void ResolveSpell(FDuelCard& Card);
 	bool ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bAutomatic);
 	void ResolveTrap(FDuelCard& Trap);

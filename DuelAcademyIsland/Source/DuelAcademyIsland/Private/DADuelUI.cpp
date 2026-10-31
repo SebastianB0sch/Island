@@ -359,6 +359,10 @@ void FDADuelUI::OpenDeckSelect(const FString& OpponentId, const FString& Opponen
 	DuelTributeHandUid = 0;
 	bDuelTributeSet = false;
 	DuelTributeUids.Reset();
+	DuelChoiceRequestId = 0;
+	DuelChoicePage = 0;
+	DuelChoiceSelected.Reset();
+	DuelChoiceCardUids.Reset();
 	DuelPileType = EDuelPileType::None;
 	DuelMessage.Empty();
 	DuelMessageTimer = 0.0f;
@@ -397,6 +401,10 @@ void FDADuelUI::StartDuelWithDeck(const FString& DeckId)
 	DuelTributeHandUid = 0;
 	bDuelTributeSet = false;
 	DuelTributeUids.Reset();
+	DuelChoiceRequestId = 0;
+	DuelChoicePage = 0;
+	DuelChoiceSelected.Reset();
+	DuelChoiceCardUids.Reset();
 	DuelPileType = EDuelPileType::None;
 	DuelMessage.Empty();
 	DuelMessageTimer = 0.0f;
@@ -472,6 +480,10 @@ void FDADuelUI::CloseDuel()
 	DuelSelectedUid = 0;
 	bDuelTributeSet = false;
 	DuelTributeUids.Reset();
+	DuelChoiceRequestId = 0;
+	DuelChoicePage = 0;
+	DuelChoiceSelected.Reset();
+	DuelChoiceCardUids.Reset();
 	DuelMessage.Empty();
 	DuelIncomingEvents.Reset();
 	DuelFx.Reset();
@@ -697,6 +709,11 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 	}
 
 	UpdateDuelVisuals(DeltaSeconds);
+	RefreshDuelChoiceState();
+	if (DuelEngine && DuelEngine->HasPendingChoice() && DuelPileType != EDuelPileType::None)
+	{
+		DuelPileType = EDuelPileType::None;
+	}
 
 	if (DuelMode == EDuelUiMode::Duel && DuelEngine)
 	{
@@ -806,13 +823,54 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 	}
 	else if (DuelMode == EDuelUiMode::Duel && PlayerOwner)
 	{
+		const FDuelChoiceRequest* PendingChoice = DuelEngine ? DuelEngine->GetPendingChoice() : nullptr;
+		const bool bChoicePending = PendingChoice != nullptr && PendingChoice->Side == EDuelOwner::Player;
+
+		const bool bPresentationActive = DuelCutInTime > 0.0f || DuelEventBannerTime > 0.0f
+			|| DuelIncomingEvents.Num() > 0 || DuelFx.Num() > 0;
+		if (!bChoicePending && bPresentationActive
+			&& PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar))
+		{
+			SkipDuelPresentation();
+		}
+
 		if (PlayerOwner->WasInputKeyJustPressed(EKeys::Escape))
 		{
-			if (DuelPileType != EDuelPileType::None) DuelPileType = EDuelPileType::None;
+			if (bChoicePending)
+			{
+				if (PendingChoice->bCancellable)
+				{
+					FString ChoiceError;
+					if (DuelEngine->CancelChoice(PendingChoice->RequestId, ChoiceError))
+					{
+						DuelChoiceRequestId = 0;
+						DuelChoicePage = 0;
+						DuelChoiceSelected.Reset();
+						DuelChoiceCardUids.Reset();
+						DuelEventPumpTimer = 0.0f;
+					}
+					else if (!ChoiceError.IsEmpty())
+					{
+						DuelShowMessage(ChoiceError);
+					}
+				}
+				else
+				{
+					DuelShowMessage(TEXT("Choose an option to continue the duel."),
+						FLinearColor(0.95f, 0.78f, 0.40f));
+				}
+			}
+			else if (DuelPileType != EDuelPileType::None) DuelPileType = EDuelPileType::None;
 			else if (bDuelTributeSet) DuelCancelTribute();
 			else DuelSelectedUid = 0;
 		}
-		if (DuelEngine && DuelEngine->IsPlayerTurn() && !DuelEngine->IsAwaitingAi())
+
+		if (bChoicePending && PlayerOwner->WasInputKeyJustPressed(EKeys::Enter))
+		{
+			SubmitDuelChoice();
+		}
+
+		if (DuelEngine && !bChoicePending && DuelEngine->IsPlayerTurn() && !DuelEngine->IsAwaitingAi())
 		{
 			if (PlayerOwner->WasInputKeyJustPressed(EKeys::B))
 			{
@@ -868,7 +926,9 @@ void FDADuelUI::PumpDuelVisualEvents(float DeltaSeconds)
 
 	SpawnDuelFx(DuelIncomingEvents[0]);
 	DuelIncomingEvents.RemoveAt(0);
-	DuelEventPumpTimer = DuelEventGap;
+	// Drain a backlog faster instead of making the player watch older beats
+	// while the rules state has already moved on.
+	DuelEventPumpTimer = FMath::Clamp(0.22f - DuelIncomingEvents.Num() * 0.018f, 0.07f, 0.22f);
 }
 
 void FDADuelUI::UpdateDuelVisuals(float DeltaSeconds)
@@ -1338,10 +1398,15 @@ FVector2D FDADuelUI::DuelCardCenter(int32 Uid, EDuelOwner FallbackSide, bool bMo
 			{
 				if (State.Hand[I].Uid == Uid)
 				{
+					// Must match the hand layout in DrawDuelActive so card
+					// flights land on the actual card at every hand size.
 					const int32 Count = State.Hand.Num();
-					const float Spacing = FMath::Min(80.0f, 650.0f / FMath::Max(1, Count));
-					const float TotalWidth = (Count - 1) * Spacing + 72.0f;
-					return FVector2D(800.0f - TotalWidth * 0.5f + I * Spacing + 36.0f,
+					const float CardW = Side == EDuelOwner::Player ? 72.0f : 52.0f;
+					const float Spacing = Side == EDuelOwner::Player
+						? FMath::Min(80.0f, (480.0f - CardW) / FMath::Max(1, Count - 1))
+						: FMath::Min(58.0f, 360.0f / FMath::Max(1, Count));
+					const float TotalWidth = (Count - 1) * Spacing + CardW;
+					return FVector2D(800.0f - TotalWidth * 0.5f + I * Spacing + CardW * 0.5f,
 						Side == EDuelOwner::Player ? 818.0f : 130.0f);
 				}
 			}
@@ -1539,6 +1604,176 @@ void FDADuelUI::AddDuelHit(const FString& Action, int32 Value, float X, float Y,
 	DuelHitTargets.Add(Hit);
 }
 
+void FDADuelUI::RefreshDuelChoiceState()
+{
+	if (!DuelEngine || DuelMode != EDuelUiMode::Duel)
+	{
+		DuelChoiceRequestId = 0;
+		DuelChoicePage = 0;
+		DuelChoiceSelected.Reset();
+		DuelChoiceCardUids.Reset();
+		return;
+	}
+
+	const FDuelChoiceRequest* Request = DuelEngine->GetPendingChoice();
+	if (!Request || Request->Side != EDuelOwner::Player)
+	{
+		DuelChoiceRequestId = 0;
+		DuelChoicePage = 0;
+		DuelChoiceSelected.Reset();
+		DuelChoiceCardUids.Reset();
+		return;
+	}
+
+	if (Request->RequestId != DuelChoiceRequestId)
+	{
+		DuelChoiceRequestId = Request->RequestId;
+		DuelChoicePage = 0;
+		DuelChoiceSelected.Reset();
+	}
+
+	DuelChoiceCardUids.Reset();
+	for (const FDuelChoiceOption& Option : Request->Options)
+	{
+		if (Option.CardUid != 0)
+		{
+			DuelChoiceCardUids.Add(Option.CardUid);
+		}
+	}
+
+	for (auto It = DuelChoiceSelected.CreateIterator(); It; ++It)
+	{
+		const bool bStillValid = Request->Options.ContainsByPredicate(
+			[Id = *It](const FDuelChoiceOption& Option) { return Option.Id == Id; });
+		if (!bStillValid)
+		{
+			It.RemoveCurrent();
+		}
+	}
+
+	const int32 PageSize = 8;
+	const int32 PageCount = FMath::Max(1, FMath::DivideAndRoundUp(Request->Options.Num(), PageSize));
+	DuelChoicePage = FMath::Clamp(DuelChoicePage, 0, PageCount - 1);
+}
+
+void FDADuelUI::SubmitDuelChoice()
+{
+	if (!DuelEngine)
+	{
+		return;
+	}
+	const FDuelChoiceRequest* Request = DuelEngine->GetPendingChoice();
+	if (!Request || Request->Side != EDuelOwner::Player)
+	{
+		return;
+	}
+	if (DuelChoiceSelected.Num() < Request->MinSelections)
+	{
+		DuelShowMessage(FString::Printf(TEXT("Select %d card(s) first."), Request->MinSelections),
+			FLinearColor(0.95f, 0.78f, 0.40f));
+		return;
+	}
+	if (DuelChoiceSelected.Num() > Request->MaxSelections)
+	{
+		DuelShowMessage(FString::Printf(TEXT("Select at most %d card(s)."), Request->MaxSelections),
+			FLinearColor(0.95f, 0.78f, 0.40f));
+		return;
+	}
+
+	TArray<int32> OptionIds = DuelChoiceSelected.Array();
+	OptionIds.Sort();
+	int32 HighlightUid = 0;
+	for (int32 OptionId : OptionIds)
+	{
+		const FDuelChoiceOption* Option = Request->Options.FindByPredicate(
+			[OptionId](const FDuelChoiceOption& Candidate) { return Candidate.Id == OptionId; });
+		if (Option && Option->CardUid != 0)
+		{
+			HighlightUid = Option->CardUid;
+			break;
+		}
+	}
+
+	FString Error;
+	if (!DuelEngine->AnswerChoice(Request->RequestId, OptionIds, Error))
+	{
+		DuelShowMessage(Error);
+		return;
+	}
+
+	PlayCue(OwnerHUD.Get(), EDASfx::CardPlace, 0.55f, 1.02f);
+	DuelSelectedUid = HighlightUid;
+	DuelChoiceRequestId = 0;
+	DuelChoicePage = 0;
+	DuelChoiceSelected.Reset();
+	DuelChoiceCardUids.Reset();
+	DuelEventPumpTimer = 0.0f;
+}
+
+void FDADuelUI::HandleDuelChoiceOption(int32 OptionId)
+{
+	if (!DuelEngine)
+	{
+		return;
+	}
+	const FDuelChoiceRequest* Request = DuelEngine->GetPendingChoice();
+	if (!Request || Request->Side != EDuelOwner::Player)
+	{
+		return;
+	}
+	const FDuelChoiceOption* Option = Request->Options.FindByPredicate(
+		[OptionId](const FDuelChoiceOption& Candidate) { return Candidate.Id == OptionId; });
+	if (!Option)
+	{
+		return;
+	}
+	if (!Option->bEnabled)
+	{
+		DuelShowMessage(Option->DisabledReason.IsEmpty() ? TEXT("That option is not legal.") : Option->DisabledReason);
+		return;
+	}
+
+	if (Request->MaxSelections <= 1)
+	{
+		DuelChoiceSelected.Reset();
+		DuelChoiceSelected.Add(OptionId);
+		SubmitDuelChoice();
+		return;
+	}
+
+	if (DuelChoiceSelected.Contains(OptionId))
+	{
+		DuelChoiceSelected.Remove(OptionId);
+	}
+	else if (DuelChoiceSelected.Num() < Request->MaxSelections)
+	{
+		DuelChoiceSelected.Add(OptionId);
+	}
+	else
+	{
+		DuelShowMessage(FString::Printf(TEXT("You can select at most %d card(s)."), Request->MaxSelections),
+			FLinearColor(0.95f, 0.78f, 0.40f));
+	}
+}
+
+void FDADuelUI::SkipDuelPresentation()
+{
+	DuelIncomingEvents.Reset();
+	DuelFx.Reset();
+	DuelEventPumpTimer = 0.0f;
+	DuelEventBannerTime = 0.0f;
+	DuelEventBannerTitle.Empty();
+	DuelEventBannerSubtitle.Empty();
+	DuelCutInTime = 0.0f;
+	DuelCutInPriority = 0;
+	DuelFlashTime = 0.0f;
+	DuelShakeTime = 0.0f;
+	if (bDuelResultPending)
+	{
+		DuelResultDelay = FMath::Min(DuelResultDelay, 0.6f);
+	}
+}
+
 void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString& Payload)
 {
 	UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("DUELHIT action=%s value=%d payload=%s"), *Action, Value, *Payload);
@@ -1592,6 +1827,75 @@ void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString&
 	{
 		return;
 	}
+	if (Action == TEXT("skipfx"))
+	{
+		SkipDuelPresentation();
+		return;
+	}
+
+	// While the rules engine is waiting for an answer, the choice panel owns
+	// input.  Clicking a highlighted card on the board is a shortcut for the
+	// matching option, so equips and searches can be aimed directly.
+	if (DuelEngine->HasPendingChoice())
+	{
+		const FDuelChoiceRequest* Request = DuelEngine->GetPendingChoice();
+		if (!Request || Request->Side != EDuelOwner::Player)
+		{
+			return;
+		}
+		if (Action == TEXT("choiceoption"))
+		{
+			HandleDuelChoiceOption(Value);
+			return;
+		}
+		if (Action == TEXT("select") && Value != 0)
+		{
+			const FDuelChoiceOption* Option = Request->Options.FindByPredicate(
+				[Value](const FDuelChoiceOption& Candidate) { return Candidate.CardUid == Value; });
+			if (Option)
+			{
+				HandleDuelChoiceOption(Option->Id);
+			}
+			return;
+		}
+		if (Action == TEXT("choiceconfirm"))
+		{
+			SubmitDuelChoice();
+			return;
+		}
+		if (Action == TEXT("choicecancel"))
+		{
+			FString Error;
+			const int32 RequestId = Request->RequestId;
+			if (DuelEngine->CancelChoice(RequestId, Error))
+			{
+				DuelChoiceRequestId = 0;
+				DuelChoicePage = 0;
+				DuelChoiceSelected.Reset();
+				DuelChoiceCardUids.Reset();
+				DuelEventPumpTimer = 0.0f;
+			}
+			else if (!Error.IsEmpty())
+			{
+				DuelShowMessage(Error);
+			}
+			return;
+		}
+		if (Action == TEXT("choiceprev"))
+		{
+			DuelChoicePage = FMath::Max(0, DuelChoicePage - 1);
+			return;
+		}
+		if (Action == TEXT("choicenext"))
+		{
+			DuelChoicePage = FMath::Min(
+				FMath::Max(0, FMath::DivideAndRoundUp(Request->Options.Num(), 8) - 1),
+				DuelChoicePage + 1);
+			return;
+		}
+		return;
+	}
+
 	if (Action == TEXT("closepile"))
 	{
 		DuelPileType = EDuelPileType::None;
@@ -1608,6 +1912,33 @@ void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString&
 		if (bDuelTributeSet)
 		{
 			return;
+		}
+		// In the Battle Phase, selecting a second monster attacks it directly.
+		// This mirrors the physical game: choose the attacker, then its target.
+		if (DuelSelectedUid != 0 && DuelSelectedUid != Value
+			&& DuelEngine->GetPhase() == EDuelPhase::Battle
+			&& DuelEngine->IsPlayerTurn() && !DuelEngine->IsAwaitingAi())
+		{
+			const FDuelCard* Attacker = DuelEngine->FindMonster(DuelSelectedUid);
+			const FDuelCard* Clicked = DuelEngine->FindMonster(Value);
+			if (Attacker && Clicked && Attacker->Controller == EDuelOwner::Player
+				&& Clicked->Controller != EDuelOwner::Player)
+			{
+				const TArray<FDuelAttackTarget> Targets = DuelEngine->GetAttackTargets(DuelSelectedUid);
+				const bool bLegalTarget = Targets.ContainsByPredicate(
+					[Value](const FDuelAttackTarget& Target) { return Target.Uid == Value; });
+				if (bLegalTarget)
+				{
+					FString AttackError;
+					if (DuelEngine->Attack(DuelSelectedUid, Value, AttackError))
+					{
+						DuelSelectedUid = 0;
+						return;
+					}
+					DuelShowMessage(AttackError);
+					return;
+				}
+			}
 		}
 		DuelSelectedUid = (DuelSelectedUid == Value) ? 0 : Value;
 		return;
@@ -1794,11 +2125,22 @@ void FDADuelUI::DrawDuel()
 			DrawShadowText(TEXT("VS  YOU"), AccentCyan, DX(800.0f), DY(572.0f), GetFont(false), 0.62f * DuelScale, true);
 		}
 		DrawDuelFx();
-		DrawDuelEventBanner();
-		DrawDuelCutIn();
+		RefreshDuelChoiceState();
+		const FDuelChoiceRequest* Pending = DuelEngine ? DuelEngine->GetPendingChoice() : nullptr;
+		const bool bChoicePending = Pending != nullptr && Pending->Side == EDuelOwner::Player;
+		if (!bChoicePending)
+		{
+			DrawDuelEventBanner();
+			DrawDuelCutIn();
+		}
+		if (bChoicePending)
+		{
+			DrawDuelChoice();
+		}
 	}
 
-	if (DuelMode == EDuelUiMode::Duel && DuelPileType != EDuelPileType::None)
+	if (DuelMode == EDuelUiMode::Duel && DuelPileType != EDuelPileType::None
+		&& !(DuelEngine && DuelEngine->HasPendingChoice()))
 	{
 		DrawDuelPile();
 	}
@@ -2473,20 +2815,23 @@ void FDADuelUI::DrawDuelEventBanner()
 	const float Fade = FMath::Min(
 		FMath::Clamp(T / 0.12f, 0.0f, 1.0f),
 		FMath::Clamp(DuelEventBannerTime / 0.26f, 0.0f, 1.0f));
-	const float Slide = (1.0f - Ease) * 30.0f;
+	const float Slide = (1.0f - Ease) * 14.0f;
+	// Keep the banner in the lane between the two monster rows so it never
+	// covers cards.  It replaces the phase strip for its short lifetime.
 	const float X = 520.0f;
-	const float Y = 388.0f + Slide;
+	const float Y = 452.0f + Slide;
 	const float W = 560.0f;
-	const float H = 72.0f;
+	const float H = 36.0f;
 	const FLinearColor Accent = FLinearColor(DuelEventBannerColor.R, DuelEventBannerColor.G,
 		DuelEventBannerColor.B, Fade);
-	DrawPanel(DX(X), DY(Y), DS(W), DS(H), FLinearColor(0.012f, 0.026f, 0.040f, 0.94f * Fade), Accent);
-	DrawRect(Accent, DX(X), DY(Y), DS(W), 3.0f);
-	DrawRect(Accent, DX(X), DY(Y + H - 2.0f), DS(W), 2.0f);
+	DrawPanel(DX(X), DY(Y), DS(W), DS(H), FLinearColor(0.012f, 0.026f, 0.040f, 0.97f * Fade), Accent);
+	DrawRect(Accent, DX(X), DY(Y), DS(W), 2.0f);
+	DrawRect(Accent, DX(X), DY(Y + H - 1.0f), DS(W), 1.0f);
 	DrawShadowText(DuelEventBannerTitle, FLinearColor(Paper.R, Paper.G, Paper.B, Fade),
-		DX(X + W * 0.5f), DY(Y + 12.0f), GetFont(true), 1.08f * DuelScale, true);
-	DrawShadowText(DuelEventBannerSubtitle, Accent, DX(X + W * 0.5f), DY(Y + 42.0f),
-		GetFont(false), 0.59f * DuelScale, true);
+		DX(X + W * 0.5f), DY(Y + 1.0f), GetFont(false), 0.66f * DuelScale, true);
+	DrawShadowText(DuelEventBannerSubtitle, Accent, DX(X + W * 0.5f), DY(Y + 19.0f),
+		GetFont(false), 0.44f * DuelScale, true);
+	AddDuelHit(TEXT("skipfx"), 0, DX(X), DY(Y), DS(W), DS(H));
 }
 
 void FDADuelUI::TriggerDuelCutIn(EDuelOwner Side, const FString& Expression, const FString& Title,
@@ -2544,8 +2889,10 @@ void FDADuelUI::DrawDuelCutIn()
 	const float W = 400.0f;
 	const float H = 400.0f;
 	const float TopH = 86.0f;
-	const float BaseX = DuelCutInSide == EDuelOwner::Player ? 16.0f : 1184.0f;
-	const float X = DuelCutInSide == EDuelOwner::Player ? BaseX - Slide : BaseX + Slide;
+	// Keep cut-ins over the log column.  They used to cover the entire command
+	// panel on the player's side, which hid the buttons the player needed.
+	const float BaseX = 16.0f;
+	const float X = BaseX - Slide;
 	const float Y = 258.0f + (1.0f - Ease) * 26.0f;
 	const FLinearColor Accent = FLinearColor(DuelCutInAccent.R, DuelCutInAccent.G,
 		DuelCutInAccent.B, A);
@@ -2636,6 +2983,9 @@ void FDADuelUI::DrawDuelCutIn()
 		DrawRect(FLinearColor(0.98f, 0.78f, 0.30f, Glow * A), DX(X + 4.0f), DY(Y + TopH + H - 7.0f),
 			DS(W - 8.0f), DS(3.0f));
 	}
+
+	// A click on the insert dismisses it without touching the board.
+	AddDuelHit(TEXT("skipfx"), 0, DX(X - 10.0f), DY(Y - 10.0f), DS(W + 20.0f), DS(TopH + H + 20.0f));
 }
 
 void FDADuelUI::DrawDuelActive()
@@ -2650,6 +3000,7 @@ void FDADuelUI::DrawDuelActive()
 	const bool bPlayerTurn = DuelEngine->IsPlayerTurn();
 	const bool bAiTurn = DuelEngine->IsAwaitingAi() || !bPlayerTurn;
 	const bool bMain = DuelEngine->GetPhase() == EDuelPhase::Main1 || DuelEngine->GetPhase() == EDuelPhase::Main2;
+	const bool bChoicePending = DuelEngine->HasPendingChoice();
 	FDuelCard* Selected = DuelEngine->FindCard(DuelSelectedUid);
 
 	// Top scoreboards.
@@ -2718,7 +3069,8 @@ void FDADuelUI::DrawDuelActive()
 		if (Side.Field.IsValid())
 		{
 			DrawDuelCard(Side.Field, DX(X), DY(Y), DS(88.0f), DS(128.0f), !Side.Field.bFaceUp,
-				DuelSelectedUid == Side.Field.Uid, false, false);
+				DuelSelectedUid == Side.Field.Uid || IsDuelChoiceSelected(Side.Field.Uid),
+				IsDuelChoiceTarget(Side.Field.Uid), false);
 			AddDuelHit(TEXT("select"), Side.Field.Uid, DX(X), DY(Y), DS(88.0f), DS(128.0f));
 		}
 		else
@@ -2765,7 +3117,8 @@ void FDADuelUI::DrawDuelActive()
 		if (Card.IsValid())
 		{
 			DrawDuelCard(Card, DX(X), DY(184.0f), DS(88.0f), DS(128.0f), !Card.bFaceUp,
-				DuelSelectedUid == Card.Uid, IsHoverRect(X, 184.0f, 88.0f, 128.0f));
+				DuelSelectedUid == Card.Uid || IsDuelChoiceSelected(Card.Uid),
+				IsHoverRect(X, 184.0f, 88.0f, 128.0f) || IsDuelChoiceTarget(Card.Uid));
 			AddDuelHit(TEXT("select"), Card.Uid, DX(X), DY(184.0f), DS(88.0f), DS(128.0f));
 		}
 		else
@@ -2780,7 +3133,8 @@ void FDADuelUI::DrawDuelActive()
 		if (Card.IsValid())
 		{
 			DrawDuelCard(Card, DX(X), DY(320.0f), DS(88.0f), DS(128.0f), !Card.bFaceUp,
-				DuelSelectedUid == Card.Uid, IsHoverRect(X, 320.0f, 88.0f, 128.0f),
+				DuelSelectedUid == Card.Uid || IsDuelChoiceSelected(Card.Uid),
+				IsHoverRect(X, 320.0f, 88.0f, 128.0f) || IsDuelChoiceTarget(Card.Uid),
 				Card.Position == EDuelPosition::Defense);
 			AddDuelHit(TEXT("select"), Card.Uid, DX(X), DY(320.0f), DS(88.0f), DS(128.0f));
 		}
@@ -2811,7 +3165,8 @@ void FDADuelUI::DrawDuelActive()
 		{
 			const bool bTributeSelected = DuelTributeUids.Contains(Card.Uid);
 			DrawDuelCard(Card, DX(X), DY(494.0f), DS(88.0f), DS(128.0f), !Card.bFaceUp,
-				bTributeSelected || DuelSelectedUid == Card.Uid, IsHoverRect(X, 494.0f, 88.0f, 128.0f),
+				bTributeSelected || DuelSelectedUid == Card.Uid || IsDuelChoiceSelected(Card.Uid),
+				IsHoverRect(X, 494.0f, 88.0f, 128.0f) || IsDuelChoiceTarget(Card.Uid),
 				Card.Position == EDuelPosition::Defense);
 			AddDuelHit(bDuelTributeSet ? TEXT("tribute") : TEXT("select"), Card.Uid,
 				DX(X), DY(494.0f), DS(88.0f), DS(128.0f));
@@ -2828,7 +3183,8 @@ void FDADuelUI::DrawDuelActive()
 		if (Card.IsValid())
 		{
 			DrawDuelCard(Card, DX(X), DY(630.0f), DS(88.0f), DS(128.0f), !Card.bFaceUp,
-				DuelSelectedUid == Card.Uid, IsHoverRect(X, 630.0f, 88.0f, 128.0f));
+				DuelSelectedUid == Card.Uid || IsDuelChoiceSelected(Card.Uid),
+				IsHoverRect(X, 630.0f, 88.0f, 128.0f) || IsDuelChoiceTarget(Card.Uid));
 			AddDuelHit(TEXT("select"), Card.Uid, DX(X), DY(630.0f), DS(88.0f), DS(128.0f));
 		}
 		else
@@ -2863,10 +3219,10 @@ void FDADuelUI::DrawDuelActive()
 		for (int32 I = 0; I < HandCount; ++I)
 		{
 			const FDuelCard& Card = PlayerSide.Hand[I];
-			const bool bSelectedCard = DuelSelectedUid == Card.Uid;
+			const bool bSelectedCard = DuelSelectedUid == Card.Uid || IsDuelChoiceSelected(Card.Uid);
 			const float CardY = 766.0f - (bSelectedCard ? 8.0f : 0.0f);
 			DrawDuelCard(Card, DX(StartX + I * Spacing), DY(CardY), DS(CardW), DS(CardH), !Card.bFaceUp,
-				bSelectedCard, IsHoverRect(StartX + I * Spacing, CardY, CardW, CardH));
+				bSelectedCard, IsHoverRect(StartX + I * Spacing, CardY, CardW, CardH) || IsDuelChoiceTarget(Card.Uid));
 			AddDuelHit(DuelEngine->IsAwaitingDiscard() ? TEXT("discard") : TEXT("select"), Card.Uid,
 				DX(StartX + I * Spacing), DY(CardY), DS(CardW), DS(CardH));
 		}
@@ -2933,6 +3289,7 @@ void FDADuelUI::DrawDuelActive()
 	else if (Selected)
 	{
 		const bool bCardHidden = !Selected->bFaceUp && Selected->Owner != EDuelOwner::Player;
+		float DetailTextEndY = RY + 380.0f;
 		if (!bCardHidden)
 		{
 			DrawDuelCard(*Selected, DX(RX + (RW - 170.0f) * 0.5f), DY(RY + 42.0f), DS(170.0f), DS(246.0f),
@@ -2944,7 +3301,14 @@ void FDADuelUI::DrawDuelActive()
 			{
 				TypeLine += FString::Printf(TEXT(" / %s"), *Selected->Data.MonsterType);
 			}
-			DrawShadowText(TypeLine, AccentCyan, DX(RX + 20.0f), DY(RY + 326.0f), GetFont(false), 0.6f * DuelScale, false);
+			if (Selected->EquippedToUid != 0)
+			{
+				if (const FDuelCard* EquipTarget = DuelEngine->FindMonster(Selected->EquippedToUid))
+				{
+					TypeLine += FString::Printf(TEXT(" / EQUIPPED TO %s"), *EquipTarget->Data.Name.ToUpper());
+				}
+			}
+			DrawShadowText(DuelTrim(TypeLine, 48), AccentCyan, DX(RX + 20.0f), DY(RY + 326.0f), GetFont(false), 0.6f * DuelScale, false);
 			if (Selected->IsMonster())
 			{
 				DrawShadowText(FString::Printf(TEXT("ATK %d   DEF %d   LV %d"), DuelEngine->GetAtk(*Selected),
@@ -2956,8 +3320,9 @@ void FDADuelUI::DrawDuelActive()
 						DX(RX + 200.0f), DY(RY + 348.0f), GetFont(false), 0.58f * DuelScale, false);
 				}
 			}
-			DrawWrappedText(Selected->Data.Description.Replace(TEXT("ð"), TEXT(" ")), DX(RX + 20.0f), DY(RY + 380.0f),
-				DS(RW - 40.0f), GetFont(false), 0.56f * DuelScale,
+			DetailTextEndY = DrawWrappedText(DuelTrim(Selected->Data.Description.Replace(TEXT("ð"), TEXT(" ")), 420),
+				DX(RX + 20.0f), DY(RY + 380.0f),
+				DS(RW - 40.0f), GetFont(false), 0.54f * DuelScale,
 				FLinearColor(0.72f, 0.78f, 0.8f), 2.0f);
 		}
 		else
@@ -2967,11 +3332,15 @@ void FDADuelUI::DrawDuelActive()
 				DX(RX + 20.0f), DY(RY + 92.0f), DS(RW - 40.0f), GetFont(false), 0.66f * DuelScale, Muted, 3.0f);
 		}
 
-		if (Selected->Controller == EDuelOwner::Player && bPlayerTurn && !bAiTurn && bMain)
+		if (Selected->Controller == EDuelOwner::Player && bPlayerTurn && !bAiTurn && bMain && !bChoicePending)
 		{
-			float ActionY = RY + 560.0f;
-			auto DrawAction = [this, &ActionY, RX](const FString& Label, const FString& Action, int32 Value)
+			float ActionY = FMath::Min(FMath::Max(RY + 520.0f, DetailTextEndY + 10.0f), RY + 612.0f);
+			auto DrawAction = [this, &ActionY, RX, RY](const FString& Label, const FString& Action, int32 Value)
 			{
+				if (ActionY + 34.0f > RY + 696.0f)
+				{
+					return;
+				}
 				DrawDuelButton(Label, Action, Value, RX + 20.0f, ActionY, 320.0f, 34.0f);
 				ActionY += 42.0f;
 			};
@@ -3010,14 +3379,15 @@ void FDADuelUI::DrawDuelActive()
 
 		// Battle targets replace the generic action list while a monster is selected.
 		if (Selected->Owner == EDuelOwner::Player && Selected->IsMonster()
-			&& DuelEngine->GetPhase() == EDuelPhase::Battle && bPlayerTurn && !bAiTurn)
+			&& DuelEngine->GetPhase() == EDuelPhase::Battle && bPlayerTurn && !bAiTurn && !bChoicePending)
 		{
 			const TArray<FDuelAttackTarget> Targets = DuelEngine->GetAttackTargets(DuelSelectedUid);
 			if (Targets.Num() > 0)
 			{
+				const float BattleTop = FMath::Min(FMath::Max(RY + 500.0f, DetailTextEndY + 8.0f), RY + 620.0f);
 				DrawShadowText(TEXT("ATTACK TARGETS"), FLinearColor(0.96f, 0.62f, 0.38f),
-					DX(RX + 20.0f), DY(RY + 512.0f), GetFont(false), 0.66f * DuelScale, false);
-				float TargetY = RY + 532.0f;
+					DX(RX + 20.0f), DY(BattleTop), GetFont(false), 0.66f * DuelScale, false);
+				float TargetY = BattleTop + 20.0f;
 				for (const FDuelAttackTarget& Target : Targets)
 				{
 					DrawDuelButton(DuelTrim(Target.Label, 40), TEXT("attack"), Target.Uid,
@@ -3030,7 +3400,7 @@ void FDADuelUI::DrawDuelActive()
 	}
 
 	// Primary command buttons.
-	if (bPlayerTurn && !bAiTurn && !DuelEngine->IsAwaitingDiscard() && !bDuelTributeSet)
+	if (bPlayerTurn && !bAiTurn && !DuelEngine->IsAwaitingDiscard() && !bDuelTributeSet && !bChoicePending)
 	{
 		if (DuelEngine->GetPhase() == EDuelPhase::Battle)
 		{
@@ -3054,9 +3424,18 @@ void FDADuelUI::DrawDuelActive()
 
 	// Message / hint strip.
 	FString Hint = TEXT("Click a card to inspect it. B enters Battle. N ends the turn. Esc deselects.");
-	if (DuelEngine->IsAwaitingDiscard())
+	if (bChoicePending)
+	{
+		Hint = TEXT("ANSWER THE CHOICE ON THE RIGHT. CLICK A HIGHLIGHTED CARD TO TARGET IT.");
+	}
+	else if (DuelEngine->IsAwaitingDiscard())
 	{
 		Hint = FString::Printf(TEXT("DISCARD %d CARD(S) TO THE 6-CARD HAND LIMIT"), DuelEngine->GetDiscardCount());
+	}
+	else if (DuelCutInTime > 0.0f || DuelEventBannerTime > 0.0f
+		|| DuelIncomingEvents.Num() > 0 || DuelFx.Num() > 0)
+	{
+		Hint = TEXT("SPACE OR CLICK A CUT-IN TO SKIP THE ANIMATION.");
 	}
 	if (DuelMessageTimer > 0.0f && !DuelMessage.IsEmpty())
 	{
@@ -3081,6 +3460,136 @@ void FDADuelUI::DrawDuelActive()
 		DrawRect(LowColor, 0.0f, 0.0f, Edge, Canvas->ClipY);
 		DrawRect(LowColor, Canvas->ClipX - Edge, 0.0f, Edge, Canvas->ClipY);
 	}
+}
+
+void FDADuelUI::DrawDuelChoice()
+{
+	if (!DuelEngine || !Canvas)
+	{
+		return;
+	}
+	const FDuelChoiceRequest* Request = DuelEngine->GetPendingChoice();
+	if (!Request || Request->Side != EDuelOwner::Player)
+	{
+		return;
+	}
+	RefreshDuelChoiceState();
+
+	// Dim the board slightly, but leave the cards visible and clickable so the
+	// player can answer target choices by clicking the monster itself.
+	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.42f), 0.0f, 0.0f, Canvas->ClipX, Canvas->ClipY);
+
+	const float X = 1216.0f;
+	const float Y = 110.0f;
+	const float W = 360.0f;
+	const float H = 760.0f;
+	DrawPanel(DX(X), DY(Y), DS(W), DS(H), FLinearColor(0.014f, 0.028f, 0.044f, 0.99f), Gold);
+	DrawRect(Gold, DX(X), DY(Y), DS(W), DS(3.0f));
+	AddDuelHit(TEXT("choiceblank"), 0, DX(X), DY(Y), DS(W), DS(H));
+
+	FString Title = TEXT("MAKE A CHOICE");
+	switch (Request->Type)
+	{
+	case EDuelChoiceType::SelectCard: Title = TEXT("SELECT A CARD"); break;
+	case EDuelChoiceType::SelectCards: Title = TEXT("SELECT CARDS"); break;
+	case EDuelChoiceType::SelectZone: Title = TEXT("SELECT A ZONE"); break;
+	case EDuelChoiceType::YesNo: Title = TEXT("ACTIVATE EFFECT?"); break;
+	case EDuelChoiceType::ChainResponse: Title = TEXT("CHAIN RESPONSE"); break;
+	case EDuelChoiceType::ActivationOrder: Title = TEXT("ACTIVATION ORDER"); break;
+	case EDuelChoiceType::Ante: Title = TEXT("CHOOSE ANTE CARD"); break;
+	default: break;
+	}
+	DrawShadowText(Title, Gold, DX(X + 20.0f), DY(Y + 12.0f), GetFont(false), 0.74f * DuelScale, false);
+
+	const FDuelCard* Source = Request->SourceCardUid != 0 ? DuelEngine->FindCard(Request->SourceCardUid) : nullptr;
+	if (Source)
+	{
+		DrawShadowText(DuelTrim(FString::Printf(TEXT("FROM %s"), *Source->Data.Name.ToUpper()), 42),
+			Muted, DX(X + 20.0f), DY(Y + 38.0f), GetFont(false), 0.48f * DuelScale, false);
+	}
+
+	const float PromptEndY = DrawWrappedText(DuelTrim(Request->Prompt, 180), DX(X + 20.0f), DY(Y + 60.0f),
+		DS(W - 40.0f), GetFont(false), 0.58f * DuelScale,
+		FLinearColor(0.86f, 0.90f, 0.92f), 2.0f);
+
+	if (Request->MaxSelections > 1 || Request->MinSelections > 1)
+	{
+		DrawShadowText(FString::Printf(TEXT("SELECT %d-%d   CHOSEN %d"),
+			Request->MinSelections, Request->MaxSelections, DuelChoiceSelected.Num()),
+			AccentCyan, DX(X + 20.0f), DY(FMath::Max(Y + 132.0f, PromptEndY + 2.0f)),
+			GetFont(false), 0.50f * DuelScale, false);
+	}
+
+	const int32 PageSize = 8;
+	const int32 PageCount = FMath::Max(1, FMath::DivideAndRoundUp(Request->Options.Num(), PageSize));
+	DuelChoicePage = FMath::Clamp(DuelChoicePage, 0, PageCount - 1);
+	const int32 FirstOption = DuelChoicePage * PageSize;
+	const int32 LastOption = FMath::Min(FirstOption + PageSize, Request->Options.Num());
+	const float OptionsTop = FMath::Max(Y + 152.0f, PromptEndY + 18.0f);
+	const float RowH = 46.0f;
+	const float RowGap = 4.0f;
+
+	for (int32 Index = FirstOption; Index < LastOption; ++Index)
+	{
+		const FDuelChoiceOption& Option = Request->Options[Index];
+		const float RowY = OptionsTop + (Index - FirstOption) * (RowH + RowGap);
+		const bool bSelected = DuelChoiceSelected.Contains(Option.Id);
+		const bool bEnabled = Option.bEnabled;
+		const FLinearColor Border = !bEnabled ? FLinearColor(0.24f, 0.28f, 0.30f, 0.7f)
+			: (bSelected ? Gold : DuelLine);
+		const FLinearColor Fill = bSelected
+			? FLinearColor(0.12f, 0.10f, 0.035f, 0.98f)
+			: (bEnabled ? FLinearColor(0.025f, 0.048f, 0.068f, 0.96f)
+				: FLinearColor(0.018f, 0.028f, 0.034f, 0.92f));
+		DrawPanel(DX(X + 20.0f), DY(RowY), DS(W - 40.0f), DS(RowH), Fill, Border);
+		if (bSelected)
+		{
+			DrawRect(Gold, DX(X + 20.0f), DY(RowY), DS(4.0f), DS(RowH));
+		}
+		const float LabelY = Option.DisabledReason.IsEmpty() ? RowY + 13.0f : RowY + 5.0f;
+		DrawShadowText(DuelTrim(Option.Label, 40), bEnabled ? Paper : FLinearColor(0.42f, 0.46f, 0.48f),
+			DX(X + 32.0f), DY(LabelY), GetFont(false), 0.53f * DuelScale, false);
+		if (!Option.DisabledReason.IsEmpty())
+		{
+			DrawShadowText(DuelTrim(Option.DisabledReason, 46), FLinearColor(0.66f, 0.48f, 0.40f),
+				DX(X + 32.0f), DY(RowY + 25.0f), GetFont(false), 0.40f * DuelScale, false);
+		}
+		if (bEnabled)
+		{
+			AddDuelHit(TEXT("choiceoption"), Option.Id, DX(X + 20.0f), DY(RowY), DS(W - 40.0f), DS(RowH));
+		}
+	}
+
+	float FooterY = OptionsTop + (LastOption - FirstOption) * (RowH + RowGap) + 4.0f;
+	if (PageCount > 1)
+	{
+		DrawDuelButton(TEXT("< PREV"), TEXT("choiceprev"), 0, X + 20.0f, FooterY, 150.0f, 30.0f,
+			DuelChoicePage > 0, FLinearColor(0.38f, 0.58f, 0.74f));
+		DrawDuelButton(TEXT("NEXT >"), TEXT("choicenext"), 0, X + 182.0f, FooterY, 150.0f, 30.0f,
+			DuelChoicePage < PageCount - 1, FLinearColor(0.38f, 0.58f, 0.74f));
+		DrawShadowText(FString::Printf(TEXT("PAGE %d / %d"), DuelChoicePage + 1, PageCount), Muted,
+			DX(X + W * 0.5f), DY(FooterY + 34.0f), GetFont(false), 0.44f * DuelScale, true);
+		FooterY += 48.0f;
+	}
+
+	if (Request->MaxSelections > 1)
+	{
+		const bool bCanConfirm = DuelChoiceSelected.Num() >= Request->MinSelections
+			&& DuelChoiceSelected.Num() <= Request->MaxSelections;
+		DrawDuelButton(TEXT("CONFIRM"), TEXT("choiceconfirm"), 0, X + 20.0f, FooterY + 8.0f, 320.0f, 38.0f,
+			bCanConfirm, FLinearColor(0.42f, 0.72f, 0.52f));
+		FooterY += 48.0f;
+	}
+	if (Request->bCancellable)
+	{
+		DrawDuelButton(TEXT("CANCEL"), TEXT("choicecancel"), 0, X + 20.0f, FooterY + 8.0f, 320.0f, 34.0f,
+			true, FLinearColor(0.72f, 0.42f, 0.38f));
+	}
+
+	const bool bCanClickCards = DuelChoiceCardUids.Num() > 0;
+	DrawShadowText(bCanClickCards ? TEXT("Click a highlighted card or an option.")
+		: TEXT("Choose an option to continue."), Muted,
+		DX(X + W * 0.5f), DY(Y + H - 26.0f), GetFont(false), 0.46f * DuelScale, true);
 }
 
 void FDADuelUI::DrawDuelResult()

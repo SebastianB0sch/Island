@@ -19,6 +19,7 @@ from ..character import export_skeletal
 from . import body as B
 from . import cast as CAST
 from . import face as FACE
+from . import gait as GAIT
 from . import hair as HAIR
 from . import head as HEAD
 from . import models as M
@@ -35,7 +36,7 @@ _ARM_DOWN = {"upperarm_l": {"aim": (0.35, 0.05, -1)}, "upperarm_r": {"aim": (-0.
              "lowerarm_l": {"aim": (0.25, -0.15, -1)}, "lowerarm_r": {"aim": (-0.25, -0.15, -1)}}
 
 
-def _duel_keys():
+def _duel_keys(rig=None):
     """Duel stance: disk arm across the chest, card hand raised, slight crouch; gentle breathing loop."""
     keys = []
     for f, br in ((0, 0.0), (30, 1.0), (60, 0.0)):
@@ -55,7 +56,7 @@ def _duel_keys():
     return keys
 
 
-def _swim_keys():
+def _swim_keys(rig=None):
     """Front crawl, authored upright (the avatar component pitches the body forward in the water)."""
     import math
     keys = []
@@ -76,12 +77,18 @@ def _swim_keys():
 
 # state -> (source registry key | None for authored, take, loop)
 TAKES = [
-    ("Idle", "A_Anime_Idle", True), ("Walk", "A_Anime_Walk", True), ("Run", "A_Anime_Run", True),
     ("Jump", "A_Anime_Jump", False), ("Fall", "A_Anime_Fall", True), ("Land", "A_Anime_Land", False),
     ("Wave", "A_Anime_Wave", False), ("Yes", "A_Anime_Yes", False), ("No", "A_Anime_No", False),
     ("Sit", "A_Anime_Sit", True), ("Clap", "A_Anime_Clap", False), ("Interact", "A_Anime_Interact", False),
 ]
-AUTHORED = {"Duel": (_duel_keys, True), "Swim": (_swim_keys, True)}
+# state -> (key generator, loop, authored ground speed in cm/s or None)
+AUTHORED = {
+    "Idle": (GAIT.idle_keys, True, 0.0),
+    "Walk": (GAIT.walk_keys, True, GAIT.WALK.speed * 100.0),
+    "Run": (GAIT.run_keys, True, GAIT.RUN.speed * 100.0),
+    "Duel": (_duel_keys, True, None),
+    "Swim": (_swim_keys, True, None),
+}
 
 
 def key_name(cid):
@@ -226,7 +233,7 @@ def build_disk(arm, name="SK_Anime_DuelDisk"):
 
 
 def bake_takes(arm, log=print):
-    """All animation takes onto `arm`. Returns {state: (action, loop)}."""
+    """All animation takes onto `arm`. Returns {state: (action, loop, speed)}."""
     reg = thirdparty.registry().get("anime", {})
     sources = {}
     out = {}
@@ -240,11 +247,15 @@ def bake_takes(arm, log=print):
             sources[path] = RT.Source(path)
         rng = tuple(spec["frames"]) if spec.get("frames") else None
         out[state] = (RT.bake(sources[path], spec["take"], arm, reg_key, frames=rng, speed=spec.get("speed", 1.0),
-                              arm_drop=spec.get("arm_drop", 0.0)), loop)
+                              arm_drop=spec.get("arm_drop", 0.0)), loop, None)
     for src in sources.values():
         src.remove()
-    for state, (fn, loop) in AUTHORED.items():
-        out[state] = (RT.pose_action(arm, f"A_Anime_{state}", fn()), loop)
+    for state, (fn, loop, speed) in AUTHORED.items():
+        act = RT.pose_action(arm, f"A_Anime_{state}", fn(arm))
+        if state in ("Walk", "Run"):
+            metrics = GAIT.validate(arm, act, GAIT.WALK if state == "Walk" else GAIT.RUN, log)
+            speed = metrics["speed"] * 100.0
+        out[state] = (act, loop, speed)
     RT._assign(arm, None)
     return out
 
@@ -271,7 +282,7 @@ def _export_takes(arm, group, out_dir, log):
     scene = bpy.context.scene
     takes = bake_takes(arm, log)
     anims = {}
-    for state, (act, loop) in takes.items():
+    for state, (act, loop, speed) in takes.items():
         RT._assign(arm, act)
         f0, f1 = (int(round(v)) for v in act.frame_range)
         scene.frame_start, scene.frame_end = f0, max(f1, f0 + 1)
@@ -280,7 +291,7 @@ def _export_takes(arm, group, out_dir, log):
         entry = dict(name=name, file=f"{OUT_REL}/{name}.fbx", loop=loop,
                      seconds=round((f1 - f0) / scene.render.fps, 3))
         if state in ("Walk", "Run"):
-            entry["speed"] = _ground_speed(arm, act)
+            entry["speed"] = round(speed if speed else _ground_speed(arm, act), 1)
         anims[state] = entry
     RT._assign(arm, None)
     log(f"  anime: {group}: {len(takes)} takes, walk {anims.get('Walk', {}).get('speed')} cm/s, "
@@ -409,7 +420,7 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
         if src is not None:
             act = RT.bake(src, spec["take"], a, f"{src_key}_{cid}", arm_drop=spec.get("arm_drop", 0.0))
         elif state in AUTHORED:
-            act = RT.pose_action(a, f"pose_{cid}", AUTHORED[state][0]())
+            act = RT.pose_action(a, f"pose_{cid}", AUTHORED[state][0](a))
         RT._assign(a, act)
         sc = e.get("scale", 1.0)
         a.location = ((i - (len(ids) - 1) / 2) * spacing, 0.0, 0.0)

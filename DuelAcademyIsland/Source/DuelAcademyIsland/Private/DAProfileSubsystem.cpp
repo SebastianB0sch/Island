@@ -375,7 +375,7 @@ int32 UDAProfileSubsystem::RecordDuelResult(const FDAProfileDuelResult& Result)
 			IncrementCounter(TEXT("story_duels_won"), 1);
 		}
 
-		DpEarned = CalculateDuelDP(Result);
+		DpEarned = Result.bAwardDP ? CalculateDuelDP(Result) : 0;
 		if (DpEarned > 0)
 		{
 			AwardDP(DpEarned);

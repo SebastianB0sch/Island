@@ -72,6 +72,10 @@ struct DUELACADEMYISLAND_API FDAProfileDuelResult
 	/** Additional event/story DP. Applied before turn multipliers. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Duel")
 	int32 BonusDP = 0;
+
+	/** Tutorial/exam duels can record a result without awarding duel DP. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Duel")
+	bool bAwardDP = true;
 };
 
 /** Per-contact email state. Content is owned by A03; read/unlock state lives here. */

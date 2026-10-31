@@ -1348,6 +1348,72 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 		}
 	}
 	{
+		FDuelEngine Duel(Database, 1211);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_EQUIP_TARGET_CHOICE"));
+		Scenario.PlayerHand = TArray<int32>{ 107 };
+		Scenario.PlayerDeck = TArray<int32>{ 7, 8, 9 };
+		Scenario.PlayerField.Add(MakeMonster(9, 0));
+		Scenario.PlayerField.Add(MakeMonster(9, 1));
+		Scenario.OpponentField.Add(MakeMonster(9, 0));
+		FString Error;
+		Duel.StartScenario(Scenario, Error);
+		const FDuelSide& PlayerSide = Duel.GetSide(EDuelOwner::Player);
+		const int32 SpellUid = FindUidInArray(PlayerSide.Hand, 107);
+		const int32 FirstUid = PlayerSide.Monsters.IsValidIndex(0) ? PlayerSide.Monsters[0].Uid : 0;
+		const int32 SecondUid = PlayerSide.Monsters.IsValidIndex(1) ? PlayerSide.Monsters[1].Uid : 0;
+		if (SpellUid != 0 && FirstUid != 0 && SecondUid != 0)
+		{
+			FString ActivateError;
+			Report.Check(Duel.ActivateSpell(SpellUid, ActivateError),
+				TEXT("Equip Spell with several legal targets activates"));
+			const FDuelChoiceRequest* Choice = Duel.GetPendingChoice();
+			Report.Check(Choice && Choice->Options.Num() == 2,
+				TEXT("equip target choice offers both own monsters and excludes the opponent"));
+			const bool bOffersSecond = Choice && Choice->Options.ContainsByPredicate(
+				[SecondUid](const FDuelChoiceOption& Option) { return Option.CardUid == SecondUid; });
+			Report.Check(bOffersSecond, TEXT("the exact second monster is a selectable equip target"));
+			FString AnswerError;
+			Report.Check(Choice && Duel.AnswerChoice(Choice->RequestId, TArray<int32>{ SecondUid }, AnswerError),
+				TEXT("the equip target choice can be answered"));
+			const FDuelCard* Equip = Duel.FindSpellTrap(SpellUid);
+			Report.Check(Equip && Equip->EquippedToUid == SecondUid,
+				TEXT("the chosen monster receives the Equip Spell"));
+			const FDuelCard* First = Duel.FindMonster(FirstUid);
+			const FDuelCard* Second = Duel.FindMonster(SecondUid);
+			Report.Check(First && Second && Duel.GetAtk(*Second) == Second->Data.Atk + 300
+				&& Duel.GetAtk(*First) == First->Data.Atk,
+				TEXT("only the chosen monster receives the equip bonus"));
+		}
+	}
+	{
+		FDuelEngine Duel(Database, 1212);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_LEGACY_EQUIP_TARGET"));
+		Scenario.PlayerHand = TArray<int32>{ 117 };
+		Scenario.PlayerDeck = TArray<int32>{ 7, 8, 9 };
+		Scenario.PlayerField.Add(MakeMonster(9, 0));
+		Scenario.PlayerField.Add(MakeMonster(9, 1));
+		FString Error;
+		Duel.StartScenario(Scenario, Error);
+		const FDuelSide& PlayerSide = Duel.GetSide(EDuelOwner::Player);
+		const int32 SpellUid = FindUidInArray(PlayerSide.Hand, 117);
+		const int32 SecondUid = PlayerSide.Monsters.IsValidIndex(1) ? PlayerSide.Monsters[1].Uid : 0;
+		if (SpellUid != 0 && SecondUid != 0)
+		{
+			FString ActivateError;
+			Report.Check(Duel.ActivateSpell(SpellUid, ActivateError),
+				TEXT("legacy Equip Spell activates and asks for its target"));
+			const FDuelChoiceRequest* Choice = Duel.GetPendingChoice();
+			Report.Check(Choice && Choice->Options.Num() == 2,
+				TEXT("legacy equip target choice lists every legal monster"));
+			FString AnswerError;
+			Report.Check(Choice && Duel.AnswerChoice(Choice->RequestId, TArray<int32>{ SecondUid }, AnswerError),
+				TEXT("legacy equip target choice can be answered"));
+			const FDuelCard* Equip = Duel.FindSpellTrap(SpellUid);
+			Report.Check(Equip && Equip->EquippedToUid == SecondUid,
+				TEXT("legacy Equip Spell attaches to the chosen monster"));
+		}
+	}
+	{
 		FDuelEngine Duel(Database, 122);
 		FDuelScenario Scenario = MakeScenario(TEXT("ERT_FIELD_ACTIVATION"));
 		Scenario.PlayerHand = TArray<int32>{ 135 };
