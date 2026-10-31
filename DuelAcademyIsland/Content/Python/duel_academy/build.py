@@ -112,6 +112,7 @@ def build_island(import_assets=True, interactive=True):
         placer.emitters()
         placer.audio()
         placer.npcs()
+        placer.world_actors()
         placer.specials()
         placer.doors()
         placer.player_start()

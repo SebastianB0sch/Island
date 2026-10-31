@@ -1,12 +1,21 @@
 """Assemble /Game/DuelAcademy/Maps/DuelAcademyIsland from Data/layout.json."""
 
+import json
 import math
+import os
 
 import unreal
 
 from . import common as C
 
 EAS = None
+
+
+def world_json(name):
+    """Read a Content/Data/World JSON file (portals, anchors, spawns)."""
+    path = os.path.join(C.project_dir(), "Content", "Data", "World", name)
+    with open(path, "r", encoding="utf-8") as fp:
+        return json.load(fp)
 
 
 def eas():
@@ -303,6 +312,133 @@ class Placer:
                             body_scale=float(n.get("scale", c.get("scale", 1.0))))
                 if n.get("name"):
                     C.set_props(a, display_name=n["name"], lines=list(n.get("lines", [])))
+
+    def world_actors(self):
+        """Spawn the A08 world data: portals, anchors, NPC spawn points and director."""
+        self.portals()
+        self.scene_anchors()
+        self.npc_spawn_points()
+        self.npc_director()
+
+    def portals(self):
+        cls = C.native_class("ADAInteriorPortal")
+        if cls is None:
+            C.warn("ADAInteriorPortal missing - interior portals skipped")
+            return
+        try:
+            data = world_json("portals.json")
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"portals.json unavailable: {e}")
+            return
+        for p in data.get("portals", []):
+            a = self.spawn(cls, self.loc(p["location_ue"]), self.yaw(p.get("yaw", 0.0)),
+                           f"Portal_{p['id']}", "Gameplay/portals")
+            if a is None:
+                continue
+            lock = p.get("lock", {}) or {}
+            fade = p.get("fade", {}) or {}
+            C.set_props(a,
+                        portal_id=p.get("id", ""),
+                        interior_id=p.get("interior_id", ""),
+                        target_portal_id=p.get("target_portal_id", ""),
+                        target_location=self.loc(p.get("target_location_ue", [0, 0, 0])),
+                        target_yaw=self.yaw(p.get("target_yaw", 0.0)),
+                        trigger_extent=C.vec(p.get("trigger_extent", [110, 110, 120])),
+                        b_auto_trigger=bool(p.get("auto_trigger", True)),
+                        b_interactable=bool(p.get("interactable", True)),
+                        display_name=p.get("display_name", "Door"),
+                        prompt=p.get("prompt", "Enter"),
+                        cooldown_seconds=float(p.get("cooldown", 1.5)),
+                        fade_out_seconds=float(fade.get("out", 0.35)),
+                        fade_in_seconds=float(fade.get("in", 0.35)),
+                        fade_color=C.lc(fade.get("color", [0, 0, 0, 1])),
+                        b_locked=bool(lock.get("locked", False)),
+                        required_flag=str(lock.get("required_flag", "")),
+                        b_fail_closed_when_flag_query_missing=bool(lock.get("fail_closed", False)),
+                        lock_reason=str(lock.get("reason", "This door is locked.")),
+                        b_return_portal=bool(p.get("return_portal", False)))
+
+    def scene_anchors(self):
+        cls = C.native_class("ADASceneAnchor")
+        if cls is None:
+            C.warn("ADASceneAnchor missing - scene anchors skipped")
+            return
+        try:
+            data = world_json("anchors.json")
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"anchors.json unavailable: {e}")
+            return
+        enum = getattr(unreal, "DASceneAnchorKind", None)
+        for entry in data.get("anchors", []):
+            a = self.spawn(cls, self.loc(entry["position_ue"]), self.yaw(entry.get("yaw", 0.0)),
+                           f"Anchor_{entry['id']}", "Gameplay/anchors")
+            if a is None:
+                continue
+            kind_name = str(entry.get("kind", "camera")).upper().replace("-", "_")
+            default_kind = getattr(enum, "CAMERA", None) if enum else None
+            kind = getattr(enum, kind_name, default_kind) if enum else None
+            look_at = entry.get("look_at_ue")
+            props = dict(anchor_id=entry.get("id", ""),
+                         fov=float(entry.get("fov", 50.0)),
+                         b_use_look_at=bool(look_at),
+                         anchor_tags=list(entry.get("tags", [])),
+                         description=entry.get("notes", ""))
+            if kind is not None:
+                props["kind"] = kind
+            if look_at:
+                props["look_at_target"] = self.loc(look_at)
+            C.set_props(a, **props)
+
+    def npc_spawn_points(self):
+        cls = C.native_class("ADANpcSpawnPoint")
+        if cls is None:
+            C.warn("ADANpcSpawnPoint missing - schedule spawns skipped")
+            return
+        try:
+            anchors = {a["id"]: a for a in world_json("anchors.json").get("anchors", [])}
+            data = world_json("spawns.json")
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"spawns.json unavailable: {e}")
+            return
+        dorm_enum = getattr(unreal, "DADorm", None)
+        for s in data.get("spawns", []):
+            anchor = anchors.get(s.get("anchor_id"))
+            if anchor is None:
+                C.warn(f"spawn {s.get('id')} references missing anchor {s.get('anchor_id')}")
+                continue
+            a = self.spawn(cls, self.loc(anchor["position_ue"]), self.yaw(anchor.get("yaw", 0.0)),
+                           f"Spawn_{s['id']}", "Gameplay/npcs")
+            if a is None:
+                continue
+            default_dorm = getattr(dorm_enum, "SLIFER", None) if dorm_enum else None
+            dorm = getattr(dorm_enum, str(s.get("dorm", "slifer")).upper(), default_dorm) if dorm_enum else None
+            props = dict(spawn_point_id=s.get("id", ""),
+                         schedule_id=s.get("schedule_id", ""),
+                         schedule_tags=list(s.get("schedule_tags", [])),
+                         spawn_role=s.get("role", "student"),
+                         wander_radius=float(s.get("wander_radius_cm", 500.0)),
+                         event_override=s.get("event_override", ""),
+                         b_enabled=True,
+                         b_spawn_on_begin_play=bool(s.get("spawn_on_begin_play", False)),
+                         spawn_z_offset=float(s.get("spawn_z_offset_cm", 90.0)),
+                         display_name=s.get("display_name", ""))
+            if dorm is not None:
+                props["dorm"] = dorm
+            C.set_props(a, **props)
+
+    def npc_director(self):
+        cls = C.native_class("ADANpcDirector")
+        if cls is None:
+            C.warn("ADANpcDirector missing - schedule director skipped")
+            return
+        a = self.spawn(cls, unreal.Vector(0, 0, 0), 0.0, "NPCDirector", "Gameplay/npcs")
+        if a is None:
+            return
+        npc_cls = C.native_class("ADAStudentNPC")
+        props = dict(b_auto_register_spawn_points=True, b_auto_apply_on_begin_play=False)
+        if npc_cls is not None:
+            props["default_npc_class"] = npc_cls
+        C.set_props(a, **props)
 
     def specials(self):
         beam_cls = C.native_class("DALighthouseBeam")

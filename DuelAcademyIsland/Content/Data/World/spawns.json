@@ -23,7 +23,8 @@
       "spawn_on_begin_play": true,
       "npc_class": "ADAStudentNPC",
       "display_name": "Receptionist",
-      "notes": "Always staffed during academy hours."
+      "notes": "Always staffed during academy hours.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "academy_card_shop_dorothy",
@@ -45,7 +46,8 @@
       "spawn_on_begin_play": true,
       "npc_class": "ADAStudentNPC",
       "display_name": "Dorothy",
-      "notes": "Shop counter; A06/A09 own the shop UI."
+      "notes": "Shop counter; A06/A09 own the shop UI.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "academy_classroom_teacher",
@@ -66,7 +68,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Teacher",
-      "notes": "Classroom teacher; generic by default, cast override later."
+      "notes": "Classroom teacher; generic by default, cast override later.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "academy_classroom_student_01",
@@ -87,7 +90,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Student desk 1."
+      "notes": "Student desk 1.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "academy_classroom_student_02",
@@ -108,7 +112,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Student desk 2."
+      "notes": "Student desk 2.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "academy_test_room_proctor",
@@ -128,7 +133,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Proctor",
-      "notes": "Exam proctor; exam UI is A07."
+      "notes": "Exam proctor; exam UI is A07.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "gym_assembly_instructor",
@@ -149,7 +155,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Instructor",
-      "notes": "Sheppard speech stand-in; cast override to sheppard when available."
+      "notes": "Sheppard speech stand-in; cast override to sheppard when available.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "gym_assembly_student_01",
@@ -170,7 +177,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Crowd mark 1."
+      "notes": "Crowd mark 1.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "gym_assembly_student_02",
@@ -191,7 +199,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Crowd mark 2."
+      "notes": "Crowd mark 2.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "gym_assembly_student_03",
@@ -212,7 +221,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Crowd mark 3."
+      "notes": "Crowd mark 3.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "crowler_office_crowler",
@@ -234,7 +244,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Dr. Crowler",
-      "notes": "Crowler at his desk."
+      "notes": "Crowler at his desk.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "chancellor_office_sheppard",
@@ -255,7 +266,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Chancellor Sheppard",
-      "notes": "Ending scenes; lock/unlock handled by story."
+      "notes": "Ending scenes; lock/unlock handled by story.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "slifer_cafeteria_attendant",
@@ -277,7 +289,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Cook",
-      "notes": "Serving counter."
+      "notes": "Serving counter.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "slifer_cafeteria_student_01",
@@ -299,7 +312,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Cafeteria seat 1."
+      "notes": "Cafeteria seat 1.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "slifer_cafeteria_student_02",
@@ -321,7 +335,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Cafeteria seat 2."
+      "notes": "Cafeteria seat 2.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "slifer_banner_room_banner",
@@ -343,7 +358,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Banner",
-      "notes": "Banner/Pharaoh scenes."
+      "notes": "Banner/Pharaoh scenes.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "slifer_jaden_room_jaden",
@@ -363,7 +379,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Jaden Yuki",
-      "notes": "Jaden's bunk room."
+      "notes": "Jaden's bunk room.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "slifer_jaden_room_syrus",
@@ -383,7 +400,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Syrus Truesdale",
-      "notes": "Syrus's bunk room."
+      "notes": "Syrus's bunk room.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "slifer_jaden_room_chumley",
@@ -403,7 +421,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Chumley Huffington",
-      "notes": "Chumley room event."
+      "notes": "Chumley room event.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "ra_cafeteria_student_01",
@@ -424,7 +443,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Ra cafeteria seat 1."
+      "notes": "Ra cafeteria seat 1.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "ra_cafeteria_student_02",
@@ -445,7 +465,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Ra cafeteria seat 2."
+      "notes": "Ra cafeteria seat 2.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "obelisk_dining_student_01",
@@ -466,7 +487,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Obelisk dining seat 1."
+      "notes": "Obelisk dining seat 1.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "obelisk_dining_student_02",
@@ -487,7 +509,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Obelisk dining seat 2."
+      "notes": "Obelisk dining seat 2.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "academy_arena_jaden",
@@ -507,7 +530,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Jaden Yuki",
-      "notes": "Event-only arena opponent; spawns when the director's active event is tutorial_duel."
+      "notes": "Event-only arena opponent; spawns when the director's active event is tutorial_duel.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "harbor_dockhand",
@@ -528,7 +552,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Dockhand",
-      "notes": "Harbor background NPC."
+      "notes": "Harbor background NPC.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "beach_student",
@@ -549,7 +574,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Student",
-      "notes": "Beach background NPC."
+      "notes": "Beach background NPC.",
+      "spawn_z_offset_cm": 0.0
     },
     {
       "id": "abandoned_dorm_titan",
@@ -569,7 +595,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Titan",
-      "notes": "Shadow Game event opponent."
+      "notes": "Shadow Game event opponent.",
+      "spawn_z_offset_cm": 90.0
     },
     {
       "id": "volcano_shadow_duelist",
@@ -589,7 +616,8 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Shadow Duelist",
-      "notes": "Alternate E24 staging on the crater rim."
+      "notes": "Alternate E24 staging on the crater rim.",
+      "spawn_z_offset_cm": 0.0
     }
   ],
   "opening_spawn_requirements": [

@@ -20,7 +20,7 @@
 | Needs a new interior cell | 10 |
 | Merged with another location | 6 |
 | Missing | 0 |
-| New interior cells planned | 10 |
+| New interior cells implemented | 10 |
 
 **Result:** every Appendix B row has a credible GX home. There are no `missing` locations in this pass. The ten new cells are all portal cells; six rows are deliberately merged to avoid duplicate, half-used rooms.
 
@@ -116,16 +116,16 @@
 
 | Cell | Room | W × D × H | Origin (UE cm) | Entrance portal | Kind | Status |
 |---|---|---|---|---|---|---|
-| `academy_classroom` | Academy Classroom | 14 × 10 × 4 m | (300000, 300000, -30000) | `portal_academy_classroom_entrance` | classroom | planned |
-| `academy_test_room` | Academy Exam Room | 12 × 9 × 3.8 m | (300000, 325000, -30000) | `portal_academy_test_room_entrance` | exam | planned |
-| `academy_crowler_office` | Crowler's Staff Office | 9 × 7 × 3.5 m | (300000, 347000, -30000) | `portal_crowler_office_entrance` | office | planned |
-| `academy_chancellor_office` | Chancellor Sheppard's Office | 10 × 8 × 3.6 m | (300000, 365000, -30000) | `portal_chancellor_office_entrance` | office | planned |
-| `slifer_player_room` | Slifer Room 101 (Player) | 6 × 5 × 3.2 m | (330000, 300000, -30000) | `portal_slifer_player_room_entrance` | dorm_room | planned |
-| `slifer_banner_room` | Banner's Room | 6.5 × 5.5 × 3.2 m | (330000, 315000, -30000) | `portal_slifer_banner_room_entrance` | headmaster_room | planned |
-| `slifer_jaden_room` | Jaden / Syrus / Chumley Bunk Room | 7 × 5.5 × 3.2 m | (330000, 330000, -30000) | `portal_slifer_jaden_room_entrance` | dorm_room | planned |
-| `ra_player_room` | Ra Room (Player) | 6.5 × 5.5 × 3.4 m | (360000, 300000, -30000) | `portal_ra_player_room_entrance` | dorm_room | planned |
-| `obelisk_dining` | Obelisk Dining Room | 14 × 9 × 4.2 m | (390000, 300000, -30000) | `portal_obelisk_dining_entrance` | dining | planned |
-| `obelisk_player_room` | Obelisk Room (Player) | 7 × 6 × 3.6 m | (390000, 320000, -30000) | `portal_obelisk_player_room_entrance` | dorm_room | planned |
+| `academy_classroom` | Academy Classroom | 14 × 10 × 4 m | (300000, 300000, -30000) | `portal_academy_classroom_entrance` | classroom | implemented |
+| `academy_test_room` | Academy Exam Room | 12 × 9 × 3.8 m | (300000, 325000, -30000) | `portal_academy_test_room_entrance` | exam | implemented |
+| `academy_crowler_office` | Crowler's Staff Office | 9 × 7 × 3.5 m | (300000, 347000, -30000) | `portal_crowler_office_entrance` | office | implemented |
+| `academy_chancellor_office` | Chancellor Sheppard's Office | 10 × 8 × 3.6 m | (300000, 365000, -30000) | `portal_chancellor_office_entrance` | office | implemented |
+| `slifer_player_room` | Slifer Room 101 (Player) | 6 × 5 × 3.2 m | (330000, 300000, -30000) | `portal_slifer_player_room_entrance` | dorm_room | implemented |
+| `slifer_banner_room` | Banner's Room | 6.5 × 5.5 × 3.2 m | (330000, 315000, -30000) | `portal_slifer_banner_room_entrance` | headmaster_room | implemented |
+| `slifer_jaden_room` | Jaden / Syrus / Chumley Bunk Room | 7 × 5.5 × 3.2 m | (330000, 330000, -30000) | `portal_slifer_jaden_room_entrance` | dorm_room | implemented |
+| `ra_player_room` | Ra Room (Player) | 6.5 × 5.5 × 3.4 m | (360000, 300000, -30000) | `portal_ra_player_room_entrance` | dorm_room | implemented |
+| `obelisk_dining` | Obelisk Dining Room | 14 × 9 × 4.2 m | (390000, 300000, -30000) | `portal_obelisk_dining_entrance` | dining | implemented |
+| `obelisk_player_room` | Obelisk Room (Player) | 7 × 6 × 3.6 m | (390000, 320000, -30000) | `portal_obelisk_player_room_entrance` | dorm_room | implemented |
 
 Room-by-room purpose, lighting, collision/nav and reuse are in [`Docs/World/INTERIORS.md`](../World/INTERIORS.md).
 
@@ -148,16 +148,16 @@ Every new interior has a paired entrance/exit portal. Exterior coordinates are t
 
 | Entrance portal | Interior | Exterior UE (cm) | Yaw | Interior arrival UE | Yaw | Return portal | Required flag |
 |---|---|---|---|---|---|---|---|
-| `portal_academy_classroom_entrance` | `academy_classroom` | (6400, -15200, 3700) | 90 | (300000, 295250, -29900) | 90 | `portal_academy_classroom_exit` | registered |
-| `portal_academy_test_room_entrance` | `academy_test_room` | (-6400, -15200, 3700) | 90 | (300000, 320750, -29900) | 90 | `portal_academy_test_room_exit` | exam_day |
-| `portal_crowler_office_entrance` | `academy_crowler_office` | (-8770, -13100, 3700) | 0 | (300000, 343750, -29900) | 90 | `portal_crowler_office_exit` | crowler_office_unlocked |
-| `portal_chancellor_office_entrance` | `academy_chancellor_office` | (8770, -13100, 3700) | 180 | (300000, 361250, -29900) | 90 | `portal_chancellor_office_exit` | chancellor_office_unlocked |
-| `portal_slifer_player_room_entrance` | `slifer_player_room` | (-106800, 24505, 3025) | 180 | (330000, 297750, -29900) | 90 | `portal_slifer_player_room_exit` | registered |
-| `portal_slifer_banner_room_entrance` | `slifer_banner_room` | (-106800, 26671.7, 3025) | 180 | (330000, 312500, -29900) | 90 | `portal_slifer_banner_room_exit` | met_banner |
-| `portal_slifer_jaden_room_entrance` | `slifer_jaden_room` | (-106800, 24505, 3300) | 180 | (330000, 327500, -29900) | 90 | `portal_slifer_jaden_room_exit` | met_jaden |
-| `portal_ra_player_room_entrance` | `ra_player_room` | (-68013.6, 65835.6, 2425) | -130 | (360000, 297500, -29900) | 90 | `portal_ra_player_room_exit` | dorm_ra |
-| `portal_obelisk_dining_entrance` | `obelisk_dining` | (-59846.8, -51871.4, 3150) | 140 | (390000, 295750, -29900) | 90 | `portal_obelisk_dining_exit` | dorm_obelisk |
-| `portal_obelisk_player_room_entrance` | `obelisk_player_room` | (-57649, -54335.1, 3150) | 140 | (390000, 317250, -29900) | 90 | `portal_obelisk_player_room_exit` | dorm_obelisk |
+| `portal_academy_classroom_entrance` | `academy_classroom` | (6400, -15200, 3700) | 90 | (300000, 299750, -29900) | 90 | `portal_academy_classroom_exit` | registered |
+| `portal_academy_test_room_entrance` | `academy_test_room` | (-6400, -15200, 3700) | 90 | (300000, 324800, -29900) | 90 | `portal_academy_test_room_exit` | exam_day |
+| `portal_crowler_office_entrance` | `academy_crowler_office` | (-8770, -13100, 3700) | 0 | (300000, 346900, -29900) | 90 | `portal_crowler_office_exit` | crowler_office_unlocked |
+| `portal_chancellor_office_entrance` | `academy_chancellor_office` | (8770, -13100, 3700) | 180 | (300000, 364850, -29900) | 90 | `portal_chancellor_office_exit` | chancellor_office_unlocked |
+| `portal_slifer_player_room_entrance` | `slifer_player_room` | (-106800, 24505, 3025) | 180 | (330000, 300000, -29900) | 90 | `portal_slifer_player_room_exit` | registered |
+| `portal_slifer_banner_room_entrance` | `slifer_banner_room` | (-106800, 26671.7, 3025) | 180 | (330000, 314975, -29900) | 90 | `portal_slifer_banner_room_exit` | met_banner |
+| `portal_slifer_jaden_room_entrance` | `slifer_jaden_room` | (-106800, 24505, 3300) | 180 | (330000, 329975, -29900) | 90 | `portal_slifer_jaden_room_exit` | met_jaden |
+| `portal_ra_player_room_entrance` | `ra_player_room` | (-68013.6, 65835.6, 2425) | -130 | (360000, 299975, -29900) | 90 | `portal_ra_player_room_exit` | dorm_ra |
+| `portal_obelisk_dining_entrance` | `obelisk_dining` | (-59846.8, -51871.4, 3150) | 140 | (390000, 299800, -29900) | 90 | `portal_obelisk_dining_exit` | dorm_obelisk |
+| `portal_obelisk_player_room_entrance` | `obelisk_player_room` | (-57649, -54335.1, 3150) | 140 | (390000, 319950, -29900) | 90 | `portal_obelisk_player_room_exit` | dorm_obelisk |
 
 Lock flags are data hooks for A02/A03. Until `ADAInteriorPortal::FlagQuery` is bound, the portals are configured with `fail_closed: false`, so a missing flag service does not seal the level during development.
 
@@ -171,10 +171,10 @@ These ids are the minimum A03/A09 contract for the opening hour. They all exist 
 | `academy_registration_player` | Registration Player | `academy_lobby` | player | (-1500, -10500, 3600) | 180 |
 | `academy_registration_camera` | Registration Camera | `academy_lobby` | camera | (-700, -7600, 5000) | 0 |
 | `slifer_cafeteria_player` | Slifer Cafeteria Player | `slifer_cafeteria` | player | (-106500, 27800, 2945) | 0 |
-| `slifer_player_room_save` | Player Room Save Point | `slifer_player_room` | player | (329500, 300500, -29900) | 180 |
-| `slifer_banner_room_desk` | Banner Desk | `slifer_banner_room` | npc | (330000, 317000, -29900) | -90 |
-| `slifer_jaden_room_jaden` | Jaden Room Jaden | `slifer_jaden_room` | npc | (329500, 330000, -29900) | 0 |
-| `academy_classroom_teacher` | Classroom Teacher | `academy_classroom` | npc | (300000, 303000, -29900) | -90 |
+| `slifer_player_room_save` | Player Room Save Point | `slifer_player_room` | player | (330050, 300050, -29900) | 180 |
+| `slifer_banner_room_desk` | Banner Desk | `slifer_banner_room` | npc | (330000, 315100, -29900) | -90 |
+| `slifer_jaden_room_jaden` | Jaden Room Jaden | `slifer_jaden_room` | npc | (329900, 329950, -29900) | 0 |
+| `academy_classroom_teacher` | Classroom Teacher | `academy_classroom` | npc | (300000, 300300, -29900) | -90 |
 | `academy_card_shop_player` | Card Shop Player | `academy_card_shop` | player | (1500, -10500, 3600) | 0 |
 | `academy_arena_field_player` | Arena Duelist | `academy_arena` | player | (-1060, -16500, 3650) | 0 |
 
@@ -184,25 +184,26 @@ These ids are the minimum A03/A09 contract for the opening hour. They all exist 
 python Tools/world/validate_layout.py          # human report
 python Tools/world/validate_layout.py --json   # machine report for A10
 python Tools/world/validate_layout.py --strict # warnings are failures
+python Tools/world/test_interiors.py           # portal route + optional bpy mesh check
 ```
 
-Current result: **PASS** — 36 locations, 10 interiors, 20 portals, 83 anchors, 28 spawns, 0 missing anchors.
+Current result: **PASS** — 36 locations, 10 interiors, 20 portals, 89 anchors, 28 spawns, 0 missing anchors.
 
 ## 9. Merge decisions (explicit)
 
 - **Slifer common room → cafeteria/dining hall.** The existing 9 × 8 m dining annex already has tables, a serving counter, a kitchen and a covered deck. A second lounge would split the only Slifer social space.
 - **Ra common room → Ra cafeteria.** No Appendix B common-room row; the existing cafeteria is the natural social space.
-- **Obelisk common room → Obelisk dining.** One large planned dining cell serves both dining and common-room scenes.
+- **Obelisk common room → Obelisk dining.** One large implemented dining cell serves both dining and common-room scenes.
 - **Ocean / next to ocean → beach + lake + cliffs.** The three existing shoreline zones cover the GBA ocean beats; use location-specific anchors.
 - **Arena backstage → arena.** The lobby-to-arena threshold and field steps already provide entrance staging; a corridor is deferred.
 - **Harbor office → harbor terminal/warehouse.** Existing harbor shells cover office/ferry/Dorothy-truck beats.
 
 ## 10. Open mapping questions / blockers
 
-- **No interior generator yet.** The ten cells are data + dimensions, not geometry. `Tools/dai/assets/interiors.py` and `Layout.place_interiors()` are the next build step.
-- **Ra/Obelisk room portals sit on facade bays, not modelled doors.** The generator must add door leaves/steps, or the portals need a temporary marker mesh.
+- **Interior geometry builder implemented; FBX/level build pending.** `Tools/dai/assets/interiors.py` + `Layout.place_interiors()` are in place and pass the headless geometry smoke test. The orchestrator still needs to run `python Tools/build_island.py layout` and the editor build.
+- **Ra/Obelisk room portals sit on facade bays.** Cell door leaves/steps are generated; the exterior facade doors still need a later facade pass.
 - **Chancellor's office is reached through the east end-block side door.** It reads as a ground-floor room; a future stair/elevator transition is needed for the top-floor fiction.
-- **Slifer room doors are decorative on a solid block.** The portal trigger sits at the existing door plane; the cell is a separate space. This is deliberate for the vertical slice.
+- **Slifer room doors are decorative on a solid block.** The cell has its own generated door leaf; the exterior trigger sits at the existing facade door plane. This is deliberate for the vertical slice.
 - **Gym assembly uses the Duel Gym.** It is the largest existing hall and already has bleachers; the GBA school-gym look is approximated, not replicated.
 
 ---

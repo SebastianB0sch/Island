@@ -11,7 +11,7 @@ Runtime data for portals, interiors, scene anchors and NPC schedules. All files 
 | `interiors.json` | Portal-cell definitions: origin, bounds, floor/ceiling, entrance/exit portals, props, lighting/nav notes. |
 | `portals.json` | 10 paired entrance/exit portals with target transforms, fade, cooldown and lock flags. |
 | `anchors.json` | Named camera/player/NPC/stage/prop marks used by story scenes. |
-| `spawns.json` | Schedule spawn points with role, dorm, wander radius and event override. |
+| `spawns.json` | Schedule spawn points with role, dorm, wander radius, Z offset and event override. |
 
 ## Coordinate convention
 
@@ -57,15 +57,22 @@ Until it is bound, `fail_closed: false` keeps development doors open. Once A02 i
 `SetActiveEvent("E24")` re-applies the current schedule. The director is an actor, does not tick, and
 only does work when a schedule/event changes.
 
-## Loading (next pass)
+## Loading (implemented)
 
-This pass deliberately adds data + actors, not a level regeneration. The next build step is:
+Gate 2 implements the full path:
 
-1. `Tools/dai/assets/interiors.py` generates the 10 cell meshes.
-2. `Layout.place_interiors()` exports them at `origin_ue` and adds static/light/text entries.
-3. `level.py` spawns portals, anchors, spawn points and one director from these JSON files (tagged
-   `GENERATED_TAG`), then saves the map.
-4. Re-run `python Tools/world/validate_layout.py --strict`.
+1. `Tools/dai/assets/interiors.py` builds the 10 cell meshes (3 meshes per cell: Shell / Props / NoCol).
+2. `Layout.place_interiors()` exports them at `origin_ue` and appends static/light/text/interact entries.
+3. `level.py::Placer.world_actors()` spawns portals, anchors, spawn points and one director from these JSON files,
+   tagged `GENERATED_TAG`; `build.py` calls it.
+4. Run:
+
+```powershell
+python Tools/build_island.py layout
+UnrealEditor-Cmd DuelAcademyIsland.uproject -ExecutePythonScript="C:/dev/GX/DuelAcademyIsland/Content/Python/build_island_cli.py"
+python Tools/world/validate_layout.py --strict
+python Tools/world/test_interiors.py
+```
 
 No `.umap` hand-editing and no Blueprint/UMG assets are required.
 
