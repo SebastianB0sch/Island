@@ -97,6 +97,7 @@ struct FDAPDADeckView
 struct FDAPDAMailView
 {
 	FString Id;
+	FString ContactId;
 	FString From;
 	FString Subject;
 	FString Preview;
@@ -110,6 +111,7 @@ struct FDAPDAMailView
 struct FDAPDASaveSlotView
 {
 	FString Id;
+	int32 SlotIndex = INDEX_NONE;
 	FString Label;
 	FString Date;
 	FString PlayerName;
@@ -284,6 +286,7 @@ private:
 	int32 ListScroll = 0;
 	int32 HoveredTab = INDEX_NONE;
 	int32 HoveredRow = INDEX_NONE;
+	int32 PendingLoadSelection = INDEX_NONE;
 	float UIScale = 1.f;
 	float Elapsed = 0.f;
 	bool bOpen = false;

@@ -1,14 +1,14 @@
-# UI Integration — Title, Dialogue, PDA and HUD hosting (A09, pass 2)
+# UI Integration — Title, Dialogue, PDA and Gameplay Screens (A09, pass 3)
 
-> Scope: the Gate 1 entry point. A normal launch now lands on a title screen
-> with NEW GAME, CONTINUE, OPTIONS and CREDITS, backed by A02's save/settings
-> APIs and A03's opening flow.
+> Scope: Gate 1 title/dialogue/PDA plus the Gate 2 gameplay screens: Dorothy's
+> shop, deck editor, monthly exam, and the live PDA Deck/Mail/Save tabs.
 > Code-only Canvas, same approach as the existing HUD and duel board. No UMG,
 > Blueprint or binary UI assets were added.
 >
 > **Owned files:** `DAHUD.*`, `DATitleScreen.*`, `DADialogueUI.*`, `DAPDAUI.*`,
-> `Content/Data/UI/**`, `Docs/UI_Integration.md`. `DADuelUI.*`, story C++,
-> save/profile C++ and world C++ were **not** modified.
+> `DAUIScreen.*`, `DAShopUI.*`, `DADeckUI.*`, `DAExamUI.*`,
+> `Content/Data/UI/**`, `Docs/UI_Integration.md`. A02/A03/A06/A07 C++ and data,
+> `DADuelUI.*` and world C++ were **not** modified.
 
 ---
 
@@ -19,18 +19,17 @@
 | Title screen: NEW GAME, CONTINUE, OPTIONS, CREDITS, version/build | Implemented, Canvas |
 | Continue: live A02 slots with name/date/DP/title/dorm/playtime; empty + corrupt states | Implemented |
 | New Game: overwrite confirmation when saves exist; starts A03 opening + autosaves | Implemented |
-| Title options: text speed, auto-advance, BGM/SFX via `UDASettings` | Implemented (audio mix hook pending) |
-| Credits panel | Implemented, scrollable, data from `ui.json` |
+| Shop: categories, price, unlock reason, stock/restock, DP, purchase confirm, pack reveal | Implemented against A06 |
+| Deck editor: player decks, collection filters/sort, add/remove/swap, validation, rename/copy/erase, recipes | Implemented against A06 |
+| Exam: written questions + timer, written summary, timed entry, practical progress, result breakdown | Implemented against A07 |
+| PDA Deck tab | Live A06 player decks, counts, active deck, validation, EDIT action |
+| PDA Mail tab | A03 emails.json + A02 unlock/read state; open marks read |
+| PDA Save tab | Live A02 slots; empty=save, occupied=load after confirm |
+| PDA Calendar/Records | Live A02 date/exam days/profile counters |
+| PDA Map/Options/Limitation | Map live; options via UDASettings; limitation still data-pending |
 | Dialogue box: speaker, portrait/expression, typewriter, continue, choices, skip/auto, history log | Implemented, Canvas |
-| Portrait fallback (colored monogram + silhouette) | Implemented |
-| PDA shell: Map, Calendar, Deck, Mail, Save, Options, Records, Limitation | Implemented; A02 profile/calendar/save/options now live |
-| PDA Map tab | Live: reads `UDAIslandSubsystem` zones and fast-travels |
-| PDA Deck tab | Live: lists the existing starter decks from `UCardDatabaseSubsystem` |
-| PDA Calendar/Records | Live A02 date/exam days/profile counters; A03 event markers pending |
-| PDA Save tab | Live A02 slot metadata; load/store UI is a later pass |
-| PDA Mail/Limitation | Empty placeholder panes + action hooks for A03/A01/A07 |
-| HUD hosting | Title is top modal; dialogue/PDA draw above world HUD |
-| Debug switches | `-DATitleTest`, `-DANewGameTest`, `-DADialogueTest`, `-DAPDATest`, `-DAUITest` |
+| HUD hosting | Title top modal; dialogue/PDA and gameplay screens layered |
+| Debug switches | `-DATitleTest`, `-DANewGameTest`, `-DAGameplayUITest`, `-DADialogueTest`, `-DAPDATest`, `-DAUITest` |
 | Data | `Content/Data/UI/ui.json` (labels, tabs, credits, sample dialogue) |
 
 Existing location banner, minimap, compass, help panel, island map/fast travel
@@ -49,16 +48,27 @@ before when no new UI is open.
 - `DuelAcademyIsland/Source/DuelAcademyIsland/Private/DADialogueUI.cpp`
 - `DuelAcademyIsland/Source/DuelAcademyIsland/Public/DAPDAUI.h`
 - `DuelAcademyIsland/Source/DuelAcademyIsland/Private/DAPDAUI.cpp`
+- `DuelAcademyIsland/Source/DuelAcademyIsland/Public/DAUIScreen.h` — shared Canvas helper base for the gameplay screens.
+- `DuelAcademyIsland/Source/DuelAcademyIsland/Private/DAUIScreen.cpp`
+- `DuelAcademyIsland/Source/DuelAcademyIsland/Public/DAShopUI.h`
+- `DuelAcademyIsland/Source/DuelAcademyIsland/Private/DAShopUI.cpp`
+- `DuelAcademyIsland/Source/DuelAcademyIsland/Public/DADeckUI.h`
+- `DuelAcademyIsland/Source/DuelAcademyIsland/Private/DADeckUI.cpp`
+- `DuelAcademyIsland/Source/DuelAcademyIsland/Public/DAExamUI.h`
+- `DuelAcademyIsland/Source/DuelAcademyIsland/Private/DAExamUI.cpp`
 - `DuelAcademyIsland/Content/Data/UI/ui.json`
 - `Docs/UI_Integration.md` (this file)
 
 **Modified (minimal)**
 
-- `Public/DAHUD.h` — title hosting, modal checks, dialogue/PDA API, members.
-- `Private/DAHUD.cpp` — creates/ticks/draws title/dialogue/PDA overlays,
-  game-flow callbacks, input mode, P polling, debug switches, help text.
+- `Public/DAHUD.h` — title/gameplay screen hosting, modal checks, dialogue/PDA
+  API, shop/deck/exam accessors, members.
+- `Private/DAHUD.cpp` — creates/ticks/draws title/dialogue/PDA and the
+  shop/deck/exam screens, game-flow callbacks, input mode, P/B polling, economy
+  wiring, `-DAGameplayUITest`, help text.
 - `Private/DAStudentCharacter.cpp` — **one line** in `IsMovementBlocked()` so
-  movement/interact stop while title/dialogue/PDA is open (see §8).
+  movement/interact stop while title/dialogue/PDA/gameplay screens are open
+  (see §5).
 
 `DADuelUI.h/.cpp` are untouched.
 
@@ -78,8 +88,9 @@ Unless a story or UI harness is starting, `ADAHUD::BeginPlay` opens
   are blocked while it is open. The world still renders behind the dim overlay.
 
 The title is **suppressed** for: `-DAOpeningTest`, `-DAStorySelfTest`,
-`-DANewGameTest`, `-DADuelScreenshot`, `-DADuelSelfTest`, `-DADialogueTest`,
-`-DAPDATest`, `-DAUITest`. `-DATitleTest` forces it on regardless.
+`-DANewGameTest`, `-DAGameplayUITest`, `-DADuelScreenshot`, `-DADuelSelfTest`,
+`-DADialogueTest`, `-DAPDATest`, `-DAUITest`. `-DATitleTest` forces it on
+regardless.
 
 ### NEW GAME
 
@@ -256,8 +267,10 @@ No story text is compiled into C++. Sample text is loaded from
 
 ## 4. PDA API (A02/A03/A06/A07 contract)
 
-`DAPDAUI.h` exposes a view model rather than reading gameplay systems directly.
-The UI never implements rules or progression.
+`DAPDAUI.h` exposes a view model. The built-in refresh fills it from live A02
+profile/calendar/save data, A03 `emails.json` plus A02 mail state, and A06
+player-deck state; `ViewModelBuilder` can still override individual tabs. The UI
+never implements rules, economy or progression.
 
 ```cpp
 enum class EDAPDATab : uint8
@@ -310,18 +323,25 @@ Activation of rows is reported through `OnAction(FName ActionId, const FString& 
 | --- | --- | --- | --- |
 | `map.travel` | zone display name | Map row activated | A08/HUD (already travels) |
 | `calendar.select` | day number | Calendar day activated | A02 |
-| `deck.open` | deck id | Deck row activated | A06 (`DADeckUI`) |
-| `mail.open` | mail id | Mail row activated | A03 |
-| `save.slot` | slot id (`slot_1`…`slot_3`, `autosave`) | Save row activated | A02 |
+| `deck.open` | deck id | Deck row activated | HUD closes the PDA and opens `DADeckUI` |
+| `exam.open` | empty | Exam-day calendar cell activated | HUD closes the PDA and opens `FDAExamUI` |
+| `mail.open` | mail id | Mail row activated | A02 read state (`MarkEmailRead`); body is shown in the detail pane |
+| `save.slot` | `save:<slot>` / `load:<slot>` | Empty save row activated / occupied row confirmed | HUD calls A02 `SaveSlot` / `LoadSlot` |
 | `options.changed` | `id=value` (`text_speed=Fast`) | Options row cycled | A02 + HUD applies |
 | `records.row` | record label | Records row activated | A02/A07 (optional) |
 | `limitation.row` | card name | Limitation row activated | A01/A07 (optional) |
 
 `ADAHUD::HandlePDAAction` handles `options.changed` through `UDASettings` and
-applies text speed/auto-advance to the dialogue box immediately. It shows a
-short “later pass” toast for `deck.open`, `mail.open` and `save.slot`.
-The Save tab itself is live: `FDAPDAViewModel::SaveSlots` is rebuilt from
-`UDASaveSubsystem::EnumerateSlots()` with occupied/empty/corrupt/backup state.
+applies text speed/auto-advance to the dialogue box immediately. `deck.open`
+and `exam.open` close the PDA and open the corresponding gameplay screen.
+`mail.open` is a no-op in the HUD because `FDAPDAUI` has already marked the
+message read through `UDAProfileSubsystem::MarkEmailRead`; the body is visible
+in the selected row's detail pane. `save.slot` performs the real A02 operation:
+empty slots save immediately, occupied slots require a second Enter on the same
+row (`PendingLoadSelection`), corrupt slots are rejected, and a successful load
+refreshes settings and resumes A03 only when the restored story is not already
+running. The Save tab is rebuilt from `UDASaveSubsystem::EnumerateSlots()` with
+occupied/empty/corrupt/backup state.
 
 ### Other public API
 
@@ -345,6 +365,155 @@ PDA->OnTabChanged / OnAction / OnClosed
 
 ---
 
+## 4A. Gameplay screens (Gate 2)
+
+`FDAShopUI`, `FDADeckUI` and `FDAExamUI` are plain C++ Canvas screens built on
+`FDAUIScreen` (shared font/draw/wrap/hit-test/audio helpers). `ADAHUD` owns one
+instance of each in a `TUniquePtr` and only one of them can be open at a time.
+They draw over the world and consume input; their `OnClosed` delegates restore
+the HUD input mode.
+
+### Dorothy's card shop (`FDAShopUI`)
+
+Open/close through the HUD:
+
+```cpp
+HUD->OpenShop();          // B while facing the card-shop interactable, or debug
+HUD->CloseShop();
+HUD->IsShopOpen();
+FDAShopUI* ShopUI = HUD->GetShopUI();
+```
+
+The old `E` card-shop path in `ADAInteractable.cpp` is intentionally untouched;
+`B` is the Gate 2 entry point.
+
+The screen is presentation-only. Every rule comes from A06:
+
+| UI action | A06 call |
+| --- | --- |
+| Build category tabs and rows | `UDAShopSubsystem::GetCatalogue()` |
+| Wallet display | `UDAShopSubsystem::GetDP()` (wired to A02 in `ADAHUD::WireEconomySystems`) |
+| Re-evaluate event/month/title unlocks | `UDAShopSubsystem::RefreshUnlocks()` |
+| Buy pack | `UDAShopSubsystem::PurchasePack(PackId, Seed, OutResult)` |
+| Read unlock reason, stock/restock, price, block | `FDAEPackView` fields |
+| Reveal cards, duplicate DP, DP before/after | `FDAEPurchaseResult` / `FDAEPackOpenResult` / `FDAEPackCardReveal` |
+
+`ADAHUD::WireEconomySystems()` installs `SetWalletHandlers` (get DP / spend DP /
+credit DP against `UDAProfileSubsystem`) and `SetUnlockContextProvider` (title,
+counters, flags, month, absolute day). A03 exposes no completed-event list, so
+event-gated packs can only be evaluated from flags/counters/title/calendar
+until A03 provides one. The shop UI never mutates DP or inventory directly.
+
+Flow: category browse → pack detail (unlock reason, stock/restock, status) →
+purchase confirmation → pack reveal with card art/rarity/owned counts and
+duplicate-DP feedback. `RefreshCatalogue(true)` keeps the selected pack after a
+purchase.
+
+### Deck editor (`FDADeckUI`)
+
+```cpp
+HUD->OpenDeckEditor(DeckId);   // PDA Deck row / detail-pane EDIT button, or debug
+HUD->CloseDeckEditor();
+HUD->IsDeckEditorOpen();
+FDADeckUI* DeckUI = HUD->GetDeckUI();
+```
+
+All deck state and rules stay in A06:
+
+| UI action | A06 call |
+| --- | --- |
+| Deck slot list, active deck | `GetPlayerDecks()` / `GetActiveDeckId()` |
+| Main/extra counts, 40–60 / 20 / 3-copy / banlist messages | `GetDeckValidationMessage()` / `IsDeckLegal()` |
+| Collection list, filter/sort | `GetCollectionView(FDAECardFilter, EDAECardSortKey, bDescending)` |
+| Add / remove / swap | `AddCardToDeck` / `RemoveCardFromDeck` / `SwapCardInDeck` |
+| Rename / copy / erase / create | `RenameDeck` / `CopyDeck` / `EraseDeck` / `CreateDeck` |
+| Set active deck | `SetActiveDeck` |
+| Fusion recipe overlay | `GetAvailableFusionRecipes()` |
+| Name length / limits | `GetRules()` |
+
+Sections: deck slots, owned-card collection with ALL/MON/SPELL/TRAP filter and
+ID/NAME/ATK/LEVEL sort, current deck main/extra tabs, validation line, deck
+actions, rename text entry, erase confirmation and recipe availability overlay.
+Adding a fusion card or pressing `X` targets the extra deck; `G` starts a swap
+from the selected deck card and completes with a collection selection.
+
+### Monthly exam (`FDAExamUI`)
+
+```cpp
+HUD->OpenExam(MonthIndex);    // 0 = current calendar month
+HUD->CloseExam();
+HUD->IsExamOpen();
+FDAExamUI* ExamUI = HUD->GetExamUI();
+```
+
+The exam is opened by activating an exam-day cell in the PDA Calendar
+(`exam.open`), or by debug/test code. A07 owns the lifecycle and scoring; the UI
+only forwards input and renders payloads:
+
+| UI phase | A07 call |
+| --- | --- |
+| Start / resume | `StartExam(MonthIndex, Seed, Error)` |
+| Written question | `GetCurrentQuestion()`, `SubmitWrittenAnswer(QuestionId, AnswerIndex, Error)` |
+| Written summary | `FinishWritten(Error)`, `GetCorrectAnswerCount()`, `GetWrittenPoints()` |
+| Timed entry | `PickTimedPuzzle(MonthIndex)`, `BeginTimed(PuzzleId, Error)` |
+| Timed result | `SubmitTimedResult(bSolved, TurnsUsed, SecondsUsed, Error)` |
+| Practical start | `BeginPractical(Error)` |
+| Practical progress | `GetPracticalObjectives()`, `GetPracticalProgress()` |
+| Practical finish / result | `FinishPractical(Error)`, `FinishExam(OutResult, Error)` |
+| Score breakdown | `FDAExamResult` (written/timed/practical/total/grade/title/dorm/objectives) |
+
+The written section shows the question, topic, difficulty, option list, answer
+cursor, answered count and a timer. The written summary shows correct/points.
+The timed panel shows the selected puzzle id; A04/A07 have not wired a timed
+puzzle duel yet, so the normal UI records “continue without clearing (0)” and
+debug helpers (`DebugAnswerAllWritten`, `DebugResolveTimed`,
+`DebugFinishPractical`, `DebugCompleteExam`) drive the other phases for
+screenshots. The practical panel shows opponent/deck/LP, turn/time limits,
+objective progress and points; the result panel shows the full breakdown.
+
+### Gameplay screen input
+
+**Shop**
+
+| Key / input | Action |
+| --- | --- |
+| `Up` / `Down`, `W` / `S`, D-pad | Move pack selection |
+| `Left` / `Right`, `Q` / `E`, LB/RB | Previous / next category |
+| `Enter` / `Space` / gamepad A | Buy selected pack (opens confirmation) |
+| `Up` / `Down` in confirmation | Switch BUY / CANCEL |
+| `Enter` / `Space` / gamepad A in confirmation | Confirm choice |
+| `Esc` / `P` / gamepad B | Cancel / close |
+| Mouse | Click category, pack, buy, confirm/cancel, reveal/close |
+
+**Deck editor**
+
+| Key / input | Action |
+| --- | --- |
+| `Tab` / LB | Cycle focus: decks → collection → deck cards |
+| `Up` / `Down`, `W` / `S`, D-pad | Move selection in the focused panel |
+| `Enter` / `Space` / gamepad A | Decks: set active; collection: add/complete swap; deck: remove |
+| `Left` / `Right` in deck cards | Switch main / extra tab |
+| `N` / `C` / `R` / `Delete` | New / copy / rename / erase deck |
+| `F` / `T` | Cycle collection filter / sort |
+| `X` | Toggle add target: main ↔ extra |
+| `G` | Start swap from the selected deck card |
+| `Q` | Fusion recipe overlay |
+| `V` | Set current deck active |
+| `Esc` / gamepad B | Cancel swap/name/erase, otherwise close |
+| Mouse | Click deck, collection card, deck card, filter/sort chips and buttons |
+
+**Exam**
+
+| Key / input | Action |
+| --- | --- |
+| `Up` / `Down`, `W` / `S`, D-pad | Move answer selection |
+| `1`–`4` | Jump to answer option |
+| `Enter` / `Space` / gamepad A | Submit answer / advance phase / close result |
+| `Esc` / `P` / gamepad B | Close exam |
+| Mouse | Click option or on-screen button |
+
+---
+
 ## 5. Input bindings
 
 All UI keys are **polled** with `APlayerController::WasInputKeyJustPressed`
@@ -357,8 +526,9 @@ added, and `DAStudentCharacter.*` input bindings were not changed.
 | Key | Action |
 | --- | --- |
 | `P` / gamepad View (Select) | Toggle PDA |
-| `M` / `Tab` / gamepad Start | Island map (existing; blocked while title/PDA/dialogue/duel is open) |
-| `F1` / `H` | Help (blocked while title/PDA/dialogue/duel is open) |
+| `B` | Open Dorothy's shop when facing the card-shop interactable (old `E` path untouched) |
+| `M` / `Tab` / gamepad Start | Island map (existing; blocked while title/duel/dialogue/PDA/gameplay screens are open) |
+| `F1` / `H` | Help (blocked while title/duel/dialogue/PDA/gameplay screens are open) |
 
 ### Title
 
@@ -404,16 +574,17 @@ bool ADAStudentCharacter::IsMovementBlocked() const
 {
     const ADAHUD* HUD = GetDAHUD();
     return HUD && (HUD->IsDuelOpen() || HUD->IsMapOpen()
-        || HUD->IsDialogueOpen() || HUD->IsPDAOpen() || HUD->IsTitleOpen());
+        || HUD->IsDialogueOpen() || HUD->IsPDAOpen() || HUD->IsTitleOpen()
+        || HUD->IsGameplayUIOpen());
 }
 ```
 
-This blocks movement, look, jump, sprint, zoom and E-interaction while the new
+This blocks movement, look, jump, sprint, zoom and E-interaction while a new
 modal UI is open. No movement/camera/duel logic was touched. A09 did **not**
-add a P or dialogue Enhanced Input action; the HUD polls those keys itself.
+add P/B/dialogue Enhanced Input actions; the HUD polls those keys itself.
 `J` (jacket), `F` (duel pose) and the time keys still work behind an open
-dialogue/PDA; treat that as a cosmetic known gap until A10 approves a broader
-modal input block.
+dialogue/PDA/gameplay screen; treat that as a cosmetic known gap until A10
+approves a broader modal input block.
 
 ---
 
@@ -424,25 +595,33 @@ From highest to lowest:
 1. **Title** (`FDATitleScreen`) - normal-launch entry point; draws alone over
    the world and owns all input.
 2. **Duel** (`DADuelUI`) - draws alone and owns its input mode.
-3. **Island map** - draws alone (existing behaviour).
-4. **Dialogue** - draws above the PDA and consumes all UI input while open.
+3. **Gameplay screens** (`FDAShopUI`, `FDADeckUI`, `FDAExamUI`) - draw alone
+   over the world, one at a time, and own all input while open.
+4. **Island map** - draws alone (existing behaviour).
 5. **PDA** - full-screen shell; stops updating input while dialogue is open.
-6. **Help** - overlay; cannot be opened while the above are open.
-7. **World HUD** - compass, minimap, banner, message, prompt.
+6. **Dialogue** - draws above the PDA and consumes all UI input while open.
+7. **Help** - overlay; cannot be opened while the above are open.
+8. **World HUD** - compass, minimap, banner, message, prompt.
 
 Rules enforced by `ADAHUD`:
 
-- `IsModalOpen()` = title || map || help || duel || PDA || dialogue.
-- `P` / gamepad View opens the PDA only when no title/duel/dialogue is open;
-  opening while the map is open closes the map first.
-- `M` and `F1` are ignored while the title/PDA/dialogue is open.
+- `IsModalOpen()` = title || map || help || duel || PDA || dialogue ||
+  shop || deck editor || exam.
+- `P` / gamepad View opens the PDA only when no title/duel/dialogue/gameplay
+  screen is open; opening while the map is open closes the map first.
+- Opening shop/deck/exam closes the PDA, dialogue, map and help first. The PDA
+  Deck row and Calendar exam day close the PDA and hand over to the screen.
+- `M` and `F1` are ignored while the title/PDA/dialogue/gameplay screens are open.
 - A story dialogue may open **over** the PDA (for mail/phone scenes). Closing
-  the dialogue returns input to the still-open PDA.
+  the dialogue returns input to the still-open PDA. Dialogue cannot open while a
+  gameplay screen is open.
 - New Game/Continue close the title **before** A03 starts its opening; this
   avoids A03's immediate dialogue being rejected by the title modal guard.
-- The PDA/dialogue use `FInputModeGameAndUI` with a visible cursor; closing the
-  last one restores `FInputModeGameOnly`.
+- The PDA/dialogue/gameplay screens use `FInputModeGameAndUI` with a visible
+  cursor; closing the last one restores `FInputModeGameOnly`.
 - `DADuelUI` always wins; the new UI never changes duel input mode.
+- A `P` press that closes a gameplay screen is consumed for that frame and does
+  not immediately re-open the PDA.
 
 ---
 
@@ -518,6 +697,7 @@ their own screenshots/exit, so combining them produces a race.
 | `-DAOpeningTest` | Existing A03 harness: starts the fresh opening after ~2 s; the title is suppressed. |
 | `-DADialogueTest` | Opens the `opening_test` sample dialogue after 1.2 s. |
 | `-DAPDATest` | Opens the PDA on the Map tab after 1.2 s. |
+| `-DAGameplayUITest` | Seeds a test profile (`Test Student`), starter decks/collection and unlocked contacts, then captures the shop, deck editor, exam written/written-done/timed/result and the PDA Deck/Mail/Save tabs before exiting. Run at 1920×1080. |
 | `-DAUITest` | Cycles all eight PDA tabs, captures `DAPDA_<tab>.png`, opens the sample dialogue, captures `DADialogue.png` / `DADialogueChoice.png`, then exits. |
 
 Example (replace the editor executable path with your local UE 5.8 path):
@@ -535,6 +715,9 @@ Expected files:
 
 - Title: `DATitle.png`
 - New game: `DANewGameOpening.png`
+- `-DAGameplayUITest`: `DAShop.png`, `DADeckEditor.png`, `DAExamWritten.png`,
+  `DAExamWrittenDone.png`, `DAExamTimed.png`, `DAExamResult.png`,
+  `DAPDA_DeckGameplay.png`, `DAPDA_Mail.png`, `DAPDA_Save.png`
 - `-DAUITest`: `DAPDA_Map.png`, `DAPDA_Calendar.png`, `DAPDA_Deck.png`,
   `DAPDA_Mail.png`, `DAPDA_Save.png`, `DAPDA_Options.png`,
   `DAPDA_Records.png`, `DAPDA_Limitation.png`, `DADialogue.png`,
@@ -560,6 +743,29 @@ Expected files:
 9. Run `-DATitleTest` and `-DAUITest` at 1920×1080 and 3840×2160; check title
    legibility, slot cards, options rows and credits scrolling.
 
+### Gate 2 manual smoke checklist
+
+1. Launch normally and choose `CONTINUE` on the autosave written by a new game:
+   confirm the loaded profile/date/DP/deck are present and the game resumes the
+   saved state rather than restarting the opening from scratch.
+2. `NEW GAME` still starts the fresh opening and writes the autosave.
+3. Face the card-shop counter and press `B`: category tabs, pack prices, unlock
+   reasons, stock/restock line and DP balance are visible. Buy a pack, confirm,
+   check the reveal cards and duplicate-DP feedback, then close with `Esc`.
+4. PDA → Deck: rows show A06 player decks, main/extra counts, the active deck and
+   validation errors. `Enter` opens the deck editor; add/remove/swap cards,
+   change filter/sort, rename/copy/erase a deck, set it active and open recipes.
+   `Esc` closes the editor and returns to gameplay.
+5. PDA → Calendar: activate an exam-day cell and confirm the exam opens. Answer
+   the ten written questions, review the written summary, record the timed
+   placeholder, finish the practical panel and inspect the result breakdown.
+6. PDA → Mail: only contacts unlocked in A02 are listed; `Enter` marks the
+   selected message read and the body appears in the detail pane. PDA → Save:
+   empty slot saves immediately; an occupied slot requires a second `Enter` and
+   loads through A02 without `UGameplayStatics`.
+7. Run `-DAGameplayUITest` at 1920×1080 and inspect all nine captures above for
+   overlap, clipping, missing art fallbacks and readable text.
+
 The existing duel harness (`-DADuelScreenshot`, `-DADuelSelfTest`) is unchanged.
 
 ---
@@ -568,11 +774,15 @@ The existing duel harness (`-DADuelScreenshot`, `-DADuelSelfTest`) is unchanged.
 
 ### A02 — Profile / Calendar / Save / Settings
 
-- `FDAPDAUI::BuildPlaceholderViewModel` already fills profile, calendar,
-  save slots, options and records from A02 APIs. `ViewModelBuilder` can still
-  override individual tabs after that.
-- Handle `OnAction` `save.slot` to call the real PDA save/load flow (currently a
-  title-only flow). Empty/corrupt slots are already rejected in the UI.
+- `FDAPDAUI::BuildPlaceholderViewModel` fills profile, calendar, deck, mail,
+  save slots, options and records from A02/A03/A06 APIs. `ViewModelBuilder` can
+  still override individual tabs after that.
+- `OnAction` `save.slot` is wired: the HUD calls A02 `SaveSlot`/`LoadSlot`,
+  confirms occupied slots twice, rejects corrupt slots, and reloads settings
+  after a successful load. There is no direct `UGameplayStatics` call.
+- The HUD installs A06's shop wallet handlers and unlock-context provider
+  against `UDAProfileSubsystem` and `UDACalendarSubsystem`
+  (`ADAHUD::WireEconomySystems`).
 - The PDA calendar is live (`UDACalendarSubsystem` month, exam days, today);
   event markers await A03 data.
 - Typed settings: add an auto-advance field to `UDASettings` and replace the
@@ -595,26 +805,44 @@ The existing duel harness (`-DADuelScreenshot`, `-DADuelSelfTest`) is unchanged.
   Do not call `Begin()` synchronously from `OnDialogueClosed` or
   `OnChoiceMade`; queue the next batch for the next tick so the UI can finish
   closing cleanly.
-- Fill `FDAPDAMailView`; handle `mail.open` to show a message/duel request.
+- `FDAPDAUI` reads `Content/Data/Story/emails.json` for contact/message bodies
+  and filters them through A02 `IsEmailUnlocked` / `IsEmailRead`; a pending A02
+  duel request is appended as a synthetic row. Activating a mail row calls
+  `UDAProfileSubsystem::MarkEmailRead` and shows the body in the detail pane.
+- A03 exposes no public completed-event list, so event-gated shop unlocks and
+  Calendar event markers cannot be populated yet. Expose that state (or add it
+  to `FDAEUnlockContext::CompletedEvents`) when available.
 - For a mail scene over the PDA, call `BeginDialogue` while the PDA is open;
   the dialogue draws on top and returns to the PDA when closed.
 
 ### A06 — Inventory / Deck / Shop
 
-- Fill `FDAPDADeckView` with player decks, counts and validation strings.
-- Handle `OnAction` `deck.open` to open `DADeckUI` with the payload deck id;
-  close the PDA first or leave it as the return layer, whichever the deck UI
-  prefers (document the choice in `Docs/UI_Integration.md`).
-- Cards/shop screens are out of scope for this pass; add `DAShopUI.*` and a
-  PDA row/action later.
-- The Deck tab already lists the four existing starter decks as a stopgap.
+- `FDAPDAUI` now fills `FDAPDADeckView` from `UDADeckLogic::GetPlayerDecksRef()`
+  (not the four starter catalogue decks) with main/extra counts, active deck and
+  `GetDeckValidationMessage()`.
+- `OnAction` `deck.open` is wired: the HUD closes the PDA and calls
+  `ADAHUD::OpenDeckEditor(Payload)`. The editor uses only `UDADeckLogic` /
+  `UDAInventorySubsystem` APIs (collection view, add/remove/swap, rename/copy/
+  erase, set active, recipes).
+- `FDAShopUI` is wired to `UDAShopSubsystem::GetCatalogue` / `PurchasePack` /
+  `GetDP`; A09 contains no price, stock, unlock or duplicate-DP logic.
+- Remaining A06 gap: no changes were made to A06 source or data; the UI depends
+  on the public headers listed in §4A.
 
 ### A07 — Exams / Records / Limitation
 
-- Fill `FDAPDARecordRow` (wins, timed clears, exam scores, titles) and
-  `FDAPDALimitRow` (banned/limited cards).
-- Add exam entry points later (PDA Calendar day → exam screen) through
-  `OnAction` `calendar.select` or a new `exam.open` action.
+- `FDAExamUI` is wired to `UDAExamSubsystem::StartExam`, `SubmitWrittenAnswer`,
+  `FinishWritten`, `BeginTimed`, `SubmitTimedResult`, `BeginPractical`,
+  `FinishPractical` and `FinishExam`. All scoring/grade/title/dorm outcomes come
+  from `FDAExamResult`; the UI performs no evaluation.
+- Exam entry: activating an exam-day calendar cell emits `exam.open`; the HUD
+  closes the PDA and calls `ADAHUD::OpenExam(0)` (current month).
+- Remaining A07 gap: A04/A07 have not wired a timed puzzle duel. The timed panel
+  records a failed timed section via `SubmitTimedResult(false, 0, 0, Error)` and
+  exposes debug helpers for screenshots. Replace that button with the real duel
+  launch once A04/A07 provide it.
+- `FDAPDARecordRow` (wins, timed clears, exam scores, titles) and
+  `FDAPDALimitRow` (banned/limited cards) still need A02/A07 data feeds.
 - The Limitation pane intentionally shows the empty-state explanation until
   A01/A07 data exists.
 
@@ -638,17 +866,24 @@ order guarantees the duel always owns input while open.
 
 ## 10. Known gaps / next pass
 
-- **Name entry, delete-slot confirm, shop, deck editor, exam UI and full
-  save/load UI** are not in this pass (A09 waves 2–3). New Game currently uses
-  A03's default player name; A02's rename API is ready for a later name-entry
-  screen.
+- **Name entry and delete-slot confirmation** are still later-pass screens. New
+  Game uses A03's default player name; A02's rename API is ready for a name-entry
+  screen. The PDA save tab can save/load but cannot delete a slot.
 - The title has no Quit item (not requested for Gate 1); closing the process is
   still platform/console level.
-- Mail/Limitation panes are deliberately empty placeholders; actions emit
-  events but the target screens are not connected. The Save tab shows live A02
-  metadata but does not load/store from the PDA yet.
-- `J`/`F`/time keys still act behind title/dialogue/PDA (see §5); needs an
-  A10-approved broader input-block decision.
+- Mail, Records and Limitation are not full readers/feeds: mail bodies come from
+  `emails.json` with unlock/read state, records still use A02 profile counters,
+  and the limitation list remains data-pending. Save/load **is** wired through
+  A02 now.
+- A03 exposes no completed-event list, so event-gated shop unlocks and calendar
+  event markers remain incomplete (see §9).
+- A04/A07 have no timed-puzzle duel launch yet; the exam timed section records a
+  failed result with a “continue without clearing” action until that integration
+  lands.
+- No UE build or PIE run was performed for this pass (concurrent A-lane builds
+  were prohibited). The compile audit is static only; see §11.
+- `J`/`F`/time keys still act behind title/dialogue/PDA/gameplay screens (see
+  §5); needs an A10-approved broader input-block decision.
 - Auto-advance is persisted through the `UDASettings` controls map because A02
   has no typed field yet; replace the bridge when the field lands.
 - BGM/SFX values are stored but no audio mixer consumes them yet.
@@ -677,12 +912,16 @@ This pass was written against UE 5.8 C++ without running a concurrent editor
 build (per the A09 brief: other lanes may be building). Changes are additive and
 compile-safe by inspection:
 
-- New classes are plain C++ (`FDATitleScreen`, `FDADialogueUI`, `FDAPDAUI`),
-  matching the existing `FDADuelUI` ownership pattern (`TUniquePtr` members on
-  `ADAHUD`).
+- New classes are plain C++ (`FDATitleScreen`, `FDADialogueUI`, `FDAPDAUI`,
+  `FDAUIScreen`, `FDAShopUI`, `FDADeckUI`, `FDAExamUI`), matching the existing
+  `FDADuelUI` ownership pattern (`TUniquePtr` members on `ADAHUD`).
 - Title/save/options calls go through `UDAStorySubsystem`, `UDASaveSubsystem`
   and `UDASettings`; no direct `UGameplayStatics::LoadGameFromSlot` and no
   edits to A02/A03 source.
+- Shop/deck/exam calls go through `UDAShopSubsystem`, `UDAInventorySubsystem`,
+  `UDADeckLogic` and `UDAExamSubsystem`. Prices, stock, unlock evaluation,
+  deck rules, pack rolls, exam scoring and title/dorm outcomes remain in those
+  systems; the UI only renders payloads.
 - No new module dependencies; only `Core`, `Engine`, `InputCore`, `RenderCore`,
   `Json`, `JsonUtilities`, all already in `DuelAcademyIsland.Build.cs`.
 - No reflected types were added, so UHT surface is unchanged. `DAHUD`'s new
@@ -692,6 +931,11 @@ compile-safe by inspection:
 - Entry points are additive: existing `ADAHUD` public methods keep their
   signatures; only `ToggleHelp()` moved from inline to a `.cpp` definition with
   the same behaviour plus modal guards.
+- Static checks completed after the final edits: brace/paren balance on all
+  modified/new C++ files, `ui.json` parse validation, and API signature checks
+  against the A02/A06/A07 headers. **No compile or PIE run was performed**, so
+  the first build may still surface include/order issues.
 
-Recommended gate review: build the editor target, run the manual smoke
-checklist in §8, then run `-DAUITest` at 1080p/4K before merging.
+Recommended gate review: build the editor target, fix any compile diagnostics,
+run the Gate 1 and Gate 2 manual smoke checklists in §8, then run `-DAUITest`
+and `-DAGameplayUITest` at 1080p/4K before merging.
