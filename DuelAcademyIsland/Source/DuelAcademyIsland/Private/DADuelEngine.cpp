@@ -112,6 +112,7 @@ void FDuelEngine::ResetTransientRulesState()
 {
 	PendingChoices.Reset();
 	ChoiceResolvers.Reset();
+	PendingActivationCleanupUids.Reset();
 	NextChoiceRequestId = 1;
 
 	ChainLinks.Reset();
@@ -1956,8 +1957,9 @@ TArray<FDuelAttackTarget> FDuelEngine::GetAttackTargets(int32 AttackerUid) const
 		Targets.Add({ 0, true, TEXT("Direct Attack") });
 		return Targets;
 	}
-	for (const FDuelCard& Monster : Opponent.Monsters)
+	for (int32 Zone = 0; Zone < Opponent.Monsters.Num(); ++Zone)
 	{
+		const FDuelCard& Monster = Opponent.Monsters[Zone];
 		if (!Monster.IsValid())
 		{
 			continue;
@@ -1966,8 +1968,8 @@ TArray<FDuelAttackTarget> FDuelEngine::GetAttackTargets(int32 AttackerUid) const
 		Target.Uid = Monster.Uid;
 		Target.bDirect = false;
 		Target.Label = Monster.bFaceUp
-			? FString::Printf(TEXT("%s (%d/%d)"), *CardName(Monster), GetAtk(Monster), GetDef(Monster))
-			: TEXT("Set Monster");
+			? FString::Printf(TEXT("Z%d  %s (%d/%d)"), Zone + 1, *CardName(Monster), GetAtk(Monster), GetDef(Monster))
+			: FString::Printf(TEXT("Z%d  Set Monster"), Zone + 1);
 		Targets.Add(Target);
 	}
 	return Targets;
@@ -4327,9 +4329,12 @@ void FDuelEngine::QueueEquipTargetChoice(FDuelCard& Equip, EDuelOwner Side, cons
 	int32 BestAtk = -1;
 	for (FDuelCard* Target : Targets)
 	{
+		const int32 Zone = FindMonsterZone(Side, Target->Uid);
 		FDuelChoiceOption Option;
 		Option.Id = Target->Uid;
-		Option.Label = FString::Printf(TEXT("%s (%d/%d)"), *CardName(*Target), GetAtk(*Target), GetDef(*Target));
+		Option.Label = Zone != INDEX_NONE
+			? FString::Printf(TEXT("Z%d  %s (%d/%d)"), Zone + 1, *CardName(*Target), GetAtk(*Target), GetDef(*Target))
+			: FString::Printf(TEXT("%s (%d/%d)"), *CardName(*Target), GetAtk(*Target), GetDef(*Target));
 		Option.CardUid = Target->Uid;
 		Option.CardId = Target->Data.Id;
 		Option.Zone = EDuelZone::Monster;
@@ -4347,19 +4352,28 @@ void FDuelEngine::QueueEquipTargetChoice(FDuelCard& Equip, EDuelOwner Side, cons
 	}
 
 	const int32 EquipUid = Equip.Uid;
-	RequestChoice(Request, [this, EquipUid, Name](const FDuelChoiceRequest&, const TArray<int32>& OptionIds)
+	const EDuelOwner EquipSide = Side;
+	RequestChoice(Request, [this, EquipUid, EquipSide, Name](const FDuelChoiceRequest&, const TArray<int32>& OptionIds)
 	{
-		if (OptionIds.Num() == 0)
+		FDuelCard* LiveEquip = FindSpellTrap(EquipUid);
+		if (!LiveEquip)
 		{
 			return;
 		}
-		FDuelCard* LiveEquip = FindSpellTrap(EquipUid);
-		FDuelCard* Target = FindMonster(OptionIds[0]);
-		if (LiveEquip && Target)
+
+		FDuelCard* Target = OptionIds.Num() > 0 ? FindMonster(OptionIds[0]) : nullptr;
+		if (Target && IsLegalEquipTarget(*Target, EquipSide, Name))
 		{
 			AttachEquip(*LiveEquip, *Target);
 			Log(FString::Printf(TEXT("%s equips to %s."), *Name, *CardName(*Target)), TEXT("spell"));
+			return;
 		}
+
+		// The chosen monster left the field before the choice resolved.  An
+		// Equip Spell with no legal target is destroyed instead of lingering
+		// face-up without an equipped monster.
+		DestroySpellTrap(*LiveEquip, true);
+		Log(FString::Printf(TEXT("%s has no legal target and is destroyed."), *Name), TEXT("destroy"));
 	});
 }
 
@@ -4958,7 +4972,6 @@ bool FDuelEngine::ActivateSpell(int32 Uid, FString& OutError)
 	}
 	const FString Name = HandCard->Data.Name;
 	const bool bFieldSpell = IsFieldSpellCard(*HandCard);
-	const bool bStays = IsPersistentSpellTrap(*HandCard);
 	FDuelCard Copy;
 	if (!RemoveFromZone(Copy, Uid))
 	{
@@ -4998,14 +5011,7 @@ bool FDuelEngine::ActivateSpell(int32 Uid, FString& OutError)
 	CheckWinner();
 	if (bWinnerSet) return true;
 
-	if (!bStays && FindSpellTrap(Uid))
-	{
-		FDuelCard Done;
-		if (RemoveFromZone(Done, Uid))
-		{
-			MoveToGrave(Done);
-		}
-	}
+	CleanupResolvedChainCard(Uid);
 	return true;
 }
 
@@ -5158,17 +5164,7 @@ bool FDuelEngine::ActivateQuickPlayFromHand(int32 Uid, FString& OutError)
 	{
 		return true;
 	}
-	if (FDuelCard* Done = FindSpellTrap(Uid))
-	{
-		if (!IsPersistentSpellTrap(*Done))
-		{
-			FDuelCard Remove;
-			if (RemoveFromZone(Remove, Uid))
-			{
-				MoveToGrave(Remove);
-			}
-		}
-	}
+	CleanupResolvedChainCard(Uid);
 	return true;
 }
 
@@ -5293,11 +5289,18 @@ bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bA
 	{
 		return true;
 	}
-	if (!IsPersistentSpellTrap(*Placed))
+	if (FDuelCard* Live = FindSpellTrap(Uid))
 	{
-		if (FDuelCard* Done = FindSpellTrap(Uid))
+		if (!IsPersistentSpellTrap(*Live))
 		{
-			DestroySpellTrap(*Done, true);
+			if (HasPendingChoice())
+			{
+				PendingActivationCleanupUids.Add(Uid);
+			}
+			else
+			{
+				DestroySpellTrap(*Live, true);
+			}
 		}
 	}
 	return true;
@@ -6918,6 +6921,48 @@ void FDuelEngine::InvokeChoiceResolver(int32 RequestId, const FDuelChoiceRequest
 	}
 }
 
+void FDuelEngine::FlushPendingActivationCleanup()
+{
+	// A one-shot Spell/Trap should stay on the field while its target choice is
+	// being answered; moving it to the Graveyard first made the effect look
+	// already resolved and broke scripts that need the source on the field.
+	if (HasPendingChoice() || PendingActivationCleanupUids.Num() == 0)
+	{
+		return;
+	}
+
+	// Work from a copy: destroying a card can trigger an effect that queues a
+	// new choice, in which case the remaining cards must stay deferred.
+	const TArray<int32> Pending = PendingActivationCleanupUids.Array();
+	PendingActivationCleanupUids.Reset();
+	for (int32 Uid : Pending)
+	{
+		if (HasPendingChoice())
+		{
+			PendingActivationCleanupUids.Add(Uid);
+			continue;
+		}
+
+		FDuelCard* Card = FindSpellTrap(Uid);
+		if (!Card || IsPersistentSpellTrap(*Card))
+		{
+			continue;
+		}
+		if (Card->IsTrap())
+		{
+			DestroySpellTrap(*Card, true);
+		}
+		else
+		{
+			FDuelCard Copy;
+			if (RemoveFromZone(Copy, Uid))
+			{
+				MoveToGrave(Copy);
+			}
+		}
+	}
+}
+
 bool FDuelEngine::AnswerChoice(int32 RequestId, const TArray<int32>& OptionIds, FString& OutError)
 {
 	if (PendingChoices.Num() == 0)
@@ -6973,6 +7018,7 @@ bool FDuelEngine::AnswerChoice(int32 RequestId, const TArray<int32>& OptionIds, 
 			}
 		}
 	}
+	FlushPendingActivationCleanup();
 	return true;
 }
 
@@ -7016,6 +7062,7 @@ bool FDuelEngine::CancelChoice(int32 RequestId, FString& OutError)
 	PendingChoices.RemoveAt(0);
 	InvokeChoiceResolver(Request.RequestId, Request, TArray<int32>());
 	Log(FString::Printf(TEXT("Choice cancelled: %s"), *Request.Prompt), TEXT("choice"));
+	FlushPendingActivationCleanup();
 	return true;
 }
 
@@ -7023,6 +7070,7 @@ void FDuelEngine::ClearPendingChoices()
 {
 	PendingChoices.Reset();
 	ChoiceResolvers.Reset();
+	FlushPendingActivationCleanup();
 }
 
 int32 FDuelEngine::RequestOptionalTrigger(const FDuelCard& SourceCard, const FString& Prompt, bool bDefaultYes,
@@ -7224,11 +7272,20 @@ void FDuelEngine::CleanupResolvedChainCard(int32 CardUid)
 	{
 		return;
 	}
+	if (HasPendingChoice())
+	{
+		PendingActivationCleanupUids.Add(CardUid);
+		return;
+	}
 	FDuelCard Copy;
 	if (RemoveFromZone(Copy, CardUid))
 	{
 		MoveToGrave(Copy);
 	}
+
+	// Resolve any cleanup that was waiting on an earlier choice.  The current
+	// card has already left the field, so this cannot destroy it mid-cleanup.
+	FlushPendingActivationCleanup();
 }
 
 int32 FDuelEngine::ResolveChain(FString& OutError)

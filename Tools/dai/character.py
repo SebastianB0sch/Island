@@ -172,14 +172,16 @@ def _ground_speed(arm, action):
     return float(np.median(speeds) * 100.0) if speeds else None
 
 
-def export_skeletal(objs, active, path, types, anim=None, simplify=0.0):
+def export_skeletal(objs, active, path, types, anim=None, simplify=0.0, deform_only=True):
     """FBX for Unreal: skinned mesh + armature (anim None) or an armature-only animation take
-    (simplify > 0 drops redundant keys - unanimated helper bones shrink to a couple of keys)."""
+    (simplify > 0 drops redundant keys - unanimated helper bones shrink to a couple of keys).
+    deform_only=False exports every armature bone, including helper bones a particular skinned
+    mesh does not use - needed for the shared anime cast skeleton."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     _select(objs, active)
     kw = dict(filepath=path, use_selection=True, object_types=types, apply_scale_options="FBX_SCALE_ALL",
               axis_forward="-Z", axis_up="Y", primary_bone_axis="Y", secondary_bone_axis="X",
-              use_armature_deform_only=True, add_leaf_bones=False, mesh_smooth_type="FACE",
+              use_armature_deform_only=deform_only, add_leaf_bones=False, mesh_smooth_type="FACE",
               use_mesh_modifiers=False, path_mode="STRIP", embed_textures=False, use_tspace=False,
               colors_type="LINEAR")
     if anim is None:

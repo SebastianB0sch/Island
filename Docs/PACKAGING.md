@@ -28,7 +28,7 @@ The archive is a bootstrap `DuelAcademyIsland.exe` at the archive root plus
 | Development | `Builds/Win64Dev`; `-DADuelSelfTest=1000`: 457/543 wins, 0 stalls, 0 invariant failures, deck audit 36/36, puzzle audit 100/100, exit 0 |
 | Development | `-DAPuzzleExamSelfTest`: Puzzle 102/102, Exam 104/104, `BOTH SUITES PASS`, exit 0 |
 | Development | `-DAStoryPlaythroughTest`: 35/35 events, 39/39 duels |
-| Development | `-DAEffectRuntimeSelfTest`: 124/124 with 253 scripts from the pak |
+| Development | `-DAEffectRuntimeSelfTest`: 141/141 in the last packaged archive (current editor build: 147/147) with 253 scripts loaded |
 | Development | `-DAPortalTest`: 188/188 |
 
 ## Offline single-player

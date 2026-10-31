@@ -1,0 +1,58 @@
+{
+  "note": "Local fan-project portraits. Full-body characters use Konami Duel Links renders; Jaden's and the player's expression frames use Duel Links duel portraits from the Yugipedia mirror. The player uses the generic Slifer Red student 'Evan'. Do not redistribute.",
+  "characters": {
+    "player": {
+      "npc": "player",
+      "source": "https://ms.yugipedia.com/5/5b/Evan-DULI-DuelPortrait-1.png",
+      "description": "Generic Duel Links Slifer Red student used as the custom protagonist's portrait."
+    },
+    "jaden": {
+      "npc": "jaden",
+      "source": "https://www.konami.com/yugioh/duel_links/en/series/images/character/gx01.png"
+    },
+    "syrus": {
+      "npc": "syrus",
+      "source": "https://www.konami.com/yugioh/duel_links/en/series/images/character/gx12.png"
+    },
+    "alexis": {
+      "npc": "alexis",
+      "source": "https://www.konami.com/yugioh/duel_links/en/series/images/character/gx06.png"
+    },
+    "chazz": {
+      "npc": "chazz",
+      "source": "https://www.konami.com/yugioh/duel_links/en/series/images/character/gx05.png"
+    },
+    "bastion": {
+      "npc": "bastion",
+      "source": "https://www.konami.com/yugioh/duel_links/en/series/images/character/gx10.png"
+    },
+    "zane": {
+      "npc": "zane",
+      "source": "https://www.konami.com/yugioh/duel_links/en/series/images/character/gx02.png"
+    }
+  },
+  "expressions": {
+    "jaden": {
+      "neutral": "https://ms.yugipedia.com/4/4d/JadenYuki-DULI-DuelPortrait-1.png",
+      "happy": "https://ms.yugipedia.com/5/56/JadenYuki-DULI-DuelPortrait-2.png",
+      "angry": "https://ms.yugipedia.com/6/6c/JadenYuki-DULI-DuelPortrait-3.png",
+      "shocked": "https://ms.yugipedia.com/5/52/JadenYuki-DULI-DuelPortrait-4.png",
+      "sad": "https://ms.yugipedia.com/f/fa/JadenYuki-DULI-DuelPortrait-5.png",
+      "laugh": "https://ms.yugipedia.com/9/9f/JadenYuki-DULI-DuelPortrait-6.png"
+    },
+    "player": {
+      "neutral": "https://ms.yugipedia.com/5/5b/Evan-DULI-DuelPortrait-1.png",
+      "happy": "https://ms.yugipedia.com/d/df/Evan-DULI-DuelPortrait-2.png",
+      "angry": "https://ms.yugipedia.com/4/41/Evan-DULI-DuelPortrait-3.png",
+      "shocked": "https://ms.yugipedia.com/8/89/Evan-DULI-DuelPortrait-4.png",
+      "sad": "https://ms.yugipedia.com/a/ac/Evan-DULI-DuelPortrait-5.png",
+      "laugh": "https://ms.yugipedia.com/3/35/Evan-DULI-DuelPortrait-6.png"
+    }
+  },
+  "derived": {
+    "player.png": "player_neutral.png",
+    "player_face.png": "tight crop of the player neutral frame",
+    "jaden_determined.png": "jaden_angry.png",
+    "player_determined.png": "player_angry.png"
+  }
+}

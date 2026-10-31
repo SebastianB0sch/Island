@@ -374,6 +374,7 @@ private:
 	void ResolveAnteOnDuelEnd();
 	bool BuildAutoChoiceAnswer(const FDuelChoiceRequest& Request, TArray<int32>& OutOptionIds) const;
 	void InvokeChoiceResolver(int32 RequestId, const FDuelChoiceRequest& Request, const TArray<int32>& OptionIds);
+	void FlushPendingActivationCleanup();
 	bool IsChoiceAnswerValid(const FDuelChoiceRequest& Request, const TArray<int32>& OptionIds, FString& OutError) const;
 	bool IsAutomaticTrapTimingAllowed(const FDuelCard& Card, EDuelTimingWindow Window) const;
 	void ExecuteChainLinkCard(FDuelChainLink& Link);
@@ -538,6 +539,8 @@ private:
 	// ---- rules architecture (additive, A04) ----
 	TArray<FDuelChoiceRequest> PendingChoices;
 	TMap<int32, TFunction<void(const FDuelChoiceRequest&, const TArray<int32>&)>> ChoiceResolvers;
+	/** Cards whose post-activation cleanup waits for their pending choice. */
+	TSet<int32> PendingActivationCleanupUids;
 	int32 NextChoiceRequestId = 1;
 	bool bAutoAnswerAiChoices = true;
 	bool bAutoAnswerAllChoices = false;

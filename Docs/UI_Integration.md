@@ -766,7 +766,8 @@ Expected files:
 7. Run `-DAGameplayUITest` at 1920×1080 and inspect all nine captures above for
    overlap, clipping, missing art fallbacks and readable text.
 
-The existing duel harness (`-DADuelScreenshot`, `-DADuelSelfTest`) is unchanged.
+The duel harnesses (`-DADuelScreenshot`, `-DADuelSelfTest`) still work, and
+`-DADuelChoiceScreenshot` was added for the pending-choice panel.
 
 ---
 
@@ -856,11 +857,21 @@ The existing duel harness (`-DADuelScreenshot`, `-DADuelSelfTest`) is unchanged.
 
 ### Duel UI
 
-`DADuelUI.cpp` was not touched. If the duel board needs dialogue/choice
-prompts (e.g. card effect text), route them through a separate duel-local
-overlay in a later pass; do not host `FDADialogueUI` inside the duel's
-`GameAndUI` input mode without coordinating with A04/A10. The current modal
-order guarantees the duel always owns input while open.
+`FDADuelUI` now hosts its own rules-choice overlay instead of `FDADialogueUI`.
+While a choice is pending it draws a right-hand `SELECT A CARD` / `ACTIVATE
+EFFECT?` panel, suspends board actions and shortcut keys, and accepts clicks on
+highlighted cards as direct targets. Multi-select choices page eight options at
+a time, show disabled reasons, and use Confirm/Cancel. This keeps the duel's
+`GameAndUI` input mode and modal ownership unchanged while making Equip Spell
+targets, searches, and optional triggers answerable.
+
+`DADuelScreenshot` captures the normal board sequence and
+`DADuelChoiceScreenshot` captures `DADuelChoice.png` with a live pending equip
+target. The duel no longer plays the old full-board VS portrait sweep; cut-ins
+stay over the log column, event banners use the lane between monster rows, and
+`Space` or a click on a cut-in skips the presentation queue. The presentation
+reel is also held while a choice is pending so card flights and banners cannot
+drift under the target frames; queued beats resume after the answer.
 
 ---
 

@@ -307,17 +307,14 @@ def _skeletal_options(skeleton=None):
 
 
 def _cast_anim_path(rel):
-    """Source path for a cast animation.
+    """Source path for a cast animation take.
 
-    The pipeline's takes are armature-only, which UE 5.8's legacy FBX animation importer rejects. The
-    mirrored `Combined/<name>.fbx` files carry the group's skinned mesh as well (mesh + armature) and are
-    retargeted from the take's own rest pose onto that mesh's T-pose skeleton; without the retarget the
-    clips replay as a T-pose. They also include the root -> root_001 -> pelvis chain the VroidB skeleton
-    needs. Prefer them over the raw takes."""
+    The pipeline exports armature-only FBX takes, which UE 5.8's legacy FBX importer mishandles
+    (it can leave a stale sequence or silently import the wrong length). import_cast feeds these
+    files through Interchange, which binds them directly to the existing skeleton and preserves
+    the authored time range."""
     rel = rel.replace("\\", "/")
-    folder, name = os.path.split(rel)
-    combined = os.path.join(C.source_dir(), folder, "Combined", name)
-    return combined if os.path.exists(combined) else os.path.join(C.source_dir(), rel)
+    return os.path.join(C.source_dir(), rel)
 
 
 def _interchange_animation(file, name, skeleton):
@@ -496,16 +493,27 @@ def import_cast(masters):
             skeleton = base_mesh.get_editor_property("skeleton")
             for state, a in sorted(g.get("anims", {}).items()):
                 file = _cast_anim_path(a["file"])
-                _import_tasks([file], CHAR_DIR, _skeletal_options(skeleton), [a["name"]])
-                if not C.exists(f"{CHAR_DIR}/{a['name']}"):
-                    # armature-only FBX: legacy importer cannot find the root track, use Interchange
-                    _interchange_animation(file, a["name"], skeleton)
-                if not C.exists(f"{CHAR_DIR}/{a['name']}"):
+                seq_path = f"{CHAR_DIR}/{a['name']}"
+                # Delete the old take first: a stale sequence would otherwise survive a failed or
+                # legacy import and silently keep its old length.
+                if C.exists(seq_path):
+                    unreal.EditorAssetLibrary.delete_asset(seq_path)
+                # Armature-only takes: Interchange binds them to the existing skeleton directly.
+                _interchange_animation(file, a["name"], skeleton)
+                if not C.exists(seq_path):
+                    # Fallback for engine versions where the Interchange pipeline is unavailable.
+                    _import_tasks([file], CHAR_DIR, _skeletal_options(skeleton), [a["name"]])
+                if not C.exists(seq_path):
                     seq = _find_in(CHAR_DIR, "AnimSequence", a["name"])
                     if seq is not None:
-                        unreal.EditorAssetLibrary.rename_asset(seq.get_path_name().split(".")[0], f"{CHAR_DIR}/{a['name']}")
-                if not C.exists(f"{CHAR_DIR}/{a['name']}"):
+                        unreal.EditorAssetLibrary.rename_asset(seq.get_path_name().split(".")[0], seq_path)
+                if not C.exists(seq_path):
                     C.warn(f"cast: animation {a['name']} failed to import")
+                elif a.get("seconds"):
+                    seq = C.load(seq_path)
+                    actual = seq.get_play_length() if seq else -1.0
+                    if actual >= 0.0 and abs(actual - float(a["seconds"])) > 0.02:
+                        C.warn(f"cast: {a['name']} length {actual:.3f}s, expected {a['seconds']}s")
             disk = g.get("duel_disk")
             if disk:
                 dm = _import_one(disk["file"], disk["name"], _skeletal_mesh_options(skeleton))

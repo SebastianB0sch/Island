@@ -2141,6 +2141,13 @@ void FDAEffectRuntime::ContinueToTargets(FDEffectContext Context)
 		Option.Label = Card->IsMonster()
 			? FString::Printf(TEXT("%s (%d/%d)"), *CardName(*Card), Engine->GetAtk(*Card), Engine->GetDef(*Card))
 			: CardName(*Card);
+		const int32 Zone = Card->IsMonster()
+			? Engine->FindMonsterZone(Card->Controller, Uid)
+			: ((Card->IsSpell() || Card->IsTrap()) ? Engine->FindSpellZone(Card->Controller, Uid) : INDEX_NONE);
+		if (Zone != INDEX_NONE)
+		{
+			Option.Label = FString::Printf(TEXT("Z%d  %s"), Zone + 1, *Option.Label);
+		}
 		Option.CardUid = Uid;
 		Option.CardId = Card->Data.Id;
 		Option.Zone = EDuelZone::None;
@@ -2307,11 +2314,6 @@ bool FDAEffectRuntime::ResolveScriptTarget(const FDEffectScript& Script, const F
 		return true;
 	}
 	if (Min == Max && Min == OutCandidateUids.Num())
-	{
-		OutUids = OutCandidateUids;
-		return true;
-	}
-	if (Min == Max && Min <= OutCandidateUids.Num() && OutCandidateUids.Num() <= Min)
 	{
 		OutUids = OutCandidateUids;
 		return true;
@@ -3196,18 +3198,30 @@ bool FDAEffectRuntime::ExecuteEquip(const TSharedPtr<FJsonObject>& Operation, co
 {
 	TArray<int32> Targets;
 	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
-	if (Targets.Num() == 0 || !Engine->FindSpellTrap(Context.SourceCard.Uid))
+	FDuelCard* Equip = Engine->FindSpellTrap(Context.SourceCard.Uid);
+	if (!Equip)
 	{
 		return true;
 	}
-	if (FDuelCard* Target = Engine->FindMonster(Targets[0]))
+	if (Targets.Num() == 0)
 	{
-		if (FDuelCard* Equip = Engine->FindSpellTrap(Context.SourceCard.Uid))
-		{
-			Engine->AttachEquip(*Equip, *Target);
-			Engine->Log(FString::Printf(TEXT("%s equips to %s."), *CardName(*Equip), *CardName(*Target)), TEXT("effect"));
-		}
+		return true;
 	}
+
+	FDuelCard* Target = Engine->FindMonster(Targets[0]);
+	if (Target && Target->bFaceUp && Target->Controller == Equip->Controller)
+	{
+		Engine->AttachEquip(*Equip, *Target);
+		Engine->Log(FString::Printf(TEXT("%s equips to %s."), *CardName(*Equip), *CardName(*Target)), TEXT("effect"));
+		return true;
+	}
+
+	// The selected monster left the field before this operation resolved.  An
+	// Equip Spell with no legal target is destroyed rather than left face-up
+	// with no equipped monster.
+	const FString EquipName = CardName(*Equip);
+	Engine->DestroySpellTrap(*Equip, true);
+	Engine->Log(FString::Printf(TEXT("%s has no legal target and is destroyed."), *EquipName), TEXT("destroy"));
 	return true;
 }
 

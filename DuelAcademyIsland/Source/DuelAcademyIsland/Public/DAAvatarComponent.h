@@ -19,7 +19,9 @@ class UAnimSequence;
  *     A_Anime_<Group>_<State> takes of its skeleton group and the group's duel disk;
  *  2. the curated CC0 student (SK_Student + A_Student_* sequences);
  *  3. the procedural SM_Avatar_* part meshes animated in code - no assets required.
- * Skeletal avatars are driven from the owner's velocity.
+ * Skeletal avatars are driven from the owner's velocity. The anime cast uses the native
+ * DAAvatarAnimInstance (phase-synced idle/walk/run blend + crossfaded actions); SK_Student uses
+ * single-node playback.
  *
  * Attach it at the bottom of the capsule; it faces the owner's +X.
  */
@@ -84,16 +86,17 @@ public:
 	bool bDormTint = true;
 
 	/** Ground speed (cm/s) at which the walk / run takes play at rate 1 (no foot sliding). The defaults fit the
-	 *  anime cast's takes; the SK_Student fallback switches to the speeds its import normalises its clips to
-	 *  (RateScale, measured per rig by Tools/dai/character.py). */
+	 *  anime cast's authored takes (1.50 m/s walk, 4.20 m/s run); the SK_Student fallback switches to the
+	 *  speeds its import normalises its clips to (RateScale, measured per rig by Tools/dai/character.py). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
-	float WalkAnimSpeed = 200.f;
+	float WalkAnimSpeed = 150.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
-	float RunAnimSpeed = 320.f;
+	float RunAnimSpeed = 420.f;
 
-	/** Above this ground speed (cm/s) the skeletal student runs instead of walking; 0 = halfway between
-	 *  WalkAnimSpeed and RunAnimSpeed plus 60. */
+	/** Above this ground speed (cm/s) the single-node SK_Student fallback runs instead of walking; 0 =
+	 *  halfway between WalkAnimSpeed and RunAnimSpeed plus 60. The anime cast blends Walk and Run by
+	 *  speed and ignores this. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float RunThreshold = 0.f;
 
@@ -112,6 +115,8 @@ private:
 	bool SetupCast();
 	void FinishSkeletal(class USkeletalMesh* Mesh);
 	void TickSkeletal(float DeltaTime, float GroundSpeed, bool bInAir);
+	void TickNative(float DeltaTime, float GroundSpeed, bool bInAir, float VerticalSpeed);
+	void TickSingleNode(float DeltaTime, float GroundSpeed, bool bInAir);
 	UAnimSequence* FindAnim(FName State) const;
 	UStaticMeshComponent* MakePart(const TCHAR* MeshName, USceneComponent* Parent, const FVector& Offset);
 	void ApplyColours();
@@ -155,6 +160,9 @@ private:
 	bool bAnimeCast = false;
 
 	FName CurrentAnim = NAME_None;
+	FName CurrentAction = NAME_None;
+	float LandTimer = 0.f;
+	bool bWasInAir = false;
 
 	float Phase = 0.f;
 	float SmoothedSpeed = 0.f;

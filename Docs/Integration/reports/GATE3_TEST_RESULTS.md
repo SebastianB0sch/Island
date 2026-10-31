@@ -27,7 +27,7 @@
 | `-DAEconomySelfTest` | **PASS** | `213 passed, 0 failed` |
 | `-DADuelRulesSelfTest` | **PASS** | `58 passed, 0 failed` |
 | `-DADuelSelfTest=1000` | **PASS** | `1000 iterations, 457 player wins, 543 opponent wins, 0 stalls, 0 invariant failures, deck audit 37/37, puzzle audit 100/100` |
-| `-DAEffectRuntimeSelfTest` | **PASS** | `141 passed, 0 failed` (current script set) |
+| `-DAEffectRuntimeSelfTest` | **PASS** | `147 passed, 0 failed` (current script set; re-run after the equip target-loss fixes) |
 | `-DAStorySelfTest` | **PASS** | 14/14 (opening E01/E01b) |
 | `-DAFullStorySelfTest` | **PASS** | 20/20 (35 events, 44 full scenes, 176 lines, 84 duel refs, 35/35 reachable) |
 | `-DAStoryPlaythroughTest` | **PASS** | 35/35 events, 40/40 story duels (39/39 full campaign), 28/28 checks, 0 missing scenes/dialogue/outcomes |
@@ -131,7 +131,7 @@ Commands were run headless with
 | `-DAPuzzleExamSelfTest` | **PASS**, puzzle 102/102, exam 104/104 |
 | `-DAProfileSelfTest` | **PASS**, 182 checks |
 | `-DAEconomySelfTest` | **PASS**, 213 checks |
-| `-DAEffectRuntimeSelfTest` | **PASS**, 141/141 |
+| `-DAEffectRuntimeSelfTest` | **PASS**, 147/147 |
 | `-DADuelSelfTest=1000` | **PASS**, 457/543 wins, 0 stalls, 0 invariants, deck audit 37/37, puzzle audit 100/100 |
 | `-DAPortalTest` | **PASS**, 188/188 |
 | `-DANpcScheduleTest` | **PASS**, 514/514 |
