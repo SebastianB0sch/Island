@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generated_utc": "2026-10-31T09:20:50+00:00",
   "source": {
-    "rom": "C:\\dev\\argh\\Yu-Gi-Oh! - GX Duel Academy (U).gba",
+    "rom": "$GX_ROM",
     "rom_sha256": "0c2f606986c84d584510d0b80e7cb8e2970f9c15c71d29f9bb9d5f67ceef2afe",
     "rom_size": 33554432,
     "header": {

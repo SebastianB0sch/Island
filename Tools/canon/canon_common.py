@@ -21,13 +21,13 @@ CACHE_DIR = TOOLS_DIR / "cache"
 LOCAL_ONLY_DIR = Path(
     os.environ.get(
         "GX_CANON_LOCAL_DIR",
-        r"C:\Users\Sebas\AppData\Local\Temp\opencode\gxcanon\local_only",
+        str(REPO_ROOT / "Tools" / "canon" / ".local_only"),
     )
 )
 
-DEFAULT_ROM = Path(
-    os.environ.get("GX_ROM", r"C:\dev\argh\Yu-Gi-Oh! - GX Duel Academy (U).gba")
-)
+# Never hard-code a workstation path. Set GX_ROM to the local ROM before
+# running an extraction tool; the ROM itself is never committed.
+DEFAULT_ROM = Path(os.environ.get("GX_ROM", "GX_ROM.gba"))
 TARGET_CARDS = REPO_ROOT / "DuelAcademyIsland" / "Content" / "Data" / "cards.json"
 
 ROM_SIZE = 32 * 1024 * 1024

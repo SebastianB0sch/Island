@@ -14,7 +14,7 @@ Make every GBA story location a real place in the 3D island, and give the story 
 - `Tools/dai/config.py`, `Tools/dai/layout.py`, `Tools/dai/assets/*.py`, `Tools/dai/geo.py`, `Tools/dai/palette.py`.
 - `DuelAcademyIsland/Content/Python/duel_academy/level.py`.
 - `DuelAcademyIsland/Content/Data/layout.json` / generated layout.
-- Donor: `C:\dev\argh\ue5\Source\DuelAcademy\AcademyInterior.cpp`, `SliferDorm.cpp` (layout/scale/furniture references), `IslandEnvironment.cpp`.
+- Donor: `$GX_ROM\ue5\Source\DuelAcademy\AcademyInterior.cpp`, `SliferDorm.cpp` (layout/scale/furniture references), `IslandEnvironment.cpp`.
 - A01: `LOCATION_MAP.md`; A03: anchors/schedules.
 
 ## Owned files

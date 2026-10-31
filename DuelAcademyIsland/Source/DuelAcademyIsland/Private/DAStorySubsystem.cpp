@@ -296,14 +296,18 @@ void UDAStorySubsystem::TryRegisterSaveProvider()
 
 bool UDAStorySubsystem::LoadJsonObject(const FString& RelativePath, TSharedPtr<FJsonObject>& Out, FString& OutError) const
 {
-	const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Story"), RelativePath);
+	// LoadContentJsonObject resolves paths relative to the content directory.
+	// Keep this relative so packaged builds (where ProjectContentDir is itself
+	// relative) do not combine the content directory twice.
+	const FString Path = FPaths::Combine(TEXT("Data/Story"), RelativePath);
 	return LoadContentJsonObject(Path, Out, OutError);
 }
 
 bool UDAStorySubsystem::LoadContentJsonObject(const FString& RelativeToContentData, TSharedPtr<FJsonObject>& Out, FString& OutError) const
 {
+	const FString ContentDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
 	const FString Path = FPaths::IsRelative(RelativeToContentData)
-		? FPaths::Combine(FPaths::ProjectContentDir(), RelativeToContentData)
+		? FPaths::Combine(ContentDir, RelativeToContentData)
 		: RelativeToContentData;
 	FString Raw;
 	if (!FFileHelper::LoadFileToString(Raw, *Path))

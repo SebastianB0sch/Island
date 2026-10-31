@@ -14,7 +14,7 @@
 
 namespace
 {
-	bool ReadJsonFile(const FString& Path, TSharedPtr<FJsonObject>& OutObject, FString& OutError)
+	bool PuzzleReadJsonFile(const FString& Path, TSharedPtr<FJsonObject>& OutObject, FString& OutError)
 	{
 		FString Raw;
 		if (!FFileHelper::LoadFileToString(Raw, *Path))
@@ -38,7 +38,7 @@ namespace
 		return true;
 	}
 
-	FString ReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	FString PuzzleReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
 	{
 		FString Value;
 		if (Object.IsValid())
@@ -48,7 +48,7 @@ namespace
 		return Value;
 	}
 
-	int32 ReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
+	int32 PuzzleReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
 	{
 		int32 Value = Default;
 		if (Object.IsValid())
@@ -58,7 +58,7 @@ namespace
 		return Value;
 	}
 
-	bool ReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bDefault = false)
+	bool PuzzleReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bDefault = false)
 	{
 		bool bValue = bDefault;
 		if (Object.IsValid())
@@ -68,7 +68,7 @@ namespace
 		return bValue;
 	}
 
-	TSharedPtr<FJsonObject> ReadObject(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	TSharedPtr<FJsonObject> PuzzleReadObject(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
 	{
 		const TSharedPtr<FJsonObject>* Found = nullptr;
 		if (Object.IsValid() && Object->TryGetObjectField(Field, Found) && Found && Found->IsValid())
@@ -78,7 +78,7 @@ namespace
 		return nullptr;
 	}
 
-	void ReadIntArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<int32>& Out)
+	void PuzzleReadIntArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<int32>& Out)
 	{
 		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
 		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values))
@@ -94,7 +94,7 @@ namespace
 		}
 	}
 
-	bool ReadSide(const TSharedPtr<FJsonObject>& Side, const TCHAR* Label,
+	bool PuzzleReadSide(const TSharedPtr<FJsonObject>& Side, const TCHAR* Label,
 		int32& OutLp, TArray<int32>& OutHand, TArray<int32>& OutDeck, TArray<int32>& OutGraveyard,
 		TArray<int32>& OutExtra, TArray<FDuelScenarioCard>& OutField, FString& OutError)
 	{
@@ -103,16 +103,16 @@ namespace
 			OutError = FString::Printf(TEXT("%s state is missing."), Label);
 			return false;
 		}
-		OutLp = ReadInt(Side, TEXT("lp"));
+		OutLp = PuzzleReadInt(Side, TEXT("lp"));
 		if (OutLp <= 0)
 		{
 			OutError = FString::Printf(TEXT("%s.lp must be positive."), Label);
 			return false;
 		}
-		ReadIntArray(Side, TEXT("hand"), OutHand);
-		ReadIntArray(Side, TEXT("deck"), OutDeck);
-		ReadIntArray(Side, TEXT("graveyard"), OutGraveyard);
-		ReadIntArray(Side, TEXT("extra"), OutExtra);
+		PuzzleReadIntArray(Side, TEXT("hand"), OutHand);
+		PuzzleReadIntArray(Side, TEXT("deck"), OutDeck);
+		PuzzleReadIntArray(Side, TEXT("graveyard"), OutGraveyard);
+		PuzzleReadIntArray(Side, TEXT("extra"), OutExtra);
 
 		const TArray<TSharedPtr<FJsonValue>>* FieldValues = nullptr;
 		if (Side->TryGetArrayField(TEXT("field"), FieldValues))
@@ -127,12 +127,12 @@ namespace
 					return false;
 				}
 				FDuelScenarioCard Card;
-				Card.CardId = ReadInt(Entry, TEXT("card_id"));
+				Card.CardId = PuzzleReadInt(Entry, TEXT("card_id"));
 				Card.Zone = EDuelZone::Monster;
 				Card.ZoneIndex = ZoneIndex++;
-				const FString Position = ReadString(Entry, TEXT("position")).ToLower();
+				const FString Position = PuzzleReadString(Entry, TEXT("position")).ToLower();
 				Card.bDefense = Position == TEXT("defense");
-				Card.bFaceDown = !ReadBool(Entry, TEXT("face_up"), true);
+				Card.bFaceDown = !PuzzleReadBool(Entry, TEXT("face_up"), true);
 				if (Card.CardId <= 0 || Card.ZoneIndex >= 5 || (!Position.IsEmpty() && Position != TEXT("attack") && Position != TEXT("defense")))
 				{
 					OutError = FString::Printf(TEXT("%s.field entry is invalid (card %d, position '%s')."),
@@ -161,10 +161,10 @@ namespace
 					return false;
 				}
 				FDuelScenarioCard Card;
-				Card.CardId = ReadInt(Entry, TEXT("card_id"));
+				Card.CardId = PuzzleReadInt(Entry, TEXT("card_id"));
 				Card.Zone = EDuelZone::SpellTrap;
 				Card.ZoneIndex = ZoneIndex++;
-				Card.bFaceDown = !ReadBool(Entry, TEXT("face_up"), false);
+				Card.bFaceDown = !PuzzleReadBool(Entry, TEXT("face_up"), false);
 				if (Card.CardId <= 0 || Card.ZoneIndex >= 5)
 				{
 					OutError = FString::Printf(TEXT("%s.spell_traps entry is invalid (card %d)."), Label, Card.CardId);
@@ -181,7 +181,7 @@ namespace
 		return true;
 	}
 
-	bool ReadSolution(const TArray<TSharedPtr<FJsonValue>>* Values,
+	bool PuzzleReadSolution(const TArray<TSharedPtr<FJsonValue>>* Values,
 		TArray<FDAPuzzleSolutionStep>& OutSolution, FString& OutError)
 	{
 		if (!Values || Values->Num() == 0)
@@ -198,11 +198,11 @@ namespace
 				return false;
 			}
 			FDAPuzzleSolutionStep Step;
-			Step.Action = ReadString(StepObject, TEXT("action"));
-			Step.CardId = ReadInt(StepObject, TEXT("card_id"));
-			Step.AttackerCardId = ReadInt(StepObject, TEXT("attacker_card_id"));
-			Step.Position = ReadString(StepObject, TEXT("position")).ToLower();
-			ReadIntArray(StepObject, TEXT("tribute_card_ids"), Step.TributeCardIds);
+			Step.Action = PuzzleReadString(StepObject, TEXT("action"));
+			Step.CardId = PuzzleReadInt(StepObject, TEXT("card_id"));
+			Step.AttackerCardId = PuzzleReadInt(StepObject, TEXT("attacker_card_id"));
+			Step.Position = PuzzleReadString(StepObject, TEXT("position")).ToLower();
+			PuzzleReadIntArray(StepObject, TEXT("tribute_card_ids"), Step.TributeCardIds);
 			if (Step.Action.IsEmpty())
 			{
 				OutError = TEXT("solution step has no action.");
@@ -230,14 +230,14 @@ namespace
 			}
 			else
 			{
-				Step.TargetCardId = ReadInt(StepObject, TEXT("target"));
+				Step.TargetCardId = PuzzleReadInt(StepObject, TEXT("target"));
 			}
 			OutSolution.Add(MoveTemp(Step));
 		}
 		return true;
 	}
 
-	int32 FindHandUid(const FDuelEngine& Engine, EDuelOwner Side, int32 CardId)
+	int32 PuzzleFindHandUid(const FDuelEngine& Engine, EDuelOwner Side, int32 CardId)
 	{
 		for (const FDuelCard& Card : Engine.GetSide(Side).Hand)
 		{
@@ -249,7 +249,7 @@ namespace
 		return 0;
 	}
 
-	int32 FindMonsterUid(const FDuelEngine& Engine, EDuelOwner Side, int32 CardId,
+	int32 PuzzleFindMonsterUid(const FDuelEngine& Engine, EDuelOwner Side, int32 CardId,
 		bool bRequireUnattacked = false, bool bRequireFaceUpAttack = false)
 	{
 		for (const FDuelCard& Card : Engine.GetSide(Side).Monsters)
@@ -271,7 +271,7 @@ namespace
 		return 0;
 	}
 
-	int32 FindSpellTrapUid(const FDuelEngine& Engine, EDuelOwner Side, int32 CardId, bool bFaceDown)
+	int32 PuzzleFindSpellTrapUid(const FDuelEngine& Engine, EDuelOwner Side, int32 CardId, bool bFaceDown)
 	{
 		for (const FDuelCard& Card : Engine.GetSide(Side).Spells)
 		{
@@ -283,7 +283,7 @@ namespace
 		return 0;
 	}
 
-	bool ExecuteStep(FDuelEngine& Duel, const FDAPuzzleSolutionStep& Step,
+	bool PuzzleExecuteStep(FDuelEngine& Duel, const FDAPuzzleSolutionStep& Step,
 		int32 StepIndex, FDAPuzzleReplayResult& OutResult, FString& OutError)
 	{
 		if (Step.Action == TEXT("attack"))
@@ -292,7 +292,7 @@ namespace
 			{
 				Duel.EnterBattlePhase();
 			}
-			const int32 AttackerUid = FindMonsterUid(Duel, EDuelOwner::Player, Step.AttackerCardId, true, true);
+			const int32 AttackerUid = PuzzleFindMonsterUid(Duel, EDuelOwner::Player, Step.AttackerCardId, true, true);
 			if (AttackerUid == 0)
 			{
 				OutError = FString::Printf(TEXT("step %d: attacker card %d is not a face-up, unused Attack Position monster."),
@@ -302,7 +302,7 @@ namespace
 			int32 TargetUid = 0;
 			if (!Step.bTargetDirect && Step.TargetCardId != 0)
 			{
-				TargetUid = FindMonsterUid(Duel, EDuelOwner::Opponent, Step.TargetCardId);
+				TargetUid = PuzzleFindMonsterUid(Duel, EDuelOwner::Opponent, Step.TargetCardId);
 				if (TargetUid == 0)
 				{
 					OutError = FString::Printf(TEXT("step %d: attack target card %d is not on the opponent's field."),
@@ -322,7 +322,7 @@ namespace
 
 		if (Step.Action == TEXT("normal_summon"))
 		{
-			const int32 SummonUid = FindHandUid(Duel, EDuelOwner::Player, Step.CardId);
+			const int32 SummonUid = PuzzleFindHandUid(Duel, EDuelOwner::Player, Step.CardId);
 			if (SummonUid == 0)
 			{
 				OutError = FString::Printf(TEXT("step %d: summon card %d is not in hand."), StepIndex, Step.CardId);
@@ -362,7 +362,7 @@ namespace
 
 		if (Step.Action == TEXT("activate_spell"))
 		{
-			const int32 Uid = FindHandUid(Duel, EDuelOwner::Player, Step.CardId);
+			const int32 Uid = PuzzleFindHandUid(Duel, EDuelOwner::Player, Step.CardId);
 			if (Uid == 0)
 			{
 				OutError = FString::Printf(TEXT("step %d: spell card %d is not in hand."), StepIndex, Step.CardId);
@@ -379,7 +379,7 @@ namespace
 
 		if (Step.Action == TEXT("set_spell_trap"))
 		{
-			const int32 Uid = FindHandUid(Duel, EDuelOwner::Player, Step.CardId);
+			const int32 Uid = PuzzleFindHandUid(Duel, EDuelOwner::Player, Step.CardId);
 			if (Uid == 0)
 			{
 				OutError = FString::Printf(TEXT("step %d: set card %d is not in hand."), StepIndex, Step.CardId);
@@ -396,7 +396,7 @@ namespace
 
 		if (Step.Action == TEXT("activate_trap"))
 		{
-			const int32 Uid = FindSpellTrapUid(Duel, EDuelOwner::Player, Step.CardId, true);
+			const int32 Uid = PuzzleFindSpellTrapUid(Duel, EDuelOwner::Player, Step.CardId, true);
 			if (Uid == 0)
 			{
 				OutError = FString::Printf(TEXT("step %d: trap card %d is not Set."), StepIndex, Step.CardId);
@@ -413,7 +413,7 @@ namespace
 
 		if (Step.Action == TEXT("change_position"))
 		{
-			const int32 Uid = FindMonsterUid(Duel, EDuelOwner::Player, Step.CardId, false, false);
+			const int32 Uid = PuzzleFindMonsterUid(Duel, EDuelOwner::Player, Step.CardId, false, false);
 			if (Uid == 0)
 			{
 				OutError = FString::Printf(TEXT("step %d: position-change card %d is not on the player's field."),
@@ -442,7 +442,7 @@ namespace
 		return false;
 	}
 
-	int32 CountValid(const TArray<FDuelCard>& Cards)
+	int32 PuzzleCountValid(const TArray<FDuelCard>& Cards)
 	{
 		int32 Count = 0;
 		for (const FDuelCard& Card : Cards)
@@ -455,9 +455,9 @@ namespace
 		return Count;
 	}
 
-	int32 CountSpellTraps(const FDuelSide& Side)
+	int32 PuzzleCountSpellTraps(const FDuelSide& Side)
 	{
-		return CountValid(Side.Spells);
+		return PuzzleCountValid(Side.Spells);
 	}
 }
 
@@ -465,25 +465,25 @@ bool FDAPuzzleRuntime::LoadPuzzleFile(const FString& Path, FDAPuzzleDefinition& 
 {
 	OutError.Reset();
 	TSharedPtr<FJsonObject> Root;
-	if (!ReadJsonFile(Path, Root, OutError))
+	if (!PuzzleReadJsonFile(Path, Root, OutError))
 	{
 		return false;
 	}
 
 	FDAPuzzleDefinition Puzzle;
-	Puzzle.Id = ReadString(Root, TEXT("id"));
-	Puzzle.Title = ReadString(Root, TEXT("title"));
-	Puzzle.Objective = ReadString(Root, TEXT("objective"));
-	Puzzle.Opponent = ReadString(Root, TEXT("opponent"));
-	Puzzle.Template = ReadString(Root, TEXT("template"));
-	Puzzle.Level = ReadInt(Root, TEXT("level"));
-	Puzzle.Seed = ReadInt(Root, TEXT("seed"));
-	Puzzle.TurnLimit = ReadInt(Root, TEXT("turn_limit"));
-	Puzzle.TimeLimitSeconds = ReadInt(Root, TEXT("time_limit"));
-	Puzzle.bEngineReady = ReadBool(Root, TEXT("engine_ready"), false);
-	if (const TSharedPtr<FJsonObject> Reward = ReadObject(Root, TEXT("reward")))
+	Puzzle.Id = PuzzleReadString(Root, TEXT("id"));
+	Puzzle.Title = PuzzleReadString(Root, TEXT("title"));
+	Puzzle.Objective = PuzzleReadString(Root, TEXT("objective"));
+	Puzzle.Opponent = PuzzleReadString(Root, TEXT("opponent"));
+	Puzzle.Template = PuzzleReadString(Root, TEXT("template"));
+	Puzzle.Level = PuzzleReadInt(Root, TEXT("level"));
+	Puzzle.Seed = PuzzleReadInt(Root, TEXT("seed"));
+	Puzzle.TurnLimit = PuzzleReadInt(Root, TEXT("turn_limit"));
+	Puzzle.TimeLimitSeconds = PuzzleReadInt(Root, TEXT("time_limit"));
+	Puzzle.bEngineReady = PuzzleReadBool(Root, TEXT("engine_ready"), false);
+	if (const TSharedPtr<FJsonObject> Reward = PuzzleReadObject(Root, TEXT("reward")))
 	{
-		Puzzle.RewardDp = ReadInt(Reward, TEXT("dp"));
+		Puzzle.RewardDp = PuzzleReadInt(Reward, TEXT("dp"));
 	}
 
 	if (Puzzle.Id.IsEmpty())
@@ -502,13 +502,13 @@ bool FDAPuzzleRuntime::LoadPuzzleFile(const FString& Path, FDAPuzzleDefinition& 
 		return false;
 	}
 
-	if (!ReadSide(ReadObject(Root, TEXT("player")), TEXT("player"), Puzzle.PlayerLp,
+	if (!PuzzleReadSide(PuzzleReadObject(Root, TEXT("player")), TEXT("player"), Puzzle.PlayerLp,
 			Puzzle.PlayerHand, Puzzle.PlayerDeck, Puzzle.PlayerGraveyard, Puzzle.PlayerExtra,
 			Puzzle.PlayerField, OutError))
 	{
 		return false;
 	}
-	if (!ReadSide(ReadObject(Root, TEXT("opponent_state")), TEXT("opponent_state"), Puzzle.OpponentLp,
+	if (!PuzzleReadSide(PuzzleReadObject(Root, TEXT("opponent_state")), TEXT("opponent_state"), Puzzle.OpponentLp,
 			Puzzle.OpponentHand, Puzzle.OpponentDeck, Puzzle.OpponentGraveyard, Puzzle.OpponentExtra,
 			Puzzle.OpponentField, OutError))
 	{
@@ -517,7 +517,7 @@ bool FDAPuzzleRuntime::LoadPuzzleFile(const FString& Path, FDAPuzzleDefinition& 
 
 	const TArray<TSharedPtr<FJsonValue>>* SolutionValues = nullptr;
 	if (!Root->TryGetArrayField(TEXT("solution"), SolutionValues)
-		|| !ReadSolution(SolutionValues, Puzzle.Solution, OutError))
+		|| !PuzzleReadSolution(SolutionValues, Puzzle.Solution, OutError))
 	{
 		return false;
 	}
@@ -652,10 +652,10 @@ bool FDAPuzzleRuntime::Replay(UCardDatabaseSubsystem* Database, const FDAPuzzleD
 		|| Opponent.Graveyard.Num() != Puzzle.OpponentGraveyard.Num()
 		|| Player.Extra.Num() != Puzzle.PlayerExtra.Num()
 		|| Opponent.Extra.Num() != Puzzle.OpponentExtra.Num()
-		|| CountValid(Player.Monsters) != ExpectedPlayerMonsters
-		|| CountValid(Opponent.Monsters) != ExpectedOpponentMonsters
-		|| CountSpellTraps(Player) != ExpectedPlayerSpells
-		|| CountSpellTraps(Opponent) != ExpectedOpponentSpells)
+		|| PuzzleCountValid(Player.Monsters) != ExpectedPlayerMonsters
+		|| PuzzleCountValid(Opponent.Monsters) != ExpectedOpponentMonsters
+		|| PuzzleCountSpellTraps(Player) != ExpectedPlayerSpells
+		|| PuzzleCountSpellTraps(Opponent) != ExpectedOpponentSpells)
 	{
 		OutError = TEXT("starting board does not match the authored puzzle state.");
 		return false;
@@ -674,7 +674,7 @@ bool FDAPuzzleRuntime::Replay(UCardDatabaseSubsystem* Database, const FDAPuzzleD
 
 	for (int32 StepIndex = 0; StepIndex < Puzzle.Solution.Num(); ++StepIndex)
 	{
-		if (!ExecuteStep(Duel, Puzzle.Solution[StepIndex], StepIndex, OutResult, OutError))
+		if (!PuzzleExecuteStep(Duel, Puzzle.Solution[StepIndex], StepIndex, OutResult, OutError))
 		{
 			return false;
 		}

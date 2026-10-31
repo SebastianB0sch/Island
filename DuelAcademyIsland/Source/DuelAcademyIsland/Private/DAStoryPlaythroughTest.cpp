@@ -135,7 +135,7 @@ namespace
 		return ((MonthNumber - 10) % 12 + 12) % 12;
 	}
 
-	bool IsA02OwnedCounter(const FString& Counter)
+	bool StoryTestIsA02OwnedCounter(const FString& Counter)
 	{
 		static const TSet<FString> Owned = {
 			TEXT("wins_total"), TEXT("wins_jaden"), TEXT("wins_syrus"), TEXT("wins_chumley"),
@@ -961,7 +961,7 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 			{
 				const FString Counter = PlayReadString(Outcome, TEXT("counter"), PlayReadString(Outcome, TEXT("id")));
 				const int32 Amount = PlayReadInt(Outcome, TEXT("amount"), 1);
-				if (!IsA02OwnedCounter(Counter) && Profile->GetCounter(Counter) < Amount)
+				if (!StoryTestIsA02OwnedCounter(Counter) && Profile->GetCounter(Counter) < Amount)
 				{
 					Result.EffectFailures.Add(FString::Printf(TEXT("counter %s is %d < %d"),
 						*Counter, Profile->GetCounter(Counter), Amount));

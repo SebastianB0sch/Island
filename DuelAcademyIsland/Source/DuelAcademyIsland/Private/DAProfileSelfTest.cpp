@@ -8,6 +8,7 @@
 // The command-line variant logs PASS/FAIL lines and exits with status 1 when
 // any check fails. The console variant only logs, so it is safe inside PIE.
 
+#include "DAProfileSelfTestSubsystem.h"
 #include "DACalendarSubsystem.h"
 #include "DAProfileSubsystem.h"
 #include "DASaveGame.h"
@@ -512,27 +513,36 @@ namespace
 		RunProfileSelfTest();
 	}
 
-	struct FProfileSelfTestBootstrap
-	{
-		FProfileSelfTestBootstrap()
-		{
-			if (FParse::Param(FCommandLine::Get(), TEXT("DAProfileSelfTest")))
-			{
-				FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([](float DeltaSeconds)
-				{
-					(void)DeltaSeconds;
-					const bool bPassed = RunProfileSelfTest();
-					FPlatformMisc::RequestExitWithStatus(false, bPassed ? 0 : 1, TEXT("DAProfileSelfTest"));
-					return false;
-				}), 0.5f);
-			}
-		}
-	};
-
-	FProfileSelfTestBootstrap GProfileSelfTestBootstrap;
-
 	FAutoConsoleCommandWithWorld GProfileSelfTestCommand(
 		TEXT("da.ProfileSelfTest"),
 		TEXT("Run the profile/calendar/title/save self-test. Usage: da.ProfileSelfTest"),
 		FConsoleCommandWithWorldDelegate::CreateStatic(&RunConsoleSelfTest));
+}
+
+void UDAProfileSelfTestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+	if (FParse::Param(FCommandLine::Get(), TEXT("DAProfileSelfTest")))
+	{
+		TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
+			FTickerDelegate::CreateUObject(this, &UDAProfileSelfTestSubsystem::Tick), 0.5f);
+	}
+}
+
+void UDAProfileSelfTestSubsystem::Deinitialize()
+{
+	if (TickerHandle.IsValid())
+	{
+		FTSTicker::GetCoreTicker().RemoveTicker(TickerHandle);
+		TickerHandle.Reset();
+	}
+	Super::Deinitialize();
+}
+
+bool UDAProfileSelfTestSubsystem::Tick(float DeltaSeconds)
+{
+	(void)DeltaSeconds;
+	const bool bPassed = RunProfileSelfTest();
+	FPlatformMisc::RequestExitWithStatus(false, bPassed ? 0 : 1, TEXT("DAProfileSelfTest"));
+	return false;
 }

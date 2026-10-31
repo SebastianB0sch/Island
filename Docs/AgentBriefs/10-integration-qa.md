@@ -14,7 +14,7 @@ Keep ten lanes shippable: freeze contracts, merge safely, build the test harness
 - All agent branches/worktrees.
 - `Docs/PORT_MASTERPLAN.md`, `Docs/AgentBriefs/*`.
 - Current build scripts/config: `DuelAcademyIsland/Build/**`, `Config/*.ini`, `DuelAcademyIsland.Build.cs`.
-- Donor CI/tests: `C:\dev\argh\.github/workflows/ci.yml`, `tests/`, `game3d/tests/`.
+- Donor CI/tests: `$GX_ROM\.github/workflows/ci.yml`, `tests/`, `game3d/tests/`.
 
 ## Owned files
 

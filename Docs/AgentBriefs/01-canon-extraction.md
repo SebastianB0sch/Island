@@ -10,11 +10,11 @@ Turn the GBA original and public guides into a complete, machine-readable, trace
 
 ## Inputs (read-only)
 
-- `C:\dev\argh\Yu-Gi-Oh! - GX Duel Academy (U).gba`
-- `C:\dev\argh\patched.sav`, `romhack/save_crypto.py`
-- `C:\dev\argh\decompress_rom.py`, `romhack/README.md`, `romhack/cards.py`, `romhack/research/*`
-- `C:\dev\argh\game3d\src\duel\engine.js`, `decklists.js`, `public/data/cards.json`
-- `C:\dev\argh\ue5\Source\DuelAcademy\DuelEngine.*`, `DuelAcademyData.*`
+- `$GX_ROM`
+- `$GX_ROM\patched.sav`, `romhack/save_crypto.py`
+- `$GX_ROM\decompress_rom.py`, `romhack/README.md`, `romhack/cards.py`, `romhack/research/*`
+- `$GX_ROM\game3d\src\duel\engine.js`, `decklists.js`, `public/data/cards.json`
+- `$GX_ROM\ue5\Source\DuelAcademy\DuelEngine.*`, `DuelAcademyData.*`
 - Public canon pages listed in Appendix D of the masterplan.
 - Target data: `C:\dev\GX\DuelAcademyIsland\Content\Data\cards.json`.
 

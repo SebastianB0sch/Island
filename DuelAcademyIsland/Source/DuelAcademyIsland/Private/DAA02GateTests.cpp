@@ -14,6 +14,7 @@
 // SaveNamedSlotWithContext/LoadNamedSlotWithContext. No UWorld/PIE is required.
 // Console equivalents: da.SaveFuzz and da.TwelveMonthTest.
 
+#include "DAA02GateTests.h"
 #include "DACalendarSubsystem.h"
 #include "DADeckLogic.h"
 #include "DAEconomyTypes.h"
@@ -2062,39 +2063,6 @@ namespace
 		RunTwelveMonthTest();
 	}
 
-	struct FDAA02GateBootstrap
-	{
-		FDAA02GateBootstrap()
-		{
-			int32 FuzzCount = 0;
-			const bool bFuzz = ParseFuzzCount(FuzzCount);
-			const bool bTwelveMonth = FParse::Param(FCommandLine::Get(), TEXT("DATwelveMonthTest"));
-			if (!bFuzz && !bTwelveMonth)
-			{
-				return;
-			}
-
-			const int32 FuzzSeed = ParseFuzzSeed();
-			FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([bFuzz, bTwelveMonth, FuzzCount, FuzzSeed](float DeltaSeconds)
-			{
-				(void)DeltaSeconds;
-				bool bPassed = true;
-				if (bFuzz)
-				{
-					bPassed = RunSaveFuzz(FuzzCount, FuzzSeed) && bPassed;
-				}
-				if (bTwelveMonth)
-				{
-					bPassed = RunTwelveMonthTest() && bPassed;
-				}
-				FPlatformMisc::RequestExitWithStatus(false, bPassed ? 0 : 1, TEXT("DAA02GateTests"));
-				return false;
-			}), 0.75f);
-		}
-	};
-
-	FDAA02GateBootstrap GA02GateBootstrap;
-
 	FAutoConsoleCommandWithWorldAndArgs GDAConsoleSaveFuzz(
 		TEXT("da.SaveFuzz"),
 		TEXT("Run the deterministic save/profile fuzz. Usage: da.SaveFuzz [count] [seed]"),
@@ -2104,4 +2072,46 @@ namespace
 		TEXT("da.TwelveMonthTest"),
 		TEXT("Run the 12-month day-by-day calendar/profile simulation with save/load checks."),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&RunConsoleTwelveMonth));
+}
+
+void UDAA02GateTestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+	bRunFuzz = ParseFuzzCount(FuzzCount);
+	bRunTwelveMonth = FParse::Param(FCommandLine::Get(), TEXT("DATwelveMonthTest"));
+	if (!bRunFuzz && !bRunTwelveMonth)
+	{
+		return;
+	}
+
+	FuzzSeed = ParseFuzzSeed();
+	TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
+		FTickerDelegate::CreateUObject(this, &UDAA02GateTestSubsystem::Tick), 0.75f);
+}
+
+void UDAA02GateTestSubsystem::Deinitialize()
+{
+	if (TickerHandle.IsValid())
+	{
+		FTSTicker::GetCoreTicker().RemoveTicker(TickerHandle);
+		TickerHandle.Reset();
+	}
+	Super::Deinitialize();
+}
+
+bool UDAA02GateTestSubsystem::Tick(float DeltaSeconds)
+{
+	(void)DeltaSeconds;
+	bool bPassed = true;
+	if (bRunFuzz)
+	{
+		bPassed = RunSaveFuzz(FuzzCount, FuzzSeed) && bPassed;
+	}
+	if (bRunTwelveMonth)
+	{
+		bPassed = RunTwelveMonthTest() && bPassed;
+	}
+	FPlatformMisc::RequestExitWithStatus(false, bPassed ? 0 : 1, TEXT("DAA02GateTests"));
+	return false;
 }

@@ -47,7 +47,7 @@ python Tools/canon/build_all.py
 
 The offline path needs only:
 
-- `C:\dev\argh\Yu-Gi-Oh! - GX Duel Academy (U).gba` (or `GX_ROM`), and
+- `$GX_ROM` (or `GX_ROM`), and
 - `DuelAcademyIsland/Content/Data/cards.json`.
 
 Guide facts are cached under `Tools/canon/cache/`. Opponent deck lists are

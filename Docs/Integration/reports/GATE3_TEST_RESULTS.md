@@ -37,6 +37,22 @@
 | `-DATwelveMonthTest` | **PASS** | `365 days, 12 months, 45 saves/loads, 10,947 checks, 0 failures` |
 | `-DAPortalTest` | **PASS** | `188 passed, 0 failed`; ten interior entries + classroom return |
 | `-DAGameplayUITest` | **PASS** | shop/deck/exam/PDA screenshots at 1920×1080 |
+| Packaged Shipping title | **PASS** | `Builds/Win64Shipping` archive launches to the title screen |
+| Packaged `-DADuelSelfTest=1000` | **PASS** | `457/543 wins, 0 stalls, 0 invariant failures, deck audit 36/36, puzzle audit 100/100`, exit 0 |
+| Packaged `-DAPuzzleExamSelfTest` | **PASS** | Puzzle 102/102, Exam 104/104, exit 0 |
+| Packaged story load | **PASS** | story JSON resolves from the pak after the content-path fix |
+
+## 2b. Packaging and static initialization
+
+- Shipping archive: 1,590 cooked packages, 578.96 MiB IoStore container, 0 cook errors.
+- Development archive: same content, logs enabled, used for packaged self-tests.
+- Two global bootstrap objects (`FDAA02GateBootstrap`, `FProfileSelfTestBootstrap`)
+  were calling `FCommandLine`/tickers during static initialization and crashed
+  before logging with `777006 (CrashDuringStaticInit)`. Both are now
+  `UGameInstanceSubsystem`s.
+- Raw `Content/Data/*.json` files are present in the pak; packaged story paths
+  are resolved once against `ProjectContentDir()`.
+- Details: `Docs/PACKAGING.md`.
 
 ## 3. Content dimensions
 
