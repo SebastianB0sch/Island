@@ -5,6 +5,7 @@
 #include "CanvasItem.h"
 #include "DACalendarSubsystem.h"
 #include "DACardRecords.h"
+#include "DADeckLogic.h"
 #include "DADialogueUI.h"
 #include "DAHUD.h"
 #include "DAIslandSubsystem.h"
@@ -14,6 +15,7 @@
 #include "DASettings.h"
 #include "DAStudentCharacter.h"
 #include "DuelAcademyIsland.h"
+#include "Dom/JsonObject.h"
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Engine/Font.h"
@@ -21,7 +23,11 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "RenderUtils.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 namespace
 {
@@ -53,6 +59,155 @@ namespace
 	{
 		const int32 Index = FMath::Clamp(static_cast<int32>(Tab), 0, DAPDATabCount - 1);
 		return static_cast<EDAPDATab>(Index);
+	}
+
+	FString PDAMailDisplayName(const FString& ContactId)
+	{
+		FString Fallback = ContactId.Replace(TEXT("_"), TEXT(" "));
+		if (!Fallback.IsEmpty())
+		{
+			Fallback = Fallback.Left(1).ToUpper() + Fallback.Mid(1);
+		}
+		return DAUIData::Label(FString::Printf(TEXT("mail.contact.%s"), *ContactId.ToLower()), Fallback);
+	}
+
+	struct FDAPDAMailContactDef
+	{
+		FString ContactId;
+		TArray<FDAPDAMailView> Messages;
+		FString DuelRequestId;
+		FString DuelRequestOpponent;
+		FString DuelRequestDeck;
+	};
+
+	struct FDAPDAMailCache
+	{
+		bool bAttempted = false;
+		TArray<FDAPDAMailContactDef> Contacts;
+	};
+
+	const FDAPDAMailCache& GetPDAMailCache()
+	{
+		static FDAPDAMailCache Cache;
+		if (Cache.bAttempted)
+		{
+			return Cache;
+		}
+		Cache.bAttempted = true;
+
+		const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Story/emails.json"));
+		FString Raw;
+		if (!FFileHelper::LoadFileToString(Raw, *Path))
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("PDA mail: A03 emails.json not found at %s."), *Path);
+			return Cache;
+		}
+		TSharedPtr<FJsonObject> Root;
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
+		if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("PDA mail: could not parse %s."), *Path);
+			return Cache;
+		}
+
+		const TArray<TSharedPtr<FJsonValue>>* ContactValues = nullptr;
+		if (!Root->TryGetArrayField(TEXT("contacts"), ContactValues) || !ContactValues)
+		{
+			return Cache;
+		}
+		for (const TSharedPtr<FJsonValue>& ContactValue : *ContactValues)
+		{
+			const TSharedPtr<FJsonObject>* ContactObject = nullptr;
+			if (!ContactValue.IsValid() || !ContactValue->TryGetObject(ContactObject) || !ContactObject)
+			{
+				continue;
+			}
+			FDAPDAMailContactDef Def;
+			(*ContactObject)->TryGetStringField(TEXT("contact"), Def.ContactId);
+			if (Def.ContactId.IsEmpty())
+			{
+				continue;
+			}
+
+			const TArray<TSharedPtr<FJsonValue>>* MessageValues = nullptr;
+			if ((*ContactObject)->TryGetArrayField(TEXT("messages"), MessageValues) && MessageValues)
+			{
+				for (const TSharedPtr<FJsonValue>& MessageValue : *MessageValues)
+				{
+					const TSharedPtr<FJsonObject>* MessageObject = nullptr;
+					if (!MessageValue.IsValid() || !MessageValue->TryGetObject(MessageObject) || !MessageObject)
+					{
+						continue;
+					}
+					FDAPDAMailView View;
+					View.ContactId = Def.ContactId;
+					(*MessageObject)->TryGetStringField(TEXT("id"), View.Id);
+					(*MessageObject)->TryGetStringField(TEXT("subject"), View.Subject);
+					(*MessageObject)->TryGetStringField(TEXT("body"), View.Body);
+					View.Date = TEXT("INBOX");
+					if (View.Body.Len() > 78)
+					{
+						View.Preview = View.Body.Left(75) + TEXT("...");
+					}
+					else
+					{
+						View.Preview = View.Body;
+					}
+					Def.Messages.Add(MoveTemp(View));
+				}
+			}
+
+			const TArray<TSharedPtr<FJsonValue>>* RequestValues = nullptr;
+			if ((*ContactObject)->TryGetArrayField(TEXT("duel_requests"), RequestValues) && RequestValues && RequestValues->Num() > 0)
+			{
+				const TSharedPtr<FJsonObject>* RequestObject = nullptr;
+				if ((*RequestValues)[0].IsValid() && (*RequestValues)[0]->TryGetObject(RequestObject) && RequestObject)
+				{
+					(*RequestObject)->TryGetStringField(TEXT("id"), Def.DuelRequestId);
+					(*RequestObject)->TryGetStringField(TEXT("opponent"), Def.DuelRequestOpponent);
+					(*RequestObject)->TryGetStringField(TEXT("deck"), Def.DuelRequestDeck);
+				}
+			}
+			Cache.Contacts.Add(MoveTemp(Def));
+		}
+		return Cache;
+	}
+
+	void BuildPDAMail(const UDAProfileSubsystem* Profile, TArray<FDAPDAMailView>& OutMail)
+	{
+		OutMail.Reset();
+		if (!Profile || !Profile->IsInitialized())
+		{
+			return;
+		}
+		for (const FDAPDAMailContactDef& Contact : GetPDAMailCache().Contacts)
+		{
+			if (!Profile->IsEmailUnlocked(Contact.ContactId))
+			{
+				continue;
+			}
+			const FString DisplayName = PDAMailDisplayName(Contact.ContactId);
+			for (const FDAPDAMailView& Message : Contact.Messages)
+			{
+				FDAPDAMailView View = Message;
+				View.From = DisplayName;
+				View.bRead = Profile->IsEmailRead(Contact.ContactId, Message.Id);
+				OutMail.Add(MoveTemp(View));
+			}
+			if (!Contact.DuelRequestId.IsEmpty() && Profile->HasPendingDuelRequest(Contact.ContactId))
+			{
+				FDAPDAMailView View;
+				View.Id = Contact.DuelRequestId;
+				View.ContactId = Contact.ContactId;
+				View.From = DisplayName;
+				View.Subject = DAUIData::Label(TEXT("mail.duel.subject"), TEXT("Duel request"));
+				View.Body = FString::Printf(TEXT("%s has challenged you to a duel."), *DisplayName);
+				View.Preview = View.Body;
+				View.Date = TEXT("INBOX");
+				View.bDuelRequest = true;
+				OutMail.Add(MoveTemp(View));
+			}
+		}
 	}
 }
 
@@ -111,6 +266,7 @@ void FDAPDAUI::Open(EDAPDATab Tab)
 	ActiveTab = ClampTab(Tab);
 	Selection = 0;
 	ListScroll = 0;
+	PendingLoadSelection = INDEX_NONE;
 	RefreshViewModel();
 	if (ActiveTab == EDAPDATab::Calendar)
 	{
@@ -137,6 +293,7 @@ void FDAPDAUI::Close()
 	HitTargets.Reset();
 	HoveredTab = INDEX_NONE;
 	HoveredRow = INDEX_NONE;
+	PendingLoadSelection = INDEX_NONE;
 	OnClosed.Broadcast();
 }
 
@@ -162,6 +319,7 @@ void FDAPDAUI::SetTab(EDAPDATab Tab)
 	ActiveTab = NewTab;
 	Selection = 0;
 	ListScroll = 0;
+	PendingLoadSelection = INDEX_NONE;
 	HoveredRow = INDEX_NONE;
 	RefreshViewModel();
 	if (ActiveTab == EDAPDATab::Calendar)
@@ -317,24 +475,33 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 		}
 	}
 
-	// Deck tab: read the existing starter decks; A06 replaces this with player decks.
-	UCardDatabaseSubsystem* Cards = GetGameInstance() ? GetGameInstance()->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
-	if (Cards)
+	// Deck tab: A06 player decks only (not the starter catalogue).
+	UDADeckLogic* DeckLogic = GameInstance ? GameInstance->GetSubsystem<UDADeckLogic>() : nullptr;
+	if (DeckLogic)
 	{
-		for (const FStarterDeckDef& Def : Cards->GetDecks())
+		ViewModel.Deck.bPlaceholder = false;
+		const FString ActiveDeckId = DeckLogic->GetActiveDeckId();
+		for (const FDAEDeck& Deck : DeckLogic->GetPlayerDecksRef())
 		{
 			FDAPDADeckSummary Summary;
-			Summary.Id = Def.Id;
-			Summary.Name = Def.Name;
-			Summary.Subtitle = Def.Subtitle;
-			Summary.MainCount = Def.Cards.Num();
-			Summary.ExtraCount = 0;
-			Summary.bValid = true;
-			Summary.Validation = TEXT("Starter deck - A06 validation pending");
+			Summary.Id = Deck.Id;
+			Summary.Name = Deck.Name;
+			Summary.Subtitle = Deck.Id.Equals(ActiveDeckId, ESearchCase::IgnoreCase)
+				? FString(TEXT("ACTIVE DECK")) : FString(TEXT("Player deck"));
+			Summary.MainCount = Deck.Main.Num();
+			Summary.ExtraCount = Deck.Extra.Num();
+			Summary.bValid = DeckLogic->IsDeckLegal(Deck);
+			Summary.Validation = Summary.bValid
+				? FString(TEXT("LEGAL"))
+				: DeckLogic->GetDeckValidationMessage(Deck);
+			if (Summary.Validation.Len() > 54)
+			{
+				Summary.Validation = Summary.Validation.Left(51) + TEXT("...");
+			}
 			ViewModel.Deck.Decks.Add(Summary);
 		}
 	}
-	ViewModel.Deck.Note = TEXT("Open the deck editor once A06's DADeckUI is connected.");
+	ViewModel.Deck.Note = TEXT("Enter: open the deck editor. N/C/R/Del work there.");
 
 	// Save slots: A02 is the source of truth (0 = autosave, 1..3 = manual).
 	const auto MakeSlotDate = [Calendar](const FDASaveSlotInfo& Info) -> FString
@@ -367,6 +534,7 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 		{
 			FDAPDASaveSlotView View;
 			View.Id = Info.SlotName;
+			View.SlotIndex = Info.SlotIndex;
 			View.Label = Info.bIsAutosave ? FString(TEXT("AUTOSAVE")) : FString::Printf(TEXT("SLOT %d"), Info.SlotIndex);
 			View.Date = MakeSlotDate(Info);
 			View.PlayerName = Info.PlayerName.IsEmpty() ? FString(TEXT("New Student")) : Info.PlayerName;
@@ -386,6 +554,7 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 		{
 			FDAPDASaveSlotView View;
 			View.Id = Slot == 0 ? FString(TEXT("autosave")) : FString::Printf(TEXT("slot_%d"), Slot);
+			View.SlotIndex = Slot;
 			View.Label = Slot == 0 ? FString(TEXT("AUTOSAVE")) : FString::Printf(TEXT("SLOT %d"), Slot);
 			View.Date = TEXT("EMPTY SLOT");
 			View.bAutosave = Slot == 0;
@@ -480,8 +649,14 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 		AddRecord(TEXT("Timed Clears"), TEXT("0  (placeholder)"), false);
 	}
 
+	ViewModel.Mail.Reset();
+	if (bLiveProfile)
+	{
+		BuildPDAMail(Profile, ViewModel.Mail);
+	}
+
 	ViewModel.FooterNote = bLiveProfile
-		? FString(TEXT("Live A02 profile, calendar, settings and save data."))
+		? FString(TEXT("Live A02/A03/A06 profile, calendar, mail, deck and save data."))
 		: DAUIData::Label(TEXT("pda.footer.placeholder"),
 			TEXT("PDA shell - panes marked placeholder await A02/A03/A06/A07."));
 }
@@ -534,6 +709,7 @@ void FDAPDAUI::NormalizeViewModel()
 		{
 			FDAPDASaveSlotView View;
 			View.Id = Slot == 0 ? FString(TEXT("autosave")) : FString::Printf(TEXT("slot_%d"), Slot);
+			View.SlotIndex = Slot;
 			View.Label = Slot == 0 ? FString(TEXT("AUTOSAVE")) : FString::Printf(TEXT("SLOT %d"), Slot);
 			View.Date = TEXT("EMPTY SLOT");
 			View.bAutosave = Slot == 0;
@@ -771,7 +947,7 @@ FString FDAPDAUI::RowDetailBody(int32 Index) const
 			FString Body = Deck.Subtitle;
 			Body += FString::Printf(TEXT("\n\nMain Deck: %d\nExtra Deck: %d\nStatus: %s"),
 				Deck.MainCount, Deck.ExtraCount, *Deck.Validation);
-			Body += TEXT("\n\nEnter: open the deck editor hook (A06).");
+			Body += TEXT("\n\nEnter: open the deck editor.");
 			return Body;
 		}
 		break;
@@ -823,7 +999,7 @@ FString FDAPDAUI::RowDetailBody(int32 Index) const
 			{
 				Body = TEXT("Empty slot. Start a new game or save here later.");
 			}
-			Body += TEXT("\n\nSave/load is handled by A02's SaveSubsystem; this shell shows live slot metadata.");
+			Body += TEXT("\n\nOccupied slots: press Enter twice to load. Empty slots: press Enter to save.");
 			return Body;
 		}
 		break;
@@ -964,6 +1140,7 @@ void FDAPDAUI::MoveSelection(int32 Delta)
 	if (NewSelection != Selection)
 	{
 		Selection = NewSelection;
+		PendingLoadSelection = INDEX_NONE;
 		PlaySfx(TEXT("A_UIClick"), 0.3f);
 	}
 }
@@ -982,7 +1159,12 @@ bool FDAPDAUI::ActivateSelection()
 void FDAPDAUI::SetSelection(int32 InSelection)
 {
 	const int32 Count = RowCountForTab(ActiveTab);
-	Selection = Count > 0 ? FMath::Clamp(InSelection, 0, Count - 1) : 0;
+	const int32 NewSelection = Count > 0 ? FMath::Clamp(InSelection, 0, Count - 1) : 0;
+	if (NewSelection != Selection)
+	{
+		PendingLoadSelection = INDEX_NONE;
+	}
+	Selection = NewSelection;
 }
 
 void FDAPDAUI::ActivateRow(int32 Index)
@@ -1029,6 +1211,10 @@ void FDAPDAUI::ActivateRow(int32 Index)
 		}
 		OnAction.Broadcast(FName(TEXT("calendar.select")),
 			FString::FromInt(ViewModel.Calendar.Days[Index].Day));
+		if (ViewModel.Calendar.Days[Index].bExam)
+		{
+			OnAction.Broadcast(FName(TEXT("exam.open")), FString());
+		}
 		return;
 	}
 	case EDAPDATab::Deck:
@@ -1047,6 +1233,16 @@ void FDAPDAUI::ActivateRow(int32 Index)
 			return;
 		}
 		FDAPDAMailView& Mail = ViewModel.Mail[Index];
+		if (!Mail.bDuelRequest && !Mail.ContactId.IsEmpty())
+		{
+			if (UGameInstance* GameInstance = GetGameInstance())
+			{
+				if (UDAProfileSubsystem* Profile = GameInstance->GetSubsystem<UDAProfileSubsystem>())
+				{
+					Profile->MarkEmailRead(Mail.ContactId, Mail.Id);
+				}
+			}
+		}
 		Mail.bRead = true;
 		OnAction.Broadcast(FName(TEXT("mail.open")), Mail.Id);
 		return;
@@ -1060,15 +1256,27 @@ void FDAPDAUI::ActivateRow(int32 Index)
 		const FDAPDASaveSlotView& Slot = ViewModel.SaveSlots[Index];
 		if (Slot.bCorrupt)
 		{
+			PendingLoadSelection = INDEX_NONE;
 			ViewModel.FooterNote = TEXT("This save is corrupt and cannot be loaded.");
 			return;
 		}
 		if (!Slot.bOccupied)
 		{
-			ViewModel.FooterNote = TEXT("Empty slot.");
+			PendingLoadSelection = INDEX_NONE;
+			OnAction.Broadcast(FName(TEXT("save.slot")),
+				FString::Printf(TEXT("save:%d"), Slot.SlotIndex));
 			return;
 		}
-		OnAction.Broadcast(FName(TEXT("save.slot")), Slot.Id);
+		if (PendingLoadSelection != Index)
+		{
+			PendingLoadSelection = Index;
+			ViewModel.FooterNote = FString::Printf(
+				TEXT("Press Enter again to LOAD %s. Choose another slot to cancel."), *Slot.Label);
+			return;
+		}
+		PendingLoadSelection = INDEX_NONE;
+		OnAction.Broadcast(FName(TEXT("save.slot")),
+			FString::Printf(TEXT("load:%d"), Slot.SlotIndex));
 		return;
 	}
 	case EDAPDATab::Options:
@@ -1147,8 +1355,19 @@ void FDAPDAUI::HandleHit(const FDAPDAHitTarget& Hit)
 		SetSelection(Hit.Index);
 		if (ViewModel.Calendar.Days.IsValidIndex(Hit.Index))
 		{
-			OnAction.Broadcast(FName(TEXT("calendar.select")),
-				FString::FromInt(ViewModel.Calendar.Days[Hit.Index].Day));
+			const FDAPDACalendarCell& Cell = ViewModel.Calendar.Days[Hit.Index];
+			OnAction.Broadcast(FName(TEXT("calendar.select")), FString::FromInt(Cell.Day));
+			if (Cell.bExam)
+			{
+				OnAction.Broadcast(FName(TEXT("exam.open")), FString());
+			}
+		}
+	}
+	else if (Hit.Action == TEXT("deck_edit"))
+	{
+		if (ActiveTab == EDAPDATab::Deck)
+		{
+			ActivateRow(Selection);
 		}
 	}
 	else if (Hit.Action == TEXT("close"))
@@ -1503,14 +1722,26 @@ void FDAPDAUI::DrawDetailPanel(float X, float Y, float W, float H)
 		TextY += LineH;
 	}
 
+	if (ActiveTab == EDAPDATab::Deck && ViewModel.Deck.Decks.IsValidIndex(Selection))
+	{
+		const float BW = 110.f * S;
+		const float BH = 30.f * S;
+		const float BX = X + W - BW - 24.f * S;
+		const float BY = Y + H - 44.f * S;
+		DrawRect(PdaAlpha(PdaGold, 0.2f), BX, BY, BW, BH);
+		DrawRect(PdaGold, BX, BY, 3.f * S, BH);
+		DrawText(TEXT("EDIT"), BX + 20.f * S, BY + 6.f * S, PdaPaper, 0.74f);
+		AddHit(TEXT("deck_edit"), INDEX_NONE, BX, BY, BW, BH);
+	}
+
 	// Footer action hint per tab.
 	FString Hint;
 	switch (ActiveTab)
 	{
 	case EDAPDATab::Map:       Hint = TEXT("Enter / click: fast travel"); break;
-	case EDAPDATab::Deck:      Hint = TEXT("Enter / click: open deck editor hook (A06)"); break;
-	case EDAPDATab::Mail:      Hint = TEXT("Enter / click: read message (A03 hook)"); break;
-	case EDAPDATab::Save:      Hint = TEXT("Live A02 slots. Load/save UI is a later pass."); break;
+	case EDAPDATab::Deck:      Hint = TEXT("Enter / click: open deck editor"); break;
+	case EDAPDATab::Mail:      Hint = TEXT("Enter / click: read message"); break;
+	case EDAPDATab::Save:      Hint = TEXT("Enter: save empty / load occupied twice"); break;
 	case EDAPDATab::Options:   Hint = TEXT("Enter / click: cycle value"); break;
 	case EDAPDATab::Records:   Hint = TEXT("A02/A07 counters will replace the placeholders"); break;
 	case EDAPDATab::Limitation: Hint = TEXT("A01/A07 limitation data will populate this list"); break;

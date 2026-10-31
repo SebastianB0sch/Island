@@ -5,8 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
 #include "DADialogueUI.h"
+#include "DADeckUI.h"
 #include "DADuelUI.h"
+#include "DAExamUI.h"
 #include "DAPDAUI.h"
+#include "DAShopUI.h"
 #include "DATitleScreen.h"
 #include "DAHUD.generated.h"
 
@@ -33,7 +36,11 @@ public:
 	bool IsPDAOpen() const { return PDAUI.IsValid() && PDAUI->IsOpen(); }
 	bool IsDialogueOpen() const { return DialogueUI.IsValid() && DialogueUI->IsOpen(); }
 	bool IsTitleOpen() const { return TitleScreen.IsValid() && TitleScreen->IsOpen(); }
-	bool IsModalOpen() const { return bMapOpen || bHelpOpen || IsDuelOpen() || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen(); }
+	bool IsShopOpen() const { return ShopUI.IsValid() && ShopUI->IsOpen(); }
+	bool IsDeckEditorOpen() const { return DeckUI.IsValid() && DeckUI->IsOpen(); }
+	bool IsExamOpen() const { return ExamUI.IsValid() && ExamUI->IsOpen(); }
+	bool IsGameplayUIOpen() const { return IsShopOpen() || IsDeckEditorOpen() || IsExamOpen(); }
+	bool IsModalOpen() const { return bMapOpen || bHelpOpen || IsDuelOpen() || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen() || IsGameplayUIOpen(); }
 
 	/** Opens the starter-deck picker for a duel against the given opponent. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
@@ -86,14 +93,29 @@ public:
 	void OpenTitle();
 	void CloseTitle();
 
+	// ---------------------------------------------------------------- gameplay screens
+	void OpenShop();
+	void CloseShop();
+	void OpenDeckEditor(const FString& DeckId = FString());
+	void CloseDeckEditor();
+	void OpenExam(int32 MonthIndex = 0);
+	void CloseExam();
+
+	/** Test-only: seed the transient profile/decks/inventory/mail state used by -DAGameplayUITest. */
+	void PrepareGameplayUITestState();
+
 	FDADialogueUI* GetDialogueUI() const { return DialogueUI.Get(); }
 	FDAPDAUI* GetPDAUI() const { return PDAUI.Get(); }
 	FDATitleScreen* GetTitleScreen() const { return TitleScreen.Get(); }
+	FDAShopUI* GetShopUI() const { return ShopUI.Get(); }
+	FDADeckUI* GetDeckUI() const { return DeckUI.Get(); }
+	FDAExamUI* GetExamUI() const { return ExamUI.Get(); }
 
 private:
 	// ---------------------------------------------------------------- UI hosting
 	void UpdateInputMode();
 	void ApplySettingsToUI();
+	void WireEconomySystems();
 	void HandlePDAAction(FName ActionId, const FString& Payload);
 	void HandlePDAClosed();
 	void HandleDialogueClosed(const FString& ConversationId);
@@ -101,6 +123,9 @@ private:
 	void HandleTitleContinue(int32 SlotIndex);
 	void HandleTitleOptionsChanged();
 	void HandleTitleClosed();
+	void HandleShopClosed();
+	void HandleDeckClosed();
+	void HandleExamClosed();
 
 private:
 	// drawing helpers
@@ -145,5 +170,8 @@ private:
 	TUniquePtr<FDADialogueUI> DialogueUI;
 	TUniquePtr<FDAPDAUI> PDAUI;
 	TUniquePtr<FDATitleScreen> TitleScreen;
+	TUniquePtr<FDAShopUI> ShopUI;
+	TUniquePtr<FDADeckUI> DeckUI;
+	TUniquePtr<FDAExamUI> ExamUI;
 	TWeakObjectPtr<ADALocationVolume> HoveredZone;
 };

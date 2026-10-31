@@ -3,15 +3,20 @@
 #include "DAHUD.h"
 
 #include "CanvasItem.h"
+#include "DAInteractable.h"
 #include "DAInteractableInterface.h"
+#include "DAInventorySubsystem.h"
 #include "DAIslandManager.h"
 #include "DAIslandSubsystem.h"
+#include "DADeckLogic.h"
 #include "DALocationVolume.h"
 #include "DAProfileSubsystem.h"
 #include "DASaveGame.h"
 #include "DASettings.h"
+#include "DAShopSubsystem.h"
 #include "DAStudentCharacter.h"
 #include "DAStorySubsystem.h"
+#include "DAExamSubsystem.h"
 #include "DACardRecords.h"
 #include "DADuelEngine.h"
 #include "DuelAcademyIsland.h"
@@ -65,6 +70,7 @@ namespace
 			TEXT("DAOpeningTest"),
 			TEXT("DAStorySelfTest"),
 			TEXT("DANewGameTest"),
+			TEXT("DAGameplayUITest"),
 			TEXT("DADuelScreenshot"),
 			TEXT("DADuelSelfTest"),
 			TEXT("DADialogueTest"),
@@ -106,6 +112,13 @@ void ADAHUD::BeginPlay()
 	TitleScreen->OnContinue.AddUObject(this, &ADAHUD::HandleTitleContinue);
 	TitleScreen->OnOptionsChanged.AddUObject(this, &ADAHUD::HandleTitleOptionsChanged);
 	TitleScreen->OnClosed.AddUObject(this, &ADAHUD::HandleTitleClosed);
+	ShopUI = MakeUnique<FDAShopUI>(this);
+	ShopUI->OnClosed.AddUObject(this, &ADAHUD::HandleShopClosed);
+	DeckUI = MakeUnique<FDADeckUI>(this);
+	DeckUI->OnClosed.AddUObject(this, &ADAHUD::HandleDeckClosed);
+	ExamUI = MakeUnique<FDAExamUI>(this);
+	ExamUI->OnClosed.AddUObject(this, &ADAHUD::HandleExamClosed);
+	WireEconomySystems();
 	ApplySettingsToUI();
 
 	// Debug harnesses (only active with the matching command-line switch):
@@ -280,11 +293,93 @@ void ADAHUD::BeginPlay()
 			FScreenshotRequest::RequestScreenshot(TEXT("DANewGameOpening.png"), false, false);
 		}), 4.0f, false);
 	}
+
+	// Gameplay UI screenshot harness:
+	//   -DAGameplayUITest captures shop, deck editor, exam written/result and the
+	//   PDA deck/mail/save tabs at the requested resolution, then exits.
+	if (FParse::Param(FCommandLine::Get(), TEXT("DAGameplayUITest")))
+	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
+
+		After(0.6f, [](ADAHUD* HUD)
+		{
+			HUD->PrepareGameplayUITestState();
+		});
+		After(1.2f, [](ADAHUD* HUD) { HUD->OpenShop(); });
+		After(1.8f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DAShop.png"), false, false); });
+		After(2.1f, [](ADAHUD* HUD) { HUD->CloseShop(); });
+		After(2.4f, [](ADAHUD* HUD) { HUD->OpenDeckEditor(); });
+		After(3.0f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADeckEditor.png"), false, false); });
+		After(3.3f, [](ADAHUD* HUD) { HUD->CloseDeckEditor(); });
+		After(3.6f, [](ADAHUD* HUD) { HUD->OpenExam(); });
+		After(4.2f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DAExamWritten.png"), false, false); });
+		After(4.5f, [](ADAHUD* HUD)
+		{
+			if (FDAExamUI* Exam = HUD->GetExamUI())
+			{
+				Exam->DebugAnswerAllWritten();
+			}
+		});
+		After(4.8f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DAExamWrittenDone.png"), false, false); });
+		After(5.0f, [](ADAHUD* HUD)
+		{
+			if (FDAExamUI* Exam = HUD->GetExamUI())
+			{
+				Exam->DebugResolveTimed(true);
+			}
+		});
+		After(5.3f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DAExamTimed.png"), false, false); });
+		After(5.5f, [](ADAHUD* HUD)
+		{
+			if (FDAExamUI* Exam = HUD->GetExamUI())
+			{
+				Exam->DebugFinishPractical();
+			}
+		});
+		After(5.8f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DAExamResult.png"), false, false); });
+		After(6.1f, [](ADAHUD* HUD) { HUD->CloseExam(); });
+		After(6.4f, [](ADAHUD* HUD) { HUD->OpenPDA(EDAPDATab::Deck); });
+		After(7.0f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DAPDA_DeckGameplay.png"), false, false); });
+		After(7.3f, [](ADAHUD* HUD)
+		{
+			if (FDAPDAUI* PDA = HUD->GetPDAUI())
+			{
+				PDA->SetTab(EDAPDATab::Mail);
+			}
+		});
+		After(7.9f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DAPDA_Mail.png"), false, false); });
+		After(8.2f, [](ADAHUD* HUD)
+		{
+			if (FDAPDAUI* PDA = HUD->GetPDAUI())
+			{
+				PDA->SetTab(EDAPDATab::Save);
+			}
+		});
+		After(8.8f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DAPDA_Save.png"), false, false); });
+		After(9.1f, [](ADAHUD* HUD) { HUD->ClosePDA(); });
+		After(9.8f, [](ADAHUD* HUD) { FPlatformMisc::RequestExit(false); });
+	}
 }
 
 void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& OpponentName, const FString& OpponentDeckId)
 {
-	if (IsTitleOpen())
+	if (IsTitleOpen() || IsGameplayUIOpen())
 	{
 		return;
 	}
@@ -339,7 +434,7 @@ void ADAHUD::DebugFinishDuelWin()
 
 void ADAHUD::BeginDialogue(const TArray<FDADialogueLine>& Lines, const FString& ConversationId)
 {
-	if (IsDuelOpen() || IsTitleOpen())
+	if (IsDuelOpen() || IsTitleOpen() || IsGameplayUIOpen())
 	{
 		return;
 	}
@@ -375,7 +470,7 @@ void ADAHUD::CloseDialogue()
 
 void ADAHUD::OpenPDA(EDAPDATab Tab)
 {
-	if (IsDuelOpen() || IsDialogueOpen() || IsTitleOpen())
+	if (IsDuelOpen() || IsDialogueOpen() || IsTitleOpen() || IsGameplayUIOpen())
 	{
 		return;
 	}
@@ -405,7 +500,7 @@ void ADAHUD::ClosePDA()
 
 void ADAHUD::TogglePDA(EDAPDATab Tab)
 {
-	if (IsDialogueOpen() || IsDuelOpen() || IsTitleOpen())
+	if (IsDialogueOpen() || IsDuelOpen() || IsTitleOpen() || IsGameplayUIOpen())
 	{
 		return;
 	}
@@ -431,7 +526,7 @@ void ADAHUD::UpdateInputMode()
 	{
 		return;
 	}
-	const bool bWantCursor = bMapOpen || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen();
+	const bool bWantCursor = bMapOpen || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen() || IsGameplayUIOpen();
 	PC->bShowMouseCursor = bWantCursor;
 	if (bWantCursor)
 	{
@@ -503,15 +598,76 @@ void ADAHUD::HandlePDAAction(FName ActionId, const FString& Payload)
 	FString Body;
 	if (Action == TEXT("deck.open"))
 	{
-		Body = TEXT("Deck editor hook: A06's DADeckUI is not connected yet.");
+		ClosePDA();
+		OpenDeckEditor(Payload);
+		return;
 	}
-	else if (Action == TEXT("mail.open"))
+	if (Action == TEXT("exam.open"))
 	{
-		Body = TEXT("Mail reader hook: A03's mailbox is not connected yet.");
+		ClosePDA();
+		OpenExam();
+		return;
 	}
-	else if (Action == TEXT("save.slot"))
+	if (Action == TEXT("mail.open"))
 	{
-		Body = TEXT("Save/load from the PDA is a later pass. Continue from the title screen for now.");
+		// FDAPDAUI marks the message read through UDAProfileSubsystem before emitting.
+		return;
+	}
+	if (Action == TEXT("save.slot"))
+	{
+		FString Mode;
+		FString SlotText;
+		if (!Payload.Split(TEXT(":"), &Mode, &SlotText))
+		{
+			return;
+		}
+		const int32 SlotIndex = FCString::Atoi(*SlotText);
+		UDASaveSubsystem* Save = GetGameInstance() ? GetGameInstance()->GetSubsystem<UDASaveSubsystem>() : nullptr;
+		if (!Save || !UDASaveSubsystem::IsValidSlotIndex(SlotIndex))
+		{
+			Body = TEXT("Save subsystem or slot is unavailable.");
+		}
+		else
+		{
+			FString Error;
+			if (Mode == TEXT("save"))
+			{
+				if (Save->SaveSlot(SlotIndex, Error))
+				{
+					if (PDAUI.IsValid())
+					{
+						PDAUI->RefreshViewModel();
+						PDAUI->GetViewModel().FooterNote = FString::Printf(TEXT("Saved to slot %d."), SlotIndex);
+					}
+					if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+					{
+						Sub->PlayUISound(TEXT("A_UIClick"), 0.55f);
+					}
+				}
+				else
+				{
+					Body = Error.IsEmpty() ? TEXT("Save failed.") : Error;
+				}
+			}
+			else if (Mode == TEXT("load"))
+			{
+				if (!Save->LoadSlot(SlotIndex, Error))
+				{
+					Body = Error.IsEmpty() ? TEXT("Load failed.") : Error;
+				}
+				else
+				{
+					ApplySettingsToUI();
+					ClosePDA();
+					UDAStorySubsystem* Story = UDAStorySubsystem::Get(this);
+					if (Story && !Story->IsRunning())
+					{
+						Story->StartOpening();
+					}
+					return;
+				}
+			}
+		}
 	}
 	if (!Body.IsEmpty())
 	{
@@ -553,6 +709,18 @@ void ADAHUD::OpenTitle()
 		return;
 	}
 	bTitleWasShown = true;
+	if (IsShopOpen())
+	{
+		CloseShop();
+	}
+	if (IsDeckEditorOpen())
+	{
+		CloseDeckEditor();
+	}
+	if (IsExamOpen())
+	{
+		CloseExam();
+	}
 	if (!TitleScreen.IsValid())
 	{
 		TitleScreen = MakeUnique<FDATitleScreen>(this);
@@ -670,6 +838,259 @@ void ADAHUD::HandleTitleClosed()
 	UpdateInputMode();
 }
 
+// ------------------------------------------------------------------------ gameplay screens
+
+void ADAHUD::WireEconomySystems()
+{
+	UGameInstance* GameInstance = GetGameInstance();
+	if (!GameInstance)
+	{
+		return;
+	}
+	UDAProfileSubsystem* Profile = GameInstance->GetSubsystem<UDAProfileSubsystem>();
+	UDACalendarSubsystem* Calendar = GameInstance->GetSubsystem<UDACalendarSubsystem>();
+	UDAShopSubsystem* Shop = GameInstance->GetSubsystem<UDAShopSubsystem>();
+	if (!Profile || !Shop)
+	{
+		return;
+	}
+
+	Shop->SetWalletHandlers(
+		[Profile]() { return Profile ? Profile->GetDP() : 0; },
+		[Profile](int32 Amount) { return Profile ? Profile->SpendDP(Amount) : false; },
+		[Profile](int32 Amount, const FString&)
+		{
+			if (Profile)
+			{
+				Profile->AwardDP(Amount);
+			}
+		});
+	Shop->SetUnlockContextProvider([Profile, Calendar]()
+	{
+		FDAEUnlockContext Context;
+		if (Profile)
+		{
+			Context.Title = Profile->GetTitle();
+			if (!Context.Title.IsEmpty())
+			{
+				Context.Titles.Add(Context.Title);
+			}
+			Context.Counters = Profile->GetCounters();
+			Context.DormChanges = Profile->GetCounter(TEXT("dorm_changes"));
+			for (const TPair<FString, bool>& Pair : Profile->GetFlags())
+			{
+				if (Pair.Value)
+				{
+					Context.Flags.Add(Pair.Key);
+				}
+			}
+		}
+		if (Calendar)
+		{
+			Context.MonthIndex = Calendar->GetMonthIndex() + 1;
+			Context.DayNumber = Calendar->GetDay();
+			for (int32 Month = 0; Month < Calendar->GetMonthIndex(); ++Month)
+			{
+				Context.DayNumber += Calendar->GetDaysInMonth(Calendar->GetYear(), Month);
+			}
+		}
+		return Context;
+	});
+	Shop->RefreshUnlocks();
+}
+
+void ADAHUD::PrepareGameplayUITestState()
+{
+	UGameInstance* GameInstance = GetGameInstance();
+	if (!GameInstance)
+	{
+		return;
+	}
+	UDAProfileSubsystem* Profile = GameInstance->GetSubsystem<UDAProfileSubsystem>();
+	UDACalendarSubsystem* Calendar = GameInstance->GetSubsystem<UDACalendarSubsystem>();
+	UDADeckLogic* Decks = GameInstance->GetSubsystem<UDADeckLogic>();
+	UDAInventorySubsystem* Inventory = GameInstance->GetSubsystem<UDAInventorySubsystem>();
+	UDAShopSubsystem* Shop = GameInstance->GetSubsystem<UDAShopSubsystem>();
+
+	if (Profile)
+	{
+		Profile->InitializeNewGame(TEXT("Test Student"));
+		Profile->UnlockEmail(TEXT("jaden"));
+		Profile->UnlockEmail(TEXT("syrus"));
+		Profile->UnlockEmail(TEXT("chumley"));
+	}
+	if (Calendar)
+	{
+		Calendar->ResetToDefaults();
+	}
+	if (Decks)
+	{
+		Decks->ResetToDefaults();
+	}
+	if (Inventory)
+	{
+		Inventory->ResetCollection();
+		if (Decks)
+		{
+			Inventory->GrantStarterCollection(Decks->GetDefaultStarterCards());
+		}
+	}
+	if (Shop)
+	{
+		Shop->RefreshUnlocks();
+	}
+}
+
+void ADAHUD::OpenShop()
+{
+	if (IsDuelOpen() || IsTitleOpen())
+	{
+		return;
+	}
+	if (!ShopUI.IsValid())
+	{
+		ShopUI = MakeUnique<FDAShopUI>(this);
+		ShopUI->OnClosed.AddUObject(this, &ADAHUD::HandleShopClosed);
+	}
+	if (IsDeckEditorOpen())
+	{
+		CloseDeckEditor();
+	}
+	if (IsExamOpen())
+	{
+		CloseExam();
+	}
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	if (IsPDAOpen())
+	{
+		ClosePDA();
+	}
+	if (IsDialogueOpen())
+	{
+		CloseDialogue();
+	}
+	bHelpOpen = false;
+	ShopUI->Open();
+	UpdateInputMode();
+}
+
+void ADAHUD::CloseShop()
+{
+	if (ShopUI.IsValid())
+	{
+		ShopUI->Close();
+	}
+	UpdateInputMode();
+}
+
+void ADAHUD::OpenDeckEditor(const FString& DeckId)
+{
+	if (IsDuelOpen() || IsTitleOpen())
+	{
+		return;
+	}
+	if (!DeckUI.IsValid())
+	{
+		DeckUI = MakeUnique<FDADeckUI>(this);
+		DeckUI->OnClosed.AddUObject(this, &ADAHUD::HandleDeckClosed);
+	}
+	if (IsShopOpen())
+	{
+		CloseShop();
+	}
+	if (IsExamOpen())
+	{
+		CloseExam();
+	}
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	if (IsPDAOpen())
+	{
+		ClosePDA();
+	}
+	if (IsDialogueOpen())
+	{
+		CloseDialogue();
+	}
+	bHelpOpen = false;
+	DeckUI->Open(DeckId);
+	UpdateInputMode();
+}
+
+void ADAHUD::CloseDeckEditor()
+{
+	if (DeckUI.IsValid())
+	{
+		DeckUI->Close();
+	}
+	UpdateInputMode();
+}
+
+void ADAHUD::OpenExam(int32 MonthIndex)
+{
+	if (IsDuelOpen() || IsTitleOpen())
+	{
+		return;
+	}
+	if (!ExamUI.IsValid())
+	{
+		ExamUI = MakeUnique<FDAExamUI>(this);
+		ExamUI->OnClosed.AddUObject(this, &ADAHUD::HandleExamClosed);
+	}
+	if (IsShopOpen())
+	{
+		CloseShop();
+	}
+	if (IsDeckEditorOpen())
+	{
+		CloseDeckEditor();
+	}
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	if (IsPDAOpen())
+	{
+		ClosePDA();
+	}
+	if (IsDialogueOpen())
+	{
+		CloseDialogue();
+	}
+	bHelpOpen = false;
+	ExamUI->Open(MonthIndex);
+	UpdateInputMode();
+}
+
+void ADAHUD::CloseExam()
+{
+	if (ExamUI.IsValid())
+	{
+		ExamUI->Close();
+	}
+	UpdateInputMode();
+}
+
+void ADAHUD::HandleShopClosed()
+{
+	UpdateInputMode();
+}
+
+void ADAHUD::HandleDeckClosed()
+{
+	UpdateInputMode();
+}
+
+void ADAHUD::HandleExamClosed()
+{
+	UpdateInputMode();
+}
+
 void ADAHUD::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -688,7 +1109,22 @@ void ADAHUD::Tick(float DeltaSeconds)
 	}
 
 	// Exactly one modal UI consumes input at a time: dialogue sits above the PDA.
-	if (IsDialogueOpen())
+	// Remember whether a gameplay screen was open before Update() so a P press
+	// that closes it cannot immediately re-open the PDA in the same frame.
+	const bool bGameplayUIWasOpen = IsGameplayUIOpen();
+	if (IsShopOpen())
+	{
+		ShopUI->Update(DeltaSeconds);
+	}
+	else if (IsDeckEditorOpen())
+	{
+		DeckUI->Update(DeltaSeconds);
+	}
+	else if (IsExamOpen())
+	{
+		ExamUI->Update(DeltaSeconds);
+	}
+	else if (IsDialogueOpen())
 	{
 		DialogueUI->Update(DeltaSeconds);
 	}
@@ -699,7 +1135,7 @@ void ADAHUD::Tick(float DeltaSeconds)
 
 	// P is polled here (like the map keys) so it works in GameAndUI mode and
 	// does not need a new Enhanced Input action in the shared student pawn.
-	if (!IsDuelOpen() && !IsDialogueOpen())
+	if (!IsDuelOpen() && !IsDialogueOpen() && !bGameplayUIWasOpen && !IsGameplayUIOpen())
 	{
 		if (APlayerController* PC = GetOwningPlayerController())
 		{
@@ -708,13 +1144,28 @@ void ADAHUD::Tick(float DeltaSeconds)
 			{
 				TogglePDA();
 			}
+			// B opens the new A06 shop when the player is facing the card-shop
+			// interactable. The old E path is owned by A08 and remains untouched.
+			if (!IsPDAOpen() && !bMapOpen && PC->WasInputKeyJustPressed(EKeys::B))
+			{
+				if (const ADAStudentCharacter* Student = Cast<ADAStudentCharacter>(PC->GetPawn()))
+				{
+					if (const ADAInteractable* Interactable = Cast<ADAInteractable>(Student->GetFocusedInteractable()))
+					{
+						if (Interactable->Kind == EDAInteractKind::CardShop)
+						{
+							OpenShop();
+						}
+					}
+				}
+			}
 		}
 	}
 
 	// The island map is drawn with the mouse cursor visible (GameAndUI input mode). In that mode the
 	// Enhanced Input bindings for Enter and the mouse click can be swallowed, so poll the map keys here,
 	// exactly like the duel UI does.
-	if (bMapOpen && !IsDuelOpen() && !IsPDAOpen() && !IsDialogueOpen())
+	if (bMapOpen && !IsDuelOpen() && !IsPDAOpen() && !IsDialogueOpen() && !IsGameplayUIOpen())
 	{
 		if (APlayerController* PC = GetOwningPlayerController())
 		{
@@ -858,7 +1309,7 @@ FVector2D ADAHUD::WorldToMapUV(const FVector& World) const
 
 void ADAHUD::ToggleMap()
 {
-	if (IsDuelOpen() || IsDialogueOpen() || IsPDAOpen() || IsTitleOpen())
+	if (IsDuelOpen() || IsDialogueOpen() || IsPDAOpen() || IsTitleOpen() || IsGameplayUIOpen())
 	{
 		return;
 	}
@@ -892,7 +1343,7 @@ void ADAHUD::ToggleMap()
 
 void ADAHUD::ToggleHelp()
 {
-	if (IsDuelOpen() || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen())
+	if (IsDuelOpen() || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen() || IsGameplayUIOpen())
 	{
 		return;
 	}
@@ -1014,6 +1465,22 @@ void ADAHUD::DrawHUD()
 	if (DuelUI.IsValid() && DuelUI->IsOpen())
 	{
 		DuelUI->Draw(Canvas);
+		return;
+	}
+
+	if (IsShopOpen())
+	{
+		ShopUI->Draw(Canvas);
+		return;
+	}
+	if (IsDeckEditorOpen())
+	{
+		DeckUI->Draw(Canvas);
+		return;
+	}
+	if (IsExamOpen())
+	{
+		ExamUI->Draw(Canvas);
 		return;
 	}
 
@@ -1242,7 +1709,14 @@ void ADAHUD::DrawPrompt()
 	{
 		return;
 	}
-	const FString Line = FString::Printf(TEXT("[E]  %s  -  %s"), *I->GetInteractPrompt(), *I->GetInteractName());
+	FString Line = FString::Printf(TEXT("[E]  %s  -  %s"), *I->GetInteractPrompt(), *I->GetInteractName());
+	if (const ADAInteractable* Interactable = Cast<ADAInteractable>(Target))
+	{
+		if (Interactable->Kind == EDAInteractKind::CardShop)
+		{
+			Line += TEXT("     [B] OPEN SHOP");
+		}
+	}
 	const FVector2D Sz = Measure(Line, 1.1f);
 	const float X = Canvas->ClipX * 0.5f - Sz.X * 0.5f - 18.f * S();
 	const float Y = Canvas->ClipY * 0.72f;
@@ -1287,6 +1761,7 @@ void ADAHUD::DrawHelp()
 		TEXT("E / X .................... Interact (signs, card shop, duel fields, students)"),
 		TEXT("M / Tab ................. Island map & fast travel"),
 		TEXT("P ....................... PDA (map, calendar, deck, mail, save, options, records)"),
+		TEXT("B ....................... Card shop (when facing the shop counter)"),
 		TEXT("J ........................ Switch dorm jacket"),
 		TEXT("F ........................ Raise duel disk"),
 		TEXT("T ........................ Pause / resume time"),
