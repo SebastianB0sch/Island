@@ -27,11 +27,15 @@ enum class EDEffectTrigger : uint8
 	OnBattleStart,
 	OnAttackDeclared,
 	OnAttackTarget,
+	OnDamageStep,
 	OnDamageCalculated,
+	OnBattleDamage,
 	OnBattleDestroy,
+	OnBattleDestroyByAttacker,
 	OnDestroy,
 	OnSentToGraveyard,
 	OnRemovedFromField,
+	OnPositionChange,
 	OnDraw,
 	OnStandby,
 	OnMain,
@@ -39,6 +43,8 @@ enum class EDEffectTrigger : uint8
 	OnChain,
 	OnRitualSummon,
 	OnFusionSummon,
+	OnTributeSummon,
+	InherentSummon,
 	Continuous,
 	EquipContinuous,
 	FieldContinuous,
@@ -56,9 +62,17 @@ struct FDEffectEvent
 	FString Reason;
 	int32 AttackerUid = 0;
 	int32 AttackTargetUid = 0;
+	int32 DamagedUid = 0;
+	int32 DamageAmount = 0;
+	EDuelOwner DamageReceiver = EDuelOwner::Player;
+	int32 TributeCount = 0;
+	EDuelPosition PreviousPosition = EDuelPosition::Attack;
 	int32 ChainLink = 0;
 	bool bFromField = false;
 	bool bByBattle = false;
+	bool bDirectAttack = false;
+	bool bDamageStep = false;
+	FString SourceZoneAtEvent;
 	FString CustomContext;
 };
 
@@ -119,7 +133,13 @@ public:
 	void OnActivate(FDuelCard& Card);
 	void OnChain(const FDuelChainLink& Link);
 	void OnAttackDeclared(FDuelCard& Attacker, FDuelCard* Target);
+	void OnAttackTarget(FDuelCard& Attacker, FDuelCard* Target);
+	void OnDamageStep(FDuelCard& Attacker, FDuelCard* Target);
 	void OnDamageCalculated(FDuelCard& Attacker, FDuelCard* Target);
+	void OnBattleDamage(EDuelOwner Receiver, int32 Amount, FDuelCard& Attacker, FDuelCard* Target, bool bDirect);
+	void OnBattleDestroyByAttacker(FDuelCard& Attacker, const FDuelCard& Destroyed);
+	void OnPositionChanged(FDuelCard& Card, EDuelPosition PreviousPosition);
+	void OnCounterTrapResponse(FDuelCard& Trap, int32 TargetChainLink);
 	void OnDestroyed(const FDuelCard& Card, bool bByBattle, const FString& Reason);
 	void OnSentToGraveyard(const FDuelCard& Card, bool bFromField, const FString& Reason);
 	void OnCardLeftField(const FDuelCard& Card);
@@ -130,6 +150,8 @@ public:
 
 	/** Execute a manual / ignition script by its position in the card's script list. */
 	bool ActivateManualScript(int32 CardUid, int32 ScriptIndex, FString& OutError);
+	bool ActivateInherentSummon(int32 CardUid, FString& OutError);
+	bool HasInherentSummon(const FDuelCard& Card) const;
 	bool HasManualEffect(const FDuelCard& Card) const;
 	TArray<FDuelActionInfo> GetManualActions(const FDuelCard& Card) const;
 
@@ -140,10 +162,40 @@ public:
 	bool IsTrapActivationLocked() const { return bTrapActivationLocked; }
 	bool IsCardActivationLocked(const FDuelCard& Card) const;
 	bool IsTrapEffectNegated() const { return bTrapEffectNegated; }
+	bool IsSpellActivationLocked() const { return bSpellActivationLocked; }
+	bool IsMonsterEffectLocked() const { return bMonsterEffectLocked; }
 	bool IsFusionAllowed(const FString& FusionType) const { return AllowedFusionTypes.Contains(FusionType); }
 	bool ShouldRedirectBattleDamage(int32 CardUid, EDuelOwner DamageReceiver, EDuelOwner& OutReceiver) const;
 	bool ShouldPreventBattleDamage(EDuelOwner Side) const { return PreventBattleDamageSides.Contains(static_cast<uint8>(Side)); }
 	bool IsBattleDamageZeroFor(int32 CardUid) const { return BattleDamageZeroUids.Contains(CardUid); }
+	float GetBattleDamageMultiplier(int32 CardUid) const;
+	bool HasPiercing(int32 CardUid) const { return PiercingUids.Contains(CardUid) || ContinuousPiercingUids.Contains(CardUid); }
+	bool HasExtraAttack(int32 CardUid) const { return ExtraAttackUids.Contains(CardUid) || ContinuousExtraAttackUids.Contains(CardUid); }
+
+	/** Battle permission checks.  These fold continuous and turn-scoped locks. */
+	bool CanCardAttack(const FDuelCard& Attacker) const;
+	bool CanDeclareAttack(const FDuelCard& Attacker, bool bDirect) const;
+	bool CanAttackDirectly(const FDuelCard& Attacker) const;
+	bool MustAttack(const FDuelCard& Attacker) const;
+	bool IsPositionChangeLocked(const FDuelCard& Card) const;
+	int32 GetMaxAttackers(EDuelOwner Side) const;
+	bool ConsumeAttackNegated();
+
+	/** Destruction replacement / destination hooks. */
+	bool ShouldPreventDestruction(const FDuelCard& Card, bool bByBattle, const FString& Reason) const;
+	bool ShouldBanishInsteadOfGrave(const FDuelCard& Card) const;
+
+	/** Persistence / continuous registration queries used by the engine. */
+	bool ShouldStayOnFieldAfterActivation(const FDuelCard& Card) const;
+	bool HasEquipStatScript(int32 CardId) const;
+	bool HasFieldStatScript(int32 CardId) const;
+	bool HasScriptTrigger(int32 CardId, EDEffectTrigger Trigger) const;
+
+	/** Summon and activation locks. */
+	bool IsSummonLocked(EDuelOwner Side, bool bSpecial) const;
+
+	int32 GetLastRandomResult() const { return LastRandomResult; }
+	const TArray<int32>& GetLastRandomResults() const { return LastRandomResults; }
 	int32 GetCounterCount(int32 Uid, const FString& Counter) const;
 	bool AddCounter(int32 Uid, const FString& Counter, int32 Amount, int32 Max);
 	bool RemoveCounter(int32 Uid, const FString& Counter, int32 Amount);
@@ -186,8 +238,48 @@ private:
 	TSet<int32> RedirectBattleDamageUids;
 	TSet<uint8> PreventBattleDamageSides;
 	TSet<int32> BattleDamageZeroUids;
+	TMap<int32, float> BattleDamageMultipliers;
+	TMap<int32, float> ContinuousBattleDamageMultipliers;
+	TSet<int32> CannotAttackUids;
+	TSet<int32> MustAttackUids;
+	TSet<int32> DirectAttackAllowedUids;
+	TSet<int32> DirectAttackForbiddenUids;
+	TSet<int32> PiercingUids;
+	TSet<int32> ExtraAttackUids;
+	TSet<int32> CannotChangePositionUids;
+	TSet<int32> EndBattleDefenseUids;
+	TSet<int32> PreventDestructionUids;
+	TSet<int32> PreventBattleDestructionUids;
+	TSet<int32> BanishInsteadOfGraveUids;
+	TSet<int32> SpiritReturnUids;
+	TSet<int32> ContinuousCannotAttackUids;
+	TSet<int32> ContinuousMustAttackUids;
+	TSet<int32> ContinuousDirectAttackAllowedUids;
+	TSet<int32> ContinuousDirectAttackForbiddenUids;
+	TSet<int32> ContinuousPiercingUids;
+	TSet<int32> ContinuousExtraAttackUids;
+	TSet<int32> ContinuousCannotChangePositionUids;
+	TSet<int32> ContinuousPreventDestructionUids;
+	TSet<int32> ContinuousPreventBattleDestructionUids;
+	TSet<int32> ContinuousBanishInsteadOfGraveUids;
+	TSet<int32> ContinuousSpiritReturnUids;
+	TSet<uint8> CannotAttackSidesThisTurn;
+	TSet<uint8> CannotAttackDirectlySidesThisTurn;
+	TMap<uint8, int32> MaxAttackersPerSide;
+	TMap<uint8, int32> MaxAttackersThisTurn;
+	TSet<uint8> NormalSummonLockSides;
+	TSet<uint8> SpecialSummonLockSides;
+	TSet<uint8> ContinuousNormalSummonLockSides;
+	TSet<uint8> ContinuousSpecialSummonLockSides;
+	TSet<int32> NegatedActivationUids;
+	int32 AttackRestrictionExpiryTurn = -1;
+	int32 LastRandomResult = 0;
+	TArray<int32> LastRandomResults;
 	bool bTrapActivationLocked = false;
 	bool bTrapEffectNegated = false;
+	bool bSpellActivationLocked = false;
+	bool bMonsterEffectLocked = false;
+	bool bAttackNegated = false;
 	bool bExecuting = false;
 	bool bRecomputing = false;
 	int32 PromptCount = 0;
@@ -256,7 +348,26 @@ private:
 	bool ExecuteReveal(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
 	bool ExecuteShuffle(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
 	bool ExecuteNegate(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
+	bool ExecuteAttackLock(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
+	bool ExecuteAttackDirectly(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
+	bool ExecutePiercing(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
+	bool ExecuteDestructionReplacement(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
+	bool ExecutePositionLock(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
+	bool ExecuteSpiritReturn(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
+	bool ExecuteUnionEquip(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, bool bUnequip, FString& OutError);
+	bool ExecuteInherentSummon(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError);
+	bool ExecuteRandomOutcome(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, bool bDie, FString& OutError);
+	bool ExecuteOperationsList(const TArray<TSharedPtr<FJsonObject>>& Operations, const FDEffectContext& Context, FString& OutError);
+
+	int32 ComputeDynamicAmount(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
+		const FDuelCard& Subject) const;
+	int32 CountZoneForOperation(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
+		const FDuelCard& Subject, const FString& Zone, const TSharedPtr<FJsonObject>& Filter) const;
+	bool ApplyContinuousStat(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
+		bool bAtk);
+	bool ApplyContinuousRestriction(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context);
 
 	void ClearCardState(int32 Uid);
 	void ExpireLingering(EDuelOwner EndingSide, bool bBattlePhaseOnly);
+	void ResetTurnRestrictions();
 };

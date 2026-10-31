@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "card_id": 411,
+  "name": "Sword of Deep-Seated",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "A Monster Card equipped with this card increases its ATK and DEF by 500 points.  When this card is sent to the Graveyard, place it on top of your Deck.",
+  "notes": [
+    "+500 ATK/DEF; returns to the top of the Deck from the Graveyard."
+  ],
+  "scripts": [
+    {
+      "id": "411_equip_activate",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "equip",
+          "target": "$target"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1
+      },
+      "source_text": "Equip this card to a legal monster."
+    },
+    {
+      "id": "411_equip_continuous",
+      "trigger": "equip_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 500,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_def",
+          "target": "$self",
+          "amount": 500,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true
+      },
+      "source_text": "Apply the equipped monster's continuous bonus."
+    },
+    {
+      "id": "411_grave_return_top",
+      "trigger": "on_sent_to_graveyard",
+      "operations": [
+        {
+          "op": "return_to_deck",
+          "target": "$self",
+          "destination": "deck_top",
+          "reason": "Sword of Deep-Seated"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is sent to the Graveyard, place it on top of your Deck."
+    }
+  ]
+}

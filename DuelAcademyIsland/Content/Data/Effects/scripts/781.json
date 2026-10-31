@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 781,
+  "name": "Amazoness Paladin",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increase the ATK of this monster by 100 points for each monster on your side of the field that includes \"Amazoness\" in its card name, or is named \"Amazon Archer\".",
+  "notes": [
+    "Counts itself because its name contains Amazoness."
+  ],
+  "scripts": [
+    {
+      "id": "781_amazoness_count_atk",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 100,
+          "mode": "per_card",
+          "count_zone": "self_monster",
+          "count_filter": {
+            "any": [
+              {
+                "name_contains": "Amazoness"
+              },
+              {
+                "name": "Amazon Archer"
+              }
+            ]
+          }
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "Increase the ATK of this monster by 100 points for each monster on your side of the field that includes \"Amazoness\" in its card name, or is named \"Amazon Archer\"."
+    }
+  ]
+}

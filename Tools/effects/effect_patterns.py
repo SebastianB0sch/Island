@@ -139,7 +139,8 @@ def _payload(card: dict, tier: int, scripts: list[dict], notes: list[str]) -> di
         "on_flip_summon",
         "on_battle_destroy",
         "on_sent_to_graveyard",
-        "on_destroy",
+        "on_position_change",
+        "on_tribute_summon",
     }
     for item in scripts:
         minimum = 1
@@ -1725,9 +1726,19 @@ def _continuous_self_atk_empty_hand(card, tier, match, text):
     "Standby Phase fixed burn.",
 )
 def _standby_damage(card, tier, match, text):
-    # The runtime cannot tell which player's Standby Phase is resolving, so a
-    # "your Standby Phase" trigger would also fire on the opponent's turn.
-    return None
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "standby_damage",
+                "on_standby",
+                [op("inflict_damage", amount=amount, player="opponent", reason=card["name"])],
+                condition_payload=_monster_condition(turn="self"),
+                source_text=text,
+            )
+        ],
+        ["Fires only on the controller's Standby Phase."],
+    )
 
 
 @recipe(
@@ -1736,8 +1747,19 @@ def _standby_damage(card, tier, match, text):
     "Standby Phase fixed Life Point gain.",
 )
 def _standby_heal(card, tier, match, text):
-    # Side-specific Standby timing is not exposed to script conditions.
-    return None
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "standby_heal",
+                "on_standby",
+                [op("gain_lp", amount=amount, player="self", reason=card["name"])],
+                condition_payload=_monster_condition(turn="self"),
+                source_text=text,
+            )
+        ],
+        ["Fires only on the controller's Standby Phase."],
+    )
 
 
 @recipe(
@@ -1746,8 +1768,20 @@ def _standby_heal(card, tier, match, text):
     "Standby Phase permanent self ATK gain.",
 )
 def _standby_atk_gain_self(card, tier, match, text):
-    # Side-specific Standby timing is not exposed to script conditions.
-    return None
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "standby_attack_gain",
+                "on_standby",
+                [op("modify_atk", target="$self", amount=amount, mode="flat")],
+                condition_payload=_monster_condition(turn="self"),
+                duration="permanent",
+                source_text=text,
+            )
+        ],
+        ["Lingering ATK gain on the controller's Standby Phase."],
+    )
 
 
 @recipe(
@@ -1756,8 +1790,29 @@ def _standby_atk_gain_self(card, tier, match, text):
     "Standby Phase optional self-tribute removal.",
 )
 def _standby_tribute_self_destroy_two(card, tier, match, text):
-    # Side-specific Standby timing is not exposed to script conditions.
-    return None
+    return (
+        [
+            script(
+                "standby_tribute_destroy",
+                "on_standby",
+                [op("destroy", target="$target", reason=card["name"])],
+                condition_payload=_monster_condition(turn="self"),
+                cost=[op("tribute", target="$self")],
+                target_payload=target(
+                    "all_monsters",
+                    2,
+                    all_of(
+                        condition(face_up=True),
+                        condition(atk_max=1000),
+                        {"not": condition(name=card["name"])},
+                    ),
+                ),
+                optional=True,
+                source_text=text,
+            )
+        ],
+        ["Self-tribute cost; targets two other face-up monsters with ATK <= 1000."],
+    )
 
 
 # --- Monster: battle-destruction recruiters --------------------------------
@@ -3127,16 +3182,6 @@ def _mispolymerization(card, tier, match, text):
 
 
 @recipe(
-    "maji_gire_panda",
-    r"As long as this card remains face-up on the field, each time a Beast-Type monster\(s\) on the field is destroyed, increase the ATK of this card by (\d+) points",
-    "Continuous trigger that grows when a Beast is destroyed.",
-)
-def _maji_gire_panda(card, tier, match, text):
-    # The destroyed-card event cannot be gated on this source being face-up.
-    return None
-
-
-@recipe(
     "spirit_of_the_pharaoh",
     r"This card cannot be Normal Summoned or Set\. This card cannot be Special Summoned except by the effect of \"The First Sarcophagus\"\. When this card is Special Summoned successfully, you can Special Summon up to (\d+) Level 2 or lower Zombie-Type Normal Monsters from your Graveyard",
     "Special-summon trigger that revives low-Level Zombie Normal Monsters.",
@@ -3479,6 +3524,1860 @@ RECIPES.append(
 
 
 # ---------------------------------------------------------------------------
+# Gate 3.1 recipes: A04 primitive expansion
+# ---------------------------------------------------------------------------
+
+
+def _equip_target(**filter_kwargs) -> dict:
+    filt = condition(**filter_kwargs) if filter_kwargs else None
+    return target("any_monster", 1, filt)
+
+
+def _equip_scripts(
+    card,
+    target_filter: dict | None,
+    stat_operations: list[dict],
+    *,
+    condition_payload: dict | None = None,
+    extra_scripts: list[dict] | None = None,
+    notes: list[str] | None = None,
+) -> tuple[list[dict], list[str]]:
+    condition_value = condition_payload or condition(controller="self", face_up=True)
+    scripts = [
+        script(
+            "equip_activate",
+            "on_activate",
+            [op("equip", target="$target")],
+            target_payload=target("any_monster", 1, target_filter),
+            spell_speed=1,
+            source_text="Equip this card to a legal monster.",
+        ),
+        script(
+            "equip_continuous",
+            "equip_continuous",
+            stat_operations,
+            condition_payload=condition_value,
+            duration="while_face_up",
+            source_text="Apply the equipped monster's continuous bonus.",
+        ),
+    ]
+    if extra_scripts:
+        scripts.extend(extra_scripts)
+    return scripts, notes or ["Attach on activation, then apply continuous effects to the equipped monster."]
+
+
+def _type_list_filter(types: list[str]) -> dict:
+    return any_of(*[condition(monster_type=monster_type) for monster_type in types])
+
+
+def _parse_type_list(raw: str) -> list[str]:
+    cleaned = raw.replace(" and ", ", ")
+    return [part.strip() for part in cleaned.split(",") if part.strip()]
+
+
+@recipe(
+    "equip_simple_type_atk_def",
+    r"A[n]? ([A-Za-z][A-Za-z -]*?)-Type monster equipped with this card increases its ATK and DEF by (\d+) points",
+    "Equip Spell with a Type-restricted ATK/DEF bonus.",
+)
+def _equip_simple_type_atk_def(card, tier, match, text):
+    monster_type, amount = match.group(1), int(match.group(2))
+    return _equip_scripts(
+        card,
+        condition(monster_type=monster_type),
+        [
+            op("modify_atk", target="$self", amount=amount, mode="flat"),
+            op("modify_def", target="$self", amount=amount, mode="flat"),
+        ],
+        condition_payload=condition(controller="self", face_up=True, monster_type=monster_type),
+        notes=[f"Only a {monster_type} monster can be equipped; +{amount} ATK/DEF."],
+    )
+
+
+@recipe(
+    "equip_simple_type_atk",
+    r"A[n]? ([A-Za-z][A-Za-z -]*?)-Type monster equipped with this card increases its ATK by (\d+) points",
+    "Equip Spell with a Type-restricted ATK bonus.",
+)
+def _equip_simple_type_atk(card, tier, match, text):
+    monster_type, amount = match.group(1), int(match.group(2))
+    return _equip_scripts(
+        card,
+        condition(monster_type=monster_type),
+        [op("modify_atk", target="$self", amount=amount, mode="flat")],
+        condition_payload=condition(controller="self", face_up=True, monster_type=monster_type),
+        notes=[f"Only a {monster_type} monster can be equipped; +{amount} ATK."],
+    )
+
+
+@recipe(
+    "equip_simple_attribute_atk_def",
+    r"A[n]? (LIGHT|DARK|EARTH|WATER|FIRE|WIND) monster equipped with this card increases its ATK by (\d+) points and decreases its DEF by (\d+) points",
+    "Equip Spell with an Attribute-restricted ATK gain and DEF loss.",
+)
+def _equip_simple_attribute_atk_def(card, tier, match, text):
+    attribute, atk, dfn = match.group(1), int(match.group(2)), -int(match.group(3))
+    return _equip_scripts(
+        card,
+        condition(attribute=attribute),
+        [
+            op("modify_atk", target="$self", amount=atk, mode="flat"),
+            op("modify_def", target="$self", amount=dfn, mode="flat"),
+        ],
+        condition_payload=condition(controller="self", face_up=True, attribute=attribute),
+        notes=[f"Only a {attribute} monster can be equipped; +{atk} ATK / {dfn} DEF."],
+    )
+
+
+@recipe(
+    "equip_simple_any_atk_def",
+    r"A[n]? (?:Monster Card|monster) equipped with this card increases its ATK and DEF by (\d+) points",
+    "Equip Spell with an unrestricted ATK/DEF bonus.",
+)
+def _equip_simple_any_atk_def(card, tier, match, text):
+    amount = int(match.group(1))
+    return _equip_scripts(
+        card,
+        None,
+        [
+            op("modify_atk", target="$self", amount=amount, mode="flat"),
+            op("modify_def", target="$self", amount=amount, mode="flat"),
+        ],
+        notes=[f"Any monster can be equipped; +{amount} ATK/DEF."],
+    )
+
+
+@recipe(
+    "equip_simple_any_atk",
+    r"A[n]? monster equipped with this card increases its ATK by (\d+) points",
+    "Equip Spell with an unrestricted ATK bonus.",
+)
+def _equip_simple_any_atk(card, tier, match, text):
+    amount = int(match.group(1))
+    return _equip_scripts(
+        card,
+        None,
+        [op("modify_atk", target="$self", amount=amount, mode="flat")],
+        notes=[f"Any monster can be equipped; +{amount} ATK."],
+    )
+
+
+@recipe(
+    "equip_simple_any_def",
+    r"A[n]? monster equipped with this card increases its DEF by (\d+) points",
+    "Equip Spell with an unrestricted DEF bonus.",
+)
+def _equip_simple_any_def(card, tier, match, text):
+    amount = int(match.group(1))
+    return _equip_scripts(
+        card,
+        None,
+        [op("modify_def", target="$self", amount=amount, mode="flat")],
+        notes=[f"Any monster can be equipped; +{amount} DEF."],
+    )
+
+
+@recipe(
+    "equip_fairy_meteor_crush",
+    r"When a monster equipped with this card attacks with an ATK that is higher than the DEF of a Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points",
+    "Equip Spell that grants piercing.",
+)
+def _equip_fairy_meteor_crush(card, tier, match, text):
+    return _equip_scripts(
+        card,
+        None,
+        [op("piercing", target="$equipped")],
+        notes=["The equipped monster gains piercing."],
+    )
+
+
+@recipe(
+    "equip_lightning_blade",
+    r"This card can only be equipped to Warrior-Type monsters\. Increases the ATK of the equipped monster by (\d+) points and decreases the ATK of all WATER monsters on the field by (\d+) points",
+    "Warrior-only Equip that also weakens every WATER monster.",
+)
+def _equip_lightning_blade(card, tier, match, text):
+    atk, water = int(match.group(1)), -int(match.group(2))
+    return _equip_scripts(
+        card,
+        condition(monster_type="Warrior"),
+        [
+            op("modify_atk", target="$self", amount=atk, mode="flat"),
+            op(
+                "modify_atk",
+                target={
+                    "zone": "all_monsters",
+                    "count": "all",
+                    "filter": condition(attribute="WATER"),
+                },
+                amount=water,
+                mode="flat",
+            ),
+        ],
+        condition_payload=condition(controller="self", face_up=True, monster_type="Warrior"),
+        notes=[f"+{atk} ATK to the equipped Warrior; {water} ATK to all WATER monsters on the field."],
+    )
+
+
+@recipe(
+    "equip_cyclon_laser",
+    r"This card can only be used to equip \"Gradius\"\. Increases the ATK of \"Gradius\" by (\d+) points\. When \"Gradius\" attacks with an ATK that is higher than the DEF of your opponent's Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points",
+    "Gradius-only Equip with an ATK bonus and piercing.",
+)
+def _equip_cyclon_laser(card, tier, match, text):
+    amount = int(match.group(1))
+    return _equip_scripts(
+        card,
+        condition(name="Gradius"),
+        [
+            op("modify_atk", target="$self", amount=amount, mode="flat"),
+            op("piercing", target="$equipped"),
+        ],
+        condition_payload=condition(controller="self", face_up=True, name="Gradius"),
+        notes=[f"Only Gradius can be equipped; +{amount} ATK and piercing."],
+    )
+
+
+@recipe(
+    "equip_dark_magician_tome",
+    r'Only "Dark Magician" or "Dark Magician Girl" may equip this\. The Monster that equips this will gain (\d+) ATK Points\. When this card is sent to the Graveyard, you recover (\d+) Life Points',
+    "Dark Magician-only Equip with an ATK bonus and Graveyard Life Point gain.",
+)
+def _equip_dark_magician_tome(card, tier, match, text):
+    atk, heal = int(match.group(1)), int(match.group(2))
+    return _equip_scripts(
+        card,
+        any_of(condition(name="Dark Magician"), condition(name="Dark Magician Girl")),
+        [op("modify_atk", target="$self", amount=atk, mode="flat")],
+        condition_payload=all_of(
+            condition(controller="self", face_up=True),
+            any_of(condition(name="Dark Magician"), condition(name="Dark Magician Girl")),
+        ),
+        extra_scripts=[
+            script(
+                "grave_recover_life",
+                "on_sent_to_graveyard",
+                [op("gain_lp", amount=heal, player="self", reason=card["name"])],
+                source_text="When this card is sent to the Graveyard, you recover Life Points.",
+            )
+        ],
+        notes=[f"Only Dark Magician/Dark Magician Girl; +{atk} ATK, then gain {heal} LP when sent to the Graveyard."],
+    )
+
+
+@recipe(
+    "equip_ritual_weapon",
+    r"This card can only be equipped to a Ritual Monster of Level 6 or less\. Increase the ATK and DEF of the equipped monster by (\d+) points",
+    "Ritual-only Equip with an ATK/DEF bonus.",
+)
+def _equip_ritual_weapon(card, tier, match, text):
+    amount = int(match.group(1))
+    return _equip_scripts(
+        card,
+        all_of(condition(card_type="Ritual Monster"), condition(level_max=6)),
+        [
+            op("modify_atk", target="$self", amount=amount, mode="flat"),
+            op("modify_def", target="$self", amount=amount, mode="flat"),
+        ],
+        condition_payload=all_of(
+            condition(controller="self", face_up=True),
+            condition(card_type="Ritual Monster"),
+            condition(level_max=6),
+        ),
+        notes=[f"Only a Level 6 or lower Ritual Monster; +{amount} ATK/DEF."],
+    )
+
+
+@recipe(
+    "equip_fuhma_shuriken",
+    r'This card can only be used to equip a monster that includes "Ninja" in its card name\. A monster equipped with this card increases its ATK by (\d+) points\. When this card is sent from the field to the Graveyard, inflict (\d+) points of damage to your opponent\'s Life Points',
+    "Ninja-only Equip with an ATK bonus and Graveyard burn.",
+)
+def _equip_fuhma_shuriken(card, tier, match, text):
+    atk, damage = int(match.group(1)), int(match.group(2))
+    return _equip_scripts(
+        card,
+        condition(name_contains="Ninja"),
+        [op("modify_atk", target="$self", amount=atk, mode="flat")],
+        condition_payload=condition(controller="self", face_up=True, name_contains="Ninja"),
+        extra_scripts=[
+            script(
+                "grave_damage",
+                "on_sent_to_graveyard",
+                [op("inflict_damage", amount=damage, player="opponent", reason=card["name"])],
+                condition_payload=condition(custom="sent_from_field_to_graveyard"),
+                source_text="When this card is sent from the field to the Graveyard, inflict damage.",
+            )
+        ],
+        notes=[f"Ninja-only; +{atk} ATK, then {damage} damage when sent to the Graveyard."],
+    )
+
+
+@recipe(
+    "equip_horn_of_the_unicorn",
+    r"A monster equipped with this card increases its ATK and DEF by (\d+) points\. When this card is sent from the field to the Graveyard, it returns to the top of your Deck",
+    "Equip stat bonus plus top-of-Deck recycling.",
+)
+def _equip_horn_of_the_unicorn(card, tier, match, text):
+    amount = int(match.group(1))
+    return _equip_scripts(
+        card,
+        None,
+        [
+            op("modify_atk", target="$self", amount=amount, mode="flat"),
+            op("modify_def", target="$self", amount=amount, mode="flat"),
+        ],
+        extra_scripts=[
+            script(
+                "grave_return_top",
+                "on_sent_to_graveyard",
+                [op("return_to_deck", target="$self", destination="deck_top", reason=card["name"])],
+                condition_payload=condition(custom="sent_from_field_to_graveyard"),
+                source_text="When this card is sent from the field to the Graveyard, return it to the top of the Deck.",
+            )
+        ],
+        notes=[f"+{amount} ATK/DEF; returns to the top of the Deck from the Graveyard."],
+    )
+
+
+@recipe(
+    "equip_sword_deep_seated",
+    r"A Monster Card equipped with this card increases its ATK and DEF by (\d+) points\. When this card is sent to the Graveyard, place it on top of your Deck",
+    "Equip stat bonus plus top-of-Deck recycling.",
+)
+def _equip_sword_deep_seated(card, tier, match, text):
+    amount = int(match.group(1))
+    return _equip_scripts(
+        card,
+        None,
+        [
+            op("modify_atk", target="$self", amount=amount, mode="flat"),
+            op("modify_def", target="$self", amount=amount, mode="flat"),
+        ],
+        extra_scripts=[
+            script(
+                "grave_return_top",
+                "on_sent_to_graveyard",
+                [op("return_to_deck", target="$self", destination="deck_top", reason=card["name"])],
+                source_text="When this card is sent to the Graveyard, place it on top of your Deck.",
+            )
+        ],
+        notes=[f"+{amount} ATK/DEF; returns to the top of the Deck from the Graveyard."],
+    )
+
+
+@recipe(
+    "equip_horn_of_light",
+    r"A monster equipped with this card increases its DEF by (\d+) points\. When this card is sent from the field to the Graveyard, you can pay (\d+) Life Points to place it on top of your Deck",
+    "Equip DEF bonus with an optional top-of-Deck return cost.",
+)
+def _equip_horn_of_light(card, tier, match, text):
+    dfn, cost = int(match.group(1)), int(match.group(2))
+    return _equip_scripts(
+        card,
+        None,
+        [op("modify_def", target="$self", amount=dfn, mode="flat")],
+        extra_scripts=[
+            script(
+                "grave_return_top",
+                "on_sent_to_graveyard",
+                [op("return_to_deck", target="$self", destination="deck_top", reason=card["name"])],
+                condition_payload=condition(custom="sent_from_field_to_graveyard"),
+                cost=[op("pay_lp", amount=cost)],
+                optional=True,
+                source_text="Pay Life Points to place this card on top of your Deck.",
+            )
+        ],
+        notes=[f"+{dfn} DEF; optionally pay {cost} LP to return it to the top of the Deck."],
+    )
+
+
+@recipe(
+    "equip_malevolent_nuzzler",
+    r"A monster equipped with this card increases its ATK by (\d+) points\. When this card is sent from the field to the Graveyard, if you pay (\d+) Life Points, this card returns to the top of your Deck",
+    "Equip ATK bonus with an optional top-of-Deck return cost.",
+)
+def _equip_malevolent_nuzzler(card, tier, match, text):
+    atk, cost = int(match.group(1)), int(match.group(2))
+    return _equip_scripts(
+        card,
+        None,
+        [op("modify_atk", target="$self", amount=atk, mode="flat")],
+        extra_scripts=[
+            script(
+                "grave_return_top",
+                "on_sent_to_graveyard",
+                [op("return_to_deck", target="$self", destination="deck_top", reason=card["name"])],
+                condition_payload=condition(custom="sent_from_field_to_graveyard"),
+                cost=[op("pay_lp", amount=cost)],
+                optional=True,
+                source_text="Pay Life Points to return this card to the top of the Deck.",
+            )
+        ],
+        notes=[f"+{atk} ATK; optionally pay {cost} LP to return it to the top of the Deck."],
+    )
+
+
+@recipe(
+    "equip_axe_of_despair",
+    r"A monster equipped with this card increases its ATK by (\d+) points\. When this card is sent from the field to the Graveyard, if you offer 1 monster on your side of the field as a Tribute, this card returns to the top of your Deck",
+    "Equip ATK bonus with an optional tribute-to-recycle clause.",
+)
+def _equip_axe_of_despair(card, tier, match, text):
+    atk = int(match.group(1))
+    return _equip_scripts(
+        card,
+        None,
+        [op("modify_atk", target="$self", amount=atk, mode="flat")],
+        extra_scripts=[
+            script(
+                "grave_return_top",
+                "on_sent_to_graveyard",
+                [op("return_to_deck", target="$self", destination="deck_top", reason=card["name"])],
+                condition_payload=condition(custom="sent_from_field_to_graveyard"),
+                cost=[op("tribute", target={"zone": "self_monster", "count": 1})],
+                optional=True,
+                source_text="Tribute a monster to return this card to the top of the Deck.",
+            )
+        ],
+        notes=[f"+{atk} ATK; optionally tribute a monster to return it to the top of the Deck."],
+    )
+
+
+# --- Field Spell stat patterns ---------------------------------------------
+
+
+def _field_stat_script(card, operations: list[dict], note: str) -> tuple[list[dict], list[str]]:
+    return (
+        [
+            script(
+                "field_stat",
+                "field_continuous",
+                operations,
+                condition_payload=condition(controller="self", face_up=True, zone="self_field"),
+                duration="while_face_up",
+                source_text=note,
+            )
+        ],
+        [note],
+    )
+
+
+@recipe(
+    "field_type_list_atk_def",
+    r"Increases? the ATK and DEF of all ([A-Za-z][A-Za-z ,-]*?)-Type monsters by (\d+) points",
+    "Field Spell that boosts a list of Monster Types.",
+)
+def _field_type_list_atk_def(card, tier, match, text):
+    types = _parse_type_list(match.group(1))
+    amount = int(match.group(2))
+    filter_payload = _type_list_filter(types)
+    operations = [
+        op("modify_atk", target={"zone": "all_monsters", "count": "all", "filter": filter_payload}, amount=amount, mode="flat"),
+        op("modify_def", target={"zone": "all_monsters", "count": "all", "filter": filter_payload}, amount=amount, mode="flat"),
+    ]
+    return _field_stat_script(card, operations, f"+{amount} ATK/DEF to {', '.join(types)} monsters.")
+
+
+@recipe(
+    "field_attribute_atk_def",
+    r"Increases? the ATK of all (LIGHT|DARK|EARTH|WATER|FIRE|WIND) monsters by (\d+) points and decreases? their DEF by (\d+) points",
+    "Field Spell that boosts one Attribute and lowers its DEF.",
+)
+def _field_attribute_atk_def(card, tier, match, text):
+    attribute, atk, dfn = match.group(1), int(match.group(2)), -int(match.group(3))
+    filter_payload = condition(attribute=attribute)
+    operations = [
+        op("modify_atk", target={"zone": "all_monsters", "count": "all", "filter": filter_payload}, amount=atk, mode="flat"),
+        op("modify_def", target={"zone": "all_monsters", "count": "all", "filter": filter_payload}, amount=dfn, mode="flat"),
+    ]
+    return _field_stat_script(card, operations, f"+{atk} ATK / {dfn} DEF to {attribute} monsters.")
+
+
+@recipe(
+    "field_defense_def",
+    r"Increases the DEF of all Defense Position monsters by (\d+) points",
+    "Field Spell that boosts every Defense Position monster's DEF.",
+)
+def _field_defense_def(card, tier, match, text):
+    amount = int(match.group(1))
+    operations = [
+        op(
+            "modify_def",
+            target={
+                "zone": "all_monsters",
+                "count": "all",
+                "filter": all_of(condition(position="defense"), condition(face_up=True)),
+            },
+            amount=amount,
+            mode="flat",
+        )
+    ]
+    return _field_stat_script(card, operations, f"+{amount} DEF to face-up Defense Position monsters.")
+
+
+@recipe(
+    "field_yami",
+    r"Increases the ATK and DEF of all Fiend and Spellcaster-Type monsters by (\d+) points\. Also decreases the ATK and DEF of all Fairy-Type monsters by (\d+) points",
+    "Yami's Type-specific buff and Fairy debuff.",
+)
+def _field_yami(card, tier, match, text):
+    buff, debuff = int(match.group(1)), -int(match.group(2))
+    buff_filter = any_of(condition(monster_type="Fiend"), condition(monster_type="Spellcaster"))
+    fairy_filter = condition(monster_type="Fairy")
+    operations = [
+        op("modify_atk", target={"zone": "all_monsters", "count": "all", "filter": buff_filter}, amount=buff, mode="flat"),
+        op("modify_def", target={"zone": "all_monsters", "count": "all", "filter": buff_filter}, amount=buff, mode="flat"),
+        op("modify_atk", target={"zone": "all_monsters", "count": "all", "filter": fairy_filter}, amount=debuff, mode="flat"),
+        op("modify_def", target={"zone": "all_monsters", "count": "all", "filter": fairy_filter}, amount=debuff, mode="flat"),
+    ]
+    return _field_stat_script(card, operations, f"+{buff}/-{-debuff} ATK/DEF for Fiend, Spellcaster and Fairy monsters.")
+
+
+# --- Story-reachable monsters: dynamic stats -------------------------------
+
+
+@recipe(
+    "machine_king",
+    r"Increase the ATK of this card by (\d+) points for each face-up Machine-Type monster on the field",
+    "Continuous ATK equal to 100 per face-up Machine on the field.",
+)
+def _machine_king(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "machine_count_atk",
+                "continuous",
+                [
+                    op(
+                        "modify_atk",
+                        target="$self",
+                        amount=amount,
+                        mode="per_card",
+                        count_zone="all_monsters",
+                        count_filter=all_of(condition(face_up=True), condition(monster_type="Machine")),
+                    )
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Counts every face-up Machine on either side, including this card."],
+    )
+
+
+@recipe(
+    "dark_magician_girl",
+    r"Increase the ATK of this monster by (\d+) points for each \"Dark Magician\" or \"Magician of Black Chaos\" in either player's Graveyard",
+    "Continuous ATK per Dark Magician / Magician of Black Chaos in either Graveyard.",
+)
+def _dark_magician_girl(card, tier, match, text):
+    amount = int(match.group(1))
+    name_filter = any_of(condition(name="Dark Magician"), condition(name="Magician of Black Chaos"))
+    return (
+        [
+            script(
+                "grave_name_atk",
+                "continuous",
+                [
+                    op(
+                        "modify_atk",
+                        target="$self",
+                        amount=amount,
+                        mode="per_card",
+                        count_zone="graveyard",
+                        count_filter=name_filter,
+                    )
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Both Graveyards are counted."],
+    )
+
+
+@recipe(
+    "arsenal_bug",
+    r"If there are no face-up Insect-Type monsters \(except this monster\) on your side of the field, both the ATK and DEF of this monster become (\d+) points",
+    "Continuous stat replacement while no other Insect is face-up.",
+)
+def _arsenal_bug(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "insect_condition_stats",
+                "continuous",
+                [
+                    op("modify_atk", target="$self", amount=amount, mode="set_atk"),
+                    op("modify_def", target="$self", amount=amount, mode="set_def"),
+                ],
+                condition_payload=all_of(
+                    condition(controller="self", face_up=True, zone="self_monster"),
+                    condition(
+                        count_zone="self_monster",
+                        count_filter=all_of(condition(face_up=True), condition(monster_type="Insect")),
+                        count_max=1,
+                    ),
+                ),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["The count includes Arsenal Bug itself, so count_max=1 means no other face-up Insect."],
+    )
+
+
+@recipe(
+    "amazoness_paladin",
+    r'Increase the ATK of this monster by (\d+) points for each monster on your side of the field that includes "Amazoness" in its card name, or is named "Amazon Archer"',
+    "Continuous ATK per Amazoness / Amazon Archer on your field.",
+)
+def _amazoness_paladin(card, tier, match, text):
+    amount = int(match.group(1))
+    name_filter = any_of(condition(name_contains="Amazoness"), condition(name="Amazon Archer"))
+    return (
+        [
+            script(
+                "amazoness_count_atk",
+                "continuous",
+                [
+                    op(
+                        "modify_atk",
+                        target="$self",
+                        amount=amount,
+                        mode="per_card",
+                        count_zone="self_monster",
+                        count_filter=name_filter,
+                    )
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Counts itself because its name contains Amazoness."],
+    )
+
+
+@recipe(
+    "des_koala",
+    r"FLIP: Inflict (\d+) points of Direct Damage to your opponent's Life Points for each card in your opponent's hand",
+    "FLIP burn per opponent hand card.",
+)
+def _des_koala(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "flip_hand_burn",
+                "on_flip",
+                [
+                    op(
+                        "inflict_damage",
+                        amount=amount,
+                        player="opponent",
+                        mode="per_card",
+                        count_zone="opponent_hand",
+                        reason=card["name"],
+                    )
+                ],
+                condition_payload=_monster_condition(),
+                source_text=text,
+            )
+        ],
+        ["Counts the opponent's hand at resolution."],
+    )
+
+
+@recipe(
+    "chaos_necromancer",
+    r"The ATK of this card becomes the number of Monster Cards in your Graveyard x (\d+) points",
+    "Continuous ATK equal to 300 per monster in your Graveyard (base ATK is 0).",
+)
+def _chaos_necromancer(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "grave_monster_atk",
+                "continuous",
+                [
+                    op(
+                        "modify_atk",
+                        target="$self",
+                        amount=amount,
+                        mode="per_card",
+                        count_zone="self_graveyard",
+                        count_filter=condition(card_type="Monster"),
+                    )
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Base ATK is 0, so the dynamic addition is equivalent to setting the ATK."],
+    )
+
+
+@recipe(
+    "lost_guardian",
+    r"The original DEF of this card becomes the number of your Rock-Type monsters that are removed from play x (\d+) points",
+    "Continuous DEF equal to 700 per banished Rock monster (base DEF is 0).",
+)
+def _lost_guardian(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "banished_rock_def",
+                "continuous",
+                [
+                    op(
+                        "modify_def",
+                        target="$self",
+                        amount=amount,
+                        mode="per_card",
+                        count_zone="self_banished",
+                        count_filter=condition(monster_type="Rock"),
+                    )
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Base DEF is 0, so the dynamic addition is equivalent to setting the DEF."],
+    )
+
+
+@recipe(
+    "tyranno_infinity",
+    r"The original ATK of this card becomes the number of your Dinosaur-Type monsters that are removed from play x (\d+) points",
+    "Continuous ATK equal to 1000 per banished Dinosaur (base ATK is 0).",
+)
+def _tyranno_infinity(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "banished_dinosaur_atk",
+                "continuous",
+                [
+                    op(
+                        "modify_atk",
+                        target="$self",
+                        amount=amount,
+                        mode="per_card",
+                        count_zone="self_banished",
+                        count_filter=condition(monster_type="Dinosaur"),
+                    )
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Base ATK is 0, so the dynamic addition is equivalent to setting the ATK."],
+    )
+
+
+@recipe(
+    "big_march_of_animals",
+    r"Until the End Phase, increase the ATK of all face-up Beast-Type monsters on your side of the field by (\d+) points for each Beast-Type monster on your side of the field",
+    "Team ATK boost per Beast on your field until End Phase.",
+)
+def _big_march_of_animals(card, tier, match, text):
+    amount = int(match.group(1))
+    beast = all_of(condition(face_up=True), condition(monster_type="Beast"))
+    return (
+        [
+            script(
+                "beast_team_boost",
+                "on_activate",
+                [
+                    op(
+                        "modify_atk",
+                        target="$target",
+                        amount=amount,
+                        mode="per_card",
+                        count_zone="self_monster",
+                        count_filter=beast,
+                    )
+                ],
+                target_payload=target("self_monster", "all", beast),
+                duration="until_end_of_turn",
+                spell_speed=1,
+                source_text=text,
+            )
+        ],
+        ["Each face-up Beast on your side receives the same per-Beast bonus."],
+    )
+
+
+@recipe(
+    "secret_barrel",
+    r"Inflict Direct Damage to your opponent's Life Points equal to the total number of cards on your opponent's side of the field and in your opponent's hand x (\d+) points",
+    "Trap burn per opponent field/hand card.",
+)
+def _secret_barrel(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "opponent_cards_burn",
+                "on_activate",
+                [
+                    op(
+                        "inflict_damage",
+                        amount=amount,
+                        player="opponent",
+                        mode="per_card",
+                        count_zone="opponent_all",
+                        reason=card["name"],
+                    )
+                ],
+                spell_speed=2,
+                source_text=text,
+            )
+        ],
+        ["Counts opponent monsters, Spell/Traps, Field Spell and hand."],
+    )
+
+
+@recipe(
+    "good_goblin_housekeeping",
+    r"Draw a number of cards from your Deck equal to the number of \"Good Goblin Housekeeping\" cards in your Graveyard .*?1, select 1 card from your hand, and return it to the bottom of your Deck",
+    "Draw per Good Goblin Housekeeping in the Graveyard plus one, then bottom one hand card.",
+)
+def _good_goblin_housekeeping(card, tier, match, text):
+    # draw does not implement dynamic modes; only fixed counts are executed.
+    return None
+
+
+# --- Story-reachable monsters: battle / attack primitives ------------------
+
+
+@recipe(
+    "airknight_parshath",
+    r"When this card attacks with an ATK higher than the DEF of your opponent's Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points\. When this card inflicts Battle Damage to your opponent's Life Points, draw 1 card from your Deck",
+    "Piercing plus draw on battle damage.",
+)
+def _airknight_parshath(card, tier, match, text):
+    return (
+        [
+            script(
+                "piercing",
+                "continuous",
+                [op("piercing", target="$self")],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text="This card inflicts piercing Battle Damage.",
+            ),
+            script(
+                "battle_damage_draw",
+                "on_battle_damage",
+                [op("draw", count=1, player="self", reason=card["name"])],
+                condition_payload=all_of(
+                    condition(custom="battle_involving_self"),
+                    condition(is_turn_player=True),
+                ),
+                source_text="When this card inflicts Battle Damage, draw 1 card.",
+            ),
+        ],
+        ["Piercing is continuous; the draw is an after-battle-damage trigger."],
+    )
+
+
+@recipe(
+    "mad_sword_beast",
+    r"When this card attacks with an ATK that is higher than the DEF of your opponent's Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points",
+    "Continuous piercing.",
+)
+def _mad_sword_beast(card, tier, match, text):
+    return (
+        [
+            script(
+                "piercing",
+                "continuous",
+                [op("piercing", target="$self")],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Continuous piercing permission."],
+    )
+
+
+@recipe(
+    "dark_driceratops",
+    r"When this card attacks with an ATK that is higher than the DEF of your opponent's Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points",
+    "Continuous piercing.",
+)
+def _dark_driceratops(card, tier, match, text):
+    return _mad_sword_beast(card, tier, match, text)
+
+
+@recipe(
+    "cyber_end_dragon",
+    r'"Cyber Dragon" \+ "Cyber Dragon" \+ "Cyber Dragon" A Fusion Summon of this card can only be conducted with the above Fusion Material Monsters\. During battle between this card and a Defense Position monster whose DEF is lower than the ATK of this card, inflict the difference as Battle Damage to your opponent\'s Life Points',
+    "Cyber End Dragon's continuous piercing.",
+)
+def _cyber_end_dragon(card, tier, match, text):
+    return (
+        [
+            script(
+                "piercing",
+                "continuous",
+                [op("piercing", target="$self")],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text="During battle with a Defense Position monster, inflict piercing Battle Damage.",
+            )
+        ],
+        ["The Fusion Summon recipe is rules data; the script covers the printed battle effect."],
+    )
+
+
+@recipe(
+    "cyber_twin_dragon",
+    r'"Cyber Dragon" \+ "Cyber Dragon" A Fusion Summon of this card can only be conducted with the above Fusion Material Monsters\. This card can attack twice during the same Battle Phase',
+    "Cyber Twin Dragon's second attack.",
+)
+def _cyber_twin_dragon(card, tier, match, text):
+    return (
+        [
+            script(
+                "extra_attack",
+                "continuous",
+                [op("extra_attack", target="$self", count=1)],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text="This card can attack twice during the same Battle Phase.",
+            )
+        ],
+        ["Extra attack is registered continuously; the Fusion Summon recipe is rules data."],
+    )
+
+
+@recipe(
+    "atomic_firefly",
+    r"When this face-up card on the field is destroyed as a result of battle, the player who destroyed it takes (\d+) points of damage",
+    "Battle-destruction trigger that burns the opponent.",
+)
+def _atomic_firefly(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "battle_destroy_burn",
+                "on_battle_destroy",
+                [op("inflict_damage", amount=amount, player="opponent", reason=card["name"])],
+                source_text=text,
+            )
+        ],
+        ["The battle destroyer is the opponent in a legal battle."],
+    )
+
+
+@recipe(
+    "millennium_scorpion",
+    r"Each time this card destroys 1 monster on your opponent's side of the field and sends it to the Graveyard as a result of battle, increase the ATK of this card by (\d+) points",
+    "Attacker-destroy trigger that permanently gains ATK.",
+)
+def _millennium_scorpion(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "destroy_gain_atk",
+                "on_battle_destroy_by_attacker",
+                [op("modify_atk", target="$self", amount=amount, mode="flat")],
+                condition_payload=condition(custom="battle_involving_self"),
+                duration="permanent",
+                source_text=text,
+            )
+        ],
+        ["Uses the attacker-side battle-destroy hook."],
+    )
+
+
+@recipe(
+    "holy_knight_ishzark",
+    r"A Monster destroyed by this card in battle is removed from play",
+    "Attacker-destroy trigger that banishes the destroyed monster.",
+)
+def _holy_knight_ishzark(card, tier, match, text):
+    return (
+        [
+            script(
+                "banish_destroyed_monster",
+                "on_battle_destroy_by_attacker",
+                [op("banish", target="$trigger", reason=card["name"])],
+                condition_payload=condition(custom="battle_involving_self"),
+                source_text=text,
+            )
+        ],
+        ["The destroyed monster is in the Graveyard when the attacker hook resolves; banish it from there."],
+    )
+
+
+@recipe(
+    "black_tyranno",
+    r"If the only cards on your opponent's side of the field are Defense Position Monster Cards, this card can attack your opponent's Life Points directly",
+    "Continuous direct-attack permission when the opponent has only Defense Position monsters.",
+)
+def _black_tyranno(card, tier, match, text):
+    return (
+        [
+            script(
+                "conditional_direct_attack",
+                "continuous",
+                [op("attack_directly", target="$self")],
+                condition_payload=all_of(
+                    condition(controller="self", face_up=True, zone="self_monster"),
+                    condition(
+                        count_zone="opponent_monster",
+                        count_filter=all_of(condition(position="attack"), condition(face_up=True)),
+                        count_max=0,
+                    ),
+                    condition(count_zone="opponent_spell_trap", count_max=0),
+                ),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["No face-up Attack Position monster and no opponent Spell/Trap means direct attack is legal."],
+    )
+
+
+@recipe(
+    "insect_barrier",
+    r"All Insect-Type monsters on your opponent's side of the field cannot attack as long as this card remains face-up on the field",
+    "Continuous attack lock on the opponent's Insects.",
+)
+def _insect_barrier(card, tier, match, text):
+    return (
+        [
+            script(
+                "opponent_insect_lock",
+                "continuous",
+                [
+                    op(
+                        "attack_lock",
+                        target={
+                            "zone": "opponent_monster",
+                            "count": "all",
+                            "filter": condition(monster_type="Insect"),
+                        },
+                        mode="cannot_attack",
+                    )
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_spell_trap"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["The lock is registered continuously while this card is face-up."],
+    )
+
+
+@recipe(
+    "the_dark_door",
+    r"Both players can only attack with 1 monster during their respective Battle Phases",
+    "Continuous one-attacker limit for both players.",
+)
+def _the_dark_door(card, tier, match, text):
+    return (
+        [
+            script(
+                "one_attacker_lock",
+                "continuous",
+                [op("attack_lock", mode="only_one_attacker", player="both", side_wide=True)],
+                condition_payload=condition(controller="self", face_up=True, zone="self_spell_trap"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Both sides are capped at one attacker."],
+    )
+
+
+@recipe(
+    "threatening_roar",
+    r"Your opponent cannot declare an attack during this turn",
+    "Normal Trap that forbids attacks for the turn.",
+)
+def _threatening_roar(card, tier, match, text):
+    return (
+        [
+            script(
+                "attack_lock_turn",
+                "on_activate",
+                [op("attack_lock", mode="cannot_attack", player="opponent", side_wide=True)],
+                duration="until_end_of_turn",
+                spell_speed=2,
+                source_text=text,
+            )
+        ],
+        ["Side-wide attack lock for the opponent until the end of the turn."],
+    )
+
+
+@recipe(
+    "barrel_dragon",
+    r"Toss a coin 3 times\. If 2 out of 3 results are Heads, destroy 1 monster on your opponent's side of the field\. This card's effect can only be used during your own turn, once per turn",
+    "Once-per-turn coin effect that destroys one opponent monster on two or more Heads.",
+)
+def _barrel_dragon(card, tier, match, text):
+    return (
+        [
+            script(
+                "coin_destroy_monster",
+                "manual",
+                [
+                    op(
+                        "toss_coin",
+                        count=3,
+                        success_min=2,
+                        success_max=3,
+                        success_operations=[op("destroy", target="$target", reason=card["name"])],
+                    )
+                ],
+                condition_payload=all_of(
+                    condition(controller="self", face_up=True, zone="self_monster"),
+                    condition(custom="ignition_main_phase"),
+                    condition(is_turn_player=True),
+                ),
+                target_payload=target("opponent_monster", 1),
+                once_per_turn=True,
+                source_text=text,
+            )
+        ],
+        ["The target is selected before the coin toss; only a successful result destroys it."],
+    )
+
+
+@recipe(
+    "goblin_attack_force",
+    r"When this card attacks, it is changed to Defense Position at the end of the Battle Phase\. This position cannot be changed during your next turn",
+    "End-of-Battle-Phase Defense change.",
+)
+def _goblin_attack_force(card, tier, match, text):
+    return (
+        [
+            script(
+                "battle_end_defense",
+                "continuous",
+                [op("battle_position_lock", target="$self", mode="defense_at_end")],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text="This card changes to Defense Position at the end of the Battle Phase.",
+            )
+        ],
+        ["Defense change is registered continuously; the next-turn change lock is not separately represented."],
+    )
+
+
+@recipe(
+    "goblin_elite_attack_force",
+    r"If this card attacks, it is changed to Defense Position at the end of the Battle Phase\. This card's battle position cannot be changed until the end of your next turn, except with a card effect",
+    "End-of-Battle-Phase Defense change.",
+)
+def _goblin_elite_attack_force(card, tier, match, text):
+    return _goblin_attack_force(card, tier, match, text)
+
+
+@recipe(
+    "indomitable_fighter_lei_lei",
+    r"If this card attacks, it is changed to Defense Position at the end of the Battle Phase\. This card's battle position cannot be changed until the end of your next turn, except with a card effect",
+    "End-of-Battle-Phase Defense change.",
+)
+def _indomitable_fighter_lei_lei(card, tier, match, text):
+    return _goblin_attack_force(card, tier, match, text)
+
+
+@recipe(
+    "granmarg_rock_monarch",
+    r"When this card is Tribute Summoned successfully, destroy 1 face-down card on the field",
+    "Tribute-Summon trigger that destroys one Set card.",
+)
+def _granmarg_rock_monarch(card, tier, match, text):
+    return (
+        [
+            script(
+                "tribute_summon_destroy_set",
+                "on_tribute_summon",
+                [op("destroy", target="$target", reason=card["name"])],
+                condition_payload=condition(controller="self", zone="self_monster"),
+                target_payload=target("all_cards", 1, condition(face_up=False)),
+                source_text=text,
+            )
+        ],
+        ["Triggers only on a Normal Summon with at least one tribute."],
+    )
+
+
+@recipe(
+    "maji_gire_panda",
+    r"As long as this card remains face-up on the field, each time a Beast-Type monster\(s\) on the field is destroyed, increase the ATK of this card by (\d+) points",
+    "Continuous trigger that grows when a Beast is destroyed.",
+)
+def _maji_gire_panda(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "beast_destroyed_gain_atk",
+                "on_destroy",
+                [op("modify_atk", target="$self", amount=amount, mode="flat")],
+                condition_payload=condition(monster_type="Beast"),
+                duration="permanent",
+                source_text=text,
+            )
+        ],
+        ["The destroyed Beast is the event subject; this card's script gains the ATK."],
+    )
+
+
+@recipe(
+    "kangaroo_champ",
+    r"A monster that battles with this card is changed to Defense Position after damage calculation",
+    "Change the battling monster to Defense Position after damage calculation.",
+)
+def _kangaroo_champ(card, tier, match, text):
+    # on_damage_calculated is still field-scanned for other card ids; there is
+    # no condition that proves this source is the attacker or the attack target.
+    return None
+
+
+@recipe(
+    "blade_rabbit",
+    r"When this card is changed from Attack Position to face-up Defense Position, destroy 1 monster on your opponent's side of the field",
+    "Position-change trigger that destroys one opponent monster.",
+)
+def _blade_rabbit(card, tier, match, text):
+    return (
+        [
+            script(
+                "position_change_destroy",
+                "on_position_change",
+                [op("destroy", target="$target", reason=card["name"])],
+                condition_payload=condition(
+                    controller="self", face_up=True, zone="self_monster", position="defense"
+                ),
+                target_payload=target("opponent_monster", 1),
+                source_text=text,
+            )
+        ],
+        ["A change to face-up Defense Position is distinguished from a Set by face_up=true."],
+    )
+
+
+@recipe(
+    "master_monk",
+    r"This card cannot be Normal Summoned or Set\. This card cannot be Special Summoned except by Tributing 1 \"Monk Fighter\" on your side of the field\. This card can attack twice during the same turn",
+    "Inherent summon by tributing Monk Fighter plus a second attack.",
+)
+def _master_monk(card, tier, match, text):
+    return (
+        [
+            script(
+                "inherent_summon",
+                "inherent_summon",
+                [op("inherent_special_summon", target="$self", position="attack")],
+                cost=[
+                    op(
+                        "tribute",
+                        target={
+                            "zone": "self_monster",
+                            "count": 1,
+                            "filter": condition(name="Monk Fighter"),
+                        },
+                    )
+                ],
+                source_text="Special Summon this card by Tributing 1 Monk Fighter.",
+            ),
+            script(
+                "extra_attack",
+                "continuous",
+                [op("extra_attack", target="$self", count=1)],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text="This card can attack twice during the same turn.",
+            ),
+        ],
+        ["Inherent summon plus continuous extra attack."],
+    )
+
+
+@recipe(
+    "cyber_dragon",
+    r"If there is a monster on your opponent's side of the field and there are no monsters on your side of the field, you can Special Summon this card from your hand",
+    "Inherent Special Summon from the hand when the opponent has a monster and your field is empty.",
+)
+def _cyber_dragon(card, tier, match, text):
+    return (
+        [
+            script(
+                "inherent_summon",
+                "inherent_summon",
+                [op("inherent_special_summon", target="$self", position="attack")],
+                condition_payload=all_of(
+                    condition(zone="self_hand"),
+                    condition(count_zone="opponent_monster", count_min=1),
+                    condition(count_zone="self_monster", count_max=0),
+                ),
+                source_text=text,
+            )
+        ],
+        ["The condition counts both sides at activation time."],
+    )
+
+
+@recipe(
+    "chaos_sorcerer",
+    r"This card can only be Special Summoned by removing 1 LIGHT and 1 DARK monster in your Graveyard from play\. Once during each of your turns, you can remove 1 face-up monster on the field from play\. If you activate this effect, this card cannot attack during this turn",
+    "Chaos Sorcerer's inherent banish-summon and once-per-turn banish ignition.",
+)
+def _chaos_sorcerer(card, tier, match, text):
+    return (
+        [
+            script(
+                "inherent_summon",
+                "inherent_summon",
+                [op("inherent_special_summon", target="$self", position="attack")],
+                condition_payload=all_of(
+                    condition(zone="self_hand"),
+                    condition(
+                        count_zone="self_graveyard",
+                        count_filter=condition(attribute="LIGHT"),
+                        count_min=1,
+                    ),
+                    condition(
+                        count_zone="self_graveyard",
+                        count_filter=condition(attribute="DARK"),
+                        count_min=1,
+                    ),
+                ),
+                cost=[
+                    op(
+                        "banish",
+                        target={
+                            "zone": "self_graveyard",
+                            "count": 1,
+                            "filter": condition(attribute="LIGHT"),
+                        },
+                    ),
+                    op(
+                        "banish",
+                        target={
+                            "zone": "self_graveyard",
+                            "count": 1,
+                            "filter": condition(attribute="DARK"),
+                        },
+                    ),
+                ],
+                source_text="Special Summon by banishing 1 LIGHT and 1 DARK monster from the Graveyard.",
+            ),
+            script(
+                "banish_monster",
+                "manual",
+                [
+                    op("banish", target="$target", reason=card["name"]),
+                    op("attack_lock", target="$self", mode="cannot_attack"),
+                ],
+                condition_payload=condition(
+                    controller="self", face_up=True, zone="self_monster", custom="ignition_main_phase"
+                ),
+                target_payload=target("any_monster", 1, condition(face_up=True)),
+                duration="until_end_of_turn",
+                once_per_turn=True,
+                source_text="Remove 1 face-up monster from play; this card cannot attack this turn.",
+            ),
+        ],
+        ["The banish and the attack lock resolve in the same manual script."],
+    )
+
+
+@recipe(
+    "steamroid",
+    r"If this card attacks your opponent's monster, increase the ATK of this card by (\d+) points during the Damage Step only\. If this card is attacked by your opponent's monster, decrease the ATK of this card by (\d+) points during the Damage Step only",
+    "Damage Step ATK change based on whether Steamroid is attacking or defending.",
+)
+def _steamroid(card, tier, match, text):
+    # on_damage_step is still field-scanned for different card ids; there is
+    # no condition that proves this source is the attacker/target.
+    return None
+
+
+@recipe(
+    "megarock_dragon",
+    r"This card cannot be Normal Summoned or Set\. This card cannot be Special Summoned except by removing from play a Rock-Type monster\(s\) in your Graveyard\. The original ATK and DEF of this card become the number of Rock-Type monsters you removed from play when you Special Summoned this card x (\d+) points",
+    "Inherent Rock-summon plus dynamic ATK/DEF from banished Rocks.",
+)
+def _megarock_dragon(card, tier, match, text):
+    # The printed procedure banishes any number of Rocks; a single fixed cost
+    # would change the resulting ATK/DEF.
+    return None
+
+
+@recipe(
+    "muka_muka",
+    r"Increase the ATK and DEF of this card by (\d+) points for every card in your hand",
+    "Continuous ATK/DEF per card in hand.",
+)
+def _muka_muka(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "hand_scaled_stats",
+                "continuous",
+                [
+                    op("modify_atk", target="$self", amount=amount, mode="per_hand"),
+                    op("modify_def", target="$self", amount=amount, mode="per_hand"),
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Both stats scale with the controller's hand size."],
+    )
+
+
+@recipe(
+    "team_type_stat",
+    r"As long as this card remains face-up on the field, increase the ATK and DEF of all ([A-Za-z-]+)-Type monsters on your side of the field by (\d+) points",
+    "Continuous team-wide Type stat boost.",
+)
+def _team_type_stat(card, tier, match, text):
+    monster_type, amount = match.group(1), int(match.group(2))
+    filter_payload = all_of(condition(controller="self"), condition(monster_type=monster_type))
+    return (
+        [
+            script(
+                "team_type_stat",
+                "continuous",
+                [
+                    op("modify_atk", target={"zone": "all_monsters", "count": "all", "filter": filter_payload}, amount=amount, mode="flat"),
+                    op("modify_def", target={"zone": "all_monsters", "count": "all", "filter": filter_payload}, amount=amount, mode="flat"),
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        [f"+{amount} ATK/DEF to friendly {monster_type} monsters."],
+    )
+
+
+@recipe(
+    "mudora",
+    r"The ATK of this card increases by (\d+) points for every Fairy-Type monster in your Graveyard",
+    "Continuous ATK per Fairy in the Graveyard.",
+)
+def _mudora(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "grave_fairy_atk",
+                "continuous",
+                [
+                    op(
+                        "modify_atk",
+                        target="$self",
+                        amount=amount,
+                        mode="per_card",
+                        count_zone="self_graveyard",
+                        count_filter=condition(monster_type="Fairy"),
+                    )
+                ],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Counts Fairy-Type monsters in the controller's Graveyard."],
+    )
+
+
+@recipe(
+    "giant_germ",
+    r"When this card is sent to the Graveyard as a result of battle, inflict (\d+) points of Direct Damage to your opponent's Life Points\. You can also take cards of the same name from your Deck and Special Summon them to the field in face-up Attack Position\. The Deck is then shuffled",
+    "Battle-destruction burn plus same-name recruit.",
+)
+def _giant_germ(card, tier, match, text):
+    amount = int(match.group(1))
+
+    def recruit(trigger: str):
+        return script(
+            "battle_recruit_same_name",
+            trigger,
+            [
+                op("special_summon", target="$target", position="attack"),
+                op("shuffle", player="self"),
+            ],
+            target_payload=target("self_deck", "all", condition(name=card["name"])),
+            optional=True,
+            source_text="Recruit all cards of the same name in face-up Attack Position.",
+        )
+
+    return (
+        [
+            script(
+                "battle_destroy_burn",
+                "on_battle_destroy",
+                [op("inflict_damage", amount=amount, player="opponent", reason=card["name"])],
+                source_text="When this card is sent to the Graveyard by battle, inflict damage.",
+            ),
+            recruit("on_battle_destroy"),
+        ],
+        ["Burn is mandatory; the same-name recruit is optional."],
+    )
+
+
+@recipe(
+    "nimble_momonga",
+    r"When this card is sent to the Graveyard as a result of battle, increase your Life Points by (\d+) points\. You can also take cards of the same name from your Deck and Special Summon them to the field in face-down Defense Position\. The Deck is then shuffled",
+    "Battle-destruction heal plus same-name face-down recruit.",
+)
+def _nimble_momonga(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "battle_destroy_heal",
+                "on_battle_destroy",
+                [op("gain_lp", amount=amount, player="self", reason=card["name"])],
+                source_text="When this card is sent to the Graveyard by battle, gain Life Points.",
+            ),
+            script(
+                "battle_recruit_same_name",
+                "on_battle_destroy",
+                [
+                    op("special_summon", target="$target", position="face_down"),
+                    op("shuffle", player="self"),
+                ],
+                target_payload=target("self_deck", "all", condition(name=card["name"])),
+                optional=True,
+                source_text="Recruit all cards of the same name in face-down Defense Position.",
+            ),
+        ],
+        ["Heal is mandatory; the same-name recruit is optional and uses face-down Defense."],
+    )
+
+
+@recipe(
+    "alligators_sword_dragon",
+    r'"Baby Dragon" \+ "Alligator\'s Sword" You can Inflict Direct Damage to your opponent\'s Life Points with this card if the only Attributes of Monster Cards on your opponent\'s side of the field are EARTH, WATER, or FIRE',
+    "Conditional direct attack when the opponent has no LIGHT/DARK/WIND monsters.",
+)
+def _alligators_sword_dragon(card, tier, match, text):
+    return (
+        [
+            script(
+                "conditional_direct_attack",
+                "continuous",
+                [op("attack_directly", target="$self")],
+                condition_payload=all_of(
+                    condition(controller="self", face_up=True, zone="self_monster"),
+                    condition(
+                        count_zone="opponent_monster",
+                        count_filter=any_of(
+                            condition(attribute="LIGHT"),
+                            condition(attribute="DARK"),
+                            condition(attribute="WIND"),
+                        ),
+                        count_max=0,
+                    ),
+                ),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["No LIGHT, DARK or WIND monster on the opponent's side means the direct attack is legal."],
+    )
+
+
+@recipe(
+    "zombyra_the_dark",
+    r"This card cannot attack a player directly\. Each time this card destroys a monster in battle, decrease the ATK of this card by (\d+) points",
+    "Cannot attack directly; loses ATK whenever it destroys a monster.",
+)
+def _zombyra_the_dark(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "cannot_attack_directly",
+                "continuous",
+                [op("attack_lock", target="$self", mode="cannot_attack_directly")],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text="This card cannot attack a player directly.",
+            ),
+            script(
+                "destroy_lose_atk",
+                "on_battle_destroy_by_attacker",
+                [op("modify_atk", target="$self", amount=-amount, mode="flat")],
+                condition_payload=condition(custom="battle_involving_self"),
+                duration="permanent",
+                source_text="Each time this card destroys a monster in battle, it loses ATK.",
+            ),
+        ],
+        ["Direct-attack lock plus the attacker-destroy ATK loss."],
+    )
+
+
+@recipe(
+    "lesser_fiend",
+    r"As long as this monster remains face-up on the field, monsters destroyed by this monster in battle are removed from play instead of being sent to the Graveyard",
+    "Battle-destroyed monsters are banished.",
+)
+def _lesser_fiend(card, tier, match, text):
+    return (
+        [
+            script(
+                "banish_destroyed_monster",
+                "on_battle_destroy_by_attacker",
+                [op("banish", target="$trigger", reason=card["name"])],
+                condition_payload=condition(custom="battle_involving_self"),
+                source_text=text,
+            )
+        ],
+        ["Banish the destroyed monster from the Graveyard destination."],
+    )
+
+
+@recipe(
+    "giant_orc",
+    r"When this card attacks, it is changed to Defense Position at the end of the Battle Phase\. This position cannot be changed until the end of your next turn",
+    "End-of-Battle-Phase Defense change.",
+)
+def _giant_orc(card, tier, match, text):
+    return _goblin_attack_force(card, tier, match, text)
+
+
+@recipe(
+    "backup_soldier",
+    r"You can activate this card when there are 5 or more Monster Cards in your Graveyard\. Select up to 3 Monster Cards with an ATK of 1500 points or less \(except Effect Monster Cards\) from your Graveyard and add them to your hand",
+    "Trap that returns up to three low-ATK Normal Monsters from the Graveyard.",
+)
+def _backup_soldier(card, tier, match, text):
+    return (
+        [
+            script(
+                "return_three_normal_monsters",
+                "on_activate",
+                [op("return_to_hand", target="$target", reason=card["name"])],
+                condition_payload=condition(
+                    count_zone="self_graveyard",
+                    count_filter=condition(card_type="Monster"),
+                    count_min=5,
+                ),
+                target_payload=target(
+                    "self_graveyard",
+                    {"min": 0, "max": 3},
+                    all_of(
+                        condition(card_type="Normal Monster"),
+                        condition(atk_max=1500),
+                    ),
+                    optional=True,
+                ),
+                spell_speed=2,
+                source_text=text,
+            )
+        ],
+        ["The condition counts monsters, not all Graveyard cards."],
+    )
+
+
+@recipe(
+    "direct_attack_monster",
+    r"(?:This monster|This card) may attack your opponent's Life Points directly",
+    "Continuous direct-attack permission.",
+)
+def _direct_attack_monster(card, tier, match, text):
+    return (
+        [
+            script(
+                "attack_directly",
+                "continuous",
+                [op("attack_directly", target="$self")],
+                condition_payload=condition(controller="self", face_up=True, zone="self_monster"),
+                duration="while_face_up",
+                source_text=text,
+            )
+        ],
+        ["Continuous direct-attack permission."],
+    )
+
+
+@recipe(
+    "banner_of_courage",
+    r"During your Battle Phase only, increase the ATK of all monsters on your side of the field by (\d+) points",
+    "Continuous Spell that boosts the controller's monsters during their Battle Phase.",
+)
+def _banner_of_courage(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "battle_phase_team_boost",
+                "on_battle_start",
+                [op("modify_atk", target="$target", amount=amount, mode="flat")],
+                condition_payload=condition(
+                    controller="self",
+                    face_up=True,
+                    zone="self_spell_trap",
+                    is_turn_player=True,
+                ),
+                target_payload=target(
+                    "all_monsters", "all", condition(controller="self")
+                ),
+                duration="until_end_of_battle_phase",
+                source_text=text,
+            )
+        ],
+        ["Applies at the controller's Battle Phase start and expires with the Battle Phase."],
+    )
+
+
+@recipe(
+    "soul_of_purity_and_light",
+    r"This card can only be Special Summoned by removing 2 LIGHT monsters in your Graveyard from play\. As long as this card remains face-up on the field, decrease the ATK of all monsters on your opponent's side of the field by (\d+) points during his/her Battle Phase",
+    "Banish-two-LIGHT inherent summon plus an opponent Battle Phase ATK debuff.",
+)
+def _soul_of_purity_and_light(card, tier, match, text):
+    amount = int(match.group(1))
+    return (
+        [
+            script(
+                "inherent_summon",
+                "inherent_summon",
+                [op("inherent_special_summon", target="$self", position="attack")],
+                condition_payload=all_of(
+                    condition(zone="self_hand"),
+                    condition(
+                        count_zone="self_graveyard",
+                        count_filter=condition(attribute="LIGHT"),
+                        count_min=2,
+                    ),
+                ),
+                cost=[
+                    op(
+                        "banish",
+                        target={
+                            "zone": "self_graveyard",
+                            "count": 2,
+                            "filter": condition(attribute="LIGHT"),
+                        },
+                    )
+                ],
+                source_text="Special Summon by banishing 2 LIGHT monsters from the Graveyard.",
+            ),
+            script(
+                "opponent_battle_debuff",
+                "on_battle_start",
+                [op("modify_atk", target="$target", amount=-amount, mode="flat")],
+                condition_payload=condition(
+                    controller="self",
+                    face_up=True,
+                    zone="self_monster",
+                    is_turn_player=False,
+                ),
+                target_payload=target("opponent_monster", "all"),
+                duration="until_end_of_battle_phase",
+                source_text="During the opponent's Battle Phase, their monsters lose ATK.",
+            ),
+        ],
+        ["The inherent summon and the opponent Battle Phase debuff are separate scripts."],
+    )
+
+
+@recipe(
+    "wroughtweiler",
+    r"When this card is destroyed as a result of battle and sent to the Graveyard, add from your Graveyard to your hand 1 card that includes \"Elemental Hero\" in its card name, and 1 \"Polymerization\"",
+    "Battle-destruction recovery of one Elemental HERO card and Polymerization.",
+)
+def _wroughtweiler(card, tier, match, text):
+    return (
+        [
+            script(
+                "recover_hero_and_polymerization",
+                "on_battle_destroy",
+                [
+                    op(
+                        "search",
+                        target={
+                            "zone": "self_graveyard",
+                            "count": 1,
+                            "filter": condition(name_contains="Elemental Hero"),
+                        },
+                        destination="hand",
+                        reveal=True,
+                        shuffle=False,
+                    ),
+                    op(
+                        "search",
+                        target={
+                            "zone": "self_graveyard",
+                            "count": 1,
+                            "filter": condition(name="Polymerization"),
+                        },
+                        destination="hand",
+                        reveal=True,
+                        shuffle=False,
+                    ),
+                ],
+                source_text=text,
+            )
+        ],
+        ["Two explicit Graveyard searches; the deterministic selector takes the first matching card."],
+    )
+
+
+@recipe(
+    "the_shallow_grave",
+    r"Each player takes 1 Monster Card from his/her respective Graveyard and Special Summons them on the field in face-down Defense Position",
+    "Each player revives one monster face-down.",
+)
+def _the_shallow_grave(card, tier, match, text):
+    return (
+        [
+            script(
+                "both_players_revive_facedown",
+                "on_activate",
+                [
+                    op(
+                        "special_summon",
+                        target={"zone": "self_graveyard", "count": 1, "filter": condition(card_type="Monster")},
+                        position="face_down",
+                    ),
+                    op(
+                        "special_summon",
+                        target={"zone": "opponent_graveyard", "count": 1, "filter": condition(card_type="Monster")},
+                        position="face_down",
+                    ),
+                ],
+                spell_speed=1,
+                source_text=text,
+            )
+        ],
+        ["Both players' Graveyards are selected with one monster each and Set face-down."],
+    )
+
+
+# ---------------------------------------------------------------------------
 # Pending-reason taxonomy
 # ---------------------------------------------------------------------------
 
@@ -3719,6 +5618,62 @@ PENDING_REASONS = {
         "pending",
         "changing the damage type is not implemented",
     ),
+    "runtime_upkeep_cost": (
+        "pending",
+        "Standby upkeep with a destroy-if-unpaid branch is not implemented",
+    ),
+    "runtime_grave_trigger": (
+        "pending",
+        "effects that trigger/apply while the card is in the Graveyard are not implemented",
+    ),
+    "runtime_opponent_lp_condition": (
+        "pending",
+        "conditions on the opponent's Life Points are not expressible",
+    ),
+    "runtime_source_role": (
+        "pending",
+        "the runtime cannot prove this source is the attacker or the attack target",
+    ),
+    "runtime_dynamic_target_atk": (
+        "pending",
+        "damage based on another card's ATK is not expressible",
+    ),
+    "runtime_win_condition": (
+        "pending",
+        "alternate win conditions are not implemented",
+    ),
+    "runtime_equipped_count": (
+        "pending",
+        "per-equipped-card scaling is not implemented",
+    ),
+    "runtime_dynamic_draw": (
+        "pending",
+        "draw count cannot use a dynamic mode",
+    ),
+    "runtime_global_grave_banish": (
+        "pending",
+        "global Graveyard-to-banished replacement is not implemented",
+    ),
+    "runtime_spell_counter_trigger": (
+        "pending",
+        "no field-scanning Spell-activation trigger for other cards",
+    ),
+    "runtime_trigger_scope": (
+        "pending",
+        "the needed global game-event trigger is not implemented",
+    ),
+    "runtime_lookup_set": (
+        "pending",
+        "looking at/reordering a Set card is not implemented",
+    ),
+    "runtime_zone_lock": (
+        "pending",
+        "locked Monster/Spell/Trap Zones are not implemented",
+    ),
+    "runtime_special_summoned_filter": (
+        "pending",
+        "filtering monsters by Special Summon provenance is not implemented",
+    ),
     "runtime_attack_cost": (
         "pending",
         "attack costs/restrictions are not implemented",
@@ -3924,6 +5879,93 @@ _REASON_RULES: list[tuple[str, re.Pattern[str], str]] = [
             re.IGNORECASE,
         ),
         "tracking monsters destroyed earlier in the turn is not implemented",
+    ),
+    (
+        "runtime_upkeep_cost",
+        re.compile(
+            r"must pay .* (?:during|at) each of your Standby Phases|"
+            r"Pay \d+ Life Points (?:during|at) each of your Standby Phases|"
+            r"During your Standby Phase, pay \d+ Life Points",
+            re.IGNORECASE,
+        ),
+        "Standby upkeep with a destroy-if-unpaid branch is not implemented",
+    ),
+    (
+        "runtime_grave_trigger",
+        re.compile(
+            r"exists in your Graveyard|is in the Graveyard and you have no cards in your Hand",
+            re.IGNORECASE,
+        ),
+        "effects that trigger/apply while the card is in the Graveyard are not implemented",
+    ),
+    (
+        "runtime_opponent_lp_condition",
+        re.compile(
+            r"opponent's Life Points are 3000 or less|"
+            r"opponent's Life Points are at least \d+ points higher|"
+            r"difference is 7000 points or more",
+            re.IGNORECASE,
+        ),
+        "conditions on the opponent's Life Points are not expressible",
+    ),
+    (
+        "runtime_source_role",
+        re.compile(
+            r"if this card attacks|if this card is attacked|when this card is attacked|"
+            r"attacked by a monster on your opponent's side of the field",
+            re.IGNORECASE,
+        ),
+        "the runtime cannot prove this source is the attacker or the attack target",
+    ),
+    (
+        "runtime_dynamic_target_atk",
+        re.compile(
+            r"damage equal to the .*ATK of the (?:attacking|destroyed)|"
+            r"inflict .* equal to the ATK of the attacking|"
+            r"equal to the ATK of the destroyed",
+            re.IGNORECASE,
+        ),
+        "damage based on another card's ATK is not expressible",
+    ),
+    (
+        "runtime_win_condition",
+        re.compile(r"automatic victory|you win the Duel", re.IGNORECASE),
+        "alternate win conditions are not implemented",
+    ),
+    (
+        "runtime_equipped_count",
+        re.compile(r"for each card equipped|for each Equip Card equipped", re.IGNORECASE),
+        "per-equipped-card scaling is not implemented",
+    ),
+    (
+        "runtime_dynamic_draw",
+        re.compile(r"Draw a number of cards.*equal to", re.IGNORECASE),
+        "draw count cannot use a dynamic mode",
+    ),
+    (
+        "runtime_global_grave_banish",
+        re.compile(r"any card sent to the Graveyard is removed from play", re.IGNORECASE),
+        "global Graveyard-to-banished replacement is not implemented",
+    ),
+    (
+        "runtime_spell_counter_trigger",
+        re.compile(r"Each time you or your opponent activates 1 Spell Card", re.IGNORECASE),
+        "there is no field-scanning 'a Spell was activated' trigger for other cards",
+    ),
+    (
+        "runtime_trigger_scope",
+        re.compile(
+            r"Each time (?:you draw|you increase your own Life Points|a card is removed from play|"
+            r"your opponent's Monster Cards are sent|a player equips|"
+            r"a Beast-Type monster inflicts|1 of your monsters inflicts)",
+            re.IGNORECASE,
+        ),
+        "the needed global game-event trigger is not implemented",
+    ),
+    (
+        "runtime_lookup_set",
+        re.compile(r"look at 1 Set card", re.IGNORECASE),
+        "looking at/reordering a Set card is not implemented",
     ),
     (
         "runtime_standby_side",
@@ -4390,6 +6432,37 @@ def classify_pending(card: dict) -> tuple[str, str, str]:
 
     text = normalize(card.get("description"))
     subtype = card.get("subtype") or ""
+
+    if re.search(r"\bToken\b", text, re.IGNORECASE):
+        return (
+            "pending",
+            "runtime_token_summon",
+            "token creation and token destruction are not implemented",
+        )
+    if re.search(
+        r"must pay .* (?:during|at) each of your Standby Phases|"
+        r"Pay \d+ Life Points (?:during|at) each of your Standby Phases|"
+        r"During your Standby Phase, pay \d+ Life Points",
+        text,
+        re.IGNORECASE,
+    ):
+        return (
+            "pending",
+            "runtime_upkeep_cost",
+            "Standby upkeep with a destroy-if-unpaid branch is not implemented",
+        )
+    if re.search(r"Monster Card Zones?.*cannot be used|selected zones cannot be used", text, re.IGNORECASE):
+        return (
+            "pending",
+            "runtime_zone_lock",
+            "locked Monster/Spell/Trap Zones are not implemented",
+        )
+    if re.search(r"destroy all Special Summoned monsters", text, re.IGNORECASE):
+        return (
+            "pending",
+            "runtime_special_summoned_filter",
+            "filtering monsters by Special Summon provenance is not implemented",
+        )
 
     if (
         card.get("card_type") == "Spell"

@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "card_id": 136,
+  "name": "Wasteland",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases the ATK and DEF of all Dinosaur, Zombie, and Rock-Type monsters by 200 points.",
+  "notes": [
+    "+200 ATK/DEF to Dinosaur, Zombie, Rock monsters."
+  ],
+  "scripts": [
+    {
+      "id": "136_field_stat",
+      "trigger": "field_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "any": [
+                {
+                  "monster_type": "Dinosaur"
+                },
+                {
+                  "monster_type": "Zombie"
+                },
+                {
+                  "monster_type": "Rock"
+                }
+              ]
+            }
+          },
+          "amount": 200,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_def",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "any": [
+                {
+                  "monster_type": "Dinosaur"
+                },
+                {
+                  "monster_type": "Zombie"
+                },
+                {
+                  "monster_type": "Rock"
+                }
+              ]
+            }
+          },
+          "amount": 200,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_field"
+      },
+      "source_text": "+200 ATK/DEF to Dinosaur, Zombie, Rock monsters."
+    }
+  ]
+}

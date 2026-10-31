@@ -163,7 +163,13 @@
         "continuous",
         "equip_continuous",
         "field_continuous",
-        "manual"
+        "manual",
+        "on_damage_step",
+        "on_battle_damage",
+        "on_battle_destroy_by_attacker",
+        "on_position_change",
+        "on_tribute_summon",
+        "inherent_summon"
       ]
     },
     "duration": {
@@ -319,6 +325,96 @@
         "custom": {
           "type": "string",
           "description": "Named engine predicate. Must be implemented by A04; unknown names fail validation."
+        },
+        "name_contains": {
+          "type": "string"
+        },
+        "name_on_field": {
+          "type": "string"
+        },
+        "turn": {
+          "enum": [
+            "self",
+            "opponent",
+            "any"
+          ]
+        },
+        "phase": {
+          "enum": [
+            "main",
+            "battle",
+            "any"
+          ]
+        },
+        "count_zone": {
+          "$ref": "#/$defs/zone"
+        },
+        "count_zones": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/zone"
+          }
+        },
+        "count_filter": {
+          "$ref": "#/$defs/condition"
+        },
+        "count_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_max": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "equipped_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tribute_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "graveyard_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "banished_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deck_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extra_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "monster_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "spell_trap_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "damage_step": {
+          "type": "boolean"
+        },
+        "attack_direct": {
+          "type": "boolean"
+        },
+        "has_attacked": {
+          "type": "boolean"
+        },
+        "is_turn_player": {
+          "type": "boolean"
+        },
+        "event_source_is_self": {
+          "type": "boolean"
+        },
+        "field_scan": {
+          "type": "boolean"
         }
       }
     },
@@ -416,7 +512,12 @@
         "graveyard",
         "deck",
         "hand",
-        "extra"
+        "extra",
+        "deck_top",
+        "equipped_monster",
+        "self_all",
+        "opponent_all",
+        "all_cards_and_hands"
       ]
     },
     "operation": {
@@ -441,7 +542,8 @@
                 "$cost",
                 "$trigger",
                 "$attacker",
-                "$attack_target"
+                "$attack_target",
+                "$equipped"
               ]
             }
           ]
@@ -472,7 +574,9 @@
             "attack",
             "defense",
             "face_down",
-            "face_up"
+            "face_up",
+            "top",
+            "bottom"
           ]
         },
         "attribute": {
@@ -533,6 +637,53 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "count_zone": {
+          "$ref": "#/$defs/zone"
+        },
+        "count_zones": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/zone"
+          }
+        },
+        "count_filter": {
+          "$ref": "#/$defs/condition"
+        },
+        "multiplier": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "divisor": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "success_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "success_max": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "threshold": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "side_wide": {
+          "type": "boolean"
+        },
+        "success_operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        },
+        "failure_operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation"
           }
         }
       }
@@ -604,44 +755,64 @@
         "add_counter",
         "allow_fusion",
         "attack_directly",
+        "attack_lock",
         "banish",
+        "battle_damage_modifier",
         "battle_damage_zero",
+        "battle_position_lock",
         "change_position",
+        "control",
         "copy",
+        "damage",
         "declare_name",
         "destroy",
+        "destroy_replace",
+        "destruction_replacement",
         "discard",
         "draw",
         "equip",
         "excavate",
         "extra_attack",
+        "fusion",
         "gain_lp",
+        "heal",
         "inflict_damage",
+        "inherent_special_summon",
         "lock_activation",
         "look_at_deck",
         "mill",
         "modify_atk",
         "modify_def",
+        "must_attack",
         "negate",
+        "negate_activation",
+        "negate_attack",
+        "piercing",
         "place_counter",
         "prevent_battle_damage",
         "redirect_attack",
         "redirect_battle_damage",
         "remove_counter",
+        "return_to_deck",
         "return_to_extra",
         "return_to_hand",
-        "return_to_deck",
         "reveal",
+        "ritual",
         "roll_die",
         "search",
+        "send_to_grave",
         "send_to_graveyard",
         "set",
         "shuffle",
         "skip_phase",
         "special_summon",
+        "spirit_return",
         "summon",
+        "summon_lock",
         "take_control",
-        "toss_coin"
+        "toss_coin",
+        "union_equip",
+        "union_unequip"
       ]
     }
   }

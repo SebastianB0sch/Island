@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "card_id": 125,
+  "name": "Mystical Moon",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "A Beast-Warrior-Type monster equipped with this card increases its ATK and DEF by 300 points.",
+  "notes": [
+    "Only a Beast-Warrior monster can be equipped; +300 ATK/DEF."
+  ],
+  "scripts": [
+    {
+      "id": "125_equip_activate",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "equip",
+          "target": "$target"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "monster_type": "Beast-Warrior"
+        }
+      },
+      "source_text": "Equip this card to a legal monster."
+    },
+    {
+      "id": "125_equip_continuous",
+      "trigger": "equip_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 300,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_def",
+          "target": "$self",
+          "amount": 300,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "monster_type": "Beast-Warrior"
+      },
+      "source_text": "Apply the equipped monster's continuous bonus."
+    }
+  ]
+}

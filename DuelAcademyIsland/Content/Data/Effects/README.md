@@ -88,10 +88,13 @@ manifest records `pending_reason_code` and `pending_reason` for every pending
 card, and `coverage.py` groups those rows by story event decks, opponent decks,
 puzzle decks, starter decks, shop packs and the long tail.
 
-At the Gate 3 pass there are 155 validated scripts (10 hand-authored, 145
-generated), 264 `scripted` cards, 343 `vanilla`/data-covered cards and 593
-`pending` cards. The lane report shows that story event opponent decks contain
-92 of the pending cards; the rest are roster-only or shop-only.
+At the Gate 3.1 pass there are 253 validated scripts (10 hand-authored, 243
+generated), 362 `scripted` cards, 345 `vanilla`/data-covered cards and 493
+`pending` cards. The lane report shows 119 pending cards in the current
+368-card story deck union. That lane expanded while this batch was in progress:
+of the previous 92-card story backlog, 38 are now scripted and 54 remain
+pending. Generic equip and field-spell stat recipes are generated from the same
+whole-card rule table.
 
 `send_to_graveyard` is exposed by `schema.json` for selecting one card and
 sending it to the Graveyard; the A04 runtime already implements

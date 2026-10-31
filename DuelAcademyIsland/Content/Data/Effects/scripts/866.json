@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "card_id": 866,
+  "name": "Chaos Sorcerer",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card can only be Special Summoned by removing 1 LIGHT and 1 DARK monster in your Graveyard from play. Once during each of your turns, you can remove 1 face-up monster on the field from play. If you activate this effect, this card cannot attack during this turn.",
+  "notes": [
+    "The banish and the attack lock resolve in the same manual script."
+  ],
+  "scripts": [
+    {
+      "id": "866_inherent_summon",
+      "trigger": "inherent_summon",
+      "operations": [
+        {
+          "op": "inherent_special_summon",
+          "target": "$self",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "zone": "self_hand"
+          },
+          {
+            "count_zone": "self_graveyard",
+            "count_filter": {
+              "attribute": "LIGHT"
+            },
+            "count_min": 1
+          },
+          {
+            "count_zone": "self_graveyard",
+            "count_filter": {
+              "attribute": "DARK"
+            },
+            "count_min": 1
+          }
+        ]
+      },
+      "cost": [
+        {
+          "op": "banish",
+          "target": {
+            "zone": "self_graveyard",
+            "count": 1,
+            "filter": {
+              "attribute": "LIGHT"
+            }
+          }
+        },
+        {
+          "op": "banish",
+          "target": {
+            "zone": "self_graveyard",
+            "count": 1,
+            "filter": {
+              "attribute": "DARK"
+            }
+          }
+        }
+      ],
+      "source_text": "Special Summon by banishing 1 LIGHT and 1 DARK monster from the Graveyard."
+    },
+    {
+      "id": "866_banish_monster",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "banish",
+          "target": "$target",
+          "reason": "Chaos Sorcerer"
+        },
+        {
+          "op": "attack_lock",
+          "target": "$self",
+          "mode": "cannot_attack"
+        }
+      ],
+      "duration": "until_end_of_turn",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": true,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "face_up": true
+        }
+      },
+      "source_text": "Remove 1 face-up monster from play; this card cannot attack this turn."
+    }
+  ]
+}

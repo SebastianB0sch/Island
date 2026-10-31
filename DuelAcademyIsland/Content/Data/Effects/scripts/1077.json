@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "card_id": 1077,
+  "name": "Granmarg the Rock Monarch",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is Tribute Summoned successfully, destroy 1 face-down card on the field.",
+  "notes": [
+    "Triggers only on a Normal Summon with at least one tribute."
+  ],
+  "scripts": [
+    {
+      "id": "1077_tribute_summon_destroy_set",
+      "trigger": "on_tribute_summon",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Granmarg the Rock Monarch"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Granmarg the Rock Monarch"
+          }
+        ]
+      },
+      "target": {
+        "zone": "all_cards",
+        "count": 1,
+        "filter": {
+          "face_up": false
+        }
+      },
+      "source_text": "When this card is Tribute Summoned successfully, destroy 1 face-down card on the field."
+    }
+  ]
+}

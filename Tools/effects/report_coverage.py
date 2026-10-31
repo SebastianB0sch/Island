@@ -200,6 +200,52 @@ def build_report() -> str:
     lines.append("")
 
     lane_path = data.EFFECTS_DIR / "coverage_by_deck.json"
+    lines.append("## Gate 3.1 batch record")
+    lines.append("")
+    lines.append(
+        "| Metric | Before batch | After batch |"
+    )
+    lines.append("| --- | ---: | ---: |")
+    lines.append(f"| Data scripts | 155 | {script_count} |")
+    lines.append(f"| `scripted` | 264 | {summary['by_status']['scripted']} |")
+    lines.append(f"| `vanilla` | 345 | {summary['by_status']['vanilla']} |")
+    lines.append(f"| `pending` | 591 | {summary['by_status']['pending']} |")
+    lines.append("| `unsupported` | 0 | 0 |")
+    lines.append("")
+    lane_story_pending = None
+    if lane_path.exists():
+        lane_story_pending = data.load_json(lane_path).get("summary", {}).get(
+            "categories", {}
+        ).get("story_event_decks", {}).get("pending")
+    lines.append(
+        "The previous story backlog was **92 pending cards from a 213-card story deck union**. "
+        f"Incoming deck data expanded that lane to **368 unique cards**; it now has "
+        f"**{lane_story_pending if lane_story_pending is not None else '?'} pending**, "
+        "so the lane totals are not like-for-like. Of the original 92 cards, **38 are now "
+        "`scripted` and 54 remain pending**. The current story lane's pending cards are listed "
+        "with their reasons in `COVERAGE_BY_DECK.md`; overall remaining work is grouped by reason "
+        "below."
+    )
+    lines.append("")
+    lines.append("## Runtime caveats in this batch")
+    lines.append("")
+    lines.append(
+        "- **Generic Equip/Field activation persistence.** The 40 `equip_continuous` / "
+        "`field_continuous` scripts are schema-valid, but `FDuelEngine::ActivateSpell` still "
+        "decides whether a card stays on the field with the legacy `IsEquipName` / "
+        "`IsFieldSpellName` lists. Until A04 generalises `bStays`, these cards only apply when "
+        "the card is already placed/attached; activating them from the hand sends them to the "
+        "Graveyard after resolution."
+    )
+    lines.append(
+        "- **Self-trigger source binding.** Field-scanned triggers such as `on_battle_destroy`, "
+        "`on_sent_to_graveyard`, `on_tribute_summon`, `on_position_change` and `on_summon` still "
+        "consider other card ids on the field. The new attacker hooks use the supported "
+        "`battle_involving_self` predicate where possible, but A04 still needs strict "
+        "self-trigger binding (or an `event_source_is_self` condition) for the remaining cases."
+    )
+    lines.append("")
+
     if lane_path.exists():
         lane_report = data.load_json(lane_path)
         lane_summary = lane_report.get("summary", {})

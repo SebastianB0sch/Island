@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "card_id": 1120,
+  "name": "Master Monk",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card cannot be Normal Summoned or Set. This card cannot be Special Summoned except by Tributing 1 \"Monk Fighter\" on your side of the field. This card can attack twice during the same turn.",
+  "notes": [
+    "Inherent summon plus continuous extra attack."
+  ],
+  "scripts": [
+    {
+      "id": "1120_inherent_summon",
+      "trigger": "inherent_summon",
+      "operations": [
+        {
+          "op": "inherent_special_summon",
+          "target": "$self",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "cost": [
+        {
+          "op": "tribute",
+          "target": {
+            "zone": "self_monster",
+            "count": 1,
+            "filter": {
+              "name": "Monk Fighter"
+            }
+          }
+        }
+      ],
+      "source_text": "Special Summon this card by Tributing 1 Monk Fighter."
+    },
+    {
+      "id": "1120_extra_attack",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "extra_attack",
+          "target": "$self",
+          "count": 1
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "This card can attack twice during the same turn."
+    }
+  ]
+}

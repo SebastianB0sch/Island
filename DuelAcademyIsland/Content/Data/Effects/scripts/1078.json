@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 1078,
+  "name": "Maji-Gire Panda",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "As long as this card remains face-up on the field, each time a Beast-Type monster(s) on the field is destroyed, increase the ATK of this card by 500 points.",
+  "notes": [
+    "The destroyed Beast is the event subject; this card's script gains the ATK."
+  ],
+  "scripts": [
+    {
+      "id": "1078_beast_destroyed_gain_atk",
+      "trigger": "on_destroy",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 500,
+          "mode": "flat"
+        }
+      ],
+      "duration": "permanent",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "monster_type": "Beast"
+      },
+      "source_text": "As long as this card remains face-up on the field, each time a Beast-Type monster(s) on the field is destroyed, increase the ATK of this card by 500 points."
+    }
+  ]
+}

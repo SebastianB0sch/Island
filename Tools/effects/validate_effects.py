@@ -53,6 +53,9 @@ CUSTOM_PREDICATES = {
     "sent_from_field_to_graveyard",
     "ignition_main_phase",
     "battle_involving_self",
+    "damage_step",
+    "inherent_summon",
+    "opponent_activation",
     "attack_declared_against_controller",
 }
 
@@ -62,25 +65,39 @@ OP_SPECS: dict[str, dict] = {
     "add_counter": {"required": {"target", "counter", "amount"}, "optional": {"max"}},
     "allow_fusion": {"required": {"fusion_type"}, "optional": {"banish_materials"}},
     "attack_directly": {"required": {"target"}, "optional": {}},
+    "attack_lock": {"required": set(), "optional": {"target", "mode", "player", "amount", "side_wide"}},
     "banish": {"required": {"target"}, "optional": {"destination", "reason"}},
+    "battle_damage_modifier": {"required": {"target"}, "optional": {"mode", "amount"}},
     "battle_damage_zero": {"required": {"target"}, "optional": {}},
+    "battle_position_lock": {"required": {"target"}, "optional": {"mode"}},
     "change_position": {"required": {"target", "position"}, "optional": {}},
+    "control": {"required": {"target"}, "optional": {"to"}},
     "copy": {"required": {"target"}, "optional": {"name", "card_id"}},
+    "damage": {"required": {"amount"}, "optional": {"player", "reason", "mode", "count_zone", "count_zones", "count_filter", "multiplier", "divisor"}},
     "declare_name": {"required": {"name"}, "optional": {}},
     "destroy": {"required": {"target"}, "optional": {"reason"}},
+    "destruction_replacement": {"required": {"target"}, "optional": {"mode", "reason"}},
+    "destroy_replace": {"required": {"target"}, "optional": {"mode", "reason"}},
     "discard": {"required": {"target"}, "optional": {"player", "reason"}},
     "draw": {"required": {"count"}, "optional": {"player", "reason"}},
     "equip": {"required": {"target"}, "optional": {}},
     "excavate": {"required": {"count", "target"}, "optional": {"destination", "reveal"}},
     "extra_attack": {"required": {"target"}, "optional": {"count"}},
-    "gain_lp": {"required": {"amount"}, "optional": {"player", "reason"}},
-    "inflict_damage": {"required": {"amount"}, "optional": {"player", "reason"}},
+    "fusion": {"required": set(), "optional": {"fusion_type", "card_id", "banish_materials"}},
+    "gain_lp": {"required": {"amount"}, "optional": {"player", "reason", "mode", "count_zone", "count_zones", "count_filter", "multiplier", "divisor"}},
+    "heal": {"required": {"amount"}, "optional": {"player", "reason", "mode", "count_zone", "count_zones", "count_filter", "multiplier", "divisor"}},
+    "inflict_damage": {"required": {"amount"}, "optional": {"player", "reason", "mode", "count_zone", "count_zones", "count_filter", "multiplier", "divisor"}},
+    "inherent_special_summon": {"required": {"target"}, "optional": {"position"}},
     "lock_activation": {"required": {"target"}, "optional": {"mode"}},
     "look_at_deck": {"required": {"count"}, "optional": {"player"}},
     "mill": {"required": {"count"}, "optional": {"player", "reason"}},
-    "modify_atk": {"required": {"target", "amount"}, "optional": {"counter", "mode"}},
-    "modify_def": {"required": {"target", "amount"}, "optional": {"counter", "mode"}},
+    "modify_atk": {"required": {"target", "amount"}, "optional": {"counter", "mode", "count_zone", "count_zones", "count_filter", "multiplier", "divisor"}},
+    "modify_def": {"required": {"target", "amount"}, "optional": {"counter", "mode", "count_zone", "count_zones", "count_filter", "multiplier", "divisor"}},
+    "must_attack": {"required": set(), "optional": {"target", "mode", "player", "amount", "side_wide"}},
     "negate": {"required": {"target"}, "optional": {"mode"}},
+    "negate_activation": {"required": {"target"}, "optional": {"mode"}},
+    "negate_attack": {"required": set(), "optional": {"target", "mode"}},
+    "piercing": {"required": {"target"}, "optional": {}},
     "place_counter": {"required": {"target", "counter", "amount"}, "optional": {"max"}},
     "prevent_battle_damage": {"required": {"target"}, "optional": {"player"}},
     "redirect_attack": {"required": {"target"}, "optional": {"to"}},
@@ -88,18 +105,24 @@ OP_SPECS: dict[str, dict] = {
     "remove_counter": {"required": {"target", "counter", "count"}, "optional": {}},
     "return_to_extra": {"required": {"target"}, "optional": {"reason"}},
     "return_to_hand": {"required": {"target"}, "optional": {"reason"}},
-    "return_to_deck": {"required": {"target"}, "optional": {"shuffle", "reason"}},
+    "return_to_deck": {"required": {"target"}, "optional": {"shuffle", "reason", "destination", "position"}},
     "reveal": {"required": {"target"}, "optional": {}},
-    "roll_die": {"required": {}, "optional": {"count"}},
+    "ritual": {"required": set(), "optional": {"card_id", "target"}},
+    "roll_die": {"required": set(), "optional": {"count", "success_min", "success_max", "threshold", "success_operations", "failure_operations"}},
     "search": {"required": {"target"}, "optional": {"destination", "reveal", "shuffle"}},
+    "send_to_grave": {"required": {"target"}, "optional": {"reason"}},
     "send_to_graveyard": {"required": {"target"}, "optional": {"reason"}},
     "set": {"required": {"target"}, "optional": {"position"}},
     "shuffle": {"required": set(), "optional": {"player"}},
-    "skip_phase": {"required": {}, "optional": {"player", "mode"}},
+    "skip_phase": {"required": set(), "optional": {"player", "mode"}},
     "special_summon": {"required": {"target"}, "optional": {"position"}},
+    "spirit_return": {"required": {"target"}, "optional": {}},
     "summon": {"required": {"target"}, "optional": {"position"}},
+    "summon_lock": {"required": set(), "optional": {"player", "mode"}},
     "take_control": {"required": {"target"}, "optional": {"to"}},
-    "toss_coin": {"required": {}, "optional": {"count"}},
+    "toss_coin": {"required": set(), "optional": {"count", "success_min", "success_max", "threshold", "success_operations", "failure_operations"}},
+    "union_equip": {"required": {"target"}, "optional": {"position"}},
+    "union_unequip": {"required": {"target"}, "optional": {"position"}},
 }
 
 COST_SPECS: dict[str, dict] = {
@@ -128,10 +151,17 @@ TRIGGER_REFERENCES = {
     "on_flip": {"$trigger"},
     "on_attack_declared": {"$attacker", "$trigger"},
     "on_attack_target": {"$attacker", "$attack_target", "$trigger"},
+    "on_damage_step": {"$attacker", "$attack_target", "$trigger"},
+    "on_damage_calculated": {"$attacker", "$attack_target", "$trigger"},
+    "on_battle_damage": {"$attacker", "$attack_target", "$trigger"},
+    "on_battle_destroy_by_attacker": {"$attacker", "$trigger"},
     "on_sent_to_graveyard": {"$trigger"},
     "on_destroy": {"$trigger"},
     "on_battle_destroy": {"$trigger"},
     "on_draw": {"$trigger"},
+    "on_position_change": {"$trigger"},
+    "on_tribute_summon": {"$trigger"},
+    "inherent_summon": {"$trigger"},
 }
 
 
@@ -282,7 +312,7 @@ def _check_target(
     known_refs: set[str],
 ) -> None:
     if isinstance(target, str):
-        if target not in {"$self", "$target", "$cost", "$trigger", "$attacker", "$attack_target"}:
+        if target not in {"$self", "$target", "$cost", "$trigger", "$attacker", "$attack_target", "$equipped"}:
             report.error(location, f"{context}: unknown target reference '{target}'")
         return
     if not isinstance(target, dict):
@@ -365,7 +395,7 @@ def _check_operations(
                 report.error(op_location, "uses $target but the script has no target selector")
             if target == "$cost" and not has_cost:
                 report.error(op_location, "uses $cost but the script has no cost")
-            if target.startswith("$") and target not in {"$self", "$target", "$cost", "$trigger"}.union(
+            if target.startswith("$") and target not in {"$self", "$target", "$cost", "$trigger", "$equipped"}.union(
                 TRIGGER_REFERENCES.get(trigger, set())
             ):
                 report.error(
@@ -380,6 +410,17 @@ def _check_operations(
             player = operation.get("player")
             if player and player not in {"self", "opponent", "both"}:
                 report.error(op_location, f"unknown player '{player}'")
+        for branch_key in ("success_operations", "failure_operations"):
+            branch = operation.get(branch_key)
+            if branch is not None:
+                _check_operations(
+                    report,
+                    f"{op_location}.{branch_key}",
+                    branch,
+                    trigger,
+                    has_target,
+                    has_cost,
+                )
 
 
 def validate_script_payload(

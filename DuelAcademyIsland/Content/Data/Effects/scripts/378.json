@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "card_id": 378,
+  "name": "Insect Barrier",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "All Insect-Type monsters on your opponent's side of the field cannot attack as long as this card remains face-up on the field.",
+  "notes": [
+    "The lock is registered continuously while this card is face-up."
+  ],
+  "scripts": [
+    {
+      "id": "378_opponent_insect_lock",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "attack_lock",
+          "target": {
+            "zone": "opponent_monster",
+            "count": "all",
+            "filter": {
+              "monster_type": "Insect"
+            }
+          },
+          "mode": "cannot_attack"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_spell_trap"
+      },
+      "source_text": "All Insect-Type monsters on your opponent's side of the field cannot attack as long as this card remains face-up on the field."
+    }
+  ]
+}

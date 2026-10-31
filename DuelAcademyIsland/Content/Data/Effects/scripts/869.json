@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "card_id": 869,
+  "name": "Fuhma Shuriken",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card can only be used to equip a monster that includes \"Ninja\" in its card name. A monster equipped with this card increases its ATK by 700 points. When this card is sent from the field to the Graveyard, inflict 700 points of damage to your opponent's Life Points.",
+  "notes": [
+    "Ninja-only; +700 ATK, then 700 damage when sent to the Graveyard."
+  ],
+  "scripts": [
+    {
+      "id": "869_equip_activate",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "equip",
+          "target": "$target"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "name_contains": "Ninja"
+        }
+      },
+      "source_text": "Equip this card to a legal monster."
+    },
+    {
+      "id": "869_equip_continuous",
+      "trigger": "equip_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 700,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "name_contains": "Ninja"
+      },
+      "source_text": "Apply the equipped monster's continuous bonus."
+    },
+    {
+      "id": "869_grave_damage",
+      "trigger": "on_sent_to_graveyard",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 700,
+          "player": "opponent",
+          "reason": "Fuhma Shuriken"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "custom": "sent_from_field_to_graveyard"
+      },
+      "source_text": "When this card is sent from the field to the Graveyard, inflict damage."
+    }
+  ]
+}

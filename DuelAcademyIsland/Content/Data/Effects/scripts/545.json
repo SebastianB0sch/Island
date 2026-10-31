@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "card_id": 545,
+  "name": "Lightning Blade",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card can only be equipped to Warrior-Type monsters. Increases the ATK of the equipped monster by 800 points and decreases the ATK of all WATER monsters on the field by 500 points.",
+  "notes": [
+    "+800 ATK to the equipped Warrior; -500 ATK to all WATER monsters on the field."
+  ],
+  "scripts": [
+    {
+      "id": "545_equip_activate",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "equip",
+          "target": "$target"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "monster_type": "Warrior"
+        }
+      },
+      "source_text": "Equip this card to a legal monster."
+    },
+    {
+      "id": "545_equip_continuous",
+      "trigger": "equip_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 800,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_atk",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "attribute": "WATER"
+            }
+          },
+          "amount": -500,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "monster_type": "Warrior"
+      },
+      "source_text": "Apply the equipped monster's continuous bonus."
+    }
+  ]
+}

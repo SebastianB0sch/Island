@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "card_id": 644,
+  "name": "Lesser Fiend",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "As long as this monster remains face-up on the field, monsters destroyed by this monster in battle are removed from play instead of being sent to the Graveyard.",
+  "notes": [
+    "Banish the destroyed monster from the Graveyard destination."
+  ],
+  "scripts": [
+    {
+      "id": "644_banish_destroyed_monster",
+      "trigger": "on_battle_destroy_by_attacker",
+      "operations": [
+        {
+          "op": "banish",
+          "target": "$trigger",
+          "reason": "Lesser Fiend"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "custom": "battle_involving_self"
+      },
+      "source_text": "As long as this monster remains face-up on the field, monsters destroyed by this monster in battle are removed from play instead of being sent to the Graveyard."
+    }
+  ]
+}

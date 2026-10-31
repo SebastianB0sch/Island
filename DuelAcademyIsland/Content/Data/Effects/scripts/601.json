@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "card_id": 601,
+  "name": "Dark Magician's Tome of Black Magic",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Only \"Dark Magician\" or \"Dark Magician Girl\" may equip this. The Monster that equips this will gain 700 ATK Points. When this card is sent to the Graveyard, you recover 1000 Life Points.",
+  "notes": [
+    "Only Dark Magician/Dark Magician Girl; +700 ATK, then gain 1000 LP when sent to the Graveyard."
+  ],
+  "scripts": [
+    {
+      "id": "601_equip_activate",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "equip",
+          "target": "$target"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "any": [
+            {
+              "name": "Dark Magician"
+            },
+            {
+              "name": "Dark Magician Girl"
+            }
+          ]
+        }
+      },
+      "source_text": "Equip this card to a legal monster."
+    },
+    {
+      "id": "601_equip_continuous",
+      "trigger": "equip_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 700,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true
+          },
+          {
+            "any": [
+              {
+                "name": "Dark Magician"
+              },
+              {
+                "name": "Dark Magician Girl"
+              }
+            ]
+          }
+        ]
+      },
+      "source_text": "Apply the equipped monster's continuous bonus."
+    },
+    {
+      "id": "601_grave_recover_life",
+      "trigger": "on_sent_to_graveyard",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 1000,
+          "player": "self",
+          "reason": "Dark Magician's Tome of Black Magic"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is sent to the Graveyard, you recover Life Points."
+    }
+  ]
+}

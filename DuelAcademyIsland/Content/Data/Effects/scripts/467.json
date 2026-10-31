@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "card_id": 467,
+  "name": "Backup Soldier",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "You can activate this card when there are 5 or more Monster Cards in your Graveyard. Select up to 3 Monster Cards with an ATK of 1500 points or less (except Effect Monster Cards) from your Graveyard and add them to your hand.",
+  "notes": [
+    "The condition counts monsters, not all Graveyard cards."
+  ],
+  "scripts": [
+    {
+      "id": "467_return_three_normal_monsters",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "Backup Soldier"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "condition": {
+        "count_zone": "self_graveyard",
+        "count_filter": {
+          "card_type": "Monster"
+        },
+        "count_min": 5
+      },
+      "target": {
+        "zone": "self_graveyard",
+        "count": {
+          "min": 0,
+          "max": 3
+        },
+        "filter": {
+          "all": [
+            {
+              "card_type": "Normal Monster"
+            },
+            {
+              "atk_max": 1500
+            }
+          ]
+        },
+        "optional": true
+      },
+      "source_text": "You can activate this card when there are 5 or more Monster Cards in your Graveyard. Select up to 3 Monster Cards with an ATK of 1500 points or less (except Effect Monster Cards) from your Graveyard and add them to your hand."
+    }
+  ]
+}

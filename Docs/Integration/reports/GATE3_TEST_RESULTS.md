@@ -60,7 +60,7 @@
 | Dataset | Result |
 | --- | --- |
 | Cards | 1,200 exact |
-| Effect scripts | 155 (264 scripted, 345 vanilla, 591 pending) |
+| Effect scripts | 253 (362 scripted, 345 vanilla, 493 pending) |
 | Packs | 48, pool union 1,200; Dorothy's Gift full 1,200-card pool |
 | Runtime opponent decks | 31, all legal under Year 1 banlist |
 | Constructed decks | 36/36 legal; 3 copies / 40–60 main / ≤15 Extra |
@@ -91,7 +91,7 @@
 
 ## 5. Remaining Gate 3 gaps
 
-- 591 pending Tier-2 effects (92 reachable in story-event decks).
+- 493 pending Tier-2 effects (54 story-reachable).
 - Exact GBA dialogue text remains local-only; runtime uses the paraphrased
   scaffold.
 - 21/37 canon decks incomplete (15 partial, 6 unknown); runtime fills 226 slots.

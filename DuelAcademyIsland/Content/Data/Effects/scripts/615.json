@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "card_id": 615,
+  "name": "Zombyra the Dark",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card cannot attack a player directly. Each time this card destroys a monster in battle, decrease the ATK of this card by 200 points.",
+  "notes": [
+    "Direct-attack lock plus the attacker-destroy ATK loss."
+  ],
+  "scripts": [
+    {
+      "id": "615_cannot_attack_directly",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "attack_lock",
+          "target": "$self",
+          "mode": "cannot_attack_directly"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "This card cannot attack a player directly."
+    },
+    {
+      "id": "615_destroy_lose_atk",
+      "trigger": "on_battle_destroy_by_attacker",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": -200,
+          "mode": "flat"
+        }
+      ],
+      "duration": "permanent",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "custom": "battle_involving_self"
+      },
+      "source_text": "Each time this card destroys a monster in battle, it loses ATK."
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "card_id": 140,
+  "name": "Yami",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases the ATK and DEF of all Fiend and Spellcaster-Type monsters by 200 points. Also decreases the ATK and DEF of all Fairy-Type monsters by 200 points.",
+  "notes": [
+    "+200/-200 ATK/DEF for Fiend, Spellcaster and Fairy monsters."
+  ],
+  "scripts": [
+    {
+      "id": "140_field_stat",
+      "trigger": "field_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "any": [
+                {
+                  "monster_type": "Fiend"
+                },
+                {
+                  "monster_type": "Spellcaster"
+                }
+              ]
+            }
+          },
+          "amount": 200,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_def",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "any": [
+                {
+                  "monster_type": "Fiend"
+                },
+                {
+                  "monster_type": "Spellcaster"
+                }
+              ]
+            }
+          },
+          "amount": 200,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_atk",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "monster_type": "Fairy"
+            }
+          },
+          "amount": -200,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_def",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "monster_type": "Fairy"
+            }
+          },
+          "amount": -200,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_field"
+      },
+      "source_text": "+200/-200 ATK/DEF for Fiend, Spellcaster and Fairy monsters."
+    }
+  ]
+}
