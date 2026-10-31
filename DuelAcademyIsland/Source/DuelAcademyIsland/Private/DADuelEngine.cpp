@@ -1,5 +1,6 @@
 #include "DADuelEngine.h"
 
+#include "DAEffectRuntime.h"
 #include "DuelAcademyIsland.h"
 #include "DACardRecords.h"
 
@@ -88,7 +89,16 @@ FDuelEngine::FDuelEngine(UCardDatabaseSubsystem* InDatabase, int32 InSeed)
 	Player.Name = TEXT("You");
 	Opponent.Owner = EDuelOwner::Opponent;
 	Opponent.Name = TEXT("Jaden Yuki");
+
+	EffectRuntime = MakeUnique<FDAEffectRuntime>(this);
+	FString EffectError;
+	if (!EffectRuntime->LoadDefaultScripts(EffectError))
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Effect runtime could not load default scripts: %s"), *EffectError);
+	}
 }
+
+FDuelEngine::~FDuelEngine() = default;
 
 // ---------------------------------------------------------------------------
 // Rules state reset
@@ -154,6 +164,10 @@ void FDuelEngine::ResetDuelState()
 	AnteState.PlayerCardUid = 0;
 	AnteState.OpponentCardUid = 0;
 	AnteState.Note.Reset();
+	if (EffectRuntime)
+	{
+		EffectRuntime->ResetForNewDuel();
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -273,6 +287,10 @@ void FDuelEngine::Start(const FString& InPlayerDeckId, const FString& InOpponent
 	ShuffleSide(Opponent);
 	Draw(EDuelOwner::Player, 5, true);
 	Draw(EDuelOwner::Opponent, 5, true);
+	if (EffectRuntime && !bWinnerSet)
+	{
+		EffectRuntime->OnDuelStart();
+	}
 	StartTurn(EDuelOwner::Player);
 }
 
@@ -297,6 +315,10 @@ void FDuelEngine::StartTurn(EDuelOwner Side)
 			EndDuel(EDuelOwner::Opponent, TEXT("The turn limit was reached."));
 			return;
 		}
+	}
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnTurnStart(Side);
 	}
 	// Turn-scoped flags expire when the next turn begins, even if the card that
 	// created them belonged to the side that just finished.
@@ -415,7 +437,17 @@ void FDuelEngine::StartTurn(EDuelOwner Side)
 		}
 	}
 
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnStandby(Side);
+	}
+
 	Phase = EDuelPhase::Main1;
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnMain(Side);
+		EffectRuntime->RecomputeContinuous();
+	}
 }
 
 void FDuelEngine::Draw(EDuelOwner Side, int32 Count, bool bSilent)
@@ -442,6 +474,10 @@ void FDuelEngine::Draw(EDuelOwner Side, int32 Count, bool bSilent)
 				*CardName(Card)), TEXT("draw"));
 		}
 		EmitVisual(EDuelVisualEventType::Draw, Side, &Card, 0, CardName(Card), Side == EDuelOwner::Opponent);
+		if (!bSilent && EffectRuntime)
+		{
+			EffectRuntime->OnDraw(Side, Card);
+		}
 	}
 }
 
@@ -472,6 +508,10 @@ void FDuelEngine::FinishPlayerTurn()
 	}
 	Phase = EDuelPhase::Main2;
 	TriggerEndPhaseEffects(EDuelOwner::Player);
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnEnd(EDuelOwner::Player);
+	}
 	Log(TEXT("Your turn ends."), TEXT("phase"));
 	EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Player, nullptr, 0, TEXT("END PHASE"));
 	bAiTurnPending = true;
@@ -497,6 +537,10 @@ bool FDuelEngine::DiscardFromHand(int32 Uid, FString& OutError)
 			{
 				bAwaitingDiscard = false;
 				TriggerEndPhaseEffects(EDuelOwner::Player);
+				if (EffectRuntime)
+				{
+					EffectRuntime->OnEnd(EDuelOwner::Player);
+				}
 				bAiTurnPending = true;
 				LastAiMessage = FString::Printf(TEXT("%s is taking their turn."), *OpponentDisplayName);
 				Log(TEXT("Your turn ends."), TEXT("phase"));
@@ -536,6 +580,10 @@ void FDuelEngine::RunOpponentTurn()
 		Phase = EDuelPhase::Battle;
 		Log(FString::Printf(TEXT("%s enters the Battle Phase."), *OpponentDisplayName), TEXT("phase"));
 		EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Opponent, nullptr, 0, TEXT("BATTLE PHASE"));
+		if (EffectRuntime)
+		{
+			EffectRuntime->OnBattleStart(EDuelOwner::Opponent);
+		}
 		AiPlayBattlePhase();
 	}
 	if (!bWinnerSet)
@@ -543,6 +591,10 @@ void FDuelEngine::RunOpponentTurn()
 		AiDiscardToLimit();
 		EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Opponent, nullptr, 0, TEXT("END PHASE"));
 		TriggerEndPhaseEffects(EDuelOwner::Opponent);
+		if (EffectRuntime)
+		{
+			EffectRuntime->OnEnd(EDuelOwner::Opponent);
+		}
 		Log(FString::Printf(TEXT("%s ends their turn."), *OpponentDisplayName), TEXT("phase"));
 		StartTurn(EDuelOwner::Player);
 	}
@@ -761,6 +813,10 @@ bool FDuelEngine::PlaceMonster(EDuelOwner Side, FDuelCard Card, bool bFaceUp, ED
 	Card.bHasAttacked = false;
 	Card.AttacksUsed = 0;
 	State.Monsters[Index] = Card;
+	if (EffectRuntime)
+	{
+		EffectRuntime->RecomputeContinuous();
+	}
 	return true;
 }
 
@@ -787,6 +843,10 @@ bool FDuelEngine::PlaceSpellTrap(EDuelOwner Side, FDuelCard Card, bool bFaceUp, 
 			}
 		}
 		State.Field = Card;
+		if (EffectRuntime)
+		{
+			EffectRuntime->RecomputeContinuous();
+		}
 		return true;
 	}
 
@@ -796,6 +856,10 @@ bool FDuelEngine::PlaceSpellTrap(EDuelOwner Side, FDuelCard Card, bool bFaceUp, 
 		return false;
 	}
 	State.Spells[Index] = Card;
+	if (EffectRuntime)
+	{
+		EffectRuntime->RecomputeContinuous();
+	}
 	return true;
 }
 
@@ -808,10 +872,18 @@ void FDuelEngine::MoveToGrave(FDuelCard Card)
 	Card.TiedToUid = 0;
 	Card.Counters = 0;
 	SideRef(Card.Owner).Graveyard.Add(Card);
+	if (EffectRuntime)
+	{
+		EffectRuntime->RecomputeContinuous();
+	}
 }
 
 void FDuelEngine::MoveToHand(FDuelCard Card)
 {
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnCardLeftField(Card);
+	}
 	Card.Controller = Card.Owner;
 	Card.bFaceUp = true;
 	Card.Position = EDuelPosition::Attack;
@@ -825,6 +897,10 @@ void FDuelEngine::MoveToHand(FDuelCard Card)
 
 void FDuelEngine::MoveToBanished(FDuelCard Card)
 {
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnCardLeftField(Card);
+	}
 	Card.Controller = Card.Owner;
 	Card.bFaceUp = true;
 	Card.Position = EDuelPosition::Attack;
@@ -837,6 +913,10 @@ void FDuelEngine::MoveToBanished(FDuelCard Card)
 
 void FDuelEngine::MoveToDeckBottom(FDuelCard Card)
 {
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnCardLeftField(Card);
+	}
 	Card.Controller = Card.Owner;
 	Card.bFaceUp = false;
 	Card.Position = EDuelPosition::Attack;
@@ -880,6 +960,10 @@ void FDuelEngine::DiscardCard(FDuelCard Card, const FString& Reason)
 	{
 		MoveToGrave(Card);
 	}
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnSentToGraveyard(Card, false, Reason.IsEmpty() ? TEXT("discard") : Reason);
+	}
 	if (!Reason.IsEmpty())
 	{
 		Log(FString::Printf(TEXT("%s is discarded (%s)."), *CardName(Card), *Reason), TEXT("discard"));
@@ -894,6 +978,10 @@ void FDuelEngine::Mill(EDuelOwner Side, int32 Count)
 		FDuelCard Card = State.Deck.Pop();
 		EmitVisual(EDuelVisualEventType::Mill, Side, &Card, 0, CardName(Card));
 		MoveToGrave(Card);
+		if (EffectRuntime)
+		{
+			EffectRuntime->OnSentToGraveyard(Card, false, TEXT("mill"));
+		}
 	}
 }
 
@@ -1478,6 +1566,10 @@ int32 FDuelEngine::GetAtk(const FDuelCard& Card) const
 			if (GraveCard.Data.Name.Contains(TEXT("Elemental Hero"))) Value += 300;
 		}
 	}
+	if (EffectRuntime)
+	{
+		Value += EffectRuntime->GetAtkModifier(Card.Uid);
+	}
 	return FMath::Max(0, Value);
 }
 
@@ -1520,6 +1612,10 @@ int32 FDuelEngine::GetDef(const FDuelCard& Card) const
 			}
 		}
 		Value += Harpies * 300;
+	}
+	if (EffectRuntime)
+	{
+		Value += EffectRuntime->GetDefModifier(Card.Uid);
 	}
 	return FMath::Max(0, Value);
 }
@@ -1724,6 +1820,10 @@ TArray<FDuelActionInfo> FDuelEngine::GetSpellTrapActions(int32 Uid)
 	}
 	const FDuelCard* Card = FindSpellTrap(Uid);
 	if (!Card || Card->Controller != EDuelOwner::Player || Card->bFaceUp || Card->SetTurn >= TurnNumber)
+	{
+		return Actions;
+	}
+	if (EffectRuntime && EffectRuntime->IsCardActivationLocked(*Card))
 	{
 		return Actions;
 	}
@@ -2065,7 +2165,11 @@ bool FDuelEngine::SpecialSummon(int32 Uid, FString& OutError)
 	Summoned->bSpecialSummoned = true;
 	Log(FString::Printf(TEXT("You Special Summon %s."), *Name), TEXT("summon"));
 	OnSummon(*Summoned, true);
-	TriggerSummonTraps(*Summoned, false);
+	if (bWinnerSet) return true;
+	if (FDuelCard* Live = FindMonster(Uid))
+	{
+		TriggerSummonTraps(*Live, false);
+	}
 	if (bWinnerSet) return true;
 	CheckWinner();
 	return true;
@@ -2169,6 +2273,10 @@ void FDuelEngine::OnSummon(FDuelCard& Card, bool bSpecial, int32 TributeCount, b
 	if (IsName(Card, TEXT("Harpies' Hunting Ground")))
 	{
 		// The field card itself never has a summon effect.
+	}
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnSummon(Card, bSpecial, bFlipSummon, TributeCount);
 	}
 }
 
@@ -2340,6 +2448,10 @@ bool FDuelEngine::ChangePosition(int32 Uid, FString& OutError)
 		Card->Position == EDuelPosition::Attack ? TEXT("Attack") : TEXT("Defense")), TEXT("effect"));
 	EmitVisual(EDuelVisualEventType::Position, EDuelOwner::Player, Card, 0,
 		Card->Position == EDuelPosition::Attack ? TEXT("ATTACK") : TEXT("DEFENSE"));
+	if (EffectRuntime)
+	{
+		EffectRuntime->RecomputeContinuous();
+	}
 	return true;
 }
 
@@ -2352,6 +2464,10 @@ void FDuelEngine::EnterBattlePhase()
 	Phase = EDuelPhase::Battle;
 	Log(TEXT("You enter the Battle Phase."), TEXT("phase"));
 	EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Player, nullptr, 0, TEXT("BATTLE PHASE"));
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnBattleStart(EDuelOwner::Player);
+	}
 }
 
 void FDuelEngine::EndBattlePhase()
@@ -2363,6 +2479,10 @@ void FDuelEngine::EndBattlePhase()
 	Phase = EDuelPhase::Main2;
 	Log(TEXT("You end the Battle Phase."), TEXT("phase"));
 	EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Player, nullptr, 0, TEXT("MAIN PHASE 2"));
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnBattleEnd();
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -2474,6 +2594,24 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 		AttackerSide == EDuelOwner::Player ? TEXT("use") : TEXT("uses"),
 		Target ? *FString::Printf(TEXT(" %s"), *CardName(*Target)) : TEXT(" directly")), TEXT("battle"));
 
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnAttackDeclared(*Attacker, Target);
+		if (bWinnerSet || !FindMonster(AttackerUid))
+		{
+			return true;
+		}
+		Attacker = FindMonster(AttackerUid);
+		if (TargetUid > 0)
+		{
+			Target = FindMonster(TargetUid);
+			if (!Target)
+			{
+				return true;
+			}
+		}
+	}
+
 	// Winged Kuriboh LV10 punishes an attack during the opponent's Battle Phase.
 	FDuelCard* Kuriboh = FindMonsterByName(DefenderSide, TEXT("Winged Kuriboh LV10"));
 	if (Kuriboh && Kuriboh->bFaceUp)
@@ -2575,6 +2713,10 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 
 FDuelCard* FDuelEngine::PickAttackTrap(EDuelOwner Defender, FDuelCard& Attacker, FDuelCard* Target)
 {
+	if (EffectRuntime && EffectRuntime->IsTrapActivationLocked())
+	{
+		return nullptr;
+	}
 	FDuelSide& DefenderSide = SideRef(Defender);
 	const int32 Incoming = GetBattleAtk(Attacker, Target);
 	const bool bLethal = Incoming >= DefenderSide.LP;
@@ -2722,6 +2864,10 @@ void FDuelEngine::ResolveBattle(FDuelCard& Attacker, FDuelCard* Target)
 
 	const int32 AttackerUid = Attacker.Uid;
 	const int32 TargetUid = Target->Uid;
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnDamageCalculated(Attacker, Target);
+	}
 	const int32 AttackerAtk = GetBattleAtk(Attacker, Target);
 	const int32 TargetAtk = GetAtk(*Target);
 	const int32 TargetDef = GetDef(*Target);
@@ -2794,15 +2940,47 @@ void FDuelEngine::ResolveBattle(FDuelCard& Attacker, FDuelCard* Target)
 
 	if (DamageToDefender > 0)
 	{
-		Log(FString::Printf(TEXT("%s %s %d battle damage."), *SideRef(DefenderSide).Name,
-			DefenderSide == EDuelOwner::Player ? TEXT("take") : TEXT("takes"), DamageToDefender), TEXT("damage"));
-		InflictBattleDamage(DefenderSide, DamageToDefender, TEXT("battle"));
+		EDuelOwner Receiver = DefenderSide;
+		if (EffectRuntime)
+		{
+			EDuelOwner Redirected = DefenderSide;
+			if (EffectRuntime->ShouldRedirectBattleDamage(TargetUid, DefenderSide, Redirected))
+			{
+				Receiver = Redirected;
+			}
+			if (EffectRuntime->IsBattleDamageZeroFor(TargetUid))
+			{
+				DamageToDefender = 0;
+			}
+		}
+		if (DamageToDefender > 0)
+		{
+			Log(FString::Printf(TEXT("%s %s %d battle damage."), *SideRef(Receiver).Name,
+				Receiver == EDuelOwner::Player ? TEXT("take") : TEXT("takes"), DamageToDefender), TEXT("damage"));
+			InflictBattleDamage(Receiver, DamageToDefender, TEXT("battle"));
+		}
 	}
 	if (DamageToAttacker > 0)
 	{
-		Log(FString::Printf(TEXT("%s %s %d battle damage."), *SideRef(AttackerSide).Name,
-			AttackerSide == EDuelOwner::Player ? TEXT("take") : TEXT("takes"), DamageToAttacker), TEXT("damage"));
-		InflictBattleDamage(AttackerSide, DamageToAttacker, TEXT("battle"));
+		EDuelOwner Receiver = AttackerSide;
+		if (EffectRuntime)
+		{
+			EDuelOwner Redirected = AttackerSide;
+			if (EffectRuntime->ShouldRedirectBattleDamage(AttackerUid, AttackerSide, Redirected))
+			{
+				Receiver = Redirected;
+			}
+			if (EffectRuntime->IsBattleDamageZeroFor(AttackerUid))
+			{
+				DamageToAttacker = 0;
+			}
+		}
+		if (DamageToAttacker > 0)
+		{
+			Log(FString::Printf(TEXT("%s %s %d battle damage."), *SideRef(Receiver).Name,
+				Receiver == EDuelOwner::Player ? TEXT("take") : TEXT("takes"), DamageToAttacker), TEXT("damage"));
+			InflictBattleDamage(Receiver, DamageToAttacker, TEXT("battle"));
+		}
 	}
 
 	// Flip effects resolve after the damage step but before the card leaves the field.
@@ -2931,6 +3109,10 @@ void FDuelEngine::TriggerSummonTraps(FDuelCard& Summoned, bool bNormalSummon)
 	{
 		return;
 	}
+	if (EffectRuntime && EffectRuntime->IsTrapActivationLocked())
+	{
+		return;
+	}
 	FDuelSide& Defender = SideRef(Other(Summoned.Controller));
 	FDuelCard* TrapHole = nullptr;
 	FDuelCard* Torrential = nullptr;
@@ -3020,6 +3202,14 @@ void FDuelEngine::TriggerFlipEffect(FDuelCard& Card, EDuelOwner Side)
 	const FString Name = Card.Data.Name;
 	EDuelOwner OpponentSide = Other(Side);
 	EmitVisual(EDuelVisualEventType::Effect, Side, &Card, 0, Name);
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnFlip(Card);
+		if (bWinnerSet || !FindMonster(Card.Uid))
+		{
+			return;
+		}
+	}
 
 	if (Name == TEXT("Man-Eater Bug"))
 	{
@@ -3181,6 +3371,10 @@ void FDuelEngine::DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Att
 		Reason.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" (%s)"), *Reason)), TEXT("destroy"));
 	FDuelVisualEvent& DestroyEvent = EmitVisual(EDuelVisualEventType::Destroy, Controller, &Dead, 0, Reason);
 	DestroyEvent.Zone = Zone;
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnDestroyed(Dead, bByBattle, Reason);
+	}
 
 	// Battle-triggered floaters.
 	if (bByBattle)
@@ -3379,6 +3573,10 @@ void FDuelEngine::DestroySpellTrap(FDuelCard& Card, bool bByEffect)
 	Log(FString::Printf(TEXT("%s is destroyed."), *Name), TEXT("destroy"));
 	FDuelVisualEvent& DestroyEvent = EmitVisual(EDuelVisualEventType::Destroy, Controller, &Copy, 0, Name);
 	DestroyEvent.Zone = Zone;
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnDestroyed(Copy, false, Name);
+	}
 	if (Name == TEXT("Black Pendant"))
 	{
 		InflictDamage(Other(Controller), 500, TEXT("Black Pendant"));
@@ -3502,6 +3700,10 @@ void FDuelEngine::ReturnAllSpellTrapsToHand()
 void FDuelEngine::AttachEquip(FDuelCard& Equip, FDuelCard& Target)
 {
 	Equip.EquippedToUid = Target.Uid;
+	if (EffectRuntime)
+	{
+		EffectRuntime->RecomputeContinuous();
+	}
 }
 
 void FDuelEngine::ReturnControl(FDuelCard& Card)
@@ -3549,6 +3751,11 @@ void FDuelEngine::InflictBattleDamage(EDuelOwner Side, int32 Amount, const FStri
 {
 	if (Amount <= 0 || bWinnerSet)
 	{
+		return;
+	}
+	if (EffectRuntime && EffectRuntime->ShouldPreventBattleDamage(Side))
+	{
+		Log(FString::Printf(TEXT("%s's battle damage is prevented."), *SideRef(Side).Name), TEXT("effect"));
 		return;
 	}
 	if (SideRef(Side).bBattleDamageZeroThisTurn)
@@ -4373,6 +4580,13 @@ bool FDuelEngine::ActivateSpell(int32 Uid, FString& OutError)
 		++ResultStats.SpellsActivated;
 		ResolveSpell(*Placed);
 	}
+	if (EffectRuntime)
+	{
+		if (FDuelCard* Live = FindSpellTrap(Uid))
+		{
+			EffectRuntime->OnActivate(*Live);
+		}
+	}
 	CheckWinner();
 	if (bWinnerSet) return true;
 
@@ -4524,6 +4738,13 @@ bool FDuelEngine::ActivateQuickPlayFromHand(int32 Uid, FString& OutError)
 		++ResultStats.SpellsActivated;
 		ResolveSpell(*Placed);
 	}
+	if (EffectRuntime)
+	{
+		if (FDuelCard* Live = FindSpellTrap(Uid))
+		{
+			EffectRuntime->OnActivate(*Live);
+		}
+	}
 	CheckWinner();
 	if (bWinnerSet)
 	{
@@ -4584,6 +4805,13 @@ bool FDuelEngine::ActivateSetSpell(int32 Uid, FString& OutError)
 		++ResultStats.SpellsActivated;
 		ResolveSpell(*Placed);
 	}
+	if (EffectRuntime)
+	{
+		if (FDuelCard* Live = FindSpellTrap(Uid))
+		{
+			EffectRuntime->OnActivate(*Live);
+		}
+	}
 	CheckWinner();
 	if (bWinnerSet)
 	{
@@ -4597,6 +4825,11 @@ bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bA
 {
 	if (bWinnerSet || !Trap.IsValid())
 	{
+		return false;
+	}
+	if (EffectRuntime && EffectRuntime->IsCardActivationLocked(Trap))
+	{
+		Log(FString::Printf(TEXT("%s cannot be activated because Trap activation is locked."), *Trap.Data.Name), TEXT("trap"));
 		return false;
 	}
 	const int32 Uid = Trap.Uid;
@@ -4632,6 +4865,13 @@ bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bA
 		return false;
 	}
 	ResolveTrap(*Placed);
+	if (EffectRuntime)
+	{
+		if (FDuelCard* Live = FindSpellTrap(Uid))
+		{
+			EffectRuntime->OnActivate(*Live);
+		}
+	}
 	CheckWinner();
 	if (bWinnerSet)
 	{
@@ -4796,6 +5036,7 @@ void FDuelEngine::ResolveTrap(FDuelCard& Trap)
 bool FDuelEngine::TryCounterSpell(EDuelOwner Caster, EDuelOwner Defender)
 {
 	if (bWinnerSet) return false;
+	if (EffectRuntime && EffectRuntime->IsTrapActivationLocked()) return false;
 	for (FDuelCard& Trap : SideRef(Defender).Spells)
 	{
 		if (Trap.IsValid() && !Trap.bFaceUp && IsName(Trap, TEXT("Magic Jammer")) && Trap.SetTurn < TurnNumber)
@@ -4835,6 +5076,7 @@ bool FDuelEngine::TryCounterSpell(EDuelOwner Caster, EDuelOwner Defender)
 bool FDuelEngine::TryCounterTrap(EDuelOwner Caster, EDuelOwner Defender)
 {
 	if (bWinnerSet) return false;
+	if (EffectRuntime && EffectRuntime->IsTrapActivationLocked()) return false;
 	for (FDuelCard& Trap : SideRef(Defender).Spells)
 	{
 		if (Trap.IsValid() && !Trap.bFaceUp && IsName(Trap, TEXT("Seven Tools of the Bandit")) && Trap.SetTurn < TurnNumber)
@@ -4859,6 +5101,10 @@ bool FDuelEngine::TryCounterTrap(EDuelOwner Caster, EDuelOwner Defender)
 bool FDuelEngine::FindFusionOption(EDuelOwner Side, const FString& FusionType, int32* OutResult, TArray<int32>* OutMaterialUids) const
 {
 	if (!Database)
+	{
+		return false;
+	}
+	if (FusionType == TEXT("Fusion Gate") && EffectRuntime && !EffectRuntime->IsFusionAllowed(FusionType))
 	{
 		return false;
 	}
@@ -5062,7 +5308,17 @@ bool FDuelEngine::PerformFusion(const FString& FusionType)
 		Log(FString::Printf(TEXT("%s Fusion Summons %s using %s."), *SideRef(Side).Name, *CardName(*Placed),
 			*FString::Join(MaterialNames, TEXT(", "))), TEXT("summon"));
 		OnSummon(*Placed, true);
-		TriggerSummonTraps(*Placed, false);
+		if (!bWinnerSet)
+		{
+			if (FDuelCard* Live = FindMonster(ResultCard.Uid))
+			{
+				TriggerSummonTraps(*Live, false);
+				if (EffectRuntime)
+				{
+					EffectRuntime->OnFusionSummon(*Live);
+				}
+			}
+		}
 	}
 	return true;
 }
@@ -5137,7 +5393,17 @@ bool FDuelEngine::ActivateRitual()
 		}
 		Log(FString::Printf(TEXT("%s Ritual Summons Legendary Flame Lord."), *SideRef(Side).Name), TEXT("summon"));
 		OnSummon(*Placed, true);
-		TriggerSummonTraps(*Placed, false);
+		if (!bWinnerSet)
+		{
+			if (FDuelCard* Live = FindMonster(RitualUid))
+			{
+				TriggerSummonTraps(*Live, false);
+				if (EffectRuntime)
+				{
+					EffectRuntime->OnRitualSummon(*Live);
+				}
+			}
+		}
 	}
 	return true;
 }
@@ -5236,6 +5502,11 @@ TArray<FDuelActionInfo> FDuelEngine::GetMonsterEffectActionsFor(const FDuelCard&
 			}
 		}
 	}
+	if (EffectRuntime)
+	{
+		const TArray<FDuelActionInfo> RuntimeActions = EffectRuntime->GetManualActions(Card);
+		Actions.Append(RuntimeActions);
+	}
 	return Actions;
 }
 
@@ -5256,6 +5527,22 @@ bool FDuelEngine::ActivateMonsterEffect(int32 Uid, FString& OutError)
 	{
 		OutError = TEXT("That monster is not on your field.");
 		return false;
+	}
+	if (EffectRuntime && EffectRuntime->HasManualEffect(*Card))
+	{
+		for (int32 ScriptIndex = 0; ScriptIndex < EffectRuntime->GetScriptCount(Card->Data.Id); ++ScriptIndex)
+		{
+			if (EffectRuntime->GetScriptTrigger(Card->Data.Id, ScriptIndex) == EDEffectTrigger::Manual)
+			{
+				FString RuntimeError;
+				if (EffectRuntime->ActivateManualScript(Card->Uid, ScriptIndex, RuntimeError))
+				{
+					return true;
+				}
+				OutError = RuntimeError;
+				return false;
+			}
+		}
 	}
 	if (GetMonsterEffectActionsFor(*Card).Num() == 0)
 	{
@@ -5672,6 +5959,13 @@ void FDuelEngine::AiActivateSpellCard(FDuelCard& Card)
 			++ResultStats.SpellsActivated;
 		}
 		ResolveSpell(*Placed);
+	}
+	if (EffectRuntime)
+	{
+		if (FDuelCard* Live = FindSpellTrap(Uid))
+		{
+			EffectRuntime->OnActivate(*Live);
+		}
 	}
 	CheckWinner();
 	if (bWinnerSet) return;
@@ -6334,6 +6628,14 @@ int32 FDuelEngine::RequestOptionalTrigger(const FDuelCard& SourceCard, const FSt
 
 EDuelSpellSpeed FDuelEngine::GetSpellSpeed(const FDuelCard& Card) const
 {
+	if (EffectRuntime)
+	{
+		const int32 ScriptSpeed = EffectRuntime->GetSpellSpeedOverride(Card.Data.Id);
+		if (ScriptSpeed >= 1 && ScriptSpeed <= 3)
+		{
+			return static_cast<EDuelSpellSpeed>(ScriptSpeed);
+		}
+	}
 	const FDuelActivationRule Rule = ResolveActivationRule(Card);
 	if (Rule.SpellSpeedOverride >= 1 && Rule.SpellSpeedOverride <= 3)
 	{
@@ -6422,6 +6724,10 @@ int32 FDuelEngine::AddChainLink(const FDuelChainLink& Link, FString& OutError)
 	Stored.LinkIndex = ChainLinks.Num() + 1;
 	Stored.bResolved = false;
 	ChainLinks.Add(Stored);
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnChain(Stored);
+	}
 	Log(FString::Printf(TEXT("Chain link %d: %s (Spell Speed %d)."), Stored.LinkIndex,
 		Stored.Label.IsEmpty() ? TEXT("effect") : *Stored.Label, static_cast<int32>(Stored.Speed)), TEXT("chain"));
 	EmitVisual(EDuelVisualEventType::Effect, Stored.Controller, FindCard(Stored.CardUid), Stored.LinkIndex,
@@ -6703,6 +7009,11 @@ bool FDuelEngine::ActivateCounterTrapResponse(int32 TrapUid, int32 TargetChainLi
 	if (Trap->bFaceUp || Trap->SetTurn >= TurnNumber)
 	{
 		OutError = TEXT("That Counter Trap cannot be activated yet.");
+		return false;
+	}
+	if (EffectRuntime && EffectRuntime->IsCardActivationLocked(*Trap))
+	{
+		OutError = TEXT("Trap activation is currently locked.");
 		return false;
 	}
 	if (!IsActivationLegal(*Trap, EDuelTimingWindow::ResponseToActivation, &OutError))
@@ -7219,6 +7530,10 @@ bool FDuelEngine::StartScenario(const FDuelScenario& Scenario, FString& OutError
 	if (!Scenario.bDrawOnFirstTurn)
 	{
 		SideRef(FirstSide).bSkipDraw = true;
+	}
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnDuelStart();
 	}
 	Log(FString::Printf(TEXT("Scenario '%s' begins. %s"), *Scenario.Id,
 		Scenario.TurnLimit > 0 ? *FString::Printf(TEXT("Turn limit: %d."), Scenario.TurnLimit) : TEXT("")), TEXT("turn"));
