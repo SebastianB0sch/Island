@@ -138,7 +138,7 @@ the lane directories. Canon is reference; runtime is what the game loads.
 | **Gate 1** | Opening -> registration -> Slifer -> Banner DP -> Syrus tutorial -> free-roam save | **partial** | Opening 14/14, 35/35 campaign playthrough, interiors/portal 188/188, gameplay UI screenshots. Exact dialogue presentation remains. |
 | **Gate 2** | Systems testable; 12-month fast-forward; 1,000 AI duels; 100 puzzles; save fuzz | **met** | 1,000 duels 0 stalls/0 invariants, 100/100 puzzles, 12/12 exams, 10,000-state fuzz, 12-month 10,947 checks. |
 | **Gate 3** | 33+ events, 48 packs, 100 puzzles, 12 exams, 1,200 cards, Tier-2 effects | **not met** | All content counts met; 591 effects remain pending. E02-E33 playthrough, 100 puzzles, 12 exams and 48 packs are proven. |
-| **Gate 4** | RC criteria, no P0/P1, playthrough, performance | **partial** | Packaged Development/Shipping builds launch; 1,000-duel/puzzle/exam packaged suites pass. Performance profile and deeper UI interaction QA remain. |
+| **Gate 4** | RC criteria, no P0/P1, playthrough, performance | **partial** | Packaged Development/Shipping builds launch; 1,000-duel/puzzle/exam/story suites pass. Smoke performance in `Docs/PERFORMANCE.md`; full interior frame-time capture and navmesh bake remain. |
 | **Gate 5** | Packaged build, legal audit, credits, tag | **partial** | Packages built; legal audit in `Docs/LEGAL_AUDIT.md`; credits/notices need staging; tag not created. |
 
 ---
@@ -273,3 +273,4 @@ change only through A10.
 | 2026-10-31 | Added `-DAPortalTest`; fixed the fall-out-of-world rescue swallowing interior arrivals; 188/188 portal checks pass and the classroom screenshot is captured. | A10 |
 | 2026-10-31 | Gate 3: canon decks 37/16 complete, 155 effect scripts, runtime decks 36/36 legal, 1,000 duels 0 stalls, 35/35 campaign events, 100/100 puzzles, 12/12 exams, NPC 414/414, 10k save fuzz and 12-month sim clean. | A10 |
 | 2026-10-31 | Packaged Shipping/Development Win64; fixed unity-build collisions, static-init crashes and packaged story path; packaged 1,000-duel and puzzle/exam suites pass. | A10 |
+| 2026-10-31 | Packaged campaign 35/35, packaged portal 188/188; legal audit and performance snapshot added; archive docs staged. | A10 |
