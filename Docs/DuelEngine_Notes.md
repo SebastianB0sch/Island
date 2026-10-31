@@ -225,6 +225,84 @@ ante modes before the result is consumed. A02 can map the stats to DP/titles
 (copy `OpponentId`, `Mode`, `bWentSecond`, LP and damage fields into
 `FDAProfileDuelResult`); A07 can map them to exam objectives.
 
+## Data-driven effect runtime (A04)
+
+`DAEffectRuntime.h/.cpp` loads `Content/Data/Effects/scripts/*.json` and executes
+the A05 schema. The engine owns one runtime (`FDuelEngine::GetEffectRuntime()`);
+the legacy name handlers remain the fallback.
+
+### Loading and validation
+
+- `LoadDefaultScripts`, `LoadScriptsFromDirectory`, `LoadScriptJsonText`.
+- Triggers, operations, cost ops, selector zones, condition keys and custom
+  predicates are validated while loading. Unknown data is rejected instead of
+  resolving as a no-op.
+- `ResetForNewDuel()` clears once-per-turn/duel counters, typed counters,
+  lingering modifiers and continuous registries without reloading scripts.
+- `GetLoadedCardCount`, `GetLoadedScriptCount`, `HasScript`, `GetScriptCount`,
+  `GetScriptId`, `GetScriptTrigger`.
+
+### Event mapping
+
+The engine calls the runtime at these points; each maps to the matching schema
+trigger:
+
+| Engine point | Runtime trigger(s) |
+| --- | --- |
+| `Start` / `StartScenario` | `OnDuelStart` |
+| `StartTurn` | `OnTurnStart`, `OnStandby`, `OnMain` |
+| `Draw` | `OnDraw` |
+| `OnSummon` | `OnSummon`, then `OnNormalSummon` / `OnSpecialSummon` / `OnFlipSummon` |
+| `TriggerFlipEffect` | `OnFlip` |
+| `PerformFusion` | `OnFusionSummon` |
+| `ActivateRitual` | `OnRitualSummon` |
+| Spell/Trap resolution | `OnActivate` |
+| `AddChainLink` | `OnChain` |
+| `ExecuteAttack` | `OnAttackDeclared` |
+| battle calculation | `OnDamageCalculated` |
+| monster destruction | `OnDestroy`, `OnBattleDestroy`, `OnSentToGraveyard` |
+| discard / mill | `OnSentToGraveyard` |
+| return to hand/deck/banished | `OnRemovedFromField` |
+| `FinishPlayerTurn` / AI end phase | `OnEnd` |
+
+Continuous/equip/field scripts are recomputed after zone, position, face-up,
+counter and controller changes through `RecomputeContinuous()`. Jinzo-style
+activation locks, Breaker-style ATK modifiers, Fusion Gate procedures and
+Amazoness battle-damage redirection are exposed through the runtime queries.
+
+### Supported operations
+
+Script target selectors resolve deterministically (side, zone order, uid) and
+route target/cost/optional choices through `FDuelChoiceRequest`; AI default
+answers use `DefaultOptionIds`. Implemented primitives include:
+
+- draw, discard, search, mill, banish, destroy, send-to-grave, summon,
+  special-summon, set, change-position, return-to-hand/deck/extra, reveal,
+  shuffle, excavate.
+- ATK/DEF modifiers (including per-counter), damage/heal, add/remove counters,
+  equip, take-control, fusion, ritual, negate, lock-activation, allow-fusion,
+  redirect-battle-damage, prevent-battle-damage, battle-damage-zero,
+  skip-phase/draw, extra-attack.
+- Once-per-turn and once-per-duel guards; optional prompts; atomic cost
+  validation before payment.
+
+Known runtime limitations: roll-die/toss-coin are logged visual rolls without a
+full replay record; `declare_name`/`look_at_deck`/`attack_directly`/`redirect_attack`
+are recorded but not fully interactive; contact fusion and generic mixed fusion
+slots are not yet implemented; condition/operation coverage is complete for the
+ten example scripts but not every 1,200-card rule.
+
+### Self-test
+
+- `-DAEffectRuntimeSelfTest` loads the ten scripts, runs fixed duel states and
+  exits.
+- `da.EffectRuntimeSelfTest` runs the same checks from the console.
+- Checks: script loading, Sangan search, Morphing Jar discard/draw, Breaker
+  counter + continuous ATK + manual cost, Exiled Force self-tribute and
+  once-per-turn, MST target prompt/destroy, Bottomless condition and
+  destroy→banish, negative ATK condition, Sakuretsu attack trigger, Jinzo lock,
+  Fusion Gate registration and Amazoness damage redirection.
+
 ## Compatibility flags
 
 | Flag | Default | Effect |

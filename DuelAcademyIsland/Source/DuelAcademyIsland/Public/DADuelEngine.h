@@ -3,8 +3,10 @@
 #include "CoreMinimal.h"
 #include "DACardRecords.h"
 #include "DADuelRules.h"
+#include "Templates/UniquePtr.h"
 
 class UCardDatabaseSubsystem;
+class FDAEffectRuntime;
 
 enum class EDuelPhase : uint8
 {
@@ -160,6 +162,7 @@ class DUELACADEMYISLAND_API FDuelEngine
 {
 public:
 	FDuelEngine(UCardDatabaseSubsystem* InDatabase, int32 InSeed = 20261025);
+	~FDuelEngine();
 
 	void Start(const FString& PlayerDeckId, const FString& OpponentDeckId = TEXT("jaden"),
 		const FString& OpponentName = TEXT("Jaden Yuki"), const FString& OpponentCharacterId = TEXT("jaden"));
@@ -188,6 +191,7 @@ public:
 	const FString& GetOpponentDeckId() const { return OpponentDeckId; }
 	const FString& GetOpponentName() const { return OpponentDisplayName; }
 	const FString& GetOpponentCharacterId() const { return OpponentCharacterId; }
+	FDAEffectRuntime* GetEffectRuntime() const { return EffectRuntime.Get(); }
 
 	FDuelCard* FindCard(int32 Uid);
 	const FDuelCard* FindCard(int32 Uid) const;
@@ -361,6 +365,8 @@ public:
 	void DebugFinishDuel(bool bPlayerWins);
 
 private:
+	friend class FDAEffectRuntime;
+
 	// ---- shared reset / rules plumbing ----
 	void ResetDuelState();
 	void ResetTransientRulesState();
@@ -550,6 +556,9 @@ private:
 
 	FDuelResultStats ResultStats;
 	bool bApplyingBattleDamage = false;
+
+	/** Data-script runtime; owns the loaded Content/Data/Effects scripts. */
+	TUniquePtr<FDAEffectRuntime> EffectRuntime;
 
 	FString PlayerDeckId = TEXT("fire");
 	FString OpponentDeckId = TEXT("jaden");
