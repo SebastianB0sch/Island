@@ -75,7 +75,8 @@ namespace
 			TEXT("DADuelSelfTest"),
 			TEXT("DADialogueTest"),
 			TEXT("DAPDATest"),
-			TEXT("DAUITest")
+			TEXT("DAUITest"),
+			TEXT("DAPortalTest")
 		};
 		for (const TCHAR* Param : Params)
 		{

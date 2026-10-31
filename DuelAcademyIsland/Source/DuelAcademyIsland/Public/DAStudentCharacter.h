@@ -62,6 +62,13 @@ public:
 	bool IsSwimming() const { return bSwimming; }
 	bool IsSprinting() const { return bSprinting; }
 
+	/** True while the player is inside a generated interior cell (its Z is far below the island). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
+	void SetInInterior(bool bNewInInterior);
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy")
+	bool IsInInterior() const { return bInInterior; }
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Movement")
 	float WalkSpeed = 450.f;
 
@@ -134,6 +141,7 @@ private:
 	TSet<FString> CardCollection;
 	bool bSprinting = false;
 	bool bSwimming = false;
+	bool bInInterior = false;
 	bool bDuelPose = false;
 	bool bManualDuelPose = false;
 	float TargetZoom = 520.f;

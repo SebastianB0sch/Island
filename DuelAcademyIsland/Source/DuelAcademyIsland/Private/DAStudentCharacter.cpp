@@ -76,6 +76,9 @@ void ADAStudentCharacter::BeginPlay()
 	CreateInput();
 	AddMappingContext();
 	SafeLocation = GetActorLocation();
+	// A save loaded inside a generated interior cell must not be "rescued" by
+	// the fall-out-of-world safety on the first tick.
+	bInInterior = GetActorLocation().Z < -20000.f;
 }
 
 void ADAStudentCharacter::PawnClientRestart()
@@ -596,6 +599,15 @@ void ADAStudentCharacter::UpdateSwimming(float DeltaSeconds)
 	{
 		return;
 	}
+
+	// Interior cells sit below the island water plane; do not treat their Z as
+	// open water or the character would enter flying/swimming mode indoors.
+	if (bInInterior)
+	{
+		bSwimming = false;
+		SwimAlpha = FMath::FInterpTo(SwimAlpha, 0.f, DeltaSeconds, 5.f);
+		return;
+	}
 	const FVector Loc = GetActorLocation();
 	const float Half = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	const float WaterZ = Sub->GetWaterSurfaceZ(Loc);
@@ -656,14 +668,31 @@ void ADAStudentCharacter::Tick(float DeltaSeconds)
 
 	// Safety net: remember solid ground, rescue the player if they fall out of the world.
 	SafeTimer -= DeltaSeconds;
-	if (SafeTimer <= 0.f && Move->IsMovingOnGround())
+	if (!bInInterior && SafeTimer <= 0.f && Move->IsMovingOnGround())
 	{
 		SafeTimer = 2.f;
 		SafeLocation = GetActorLocation();
 	}
-	if (GetActorLocation().Z < -8000.0)
+	if (!bInInterior && GetActorLocation().Z < -8000.0)
 	{
 		SetActorLocation(SafeLocation + FVector(0.0, 0.0, 200.0), false, nullptr, ETeleportType::TeleportPhysics);
 		Move->Velocity = FVector::ZeroVector;
+	}
+}
+
+void ADAStudentCharacter::SetInInterior(bool bNewInInterior)
+{
+	bInInterior = bNewInInterior;
+	if (bInInterior)
+	{
+		bSwimming = false;
+		if (UCharacterMovementComponent* Move = GetCharacterMovement())
+		{
+			if (Move->MovementMode == MOVE_Flying || Move->MovementMode == MOVE_Swimming)
+			{
+				Move->SetMovementMode(MOVE_Walking);
+			}
+			Move->Velocity = FVector::ZeroVector;
+		}
 	}
 }

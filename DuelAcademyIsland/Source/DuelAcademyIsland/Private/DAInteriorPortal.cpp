@@ -264,6 +264,13 @@ void ADAInteriorPortal::ApplyArrival(AActor* User)
 		return;
 	}
 
+	// Interior cells are generated far below the island; tell the character so
+	// its fall-out-of-world rescue and swimming logic do not undo the teleport.
+	if (ADAStudentCharacter* Character = Cast<ADAStudentCharacter>(User))
+	{
+		Character->SetInInterior(PendingLocation.Z < -20000.f);
+	}
+
 	if (const APawn* Pawn = Cast<APawn>(User))
 	{
 		if (UPawnMovementComponent* Movement = Pawn->GetMovementComponent())
