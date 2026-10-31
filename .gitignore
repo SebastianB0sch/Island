@@ -20,6 +20,7 @@ DuelAcademyIsland/Content/Developers/
 __pycache__/
 *.pyc
 Tools/.cache/
+Tools/.blender_site/
 Docs/previews/
 
 # OS
