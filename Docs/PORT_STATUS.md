@@ -21,6 +21,7 @@
 | `-DAUITest` / `-DAGameplayUITest` | 8 PDA + 2 dialogue + shop/deck/exam/PDA gameplay screenshots at 1920x1080 |
 | `-DATitleTest` / `-DANewGameTest` | title + new-game opening screenshots at 1920x1080 |
 | `-DADuelSelfTest` | **24 iterations, 12 player wins, 12 opponent wins, 0 stalls, average 11.7 turns** |
+| `-DAPortalTest` | **188 passed, 0 failed** (all 20 portals paired; ten interior entries and classroom return teleport; screenshot captured) |
 | World actors | 20 portals / 89 anchors / 28 spawn points / 1 director / 88 NPCs / 45 interactables; 1,134 level actors |
 | Runtime data | 1,200 cards / 100 puzzles / 12 exam cycles / 25 duelists / 31 decks / 48 packs / 37 events / 56 scenes / 161 dialogue lines / 6 emails |
 
@@ -113,9 +114,7 @@ the lane directories. Canon is reference; runtime is what the game loads.
 - PDA email wiring: contacts/messages are now filled from `emails.json` and
   filtered by unlock/read state; open/read and pending-duel-request behavior
   still needs an in-engine interaction pass.
-- Interior portals are generated, paired, locked behind A02 flags and route
-  validated headlessly; a PIE entry/exit/bounce test and an interior screenshot
-  remain.
+- Interior portals are generated, paired, locked behind A02 flags and verified in PIE: `-DAPortalTest` passes all ten entries and the classroom return (188/188). Interior screenshot: `Docs/renders/port/interior_classroom.png`.
 - Shop, deck editor and exam screens are wired to the A06/A07 APIs and captured
   at 1920x1080; purchase/confirm, rename/copy/erase and exam-result paths still
   need deeper interaction QA.
@@ -133,9 +132,9 @@ the lane directories. Canon is reference; runtime is what the game loads.
 | Gate | Criteria | Status | Evidence / blocker |
 | --- | --- | --- | --- |
 | **Gate 0** | Build green; Jaden duel/self-test; contracts; clean-tree merge discipline | **partial** | Build green; duel 24/0 stalls; profile/economy/rules/story self-tests green. Working tree still has lane WIP and pre-contract shapes. |
-| **Gate 1** | Opening -> registration -> Slifer -> Banner DP -> Syrus tutorial -> free-roam save | **partial** | Story 14/14 covers the opening; 10 UI screenshots; interiors, shop, deck editor and exam screens now exist. Full dialogue integration and PIE portal bounce remain. |
+| **Gate 1** | Opening -> registration -> Slifer -> Banner DP -> Syrus tutorial -> free-roam save | **partial** | Story 14/14 covers the opening; 10 UI screenshots; interiors, shop, deck editor and exam screens now exist. Full dialogue integration remains. |
 | **Gate 2** | Systems testable; 12-month fast-forward; 1,000 AI duels; 100 puzzles; save fuzz | **partial** | 100 puzzle definitions validate; 12 exams; save self-test 182/0; effect runtime 44/44; interiors and gameplay UI generated. 1,000 AI, 12-month and scale fuzz not run. |
-| **Gate 3** | 33+ events, 48 packs, 100 puzzles, 12 exams, 1,200 cards, Tier-2 effects | **not met** | Canon and runtime definitions largely complete; 760 pending effects, E02-E33 playthrough proof, full dialogue integration and PIE portal verification remain. |
+| **Gate 3** | 33+ events, 48 packs, 100 puzzles, 12 exams, 1,200 cards, Tier-2 effects | **not met** | Canon and runtime definitions largely complete; 760 pending effects, E02-E33 playthrough proof and full dialogue integration remain. |
 | **Gate 4** | RC criteria, no P0/P1, playthrough, performance | **not started** | - |
 | **Gate 5** | Packaged build, legal audit, credits, tag | **not started** | - |
 
@@ -221,8 +220,7 @@ change only through A10.
    dialogue/choices end-to-end; exercise PDA email open/read and pending duels.
 2. A05: reduce the 760 pending effects; script or classify every card used by
    story/puzzle/shop content first.
-3. A08: PIE portal entry/exit/bounce test and an interior screenshot; verify
-   the NPC director schedule application.
+3. A08: verify the NPC director schedule application and add interior nav coverage.
 4. A09/A06/A07: deeper interaction QA for shop purchase, deck rename/copy/erase
    and exam lifecycle/result/DP feedback.
 5. A01: reconcile incomplete canon decks and four event deck refs; decide the
@@ -243,3 +241,4 @@ change only through A10.
 | 2026-10-30 | Accepted A05 `card_effect_manifest.json` (760 pending as a GAP), A07 100-puzzle/12-exam shapes, and A03 full events/scenes/dialogue/emails shapes; moved reports to `Docs/Integration/`. | A10 |
 | 2026-10-31 | Gate 2: data-driven effect runtime 44/44; shop/deck/exam/PDA screens; 10 interior cells + 20 portals / 89 anchors / 28 spawns / 1 director / 88 NPCs / 45 interactables; gameplay UI screenshots; duel 24/0 stalls. | A10 |
 | 2026-10-31 | Fixed unity-build JSON helper collisions, effect-trigger enum mismatch, Python native class names and bool property names; rebuilt the level (1,134 actors). | A10 |
+| 2026-10-31 | Added `-DAPortalTest`; fixed the fall-out-of-world rescue swallowing interior arrivals; 188/188 portal checks pass and the classroom screenshot is captured. | A10 |
