@@ -189,6 +189,8 @@ public:
 	bool ShouldStayOnFieldAfterActivation(const FDuelCard& Card) const;
 	bool HasEquipStatScript(int32 CardId) const;
 	bool HasFieldStatScript(int32 CardId) const;
+	/** True when a data-script Equip Spell has a legal face-up target right now. */
+	bool HasLegalEquipTarget(const FDuelCard& Card) const;
 	bool HasScriptTrigger(int32 CardId, EDEffectTrigger Trigger) const;
 
 	/** Summon and activation locks. */

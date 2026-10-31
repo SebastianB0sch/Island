@@ -43,6 +43,18 @@ namespace
 		return Default;
 	}
 
+	bool ScriptHasOperation(const FDEffectScript& Script, const TCHAR* Operation)
+	{
+		for (const TSharedPtr<FJsonObject>& Step : Script.Operations)
+		{
+			if (ReadString(Step, TEXT("op")) == Operation)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/** Triggers that belong to the card the event happened to.  A script on a
 	 *  different copy of the same card must not fire for another copy's event.
 	 *  Spell/Trap field responses are still scanned (Bottomless, Sakuretsu). */
@@ -2114,6 +2126,9 @@ void FDAEffectRuntime::ContinueToTargets(FDEffectContext Context)
 	Request.bCancellable = Min == 0;
 	Request.Context = Context.Script.Id;
 
+	const bool bEquipScript = ScriptHasOperation(Context.Script, TEXT("equip"));
+	int32 BestEquipUid = 0;
+	int32 BestEquipAtk = -1;
 	for (int32 Uid : CandidateUids)
 	{
 		const FDuelCard* Card = Engine->FindCard(Uid);
@@ -2123,13 +2138,29 @@ void FDAEffectRuntime::ContinueToTargets(FDEffectContext Context)
 		}
 		FDuelChoiceOption Option;
 		Option.Id = Uid;
-		Option.Label = CardName(*Card);
+		Option.Label = Card->IsMonster()
+			? FString::Printf(TEXT("%s (%d/%d)"), *CardName(*Card), Engine->GetAtk(*Card), Engine->GetDef(*Card))
+			: CardName(*Card);
 		Option.CardUid = Uid;
 		Option.CardId = Card->Data.Id;
 		Option.Zone = EDuelZone::None;
 		Request.Options.Add(Option);
+		if (bEquipScript && Card->IsMonster())
+		{
+			const int32 Atk = Engine->GetAtk(*Card);
+			if (Atk > BestEquipAtk)
+			{
+				BestEquipAtk = Atk;
+				BestEquipUid = Uid;
+			}
+		}
 	}
 	TSet<int32> Added;
+	if (bEquipScript && BestEquipUid != 0)
+	{
+		Added.Add(BestEquipUid);
+		Request.DefaultOptionIds.Add(BestEquipUid);
+	}
 	for (int32 Uid : CandidateUids)
 	{
 		if (Request.DefaultOptionIds.Num() >= FMath::Max(1, Min))
@@ -2192,8 +2223,19 @@ bool FDAEffectRuntime::ResolveScriptTarget(const FDEffectScript& Script, const F
 
 	const TSharedPtr<FJsonObject>* Filter = nullptr;
 	Script.Target->TryGetObjectField(TEXT("filter"), Filter);
+	// An Equip Spell is equipped to a face-up monster its controller controls.
+	// The shipped scripts use "any_monster" as a shorthand, which would
+	// otherwise let the player equip the opponent's monsters (and would offer
+	// face-down monsters that cannot legally hold an Equip Spell).
+	const bool bEquipScript = ScriptHasOperation(Script, TEXT("equip"))
+		&& !Zone.StartsWith(TEXT("opponent"));
 	for (const FDuelCard& Candidate : CollectCandidates(Zone, SourceCard, Event))
 	{
+		if (bEquipScript
+			&& (Candidate.Controller != SourceCard.Controller || !Candidate.bFaceUp))
+		{
+			continue;
+		}
 		if (MatchesFilter(Candidate, Filter ? *Filter : nullptr, SourceCard, Event))
 		{
 			OutCandidateUids.Add(Candidate.Uid);
@@ -2280,8 +2322,16 @@ bool FDAEffectRuntime::ResolveScriptTarget(const FDEffectScript& Script, const F
 	}
 
 	bOutNeedsPrompt = true;
-	OutPrompt = FString::Printf(TEXT("Select %d-%d card(s) for %s"),
-		Min, Max, Script.SourceText.IsEmpty() ? *Script.Id : *Script.SourceText);
+	if (bEquipScript)
+	{
+		OutPrompt = FString::Printf(TEXT("Choose a face-up monster you control to equip with %s."),
+			*CardName(SourceCard));
+	}
+	else
+	{
+		OutPrompt = FString::Printf(TEXT("Select %d-%d card(s) for %s"),
+			Min, Max, Script.SourceText.IsEmpty() ? *Script.Id : *Script.SourceText);
+	}
 	return true;
 }
 
@@ -4721,6 +4771,47 @@ bool FDAEffectRuntime::HasFieldStatScript(int32 CardId) const
 			{
 				return true;
 			}
+		}
+	}
+	return false;
+}
+
+bool FDAEffectRuntime::HasLegalEquipTarget(const FDuelCard& Card) const
+{
+	if (!Engine)
+	{
+		return false;
+	}
+	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(Card.Data.Id);
+	if (!Scripts)
+	{
+		return false;
+	}
+
+	FDEffectEvent Event;
+	Event.Trigger = EDEffectTrigger::OnActivate;
+	Event.SourceCard = Card;
+	Event.EventCard = Card;
+	Event.SourceController = Card.Controller;
+	Event.EventController = Card.Controller;
+
+	for (const FDEffectScript& Script : *Scripts)
+	{
+		if (Script.Trigger != EDEffectTrigger::OnActivate || !ScriptHasOperation(Script, TEXT("equip")))
+		{
+			continue;
+		}
+		TArray<int32> Resolved;
+		TArray<int32> Candidates;
+		bool bNeedsPrompt = false;
+		EDuelOwner Chooser = Card.Controller;
+		int32 Min = 0;
+		int32 Max = 0;
+		FString Prompt;
+		if (ResolveScriptTarget(Script, Card, Event, Resolved, Candidates, bNeedsPrompt, Chooser, Min, Max, Prompt)
+			&& (Resolved.Num() > 0 || Candidates.Num() > 0))
+		{
+			return true;
 		}
 	}
 	return false;

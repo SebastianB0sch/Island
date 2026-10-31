@@ -4248,18 +4248,29 @@ void FDuelEngine::SpecialSummonHarpieSisters(EDuelOwner Side)
 // Spell / Trap resolution
 // ---------------------------------------------------------------------------
 
+bool FDuelEngine::IsLegalEquipTarget(const FDuelCard& Card, EDuelOwner Side, const FString& Name) const
+{
+	if (!Card.IsValid() || !Card.bFaceUp || Card.Controller != Side)
+	{
+		return false;
+	}
+	if (Name == TEXT("Fusion Weapon") && (!Card.IsFusion() || Card.Data.Level > 6)) return false;
+	if ((Name == TEXT("Burning Spear") || Name == TEXT("Salamandra")) && Card.Data.Attribute != TEXT("FIRE")) return false;
+	if (Name == TEXT("Gust Fan") && Card.Data.Attribute != TEXT("WIND")) return false;
+	if (Name == TEXT("Steel Shell") && Card.Data.Attribute != TEXT("WATER")) return false;
+	if (Name == TEXT("Power of Kaishin") && Card.Data.MonsterType != TEXT("Aqua")) return false;
+	if (Name == TEXT("Cyber Shield") && !IsHarpieLady(Card) && !IsName(Card, TEXT("Harpie Lady Sisters"))) return false;
+	return true;
+}
+
 bool FDuelEngine::HasEquipTarget(EDuelOwner Side, const FString& Name) const
 {
 	for (const FDuelCard& Card : SideRef(Side).Monsters)
 	{
-		if (!Card.IsValid() || !Card.bFaceUp) continue;
-		if (Name == TEXT("Fusion Weapon") && (!Card.IsFusion() || Card.Data.Level > 6)) continue;
-		if ((Name == TEXT("Burning Spear") || Name == TEXT("Salamandra")) && Card.Data.Attribute != TEXT("FIRE")) continue;
-		if (Name == TEXT("Gust Fan") && Card.Data.Attribute != TEXT("WIND")) continue;
-		if (Name == TEXT("Steel Shell") && Card.Data.Attribute != TEXT("WATER")) continue;
-		if (Name == TEXT("Power of Kaishin") && Card.Data.MonsterType != TEXT("Aqua")) continue;
-		if (Name == TEXT("Cyber Shield") && !IsHarpieLady(Card) && !IsName(Card, TEXT("Harpie Lady Sisters"))) continue;
-		return true;
+		if (IsLegalEquipTarget(Card, Side, Name))
+		{
+			return true;
+		}
 	}
 	return false;
 }
@@ -4270,13 +4281,7 @@ FDuelCard* FDuelEngine::ChooseEquipTarget(EDuelOwner Side, const FString& Name)
 	int32 BestAtk = -1;
 	for (FDuelCard& Card : SideRef(Side).Monsters)
 	{
-		if (!Card.IsValid() || !Card.bFaceUp) continue;
-		if (Name == TEXT("Fusion Weapon") && (!Card.IsFusion() || Card.Data.Level > 6)) continue;
-		if ((Name == TEXT("Burning Spear") || Name == TEXT("Salamandra")) && Card.Data.Attribute != TEXT("FIRE")) continue;
-		if (Name == TEXT("Gust Fan") && Card.Data.Attribute != TEXT("WIND")) continue;
-		if (Name == TEXT("Steel Shell") && Card.Data.Attribute != TEXT("WATER")) continue;
-		if (Name == TEXT("Power of Kaishin") && Card.Data.MonsterType != TEXT("Aqua")) continue;
-		if (Name == TEXT("Cyber Shield") && !IsHarpieLady(Card) && !IsName(Card, TEXT("Harpie Lady Sisters"))) continue;
+		if (!IsLegalEquipTarget(Card, Side, Name)) continue;
 		const int32 Atk = GetAtk(Card);
 		if (Atk > BestAtk)
 		{
@@ -4285,6 +4290,77 @@ FDuelCard* FDuelEngine::ChooseEquipTarget(EDuelOwner Side, const FString& Name)
 		}
 	}
 	return Best;
+}
+
+void FDuelEngine::QueueEquipTargetChoice(FDuelCard& Equip, EDuelOwner Side, const FString& Name)
+{
+	TArray<FDuelCard*> Targets;
+	for (FDuelCard& Card : SideRef(Side).Monsters)
+	{
+		if (IsLegalEquipTarget(Card, Side, Name))
+		{
+			Targets.Add(&Card);
+		}
+	}
+	if (Targets.Num() == 0)
+	{
+		return;
+	}
+	if (Targets.Num() == 1)
+	{
+		AttachEquip(Equip, *Targets[0]);
+		Log(FString::Printf(TEXT("%s equips to %s."), *Name, *CardName(*Targets[0])), TEXT("spell"));
+		return;
+	}
+
+	FDuelChoiceRequest Request;
+	Request.Type = EDuelChoiceType::SelectCard;
+	Request.Prompt = FString::Printf(TEXT("Select the monster to equip with %s."), *Name);
+	Request.Side = Side;
+	Request.MinSelections = 1;
+	Request.MaxSelections = 1;
+	Request.SourceCardUid = Equip.Uid;
+	Request.SourceCardId = Equip.Data.Id;
+	Request.TargetZone = EDuelZone::Monster;
+
+	int32 BestUid = 0;
+	int32 BestAtk = -1;
+	for (FDuelCard* Target : Targets)
+	{
+		FDuelChoiceOption Option;
+		Option.Id = Target->Uid;
+		Option.Label = FString::Printf(TEXT("%s (%d/%d)"), *CardName(*Target), GetAtk(*Target), GetDef(*Target));
+		Option.CardUid = Target->Uid;
+		Option.CardId = Target->Data.Id;
+		Option.Zone = EDuelZone::Monster;
+		Request.Options.Add(Option);
+		const int32 Atk = GetAtk(*Target);
+		if (Atk > BestAtk)
+		{
+			BestAtk = Atk;
+			BestUid = Target->Uid;
+		}
+	}
+	if (BestUid != 0)
+	{
+		Request.DefaultOptionIds.Add(BestUid);
+	}
+
+	const int32 EquipUid = Equip.Uid;
+	RequestChoice(Request, [this, EquipUid, Name](const FDuelChoiceRequest&, const TArray<int32>& OptionIds)
+	{
+		if (OptionIds.Num() == 0)
+		{
+			return;
+		}
+		FDuelCard* LiveEquip = FindSpellTrap(EquipUid);
+		FDuelCard* Target = FindMonster(OptionIds[0]);
+		if (LiveEquip && Target)
+		{
+			AttachEquip(*LiveEquip, *Target);
+			Log(FString::Printf(TEXT("%s equips to %s."), *Name, *CardName(*Target)), TEXT("spell"));
+		}
+	});
 }
 
 bool FDuelEngine::CanActivateSpellCard(const FDuelCard& Card)
@@ -4458,6 +4534,11 @@ bool FDuelEngine::CanActivateSpellCard(const FDuelCard& Card)
 	if (IsEquipName(Name))
 	{
 		return HasEquipTarget(Side, Name);
+	}
+	if (EffectRuntime && EffectRuntime->HasEquipStatScript(Card.Data.Id)
+		&& !EffectRuntime->HasLegalEquipTarget(Card))
+	{
+		return false;
 	}
 	if (bFieldSpell)
 	{
@@ -4841,11 +4922,7 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 	}
 	else if (IsEquipName(Name))
 	{
-		if (FDuelCard* Target = ChooseEquipTarget(Side, Name))
-		{
-			AttachEquip(Card, *Target);
-			Log(FString::Printf(TEXT("%s equips to %s."), *Name, *CardName(*Target)), TEXT("spell"));
-		}
+		QueueEquipTargetChoice(Card, Side, Name);
 	}
 	else
 	{

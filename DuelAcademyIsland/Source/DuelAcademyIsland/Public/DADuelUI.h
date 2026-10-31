@@ -152,6 +152,13 @@ private:
 	void DrawDuelActive();
 	void DrawDuelResult();
 	void DrawDuelPile();
+	void DrawDuelChoice();
+	void RefreshDuelChoiceState();
+	void SubmitDuelChoice();
+	void HandleDuelChoiceOption(int32 OptionId);
+	void SkipDuelPresentation();
+	bool IsDuelChoiceTarget(int32 Uid) const { return DuelChoiceCardUids.Contains(Uid); }
+	bool IsDuelChoiceSelected(int32 Uid) const { return DuelChoiceSelected.Contains(Uid); }
 	void DrawDuelCard(const FDuelCard& Card, float X, float Y, float W, float H,
 		bool bFaceDown, bool bSelected = false, bool bHovered = false, bool bDefense = false);
 	void DrawDuelCardFace(int32 CardId, bool bFaceDown, float X, float Y, float W, float H, float Alpha = 1.0f);
@@ -185,6 +192,13 @@ private:
 	TUniquePtr<FDuelEngine> DuelEngine;
 	EDuelUiMode DuelMode = EDuelUiMode::None;
 	int32 DuelSelectedUid = 0;
+
+	// Pending rules-choice presentation (targets, searches, optional triggers).
+	int32 DuelChoiceRequestId = 0;
+	int32 DuelChoicePage = 0;
+	TSet<int32> DuelChoiceSelected;
+	TSet<int32> DuelChoiceCardUids;
+
 	int32 DuelTributeHandUid = 0;
 	bool bDuelTributeSet = false;
 	TSet<int32> DuelTributeUids;
