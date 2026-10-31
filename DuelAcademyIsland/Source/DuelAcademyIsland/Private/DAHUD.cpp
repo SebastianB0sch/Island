@@ -3,6 +3,8 @@
 #include "DAHUD.h"
 
 #include "CanvasItem.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "DAInteractable.h"
 #include "DAInteractableInterface.h"
 #include "DAInventorySubsystem.h"
@@ -28,6 +30,7 @@
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "HAL/PlatformMisc.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
@@ -163,6 +166,7 @@ void ADAHUD::BeginPlay()
 		After(1.0f, [](ADAHUD* HUD) { HUD->OpenDuelDeckSelect(TEXT("jaden"), TEXT("Jaden Yuki"), TEXT("jaden")); });
 		After(2.2f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelDeck.png"), false, false); });
 		After(3.0f, [](ADAHUD* HUD) { HUD->StartDuelWithDeck(TEXT("fire")); });
+		After(3.9f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelBanner.png"), false, false); });
 		After(5.6f, [](ADAHUD* HUD) { HUD->DebugAutoPlayOpening(); });
 		After(6.3f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelBoard.png"), false, false); });
 		After(7.1f, [](ADAHUD* HUD) { HUD->DebugSelectFirstHandCard(); });
@@ -170,6 +174,93 @@ void ADAHUD::BeginPlay()
 		After(8.6f, [](ADAHUD* HUD) { HUD->DebugFinishDuelWin(); });
 		After(13.0f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelResult.png"), false, false); });
 		After(14.2f, [](ADAHUD* HUD) { FPlatformMisc::RequestExit(false); });
+	}
+
+	if (FParse::Param(FCommandLine::Get(), TEXT("DADuelChoiceScreenshot")))
+	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
+		After(0.8f, [](ADAHUD* HUD) { HUD->CloseTitle(); });
+		After(1.0f, [](ADAHUD* HUD) { HUD->DebugOpenDuelEquipChoice(); });
+		After(2.2f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelChoice.png"), false, false); });
+		After(3.2f, [](ADAHUD* HUD) { FPlatformMisc::RequestExit(false); });
+	}
+
+	// Locomotion screenshot harness: teleports the player to the plaza, runs a side camera,
+	// walks for a few strides, sprints, then stops. Used to eyeball the phase-matched blend in
+	// the engine: -DALocomotionTest.
+	if (FParse::Param(FCommandLine::Get(), TEXT("DALocomotionTest")))
+	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
+		After(1.0f, [](ADAHUD* HUD)
+		{
+			HUD->CloseTitle();
+			APlayerController* PC = HUD->GetOwningPlayerController();
+			ADAStudentCharacter* Char = PC ? Cast<ADAStudentCharacter>(PC->GetPawn()) : nullptr;
+			if (!Char)
+			{
+				return;
+			}
+			Char->SetActorLocation(FVector(0.f, 4000.f, 3700.f), false, nullptr, ETeleportType::TeleportPhysics);
+			Char->SetActorRotation(FRotator(0.f, 0.f, 0.f));
+			Char->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			HUD->LocomotionTestChar = Char;
+			HUD->LocomotionTestStart = HUD->GetWorld()->GetTimeSeconds();
+			HUD->bLocomotionTest = true;
+			HUD->bLocomotionSprint = false;
+			HUD->LocomotionSamples.Reset();
+			PC->SetControlRotation(FRotator(-8.f, -90.f, 0.f));
+			if (USpringArmComponent* Boom = Char->FindComponentByClass<USpringArmComponent>())
+			{
+				Boom->TargetArmLength = 380.f;
+				Boom->SocketOffset = FVector(0.0, 0.0, 45.0);
+				Boom->bDoCollisionTest = false;
+			}
+		});
+		After(1.9f, [](ADAHUD* HUD) { HUD->LocomotionSamples.Reset(); });
+		After(2.1f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DAWalkA.png"), false, false); });
+		After(2.8f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DAWalkB.png"), false, false); });
+		After(3.5f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DAWalkC.png"), false, false); });
+		After(3.7f, [](ADAHUD* HUD) { HUD->LogFootPlantStats(TEXT("walk")); HUD->LocomotionSamples.Reset(); });
+		After(3.9f, [](ADAHUD* HUD) { HUD->bLocomotionSprint = true; });
+		After(4.8f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DARunA.png"), false, false); });
+		After(4.5f, [](ADAHUD* HUD) { HUD->LocomotionSamples.Reset(); });
+		After(5.1f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DARunB.png"), false, false); });
+		After(5.4f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DARunC.png"), false, false); });
+		After(6.0f, [](ADAHUD* HUD) { HUD->LogFootPlantStats(TEXT("run")); HUD->LocomotionSamples.Reset(); HUD->bLocomotionTest = false; });
+		After(6.8f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DAStop.png"), false, false); });
+		After(7.8f, [](ADAHUD*) { FPlatformMisc::RequestExit(false); });
 	}
 
 	// UI debug harnesses:
@@ -378,7 +469,8 @@ void ADAHUD::BeginPlay()
 	}
 }
 
-void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& OpponentName, const FString& OpponentDeckId)
+void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& OpponentName, const FString& OpponentDeckId,
+	const FString& Mode, bool bAwardDP)
 {
 	if (IsTitleOpen() || IsGameplayUIOpen())
 	{
@@ -388,7 +480,7 @@ void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& Oppone
 	{
 		DuelUI = MakeUnique<FDADuelUI>(this);
 	}
-	DuelUI->OpenDeckSelect(OpponentId, OpponentName, OpponentDeckId);
+	DuelUI->OpenDeckSelect(OpponentId, OpponentName, OpponentDeckId, Mode, bAwardDP);
 }
 
 void ADAHUD::CloseDuel()
@@ -429,6 +521,15 @@ void ADAHUD::DebugFinishDuelWin()
 	{
 		DuelUI->DebugFinishDuelWin();
 	}
+}
+
+void ADAHUD::DebugOpenDuelEquipChoice()
+{
+	if (!DuelUI.IsValid())
+	{
+		DuelUI = MakeUnique<FDADuelUI>(this);
+	}
+	DuelUI->DebugOpenEquipChoice();
 }
 
 // ------------------------------------------------------------------------ dialogue / PDA hosting
@@ -1096,6 +1197,36 @@ void ADAHUD::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	if (bLocomotionTest)
+	{
+		if (ADAStudentCharacter* Char = LocomotionTestChar.Get())
+		{
+			Char->GetCharacterMovement()->MaxWalkSpeed = bLocomotionSprint ? 420.f : 150.f;
+			Char->AddMovementInput(FVector(1.0, 0.0, 0.0), 1.0f);
+			if (APlayerController* PC = GetOwningPlayerController())
+			{
+				PC->SetControlRotation(FRotator(-8.0f, -90.0f, 0.0f));
+			}
+			// Measure the planted ball joints: a foot that is properly planted stays still in world
+			// space while the actor travels, so this is a direct in-engine foot-slide check.
+			TArray<USkeletalMeshComponent*> Meshes;
+			Char->GetComponents<USkeletalMeshComponent>(Meshes);
+			for (USkeletalMeshComponent* Mesh : Meshes)
+			{
+				if (Mesh && Mesh->GetSkeletalMeshAsset())
+				{
+					FDALocoSample Sample;
+					Sample.Time = GetWorld()->GetTimeSeconds();
+					Sample.BallL = Mesh->GetBoneLocation(TEXT("ball_l"), EBoneSpaces::WorldSpace);
+					Sample.BallR = Mesh->GetBoneLocation(TEXT("ball_r"), EBoneSpaces::WorldSpace);
+					Sample.Actor = Char->GetActorLocation();
+					LocomotionSamples.Add(Sample);
+					break;
+				}
+			}
+		}
+	}
+
 	// The title screen is the top-most modal layer: it owns input until the
 	// player starts a new game or loads a save.
 	if (IsTitleOpen())
@@ -1437,6 +1568,57 @@ ADALocationVolume* ADAHUD::PickZoneRowUnderCursor() const
 }
 
 // ------------------------------------------------------------------------ main draw
+
+void ADAHUD::LogFootPlantStats(const FString& Label)
+{
+	const int32 Num = LocomotionSamples.Num();
+	if (Num < 4)
+	{
+		UE_LOG(LogTemp, Log, TEXT("DALocoTest %s: not enough samples (%d)"), *Label, Num);
+		return;
+	}
+	float MinL = TNumericLimits<float>::Max();
+	float MinR = TNumericLimits<float>::Max();
+	for (const FDALocoSample& Sample : LocomotionSamples)
+	{
+		MinL = FMath::Min(MinL, static_cast<float>(Sample.BallL.Z));
+		MinR = FMath::Min(MinR, static_cast<float>(Sample.BallR.Z));
+	}
+	TArray<float> Speeds;
+	Speeds.Reserve(Num * 2);
+	for (int32 Index = 1; Index < Num; ++Index)
+	{
+		const FDALocoSample& Prev = LocomotionSamples[Index - 1];
+		const FDALocoSample& Cur = LocomotionSamples[Index];
+		const double Dt = Cur.Time - Prev.Time;
+		if (Dt <= 1e-5)
+		{
+			continue;
+		}
+		if (Cur.BallL.Z < MinL + 4.0f && Prev.BallL.Z < MinL + 4.0f)
+		{
+			Speeds.Add(static_cast<float>((Cur.BallL - Prev.BallL).Size2D() / Dt));
+		}
+		if (Cur.BallR.Z < MinR + 4.0f && Prev.BallR.Z < MinR + 4.0f)
+		{
+			Speeds.Add(static_cast<float>((Cur.BallR - Prev.BallR).Size2D() / Dt));
+		}
+	}
+	const double Duration = LocomotionSamples.Last().Time - LocomotionSamples[0].Time;
+	const float ActorSpeed = Duration > 1e-5
+		? static_cast<float>((LocomotionSamples.Last().Actor - LocomotionSamples[0].Actor).Size2D() / Duration)
+		: 0.f;
+	if (Speeds.Num() == 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("DALocoTest %s: actor %.0f cm/s, no planted-ball samples"), *Label, ActorSpeed);
+		return;
+	}
+	Speeds.Sort();
+	const float Median = Speeds[Speeds.Num() / 2];
+	const float P90 = Speeds[FMath::Min(Speeds.Num() - 1, Speeds.Num() * 9 / 10)];
+	UE_LOG(LogTemp, Log, TEXT("DALocoTest %s: actor %.0f cm/s, planted ball median %.1f cm/s (p90 %.1f), samples %d"),
+		*Label, ActorSpeed, Median, P90, Speeds.Num());
+}
 
 void ADAHUD::DrawHUD()
 {

@@ -18,6 +18,7 @@ class ADAIslandManager;
 class UDAIslandSubsystem;
 class UFont;
 class UTexture2D;
+class ADAStudentCharacter;
 
 UCLASS()
 class DUELACADEMYISLAND_API ADAHUD : public AHUD
@@ -25,6 +26,14 @@ class DUELACADEMYISLAND_API ADAHUD : public AHUD
 	GENERATED_BODY()
 
 public:
+	struct FDALocoSample
+	{
+		double Time = 0.0;
+		FVector BallL = FVector::ZeroVector;
+		FVector BallR = FVector::ZeroVector;
+		FVector Actor = FVector::ZeroVector;
+	};
+
 	ADAHUD();
 
 	virtual void BeginPlay() override;
@@ -45,7 +54,8 @@ public:
 	/** Opens the starter-deck picker for a duel against the given opponent. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
 	void OpenDuelDeckSelect(const FString& OpponentId = TEXT("jaden"),
-		const FString& OpponentName = TEXT("Jaden Yuki"), const FString& OpponentDeckId = TEXT("jaden"));
+		const FString& OpponentName = TEXT("Jaden Yuki"), const FString& OpponentDeckId = TEXT("jaden"),
+		const FString& Mode = TEXT("free"), bool bAwardDP = true);
 
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
 	void StartDuelWithDeck(const FString& DeckId);
@@ -61,6 +71,9 @@ public:
 
 	/** Debug-only: finish the current duel with a player win. */
 	void DebugFinishDuelWin();
+
+	/** Debug-only: open a fixed board with a pending Equip-Spell target choice. */
+	void DebugOpenDuelEquipChoice();
 
 	UFont* GetSmallFont() const { return SmallFont; }
 	UFont* GetBigFont() const { return BigFont; }
@@ -103,6 +116,12 @@ public:
 
 	/** Test-only: seed the transient profile/decks/inventory/mail state used by -DAGameplayUITest. */
 	void PrepareGameplayUITestState();
+
+	/** Debug-only: log the planted-foot speed measured by the -DALocomotionTest harness. */
+	void LogLocomotionStats(const FString& Label);
+
+	/** Debug-only: log the world-space speed of the planted ball joints (foot-slide check). */
+	void LogFootPlantStats(const FString& Label);
 
 	FDADialogueUI* GetDialogueUI() const { return DialogueUI.Get(); }
 	FDAPDAUI* GetPDAUI() const { return PDAUI.Get(); }
@@ -159,10 +178,15 @@ private:
 
 	FVector2D MapMin = FVector2D(-153600.0, -153600.0);
 	FVector2D MapMax = FVector2D(153600.0, 153600.0);
+	TWeakObjectPtr<ADAStudentCharacter> LocomotionTestChar;
+	TArray<FDALocoSample> LocomotionSamples;
 
 	bool bMapOpen = false;
 	bool bHelpOpen = false;
 	bool bTitleWasShown = false;
+	bool bLocomotionTest = false;
+	bool bLocomotionSprint = false;
+	float LocomotionTestStart = 0.f;
 	int32 MapSelection = 0;
 	float UIScale = 1.f;
 	float StartTime = 0.f;

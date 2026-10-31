@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "DAAvatarComponent.h"
+#include "DACalendarSubsystem.h"
 #include "DAHUD.h"
 #include "DAInteractableInterface.h"
 #include "DAIslandManager.h"
@@ -34,12 +35,13 @@ ADAStudentCharacter::ADAStudentCharacter()
 
 	UCharacterMovementComponent* Move = GetCharacterMovement();
 	Move->bOrientRotationToMovement = true;
-	Move->RotationRate = FRotator(0.f, 600.f, 0.f);
+	Move->RotationRate = FRotator(0.f, 420.f, 0.f);
 	Move->MaxWalkSpeed = WalkSpeed;
 	Move->MinAnalogWalkSpeed = 40.f;
+	Move->MaxAcceleration = 1000.f;
 	Move->JumpZVelocity = 560.f;
 	Move->AirControl = 0.4f;
-	Move->BrakingDecelerationWalking = 2200.f;
+	Move->BrakingDecelerationWalking = 1400.f;
 	Move->BrakingDecelerationFalling = 600.f;
 	Move->MaxStepHeight = 45.f;
 	Move->SetWalkableFloorAngle(46.f);
@@ -501,11 +503,22 @@ void ADAStudentCharacter::OnTimeSkip(const FInputActionValue& V)
 	{
 		return;
 	}
+
+	// Advance the campaign clock, not just the lighting. Periods roll
+	// AM -> PM -> Night -> next day, which is what date/weekday gates read.
+	UGameInstance* GameInstance = GetWorld() ? GetWorld()->GetGameInstance() : nullptr;
+	UDACalendarSubsystem* Calendar = GameInstance ? GameInstance->GetSubsystem<UDACalendarSubsystem>() : nullptr;
+	if (!Calendar)
+	{
+		return;
+	}
+	Calendar->AdvancePeriod();
+
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
 		if (ADAIslandManager* M = Sub->GetManager())
 		{
-			M->SetHour(M->Hour + 3.f);
+			M->SetHour(static_cast<float>(Calendar->GetHour()));
 		}
 	}
 }

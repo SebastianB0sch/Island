@@ -22,7 +22,9 @@ enum class EDAInteractKind : uint8
 	Sign,
 	CardShop,
 	DuelField,
-	Info
+	Info,
+	RoomBed,
+	WalkHome
 };
 
 /** A message shown in the HUD's dialogue panel. */

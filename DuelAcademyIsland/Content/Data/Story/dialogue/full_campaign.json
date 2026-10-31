@@ -1492,6 +1492,391 @@
         "full_campaign",
         "E33"
       ]
+    },
+    "E33.04": {
+      "key": "E33.04",
+      "speaker": "sheppard",
+      "portrait": "sheppard_happy",
+      "expression": "happy",
+      "text": "Then it is official. You are the King of Games. The island is yours to enjoy, and your name is yours to change.",
+      "next": "",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E33",
+        "win"
+      ]
+    },
+    "E33.05": {
+      "key": "E33.05",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "Not this time. You are the Prince of Games, and the throne will wait for your next challenge.",
+      "next": "",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E33",
+        "lose"
+      ]
+    },
+    "E07.choice": {
+      "key": "E07.choice",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Torrey holds out a strange card. Do you accept the occult recommendation?",
+      "next": "",
+      "choices": [
+        {
+          "id": "accept",
+          "text": "Accept",
+          "next_scene": "",
+          "next_key": "",
+          "outcomes": [
+            {
+              "type": "grant_card",
+              "card_id": 602,
+              "count": 1
+            },
+            {
+              "type": "set_title",
+              "title": "Occult Duelist"
+            },
+            {
+              "type": "set_flag",
+              "flag": "occult_duelist",
+              "value": true
+            },
+            {
+              "type": "set_flag",
+              "flag": "occult_accepted",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "refuse",
+          "text": "Refuse",
+          "next_scene": "",
+          "next_key": "E07.refuse_end",
+          "outcomes": [
+            {
+              "type": "set_flag",
+              "flag": "occult_refused",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E07"
+      ]
+    },
+    "E12.choice": {
+      "key": "E12.choice",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "The Obelisk elite demand a response. Do you accept their challenge?",
+      "next": "",
+      "choices": [
+        {
+          "id": "accept",
+          "text": "Accept",
+          "next_scene": "",
+          "next_key": "",
+          "outcomes": [
+            {
+              "type": "set_flag",
+              "flag": "elite_duel_accepted",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "refuse",
+          "text": "Refuse",
+          "next_scene": "",
+          "next_key": "E12.refuse_end",
+          "outcomes": [
+            {
+              "type": "set_flag",
+              "flag": "elite_duel_refused",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E12"
+      ]
+    },
+    "E14.choice": {
+      "key": "E14.choice",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "The Obelisk lackeys ask for your help. Do you accept?",
+      "next": "",
+      "choices": [
+        {
+          "id": "accept",
+          "text": "Accept",
+          "next_scene": "",
+          "next_key": "",
+          "outcomes": [
+            {
+              "type": "set_flag",
+              "flag": "helped_lackeys",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "refuse",
+          "text": "Refuse",
+          "next_scene": "",
+          "next_key": "E14.refuse_end",
+          "outcomes": [
+            {
+              "type": "set_flag",
+              "flag": "refused_lackeys",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E14"
+      ]
+    },
+    "E24.choice": {
+      "key": "E24.choice",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "Jaden is hiding something. Do you insist on talking, or leave him alone?",
+      "next": "",
+      "choices": [
+        {
+          "id": "insist",
+          "text": "Insist",
+          "next_scene": "",
+          "next_key": "",
+          "outcomes": [
+            {
+              "type": "grant_card",
+              "card_id": 921,
+              "count": 1
+            },
+            {
+              "type": "set_flag",
+              "flag": "blair_revealed",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "leave",
+          "text": "Leave",
+          "next_scene": "full.E24_leave",
+          "next_key": "",
+          "outcomes": [
+            {
+              "type": "set_flag",
+              "flag": "blair_left",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E24"
+      ]
+    },
+    "E28b.choice": {
+      "key": "E28b.choice",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "The Queen expects a gift in return. Do you give one?",
+      "next": "",
+      "choices": [
+        {
+          "id": "give",
+          "text": "Give gift",
+          "next_scene": "",
+          "next_key": "",
+          "outcomes": [
+            {
+              "type": "set_flag",
+              "flag": "valentine_gift_given",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "decline",
+          "text": "Do not give gift",
+          "next_scene": "",
+          "next_key": "",
+          "outcomes": [
+            {
+              "type": "set_flag",
+              "flag": "valentine_gift_declined",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E28b"
+      ]
+    },
+    "E20.03": {
+      "key": "E20.03",
+      "speaker": "shadow_duelist",
+      "portrait": "shadow_duelist_neutral",
+      "expression": "neutral",
+      "text": "The volcano next. The ante grows with every step.",
+      "next": "",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E20"
+      ]
+    },
+    "E20.04": {
+      "key": "E20.04",
+      "speaker": "shadow_duelist",
+      "portrait": "shadow_duelist_neutral",
+      "expression": "neutral",
+      "text": "The gym is the last table. Win, and the shadow game is over.",
+      "next": "",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E20"
+      ]
+    },
+    "E29.03": {
+      "key": "E29.03",
+      "speaker": "fontaine",
+      "portrait": "fontaine_happy",
+      "expression": "happy",
+      "text": "You did it. Welcome back, Apprentice Duelist. Take the DP you earned and keep moving forward.",
+      "next": "",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E29",
+        "win"
+      ]
+    },
+    "E29.04": {
+      "key": "E29.04",
+      "speaker": "fontaine",
+      "portrait": "fontaine_neutral",
+      "expression": "neutral",
+      "text": "Not yet. Go rest, rebuild your deck, and come back when you are ready to try again.",
+      "next": "",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "full_campaign",
+        "E29",
+        "lose"
+      ]
+    },
+    "E09.03": {
+      "key": "E09.03",
+      "speaker": "jaden",
+      "portrait": "jaden_happy",
+      "expression": "happy",
+      "text": "That was the best final I've had all year. The festival belt is yours!",
+      "next": "",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E09",
+        "win"
+      ]
+    },
+    "E09.04": {
+      "key": "E09.04",
+      "speaker": "jaden",
+      "portrait": "jaden_neutral",
+      "expression": "neutral",
+      "text": "Close one! The belt stays with me this year, but you'll get another shot.",
+      "next": "",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E09",
+        "lose"
+      ]
+    },
+    "E24.05": {
+      "key": "E24.05",
+      "speaker": "player",
+      "portrait": "player_neutral",
+      "expression": "neutral",
+      "text": "You decide to leave Jaden alone for now. The mystery can wait.",
+      "next": "",
+      "choices": [],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "medium",
+      "tags": [
+        "full_campaign",
+        "E24",
+        "leave"
+      ]
     }
   }
 }

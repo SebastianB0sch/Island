@@ -1959,6 +1959,174 @@
         "tutorial"
       ],
       "notes": "Integration alias for the Syrus tutorial practice table."
+    },
+    {
+      "id": "academy_classroom_student_03",
+      "name": "Classroom Student 03",
+      "location_id": "academy_classroom",
+      "zone_id": "academy",
+      "interior_id": "academy_classroom",
+      "kind": "npc",
+      "position_ue": [
+        300480,
+        299690,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "story",
+        "duelist"
+      ],
+      "notes": "Story duelist desk 3."
+    },
+    {
+      "id": "academy_classroom_student_04",
+      "name": "Classroom Student 04",
+      "location_id": "academy_classroom",
+      "zone_id": "academy",
+      "interior_id": "academy_classroom",
+      "kind": "npc",
+      "position_ue": [
+        300600,
+        299530,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "story",
+        "duelist"
+      ],
+      "notes": "Story duelist desk 4."
+    },
+    {
+      "id": "academy_classroom_student_05",
+      "name": "Classroom Student 05",
+      "location_id": "academy_classroom",
+      "zone_id": "academy",
+      "interior_id": "academy_classroom",
+      "kind": "npc",
+      "position_ue": [
+        300720,
+        299370,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "story",
+        "duelist"
+      ],
+      "notes": "Story duelist desk 5."
+    },
+    {
+      "id": "ra_cafeteria_seat_03",
+      "name": "Ra Cafeteria Seat 03",
+      "location_id": "ra_cafeteria",
+      "zone_id": "ra",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -70830,
+        63850,
+        2295
+      ],
+      "yaw": 130.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "story",
+        "duelist"
+      ],
+      "notes": "Story duelist seat 3."
+    },
+    {
+      "id": "ra_cafeteria_seat_04",
+      "name": "Ra Cafeteria Seat 04",
+      "location_id": "ra_cafeteria",
+      "zone_id": "ra",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -70610,
+        63850,
+        2295
+      ],
+      "yaw": 130.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "story",
+        "duelist"
+      ],
+      "notes": "Story duelist seat 4."
+    },
+    {
+      "id": "slifer_cafeteria_seat_04",
+      "name": "Slifer Cafeteria Seat 04",
+      "location_id": "slifer_cafeteria",
+      "zone_id": "slifer",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -106170,
+        27900,
+        2945
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "story",
+        "duelist"
+      ],
+      "notes": "Story duelist seat 4."
+    },
+    {
+      "id": "gym_assembly_student_04",
+      "name": "Gym Assembly Student 04",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        69950,
+        71650,
+        620
+      ],
+      "yaw": 157.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "story",
+        "duelist"
+      ],
+      "notes": "Story duelist crowd 4."
+    },
+    {
+      "id": "gym_assembly_student_05",
+      "name": "Gym Assembly Student 05",
+      "location_id": "academy_gym",
+      "zone_id": "gym",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        70150,
+        71500,
+        620
+      ],
+      "yaw": 157.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "story",
+        "duelist"
+      ],
+      "notes": "Story duelist crowd 5."
     }
   ],
   "opening_anchor_requirements": [

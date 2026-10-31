@@ -108,10 +108,10 @@ forced runtime pass.
 | `E32` | Help Miss Dorothy | `full.E32` | 0 | 2 | weekday | exam_day |
 | `E33` | The Duel King | `full.E33` | 0 | 3 | flag | counter; flag |
 
-Totals: **35 events / 35 scenes / 75 dialogue keys / 38 full-campaign duel
+Totals: **35 events / 44 full-campaign scenes / 89 dialogue keys / 39 full-campaign duel
 commands / 6 email contacts / 6 email duel requests**. The playthrough also
 resolves the opening `E01` tutorial duel, so its aggregate story-duel count is
-39/39 (38 full-campaign + 1 tutorial).
+40/40 (39 full-campaign + 1 tutorial).
 
 ---
 
@@ -129,7 +129,8 @@ These were found while making the campaign actually run, not just validate:
    `Advance()` did not clear `bPendingTextInput`, so a headless/automation run
    could stop on the opening name-entry line. `Advance()` now confirms the
    current profile name and clears the pending text-input flag, matching
-   `HandleDialogueClosed`.
+   `HandleDialogueClosed`. The live UI now has a real text field; the harness
+   stays headless and confirms the default.
 3. **Duel commands could only be resolved by polling the HUD.**
    A manual duel now stays pending until `NotifyDuelResult(true, false)` is
    called. Sequential duels (E12, E16, E17, E19, E20, E28) continue correctly
@@ -163,13 +164,11 @@ These were found while making the campaign actually run, not just validate:
 10. **Calendar rollover was only assumed.**
    The harness uses `AdvanceDay()`/`AdvancePeriod()` for 365 days and asserts all
    12 month indexes were visited. No A02 code was edited.
-11. **Date-window detection is explicit, not hidden.**
-   E11/E28/E28b are canonically Year 2, while A02's calendar `Year` is the
-   school year. The natural 365-day pass does **not** rewrite their data; it
-   records the exact date blocker. Only the forced runtime pass advances the
-   calendar to A02 Year 2 and marks the event with
-   `calendar beyond 365 days (Year 2)`. This keeps the canon dates intact and
-   makes the A02/canon semantics question visible.
+11. **Date windows use the school-year calendar.**
+   E11/E28/E28b are January/February/March of **school Year 1** (October–September).
+   A02's `Year` is the school year, so they are inside the natural 365-day pass.
+   An earlier harness revision simulated January–September as literal Year 2 and
+   falsely reported them as blocked; the audit now walks one school year.
 
 ---
 
@@ -177,15 +176,14 @@ These were found while making the campaign actually run, not just validate:
 
 | Blocker | Detail |
 | --- | --- |
-| **No producer for three world flags** | `stayed_in_room_three_weekends`, `walk_home_partner_3` and `post_game` are read by E30/E31/E33 but no current A08/A09 ending/room/walk-home flow writes them. The harness simulates `stayed_in_room_three_weekends`/`walk_home_partner_3` on simulated days 42/84, and `post_game` on day 300 only after the other 34 canonical events are complete (or forces it during the runtime pass). Each simulated gate is logged. |
+| **World flags now have producers** | `NotifyRoomStay` (room-bed interactable, weekends only), `NotifyWalkHome` (harbor walk-home interactable) and the year-2 post-game gate write `stayed_in_room_three_weekends`, `walk_home_partner_3` and `post_game`. The harness still simulates them for deterministic coverage. |
 | **Exclusive dorm gates** | E02/E03/E12/E24/E29/E30 require Slifer, E16/E17/E18 require Ra, E05/E22 require Obelisk, and E13 writes Obelisk. A single natural save cannot hold two dorms at once, so the natural pass reports the exact dorm blocker and the forced pass sets the requested dorm through A02 `SetDorm`. The campaign still needs an authored dorm-change/reassignment path or a canonical event ordering decision. |
-| **E11/E28/E28b are beyond the first 365 days** | Canon dates are January/February/March of **Year 2**, while A02's `Year` is the school year (Year 1 = Oct Y1–Sep Y2). The natural 365-day pass reports the exact date blocker; the forced runtime pass advances to A02 Year 2 and logs `calendar beyond 365 days (Year 2)`. A02 or the canon date table must decide whether `Year` means school year or calendar year. |
-| **E29 needs a fail state** | `Dropout Boy` is produced by A02/`UDATitleSystem::ApplyExamOutcome(0)`. The harness invokes that API; normal play needs the exam-result UI (A07/A09) to call it. |
-| **Unopened packs** | Story state now holds the grant, but A06/A09 must consume `GetPendingPackGrants()` / `ConsumePendingPackGrant()` to show/open the pack. |
-| **Duel result callback** | The HUD still has no public result callback. The harness calls `NotifyDuelResult` directly; A04/A09 must call the same hook when a real duel ends. |
-| **Name entry UI** | A09 still has no text-entry widget; automation and the harness confirm the current/default name. |
+| **E29 fail state** | `Dropout Boy` is produced by A02/`UDATitleSystem::ApplyExamOutcome(0)`, and `FDAExamUI` now calls it on a failed exam. The harness also invokes it directly for determinism. |
+| **Unopened packs** | Story state holds the grant; A06/A09 must consume `GetPendingPackGrants()` / `ConsumePendingPackGrant()` to show/open the pack. |
+| **Duel result callback** | `FDADuelUI` now records the profile/opponent result and calls `NotifyDuelResult` after the result screen closes. The harness calls the same hook directly. |
+| **Name entry UI** | `FDADialogueUI` now implements the 1–8 character text field; automation and the harness still confirm the default name. |
 | **Exact dialogue text** | `dialogue/full_campaign.json` remains port-scaffold paraphrase, not exact canon text. |
-| **Placeholder content** | Goblin King/Jinzo spirit opponents, the Gerard quiz, E04 one-turn puzzle, E20 ante rules, E28 bracket order, E29 LP-based DP and E31 partner routes remain scaffold/placeholder per the event notes. |
+| **Placeholder content** | E04 one-turn setup, E09 bracket, E17 timed puzzle and E28 bracket order remain scaffold rules; E20 is now a three-location chain and E29 now uses remaining-LP DP. |
 
 ---
 
@@ -207,16 +205,16 @@ StoryPlaythroughTest: PASS opening E01/E01b completed
 StoryPlaythroughTest: INFO simulated external progress: 220 wins, 60 timed clears, 130 written answers (... counters set)
 StoryPlaythroughTest: INFO natural 365-day timeline: .../35 events completed
 StoryPlaythroughTest: INFO natural blocker E05 @ ...: dorm is slifer, expected obelisk
-StoryPlaythroughTest: INFO natural blocker E11 @ ...: date is not == 0002-01-01
+StoryPlaythroughTest: INFO natural blocker E16 @ ...: dorm is slifer, expected ra
 StoryPlaythroughTest: INFO forced gates E05: dorm Obelisk Blue
-StoryPlaythroughTest: INFO forced gates E11: calendar beyond 365 days (Year 2)
+StoryPlaythroughTest: INFO forced gates E16: dorm Ra Yellow
 StoryPlaythroughTest: PASS event E02 (Pharaoh's True Power): duels 1/1, dialogue 2, choices 0, outcomes 3
 ...
-StoryPlaythroughTest: PASS event E33 (The Duel King): duels 0/0, dialogue 3, choices 0, outcomes 3
+StoryPlaythroughTest: PASS event E33 (The Duel King): duels 1/1, dialogue 4, choices 0, outcomes 1
 StoryPlaythroughTest: PASS all 35 events started
 StoryPlaythroughTest: PASS all 35 events completed
-StoryPlaythroughTest: PASS 38/38 full-campaign duel commands resolved
-StoryPlaythroughTest: PASS all story duels resolved (39/39 including the E01 tutorial)
+StoryPlaythroughTest: PASS 39/39 full-campaign duel commands resolved
+StoryPlaythroughTest: PASS all story duels resolved (40/40 including the E01 tutorial)
 StoryPlaythroughTest: PASS no missing scenes
 StoryPlaythroughTest: PASS no missing dialogue/choice keys
 StoryPlaythroughTest: PASS no unknown command types
@@ -233,7 +231,7 @@ StoryPlaythroughTest: PASS opening flags preserved
 StoryPlaythroughTest: PASS E33 King of Games title applied
 StoryPlaythroughTest: PASS calendar advanced a full school year
 StoryPlaythroughTest: PASS calendar visited all 12 months
-StoryPlaythroughTest: SUMMARY PASS: 35/35 events started, 35/35 events completed, 39/39 story duels resolved (38/38 full campaign), 6/6 email contacts, ... pending packs, ... checks passed, 0 checks failed, 0 event failures
+StoryPlaythroughTest: SUMMARY PASS: 35/35 events started, 35/35 events completed, 40/40 story duels resolved (39/39 full campaign), 6/6 email contacts, ... pending packs, 28/28 checks passed, 0 checks failed, 0 event failures
 StoryPlaythroughTest: PASS in 0.xxx s
 ```
 
@@ -249,7 +247,7 @@ A failure produces `FAIL event <id>` with the event failure/effect failures and
 | --- | --- | --- |
 | `-DAStorySelfTest` | Opening/E01 slice | **14/14 PASS** |
 | `-DAFullStorySelfTest` | 35-event data/reachability audit | **20/20 PASS**, 35/35 reachable with progress |
-| `-DAStoryPlaythroughTest` | In-engine E02–E33 runtime playthrough | **35/35 events**, **38/38 full-campaign duels** (+ E01 tutorial), 0 missing |
+| `-DAStoryPlaythroughTest` | In-engine E02–E33 runtime playthrough | **35/35 events**, **39/39 full-campaign duels** (+ E01 tutorial), 28/28 checks, 0 missing |
 
 The playthrough harness is deliberately separate from the two existing suites so
 a failure in full-campaign runtime cannot be masked by the static audit, and the

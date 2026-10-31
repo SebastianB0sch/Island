@@ -2071,6 +2071,54 @@
       "text_key": "FJ01.b08_jaden_loss_02",
       "source_detail": "port-original",
       "emotion": "laugh"
+    },
+    "E01.b01_starter_choice": {
+      "key": "E01.b01_starter_choice",
+      "speaker": "mimicry",
+      "portrait": "mimicry_neutral",
+      "expression": "neutral",
+      "text": "Before you register, choose the starter deck you will bring to Duel Academy.",
+      "next": "",
+      "choices": [
+        {
+          "id": "fire",
+          "text": "Fire - aggressive beatdown",
+          "outcomes": [
+            {
+              "type": "select_deck",
+              "deck_id": "fire"
+            }
+          ]
+        },
+        {
+          "id": "water",
+          "text": "Water - control and defense",
+          "outcomes": [
+            {
+              "type": "select_deck",
+              "deck_id": "water"
+            }
+          ]
+        },
+        {
+          "id": "wind",
+          "text": "Wind - tempo and evasion",
+          "outcomes": [
+            {
+              "type": "select_deck",
+              "deck_id": "wind"
+            }
+          ]
+        }
+      ],
+      "source": "port-scaffold",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "E01",
+        "setup"
+      ]
     }
   }
 }

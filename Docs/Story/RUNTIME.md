@@ -3,7 +3,7 @@
 > **Owner:** A03 (Director).
 > **Files:** `DAStorySubsystem.h/.cpp`, `DAEventGraph.h/.cpp`.
 > **Data:** `Content/Data/Story/opening.json`, `scenes/opening.json`, `dialogue/opening.json`, `schedules/opening.json`, plus the additive `events.json`, `scenes/full_campaign.json`, `dialogue/full_campaign.json`, `emails.json`.
-> **Status:** compile-by-inspection pass; no UE build was run (the combined build is owned by A10/the user).
+> **Status:** integrated with the HUD, dialogue/name entry, duel result, exam outcome, NPC interaction and world spawn paths. Editor build and all story suites pass on 2026-10-31.
 
 ---
 
@@ -26,7 +26,7 @@
 - the in-engine `-DAStoryPlaythroughTest` / `da.StoryPlaythroughTest` E02-E33
   playthrough harness (see `Docs/Story/CAMPAIGN_PLAYTHROUGH.md`).
 
-It does **not** draw UI, move NPCs, start cameras, or implement duel rules. Camera/MoveNpc/Fade/Banner/PlaySfx/Music are emitted as log/presentation cues until A08/A09 bind them; dialogue and duel entry use the existing A09 APIs.
+It does **not** draw UI or implement duel rules. Camera/MoveNpc/Fade/Banner/PlaySfx/Music execute against `ADASceneAnchor`, `ADAStudentNPC`, the player camera and the island sound set; dialogue, name entry and duel entry use the A09/HUD APIs.
 
 ---
 
@@ -97,13 +97,13 @@ If no deck was selected, the story selects **Fire** and sets `starter_deck_fire`
 
 ```text
 StartOpeningFresh()
-  -> Profile->InitializeNewGame("ALEX")
+  -> Profile->InitializeNewGame(default name)
   -> Calendar->SetDate(1, 0, 1, AM)  // Oct 1 prologue
-  -> EnsureStarterDeck("fire")
   -> StartEvent("E01")
 
-E01: b01 -> b02 -> b03_registration -> b03_name_entry
-     -> choice: name confirm
+E01: b01_new_game -> starter deck choice (Fire/Water/Wind)
+     -> b02 -> b03_registration -> b03_name_entry
+     -> text entry (A-Z/0-9, 1-8 characters)
      -> b03_name_accepted -> b04 -> b05 -> b06_tutorial
      -> tutorial choice -> b06_tutorial_duel
      -> (headless: simulated win) b06_tutorial_win
@@ -136,8 +136,8 @@ The full campaign is **additive**: `Initialize()` calls `LoadOpeningData()` and 
 | File | Contents |
 | --- | --- |
 | `Content/Data/Story/events.json` | 35 canon event records: `E01`–`E33`, `E04b`, `E28b`. Each has `id`, `title`, `canon_event`, `when`, `where`, `trigger`, `requirements`, `outcomes`, `rewards` (raw A01 audit copy), `once`, `priority`, `scene`, `dialogue_keys`, `canon_requirements`, `confidence`. |
-| `Content/Data/Story/scenes/full_campaign.json` | 35 scenes, ids `full.<event>`, 5–8 commands each (limit 3–8). Uses the existing command schema. |
-| `Content/Data/Story/dialogue/full_campaign.json` | 75 lines with stable keys `E02.01` …; every line is `source: "port-scaffold"`, with speaker, portrait hint and confidence. |
+| `Content/Data/Story/scenes/full_campaign.json` | 44 scenes: 35 event scenes, the E20 Ocean→Volcano→Gym chain, E29 win/lose recovery branches, and E33 King/Prince branches. Uses the existing command schema. |
+| `Content/Data/Story/dialogue/full_campaign.json` | 89 lines with stable keys `E02.01` …; every line is `source: "port-scaffold"`, with speaker, portrait hint and confidence. |
 | `Content/Data/Story/emails.json` | 6 A01 contacts (Alexis, Chazz, Chumley, Jaden, Syrus, Zane), unlock event ids, scaffold messages and duel requests. |
 
 **Opening protection:** full `E01` is present in `events.json` for the 35-event audit, but `LoadFullCampaignData()` excludes it from the graph merge. `opening.json` still owns the trigger, scene, dialogue and rewards for the opening.
@@ -149,8 +149,16 @@ The full campaign is **additive**: `Initialize()` calls `LoadOpeningData()` and 
 - Month/day/period gates use `date`, `weekday`, `period`; a `date` without `day` means “any time in that month” (Duel Festival). A02's `Year` is the school year (October–September), so January–September after the opening are still Year 1.
 - `exam_day` uses `UDACalendarSubsystem::IsExamDay()`.
 - Card ownership uses `UDAInventorySubsystem` (`card` condition).
-- `talk` events still need an external interaction caller (`StartEvent`), and are skipped by the auto-start path.
-- Unsupported A01 concepts (exact chance rolls, multi-month hidden waits, per-duelist 10-win counts, minigames) are approximated and recorded in each event's `canon_requirements` / `notes`.
+- `talk` events are started by `UDAStorySubsystem::NotifyTalkToNPC`, called by `ADAStudentNPC::Interact`. The auto-start path still skips them so the player must reach the character.
+- `wins_against_each` enforces the E33 per-duelist win gate; `written_correct_percent` enforces the written-answer ratio; `after_ending` reads `post_game`.
+- `random_chance` is a stable per-day roll, so an optional event cannot flicker on/off within one day. E32 uses its canon 2/5 chance.
+- Remaining approximations are content-level: exact E04 one-turn setup, E09 bracket, E17 timed puzzle, and E28 bracket order.
+
+### Live time and free-roam availability
+
+- The `N` time-skip key advances A02 by one period (`AM -> PM -> Night -> next day`) and syncs the island lighting. It no longer only moves the visual clock.
+- Resting in any player-room bed advances one day and calls `NotifyRoomStay`; a weekend counts once, not once per Saturday and Sunday.
+- While in free roam with no modal UI open, `UDAStorySubsystem::Tick` polls `TryStartNextAvailableEvent()` once per second. Date/flag/event events therefore start without requiring another scene transition; talk events still require the player to reach the NPC.
 
 ### Duel ids
 
@@ -174,11 +182,13 @@ A01 opponent/deck ids are mapped to the A07 roster/decks that exist today:
 | `chumley_year1` | `chumley` / `chumley_koala` |
 | `topher`, `conklin` | `topher` / `topher_goblin`, `conklin` / `conklin_dino` |
 
-`goblin_king` and the `jinzo` spirit have no A07 runtime opponents yet; they use Brier / Shadow Duelist placeholders and are flagged in the event notes.
+`goblin_king` uses Topher's `topher_goblin` deck; the Jinzo spirit uses the Shadow Duelist placeholder and is flagged in the event notes.
 
 ### Sequential duels
 
 Multi-duel events (`E12`, `E16`, `E17`, `E19`, `E20`, `E28`) emit consecutive `duel` commands with empty `on_win`/`on_lose`/`on_draw`. `ResolvePendingDuel()` now advances to the next command when no result scene is set instead of finishing the event. A duel that does set a branch scene still jumps to it.
+
+E09 `on_win`/`on_lose` branches grant the festival DP and `event_09_won` only on a win; the loss branch completes without unlocking E27. E28 uses the canon participant set Alexis/Jasmine/Mindy/Blair and requires `met_fontaine`. E12/E17 no longer gate on `timed_clears` until the practical/timed-duel path is playable; the canon requirement stays in `canon_requirements`. Banner is a rematchable duelist (`banner_alchemy`), so the E33 `wins_banner` gate is satisfiable.
 
 ### Full campaign audit
 
@@ -190,7 +200,7 @@ Multi-duel events (`E12`, `E16`, `E17`, `E19`, `E20`, `E28`) emit consecutive `d
 4. every A08 anchor used by the bundle exists (when `anchors.json` is readable);
 5. every reward type is known, `pack` / `pack_by_dorm` ids exist in the A06 shop, and every `reward_id` outcome resolves;
 6. every duel opponent/deck (events, scenes, email requests) exists in `Content/Data/Opponents/roster.json`;
-7. 12-month availability (Oct Year 1 → Sep Year 2, all periods):
+7. 12-month availability (Oct Year 1 → Sep Year 1, all periods):
    - a **counterless** pass reports events unreachable without counters;
    - a **maxed-progress** pass grants all referenced flags/counters/events, all three dorms and the Dropout Boy title, and verifies all 35 events can become available;
 8. `StartEvent` can resolve every canonical id and its runtime scene.
@@ -207,14 +217,14 @@ The scenes use the authored lowercase shape; `FDAStoryCommand::Type` uses the ma
 | --- | --- | --- |
 | `dialogue` | `Dialogue` | Resolves `key` in the merged opening/full-campaign line map, builds `FDADialogueLine`, calls `ADAHUD::BeginDialogueLine`. Blocks until `OnDialogueClosed`; the callback increments the command index and requests the next tick. |
 | `choice` | `Choice` | Resolves the line, filters option requirements, builds a one-line `FDADialogueLine` with `bChoice=true`, calls `ADAHUD::BeginDialogue` with a unique conversation id. `OnChoiceMade` applies the option and jumps to `next_scene` + `next_key`. |
-| `camera` | `Camera` | Logs the anchor (A08 can bind a camera request later). Non-blocking. |
-| `move_npc` | `MoveNpc` | Logs npc/anchor (A08 director owns movement). Non-blocking. |
-| `fade` | `Fade` | Logs mode/duration; non-blocking. |
+| `camera` | `Camera` | Finds the `ADASceneAnchor` and calls `SetViewTargetWithBlend`; restores the player pawn when the event ends. Non-blocking. |
+| `move_npc` | `MoveNpc` | Finds the anchor and teleports the matching `ADAStudentNPC` to it. Non-blocking. |
+| `fade` | `Fade` | Calls `APlayerCameraManager::StartCameraFade` (out/in). Non-blocking. |
 | `wait` | `Wait` | Blocks for `duration` unless headless/fast-forward. The ticker increments the command index when the timer expires. |
-| `banner` | `Banner` | Logs title/subtitle/style. Non-blocking. |
-| `play_sfx` | `PlaySfx` | Logs cue id. Non-blocking. |
-| `music` | `Music` | Logs track. Non-blocking. |
-| `duel` | `Duel` | Captures opponent/deck/mode/result scenes, then calls `ADAHUD::OpenDuelDeckSelect(opponent, name, deck)`. Blocks; the ticker waits for the duel UI to close and infers the result from A02 counters (or uses `NotifyDuelResult`). With no `on_win/on_lose/on_draw`, the next command runs (sequential multi-duel events). |
+| `banner` | `Banner` | Pushes the title/subtitle through `UDAIslandSubsystem::PushMessage`. Non-blocking. |
+| `play_sfx` | `PlaySfx` | Plays the named cue through the island sound set. Non-blocking. |
+| `music` | `Music` | Plays the named track through the island sound set. Non-blocking. |
+| `duel` | `Duel` | Resolves `opponent_by_dorm` (E11), captures opponent/deck/mode/result scenes, then calls `ADAHUD::OpenDuelDeckSelect(opponent, name, deck, mode, award_dp)`. Blocks; `DADuelUI` records the profile/opponent result and calls `NotifyDuelResult` when the result screen closes. With no `on_win/on_lose/on_draw`, the next command runs (sequential multi-duel events). |
 | `reward` | `Reward` | Applies `reward_id` through the opening reward table; inline `dp`/`emails`/`deck_id`/`flags` are fallbacks. Idempotent by command/reward id. |
 | `set_flag` | `SetFlag` | Calls `UDAProfileSubsystem::SetFlag`. Non-blocking. |
 | `end` | `End` | If `next_scene` is set, starts it; otherwise finishes the event. Honors `complete_event` and `enter_free_roam`. |
@@ -222,10 +232,11 @@ The scenes use the authored lowercase shape; `FDAStoryCommand::Type` uses the ma
 ### Choice/input details
 
 - Choice options are the **filtered** `ActiveChoices`; `Choose(Index)` indexes into that filtered list, matching the UI buttons.
-- The name-entry line has `input.kind = "text"`. A09 has no text-entry UI yet, so the runtime:
-  - shows Mimicry's prompt as a normal line;
-  - on close, applies the current profile name (default `ALEX`, max 8, uppercase) and advances to the confirmation choice.
-- A09 can replace this later by calling `Story->SetPlayerName(Name)` from a real text-entry screen; the confirmation line then reads back the new name.
+- The name-entry line has `input.kind = "text"`. `FDADialogueUI` enters a modal text-entry mode:
+  - A-Z, 0-9 and space; Backspace deletes; Enter/End confirms.
+  - The buffer honors `min_length`/`max_length` (1–8 for the opening) and is uppercased by `SetPlayerName`.
+  - Closing the line without Enter (e.g. Skip) submits the current buffer; an empty value keeps the profile's display name.
+- `SetPlayerName` filters to the GBA character set and stores the result in A02. The confirmation line reads it back.
 - Escape-close is disabled on choice lines; if the UI closes without a choice, the runtime takes option 0 to avoid a softlock.
 
 ### Re-entrancy rule
@@ -261,6 +272,10 @@ Supported conditions:
 - `date` / `date_at_least` (`year`, `month`/`calendar_month`, `day`, `op`, optional `weekday`/`period`; no `day` = whole month);
 - `weekday`, `period`, `dorm` (normalizes `Slifer`/`Slifer Red`, etc.), `title`, `card` (`id`, `min_count`);
 - `exam_day` — `UDACalendarSubsystem::IsExamDay()`;
+- `wins_against_each` (`count`, `duelists`) — per-opponent `wins_<id>` counters;
+- `written_correct_percent` (`percent`) — `written_correct / written_total`;
+- `after_ending` — `post_game`;
+- `random_chance` (`value: "2/5"`, optional `seed`) — stable roll per calendar day/period;
 - `all`/`any` nested groups (both `type:"all"` and `{ "all": [...] }` shapes);
 - `talk`/`always`/`location` are pass-throughs (location is A08-owned);
 - `duel_result`/`exam_result` are accepted but not evaluated yet.
@@ -295,6 +310,8 @@ Full-campaign outcomes additionally handle:
 - `item` — sets `item_<name>` and increments a matching counter;
 - `temporary_title` / `restore_title` — uses A02 `SetTemporaryTitle` / `ClearTemporaryTitle` and remembers the previous title;
 - `name_change` — sets `name_change_unlocked`;
+- `select_deck` / `starter_deck` — calls `SelectStarterDeck`;
+- `grant_dp_from_last_lp` / `dp_equal_remaining_lp` — awards DP equal to `last_duel_player_lp` (E29 recovery);
 - `grant_pack` - queues an unopened pack grant in `GetPendingPackGrants()` until A06 exposes an inventory hook.
 
 ---
@@ -303,9 +320,9 @@ Full-campaign outcomes additionally handle:
 
 ### Tutorial
 
-- Data: `mode: "free"`, `tutorial: true`, opponent `syrus`, deck `syrus_roids`, 4,000 LP, 10-turn limit, no DP, no win counter.
-- Runtime: `ADAHUD::OpenDuelDeckSelect("syrus", "Syrus Truesdale", "syrus_roids")`.
-- The frozen duel-mode enum has no `tutorial` value; the story uses `free` + `tutorial: true`. A04/A07 must honor the LP/turn overrides and must not call A02 `RecordDuelResult` for this practice match, or must pass a mode A02 treats as no-reward/no-counter.
+- Data: `mode: "tutorial"`, `tutorial: true`, opponent `syrus`, deck `syrus_roids`, no DP, no progression counter.
+- Runtime: `ADAHUD::OpenDuelDeckSelect("syrus", "Syrus Truesdale", "syrus_roids", "tutorial", false)`.
+- `FDADuelUI` uses a normal 8,000 LP duel but records the result with `FDAProfileDuelResult::bAwardDP = false`. The story skips tutorial wins when it resolves a headless result.
 - Loss is a valid branch (`b06_tutorial_lose`); the player can retry or continue. E01 completes either way.
 
 ### Optional Jaden free duel
@@ -316,14 +333,14 @@ Full-campaign outcomes additionally handle:
 
 ### Result detection
 
-The current HUD has no public duel-result callback. The story currently:
+`FDADuelUI` owns the live path:
 
-1. records `wins_jaden` / `wins_syrus` / `draws_total` before opening the duel;
-2. polls `ADAHUD::IsDuelOpen()` each tick;
-3. when the duel UI closes, infers win/draw/loss from the counter delta;
-4. falls back to a loss if the duel UI never opens (10-second guard), avoiding a softlock.
+1. On result-screen close it builds an `FDAProfileDuelResult` from the engine stats and the selected opponent/mode.
+2. It calls `UDAProfileSubsystem::RecordDuelResult` (DP, win/loss/draw counters, `wins_<opponent>`, `duels_total`, `last_duel_player_lp`).
+3. It calls `UDAOpponentSubsystem::RecordDuelResult` for opponent tracking.
+4. It calls `UDAStorySubsystem::NotifyDuelResult(bPlayerWon, bDraw)` after the overlay is dismissed, so the next story line cannot open behind the result screen.
 
-**Preferred integration:** A04/A09/A10 should call `Story->NotifyDuelResult(bPlayerWon, bDraw)` as soon as the result is known. That bypasses the inference and is the only reliable path once A02 starts recording results differently.
+The story still polls `ADAHUD::IsDuelOpen()` as a fallback for hosts that do not use `FDADuelUI`; headless simulation resolves through `SimulateDuelResult`, which also records a synthetic profile result unless the live UI already did.
 
 ---
 
@@ -454,11 +471,10 @@ FullStorySelfTest: PASS all 35 events reachable with progress
 FullStorySelfTest: PASS in 0.xxx s
 ```
 
-The static bundle audit (run outside UE on 2026-10-30) found:
+The static bundle audit (run outside UE on 2026-10-31) found:
 
-- 35 events / 35 scenes / 75 dialogue lines / 6 email contacts;
-- 38 event duel records and 38 scene duel commands, all resolving to A07 roster ids and decks (plus 6 email duel requests);
-- 218 commands total, every scene 5–8 commands;
+- 35 events / 44 full-campaign scenes / 89 full-campaign lines / 6 email contacts;
+- 39 event duel records and 39 scene duel commands, all resolving to A07 roster ids and decks (plus 6 email duel requests);
 - every camera/event anchor resolving in `Content/Data/World/anchors.json`;
 - maxed-progress availability: **35/35**;
 - counterless availability: 4/35 (`E01`, `E09`, `E11`, `E32`), with the remaining 31 gated by counters/flags/titles/prior events.
@@ -482,11 +498,11 @@ expected log lines and remaining blockers.
   -game -nullrhi -DAStoryPlaythroughTest
 ```
 
-Expected aggregate result: **35/35 events started, 35/35 completed, 38/38
-full-campaign duel commands plus the E01 tutorial (39/39 story duels), 0 missing
-scenes/dialogue/commands, 6/6 email contacts**. E11/E28/E28b are canonically
-Year 2 and are reported as beyond the first 365 days before the forced runtime
-pass advances A02 to Year 2.
+Expected aggregate result: **35/35 events started, 35/35 completed, 39/39
+full-campaign duel commands plus the E01 tutorial (40/40 story duels), 28/28
+checks, 0 missing scenes/dialogue/commands, 6/6 email contacts**. E11/E28/E28b
+use the school-year calendar: their January–March dates are Year 1 even though
+they fall after the opening's October start.
 
 ---
 
@@ -495,26 +511,21 @@ pass advances A02 to Year 2.
 | Lane | Hook | Status |
 | --- | --- | --- |
 | **A02** | `InitializeNewGame`, `SetPlayerName`, `SetFlag`, `IncrementCounter`, `AwardDP`, `UnlockEmail`, `SetTitle`, `SetDorm`, `SetDate`, `IDASavePayloadProvider` | Connected. A02 default DP is 3,000; the opening reward ensures a minimum, not an addition. |
-| **A09** | `BeginDialogue`, `BeginDialogueLine`, `GetDialogueUI`, `OnDialogueClosed`, `OnChoiceMade` | Connected. Name entry has no text-entry UI yet; runtime auto-fills the current/default name. Choice Escape-close is disabled. |
-| **A08** | `GetScheduledNpcLocation`; camera/move cues are logged only | Schedule query ready. Six anchors are still requests: `gym_assembly_staff`, `slifer_cafeteria_seat_03`, `slifer_dorm_front_jaden`, `slifer_dorm_front_syrus`, `slifer_dorm_front_chumley`, `slifer_yard_practice`. NPC movement is intentionally not done here. |
-| **A04/A07** | `NotifyDuelResult`; `OpenDuelDeckSelect` | Start connected. Result callback is missing on the HUD; current fallback infers from A02 counters. Tutorial uses `free` + `tutorial: true`, `syrus_roids`, 4,000 LP/10 turns. |
-| **A06** | Deck provider `SetActiveDeckId`; `UDAInventorySubsystem::AddCard` | Deck activation works when A06 registers the provider. Story pack grants are queued in `GetPendingPackGrants()`; A06/A09 must consume them into an unopened-pack inventory. Starter deck UI should call `SelectStarterDeck`. |
+| **A09** | `BeginDialogue`, `BeginDialogueLine`, `GetDialogueUI`, `OnDialogueClosed`, `OnChoiceMade` | Connected. Text entry is implemented for the opening name prompt. Choice Escape-close is disabled. |
+| **A08** | `GetScheduledNpcLocation`; camera/move/fade/banner/SFX/music commands | Connected. Anchor lookup drives camera and NPC movement; fades, banners, cues and music execute against the live world. |
+| **A04/A07** | `NotifyDuelResult`; `OpenDuelDeckSelect` | Connected. `FDADuelUI` records profile/opponent results and notifies the story on result close. Tutorial mode records no DP. |
+| **A06** | Deck provider `SetActiveDeckId`; `UDAInventorySubsystem::AddCard` | Deck activation works when A06 registers the provider. Story pack grants are queued in `GetPendingPackGrants()`; A06/A09 must consume them into an unopened-pack inventory. Starter deck UI calls `SelectStarterDeck`. |
 | **A01 canon** | `Content/Data/Canon/*` | Read-only input. 35 event records and 6 email contacts are reflected in the scaffold; exact dialogue/message bodies remain local-only. |
 | **A10** | `-DAOpeningTest`, `-DAStorySelfTest`, `-DAFullStorySelfTest`, console commands, save section `story` | Ready for the combined build. The full campaign is a bundle (one scene object per event inside `scenes/full_campaign.json`), not one file per event. |
 
 ### Blockers / next pass
 
-1. **Name-entry UI (A09):** replace the `ALEX` auto-fill with a real 8-character entry screen and call `SetPlayerName`.
-2. **Duel-result callback (A04/A09):** call `NotifyDuelResult`; otherwise win/loss is inferred from A02 counters.
-3. **Tutorial result policy (A02/A04/A07):** do not award DP or wins for the `tutorial: true` practice match.
-4. **Six A08 anchors:** publish them or retarget the scene/schedule references.
-5. **Schedule actor movement (A08):** bind `GetScheduledNpcLocationNow` to `DANpcDirector`.
-6. **Camera/fade/banner/SFX/music presentation (A08/A09):** currently logged; bind via a presentation delegate or direct calls when the APIs are stable.
-7. **Canonical scene split (A10/A03):** `scenes/opening.json` and `scenes/full_campaign.json` are bundles; the frozen A10 layout wants one file per scene plus `Story/events.json`, `Story/dialogue.json`, `Story/schedules.json`.
-8. **Exact dialogue / email bodies (A01):** the scaffold is faithful paraphrase only; exact canon text stays local-only.
-9. **Story-only characters / minigames (A01/A07/A09):** Goblin King, Jinzo spirit, the Gerard quiz, the E04 one-turn puzzle, E20 ante rules, E28 bracket order, E29 LP-based DP and E31 partner-specific routes are placeholders.
-10. **Exact anchors (A08):** the scaffold uses existing anchors only; event-specific anchor requests are listed in the data notes rather than silently retargeted.
-11. **World progress flags (A08/A09/A10):** `stayed_in_room_three_weekends`, `walk_home_partner_3` and `post_game` still have no gameplay producer; the playthrough harness simulates them through A02 and logs them.
-12. **Unopened pack inventory (A06):** story now queues pack grants in `GetPendingPackGrants()`; A06/A09 must consume them.
+1. **Exact dialogue / email bodies (A01):** the scaffold is faithful paraphrase only; exact canon text stays local-only, so exact-match coverage is intentionally 0.
+2. **E04 one-turn setup / E09 bracket / E17 timed puzzle / E28 bracket order:** the scenes play the right opponents, but the special rules are not yet authored as duel scenarios.
+3. **E33 grind:** the King of Games gate is canonical (200 wins, 10 wins against each of 20 duelists, 60% written). All 20 duelists now have world contacts or ambient NPCs; the gate is intentionally long.
+4. **`name_change_unlocked`:** the flag is set, and the text-entry UI exists, but there is no post-game menu entry that reopens it.
+5. **Unopened pack inventory (A06):** story queues pack grants in `GetPendingPackGrants()`; A06/A09 must consume them.
+6. **Canonical scene split (A10/A03):** `scenes/opening.json` and `scenes/full_campaign.json` are bundles; the frozen A10 layout wants one file per scene.
+7. **Mid-duel save:** saving during a duel and reloading reopens the story duel selector rather than resuming the board.
 
-No shared C++/UI/world/save files were modified. No UE build was run in this pass.
+The story now shares the HUD, dialogue, duel result, exam outcome, NPC interaction, world spawn and save paths; see `Docs/Integration/reports/GATE3_TEST_RESULTS.md` for the current build evidence.

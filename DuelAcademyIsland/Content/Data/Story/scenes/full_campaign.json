@@ -472,6 +472,10 @@
           "key": "E07.02"
         },
         {
+          "type": "choice",
+          "key": "E07.choice"
+        },
+        {
           "type": "duel",
           "opponent_id": "torrey",
           "opponent_name": "Torrey",
@@ -488,6 +492,7 @@
         },
         {
           "type": "end",
+          "key": "E07.refuse_end",
           "next_scene": "",
           "enter_free_roam": false,
           "complete_event": true
@@ -604,9 +609,9 @@
           "opponent_deck_id": "jaden_year1",
           "player_deck": "active",
           "mode": "story",
-          "on_win": "",
-          "on_lose": "",
-          "on_draw": "",
+          "on_win": "full.E09_win",
+          "on_lose": "full.E09_lose",
+          "on_draw": "full.E09_lose",
           "optional": false,
           "story_critical": true,
           "counts_as_win": true,
@@ -721,7 +726,24 @@
           "optional": false,
           "story_critical": true,
           "counts_as_win": true,
-          "award_dp": "formula"
+          "award_dp": "formula",
+          "opponent_by_dorm": {
+            "slifer": {
+              "id": "jaden",
+              "name": "Jaden Yuki",
+              "deck": "jaden_year1"
+            },
+            "ra": {
+              "id": "bastion",
+              "name": "Bastion Misawa",
+              "deck": "bastion_chem"
+            },
+            "obelisk": {
+              "id": "zane",
+              "name": "Zane Truesdale",
+              "deck": "zane_cyber"
+            }
+          }
         },
         {
           "type": "end",
@@ -767,8 +789,8 @@
           "key": "E12.01"
         },
         {
-          "type": "dialogue",
-          "key": "E12.02"
+          "type": "choice",
+          "key": "E12.choice"
         },
         {
           "type": "duel",
@@ -819,7 +841,8 @@
           "type": "end",
           "next_scene": "",
           "enter_free_roam": false,
-          "complete_event": true
+          "complete_event": true,
+          "key": "E12.refuse_end"
         }
       ],
       "source": "port-scaffold",
@@ -927,6 +950,10 @@
           "key": "E14.02"
         },
         {
+          "type": "choice",
+          "key": "E14.choice"
+        },
+        {
           "type": "duel",
           "opponent_id": "jaden",
           "opponent_name": "Jaden Yuki",
@@ -945,7 +972,8 @@
           "type": "end",
           "next_scene": "",
           "enter_free_roam": false,
-          "complete_event": true
+          "complete_event": true,
+          "key": "E14.refuse_end"
         }
       ],
       "source": "port-scaffold",
@@ -1340,7 +1368,7 @@
         {
           "type": "banner",
           "title": "A Shadow Game",
-          "subtitle": "E20",
+          "subtitle": "Ocean",
           "style": "location",
           "duration": 2.5
         },
@@ -1368,40 +1396,10 @@
           "award_dp": "formula"
         },
         {
-          "type": "duel",
-          "opponent_id": "shadow_duelist",
-          "opponent_name": "Titan",
-          "opponent_deck_id": "shadow_duelist_fiend",
-          "player_deck": "active",
-          "mode": "ante",
-          "on_win": "",
-          "on_lose": "",
-          "on_draw": "",
-          "optional": false,
-          "story_critical": true,
-          "counts_as_win": true,
-          "award_dp": "formula"
-        },
-        {
-          "type": "duel",
-          "opponent_id": "shadow_duelist",
-          "opponent_name": "Titan",
-          "opponent_deck_id": "shadow_duelist_fiend",
-          "player_deck": "active",
-          "mode": "ante",
-          "on_win": "",
-          "on_lose": "",
-          "on_draw": "",
-          "optional": false,
-          "story_critical": true,
-          "counts_as_win": true,
-          "award_dp": "formula"
-        },
-        {
           "type": "end",
-          "next_scene": "",
+          "next_scene": "full.E20_b",
           "enter_free_roam": false,
-          "complete_event": true
+          "complete_event": false
         }
       ],
       "source": "port-scaffold",
@@ -1623,6 +1621,10 @@
           "key": "E24.02"
         },
         {
+          "type": "choice",
+          "key": "E24.choice"
+        },
+        {
           "type": "duel",
           "opponent_id": "jaden",
           "opponent_name": "Jaden Yuki",
@@ -1639,8 +1641,9 @@
         },
         {
           "type": "end",
+          "key": "",
           "next_scene": "",
-          "enter_free_roam": false,
+          "enter_free_roam": true,
           "complete_event": true
         }
       ],
@@ -1904,9 +1907,9 @@
         },
         {
           "type": "duel",
-          "opponent_id": "chazz",
-          "opponent_name": "Chazz Princeton",
-          "opponent_deck_id": "chazz_ojama",
+          "opponent_id": "blair",
+          "opponent_name": "Blair Flannigan",
+          "opponent_deck_id": "blair_toon",
           "player_deck": "active",
           "mode": "story",
           "on_win": "",
@@ -1970,6 +1973,10 @@
           "key": "E28b.03"
         },
         {
+          "type": "choice",
+          "key": "E28b.choice"
+        },
+        {
           "type": "end",
           "next_scene": "",
           "enter_free_roam": false,
@@ -2024,9 +2031,9 @@
           "opponent_deck_id": "fontaine_nurse",
           "player_deck": "active",
           "mode": "story",
-          "on_win": "",
-          "on_lose": "",
-          "on_draw": "",
+          "on_win": "full.E29_win",
+          "on_lose": "full.E29_lose",
+          "on_draw": "full.E29_lose",
           "optional": false,
           "story_critical": true,
           "counts_as_win": true,
@@ -2259,6 +2266,21 @@
           "key": "E33.03"
         },
         {
+          "type": "duel",
+          "opponent_id": "sheppard",
+          "opponent_name": "Chancellor Sheppard",
+          "opponent_deck_id": "sheppard_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "full.E33_win",
+          "on_lose": "full.E33_lose",
+          "on_draw": "full.E33_lose",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
           "type": "end",
           "next_scene": "",
           "enter_free_roam": false,
@@ -2268,6 +2290,458 @@
       "source": "port-scaffold",
       "confidence": "high",
       "notes": "Per-duelist 10-win requirement is approximated by wins_total; post_game flag is set by the ending flow."
+    },
+    "full.E33_win": {
+      "id": "full.E33_win",
+      "event_id": "E33",
+      "title": "King of Games",
+      "location": "academy",
+      "anchor": "chancellor_office_desk",
+      "camera_anchor": "chancellor_office_camera",
+      "cast": [
+        "player",
+        "sheppard"
+      ],
+      "required_anchors": [
+        "chancellor_office_camera",
+        "chancellor_office_desk"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "chancellor_office_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "KING OF GAMES",
+          "subtitle": "The island is yours",
+          "style": "chapter",
+          "duration": 4.0
+        },
+        {
+          "type": "dialogue",
+          "key": "E33.04"
+        },
+        {
+          "type": "reward",
+          "reward_id": "e33_king_of_games"
+        },
+        {
+          "type": "set_flag",
+          "flag": "king_of_games",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "name_change_unlocked",
+          "value": true
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": true,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "King of Games branch; name change is unlocked for post-game."
+    },
+    "full.E33_lose": {
+      "id": "full.E33_lose",
+      "event_id": "E33",
+      "title": "Prince of Games",
+      "location": "academy",
+      "anchor": "chancellor_office_desk",
+      "camera_anchor": "chancellor_office_camera",
+      "cast": [
+        "player",
+        "sheppard"
+      ],
+      "required_anchors": [
+        "chancellor_office_camera",
+        "chancellor_office_desk"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "chancellor_office_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "PRINCE OF GAMES",
+          "subtitle": "A rival is waiting next year",
+          "style": "chapter",
+          "duration": 4.0
+        },
+        {
+          "type": "dialogue",
+          "key": "E33.05"
+        },
+        {
+          "type": "reward",
+          "reward_id": "e33_prince_of_games"
+        },
+        {
+          "type": "set_flag",
+          "flag": "prince_of_games",
+          "value": true
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": true,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Prince of Games branch for losing the promotion duel."
+    },
+    "full.E20_b": {
+      "id": "full.E20_b",
+      "event_id": "E20",
+      "title": "A Shadow Game - Volcano",
+      "location": "volcano",
+      "anchor": "volcano_crater",
+      "camera_anchor": "volcano_crater",
+      "cast": [
+        "player",
+        "shadow_duelist"
+      ],
+      "required_anchors": [
+        "volcano_crater"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "volcano_crater",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "A Shadow Game",
+          "subtitle": "Volcano",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E20.03"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "ante",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "full.E20_c",
+          "enter_free_roam": false,
+          "complete_event": false
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "Second shadow-game location."
+    },
+    "full.E20_c": {
+      "id": "full.E20_c",
+      "event_id": "E20",
+      "title": "A Shadow Game - Gym",
+      "location": "gym",
+      "anchor": "gym_duel_field",
+      "camera_anchor": "gym_assembly_camera",
+      "cast": [
+        "player",
+        "shadow_duelist"
+      ],
+      "required_anchors": [
+        "gym_assembly_camera"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "gym_assembly_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "A Shadow Game",
+          "subtitle": "Gym",
+          "style": "location",
+          "duration": 2.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E20.04"
+        },
+        {
+          "type": "duel",
+          "opponent_id": "shadow_duelist",
+          "opponent_name": "Titan",
+          "opponent_deck_id": "shadow_duelist_fiend",
+          "player_deck": "active",
+          "mode": "ante",
+          "on_win": "",
+          "on_lose": "",
+          "on_draw": "",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "Final shadow-game location."
+    },
+    "full.E29_win": {
+      "id": "full.E29_win",
+      "event_id": "E29",
+      "title": "Helping the Dropout - Recovery",
+      "location": "gym",
+      "anchor": "gym_practice_field_a",
+      "camera_anchor": "gym_assembly_camera",
+      "cast": [
+        "player",
+        "fontaine"
+      ],
+      "required_anchors": [
+        "gym_assembly_camera"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "gym_assembly_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "RECOVERY",
+          "subtitle": "Apprentice Duelist",
+          "style": "chapter",
+          "duration": 3.0
+        },
+        {
+          "type": "dialogue",
+          "key": "E29.03"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": true,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Win branch: resumes the Apprentice title and awards remaining-LP DP through outcomes."
+    },
+    "full.E29_lose": {
+      "id": "full.E29_lose",
+      "event_id": "E29",
+      "title": "Helping the Dropout - Retry",
+      "location": "gym",
+      "anchor": "gym_practice_field_a",
+      "camera_anchor": "gym_assembly_camera",
+      "cast": [
+        "player",
+        "fontaine"
+      ],
+      "required_anchors": [
+        "gym_assembly_camera"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "gym_assembly_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "TRY AGAIN",
+          "subtitle": "Dropout Boy",
+          "style": "chapter",
+          "duration": 3.0
+        },
+        {
+          "type": "dialogue",
+          "key": "E29.04"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": true,
+          "complete_event": false
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "high",
+      "notes": "Loss branch: event stays available so the player can retry the recovery duel."
+    },
+    "full.E09_win": {
+      "id": "full.E09_win",
+      "event_id": "E09",
+      "title": "Duel Festival - Champion",
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "camera_anchor": "academy_arena_camera",
+      "cast": [
+        "player",
+        "jaden"
+      ],
+      "required_anchors": [
+        "academy_arena_camera",
+        "academy_arena_field_player"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_arena_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "DUEL FESTIVAL CHAMPION",
+          "subtitle": "The belt is yours",
+          "style": "chapter",
+          "duration": 3.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E09.03"
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_09_prize_seen",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "event_09_won",
+          "value": true
+        },
+        {
+          "type": "set_flag",
+          "flag": "duel_festival_won",
+          "value": true
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": true,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "Win-only festival rewards and flags."
+    },
+    "full.E09_lose": {
+      "id": "full.E09_lose",
+      "event_id": "E09",
+      "title": "Duel Festival - Runner-up",
+      "location": "academy",
+      "anchor": "academy_arena_field_player",
+      "camera_anchor": "academy_arena_camera",
+      "cast": [
+        "player",
+        "jaden"
+      ],
+      "required_anchors": [
+        "academy_arena_camera",
+        "academy_arena_field_player"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "academy_arena_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "banner",
+          "title": "RUNNER-UP",
+          "subtitle": "The festival ends",
+          "style": "chapter",
+          "duration": 3.5
+        },
+        {
+          "type": "dialogue",
+          "key": "E09.04"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": true,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "Loss branch: no DP, no event_09_won, so E27 stays locked."
+    },
+    "full.E24_leave": {
+      "id": "full.E24_leave",
+      "event_id": "E24",
+      "title": "Missing Hero - Leave",
+      "location": "slifer",
+      "anchor": "slifer_jaden_room_bunk",
+      "camera_anchor": "slifer_jaden_room_camera",
+      "cast": [
+        "player"
+      ],
+      "required_anchors": [
+        "slifer_jaden_room_camera",
+        "slifer_jaden_room_bunk"
+      ],
+      "commands": [
+        {
+          "type": "camera",
+          "anchor": "slifer_jaden_room_camera",
+          "transition": "cut",
+          "duration": 0.0
+        },
+        {
+          "type": "dialogue",
+          "key": "E24.05"
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": true,
+          "complete_event": false
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "Leaving Jaden keeps E24 available for a later retry."
     }
   }
 }

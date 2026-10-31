@@ -5,10 +5,14 @@
 #include "Components/BillboardComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "DAHUD.h"
+#include "DACalendarSubsystem.h"
 #include "DAIslandSubsystem.h"
+#include "DAStorySubsystem.h"
 #include "DAStudentCharacter.h"
 #include "DACardDatabase.h"
+#include "Engine/GameInstance.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
@@ -122,9 +126,11 @@ FString ADAInteractable::GetInteractPrompt() const
 {
 	switch (Kind)
 	{
-	case EDAInteractKind::CardShop:  return TEXT("Buy a booster pack");
-	case EDAInteractKind::DuelField: return IsAnyDuelOpen(this) ? TEXT("Duel in progress") : TEXT("Duel");
-	case EDAInteractKind::Info:      return TEXT("Look");
+		case EDAInteractKind::CardShop:  return TEXT("Buy a booster pack");
+		case EDAInteractKind::DuelField: return IsAnyDuelOpen(this) ? TEXT("Duel in progress") : TEXT("Duel");
+		case EDAInteractKind::RoomBed:   return TEXT("Rest for the weekend");
+		case EDAInteractKind::WalkHome:  return TEXT("Walk home");
+		case EDAInteractKind::Info:      return TEXT("Look");
 	case EDAInteractKind::Sign:
 	default:                         return TEXT("Read");
 	}
@@ -150,6 +156,53 @@ void ADAInteractable::Interact(ADAStudentCharacter* By)
 		break;
 	case EDAInteractKind::DuelField:
 		StartDuel(By);
+		break;
+	case EDAInteractKind::RoomBed:
+	{
+		UDACalendarSubsystem* Calendar = nullptr;
+		if (UWorld* World = GetWorld())
+		{
+			if (UGameInstance* GameInstance = World->GetGameInstance())
+			{
+				Calendar = GameInstance->GetSubsystem<UDACalendarSubsystem>();
+			}
+		}
+		if (Calendar)
+		{
+			// Resting advances one campaign day, mirroring the GBA bed/wait flow.
+			Calendar->Sleep();
+		}
+		if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(this))
+		{
+			Story->NotifyRoomStay();
+		}
+		if (Sub)
+		{
+			FDAMessage Msg;
+			Msg.Title = TEXT("Your Room");
+			Msg.Body = Calendar
+				? FString::Printf(TEXT("You rest until %s. Three weekends in your room will make your friends worry."), *Calendar->GetFullDateText())
+				: TEXT("You rest for a while. Three weekends in your room will make your friends worry.");
+			Msg.Duration = 6.f;
+			Sub->PushMessage(Msg);
+			Sub->PlayUISound(TEXT("A_UIClick"), 0.5f);
+		}
+		break;
+	}
+	case EDAInteractKind::WalkHome:
+		if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(this))
+		{
+			Story->NotifyWalkHome(TEXT("jaden"));
+		}
+		if (Sub)
+		{
+			FDAMessage Msg;
+			Msg.Title = TEXT("Walk Home");
+			Msg.Body = TEXT("You walk back to the dorm with Jaden. Three walks with the same friend will mean something.");
+			Msg.Duration = 6.f;
+			Sub->PushMessage(Msg);
+			Sub->PlayUISound(TEXT("A_UIClick"), 0.5f);
+		}
 		break;
 	case EDAInteractKind::Sign:
 	case EDAInteractKind::Info:

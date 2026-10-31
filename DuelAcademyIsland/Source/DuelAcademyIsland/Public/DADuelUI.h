@@ -93,7 +93,7 @@ public:
 	bool IsDuelOpen() const { return DuelMode == EDuelUiMode::Duel || DuelMode == EDuelUiMode::Result; }
 
 	void OpenDeckSelect(const FString& OpponentId = TEXT("jaden"), const FString& OpponentName = TEXT("Jaden Yuki"),
-		const FString& OpponentDeckId = TEXT("jaden"));
+		const FString& OpponentDeckId = TEXT("jaden"), const FString& Mode = TEXT("free"), bool bInAwardDP = true);
 	void StartDuelWithDeck(const FString& DeckId);
 	void CloseDuel();
 
@@ -102,6 +102,8 @@ public:
 	void DebugAutoPlayOpening();
 	void DebugSelectFirstHandCard();
 	void DebugFinishDuelWin();
+	/** Screenshot harness: a fixed board with two legal Equip targets and a pending choice. */
+	void DebugOpenEquipChoice();
 
 private:
 	// ---- drawing helpers ----
@@ -160,7 +162,8 @@ private:
 	bool IsDuelChoiceTarget(int32 Uid) const { return DuelChoiceCardUids.Contains(Uid); }
 	bool IsDuelChoiceSelected(int32 Uid) const { return DuelChoiceSelected.Contains(Uid); }
 	void DrawDuelCard(const FDuelCard& Card, float X, float Y, float W, float H,
-		bool bFaceDown, bool bSelected = false, bool bHovered = false, bool bDefense = false);
+		bool bFaceDown, bool bSelected = false, bool bHovered = false, bool bDefense = false,
+		bool bChoiceTarget = false);
 	void DrawDuelCardFace(int32 CardId, bool bFaceDown, float X, float Y, float W, float H, float Alpha = 1.0f);
 	void DrawDuelPortrait(const FString& CharacterId, float X, float Y, float W, float H,
 		const FLinearColor& Accent, float Alpha = 1.0f, bool bFaceCrop = true,
@@ -222,11 +225,20 @@ private:
 	FString DuelOpponentId = TEXT("jaden");
 	FString DuelOpponentName = TEXT("Jaden Yuki");
 	FString DuelOpponentDeckId = TEXT("jaden");
+	FString DuelModeString = TEXT("free");
+	bool bDuelAwardDP = true;
+	int32 DuelResultDpEarned = 0;
+
+	/** True when the result screen should tell the story subsystem on close. */
+	bool bStoryResultPending = false;
+	bool bStoryResultWon = false;
+	bool bStoryResultDraw = false;
 
 	/** Built on the result screen, shown after the player returns to the island. */
 	FString DuelResultTitle;
 	FString DuelResultMessage;
 	FLinearColor DuelResultColor = FLinearColor::White;
+	bool bDuelResultDraw = false;
 
 	// Animation / presentation beat state.
 	TArray<FDuelVisualEvent> DuelIncomingEvents;

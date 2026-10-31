@@ -156,6 +156,21 @@ void FDADialogueUI::GoToLine(int32 NewIndex)
 	ChoiceSelection = 0;
 	bTyping = !Lines[NewIndex].GetDisplayText().IsEmpty();
 
+	const FDADialogueLine& NewLine = Lines[NewIndex];
+	bTextEntry = NewLine.bTextInput;
+	if (bTextEntry)
+	{
+		TextEntryMinLength = FMath::Max(1, NewLine.TextMinLength);
+		TextEntryMaxLength = FMath::Max(TextEntryMinLength, NewLine.TextMaxLength);
+		TextEntryBuffer = NewLine.TextDefault.Left(TextEntryMaxLength);
+		bEscapeClose = false;
+	}
+	else
+	{
+		TextEntryBuffer.Reset();
+		bEscapeClose = true;
+	}
+
 	if (LastShownLine != LineIndex)
 	{
 		PushLineToHistory();
@@ -208,6 +223,11 @@ bool FDADialogueUI::Advance()
 	}
 	if (Line.bChoice)
 	{
+		return false;
+	}
+	if (Line.bTextInput)
+	{
+		// Text entry is submitted with Enter, not by clicking/advancing.
 		return false;
 	}
 	if (Lines.IsValidIndex(LineIndex + 1))
@@ -353,6 +373,13 @@ void FDADialogueUI::Update(float DeltaSeconds)
 		return;
 	}
 
+	// Text entry is modal: no history, auto, click or advance shortcuts.
+	if (InputLine.bTextInput)
+	{
+		UpdateTextEntry();
+		return;
+	}
+
 	// History is modal inside the dialogue: navigation and close only.
 	if (PlayerOwner->WasInputKeyJustPressed(EKeys::H) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_Special_Left))
 	{
@@ -473,6 +500,78 @@ void FDADialogueUI::Update(float DeltaSeconds)
 		{
 			Advance();
 		}
+	}
+}
+
+void FDADialogueUI::UpdateTextEntry()
+{
+	if (!bTextEntry || !PlayerOwner || !Lines.IsValidIndex(LineIndex))
+	{
+		return;
+	}
+
+	auto AppendCharacter = [this](TCHAR Character)
+	{
+		if (TextEntryBuffer.Len() < TextEntryMaxLength)
+		{
+			TextEntryBuffer.AppendChar(Character);
+		}
+	};
+
+	static const FKey LetterKeys[] = {
+		EKeys::A, EKeys::B, EKeys::C, EKeys::D, EKeys::E, EKeys::F, EKeys::G,
+		EKeys::H, EKeys::I, EKeys::J, EKeys::K, EKeys::L, EKeys::M, EKeys::N,
+		EKeys::O, EKeys::P, EKeys::Q, EKeys::R, EKeys::S, EKeys::T, EKeys::U,
+		EKeys::V, EKeys::W, EKeys::X, EKeys::Y, EKeys::Z
+	};
+	static const TCHAR LetterCharacters[] = {
+		TEXT('A'), TEXT('B'), TEXT('C'), TEXT('D'), TEXT('E'), TEXT('F'), TEXT('G'),
+		TEXT('H'), TEXT('I'), TEXT('J'), TEXT('K'), TEXT('L'), TEXT('M'), TEXT('N'),
+		TEXT('O'), TEXT('P'), TEXT('Q'), TEXT('R'), TEXT('S'), TEXT('T'), TEXT('U'),
+		TEXT('V'), TEXT('W'), TEXT('X'), TEXT('Y'), TEXT('Z')
+	};
+	for (int32 Index = 0; Index < UE_ARRAY_COUNT(LetterKeys); ++Index)
+	{
+		if (PlayerOwner->WasInputKeyJustPressed(LetterKeys[Index]))
+		{
+			AppendCharacter(LetterCharacters[Index]);
+		}
+	}
+
+	static const FKey DigitKeys[] = {
+		EKeys::Zero, EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four,
+		EKeys::Five, EKeys::Six, EKeys::Seven, EKeys::Eight, EKeys::Nine
+	};
+	for (int32 Index = 0; Index < UE_ARRAY_COUNT(DigitKeys); ++Index)
+	{
+		if (PlayerOwner->WasInputKeyJustPressed(DigitKeys[Index]))
+		{
+			AppendCharacter(static_cast<TCHAR>(TEXT('0') + Index));
+		}
+	}
+
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar))
+	{
+		AppendCharacter(TEXT(' '));
+	}
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::BackSpace) && !TextEntryBuffer.IsEmpty())
+	{
+		TextEntryBuffer.LeftChopInline(1);
+		PlaySfx(TEXT("A_UIClick"), 0.25f);
+	}
+
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Enter)
+		|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Bottom))
+	{
+		const FString Value = TextEntryBuffer.TrimStartAndEnd();
+		if (Value.Len() < TextEntryMinLength)
+		{
+			PlaySfx(TEXT("A_UIClick"), 0.3f);
+			return;
+		}
+		TextEntryBuffer = Value;
+		PlaySfx(TEXT("A_UIClick"), 0.8f);
+		Close();
 	}
 }
 
@@ -734,6 +833,16 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 		DrawText(TEXT("..."), TX, Y + 96.f * S + MaxTextLines * LineH, DialogueAlpha(DlgPaper, 0.6f), 1.0f);
 	}
 
+	if (Line.bTextInput)
+	{
+		const float FieldY = Y + BaseH - 74.f * S;
+		DrawRect(DialogueAlpha(FLinearColor(0.f, 0.f, 0.f), 0.55f), TX, FieldY, TextW, 40.f * S);
+		DrawRect(DialogueAlpha(Accent, 0.85f), TX, FieldY, TextW, 2.f * S);
+		const bool bCursorOn = FMath::Fmod(Elapsed, 1.f) < 0.55f;
+		const FString Entry = TextEntryBuffer + (bCursorOn ? TEXT("_") : TEXT(" "));
+		DrawText(Entry, TX + 12.f * S, FieldY + 7.f * S, DlgPaper, 1.15f, false, GetFont(true));
+	}
+
 	// Choice buttons.
 	if (NumOptions > 0)
 	{
@@ -788,6 +897,10 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	if (NumOptions > 0)
 	{
 		Hint = DAUIData::Label(TEXT("dialogue.hint.choice"), TEXT("Choose an option  -  1-9 / click"));
+	}
+	else if (Line.bTextInput)
+	{
+		Hint = DAUIData::Label(TEXT("dialogue.hint.name"), TEXT("TYPE A NAME  -  ENTER / END"));
 	}
 	else if (bTyping)
 	{

@@ -85,6 +85,7 @@ private:
 	int32 AnswerSelection = 0;
 	int32 HoveredAnswer = INDEX_NONE;
 	bool bOpen = false;
+	bool bOutcomeApplied = false;
 
 	float Elapsed = 0.f;
 	float StatusTime = 0.f;

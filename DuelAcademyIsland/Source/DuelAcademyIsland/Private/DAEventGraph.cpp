@@ -460,6 +460,75 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 			OutReason = FString::Printf(TEXT("card %d count is %d, expected >= %d"), CardId, Count, MinCount);
 		}
 	}
+	else if (Kind == TEXT("wins_against_each"))
+	{
+		const int32 WinsPerDuelist = StoryReadInt(Condition, TEXT("count"), 10);
+		const int32 RequiredDuelists = StoryReadInt(Condition, TEXT("duelists"), 20);
+		static const TCHAR* const Duelists[] = {
+			TEXT("jaden"), TEXT("syrus"), TEXT("chumley"), TEXT("bastion"), TEXT("chazz"),
+			TEXT("zane"), TEXT("alexis"), TEXT("jasmine"), TEXT("mindy"), TEXT("crowler"),
+			TEXT("banner"), TEXT("blair"), TEXT("brier"), TEXT("beauregard"), TEXT("topher"),
+			TEXT("conklin"), TEXT("damon"), TEXT("dimitri"), TEXT("gerard"), TEXT("fontaine")
+		};
+		int32 Qualified = 0;
+		for (const TCHAR* Duelist : Duelists)
+		{
+			if (Profile && Profile->GetCounter(FString::Printf(TEXT("wins_%s"), Duelist)) >= WinsPerDuelist)
+			{
+				++Qualified;
+			}
+		}
+		bResult = Qualified >= RequiredDuelists;
+		if (!bResult)
+		{
+			OutReason = FString::Printf(TEXT("only %d/%d duelists have %d wins"), Qualified, RequiredDuelists, WinsPerDuelist);
+		}
+	}
+	else if (Kind == TEXT("written_correct_percent"))
+	{
+		const int32 Percent = StoryReadInt(Condition, TEXT("percent"), 60);
+		const int32 Correct = Profile ? Profile->GetCounter(TEXT("written_correct")) : 0;
+		const int32 Total = Profile ? Profile->GetCounter(TEXT("written_total")) : 0;
+		bResult = Total > 0 && static_cast<int64>(Correct) * 100 >= static_cast<int64>(Percent) * Total;
+		if (!bResult)
+		{
+			OutReason = FString::Printf(TEXT("written score is %d/%d, expected >= %d%%"), Correct, Total, Percent);
+		}
+	}
+	else if (Kind == TEXT("after_ending"))
+	{
+		bResult = Profile && Profile->GetFlag(TEXT("post_game"));
+		if (!bResult)
+		{
+			OutReason = TEXT("the post-game has not started");
+		}
+	}
+	else if (Kind == TEXT("random_chance"))
+	{
+		// Stable per-day roll: re-evaluating the same event on the same day
+		// cannot flicker between available and unavailable. The next eligible
+		// day rolls again, so an optional event eventually happens.
+		const FString Chance = StoryReadString(Condition, TEXT("value"), TEXT("1/1"));
+		FString Numerator;
+		FString Denominator;
+		if (!Chance.Split(TEXT("/"), &Numerator, &Denominator))
+		{
+			Numerator = Chance;
+			Denominator = TEXT("1");
+		}
+		const int32 Num = FMath::Max(0, FCString::Atoi(*Numerator));
+		const int32 Den = FMath::Max(1, FCString::Atoi(*Denominator));
+		const FString Seed = StoryReadString(Condition, TEXT("seed"), TEXT("random"));
+		const int32 Day = Calendar ? Calendar->GetAbsoluteDay() : 0;
+		const int32 Period = Calendar ? static_cast<int32>(Calendar->GetPeriod()) : 0;
+		const uint32 Roll = HashCombine(HashCombine(GetTypeHash(Seed), static_cast<uint32>(Day)),
+			static_cast<uint32>(Period)) % static_cast<uint32>(Den);
+		bResult = static_cast<int32>(Roll) < Num;
+		if (!bResult)
+		{
+			OutReason = FString::Printf(TEXT("%s roll failed today (%d/%d)"), *Seed, Num, Den);
+		}
+	}
 	else if (Kind == TEXT("talk") || Kind == TEXT("always") || Kind == TEXT("location"))
 	{
 		// Talk is caller-driven; location is checked by the world lane.
