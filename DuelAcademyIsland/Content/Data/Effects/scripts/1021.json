@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 1021,
+  "name": "Dark Factory of Mass Production",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select 2 Normal Monsters from your Graveyard and add them to your hand.",
+  "notes": [
+    "Exactly two Normal Monsters."
+  ],
+  "scripts": [
+    {
+      "id": "1021_return_two_normal_monsters",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "Dark Factory of Mass Production"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_graveyard",
+        "count": 2,
+        "filter": {
+          "card_type": "Normal Monster"
+        }
+      },
+      "source_text": "Select 2 Normal Monsters from your Graveyard and add them to your hand."
+    }
+  ]
+}

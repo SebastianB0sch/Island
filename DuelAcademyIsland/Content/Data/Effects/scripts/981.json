@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 981,
+  "name": "Spirit Caller",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: You can Special Summon 1 Level 3 or lower Normal Monster from your Graveyard to your side of the field.",
+  "notes": [
+    "Revived in face-up Attack Position (the runtime's fixed special-summon position)."
+  ],
+  "scripts": [
+    {
+      "id": "981_flip_revive_normal",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "self_graveyard",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Normal Monster"
+            },
+            {
+              "level_max": 3
+            }
+          ]
+        }
+      },
+      "source_text": "FLIP: You can Special Summon 1 Level 3 or lower Normal Monster from your Graveyard to your side of the field."
+    }
+  ]
+}

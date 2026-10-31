@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "card_id": 898,
+  "name": "Sacred Crane",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is Special Summoned, the controller of this card draws 1 card.",
+  "notes": [
+    "Fires only on Special Summon."
+  ],
+  "scripts": [
+    {
+      "id": "898_special_summon_draw",
+      "trigger": "on_special_summon",
+      "operations": [
+        {
+          "op": "draw",
+          "count": 1,
+          "player": "self",
+          "reason": "Sacred Crane"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Sacred Crane"
+          }
+        ]
+      },
+      "source_text": "When this card is Special Summoned, the controller of this card draws 1 card."
+    }
+  ]
+}

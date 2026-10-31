@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "card_id": 690,
+  "name": "Poison Mummy",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Inflict 500 points of Direct Damage to your opponent's Life Points.",
+  "notes": [
+    "FLIP burn."
+  ],
+  "scripts": [
+    {
+      "id": "690_flip_damage",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 500,
+          "player": "opponent",
+          "reason": "Poison Mummy"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "FLIP: Inflict 500 points of Direct Damage to your opponent's Life Points."
+    }
+  ]
+}

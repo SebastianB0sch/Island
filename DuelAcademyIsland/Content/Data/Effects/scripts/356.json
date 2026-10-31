@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "card_id": 356,
+  "name": "Pinch Hopper",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card on your side of the field is sent to the Graveyard, you can Special Summon 1 Insect-Type Monster from your hand.",
+  "notes": [
+    "The Insect is summoned in face-up Attack Position."
+  ],
+  "scripts": [
+    {
+      "id": "356_sent_summon_insect",
+      "trigger": "on_sent_to_graveyard",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self"
+          },
+          {
+            "zone": "self_monster"
+          },
+          {
+            "custom": "sent_from_field_to_graveyard"
+          },
+          {
+            "name": "Pinch Hopper"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_hand",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "monster_type": "Insect"
+            }
+          ]
+        }
+      },
+      "source_text": "When this card on your side of the field is sent to the Graveyard, you can Special Summon 1 Insect-Type Monster from your hand."
+    }
+  ]
+}

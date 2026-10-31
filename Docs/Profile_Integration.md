@@ -200,13 +200,135 @@ Do not let `ADAIslandManager` write back into `UDACalendarSubsystem`.
 - C++: `Profile->InitializeNewGame`, `AwardDP`, `SetFlag`, `SetCounter`,
   `SetDorm`, `ForceTitle`, `SaveNow`, `Calendar->SetDate/SkipToDate`.
 
+## Gate 3 scale tests (A02)
+
+Two process-level switches cover the save/calendar scale gates. Both use the
+real `UDAProfileSubsystem`, `UDACalendarSubsystem`, `UDASettings`,
+`UDASaveSubsystem`, and the A06 `UDAInventorySubsystem` / `UDADeckLogic`
+payload providers. They do not read or overwrite the golden saves in
+`Content/Data/Integration/saves/`; all files are named `DASaveFuzz_*` or
+`DATwelveMonth_*` and are deleted at the end. Implementation:
+`DuelAcademyIsland/Source/DuelAcademyIsland/Private/DAA02GateTests.cpp`.
+
+| Switch | Default | Purpose |
+| --- | --- | --- |
+| `-DASaveFuzz=N` | `N=10000` | random valid state round-trips, corruption/recovery, version/migration fuzz |
+| `-DASaveFuzzSeed=S` | `0x5A02F022` | deterministic fuzz seed (decimal) |
+| `-DATwelveMonthTest` | off | 365-day, 12-month calendar/profile simulation with save/load |
+
+Console equivalents: `da.SaveFuzz [count] [seed]` and `da.TwelveMonthTest`.
+Run each process switch separately; combining it with `-DAProfileSelfTest`
+starts more than one exit ticker, so the process can exit after the first suite.
+
+### `-DASaveFuzz=N`
+
+Default counts:
+
+- `N` valid states are built with random slots, names (including JSON escapes),
+  genders, dorms, titles, temporary titles, DP, playtime, flags, counters,
+  emails, dates/periods, settings/controls, inventory counts/ante and decks.
+- `max(100, N/10)` corruption cases. For each case a known state A is saved,
+  state B is saved over it (so A is the backup), then the primary file is
+  flipped/truncated/duplicated/reordered/appended. Loading must recover A from
+  the backup and deep-compare every field; the backup is then corrupted too and
+  loading must fail cleanly with an error and `bCorrupt=true`, without deleting
+  either file.
+- `max(50, N/50)` migration cases. v0 flat payloads (with and without a JSON
+  `version` field) are migrated in memory and as real v0 files, including the
+  v0-JSON/v1-wrapper combination. Migrated names, dorm, title, gender, DP,
+  fractional playtime, dates, flags, counters, settings defaults, meta and
+  idempotence are checked. Future versions and invalid JSON are rejected.
+- Per-batch `[PASS]`/`[FAIL]` lines are emitted for the roundtrip, corruption
+  and migration batches, followed by:
+
+```text
+=== DASaveFuzz summary: 10000 states, 1000 corruption cases, 200 migration cases, <checks> checks, 0 failure(s), seed 0x5A02F022, max save size <bytes> bytes ===
+DASaveFuzz PASSED.
+```
+
+A failed run ends with `DASaveFuzz FAILED.` and a non-zero process exit code.
+Use `-DASaveFuzz=500` for a quick smoke run; the corruption/migration floors
+still exercise every corruption mode and version variant.
+
+```powershell
+DuelAcademyIsland.exe -DAProfileSelfTest
+DuelAcademyIsland.exe -DASaveFuzz=500
+DuelAcademyIsland.exe -DASaveFuzz=10000 -DASaveFuzzSeed=1510141986
+DuelAcademyIsland.exe -DATwelveMonthTest
+```
+
+### `-DATwelveMonthTest`
+
+Starts at the canonical Saturday, October 7, Year 1, AM and advances 365 real
+calendar days to October 7, Year 2. The random save-day stream is fixed at seed
+`0x00012A02`, so runs are reproducible. Each day verifies:
+
+- day/month/year rollover, month length, weekday, absolute-day monotonicity and
+  no duplicate day or skipped month;
+- AM (08:00) -> PM (14:00) -> Night (20:00) period rollover from
+  `calendar.json` `period_hours`;
+- exam days for every month: in range, configured weekday, `IsExamDayFor`, and
+  `GetNextExamDate` agreement;
+- story-style flags (`story_month_<m>_reached`, `exam_seen_<year>_<m>`) and
+  birthday marker flags (`birthday_<m>`; see the ambiguity note below);
+- non-negative DP/counters/playtime and INT_MAX clamping probes.
+
+Save/load runs on every month boundary, on every exam day and on deterministic
+random days. Before loading, the profile/calendar/settings/inventory/decks are
+poisoned; loading must restore the exact date, DP, progress, flags, counters,
+inventory counts/ante and deck payload. Output includes one
+`[CHECKPOINT] Month n/12 ...` line per month and:
+
+```text
+=== DATwelveMonthTest summary: 365 days, 12 months, <n> saves, <n> loads, <n> random save days, <n> exam days, <checks> checks, 0 failure(s), max save size <bytes> bytes ===
+DATwelveMonthTest PASSED.
+```
+
+### Defects fixed by these gates
+
+- v0 migration truncated fractional `playtime_seconds` (it used an int32
+  reader); the migration now uses a double-preserving move and also writes
+  `meta.playtime_seconds`.
+- A v0 payload with a JSON `version:0` archived with wrapper version 1 was not
+  migrated because version 0 was treated as “missing”. JSON version 0 is now
+  authoritative.
+- Profile DP/temporary-title-day/counter reads could overflow on hostile or
+  corrupted numeric input; they now clamp to `[0, INT_MAX]`.
+- Calendar save-driven years are clamped to 9999 and absolute-day math is
+  computed arithmetically, so a hostile year cannot spin an unbounded loop.
+- Settings volume setters and profile playtime now reject non-finite values.
+
+No existing public signature used by A03 was changed. The only new public
+calendar surface is the non-breaking constant
+`UDACalendarSubsystem::MaxSupportedYear`.
+
+The harness registers A06's real `UDAInventorySubsystem` and `UDADeckLogic`
+providers. If A06 changes its section schema, the harness may need a matching
+update; A02's save/profile/calendar code is unaffected.
+
 ## Canon assumptions (pending A01)
 
 - Exam day = last Friday of each month (`calendar.json` `exam.week`; change to
-  `first`/`second`/`third`/`fourth` when A01 freezes the table).
+  `first`/`second`/`third`/`fourth` when A01 freezes the table). The exact week
+  rule is still ambiguous: `Content/Data/Canon/calendar.json` records
+  `exam_friday_default` as the last Friday with `exam_confidence: "low"`, while
+  the November tournament story data describes a third-Friday rule. A02 keeps
+  the data-driven `last` default until A01 freezes the table; A07's
+  `UDAExamSubsystem::IsExamDay` only checks Friday, so it accepts any Friday.
+- There is no birthday table or season field in the calendar/profile schema
+  yet. The 12-month test plants `birthday_<month>` profile flags as markers and
+  checks they survive; it does not invent canon birthdays. "Season" is
+  represented only by the October..September month sequence and month names.
 - Exam pass mark `300`, dorm promotion `400` (`titles.json` `dorm_rules`).
 - The 12 permanent title thresholds and temporary title list are conservative
   stubs, not final canon.
 - New game: 3000 DP, Slifer Red, Apprentice Duelist, Saturday October 7 Year 1
   AM; October 1 Year 1 is treated as a Sunday so weekdays stay stable across
   the 12-month rollover (Year 1 is non-leap; school year 3 contains Feb 29).
+  `Year` is the school year (October..September), not the Gregorian year;
+  January..September of school year N use calendar year N+1 for leap rules.
+- A03 story content currently labels January..September as `year: 2` while
+  this calendar keeps them in school Year 1 (rollover happens after September).
+  A02 did not change `GetYear`/`SetDate`; story date conditions should key on
+  `month_index` or normalize to the school-year label. This is an A03 content
+  concern, not a calendar API change.

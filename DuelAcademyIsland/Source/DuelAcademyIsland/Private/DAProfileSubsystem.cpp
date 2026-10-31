@@ -18,9 +18,22 @@ namespace
 {
 	const TCHAR* const DefaultTitle = TEXT("Apprentice Duelist");
 
+	/** Keeps playtime safe for int64 text conversion and JSON serialization. */
+	constexpr double MaxPlaytimeSeconds = 1.0e15;
+
 	FString ProfileJsonKeyToString(const FJsonObject::FStringType& Key)
 	{
 		return FString(*Key);
+	}
+
+	double ProfileReadClampedDouble(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, double Default, double Min, double Max)
+	{
+		double Value = Default;
+		if (Object.IsValid() && Object->TryGetNumberField(Field, Value) && FMath::IsFinite(Value))
+		{
+			return FMath::Clamp(Value, Min, Max);
+		}
+		return Default;
 	}
 
 	void ProfileReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& OutValues)
@@ -133,9 +146,9 @@ UDAProfileSubsystem* UDAProfileSubsystem::Get(const UObject* WorldContext)
 
 bool UDAProfileSubsystem::TickPlaytime(float DeltaSeconds)
 {
-	if (bInitialized && GetGameInstance() && DeltaSeconds > 0.f)
+	if (bInitialized && GetGameInstance() && DeltaSeconds > 0.f && FMath::IsFinite(DeltaSeconds))
 	{
-		PlaytimeSeconds += static_cast<double>(DeltaSeconds);
+		PlaytimeSeconds = FMath::Min(MaxPlaytimeSeconds, PlaytimeSeconds + static_cast<double>(DeltaSeconds));
 	}
 	return true;
 }
@@ -624,15 +637,18 @@ bool UDAProfileSubsystem::SetDeckProvider(UObject* Provider)
 
 void UDAProfileSubsystem::AddPlaytime(double Seconds)
 {
-	if (Seconds > 0.0)
+	if (Seconds > 0.0 && FMath::IsFinite(Seconds))
 	{
-		PlaytimeSeconds += Seconds;
+		PlaytimeSeconds = FMath::Min(MaxPlaytimeSeconds, PlaytimeSeconds + Seconds);
 	}
 }
 
 FString UDAProfileSubsystem::GetPlaytimeText() const
 {
-	const int64 TotalSeconds = FMath::Max<int64>(0, static_cast<int64>(FMath::FloorToDouble(PlaytimeSeconds)));
+	const double SafePlaytime = FMath::IsFinite(PlaytimeSeconds)
+		? FMath::Clamp(PlaytimeSeconds, 0.0, MaxPlaytimeSeconds)
+		: 0.0;
+	const int64 TotalSeconds = FMath::Max<int64>(0, static_cast<int64>(FMath::FloorToDouble(SafePlaytime)));
 	const int64 Hours = TotalSeconds / 3600;
 	const int64 Minutes = (TotalSeconds % 3600) / 60;
 	const int64 SecondsPart = TotalSeconds % 60;
@@ -697,7 +713,8 @@ void UDAProfileSubsystem::WriteSaveData(TSharedPtr<FJsonObject>& Root) const
 	ProfileObject->SetStringField(TEXT("title"), Title);
 	ProfileObject->SetNumberField(TEXT("dp"), DP);
 	ProfileObject->SetStringField(TEXT("gender"), Gender);
-	ProfileObject->SetNumberField(TEXT("playtime_seconds"), PlaytimeSeconds);
+	ProfileObject->SetNumberField(TEXT("playtime_seconds"),
+		FMath::IsFinite(PlaytimeSeconds) ? FMath::Clamp(PlaytimeSeconds, 0.0, MaxPlaytimeSeconds) : 0.0);
 	ProfileObject->SetStringField(TEXT("temporary_title"), TemporaryTitle);
 	ProfileObject->SetNumberField(TEXT("temporary_title_days"), TemporaryTitleDaysRemaining);
 	ProfileObject->SetBoolField(TEXT("initialized"), bInitialized);
@@ -777,14 +794,12 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 	Source->TryGetStringField(TEXT("gender"), Gender);
 	Source->TryGetStringField(TEXT("title"), Title);
 	Source->TryGetStringField(TEXT("temporary_title"), TemporaryTitle);
-	Source->TryGetNumberField(TEXT("temporary_title_days"), TemporaryTitleDaysRemaining);
-	Source->TryGetNumberField(TEXT("dp"), DP);
-
-	double LoadedPlaytime = 0.0;
-	if (Source->TryGetNumberField(TEXT("playtime_seconds"), LoadedPlaytime))
-	{
-		PlaytimeSeconds = FMath::Max(0.0, LoadedPlaytime);
-	}
+	TemporaryTitleDaysRemaining = static_cast<int32>(ProfileReadClampedDouble(
+		Source, TEXT("temporary_title_days"), 0.0, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
+	DP = static_cast<int32>(ProfileReadClampedDouble(
+		Source, TEXT("dp"), 3000.0, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
+	PlaytimeSeconds = ProfileReadClampedDouble(
+		Source, TEXT("playtime_seconds"), 0.0, 0.0, MaxPlaytimeSeconds);
 
 	FString DormKey;
 	if (Source->TryGetStringField(TEXT("dorm"), DormKey))
@@ -832,7 +847,14 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 		{
 			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::Number)
 			{
-				Counters.Add(ProfileJsonKeyToString(Pair.Key), FMath::Max(0, static_cast<int32>(Pair.Value->AsNumber())));
+				const double RawValue = Pair.Value->AsNumber();
+				if (!FMath::IsFinite(RawValue))
+				{
+					continue;
+				}
+				const int32 Value = static_cast<int32>(FMath::Clamp(
+					RawValue, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
+				Counters.Add(ProfileJsonKeyToString(Pair.Key), Value);
 			}
 		}
 	}

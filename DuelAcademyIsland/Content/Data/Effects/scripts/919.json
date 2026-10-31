@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 919,
+  "name": "Destruction Ring",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroy 1 face-up monster on your side of the field to inflict 1000 points of damage to both players' Life Points.",
+  "notes": [
+    "Destroy first, then both players take 1000."
+  ],
+  "scripts": [
+    {
+      "id": "919_destruction_ring",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Destruction Ring"
+        },
+        {
+          "op": "inflict_damage",
+          "amount": 1000,
+          "player": "both",
+          "reason": "Destruction Ring"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_monster",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "Destroy 1 face-up monster on your side of the field to inflict 1000 points of damage to both players' Life Points."
+    }
+  ]
+}

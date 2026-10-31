@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "card_id": 1016,
+  "name": "Hade-Hane",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: You can return up to 3 monsters on the field to the owner's hand.",
+  "notes": [
+    "Zero to three monsters; the controller chooses."
+  ],
+  "scripts": [
+    {
+      "id": "1016_flip_bounce_monsters",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "Hade-Hane"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "any_monster",
+        "count": {
+          "min": 0,
+          "max": 3
+        },
+        "optional": true
+      },
+      "source_text": "FLIP: You can return up to 3 monsters on the field to the owner's hand."
+    }
+  ]
+}

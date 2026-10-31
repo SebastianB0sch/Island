@@ -21,7 +21,12 @@ python Tools\integration\run_smoke.py --self-tests
 # Opening story self-test (explicit; the editor harness may stay open)
 python Tools\integration\run_smoke.py --story-selftest
 
-# Full gate: validator + self-tests + automation tests
+# A07: 100 puzzle replays + 12 exam cycles in one headless process
+python Tools\integration\run_smoke.py --a07-selftest
+python Tools\integration\run_smoke.py --puzzle-selftest
+python Tools\integration\run_smoke.py --exam-selftest
+
+# Full gate: validator + self-tests + A07 puzzle/exam suites + automation tests
 python Tools\integration\run_smoke.py --all --automation-filter DuelAcademy
 
 # Print commands without launching anything
@@ -61,24 +66,24 @@ early lanes and strict mode at a content gate.
 
 ### 2. Duel self-test
 
-Current C++ switch (runs a fixed 24-duel batch):
+Counted C++ switch (default 24; release gate uses 1000):
 
 ```powershell
 "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" `
   "C:\dev\GX\DuelAcademyIsland\DuelAcademyIsland.uproject" `
-  -game -nullrhi -nosound -unattended -nop4 -DADuelSelfTest `
+  -game -nullrhi -nosound -unattended -nop4 -DADuelSelfTest=1000 `
   -log -stdout -FullStdOutLogOutput
 ```
 
 The log must contain a line like:
 
 ```text
-Duel self-test: 24 iterations, N player wins, M opponent wins, 0 stalls, average turns X
+Duel self-test: 1000 iterations, N player wins, M opponent wins, 0 stalls, average turns X, invariant failures 0, gate deck failures 0, deck audit 6/36, puzzle audit 100/100, elapsed Xs, RESULT PASS
 ```
 
-The runner fails the step if `stalls` is greater than zero. A04 owns the
-`-DADuelSelfTest=N` extension; until it lands, `--iterations` other than 24 is
-reported as a note and the fixed 24-duel switch is still used.
+The runner fails the step if `stalls` is greater than zero or the summary contains
+`RESULT FAIL`. `--iterations N` is passed through as `-DADuelSelfTest=N`;
+the bare `-DADuelSelfTest` token still runs the legacy 24-duel HUD path.
 
 There is also a console command once a world is loaded:
 
@@ -89,7 +94,29 @@ da.DuelSelfTest 1000
 It is clamped to 500 per call in the current implementation and is intended for
 PIE/console use, not the headless switch.
 
-### 3. Unreal automation tests
+### 3. A07 puzzle/exam self-tests
+
+```powershell
+python Tools\puzzles\run_engine_selftests.py
+python Tools\puzzles\run_engine_selftests.py --mode puzzles
+python Tools\puzzles\run_engine_selftests.py --mode exams
+```
+
+The dedicated runner and the `run_smoke.py --a07-selftest` wrapper launch
+`UnrealEditor-Cmd` with `-DAPuzzleExamSelfTest`, `-DAPuzzleSelfTest` or
+`-DAExamSelfTest`. The log must contain:
+
+```text
+PuzzleSelfTest: 102 passed, 0 failed. ALL PASS
+ExamSelfTest: <N> passed, 0 failed. ALL PASS
+A07SelfTest: BOTH SUITES PASS
+```
+
+`--a07-selftest` is the combined single-process gate command. It also drives
+the 12 authored `Exams/exams.json` cycles through `UDAExamSubsystem`, including
+the actual timed-puzzle solve. See `Docs/Puzzles/PUZZLE_ENGINE_TESTS.md`.
+
+### 4. Unreal automation tests
 
 ```powershell
 "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" `

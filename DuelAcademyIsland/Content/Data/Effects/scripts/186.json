@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 186,
+  "name": "Cyber-Stein",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "At the cost of 5000 of your own Life Points, you can Special Summon 1 Fusion Monster from your Fusion Deck in face-up Attack Position.",
+  "notes": [
+    "Pays 5000 LP and summons a Fusion Monster from the Extra Deck."
+  ],
+  "scripts": [
+    {
+      "id": "186_pay_life_summon_fusion",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "pay_lp",
+          "amount": 5000
+        }
+      ],
+      "target": {
+        "zone": "self_extra",
+        "count": 1,
+        "filter": {
+          "card_type": "Fusion Monster"
+        }
+      },
+      "source_text": "At the cost of 5000 of your own Life Points, you can Special Summon 1 Fusion Monster from your Fusion Deck in face-up Attack Position."
+    }
+  ]
+}

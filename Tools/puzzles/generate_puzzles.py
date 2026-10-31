@@ -174,7 +174,10 @@ def t_ritual(level: int, variant: int, cards: dict[int, dict]):
             dict(hand=[843, 841, 234, 195], field=[], lp=2400),
         ],
         3: [
-            dict(hand=[843, 841, 2, 165], field=[234], lp=4300),
+            # Jack's Knight is Level 5 so the engine's lowest-level ritual
+            # tribute pass cannot consume the field body (Level 4 hand
+            # materials are the intended tributes).
+            dict(hand=[843, 841, 2, 165], field=[749], lp=4300),
             dict(hand=[843, 841, 234, 195], field=[363], lp=4900),
         ],
         4: [

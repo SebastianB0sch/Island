@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 1118,
+  "name": "Mine Golem",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent to the Graveyard as a result of battle, inflict 500 points of damage to your opponent's Life Points.",
+  "notes": [
+    "Fires when this card is destroyed by battle."
+  ],
+  "scripts": [
+    {
+      "id": "1118_battle_destroy_damage",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 500,
+          "player": "opponent",
+          "reason": "Mine Golem"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is sent to the Graveyard as a result of battle, inflict 500 points of damage to your opponent's Life Points.",
+      "condition": {
+        "name": "Mine Golem"
+      }
+    }
+  ]
+}

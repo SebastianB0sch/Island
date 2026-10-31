@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "card_id": 412,
+  "name": "Block Attack",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select 1 of your opponent's face-up Attack Position monsters and shift it to Defense Position.",
+  "notes": [
+    "No damage calculation is involved."
+  ],
+  "scripts": [
+    {
+      "id": "412_change_to_defense",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "change_position",
+          "target": "$target",
+          "position": "defense"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "opponent_monster",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "position": "attack"
+            },
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "Select 1 of your opponent's face-up Attack Position monsters and shift it to Defense Position."
+    }
+  ]
+}

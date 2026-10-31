@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "card_id": 443,
+  "name": "Senju of the Thousand Hands",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is summoned to the field (excluding Special Summon), you may move 1 Ritual Monster Card from your Deck to your hand. The Deck is then shuffled.",
+  "notes": [
+    "Searches a Ritual card from the Deck."
+  ],
+  "scripts": [
+    {
+      "id": "443_on_normal_summon_search_ritual",
+      "trigger": "on_normal_summon",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Senju of the Thousand Hands"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "card_type": "Ritual Monster"
+        }
+      },
+      "source_text": "When this card is summoned to the field (excluding Special Summon), you may move 1 Ritual Monster Card from your Deck to your hand. The Deck is then shuffled."
+    },
+    {
+      "id": "443_on_flip_summon_search_ritual",
+      "trigger": "on_flip_summon",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Senju of the Thousand Hands"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "card_type": "Ritual Monster"
+        }
+      },
+      "source_text": "When this card is summoned to the field (excluding Special Summon), you may move 1 Ritual Monster Card from your Deck to your hand. The Deck is then shuffled."
+    }
+  ]
+}

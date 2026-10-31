@@ -95,6 +95,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Economy|Shop")
 	int32 GetNextAvailableDay(const FString& PackId) const;
 
+	/** Lifetime purchases recorded for a pack; this is the stock consumption counter. */
+	UFUNCTION(BlueprintPure, Category = "Economy|Shop")
+	int32 GetPurchaseCount(const FString& PackId) const;
+
+	/** Remaining lifetime stock; -1 means unlimited (canon stock 0/null) or unknown pack. */
+	UFUNCTION(BlueprintPure, Category = "Economy|Shop")
+	int32 GetRemainingStock(const FString& PackId) const;
+
 	// ------------------------------------------------------------ purchase
 
 	UFUNCTION(BlueprintCallable, Category = "Economy|Shop")

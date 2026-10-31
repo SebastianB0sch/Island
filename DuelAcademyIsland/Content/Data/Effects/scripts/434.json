@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "card_id": 434,
+  "name": "The Forceful Sentry",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Look at your opponent's hand, then select 1 card and return it to his/her Deck. The Deck is then shuffled.",
+  "notes": [
+    "The hand is revealed by the target prompt; the card goes to the bottom and the Deck is shuffled."
+  ],
+  "scripts": [
+    {
+      "id": "434_return_opponent_hand_card",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "return_to_deck",
+          "target": "$target",
+          "shuffle": true
+        },
+        {
+          "op": "shuffle",
+          "player": "opponent"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "opponent_hand",
+        "count": 1,
+        "chooser": "controller"
+      },
+      "source_text": "Look at your opponent's hand, then select 1 card and return it to his/her Deck. The Deck is then shuffled."
+    }
+  ]
+}

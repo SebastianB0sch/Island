@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "card_id": 665,
+  "name": "Keldo",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is destroyed and sent to the Graveyard as a result of battle, select 2 cards from your opponent's Graveyard and return them to your opponent's Deck. Your opponent then shuffles his/her Deck.",
+  "notes": [
+    "Two cards are placed on the bottom and the opponent's Deck is shuffled."
+  ],
+  "scripts": [
+    {
+      "id": "665_battle_recycle_opponent_grave",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "return_to_deck",
+          "target": "$target",
+          "reason": "Keldo"
+        },
+        {
+          "op": "shuffle",
+          "player": "opponent"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "opponent_graveyard",
+        "count": 2
+      },
+      "source_text": "When this card is destroyed and sent to the Graveyard as a result of battle, select 2 cards from your opponent's Graveyard and return them to your opponent's Deck. Your opponent then shuffles his/her Deck.",
+      "condition": {
+        "name": "Keldo"
+      }
+    }
+  ]
+}

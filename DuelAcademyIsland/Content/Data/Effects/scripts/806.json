@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "card_id": 806,
+  "name": "Disarmament",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroy all Equip Spell Cards on the field.",
+  "notes": [
+    "All Equip Spells on the field are destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "806_destroy_equip_spells",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Disarmament"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "all_spell_traps",
+        "count": "all",
+        "filter": {
+          "all": [
+            {
+              "card_type": "Spell"
+            },
+            {
+              "subtype": "Equip"
+            }
+          ]
+        }
+      },
+      "source_text": "Destroy all Equip Spell Cards on the field."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Canon traceability matrix
 
-Generated: 2026-10-30T17:24:04+00:00
+Generated: 2026-10-31T09:24:44+00:00
 
 One row per runtime ID. `Source` is a ROM offset, a public-guide URL, or an explicit inference.
 `Confidence` is `exact` only for byte-verified ROM data; everything guide-derived is marked.
@@ -12,8 +12,8 @@ One row per runtime ID. `Source` is a ROM offset, a public-guide URL, or an expl
 | Cards | 1200 | ROM 0xF243CC / 0xF2A68C / 0xF58294 | exact | A05, A06 |
 | Packs | 48 | Yugipedia set pages + ROM pack names | high price/pool, low odds | A06 |
 | Events | 35 | Yugipedia Events + ROM dialogue | high/medium | A03 |
-| Opponents | 25 | Yugipedia Opponents + ROM name pool | medium | A07 |
-| Decks | 31 | starter guide + donor/guide archetypes | high starters, low opponents | A06, A07 |
+| Opponents | 28 (25 named + 3 event) | Yugipedia Opponents + ROM name pool | medium | A07 |
+| Decks | 37 (16 complete) | starter guide + Character Deck FAQ v1.4 + donor Jaden | high starters, mixed opponents | A06, A07 |
 | Puzzles | 100 | Yugipedia puzzle pages | high solution, unknown setup | A07 |
 | Titles | 14 | ROM 0x146C858 + guides | mixed | A02 |
 | Banned/Limited | 63 | Yugipedia Banned List | high | A04, A06 |
@@ -1323,67 +1323,84 @@ One row per runtime ID. `Source` is a ROM offset, a public-guide URL, or an expl
 
 | ID | Name | Dorm | Archetype | Signature cards | Confidence |
 | --- | --- | --- | --- | ---: | --- |
-| banner | Lyman Banner | Slifer Red | Retro | 4 | medium |
-| pharaoh | Pharaoh | Slifer Red | unclassified | 2 | medium |
-| jaden | Jaden Yuki | Slifer Red | Beatdown Elemental Hero/Dragon | 14 | medium |
-| syrus | Syrus Truesdale | Slifer Red | Vehicroid | 5 | medium |
-| chumley | Chumley Huffington | Slifer Red | Burn Beast | 4 | medium |
-| blair | Blair Flannigan | Slifer Red | Maiden | 7 | medium |
-| gerard | Gerard | Slifer Red | unclassified | 5 | medium |
-| sartyr | Sartyr | Ra Yellow | Knowledge | 10 | medium |
-| bastion | Bastion Misawa | Ra Yellow | Magnet | 10 | medium |
-| dimitri | Dimitri | Ra Yellow | unclassified | 14 | medium |
-| brier | Brier | Ra Yellow | Goblin | 7 | medium |
-| beauregard | Beauregard | Ra Yellow | Goblin | 11 | medium |
-| crowler | Vellian Crowler | Obelisk Blue | Ancient Gear | 10 | medium |
-| fontaine | Fonda Fontaine | Obelisk Blue | Winged Beast | 12 | medium |
-| zane | Zane Truesdale | Obelisk Blue | Cyber Dragon / Fusion | 18 | medium |
-| chazz | Chazz Princeton | Obelisk Blue | Dark | 7 | medium |
-| topher | Topher | Obelisk Blue | Burn | 2 | medium |
-| conklin | Conklin | Obelisk Blue | basic Fire | 2 | medium |
 | alexis | Alexis Rhodes | Obelisk Blue | Fairy | 16 | medium |
-| mindy | Mindy | Obelisk Blue | Beatdown | 8 | medium |
-| jasmine | Jasmine | Obelisk Blue | Warrior | 7 | medium |
-| torrey | Torrey | Obelisk Blue | Fiend | 5 | medium |
+| banner | Lyman Banner | Slifer Red | Retro | 4 | medium |
+| bastion | Bastion Misawa | Ra Yellow | Magnet | 10 | medium |
+| beauregard | Beauregard | Ra Yellow | Goblin | 11 | medium |
+| blair | Blair Flannigan | Slifer Red | Maiden | 7 | medium |
+| brier | Brier | Ra Yellow | Goblin | 7 | medium |
+| chazz | Chazz Princeton | Obelisk Blue | Dark | 7 | medium |
+| chumley | Chumley Huffington | Slifer Red | Burn Beast | 4 | medium |
+| conklin | Conklin | Obelisk Blue | basic Fire | 2 | medium |
+| crowler | Vellian Crowler | Obelisk Blue | Ancient Gear | 10 | medium |
 | damon | Damon | Obelisk Blue | Draw | 13 | medium |
+| dimitri | Dimitri | Ra Yellow | unclassified | 14 | medium |
+| fontaine | Fonda Fontaine | Obelisk Blue | Winged Beast | 12 | medium |
+| gerard | Gerard | Slifer Red | unclassified | 5 | medium |
+| jaden | Jaden Yuki | Slifer Red | Beatdown Elemental Hero/Dragon | 14 | medium |
+| jasmine | Jasmine | Obelisk Blue | Warrior | 7 | medium |
 | mimicry | Mimicry | Others | Cure/Burn/Piercing | 11 | medium |
+| mindy | Mindy | Obelisk Blue | Beatdown | 8 | medium |
+| pharaoh | Pharaoh | Slifer Red | unclassified | 2 | medium |
+| sartyr | Sartyr | Ra Yellow | Knowledge | 10 | medium |
 | shadow_duelist | The Shadow Duelist | Others | Archfiend | 16 | medium |
+| syrus | Syrus Truesdale | Slifer Red | Vehicroid | 5 | medium |
+| topher | Topher | Obelisk Blue | Burn | 2 | medium |
+| torrey | Torrey | Obelisk Blue | Fiend | 5 | medium |
+| zane | Zane Truesdale | Obelisk Blue | Cyber Dragon / Fusion | 18 | medium |
+| goblin_king | Goblin King / Duel Giant | Event |  | 1 | medium |
+| jinzo | Jinzo (spirit) | Event |  | 1 | medium |
+| sheppard | Chancellor Sheppard | Staff |  | 3 | high |
 
 ## Decks
 
-| ID | Name | Type | Main | Extra | Complete | Confidence |
-| --- | --- | --- | ---: | ---: | --- | --- |
-| fire | Fire Starter | starter | 40 | 1 | True | high |
-| water | Water Starter | starter | 40 | 0 | True | high |
-| wind | Wind Starter | starter | 40 | 0 | True | high |
-| jaden_year1 | Jaden Yuki - Year 1 | opponent | 56 | 4 | True | medium |
-| banner_year1 | Lyman Banner - Year 1 | opponent | 0 | 0 | False | low |
-| pharaoh_year1 | Pharaoh - Year 1 | opponent | 0 | 0 | False | low |
-| syrus_year1 | Syrus Truesdale - Year 1 | opponent | 0 | 0 | False | low |
-| chumley_year1 | Chumley Huffington - Year 1 | opponent | 0 | 0 | False | low |
-| blair_year1 | Blair Flannigan - Year 1 | opponent | 0 | 0 | False | low |
-| gerard_year1 | Gerard - Year 1 | opponent | 0 | 0 | False | low |
-| sartyr_year1 | Sartyr - Year 1 | opponent | 0 | 0 | False | low |
-| bastion_year1 | Bastion Misawa - Year 1 | opponent | 0 | 0 | False | low |
-| dimitri_year1 | Dimitri - Year 1 | opponent | 0 | 0 | False | low |
-| brier_year1 | Brier - Year 1 | opponent | 0 | 0 | False | low |
-| beauregard_year1 | Beauregard - Year 1 | opponent | 0 | 0 | False | low |
-| crowler_year1 | Vellian Crowler - Year 1 | opponent | 0 | 0 | False | low |
-| fontaine_year1 | Fonda Fontaine - Year 1 | opponent | 0 | 0 | False | low |
-| zane_year1 | Zane Truesdale - Year 1 | opponent | 0 | 0 | False | low |
-| chazz_year1 | Chazz Princeton - Year 1 | opponent | 0 | 0 | False | low |
-| topher_year1 | Topher - Year 1 | opponent | 0 | 0 | False | low |
-| conklin_year1 | Conklin - Year 1 | opponent | 0 | 0 | False | low |
-| alexis_year1 | Alexis Rhodes - Year 1 | opponent | 0 | 0 | False | low |
-| mindy_year1 | Mindy - Year 1 | opponent | 0 | 0 | False | low |
-| jasmine_year1 | Jasmine - Year 1 | opponent | 0 | 0 | False | low |
-| torrey_year1 | Torrey - Year 1 | opponent | 0 | 0 | False | low |
-| damon_year1 | Damon - Year 1 | opponent | 0 | 0 | False | low |
-| mimicry_year1 | Mimicry - Year 1 | opponent | 0 | 0 | False | low |
-| shadow_duelist_year1 | The Shadow Duelist - Year 1 | opponent | 0 | 0 | False | low |
-| chazz_ojama | Chazz Princeton - Ojama | opponent_variant | 0 | 0 | False | medium |
-| jaden_improved | Jaden Yuki - Improved | opponent_variant | 0 | 0 | False | medium |
-| bastion_magnet | Bastion Misawa - Magnet | opponent | 0 | 0 | False | medium |
+| ID | Name | Type | Main | Extra | Status | Unresolved slots | Complete | Confidence | Source |
+| --- | --- | --- | ---: | ---: | --- | ---: | --- | --- | --- |
+| fire | Fire Starter | starter | 40 | 1 | complete | 0 | True | high | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Starter_Decks) |
+| water | Water Starter | starter | 40 | 0 | complete | 0 | True | high | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Starter_Decks) |
+| wind | Wind Starter | starter | 40 | 0 | complete | 0 | True | high | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Starter_Decks) |
+| alexis_year1 | Alexis Rhodes - Year 1 | opponent | 49 | 1 | partial | 4 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#a) |
+| banner_year1 | Lyman Banner - Year 1 | opponent | 40 | 2 | partial | 2 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#b) |
+| bastion_year1 | Bastion Misawa - Year 1 | opponent | 43 | 0 | partial | 3 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#c) |
+| beauregard_year1 | Beauregard - Year 1 | opponent | 52 | 0 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#d) |
+| blair_year1 | Blair Flannigan - Year 1 | opponent | 43 | 0 | partial | 1 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#e) |
+| brier_year1 | Brier - Year 1 | opponent | 47 | 0 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#f) |
+| chazz_year1 | Chazz Princeton - Year 1 | opponent | 45 | 0 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#g) |
+| chumley_year1 | Chumley Huffington - Year 1 | opponent | 50 | 1 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#h) |
+| crowler_year1 | Vellian Crowler - Year 1 | opponent | 45 | 0 | partial | 4 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#i) |
+| damon_year1 | Damon - Year 1 | opponent | 50 | 1 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#j) |
+| dimitri_year1 | Dimitri - Year 1 | opponent | 51 | 4 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#k) |
+| fontaine_year1 | Fonda Fontaine - Year 1 | opponent | 45 | 0 | partial | 2 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#l) |
+| gerard_year1 | Gerard - Year 1 | opponent | 44 | 2 | partial | 1 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#m) |
+| jasmine_year1 | Jasmine - Year 1 | opponent | 60 | 0 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#o) |
+| mindy_year1 | Mindy - Year 1 | opponent | 28 | 0 | partial | 12 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#p) |
+| pharaoh_year1 | Pharaoh - Year 1 | opponent | 39 | 0 | partial | 1 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#q) |
+| sartyr_year1 | Sartyr - Year 1 | opponent | 43 | 0 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#r) |
+| syrus_year1 | Syrus Truesdale - Year 1 | opponent | 45 | 1 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#s) |
+| torrey_year1 | Torrey - Year 1 | opponent | 48 | 0 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#t) |
+| zane_year1 | Zane Truesdale - Year 1 | opponent | 50 | 2 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#v) |
+| shadow_duelist_year1 | The Shadow Duelist - Year 1 | opponent | 16 | 0 | partial | 24 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#w) |
+| mimicry_year1 | Mimicry / Test Proctor - Year 1 | opponent | 46 | 0 | partial | 0 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#x) |
+| topher_year1 | Topher - Year 1 | opponent | 17 | 0 | partial | 23 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#event) |
+| conklin_year1 | Conklin - Year 1 | opponent | 17 | 0 | partial | 23 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#event) |
+| sheppard_year1 | Chancellor Sheppard - Year 1 | opponent | 48 | 3 | complete | 0 | True | high | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#y) |
+| jaden_year1 | Jaden Yuki - Year 1 | opponent | 53 | 4 | complete | 0 | True | medium | game3d/src/duel/decklists.js (local donor; not committed) + https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#n |
+| jinzo_spirit | Jinzo - Spirit Deck | event | 0 | 0 | unknown | 40 | False | low | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_8:_Jinzo) |
+| damon_exodia | Damon - Exodia Draw (Event) | event | 5 | 0 | partial | 35 | False | low | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_22:_Draw,_draw,_draw) |
+| yugi_deck | Yugi Muto - Legendary Deck (Event) | event | 39 | 2 | partial | 5 | False | medium | [guide](https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382#u) |
+| bastion_seventh | Bastion Misawa - Seventh Deck | event | 0 | 0 | unknown | 40 | False | low | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_26:_The_7th_Deck + dialogue index 4230) |
+| torrey_special | Torrey - Special Player Deck | player_override | 0 | 0 | unknown | 40 | False | low | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_7:_Occult_Recommendation) |
+| chazz_ojama | Chazz Princeton - Ojama | opponent_variant | 0 | 0 | unknown | 40 | False | low | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events) |
+| jaden_improved | Jaden Yuki - Improved | opponent_variant | 0 | 0 | unknown | 40 | False | low | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events) |
+| bastion_magnet | Bastion Misawa - Magnet | opponent_variant | 0 | 0 | unknown | 40 | False | low | [guide](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents) |
+
+### Event constructs
+
+| ID | Kind | Participants | Rounds | Source |
+| --- | --- | --- | ---: | --- |
+| festival_bracket | tournament | ranked_roster | None | [Events](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_9:_Duel_Festival) |
+| chocolate_bracket | tournament | fontaine, alexis, jasmine, mindy, blair | 4 | [Events](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_28:_Battle_for_the_Chocolate!) |
+| walk_home_partner | partner_pool | jaden, syrus, chumley, bastion, alexis, chazz, zane | 1 | [Events](https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events#Event_31:_The_Walk_Home) |
 
 ## Puzzles
 
@@ -1584,5 +1601,5 @@ One row per runtime ID. `Source` is a ROM offset, a public-guide URL, or an expl
 | written_exam_bank | question templates | ROM 0x1430F2C | high templates / low keys |
 | practical_exam_1..7 | practical definitions | ROM 0x146C23E | high |
 | dialogue_index | 4,527 strings | ROM 0x13F6DF0 / 0x14280A0 | high offsets, local-only text |
-| name_table | 26 full / 21 short names | ROM 0x146CB14 / 0x146CC32 | exact |
+| name_table | 26 full / 26 short names | ROM 0x146CB14 / 0x146CC32 | exact |
 

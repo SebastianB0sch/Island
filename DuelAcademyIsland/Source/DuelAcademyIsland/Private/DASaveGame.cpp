@@ -379,6 +379,21 @@ namespace
 		}
 	}
 
+	/** Double-preserving variant used by fields such as playtime_seconds. */
+	void MoveDoubleField(const TSharedPtr<FJsonObject>& From, const TSharedPtr<FJsonObject>& To, const TCHAR* Field, const TCHAR* NewField = nullptr)
+	{
+		double Value = 0.0;
+		if (From->TryGetNumberField(Field, Value))
+		{
+			const TCHAR* Target = NewField ? NewField : Field;
+			if (FMath::IsFinite(Value) && !To->HasField(Target))
+			{
+				To->SetNumberField(Target, Value);
+			}
+			From->RemoveField(Field);
+		}
+	}
+
 	void MoveCounter(const TSharedPtr<FJsonObject>& Counters, const TCHAR* OldName, const TCHAR* NewName)
 	{
 		int32 Value = 0;
@@ -405,7 +420,7 @@ namespace
 		MoveStringField(Root, Profile, TEXT("title"));
 		MoveNumberField(Root, Profile, TEXT("dp"));
 		MoveStringField(Root, Profile, TEXT("gender"));
-		MoveNumberField(Root, Profile, TEXT("playtime_seconds"));
+		MoveDoubleField(Root, Profile, TEXT("playtime_seconds"));
 
 		if (!Profile->HasField(TEXT("name")))
 		{
@@ -528,7 +543,19 @@ namespace
 		{
 			int32 DP = 0;
 			Profile->TryGetNumberField(TEXT("dp"), DP);
-			Meta->SetNumberField(TEXT("dp"), DP);
+			Meta->SetNumberField(TEXT("dp"), FMath::Max(0, DP));
+		}
+		if (!Meta->HasField(TEXT("playtime_seconds")))
+		{
+			double Playtime = 0.0;
+			if (Profile->TryGetNumberField(TEXT("playtime_seconds"), Playtime) && FMath::IsFinite(Playtime))
+			{
+				Meta->SetNumberField(TEXT("playtime_seconds"), FMath::Max(0.0, Playtime));
+			}
+			else
+			{
+				Meta->SetNumberField(TEXT("playtime_seconds"), 0.0);
+			}
 		}
 		if (!Meta->HasField(TEXT("year")))
 		{
@@ -932,8 +959,11 @@ FDASaveSlotInfo UDASaveSubsystem::GetSlotInfo(const FString& SlotName, int32 Slo
 		(*Meta)->TryGetStringField(TEXT("name"), Info.PlayerName);
 		(*Meta)->TryGetStringField(TEXT("title"), Info.Title);
 		(*Meta)->TryGetStringField(TEXT("saved_at"), Info.SavedAtUtc);
-		(*Meta)->TryGetStringField(TEXT("dorm"), Error);
-		Info.Dorm = DuelAcademyProfile::ParseDorm(Error);
+		FString DormKey;
+		if ((*Meta)->TryGetStringField(TEXT("dorm"), DormKey))
+		{
+			Info.Dorm = DuelAcademyProfile::ParseDorm(DormKey);
+		}
 		(*Meta)->TryGetNumberField(TEXT("dp"), Info.DP);
 		(*Meta)->TryGetNumberField(TEXT("playtime_seconds"), Info.PlaytimeSeconds);
 		(*Meta)->TryGetNumberField(TEXT("year"), Info.Year);
@@ -1224,7 +1254,7 @@ bool UDASaveSubsystem::WriteAtomic(const FString& SlotName, const FString& Json,
 bool UDASaveSubsystem::ReadPayloadFromSlotName(const FString& SlotName, FString& OutJson, int32& OutVersion, FString& OutError) const
 {
 	OutJson.Reset();
-	OutVersion = 0;
+	OutVersion = -1;
 
 	if (!IFileManager::Get().FileExists(*GetSaveFilePath(SlotName)))
 	{
@@ -1261,15 +1291,16 @@ bool UDASaveSubsystem::ReadPayloadFromSlotName(const FString& SlotName, FString&
 		OutError = FString::Printf(TEXT("Save slot '%s' contains invalid JSON."), *SlotName);
 		return false;
 	}
-	if (Root->HasField(TEXT("version")))
+
+	// The JSON schema version is authoritative when present, including version 0
+	// (the legacy flat payload). This matters for v0 payloads that were archived
+	// with a wrapper version of 1.
+	int32 JsonVersion = -1;
+	if (Root->TryGetNumberField(TEXT("version"), JsonVersion) && JsonVersion >= 0)
 	{
-		int32 JsonVersion = 0;
-		if (Root->TryGetNumberField(TEXT("version"), JsonVersion) && JsonVersion > 0)
-		{
-			OutVersion = JsonVersion;
-		}
+		OutVersion = JsonVersion;
 	}
-	if (OutVersion <= 0)
+	if (OutVersion < 0)
 	{
 		OutVersion = Save->Version;
 	}

@@ -92,8 +92,9 @@ OP_SPECS: dict[str, dict] = {
     "reveal": {"required": {"target"}, "optional": {}},
     "roll_die": {"required": {}, "optional": {"count"}},
     "search": {"required": {"target"}, "optional": {"destination", "reveal", "shuffle"}},
+    "send_to_graveyard": {"required": {"target"}, "optional": {"reason"}},
     "set": {"required": {"target"}, "optional": {"position"}},
-    "shuffle": {"required": {"target"}, "optional": {}},
+    "shuffle": {"required": set(), "optional": {"player"}},
     "skip_phase": {"required": {}, "optional": {"player", "mode"}},
     "special_summon": {"required": {"target"}, "optional": {"position"}},
     "summon": {"required": {"target"}, "optional": {"position"}},
@@ -551,6 +552,19 @@ def validate_manifest(
                     "card_effect_manifest.json",
                     f"card {card_id} is marked data_script but has no script file",
                 )
+        script_path = entry.get("script_path")
+        if script_path:
+            if Path(script_path).name != f"{card_id}.json":
+                report.error(
+                    "card_effect_manifest.json",
+                    f"card {card_id} script_path must end in {card_id}.json, found '{script_path}'",
+                )
+            if not (data.ROOT / script_path).exists():
+                report.error(
+                    "card_effect_manifest.json",
+                    f"card {card_id} script_path does not exist: {script_path}",
+                    "rerun build_manifest.py",
+                )
         if entry.get("status") != "scripted" and card_id in scripts:
             report.error(
                 "card_effect_manifest.json",
@@ -838,6 +852,7 @@ def validate(root: Path | None = None) -> tuple[Report, dict]:
 
     script_paths = sorted(data.SCRIPTS_DIR.glob("*.json")) if data.SCRIPTS_DIR.exists() else []
     seen_cards: dict[int, Path] = {}
+    seen_script_ids: dict[str, Path] = {}
     for path in script_paths:
         try:
             payload = data.load_json(path)
@@ -856,6 +871,20 @@ def validate(root: Path | None = None) -> tuple[Report, dict]:
             )
         else:
             seen_cards[card_id] = path
+        for item in payload.get("scripts", []) or []:
+            if not isinstance(item, dict):
+                continue
+            script_id = item.get("id")
+            if not isinstance(script_id, str):
+                continue
+            if script_id in seen_script_ids:
+                report.error(
+                    str(path),
+                    f"duplicate script id '{script_id}' (already in {seen_script_ids[script_id].name})",
+                    "script ids are required to be unique across the whole scripts directory",
+                )
+            else:
+                seen_script_ids[script_id] = path
         validate_script_payload(report, path, payload, card_index, manifest_by_id, schema)
         if path.stem != str(card_id):
             report.warning(str(path), f"file name should be {card_id}.json to match card_id")

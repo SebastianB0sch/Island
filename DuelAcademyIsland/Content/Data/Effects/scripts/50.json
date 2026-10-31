@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "card_id": 50,
+  "name": "Mask of Darkness",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Select 1 Trap Card from your Graveyard and return it to your hand.",
+  "notes": [
+    "Trap card only."
+  ],
+  "scripts": [
+    {
+      "id": "50_flip_trap_to_hand",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "Mask of Darkness"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "self_graveyard",
+        "count": 1,
+        "filter": {
+          "card_type": "Trap"
+        }
+      },
+      "source_text": "FLIP: Select 1 Trap Card from your Graveyard and return it to your hand."
+    }
+  ]
+}

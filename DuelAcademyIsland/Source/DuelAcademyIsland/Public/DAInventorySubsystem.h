@@ -110,6 +110,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Economy|Pack")
 	FDAEPackOpenResult PreviewPack(const FString& PackId, int32 Seed);
 
+	/**
+	 * Consume one A03 pending pack grant and add its cards to the trunk.
+	 * The grant is removed only after a successful open; a failed open leaves it
+	 * queued. Repeated calls without a grant return no_pending_grant and add
+	 * nothing, so a grant is applied exactly once.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Economy|Pack")
+	FDAEPackOpenResult ConsumePendingPackGrant(const FString& PackId, int32 Seed = 0);
+
 	// ------------------------------------------------------------ ante
 
 	/** Remove one copy from the trunk and hold it as an ante stake. */

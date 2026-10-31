@@ -9,11 +9,13 @@ a confidence marker.
 1. [`SOURCE_MAP.md`](SOURCE_MAP.md) — ROM offsets, table formats, extraction status.
 2. [`TEXT_FORMAT.md`](TEXT_FORMAT.md) — encoding, control codes, speaker table, sample scene.
 3. [`TRACEABILITY.md`](TRACEABILITY.md) — one row per runtime ID.
-4. [`GAPS.md`](GAPS.md) — unresolved data and fallbacks.
-5. [`LOCATION_MAP.md`](LOCATION_MAP.md) — A08's audited GBA→GX map.
+4. [`DECK_TRACEABILITY.md`](DECK_TRACEABILITY.md) — per-deck audit, card lists, evidence and unknown slots.
+5. [`GATE3_RECONCILIATION.md`](GATE3_RECONCILIATION.md) — Gate 3 before/after gaps.
+6. [`GAPS.md`](GAPS.md) — unresolved data and fallbacks.
+7. [`LOCATION_MAP.md`](LOCATION_MAP.md) — A08's audited GBA→GX map.
    [`LOCATION_MAP_A01.md`](LOCATION_MAP_A01.md) — A01's ROM-name extraction and initial mapping.
-6. [`LOCAL_ONLY.md`](LOCAL_ONLY.md) — why full dialogue is not committed.
-7. [`VALIDATION.md`](VALIDATION.md) — latest validator output.
+8. [`LOCAL_ONLY.md`](LOCAL_ONLY.md) — why full dialogue is not committed.
+9. [`VALIDATION.md`](VALIDATION.md) — latest validator output.
 
 ## Data files
 
@@ -24,8 +26,8 @@ a confidence marker.
 | `Content/Data/Canon/calendar.json` | 12 months | Oct 2006–Sep 2007, weekdays, periods, fixed dates |
 | `Content/Data/Canon/titles.json` | 14 | 12 permanent + Dropout penalty + Occult temporary |
 | `Content/Data/Canon/packs.json` | 48 | prices, pools, rarities, unlocks; all 1,200 cards obtainable |
-| `Content/Data/Canon/opponents.json` | 25 | roster, dorm, archetype, signature cards, gifts |
-| `Content/Data/Canon/decks.json` | 31 | 3 complete starters, donor Jaden, opponent archetypes |
+| `Content/Data/Canon/opponents.json` | 28 | 25 named + 3 event duelists; dorm, archetype, signature cards, gifts, deck refs |
+| `Content/Data/Canon/decks.json` | 37 | 16 complete, 15 partial (14 with explicit unknown slots, 1 unverified), 6 fully unknown; starters, donor Jaden, opponent/event decks, variants |
 | `Content/Data/Canon/puzzles.json` | 100 | level, solution steps, cards; setups still unknown |
 | `Content/Data/Canon/exams.json` | 89 templates | written bank, practical definitions, Gerard quiz |
 | `Content/Data/Canon/events.json` | 35 | E01–E33 + E04b + E28b, conditions/rewards |
@@ -48,8 +50,12 @@ The offline path needs only:
 - `C:\dev\argh\Yu-Gi-Oh! - GX Duel Academy (U).gba` (or `GX_ROM`), and
 - `DuelAcademyIsland/Content/Data/cards.json`.
 
-Guide facts are cached under `Tools/canon/cache/`. Re-fetch the public pages
-with `Tools/canon/fetch_guides.py` only when you intentionally refresh them.
+Guide facts are cached under `Tools/canon/cache/`. Opponent deck lists are
+transcribed from the GameFAQs Character Deck List FAQ v1.4 into
+`Tools/canon/deck_lists_faq.json`; the builder resolves every card against
+`cards.json` and emits explicit `unresolved_slots` rather than filling gaps.
+Re-fetch the public pages with `Tools/canon/fetch_guides.py` only when you
+intentionally refresh them.
 
 ## Confidence
 

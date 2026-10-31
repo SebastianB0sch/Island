@@ -1,9 +1,16 @@
-"""Build starter decks, opponent roster and opponent deck skeletons.
+"""Build starter decks, opponent roster and opponent deck records.
 
-Starter decks are complete and verified against the guide. Opponent decks are
-reconstructed as *archetypes* with signature cards, because the public guide
-does not publish full 40-card lists for every duelist. Completeness is explicit
-per record so downstream lanes cannot mistake a skeleton for a legal deck.
+The three starter decks are complete and verified against the guide. Opponent
+decks are transcribed from the GameFAQs Character Deck List FAQ v1.4 (section
+VII), with the shared Year 1 generic shell appended where the FAQ says the
+character uses it. Every record carries an explicit status and, where the FAQ
+says cards are missing, an ``unresolved_slots`` count so downstream lanes
+cannot mistake a partial list for a legal 40-card deck.
+
+The ROM has no contiguous, uncompressed 40-card deck table at the card-id
+encoding used by ``cards.json``. A raw u16 sequence scan and a GBA LZ77/RLE
+block scan both came up empty (see Docs/Canon/GATE3_RECONCILIATION.md). Deck
+lists therefore remain guide-derived and are marked accordingly.
 """
 from __future__ import annotations
 
@@ -21,20 +28,12 @@ from canon_common import (
 STARTER_PAGE = "Yu-Gi-Oh! GX Duel Academy/Starter Decks"
 OPPONENTS_PAGE = "Yu-Gi-Oh! GX Duel Academy/Opponents"
 GUIDE_BASE = "https://yugipedia.com/wiki/"
+FAQ_URL = "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41382"
+CURATED_PATH = Path(__file__).with_name("deck_lists_faq.json")
 
-SLUGS = {
-    "Lyman Banner": "banner", "Pharaoh": "pharaoh", "Jaden Yuki": "jaden",
-    "Syrus Truesdale": "syrus", "Chumley Huffington": "chumley",
-    "Bastion Misawa": "bastion", "Blair Flannigan": "blair",
-    "Gerard": "gerard", "Sartyr": "sartyr", "Dimitri": "dimitri",
-    "Brier": "brier", "Beauregard": "beauregard",
-    "Vellian Crowler": "crowler", "Fonda Fontaine": "fontaine",
-    "Zane Truesdale": "zane", "Chazz Princeton": "chazz", "Topher": "topher",
-    "Conklin": "conklin", "Alexis Rhodes": "alexis", "Mindy": "mindy",
-    "Jasmine": "jasmine", "Torrey": "torrey", "Damon": "damon",
-    "Mimicry": "mimicry", "The Shadow Duelist": "shadow_duelist",
-    "Shadow Duelist": "shadow_duelist", "Titan": "shadow_duelist",
-}
+# The five event-only constructs are not roster duelists. They are represented
+# in events.json as tournament/partner objects with explicit participant IDs.
+EVENT_CONSTRUCT_IDS = {"festival_bracket", "chocolate_bracket", "walk_home_partner"}
 
 
 def norm(name: str) -> str:
@@ -43,13 +42,16 @@ def norm(name: str) -> str:
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
 
+def slugify(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+
+
 def load_cards() -> tuple[dict[int, str], dict[str, int], dict[str, int]]:
     cards = read_json(CANON_DIR.parent / "cards.json")
     by_id = {int(c["id"]): c["name"] for c in cards}
     by_name = {norm(c["name"]): int(c["id"]) for c in cards}
     aliases_raw = read_json(Path(__file__).with_name("card_aliases.json"))["aliases"]
     aliases = {norm(k): v for k, v in aliases_raw.items() if v is not None}
-    # Extra names used by the starter page that are not pack-page aliases.
     aliases.update({
         norm("Sky Scout"): 490,
         norm("Harpie's Brother"): 490,
@@ -101,6 +103,8 @@ def parse_starter_decks(text: str, aliases: dict, by_name: dict) -> list[dict]:
             "main_count": len(main),
             "extra_count": len(extra),
             "complete": all(item["resolved"] for item in items),
+            "status": "complete",
+            "unresolved_slots": 0,
             "unresolved": [item["name"] for item in items if not item["resolved"]],
             "source": GUIDE_BASE + STARTER_PAGE.replace(" ", "_"),
             "confidence": "high",
@@ -108,36 +112,9 @@ def parse_starter_decks(text: str, aliases: dict, by_name: dict) -> list[dict]:
     return decks
 
 
-def parse_jaden_donor() -> dict | None:
-    donor = Path(r"C:\dev\argh\game3d\src\duel\decklists.js")
-    if not donor.exists():
-        return None
-    text = donor.read_text(encoding="utf-8")
-    block = re.search(r"export const JADEN_DECK = \{(.*?)\n\};", text, re.S)
-    if not block:
-        return None
-    cards = [int(x) for x in re.findall(r"\b(\d{1,4})\b", block.group(1).split("cards:")[1].split("extra:")[0])]
-    extra_match = re.search(r"extra:\s*\[([^\]]*)\]", block.group(1))
-    extra = [int(x) for x in re.findall(r"\d+", extra_match.group(1))] if extra_match else []
-    return {
-        "id": "jaden_year1",
-        "name": "Jaden Yuki - Year 1",
-        "type": "opponent",
-        "opponent": "jaden",
-        "main": cards,
-        "extra": extra,
-        "main_count": len(cards),
-        "extra_count": len(extra),
-        "complete": True,
-        "source": "C:/dev/argh/game3d/src/duel/decklists.js (donor implementation)",
-        "confidence": "medium",
-        "notes": ["Donor list, not independently verified against the ROM deck table."],
-    }
-
-
 def parse_opponents(text: str, aliases: dict, by_name: dict, by_id: dict[int, str]) -> tuple[list[dict], list[dict]]:
+    """Fallback parser used only when the facts cache is absent."""
     opponents = []
-    decks = []
     section = None
     current = None
     deck_lines: list[str] = []
@@ -156,9 +133,7 @@ def parse_opponents(text: str, aliases: dict, by_name: dict, by_id: dict[int, st
                 opponents.append(current)
             name = (heading.group(2) or heading.group(1)).strip()
             note = re.sub(r"\s+", " ", heading.group(3)).strip(" ()")
-            slug = SLUGS.get(name)
-            if not slug:
-                continue
+            slug = slugify(name)
             current = {
                 "id": slug,
                 "name": name,
@@ -179,132 +154,148 @@ def parse_opponents(text: str, aliases: dict, by_name: dict, by_id: dict[int, st
                 if deck_lines:
                     deck_lines.append(line.strip())
 
-    if current:
-        current["deck_text"] = " ".join(deck_lines).strip()
-        current["gift_text"] = " ".join(gift_lines).strip()
-        opponents.append(current)
-
     for opponent in opponents:
         opponent["signature_card_ids"] = sorted({
             cid for cid in (
                 resolve(link_name(m), aliases, by_name)
-                for m in re.finditer(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", opponent["deck_text"])
+                for m in re.finditer(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", opponent.pop("deck_text"))
             ) if cid is not None
         })
         opponent["signature_cards"] = [by_id[cid] for cid in opponent["signature_card_ids"]]
-        opponent["archetype"] = infer_archetype(opponent["deck_text"])
+        opponent["archetype"] = "unclassified"
         opponent["gift_card_ids"] = sorted({
             cid for cid in (
                 resolve(link_name(m), aliases, by_name)
-                for m in re.finditer(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", opponent["gift_text"])
+                for m in re.finditer(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", opponent.pop("gift_text"))
             ) if cid is not None
         })
         opponent["gift_cards"] = [by_id[cid] for cid in opponent["gift_card_ids"]]
         opponent["confidence"] = "medium"
         opponent["source"] = GUIDE_BASE + OPPONENTS_PAGE.replace(" ", "_")
-        opponent.pop("deck_text", None)
-        opponent.pop("gift_text", None)
-        if opponent["id"] != "jaden":
-            decks.append(make_opponent_deck(opponent, aliases, by_name))
-    return opponents, decks
+    return opponents, []
 
 
-def infer_archetype(text: str) -> str:
-    match = re.search(r"Uses (?:a|an) ([^.!]+?) Deck", text, re.I)
-    if match:
-        value = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", match.group(1))
-        value = re.sub(r"\[\[([^\]]+)\]\]", r"\1", value)
-        return value.replace("Knowldege", "Knowledge").strip()
-    if "Elemental Hero" in text:
-        return "Elemental HERO / Dragon beatdown"
-    if "Vehicroid" in text:
-        return "Vehicroid"
-    if "Cyber Dragon" in text:
-        return "Cyber Dragon / Fusion"
-    return "unclassified"
+def sha_deck(deck: dict) -> str:
+    payload = json.dumps({k: deck.get(k) for k in ("id", "name", "type", "opponent", "main", "extra")},
+                         sort_keys=True).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
-def make_opponent_deck(opponent: dict, aliases: dict, by_name: dict) -> dict:
-    deck_id = f"{opponent['id']}_year1"
-    return {
-        "id": deck_id,
-        "name": f"{opponent['name']} - Year 1",
-        "type": "opponent",
-        "opponent": opponent["id"],
-        "archetype": opponent.get("archetype") or "unclassified",
-        "main": [],
-        "extra": [],
-        "main_count": 0,
-        "extra_count": 0,
-        "complete": False,
-        "signature_cards": opponent.get("signature_cards", []),
-        "source": GUIDE_BASE + OPPONENTS_PAGE.replace(" ", "_"),
-        "confidence": "low",
-        "gap": "Public guide gives an archetype and signature cards, not a full 40-card list.",
+def curated_deck(did: str, source: dict, deck_type: str) -> dict:
+    deck = {
+        "id": did,
+        "name": source["name"],
+        "type": deck_type,
+        "opponent": source.get("opponent"),
+        "archetype": source.get("archetype", "unclassified"),
+        "main": source.get("main", []),
+        "extra": source.get("extra", []),
+        "main_count": len(source.get("main", [])),
+        "extra_count": len(source.get("extra", [])),
+        "complete": bool(source.get("complete")),
+        "status": source.get("status", "unknown"),
+        "confidence": source.get("confidence", "low"),
+        "source": source.get("source", FAQ_URL),
+        "faq_section": source.get("faq_section"),
+        "use_generic_shell": bool(source.get("use_generic_shell")),
+        "fixed_cards": source.get("fixed_cards", []),
+        "extra_cards": source.get("extra_cards", []),
+        "unresolved_slots": int(source.get("unresolved_slots", 0)),
+        "unresolved_reason": source.get("unresolved_reason", ""),
+        "random_pool": source.get("random_pool", []),
+        "notes": source.get("notes", []),
     }
+    deck["sha256"] = sha_deck(deck)
+    return deck
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path,
-                        default=Path(r"C:\Users\Sebas\AppData\Local\Temp\opencode\gxcanon\guide_wikitext.json"))
+                        default=Path("Tools/canon/cache/guide_wikitext.json"),
+                        help="optional wikitext cache; only needed when decks_facts.json is absent")
     args = parser.parse_args()
     ensure_dirs()
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_path = CACHE_DIR / "decks_facts.json"
     by_id, by_name, aliases = load_cards()
+    curated = read_json(CURATED_PATH)
+
     if cache_path.exists():
         cached = read_json(cache_path)
         starters = cached["starters"]
-        jaden = cached["jaden"]
         opponents = cached["opponents"]
-        opponent_decks = cached["opponent_decks"]
     else:
         source = read_json(args.source)
         starters = parse_starter_decks(source[STARTER_PAGE], aliases, by_name)
-        jaden = parse_jaden_donor()
-        opponents, opponent_decks = parse_opponents(source[OPPONENTS_PAGE], aliases, by_name, by_id)
-        write_json(cache_path, {
-            "schema_version": 1,
-            "source": "Yugipedia starter/opponent pages + game3d donor",
-            "starters": starters,
-            "jaden": jaden,
-            "opponents": opponents,
-            "opponent_decks": opponent_decks,
-        })
+        opponents, _ = parse_opponents(source[OPPONENTS_PAGE], aliases, by_name, by_id)
+
+    for starter in starters:
+        starter.setdefault("status", "complete")
+        starter.setdefault("unresolved_slots", 0)
+        starter.setdefault("unresolved_reason", "")
+    deck_records: list[dict] = list(starters)
+    for did, source in curated["opponent_decks"].items():
+        deck_records.append(curated_deck(did, source, "opponent"))
+    for did, source in curated["event_decks"].items():
+        deck_records.append(curated_deck(did, source, source.get("type", "event")))
 
     variants = [
         {
             "id": "chazz_ojama", "name": "Chazz Princeton - Ojama", "type": "opponent_variant",
             "opponent": "chazz", "archetype": "Ojama", "main": [], "extra": [],
-            "main_count": 0, "extra_count": 0, "complete": False,
+            "main_count": 0, "extra_count": 0, "complete": False, "status": "unknown",
+            "unresolved_slots": 40,
+            "unresolved_reason": "Event 15 deck; full list not published.",
             "signature_cards": ["Ojama Yellow", "Ojama Green", "Ojama Black", "Ojama Trio", "Ojama Delta Hurricane!!"],
             "source": GUIDE_BASE + "Yu-Gi-Oh!_GX_Duel_Academy/Events",
-            "confidence": "medium", "gap": "Event 15 deck; full list not published.",
+            "confidence": "low",
         },
         {
             "id": "jaden_improved", "name": "Jaden Yuki - Improved", "type": "opponent_variant",
             "opponent": "jaden", "archetype": "Elemental HERO", "main": [], "extra": [],
-            "main_count": 0, "extra_count": 0, "complete": False,
+            "main_count": 0, "extra_count": 0, "complete": False, "status": "unknown",
+            "unresolved_slots": 40,
+            "unresolved_reason": "Event 3 upgrade; full list not published.",
             "signature_cards": ["Elemental Hero Flame Wingman"],
             "source": GUIDE_BASE + "Yu-Gi-Oh!_GX_Duel_Academy/Events",
-            "confidence": "medium", "gap": "Event 3 upgrade; full list not published.",
+            "confidence": "low",
         },
         {
-            "id": "bastion_magnet", "name": "Bastion Misawa - Magnet", "type": "opponent",
+            "id": "bastion_magnet", "name": "Bastion Misawa - Magnet", "type": "opponent_variant",
             "opponent": "bastion", "archetype": "Magnet Warrior", "main": [], "extra": [],
-            "main_count": 0, "extra_count": 0, "complete": False,
-            "signature_cards": ["Alpha The Magnet Warrior", "Beta The Magnet Warrior", "Gamma The Magnet Warrior", "Valkyrion the Magna Warrior"],
+            "main_count": 0, "extra_count": 0, "complete": False, "status": "unknown",
+            "unresolved_slots": 40,
+            "unresolved_reason": "One of six Bastion decks; only signature cards documented.",
+            "signature_cards": ["Alpha The Magnet Warrior", "Beta The Magnet Warrior",
+                                "Gamma The Magnet Warrior", "Valkyrion the Magna Warrior"],
             "source": GUIDE_BASE + OPPONENTS_PAGE.replace(" ", "_"),
-            "confidence": "medium", "gap": "One of six Bastion decks; only signature cards documented.",
+            "confidence": "low",
         },
     ]
+    for deck in variants:
+        deck["sha256"] = sha_deck(deck)
+    deck_records.extend(variants)
 
-    deck_records = starters + ([jaden] if jaden else []) + opponent_decks + variants
-    for deck in deck_records:
-        payload = json.dumps({k: deck.get(k) for k in ("id", "name", "type", "opponent", "main", "extra")},
-                             sort_keys=True).encode("utf-8")
-        deck["sha256"] = hashlib.sha256(payload).hexdigest()
+    # Roster: the 25 named duelists from the original extraction plus the three
+    # named event duelists reconciled in Gate 3.
+    roster = {o["id"]: dict(o) for o in opponents}
+    for addition in curated["opponent_additions"]:
+        roster[addition["id"]] = dict(addition)
+    for oid, opponent in roster.items():
+        opponent.setdefault("role", "named")
+        decks = [d["id"] for d in deck_records if d.get("opponent") == oid and d["type"] in
+                 {"opponent", "opponent_variant", "event"}]
+        opponent["decks"] = sorted(set(opponent.get("decks", []) + decks))
+        if opponent.get("deck"):
+            opponent["default_deck"] = opponent["deck"]
+        elif f"{oid}_year1" in opponent["decks"]:
+            opponent["default_deck"] = f"{oid}_year1"
+        elif opponent["decks"]:
+            complete = [d["id"] for d in deck_records
+                        if d["id"] in opponent["decks"] and d.get("complete")]
+            opponent["default_deck"] = (complete or opponent["decks"])[0]
+    roster_list = sorted(roster.values(), key=lambda o: (o.get("role") == "event", o["id"]))
 
     write_json(CANON_DIR / "decks.json", {
         "schema_version": 1,
@@ -312,30 +303,46 @@ def main() -> int:
         "source": {
             "starters": GUIDE_BASE + STARTER_PAGE.replace(" ", "_"),
             "opponents": GUIDE_BASE + OPPONENTS_PAGE.replace(" ", "_"),
-            "jaden_donor": "C:/dev/argh/game3d/src/duel/decklists.js",
+            "opponent_decks": FAQ_URL,
+            "opponent_decks_title": "Character Deck List FAQ v1.4 (Tracy_Smith, 2006-03-11)",
+            "jaden_donor": "game3d/src/duel/decklists.js (local donor; not committed)",
+            "rom_deck_table": curated["source"]["rom_deck_table"],
         },
         "summary": {
             "total": len(deck_records),
             "complete": sum(1 for deck in deck_records if deck["complete"]),
             "incomplete": sum(1 for deck in deck_records if not deck["complete"]),
+            "unknown": sum(1 for deck in deck_records if deck.get("status") == "unknown"),
+            "partial": sum(1 for deck in deck_records if deck.get("status") == "partial"),
         },
+        "generic_shell": curated["generic_shell"],
+        "event_constructs": curated["event_constructs"],
         "decks": deck_records,
     })
 
     write_json(CANON_DIR / "opponents.json", {
         "schema_version": 1,
         "generated_utc": utc_now(),
-        "source": GUIDE_BASE + OPPONENTS_PAGE.replace(" ", "_"),
+        "source": {
+            "roster": GUIDE_BASE + OPPONENTS_PAGE.replace(" ", "_"),
+            "decks": FAQ_URL,
+            "rom_names": "0x146CB14 / 0x146CC32",
+        },
         "notes": [
             "Roster names come from the verified ROM name pool at 0x146CB14/0x146CC32.",
-            "Guide roles and archetypes are secondary; full deck lists are not published.",
+            "25 named duelists are the original extraction; jinzo, goblin_king and sheppard are event-only additions reconciled in Gate 3.",
+            "Tournament/partner constructs (festival_bracket, chocolate_bracket, walk_home_partner) are NOT roster duelists; they live in decks.json event_constructs and events.json duel objects.",
+            "Mimicry is the practical-exam proctor; the Character Deck FAQ calls the same role 'Test Proctor'.",
         ],
-        "count": len(opponents),
-        "opponents": opponents,
+        "count": len(roster_list),
+        "named_duelists": sum(1 for o in roster_list if o.get("role") != "event"),
+        "event_duelists": sum(1 for o in roster_list if o.get("role") == "event"),
+        "opponents": roster_list,
     })
     print(f"starter decks: {len(starters)}  complete: {sum(1 for s in starters if s['complete'])}")
-    print(f"opponents: {len(opponents)}  decks: {len(deck_records)}")
-    print("starter main counts:", [s["main_count"] for s in starters])
+    print(f"opponents: {len(roster_list)}  decks: {len(deck_records)}")
+    print("deck status:", {s: sum(1 for d in deck_records if d.get("status") == s)
+                            for s in ("complete", "partial", "unknown")})
     return 0
 
 

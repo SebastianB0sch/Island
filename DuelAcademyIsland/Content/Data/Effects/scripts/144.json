@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 144,
+  "name": "Red Medicine",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases your Life Points by 500 points.",
+  "notes": [
+    "Single-clause Life Point gain."
+  ],
+  "scripts": [
+    {
+      "id": "144_gain_life_points",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 500,
+          "player": "self",
+          "reason": "Red Medicine"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Increases your Life Points by 500 points."
+    }
+  ]
+}

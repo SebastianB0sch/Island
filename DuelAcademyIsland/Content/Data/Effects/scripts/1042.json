@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 1042,
+  "name": "The Creator Incarnate",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Tribute this card to Special Summon 1 \"The Creator\" from your hand.",
+  "notes": [
+    "Tributing the source is the cost for summoning 'The Creator'."
+  ],
+  "scripts": [
+    {
+      "id": "1042_tribute_self_summon_named",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "tribute",
+          "target": "$self"
+        }
+      ],
+      "target": {
+        "zone": "self_hand",
+        "count": 1,
+        "filter": {
+          "name": "The Creator"
+        }
+      },
+      "source_text": "Tribute this card to Special Summon 1 \"The Creator\" from your hand."
+    }
+  ]
+}

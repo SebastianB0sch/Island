@@ -49,6 +49,9 @@ Run the runtime suites from the editor/game command line:
 -DADuelRulesSelfTest      # 57/57
 -DAStorySelfTest          # 14/14
 -DAFullStorySelfTest      # 20/20, 35/35 reachable with progress
+-DAPuzzleSelfTest         # 100/100 authored puzzles replayed in-engine
+-DAExamSelfTest           # 12/12 monthly exam cycles
+-DAPuzzleExamSelfTest     # both A07 suites in one process
 -DAUITest                 # 8 PDA + 2 dialogue screenshots
 -DATitleTest / -DANewGameTest
 ```
@@ -58,6 +61,7 @@ Data validators:
 ```text
 python Tools/validate/validate_all.py      # PASS, known gaps listed
 python Tools/puzzles/validate.py           # 141 checks, 0 failures
+python Tools/opponents/import_canon_decks.py --check  # 31/31 runtime decks, 36/36 constructed
 python Tools/effects/audit.py              # PASS; 119 scripted + 321 vanilla, 760 pending
 ```
 

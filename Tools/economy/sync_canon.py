@@ -89,6 +89,22 @@ def main() -> int:
     canon = load(CANON_PACKS)
     shop = load(SHOP_PACKS)
     banned = load(CANON_BANNED)
+    cards = load(CARDS)
+
+    rank = {rarity: index for index, rarity in enumerate(RARITY_ORDER)}
+    rarity_by_card: dict[int, str] = {}
+    for canon_pack in canon["packs"]:
+        if canon_pack.get("full_pool"):
+            continue
+        for entry in canon_pack.get("pool", []):
+            rarity = RARITY_MAP.get(entry.get("rarity", ""))
+            card_id = entry.get("card_id")
+            if not rarity or not isinstance(card_id, int) or card_id <= 0:
+                continue
+            if card_id not in rarity_by_card or rank[rarity] > rank[rarity_by_card[card_id]]:
+                rarity_by_card[card_id] = rarity
+    for card in cards:
+        rarity_by_card.setdefault(int(card["id"]), "Common")
 
     old_by_name = {pack["name"]: pack for pack in shop["packs"]}
     old_by_id = {pack["id"]: pack for pack in shop["packs"]}
@@ -132,9 +148,25 @@ def main() -> int:
             "source": "Content/Data/Canon/packs.json (A01) + A06 provisional slots/odds",
         }
         if canon_pack["id"] == "dorothys_gift":
+            # Canon/packs.json marks this pack full_pool=true with a declared
+            # 1,200-card pool. Materialise the exact ids instead of leaving an
+            # empty pools array; every card has copy weight 1 (uniform).
+            all_card_ids = sorted(int(card["id"]) for card in cards)
+            pools = {rarity: [] for rarity in RARITY_ORDER}
+            for card_id in all_card_ids:
+                pools[rarity_by_card.get(card_id, "Common")].append(card_id)
+            pack["pools"] = [
+                {"rarity": rarity, "cards": pools[rarity]} for rarity in RARITY_ORDER
+            ]
             pack["all_cards"] = True
             pack["prefer_unowned"] = True
-            pack["pools"] = []
+            pack["pool_status"] = "canon_full_pool"
+            pack["pool_note"] = (
+                "Canon/packs.json full_pool=true declares all 1,200 cards; "
+                "each card has copy weight 1 (uniform), no per-card canon weights."
+            )
+            pack["pool_card_count"] = len(all_card_ids)
+            pack["pool_copy_weight"] = 1
         new_packs.append(pack)
 
     if len(new_packs) != 48:
@@ -149,24 +181,10 @@ def main() -> int:
         "Rarity/slot layout and rare-plus weights remain provisional; A01 marks odds_status unresolved.",
         "Unlock descriptions are A01 canon raw text; structured condition keys are port integration hooks.",
         "Calendar packs use month_at_least until A02 exposes exact last-week/day windows.",
+        "Dorothy's Gift materialises A01's full_pool=true as all 1,200 card ids at copy weight 1; any-card slots still prefer unowned cards.",
     ]
     write(SHOP_PACKS, shop)
 
-    rank = {rarity: index for index, rarity in enumerate(RARITY_ORDER)}
-    rarity_by_card: dict[int, str] = {}
-    for canon_pack in canon["packs"]:
-        if canon_pack.get("full_pool"):
-            continue
-        for entry in canon_pack.get("pool", []):
-            rarity = RARITY_MAP.get(entry.get("rarity", ""))
-            card_id = entry.get("card_id")
-            if not rarity or not isinstance(card_id, int) or card_id <= 0:
-                continue
-            if card_id not in rarity_by_card or rank[rarity] > rank[rarity_by_card[card_id]]:
-                rarity_by_card[card_id] = rarity
-
-    for card in load(CARDS):
-        rarity_by_card.setdefault(card["id"], "Common")
     write(
         RARITY,
         {
@@ -205,7 +223,7 @@ def main() -> int:
             "rules": {
                 "min_main": 40,
                 "max_main": 60,
-                "max_extra": 20,
+                "max_extra": 15,
                 "max_copies": 3,
                 "max_side": 0,
                 "max_player_decks": 24,

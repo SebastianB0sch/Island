@@ -1,5 +1,12 @@
 # Canon gaps and fallback decisions
 
+> **Gate 3 update (2026-10-31):** opponent decks are now transcribed from the
+> GameFAQs Character Deck List FAQ v1.4 and the Year 1 generic shell. 16/37 decks
+> are complete; 15 are partial (14 with explicit `unresolved_slots`, 1
+> unverified list); 6 are fully unknown. Event deck references and the five missing event opponents are
+> reconciled. The exam week remains an explicit question with recorded evidence.
+> See `GATE3_RECONCILIATION.md` and `DECK_TRACEABILITY.md`.
+>
 > **Rule:** no datum is silently invented. Every unresolved item below has an
 > owner and a downstream impact. Items marked **blocking** must be resolved
 > before the content freeze.
@@ -38,16 +45,18 @@ Legend: **confidence** = exact / high / medium / low / unknown.
 | Unlock dates | **medium** | Dates/week labels extracted; exact "last week" day is a calendar rule. | A02/A06 |
 | Card-pool completeness | **high** | All 1,200 cards appear in at least one pack; 2 guide names required alias resolution. | A01/A06 |
 | Pack pool duplicates | **info** | `pool_cards_listed` can exceed unique ids because guide lists variants/duplicates. | A06 |
+| Dorothy's Gift empty pool | **known gap (A06)** | `packs.json` still has an empty `dorothys_gift` pool. A06 owns the shop-pack fix; A01 only records it. | A06 |
 
 ## 4. Opponents and decks
 
 | Gap | Status | Detail | Owner |
 | --- | --- | --- | --- |
-| Full opponent deck lists | **blocking for A07** | Public guide gives archetypes and signature cards, not 40-card lists. `decks.json` marks every opponent deck `complete: false`. | A07 |
-| Deck evolution | **partial** | Jaden improved, Chazz Ojama, Bastion six-decks are named; exact lists missing. | A07 |
+| Full opponent deck lists | **partial (Gate 3)** | **16/37 complete**, **15 partial** (14 with explicit `unresolved_slots`; 1 unverified list), **6 fully unknown**. Source: GameFAQs Character Deck List FAQ v1.4 (Tracy_Smith, 2006-03-11) + Year 1 generic shell. No ROM deck table was located. See `DECK_TRACEABILITY.md`. | A07 |
+| Deck evolution | **partial** | Jaden improved, Chazz Ojama and Bastion's Magnet/Seventh decks are named; `jaden_improved`, `chazz_ojama`, `bastion_magnet`, `bastion_seventh` remain fully unknown. | A07 |
 | AI profiles | **out of A01 scope** | A07 defines behavior from archetype/signature cards. | A07 |
 | Ante/gift cards | **medium** | Gift cards extracted where the guide lists them; ante rules unresolved. | A07 |
-| Roster count | **high** | 25 named opponents from ROM name table + guide; 20 ranked + event-only. | A07 |
+| Roster count | **high (Gate 3)** | **28** canon entries: 25 named duelists + 3 event duelists (`jinzo`, `goblin_king`, `sheppard`). The three bracket/partner constructs are not roster duelists; see `decks.json` `event_constructs`. | A07 |
+| Torrey special player deck | **unknown** | E07 forces a special deck made by Torrey; no list is published. Explicit `torrey_special` deck record with 40 unresolved slots. | A07 |
 
 ## 5. Puzzles
 
@@ -66,7 +75,7 @@ Legend: **confidence** = exact / high / medium / low / unknown.
 | Pass mark | **blocking** | Sources disagree: 250 vs 300 out of 500. | A02/A07 |
 | Written/timed/practical weights | **open** | 10 questions per exam; 500 total; component weights unresolved. | A07 |
 | Practical scoring | **open** | Seven objectives extracted; thresholds/points unresolved. | A07 |
-| Exam week | **open** | Monthly Friday; exact week (first/last/third) not proven. | A02 |
+| Exam week | **open (explicit question)** | Monthly Friday is confirmed (guide + 12-exam year). Exact week is not proven: no guide states first/second/third/fourth/last; E09's "third Friday of November" is an event-specific rule. ROM strings 74/93 (`Next Friday is/will be the Dorm Switch Exam`) only prove a one-week warning; a raw search found no 12-entry exam-date table. Last-Friday fallback retained and marked unproven in `calendar.json` / `exams.json`. | A02 |
 
 ## 7. Titles and progression
 
@@ -97,7 +106,7 @@ Legend: **confidence** = exact / high / medium / low / unknown.
 | --- | --- | --- | --- |
 | E19/E20/E25/E28/E30 timing | **medium** | Guide wording is vague ("3 months", "weekend", "after event"). | A03 |
 | Event numbering | **info** | Yugipedia and GameFAQs order events differently; Yugipedia numbering used. | A03 |
-| Event-only opponents | **partial** | Topher, Conklin, Mimicry, Shadow Duelist, Goblin King identified; full decks missing. | A07 |
+| Event-only opponents | **reconciled (Gate 3)** | `jinzo`, `goblin_king` and `sheppard` added to the canon roster with traceability. E09/E28/E31 brackets/partner pools now map to existing roster ids. Topher/Conklin/Mimicry/Shadow Duelist remain partial with explicit unknown slots; full lists still missing. | A07 |
 | Event dialogue text | **local-only** | Keyword candidates attached; exact scene scripts not extracted. | A03 |
 | Mandatory vs optional | **open** | Guide implies all 33 are reachable; exact ending gate is E33. | A03 |
 

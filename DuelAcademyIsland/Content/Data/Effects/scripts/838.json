@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "card_id": 838,
+  "name": "Iron Blacksmith Kotetsu",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Select 1 Equip Spell Card from your Deck and add it to your hand.",
+  "notes": [
+    "Searches an Equip Spell and shuffles."
+  ],
+  "scripts": [
+    {
+      "id": "838_flip_search_equip",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Spell"
+            },
+            {
+              "subtype": "Equip"
+            }
+          ]
+        }
+      },
+      "source_text": "FLIP: Select 1 Equip Spell Card from your Deck and add it to your hand."
+    }
+  ]
+}

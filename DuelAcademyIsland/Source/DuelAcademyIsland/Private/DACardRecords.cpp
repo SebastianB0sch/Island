@@ -228,8 +228,33 @@ const FCardRecord* UCardDatabaseSubsystem::FindCard(int32 CardId) const
 
 const FStarterDeckDef* UCardDatabaseSubsystem::FindDeck(const FString& DeckId) const
 {
-	return Decks.FindByPredicate([&DeckId](const FStarterDeckDef& Deck)
+	if (const FStarterDeckDef* Starter = Decks.FindByPredicate([&DeckId](const FStarterDeckDef& Deck)
+	{
+		return Deck.Id.Equals(DeckId, ESearchCase::IgnoreCase);
+	}))
+	{
+		return Starter;
+	}
+	return RegisteredDecks.FindByPredicate([&DeckId](const FStarterDeckDef& Deck)
 	{
 		return Deck.Id.Equals(DeckId, ESearchCase::IgnoreCase);
 	});
+}
+
+bool UCardDatabaseSubsystem::RegisterDeck(const FStarterDeckDef& Deck)
+{
+	if (Deck.Id.IsEmpty() || Deck.Cards.Num() == 0)
+	{
+		return false;
+	}
+	for (FStarterDeckDef& Existing : RegisteredDecks)
+	{
+		if (Existing.Id.Equals(Deck.Id, ESearchCase::IgnoreCase))
+		{
+			Existing = Deck;
+			return true;
+		}
+	}
+	RegisteredDecks.Add(Deck);
+	return true;
 }

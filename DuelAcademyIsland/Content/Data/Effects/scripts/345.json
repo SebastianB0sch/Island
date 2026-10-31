@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "card_id": 345,
+  "name": "Berfomet",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is summoned (excluding Special Summon), you can add 1 \"Gazelle the King of Mythical Beasts\" from your Deck to your hand.",
+  "notes": [
+    "Searches 'Gazelle the King of Mythical Beasts'."
+  ],
+  "scripts": [
+    {
+      "id": "345_on_normal_summon_search_named",
+      "trigger": "on_normal_summon",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Berfomet"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "name": "Gazelle the King of Mythical Beasts"
+        }
+      },
+      "source_text": "When this card is summoned (excluding Special Summon), you can add 1 \"Gazelle the King of Mythical Beasts\" from your Deck to your hand."
+    },
+    {
+      "id": "345_on_flip_summon_search_named",
+      "trigger": "on_flip_summon",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Berfomet"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "name": "Gazelle the King of Mythical Beasts"
+        }
+      },
+      "source_text": "When this card is summoned (excluding Special Summon), you can add 1 \"Gazelle the King of Mythical Beasts\" from your Deck to your hand."
+    }
+  ]
+}

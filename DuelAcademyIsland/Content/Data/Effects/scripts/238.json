@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "card_id": 238,
+  "name": "Skelengel",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: You can draw 1 card from your deck.",
+  "notes": [
+    "Optional FLIP draw."
+  ],
+  "scripts": [
+    {
+      "id": "238_flip_draw",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "draw",
+          "count": 1,
+          "player": "self",
+          "reason": "Skelengel"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "FLIP: You can draw 1 card from your deck."
+    }
+  ]
+}

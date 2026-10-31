@@ -2,8 +2,9 @@
 //
 // -DADuelRulesSelfTest boots the game, waits for the card database, runs the
 // rules checks and exits.  da.DuelRulesSelfTest runs the same checks on demand
-// from the console.  The legacy -DADuelSelfTest / da.DuelSelfTest harness is
-// untouched.
+// from the console.  -DADuelSelfTest=N runs the release-gate duel batch from
+// this subsystem because the legacy HUD switch only recognises a bare
+// -DADuelSelfTest token.  da.DuelSelfTest remains the console entry point.
 
 #pragma once
 
@@ -64,5 +65,7 @@ private:
 
 	FTSTicker::FDelegateHandle TickerHandle;
 	bool bFinished = false;
+	bool bRunDuelGate = false;
+	int32 DuelGateIterations = 24;
 	float WaitSeconds = 0.f;
 };

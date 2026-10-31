@@ -5,6 +5,7 @@
 #include "Components/SceneComponent.h"
 #include "DANpcSpawnPoint.h"
 #include "DAStudentNPC.h"
+#include "DuelAcademyIsland.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/Character.h"
@@ -88,6 +89,9 @@ void ADANpcDirector::UnregisterSpawnPoint(ADANpcSpawnPoint* SpawnPoint)
 
 int32 ADANpcDirector::RefreshSpawnPoints()
 {
+	const TMap<FString, TWeakObjectPtr<ADANpcSpawnPoint>> PreviousPoints = SpawnPoints;
+	const TMap<FString, TWeakObjectPtr<AActor>> PreviousActive = ActiveNpcs;
+
 	SpawnPoints.Reset();
 
 	TArray<ADANpcSpawnPoint*> Points;
@@ -103,15 +107,69 @@ int32 ADANpcDirector::RefreshSpawnPoints()
 	{
 		if (Point && !Point->SpawnPointId.IsEmpty())
 		{
+			const TWeakObjectPtr<ADANpcSpawnPoint>* Existing = SpawnPoints.Find(Point->SpawnPointId);
+			if (Existing && Existing->IsValid())
+			{
+				UE_LOG(LogDuelAcademyIsland, Warning,
+					TEXT("Duplicate NPC spawn point id '%s'; keeping the first registration."), *Point->SpawnPointId);
+				continue;
+			}
 			SpawnPoints.Add(Point->SpawnPointId, Point);
 		}
 	}
 
-	for (ADANpcSpawnPoint* Point : Points)
+	// Points removed from the level release their NPC before the active map is rebuilt.
+	for (const TPair<FString, TWeakObjectPtr<ADANpcSpawnPoint>>& Pair : PreviousPoints)
 	{
-		if (Point && Point->bSpawnOnBeginPlay && !Point->IsOccupied())
+		if (SpawnPoints.Contains(Pair.Key))
 		{
-			SpawnAtPoint(Point->SpawnPointId);
+			continue;
+		}
+		if (ADANpcSpawnPoint* OldPoint = Pair.Value.Get())
+		{
+			OldPoint->DespawnNpc();
+		}
+	}
+
+	// Rebuild the active map from the points that survived; any NPC that can no
+	// longer be reached through a registered point becomes an orphan and is destroyed.
+	ActiveNpcs.Reset();
+	TSet<AActor*> KeptNpcs;
+	for (const TPair<FString, TWeakObjectPtr<ADANpcSpawnPoint>>& Pair : SpawnPoints)
+	{
+		ADANpcSpawnPoint* Point = Pair.Value.Get();
+		AActor* Npc = Point ? Point->GetSpawnedNpc() : nullptr;
+		if (IsValid(Npc))
+		{
+			ActiveNpcs.Add(Pair.Key, Npc);
+			KeptNpcs.Add(Npc);
+		}
+	}
+
+	for (const TPair<FString, TWeakObjectPtr<AActor>>& Pair : PreviousActive)
+	{
+		AActor* Npc = Pair.Value.Get();
+		if (IsValid(Npc) && !KeptNpcs.Contains(Npc))
+		{
+			OnNpcDespawned.Broadcast(Pair.Key, Npc);
+			Npc->Destroy();
+		}
+	}
+
+	if (bHasAppliedSchedule)
+	{
+		// Preserve the current week/event filter; this also despawns stale NPCs
+		// that no longer match after a rebuild.
+		ApplySchedule(CurrentScheduleId, CurrentWeekday, CurrentPeriod);
+	}
+	else
+	{
+		for (ADANpcSpawnPoint* Point : Points)
+		{
+			if (Point && Point->bSpawnOnBeginPlay && !Point->IsOccupied())
+			{
+				SpawnAtPoint(Point->SpawnPointId);
+			}
 		}
 	}
 
@@ -120,6 +178,7 @@ int32 ADANpcDirector::RefreshSpawnPoints()
 
 void ADANpcDirector::ApplySchedule(const FString& ScheduleId, const FString& Weekday, const FString& Period)
 {
+	bHasAppliedSchedule = true;
 	CurrentScheduleId = ScheduleId;
 	CurrentWeekday = Weekday;
 	CurrentPeriod = Period;

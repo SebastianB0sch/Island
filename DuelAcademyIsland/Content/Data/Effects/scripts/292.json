@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 292,
+  "name": "Harpie's Feather Duster",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys all of your opponent's Spell and Trap Cards on the field.",
+  "notes": [
+    "Symmetric Spell/Trap wipe against the opponent."
+  ],
+  "scripts": [
+    {
+      "id": "292_destroy_opponent_spell_traps",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Harpie's Feather Duster"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "opponent_spell_trap",
+        "count": "all"
+      },
+      "source_text": "Destroys all of your opponent's Spell and Trap Cards on the field."
+    }
+  ]
+}

@@ -108,14 +108,24 @@ namespace
 		return Fallback;
 	}
 
-	int32 CalendarReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default)
+	int32 CalendarReadClampedInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default, int32 Min, int32 Max)
 	{
-		int32 Value = Default;
-		if (Object.IsValid())
+		double Value = Default;
+		if (Object.IsValid() && Object->TryGetNumberField(Field, Value) && FMath::IsFinite(Value))
 		{
-			Object->TryGetNumberField(Field, Value);
+			return static_cast<int32>(FMath::Clamp(
+				Value, static_cast<double>(Min), static_cast<double>(Max)));
 		}
-		return Value;
+		return Default;
+	}
+
+	int32 CountLeapYearsUpTo(int32 InYear)
+	{
+		if (InYear <= 0)
+		{
+			return 0;
+		}
+		return InYear / 4 - InYear / 100 + InYear / 400;
 	}
 }
 
@@ -192,9 +202,9 @@ bool UDACalendarSubsystem::LoadCalendarData()
 	const TSharedPtr<FJsonObject>* Start = nullptr;
 	if (Root->TryGetObjectField(TEXT("start"), Start) && Start && Start->IsValid())
 	{
-		const int32 StartYear = FMath::Max(1, CalendarReadInt(*Start, TEXT("year"), 1));
-		const int32 StartMonth = FMath::Clamp(CalendarReadInt(*Start, TEXT("month_index"), 0), 0, 11);
-		const int32 StartDay = FMath::Max(1, CalendarReadInt(*Start, TEXT("day"), 7));
+		const int32 StartYear = CalendarReadClampedInt(*Start, TEXT("year"), 1, 1, MaxSupportedYear);
+		const int32 StartMonth = CalendarReadClampedInt(*Start, TEXT("month_index"), 0, 0, 11);
+		const int32 StartDay = CalendarReadClampedInt(*Start, TEXT("day"), 7, 1, 31);
 		EDADayPeriod StartPeriod = EDADayPeriod::AM;
 		FString PeriodText;
 		if ((*Start)->TryGetStringField(TEXT("period"), PeriodText))
@@ -208,9 +218,9 @@ bool UDACalendarSubsystem::LoadCalendarData()
 	if (Root->TryGetObjectField(TEXT("period_hours"), PeriodHoursObject) && PeriodHoursObject && PeriodHoursObject->IsValid())
 	{
 		PeriodHours.SetNum(3);
-		PeriodHours[0] = FMath::Clamp(CalendarReadInt(*PeriodHoursObject, TEXT("AM"), 8), 0, 23);
-		PeriodHours[1] = FMath::Clamp(CalendarReadInt(*PeriodHoursObject, TEXT("PM"), 14), 0, 23);
-		PeriodHours[2] = FMath::Clamp(CalendarReadInt(*PeriodHoursObject, TEXT("Night"), 20), 0, 23);
+		PeriodHours[0] = CalendarReadClampedInt(*PeriodHoursObject, TEXT("AM"), 8, 0, 23);
+		PeriodHours[1] = CalendarReadClampedInt(*PeriodHoursObject, TEXT("PM"), 14, 0, 23);
+		PeriodHours[2] = CalendarReadClampedInt(*PeriodHoursObject, TEXT("Night"), 20, 0, 23);
 		Hour = GetPeriodStartHour(Period);
 	}
 
@@ -227,7 +237,7 @@ bool UDACalendarSubsystem::LoadCalendarData()
 		{
 			ExamWeekRule = StringToExamWeek(WeekText, EDAExamWeekRule::Last);
 		}
-		ExamPassMark = FMath::Max(0, CalendarReadInt(*Exam, TEXT("pass_mark"), 300));
+		ExamPassMark = CalendarReadClampedInt(*Exam, TEXT("pass_mark"), 300, 0, TNumericLimits<int32>::Max());
 	}
 
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded school calendar: year %d, month %s, day %d, exam weekday %s (%s)."),
@@ -313,7 +323,7 @@ void UDACalendarSubsystem::AdvanceDay()
 		if (MonthIndex > 11)
 		{
 			MonthIndex = 0;
-			++Year;
+			Year = FMath::Min(Year + 1, MaxSupportedYear);
 		}
 	}
 	Weekday = ComputeWeekday(Year, MonthIndex, Day);
@@ -334,7 +344,7 @@ bool UDACalendarSubsystem::IsWeekend() const
 
 void UDACalendarSubsystem::ApplyDateInternal(int32 InYear, int32 InMonthIndex, int32 InDay, EDADayPeriod InPeriod)
 {
-	Year = FMath::Max(1, InYear);
+	Year = FMath::Clamp(InYear, 1, MaxSupportedYear);
 	MonthIndex = FMath::Clamp(InMonthIndex, 0, 11);
 	Day = FMath::Clamp(InDay, 1, GetDaysInMonth(Year, MonthIndex));
 	Period = InPeriod;
@@ -387,7 +397,7 @@ int32 UDACalendarSubsystem::GetDaysInMonth(int32 InYear, int32 InMonthIndex) con
 {
 	static const int32 FixedDays[12] = { 31, 30, 31, 31, 28, 31, 30, 31, 30, 31, 31, 30 };
 	const int32 SafeIndex = FMath::Clamp(InMonthIndex, 0, 11);
-	if (SafeIndex == 4 && IsLeapYear(GetCalendarYearForMonth(FMath::Max(1, InYear), SafeIndex)))
+	if (SafeIndex == 4 && IsLeapYear(GetCalendarYearForMonth(FMath::Clamp(InYear, 1, MaxSupportedYear), SafeIndex)))
 	{
 		return 29;
 	}
@@ -437,7 +447,7 @@ FString UDACalendarSubsystem::GetTimeText() const
 
 int32 UDACalendarSubsystem::GetExamDay(int32 InYear, int32 InMonthIndex) const
 {
-	const int32 SafeYear = FMath::Max(1, InYear);
+	const int32 SafeYear = FMath::Clamp(InYear, 1, MaxSupportedYear);
 	const int32 SafeMonth = FMath::Clamp(InMonthIndex, 0, 11);
 	const int32 DaysInMonth = GetDaysInMonth(SafeYear, SafeMonth);
 	const EDADayOfWeek FirstWeekday = ComputeWeekday(SafeYear, SafeMonth, 1);
@@ -469,7 +479,7 @@ bool UDACalendarSubsystem::IsExamDayFor(int32 InYear, int32 InMonthIndex, int32 
 	{
 		return false;
 	}
-	if (InDay < 1 || InDay > GetDaysInMonth(FMath::Max(1, InYear), InMonthIndex))
+	if (InDay < 1 || InDay > GetDaysInMonth(FMath::Clamp(InYear, 1, MaxSupportedYear), InMonthIndex))
 	{
 		return false;
 	}
@@ -481,7 +491,7 @@ bool UDACalendarSubsystem::GetNextExamDate(int32& OutYear, int32& OutMonthIndex,
 	for (int32 Offset = 0; Offset <= 12; ++Offset)
 	{
 		int32 CandidateMonth = MonthIndex + Offset;
-		const int32 CandidateYear = Year + CandidateMonth / 12;
+		const int32 CandidateYear = FMath::Min(Year + CandidateMonth / 12, MaxSupportedYear);
 		CandidateMonth %= 12;
 		const int32 ExamDay = GetExamDay(CandidateYear, CandidateMonth);
 		if (Offset == 0 && ExamDay < Day)
@@ -527,22 +537,21 @@ int32 UDACalendarSubsystem::GetAbsoluteDay() const
 
 int32 UDACalendarSubsystem::GetAbsoluteDayFor(int32 InYear, int32 InMonthIndex, int32 InDay) const
 {
-	const int32 SafeYear = FMath::Max(1, InYear);
+	const int32 SafeYear = FMath::Clamp(InYear, 1, MaxSupportedYear);
 	const int32 SafeMonth = FMath::Clamp(InMonthIndex, 0, 11);
 	const int32 SafeDay = FMath::Clamp(InDay, 1, GetDaysInMonth(SafeYear, SafeMonth));
-	int32 Days = 0;
-	for (int32 YearIndex = 1; YearIndex < SafeYear; ++YearIndex)
-	{
-		// A school year runs October..September; February belongs to the next
-		// calendar year (YearIndex + 1).
-		Days += 365 + (IsLeapYear(YearIndex + 1) ? 1 : 0);
-	}
+
+	// A school year runs October..September; February belongs to the next
+	// calendar year (YearIndex + 1). The leap count for calendar years 2..SafeYear
+	// is leapCount(SafeYear) because calendar year 1 is not a leap year.
+	const int64 LeapDays = CountLeapYearsUpTo(SafeYear);
+	int64 Days = static_cast<int64>(SafeYear - 1) * 365 + LeapDays;
 	for (int32 Month = 0; Month < SafeMonth; ++Month)
 	{
 		Days += GetDaysInMonth(SafeYear, Month);
 	}
 	Days += SafeDay - 1;
-	return Days;
+	return static_cast<int32>(FMath::Clamp<int64>(Days, 0, TNumericLimits<int32>::Max()));
 }
 
 EDADayOfWeek UDACalendarSubsystem::GetWeekdayForDate(int32 InYear, int32 InMonthIndex, int32 InDay) const
@@ -569,7 +578,7 @@ bool UDACalendarSubsystem::IsLeapYear(int32 InYear)
 
 int32 UDACalendarSubsystem::GetCalendarYearForMonth(int32 InYear, int32 InMonthIndex) const
 {
-	return FMath::Max(1, InYear) + (InMonthIndex >= 3 ? 1 : 0);
+	return FMath::Clamp(InYear, 1, MaxSupportedYear) + (InMonthIndex >= 3 ? 1 : 0);
 }
 
 void UDACalendarSubsystem::ParseExamWeekday(const FString& Value)
@@ -633,16 +642,18 @@ bool UDACalendarSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FSt
 	int32 LoadedYear = 1;
 	int32 LoadedMonthIndex = 0;
 	int32 LoadedDay = 7;
-	Source->TryGetNumberField(TEXT("year"), LoadedYear);
-	if (!Source->TryGetNumberField(TEXT("month_index"), LoadedMonthIndex))
+	LoadedYear = CalendarReadClampedInt(Source, TEXT("year"), 1, 1, MaxSupportedYear);
+	double RawMonthIndex = 0.0;
+	if (Source->TryGetNumberField(TEXT("month_index"), RawMonthIndex) && FMath::IsFinite(RawMonthIndex))
 	{
-		int32 MonthNumber = 10;
-		if (Source->TryGetNumberField(TEXT("month"), MonthNumber))
-		{
-			LoadedMonthIndex = ((MonthNumber - 10) % 12 + 12) % 12;
-		}
+		LoadedMonthIndex = static_cast<int32>(FMath::Clamp(RawMonthIndex, 0.0, 11.0));
 	}
-	Source->TryGetNumberField(TEXT("day"), LoadedDay);
+	else
+	{
+		const int32 MonthNumber = CalendarReadClampedInt(Source, TEXT("month"), 10, 1, 12);
+		LoadedMonthIndex = ((MonthNumber - 10) % 12 + 12) % 12;
+	}
+	LoadedDay = CalendarReadClampedInt(Source, TEXT("day"), 7, 1, 31);
 
 	EDADayPeriod LoadedPeriod = EDADayPeriod::AM;
 	FString PeriodText;

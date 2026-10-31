@@ -5,6 +5,7 @@
 #include "DACardRecords.h"
 #include "DADeckLogic.h"
 #include "DAShopSubsystem.h"
+#include "DAStorySubsystem.h"
 #include "DuelAcademyIsland.h"
 
 #include "Dom/JsonObject.h"
@@ -579,6 +580,71 @@ FDAEPackOpenResult UDAInventorySubsystem::PreviewPack(const FString& PackId, int
 	}
 	Result.PackId = Pack->Id;
 	return OpenPackDefinition(*Pack, Seed, false);
+}
+
+FDAEPackOpenResult UDAInventorySubsystem::ConsumePendingPackGrant(const FString& PackId, int32 Seed)
+{
+	FDAEPackOpenResult Result;
+	Result.PackId = PackId;
+	Result.Seed = Seed;
+
+	UGameInstance* GI = GetGameInstance();
+	UDAStorySubsystem* Story = GI ? GI->GetSubsystem<UDAStorySubsystem>() : nullptr;
+	if (!Story)
+	{
+		Result.ErrorCode = TEXT("story_unavailable");
+		Result.ErrorMessage = TEXT("The story pack-grant queue is not available.");
+		return Result;
+	}
+	if (!Story->GetPendingPackGrants().Contains(PackId))
+	{
+		Result.ErrorCode = TEXT("no_pending_grant");
+		Result.ErrorMessage = TEXT("No pending pack grant matches that pack.");
+		return Result;
+	}
+
+	UDAShopSubsystem* Shop = GI ? GI->GetSubsystem<UDAShopSubsystem>() : nullptr;
+	if (!Shop)
+	{
+		Result.ErrorCode = TEXT("shop_unavailable");
+		Result.ErrorMessage = TEXT("The card shop is not available.");
+		return Result;
+	}
+	const FDAEPackDef* Pack = Shop->FindPack(PackId);
+	if (!Pack)
+	{
+		Result.ErrorCode = TEXT("pack_not_found");
+		Result.ErrorMessage = FString::Printf(TEXT("Unknown booster pack '%s'."), *PackId);
+		return Result;
+	}
+
+	const FDAEPackOpenResult OpenResult = OpenPackDefinition(*Pack, Seed, true);
+	if (!OpenResult.bSuccess)
+	{
+		return OpenResult;
+	}
+
+	// Consume the grant only after the cards have been added. If the grant was
+	// already taken by another caller, roll back exactly the copies this call
+	// added so a race cannot duplicate cards.
+	if (!Story->ConsumePendingPackGrant(PackId))
+	{
+		for (int32 Index = OpenResult.Cards.Num() - 1; Index >= 0; --Index)
+		{
+			if (!OpenResult.Cards[Index].bDuplicate)
+			{
+				RemoveCard(OpenResult.Cards[Index].CardId, 1);
+			}
+		}
+		FDAEPackOpenResult Failed = OpenResult;
+		Failed.bSuccess = false;
+		Failed.ErrorCode = TEXT("grant_consume_failed");
+		Failed.ErrorMessage = TEXT("The pending pack grant could not be consumed; the pack was rolled back.");
+		Failed.DPFromDuplicates = 0;
+		return Failed;
+	}
+
+	return OpenResult;
 }
 
 FDAEPackOpenResult UDAInventorySubsystem::OpenPackDefinition(const FDAEPackDef& Pack, int32 Seed, bool bAddToCollection)

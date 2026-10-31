@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 641,
+  "name": "Amazoness Fighter",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "All Battle Damage to this card's controller that he/she takes from a battle involving this monster becomes 0.",
+  "notes": [
+    "Card-specific battle-damage zero."
+  ],
+  "scripts": [
+    {
+      "id": "641_battle_damage_zero",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "battle_damage_zero",
+          "target": "$self"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "All Battle Damage to this card's controller that he/she takes from a battle involving this monster becomes 0."
+    }
+  ]
+}

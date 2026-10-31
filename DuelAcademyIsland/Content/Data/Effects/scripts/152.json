@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 152,
+  "name": "Tremendous Fire",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Inflicts 1000 points of Direct Damage to your opponent's Life Points and 500 points of Direct Damage to your Life Points.",
+  "notes": [
+    "Two fixed damage operations; opponent first, then self."
+  ],
+  "scripts": [
+    {
+      "id": "152_tremendous_fire",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 1000,
+          "player": "opponent",
+          "reason": "Tremendous Fire"
+        },
+        {
+          "op": "inflict_damage",
+          "amount": 500,
+          "player": "self",
+          "reason": "Tremendous Fire"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Inflicts 1000 points of Direct Damage to your opponent's Life Points and 500 points of Direct Damage to your Life Points."
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "card_id": 407,
+  "name": "Exile of the Wicked",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys all face-up Fiend-Type monsters on the field.",
+  "notes": [
+    "All Fiend monsters are destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "407_destroy_type",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Exile of the Wicked"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "all_monsters",
+        "count": "all",
+        "filter": {
+          "all": [
+            {
+              "monster_type": "Fiend",
+              "card_type": "Monster"
+            },
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "Destroys all face-up Fiend-Type monsters on the field."
+    }
+  ]
+}

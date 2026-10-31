@@ -151,9 +151,9 @@ the full effect layer.
 
 `ValidateDeck(Main, Extra)` returns `FDuelDeckValidationResult`:
 
-- Main Deck 40–60; Extra Deck ≤20 (defaults; `MinMain`, `MaxMain`, `MaxExtra`
-  and `MaxCopies` are part of the ruleset and can be overridden by the loaded
-  JSON).
+- Main Deck 40–60; Extra Deck ≤15 (2006 Fusion Deck cap; `MinMain`, `MaxMain`,
+  `MaxExtra` and `MaxCopies` are part of the ruleset, but `LoadBannedListFromJson`
+  clamps `max_extra` to 15 even when an older A06 file advertises 20).
 - At most 3 copies per card id in each deck and ≤3 across both (or
   `MaxCopies` if the ruleset changes it).
 - Extra Deck entries must be Fusion Monsters when the card database is present.
@@ -320,13 +320,134 @@ No pending choice + timing off + legacy traps on is the old 137-card behaviour.
 - `-DADuelRulesSelfTest` — boots the game, waits for the card database, runs all
   checks, logs `PASS:`/`FAIL:` lines and exits.
 - `da.DuelRulesSelfTest` — same checks from the console without exiting.
-- Existing `-DADuelSelfTest` and `da.DuelSelfTest` are untouched.
+- `-DADuelSelfTest` — legacy 24-duel AI-vs-AI smoke, still handled by the HUD.
+- `-DADuelSelfTest=N` — release-gate batch (1–10,000; default 24). The counted
+  form is owned by `UDADuelRulesSelfTestSubsystem` because the legacy HUD switch
+  only matches a bare token; no UI change is required.
+- `da.DuelSelfTest [N]` — same batch from the console (1–10,000; default 24).
 
 Checks cover: choice queue/targeting/disabled options/AI auto-answer, chain link
 ordering and speed rejection, Quick-Play/Counter Trap timing, banned/limited/
 copy/40–60/main-extra validation, banned-list JSON, ante selection/transfer/hook,
 fixed scenario setup/turn limit/timeout, result stats, and a 2-duel smoke run of
 the existing AI-vs-AI harness (must report 0 stalls).
+
+## Release gate (Gate 3 / A04)
+
+Command (no editor build required for the code change; run once a build exists):
+
+```text
+UnrealEditor-Cmd.exe DuelAcademyIsland/DuelAcademyIsland.uproject -game -nullrhi -nosound -unattended -nop4 -DADuelSelfTest=1000 -log -stdout -FullStdOutLogOutput
+```
+
+`Tools/integration/run_smoke.py --duel-selftest --iterations 1000` now emits the
+same `-DADuelSelfTest=1000` command.
+
+### Determinism
+
+- Game `i` uses seed `1200 + i * 37` (0-based, same seed for every run).
+- Player deck rotates `fire` → `water` → `wind`; the opponent is always the
+  `jaden` database deck.
+- Shuffles use `FRandomStream`; no wall clock or HUD input participates.
+- Each game installs the default `Content/Data/Rules/banned_limited.json` list.
+
+### Per-game invariants
+
+Every step of every duel is checked (and again at the final state):
+
+- No stall: the duel must finish before 120 turns / 240 harness steps.
+- No negative Life Points (damage and costs clamp at 0).
+- Zone shape: five Monster slots and five Spell & Trap slots per side; no
+  invalid entries; monsters in Monster Zones, Spells/Traps in Spell & Trap
+  Zones, Field Zone holds a Spell.
+- Conservation: every card owned by a duelist still exists in exactly one zone
+  (deck/hand/field/graveyard/banished/extra); zone control changes do not lose
+  or duplicate cards.
+- No duplicate card instance uids across both sides, and no dangling equipment
+  or tie targets.
+- Card turn stamps (`SummonedTurn`, `SetTurn`, `PositionChangedTurn`,
+  `EffectUsedTurn`) are not in the future; counters/attack counters are not
+  negative.
+- Legal phase transitions: Main 1 → Battle → Main 2, or a new turn starting in
+  Main 1; the Over phase is only reachable after a winner exists.
+- No unanswered choice and no open chain after a step; any open chain is logged
+  and resolved so the rest of the batch can continue.
+- Banlist/copy limits are re-validated for both gate decks before each game.
+- Result statistics finalize the turn count and final Life Points exactly.
+
+### Deck legality pass
+
+Constructed decks (starter/shop decks in `Data/decks.json`, A06 player decks in
+`Data/Decks/player_decks.json`, and every `Data/Opponents/decks/*.json`) are
+checked for 40–60 main, 0–15 Extra, at most three copies, the loaded banlist,
+known card ids, Fusion-only Extra entries, and at least one legal win condition
+(attack-capable monster, Exodia/alternate-win card, or a damage Spell/Trap).
+
+Puzzle files are fixed scenarios, so the 40–60 construction rule does not apply.
+Each `Data/Puzzles/P*.json` is checked for known ids, copy/banlist limits, Extra
+size, and a legal player win condition, then actually constructed through
+`StartScenario` and checked with the same state invariants.
+
+The report is one `[DeckLegality] PASS|FAIL <id> ...` line per constructed deck
+and one `[PuzzleLegality] PASS|FAIL <file>` line per puzzle. A06/A07 data is
+read-only for this gate: failures are reported, never repaired in place.
+
+Current data status (static audit; rerun the command for the authoritative
+result): 6 of 36 constructed decks pass and 30 fail, mostly because many
+opponent decks still run banned/limited staples (`Monster Reborn` 385 is the
+most common). All 100 puzzle boards pass the scenario audit. These are A06/A07
+data findings, not engine regressions.
+
+### Expected output
+
+Legacy/default run:
+
+```text
+Duel self-test: 24 iterations, ... 0 stalls, average turns ..., invariant failures 0, gate deck failures 0, deck audit 6/36, puzzle audit 100/100, elapsed ...s, RESULT PASS
+```
+
+Release gate:
+
+```text
+Duel self-test: 1000 iterations, ... 0 stalls, average turns ..., invariant failures 0, gate deck failures 0, deck audit 6/36, puzzle audit 100/100, elapsed ...s, RESULT PASS
+```
+
+`RESULT PASS` means the engine and invariants passed. It does not mean the
+A06/A07 deck data is legal; the separate deck-audit count is the data sign-off.
+A stall or any invariant failure prints `[DuelSelfTest] ...` details and returns
+`RESULT FAIL`.
+
+### Runtime budget
+
+Target: under 10 minutes for 1,000 duels with `-nullrhi` on a desktop CPU; the
+legacy 24-duel smoke should stay under 30 seconds. The summary prints elapsed
+seconds so the orchestrator can gate on it. The 100-game puzzle probe constructs
+one scenario per file and does not simulate puzzle solutions.
+
+### Remaining coverage / risks
+
+- Legacy 137-card effects still use the automatic resolver; the AI-vs-AI batch
+  does not build arbitrary chain stacks. Chain/timing coverage comes from
+  `-DADuelRulesSelfTest`, and script coverage from `-DAEffectRuntimeSelfTest`.
+- A07 now registers `Content/Data/Opponents/decks/*.json` with
+  `UCardDatabaseSubsystem::RegisterDeck`, so `FDuelEngine::Start` resolves
+  opponent deck ids in addition to `Data/decks.json`. The 31 runtime decks are
+  regenerated from A01 canon data by `Tools/opponents/import_canon_decks.py`.
+- `banned_limited.json` now advertises `max_extra: 15`, and A06's `DADeckLogic`
+  reads that value, so the deck editor and duel engine agree. A06's
+  `DAEconomyTests.cpp` still has 20-card extra assertions and
+  `Tools/economy/sync_canon.py` still writes 20; those A06-owned files need a
+  coordinated update or a later sync run will reintroduce the old value.
+- The release gate is compile-safe only in this lane; a UE build is required to
+  produce the actual 1,000-duel log. No standalone/Python simulation is treated
+  as proof.
+- The counted switch still boots the normal GameInstance to obtain
+  `UCardDatabaseSubsystem`; the duel simulation itself has no world/HUD
+  dependency. A future commandlet could remove that last boot cost.
+- A07's 31 runtime opponent decks are now regenerated from canon data and pass
+  the constructed-deck audit (`Tools/opponents/import_canon_decks.py --check`).
+  The engine still treats deck JSON as read-only; the importer is the only
+  writer.
 
 ## Integration hooks and gaps
 

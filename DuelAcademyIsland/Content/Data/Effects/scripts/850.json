@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "card_id": 850,
+  "name": "Ray of Hope",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select 2 LIGHT monsters from your Graveyard and add them to your Deck. Then shuffle your Deck.",
+  "notes": [
+    "Two LIGHT monsters go to the bottom and the Deck is shuffled."
+  ],
+  "scripts": [
+    {
+      "id": "850_recycle_two_light_monsters",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "return_to_deck",
+          "target": "$target",
+          "reason": "Ray of Hope"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_graveyard",
+        "count": 2,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "attribute": "LIGHT"
+            }
+          ]
+        }
+      },
+      "source_text": "Select 2 LIGHT monsters from your Graveyard and add them to your Deck. Then shuffle your Deck."
+    }
+  ]
+}

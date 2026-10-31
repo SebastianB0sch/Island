@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "card_id": 804,
+  "name": "Hidden Book of Spell",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "You can only activate this card during your turn. Select 2 Spell Cards from your Graveyard and add them to your Deck. Your Deck is then shuffled.",
+  "notes": [
+    "Two Spells go to the bottom and the Deck is shuffled."
+  ],
+  "scripts": [
+    {
+      "id": "804_recycle_two_spells",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "return_to_deck",
+          "target": "$target",
+          "reason": "Hidden Book of Spell"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_graveyard",
+        "count": 2,
+        "filter": {
+          "card_type": "Spell"
+        }
+      },
+      "source_text": "You can only activate this card during your turn. Select 2 Spell Cards from your Graveyard and add them to your Deck. Your Deck is then shuffled."
+    }
+  ]
+}

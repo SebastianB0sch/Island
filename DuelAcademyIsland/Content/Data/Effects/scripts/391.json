@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "card_id": 391,
+  "name": "Reinforcements",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increase 1 selected monster's ATK by 500 points during the turn this card is activated.",
+  "notes": [
+    "Single-target ATK boost until the end of the turn."
+  ],
+  "scripts": [
+    {
+      "id": "391_boost_atk",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$target",
+          "amount": 500,
+          "mode": "flat"
+        }
+      ],
+      "duration": "until_end_of_turn",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1
+      },
+      "source_text": "Increase 1 selected monster's ATK by 500 points during the turn this card is activated."
+    }
+  ]
+}

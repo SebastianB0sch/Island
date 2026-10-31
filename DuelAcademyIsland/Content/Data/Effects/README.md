@@ -8,25 +8,31 @@ Owned by A05 (Cardwright). Runtime code is owned by A04; nothing here edits
 ```text
 Content/Data/Effects/
   schema.json                  JSON Schema (Draft 2020-12) for one card file
-  scripts/<card_id>.json       hand-authored effect scripts
+  scripts/<card_id>.json       card effect scripts (hand-authored + generated)
   tier1_cards.json             explicit Tier 1 reservation list
   card_effect_manifest.json    generated coverage manifest (1,200 entries)
+  coverage_by_deck.json        generated pending-by-reachability report
   fusion_candidates.json       generated review copy of all 76 Fusion recipes
 Content/Data/fusions.json      engine-facing fusion recipes
 Content/Data/rituals.json      engine-facing ritual procedures
+Tools/effects/
+  effect_patterns.py           whole-card recipes + pending-reason taxonomy
+  generate_scripts.py          writes validated scripts from those recipes
+  coverage.py                  reachability report (JSON + markdown)
+  validate_effects.py          schema/manifest/fusion/ritual validator
 ```
 
 Scripts are one file per card. A script file must reproduce the `cards.json`
 description byte-for-byte in `source_text`; the manifest hashes it so drift is
-detected.
+detected. Generated scripts follow the same rule.
 
 ## Status meanings
 
 | Status | Meaning |
 | --- | --- |
 | `scripted` | Data script exists, or the card is in the 137-card regression baseline and has a verified name handler in `DADuelEngine.cpp`. |
-| `vanilla` | No effect text. Generic rules or `fusions.json` / `rituals.json` cover it. |
-| `pending` | Effect text exists but no script/handler yet. |
+| `vanilla` | No standalone effect to script. Normal Monsters use generic rules; effect-free Fusions/Rituals use `fusions.json` / `rituals.json`; specific Ritual Spell procedures are owned by `rituals.json`; summoning-restriction-only monsters have no executable effect. |
+| `pending` | Effect text exists but the whole effect is not covered. `pending_reason_code` names the missing runtime capability. |
 | `unsupported` | Explicit blocker; never allowed in a deck, pack, puzzle, exam or legal list. |
 
 `implementation` is separate from `status`:
@@ -60,13 +66,36 @@ existing usage dataset, for `unsupported` cards.
 ## Commands
 
 ```powershell
+python Tools/effects/generate_scripts.py --check   # show the next rule-based batch
+python Tools/effects/generate_scripts.py --write   # write missing scripts only
 python Tools/effects/build_manifest.py
-python Tools/effects/extract_fusion_recipes.py   # writes fusions.json, rituals.json and fusion_candidates.json
+python Tools/effects/coverage.py                    # writes coverage_by_deck.json + markdown lane report
 python Tools/effects/validate_effects.py
 python Tools/effects/report_coverage.py
 python Tools/effects/audit.py
 python Tools/effects/audit.py --release   # full 1,200-card gate
 ```
+
+Run them in that order after changing a recipe: generate, rebuild the manifest,
+refresh the lane report, then validate. `generate_scripts.py` refuses to
+overwrite an existing file, so hand-authored work is never replaced.
+
+## Generated scripts and pending reasons
+
+`effect_patterns.py` contains whole-card recipes. A card is scripted only when
+every printed clause is represented; partial effects stay `pending`. The
+manifest records `pending_reason_code` and `pending_reason` for every pending
+card, and `coverage.py` groups those rows by story event decks, opponent decks,
+puzzle decks, starter decks, shop packs and the long tail.
+
+At the Gate 3 pass there are 155 validated scripts (10 hand-authored, 145
+generated), 264 `scripted` cards, 343 `vanilla`/data-covered cards and 593
+`pending` cards. The lane report shows that story event opponent decks contain
+92 of the pending cards; the rest are roster-only or shop-only.
+
+`send_to_graveyard` is exposed by `schema.json` for selecting one card and
+sending it to the Graveyard; the A04 runtime already implements
+`send_to_graveyard`/`send_to_grave`.
 
 `audit.py` is idempotent. Baseline mode hard-gates Tier 0/1, manifest integrity,
 usage legality and fusion/ritual accounting; Tier 2/3 backlogs are reported and

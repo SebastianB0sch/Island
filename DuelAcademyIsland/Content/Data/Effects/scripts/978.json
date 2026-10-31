@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "card_id": 978,
+  "name": "Desertapir",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Flip 1 face-up monster on the field into face-down Defense Position. You cannot select \"Desertapir\".",
+  "notes": [
+    "Excludes 'Desertapir' via a negated name filter."
+  ],
+  "scripts": [
+    {
+      "id": "978_flip_turn_monster_down",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "change_position",
+          "target": "$target",
+          "position": "face_down"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "face_up": true
+            },
+            {
+              "not": {
+                "name": "Desertapir"
+              }
+            }
+          ]
+        }
+      },
+      "source_text": "FLIP: Flip 1 face-up monster on the field into face-down Defense Position. You cannot select \"Desertapir\"."
+    }
+  ]
+}

@@ -68,6 +68,12 @@ CARD_KEYS = {
     "deck",
     "banished",
     "extra_deck",
+    "spell_traps",
+    "starter_cards",
+    "reward_cards",
+    "attacker_card_id",
+    "target_card_id",
+    "source_card_id",
 }
 
 FUSION_MATERIAL_PREFIX = re.compile(
@@ -284,6 +290,284 @@ def tier1_ids() -> list[int]:
     return [int(value) for value in payload if isinstance(value, int)]
 
 
+# ---------------------------------------------------------------------------
+# Usage breakdown by content lane
+# ---------------------------------------------------------------------------
+
+USAGE_CATEGORY_ORDER = [
+    "story_event_decks",
+    "opponent_decks",
+    "puzzle_decks",
+    "starter_decks",
+    "shop_packs",
+    "story_rewards",
+    "long_tail",
+]
+
+
+def _ids_from(value) -> set[int]:
+    found: set[int] = set()
+    _collect_ids(value, found)
+    _walk_card_keys(value, found)
+    return found
+
+
+def _safe_load(path: Path):
+    try:
+        return load_json(path)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _starter_breakdown() -> tuple[set[int], dict[str, dict]]:
+    cards: set[int] = set()
+    decks: dict[str, dict] = {}
+    for deck in load_decks():
+        deck_id = str(deck.get("id") or deck.get("name") or "starter")
+        ids = _ids_from(deck.get("cards")) | _ids_from(deck.get("extra"))
+        cards |= ids
+        decks[deck_id] = {
+            "name": deck.get("name") or deck_id,
+            "source": "decks.json",
+            "cards": sorted(ids),
+        }
+    path = DATA / "Decks" / "player_decks.json"
+    payload = _safe_load(path)
+    if isinstance(payload, dict):
+        ids = _ids_from(payload.get("starter_cards"))
+        cards |= ids
+        decks["player_starter"] = {
+            "name": "Player starter",
+            "source": "Decks/player_decks.json",
+            "cards": sorted(ids),
+        }
+        for deck in payload.get("decks", []) or []:
+            if not isinstance(deck, dict):
+                continue
+            deck_id = str(deck.get("id") or deck.get("name") or "player_deck")
+            ids = _ids_from(deck.get("main")) | _ids_from(deck.get("extra"))
+            cards |= ids
+            decks[deck_id] = {
+                "name": deck.get("name") or deck_id,
+                "source": "Decks/player_decks.json",
+                "cards": sorted(ids),
+            }
+    return cards, decks
+
+
+def _story_event_index() -> dict[str, list[dict]]:
+    path = DATA / "Story" / "events.json"
+    payload = _safe_load(path)
+    index: dict[str, list[dict]] = {}
+    if not isinstance(payload, dict):
+        return index
+    for event in payload.get("events", []) or []:
+        if not isinstance(event, dict):
+            continue
+        for duel in event.get("duels", []) or []:
+            if not isinstance(duel, dict):
+                continue
+            deck_id = duel.get("opponent_deck_id")
+            if not isinstance(deck_id, str) or not deck_id:
+                continue
+            index.setdefault(deck_id, []).append(
+                {
+                    "event_id": event.get("id"),
+                    "title": event.get("title"),
+                    "opponent": duel.get("opponent_name") or duel.get("opponent_id"),
+                }
+            )
+    return index
+
+
+def _opponent_breakdown() -> tuple[set[int], set[int], dict[str, dict]]:
+    story_index = _story_event_index()
+    all_cards: set[int] = set()
+    story_cards: set[int] = set()
+    decks: dict[str, dict] = {}
+    deck_dir = DATA / "Opponents" / "decks"
+    if not deck_dir.exists():
+        return all_cards, story_cards, decks
+    for path in sorted(deck_dir.glob("*.json")):
+        payload = _safe_load(path)
+        if not isinstance(payload, dict):
+            continue
+        deck_id = str(payload.get("id") or path.stem)
+        ids = _ids_from(payload.get("cards")) | _ids_from(payload.get("extra")) | _ids_from(
+            payload.get("side")
+        )
+        all_cards |= ids
+        events = story_index.get(deck_id, [])
+        if events:
+            story_cards |= ids
+        decks[deck_id] = {
+            "name": payload.get("name") or deck_id,
+            "opponent": payload.get("opponent"),
+            "source": str(path.relative_to(DATA)).replace("\\", "/"),
+            "events": events,
+            "cards": sorted(ids),
+        }
+    return all_cards, story_cards, decks
+
+
+def _puzzle_breakdown() -> tuple[set[int], dict[str, dict]]:
+    cards: set[int] = set()
+    puzzles: dict[str, dict] = {}
+    puzzle_dir = DATA / "Puzzles"
+    if not puzzle_dir.exists():
+        return cards, puzzles
+    zones = ("hand", "field", "spell_traps", "graveyard", "deck", "extra", "extra_deck", "banished")
+    for path in sorted(puzzle_dir.glob("*.json")):
+        payload = _safe_load(path)
+        if not isinstance(payload, dict):
+            continue
+        ids: set[int] = set()
+        for side_key in ("player", "opponent_state"):
+            state = payload.get(side_key)
+            if not isinstance(state, dict):
+                continue
+            for zone in zones:
+                ids |= _ids_from(state.get(zone))
+        cards |= ids
+        puzzle_id = str(payload.get("id") or path.stem)
+        puzzles[puzzle_id] = {
+            "title": payload.get("title") or puzzle_id,
+            "level": payload.get("level"),
+            "source": str(path.relative_to(DATA)).replace("\\", "/"),
+            "cards": sorted(ids),
+        }
+    return cards, puzzles
+
+
+def _shop_breakdown() -> tuple[set[int], dict[str, dict]]:
+    cards: set[int] = set()
+    packs: dict[str, dict] = {}
+    payload = _safe_load(DATA / "Shop" / "packs.json")
+    if not isinstance(payload, dict):
+        return cards, packs
+    for pack in payload.get("packs", []) or []:
+        if not isinstance(pack, dict):
+            continue
+        pack_id = str(pack.get("id") or pack.get("name") or "pack")
+        ids: set[int] = set()
+        for pool in pack.get("pools", []) or []:
+            if isinstance(pool, dict):
+                ids |= _ids_from(pool.get("cards"))
+        cards |= ids
+        packs[pack_id] = {
+            "name": pack.get("name") or pack_id,
+            "category": pack.get("category"),
+            "source": "Shop/packs.json",
+            "cards": sorted(ids),
+        }
+    return cards, packs
+
+
+def _story_reward_breakdown() -> tuple[set[int], dict[str, dict]]:
+    cards: set[int] = set()
+    events: dict[str, dict] = {}
+    payload = _safe_load(DATA / "Story" / "events.json")
+    if not isinstance(payload, dict):
+        return cards, events
+    for event in payload.get("events", []) or []:
+        if not isinstance(event, dict):
+            continue
+        ids: set[int] = set()
+        for outcome in event.get("outcomes", []) or []:
+            if isinstance(outcome, dict) and outcome.get("type") == "grant_card":
+                ids |= _ids_from(outcome.get("card_id"))
+        ids |= _ids_from(event.get("rewards"))
+        ids |= _ids_from(event.get("reward"))
+        if not ids:
+            continue
+        cards |= ids
+        event_id = str(event.get("id") or event.get("title") or "event")
+        events[event_id] = {
+            "title": event.get("title") or event_id,
+            "cards": sorted(ids),
+        }
+    return cards, events
+
+
+def usage_breakdown() -> dict:
+    """Group card ids by the content lane that makes them reachable.
+
+    The story decks are the opponent deck files referenced by
+    `Story/events.json`.  `opponent_decks` is the full roster.  The priority
+    field assigns each card to the first lane that references it, in the order
+    requested for the A05 backlog.
+    """
+    starter_cards, starter_decks = _starter_breakdown()
+    opponent_cards, story_deck_cards, opponent_decks = _opponent_breakdown()
+    puzzle_cards, puzzles = _puzzle_breakdown()
+    shop_cards, shop_packs = _shop_breakdown()
+    reward_cards, story_rewards = _story_reward_breakdown()
+
+    categories = {
+        "story_event_decks": {"cards": story_deck_cards, "decks": opponent_decks},
+        "opponent_decks": {"cards": opponent_cards, "decks": opponent_decks},
+        "puzzle_decks": {"cards": puzzle_cards, "puzzles": puzzles},
+        "starter_decks": {"cards": starter_cards, "decks": starter_decks},
+        "shop_packs": {"cards": shop_cards, "packs": shop_packs},
+        "story_rewards": {"cards": reward_cards, "events": story_rewards},
+        "long_tail": {"cards": set(), "decks": {}},
+    }
+    all_card_ids = {int(card["id"]) for card in load_cards()}
+    covered_ids: set[int] = set()
+    for name in USAGE_CATEGORY_ORDER:
+        if name == "long_tail":
+            continue
+        covered_ids |= {int(card_id) for card_id in categories[name]["cards"]}
+    categories["long_tail"]["cards"] = all_card_ids - covered_ids
+
+    card_categories: dict[int, set[str]] = {}
+    card_labels: dict[int, set[str]] = {}
+    for name, payload in categories.items():
+        for card_id in payload["cards"]:
+            card_categories.setdefault(int(card_id), set()).add(name)
+
+    for deck_id, deck in opponent_decks.items():
+        for card_id in deck["cards"]:
+            card_labels.setdefault(int(card_id), set()).add(f"deck:{deck_id}")
+            for event in deck.get("events", []):
+                if event.get("event_id"):
+                    card_labels[int(card_id)].add(f"event:{event['event_id']}")
+    for deck_id, deck in starter_decks.items():
+        for card_id in deck["cards"]:
+            card_labels.setdefault(int(card_id), set()).add(f"starter:{deck_id}")
+    for puzzle_id, puzzle in puzzles.items():
+        for card_id in puzzle["cards"]:
+            card_labels.setdefault(int(card_id), set()).add(f"puzzle:{puzzle_id}")
+    for pack_id, pack in shop_packs.items():
+        for card_id in pack["cards"]:
+            card_labels.setdefault(int(card_id), set()).add(f"pack:{pack_id}")
+    for event_id, event in story_rewards.items():
+        for card_id in event["cards"]:
+            card_labels.setdefault(int(card_id), set()).add(f"reward:{event_id}")
+
+    priority: dict[int, str] = {}
+    for name in USAGE_CATEGORY_ORDER:
+        for card_id in sorted(categories[name]["cards"]):
+            priority.setdefault(int(card_id), name)
+
+    # Anything not covered by the five deck lanes falls into the long tail.
+    all_ids: set[int] = set()
+    for payload in categories.values():
+        all_ids |= payload["cards"]
+    for card_id in priority:
+        all_ids.add(card_id)
+    for card_id in sorted(all_ids):
+        priority.setdefault(card_id, "long_tail")
+
+    return {
+        "categories": categories,
+        "card_categories": card_categories,
+        "card_labels": card_labels,
+        "priority": priority,
+    }
+
+
+
 def tier_assignments(cards: list[dict]) -> dict[int, tuple[int, str]]:
     tier0 = deck_ids()
     tier1 = set(tier1_ids())
@@ -353,6 +637,8 @@ def classify_card(
     covered_by = ""
     reason = "effect text not yet scripted"
 
+    import effect_patterns  # local import avoids a cycle at module load
+
     if has_script:
         status = "scripted"
         implementation = "data_script"
@@ -367,6 +653,20 @@ def classify_card(
         implementation = "generic"
         covered_by = "DADuelEngine.cpp:Normal Monster rules"
         reason = "no effect text"
+    elif effect_patterns.ritual_procedure_only(card) and not (
+        tier == 0 and card.get("name") in name_literals
+    ):
+        status = "vanilla"
+        implementation = "generic_ritual"
+        covered_by = "Content/Data/rituals.json"
+        reason = "ritual procedure is data in rituals.json; no standalone effect"
+    elif effect_patterns.summoning_condition_only(card) and not (
+        tier == 0 and card.get("name") in name_literals
+    ):
+        status = "vanilla"
+        implementation = "generic"
+        covered_by = "summoning condition only (no scriptable effect)"
+        reason = "printed text is only a summoning restriction/procedure; no effect to script"
     elif card_type == "Fusion Monster":
         if not fusion_has_effect(card):
             status = "vanilla"
@@ -400,7 +700,7 @@ def classify_card(
         covered_by = "DuelAcademyIsland/Source/DuelAcademyIsland/Private/DADuelEngine.cpp"
         reason = "137-card regression baseline: exact-name handler in DADuelEngine.cpp"
 
-    return {
+    result = {
         "id": card_id,
         "name": card.get("name", ""),
         "type": card_type,
@@ -414,6 +714,11 @@ def classify_card(
         "script_path": script_path_for(card_id),
         "reason": reason,
     }
+    if status == "pending":
+        _, reason_code, detail = effect_patterns.classify_pending(card)
+        result["pending_reason_code"] = reason_code
+        result["pending_reason"] = f"{reason_code}: {detail}"
+    return result
 
 
 def build_manifest_data(cards: list[dict] | None = None) -> dict:
@@ -440,6 +745,27 @@ def build_manifest_data(cards: list[dict] | None = None) -> dict:
     for entry in entries:
         status_counts[entry["status"]] += 1
         tier_counts[entry["tier"]] += 1
+
+    breakdown = usage_breakdown()
+    card_ids = {int(card["id"]) for card in cards}
+    pending_by_priority = {name: [] for name in USAGE_CATEGORY_ORDER}
+    for entry in entries:
+        if entry["status"] != "pending":
+            continue
+        priority = breakdown["priority"].get(int(entry["id"]), "long_tail")
+        pending_by_priority.setdefault(priority, []).append(int(entry["id"]))
+    category_counts = {}
+    for name in USAGE_CATEGORY_ORDER:
+        ids = {int(card_id) for card_id in breakdown["categories"][name]["cards"]} & card_ids
+        pending = [
+            entry["id"] for entry in entries if entry["id"] in ids and entry["status"] == "pending"
+        ]
+        category_counts[name] = {
+            "cards": len(ids),
+            "pending": len(pending),
+            "covered": len(ids) - len(pending),
+        }
+
     return {
         "schema_version": 1,
         "generated_by": "Tools/effects/build_manifest.py",
@@ -454,6 +780,11 @@ def build_manifest_data(cards: list[dict] | None = None) -> dict:
             "total": len(entries),
             "by_status": status_counts,
             "by_tier": {str(key): value for key, value in tier_counts.items()},
+        },
+        "coverage_by_deck": {
+            "priority_order": USAGE_CATEGORY_ORDER,
+            "categories": category_counts,
+            "pending_by_priority": pending_by_priority,
         },
         "cards": entries,
     }

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "card_id": 860,
+  "name": "Witch Doctor of Chaos",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Select 1 Monster Card from you or your opponent's Graveyard. Remove it from play.",
+  "notes": [
+    "Either Graveyard is eligible."
+  ],
+  "scripts": [
+    {
+      "id": "860_flip_banish_grave_monster",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "banish",
+          "target": "$target",
+          "reason": "Witch Doctor of Chaos"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "target": {
+        "zone": "graveyard",
+        "count": 1,
+        "filter": {
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "FLIP: Select 1 Monster Card from you or your opponent's Graveyard. Remove it from play."
+    }
+  ]
+}

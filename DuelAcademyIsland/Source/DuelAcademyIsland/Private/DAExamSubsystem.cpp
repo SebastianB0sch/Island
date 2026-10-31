@@ -99,6 +99,8 @@ bool UDAExamSubsystem::Reload(FString& OutError)
 	ExamSets.Reset();
 	PracticalObjectives.Reset();
 	GradeBands.Reset();
+	Cycles.Reset();
+	CyclesByMonth.Reset();
 	PuzzleIds.Reset();
 	CurrentQuestionIds.Reset();
 	WrittenAnswers.Reset();
@@ -129,6 +131,11 @@ bool UDAExamSubsystem::Reload(FString& OutError)
 		return false;
 	}
 	LoadPuzzleCatalog(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Puzzles")));
+	if (!LoadCyclesFile(FPaths::Combine(ExamRoot, TEXT("exams.json")), Error))
+	{
+		OutError = Error;
+		return false;
+	}
 
 	if (QuestionsById.Num() == 0 || ExamSets.Num() == 0)
 	{
@@ -140,8 +147,8 @@ bool UDAExamSubsystem::Reload(FString& OutError)
 		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("[Exams] Expected 7 practical objectives, found %d."), PracticalObjectives.Num());
 	}
 	bLoaded = true;
-	UE_LOG(LogDuelAcademyIsland, Log, TEXT("[Exams] %d questions, %d exam sets, %d practical objectives, %d puzzles."),
-		QuestionsById.Num(), ExamSets.Num(), PracticalObjectives.Num(), PuzzleIds.Num());
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("[Exams] %d questions, %d exam sets, %d practical objectives, %d puzzles, %d cycles."),
+		QuestionsById.Num(), ExamSets.Num(), PracticalObjectives.Num(), PuzzleIds.Num(), Cycles.Num());
 	return true;
 }
 
@@ -320,6 +327,125 @@ bool UDAExamSubsystem::LoadScoringFile(const FString& Path, FString& OutError)
 	return true;
 }
 
+bool UDAExamSubsystem::LoadCyclesFile(const FString& Path, FString& OutError)
+{
+	TSharedPtr<FJsonValue> Root;
+	if (!ExLoadJson(Path, Root, OutError))
+	{
+		return false;
+	}
+	const TSharedPtr<FJsonObject> Object = Root->AsObject();
+	if (!Object.IsValid())
+	{
+		OutError = TEXT("exams.json root must be an object.");
+		return false;
+	}
+
+	const TArray<TSharedPtr<FJsonValue>>* CycleValues = nullptr;
+	if (!Object->TryGetArrayField(TEXT("cycles"), CycleValues))
+	{
+		OutError = TEXT("exams.json has no cycles array.");
+		return false;
+	}
+
+	TSet<FString> ObjectiveIds;
+	for (const FDAExamPracticalObjective& Objective : PracticalObjectives)
+	{
+		ObjectiveIds.Add(Objective.Id);
+	}
+
+	for (const TSharedPtr<FJsonValue>& Value : *CycleValues)
+	{
+		const TSharedPtr<FJsonObject> CycleObject = Value.IsValid() ? Value->AsObject() : nullptr;
+		if (!CycleObject.IsValid())
+		{
+			OutError = TEXT("exams.json contains a non-object cycle.");
+			return false;
+		}
+
+		FDAExamCycle Cycle;
+		Cycle.MonthIndex = ExReadInt(CycleObject, TEXT("month_index"));
+		Cycle.ExamId = ExReadString(CycleObject, TEXT("exam_id"));
+		Cycle.WrittenSetId = ExReadString(CycleObject, TEXT("written_set_id"));
+		Cycle.TimedPuzzleId = ExReadString(CycleObject, TEXT("timed_puzzle_id"));
+		Cycle.PracticalObjectiveId = ExReadString(CycleObject, TEXT("practical_objective_id"));
+		Cycle.PassMark = ExReadInt(CycleObject, TEXT("pass_mark"), PassMark);
+		Cycle.MaxPoints = ExReadInt(CycleObject, TEXT("max_points"), MaxPoints);
+		ExReadStringArray(CycleObject, TEXT("question_ids"), Cycle.QuestionIds);
+		if (const TSharedPtr<FJsonObject> Scoring = ExReadObject(CycleObject, TEXT("scoring")))
+		{
+			Cycle.PassMark = ExReadInt(Scoring, TEXT("pass_mark"), Cycle.PassMark);
+			Cycle.MaxPoints = ExReadInt(Scoring, TEXT("max_points"), Cycle.MaxPoints);
+		}
+		if (const TSharedPtr<FJsonObject> Reward = ExReadObject(CycleObject, TEXT("reward")))
+		{
+			Cycle.DPReward = ExReadInt(Reward, TEXT("dp"), 0);
+		}
+		Cycle.DPReward = ExReadInt(CycleObject, TEXT("dp_reward"), Cycle.DPReward);
+
+		if (Cycle.MonthIndex < 1 || Cycle.MonthIndex > 12)
+		{
+			OutError = FString::Printf(TEXT("exams.json: invalid month_index %d."), Cycle.MonthIndex);
+			return false;
+		}
+		if (Cycle.ExamId.IsEmpty())
+		{
+			Cycle.ExamId = FString::Printf(TEXT("EXAM_%02d"), Cycle.MonthIndex);
+		}
+		if (Cycle.QuestionIds.Num() != 10)
+		{
+			OutError = FString::Printf(TEXT("exams.json %s: expected 10 question ids, found %d."),
+				*Cycle.ExamId, Cycle.QuestionIds.Num());
+			return false;
+		}
+		for (const FString& QuestionId : Cycle.QuestionIds)
+		{
+			if (!QuestionsById.Contains(QuestionId))
+			{
+				OutError = FString::Printf(TEXT("exams.json %s: unknown question '%s'."),
+					*Cycle.ExamId, *QuestionId);
+				return false;
+			}
+		}
+		if (Cycle.TimedPuzzleId.IsEmpty() || !PuzzleIds.Contains(Cycle.TimedPuzzleId))
+		{
+			OutError = FString::Printf(TEXT("exams.json %s: unknown timed puzzle '%s'."),
+				*Cycle.ExamId, *Cycle.TimedPuzzleId);
+			return false;
+		}
+		if (Cycle.PracticalObjectiveId.IsEmpty() || !ObjectiveIds.Contains(Cycle.PracticalObjectiveId))
+		{
+			OutError = FString::Printf(TEXT("exams.json %s: unknown practical objective '%s'."),
+				*Cycle.ExamId, *Cycle.PracticalObjectiveId);
+			return false;
+		}
+		if (Cycle.PassMark < 0 || Cycle.PassMark > Cycle.MaxPoints || Cycle.MaxPoints <= 0 || Cycle.DPReward < 0)
+		{
+			OutError = FString::Printf(TEXT("exams.json %s: scoring values are invalid."), *Cycle.ExamId);
+			return false;
+		}
+		if (CyclesByMonth.Contains(Cycle.MonthIndex))
+		{
+			OutError = FString::Printf(TEXT("exams.json: duplicate month_index %d."), Cycle.MonthIndex);
+			return false;
+		}
+
+		CyclesByMonth.Add(Cycle.MonthIndex, Cycle);
+		Cycles.Add(MoveTemp(Cycle));
+	}
+
+	Cycles.Sort([](const FDAExamCycle& A, const FDAExamCycle& B)
+	{
+		return A.MonthIndex < B.MonthIndex;
+	});
+	if (Cycles.Num() != 12)
+	{
+		OutError = FString::Printf(TEXT("exams.json: expected 12 cycles, found %d."), Cycles.Num());
+		return false;
+	}
+	return true;
+}
+
 void UDAExamSubsystem::LoadPuzzleCatalog(const FString& Directory)
 {
 	TArray<FString> Files;
@@ -348,8 +474,9 @@ bool UDAExamSubsystem::StartExam(int32 InMonthIndex, int32 InSeed, FString& OutE
 		OutError = FString::Printf(TEXT("Month index %d is outside 1-12."), InMonthIndex);
 		return false;
 	}
+	const FDAExamCycle* Cycle = CyclesByMonth.Find(InMonthIndex);
 	const TArray<FString>* Set = ExamSets.Find(InMonthIndex);
-	if (!Set || Set->Num() == 0)
+	if ((!Cycle || Cycle->QuestionIds.Num() == 0) && (!Set || Set->Num() == 0))
 	{
 		OutError = FString::Printf(TEXT("No exam set for month %d."), InMonthIndex);
 		return false;
@@ -357,7 +484,7 @@ bool UDAExamSubsystem::StartExam(int32 InMonthIndex, int32 InSeed, FString& OutE
 
 	MonthIndex = InMonthIndex;
 	Seed = InSeed;
-	CurrentQuestionIds = *Set;
+	CurrentQuestionIds = Cycle ? Cycle->QuestionIds : *Set;
 	CurrentQuestionIndex = 0;
 	WrittenAnswers.Reset();
 	PracticalProgress.Reset();
@@ -614,8 +741,15 @@ bool UDAExamSubsystem::FinishExam(FDAExamResult& OutResult, FString& OutError)
 	Result.bTimedSolved = bTimedSolved;
 	Result.TimedPoints = bTimedSolved ? TimedMax : 0;
 	Result.PracticalPoints = ScorePractical();
+	Result.DPReward = 0;
+	int32 ActivePassMark = PassMark;
+	if (const FDAExamCycle* Cycle = CyclesByMonth.Find(MonthIndex))
+	{
+		ActivePassMark = Cycle->PassMark;
+		Result.DPReward = Cycle->DPReward;
+	}
 	Result.TotalPoints = Result.WrittenPoints + Result.TimedPoints + Result.PracticalPoints;
-	Result.bPassed = Result.TotalPoints >= PassMark;
+	Result.bPassed = Result.TotalPoints >= ActivePassMark;
 	Result.Grade = GradeForPoints(Result.TotalPoints);
 	Result.TitleOutcome = Result.bPassed ? TEXT("promotion_eligible") : TEXT("Dropout Boy");
 	Result.DormOutcome = Result.bPassed
@@ -684,6 +818,13 @@ FString UDAExamSubsystem::GetExamId() const
 
 FString UDAExamSubsystem::PickTimedPuzzle(int32 InMonthIndex) const
 {
+	if (const FDAExamCycle* Cycle = CyclesByMonth.Find(InMonthIndex))
+	{
+		if (!Cycle->TimedPuzzleId.IsEmpty() && PuzzleIds.Contains(Cycle->TimedPuzzleId))
+		{
+			return Cycle->TimedPuzzleId;
+		}
+	}
 	if (PuzzleIds.Num() == 0)
 	{
 		return FString();

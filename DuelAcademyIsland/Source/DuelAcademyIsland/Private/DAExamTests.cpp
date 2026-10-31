@@ -126,5 +126,65 @@ bool FDAExamScoringTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDAExamCycleTest, "DuelAcademy.Exams.Cycles",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FDAExamCycleTest::RunTest(const FString& Parameters)
+{
+	(void)Parameters;
+	UDAExamSubsystem* Exam = NewObject<UDAExamSubsystem>(GetTransientPackage());
+	if (!TestNotNull(TEXT("Exam subsystem created"), Exam))
+	{
+		return false;
+	}
+	FString Error;
+	if (!TestTrue(TEXT("Exam data loads"), Exam->Reload(Error)))
+	{
+		AddError(Error);
+		return false;
+	}
+
+	TestEqual(TEXT("Twelve authored cycles load"), Exam->GetCycleCount(), 12);
+	for (int32 Month = 1; Month <= 12; ++Month)
+	{
+		const FDAExamCycle* Cycle = Exam->GetCycle(Month);
+		if (!TestTrue(*FString::Printf(TEXT("Month %d cycle exists"), Month), Cycle != nullptr))
+		{
+			continue;
+		}
+		TestEqual(FString::Printf(TEXT("Month %d exam id"), Month), Cycle->ExamId,
+			FString::Printf(TEXT("EXAM_%02d"), Month));
+		TestEqual(FString::Printf(TEXT("Month %d has ten questions"), Month), Cycle->QuestionIds.Num(), 10);
+		TestTrue(FString::Printf(TEXT("Month %d timed puzzle exists"), Month),
+			Exam->GetPuzzleIds().Contains(Cycle->TimedPuzzleId));
+		TestTrue(FString::Printf(TEXT("Month %d practical focus exists"), Month),
+			Exam->GetPracticalObjectives().ContainsByPredicate([Cycle](const FDAExamPracticalObjective& Objective)
+			{
+				return Objective.Id.Equals(Cycle->PracticalObjectiveId, ESearchCase::IgnoreCase);
+			}));
+	}
+
+	TestTrue(TEXT("Month 1 starts"), Exam->StartExam(1, 1234, Error));
+	TestEqual(TEXT("Month 1 selects the authored timed puzzle"),
+		Exam->PickTimedPuzzle(1), Exam->GetCycle(1)->TimedPuzzleId);
+	TestTrue(TEXT("Month 1 question set matches the cycle"),
+		Exam->GetCurrentQuestionIds() == Exam->GetCycle(1)->QuestionIds);
+
+	TestTrue(TEXT("Month 12 starts"), Exam->StartExam(12, 99, Error));
+	TestTrue(TEXT("Month 1 restarts after month 12"), Exam->StartExam(1, 100, Error));
+	TestEqual(TEXT("Rollover exam id"), Exam->GetExamId(), FString(TEXT("EXAM_01")));
+	TestEqual(TEXT("Rollover phase"), static_cast<int32>(Exam->GetPhase()), static_cast<int32>(EDAExamPhase::Written));
+	TestEqual(TEXT("Rollover clears written answers"), Exam->GetAnsweredCount(), 0);
+	TestTrue(TEXT("Rollover clears the timed puzzle"), Exam->GetSelectedPuzzleId().IsEmpty());
+	TestFalse(TEXT("Rollover clears the result"), Exam->HasResult());
+
+	TestFalse(TEXT("Month 0 is rejected"), Exam->StartExam(0, 1, Error));
+	TestFalse(TEXT("Month 13 is rejected"), Exam->StartExam(13, 1, Error));
+	Exam->AbortExam();
+	TestTrue(TEXT("Abort resets to None"), Exam->GetPhase() == EDAExamPhase::None);
+	TestEqual(TEXT("Abort clears the month"), Exam->GetMonthIndex(), 0);
+	return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS
 

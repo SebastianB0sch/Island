@@ -86,7 +86,7 @@ namespace
 	float SettingsReadFloat(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float Default)
 	{
 		double Value = Default;
-		if (Object.IsValid() && Object->TryGetNumberField(Field, Value))
+		if (Object.IsValid() && Object->TryGetNumberField(Field, Value) && FMath::IsFinite(Value))
 		{
 			return static_cast<float>(Value);
 		}
@@ -243,6 +243,10 @@ void UDASettings::SetSubtitles(bool bNewValue)
 
 void UDASettings::SetBgmVolume(float NewVolume)
 {
+	if (!FMath::IsFinite(NewVolume))
+	{
+		return;
+	}
 	const float Clamped = FMath::Clamp(NewVolume, 0.0f, 1.0f);
 	if (FMath::IsNearlyEqual(BgmVolume, Clamped))
 	{
@@ -254,6 +258,10 @@ void UDASettings::SetBgmVolume(float NewVolume)
 
 void UDASettings::SetSfxVolume(float NewVolume)
 {
+	if (!FMath::IsFinite(NewVolume))
+	{
+		return;
+	}
 	const float Clamped = FMath::Clamp(NewVolume, 0.0f, 1.0f);
 	if (FMath::IsNearlyEqual(SfxVolume, Clamped))
 	{

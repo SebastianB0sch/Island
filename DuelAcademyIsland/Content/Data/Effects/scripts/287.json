@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "card_id": 287,
+  "name": "Eternal Draught",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys all Fish-Type monsters on the field.",
+  "notes": [
+    "All Fish monsters are destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "287_destroy_type",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Eternal Draught"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "all_monsters",
+        "count": "all",
+        "filter": {
+          "monster_type": "Fish",
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "Destroys all Fish-Type monsters on the field."
+    }
+  ]
+}

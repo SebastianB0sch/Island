@@ -151,4 +151,7 @@ private:
 	FString CurrentWeekday;
 	FString CurrentPeriod;
 	FString ActiveEvent;
+
+	/** True once a schedule filter has been applied; RefreshSpawnPoints re-runs it. */
+	bool bHasAppliedSchedule = false;
 };

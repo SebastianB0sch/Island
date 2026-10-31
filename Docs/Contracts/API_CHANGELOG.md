@@ -92,6 +92,42 @@ and the canon layer A01 published:
 - `world` coverage now accepts single-segment anchor ids and the A08
   `position_ue`/implicit-location shape while warning about drift.
 
+## v1.0.3 - 2026-10-31 - A07 engine self-tests and exam cycles
+
+Additive, no breaking change:
+
+- `FDAExamCycle` (month, authored question ids, timed puzzle id, practical focus,
+  pass/max points and optional `DPReward`) is loaded from `Exams/exams.json`.
+  `UDAExamSubsystem::StartExam`/`PickTimedPuzzle` now use the authored cycle.
+- `FDAExamResult::DPReward` is added; current content is 0 because no canonical
+  exam DP amount is extracted.
+- New switches `-DAPuzzleSelfTest`, `-DAExamSelfTest`,
+  `-DAPuzzleExamSelfTest` and matching `da.*` console commands prove the 100
+  puzzles and 12 cycles through `FDuelEngine`/`UDAExamSubsystem`. See
+  `Docs/Puzzles/PUZZLE_ENGINE_TESTS.md`.
+- Data corrections: P015 Sets a Trap instead of an Equip Spell (A04
+  `SetSpellTrap` restriction); P047 uses a Level 5 field body to keep ritual
+  tributes deterministic. Canon board/time-limit data and exam DP remain A01
+  gaps.
+
+## v1.0.4 - 2026-10-31 - A07 opponent deck registry and 15-card Extra Deck
+
+Additive, no breaking change:
+
+- `UCardDatabaseSubsystem::RegisterDeck(const FStarterDeckDef&)` is a narrow
+  registry hook for non-starter decks. `FindDeck` resolves both starter and
+  registered decks; `GetDecks()` remains starter-only so the A06 starter UI is
+  unchanged. `UDAOpponentSubsystem::Reload` registers all opponent decks.
+- `Rules/banned_limited.json` now has `max_extra: 15` (2006 Fusion Deck cap).
+  `Docs/Contracts/schemas/decks.schema.json` and A06's rule reader follow the
+  same value. A06's `Tools/economy/sync_canon.py` and
+  `DAEconomyTests.cpp` still contain legacy 20-card values and need a
+  coordinated A06 update.
+- `Content/Data/Opponents/decks/*.json` are regenerated from
+  `Canon/decks.json` by `Tools/opponents/import_canon_decks.py`; runtime ids
+  used by `events.json`/`roster.json` are preserved and canonical ids are
+  recorded as aliases.
+
 ## How to propose a change
 
 1. Add a section here with date, owner, files, reason, compatibility and tests.
