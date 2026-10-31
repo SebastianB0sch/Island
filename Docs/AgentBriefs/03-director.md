@@ -13,7 +13,7 @@ Deliver the complete GBA story as a data-driven, testable event graph: every sce
 - `Content/Data/Canon/events.json`, `dialogue_keys.json`, `emails.json`, `packs.json`, `opponents.json` (A01; stubs until frozen).
 - A02 APIs: profile, calendar, titles, flags, counters, save.
 - A08 anchors/portals/spawn points; A09 dialogue/cutscene UI.
-- Donor: `C:\dev\argh\ue5\Source\DuelAcademy\DialogueNpc.*`, `DuelAcademyGameMode.cpp` (quest/state patterns).
+- Donor: `$GX_ROM\ue5\Source\DuelAcademy\DialogueNpc.*`, `DuelAcademyGameMode.cpp` (quest/state patterns).
 - Public event guide (Appendix D).
 
 ## Owned files

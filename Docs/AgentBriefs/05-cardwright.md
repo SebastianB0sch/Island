@@ -14,7 +14,7 @@ Make every one of the 1,200 cards behave correctly through a data-driven effect 
 - `Content/Data/fusions.json` (currently 5 recipes; expand).
 - A04: effect runtime primitives + script schema + test harness.
 - A01: card text/errata, banned/limited list, puzzle/opponent deck usage.
-- Donor: `C:\dev\argh\ue5\Source\DuelAcademy\DuelEngine.cpp` (137 card handlers), `game3d/src/duel/engine.js`.
+- Donor: `$GX_ROM\ue5\Source\DuelAcademy\DuelEngine.cpp` (137 card handlers), `game3d/src/duel/engine.js`.
 
 ## Owned files
 

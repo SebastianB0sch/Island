@@ -21,7 +21,12 @@ __pycache__/
 *.pyc
 Tools/.cache/
 Tools/.blender_site/
+Tools/canon/.local_only/
+Tools/canon/cache/
 Docs/previews/
+
+# Packaged builds and staging
+Builds/
 
 # OS
 .DS_Store

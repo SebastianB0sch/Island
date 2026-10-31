@@ -12,6 +12,7 @@
 | Item | Result |
 | --- | --- |
 | Build | **Succeeded** - Gate 3 combined build green after integration fixes |
+| Packaged Win64 | **Shipping + Development** archives built; Shipping title screen runs; Development packaged 1,000-duel and puzzle/exam suites pass |
 | `-DAProfileSelfTest` | **182 checks, 0 failures** (save round-trip, backup recovery, corruption, migration) |
 | `-DASaveFuzz=10000` | **10,000 states, 1,000 corruption cases, 200 migrations, 1,800,212 checks, 0 failures**, max save 5,634 bytes |
 | `-DATwelveMonthTest` | **365 days / 12 months, 10,947 checks, 0 failures**; leap year and month rollover verified |
@@ -98,8 +99,9 @@ the lane directories. Canon is reference; runtime is what the game loads.
    and key, but exact GBA text remains local-only; runtime uses the paraphrased
    scaffold and the deepest choice/history/portrait presentation still needs an
    A09 pass.
-3. **Release audits:** packaged build, performance profile, legal/credits audit
-   and the strict validator gate have not been run (A10).
+3. **Release audits:** packaged Win64 archives now build and launch; the
+   performance profile, legal/credits staging and strict validator gate remain
+   (A10).
 
 ### P1 - integration debt
 
@@ -136,8 +138,8 @@ the lane directories. Canon is reference; runtime is what the game loads.
 | **Gate 1** | Opening -> registration -> Slifer -> Banner DP -> Syrus tutorial -> free-roam save | **partial** | Opening 14/14, 35/35 campaign playthrough, interiors/portal 188/188, gameplay UI screenshots. Exact dialogue presentation remains. |
 | **Gate 2** | Systems testable; 12-month fast-forward; 1,000 AI duels; 100 puzzles; save fuzz | **met** | 1,000 duels 0 stalls/0 invariants, 100/100 puzzles, 12/12 exams, 10,000-state fuzz, 12-month 10,947 checks. |
 | **Gate 3** | 33+ events, 48 packs, 100 puzzles, 12 exams, 1,200 cards, Tier-2 effects | **not met** | All content counts met; 591 effects remain pending. E02-E33 playthrough, 100 puzzles, 12 exams and 48 packs are proven. |
-| **Gate 4** | RC criteria, no P0/P1, playthrough, performance | **not started** | - |
-| **Gate 5** | Packaged build, legal audit, credits, tag | **not started** | - |
+| **Gate 4** | RC criteria, no P0/P1, playthrough, performance | **partial** | Packaged Development/Shipping builds launch; 1,000-duel/puzzle/exam packaged suites pass. Performance profile and deeper UI interaction QA remain. |
+| **Gate 5** | Packaged build, legal audit, credits, tag | **partial** | Packages built; legal audit in `Docs/LEGAL_AUDIT.md`; credits/notices need staging; tag not created. |
 
 ---
 
@@ -270,3 +272,4 @@ change only through A10.
 | 2026-10-31 | Fixed unity-build JSON helper collisions, effect-trigger enum mismatch, Python native class names and bool property names; rebuilt the level (1,134 actors). | A10 |
 | 2026-10-31 | Added `-DAPortalTest`; fixed the fall-out-of-world rescue swallowing interior arrivals; 188/188 portal checks pass and the classroom screenshot is captured. | A10 |
 | 2026-10-31 | Gate 3: canon decks 37/16 complete, 155 effect scripts, runtime decks 36/36 legal, 1,000 duels 0 stalls, 35/35 campaign events, 100/100 puzzles, 12/12 exams, NPC 414/414, 10k save fuzz and 12-month sim clean. | A10 |
+| 2026-10-31 | Packaged Shipping/Development Win64; fixed unity-build collisions, static-init crashes and packaged story path; packaged 1,000-duel and puzzle/exam suites pass. | A10 |

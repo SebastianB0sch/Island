@@ -12,8 +12,8 @@ Turn the current 137-card friendly engine into a complete, tested 2006-era rules
 
 - `DuelAcademyIsland/Source/DuelAcademyIsland/Public/DADuelEngine.h`
 - `.../Private/DADuelEngine.cpp` (current monolith)
-- `C:\dev\argh\game3d\src\duel\engine.js` (reference rules + 22 tests)
-- `C:\dev\argh\ue5\Source\DuelAcademy\DuelEngine.*` (native donor, 137 cards)
+- `$GX_ROM\game3d\src\duel\engine.js` (reference rules + 22 tests)
+- `$GX_ROM\ue5\Source\DuelAcademy\DuelEngine.*` (native donor, 137 cards)
 - A01: `banned_list.json`, `dp_rules.json`, puzzle/exam rules.
 - A05: effect runtime/scripts (joint contract).
 

@@ -12,7 +12,7 @@ Make the player, the school year and the save data real. Every other lane depend
 
 - `Docs/Canon/calendar.json`, `titles.json`, `dp_rules.json` (from A01; use stubs until frozen).
 - Target: `DAStudentCharacter.*`, `DAIslandManager.*`, `DAHUD.*`, `DAGameMode.*`.
-- Donor: `C:\dev\argh\ue5\Source\DuelAcademy\DuelAcademyGameMode.*` (quest state patterns), save crypto `romhack/save_crypto.py` (reference only).
+- Donor: `$GX_ROM\ue5\Source\DuelAcademy\DuelAcademyGameMode.*` (quest state patterns), save crypto `romhack/save_crypto.py` (reference only).
 
 ## Owned files
 

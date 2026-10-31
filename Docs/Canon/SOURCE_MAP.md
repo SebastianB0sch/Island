@@ -6,7 +6,7 @@
 > **Header:** title `YUGIOHGXDA`, game code `BYGE`, maker `A4`.
 > **Target:** `DuelAcademyIsland/Content/Data/cards.json` (1,200 records).
 
-The ROM stays at `C:\dev\argh\...` and is read in place. No ROM, save file,
+The ROM stays at `$GX_ROM\...` and is read in place. No ROM, save file,
 emulator binary or extracted art is copied or committed by this toolkit.
 
 ---

@@ -1786,23 +1786,23 @@ LogConfig: Set CVar [[fx.NiagaraAllowRuntimeScalabilityChanges:1]]
 [2026.10.30-17.19.45:011][  0]LogDesktopPlatform: Enumerating Projects From Engine Ver: 5.8
 [2026.10.30-17.19.45:011][  0]LogDesktopPlatform: Looking for directories to scan from : C:/Users/Sebas/AppData/Local/UnrealEngine/5.8/Saved/Config/WindowsEditor
 [2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Searching for previously created project directories...
-[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found directory: "C:/dev/argh"
-[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found project "(ProjectName="C:/dev/argh/ue5-stable/DuelAcademy.uproject",LastOpenTime=2026.10.25-17.19.19)" in recently opened files
-[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found project "(ProjectName="C:/dev/argh/ue5-stable-v2/DuelAcademy.uproject",LastOpenTime=2026.10.25-21.16.50)" in recently opened files
-[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found project "(ProjectName="C:/dev/argh/ue5/DuelAcademy.uproject",LastOpenTime=2026.10.27-18.46.26)" in recently opened files
+[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found directory: "$GX_ROM"
+[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found project "(ProjectName="$GX_ROM/ue5-stable/DuelAcademy.uproject",LastOpenTime=2026.10.25-17.19.19)" in recently opened files
+[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found project "(ProjectName="$GX_ROM/ue5-stable-v2/DuelAcademy.uproject",LastOpenTime=2026.10.25-21.16.50)" in recently opened files
+[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found project "(ProjectName="$GX_ROM/ue5/DuelAcademy.uproject",LastOpenTime=2026.10.27-18.46.26)" in recently opened files
 [2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found project "(ProjectName="C:/dev/GX/DuelAcademyIsland/DuelAcademyIsland.uproject",LastOpenTime=2026.10.30-17.19.43)" in recently opened files
-[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found project "C:/dev/argh/ue5/DuelAcademy.uproject" in previously created project directory
+[2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Found project "$GX_ROM/ue5/DuelAcademy.uproject" in previously created project directory
 [2026.10.30-17.19.45:012][  0]LogDesktopPlatform: Searching for projects in .uprojectdirs
 [2026.10.30-17.19.45:013][  0]LogProjectBrowser: Enumerating Launcher Sample Projects...
 [2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Enumerating Projects From Engine Ver: 5.8
 [2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Looking for directories to scan from : C:/Users/Sebas/AppData/Local/UnrealEngine/5.8/Saved/Config/WindowsEditor
 [2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Searching for previously created project directories...
-[2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Found directory: "C:/dev/argh"
-[2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Found project "(ProjectName="C:/dev/argh/ue5-stable/DuelAcademy.uproject",LastOpenTime=2026.10.25-17.19.19)" in recently opened files
-[2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Found project "(ProjectName="C:/dev/argh/ue5-stable-v2/DuelAcademy.uproject",LastOpenTime=2026.10.25-21.16.50)" in recently opened files
-[2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Found project "(ProjectName="C:/dev/argh/ue5/DuelAcademy.uproject",LastOpenTime=2026.10.27-18.46.26)" in recently opened files
+[2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Found directory: "$GX_ROM"
+[2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Found project "(ProjectName="$GX_ROM/ue5-stable/DuelAcademy.uproject",LastOpenTime=2026.10.25-17.19.19)" in recently opened files
+[2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Found project "(ProjectName="$GX_ROM/ue5-stable-v2/DuelAcademy.uproject",LastOpenTime=2026.10.25-21.16.50)" in recently opened files
+[2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Found project "(ProjectName="$GX_ROM/ue5/DuelAcademy.uproject",LastOpenTime=2026.10.27-18.46.26)" in recently opened files
 [2026.10.30-17.19.45:015][  0]LogDesktopPlatform: Found project "(ProjectName="C:/dev/GX/DuelAcademyIsland/DuelAcademyIsland.uproject",LastOpenTime=2026.10.30-17.19.43)" in recently opened files
-[2026.10.30-17.19.45:016][  0]LogDesktopPlatform: Found project "C:/dev/argh/ue5/DuelAcademy.uproject" in previously created project directory
+[2026.10.30-17.19.45:016][  0]LogDesktopPlatform: Found project "$GX_ROM/ue5/DuelAcademy.uproject" in previously created project directory
 [2026.10.30-17.19.45:016][  0]LogDesktopPlatform: Searching for projects in .uprojectdirs
 [2026.10.30-17.19.45:019][  0]LogPlacementMode: Display: The Asset Registry is not yet fully loaded so some placeable classes might be missing.
 [2026.10.30-17.19.45:035][  0]LogModuleManager: InternalLoadLibrary: 'UnsavedAssetsTracker' ('C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor-UnsavedAssetsTracker.dll')

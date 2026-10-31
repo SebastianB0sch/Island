@@ -15,7 +15,7 @@ Make the port feel like a complete game: every screen, every line, every reward,
 - A03: story commands + text keys.
 - A06: inventory/shop/deck APIs; A07: opponent/exam/puzzle payloads.
 - A01: portrait manifest, UI strings.
-- Donor: `C:\dev\argh\ue5\Source\DuelAcademy\DuelAcademyHUD.*` (dialogue/deck/duel screens), `CharacterPortraitSubsystem.*`.
+- Donor: `$GX_ROM\ue5\Source\DuelAcademy\DuelAcademyHUD.*` (dialogue/deck/duel screens), `CharacterPortraitSubsystem.*`.
 
 ## Owned files
 

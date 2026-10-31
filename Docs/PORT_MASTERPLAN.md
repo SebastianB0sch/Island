@@ -1,7 +1,7 @@
 # Duel Academy GBA → DuelAcademyIsland — Port Masterplan
 
 > **Status:** planning document, not yet dispatched.
-> **Source of the original game:** `C:\dev\argh` (GBA ROM, ROM toolkit, Three.js reference, older UE5 donor).
+> **Source of the original game:** `$GX_ROM` (GBA ROM, ROM toolkit, Three.js reference, older UE5 donor).
 > **Target game:** `C:\dev\GX` (`DuelAcademyIsland`, Unreal Engine 5.8, C++).
 > **Goal:** port the complete single-player story and functionality of *Yu-Gi-Oh! GX: Duel Academy* (GBA) into the 3D island, not just the first Jaden duel.
 
@@ -110,7 +110,7 @@ These are the only intentional deviations from a 1:1 GBA port. Everything else s
 
 **Important:** the target working tree currently contains substantial uncommitted work (duel engine, data, cast, HUD changes). **Do not let subagents start from a dirty tree.** See §10.
 
-### 2.2 Source: `C:\dev\argh`
+### 2.2 Source: `$GX_ROM`
 
 - **ROM toolkit** (`decompress_rom.py`, `romhack/`): card extraction/reinjection, portraits/faces, save crypto, compressed-block research.
 - **Three.js reference** (`game3d/`): 1,200-card database, canonical starter deck lists, Jaden deck, a 22-test headless duel engine and duel UI. It is the behavioural reference for rules.
@@ -978,9 +978,9 @@ A01 and A10 can run for the entire program; A05 and A07 are the longest content 
 
 ### D.3 Donor code
 
-- Rules reference: `C:\dev\argh\game3d\src\duel\engine.js`, `decklists.js`, `ui.js`.
-- Native duel reference: `C:\dev\argh\ue5\Source\DuelAcademy\DuelEngine.*`, `DuelAcademyHUD.*`.
-- Interiors: `C:\dev\argh\ue5\Source\DuelAcademy\AcademyInterior.cpp`, `SliferDorm.cpp`.
+- Rules reference: `$GX_ROM\game3d\src\duel\engine.js`, `decklists.js`, `ui.js`.
+- Native duel reference: `$GX_ROM\ue5\Source\DuelAcademy\DuelEngine.*`, `DuelAcademyHUD.*`.
+- Interiors: `$GX_ROM\ue5\Source\DuelAcademy\AcademyInterior.cpp`, `SliferDorm.cpp`.
 - Dialogue/NPC: `DialogueNpc.*`, `DuelAcademyGameMode.cpp`.
 - Audio: `DuelAcademyAudio.*`, `docs/audio/AUDIO_GUIDE.md`.
 - Art/layout: `art/world.layout.json`, `docs/art/*`.
