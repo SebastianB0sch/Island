@@ -321,7 +321,7 @@ class Placer:
         self.npc_director()
 
     def portals(self):
-        cls = C.native_class("ADAInteriorPortal")
+        cls = C.native_class("DAInteriorPortal")
         if cls is None:
             C.warn("ADAInteriorPortal missing - interior portals skipped")
             return
@@ -344,22 +344,22 @@ class Placer:
                         target_location=self.loc(p.get("target_location_ue", [0, 0, 0])),
                         target_yaw=self.yaw(p.get("target_yaw", 0.0)),
                         trigger_extent=C.vec(p.get("trigger_extent", [110, 110, 120])),
-                        b_auto_trigger=bool(p.get("auto_trigger", True)),
-                        b_interactable=bool(p.get("interactable", True)),
+                        auto_trigger=bool(p.get("auto_trigger", True)),
+                        interactable=bool(p.get("interactable", True)),
                         display_name=p.get("display_name", "Door"),
                         prompt=p.get("prompt", "Enter"),
                         cooldown_seconds=float(p.get("cooldown", 1.5)),
                         fade_out_seconds=float(fade.get("out", 0.35)),
                         fade_in_seconds=float(fade.get("in", 0.35)),
                         fade_color=C.lc(fade.get("color", [0, 0, 0, 1])),
-                        b_locked=bool(lock.get("locked", False)),
+                        locked=bool(lock.get("locked", False)),
                         required_flag=str(lock.get("required_flag", "")),
-                        b_fail_closed_when_flag_query_missing=bool(lock.get("fail_closed", False)),
+                        fail_closed_when_flag_query_missing=bool(lock.get("fail_closed", False)),
                         lock_reason=str(lock.get("reason", "This door is locked.")),
-                        b_return_portal=bool(p.get("return_portal", False)))
+                        return_portal=bool(p.get("return_portal", False)))
 
     def scene_anchors(self):
-        cls = C.native_class("ADASceneAnchor")
+        cls = C.native_class("DASceneAnchor")
         if cls is None:
             C.warn("ADASceneAnchor missing - scene anchors skipped")
             return
@@ -380,7 +380,7 @@ class Placer:
             look_at = entry.get("look_at_ue")
             props = dict(anchor_id=entry.get("id", ""),
                          fov=float(entry.get("fov", 50.0)),
-                         b_use_look_at=bool(look_at),
+                         use_look_at=bool(look_at),
                          anchor_tags=list(entry.get("tags", [])),
                          description=entry.get("notes", ""))
             if kind is not None:
@@ -390,7 +390,7 @@ class Placer:
             C.set_props(a, **props)
 
     def npc_spawn_points(self):
-        cls = C.native_class("ADANpcSpawnPoint")
+        cls = C.native_class("DANpcSpawnPoint")
         if cls is None:
             C.warn("ADANpcSpawnPoint missing - schedule spawns skipped")
             return
@@ -418,8 +418,8 @@ class Placer:
                          spawn_role=s.get("role", "student"),
                          wander_radius=float(s.get("wander_radius_cm", 500.0)),
                          event_override=s.get("event_override", ""),
-                         b_enabled=True,
-                         b_spawn_on_begin_play=bool(s.get("spawn_on_begin_play", False)),
+                         enabled=True,
+                         spawn_on_begin_play=bool(s.get("spawn_on_begin_play", False)),
                          spawn_z_offset=float(s.get("spawn_z_offset_cm", 90.0)),
                          display_name=s.get("display_name", ""))
             if dorm is not None:
@@ -427,15 +427,15 @@ class Placer:
             C.set_props(a, **props)
 
     def npc_director(self):
-        cls = C.native_class("ADANpcDirector")
+        cls = C.native_class("DANpcDirector")
         if cls is None:
             C.warn("ADANpcDirector missing - schedule director skipped")
             return
         a = self.spawn(cls, unreal.Vector(0, 0, 0), 0.0, "NPCDirector", "Gameplay/npcs")
         if a is None:
             return
-        npc_cls = C.native_class("ADAStudentNPC")
-        props = dict(b_auto_register_spawn_points=True, b_auto_apply_on_begin_play=False)
+        npc_cls = C.native_class("DAStudentNPC")
+        props = dict(auto_register_spawn_points=True, auto_apply_on_begin_play=False)
         if npc_cls is not None:
             props["default_npc_class"] = npc_cls
         C.set_props(a, **props)
