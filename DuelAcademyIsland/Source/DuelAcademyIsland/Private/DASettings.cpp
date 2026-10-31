@@ -83,7 +83,7 @@ namespace
 		return Fallback;
 	}
 
-	float ReadFloat(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float Default)
+	float SettingsReadFloat(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float Default)
 	{
 		double Value = Default;
 		if (Object.IsValid() && Object->TryGetNumberField(Field, Value))
@@ -365,8 +365,8 @@ bool UDASettings::ReadJson(const TSharedPtr<FJsonObject>& Root, FString& OutErro
 		TextSpeed = StringToTextSpeed(TextSpeedText, TextSpeed);
 	}
 
-	BgmVolume = FMath::Clamp(ReadFloat(Root, TEXT("bgm_volume"), BgmVolume), 0.0f, 1.0f);
-	SfxVolume = FMath::Clamp(ReadFloat(Root, TEXT("sfx_volume"), SfxVolume), 0.0f, 1.0f);
+	BgmVolume = FMath::Clamp(SettingsReadFloat(Root, TEXT("bgm_volume"), BgmVolume), 0.0f, 1.0f);
+	SfxVolume = FMath::Clamp(SettingsReadFloat(Root, TEXT("sfx_volume"), SfxVolume), 0.0f, 1.0f);
 	Root->TryGetBoolField(TEXT("subtitles"), bSubtitles);
 
 	FString Language;

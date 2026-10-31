@@ -42,7 +42,7 @@ namespace
 		return bValue;
 	}
 
-	void ReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& Out)
+	void OppReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& Out)
 	{
 		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
 		if (Object.IsValid() && Object->TryGetArrayField(Field, Values))
@@ -213,16 +213,16 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 			continue;
 		}
 		Duelist.Name = OppReadString(Object, TEXT("name"));
-		ReadStringArray(Object, TEXT("aliases"), Duelist.Aliases);
+		OppReadStringArray(Object, TEXT("aliases"), Duelist.Aliases);
 		Duelist.Role = OppReadString(Object, TEXT("role"));
 		Duelist.Rank = OppReadInt(Object, TEXT("rank"));
 		Duelist.Dorm = OppReadString(Object, TEXT("dorm"));
 		Duelist.Year = OppReadInt(Object, TEXT("year"), 1);
 		Duelist.Title = OppReadString(Object, TEXT("title"));
 		Duelist.AIProfile = OppReadString(Object, TEXT("ai_profile"));
-		ReadStringArray(Object, TEXT("decks"), Duelist.Decks);
+		OppReadStringArray(Object, TEXT("decks"), Duelist.Decks);
 		ReadIntArray(Object, TEXT("signature_card_ids"), Duelist.SignatureCardIds);
-		ReadStringArray(Object, TEXT("signature_cards"), Duelist.SignatureCards);
+		OppReadStringArray(Object, TEXT("signature_cards"), Duelist.SignatureCards);
 		ReadIntArray(Object, TEXT("canon_gift_card_ids"), Duelist.CanonGiftCardIds);
 		Duelist.CanonSource = OppReadString(Object, TEXT("canon_source"));
 		Duelist.CanonConfidence = OppReadString(Object, TEXT("canon_confidence"));
@@ -283,8 +283,8 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 					continue;
 				}
 				FDAOpponentScheduleSlot Slot;
-				ReadStringArray(ScheduleObject, TEXT("weekdays"), Slot.Weekdays);
-				ReadStringArray(ScheduleObject, TEXT("periods"), Slot.Periods);
+				OppReadStringArray(ScheduleObject, TEXT("weekdays"), Slot.Weekdays);
+				OppReadStringArray(ScheduleObject, TEXT("periods"), Slot.Periods);
 				Slot.Zone = OppReadString(ScheduleObject, TEXT("zone"));
 				Slot.Interior = OppReadString(ScheduleObject, TEXT("interior"));
 				Duelist.Schedule.Add(MoveTemp(Slot));
@@ -357,7 +357,7 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 		{
 			Duelist.WalkHome.bEnabled = OppReadBool(WalkObject, TEXT("enabled"));
 			Duelist.WalkHome.Zone = OppReadString(WalkObject, TEXT("zone"));
-			ReadStringArray(WalkObject, TEXT("weekdays"), Duelist.WalkHome.Weekdays);
+			OppReadStringArray(WalkObject, TEXT("weekdays"), Duelist.WalkHome.Weekdays);
 			Duelist.WalkHome.Period = OppReadString(WalkObject, TEXT("period"));
 			Duelist.WalkHome.Flag = OppReadString(WalkObject, TEXT("flag"));
 			Duelist.WalkHome.Confidence = OppReadString(WalkObject, TEXT("confidence"));
@@ -472,8 +472,8 @@ void UDAOpponentSubsystem::LoadAIProfileDirectory(const FString& Directory, TArr
 		ReadNumberMap(Object, TEXT("weights"), Profile.Weights);
 		ReadNumberMap(Object, TEXT("thresholds"), Profile.Thresholds);
 		ReadBoolMap(Object, TEXT("thresholds"), Profile.BoolThresholds);
-		ReadStringArray(Object, TEXT("preferred_card_names"), Profile.PreferredCardNames);
-		ReadStringArray(Object, TEXT("avoid_card_names"), Profile.AvoidCardNames);
+		OppReadStringArray(Object, TEXT("preferred_card_names"), Profile.PreferredCardNames);
+		OppReadStringArray(Object, TEXT("avoid_card_names"), Profile.AvoidCardNames);
 		Profile.Confidence = OppReadString(Object, TEXT("confidence"));
 		Profile.Source = OppReadString(Object, TEXT("source"));
 		Profile.Notes = OppReadString(Object, TEXT("notes"));
