@@ -1094,6 +1094,14 @@ void FDADuelUI::PumpDuelVisualEvents(float DeltaSeconds)
 		DuelIncomingEvents.Append(NewEvents);
 	}
 
+	// Hold the presentation reel while the duel is waiting for an answer.  A
+	// card flight or banner playing under the choice panel made the target
+	// frames drift away from the cards and stole focus from the question.
+	if (DuelEngine->HasPendingChoice())
+	{
+		return;
+	}
+
 	DuelEventPumpTimer -= DeltaSeconds;
 	if (DuelEventPumpTimer > 0.0f || DuelIncomingEvents.Num() == 0)
 	{
@@ -1813,8 +1821,11 @@ void FDADuelUI::RefreshDuelChoiceState()
 		DuelChoicePage = 0;
 		DuelChoiceSelected.Reset();
 		// The choice is the focus now.  Clear presentation beats that would
-		// otherwise draw large labels and lines across the target cards.
+		// otherwise draw large labels and lines across the target cards, and
+		// drop stale action errors from before the prompt appeared.
 		SkipDuelPresentation();
+		DuelMessage.Empty();
+		DuelMessageTimer = 0.0f;
 	}
 
 	DuelChoiceCardUids.Reset();
@@ -2035,8 +2046,20 @@ void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString&
 		}
 		if (Action == TEXT("select") && Value != 0)
 		{
+			// Prefer an enabled option if the same card appears more than once
+			// (for example, different modes of the same target).  Fall back to
+			// a disabled one so its reason is shown instead of swallowing the
+			// click.
 			const FDuelChoiceOption* Option = Request->Options.FindByPredicate(
-				[Value](const FDuelChoiceOption& Candidate) { return Candidate.CardUid == Value; });
+				[Value](const FDuelChoiceOption& Candidate)
+				{
+					return Candidate.CardUid == Value && Candidate.bEnabled;
+				});
+			if (!Option)
+			{
+				Option = Request->Options.FindByPredicate(
+					[Value](const FDuelChoiceOption& Candidate) { return Candidate.CardUid == Value; });
+			}
 			if (Option)
 			{
 				HandleDuelChoiceOption(Option->Id);
@@ -3022,15 +3045,10 @@ void FDADuelUI::TriggerDuelCutIn(EDuelOwner Side, const FString& Expression, con
 	if (DuelCutInTime > 0.0f)
 	{
 		const bool bOtherSide = Side != DuelCutInSide;
-		const bool bFresh = DuelCutInAge < 0.38f;
 		const bool bHigher = Priority > DuelCutInPriority;
 		const bool bCounterBeat = bOtherSide && Priority >= 50 && DuelCutInAge > 0.32f;
 		const bool bSameBeat = Priority == DuelCutInPriority && DuelCutInAge > 0.45f;
-		if (!bHigher && !bCounterBeat && !bSameBeat && !bFresh)
-		{
-			return;
-		}
-		if (!bHigher && !bCounterBeat && !bSameBeat && bFresh)
+		if (!bHigher && !bCounterBeat && !bSameBeat)
 		{
 			return;
 		}
@@ -3678,12 +3696,13 @@ void FDADuelUI::DrawDuelChoice()
 	{
 		return;
 	}
-	RefreshDuelChoiceState();
 
 	// Dim the board slightly, but leave the cards visible and clickable so the
 	// player can answer target choices by clicking the monster itself.
 	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.42f), 0.0f, 0.0f, Canvas->ClipX, Canvas->ClipY);
 
+	// Keep these rects in sync with the card layout in DrawDuelActive; the
+	// frames must sit directly on the cards the player can click.
 	auto FindBoardCardRect = [this](int32 Uid, float& OutX, float& OutY, float& OutW, float& OutH) -> bool
 	{
 		if (Uid == 0)
@@ -3888,9 +3907,28 @@ void FDADuelUI::DrawDuelChoice()
 			true, FLinearColor(0.72f, 0.42f, 0.38f));
 	}
 
+	FString KeyHint = TEXT("1-8  SELECT");
+	if (Request->MaxSelections > 1)
+	{
+		KeyHint += TEXT("     ENTER  CONFIRM");
+	}
+	if (Request->bCancellable)
+	{
+		KeyHint += TEXT("     ESC  CANCEL");
+	}
+	DrawShadowText(KeyHint, Muted, DX(X + W * 0.5f), DY(Y + H - 46.0f),
+		GetFont(false), 0.42f * DuelScale, true);
+
 	const bool bCanClickCards = DuelChoiceCardUids.Num() > 0;
-	DrawShadowText(bCanClickCards ? TEXT("Click a highlighted card or an option.")
-		: TEXT("Choose an option to continue."), Muted,
+	FString ChoiceHint = bCanClickCards ? TEXT("Click a highlighted card or an option.")
+		: TEXT("Choose an option to continue.");
+	FLinearColor ChoiceHintColor = Muted;
+	if (DuelMessageTimer > 0.0f && !DuelMessage.IsEmpty())
+	{
+		ChoiceHint = DuelMessage;
+		ChoiceHintColor = FLinearColor(0.95f, 0.74f, 0.38f);
+	}
+	DrawShadowText(DuelTrim(ChoiceHint, 52), ChoiceHintColor,
 		DX(X + W * 0.5f), DY(Y + H - 26.0f), GetFont(false), 0.46f * DuelScale, true);
 }
 

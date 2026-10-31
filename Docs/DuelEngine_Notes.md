@@ -51,13 +51,48 @@ Request ids are engine-assigned when `RequestId <= 0`. Only the head of the
 queue can be answered. `ClearPendingChoices()` is a debug/reset helper; the
 queue is also cleared when the duel ends.
 
-A choice is not required for existing automatic effects. Existing effects keep
-their auto-targeting; A05 can opt into prompts card by card.
+Most existing automatic effects keep their auto-targeting; A05 can opt into
+prompts card by card. Equip Spells are the first converted family: both legacy
+and data-script equips now ask for their target when more than one legal
+monster exists.
 
 `RequestOptionalTrigger(Card, Prompt, bDefaultYes, Callback)` is a convenience
 wrapper that queues a Yes/No prompt (`Activate` / `Do not activate`) for the
 player. A05 should use it for "you may" player triggers; for opponent-side
 optional triggers, build an `FDuelChoiceRequest` with `Side = Opponent`.
+
+### Duel-board choice UI
+
+`FDADuelUI` now presents the head of the player choice queue as an in-duel
+panel. Single-card choices submit on click; multi-card choices toggle and use
+`CONFIRM`. Disabled options are visible with their reason, and long option
+lists page eight at a time. The panel is drawn above the board and every board
+action/keyboard shortcut is suspended while a choice is pending.
+
+When an option carries a `CardUid`, the matching card on the board (or in hand)
+gets a cyan target border and can be clicked directly. This is the primary way
+to resolve Equip Spell targets and other card choices; clicking the card is
+equivalent to clicking its row in the panel. Option rows include the monster /
+Spell & Trap zone number (`Z1`-`Z5`), so duplicate names remain distinguishable.
+Press `Esc` to cancel when the request is cancellable, `Enter` to confirm a
+multi-select, and `1`-`8` to pick the visible options. The presentation reel is
+held while a choice is open, so card flights and banners cannot drift under the
+target frames; queued beats resume after the answer.
+
+Legacy Equip Spells (Black Pendant, United We Stand, etc.) now queue an engine
+choice instead of auto-equipping the strongest monster. Data-script Equip
+Spells restrict their `any_monster` target to face-up monsters controlled by
+the caster, and `CanActivateSpellCard` rejects an Equip Spell when no such
+target exists. The equip card shows an `EQ` badge while attached and the
+card-detail panel names its target. If the chosen monster leaves the field
+before the choice resolves, the Equip Spell is destroyed instead of lingering
+face-up without a target.
+
+One-shot Spells and Traps that queue a target choice stay face-up until the
+choice is answered. `CleanupResolvedChainCard` and the trap activation path
+defer their Graveyard move through `FlushPendingActivationCleanup`, which runs
+after `AnswerChoice` / `CancelChoice` drains the queue. This prevents the
+source card from disappearing while its target is still being chosen.
 
 ## Chain stack
 
@@ -302,7 +337,7 @@ destruction replacement, Spirit/Union and inherent Special Summon.
 - Checks: all-script load regression, source-UID trigger isolation, Sangan
   search, Morphing Jar discard/draw, Breaker counters, Exiled Force,
   MST/Bottomless/Sakuretsu timing, Jinzo lock, Fusion Gate, Amazoness damage
-  redirection, plus the Gate 3 primitives above (124 checks total).
+  redirection, plus the Gate 3 primitives above (147 checks total).
 
 ## Compatibility flags
 
@@ -473,8 +508,9 @@ For A07:
 
 For A09:
 
-- During a duel, check `HasPendingChoice()` before accepting board input; render
-  `GetPendingChoice()` and submit `AnswerChoice`.
+- `FDADuelUI` already checks `HasPendingChoice()`, renders the choice panel and
+  submits `AnswerChoice`; future UI shells should do the same rather than
+  accepting board input while a question is queued.
 - `GetChainLinks()` / `GetLastResolvedChain()` drive chain visuals.
 - `GetResultStats()` drives the result screen; ante state drives ante UI.
 - For a Set Quick-Play action returned by `GetSpellTrapActions`, call
@@ -484,8 +520,9 @@ For A09:
 
 Known gaps (intentional for this pass):
 
-- The legacy 137-card effects still auto-target; they do not yet generate
-  choice requests. Converting them is the next incremental step.
+- Most legacy 137-card effects still auto-target; only Equip Spells have been
+  converted to target choices so far. Converting the other targeted
+  destruction/position/reanimation cards is the next incremental step.
 - Chain links created by legacy `ActivateSpell`/`ActivateTrapInternal` are not
   mirrored into `ChainLinks`; only callers using the new chain API get a stack.
 - `ActivateCounterTrapResponse` now dispatches `on_activate` to the Counter
@@ -550,6 +587,17 @@ UnrealEditor-Cmd.exe <project>.uproject -game -unattended -nullrhi -DADuelRulesS
 UnrealEditor-Cmd.exe <project>.uproject -game -unattended -nullrhi -DADuelSelfTest=1000 -ExecCmds="quit"
 ```
 
-Expected: effect runtime **124/124**, rules **58/58**, duel smoke **1,000
+Expected: effect runtime **147/147**, rules **58/58**, duel smoke **1,000
 iterations / 0 stalls**.  The 253-card / 312-script load regression is part of
-the 124 checks.  No A05 script or manifest file changed in this pass.
+the 147 checks.  No A05 script or manifest file changed in this pass.
+
+The 147-check suite now also covers five Equip-Spell target regressions: a
+data-script equip with two legal own monsters and an opponent decoy (the choice
+offers exactly the two own monsters and applies the bonus only to the chosen
+one), a legacy Equip Spell (Black Pendant) that must ask for its target and
+attach to the answer, an equip activation with no legal target that must be
+rejected without leaving the hand, and both legacy and data-script equips whose
+chosen monster leaves the field before the choice resolves (the equip must be
+destroyed rather than left face-up).  Screenshot harnesses are available with
+`-DADuelScreenshot` and `-DADuelChoiceScreenshot` (the latter captures
+`DADuelChoice.png` with a live pending target choice).

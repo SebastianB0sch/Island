@@ -1,21 +1,6 @@
 {
-  "_comment": "Animation takes for the anime cast (Tools/dai/anime): CC0 Quaternius takes retargeted onto the shared anime cast skeleton. 'take' = source action name (after the last '|'); optional 'frames' [first, last], 'speed' (playback multiplier) and 'arm_drop' (degrees: the astronaut's bulky suit holds the arms away from the body). 'anime_models': existing anime base models (VRM / glTF / FBX humanoids) the cast is built from (Tools/dai/anime/models.py); drop your own in Tools/thirdparty/<pack>/<asset>/ with a SOURCE.txt and register them here.",
+  "_comment": "Animation takes for the anime cast (Tools/dai/anime). Idle, Walk and Run are solved procedurally on the cast skeleton by Tools/dai/anime/gait.py (biomechanical foot planting, see build.py); the other states are CC0 Quaternius takes retargeted onto the shared anime skeleton. 'take' = source action name (after the last '|'); optional 'frames' [first, last], 'speed' (playback multiplier) and 'arm_drop' (degrees: the astronaut's bulky suit holds the arms away from the body). 'anime_models': existing anime base models (VRM / glTF / FBX humanoids) the cast is built from (Tools/dai/anime/models.py); drop your own in Tools/thirdparty/<pack>/<asset>/ with a SOURCE.txt and register them here.",
   "anime": {
-    "A_Anime_Idle": {
-      "file": "quaternius/astronaut/astronaut.glb",
-      "take": "Idle",
-      "arm_drop": 22
-    },
-    "A_Anime_Walk": {
-      "file": "quaternius/astronaut/astronaut.glb",
-      "take": "Walk",
-      "arm_drop": 22
-    },
-    "A_Anime_Run": {
-      "file": "quaternius/astronaut/astronaut.glb",
-      "take": "Run",
-      "arm_drop": 22
-    },
     "A_Anime_Jump": {
       "file": "quaternius/astronaut/astronaut.glb",
       "take": "Jump",

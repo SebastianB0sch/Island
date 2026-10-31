@@ -70,10 +70,10 @@ public:
 	bool IsInInterior() const { return bInInterior; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Movement")
-	float WalkSpeed = 450.f;
+	float WalkSpeed = 150.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Movement")
-	float SprintSpeed = 950.f;
+	float SprintSpeed = 420.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Movement")
 	float SwimSpeed = 330.f;

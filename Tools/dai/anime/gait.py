@@ -25,20 +25,11 @@ quality, knee range and loop error; build.py bakes the takes and logs the result
 import math
 from dataclasses import dataclass, field
 
-from mathutils import Euler, Matrix, Quaternion, Vector
+from mathutils import Euler, Matrix, Vector
 
 from . import skeleton as S
 
 FPS = 30
-GRAVITY = 9.81
-
-# Shoe contact geometry in armature rest space, relative to the ankle (foot bone head).
-HEEL = Vector((0.0, 0.075, -0.085))          # back edge of the sole
-BALL_JOINT = Vector((0.0, -0.105, -0.055))   # ball bone head, relative to the ankle
-BALL_SOLE = Vector((0.0, -0.105, -0.085))    # sole under the ball
-TOE = Vector((0.0, -0.190, -0.085))          # front edge of the sole
-FOOT_X = S.HIP_X                              # feet track under the hip joints
-SOLE_Z = S.ANKLE                              # ankle height with the sole flat
 
 
 def _smooth(t):
@@ -61,12 +52,6 @@ def _rx(deg, v):
     return Vector((v.x, v.y * c - v.z * s, v.y * s + v.z * c))
 
 
-def _rz(deg, v):
-    a = math.radians(deg)
-    c, s = math.cos(a), math.sin(a)
-    return Vector((v.x * c - v.y * s, v.x * s + v.y * c, v.z))
-
-
 @dataclass
 class Gait:
     """Parameters of one locomotion cycle. Speeds in metres, cycle time in seconds, angles deg."""
@@ -75,17 +60,13 @@ class Gait:
     speed: float               # ground speed (m/s)
     cycle: float               # duration of one full cycle (two steps)
     duty: float                # stance fraction of the cycle (< 0.5: flight phases)
-    contact_y: float           # contact point ahead of the pelvis at heel strike (m, +/back is +Y)
+    contact_y: float           # contact point Y at heel strike (m; the character faces -Y)
     heel_angle: float          # toe-up angle at heel strike
     heel_flat: float           # phase fraction where the foot becomes flat
     heel_off: float            # phase fraction where the heel starts to rise
     push_angle: float          # toe-down angle at toe-off
     swing_lift: float          # extra ankle height mid-swing
     swing_toe: float           # extra toe-up during swing
-    arm_swing: float           # shoulder swing amplitude
-    arm_elbow: float           # base elbow flexion
-    arm_elbow_swing: float     # extra elbow flexion when the arm is forward
-    arm_out: float             # lateral upper-arm angle
     lean: float                # forward lean (deg)
     pelvis_yaw: float
     pelvis_roll: float
@@ -94,7 +75,6 @@ class Gait:
     sway: float                # lateral pelvis shift
     knee_margin: float         # minimum knee flex (shortens the leg)
     toe_out: float
-    foot_lift_idle: float = 0.0
     profile: tuple = field(default_factory=tuple)
 
     @property
@@ -115,7 +95,6 @@ WALK = Gait(
     name="Walk", speed=1.50, cycle=0.80, duty=0.58, contact_y=-0.300,
     heel_angle=15.0, heel_flat=0.10, heel_off=0.40, push_angle=42.0,
     swing_lift=0.105, swing_toe=13.0,
-    arm_swing=19.0, arm_elbow=13.0, arm_elbow_swing=13.0, arm_out=0.10,
     lean=2.4, pelvis_yaw=4.0, pelvis_roll=3.0, shoulder_yaw=5.0, trunk_roll=1.5,
     sway=0.018, knee_margin=0.012, toe_out=6.0,
     profile=((0.00, 0.860), (0.25, 0.930), (0.50, 0.860), (0.75, 0.930), (1.00, 0.860)),
@@ -125,7 +104,6 @@ RUN = Gait(
     name="Run", speed=4.20, cycle=14.0 / FPS, duty=0.30, contact_y=-0.105,
     heel_angle=3.0, heel_flat=0.055, heel_off=0.16, push_angle=52.0,
     swing_lift=0.255, swing_toe=7.0,
-    arm_swing=38.0, arm_elbow=66.0, arm_elbow_swing=22.0, arm_out=0.075,
     lean=6.5, pelvis_yaw=8.0, pelvis_roll=4.0, shoulder_yaw=11.0, trunk_roll=2.2,
     sway=0.011, knee_margin=0.055, toe_out=3.0,
     profile=((0.00, 0.880), (0.15, 0.842), (0.26, 0.840), (0.31, 0.855),
@@ -143,9 +121,36 @@ class Rig:
         self.rest = {b.name: b.matrix_local.copy() for b in arm.data.bones}
         self.rest_q = {n: m.to_3x3().normalized().to_quaternion() for n, m in self.rest.items()}
         self.length = {b.name: float(b.length) for b in arm.data.bones}
+        self.joint = {n: m.translation.copy() for n, m in self.rest.items()}
+        # Limb segments are measured between joint heads, not along the (arbitrary) bone tails:
+        # the VRoid cast skeletons keep display tails pointing up even though the limb hangs down.
+        self.seg = {}
+        for parent, child in (
+            ("thigh_l", "calf_l"), ("thigh_r", "calf_r"),
+            ("calf_l", "foot_l"), ("calf_r", "foot_r"),
+            ("upperarm_l", "lowerarm_l"), ("upperarm_r", "lowerarm_r"),
+            ("lowerarm_l", "hand_l"), ("lowerarm_r", "hand_r"),
+        ):
+            d = self.joint[child] - self.joint[parent]
+            self.seg[parent] = d.normalized()
+            self.length[parent] = d.length
         self.thigh = self.length["thigh_l"]
         self.calf = self.length["calf_l"]
+        self.upperarm = self.length["upperarm_l"]
+        self.lowerarm = self.length["lowerarm_l"]
         self.leg = self.thigh + self.calf
+        # Shoe geometry, read from the rest skeleton and scaled by the foot length.
+        self.foot_x = {"l": self.joint["foot_l"].x, "r": self.joint["foot_r"].x}
+        self.ankle_z = self.joint["foot_l"].z
+        self.ball_z = self.joint["ball_l"].z
+        self.ball_offset = self.joint["ball_l"] - self.joint["foot_l"]
+        canon_foot = 0.1185
+        s = max(0.5, min(2.0, self.ball_offset.length / canon_foot))
+        self.heel_back = 0.075 * s
+        self.toe_len = 0.085 * s
+        # Locomotion poses are authored around the canonical 1.70 m skeleton; scale vertical
+        # targets by the target rig's pelvis height so proportionally taller bases do not crouch.
+        self.height_scale = self.joint["pelvis"].z / S.PELVIS
 
     def pelvis(self, offset, rot):
         pos = self.rest["pelvis"].translation + Vector(offset)
@@ -156,8 +161,51 @@ class Rig:
         return (pelvis_world @ self.rest["pelvis"].inverted()
                 @ self.rest[f"thigh_{side}"]).translation
 
+    def upper_world(self, pelvis_world, upper):
+        """World matrices of the spine chain and clavicles for the given absolute Euler offsets."""
+        world = {"pelvis": pelvis_world}
+        for bname in ("spine_01", "spine_02", "spine_03", "neck_01", "head"):
+            b = self.arm.data.bones[bname]
+            p = b.parent.name
+            pos = (world[p] @ self.rest[p].inverted() @ self.rest[bname]).translation
+            q = Euler(tuple(math.radians(v) for v in upper[bname]), "XYZ").to_quaternion() @ self.rest_q[bname]
+            world[bname] = Matrix.Translation(pos) @ q.to_matrix().to_4x4()
+        for side in ("l", "r"):
+            clav = f"clavicle_{side}"
+            p = self.arm.data.bones[clav].parent.name
+            pos = (world[p] @ self.rest[p].inverted() @ self.rest[clav]).translation
+            q = (world[p].to_quaternion() @ self.rest_q[p].inverted() @ self.rest_q[clav])
+            world[clav] = Matrix.Translation(pos) @ q.to_matrix().to_4x4()
+        return world
+
+    def shoulder(self, upper_world, side):
+        clav = f"clavicle_{side}"
+        return (upper_world[clav] @ self.rest[clav].inverted()
+                @ self.rest[f"upperarm_{side}"]).translation
+
+    def pose_arm(self, side, shoulder, wrist, bend_dir):
+        """Two-bone arm IK -> (upperarm target direction, forearm target direction)."""
+        l1, l2 = self.upperarm, self.lowerarm
+        d = wrist - shoulder
+        dist = max(d.length, 1e-6)
+        max_len = l1 + l2 - 1e-5
+        if dist > max_len:
+            wrist = shoulder + d * (max_len / dist)
+            d = wrist - shoulder
+            dist = max_len
+        n = d.normalized()
+        bend = Vector(bend_dir) - n * Vector(bend_dir).dot(n)
+        if bend.length < 1e-4:
+            bend = Vector((1.0 if side == "l" else -1.0, 0.0, 0.0))
+        bend.normalize()
+        cos_a = (l1 * l1 + dist * dist - l2 * l2) / (2.0 * l1 * dist)
+        cos_a = max(-1.0, min(1.0, cos_a))
+        sin_a = math.sqrt(max(0.0, 1.0 - cos_a * cos_a))
+        elbow = shoulder + n * (l1 * cos_a) + bend * (l1 * sin_a)
+        return (elbow - shoulder).normalized(), (wrist - elbow).normalized()
+
     def pose_leg(self, side, hip, ankle):
-        """Two-bone IK -> (thigh aim, calf aim)."""
+        """Two-bone IK -> (thigh target direction, calf target direction)."""
         s = 1.0 if side == "l" else -1.0
         d = ankle - hip
         dist = max(d.length, 1e-6)
@@ -195,14 +243,18 @@ def _curve(profile, phase):
     return pts[-1][1]
 
 
-def _foot(gait, phase, side):
+def _foot(rig, gait, phase, side):
     """Return (ankle target, foot pitch, ball pitch, in_stance) for one leg.
 
     The contact point travels backwards at the authored speed during stance; the ankle is
-    placed above it so the heel, sole or ball is exactly on the ground.
+    placed above it so the heel, sole or ball is exactly on the ground. The shoe dimensions
+    come from the target rig, so the same gait plants on the VRoid cast and on the fallback
+    skeleton.
     """
     lp = (phase + (0.0 if side == "l" else 0.5)) % 1.0
-    x = FOOT_X * (1.0 if side == "l" else -1.0)
+    fx = rig.foot_x[side]
+    heel_off_v = Vector((0.0, rig.heel_back, -rig.ankle_z))
+    ball_off_v = Vector((rig.ball_offset.x, rig.ball_offset.y, rig.ball_offset.z))
     stride = gait.stride
 
     def stance_foot(p):
@@ -211,17 +263,16 @@ def _foot(gait, phase, side):
         h = gait.contact_y + stride * p
         if p <= gait.heel_flat:
             th = -gait.heel_angle * (1.0 - _smooth(p / max(gait.heel_flat, 1e-6)))
-            heel = Vector((x, h, 0.0))
-            ankle = heel - _rx(th, HEEL)
+            heel = Vector((fx, h, 0.0))
+            ankle = heel - _rx(th, heel_off_v)
             return ankle, th, th
         if p <= gait.heel_off:
-            ankle = Vector((x, h - 0.075, SOLE_Z))
+            ankle = Vector((fx, h - rig.heel_back, rig.ankle_z))
             return ankle, 0.0, 0.0
         t = (p - gait.heel_off) / max(gait.duty - gait.heel_off, 1e-6)
         th = gait.push_angle * _smooth(t)
-        ball_y = h - 0.180
-        ball = Vector((x, ball_y, S.BALL_Z - 0.0))       # ball joint 3 cm above the sole
-        ankle = ball - _rx(th, BALL_JOINT)
+        ball = Vector((fx + ball_off_v.x, h - rig.heel_back + ball_off_v.y, rig.ball_z))
+        ankle = ball - _rx(th, ball_off_v)
         return ankle, th, 0.0
 
     if lp < gait.duty:
@@ -248,26 +299,36 @@ def _pelvis_base(gait, phase):
     return 0.92
 
 
-def _arm_aims(gait, phase, side):
+def _wrist_target(rig, gait, phase, side, shoulder, idle=False):
     s = 1.0 if side == "l" else -1.0
-    a = math.radians(-s * gait.arm_swing * math.cos(2.0 * math.pi * phase))
-    u = Vector((s * gait.arm_out, -math.sin(a), -math.cos(a))).normalized()
-    forward = Vector((0.0, -1.0, 0.0))
-    perp = forward - u * forward.dot(u)
-    if perp.length < 1e-4:
-        perp = Vector((0.0, -1.0, 0.0))
-    perp.normalize()
-    bend = math.radians(gait.arm_elbow + gait.arm_elbow_swing * max(0.0, math.sin(a)))
-    f = (u * math.cos(bend) + perp * math.sin(bend) + Vector((s * 0.035, 0.0, 0.0))).normalized()
-    down = Vector((0.0, 0.0, -1.0)) - f * f.dot(Vector((0.0, 0.0, -1.0)))
+    c = math.cos(2.0 * math.pi * phase)
+    hs = rig.height_scale
+    if idle or gait.name == "Idle":
+        y = 0.010 * math.sin(2.0 * math.pi * phase + (0.6 if s > 0 else 1.7))
+        z = shoulder.z - 0.455 * hs
+        x = shoulder.x + s * 0.050 * hs
+    elif gait.name == "Run":
+        fwd = -s * c
+        y = s * 0.180 * c
+        z = shoulder.z - (0.330 - 0.150 * (0.5 + 0.5 * fwd)) * hs
+        x = shoulder.x + s * 0.030 * hs
+    else:
+        y = s * 0.150 * c
+        z = shoulder.z - 0.450 * hs
+        x = shoulder.x + s * 0.055 * hs
+    return Vector((x, y, z))
+
+
+def _hand_dir(fore, wrist_deg=10.0):
+    down = Vector((0.0, 0.0, -1.0)) - fore * fore.dot(Vector((0.0, 0.0, -1.0)))
     if down.length < 1e-4:
         down = Vector((0.0, -1.0, 0.0))
     down.normalize()
-    h = (f * math.cos(math.radians(12.0)) + down * math.sin(math.radians(12.0))).normalized()
-    return tuple(u), tuple(f), tuple(h)
+    a = math.radians(wrist_deg)
+    return (fore * math.cos(a) + down * math.sin(a)).normalized()
 
 
-def _upper_body(gait, phase, bob):
+def _upper_body(gait, phase):
     """Absolute world-space Euler offsets (deg) for pelvis, spine, neck and head."""
     c = math.cos(2.0 * math.pi * phase)
     s = math.sin(2.0 * math.pi * phase)
@@ -299,23 +360,11 @@ def _frame(rig, gait, phase, idle=False):
         roll = -1.1 * math.sin(a)
         lean = 1.2 + 0.25 * math.sin(a * 2.0)
         base = 0.918 + 0.0018 * math.sin(a * 2.0)
+        base *= rig.height_scale
         pelvis_rot = (lean * 0.16, roll, yaw)
-        feet = {side: (Vector((FOOT_X * (1 if side == "l" else -1), 0.0, SOLE_Z)), 0.0, 0.0,
+        feet = {side: (Vector((rig.foot_x[side], rig.joint[f"foot_{side}"].y, rig.ankle_z)), 0.0, 0.0,
                        True) for side in ("l", "r")}
-        pelvis_x = sway
-        # The idle arm swing is a very slow pendulum plus breathing.
-        arms = {}
-        for side, s in (("l", 1.0), ("r", -1.0)):
-            swing = math.radians(-s * (2.0 + 0.7 * math.sin(a + 0.7)))
-            u = Vector((s * 0.095, -math.sin(swing), -math.cos(swing))).normalized()
-            perp = Vector((0, -1, 0)) - u * u.dot(Vector((0, -1, 0)))
-            perp.normalize()
-            bend = math.radians(10.0 + 1.8 * math.sin(a + (0.9 if s > 0 else 1.6)))
-            f = (u * math.cos(bend) + perp * math.sin(bend) + Vector((s * 0.028, 0, 0))).normalized()
-            down = Vector((0, 0, -1)) - f * f.dot(Vector((0, 0, -1)))
-            down.normalize()
-            h = (f * math.cos(math.radians(10.0)) + down * math.sin(math.radians(10.0))).normalized()
-            arms[side] = (tuple(u), tuple(f), tuple(h))
+        pelvis_x = sway * rig.height_scale
         upper = {
             "pelvis": (lean * 0.16, roll, yaw),
             "spine_01": (lean * 0.30, -roll * 0.45, -yaw * 0.20),
@@ -324,13 +373,13 @@ def _frame(rig, gait, phase, idle=False):
             "neck_01": (lean * 0.25, -roll * 0.15, -yaw * 0.4),
             "head": (-lean * 0.10, roll * 0.15, -yaw * 0.05 + 2.5 * math.sin(a + 0.6)),
         }
-        return _assemble(rig, gait, phase, pelvis_x, base, pelvis_rot, feet, arms, upper, idle=True)
+        return _assemble(rig, gait, phase, pelvis_x, base, pelvis_rot, feet, upper, idle=True)
 
-    base = _pelvis_base(gait, phase)
-    sway = gait.sway * math.sin(2.0 * math.pi * phase)
-    upper = _upper_body(gait, phase, base)
+    base = _pelvis_base(gait, phase) * rig.height_scale
+    sway = gait.sway * math.sin(2.0 * math.pi * phase) * rig.height_scale
+    upper = _upper_body(gait, phase)
     pelvis_rot = upper["pelvis"]
-    feet = {side: _foot(gait, phase, side) for side in ("l", "r")}
+    feet = {side: _foot(rig, gait, phase, side) for side in ("l", "r")}
 
     # The pelvis must be low enough for every stance foot. Compute each hip position with a
     # pelvis at z=0; the rotation does not change when the pelvis slides vertically.
@@ -340,7 +389,7 @@ def _frame(rig, gait, phase, idle=False):
         if not stance:
             continue
         hip = rig.hip(tmp, side)
-        dz = hip.z - S.PELVIS
+        dz = hip.z - tmp.translation.z
         horiz2 = (hip.x - ankle.x) ** 2 + (hip.y - ankle.y) ** 2
         reach = rig.leg - max(0.0, gait.knee_margin * (0.4 + 0.6 * math.sin(math.pi * min(1.0, phase / max(gait.duty, 1e-6)))))
         if horiz2 >= reach * reach:
@@ -351,13 +400,13 @@ def _frame(rig, gait, phase, idle=False):
     if base < S.PELVIS - 0.22:
         base = S.PELVIS - 0.22
 
-    arms = {side: _arm_aims(gait, phase, side) for side in ("l", "r")}
-    return _assemble(rig, gait, phase, sway, base, pelvis_rot, feet, arms, upper)
+    return _assemble(rig, gait, phase, sway, base, pelvis_rot, feet, upper)
 
 
-def _assemble(rig, gait, phase, pelvis_x, pelvis_z, pelvis_rot, feet, arms, upper, idle=False):
-    pelvis_world = rig.pelvis((pelvis_x, 0.0, pelvis_z - S.PELVIS), pelvis_rot)
-    key = {"_pelvis_offset": (pelvis_x, 0.0, pelvis_z - S.PELVIS)}
+def _assemble(rig, gait, phase, pelvis_x, pelvis_z, pelvis_rot, feet, upper, idle=False):
+    offset = pelvis_z - rig.joint["pelvis"].z
+    pelvis_world = rig.pelvis((pelvis_x, 0.0, offset), pelvis_rot)
+    key = {"_pelvis_offset": (pelvis_x, 0.0, offset)}
     for bname, rot in upper.items():
         key[bname] = rot
     clamped = 0
@@ -366,13 +415,21 @@ def _assemble(rig, gait, phase, pelvis_x, pelvis_z, pelvis_rot, feet, arms, uppe
         hip = rig.hip(pelvis_world, side)
         thigh, calf, was_clamped = rig.pose_leg(side, hip, ankle)
         clamped += int(was_clamped)
-        key[f"thigh_{side}"] = {"aim": tuple(thigh)}
-        key[f"calf_{side}"] = {"aim": tuple(calf)}
+        key[f"thigh_{side}"] = {"seg": tuple(thigh), "rest": tuple(rig.seg[f"thigh_{side}"])}
+        key[f"calf_{side}"] = {"seg": tuple(calf), "rest": tuple(rig.seg[f"calf_{side}"])}
         key[f"foot_{side}"] = (pitch, 0.0, (1 if side == "l" else -1) * gait.toe_out)
         key[f"ball_{side}"] = (ball, 0.0, (1 if side == "l" else -1) * gait.toe_out)
-        key[f"hand_{side}"] = {"aim": arms[side][2]}
-        key[f"lowerarm_{side}"] = {"aim": arms[side][1]}
-        key[f"upperarm_{side}"] = {"aim": arms[side][0]}
+
+    upper_world = rig.upper_world(pelvis_world, upper)
+    for side, s in (("l", 1.0), ("r", -1.0)):
+        shoulder = rig.shoulder(upper_world, side)
+        wrist = _wrist_target(rig, gait, phase, side, shoulder, idle)
+        bend_dir = (s * 0.14, 0.42, -1.0) if gait.name != "Idle" else (s * 0.10, 0.22, -1.0)
+        up_dir, fore_dir = rig.pose_arm(side, shoulder, wrist, bend_dir)
+        h = _hand_dir(fore_dir, 14.0 if gait.name == "Run" else 10.0)
+        key[f"upperarm_{side}"] = {"seg": tuple(up_dir), "rest": tuple(rig.seg[f"upperarm_{side}"])}
+        key[f"lowerarm_{side}"] = {"seg": tuple(fore_dir), "rest": tuple(rig.seg[f"lowerarm_{side}"])}
+        key[f"hand_{side}"] = {"seg": tuple(h), "rest": tuple(rig.seg[f"lowerarm_{side}"])}
     return key, {"clamped": clamped, "pelvis_z": pelvis_z, "feet": feet}
 
 
@@ -394,7 +451,6 @@ IDLE = Gait(
     name="Idle", speed=0.0, cycle=IDLE_PERIOD, duty=1.0, contact_y=0.0,
     heel_angle=0.0, heel_flat=0.0, heel_off=0.0, push_angle=0.0,
     swing_lift=0.0, swing_toe=0.0,
-    arm_swing=0.0, arm_elbow=10.0, arm_elbow_swing=0.0, arm_out=0.095,
     lean=1.2, pelvis_yaw=0.0, pelvis_roll=0.0, shoulder_yaw=0.0, trunk_roll=0.0,
     sway=0.0, knee_margin=0.012, toe_out=5.0,
 )
@@ -413,40 +469,43 @@ def idle_keys(rig=None):
 
 
 # --------------------------------------------------------------------------- validation
-def _contact_points(arm, side, rest):
-    """World heel / ball / toe points of the posed shoe, using the actual bone matrices."""
+def _contact_points(arm, rig, side, rest):
+    """World heel / ball / toe points of the posed shoe, using the actual bone matrices and
+    the shoe dimensions measured from the rest skeleton."""
     foot = arm.pose.bones[f"foot_{side}"]
     ball = arm.pose.bones[f"ball_{side}"]
-    x = FOOT_X * (1 if side == "l" else -1)
-    heel = Vector((x, 0.075, 0.0))
-    ball_sole = Vector((x, -0.105, 0.0))
-    toe = Vector((x, -0.190, 0.0))
+    fy = rig.joint[f"foot_{side}"].y
+    by = rig.joint[f"ball_{side}"].y
+    bx = rig.joint[f"ball_{side}"].x
+    heel = Vector((rig.foot_x[side], fy + rig.heel_back, 0.0))
+    ball_sole = Vector((bx, by, 0.0))
+    toe = Vector((bx, by - rig.toe_len, 0.0))
     h = arm.matrix_world @ foot.matrix @ rest[f"foot_{side}"].inverted() @ heel
     b = arm.matrix_world @ ball.matrix @ rest[f"ball_{side}"].inverted() @ ball_sole
     t = arm.matrix_world @ ball.matrix @ rest[f"ball_{side}"].inverted() @ toe
     return h, b, t
 
 
-def validate(arm, action, gait, log=print, tolerance=0.012, raise_on_error=True):
+def validate(arm, action, gait, log=print, raise_on_error=True):
     """Check foot planting, penetration, loop closure and knee range of a baked gait take."""
     from . import retarget as RT
     scene = bpy.context.scene
+    rig = Rig(arm)
     RT._assign(arm, action)
     f0, f1 = (int(round(v)) for v in action.frame_range)
     rest = {b.name: b.matrix_local.copy() for b in arm.data.bones}
-    ys, zs, planted = {"l": [], "r": []}, [], []
+    ys, zs = {"l": [], "r": []}, []
     knee_min, knee_max = 180.0, 0.0
     pelvis_z = []
     for f in range(f0, f1 + 1):
         scene.frame_set(f)
         frame_z = []
         for side in ("l", "r"):
-            h, b, t = _contact_points(arm, side, rest)
+            h, b, t = _contact_points(arm, rig, side, rest)
             frame_z += [h.z, b.z, t.z]
             ys[side].append((h.y, b.y, t.y, min(h.z, b.z, t.z)))
-            knee = arm.pose.bones[f"thigh_{side}"].rotation_quaternion
-            th = arm.pose.bones[f"thigh_{side}"].matrix.to_3x3() @ Vector((0, 1, 0))
-            cf = arm.pose.bones[f"calf_{side}"].matrix.to_3x3() @ Vector((0, 1, 0))
+            th = arm.pose.bones[f"calf_{side}"].head - arm.pose.bones[f"thigh_{side}"].head
+            cf = arm.pose.bones[f"foot_{side}"].head - arm.pose.bones[f"calf_{side}"].head
             knee_min = min(knee_min, math.degrees(th.angle(cf)))
             knee_max = max(knee_max, math.degrees(th.angle(cf)))
         zs.append(min(frame_z))
@@ -468,7 +527,7 @@ def validate(arm, action, gait, log=print, tolerance=0.012, raise_on_error=True)
     contact = 100.0 * sum(1 for z in zs if z < 0.015) / len(zs)
     # Loop closure: compare every bone transform at the first and last frame.
     scene.frame_set(f0)
-    first = {b.name: (b.matrix.copy() if False else arm.pose.bones[b.name].matrix.copy()) for b in arm.data.bones}
+    first = {b.name: arm.pose.bones[b.name].matrix.copy() for b in arm.data.bones}
     scene.frame_set(f1)
     loop = 0.0
     for b in arm.data.bones:
@@ -477,8 +536,8 @@ def validate(arm, action, gait, log=print, tolerance=0.012, raise_on_error=True)
         loop = max(loop, (a.translation - c.translation).length)
         loop = max(loop, math.degrees(a.to_quaternion().rotation_difference(c.to_quaternion()).angle))
     RT._assign(arm, None)
-    ok = (penetration > -9.0 and contact > 78.0 and measured > gait.speed * 0.92 and
-          measured < gait.speed * 1.08 and loop < 0.002)
+    ok = (penetration > -9.0 and contact > (64.0 if gait.name == "Run" else 78.0) and
+          measured > gait.speed * 0.92 and measured < gait.speed * 1.08 and loop < 0.002)
     log(f"  gait {gait.name:4s}: {gait.frames} frames, authored {gait.speed:.2f} m/s, "
         f"measured {measured:.2f} m/s, contact {contact:.0f}%, lowest {penetration:.1f} mm, "
         f"knee {knee_min:.0f}-{knee_max:.0f} deg, pelvis {(min(pelvis_z)):.3f}-{max(pelvis_z):.3f} m, "

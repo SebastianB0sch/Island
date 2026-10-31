@@ -132,10 +132,27 @@ The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the S
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on
 the arena field) and have their own lines; every other student gets a generic look tinted by dorm.
 
-The bones are renamed to the **UE5 Mannequin** scheme (`pelvis`, `spine_01`, `upperarm_l` …), so the cast plays
-CC0 Quaternius animation takes retargeted onto each model (idle, walk, run, jump / fall / land, wave, yes / no,
-sit, clap, interact) plus hand-authored duel-stance and swim takes — and Unreal's IK Retargeter auto-maps the
-skeletons to Manny/Quinn if you want the engine's own animations.
+The bones are renamed to the **UE5 Mannequin** scheme (`pelvis`, `spine_01`, `upperarm_l` …). Locomotion is
+solved rather than lifted from a stock clip: `Tools/dai/anime/gait.py` generates the **idle, walk and run**
+cycles from a biomechanical gait model. The stance shoe rolls heel → flat → ball → toe, a two-bone leg IK
+plants the ankle on the ground while the pelvis follows the natural bob (lowest at double support, highest at
+midstance), the pelvis sways/yaws under a counter-rotating spine, the head stays level, and the arms swing in
+opposition with bent elbows and relaxed wrists. The run has a real flight phase, stance compression, high heel
+recovery and a forward lean. Every cycle is validated at build time for contact speed, ground penetration,
+contact percentage, knee range and loop closure (the walk measures 1.50 m/s, the run 4.20 m/s).
+
+At runtime a native animation instance (`DAAvatarAnimInstance`) blends **idle → walk → run** by ground speed,
+drives both locomotion clips from one contact phase and solves the cadence from the blended stride length, so
+the planted foot moves at exactly the character's speed (no foot skating from a stroll to a sprint). Jump,
+Fall, Land, Swim and Duel are crossfaded action layers on top. The player moves at a human-scale 1.5 m/s walk
+and 4.2 m/s sprint; NPCs stroll at 1.4 m/s. The other takes (jump / fall / land, wave, yes / no, sit, clap,
+interact) are still CC0 Quaternius takes retargeted onto each model, plus hand-authored duel-stance and swim
+poses — and Unreal's IK Retargeter auto-maps the skeletons to Manny/Quinn if you want the engine's own
+animations.
+
+![Gait](Docs/renders/gait.jpg)
+
+*Walk and run cycles rendered from the gait solver: heel strike, flat, heel-off and toe-off; a real flight phase and stance compression in the run, with the arms and shoulders counter-swinging.*
 
 **Using your own models.** The likenesses are limited by what is freely redistributable: faces are the
 VRoid samples' own and hairstyles are restyled from their cuts. Any rigged humanoid **VRM / glTF / FBX** (VRoid Hub, Sketchfab,
@@ -149,6 +166,9 @@ model's license allows redistribution before committing it.
 * Third-person anime student (the cast's generic boy) — switch your **dorm jacket**
   (Slifer Red / Ra Yellow / Obelisk Blue / Society of Light white) with **J**; NPC students wear theirs. The
   older CC0 low-poly student and a procedural avatar remain as fallbacks when no cast is imported.
+* **Human-scale locomotion**: a 1.5 m/s walk (WASD) and 4.2 m/s sprint (Shift), with phase-matched
+  idle/walk/run blending, foot-planted cycles and smooth jump/fall/land transitions. The old
+  450/950 cm/s arcade speeds were retired because they made any authored stride skate.
 * Location banners + "**New location discovered**" tracking (17 named locations), compass, minimap.
 * **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker.
 * **A full duel system**: a deterministic 1,200-card rules engine (summons, tributes, Fusion and Ritual
@@ -223,7 +243,8 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction
   dai/character.py          rigged third-party student -> SK_Student + A_Student_<State> FBX
   dai/anime/                anime cast: VRM/glTF base models -> UE5-Mannequin-named skeletons, tailored
-                            uniforms (outfit.py), restyled hair (hairdo.py), ink outlines, CC0 takes
+                            uniforms (outfit.py), restyled hair (hairdo.py), ink outlines; biomechanical
+                            idle/walk/run gait solver (gait.py, foot-planting IK + validation); CC0 takes
                             retargeted onto every skeleton, cast.json
                             (cast.py = who is who; a procedural fallback builds anyone without a model)
   dai/credits.py            CREDITS.md from the SOURCE.txt files
@@ -267,6 +288,17 @@ npm install -g @gltf-transform/cli                 # optional: decodes meshopt-c
 .venv/bin/python Tools/build_island.py cast       # rebuild the anime cast only
 .venv/bin/python Tools/preview_anime.py jaden alexis --state Walk --frame 10   # cast preview render
 ```
+
+The gait solver validates every generated cycle before export (contact speed, penetration, contact
+percentage, knee range, loop closure). To check the runtime blend and planted feet in the engine:
+
+```text
+UnrealEditor-Cmd DuelAcademyIsland.uproject /Game/DuelAcademy/Maps/DuelAcademyIsland -game -windowed -DALocomotionTest
+```
+
+It teleports to the plaza, walks, sprints and stops from a side camera, saves `DAWalk*/DARun*/DAStop`
+screenshots and logs the planted ball-joint speed (about 7 cm/s at the 1.5 m/s walk and 13 cm/s at
+the 4.2 m/s run; 0 would be a perfectly locked foot).
 
 Edit `Tools/dai/config.py` (positions, heights, paths), a location module in `Tools/dai/assets/`, or
 `Tools/dai/palette.py` (colours), regenerate, then *Duel Academy → Build Island* in the editor.

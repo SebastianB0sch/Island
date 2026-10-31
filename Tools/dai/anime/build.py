@@ -4,6 +4,11 @@ SK_Anime_<Name> mesh per cast member (+ the duel disk attachment), the face text
 Data/cast.json for the Unreal importer. Also annotates layout.json's NPC markers with who stands
 where (cast.assign_npcs).
 
+Idle / Walk / Run come from the biomechanical gait solver (gait.py, foot-planting IK and a build-
+time contact check); the other takes are retargeted CC0 clips or hand-authored poses. Every member
+of a skeleton group is exported on one union armature (all hair / outfit helper bones merged), so
+Unreal's shared Skeleton imports without a "regenerate skeleton" merge.
+
     python Tools/build_island.py cast             # build + export the cast
     python Tools/preview_anime.py [ids...]          # Cycles lineup render
 """
@@ -31,33 +36,42 @@ OUT_REL = "Meshes/Characters/Anime"
 TEX_REL = "Characters"
 OUTLINE_COLOR = (0.09, 0.06, 0.07)
 
-# Authored takes (world-space aims, see retarget.pose_action) -------------------------------------
-_ARM_DOWN = {"upperarm_l": {"aim": (0.35, 0.05, -1)}, "upperarm_r": {"aim": (-0.35, 0.05, -1)},
-             "lowerarm_l": {"aim": (0.25, -0.15, -1)}, "lowerarm_r": {"aim": (-0.25, -0.15, -1)}}
+# Authored takes (joint-space directions, see retarget.pose_action) --------------------------------
+def _seg(rig, bone, target, rest_bone=None):
+    """Pose offset that aims a limb segment (works on VRoid bones whose displayed tails point up)."""
+    if rig is None:
+        return {"aim": target}
+    return {"seg": target, "rest": tuple(rig.seg[rest_bone or bone])}
 
 
 def _duel_keys(rig=None):
     """Duel stance: disk arm across the chest, card hand raised, slight crouch; gentle breathing loop."""
+    if rig is not None and not isinstance(rig, GAIT.Rig):
+        rig = GAIT.Rig(rig)
     keys = []
     for f, br in ((0, 0.0), (30, 1.0), (60, 0.0)):
         keys.append((f, {
             "_pelvis_offset": (0.0, 0.0, -0.012 - 0.004 * br),
             "spine_01": (4 + 2 * br, 0, 6), "spine_03": (2 - 1.5 * br, 0, 8),
             "head": (-2 + 2 * br, 0, -10),
-            "upperarm_l": {"aim": (0.55, -0.75, -0.35), "roll": -10},
-            "lowerarm_l": {"aim": (-0.75, -0.62, 0.08), "roll": -15},
-            "hand_l": {"aim": (-0.8, -0.55, 0.0)},
-            "upperarm_r": {"aim": (-0.45, -0.55, 0.15 + 0.03 * br)},
-            "lowerarm_r": {"aim": (-0.05, -0.45, 0.9)},
-            "hand_r": {"aim": (0.0, -0.3, 1.0)},
-            "thigh_l": {"aim": (0.18, -0.12, -1)}, "thigh_r": {"aim": (-0.18, 0.1, -1)},
-            "calf_l": {"aim": (0.12, 0.05, -1)}, "calf_r": {"aim": (-0.12, 0.08, -1)},
+            "upperarm_l": _seg(rig, "upperarm_l", (0.55, -0.75, -0.35)),
+            "lowerarm_l": _seg(rig, "lowerarm_l", (-0.75, -0.62, 0.08)),
+            "hand_l": _seg(rig, "hand_l", (-0.8, -0.55, 0.0), "lowerarm_l"),
+            "upperarm_r": _seg(rig, "upperarm_r", (-0.45, -0.55, 0.15 + 0.03 * br)),
+            "lowerarm_r": _seg(rig, "lowerarm_r", (-0.05, -0.45, 0.9)),
+            "hand_r": _seg(rig, "hand_r", (0.0, -0.3, 1.0), "lowerarm_r"),
+            "thigh_l": _seg(rig, "thigh_l", (0.18, -0.12, -1)),
+            "thigh_r": _seg(rig, "thigh_r", (-0.18, 0.1, -1)),
+            "calf_l": _seg(rig, "calf_l", (0.12, 0.05, -1)),
+            "calf_r": _seg(rig, "calf_r", (-0.12, 0.08, -1)),
         }))
     return keys
 
 
 def _swim_keys(rig=None):
     """Front crawl, authored upright (the avatar component pitches the body forward in the water)."""
+    if rig is not None and not isinstance(rig, GAIT.Rig):
+        rig = GAIT.Rig(rig)
     import math
     keys = []
     for k in range(9):
@@ -67,8 +81,10 @@ def _swim_keys(rig=None):
         aim_r = (-0.28, -math.sin(a + math.pi) * 0.9, math.cos(a + math.pi))
         kick = 14 * math.sin(a * 3)
         keys.append((f, {
-            "upperarm_l": {"aim": aim_l}, "upperarm_r": {"aim": aim_r},
-            "lowerarm_l": {"aim": aim_l}, "lowerarm_r": {"aim": aim_r},
+            "upperarm_l": _seg(rig, "upperarm_l", aim_l),
+            "upperarm_r": _seg(rig, "upperarm_r", aim_r),
+            "lowerarm_l": _seg(rig, "lowerarm_l", aim_l),
+            "lowerarm_r": _seg(rig, "lowerarm_r", aim_r),
             "thigh_l": (kick, 0, 0), "thigh_r": (-kick, 0, 0),
             "head": (0, 0, 12 * math.sin(a)),
         }))
@@ -287,7 +303,8 @@ def _export_takes(arm, group, out_dir, log):
         f0, f1 = (int(round(v)) for v in act.frame_range)
         scene.frame_start, scene.frame_end = f0, max(f1, f0 + 1)
         name = f"A_Anime_{group}_{state}"
-        export_skeletal([arm], arm, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE"}, anim=act, simplify=1.0)
+        export_skeletal([arm], arm, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE"}, anim=act, simplify=1.0,
+                        deform_only=False)
         entry = dict(name=name, file=f"{OUT_REL}/{name}.fbx", loop=loop,
                      seconds=round((f1 - f0) / scene.render.fps, 3))
         if state in ("Walk", "Run"):
@@ -304,15 +321,73 @@ def _disk_bones(arm):
     return tuple(b.head_local), tuple(b.tail_local)
 
 
+def _merge_rig(base, arm, mesh, log=print):
+    """Add the bones `arm` uses that `base` lacks, then rebind `mesh` to `base`.
+
+    Each cast member is built from the same base model but restyling can keep or remove hair /
+    outfit helper bones. Exporting every member with one union armature keeps Unreal's shared
+    Skeleton complete, so importing a member can never trigger a "regenerate the skeleton"
+    merge (which invalidates the meshes and takes already imported).
+    """
+    if base is arm:
+        return
+    order = []
+    def walk(bone):
+        order.append(bone)
+        for child in bone.children:
+            walk(child)
+    for bone in arm.data.bones:
+        if bone.parent is None:
+            walk(bone)
+
+    for o in bpy.context.scene.objects:
+        o.select_set(False)
+    base.select_set(True)
+    bpy.context.view_layer.objects.active = base
+    bpy.ops.object.mode_set(mode="EDIT")
+    eb = base.data.edit_bones
+    for bone in order:
+        if bone.name in eb:
+            current = eb[bone.name]
+            if (current.head - bone.head_local).length > 1e-4 or (current.tail - bone.tail_local).length > 1e-4:
+                log(f"  anime: helper bone {bone.name} differs between cast members; keeping the first rest pose")
+            continue
+        nb = eb.new(bone.name)
+        nb.head = bone.head_local
+        nb.tail = bone.tail_local
+        try:
+            nb.align_roll(bone.z_axis)
+        except Exception:  # noqa: BLE001
+            nb.roll = bone.roll
+        nb.use_deform = bone.use_deform
+        nb.use_connect = False
+        if bone.parent is not None and bone.parent.name in eb:
+            nb.parent = eb[bone.parent.name]
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    for mod in mesh.modifiers:
+        if mod.type == "ARMATURE":
+            mod.object = base
+    world = mesh.matrix_world.copy()
+    mesh.parent = base
+    mesh.matrix_parent_inverse.identity()
+    mesh.matrix_world = world
+
+
 def build(log=print, only=None):
     """Every cast member, grouped by skeleton: all members built on the same base model (or the procedural
     fallback rig) share one skeleton, one set of A_Anime_<Group>_<State> takes and one duel disk."""
     import shutil
     from .. import blend
     out_dir = os.path.join(C.OUT_DIR, OUT_REL)
-    for d in (out_dir, os.path.join(C.OUT_TEXTURES, TEX_REL)):      # fully generated: start clean
-        shutil.rmtree(d, ignore_errors=True)
+    # Remove only the generated takes (keep any user subfolders such as a hand-made Combined/
+    # set); the texture folder is fully generated.
     os.makedirs(out_dir, exist_ok=True)
+    for entry in os.scandir(out_dir):
+        if entry.is_file() and entry.name.lower().endswith((".fbx", ".json")):
+            os.remove(entry.path)
+    shutil.rmtree(os.path.join(C.OUT_TEXTURES, TEX_REL), ignore_errors=True)
+    os.makedirs(os.path.join(C.OUT_TEXTURES, TEX_REL), exist_ok=True)
     entries = CAST.all_entries()
     order = [CAST.PLAYER] + [c for c in entries if c != CAST.PLAYER]
     if only:
@@ -329,37 +404,44 @@ def build(log=print, only=None):
         bpy.context.scene.render.fps = 30
         if group == PROCEDURAL:
             arm = S.create("root")
+            built = []
+            for cid in cids:
+                built.append((cid, arm, build_character(cid, entries[cid], arm)))
         else:
-            arm, first = M.build_model(cids[0], entries[cids[0]], key_name, log)
-            bpy.data.objects.remove(first, do_unlink=True)
+            # Build every member once, then merge their helper bones into the first member's
+            # armature and export all meshes on that one union skeleton.
+            built = []
+            for cid in cids:
+                a, obj = M.build_model(cid, entries[cid], key_name, log)
+                built.append((cid, a, obj))
+            arm = built[0][1]
+            for cid, a, obj in built[1:]:
+                _merge_rig(arm, a, obj, log)
+                bpy.data.objects.remove(a, do_unlink=True)
         g = dict(skeleton_mesh=None, anims=_export_takes(arm, group, out_dir, log))
         disk = build_disk(arm, f"SK_Anime_{group}_DuelDisk")
-        export_skeletal([arm, disk], arm, os.path.join(out_dir, disk.name + ".fbx"), {"ARMATURE", "MESH"})
+        export_skeletal([arm, disk], arm, os.path.join(out_dir, disk.name + ".fbx"), {"ARMATURE", "MESH"},
+                        deform_only=False)
         g["duel_disk"] = dict(name=disk.name, file=f"{OUT_REL}/{disk.name}.fbx",
                               materials=[s.material.name for s in disk.material_slots if s.material])
         used.update(g["duel_disk"]["materials"])
         bpy.data.objects.remove(disk, do_unlink=True)
-        for cid in cids:
+        for cid, a, obj in built:
             e = entries[cid]
-            if group == PROCEDURAL:
-                a, obj = arm, build_character(cid, e, arm)
-            else:
-                a, obj = M.build_model(cid, e, key_name, log)
             name = obj.name
             mats = [s.material.name for s in obj.material_slots if s.material]
             used.update(mats)
             entry = dict(name=name, group=group, display=e["name"], dorm=e["dorm"], scale=e.get("scale", 1.0),
                          tint=e.get("tint", []), female=bool(e.get("body", {}).get("female")), materials=mats)
-            # every member is tailored / restyled individually: one FBX each, all on the group's skeleton (the
-            # first member's import creates it in Unreal, the others and the takes reuse it)
-            export_skeletal([a, obj], a, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE", "MESH"})
+            # every member is tailored / restyled individually: one FBX each, all on the group's
+            # union skeleton (the first member's import creates it in Unreal, all others reuse it)
+            export_skeletal([arm, obj], arm, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE", "MESH"},
+                            deform_only=False)
             entry["file"] = f"{OUT_REL}/{name}.fbx"
             info["meshes"][cid] = entry
             g["skeleton_mesh"] = g["skeleton_mesh"] or name
             log(f"  anime: {name:24s} [{group}] {K.tri_count(obj):6d} tris, {len(mats)} materials")
             bpy.data.objects.remove(obj, do_unlink=True)
-            if a is not arm:
-                bpy.data.objects.remove(a, do_unlink=True)
         info["groups"][group] = g
     mats = palette.material_json()
     info["materials"] = {k: mats[k] for k in sorted(used) if k in mats}

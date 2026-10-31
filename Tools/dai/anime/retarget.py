@@ -198,9 +198,11 @@ def bake(src, take, dst_arm, name, frames=None, speed=1.0, arm_drop=0.0):
 
 def pose_action(dst_arm, name, keys):
     """Hand-authored take: keys = [(frame, {bone: offset})], parent-first like bake(). An offset is either
-    an XYZ Euler rotation in degrees (world space, applied on top of the rest pose) or {"aim": direction,
-    "roll": degrees} which points the bone along a world direction. Bones without an offset keep their rest
-    relation to their parent. The optional "_pelvis_offset" entry moves the pelvis (metres)."""
+    an XYZ Euler rotation in degrees (world space, applied on top of the rest pose), {"aim": direction,
+    "roll": degrees} which points the bone's local Y axis along a world direction, or
+    {"seg": direction, "rest": reference} which applies the world rotation that takes a rest-space segment
+    direction to a target direction (works on rigs whose bone tails do not follow the limb joints, such as
+    the VRoid cast skeletons). The optional "_pelvis_offset" entry moves the pelvis (metres)."""
     out = bpy.data.actions.new(name)
     _assign(dst_arm, out)
     rest = {b.name: b.matrix_local.copy() for b in dst_arm.data.bones}
@@ -219,7 +221,14 @@ def pose_action(dst_arm, name, keys):
                 offsets_b = None
             else:
                 offsets_b = offsets.get(bname)
-            if isinstance(offsets_b, dict):
+            if isinstance(offsets_b, dict) and "seg" in offsets_b:
+                o = offsets_b
+                target = Vector(o["seg"]).normalized()
+                ref = Vector(o.get("rest", (0, 1, 0))).normalized()
+                q = ref.rotation_difference(target) @ rest_q[bname]
+                if o.get("roll"):
+                    q = Quaternion(target, math.radians(o["roll"])) @ q
+            elif isinstance(offsets_b, dict):
                 o = offsets_b
                 axis = rest_q[bname] @ Vector((0, 1, 0))
                 aim = Vector(o["aim"]).normalized()

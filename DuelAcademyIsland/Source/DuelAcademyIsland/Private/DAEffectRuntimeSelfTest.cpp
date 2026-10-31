@@ -492,6 +492,37 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 		}
 	}
 
+	// ---- one-shot Spell stays on the field until its choice is answered ---
+	{
+		FDuelEngine Duel(Database, 1214);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_CLEANUP_AFTER_CHOICE"));
+		Scenario.PlayerHand = TArray<int32>{ 436 };
+		Scenario.OpponentField.Add(MakeSpellTrap(849, 0, true));
+		Scenario.OpponentField.Add(MakeSpellTrap(686, 1, true));
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("deferred-cleanup scenario starts"));
+		const int32 MstUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 436);
+		if (MstUid != 0)
+		{
+			FString ActivateError;
+			Report.Check(Duel.ActivateQuickPlayFromHand(MstUid, ActivateError),
+				TEXT("Quick-Play spell activates and queues a target"));
+			const FDuelChoiceRequest* Choice = Duel.GetPendingChoice();
+			Report.Check(Choice && Duel.FindSpellTrap(MstUid) != nullptr,
+				TEXT("the one-shot Spell stays on the field while the choice is pending"));
+			const int32 TargetOption = Choice && Choice->Options.Num() > 0 ? Choice->Options[0].Id : 0;
+			FString AnswerError;
+			Report.Check(Choice && TargetOption != 0
+				&& Duel.AnswerChoice(Choice->RequestId, TArray<int32>{ TargetOption }, AnswerError),
+				TEXT("the pending target can be answered"));
+			const FDuelSide& Player = Duel.GetSide(EDuelOwner::Player);
+			Report.Check(Duel.FindSpellTrap(MstUid) == nullptr
+				&& Player.Graveyard.ContainsByPredicate(
+					[MstUid](const FDuelCard& Card) { return Card.Uid == MstUid; }),
+				TEXT("the resolved one-shot Spell moves to the Graveyard after the answer"));
+		}
+	}
+
 	// ---- Bottomless Trap Hole: summon condition and destroy->banish ------
 	{
 		FDuelEngine Duel(Database, 77);
@@ -1411,6 +1442,99 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 			const FDuelCard* Equip = Duel.FindSpellTrap(SpellUid);
 			Report.Check(Equip && Equip->EquippedToUid == SecondUid,
 				TEXT("legacy Equip Spell attaches to the chosen monster"));
+		}
+	}
+	{
+		FDuelEngine Duel(Database, 1213);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_EQUIP_NO_TARGET"));
+		Scenario.PlayerHand = TArray<int32>{ 107 };
+		Scenario.PlayerDeck = TArray<int32>{ 7, 8, 9 };
+		FString Error;
+		Duel.StartScenario(Scenario, Error);
+		const int32 SpellUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Hand, 107);
+		if (SpellUid != 0)
+		{
+			FString ActivateError;
+			Report.Check(!Duel.ActivateSpell(SpellUid, ActivateError),
+				TEXT("Equip Spell cannot be activated without a legal face-up target"));
+			Report.Check(FindUidInArray(Duel.GetSide(EDuelOwner::Player).Hand, 107) == SpellUid,
+				TEXT("the rejected Equip Spell stays in the hand"));
+		}
+	}
+	{
+		FDuelEngine Duel(Database, 1215);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_LEGACY_EQUIP_TARGET_LOST"));
+		Scenario.PlayerHand = TArray<int32>{ 117 };
+		Scenario.PlayerDeck = TArray<int32>{ 7, 8, 9 };
+		Scenario.PlayerField.Add(MakeMonster(9, 0));
+		Scenario.PlayerField.Add(MakeMonster(9, 1));
+		FString Error;
+		Duel.StartScenario(Scenario, Error);
+		const int32 SpellUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Hand, 117);
+		if (SpellUid != 0)
+		{
+			FString ActivateError;
+			Report.Check(Duel.ActivateSpell(SpellUid, ActivateError),
+				TEXT("legacy Equip Spell with two targets activates"));
+			const FDuelChoiceRequest* Choice = Duel.GetPendingChoice();
+			const int32 LostUid = Choice && Choice->Options.Num() > 0 ? Choice->Options[0].CardUid : 0;
+			Report.Check(LostUid != 0, TEXT("the legacy equip choice offers a target to remove"));
+			if (Choice && LostUid != 0)
+			{
+				FDuelSide& MutablePlayer = Duel.GetSideMutable(EDuelOwner::Player);
+				for (FDuelCard& Monster : MutablePlayer.Monsters)
+				{
+					if (Monster.Uid == LostUid)
+					{
+						Monster = FDuelCard();
+					}
+				}
+				FString AnswerError;
+				Duel.AnswerChoice(Choice->RequestId, TArray<int32>{ LostUid }, AnswerError);
+			}
+			const FDuelSide& Player = Duel.GetSide(EDuelOwner::Player);
+			Report.Check(Duel.FindSpellTrap(SpellUid) == nullptr
+				&& Player.Graveyard.ContainsByPredicate(
+					[SpellUid](const FDuelCard& Card) { return Card.Uid == SpellUid; }),
+				TEXT("a legacy Equip Spell whose target vanished is destroyed"));
+		}
+	}
+	{
+		FDuelEngine Duel(Database, 1216);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_SCRIPT_EQUIP_TARGET_LOST"));
+		Scenario.PlayerHand = TArray<int32>{ 107 };
+		Scenario.PlayerDeck = TArray<int32>{ 7, 8, 9 };
+		Scenario.PlayerField.Add(MakeMonster(9, 0));
+		Scenario.PlayerField.Add(MakeMonster(9, 1));
+		FString Error;
+		Duel.StartScenario(Scenario, Error);
+		const int32 SpellUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Hand, 107);
+		if (SpellUid != 0)
+		{
+			FString ActivateError;
+			Report.Check(Duel.ActivateSpell(SpellUid, ActivateError),
+				TEXT("scripted Equip Spell with two targets activates"));
+			const FDuelChoiceRequest* Choice = Duel.GetPendingChoice();
+			const int32 LostUid = Choice && Choice->Options.Num() > 0 ? Choice->Options[0].CardUid : 0;
+			Report.Check(LostUid != 0, TEXT("the scripted equip choice offers a target to remove"));
+			if (Choice && LostUid != 0)
+			{
+				FDuelSide& MutablePlayer = Duel.GetSideMutable(EDuelOwner::Player);
+				for (FDuelCard& Monster : MutablePlayer.Monsters)
+				{
+					if (Monster.Uid == LostUid)
+					{
+						Monster = FDuelCard();
+					}
+				}
+				FString AnswerError;
+				Duel.AnswerChoice(Choice->RequestId, TArray<int32>{ LostUid }, AnswerError);
+			}
+			const FDuelSide& Player = Duel.GetSide(EDuelOwner::Player);
+			Report.Check(Duel.FindSpellTrap(SpellUid) == nullptr
+				&& Player.Graveyard.ContainsByPredicate(
+					[SpellUid](const FDuelCard& Card) { return Card.Uid == SpellUid; }),
+				TEXT("a scripted Equip Spell whose target vanished is destroyed"));
 		}
 	}
 	{

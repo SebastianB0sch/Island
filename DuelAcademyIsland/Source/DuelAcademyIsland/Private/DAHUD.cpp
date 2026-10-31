@@ -240,7 +240,7 @@ void ADAHUD::BeginPlay()
 			HUD->bLocomotionTest = true;
 			HUD->bLocomotionSprint = false;
 			HUD->LocomotionSamples.Reset();
-			PC->SetControlRotation(FRotator(-8.f, -90.f, 0.f));
+			PC->SetControlRotation(FRotator(-8.f, 45.f, 0.f));
 			if (USpringArmComponent* Boom = Char->FindComponentByClass<USpringArmComponent>())
 			{
 				Boom->TargetArmLength = 380.f;
@@ -1205,7 +1205,7 @@ void ADAHUD::Tick(float DeltaSeconds)
 			Char->AddMovementInput(FVector(1.0, 0.0, 0.0), 1.0f);
 			if (APlayerController* PC = GetOwningPlayerController())
 			{
-				PC->SetControlRotation(FRotator(-8.0f, -90.0f, 0.0f));
+				PC->SetControlRotation(FRotator(-8.0f, 45.0f, 0.0f));
 			}
 			// Measure the planted ball joints: a foot that is properly planted stays still in world
 			// space while the actor travels, so this is a direct in-engine foot-slide check.

@@ -5,6 +5,7 @@
 #include "Animation/AnimSequence.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "DAAvatarAnimInstance.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/Actor.h"
@@ -115,6 +116,21 @@ bool UDAAvatarComponent::SetupCast()
 	}
 	FinishSkeletal(Mesh);
 	bAnimeCast = true;
+	// Native phase-synced locomotion graph (Idle/Walk/Run + crossfaded actions) on the cast skeleton.
+	SkelComp->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+	SkelComp->SetAnimInstanceClass(UDAAvatarAnimInstance::StaticClass());
+	if (!SkelComp->GetAnimInstance())
+	{
+		SkelComp->InitializeAnimScriptInstance(true);
+	}
+	if (UDAAvatarAnimInstance* Inst = Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()))
+	{
+		Inst->Configure(Anims, WalkAnimSpeed * BodyScale, RunAnimSpeed * BodyScale);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DAAvatar: %s has no native anim instance; falling back to single-node playback"), *GetName());
+	}
 	if (bShowDuelDisk)
 	{
 		if (USkeletalMesh* DiskMesh = LoadCharacterAsset<USkeletalMesh>(FString::Printf(TEXT("SK_Anime_%s_DuelDisk"), *AnimGroup)))
@@ -160,7 +176,7 @@ bool UDAAvatarComponent::SetupSkeletal()
 	RunAnimSpeed = 600.f;
 	if (RunThreshold <= 0.f)
 	{
-		RunThreshold = 560.f;   // the player walks at 450, sprints at 950
+		RunThreshold = 300.f;   // the player walks at 150, sprints at 420
 	}
 	return true;
 }
@@ -172,6 +188,104 @@ UAnimSequence* UDAAvatarComponent::FindAnim(FName State) const
 }
 
 void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool bInAir)
+{
+	const float VerticalSpeed = GetOwner() ? GetOwner()->GetVelocity().Z : 0.f;
+	if (Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()))
+	{
+		TickNative(DeltaTime, GroundSpeed, bInAir, VerticalSpeed);
+	}
+	else
+	{
+		TickSingleNode(DeltaTime, GroundSpeed, bInAir);
+	}
+	// Swimming: lay the body prone about the hips. The mesh faces +Y in avatar space and a positive roll tips
+	// +Z towards +Y (FRotationMatrix), i.e. forwards; then lift the hips to just under the water surface.
+	static const FVector Hip(0.0, 0.0, 95.0);
+	const FRotator Lean(0.f, 0.f, 80.f * SwimAlpha);
+	SkelComp->SetRelativeRotation(Lean);
+	SkelComp->SetRelativeLocation(Hip - Lean.RotateVector(Hip) + FVector(0.0, 0.0, 30.0 * SwimAlpha));
+}
+
+void UDAAvatarComponent::TickNative(float DeltaTime, float GroundSpeed, bool bInAir, float VerticalSpeed)
+{
+	UDAAvatarAnimInstance* Anim = Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance());
+	if (!Anim)
+	{
+		return;
+	}
+
+	// A landing take plays once after touching down; while it runs it takes priority over locomotion.
+	if (bWasInAir && !bInAir && VerticalSpeed < -50.f)
+	{
+		if (UAnimSequence* Land = FindAnim(TEXT("Land")))
+		{
+			LandTimer = Land->GetPlayLength();
+		}
+	}
+	bWasInAir = bInAir;
+	if (LandTimer > 0.f)
+	{
+		LandTimer = FMath::Max(0.f, LandTimer - DeltaTime);
+	}
+
+	FName Want = NAME_None;
+	bool bLoop = false;
+	float TargetWeight = 1.f;
+	if (SwimAlpha > 0.5f && FindAnim(TEXT("Swim")))
+	{
+		Want = TEXT("Swim");
+		bLoop = true;
+		TargetWeight = FMath::Clamp(SwimAlpha, 0.f, 1.f);
+	}
+	else if (bInAir)
+	{
+		if (VerticalSpeed < -50.f && FindAnim(TEXT("Fall")))
+		{
+			Want = TEXT("Fall");
+			bLoop = true;
+		}
+		else if (FindAnim(TEXT("Jump")))
+		{
+			Want = TEXT("Jump");
+			bLoop = false;
+		}
+	}
+	else if (LandTimer > 0.f && FindAnim(TEXT("Land")))
+	{
+		Want = TEXT("Land");
+		bLoop = false;
+	}
+	else if (DuelPoseAlpha > 0.02f && GroundSpeed < 30.f && FindAnim(TEXT("Duel")))
+	{
+		Want = TEXT("Duel");
+		bLoop = true;
+		TargetWeight = FMath::Clamp(DuelPoseAlpha, 0.f, 1.f);
+	}
+
+	if (Want != CurrentAction)
+	{
+		if (Want == NAME_None)
+		{
+			Anim->ClearAction();
+		}
+		else
+		{
+			Anim->SetAction(FindAnim(Want), bLoop, TargetWeight);
+		}
+		CurrentAction = Want;
+	}
+	else if (Want != NAME_None && (Want == TEXT("Duel") || Want == TEXT("Swim")))
+	{
+		Anim->SetActionWeight(TargetWeight);
+	}
+
+	// While the full-body swim action is showing, keep the base locomotion at a standstill so it
+	// cannot leak through the blend.
+	const float LocomotionSpeed = (SwimAlpha > 0.5f) ? 0.f : GroundSpeed;
+	Anim->SetLocomotion(LocomotionSpeed, bInAir, VerticalSpeed, SwimAlpha, DuelPoseAlpha);
+}
+
+void UDAAvatarComponent::TickSingleNode(float DeltaTime, float GroundSpeed, bool bInAir)
 {
 	static const FName NameIdle(TEXT("Idle"));
 	static const FName NameWalk(TEXT("Walk"));
@@ -199,7 +313,7 @@ void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool b
 	else if (GroundSpeed > (RunThreshold > 0.f ? RunThreshold : (WalkAnimSpeed + RunAnimSpeed) * 0.5f + 60.f) && FindAnim(NameRun))
 	{
 		Want = NameRun;
-		Rate = FMath::Clamp(GroundSpeed / FMath::Max(RunAnimSpeed, 1.f), 0.8f, 3.f);   // the player sprints at 950 cm/s
+		Rate = FMath::Clamp(GroundSpeed / FMath::Max(RunAnimSpeed, 1.f), 0.5f, 3.f);   // sprint
 	}
 	else if (GroundSpeed > 20.f && FindAnim(NameWalk))
 	{
@@ -220,12 +334,6 @@ void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool b
 		}
 	}
 	SkelComp->SetPlayRate(Rate);
-	// Swimming: lay the body prone about the hips. The mesh faces +Y in avatar space and a positive roll tips
-	// +Z towards +Y (FRotationMatrix), i.e. forwards; then lift the hips to just under the water surface.
-	static const FVector Hip(0.0, 0.0, 95.0);
-	const FRotator Lean(0.f, 0.f, 80.f * SwimAlpha);
-	SkelComp->SetRelativeRotation(Lean);
-	SkelComp->SetRelativeLocation(Hip - Lean.RotateVector(Hip) + FVector(0.0, 0.0, 30.0 * SwimAlpha));
 }
 
 void UDAAvatarComponent::BeginPlay()
