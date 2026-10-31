@@ -40,7 +40,8 @@
 | Packaged Shipping title | **PASS** | `Builds/Win64Shipping` archive launches to the title screen |
 | Packaged `-DADuelSelfTest=1000` | **PASS** | `457/543 wins, 0 stalls, 0 invariant failures, deck audit 36/36, puzzle audit 100/100`, exit 0 |
 | Packaged `-DAPuzzleExamSelfTest` | **PASS** | Puzzle 102/102, Exam 104/104, exit 0 |
-| Packaged story load | **PASS** | story JSON resolves from the pak after the content-path fix |
+| Packaged story load | **PASS** | `35/35` events, `39/39` duels from the pak after the content-path fix |
+| Packaged `-DAPortalTest` | **PASS** | `188 passed, 0 failed` in the Development archive |
 
 ## 2b. Packaging and static initialization
 
