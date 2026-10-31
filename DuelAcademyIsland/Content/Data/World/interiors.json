@@ -10,7 +10,7 @@
       "location_id": "academy_classroom",
       "zone_id": "academy",
       "kind": "classroom",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         300000,
         300000,
@@ -22,11 +22,11 @@
         4.0
       ],
       "bounds_ue": [
-        293000,
-        295000,
+        299300,
+        299500,
         -30000,
-        307000,
-        305000,
+        300700,
+        300500,
         -29600
       ],
       "floor_z": -30000,
@@ -54,14 +54,17 @@
       "notes": "Stage for E02 and the first class beat. Camera at the back wall, teacher at the board.",
       "interior_exit_ue": [
         300000,
-        295100,
+        299600,
         -29900
       ],
       "arrival_ue": [
         300000,
-        295250,
+        299750,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 5918,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     },
     {
       "id": "academy_test_room",
@@ -69,7 +72,7 @@
       "location_id": "academy_test_room",
       "zone_id": "academy",
       "kind": "exam",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         300000,
         325000,
@@ -81,11 +84,11 @@
         3.8
       ],
       "bounds_ue": [
-        294000,
-        320500,
+        299400,
+        324550,
         -30000,
-        306000,
-        329500,
+        300600,
+        325450,
         -29620
       ],
       "floor_z": -30000,
@@ -111,14 +114,17 @@
       "notes": "Written exam UI is A07/A09; this room only supplies the space and marks.",
       "interior_exit_ue": [
         300000,
-        320600,
+        324650,
         -29900
       ],
       "arrival_ue": [
         300000,
-        320750,
+        324800,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 4838,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     },
     {
       "id": "academy_crowler_office",
@@ -126,7 +132,7 @@
       "location_id": "academy_crowler_office",
       "zone_id": "academy",
       "kind": "office",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         300000,
         347000,
@@ -138,11 +144,11 @@
         3.5
       ],
       "bounds_ue": [
-        295500,
-        343500,
+        299550,
+        346650,
         -30000,
-        304500,
-        350500,
+        300450,
+        347350,
         -29650
       ],
       "floor_z": -30000,
@@ -168,14 +174,17 @@
       "notes": "Crowler scenes. Desk faces the door; camera over the player's shoulder.",
       "interior_exit_ue": [
         300000,
-        343600,
+        346750,
         -29900
       ],
       "arrival_ue": [
         300000,
-        343750,
+        346900,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 1526,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     },
     {
       "id": "academy_chancellor_office",
@@ -183,7 +192,7 @@
       "location_id": "academy_chancellor_office",
       "zone_id": "academy",
       "kind": "office",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         300000,
         365000,
@@ -195,11 +204,11 @@
         3.6
       ],
       "bounds_ue": [
-        295000,
-        361000,
+        299500,
+        364600,
         -30000,
-        305000,
-        369000,
+        300500,
+        365400,
         -29640
       ],
       "floor_z": -30000,
@@ -226,14 +235,17 @@
       "notes": "Ending/King of Games trigger. Keep a 2 m clear circle around the ending mark.",
       "interior_exit_ue": [
         300000,
-        361100,
+        364700,
         -29900
       ],
       "arrival_ue": [
         300000,
-        361250,
+        364850,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 1694,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     },
     {
       "id": "slifer_player_room",
@@ -241,7 +253,7 @@
       "location_id": "slifer_player_room",
       "zone_id": "slifer",
       "kind": "dorm_room",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         330000,
         300000,
@@ -253,11 +265,11 @@
         3.2
       ],
       "bounds_ue": [
-        327000,
-        297500,
+        329700,
+        299750,
         -30000,
-        333000,
-        302500,
+        330300,
+        300250,
         -29680
       ],
       "floor_z": -30000,
@@ -286,14 +298,17 @@
       "notes": "Vertical-slice room. Bed is the sleep/save interaction; keep 1.2 m clear at the door.",
       "interior_exit_ue": [
         330000,
-        297600,
+        299850,
         -29900
       ],
       "arrival_ue": [
         330000,
-        297750,
+        300000,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 922,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     },
     {
       "id": "slifer_banner_room",
@@ -301,7 +316,7 @@
       "location_id": "slifer_banner_room",
       "zone_id": "slifer",
       "kind": "headmaster_room",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         330000,
         315000,
@@ -313,11 +328,11 @@
         3.2
       ],
       "bounds_ue": [
-        326750,
-        312250,
+        329675,
+        314725,
         -30000,
-        333250,
-        317750,
+        330325,
+        315275,
         -29680
       ],
       "floor_z": -30000,
@@ -343,14 +358,17 @@
       "notes": "Pharaoh/E14 scenes. Tank is a lit prop anchor; no animal AI in this pass.",
       "interior_exit_ue": [
         330000,
-        312350,
+        314825,
         -29900
       ],
       "arrival_ue": [
         330000,
-        312500,
+        314975,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 1342,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     },
     {
       "id": "slifer_jaden_room",
@@ -358,7 +376,7 @@
       "location_id": "slifer_jaden_room",
       "zone_id": "slifer",
       "kind": "dorm_room",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         330000,
         330000,
@@ -370,11 +388,11 @@
         3.2
       ],
       "bounds_ue": [
-        326500,
-        327250,
+        329650,
+        329725,
         -30000,
-        333500,
-        332750,
+        330350,
+        330275,
         -29680
       ],
       "floor_z": -30000,
@@ -402,14 +420,17 @@
       "notes": "E03 and Chumley room beats. Three NPC marks: Jaden, Syrus, Chumley.",
       "interior_exit_ue": [
         330000,
-        327350,
+        329825,
         -29900
       ],
       "arrival_ue": [
         330000,
-        327500,
+        329975,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 1090,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     },
     {
       "id": "ra_player_room",
@@ -417,7 +438,7 @@
       "location_id": "ra_player_room",
       "zone_id": "ra",
       "kind": "dorm_room",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         360000,
         300000,
@@ -429,11 +450,11 @@
         3.4
       ],
       "bounds_ue": [
-        356750,
-        297250,
+        359675,
+        299725,
         -30000,
-        363250,
-        302750,
+        360325,
+        300275,
         -29660
       ],
       "floor_z": -30000,
@@ -459,14 +480,17 @@
       "notes": "Promotion room. Shares the Slifer room kit with a Ra material swap.",
       "interior_exit_ue": [
         360000,
-        297350,
+        299825,
         -29900
       ],
       "arrival_ue": [
         360000,
-        297500,
+        299975,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 1090,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     },
     {
       "id": "obelisk_dining",
@@ -474,7 +498,7 @@
       "location_id": "obelisk_dining",
       "zone_id": "obelisk_boys",
       "kind": "dining",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         390000,
         300000,
@@ -486,11 +510,11 @@
         4.2
       ],
       "bounds_ue": [
-        383000,
-        295500,
+        389300,
+        299550,
         -30000,
-        397000,
-        304500,
+        390700,
+        300450,
         -29580
       ],
       "floor_z": -30000,
@@ -517,14 +541,17 @@
       "notes": "Obelisk social/dining scenes. Also serves as the dorm common room.",
       "interior_exit_ue": [
         390000,
-        295600,
+        299650,
         -29900
       ],
       "arrival_ue": [
         390000,
-        295750,
+        299800,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 2346,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     },
     {
       "id": "obelisk_player_room",
@@ -532,7 +559,7 @@
       "location_id": "obelisk_player_room",
       "zone_id": "obelisk_boys",
       "kind": "dorm_room",
-      "status": "planned",
+      "status": "implemented",
       "origin_ue": [
         390000,
         320000,
@@ -544,11 +571,11 @@
         3.6
       ],
       "bounds_ue": [
-        386500,
-        317000,
+        389650,
+        319700,
         -30000,
-        393500,
-        323000,
+        390350,
+        320300,
         -29640
       ],
       "floor_z": -30000,
@@ -575,14 +602,17 @@
       "notes": "Promotion room. Material swap on the Ra/Slifer room kit plus marble trim.",
       "interior_exit_ue": [
         390000,
-        317100,
+        319800,
         -29900
       ],
       "arrival_ue": [
         390000,
-        317250,
+        319950,
         -29900
-      ]
+      ],
+      "mesh_count": 3,
+      "triangle_estimate": 1090,
+      "geometry_builder": "Tools/dai/assets/interiors.py"
     }
   ],
   "cell_block": {

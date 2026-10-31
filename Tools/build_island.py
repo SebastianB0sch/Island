@@ -64,6 +64,7 @@ def main(argv):
             lay = layout.Layout(log)
             lay.place_world()
             lay.place_locations()
+            lay.place_interiors()
             lay.place_path_dressing()
             lay.scatter()
             layout.export_props(lay.manifest, log)

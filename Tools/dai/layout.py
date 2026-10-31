@@ -142,6 +142,84 @@ class Layout:
             self.place_sockets(aset, xf, key)
             self.log(f"  {key:14s} {n_mesh} meshes, {len(aset.sockets)} sockets")
 
+    # ------------------------------------------------------------------ interiors
+    def place_interiors(self, export=True):
+        """Build/export the portal-cell interiors listed in Content/Data/World/interiors.json.
+
+        Cells are authored in local metres by `dai.assets.interiors`; this method
+        places each AssetSet at its UE origin and appends its lights/text/interacts
+        to the same layout arrays the existing island uses.  It does not touch any
+        existing location placement.
+        """
+        from .assets import interiors as I
+
+        path = os.path.join(C.UE_PROJECT_DIR, "Content", "Data", "World", "interiors.json")
+        if not os.path.exists(path):
+            self.log(f"  interiors: {path} not found, skipping")
+            return
+        with open(path, "r", encoding="utf-8") as fp:
+            doc = json.load(fp)
+
+        cells = doc.get("cells", [])
+        for cell in cells:
+            cid = str(cell.get("id", "cell"))
+            origin = [float(v) for v in cell.get("origin_ue", [0, 0, 0])]
+            aset = I.build_cell(cell)
+            folder = "Locations/interiors"
+            for name, mb in aset.meshes.items():
+                if not mb.verts:
+                    continue
+                collision = "none" if name.endswith("_NoCol") else "complex"
+                if export:
+                    self.export_mesh(mb, name, folder, collision)
+                self.static.append(dict(mesh=f"SM_{name}", folder=folder, loc=origin, yaw=0.0,
+                                        collision=collision, group="interiors", label=name))
+            self._place_interior_sockets(aset, origin, cid)
+            self.log(f"  interior {cid:24s} {len(aset.meshes)} meshes, {len(aset.sockets)} sockets")
+
+        self.log(f"  interiors: {len(cells)} cells")
+
+    def _place_interior_sockets(self, aset, origin, cid):
+        """Convert local socket positions to UE world and append them to layout arrays."""
+        ox, oy, oz = origin
+
+        def upoint(p):
+            return [round(ox + float(p[0]) * 100.0, 1),
+                    round(oy - float(p[1]) * 100.0, 1),
+                    round(oz + (float(p[2]) if len(p) > 2 else 0.0) * 100.0, 1)]
+
+        for s in aset.sockets:
+            t, p, pr = s["type"], s["pos"], s["props"]
+            loc = upoint(p)
+            yaw = ue_yaw(s["yaw"])
+            if t == "light":
+                L = dict(loc=loc, color=pr.get("color", [1, 0.85, 0.6]),
+                         intensity=pr.get("intensity", 5000.0),
+                         radius=float(pr.get("radius", 12.0)) * 100.0,
+                         night_only=bool(pr.get("night_only", False)),
+                         shadows=bool(pr.get("shadows", False)))
+                if pr.get("spot_pitch") is not None:
+                    L["spot"] = dict(yaw=yaw, pitch=-float(pr["spot_pitch"]), cone=float(pr.get("cone") or 40.0))
+                self.lights.append(L)
+            elif t == "text":
+                self.texts.append(dict(loc=loc, yaw=yaw, text=pr.get("text", ""),
+                                       size=float(pr.get("size", 1.0)) * 100.0,
+                                       color=pr.get("color", [1, 1, 1]),
+                                       emissive=bool(pr.get("emissive", False))))
+            elif t == "interact":
+                self.interacts.append(dict(kind=pr.get("kind", "sign"), loc=loc, yaw=yaw,
+                                           title=pr.get("title", ""), text=pr.get("text", ""),
+                                           radius=float(pr.get("radius", 3.0)) * 100.0,
+                                           group=cid))
+            elif t == "audio":
+                self.audio.append(dict(sound=pr.get("sound", "A_Wind"), loc=loc,
+                                       radius=float(pr.get("radius", 40.0)) * 100.0,
+                                       volume=float(pr.get("volume", 1.0))))
+            elif t == "emitter":
+                self.emitters.append(dict(kind=pr.get("kind", "steam"), loc=loc,
+                                          scale=float(pr.get("scale", 1.0)),
+                                          rate=float(pr.get("rate", 1.0))))
+
     def place_sockets(self, aset, xf, key):
         for s in aset.sockets:
             p = xf.point(s["pos"])

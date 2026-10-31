@@ -271,6 +271,21 @@ def main(argv: list[str]) -> int:
         size = as_list(cell.get("size_m"))
         if len(size) != 3 or any(not isinstance(v, (int, float)) or v <= 0 for v in size):
             report.error(f"interior '{cell_id}': size_m must be three positive numbers")
+        elif box:
+            extents = (box[3] - box[0], box[4] - box[1], box[5] - box[2])
+            for axis, (actual, declared) in enumerate(zip(extents, size)):
+                if abs(actual - float(declared) * 100.0) > 1.0:
+                    report.error(f"interior '{cell_id}': bounds_ue axis {axis} is {actual:.0f} cm but size_m says "
+                                 f"{float(declared) * 100.0:.0f} cm")
+
+        origin = vec3(cell.get("origin_ue"))
+        if not origin:
+            report.error(f"interior '{cell_id}': origin_ue must be [x, y, z]")
+        elif box:
+            center_x = (box[0] + box[3]) / 2.0
+            center_y = (box[1] + box[4]) / 2.0
+            if abs(origin[0] - center_x) > 1.0 or abs(origin[1] - center_y) > 1.0 or abs(origin[2] - box[2]) > 1.0:
+                report.error(f"interior '{cell_id}': origin_ue {origin} must be the floor centre of bounds_ue")
 
         for key in ("interior_exit_ue", "arrival_ue"):
             point = vec3(cell.get(key))
@@ -458,6 +473,9 @@ def main(argv: list[str]) -> int:
         wander = spawn.get("wander_radius_cm")
         if not isinstance(wander, (int, float)) or wander < 0:
             report.error(f"spawn '{spawn_id}': wander_radius_cm must be a non-negative number")
+        z_offset = spawn.get("spawn_z_offset_cm")
+        if not isinstance(z_offset, (int, float)) or z_offset < 0:
+            report.error(f"spawn '{spawn_id}': spawn_z_offset_cm must be a non-negative number")
         if not isinstance(spawn.get("spawn_on_begin_play", False), bool):
             report.error(f"spawn '{spawn_id}': spawn_on_begin_play must be a bool")
         if not isinstance(spawn.get("event_override", ""), str):
