@@ -24,10 +24,23 @@ The archive is a bootstrap `DuelAcademyIsland.exe` at the archive root plus
 
 | Package | Result |
 | --- | --- |
-| Shipping | Cooked 1,590 packages, 0 cook errors; title screen launches at the title screen (`NEW GAME`, `CONTINUE`, `NO SAVE DATA`) |
-| Development | `-DADuelSelfTest=1000`: 457/543 wins, 0 stalls, 0 invariant failures, deck audit 36/36, puzzle audit 100/100, exit 0 |
+| Shipping | Cooked 1,590 packages, 0 cook errors; `Builds/Win64ShippingFinal2` launches to the title screen (`NEW GAME`, `CONTINUE`, `NO SAVE DATA`) |
+| Development | `Builds/Win64Dev`; `-DADuelSelfTest=1000`: 457/543 wins, 0 stalls, 0 invariant failures, deck audit 36/36, puzzle audit 100/100, exit 0 |
 | Development | `-DAPuzzleExamSelfTest`: Puzzle 102/102, Exam 104/104, `BOTH SUITES PASS`, exit 0 |
-| Development | `-DAStoryPlaythroughTest`: story JSON loads from the pak after the content-path fix; 35/35 campaign events |
+| Development | `-DAStoryPlaythroughTest`: 35/35 events, 39/39 duels |
+| Development | `-DAEffectRuntimeSelfTest`: 124/124 with 253 scripts from the pak |
+| Development | `-DAPortalTest`: 188/188 |
+
+## Offline single-player
+
+EOS/online plugins are disabled in `.uproject` and `DefaultEngine.ini`
+(`DefaultPlatformService=NULL`). The game is offline-only.
+
+On first launch Windows may still show a firewall prompt for the executable;
+canceling it does not affect the game. This is a Windows/UE runtime prompt, not
+a required online service. Eliminating it entirely is a remaining packaging
+polish item.
+
 
 ## Static-initialization rule
 

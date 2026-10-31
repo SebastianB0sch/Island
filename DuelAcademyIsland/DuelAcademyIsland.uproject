@@ -26,6 +26,34 @@
 		{
 			"Name": "EnhancedInput",
 			"Enabled": true
+		},
+		{
+			"Name": "OnlineSubsystemEOS",
+			"Enabled": false
+		},
+		{
+			"Name": "EOSShared",
+			"Enabled": false
+		},
+		{
+			"Name": "SocketSubsystemEOS",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineServicesEOS",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineServicesEOSGS",
+			"Enabled": false
+		},
+		{
+			"Name": "EOSOverlayInputProvider",
+			"Enabled": false
+		},
+		{
+			"Name": "WebAuth",
+			"Enabled": false
 		}
 	]
 }

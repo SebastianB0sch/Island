@@ -12,7 +12,7 @@
 | Item | Result |
 | --- | --- |
 | Build | **Succeeded** - Gate 3 combined build green after integration fixes |
-| Packaged Win64 | **Shipping + Development** archives built; Shipping title screen runs; Development packaged 1,000-duel and puzzle/exam suites pass |
+| Packaged Win64 | **Shipping + Development** archives built; final Shipping Builds/Win64ShippingFinal2 runs; packaged 1,000-duel, puzzle/exam, campaign, portal and 124/124 effect suites pass |
 | `-DAProfileSelfTest` | **182 checks, 0 failures** (save round-trip, backup recovery, corruption, migration) |
 | `-DASaveFuzz=10000` | **10,000 states, 1,000 corruption cases, 200 migrations, 1,800,212 checks, 0 failures**, max save 5,634 bytes |
 | `-DATwelveMonthTest` | **365 days / 12 months, 10,947 checks, 0 failures**; leap year and month rollover verified |
