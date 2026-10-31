@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "card_id": 512,
+  "name": "Fairy King Truesdale",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "As long as this card remains face-up on the field, increase the ATK and DEF of all Plant-Type monsters on your side of the field by 500 points.",
+  "notes": [
+    "+500 ATK/DEF to friendly Plant monsters."
+  ],
+  "scripts": [
+    {
+      "id": "512_team_type_stat",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "all": [
+                {
+                  "controller": "self"
+                },
+                {
+                  "monster_type": "Plant"
+                }
+              ]
+            }
+          },
+          "amount": 500,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_def",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "all": [
+                {
+                  "controller": "self"
+                },
+                {
+                  "monster_type": "Plant"
+                }
+              ]
+            }
+          },
+          "amount": 500,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "As long as this card remains face-up on the field, increase the ATK and DEF of all Plant-Type monsters on your side of the field by 500 points."
+    }
+  ]
+}

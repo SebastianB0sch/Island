@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 810,
+  "name": "Bowganian",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "During each of your Standby Phases, inflict 600 points of damage to your opponent's Life Points.",
+  "notes": [
+    "Fires only on the controller's Standby Phase."
+  ],
+  "scripts": [
+    {
+      "id": "810_standby_damage",
+      "trigger": "on_standby",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 600,
+          "player": "opponent",
+          "reason": "Bowganian"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "turn": "self"
+      },
+      "source_text": "During each of your Standby Phases, inflict 600 points of damage to your opponent's Life Points."
+    }
+  ]
+}

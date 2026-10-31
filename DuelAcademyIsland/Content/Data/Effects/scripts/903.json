@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "card_id": 903,
+  "name": "Black Tyranno",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "If the only cards on your opponent's side of the field are Defense Position Monster Cards, this card can attack your opponent's Life Points directly.",
+  "notes": [
+    "No face-up Attack Position monster and no opponent Spell/Trap means direct attack is legal."
+  ],
+  "scripts": [
+    {
+      "id": "903_conditional_direct_attack",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "attack_directly",
+          "target": "$self"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true,
+            "zone": "self_monster"
+          },
+          {
+            "count_zone": "opponent_monster",
+            "count_filter": {
+              "all": [
+                {
+                  "position": "attack"
+                },
+                {
+                  "face_up": true
+                }
+              ]
+            },
+            "count_max": 0
+          },
+          {
+            "count_zone": "opponent_spell_trap",
+            "count_max": 0
+          }
+        ]
+      },
+      "source_text": "If the only cards on your opponent's side of the field are Defense Position Monster Cards, this card can attack your opponent's Life Points directly."
+    }
+  ]
+}

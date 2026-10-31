@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "card_id": 1144,
+  "name": "Holy Knight Ishzark",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "A Monster destroyed by this card in battle is removed from play.",
+  "notes": [
+    "The destroyed monster is in the Graveyard when the attacker hook resolves; banish it from there."
+  ],
+  "scripts": [
+    {
+      "id": "1144_banish_destroyed_monster",
+      "trigger": "on_battle_destroy_by_attacker",
+      "operations": [
+        {
+          "op": "banish",
+          "target": "$trigger",
+          "reason": "Holy Knight Ishzark"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "custom": "battle_involving_self"
+      },
+      "source_text": "A Monster destroyed by this card in battle is removed from play."
+    }
+  ]
+}

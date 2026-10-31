@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "card_id": 1153,
+  "name": "Wroughtweiler",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is destroyed as a result of battle and sent to the Graveyard, add from your Graveyard to your hand 1 card that includes \"Elemental Hero\" in its card name, and 1 \"Polymerization\".",
+  "notes": [
+    "Two explicit Graveyard searches; the deterministic selector takes the first matching card."
+  ],
+  "scripts": [
+    {
+      "id": "1153_recover_hero_and_polymerization",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "search",
+          "target": {
+            "zone": "self_graveyard",
+            "count": 1,
+            "filter": {
+              "name_contains": "Elemental Hero"
+            }
+          },
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": false
+        },
+        {
+          "op": "search",
+          "target": {
+            "zone": "self_graveyard",
+            "count": 1,
+            "filter": {
+              "name": "Polymerization"
+            }
+          },
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": false
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is destroyed as a result of battle and sent to the Graveyard, add from your Graveyard to your hand 1 card that includes \"Elemental Hero\" in its card name, and 1 \"Polymerization\".",
+      "condition": {
+        "name": "Wroughtweiler"
+      }
+    }
+  ]
+}

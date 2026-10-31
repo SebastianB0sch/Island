@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "card_id": 668,
+  "name": "Mudora",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "The ATK of this card increases by 200 points for every Fairy-Type monster in your Graveyard.",
+  "notes": [
+    "Counts Fairy-Type monsters in the controller's Graveyard."
+  ],
+  "scripts": [
+    {
+      "id": "668_grave_fairy_atk",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 200,
+          "mode": "per_card",
+          "count_zone": "self_graveyard",
+          "count_filter": {
+            "monster_type": "Fairy"
+          }
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "The ATK of this card increases by 200 points for every Fairy-Type monster in your Graveyard."
+    }
+  ]
+}

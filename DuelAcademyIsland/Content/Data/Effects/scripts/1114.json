@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 1114,
+  "name": "Millennium Scorpion",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Each time this card destroys 1 monster on your opponent's side of the field and sends it to the Graveyard as a result of battle, increase the ATK of this card by 500 points.",
+  "notes": [
+    "Uses the attacker-side battle-destroy hook."
+  ],
+  "scripts": [
+    {
+      "id": "1114_destroy_gain_atk",
+      "trigger": "on_battle_destroy_by_attacker",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 500,
+          "mode": "flat"
+        }
+      ],
+      "duration": "permanent",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "custom": "battle_involving_self"
+      },
+      "source_text": "Each time this card destroys 1 monster on your opponent's side of the field and sends it to the Graveyard as a result of battle, increase the ATK of this card by 500 points."
+    }
+  ]
+}

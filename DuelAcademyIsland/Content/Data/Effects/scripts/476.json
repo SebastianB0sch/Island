@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 476,
+  "name": "The Shallow Grave",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Each player takes 1 Monster Card from his/her respective Graveyard and Special Summons them on the field in face-down Defense Position.",
+  "notes": [
+    "Both players' Graveyards are selected with one monster each and Set face-down."
+  ],
+  "scripts": [
+    {
+      "id": "476_both_players_revive_facedown",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": {
+            "zone": "self_graveyard",
+            "count": 1,
+            "filter": {
+              "card_type": "Monster"
+            }
+          },
+          "position": "face_down"
+        },
+        {
+          "op": "special_summon",
+          "target": {
+            "zone": "opponent_graveyard",
+            "count": 1,
+            "filter": {
+              "card_type": "Monster"
+            }
+          },
+          "position": "face_down"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Each player takes 1 Monster Card from his/her respective Graveyard and Special Summons them on the field in face-down Defense Position."
+    }
+  ]
+}

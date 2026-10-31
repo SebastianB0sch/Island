@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "card_id": 448,
+  "name": "Nimble Momonga",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent to the Graveyard as a result of battle, increase your Life Points by 1000 points. You can also take cards of the same name from your Deck and Special Summon them to the field in face-down Defense Position. The Deck is then shuffled.",
+  "notes": [
+    "Heal is mandatory; the same-name recruit is optional and uses face-down Defense."
+  ],
+  "scripts": [
+    {
+      "id": "448_battle_destroy_heal",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 1000,
+          "player": "self",
+          "reason": "Nimble Momonga"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is sent to the Graveyard by battle, gain Life Points.",
+      "condition": {
+        "name": "Nimble Momonga"
+      }
+    },
+    {
+      "id": "448_battle_recruit_same_name",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "face_down"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": "all",
+        "filter": {
+          "name": "Nimble Momonga"
+        }
+      },
+      "source_text": "Recruit all cards of the same name in face-down Defense Position.",
+      "condition": {
+        "name": "Nimble Momonga"
+      }
+    }
+  ]
+}

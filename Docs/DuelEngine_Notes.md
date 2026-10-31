@@ -286,22 +286,23 @@ answers use `DefaultOptionIds`. Implemented primitives include:
 - Once-per-turn and once-per-duel guards; optional prompts; atomic cost
   validation before payment.
 
-Known runtime limitations: roll-die/toss-coin are logged visual rolls without a
-full replay record; `declare_name`/`look_at_deck`/`attack_directly`/`redirect_attack`
-are recorded but not fully interactive; contact fusion and generic mixed fusion
-slots are not yet implemented; condition/operation coverage is complete for the
-ten example scripts but not every 1,200-card rule.
+Known runtime limitations: contact fusion and generic mixed fusion slots are not
+yet implemented; Toon restrictions, token creation, full Damage Step
+sub-windows, delayed turn counters and some multi-clause cards remain outside
+the data runtime.  The Gate 3 follow-up covers generic equip/field/team stats,
+dynamic stat/damage counts, Standby gating, summon positions, attack locks,
+battle-damage triggers, seeded coin/die branches, top-of-Deck placement,
+destruction replacement, Spirit/Union and inherent Special Summon.
 
 ### Self-test
 
-- `-DAEffectRuntimeSelfTest` loads the ten scripts, runs fixed duel states and
-  exits.
+- `-DAEffectRuntimeSelfTest` loads all 253 shipped scripts, runs fixed duel
+  states and exits.
 - `da.EffectRuntimeSelfTest` runs the same checks from the console.
-- Checks: script loading, Sangan search, Morphing Jar discard/draw, Breaker
-  counter + continuous ATK + manual cost, Exiled Force self-tribute and
-  once-per-turn, MST target prompt/destroy, Bottomless condition and
-  destroy→banish, negative ATK condition, Sakuretsu attack trigger, Jinzo lock,
-  Fusion Gate registration and Amazoness damage redirection.
+- Checks: all-script load regression, source-UID trigger isolation, Sangan
+  search, Morphing Jar discard/draw, Breaker counters, Exiled Force,
+  MST/Bottomless/Sakuretsu timing, Jinzo lock, Fusion Gate, Amazoness damage
+  redirection, plus the Gate 3 primitives above (124 checks total).
 
 ## Compatibility flags
 
@@ -487,8 +488,9 @@ Known gaps (intentional for this pass):
   choice requests. Converting them is the next incremental step.
 - Chain links created by legacy `ActivateSpell`/`ActivateTrapInternal` are not
   mirrored into `ChainLinks`; only callers using the new chain API get a stack.
-- `ActivateCounterTrapResponse` negates a link but does not execute the counter
-  card's own effect (A05 owns that script).
+- `ActivateCounterTrapResponse` now dispatches `on_activate` to the Counter
+  Trap's data script before the fallback link negation; A05 owns the counter
+  card's script. Without a script the legacy negation still applies.
 - Choice resolution is synchronous: an effect that queues a player choice during
   the AI turn must resume from its callback; the base AI loop does not suspend
   and resume arbitrary card effects yet. Existing 137-card effects never queue
@@ -500,3 +502,54 @@ Known gaps (intentional for this pass):
   response-window UI from A09 plus a non-player-turn activation path.
 - Damage Step timing is a single window until a full damage-step state machine
   lands.
+
+## Gate 3 effect-runtime follow-up (A04)
+
+Additive runtime primitives now cover generic Equip/Field/team stat scripts,
+dynamic stat and damage counts, per-player Standby gating, Special Summon
+positions, attack/direct/max-attacker locks, battle-damage and
+attacker-destroy triggers, seeded coin/die branches, top-of-Deck placement,
+destruction replacement, Spirit return, Union equip/unequip, inherent Special
+Summon, position locks, summon locks and Counter Trap activation negation.
+
+Engine integration points:
+
+- `CanAttack`/`ExecuteAttack` consult `CanCardAttack`/`CanDeclareAttack`;
+  `on_attack_target` is emitted before legacy attack traps.
+- `ResolveBattle` emits `on_damage_step` and `on_battle_damage`, applies
+  runtime battle-damage multipliers and runtime piercing.
+- `DestroyMonster` asks the runtime for destruction replacement / banish
+  destination and emits `on_battle_destroy_by_attacker` after the destroyed
+  card's own triggers.
+- `ChangePosition` emits `on_position_change` and honours position locks.
+- `ActivateSpell`, `ActivateTrapInternal`, `ActivateQuickPlayFromHand`,
+  `ActivateSetSpell`, `AiActivateSpellCard` and `CleanupResolvedChainCard`
+  decide persistence from the printed `Equip`/`Field`/`Continuous` subtype and
+  from `ShouldStayOnFieldAfterActivation()` (loaded `equip_continuous` /
+  `field_continuous` / persistent script triggers).  Legacy name lists remain
+  only as fallbacks.
+- Field/Continuous cards call `RecomputeContinuous()` when they become
+  face-up; Equip Spells register through `AttachEquip`.  Destruction,
+  target-loss and counter-negation still remove the card and clear its state.
+- `EquipAtkBonus`/`EquipDefBonus` and the hardcoded Field Spell stat block are
+  skipped when the corresponding card has a data stat script, preventing
+  double counting while preserving the shipped hardcoded cards.
+- `FireEvent` enforces self-only source binding for battle-destroy,
+  sent-to-graveyard, tribute-summon, position-change, attacker-destroy and
+  battle-damage triggers, and for Monster summon triggers.  `field_scan:true`
+  or `event_source_is_self:false` opts a script into other-card events;
+  Spell/Trap summon responses keep their field-wide scan.  Zone conditions use
+  the event-time source-zone snapshot.
+
+Verification:
+
+```text
+python Tools/effects/validate_effects.py
+UnrealEditor-Cmd.exe <project>.uproject -game -unattended -nullrhi -DAEffectRuntimeSelfTest -ExecCmds="quit"
+UnrealEditor-Cmd.exe <project>.uproject -game -unattended -nullrhi -DADuelRulesSelfTest -ExecCmds="quit"
+UnrealEditor-Cmd.exe <project>.uproject -game -unattended -nullrhi -DADuelSelfTest=1000 -ExecCmds="quit"
+```
+
+Expected: effect runtime **124/124**, rules **58/58**, duel smoke **1,000
+iterations / 0 stalls**.  The 253-card / 312-script load regression is part of
+the 124 checks.  No A05 script or manifest file changed in this pass.

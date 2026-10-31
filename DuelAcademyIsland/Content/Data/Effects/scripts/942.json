@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 942,
+  "name": "Atomic Firefly",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this face-up card on the field is destroyed as a result of battle, the player who destroyed it takes 1000 points of damage.",
+  "notes": [
+    "The battle destroyer is the opponent in a legal battle."
+  ],
+  "scripts": [
+    {
+      "id": "942_battle_destroy_burn",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 1000,
+          "player": "opponent",
+          "reason": "Atomic Firefly"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this face-up card on the field is destroyed as a result of battle, the player who destroyed it takes 1000 points of damage.",
+      "condition": {
+        "name": "Atomic Firefly"
+      }
+    }
+  ]
+}

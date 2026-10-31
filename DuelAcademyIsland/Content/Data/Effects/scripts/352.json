@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 352,
+  "name": "Dark Magician Girl",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increase the ATK of this monster by 300 points for each \"Dark Magician\" or \"Magician of Black Chaos\" in either player's Graveyard.",
+  "notes": [
+    "Both Graveyards are counted."
+  ],
+  "scripts": [
+    {
+      "id": "352_grave_name_atk",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 300,
+          "mode": "per_card",
+          "count_zone": "graveyard",
+          "count_filter": {
+            "any": [
+              {
+                "name": "Dark Magician"
+              },
+              {
+                "name": "Magician of Black Chaos"
+              }
+            ]
+          }
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "Increase the ATK of this monster by 300 points for each \"Dark Magician\" or \"Magician of Black Chaos\" in either player's Graveyard."
+    }
+  ]
+}

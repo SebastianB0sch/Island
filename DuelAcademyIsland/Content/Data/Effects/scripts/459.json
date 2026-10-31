@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "card_id": 459,
+  "name": "Luminous Spark",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases the ATK of all LIGHT monsters by 500 points and decreases their DEF by 400 points.",
+  "notes": [
+    "+500 ATK / -400 DEF to LIGHT monsters."
+  ],
+  "scripts": [
+    {
+      "id": "459_field_stat",
+      "trigger": "field_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "attribute": "LIGHT"
+            }
+          },
+          "amount": 500,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_def",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "attribute": "LIGHT"
+            }
+          },
+          "amount": -400,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_field"
+      },
+      "source_text": "+500 ATK / -400 DEF to LIGHT monsters."
+    }
+  ]
+}

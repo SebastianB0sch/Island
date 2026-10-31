@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 1158,
+  "name": "Cyber End Dragon",
+  "card_type": "Fusion Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "\"Cyber Dragon\" + \"Cyber Dragon\" + \"Cyber Dragon\" A Fusion Summon of this card can only be conducted with the above Fusion Material Monsters. During battle between this card and a Defense Position monster whose DEF is lower than the ATK of this card, inflict the difference as Battle Damage to your opponent's Life Points.",
+  "notes": [
+    "The Fusion Summon recipe is rules data; the script covers the printed battle effect."
+  ],
+  "scripts": [
+    {
+      "id": "1158_piercing",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "piercing",
+          "target": "$self"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "During battle with a Defense Position monster, inflict piercing Battle Damage."
+    }
+  ]
+}

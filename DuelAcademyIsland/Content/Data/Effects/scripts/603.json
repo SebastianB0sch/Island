@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "card_id": 603,
+  "name": "The Dark Door",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Both players can only attack with 1 monster during their respective Battle Phases.",
+  "notes": [
+    "Both sides are capped at one attacker."
+  ],
+  "scripts": [
+    {
+      "id": "603_one_attacker_lock",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "attack_lock",
+          "mode": "only_one_attacker",
+          "player": "both",
+          "side_wide": true
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_spell_trap"
+      },
+      "source_text": "Both players can only attack with 1 monster during their respective Battle Phases."
+    }
+  ]
+}

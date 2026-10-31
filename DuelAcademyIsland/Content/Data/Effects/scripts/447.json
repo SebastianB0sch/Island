@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "card_id": 447,
+  "name": "Giant Germ",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent to the Graveyard as a result of battle, inflict 500 points of Direct Damage to your opponent's Life Points. You can also take cards of the same name from your Deck and Special Summon them to the field in face-up Attack Position. The Deck is then shuffled.",
+  "notes": [
+    "Burn is mandatory; the same-name recruit is optional."
+  ],
+  "scripts": [
+    {
+      "id": "447_battle_destroy_burn",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 500,
+          "player": "opponent",
+          "reason": "Giant Germ"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is sent to the Graveyard by battle, inflict damage.",
+      "condition": {
+        "name": "Giant Germ"
+      }
+    },
+    {
+      "id": "447_battle_recruit_same_name",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": "all",
+        "filter": {
+          "name": "Giant Germ"
+        }
+      },
+      "source_text": "Recruit all cards of the same name in face-up Attack Position.",
+      "condition": {
+        "name": "Giant Germ"
+      }
+    }
+  ]
+}

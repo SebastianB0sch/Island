@@ -225,6 +225,13 @@ def render_markdown(payload: dict) -> str:
         "because they are playable from the roster."
     )
     lines.append("")
+    lines.append(
+        "Batch note: at the start of Gate 3.1 the story lane was 213 unique cards / 92 pending. "
+        "Incoming deck data expanded it to 368 unique cards / 119 pending, so the lane totals are "
+        "not like-for-like. Of the original 92-card backlog, 38 are now scripted and 54 remain "
+        "pending."
+    )
+    lines.append("")
 
     lines.append("## Pending by priority")
     lines.append("")
@@ -281,6 +288,17 @@ def render_markdown(payload: dict) -> str:
             f"- Unique cards: **{category['cards']}**; pending: **{category['pending']}**; "
             f"covered: **{category['covered']}**."
         )
+        lane_rows = [row for row in payload["pending_cards"] if row["priority"] == name]
+        if lane_rows:
+            lane_reasons: dict[str, int] = {}
+            for row in lane_rows:
+                code = row["pending_reason_code"]
+                lane_reasons[code] = lane_reasons.get(code, 0) + 1
+            reason_summary = ", ".join(
+                f"`{code}`={count}"
+                for code, count in sorted(lane_reasons.items(), key=lambda item: (-item[1], item[0]))
+            )
+            lines.append(f"- Pending by reason: {reason_summary}.")
         if category["items"]:
             item_rows = []
             for item in category["items"][:20]:

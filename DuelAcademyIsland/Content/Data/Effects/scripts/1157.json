@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "card_id": 1157,
+  "name": "Cyber Twin Dragon",
+  "card_type": "Fusion Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "\"Cyber Dragon\" + \"Cyber Dragon\" A Fusion Summon of this card can only be conducted with the above Fusion Material Monsters. This card can attack twice during the same Battle Phase.",
+  "notes": [
+    "Extra attack is registered continuously; the Fusion Summon recipe is rules data."
+  ],
+  "scripts": [
+    {
+      "id": "1157_extra_attack",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "extra_attack",
+          "target": "$self",
+          "count": 1
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "This card can attack twice during the same Battle Phase."
+    }
+  ]
+}

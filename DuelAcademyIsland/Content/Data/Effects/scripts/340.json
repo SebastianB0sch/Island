@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "card_id": 340,
+  "name": "Barrel Dragon",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Toss a coin 3 times. If 2 out of 3 results are Heads, destroy 1 monster on your opponent's side of the field. This card's effect can only be used during your own turn, once per turn.",
+  "notes": [
+    "The target is selected before the coin toss; only a successful result destroys it."
+  ],
+  "scripts": [
+    {
+      "id": "340_coin_destroy_monster",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "toss_coin",
+          "count": 3,
+          "success_min": 2,
+          "success_max": 3,
+          "success_operations": [
+            {
+              "op": "destroy",
+              "target": "$target",
+              "reason": "Barrel Dragon"
+            }
+          ]
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": true,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true,
+            "zone": "self_monster"
+          },
+          {
+            "custom": "ignition_main_phase"
+          },
+          {
+            "is_turn_player": true
+          }
+        ]
+      },
+      "target": {
+        "zone": "opponent_monster",
+        "count": 1
+      },
+      "source_text": "Toss a coin 3 times. If 2 out of 3 results are Heads, destroy 1 monster on your opponent's side of the field. This card's effect can only be used during your own turn, once per turn."
+    }
+  ]
+}

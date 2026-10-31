@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 180,
+  "name": "Machine King",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increase the ATK of this card by 100 points for each face-up Machine-Type monster on the field.",
+  "notes": [
+    "Counts every face-up Machine on either side, including this card."
+  ],
+  "scripts": [
+    {
+      "id": "180_machine_count_atk",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 100,
+          "mode": "per_card",
+          "count_zone": "all_monsters",
+          "count_filter": {
+            "all": [
+              {
+                "face_up": true
+              },
+              {
+                "monster_type": "Machine"
+              }
+            ]
+          }
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "Increase the ATK of this card by 100 points for each face-up Machine-Type monster on the field."
+    }
+  ]
+}

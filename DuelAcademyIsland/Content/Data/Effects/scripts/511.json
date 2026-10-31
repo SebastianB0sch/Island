@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "card_id": 511,
+  "name": "Airknight Parshath",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card attacks with an ATK higher than the DEF of your opponent's Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points. When this card inflicts Battle Damage to your opponent's Life Points, draw 1 card from your Deck.",
+  "notes": [
+    "Piercing is continuous; the draw is an after-battle-damage trigger."
+  ],
+  "scripts": [
+    {
+      "id": "511_piercing",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "piercing",
+          "target": "$self"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "This card inflicts piercing Battle Damage."
+    },
+    {
+      "id": "511_battle_damage_draw",
+      "trigger": "on_battle_damage",
+      "operations": [
+        {
+          "op": "draw",
+          "count": 1,
+          "player": "self",
+          "reason": "Airknight Parshath"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "custom": "battle_involving_self"
+          },
+          {
+            "is_turn_player": true
+          }
+        ]
+      },
+      "source_text": "When this card inflicts Battle Damage, draw 1 card."
+    }
+  ]
+}

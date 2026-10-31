@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "card_id": 632,
+  "name": "Cyclon Laser",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card can only be used to equip \"Gradius\". Increases the ATK of \"Gradius\" by 300 points. When \"Gradius\" attacks with an ATK that is higher than the DEF of your opponent's Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points.",
+  "notes": [
+    "Only Gradius can be equipped; +300 ATK and piercing."
+  ],
+  "scripts": [
+    {
+      "id": "632_equip_activate",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "equip",
+          "target": "$target"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "name": "Gradius"
+        }
+      },
+      "source_text": "Equip this card to a legal monster."
+    },
+    {
+      "id": "632_equip_continuous",
+      "trigger": "equip_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 300,
+          "mode": "flat"
+        },
+        {
+          "op": "piercing",
+          "target": "$equipped"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "name": "Gradius"
+      },
+      "source_text": "Apply the equipped monster's continuous bonus."
+    }
+  ]
+}

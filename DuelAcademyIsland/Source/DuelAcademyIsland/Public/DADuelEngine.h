@@ -412,6 +412,7 @@ private:
 	void MoveToHand(FDuelCard Card);
 	void MoveToBanished(FDuelCard Card);
 	void MoveToDeckBottom(FDuelCard Card);
+	void MoveToDeckTop(FDuelCard Card);
 	void RemoveFromGrave(EDuelOwner Side, int32 Uid);
 	void DiscardCard(FDuelCard Card, const FString& Reason = FString());
 	void Mill(EDuelOwner Side, int32 Count);
@@ -441,6 +442,9 @@ private:
 	int32 EquipAtkBonus(const FDuelCard& Card) const;
 	int32 EquipDefBonus(const FDuelCard& Card) const;
 	bool HasField(EDuelOwner Side, const TCHAR* Name) const;
+	bool IsPersistentSpellTrap(const FDuelCard& Card) const;
+	bool IsFieldSpellCard(const FDuelCard& Card) const;
+	bool IsManualTrapCard(const FDuelCard& Card) const;
 	bool IsContinuousTrap(const FString& Name) const;
 
 	// ---- summoning ----

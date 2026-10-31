@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 1096,
+  "name": "Threatening Roar",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Your opponent cannot declare an attack during this turn.",
+  "notes": [
+    "Side-wide attack lock for the opponent until the end of the turn."
+  ],
+  "scripts": [
+    {
+      "id": "1096_attack_lock_turn",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "attack_lock",
+          "mode": "cannot_attack",
+          "player": "opponent",
+          "side_wide": true
+        }
+      ],
+      "duration": "until_end_of_turn",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "source_text": "Your opponent cannot declare an attack during this turn."
+    }
+  ]
+}

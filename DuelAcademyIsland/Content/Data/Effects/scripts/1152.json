@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "card_id": 1152,
+  "name": "Cyber Dragon",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "If there is a monster on your opponent's side of the field and there are no monsters on your side of the field, you can Special Summon this card from your hand.",
+  "notes": [
+    "The condition counts both sides at activation time."
+  ],
+  "scripts": [
+    {
+      "id": "1152_inherent_summon",
+      "trigger": "inherent_summon",
+      "operations": [
+        {
+          "op": "inherent_special_summon",
+          "target": "$self",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "zone": "self_hand"
+          },
+          {
+            "count_zone": "opponent_monster",
+            "count_min": 1
+          },
+          {
+            "count_zone": "self_monster",
+            "count_max": 0
+          }
+        ]
+      },
+      "source_text": "If there is a monster on your opponent's side of the field and there are no monsters on your side of the field, you can Special Summon this card from your hand."
+    }
+  ]
+}

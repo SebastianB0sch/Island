@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "card_id": 185,
+  "name": "Blast Juggler",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Offer this card as a Tribute during your Standby Phase if face-up to destroy 2 face-up monsters with an ATK of 1000 or less.",
+  "notes": [
+    "Self-tribute cost; targets two other face-up monsters with ATK <= 1000."
+  ],
+  "scripts": [
+    {
+      "id": "185_standby_tribute_destroy",
+      "trigger": "on_standby",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Blast Juggler"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "turn": "self"
+      },
+      "cost": [
+        {
+          "op": "tribute",
+          "target": "$self"
+        }
+      ],
+      "target": {
+        "zone": "all_monsters",
+        "count": 2,
+        "filter": {
+          "all": [
+            {
+              "face_up": true
+            },
+            {
+              "atk_max": 1000
+            },
+            {
+              "not": {
+                "name": "Blast Juggler"
+              }
+            }
+          ]
+        }
+      },
+      "source_text": "Offer this card as a Tribute during your Standby Phase if face-up to destroy 2 face-up monsters with an ATK of 1000 or less."
+    }
+  ]
+}

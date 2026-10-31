@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "card_id": 620,
+  "name": "Soul of Purity and Light",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card can only be Special Summoned by removing 2 LIGHT monsters in your Graveyard from play. As long as this card remains face-up on the field, decrease the ATK of all monsters on your opponent's side of the field by 300 points during his/her Battle Phase.",
+  "notes": [
+    "The inherent summon and the opponent Battle Phase debuff are separate scripts."
+  ],
+  "scripts": [
+    {
+      "id": "620_inherent_summon",
+      "trigger": "inherent_summon",
+      "operations": [
+        {
+          "op": "inherent_special_summon",
+          "target": "$self",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "zone": "self_hand"
+          },
+          {
+            "count_zone": "self_graveyard",
+            "count_filter": {
+              "attribute": "LIGHT"
+            },
+            "count_min": 2
+          }
+        ]
+      },
+      "cost": [
+        {
+          "op": "banish",
+          "target": {
+            "zone": "self_graveyard",
+            "count": 2,
+            "filter": {
+              "attribute": "LIGHT"
+            }
+          }
+        }
+      ],
+      "source_text": "Special Summon by banishing 2 LIGHT monsters from the Graveyard."
+    },
+    {
+      "id": "620_opponent_battle_debuff",
+      "trigger": "on_battle_start",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$target",
+          "amount": -300,
+          "mode": "flat"
+        }
+      ],
+      "duration": "until_end_of_battle_phase",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "is_turn_player": false
+      },
+      "target": {
+        "zone": "opponent_monster",
+        "count": "all"
+      },
+      "source_text": "During the opponent's Battle Phase, their monsters lose ATK."
+    }
+  ]
+}

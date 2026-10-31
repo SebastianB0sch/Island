@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 902,
+  "name": "Dark Driceratops",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card attacks with an ATK that is higher than the DEF of your opponent's Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points.",
+  "notes": [
+    "Continuous piercing permission."
+  ],
+  "scripts": [
+    {
+      "id": "902_piercing",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "piercing",
+          "target": "$self"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "When this card attacks with an ATK that is higher than the DEF of your opponent's Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points."
+    }
+  ]
+}

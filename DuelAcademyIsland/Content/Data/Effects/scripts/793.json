@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "card_id": 793,
+  "name": "Des Koala",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: Inflict 400 points of Direct Damage to your opponent's Life Points for each card in your opponent's hand.",
+  "notes": [
+    "Counts the opponent's hand at resolution."
+  ],
+  "scripts": [
+    {
+      "id": "793_flip_hand_burn",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 400,
+          "player": "opponent",
+          "mode": "per_card",
+          "count_zone": "opponent_hand",
+          "reason": "Des Koala"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "FLIP: Inflict 400 points of Direct Damage to your opponent's Life Points for each card in your opponent's hand."
+    }
+  ]
+}

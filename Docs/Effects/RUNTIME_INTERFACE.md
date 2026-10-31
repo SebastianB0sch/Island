@@ -169,12 +169,18 @@ when only one is summoned/destroyed.
 Field-wide response scans are preserved for different cards: Spell/Trap cards
 on the field are still considered for summon, destroy, leave-field and attack
 responses (for example Bottomless Trap Hole on `on_summon` and Sakuretsu Armor
-on `on_attack_declared`), and different-card monster triggers still participate
-in those field scans. `on_activate` and `on_chain` are strictly source-only
+on `on_attack_declared`). `on_activate` and `on_chain` are strictly source-only
 because they identify the card whose activation/link is being processed.
-Continuous and replacement effects continue to use `RecomputeContinuous()` and
-the field-wide timing scans; name guards in A05 scripts are now redundant safety
-conditions, not the mechanism that selects the correct copy.
+
+**Gate 3 follow-up self-binding.** `on_battle_destroy`,
+`on_sent_to_graveyard`, `on_tribute_summon`, `on_position_change`,
+`on_battle_destroy_by_attacker` and `on_battle_damage` are now self-only by
+default, and Monster `on_summon`/summon variants are self-only too.  A script
+must set `"field_scan": true` or `"event_source_is_self": false` to react to
+another card's event.  This keeps equip/Graveyard/recruiter triggers from
+firing when a different card leaves the field.  Continuous and replacement
+effects continue to use `RecomputeContinuous()` and the field-wide timing
+scans.
 
 ## 6. Selector and prompt contract
 
@@ -264,7 +270,136 @@ These are already represented in the example scripts and need runtime support:
 | 787 Breaker | Counters, `modify_atk` per counter, counter-removal cost. |
 | 637 Fusion Gate | Field-spell continuous `allow_fusion` with banish materials. |
 
-## 9. Non-goals and boundaries
+## 9. Gate 3 runtime follow-up (A04)
+
+The following primitives are implemented by `DAEffectRuntime.*` and are the
+contract for the next A05 generation pass.  They are additive: the legacy
+137-card handlers and all existing scripts keep running unchanged.
+
+### 9.1 New event hooks
+
+| Trigger | Payload / timing |
+| --- | --- |
+| `on_attack_target` | Fired after `on_attack_declared`, before traps and damage. `$attacker` / `$attack_target` are available. |
+| `on_damage_step` | Start of the Damage Step, before `on_damage_calculated`. |
+| `on_battle_damage` | After battle damage is actually applied. `DamageReceiver`, `DamageAmount`, `bDirectAttack`, `$attacker` and `$attack_target` are set. |
+| `on_battle_destroy_by_attacker` | The source monster destroyed the event monster by battle. `$trigger` is the destroyed monster. |
+| `on_position_change` | Source changes battle position; `PreviousPosition` is carried on the event. |
+| `on_tribute_summon` | Normal Summon with one or more tributes; `tribute_min` can gate the trigger. |
+| `inherent_summon` | Manual inherent Special Summon from the hand, activated through `ActivateInherentSummon`. |
+
+`on_removed_from_field` now runs from the last known card snapshot after the
+source has left its zone.  `on_standby` can be gated to one player's turn with
+`"turn": "self"` or `"turn": "opponent"`.
+
+### 9.2 Selectors and conditions
+
+New condition keys: `turn`, `phase`, `name_contains`, `name_on_field`,
+`count_zone`, `count_zones`, `count_filter`, `count_min`, `count_max`,
+`equipped_min`, `tribute_min`, `graveyard_min`, `banished_min`, `deck_min`,
+`extra_min`, `monster_min`, `spell_trap_min`, `damage_step`, `attack_direct`,
+`has_attacked`, `is_turn_player`, `event_source_is_self` and `field_scan`.
+
+New target zones: `deck_top`, `equipped_monster`, `self_all`,
+`opponent_all` and `all_cards_and_hands`.  For `equip_continuous` scripts the
+condition subject and a `$self` stat target are the **equipped monster**, not
+the Equip Spell itself; `$equipped` is an explicit alias.  A missing stat
+target on `field_continuous` applies to every face-up monster, and a target
+object (`{"zone": "all_monsters", "filter": ...}`) applies team-wide.
+
+### 9.3 Stat, damage and counter operations
+
+| Op | Fields | Behaviour |
+| --- | --- | --- |
+| `modify_atk` / `modify_def` | `amount`, `mode`, `counter`, `count_zone`, `count_zones`, `count_filter`, `multiplier`, `divisor` | Modes: `flat`, `per_counter`, `per_card`/`count`, `per_level`, `per_atk`/`atk`, `per_def`/`def`, `half_atk`, `half_def`, `per_hand`, `per_graveyard`, `per_banished`, `per_deck`, `per_extra`, `per_monster`, `per_spell_trap`, `set_atk`, `set_def`. |
+| `inflict_damage` / `gain_lp` | same dynamic fields | Damage/LP amount can use any of the dynamic modes. |
+| `battle_damage_modifier` | `mode`: `zero`, `half`, `double` | Applied to battle damage dealt/received by the target. |
+| `piercing` | `target` | Continuous or lingering piercing permission. |
+| `extra_attack` / `attack_directly` | `target`, optional `count` | Battle-phase permissions; extra attacks also work through continuous scripts. |
+
+Continuous stats are recalculated from the current board on every
+`RecomputeContinuous()` and removed when their source or equipped target
+leaves.  Equip Spell stat scripts take precedence over the legacy hardcoded
+equip list, so a card is never counted twice.
+
+### 9.4 Attack, battle and destruction controls
+
+| Op | Fields | Behaviour |
+| --- | --- | --- |
+| `attack_lock` / `must_attack` | `target`, `mode`, `player`, `amount`, `side_wide` | `cannot_attack`, `cannot_attack_directly`, `must_attack`, `max_attackers`/`only_one_attacker`. `until_end_of_turn` locks also cover monsters summoned later in the turn. |
+| `negate_attack` | none | Sets the one-shot attack-negation flag consumed by the engine after `on_attack_target`. |
+| `battle_position_lock` | `target`, `mode` | `cannot_change` or `defense_at_end` (applied by `OnBattleEnd`). |
+| `destruction_replacement` / `destroy_replace` | `target`, `mode` | `cannot_be_destroyed`, `cannot_be_destroyed_by_battle`, `banish_instead`. Effect-destruction still works when only battle immunity is registered. |
+| `summon_lock` | `player`, `mode` | `normal`, `special`, `both`, `normal_only`, `special_only`. |
+| `spirit_return` | `target` | Registers a Spirit Monster that returns to the hand in its controller's End Phase. |
+| `union_equip` / `union_unequip` | `target`, `position` | Moves a Union monster between the Monster Zone and a Spell/Trap slot while preserving `EquippedToUid`. |
+
+### 9.5 Position, Deck and random outcomes
+
+- `special_summon` / `summon` accept `"position": "attack" | "defense" |
+  "face_down"`; face-down Defense is a Set, not a Flip Summon.
+- `return_to_deck` accepts `"destination": "deck_top"` or
+  `"position": "top"`.  `deck_top` is the card the next `Draw` takes.
+- `roll_die` / `toss_coin` use the duel's seeded `FRandomStream`.  `count`,
+  `success_min`, `success_max` and `threshold` control the result, and
+  `success_operations` / `failure_operations` contain nested operation arrays.
+  `GetLastRandomResult()` / `GetLastRandomResults()` expose the recorded
+  outcome for replay tests.
+- `negate` / `negate_activation` mark the addressed chain link (or the
+  `Event.ChainLink` target of a Counter Trap response) negated.
+- `inherent_special_summon` performs the source card's printed inherent
+  procedure without applying `CanBeSpecialSummonedByEffect`.
+
+### 9.6 Activation persistence
+
+`FDuelEngine` decides whether an activated Spell/Trap remains on the field
+from the card's printed subtype first: `Equip`, `Field` and `Continuous` cards
+stay face-up.  The loaded data script is the second source of truth:
+`equip_continuous` and `field_continuous` triggers, or a `continuous` /
+`on_activate` script with `duration: while_face_up|permanent`, also keep the
+card registered.  The old name lists remain only as a fallback for the shipped
+137-card handlers.
+
+Field Spells are placed in the Field Zone and immediately trigger
+`RecomputeContinuous()`.  Equip Spells stay face-up until their `on_activate`
+script attaches them, then `AttachEquip` updates `EquippedToUid` and
+recalculates.  Continuous Spells/Traps are recalculated when they are flipped
+face-up on activation.  Destruction, target loss and counter-negation always
+remove the card through `DestroySpellTrap`/`MoveToGrave` and clear its
+registered continuous state.  Engine fallback stat tables are skipped when a
+card has an `equip_continuous`/`field_continuous` stat script, so stats are
+never applied twice.
+
+### 9.7 Source binding for self triggers
+
+`on_battle_destroy`, `on_sent_to_graveyard`, `on_tribute_summon`,
+`on_position_change`, `on_battle_destroy_by_attacker` and `on_battle_damage`
+are self-only by default: a script only runs when the event's source UID is
+its own UID.  `on_summon`/`on_normal_summon`/`on_special_summon`/
+`on_flip_summon` use the same rule for Monster sources, while Spell/Trap
+responses (Bottomless Trap Hole, Mispolymerization) keep the field-wide scan.
+
+A script can opt into another card's event explicitly:
+
+```json
+"condition": { "field_scan": true }
+```
+
+or equivalently `"event_source_is_self": false`.  `event_source_is_self: true`
+makes the self binding explicit and is useful for documentation.  The same-ID
+copy guard remains: two copies of one card never both fire for one event.
+Zone conditions are evaluated against the event-time source zone snapshot, so
+an earlier operation in the same event cannot make a later script appear to be
+in a different zone.
+
+### 9.8 Runtime self-test
+
+`-DAEffectRuntimeSelfTest` and `da.EffectRuntimeSelfTest` now run **124**
+checks, including a load regression for all **253** script files / **312**
+script entries and focused single/continuous/cleanup cases for every
+primitive above, plus explicit two-copy/other-card source-binding cases.
+
+## 10. Non-goals and boundaries
 
 - A05 does not add C++ methods, edit `DADuelEngine.*`, or change the duel UI.
 - A05 does not choose AI policy; it only supplies prompt data and condition

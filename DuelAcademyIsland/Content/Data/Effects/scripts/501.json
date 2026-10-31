@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "card_id": 501,
+  "name": "Alligator's Sword Dragon",
+  "card_type": "Fusion Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "\"Baby Dragon\" + \"Alligator's Sword\" You can Inflict Direct Damage to your opponent's Life Points with this card if the only Attributes of Monster Cards on your opponent's side of the field are EARTH, WATER, or FIRE.",
+  "notes": [
+    "No LIGHT, DARK or WIND monster on the opponent's side means the direct attack is legal."
+  ],
+  "scripts": [
+    {
+      "id": "501_conditional_direct_attack",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "attack_directly",
+          "target": "$self"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true,
+            "zone": "self_monster"
+          },
+          {
+            "count_zone": "opponent_monster",
+            "count_filter": {
+              "any": [
+                {
+                  "attribute": "LIGHT"
+                },
+                {
+                  "attribute": "DARK"
+                },
+                {
+                  "attribute": "WIND"
+                }
+              ]
+            },
+            "count_max": 0
+          }
+        ]
+      },
+      "source_text": "\"Baby Dragon\" + \"Alligator's Sword\" You can Inflict Direct Damage to your opponent's Life Points with this card if the only Attributes of Monster Cards on your opponent's side of the field are EARTH, WATER, or FIRE."
+    }
+  ]
+}

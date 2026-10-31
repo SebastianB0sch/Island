@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "card_id": 555,
+  "name": "Fairy Meteor Crush",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When a monster equipped with this card attacks with an ATK that is higher than the DEF of a Defense Position monster, inflict the difference as Battle Damage to your opponent's Life Points.",
+  "notes": [
+    "The equipped monster gains piercing."
+  ],
+  "scripts": [
+    {
+      "id": "555_equip_activate",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "equip",
+          "target": "$target"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1
+      },
+      "source_text": "Equip this card to a legal monster."
+    },
+    {
+      "id": "555_equip_continuous",
+      "trigger": "equip_continuous",
+      "operations": [
+        {
+          "op": "piercing",
+          "target": "$equipped"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true
+      },
+      "source_text": "Apply the equipped monster's continuous bonus."
+    }
+  ]
+}

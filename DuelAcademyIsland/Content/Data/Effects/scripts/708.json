@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 708,
+  "name": "Legendary Fiend",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "During each Standby Phase on your turn, this card's ATK is raised by 700 points.",
+  "notes": [
+    "Lingering ATK gain on the controller's Standby Phase."
+  ],
+  "scripts": [
+    {
+      "id": "708_standby_attack_gain",
+      "trigger": "on_standby",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 700,
+          "mode": "flat"
+        }
+      ],
+      "duration": "permanent",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "turn": "self"
+      },
+      "source_text": "During each Standby Phase on your turn, this card's ATK is raised by 700 points."
+    }
+  ]
+}

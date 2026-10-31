@@ -939,6 +939,30 @@ void FDuelEngine::MoveToDeckBottom(FDuelCard Card)
 	SideRef(Card.Owner).Deck.Insert(Card, 0);
 }
 
+void FDuelEngine::MoveToDeckTop(FDuelCard Card)
+{
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnCardLeftField(Card);
+	}
+	Card.Controller = Card.Owner;
+	Card.bFaceUp = false;
+	Card.Position = EDuelPosition::Attack;
+	Card.EquippedToUid = 0;
+	Card.TiedToUid = 0;
+	Card.Counters = 0;
+	if (Card.bExtra || Card.IsFusion())
+	{
+		Card.bExtra = true;
+		EmitVisual(EDuelVisualEventType::Return, Card.Owner, &Card, 0, TEXT("EXTRA DECK"));
+		SideRef(Card.Owner).Extra.Add(Card);
+		return;
+	}
+	EmitVisual(EDuelVisualEventType::Return, Card.Owner, &Card, 0, TEXT("DECK TOP"));
+	// Draw() uses Pop(), so the last array element is the top of the Deck.
+	SideRef(Card.Owner).Deck.Add(Card);
+}
+
 void FDuelEngine::RemoveFromGrave(EDuelOwner Side, int32 Uid)
 {
 	FDuelSide& State = SideRef(Side);
@@ -1303,6 +1327,10 @@ bool FDuelEngine::IsWarrior(const FDuelCard& Card) const
 
 bool FDuelEngine::CanBeSpecialSummonedByEffect(const FDuelCard& Card) const
 {
+	if (EffectRuntime && EffectRuntime->IsSummonLocked(Card.Controller, true))
+	{
+		return false;
+	}
 	// These cards name the exact Summon that may bring them out and cannot be
 	// revived or cheated onto the field by generic effects such as Premature
 	// Burial, Call of the Haunted or A Hero Emerges. Their dedicated summon
@@ -1427,6 +1455,10 @@ int32 FDuelEngine::EquipAtkBonus(const FDuelCard& Card) const
 			{
 				continue;
 			}
+			if (EffectRuntime && EffectRuntime->HasEquipStatScript(Spell.Data.Id))
+			{
+				continue;
+			}
 			if (IsName(Spell, TEXT("Black Pendant"))) Bonus += 500;
 			else if (IsName(Spell, TEXT("Burning Spear")) && Card.Data.Attribute == TEXT("FIRE")) Bonus += 400;
 			else if (IsName(Spell, TEXT("Salamandra")) && Card.Data.Attribute == TEXT("FIRE")) Bonus += 700;
@@ -1462,6 +1494,10 @@ int32 FDuelEngine::EquipDefBonus(const FDuelCard& Card) const
 		for (const FDuelCard& Spell : State.Spells)
 		{
 			if (!Spell.IsValid() || !Spell.bFaceUp || Spell.EquippedToUid != Card.Uid)
+			{
+				continue;
+			}
+			if (EffectRuntime && EffectRuntime->HasEquipStatScript(Spell.Data.Id))
 			{
 				continue;
 			}
@@ -1506,15 +1542,16 @@ int32 FDuelEngine::GetAtk(const FDuelCard& Card) const
 		const FString& FieldName = Field->Data.Name;
 		const FString& Attribute = Card.Data.Attribute;
 		const FString& Type = Card.Data.MonsterType;
-		if (FieldName == TEXT("Umi"))
+		const bool bLegacyFieldStats = !EffectRuntime || !EffectRuntime->HasFieldStatScript(Field->Data.Id);
+		if (bLegacyFieldStats && FieldName == TEXT("Umi"))
 		{
 			if (Type == TEXT("Fish") || Type == TEXT("Sea Serpent") || Type == TEXT("Thunder") || Type == TEXT("Aqua")) Value += 200;
 			if (Type == TEXT("Machine") || Type == TEXT("Pyro")) Value -= 200;
 		}
-		else if (FieldName == TEXT("A Legendary Ocean") && Attribute == TEXT("WATER")) Value += 200;
-		else if (FieldName == TEXT("Umiiruka") && Attribute == TEXT("WATER")) Value += 500;
-		else if (FieldName == TEXT("Rising Air Current") && Attribute == TEXT("WIND")) Value += 500;
-		else if (FieldName == TEXT("Harpies' Hunting Ground") && Type == TEXT("Winged Beast")) Value += 200;
+		else if (bLegacyFieldStats && FieldName == TEXT("A Legendary Ocean") && Attribute == TEXT("WATER")) Value += 200;
+		else if (bLegacyFieldStats && FieldName == TEXT("Umiiruka") && Attribute == TEXT("WATER")) Value += 500;
+		else if (bLegacyFieldStats && FieldName == TEXT("Rising Air Current") && Attribute == TEXT("WIND")) Value += 500;
+		else if (bLegacyFieldStats && FieldName == TEXT("Harpies' Hunting Ground") && Type == TEXT("Winged Beast")) Value += 200;
 	}
 
 	// Continuous monster effects are global while their source is face-up.
@@ -1604,15 +1641,16 @@ int32 FDuelEngine::GetDef(const FDuelCard& Card) const
 		const FString& FieldName = Field->Data.Name;
 		const FString& Attribute = Card.Data.Attribute;
 		const FString& Type = Card.Data.MonsterType;
-		if (FieldName == TEXT("Umi"))
+		const bool bLegacyFieldStats = !EffectRuntime || !EffectRuntime->HasFieldStatScript(Field->Data.Id);
+		if (bLegacyFieldStats && FieldName == TEXT("Umi"))
 		{
 			if (Type == TEXT("Fish") || Type == TEXT("Sea Serpent") || Type == TEXT("Thunder") || Type == TEXT("Aqua")) Value += 200;
 			if (Type == TEXT("Machine") || Type == TEXT("Pyro")) Value -= 200;
 		}
-		else if (FieldName == TEXT("A Legendary Ocean") && Attribute == TEXT("WATER")) Value += 200;
-		else if (FieldName == TEXT("Umiiruka") && Attribute == TEXT("WATER")) Value -= 400;
-		else if (FieldName == TEXT("Rising Air Current") && Attribute == TEXT("WIND")) Value -= 400;
-		else if (FieldName == TEXT("Harpies' Hunting Ground") && Type == TEXT("Winged Beast")) Value += 200;
+		else if (bLegacyFieldStats && FieldName == TEXT("A Legendary Ocean") && Attribute == TEXT("WATER")) Value += 200;
+		else if (bLegacyFieldStats && FieldName == TEXT("Umiiruka") && Attribute == TEXT("WATER")) Value -= 400;
+		else if (bLegacyFieldStats && FieldName == TEXT("Rising Air Current") && Attribute == TEXT("WIND")) Value -= 400;
+		else if (bLegacyFieldStats && FieldName == TEXT("Harpies' Hunting Ground") && Type == TEXT("Winged Beast")) Value += 200;
 	}
 
 	if (IsName(Card, TEXT("Harpie's Pet Dragon")))
@@ -1747,6 +1785,14 @@ TArray<FDuelActionInfo> FDuelEngine::GetHandActions(int32 Uid)
 			Special.Label = SpecialSummonLabel(*Card);
 			Actions.Add(Special);
 		}
+		else if (EffectRuntime && EffectRuntime->HasInherentSummon(*Card)
+			&& EmptyMonsterZone(EDuelOwner::Player) != INDEX_NONE)
+		{
+			FDuelActionInfo Special;
+			Special.Action = EDuelAction::SpecialSummon;
+			Special.Label = TEXT("Special Summon");
+			Actions.Add(Special);
+		}
 	}
 	else if (Card->IsSpell())
 	{
@@ -1754,7 +1800,7 @@ TArray<FDuelActionInfo> FDuelEngine::GetHandActions(int32 Uid)
 		{
 			FDuelActionInfo Activate;
 			Activate.Action = EDuelAction::ActivateSpell;
-			Activate.Label = IsFieldSpellName(Card->Data.Name) ? TEXT("Activate Field Spell") : TEXT("Activate");
+			Activate.Label = IsFieldSpellCard(*Card) ? TEXT("Activate Field Spell") : TEXT("Activate");
 			Actions.Add(Activate);
 		}
 		if (Card->Data.Subtype == TEXT("Quick-Play") && EmptySpellZone(EDuelOwner::Player) != INDEX_NONE)
@@ -1852,7 +1898,7 @@ TArray<FDuelActionInfo> FDuelEngine::GetSpellTrapActions(int32 Uid)
 		}
 		return Actions;
 	}
-	if (!IsManualTrapName(Card->Data.Name))
+	if (!IsManualTrapCard(*Card))
 	{
 		return Actions;
 	}
@@ -1941,6 +1987,10 @@ int32 FDuelEngine::GetRequiredTributes(int32 HandUid) const
 
 bool FDuelEngine::CanNormalSummon(const FDuelCard& Card, TArray<int32>* OutTributeUids)
 {
+	if (EffectRuntime && EffectRuntime->IsSummonLocked(EDuelOwner::Player, false))
+	{
+		return false;
+	}
 	if (!IsMainPhase() || !CanPlayerAct() || Player.bNormalSummoned || !Card.IsMonster() || IsNormalSummonLocked(Card))
 	{
 		return false;
@@ -1982,6 +2032,10 @@ bool FDuelEngine::CanNormalSummon(const FDuelCard& Card, TArray<int32>* OutTribu
 
 bool FDuelEngine::CanSpecialSummon(const FDuelCard& Card)
 {
+	if (EffectRuntime && EffectRuntime->IsSummonLocked(EDuelOwner::Player, true))
+	{
+		return false;
+	}
 	if (!IsMainPhase() || !CanPlayerAct())
 	{
 		return false;
@@ -2034,6 +2088,10 @@ bool FDuelEngine::PerformSpecialSummon(FDuelCard& Card, EDuelOwner Side)
 {
 	const FString Name = Card.Data.Name;
 	const int32 Uid = Card.Uid;
+	if (EffectRuntime && EffectRuntime->IsSummonLocked(Side, true))
+	{
+		return false;
+	}
 
 	if (IsName(Card, TEXT("Ocean Dragon Lord - Neo-Daedalus")))
 	{
@@ -2162,6 +2220,15 @@ bool FDuelEngine::SpecialSummon(int32 Uid, FString& OutError)
 	}
 	if (!HandCard || !CanSpecialSummon(*HandCard))
 	{
+		if (EffectRuntime && EffectRuntime->IsSummonLocked(EDuelOwner::Player, true))
+		{
+			OutError = TEXT("Special Summons are currently locked.");
+			return false;
+		}
+		if (HandCard && EffectRuntime && EffectRuntime->HasInherentSummon(*HandCard))
+		{
+			return EffectRuntime->ActivateInherentSummon(Uid, OutError);
+		}
 		OutError = TEXT("That monster cannot be Special Summoned right now.");
 		return false;
 	}
@@ -2326,6 +2393,11 @@ bool FDuelEngine::NormalSummon(int32 Uid, const TArray<int32>& TributeUids, bool
 		OutError = TEXT("That card cannot be Normal Summoned.");
 		return false;
 	}
+	if (EffectRuntime && EffectRuntime->IsSummonLocked(EDuelOwner::Player, false))
+	{
+		OutError = TEXT("Normal Summons are currently locked.");
+		return false;
+	}
 
 	const int32 Required = GetTributeCount(*HandCard);
 	if (TributeUids.Num() != Required)
@@ -2462,6 +2534,12 @@ bool FDuelEngine::ChangePosition(int32 Uid, FString& OutError)
 		OutError = TEXT("That monster cannot change position this turn.");
 		return false;
 	}
+	if (EffectRuntime && EffectRuntime->IsPositionChangeLocked(*Card))
+	{
+		OutError = TEXT("That monster's battle position is locked.");
+		return false;
+	}
+	const EDuelPosition PreviousPosition = Card->Position;
 	Card->Position = Card->Position == EDuelPosition::Attack ? EDuelPosition::Defense : EDuelPosition::Attack;
 	Card->PositionChangedTurn = TurnNumber;
 	Log(FString::Printf(TEXT("%s is now in %s Position."), *CardName(*Card),
@@ -2470,6 +2548,7 @@ bool FDuelEngine::ChangePosition(int32 Uid, FString& OutError)
 		Card->Position == EDuelPosition::Attack ? TEXT("ATTACK") : TEXT("DEFENSE"));
 	if (EffectRuntime)
 	{
+		EffectRuntime->OnPositionChanged(*Card, PreviousPosition);
 		EffectRuntime->RecomputeContinuous();
 	}
 	return true;
@@ -2516,6 +2595,10 @@ bool FDuelEngine::CanAttack(const FDuelCard& Card) const
 		return false;
 	}
 	if (!Card.IsValid() || !Card.IsMonster() || !Card.bFaceUp || Card.Position != EDuelPosition::Attack || Card.bHasAttacked)
+	{
+		return false;
+	}
+	if (EffectRuntime && !EffectRuntime->CanCardAttack(Card))
 	{
 		return false;
 	}
@@ -2586,10 +2669,16 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 		return false;
 	}
 	const bool bDirectAllowed = CountMonsters(DefenderSide) == 0
-		|| (IsName(*Attacker, TEXT("Amphibious Bugroth MK-3")) && HasUmi(AttackerSide));
+		|| (IsName(*Attacker, TEXT("Amphibious Bugroth MK-3")) && HasUmi(AttackerSide))
+		|| (EffectRuntime && EffectRuntime->CanAttackDirectly(*Attacker));
 	if (!Target && !bDirectAllowed)
 	{
 		OutError = TEXT("You must choose an attack target.");
+		return false;
+	}
+	if (EffectRuntime && !EffectRuntime->CanDeclareAttack(*Attacker, Target == nullptr))
+	{
+		OutError = TEXT("That monster cannot declare this attack.");
 		return false;
 	}
 
@@ -2617,6 +2706,25 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 	if (EffectRuntime)
 	{
 		EffectRuntime->OnAttackDeclared(*Attacker, Target);
+		if (bWinnerSet || !FindMonster(AttackerUid))
+		{
+			return true;
+		}
+		Attacker = FindMonster(AttackerUid);
+		if (TargetUid > 0)
+		{
+			Target = FindMonster(TargetUid);
+			if (!Target)
+			{
+				return true;
+			}
+		}
+		EffectRuntime->OnAttackTarget(*Attacker, Target);
+		if (EffectRuntime->ConsumeAttackNegated())
+		{
+			Log(FString::Printf(TEXT("%s's attack is negated."), *AttackerName), TEXT("effect"));
+			return true;
+		}
 		if (bWinnerSet || !FindMonster(AttackerUid))
 		{
 			return true;
@@ -2718,10 +2826,25 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 
 	if (!Target)
 	{
-		const int32 Damage = GetBattleAtk(*Attacker, nullptr);
+		int32 Damage = GetBattleAtk(*Attacker, nullptr);
+		if (EffectRuntime)
+		{
+			Damage = FMath::FloorToInt(Damage * EffectRuntime->GetBattleDamageMultiplier(Attacker->Uid));
+		}
 		Log(FString::Printf(TEXT("%s attacks directly for %d damage."), *AttackerName, Damage), TEXT("damage"));
+		const int32 LpBefore = GetSide(DefenderSide).LP;
 		InflictBattleDamage(DefenderSide, Damage, AttackerName);
-		AfterAttack(*Attacker);
+		if (EffectRuntime && !bWinnerSet && GetSide(DefenderSide).LP < LpBefore)
+		{
+			if (FDuelCard* StillAttacker = FindMonster(AttackerUid))
+			{
+				EffectRuntime->OnBattleDamage(DefenderSide, LpBefore - GetSide(DefenderSide).LP, *StillAttacker, nullptr, true);
+			}
+		}
+		if (FDuelCard* StillAttacker = FindMonster(AttackerUid))
+		{
+			AfterAttack(*StillAttacker);
+		}
 		CheckWinner();
 		return true;
 	}
@@ -2801,7 +2924,7 @@ bool FDuelEngine::ResolveAttackTrap(FDuelCard& Trap, EDuelOwner Defender, FDuelC
 		Log(TEXT("Mirror Force destroys all Attack Position monsters."), TEXT("trap"));
 		if (FDuelCard* StillThere = FindSpellTrap(TrapUid))
 		{
-			if (!IsContinuousTrapName(TrapName)) DestroySpellTrap(*StillThere, true);
+			if (!IsPersistentSpellTrap(*StillThere)) DestroySpellTrap(*StillThere, true);
 		}
 		return true;
 	}
@@ -2890,7 +3013,36 @@ void FDuelEngine::ResolveBattle(FDuelCard& Attacker, FDuelCard* Target)
 	const int32 TargetUid = Target->Uid;
 	if (EffectRuntime)
 	{
+		EffectRuntime->OnDamageStep(Attacker, Target);
+		if (bWinnerSet)
+		{
+			return;
+		}
+		if (!FindMonster(AttackerUid))
+		{
+			return;
+		}
+		Attacker = *FindMonster(AttackerUid);
+		Target = FindMonster(TargetUid);
+		if (!Target)
+		{
+			return;
+		}
 		EffectRuntime->OnDamageCalculated(Attacker, Target);
+		if (bWinnerSet)
+		{
+			return;
+		}
+		if (!FindMonster(AttackerUid))
+		{
+			return;
+		}
+		Attacker = *FindMonster(AttackerUid);
+		Target = FindMonster(TargetUid);
+		if (!Target)
+		{
+			return;
+		}
 	}
 	const int32 AttackerAtk = GetBattleAtk(Attacker, Target);
 	const int32 TargetAtk = GetAtk(*Target);
@@ -2902,7 +3054,8 @@ void FDuelEngine::ResolveBattle(FDuelCard& Attacker, FDuelCard* Target)
 	int32 DamageToDefender = 0;
 	int32 DamageToAttacker = 0;
 
-	const bool bPiercing = IsName(Attacker, TEXT("Spear Dragon"));
+	const bool bPiercing = IsName(Attacker, TEXT("Spear Dragon"))
+		|| (EffectRuntime && EffectRuntime->HasPiercing(Attacker.Uid));
 
 	if (!bTargetDefense)
 	{
@@ -2976,12 +3129,23 @@ void FDuelEngine::ResolveBattle(FDuelCard& Attacker, FDuelCard* Target)
 			{
 				DamageToDefender = 0;
 			}
+			DamageToDefender = FMath::FloorToInt(
+				DamageToDefender * EffectRuntime->GetBattleDamageMultiplier(AttackerUid));
 		}
 		if (DamageToDefender > 0)
 		{
 			Log(FString::Printf(TEXT("%s %s %d battle damage."), *SideRef(Receiver).Name,
 				Receiver == EDuelOwner::Player ? TEXT("take") : TEXT("takes"), DamageToDefender), TEXT("damage"));
+			const int32 LpBefore = GetSide(Receiver).LP;
 			InflictBattleDamage(Receiver, DamageToDefender, TEXT("battle"));
+			if (EffectRuntime && !bWinnerSet && GetSide(Receiver).LP < LpBefore)
+			{
+				if (FDuelCard* AttackerNow = FindMonster(AttackerUid))
+				{
+					EffectRuntime->OnBattleDamage(Receiver, LpBefore - GetSide(Receiver).LP,
+						*AttackerNow, FindMonster(TargetUid), false);
+				}
+			}
 		}
 	}
 	if (DamageToAttacker > 0)
@@ -2998,12 +3162,23 @@ void FDuelEngine::ResolveBattle(FDuelCard& Attacker, FDuelCard* Target)
 			{
 				DamageToAttacker = 0;
 			}
+			DamageToAttacker = FMath::FloorToInt(
+				DamageToAttacker * EffectRuntime->GetBattleDamageMultiplier(TargetUid));
 		}
 		if (DamageToAttacker > 0)
 		{
 			Log(FString::Printf(TEXT("%s %s %d battle damage."), *SideRef(Receiver).Name,
 				Receiver == EDuelOwner::Player ? TEXT("take") : TEXT("takes"), DamageToAttacker), TEXT("damage"));
+			const int32 LpBefore = GetSide(Receiver).LP;
 			InflictBattleDamage(Receiver, DamageToAttacker, TEXT("battle"));
+			if (EffectRuntime && !bWinnerSet && GetSide(Receiver).LP < LpBefore)
+			{
+				if (FDuelCard* AttackerNow = FindMonster(AttackerUid))
+				{
+					EffectRuntime->OnBattleDamage(Receiver, LpBefore - GetSide(Receiver).LP,
+						*AttackerNow, FindMonster(TargetUid), false);
+				}
+			}
 		}
 	}
 
@@ -3088,6 +3263,10 @@ void FDuelEngine::AfterAttack(FDuelCard& Attacker)
 		Attacker.bHasAttacked = false;
 	}
 	if (Attacker.ExtraAttacks > 0 && Attacker.AttacksUsed <= 1)
+	{
+		Attacker.bHasAttacked = false;
+	}
+	if (EffectRuntime && EffectRuntime->HasExtraAttack(Attacker.Uid) && Attacker.AttacksUsed <= 1)
 	{
 		Attacker.bHasAttacked = false;
 	}
@@ -3376,6 +3555,14 @@ void FDuelEngine::DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Att
 	}
 	const int32 Uid = Card.Uid;
 	FDuelCard Dead = *Existing;
+	if (EffectRuntime && EffectRuntime->ShouldPreventDestruction(Dead, bByBattle, Reason))
+	{
+		Log(FString::Printf(TEXT("%s is not destroyed (%s)."), *CardName(Dead), *Reason), TEXT("effect"));
+		EmitVisual(EDuelVisualEventType::Effect, Dead.Controller, &Dead, 0, TEXT("DESTRUCTION PREVENTED"));
+		return;
+	}
+	const int32 AttackerUid = Attacker ? Attacker->Uid : 0;
+	const bool bBanishInstead = EffectRuntime && EffectRuntime->ShouldBanishInsteadOfGrave(Dead);
 	const bool bWasFaceUp = Dead.bFaceUp && !bWasFaceDown;
 	const EDuelOwner Controller = Dead.Controller;
 	const int32 Zone = FindMonsterZone(Controller, Uid);
@@ -3396,7 +3583,14 @@ void FDuelEngine::DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Att
 		return;
 	}
 	CleanupEquips(Dead);
-	MoveToGrave(Dead);
+	if (bBanishInstead)
+	{
+		MoveToBanished(Dead);
+	}
+	else
+	{
+		MoveToGrave(Dead);
+	}
 	Log(FString::Printf(TEXT("%s is destroyed%s."), *CardName(Dead),
 		Reason.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" (%s)"), *Reason)), TEXT("destroy"));
 	FDuelVisualEvent& DestroyEvent = EmitVisual(EDuelVisualEventType::Destroy, Controller, &Dead, 0, Reason);
@@ -3404,6 +3598,13 @@ void FDuelEngine::DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Att
 	if (EffectRuntime)
 	{
 		EffectRuntime->OnDestroyed(Dead, bByBattle, Reason);
+		if (bByBattle && AttackerUid != 0)
+		{
+			if (FDuelCard* SurvivingAttacker = FindMonster(AttackerUid))
+			{
+				EffectRuntime->OnBattleDestroyByAttacker(*SurvivingAttacker, Dead);
+			}
+		}
 	}
 
 	// Battle-triggered floaters.
@@ -3839,6 +4040,53 @@ bool FDuelEngine::IsContinuousTrap(const FString& Name) const
 	return IsContinuousTrapName(Name);
 }
 
+bool FDuelEngine::IsFieldSpellCard(const FDuelCard& Card) const
+{
+	return Card.Data.Subtype == TEXT("Field") || IsFieldSpellName(Card.Data.Name);
+}
+
+bool FDuelEngine::IsPersistentSpellTrap(const FDuelCard& Card) const
+{
+	if (!Card.IsSpell() && !Card.IsTrap())
+	{
+		return false;
+	}
+	if (EffectRuntime && EffectRuntime->ShouldStayOnFieldAfterActivation(Card))
+	{
+		return true;
+	}
+	const FString& Subtype = Card.Data.Subtype;
+	return Subtype == TEXT("Equip")
+		|| Subtype == TEXT("Field")
+		|| Subtype == TEXT("Continuous")
+		|| IsFieldSpellName(Card.Data.Name)
+		|| IsEquipName(Card.Data.Name)
+		|| IsContinuousTrapName(Card.Data.Name);
+}
+
+bool FDuelEngine::IsManualTrapCard(const FDuelCard& Card) const
+{
+	if (!Card.IsTrap())
+	{
+		return false;
+	}
+	if (IsManualTrapName(Card.Data.Name))
+	{
+		return true;
+	}
+	if (EffectRuntime)
+	{
+		if (Card.Data.Subtype == TEXT("Continuous")
+			&& EffectRuntime->HasScriptTrigger(Card.Data.Id, EDEffectTrigger::OnActivate))
+		{
+			return true;
+		}
+		return EffectRuntime->HasScriptTrigger(Card.Data.Id, EDEffectTrigger::Manual)
+			|| EffectRuntime->HasScriptTrigger(Card.Data.Id, EDEffectTrigger::Continuous);
+	}
+	return false;
+}
+
 // ---------------------------------------------------------------------------
 // Summon helpers used by card effects
 // ---------------------------------------------------------------------------
@@ -4060,7 +4308,7 @@ bool FDuelEngine::CanActivateSpellCard(const FDuelCard& Card)
 		return false;
 	}
 	const FString& Name = Card.Data.Name;
-	const bool bFieldSpell = IsFieldSpellName(Name);
+	const bool bFieldSpell = IsFieldSpellCard(Card);
 	if (!bFieldSpell && EmptySpellZone(Card.Controller) == INDEX_NONE)
 	{
 		return false;
@@ -4632,8 +4880,8 @@ bool FDuelEngine::ActivateSpell(int32 Uid, FString& OutError)
 		}
 	}
 	const FString Name = HandCard->Data.Name;
-	const bool bFieldSpell = IsFieldSpellName(Name);
-	const bool bStays = bFieldSpell || IsEquipName(Name);
+	const bool bFieldSpell = IsFieldSpellCard(*HandCard);
+	const bool bStays = IsPersistentSpellTrap(*HandCard);
 	FDuelCard Copy;
 	if (!RemoveFromZone(Copy, Uid))
 	{
@@ -4745,7 +4993,7 @@ bool FDuelEngine::ActivateSetTrap(int32 Uid, FString& OutError)
 			return false;
 		}
 	}
-	if (!IsManualTrapName(Trap->Data.Name))
+	if (!IsManualTrapCard(*Trap))
 	{
 		OutError = TEXT("That Trap activates automatically at the correct timing.");
 		return false;
@@ -4835,7 +5083,7 @@ bool FDuelEngine::ActivateQuickPlayFromHand(int32 Uid, FString& OutError)
 	}
 	if (FDuelCard* Done = FindSpellTrap(Uid))
 	{
-		if (!Done->bFaceUp || Done->Data.Subtype != TEXT("Continuous"))
+		if (!IsPersistentSpellTrap(*Done))
 		{
 			FDuelCard Remove;
 			if (RemoveFromZone(Remove, Uid))
@@ -4871,6 +5119,10 @@ bool FDuelEngine::ActivateSetSpell(int32 Uid, FString& OutError)
 
 	const FString Name = Card->Data.Name;
 	Card->bFaceUp = true;
+	if (EffectRuntime)
+	{
+		EffectRuntime->RecomputeContinuous();
+	}
 	if (TryCounterSpell(EDuelOwner::Player, EDuelOwner::Opponent))
 	{
 		if (FDuelCard* Negated = FindSpellTrap(Uid))
@@ -4934,6 +5186,10 @@ bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bA
 	{
 		FieldTrap->bFaceUp = true;
 	}
+	if (EffectRuntime)
+	{
+		EffectRuntime->RecomputeContinuous();
+	}
 	Log(FString::Printf(TEXT("%s activates %s."), *SideRef(Side).Name, *Name), TEXT("trap"));
 	FDuelVisualEvent& TrapEvent = EmitVisual(EDuelVisualEventType::Trap, Side, &Trap, 0, Name);
 	TrapEvent.Zone = FindSpellZone(Side, Uid);
@@ -4960,7 +5216,7 @@ bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bA
 	{
 		return true;
 	}
-	if (!IsContinuousTrapName(Name))
+	if (!IsPersistentSpellTrap(*Placed))
 	{
 		if (FDuelCard* Done = FindSpellTrap(Uid))
 		{
@@ -5607,6 +5863,11 @@ bool FDuelEngine::CanActivateMonsterEffect(const FDuelCard& Card)
 
 bool FDuelEngine::ActivateMonsterEffect(int32 Uid, FString& OutError)
 {
+	if (EffectRuntime && EffectRuntime->IsMonsterEffectLocked())
+	{
+		OutError = TEXT("Monster effects are currently locked.");
+		return false;
+	}
 	if (HasPendingChoice())
 	{
 		OutError = TEXT("Answer the pending choice first.");
@@ -6027,8 +6288,8 @@ void FDuelEngine::AiActivateSpellCard(FDuelCard& Card)
 	const EDuelOwner Opp = Other(Side);
 	const int32 Uid = Card.Uid;
 	const FString Name = Card.Data.Name;
-	const bool bFieldSpell = IsFieldSpellName(Name);
-	const bool bStays = bFieldSpell || IsEquipName(Name);
+	const bool bFieldSpell = IsFieldSpellCard(Card);
+	const bool bStays = IsPersistentSpellTrap(Card);
 
 	FDuelCard Copy;
 	if (!RemoveFromZone(Copy, Uid))
@@ -6177,7 +6438,7 @@ void FDuelEngine::AiActivateManualTraps()
 	for (const FDuelCard& Spell : State.Spells)
 	{
 		if (!Spell.IsValid() || Spell.bFaceUp || Spell.SetTurn >= TurnNumber) continue;
-		if (IsManualTrapName(Spell.Data.Name)) TrapUids.Add(Spell.Uid);
+		if (IsManualTrapCard(Spell)) TrapUids.Add(Spell.Uid);
 	}
 	for (int32 Uid : TrapUids)
 	{
@@ -6882,9 +7143,7 @@ void FDuelEngine::CleanupResolvedChainCard(int32 CardUid)
 	{
 		return;
 	}
-	const FString& Subtype = Card->Data.Subtype;
-	const bool bStays = Subtype == TEXT("Continuous") || Subtype == TEXT("Equip") || Subtype == TEXT("Field");
-	if (bStays)
+	if (IsPersistentSpellTrap(*Card))
 	{
 		return;
 	}
@@ -7131,21 +7390,31 @@ bool FDuelEngine::ActivateCounterTrapResponse(int32 TrapUid, int32 TargetChainLi
 	Link.LinkType = EDuelChainLinkType::Trap;
 	Link.Label = Trap->Data.Name;
 	Link.bCardEffect = true;
+	const EDuelOwner TrapController = Trap->Controller;
+	const FString TrapName = Trap->Data.Name;
 	if (AddChainLink(Link, OutError) == 0)
 	{
 		return false;
 	}
-	if (!NegateChainLink(TargetChainLinkNumber, OutError))
-	{
-		return false;
-	}
 	Trap->bFaceUp = true;
-	if (Trap->Controller == EDuelOwner::Player)
+	if (EffectRuntime)
+	{
+		EffectRuntime->OnCounterTrapResponse(*Trap, TargetChainLinkNumber);
+	}
+	if (ChainLinks.IsValidIndex(TargetChainLinkNumber - 1)
+		&& !ChainLinks[TargetChainLinkNumber - 1].bNegated)
+	{
+		if (!NegateChainLink(TargetChainLinkNumber, OutError))
+		{
+			return false;
+		}
+	}
+	if (TrapController == EDuelOwner::Player)
 	{
 		++ResultStats.TrapsActivated;
 	}
 	Log(FString::Printf(TEXT("%s activates %s in response to chain link %d."),
-		*SideRef(Trap->Controller).Name, *Trap->Data.Name, TargetChainLinkNumber), TEXT("trap"));
+		*SideRef(TrapController).Name, *TrapName, TargetChainLinkNumber), TEXT("trap"));
 	return true;
 }
 

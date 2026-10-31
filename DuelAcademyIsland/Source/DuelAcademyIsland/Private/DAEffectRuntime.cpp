@@ -61,31 +61,108 @@ namespace
 		case EDEffectTrigger::OnChain:
 		case EDEffectTrigger::OnAttackDeclared:
 		case EDEffectTrigger::OnAttackTarget:
+		case EDEffectTrigger::OnDamageStep:
 		case EDEffectTrigger::OnDamageCalculated:
+		case EDEffectTrigger::OnBattleDamage:
 		case EDEffectTrigger::OnBattleDestroy:
+		case EDEffectTrigger::OnBattleDestroyByAttacker:
 		case EDEffectTrigger::OnDestroy:
 		case EDEffectTrigger::OnSentToGraveyard:
 		case EDEffectTrigger::OnRemovedFromField:
+		case EDEffectTrigger::OnPositionChange:
+		case EDEffectTrigger::OnTributeSummon:
+		case EDEffectTrigger::InherentSummon:
 			return true;
 		default:
 			return false;
 		}
 	}
 
+	/** Triggers whose natural subject is the card they happened to.  A05's
+	 *  scripts can opt into a field-wide scan with `field_scan: true` or
+	 *  `event_source_is_self: false`. */
+	bool IsSelfOnlyTrigger(EDEffectTrigger Trigger)
+	{
+		switch (Trigger)
+		{
+		case EDEffectTrigger::OnBattleDestroy:
+		case EDEffectTrigger::OnSentToGraveyard:
+		case EDEffectTrigger::OnTributeSummon:
+		case EDEffectTrigger::OnPositionChange:
+		case EDEffectTrigger::OnBattleDestroyByAttacker:
+		case EDEffectTrigger::OnBattleDamage:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	bool IsSummonTrigger(EDEffectTrigger Trigger)
+	{
+		return Trigger == EDEffectTrigger::OnSummon
+			|| Trigger == EDEffectTrigger::OnNormalSummon
+			|| Trigger == EDEffectTrigger::OnSpecialSummon
+			|| Trigger == EDEffectTrigger::OnFlipSummon;
+	}
+
+	bool ConditionRequestsFieldScan(const TSharedPtr<FJsonObject>& Condition)
+	{
+		if (!Condition.IsValid())
+		{
+			return false;
+		}
+		bool bValue = false;
+		if (Condition->TryGetBoolField(TEXT("field_scan"), bValue) && bValue)
+		{
+			return true;
+		}
+		if (Condition->TryGetBoolField(TEXT("event_source_is_self"), bValue) && !bValue)
+		{
+			return true;
+		}
+		for (const TCHAR* Key : { TEXT("all"), TEXT("any") })
+		{
+			const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+			if (Condition->TryGetArrayField(Key, Values) && Values)
+			{
+				for (const TSharedPtr<FJsonValue>& Value : *Values)
+				{
+					if (Value.IsValid() && ConditionRequestsFieldScan(Value->AsObject()))
+					{
+						return true;
+					}
+				}
+			}
+		}
+		const TSharedPtr<FJsonObject>* NotCondition = nullptr;
+		if (Condition->TryGetObjectField(TEXT("not"), NotCondition) && NotCondition && NotCondition->IsValid())
+		{
+			if (ConditionRequestsFieldScan(*NotCondition))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	bool IsKnownOp(const FString& Op)
 	{
 		static const TSet<FString> Known = {
-			TEXT("add_counter"), TEXT("allow_fusion"), TEXT("attack_directly"), TEXT("banish"),
-			TEXT("battle_damage_zero"), TEXT("change_position"), TEXT("copy"), TEXT("declare_name"),
-			TEXT("destroy"), TEXT("discard"), TEXT("draw"), TEXT("equip"), TEXT("excavate"),
-			TEXT("extra_attack"), TEXT("fusion"), TEXT("gain_lp"), TEXT("heal"), TEXT("inflict_damage"),
-			TEXT("lock_activation"), TEXT("look_at_deck"), TEXT("mill"), TEXT("modify_atk"),
-			TEXT("modify_def"), TEXT("negate"), TEXT("place_counter"), TEXT("prevent_battle_damage"),
-			TEXT("redirect_attack"), TEXT("redirect_battle_damage"), TEXT("remove_counter"),
-			TEXT("return_to_extra"), TEXT("return_to_hand"), TEXT("return_to_deck"), TEXT("reveal"),
-			TEXT("ritual"), TEXT("roll_die"), TEXT("search"), TEXT("send_to_grave"), TEXT("send_to_graveyard"), TEXT("set"),
-			TEXT("shuffle"), TEXT("skip_phase"), TEXT("special_summon"), TEXT("summon"),
-			TEXT("take_control"), TEXT("control"), TEXT("toss_coin"), TEXT("damage")
+			TEXT("add_counter"), TEXT("allow_fusion"), TEXT("attack_directly"), TEXT("attack_lock"),
+			TEXT("banish"), TEXT("battle_damage_zero"), TEXT("battle_damage_modifier"), TEXT("battle_position_lock"),
+			TEXT("change_position"), TEXT("copy"), TEXT("declare_name"), TEXT("destroy"),
+			TEXT("destruction_replacement"), TEXT("destroy_replace"), TEXT("discard"), TEXT("draw"),
+			TEXT("equip"), TEXT("excavate"), TEXT("extra_attack"), TEXT("fusion"), TEXT("gain_lp"),
+			TEXT("heal"), TEXT("inherent_special_summon"), TEXT("inflict_damage"), TEXT("lock_activation"),
+			TEXT("look_at_deck"), TEXT("mill"), TEXT("modify_atk"), TEXT("modify_def"), TEXT("must_attack"),
+			TEXT("negate"), TEXT("negate_activation"), TEXT("negate_attack"), TEXT("piercing"),
+			TEXT("place_counter"), TEXT("prevent_battle_damage"), TEXT("redirect_attack"),
+			TEXT("redirect_battle_damage"), TEXT("remove_counter"), TEXT("return_to_extra"),
+			TEXT("return_to_hand"), TEXT("return_to_deck"), TEXT("reveal"), TEXT("ritual"),
+			TEXT("roll_die"), TEXT("search"), TEXT("send_to_grave"), TEXT("send_to_graveyard"), TEXT("set"),
+			TEXT("shuffle"), TEXT("skip_phase"), TEXT("special_summon"), TEXT("spirit_return"),
+			TEXT("summon"), TEXT("summon_lock"), TEXT("take_control"), TEXT("control"), TEXT("toss_coin"),
+			TEXT("union_equip"), TEXT("union_unequip"), TEXT("damage")
 		};
 		return Known.Contains(Op);
 	}
@@ -111,7 +188,9 @@ namespace
 			TEXT("opponent_banished"), TEXT("opponent_extra"), TEXT("any_monster"), TEXT("any_spell_trap"),
 			TEXT("all_monsters"), TEXT("all_spell_traps"), TEXT("all_cards"), TEXT("all_hands"),
 			TEXT("attacking_monster"), TEXT("attack_target"), TEXT("trigger_source"), TEXT("chain_link"),
-			TEXT("banished"), TEXT("graveyard"), TEXT("deck"), TEXT("hand"), TEXT("extra")
+			TEXT("banished"), TEXT("graveyard"), TEXT("deck"), TEXT("hand"), TEXT("extra"),
+			TEXT("deck_top"), TEXT("equipped_monster"), TEXT("self_all"), TEXT("opponent_all"),
+			TEXT("all_cards_and_hands")
 		};
 		return Known.Contains(Zone);
 	}
@@ -122,9 +201,14 @@ namespace
 			TEXT("all"), TEXT("any"), TEXT("not"), TEXT("controller"), TEXT("face_up"),
 			TEXT("position"), TEXT("zone"), TEXT("card_type"), TEXT("subtype"), TEXT("attribute"),
 			TEXT("monster_type"), TEXT("level_min"), TEXT("level_max"), TEXT("atk_min"), TEXT("atk_max"),
-			TEXT("def_min"), TEXT("def_max"), TEXT("name"), TEXT("has_counter"), TEXT("lp_min"),
-			TEXT("lp_max"), TEXT("hand_min"), TEXT("hand_max"), TEXT("field_spell"), TEXT("summon_type"),
-			TEXT("reason"), TEXT("custom")
+			TEXT("def_min"), TEXT("def_max"), TEXT("name"), TEXT("name_contains"), TEXT("name_on_field"),
+			TEXT("has_counter"), TEXT("lp_min"), TEXT("lp_max"), TEXT("hand_min"), TEXT("hand_max"),
+			TEXT("field_spell"), TEXT("summon_type"), TEXT("reason"), TEXT("custom"),
+			TEXT("turn"), TEXT("phase"), TEXT("count_zone"), TEXT("count_zones"), TEXT("count_filter"),
+			TEXT("count_min"), TEXT("count_max"), TEXT("equipped_min"), TEXT("tribute_min"),
+			TEXT("graveyard_min"), TEXT("banished_min"), TEXT("deck_min"), TEXT("extra_min"),
+			TEXT("monster_min"), TEXT("spell_trap_min"), TEXT("damage_step"), TEXT("attack_direct"),
+			TEXT("has_attacked"), TEXT("is_turn_player"), TEXT("event_source_is_self"), TEXT("field_scan")
 		};
 		return Known.Contains(Key);
 	}
@@ -134,6 +218,9 @@ namespace
 		return Custom == TEXT("sent_from_field_to_graveyard")
 			|| Custom == TEXT("ignition_main_phase")
 			|| Custom == TEXT("battle_involving_self")
+			|| Custom == TEXT("damage_step")
+			|| Custom == TEXT("inherent_summon")
+			|| Custom == TEXT("opponent_activation")
 			|| Custom == TEXT("attack_declared_against_controller");
 	}
 
@@ -177,6 +264,27 @@ namespace
 			if (!ValidateConditionJson(*NotCondition, OutError, Depth + 1))
 			{
 				return false;
+			}
+		}
+		const TSharedPtr<FJsonObject>* CountFilter = nullptr;
+		if (Condition->TryGetObjectField(TEXT("count_filter"), CountFilter) && CountFilter && CountFilter->IsValid())
+		{
+			if (!ValidateConditionJson(*CountFilter, OutError, Depth + 1))
+			{
+				return false;
+			}
+		}
+		const TArray<TSharedPtr<FJsonValue>>* CountZones = nullptr;
+		if (Condition->TryGetArrayField(TEXT("count_zones"), CountZones) && CountZones)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *CountZones)
+			{
+				if (!Value.IsValid() || !IsKnownZone(Value->AsString()))
+				{
+					OutError = FString::Printf(TEXT("unknown count zone '%s'"),
+						Value.IsValid() ? *Value->AsString() : TEXT(""));
+					return false;
+				}
 			}
 		}
 		for (const auto& Pair : Condition->Values)
@@ -232,6 +340,69 @@ namespace
 				{
 					OutError = FString::Printf(TEXT("unknown target count key '%s'"), *FString(Pair.Key));
 					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	bool ValidateOperationJsonArray(const TArray<TSharedPtr<FJsonValue>>& Values, FString& OutError, int32 Depth = 0)
+	{
+		if (Depth > 8)
+		{
+			OutError = TEXT("operation nesting is too deep");
+			return false;
+		}
+		for (const TSharedPtr<FJsonValue>& OpValue : Values)
+		{
+			const TSharedPtr<FJsonObject> Op = OpValue.IsValid() ? OpValue->AsObject() : nullptr;
+			if (!Op.IsValid())
+			{
+				OutError = TEXT("contains a non-object operation");
+				return false;
+			}
+			const FString OpName = ReadString(Op, TEXT("op"));
+			if (!IsKnownOp(OpName))
+			{
+				OutError = FString::Printf(TEXT("uses unknown operation '%s'"), *OpName);
+				return false;
+			}
+			const TSharedPtr<FJsonObject>* OpTarget = nullptr;
+			if (Op->TryGetObjectField(TEXT("target"), OpTarget) && OpTarget && OpTarget->IsValid())
+			{
+				if (!ValidateTargetJson(*OpTarget, OutError))
+				{
+					return false;
+				}
+			}
+			const FString Destination = ReadString(Op, TEXT("destination"));
+			if (!Destination.IsEmpty() && !IsKnownZone(Destination))
+			{
+				OutError = FString::Printf(TEXT("uses unknown destination '%s'"), *Destination);
+				return false;
+			}
+			const TArray<TSharedPtr<FJsonValue>>* CountZones = nullptr;
+			if (Op->TryGetArrayField(TEXT("count_zones"), CountZones) && CountZones)
+			{
+				for (const TSharedPtr<FJsonValue>& Value : *CountZones)
+				{
+					if (!Value.IsValid() || !IsKnownZone(Value->AsString()))
+					{
+						OutError = FString::Printf(TEXT("uses unknown count zone '%s'"),
+							Value.IsValid() ? *Value->AsString() : TEXT(""));
+						return false;
+					}
+				}
+			}
+			for (const TCHAR* BranchKey : { TEXT("success_operations"), TEXT("failure_operations") })
+			{
+				const TArray<TSharedPtr<FJsonValue>>* Branch = nullptr;
+				if (Op->TryGetArrayField(BranchKey, Branch) && Branch)
+				{
+					if (!ValidateOperationJsonArray(*Branch, OutError, Depth + 1))
+					{
+						return false;
+					}
 				}
 			}
 		}
@@ -418,27 +589,15 @@ bool FDAEffectRuntime::LoadScriptJsonText(const FString& JsonText, FString& OutE
 				OutError = FString::Printf(TEXT("Card %d script '%s' contains a non-object operation."), CardId, *Script.Id);
 				return false;
 			}
-			const FString OpName = ReadString(Op, TEXT("op"));
-			if (!IsKnownOp(OpName))
-			{
-				OutError = FString::Printf(TEXT("Card %d script '%s' uses unknown operation '%s'."), CardId, *Script.Id, *OpName);
-				return false;
-			}
-			const TSharedPtr<FJsonObject>* OpTarget = nullptr;
-			if (Op->TryGetObjectField(TEXT("target"), OpTarget) && OpTarget && OpTarget->IsValid())
-			{
-				if (!ValidateTargetJson(*OpTarget, OutError))
-				{
-					return false;
-				}
-			}
-			const FString Destination = ReadString(Op, TEXT("destination"));
-			if (!Destination.IsEmpty() && !IsKnownZone(Destination))
-			{
-				OutError = FString::Printf(TEXT("Card %d script '%s' uses unknown destination '%s'."), CardId, *Script.Id, *Destination);
-				return false;
-			}
-			Script.Operations.Add(Op);
+		}
+		if (!ValidateOperationJsonArray(*Operations, OutError))
+		{
+			OutError = FString::Printf(TEXT("Card %d script '%s' %s."), CardId, *Script.Id, *OutError);
+			return false;
+		}
+		for (const TSharedPtr<FJsonValue>& OpValue : *Operations)
+		{
+			Script.Operations.Add(OpValue->AsObject());
 		}
 
 		Script.Duration = ReadString(Object, TEXT("duration"), TEXT("instant"));
@@ -483,8 +642,48 @@ void FDAEffectRuntime::ResetForNewDuel()
 	RedirectBattleDamageUids.Reset();
 	PreventBattleDamageSides.Reset();
 	BattleDamageZeroUids.Reset();
+	BattleDamageMultipliers.Reset();
+	ContinuousBattleDamageMultipliers.Reset();
+	CannotAttackUids.Reset();
+	MustAttackUids.Reset();
+	DirectAttackAllowedUids.Reset();
+	DirectAttackForbiddenUids.Reset();
+	PiercingUids.Reset();
+	ExtraAttackUids.Reset();
+	CannotChangePositionUids.Reset();
+	EndBattleDefenseUids.Reset();
+	PreventDestructionUids.Reset();
+	PreventBattleDestructionUids.Reset();
+	BanishInsteadOfGraveUids.Reset();
+	SpiritReturnUids.Reset();
+	ContinuousCannotAttackUids.Reset();
+	ContinuousMustAttackUids.Reset();
+	ContinuousDirectAttackAllowedUids.Reset();
+	ContinuousDirectAttackForbiddenUids.Reset();
+	ContinuousPiercingUids.Reset();
+	ContinuousExtraAttackUids.Reset();
+	ContinuousCannotChangePositionUids.Reset();
+	ContinuousPreventDestructionUids.Reset();
+	ContinuousPreventBattleDestructionUids.Reset();
+	ContinuousBanishInsteadOfGraveUids.Reset();
+	ContinuousSpiritReturnUids.Reset();
+	CannotAttackSidesThisTurn.Reset();
+	CannotAttackDirectlySidesThisTurn.Reset();
+	MaxAttackersPerSide.Reset();
+	MaxAttackersThisTurn.Reset();
+	NormalSummonLockSides.Reset();
+	SpecialSummonLockSides.Reset();
+	ContinuousNormalSummonLockSides.Reset();
+	ContinuousSpecialSummonLockSides.Reset();
+	NegatedActivationUids.Reset();
+	LastRandomResult = 0;
+	LastRandomResults.Reset();
+	AttackRestrictionExpiryTurn = -1;
 	bTrapActivationLocked = false;
 	bTrapEffectNegated = false;
+	bSpellActivationLocked = false;
+	bMonsterEffectLocked = false;
+	bAttackNegated = false;
 	bExecuting = false;
 	bRecomputing = false;
 	PromptCount = 0;
@@ -543,11 +742,15 @@ FString FDAEffectRuntime::TriggerToString(EDEffectTrigger Trigger) const
 	case EDEffectTrigger::OnBattleStart: return TEXT("on_battle_start");
 	case EDEffectTrigger::OnAttackDeclared: return TEXT("on_attack_declared");
 	case EDEffectTrigger::OnAttackTarget: return TEXT("on_attack_target");
+	case EDEffectTrigger::OnDamageStep: return TEXT("on_damage_step");
 	case EDEffectTrigger::OnDamageCalculated: return TEXT("on_damage_calculated");
+	case EDEffectTrigger::OnBattleDamage: return TEXT("on_battle_damage");
 	case EDEffectTrigger::OnBattleDestroy: return TEXT("on_battle_destroy");
+	case EDEffectTrigger::OnBattleDestroyByAttacker: return TEXT("on_battle_destroy_by_attacker");
 	case EDEffectTrigger::OnDestroy: return TEXT("on_destroy");
 	case EDEffectTrigger::OnSentToGraveyard: return TEXT("on_sent_to_graveyard");
 	case EDEffectTrigger::OnRemovedFromField: return TEXT("on_removed_from_field");
+	case EDEffectTrigger::OnPositionChange: return TEXT("on_position_change");
 	case EDEffectTrigger::OnDraw: return TEXT("on_draw");
 	case EDEffectTrigger::OnStandby: return TEXT("on_standby");
 	case EDEffectTrigger::OnMain: return TEXT("on_main");
@@ -555,6 +758,8 @@ FString FDAEffectRuntime::TriggerToString(EDEffectTrigger Trigger) const
 	case EDEffectTrigger::OnChain: return TEXT("on_chain");
 	case EDEffectTrigger::OnRitualSummon: return TEXT("on_ritual_summon");
 	case EDEffectTrigger::OnFusionSummon: return TEXT("on_fusion_summon");
+	case EDEffectTrigger::OnTributeSummon: return TEXT("on_tribute_summon");
+	case EDEffectTrigger::InherentSummon: return TEXT("inherent_summon");
 	case EDEffectTrigger::Continuous: return TEXT("continuous");
 	case EDEffectTrigger::EquipContinuous: return TEXT("equip_continuous");
 	case EDEffectTrigger::FieldContinuous: return TEXT("field_continuous");
@@ -578,11 +783,15 @@ EDEffectTrigger FDAEffectRuntime::TriggerFromString(const FString& Value) const
 		{ TEXT("on_battle_start"), EDEffectTrigger::OnBattleStart },
 		{ TEXT("on_attack_declared"), EDEffectTrigger::OnAttackDeclared },
 		{ TEXT("on_attack_target"), EDEffectTrigger::OnAttackTarget },
+		{ TEXT("on_damage_step"), EDEffectTrigger::OnDamageStep },
 		{ TEXT("on_damage_calculated"), EDEffectTrigger::OnDamageCalculated },
+		{ TEXT("on_battle_damage"), EDEffectTrigger::OnBattleDamage },
 		{ TEXT("on_battle_destroy"), EDEffectTrigger::OnBattleDestroy },
+		{ TEXT("on_battle_destroy_by_attacker"), EDEffectTrigger::OnBattleDestroyByAttacker },
 		{ TEXT("on_destroy"), EDEffectTrigger::OnDestroy },
 		{ TEXT("on_sent_to_graveyard"), EDEffectTrigger::OnSentToGraveyard },
 		{ TEXT("on_removed_from_field"), EDEffectTrigger::OnRemovedFromField },
+		{ TEXT("on_position_change"), EDEffectTrigger::OnPositionChange },
 		{ TEXT("on_draw"), EDEffectTrigger::OnDraw },
 		{ TEXT("on_standby"), EDEffectTrigger::OnStandby },
 		{ TEXT("on_main"), EDEffectTrigger::OnMain },
@@ -590,6 +799,8 @@ EDEffectTrigger FDAEffectRuntime::TriggerFromString(const FString& Value) const
 		{ TEXT("on_chain"), EDEffectTrigger::OnChain },
 		{ TEXT("on_ritual_summon"), EDEffectTrigger::OnRitualSummon },
 		{ TEXT("on_fusion_summon"), EDEffectTrigger::OnFusionSummon },
+		{ TEXT("on_tribute_summon"), EDEffectTrigger::OnTributeSummon },
+		{ TEXT("inherent_summon"), EDEffectTrigger::InherentSummon },
 		{ TEXT("continuous"), EDEffectTrigger::Continuous },
 		{ TEXT("equip_continuous"), EDEffectTrigger::EquipContinuous },
 		{ TEXT("field_continuous"), EDEffectTrigger::FieldContinuous },
@@ -656,6 +867,7 @@ void FDAEffectRuntime::OnDuelStart()
 void FDAEffectRuntime::OnTurnStart(EDuelOwner Side)
 {
 	UsedThisTurn.Reset();
+	ResetTurnRestrictions();
 	FDEffectEvent Event;
 	Event.Trigger = EDEffectTrigger::OnTurnStart;
 	Event.SourceController = Side;
@@ -707,12 +919,56 @@ void FDAEffectRuntime::OnBattleStart(EDuelOwner Side)
 
 void FDAEffectRuntime::OnBattleEnd()
 {
+	TArray<int32> Positions = EndBattleDefenseUids.Array();
+	for (int32 Uid : Positions)
+	{
+		FDuelCard* Card = Engine ? Engine->FindMonster(Uid) : nullptr;
+		if (Card && Card->bFaceUp && Card->Position != EDuelPosition::Defense)
+		{
+			const EDuelPosition Previous = Card->Position;
+			Card->Position = EDuelPosition::Defense;
+			Card->PositionChangedTurn = Engine->TurnNumber;
+			Engine->Log(FString::Printf(TEXT("%s changes to Defense Position at the end of the Battle Phase."),
+				*CardName(*Card)), TEXT("effect"));
+			Engine->EmitVisual(EDuelVisualEventType::Position, Card->Controller, Card, 0, TEXT("BATTLE END: DEFENSE"));
+			OnPositionChanged(*Card, Previous);
+		}
+	}
+	EndBattleDefenseUids.Reset();
 	ExpireLingering(EDuelOwner::Player, true);
 	RecomputeContinuous();
 }
 
 void FDAEffectRuntime::OnEnd(EDuelOwner Side)
 {
+	// Spirit Monsters return to the owner's hand during their controller's End
+	// Phase.  The marker is registered by a continuous/ignition script so the
+	// legacy engine does not need a card-name table.
+	TArray<int32> Spirits;
+	TSet<int32> AllSpirits = SpiritReturnUids;
+	for (int32 Uid : ContinuousSpiritReturnUids)
+	{
+		AllSpirits.Add(Uid);
+	}
+	for (int32 Uid : AllSpirits)
+	{
+		const FDuelCard* Card = Engine ? Engine->FindMonster(Uid) : nullptr;
+		if (Card && Card->Controller == Side && Card->bFaceUp)
+		{
+			Spirits.Add(Uid);
+		}
+	}
+	for (int32 Uid : Spirits)
+	{
+		FDuelCard Copy;
+		if (Engine && Engine->RemoveFromZone(Copy, Uid))
+		{
+			Engine->CleanupEquips(Copy);
+			Engine->MoveToHand(Copy);
+			Engine->Log(FString::Printf(TEXT("%s returns to the hand during the End Phase."), *CardName(Copy)), TEXT("effect"));
+		}
+	}
+
 	FDEffectEvent Event;
 	Event.Trigger = EDEffectTrigger::OnTurnEnd;
 	Event.SourceController = Side;
@@ -734,6 +990,7 @@ void FDAEffectRuntime::OnSummon(FDuelCard& Card, bool bSpecial, bool bFlipSummon
 	Event.EventController = Card.Controller;
 	Event.SummonType = bSpecial ? TEXT("special") : (bFlipSummon ? TEXT("flip") : TEXT("normal"));
 	Event.Reason = FString::Printf(TEXT("%s summon"), *Event.SummonType);
+	Event.TributeCount = TributeCount;
 	Event.Trigger = EDEffectTrigger::OnSummon;
 	FireEvent(Event);
 
@@ -751,6 +1008,11 @@ void FDAEffectRuntime::OnSummon(FDuelCard& Card, bool bSpecial, bool bFlipSummon
 	{
 		Event.Trigger = EDEffectTrigger::OnNormalSummon;
 		FireEvent(Event);
+		if (TributeCount > 0)
+		{
+			Event.Trigger = EDEffectTrigger::OnTributeSummon;
+			FireEvent(Event);
+		}
 	}
 	RecomputeContinuous();
 }
@@ -832,6 +1094,35 @@ void FDAEffectRuntime::OnAttackDeclared(FDuelCard& Attacker, FDuelCard* Target)
 	FireEvent(Event);
 }
 
+void FDAEffectRuntime::OnAttackTarget(FDuelCard& Attacker, FDuelCard* Target)
+{
+	FDEffectEvent Event;
+	Event.Trigger = EDEffectTrigger::OnAttackTarget;
+	Event.SourceCard = Attacker;
+	Event.EventCard = Target ? *Target : Attacker;
+	Event.SourceController = Attacker.Controller;
+	Event.EventController = Target ? Target->Controller : Attacker.Controller;
+	Event.AttackerUid = Attacker.Uid;
+	Event.AttackTargetUid = Target ? Target->Uid : 0;
+	Event.Reason = TEXT("attack target");
+	FireEvent(Event);
+}
+
+void FDAEffectRuntime::OnDamageStep(FDuelCard& Attacker, FDuelCard* Target)
+{
+	FDEffectEvent Event;
+	Event.Trigger = EDEffectTrigger::OnDamageStep;
+	Event.SourceCard = Attacker;
+	Event.EventCard = Target ? *Target : Attacker;
+	Event.SourceController = Attacker.Controller;
+	Event.EventController = Target ? Target->Controller : Attacker.Controller;
+	Event.AttackerUid = Attacker.Uid;
+	Event.AttackTargetUid = Target ? Target->Uid : 0;
+	Event.bDamageStep = true;
+	Event.Reason = TEXT("damage step");
+	FireEvent(Event);
+}
+
 void FDAEffectRuntime::OnDamageCalculated(FDuelCard& Attacker, FDuelCard* Target)
 {
 	FDEffectEvent Event;
@@ -842,6 +1133,71 @@ void FDAEffectRuntime::OnDamageCalculated(FDuelCard& Attacker, FDuelCard* Target
 	Event.EventController = Target ? Target->Controller : Attacker.Controller;
 	Event.AttackerUid = Attacker.Uid;
 	Event.AttackTargetUid = Target ? Target->Uid : 0;
+	Event.bDamageStep = true;
+	Event.Reason = TEXT("damage calculation");
+	FireEvent(Event);
+}
+
+void FDAEffectRuntime::OnBattleDamage(EDuelOwner Receiver, int32 Amount, FDuelCard& Attacker, FDuelCard* Target, bool bDirect)
+{
+	if (Amount <= 0)
+	{
+		return;
+	}
+	FDEffectEvent Event;
+	Event.Trigger = EDEffectTrigger::OnBattleDamage;
+	Event.SourceCard = Attacker;
+	Event.EventCard = Target ? *Target : Attacker;
+	Event.SourceController = Attacker.Controller;
+	Event.EventController = Target ? Target->Controller : Receiver;
+	Event.AttackerUid = Attacker.Uid;
+	Event.AttackTargetUid = Target ? Target->Uid : 0;
+	Event.DamagedUid = Target ? Target->Uid : 0;
+	Event.DamageReceiver = Receiver;
+	Event.DamageAmount = Amount;
+	Event.bDirectAttack = bDirect;
+	Event.Reason = bDirect ? TEXT("direct battle damage") : TEXT("battle damage");
+	FireEvent(Event);
+}
+
+void FDAEffectRuntime::OnBattleDestroyByAttacker(FDuelCard& Attacker, const FDuelCard& Destroyed)
+{
+	FDEffectEvent Event;
+	Event.Trigger = EDEffectTrigger::OnBattleDestroyByAttacker;
+	Event.SourceCard = Attacker;
+	Event.EventCard = Destroyed;
+	Event.SourceController = Attacker.Controller;
+	Event.EventController = Destroyed.Controller;
+	Event.AttackerUid = Attacker.Uid;
+	Event.DamagedUid = Destroyed.Uid;
+	Event.bByBattle = true;
+	Event.Reason = TEXT("destroyed by battle");
+	FireEvent(Event);
+}
+
+void FDAEffectRuntime::OnPositionChanged(FDuelCard& Card, EDuelPosition PreviousPosition)
+{
+	FDEffectEvent Event;
+	Event.Trigger = EDEffectTrigger::OnPositionChange;
+	Event.SourceCard = Card;
+	Event.EventCard = Card;
+	Event.SourceController = Card.Controller;
+	Event.EventController = Card.Controller;
+	Event.PreviousPosition = PreviousPosition;
+	Event.Reason = TEXT("position change");
+	FireEvent(Event);
+}
+
+void FDAEffectRuntime::OnCounterTrapResponse(FDuelCard& Trap, int32 TargetChainLink)
+{
+	FDEffectEvent Event;
+	Event.Trigger = EDEffectTrigger::OnActivate;
+	Event.SourceCard = Trap;
+	Event.EventCard = Trap;
+	Event.SourceController = Trap.Controller;
+	Event.EventController = Trap.Controller;
+	Event.ChainLink = TargetChainLink;
+	Event.Reason = TEXT("counter trap response");
 	FireEvent(Event);
 }
 
@@ -916,25 +1272,24 @@ int32 FDAEffectRuntime::FireEvent(const FDEffectEvent& Event)
 	{
 		LocalEvent.EventController = LocalEvent.EventCard.Controller;
 	}
+	if (LocalEvent.SourceZoneAtEvent.IsEmpty() && LocalEvent.SourceCard.Uid > 0)
+	{
+		LocalEvent.SourceZoneAtEvent = ZoneStringOf(LocalEvent.SourceCard);
+	}
 
 	int32 Started = 0;
 	TSet<FString> Seen;
 	const bool bSourceBoundTrigger = IsSourceBoundTrigger(LocalEvent.Trigger);
+	const bool bSelfOnlyTrigger = IsSelfOnlyTrigger(LocalEvent.Trigger);
+	const bool bSummonTrigger = IsSummonTrigger(LocalEvent.Trigger);
+	const bool bStrictSourceOnly = LocalEvent.Trigger == EDEffectTrigger::OnActivate
+		|| LocalEvent.Trigger == EDEffectTrigger::OnChain;
 	auto ConsiderCard = [&](const FDuelCard& Source)
 	{
-		// Self triggers bind to the exact event source uid.  Another copy of
-		// the same card id never fires for the event; different cards can
-		// still be field-wide responses (summon/destroy/attack responses).
-		// Activation and chain links are strictly source-only because every
-		// set card's own script would otherwise react to another activation.
-		if (bSourceBoundTrigger && Source.Uid != LocalEvent.SourceCard.Uid)
+		const bool bIsSource = Source.Uid == LocalEvent.SourceCard.Uid;
+		if (bStrictSourceOnly && !bIsSource)
 		{
-			const bool bStrictSourceOnly = LocalEvent.Trigger == EDEffectTrigger::OnActivate
-				|| LocalEvent.Trigger == EDEffectTrigger::OnChain;
-			if (bStrictSourceOnly || Source.Data.Id == LocalEvent.SourceCard.Data.Id)
-			{
-				return;
-			}
+			return;
 		}
 
 		const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(Source.Data.Id);
@@ -949,6 +1304,33 @@ int32 FDAEffectRuntime::FireEvent(const FDEffectEvent& Event)
 			{
 				continue;
 			}
+
+			// Self triggers only react to their own card's event.  A05 can
+			// explicitly opt into a field-wide scan with field_scan:true or
+			// event_source_is_self:false.  Summon responses from Spell/Trap
+			// cards (Bottomless, Mispolymerization) remain field-scanned.
+			bool bRequiresSelf = bSelfOnlyTrigger;
+			if (bSummonTrigger && !(Source.IsSpell() || Source.IsTrap()))
+			{
+				bRequiresSelf = true;
+			}
+			if (ConditionRequestsFieldScan(Script.Condition))
+			{
+				bRequiresSelf = false;
+			}
+			if (bRequiresSelf && !bIsSource)
+			{
+				continue;
+			}
+			// A different copy of the same card never fires merely because it
+			// shares the card id.  Different cards can still be field-wide
+			// responses for non-self triggers.
+			if (bSourceBoundTrigger && !bRequiresSelf && !bIsSource
+				&& Source.Data.Id == LocalEvent.SourceCard.Data.Id)
+			{
+				continue;
+			}
+
 			const FString Key = FString::Printf(TEXT("%d:%d"), Source.Uid, Index);
 			if (Seen.Contains(Key))
 			{
@@ -975,12 +1357,17 @@ int32 FDAEffectRuntime::FireEvent(const FDEffectEvent& Event)
 		|| Event.Trigger == EDEffectTrigger::OnFlipSummon
 		|| Event.Trigger == EDEffectTrigger::OnAttackDeclared
 		|| Event.Trigger == EDEffectTrigger::OnAttackTarget
+		|| Event.Trigger == EDEffectTrigger::OnDamageStep
 		|| Event.Trigger == EDEffectTrigger::OnBattleStart
 		|| Event.Trigger == EDEffectTrigger::OnDamageCalculated
+		|| Event.Trigger == EDEffectTrigger::OnBattleDamage
 		|| Event.Trigger == EDEffectTrigger::OnDestroy
 		|| Event.Trigger == EDEffectTrigger::OnBattleDestroy
+		|| Event.Trigger == EDEffectTrigger::OnBattleDestroyByAttacker
 		|| Event.Trigger == EDEffectTrigger::OnSentToGraveyard
 		|| Event.Trigger == EDEffectTrigger::OnRemovedFromField
+		|| Event.Trigger == EDEffectTrigger::OnPositionChange
+		|| Event.Trigger == EDEffectTrigger::OnTributeSummon
 		|| Event.Trigger == EDEffectTrigger::OnDraw
 		|| Event.Trigger == EDEffectTrigger::OnStandby
 		|| Event.Trigger == EDEffectTrigger::OnMain
@@ -1017,7 +1404,23 @@ bool FDAEffectRuntime::EvaluateCustomCondition(const FString& Custom, const FDue
 	}
 	if (Custom == TEXT("battle_involving_self"))
 	{
-		return Event.AttackerUid == Subject.Uid || Event.AttackTargetUid == Subject.Uid;
+		return Event.AttackerUid == Subject.Uid || Event.AttackTargetUid == Subject.Uid
+			|| Event.AttackerUid == SourceCard.Uid || Event.AttackTargetUid == SourceCard.Uid;
+	}
+	if (Custom == TEXT("damage_step"))
+	{
+		return Event.bDamageStep || Event.Trigger == EDEffectTrigger::OnDamageStep
+			|| Event.Trigger == EDEffectTrigger::OnDamageCalculated;
+	}
+	if (Custom == TEXT("inherent_summon"))
+	{
+		return Event.Trigger == EDEffectTrigger::InherentSummon
+			|| (Event.Trigger == EDEffectTrigger::OnSpecialSummon && Event.SourceCard.Uid == Subject.Uid);
+	}
+	if (Custom == TEXT("opponent_activation"))
+	{
+		return (Event.Trigger == EDEffectTrigger::OnActivate || Event.Trigger == EDEffectTrigger::OnChain)
+			&& Event.SourceController != SourceCard.Controller;
 	}
 	if (Custom == TEXT("attack_declared_against_controller"))
 	{
@@ -1102,7 +1505,10 @@ bool FDAEffectRuntime::EvaluateCondition(const TSharedPtr<FJsonObject>& Conditio
 	const FString Zone = ReadString(Condition, TEXT("zone"));
 	if (!Zone.IsEmpty())
 	{
-		const FString Actual = ZoneStringOf(Subject);
+		const FString Actual = (!Event.SourceZoneAtEvent.IsEmpty()
+			&& Subject.Uid == Event.SourceCard.Uid)
+			? Event.SourceZoneAtEvent
+			: ZoneStringOf(Subject);
 		const bool bFromFieldSpecial = Event.bFromField && Subject.Uid == Event.SourceCard.Uid
 			&& IsFieldZoneString(Zone) && Event.Trigger != EDEffectTrigger::None;
 		if (!bFromFieldSpecial)
@@ -1132,6 +1538,143 @@ bool FDAEffectRuntime::EvaluateCondition(const TSharedPtr<FJsonObject>& Conditio
 	if (!MonsterType.IsEmpty() && Subject.Data.MonsterType != MonsterType) return false;
 	const FString Name = ReadString(Condition, TEXT("name"));
 	if (!Name.IsEmpty() && Subject.Data.Name != Name) return false;
+	const FString NameContains = ReadString(Condition, TEXT("name_contains"));
+	if (!NameContains.IsEmpty() && !Subject.Data.Name.Contains(NameContains, ESearchCase::IgnoreCase)) return false;
+
+	auto HasNamedCardOnField = [this, &SourceCard](const FString& Wanted, bool bSubstring) -> bool
+	{
+		if (!Engine)
+		{
+			return false;
+		}
+		for (const FDuelCard& Card : CollectCardsInZone(TEXT("all_cards"), SourceCard.Controller))
+		{
+			if (!Card.IsValid())
+			{
+				continue;
+			}
+			if (bSubstring ? Card.Data.Name.Contains(Wanted, ESearchCase::IgnoreCase) : Card.Data.Name == Wanted)
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+	const FString NameOnField = ReadString(Condition, TEXT("name_on_field"));
+	if (!NameOnField.IsEmpty() && !HasNamedCardOnField(NameOnField, false)) return false;
+
+	const FString Turn = ReadString(Condition, TEXT("turn"));
+	if (!Turn.IsEmpty() && Turn != TEXT("any"))
+	{
+		const EDuelOwner TurnSide = Event.SourceController;
+		if (Turn == TEXT("self") && TurnSide != SourceCard.Controller) return false;
+		if (Turn == TEXT("opponent") && TurnSide == SourceCard.Controller) return false;
+	}
+	const FString PhaseName = ReadString(Condition, TEXT("phase"));
+	if (!PhaseName.IsEmpty() && PhaseName != TEXT("any"))
+	{
+		if (!Engine) return false;
+		const bool bBattle = Engine->GetPhase() == EDuelPhase::Battle;
+		const bool bMain = Engine->GetPhase() == EDuelPhase::Main1 || Engine->GetPhase() == EDuelPhase::Main2;
+		if (PhaseName == TEXT("battle") && !bBattle) return false;
+		if (PhaseName == TEXT("main") && !bMain) return false;
+	}
+	bool bBoolValue = false;
+	if (Condition->TryGetBoolField(TEXT("damage_step"), bBoolValue) && bBoolValue
+		&& !(Event.bDamageStep || Event.Trigger == EDEffectTrigger::OnDamageStep
+			|| Event.Trigger == EDEffectTrigger::OnDamageCalculated))
+	{
+		return false;
+	}
+	if (Condition->TryGetBoolField(TEXT("attack_direct"), bBoolValue) && Event.bDirectAttack != bBoolValue) return false;
+	if (Condition->TryGetBoolField(TEXT("has_attacked"), bBoolValue) && Subject.bHasAttacked != bBoolValue) return false;
+	if (Condition->TryGetBoolField(TEXT("event_source_is_self"), bBoolValue) && bBoolValue
+		&& Event.SourceCard.Uid != SourceCard.Uid) return false;
+	if (Condition->TryGetBoolField(TEXT("is_turn_player"), bBoolValue) && Engine
+		&& (Engine->ActiveSide == SourceCard.Controller) != bBoolValue) return false;
+	int32 Number = 0;
+	if (Condition->TryGetNumberField(TEXT("tribute_min"), Number) && Event.TributeCount < Number) return false;
+	if (Condition->TryGetNumberField(TEXT("equipped_min"), Number))
+	{
+		int32 Equipped = 0;
+		if (Engine)
+		{
+			for (EDuelOwner EquipSide : { EDuelOwner::Player, EDuelOwner::Opponent })
+			{
+				for (const FDuelCard& Spell : Engine->GetSide(EquipSide).Spells)
+				{
+					if (Spell.IsValid() && Spell.EquippedToUid == Subject.Uid) ++Equipped;
+				}
+			}
+		}
+		if (Equipped < Number) return false;
+	}
+
+	auto CountConditionZone = [this, &Condition, &Subject, &SourceCard, &Event](const FString& Zone) -> int32
+	{
+		const TSharedPtr<FJsonObject>* CountFilter = nullptr;
+		Condition->TryGetObjectField(TEXT("count_filter"), CountFilter);
+		int32 Count = 0;
+		for (const FDuelCard& Card : CollectCandidates(Zone, SourceCard, Event))
+		{
+			if (!CountFilter || MatchesFilter(Card, CountFilter ? *CountFilter : nullptr, SourceCard, Event))
+			{
+				++Count;
+			}
+		}
+		return Count;
+	};
+	int32 CountTotal = 0;
+	bool bHasCount = false;
+	const FString CountZone = ReadString(Condition, TEXT("count_zone"));
+	if (!CountZone.IsEmpty())
+	{
+		bHasCount = true;
+		CountTotal += CountConditionZone(CountZone);
+	}
+	const TArray<TSharedPtr<FJsonValue>>* CountZones = nullptr;
+	if (Condition->TryGetArrayField(TEXT("count_zones"), CountZones) && CountZones)
+	{
+		bHasCount = true;
+		for (const TSharedPtr<FJsonValue>& Value : *CountZones)
+		{
+			if (Value.IsValid())
+			{
+				CountTotal += CountConditionZone(Value->AsString());
+			}
+		}
+	}
+	if (Condition->TryGetNumberField(TEXT("count_min"), Number) && CountTotal < Number) return false;
+	if (Condition->TryGetNumberField(TEXT("count_max"), Number) && CountTotal > Number) return false;
+	if (bHasCount && Condition->HasField(TEXT("count_min")) == false
+		&& Condition->HasField(TEXT("count_max")) == false && CountTotal <= 0)
+	{
+		return false;
+	}
+
+	auto SideCount = [this, &SourceCard](EDuelOwner Side, const FString& What) -> int32
+	{
+		if (!Engine) return 0;
+		const FDuelSide& State = Engine->GetSide(Side);
+		if (What == TEXT("hand")) return State.Hand.Num();
+		if (What == TEXT("graveyard")) return State.Graveyard.Num();
+		if (What == TEXT("banished")) return State.Banished.Num();
+		if (What == TEXT("deck")) return State.Deck.Num();
+		if (What == TEXT("extra")) return State.Extra.Num();
+		if (What == TEXT("monster")) return State.Monsters.FilterByPredicate([](const FDuelCard& C) { return C.IsValid(); }).Num();
+		if (What == TEXT("spell_trap")) return State.Spells.FilterByPredicate([](const FDuelCard& C) { return C.IsValid(); }).Num();
+		return 0;
+	};
+	const TPair<FString, FString> MinimumKeys[] = {
+		{ TEXT("graveyard_min"), TEXT("graveyard") }, { TEXT("banished_min"), TEXT("banished") },
+		{ TEXT("deck_min"), TEXT("deck") }, { TEXT("extra_min"), TEXT("extra") },
+		{ TEXT("monster_min"), TEXT("monster") }, { TEXT("spell_trap_min"), TEXT("spell_trap") }
+	};
+	for (const TPair<FString, FString>& Pair : MinimumKeys)
+	{
+		if (Condition->TryGetNumberField(*Pair.Key, Number)
+			&& SideCount(SourceCard.Controller, Pair.Value) < Number) return false;
+	}
 
 	auto EffectiveLevel = [this, &Subject]() -> int32
 	{
@@ -1146,7 +1689,6 @@ bool FDAEffectRuntime::EvaluateCondition(const TSharedPtr<FJsonObject>& Conditio
 		return Engine && Engine->FindMonster(Subject.Uid) ? Engine->GetDef(Subject) : Subject.Data.Def;
 	};
 
-	int32 Number = 0;
 	if (Condition->TryGetNumberField(TEXT("level_min"), Number) && EffectiveLevel() < Number) return false;
 	if (Condition->TryGetNumberField(TEXT("level_max"), Number) && EffectiveLevel() > Number) return false;
 	if (Condition->TryGetNumberField(TEXT("atk_min"), Number) && EffectiveAtk() < Number) return false;
@@ -1250,9 +1792,16 @@ TArray<FDuelCard> FDAEffectRuntime::CollectCardsInZone(const FString& Zone, EDue
 		{
 			AddArray(State.Hand);
 		}
-		if (Zone == P + TEXT("_deck") || Zone == TEXT("deck"))
+		if (Zone == P + TEXT("_deck") || Zone == TEXT("deck") || Zone == TEXT("deck_top"))
 		{
-			AddArray(State.Deck);
+			if (Zone == TEXT("deck_top"))
+			{
+				if (State.Deck.Num() > 0) Result.Add(State.Deck.Last());
+			}
+			else
+			{
+				AddArray(State.Deck);
+			}
 		}
 		if (Zone == P + TEXT("_graveyard") || Zone == TEXT("graveyard"))
 		{
@@ -1266,11 +1815,19 @@ TArray<FDuelCard> FDAEffectRuntime::CollectCardsInZone(const FString& Zone, EDue
 		{
 			AddArray(State.Extra);
 		}
-		if (Zone == TEXT("all_cards") || Zone == P)
+		if (Zone == TEXT("all_cards") || Zone == P || Zone == P + TEXT("_all"))
 		{
 			AddArray(State.Monsters);
 			AddArray(State.Spells);
 			if (State.Field.IsValid()) Result.Add(State.Field);
+			if (Zone != TEXT("all_cards")) AddArray(State.Hand);
+		}
+		if (Zone == TEXT("all_cards_and_hands"))
+		{
+			AddArray(State.Monsters);
+			AddArray(State.Spells);
+			if (State.Field.IsValid()) Result.Add(State.Field);
+			AddArray(State.Hand);
 		}
 	};
 
@@ -1278,6 +1835,7 @@ TArray<FDuelCard> FDAEffectRuntime::CollectCardsInZone(const FString& Zone, EDue
 	const bool bBoth = Zone == TEXT("any_monster") || Zone == TEXT("all_monsters")
 		|| Zone == TEXT("any_spell_trap") || Zone == TEXT("all_spell_traps")
 		|| Zone == TEXT("all_hands") || Zone == TEXT("all_cards")
+		|| Zone == TEXT("all_cards_and_hands")
 		|| Zone == TEXT("graveyard") || Zone == TEXT("deck") || Zone == TEXT("banished")
 		|| Zone == TEXT("hand") || Zone == TEXT("extra");
 	if (bBoth || Zone.StartsWith(TEXT("self")) || Zone == TEXT("all_cards"))
@@ -1329,9 +1887,28 @@ TArray<FDuelCard> FDAEffectRuntime::CollectCandidates(const FString& Zone, const
 	{
 		TArray<FDuelCard> Result;
 		const TArray<FDuelChainLink>& Links = Engine->GetChainLinks();
-		if (Links.Num() > 0)
+		const int32 WantedLink = Event.ChainLink > 0 ? Event.ChainLink : (Links.Num() > 0 ? Links.Last().LinkIndex : 0);
+		for (const FDuelChainLink& Link : Links)
 		{
-			if (const FDuelCard* Card = Engine->FindCard(Links.Last().CardUid))
+			if (Link.LinkIndex == WantedLink)
+			{
+				if (const FDuelCard* Card = Engine->FindCard(Link.CardUid))
+				{
+					Result.Add(*Card);
+				}
+				break;
+			}
+		}
+		return Result;
+	}
+	if (Zone == TEXT("equipped_monster"))
+	{
+		TArray<FDuelCard> Result;
+		const FDuelCard* Source = Engine->FindCard(SourceCard.Uid);
+		const int32 EquippedUid = Source ? Source->EquippedToUid : SourceCard.EquippedToUid;
+		if (EquippedUid != 0)
+		{
+			if (const FDuelCard* Card = Engine->FindMonster(EquippedUid))
 			{
 				Result.Add(*Card);
 			}
@@ -1356,6 +1933,16 @@ bool FDAEffectRuntime::IsSourceAvailable(const FDEffectScript& Script, const FDu
 	const FDuelCard* Live = Engine->FindCard(Source.Uid);
 	if (!Live)
 	{
+		// A leave-field trigger is dispatched after the card has been removed
+		// from its zone.  The event carries the last known card snapshot, so the
+		// source-bound script can still run without a live zone lookup.
+		if (Script.Trigger == EDEffectTrigger::OnRemovedFromField
+			&& Event.Trigger == EDEffectTrigger::OnRemovedFromField
+			&& Event.SourceCard.Uid == Source.Uid
+			&& Event.bFromField)
+		{
+			return true;
+		}
 		return false;
 	}
 	if (Live->IsTrap() && bTrapActivationLocked)
@@ -1364,10 +1951,20 @@ bool FDAEffectRuntime::IsSourceAvailable(const FDEffectScript& Script, const FDu
 	}
 	const FString Zone = ZoneStringOf(*Live);
 
-	if (Script.Trigger == EDEffectTrigger::Manual)
+	if (Script.Trigger == EDEffectTrigger::Manual
+		|| Script.Trigger == EDEffectTrigger::InherentSummon)
 	{
-		return Live->IsMonster() && Live->bFaceUp && Zone.Contains(TEXT("monster"))
-			&& Engine->IsMainPhase() && !Engine->bWinnerSet;
+		if (Live->IsMonster() && Live->bFaceUp && Zone.Contains(TEXT("monster"))
+			&& Engine->IsMainPhase() && !Engine->bWinnerSet)
+		{
+			return true;
+		}
+		if (Script.Trigger == EDEffectTrigger::InherentSummon && Live->IsMonster()
+			&& Zone.Contains(TEXT("hand")) && Engine->IsMainPhase() && !Engine->bWinnerSet)
+		{
+			return true;
+		}
+		return false;
 	}
 	if (Script.Trigger == EDEffectTrigger::Continuous
 		|| Script.Trigger == EDEffectTrigger::EquipContinuous
@@ -2063,6 +2660,12 @@ bool FDAEffectRuntime::ResolveOperationTargets(const TSharedPtr<FJsonObject>& Op
 	if (Operation->TryGetStringField(TEXT("target"), TargetString))
 	{
 		if (TargetString == TEXT("$self")) OutUids.Add(SourceCard.Uid);
+		else if (TargetString == TEXT("$equipped"))
+		{
+			const FDuelCard* Source = Engine ? Engine->FindCard(SourceCard.Uid) : nullptr;
+			const int32 EquippedUid = Source ? Source->EquippedToUid : SourceCard.EquippedToUid;
+			if (EquippedUid != 0) OutUids.Add(EquippedUid);
+		}
 		else if (TargetString == TEXT("$target")) OutUids = Context.TargetUids;
 		else if (TargetString == TEXT("$cost")) OutUids = Context.CostUids;
 		else if (TargetString == TEXT("$trigger")) OutUids.Add(Event.EventCard.Uid);
@@ -2282,6 +2885,10 @@ bool FDAEffectRuntime::ExecuteSummon(const TSharedPtr<FJsonObject>& Operation, c
 {
 	TArray<int32> Targets;
 	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+	const FString PositionValue = ReadString(Operation, TEXT("position"), TEXT("attack"));
+	const bool bFaceUp = PositionValue != TEXT("face_down") && PositionValue != TEXT("faceDown");
+	const EDuelPosition Position = (PositionValue == TEXT("defense") || PositionValue == TEXT("face_down")
+		|| PositionValue == TEXT("faceDown")) ? EDuelPosition::Defense : EDuelPosition::Attack;
 	for (int32 Uid : Targets)
 	{
 		FDuelCard* Card = Engine->FindCard(Uid);
@@ -2298,7 +2905,7 @@ bool FDAEffectRuntime::ExecuteSummon(const TSharedPtr<FJsonObject>& Operation, c
 		{
 			continue;
 		}
-		if (!Engine->PlaceMonster(Copy.Owner, Copy, true, EDuelPosition::Attack))
+		if (!Engine->PlaceMonster(Copy.Owner, Copy, bFaceUp, Position))
 		{
 			Engine->MoveToGrave(Copy);
 			continue;
@@ -2306,8 +2913,10 @@ bool FDAEffectRuntime::ExecuteSummon(const TSharedPtr<FJsonObject>& Operation, c
 		if (FDuelCard* Placed = Engine->FindMonster(Uid))
 		{
 			Placed->bSpecialSummoned = bSpecial;
-			Engine->Log(FString::Printf(TEXT("%s %s %s."), *Engine->GetSide(Copy.Owner).Name,
-				bSpecial ? TEXT("Special Summons") : TEXT("Summons"), *CardName(*Placed)), TEXT("summon"));
+			Engine->Log(FString::Printf(TEXT("%s %s %s in %s Position."), *Engine->GetSide(Copy.Owner).Name,
+				bSpecial ? TEXT("Special Summons") : TEXT("Summons"), *CardName(*Placed),
+				bFaceUp ? (Position == EDuelPosition::Attack ? TEXT("Attack") : TEXT("Defense")) : TEXT("face-down Defense")),
+				TEXT("summon"));
 			Engine->OnSummon(*Placed, bSpecial, 0);
 		}
 	}
@@ -2351,12 +2960,14 @@ bool FDAEffectRuntime::ExecutePosition(const TSharedPtr<FJsonObject>& Operation,
 	{
 		if (FDuelCard* Card = Engine->FindMonster(Uid))
 		{
+			const EDuelPosition Previous = Card->Position;
 			Card->bFaceUp = Position != TEXT("face_down");
 			Card->Position = Position == TEXT("defense") || Position == TEXT("face_down")
 				? EDuelPosition::Defense : EDuelPosition::Attack;
 			Card->PositionChangedTurn = Engine->TurnNumber;
 			Engine->EmitVisual(EDuelVisualEventType::Position, Card->Controller, Card, 0,
 				Card->Position == EDuelPosition::Attack ? TEXT("ATTACK") : TEXT("DEFENSE"));
+			OnPositionChanged(*Card, Previous);
 		}
 	}
 	return true;
@@ -2380,6 +2991,10 @@ bool FDAEffectRuntime::ExecuteStatModifier(const TSharedPtr<FJsonObject>& Operat
 	{
 		Amount *= GetCounterCount(Targets[0], Counter);
 	}
+	else if (!Mode.IsEmpty() && Mode != TEXT("flat"))
+	{
+		Amount = ComputeDynamicAmount(Operation, Context, Context.SourceCard);
+	}
 	const FString Duration = Context.Script.Duration;
 	int32 ExpiryTurn = -1;
 	if (Duration == TEXT("until_end_of_turn") || Duration == TEXT("until_end_of_battle_phase"))
@@ -2392,6 +3007,13 @@ bool FDAEffectRuntime::ExecuteStatModifier(const TSharedPtr<FJsonObject>& Operat
 	}
 	for (int32 Uid : Targets)
 	{
+		const FDuelCard* TargetCard = Engine->FindCard(Uid);
+		if (Mode == TEXT("set_atk") || Mode == TEXT("set_def"))
+		{
+			if (!TargetCard) continue;
+			Amount = ReadInt(Operation, TEXT("amount"), bAtk ? TargetCard->Data.Atk : TargetCard->Data.Def)
+				- (bAtk ? TargetCard->Data.Atk : TargetCard->Data.Def);
+		}
 		FDEffectModifier Modifier;
 		Modifier.Uid = Uid;
 		Modifier.Atk = bAtk ? Amount : 0;
@@ -2409,7 +3031,12 @@ bool FDAEffectRuntime::ExecuteStatModifier(const TSharedPtr<FJsonObject>& Operat
 bool FDAEffectRuntime::ExecuteDamageOrHeal(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
 	bool bHeal, FString& OutError)
 {
-	const int32 Amount = ReadInt(Operation, TEXT("amount"), 0);
+	const FString Mode = ReadString(Operation, TEXT("mode"));
+	int32 Amount = ReadInt(Operation, TEXT("amount"), 0);
+	if (!Mode.IsEmpty() && Mode != TEXT("flat"))
+	{
+		Amount = ComputeDynamicAmount(Operation, Context, Context.SourceCard);
+	}
 	const FString Player = ReadString(Operation, TEXT("player"), ReadString(Operation, TEXT("to"), TEXT("self")));
 	const FString Reason = ReadString(Operation, TEXT("reason"), Context.Script.Id);
 	if (Amount <= 0)
@@ -2496,7 +3123,16 @@ bool FDAEffectRuntime::ExecuteReturn(const TSharedPtr<FJsonObject>& Operation, c
 		}
 		else if (Op == TEXT("return_to_deck"))
 		{
-			Engine->MoveToDeckBottom(Copy);
+			const FString Destination = ReadString(Operation, TEXT("destination"));
+			const FString Placement = ReadString(Operation, TEXT("position"));
+			if (Destination == TEXT("deck_top") || Placement == TEXT("top"))
+			{
+				Engine->MoveToDeckTop(Copy);
+			}
+			else
+			{
+				Engine->MoveToDeckBottom(Copy);
+			}
 		}
 		else
 		{
@@ -2679,11 +3315,24 @@ bool FDAEffectRuntime::ExecuteNegate(const TSharedPtr<FJsonObject>& Operation, c
 		if (Targets.Contains(Link.CardUid))
 		{
 			Link.bNegated = true;
+			NegatedActivationUids.Add(Link.CardUid);
 		}
 	}
-	if (Engine->ChainLinks.Num() > 0)
+	if (Context.Event.ChainLink > 0)
+	{
+		for (FDuelChainLink& Link : Engine->ChainLinks)
+		{
+			if (Link.LinkIndex == Context.Event.ChainLink && (Targets.Num() == 0 || Targets.Contains(Link.CardUid)))
+			{
+				Link.bNegated = true;
+				NegatedActivationUids.Add(Link.CardUid);
+			}
+		}
+	}
+	if (Engine->ChainLinks.Num() > 0 && Targets.Num() == 0 && Context.Event.ChainLink <= 0)
 	{
 		Engine->ChainLinks.Last().bNegated = true;
+		NegatedActivationUids.Add(Engine->ChainLinks.Last().CardUid);
 	}
 	bTrapEffectNegated = true;
 	return true;
@@ -2700,6 +3349,694 @@ bool FDAEffectRuntime::ExecuteOperations(const FDEffectContext& Context, FString
 		if (Engine->bWinnerSet)
 		{
 			break;
+		}
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ExecuteOperationsList(const TArray<TSharedPtr<FJsonObject>>& Operations,
+	const FDEffectContext& Context, FString& OutError)
+{
+	for (const TSharedPtr<FJsonObject>& Operation : Operations)
+	{
+		if (!ExecuteOperation(Operation, Context, OutError))
+		{
+			return false;
+		}
+		if (Engine->bWinnerSet)
+		{
+			break;
+		}
+	}
+	return true;
+}
+
+int32 FDAEffectRuntime::CountZoneForOperation(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, const FDuelCard& Subject, const FString& Zone,
+	const TSharedPtr<FJsonObject>& Filter) const
+{
+	int32 Count = 0;
+	for (const FDuelCard& Card : CollectCandidates(Zone, Context.SourceCard, Context.Event))
+	{
+		if (!Filter.IsValid() || EvaluateCondition(Filter, Card, Context.SourceCard, Context.Event))
+		{
+			++Count;
+		}
+	}
+	(void)Subject;
+	return Count;
+}
+
+int32 FDAEffectRuntime::ComputeDynamicAmount(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, const FDuelCard& Subject) const
+{
+	const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("flat"));
+	int32 Base = ReadInt(Operation, TEXT("amount"), 0);
+	const int32 Multiplier = FMath::Max(1, ReadInt(Operation, TEXT("multiplier"), 1));
+	const int32 Divisor = FMath::Max(1, ReadInt(Operation, TEXT("divisor"), 1));
+	const TSharedPtr<FJsonObject>* Filter = nullptr;
+	Operation->TryGetObjectField(TEXT("count_filter"), Filter);
+
+	int32 Count = 0;
+	bool bHasCount = false;
+	const FString CountZone = ReadString(Operation, TEXT("count_zone"));
+	if (!CountZone.IsEmpty())
+	{
+		bHasCount = true;
+		Count += CountZoneForOperation(Operation, Context, Subject, CountZone, Filter ? *Filter : nullptr);
+	}
+	const TArray<TSharedPtr<FJsonValue>>* CountZones = nullptr;
+	if (Operation->TryGetArrayField(TEXT("count_zones"), CountZones) && CountZones)
+	{
+		bHasCount = true;
+		for (const TSharedPtr<FJsonValue>& Value : *CountZones)
+		{
+			if (Value.IsValid())
+			{
+				Count += CountZoneForOperation(Operation, Context, Subject, Value->AsString(), Filter ? *Filter : nullptr);
+			}
+		}
+	}
+
+	const FDuelCard* LiveSubject = Engine ? Engine->FindCard(Subject.Uid) : nullptr;
+	const FDuelCard& StatSubject = LiveSubject ? *LiveSubject : Subject;
+	const EDuelOwner Controller = Context.SourceCard.Controller;
+
+	if (Mode == TEXT("per_counter"))
+	{
+		const FString Counter = ReadString(Operation, TEXT("counter"), TEXT("spell"));
+		return Base * GetCounterCount(StatSubject.Uid, Counter);
+	}
+	if (Mode == TEXT("per_level"))
+	{
+		return Base * Engine->GetEffectiveLevel(StatSubject);
+	}
+	if (Mode == TEXT("per_atk") || Mode == TEXT("atk"))
+	{
+		return Engine->GetAtk(StatSubject) * Multiplier / Divisor;
+	}
+	if (Mode == TEXT("per_def") || Mode == TEXT("def"))
+	{
+		return Engine->GetDef(StatSubject) * Multiplier / Divisor;
+	}
+	if (Mode == TEXT("half_atk"))
+	{
+		return Engine->GetAtk(StatSubject) / 2;
+	}
+	if (Mode == TEXT("half_def"))
+	{
+		return Engine->GetDef(StatSubject) / 2;
+	}
+	if (Mode == TEXT("per_hand"))
+	{
+		return Base * Engine->GetSide(Controller).Hand.Num();
+	}
+	if (Mode == TEXT("per_graveyard"))
+	{
+		return Base * Engine->GetSide(Controller).Graveyard.Num();
+	}
+	if (Mode == TEXT("per_banished"))
+	{
+		return Base * Engine->GetSide(Controller).Banished.Num();
+	}
+	if (Mode == TEXT("per_deck"))
+	{
+		return Base * Engine->GetSide(Controller).Deck.Num();
+	}
+	if (Mode == TEXT("per_extra"))
+	{
+		return Base * Engine->GetSide(Controller).Extra.Num();
+	}
+	if (Mode == TEXT("per_monster"))
+	{
+		int32 Monsters = 0;
+		for (const FDuelCard& Card : Engine->GetSide(Controller).Monsters)
+		{
+			if (Card.IsValid() && Card.bFaceUp) ++Monsters;
+		}
+		return Base * Monsters;
+	}
+	if (Mode == TEXT("per_spell_trap"))
+	{
+		return Base * Engine->GetSide(Controller).Spells.FilterByPredicate(
+			[](const FDuelCard& Card) { return Card.IsValid(); }).Num();
+	}
+	if (bHasCount || Mode == TEXT("per_card") || Mode == TEXT("count"))
+	{
+		return Base * Count * Multiplier / Divisor;
+	}
+	return Base * Multiplier / Divisor;
+}
+
+bool FDAEffectRuntime::ExecuteAttackLock(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, FString& OutError)
+{
+	(void)OutError;
+	TArray<int32> Targets;
+	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+	const FString Op = ReadString(Operation, TEXT("op"));
+	const FString Mode = ReadString(Operation, TEXT("mode"), Op == TEXT("must_attack") ? TEXT("must_attack") : TEXT("cannot_attack"));
+	const FString Player = ReadString(Operation, TEXT("player"), TEXT("self"));
+	const FString Duration = Context.Script.Duration;
+	const bool bTurnScoped = Duration == TEXT("until_end_of_turn");
+	if (bTurnScoped)
+	{
+		AttackRestrictionExpiryTurn = Engine->TurnNumber;
+	}
+
+	auto ApplySide = [this, &Mode, bTurnScoped](EDuelOwner Side)
+	{
+		if (Mode == TEXT("max_attackers") || Mode == TEXT("only_one_attacker"))
+		{
+			MaxAttackersThisTurn.Add(static_cast<uint8>(Side), 1);
+		}
+		else if (Mode == TEXT("cannot_attack_directly"))
+		{
+			CannotAttackDirectlySidesThisTurn.Add(static_cast<uint8>(Side));
+		}
+		else if (Mode == TEXT("must_attack"))
+		{
+			for (FDuelCard& Card : Engine->SideRef(Side).Monsters)
+			{
+				if (Card.IsValid()) MustAttackUids.Add(Card.Uid);
+			}
+		}
+		else if (bTurnScoped)
+		{
+			CannotAttackSidesThisTurn.Add(static_cast<uint8>(Side));
+		}
+		else
+		{
+			for (FDuelCard& Card : Engine->SideRef(Side).Monsters)
+			{
+				if (Card.IsValid()) CannotAttackUids.Add(Card.Uid);
+			}
+		}
+	};
+
+	const bool bSideWide = Targets.Num() == 0 || ReadBool(Operation, TEXT("side_wide"), false);
+	if (bSideWide)
+	{
+		if (Player == TEXT("both")) { ApplySide(EDuelOwner::Player); ApplySide(EDuelOwner::Opponent); }
+		else if (Player == TEXT("opponent")) ApplySide(Other(Context.SourceCard.Controller));
+		else ApplySide(Context.SourceCard.Controller);
+	}
+	for (int32 Uid : Targets)
+	{
+		const FDuelCard* Card = Engine->FindMonster(Uid);
+		if (!Card)
+		{
+			continue;
+		}
+		if (Mode == TEXT("max_attackers") || Mode == TEXT("only_one_attacker"))
+		{
+			MaxAttackersThisTurn.Add(static_cast<uint8>(Card->Controller), 1);
+		}
+		else if (Mode == TEXT("cannot_attack_directly"))
+		{
+			DirectAttackForbiddenUids.Add(Uid);
+		}
+		else if (Mode == TEXT("must_attack"))
+		{
+			MustAttackUids.Add(Uid);
+		}
+		else
+		{
+			CannotAttackUids.Add(Uid);
+			if (bTurnScoped)
+			{
+				CannotAttackSidesThisTurn.Add(static_cast<uint8>(Card->Controller));
+			}
+		}
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ExecuteAttackDirectly(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, FString& OutError)
+{
+	(void)OutError;
+	TArray<int32> Targets;
+	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+	if (Targets.Num() == 0)
+	{
+		Targets.Add(Context.SourceCard.Uid);
+	}
+	for (int32 Uid : Targets)
+	{
+		DirectAttackAllowedUids.Add(Uid);
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ExecutePiercing(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, FString& OutError)
+{
+	(void)OutError;
+	TArray<int32> Targets;
+	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+	if (Targets.Num() == 0)
+	{
+		Targets.Add(Context.SourceCard.Uid);
+	}
+	for (int32 Uid : Targets)
+	{
+		PiercingUids.Add(Uid);
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ExecuteDestructionReplacement(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, FString& OutError)
+{
+	(void)OutError;
+	TArray<int32> Targets;
+	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+	if (Targets.Num() == 0)
+	{
+		Targets.Add(Context.SourceCard.Uid);
+	}
+	const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("cannot_be_destroyed"));
+	for (int32 Uid : Targets)
+	{
+		if (Mode.Contains(TEXT("battle")) && !Mode.Contains(TEXT("effect")))
+		{
+			PreventBattleDestructionUids.Add(Uid);
+		}
+		else if (Mode.Contains(TEXT("banish")))
+		{
+			BanishInsteadOfGraveUids.Add(Uid);
+		}
+		else if (Mode.Contains(TEXT("destroy") ) && Mode.Contains(TEXT("cannot")))
+		{
+			PreventDestructionUids.Add(Uid);
+		}
+		else
+		{
+			PreventDestructionUids.Add(Uid);
+		}
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ExecutePositionLock(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, FString& OutError)
+{
+	(void)OutError;
+	TArray<int32> Targets;
+	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+	if (Targets.Num() == 0)
+	{
+		Targets.Add(Context.SourceCard.Uid);
+	}
+	const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("cannot_change"));
+	for (int32 Uid : Targets)
+	{
+		if (Mode.Contains(TEXT("end")) || Mode.Contains(TEXT("battle")))
+		{
+			EndBattleDefenseUids.Add(Uid);
+		}
+		else
+		{
+			CannotChangePositionUids.Add(Uid);
+		}
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ExecuteSpiritReturn(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, FString& OutError)
+{
+	(void)OutError;
+	TArray<int32> Targets;
+	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+	if (Targets.Num() == 0)
+	{
+		Targets.Add(Context.SourceCard.Uid);
+	}
+	for (int32 Uid : Targets)
+	{
+		SpiritReturnUids.Add(Uid);
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ExecuteUnionEquip(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, bool bUnequip, FString& OutError)
+{
+	if (!bUnequip)
+	{
+		FDuelCard* Source = Engine->FindMonster(Context.SourceCard.Uid);
+		if (!Source)
+		{
+			OutError = TEXT("union source is not a face-up monster");
+			return false;
+		}
+		TArray<int32> Targets;
+		ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+		const int32 TargetUid = Targets.Num() > 0 ? Targets[0] : 0;
+		FDuelCard* Target = Engine->FindMonster(TargetUid);
+		if (!Target || Target->Uid == Source->Uid)
+		{
+			OutError = TEXT("union equip needs another monster target");
+			return false;
+		}
+		const int32 SourceUid = Source->Uid;
+		FDuelCard Copy;
+		if (!Engine->RemoveFromZone(Copy, SourceUid))
+		{
+			OutError = TEXT("union source left the field");
+			return false;
+		}
+		if (!Engine->PlaceSpellTrap(Copy.Owner, Copy, true, false))
+		{
+			Engine->MoveToGrave(Copy);
+			OutError = TEXT("no Spell/Trap zone for the Union monster");
+			return false;
+		}
+		if (FDuelCard* Equip = Engine->FindSpellTrap(SourceUid))
+		{
+			Equip->EquippedToUid = TargetUid;
+		}
+		Engine->Log(FString::Printf(TEXT("%s equips to %s as a Union monster."), *CardName(Copy), *CardName(*Target)), TEXT("effect"));
+		RecomputeContinuous();
+		return true;
+	}
+
+	FDuelCard* Equip = Engine->FindSpellTrap(Context.SourceCard.Uid);
+	if (!Equip)
+	{
+		OutError = TEXT("union card is not equipped");
+		return false;
+	}
+	const int32 EquipUid = Equip->Uid;
+	FDuelCard Copy;
+	if (!Engine->RemoveFromZone(Copy, EquipUid))
+	{
+		OutError = TEXT("union card left the field");
+		return false;
+	}
+	Copy.EquippedToUid = 0;
+	const FString PositionValue = ReadString(Operation, TEXT("position"), TEXT("attack"));
+	const EDuelPosition Position = PositionValue == TEXT("defense") ? EDuelPosition::Defense : EDuelPosition::Attack;
+	if (!Engine->PlaceMonster(Copy.Owner, Copy, true, Position))
+	{
+		Engine->MoveToGrave(Copy);
+		OutError = TEXT("no monster zone for the Union monster");
+		return false;
+	}
+	if (FDuelCard* Placed = Engine->FindMonster(EquipUid))
+	{
+		Placed->bSpecialSummoned = true;
+		Engine->OnSummon(*Placed, true, 0);
+	}
+	RecomputeContinuous();
+	return true;
+}
+
+bool FDAEffectRuntime::ExecuteInherentSummon(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, FString& OutError)
+{
+	TArray<int32> Targets;
+	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+	if (Targets.Num() == 0)
+	{
+		Targets.Add(Context.SourceCard.Uid);
+	}
+	const FString PositionValue = ReadString(Operation, TEXT("position"), TEXT("attack"));
+	const EDuelPosition Position = PositionValue == TEXT("defense") ? EDuelPosition::Defense : EDuelPosition::Attack;
+	for (int32 Uid : Targets)
+	{
+		FDuelCard* Card = Engine->FindCard(Uid);
+		if (!Card)
+		{
+			continue;
+		}
+		FDuelCard Copy;
+		if (!Engine->RemoveFromZone(Copy, Uid))
+		{
+			continue;
+		}
+		if (!Engine->PlaceMonster(Copy.Owner, Copy, true, Position))
+		{
+			Engine->MoveToGrave(Copy);
+			continue;
+		}
+		if (FDuelCard* Placed = Engine->FindMonster(Uid))
+		{
+			Placed->bSpecialSummoned = true;
+			Engine->Log(FString::Printf(TEXT("%s Special Summons %s by its inherent procedure."),
+				*Engine->GetSide(Copy.Owner).Name, *CardName(*Placed)), TEXT("summon"));
+			Engine->OnSummon(*Placed, true, 0);
+		}
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ExecuteRandomOutcome(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, bool bDie, FString& OutError)
+{
+	const bool bCoin = !bDie;
+	const int32 Count = FMath::Clamp(ReadInt(Operation, TEXT("count"), 1), 1, 10);
+	LastRandomResults.Reset();
+	int32 Sum = 0;
+	int32 Heads = 0;
+	for (int32 I = 0; I < Count; ++I)
+	{
+		const int32 Result = Engine->Random.RandRange(1, bDie ? 6 : 2);
+		LastRandomResults.Add(Result);
+		Sum += Result;
+		if (bCoin && Result == 1)
+		{
+			++Heads;
+		}
+	}
+	LastRandomResult = Sum;
+	int32 SuccessMin = ReadInt(Operation, TEXT("success_min"), ReadInt(Operation, TEXT("threshold"), bCoin ? 1 : 1));
+	int32 SuccessMax = ReadInt(Operation, TEXT("success_max"), 999);
+	if (bCoin && ReadInt(Operation, TEXT("success_min"), -1) < 0 && !Operation->HasField(TEXT("threshold")))
+	{
+		SuccessMin = 1;
+	}
+	const int32 CompareValue = bCoin ? Heads : Sum;
+	const bool bSuccess = CompareValue >= SuccessMin && CompareValue <= SuccessMax;
+
+	Engine->EmitVisual(EDuelVisualEventType::Effect, Context.SourceCard.Controller, &Context.SourceCard,
+		bCoin ? Heads : Sum, bCoin ? (bSuccess ? TEXT("COIN HEADS") : TEXT("COIN TAILS")) : TEXT("DIE"));
+
+	auto RunBranch = [this, &Operation, &Context, &OutError](const TCHAR* Key) -> bool
+	{
+		const TArray<TSharedPtr<FJsonValue>>* Branch = nullptr;
+		if (!Operation->TryGetArrayField(Key, Branch) || !Branch)
+		{
+			return true;
+		}
+		TArray<TSharedPtr<FJsonObject>> BranchOps;
+		for (const TSharedPtr<FJsonValue>& Value : *Branch)
+		{
+			if (Value.IsValid() && Value->AsObject().IsValid())
+			{
+				BranchOps.Add(Value->AsObject());
+			}
+		}
+		return ExecuteOperationsList(BranchOps, Context, OutError);
+	};
+	if (!RunBranch(bSuccess ? TEXT("success_operations") : TEXT("failure_operations")))
+	{
+		return false;
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ApplyContinuousStat(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, bool bAtk)
+{
+	const FDuelCard& Card = Context.SourceCard;
+	TArray<int32> Targets;
+	FString TargetString;
+	const bool bStringTarget = Operation->TryGetStringField(TEXT("target"), TargetString);
+	if (bStringTarget && (TargetString == TEXT("$self") || TargetString == TEXT("$equipped")))
+	{
+		if (Context.Script.Trigger == EDEffectTrigger::EquipContinuous || TargetString == TEXT("$equipped"))
+		{
+			if (Card.EquippedToUid != 0) Targets.Add(Card.EquippedToUid);
+		}
+		else if (Context.Script.Trigger == EDEffectTrigger::FieldContinuous)
+		{
+			for (EDuelOwner Side : { EDuelOwner::Player, EDuelOwner::Opponent })
+			{
+				for (const FDuelCard& Monster : Engine->GetSide(Side).Monsters)
+				{
+					if (Monster.IsValid() && Monster.bFaceUp) Targets.Add(Monster.Uid);
+				}
+			}
+		}
+		else
+		{
+			Targets.Add(Card.Uid);
+		}
+	}
+	else if (Operation->HasField(TEXT("target")))
+	{
+		const TSharedPtr<FJsonObject>* TargetObject = nullptr;
+		Operation->TryGetObjectField(TEXT("target"), TargetObject);
+		bool bWholeZoneTarget = false;
+		if (TargetObject && TargetObject->IsValid())
+		{
+			const FString Zone = ReadString(*TargetObject, TEXT("zone"));
+			bWholeZoneTarget = !(*TargetObject)->HasField(TEXT("count"))
+				&& (Zone == TEXT("all_monsters") || Zone == TEXT("all_spell_traps")
+					|| Zone == TEXT("all_cards") || Zone == TEXT("all_hands")
+					|| Zone == TEXT("all_cards_and_hands"));
+		}
+		if (bWholeZoneTarget)
+		{
+			const FString Zone = ReadString(*TargetObject, TEXT("zone"));
+			const TSharedPtr<FJsonObject>* Filter = nullptr;
+			(*TargetObject)->TryGetObjectField(TEXT("filter"), Filter);
+			for (const FDuelCard& Candidate : CollectCandidates(Zone, Card, Context.Event))
+			{
+				if (MatchesFilter(Candidate, Filter ? *Filter : nullptr, Card, Context.Event))
+				{
+					Targets.Add(Candidate.Uid);
+				}
+			}
+		}
+		else
+		{
+			ResolveOperationTargets(Operation, Context, Card, Context.Event, Targets);
+		}
+	}
+	else if (Context.Script.Trigger == EDEffectTrigger::EquipContinuous)
+	{
+		if (Card.EquippedToUid != 0) Targets.Add(Card.EquippedToUid);
+	}
+	else if (Context.Script.Trigger == EDEffectTrigger::FieldContinuous)
+	{
+		for (EDuelOwner Side : { EDuelOwner::Player, EDuelOwner::Opponent })
+		{
+			for (const FDuelCard& Monster : Engine->GetSide(Side).Monsters)
+			{
+				if (Monster.IsValid() && Monster.bFaceUp) Targets.Add(Monster.Uid);
+			}
+		}
+	}
+	else
+	{
+		Targets.Add(Card.Uid);
+	}
+
+	const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("flat"));
+	for (int32 Uid : Targets)
+	{
+		const FDuelCard* Target = Engine->FindCard(Uid);
+		if (!Target || !Target->IsMonster())
+		{
+			continue;
+		}
+		int32 Amount = ComputeDynamicAmount(Operation, Context, *Target);
+		if (Mode == TEXT("set_atk") || Mode == TEXT("set_def"))
+		{
+			const int32 Wanted = ReadInt(Operation, TEXT("amount"), bAtk ? Target->Data.Atk : Target->Data.Def);
+			Amount = Wanted - (bAtk ? Target->Data.Atk : Target->Data.Def);
+		}
+		if (bAtk)
+		{
+			ContinuousAtkModifiers.FindOrAdd(Uid) += Amount;
+		}
+		else
+		{
+			ContinuousDefModifiers.FindOrAdd(Uid) += Amount;
+		}
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::ApplyContinuousRestriction(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context)
+{
+	const FDuelCard& Card = Context.SourceCard;
+	const FString Op = ReadString(Operation, TEXT("op"));
+	TArray<int32> Targets;
+	if (Operation->HasField(TEXT("target")))
+	{
+		ResolveOperationTargets(Operation, Context, Card, Context.Event, Targets);
+	}
+	else if (Context.Script.Trigger == EDEffectTrigger::EquipContinuous)
+	{
+		if (Card.EquippedToUid != 0) Targets.Add(Card.EquippedToUid);
+	}
+	else if (Context.Script.Trigger == EDEffectTrigger::FieldContinuous)
+	{
+		for (EDuelOwner Side : { EDuelOwner::Player, EDuelOwner::Opponent })
+		{
+			for (const FDuelCard& Monster : Engine->GetSide(Side).Monsters)
+			{
+				if (Monster.IsValid() && Monster.bFaceUp) Targets.Add(Monster.Uid);
+			}
+		}
+	}
+	else
+	{
+		Targets.Add(Card.Uid);
+	}
+
+	const FString Mode = ReadString(Operation, TEXT("mode"), Op == TEXT("must_attack") ? TEXT("must_attack") : TEXT("cannot_attack"));
+	const FString Player = ReadString(Operation, TEXT("player"), TEXT("self"));
+	auto ApplySide = [this, &Mode](EDuelOwner Side)
+	{
+		if (Mode == TEXT("max_attackers") || Mode == TEXT("only_one_attacker"))
+		{
+			MaxAttackersPerSide.Add(static_cast<uint8>(Side), 1);
+		}
+		else if (Mode == TEXT("cannot_attack_directly"))
+		{
+			for (const FDuelCard& Monster : Engine->GetSide(Side).Monsters)
+			{
+				if (Monster.IsValid()) ContinuousDirectAttackForbiddenUids.Add(Monster.Uid);
+			}
+		}
+		else if (Mode == TEXT("must_attack"))
+		{
+			for (const FDuelCard& Monster : Engine->GetSide(Side).Monsters)
+			{
+				if (Monster.IsValid()) ContinuousMustAttackUids.Add(Monster.Uid);
+			}
+		}
+		else
+		{
+			for (const FDuelCard& Monster : Engine->GetSide(Side).Monsters)
+			{
+				if (Monster.IsValid()) ContinuousCannotAttackUids.Add(Monster.Uid);
+			}
+		}
+	};
+	if (Targets.Num() == 0 || ReadBool(Operation, TEXT("side_wide"), false))
+	{
+		if (Player == TEXT("both")) { ApplySide(EDuelOwner::Player); ApplySide(EDuelOwner::Opponent); }
+		else if (Player == TEXT("opponent")) ApplySide(Other(Card.Controller));
+		else ApplySide(Card.Controller);
+	}
+	for (int32 Uid : Targets)
+	{
+		if (Mode == TEXT("max_attackers") || Mode == TEXT("only_one_attacker"))
+		{
+			if (const FDuelCard* Monster = Engine->FindMonster(Uid))
+			{
+				MaxAttackersPerSide.Add(static_cast<uint8>(Monster->Controller), 1);
+			}
+		}
+		else if (Mode == TEXT("cannot_attack_directly"))
+		{
+			ContinuousDirectAttackForbiddenUids.Add(Uid);
+		}
+		else if (Mode == TEXT("must_attack"))
+		{
+			ContinuousMustAttackUids.Add(Uid);
+		}
+		else
+		{
+			ContinuousCannotAttackUids.Add(Uid);
 		}
 	}
 	return true;
@@ -2734,7 +4071,16 @@ bool FDAEffectRuntime::ExecuteOperation(const TSharedPtr<FJsonObject>& Operation
 	if (Op == TEXT("reveal")) return ExecuteReveal(Operation, Context, OutError);
 	if (Op == TEXT("shuffle")) return ExecuteShuffle(Operation, Context, OutError);
 	if (Op == TEXT("negate")) return ExecuteNegate(Operation, Context, OutError);
-	if (Op == TEXT("lock_activation")) { bTrapActivationLocked = true; bTrapEffectNegated = true; return true; }
+	if (Op == TEXT("negate_activation")) return ExecuteNegate(Operation, Context, OutError);
+	if (Op == TEXT("lock_activation"))
+	{
+		const FString Mode = ReadString(Operation, TEXT("mode"));
+		if (Mode.Contains(TEXT("spell"))) bSpellActivationLocked = true;
+		if (Mode.Contains(TEXT("monster"))) bMonsterEffectLocked = true;
+		if (Mode.Contains(TEXT("trap")) || Mode.IsEmpty()) bTrapActivationLocked = true;
+		if (Mode.Contains(TEXT("effect"))) bTrapEffectNegated = true;
+		return true;
+	}
 	if (Op == TEXT("allow_fusion"))
 	{
 		AllowedFusionTypes.Add(ReadString(Operation, TEXT("fusion_type"), TEXT("Fusion Gate")));
@@ -2743,10 +4089,26 @@ bool FDAEffectRuntime::ExecuteOperation(const TSharedPtr<FJsonObject>& Operation
 	if (Op == TEXT("redirect_battle_damage")) { RedirectBattleDamageUids.Add(Context.SourceCard.Uid); return true; }
 	if (Op == TEXT("prevent_battle_damage")) { PreventBattleDamageSides.Add(static_cast<uint8>(Context.SourceCard.Controller)); return true; }
 	if (Op == TEXT("battle_damage_zero")) { BattleDamageZeroUids.Add(Context.SourceCard.Uid); return true; }
+	if (Op == TEXT("battle_damage_modifier"))
+	{
+		TArray<int32> Targets;
+		ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+		if (Targets.Num() == 0) Targets.Add(Context.SourceCard.Uid);
+		const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("zero"));
+		const float Multiplier = Mode == TEXT("half") ? 0.5f : (Mode == TEXT("double") ? 2.f : 0.f);
+		for (int32 Uid : Targets)
+		{
+			BattleDamageMultipliers.Add(Uid, Multiplier);
+		}
+		return true;
+	}
 	if (Op == TEXT("skip_phase") || Op == TEXT("skip_draw")) { Engine->SideRef(Context.SourceCard.Controller).bSkipDraw = true; return true; }
 	if (Op == TEXT("extra_attack"))
 	{
-		for (int32 Uid : Context.TargetUids)
+		TArray<int32> Targets;
+		ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+		if (Targets.Num() == 0) Targets = Context.TargetUids;
+		for (int32 Uid : Targets)
 		{
 			if (FDuelCard* Card = Engine->FindMonster(Uid))
 			{
@@ -2755,17 +4117,45 @@ bool FDAEffectRuntime::ExecuteOperation(const TSharedPtr<FJsonObject>& Operation
 		}
 		return true;
 	}
-	if (Op == TEXT("attack_directly") || Op == TEXT("redirect_attack") || Op == TEXT("declare_name") || Op == TEXT("look_at_deck"))
+	if (Op == TEXT("attack_directly")) return ExecuteAttackDirectly(Operation, Context, OutError);
+	if (Op == TEXT("attack_lock") || Op == TEXT("must_attack")) return ExecuteAttackLock(Operation, Context, OutError);
+	if (Op == TEXT("negate_attack")) { bAttackNegated = true; return true; }
+	if (Op == TEXT("piercing")) return ExecutePiercing(Operation, Context, OutError);
+	if (Op == TEXT("destruction_replacement") || Op == TEXT("destroy_replace"))
 	{
-		Engine->Log(FString::Printf(TEXT("Effect operation '%s' is recorded but not yet visualised."), *Op), TEXT("effect"));
+		return ExecuteDestructionReplacement(Operation, Context, OutError);
+	}
+	if (Op == TEXT("battle_position_lock")) return ExecutePositionLock(Operation, Context, OutError);
+	if (Op == TEXT("spirit_return")) return ExecuteSpiritReturn(Operation, Context, OutError);
+	if (Op == TEXT("summon_lock"))
+	{
+		const FString Player = ReadString(Operation, TEXT("player"), TEXT("both"));
+		const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("both"));
+		const bool bSpecialOnly = Mode.Contains(TEXT("special_only"));
+		const bool bNormalOnly = Mode.Contains(TEXT("normal_only"));
+		const bool bLockSpecial = !bNormalOnly && (bSpecialOnly || Mode.Contains(TEXT("special")) || Mode == TEXT("both"));
+		const bool bLockNormal = !bSpecialOnly && (bNormalOnly || Mode.Contains(TEXT("normal")) || Mode == TEXT("both"));
+		auto LockSide = [this, bLockSpecial, bLockNormal](EDuelOwner Side)
+		{
+			if (bLockNormal) NormalSummonLockSides.Add(static_cast<uint8>(Side));
+			if (bLockSpecial) SpecialSummonLockSides.Add(static_cast<uint8>(Side));
+		};
+		if (Player == TEXT("both")) { LockSide(EDuelOwner::Player); LockSide(EDuelOwner::Opponent); }
+		else if (Player == TEXT("opponent")) LockSide(Other(Context.SourceCard.Controller));
+		else LockSide(Context.SourceCard.Controller);
+		return true;
+	}
+	if (Op == TEXT("union_equip")) return ExecuteUnionEquip(Operation, Context, false, OutError);
+	if (Op == TEXT("union_unequip")) return ExecuteUnionEquip(Operation, Context, true, OutError);
+	if (Op == TEXT("inherent_special_summon")) return ExecuteInherentSummon(Operation, Context, OutError);
+	if (Op == TEXT("declare_name") || Op == TEXT("look_at_deck") || Op == TEXT("redirect_attack"))
+	{
+		Engine->Log(FString::Printf(TEXT("Effect operation '%s' is recorded but has no visual callback."), *Op), TEXT("effect"));
 		return true;
 	}
 	if (Op == TEXT("roll_die") || Op == TEXT("toss_coin"))
 	{
-		const int32 Result = Engine->Random.RandRange(1, Op == TEXT("roll_die") ? 6 : 2);
-		Engine->EmitVisual(EDuelVisualEventType::Effect, Context.SourceCard.Controller, &Context.SourceCard, Result,
-			Op == TEXT("roll_die") ? TEXT("DIE") : TEXT("COIN"));
-		return true;
+		return ExecuteRandomOutcome(Operation, Context, Op == TEXT("roll_die"), OutError);
 	}
 	if (Op == TEXT("excavate"))
 	{
@@ -2810,8 +4200,25 @@ void FDAEffectRuntime::RecomputeContinuous()
 	RedirectBattleDamageUids.Reset();
 	PreventBattleDamageSides.Reset();
 	BattleDamageZeroUids.Reset();
+	ContinuousCannotAttackUids.Reset();
+	ContinuousMustAttackUids.Reset();
+	ContinuousDirectAttackAllowedUids.Reset();
+	ContinuousDirectAttackForbiddenUids.Reset();
+	ContinuousPiercingUids.Reset();
+	ContinuousExtraAttackUids.Reset();
+	ContinuousCannotChangePositionUids.Reset();
+	ContinuousPreventDestructionUids.Reset();
+	ContinuousPreventBattleDestructionUids.Reset();
+	ContinuousBanishInsteadOfGraveUids.Reset();
+	ContinuousSpiritReturnUids.Reset();
+	MaxAttackersPerSide.Reset();
+	ContinuousNormalSummonLockSides.Reset();
+	ContinuousSpecialSummonLockSides.Reset();
+	ContinuousBattleDamageMultipliers.Reset();
 	bTrapActivationLocked = false;
 	bTrapEffectNegated = false;
+	bSpellActivationLocked = false;
+	bMonsterEffectLocked = false;
 
 	auto ProcessCard = [this](const FDuelCard& Card, EDuelOwner Side)
 	{
@@ -2832,44 +4239,53 @@ void FDAEffectRuntime::RecomputeContinuous()
 			{
 				continue;
 			}
+			const FDuelCard* EquippedTarget = nullptr;
+			if (Script.Trigger == EDEffectTrigger::EquipContinuous)
+			{
+				if (Card.EquippedToUid == 0)
+				{
+					continue;
+				}
+				EquippedTarget = Engine->FindMonster(Card.EquippedToUid);
+				if (!EquippedTarget)
+				{
+					continue;
+				}
+			}
+			const FDuelCard& Subject = EquippedTarget ? *EquippedTarget : Card;
 			FDEffectEvent Event;
 			Event.Trigger = Script.Trigger;
 			Event.SourceCard = Card;
-			Event.EventCard = Card;
+			Event.EventCard = Subject;
 			Event.SourceController = Side;
-			Event.EventController = Side;
-			if (!EvaluateCondition(Script.Condition, Card, Card, Event, true))
+			Event.EventController = Subject.Controller;
+			if (!EvaluateCondition(Script.Condition, Subject, Card, Event, true))
 			{
 				continue;
 			}
+			FDEffectContext Context;
+			Context.Script = Script;
+			Context.SourceCard = Card;
+			Context.Event = Event;
+			Context.Chooser = Side;
 			for (const TSharedPtr<FJsonObject>& Operation : Script.Operations)
 			{
 				const FString Op = ReadString(Operation, TEXT("op"));
 				if (Op == TEXT("modify_atk") || Op == TEXT("modify_def"))
 				{
-					int32 Amount = ReadInt(Operation, TEXT("amount"), 0);
-					const FString Mode = ReadString(Operation, TEXT("mode"));
-					const FString Counter = ReadString(Operation, TEXT("counter"));
-					if (Mode == TEXT("per_counter") && !Counter.IsEmpty())
-					{
-						Amount *= GetCounterCount(Card.Uid, Counter);
-					}
-					if (Op == TEXT("modify_atk"))
-					{
-						ContinuousAtkModifiers.FindOrAdd(Card.Uid) += Amount;
-					}
-					else
-					{
-						ContinuousDefModifiers.FindOrAdd(Card.Uid) += Amount;
-					}
+					ApplyContinuousStat(Operation, Context, Op == TEXT("modify_atk"));
+				}
+				else if (Op == TEXT("attack_lock") || Op == TEXT("must_attack"))
+				{
+					ApplyContinuousRestriction(Operation, Context);
 				}
 				else if (Op == TEXT("lock_activation"))
 				{
-					bTrapActivationLocked = true;
-					if (ReadString(Operation, TEXT("mode")).Contains(TEXT("effect")))
-					{
-						bTrapEffectNegated = true;
-					}
+					const FString Mode = ReadString(Operation, TEXT("mode"));
+					if (Mode.Contains(TEXT("spell"))) bSpellActivationLocked = true;
+					if (Mode.Contains(TEXT("monster"))) bMonsterEffectLocked = true;
+					if (Mode.Contains(TEXT("trap")) || Mode.IsEmpty()) bTrapActivationLocked = true;
+					if (Mode.Contains(TEXT("effect"))) bTrapEffectNegated = true;
 				}
 				else if (Op == TEXT("allow_fusion"))
 				{
@@ -2886,6 +4302,144 @@ void FDAEffectRuntime::RecomputeContinuous()
 				else if (Op == TEXT("battle_damage_zero"))
 				{
 					BattleDamageZeroUids.Add(Card.Uid);
+				}
+				else if (Op == TEXT("attack_directly"))
+				{
+					TArray<int32> Targets;
+					FString TargetString;
+					if (Operation->TryGetStringField(TEXT("target"), TargetString) && TargetString == TEXT("$self"))
+					{
+						Targets.Add(EquippedTarget ? EquippedTarget->Uid : Card.Uid);
+					}
+					else if (Operation->HasField(TEXT("target")))
+					{
+						ResolveOperationTargets(Operation, Context, Card, Event, Targets);
+					}
+					else
+					{
+						Targets.Add(EquippedTarget ? EquippedTarget->Uid : Card.Uid);
+					}
+					for (int32 Uid : Targets)
+					{
+						ContinuousDirectAttackAllowedUids.Add(Uid);
+					}
+				}
+				else if (Op == TEXT("piercing"))
+				{
+					TArray<int32> Targets;
+					if (Operation->HasField(TEXT("target")))
+					{
+						ResolveOperationTargets(Operation, Context, Card, Event, Targets);
+					}
+					if (Targets.Num() == 0) Targets.Add(EquippedTarget ? EquippedTarget->Uid : Card.Uid);
+					for (int32 Uid : Targets)
+					{
+						ContinuousPiercingUids.Add(Uid);
+					}
+				}
+				else if (Op == TEXT("extra_attack"))
+				{
+					TArray<int32> Targets;
+					if (Operation->HasField(TEXT("target")))
+					{
+						ResolveOperationTargets(Operation, Context, Card, Event, Targets);
+					}
+					if (Targets.Num() == 0) Targets.Add(EquippedTarget ? EquippedTarget->Uid : Card.Uid);
+					for (int32 Uid : Targets)
+					{
+						ContinuousExtraAttackUids.Add(Uid);
+					}
+				}
+				else if (Op == TEXT("destruction_replacement") || Op == TEXT("destroy_replace"))
+				{
+					TArray<int32> Targets;
+					if (Operation->HasField(TEXT("target")))
+					{
+						ResolveOperationTargets(Operation, Context, Card, Event, Targets);
+					}
+					if (Targets.Num() == 0) Targets.Add(EquippedTarget ? EquippedTarget->Uid : Card.Uid);
+					const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("cannot_be_destroyed"));
+					for (int32 Uid : Targets)
+					{
+						if (Mode.Contains(TEXT("battle")) && !Mode.Contains(TEXT("effect")))
+						{
+							ContinuousPreventBattleDestructionUids.Add(Uid);
+						}
+						else if (Mode.Contains(TEXT("banish")))
+						{
+							ContinuousBanishInsteadOfGraveUids.Add(Uid);
+						}
+						else
+						{
+							ContinuousPreventDestructionUids.Add(Uid);
+						}
+					}
+				}
+				else if (Op == TEXT("battle_position_lock"))
+				{
+					TArray<int32> Targets;
+					if (Operation->HasField(TEXT("target")))
+					{
+						ResolveOperationTargets(Operation, Context, Card, Event, Targets);
+					}
+					if (Targets.Num() == 0) Targets.Add(EquippedTarget ? EquippedTarget->Uid : Card.Uid);
+					const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("cannot_change"));
+					for (int32 Uid : Targets)
+					{
+						if (Mode.Contains(TEXT("end")) || Mode.Contains(TEXT("battle")))
+						{
+							EndBattleDefenseUids.Add(Uid);
+						}
+						else
+						{
+							ContinuousCannotChangePositionUids.Add(Uid);
+						}
+					}
+				}
+				else if (Op == TEXT("spirit_return"))
+				{
+					TArray<int32> Targets;
+					if (Operation->HasField(TEXT("target")))
+					{
+						ResolveOperationTargets(Operation, Context, Card, Event, Targets);
+					}
+					if (Targets.Num() == 0) Targets.Add(EquippedTarget ? EquippedTarget->Uid : Card.Uid);
+					for (int32 Uid : Targets)
+					{
+						ContinuousSpiritReturnUids.Add(Uid);
+					}
+				}
+				else if (Op == TEXT("summon_lock"))
+				{
+					const FString Player = ReadString(Operation, TEXT("player"), TEXT("both"));
+					const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("both"));
+					const bool bSpecialOnly = Mode.Contains(TEXT("special_only"));
+					const bool bNormalOnly = Mode.Contains(TEXT("normal_only"));
+					const bool bLockSpecial = !bNormalOnly && (bSpecialOnly || Mode.Contains(TEXT("special")) || Mode == TEXT("both"));
+					const bool bLockNormal = !bSpecialOnly && (bNormalOnly || Mode.Contains(TEXT("normal")) || Mode == TEXT("both"));
+					auto Lock = [this, bLockSpecial, bLockNormal](EDuelOwner LockSide)
+					{
+						if (bLockNormal) ContinuousNormalSummonLockSides.Add(static_cast<uint8>(LockSide));
+						if (bLockSpecial) ContinuousSpecialSummonLockSides.Add(static_cast<uint8>(LockSide));
+					};
+					if (Player == TEXT("both")) { Lock(EDuelOwner::Player); Lock(EDuelOwner::Opponent); }
+					else if (Player == TEXT("opponent")) Lock(Other(Side));
+					else Lock(Side);
+				}
+				else if (Op == TEXT("battle_damage_modifier"))
+				{
+					TArray<int32> Targets;
+					if (Operation->HasField(TEXT("target")))
+					{
+						ResolveOperationTargets(Operation, Context, Card, Event, Targets);
+					}
+					if (Targets.Num() == 0) Targets.Add(EquippedTarget ? EquippedTarget->Uid : Card.Uid);
+					const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("zero"));
+					const float Value = Mode == TEXT("half") ? 0.5f : (Mode == TEXT("double") ? 2.f : 0.f);
+					for (int32 Uid : Targets)
+					{
+						ContinuousBattleDamageMultipliers.Add(Uid, Value);
+					}
 				}
 			}
 		}
@@ -2954,7 +4508,252 @@ int32 FDAEffectRuntime::GetSpellSpeedOverride(int32 CardId) const
 
 bool FDAEffectRuntime::IsCardActivationLocked(const FDuelCard& Card) const
 {
-	return Card.IsTrap() && (bTrapActivationLocked || bTrapEffectNegated);
+	if (Card.IsTrap() && (bTrapActivationLocked || bTrapEffectNegated))
+	{
+		return true;
+	}
+	if (Card.IsSpell() && bSpellActivationLocked)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool FDAEffectRuntime::CanCardAttack(const FDuelCard& Attacker) const
+{
+	if (!Attacker.IsValid())
+	{
+		return false;
+	}
+	if (CannotAttackUids.Contains(Attacker.Uid) || ContinuousCannotAttackUids.Contains(Attacker.Uid))
+	{
+		return false;
+	}
+	if (CannotAttackSidesThisTurn.Contains(static_cast<uint8>(Attacker.Controller)))
+	{
+		return false;
+	}
+	const int32 MaxAttackers = GetMaxAttackers(Attacker.Controller);
+	if (MaxAttackers > 0)
+	{
+		int32 Used = 0;
+		for (const FDuelCard& Monster : Engine->GetSide(Attacker.Controller).Monsters)
+		{
+			if (Monster.IsValid() && (Monster.bHasAttacked || Monster.Uid == Attacker.Uid && Monster.AttacksUsed > 0))
+			{
+				++Used;
+			}
+		}
+		if (Used >= MaxAttackers && Attacker.AttacksUsed == 0)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::CanDeclareAttack(const FDuelCard& Attacker, bool bDirect) const
+{
+	if (!CanCardAttack(Attacker))
+	{
+		return false;
+	}
+	if (bDirect)
+	{
+		if (CannotAttackDirectlySidesThisTurn.Contains(static_cast<uint8>(Attacker.Controller))
+			|| DirectAttackForbiddenUids.Contains(Attacker.Uid)
+			|| ContinuousDirectAttackForbiddenUids.Contains(Attacker.Uid))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::CanAttackDirectly(const FDuelCard& Attacker) const
+{
+	return DirectAttackAllowedUids.Contains(Attacker.Uid)
+		|| ContinuousDirectAttackAllowedUids.Contains(Attacker.Uid);
+}
+
+bool FDAEffectRuntime::MustAttack(const FDuelCard& Attacker) const
+{
+	return MustAttackUids.Contains(Attacker.Uid) || ContinuousMustAttackUids.Contains(Attacker.Uid);
+}
+
+bool FDAEffectRuntime::IsPositionChangeLocked(const FDuelCard& Card) const
+{
+	return CannotChangePositionUids.Contains(Card.Uid) || ContinuousCannotChangePositionUids.Contains(Card.Uid);
+}
+
+int32 FDAEffectRuntime::GetMaxAttackers(EDuelOwner Side) const
+{
+	int32 Max = 0;
+	if (const int32* Found = MaxAttackersPerSide.Find(static_cast<uint8>(Side)))
+	{
+		Max = FMath::Max(Max, *Found);
+	}
+	if (const int32* Found = MaxAttackersThisTurn.Find(static_cast<uint8>(Side)))
+	{
+		Max = Max > 0 ? FMath::Min(Max, *Found) : *Found;
+	}
+	return Max;
+}
+
+bool FDAEffectRuntime::ConsumeAttackNegated()
+{
+	const bool bWasNegated = bAttackNegated;
+	bAttackNegated = false;
+	return bWasNegated;
+}
+
+bool FDAEffectRuntime::ShouldPreventDestruction(const FDuelCard& Card, bool bByBattle, const FString& Reason) const
+{
+	(void)Reason;
+	if (PreventDestructionUids.Contains(Card.Uid) || ContinuousPreventDestructionUids.Contains(Card.Uid))
+	{
+		return true;
+	}
+	if (bByBattle && (PreventBattleDestructionUids.Contains(Card.Uid)
+		|| ContinuousPreventBattleDestructionUids.Contains(Card.Uid)))
+	{
+		return true;
+	}
+	return false;
+}
+
+bool FDAEffectRuntime::ShouldBanishInsteadOfGrave(const FDuelCard& Card) const
+{
+	return BanishInsteadOfGraveUids.Contains(Card.Uid)
+		|| ContinuousBanishInsteadOfGraveUids.Contains(Card.Uid);
+}
+
+bool FDAEffectRuntime::IsSummonLocked(EDuelOwner Side, bool bSpecial) const
+{
+	const uint8 Key = static_cast<uint8>(Side);
+	return bSpecial
+		? (SpecialSummonLockSides.Contains(Key) || ContinuousSpecialSummonLockSides.Contains(Key))
+		: (NormalSummonLockSides.Contains(Key) || ContinuousNormalSummonLockSides.Contains(Key));
+}
+
+bool FDAEffectRuntime::ShouldStayOnFieldAfterActivation(const FDuelCard& Card) const
+{
+	if (!Card.IsSpell() && !Card.IsTrap())
+	{
+		return false;
+	}
+	// Printed card category is the primary rule.  A05's data scripts then
+	// refine it for cards whose subtype metadata is generic.
+	const FString& Subtype = Card.Data.Subtype;
+	if (Subtype == TEXT("Equip") || Subtype == TEXT("Field") || Subtype == TEXT("Continuous"))
+	{
+		return true;
+	}
+
+	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(Card.Data.Id);
+	if (!Scripts)
+	{
+		return false;
+	}
+	for (const FDEffectScript& Script : *Scripts)
+	{
+		if (Script.Trigger == EDEffectTrigger::EquipContinuous
+			|| Script.Trigger == EDEffectTrigger::FieldContinuous)
+		{
+			return true;
+		}
+		if (Script.Trigger == EDEffectTrigger::Continuous
+			&& (Script.Duration == TEXT("while_face_up") || Script.Duration == TEXT("permanent")))
+		{
+			return true;
+		}
+		if (Script.Trigger == EDEffectTrigger::OnActivate
+			&& (Script.Duration == TEXT("while_face_up") || Script.Duration == TEXT("permanent")))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool FDAEffectRuntime::HasEquipStatScript(int32 CardId) const
+{
+	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(CardId);
+	if (!Scripts)
+	{
+		return false;
+	}
+	for (const FDEffectScript& Script : *Scripts)
+	{
+		if (Script.Trigger != EDEffectTrigger::EquipContinuous)
+		{
+			continue;
+		}
+		for (const TSharedPtr<FJsonObject>& Operation : Script.Operations)
+		{
+			const FString Op = ReadString(Operation, TEXT("op"));
+			if (Op == TEXT("modify_atk") || Op == TEXT("modify_def"))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool FDAEffectRuntime::HasFieldStatScript(int32 CardId) const
+{
+	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(CardId);
+	if (!Scripts)
+	{
+		return false;
+	}
+	for (const FDEffectScript& Script : *Scripts)
+	{
+		if (Script.Trigger != EDEffectTrigger::FieldContinuous)
+		{
+			continue;
+		}
+		for (const TSharedPtr<FJsonObject>& Operation : Script.Operations)
+		{
+			const FString Op = ReadString(Operation, TEXT("op"));
+			if (Op == TEXT("modify_atk") || Op == TEXT("modify_def"))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool FDAEffectRuntime::HasScriptTrigger(int32 CardId, EDEffectTrigger Trigger) const
+{
+	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(CardId);
+	if (!Scripts)
+	{
+		return false;
+	}
+	for (const FDEffectScript& Script : *Scripts)
+	{
+		if (Script.Trigger == Trigger)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+float FDAEffectRuntime::GetBattleDamageMultiplier(int32 CardUid) const
+{
+	if (const float* Found = BattleDamageMultipliers.Find(CardUid))
+	{
+		return *Found;
+	}
+	if (const float* Found = ContinuousBattleDamageMultipliers.Find(CardUid))
+	{
+		return *Found;
+	}
+	return 1.f;
 }
 
 bool FDAEffectRuntime::ShouldRedirectBattleDamage(int32 CardUid, EDuelOwner DamageReceiver, EDuelOwner& OutReceiver) const
@@ -3048,6 +4847,31 @@ void FDAEffectRuntime::ClearCardState(int32 Uid)
 	ContinuousDefModifiers.Remove(Uid);
 	RedirectBattleDamageUids.Remove(Uid);
 	BattleDamageZeroUids.Remove(Uid);
+	CannotAttackUids.Remove(Uid);
+	MustAttackUids.Remove(Uid);
+	DirectAttackAllowedUids.Remove(Uid);
+	DirectAttackForbiddenUids.Remove(Uid);
+	PiercingUids.Remove(Uid);
+	ExtraAttackUids.Remove(Uid);
+	CannotChangePositionUids.Remove(Uid);
+	EndBattleDefenseUids.Remove(Uid);
+	PreventDestructionUids.Remove(Uid);
+	PreventBattleDestructionUids.Remove(Uid);
+	BanishInsteadOfGraveUids.Remove(Uid);
+	SpiritReturnUids.Remove(Uid);
+	ContinuousCannotAttackUids.Remove(Uid);
+	ContinuousMustAttackUids.Remove(Uid);
+	ContinuousDirectAttackAllowedUids.Remove(Uid);
+	ContinuousDirectAttackForbiddenUids.Remove(Uid);
+	ContinuousPiercingUids.Remove(Uid);
+	ContinuousExtraAttackUids.Remove(Uid);
+	ContinuousCannotChangePositionUids.Remove(Uid);
+	ContinuousPreventDestructionUids.Remove(Uid);
+	ContinuousPreventBattleDestructionUids.Remove(Uid);
+	ContinuousBanishInsteadOfGraveUids.Remove(Uid);
+	ContinuousSpiritReturnUids.Remove(Uid);
+	BattleDamageMultipliers.Remove(Uid);
+	ContinuousBattleDamageMultipliers.Remove(Uid);
 	for (int32 I = LingeringModifiers.Num() - 1; I >= 0; --I)
 	{
 		if (LingeringModifiers[I].Uid == Uid)
@@ -3055,6 +4879,16 @@ void FDAEffectRuntime::ClearCardState(int32 Uid)
 			LingeringModifiers.RemoveAt(I);
 		}
 	}
+}
+
+void FDAEffectRuntime::ResetTurnRestrictions()
+{
+	CannotAttackSidesThisTurn.Reset();
+	CannotAttackDirectlySidesThisTurn.Reset();
+	MaxAttackersThisTurn.Reset();
+	NormalSummonLockSides.Reset();
+	SpecialSummonLockSides.Reset();
+	AttackRestrictionExpiryTurn = -1;
 }
 
 void FDAEffectRuntime::ExpireLingering(EDuelOwner EndingSide, bool bBattlePhaseOnly)
@@ -3080,6 +4914,73 @@ void FDAEffectRuntime::ExpireLingering(EDuelOwner EndingSide, bool bBattlePhaseO
 		}
 	}
 	(void)EndingSide;
+}
+
+bool FDAEffectRuntime::HasInherentSummon(const FDuelCard& Card) const
+{
+	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(Card.Data.Id);
+	if (!Scripts)
+	{
+		return false;
+	}
+	for (const FDEffectScript& Script : *Scripts)
+	{
+		if (Script.Trigger == EDEffectTrigger::InherentSummon)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool FDAEffectRuntime::ActivateInherentSummon(int32 CardUid, FString& OutError)
+{
+	if (!Engine)
+	{
+		OutError = TEXT("effect runtime has no engine");
+		return false;
+	}
+	FDuelCard* Card = Engine->FindCard(CardUid);
+	if (!Card || !Card->IsMonster())
+	{
+		OutError = TEXT("inherent summon source is not a monster");
+		return false;
+	}
+	if (Engine->EmptyMonsterZone(Card->Controller) == INDEX_NONE)
+	{
+		OutError = TEXT("there is no empty Monster Zone for the inherent summon");
+		return false;
+	}
+	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(Card->Data.Id);
+	if (!Scripts)
+	{
+		OutError = TEXT("inherent summon source has no script");
+		return false;
+	}
+	for (const FDEffectScript& Script : *Scripts)
+	{
+		if (Script.Trigger != EDEffectTrigger::InherentSummon)
+		{
+			continue;
+		}
+		FDEffectEvent Event;
+		Event.Trigger = EDEffectTrigger::InherentSummon;
+		Event.SourceCard = *Card;
+		Event.EventCard = *Card;
+		Event.SourceController = Card->Controller;
+		Event.EventController = Card->Controller;
+		if (TryStartScript(Script, *Card, Event))
+		{
+			if (FDuelCard* Placed = Engine->FindMonster(CardUid))
+			{
+				Engine->TriggerSummonTraps(*Placed, false);
+			}
+			Engine->CheckWinner();
+			return true;
+		}
+	}
+	OutError = FString::Printf(TEXT("%s cannot be inherently Special Summoned right now."), *CardName(*Card));
+	return false;
 }
 
 bool FDAEffectRuntime::HasManualEffect(const FDuelCard& Card) const
