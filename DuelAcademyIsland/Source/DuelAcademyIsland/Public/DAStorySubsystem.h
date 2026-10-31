@@ -95,6 +95,7 @@ struct FDAStoryCommand
 	bool bOptional = false;
 	bool bTutorial = false;
 	bool bCountsAsWin = false;
+	bool bAwardDP = true;
 	bool bCompleteEvent = true;
 	bool bEnterFreeRoam = false;
 	bool bFlagValue = true;
@@ -235,6 +236,25 @@ public:
 	/** Integration hook for A04/A09/A10 when the duel result is known. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
 	void NotifyDuelResult(bool bPlayerWon, bool bDraw);
+
+	/** True while the current scene is blocked on a duel result. */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	bool HasPendingDuel() const { return bWaitingForDuel; }
+
+	/**
+	 * Attempt to start a talk-triggered event for this NPC. This is the world
+	 * interaction hook that the auto-start path deliberately skips.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
+	bool NotifyTalkToNPC(const FString& NpcId);
+
+	/** Count one walk-home trip with a partner; three with the same partner sets the E31 flag. */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
+	void NotifyWalkHome(const FString& PartnerId);
+
+	/** Count a weekend spent in the player's room; three weekends sets the E30 flag. */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
+	void NotifyRoomStay();
 
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
 	void SetPlayerName(const FString& NewName);
@@ -444,6 +464,8 @@ private:
 
 	float WaitRemaining = 0.f;
 	float AutoStartDelay = 2.f;
+	/** Throttles the free-roam availability poll so date/flag events start without a scene transition. */
+	float FreeRoamPollTimer = 0.f;
 	TWeakObjectPtr<ADAHUD> BoundHUD;
 	FTSTicker::FDelegateHandle TickerHandle;
 };

@@ -842,22 +842,8 @@
       ],
       "outcomes": [
         {
-          "type": "grant_card",
-          "card_id": 602,
-          "count": 1
-        },
-        {
-          "type": "set_title",
-          "title": "Occult Duelist"
-        },
-        {
           "type": "set_flag",
           "flag": "event_07_cleared",
-          "value": true
-        },
-        {
-          "type": "set_flag",
-          "flag": "occult_duelist",
           "value": true
         }
       ],
@@ -898,7 +884,8 @@
       "scene": "full.E07",
       "dialogue_keys": [
         "E07.01",
-        "E07.02"
+        "E07.02",
+        "E07.choice"
       ],
       "notes": "Card-in-main-deck is approximated by card ownership; temporary title has no restore stack yet."
     },
@@ -1045,21 +1032,18 @@
       "outcomes": [
         {
           "type": "grant_dp",
-          "amount": 15000
+          "amount": 15000,
+          "conditions": [
+            {
+              "type": "flag",
+              "flag": "event_09_won",
+              "value": true
+            }
+          ]
         },
         {
           "type": "set_flag",
           "flag": "event_09_cleared",
-          "value": true
-        },
-        {
-          "type": "set_flag",
-          "flag": "event_09_won",
-          "value": true
-        },
-        {
-          "type": "set_flag",
-          "flag": "duel_festival_won",
           "value": true
         }
       ],
@@ -1077,9 +1061,9 @@
           "opponent_deck_id": "jaden_year1",
           "player_deck": "active",
           "mode": "story",
-          "on_win": "",
-          "on_lose": "",
-          "on_draw": "",
+          "on_win": "full.E09_win",
+          "on_lose": "full.E09_lose",
+          "on_draw": "full.E09_lose",
           "optional": false,
           "story_critical": true,
           "counts_as_win": true,
@@ -1091,7 +1075,7 @@
         "E09.01",
         "E09.02"
       ],
-      "notes": "Third-Friday rule is scaffolded as a November Friday; tournament bracket is a placeholder single duel."
+      "notes": "Third-Friday rule is scaffolded as a November Friday; tournament bracket is a placeholder single duel. Win branch grants the festival DP/title flags; the loss branch completes without them."
     },
     {
       "id": "E10",
@@ -1217,7 +1201,7 @@
       "story_critical": true,
       "when": {
         "date": {
-          "year": 2,
+          "year": 1,
           "month": 1,
           "day": 1
         }
@@ -1229,7 +1213,7 @@
       "anchor": "slifer_player_room_bed",
       "trigger": {
         "type": "date",
-        "year": 2,
+        "year": 1,
         "month": 1,
         "day": 1
       },
@@ -1281,7 +1265,7 @@
         "E11.01",
         "E11.02"
       ],
-      "notes": "Dorm-dependent visitor is scaffolded as Jaden; Ra/Obelisk branches need A08/A03 scene variants."
+      "notes": "Dorm-dependent visitor resolved at runtime: Slifer Jaden, Ra Bastion, Obelisk Zane. The scene carries opponent_by_dorm. Calendar dates use the literal A02 year: the first school year starts October of Year 1, so January-March scenes fall in calendar Year 2 even though the academy calls it Year 1. Year labels use A02 school-year semantics (October-September); January-March of the following calendar year is still school Year 1."
     },
     {
       "id": "E12",
@@ -1314,12 +1298,6 @@
         {
           "type": "counter",
           "counter": "wins_total",
-          "op": ">=",
-          "value": 50
-        },
-        {
-          "type": "counter",
-          "counter": "timed_clears",
           "op": ">=",
           "value": 50
         },
@@ -1462,9 +1440,10 @@
       "scene": "full.E12",
       "dialogue_keys": [
         "E12.01",
-        "E12.02"
+        "E12.02",
+        "E12.choice"
       ],
-      "notes": "Three sequential duels; runtime continues after each duel when no result scene is set."
+      "notes": "Three sequential duels; runtime continues after each duel when no result scene is set. Runtime no longer gates on timed_clears until the practical/timed-duel path is playable."
     },
     {
       "id": "E13",
@@ -1533,8 +1512,9 @@
       ],
       "outcomes": [
         {
-          "type": "set_dorm",
-          "dorm": "Obelisk Blue"
+          "type": "set_flag",
+          "flag": "obelisk_promotion_earned",
+          "value": true
         },
         {
           "type": "set_flag",
@@ -1579,7 +1559,7 @@
         "E13.01",
         "E13.02"
       ],
-      "notes": "Dorm promotion and exam exemption are scaffolded as flags."
+      "notes": "Dorm promotion and exam exemption are scaffolded as flags. Dorm promotion is left to the exam path; E13 records eligibility instead of forcing Obelisk."
     },
     {
       "id": "E14",
@@ -1711,7 +1691,8 @@
       "scene": "full.E14",
       "dialogue_keys": [
         "E14.01",
-        "E14.02"
+        "E14.02",
+        "E14.choice"
       ],
       "notes": ""
     },
@@ -2105,12 +2086,6 @@
           "value": 50
         },
         {
-          "type": "counter",
-          "counter": "timed_clears",
-          "op": ">=",
-          "value": 50
-        },
-        {
           "type": "dorm",
           "value": "Ra Yellow"
         }
@@ -2178,9 +2153,9 @@
       "duels": [
         {
           "type": "duel",
-          "opponent_id": "brier",
-          "opponent_name": "Brier",
-          "opponent_deck_id": "brier_quiz",
+          "opponent_id": "topher",
+          "opponent_name": "Goblin King",
+          "opponent_deck_id": "topher_goblin",
           "player_deck": "active",
           "mode": "story",
           "on_win": "",
@@ -2214,7 +2189,7 @@
         "E17.01",
         "E17.02"
       ],
-      "notes": "Goblin King is not a runtime opponent yet; both duels use Brier as a placeholder. Timed/ante rules are pending A04/A07."
+      "notes": "Goblin King uses Topher goblin deck; the canon timed-puzzle rule is still pending. Second duel remains Brier. Runtime no longer gates on timed_clears until the practical/timed-duel path is playable."
     },
     {
       "id": "E18",
@@ -2624,9 +2599,11 @@
       "scene": "full.E20",
       "dialogue_keys": [
         "E20.01",
-        "E20.02"
+        "E20.02",
+        "E20.03",
+        "E20.04"
       ],
-      "notes": "Ante rules and location sequence are scaffolded; double DP is implemented as an outcome."
+      "notes": "Three-location sequence restored as three chained scenes: Ocean -> Volcano -> Gym."
     },
     {
       "id": "E21",
@@ -3119,18 +3096,8 @@
       ],
       "outcomes": [
         {
-          "type": "grant_card",
-          "card_id": 921,
-          "count": 1
-        },
-        {
           "type": "set_flag",
           "flag": "event_24_cleared",
-          "value": true
-        },
-        {
-          "type": "set_flag",
-          "flag": "blair_revealed",
           "value": true
         }
       ],
@@ -3171,7 +3138,8 @@
       "scene": "full.E24",
       "dialogue_keys": [
         "E24.01",
-        "E24.02"
+        "E24.02",
+        "E24.choice"
       ],
       "notes": "Blair's one-month appearance and exact win-rate gate are approximated by E19/wins_jaden."
     },
@@ -3530,7 +3498,7 @@
       "story_critical": true,
       "when": {
         "date": {
-          "year": 2,
+          "year": 1,
           "month": 2,
           "day": 14
         }
@@ -3543,7 +3511,7 @@
       "anchor": "academy_arena_field_player",
       "trigger": {
         "type": "date",
-        "year": 2,
+        "year": 1,
         "month": 2,
         "day": 14
       },
@@ -3566,6 +3534,11 @@
         {
           "type": "flag",
           "flag": "met_blair",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "flag": "met_fontaine",
           "value": true
         }
       ],
@@ -3663,9 +3636,9 @@
         },
         {
           "type": "duel",
-          "opponent_id": "chazz",
-          "opponent_name": "Chazz Princeton",
-          "opponent_deck_id": "chazz_ojama",
+          "opponent_id": "blair",
+          "opponent_name": "Blair Flannigan",
+          "opponent_deck_id": "blair_toon",
           "player_deck": "active",
           "mode": "story",
           "on_win": "",
@@ -3681,7 +3654,7 @@
       "dialogue_keys": [
         "E28.01"
       ],
-      "notes": "Four-round bracket is scaffolded with four sequential duels; exact bracket order is pending A01."
+      "notes": "Four-round bracket is scaffolded with four sequential duels; exact bracket order is pending A01. Year labels use A02 school-year semantics (October-September); January-March of the following calendar year is still school Year 1. Calendar dates use the literal A02 year: the first school year starts October of Year 1, so January-March scenes fall in calendar Year 2 even though the academy calls it Year 1. Bracket uses the canon participants Alexis/Jasmine/Mindy/Blair; Chazz is not in this tournament."
     },
     {
       "id": "E28b",
@@ -3699,7 +3672,7 @@
       "story_critical": true,
       "when": {
         "date": {
-          "year": 2,
+          "year": 1,
           "month": 3,
           "day": 14
         }
@@ -3711,7 +3684,7 @@
       "anchor": "obelisk_girls_gate",
       "trigger": {
         "type": "date",
-        "year": 2,
+        "year": 1,
         "month": 3,
         "day": 14
       },
@@ -3738,11 +3711,6 @@
           "type": "set_flag",
           "flag": "valentine_reversal",
           "value": true
-        },
-        {
-          "type": "set_flag",
-          "flag": "valentine_gift_given",
-          "value": true
         }
       ],
       "rewards": [
@@ -3756,9 +3724,10 @@
       "dialogue_keys": [
         "E28b.01",
         "E28b.02",
-        "E28b.03"
+        "E28b.03",
+        "E28b.choice"
       ],
-      "notes": ""
+      "notes": "Year labels use A02 school-year semantics (October-September); January-March of the following calendar year is still school Year 1. Calendar dates use the literal A02 year: the first school year starts October of Year 1, so January-March scenes fall in calendar Year 2 even though the academy calls it Year 1."
     },
     {
       "id": "E29",
@@ -3813,8 +3782,7 @@
       ],
       "outcomes": [
         {
-          "type": "grant_dp",
-          "amount": 1000
+          "type": "grant_dp_from_last_lp"
         },
         {
           "type": "set_title",
@@ -3848,9 +3816,9 @@
           "opponent_deck_id": "fontaine_nurse",
           "player_deck": "active",
           "mode": "story",
-          "on_win": "",
-          "on_lose": "",
-          "on_draw": "",
+          "on_win": "full.E29_win",
+          "on_lose": "full.E29_lose",
+          "on_draw": "full.E29_lose",
           "optional": false,
           "story_critical": true,
           "counts_as_win": true,
@@ -3860,9 +3828,11 @@
       "scene": "full.E29",
       "dialogue_keys": [
         "E29.01",
-        "E29.02"
+        "E29.02",
+        "E29.03",
+        "E29.04"
       ],
-      "notes": "DP equal to remaining LP is scaffolded as 1,000 DP until A02 exposes the result LP."
+      "notes": "Recovery duel: win -> Apprentice Duelist and DP equal to remaining LP; loss leaves Dropout Boy and can be retried."
     },
     {
       "id": "E30",
@@ -4138,6 +4108,11 @@
       "requirements": [
         {
           "type": "exam_day"
+        },
+        {
+          "type": "random_chance",
+          "value": "2/5",
+          "seed": "E32"
         }
       ],
       "canon_requirements": [
@@ -4178,7 +4153,7 @@
         "E32.01",
         "E32.02"
       ],
-      "notes": "2/5 chance is not simulated; the event is available on any exam Friday in the scaffold."
+      "notes": "Canon 2/5 chance on an exam-day Friday, evaluated as a stable per-day roll. Helping Dorothy grants one Dorothy pack from A06."
     },
     {
       "id": "E33",
@@ -4204,9 +4179,8 @@
       "location": "academy",
       "anchor": "chancellor_office_desk",
       "trigger": {
-        "type": "flag",
-        "flag": "post_game",
-        "value": true
+        "type": "talk",
+        "npc": "sheppard"
       },
       "requirements": [
         {
@@ -4216,10 +4190,13 @@
           "value": 200
         },
         {
-          "type": "counter",
-          "counter": "written_correct",
-          "op": ">=",
-          "value": 120
+          "type": "wins_against_each",
+          "count": 10,
+          "duelists": 20
+        },
+        {
+          "type": "written_correct_percent",
+          "percent": 60
         },
         {
           "type": "flag",
@@ -4247,17 +4224,8 @@
       ],
       "outcomes": [
         {
-          "type": "set_title",
-          "title": "King of Games"
-        },
-        {
           "type": "set_flag",
           "flag": "event_33_cleared",
-          "value": true
-        },
-        {
-          "type": "set_flag",
-          "flag": "name_change_unlocked",
           "value": true
         }
       ],
@@ -4270,14 +4238,32 @@
           "type": "name_change"
         }
       ],
-      "duels": [],
+      "duels": [
+        {
+          "type": "duel",
+          "opponent_id": "sheppard",
+          "opponent_name": "Chancellor Sheppard",
+          "opponent_deck_id": "sheppard_year1",
+          "player_deck": "active",
+          "mode": "story",
+          "on_win": "full.E33_win",
+          "on_lose": "full.E33_lose",
+          "on_draw": "full.E33_lose",
+          "optional": false,
+          "story_critical": true,
+          "counts_as_win": true,
+          "award_dp": "formula"
+        }
+      ],
       "scene": "full.E33",
       "dialogue_keys": [
         "E33.01",
         "E33.02",
-        "E33.03"
+        "E33.03",
+        "E33.04",
+        "E33.05"
       ],
-      "notes": "Per-duelist 10-win requirement is approximated by wins_total; post_game flag is set by the ending flow."
+      "notes": "Talk to Chancellor Sheppard in his office after the school year ends and the 200-win / per-duelist / written gates are met. Win -> King of Games; loss -> Prince of Games."
     }
   ]
 }

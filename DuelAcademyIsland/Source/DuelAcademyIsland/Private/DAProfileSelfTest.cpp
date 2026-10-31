@@ -258,7 +258,7 @@ namespace
 	{
 		Test.Check(Test.Titles->LoadDefinitions(), TEXT("titles.json loads"));
 		const TArray<FDATitleDefinition> Permanent = Test.Titles->GetPermanentTitles();
-		Test.CheckInt(Permanent.Num(), 12, TEXT("12 permanent titles"));
+		Test.CheckInt(Permanent.Num(), 13, TEXT("13 permanent titles"));
 		Test.Check(Test.Titles->GetTemporaryTitles().Num() >= 2, TEXT("temporary titles load"));
 
 		Test.Profile->InitializeNewGame(TEXT("Title Test"));

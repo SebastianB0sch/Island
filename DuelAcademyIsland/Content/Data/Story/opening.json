@@ -906,6 +906,33 @@
       "source": "guide",
       "confidence": "high",
       "note": "Existing target starter deck; canon offers three starter decks."
+    },
+    "e33_king_of_games": {
+      "id": "e33_king_of_games",
+      "type": "title",
+      "title": "King of Games",
+      "once": true,
+      "source": "canon",
+      "confidence": "high",
+      "note": "Win the E33 promotion duel against Chancellor Sheppard."
+    },
+    "e33_prince_of_games": {
+      "id": "e33_prince_of_games",
+      "type": "title",
+      "title": "Prince of Games",
+      "once": true,
+      "source": "canon",
+      "confidence": "high",
+      "note": "Alternative E33 outcome when the promotion duel is lost."
+    },
+    "e09_festival_prize": {
+      "id": "e09_festival_prize",
+      "type": "dp",
+      "amount": 15000,
+      "once": true,
+      "source": "canon",
+      "confidence": "medium",
+      "note": "Duel Festival winner prize; only applied by the E09 win branch."
     }
   },
   "save_points": [

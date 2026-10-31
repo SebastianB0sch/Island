@@ -43,6 +43,12 @@ struct FDADialogueLine
 	/** When true, Options is shown and the conversation waits for Choose(). */
 	bool bChoice = false;
 
+	/** When true, the dialogue shows a text-entry field instead of a normal continue prompt. */
+	bool bTextInput = false;
+	int32 TextMinLength = 1;
+	int32 TextMaxLength = 8;
+	FString TextDefault;
+
 	/** Choice labels. */
 	TArray<FString> Options;
 
@@ -113,6 +119,9 @@ public:
 	bool IsTyping() const { return bTyping; }
 	bool IsWaitingForChoice() const;
 	bool IsHistoryOpen() const { return bHistoryOpen; }
+	bool IsTextEntry() const { return bTextEntry; }
+	const FString& GetTextEntryValue() const { return TextEntryBuffer; }
+	void ClearTextEntry() { TextEntryBuffer.Reset(); bTextEntry = false; }
 
 	const FString& GetConversationId() const { return ConversationId; }
 	int32 GetLineIndex() const { return LineIndex; }
@@ -173,6 +182,7 @@ private:
 	void AddHit(const FString& Action, int32 Index, float X, float Y, float W, float H);
 	void HandleClickAtMouse();
 	void HandleHit(const FDADialogueHitTarget& Hit);
+	void UpdateTextEntry();
 	void GoToLine(int32 NewIndex);
 	void PushLineToHistory();
 	void PlaySfx(const TCHAR* SoundName, float Volume = 1.f) const;
@@ -199,6 +209,10 @@ private:
 	bool bAuto = false;
 	bool bHistoryOpen = false;
 	bool bEscapeClose = true;
+	bool bTextEntry = false;
+	FString TextEntryBuffer;
+	int32 TextEntryMinLength = 1;
+	int32 TextEntryMaxLength = 8;
 	int32 ChoiceSelection = 0;
 	int32 HistoryScroll = 0;
 

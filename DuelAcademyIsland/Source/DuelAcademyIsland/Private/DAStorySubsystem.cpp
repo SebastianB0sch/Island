@@ -8,11 +8,16 @@
 #include "DAProfileSubsystem.h"
 #include "DACalendarSubsystem.h"
 #include "DAInventorySubsystem.h"
+#include "DAIslandSubsystem.h"
+#include "DASceneAnchor.h"
+#include "DAStudentNPC.h"
 #include "DuelAcademyIsland.h"
 
+#include "Camera/PlayerCameraManager.h"
 #include "Dom/JsonValue.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
 #include "HAL/IConsoleManager.h"
 #include "HAL/PlatformTime.h"
@@ -163,6 +168,35 @@ namespace
 			TEXT("battle_damage_total"), TEXT("monsters_destroyed_total"), TEXT("lp_lost_total")
 		};
 		return Owned.Contains(Counter);
+	}
+
+	/** Normalize NPC display names, roster ids and trigger ids to one story id. */
+	FString NormalizeStoryNpcId(const FString& Raw)
+	{
+		FString Id = Raw.TrimStartAndEnd().ToLower();
+		Id.ReplaceInline(TEXT("."), TEXT(""));
+		Id.ReplaceInline(TEXT("'"), TEXT(""));
+		Id.ReplaceInline(TEXT("-"), TEXT("_"));
+		Id.ReplaceInline(TEXT(" "), TEXT("_"));
+		while (Id.Contains(TEXT("__")))
+		{
+			Id.ReplaceInline(TEXT("__"), TEXT("_"));
+		}
+		if (Id.StartsWith(TEXT("dr_")))
+		{
+			Id = Id.RightChop(3);
+		}
+		if (Id == TEXT("alexis_rhodes")) return TEXT("alexis");
+		if (Id == TEXT("syrus_truesdale")) return TEXT("syrus");
+		if (Id == TEXT("jaden_yuki")) return TEXT("jaden");
+		if (Id == TEXT("chumley_huffington")) return TEXT("chumley");
+		if (Id == TEXT("lyman_banner")) return TEXT("banner");
+		if (Id == TEXT("chancellor_sheppard")) return TEXT("sheppard");
+		if (Id == TEXT("nurse_fontaine") || Id == TEXT("miss_fontaine")) return TEXT("fontaine");
+		if (Id == TEXT("shadow_duelist") || Id == TEXT("titan")) return TEXT("shadow_duelist");
+		if (Id == TEXT("goblin_king")) return TEXT("goblin_king");
+		if (Id == TEXT("cyber_angel")) return TEXT("alexis");
+		return Id;
 	}
 
 	FLinearColor ColorFromHex(const FString& Hex)
@@ -554,6 +588,8 @@ void UDAStorySubsystem::ParseScenes(const TSharedPtr<FJsonObject>& Root, bool bM
 				Command.bOptional = StoryReadBool(CommandJson, TEXT("optional"), false);
 				Command.bTutorial = StoryReadBool(CommandJson, TEXT("tutorial"), false);
 				Command.bCountsAsWin = StoryReadBool(CommandJson, TEXT("counts_as_win"), false);
+				const FString AwardDp = StoryReadString(CommandJson, TEXT("award_dp"));
+				Command.bAwardDP = !AwardDp.Equals(TEXT("none"), ESearchCase::IgnoreCase);
 				Command.bCompleteEvent = StoryReadBool(CommandJson, TEXT("complete_event"), true);
 				Command.bEnterFreeRoam = StoryReadBool(CommandJson, TEXT("enter_free_roam"), false);
 				Command.bSkippable = StoryReadBool(CommandJson, TEXT("skippable"), true);
@@ -905,7 +941,6 @@ void UDAStorySubsystem::StartOpeningFresh()
 	bHeadless = ResolveHUD() == nullptr;
 	Profile->InitializeNewGame(DefaultPlayerName);
 	Calendar->SetDate(1, 0, 1, EDADayPeriod::AM);
-	EnsureStarterDeck(TEXT("fire"));
 	Profile->SetFlag(TEXT("new_game_started"), true);
 	bOpeningStarted = true;
 	StartEvent(TEXT("E01"));
@@ -977,6 +1012,108 @@ bool UDAStorySubsystem::CanStartEvent(const FString& EventId, FString& OutReason
 
 	OutReason.Reset();
 	return true;
+}
+
+bool UDAStorySubsystem::NotifyTalkToNPC(const FString& NpcId)
+{
+	if (bRunning)
+	{
+		return false;
+	}
+	UDAProfileSubsystem* Profile = ResolveProfile();
+	UDACalendarSubsystem* Calendar = ResolveCalendar();
+	if (!Profile || !Calendar)
+	{
+		return false;
+	}
+
+	const FString Id = NormalizeStoryNpcId(NpcId);
+	if (Id.IsEmpty())
+	{
+		return false;
+	}
+
+	// Talking is also how the player meets a character. This makes met_* gates
+	// and the email/duel-request unlocks behave like the GBA flow.
+	Profile->SetFlag(FString::Printf(TEXT("met_%s"), *Id), true);
+
+	const TArray<FString> Available = EventGraph.GetAvailableEvents(Profile, Calendar);
+	for (const FString& EventId : Available)
+	{
+		const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
+		if (!Event || !Event->Trigger.IsValid())
+		{
+			continue;
+		}
+		if (!StoryReadString(Event->Trigger, TEXT("type")).Equals(TEXT("talk"), ESearchCase::IgnoreCase))
+		{
+			continue;
+		}
+		const FString TriggerNpc = NormalizeStoryNpcId(StoryReadString(Event->Trigger, TEXT("npc")));
+		if (TriggerNpc != Id)
+		{
+			continue;
+		}
+
+		UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: talk to %s starts %s."), *Id, *EventId);
+		StartEvent(EventId);
+		return IsRunning() && GetCurrentEventId().Equals(EventId, ESearchCase::IgnoreCase);
+	}
+	return false;
+}
+
+void UDAStorySubsystem::NotifyWalkHome(const FString& PartnerId)
+{
+	UDAProfileSubsystem* Profile = ResolveProfile();
+	if (!Profile)
+	{
+		return;
+	}
+	const FString Id = NormalizeStoryNpcId(PartnerId);
+	if (Id.IsEmpty())
+	{
+		return;
+	}
+	const int32 Count = Profile->IncrementCounter(FString::Printf(TEXT("walk_home_%s"), *Id), 1);
+	Profile->IncrementCounter(TEXT("walk_home_total"), 1);
+	Profile->SetFlag(FString::Printf(TEXT("walk_home_%s_%d"), *Id, Count), true);
+	if (Count >= 3)
+	{
+		Profile->SetFlag(TEXT("walk_home_partner_3"), true);
+		UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: walked home with %s three times."), *Id);
+	}
+}
+
+void UDAStorySubsystem::NotifyRoomStay()
+{
+	UDAProfileSubsystem* Profile = ResolveProfile();
+	UDACalendarSubsystem* Calendar = ResolveCalendar();
+	if (!Profile || !Calendar)
+	{
+		return;
+	}
+	const EDADayOfWeek Weekday = Calendar->GetWeekday();
+	if (Weekday != EDADayOfWeek::Saturday && Weekday != EDADayOfWeek::Sunday)
+	{
+		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: room stay only counts on weekends."));
+		return;
+	}
+
+	// Count one stay per weekend, not one per weekend day. Saturday is the key;
+	// Sunday shares the same key.
+	const int32 WeekendKey = Calendar->GetAbsoluteDay() - (Weekday == EDADayOfWeek::Sunday ? 1 : 0);
+	const FString WeekendFlag = FString::Printf(TEXT("room_stay_weekend_%d"), WeekendKey);
+	if (Profile->GetFlag(WeekendFlag))
+	{
+		return;
+	}
+	Profile->SetFlag(WeekendFlag, true);
+	const int32 Count = Profile->IncrementCounter(TEXT("room_stay_weekends"), 1);
+	if (Count >= 3)
+	{
+		Profile->SetFlag(TEXT("stayed_in_room_three_weekends"), true);
+		UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: stayed in the room for three weekends."));
+	}
 }
 
 void UDAStorySubsystem::TryStartNextAvailableEvent()
@@ -1070,6 +1207,24 @@ void UDAStorySubsystem::FinishEvent(bool bComplete, bool bEnterFreeRoam)
 	if (bEnterFreeRoam)
 	{
 		bFreeRoam = true;
+	}
+
+	// Return the camera and fade state to gameplay before another event starts.
+	if (!bHeadless)
+	{
+		UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+		APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+		if (PC)
+		{
+			if (APawn* Pawn = PC->GetPawn())
+			{
+				PC->SetViewTargetWithBlend(Pawn, 0.25f, VTBlend_Cubic);
+			}
+			if (PC->PlayerCameraManager)
+			{
+				PC->PlayerCameraManager->StopCameraFade();
+			}
+		}
 	}
 
 	bRunning = false;
@@ -1209,6 +1364,50 @@ bool UDAStorySubsystem::Tick(float DeltaSeconds)
 	{
 		bPendingContinue = false;
 		PumpQueue();
+	}
+
+	// date/flag/event events can become eligible while the player is walking
+	// around. Poll outside modal UI so the campaign does not wait for the next
+	// scene transition to start them.
+	if (!bRunning && bFreeRoam && !bSuppressAutoStart && !bManualAudience && !bHeadless)
+	{
+		FreeRoamPollTimer -= DeltaSeconds;
+		if (FreeRoamPollTimer <= 0.f)
+		{
+			FreeRoamPollTimer = 1.f;
+			ADAHUD* HUD = ResolveHUD();
+			if (!HUD || !HUD->IsModalOpen())
+			{
+				TryStartNextAvailableEvent();
+			}
+		}
+	}
+
+	// The post-game gate is the end of the 12-month school year, or completing
+	// every mandatory canonical event except the King of Games finale.
+	if (UDAProfileSubsystem* Profile = ResolveProfile())
+	{
+		if (!Profile->GetFlag(TEXT("post_game")))
+		{
+			bool bAllCanonComplete = true;
+			for (const FDAEventDefinition& Event : EventGraph.GetEvents())
+			{
+				if (Event.bCanonEvent && !Event.bOptional
+					&& !Event.Id.Equals(TEXT("E33"), ESearchCase::IgnoreCase)
+					&& !EventGraph.IsEventComplete(Event.Id, Profile))
+				{
+					bAllCanonComplete = false;
+					break;
+				}
+			}
+			const UDACalendarSubsystem* Calendar = ResolveCalendar();
+			if (bAllCanonComplete || (Calendar && Calendar->GetYear() >= 2))
+			{
+				Profile->SetFlag(TEXT("post_game"), true);
+				UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: post-game gate opened (year %d)."),
+					Calendar ? Calendar->GetYear() : 0);
+			}
+		}
 	}
 
 	return true;
@@ -1396,16 +1595,79 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 	}
 
 	case EDAStoryCommandType::Camera:
+	{
 		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: camera anchor %s (%.2fs)."), *Command.Anchor, Command.Duration);
+		if (!bHeadless)
+		{
+			UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+			APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+			if (PC && World)
+			{
+				for (TActorIterator<ADASceneAnchor> It(World); It; ++It)
+				{
+					if (It->AnchorId.Equals(Command.Anchor, ESearchCase::IgnoreCase))
+					{
+						PC->SetViewTargetWithBlend(*It, Command.Duration > 0.f ? Command.Duration : 0.25f, VTBlend_Cubic);
+						break;
+					}
+				}
+			}
+		}
 		return true;
+	}
 
 	case EDAStoryCommandType::MoveNpc:
+	{
 		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: move %s to %s (%.2fs)."), *Command.Npc, *Command.Anchor, Command.Duration);
+		if (!bHeadless)
+		{
+			UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+			if (World)
+			{
+				ADASceneAnchor* Target = nullptr;
+				for (TActorIterator<ADASceneAnchor> It(World); It; ++It)
+				{
+					if (It->AnchorId.Equals(Command.Anchor, ESearchCase::IgnoreCase))
+					{
+						Target = *It;
+						break;
+					}
+				}
+				if (Target)
+				{
+					for (TActorIterator<ADAStudentNPC> It(World); It; ++It)
+					{
+						if (It->DuelOpponentId.Equals(Command.Npc, ESearchCase::IgnoreCase)
+							|| It->GetInteractName().Contains(Command.Npc, ESearchCase::IgnoreCase))
+						{
+							It->SetActorLocation(Target->GetActorLocation() + FVector(0, 0, 90),
+								false, nullptr, ETeleportType::TeleportPhysics);
+							break;
+						}
+					}
+				}
+			}
+		}
 		return true;
+	}
 
 	case EDAStoryCommandType::Fade:
-		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: fade %s (%.2fs)."), *StoryReadString(Command.Raw, TEXT("mode"), TEXT("out")), Command.Duration);
+	{
+		const FString Mode = StoryReadString(Command.Raw, TEXT("mode"), TEXT("out"));
+		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: fade %s (%.2fs)."), *Mode, Command.Duration);
+		if (!bHeadless)
+		{
+			UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+			APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+			if (PC && PC->PlayerCameraManager)
+			{
+				const bool bIn = Mode.Equals(TEXT("in"), ESearchCase::IgnoreCase);
+				PC->PlayerCameraManager->StartCameraFade(bIn ? 1.f : 0.f, bIn ? 0.f : 1.f,
+					FMath::Max(0.05f, Command.Duration), FLinearColor::Black, false, true);
+			}
+		}
 		return true;
+	}
 
 	case EDAStoryCommandType::Wait:
 		if (bHeadless || bFastForward || Command.Duration <= 0.f)
@@ -1418,21 +1680,78 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 		return false;
 
 	case EDAStoryCommandType::Banner:
+	{
 		UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: banner '%s' - '%s'."), *Command.Title, *Command.Subtitle);
+		if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+		{
+			FDAMessage Msg;
+			Msg.Title = Command.Title;
+			Msg.Body = Command.Subtitle;
+			Msg.Accent = FLinearColor(1.f, 0.78f, 0.25f);
+			Msg.Duration = Command.Duration > 0.f ? Command.Duration : 4.f;
+			Sub->PushMessage(Msg);
+		}
 		return true;
+	}
 
 	case EDAStoryCommandType::PlaySfx:
 		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: sfx %s."), *Command.Sfx);
+		if (!Command.Sfx.IsEmpty())
+		{
+			if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+			{
+				Sub->PlayUISound(FName(*Command.Sfx), 1.f);
+			}
+		}
 		return true;
 
 	case EDAStoryCommandType::Music:
 		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: music %s."), *Command.Track);
+		if (!Command.Track.IsEmpty())
+		{
+			if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+			{
+				Sub->PlayUISound(FName(*Command.Track), 0.55f);
+			}
+		}
 		return true;
 
 	case EDAStoryCommandType::Duel:
 	{
 		++PlaythroughDuelCommands;
-		CapturePendingDuel(Command);
+		FDAStoryCommand Resolved = Command;
+		if (Command.Raw.IsValid())
+		{
+			const TSharedPtr<FJsonObject>* ByDorm = nullptr;
+			if (Command.Raw->TryGetObjectField(TEXT("opponent_by_dorm"), ByDorm) && ByDorm)
+			{
+				FString DormKey = TEXT("slifer");
+				if (const UDAProfileSubsystem* Profile = ResolveProfile())
+				{
+					if (Profile->GetDorm() == EDADorm::Ra)
+					{
+						DormKey = TEXT("ra");
+					}
+					else if (Profile->GetDorm() == EDADorm::Obelisk)
+					{
+						DormKey = TEXT("obelisk");
+					}
+				}
+				const TSharedPtr<FJsonObject>* Entry = nullptr;
+				if ((*ByDorm)->TryGetObjectField(DormKey, Entry) && Entry)
+				{
+					const FString Id = StoryReadString(*Entry, TEXT("id"));
+					const FString Name = StoryReadString(*Entry, TEXT("name"));
+					const FString Deck = StoryReadString(*Entry, TEXT("deck"));
+					if (!Id.IsEmpty()) Resolved.OpponentId = Id;
+					if (!Name.IsEmpty()) Resolved.OpponentName = Name;
+					if (!Deck.IsEmpty()) Resolved.OpponentDeckId = Deck;
+					UE_LOG(LogDuelAcademyIsland, Log,
+						TEXT("Story: E11 dorm branch %s -> %s (%s)."), *DormKey, *Resolved.OpponentId, *Resolved.OpponentDeckId);
+				}
+			}
+		}
+		CapturePendingDuel(Resolved);
 		if (bManualAudience)
 		{
 			bWaitingForDuel = true;
@@ -1461,8 +1780,10 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 		PendingDuel.bOpened = false;
 		PendingDuel.Elapsed = 0.f;
 		UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: opening duel selector for %s (%s)."),
-			*Command.OpponentId, *Command.OpponentDeckId);
-		HUD->OpenDuelDeckSelect(Command.OpponentId, Command.OpponentName, Command.OpponentDeckId);
+			*Resolved.OpponentId, *Resolved.OpponentDeckId);
+		const FString DuelMode = Resolved.bTutorial ? TEXT("tutorial") : Resolved.Mode;
+		HUD->OpenDuelDeckSelect(Resolved.OpponentId, Resolved.OpponentName, Resolved.OpponentDeckId,
+			DuelMode, Resolved.bAwardDP);
 		bOutBlocked = true;
 		return false;
 	}
@@ -1595,7 +1916,16 @@ void UDAStorySubsystem::HandleDialogueClosed(const FString& ConversationId)
 {
 	if (bPendingTextInput)
 	{
-		SetPlayerName(GetPlayerNameForDisplay());
+		FString EnteredName;
+		if (ADAHUD* HUD = ResolveHUD())
+		{
+			if (FDADialogueUI* Dialogue = HUD->GetDialogueUI())
+			{
+				EnteredName = Dialogue->GetTextEntryValue();
+				Dialogue->ClearTextEntry();
+			}
+		}
+		SetPlayerName(EnteredName.IsEmpty() ? GetPlayerNameForDisplay() : EnteredName);
 		bPendingTextInput = false;
 		bWaitingForDialogue = false;
 		++CommandIndex;
@@ -1667,8 +1997,11 @@ void UDAStorySubsystem::ApplyChoiceInternal(int32 OptionIndex)
 		const int32 FoundIndex = FindCommandIndexForKey(Choice.NextScene, Choice.NextKey);
 		if (FoundIndex == INDEX_NONE && !Choice.NextKey.IsEmpty())
 		{
-			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: choice next_key %s was not found in %s; starting at the top."),
+			UE_LOG(LogDuelAcademyIsland, Error, TEXT("Story: choice next_key %s was not found in %s; leaving the event incomplete."),
 				*Choice.NextKey, *Choice.NextScene);
+			bWaitingForChoice = false;
+			FinishEvent(false, false);
+			return;
 		}
 		StartScene(Choice.NextScene, FoundIndex);
 	}
@@ -1828,6 +2161,13 @@ void UDAStorySubsystem::BuildDialogueLine(const FDAStoryLine& Line, bool bChoice
 	OutLine.NodeId = Line.Key;
 	OutLine.SpeakerTitle = SpeakerTitleFor(Line.Speaker);
 	OutLine.bChoice = bChoice;
+	if (Line.Input.IsValid())
+	{
+		OutLine.bTextInput = true;
+		OutLine.TextMinLength = FMath::Max(1, StoryReadInt(Line.Input, TEXT("min_length"), 1));
+		OutLine.TextMaxLength = FMath::Max(OutLine.TextMinLength, StoryReadInt(Line.Input, TEXT("max_length"), 8));
+		OutLine.TextDefault = StoryReadString(Line.Input, TEXT("default"));
+	}
 	OutLine.Accent = SpeakerColors.FindRef(Line.Speaker);
 	if (OutLine.Accent.A <= 0.f)
 	{
@@ -1964,6 +2304,18 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 		else if (Type == TEXT("grant_dp"))
 		{
 			if (Profile) Profile->AwardDP(StoryReadInt(Outcome, TEXT("amount"), 0));
+		}
+		else if (Type == TEXT("grant_dp_from_last_lp") || Type == TEXT("dp_equal_remaining_lp"))
+		{
+			if (Profile) Profile->AwardDP(FMath::Max(0, Profile->GetCounter(TEXT("last_duel_player_lp"))));
+		}
+		else if (Type == TEXT("select_deck") || Type == TEXT("starter_deck"))
+		{
+			const FString DeckId = StoryReadString(Outcome, TEXT("deck_id"), StoryReadString(Outcome, TEXT("value")));
+			if (!DeckId.IsEmpty())
+			{
+				SelectStarterDeck(DeckId);
+			}
 		}
 		else if (Type == TEXT("grant_card"))
 		{
@@ -2578,6 +2930,41 @@ void UDAStorySubsystem::ResolvePendingDuel(bool bWon, bool bDraw)
 		*Opponent, bWon ? TEXT("true") : TEXT("false"), bDraw ? TEXT("true") : TEXT("false"),
 		SceneId.IsEmpty() ? TEXT("<finish>") : *SceneId);
 
+	// Headless/manual audiences resolve duels without the duel UI, so they must
+	// still feed the same profile counters the live path records. A changed
+	// duels_total means DADuelUI already recorded this result.
+	if (UDAProfileSubsystem* Profile = ResolveProfile())
+	{
+		if (!PendingDuel.bTutorial && Profile->GetCounter(TEXT("duels_total")) == PendingDuel.PreDuels)
+		{
+			const FString OpponentKey = NormalizeStoryNpcId(Opponent);
+			Profile->IncrementCounter(TEXT("duels_total"), 1);
+			if (bDraw)
+			{
+				Profile->IncrementCounter(TEXT("draws_total"), 1);
+				Profile->SetCounter(TEXT("last_duel_player_lp"), 0);
+			}
+			else if (!bWon)
+			{
+				Profile->IncrementCounter(TEXT("losses_total"), 1);
+				if (!OpponentKey.IsEmpty())
+				{
+					Profile->IncrementCounter(FString::Printf(TEXT("losses_%s"), *OpponentKey), 1);
+				}
+				Profile->SetCounter(TEXT("last_duel_player_lp"), 0);
+			}
+			else
+			{
+				Profile->IncrementCounter(TEXT("wins_total"), 1);
+				if (!OpponentKey.IsEmpty())
+				{
+					Profile->IncrementCounter(FString::Printf(TEXT("wins_%s"), *OpponentKey), 1);
+				}
+				Profile->SetCounter(TEXT("last_duel_player_lp"), 8000);
+			}
+		}
+	}
+
 	if (!SceneId.IsEmpty())
 	{
 		StartScene(SceneId, 0);
@@ -3101,6 +3488,28 @@ void UDAStorySubsystem::CollectConditionState(const TSharedPtr<FJsonObject>& Con
 			OutEvents.Add(EventId);
 		}
 	}
+	else if (Kind == TEXT("wins_against_each"))
+	{
+		static const TCHAR* const Duelists[] = {
+			TEXT("jaden"), TEXT("syrus"), TEXT("chumley"), TEXT("bastion"), TEXT("chazz"),
+			TEXT("zane"), TEXT("alexis"), TEXT("jasmine"), TEXT("mindy"), TEXT("crowler"),
+			TEXT("banner"), TEXT("blair"), TEXT("brier"), TEXT("beauregard"), TEXT("topher"),
+			TEXT("conklin"), TEXT("damon"), TEXT("dimitri"), TEXT("gerard"), TEXT("fontaine")
+		};
+		for (const TCHAR* Duelist : Duelists)
+		{
+			OutCounters.Add(FString::Printf(TEXT("wins_%s"), Duelist));
+		}
+	}
+	else if (Kind == TEXT("written_correct_percent"))
+	{
+		OutCounters.Add(TEXT("written_correct"));
+		OutCounters.Add(TEXT("written_total"));
+	}
+	else if (Kind == TEXT("after_ending"))
+	{
+		OutFlags.Add(TEXT("post_game"));
+	}
 
 	const TCHAR* NestedFields[] = { TEXT("conditions"), TEXT("all"), TEXT("any") };
 	for (const TCHAR* Field : NestedFields)
@@ -3404,7 +3813,8 @@ bool UDAStorySubsystem::RunFullStorySelfTest()
 		TEXT("unlock_email"), TEXT("grant_dp"), TEXT("grant_card"), TEXT("grant_pack"),
 		TEXT("grant_deck"), TEXT("set_title"), TEXT("set_dorm"), TEXT("dorm_unlock"), TEXT("double_dp"),
 		TEXT("dp_multiplier"), TEXT("exam_exemption"), TEXT("unlock_duel"), TEXT("item"),
-		TEXT("name_change"), TEXT("temporary_title"), TEXT("restore_title"), TEXT("next_event")
+		TEXT("name_change"), TEXT("temporary_title"), TEXT("restore_title"), TEXT("next_event"),
+		TEXT("grant_dp_from_last_lp"), TEXT("dp_equal_remaining_lp"), TEXT("select_deck")
 	};
 
 	TArray<FString> BadRewards;
@@ -3635,9 +4045,12 @@ bool UDAStorySubsystem::RunFullStorySelfTest()
 	auto WalkTwelveMonths = [this, Profile, Calendar](TSet<FString>& OutAvailable)
 	{
 		const EDADayPeriod Periods[] = { EDADayPeriod::AM, EDADayPeriod::PM, EDADayPeriod::Night };
+		// A02's Year is the school year: index 0 is October and the year rolls
+		// over after September. Walk one complete school year, not two literal
+		// calendar years.
 		for (int32 MonthIndex = 0; MonthIndex < 12; ++MonthIndex)
 		{
-			const int32 Year = MonthIndex < 3 ? 1 : 2;
+			const int32 Year = 1;
 			const int32 Days = Calendar->GetDaysInMonth(Year, MonthIndex);
 			for (int32 Day = 1; Day <= Days; ++Day)
 			{

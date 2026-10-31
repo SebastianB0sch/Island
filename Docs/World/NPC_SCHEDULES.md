@@ -1,7 +1,7 @@
 # NPC Schedules and Gate 3 Runtime
 
 > **Owner:** A08. **Test switch:** `-DANpcScheduleTest` (GameInstanceSubsystem, headless, exits after the summary).
-> **Data:** `Content/Data/World/spawns.json` (28 spawn points). **Code:** `DANpcSpawnPoint`, `DANpcDirector`, `DANpcScheduleTest`.
+> **Data:** `Content/Data/World/spawns.json` (38 spawn points). **Code:** `DANpcSpawnPoint`, `DANpcDirector`, `DANpcScheduleTest`.
 > **Build placement:** `Content/Python/duel_academy/level.py::Placer.interior_nav()` for the ten interior nav volumes.
 
 ## Run
@@ -20,15 +20,15 @@ The test waits for `UWorld::HasBegunPlay`, finds the single `ADANpcDirector` and
 Expected healthy summary line:
 
 ```text
-NPC schedule test: 414 passed, 0 failed. ALL PASS
+NPC schedule test: 514 passed, 0 failed. ALL PASS
 ```
 
-Every individual line is `PASS: ...` on `LogDuelAcademyIsland`; failures are `FAIL: ...` at `Error` severity. A failure summary ends with `FAILURES PRESENT`. The exact total is 414 with the current 28 spawn rows and 8 opening requirements; adding rows increases the registration checks.
+Every individual line is `PASS: ...` on `LogDuelAcademyIsland`; failures are `FAIL: ...` at `Error` severity. A failure summary ends with `FAILURES PRESENT`. The exact total is 514 with the current 38 spawn rows and 8 opening requirements; adding rows increases the registration checks.
 
 ## What the test verifies
 
 1. **Registration and data parity**
-   - one director, 28 spawn actors and 28 registered ids (auto-registration from `BeginPlay`);
+   - one director, 38 spawn actors and 38 registered ids (auto-registration from `BeginPlay`);
    - data ids unique, runtime ids unique, every runtime id exists in JSON and vice versa;
    - all 8 `opening_spawn_requirements` are registered;
    - per row: `ScheduleId`, `ScheduleTags`, `EventOverride`, `bEnabled`, `bEventOnly` and `bSpawnOnBeginPlay` match `spawns.json`.

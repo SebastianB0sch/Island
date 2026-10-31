@@ -10,13 +10,13 @@
 | Command | Result | Tail |
 | --- | --- | --- |
 | `python Tools/canon/validate_canon.py` | **PASS** | `checks: 290  errors: 0  warnings: 1` |
-| `python Tools/validate/validate_all.py` | **PASS** | `0 error(s), 15 warning(s), 6 gap(s), 205 info; 321 file(s) read` |
+| `python Tools/validate/validate_all.py` | **PASS** | `0 error(s), 15 warning(s), 6 gap(s), 304 info; 420 file(s) read` |
 | `python Tools/validate/validate_all.py --strict` | **FAIL (expected)** | 15 warnings + 6 gaps |
-| `python Tools/puzzles/validate.py` | **PASS** | `141 checks, 0 failures, 1 warning` |
+| `python Tools/puzzles/validate.py` | **PASS** | `145 checks, 0 failures, 1 warning` |
 | `python Tools/economy/validate_packs.py` | **PASS** | `48 packs, 1200 cards, pool union 1200; 1342 checks, 0 failures` |
 | `python Tools/economy/validate_decks.py` | **PASS** | `5 decks; 81 checks, 0 failures` |
-| `python Tools/effects/validate_effects.py` | **PASS** | `155 scripts, fusion 75/76, ritual 22/22, 0 warnings` |
-| `python Tools/world/validate_layout.py --strict` | **PASS** | `36 locations, 10 interiors, 20 portals, 89 anchors, 28 spawns` |
+| `python Tools/effects/validate_effects.py` | **PASS** | `253 scripts, fusion 75/76, ritual 22/22, 0 warnings` |
+| `python Tools/world/validate_layout.py --strict` | **PASS** | `36 locations, 10 interiors, 20 portals, 97 anchors, 38 spawns` |
 | `python Tools/world/test_interiors.py` | **PASS** | 10 portal routes |
 
 ## 2. Runtime suites
@@ -26,13 +26,13 @@
 | `-DAProfileSelfTest` | **PASS** | `182 checks, 0 failure(s)` |
 | `-DAEconomySelfTest` | **PASS** | `213 passed, 0 failed` |
 | `-DADuelRulesSelfTest` | **PASS** | `58 passed, 0 failed` |
-| `-DADuelSelfTest=1000` | **PASS** | `1000 iterations, 457 player wins, 543 opponent wins, 0 stalls, 0 invariant failures, deck audit 36/36, puzzle audit 100/100` |
-| `-DAEffectRuntimeSelfTest` | **PASS** | `53 passed, 0 failed` (155 scripts loaded) |
+| `-DADuelSelfTest=1000` | **PASS** | `1000 iterations, 457 player wins, 543 opponent wins, 0 stalls, 0 invariant failures, deck audit 37/37, puzzle audit 100/100` |
+| `-DAEffectRuntimeSelfTest` | **PASS** | `141 passed, 0 failed` (current script set) |
 | `-DAStorySelfTest` | **PASS** | 14/14 (opening E01/E01b) |
-| `-DAFullStorySelfTest` | **PASS** | 20/20 (35 events, 6 emails, 82 duel refs, 35/35 reachable) |
-| `-DAStoryPlaythroughTest` | **PASS** | 35/35 events, 39/39 story duels, 0 missing scenes/dialogue/outcomes |
+| `-DAFullStorySelfTest` | **PASS** | 20/20 (35 events, 44 full scenes, 176 lines, 84 duel refs, 35/35 reachable) |
+| `-DAStoryPlaythroughTest` | **PASS** | 35/35 events, 40/40 story duels (39/39 full campaign), 28/28 checks, 0 missing scenes/dialogue/outcomes |
 | `-DAPuzzleExamSelfTest` | **PASS** | `PuzzleSelfTest: 102 passed, 0 failed`; `ExamSelfTest: 104 passed, 0 failed`; `BOTH SUITES PASS` |
-| `-DANpcScheduleTest` | **PASS** | `414 passed, 0 failed` |
+| `-DANpcScheduleTest` | **PASS** | `514 passed, 0 failed` |
 | `-DASaveFuzz=10000` | **PASS** | `10,000 states, 1,000 corruption cases, 200 migrations, 1,800,212 checks, 0 failures` |
 | `-DATwelveMonthTest` | **PASS** | `365 days, 12 months, 45 saves/loads, 10,947 checks, 0 failures` |
 | `-DAPortalTest` | **PASS** | `188 passed, 0 failed`; ten interior entries + classroom return |
@@ -112,3 +112,47 @@
 - `Docs/Puzzles/PUZZLE_ENGINE_TESTS.md`
 - `Docs/World/NPC_SCHEDULES.md`
 - `Docs/renders/port/interior_classroom.png`
+
+## 7. Story integration re-run (2026-10-31)
+
+Commands were run headless with
+`UnrealEditor-Cmd.exe <uproject> /Game/DuelAcademy/Maps/DuelAcademyIsland -game -nullrhi`.
+
+| Suite | Result |
+| --- | --- |
+| `Tools/validate/validate_all.py` | **PASS**, 0 errors; 15 warnings, 6 known gaps |
+| `Tools/puzzles/validate.py` | **PASS**, 145 checks, 1 duplicate-name warning |
+| `Tools/economy/validate_packs.py` | **PASS**, 1,342 checks |
+| `Tools/economy/validate_decks.py` | **PASS**, 81 checks |
+| `Tools/effects/validate_effects.py` | **PASS**, 253 scripts, 75/76 fusions, 22/22 rituals |
+| `-DAStorySelfTest` | **14/14 PASS** |
+| `-DAFullStorySelfTest` | **20/20 PASS** (35 events, 44 full scenes, 176 lines, 84 duel refs, 35/35 reachable) |
+| `-DAStoryPlaythroughTest` | **PASS**, 35/35 events, 40/40 story duels (39/39 full campaign), 28/28 checks |
+| `-DAPuzzleExamSelfTest` | **PASS**, puzzle 102/102, exam 104/104 |
+| `-DAProfileSelfTest` | **PASS**, 182 checks |
+| `-DAEconomySelfTest` | **PASS**, 213 checks |
+| `-DAEffectRuntimeSelfTest` | **PASS**, 141/141 |
+| `-DADuelSelfTest=1000` | **PASS**, 457/543 wins, 0 stalls, 0 invariants, deck audit 37/37, puzzle audit 100/100 |
+| `-DAPortalTest` | **PASS**, 188/188 |
+| `-DANpcScheduleTest` | **PASS**, 514/514 |
+
+Story fixes verified by these runs:
+
+- `FDADuelUI` records profile/opponent results, DP, `wins_<opponent>` and
+  `last_duel_player_lp`, then notifies the story after the result screen closes.
+- Tutorial and exam duels can suppress DP; headless story duels record synthetic
+  counters so story gates do not depend on the UI.
+- `ADAStudentNPC::Interact` starts talk-triggered events before generic dialogue;
+  Banner, Brier, Sartyr, Fontaine, Blair, Topher, Conklin, Damon, Dimitri and
+  Gerard have world contacts, and Sheppard/chancellor, Chumley and Shadow Duelist
+  are spawned.
+- Opening name entry is a real 1-8 character text field backed by
+  `SetPlayerName`; starter deck choice is a scene choice.
+- Exams apply Dropout/promotion outcomes and written counters.
+- E20 is Ocean -> Volcano -> Gym; E29 has win/lose recovery scenes and LP-based
+  DP; E33 is a Sheppard promotion duel with King/Prince of Games branches.
+- E32 uses a stable per-day 2/5 roll; E33 enforces 200 wins, 10 wins against
+  each of 20 duelists and 60% written answers.
+
+Remaining story gaps: exact GBA dialogue is local-only, the runtime remains a
+paraphrase, and E04/E09/E17/E28 still need authored special-rule scenarios.

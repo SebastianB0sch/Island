@@ -21,6 +21,10 @@
       "entry_conditions": [],
       "commands": [
         {
+          "type": "choice",
+          "key": "E01.b01_starter_choice"
+        },
+        {
           "type": "music",
           "track": "BGM_Academy_Arrival",
           "mode": "play",

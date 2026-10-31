@@ -337,7 +337,16 @@ int32 UDAProfileSubsystem::CalculateDuelDP(const FDAProfileDuelResult& Result)
 
 int32 UDAProfileSubsystem::RecordDuelResult(const FDAProfileDuelResult& Result)
 {
+	// Practice/tutorial duels are not competitive results; they must not count
+	// toward wins_total, wins_<opponent> or the E33 gates.
+	if (Result.Mode.Equals(TEXT("tutorial"), ESearchCase::IgnoreCase))
+	{
+		SetCounter(TEXT("last_duel_player_lp"), FMath::Max(0, Result.PlayerLp));
+		return 0;
+	}
+
 	IncrementCounter(TEXT("duels_total"), 1);
+	SetCounter(TEXT("last_duel_player_lp"), FMath::Max(0, Result.PlayerLp));
 
 	const FString OpponentKey = DuelAcademyProfile::NormalizeId(Result.OpponentId);
 	int32 DpEarned = 0;

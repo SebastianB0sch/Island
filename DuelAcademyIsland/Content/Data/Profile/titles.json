@@ -170,6 +170,14 @@
       "description": "Temporary title while aligned with the Society of Light.",
       "order": 35,
       "permanent": false
+    },
+    {
+      "id": "prince_of_games",
+      "name": "Prince of Games",
+      "description": "Reached the final promotion duel and lost; the throne waits for next year.",
+      "order": 90,
+      "permanent": true,
+      "min_wins_total": 200
     }
   ]
 }

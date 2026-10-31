@@ -646,14 +646,27 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 	SetCounterAtLeast(TEXT("duels_total"), 220);
 	SetCounterAtLeast(TEXT("timed_clears"), 60);
 	SetCounterAtLeast(TEXT("written_correct"), 130);
+	SetCounterAtLeast(TEXT("written_total"), 200);
 	SetCounterAtLeast(TEXT("wins_jaden"), 30);
 	SetCounterAtLeast(TEXT("wins_syrus"), 30);
 	SetCounterAtLeast(TEXT("wins_chumley"), 30);
+	SetCounterAtLeast(TEXT("wins_bastion"), 30);
 	SetCounterAtLeast(TEXT("wins_zane"), 30);
 	SetCounterAtLeast(TEXT("wins_chazz"), 30);
+	SetCounterAtLeast(TEXT("wins_alexis"), 30);
+	SetCounterAtLeast(TEXT("wins_jasmine"), 30);
+	SetCounterAtLeast(TEXT("wins_mindy"), 30);
+	SetCounterAtLeast(TEXT("wins_crowler"), 30);
+	SetCounterAtLeast(TEXT("wins_banner"), 30);
+	SetCounterAtLeast(TEXT("wins_blair"), 30);
 	SetCounterAtLeast(TEXT("wins_brier"), 30);
 	SetCounterAtLeast(TEXT("wins_beauregard"), 30);
+	SetCounterAtLeast(TEXT("wins_topher"), 30);
+	SetCounterAtLeast(TEXT("wins_conklin"), 30);
 	SetCounterAtLeast(TEXT("wins_damon"), 30);
+	SetCounterAtLeast(TEXT("wins_dimitri"), 30);
+	SetCounterAtLeast(TEXT("wins_gerard"), 30);
+	SetCounterAtLeast(TEXT("wins_fontaine"), 30);
 	AddInfo(FString::Printf(TEXT("simulated external progress: 220 wins, 60 timed clears, 130 written answers (%d counters set)"),
 		SimulatedWins));
 
@@ -831,6 +844,10 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 			{
 				ExpectedDP += PlayReadInt(Outcome, TEXT("amount"), 0);
 			}
+			else if (Type == TEXT("grant_dp_from_last_lp") || Type == TEXT("dp_equal_remaining_lp"))
+			{
+				ExpectedDP += FMath::Max(0, Profile->GetCounter(TEXT("last_duel_player_lp")));
+			}
 			else if (Type == TEXT("double_dp") || Type == TEXT("dp_multiplier"))
 			{
 				const int32 Multiplier = FMath::Max(1, PlayReadInt(Outcome, TEXT("multiplier"), 2));
@@ -922,7 +939,8 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 					}
 				}
 			}
-			else if (Type == TEXT("grant_dp") || Type == TEXT("double_dp") || Type == TEXT("dp_multiplier"))
+			else if (Type == TEXT("grant_dp") || Type == TEXT("double_dp") || Type == TEXT("dp_multiplier")
+				|| Type == TEXT("grant_dp_from_last_lp") || Type == TEXT("dp_equal_remaining_lp"))
 			{
 				// Covered by the DP expectation above.
 			}
@@ -1174,6 +1192,55 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 			{
 				Profile->SetCounter(Counter, Target);
 				Gates.Add(FString::Printf(TEXT("counter %s=%d"), *Counter, Target));
+			}
+			return true;
+		}
+
+		if (Kind == TEXT("wins_against_each"))
+		{
+			const int32 Wins = PlayReadInt(Condition, TEXT("count"), 10);
+			static const TCHAR* const Duelists[] = {
+				TEXT("jaden"), TEXT("syrus"), TEXT("chumley"), TEXT("bastion"), TEXT("chazz"),
+				TEXT("zane"), TEXT("alexis"), TEXT("jasmine"), TEXT("mindy"), TEXT("crowler"),
+				TEXT("banner"), TEXT("blair"), TEXT("brier"), TEXT("beauregard"), TEXT("topher"),
+				TEXT("conklin"), TEXT("damon"), TEXT("dimitri"), TEXT("gerard"), TEXT("fontaine")
+			};
+			for (const TCHAR* Duelist : Duelists)
+			{
+				const FString Key = FString::Printf(TEXT("wins_%s"), Duelist);
+				if (Profile->GetCounter(Key) < Wins)
+				{
+					Profile->SetCounter(Key, Wins);
+					Gates.Add(FString::Printf(TEXT("counter %s=%d"), *Key, Wins));
+				}
+			}
+			return true;
+		}
+
+		if (Kind == TEXT("written_correct_percent"))
+		{
+			const int32 Percent = FMath::Clamp(PlayReadInt(Condition, TEXT("percent"), 60), 0, 100);
+			int32 Total = Profile->GetCounter(TEXT("written_total"));
+			if (Total <= 0)
+			{
+				Total = 200;
+				Profile->SetCounter(TEXT("written_total"), Total);
+			}
+			const int32 Needed = FMath::DivideAndRoundUp(Percent * Total, 100);
+			if (Profile->GetCounter(TEXT("written_correct")) < Needed)
+			{
+				Profile->SetCounter(TEXT("written_correct"), Needed);
+				Gates.Add(FString::Printf(TEXT("written_correct=%d/%d"), Needed, Total));
+			}
+			return true;
+		}
+
+		if (Kind == TEXT("after_ending"))
+		{
+			if (!Profile->GetFlag(TEXT("post_game")))
+			{
+				Profile->SetFlag(TEXT("post_game"), true);
+				Gates.Add(TEXT("post_game"));
 			}
 			return true;
 		}
@@ -1757,8 +1824,8 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 
 	AddCheck(TEXT("all 35 events started"), StartedCount == 35, FString::FromInt(StartedCount));
 	AddCheck(TEXT("all 35 events completed"), CompletedCount == 35, FString::FromInt(CompletedCount));
-	AddCheck(TEXT("38/38 full-campaign duel commands resolved"),
-		FullCampaignDuelCommands == 38 && FullCampaignDuelResolved == 38,
+	AddCheck(TEXT("39/39 full-campaign duel commands resolved"),
+		FullCampaignDuelCommands == 39 && FullCampaignDuelResolved == 39,
 		FString::Printf(TEXT("%d/%d"), FullCampaignDuelResolved, FullCampaignDuelCommands));
 	AddCheck(TEXT("all story duels resolved"), TotalDuelCommands == TotalDuelResolved,
 		FString::Printf(TEXT("%d/%d including the E01 tutorial"), TotalDuelResolved, TotalDuelCommands));

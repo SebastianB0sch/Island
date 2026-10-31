@@ -3,6 +3,8 @@
 #include "DAExamUI.h"
 
 #include "DACalendarSubsystem.h"
+#include "DAProfileSubsystem.h"
+#include "DATitleSystem.h"
 #include "DuelAcademyIsland.h"
 #include "Engine/Canvas.h"
 #include "GameFramework/PlayerController.h"
@@ -42,6 +44,7 @@ UDAExamSubsystem* FDAExamUI::GetExam() const
 void FDAExamUI::Open(int32 InMonthIndex, int32 Seed)
 {
 	bOpen = true;
+	bOutcomeApplied = false;
 	Elapsed = 0.f;
 	AnswerSelection = 0;
 	HoveredAnswer = INDEX_NONE;
@@ -279,6 +282,31 @@ void FDAExamUI::FinishPracticalAndResult()
 	}
 	Result = OutResult;
 	Panel = EPanel::Result;
+
+	// The exam result must reach A02/A07 progression, not just the result card.
+	// This is what makes Dropout Boy, dorm promotion, exam DP and E29 real.
+	if (!bOutcomeApplied)
+	{
+		bOutcomeApplied = true;
+		UGameInstance* GameInstance = GetGameInstance();
+		UDAProfileSubsystem* Profile = GameInstance ? GameInstance->GetSubsystem<UDAProfileSubsystem>() : nullptr;
+		UDATitleSystem* Titles = GameInstance ? GameInstance->GetSubsystem<UDATitleSystem>() : nullptr;
+		if (Profile)
+		{
+			Profile->IncrementCounter(TEXT("written_correct"), FMath::Max(0, Result.WrittenCorrect));
+			Profile->IncrementCounter(TEXT("written_total"), 10);
+			if (Result.DPReward > 0)
+			{
+				Profile->AwardDP(Result.DPReward);
+			}
+			if (Titles)
+			{
+				const bool bPromotionEligible = Result.TotalPoints >= 450;
+				Titles->ApplyExamOutcome(Profile, Result.TotalPoints, Exam->GetPassMark(), bPromotionEligible);
+			}
+		}
+	}
+
 	PlaySfx(TEXT("A_UIClick"), 0.7f);
 }
 

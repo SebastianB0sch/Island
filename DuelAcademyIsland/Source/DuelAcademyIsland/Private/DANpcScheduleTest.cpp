@@ -20,7 +20,7 @@
 namespace
 {
 	constexpr float NpcScheduleTestTimeout = 180.f;
-	constexpr int32 NpcScheduleExpectedPoints = 28;
+	constexpr int32 NpcScheduleExpectedPoints = 38;
 
 	const TCHAR* const NpcScheduleWeekdays[] = {
 		TEXT("Monday"), TEXT("Tuesday"), TEXT("Wednesday"), TEXT("Thursday"),
@@ -551,7 +551,7 @@ void UDANpcScheduleTestSubsystem::RunEventCases()
 	VerifyActiveSet(TEXT("event restore"), TEXT("default"), TEXT("Monday"), TEXT("AM"), FString());
 	Check(Arena && !Arena->IsOccupied(), TEXT("event restore clears academy_arena_jaden"));
 	Check(Titan && !Titan->IsOccupied(), TEXT("event restore clears abandoned_dorm_titan"));
-	Check(Shadow && !Shadow->IsOccupied(), TEXT("event restore clears volcano_shadow_duelist"));
+	Check(Shadow && Shadow->IsOccupied(), TEXT("event restore keeps the E20 shadow contact"));
 }
 
 void UDANpcScheduleTestSubsystem::RunSpawnDespawnCases()

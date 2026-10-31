@@ -262,7 +262,8 @@ class Placer:
         cls = C.native_class("DAInteractable")
         if cls is None:
             return
-        kinds = {"sign": "SIGN", "card_shop": "CARD_SHOP", "duel_field": "DUEL_FIELD", "info": "INFO"}
+        kinds = {"sign": "SIGN", "card_shop": "CARD_SHOP", "duel_field": "DUEL_FIELD", "info": "INFO",
+                 "room_bed": "ROOM_BED", "walk_home": "WALK_HOME"}
         enum = getattr(unreal, "DAInteractKind", None)
         for it in self.layout["interacts"]:
             a = self.spawn(cls, self.loc(it["loc"]), self.yaw(it["yaw"]), f"Interact_{it.get('title', 'Sign')}"[:60],
@@ -318,8 +319,42 @@ class Placer:
         self.portals()
         self.scene_anchors()
         self.interior_nav()
+        self.story_interactables()
         self.npc_spawn_points()
         self.npc_director()
+
+    def story_interactables(self):
+        """World hooks for E30 (room weekend) and E31 (walk home)."""
+        cls = C.native_class("DAInteractable")
+        enum = getattr(unreal, "DAInteractKind", None)
+        if cls is None or enum is None:
+            return
+        try:
+            anchors = {a["id"]: a for a in world_json("anchors.json").get("anchors", [])}
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"story interactable anchors unavailable: {e}")
+            return
+        hooks = [
+            ("slifer_player_room_bed", "ROOM_BED", "Your Bed",
+             "Spend the weekend in your room. Three weekends make your friends worry.", 220.0),
+            ("ra_player_room_bed", "ROOM_BED", "Your Bed",
+             "Spend the weekend in your room. Three weekends make your friends worry.", 220.0),
+            ("obelisk_player_room_bed", "ROOM_BED", "Your Bed",
+             "Spend the weekend in your room. Three weekends make your friends worry.", 220.0),
+            ("harbor_dock", "WALK_HOME", "Walk Home",
+             "Walk back to the dorm with a friend. Three walks with the same friend will matter.", 300.0),
+        ]
+        for anchor_id, kind_name, title, text, radius in hooks:
+            anchor = anchors.get(anchor_id)
+            if anchor is None:
+                C.warn(f"story hook anchor {anchor_id} missing")
+                continue
+            a = self.spawn(cls, self.loc(anchor["position_ue"]), self.yaw(anchor.get("yaw", 0.0)),
+                           f"Story_{anchor_id}", "Gameplay/story")
+            if a is None:
+                continue
+            C.set_props(a, kind=getattr(enum, kind_name), title=title, text=text, radius=radius,
+                        show_marker=False)
 
     def portals(self):
         cls = C.native_class("DAInteriorPortal")
