@@ -1,13 +1,17 @@
 """
 CREDITS.md generator: one row per curated third-party asset folder (Tools/thirdparty/**/SOURCE.txt),
 plus the catalog names each asset replaces (from the registry).
+
+The file is published through dai.atomic (temp + replace + fsync).  Its newline
+policy is LF, matching the pipeline's LF rule (generated files must be stable
+across machines; see Docs/conventions for dai.atomic / jsonio).
 """
 
 import json
 import os
 import re
-import tempfile
 
+from . import atomic
 from . import config as C
 from . import thirdparty
 
@@ -143,19 +147,7 @@ def write(path=None, log=print):
         "",
     ]
     path = path or os.path.join(C.REPO_DIR, "CREDITS.md")
-    directory = os.path.dirname(os.path.abspath(path))
-    os.makedirs(directory, exist_ok=True)
-    fd, temp_name = tempfile.mkstemp(prefix=os.path.basename(path) + ".", suffix=".tmp", dir=directory)
-    temp_path = temp_name
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as fp:
-            fp.write("\n".join(lines))
-        os.replace(temp_path, path)
-    finally:
-        if os.path.exists(temp_path):
-            try:
-                os.unlink(temp_path)
-            except OSError:
-                pass
+    # atomic.write_text keeps the LF policy explicit for the committed MD file
+    atomic.write_text(path, "".join(f"{line}\n" for line in lines), encoding="utf-8", newline="\n")
     log(f"  credits: {len(rows)} third-party asset folders -> CREDITS.md")
     return rows

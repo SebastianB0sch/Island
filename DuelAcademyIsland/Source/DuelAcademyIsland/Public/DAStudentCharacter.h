@@ -52,6 +52,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
 	void FastTravelTo(ADALocationVolume* Zone);
 
+	/**
+	 * Pinned cross-workstream contract (WS-05 consumes from portal code):
+	 * strictly focus-clearing. A teleport makes the departure view's world
+	 * focus meaningless, so drop it and let the next focus poll re-acquire from
+	 * the arrival point. Never teleports, moves, or changes any mode.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
+	void NotifyTeleportArrived();
+
 	/** The interactable actor currently in focus (implements IDAInteractableInterface), or null. */
 	UFUNCTION(BlueprintPure, Category = "Duel Academy")
 	AActor* GetFocusedInteractable() const { return FocusedInteractable.Get(); }
@@ -68,6 +77,16 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Duel Academy")
 	bool IsInInterior() const { return bInInterior; }
+
+	/**
+	 * Pure gate for DAA02GateTests: the exact denominator the pawn's world
+	 * input gate consults. The flags mirror ADAHUD's modal-ownership set
+	 * (IsModalOpen + bHelpOpen). No world object is touched, so headless tests
+	 * enumerate every modal combination. Nothing outside this class and the
+	 * headless gate test may call it.
+	 */
+	static bool WorldInputAllowedFor(bool bDuelOpen, bool bMapOpen, bool bDialogueOpen, bool bPDAOpen,
+		bool bTitleOpen, bool bGameplayUIOpen, bool bHelpOpen);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Movement")
 	float WalkSpeed = 150.f;
@@ -98,7 +117,6 @@ private:
 	void CreateInput();
 	void AddMappingContext();
 	ADAHUD* GetDAHUD() const;
-	bool IsDuelOpen() const;
 	bool IsMovementBlocked() const;
 	void UpdateFocus();
 	void UpdateSwimming(float DeltaSeconds);
@@ -118,10 +136,6 @@ private:
 	void OnSprintStop(const FInputActionValue& V);
 	void OnInteract(const FInputActionValue& V);
 	void OnMap(const FInputActionValue& V);
-	void OnMenuUp(const FInputActionValue& V);
-	void OnMenuDown(const FInputActionValue& V);
-	void OnMenuSelect(const FInputActionValue& V);
-	void OnClick(const FInputActionValue& V);
 	void OnJacket(const FInputActionValue& V);
 	void OnDuelDisk(const FInputActionValue& V);
 	void OnHelp(const FInputActionValue& V);
@@ -130,6 +144,14 @@ private:
 	void OnTimeSlower(const FInputActionValue& V);
 	void OnTimeSkip(const FInputActionValue& V);
 	void MoveInput(float Forward, float Right);
+
+	/**
+	 * True when no HUD modal owns the screen. World hotkeys (F/J/T/N/[/]/E and
+	 * the map toggle's own opens) route through this one gate so nothing leaks
+	 * under the map, help, or gameplay Canvas modals. Movement and camera keep
+	 * IsMovementBlocked() (help is deliberately not movement-blocking).
+	 */
+	bool IsWorldInputAllowed() const;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInputMappingContext> MappingContext;

@@ -136,6 +136,25 @@ struct FDAStoryPendingDuel
 };
 
 /**
+ * One decision the story tick can make for a pending duel whose deck select is
+ * not open (P4-02/P4-03 policy). Exposed as a pure function so the playthrough
+ * harness can assert the same policy the real tick executes.
+ */
+enum class EDAStoryDuelTickDecision : uint8
+{
+	/** Keep waiting (the deck select/duel is open, or a reopen is still throttled). */
+	None,
+	/** Re-present the deck select (restored pending duel or close-without-result). */
+	Reopen,
+	/** Re-issue a refused open request (HUD can silently refuse; retry ~0.5s). */
+	RetryRequest,
+	/** The duel was played and closed; infer the recorded result from counters. */
+	ResolveInferred,
+	/** The deck select never opened within the 10s budget. */
+	ResolveLoss
+};
+
+/**
  * Story runtime for the opening slice.
  *
  * Public flow:
@@ -310,6 +329,21 @@ public:
 	/** Log the current scene/queue state to the output log. */
 	void DebugLogState() const;
 
+	/**
+	 * Pure P4-02/P4-03 policy: what the tick does for a pending duel whose deck
+	 * select is not open. Inputs mirror the story's real tick state so tests can
+	 * pin the policy without a HUD:
+	 *   bDuelOpen                  - the HUD reports a duel/deck-select open
+	 *   bDeckSelectClosedWithoutResult - FDADuelUI::WasDeckSelectClosedWithoutResult
+	 *   bModalOpen                 - HUD::IsModalOpen
+	 *   bResumePendingDuel         - the duel was restored from a save
+	 *   bOpened                    - the deck select previously opened
+	 *   Elapsed                    - seconds since the duel command ran
+	 *   RetryTimer                 - seconds until the next refused-open retry
+	 */
+	static EDAStoryDuelTickDecision DecidePendingDuelTick(bool bDuelOpen, bool bDeckSelectClosedWithoutResult,
+		bool bModalOpen, bool bResumePendingDuel, bool bOpened, float Elapsed, float RetryTimer);
+
 	// ---------------------------------------------------------------- save
 	FString SaveState() const;
 	bool LoadState(const FString& Json, FString& OutError);
@@ -351,14 +385,18 @@ private:
 
 	void ApplyEventOutcomes(const FString& EventId);
 	void ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Outcomes, const FString& ContextKey);
-	void ApplyRewardById(const FString& RewardId);
+	/** Applies one declared reward. Returns false for unknown/blank ids or when the reward failed (a deck import cannot complete); only successful applications enter the applied-rewards ledger. */
+	bool ApplyRewardById(const FString& RewardId);
 	void ApplyRewardCommand(const FDAStoryCommand& Command);
 	void GrantCardReward(int32 CardId, int32 Count);
 	bool AddPendingPackGrant(const FString& PackId, int32 Count);
 	void ApplyTitleReward(const FString& Title);
 	void ApplySetFlag(const FString& Flag, bool bValue);
-	void ApplyDeckGrant(const FString& DeckId);
+	bool ApplyDeckGrant(const FString& DeckId);
 	bool EnsureStarterDeck(const FString& PreferredDeck = TEXT("fire"));
+
+	/** Re-issues the story deck-select ask for the currently pending duel. */
+	void OpenPendingDuelDeckSelect(ADAHUD& HUD);
 
 	bool EvaluateConditions(const TArray<TSharedPtr<FJsonObject>>& Conditions) const;
 	void ApplyChoiceInternal(int32 OptionIndex);
@@ -481,6 +519,8 @@ private:
 
 	float WaitRemaining = 0.f;
 	float AutoStartDelay = 2.f;
+	/** Seconds until the pending duel's refused open request is retried (P4-03). */
+	float DuelOpenRetryTimer = 0.f;
 	/** Throttles the free-roam availability poll so date/flag events start without a scene transition. */
 	float FreeRoamPollTimer = 0.f;
 	TWeakObjectPtr<ADAHUD> BoundHUD;

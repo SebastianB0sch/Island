@@ -348,6 +348,15 @@ namespace
 		Report.CheckEqual(MissingUnlockData, 0, TEXT("every pack has unlock text and conditions"));
 		Report.CheckEqual(MissingSets, 0, TEXT("every pack references a known set/category and source"));
 		Report.CheckEqual(Obtainable.Num(), 1200, TEXT("all 1200 cards are obtainable from packs"));
+		bool bNoCanonPackClamped = true;
+		for (const FDAEPackDef& Pack : Shop->GetPacksRef())
+		{
+			if (Pack.bPackSizeClamped)
+			{
+				bNoCanonPackClamped = false;
+			}
+		}
+		Report.CheckTrue(bNoCanonPackClamped, TEXT("no shipped pack_size exceeds the load-time clamp"));
 		Report.CheckEqual(Shop->GetCatalogue().Num(), 48, TEXT("shop catalogue rows = 48"));
 	}
 
@@ -370,16 +379,31 @@ namespace
 			Inventory->RemoveCard(Pair.Key, 1);
 		}
 		Report.CheckEqual(Inventory->GetCollectionSize(), 0, TEXT("inventory remove-all empties the trunk"));
+		Report.CheckEqual(Inventory->GetDistinctCardsOwned(), 0, TEXT("emptied trunk reports zero distinct cards"));
 
 		Inventory->ResetCollection();
 		const int32 Added = Inventory->AddCard(1, 5);
 		Report.CheckEqual(Added, 3, TEXT("ownership copy cap accepts 3 of 5"));
 		Report.CheckEqual(Inventory->GetCount(1), 3, TEXT("ownership copy cap stores 3"));
 		Report.CheckEqual(Inventory->AddCard(1, 1), 0, TEXT("ownership copy cap rejects a 4th copy"));
+		// E2 regression: an at-cap add must not leave a phantom id->0 entry
+		// behind; it used to inflate Counts.Num() feeding GetDistinctCardsOwned
+		// and every MinCardsOwned title gate.
+		Report.CheckEqual(Inventory->GetDistinctCardsOwned(), 1, TEXT("at-cap trunk reports exactly one distinct card"));
+		bool bNoPhantomCounts = true;
+		for (const TPair<int32, int32>& Pair : Inventory->GetCollection())
+		{
+			if (Pair.Value <= 0)
+			{
+				bNoPhantomCounts = false;
+			}
+		}
+		Report.CheckTrue(bNoPhantomCounts, TEXT("at-cap add leaves no phantom zero-count entry"));
 		Report.CheckEqual(Inventory->RemoveCard(1, 1), 1, TEXT("remove one copy"));
 		const int32 AddedAfter = Inventory->AddCard(1, 2);
 		Report.CheckEqual(AddedAfter, 1, TEXT("copy limit refills the one missing copy"));
 		Report.CheckEqual(Inventory->GetCount(1), 3, TEXT("copy limit refills to 3"));
+		Report.CheckEqual(Inventory->GetDistinctCardsOwned(), 1, TEXT("cap refill keeps exactly one distinct card"));
 
 		Inventory->SetMaxOwnedCopies(0);
 		Report.CheckEqual(Inventory->AddCard(1, 10), 10, TEXT("unlimited ownership mode accepts 10"));
@@ -809,6 +833,20 @@ namespace
 		Report.CheckTrue(Story->GetPendingPackGrants().Contains(TEXT("missing_pack")), TEXT("failed consume leaves the grant queued"));
 		Report.CheckEqual(Inventory->GetCollectionSize(), InventoryBeforeMissing, TEXT("failed consume adds no cards"));
 
+		// A queued grant with a zero count would be the only way the story
+		// consume fails AFTER the pack was opened; the recorded contract is that
+		// the story queue drops such rows entirely (counts below 1 are not
+		// queued), so the defensive rollback branch exists for races only.
+		// Assert the observable contract here instead: a zero-count row is not
+		// queued and nothing is opened or added.
+		Report.CheckTrue(Story->LoadState(TEXT("{\"pending_packs\":{\"basic_1a\":0}}"), StoryError), TEXT("test loads a zero-count pending pack row"));
+		Report.CheckTrue(!Story->GetPendingPackGrants().Contains(TEXT("basic_1a")), TEXT("a zero-count grant row is not queued"));
+		Inventory->ResetCollection();
+		const FDAEPackOpenResult ZeroCount = Inventory->ConsumePendingPackGrant(TEXT("basic_1a"), 991);
+		Report.CheckTrue(!ZeroCount.bSuccess, TEXT("no queued grant means no open"));
+		Report.CheckTrue(ZeroCount.ErrorCode == TEXT("no_pending_grant"), TEXT("zero-count row reports no_pending_grant"));
+		Report.CheckEqual(Inventory->GetCollectionSize(), 0, TEXT("zero-count row adds no cards"));
+
 		FString RestoreError;
 		Report.CheckTrue(Story->LoadState(SavedStory, RestoreError), TEXT("story state restores after the grant test"));
 	}
@@ -1094,6 +1132,21 @@ namespace
 		Report.CheckTrue(!Shop->PurchasePack(TEXT("basic_1a"), 2, Rejected), TEXT("wallet rejection fails the purchase"));
 		Report.CheckEqual(static_cast<int32>(Rejected.Block), static_cast<int32>(EDAEPurchaseBlock::WalletRejected), TEXT("wallet rejection block reason"));
 		Report.CheckEqual(Inventory->GetCollectionSize(), 0, TEXT("wallet rejection leaves inventory untouched"));
+
+		// E4: registered A02 wallet handlers must survive a legacy
+		// `internal_wallet:true` save payload; only genuinely absent handlers
+		// fall back to the cached standalone wallet.
+		FString WalletError;
+		FDAEShopSaveData LegacyInternalFlag = Shop->GetSaveData();
+		LegacyInternalFlag.bInternalWallet = true;
+		LegacyInternalFlag.CachedDP = 123;
+		Report.CheckTrue(Shop->ApplySaveData(LegacyInternalFlag, WalletError), TEXT("legacy internal-wallet flag payload applies"));
+		Report.CheckTrue(!Shop->IsUsingInternalWallet(), TEXT("registered wallet handlers survive a legacy internal-wallet save"));
+		Report.CheckEqual(Shop->GetDP(), 1000, TEXT("DP keeps coming from the registered handler"));
+		Shop->ClearWalletHandlers();
+		Report.CheckTrue(Shop->ApplySaveData(LegacyInternalFlag, WalletError), TEXT("internal-wallet flag payload applies without handlers"));
+		Report.CheckTrue(Shop->IsUsingInternalWallet(), TEXT("absent handlers fall back to the internal wallet"));
+		Report.CheckEqual(Shop->GetDP(), 123, TEXT("cached DP restores under the fallback wallet"));
 		Shop->SetDebugDP(1000);
 
 		// Locked pack until its event flag is pushed.
@@ -1213,6 +1266,21 @@ namespace
 		Report.CheckEqual(Inventory->GetMaxOwnedCopies(), 0, TEXT("unlimited cap round-trips"));
 		Report.CheckEqual(Inventory->GetCount(1), 5, TEXT("unlimited count round-trips"));
 		Inventory->SetMaxOwnedCopies(3);
+
+		// E6: the struct payload applies the same explicit-zero-is-absent rule
+		// as ImportStateJson; an all-zero counts payload refreshes the trunk to
+		// empty instead of drifting into a JSON-path-only rejection.
+		Inventory->ResetCollection();
+		Inventory->AddCard(2, 2);
+		FDAEInventorySaveData AllZeroData;
+		AllZeroData.MaxOwnedCopies = 3;
+		AllZeroData.Counts.Add(1, 0);
+		AllZeroData.Counts.Add(2, 0);
+		Report.CheckTrue(Inventory->ApplySaveData(AllZeroData, Error), TEXT("all-zero inventory payload applies"));
+		Report.CheckEqual(Inventory->GetCount(1), 0, TEXT("all-zero payload clears card 1"));
+		Report.CheckEqual(Inventory->GetCount(2), 0, TEXT("all-zero payload clears card 2"));
+		Report.CheckEqual(Inventory->GetCollectionSize(), 0, TEXT("all-zero payload empties the trunk"));
+		Report.CheckEqual(Inventory->GetDistinctCardsOwned(), 0, TEXT("all-zero payload reports zero distinct cards"));
 
 		// Invalid ante records are filtered instead of poisoning the queue.
 		FDAEInventorySaveData AnteData;
@@ -1477,6 +1545,101 @@ namespace
 		Shop->ResetPurchaseState();
 	}
 
+	void TestSaveVersionGates(
+		FTestReport& Report,
+		UDAInventorySubsystem* Inventory,
+		UDAShopSubsystem* Shop,
+		UDADeckLogic* DeckLogic)
+	{
+		Inventory->ResetCollection();
+		Inventory->SetMaxOwnedCopies(3);
+		Shop->ResetPurchaseState();
+		Shop->SetDebugDP(400);
+		DeckLogic->ResetToDefaults();
+		const int32 DeckCountBefore = DeckLogic->GetPlayerDecksRef().Num();
+		const FString ActiveBefore = DeckLogic->GetActiveDeckId();
+
+		// E9: a section declaring a version newer than the known one is
+		// rejected by every economy provider validator, leaving live state
+		// untouched. Known and legacy (no version) sections stay loadable.
+		const TCHAR* FutureInventorySections[] = {
+			TEXT("{\"version\":2,\"counts\":{\"1\":2}}"),
+			TEXT("{\"version\":2147483647,\"counts\":{\"1\":2}}"),
+			TEXT("{\"version\":\"two\",\"counts\":{\"1\":2}}")
+		};
+		for (const TCHAR* Json : FutureInventorySections)
+		{
+			const TSharedPtr<FJsonObject> Bad = ParseJsonObjectForTest(Json);
+			Report.CheckTrue(Bad.IsValid(), FString::Printf(TEXT("future-version inventory fixture parses: %s"), Json));
+			FString Error;
+			Report.CheckTrue(!Inventory->ValidateSaveSection(Bad, Error),
+				FString::Printf(TEXT("inventory validator rejects a future version: %s"), Json));
+			Report.CheckTrue(!Inventory->ImportStateJson(Json, Error),
+				FString::Printf(TEXT("inventory import rejects a future version: %s"), Json));
+			Report.CheckEqual(Inventory->GetCount(1), 0,
+				FString::Printf(TEXT("inventory state preserved on future version: %s"), Json));
+		}
+		FString InventoryGateError;
+		Report.CheckTrue(Inventory->ImportStateJson(TEXT("{\"version\":1,\"counts\":{\"1\":2}}"), InventoryGateError),
+			TEXT("known inventory version imports"));
+		Report.CheckEqual(Inventory->GetCount(1), 2, TEXT("known inventory version applies its counts"));
+		Report.CheckTrue(Inventory->ImportStateJson(TEXT("{\"version\":0,\"counts\":{\"1\":3}}"), InventoryGateError),
+			TEXT("older inventory version imports"));
+		Report.CheckEqual(Inventory->GetCount(1), 3, TEXT("older inventory version applies its counts"));
+		Report.CheckTrue(Inventory->ImportStateJson(TEXT("{\"counts\":{\"1\":4}}"), InventoryGateError),
+			TEXT("legacy inventory section without a version imports"));
+		Report.CheckEqual(Inventory->GetCount(1), 4, TEXT("legacy inventory section applies its counts"));
+		Inventory->ResetCollection();
+
+		const TCHAR* FutureShopSections[] = {
+			TEXT("{\"version\":2,\"cached_dp\":10}"),
+			TEXT("{\"version\":99,\"cached_dp\":10,\"last_purchase_day\":{},\"purchase_counts\":{}}")
+		};
+		for (const TCHAR* Json : FutureShopSections)
+		{
+			const TSharedPtr<FJsonObject> Bad = ParseJsonObjectForTest(Json);
+			Report.CheckTrue(Bad.IsValid(), FString::Printf(TEXT("future-version shop fixture parses: %s"), Json));
+			FString Error;
+			Report.CheckTrue(!Shop->ValidateSaveSection(Bad, Error),
+				FString::Printf(TEXT("shop validator rejects a future version: %s"), Json));
+			Report.CheckTrue(!Shop->ReadSaveSection(Bad, Error),
+				FString::Printf(TEXT("shop read rejects a future version: %s"), Json));
+			Report.CheckEqual(Shop->GetDP(), 400,
+				FString::Printf(TEXT("shop DP preserved on future version: %s"), Json));
+		}
+		TSharedPtr<FJsonObject> GoodShopSection = MakeShared<FJsonObject>();
+		Report.CheckTrue(Shop->WriteSaveSection(GoodShopSection), TEXT("shop writer emits a section"));
+		FString ShopGateError;
+		Report.CheckTrue(Shop->ValidateSaveSection(GoodShopSection, ShopGateError), TEXT("shop writer validates its own version"));
+		Shop->ResetPurchaseState();
+
+		const TCHAR* FutureDeckSections[] = {
+			TEXT("{\"version\":2,\"decks\":[{\"id\":\"v2_deck\",\"name\":\"V2\",\"main\":[],\"extra\":[]}]}")
+		};
+		for (const TCHAR* Json : FutureDeckSections)
+		{
+			const TSharedPtr<FJsonObject> Bad = ParseJsonObjectForTest(Json);
+			Report.CheckTrue(Bad.IsValid(), FString::Printf(TEXT("future-version deck fixture parses: %s"), Json));
+			FString Error;
+			Report.CheckTrue(!DeckLogic->ValidateSaveSection(Bad, Error),
+				FString::Printf(TEXT("deck validator rejects a future version: %s"), Json));
+			Report.CheckTrue(!DeckLogic->ImportStateJson(Json, Error),
+				FString::Printf(TEXT("deck import rejects a future version: %s"), Json));
+			Report.CheckEqual(DeckLogic->GetPlayerDecksRef().Num(), DeckCountBefore,
+				FString::Printf(TEXT("deck count preserved on future version: %s"), Json));
+			Report.CheckTrue(DeckLogic->GetActiveDeckId() == ActiveBefore,
+				FString::Printf(TEXT("active deck preserved on future version: %s"), Json));
+		}
+		TSharedPtr<FJsonObject> GoodDeckSection = MakeShared<FJsonObject>();
+		Report.CheckTrue(DeckLogic->WriteSaveSection(GoodDeckSection), TEXT("deck writer emits a section"));
+		FString DeckGateError;
+		Report.CheckTrue(DeckLogic->ValidateSaveSection(GoodDeckSection, DeckGateError), TEXT("deck writer validates its own version"));
+		DeckLogic->ResetToDefaults();
+
+		Inventory->ResetCollection();
+		Shop->ResetPurchaseState();
+	}
+
 	void TestDeckState(
 		FTestReport& Report,
 		UDAInventorySubsystem* Inventory,
@@ -1644,6 +1807,42 @@ namespace
 		Report.CheckTrue(DeckLogic->GetActiveDeck() != nullptr, TEXT("erasing the active deck selects a fallback"));
 		Report.CheckTrue(DeckLogic->GetActiveDeckId() != StarterId, TEXT("erased deck is no longer active"));
 
+		// E3: the provider hook used by story grants refuses a rules-illegal
+		// switch and keeps the previous activation. A fresh empty deck is
+		// illegal by shape (main_too_small), independent of inventory contents.
+		const FString GatePreviousActive = DeckLogic->GetActiveDeckId();
+		FString GateCreateError;
+		const FString GateDeckId = DeckLogic->CreateDeck(TEXT("Activation Gate"), GateCreateError);
+		Report.CheckTrue(!GateDeckId.IsEmpty(), TEXT("activation gate test deck is created"));
+		DeckLogic->SetActiveDeckId(GateDeckId);
+		Report.CheckTrue(DeckLogic->GetActiveDeckId().Equals(GatePreviousActive, ESearchCase::IgnoreCase),
+			TEXT("SetActiveDeckId refuses an illegal deck and keeps the previous deck"));
+		Report.CheckTrue(!DeckLogic->GetActiveDeckId().Equals(GateDeckId, ESearchCase::IgnoreCase),
+			TEXT("refused illegal deck stays inactive"));
+		FString GateEraseError;
+		Report.CheckTrue(DeckLogic->EraseDeck(GateDeckId, GateEraseError), TEXT("activation gate test deck is erased"));
+
+		// A rules-legal deck (ownership deliberately not required here) still
+		// activates through the provider hook.
+		FString LegalGateTargetId;
+		for (const FDAEDeck& Deck : DeckLogic->GetPlayerDecksRef())
+		{
+			TArray<FDAEDeckError> GateErrors;
+			if (UDADeckLogic::ValidateDeckAgainstRules(Deck, DeckLogic->GetRules(), Database, nullptr, false, GateErrors)
+				&& !Deck.Id.Equals(GatePreviousActive, ESearchCase::IgnoreCase))
+			{
+				LegalGateTargetId = Deck.Id;
+				break;
+			}
+		}
+		if (!LegalGateTargetId.IsEmpty())
+		{
+			DeckLogic->SetActiveDeckId(LegalGateTargetId);
+			Report.CheckTrue(DeckLogic->GetActiveDeckId().Equals(LegalGateTargetId, ESearchCase::IgnoreCase),
+				TEXT("SetActiveDeckId activates a rules-legal deck"));
+			DeckLogic->SetActiveDeckId(GatePreviousActive);
+		}
+
 		// Struct saves drop non-positive card ids rather than persisting them.
 		FDAEDeckSaveData FilterData = DeckLogic->GetSaveData();
 		if (FilterData.Decks.Num() > 0)
@@ -1708,6 +1907,7 @@ FString DAEconomyTests::Run(
 	TestShop(Report, Inventory, Shop, DeckLogic);
 	TestInventoryTransactionality(Report, Inventory, Shop, Database);
 	TestShopState(Report, Inventory, Shop);
+	TestSaveVersionGates(Report, Inventory, Shop, DeckLogic);
 	TestDeckState(Report, Inventory, DeckLogic, Database);
 
 	// Leave a clean, playable default state in case the caller did not exit.

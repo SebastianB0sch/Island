@@ -33,6 +33,7 @@ import math
 import os
 import shutil
 import subprocess
+import time
 
 import bpy  # must come before bmesh (bmesh is provided by the Blender module)
 import bmesh
@@ -45,9 +46,11 @@ from . import atomic, cache, palette
 TP_DIR = os.path.join(C.TOOLS_DIR, "thirdparty")
 REG_PATH = os.path.join(TP_DIR, "registry.json")
 TEX_OUT = os.path.join(C.OUT_TEXTURES, "ThirdParty")
+# glTF-Transform is picked from the GLTF_TRANSFORM env var first (pin a specific
+# binary), then from PATH; a hung process must not stall the build forever.
+GLTF_TRANSFORM_TIMEOUT = 120.0
 GLTF_TRANSFORM_CANDIDATES = [
     os.environ.get("GLTF_TRANSFORM", ""),
-    "/home/user/tools-node/node_modules/.bin/gltf-transform",
     shutil.which("gltf-transform") or "",
 ]
 
@@ -98,10 +101,11 @@ def _decode_meshopt(path):
     out = cache.cache_file(cache_dir, path, ".glb")
     if cache.is_fresh(out, path) and cache.is_glb(out):
         return out
-    last_error = None
+    attempts = []
     for tool in GLTF_TRANSFORM_CANDIDATES:
         if not tool or not os.path.exists(tool):
             continue
+        started = time.monotonic()
         try:
             # Write next to the cache entry, then publish - a cancelled decode leaves
             # the previous cache untouched.
@@ -109,13 +113,18 @@ def _decode_meshopt(path):
                 # gltf-transform may refuse an existing output path; the unique
                 # temp name is ours, so let the CLI create it.
                 temp_path.unlink()
-                subprocess.run([tool, "copy", path, str(temp_path)], check=True, capture_output=True)
+                subprocess.run([tool, "copy", path, str(temp_path)], check=True, capture_output=True,
+                               timeout=GLTF_TRANSFORM_TIMEOUT)
                 if not cache.is_glb(temp_path):
                     raise RuntimeError("gltf-transform produced an invalid GLB")
-            return out
-        except (OSError, RuntimeError, subprocess.CalledProcessError) as exc:
-            last_error = exc
-    detail = f": {last_error}" if last_error else ""
+        except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+            # SubprocessError covers both a failed exit and a hung process
+            # (TimeoutExpired); surface which tool failed and how long it took.
+            attempts.append(f"{tool} ({time.monotonic() - started:.1f}s): {exc}")
+            continue
+        print(f"  thirdparty: decoding {os.path.basename(path)} with {tool}", flush=True)
+        return out
+    detail = "".join(f"\n  {attempt}" for attempt in attempts)
     raise RuntimeError("meshopt-compressed glTF and no working gltf-transform available "
                        "(npm install @gltf-transform/cli and set GLTF_TRANSFORM)" + detail)
 
@@ -236,8 +245,13 @@ def _image_from(socket, depth=0):
     return None, None
 
 
-def _save_image(img, path, max_size=2048, mode=None, use_cache=True):
-    if use_cache and os.path.isfile(path) and os.path.getsize(path) > 0:
+def _save_image(img, path, max_size=2048, mode=None, use_cache=True, fresh_against=None):
+    """Save / reuse an extracted texture.  With ``fresh_against`` (the source file the
+    image came from) an existing cache entry is only reused when it is not older
+    than that file - replacing a registered model in place used to silently keep
+    its stale cached textures (existence-only freshness)."""
+    if use_cache and os.path.isfile(path) and os.path.getsize(path) > 0 \
+            and (fresh_against is None or cache.is_fresh(path, fresh_against)):
         return path
     w, h = img.size[:]
     if w == 0 or h == 0:

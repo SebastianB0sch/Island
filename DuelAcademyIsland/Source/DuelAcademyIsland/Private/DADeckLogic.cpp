@@ -23,6 +23,9 @@ namespace
 		return TEXT("Data/Decks/player_decks.json");
 	}
 
+	/** Written by WriteSaveSection; RequireVersion accepts this and older. */
+	constexpr int32 DeckSaveSectionVersion = 1;
+
 	bool ParseCardIdArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<int32>& OutCards)
 	{
 		const TArray<int32> Values = DAEconomyJson::ReadIntArray(Object, Field);
@@ -197,6 +200,29 @@ void UDADeckLogic::SetActiveDeckId(const FString& DeckId)
 	const FString RequestedId = DeckId.TrimStartAndEnd();
 	if (const FDAEDeck* Deck = FindPlayerDeck(RequestedId))
 	{
+		// The duel engine needs a deck that is legal under the rules (shape,
+		// copies, banlist). A must-be-active call with an illegal deck is
+		// refused and the previous activation is kept; ownership is not checked
+		// because story grants activate starter decks before every card copy
+		// has been granted to the trunk.
+		TArray<FDAEDeckError> Errors;
+		if (!ValidateDeckWithoutOwnership(*Deck, Errors))
+		{
+			// A missing card database cannot evaluate the rules yet; keep the
+			// pre-gate behaviour for that case (the engine's own Start-time
+			// validation still refuses illegal decks once rules load).
+			const FName DatabaseUnavailableCode(TEXT("database_unavailable"));
+			const bool bRulesUnevaluable = Errors.Num() == 1 && Errors[0].Code == DatabaseUnavailableCode;
+			if (!bRulesUnevaluable)
+			{
+				UE_LOG(LogDuelAcademyIsland, Warning,
+					TEXT("DeckLogic: refusing activation of illegal deck '%s' (%s); keeping '%s'."),
+					*RequestedId,
+					Errors.Num() > 0 ? *Errors[0].Message : TEXT("the deck is not legal"),
+					*ActiveDeckId);
+				return;
+			}
+		}
 		ActiveDeckId = Deck->Id;
 	}
 	else if (PlayerDecks.Num() > 0)
@@ -221,7 +247,7 @@ bool UDADeckLogic::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const
 	{
 		OutSection = MakeShared<FJsonObject>();
 	}
-	OutSection->SetNumberField(TEXT("version"), 1);
+	OutSection->SetNumberField(TEXT("version"), DeckSaveSectionVersion);
 	OutSection->SetStringField(TEXT("active_deck_id"), ActiveDeckId);
 
 	TArray<TSharedPtr<FJsonValue>> Decks;
@@ -245,6 +271,10 @@ bool UDADeckLogic::ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection,
 	if (!InSection.IsValid())
 	{
 		OutError = TEXT("Deck save section is missing.");
+		return false;
+	}
+	if (!DAEconomyJson::RequireVersion(InSection, DeckSaveSectionVersion, OutError))
+	{
 		return false;
 	}
 
@@ -278,12 +308,18 @@ bool UDADeckLogic::ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection,
 			return false;
 		}
 		FDAEDeck Deck;
-		if (!ParseDeckObject(Entry, Deck) || SeenIds.Contains(Deck.Id.ToLower()))
+		if (!ParseDeckObject(Entry, Deck))
 		{
 			OutError = TEXT("Deck save section contains an invalid or duplicate Deck.");
 			return false;
 		}
-		SeenIds.Add(Deck.Id.ToLower());
+		const FString IdKey = DAEconomy::NormalizeIdKey(Deck.Id);
+		if (SeenIds.Contains(IdKey))
+		{
+			OutError = TEXT("Deck save section contains an invalid or duplicate Deck.");
+			return false;
+		}
+		SeenIds.Add(IdKey);
 	}
 
 	OutError.Reset();
@@ -337,7 +373,6 @@ bool UDADeckLogic::LoadRules(FString& OutError)
 	Rules.DeckNameMinLength = FMath::Max(0, DAEconomyJson::ReadInt(Source, TEXT("deck_name_min_length"), Rules.DeckNameMinLength));
 	Rules.DeckNameMaxLength = FMath::Max(Rules.DeckNameMinLength, DAEconomyJson::ReadInt(Source, TEXT("deck_name_max_length"), Rules.DeckNameMaxLength));
 	MaxPlayerDecks = Rules.MaxPlayerDecks;
-
 	auto ReadCardList = [](const TArray<TSharedPtr<FJsonValue>>* Array, TSet<int32>& OutSet)
 	{
 		if (!Array)
@@ -429,18 +464,27 @@ bool UDADeckLogic::LoadPlayerDeckFile(FString& OutError)
 		return false;
 	}
 
+	// MaxPlayerDecks (the loose member) is the single authoritative slot
+	// capacity; the rules mirror is re-synced whenever it is raised so that
+	// GetRules() stays truthful for other lanes reading Rules.MaxPlayerDecks.
 	MaxPlayerDecks = FMath::Max(MaxPlayerDecks, DAEconomyJson::ReadInt(Object, TEXT("max_player_decks"), MaxPlayerDecks));
+	Rules.MaxPlayerDecks = MaxPlayerDecks;
 
 	TSet<FString> SeenIds;
 	for (const TSharedPtr<FJsonValue>& Value : *DeckArray)
 	{
 		const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
 		FDAEDeck Deck;
-		if (!ParseDeckObject(Entry, Deck) || SeenIds.Contains(Deck.Id.ToLower()))
+		if (!ParseDeckObject(Entry, Deck))
 		{
 			continue;
 		}
-		SeenIds.Add(Deck.Id.ToLower());
+		const FString IdKey = DAEconomy::NormalizeIdKey(Deck.Id);
+		if (SeenIds.Contains(IdKey))
+		{
+			continue;
+		}
+		SeenIds.Add(IdKey);
 		PlayerDecks.Add(MoveTemp(Deck));
 	}
 
@@ -458,6 +502,7 @@ bool UDADeckLogic::LoadPlayerDeckFile(FString& OutError)
 			TEXT("DeckLogic: %d default decks exceed max_player_decks=%d; raising the limit."),
 			PlayerDecks.Num(), MaxPlayerDecks);
 		MaxPlayerDecks = PlayerDecks.Num();
+		Rules.MaxPlayerDecks = MaxPlayerDecks;
 	}
 
 	DefaultStarterCards = DAEconomyJson::ReadIntArray(Object, TEXT("starter_cards"));
@@ -1340,7 +1385,7 @@ bool UDADeckLogic::ApplySaveData(const FDAEDeckSaveData& Data, FString& OutError
 	for (const FDAEDeck& Source : Data.Decks)
 	{
 		const FString DeckId = Source.Id.TrimStartAndEnd();
-		const FString IdKey = DeckId.ToLower();
+		const FString IdKey = DAEconomy::NormalizeIdKey(DeckId);
 		if (DeckId.IsEmpty() || SeenIds.Contains(IdKey))
 		{
 			OutError = TEXT("Deck save contains an invalid or duplicate Deck id.");
@@ -1427,12 +1472,18 @@ bool UDADeckLogic::ImportStateJson(const FString& Json, FString& OutError)
 	{
 		const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
 		FDAEDeck Deck;
-		if (!ParseDeckObject(Entry, Deck) || SeenIds.Contains(Deck.Id.ToLower()))
+		if (!ParseDeckObject(Entry, Deck))
 		{
 			OutError = TEXT("Deck JSON contains an invalid or duplicate Deck.");
 			return false;
 		}
-		SeenIds.Add(Deck.Id.ToLower());
+		const FString IdKey = DAEconomy::NormalizeIdKey(Deck.Id);
+		if (SeenIds.Contains(IdKey))
+		{
+			OutError = TEXT("Deck JSON contains an invalid or duplicate Deck.");
+			return false;
+		}
+		SeenIds.Add(IdKey);
 		NewDecks.Add(MoveTemp(Deck));
 	}
 

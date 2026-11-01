@@ -30,6 +30,9 @@ namespace
 		return TEXT("Data/Rules/card_rarity.json");
 	}
 
+	/** Written by WriteSaveSection; RequireVersion accepts this and older. */
+	constexpr int32 InventorySaveSectionVersion = 1;
+
 	bool MatchesAny(const FString& Value, const TArray<FString>& Filters)
 	{
 		if (Filters.Num() == 0)
@@ -124,6 +127,11 @@ namespace
 			return false;
 		}
 
+		if (!DAEconomyJson::RequireVersion(Object, InventorySaveSectionVersion, OutError))
+		{
+			return false;
+		}
+
 		const TSharedPtr<FJsonObject>* CountsObject = nullptr;
 		if (!Object->TryGetObjectField(TEXT("counts"), CountsObject) || !CountsObject || !CountsObject->IsValid())
 		{
@@ -181,7 +189,8 @@ namespace
 				const TSharedPtr<FJsonValue> DuelValue = Entry->TryGetField(TEXT("duel_id"));
 				FString DuelId;
 				if (!DuelValue.IsValid() || DuelValue->Type != EJson::String
-					|| !DuelValue->TryGetString(DuelId) || DuelId.IsEmpty())
+					|| !DuelValue->TryGetString(DuelId)
+					|| DAEconomy::NormalizeIdKey(DuelId).IsEmpty())
 				{
 					OutError = TEXT("Inventory save section has an ante record without a duel id.");
 					return false;
@@ -238,7 +247,7 @@ bool UDAInventorySubsystem::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection
 	{
 		OutSection = MakeShared<FJsonObject>();
 	}
-	OutSection->SetNumberField(TEXT("version"), 1);
+	OutSection->SetNumberField(TEXT("version"), InventorySaveSectionVersion);
 	OutSection->SetNumberField(TEXT("max_owned_copies"), MaxOwnedCopies);
 
 	const TSharedPtr<FJsonObject> CountsObject = MakeShared<FJsonObject>();
@@ -385,22 +394,27 @@ int32 UDAInventorySubsystem::AddCard(int32 CardId, int32 Count)
 		return 0;
 	}
 
-	int32& Owned = Counts.FindOrAdd(CardId);
+	// Read the existing count instead of FindOrAdd: inserting before the cap
+	// check used to leave a permanent id->0 phantom entry behind whenever an
+	// at-cap/invalid add returned early, inflating GetDistinctCardsOwned
+	// (Counts.Num()) and every MinCardsOwned title gate that reads it.
+	const int32 Owned = GetCount(CardId);
 	const int64 Space = MaxOwnedCopies > 0
 		? FMath::Max<int64>(0, static_cast<int64>(MaxOwnedCopies) - Owned)
 		: Count;
 	const int32 Requested = static_cast<int32>(FMath::Min<int64>(Count, Space));
-	const int32 OldOwned = Owned;
 	const int32 NewOwned = static_cast<int32>(FMath::Clamp<int64>(
-		static_cast<int64>(OldOwned) + Requested, 0, TNumericLimits<int32>::Max()));
-	const int32 Added = NewOwned - OldOwned;
+		static_cast<int64>(Owned) + Requested, 0, TNumericLimits<int32>::Max()));
+	const int32 Added = NewOwned - Owned;
 	if (Added <= 0)
 	{
 		return 0;
 	}
 
-	Owned = NewOwned;
-	OnCollectionChanged.Broadcast(CardId, Owned);
+	// Only insert/overwrite when the count actually moves (also heals a legacy
+	// phantom zero entry for the same id).
+	Counts.Add(CardId, NewOwned);
+	OnCollectionChanged.Broadcast(CardId, NewOwned);
 	return Added;
 }
 
@@ -1138,13 +1152,17 @@ int32 UDAInventorySubsystem::ResolveSeed(int32 Seed)
 
 bool UDAInventorySubsystem::RemoveCardForAnte(int32 CardId, const FString& DuelId, const FString& Source)
 {
-	if (DuelId.IsEmpty())
+	// Ante duel ids are stored in canonical folded form (like deck ids) so the
+	// one-stake guard and every later lookup compare equal regardless of the
+	// caller's casing; comparisons stay case-insensitive for legacy rows.
+	const FString DuelKey = DAEconomy::NormalizeIdKey(DuelId);
+	if (DuelKey.IsEmpty())
 	{
 		return false;
 	}
-	if (PendingAnte.ContainsByPredicate([&DuelId](const FDAEAnteRecord& Record)
+	if (PendingAnte.ContainsByPredicate([&DuelKey](const FDAEAnteRecord& Record)
 		{
-			return Record.DuelId.Equals(DuelId, ESearchCase::IgnoreCase);
+			return Record.DuelId.Equals(DuelKey, ESearchCase::IgnoreCase);
 		}))
 	{
 		// One ante stake per duel. Without this guard a retried call could
@@ -1157,7 +1175,7 @@ bool UDAInventorySubsystem::RemoveCardForAnte(int32 CardId, const FString& DuelI
 	}
 	FDAEAnteRecord Record;
 	Record.CardId = CardId;
-	Record.DuelId = DuelId;
+	Record.DuelId = DuelKey;
 	Record.Source = Source;
 	PendingAnte.Add(Record);
 	OnAnteChanged.Broadcast(PendingAnte.Num());
@@ -1166,9 +1184,10 @@ bool UDAInventorySubsystem::RemoveCardForAnte(int32 CardId, const FString& DuelI
 
 bool UDAInventorySubsystem::ReturnAnteCard(const FString& DuelId)
 {
-	const int32 Index = PendingAnte.IndexOfByPredicate([&DuelId](const FDAEAnteRecord& Record)
+	const FString DuelKey = DAEconomy::NormalizeIdKey(DuelId);
+	const int32 Index = PendingAnte.IndexOfByPredicate([&DuelKey](const FDAEAnteRecord& Record)
 	{
-		return Record.DuelId.Equals(DuelId, ESearchCase::IgnoreCase);
+		return Record.DuelId.Equals(DuelKey, ESearchCase::IgnoreCase);
 	});
 	if (Index == INDEX_NONE)
 	{
@@ -1185,9 +1204,10 @@ bool UDAInventorySubsystem::ReturnAnteCard(const FString& DuelId)
 
 bool UDAInventorySubsystem::CommitAnteLoss(const FString& DuelId)
 {
-	const int32 Removed = PendingAnte.RemoveAll([&DuelId](const FDAEAnteRecord& Record)
+	const FString DuelKey = DAEconomy::NormalizeIdKey(DuelId);
+	const int32 Removed = PendingAnte.RemoveAll([&DuelKey](const FDAEAnteRecord& Record)
 	{
-		return Record.DuelId.Equals(DuelId, ESearchCase::IgnoreCase);
+		return Record.DuelId.Equals(DuelKey, ESearchCase::IgnoreCase);
 	});
 	if (Removed > 0)
 	{
@@ -1218,7 +1238,7 @@ int32 UDAInventorySubsystem::ReturnAllAnte()
 FString UDAInventorySubsystem::ExportStateJson() const
 {
 	const TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
-	Root->SetNumberField(TEXT("version"), 1);
+	Root->SetNumberField(TEXT("version"), InventorySaveSectionVersion);
 	Root->SetNumberField(TEXT("max_owned_copies"), MaxOwnedCopies);
 
 	const TSharedPtr<FJsonObject> CountsObject = MakeShared<FJsonObject>();
@@ -1306,7 +1326,7 @@ bool UDAInventorySubsystem::ImportStateJson(const FString& Json, FString& OutErr
 				OutError = TEXT("Inventory JSON contains an invalid ante card id.");
 				return false;
 			}
-			Record.DuelId = DAEconomyJson::ReadString(Entry, TEXT("duel_id"));
+			Record.DuelId = DAEconomy::NormalizeIdKey(DAEconomyJson::ReadString(Entry, TEXT("duel_id")));
 			Record.Source = DAEconomyJson::ReadString(Entry, TEXT("source"));
 			if (Record.DuelId.IsEmpty())
 			{
@@ -1353,6 +1373,10 @@ bool UDAInventorySubsystem::ApplySaveData(const FDAEInventorySaveData& Data, FSt
 		return false;
 	}
 
+	// Same explicit-zero contract as ImportStateJson: a zero count means
+	// "not owned" and is treated as absent, so an all-zero struct payload
+	// refreshes the trunk to empty instead of drifting into a rejection that
+	// the JSON path would not produce.
 	TMap<int32, int32> NewCounts;
 	for (const TPair<int32, int32>& Pair : Data.Counts)
 	{
@@ -1361,11 +1385,6 @@ bool UDAInventorySubsystem::ApplySaveData(const FDAEInventorySaveData& Data, FSt
 			NewCounts.Add(Pair.Key, Pair.Value);
 		}
 	}
-	if (Data.Counts.Num() > 0 && NewCounts.Num() == 0)
-	{
-		OutError = TEXT("Inventory save contains no valid card counts.");
-		return false;
-	}
 
 	Counts = MoveTemp(NewCounts);
 
@@ -1373,9 +1392,13 @@ bool UDAInventorySubsystem::ApplySaveData(const FDAEInventorySaveData& Data, FSt
 	NewAnte.Reserve(Data.PendingAnte.Num());
 	for (const FDAEAnteRecord& Record : Data.PendingAnte)
 	{
-		if (Record.CardId > 0 && !Record.DuelId.IsEmpty())
+		// Normalize the duel id at entry so the one-stake guard and return
+		// lookups match the runtime path (RemoveCardForAnte) everywhere.
+		FDAEAnteRecord Normalized = Record;
+		Normalized.DuelId = DAEconomy::NormalizeIdKey(Normalized.DuelId);
+		if (Normalized.CardId > 0 && !Normalized.DuelId.IsEmpty())
 		{
-			NewAnte.Add(Record);
+			NewAnte.Add(MoveTemp(Normalized));
 		}
 	}
 	PendingAnte = MoveTemp(NewAnte);

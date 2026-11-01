@@ -129,6 +129,8 @@ class Placer:
         w = self.layout["world"]
         m = self.spawn(cls, unreal.Vector(0, 0, 10000), 0.0, "IslandManager", "Environment")
         lake = w["lake"]
+        # strict: a silently-failed property leaves the manager with a null sun / map /
+        # lake centre, which breaks the day-night cycle and the minimap at runtime.
         C.set_props(m, sun=env.get("sun"), moon=env.get("moon"), sky_light=env.get("sky"), height_fog=env.get("fog"),
                     parameter_collection=mpc, hour=float(self.layout["environment"]["start_hour"]),
                     day_length_minutes=float(self.layout["environment"]["day_minutes"]), map_texture=map_tex,
@@ -136,11 +138,11 @@ class Placer:
                     map_max=unreal.Vector2D(w["map"]["max"][0], w["map"]["max"][1]),
                     sea_level=float(w["sea_level"]), lake_center=self.loc(lake["center"]),
                     lake_radii=unreal.Vector2D(lake["radii"][0], lake["radii"][1]),
-                    lake_yaw=self.yaw(lake["rot"]), lake_level=float(w["lake_level"]))
+                    lake_yaw=self.yaw(lake["rot"]), lake_level=float(w["lake_level"]), strict=True)
         if self.ysign < 0:
             # the map texture's north edge is now at +Y
             C.set_props(m, map_min=unreal.Vector2D(w["map"]["min"][0], w["map"]["max"][1]),
-                        map_max=unreal.Vector2D(w["map"]["max"][0], w["map"]["min"][1]))
+                        map_max=unreal.Vector2D(w["map"]["max"][0], w["map"]["min"][1]), strict=True)
         return m
 
     # ------------------------------------------------------------------ static meshes
@@ -614,4 +616,12 @@ def set_world_settings():
 
 
 def save():
-    les().save_current_level()
+    """Save the map, raising when the editor subsystem reports failure.
+
+    The headless CLI turns a False / None result of ``save_current_level`` into
+    a build failure; without this check the build would log success while the
+    replaced actors exist only in the editor's unsaved state.
+    """
+    result = les().save_current_level()
+    if not result:
+        raise RuntimeError(f"map save failed ({C.MAP_PATH}): save_current_level -> {result!r}")

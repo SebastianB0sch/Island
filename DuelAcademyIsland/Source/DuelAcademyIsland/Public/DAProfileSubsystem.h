@@ -220,10 +220,34 @@ public:
 	/**
 	 * Claims a result token before its effects are applied.  Returns true only
 	 * for the first caller; a false return means the result already happened.
-	 * Invalid or empty tokens are rejected (false).  The claim is autosaved.
+	 * Invalid or empty tokens are rejected (false).  The claim is autosaved
+	 * immediately, which is safe for a standalone claim.  Flow that pairs the
+	 * claim with an apply must use TryMarkResultTokenAppliedDeferred instead:
+	 * a token-only save strands the reward if the process dies before the
+	 * apply is persisted.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Profile")
 	bool TryMarkResultTokenApplied(const FString& ResultToken);
+
+	/**
+	 * Claims a result token in memory only, with no autosave.  The caller
+	 * applies the gated effects right away and lets its own autosave persist
+	 * token + effects in one atomic save (exactly-once across a crash in
+	 * either direction).  Call this only when an apply (and its save) follows;
+	 * a claim that is never apply-saved may itself be lost on a crash, which
+	 * then lets the result re-apply rather than silently discarding it.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Profile")
+	bool TryMarkResultTokenAppliedDeferred(const FString& ResultToken);
+
+	/**
+	 * Requests a debounced-by-queue progression autosave with an explicit
+	 * reason string ("day_change", "event_complete", "shop_purchase",
+	 * "exam_result", ...). Public so the progression producers documented in
+	 * DASaveGame.h (day changes, event completion, purchases, duels) can
+	 * trigger it; callers must only fire it after a successful mutation.
+	 */
+	void RequestProgressionAutosave(const FString& Reason);
 
 	// ---------------------------------------------------------------- flags
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Profile")
@@ -367,8 +391,10 @@ public:
 
 private:
 	bool TickPlaytime(float DeltaSeconds);
-	void RequestProgressionAutosave(const FString& Reason);
 	void ApplyCounterDelta(const FString& Counter, int32 Delta);
+
+	/** Marks the token in memory; returns false when absent/already applied. No save. */
+	bool MarkResultTokenAppliedInternal(const FString& Token);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy|Profile", meta = (AllowPrivateAccess = "true"))
 	FString PlayerName;

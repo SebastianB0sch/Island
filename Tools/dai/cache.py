@@ -9,8 +9,13 @@ interrupted or truncated file is worse than no cache at all.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import struct
+
+
+class StampedCacheError(RuntimeError):
+    """Stamped derived caches are missing, partial, stale, or unreadable."""
 
 
 def source_key(path: str | os.PathLike[str]) -> str:
@@ -69,3 +74,53 @@ def require_file(path: str | os.PathLike[str], label: str = "source") -> str:
     if not os.path.isfile(path):
         raise FileNotFoundError(f"{label} file not found: {path}")
     return path
+
+
+def read_stamp(cache_dir: str | os.PathLike[str], stamp_name: str) -> dict | None:
+    """Parsed stamp JSON of a derived cache, or ``None`` when it is not written yet.
+
+    A corrupt / non-object stamp raises :class:`StampedCacheError` - it is
+    evidence of an interrupted or hand-edited cache, not something to trust.
+    """
+    path = os.path.join(os.fspath(cache_dir), stamp_name)
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as fp:
+            stamp = json.load(fp)
+    except (OSError, ValueError) as exc:
+        raise StampedCacheError(f"{stamp_name} is unreadable ({exc}); delete the cache directory and rebuild") from exc
+    if not isinstance(stamp, dict):
+        raise StampedCacheError(f"{stamp_name} is not an object; delete the cache directory and rebuild")
+    return stamp
+
+
+def require_stamp(cache_dir: str | os.PathLike[str], stamp_name: str, config: dict,
+                  required_files, *, subject: str, fix: str) -> dict:
+    """Validate a stamped cache against the current pipeline configuration.
+
+    ``config`` maps stamp key -> expected value (e.g. ``{"field_res": C.FIELD_RES}``):
+    every key must be present and equal, or the caches were written by an older
+    configuration and must not be mixed into new outputs.  Every entry of
+    ``required_files`` (relative to ``cache_dir``) must exist.  ``subject`` /
+    ``fix`` fill the error message (``fix`` names the command that rebuilds).
+    """
+    stamp = read_stamp(cache_dir, stamp_name)
+    if stamp is None:
+        raise StampedCacheError(
+            f"{subject}: no {stamp_name} stamp - the cache directory cannot be checked against this "
+            f"configuration; run {fix}")
+    for key, expected in config.items():
+        actual = stamp.get(key)
+        if actual != expected:
+            raise StampedCacheError(
+                f"{subject}: {stamp_name} was written with {key}={actual!r}, "
+                f"but the pipeline now uses {key}={expected!r}; mixing the resolutions would silently "
+                f"freeze or smear the terrain.  Run {fix}")
+    for name in required_files:
+        path = os.path.join(os.fspath(cache_dir), name)
+        if not os.path.isfile(path) or os.path.getsize(path) == 0:
+            raise StampedCacheError(
+                f"{subject}: cache file {os.path.basename(path)} is missing or empty "
+                f"(interrupted run); run {fix}")
+    return stamp

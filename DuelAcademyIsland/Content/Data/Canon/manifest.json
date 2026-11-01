@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-10-31T20:04:00+00:00",
+  "generated_utc": "2026-11-01T09:27:09+00:00",
   "project": "DuelAcademyIsland / Yu-Gi-Oh! GX: Duel Academy GBA port",
   "source": {
     "rom_sha256": "0c2f606986c84d584510d0b80e7cb8e2970f9c15c71d29f9bb9d5f67ceef2afe",
@@ -68,14 +68,14 @@
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/opponents.json",
-      "sha256": "40a7d5cad2f354c7d21fb948b7d602169440d94561971dc1a0cc3f5a5cb5a673",
+      "sha256": "4fca1cd283491a998743a2bc07c170f79c4301a33ca8d9cdc7b76bdfb2b85c51",
       "bytes": 26562,
       "records": 28
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/decks.json",
-      "sha256": "73559d205f3b13960c2b93d80f2b39297c795b1d4fde28860cbc6f8b6679b04b",
-      "bytes": 167536,
+      "sha256": "52db1a36f9909e37b523580efd47f32553207bf18e4bd39ee807c605f04427dc",
+      "bytes": 167788,
       "records": 37
     },
     {

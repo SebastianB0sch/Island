@@ -1,6 +1,7 @@
 #include "DAShopSubsystem.h"
 
 #include "DAEconomyJson.h"
+#include "DAProfileSubsystem.h"
 #include "DAInventorySubsystem.h"
 #include "DACardRecords.h"
 #include "DuelAcademyIsland.h"
@@ -17,6 +18,16 @@ namespace
 	{
 		return TEXT("Data/Shop/packs.json");
 	}
+
+	/** Written by WriteSaveSection; RequireVersion accepts this and older. */
+	constexpr int32 ShopSaveSectionVersion = 1;
+
+	/**
+	 * Load-time ceiling for a hand-authored pack size (E8). Shipped canon runs
+	 * 3-7 slots; anything larger is treated as a data defect, clamped so slot
+	 * regeneration stays bounded, and reported by ValidateCatalogue.
+	 */
+	constexpr int32 MaxShopPackSize = 20;
 
 	EDAEUnlockConditionType ParseUnlockType(const FString& Text)
 	{
@@ -105,12 +116,21 @@ namespace
 		for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : MapObject->Values)
 		{
 			int32 Number = 0;
-			if (Pair.Key.IsEmpty() || !ReadNonNegativeSaveInt(Pair.Value, Number))
+			// Pack purchase-state keys fold like every other economy id space
+			// (deck/ante), so a mixed-case hand-edited save still matches the
+			// canonical lookups.
+			const FString MapKey = DAEconomy::NormalizeIdKey(Pair.Key);
+			if (MapKey.IsEmpty() || !ReadNonNegativeSaveInt(Pair.Value, Number))
 			{
 				OutError = FString::Printf(TEXT("Shop save field '%s' has an invalid entry '%s'."), Field, *Pair.Key);
 				return false;
 			}
-			OutMap.Add(Pair.Key, Number);
+			// First entry wins on case-insensitive collisions (matching the
+			// struct path in ApplySaveData) for a deterministic fold.
+			if (!OutMap.Contains(MapKey))
+			{
+				OutMap.Add(MapKey, Number);
+			}
 		}
 		return true;
 	}
@@ -122,6 +142,10 @@ namespace
 			OutError = TEXT("Shop save section is missing.");
 			return false;
 		}
+		if (!DAEconomyJson::RequireVersion(Object, ShopSaveSectionVersion, OutError))
+		{
+			return false;
+		}
 		if (!Object->HasField(TEXT("cached_dp"))
 			&& !Object->HasField(TEXT("internal_wallet"))
 			&& !Object->HasField(TEXT("last_purchase_day"))
@@ -130,7 +154,6 @@ namespace
 			OutError = TEXT("Shop save section has no shop state.");
 			return false;
 		}
-
 		if (Object->HasField(TEXT("cached_dp")))
 		{
 			int32 CachedDP = 0;
@@ -206,7 +229,7 @@ bool UDAShopSubsystem::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) con
 	{
 		OutSection = MakeShared<FJsonObject>();
 	}
-	OutSection->SetNumberField(TEXT("version"), 1);
+	OutSection->SetNumberField(TEXT("version"), ShopSaveSectionVersion);
 	OutSection->SetNumberField(TEXT("cached_dp"), CachedDP);
 	OutSection->SetBoolField(TEXT("internal_wallet"), bInternalWallet);
 
@@ -354,6 +377,14 @@ bool UDAShopSubsystem::LoadPacks(FString& OutError)
 		Pack.Source = DAEconomyJson::ReadString(Entry, TEXT("source"));
 		Pack.Price = DAEconomyJson::ReadInt(Entry, TEXT("price"));
 		Pack.PackSize = DAEconomyJson::ReadInt(Entry, TEXT("pack_size"), 5);
+		if (Pack.PackSize > MaxShopPackSize)
+		{
+			// A hand-authored huge pack_size must not grow the slot list (and
+			// the later regeneration loop) without bound; clamp at load and let
+			// ValidateCatalogue report the oversized row.
+			Pack.PackSize = MaxShopPackSize;
+			Pack.bPackSizeClamped = true;
+		}
 		Pack.RestockDays = DAEconomyJson::ReadInt(Entry, TEXT("restock_days"), 7);
 		Pack.PurchaseLimit = DAEconomyJson::ReadInt(Entry, TEXT("purchase_limit"), 1);
 		Pack.Stock = DAEconomyJson::ReadInt(Entry, TEXT("stock"), 0);
@@ -467,18 +498,19 @@ bool UDAShopSubsystem::LoadPacks(FString& OutError)
 			}
 		}
 
-		if (Pack.Id.IsEmpty() || Pack.Name.IsEmpty())
+		const FString PackKey = DAEconomy::NormalizeIdKey(Pack.Id);
+		if (PackKey.IsEmpty() || Pack.Name.IsEmpty())
 		{
 			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Shop: skipping a pack with an empty id/name."));
 			continue;
 		}
-		if (PackIndexById.Contains(Pack.Id))
+		if (PackIndexById.Contains(PackKey))
 		{
 			UE_LOG(LogDuelAcademyIsland, Error, TEXT("Shop: duplicate pack id '%s' skipped."), *Pack.Id);
 			continue;
 		}
 
-		PackIndexById.Add(Pack.Id, Packs.Num());
+		PackIndexById.Add(PackKey, Packs.Num());
 		Packs.Add(MoveTemp(Pack));
 	}
 
@@ -492,7 +524,9 @@ bool UDAShopSubsystem::LoadPacks(FString& OutError)
 
 const FDAEPackDef* UDAShopSubsystem::FindPack(const FString& PackId) const
 {
-	const int32* Index = PackIndexById.Find(PackId);
+	// Pack ids fold like the deck/ante id spaces: the index is seeded with
+	// canonical keys and lookups normalize before comparing.
+	const int32* Index = PackIndexById.Find(DAEconomy::NormalizeIdKey(PackId));
 	return Index && Packs.IsValidIndex(*Index) ? &Packs[*Index] : nullptr;
 }
 
@@ -747,7 +781,7 @@ float UDAShopSubsystem::GetPackCompletionPercent(const FString& PackId) const
 
 int32 UDAShopSubsystem::GetLastPurchaseDay(const FString& PackId) const
 {
-	const int32* Day = LastPurchaseDay.Find(PackId);
+	const int32* Day = LastPurchaseDay.Find(DAEconomy::NormalizeIdKey(PackId));
 	return Day ? *Day : -1;
 }
 
@@ -763,7 +797,7 @@ int32 UDAShopSubsystem::GetNextAvailableDay(const FString& PackId) const
 
 int32 UDAShopSubsystem::GetPurchaseCount(const FString& PackId) const
 {
-	return PurchaseCounts.FindRef(PackId);
+	return PurchaseCounts.FindRef(DAEconomy::NormalizeIdKey(PackId));
 }
 
 int32 UDAShopSubsystem::GetRemainingStock(const FString& PackId) const
@@ -938,12 +972,13 @@ bool UDAShopSubsystem::GetPackView(const FString& PackId, FDAEPackView& OutView)
 
 void UDAShopSubsystem::MarkPurchased(const FString& PackId)
 {
+	const FString PackKey = DAEconomy::NormalizeIdKey(PackId);
 	const FDAEUnlockContext Context = GetUnlockContext();
 	if (Context.DayNumber >= 0)
 	{
-		LastPurchaseDay.Add(PackId, Context.DayNumber);
+		LastPurchaseDay.Add(PackKey, Context.DayNumber);
 	}
-	int32& Count = PurchaseCounts.FindOrAdd(PackId);
+	int32& Count = PurchaseCounts.FindOrAdd(PackKey);
 	Count = static_cast<int32>(FMath::Clamp<int64>(
 		static_cast<int64>(Count) + 1, 0, TNumericLimits<int32>::Max()));
 }
@@ -1010,6 +1045,13 @@ bool UDAShopSubsystem::PurchasePack(const FString& PackId, int32 Seed, FDAEPurch
 
 	MarkPurchased(PackId);
 
+	// DASaveGame.h documents "purchases" as an autosave trigger; only a
+	// successful purchase saves (blocked/refunded purchases must not).
+	if (UDAProfileSubsystem* Profile = GI ? GI->GetSubsystem<UDAProfileSubsystem>() : nullptr)
+	{
+		Profile->RequestProgressionAutosave(TEXT("shop_purchase"));
+	}
+
 	OutResult.bPurchased = true;
 	OutResult.Block = EDAEPurchaseBlock::None;
 	OutResult.Open = OpenResult;
@@ -1062,6 +1104,10 @@ TArray<FString> UDAShopSubsystem::ValidateCatalogue() const
 		if (Pack.Stock < 0) Issues.Add(FString::Printf(TEXT("Pack '%s' has negative stock."), *Pack.Id));
 		if (Pack.DuplicateDPPerCard < 0) Issues.Add(FString::Printf(TEXT("Pack '%s' has negative duplicate DP."), *Pack.Id));
 		if (Pack.Slots.Num() != Pack.PackSize) Issues.Add(FString::Printf(TEXT("Pack '%s' slot count %d != pack size %d."), *Pack.Id, Pack.Slots.Num(), Pack.PackSize));
+		if (Pack.bPackSizeClamped)
+		{
+			Issues.Add(FString::Printf(TEXT("Pack '%s' pack_size exceeded the load-time maximum %d and was clamped."), *Pack.Id, MaxShopPackSize));
+		}
 		if (!Pack.HasAnyPool()) Issues.Add(FString::Printf(TEXT("Pack '%s' has no pools."), *Pack.Id));
 		if (Pack.bAllCards && Pack.Pools.Num() == 0)
 		{
@@ -1182,7 +1228,7 @@ TArray<FString> UDAShopSubsystem::ValidateCatalogue() const
 FString UDAShopSubsystem::ExportStateJson() const
 {
 	const TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
-	Root->SetNumberField(TEXT("version"), 1);
+	Root->SetNumberField(TEXT("version"), ShopSaveSectionVersion);
 	Root->SetNumberField(TEXT("cached_dp"), CachedDP);
 	Root->SetBoolField(TEXT("internal_wallet"), bInternalWallet);
 
@@ -1238,22 +1284,12 @@ bool UDAShopSubsystem::ImportStateJson(const FString& Json, FString& OutError)
 	LastPurchaseDay = MoveTemp(NewLast);
 	PurchaseCounts = MoveTemp(NewCounts);
 	CachedDP = FMath::Max(0, NewCachedDP);
-	if (Object->HasField(TEXT("internal_wallet")))
-	{
-		Object->TryGetBoolField(TEXT("internal_wallet"), bInternalWallet);
-	}
-	if (bInternalWallet)
-	{
-		GetDPHandler = nullptr;
-		SpendDPHandler = nullptr;
-		CreditDPHandler = nullptr;
-	}
-	else if (!GetDPHandler || !SpendDPHandler || !CreditDPHandler)
-	{
-		// A save written with A02's wallet needs all three handlers. Without
-		// them the cached fallback wallet remains authoritative.
-		bInternalWallet = true;
-	}
+	// The saved internal_wallet flag only records the wallet state at write
+	// time. A session that has already registered A02's wallet handlers keeps
+	// them regardless of the flag: a legacy `internal_wallet: true` row must
+	// not detach the shop from the profile wallet after a Continue. Only fall
+	// back when the handlers are genuinely absent.
+	bInternalWallet = !(GetDPHandler && SpendDPHandler && CreditDPHandler);
 	OnShopChanged.Broadcast();
 	return true;
 }
@@ -1278,35 +1314,31 @@ bool UDAShopSubsystem::ApplySaveData(const FDAEShopSaveData& Data, FString& OutE
 	}
 
 	LastPurchaseDay.Reset();
+	// Fold keys so lookups match FindPack's canonical pack ids. First entry
+	// wins when two saved keys collide case-insensitively.
 	for (const TPair<FString, int32>& Pair : Data.LastPurchaseDay)
 	{
-		if (!Pair.Key.IsEmpty() && Pair.Value >= 0)
+		const FString PackKey = DAEconomy::NormalizeIdKey(Pair.Key);
+		if (!PackKey.IsEmpty() && Pair.Value >= 0 && !LastPurchaseDay.Contains(PackKey))
 		{
-			LastPurchaseDay.Add(Pair.Key, Pair.Value);
+			LastPurchaseDay.Add(PackKey, Pair.Value);
 		}
 	}
 	PurchaseCounts.Reset();
 	for (const TPair<FString, int32>& Pair : Data.PurchaseCounts)
 	{
-		if (!Pair.Key.IsEmpty() && Pair.Value >= 0)
+		const FString PackKey = DAEconomy::NormalizeIdKey(Pair.Key);
+		if (!PackKey.IsEmpty() && Pair.Value >= 0 && !PurchaseCounts.Contains(PackKey))
 		{
-			PurchaseCounts.Add(Pair.Key, Pair.Value);
+			PurchaseCounts.Add(PackKey, Pair.Value);
 		}
 	}
 	CachedDP = FMath::Max(0, Data.CachedDP);
-	bInternalWallet = Data.bInternalWallet;
-	if (bInternalWallet)
-	{
-		GetDPHandler = nullptr;
-		SpendDPHandler = nullptr;
-		CreditDPHandler = nullptr;
-	}
-	else if (!GetDPHandler || !SpendDPHandler || !CreditDPHandler)
-	{
-		// The save expected A02's wallet; if it has not registered yet, keep the
-		// cached DP intact and leave the fallback active until SetWalletHandlers.
-		bInternalWallet = true;
-	}
+	// Same wallet rule as ImportStateJson (E4): registered A02 handlers win
+	// over the saved flag; the fallback wallet is only authoritative while the
+	// handlers are genuinely absent (SetWalletHandlers wired by A02 comes
+	// later in that case and flips the shop back after its own Continue path).
+	bInternalWallet = !(GetDPHandler && SpendDPHandler && CreditDPHandler);
 	OnShopChanged.Broadcast();
 	return true;
 }

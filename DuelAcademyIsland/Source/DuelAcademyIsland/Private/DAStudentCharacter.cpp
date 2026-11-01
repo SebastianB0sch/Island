@@ -92,6 +92,11 @@ void ADAStudentCharacter::PawnClientRestart()
 	// and the interaction target belongs to the old view.
 	bSprinting = false;
 	FocusedInteractable.Reset();
+	// W5: a mid-deck-select restart (possession change, slot reload) must not
+	// walk out with the duel disk raised; CloseDuel clears it normally, but
+	// restart happens outside that flow.
+	bDuelPose = false;
+	bManualDuelPose = false;
 }
 
 // ------------------------------------------------------------------------ input setup
@@ -149,17 +154,12 @@ void ADAStudentCharacter::CreateInput()
 	Map(MapAction, EKeys::M);
 	Map(MapAction, EKeys::Tab);
 	Map(MapAction, EKeys::Gamepad_Special_Right);
-
-	UInputAction* Up = MakeAction(TEXT("MenuUp"), VT::Boolean);
-	Map(Up, EKeys::Up);
-	Map(Up, EKeys::Gamepad_DPad_Up);
-	UInputAction* Down = MakeAction(TEXT("MenuDown"), VT::Boolean);
-	Map(Down, EKeys::Down);
-	Map(Down, EKeys::Gamepad_DPad_Down);
-	UInputAction* Select = MakeAction(TEXT("MenuSelect"), VT::Boolean);
-	Map(Select, EKeys::Enter);
-	Map(Select, EKeys::Gamepad_FaceButton_Right);
-	Map(MakeAction(TEXT("Click"), VT::Boolean), EKeys::LeftMouseButton);
+	// Deliberately no Enhanced Input actions for Up/Down/Enter/click here: the
+	// island map owns its menu navigation and click travel by polling keys in
+	// ADAHUD::Tick (the bMapOpen && !bHelpOpen block at ADAHUD.cpp:1449), the
+	// same pattern the duel UI uses, because GameAndUI input mode can swallow
+	// those bindings. Do not re-introduce enhanced-menu handlers here - that
+	// was the pre-three-pass double-owner bug.
 
 	Map(MakeAction(TEXT("Jacket"), VT::Boolean), EKeys::J);
 	Map(MakeAction(TEXT("DuelDisk"), VT::Boolean), EKeys::F);
@@ -236,16 +236,30 @@ ADAHUD* ADAStudentCharacter::GetDAHUD() const
 	return PC ? Cast<ADAHUD>(PC->GetHUD()) : nullptr;
 }
 
-bool ADAStudentCharacter::IsDuelOpen() const
-{
-	const ADAHUD* HUD = GetDAHUD();
-	return HUD && HUD->IsDuelOpen();
-}
-
 bool ADAStudentCharacter::IsMovementBlocked() const
 {
 	const ADAHUD* HUD = GetDAHUD();
 	return HUD && (HUD->IsDuelOpen() || HUD->IsMapOpen() || HUD->IsDialogueOpen() || HUD->IsPDAOpen() || HUD->IsTitleOpen() || HUD->IsGameplayUIOpen());
+}
+
+bool ADAStudentCharacter::WorldInputAllowedFor(bool bDuelOpen, bool bMapOpen, bool bDialogueOpen, bool bPDAOpen,
+	bool bTitleOpen, bool bGameplayUIOpen, bool bHelpOpen)
+{
+	// U1: exactly ADAHUD's modal set. Help sits on top of the map and blocked
+	// screens the same way, so one flat "any modal wins" test covers U2's
+	// map/help leaks too. A missing HUD keeps the world playable.
+	return !(bDuelOpen || bMapOpen || bDialogueOpen || bPDAOpen || bTitleOpen || bGameplayUIOpen || bHelpOpen);
+}
+
+bool ADAStudentCharacter::IsWorldInputAllowed() const
+{
+	const ADAHUD* HUD = GetDAHUD();
+	if (!HUD)
+	{
+		return true;
+	}
+	return WorldInputAllowedFor(HUD->IsDuelOpen(), HUD->IsMapOpen(), HUD->IsDialogueOpen(), HUD->IsPDAOpen(),
+		HUD->IsTitleOpen(), HUD->IsGameplayUIOpen(), HUD->IsHelpOpen());
 }
 
 // ------------------------------------------------------------------------ movement / camera
@@ -327,7 +341,7 @@ void ADAStudentCharacter::OnSprintStop(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnInteract(const FInputActionValue& V)
 {
-	if (IsMovementBlocked())
+	if (!IsWorldInputAllowed())
 	{
 		return;
 	}
@@ -356,69 +370,20 @@ void ADAStudentCharacter::OnInteract(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnMap(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	// The map's own M/Tab toggle must stay reachable while the map is open, but
+	// every other modal (help included) wins first; HUD::ToggleMap re-checks.
+	ADAHUD* HUD = GetDAHUD();
+	if (!HUD || HUD->IsDuelOpen() || HUD->IsHelpOpen() || HUD->IsDialogueOpen()
+		|| HUD->IsPDAOpen() || HUD->IsTitleOpen() || HUD->IsGameplayUIOpen())
 	{
 		return;
 	}
-	if (ADAHUD* HUD = GetDAHUD())
-	{
-		HUD->ToggleMap();
-	}
-}
-
-void ADAStudentCharacter::OnMenuUp(const FInputActionValue& V)
-{
-	if (ADAHUD* HUD = GetDAHUD())
-	{
-		HUD->MoveMapSelection(-1);
-	}
-}
-
-void ADAStudentCharacter::OnMenuDown(const FInputActionValue& V)
-{
-	if (ADAHUD* HUD = GetDAHUD())
-	{
-		HUD->MoveMapSelection(1);
-	}
-}
-
-void ADAStudentCharacter::OnMenuSelect(const FInputActionValue& V)
-{
-	if (ADAHUD* HUD = GetDAHUD())
-	{
-		if (HUD->IsMapOpen())
-		{
-			if (ADALocationVolume* Zone = HUD->GetSelectedZone())
-			{
-				HUD->ToggleMap();
-				FastTravelTo(Zone);
-			}
-		}
-	}
-}
-
-void ADAStudentCharacter::OnClick(const FInputActionValue& V)
-{
-	if (IsDuelOpen())
-	{
-		return;
-	}
-	if (ADAHUD* HUD = GetDAHUD())
-	{
-		if (HUD->IsMapOpen())
-		{
-			if (ADALocationVolume* Zone = HUD->PickZoneUnderCursor())
-			{
-				HUD->ToggleMap();
-				FastTravelTo(Zone);
-			}
-		}
-	}
+	HUD->ToggleMap();
 }
 
 void ADAStudentCharacter::OnJacket(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (!IsWorldInputAllowed())
 	{
 		return;
 	}
@@ -438,7 +403,7 @@ void ADAStudentCharacter::OnJacket(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnDuelDisk(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (!IsWorldInputAllowed())
 	{
 		return;
 	}
@@ -447,11 +412,17 @@ void ADAStudentCharacter::OnDuelDisk(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnHelp(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	// F1/H stays togglable while help itself is open (otherwise the overlay
+	// could only be closed by Escape), so this handler keeps the movement
+	// gate instead of IsWorldInputAllowed(): every real modal still blocks
+	// the toggle, help merely does not block its own dismissal.
+	(void)V;
+	if (IsMovementBlocked())
 	{
 		return;
 	}
-	if (ADAHUD* HUD = GetDAHUD())
+	ADAHUD* HUD = GetDAHUD();
+	if (HUD)
 	{
 		HUD->ToggleHelp();
 	}
@@ -459,7 +430,7 @@ void ADAStudentCharacter::OnHelp(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimePause(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (!IsWorldInputAllowed())
 	{
 		return;
 	}
@@ -474,7 +445,7 @@ void ADAStudentCharacter::OnTimePause(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeFaster(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (!IsWorldInputAllowed())
 	{
 		return;
 	}
@@ -489,7 +460,7 @@ void ADAStudentCharacter::OnTimeFaster(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeSlower(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (!IsWorldInputAllowed())
 	{
 		return;
 	}
@@ -504,7 +475,7 @@ void ADAStudentCharacter::OnTimeSlower(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeSkip(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (!IsWorldInputAllowed())
 	{
 		return;
 	}
@@ -539,6 +510,17 @@ void ADAStudentCharacter::SetDorm(EDADorm NewDorm)
 EDADorm ADAStudentCharacter::GetDorm() const
 {
 	return Avatar ? Avatar->GetDorm() : EDADorm::Slifer;
+}
+
+void ADAStudentCharacter::NotifyTeleportArrived()
+{
+	// Pinned cross-workstream contract #2 (WS-05 calls this from
+	// DAInteriorPortal::ApplyArrival): strictly focus-clearing. The
+	// dependency view belongs to the departure point, so drop it and reset
+	// the focus poll timer so the next UI tick re-acquires at the arrival
+	// point. Never teleports, never changes movement or input modes.
+	FocusedInteractable.Reset();
+	FocusTimer = 0.f;
 }
 
 void ADAStudentCharacter::FastTravelTo(ADALocationVolume* Zone)

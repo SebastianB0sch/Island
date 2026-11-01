@@ -608,7 +608,8 @@ class Layout:
         colour_path = os.path.join(C.OUT_TEXTURES, "T_TerrainColor.png")
         if not os.path.exists(colour_path):
             raise FileNotFoundError(f"{colour_path} missing - run the textures and terrain stages first")
-        col = np.asarray(Image.open(colour_path).convert("RGB")).astype(np.float32) / 255.0
+        with Image.open(colour_path) as colour:
+            col = np.asarray(colour.convert("RGB")).astype(np.float32) / 255.0
         from scipy import ndimage
         hz = ndimage.zoom(h, size / h.shape[0], order=1)[:size, :size]
         cz = ndimage.zoom(col, (size / col.shape[0], size / col.shape[1], 1), order=1)[:size, :size]

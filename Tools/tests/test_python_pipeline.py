@@ -1,8 +1,10 @@
 """Focused regression tests for the Python pipeline helpers.
 
 These cover the gate behaviour that is easy to break without touching data:
-schema type typos, check/finding aggregation, duplicate JSON keys, and stable
-report writing. Run with:
+schema type typos, check/finding aggregation, duplicate JSON keys, stable
+report writing, cast-manifest merges (partial builds), VRM/glTF parsing under
+corruption, the stamped terrain cache, the atomic WAV writer, gltf-transform
+subprocess handling, and the build_island stage dependency guard. Run with:
 
     python -m unittest discover -s Tools/tests -v
 """
@@ -10,11 +12,17 @@ report writing. Run with:
 from __future__ import annotations
 
 import json
+import math
 import os
+import shutil
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
+import wave
+from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
 from pathlib import Path
 from unittest import mock
 
@@ -36,6 +44,10 @@ import generate_puzzles  # noqa: E402
 from dai import atomic, cache  # noqa: E402
 from dai import config as pipeline_config  # noqa: E402
 from dai import jsonio  # noqa: E402
+from dai.anime import manifest, vrm  # noqa: E402
+from dai.anime.vrm import alpha_modes, read_vrm, target_names  # noqa: E402
+from dai import audio  # noqa: E402
+import numpy as np  # noqa: E402
 from duel_academy import asset_paths  # noqa: E402
 
 
@@ -414,6 +426,427 @@ class CastCleanupTests(unittest.TestCase):
             self.assertNotIn(b"\r\n", data)
             self.assertEqual(json.loads(data)["assets"], ["SK_Anime_A"])
             self.assertEqual(sorted(p.name for p in path.parent.iterdir()), ["cast_assets.json"])
+
+
+# ---------------------------------------------------------------------------
+# Blender-dependent modules are unit-tested with stub bpy / bmesh / mathutils:
+# dai.thirdparty only touches them inside function bodies, so an empty module
+# object suffices for import.  Nothing is stubbed when a real bpy wheel exists.
+def _install_blender_stubs() -> None:
+    import importlib.util
+    import types
+
+    if "bpy" in sys.modules or importlib.util.find_spec("bpy") is not None:
+        return
+    for name in ("bpy", "bmesh"):
+        sys.modules.setdefault(name, types.ModuleType(name))
+    module = sys.modules.setdefault("mathutils", types.ModuleType("mathutils"))
+
+    def stub(name_attr):
+        class _NeverCall:
+            def __call__(self, *args, **kwargs):
+                raise AssertionError(f"mathutils.{name_attr} used inside a unit test")
+        return _NeverCall()
+
+    for attr in ("Euler", "Matrix", "Vector"):
+        if not hasattr(module, attr):
+            setattr(module, attr, stub(attr))
+
+
+def _load_build_island_module():
+    """Tools/build_island.py imported without the dai package tree executing."""
+    import importlib.util
+
+    path = TOOLS / "build_island.py"
+    spec = importlib.util.spec_from_file_location("python_pipeline_build_island", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+class _StubbedThirdpartyMixin:
+    """Mixin loading dai.thirdparty with the Blender stubs installed."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        _install_blender_stubs()
+        from dai import thirdparty
+        cls.tp = thirdparty
+
+
+class MergePartialManifestTests(unittest.TestCase):
+    """G1: a partial (only=...) cast build must publish the FULL manifest."""
+
+    @staticmethod
+    def full_cast() -> dict:
+        return {
+            "player": "jaden",
+            "groups": {
+                "Proc": {
+                    "base_mesh": {"name": "SK_Anime_StudentM1", "file": "Meshes/Characters/Anime/SK_Anime_StudentM1.fbx"},
+                    "anims": {"Idle": {"name": "A_Anime_Proc_Idle"}},
+                },
+                "VroidC": {
+                    "anims": {"Idle": {"name": "A_Anime_VroidC_Idle"}},
+                    "duel_disk": {"name": "SK_Anime_VroidC_DuelDisk", "file": "Meshes/Characters/Anime/SK_Anime_VroidC_DuelDisk.fbx"},
+                },
+            },
+            "meshes": {
+                "student_m1": {"name": "SK_Anime_StudentM1", "group": "Proc"},
+                "jaden": {"name": "SK_Anime_Jaden", "group": "VroidC", "file": "Meshes/Characters/Anime/SK_Anime_Jaden.fbx"},
+                "alexis": {"name": "SK_Anime_Alexis", "group": "VroidC", "file": "Meshes/Characters/Anime/SK_Anime_Alexis.fbx"},
+            },
+            "materials": {"M_Anime_StudentM1_Hair": {"kind": "toon"}, "M_Anime_Jaden_Top": {"kind": "toon"}},
+        }
+
+    def test_subset_build_leaves_the_full_set_represented(self) -> None:
+        previous = self.full_cast()
+        rebuilt = {
+            "player": "jaden",
+            "groups": {"VroidC": {"anims": {"Idle": {"name": "A_Anime_VroidC_Idle_R" }},
+                                  "duel_disk": {"name": "SK_Anime_VroidC_DuelDisk", "file": "Meshes/Characters/Anime/SK_Anime_VroidC_DuelDisk.fbx"}}},
+            "meshes": {"jaden": {"name": "SK_Anime_Jaden", "group": "VroidC",
+                                 "file": "Meshes/Characters/Anime/SK_Anime_Jaden_2.fbx"}},
+            "materials": {"M_Anime_Jaden_Top": {"kind": "toon", "fill": 0.5}},
+        }
+        merged = manifest.merge_partial_manifests(previous, rebuilt)
+
+        # no member dropped: the importer's stale-cast cleanup sees the whole cast
+        self.assertEqual(set(merged["meshes"]), {"student_m1", "jaden", "alexis"})
+        self.assertEqual(set(merged["groups"]), {"Proc", "VroidC"})
+        # rebuilt entries win
+        self.assertEqual(merged["meshes"]["jaden"]["file"], "Meshes/Characters/Anime/SK_Anime_Jaden_2.fbx")
+        self.assertEqual(merged["groups"]["VroidC"]["anims"]["Idle"]["name"], "A_Anime_VroidC_Idle_R")
+        # untouched members + their materials survive untouched
+        self.assertEqual(merged["meshes"]["student_m1"], previous["meshes"]["student_m1"])
+        self.assertEqual(merged["meshes"]["alexis"], previous["meshes"]["alexis"])
+        self.assertEqual(merged["groups"]["Proc"], previous["groups"]["Proc"])
+        self.assertEqual(merged["materials"],
+                         {**previous["materials"], **rebuilt["materials"]})
+        # extra top-level keys / player come from the newer document
+        self.assertEqual(merged["player"], "jaden")
+
+    def test_unreadable_previous_document_falls_back_to_the_rebuild(self) -> None:
+        previous = "corrupt"
+        subset = {"meshes": {"k": {"name": "SK_Anime_K", "group": "Proc"}}}
+        merged = manifest.merge_partial_manifests(previous, subset)
+        self.assertEqual(merged, subset)
+
+    def test_non_object_subset_is_refused(self) -> None:
+        with self.assertRaises(TypeError):
+            manifest.merge_partial_manifests({"meshes": {}}, 42)
+
+    def test_inputs_are_neither_mutated(self) -> None:
+        previous = self.full_cast()
+        rebuilt = {"meshes": {"jaden": {"name": "SK_Anime_Jaden2", "group": "VroidC"}}}
+        manifest.merge_partial_manifests(previous, rebuilt)
+        self.assertEqual(len(previous["meshes"]), 3)
+        self.assertEqual(len(rebuilt["meshes"]), 1)
+
+    def test_extra_top_level_keys_are_preserved(self) -> None:
+        merged = manifest.merge_partial_manifests({"version": 3, "groups": {}},
+                                                  {"version": 4, "meshes": {}})
+        self.assertEqual(merged["version"], 4)   # subset key wins
+        self.assertEqual(merged["groups"], {})
+        self.assertEqual(merged["meshes"], {})
+
+
+class VrmParseTests(unittest.TestCase):
+    """T6: corrupt VRM / glTF manifests must yield safe empties, not exceptions."""
+
+    @staticmethod
+    def payload(document) -> bytes:
+        return _glb_bytes(json.dumps(document).encode("utf-8"))
+
+    def _document(self, **overrides) -> dict:
+        doc = {
+            "nodes": [{"name": "Root"}, {"name": "Hips"}, {"name": "UpperArm_L"}],
+            "materials": [{"name": "Top", "alphaMode": "OPAQUE"}, {"name": "Hair", "alphaMode": "MASK"}],
+            "extensions": {
+                "VRMC_vrm": {"humanoid": {"humanBones": {"hips": {"node": 1},
+                                                         "leftUpperArm": {"node": 2}}}},
+            },
+        }
+        doc.update(overrides)
+        return doc
+
+    def test_valid_vrm_1_humanoid_map(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "model.vrm"
+            path.write_bytes(self.payload(self._document()))
+            self.assertEqual(read_vrm(str(path)), (1, {"hips": "Hips", "leftUpperArm": "UpperArm_L"}))
+
+    def test_valid_vrm_0_humanoid_map(self) -> None:
+        doc = self._document(extensions={"VRM": {"humanoid": {"humanBones": [
+            {"bone": "hips", "node": 1}, {"bone": "leftUpperArm", "node": 2}]}}})
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "model.vrm"
+            path.write_bytes(self.payload(doc))
+            self.assertEqual(target_names(str(path)), {})
+            self.assertEqual(read_vrm(str(path)), (0, {"hips": "Hips", "leftUpperArm": "UpperArm_L"}))
+            self.assertEqual(alpha_modes(str(path)), {"Top": "OPAQUE", "Hair": "MASK"})
+
+    def test_vrm_0_blend_mode_overrides_alpha_mode(self) -> None:
+        doc = self._document(extensions={"VRM": {
+            "materialProperties": [{"name": "Top", "floatProperties": {"_BlendMode": 1}},
+                                   {"name": "Hair", "floatProperties": {"_BlendMode": 2}}],
+            "humanoid": {"humanBones": []}}})
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "model.vrm"
+            path.write_bytes(self.payload(doc))
+            self.assertEqual(alpha_modes(str(path)), {"Top": "MASK", "Hair": "BLEND"})
+
+    def test_corrupt_manifests_return_safe_empties(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(alpha_modes(str(Path(tmp) / "absent.glb")), {})
+            self.assertEqual(read_vrm(str(Path(tmp) / "absent.glb")), (None, {}))
+            cases = [
+                {"nodes": "hunig"},
+                {"nodes": [{"no_name": 1}], "extensions": {"VRMC_vrm": {"humanoid": {"humanBones": {"hips": {"node": 0}}}}}},
+                {"nodes": [{"name": "A"}], "extensions": {"VRMC_vrm": {"humanoid": {"humanBones": {"hips": {"node": 42}}}}}},
+                {"nodes": [{"name": "A"}], "extensions": {"VRMC_vrm": {"humanoid": {"humanBones": {"hips": 1}}}}},
+                {"nodes": [{"name": "A"}], "extensions": {"VRM": "hunig"}},
+                {"nodes": [{"name": "A"}], "extensions": {"VRM": {"humanoid": {"humanBones": [{"bone": "hips"}, 1]}}}},
+                {"nodes": [{"name": "A"}], "extensions": {"VRM": {"humanoid": {"humanBones": [{"bone": "hips", "node": True}]}}}},
+            ]
+            for i, doc in enumerate(cases):
+                path = Path(tmp) / f"case_{i}.vrm"
+                path.write_bytes(self.payload(doc))
+                with self.subTest(case=i):
+                    version, human = read_vrm(str(path))
+                    self.assertIn(version, (None, 0, 1))
+                    self.assertTrue(all(isinstance(name, str) for name in human.values()))
+                    self.assertEqual(alpha_modes(str(path)), {})
+                    self.assertEqual(target_names(str(path)), {})
+
+    def test_corrupt_glb_bytes_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            for blob in (b"", b"glTF", b"glTF" + b"0" * 30, self.payload({"materials": [{"no_name": 1}]})[:-4]):
+                path = Path(tmp) / "in.vrm"
+                path.write_bytes(blob)
+                self.assertEqual(read_vrm(str(path)), (None, {}), blob[:8])
+                self.assertEqual(alpha_modes(str(path)), {})
+
+    def test_target_names_are_validated(self) -> None:
+        doc = self._document(meshes=[
+            {"name": "Face", "extras": {"targetNames": ["Fcl_BRW_Angry"]}},
+            {"name": "Body.001", "primitives": [{"extras": {"targetNames": ["A", "B"]}}]},
+            {"name": "Broken", "extras": {"targetNames": "no"}},
+            {"name": "Empty", "primitives": "no"},
+            {"name": "Intish", "extras": {"targetNames": [3]}},
+        ])
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "model.vrm"
+            path.write_bytes(self.payload(doc))
+            self.assertEqual(target_names(str(path)), {
+                "Face": ["Fcl_BRW_Angry"], "Body": ["A", "B"],
+            })
+
+
+class StampedCacheTests(unittest.TestCase):
+    """T7: terrain *.npy caches are stamped on write and refused on read."""
+
+    def _require(self, cache_dir, *, fix="python Tools/build_island.py terrain"):
+        return cache.require_stamp(cache_dir, "terrain_cache.json",
+                                   {"field_res": 4, "world_size": 300.0},
+                                   ("height.npy", "slope.npy"),
+                                   subject="terrain caches", fix=fix)
+
+    def test_missing_stamp_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "height.npy").write_bytes(b"x")
+            with self.assertRaisesRegex(cache.StampedCacheError, "no terrain_cache\\.json stamp"):
+                self._require(tmp)
+
+    def test_mismatched_configuration_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ("height.npy", "slope.npy"):
+                (Path(tmp) / name).write_bytes(b"x")
+            jsonio.write_json(Path(tmp) / "terrain_cache.json",
+                              {"field_res": 2, "world_size": 200.0}, indent=1)
+            with self.assertRaises(cache.StampedCacheError) as caught:
+                self._require(tmp)
+            message = str(caught.exception)
+            self.assertIn("field_res=2", message)
+            self.assertIn("field_res=4", message)
+            self.assertIn("python Tools/build_island.py terrain", message)
+
+    def test_partial_cache_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "height.npy").write_bytes(b"x")     # slope.npy missing
+            jsonio.write_json(Path(tmp) / "terrain_cache.json",
+                              {"field_res": 4, "world_size": 300.0}, indent=1)
+            with self.assertRaisesRegex(cache.StampedCacheError, "slope\\.npy"):
+                self._require(tmp)
+
+    def test_valid_stamp_passes_and_returns_it(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ("height.npy", "slope.npy"):
+                (Path(tmp) / name).write_bytes(b"x")
+            jsonio.write_json(Path(tmp) / "terrain_cache.json",
+                              {"field_res": 4, "world_size": 300.0}, indent=1)
+            stamp = self._require(tmp)
+            self.assertEqual(stamp, {"field_res": 4, "world_size": 300.0})
+
+    def test_unreadable_stamp_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ("height.npy", "slope.npy", "terrain_cache.json"):
+                (Path(tmp) / name).write_bytes(b"not json")
+            with self.assertRaisesRegex(cache.StampedCacheError, "unreadable"):
+                self._require(tmp)
+
+
+class AudioWriterTests(unittest.TestCase):
+    """G4: the WAV writer publishes a valid 16-bit mono header and rolls back on failure."""
+
+    def test_write_produces_16bit_mono_wav_with_expected_loop_length(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "A_Test.wav"
+            frames = int(audio.SR * 0.06)
+            samples = np.sin(np.linspace(0.0, 2.0 * math.pi * 8.0, frames))
+            audio._write(str(path), samples)
+            with wave.open(str(path), "rb") as w:
+                self.assertEqual(w.getnchannels(), 1)
+                self.assertEqual(w.getsampwidth(), 2)
+                self.assertEqual(w.getframerate(), audio.SR)
+                self.assertEqual(w.getcomptype(), "NONE")
+                self.assertEqual(w.getnframes(), frames)   # loop length follows the duration
+            # atomic publish: no temp files next to the target
+            self.assertEqual([p.name for p in path.parent.iterdir()], ["A_Test.wav"])
+
+    def test_writer_failure_keeps_previous_file_and_leaves_no_temp(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "A_Test.wav"
+            audio._write(str(path), np.zeros(64))
+            before = path.read_bytes()
+            with mock.patch.object(audio.wave, "open", side_effect=OSError("no wave writer")):
+                with self.assertRaises(OSError):
+                    audio._write(str(path), np.ones(64))
+            self.assertEqual(path.read_bytes(), before)
+            self.assertEqual([p.name for p in path.parent.iterdir()], ["A_Test.wav"])
+
+
+class ThirdpartyToolTests(_StubbedThirdpartyMixin, unittest.TestCase):
+    """T3 / T4 / T13: gltf-transform runner + extracted-texture cache freshness."""
+
+    def test_candidate_list_is_portable_and_env_first(self) -> None:
+        candidates = self.tp.GLTF_TRANSFORM_CANDIDATES
+        self.assertEqual(candidates, [os.environ.get("GLTF_TRANSFORM", ""),
+                                      shutil.which("gltf-transform") or ""])
+        self.assertNotIn("/home/", " ".join(candidates))   # no personal tool path again
+
+    def test_decode_passes_a_timeout_and_fails_closed_on_a_hang(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "packed.glb"
+            source.write_bytes(b"meshopt")
+            tool = Path(tmp) / "gltf-transform.cmd"
+            tool.write_bytes(b"")
+            calls = {}
+
+            def hang(cmd, **kwargs):
+                calls.update(kwargs)
+                raise subprocess.TimeoutExpired(cmd, kwargs.get("timeout"))
+
+            with mock.patch.object(self.tp, "GLTF_TRANSFORM_CANDIDATES", [str(tool)]), \
+                    mock.patch.object(subprocess, "run", hang):
+                with self.assertRaises(RuntimeError) as caught:
+                    with redirect_stdout(StringIO()):
+                        self.tp._decode_meshopt(str(source))
+            self.assertEqual(calls.get("timeout"), self.tp.GLTF_TRANSFORM_TIMEOUT)
+            message = str(caught.exception)
+            self.assertIn("no working gltf-transform available", message)
+            self.assertRegex(message, r"timed out after \d+(\.\d+)? seconds")
+            self.assertRegex(message, r"\(\d+\.\ds\)")   # elapsed attempt is surfaced
+
+    def test_decode_success_caches_and_logs_the_tool(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            cache_root = Path(tmp) / "cache"
+            source = Path(tmp) / "packed.glb"
+            source.write_bytes(b"meshopt")
+            tool = Path(tmp) / "gltf-transform.cmd"
+            tool.write_bytes(b"")
+
+            def decode(cmd, **kwargs):
+                target = Path(cmd[3])
+                target.write_bytes(_glb_bytes(b"{}"))
+                return subprocess.CompletedProcess(cmd, 0)
+
+            expected = Path(cache.cache_file(str(cache_root / "decoded"), str(source), ".glb"))
+            with mock.patch.object(self.tp, "GLTF_TRANSFORM_CANDIDATES", [str(tool)]), \
+                    mock.patch.object(self.tp.C, "CACHE_DIR", str(cache_root)), \
+                    mock.patch.object(subprocess, "run", decode), \
+                    redirect_stdout(StringIO()) as out:
+                result = self.tp._decode_meshopt(str(source))
+            self.assertEqual(result, str(expected))
+            self.assertTrue(cache.is_glb(expected))
+            self.assertIn(str(tool), out.getvalue())   # which tool was used is logged
+
+    def _stub_image(self):
+        class _StubImage:
+            def __init__(self) -> None:
+                self.size = (2, 2)
+                self.pixels = [0.5] * 16     # 2x2 RGBA
+
+        return _StubImage()
+
+    def test_save_image_reuses_only_fresh_cache_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "model.vrm"
+            source.write_bytes(b"vrm payload")
+            cached = Path(tmp) / "T_X_Base.png"
+            cached.write_bytes(b"stale")
+            os.utime(source, (1_600_000_000, 1_600_000_000))
+            os.utime(cached, (1_500_000_000, 1_500_000_000))
+            result = self.tp._save_image(self._stub_image(), str(cached), fresh_against=str(source))
+            self.assertEqual(result, str(cached))
+            self.assertTrue(cache.is_fresh(cached, source))   # regenerated from the source image
+            self.assertEqual(cached.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+
+    def test_save_image_keeps_a_fresh_cache_entry_untouched(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "model.vrm"
+            source.write_bytes(b"vrm payload")
+            cached = Path(tmp) / "T_X_Base.png"
+            cached.write_bytes(b"cached-bytes")
+            os.utime(source, (1_500_000_000, 1_500_000_000))
+            os.utime(cached, (1_600_000_000, 1_600_000_000))
+            result = self.tp._save_image(self._stub_image(), str(cached), fresh_against=str(source))
+            self.assertEqual(result, str(cached))
+            self.assertEqual(cached.read_bytes(), b"cached-bytes")
+
+
+class StageDependencyTests(unittest.TestCase):
+    """G5: running a stage before its producer exits 2 with a stage hint."""
+
+    def test_missing_stage_input_is_an_exit_2_configuration_error(self) -> None:
+        module = _load_build_island_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(pipeline_config, "CACHE_DIR", str(Path(tmp) / "cache")), \
+                    mock.patch.object(pipeline_config, "OUT_DATA", str(Path(tmp) / "data")), \
+                    redirect_stdout(StringIO()), redirect_stderr(StringIO()) as err:
+                rc = module.main(["layout"])
+        self.assertEqual(rc, 2)
+        self.assertIn("run the terrain stage first", err.getvalue())
+        self.assertIn("height.npy", err.getvalue())
+
+    def test_producer_in_the_same_run_suppresses_the_requirement(self) -> None:
+        module = _load_build_island_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(pipeline_config, "CACHE_DIR", str(Path(tmp) / "cache")), \
+                    mock.patch.object(pipeline_config, "OUT_DATA", str(Path(tmp) / "data")):
+                self.assertEqual(module.missing_stage_inputs(["terrain", "layout", "meshes"]), [])
+        # without the producer, all of its outputs are required
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(pipeline_config, "CACHE_DIR", str(Path(tmp) / "cache")), \
+                    mock.patch.object(pipeline_config, "OUT_DATA", str(Path(tmp) / "data")):
+                problems = module.missing_stage_inputs(["meshes"])
+            self.assertEqual([(stage, producer) for stage, producer, _p in problems],
+                             [("meshes", "terrain"), ("meshes", "terrain")])
+
+    def test_standalone_stages_have_no_input_requirements(self) -> None:
+        module = _load_build_island_module()
+        self.assertEqual(module.missing_stage_inputs(["textures", "audio", "cast"]), [])
 
 
 if __name__ == "__main__":

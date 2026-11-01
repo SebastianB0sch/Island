@@ -5,6 +5,7 @@
 #include "DAInteriorPortal.h"
 #include "DAIslandManager.h"
 #include "DALocationVolume.h"
+#include "DACalendarSubsystem.h"
 #include "DANpcDirector.h"
 #include "Dom/JsonValue.h"
 #include "DuelAcademyIsland.h"
@@ -102,14 +103,7 @@ void UDAIslandSubsystem::Tick(float DeltaTime)
 		PendingWorldStateSeconds += DeltaTime;
 		if (!ApplyPendingWorldState() && PendingWorldStateSeconds >= WorldStateDirectorWaitSeconds)
 		{
-			UE_LOG(LogDuelAcademyIsland, Warning,
-				TEXT("World: NPC director did not appear after %.0f s; the saved schedule was not restored."),
-				WorldStateDirectorWaitSeconds);
-			// Portal and discovery state were already applied by the failed
-			// pass; drop the queued schedule instead of retrying forever.
-			PendingWorldState = FDAWorldSaveState();
-			bWorldStatePending = false;
-			PendingWorldStateSeconds = 0.f;
+			ExpirePendingWorldState();
 		}
 	}
 
@@ -118,6 +112,31 @@ void UDAIslandSubsystem::Tick(float DeltaTime)
 	{
 		ZonePollAccumulator = 0.f;
 		UpdateCurrentZone();
+
+		// W2: weekday/period cast bridge. Suppressed on the one poll that
+		// follows a pass of ApplyPendingWorldState materializing the saved
+		// NPC schedule (or holding it for a director) so the restored
+		// schedule is never double-applied. The pending queue may
+		// legitimately still hold unresolved portal ids (retry window);
+		// those do not touch the cast, so the bridge keeps running.
+		// The flag is consumed on read: exactly one poll is suppressed.
+		const bool bSuppressThisPoll = bScheduleBridgeSuppressTick;
+		bScheduleBridgeSuppressTick = false;
+		if (!bSuppressThisPoll)
+		{
+			if (bScheduleBridgeHoldPrev)
+			{
+				// Hold->resume edge, taken once: prime instead of re-applying
+				// what the restore already applied.
+				bScheduleBridgeHoldPrev = false;
+				bScheduleBridgePrimed = false;
+			}
+			UpdateScheduleBridge();
+		}
+		else
+		{
+			bScheduleBridgeHoldPrev = true;
+		}
 	}
 
 	// Expire timed messages.
@@ -572,6 +591,9 @@ bool UDAIslandSubsystem::ApplyPendingWorldState()
 		return true;
 	}
 
+	// W3: portals resolve what exists now and keep the rest queued. Every
+	// resolved entry already holds its saved flags (assignment is idempotent),
+	// so only the unresolved ids are retried on the next pass.
 	if (PendingWorldState.Portals.Num() > 0)
 	{
 		TArray<FDAPortalSaveState> States;
@@ -584,12 +606,54 @@ bool UDAIslandSubsystem::ApplyPendingWorldState()
 			State.bUsed = Entry.bUsed;
 			States.Add(MoveTemp(State));
 		}
-		ADAInteriorPortal::ApplySaveStates(GetWorld(), States);
+
+		TArray<FString> UnresolvedIds;
+		ADAInteriorPortal::ApplySaveStates(GetWorld(), States, &UnresolvedIds);
+		if (UnresolvedIds.Num() > 0)
+		{
+			// Keep exactly the ids whose actor does not exist yet (level still
+			// spawning, future streaming); the resolved rows are not re-run.
+			TArray<FDAWorldPortalSaveEntry> Remaining;
+			for (const FDAWorldPortalSaveEntry& Entry : PendingWorldState.Portals)
+			{
+				if (UnresolvedIds.Contains(Entry.PortalId))
+				{
+					Remaining.Add(Entry);
+				}
+			}
+			PendingWorldState.Portals = MoveTemp(Remaining);
+			UE_LOG(LogDuelAcademyIsland, Verbose,
+				TEXT("World: %d saved portal id(s) resolved to no live actor yet; queued for retry."),
+				UnresolvedIds.Num());
+		}
+		else
+		{
+			PendingWorldState.Portals.Reset();
+		}
 	}
 
 	if (PendingWorldState.bHasDiscoveredState)
 	{
-		RestoreDiscoveredLocationIds(PendingWorldState.Discovered);
+		// P4-10: merge into the live set instead of replacing it. The queue can
+		// apply after the zone poll already discovered the player's spawn zone
+		// this session; a replace here would wipe that discovery permanently
+		// because later saves re-export the reduced set.
+		int32 AddedCount = 0;
+		for (const FString& LocationId : PendingWorldState.Discovered)
+		{
+			if (!LocationId.IsEmpty() && !Discovered.Contains(LocationId))
+			{
+				Discovered.Add(LocationId);
+				++AddedCount;
+			}
+		}
+		if (AddedCount > 0)
+		{
+			UE_LOG(LogDuelAcademyIsland, Log,
+				TEXT("World: merged %d saved discovered location id(s) into the live set (%d total); same-frame discoveries are kept."),
+				AddedCount, Discovered.Num());
+		}
+		PendingWorldState.bHasDiscoveredState = false;
 	}
 
 	if (PendingWorldState.bHasNpcSchedule)
@@ -598,15 +662,125 @@ bool UDAIslandSubsystem::ApplyPendingWorldState()
 		if (!Director)
 		{
 			// The level may still be starting. Keep the queue; Tick retries.
+			bWorldStatePending = true;
+			// W2: suppress the schedule bridge on this pass; the slice is
+			// still queued and will apply on a later pass.
+			bScheduleBridgeSuppressTick = true;
 			return false;
 		}
 		Director->RestoreScheduleState(PendingWorldState.bNpcScheduleApplied,
 			PendingWorldState.ScheduleId, PendingWorldState.Weekday,
 			PendingWorldState.Period, PendingWorldState.ActiveEvent);
+		// Applied once: a later retry pass must not re-run the schedule
+		// (the no-schedule baseline branch is not idempotent across retries).
+		PendingWorldState.bHasNpcSchedule = false;
+		// W2: suppress the schedule bridge on this pass so a live calendar
+		// change cannot race the just-restored schedule into a double apply.
+		bScheduleBridgeSuppressTick = true;
 	}
 
-	bWorldStatePending = false;
+	bWorldStatePending = PendingWorldState.Portals.Num() > 0 || PendingWorldState.bHasNpcSchedule;
+	if (bWorldStatePending)
+	{
+		// Discovery state is applied atomically; never carry it into retries.
+		PendingWorldState.Discovered.Reset();
+		PendingWorldState.bHasDiscoveredState = false;
+		return false;
+	}
+
 	PendingWorldStateSeconds = 0.f;
 	PendingWorldState = FDAWorldSaveState();
 	return true;
+}
+
+void UDAIslandSubsystem::ExpirePendingWorldState()
+{
+	if (!bWorldStatePending)
+	{
+		return;
+	}
+
+	UE_LOG(LogDuelAcademyIsland, Warning,
+		TEXT("World: pending world state still unresolved after %.0f s (missing NPC director and/or portal actors); dropping the remainder."),
+		PendingWorldStateSeconds);
+	PendingWorldState = FDAWorldSaveState();
+	bWorldStatePending = false;
+	PendingWorldStateSeconds = 0.f;
+}
+
+void UDAIslandSubsystem::UpdateScheduleBridge()
+{
+	const UDACalendarSubsystem* Calendar = UDACalendarSubsystem::Get(this);
+	if (!Calendar)
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("[BRIDGE] no calendar"));
+		return;
+	}
+
+	const FString Weekday = Calendar->GetWeekdayName(Calendar->GetWeekday());
+	const FString Period = Calendar->GetPeriodName(Calendar->GetPeriod());
+
+	if (!bScheduleBridgePrimed)
+	{
+		// Baseline = the last cast alignment. The director's state IS that
+		// alignment whenever it has applied a schedule (its begin play, a
+		// restore, tests); only fall back to the calendar while no director
+		// has ever applied anything. Priming from the calendar here would
+		// treat the difference between the director's state and the current
+		// calendar moment as "no change" and silently swallow it.
+		if (ADANpcDirector* Director = ADANpcDirector::Get(this))
+		{
+			if (Director->HasAppliedSchedule())
+			{
+				bScheduleBridgePrimed = true;
+				ScheduleBridgeWeekday = Director->GetCurrentWeekday();
+				ScheduleBridgePeriod = Director->GetCurrentPeriod();
+				UE_LOG(LogTemp, Verbose,
+					TEXT("[BRIDGE] priming from director %s / %s"),
+					*ScheduleBridgeWeekday, *ScheduleBridgePeriod);
+				return;
+			}
+		}
+		bScheduleBridgePrimed = true;
+		ScheduleBridgeWeekday = Weekday;
+		ScheduleBridgePeriod = Period;
+		UE_LOG(LogTemp, Verbose, TEXT("[BRIDGE] priming from calendar %s / %s"), *Weekday, *Period);
+		return;
+	}
+
+	if (Weekday.Equals(ScheduleBridgeWeekday, ESearchCase::IgnoreCase)
+		&& Period.Equals(ScheduleBridgePeriod, ESearchCase::IgnoreCase))
+	{
+		// Unchanged combo: never re-apply an identical schedule.
+		return;
+	}
+
+	ScheduleBridgeWeekday = Weekday;
+	ScheduleBridgePeriod = Period;
+
+	ADANpcDirector* Director = ADANpcDirector::Get(this);
+	if (Director)
+	{
+		// A period change re-runs the director's CURRENT schedule id with the
+		// new weekday/period, so save-restored filters and story-pinned
+		// schedules keep their id. Event-only points keep following
+		// SetActiveEvent; a missing director is not an error (record the combo
+		// and let the first real application come from its owner).
+		Director->ApplySchedule(Director->GetCurrentScheduleId(), Weekday, Period);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("[BRIDGE] no director, combo recorded only"));
+	}
+}
+
+void UDAIslandSubsystem::NotifyScheduleApplied(const FString& Weekday, const FString& Period)
+{
+	// Re-baseline the bridge to the combo the just-applied cast represents.
+	bScheduleBridgePrimed = true;
+	ScheduleBridgeWeekday = Weekday;
+	ScheduleBridgePeriod = Period;
+	UE_LOG(LogTemp, Verbose,
+		TEXT("[ISLAND] bridge re-baselined from schedule apply %s / %s"),
+		*Weekday, *Period);
 }

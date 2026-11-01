@@ -78,6 +78,35 @@ namespace DAEconomyJson
 		return true;
 	}
 
+	/**
+	 * Save-section gate shared by the economy validators (E9). Sections with
+	 * no version field (oldest writers) or a version <= KnownVersion stay
+	 * loadable; a section declaring a higher version was produced by a newer
+	 * build and must be rejected instead of silently read. Returns false and
+	 * fills OutError on rejection or on a malformed/negative version value.
+	 */
+	inline bool RequireVersion(const TSharedPtr<FJsonObject>& Object, int32 KnownVersion, FString& OutError)
+	{
+		if (!Object.IsValid() || !Object->HasField(TEXT("version")))
+		{
+			return true;
+		}
+		int32 Version = 0;
+		if (!TryReadInt(Object->TryGetField(TEXT("version")), Version) || Version < 0)
+		{
+			OutError = TEXT("Save section has an invalid version value.");
+			return false;
+		}
+		if (Version > KnownVersion)
+		{
+			OutError = FString::Printf(
+				TEXT("Save section declares version %d, which is newer than the known version %d."),
+				Version, KnownVersion);
+			return false;
+		}
+		return true;
+	}
+
 	inline int32 ReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
 	{
 		const TSharedPtr<FJsonValue> Value = Object.IsValid() ? Object->TryGetField(Field) : nullptr;

@@ -1387,7 +1387,12 @@ void ADAHUD::Tick(float DeltaSeconds)
 	// Help is the top input layer over the map/gameplay while no modal screen
 	// is above it.  Escape/back closes only help and is consumed before the
 	// map key block can navigate, travel or close the map underneath.
-	if (bHelpOpen && !IsDuelOpen() && !IsPDAOpen() && !IsDialogueOpen()
+	// Owner decision (U2): help itself owns Escape. If a passive PDA somehow
+	// ended up pinned underneath help, that PDA never received input priority
+	// (help draws over it), so Escape closes the PDA first and then help; a
+	// real dialogue/duel/title/gameplay screen still wins and suppresses this
+	// branch entirely.
+	if (bHelpOpen && !IsDuelOpen() && !IsDialogueOpen()
 		&& !IsTitleOpen() && !IsGameplayUIOpen())
 	{
 		if (APlayerController* PC = GetOwningPlayerController())
@@ -1395,6 +1400,10 @@ void ADAHUD::Tick(float DeltaSeconds)
 			if (PC->WasInputKeyJustPressed(EKeys::Escape)
 				|| PC->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Right))
 			{
+				if (IsPDAOpen())
+				{
+					ClosePDA();
+				}
 				bHelpOpen = false;
 				return;
 			}
@@ -1403,7 +1412,11 @@ void ADAHUD::Tick(float DeltaSeconds)
 
 	// P is polled here (like the map keys) so it works in GameAndUI mode and
 	// does not need a new Enhanced Input action in the shared student pawn.
-	if (!IsDuelOpen() && !IsDialogueOpen() && !bGameplayUIWasOpen && !IsGameplayUIOpen())
+	// U2: the map and help must own their layer completely; polling P/B under
+	// either opened a hidden PDA (or shop) that nothing could close, and help
+	// pinning one on top of the map.
+	if (!IsDuelOpen() && !IsDialogueOpen() && !bGameplayUIWasOpen && !IsGameplayUIOpen()
+		&& !bMapOpen && !bHelpOpen)
 	{
 		if (APlayerController* PC = GetOwningPlayerController())
 		{

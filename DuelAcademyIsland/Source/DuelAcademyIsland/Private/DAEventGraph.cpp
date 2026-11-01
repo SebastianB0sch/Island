@@ -585,33 +585,29 @@ bool FDAEventGraph::EvaluateTrigger(const FDAEventDefinition& Event, const UDAPr
 	}
 
 	const FString Kind = StoryReadString(Event.Trigger, TEXT("type"));
-	if (Kind == TEXT("new_game"))
+	if (Kind.IsEmpty())
 	{
-		const bool bStarted = Profile && (Profile->GetFlag(TEXT("new_game")) || Profile->GetFlag(TEXT("new_game_started")));
-		if (!bStarted)
-		{
-			OutReason = TEXT("new game has not started");
-		}
-		return bStarted;
-	}
-	if (Kind == TEXT("date") || Kind == TEXT("flag") || Kind == TEXT("event") || Kind == TEXT("event_complete")
-		|| Kind == TEXT("weekday") || Kind == TEXT("period") || Kind == TEXT("exam_day"))
-	{
-		return EvaluateCondition(Event.Trigger, Profile, Calendar, OutReason);
-	}
-	if (Kind == TEXT("talk") || Kind == TEXT("always"))
-	{
+		// A genuinely empty trigger (no type field and no children) silently
+		// continues; the event is available whenever its requirements pass.
 		OutReason.Reset();
 		return true;
 	}
-	if (Kind.IsEmpty())
+	if (Kind == TEXT("talk") || Kind == TEXT("always"))
 	{
+		// Caller-driven admissions; NotifyTalkToNPC matches the NPC id before
+		// StartEvent, so the graph alone cannot gate these.
 		OutReason.Reset();
 		return true;
 	}
 
-	OutReason = FString::Printf(TEXT("unsupported trigger type '%s'"), *Kind);
-	return false;
+	// Everything else is part of the shared condition vocabulary (new_game,
+	// date, date_at_least, flag, event, counter, card, dorm, title,
+	// written_correct_percent, after_ending, random_chance, all/any
+	// composites, ...). Evaluate it with the condition evaluator instead of
+	// silently blocking the event: the old whitelist only covered a handful of
+	// kinds and made counter/card/date_at_least/after_ending/random_chance
+	// triggers unreachable.
+	return EvaluateCondition(Event.Trigger, Profile, Calendar, OutReason);
 }
 
 bool FDAEventGraph::EvaluateRequirements(const FDAEventDefinition& Event, const UDAProfileSubsystem* Profile,

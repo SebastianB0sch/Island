@@ -521,7 +521,7 @@ def build_terrain():
     try:
         world_m = float(C.load_json("layout.json")["world"]["size"]) / 100.0
     except Exception:  # noqa: BLE001 - layout.json is optional for a material-only rebuild
-        world_m = 3072.0
+        world_m = C.WORLD_SIZE_M   # Tools/dai/config.py WORLD_SIZE (see common.py)
     # large-scale brightness variation breaks up visible tiling
     var = g.tex("VariationNoise", T("T_Noise"), S_LIN, g.mul(uv, g.const(6.0)))
     var2 = g.tex("VariationNoise2", T("T_Noise"), S_LIN, g.mul(uv, g.const(41.0)), param=False)

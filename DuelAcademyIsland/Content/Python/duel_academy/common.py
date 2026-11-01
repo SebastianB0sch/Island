@@ -13,6 +13,14 @@ AUDIO_DIR = ROOT + "/Audio"
 MAP_PATH = ROOT + "/Maps/DuelAcademyIsland"
 GENERATED_TAG = "DA_Generated"
 
+# Gameplay constants shared by the editor scripts and the C++ module - keep in
+# sync on both sides (the Blender side's mirror is Tools/dai/config.py).
+# cm/s the Walk / Run clips cover at play rate 1 after import (UDAAvatarComponent)
+REF_SPEED = {"Walk": 300.0, "Run": 600.0}
+# Island edge length in metres: Tools/dai/config.py WORLD_SIZE, used as the
+# terrain-UV scale fallback when layout.json is not (re)built
+WORLD_SIZE_M = 3072.0
+
 
 def project_dir():
     return os.path.abspath(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir()))
@@ -79,13 +87,22 @@ def native_class(name):
     return cls
 
 
-def set_props(obj, **kwargs):
-    """set_editor_property for each kwarg; logs (doesn't raise) on failures."""
+def set_props(obj, strict=False, **kwargs):
+    """set_editor_property for each kwarg.
+
+    Failures are logged by default.  With ``strict=True`` the failure is logged -
+    and then re-raised: use it for gameplay-relevant properties where
+    silently keeping the engine default yields a broken actor (manager wiring,
+    collider / import flags), rather than decoration.
+    """
     for k, v in kwargs.items():
         try:
             obj.set_editor_property(k, v)
         except Exception as e:  # noqa: BLE001
             warn(f"could not set {type(obj).__name__}.{k}: {e}")
+            if strict:
+                raise RuntimeError(f"{type(obj).__name__}: could not set property {k} "
+                                   f"({v!r}): {e}") from e
 
 
 def lc(c, a=1.0):

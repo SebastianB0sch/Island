@@ -35,6 +35,11 @@ Docs/Integration/reports/validate*.json
 !Docs/Integration/reports/validate_baseline.json
 !Docs/Integration/reports/validate_strict.json
 
+# Generated canon validation report (only written through an explicit
+# --report path). The tracked copy is Docs/Canon/VALIDATION.md, refreshed
+# deliberately because its timestamp changes on every regeneration.
+Docs/Integration/reports/canon-validation.md
+
 # Packaged builds and staging
 Builds/
 

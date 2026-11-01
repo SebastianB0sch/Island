@@ -3,6 +3,7 @@
 #include "DANpcDirector.h"
 
 #include "Components/SceneComponent.h"
+#include "DAIslandSubsystem.h"
 #include "DANpcSpawnPoint.h"
 #include "DAStudentNPC.h"
 #include "DuelAcademyIsland.h"
@@ -215,6 +216,14 @@ void ADANpcDirector::ApplySchedule(const FString& ScheduleId, const FString& Wee
 	CurrentWeekday = Weekday;
 	CurrentPeriod = Period;
 
+	if (UWorld* World = GetWorld())
+	{
+		if (UDAIslandSubsystem* Island = World->GetSubsystem<UDAIslandSubsystem>())
+		{
+			Island->NotifyScheduleApplied(CurrentWeekday, CurrentPeriod);
+		}
+	}
+
 	OnScheduleApplied.Broadcast(ScheduleId, Weekday, Period);
 
 	TArray<FString> Ids;
@@ -258,6 +267,15 @@ void ADANpcDirector::ApplySchedule(const FString& ScheduleId, const FString& Wee
 		{
 			// Points can be occupied by an NPC spawned outside this map (or the
 			// active map can be stale after a level reload); re-adopt it.
+			// W6: adopting must not orphan the actor the map currently holds.
+			// If it is a different, still-valid NPC from this point's
+			// occupant, despawn it the way DespawnAtPoint resolves a mismatch.
+			AActor* Previous = ActiveNpcs.FindRef(Id).Get();
+			if (IsValid(Previous) && Previous != PointNpc)
+			{
+				OnNpcDespawned.Broadcast(Id, Previous);
+				Previous->Destroy();
+			}
 			ActiveNpcs.Add(Id, PointNpc);
 		}
 	}
@@ -431,6 +449,20 @@ bool ADANpcDirector::TeleportNpcToPoint(const FString& NpcId, const FString& Spa
 		return false;
 	}
 
+	// W7: the destination ends occupied by the teleported NPC. Release its
+	// previous occupant first (missing bookkeeping here let a later
+	// ApplySchedule spawn a second NPC at that point). Never route through
+	// DespawnAtPoint when the point already holds the teleported NPC itself;
+	// it would destroy the actor being moved.
+	AActor* PointOccupant = Point->GetSpawnedNpc();
+	AActor* MappedOccupant = ActiveNpcs.FindRef(SpawnPointId).Get();
+	const bool bDestOccupiedByOther = (IsValid(PointOccupant) && PointOccupant != Npc)
+		|| (!IsValid(PointOccupant) && IsValid(MappedOccupant) && MappedOccupant != Npc);
+	if (bDestOccupiedByOther)
+	{
+		DespawnAtPoint(SpawnPointId);
+	}
+
 	if (ACharacter* Character = Cast<ACharacter>(Npc))
 	{
 		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
@@ -447,6 +479,28 @@ bool ADANpcDirector::TeleportNpcToPoint(const FString& NpcId, const FString& Spa
 	{
 		Student->SetWanderHome(Npc->GetActorLocation());
 	}
+
+	// Release the departure point's claim so the NPC cannot stay double-booked
+	// (an ApplySchedule at the old point would otherwise re-adopt it there).
+	for (TPair<FString, TWeakObjectPtr<ADANpcSpawnPoint>>& Pair : SpawnPoints)
+	{
+		if (ADANpcSpawnPoint* OldPoint = Pair.Value.Get(); OldPoint && OldPoint != Point && OldPoint->GetSpawnedNpc() == Npc)
+		{
+			OldPoint->SetSpawnedNpc(nullptr);
+		}
+	}
+	for (TMap<FString, TWeakObjectPtr<AActor>>::TIterator It = ActiveNpcs.CreateIterator(); It; ++It)
+	{
+		if (It.Value().Get() == Npc && It.Key() != SpawnPointId)
+		{
+			It.RemoveCurrent();
+		}
+	}
+
+	// Record the destination per SpawnAtPoint semantics (point id -> NPC) so
+	// the schedule keeps a single, deterministic occupant.
+	ActiveNpcs.Add(SpawnPointId, Npc);
+	Point->SetSpawnedNpc(Npc);
 	return true;
 }
 

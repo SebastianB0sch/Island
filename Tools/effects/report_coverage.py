@@ -16,8 +16,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import effect_data as data
+from tooling import atomic
 
 RISK_KEYWORDS = [    ("negate", 5),
     ("control", 5),
@@ -633,8 +635,7 @@ def main(argv: list[str] | None = None) -> int:
     report = build_report()
     if not args.check:
         output = data.ROOT / "Docs" / "Effects" / "COVERAGE.md"
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(report, encoding="utf-8", newline="\n")
+        atomic.write_text(output, report)
         print(f"Wrote {output.relative_to(data.ROOT)}")
     else:
         print(report)

@@ -18,9 +18,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import effect_data as data
 import effect_patterns as patterns
+from tooling import atomic
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_effects import validate_json_schema  # noqa: E402
@@ -92,8 +94,10 @@ def write_payloads(payloads: list[dict], check: bool) -> tuple[int, int]:
                 f"refusing to overwrite existing script {path}; move it aside if it should be regenerated"
             )
         if not check:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(serialized, encoding="utf-8", newline="\n")
+            # Effect scripts are loaded by the engine; publish them through the
+            # atomic same-directory temp write so an interrupted run cannot
+            # leave a truncated script behind.
+            atomic.write_text(path, serialized)
         written += 1
     return written, unchanged
 

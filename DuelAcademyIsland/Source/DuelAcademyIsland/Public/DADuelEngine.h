@@ -145,6 +145,20 @@ struct FDuelVisualEvent
 	FString Text;
 };
 
+/**
+ * Optional target fields for FDuelEngine::EmitVisual (D6).  Attacker-style
+ * events need the target card and both zones; passing them through EmitVisual
+ * keeps every event on the capped VisualEvents retention path.
+ */
+struct FDuelVisualEventTargetInfo
+{
+	int32 TargetUid = 0;
+	int32 TargetCardId = 0;
+	int32 TargetZone = INDEX_NONE;
+	int32 Zone = INDEX_NONE;
+	bool bDirect = false;
+};
+
 struct FDuelAttackTarget
 {
 	int32 Uid = 0;
@@ -408,6 +422,12 @@ private:
 
 	// ---- setup and turn flow ----
 	void SetupSide(EDuelOwner Side, const FString& DeckId);
+	/**
+	 * D-START gate: resolves DeckId through the card database and runs
+	 * FDuelEngine::ValidateDeck over its Main/Extra lists.  An unresolvable
+	 * deck id reports one error so the caller can fail closed.
+	 */
+	FDuelDeckValidationResult ValidateSideDeck(const FString& DeckId) const;
 	/** Release-gate helper: structural checks shared by the AI smoke test and scenario probes. */
 	bool CheckDuelStateInvariants(int32 ExpectedPlayerCards, int32 ExpectedOpponentCards,
 		TArray<FString>& OutErrors) const;
@@ -432,6 +452,8 @@ private:
 	FString SideName(EDuelOwner Side) const;
 	bool IsMainPhase() const;
 	bool CanPlayerAct() const;
+	/** Normalizes a card before it leaves any zone for Hand/Banish/Deck. */
+	void NormalizeOutbound(FDuelCard& Card, bool bFaceUp);
 	bool RemoveFromZone(FDuelCard& OutCard, int32 Uid);
 	bool PlaceMonster(EDuelOwner Side, FDuelCard Card, bool bFaceUp, EDuelPosition Position, int32 Zone = -1);
 	bool PlaceSpellTrap(EDuelOwner Side, FDuelCard Card, bool bFaceUp, bool bFieldZone = false);
@@ -470,6 +492,8 @@ private:
 	// ---- stats and continuous effects ----
 	int32 EquipAtkBonus(const FDuelCard& Card) const;
 	int32 EquipDefBonus(const FDuelCard& Card) const;
+	/** Shared legacy Field Spell stat ladder used by GetAtk (bAtkStyle) and GetDef. */
+	void ApplyFieldStats(int32& Value, const FDuelCard& Card, bool bAtkStyle) const;
 	bool HasField(EDuelOwner Side, const TCHAR* Name) const;
 	bool IsPersistentSpellTrap(const FDuelCard& Card) const;
 	bool IsFieldSpellCard(const FDuelCard& Card) const;
@@ -544,9 +568,23 @@ private:
 	bool AiAttackWith(FDuelCard& Attacker);
 	int32 AiCardValue(const FDuelCard& Card) const;
 
+	/**
+	 * The tail of the player's End-Phase handoff (turn-end log, END PHASE
+	 * visual, AI-turn flag).  Used by FinishPlayerTurn, the hand-limit
+	 * discard path and the deferred-handoff resume, so all three emit the
+	 * same presentation.
+	 */
+	void FinalizePlayerEndPhaseHandoff();
+	/**
+	 * Completes a handoff that was deferred behind a pending player prompt.
+	 * No-op while the prompt queue still holds a player question.
+	 */
+	void ContinueDeferredPlayerHandoff();
+
 	void OnSpellActivated();
 	FDuelVisualEvent& EmitVisual(EDuelVisualEventType Type, EDuelOwner Side, const FDuelCard* Card = nullptr,
-		int32 Amount = 0, const FString& Text = FString(), bool bFaceDown = false);
+		int32 Amount = 0, const FString& Text = FString(), bool bFaceDown = false,
+		const FDuelVisualEventTargetInfo* TargetInfo = nullptr);
 	void Log(const FString& Message, const FString& Tone = TEXT("normal"));
 	FString Verb(EDuelOwner Side, const TCHAR* ThirdPerson, const TCHAR* SecondPerson) const;
 
@@ -567,6 +605,12 @@ private:
 	bool bAwaitingDiscard = false;
 	bool bAiTurnPending = false;
 	bool bAiRunning = false;
+	/**
+	 * True when FinishPlayerTurn (or the hand-limit discard path) wants to run
+	 * the opponent's turn but a player prompt is still pending; AnswerChoice /
+	 * CancelChoice resume the handoff once the queue is clear (D2).
+	 */
+	bool bPlayerEndHandoffDeferred = false;
 	FString LastAiMessage;
 
 	// ---- rules architecture (additive, A04) ----

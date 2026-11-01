@@ -13,11 +13,45 @@ from pathlib import Path
 
 from build_manifest import FILES as MANIFEST_FILES, MANIFEST_PATH_PREFIX
 from canon_common import (
-    CANON_DIR, DOCS_DIR, REPO_ROOT, TOOLS_DIR, read_json, sha256_file, utc_now,
-    write_text,
+    CANON_DIR, DOCS_DIR, REPO_ROOT, TOOLS_DIR, LOCAL_ONLY_DIR, card_fingerprint,
+    read_json, sha256_bytes, sha256_file, utc_now, write_text,
 )
 
 CARD_IDS = set(range(1, 1201))
+
+
+def is_under(path: Path, root: Path) -> bool:
+    """True when ``path`` is ``root`` or one of its descendants."""
+    try:
+        path.resolve().relative_to(root.expanduser().resolve())
+        return True
+    except ValueError:
+        return False
+
+
+def deck_record_digest(deck: dict) -> str:
+    """Mirror ``build_decks.sha_deck``: digest over the deck identity fields."""
+    payload = {key: deck.get(key) for key in ("id", "name", "type", "opponent", "main", "extra")}
+    return sha256_bytes(json.dumps(payload, sort_keys=True).encode("utf-8"))
+
+
+def pack_record_digest(record: dict) -> str:
+    """Mirror ``build_packs``: digest over the record without its own ``sha256``.
+
+    The builder hashes the record exactly as written, minus the digest field,
+    so dropping only ``sha256`` reproduces it byte for byte.
+    """
+    payload = {key: value for key, value in record.items() if key != "sha256"}
+    return sha256_bytes(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8"))
+
+
+def puzzle_record_digest(puzzle: dict) -> str:
+    """Mirror ``build_puzzles``: digest over the puzzle id and step texts."""
+    payload = {
+        "id": puzzle.get("id"),
+        "steps": [step.get("text") for step in puzzle.get("solution_steps", [])],
+    }
+    return sha256_bytes(json.dumps(payload, sort_keys=True).encode("utf-8"))
 
 
 def manifest_hash_errors(manifest_path: Path, repo_root: Path) -> list[str]:
@@ -66,6 +100,21 @@ def manifest_hash_errors(manifest_path: Path, repo_root: Path) -> list[str]:
     return errors
 
 
+def collect_dialogue_leaks() -> list[str]:
+    """Full-dialogue JSONs committed under Tools/canon (relative to the repo).
+
+    extract_text.py is supported to write the full dossier into the documented
+    local-only directory (Tools/canon/.local_only by default, or the
+    GX_CANON_LOCAL_DIR override); the gate only rejects one committed anywhere
+    else.
+    """
+    return [
+        str(path.relative_to(REPO_ROOT))
+        for path in (REPO_ROOT / "Tools" / "canon").rglob("dialogue_full.json")
+        if not is_under(path, LOCAL_ONLY_DIR)
+    ]
+
+
 class Report:
     def __init__(self) -> None:
         self.errors: list[str] = []
@@ -88,10 +137,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--report",
         type=Path,
-        default=DOCS_DIR / "VALIDATION.md",
-        help="Markdown report path (default: Docs/Canon/VALIDATION.md)",
+        nargs="?",
+        const=DOCS_DIR / "VALIDATION.md",
+        default=None,
+        help="write the Markdown report to this path "
+             "(no value: Docs/Canon/VALIDATION.md). No report is written by "
+             "default; the doc refresh is a deliberate step because it "
+             "changes the committed file.",
     )
-    parser.add_argument("--no-report", action="store_true", help="do not write the Markdown report")
+    # Kept for older invocations (CI used to pass it): reports are now off by
+    # default, so this flag is a no-op.
+    parser.add_argument("--no-report", action="store_true", help="ignored; no report is written unless --report is given")
     args = parser.parse_args(argv)
 
     report = Report()
@@ -106,6 +162,33 @@ def main(argv: list[str] | None = None) -> int:
     report.check("cards.hash", len(manifest["canonical_hash"]["value"]) == 64,
                  manifest["canonical_hash"]["value"][:16] + "...")
 
+    # Per-record digests: cards.json must still reproduce every per-card
+    # fingerprint and the canonical digest published in cards_manifest.json.
+    per_card_expected: dict[str, str] | None = manifest.get("per_card_sha256")
+    if isinstance(per_card_expected, dict):
+        fingerprint_errors: list[int] = []
+        canonical_payload: list[str] = []
+        for card in cards:
+            expected = per_card_expected.get(str(card["id"]))
+            if expected is None:
+                fingerprint_errors.append(int(card["id"]))
+                continue
+            actual = card_fingerprint(card)
+            canonical_payload.append(actual)
+            if actual != expected:
+                fingerprint_errors.append(int(card["id"]))
+        if len(canonical_payload) == len(cards):
+            canonical_actual = sha256_bytes("\n".join(canonical_payload).encode("ascii"))
+        else:
+            canonical_actual = "incomplete card set"
+        report.check("cards.fingerprints", not fingerprint_errors,
+                     f"{len(fingerprint_errors)} card digest(s) mismatched or absent"
+                     + (f" e.g. {fingerprint_errors[:5]}" if fingerprint_errors else ""))
+        report.check("cards.canonical_digest", canonical_actual == manifest["canonical_hash"]["value"],
+                     "recomputed from the committed cards.json")
+    else:
+        report.check("cards.fingerprints", False, "cards_manifest.json has no per_card_sha256 map")
+
     packs = read_json(CANON_DIR / "packs.json")
     pack_records = packs["packs"]
     report.check("packs.count", len(pack_records) == 48, str(len(pack_records)))
@@ -119,6 +202,16 @@ def main(argv: list[str] | None = None) -> int:
     report.check("packs.prices", not missing_prices, str(missing_prices))
     missing_sizes = [p["id"] for p in pack_records if not (p["cards_per_pack"] or 0)]
     report.check("packs.pack_sizes", not missing_sizes, str(missing_sizes))
+
+    pack_without_digest = [p["id"] for p in pack_records if not p.get("sha256")]
+    pack_digest_errors = [
+        p["id"] for p in pack_records
+        if p.get("sha256") and pack_record_digest(p) != p["sha256"]
+    ]
+    report.check("packs.record_digests", not pack_digest_errors,
+                 f"{len(pack_digest_errors)} mismatched, {len(pack_without_digest)} missing records")
+    report.warn("packs.record_digests", not pack_without_digest,
+                f"{len(pack_without_digest)} pack record(s) without a digest: {pack_without_digest}")
     report.warn("packs.odds", False, "pack rarity odds are not published; A06 must define a seeded model")
     report.warn("packs.unresolved_names", not any(p["unresolved_names"] for p in pack_records),
                 f"{sum(1 for p in pack_records if p['unresolved_names'])} packs have unresolved guide names")
@@ -201,6 +294,16 @@ def main(argv: list[str] | None = None) -> int:
     unknown_decks = [d["id"] for d in decks if d.get("status") == "unknown"]
     report.warn("decks.unknown_explicit", True, f"{len(unknown_decks)} decks explicitly unknown: {unknown_decks}")
 
+    deck_without_digest = [d["id"] for d in decks if not d.get("sha256")]
+    deck_digest_errors = [
+        d["id"] for d in decks
+        if d.get("sha256") and deck_record_digest(d) != d["sha256"]
+    ]
+    report.check("decks.record_digests", not deck_digest_errors,
+                 f"{len(deck_digest_errors)} mismatched, {len(deck_without_digest)} missing records")
+    report.warn("decks.record_digests", not deck_without_digest,
+                f"{len(deck_without_digest)} deck record(s) without a digest: {deck_without_digest}")
+
     # Event references: opponents, decks, tournament/partner constructs.
     for event in events:
         for duel in event.get("duels", []):
@@ -237,6 +340,16 @@ def main(argv: list[str] | None = None) -> int:
     report.check("puzzles.solutions", all(p["solution_steps"] for p in puzzles),
                  f"{sum(1 for p in puzzles if not p['solution_steps'])} missing")
     report.check("puzzles.card_ids", all(set(p["solution_card_ids"]) <= CARD_IDS for p in puzzles), "")
+
+    puzzle_without_digest = [p["id"] for p in puzzles if not p.get("sha256")]
+    puzzle_digest_errors = [
+        p["id"] for p in puzzles
+        if p.get("sha256") and puzzle_record_digest(p) != p["sha256"]
+    ]
+    report.check("puzzles.record_digests", not puzzle_digest_errors,
+                 f"{len(puzzle_digest_errors)} mismatched, {len(puzzle_without_digest)} missing records")
+    report.warn("puzzles.record_digests", not puzzle_without_digest,
+                f"{len(puzzle_without_digest)} puzzle record(s) without a digest: {puzzle_without_digest}")
 
     titles = read_json(CANON_DIR / "titles.json")["titles"]
     permanent = [t for t in titles if t["permanent"]]
@@ -294,7 +407,7 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             leaked.append(str(path.relative_to(REPO_ROOT)))
     report.check("legal.no_rom_or_save", not leaked, str(leaked[:5]))
-    dialogue_leaks = [str(p.relative_to(REPO_ROOT)) for p in (REPO_ROOT / "Tools" / "canon").rglob("dialogue_full.json")]
+    dialogue_leaks = collect_dialogue_leaks()
     report.check("legal.no_full_dialogue", not dialogue_leaks, str(dialogue_leaks))
 
     # Manifest hash check. This is a hard error: the manifest is the published
@@ -320,7 +433,7 @@ def main(argv: list[str] | None = None) -> int:
         lines += ["", "## Errors", ""] + [f"- {e}" for e in report.errors]
     if report.warnings:
         lines += ["", "## Warnings", ""] + [f"- {w}" for w in report.warnings]
-    if not args.no_report:
+    if args.report:
         report_path = args.report.expanduser()
         if not report_path.is_absolute():
             report_path = Path.cwd() / report_path

@@ -66,8 +66,7 @@ enum class EDAEPurchaseBlock : uint8
 	InvalidPack,
 	NoInventory,
 	WalletRejected,
-	OpenFailed,
-	DeckInvalid
+	OpenFailed
 };
 
 /** A weighted rarity entry used by rare-plus slots. */
@@ -162,6 +161,14 @@ struct FDAEPackDef
 
 	UPROPERTY(BlueprintReadOnly, Category = "Economy|Pack")
 	int32 PackSize = 5;
+
+	/**
+	 * True when the hand-authored pack_size exceeded the load-time clamp and
+	 * was reduced to it (E8). Runtime-only diagnostic: ValidateCatalogue uses
+	 * it to report the oversized row; no save payload serializes it.
+	 */
+	UPROPERTY(BlueprintReadOnly, Category = "Economy|Pack")
+	bool bPackSizeClamped = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Economy|Pack")
 	int32 RestockDays = 7;
@@ -622,6 +629,18 @@ struct FDAEInventorySaveData
 
 namespace DAEconomy
 {
+	/**
+	 * Canonical fold for economy string ids that are stored or compared by
+	 * name (deck ids, ante duel ids, shop pack keys). One helper instead of
+	 * per-lane trims/case rules: identifiers in this id space are
+	 * case-insensitive, so fold once at the boundary rather than mixing
+	 * Equals(IgnoreCase) sites with exact map keys.
+	 */
+	inline FString NormalizeIdKey(const FString& Value)
+	{
+		return Value.TrimStartAndEnd().ToLower();
+	}
+
 	inline FString RarityToString(EDAECardRarity Rarity)
 	{
 		switch (Rarity)

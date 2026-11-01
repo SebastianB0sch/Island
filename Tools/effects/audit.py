@@ -27,11 +27,13 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import build_manifest
 import effect_data as data
 import report_coverage
 import validate_effects
+from tooling import atomic
 
 
 def _pct(value: int, total: int) -> float:
@@ -89,8 +91,9 @@ def main(argv: list[str] | None = None) -> int:
     print("\n== coverage report ==")
     coverage_text = report_coverage.build_report()
     coverage_path = data.ROOT / "Docs" / "Effects" / "COVERAGE.md"
-    coverage_path.parent.mkdir(parents=True, exist_ok=True)
-    coverage_path.write_text(coverage_text, encoding="utf-8", newline="\n")
+    # Publish the report through the atomic writer; the report is gate
+    # evidence and must never be left truncated by an interrupted run.
+    atomic.write_text(coverage_path, coverage_text)
     print(f"Wrote {coverage_path.relative_to(data.ROOT)}")
 
     entries = manifest["cards"]

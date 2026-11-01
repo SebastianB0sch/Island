@@ -894,7 +894,9 @@ FString FDuelEngine::RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterati
 				CheckState();
 				if (!Duel.IsOver())
 				{
-					Duel.Phase = EDuelPhase::Battle;
+					// Public phase actions instead of direct Phase writes, so
+					// the batch enters the Battle Phase like the HUD does.
+					Duel.EnterBattlePhase();
 					ObservePhase();
 					Duel.AiPlayBattlePhase();
 					AnswerPending();
@@ -906,12 +908,14 @@ FString FDuelEngine::RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterati
 				{
 					break;
 				}
-				Duel.Phase = EDuelPhase::Main2;
+				Duel.EndBattlePhase();
 				ObservePhase();
-				if (Duel.Player.Hand.Num() > HandLimit)
+				// EndTurn routes the hand limit and the End-Phase effects
+				// through FinishPlayerTurn like a player-driven duel.
+				Duel.EndTurn();
+				if (Duel.IsAwaitingDiscard())
 				{
-					Duel.bAwaitingDiscard = true;
-					while (Duel.bAwaitingDiscard && Duel.Player.Hand.Num() > HandLimit)
+					while (Duel.IsAwaitingDiscard() && Duel.Player.Hand.Num() > HandLimit)
 					{
 						FString DiscardError;
 						if (!Duel.DiscardFromHand(Duel.Player.Hand[0].Uid, DiscardError))

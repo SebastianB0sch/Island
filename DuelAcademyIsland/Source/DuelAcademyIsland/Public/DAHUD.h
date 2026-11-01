@@ -42,6 +42,7 @@ public:
 
 	bool IsMapOpen() const { return bMapOpen; }
 	bool IsDuelOpen() const { return DuelUI.IsValid() && DuelUI->IsOpen(); }
+	bool IsHelpOpen() const { return bHelpOpen; }
 	bool IsPDAOpen() const { return PDAUI.IsValid() && PDAUI->IsOpen(); }
 	bool IsDialogueOpen() const { return DialogueUI.IsValid() && DialogueUI->IsOpen(); }
 	bool IsTitleOpen() const { return TitleScreen.IsValid() && TitleScreen->IsOpen(); }
@@ -135,6 +136,14 @@ public:
 	FDAShopUI* GetShopUI() const { return ShopUI.Get(); }
 	FDADeckUI* GetDeckUI() const { return DeckUI.Get(); }
 	FDAExamUI* GetExamUI() const { return ExamUI.Get(); }
+
+	/**
+	 * Integration seam for pinned cross-workstream contract #1
+	 * (FDADuelUI::WasDeckSelectClosedWithoutResult, consumed by the story
+	 * workstream): the duel board itself stays private to the HUD flow
+	 * otherwise, so nothing outside that one consumption should call this.
+	 */
+	FDADuelUI* GetDuelUI() const { return DuelUI.Get(); }
 
 private:
 	// ---------------------------------------------------------------- UI hosting

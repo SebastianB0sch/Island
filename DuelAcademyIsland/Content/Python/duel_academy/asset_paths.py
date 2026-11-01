@@ -129,7 +129,13 @@ def owned_names(document) -> set[str]:
 
 
 def write_json_atomic(path: str | os.PathLike[str], value) -> None:
-    """Small stdlib atomic writer for the ownership record in Saved/."""
+    """Small stdlib atomic writer for the ownership record in Saved/.
+
+    Deliberately mirrors :func:`dai.atomic.write_text` without importing it: this
+    module stays stdlib-only so the rules are unit-testable in the editor and in
+    bare Python, hence the same-directory temp file, ``os.replace`` publish and
+    ``os.fsync`` of the UTF-8 / LF bytes inlined below.
+    """
     path = os.fspath(path)
     directory = os.path.dirname(os.path.abspath(path))
     os.makedirs(directory, exist_ok=True)
@@ -138,6 +144,8 @@ def write_json_atomic(path: str | os.PathLike[str], value) -> None:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fp:
             json.dump(value, fp, indent=1)
             fp.write("\n")
+            fp.flush()
+            os.fsync(fp.fileno())
         os.replace(temp_name, path)
     finally:
         if os.path.exists(temp_name):

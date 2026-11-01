@@ -124,9 +124,10 @@ def _fbx_options(nanite):
         pass
     sm = ui.get_editor_property("static_mesh_import_data")
     # convert_scene_unit defaults to False on programmatically created import options in UE 5.8; the FBX
-    # files are exported in metres, so without it every mesh imports 100x too small.
+    # files are exported in metres, so without it every mesh imports 100x too small. Collision and unit
+    # flags are gameplay-relevant -> strict: a silent failure here must abort the import.
     C.set_props(sm, combine_meshes=True, auto_generate_collision=False, generate_lightmap_u_vs=False,
-                remove_degenerates=True, one_convex_hull_per_ucx=True, convert_scene_unit=True)
+                remove_degenerates=True, one_convex_hull_per_ucx=True, convert_scene_unit=True, strict=True)
     try:
         sm.set_editor_property("normal_import_method", unreal.FBXNormalImportMethod.FBXNIM_IMPORT_NORMALS)
     except Exception:  # noqa: BLE001
@@ -330,8 +331,8 @@ def cleanup_imported_materials():
 
 # --------------------------------------------------------------------------- skeletal student
 CHAR_DIR = C.ROOT + "/Characters"
-# cm/s the Walk / Run clips cover at play rate 1 after import (keep in sync with UDAAvatarComponent)
-REF_SPEED = {"Walk": 300.0, "Run": 600.0}
+# Walk / Run reference speed lives in common.REF_SPEED (shared with the terrain
+# material scale fallback and documented against UDAAvatarComponent).
 
 
 def _skeletal_options(skeleton=None):
@@ -472,7 +473,7 @@ def import_character(materials):
             # normalise each locomotion clip to a reference ground speed (UDAAvatarComponent::WalkAnimSpeed /
             # RunAnimSpeed) using the speed measured by Tools/dai/character.py, so play rates match any rig
             speed = info.get("ground_speed", {}).get(state)
-            ref = REF_SPEED.get(state)
+            ref = C.REF_SPEED.get(state)
             if speed and ref:
                 seq = C.load(f"{CHAR_DIR}/{name}")
                 try:

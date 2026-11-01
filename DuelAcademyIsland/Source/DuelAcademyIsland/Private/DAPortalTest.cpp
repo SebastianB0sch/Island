@@ -201,7 +201,8 @@ void UDAPortalTestSubsystem::VerifyWorldSaveStateContract()
 	Check(Portal->IsPortalLocked() && Portal->bUsed,
 		TEXT("re-applying world save state keeps portal flags"));
 
-	// Duplicate, unknown and empty ids must never overwrite live doors.
+	// Duplicate, unknown and empty ids must never overwrite live doors. The
+	// valid row wins, and W3: the row with no live actor stays queued.
 	TSharedPtr<FJsonObject> HostileSection = MakeShared<FJsonObject>();
 	HostileSection->SetNumberField(TEXT("version"), 1);
 	TArray<TSharedPtr<FJsonValue>> PortalRows;
@@ -236,15 +237,21 @@ void UDAPortalTestSubsystem::VerifyWorldSaveStateContract()
 	Portal->bUsed = true;
 	Check(Island->ReadSaveSection(HostileSection, Error),
 		FString::Printf(TEXT("world save section accepts duplicate/unknown ids (%s)"), *Error));
-	Check(Island->ApplyPendingWorldState(), TEXT("world save state with duplicate ids applies"));
+	Check(!Island->ApplyPendingWorldState(),
+		TEXT("world save state with an unresolved actor id stays queued"));
+	Check(Island->HasPendingWorldState(), TEXT("unresolved portal ids keep the queue pending"));
 	Check(!Portal->IsPortalLocked() && !Portal->bUsed,
 		TEXT("duplicate portal ids keep the first entry"));
-	Check(Island->ApplyPendingWorldState(), TEXT("duplicate world save state re-applies"));
+	Check(!Island->ApplyPendingWorldState(),
+		TEXT("unresolved portal ids retry every pass until resolved"));
 	Check(!Portal->IsPortalLocked() && !Portal->bUsed,
-		TEXT("duplicate portal ids stay stable on retry"));
+		TEXT("resolved portal state is not re-toggled across retries"));
+	Island->ExpirePendingWorldState();
+	Check(!Island->HasPendingWorldState(), TEXT("expiry drops unresolved portal ids"));
 
-	// A saved portal that has no live actor yet must not fail the load or touch
-	// the other doors, so the same payload can be retried after the actor exists.
+	// A saved portal with no live actor must not fail the load, must not touch
+	// the other doors and must keep retrying until the actor (or the wait
+	// window, via ExpirePendingWorldState) ends the queue.
 	TSharedPtr<FJsonObject> MissingActorSection = MakeShared<FJsonObject>();
 	MissingActorSection->SetNumberField(TEXT("version"), 1);
 	TArray<TSharedPtr<FJsonValue>> MissingRows;
@@ -258,12 +265,20 @@ void UDAPortalTestSubsystem::VerifyWorldSaveStateContract()
 	MissingActorSection->SetArrayField(TEXT("portals"), MissingRows);
 	Check(Island->ReadSaveSection(MissingActorSection, Error),
 		FString::Printf(TEXT("world save section accepts an id without a live actor (%s)"), *Error));
-	Check(Island->ApplyPendingWorldState(),
-		TEXT("world save state with an unknown actor id still applies"));
+	Check(!Island->ApplyPendingWorldState(),
+		TEXT("world save state with an unknown actor id stays pending"));
+	Check(Island->HasPendingWorldState(), TEXT("unknown portal ids keep the queue pending for retry"));
+	Check(!Island->ApplyPendingWorldState(),
+		TEXT("unknown portal ids retry while no actor exists"));
 	Check(!Portal->IsPortalLocked() && !Portal->bUsed,
 		TEXT("unknown portal ids do not touch unrelated doors"));
+	Island->ExpirePendingWorldState();
+	Check(!Island->HasPendingWorldState(), TEXT("expiry clears the queue for the next probe"));
 
-	// Zone discovery round-trips through the same section.
+	// Zone discovery round-trips through the same section. P4-10: the applied
+	// restore must UNION with the discoveries the session already made instead
+	// of replacing them (same-frame discoveries must survive a load).
+	const TArray<FString> PreUnionIds = Island->GetDiscoveredLocationIds();
 	TSharedPtr<FJsonObject> DiscoverySection = MakeShared<FJsonObject>();
 	DiscoverySection->SetNumberField(TEXT("version"), 1);
 	TArray<TSharedPtr<FJsonValue>> DiscoveredRows;
@@ -274,9 +289,17 @@ void UDAPortalTestSubsystem::VerifyWorldSaveStateContract()
 		FString::Printf(TEXT("world save section accepts discovered ids (%s)"), *Error));
 	Check(Island->ApplyPendingWorldState(), TEXT("world discovered state applies"));
 	const TArray<FString> RestoredIds = Island->GetDiscoveredLocationIds();
-	Check(RestoredIds.Num() == 2 && RestoredIds.Contains(TEXT("__test_zone_a__"))
-			&& RestoredIds.Contains(TEXT("__test_zone_b__")),
+	Check(RestoredIds.Contains(TEXT("__test_zone_a__")) && RestoredIds.Contains(TEXT("__test_zone_b__")),
 		TEXT("world save restores discovered zone ids"));
+	bool bUnionKept = true;
+	for (const FString& PreUnionId : PreUnionIds)
+	{
+		if (!RestoredIds.Contains(PreUnionId))
+		{
+			bUnionKept = false;
+		}
+	}
+	Check(bUnionKept, TEXT("world discovered restore unions with same-frame discoveries"));
 
 	// Restore the live world exactly as it was before the probe.
 	if (OriginalSection.IsValid())

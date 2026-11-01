@@ -137,6 +137,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Director")
 	AActor* FindNpc(const FString& NpcId) const;
 
+	/**
+	 * Teleport an NPC to a spawn point. The destination ends occupied by that
+	 * NPC (previous occupant despawned like DespawnAtPoint) and its departure
+	 * point's occupancy is released, so a follow-up ApplySchedule cannot spawn
+	 * a duplicate NPC there.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Director")
 	bool TeleportNpcToPoint(const FString& NpcId, const FString& SpawnPointId);
 

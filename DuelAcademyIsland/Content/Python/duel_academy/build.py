@@ -85,7 +85,8 @@ def build_island(import_assets=True, interactive=True, prune_cast=True):
             importer.import_character(instances)
             slow.enter_progress_frame(1, "Importing the anime cast")
             importer.import_cast(masters, prune=prune_cast)
-            unreal.EditorAssetLibrary.save_directory(C.ROOT, only_if_is_dirty=True, recursive=True)
+            if not unreal.EditorAssetLibrary.save_directory(C.ROOT, only_if_is_dirty=True, recursive=True):
+                raise RuntimeError("map save failed: save_directory(/Game/DuelAcademy) for the imported assets failed")
         else:
             mpc = C.load(f"{C.MAT_DIR}/MPC_DuelAcademy")
             instances = {}
@@ -124,7 +125,8 @@ def build_island(import_assets=True, interactive=True, prune_cast=True):
         level.set_world_settings()
         slow.enter_progress_frame(2, "Saving")
         level.save()
-        unreal.EditorAssetLibrary.save_directory(C.ROOT, only_if_is_dirty=True, recursive=True)
+        if not unreal.EditorAssetLibrary.save_directory(C.ROOT, only_if_is_dirty=True, recursive=True):
+            raise RuntimeError("map save failed: save_directory(/Game/DuelAcademy) for the level assets failed")
 
     msg = f"Duel Academy Island built in {time.time() - t0:.0f}s: {placer.count} actors."
     C.log(msg)

@@ -128,8 +128,10 @@ public:
 	const TArray<FDADialogueLine>& GetLines() const { return Lines; }
 	const TArray<FString>& GetHistory() const { return History; }
 
-	/** Critical story scenes can refuse Escape-close (call after Begin) and require a choice. */
-	void SetAllowEscapeClose(bool bAllowed) { bEscapeClose = bAllowed; }
+	/** Critical story scenes can refuse Escape-close (call after Begin) and require a choice.
+	 *  The request is carried across line advances (see bRequestedNoEscapeClose); only text-entry
+	 *  lines re-lock Escape-close on their own. */
+	void SetAllowEscapeClose(bool bAllowed);
 	bool AllowsEscapeClose() const { return bEscapeClose; }
 
 	// ------------------------------------------------------------------ story API
@@ -212,6 +214,10 @@ private:
 	bool bAuto = false;
 	bool bHistoryOpen = false;
 	bool bEscapeClose = true;
+	/** Sticky request behind SetAllowEscapeClose (U7): without it GoToLine
+	 *  re-enabled Escape-close after every advance. Text-entry lines are the
+	 *  only exception; they force no-escape-close for the line's duration. */
+	bool bRequestedNoEscapeClose = false;
 	bool bTextEntry = false;
 	FString TextEntryBuffer;
 	int32 TextEntryMinLength = 1;

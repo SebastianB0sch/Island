@@ -126,21 +126,12 @@ def main() -> int:
         ],
     )
 
-    # Remove branch rewards from event outcomes; the selected choice owns them now.
-    def strip_outcomes(event_id, types, flags=None):
-        event = events[event_id]
-        kept = []
-        for outcome in event.get("outcomes", []):
-            if outcome.get("type") in types:
-                if flags is not None and outcome.get("flag") not in flags:
-                    kept.append(outcome)
-                continue
-            kept.append(outcome)
-        event["outcomes"] = kept
-
-    strip_outcomes("E07", {"grant_card", "set_title"}, {"occult_duelist"})
-    strip_outcomes("E24", {"grant_card"}, {"blair_revealed"})
-    # Flag-only outcomes need an explicit keep-list pass.
+    # Post-migration note: the earlier ``strip_outcomes`` helper was dead code.
+    # It matched ``grant_card``/``set_title`` outcomes only when they carried a
+    # ``flag`` key, which none ever did, so nothing was ever stripped and the
+    # story data was never changed by it. The branch rewards the selected
+    # choice owns are carried by the outcome payloads added above; only the
+    # flag-only outcome removal below was effective and it stays.
     for event_id, remove_flags in (("E07", {"occult_duelist"}), ("E24", {"blair_revealed"}), ("E28b", {"valentine_gift_given"})):
         events[event_id]["outcomes"] = [
             o for o in events[event_id].get("outcomes", [])

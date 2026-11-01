@@ -296,7 +296,9 @@ void UDAAvatarComponent::TickNative(float DeltaTime, float GroundSpeed, bool bIn
 	// While the full-body swim action is showing, keep the base locomotion at a standstill so it
 	// cannot leak through the blend.
 	const float LocomotionSpeed = (SwimAlpha > 0.5f) ? 0.f : GroundSpeed;
-	Anim->SetLocomotion(LocomotionSpeed, bInAir, VerticalSpeed, SwimAlpha, DuelPoseAlpha);
+	// W11: the graph never read air/vertical state, so the feed drops them
+	// (SetLocomotion now takes ground speed + the two alphas only).
+	Anim->SetLocomotion(LocomotionSpeed, SwimAlpha, DuelPoseAlpha);
 }
 
 void UDAAvatarComponent::TickSingleNode(float DeltaTime, float GroundSpeed, bool bInAir)

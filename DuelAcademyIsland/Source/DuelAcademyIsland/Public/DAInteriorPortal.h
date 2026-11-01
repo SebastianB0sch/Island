@@ -194,9 +194,13 @@ public:
 	 * Apply a batch by exact PortalId. Empty ids, duplicate array entries
 	 * (first wins) and ids with no live actor are ignored. Idempotent; returns
 	 * the number of portals updated. Safe to call before actors exist (returns 0
-	 * for unknown ids instead of failing the load).
+	 * for unknown ids instead of failing the load). When OutUnresolvedIds is
+	 * provided it receives every id that resolved to no live actor (level still
+	 * spawning or future streaming) so the caller can retry exactly those
+	 * instead of re-running the whole batch.
 	 */
-	static int32 ApplySaveStates(UWorld* World, const TArray<FDAPortalSaveState>& States);
+	static int32 ApplySaveStates(UWorld* World, const TArray<FDAPortalSaveState>& States,
+		TArray<FString>* OutUnresolvedIds = nullptr);
 
 	/** Override this in a Blueprint or a C++ subclass for event-specific rules. */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Duel Academy|Portal|Lock")
@@ -242,6 +246,9 @@ private:
 	TWeakObjectPtr<AActor> SuppressedUser;
 	FVector PendingLocation = FVector::ZeroVector;
 	float PendingYaw = 0.f;
+	/** User location armed in BeginTeleport; FinishTeleport aborts when the actor
+	 *  has been relocated away from it (e.g. a map fast travel in the fade). */
+	FVector TeleportCaptureLocation = FVector::ZeroVector;
 	FTimerHandle TeleportTimer;
 	FTimerHandle SuppressTimer;
 	double CooldownUntil = 0.0;

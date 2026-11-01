@@ -199,7 +199,67 @@ int32 FDAExamUI::GetOptionCount() const
 		return 0;
 	}
 	const FDAExamQuestion* Question = Exam->GetCurrentQuestion();
-	return Question ? Question->Options.Num() : 0;
+	if (!Question)
+	{
+		return 0;
+	}
+
+	// U5: keep selection reachable only for the options DrawWritten can show.
+	// Before the first Draw there is no canvas yet (and nothing drawn either),
+	// so fall back to the full list for that one frame.
+	if (!Canvas)
+	{
+		return Question->Options.Num();
+	}
+	float OptionsTop = 0.f;
+	int32 VisibleCount = 0;
+	ComputeWrittenOptionLayout(OptionsTop, VisibleCount);
+	return VisibleCount;
+}
+
+void FDAExamUI::ComputeWrittenOptionLayout(float& OutOptionsTop, int32& OutVisibleCount) const
+{
+	OutOptionsTop = 0.f;
+	OutVisibleCount = 0;
+	if (!Exam || !Canvas)
+	{
+		return;
+	}
+	const FDAExamQuestion* Question = Exam->GetCurrentQuestion();
+	if (!Question)
+	{
+		return;
+	}
+
+	const float S = UIScale;
+	const float W = FMath::Min(Canvas->ClipX * 0.72f, 1180.f * S);
+	if (W <= 0.f)
+	{
+		return;
+	}
+	const float Y = 112.f * S;
+
+	float TextY = Y + 102.f * S;
+	for (const FString& Line : WrapText(Question->Text, W - 64.f * S, 0.95f))
+	{
+		TextY += Measure(TEXT("Ag"), 0.95f).Y + 4.f * S;
+	}
+	const float OptionsTop = TextY + 18.f * S;
+
+	const float OptionH = 42.f * S;
+	// The pinned SUBMIT/ANSWERED row sits at ClipY - 158S/-146S; keep the same
+	// seam above it other panels budget for, so the stack can never draw
+	// underneath it.
+	const float StackBudget = Canvas->ClipY - 200.f * S;
+	int32 Visible = Question->Options.Num();
+	while (Visible > 0
+		&& OptionsTop + Visible * (OptionH + 8.f * S) - 8.f * S > StackBudget)
+	{
+		--Visible;
+	}
+
+	OutOptionsTop = OptionsTop;
+	OutVisibleCount = Visible;
 }
 
 void FDAExamUI::SubmitAnswer(int32 AnswerIndex)
@@ -508,8 +568,10 @@ void FDAExamUI::FinishPracticalAndResult()
 		{
 			// One token covers counters, DP and the title/dorm outcome, so a
 			// recreated result screen cannot apply any of them a second time.
+			// The deferred claim pairs with the closing autosave so claim and
+			// outcome persist in one atomic save (crash-safe in either order).
 			const FString OutcomeToken = FString::Printf(TEXT("exam_outcome:%s"), *Exam->GetAttemptToken());
-			if (Profile->TryMarkResultTokenApplied(OutcomeToken))
+			if (Profile->TryMarkResultTokenAppliedDeferred(OutcomeToken))
 			{
 				Profile->IncrementCounter(TEXT("written_correct"), FMath::Max(0, Result.WrittenCorrect));
 				Profile->IncrementCounter(TEXT("written_total"), 10);
@@ -522,6 +584,7 @@ void FDAExamUI::FinishPracticalAndResult()
 					const bool bPromotionEligible = Result.TotalPoints >= 450;
 					Titles->ApplyExamOutcome(Profile, Result.TotalPoints, Exam->GetPassMark(), bPromotionEligible);
 				}
+				Profile->RequestProgressionAutosave(TEXT("exam_result"));
 			}
 		}
 	}
@@ -640,18 +703,15 @@ void FDAExamUI::Update(float DeltaSeconds)
 		}
 	}
 
-	// The live puzzle board owns input while it is up.  Back/cancel resolves the
-	// timed section as a failure instead of leaving an orphan duel running.
+	// The live puzzle board owns input while it is up (U11). Its Escape
+	// handling covers pending-choice cancel, pile close and deselect, and its
+	// result screen's "continue the exam"; polling Esc/P/Pad-B here too meant
+	// one press both cancelled the board state and failed the puzzle. The
+	// timed section is still skippable from the Timed panel afterwards, and
+	// PollTimedDuel() below consumes the board's terminal result.
 	if (bTimedDuelActive)
 	{
 		PollTimedDuel();
-		if (bTimedDuelActive && PlayerOwner
-			&& (PlayerOwner->WasInputKeyJustPressed(EKeys::Escape)
-				|| PlayerOwner->WasInputKeyJustPressed(EKeys::P)
-				|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Right)))
-		{
-			CancelTimedDuel();
-		}
 		return;
 	}
 	if (!PlayerOwner)
@@ -923,9 +983,14 @@ void FDAExamUI::DrawWritten()
 		TextY += Measure(TEXT("Ag"), 0.95f).Y + 4.f * S;
 	}
 
-	const float OptionsTop = TextY + 18.f * S;
+	// U5: one shared budget for the option stack, the up/down selection and
+	// the hit targets — overflow rows are dropped instead of running into the
+	// pinned SUBMIT/ANSWERED row.
+	float OptionsTop = 0.f;
+	int32 VisibleOptions = 0;
+	ComputeWrittenOptionLayout(OptionsTop, VisibleOptions);
 	const float OptionH = 42.f * S;
-	for (int32 Index = 0; Index < Question->Options.Num(); ++Index)
+	for (int32 Index = 0; Index < VisibleOptions; ++Index)
 	{
 		DrawOption(Question->Options[Index], Index, X + 32.f * S,
 			OptionsTop + Index * (OptionH + 8.f * S), W - 64.f * S, OptionH, Index == AnswerSelection);

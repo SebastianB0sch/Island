@@ -982,15 +982,24 @@ bool UDAOpponentSubsystem::CanRequestDuel(const FString& OpponentId, int32 DayIn
 		const int64 ElapsedDays = static_cast<int64>(DayIndex) - static_cast<int64>(*LastDay);
 		if (ElapsedDays < 0)
 		{
-			OutReason = TEXT("The current day is earlier than this opponent's last request.");
-			return false;
+			// P4-09: a backwards day jump (older save, calendar override or a
+			// tampered runtime state) makes the stored cooldown unreachable —
+			// blocking here would last until a game day caught up with the
+			// stale entry. Treat the entry as expired; ConsumeDuelRequest
+			// realigns (and clears) the state at its next request.
+			UE_LOG(LogDuelAcademyIsland, Verbose,
+				TEXT("Opponent '%s': request day %d is ahead of the runtime bookkeeping (%d); cooldown ignored."),
+				*OpponentId, *LastDay, DayIndex);
 		}
-		const int64 CooldownDays = FMath::Max(0, Opponent->DuelRequest.CooldownDays);
-		if (ElapsedDays > 0 && CooldownDays > 0 && ElapsedDays < CooldownDays)
+		else
 		{
-			OutReason = FString::Printf(TEXT("This opponent needs %lld more day(s) before another request."),
-				CooldownDays - ElapsedDays);
-			return false;
+			const int64 CooldownDays = FMath::Max(0, Opponent->DuelRequest.CooldownDays);
+			if (ElapsedDays > 0 && CooldownDays > 0 && ElapsedDays < CooldownDays)
+			{
+				OutReason = FString::Printf(TEXT("This opponent needs %lld more day(s) before another request."),
+					CooldownDays - ElapsedDays);
+				return false;
+			}
 		}
 	}
 	return true;
@@ -1017,6 +1026,18 @@ void UDAOpponentSubsystem::ResetDailyRequests(int32 DayIndex)
 	{
 		RuntimeState.RequestDay = DayIndex;
 		RuntimeState.RequestsToday.Reset();
+
+		// P4-09: a save can realign the day backwards (or story data can move
+		// the calendar back). Cooldown entries recorded on a later day can
+		// never expire in the new timeline, so drop them instead of blocking
+		// requests forever; entries on/before the new day stay accurate.
+		for (auto It = RuntimeState.LastRequestDay.CreateIterator(); It; ++It)
+		{
+			if (It.Value() > DayIndex)
+			{
+				It.RemoveCurrent();
+			}
+		}
 	}
 }
 
@@ -1113,11 +1134,41 @@ bool UDAOpponentSubsystem::ValidateSaveSection(const TSharedPtr<FJsonObject>& In
 
 	if (InSection->HasField(TEXT("request_day")))
 	{
-		int32 RequestDay = -1;
-		if (!InSection->TryGetNumberField(TEXT("request_day"), RequestDay))
+		double RequestDayNumber = 0.0;
+		if (!InSection->TryGetNumberField(TEXT("request_day"), RequestDayNumber)
+			|| !FMath::IsFinite(RequestDayNumber)
+			|| FMath::FloorToDouble(RequestDayNumber) != RequestDayNumber
+			|| RequestDayNumber < static_cast<double>(TNumericLimits<int32>::Min())
+			|| RequestDayNumber > static_cast<double>(TNumericLimits<int32>::Max()))
 		{
 			OutError = TEXT("Opponent save field 'request_day' is not a number.");
 			return false;
+		}
+		const int32 RequestDay = static_cast<int32>(RequestDayNumber);
+
+		// P4-09: last_request_day entries cannot be later than the tracked
+		// request day (a consume sets the entry on the day it realigned to).
+		// Later entries only come from a corrupted/tampered save and would
+		// block every request forever, so reject the section up front.
+		if (RequestDay >= 0)
+		{
+			const TSharedPtr<FJsonObject>* LastMap = nullptr;
+			if (InSection->TryGetObjectField(TEXT("last_request_day"), LastMap) && LastMap && LastMap->IsValid())
+			{
+				for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : (*LastMap)->Values)
+				{
+					double Entry = 0.0;
+					if (Pair.Value.IsValid() && Pair.Value->TryGetNumber(Entry)
+						&& FMath::IsFinite(Entry)
+						&& FMath::FloorToDouble(Entry) > static_cast<double>(RequestDay))
+					{
+						OutError = FString::Printf(
+							TEXT("Opponent save entry '%s' has a request day %.0f later than the tracked request day %d."),
+							*FString(*Pair.Key), Entry, RequestDay);
+						return false;
+					}
+				}
+			}
 		}
 	}
 

@@ -21,9 +21,25 @@ namespace
 	/** Keeps playtime safe for int64 text conversion and JSON serialization. */
 	constexpr double MaxPlaytimeSeconds = 1.0e15;
 
-	/** Bounded so a long play session cannot grow the save file without limit. */
+	/**
+	 * Bounded so a long play session cannot grow the save file without limit.
+	 */
 	constexpr int32 MaxAppliedResultTokens = 256;
 	constexpr int32 MaxResultTokenLength = 160;
+
+	/**
+	 * Legacy saves can carry uncapped temporary-title day counts (E.g. an
+	 * int32 max read from a hand-migrated file); anything beyond a full school
+	 * year is junk and clamps at read. Values 1..365 round-trip unchanged.
+	 */
+	constexpr int32 MaxTemporaryTitleDays = 365;
+
+	/**
+	 * Older writers could store a temporary title without its day count; treat
+	 * the missing count as a grace window instead of silently dropping the
+	 * title at load. An explicit zero still means "expired".
+	 */
+	constexpr int32 DefaultTemporaryTitleGraceDays = 7;
 
 	FString ProfileNormalizeResultToken(const FString& InToken)
 	{
@@ -45,6 +61,12 @@ namespace
 	FString ProfileJsonKeyToString(const FJsonObject::FStringType& Key)
 	{
 		return FString(*Key);
+	}
+
+	/** Practice/tutorial duels record no competitive counters or DP. */
+	bool ProfileIsTutorialMode(const FDAProfileDuelResult& Result)
+	{
+		return Result.Mode.Equals(TEXT("tutorial"), ESearchCase::IgnoreCase);
 	}
 
 	double ProfileReadClampedDouble(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, double Default, double Min, double Max)
@@ -361,7 +383,7 @@ int32 UDAProfileSubsystem::RecordDuelResult(const FDAProfileDuelResult& Result)
 {
 	// Practice/tutorial duels are not competitive results; they must not count
 	// toward wins_total, wins_<opponent> or the E33 gates.
-	if (Result.Mode.Equals(TEXT("tutorial"), ESearchCase::IgnoreCase))
+	if (ProfileIsTutorialMode(Result))
 	{
 		SetCounter(TEXT("last_duel_player_lp"), FMath::Max(0, Result.PlayerLp));
 		return 0;
@@ -424,9 +446,8 @@ bool UDAProfileSubsystem::IsResultTokenApplied(const FString& ResultToken) const
 	return !Token.IsEmpty() && AppliedResultTokens.Contains(Token);
 }
 
-bool UDAProfileSubsystem::TryMarkResultTokenApplied(const FString& ResultToken)
+bool UDAProfileSubsystem::MarkResultTokenAppliedInternal(const FString& Token)
 {
-	const FString Token = ProfileNormalizeResultToken(ResultToken);
 	if (Token.IsEmpty() || AppliedResultTokens.Contains(Token))
 	{
 		return false;
@@ -437,8 +458,29 @@ bool UDAProfileSubsystem::TryMarkResultTokenApplied(const FString& ResultToken)
 		AppliedResultTokens.RemoveAt(0, AppliedResultTokens.Num() - MaxAppliedResultTokens,
 			EAllowShrinking::No);
 	}
+	return true;
+}
+
+bool UDAProfileSubsystem::TryMarkResultTokenApplied(const FString& ResultToken)
+{
+	const FString Token = ProfileNormalizeResultToken(ResultToken);
+	if (!MarkResultTokenAppliedInternal(Token))
+	{
+		return false;
+	}
+	// A standalone claim has no guaranteed follow-up apply, so persist the
+	// guard immediately (wallet/tests/exam lane call this directly). Claim +
+	// apply pairs must use TryMarkResultTokenAppliedDeferred instead so the
+	// token is persisted together with its effects in one save.
 	RequestProgressionAutosave(TEXT("result_token"));
 	return true;
+}
+
+bool UDAProfileSubsystem::TryMarkResultTokenAppliedDeferred(const FString& ResultToken)
+{
+	// In-memory claim only. The caller applies the gated effects immediately
+	// after and relies on an autosave to persist claim + effects atomically.
+	return MarkResultTokenAppliedInternal(ProfileNormalizeResultToken(ResultToken));
 }
 
 int32 UDAProfileSubsystem::RecordDuelResultOnce(const FDAProfileDuelResult& Result, const FString& ResultToken,
@@ -450,12 +492,23 @@ int32 UDAProfileSubsystem::RecordDuelResultOnce(const FDAProfileDuelResult& Resu
 	{
 		return RecordDuelResult(Result);
 	}
-	if (!TryMarkResultTokenApplied(Token))
+	if (!MarkResultTokenAppliedInternal(Token))
 	{
 		bAlreadyApplied = true;
 		return 0;
 	}
-	return RecordDuelResult(Result);
+	// Claim in memory, then apply: the single autosave inside RecordDuelResult
+	// persists the token together with the counters/DP it gates. A crash
+	// before that save simply lets the result re-apply, so no reward can be
+	// stranded behind a token-only save.
+	const int32 DpEarned = RecordDuelResult(Result);
+	if (ProfileIsTutorialMode(Result))
+	{
+		// RecordDuelResult skips the autosave for tutorial results, but the
+		// claim still needs one save to keep exactly-once across a restart.
+		RequestProgressionAutosave(TEXT("result_token"));
+	}
+	return DpEarned;
 }
 
 // ------------------------------------------------------------------------ flags
@@ -876,8 +929,19 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 	// profile, so default to true and preserve backward compatibility.
 	bool bLoadedInitialized = true;
 	Source->TryGetBoolField(TEXT("initialized"), bLoadedInitialized);
-	TemporaryTitleDaysRemaining = static_cast<int32>(ProfileReadClampedDouble(
-		Source, TEXT("temporary_title_days"), 0.0, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
+	// P4-11: legacy payloads could store an uncapped day count, and older
+	// writers could omit the count entirely while keeping the title. A present
+	// count clamps at read; a missing count gets a bounded grace window when a
+	// title is actually saved. An explicit zero still means "expired".
+	{
+		double RawDays = 0.0;
+		const bool bHasDays = Source->TryGetNumberField(TEXT("temporary_title_days"), RawDays)
+			&& FMath::IsFinite(RawDays);
+		TemporaryTitleDaysRemaining = bHasDays
+			? static_cast<int32>(FMath::Clamp(FMath::FloorToDouble(RawDays),
+				0.0, static_cast<double>(MaxTemporaryTitleDays)))
+			: (TemporaryTitle.IsEmpty() ? 0 : DefaultTemporaryTitleGraceDays);
+	}
 	DP = static_cast<int32>(ProfileReadClampedDouble(
 		Source, TEXT("dp"), 3000.0, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
 	PlaytimeSeconds = ProfileReadClampedDouble(
@@ -902,7 +966,9 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 		Title = DefaultTitle;
 	}
 	DP = FMath::Max(0, DP);
-	TemporaryTitleDaysRemaining = FMath::Max(0, TemporaryTitleDaysRemaining);
+	// A saved count of exactly zero means the temporary title already expired;
+	// a grace/clamped count keeps it active. (Reads above already bound the
+	// day count to 0..365, so no further coercion is needed here.)
 	if (TemporaryTitleDaysRemaining == 0)
 	{
 		TemporaryTitle.Reset();

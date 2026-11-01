@@ -743,14 +743,22 @@ def main(argv: list[str] | None = None) -> int:
     canon_by_id = {str(entry["id"]): entry for entry in canon.get("decks", [])}
 
     if args.check:
-        passed, total, opponent_passed, opponent_total, lines = audit_all(rules)
+        try:
+            passed, total, opponent_passed, opponent_total, lines = audit_all(rules)
+        except (OSError, ValueError) as exc:
+            print(f"error: cannot load opponent deck inputs: {exc}", file=sys.stderr)
+            return 2
         for line in lines:
             print(line)
         print(f"{'PASS' if opponent_passed == opponent_total else 'FAIL'}: "
               f"{opponent_passed}/{opponent_total} runtime opponent decks legal (full name/copy/year-1 audit)")
         print(f"{'PASS' if passed == total else 'FAIL'}: "
               f"{passed}/{total} constructed decks legal under A04 static audit")
-        refs = reference_errors()
+        try:
+            refs = reference_errors()
+        except (OSError, ValueError) as exc:
+            print(f"error: cannot load opponent deck inputs: {exc}", file=sys.stderr)
+            return 2
         for error in refs:
             print(f"FAIL: {error}")
         if not refs:
@@ -790,14 +798,22 @@ def main(argv: list[str] | None = None) -> int:
         write_json(RUNTIME_DIR / f"{row['id']}.json", row["deck"])
     print(f"Wrote {len(rows)} runtime opponent decks from {len(canon_by_id)} canon records")
 
-    passed, total, opponent_passed, opponent_total, lines = audit_all(rules)
+    try:
+        passed, total, opponent_passed, opponent_total, lines = audit_all(rules)
+    except (OSError, ValueError) as exc:
+        print(f"error: cannot load opponent deck inputs: {exc}", file=sys.stderr)
+        return 2
     for line in lines:
         print(line)
     print(f"{'PASS' if opponent_passed == opponent_total else 'FAIL'}: "
           f"{opponent_passed}/{opponent_total} runtime opponent decks legal (full name/copy/year-1 audit)")
     print(f"{'PASS' if passed == total else 'FAIL'}: "
           f"{passed}/{total} constructed decks legal under A04 static audit")
-    refs = reference_errors()
+    try:
+        refs = reference_errors()
+    except (OSError, ValueError) as exc:
+        print(f"error: cannot load opponent deck inputs: {exc}", file=sys.stderr)
+        return 2
     for error in refs:
         print(f"FAIL: {error}")
     if not refs:

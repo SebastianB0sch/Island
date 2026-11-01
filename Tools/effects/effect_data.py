@@ -9,8 +9,13 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sys
 import unicodedata
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from tooling import atomic  # noqa: E402  (path setup makes tooling importable)
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "DuelAcademyIsland" / "Content" / "Data"
@@ -97,11 +102,14 @@ def load_json(path: Path):
 
 
 def write_json(path: Path, payload) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, indent=2, ensure_ascii=False)
-    with path.open("w", encoding="utf-8", newline="\n") as handle:
-        handle.write(text)
-        handle.write("\n")
+    """Serialize ``payload`` as indent-2 UTF-8 JSON and publish it atomically.
+
+    fusions.json, rituals.json and the effect manifest are loaded by the
+    engine, so a truncated half-write must never become visible: serialize to
+    a same-directory temporary file, fsync it, then ``os.replace`` (see
+    Tools/tooling/atomic.py).
+    """
+    atomic.write_json(path, payload)
 
 
 def load_cards() -> list[dict]:
@@ -187,11 +195,13 @@ def ritual_has_effect(card: dict) -> bool:
 def engine_name_literals() -> set[str]:
     """Names passed to TEXT(...) in the current engine.
 
-    The 137-card regression baseline is the union of the four decks. 110 of
-    those cards have an exact name literal in DADuelEngine.cpp; the remaining
-    27 are Normal Monsters or the effect-free Fusion Monster 319, which are
-    covered generically. This scanner is read-only and intentionally loose:
-    Tier 0 coverage is only credited when a card also passes the vanilla test.
+    The 137-card tier 0 baseline is the union of the four decks. 109 of those
+    cards are credited as `engine_cpp` in the coverage manifest; the remaining
+    28 have no scripted effect to credit: 27 are Normal Monsters and one is
+    the effect-free Fusion Monster 319, both covered by the generic
+    engine/fusion-data rules. This scanner is read-only and intentionally
+    loose: Tier 0 coverage is only credited when a card also passes the
+    vanilla test, so a name literal alone never counts as scripting.
     """
     if not ENGINE_CPP.exists():
         return set()

@@ -861,8 +861,19 @@ bool UDASaveSubsystem::LoadPayloadJsonWithContext(const FString& Json, UDAProfil
 		return false;
 	}
 
+	// In-memory payloads follow the file path: they are migrated to
+	// CurrentVersion first (ReadPayloadFromSlotName migrates slot payloads).
+	// Without this a legacy v0 payload that places name/dorm at the root parses
+	// but is then rejected by ValidatePayload's "has no profile object" check,
+	// and a payload claiming a newer version would load silently un-migrated.
+	FString Payload = Json;
+	if (!MigrateJson(Payload, -1, OutError))
+	{
+		return false;
+	}
+
 	TSharedPtr<FJsonObject> Root;
-	if (!ParseJsonObject(Json, Root))
+	if (!ParseJsonObject(Payload, Root))
 	{
 		OutError = TEXT("Payload is not a valid JSON object.");
 		return false;

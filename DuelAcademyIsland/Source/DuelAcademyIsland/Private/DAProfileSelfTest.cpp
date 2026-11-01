@@ -553,6 +553,53 @@ namespace
 
 		FString Future = TEXT("{\"version\":99}");
 		Test.Check(!Test.Save->MigrateJson(Future, 99, Error), TEXT("newer save version is rejected"));
+
+		// P4-11: legacy temporary-title payloads. An uncapped saved day count
+		// clamps at read; a title without a count keeps the title on a grace
+		// window; an explicit zero still expires the title.
+		{
+			const FString UncappedJson = TEXT(
+				"{\"profile\":{\"name\":\"Legacy Title\",\"gender\":\"unspecified\",\"dorm\":\"Slifer\","
+				"\"title\":\"Occult Duelist\",\"dp\":3000,\"initialized\":true,"
+				"\"temporary_title\":\"Occult Duelist\",\"temporary_title_days\":2147483647}}");
+			TSharedPtr<FJsonObject> UncappedRoot;
+			Test.Check(ParseJsonRoot(UncappedJson, UncappedRoot), TEXT("legacy uncapped title payload parses"));
+			FString UncappedError;
+			Test.Check(Test.Profile->ReadSaveData(UncappedRoot, UncappedError),
+				TEXT("legacy uncapped title payload reads"));
+			Test.CheckString(Test.Profile->GetTemporaryTitle(), TEXT("Occult Duelist"),
+				TEXT("legacy uncapped count keeps the temporary title"));
+			Test.CheckInt(Test.Profile->GetTemporaryTitleDaysRemaining(), 365,
+				TEXT("legacy uncapped day count clamps to a full year"));
+
+			const FString MissingDaysJson = TEXT(
+				"{\"profile\":{\"name\":\"Legacy Title\",\"gender\":\"unspecified\",\"dorm\":\"Slifer\","
+				"\"title\":\"Occult Duelist\",\"dp\":3000,\"initialized\":true,"
+				"\"temporary_title\":\"Occult Duelist\"}}");
+			TSharedPtr<FJsonObject> MissingRoot;
+			Test.Check(ParseJsonRoot(MissingDaysJson, MissingRoot), TEXT("legacy title-without-days payload parses"));
+			FString MissingError;
+			Test.Check(Test.Profile->ReadSaveData(MissingRoot, MissingError),
+				TEXT("legacy title-without-days payload reads"));
+			Test.CheckString(Test.Profile->GetTemporaryTitle(), TEXT("Occult Duelist"),
+				TEXT("title without a day count is not silently dropped"));
+			Test.Check(Test.Profile->GetTemporaryTitleDaysRemaining() > 0,
+				TEXT("title without a day count gets a grace window"));
+
+			const FString ExpiredJson = TEXT(
+				"{\"profile\":{\"name\":\"Legacy Title\",\"gender\":\"unspecified\",\"dorm\":\"Slifer\","
+				"\"title\":\"Occult Duelist\",\"dp\":3000,\"initialized\":true,"
+				"\"temporary_title\":\"Occult Duelist\",\"temporary_title_days\":0}}");
+			TSharedPtr<FJsonObject> ExpiredRoot;
+			Test.Check(ParseJsonRoot(ExpiredJson, ExpiredRoot), TEXT("expired title payload parses"));
+			FString ExpiredError;
+			Test.Check(Test.Profile->ReadSaveData(ExpiredRoot, ExpiredError),
+				TEXT("expired title payload reads"));
+			Test.CheckString(Test.Profile->GetTemporaryTitle(), FString(),
+				TEXT("an explicit zero day count still expires the temporary title"));
+			Test.CheckInt(Test.Profile->GetTemporaryTitleDaysRemaining(), 0,
+				TEXT("an explicit zero day count stays zero"));
+		}
 	}
 
 	bool RunProfileSelfTest()

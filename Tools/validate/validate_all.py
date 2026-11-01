@@ -4879,6 +4879,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     ctx = make_context(root, data_dir, contracts_dir)
 
+    internal_error = False
     try:
         validate_cards(ctx, report)
         validate_canon_reference(ctx, report)
@@ -4899,6 +4900,7 @@ def main(argv: list[str] | None = None) -> int:
         validate_saves(ctx, report)
         cross_check(ctx, report)
     except Exception as exc:  # pragma: no cover - defensive CLI boundary
+        internal_error = True
         report.error("internal_error", f"{type(exc).__name__}: {exc}", owner="A10")
         if args.debug:
             raise
@@ -4916,6 +4918,12 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         if not args.json:
             print(f"Report: {report_path}")
+
+    if internal_error:
+        # An unexpected exception is a tool failure, not a data failure: honor
+        # the documented exit 2 (data findings exit 1).
+        print("error: internal error; validate_all exited with 2", file=sys.stderr)
+        return 2
 
     return 0 if report.result() == "PASS" else 1
 

@@ -5,6 +5,7 @@
 #include "DAEventGraph.h"
 #include "DAHUD.h"
 #include "DADialogueUI.h"
+#include "DADuelUI.h"
 #include "DAProfileSubsystem.h"
 #include "DACalendarSubsystem.h"
 #include "DADeckLogic.h"
@@ -618,6 +619,13 @@ void UDAStorySubsystem::ParseScenes(const TSharedPtr<FJsonObject>& Root, bool bM
 			}
 		}
 
+		// Duplicate ids overwrite each other in this map; warn exactly like
+		// MergeFromJson does for duplicate event ids so a data collision is
+		// never silent.
+		if (Scenes.Contains(Scene.Id))
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: duplicate scene id %s overwritten."), *Scene.Id);
+		}
 		Scenes.Add(Scene.Id, Scene);
 	}
 }
@@ -701,6 +709,12 @@ void UDAStorySubsystem::ParseDialogue(const TSharedPtr<FJsonObject>& Root, bool 
 			}
 		}
 
+		// Duplicate dialogue keys overwrite each other in this map; warn exactly
+		// like MergeFromJson does for duplicate event ids.
+		if (Lines.Contains(Line.Key))
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: duplicate dialogue key %s overwritten."), *Line.Key);
+		}
 		Lines.Add(Line.Key, Line);
 	}
 }
@@ -833,6 +847,7 @@ void UDAStorySubsystem::ResetRuntimeState()
 	PreviousTitle.Reset();
 	PendingDuel = FDAStoryPendingDuel();
 	bResumePendingDuel = false;
+	DuelOpenRetryTimer = 0.f;
 }
 
 void UDAStorySubsystem::StartOpening()
@@ -1342,39 +1357,63 @@ bool UDAStorySubsystem::Tick(float DeltaSeconds)
 	if (bWaitingForDuel)
 	{
 		PendingDuel.Elapsed += DeltaSeconds;
+		DuelOpenRetryTimer = FMath::Max(0.f, DuelOpenRetryTimer - DeltaSeconds);
 		if (ADAHUD* HUD = ResolveHUD())
 		{
-			if (HUD->IsDuelOpen())
+			const FDADuelUI* DuelUI = HUD->GetDuelUI();
+			switch (DecidePendingDuelTick(
+				HUD->IsDuelOpen(),
+				DuelUI && DuelUI->WasDeckSelectClosedWithoutResult(),
+				HUD->IsModalOpen(),
+				bResumePendingDuel,
+				PendingDuel.bOpened,
+				PendingDuel.Elapsed,
+				DuelOpenRetryTimer))
 			{
-				PendingDuel.bOpened = true;
-				bResumePendingDuel = false;
-			}
-			else if (bResumePendingDuel)
+			case EDAStoryDuelTickDecision::None:
 			{
-				// The save was made while a duel was pending. The load restored
-				// the opponent/branch state but the duel UI is not open, so
-				// re-present the same selector instead of replaying the command.
-				if (PendingDuel.Elapsed > 0.5f && !HUD->IsModalOpen())
+				if (HUD->IsDuelOpen())
 				{
+					PendingDuel.bOpened = true;
 					bResumePendingDuel = false;
-					PendingDuel.bOpened = false;
-					PendingDuel.Elapsed = 0.f;
-					const FString DuelMode = PendingDuel.bTutorial ? TEXT("tutorial") : PendingDuel.Mode;
-					HUD->OpenDuelDeckSelect(PendingDuel.OpponentId, PendingDuel.OpponentName,
-						PendingDuel.OpponentDeckId, DuelMode, PendingDuel.bAwardDP);
+					DuelOpenRetryTimer = 0.f;
 				}
+				break;
 			}
-			else if (PendingDuel.bOpened)
+			case EDAStoryDuelTickDecision::Reopen:
+			{
+				// P4-02: the deck select ended without recording a duel result
+				// (the player backed out). Re-present the same selector instead
+				// of inferring a phantom loss from unchanged counters.
+				UE_LOG(LogDuelAcademyIsland, Log,
+					TEXT("Story: duel vs %s closed without a result; re-presenting the deck select."),
+					*PendingDuel.OpponentId);
+				bResumePendingDuel = false;
+				PendingDuel.bOpened = false;
+				PendingDuel.Elapsed = 0.f;
+				DuelOpenRetryTimer = 0.5f;
+				OpenPendingDuelDeckSelect(*HUD);
+				break;
+			}
+			case EDAStoryDuelTickDecision::RetryRequest:
+				// P4-03: the initial ask can be silently refused by the HUD
+				// (title screen open, another duel...). Re-issue it on a short
+				// interval; the 10s loss timer is only the last resort.
+				DuelOpenRetryTimer = 0.5f;
+				OpenPendingDuelDeckSelect(*HUD);
+				break;
+			case EDAStoryDuelTickDecision::ResolveInferred:
 			{
 				bool bWon = false;
 				bool bDraw = false;
 				InferPendingDuelResult(bWon, bDraw);
 				ResolvePendingDuel(bWon, bDraw);
+				break;
 			}
-			else if (PendingDuel.Elapsed > 10.f)
-			{
+			case EDAStoryDuelTickDecision::ResolveLoss:
 				UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: duel UI did not open; treating as a loss."));
 				ResolvePendingDuel(false, false);
+				break;
 			}
 		}
 		else if (!bResumePendingDuel && PendingDuel.Elapsed > 1.f)
@@ -2471,18 +2510,18 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 	}
 }
 
-void UDAStorySubsystem::ApplyRewardById(const FString& RewardId)
+bool UDAStorySubsystem::ApplyRewardById(const FString& RewardId)
 {
 	if (RewardId.IsEmpty() || AppliedRewardIds.Contains(RewardId))
 	{
-		return;
+		return false;
 	}
 
 	const TSharedPtr<FJsonObject>* RewardPtr = Rewards.Find(RewardId);
 	if (!RewardPtr || !RewardPtr->IsValid())
 	{
 		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: reward id '%s' is not declared."), *RewardId);
-		return;
+		return false;
 	}
 	const TSharedPtr<FJsonObject> Reward = *RewardPtr;
 	const FString Type = StoryReadString(Reward, TEXT("type"));
@@ -2521,7 +2560,13 @@ void UDAStorySubsystem::ApplyRewardById(const FString& RewardId)
 	}
 	else if (Type == TEXT("deck_grant"))
 	{
-		ApplyDeckGrant(StoryReadString(Reward, TEXT("deck_id")));
+		// V2 residual corner: only ledger the reward once the deck import really
+		// succeeded. A failed import stays retryable instead of being swallowed
+		// as "already applied" (applied at the call site below).
+		if (!ApplyDeckGrant(StoryReadString(Reward, TEXT("deck_id"))))
+		{
+			return false;
+		}
 	}
 	else if (Type == TEXT("card") || Type == TEXT("card_grant"))
 	{
@@ -2550,6 +2595,7 @@ void UDAStorySubsystem::ApplyRewardById(const FString& RewardId)
 
 	AppliedRewardIds.Add(RewardId);
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: applied reward %s (%s)."), *RewardId, *Type);
+	return true;
 }
 
 void UDAStorySubsystem::ApplyRewardCommand(const FDAStoryCommand& Command)
@@ -2712,19 +2758,23 @@ void UDAStorySubsystem::UnlockDuel(const FString& DuelId)
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: duel request '%s' unlocked."), *Key);
 }
 
-void UDAStorySubsystem::ApplyDeckGrant(const FString& DeckId)
+bool UDAStorySubsystem::ApplyDeckGrant(const FString& DeckId)
 {
 	if (DeckId.IsEmpty())
 	{
-		return;
+		return false;
 	}
 
 	SelectedStarterDeck = DeckId;
 	UDAProfileSubsystem* Profile = ResolveProfile();
 	if (!Profile)
 	{
-		return;
+		return false;
 	}
+
+	// V2 residual corner: the starter flags must only record a deck choice the
+	// import actually applied, so a failed import stays retryable.
+	bool bImported = false;
 
 	if (UObject* Provider = Profile->GetDeckProvider())
 	{
@@ -2752,6 +2802,7 @@ void UDAStorySubsystem::ApplyDeckGrant(const FString& DeckId)
 					}
 				}
 				DeckLogic->SetActiveDeckId(ActiveDeckId);
+				bImported = true;
 			}
 			else
 			{
@@ -2762,6 +2813,7 @@ void UDAStorySubsystem::ApplyDeckGrant(const FString& DeckId)
 		else if (IDAProfileDeckInterface* Decks = Cast<IDAProfileDeckInterface>(Provider))
 		{
 			Decks->SetActiveDeckId(DeckId);
+			bImported = true;
 		}
 		else
 		{
@@ -2773,9 +2825,13 @@ void UDAStorySubsystem::ApplyDeckGrant(const FString& DeckId)
 		UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: no A06 deck provider yet; selected deck %s recorded in story state."), *DeckId);
 	}
 
-	Profile->SetFlag(FString::Printf(TEXT("starter_deck_%s"), *DeckId.ToLower()), true);
-	Profile->SetFlag(TEXT("starter_deck_chosen"), true);
-	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: granted/activated deck %s."), *DeckId);
+	if (bImported)
+	{
+		Profile->SetFlag(FString::Printf(TEXT("starter_deck_%s"), *DeckId.ToLower()), true);
+		Profile->SetFlag(TEXT("starter_deck_chosen"), true);
+		UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: granted/activated deck %s."), *DeckId);
+	}
+	return bImported;
 }
 
 bool UDAStorySubsystem::EnsureStarterDeck(const FString& PreferredDeck)
@@ -2791,13 +2847,9 @@ bool UDAStorySubsystem::EnsureStarterDeck(const FString& PreferredDeck)
 	const FString RewardId = FString::Printf(TEXT("opening_starter_deck_%s"), *Deck.ToLower());
 	if (Rewards.Contains(RewardId))
 	{
-		ApplyRewardById(RewardId);
+		return ApplyRewardById(RewardId);
 	}
-	else
-	{
-		ApplyDeckGrant(Deck);
-	}
-	return true;
+	return ApplyDeckGrant(Deck);
 }
 
 void UDAStorySubsystem::SetCalendarFromJson(const TSharedPtr<FJsonObject>& Object)
@@ -2841,10 +2893,20 @@ void UDAStorySubsystem::CompleteEvent(const FString& EventId)
 	{
 		return;
 	}
+
+	// A02's title system ranks King of Games/Duel King MinStoryEvents against
+	// story_events_cleared. Count exactly one increment per new completion:
+	// the migration maps the legacy "events" counter onto the same key, and the
+	// replay/idempotency paths (outcome ledger, forced re-runs) reuse ids.
+	const bool bNewCompletion = !CompletedEvents.Contains(EventId);
 	CompletedEvents.Add(EventId);
 	if (UDAProfileSubsystem* Profile = ResolveProfile())
 	{
 		Profile->SetFlag(FDAEventGraph::EventCompletionFlag(EventId), true);
+		if (bNewCompletion)
+		{
+			Profile->IncrementCounter(TEXT("story_events_cleared"), 1);
+		}
 
 		// Data-only email hooks: emails.json owns unlocked_by and duel_requests.
 		// Apply them through A02 so the PDA and A07 can consume the same state.
@@ -2875,6 +2937,11 @@ void UDAStorySubsystem::CompleteEvent(const FString& EventId)
 				}
 			}
 		}
+
+		// DASaveGame.h documents "event completion" as part of the autosave
+		// trigger set; keep the reason in the same lowercase style as the
+		// profile's "duel_result"/"result_token" reasons.
+		Profile->RequestProgressionAutosave(TEXT("event_complete"));
 	}
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: event %s marked complete."), *EventId);
 }
@@ -3025,6 +3092,53 @@ void UDAStorySubsystem::InferPendingDuelResult(bool& bOutWon, bool& bOutDraw) co
 		|| Profile->GetCounter(TEXT("wins_syrus")) > PendingDuel.PreWinsSyrus;
 }
 
+EDAStoryDuelTickDecision UDAStorySubsystem::DecidePendingDuelTick(bool bDuelOpen, bool bDeckSelectClosedWithoutResult,
+	bool bModalOpen, bool bResumePendingDuel, bool bOpened, float Elapsed, float RetryTimer)
+{
+	if (bDuelOpen)
+	{
+		// The deck select/duel owns the screen; the tick only marks the duel as
+		// opened (a side effect of being here, no further decision needed).
+		return EDAStoryDuelTickDecision::None;
+	}
+	if (bResumePendingDuel)
+	{
+		// A save restored a pending duel. Re-present once the screen frees up
+		// instead of replaying the duel command; never time a restore into a
+		// loss while a modal simply blocks the open.
+		return (Elapsed > 0.5f && !bModalOpen)
+			? EDAStoryDuelTickDecision::Reopen
+			: EDAStoryDuelTickDecision::None;
+	}
+	if (bDeckSelectClosedWithoutResult)
+	{
+		// P4-02: the player backed out of the story deck select. That is a
+		// re-present, never a story loss.
+		return EDAStoryDuelTickDecision::Reopen;
+	}
+	if (bOpened)
+	{
+		// P4-02: the duel ran and closed; infer the result from the counters.
+		return EDAStoryDuelTickDecision::ResolveInferred;
+	}
+	if (Elapsed > 10.f)
+	{
+		// Only a genuinely unopenable HUD reaches this: the refusal retry below
+		// consumed its full 10s budget (or no retry could open the selector).
+		return EDAStoryDuelTickDecision::ResolveLoss;
+	}
+	return RetryTimer <= 0.f
+		? EDAStoryDuelTickDecision::RetryRequest
+		: EDAStoryDuelTickDecision::None;
+}
+
+void UDAStorySubsystem::OpenPendingDuelDeckSelect(ADAHUD& HUD)
+{
+	const FString DuelMode = PendingDuel.bTutorial ? TEXT("tutorial") : PendingDuel.Mode;
+	HUD.OpenDuelDeckSelect(PendingDuel.OpponentId, PendingDuel.OpponentName,
+		PendingDuel.OpponentDeckId, DuelMode, PendingDuel.bAwardDP);
+}
+
 void UDAStorySubsystem::ResolvePendingDuel(bool bWon, bool bDraw)
 {
 	++PlaythroughDuelResolved;
@@ -3035,6 +3149,7 @@ void UDAStorySubsystem::ResolvePendingDuel(bool bWon, bool bDraw)
 	PendingDuel.bOpened = false;
 	PendingDuel.Elapsed = 0.f;
 	bResumePendingDuel = false;
+	DuelOpenRetryTimer = 0.f;
 
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: duel vs %s resolved (won=%s, draw=%s) -> %s"),
 		*Opponent, bWon ? TEXT("true") : TEXT("false"), bDraw ? TEXT("true") : TEXT("false"),
@@ -3415,6 +3530,15 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 				}
 			}
 		}
+		else if (Root->HasField(Field))
+		{
+			// Full save loads are rejected by ValidateSaveSection before this
+			// point; reaching here means a direct LoadState reset a ledger.
+			// Make that visible instead of silently granting outcomes again.
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Story: save field '%s' is not a string array; the %s ledger was reset while reading."),
+				*FString(Field), *FString(Field));
+		}
 	};
 
 	ReadStringSet(TEXT("completed"), CompletedEvents);
@@ -3460,6 +3584,7 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 	bPendingTextInput = false;
 	bPendingContinue = false;
 	bResumePendingDuel = false;
+	DuelOpenRetryTimer = 0.f;
 	WaitRemaining = 0.f;
 	ActiveChoices.Reset();
 	ActiveChoiceConversationId.Reset();
@@ -3618,6 +3743,27 @@ bool UDAStorySubsystem::ValidateSaveSection(const TSharedPtr<FJsonObject>& InSec
 	{
 		OutError = TEXT("Story save section contains invalid state JSON.");
 		return false;
+	}
+
+	// The idempotency ledgers are reject-or-accept, never silently reset: a
+	// null/ill-typed array used to clear the ledger at read time, which made
+	// granting outcomes reapply (double DP/pack/card) after a corrupt load.
+	// P4-12 is deferred, so validate the existing key scheme as-is.
+	static const TCHAR* const LedgerFields[] = {
+		TEXT("applied_outcomes"), TEXT("completed"), TEXT("applied_rewards"), TEXT("unlocked_duels")
+	};
+	for (const TCHAR* Field : LedgerFields)
+	{
+		if (!Parsed->HasField(Field))
+		{
+			continue;
+		}
+		const TSharedPtr<FJsonValue> Value = Parsed->TryGetField(Field);
+		if (!Value.IsValid() || Value->Type != EJson::Array)
+		{
+			OutError = FString::Printf(TEXT("Story save state field '%s' is not an array."), *FString(Field));
+			return false;
+		}
 	}
 
 	OutError.Reset();

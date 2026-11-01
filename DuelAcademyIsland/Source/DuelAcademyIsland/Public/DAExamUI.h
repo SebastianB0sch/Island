@@ -74,6 +74,14 @@ private:
 	FString GetGradeLabel() const;
 	int32 GetOptionCount() const;
 
+	/**
+	 * U5: shared written-panel layout so the drawn option stack and the
+	 * keyboard/click selection use one budget. Reserves the seam above the
+	 * pinned SUBMIT/ANSWERED row (other panels keep ClipY - 200S) and drops
+	 * option rows that would run under it.
+	 */
+	void ComputeWrittenOptionLayout(float& OutOptionsTop, int32& OutVisibleCount) const;
+
 	void DrawHeader();
 	void DrawWritten();
 	void DrawWrittenDone();

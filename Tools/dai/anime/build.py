@@ -26,6 +26,7 @@ from . import face as FACE
 from . import gait as GAIT
 from . import hair as HAIR
 from . import head as HEAD
+from . import manifest as MANIFEST
 from . import models as M
 from . import retarget as RT
 from . import skeleton as S
@@ -431,8 +432,11 @@ def _prune_previous_outputs(old_info, new_info, log):
 
     This runs only after the new cast.json has been written atomically, so an
     interrupted export leaves the previous manifests and meshes usable.  It is
-    skipped for a partial (``only=...``) build, which intentionally keeps the
-    rest of the cast.
+    skipped for a partial (``only=...``) build: build() merges the rebuilt
+    subset into the previous manifest (see merge_partial_manifests), so the
+    published cast.json still lists the untouched members that keep their
+    exported files - pruning here would delete referenced assets.  Members
+    removed from the cast registry are dropped by the next full build.
     """
     if not isinstance(old_info, dict):
         return 0
@@ -454,7 +458,14 @@ def _prune_previous_outputs(old_info, new_info, log):
 
 def build(log=print, only=None):
     """Every cast member, grouped by skeleton: all members built on the same base model (or the procedural
-    fallback rig) share one skeleton, one set of A_Anime_<Group>_<State> takes and one duel disk."""
+    fallback rig) share one skeleton, one set of A_Anime_<Group>_<State> takes and one duel disk.
+
+    With ``only`` (a list of cast ids) only those members (plus the player) are rebuilt, but the
+    published cast.json still describes the whole cast: the rebuilt ``groups`` / ``meshes`` /
+    ``materials`` entries overwrite their previous ones and the untouched members keep theirs
+    (merge_partial_manifests), so the importer's stale-cast cleanup never deletes assets that are
+    still on disk and still in the manifest.  A partial build also skips stale-file pruning for the
+    same reason."""
     from .. import blend
     out_dir = os.path.join(C.OUT_DIR, OUT_REL)
     os.makedirs(out_dir, exist_ok=True)
@@ -463,11 +474,13 @@ def build(log=print, only=None):
     # FBX/PNG writers are atomic, and stale files are pruned below only after
     # cast.json has been replaced.
     old_info = None
+    old_info_error = None
     cast_path = os.path.join(C.OUT_DATA, "cast.json")
     if os.path.exists(cast_path):
         try:
             old_info = jsonio.read_json(cast_path)
         except (OSError, ValueError) as exc:
+            old_info_error = exc
             log(f"  !! anime: previous cast.json unreadable ({exc}); stale files will not be pruned")
     entries = CAST.all_entries()
     order = [CAST.PLAYER] + [c for c in entries if c != CAST.PLAYER]
@@ -526,15 +539,28 @@ def build(log=print, only=None):
         info["groups"][group] = g
     mats = palette.material_json()
     info["materials"] = {k: mats[k] for k in sorted(used) if k in mats}
+    # A partial build publishes the FULL manifest (rebuilt subset merged into the
+    # previous document); publishing the subset alone would tell the importer
+    # that every untouched member no longer exists and make it delete those
+    # assets on the next import.
+    if only is not None and old_info is None and old_info_error is not None:
+        raise RuntimeError(
+            f"partial cast build could not read the previous cast.json ({old_info_error}); "
+            "the rebuilt subset alone would describe less of the cast than the importer expects - "
+            "run a full build (python Tools/build_island.py cast) to republish the whole manifest")
+    published = info if only is None else MANIFEST.merge_partial_manifests(old_info, info)
+    if only is not None and not isinstance(old_info, dict):
+        log("  !! anime: no previous cast.json to merge the partial build into; "
+            "the published manifest only covers its rebuilt members")
     os.makedirs(C.OUT_DATA, exist_ok=True)
-    jsonio.write_json(cast_path, info, indent=1)
+    jsonio.write_json(cast_path, published, indent=1)
     if only is None:
         try:
             _prune_previous_outputs(old_info, info, log)
         except Exception as exc:  # noqa: BLE001 - cleanup must not fail a successful export
             log(f"  !! anime: stale-file cleanup failed ({exc}); files left in place")
     annotate_layout(log)
-    return info
+    return published
 
 
 def annotate_layout(log=print):

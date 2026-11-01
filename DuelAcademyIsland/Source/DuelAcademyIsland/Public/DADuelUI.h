@@ -103,6 +103,33 @@ public:
 	bool IsOpen() const { return DuelMode != EDuelUiMode::None; }
 	bool IsDuelOpen() const { return DuelMode == EDuelUiMode::Duel || DuelMode == EDuelUiMode::Result; }
 
+	// Pinned cross-workstream contract #1 (WS-02 consumes via
+	// ADAHUD::GetDuelUI). True iff the most recently opened story deck-select
+	// ended without a duel result being recorded (player backed out of the
+	// picker, or a story-owned duel closed mid-board without a result). Story
+	// treats this as re-present, not as a phantom loss. Cleared the next time
+	// a duel result is recorded or a story-owned duel closes with a result.
+	bool WasDeckSelectClosedWithoutResult() const;
+
+	/**
+	 * U4 layout constants and pure helpers so the headless gate test can pin
+	 * the picker's pagination bounds. The single-row panel geometry fits at
+	 * most 4 starter decks (the shipped decks.json count); raising the page
+	 * size for a future data update must respect the hard cap 6 or the 1600x900
+	 * board cannot keep the panels on-screen.
+	 */
+	static constexpr int32 DeckSelectPageSize = 4;
+	static int32 DeckSelectPageCount(int32 NumDecks);
+	static int32 DeckSelectPageFirstDeck(int32 Page);
+
+	/**
+	 * Pure decision for the no-result-close state machine (contract #1). Only
+	 * a story-owned session that was actually open and finished without
+	 * bStoryResultPending sets the flag; every other close clears it. Exposed
+	 * static for DAA02GateTests; the production flow calls it from CloseDuel.
+	 */
+	static bool ComputeStoryDuelClosedWithoutResult(bool bOwnedByStoryAtOpen, bool bResultRecordedAtClose, bool bWasOpenAtClose);
+
 	void OpenDeckSelect(const FString& OpponentId = TEXT("jaden"), const FString& OpponentName = TEXT("Jaden Yuki"),
 		const FString& OpponentDeckId = TEXT("jaden"), const FString& Mode = TEXT("free"), bool bInAwardDP = true);
 	void StartDuelWithDeck(const FString& DeckId);
@@ -127,6 +154,14 @@ public:
 	void DebugFinishDuelWin();
 	/** Screenshot harness: a fixed board with two legal Equip targets and a pending choice. */
 	void DebugOpenEquipChoice();
+
+	/**
+	 * Test-only (DAA02GateTests): seed the story-ownership marker that the
+	 * production open path captures from UDAStorySubsystem::HasPendingDuel so
+	 * the headless state machine of contract #1 can be driven. Production flow
+	 * must not call this.
+	 */
+	void DebugSetStoryOwnedDuel(bool bStoryOwned);
 
 private:
 	// ---- drawing helpers ----
@@ -274,6 +309,16 @@ private:
 	FString DuelModeString = TEXT("free");
 	bool bDuelAwardDP = true;
 	int32 DuelResultDpEarned = 0;
+
+	// Pinned contract #1 state. bDuelOpenedForStory is captured once at
+	// OpenDeckSelect (a story command was waiting for a duel) and survives
+	// StartDuelWithDeck so an Escape-on-the-live-board still counts as a story
+	// close without a result; CloseDuel folds both flags into the public one.
+	bool bDeckSelectClosedWithoutResult = false;
+	bool bDuelOpenedForStory = false;
+
+	// U4: deck picker page for decks beyond the single row's page size.
+	int32 DeckSelectPage = 0;
 
 	/** One unique token per duel; guards profile rewards against duplicate notification. */
 	FString DuelResultToken;

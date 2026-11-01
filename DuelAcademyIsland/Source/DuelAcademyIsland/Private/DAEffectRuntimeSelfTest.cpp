@@ -1160,6 +1160,67 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 				TEXT("battle_position_lock mode=defense_at_end changes position after the Battle Phase"));
 		}
 	}
+	// ---- T4: an AI battle turn must fire the defense_at_end flip at its end ----
+	{
+		FDuelEngine Duel(Database, 129);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_AI_BATTLE_END_DEFENSE"));
+		Scenario.OpponentField.Add(MakeMonster(1, 0));
+		Scenario.PlayerField.Add(MakeMonster(2, 0, true));
+		FString Error;
+		Duel.StartScenario(Scenario, Error);
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 BlueEyesUid = FindUidInSide(Duel.GetSide(EDuelOwner::Opponent), 1);
+		LoadTestScript(Runtime, 1, TEXT(R"JSON({"id":"test_ai_battle_end_defense","trigger":"continuous","operations":[{"op":"battle_position_lock","target":"$self","mode":"defense_at_end"}]})JSON"));
+		if (Runtime && BlueEyesUid != 0)
+		{
+			Runtime->RecomputeContinuous();
+			const FDuelCard* BlueEyes = Duel.FindMonster(BlueEyesUid);
+			Report.Check(BlueEyes && BlueEyes->Position == EDuelPosition::Attack,
+				TEXT("the AI's defense_at_end monster starts in Attack Position"));
+			// Public handoff only: EndTurn queues the opponent turn and
+			// RunOpponentTurn drives it end-to-end.  The battle-end flip must
+			// happen inside the AI turn (D1), not on the following player
+			// trigger only.
+			Duel.EndTurn();
+			Report.Check(Duel.IsAwaitingAi(), TEXT("AI turn is queued for the defense_at_end flip test"));
+			Duel.RunOpponentTurn();
+			BlueEyes = Duel.FindMonster(BlueEyesUid);
+			Report.Check(!Duel.IsOver() && BlueEyes != nullptr && BlueEyes->bFaceUp
+				&& BlueEyes->Position == EDuelPosition::Defense,
+				TEXT("the AI's battle turn fires the defense_at_end position change"));
+		}
+	}
+	// ---- T3: an End-Phase player prompt defers the AI handoff -------------
+	{
+		FDuelEngine Duel(Database, 128);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_END_PHASE_PROMPT_DEFER"));
+		Scenario.PlayerField.Add(MakeMonster(1, 0));
+		FString Error;
+		Duel.StartScenario(Scenario, Error);
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		LoadTestScript(Runtime, 1, TEXT(R"JSON({"id":"test_end_phase_prompt","trigger":"on_end","optional":true,"operations":[{"op":"gain_lp","amount":100}]})JSON"));
+		const int32 BlueEyesUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1);
+		if (Runtime && BlueEyesUid != 0)
+		{
+			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
+			// Public End-Phase path: either the opponent turn is queued or a
+			// player prompt is deferred, never both.
+			Duel.EndTurn();
+			Report.Check(Duel.HasPendingChoiceFor(EDuelOwner::Player) && !Duel.IsAwaitingAi()
+				&& Duel.GetActiveSide() == EDuelOwner::Player,
+				TEXT("an End-Phase player prompt defers the AI handoff instead of stranding it"));
+			FString AnswerError;
+			Report.Check(Duel.AutoAnswerPendingChoice(&AnswerError),
+				TEXT("the deferred End-Phase prompt can be answered"));
+			Report.Check(Duel.GetSide(EDuelOwner::Player).LP == LpBefore + 100,
+				TEXT("answering the deferred prompt still executes the optional effect"));
+			Report.Check(Duel.IsAwaitingAi(),
+				TEXT("answering the deferred prompt resumes the AI handoff"));
+			Duel.RunOpponentTurn();
+			Report.Check(!Duel.IsOver(),
+				TEXT("the deferred duel continues normally after the AI turn"));
+		}
+	}
 	{
 		FDuelEngine Duel(Database, 111);
 		FDuelScenario Scenario = MakeScenario(TEXT("ERT_ACTIVATION_LOCK"));
@@ -1919,6 +1980,57 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 			Report.Check(bActivated && Runtime->GetAtkModifier(SourceUid) == 100
 				&& Runtime->GetAtkModifier(OtherUid) == 300,
 				TEXT("per_counter uses each target's own counter count"));
+		}
+	}
+
+	// ---- T1: bounded effect event queue -----------------------------------
+	{
+		FDuelEngine Duel(Database, 133);
+		Duel.SetAutoAnswerAllChoices(true);
+		// 200 identical fillers so a single mill operation raises far more
+		// nested on_sent_to_graveyard events than the queue can hold.
+		TArray<int32> BigDeck;
+		for (int32 I = 0; I < 200; ++I)
+		{
+			BigDeck.Add(7);
+		}
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_EVENT_QUEUE_CAP"));
+		Scenario.PlayerDeck = BigDeck;
+		Scenario.PlayerField.Add(MakeMonster(1, 0));
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("event-queue scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		// Each milled copy reports its own Graveyard event; the Blue-Eyes
+		// script drives one 200-card mill from the End Phase.
+		LoadTestScript(Runtime, 7, TEXT(R"JSON({"id":"test_queue_probe","trigger":"on_sent_to_graveyard","operations":[{"op":"gain_lp","player":"self","amount":1}]})JSON"));
+		LoadTestScript(Runtime, 1, TEXT(R"JSON({"id":"test_queue_filler","trigger":"on_end","operations":[{"op":"mill","player":"self","count":200}]})JSON"));
+		if (Runtime)
+		{
+			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
+			Runtime->OnEnd(EDuelOwner::Player);
+			int32 FullCount = 0;
+			int32 CascadeCount = 0;
+			for (const FDuelLogEntry& Entry : Duel.GetLog())
+			{
+				if (Entry.Message.Contains(TEXT("Effect event queue is full")))
+				{
+					++FullCount;
+				}
+				if (Entry.Message.Contains(TEXT("cascade limit reached")))
+				{
+					++CascadeCount;
+				}
+			}
+			Report.Check(FullCount == 1 && CascadeCount == 0,
+				TEXT("an oversized event batch warns once and never hits the cascade limit"));
+			// Newest events beyond the 64-entry cap are refused, so exactly
+			// the queued 64 probes execute, plus the one mill script.  The
+			// LP delta (+64) pins the same count independently.
+			Report.Check(Runtime->GetExecutedScriptCount() == 65
+				&& Duel.GetSide(EDuelOwner::Player).LP == LpBefore + 64,
+				TEXT("the full event queue dispatches exactly 64 events and refuses the newest ones"));
+			Report.Check(!Duel.IsOver() && !Duel.HasPendingChoice(),
+				TEXT("the queue-cap scenario still ends over a live duel"));
 		}
 	}
 

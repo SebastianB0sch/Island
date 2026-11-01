@@ -4,6 +4,10 @@ The normal build is offline and uses Tools/canon/cache/*.json. This script is
 only for maintaining those caches. It writes the raw wikitext outside the
 repository by default because it is copyrighted reference material.
 
+A failed fetch keeps any existing non-empty cache entry and exits non-zero
+while pages remain empty, so a partially failed refresh is never mistaken
+for a complete one.
+
 Usage:
     python Tools/canon/fetch_guides.py
     python Tools/canon/fetch_guides.py --out C:\\path\\guide_wikitext.json
@@ -12,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 import urllib.parse
 import urllib.request
@@ -79,14 +84,22 @@ def main() -> int:
         cache = json.loads(args.out.read_text(encoding="utf-8"))
     todo = [page for page in PAGES if not cache.get(page)]
     print(f"{len(cache)} cached, {len(todo)} to fetch")
+    failures: list[str] = []
     with ThreadPoolExecutor(max_workers=2) as pool:
         for future in as_completed({pool.submit(fetch, page): page for page in todo}):
             title, text = future.result()
+            if not text:
+                # A failed fetch must never shrink the cache: keep an existing
+                # non-empty entry and record the failure instead.
+                failures.append(title)
+                continue
             cache[title] = text
     write_text(args.out, json.dumps(cache, ensure_ascii=False, indent=1, sort_keys=True))
     empty = [page for page in PAGES if not cache.get(page)]
     print(f"wrote {args.out}; empty={len(empty)}")
-    return 0
+    if failures:
+        print(f"error: {len(failures)} fetch(es) failed: {failures[:8]}", file=sys.stderr)
+    return 1 if empty else 0
 
 
 if __name__ == "__main__":

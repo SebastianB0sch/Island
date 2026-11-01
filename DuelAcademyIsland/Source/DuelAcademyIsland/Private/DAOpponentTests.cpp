@@ -6,6 +6,9 @@
 #include "DADuelistAI.h"
 #include "Engine/GameInstance.h"
 
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+
 #if WITH_DEV_AUTOMATION_TESTS
 
 namespace
@@ -126,6 +129,88 @@ bool FDAOpponentRosterTest::RunTest(const FString& Parameters)
 		const FDAAIDecision Decision = AI.ChooseAction(Snapshot);
 		TestTrue(TEXT("Battle policy chooses a direct attack"), Decision.Action == EDAAIAction::DirectAttack);
 	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDAOpponentCooldownRealignTest, "DuelAcademy.Opponents.CooldownRealign",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FDAOpponentCooldownRealignTest::RunTest(const FString& Parameters)
+{
+	(void)Parameters;
+	UDAOpponentSubsystem* Opponents = MakeOpponentSubsystemForTest();
+	if (!TestNotNull(TEXT("Opponent subsystem created"), Opponents))
+	{
+		return false;
+	}
+
+	FString Error;
+	if (!TestTrue(TEXT("Roster loads"), Opponents->Reload(Error)))
+	{
+		AddError(Error);
+		return false;
+	}
+	const FDAOpponentDef* Jaden = Opponents->FindOpponent(TEXT("jaden"));
+	if (!TestNotNull(TEXT("Jaden exists"), Jaden))
+	{
+		return false;
+	}
+
+	// P4-09: a backwards day jump (older save or calendar override) must never
+	// wedge the duel-request cooldown. Consume on a later day, then jump back.
+	Opponents->ResetRuntimeState();
+	FString Reason;
+	TestTrue(TEXT("Request accepted on day 10"), Opponents->ConsumeDuelRequest(TEXT("jaden"), 10, 0, Reason));
+
+	FDAOpponentRuntimeState FutureState = Opponents->GetRuntimeState();
+	FutureState.RequestDay = 12;
+	FutureState.LastRequestDay.Add(TEXT("jaden"), 12);
+	Opponents->SetRuntimeState(FutureState);
+
+	TestTrue(TEXT("A backwards jump does not block with a stale future cooldown"),
+		Opponents->CanRequestDuel(TEXT("jaden"), 5, 0, Reason));
+	TestTrue(TEXT("Consume realigns the request-day bookkeeping"),
+		Opponents->ConsumeDuelRequest(TEXT("jaden"), 5, 0, Reason));
+	const FDAOpponentRuntimeState& Realigned = Opponents->GetRuntimeState();
+	TestEqual(TEXT("Request day realigned to the new day"), Realigned.RequestDay, 5);
+	TestEqual(TEXT("Stale future cooldown entry cleared"), Realigned.LastRequestDay.FindRef(TEXT("jaden")), 5);
+	TestEqual(TEXT("Stale per-day counter was reset, then counted once"),
+		Realigned.RequestsToday.FindRef(TEXT("jaden")), 1);
+
+	// Forward cooldowns must keep blocking exactly as before.
+	FDAOpponentRuntimeState NormalState;
+	NormalState.RequestDay = 10;
+	NormalState.LastRequestDay.Add(TEXT("jaden"), 10);
+	Opponents->SetRuntimeState(NormalState);
+	const int32 CooldownDays = FMath::Max(1, Jaden->DuelRequest.CooldownDays);
+	if (CooldownDays >= 2)
+	{
+		TestFalse(TEXT("Forward cooldown still blocks mid-window"),
+			Opponents->CanRequestDuel(TEXT("jaden"), 10 + CooldownDays - 1, 0, Reason));
+	}
+	TestTrue(TEXT("Forward cooldown expires on schedule"),
+		Opponents->CanRequestDuel(TEXT("jaden"), 10 + CooldownDays, 0, Reason));
+
+	// ValidateSaveSection catches last_request_day entries later than the
+	// tracked request day (only possible in a corrupted/tampered save; they
+	// would otherwise block every request forever).
+	TSharedPtr<FJsonObject> BadSection = MakeShared<FJsonObject>();
+	BadSection->SetNumberField(TEXT("version"), 1);
+	BadSection->SetNumberField(TEXT("request_day"), 5);
+	TSharedPtr<FJsonObject> LastDays = MakeShared<FJsonObject>();
+	LastDays->SetNumberField(TEXT("jaden"), 12);
+	BadSection->SetObjectField(TEXT("last_request_day"), LastDays);
+	FString ValidateError;
+	TestFalse(TEXT("Future last_request_day entry is rejected"), Opponents->ValidateSaveSection(BadSection, ValidateError));
+
+	TSharedPtr<FJsonObject> GoodSection = MakeShared<FJsonObject>();
+	GoodSection->SetNumberField(TEXT("version"), 1);
+	GoodSection->SetNumberField(TEXT("request_day"), 12);
+	TSharedPtr<FJsonObject> GoodLastDays = MakeShared<FJsonObject>();
+	GoodLastDays->SetNumberField(TEXT("jaden"), 12);
+	GoodSection->SetObjectField(TEXT("last_request_day"), GoodLastDays);
+	TestTrue(TEXT("Consistent request-day bookkeeping validates"), Opponents->ValidateSaveSection(GoodSection, ValidateError));
 
 	return true;
 }

@@ -1,6 +1,6 @@
 # Canon validation report
 
-Generated: 2026-10-31T10:00:56+00:00
+Generated: 2026-11-01T10:05:23+00:00
 
 - Errors: **0**
 - Warnings: **1**
@@ -10,12 +10,16 @@ Generated: 2026-10-31T10:00:56+00:00
 | `cards.count` | PASS | 1200 records, ids 1..1200 |
 | `cards.verified` | PASS | 0 differences |
 | `cards.hash` | PASS | 1ebf1f7217522b6c... |
+| `cards.fingerprints` | PASS | 0 card digest(s) mismatched or absent |
+| `cards.canonical_digest` | PASS | recomputed from the committed cards.json |
 | `packs.count` | PASS | 48 |
 | `packs.ids_unique` | PASS |  |
 | `packs.cards_valid` | PASS | 0 invalid ids |
 | `packs.all_cards_obtainable` | PASS | 0 cards missing |
 | `packs.prices` | PASS | [] |
 | `packs.pack_sizes` | PASS | [] |
+| `packs.record_digests` | PASS | 0 mismatched, 0 missing records |
+| `packs.record_digests` | PASS | 0 pack record(s) without a digest: [] |
 | `packs.odds` | WARN | pack rarity odds are not published; A06 must define a seeded model |
 | `packs.unresolved_names` | PASS | 0 packs have unresolved guide names |
 | `events.count` | PASS | 35 |
@@ -272,11 +276,15 @@ Generated: 2026-10-31T10:00:56+00:00
 | `decks.bastion_magnet.unresolved` | PASS | unresolved 40 |
 | `decks.bastion_magnet.copies` | PASS | copy limit check is against the 3-copy rule, not the year list |
 | `decks.unknown_explicit` | PASS | 6 decks explicitly unknown: ['jinzo_spirit', 'bastion_seventh', 'torrey_special', 'chazz_ojama', 'jaden_improved', 'bastion_magnet'] |
+| `decks.record_digests` | PASS | 0 mismatched, 0 missing records |
+| `decks.record_digests` | PASS | 0 deck record(s) without a digest: [] |
 | `events.E09.tournament.source` | PASS | ranked roster |
 | `puzzles.count` | PASS | 100 |
 | `puzzles.levels` | PASS |  |
 | `puzzles.solutions` | PASS | 0 missing |
 | `puzzles.card_ids` | PASS |  |
+| `puzzles.record_digests` | PASS | 0 mismatched, 0 missing records |
+| `puzzles.record_digests` | PASS | 0 puzzle record(s) without a digest: [] |
 | `titles.count` | PASS | 12 permanent titles |
 | `titles.dropout` | PASS | Dropout Boy state |
 | `titles.temporary` | PASS | Occult Duelist |
@@ -296,7 +304,7 @@ Generated: 2026-10-31T10:00:56+00:00
 | `text.name_pointer_pools` | PASS | {'full_base_expected': '0x146CB14', 'full_first_pointer': '0x0946CB14', 'full_first_pointer_matches': True, 'short_base_expected': '0x146CC32', 'short_first_pointer': '0x0946CC32', 'short_first_pointer_matches': True} |
 | `legal.no_rom_or_save` | PASS | [] |
 | `legal.no_full_dialogue` | PASS | [] |
-| `manifest.hashes` | PASS |  |
+| `manifest.hashes` | PASS | 0 issue(s) |
 
 ## Warnings
 

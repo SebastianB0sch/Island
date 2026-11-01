@@ -34,7 +34,20 @@ public:
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) override;
 	virtual void ResetSaveSectionState() override;
 	virtual int32 GetOwnedCardCount(int32 CardId) const override { return GetCount(CardId); }
-	virtual int32 GetDistinctCardsOwned() const override { return Counts.Num(); }
+
+	/** Only positive counts are "owned": transient zero-count entries (legacy saves) must not inflate title gates. */
+	virtual int32 GetDistinctCardsOwned() const override
+	{
+		int32 Distinct = 0;
+		for (const TPair<int32, int32>& Pair : Counts)
+		{
+			if (Pair.Value > 0)
+			{
+				++Distinct;
+			}
+		}
+		return Distinct;
+	}
 
 	// ------------------------------------------------------------ collection
 

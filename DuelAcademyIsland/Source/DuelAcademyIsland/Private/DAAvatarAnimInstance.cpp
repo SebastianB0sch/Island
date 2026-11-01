@@ -221,8 +221,7 @@ void UDAAvatarAnimInstance::NativeInitializeAnimation()
 	Super::NativeInitializeAnimation();
 	// A reinitialised instance must not inherit a previous mesh's action slot or
 	// blend state; Configure() only replaces the locomotion takes.
-	GroundSpeed = VerticalSpeed = SwimAlpha = DuelAlpha = 0.f;
-	bInAir = false;
+	GroundSpeed = SwimAlpha = DuelAlpha = 0.f;
 	SmoothedSpeed = 0.f;
 	BlendedGroundSpeed = 0.f;
 	Phase = 0.f;
@@ -255,11 +254,12 @@ void UDAAvatarAnimInstance::Configure(const TMap<FName, TObjectPtr<UAnimSequence
 		WalkGroundSpeed, RunGroundSpeed);
 }
 
-void UDAAvatarAnimInstance::SetLocomotion(float InGroundSpeed, bool bInAirNow, float InVerticalSpeed, float InSwimAlpha, float InDuelAlpha)
+void UDAAvatarAnimInstance::SetLocomotion(float InGroundSpeed, float InSwimAlpha, float InDuelAlpha)
 {
+	// W11: bInAir/VerticalSpeed were written here and never read by the
+	// graph (the action layer in UDAAvatarComponent owns the air state), so
+	// the feed and the fields are gone.
 	GroundSpeed = FMath::Max(0.f, InGroundSpeed);
-	bInAir = bInAirNow;
-	VerticalSpeed = InVerticalSpeed;
 	SwimAlpha = FMath::Clamp(InSwimAlpha, 0.f, 1.f);
 	DuelAlpha = FMath::Clamp(InDuelAlpha, 0.f, 1.f);
 }

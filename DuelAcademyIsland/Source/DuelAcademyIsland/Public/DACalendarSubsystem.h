@@ -156,7 +156,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Calendar")
 	bool IsExamDayFor(int32 InYear, int32 InMonthIndex, int32 InDay) const;
 
-	/** First exam day on or after the current date. */
+	/**
+	 * First exam day on or after the current date.
+	 *
+	 * Boundary (P4-13, conservative read): on an exam day itself the method
+	 * still reports that day's exam, regardless of the current period. Callers
+	 * that need "the exam after this one" must advance to the next day (or the
+	 * next period and beyond) before asking; today's-current-exam callers rely
+	 * on this behavior.
+	 */
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Calendar")
 	bool GetNextExamDate(int32& OutYear, int32& OutMonthIndex, int32& OutDay) const;
 

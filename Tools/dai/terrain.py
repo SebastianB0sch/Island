@@ -19,11 +19,35 @@ import numpy as np
 from scipy import ndimage
 from scipy.interpolate import CubicSpline, RectBivariateSpline
 
-from . import atomic
+from . import atomic, cache
 from . import config as C
 from . import jsonio, palette
 
 # --------------------------------------------------------------------------- helpers
+STAMP_NAME = "terrain_cache.json"
+
+
+def cache_stamp():
+    """Current cache-configuration stamp: shapes / scaling the cached arrays rely on."""
+    return {"field_res": int(C.FIELD_RES), "world_size": float(C.WORLD_SIZE)}
+
+
+def write_cache_stamp():
+    """Publish the stamp last, after every array cache, so a stamp proves a complete run."""
+    jsonio.write_json(os.path.join(C.CACHE_DIR, STAMP_NAME), cache_stamp(), indent=1, sort_keys=True)
+
+
+def check_cache(*required, fix="python Tools/build_island.py terrain"):
+    """Refuse (StampedCacheError) unless Tools/.cache matches this build's configuration.
+
+    Consumers of the *.npy terrain caches lived off existence checks alone: after a
+    FIELD_RES / WORLD_SIZE change or an interrupted run, layout silently mixed
+    mismatched resolutions into a finished-looking layout.json.  Runs are stamped
+    on write (see write_cache_stamp); reads refuse anything they cannot verify.
+    """
+    cache.require_stamp(C.CACHE_DIR, STAMP_NAME, cache_stamp(), required,
+                        subject="terrain caches", fix=fix)
+
 
 def smoothstep(e0, e1, x):
     t = np.clip((x - e0) / (e1 - e0), 0.0, 1.0)
@@ -586,6 +610,7 @@ class Terrain:
         save_npy(os.path.join(C.CACHE_DIR, "occupied.npy"), occ.astype(np.float32))
         save_npy(os.path.join(C.CACHE_DIR, "d_in.npy"), self.d_in.astype(np.float32))
         jsonio.write_json(os.path.join(C.CACHE_DIR, "terrain_info.json"), dict(info=self.info, paths=self.paths))
+        write_cache_stamp()
         log("  saved heightmap, splats, colour map, caches")
 
     def minimap(self, size=2048):
@@ -628,7 +653,12 @@ def build_terrain(log=print):
 
 
 def load_cached():
-    """Lightweight access for later stages (layout) without regenerating."""
+    """Lightweight access for later stages (layout) without regenerating.
+
+    Raises cache.StampedCacheError when the caches are missing / partial / were
+    written with a different FIELD_RES / WORLD_SIZE (see check_cache).
+    """
+    check_cache("height.npy", "forest.npy", "slope.npy", "terrain_info.json")
     h = np.load(os.path.join(C.CACHE_DIR, "height.npy"))
     forest = np.load(os.path.join(C.CACHE_DIR, "forest.npy"))
     slope = np.load(os.path.join(C.CACHE_DIR, "slope.npy"))
@@ -637,6 +667,7 @@ def load_cached():
 
 
 def load_extra():
+    check_cache("occupied.npy", "d_in.npy")
     occ = np.load(os.path.join(C.CACHE_DIR, "occupied.npy"))
     d_in = np.load(os.path.join(C.CACHE_DIR, "d_in.npy"))
     return Field(occ), Field(d_in)

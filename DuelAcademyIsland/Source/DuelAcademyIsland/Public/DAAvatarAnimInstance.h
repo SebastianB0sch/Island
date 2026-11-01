@@ -35,8 +35,10 @@ public:
 	/** Copy the cast's take map and the clip ground speeds (cm/s, already scaled by BodyScale). */
 	void Configure(const TMap<FName, TObjectPtr<UAnimSequence>>& InAnims, float InWalkSpeed, float InRunSpeed);
 
-	/** Per-tick locomotion input. */
-	void SetLocomotion(float InGroundSpeed, bool bInAir, float InVerticalSpeed, float InSwimAlpha, float InDuelAlpha);
+	/** Per-tick locomotion input. VerticalSpeed/bInAir were dropped (W11): the
+	 *  native graph reads only ground speed plus the swim/duel alphas; the
+	 *  air/jump/land action choice stays in UDAAvatarComponent's own tick. */
+	void SetLocomotion(float InGroundSpeed, float InSwimAlpha, float InDuelAlpha);
 
 	/** Start (or retarget) an action. Re-sending the current sequence only updates its target weight. */
 	void SetAction(UAnimSequence* Sequence, bool bLoop, float InTargetWeight = 1.f, float InPlayRate = 1.f);
@@ -71,10 +73,8 @@ private:
 	void UpdateActionTimes(float DeltaSeconds);
 
 	float GroundSpeed = 0.f;
-	float VerticalSpeed = 0.f;
 	float SwimAlpha = 0.f;
 	float DuelAlpha = 0.f;
-	bool bInAir = false;
 
 	float WalkGroundSpeed = 150.f;
 	float RunGroundSpeed = 420.f;

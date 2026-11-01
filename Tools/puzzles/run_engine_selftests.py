@@ -30,6 +30,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from Tools.integration import run_smoke as _smoke  # noqa: E402  (path setup)
+
 DEFAULT_UPROJECT = ROOT / "DuelAcademyIsland" / "DuelAcademyIsland.uproject"
 DEFAULT_UE_EDITOR = Path(r"C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe")
 MODES = {
@@ -70,6 +75,46 @@ def _resolve_editor(explicit: str) -> Path | None:
     if DEFAULT_UE_EDITOR.exists():
         return DEFAULT_UE_EDITOR
     return None
+
+
+def _execute(command: list[str], cwd: Path, timeout: int) -> tuple[int | None, str, bool]:
+    """Run ``command``, kill the whole process tree on timeout.
+
+    Uses Tools/integration/run_smoke.py's ``_popen_tree_kwargs`` /
+    ``_terminate_process_tree`` helpers so every runner grows the same single
+    strategy (an UnrealEditor-Cmd child spawns helpers that must die too).
+    The timeout still bounds the direct child exactly like
+    ``subprocess.run(timeout=...)`` did: a child that exits in time keeps its
+    return code and captured output.
+    """
+    proc = subprocess.Popen(
+        command,
+        cwd=str(cwd),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        **_smoke._popen_tree_kwargs(),
+    )
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        partial_stdout = exc.stdout if isinstance(exc.stdout, str) else ""
+        partial_stderr = exc.stderr if isinstance(exc.stderr, str) else ""
+        _smoke._terminate_process_tree(proc)
+        try:
+            stdout, stderr = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            stdout, stderr = "", ""
+        output = (
+            f"TIMEOUT after {timeout}s\n\n"
+            f"--- stdout ---\n{partial_stdout or stdout}\n\n"
+            f"--- stderr ---\n{partial_stderr or stderr}\n"
+        )
+        return None, output, True
+    output = f"--- stdout ---\n{stdout}\n\n--- stderr ---\n{stderr}\n"
+    return proc.returncode, output, False
 
 
 def _parse_summaries(text: str) -> dict[str, dict[str, int | str]]:
@@ -126,24 +171,7 @@ def main(argv: list[str] | None = None) -> int:
     ]
     started = _dt.datetime.now(_dt.timezone.utc)
     try:
-        completed = subprocess.run(
-            command,
-            cwd=str(ROOT),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=args.timeout,
-        )
-        returncode: int | None = completed.returncode
-        output = f"--- stdout ---\n{completed.stdout}\n\n--- stderr ---\n{completed.stderr}\n"
-        timed_out = False
-    except subprocess.TimeoutExpired as exc:
-        returncode = None
-        stdout = exc.stdout if isinstance(exc.stdout, str) else ""
-        stderr = exc.stderr if isinstance(exc.stderr, str) else ""
-        output = f"TIMEOUT after {args.timeout}s\n\n{stdout}\n\n{stderr}\n"
-        timed_out = True
+        returncode, output, timed_out = _execute(command, ROOT, args.timeout)
     except OSError as exc:
         print(f"error: cannot execute {editor}: {exc}", file=sys.stderr)
         return 2

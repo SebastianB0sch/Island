@@ -234,6 +234,9 @@ def main() -> int:
         starter.setdefault("status", "complete")
         starter.setdefault("unresolved_slots", 0)
         starter.setdefault("unresolved_reason", "")
+        # Same per-record digest the opponent/event decks carry (closed by
+        # Pass 4: validate_canon warns on digest-less deck records).
+        starter["sha256"] = sha_deck(starter)
     deck_records: list[dict] = list(starters)
     for did, source in curated["opponent_decks"].items():
         deck_records.append(curated_deck(did, source, "opponent"))

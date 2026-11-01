@@ -23,14 +23,15 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import effect_data as data
 import effect_patterns as patterns
+from tooling import atomic
 
 LANE_TITLES = {
     "story_event_decks": "Story event opponent decks",
@@ -383,8 +384,7 @@ def main(argv: list[str] | None = None) -> int:
     md_path = data.ROOT / "Docs" / "Effects" / "COVERAGE_BY_DECK.md"
     if not args.check:
         data.write_json(json_path, payload)
-        md_path.parent.mkdir(parents=True, exist_ok=True)
-        md_path.write_text(markdown, encoding="utf-8", newline="\n")
+        atomic.write_text(md_path, markdown)
         print(f"Wrote {json_path.relative_to(data.ROOT)}")
         print(f"Wrote {md_path.relative_to(data.ROOT)}")
     print(

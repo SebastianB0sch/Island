@@ -7,38 +7,33 @@ they are perfectly periodic: they loop seamlessly in Unreal (bLooping).
 
 import math
 import os
-import tempfile
 import wave
 
 import numpy as np
 
+from . import atomic
 from . import config as C
 
 SR = 22050
 
 
 def _write(path, x, sr=SR):
+    """Write a 16-bit mono WAV, atomically (temp + os.replace + fsync via dai.atomic)."""
     x = np.asarray(x, np.float64)
     peak = np.max(np.abs(x)) + 1e-9
     x = x / peak * 0.85
     data = (x * 32767).astype("<i2")
-    directory = os.path.dirname(os.path.abspath(path))
-    os.makedirs(directory, exist_ok=True)
-    fd, temp_name = tempfile.mkstemp(prefix=os.path.basename(path) + ".", suffix=".wav", dir=directory)
-    os.close(fd)
-    try:
-        with wave.open(temp_name, "wb") as w:
+    with atomic.atomic_path(path) as temp_path:
+        with wave.open(str(temp_path), "wb") as w:
             w.setnchannels(1)
             w.setsampwidth(2)
             w.setframerate(sr)
             w.writeframes(data.tobytes())
-        os.replace(temp_name, path)
-    finally:
-        if os.path.exists(temp_name):
-            try:
-                os.unlink(temp_name)
-            except OSError:
-                pass
+        # fsync before publishing so an interrupted run cannot leave a truncated
+        # header / data chunk in the published file (write mode: Windows
+        # FlushFileBuffers needs a writable handle).
+        with temp_path.open("r+b") as fp:
+            os.fsync(fp.fileno())
 
 
 def band_noise(n, lo, hi, seed, tilt=0.0):

@@ -2,6 +2,7 @@
 
 #include "DANpcScheduleTest.h"
 
+#include "DACalendarSubsystem.h"
 #include "DAIslandSubsystem.h"
 #include "DANpcDirector.h"
 #include "DANpcSpawnPoint.h"
@@ -22,6 +23,12 @@ namespace
 {
 	constexpr float NpcScheduleTestTimeout = 180.f;
 	constexpr int32 NpcScheduleExpectedPoints = 38;
+
+	// Calendar-bridge case (W2): how long to wait for the island tick to apply
+	// a driven weekday/period change, and how long the no-change quiet window
+	// runs to prove an identical schedule is not re-applied.
+	constexpr float NpcScheduleBridgeStageTimeout = 5.f;
+	constexpr float NpcScheduleBridgeQuietSeconds = 1.f;
 
 	const TCHAR* const NpcScheduleWeekdays[] = {
 		TEXT("Monday"), TEXT("Tuesday"), TEXT("Wednesday"), TEXT("Thursday"),
@@ -618,6 +625,46 @@ void UDANpcScheduleTestSubsystem::RunSpawnDespawnCases()
 	D->ApplySchedule(TEXT("default"), TEXT("Monday"), TEXT("AM"));
 	Check(ActivePoint->IsOccupied() && CountDirectorNpcs() == Baseline,
 		TEXT("event-only flag restore returns to the baseline set"));
+
+	// W7: TeleportNpcToPoint records the destination occupancy and releases the
+	// departure point, so a follow-up ApplySchedule cannot double-spawn either.
+	ADANpcSpawnPoint* TeleportSource = FindPoint(TEXT("academy_receptionist"));
+	ADANpcSpawnPoint* TeleportDestination = FindPoint(TEXT("academy_arena_jaden"));
+	Check(TeleportSource != nullptr && TeleportDestination != nullptr, TEXT("teleport probe points resolve"));
+	if (TeleportSource && TeleportDestination)
+	{
+		AActor* Mover = TeleportSource->GetSpawnedNpc();
+		Check(D->TeleportNpcToPoint(TEXT("academy_receptionist"), TEXT("academy_arena_jaden"))
+				&& TeleportDestination->GetSpawnedNpc() == Mover
+				&& !TeleportSource->IsOccupied()
+				&& CountDirectorNpcs() == Baseline,
+			TEXT("teleport moves the occupancy without spawning a duplicate"));
+		D->ApplySchedule(TEXT("default"), TEXT("Monday"), TEXT("AM"));
+		VerifyActiveSet(TEXT("teleport schedule despawns the foreign occupant"),
+			TEXT("default"), TEXT("Monday"), TEXT("AM"), FString());
+
+		// Second hop onto an occupied destination: its previous occupant is
+		// deterministically despawned, still without a count change.
+		AActor* ArenaOccupant = D->SpawnAtPoint(TEXT("academy_arena_jaden"));
+		AActor* SecondMover = TeleportSource ? TeleportSource->GetSpawnedNpc() : nullptr;
+		Check(IsValid(ArenaOccupant) && IsValid(SecondMover) && SecondMover != Mover,
+			TEXT("teleport probe has both a destination occupant and a mover"));
+		if (IsValid(ArenaOccupant) && IsValid(SecondMover))
+		{
+			Check(D->TeleportNpcToPoint(TEXT("academy_receptionist"), TEXT("academy_arena_jaden"))
+					&& TeleportDestination->GetSpawnedNpc() == SecondMover
+					&& !IsValid(ArenaOccupant)
+					&& CountDirectorNpcs() == Baseline,
+				TEXT("teleport onto an occupied point despawns the previous occupant"));
+		}
+		// Restore the schedule baseline for the persistence cases that follow.
+		if (TeleportDestination->IsOccupied())
+		{
+			D->DespawnAtPoint(TEXT("academy_arena_jaden"));
+		}
+		D->ApplySchedule(TEXT("default"), TEXT("Monday"), TEXT("AM"));
+		VerifyActiveSet(TEXT("teleport restore baseline"), TEXT("default"), TEXT("Monday"), TEXT("AM"), FString());
+	}
 }
 
 void UDANpcScheduleTestSubsystem::RunRefreshCases()
@@ -742,6 +789,138 @@ void UDANpcScheduleTestSubsystem::RunWorldStatePersistenceCases()
 	}
 }
 
+// W2: the test drives the calendar through real API changes and waits for
+// the island tick's schedule bridge to re-apply the cast. Data-driven end
+// to end: the expected weekday/period are read back from the calendar, so
+// the case makes no assumption about the boot date.
+void UDANpcScheduleTestSubsystem::RunCalendarBridgeCases()
+{
+	ADANpcDirector* D = Director.Get();
+	UDACalendarSubsystem* Calendar = GetGameInstance()
+		? GetGameInstance()->GetSubsystem<UDACalendarSubsystem>()
+		: nullptr;
+	Check(D != nullptr && Calendar != nullptr, TEXT("calendar bridge case has a director and calendar"));
+	if (!D || !Calendar)
+	{
+		Finish();
+		return;
+	}
+
+	Check(D->HasAppliedSchedule(), TEXT("calendar bridge starts from an applied schedule"));
+	BridgeBaseScheduleId = D->GetCurrentScheduleId();
+	Check(!BridgeBaseScheduleId.IsEmpty(), TEXT("calendar bridge base schedule id is set"));
+
+	D->OnScheduleApplied.AddDynamic(this, &UDANpcScheduleTestSubsystem::HandleScheduleApplied);
+	BridgeApplications = 0;
+	Calendar->AdvancePeriod();
+	bBridgeCaseStarted = true;
+	BridgeStage = 0;
+	BridgeStageSeconds = 0.f;
+}
+
+void UDANpcScheduleTestSubsystem::HandleScheduleApplied(FString ScheduleId, FString Weekday, FString Period)
+{
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("NPC schedule test: OnScheduleApplied %s %s %s"),
+		*ScheduleId, *Weekday, *Period);
+	++BridgeApplications;
+}
+
+void UDANpcScheduleTestSubsystem::BridgeCaseTick(float DeltaTime)
+{
+	ADANpcDirector* D = Director.Get();
+	UDACalendarSubsystem* Calendar = GetGameInstance()
+		? GetGameInstance()->GetSubsystem<UDACalendarSubsystem>()
+		: nullptr;
+	if (!D || !Calendar)
+	{
+		Check(false, TEXT("calendar bridge tick has a director and calendar"));
+		Finish();
+		return;
+	}
+
+	BridgeStageSeconds += DeltaTime;
+	switch (BridgeStage)
+	{
+	case 0: // wait for the island tick to bridge the period change
+	{
+		const FString ExpectedWeekday = Calendar->GetWeekdayName(Calendar->GetWeekday());
+		const FString ExpectedPeriod = Calendar->GetPeriodName(Calendar->GetPeriod());
+		if (D->GetCurrentPeriod().Equals(ExpectedPeriod, ESearchCase::IgnoreCase)
+			&& D->GetCurrentWeekday().Equals(ExpectedWeekday, ESearchCase::IgnoreCase))
+		{
+			Check(true, TEXT("calendar bridge applied the calendar's weekday and period"));
+			Check(D->GetCurrentScheduleId() == BridgeBaseScheduleId,
+				TEXT("calendar bridge keeps the applied schedule id"));
+			Check(D->GetActiveEvent().IsEmpty(),
+				TEXT("calendar bridge runs without an event override"));
+			VerifyActiveSet(TEXT("calendar bridge period change"),
+				D->GetCurrentScheduleId(), ExpectedWeekday, ExpectedPeriod, FString());
+			// Reset the count for the next stage's quiet-window assertion; the
+			// stage-0 application itself was already counted.
+			BridgeApplications = 0;
+			BridgeStage = 1;
+			BridgeStageSeconds = 0.f;
+		}
+		else if (BridgeStageSeconds > NpcScheduleBridgeStageTimeout)
+		{
+			Check(false, TEXT("calendar bridge applied the period change"));
+			Finish();
+		}
+		break;
+	}
+
+	case 1: // quiet window: no combo change means no re-apply
+	{
+		if (BridgeStageSeconds >= NpcScheduleBridgeQuietSeconds)
+		{
+			Check(BridgeApplications == 0,
+				TEXT("calendar bridge does not re-apply an identical schedule"));
+			BridgeApplications = 0;
+			Calendar->AdvanceDay();
+			BridgeStage = 2;
+			BridgeStageSeconds = 0.f;
+		}
+		break;
+	}
+
+	case 2: // wait for the weekday change to bridge (AdvanceDay ends in AM)
+	{
+		const FString ExpectedWeekday = Calendar->GetWeekdayName(Calendar->GetWeekday());
+		const FString ExpectedPeriod = Calendar->GetPeriodName(Calendar->GetPeriod());
+		if (D->GetCurrentWeekday().Equals(ExpectedWeekday, ESearchCase::IgnoreCase)
+			&& D->GetCurrentPeriod().Equals(ExpectedPeriod, ESearchCase::IgnoreCase))
+		{
+			Check(BridgeApplications >= 1,
+				TEXT("calendar bridge applied the weekday change"));
+			VerifyActiveSet(TEXT("calendar bridge weekday change"),
+				D->GetCurrentScheduleId(), ExpectedWeekday, ExpectedPeriod, FString());
+			BridgeApplications = 0;
+			BridgeStage = 3;
+			BridgeStageSeconds = 0.f;
+		}
+		else if (BridgeStageSeconds > NpcScheduleBridgeStageTimeout)
+		{
+			Check(false, TEXT("calendar bridge applied the weekday change"));
+			Finish();
+		}
+		break;
+	}
+
+	default:
+	{
+		// A second quiet window: the dedup must hold across day changes too.
+		if (BridgeStageSeconds >= NpcScheduleBridgeQuietSeconds)
+		{
+			Check(BridgeApplications == 0,
+				TEXT("calendar bridge stays quiet while the weekday holds"));
+			D->OnScheduleApplied.RemoveDynamic(this, &UDANpcScheduleTestSubsystem::HandleScheduleApplied);
+			Finish();
+		}
+		break;
+	}
+	}
+}
+
 void UDANpcScheduleTestSubsystem::Finish()
 {
 	if (bFinished)
@@ -838,7 +1017,18 @@ bool UDANpcScheduleTestSubsystem::Tick(float DeltaTime)
 		RunSpawnDespawnCases();
 		RunRefreshCases();
 		RunWorldStatePersistenceCases();
-		Finish();
+		// The calendar-bridge case hands the remaining stages off to later
+		// ticks; it calls Finish itself when it cannot start.
+		RunCalendarBridgeCases();
+		if (!bBridgeCaseStarted)
+		{
+			Finish();
+		}
+	}
+
+	if (bBridgeCaseStarted)
+	{
+		BridgeCaseTick(DeltaTime);
 	}
 
 	return !bFinished;

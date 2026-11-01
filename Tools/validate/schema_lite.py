@@ -30,7 +30,12 @@ _TYPE_CHECKS = {
     "object": lambda v: isinstance(v, dict),
     "array": lambda v: isinstance(v, list),
     "number": lambda v: isinstance(v, (int, float)) and not isinstance(v, bool),
-    "integer": lambda v: isinstance(v, int) and not isinstance(v, bool),
+    # draft-07: any number with a zero fractional part is an integer, so 2.0
+    # matches "integer" but 2.5 does not.
+    "integer": lambda v: (
+        (isinstance(v, int) and not isinstance(v, bool))
+        or (isinstance(v, float) and not isinstance(v, bool) and v.is_integer())
+    ),
     "string": lambda v: isinstance(v, str),
 }
 
@@ -131,12 +136,14 @@ def _validate(
     if depth > 64:
         errors.append(f"{path}: schema recursion limit exceeded")
         return
-    if schema is True or schema is None:
+    if schema is True:
         return
     if schema is False:
         errors.append(f"{path}: not allowed")
         return
     if not isinstance(schema, dict):
+        # A null (or any other non-object) subschema node is a schema author's
+        # mistake: it must fail loudly instead of silently accepting data.
         errors.append(f"{path}: invalid schema node ({type(schema).__name__})")
         return
 
@@ -331,17 +338,38 @@ def _validate_string(value: str, schema: dict, path: str, errors: list[str]) -> 
             errors.append(f"{path}: bad pattern {schema['pattern']!r}: {exc}")
 
 
+def _numeric_keyword(schema: dict, key: str, path: str, errors: list[str]) -> float | None:
+    """Read a numeric schema keyword, rejecting booleans and non-numbers.
+
+    ``True`` comparison-equals ``1`` in Python, so an unguarded
+    ``value < schema[\"minimum\"]`` would silently accept boolean metadata
+    instead of reporting the mis-authored schema.
+    """
+    bound = schema.get(key)
+    if bound is None:
+        return None
+    if isinstance(bound, bool) or not isinstance(bound, (int, float)):
+        errors.append(f"{path}: schema {key} must be a number, got {type(bound).__name__}")
+        return None
+    return float(bound)
+
+
 def _validate_number(value: float, schema: dict, path: str, errors: list[str]) -> None:
-    if "minimum" in schema and value < schema["minimum"]:
+    minimum = _numeric_keyword(schema, "minimum", path, errors)
+    if minimum is not None and value < minimum:
         errors.append(f"{path}: {value} is less than minimum {schema['minimum']}")
-    if "maximum" in schema and value > schema["maximum"]:
+    maximum = _numeric_keyword(schema, "maximum", path, errors)
+    if maximum is not None and value > maximum:
         errors.append(f"{path}: {value} is greater than maximum {schema['maximum']}")
-    if "exclusiveMinimum" in schema and value <= schema["exclusiveMinimum"]:
+    exclusive_minimum = _numeric_keyword(schema, "exclusiveMinimum", path, errors)
+    if exclusive_minimum is not None and value <= exclusive_minimum:
         errors.append(f"{path}: {value} must be > {schema['exclusiveMinimum']}")
-    if "exclusiveMaximum" in schema and value >= schema["exclusiveMaximum"]:
+    exclusive_maximum = _numeric_keyword(schema, "exclusiveMaximum", path, errors)
+    if exclusive_maximum is not None and value >= exclusive_maximum:
         errors.append(f"{path}: {value} must be < {schema['exclusiveMaximum']}")
-    if "multipleOf" in schema and schema["multipleOf"]:
-        quotient = value / schema["multipleOf"]
+    multiple_of = _numeric_keyword(schema, "multipleOf", path, errors)
+    if multiple_of is not None and multiple_of != 0:
+        quotient = value / multiple_of
         if not math.isclose(quotient, round(quotient), rel_tol=0.0, abs_tol=1e-9):
             errors.append(f"{path}: {value} is not a multiple of {schema['multipleOf']}")
 

@@ -10,8 +10,10 @@
 
 #include "DAStorySubsystem.h"
 #include "DAEventGraph.h"
+#include "DAIslandSubsystem.h"
 #include "DAProfileSubsystem.h"
 #include "DACalendarSubsystem.h"
+#include "DADeckLogic.h"
 #include "DAInventorySubsystem.h"
 #include "DAOpponentSubsystem.h"
 #include "DASaveGame.h"
@@ -30,6 +32,7 @@
 #include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
+#include "Misc/Paths.h"
 #include "Misc/ScopeExit.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
@@ -1831,6 +1834,10 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 
 	AddCheck(TEXT("all 35 events started"), StartedCount == 35, FString::FromInt(StartedCount));
 	AddCheck(TEXT("all 35 events completed"), CompletedCount == 35, FString::FromInt(CompletedCount));
+	AddCheck(TEXT("story_events_cleared counts each new completion"),
+		Profile->GetCounter(TEXT("story_events_cleared")) == CompletedEvents.Num(),
+		FString::Printf(TEXT("%d completed ids / %d counted"),
+			CompletedEvents.Num(), Profile->GetCounter(TEXT("story_events_cleared"))));
 	AddCheck(TEXT("39/39 full-campaign duel commands resolved"),
 		FullCampaignDuelCommands == 39 && FullCampaignDuelResolved == 39,
 		FString::Printf(TEXT("%d/%d"), FullCampaignDuelResolved, FullCampaignDuelCommands));
@@ -1926,6 +1933,54 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 				Calendar->GetFullDateText());
 			AddCheck(TEXT("failed world load leaves the story state untouched"),
 				SaveState().Equals(LoadStorySnapshot), FString());
+
+			// P4-05: a story state whose ledger arrays are null/ill-typed is
+			// rejected before the ledgers are reset (outcomes would replay).
+			auto MakeLedgerSpoofJson = [&Profile, &Calendar, &Settings](EJson ValueType) -> FString
+			{
+				TSharedPtr<FJsonObject> LedgerRoot = MakeShared<FJsonObject>();
+				LedgerRoot->SetNumberField(TEXT("version"), UDASaveSubsystem::CurrentVersion);
+				Profile->WriteSaveData(LedgerRoot);
+				Calendar->WriteSaveData(LedgerRoot);
+				TSharedPtr<FJsonObject> LedgerSettings = MakeShared<FJsonObject>();
+				Settings->WriteSaveData(LedgerSettings);
+				LedgerRoot->SetObjectField(TEXT("settings"), LedgerSettings);
+
+				TSharedPtr<FJsonObject> SpoofState = MakeShared<FJsonObject>();
+				SpoofState->SetNumberField(TEXT("version"), 1);
+				SpoofState->SetStringField(TEXT("event"), TEXT("E01"));
+				SpoofState->SetStringField(TEXT("scene"), TEXT("opening.b01_new_game"));
+				SpoofState->SetNumberField(TEXT("command"), 0);
+				SpoofState->SetBoolField(TEXT("running"), false);
+				SpoofState->SetBoolField(TEXT("free_roam"), false);
+				SpoofState->SetBoolField(TEXT("opening_started"), false);
+				SpoofState->SetStringField(TEXT("starter_deck"), TEXT("fire"));
+				if (ValueType == EJson::Null)
+				{
+					SpoofState->SetField(TEXT("applied_outcomes"), MakeShared<FJsonValueNull>());
+				}
+				else
+				{
+					SpoofState->SetNumberField(TEXT("applied_outcomes"), 3);
+				}
+				SpoofState->SetField(TEXT("completed"), MakeShared<FJsonValueObject>(MakeShared<FJsonObject>()));
+
+				TSharedPtr<FJsonObject> StorySection = MakeShared<FJsonObject>();
+				StorySection->SetNumberField(TEXT("version"), 1);
+				StorySection->SetStringField(TEXT("state"), UDASaveSubsystem::SerializeCanonicalJson(SpoofState));
+				LedgerRoot->SetObjectField(TEXT("story"), StorySection);
+				return UDASaveSubsystem::SerializeCanonicalJson(LedgerRoot);
+			};
+
+			const FString LedgerBeforeSpoof = SaveState();
+			for (const EJson LedgerType : { EJson::Null, EJson::Number })
+			{
+				FString LedgerSpoofError;
+				const bool bLedgerSpoofLoaded = SaveSubsystem->LoadPayloadJsonWithContext(
+					MakeLedgerSpoofJson(LedgerType), Profile, Calendar, Settings, LedgerSpoofError);
+				AddCheck(TEXT("ill-typed story ledger is rejected"), !bLedgerSpoofLoaded, LedgerSpoofError);
+			}
+			AddCheck(TEXT("rejected ledger load keeps the story ledger"), SaveState().Equals(LedgerBeforeSpoof), FString());
 
 			// Pending duel state round-trips without replaying the duel command.
 			FString DuelSceneId;
@@ -2033,6 +2088,29 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 				InferPendingDuelResult(bInferredWon, bInferredDraw);
 				AddCheck(TEXT("pending duel prefers a draw"), !bInferredWon && bInferredDraw, FString());
 			}
+
+			// P4-02/P4-03 regression policy: the same pure decision the real tick
+			// executes, asserted without needing a live HUD.
+			using EDecision = EDAStoryDuelTickDecision;
+			AddCheck(TEXT("deck select closed without a result re-presents instead of a loss"),
+				DecidePendingDuelTick(false, true, false, false, false, 3.f, 0.2f) == EDecision::Reopen
+					&& DecidePendingDuelTick(false, true, false, true, true, 20.f, 0.f) == EDecision::Reopen,
+				FString());
+			AddCheck(TEXT("an open deck select only marks the pending duel as opened"),
+				DecidePendingDuelTick(true, true, false, true, false, 1.f, 0.f) == EDecision::None, FString());
+			AddCheck(TEXT("a refused initial open is retried before the loss timer"),
+				DecidePendingDuelTick(false, false, false, false, false, 6.f, 0.f) == EDecision::RetryRequest
+					&& DecidePendingDuelTick(false, false, false, false, false, 6.f, 0.4f) == EDecision::None,
+				FString());
+			AddCheck(TEXT("12s without an open deck select is a real loss"),
+				DecidePendingDuelTick(false, false, false, false, false, 12.f, 0.3f) == EDecision::ResolveLoss, FString());
+			AddCheck(TEXT("a properly closed duel resolves through counters"),
+				DecidePendingDuelTick(false, false, false, false, true, 2.f, 0.f) == EDecision::ResolveInferred, FString());
+			AddCheck(TEXT("a restored pending duel re-opens when the screen frees up"),
+				DecidePendingDuelTick(false, false, false, true, false, 1.f, 0.f) == EDecision::Reopen
+					&& DecidePendingDuelTick(false, false, true, true, false, 1.f, 0.f) == EDecision::None
+					&& DecidePendingDuelTick(false, false, false, true, false, 0.2f, 0.f) == EDecision::None,
+				FString());
 
 			// The outcome ledger makes non-reward event effects idempotent when
 			// an event is interrupted and replayed.
@@ -2318,6 +2396,258 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 			if (!RestoreError.IsEmpty())
 			{
 				AddInfo(FString::Printf(TEXT("persistence snapshot restore warning: %s"), *RestoreError));
+			}
+
+			// ------------------------------------------------------------ golden save fixtures (P4-01)
+			// The golden saves under Content/Data/Integration/saves are the
+			// contract artifacts; loading them into fresh progression state is
+			// harnessable here without a disk slot. This pins P4-01 (the schema
+			// declares settings.animation_speed as an integer while every golden
+			// stores 2), P4-06 (in-memory loads migrate), W9 (the saved hour is
+			// honored) and the absent-section reset semantics of the providers.
+			// UDAIslandSubsystem is a world subsystem; the island-side snapshot
+			// is written through it while every provider section comes from
+			// the game-instance-owned providers below.
+			UWorld* ReplayWorld = GameInstance ? GameInstance->GetWorld() : nullptr;
+			UDAIslandSubsystem* Island = ReplayWorld ? ReplayWorld->GetSubsystem<UDAIslandSubsystem>() : nullptr;
+			UDADeckLogic* Decks = GameInstance ? GameInstance->GetSubsystem<UDADeckLogic>() : nullptr;
+			UDAOpponentSubsystem* Opponents = GameInstance ? GameInstance->GetSubsystem<UDAOpponentSubsystem>() : nullptr;
+			FDAOpponentRuntimeState StaleOpponents;
+			auto RunGoldenFixture = [&](const TCHAR* FileName, bool bFullAssertions, bool bRoundTrip)
+			{
+				const FString Label = FString::Printf(TEXT("golden %s"), *FString(FileName));
+				const FString GoldenPath = FPaths::Combine(
+					FPaths::ProjectContentDir(), TEXT("Data/Integration/saves"), FileName);
+				FString GoldenJson;
+				if (!FFileHelper::LoadFileToString(GoldenJson, *GoldenPath))
+				{
+					AddCheck(FString::Printf(TEXT("%s exists"), *Label), false, GoldenPath);
+					return;
+				}
+				AddCheck(FString::Printf(TEXT("%s exists"), *Label), true, GoldenPath);
+				if (!Opponents)
+				{
+					AddCheck(FString::Printf(TEXT("%s has an opponents subsystem"), *Label), false, GoldenPath);
+					return;
+				}
+
+				// Snapshot everything the fixture replaces.
+				TSharedPtr<FJsonObject> FixtureProfile = MakeShared<FJsonObject>();
+				TSharedPtr<FJsonObject> FixtureCalendar = MakeShared<FJsonObject>();
+				TSharedPtr<FJsonObject> FixtureSettings = MakeShared<FJsonObject>();
+				Profile->WriteSaveData(FixtureProfile);
+				Calendar->WriteSaveData(FixtureCalendar);
+				Settings->WriteSaveData(FixtureSettings);
+				const FString FixtureStory = SaveState();
+				const FDAOpponentRuntimeState FixtureOpponents = Opponents->GetRuntimeState();
+				FString WorldBefore;
+				if (Island)
+				{
+					TSharedPtr<FJsonObject> WorldSection = MakeShared<FJsonObject>();
+					Island->WriteSaveSection(WorldSection);
+					WorldBefore = UDASaveSubsystem::SerializeCanonicalJson(WorldSection);
+				}
+				TSharedPtr<FJsonObject> FixtureDecks;
+				if (Decks)
+				{
+					FixtureDecks = MakeShared<FJsonObject>();
+					Decks->WriteSaveSection(FixtureDecks);
+				}
+				FString FixtureInventory;
+				if (Inventory)
+				{
+					FixtureInventory = Inventory->ExportStateJson();
+				}
+
+				// Fresh, deliberately-different context so the load must move state.
+				StaleOpponents = FDAOpponentRuntimeState();
+				StaleOpponents.LastRequestDay.Add(TEXT("jaden"), 99);
+				StaleOpponents.RequestDay = 99;
+				StaleOpponents.RequestsToday.Add(TEXT("jaden"), 5);
+				StaleOpponents.Wins.Add(TEXT("jaden"), 7);
+				Opponents->SetRuntimeState(StaleOpponents);
+				if (Inventory)
+				{
+					Inventory->ResetCollection();
+				}
+				if (Decks)
+				{
+					Decks->ResetToDefaults();
+				}
+				Settings->ResetToDefaults();
+				Settings->SetAnimationSpeed(EDAAnimationSpeed::Slow);
+				Profile->InitializeNewGame(TEXT("SHOULDNOT"));
+				Calendar->SetDate(2, 5, 9, EDADayPeriod::Night);
+
+				FString GoldenError;
+				const bool bGoldenLoaded = SaveSubsystem->LoadPayloadJsonWithContext(
+					GoldenJson, Profile, Calendar, Settings, GoldenError);
+				AddCheck(FString::Printf(TEXT("%s loads with an empty error"), *Label),
+					bGoldenLoaded && GoldenError.IsEmpty(), GoldenError);
+
+				if (bGoldenLoaded)
+				{
+					AddCheck(FString::Printf(TEXT("%s restores name/DP/dorm"), *Label),
+						Profile->GetPlayerName().Equals(TEXT("Alex"), ESearchCase::IgnoreCase)
+							&& Profile->GetDP() == 3000
+							&& Profile->GetDorm() == EDADorm::Slifer,
+						FString::Printf(TEXT("%s/%d"), *Profile->GetPlayerName(), Profile->GetDP()));
+					AddCheck(FString::Printf(TEXT("%s restores Oct 7 Year 1 AM Saturday"), *Label),
+						Calendar->GetYear() == 1 && Calendar->GetMonthIndex() == 0
+							&& Calendar->GetDay() == 7 && Calendar->GetPeriod() == EDADayPeriod::AM
+							&& Calendar->GetWeekday() == EDADayOfWeek::Saturday,
+						Calendar->GetFullDateText());
+					AddCheck(FString::Printf(TEXT("%s honors the saved hour"), *Label),
+						Calendar->GetHour() == 8, FString::FromInt(Calendar->GetHour()));
+					AddCheck(FString::Printf(TEXT("%s coerces settings.animation_speed 2"), *Label),
+						Settings->GetAnimationSpeed() == EDAAnimationSpeed::Fast, FString());
+					AddCheck(FString::Printf(TEXT("%s unlocks jaden with jaden_01 read"), *Label),
+						Profile->IsEmailUnlocked(TEXT("jaden")) && Profile->IsEmailRead(TEXT("jaden"), TEXT("jaden_01")),
+						FString());
+					const FDAOpponentRuntimeState& ResetOpponents = Opponents->GetRuntimeState();
+					AddCheck(FString::Printf(TEXT("%s resets the opponents runtime"), *Label),
+						ResetOpponents.LastRequestDay.Num() == 0 && ResetOpponents.RequestDay == -1
+							&& ResetOpponents.Wins.Num() == 0,
+						FString::Printf(TEXT("%d request days"), ResetOpponents.LastRequestDay.Num()));
+					if (Island)
+					{
+						TSharedPtr<FJsonObject> WorldSection = MakeShared<FJsonObject>();
+						Island->WriteSaveSection(WorldSection);
+						AddCheck(FString::Printf(TEXT("%s leaves the world untouched"), *Label),
+							UDASaveSubsystem::SerializeCanonicalJson(WorldSection) == WorldBefore, FString());
+					}
+					AddCheck(FString::Printf(TEXT("%s restores the opening flags"), *Label),
+						bFullAssertions
+							? (Profile->GetFlag(TEXT("registered")) && Profile->GetFlag(TEXT("met_jaden"))
+								&& Profile->GetFlag(TEXT("first_free_roam"))
+								&& Profile->GetFlag(TEXT("event_01_cleared")))
+							: (Profile->GetFlag(TEXT("registered")) && Profile->GetFlag(TEXT("met_jaden"))),
+						FString());
+
+					if (bFullAssertions)
+					{
+						const FDAEDeck* ActiveDeck = Decks ? Decks->GetActiveDeck() : nullptr;
+						AddCheck(FString::Printf(TEXT("%s activates player_1 (40 main + 1 extra)"), *Label),
+							ActiveDeck && ActiveDeck->Id.Equals(TEXT("player_1"))
+								&& ActiveDeck->Main.Num() == 40 && ActiveDeck->Extra.Num() == 1,
+							ActiveDeck ? ActiveDeck->Id : FString(TEXT("no active deck")));
+
+						TArray<FString> InventoryShortfalls;
+						if (ActiveDeck && Inventory)
+						{
+							TMap<int32, int32> Needed;
+							for (const int32 CardId : ActiveDeck->Main)
+							{
+								++Needed.FindOrAdd(CardId);
+							}
+							for (const int32 CardId : ActiveDeck->Extra)
+							{
+								++Needed.FindOrAdd(CardId);
+							}
+							for (const TPair<int32, int32>& Need : Needed)
+							{
+								if (Inventory->GetCount(Need.Key) < Need.Value)
+								{
+									InventoryShortfalls.Add(FString::Printf(TEXT("%d needs %d, owns %d"),
+										Need.Key, Need.Value, Inventory->GetCount(Need.Key)));
+								}
+							}
+						}
+						AddCheck(FString::Printf(TEXT("%s inventory covers every player_1 card"), *Label),
+							InventoryShortfalls.Num() == 0, FString::Join(InventoryShortfalls, TEXT(", ")));
+					}
+
+					if (bRoundTrip)
+					{
+						// The loaded golden must survive a real .sav round trip.
+						const FString RoundTripSlot = TEXT("DAStoryPlaythroughTest_Golden");
+						FString RoundTripError;
+						const bool bRoundTripped = SaveSubsystem->SaveNamedSlotWithContext(
+							RoundTripSlot, 1, Profile, Calendar, Settings, RoundTripError);
+						AddCheck(TEXT("golden runtime round-trip saves"), bRoundTripped, RoundTripError);
+						FString ReloadError;
+						if (bRoundTripped && SaveSubsystem->LoadNamedSlotWithContext(
+							RoundTripSlot, Profile, Calendar, Settings, ReloadError))
+						{
+							AddCheck(TEXT("golden runtime round-trip reloads"), true, ReloadError);
+							AddCheck(TEXT("golden runtime round-trip keeps identity"),
+								Profile->GetPlayerName().Equals(TEXT("Alex"), ESearchCase::IgnoreCase)
+									&& Profile->GetDP() == 3000
+									&& Calendar->GetYear() == 1 && Calendar->GetDay() == 7
+									&& Settings->GetAnimationSpeed() == EDAAnimationSpeed::Fast,
+								FString::Printf(TEXT("%s/%d"), *Profile->GetPlayerName(), Profile->GetDP()));
+						}
+						else
+						{
+							AddCheck(TEXT("golden runtime round-trip reloads"), false, ReloadError);
+						}
+						FString DeleteError;
+						SaveSubsystem->DeleteNamedSlot(RoundTripSlot, DeleteError);
+					}
+				}
+
+				// Restore the pre-fixture context, including the deck/inventory
+				// lanes the payloads replaced.
+				FString FixtureRestoreError;
+				LoadState(FixtureStory, FixtureRestoreError);
+				Profile->ReadSaveData(FixtureProfile, FixtureRestoreError);
+				Calendar->ReadSaveData(FixtureCalendar, FixtureRestoreError);
+				Settings->ReadSaveData(FixtureSettings, FixtureRestoreError);
+				Opponents->SetRuntimeState(FixtureOpponents);
+				if (Decks && FixtureDecks.IsValid())
+				{
+					Decks->ReadSaveSection(FixtureDecks, FixtureRestoreError);
+				}
+				if (Inventory && !FixtureInventory.IsEmpty())
+				{
+					Inventory->ImportStateJson(FixtureInventory, FixtureRestoreError);
+				}
+				if (!FixtureRestoreError.IsEmpty())
+				{
+					AddInfo(FString::Printf(TEXT("%s restore warning: %s"), *Label, *FixtureRestoreError));
+				}
+			};
+
+			RunGoldenFixture(TEXT("golden_new_game.json"), true, false);
+			RunGoldenFixture(TEXT("golden_runtime_v1.json"), false, true);
+
+			// ------------------------------------------------------------ migrated v0 payload (P4-06)
+			TSharedPtr<FJsonObject> LegacyPayload = MakeShared<FJsonObject>();
+			LegacyPayload->SetStringField(TEXT("name"), TEXT("LEGACY"));
+			LegacyPayload->SetStringField(TEXT("dorm"), TEXT("Ra"));
+			LegacyPayload->SetNumberField(TEXT("dp"), 1234);
+			LegacyPayload->SetNumberField(TEXT("month"), 11);
+			LegacyPayload->SetNumberField(TEXT("day"), 5);
+			FString LegacyError;
+			{
+				TSharedPtr<FJsonObject> LegacyProfileSnapshot = MakeShared<FJsonObject>();
+				TSharedPtr<FJsonObject> LegacyCalendarSnapshot = MakeShared<FJsonObject>();
+				Profile->WriteSaveData(LegacyProfileSnapshot);
+				Calendar->WriteSaveData(LegacyCalendarSnapshot);
+				FDAOpponentRuntimeState LegacyOpponents;
+				if (Opponents)
+				{
+					LegacyOpponents = Opponents->GetRuntimeState();
+				}
+				const bool bLegacyLoaded = SaveSubsystem->LoadPayloadJsonWithContext(
+					UDASaveSubsystem::SerializeCanonicalJson(LegacyPayload), Profile, Calendar, Settings, LegacyError);
+				AddCheck(TEXT("untyped v0 payload migrates through the in-memory path"), bLegacyLoaded, LegacyError);
+				AddCheck(TEXT("migrated v0 payload keeps the flat identity"),
+					bLegacyLoaded && Profile->GetPlayerName().Equals(TEXT("LEGACY"), ESearchCase::IgnoreCase)
+						&& Profile->GetDP() == 1234 && Profile->GetDorm() == EDADorm::Ra
+						&& Calendar->GetMonthIndex() == 1 && Calendar->GetDay() == 5,
+					FString::Printf(TEXT("%s/%d"), *Profile->GetPlayerName(), Profile->GetDP()));
+				FString LegacyRestoreError;
+				Profile->ReadSaveData(LegacyProfileSnapshot, LegacyRestoreError);
+				Calendar->ReadSaveData(LegacyCalendarSnapshot, LegacyRestoreError);
+				if (Opponents)
+				{
+					Opponents->SetRuntimeState(LegacyOpponents);
+				}
+				if (!LegacyRestoreError.IsEmpty())
+				{
+					AddInfo(FString::Printf(TEXT("v0 migration profile restore warning: %s"), *LegacyRestoreError));
+				}
 			}
 		}
 	}

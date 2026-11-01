@@ -258,6 +258,20 @@ void FDAPDAUI::Open(EDAPDATab Tab)
 	if (bOpen)
 	{
 		SetTab(Tab);
+		if (ClampTab(Tab) == ActiveTab)
+		{
+			// U9: SetTab early-outs on the unchanged tab, so reopening the PDA
+			// with the same tab would keep the stale view model (mail fetched
+			// before the new message existed). Re-run the per-tab refresh and
+			// reset the row state to match a fresh open.
+			Selection = 0;
+			ListScroll = 0;
+			PendingLoadSelection = INDEX_NONE;
+			HoveredRow = INDEX_NONE;
+			HitTargets.Reset();
+			RefreshViewModel();
+			RefreshRows();
+		}
 		return;
 	}
 	bOpen = true;

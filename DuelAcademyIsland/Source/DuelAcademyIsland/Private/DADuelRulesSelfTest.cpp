@@ -872,8 +872,15 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 	{
 		const FString Baseline = FDuelEngine::RunSelfTest(Database, 2);
 		UE_LOG(LogDuelAcademyIsland, Log, TEXT("%s"), *Baseline);
+		// The greps below also must keep passing on the gate summary, which
+		// prints RESULT PASS only when stalls and invariant failures are both
+		// zero (see FDuelEngine::RunSelfTest in DADuelEngineDiagnostics.cpp).
 		Report.Check(!Baseline.Contains(TEXT("missing")) && Baseline.Contains(TEXT(" 0 stalls,")),
 			TEXT("existing AI-vs-AI duel self-test still completes without stalls"));
+		Report.Check(Baseline.Contains(TEXT("invariant failures 0")),
+			TEXT("existing AI-vs-AI duel self-test reports zero invariant failures"));
+		Report.Check(Baseline.Contains(TEXT("RESULT PASS")),
+			TEXT("existing AI-vs-AI duel self-test reports RESULT PASS"));
 	}
 
 	LogReport(Report);

@@ -100,6 +100,41 @@ namespace
 		return true;
 	}
 
+	/**
+	 * Reads a speed field that the save schema (save.v1.schema.json) declares as
+	 * an integer index while the runtime writers emit canonical names. The
+	 * golden saves store animation_speed as the integer 2, so accept both:
+	 * strings pass through unchanged (gameplay already accepts "0".."3"), an
+	 * integral number 0..3 is coerced to its decimal string, and anything else
+	 * is rejected so a corrupt settings block cannot load half-applied.
+	 */
+	bool ReadSpeedField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, FString& OutValue, FString& OutError)
+	{
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid())
+		{
+			return true;
+		}
+		if (Value->Type == EJson::String)
+		{
+			OutValue = Value->AsString();
+			return true;
+		}
+		if (Value->Type == EJson::Number)
+		{
+			const double Number = Value->AsNumber();
+			if (FMath::IsFinite(Number)
+				&& FMath::FloorToDouble(Number) == Number
+				&& Number >= 0.0 && Number <= 3.0)
+			{
+				OutValue = FString::FromInt(static_cast<int32>(Number));
+				return true;
+			}
+		}
+		OutError = FString::Printf(TEXT("Settings field '%s' must be a string or a speed index 0..3."), Field);
+		return false;
+	}
+
 	bool ReadBoolField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool& OutValue, FString& OutError)
 	{
 		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
@@ -427,7 +462,7 @@ bool UDASettings::ReadJson(const TSharedPtr<FJsonObject>& Root, FString& OutErro
 	TMap<FString, FString> NewControls = Controls;
 
 	FString AnimationText;
-	if (!ReadStringField(Root, TEXT("animation_speed"), AnimationText, OutError))
+	if (!ReadSpeedField(Root, TEXT("animation_speed"), AnimationText, OutError))
 	{
 		return false;
 	}
@@ -442,7 +477,7 @@ bool UDASettings::ReadJson(const TSharedPtr<FJsonObject>& Root, FString& OutErro
 	}
 
 	FString TextSpeedText;
-	if (!ReadStringField(Root, TEXT("text_speed"), TextSpeedText, OutError))
+	if (!ReadSpeedField(Root, TEXT("text_speed"), TextSpeedText, OutError))
 	{
 		return false;
 	}

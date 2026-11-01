@@ -17,12 +17,6 @@ an Unreal-ready skeletal mesh:
   * the retargeted / authored takes are baked onto the model's own skeleton (its proportions)
 """
 
-import json
-import math
-import os
-import re
-import struct
-
 import bpy
 import numpy as np
 from mathutils import Matrix
@@ -32,6 +26,7 @@ from .. import atomic, cache
 from .. import config as C
 from .. import palette, thirdparty
 from . import skin as K
+from .vrm import alpha_modes, read_vrm, target_names
 
 TEX_REL = "Characters"
 
@@ -72,50 +67,8 @@ def role_of(mat_name):
 
 
 # --------------------------------------------------------------------------- VRM json
-def _gltf_json(path):
-    try:
-        with open(path, "rb") as fp:
-            head = fp.read(20)
-            if len(head) < 20 or head[:4] != b"glTF":
-                return None
-            n = struct.unpack_from("<I", head, 12)[0]
-            # Guard against a truncated/corrupt header: the JSON chunk must be sane.
-            if n < 2 or n > 64 * 1024 * 1024:
-                return None
-            chunk = fp.read(n)
-            if len(chunk) < n:
-                return None
-            return json.loads(chunk)
-    except (OSError, ValueError):
-        return None
-
-
-def alpha_modes(path):
-    """{material name: OPAQUE | MASK | BLEND} from a .vrm/.glb file ({} for other formats). VRM 0.x keeps the
-    MToon render mode (_BlendMode: 0 opaque, 1 cutout, 2/3 transparent) in its own extension."""
-    j = _gltf_json(path) or {}
-    out = {m.get("name"): m.get("alphaMode", "OPAQUE") for m in j.get("materials", [])}
-    for mp in j.get("extensions", {}).get("VRM", {}).get("materialProperties", []):
-        mode = mp.get("floatProperties", {}).get("_BlendMode", 0)
-        if mode >= 1 and mp.get("name") in out:
-            out[mp["name"]] = "MASK" if mode == 1 else "BLEND"
-    return out
-
-
-def read_vrm(path):
-    """(version 0 | 1 | None, {humanBone: node name}) from a .vrm/.glb file."""
-    j = _gltf_json(path)
-    if j is None:
-        return None, {}
-    names = [nd.get("name") for nd in j.get("nodes", [])]
-    ext = j.get("extensions", {})
-    if "VRMC_vrm" in ext:
-        hb = ext["VRMC_vrm"]["humanoid"]["humanBones"]
-        return 1, {k: names[v["node"]] for k, v in hb.items()}
-    if "VRM" in ext:
-        return 0, {h["bone"]: names[h["node"]] for h in ext["VRM"]["humanoid"]["humanBones"] if "node" in h}
-    return None, {}
-
+# _gltf_json / alpha_modes / read_vrm / target_names live in dai.anime.vrm
+# (stdlib-only so they can be unit-tested without Blender) and are imported above.
 
 # common non-VRM rigs (Mixamo, VRoid FBX exports) when the file carries no humanoid map
 NAME_HINTS = {
@@ -137,17 +90,6 @@ def _select(objs, active):
     for o in objs:
         o.select_set(True)
     bpy.context.view_layer.objects.active = active
-
-
-def target_names(path):
-    """{mesh name: [blendshape name per glTF morph target]} (VRoid keeps them in the mesh extras)."""
-    j = _gltf_json(path) or {}
-    out = {}
-    for m in j.get("meshes", []):
-        names = (m.get("extras") or {}).get("targetNames") or (m["primitives"][0].get("extras") or {}).get("targetNames")
-        if names:
-            out[m.get("name", "").split(".")[0]] = names
-    return out
 
 
 def _bake_expression(obj, names, expression):
@@ -276,7 +218,8 @@ def _recolor(src_png, dst_png, target, keep=0.0, gradient=None, contrast=1.0):
     """Recolour a texture to `target` (sRGB) keeping its light / dark detail (luminance normalised to the
     dominant tone). keep blends some of the original colour back in. gradient = (colour, v, soft): below
     texture v (VRoid hair strands run from v=1 at the root to v=0 at the tip) blend into a second colour."""
-    img = Image.open(src_png).convert("RGBA")
+    with Image.open(src_png) as src_img:
+        img = src_img.convert("RGBA")
     a = np.asarray(img).astype(np.float32) / 255.0
     rgb, al = a[..., :3], a[..., 3]
     lum = rgb @ np.array([0.299, 0.587, 0.114], np.float32)
@@ -322,8 +265,8 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
     tint = set(entry.get("tint", []))
     col = entry.get("colors", {})
     hair = entry.get("hair", {})
-    # Key the extracted base textures by the source path too: replacing a
-    # registered model in place used to leave the old textures in the cache.
+    # The vrm_tex cache entries are keyed by source path (like the decoded glTF
+    # cache) so two packs with the same model name cannot collide.
     tex_cache_key = f"{base}-{cache.source_key(source)}" if source else base
     recolor = {
         "tops": None if "jacket" in tint else col.get("jacket"),
@@ -350,8 +293,10 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
             img, masked = _base_image(mat, (alpha or {}).get(src_name))
             base_png = None
             if img is not None:
+                # `fresh_against` reuses the cache only while it is not older than
+                # the registered model file (see thirdparty._save_image).
                 base_png = thirdparty._save_image(img, os.path.join(C.CACHE_DIR, "vrm_tex", tex_cache_key, f"{safe}.png"),
-                                                  2048, mode="RGBA")
+                                                  2048, mode="RGBA", fresh_against=source)
             if base_png and rig is not None and role == "skin" and "body" in mat.name.lower():
                 from .outfit import fix_skin
                 base_png = fix_skin(obj, slot_idx, base_png, base_png[:-4] + "_bare.png", rig,
@@ -378,7 +323,8 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
                 dst = os.path.join(C.OUT_TEXTURES, rel + ".png")
                 # Always refresh the output copy: the cache may predate a texture
                 # or material change, and the previous code kept stale files forever.
-                atomic.save_image(Image.open(base_png), dst, optimize=True)
+                with Image.open(base_png) as cached:
+                    atomic.save_image(cached, dst, optimize=True)
                 name = f"M_Anime_{base}_{safe}"
             else:
                 rel = None
@@ -407,7 +353,8 @@ def _alpha_lookup(obj):
         if spec.get("masked") and spec.get("base"):
             path = os.path.join(C.OUT_TEXTURES, spec["base"] + ".png")
             if os.path.exists(path):
-                tex[i] = np.asarray(Image.open(path).convert("RGBA"))[..., 3]
+                with Image.open(path) as img:
+                    tex[i] = np.asarray(img.convert("RGBA"))[..., 3]
     return tex
 
 

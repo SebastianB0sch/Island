@@ -276,14 +276,38 @@ bool UDACalendarSubsystem::SkipToDate(int32 InYear, int32 InMonthIndex, int32 In
 		return false;
 	}
 
-	while (GetAbsoluteDay() < TargetAbsoluteDay)
+	const EDADayPeriod OldPeriod = Period;
+	if (TargetAbsoluteDay > CurrentAbsoluteDay)
 	{
-		AdvanceDay();
+		// W13: apply the skipped days arithmetically instead of calling
+		// AdvanceDay() once per day (which re-rolled the weekday and broadcast
+		// a full day change for every skipped day). The month/year rollover
+		// mirrors the canonical AdvanceDay() bound checks.
+		const int32 DeltaDays = TargetAbsoluteDay - CurrentAbsoluteDay;
+		int32 NewDay = Day + DeltaDays;
+		int32 NewMonthIndex = MonthIndex;
+		int32 NewYear = Year;
+		while (NewDay > GetDaysInMonth(NewYear, NewMonthIndex))
+		{
+			NewDay -= GetDaysInMonth(NewYear, NewMonthIndex);
+			++NewMonthIndex;
+			if (NewMonthIndex > 11)
+			{
+				NewMonthIndex = 0;
+				NewYear = FMath::Min(NewYear + 1, MaxSupportedYear);
+			}
+		}
+		ApplyDateInternal(NewYear, NewMonthIndex, NewDay, InPeriod);
 	}
-	while (GetPeriodRank(Period) < GetPeriodRank(InPeriod))
+	else
 	{
-		AdvancePeriod();
+		// Same absolute day: just move the period (and its start hour) forward.
+		Period = InPeriod;
+		Hour = GetPeriodStartHour(Period);
 	}
+
+	// One broadcast for the whole jump, as the callers' notifications expect.
+	BroadcastDateChanged(OldPeriod, TargetAbsoluteDay != CurrentAbsoluteDay);
 	return true;
 }
 
@@ -396,9 +420,16 @@ void UDACalendarSubsystem::NotifyProfileDayChanged()
 {
 	if (UGameInstance* GameInstance = GetGameInstance())
 	{
-		if (UDAProfileSubsystem* Profile = GameInstance->GetSubsystem<UDAProfileSubsystem>())
+		UDAProfileSubsystem* Profile = GameInstance->GetSubsystem<UDAProfileSubsystem>();
+		if (Profile)
 		{
 			Profile->NotifyDayChanged(Year, MonthIndex, Day);
+
+			// P4-04: "day change" is part of the documented autosave trigger
+			// set (DASaveGame.h). It rides the same cross-subsystem
+			// notification path and is intentionally not reached by
+			// ReadSaveData, so loading a save cannot trigger a save loop.
+			Profile->RequestProgressionAutosave(TEXT("day_change"));
 		}
 	}
 }
@@ -500,6 +531,10 @@ bool UDACalendarSubsystem::IsExamDayFor(int32 InYear, int32 InMonthIndex, int32 
 
 bool UDACalendarSubsystem::GetNextExamDate(int32& OutYear, int32& OutMonthIndex, int32& OutDay) const
 {
+	// P4-13: "on or after today" is deliberate, including the exam day itself
+	// after the exam period has passed (see the header documentation). The
+	// call sites (title/PDA probes, gate tests and the profile self-test) all
+	// expect today's current exam, not the following month's.
 	for (int32 Offset = 0; Offset <= 12; ++Offset)
 	{
 		int32 CandidateMonth = MonthIndex + Offset;
@@ -683,7 +718,14 @@ bool UDACalendarSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FSt
 		LoadedPeriod = ParsePeriod(PeriodText, EDADayPeriod::AM);
 	}
 
+	// W9: the save's hour is authoritative for the visual clock when present;
+	// ApplyDateInternal resets it to the period's start hour, so re-apply after
+	// the date settles. Absent (legacy) keeps the derived period hour.
+	const int32 FallbackHour = GetPeriodStartHour(LoadedPeriod);
+	const int32 LoadedHour = CalendarReadClampedInt(Source, TEXT("hour"), FallbackHour, 0, 23);
+
 	ApplyDateInternal(LoadedYear, LoadedMonthIndex, LoadedDay, LoadedPeriod);
+	Hour = LoadedHour;
 
 	const bool bDateChanged = OldYear != Year || OldMonth != MonthIndex || OldDay != Day;
 	OnCalendarChanged.Broadcast();

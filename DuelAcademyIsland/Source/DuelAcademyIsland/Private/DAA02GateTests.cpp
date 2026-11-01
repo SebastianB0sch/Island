@@ -15,6 +15,8 @@
 // Console equivalents: da.SaveFuzz and da.TwelveMonthTest.
 
 #include "DAA02GateTests.h"
+#include "DADuelUI.h"
+#include "DAStudentCharacter.h"
 #include "DACalendarSubsystem.h"
 #include "DADeckLogic.h"
 #include "DAEconomyTypes.h"
@@ -25,6 +27,7 @@
 #include "DuelAcademyIsland.h"
 
 #include "Containers/Ticker.h"
+#include "Templates/UniquePtr.h"
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
 #include "Engine/GameInstance.h"
@@ -2039,6 +2042,177 @@ namespace
 		return true;
 	}
 
+	// ------------------------------------------------------------------ WS-04 UI/pawn gate tests
+
+	/**
+	 * Pure-C++ (no world, no renderer) coverage for the Pass-4 UI/pawn fixes:
+	 *
+	 *   - ADAStudentCharacter::WorldInputAllowedFor truth table vs the HUD
+	 *     modal-ownership set the pawn gate must mirror (U1/U2).
+	 *   - FDADuelUI::ComputeStoryDuelClosedWithoutResult (pinned contract #1)
+	 *     plus the null-owner state machine of
+	 *     FDADuelUI::WasDeckSelectClosedWithoutResult.
+	 *   - FDADuelUI deck-select pagination bounds (U4) for 1..6 fake decks.
+	 */
+	bool RunPawnUIGateTest()
+	{
+		UE_LOG(LogDuelAcademyIsland, Display,
+			TEXT("=== DAPawnUIGateTest: pawn world-input gate, duel no-result contract, deck pages ==="));
+
+		FDATestReport Report;
+
+		// 1) Input-gating truth table over every HUD modal combination. The
+		//    reference expression mirrors ADAHUD's modal ownership (its
+		//    IsModalOpen set plus bHelpOpen): duel, map, dialogue, PDA, title,
+		//    gameplay screens, and help each own the screen and must block every
+		//    world hotkey.
+		auto HudModalPolicy = [](bool bDuel, bool bMap, bool bDialogue, bool bPDA, bool bTitle, bool bGameplay, bool bHelp)
+		{
+			return !(bDuel || bMap || bDialogue || bPDA || bTitle || bGameplay || bHelp);
+		};
+		for (int32 Combo = 0; Combo < 128; ++Combo)
+		{
+			const bool bDuel = (Combo & 1) != 0;
+			const bool bMap = (Combo & 2) != 0;
+			const bool bDialogue = (Combo & 4) != 0;
+			const bool bPDA = (Combo & 8) != 0;
+			const bool bTitle = (Combo & 16) != 0;
+			const bool bGameplay = (Combo & 32) != 0;
+			const bool bHelp = (Combo & 64) != 0;
+
+			const bool Expected = HudModalPolicy(bDuel, bMap, bDialogue, bPDA, bTitle, bGameplay, bHelp);
+			const bool Actual = ADAStudentCharacter::WorldInputAllowedFor(
+				bDuel, bMap, bDialogue, bPDA, bTitle, bGameplay, bHelp);
+			if (Actual != Expected)
+			{
+				Report.Fail(FString::Printf(
+					TEXT("DAPawnUIGateTest: world-input mask %d (duel=%d map=%d dialogue=%d pda=%d title=%d gameplay=%d help=%d) diverged from HUD policy"),
+					Combo, bDuel ? 1 : 0, bMap ? 1 : 0, bDialogue ? 1 : 0, bPDA ? 1 : 0,
+					bTitle ? 1 : 0, bGameplay ? 1 : 0, bHelp ? 1 : 0));
+			}
+		}
+		Report.Check(Report.Failures == 0, TEXT("DAPawnUIGateTest: all 128 modal masks agree with the HUD policy"));
+
+		// 2) Named spot checks for the exact leaks from the findings.
+		Report.Check(ADAStudentCharacter::WorldInputAllowedFor(false, false, false, false, false, false, false),
+			TEXT("DAPawnUIGateTest: no modal allows world input"));
+		Report.Check(!ADAStudentCharacter::WorldInputAllowedFor(true, false, false, false, false, false, false),
+			TEXT("DAPawnUIGateTest: duel blocks world input"));
+		Report.Check(!ADAStudentCharacter::WorldInputAllowedFor(false, true, false, false, false, false, false),
+			TEXT("DAPawnUIGateTest: map blocks world input (U1)"));
+		Report.Check(!ADAStudentCharacter::WorldInputAllowedFor(false, false, false, false, false, false, true),
+			TEXT("DAPawnUIGateTest: help blocks world input (U1)"));
+		Report.Check(!ADAStudentCharacter::WorldInputAllowedFor(false, true, false, false, false, false, true),
+			TEXT("DAPawnUIGateTest: map under help blocks world input (U2)"));
+		Report.Check(!ADAStudentCharacter::WorldInputAllowedFor(false, true, false, true, false, false, false),
+			TEXT("DAPawnUIGateTest: PDA under map blocks world input (U2)"));
+		Report.Check(!ADAStudentCharacter::WorldInputAllowedFor(false, false, false, false, false, true, false),
+			TEXT("DAPawnUIGateTest: shop/deck/exam screens block world input (U1)"));
+		Report.Check(!ADAStudentCharacter::WorldInputAllowedFor(false, false, true, false, false, false, false),
+			TEXT("DAPawnUIGateTest: story dialogue blocks world input (U1)"));
+		Report.Check(!ADAStudentCharacter::WorldInputAllowedFor(false, false, false, false, true, false, false),
+			TEXT("DAPawnUIGateTest: title owns input (U1)"));
+
+		// 3) Contract #1 pure decision table: a story-owned, actually-open
+		//    session closed without a recorded result is the only true case.
+		Report.Check(FDADuelUI::ComputeStoryDuelClosedWithoutResult(true, false, true),
+			TEXT("DAPawnUIGateTest: story-owned close without a result sets the flag"));
+		Report.Check(!FDADuelUI::ComputeStoryDuelClosedWithoutResult(true, true, true),
+			TEXT("DAPawnUIGateTest: story-owned close with a recorded result clears the flag"));
+		Report.Check(!FDADuelUI::ComputeStoryDuelClosedWithoutResult(false, false, true),
+			TEXT("DAPawnUIGateTest: non-story close never sets the flag"));
+		Report.Check(!FDADuelUI::ComputeStoryDuelClosedWithoutResult(true, false, false),
+			TEXT("DAPawnUIGateTest: closing an idle board must not touch the flag"));
+		Report.Check(!FDADuelUI::ComputeStoryDuelClosedWithoutResult(false, true, false),
+			TEXT("DAPawnUIGateTest: idle close with a recorded result stays clear"));
+		Report.Check(!FDADuelUI::ComputeStoryDuelClosedWithoutResult(false, false, false),
+			TEXT("DAPawnUIGateTest: all-clear idle close stays clear"));
+		Report.Check(FDADuelUI::ComputeStoryDuelClosedWithoutResult(true, false, true)
+			&& !FDADuelUI::ComputeStoryDuelClosedWithoutResult(true, true, false)
+			&& !FDADuelUI::ComputeStoryDuelClosedWithoutResult(false, true, true),
+			TEXT("DAPawnUIGateTest: remaining masks stay false (recency/no-owner)"));
+
+		// 4) Contract #1 state machine, driven headless on an owner-less board
+		//    (the story query returns null, so ownership is seeded through the
+		//    documented test-only DebugSetStoryOwnedDuel seam).
+		{
+			// DADuelUI.h forward-declares ADAHUD; an explicit null owner keeps
+			// the headless run free of engine objects.
+			ADAHUD* NullOwner = nullptr;
+			TUniquePtr<FDADuelUI> Board(MakeUnique<FDADuelUI>(NullOwner));
+			if (Report.Check(Board.IsValid() && !Board->IsOpen(),
+				TEXT("DAPawnUIGateTest: owner-less duel board constructs closed")))
+			{
+				Board->OpenDeckSelect(TEXT("syrus"), TEXT("Syrus"), TEXT("syrus_roids"), TEXT("free"), true);
+				Report.Check(Board->IsOpen(),
+					TEXT("DAPawnUIGateTest: owner-less OpenDeckSelect reaches the picker"));
+				Board->DebugSetStoryOwnedDuel(true);
+				Board->CloseDuel();
+				Report.Check(Board->WasDeckSelectClosedWithoutResult(),
+					TEXT("DAPawnUIGateTest: backing out of a story picker sets the no-result flag"));
+				Board->CloseDuel();
+				Report.Check(Board->WasDeckSelectClosedWithoutResult(),
+					TEXT("DAPawnUIGateTest: a repeated close must not clobber the unread flag"));
+
+				Board->OpenDeckSelect(TEXT("syrus"), TEXT("Syrus"), TEXT("syrus_roids"), TEXT("free"), true);
+				Report.Check(!Board->WasDeckSelectClosedWithoutResult(),
+					TEXT("DAPawnUIGateTest: a fresh picker clears the no-result flag"));
+				Board->DebugSetStoryOwnedDuel(false);
+				Board->CloseDuel();
+				Report.Check(!Board->WasDeckSelectClosedWithoutResult(),
+					TEXT("DAPawnUIGateTest: backing out of a non-story picker stays clear"));
+
+				Board->DebugSetStoryOwnedDuel(true);
+				Board->OpenDeckSelect(TEXT("jaden"), TEXT("Jaden"), TEXT("jaden"), TEXT("free"), true);
+				Board->DebugSetStoryOwnedDuel(false);
+				Board->CloseDuel();
+				Report.Check(!Board->WasDeckSelectClosedWithoutResult(),
+					TEXT("DAPawnUIGateTest: a fresh open supersedes a stale seeded marker"));
+			}
+		}
+
+		// 5) U4 pagination bounds for 1..6 fake decks (page size 4, hard cap 6).
+		Report.Check(FDADuelUI::DeckSelectPageSize == 4,
+			TEXT("DAPawnUIGateTest: deck-select page size stays 4"));
+		Report.Check(FDADuelUI::DeckSelectPageSize <= 6,
+			TEXT("DAPawnUIGateTest: deck-select page size respects the documented cap 6"));
+		for (int32 Decks = 1; Decks <= 6; ++Decks)
+		{
+			const int32 PageCount = FDADuelUI::DeckSelectPageCount(Decks);
+			const int32 ExpectedPages = FMath::DivideAndRoundUp(Decks, FDADuelUI::DeckSelectPageSize);
+			Report.Check(PageCount == ExpectedPages && PageCount >= 1,
+				FString::Printf(TEXT("DAPawnUIGateTest: %d decks produce %d page(s)"), Decks, ExpectedPages));
+
+			for (int32 Page = 0; Page < PageCount; ++Page)
+			{
+				const int32 First = FDADuelUI::DeckSelectPageFirstDeck(Page);
+				const int32 PageSize = FMath::Min(FDADuelUI::DeckSelectPageSize, Decks - First);
+				Report.Check(First >= 0 && First < Decks,
+					FString::Printf(TEXT("DAPawnUIGateTest: page %d of %d starts inside 1..%d"), Page, PageCount, Decks));
+				Report.Check(PageSize >= 1 && PageSize <= FDADuelUI::DeckSelectPageSize,
+					FString::Printf(TEXT("DAPawnUIGateTest: page %d of %d renders 1..4 decks"), Page, PageCount));
+			}
+		}
+		Report.Check(FDADuelUI::DeckSelectPageFirstDeck(1) == FDADuelUI::DeckSelectPageSize,
+			TEXT("DAPawnUIGateTest: page 1 starts at PageSize"));
+		Report.Check(FDADuelUI::DeckSelectPageFirstDeck(-3) == 0,
+			TEXT("DAPawnUIGateTest: a negative page clamps to the first"));
+		Report.Check(FDADuelUI::DeckSelectPageCount(0) == 1,
+			TEXT("DAPawnUIGateTest: zero decks still answer one page"));
+
+		UE_LOG(LogDuelAcademyIsland, Display,
+			TEXT("=== DAPawnUIGateTest summary: %d checks, %d failure(s) ==="),
+			Report.Checks, Report.Failures);
+
+		if (Report.Failures > 0)
+		{
+			UE_LOG(LogDuelAcademyIsland, Error, TEXT("DAPawnUIGateTest FAILED."));
+			return false;
+		}
+		UE_LOG(LogDuelAcademyIsland, Display, TEXT("DAPawnUIGateTest PASSED."));
+		return true;
+	}
+
 	// ------------------------------------------------------------------ bootstrap
 
 	bool ParseFuzzCount(int32& OutCount)
@@ -2103,6 +2277,18 @@ void UDAA02GateTestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	bRunFuzz = ParseFuzzCount(FuzzCount);
 	bRunTwelveMonth = FParse::Param(FCommandLine::Get(), TEXT("DATwelveMonthTest"));
+
+	// WS-04 Pass-4 UI/pawn gate suite. It needs no world or subsystems, so it
+	// runs synchronously here (the other two suites still ride the ticker).
+	if (FParse::Param(FCommandLine::Get(), TEXT("DAPawnUIGateTest")))
+	{
+		const bool bPassed = RunPawnUIGateTest();
+		if (!bRunFuzz && !bRunTwelveMonth)
+		{
+			FPlatformMisc::RequestExitWithStatus(false, bPassed ? 0 : 1, TEXT("DAPawnUIGateTest"));
+		}
+	}
+
 	if (!bRunFuzz && !bRunTwelveMonth)
 	{
 		return;

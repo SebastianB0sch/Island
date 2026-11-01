@@ -54,6 +54,14 @@ jobs:
         run: python Tools/effects/validate_effects.py
       - name: Effect pipeline regression tests
         run: python Tools/effects/test_effects.py
+      # coverage.py/report_coverage.py --check build in memory; audit.py
+      # regenerates its own derived files (card_effect_manifest.json and
+      # Docs/Effects/COVERAGE.md) and fails on any missed coverage target.
+      - name: Effects coverage reports and audit
+        run: |
+          python Tools/effects/coverage.py --check
+          python Tools/effects/report_coverage.py --check > /dev/null
+          python Tools/effects/audit.py
       - name: Integration harness (validator and dry run)
         run: |
           python Tools/integration/run_smoke.py --validate \

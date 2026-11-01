@@ -7,6 +7,7 @@ the committed files and that a hash refresh cannot silently hide content drift.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -120,6 +121,97 @@ class ValidateAllManifestTests(unittest.TestCase):
                 "bytes": 1,
             })
         self.assertIn("canon_manifest_path", codes)
+
+
+class RecordDigestTests(unittest.TestCase):
+    """V7: per-record digests embedded by the canon builders must re-verify.
+
+    Each check mirrors the exact digest algorithm of the builder that wrote
+    the record (build_decks.sha_deck, build_packs, build_puzzles,
+    canon_common.card_fingerprint) so a tampered or drifted record cannot pass
+    the manifest gate silently.
+    """
+
+    RUNTIME = REPO / "DuelAcademyIsland" / "Content" / "Data"
+
+    def test_deck_record_digests_match(self) -> None:
+        decks = json.loads((CANON / "decks.json").read_text(encoding="utf-8"))["decks"]
+        digested = [deck for deck in decks if deck.get("sha256")]
+        self.assertGreaterEqual(len(digested), 30)
+        mismatched = [
+            deck["id"] for deck in digested
+            if validate_canon.deck_record_digest(deck) != deck["sha256"]
+        ]
+        self.assertEqual(mismatched, [])
+
+    def test_pack_and_puzzle_record_digests_match(self) -> None:
+        packs = json.loads((CANON / "packs.json").read_text(encoding="utf-8"))["packs"]
+        self.assertEqual(len(packs), 48)
+        for pack in packs:
+            self.assertEqual(validate_canon.pack_record_digest(pack), pack["sha256"], pack["id"])
+        puzzles = json.loads((CANON / "puzzles.json").read_text(encoding="utf-8"))["puzzles"]
+        self.assertEqual(len(puzzles), 100)
+        for puzzle in puzzles:
+            self.assertEqual(
+                validate_canon.puzzle_record_digest(puzzle), puzzle["sha256"], puzzle["id"]
+            )
+
+    def test_card_fingerprints_reproduce_the_canonical_digest(self) -> None:
+        sys.path.insert(0, str(TOOLS / "canon"))
+        from canon_common import card_fingerprint
+
+        manifest = json.loads((CANON / "cards_manifest.json").read_text(encoding="utf-8"))
+        per_card = manifest["per_card_sha256"]
+        self.assertEqual(len(per_card), 1200)
+        cards = json.loads((self.RUNTIME / "cards.json").read_text(encoding="utf-8"))
+        payload = []
+        for card in cards:
+            actual = card_fingerprint(card)
+            payload.append(actual)
+            self.assertEqual(actual, per_card[str(card["id"])], f"card {card['id']}")
+        import hashlib
+
+        canonical = hashlib.sha256("\n".join(payload).encode("ascii")).hexdigest()
+        self.assertEqual(canonical, manifest["canonical_hash"]["value"])
+
+    def test_corrupted_deck_digest_is_detectable(self) -> None:
+        decks = json.loads((CANON / "decks.json").read_text(encoding="utf-8"))["decks"]
+        deck = dict(next(d for d in decks if d.get("sha256")))
+        original_main = deck["main"]
+        with mock.patch.dict(deck, {"main": original_main + [1]}):
+            self.assertNotEqual(validate_canon.deck_record_digest(deck), deck["sha256"])
+
+
+class LocalOnlyDialogueGateTests(unittest.TestCase):
+    """V3: the supported local-only dossier must not fail the legal gate."""
+
+    def test_dialogue_in_the_local_only_dossier_is_not_a_leak(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            canon_dir = root / "Tools" / "canon"
+            local_only = canon_dir / ".local_only"
+            (canon_dir / "outside").mkdir(parents=True)
+            (local_only / "reference").mkdir(parents=True)
+            (canon_dir / "outside" / "dialogue_full.json").write_text("{}", encoding="utf-8")
+            (local_only / "reference" / "dialogue_full.json").write_text("{}", encoding="utf-8")
+            with mock.patch.object(validate_canon, "REPO_ROOT", root), \
+                 mock.patch.object(validate_canon, "LOCAL_ONLY_DIR", local_only):
+                leaks = validate_canon.collect_dialogue_leaks()
+        self.assertEqual(leaks, ["Tools/canon/outside/dialogue_full.json".replace("/", os.sep)])
+
+    def test_environment_override_of_the_local_only_dir_is_respected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            canon_dir = root / "Tools" / "canon"
+            override = root / "elsewhere" / "dossier"
+            canon_dir.mkdir(parents=True)
+            override.mkdir(parents=True)
+            (canon_dir / "dialogue_full.json").write_text("{}", encoding="utf-8")
+            (override / "dialogue_full.json").write_text("{}", encoding="utf-8")
+            with mock.patch.object(validate_canon, "REPO_ROOT", root), \
+                 mock.patch.object(validate_canon, "LOCAL_ONLY_DIR", override):
+                leaks = validate_canon.collect_dialogue_leaks()
+        self.assertEqual(leaks, ["Tools/canon/dialogue_full.json".replace("/", os.sep)])
 
 
 class ManifestRefreshTests(unittest.TestCase):

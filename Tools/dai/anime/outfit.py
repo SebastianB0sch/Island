@@ -800,7 +800,8 @@ def fix_skin(obj, mat_idx, src_png, dst_png, rig, legs=False):
     """Paint the base model's body texture back to bare skin where its painted-on clothing would show with
     the uniform: gloves on the hands (and tights on the legs for skirts). The skin tone is sampled from the
     neck."""
-    img = np.asarray(Image.open(src_png).convert("RGBA")).astype(np.float32) / 255.0
+    with Image.open(src_png) as src_img:
+        img = np.asarray(src_img.convert("RGBA")).astype(np.float32) / 255.0
     h, w = img.shape[:2]
     pos, mask = bake_positions(obj.data, mat_idx, max(h, w))
     if (h, w) != mask.shape:

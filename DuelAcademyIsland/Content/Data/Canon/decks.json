@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-10-31T09:24:44+00:00",
+  "generated_utc": "2026-11-01T09:27:09+00:00",
   "source": {
     "starters": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Starter_Decks",
     "opponents": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Opponents",
@@ -150,7 +150,8 @@
       "confidence": "high",
       "status": "complete",
       "unresolved_slots": 0,
-      "unresolved_reason": ""
+      "unresolved_reason": "",
+      "sha256": "5ae249d29bdeb98cec3e98fa213044ddb5f0f9ff6339402e1c0c306198eb5748"
     },
     {
       "id": "water",
@@ -207,7 +208,8 @@
       "confidence": "high",
       "status": "complete",
       "unresolved_slots": 0,
-      "unresolved_reason": ""
+      "unresolved_reason": "",
+      "sha256": "0cf4a654b90faa9d1262638b5824fcd4ec19adb69d053623eca2aaac9b83ed3e"
     },
     {
       "id": "wind",
@@ -264,7 +266,8 @@
       "confidence": "high",
       "status": "complete",
       "unresolved_slots": 0,
-      "unresolved_reason": ""
+      "unresolved_reason": "",
+      "sha256": "775786ac2fcc54e2a2462be3d195fc9fcb7d51b81671b3cd41a6c8b6278b35ab"
     },
     {
       "id": "alexis_year1",

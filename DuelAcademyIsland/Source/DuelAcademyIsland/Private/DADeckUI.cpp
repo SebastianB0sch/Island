@@ -663,6 +663,15 @@ void FDADeckUI::Update(float DeltaSeconds)
 		{
 			RecipeScroll = FMath::Min(FMath::Max(0, Recipes.Num() - 1), RecipeScroll + 1);
 		}
+		// U8: wheel scrolls the recipe list too.
+		if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollUp))
+		{
+			RecipeScroll = FMath::Max(0, RecipeScroll - 1);
+		}
+		if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollDown))
+		{
+			RecipeScroll = FMath::Min(FMath::Max(0, Recipes.Num() - 1), RecipeScroll + 1);
+		}
 		if (PlayerOwner->WasInputKeyJustPressed(EKeys::Escape) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Right)
 			|| PlayerOwner->WasInputKeyJustPressed(EKeys::Q) || PlayerOwner->WasInputKeyJustPressed(EKeys::F))
 		{
@@ -701,6 +710,15 @@ void FDADeckUI::Update(float DeltaSeconds)
 	}
 	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Down) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_DPad_Down)
 		|| PlayerOwner->WasInputKeyJustPressed(EKeys::S))
+	{
+		MoveSelection(1);
+	}
+	// U8: wheel drives the focused list exactly like the PDA pattern.
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollUp))
+	{
+		MoveSelection(-1);
+	}
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollDown))
 	{
 		MoveSelection(1);
 	}
@@ -1095,7 +1113,9 @@ void FDADeckUI::DrawCollectionPanel()
 
 	const float RowH = 42.f * S;
 	const float Top = ChipY + 64.f * S;
-	const int32 Visible = FMath::Max(1, FMath::FloorToInt((H - 132.f * S) / RowH));
+	// U6: the ADD/SWAP button sits 48S above the panel bottom, so keep 154S
+	// cleared (was 132S) or the last grid row slides partly underneath it.
+	const int32 Visible = FMath::Max(1, FMath::FloorToInt((H - 154.f * S) / RowH));
 	if (CollectionSelection < CollectionScroll)
 	{
 		CollectionScroll = CollectionSelection;

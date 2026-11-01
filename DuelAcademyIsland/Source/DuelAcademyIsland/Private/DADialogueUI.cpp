@@ -108,6 +108,7 @@ void FDADialogueUI::Begin(const TArray<FDADialogueLine>& InLines, const FString&
 	HistoryScroll = 0;
 	bHistoryOpen = false;
 	bEscapeClose = true;
+	bRequestedNoEscapeClose = false;
 	bOpen = true;
 
 	GoToLine(0);
@@ -150,6 +151,14 @@ bool FDADialogueUI::IsWaitingForChoice() const
 		&& Lines[LineIndex].Options.Num() > 0;
 }
 
+void FDADialogueUI::SetAllowEscapeClose(bool bAllowed)
+{
+	// U7: the request survives line advances; GoToLine re-applies it unless a
+	// text-entry line must lock Escape-close on its own.
+	bRequestedNoEscapeClose = !bAllowed;
+	bEscapeClose = bAllowed;
+}
+
 void FDADialogueUI::GoToLine(int32 NewIndex)
 {
 	if (!Lines.IsValidIndex(NewIndex))
@@ -172,12 +181,15 @@ void FDADialogueUI::GoToLine(int32 NewIndex)
 		TextEntryMinLength = FMath::Max(1, NewLine.TextMinLength);
 		TextEntryMaxLength = FMath::Max(TextEntryMinLength, NewLine.TextMaxLength);
 		TextEntryBuffer = NewLine.TextDefault.Left(TextEntryMaxLength);
+		// Text input always re-locks Escape-close for the line's duration.
 		bEscapeClose = false;
 	}
 	else
 	{
 		TextEntryBuffer.Reset();
-		bEscapeClose = true;
+		// U7: carry the critical-scene request across the conversation instead
+		// of every line re-enabling Escape-close behind SetAllowEscapeClose.
+		bEscapeClose = !bRequestedNoEscapeClose;
 	}
 
 	if (LastShownLine != LineIndex)

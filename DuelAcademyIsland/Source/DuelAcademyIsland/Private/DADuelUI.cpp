@@ -180,6 +180,40 @@ FDADuelUI::FDADuelUI(ADAHUD* InOwner)
 
 FDADuelUI::~FDADuelUI() = default;
 
+// Pinned cross-workstream contract #1.
+bool FDADuelUI::WasDeckSelectClosedWithoutResult() const
+{
+	return bDeckSelectClosedWithoutResult;
+}
+
+// U4: the single-row deck picker keeps hard bounds. 4 fits the shipped
+// decks.json; if a future layout raises the page size, 6 is the ceiling the
+// 1600x900 board can carry (documented on the header constant).
+static_assert(FDADuelUI::DeckSelectPageSize >= 1 && FDADuelUI::DeckSelectPageSize <= 6,
+	"Deck select page size must stay within the single-row layout cap documented on FDADuelUI::DeckSelectPageSize");
+
+void FDADuelUI::DebugSetStoryOwnedDuel(bool bStoryOwned)
+{
+	// Test-only override (DAA02GateTests): production captures this at
+	// OpenDeckSelect via UDAStorySubsystem::HasPendingDuel.
+	bDuelOpenedForStory = bStoryOwned;
+}
+
+int32 FDADuelUI::DeckSelectPageCount(int32 NumDecks)
+{
+	return FMath::Max(1, FMath::DivideAndRoundUp(FMath::Max(0, NumDecks), DeckSelectPageSize));
+}
+
+int32 FDADuelUI::DeckSelectPageFirstDeck(int32 Page)
+{
+	return FMath::Max(0, Page) * DeckSelectPageSize;
+}
+
+bool FDADuelUI::ComputeStoryDuelClosedWithoutResult(bool bOwnedByStoryAtOpen, bool bResultRecordedAtClose, bool bWasOpenAtClose)
+{
+	return bOwnedByStoryAtOpen && bWasOpenAtClose && !bResultRecordedAtClose;
+}
+
 UWorld* FDADuelUI::GetWorld() const
 {
 	return OwnerHUD.IsValid() ? OwnerHUD->GetWorld() : nullptr;
@@ -355,6 +389,10 @@ void FDADuelUI::NotifyDuelFinished(bool bPlayerWon)
 	bStoryResultWon = bWon;
 	bStoryResultDraw = bDraw;
 
+	// Pinned contract #1: a result was recorded, so any waiting no-result
+	// state is answered for good (story resolves normally on close).
+	bDeckSelectClosedWithoutResult = false;
+
 	const FString RewardLine = DpEarned > 0 ? FString::Printf(TEXT(" +%d DP."), DpEarned) : FString();
 	DuelResultTitle = bDraw ? TEXT("DUEL DRAW") : (bWon ? TEXT("DUEL WON") : TEXT("DUEL LOST"));
 	DuelResultMessage = bDraw
@@ -395,11 +433,31 @@ void FDADuelUI::OpenDeckSelect(const FString& OpponentId, const FString& Opponen
 	DuelModeString = Mode.IsEmpty() ? TEXT("free") : Mode;
 	bDuelAwardDP = bInAwardDP;
 	DuelResultDpEarned = 0;
+
+	// Pinned contract #1: read the pre-open story state first — a picker grown
+	// from a result screen has bStoryResultPending set, which means the session
+	// already recorded a result, so backing out of that rematch picker must
+	// NOT re-open the story duel. A fresh story picker sees no recorded result
+	// and a story command still waiting for a duel.
+	const bool bStoryResultPendingBeforeOpen = bStoryResultPending;
+	bool bStoryOwned = false;
+	if (OwnerHUD.IsValid())
+	{
+		UDAStorySubsystem* Story = UDAStorySubsystem::Get(OwnerHUD.Get());
+		bStoryOwned = Story && Story->HasPendingDuel();
+	}
+	bStoryOwned = bStoryOwned && !bStoryResultPendingBeforeOpen;
+
 	bStoryResultPending = false;
 	bStoryResultWon = false;
 	bStoryResultDraw = false;
 
+	// A brand-new picker supersedes the previous no-result state.
+	bDeckSelectClosedWithoutResult = false;
+	bDuelOpenedForStory = bStoryOwned;
+
 	DuelMode = EDuelUiMode::DeckSelect;
+	DeckSelectPage = 0;
 	DuelEngine.Reset();
 	DuelSelectedUid = 0;
 	DuelTributeHandUid = 0;
@@ -650,6 +708,16 @@ void FDADuelUI::AbortScenarioDuel()
 
 void FDADuelUI::CloseDuel()
 {
+	// Pinned contract #1: fold the session's outcome into the public flag
+	// before the mode is torn down. A second, already-closed call must not
+	// clobber a flag the story has not consumed yet.
+	if (DuelMode != EDuelUiMode::None)
+	{
+		bDeckSelectClosedWithoutResult = ComputeStoryDuelClosedWithoutResult(
+			bDuelOpenedForStory, bStoryResultPending, true);
+		bDuelOpenedForStory = false;
+	}
+
 	const bool bNotifyStory = bStoryResultPending;
 	const bool bStoryWon = bStoryResultWon;
 	const bool bStoryDraw = bStoryResultDraw;
@@ -1182,18 +1250,26 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 	{
 		if (PlayerOwner)
 		{
-			if (PlayerOwner->WasInputKeyJustPressed(EKeys::One) || PlayerOwner->WasInputKeyJustPressed(EKeys::Two)
-				|| PlayerOwner->WasInputKeyJustPressed(EKeys::Three))
+			UCardDatabaseSubsystem* Cards = GetGameInstance() ? GetGameInstance()->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
+			if (Cards && Cards->GetDecks().Num() > 0)
 			{
-				UCardDatabaseSubsystem* Cards = GetGameInstance() ? GetGameInstance()->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
-				if (Cards && Cards->GetDecks().Num() > 0)
+				const TArray<FStarterDeckDef>& Decks = Cards->GetDecks();
+				// U4: the picker paginates beyond one row of panels; number keys
+				// address the decks visible on the current page only.
+				const int32 PageCount = DeckSelectPageCount(Decks.Num());
+				DeckSelectPage = FMath::Clamp(DeckSelectPage, 0, PageCount - 1);
+				const int32 FirstDeck = DeckSelectPageFirstDeck(DeckSelectPage);
+				const int32 PageDeckCount = FMath::Min(DeckSelectPageSize, Decks.Num() - FirstDeck);
+				static const FKey DeckNumberKeys[6] = { EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four,
+					EKeys::Five, EKeys::Six };
+				for (int32 Slot = 0; Slot < PageDeckCount; ++Slot)
 				{
-					int32 Index = PlayerOwner->WasInputKeyJustPressed(EKeys::One) ? 0
-						: (PlayerOwner->WasInputKeyJustPressed(EKeys::Two) ? 1 : 2);
-					const TArray<FStarterDeckDef>& Decks = Cards->GetDecks();
-					if (Decks.IsValidIndex(Index))
+					const int32 DeckIndex = FirstDeck + Slot;
+					if (Decks.IsValidIndex(DeckIndex)
+						&& PlayerOwner->WasInputKeyJustPressed(DeckNumberKeys[Slot]))
 					{
-						StartDuelWithDeck(Decks[Index].Id);
+						StartDuelWithDeck(Decks[DeckIndex].Id);
+						break;
 					}
 				}
 			}
@@ -2342,6 +2418,15 @@ void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString&
 		{
 			CloseDuel();
 		}
+		else if (Action == TEXT("deckprev"))
+		{
+			// U4: the same page buttons DrawDuelChoice uses for its options.
+			DeckSelectPage = FMath::Max(0, DeckSelectPage - 1);
+		}
+		else if (Action == TEXT("decknext"))
+		{
+			++DeckSelectPage;
+		}
 		return;
 	}
 	if (DuelMode == EDuelUiMode::Result)
@@ -2638,8 +2723,15 @@ void FDADuelUI::DrawDuelDeckSelect()
 	DrawDuelPortrait(TEXT("player"), DX(70.0f), DY(26.0f), DS(72.0f), DS(72.0f), AccentCyan, 1.0f, true);
 	DrawShadowText(TEXT("DUEL ACADEMY ISLAND"), Gold, DX(158.0f), DY(34.0f), GetFont(false), 0.82f * DuelScale, false);
 	DrawShadowText(TEXT("CHOOSE YOUR STARTER DECK"), Paper, DX(158.0f), DY(60.0f), GetFont(true), 1.32f * DuelScale, false);
-	DrawShadowText(FString::Printf(TEXT("%s is waiting for a duel. Choose one of three starter decks."), *DuelOpponentName),
-		Muted, DX(158.0f), DY(104.0f), GetFont(false), 0.8f * DuelScale, false);
+	if (Cards && Cards->IsLoaded())
+	{
+		const FString DeckCountLine = DeckSelectPageCount(Cards->GetDecks().Num()) > 1
+			? FString::Printf(TEXT("%s is waiting for a duel. %d starter decks spread over %d pages."),
+				*DuelOpponentName, Cards->GetDecks().Num(), DeckSelectPageCount(Cards->GetDecks().Num()))
+			: FString::Printf(TEXT("%s is waiting for a duel. Choose one of %d starter decks."),
+				*DuelOpponentName, Cards->GetDecks().Num());
+		DrawShadowText(DeckCountLine, Muted, DX(158.0f), DY(104.0f), GetFont(false), 0.8f * DuelScale, false);
+	}
 
 	DrawPanel(DX(1130.0f), DY(26.0f), DS(430.0f), DS(98.0f),
 		FLinearColor(0.035f, 0.055f, 0.075f, 0.95f), DuelLine);
@@ -2647,8 +2739,18 @@ void FDADuelUI::DrawDuelDeckSelect()
 		FLinearColor(0.88f, 0.58f, 0.26f), 1.0f, true);
 	DrawShadowText(DuelOpponentName.ToUpper(), Gold, DX(1238.0f), DY(38.0f), GetFont(false), 0.95f * DuelScale, false);
 	DrawShadowText(FString::Printf(TEXT("%s DECK  /  8000 LP"), *DuelOpponentDeckId.ToUpper()), Paper, DX(1238.0f), DY(64.0f), GetFont(false), 0.68f * DuelScale, false);
-	DrawShadowText(TEXT("Click a deck or press 1, 2, 3. Esc returns."), Muted, DX(1238.0f), DY(88.0f),
-		GetFont(false), 0.58f * DuelScale, false);
+	if (!Cards || !Cards->IsLoaded() || Cards->GetDecks().Num() == 0)
+	{
+		DrawShadowText(TEXT("Card database not loaded (Content/Data/cards.json is missing or invalid)."),
+			FLinearColor(0.95f, 0.5f, 0.4f), DX(1238.0f), DY(88.0f), GetFont(false), 0.58f * DuelScale, false);
+	}
+	else
+	{
+		const int32 PageFirst = DeckSelectPageFirstDeck(FMath::Clamp(DeckSelectPage, 0, DeckSelectPageCount(Cards->GetDecks().Num()) - 1));
+		const int32 PageSlots = FMath::Min(DeckSelectPageSize, Cards->GetDecks().Num() - PageFirst);
+		DrawShadowText(FString::Printf(TEXT("Click a deck or press 1-%d. Esc returns."), PageSlots),
+			Muted, DX(1238.0f), DY(88.0f), GetFont(false), 0.58f * DuelScale, false);
+	}
 	DrawDuelButton(TEXT("BACK"), TEXT("back"), 0, 70.0f, 120.0f, 120.0f, 34.0f,
 		true, FLinearColor(0.42f, 0.68f, 0.86f));
 
@@ -2660,12 +2762,49 @@ void FDADuelUI::DrawDuelDeckSelect()
 	}
 
 	const TArray<FStarterDeckDef>& Decks = Cards->GetDecks();
-	for (int32 I = 0; I < 3 && I < Decks.Num(); ++I)
+	if (Decks.Num() == 0)
 	{
-		const FStarterDeckDef& Deck = Decks[I];
-		const float PX = 70.0f + I * 500.0f;
+		DrawShadowText(TEXT("No starter decks defined in Content/Data/cards.json."),
+			FLinearColor(0.95f, 0.5f, 0.4f), DX(70.0f), DY(160.0f), GetFont(false), 0.9f * DuelScale, false);
+		return;
+	}
+
+	// U4: the row renders up to DeckSelectPageSize panels (4 today; the hard
+	// cap for a future layout bump is 6 - see the header). Everything is
+	// measured on the 1600x900 duel board and mapped through DX/DY/DS, so the
+	// row letterboxes correctly onto every HD/HD2 resolution.
+	const int32 PageCount = DeckSelectPageCount(Decks.Num());
+	DeckSelectPage = FMath::Clamp(DeckSelectPage, 0, PageCount - 1);
+	const int32 FirstDeck = DeckSelectPageFirstDeck(DeckSelectPage);
+	const int32 RowCount = FMath::Min(DeckSelectPageSize, Decks.Num() - FirstDeck);
+
+	// Row geometry: the shipped 3-deck look (460-wide panels, 40 gaps) stays
+	// pixel-identical; a wider row (4 decks today) shrinks panels and tightens
+	// the gap to fit between the 70-unit margins.
+	const float RowW = 1600.0f - 2.0f * 70.0f;
+	const float PanelW = RowCount <= 3 ? 460.0f : FMath::Min(460.0f, (RowW - (RowCount - 1) * 20.0f) / RowCount);
+	const float Stride = RowCount <= 3 ? 500.0f : PanelW + 20.0f;
+
+	// The inner content scales down with the narrower panels: card art slots
+	// and the KEY CARDS text width track the panel, so 4 decks fit without
+	// anything spilling past its frame.
+	const float ArtSlotW = FMath::Min(98.0f, (PanelW - 40.0f - 3.0f * 8.0f) / 4.0f);
+	const float ArtCardW = ArtSlotW;
+	const float ArtCardH = ArtCardW * 142.0f / 98.0f;
+	const float ArtStride = ArtSlotW + 8.0f;
+	const int32 TrimChars = FMath::Max(18, FMath::RoundToInt(37.0f * (PanelW - 44.0f) / 416.0f));
+
+	for (int32 Row = 0; Row < RowCount; ++Row)
+	{
+		const int32 DeckIndex = FirstDeck + Row;
+		if (!Decks.IsValidIndex(DeckIndex))
+		{
+			continue;
+		}
+		const FStarterDeckDef& Deck = Decks[DeckIndex];
+		const float PX = 70.0f + Row * Stride;
 		const float PY = 160.0f;
-		const float PW = 460.0f;
+		const float PW = PanelW;
 		const float PH = 650.0f;
 		const float AX = DX(PX);
 		const float AY = DY(PY);
@@ -2704,7 +2843,8 @@ void FDADuelUI::DrawDuelDeckSelect()
 		{
 			FDuelCard Preview;
 			Preview.Data = *PreviewCards[ArtIndex];
-			DrawDuelCard(Preview, DX(PX + 20.0f + ArtIndex * 106.0f), DY(PY + 106.0f), DS(98.0f), DS(142.0f), false);
+			DrawDuelCard(Preview, DX(PX + 20.0f + ArtIndex * ArtStride), DY(PY + 106.0f),
+				DS(ArtCardW), DS(ArtCardH), false);
 		}
 
 		DrawWrappedText(Deck.Description, DX(PX + 22.0f), DY(PY + 258.0f), DS(PW - 44.0f),
@@ -2721,7 +2861,7 @@ void FDADuelUI::DrawDuelDeckSelect()
 			{
 				CardLine += FString::Printf(TEXT("   %d/%d"), Record->Atk, Record->Def);
 			}
-			DrawShadowText(DuelTrim(CardLine, 37), Record->IsMonster() ? Paper : AccentCyan,
+			DrawShadowText(DuelTrim(CardLine, TrimChars), Record->IsMonster() ? Paper : AccentCyan,
 				DX(PX + 22.0f), DY(NameY), GetFont(false), 0.63f * DuelScale, false);
 			NameY += 23.0f;
 		}
@@ -2731,9 +2871,20 @@ void FDADuelUI::DrawDuelDeckSelect()
 			&& DuelMousePosition.Y >= DY(ButtonY) && DuelMousePosition.Y <= DY(ButtonY + 44.0f);
 		DrawPanel(DX(PX + 20.0f), DY(ButtonY), DS(PW - 40.0f), DS(44.0f),
 			bHoverButton ? Accent * 0.9f : FLinearColor(0.03f, 0.06f, 0.09f, 0.98f), Accent);
-		DrawShadowText(FString::Printf(TEXT("DUEL %s   [%d]"), *DuelOpponentName.ToUpper(), I + 1), Accent,
-			DX(PX + PW * 0.5f), DY(ButtonY + 12.0f), GetFont(false), 0.88f * DuelScale, true);
-		AddDuelHit(TEXT("deck"), I, DX(PX), DY(PY), DS(PW), DS(PH), Deck.Id);
+		DrawShadowText(FString::Printf(TEXT("DUEL %s   [%d]"), *DuelOpponentName.ToUpper(), Row + 1),
+			Accent, DX(PX + PW * 0.5f), DY(ButtonY + 12.0f), GetFont(false), 0.88f * DuelScale, true);
+		AddDuelHit(TEXT("deck"), DeckIndex, DX(PX), DY(PY), DS(PW), DS(PH), Deck.Id);
+	}
+
+	// Pagination footer, mirroring the duel choice panel's PREV/NEXT buttons.
+	if (PageCount > 1)
+	{
+		DrawDuelButton(TEXT("< PREV"), TEXT("deckprev"), 0, 645.0f, 822.0f, 150.0f, 30.0f,
+			DeckSelectPage > 0, FLinearColor(0.38f, 0.58f, 0.74f));
+		DrawDuelButton(TEXT("NEXT >"), TEXT("decknext"), 0, 805.0f, 822.0f, 150.0f, 30.0f,
+			DeckSelectPage < PageCount - 1, FLinearColor(0.38f, 0.58f, 0.74f));
+		DrawShadowText(FString::Printf(TEXT("PAGE %d / %d"), DeckSelectPage + 1, PageCount), Muted,
+			DX(800.0f), DY(862.0f), GetFont(false), 0.55f * DuelScale, true);
 	}
 
 	if (Art)

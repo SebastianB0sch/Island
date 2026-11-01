@@ -46,6 +46,10 @@ private:
 	void RunSpawnDespawnCases();
 	void RunRefreshCases();
 	void RunWorldStatePersistenceCases();
+	void RunCalendarBridgeCases();
+	void BridgeCaseTick(float DeltaTime);
+	UFUNCTION()
+	void HandleScheduleApplied(FString ScheduleId, FString Weekday, FString Period);
 	void VerifyActiveSet(const FString& CaseName, const FString& ScheduleId, const FString& Weekday,
 		const FString& Period, const FString& Event);
 	bool ExpectedActive(const FDANpcSchedulePointData& Point, const FString& ScheduleId, const FString& Weekday,
@@ -69,4 +73,11 @@ private:
 	TMap<FString, TObjectPtr<ADANpcSpawnPoint>> SpawnPointsById;
 	TArray<FDANpcSchedulePointData> SpawnData;
 	TArray<FString> RequiredSpawnIds;
+
+	// Calendar-bridge case (W2) stage machine.
+	bool bBridgeCaseStarted = false;
+	int32 BridgeStage = 0;
+	float BridgeStageSeconds = 0.f;
+	FString BridgeBaseScheduleId;
+	int32 BridgeApplications = 0;
 };

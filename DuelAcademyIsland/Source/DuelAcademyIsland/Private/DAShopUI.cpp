@@ -364,6 +364,16 @@ void FDAShopUI::Update(float DeltaSeconds)
 	{
 		MoveSelection(1);
 	}
+	// U8: wheel scrolls the pack list exactly like the PDA's list, so the
+	// ^/v row indicators above the list stop being decoration.
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollUp))
+	{
+		MoveSelection(-1);
+	}
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollDown))
+	{
+		MoveSelection(1);
+	}
 	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Left) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_LeftShoulder)
 		|| PlayerOwner->WasInputKeyJustPressed(EKeys::Q))
 	{

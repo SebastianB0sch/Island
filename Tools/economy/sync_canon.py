@@ -104,10 +104,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if not CANON_PACKS.exists():
         print(f"missing canon packs: {CANON_PACKS}", file=sys.stderr)
-        return 1
+        return 2
     if not CANON_BANNED.exists():
         print(f"missing canon banned list: {CANON_BANNED}", file=sys.stderr)
-        return 1
+        return 2
 
     try:
         canon = load(CANON_PACKS)
@@ -260,26 +260,34 @@ def main(argv: list[str] | None = None) -> int:
             "semi_limited": "Array of {card_id, limit, name, reason}; limit is 2.",
         },
     }
-    if not args.check:
-        write(SHOP_PACKS, shop)
-        write(RARITY, rarity_doc)
-        write(RULES, rules_doc)
-
-    # Sanity: the default player deck must be legal under the year 1 list.
+    # Sanity: the default player decks must be legal under the year 1 list.
+    # This runs BEFORE any write so an illegal generated banlist can never be
+    # published (fail closed); violations are errors, not warnings.
     banned_set = {entry["card_id"] for entry in banned_ids}
     limited_map = {entry["card_id"]: entry["limit"] for entry in limited}
     semi_map = {entry["card_id"]: entry["limit"] for entry in semi_limited}
+    violations: list[str] = []
     for deck in decks:
         counts: dict[int, int] = {}
         for card_id in deck["cards"]:
             counts[card_id] = counts.get(card_id, 0) + 1
         for card_id, count in counts.items():
             if card_id in banned_set:
-                print(f"WARNING: {deck['id']} contains forbidden card {card_id}", file=sys.stderr)
+                violations.append(f"{deck['id']} contains forbidden card {card_id}")
             if card_id in limited_map and count > limited_map[card_id]:
-                print(f"WARNING: {deck['id']} exceeds limited card {card_id}", file=sys.stderr)
+                violations.append(f"{deck['id']} exceeds limited card {card_id} ({count} > {limited_map[card_id]})")
             if card_id in semi_map and count > semi_map[card_id]:
-                print(f"WARNING: {deck['id']} exceeds semi-limited card {card_id}", file=sys.stderr)
+                violations.append(f"{deck['id']} exceeds semi-limited card {card_id} ({count} > {semi_map[card_id]})")
+    if violations:
+        for violation in violations:
+            print(f"ERROR: deck legality violation: {violation}", file=sys.stderr)
+        print(f"error: {len(violations)} legality violation(s); nothing written", file=sys.stderr)
+        return 1
+
+    if not args.check:
+        write(SHOP_PACKS, shop)
+        write(RARITY, rarity_doc)
+        write(RULES, rules_doc)
 
     print(
         f"{'checked' if args.check else 'synced'} {len(new_packs)} packs, "

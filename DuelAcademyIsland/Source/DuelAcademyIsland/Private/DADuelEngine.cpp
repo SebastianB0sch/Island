@@ -15,6 +15,13 @@
 namespace
 {
 	constexpr int32 StartingLP = 8000;
+	/**
+	 * Upper Life Point bound (D9): effect-script amounts are clamped at read
+	 * time and GainLp clamps the accumulator, so a malformed Content/Data
+	 * script can inflate LP but never int32-overflow the counter.  Unreachable
+	 * through legitimate card effects.
+	 */
+	constexpr int32 MaxLifePoints = 1000000000;
 
 	const TSet<FString>& NormalSummonLockedNames()
 	{
@@ -142,6 +149,7 @@ void FDuelEngine::ResetDuelState()
 	bAwaitingDiscard = false;
 	bAiTurnPending = false;
 	bAiRunning = false;
+	bPlayerEndHandoffDeferred = false;
 	LastAiMessage.Reset();
 	UidCounter = 0;
 
@@ -231,6 +239,18 @@ void FDuelEngine::SetupSide(EDuelOwner Side, const FString& DeckId)
 	});
 }
 
+FDuelDeckValidationResult FDuelEngine::ValidateSideDeck(const FString& DeckId) const
+{
+	FDuelDeckValidationResult Result;
+	const FStarterDeckDef* Deck = Database ? Database->FindDeck(DeckId) : nullptr;
+	if (!Deck)
+	{
+		Result.AddError(FString::Printf(TEXT("Deck '%s' is not registered in the card database."), *DeckId));
+		return Result;
+	}
+	return ValidateDeck(Deck->Cards, Deck->Extra);
+}
+
 void FDuelEngine::ShuffleSide(FDuelSide& Side)
 {
 	for (int32 I = Side.Deck.Num() - 1; I > 0; --I)
@@ -278,6 +298,31 @@ void FDuelEngine::Start(const FString& InPlayerDeckId, const FString& InOpponent
 	if (Player.Deck.Num() == 0 || Opponent.Deck.Num() == 0)
 	{
 		EndDuel(EDuelOwner::Opponent, TEXT("A deck could not be loaded."));
+		return;
+	}
+
+	// D-START: fail closed on illegal decks before the first turn runs.  The
+	// shipped starter decks, player decks and every registered opponent deck
+	// validate against the active ruleset, so a rejection here means bad data
+	// rather than a startable duel.  The side with the legal deck wins; when
+	// both sides are illegal the legacy unloaded-deck convention applies
+	// (opponent awarded, so no phantom player win records into story/stats).
+	const FDuelDeckValidationResult PlayerValidation = ValidateSideDeck(PlayerDeckId);
+	const FDuelDeckValidationResult OpponentValidation = ValidateSideDeck(OpponentDeckId);
+	if (!PlayerValidation.bValid || !OpponentValidation.bValid)
+	{
+		TArray<FString> Problems = PlayerValidation.Errors;
+		Problems.Append(OpponentValidation.Errors);
+		FString JoinedErrors;
+		for (const FString& Problem : Problems)
+		{
+			JoinedErrors += JoinedErrors.IsEmpty() ? Problem : TEXT("; ") + Problem;
+		}
+		Log(FString::Printf(TEXT("Deck validation failed: %s"), *JoinedErrors), TEXT("error"));
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("[Duel] Deck validation failed ('%s' vs '%s'): %s"),
+			*PlayerDeckId, *OpponentDeckId, *JoinedErrors);
+		EndDuel(PlayerValidation.bValid ? EDuelOwner::Player : EDuelOwner::Opponent,
+			TEXT("A deck failed validation."));
 		return;
 	}
 
@@ -540,10 +585,34 @@ void FDuelEngine::FinishPlayerTurn()
 			return;
 		}
 	}
+	if (HasPendingChoiceFor(EDuelOwner::Player))
+	{
+		// An End-Phase effect (optional trigger) queued a player question:
+		// defer the opponent handoff until it is answered instead of letting
+		// the prompt settle across the opponent's whole turn.  AnswerChoice /
+		// CancelChoice resume the handoff.
+		bPlayerEndHandoffDeferred = true;
+		return;
+	}
+	FinalizePlayerEndPhaseHandoff();
+}
+
+void FDuelEngine::FinalizePlayerEndPhaseHandoff()
+{
 	Log(TEXT("Your turn ends."), TEXT("phase"));
 	EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Player, nullptr, 0, TEXT("END PHASE"));
 	bAiTurnPending = true;
 	LastAiMessage = FString::Printf(TEXT("%s is taking their turn."), *OpponentDisplayName);
+}
+
+void FDuelEngine::ContinueDeferredPlayerHandoff()
+{
+	if (!bPlayerEndHandoffDeferred || bWinnerSet || HasPendingChoiceFor(EDuelOwner::Player))
+	{
+		return;
+	}
+	bPlayerEndHandoffDeferred = false;
+	FinalizePlayerEndPhaseHandoff();
 }
 
 bool FDuelEngine::DiscardFromHand(int32 Uid, FString& OutError)
@@ -581,9 +650,15 @@ bool FDuelEngine::DiscardFromHand(int32 Uid, FString& OutError)
 						return true;
 					}
 				}
-				bAiTurnPending = true;
-				LastAiMessage = FString::Printf(TEXT("%s is taking their turn."), *OpponentDisplayName);
-				Log(TEXT("Your turn ends."), TEXT("phase"));
+				if (HasPendingChoiceFor(EDuelOwner::Player))
+				{
+					// Same deferred handoff as FinishPlayerTurn: an
+					// End-Phase prompt must be answered before the opponent
+					// takes their turn.
+					bPlayerEndHandoffDeferred = true;
+					return true;
+				}
+				FinalizePlayerEndPhaseHandoff();
 			}
 			return true;
 		}
@@ -625,6 +700,13 @@ void FDuelEngine::RunOpponentTurn()
 			EffectRuntime->OnBattleStart(EDuelOwner::Opponent);
 		}
 		AiPlayBattlePhase();
+	}
+	if (EffectRuntime && !bWinnerSet)
+	{
+		// The player's EndBattlePhase fires this; the AI's Battle Phase must
+		// end the same way so defense_at_end cards flip at the AI's turn end
+		// instead of one turn late.
+		EffectRuntime->OnBattleEnd();
 	}
 	if (!bWinnerSet)
 	{
@@ -968,18 +1050,26 @@ FDuelCard FDuelEngine::MoveToGraveRaw(FDuelCard Card)
 	return Card;
 }
 
+void FDuelEngine::NormalizeOutbound(FDuelCard& Card, bool bFaceUp)
+{
+	// Shared outbound normalization for cards that leave any zone for the
+	// hand, Banished pile or a Deck: return control to the owner, reset
+	// equip/tie/counter state and pick the requested face state.
+	Card.Controller = Card.Owner;
+	Card.bFaceUp = bFaceUp;
+	Card.Position = EDuelPosition::Attack;
+	Card.EquippedToUid = 0;
+	Card.TiedToUid = 0;
+	Card.Counters = 0;
+}
+
 void FDuelEngine::MoveToHand(FDuelCard Card)
 {
 	if (EffectRuntime)
 	{
 		EffectRuntime->OnCardLeftField(Card);
 	}
-	Card.Controller = Card.Owner;
-	Card.bFaceUp = true;
-	Card.Position = EDuelPosition::Attack;
-	Card.EquippedToUid = 0;
-	Card.TiedToUid = 0;
-	Card.Counters = 0;
+	NormalizeOutbound(Card, true);
 	Card.bSpecialSummoned = false;
 	EmitVisual(EDuelVisualEventType::Return, Card.Owner, &Card, 0, CardName(Card));
 	SideRef(Card.Owner).Hand.Add(Card);
@@ -991,12 +1081,7 @@ void FDuelEngine::MoveToBanished(FDuelCard Card)
 	{
 		EffectRuntime->OnCardLeftField(Card);
 	}
-	Card.Controller = Card.Owner;
-	Card.bFaceUp = true;
-	Card.Position = EDuelPosition::Attack;
-	Card.EquippedToUid = 0;
-	Card.TiedToUid = 0;
-	Card.Counters = 0;
+	NormalizeOutbound(Card, true);
 	EmitVisual(EDuelVisualEventType::Banish, Card.Owner, &Card, 0, CardName(Card));
 	SideRef(Card.Owner).Banished.Add(Card);
 }
@@ -1007,12 +1092,7 @@ void FDuelEngine::MoveToDeckBottom(FDuelCard Card)
 	{
 		EffectRuntime->OnCardLeftField(Card);
 	}
-	Card.Controller = Card.Owner;
-	Card.bFaceUp = false;
-	Card.Position = EDuelPosition::Attack;
-	Card.EquippedToUid = 0;
-	Card.TiedToUid = 0;
-	Card.Counters = 0;
+	NormalizeOutbound(Card, false);
 	if (Card.bExtra || Card.IsFusion())
 	{
 		// Fusion/Extra Deck monsters never enter the Main Deck.
@@ -1031,12 +1111,7 @@ void FDuelEngine::MoveToDeckTop(FDuelCard Card)
 	{
 		EffectRuntime->OnCardLeftField(Card);
 	}
-	Card.Controller = Card.Owner;
-	Card.bFaceUp = false;
-	Card.Position = EDuelPosition::Attack;
-	Card.EquippedToUid = 0;
-	Card.TiedToUid = 0;
-	Card.Counters = 0;
+	NormalizeOutbound(Card, false);
 	if (Card.bExtra || Card.IsFusion())
 	{
 		Card.bExtra = true;
@@ -1424,7 +1499,7 @@ bool FDuelEngine::CanBeSpecialSummonedByEffect(const FDuelCard& Card) const
 }
 
 FDuelVisualEvent& FDuelEngine::EmitVisual(EDuelVisualEventType Type, EDuelOwner Side, const FDuelCard* Card,
-	int32 Amount, const FString& Text, bool bFaceDown)
+	int32 Amount, const FString& Text, bool bFaceDown, const FDuelVisualEventTargetInfo* TargetInfo)
 {
 	FDuelVisualEvent Event;
 	Event.Type = Type;
@@ -1436,6 +1511,14 @@ FDuelVisualEvent& FDuelEngine::EmitVisual(EDuelVisualEventType Type, EDuelOwner 
 	{
 		Event.CardUid = Card->Uid;
 		Event.CardId = Card->Data.Id;
+	}
+	if (TargetInfo)
+	{
+		Event.TargetUid = TargetInfo->TargetUid;
+		Event.TargetCardId = TargetInfo->TargetCardId;
+		Event.Zone = TargetInfo->Zone;
+		Event.TargetZone = TargetInfo->TargetZone;
+		Event.bDirect = TargetInfo->bDirect;
 	}
 	VisualEvents.Add(Event);
 	if (VisualEvents.Num() > 180)
@@ -1609,6 +1692,50 @@ int32 FDuelEngine::EquipDefBonus(const FDuelCard& Card) const
 	return Bonus;
 }
 
+void FDuelEngine::ApplyFieldStats(int32& Value, const FDuelCard& Card, bool bAtkStyle) const
+{
+	// The active Field Spell affects every monster on the field.  Shared by
+	// GetAtk (bAtkStyle = true) and GetDef; Umi, A Legendary Ocean and Harpies'
+	// Hunting Ground move DEF the same way as ATK, while Umiiruka and Rising
+	// Air Current boost ATK by 500 and cut DEF by 400.
+	const FDuelCard* Field = nullptr;
+	if (Player.Field.IsValid() && Player.Field.bFaceUp) Field = &Player.Field;
+	else if (Opponent.Field.IsValid() && Opponent.Field.bFaceUp) Field = &Opponent.Field;
+	if (!Field)
+	{
+		return;
+	}
+	const FString& FieldName = Field->Data.Name;
+	const FString& Attribute = Card.Data.Attribute;
+	const FString& Type = Card.Data.MonsterType;
+	const bool bLegacyFieldStats = !EffectRuntime || !EffectRuntime->HasFieldStatScript(Field->Data.Id);
+	if (!bLegacyFieldStats)
+	{
+		return;
+	}
+	if (FieldName == TEXT("Umi"))
+	{
+		if (Type == TEXT("Fish") || Type == TEXT("Sea Serpent") || Type == TEXT("Thunder") || Type == TEXT("Aqua")) Value += 200;
+		if (Type == TEXT("Machine") || Type == TEXT("Pyro")) Value -= 200;
+	}
+	else if (FieldName == TEXT("A Legendary Ocean") && Attribute == TEXT("WATER"))
+	{
+		Value += 200;
+	}
+	else if (FieldName == TEXT("Umiiruka") && Attribute == TEXT("WATER"))
+	{
+		Value += bAtkStyle ? 500 : -400;
+	}
+	else if (FieldName == TEXT("Rising Air Current") && Attribute == TEXT("WIND"))
+	{
+		Value += bAtkStyle ? 500 : -400;
+	}
+	else if (FieldName == TEXT("Harpies' Hunting Ground") && Type == TEXT("Winged Beast"))
+	{
+		Value += 200;
+	}
+}
+
 int32 FDuelEngine::GetAtk(const FDuelCard& Card) const
 {
 	if (!Card.IsMonster())
@@ -1618,28 +1745,7 @@ int32 FDuelEngine::GetAtk(const FDuelCard& Card) const
 
 	int32 Value = Card.Data.Atk + EquipAtkBonus(Card);
 
-	// The active Field Spell affects every monster on the field.
-	const FDuelCard* Field = nullptr;
-	if (Player.Field.IsValid() && Player.Field.bFaceUp) Field = &Player.Field;
-	else if (Opponent.Field.IsValid() && Opponent.Field.bFaceUp) Field = &Opponent.Field;
-	if (Field)
-	{
-		const FString& FieldName = Field->Data.Name;
-		const FString& Attribute = Card.Data.Attribute;
-		const FString& Type = Card.Data.MonsterType;
-		const bool bLegacyFieldStats = !EffectRuntime || !EffectRuntime->HasFieldStatScript(Field->Data.Id);
-		if (bLegacyFieldStats && FieldName == TEXT("Umi"))
-		{
-			if (Type == TEXT("Fish") || Type == TEXT("Sea Serpent") || Type == TEXT("Thunder") || Type == TEXT("Aqua")) Value += 200;
-			if (Type == TEXT("Machine") || Type == TEXT("Pyro")) Value -= 200;
-		}
-		else if (bLegacyFieldStats && FieldName == TEXT("A Legendary Ocean") && Attribute == TEXT("WATER")) Value += 200;
-		else if (bLegacyFieldStats && FieldName == TEXT("Umiiruka") && Attribute == TEXT("WATER")) Value += 500;
-		else if (bLegacyFieldStats && FieldName == TEXT("Rising Air Current") && Attribute == TEXT("WIND")) Value += 500;
-		else if (bLegacyFieldStats && FieldName == TEXT("Harpies' Hunting Ground") && Type == TEXT("Winged Beast")) Value += 200;
-	}
-
-	// Continuous monster effects are global while their source is face-up.
+	ApplyFieldStats(Value, Card, true);
 	for (EDuelOwner Side : { EDuelOwner::Player, EDuelOwner::Opponent })
 	{
 		for (const FDuelCard& Source : SideRef(Side).Monsters)
@@ -1718,25 +1824,7 @@ int32 FDuelEngine::GetDef(const FDuelCard& Card) const
 
 	int32 Value = Card.Data.Def + EquipDefBonus(Card);
 
-	const FDuelCard* Field = nullptr;
-	if (Player.Field.IsValid() && Player.Field.bFaceUp) Field = &Player.Field;
-	else if (Opponent.Field.IsValid() && Opponent.Field.bFaceUp) Field = &Opponent.Field;
-	if (Field)
-	{
-		const FString& FieldName = Field->Data.Name;
-		const FString& Attribute = Card.Data.Attribute;
-		const FString& Type = Card.Data.MonsterType;
-		const bool bLegacyFieldStats = !EffectRuntime || !EffectRuntime->HasFieldStatScript(Field->Data.Id);
-		if (bLegacyFieldStats && FieldName == TEXT("Umi"))
-		{
-			if (Type == TEXT("Fish") || Type == TEXT("Sea Serpent") || Type == TEXT("Thunder") || Type == TEXT("Aqua")) Value += 200;
-			if (Type == TEXT("Machine") || Type == TEXT("Pyro")) Value -= 200;
-		}
-		else if (bLegacyFieldStats && FieldName == TEXT("A Legendary Ocean") && Attribute == TEXT("WATER")) Value += 200;
-		else if (bLegacyFieldStats && FieldName == TEXT("Umiiruka") && Attribute == TEXT("WATER")) Value -= 400;
-		else if (bLegacyFieldStats && FieldName == TEXT("Rising Air Current") && Attribute == TEXT("WIND")) Value -= 400;
-		else if (bLegacyFieldStats && FieldName == TEXT("Harpies' Hunting Ground") && Type == TEXT("Winged Beast")) Value += 200;
-	}
+	ApplyFieldStats(Value, Card, false);
 
 	if (IsName(Card, TEXT("Harpie's Pet Dragon")))
 	{
@@ -2788,18 +2876,16 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 	++Attacker->AttacksUsed;
 	const FString AttackerName = CardName(*Attacker);
 	{
-		FDuelVisualEvent AttackEvent;
-		AttackEvent.Type = EDuelVisualEventType::Attack;
-		AttackEvent.Side = AttackerSide;
-		AttackEvent.CardUid = Attacker->Uid;
-		AttackEvent.CardId = Attacker->Data.Id;
-		AttackEvent.TargetUid = Target ? Target->Uid : 0;
-		AttackEvent.TargetCardId = Target ? Target->Data.Id : 0;
-		AttackEvent.Zone = FindMonsterZone(AttackerSide, Attacker->Uid);
-		AttackEvent.TargetZone = Target ? FindMonsterZone(DefenderSide, Target->Uid) : INDEX_NONE;
-		AttackEvent.bDirect = Target == nullptr;
-		AttackEvent.Text = Target ? CardName(*Target) : TEXT("Direct Attack");
-		VisualEvents.Add(AttackEvent);
+		// D6: emitted through EmitVisual so the attack event lives on the
+		// same 180-entry retention path as every other event.
+		FDuelVisualEventTargetInfo AttackInfo;
+		AttackInfo.Zone = FindMonsterZone(AttackerSide, Attacker->Uid);
+		AttackInfo.TargetUid = Target ? Target->Uid : 0;
+		AttackInfo.TargetCardId = Target ? Target->Data.Id : 0;
+		AttackInfo.TargetZone = Target ? FindMonsterZone(DefenderSide, Target->Uid) : INDEX_NONE;
+		AttackInfo.bDirect = Target == nullptr;
+		EmitVisual(EDuelVisualEventType::Attack, AttackerSide, Attacker, 0,
+			Target ? CardName(*Target) : TEXT("Direct Attack"), false, &AttackInfo);
 	}
 	Log(FString::Printf(TEXT("%s %s attacks%s!"), *SideRef(AttackerSide).Name,
 		AttackerSide == EDuelOwner::Player ? TEXT("use") : TEXT("uses"),
@@ -2855,7 +2941,7 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 			if (Monster.IsValid() && Monster.bFaceUp && Monster.Position == EDuelPosition::Attack)
 			{
 				Attackers.Add(Monster.Uid);
-				Burn += Monster.Data.Atk;
+				Burn += GetAtk(Monster);
 			}
 		}
 		FDuelCard Sacrifice;
@@ -4250,7 +4336,8 @@ void FDuelEngine::InflictBattleDamage(EDuelOwner Side, int32 Amount, const FStri
 void FDuelEngine::GainLp(EDuelOwner Side, int32 Amount, const FString& Reason)
 {
 	if (Amount <= 0 || bWinnerSet) return;
-	SideRef(Side).LP += Amount;
+	// D9: clamped so accumulated script-driven heals cannot overflow int32.
+	SideRef(Side).LP = FMath::Min(SideRef(Side).LP + Amount, MaxLifePoints);
 	Log(FString::Printf(TEXT("%s gains %d LP%s."), *SideRef(Side).Name, Amount,
 		Reason.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(" (%s)"), *Reason)), TEXT("heal"));
 	EmitVisual(EDuelVisualEventType::Heal, Side, nullptr, Amount, Reason);
@@ -4923,12 +5010,18 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 			}
 			return;
 		}
-		for (EDuelOwner DestroySide : { EDuelOwner::Player, EDuelOwner::Opponent })
+		// Mirror the both-short ordering: discard both hands before resolving
+		// either draw, so a one-sided deck-out cannot end the duel with the
+		// other hand still unprocessed.
+		const int32 PlayerDrawCount = DiscardHandToGrave(EDuelOwner::Player);
+		const int32 OpponentDrawCount = bWinnerSet ? 0 : DiscardHandToGrave(EDuelOwner::Opponent);
+		if (!bWinnerSet && PlayerDrawCount > 0)
 		{
-			const int32 DiscardedCount = DiscardHandToGrave(DestroySide);
-			if (bWinnerSet) return;
-			if (DiscardedCount > 0) Draw(DestroySide, DiscardedCount);
-			if (bWinnerSet) return;
+			Draw(EDuelOwner::Player, PlayerDrawCount);
+		}
+		if (!bWinnerSet && OpponentDrawCount > 0)
+		{
+			Draw(EDuelOwner::Opponent, OpponentDrawCount);
 		}
 	}
 	else if (Name == TEXT("Heavy Storm"))
@@ -6626,7 +6719,6 @@ void FDuelEngine::AiActivateSpellCard(FDuelCard& Card)
 	const int32 Uid = Card.Uid;
 	const FString Name = Card.Data.Name;
 	const bool bFieldSpell = IsFieldSpellCard(Card);
-	const bool bStays = IsPersistentSpellTrap(Card);
 
 	FDuelCard Copy;
 	if (!RemoveFromZone(Copy, Uid))
@@ -6663,11 +6755,10 @@ void FDuelEngine::AiActivateSpellCard(FDuelCard& Card)
 		}
 	}
 	CheckWinner();
-	if (!bStays && FindSpellTrap(Uid))
-	{
-		FDuelCard Done;
-		if (RemoveFromZone(Done, Uid)) MoveToGrave(Done, Name, true);
-	}
+	// D3: share the ActivateTrapInternal / CleanupResolvedChainCard cleanup:
+	// it defers behind a pending choice and files one-shot Spells under the
+	// shared "resolve" reason instead of the card's own name.
+	CleanupResolvedChainCard(Uid);
 }
 
 void FDuelEngine::AiActivateSpells()
@@ -7283,6 +7374,9 @@ bool FDuelEngine::AnswerChoice(int32 RequestId, const TArray<int32>& OptionIds, 
 		}
 	}
 	FlushPendingActivationCleanup();
+	// A handoff deferred behind a player prompt continues once the queue is
+	// clear (D2); the resolver above may have queued follow-up questions.
+	ContinueDeferredPlayerHandoff();
 	return true;
 }
 
@@ -7327,6 +7421,7 @@ bool FDuelEngine::CancelChoice(int32 RequestId, FString& OutError)
 	InvokeChoiceResolver(Request.RequestId, Request, TArray<int32>());
 	Log(FString::Printf(TEXT("Choice cancelled: %s"), *Request.Prompt), TEXT("choice"));
 	FlushPendingActivationCleanup();
+	ContinueDeferredPlayerHandoff();
 	return true;
 }
 
@@ -7334,6 +7429,7 @@ void FDuelEngine::ClearPendingChoices()
 {
 	PendingChoices.Reset();
 	ChoiceResolvers.Reset();
+	bPlayerEndHandoffDeferred = false;
 	FlushPendingActivationCleanup();
 }
 
@@ -7511,7 +7607,10 @@ void FDuelEngine::ExecuteChainLinkCard(FDuelChainLink& Link)
 	{
 		return;
 	}
-	FDuelCard* Card = FindCard(Link.CardUid);
+	// D8: resolve from the Spell/Trap/Field zones only.  A chain card that was
+	// destroyed (or moved) by an earlier-resolving link must not be re-resolved
+	// from (or have bFaceUp flipped on) a Graveyard/Hand copy.
+	FDuelCard* Card = FindSpellTrap(Link.CardUid);
 	if (!Card)
 	{
 		return;

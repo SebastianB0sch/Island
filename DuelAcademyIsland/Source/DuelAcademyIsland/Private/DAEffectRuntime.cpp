@@ -29,10 +29,17 @@ namespace
 
 	int32 ReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Key, int32 Default = 0)
 	{
-		int32 Value = Default;
-		if (Object.IsValid() && Object->TryGetNumberField(Key, Value))
+		// D9: script-read ints are clamped well past any legal value (LP
+		// amounts, draw counts, counters, card ids) so malformed JSON cannot
+		// produce runaway or implementation-defined truncation values.
+		double Number = 0.0;
+		if (Object.IsValid() && Object->TryGetNumberField(Key, Number))
 		{
-			return Value;
+			if (!FMath::IsFinite(Number))
+			{
+				return Default;
+			}
+			return static_cast<int32>(FMath::Clamp(Number, -1.0e9, 1.0e9));
 		}
 		return Default;
 	}
@@ -3061,13 +3068,22 @@ bool FDAEffectRuntime::ExecuteDiscard(const TSharedPtr<FJsonObject>& Operation, 
 		{
 			for (int32 I = 0; I < Count && Engine->GetSide(Side).Hand.Num() > 0; ++I)
 			{
+				// D7: a discard trigger can end the duel mid-batch; engine
+				// batch paths break on bWinnerSet, so this must too.
+				if (Engine->bWinnerSet)
+				{
+					break;
+				}
 				Engine->DiscardCard(Engine->SideRef(Side).Hand[0], Context.Script.Id);
 			}
 		};
 		if (Player == TEXT("both"))
 		{
 			DiscardFrom(Context.SourceCard.Controller);
-			DiscardFrom(Other(Context.SourceCard.Controller));
+			if (!Engine->bWinnerSet)
+			{
+				DiscardFrom(Other(Context.SourceCard.Controller));
+			}
 		}
 		else if (Player == TEXT("opponent"))
 		{
@@ -3082,6 +3098,10 @@ bool FDAEffectRuntime::ExecuteDiscard(const TSharedPtr<FJsonObject>& Operation, 
 
 	for (int32 Uid : Targets)
 	{
+		if (Engine->bWinnerSet)
+		{
+			break;
+		}
 		if (FDuelCard* Card = Engine->FindCard(Uid))
 		{
 			Engine->DiscardCard(*Card, Context.Script.Id);
@@ -3149,6 +3169,11 @@ bool FDAEffectRuntime::ExecuteBanish(const TSharedPtr<FJsonObject>& Operation, c
 	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
 	for (int32 Uid : Targets)
 	{
+		// D7: stop once a trigger has ended the duel (engine batch behaviour).
+		if (Engine->bWinnerSet)
+		{
+			break;
+		}
 		FDuelCard Copy;
 		if (Engine->RemoveFromZone(Copy, Uid))
 		{
@@ -3185,6 +3210,11 @@ bool FDAEffectRuntime::ExecuteSendToGrave(const TSharedPtr<FJsonObject>& Operati
 	const FString Reason = ReadString(Operation, TEXT("reason"), Context.Script.Id);
 	for (int32 Uid : Targets)
 	{
+		// D7: stop once a trigger has ended the duel (engine batch behaviour).
+		if (Engine->bWinnerSet)
+		{
+			break;
+		}
 		const FDuelCard* Card = Engine->FindCard(Uid);
 		const bool bFromField = Card && IsFieldZoneString(ZoneStringOf(*Card));
 		FDuelCard Copy;

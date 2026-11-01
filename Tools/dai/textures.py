@@ -360,14 +360,14 @@ def _tp():
 
 def _load_img(rel, size, mode="RGB"):
     path = _tp().tp_path(rel)
-    img = Image.open(path)
-    if img.mode in ("I;16", "I", "F") and mode != "L":
-        arr = np.asarray(img, dtype=np.float32)
-        arr = arr / max(arr.max(), 1.0)
-        img = Image.fromarray((arr * 255).astype(np.uint8))
-    img = img.convert(mode)
-    if size and img.size != (size, size):
-        img = img.resize((size, size), Image.LANCZOS)
+    with Image.open(path) as img:
+        if img.mode in ("I;16", "I", "F") and mode != "L":
+            arr = np.asarray(img, dtype=np.float32)
+            arr = arr / max(arr.max(), 1.0)
+            img = Image.fromarray((arr * 255).astype(np.uint8))
+        img = img.convert(mode)
+        if size and img.size != (size, size):
+            img = img.resize((size, size), Image.LANCZOS)
     return np.asarray(img).astype(np.float32) / 255.0
 
 
@@ -438,9 +438,11 @@ def build_photo_textures(log=print):
                 raise KeyError("no photo set")
         except Exception:  # noqa: BLE001  - procedural fallback (tint * detail)
             det = TERRAIN_FALLBACK_DETAIL[layer]
-            d = np.asarray(Image.open(os.path.join(C.OUT_TEXTURES, f"T_{det}_D.png")).convert("L")).astype(np.float32) / 255.0
+            with Image.open(os.path.join(C.OUT_TEXTURES, f"T_{det}_D.png")) as detail_img:
+                d = np.asarray(detail_img.convert("L")).astype(np.float32) / 255.0
             bc = np.clip(np.array(tints[layer], np.float32)[None, None, :] * (d[..., None] * 2.0), 0, 1)
-            nrm = np.asarray(Image.open(os.path.join(C.OUT_TEXTURES, f"T_{det}_N.png")).convert("RGB")).astype(np.float32) / 255.0
+            with Image.open(os.path.join(C.OUT_TEXTURES, f"T_{det}_N.png")) as n_img:
+                nrm = np.asarray(n_img.convert("RGB")).astype(np.float32) / 255.0
             rough = np.full(d.shape, 0.9, np.float32)
             source = "procedural"
         atomic.save_image(Image.fromarray((np.clip(bc, 0, 1) * 255).astype(np.uint8), "RGB"), bc_path, quality=92)

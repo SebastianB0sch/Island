@@ -20,6 +20,30 @@
 #include "Components/BillboardComponent.h"
 #endif
 
+namespace
+{
+	// W1: FinishTeleport aborts when the user moved farther than this from the
+	// point armed in BeginTeleport. A map fast travel relocates the player
+	// hundreds of metres; a player walking (or tumbling near the door) during
+	// the 0.35 s fade cannot reach this distance, so legitimate movement never
+	// cancels the door.
+	constexpr float PortalRelocationCancelDistance = 500.f;
+
+	APlayerController* FindFadeController(const AActor* User, const UWorld* World)
+	{
+		APlayerController* PC = nullptr;
+		if (const APawn* Pawn = Cast<APawn>(User))
+		{
+			PC = Cast<APlayerController>(Pawn->GetController());
+		}
+		if (!PC && World)
+		{
+			PC = World->GetFirstPlayerController();
+		}
+		return PC;
+	}
+}
+
 FDAPortalFlagQuery ADAInteriorPortal::FlagQuery;
 
 ADAInteriorPortal::ADAInteriorPortal()
@@ -286,15 +310,12 @@ void ADAInteriorPortal::BeginTeleport(AActor* User)
 		PendingYaw = TargetYaw;
 	}
 
-	APlayerController* PC = nullptr;
-	if (const APawn* Pawn = Cast<APawn>(User))
-	{
-		PC = Cast<APlayerController>(Pawn->GetController());
-	}
-	if (!PC && GetWorld())
-	{
-		PC = GetWorld()->GetFirstPlayerController();
-	}
+	// The capture point is what FinishTeleport validates: anything that moves
+	// the user away from here during the fade (map fast travel, story teleport)
+	// cancels the pending arrival.
+	TeleportCaptureLocation = User ? User->GetActorLocation() : FVector::ZeroVector;
+
+	APlayerController* PC = FindFadeController(User, GetWorld());
 
 	if (PC && PC->PlayerCameraManager && FadeOutSeconds > 0.f)
 	{
@@ -313,20 +334,48 @@ void ADAInteriorPortal::FinishTeleport()
 	AActor* User = PendingUser.Get();
 	if (User)
 	{
+		// W1: a fast travel (or any scripted relocation) inside the fade window
+		// must not be yanked back to this door, and the stale-arrival path must
+		// not re-derive the interior flag from PendingLocation afterwards.
+		const float Drift = FVector::Dist(User->GetActorLocation(), TeleportCaptureLocation);
+		if (Drift > PortalRelocationCancelDistance)
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Portal %s cancelled the pending teleport: the user relocated %.0f cm from the armed point during the fade."),
+				*PortalId, Drift);
+
+			// Kill the timer defensively; the abort must never leave a live
+			// FinishTeleport waiting behind the cancelled one.
+			GetWorldTimerManager().ClearTimer(TeleportTimer);
+
+			// Drop the fade state cleanly. The fade-out already reached black,
+			// so fade in from wherever the camera currently is (fast travel
+			// runs its own fade-in; this continues from its current amount
+			// instead of snapping back to full black).
+			if (APlayerController* PC = FindFadeController(User, GetWorld()))
+			{
+				if (PC->PlayerCameraManager && FadeInSeconds > 0.f && PC->PlayerCameraManager->FadeAmount > 0.001f)
+				{
+					PC->PlayerCameraManager->StartCameraFade(
+						FMath::Clamp(PC->PlayerCameraManager->FadeAmount, 0.f, 1.f), 0.f,
+						FadeInSeconds, FadeColor, false, false);
+				}
+			}
+
+			// No arrival: skip ApplyArrival (no SetInInterior change) and skip
+			// OnPortalUsed so story "door used" beats stay truthful. The linked
+			// portal's suppression/cooldown simply expire on their own.
+			PendingUser.Reset();
+			bTeleportPending = false;
+			return;
+		}
+
 		ApplyArrival(User);
 	}
 
 	// Fade back in even if the user disappeared during the fade-out; otherwise
 	// the camera would stay black until the next transition.
-	APlayerController* PC = nullptr;
-	if (const APawn* Pawn = Cast<APawn>(User))
-	{
-		PC = Cast<APlayerController>(Pawn->GetController());
-	}
-	if (!PC && GetWorld())
-	{
-		PC = GetWorld()->GetFirstPlayerController();
-	}
+	APlayerController* PC = FindFadeController(User, GetWorld());
 	if (PC && PC->PlayerCameraManager && FadeInSeconds > 0.f)
 	{
 		PC->PlayerCameraManager->StartCameraFade(1.f, 0.f, FadeInSeconds, FadeColor, false, false);
@@ -366,6 +415,10 @@ void ADAInteriorPortal::ApplyArrival(AActor* User)
 	if (ADAStudentCharacter* Character = Cast<ADAStudentCharacter>(User))
 	{
 		Character->SetInInterior(PendingLocation.Z < -20000.f);
+		// Pinned contract #2 (WS-04 declares + implements): clear the focus the
+		// player picked up at the departure door, otherwise the HUD prompt keeps
+		// pointing at an interactable left behind in another cell.
+		Character->NotifyTeleportArrived();
 	}
 
 	if (APawn* Pawn = Cast<APawn>(User))
@@ -530,7 +583,8 @@ void ADAInteriorPortal::CollectSaveStates(UWorld* World, TArray<FDAPortalSaveSta
 	}
 }
 
-int32 ADAInteriorPortal::ApplySaveStates(UWorld* World, const TArray<FDAPortalSaveState>& States)
+int32 ADAInteriorPortal::ApplySaveStates(UWorld* World, const TArray<FDAPortalSaveState>& States,
+	TArray<FString>* OutUnresolvedIds)
 {
 	if (!World)
 	{
@@ -556,6 +610,10 @@ int32 ADAInteriorPortal::ApplySaveStates(UWorld* World, const TArray<FDAPortalSa
 
 	int32 Applied = 0;
 	TSet<FString> SeenIds;
+	if (OutUnresolvedIds)
+	{
+		OutUnresolvedIds->Reset();
+	}
 	for (const FDAPortalSaveState& State : States)
 	{
 		// Empty ids are not wildcards, and duplicate entries must not let a
@@ -570,7 +628,12 @@ int32 ADAInteriorPortal::ApplySaveStates(UWorld* World, const TArray<FDAPortalSa
 		if (!Target)
 		{
 			// Unknown id (actor not loaded, content removed, or a hand-edited
-			// save): ignore it rather than failing the whole load.
+			// save): reported to the caller for retry rather than failing the
+			// whole load.
+			if (OutUnresolvedIds)
+			{
+				OutUnresolvedIds->Add(State.PortalId);
+			}
 			continue;
 		}
 		Target->ApplySaveState(State);

@@ -190,7 +190,9 @@ def main(argv: list[str]) -> int:
     portals_doc = load_json(data_dir / "portals.json", report)
     anchors_doc = load_json(data_dir / "anchors.json", report)
     spawns_doc = load_json(data_dir / "spawns.json", report)
-    layout = load_json(layout_path, report) if layout_path.exists() else None
+    layout = load_json(layout_path, report)
+    # A missing layout.json is an error via load_json (zone checks cannot run
+    # at all); keeping the degrade only for an existing-but-unreadable file.
     if layout is None and layout_path.exists():
         report.warn("layout.json could not be read; zone checks are limited")
 
