@@ -11,6 +11,10 @@ class UTexture2D;
  * live outside /Game on purpose: they are ordinary JPGs under Content/Data so
  * the art can be refreshed with Tools/fetch_card_art.py without reimporting
  * assets.  Textures are created on first use and cached for the session.
+ *
+ * A missing or invalid scan is cached as null so draw code does not repeat the
+ * file lookup every frame; restart the session after adding art.  Card ids are
+ * integers, so the path has no user-controlled directory components.
  */
 UCLASS()
 class DUELACADEMYISLAND_API UCardArtSubsystem : public UGameInstanceSubsystem

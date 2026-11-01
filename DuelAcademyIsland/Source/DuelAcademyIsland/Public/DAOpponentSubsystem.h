@@ -8,6 +8,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "DASaveGame.h"
 #include "DAOpponentSubsystem.generated.h"
 
 /** One recurring schedule slot. An empty Interior means the exterior zone is enough. */
@@ -394,7 +395,10 @@ struct FDAOpponentEmailRuntime
 	TArray<FString> ReadThreads;
 };
 
-/** Transient state A02 should fold into the profile/save payload. */
+/**
+ * Runtime opponent state. Persisted as the additive "opponents" save section:
+ * duel counters, email read/unlock state and the duel-request cooldown bookkeeping.
+ */
 USTRUCT(BlueprintType)
 struct FDAOpponentRuntimeState
 {
@@ -414,6 +418,10 @@ struct FDAOpponentRuntimeState
 
 	UPROPERTY(BlueprintReadOnly, Category = "Opponent")
 	TMap<FString, int32> RequestsToday;
+
+	/** Last day a request was consumed per opponent; drives DuelRequest.CooldownDays. */
+	UPROPERTY(BlueprintReadOnly, Category = "Opponent")
+	TMap<FString, int32> LastRequestDay;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Opponent")
 	int32 RequestDay = -1;
@@ -451,17 +459,19 @@ struct FDAOpponentDuelOutcome
  *
  * Baseline contract:
  *  - A09 asks for a duelist, a deck id and an AI profile; it does not read JSON.
- *  - A02 stores FDAOpponentRuntimeState; this subsystem does not write save files.
+ *  - RuntimeState is persisted by this subsystem as the additive "opponents"
+ *    save section; it only touches disk through UDASaveSubsystem.
  *  - A04's duel request should carry FDAOpponentDef::DefaultDeck or
  *    ResolveDeckFor(). Puzzle/exam requests are owned by UDAExamSubsystem.
  */
 UCLASS()
-class DUELACADEMYISLAND_API UDAOpponentSubsystem : public UGameInstanceSubsystem
+class DUELACADEMYISLAND_API UDAOpponentSubsystem : public UGameInstanceSubsystem, public IDASavePayloadProvider
 {
 	GENERATED_BODY()
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 
 	/** Idempotent loader. Returns false on a missing/invalid roster; decks with warnings are skipped. */
 	bool Reload(FString& OutError);
@@ -511,7 +521,17 @@ public:
 	void SetRuntimeState(const FDAOpponentRuntimeState& InState) { RuntimeState = InState; }
 	void ResetRuntimeState() { RuntimeState = FDAOpponentRuntimeState(); }
 
+	// IDASavePayloadProvider. The section is additive: saves written before it
+	// existed load with empty runtime state instead of stale in-session values.
+	virtual FString GetSaveSectionName() const override;
+	virtual bool WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const override;
+	virtual bool ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const override;
+	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) override;
+	virtual void ResetSaveSectionState() override;
+
 private:
+	void TryRegisterSaveProvider();
+
 	bool LoadRosterFile(const FString& Path, FString& OutError);
 	bool LoadDeckFile(const FString& Path, FString& OutError);
 	void LoadDeckDirectory(const FString& Directory, TArray<FString>& OutWarnings);
@@ -528,4 +548,5 @@ private:
 
 	FDAOpponentRuntimeState RuntimeState;
 	bool bLoaded = false;
+	bool bSaveProviderRegistered = false;
 };

@@ -127,7 +127,12 @@ class DUELACADEMYISLAND_API UDATitleSystem : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	/** Loads Content/Data/Profile/titles.json. Falls back to hardcoded defaults. */
+	/**
+	 * Loads Content/Data/Profile/titles.json.  Malformed entries are skipped,
+	 * duplicate ids keep the first definition, and the table is sorted by
+	 * Order then id so equal-order titles evaluate deterministically.  Falls
+	 * back to the hardcoded defaults when the file is missing or unusable.
+	 */
 	bool LoadDefinitions();
 
 	/** Restores the conservative hardcoded table (used if the JSON is missing). */
@@ -146,7 +151,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Title")
 	FString GetDefaultTitle() const;
 
-	/** Best eligible title for the profile: active temporary title, Dropout Boy, or best permanent. */
+	/** Best eligible title for the profile: Dropout Boy, active temporary title, or best permanent. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Title")
 	FString EvaluateTitle(const UDAProfileSubsystem* Profile);
 

@@ -40,6 +40,13 @@ def _pct(value: int, total: int) -> float:
     return (value / total) * 100.0
 
 
+def _expected_recipe_totals(cards: list[dict]) -> tuple[int, int]:
+    """Count the Fusion/Ritual cards that must have data records."""
+    fusion = sum(1 for card in cards if card.get("card_type") == "Fusion Monster")
+    ritual = sum(1 for card in cards if card.get("card_type") == "Ritual Monster")
+    return fusion, ritual
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -62,6 +69,13 @@ def main(argv: list[str] | None = None) -> int:
     strict_tier3 = args.strict_tier3 or args.release
 
     print("== build manifest ==")
+    # Fail before the manifest (and its last-one-wins card map) is written.
+    try:
+        data.script_files()
+    except ValueError as exc:
+        print(f"ERROR {exc}")
+        print("\nAUDIT FAILED")
+        return 1
     manifest = build_manifest.build(write=True)
     build_manifest.print_summary(manifest)
 
@@ -113,22 +127,23 @@ def main(argv: list[str] | None = None) -> int:
 
     fusion = stats.get("fusion", {})
     ritual = stats.get("ritual", {})
+    expected_fusion, expected_ritual = _expected_recipe_totals(data.load_cards())
     fusion_total = fusion.get("total", 0)
-    fusion_accounted = fusion_total if fusion_total == 76 else 0
+    fusion_accounted = fusion_total if fusion_total == expected_fusion else 0
     ritual_total = ritual.get("total", 0)
-    ritual_accounted = ritual_total if ritual_total == 22 else 0
-    targets.append(("Fusion recipes accounted", _pct(fusion_accounted, 76), 100.0))
-    targets.append(("Ritual procedures accounted", _pct(ritual_accounted, 22), 100.0))
-    targets.append(("Fusion recipes resolved", _pct(fusion.get("resolved", 0), 76), 95.0))
-    targets.append(("Ritual procedures resolved", _pct(ritual.get("resolved", 0), 22), 100.0))
-    if fusion_accounted != 76:
-        failures.append(f"Fusion coverage is {fusion_accounted}/76; every Fusion needs a recipe or explicit unresolved record")
-    if ritual_accounted != 22:
-        failures.append(f"Ritual coverage is {ritual_accounted}/22; every Ritual needs an entry")
-    if _pct(fusion.get("resolved", 0), 76) < 95.0:
-        failures.append(f"Only {fusion.get('resolved', 0)}/76 Fusion recipes resolved (target 95%)")
-    if _pct(ritual.get("resolved", 0), 22) < 100.0:
-        failures.append(f"Only {ritual.get('resolved', 0)}/22 Ritual procedures resolved (target 100%)")
+    ritual_accounted = ritual_total if ritual_total == expected_ritual else 0
+    targets.append(("Fusion recipes accounted", _pct(fusion_accounted, expected_fusion), 100.0))
+    targets.append(("Ritual procedures accounted", _pct(ritual_accounted, expected_ritual), 100.0))
+    targets.append(("Fusion recipes resolved", _pct(fusion.get("resolved", 0), expected_fusion), 95.0))
+    targets.append(("Ritual procedures resolved", _pct(ritual.get("resolved", 0), expected_ritual), 100.0))
+    if fusion_accounted != expected_fusion:
+        failures.append(f"Fusion coverage is {fusion_accounted}/{expected_fusion}; every Fusion needs a recipe or explicit unresolved record")
+    if ritual_accounted != expected_ritual:
+        failures.append(f"Ritual coverage is {ritual_accounted}/{expected_ritual}; every Ritual needs an entry")
+    if _pct(fusion.get("resolved", 0), expected_fusion) < 95.0:
+        failures.append(f"Only {fusion.get('resolved', 0)}/{expected_fusion} Fusion recipes resolved (target 95%)")
+    if _pct(ritual.get("resolved", 0), expected_ritual) < 100.0:
+        failures.append(f"Only {ritual.get('resolved', 0)}/{expected_ritual} Ritual procedures resolved (target 100%)")
 
     if report.errors:
         failures.append(f"{len(report.errors)} validation error(s)")

@@ -6,7 +6,8 @@ Usage:
     python Tools/puzzles/validate.py --report Docs/Opponents_Validation_Report.md
     python Tools/puzzles/validate.py --strict-warnings
 
-Exit code 0 = PASS, 1 = FAIL. Warnings do not fail unless --strict-warnings.
+Exit code 0 = PASS, 1 = FAIL, 2 = report path could not be written. Warnings do
+not fail unless --strict-warnings.
 """
 
 from __future__ import annotations
@@ -16,7 +17,9 @@ import datetime as _dt
 import json
 import os
 import sys
+import tempfile
 from collections import Counter, defaultdict
+from pathlib import Path
 
 ROOT_DEFAULT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CARD_MIN, CARD_MAX = 1, 1200
@@ -102,6 +105,9 @@ def validate_cards(v: Validator, root: str) -> tuple[dict[int, dict], dict[str, 
 def validate_decks(v: Validator, root: str, cards: dict[int, dict], names: dict[str, int],
                    roster: dict | None) -> tuple[list[dict], dict[str, dict]]:
     decks_dir = data_path(root, "Opponents", "decks")
+    if not os.path.isdir(decks_dir):
+        v.fail("decks", f"directory missing: {decks_dir}")
+        return [], {}
     files = sorted(f for f in os.listdir(decks_dir) if f.endswith(".json"))
     v.require(len(files) > 0, "decks", f"found {len(files)} deck files")
     decks: list[dict] = []
@@ -119,6 +125,9 @@ def validate_decks(v: Validator, root: str, cards: dict[int, dict], names: dict[
             deck = load_json(path)
         except Exception as exc:  # noqa: BLE001 - report malformed content
             v.fail("decks", f"{filename}: {exc}")
+            continue
+        if not isinstance(deck, dict):
+            v.fail("decks", f"{filename}: root is not an object")
             continue
         deck_id = deck.get("id")
         if deck_id != os.path.splitext(filename)[0]:
@@ -172,6 +181,9 @@ def validate_decks(v: Validator, root: str, cards: dict[int, dict], names: dict[
 
 def validate_ai(v: Validator, root: str) -> dict[str, dict]:
     ai_dir = data_path(root, "Opponents", "ai")
+    if not os.path.isdir(ai_dir):
+        v.fail("ai", f"directory missing: {ai_dir}")
+        return {}
     files = sorted(f for f in os.listdir(ai_dir) if f.endswith(".json"))
     v.require(len(files) > 0, "ai", f"found {len(files)} AI profile files")
     profiles: dict[str, dict] = {}
@@ -181,6 +193,9 @@ def validate_ai(v: Validator, root: str) -> dict[str, dict]:
             profile = load_json(path)
         except Exception as exc:  # noqa: BLE001
             v.fail("ai", f"{filename}: {exc}")
+            continue
+        if not isinstance(profile, dict):
+            v.fail("ai", f"{filename}: root is not an object")
             continue
         pid = profile.get("id")
         if pid != os.path.splitext(filename)[0]:
@@ -216,12 +231,19 @@ def validate_roster(v: Validator, root: str, decks: dict[str, dict], ai: dict[st
     except Exception as exc:  # noqa: BLE001
         v.fail("roster", f"{path}: {exc}")
         return None, []
+    if not isinstance(roster, dict):
+        v.fail("roster", f"{path}: root is not an object")
+        return None, []
     duelists = roster.get("duelists", [])
+    duelist_count = len(duelists) if isinstance(duelists, list) else 0
     v.require(isinstance(duelists, list) and len(duelists) >= 25, "roster",
-              f"{len(duelists)} duelists (need at least 25: 20 ranked + events)")
+              f"{duelist_count} duelists (need at least 25: 20 ranked + events)")
     ids: set[str] = set()
     ranked = 0
-    for d in duelists:
+    for d in duelists if isinstance(duelists, list) else []:
+        if not isinstance(d, dict):
+            v.fail("roster", "duelist entry is not an object")
+            continue
         did = d.get("id")
         if not did:
             v.fail("roster", "duelist has no id")
@@ -667,6 +689,9 @@ class PuzzleSim:
 
 def validate_puzzles(v: Validator, root: str, cards: dict[int, dict], roster: dict | None) -> list[dict]:
     puzzle_dir = data_path(root, "Puzzles")
+    if not os.path.isdir(puzzle_dir):
+        v.fail("puzzles", f"directory missing: {puzzle_dir}")
+        return []
     files = sorted(f for f in os.listdir(puzzle_dir) if f.endswith(".json"))
     v.require(len(files) == 100, "puzzles", f"{len(files)} puzzle files (need P001-P100)")
     fusions_path = data_path(root, "fusions.json")
@@ -685,6 +710,9 @@ def validate_puzzles(v: Validator, root: str, cards: dict[int, dict], roster: di
             puzzle = load_json(path)
         except Exception as exc:  # noqa: BLE001
             v.fail("puzzles", f"{filename}: {exc}")
+            continue
+        if not isinstance(puzzle, dict):
+            v.fail("puzzles", f"{filename}: root is not an object")
             continue
         pid = puzzle.get("id")
         label = f"puzzle {pid or filename}"
@@ -1093,12 +1121,29 @@ def build_report(root: str, v: Validator, cards: dict[int, dict], decks: list[di
     return "\n".join(lines)
 
 
-def main() -> int:
+def _write_text_atomic(path: Path, text: str) -> None:
+    """Write the Markdown report atomically with stable UTF-8/LF bytes."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
+    temp_path = Path(temp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temp_path, path)
+    finally:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except OSError:
+                pass
+
+
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Validate Duel Academy opponent, AI, exam and puzzle data.")
     parser.add_argument("--root", default=ROOT_DEFAULT, help="Repository root (default: two levels above this script)")
     parser.add_argument("--report", default="", help="Write a Markdown validation report to this path")
     parser.add_argument("--strict-warnings", action="store_true", help="Treat warnings as failures")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     root = os.path.abspath(args.root)
     v = Validator(root)
 
@@ -1141,11 +1186,16 @@ def main() -> int:
           f"questions={len(questions.get('questions', []))} cycles={len(exams.get('cycles', []))}")
 
     if args.report:
-        report_path = os.path.abspath(args.report)
-        os.makedirs(os.path.dirname(report_path), exist_ok=True)
-        with open(report_path, "w", encoding="utf-8") as handle:
-            handle.write(build_report(root, v, cards, decks, roster or roster_raw, ai, puzzles,
-                                      questions, practicals, scoring, exams))
+        report_path = Path(os.path.abspath(args.report))
+        try:
+            _write_text_atomic(
+                report_path,
+                build_report(root, v, cards, decks, roster or roster_raw, ai, puzzles,
+                             questions, practicals, scoring, exams),
+            )
+        except OSError as exc:
+            print(f"error: cannot write report {report_path}: {exc}", file=sys.stderr)
+            return 2
         print(f"report={report_path}")
 
     return 1 if failed else 0

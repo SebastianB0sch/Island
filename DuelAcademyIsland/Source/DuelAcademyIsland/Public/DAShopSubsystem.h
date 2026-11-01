@@ -50,7 +50,9 @@ public:
 	// ------------------------------------------------ A02 save interface
 	virtual FString GetSaveSectionName() const override { return TEXT("shop"); }
 	virtual bool WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const override;
+	virtual bool ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const override;
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) override;
+	virtual void ResetSaveSectionState() override;
 
 	// ------------------------------------------------------------ catalog
 

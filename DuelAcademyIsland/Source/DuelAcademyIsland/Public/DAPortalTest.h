@@ -30,6 +30,8 @@ private:
 	void VerifyEntry();
 	void BeginReturn();
 	void VerifyReturn();
+	void VerifySaveStateContract();
+	void VerifyWorldSaveStateContract();
 	void Finish();
 
 	void Check(bool bCondition, const FString& Name);

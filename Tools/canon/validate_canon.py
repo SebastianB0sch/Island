@@ -5,17 +5,65 @@ in Docs/Canon/VALIDATION.md.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from collections import Counter
 from pathlib import Path
 
+from build_manifest import FILES as MANIFEST_FILES, MANIFEST_PATH_PREFIX
 from canon_common import (
     CANON_DIR, DOCS_DIR, REPO_ROOT, TOOLS_DIR, read_json, sha256_file, utc_now,
     write_text,
 )
 
 CARD_IDS = set(range(1, 1201))
+
+
+def manifest_hash_errors(manifest_path: Path, repo_root: Path) -> list[str]:
+    """Return every missing/mismatched/duplicate manifest file entry."""
+    errors: list[str] = []
+    if not manifest_path.is_file():
+        return [f"manifest missing {manifest_path}"]
+    try:
+        manifest = read_json(manifest_path)
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"manifest unreadable {manifest_path}: {exc}"]
+    files = manifest.get("files") if isinstance(manifest, dict) else None
+    if not isinstance(files, list):
+        return [f"manifest {manifest_path} has no files array"]
+
+    seen: set[str] = set()
+    for item in files:
+        if not isinstance(item, dict) or not isinstance(item.get("path"), str):
+            errors.append(f"manifest has a malformed file entry: {item!r}")
+            continue
+        rel = item["path"]
+        if rel in seen:
+            errors.append(f"manifest lists {rel} more than once")
+            continue
+        seen.add(rel)
+        path = repo_root / rel
+        if not path.is_file():
+            errors.append(f"manifest missing file {rel}")
+            continue
+        expected = item.get("sha256")
+        if not isinstance(expected, str) or len(expected) != 64:
+            errors.append(f"manifest entry {rel} has an invalid sha256")
+        elif sha256_file(path) != expected:
+            errors.append(f"manifest hash mismatch {rel}")
+        size = item.get("bytes")
+        if isinstance(size, int) and not isinstance(size, bool) and size != path.stat().st_size:
+            errors.append(f"manifest size mismatch {rel} ({size} != {path.stat().st_size})")
+
+    expected_paths = {f"{MANIFEST_PATH_PREFIX}/{rel}" for rel in MANIFEST_FILES}
+    missing_entries = sorted(expected_paths - seen)
+    if missing_entries:
+        errors.append(f"manifest omits published file(s): {missing_entries}")
+    unexpected = sorted(seen - expected_paths)
+    if unexpected:
+        errors.append(f"manifest lists unexpected file(s): {unexpected}")
+    return errors
 
 
 class Report:
@@ -35,7 +83,17 @@ class Report:
             self.warnings.append(f"{name}: {detail}")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Validate the canon dataset.")
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=DOCS_DIR / "VALIDATION.md",
+        help="Markdown report path (default: Docs/Canon/VALIDATION.md)",
+    )
+    parser.add_argument("--no-report", action="store_true", help="do not write the Markdown report")
+    args = parser.parse_args(argv)
+
     report = Report()
     cards = read_json(CANON_DIR.parent / "cards.json")
     card_ids = {int(c["id"]) for c in cards}
@@ -120,7 +178,7 @@ def main() -> int:
                      f"main {deck['main_count']}/{len(deck['main'])}, extra {deck['extra_count']}/{len(deck['extra'])}")
         report.check(f"decks.{deck['id']}.size_bounds", 0 <= deck["main_count"] <= 60,
                      f"main {deck['main_count']}")
-        report.check(f"decks.{deck['id']}.extra", deck["extra_count"] <= 20,
+        report.check(f"decks.{deck['id']}.extra", deck["extra_count"] <= 15,
                      f"extra {deck['extra_count']}")
         if deck["complete"]:
             report.check(f"decks.{deck['id']}.size", 40 <= deck["main_count"] <= 60,
@@ -239,15 +297,11 @@ def main() -> int:
     dialogue_leaks = [str(p.relative_to(REPO_ROOT)) for p in (REPO_ROOT / "Tools" / "canon").rglob("dialogue_full.json")]
     report.check("legal.no_full_dialogue", not dialogue_leaks, str(dialogue_leaks))
 
-    # Manifest hash check.
-    top = read_json(CANON_DIR / "manifest.json")
-    for item in top["files"]:
-        path = REPO_ROOT / item["path"]
-        if not path.exists():
-            report.errors.append(f"manifest missing file {item['path']}")
-        elif sha256_file(path) != item["sha256"]:
-            report.errors.append(f"manifest hash mismatch {item['path']}")
-    report.check("manifest.hashes", not any("hash mismatch" in e for e in report.errors), "")
+    # Manifest hash check. This is a hard error: the manifest is the published
+    # hash inventory for the canonical extracts.
+    manifest_errors = manifest_hash_errors(CANON_DIR / "manifest.json", REPO_ROOT)
+    report.errors.extend(manifest_errors)
+    report.check("manifest.hashes", not manifest_errors, f"{len(manifest_errors)} issue(s)")
 
     lines = [
         "# Canon validation report",
@@ -266,7 +320,16 @@ def main() -> int:
         lines += ["", "## Errors", ""] + [f"- {e}" for e in report.errors]
     if report.warnings:
         lines += ["", "## Warnings", ""] + [f"- {w}" for w in report.warnings]
-    write_text(DOCS_DIR / "VALIDATION.md", "\n".join(lines) + "\n")
+    if not args.no_report:
+        report_path = args.report.expanduser()
+        if not report_path.is_absolute():
+            report_path = Path.cwd() / report_path
+        try:
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            write_text(report_path, "\n".join(lines) + "\n")
+        except OSError as exc:
+            print(f"error: cannot write report {report_path}: {exc}", file=sys.stderr)
+            return 2
 
     print(f"checks: {len(report.checks)}  errors: {len(report.errors)}  warnings: {len(report.warnings)}")
     for error in report.errors:

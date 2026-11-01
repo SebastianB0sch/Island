@@ -169,6 +169,11 @@ class MeshBuilder:
             self.poly(list(reversed(ring)), mat)
 
     def sphere(self, center, radius, mat, seg=16, rings=10, hemi=False, scale=(1, 1, 1), smooth=True):
+        # A full sphere samples both poles, so an odd ring count would put one profile
+        # row past -Z (a negative radius clamped to a degenerate pole ring).  Round up
+        # to the next even count; hemispheres only walk 0..+Z and are fine as authored.
+        if not hemi:
+            rings = max(2, rings + (rings % 2))
         prof = []
         lo = 0 if hemi else -rings // 2
         n = rings // 2 if hemi else rings // 2

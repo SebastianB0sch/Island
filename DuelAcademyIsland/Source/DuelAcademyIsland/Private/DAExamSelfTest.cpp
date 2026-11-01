@@ -134,8 +134,17 @@ namespace
 		{
 			return;
 		}
-		Check.Expect(Exam->SubmitTimedResult(true, FMath::Max(1, Replay.StepsExecuted), 1.f, Error),
-			FString::Printf(TEXT("SubmitTimedResult: %s"), *Error));
+		FString TimedToken = FString::Printf(TEXT("timed_selftest:%s:%d"), *Cycle.ExamId, Cycle.MonthIndex);
+		bool bAlreadyApplied = false;
+		Check.Expect(Exam->SubmitTimedResultOnce(true, FMath::Max(1, Replay.StepsExecuted), 1.f,
+				TimedToken, Error, bAlreadyApplied),
+			FString::Printf(TEXT("SubmitTimedResultOnce: %s"), *Error));
+		Check.Expect(!bAlreadyApplied, TEXT("first timed submission is not a duplicate"));
+		Check.Expect(Exam->SubmitTimedResultOnce(true, 99, 99.f, TimedToken, Error, bAlreadyApplied)
+				&& bAlreadyApplied,
+			TEXT("repeated timed submission is idempotent"));
+		Check.Expect(Exam->GetTimedTurns() == FMath::Max(1, Replay.StepsExecuted),
+			TEXT("repeated timed submission keeps the recorded turn count"));
 		Check.Expect(Exam->BeginPractical(Error), FString::Printf(TEXT("BeginPractical: %s"), *Error));
 		if (!Check.bPass)
 		{

@@ -25,6 +25,16 @@ Tools/canon/.local_only/
 Tools/canon/cache/
 Docs/previews/
 
+# Generated integration reports/logs (run_smoke.py defaults). Curated gate
+# evidence is tracked explicitly; `git add -f` a new evidence artifact.
+Docs/Integration/reports/logs/*.log
+Docs/Integration/reports/automation/
+Docs/Integration/reports/smoke*.json
+!Docs/Integration/reports/smoke_selftests.json
+Docs/Integration/reports/validate*.json
+!Docs/Integration/reports/validate_baseline.json
+!Docs/Integration/reports/validate_strict.json
+
 # Packaged builds and staging
 Builds/
 

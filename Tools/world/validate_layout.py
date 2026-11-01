@@ -124,8 +124,10 @@ def inside_bounds(point: tuple[float, float, float], box: tuple[float, float, fl
 def zone_contains(zone: dict[str, Any], point: tuple[float, float, float], margin: float = 0.0) -> bool:
     center = vec3(zone.get("center"))
     extent = vec3(zone.get("extent"))
-    if not center or not extent:
-        return True
+    if center is None or extent is None:
+        # A malformed zone cannot prove containment; callers report the
+        # missing/invalid centre separately rather than silently accepting it.
+        return False
     return (abs(point[0] - center[0]) <= extent[0] + margin and
             abs(point[1] - center[1]) <= extent[1] + margin and
             abs(point[2] - center[2]) <= extent[2] + margin)

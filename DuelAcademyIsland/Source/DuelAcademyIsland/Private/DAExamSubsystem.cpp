@@ -6,6 +6,7 @@
 #include "Dom/JsonObject.h"
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
+#include "Misc/Guid.h"
 #include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
@@ -110,6 +111,12 @@ bool UDAExamSubsystem::Reload(FString& OutError)
 	MonthIndex = 0;
 	Seed = 0;
 	CurrentQuestionIndex = 0;
+	SelectedPuzzleId.Reset();
+	AttemptToken.Reset();
+	TimedResultToken.Reset();
+	bTimedSolved = false;
+	TimedTurns = 0;
+	TimedSeconds = 0.f;
 	bResultValid = false;
 	bLoaded = false;
 
@@ -262,8 +269,8 @@ bool UDAExamSubsystem::LoadPracticalsFile(const FString& Path, FString& OutError
 		Objective.Id = ExReadString(ObjectiveObject, TEXT("id"));
 		Objective.Label = ExReadString(ObjectiveObject, TEXT("label"));
 		Objective.Event = ExReadString(ObjectiveObject, TEXT("event"));
-		Objective.Target = ExReadInt(ObjectiveObject, TEXT("target"), 1);
-		Objective.Points = ExReadInt(ObjectiveObject, TEXT("points"));
+		Objective.Target = FMath::Max(1, ExReadInt(ObjectiveObject, TEXT("target"), 1));
+		Objective.Points = FMath::Max(0, ExReadInt(ObjectiveObject, TEXT("points")));
 		Objective.bRepeatable = ExReadBool(ObjectiveObject, TEXT("repeatable"), true);
 		if (!Objective.Id.IsEmpty())
 		{
@@ -484,11 +491,18 @@ bool UDAExamSubsystem::StartExam(int32 InMonthIndex, int32 InSeed, FString& OutE
 
 	MonthIndex = InMonthIndex;
 	Seed = InSeed;
-	CurrentQuestionIds = Cycle ? Cycle->QuestionIds : *Set;
+	CurrentQuestionIds = (Cycle && Cycle->QuestionIds.Num() > 0) ? Cycle->QuestionIds : *Set;
+	if (CurrentQuestionIds.Num() == 0)
+	{
+		OutError = FString::Printf(TEXT("No exam questions for month %d."), InMonthIndex);
+		return false;
+	}
 	CurrentQuestionIndex = 0;
 	WrittenAnswers.Reset();
 	PracticalProgress.Reset();
 	SelectedPuzzleId.Reset();
+	AttemptToken = FGuid::NewGuid().ToString(EGuidFormats::Digits);
+	TimedResultToken.Reset();
 	bTimedSolved = false;
 	TimedTurns = 0;
 	TimedSeconds = 0.f;
@@ -511,6 +525,8 @@ bool UDAExamSubsystem::BeginWritten(FString& OutError)
 	bTimedSolved = false;
 	PracticalProgress.Reset();
 	SelectedPuzzleId.Reset();
+	AttemptToken = FGuid::NewGuid().ToString(EGuidFormats::Digits);
+	TimedResultToken.Reset();
 	Result = FDAExamResult();
 	bResultValid = false;
 	Phase = EDAExamPhase::Written;
@@ -577,6 +593,7 @@ bool UDAExamSubsystem::BeginTimed(const FString& PuzzleId, FString& OutError)
 		return false;
 	}
 	SelectedPuzzleId = Wanted;
+	TimedResultToken.Reset();
 	bTimedSolved = false;
 	TimedTurns = 0;
 	TimedSeconds = 0.f;
@@ -586,17 +603,52 @@ bool UDAExamSubsystem::BeginTimed(const FString& PuzzleId, FString& OutError)
 
 bool UDAExamSubsystem::SubmitTimedResult(bool bSolved, int32 TurnsUsed, float SecondsUsed, FString& OutError)
 {
+	bool bAlreadyApplied = false;
+	return SubmitTimedResultOnce(bSolved, TurnsUsed, SecondsUsed, FString(), OutError, bAlreadyApplied);
+}
+
+bool UDAExamSubsystem::SubmitTimedResultOnce(bool bSolved, int32 TurnsUsed, float SecondsUsed,
+	const FString& ResultToken, FString& OutError, bool& bAlreadyApplied)
+{
 	OutError.Reset();
+	bAlreadyApplied = false;
+	const FString Token = ResultToken.TrimStartAndEnd();
+
+	// A retried/recreated result must not mutate the recorded score again.
+	if (!Token.IsEmpty() && !TimedResultToken.IsEmpty() && Token == TimedResultToken)
+	{
+		if (Phase == EDAExamPhase::Timed || Phase == EDAExamPhase::TimedDone)
+		{
+			bAlreadyApplied = true;
+			return true;
+		}
+	}
+	if (!Token.IsEmpty() && !TimedResultToken.IsEmpty() && Token != TimedResultToken)
+	{
+		OutError = TEXT("A different timed result was already submitted for this exam.");
+		return false;
+	}
 	if (Phase != EDAExamPhase::Timed)
 	{
 		OutError = TEXT("Not in the timed-duel section.");
 		return false;
 	}
 	bTimedSolved = bSolved;
-	TimedTurns = FMath::Max(0, TurnsUsed);
-	TimedSeconds = FMath::Max(0.f, SecondsUsed);
+	TimedTurns = FMath::Max(0, FMath::Min(TurnsUsed, 100000));
+	TimedSeconds = FMath::IsFinite(SecondsUsed) ? FMath::Max(0.f, FMath::Min(SecondsUsed, 86400.f)) : 0.f;
+	TimedResultToken = Token;
 	Phase = EDAExamPhase::TimedDone;
 	return true;
+}
+
+FString UDAExamSubsystem::GetAttemptToken() const
+{
+	if (!AttemptToken.IsEmpty())
+	{
+		return AttemptToken;
+	}
+	// Deterministic fallback for systems/tests created before StartExam.
+	return FString::Printf(TEXT("exam_%d_%d"), MonthIndex, Seed);
 }
 
 bool UDAExamSubsystem::BeginPractical(FString& OutError)
@@ -640,7 +692,8 @@ void UDAExamSubsystem::RecordPracticalEvent(const FString& ObjectiveId, int32 Am
 		{
 			return;
 		}
-		Progress.Progress = FMath::Min(Progress.Target, Progress.Progress + Amount);
+		Progress.Progress = static_cast<int32>(FMath::Min<int64>(
+			Progress.Target, static_cast<int64>(Progress.Progress) + Amount));
 		if (Progress.Progress >= Progress.Target && !Progress.bComplete)
 		{
 			Progress.bComplete = true;
@@ -676,17 +729,18 @@ bool UDAExamSubsystem::FinishPractical(FString& OutError)
 
 int32 UDAExamSubsystem::ScoreWritten() const
 {
-	return FMath::Min(GetCorrectAnswerCount() * PointsPerCorrect, WrittenMax);
+	const int64 Points = static_cast<int64>(GetCorrectAnswerCount()) * PointsPerCorrect;
+	return static_cast<int32>(FMath::Min<int64>(Points, WrittenMax));
 }
 
 int32 UDAExamSubsystem::ScorePractical() const
 {
-	int32 Points = 0;
+	int64 Points = 0;
 	for (const FDAExamPracticalProgress& Progress : PracticalProgress)
 	{
 		Points += Progress.AwardedPoints;
 	}
-	return FMath::Min(Points, PracticalMax);
+	return static_cast<int32>(FMath::Min<int64>(Points, PracticalMax));
 }
 
 int32 UDAExamSubsystem::GetCorrectAnswerCount() const
@@ -748,7 +802,10 @@ bool UDAExamSubsystem::FinishExam(FDAExamResult& OutResult, FString& OutError)
 		ActivePassMark = Cycle->PassMark;
 		Result.DPReward = Cycle->DPReward;
 	}
-	Result.TotalPoints = Result.WrittenPoints + Result.TimedPoints + Result.PracticalPoints;
+	const int64 TotalPoints = static_cast<int64>(Result.WrittenPoints)
+		+ Result.TimedPoints + Result.PracticalPoints;
+	Result.TotalPoints = static_cast<int32>(FMath::Clamp<int64>(
+		TotalPoints, 0, TNumericLimits<int32>::Max()));
 	Result.bPassed = Result.TotalPoints >= ActivePassMark;
 	Result.Grade = GradeForPoints(Result.TotalPoints);
 	Result.TitleOutcome = Result.bPassed ? TEXT("promotion_eligible") : TEXT("Dropout Boy");
@@ -790,6 +847,8 @@ void UDAExamSubsystem::AbortExam()
 	WrittenAnswers.Reset();
 	PracticalProgress.Reset();
 	SelectedPuzzleId.Reset();
+	AttemptToken.Reset();
+	TimedResultToken.Reset();
 	bTimedSolved = false;
 	TimedTurns = 0;
 	TimedSeconds = 0.f;

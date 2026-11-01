@@ -81,10 +81,15 @@ def main() -> int:
         if not ok:
             failures.append(f"{code}: {detail}")
 
-    shop = load(SHOP_PACKS)
-    canon = load(CANON_PACKS)
-    cards = load(CARDS)
-    rarity_doc = load(RARITY)
+    try:
+        shop = load(SHOP_PACKS)
+        canon = load(CANON_PACKS)
+        cards = load(CARDS)
+        rarity_doc = load(RARITY)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"error: cannot load A06 pack data: {exc}", file=sys.stderr)
+        return 2
+
 
     card_ids = {int(card["id"]) for card in cards}
     card_rarity = {

@@ -204,7 +204,7 @@ const FDAEventDefinition* FDAEventGraph::FindEvent(const FString& EventId) const
 FString FDAEventGraph::EventCompletionFlag(const FString& EventId)
 {
 	FString Tail = EventId.ToLower();
-	if (Tail.StartsWith(TEXT("e")))
+	if (Tail.Len() > 1 && Tail[0] == TEXT('e') && FChar::IsDigit(Tail[1]))
 	{
 		Tail = Tail.RightChop(1);
 	}
@@ -343,10 +343,25 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 		const FString EventId = StoryReadString(Condition, TEXT("id"), StoryReadString(Condition, TEXT("event")));
 		const bool bComplete = Profile && Profile->GetFlag(EventCompletionFlag(EventId));
 		const FString State = StoryReadString(Condition, TEXT("state"), TEXT("complete"));
-		bResult = State.IsEmpty() || State == TEXT("complete") ? bComplete : true;
-		if (!bResult)
+		if (State.IsEmpty() || State.Equals(TEXT("complete"), ESearchCase::IgnoreCase))
 		{
-			OutReason = FString::Printf(TEXT("event %s is not complete"), *EventId);
+			bResult = bComplete;
+			if (!bResult)
+			{
+				OutReason = FString::Printf(TEXT("event %s is not complete"), *EventId);
+			}
+		}
+		else if (State.Equals(TEXT("incomplete"), ESearchCase::IgnoreCase))
+		{
+			bResult = !bComplete;
+			if (!bResult)
+			{
+				OutReason = FString::Printf(TEXT("event %s is already complete"), *EventId);
+			}
+		}
+		else
+		{
+			bResult = true;
 		}
 	}
 	else if (Kind == TEXT("date") || Kind == TEXT("date_at_least"))

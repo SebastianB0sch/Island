@@ -8,11 +8,14 @@ Run:
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import audit
 import build_manifest
 import effect_data as data
 import validate_effects
@@ -22,7 +25,9 @@ class EffectDataTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.cards = data.load_cards()
-        cls.manifest = build_manifest.build(write=True)
+        # Keep the test read-only: build the manifest in memory instead of
+        # rewriting the committed data file as a side effect of running tests.
+        cls.manifest = build_manifest.build(write=False)
 
     def test_manifest_covers_every_card(self) -> None:
         entries = self.manifest["cards"]
@@ -67,6 +72,33 @@ class EffectDataTests(unittest.TestCase):
         first = build_manifest.build(write=False)
         second = build_manifest.build(write=False)
         self.assertEqual(first, second)
+
+    def test_ids_from_only_reads_card_fields(self) -> None:
+        self.assertEqual(data._ids_from([1, 2, 1200]), {1, 2, 1200})
+        self.assertEqual(data._ids_from({"cards": [1, 2], "amount": 500}), {1, 2})
+        self.assertEqual(
+            data._ids_from({"rewards": [{"type": "dp", "amount": 500}]}), set()
+        )
+        self.assertEqual(
+            data._ids_from({"reward": {"card_id": 42, "count": 3}}), {42}
+        )
+
+    def test_duplicate_script_files_fail_loudly(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            (directory / "1.json").write_text('{"card_id": 1}', encoding="utf-8")
+            (directory / "2.json").write_text('{"card_id": 1}', encoding="utf-8")
+            with mock.patch.object(data, "SCRIPTS_DIR", directory):
+                with self.assertRaises(ValueError):
+                    data.script_files()
+
+    def test_recipe_totals_are_derived_from_cards(self) -> None:
+        cards = [
+            {"card_type": "Fusion Monster"},
+            {"card_type": "Ritual Monster"},
+            {"card_type": "Spell"},
+        ]
+        self.assertEqual(audit._expected_recipe_totals(cards), (1, 1))
 
 
 if __name__ == "__main__":

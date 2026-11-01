@@ -169,8 +169,31 @@ public:
 
 	bool IsStarted() const { return bStarted; }
 	bool IsOver() const { return bWinnerSet; }
+	/** True when the duel has finished, including a draw. Use IsDraw() to distinguish. */
 	bool HasWinner() const { return bWinnerSet; }
+	/**
+	 * True when the duel ended without a winner (double KO or a simultaneous
+	 * deck-out).  HasWinner()/IsOver() still report the duel as finished; only
+	 * this query distinguishes a draw from a win or loss.  Winner is not
+	 * meaningful when this returns true.
+	 */
+	bool IsDraw() const { return bDraw; }
+	/** Only meaningful when !IsDraw(); a draw keeps the legacy opponent value. */
 	EDuelOwner GetWinner() const { return Winner; }
+	/**
+	 * Explicit winner query: returns false while the duel is unfinished or was
+	 * drawn, and only then writes a meaningful side to OutWinner.  New callers
+	 * should prefer this over GetWinner(), which cannot report "no winner".
+	 */
+	bool TryGetWinner(EDuelOwner& OutWinner) const
+	{
+		if (!bWinnerSet || bDraw)
+		{
+			return false;
+		}
+		OutWinner = Winner;
+		return true;
+	}
 	FString GetWinnerName() const;
 	EDuelOwner GetActiveSide() const { return ActiveSide; }
 	EDuelPhase GetPhase() const { return Phase; }
@@ -398,6 +421,9 @@ private:
 	void BeginNextTurn();
 	void CheckWinner();
 	void EndDuel(EDuelOwner WinnerSide, const FString& Reason);
+	void EndDuelAsDraw(const FString& Reason);
+	/** Shared end-of-duel cleanup: prompts, deferred activation and chain links. */
+	void FinishDuelBookkeeping();
 
 	// ---- state helpers ----
 	EDuelOwner Other(EDuelOwner Side) const;
@@ -409,7 +435,9 @@ private:
 	bool RemoveFromZone(FDuelCard& OutCard, int32 Uid);
 	bool PlaceMonster(EDuelOwner Side, FDuelCard Card, bool bFaceUp, EDuelPosition Position, int32 Zone = -1);
 	bool PlaceSpellTrap(EDuelOwner Side, FDuelCard Card, bool bFaceUp, bool bFieldZone = false);
-	void MoveToGrave(FDuelCard Card);
+	void MoveToGrave(FDuelCard Card, const FString& Reason = FString(), bool bFromField = false);
+	/** Places the card without notifying; destruction owns its OnDestroyed event. */
+	FDuelCard MoveToGraveRaw(FDuelCard Card);
 	void MoveToHand(FDuelCard Card);
 	void MoveToBanished(FDuelCard Card);
 	void MoveToDeckBottom(FDuelCard Card);
@@ -463,12 +491,13 @@ private:
 	// ---- battle ----
 	bool CanAttack(const FDuelCard& Card) const;
 	void ResolveBattle(FDuelCard& Attacker, FDuelCard* Target);
+	void ApplyBattleDamage(EDuelOwner Receiver, int32 Amount, int32 SourceUid, int32 ReceiverCardUid);
 	void AfterAttack(FDuelCard& Attacker);
 	FDuelCard* PickAttackTrap(EDuelOwner Defender, FDuelCard& Attacker, FDuelCard* Target);
 	bool ResolveAttackTrap(FDuelCard& Trap, EDuelOwner Defender, FDuelCard& Attacker, FDuelCard*& Target, EDuelOwner AttackerSide);
-	FDuelCard* PickSummonTrap(EDuelOwner Defender, FDuelCard& Summoned, bool bNormalSummon);
 	void TriggerFlipEffect(FDuelCard& Card, EDuelOwner Side);
-	void DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Attacker, bool bWasFaceDown, const FString& Reason);
+	/** Returns true when the card was actually moved to the Graveyard/Banished pile. */
+	bool DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Attacker, bool bWasFaceDown, const FString& Reason);
 	void DestroySpellTrap(FDuelCard& Card, bool bByEffect);
 	void DestroyAllMonsters(const FString& Reason);
 	void DestroyAllSpellTraps(bool bByEffect);
@@ -477,7 +506,8 @@ private:
 	void AttachEquip(FDuelCard& Equip, FDuelCard& Target);
 	void CleanupEquips(FDuelCard& Card);
 	void ReturnControl(FDuelCard& Card);
-	void InflictDamage(EDuelOwner Side, int32 Amount, const FString& Reason);
+	/** Applies damage and returns the Life Points actually lost (0 when clamped). */
+	int32 InflictDamage(EDuelOwner Side, int32 Amount, const FString& Reason);
 	void InflictBattleDamage(EDuelOwner Side, int32 Amount, const FString& Reason);
 	void GainLp(EDuelOwner Side, int32 Amount, const FString& Reason);
 	void PayLp(EDuelOwner Side, int32 Amount, const FString& Reason);
@@ -487,6 +517,7 @@ private:
 	bool IsLegalEquipTarget(const FDuelCard& Card, EDuelOwner Side, const FString& Name) const;
 	void QueueEquipTargetChoice(FDuelCard& Equip, EDuelOwner Side, const FString& Name);
 	void ResolveSpell(FDuelCard& Card);
+	void ResolveReviveSpell(FDuelCard& Spell, EDuelOwner Side, EDuelOwner GraveOwner, int32 LpCost, const TCHAR* Reason);
 	bool ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bAutomatic);
 	void ResolveTrap(FDuelCard& Trap);
 	bool TryCounterSpell(EDuelOwner Caster, EDuelOwner Defender);
@@ -530,6 +561,8 @@ private:
 	int32 TurnNumber = 0;
 	bool bStarted = false;
 	bool bWinnerSet = false;
+	/** Authoritative drawn-duel flag.  When true, Winner is not meaningful. */
+	bool bDraw = false;
 	EDuelOwner Winner = EDuelOwner::Player;
 	bool bAwaitingDiscard = false;
 	bool bAiTurnPending = false;
@@ -568,6 +601,9 @@ private:
 
 	FDuelResultStats ResultStats;
 	bool bApplyingBattleDamage = false;
+
+	/** House hand limit shared with the diagnostics/self-test translation unit. */
+	static constexpr int32 HandLimit = 6;
 
 	/** Data-script runtime; owns the loaded Content/Data/Effects scripts. */
 	TUniquePtr<FDAEffectRuntime> EffectRuntime;

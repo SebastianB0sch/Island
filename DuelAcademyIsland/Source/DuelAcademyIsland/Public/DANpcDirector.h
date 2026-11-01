@@ -105,6 +105,20 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Director")
 	FString GetCurrentPeriod() const { return CurrentPeriod; }
 
+	/** True once a schedule filter has been established (see RestoreScheduleState). */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Director")
+	bool HasAppliedSchedule() const { return bHasAppliedSchedule; }
+
+	/**
+	 * Restore a serialized schedule/event state in one pass. Used by the world
+	 * save provider after a load. Idempotent and safe before spawn points are
+	 * registered: the filter is retained and RefreshSpawnPoints re-runs it.
+	 * A saved "no schedule applied" state only clears the filter and does not
+	 * spawn the wildcard set (P2-WORLD-08).
+	 */
+	void RestoreScheduleState(bool bInApplied, const FString& InScheduleId, const FString& InWeekday,
+		const FString& InPeriod, const FString& InEvent);
+
 	// ---------------------------------------------------------------- NPC control
 	/** Spawn (or return) the NPC assigned to a spawn point id. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Director")

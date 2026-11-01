@@ -30,7 +30,9 @@ public:
 	// ------------------------------------------------ A02 save/profile interfaces
 	virtual FString GetSaveSectionName() const override;
 	virtual bool WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const override;
+	virtual bool ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const override;
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) override;
+	virtual void ResetSaveSectionState() override;
 	virtual int32 GetOwnedCardCount(int32 CardId) const override { return GetCount(CardId); }
 	virtual int32 GetDistinctCardsOwned() const override { return Counts.Num(); }
 

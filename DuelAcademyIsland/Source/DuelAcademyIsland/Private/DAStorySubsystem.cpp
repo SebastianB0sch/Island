@@ -7,7 +7,9 @@
 #include "DADialogueUI.h"
 #include "DAProfileSubsystem.h"
 #include "DACalendarSubsystem.h"
+#include "DADeckLogic.h"
 #include "DAInventorySubsystem.h"
+#include "DAShopSubsystem.h"
 #include "DAIslandSubsystem.h"
 #include "DASceneAnchor.h"
 #include "DAStudentNPC.h"
@@ -28,7 +30,6 @@
 #include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
-#include "Serialization/JsonWriter.h"
 #include "Templates/Function.h"
 
 namespace
@@ -809,6 +810,7 @@ void UDAStorySubsystem::ResetRuntimeState()
 
 	CompletedEvents.Reset();
 	AppliedRewardIds.Reset();
+	AppliedOutcomeKeys.Reset();
 	UnlockedDuels.Reset();
 	Objectives.Reset();
 	PendingPackGrants.Reset();
@@ -830,6 +832,7 @@ void UDAStorySubsystem::ResetRuntimeState()
 	SelectedStarterDeck.Reset();
 	PreviousTitle.Reset();
 	PendingDuel = FDAStoryPendingDuel();
+	bResumePendingDuel = false;
 }
 
 void UDAStorySubsystem::StartOpening()
@@ -937,6 +940,25 @@ void UDAStorySubsystem::StartOpeningFresh()
 	if (ADAHUD* HUD = ResolveHUD())
 	{
 		HUD->CloseDialogue();
+	}
+	// A fresh opening is a new campaign, not a continuation in the same
+	// GameInstance. Reset the economy before the starter-deck command runs so
+	// a second new game cannot inherit the previous trunk, decks or purchases.
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (UDAInventorySubsystem* Inventory = GameInstance->GetSubsystem<UDAInventorySubsystem>())
+		{
+			Inventory->ResetCollection();
+		}
+		if (UDAShopSubsystem* Shop = GameInstance->GetSubsystem<UDAShopSubsystem>())
+		{
+			// Preserve the HUD wallet handlers; ResetPurchaseState() clears them.
+			Shop->ResetSaveSectionState();
+		}
+		if (UDADeckLogic* Decks = GameInstance->GetSubsystem<UDADeckLogic>())
+		{
+			Decks->ResetToDefaults();
+		}
 	}
 	bHeadless = ResolveHUD() == nullptr;
 	Profile->InitializeNewGame(DefaultPlayerName);
@@ -1233,6 +1255,7 @@ void UDAStorySubsystem::FinishEvent(bool bComplete, bool bEnterFreeRoam)
 	bWaitingForDuel = false;
 	bWaitingForTimer = false;
 	bPendingTextInput = false;
+	bResumePendingDuel = false;
 	CurrentSceneId.Reset();
 	CurrentCommands.Reset();
 	CommandIndex = 0;
@@ -1324,27 +1347,28 @@ bool UDAStorySubsystem::Tick(float DeltaSeconds)
 			if (HUD->IsDuelOpen())
 			{
 				PendingDuel.bOpened = true;
+				bResumePendingDuel = false;
+			}
+			else if (bResumePendingDuel)
+			{
+				// The save was made while a duel was pending. The load restored
+				// the opponent/branch state but the duel UI is not open, so
+				// re-present the same selector instead of replaying the command.
+				if (PendingDuel.Elapsed > 0.5f && !HUD->IsModalOpen())
+				{
+					bResumePendingDuel = false;
+					PendingDuel.bOpened = false;
+					PendingDuel.Elapsed = 0.f;
+					const FString DuelMode = PendingDuel.bTutorial ? TEXT("tutorial") : PendingDuel.Mode;
+					HUD->OpenDuelDeckSelect(PendingDuel.OpponentId, PendingDuel.OpponentName,
+						PendingDuel.OpponentDeckId, DuelMode, PendingDuel.bAwardDP);
+				}
 			}
 			else if (PendingDuel.bOpened)
 			{
-				UDAProfileSubsystem* Profile = ResolveProfile();
 				bool bWon = false;
 				bool bDraw = false;
-				if (Profile)
-				{
-					if (Profile->GetCounter(TEXT("draws_total")) > PendingDuel.PreDraws)
-					{
-						bDraw = true;
-					}
-					else if (PendingDuel.bTutorial)
-					{
-						bWon = Profile->GetCounter(TEXT("wins_syrus")) > PendingDuel.PreWinsSyrus;
-					}
-					else
-					{
-						bWon = Profile->GetCounter(TEXT("wins_jaden")) > PendingDuel.PreWinsJaden;
-					}
-				}
+				InferPendingDuelResult(bWon, bDraw);
 				ResolvePendingDuel(bWon, bDraw);
 			}
 			else if (PendingDuel.Elapsed > 10.f)
@@ -1353,8 +1377,17 @@ bool UDAStorySubsystem::Tick(float DeltaSeconds)
 				ResolvePendingDuel(false, false);
 			}
 		}
-		else if (PendingDuel.Elapsed > 1.f)
+		else if (!bResumePendingDuel && PendingDuel.Elapsed > 1.f)
 		{
+			ResolvePendingDuel(false, false);
+		}
+		else if (bResumePendingDuel && PendingDuel.Elapsed > 10.f)
+		{
+			// A restored pending duel with no HUD to present it would otherwise
+			// wait forever. Mirror the "duel UI did not open" fallback above so a
+			// headless/dedicated load cannot soft-lock the event queue.
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Story: no HUD to resume the saved pending duel; treating it as a loss."));
 			ResolvePendingDuel(false, false);
 		}
 	}
@@ -1550,10 +1583,10 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: choice line %s has no valid options."), *Command.Key);
 			return true;
 		}
+		ActiveChoiceLineKey = Line->Key;
 
 		if (bManualAudience)
 		{
-			ActiveChoiceLineKey = Line->Key;
 			ActiveChoiceConversationId = FString::Printf(TEXT("%s.choice.%d"), *CurrentSceneId, CommandIndex);
 			bWaitingForChoice = true;
 			bOutBlocked = true;
@@ -1990,7 +2023,10 @@ void UDAStorySubsystem::ApplyChoiceInternal(int32 OptionIndex)
 	const FDAStoryChoice Choice = ActiveChoices[OptionIndex];
 	ActiveChoices.Reset();
 
-	ApplyOutcomes(Choice.Outcomes);
+	const FString ChoiceKey = Choice.Id.IsEmpty() ? FString::FromInt(OptionIndex) : Choice.Id;
+	ApplyOutcomes(Choice.Outcomes,
+		FString::Printf(TEXT("choice:%s:%s:%d:%s:%s"),
+			*CurrentEventId, *CurrentSceneId, CommandIndex, *ActiveChoiceLineKey, *ChoiceKey));
 
 	if (!Choice.NextScene.IsEmpty())
 	{
@@ -2229,17 +2265,28 @@ void UDAStorySubsystem::ApplyEventOutcomes(const FString& EventId)
 	{
 		return;
 	}
-	ApplyOutcomes(Event->Outcomes);
+	ApplyOutcomes(Event->Outcomes, FString::Printf(TEXT("event:%s"), *EventId));
 }
 
-void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Outcomes)
+void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Outcomes, const FString& ContextKey)
 {
 	UDAProfileSubsystem* Profile = ResolveProfile();
 	UDACalendarSubsystem* Calendar = ResolveCalendar();
+	const FString KeyPrefix = ContextKey.IsEmpty() ? FString(TEXT("outcome")) : ContextKey;
 
-	for (const TSharedPtr<FJsonObject>& Outcome : Outcomes)
+	for (int32 OutcomeIndex = 0; OutcomeIndex < Outcomes.Num(); ++OutcomeIndex)
 	{
+		const TSharedPtr<FJsonObject>& Outcome = Outcomes[OutcomeIndex];
 		if (!Outcome.IsValid())
+		{
+			continue;
+		}
+
+		// Event/choice outcome ledger. Interrupting an event after some outcomes
+		// were applied must not grant the same card/pack/DP twice when the event
+		// is replayed. Condition-gated outcomes are only marked once they run.
+		const FString OutcomeKey = FString::Printf(TEXT("%s:%d"), *KeyPrefix, OutcomeIndex);
+		if (AppliedOutcomeKeys.Contains(OutcomeKey))
 		{
 			continue;
 		}
@@ -2321,32 +2368,15 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 		{
 			const int32 CardId = StoryReadInt(Outcome, TEXT("card_id"), StoryReadInt(Outcome, TEXT("card"), 0));
 			const int32 Count = FMath::Max(1, StoryReadInt(Outcome, TEXT("count"), 1));
-			bool bAdded = false;
-			if (UGameInstance* GI = GetGameInstance())
-			{
-				if (UDAInventorySubsystem* Inventory = GI->GetSubsystem<UDAInventorySubsystem>())
-				{
-					Inventory->AddCard(CardId, Count);
-					bAdded = true;
-				}
-			}
-			if (!bAdded && Profile)
-			{
-				Profile->IncrementCounter(FString::Printf(TEXT("card_%d"), CardId), Count);
-			}
+			GrantCardReward(CardId, Count);
 		}
 		else if (Type == TEXT("grant_pack"))
 		{
 			const FString PackId = StoryReadString(Outcome, TEXT("pack_id"), StoryReadString(Outcome, TEXT("pack")));
-			if (PackId.IsEmpty())
+			const int32 Count = FMath::Max(1, StoryReadInt(Outcome, TEXT("count"), 1));
+			if (!AddPendingPackGrant(PackId, Count))
 			{
 				UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: grant_pack outcome has no pack id."));
-			}
-			else
-			{
-				const int32 Count = FMath::Max(1, StoryReadInt(Outcome, TEXT("count"), 1));
-				PendingPackGrants.FindOrAdd(PackId) += Count;
-				UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: pack '%s' queued as an unopened grant (x%d)."), *PackId, Count);
 			}
 		}
 		else if (Type == TEXT("grant_deck"))
@@ -2355,18 +2385,7 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 		}
 		else if (Type == TEXT("set_title"))
 		{
-			if (Profile)
-			{
-				const FString Title = StoryReadString(Outcome, TEXT("title"));
-				Profile->SetTitle(Title);
-				if (!Title.Equals(TEXT("Dropout Boy"), ESearchCase::IgnoreCase))
-				{
-					// E29 recovers from the exam fail state by setting a normal
-					// title. A later A02 title refresh must not resurrect Dropout.
-					Profile->SetFlag(TEXT("dropout_boy"), false);
-					Profile->SetFlag(TEXT("dropout"), false);
-				}
-			}
+			ApplyTitleReward(StoryReadString(Outcome, TEXT("title")));
 		}
 		else if (Type == TEXT("set_dorm") || Type == TEXT("dorm_unlock"))
 		{
@@ -2381,7 +2400,8 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 			{
 				const int32 CurrentDP = Profile->GetDP();
 				const int32 Multiplier = FMath::Max(1, StoryReadInt(Outcome, TEXT("multiplier"), 2));
-				Profile->AwardDP(CurrentDP * (Multiplier - 1));
+				const int64 Bonus = static_cast<int64>(CurrentDP) * static_cast<int64>(Multiplier - 1);
+				Profile->AwardDP(static_cast<int32>(FMath::Clamp<int64>(Bonus, 0, TNumericLimits<int32>::Max())));
 				UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: DP multiplied by %d (now %d)."), Multiplier, Profile->GetDP());
 			}
 		}
@@ -2446,6 +2466,8 @@ void UDAStorySubsystem::ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Out
 			++PlaythroughUnknownOutcome;
 			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: unknown outcome type '%s'."), *Type);
 		}
+
+		AppliedOutcomeKeys.Add(OutcomeKey);
 	}
 }
 
@@ -2505,29 +2527,13 @@ void UDAStorySubsystem::ApplyRewardById(const FString& RewardId)
 	{
 		const int32 CardId = StoryReadInt(Reward, TEXT("card_id"), StoryReadInt(Reward, TEXT("card"), 0));
 		const int32 Count = FMath::Max(1, StoryReadInt(Reward, TEXT("count"), 1));
-		bool bAdded = false;
-		if (UGameInstance* GI = GetGameInstance())
-		{
-			if (UDAInventorySubsystem* Inventory = GI->GetSubsystem<UDAInventorySubsystem>())
-			{
-				Inventory->AddCard(CardId, Count);
-				bAdded = true;
-			}
-		}
-		if (!bAdded && Profile)
-		{
-			Profile->IncrementCounter(FString::Printf(TEXT("card_%d"), CardId), Count);
-		}
+		GrantCardReward(CardId, Count);
 	}
 	else if (Type == TEXT("pack") || Type == TEXT("pack_grant"))
 	{
 		const FString PackId = StoryReadString(Reward, TEXT("pack_id"), StoryReadString(Reward, TEXT("pack")));
-		if (!PackId.IsEmpty())
-		{
-			const int32 Count = FMath::Max(1, StoryReadInt(Reward, TEXT("count"), 1));
-			PendingPackGrants.FindOrAdd(PackId) += Count;
-			UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: pack '%s' queued as an unopened grant (x%d)."), *PackId, Count);
-		}
+		const int32 Count = FMath::Max(1, StoryReadInt(Reward, TEXT("count"), 1));
+		AddPendingPackGrant(PackId, Count);
 	}
 	else if (Type == TEXT("flag"))
 	{
@@ -2535,16 +2541,7 @@ void UDAStorySubsystem::ApplyRewardById(const FString& RewardId)
 	}
 	else if (Type == TEXT("title"))
 	{
-		if (Profile)
-		{
-			const FString Title = StoryReadString(Reward, TEXT("title"));
-			Profile->SetTitle(Title);
-			if (!Title.Equals(TEXT("Dropout Boy"), ESearchCase::IgnoreCase))
-			{
-				Profile->SetFlag(TEXT("dropout_boy"), false);
-				Profile->SetFlag(TEXT("dropout"), false);
-			}
-		}
+		ApplyTitleReward(StoryReadString(Reward, TEXT("title")));
 	}
 	else if (Type == TEXT("dorm"))
 	{
@@ -2597,9 +2594,7 @@ void UDAStorySubsystem::ApplyRewardCommand(const FDAStoryCommand& Command)
 		const FString PackId = StoryReadString(Command.Raw, TEXT("pack_id"));
 		if (!PackId.IsEmpty())
 		{
-			const int32 Count = FMath::Max(1, StoryReadInt(Command.Raw, TEXT("count"), 1));
-			PendingPackGrants.FindOrAdd(PackId) += Count;
-			UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: pack '%s' queued as an unopened grant (x%d)."), *PackId, Count);
+			AddPendingPackGrant(PackId, FMath::Max(1, StoryReadInt(Command.Raw, TEXT("count"), 1)));
 		}
 
 		const TArray<FString> Flags = ReadStringArray(Command.Raw, TEXT("flags"));
@@ -2610,6 +2605,59 @@ void UDAStorySubsystem::ApplyRewardCommand(const FDAStoryCommand& Command)
 	}
 
 	AppliedRewardIds.Add(Key);
+}
+
+void UDAStorySubsystem::GrantCardReward(int32 CardId, int32 Count)
+{
+	const int32 SafeCount = FMath::Max(1, Count);
+	bool bAdded = false;
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UDAInventorySubsystem* Inventory = GI->GetSubsystem<UDAInventorySubsystem>())
+		{
+			Inventory->AddCard(CardId, SafeCount);
+			bAdded = true;
+		}
+	}
+	if (!bAdded)
+	{
+		if (UDAProfileSubsystem* Profile = ResolveProfile())
+		{
+			Profile->IncrementCounter(FString::Printf(TEXT("card_%d"), CardId), SafeCount);
+		}
+	}
+}
+
+bool UDAStorySubsystem::AddPendingPackGrant(const FString& PackId, int32 Count)
+{
+	if (PackId.IsEmpty() || Count <= 0)
+	{
+		return false;
+	}
+
+	int32& Pending = PendingPackGrants.FindOrAdd(PackId);
+	Pending = static_cast<int32>(FMath::Clamp<int64>(
+		static_cast<int64>(Pending) + Count, 0, TNumericLimits<int32>::Max()));
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: pack '%s' queued as an unopened grant (x%d)."), *PackId, Count);
+	return true;
+}
+
+void UDAStorySubsystem::ApplyTitleReward(const FString& Title)
+{
+	UDAProfileSubsystem* Profile = ResolveProfile();
+	if (!Profile)
+	{
+		return;
+	}
+
+	Profile->SetTitle(Title);
+	if (!Title.Equals(TEXT("Dropout Boy"), ESearchCase::IgnoreCase))
+	{
+		// E29 recovers from the exam fail state by setting a normal title. A
+		// later A02 title refresh must not resurrect Dropout.
+		Profile->SetFlag(TEXT("dropout_boy"), false);
+		Profile->SetFlag(TEXT("dropout"), false);
+	}
 }
 
 void UDAStorySubsystem::ApplySetFlag(const FString& Flag, bool bValue)
@@ -2680,7 +2728,38 @@ void UDAStorySubsystem::ApplyDeckGrant(const FString& DeckId)
 
 	if (UObject* Provider = Profile->GetDeckProvider())
 	{
-		if (IDAProfileDeckInterface* Decks = Cast<IDAProfileDeckInterface>(Provider))
+		if (UDADeckLogic* DeckLogic = Cast<UDADeckLogic>(Provider))
+		{
+			// Starter recipes (fire/water/wind) are card-database ids, not player
+			// deck ids. Import the chosen recipe under its stable recipe id and
+			// grant its cards once; a reloaded/duplicate grant finds the existing
+			// deck and does not add a second copy of the collection.
+			const bool bHadDeck = DeckLogic->FindPlayerDeck(DeckId) != nullptr;
+			const FString DeckName = FString::Printf(TEXT("%s Deck"), *DeckId.ToUpper());
+			FString ActiveDeckId;
+			FString DeckError;
+			bool bCreated = false;
+			if (DeckLogic->EnsureStarterDeck(DeckId, DeckName, ActiveDeckId, bCreated, DeckError))
+			{
+				if (bCreated && !bHadDeck)
+				{
+					if (UGameInstance* GameInstance = GetGameInstance())
+					{
+						if (UDAInventorySubsystem* Inventory = GameInstance->GetSubsystem<UDAInventorySubsystem>())
+						{
+							Inventory->GrantStarterCollection(DeckLogic->GetStarterDeckCards(DeckId));
+						}
+					}
+				}
+				DeckLogic->SetActiveDeckId(ActiveDeckId);
+			}
+			else
+			{
+				UE_LOG(LogDuelAcademyIsland, Warning,
+					TEXT("Story: could not import starter deck %s: %s"), *DeckId, *DeckError);
+			}
+		}
+		else if (IDAProfileDeckInterface* Decks = Cast<IDAProfileDeckInterface>(Provider))
 		{
 			Decks->SetActiveDeckId(DeckId);
 		}
@@ -2905,6 +2984,7 @@ void UDAStorySubsystem::CapturePendingDuel(const FDAStoryCommand& Command)
 	PendingDuel.OnLose = Command.OnLose;
 	PendingDuel.OnDraw = Command.OnDraw;
 	PendingDuel.bTutorial = Command.bTutorial;
+	PendingDuel.bAwardDP = Command.bAwardDP;
 
 	if (const UDAProfileSubsystem* Profile = ResolveProfile())
 	{
@@ -2913,7 +2993,36 @@ void UDAStorySubsystem::CapturePendingDuel(const FDAStoryCommand& Command)
 		PendingDuel.PreWinsTotal = Profile->GetCounter(TEXT("wins_total"));
 		PendingDuel.PreDuels = Profile->GetCounter(TEXT("duels_total"));
 		PendingDuel.PreDraws = Profile->GetCounter(TEXT("draws_total"));
+		PendingDuel.PreLosses = Profile->GetCounter(TEXT("losses_total"));
 	}
+}
+
+void UDAStorySubsystem::InferPendingDuelResult(bool& bOutWon, bool& bOutDraw) const
+{
+	bOutWon = false;
+	bOutDraw = false;
+	const UDAProfileSubsystem* Profile = ResolveProfile();
+	if (!Profile)
+	{
+		return;
+	}
+
+	if (Profile->GetCounter(TEXT("draws_total")) > PendingDuel.PreDraws)
+	{
+		bOutDraw = true;
+		return;
+	}
+	if (PendingDuel.bTutorial)
+	{
+		bOutWon = Profile->GetCounter(TEXT("wins_syrus")) > PendingDuel.PreWinsSyrus;
+		return;
+	}
+
+	// wins_total covers every opponent; the per-opponent counters are kept as
+	// fallbacks for hand-edited or legacy saves that only moved one of them.
+	bOutWon = Profile->GetCounter(TEXT("wins_total")) > PendingDuel.PreWinsTotal
+		|| Profile->GetCounter(TEXT("wins_jaden")) > PendingDuel.PreWinsJaden
+		|| Profile->GetCounter(TEXT("wins_syrus")) > PendingDuel.PreWinsSyrus;
 }
 
 void UDAStorySubsystem::ResolvePendingDuel(bool bWon, bool bDraw)
@@ -2925,6 +3034,7 @@ void UDAStorySubsystem::ResolvePendingDuel(bool bWon, bool bDraw)
 	bWaitingForDuel = false;
 	PendingDuel.bOpened = false;
 	PendingDuel.Elapsed = 0.f;
+	bResumePendingDuel = false;
 
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: duel vs %s resolved (won=%s, draw=%s) -> %s"),
 		*Opponent, bWon ? TEXT("true") : TEXT("false"), bDraw ? TEXT("true") : TEXT("false"),
@@ -3174,27 +3284,68 @@ FString UDAStorySubsystem::SaveState() const
 	Root->SetBoolField(TEXT("opening_started"), bOpeningStarted);
 	Root->SetStringField(TEXT("starter_deck"), SelectedStarterDeck);
 
+	// TSet iteration order is not stable across runs. Sort the serialized
+	// arrays so saving the same story state twice stays byte-identical.
+	TArray<FString> CompletedIds = CompletedEvents.Array();
+	CompletedIds.Sort();
 	TArray<TSharedPtr<FJsonValue>> Completed;
-	for (const FString& EventId : CompletedEvents)
+	for (const FString& EventId : CompletedIds)
 	{
 		Completed.Add(MakeShared<FJsonValueString>(EventId));
 	}
 	Root->SetArrayField(TEXT("completed"), Completed);
 
+	TArray<FString> AppliedIds = AppliedRewardIds.Array();
+	AppliedIds.Sort();
 	TArray<TSharedPtr<FJsonValue>> Applied;
-	for (const FString& RewardId : AppliedRewardIds)
+	for (const FString& RewardId : AppliedIds)
 	{
 		Applied.Add(MakeShared<FJsonValueString>(RewardId));
 	}
 	Root->SetArrayField(TEXT("applied_rewards"), Applied);
 
+	TArray<FString> UnlockedIds = UnlockedDuels.Array();
+	UnlockedIds.Sort();
 	TArray<TSharedPtr<FJsonValue>> Unlocked;
-	for (const FString& DuelId : UnlockedDuels)
+	for (const FString& DuelId : UnlockedIds)
 	{
 		Unlocked.Add(MakeShared<FJsonValueString>(DuelId));
 	}
 	Root->SetArrayField(TEXT("unlocked_duels"), Unlocked);
 	Root->SetStringField(TEXT("previous_title"), PreviousTitle);
+
+	TArray<FString> OutcomeIds = AppliedOutcomeKeys.Array();
+	OutcomeIds.Sort();
+	TArray<TSharedPtr<FJsonValue>> AppliedOutcomes;
+	for (const FString& OutcomeKey : OutcomeIds)
+	{
+		AppliedOutcomes.Add(MakeShared<FJsonValueString>(OutcomeKey));
+	}
+	Root->SetArrayField(TEXT("applied_outcomes"), AppliedOutcomes);
+
+	Root->SetBoolField(TEXT("waiting_for_duel"), bWaitingForDuel);
+	if (bWaitingForDuel)
+	{
+		TSharedPtr<FJsonObject> PendingObject = MakeShared<FJsonObject>();
+		PendingObject->SetStringField(TEXT("opponent_id"), PendingDuel.OpponentId);
+		PendingObject->SetStringField(TEXT("opponent_name"), PendingDuel.OpponentName);
+		PendingObject->SetStringField(TEXT("opponent_deck_id"), PendingDuel.OpponentDeckId);
+		PendingObject->SetStringField(TEXT("mode"), PendingDuel.Mode);
+		PendingObject->SetStringField(TEXT("on_win"), PendingDuel.OnWin);
+		PendingObject->SetStringField(TEXT("on_lose"), PendingDuel.OnLose);
+		PendingObject->SetStringField(TEXT("on_draw"), PendingDuel.OnDraw);
+		PendingObject->SetBoolField(TEXT("tutorial"), PendingDuel.bTutorial);
+		PendingObject->SetBoolField(TEXT("award_dp"), PendingDuel.bAwardDP);
+		PendingObject->SetBoolField(TEXT("opened"), PendingDuel.bOpened);
+		PendingObject->SetNumberField(TEXT("elapsed"), PendingDuel.Elapsed);
+		PendingObject->SetNumberField(TEXT("pre_wins_jaden"), PendingDuel.PreWinsJaden);
+		PendingObject->SetNumberField(TEXT("pre_wins_syrus"), PendingDuel.PreWinsSyrus);
+		PendingObject->SetNumberField(TEXT("pre_wins_total"), PendingDuel.PreWinsTotal);
+		PendingObject->SetNumberField(TEXT("pre_duels"), PendingDuel.PreDuels);
+		PendingObject->SetNumberField(TEXT("pre_draws"), PendingDuel.PreDraws);
+		PendingObject->SetNumberField(TEXT("pre_losses"), PendingDuel.PreLosses);
+		Root->SetObjectField(TEXT("pending_duel"), PendingObject);
+	}
 
 	TSharedPtr<FJsonObject> PackObject = MakeShared<FJsonObject>();
 	for (const TPair<FString, int32>& Pair : PendingPackGrants)
@@ -3210,13 +3361,9 @@ FString UDAStorySubsystem::SaveState() const
 	}
 	Root->SetObjectField(TEXT("objectives"), ObjectiveObject);
 
-	FString Out;
-	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Out);
-	if (!FJsonSerializer::Serialize(Root.ToSharedRef(), Writer))
-	{
-		return TEXT("{}");
-	}
-	return Out;
+	// Sort nested object keys through the save subsystem's canonical serializer
+	// so pending_packs/objectives TMap order cannot change the bytes.
+	return UDASaveSubsystem::SerializeCanonicalJson(Root);
 }
 
 bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
@@ -3229,43 +3376,51 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 		return false;
 	}
 
+	// Reset first: a partial/legacy payload must not inherit stale runtime
+	// fields from whatever the subsystem was doing before the load. Missing
+	// fields remain at these safe defaults (partial payloads are still valid).
+	CurrentEventId.Reset();
+	CurrentSceneId.Reset();
+	CommandIndex = 0;
+	bRunning = false;
+	bFreeRoam = false;
+	bOpeningStarted = false;
+	SelectedStarterDeck.Reset();
+	PreviousTitle.Reset();
+
 	Root->TryGetStringField(TEXT("event"), CurrentEventId);
 	Root->TryGetStringField(TEXT("scene"), CurrentSceneId);
 	Root->TryGetNumberField(TEXT("command"), CommandIndex);
+	CommandIndex = FMath::Max(0, CommandIndex);
 	Root->TryGetBoolField(TEXT("running"), bRunning);
 	Root->TryGetBoolField(TEXT("free_roam"), bFreeRoam);
 	Root->TryGetBoolField(TEXT("opening_started"), bOpeningStarted);
 	Root->TryGetStringField(TEXT("starter_deck"), SelectedStarterDeck);
 
-	CompletedEvents.Reset();
-	const TArray<TSharedPtr<FJsonValue>>* Completed = nullptr;
-	if (Root->TryGetArrayField(TEXT("completed"), Completed) && Completed)
+	auto ReadStringSet = [&Root](const TCHAR* Field, TSet<FString>& OutSet)
 	{
-		for (const TSharedPtr<FJsonValue>& Value : *Completed)
+		OutSet.Reset();
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (Root->TryGetArrayField(Field, Values) && Values)
 		{
-			if (Value.IsValid()) CompletedEvents.Add(Value->AsString());
+			for (const TSharedPtr<FJsonValue>& Value : *Values)
+			{
+				if (Value.IsValid() && Value->Type == EJson::String)
+				{
+					const FString Id = Value->AsString();
+					if (!Id.IsEmpty())
+					{
+						OutSet.Add(Id);
+					}
+				}
+			}
 		}
-	}
+	};
 
-	AppliedRewardIds.Reset();
-	const TArray<TSharedPtr<FJsonValue>>* Applied = nullptr;
-	if (Root->TryGetArrayField(TEXT("applied_rewards"), Applied) && Applied)
-	{
-		for (const TSharedPtr<FJsonValue>& Value : *Applied)
-		{
-			if (Value.IsValid()) AppliedRewardIds.Add(Value->AsString());
-		}
-	}
-
-	UnlockedDuels.Reset();
-	const TArray<TSharedPtr<FJsonValue>>* Unlocked = nullptr;
-	if (Root->TryGetArrayField(TEXT("unlocked_duels"), Unlocked) && Unlocked)
-	{
-		for (const TSharedPtr<FJsonValue>& Value : *Unlocked)
-		{
-			if (Value.IsValid()) UnlockedDuels.Add(Value->AsString());
-		}
-	}
+	ReadStringSet(TEXT("completed"), CompletedEvents);
+	ReadStringSet(TEXT("applied_rewards"), AppliedRewardIds);
+	ReadStringSet(TEXT("applied_outcomes"), AppliedOutcomeKeys);
+	ReadStringSet(TEXT("unlocked_duels"), UnlockedDuels);
 	Root->TryGetStringField(TEXT("previous_title"), PreviousTitle);
 
 	PendingPackGrants.Reset();
@@ -3275,9 +3430,12 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : (*PackObject)->Values)
 		{
 			double CountNumber = 0.0;
-			if (Pair.Value.IsValid() && Pair.Value->TryGetNumber(CountNumber) && CountNumber > 0.0)
+			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::Number
+				&& Pair.Value->TryGetNumber(CountNumber) && FMath::IsFinite(CountNumber) && CountNumber >= 1.0)
 			{
-				PendingPackGrants.Add(FString(*Pair.Key), FMath::Max(1, FMath::RoundToInt(CountNumber)));
+				const double Clamped = FMath::Min(CountNumber, static_cast<double>(TNumericLimits<int32>::Max()));
+				const int32 Count = static_cast<int32>(FMath::Max<int64>(1, FMath::RoundToInt(Clamped)));
+				PendingPackGrants.Add(FString(*Pair.Key), Count);
 			}
 		}
 	}
@@ -3288,7 +3446,7 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 	{
 		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : (*ObjectiveObject)->Values)
 		{
-			if (Pair.Value.IsValid())
+			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::String)
 			{
 				Objectives.Add(FString(*Pair.Key), Pair.Value->AsString());
 			}
@@ -3300,8 +3458,57 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 	bWaitingForDuel = false;
 	bWaitingForTimer = false;
 	bPendingTextInput = false;
+	bPendingContinue = false;
+	bResumePendingDuel = false;
 	WaitRemaining = 0.f;
 	ActiveChoices.Reset();
+	ActiveChoiceConversationId.Reset();
+	ActiveChoiceLineKey.Reset();
+	PendingTextInputKey.Reset();
+	PendingDuel = FDAStoryPendingDuel();
+
+	// Pending-duel state is additive. Older saves have no pending_duel object
+	// and keep the historical replay-the-duel-command behavior.
+	bool bSavedWaitingForDuel = false;
+	Root->TryGetBoolField(TEXT("waiting_for_duel"), bSavedWaitingForDuel);
+	const TSharedPtr<FJsonObject>* PendingObject = nullptr;
+	if (Root->TryGetObjectField(TEXT("pending_duel"), PendingObject) && PendingObject && PendingObject->IsValid())
+	{
+		FDAStoryPendingDuel LoadedDuel;
+		(*PendingObject)->TryGetStringField(TEXT("opponent_id"), LoadedDuel.OpponentId);
+		(*PendingObject)->TryGetStringField(TEXT("opponent_name"), LoadedDuel.OpponentName);
+		(*PendingObject)->TryGetStringField(TEXT("opponent_deck_id"), LoadedDuel.OpponentDeckId);
+		(*PendingObject)->TryGetStringField(TEXT("mode"), LoadedDuel.Mode);
+		(*PendingObject)->TryGetStringField(TEXT("on_win"), LoadedDuel.OnWin);
+		(*PendingObject)->TryGetStringField(TEXT("on_lose"), LoadedDuel.OnLose);
+		(*PendingObject)->TryGetStringField(TEXT("on_draw"), LoadedDuel.OnDraw);
+		(*PendingObject)->TryGetBoolField(TEXT("tutorial"), LoadedDuel.bTutorial);
+		(*PendingObject)->TryGetBoolField(TEXT("award_dp"), LoadedDuel.bAwardDP);
+		(*PendingObject)->TryGetBoolField(TEXT("opened"), LoadedDuel.bOpened);
+		double Elapsed = 0.0;
+		if ((*PendingObject)->TryGetNumberField(TEXT("elapsed"), Elapsed) && FMath::IsFinite(Elapsed))
+		{
+			LoadedDuel.Elapsed = static_cast<float>(FMath::Clamp(Elapsed, 0.0, 10.0));
+		}
+		(*PendingObject)->TryGetNumberField(TEXT("pre_wins_jaden"), LoadedDuel.PreWinsJaden);
+		(*PendingObject)->TryGetNumberField(TEXT("pre_wins_syrus"), LoadedDuel.PreWinsSyrus);
+		(*PendingObject)->TryGetNumberField(TEXT("pre_wins_total"), LoadedDuel.PreWinsTotal);
+		(*PendingObject)->TryGetNumberField(TEXT("pre_duels"), LoadedDuel.PreDuels);
+		(*PendingObject)->TryGetNumberField(TEXT("pre_draws"), LoadedDuel.PreDraws);
+		(*PendingObject)->TryGetNumberField(TEXT("pre_losses"), LoadedDuel.PreLosses);
+
+		if (!LoadedDuel.OpponentId.IsEmpty())
+		{
+			PendingDuel = LoadedDuel;
+			bWaitingForDuel = true;
+		}
+	}
+	if (bSavedWaitingForDuel && PendingDuel.OpponentId.IsEmpty())
+	{
+		// A save that declared a waiting duel but carried no usable opponent is
+		// treated as corrupt and resumes in free roam instead of soft-locking.
+		bWaitingForDuel = false;
+	}
 
 	if (bRunning)
 	{
@@ -3323,6 +3530,49 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 	{
 		CurrentCommands.Reset();
 		CommandIndex = 0;
+	}
+
+	if (bWaitingForDuel)
+	{
+		const bool bDuelCommand = bRunning && CurrentCommands.IsValidIndex(CommandIndex)
+			&& CurrentCommands[CommandIndex].Type == EDAStoryCommandType::Duel;
+		if (!bDuelCommand)
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Story: pending duel in save does not match the restored command; clearing it."));
+			bWaitingForDuel = false;
+			PendingDuel = FDAStoryPendingDuel();
+		}
+		else
+		{
+			// If the duel result was already recorded before the save (for
+			// example the save happened after the UI result but before the
+			// story tick), resolve the saved branch now instead of re-opening
+			// the duel and counting the result twice.
+			bool bResultRecorded = false;
+			bool bWon = false;
+			bool bDraw = false;
+			if (const UDAProfileSubsystem* Profile = ResolveProfile())
+			{
+				InferPendingDuelResult(bWon, bDraw);
+				bResultRecorded = bDraw || bWon
+					|| Profile->GetCounter(TEXT("losses_total")) > PendingDuel.PreLosses;
+			}
+
+			if (bResultRecorded)
+			{
+				UE_LOG(LogDuelAcademyIsland, Log,
+					TEXT("Story: pending duel already recorded its result; resolving the saved branch."));
+				ResolvePendingDuel(bWon, bDraw);
+			}
+			else
+			{
+				// Do not replay the duel command. Tick re-presents the saved duel
+				// selector and waits for the real result.
+				bResumePendingDuel = true;
+				bPendingContinue = false;
+			}
+		}
 	}
 
 	OutError.Reset();
@@ -3347,14 +3597,42 @@ bool UDAStorySubsystem::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) co
 	return true;
 }
 
+bool UDAStorySubsystem::ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const
+{
+	if (!InSection.IsValid())
+	{
+		OutError = TEXT("Story save section is missing.");
+		return false;
+	}
+
+	FString State;
+	if (!InSection->TryGetStringField(TEXT("state"), State) || State.IsEmpty())
+	{
+		OutError = TEXT("Story save section has no state payload.");
+		return false;
+	}
+
+	TSharedPtr<FJsonObject> Parsed;
+	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(State);
+	if (!FJsonSerializer::Deserialize(Reader, Parsed) || !Parsed.IsValid())
+	{
+		OutError = TEXT("Story save section contains invalid state JSON.");
+		return false;
+	}
+
+	OutError.Reset();
+	return true;
+}
+
 bool UDAStorySubsystem::ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError)
 {
-	FString State;
-	if (!InSection.IsValid() || !InSection->TryGetStringField(TEXT("state"), State) || State.IsEmpty())
+	if (!ValidateSaveSection(InSection, OutError))
 	{
-		OutError.Reset();
-		return true;
+		return false;
 	}
+
+	FString State;
+	InSection->TryGetStringField(TEXT("state"), State);
 	return LoadState(State, OutError);
 }
 
@@ -3420,6 +3698,15 @@ bool UDAStorySubsystem::RunSelfTest()
 	AddSimpleCheck(TEXT("shop unlocked"), Profile && Profile->GetFlag(TEXT("shop_unlocked")));
 	AddSimpleCheck(TEXT("save unlocked"), Profile && Profile->GetFlag(TEXT("save_unlocked")));
 	AddSimpleCheck(TEXT("starter deck chosen"), Profile && Profile->GetFlag(TEXT("starter_deck_chosen")));
+	UGameInstance* GameInstance = GetGameInstance();
+	UDADeckLogic* Decks = GameInstance ? GameInstance->GetSubsystem<UDADeckLogic>() : nullptr;
+	UDAInventorySubsystem* Inventory = GameInstance ? GameInstance->GetSubsystem<UDAInventorySubsystem>() : nullptr;
+	const bool bStarterDeckImported = Decks && (Decks->FindPlayerDeck(TEXT("fire"))
+		|| Decks->FindPlayerDeck(TEXT("water")) || Decks->FindPlayerDeck(TEXT("wind")));
+	AddCheck(TEXT("starter deck imported"), bStarterDeckImported,
+		Decks && Decks->GetActiveDeck() ? Decks->GetActiveDeck()->Id : FString(TEXT("no active deck")));
+	AddCheck(TEXT("starter cards granted"), Inventory && Inventory->GetCollectionSize() > 0,
+		Inventory ? FString::FromInt(Inventory->GetCollectionSize()) : FString(TEXT("no inventory")));
 	AddCheck(TEXT("3000 DP"), Profile && Profile->GetDP() == 3000,
 		Profile ? FString::FromInt(Profile->GetDP()) : FString(TEXT("no profile")));
 	AddCheck(TEXT("date is Oct 7 AM"), Calendar && Calendar->GetYear() == 1 && Calendar->GetMonthIndex() == 0
@@ -3452,747 +3739,8 @@ bool UDAStorySubsystem::RunSelfTest()
 }
 
 // ---------------------------------------------------------------------------
-// Full-campaign audit
+// Full-campaign audit (implementation in DAStorySelfTest.cpp)
 // ---------------------------------------------------------------------------
-
-void UDAStorySubsystem::CollectConditionState(const TSharedPtr<FJsonObject>& Condition,
-	TSet<FString>& OutFlags, TSet<FString>& OutCounters, TSet<FString>& OutEvents) const
-{
-	if (!Condition.IsValid())
-	{
-		return;
-	}
-
-	const FString Kind = StoryReadString(Condition, TEXT("type"));
-	if (Kind == TEXT("flag"))
-	{
-		const FString Flag = StoryReadString(Condition, TEXT("flag"), StoryReadString(Condition, TEXT("id")));
-		if (!Flag.IsEmpty())
-		{
-			OutFlags.Add(Flag);
-		}
-	}
-	else if (Kind == TEXT("counter"))
-	{
-		const FString Counter = StoryReadString(Condition, TEXT("counter"), StoryReadString(Condition, TEXT("id")));
-		if (!Counter.IsEmpty())
-		{
-			OutCounters.Add(Counter);
-		}
-	}
-	else if (Kind == TEXT("event") || Kind == TEXT("event_complete"))
-	{
-		const FString EventId = StoryReadString(Condition, TEXT("id"), StoryReadString(Condition, TEXT("event")));
-		if (!EventId.IsEmpty())
-		{
-			OutEvents.Add(EventId);
-		}
-	}
-	else if (Kind == TEXT("wins_against_each"))
-	{
-		static const TCHAR* const Duelists[] = {
-			TEXT("jaden"), TEXT("syrus"), TEXT("chumley"), TEXT("bastion"), TEXT("chazz"),
-			TEXT("zane"), TEXT("alexis"), TEXT("jasmine"), TEXT("mindy"), TEXT("crowler"),
-			TEXT("banner"), TEXT("blair"), TEXT("brier"), TEXT("beauregard"), TEXT("topher"),
-			TEXT("conklin"), TEXT("damon"), TEXT("dimitri"), TEXT("gerard"), TEXT("fontaine")
-		};
-		for (const TCHAR* Duelist : Duelists)
-		{
-			OutCounters.Add(FString::Printf(TEXT("wins_%s"), Duelist));
-		}
-	}
-	else if (Kind == TEXT("written_correct_percent"))
-	{
-		OutCounters.Add(TEXT("written_correct"));
-		OutCounters.Add(TEXT("written_total"));
-	}
-	else if (Kind == TEXT("after_ending"))
-	{
-		OutFlags.Add(TEXT("post_game"));
-	}
-
-	const TCHAR* NestedFields[] = { TEXT("conditions"), TEXT("all"), TEXT("any") };
-	for (const TCHAR* Field : NestedFields)
-	{
-		for (const TSharedPtr<FJsonObject>& Child : ReadObjectArray(Condition, Field))
-		{
-			CollectConditionState(Child, OutFlags, OutCounters, OutEvents);
-		}
-	}
-}
-
-void UDAStorySubsystem::CollectEventState(const FDAEventDefinition& Event, TSet<FString>& OutFlags,
-	TSet<FString>& OutCounters, TSet<FString>& OutEvents) const
-{
-	CollectConditionState(Event.Trigger, OutFlags, OutCounters, OutEvents);
-	for (const TSharedPtr<FJsonObject>& Requirement : Event.Requirements)
-	{
-		CollectConditionState(Requirement, OutFlags, OutCounters, OutEvents);
-	}
-}
-
-bool UDAStorySubsystem::RunFullStorySelfTest()
-{
-	TArray<FString> Report;
-	auto AddCheck = [&Report](const FString& Label, bool bPass, const FString& Detail)
-	{
-		FString Suffix;
-		if (!Detail.IsEmpty())
-		{
-			Suffix = FString::Printf(TEXT(" (%s)"), *Detail);
-		}
-		Report.Add(FString::Printf(TEXT("%s %s%s"), bPass ? TEXT("PASS") : TEXT("FAIL"), *Label, *Suffix));
-	};
-	auto AddSimpleCheck = [&AddCheck](const FString& Label, bool bPass)
-	{
-		AddCheck(Label, bPass, FString());
-	};
-	auto AddInfo = [&Report](const FString& Text)
-	{
-		Report.Add(FString::Printf(TEXT("INFO %s"), *Text));
-	};
-
-	const double StartTime = FPlatformTime::Seconds();
-
-	if (bRunning)
-	{
-		LastFullSelfTestReport = FString::Printf(TEXT("FAIL cannot run the audit while %s is running"), *CurrentEventId);
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("FullStorySelfTest: %s"), *LastFullSelfTestReport);
-		return false;
-	}
-
-	if (!LoadFullCampaignData())
-	{
-		LastFullSelfTestReport = TEXT("FAIL full campaign data did not load");
-		UE_LOG(LogDuelAcademyIsland, Error, TEXT("FullStorySelfTest: %s"), *LastFullSelfTestReport);
-		return false;
-	}
-
-	UDAProfileSubsystem* Profile = ResolveProfile();
-	UDACalendarSubsystem* Calendar = ResolveCalendar();
-	if (!Profile || !Calendar)
-	{
-		LastFullSelfTestReport = TEXT("FAIL profile/calendar subsystems are unavailable");
-		UE_LOG(LogDuelAcademyIsland, Error, TEXT("FullStorySelfTest: %s"), *LastFullSelfTestReport);
-		return false;
-	}
-
-	AddSimpleCheck(TEXT("full campaign loaded"), bFullCampaignLoaded);
-	AddCheck(TEXT("35 canonical event ids"), FullCampaignEventIds.Num() == 35,
-		FString::FromInt(FullCampaignEventIds.Num()));
-	AddSimpleCheck(TEXT("opening E01 remains loaded"), EventGraph.FindEvent(TEXT("E01")) != nullptr);
-
-	int32 FullSceneCount = 0;
-	for (const TPair<FString, FDAStoryScene>& Pair : Scenes)
-	{
-		if (Pair.Key.StartsWith(TEXT("full.")))
-		{
-			++FullSceneCount;
-		}
-	}
-	AddInfo(FString::Printf(TEXT("%d canonical events, %d full scenes, %d total dialogue lines, %d email contacts"),
-		FullCampaignEventIds.Num(), FullSceneCount, Lines.Num(), EmailContacts.Num()));
-
-	// Compare against the read-only A01 canon manifest when it is available.
-	TSharedPtr<FJsonObject> CanonRoot;
-	FString CanonError;
-	TSet<FString> CanonIds;
-	if (LoadContentJsonObject(TEXT("Data/Canon/events.json"), CanonRoot, CanonError))
-	{
-		const TArray<TSharedPtr<FJsonValue>>* CanonValues = nullptr;
-		if (CanonRoot->TryGetArrayField(TEXT("events"), CanonValues) && CanonValues)
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *CanonValues)
-			{
-				const TSharedPtr<FJsonObject> CanonEvent = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
-				FString CanonId;
-				if (CanonEvent.IsValid() && CanonEvent->TryGetStringField(TEXT("id"), CanonId))
-				{
-					CanonIds.Add(CanonId);
-				}
-			}
-		}
-	}
-	TArray<FString> CanonMismatch;
-	if (CanonIds.Num() > 0)
-	{
-		for (const FString& CanonId : CanonIds)
-		{
-			if (!FullCampaignEventIds.Contains(CanonId))
-			{
-				CanonMismatch.Add(CanonId);
-			}
-		}
-		for (const FString& FullId : FullCampaignEventIds)
-		{
-			if (!CanonIds.Contains(FullId))
-			{
-				CanonMismatch.Add(FullId);
-			}
-		}
-		AddCheck(TEXT("ids match A01 canon"), CanonMismatch.Num() == 0,
-			FString::Join(CanonMismatch, TEXT(", ")));
-	}
-	else
-	{
-		AddInfo(FString::Printf(TEXT("A01 canon manifest unavailable: %s"), *CanonError));
-	}
-
-	TSet<FString> SeenIds;
-	bool bUniqueIds = true;
-	for (const FDAEventDefinition& Event : EventGraph.GetEvents())
-	{
-		if (SeenIds.Contains(Event.Id))
-		{
-			bUniqueIds = false;
-		}
-		SeenIds.Add(Event.Id);
-	}
-	AddCheck(TEXT("unique event ids"), bUniqueIds, FString::FromInt(SeenIds.Num()));
-
-	// ---------------------------------------------------------------- structure
-	TArray<FString> MissingScenes;
-	TArray<FString> MissingLines;
-	TArray<FString> MissingAnchorScenes;
-	int32 BadCommandCounts = 0;
-	int32 UnknownCommands = 0;
-	int32 MissingAnchorCount = 0;
-
-	TSharedPtr<FJsonObject> AnchorRoot;
-	FString AnchorError;
-	TSet<FString> AnchorIds;
-	if (LoadContentJsonObject(TEXT("Data/World/anchors.json"), AnchorRoot, AnchorError))
-	{
-		TFunction<void(const TSharedPtr<FJsonValue>&)> WalkAnchors;
-		WalkAnchors = [&AnchorIds, &WalkAnchors](const TSharedPtr<FJsonValue>& Value)
-		{
-			if (!Value.IsValid())
-			{
-				return;
-			}
-			if (Value->Type == EJson::Object)
-			{
-				const TSharedPtr<FJsonObject> Object = Value->AsObject();
-				FString Id;
-				if (Object.IsValid() && Object->TryGetStringField(TEXT("id"), Id) && !Id.IsEmpty())
-				{
-					AnchorIds.Add(Id);
-				}
-				for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : Object->Values)
-				{
-					WalkAnchors(Pair.Value);
-				}
-			}
-			else if (Value->Type == EJson::Array)
-			{
-				for (const TSharedPtr<FJsonValue>& Child : Value->AsArray())
-				{
-					WalkAnchors(Child);
-				}
-			}
-		};
-		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : AnchorRoot->Values)
-		{
-			WalkAnchors(Pair.Value);
-		}
-	}
-	else
-	{
-		AddInfo(FString::Printf(TEXT("A08 anchors unavailable: %s"), *AnchorError));
-	}
-
-	for (const FString& EventId : FullCampaignEventIds)
-	{
-		const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
-		if (!Event)
-		{
-			MissingScenes.Add(EventId);
-			continue;
-		}
-
-		// The audit checks the full-bundle scene (full.E01 is intentionally not
-		// merged as the runtime scene because opening.json owns E01).
-		const FString BundleSceneId = FString::Printf(TEXT("full.%s"), *EventId);
-		const FDAStoryScene* Scene = Scenes.Find(BundleSceneId);
-		if (!Scene)
-		{
-			MissingScenes.Add(EventId);
-			continue;
-		}
-		if (!Scenes.Contains(Event->Scene))
-		{
-			MissingScenes.Add(FString::Printf(TEXT("%s:runtime:%s"), *EventId, *Event->Scene));
-		}
-
-		const TSharedPtr<FJsonObject>* FullDocPtr = FullCampaignEventDocs.Find(EventId);
-		const TSharedPtr<FJsonObject>& EventRaw = (FullDocPtr && FullDocPtr->IsValid()) ? *FullDocPtr : Event->Raw;
-
-		if (Scene->Commands.Num() < 3 || Scene->Commands.Num() > 8)
-		{
-			++BadCommandCounts;
-		}
-
-		for (const FString& Key : ReadStringArray(EventRaw, TEXT("dialogue_keys")))
-		{
-			if (!Lines.Contains(Key))
-			{
-				MissingLines.Add(FString::Printf(TEXT("%s:%s"), *EventId, *Key));
-			}
-		}
-
-		for (const FDAStoryCommand& Command : Scene->Commands)
-		{
-			if (Command.Type == EDAStoryCommandType::Unknown)
-			{
-				++UnknownCommands;
-			}
-			if (Command.Type == EDAStoryCommandType::Dialogue && !Lines.Contains(Command.Key))
-			{
-				MissingLines.Add(FString::Printf(TEXT("%s:%s"), *Scene->Id, *Command.Key));
-			}
-			if (Command.Type == EDAStoryCommandType::Camera && !Command.Anchor.IsEmpty()
-				&& AnchorIds.Num() > 0 && !AnchorIds.Contains(Command.Anchor))
-			{
-				++MissingAnchorCount;
-				MissingAnchorScenes.Add(FString::Printf(TEXT("%s:%s"), *Scene->Id, *Command.Anchor));
-			}
-		}
-
-		const FString EventAnchor = StoryReadString(EventRaw, TEXT("anchor"));
-		if (!EventAnchor.IsEmpty() && AnchorIds.Num() > 0 && !AnchorIds.Contains(EventAnchor))
-		{
-			++MissingAnchorCount;
-			MissingAnchorScenes.Add(FString::Printf(TEXT("%s:event_anchor:%s"), *EventId, *EventAnchor));
-		}
-	}
-
-	AddCheck(TEXT("every event has a loaded scene"), MissingScenes.Num() == 0,
-		FString::Join(MissingScenes, TEXT(", ")));
-	AddCheck(TEXT("scene command counts are 3-8"), BadCommandCounts == 0, FString::FromInt(BadCommandCounts));
-	AddCheck(TEXT("all scene commands are known"), UnknownCommands == 0, FString::FromInt(UnknownCommands));
-	AddCheck(TEXT("all dialogue keys resolve"), MissingLines.Num() == 0,
-		FString::Join(MissingLines, TEXT(", ")));
-	AddCheck(TEXT("A08 anchors resolve"), MissingAnchorCount == 0,
-		FString::Join(MissingAnchorScenes, TEXT(", ")));
-
-	// ---------------------------------------------------------------- rewards
-	TSharedPtr<FJsonObject> ShopRoot;
-	FString ShopError;
-	TSet<FString> PackIds;
-	if (LoadContentJsonObject(TEXT("Data/Shop/packs.json"), ShopRoot, ShopError))
-	{
-		const TArray<TSharedPtr<FJsonValue>>* PackValues = nullptr;
-		if (ShopRoot->TryGetArrayField(TEXT("packs"), PackValues) && PackValues)
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *PackValues)
-			{
-				const TSharedPtr<FJsonObject> Pack = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
-				FString PackId;
-				if (Pack.IsValid() && Pack->TryGetStringField(TEXT("id"), PackId))
-				{
-					PackIds.Add(PackId);
-				}
-			}
-		}
-	}
-	else
-	{
-		AddInfo(FString::Printf(TEXT("A06 shop packs unavailable: %s"), *ShopError));
-	}
-
-	static const TSet<FString> KnownRewardTypes = {
-		TEXT("dp"), TEXT("email_unlock"), TEXT("card"), TEXT("card_by_result"), TEXT("tutorial"),
-		TEXT("temporary_title"), TEXT("restore_title"), TEXT("pack_by_dorm"), TEXT("dorm_unlock"),
-		TEXT("exam_exemption"), TEXT("unlock_duel"), TEXT("dp_multiplier"), TEXT("flag"), TEXT("item"),
-		TEXT("choice_reward"), TEXT("dp_equal_remaining_lp"), TEXT("card_by_partner"), TEXT("pack"),
-		TEXT("name_change"), TEXT("title")
-	};
-	static const TSet<FString> KnownOutcomeTypes = {
-		TEXT("set_flag"), TEXT("flag"), TEXT("add_counter"), TEXT("counter"), TEXT("reward"),
-		TEXT("grant_reward"), TEXT("set_calendar"), TEXT("set_objective"), TEXT("complete_event"),
-		TEXT("unlock_email"), TEXT("grant_dp"), TEXT("grant_card"), TEXT("grant_pack"),
-		TEXT("grant_deck"), TEXT("set_title"), TEXT("set_dorm"), TEXT("dorm_unlock"), TEXT("double_dp"),
-		TEXT("dp_multiplier"), TEXT("exam_exemption"), TEXT("unlock_duel"), TEXT("item"),
-		TEXT("name_change"), TEXT("temporary_title"), TEXT("restore_title"), TEXT("next_event"),
-		TEXT("grant_dp_from_last_lp"), TEXT("dp_equal_remaining_lp"), TEXT("select_deck")
-	};
-
-	TArray<FString> BadRewards;
-	TArray<FString> BadOutcomes;
-	TArray<FString> BadPacks;
-	TArray<FString> MissingRewardIds;
-	int32 RewardCount = 0;
-	for (const FString& EventId : FullCampaignEventIds)
-	{
-		const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
-		const TSharedPtr<FJsonObject>* FullDocPtr = FullCampaignEventDocs.Find(EventId);
-		const TSharedPtr<FJsonObject> EventRaw = (FullDocPtr && FullDocPtr->IsValid()) ? *FullDocPtr : (Event ? Event->Raw : TSharedPtr<FJsonObject>());
-		if (!EventRaw.IsValid())
-		{
-			continue;
-		}
-
-		const TArray<TSharedPtr<FJsonValue>>* RewardValues = nullptr;
-		if (EventRaw->TryGetArrayField(TEXT("rewards"), RewardValues) && RewardValues)
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *RewardValues)
-			{
-				const TSharedPtr<FJsonObject> Reward = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
-				if (!Reward.IsValid())
-				{
-					continue;
-				}
-				++RewardCount;
-				const FString Type = StoryReadString(Reward, TEXT("type"));
-				if (!KnownRewardTypes.Contains(Type))
-				{
-					BadRewards.Add(FString::Printf(TEXT("%s:%s"), *EventId, *Type));
-				}
-				if (Type == TEXT("pack"))
-				{
-					const FString PackId = StoryReadString(Reward, TEXT("pack"), StoryReadString(Reward, TEXT("pack_id")));
-					if (!PackIds.Contains(PackId))
-					{
-						BadPacks.Add(FString::Printf(TEXT("%s:%s"), *EventId, *PackId));
-					}
-				}
-				else if (Type == TEXT("pack_by_dorm"))
-				{
-					for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : Reward->Values)
-					{
-						const FString Key(*Pair.Key);
-						if (Key.Equals(TEXT("type"), ESearchCase::IgnoreCase)
-							|| Key.Equals(TEXT("note"), ESearchCase::IgnoreCase)
-							|| Key.Equals(TEXT("source"), ESearchCase::IgnoreCase))
-						{
-							continue;
-						}
-						if (Pair.Value.IsValid() && Pair.Value->Type == EJson::String)
-						{
-							const FString PackId = Pair.Value->AsString();
-							if (!PackIds.Contains(PackId))
-							{
-								BadPacks.Add(FString::Printf(TEXT("%s:%s"), *EventId, *PackId));
-							}
-						}
-					}
-				}
-			}
-		}
-
-		for (const TSharedPtr<FJsonObject>& Outcome : Event->Outcomes)
-		{
-			const FString Type = StoryReadString(Outcome, TEXT("type"));
-			if (!KnownOutcomeTypes.Contains(Type))
-			{
-				BadOutcomes.Add(FString::Printf(TEXT("%s:%s"), *EventId, *Type));
-			}
-			if (Type == TEXT("reward") || Type == TEXT("grant_reward"))
-			{
-				const FString RewardId = StoryReadString(Outcome, TEXT("reward_id"), StoryReadString(Outcome, TEXT("id")));
-				if (!Rewards.Contains(RewardId))
-				{
-					MissingRewardIds.Add(FString::Printf(TEXT("%s:%s"), *EventId, *RewardId));
-				}
-			}
-		}
-	}
-
-	AddCheck(TEXT("reward types are known"), BadRewards.Num() == 0,
-		FString::Join(BadRewards, TEXT(", ")));
-	AddCheck(TEXT("reward packs exist in A06 shop"), BadPacks.Num() == 0,
-		FString::Join(BadPacks, TEXT(", ")));
-	AddCheck(TEXT("outcome types are supported"), BadOutcomes.Num() == 0,
-		FString::Join(BadOutcomes, TEXT(", ")));
-	AddCheck(TEXT("reward ids resolve"), MissingRewardIds.Num() == 0,
-		FString::Join(MissingRewardIds, TEXT(", ")));
-	AddInfo(FString::Printf(TEXT("%d canon reward records audited"), RewardCount));
-
-	// ---------------------------------------------------------------- A07 duels
-	TSharedPtr<FJsonObject> RosterRoot;
-	FString RosterError;
-	TMap<FString, TSet<FString>> OpponentDecks;
-	if (LoadContentJsonObject(TEXT("Data/Opponents/roster.json"), RosterRoot, RosterError))
-	{
-		const TArray<TSharedPtr<FJsonValue>>* DuelistValues = nullptr;
-		if (RosterRoot->TryGetArrayField(TEXT("duelists"), DuelistValues) && DuelistValues)
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *DuelistValues)
-			{
-				const TSharedPtr<FJsonObject> Duelist = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
-				FString OpponentId;
-				if (!Duelist.IsValid() || !Duelist->TryGetStringField(TEXT("id"), OpponentId))
-				{
-					continue;
-				}
-				TSet<FString>& Decks = OpponentDecks.Add(OpponentId);
-				for (const FString& DeckId : ReadStringArray(Duelist, TEXT("decks")))
-				{
-					Decks.Add(DeckId);
-				}
-			}
-		}
-	}
-	else
-	{
-		AddInfo(FString::Printf(TEXT("A07 roster unavailable: %s"), *RosterError));
-	}
-
-	TArray<FString> BadOpponents;
-	TArray<FString> BadDecks;
-	int32 DuelCount = 0;
-	auto ValidateDuel = [&](const FString& Source, const FString& OpponentId, const FString& DeckId)
-	{
-		++DuelCount;
-		const TSet<FString>* Decks = OpponentDecks.Find(OpponentId);
-		if (!Decks)
-		{
-			BadOpponents.Add(FString::Printf(TEXT("%s:%s"), *Source, *OpponentId));
-			return;
-		}
-		if (!DeckId.IsEmpty() && !Decks->Contains(DeckId))
-		{
-			BadDecks.Add(FString::Printf(TEXT("%s:%s/%s"), *Source, *OpponentId, *DeckId));
-		}
-	};
-
-	for (const FString& EventId : FullCampaignEventIds)
-	{
-		const TSharedPtr<FJsonObject>* FullDocPtr = FullCampaignEventDocs.Find(EventId);
-		if (!FullDocPtr || !FullDocPtr->IsValid())
-		{
-			continue;
-		}
-		const TArray<TSharedPtr<FJsonValue>>* DuelValues = nullptr;
-		if ((*FullDocPtr)->TryGetArrayField(TEXT("duels"), DuelValues) && DuelValues)
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *DuelValues)
-			{
-				const TSharedPtr<FJsonObject> Duel = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
-				if (Duel.IsValid())
-				{
-					ValidateDuel(EventId, StoryReadString(Duel, TEXT("opponent_id"), StoryReadString(Duel, TEXT("opponent"))),
-						StoryReadString(Duel, TEXT("opponent_deck_id"), StoryReadString(Duel, TEXT("deck"))));
-				}
-			}
-		}
-	}
-
-	for (const TPair<FString, FDAStoryScene>& Pair : Scenes)
-	{
-		if (!Pair.Key.StartsWith(TEXT("full.")))
-		{
-			continue;
-		}
-		for (const FDAStoryCommand& Command : Pair.Value.Commands)
-		{
-			if (Command.Type == EDAStoryCommandType::Duel)
-			{
-				ValidateDuel(Pair.Key, Command.OpponentId, Command.OpponentDeckId);
-			}
-		}
-	}
-
-	for (const TPair<FString, TSharedPtr<FJsonObject>>& Pair : EmailContacts)
-	{
-		const TArray<TSharedPtr<FJsonValue>>* RequestValues = nullptr;
-		if (Pair.Value.IsValid() && Pair.Value->TryGetArrayField(TEXT("duel_requests"), RequestValues) && RequestValues)
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *RequestValues)
-			{
-				const TSharedPtr<FJsonObject> Request = Value.IsValid() ? Value->AsObject() : TSharedPtr<FJsonObject>();
-				if (Request.IsValid())
-				{
-					ValidateDuel(FString::Printf(TEXT("email:%s"), *Pair.Key),
-						StoryReadString(Request, TEXT("opponent")), StoryReadString(Request, TEXT("deck")));
-				}
-			}
-		}
-	}
-
-	AddCheck(TEXT("A07 opponent ids resolve"), BadOpponents.Num() == 0,
-		FString::Join(BadOpponents, TEXT(", ")));
-	AddCheck(TEXT("A07 opponent decks resolve"), BadDecks.Num() == 0,
-		FString::Join(BadDecks, TEXT(", ")));
-	AddInfo(FString::Printf(TEXT("%d duel references audited"), DuelCount));
-	AddCheck(TEXT("email contacts loaded"), EmailContacts.Num() == 6, FString::FromInt(EmailContacts.Num()));
-
-	// ---------------------------------------------------------------- availability
-	// Snapshot and restore so the audit does not overwrite a live profile.
-	TSharedPtr<FJsonObject> ProfileSnapshot = MakeShared<FJsonObject>();
-	TSharedPtr<FJsonObject> CalendarSnapshot = MakeShared<FJsonObject>();
-	Profile->WriteSaveData(ProfileSnapshot);
-	Calendar->WriteSaveData(CalendarSnapshot);
-
-	UDAInventorySubsystem* Inventory = GetGameInstance() ? GetGameInstance()->GetSubsystem<UDAInventorySubsystem>() : nullptr;
-	int32 AddedCard348 = 0;
-
-	auto SetOpeningBaseline = [Profile]()
-	{
-		Profile->ResetToDefaults();
-		Profile->SetFlag(TEXT("new_game"), true);
-		Profile->SetFlag(TEXT("new_game_started"), true);
-		Profile->SetFlag(TEXT("registered"), true);
-		Profile->SetFlag(TEXT("tutorial_complete"), true);
-		Profile->SetFlag(TEXT("first_free_roam"), true);
-		Profile->SetFlag(TEXT("opening_complete"), true);
-		Profile->SetFlag(TEXT("shop_unlocked"), true);
-		Profile->SetFlag(TEXT("save_unlocked"), true);
-		Profile->SetFlag(FDAEventGraph::EventCompletionFlag(TEXT("E01")), true);
-		Profile->SetFlag(FDAEventGraph::EventCompletionFlag(TEXT("E01b")), true);
-	};
-
-	auto WalkTwelveMonths = [this, Profile, Calendar](TSet<FString>& OutAvailable)
-	{
-		const EDADayPeriod Periods[] = { EDADayPeriod::AM, EDADayPeriod::PM, EDADayPeriod::Night };
-		// A02's Year is the school year: index 0 is October and the year rolls
-		// over after September. Walk one complete school year, not two literal
-		// calendar years.
-		for (int32 MonthIndex = 0; MonthIndex < 12; ++MonthIndex)
-		{
-			const int32 Year = 1;
-			const int32 Days = Calendar->GetDaysInMonth(Year, MonthIndex);
-			for (int32 Day = 1; Day <= Days; ++Day)
-			{
-				for (EDADayPeriod Period : Periods)
-				{
-					Calendar->SetDate(Year, MonthIndex, Day, Period);
-					for (const FString& EventId : FullCampaignEventIds)
-					{
-						const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
-						if (!Event)
-						{
-							continue;
-						}
-						FString Reason;
-						if (EventGraph.EvaluateTrigger(*Event, Profile, Calendar, Reason)
-							&& EventGraph.EvaluateRequirements(*Event, Profile, Calendar, Reason))
-						{
-							OutAvailable.Add(EventId);
-						}
-					}
-				}
-			}
-		}
-	};
-
-	TSet<FString> CounterlessAvailable;
-	SetOpeningBaseline();
-	Calendar->SetDate(1, 0, 1, EDADayPeriod::AM);
-	WalkTwelveMonths(CounterlessAvailable);
-
-	TArray<FString> Unreachable = FullCampaignEventIds.Array();
-	Unreachable.Sort();
-	for (int32 Index = Unreachable.Num() - 1; Index >= 0; --Index)
-	{
-		if (CounterlessAvailable.Contains(Unreachable[Index]))
-		{
-			Unreachable.RemoveAt(Index);
-		}
-	}
-	AddInfo(FString::Printf(TEXT("%d/%d events reachable without counters"), CounterlessAvailable.Num(), FullCampaignEventIds.Num()));
-	AddInfo(FString::Printf(TEXT("unreachable without counters: %s"),
-		Unreachable.Num() > 0 ? *FString::Join(Unreachable, TEXT(", ")) : TEXT("<none>")));
-
-	// Maxed-progress pass: proves every event is reachable once its gates are met.
-	TSet<FString> AllFlags;
-	TSet<FString> AllCounters;
-	TSet<FString> AllEvents;
-	for (const FString& EventId : FullCampaignEventIds)
-	{
-		if (const FDAEventDefinition* Event = EventGraph.FindEvent(EventId))
-		{
-			CollectEventState(*Event, AllFlags, AllCounters, AllEvents);
-		}
-	}
-
-	TSet<FString> MaxedAvailable;
-	SetOpeningBaseline();
-	for (const FString& Counter : AllCounters)
-	{
-		Profile->SetCounter(Counter, 9999);
-	}
-	for (const FString& Flag : AllFlags)
-	{
-		Profile->SetFlag(Flag, true);
-	}
-	for (const FString& EventId : AllEvents)
-	{
-		Profile->SetFlag(FDAEventGraph::EventCompletionFlag(EventId), true);
-	}
-	Profile->SetTitle(TEXT("Dropout Boy"));
-	Profile->SetCounter(TEXT("card_348"), 1);
-	if (Inventory && Inventory->GetCount(348) <= 0)
-	{
-		AddedCard348 = Inventory->AddCard(348, 1);
-	}
-
-	const EDADorm Dorms[] = { EDADorm::Slifer, EDADorm::Ra, EDADorm::Obelisk };
-	for (EDADorm Dorm : Dorms)
-	{
-		Profile->SetDorm(Dorm);
-		Calendar->SetDate(1, 0, 1, EDADayPeriod::AM);
-		WalkTwelveMonths(MaxedAvailable);
-	}
-
-	TArray<FString> MaxedMissing = FullCampaignEventIds.Array();
-	MaxedMissing.Sort();
-	for (int32 Index = MaxedMissing.Num() - 1; Index >= 0; --Index)
-	{
-		if (MaxedAvailable.Contains(MaxedMissing[Index]))
-		{
-			MaxedMissing.RemoveAt(Index);
-		}
-	}
-	AddCheck(TEXT("all 35 events reachable with progress"), MaxedMissing.Num() == 0,
-		FString::Join(MaxedMissing, TEXT(", ")));
-
-	// Restore the live profile/calendar and inventory.
-	if (AddedCard348 > 0 && Inventory)
-	{
-		Inventory->RemoveCard(348, AddedCard348);
-	}
-	FString RestoreError;
-	Profile->ReadSaveData(ProfileSnapshot, RestoreError);
-	Calendar->ReadSaveData(CalendarSnapshot, RestoreError);
-	if (!RestoreError.IsEmpty())
-	{
-		AddInfo(FString::Printf(TEXT("snapshot restore warning: %s"), *RestoreError));
-	}
-
-	// StartEvent availability is structural for every canon id.
-	TArray<FString> NoScene;
-	for (const FString& EventId : FullCampaignEventIds)
-	{
-		const FDAEventDefinition* Event = EventGraph.FindEvent(EventId);
-		if (!Event || !Scenes.Contains(Event->Scene))
-		{
-			NoScene.Add(EventId);
-		}
-	}
-	AddCheck(TEXT("StartEvent can resolve every id"), NoScene.Num() == 0,
-		FString::Join(NoScene, TEXT(", ")));
-
-	const double Elapsed = FPlatformTime::Seconds() - StartTime;
-	bool bAllPass = true;
-	for (const FString& Line : Report)
-	{
-		if (Line.StartsWith(TEXT("FAIL")))
-		{
-			bAllPass = false;
-		}
-		UE_LOG(LogDuelAcademyIsland, Log, TEXT("FullStorySelfTest: %s"), *Line);
-	}
-	UE_LOG(LogDuelAcademyIsland, Log, TEXT("FullStorySelfTest: %s in %.3fs"),
-		bAllPass ? TEXT("PASS") : TEXT("FAIL"), Elapsed);
-
-	LastFullSelfTestReport = FString::Join(Report, TEXT("\n"));
-	LastFullSelfTestReport += FString::Printf(TEXT("\n%s in %.3fs"),
-		bAllPass ? TEXT("PASS") : TEXT("FAIL"), Elapsed);
-	return bAllPass;
-}
-
-
 
 void UDAStorySubsystem::DebugLogState() const
 {

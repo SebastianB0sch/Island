@@ -166,10 +166,17 @@ struct FDAEPackDef
 	UPROPERTY(BlueprintReadOnly, Category = "Economy|Pack")
 	int32 RestockDays = 7;
 
+	/**
+	 * Purchases allowed per restock window. All shipped rows use 1, which the
+	 * existing restock gate already enforces. The value is parsed and validated
+	 * but is not separately counted: a future pack with a larger value would
+	 * still be limited to one purchase per window until per-window counters are
+	 * added to the save.
+	 */
 	UPROPERTY(BlueprintReadOnly, Category = "Economy|Pack")
 	int32 PurchaseLimit = 1;
 
-	/** Lifetime stock from A01 canon; 0/-1 means unlimited. */
+	/** Lifetime stock from A01 canon; 0 means unlimited. Restocks do not replenish it. */
 	UPROPERTY(BlueprintReadOnly, Category = "Economy|Pack")
 	int32 Stock = 0;
 

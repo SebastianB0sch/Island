@@ -14,6 +14,7 @@
 
 class UBoxComponent;
 class UBillboardComponent;
+class UWorld;
 class ADAInteriorPortal;
 class ADAStudentCharacter;
 
@@ -22,7 +23,10 @@ DECLARE_DELEGATE_RetVal_OneParam(bool, FDAPortalFlagQuery, const FString&);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDAPortalUsedSignature, ADAInteriorPortal*, Portal, AActor*, User);
 
-/** Small serializable slice owned by the portal; A02 can embed it in the save payload. */
+/**
+ * Small serializable slice owned by the portal. The world save provider
+ * (UDAIslandSubsystem) embeds these keyed by PortalId in the "world" section.
+ */
 USTRUCT(BlueprintType)
 struct FDAPortalSaveState
 {
@@ -180,6 +184,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Portal")
 	void ApplySaveState(const FDAPortalSaveState& State);
 
+	/**
+	 * Snapshot every portal that has a non-empty id, sorted by id and then actor
+	 * name. Duplicate actor ids keep the first entry so the bytes are stable.
+	 */
+	static void CollectSaveStates(UWorld* World, TArray<FDAPortalSaveState>& OutStates);
+
+	/**
+	 * Apply a batch by exact PortalId. Empty ids, duplicate array entries
+	 * (first wins) and ids with no live actor are ignored. Idempotent; returns
+	 * the number of portals updated. Safe to call before actors exist (returns 0
+	 * for unknown ids instead of failing the load).
+	 */
+	static int32 ApplySaveStates(UWorld* World, const TArray<FDAPortalSaveState>& States);
+
 	/** Override this in a Blueprint or a C++ subclass for event-specific rules. */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Duel Academy|Portal|Lock")
 	bool CanUsePortal(AActor* User) const;
@@ -209,6 +227,7 @@ protected:
 	void FinishTeleport();
 	void ApplyArrival(AActor* User);
 	void ClearSuppression();
+	void ValidatePairing() const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy|Portal")
 	TObjectPtr<UBoxComponent> Trigger;

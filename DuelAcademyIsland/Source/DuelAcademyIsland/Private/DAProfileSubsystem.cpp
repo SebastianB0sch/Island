@@ -21,6 +21,27 @@ namespace
 	/** Keeps playtime safe for int64 text conversion and JSON serialization. */
 	constexpr double MaxPlaytimeSeconds = 1.0e15;
 
+	/** Bounded so a long play session cannot grow the save file without limit. */
+	constexpr int32 MaxAppliedResultTokens = 256;
+	constexpr int32 MaxResultTokenLength = 160;
+
+	FString ProfileNormalizeResultToken(const FString& InToken)
+	{
+		const FString Token = InToken.TrimStartAndEnd();
+		if (Token.IsEmpty() || Token.Len() > MaxResultTokenLength)
+		{
+			return FString();
+		}
+		for (const TCHAR Character : Token)
+		{
+			if (Character == TCHAR('\n') || Character == TCHAR('\r') || Character == TCHAR('\0'))
+			{
+				return FString();
+			}
+		}
+		return Token;
+	}
+
 	FString ProfileJsonKeyToString(const FJsonObject::FStringType& Key)
 	{
 		return FString(*Key);
@@ -194,6 +215,7 @@ void UDAProfileSubsystem::ResetToDefaults()
 	PlaytimeSeconds = 0.0;
 	Flags.Reset();
 	Counters.Reset();
+	AppliedResultTokens.Reset();
 	Emails.Reset();
 	bInitialized = false;
 
@@ -394,6 +416,46 @@ int32 UDAProfileSubsystem::RecordDuelResult(const FDAProfileDuelResult& Result)
 	RefreshTitleFromSystem();
 	RequestProgressionAutosave(TEXT("duel_result"));
 	return DpEarned;
+}
+
+bool UDAProfileSubsystem::IsResultTokenApplied(const FString& ResultToken) const
+{
+	const FString Token = ProfileNormalizeResultToken(ResultToken);
+	return !Token.IsEmpty() && AppliedResultTokens.Contains(Token);
+}
+
+bool UDAProfileSubsystem::TryMarkResultTokenApplied(const FString& ResultToken)
+{
+	const FString Token = ProfileNormalizeResultToken(ResultToken);
+	if (Token.IsEmpty() || AppliedResultTokens.Contains(Token))
+	{
+		return false;
+	}
+	AppliedResultTokens.Add(Token);
+	if (AppliedResultTokens.Num() > MaxAppliedResultTokens)
+	{
+		AppliedResultTokens.RemoveAt(0, AppliedResultTokens.Num() - MaxAppliedResultTokens,
+			EAllowShrinking::No);
+	}
+	RequestProgressionAutosave(TEXT("result_token"));
+	return true;
+}
+
+int32 UDAProfileSubsystem::RecordDuelResultOnce(const FDAProfileDuelResult& Result, const FString& ResultToken,
+	bool& bAlreadyApplied)
+{
+	bAlreadyApplied = false;
+	const FString Token = ProfileNormalizeResultToken(ResultToken);
+	if (Token.IsEmpty())
+	{
+		return RecordDuelResult(Result);
+	}
+	if (!TryMarkResultTokenApplied(Token))
+	{
+		bAlreadyApplied = true;
+		return 0;
+	}
+	return RecordDuelResult(Result);
 }
 
 // ------------------------------------------------------------------------ flags
@@ -727,6 +789,13 @@ void UDAProfileSubsystem::WriteSaveData(TSharedPtr<FJsonObject>& Root) const
 	ProfileObject->SetStringField(TEXT("temporary_title"), TemporaryTitle);
 	ProfileObject->SetNumberField(TEXT("temporary_title_days"), TemporaryTitleDaysRemaining);
 	ProfileObject->SetBoolField(TEXT("initialized"), bInitialized);
+	TArray<TSharedPtr<FJsonValue>> TokenArray;
+	TokenArray.Reserve(AppliedResultTokens.Num());
+	for (const FString& Token : AppliedResultTokens)
+	{
+		TokenArray.Add(MakeShared<FJsonValueString>(Token));
+	}
+	ProfileObject->SetArrayField(TEXT("applied_result_tokens"), TokenArray);
 	Root->SetObjectField(TEXT("profile"), ProfileObject);
 
 	TSharedPtr<FJsonObject> FlagsObject = MakeShared<FJsonObject>();
@@ -803,6 +872,10 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 	Source->TryGetStringField(TEXT("gender"), Gender);
 	Source->TryGetStringField(TEXT("title"), Title);
 	Source->TryGetStringField(TEXT("temporary_title"), TemporaryTitle);
+	// Older payloads omit this field; they were written by an initialized
+	// profile, so default to true and preserve backward compatibility.
+	bool bLoadedInitialized = true;
+	Source->TryGetBoolField(TEXT("initialized"), bLoadedInitialized);
 	TemporaryTitleDaysRemaining = static_cast<int32>(ProfileReadClampedDouble(
 		Source, TEXT("temporary_title_days"), 0.0, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
 	DP = static_cast<int32>(ProfileReadClampedDouble(
@@ -833,6 +906,25 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 	if (TemporaryTitleDaysRemaining == 0)
 	{
 		TemporaryTitle.Reset();
+	}
+
+	// Additive field: old saves simply have no tokens, so their first result of
+	// the session is applied normally.
+	AppliedResultTokens.Reset();
+	TArray<FString> LoadedTokens;
+	ProfileReadStringArray(Source, TEXT("applied_result_tokens"), LoadedTokens);
+	for (const FString& LoadedToken : LoadedTokens)
+	{
+		const FString Token = ProfileNormalizeResultToken(LoadedToken);
+		if (!Token.IsEmpty() && !AppliedResultTokens.Contains(Token))
+		{
+			AppliedResultTokens.Add(Token);
+		}
+	}
+	if (AppliedResultTokens.Num() > MaxAppliedResultTokens)
+	{
+		AppliedResultTokens.RemoveAt(0, AppliedResultTokens.Num() - MaxAppliedResultTokens,
+			EAllowShrinking::No);
 	}
 
 	Flags.Reset();
@@ -891,7 +983,7 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 		}
 	}
 
-	bInitialized = true;
+	bInitialized = bLoadedInitialized;
 
 	if (OldDP != DP)
 	{

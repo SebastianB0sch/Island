@@ -54,7 +54,8 @@ public:
 
 /**
  * Optional extension point for lanes that own their own save sections
- * (inventory/decks for A06, story/events for A03, exams for A07).
+ * (inventory/decks for A06, story/events for A03, exams for A07, opponent
+ * runtime state and world/portal/NPC state for A02/A08).
  *
  * Providers are registered on UDASaveSubsystem. The save subsystem writes
  * each provider under its section name at the root of the payload and reads
@@ -78,8 +79,29 @@ public:
 	/** Fill OutSection with this lane's state. Return false to fail the save. */
 	virtual bool WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const = 0;
 
+	/**
+	 * Non-mutating structural check run before any saved state is applied.
+	 * Override when the section can be rejected without touching runtime state.
+	 * The default accepts the section; ApplyPayload still rolls back the whole
+	 * load if a later ReadSaveSection fails.
+	 */
+	virtual bool ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const
+	{
+		OutError.Reset();
+		return InSection.IsValid();
+	}
+
 	/** Restore this lane's state. Return false to fail the load. */
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) = 0;
+
+	/**
+	 * Called when a payload has no section for this provider, i.e. the save was
+	 * written before the section existed. The default keeps the live state
+	 * (older saves simply did not describe this lane). Override when an absent
+	 * section means "this lane's defaults"; for example persisted cooldowns must
+	 * not leak from the previous session into an older save.
+	 */
+	virtual void ResetSaveSectionState() {}
 };
 
 /** UI-facing metadata for one slot. Populated without loading the profile. */
@@ -211,12 +233,16 @@ public:
 	// ---------------------------------------------------------------- migrations
 	/**
 	 * Migrates a JSON payload to CurrentVersion in place.
-	 * FromVersion < 0 means "read the version from the payload".
+	 * FromVersion < 0 means "read the version from the payload". When the
+	 * payload declares a version, that value is authoritative over FromVersion.
 	 * Unknown/newer versions are rejected, never silently loaded.
 	 */
 	bool MigrateJson(FString& Json, int32 FromVersion, FString& OutError) const;
 
 	static int32 GetVersionFromJson(const FString& Json);
+
+	/** Canonical JSON used for the save root and nested provider payloads. */
+	static FString SerializeCanonicalJson(const TSharedPtr<FJsonObject>& Root);
 
 	// ---------------------------------------------------------------- extension providers
 	void RegisterPayloadProvider(UObject* Provider);
@@ -227,6 +253,9 @@ public:
 	// commandlets do not need a fully initialised UGameInstance.
 	bool SaveSlotWithContext(int32 SlotIndex, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError);
 	bool LoadSlotWithContext(int32 SlotIndex, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError, bool* bOutRecoveredFromBackup = nullptr);
+
+	/** Parse and apply an in-memory current-version payload through the normal two-phase load path. */
+	bool LoadPayloadJsonWithContext(const FString& Json, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError);
 
 	bool SaveNamedSlotWithContext(const FString& SlotName, int32 LogicalSlotIndex, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError);
 	bool LoadNamedSlotWithContext(const FString& SlotName, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError, bool* bOutRecoveredFromBackup = nullptr);
@@ -250,6 +279,8 @@ private:
 
 	bool BuildPayload(int32 LogicalSlotIndex, const FString& SlotName, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutJson, FString& OutError) const;
 	bool ApplyPayload(const TSharedPtr<FJsonObject>& Root, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError) const;
+	bool ValidatePayload(const TSharedPtr<FJsonObject>& Root, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError) const;
+	bool ApplyPayloadInPlace(const TSharedPtr<FJsonObject>& Root, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError) const;
 
 	bool WriteAtomic(const FString& SlotName, const FString& Json, FString& OutError);
 	bool ReadPayloadFile(const FString& SlotName, FString& OutJson, bool& bOutUsedBackup, FString& OutError) const;

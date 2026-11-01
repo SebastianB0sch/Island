@@ -211,6 +211,8 @@ def deck_ids(decks: list[dict] | None = None) -> set[int]:
 
 
 def _collect_ids(value, found: set[int]) -> None:
+    if isinstance(value, bool):
+        return
     if isinstance(value, int):
         if 1 <= value <= 1200:
             found.add(value)
@@ -223,10 +225,8 @@ def _collect_ids(value, found: set[int]) -> None:
         return
     if isinstance(value, dict):
         for key, item in value.items():
-            if key in ("card_id", "card_ids", "id") and isinstance(item, int):
-                if 1 <= item <= 1200:
-                    found.add(item)
-            else:
+            # Only descend through keys that can denote card ids/containers.
+            if key in ("card_id", "card_ids", "id") or key in CARD_KEYS:
                 _collect_ids(item, found)
 
 
@@ -257,11 +257,11 @@ def usage_sources() -> dict[int, set[str]]:
         payload = load_json(LEGAL_CARDS_PATH)
         found: set[int] = set()
         if isinstance(payload, list):
-            _collect_ids(payload, found)
+            found = _ids_from(payload)
         elif isinstance(payload, dict):
             for key in ("cards", "card_ids", "legal", "ids"):
                 if key in payload:
-                    _collect_ids(payload[key], found)
+                    found |= _ids_from(payload[key])
             if not found:
                 _walk_card_keys(payload, found)
         add(found, "Effects/legal_cards.json")
@@ -306,9 +306,30 @@ USAGE_CATEGORY_ORDER = [
 
 
 def _ids_from(value) -> set[int]:
+    """Collect card ids from a card-id field.
+
+    Lists passed here are card lists whose bare integers are ids.  Dicts are
+    only searched under card-id keys, so unrelated numbers (amounts, levels,
+    counters) elsewhere in the payload are not mistaken for card ids.
+    """
     found: set[int] = set()
-    _collect_ids(value, found)
-    _walk_card_keys(value, found)
+
+    def add(value) -> None:
+        if isinstance(value, bool):
+            return
+        if isinstance(value, int):
+            if 1 <= value <= 1200:
+                found.add(value)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    _walk_card_keys(item, found)
+                else:
+                    add(item)
+        elif isinstance(value, dict):
+            _walk_card_keys(value, found)
+
+    add(value)
     return found
 
 
@@ -600,7 +621,21 @@ def script_files() -> dict[int, Path]:
         except (OSError, json.JSONDecodeError):
             continue
         card_id = payload.get("card_id")
-        if isinstance(card_id, int):
+        if isinstance(card_id, int) and not isinstance(card_id, bool):
+            if card_id in files:
+                previous = files[card_id]
+                try:
+                    previous_name = previous.relative_to(ROOT)
+                except ValueError:
+                    previous_name = previous
+                try:
+                    current_name = path.relative_to(ROOT)
+                except ValueError:
+                    current_name = path
+                raise ValueError(
+                    f"duplicate effect script for card {card_id}: "
+                    f"{previous_name} and {current_name}"
+                )
             files[card_id] = path
     return files
 

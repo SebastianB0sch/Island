@@ -10,6 +10,10 @@ class UTexture2D;
  * Runtime loader for the character portraits shown in dialogue, duel
  * scoreboards and the result screen. The PNGs live under Content/Data so they
  * can be replaced without reimporting assets.
+ *
+ * Character and expression ids are trimmed and lowercased before lookup, so
+ * shipped files must use lowercase slug names.  Path separators and parent
+ * directory components are rejected.
  */
 UCLASS()
 class DUELACADEMYISLAND_API UCharacterPortraitSubsystem : public UGameInstanceSubsystem

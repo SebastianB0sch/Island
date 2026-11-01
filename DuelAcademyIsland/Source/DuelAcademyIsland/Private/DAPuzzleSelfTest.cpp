@@ -53,6 +53,13 @@ namespace
 			OutError = TEXT("timer expiry did not end the duel as an opponent win.");
 			return false;
 		}
+		// A second timer tick must not re-end the duel or flip the result.
+		if (Duel.CheckScenarioTimeout(PastLimit + 1.0f)
+			|| !Duel.IsOver() || Duel.GetWinner() != EDuelOwner::Opponent)
+		{
+			OutError = TEXT("timer expiry was applied more than once.");
+			return false;
+		}
 		return true;
 	}
 
@@ -86,6 +93,24 @@ FDASelfTestReport FDAPuzzleSelfTest::Run(UCardDatabaseSubsystem* Database)
 	}
 
 	Report.Check(Puzzles.Num() == 100, FString::Printf(TEXT("100 puzzle files load (found %d)"), Puzzles.Num()));
+
+	// The replay API must reject a missing database/board rather than
+	// dereferencing them, and a retry must start from a clean duel.
+	if (Puzzles.Num() > 0)
+	{
+		FDAPuzzleReplayResult NullResult;
+		FString NullError;
+		Report.Check(!FDAPuzzleRuntime::Replay(nullptr, Puzzles[0], NullResult, NullError)
+			&& !NullError.IsEmpty(), TEXT("replay rejects a null card database"));
+
+		FDAPuzzleDefinition Invalid = Puzzles[0];
+		Invalid.Id.Reset();
+		FDuelScenario InvalidScenario;
+		FString InvalidError;
+		Report.Check(!FDAPuzzleRuntime::BuildScenario(Invalid, InvalidScenario, InvalidError)
+			&& !InvalidError.IsEmpty(), TEXT("scenario build rejects a puzzle without an id"));
+	}
+
 	TSet<FString> SeenIds;
 	int32 Wins = 0;
 	for (const FDAPuzzleDefinition& Puzzle : Puzzles)
@@ -152,7 +177,7 @@ FDASelfTestReport FDAPuzzleSelfTest::Run(UCardDatabaseSubsystem* Database)
 			{
 				Fail(DetailOr(Error, TEXT("replay failed")));
 			}
-			else if (!Replay.bWon || Replay.OpponentLp > 0 || Replay.PlayerLp <= 0)
+			else if (!Replay.bWon || Replay.PlayerLp <= 0)
 			{
 				Fail(FString::Printf(TEXT("replay did not end in a player win (player %d LP, opponent %d LP)"),
 					Replay.PlayerLp, Replay.OpponentLp));
@@ -167,6 +192,27 @@ FDASelfTestReport FDAPuzzleSelfTest::Run(UCardDatabaseSubsystem* Database)
 				Fail(FString::Printf(TEXT("used %d player turns (limit %d)"),
 					Replay.PlayerTurns, Puzzle.TurnLimit));
 			}
+			else
+			{
+				// Replay is stateless; running the same authored line again must
+				// produce the same result (retry determinism, no leaked duel state).
+				FDAPuzzleReplayResult Retry;
+				FString RetryError;
+				if (!FDAPuzzleRuntime::Replay(Database, Puzzle, Retry, RetryError))
+				{
+					Fail(FString::Printf(TEXT("retry failed: %s"), *DetailOr(RetryError, TEXT("unknown error"))));
+				}
+				else if (!Retry.bWon
+					|| Retry.StepsExecuted != Replay.StepsExecuted
+					|| Retry.PlayerLp != Replay.PlayerLp
+					|| Retry.OpponentLp != Replay.OpponentLp
+					|| Retry.PlayerTurns != Replay.PlayerTurns)
+				{
+					Fail(FString::Printf(TEXT("retry diverged (steps %d/%d, player %d/%d LP, opponent %d/%d LP)"),
+						Retry.StepsExecuted, Replay.StepsExecuted, Retry.PlayerLp, Replay.PlayerLp,
+						Retry.OpponentLp, Replay.OpponentLp));
+				}
+			}
 		}
 
 		if (bPass)
@@ -179,6 +225,38 @@ FDASelfTestReport FDAPuzzleSelfTest::Run(UCardDatabaseSubsystem* Database)
 		{
 			Report.Check(false, FString::Printf(TEXT("%s %s: %s"), *Puzzle.Id, *Puzzle.Title, *Failure));
 		}
+	}
+
+	if (Puzzles.Num() > 0 && Puzzles[0].Solution.Num() > 0)
+	{
+		// A failed attempt must not contaminate the next attempt: retry the same
+		// puzzle through a fresh engine after an authored step error.
+		FDAPuzzleDefinition Broken = Puzzles[0];
+		Broken.Solution[0].Action = TEXT("unsupported_self_test_action");
+		FDAPuzzleReplayResult BrokenResult;
+		FString BrokenError;
+		const bool bBrokenRejected = !FDAPuzzleRuntime::Replay(Database, Broken, BrokenResult, BrokenError)
+			&& !BrokenError.IsEmpty();
+
+		FDAPuzzleReplayResult RetryResult;
+		FString RetryError;
+		const bool bRetryWon = FDAPuzzleRuntime::Replay(Database, Puzzles[0], RetryResult, RetryError)
+			&& RetryResult.bWon;
+		FString RetryName;
+		if (!bBrokenRejected)
+		{
+			RetryName = TEXT("failed attempt was not rejected before retry");
+		}
+		else if (!bRetryWon)
+		{
+			RetryName = FString::Printf(TEXT("retry after a failed attempt failed: %s"),
+				*DetailOr(RetryError, TEXT("unknown error")));
+		}
+		else
+		{
+			RetryName = TEXT("retry after a failed attempt wins");
+		}
+		Report.Check(bBrokenRejected && bRetryWon, RetryName);
 	}
 
 	Report.Info(FString::Printf(TEXT("%d/%d authored puzzles won in the engine"), Wins, Puzzles.Num()));

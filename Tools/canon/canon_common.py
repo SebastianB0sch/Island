@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import struct
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -26,7 +27,10 @@ LOCAL_ONLY_DIR = Path(
 )
 
 # Never hard-code a workstation path. Set GX_ROM to the local ROM before
-# running an extraction tool; the ROM itself is never committed.
+# running an extraction tool; the ROM itself is never committed. Generated
+# extracts record this stable placeholder instead of the local path so the
+# committed data and its manifest hashes do not depend on the workstation.
+ROM_SOURCE_LABEL = "$GX_ROM"
 DEFAULT_ROM = Path(os.environ.get("GX_ROM", "GX_ROM.gba"))
 TARGET_CARDS = REPO_ROOT / "DuelAcademyIsland" / "Content" / "Data" / "cards.json"
 
@@ -109,17 +113,29 @@ def read_json(path: Path) -> Any:
         return json.load(fh)
 
 
-def write_json(path: Path, value: Any) -> None:
+def _atomic_write_text(path: Path, value: str) -> None:
+    """Write UTF-8/LF text atomically so an interrupted build cannot truncate canon data."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as fh:
-        json.dump(value, fh, ensure_ascii=False, indent=2)
-        fh.write("\n")
+    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
+    temp_path = Path(temp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(value)
+        os.replace(temp_path, path)
+    finally:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except OSError:
+                pass
+
+
+def write_json(path: Path, value: Any) -> None:
+    _atomic_write_text(path, json.dumps(value, ensure_ascii=False, indent=2) + "\n")
 
 
 def write_text(path: Path, value: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as fh:
-        fh.write(value)
+    _atomic_write_text(path, value)
 
 
 def u16(rom: bytes, offset: int) -> int:

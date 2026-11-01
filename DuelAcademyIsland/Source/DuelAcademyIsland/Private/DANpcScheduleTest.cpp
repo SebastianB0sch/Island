@@ -2,6 +2,7 @@
 
 #include "DANpcScheduleTest.h"
 
+#include "DAIslandSubsystem.h"
 #include "DANpcDirector.h"
 #include "DANpcSpawnPoint.h"
 #include "DAStudentNPC.h"
@@ -657,6 +658,90 @@ void UDANpcScheduleTestSubsystem::RunRefreshCases()
 	}
 }
 
+void UDANpcScheduleTestSubsystem::RunWorldStatePersistenceCases()
+{
+	ADANpcDirector* D = Director.Get();
+	UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+	UDAIslandSubsystem* Island = World ? World->GetSubsystem<UDAIslandSubsystem>() : nullptr;
+	Check(D != nullptr && Island != nullptr, TEXT("world persistence has a director and island subsystem"));
+	if (!D || !Island)
+	{
+		return;
+	}
+
+	// Snapshot the live world exactly as the save provider sees it.
+	TSharedPtr<FJsonObject> OriginalSection;
+	Check(Island->WriteSaveSection(OriginalSection), TEXT("world persistence writes its section"));
+
+	// Save the E01 assembly filter, which includes event-pinned points.
+	D->SetActiveEvent(TEXT("E01"));
+	D->ApplySchedule(TEXT("E01"), TEXT("Monday"), TEXT("AM"));
+	Check(D->HasAppliedSchedule(), TEXT("world persistence schedule is applied before saving"));
+	TSharedPtr<FJsonObject> SavedSection;
+	Check(Island->WriteSaveSection(SavedSection), TEXT("world persistence captures the E01 schedule"));
+
+	// Move the live director somewhere else, as a new game world would be.
+	D->SetActiveEvent(FString());
+	D->ApplySchedule(TEXT("default"), TEXT("Monday"), TEXT("PM"));
+
+	FString Error;
+	Check(Island->ReadSaveSection(SavedSection, Error),
+		FString::Printf(TEXT("world persistence reads its section (%s)"), *Error));
+	Check(Island->HasPendingWorldState(), TEXT("world persistence queues the restored schedule"));
+	Check(D->GetCurrentPeriod().Equals(TEXT("PM")),
+		TEXT("world persistence does not apply the schedule during read"));
+	Check(Island->ApplyPendingWorldState(), TEXT("world persistence applies the queued schedule"));
+	Check(D->GetCurrentScheduleId().Equals(TEXT("E01"))
+			&& D->GetCurrentWeekday().Equals(TEXT("Monday"))
+			&& D->GetCurrentPeriod().Equals(TEXT("AM"))
+			&& D->GetActiveEvent().Equals(TEXT("E01")),
+		FString::Printf(TEXT("world persistence restores schedule/event (%s/%s/%s/%s)"),
+			*D->GetCurrentScheduleId(), *D->GetCurrentWeekday(), *D->GetCurrentPeriod(), *D->GetActiveEvent()));
+	Check(!Island->HasPendingWorldState(), TEXT("world persistence clears the queue after apply"));
+	VerifyActiveSet(TEXT("world restore E01"), TEXT("E01"), TEXT("Monday"), TEXT("AM"), TEXT("E01"));
+	Check(Island->ApplyPendingWorldState(), TEXT("world persistence re-apply is idempotent"));
+	VerifyActiveSet(TEXT("world restore E01 retry"), TEXT("E01"), TEXT("Monday"), TEXT("AM"), TEXT("E01"));
+
+	// A section that predates NPC persistence must not disturb the director.
+	TSharedPtr<FJsonObject> LegacySection = MakeShared<FJsonObject>();
+	LegacySection->SetNumberField(TEXT("version"), 1);
+	Check(Island->ReadSaveSection(LegacySection, Error),
+		FString::Printf(TEXT("world persistence accepts a section without NPC state (%s)"), *Error));
+	Check(Island->ApplyPendingWorldState(), TEXT("world persistence applies a section without NPC state"));
+	Check(D->GetCurrentScheduleId().Equals(TEXT("E01")),
+		TEXT("a section without NPC state leaves the schedule untouched"));
+
+	// A save written before the first ApplySchedule restores the begin-play
+	// baseline instead of keeping the previous session's scheduled cast.
+	TSharedPtr<FJsonObject> NoScheduleSection = MakeShared<FJsonObject>();
+	NoScheduleSection->SetNumberField(TEXT("version"), 1);
+	NoScheduleSection->SetBoolField(TEXT("npc_schedule_applied"), false);
+	Check(Island->ReadSaveSection(NoScheduleSection, Error),
+		FString::Printf(TEXT("world persistence reads a no-schedule section (%s)"), *Error));
+	Check(Island->ApplyPendingWorldState(), TEXT("world persistence applies a no-schedule section"));
+	Check(!D->HasAppliedSchedule(), TEXT("no-schedule save clears the director filter"));
+
+	bool bBaselineOk = true;
+	for (const FDANpcSchedulePointData& Row : SpawnData)
+	{
+		ADANpcSpawnPoint* Point = FindPoint(Row.Id);
+		if (!Point || Point->IsOccupied() != Row.bSpawnOnBeginPlay)
+		{
+			bBaselineOk = false;
+		}
+	}
+	Check(bBaselineOk, TEXT("no-schedule save restores the begin-play spawn baseline"));
+
+	// Restore the live world.
+	if (OriginalSection.IsValid())
+	{
+		Check(Island->ReadSaveSection(OriginalSection, Error),
+			FString::Printf(TEXT("world persistence restores its snapshot (%s)"), *Error));
+		Check(Island->ApplyPendingWorldState(), TEXT("world persistence restores the snapshot schedule"));
+		VerifyActiveSet(TEXT("world persistence snapshot"), TEXT("default"), TEXT("Monday"), TEXT("AM"), FString());
+	}
+}
+
 void UDANpcScheduleTestSubsystem::Finish()
 {
 	if (bFinished)
@@ -752,6 +837,7 @@ bool UDANpcScheduleTestSubsystem::Tick(float DeltaTime)
 		RunEventCases();
 		RunSpawnDespawnCases();
 		RunRefreshCases();
+		RunWorldStatePersistenceCases();
 		Finish();
 	}
 

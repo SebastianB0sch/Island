@@ -30,10 +30,40 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 STAGES = ["textures", "terrain", "meshes", "audio", "layout", "cast", "render"]
 
 
+def parse_stages(argv):
+    """Return the ordered stage list, or None when help was requested.
+
+    Raises ValueError for unknown stage names/options so a typo cannot silently
+    run the full default pipeline.
+    """
+    if any(arg in ("-h", "--help") for arg in argv):
+        return None
+
+    unknown = [arg for arg in argv if arg != "all" and arg != "--render" and arg not in STAGES]
+    if unknown:
+        raise ValueError(f"unknown stage/option: {', '.join(unknown)}")
+
+    if "all" in argv:
+        return list(STAGES)
+
+    requested = [stage for stage in argv if stage in STAGES]
+    stages = requested or [stage for stage in STAGES if stage != "render"]
+    if "--render" in argv:
+        stages.append("render")
+    return [stage for stage in STAGES if stage in stages]
+
+
 def main(argv):
-    stages = [a for a in argv if a in STAGES] or [s for s in STAGES if s != "render"] + (["render"] if "--render" in argv else [])
-    if argv and argv[0] == "all":
-        stages = STAGES
+    try:
+        stages = parse_stages(argv)
+    except ValueError as error:
+        print(f"build_island: {error}", file=sys.stderr)
+        print(f"stages: {' '.join(STAGES)}  (or all, --render)", file=sys.stderr)
+        return 2
+    if stages is None:
+        print(__doc__)
+        return 0
+
     import numpy as np
     from dai import blend, config as C
     t_all = time.time()
@@ -88,7 +118,8 @@ def main(argv):
             render.render_island(log)
         log(f"  ({time.time() - t0:.1f}s)")
     log(f"done in {time.time() - t_all:.1f}s")
+    return 0
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    raise SystemExit(main(sys.argv[1:]))

@@ -6,6 +6,7 @@ plus the catalog names each asset replaces (from the registry).
 import json
 import os
 import re
+import tempfile
 
 from . import config as C
 from . import thirdparty
@@ -57,14 +58,15 @@ def asset_folders():
             yield os.path.relpath(root, thirdparty.TP_DIR).replace(os.sep, "/")
 
 
-def usage():
+def usage(folders=None):
     """folder -> sorted list of the names (catalog props, texture sets, layers, skies) it provides."""
     uses = {}
+    folders = list(folders) if folders is not None else list(asset_folders())
     reg = thirdparty.registry()
 
     def add(rel, name):
         rel = rel.replace(os.sep, "/")
-        for folder in asset_folders_cache:
+        for folder in folders:
             if rel.startswith(folder + "/"):
                 uses.setdefault(folder, set()).add(name)
                 return
@@ -81,20 +83,16 @@ def usage():
     return {k: sorted(v) for k, v in uses.items()}
 
 
-asset_folders_cache = []
-
-
 def write(path=None, log=print):
-    global asset_folders_cache
-    asset_folders_cache = list(asset_folders())
-    uses = usage()
+    folders = list(asset_folders())
+    uses = usage(folders)
     rows = []
     overrides = {}
     opath = os.path.join(thirdparty.REG_DIR, "credits_overrides.json")
     if os.path.exists(opath):
         with open(opath, encoding="utf-8") as fp:
             overrides = json.load(fp).get("credits", {})
-    for folder in asset_folders_cache:
+    for folder in folders:
         info = parse_source(os.path.join(thirdparty.TP_DIR, folder, "SOURCE.txt"))
         info.update(overrides.get(folder, {}))
         rows.append((folder, info, uses.get(folder, [])))
@@ -145,7 +143,19 @@ def write(path=None, log=print):
         "",
     ]
     path = path or os.path.join(C.REPO_DIR, "CREDITS.md")
-    with open(path, "w", encoding="utf-8") as fp:
-        fp.write("\n".join(lines))
+    directory = os.path.dirname(os.path.abspath(path))
+    os.makedirs(directory, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=os.path.basename(path) + ".", suffix=".tmp", dir=directory)
+    temp_path = temp_name
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fp:
+            fp.write("\n".join(lines))
+        os.replace(temp_path, path)
+    finally:
+        if os.path.exists(temp_path):
+            try:
+                os.unlink(temp_path)
+            except OSError:
+                pass
     log(f"  credits: {len(rows)} third-party asset folders -> CREDITS.md")
     return rows

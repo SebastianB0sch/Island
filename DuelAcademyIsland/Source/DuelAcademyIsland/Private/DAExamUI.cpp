@@ -3,12 +3,15 @@
 #include "DAExamUI.h"
 
 #include "DACalendarSubsystem.h"
+#include "DAHUD.h"
 #include "DAProfileSubsystem.h"
+#include "DAPuzzleRuntime.h"
 #include "DATitleSystem.h"
 #include "DuelAcademyIsland.h"
 #include "Engine/Canvas.h"
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
+#include "Misc/Guid.h"
 
 namespace
 {
@@ -45,6 +48,10 @@ void FDAExamUI::Open(int32 InMonthIndex, int32 Seed)
 {
 	bOpen = true;
 	bOutcomeApplied = false;
+	bTimedDuelActive = false;
+	TimedDuelToken.Reset();
+	TimedTurnLimit = 0;
+	TimedTimeLimit = 0;
 	Elapsed = 0.f;
 	AnswerSelection = 0;
 	HoveredAnswer = INDEX_NONE;
@@ -90,6 +97,19 @@ void FDAExamUI::Open(int32 InMonthIndex, int32 Seed)
 		Result = Exam->GetResult();
 	}
 	SyncPanelFromPhase();
+
+	// A screen recreated while its timed duel is still on screen adopts that
+	// duel instead of offering to launch a second one.
+	if (Exam->GetPhase() == EDAExamPhase::Timed)
+	{
+		ADAHUD* HUD = OwnerHUD.Get();
+		if (HUD && HUD->IsExamTimedDuelOpen())
+		{
+			bTimedDuelActive = true;
+			TimedDuelToken = FString::Printf(TEXT("timed_resume:%s:%s"),
+				*Exam->GetAttemptToken(), *Exam->GetSelectedPuzzleId());
+		}
+	}
 	PlaySfx(TEXT("A_UIClick"), 0.45f);
 }
 
@@ -98,6 +118,12 @@ void FDAExamUI::Close()
 	if (!bOpen)
 	{
 		return;
+	}
+	// Leaving the exam while a puzzle duel is live must not strand the duel on
+	// top of the island; record the cancellation through the same one-shot path.
+	if (bTimedDuelActive)
+	{
+		CancelTimedDuel();
 	}
 	bOpen = false;
 	HitTargets.Reset();
@@ -233,12 +259,199 @@ void FDAExamUI::StartTimed()
 	if (Exam->BeginTimed(Exam->PickTimedPuzzle(MonthIndex), Error))
 	{
 		SyncPanelFromPhase();
-		SetStatus(TEXT("Timed puzzle selected."), false);
+		LaunchTimedDuel();
 	}
 	else
 	{
 		SetStatus(Error.IsEmpty() ? TEXT("Could not start the timed section.") : Error, true);
 	}
+}
+
+void FDAExamUI::LaunchTimedDuel()
+{
+	if (!Exam || bTimedDuelActive || Exam->GetPhase() != EDAExamPhase::Timed)
+	{
+		return;
+	}
+	const FString PuzzleId = Exam->GetSelectedPuzzleId();
+	if (PuzzleId.IsEmpty())
+	{
+		SetStatus(TEXT("No timed puzzle is selected."), true);
+		return;
+	}
+	TimedTurnLimit = 0;
+	TimedTimeLimit = 0;
+
+	FDAPuzzleDefinition Puzzle;
+	FString Error;
+	if (!FDAPuzzleRuntime::LoadPuzzleById(PuzzleId, Puzzle, Error))
+	{
+		SetStatus(Error.IsEmpty() ? TEXT("Could not load the timed puzzle.") : Error, true);
+		return;
+	}
+	if (!Puzzle.bEngineReady)
+	{
+		SetStatus(FString::Printf(TEXT("Timed puzzle %s is not engine-ready."), *PuzzleId), true);
+		return;
+	}
+	FDuelScenario Scenario;
+	if (!FDAPuzzleRuntime::BuildScenario(Puzzle, Scenario, Error))
+	{
+		SetStatus(Error.IsEmpty() ? TEXT("Could not build the timed puzzle.") : Error, true);
+		return;
+	}
+	TimedTurnLimit = Puzzle.TurnLimit;
+	TimedTimeLimit = Puzzle.TimeLimitSeconds;
+
+	ADAHUD* HUD = OwnerHUD.Get();
+	if (!HUD)
+	{
+		SetStatus(TEXT("The HUD is unavailable."), true);
+		return;
+	}
+	if (!HUD->StartExamTimedDuel(Scenario, Error))
+	{
+		SetStatus(Error.IsEmpty() ? TEXT("Could not start the timed puzzle duel.") : Error, true);
+		return;
+	}
+
+	bTimedDuelActive = true;
+	TimedDuelToken = FString::Printf(TEXT("timed:%s:%s:%s"), *Exam->GetAttemptToken(), *PuzzleId,
+		*FGuid::NewGuid().ToString(EGuidFormats::Digits));
+	SyncPanelFromPhase();
+	SetStatus(TEXT("Timed puzzle duel started."), false);
+}
+
+void FDAExamUI::PollTimedDuel()
+{
+	if (!bTimedDuelActive || !Exam)
+	{
+		return;
+	}
+	ADAHUD* HUD = OwnerHUD.Get();
+	if (!HUD)
+	{
+		bTimedDuelActive = false;
+		return;
+	}
+
+	FDAScenarioDuelResult DuelResult;
+	if (HUD->ConsumeExamTimedDuelResult(DuelResult))
+	{
+		bTimedDuelActive = false;
+		if (HUD->IsDuelOpen())
+		{
+			HUD->CloseDuel();
+		}
+		RestoreExamInputMode();
+		FinishTimedResult(DuelResult.bSolved, DuelResult.TurnsUsed, DuelResult.SecondsUsed);
+		return;
+	}
+
+	if (Exam->GetPhase() != EDAExamPhase::Timed)
+	{
+		// Some other caller resolved the section while the board was up.
+		bTimedDuelActive = false;
+		if (HUD->IsDuelOpen())
+		{
+			HUD->AbortExamTimedDuel();
+		}
+		SyncPanelFromPhase();
+	}
+	else if (!HUD->IsExamTimedDuelOpen())
+	{
+		// The board vanished without a terminal payload (for example a forced
+		// modal close); leave the section open so the player can retry or skip.
+		bTimedDuelActive = false;
+		SetStatus(TEXT("Timed puzzle duel closed before a result."), true);
+		SyncPanelFromPhase();
+	}
+}
+
+void FDAExamUI::CancelTimedDuel()
+{
+	if (!bTimedDuelActive || !Exam)
+	{
+		bTimedDuelActive = false;
+		return;
+	}
+	ADAHUD* HUD = OwnerHUD.Get();
+	FDAScenarioDuelResult DuelResult;
+	if (HUD)
+	{
+		HUD->AbortExamTimedDuel();
+		RestoreExamInputMode();
+		if (HUD->ConsumeExamTimedDuelResult(DuelResult))
+		{
+			bTimedDuelActive = false;
+			FinishTimedResult(DuelResult.bSolved, DuelResult.TurnsUsed, DuelResult.SecondsUsed);
+			return;
+		}
+	}
+	bTimedDuelActive = false;
+	FinishTimedResult(false, 0, 0.f);
+	SetStatus(TEXT("Timed puzzle cancelled."), true);
+}
+
+void FDAExamUI::FinishTimedResult(bool bSolved, int32 TurnsUsed, float SecondsUsed)
+{
+	if (!Exam)
+	{
+		return;
+	}
+	if (Exam->GetPhase() == EDAExamPhase::TimedDone)
+	{
+		SyncPanelFromPhase();
+		SetStatus(TEXT("Timed result already recorded."), false);
+		TimedDuelToken.Reset();
+		return;
+	}
+	if (Exam->GetPhase() != EDAExamPhase::Timed)
+	{
+		SyncPanelFromPhase();
+		return;
+	}
+
+	const FString Token = TimedDuelToken.IsEmpty()
+		? FString::Printf(TEXT("timed_manual:%s:%s"), *Exam->GetAttemptToken(), *Exam->GetSelectedPuzzleId())
+		: TimedDuelToken;
+	FString Error;
+	bool bAlreadyApplied = false;
+	if (!Exam->SubmitTimedResultOnce(bSolved, TurnsUsed, SecondsUsed, Token, Error, bAlreadyApplied))
+	{
+		SetStatus(Error.IsEmpty() ? TEXT("Could not record the timed result.") : Error, true);
+		return;
+	}
+	TimedDuelToken.Reset();
+	SyncPanelFromPhase();
+	SetStatus(bAlreadyApplied ? TEXT("Timed result already recorded.")
+		: (bSolved ? TEXT("Timed puzzle solved.") : TEXT("Timed puzzle failed.")), false);
+}
+
+void FDAExamUI::RestoreExamInputMode()
+{
+	if (PlayerOwner)
+	{
+		PlayerOwner->bShowMouseCursor = true;
+		PlayerOwner->SetInputMode(FInputModeGameAndUI());
+	}
+}
+
+bool FDAExamUI::DebugStartTimedDuel()
+{
+	if (!Exam)
+	{
+		return false;
+	}
+	if (Exam->GetPhase() == EDAExamPhase::WrittenDone)
+	{
+		StartTimed();
+	}
+	else if (Exam->GetPhase() == EDAExamPhase::Timed)
+	{
+		LaunchTimedDuel();
+	}
+	return bTimedDuelActive;
 }
 
 void FDAExamUI::StartPractical()
@@ -293,16 +506,22 @@ void FDAExamUI::FinishPracticalAndResult()
 		UDATitleSystem* Titles = GameInstance ? GameInstance->GetSubsystem<UDATitleSystem>() : nullptr;
 		if (Profile)
 		{
-			Profile->IncrementCounter(TEXT("written_correct"), FMath::Max(0, Result.WrittenCorrect));
-			Profile->IncrementCounter(TEXT("written_total"), 10);
-			if (Result.DPReward > 0)
+			// One token covers counters, DP and the title/dorm outcome, so a
+			// recreated result screen cannot apply any of them a second time.
+			const FString OutcomeToken = FString::Printf(TEXT("exam_outcome:%s"), *Exam->GetAttemptToken());
+			if (Profile->TryMarkResultTokenApplied(OutcomeToken))
 			{
-				Profile->AwardDP(Result.DPReward);
-			}
-			if (Titles)
-			{
-				const bool bPromotionEligible = Result.TotalPoints >= 450;
-				Titles->ApplyExamOutcome(Profile, Result.TotalPoints, Exam->GetPassMark(), bPromotionEligible);
+				Profile->IncrementCounter(TEXT("written_correct"), FMath::Max(0, Result.WrittenCorrect));
+				Profile->IncrementCounter(TEXT("written_total"), 10);
+				if (Result.DPReward > 0)
+				{
+					Profile->AwardDP(Result.DPReward);
+				}
+				if (Titles)
+				{
+					const bool bPromotionEligible = Result.TotalPoints >= 450;
+					Titles->ApplyExamOutcome(Profile, Result.TotalPoints, Exam->GetPassMark(), bPromotionEligible);
+				}
 			}
 		}
 	}
@@ -339,11 +558,22 @@ void FDAExamUI::DebugResolveTimed(bool bSolved)
 	{
 		StartTimed();
 	}
+	if (bTimedDuelActive)
+	{
+		// Debug resolution wins over the live board: close it, discard its
+		// pending payload and submit the requested result exactly once.
+		if (ADAHUD* HUD = OwnerHUD.Get())
+		{
+			HUD->AbortExamTimedDuel();
+			FDAScenarioDuelResult Ignored;
+			HUD->ConsumeExamTimedDuelResult(Ignored);
+			RestoreExamInputMode();
+		}
+		bTimedDuelActive = false;
+	}
 	if (Exam->GetPhase() == EDAExamPhase::Timed)
 	{
-		FString Error;
-		Exam->SubmitTimedResult(bSolved, bSolved ? 1 : 0, bSolved ? 4.f : 0.f, Error);
-		SyncPanelFromPhase();
+		FinishTimedResult(bSolved, bSolved ? 1 : 0, bSolved ? 4.f : 0.f);
 	}
 }
 
@@ -410,6 +640,20 @@ void FDAExamUI::Update(float DeltaSeconds)
 		}
 	}
 
+	// The live puzzle board owns input while it is up.  Back/cancel resolves the
+	// timed section as a failure instead of leaving an orphan duel running.
+	if (bTimedDuelActive)
+	{
+		PollTimedDuel();
+		if (bTimedDuelActive && PlayerOwner
+			&& (PlayerOwner->WasInputKeyJustPressed(EKeys::Escape)
+				|| PlayerOwner->WasInputKeyJustPressed(EKeys::P)
+				|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Right)))
+		{
+			CancelTimedDuel();
+		}
+		return;
+	}
 	if (!PlayerOwner)
 	{
 		return;
@@ -454,6 +698,7 @@ void FDAExamUI::Update(float DeltaSeconds)
 		const int32 Options = Question ? Question->Options.Num() : 0;
 		if (Options > 0)
 		{
+			AnswerSelection = FMath::Clamp(AnswerSelection, 0, Options - 1);
 			if (PlayerOwner->WasInputKeyJustPressed(EKeys::Up) || PlayerOwner->WasInputKeyJustPressed(EKeys::W))
 			{
 				AnswerSelection = (AnswerSelection - 1 + Options) % Options;
@@ -504,9 +749,17 @@ void FDAExamUI::Update(float DeltaSeconds)
 				StartPractical();
 			}
 		}
-		else if (PlayerOwner->WasInputKeyJustPressed(EKeys::LeftMouseButton))
+		else if (Phase == EDAExamPhase::Timed)
 		{
-			HandleClickAtMouse();
+			if (PlayerOwner->WasInputKeyJustPressed(EKeys::Enter) || PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar)
+				|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Bottom))
+			{
+				LaunchTimedDuel();
+			}
+			else if (PlayerOwner->WasInputKeyJustPressed(EKeys::LeftMouseButton))
+			{
+				HandleClickAtMouse();
+			}
 		}
 		return;
 	}
@@ -550,7 +803,11 @@ void FDAExamUI::HandleHit(const FDAUIHitTarget& Hit)
 {
 	if (Hit.Action == TEXT("answer"))
 	{
-		AnswerSelection = Hit.Index;
+		const int32 Count = GetOptionCount();
+		if (Count > 0)
+		{
+			AnswerSelection = FMath::Clamp(Hit.Index, 0, Count - 1);
+		}
 		PlaySfx(TEXT("A_UIClick"), 0.22f);
 	}
 	else if (Hit.Action == TEXT("submit"))
@@ -569,13 +826,15 @@ void FDAExamUI::HandleHit(const FDAUIHitTarget& Hit)
 	{
 		StartTimed();
 	}
+	else if (Hit.Action == TEXT("launch_timed"))
+	{
+		LaunchTimedDuel();
+	}
 	else if (Hit.Action == TEXT("skip_timed"))
 	{
-		if (Exam && Exam->GetPhase() == EDAExamPhase::Timed)
+		if (Exam && Exam->GetPhase() == EDAExamPhase::Timed && !bTimedDuelActive)
 		{
-			FString Error;
-			Exam->SubmitTimedResult(false, 0, 0.f, Error);
-			SyncPanelFromPhase();
+			FinishTimedResult(false, 0, 0.f);
 		}
 	}
 	else if (Hit.Action == TEXT("begin_practical"))
@@ -652,7 +911,8 @@ void FDAExamUI::DrawWritten()
 
 	DrawText(FString::Printf(TEXT("QUESTION %d OF %d"), Exam->GetCurrentQuestionIndex() + 1, Exam->GetQuestionCount()),
 		X + 32.f * S, Y + 24.f * S, ExamGold, 0.9f, false, GetFont(true));
-	DrawText(FString::Printf(TEXT("%s  -  DIFFICULTY %d"), *Question->Topic, Question->Difficulty),
+	const FString TopicLine = FString::Printf(TEXT("%s  -  DIFFICULTY %d"), *Question->Topic, Question->Difficulty);
+	DrawText(Ellipsize(TopicLine, W - 64.f * S, 0.72f),
 		X + 32.f * S, Y + 56.f * S, ExamMuted, 0.72f);
 	DrawRect(ExamAlpha(ExamGold, 0.35f), X + 32.f * S, Y + 84.f * S, W - 64.f * S, 1.f * S);
 
@@ -690,7 +950,7 @@ void FDAExamUI::DrawWrittenDone()
 	DrawText(FString::Printf(TEXT("CORRECT %d / %d"), Correct, Exam ? Exam->GetQuestionCount() : 10),
 		X + 30.f * S, Y + 80.f * S, ExamPaper, 1.0f);
 	DrawText(FString::Printf(TEXT("WRITTEN POINTS %d"), Points), X + 30.f * S, Y + 114.f * S, ExamGold, 0.9f);
-	DrawText(TEXT("Next: timed puzzle. The puzzle duel itself is wired by A04/A07 in a later pass."),
+	DrawText(TEXT("Next: the timed puzzle duel. A cleared puzzle adds the timed score."),
 		X + 30.f * S, Y + 166.f * S, ExamMuted, 0.78f);
 	DrawButton(TEXT("BEGIN TIMED DUEL"), TEXT("begin_timed"), X + 30.f * S, Y + 230.f * S, 300.f * S, 48.f * S);
 }
@@ -708,22 +968,29 @@ void FDAExamUI::DrawTimed()
 		X + 28.f * S, Y + 22.f * S, bDone ? ExamGreen : ExamCyan, 1.35f, false, GetFont(true));
 	DrawText(FString::Printf(TEXT("PUZZLE %s"), Exam ? *Exam->GetSelectedPuzzleId() : TEXT("-")),
 		X + 30.f * S, Y + 80.f * S, ExamPaper, 1.0f);
-	DrawText(FString::Printf(TEXT("TURN LIMIT %d   TIME LIMIT %d s"),
-		Exam ? Exam->GetPracticalTurnLimit() : 0, Exam ? Exam->GetPracticalTimeLimit() : 0),
-		X + 30.f * S, Y + 114.f * S, ExamMuted, 0.78f);
+	const FString LimitText = (TimedTurnLimit > 0 || TimedTimeLimit > 0)
+		? FString::Printf(TEXT("TURN LIMIT %d   TIME LIMIT %d s"), TimedTurnLimit, TimedTimeLimit)
+		: FString(TEXT("TURN / TIME LIMITS ARE SET BY THE PUZZLE"));
+	DrawText(LimitText, X + 30.f * S, Y + 114.f * S, ExamMuted, 0.78f);
 	if (bDone)
 	{
-		DrawText(TEXT("STATUS: RESULT RECORDED"), X + 30.f * S, Y + 166.f * S, ExamGreen, 0.9f);
+		const bool bSolved = Exam && Exam->IsTimedSolved();
+		DrawText(FString::Printf(TEXT("STATUS: %s   TURNS %d   TIME %.1f s"),
+			bSolved ? TEXT("CLEARED") : TEXT("NOT CLEARED"),
+			Exam ? Exam->GetTimedTurns() : 0, Exam ? Exam->GetTimedSeconds() : 0.f),
+			X + 30.f * S, Y + 166.f * S, bSolved ? ExamGreen : ExamRed, 0.9f);
 		DrawButton(TEXT("BEGIN PRACTICAL"), TEXT("begin_practical"), X + 30.f * S, Y + 230.f * S, 300.f * S, 48.f * S);
 	}
 	else
 	{
-		DrawText(TEXT("The timed puzzle duel is launched by A04/A07. This shell waits for its result."),
+		DrawText(TEXT("Play the authored puzzle duel. A win or completed objective clears the section."),
 			X + 30.f * S, Y + 166.f * S, ExamMuted, 0.78f);
-		DrawText(TEXT("For the current build, CONTINUE WITHOUT CLEARING records a failed timed section."),
+		DrawText(TEXT("ESC during the duel cancels it and records a failed timed section."),
 			X + 30.f * S, Y + 198.f * S, ExamMuted, 0.72f);
-		DrawButton(TEXT("CONTINUE WITHOUT CLEARING (0)"), TEXT("skip_timed"), X + 30.f * S, Y + 246.f * S,
-			380.f * S, 46.f * S);
+		DrawButton(TEXT("ENTER TIMED DUEL"), TEXT("launch_timed"), X + 30.f * S, Y + 230.f * S,
+			300.f * S, 48.f * S);
+		DrawButton(TEXT("CONTINUE WITHOUT CLEARING (0)"), TEXT("skip_timed"), X + 30.f * S, Y + 292.f * S,
+			380.f * S, 42.f * S);
 	}
 }
 
@@ -845,7 +1112,8 @@ void FDAExamUI::DrawOption(const FString& Label, int32 Index, float X, float Y, 
 		DrawRect(ExamAlpha(ExamGold, bSelected ? 0.22f : 0.08f), X, Y, W, H);
 		DrawRect(ExamGold, X, Y, 4.f * S, H);
 	}
-	DrawText(FString::Printf(TEXT("%d.  %s"), Index + 1, *Label), X + 16.f * S, Y + 8.f * S,
+	const FString LabelText = FString::Printf(TEXT("%d.  %s"), Index + 1, *Label);
+	DrawText(Ellipsize(LabelText, W - 32.f * S, 0.82f), X + 16.f * S, Y + 8.f * S,
 		bSelected ? ExamPaper : ExamMuted, 0.82f);
 	AddHit(TEXT("answer"), Index, X, Y, W, H);
 }
@@ -856,7 +1124,8 @@ void FDAExamUI::DrawButton(const FString& Label, const FString& Action, float X,
 	const FLinearColor Accent = bEnabled ? ExamGold : ExamMuted;
 	DrawRect(ExamAlpha(Accent, bEnabled ? 0.2f : 0.08f), X, Y, W, H);
 	DrawRect(Accent, X, Y, 4.f * S, H);
-	DrawText(Label, X + 16.f * S, Y + 8.f * S, bEnabled ? ExamPaper : ExamMuted, 0.78f);
+	DrawText(Ellipsize(Label, W - 32.f * S, 0.78f), X + 16.f * S, Y + 8.f * S,
+		bEnabled ? ExamPaper : ExamMuted, 0.78f);
 	if (bEnabled)
 	{
 		AddHit(Action, INDEX_NONE, X, Y, W, H);
@@ -879,7 +1148,9 @@ void FDAExamUI::DrawFooter()
 		Hint = TEXT("ENTER begin timed section   ESC close");
 		break;
 	case EPanel::Timed:
-		Hint = TEXT("Wait for puzzle result or continue without clearing   ESC close");
+		Hint = Exam && Exam->GetPhase() == EDAExamPhase::Timed
+			? TEXT("ENTER start/resume the timed duel   ESC close exam")
+			: TEXT("ENTER begin practical   ESC close exam");
 		break;
 	case EPanel::Practical:
 		Hint = TEXT("ENTER finish practical   ESC close");
@@ -906,10 +1177,6 @@ void FDAExamUI::DrawStatus()
 	const float Y = Canvas->ClipY - 84.f * S;
 	DrawRect(ExamAlpha(ExamInk, 0.94f), X, Y, W, H);
 	DrawRect(bStatusError ? ExamRed : ExamGold, X, Y, 4.f * S, H);
-	FString Message = StatusMessage;
-	while (Message.Len() > 4 && Measure(Message, 0.76f).X > W - 30.f * S)
-	{
-		Message = Message.LeftChop(4) + TEXT("...");
-	}
-	DrawText(Message, X + 14.f * S, Y + 8.f * S, bStatusError ? ExamRed : ExamPaper, 0.76f);
+	DrawText(Ellipsize(StatusMessage, W - 30.f * S, 0.76f), X + 14.f * S, Y + 8.f * S,
+		bStatusError ? ExamRed : ExamPaper, 0.76f);
 }

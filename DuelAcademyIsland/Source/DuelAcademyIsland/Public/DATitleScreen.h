@@ -128,6 +128,7 @@ private:
 	void ActivateOptionRow();
 	void BackToMain();
 	void UpdateSelectionClamp();
+	void MoveContinueSelection(int32 Delta);
 	void HandleClickAtMouse();
 	void HandleHit(const FDATitleHitTarget& Hit);
 	void AddHit(const FString& Action, int32 Index, float X, float Y, float W, float H);
@@ -155,6 +156,7 @@ private:
 	void Diamond(const FVector2D& C, float R, const FLinearColor& Color);
 	FVector2D Measure(const FString& Str, float InScale, UFont* Font = nullptr) const;
 	TArray<FString> WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+	FString Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
 	void DrawMenuButton(const FString& Label, int32 Index, float X, float Y, float W, float H, bool bSelected);
 	void DrawSlotCard(const FDATitleSlotView& Slot, int32 Index, float X, float Y, float W, float H, bool bSelected);
 	void DrawOptionRow(const FString& Label, const FString& Value, int32 Index, float X, float Y,
@@ -171,6 +173,7 @@ private:
 	int32 Selection = 0;
 	int32 HoveredIndex = INDEX_NONE;
 	int32 CreditsScroll = 0;
+	int32 ContinueScroll = 0;
 	float Elapsed = 0.f;
 	float UIScale = 1.f;
 	float StatusTime = 0.f;

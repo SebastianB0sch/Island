@@ -11,22 +11,93 @@ namespace
 {
 	FString CardReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
 	{
-		FString Value;
-		if (Object.IsValid())
+		if (!Object.IsValid())
 		{
-			Object->TryGetStringField(Field, Value);
+			return FString();
 		}
-		return Value;
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		FString Text;
+		if (!Value.IsValid() || Value->Type != EJson::String || !Value->TryGetString(Text))
+		{
+			return FString();
+		}
+		return Text;
 	}
 
 	int32 CardReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
 	{
-		int32 Value = Default;
-		if (Object.IsValid())
+		if (!Object.IsValid())
 		{
-			Object->TryGetNumberField(Field, Value);
+			return Default;
 		}
-		return Value;
+		// Require a real JSON number with an integral value in int32 range.
+		// TryGetNumberField(int32) also accepts booleans (true -> 1) and rounds
+		// fractional values, which would let malformed card rows through.
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid() || Value->Type != EJson::Number)
+		{
+			return Default;
+		}
+		double Number = 0.0;
+		if (!Value->TryGetNumber(Number) || !FMath::IsFinite(Number)
+			|| FMath::FloorToDouble(Number) != Number
+			|| Number < static_cast<double>(TNumericLimits<int32>::Min())
+			|| Number > static_cast<double>(TNumericLimits<int32>::Max()))
+		{
+			return Default;
+		}
+		return static_cast<int32>(Number);
+	}
+
+	int32 CardReadIntArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<int32>& Out)
+	{
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values))
+		{
+			return 0;
+		}
+		int32 Skipped = 0;
+		for (const TSharedPtr<FJsonValue>& Value : *Values)
+		{
+			double Number = 0.0;
+			if (!Value.IsValid() || Value->Type != EJson::Number
+				|| !Value->TryGetNumber(Number) || !FMath::IsFinite(Number)
+				|| Number < 1.0 || Number > static_cast<double>(TNumericLimits<int32>::Max())
+				|| FMath::FloorToDouble(Number) != Number)
+			{
+				++Skipped;
+				continue;
+			}
+			Out.Add(static_cast<int32>(Number));
+		}
+		return Skipped;
+	}
+
+	int32 CardReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& Out)
+	{
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values))
+		{
+			return 0;
+		}
+		int32 Skipped = 0;
+		for (const TSharedPtr<FJsonValue>& Value : *Values)
+		{
+			FString Text;
+			if (!Value.IsValid() || Value->Type != EJson::String || !Value->TryGetString(Text))
+			{
+				++Skipped;
+				continue;
+			}
+			Text.TrimStartAndEndInline();
+			if (Text.IsEmpty())
+			{
+				++Skipped;
+				continue;
+			}
+			Out.Add(MoveTemp(Text));
+		}
+		return Skipped;
 	}
 }
 
@@ -42,6 +113,11 @@ void UCardDatabaseSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UCardDatabaseSubsystem::LoadCards(const FString& Path)
 {
+	// A failed or repeated load must not leave records from an earlier file.
+	CardsById.Reset();
+	LoadError.Reset();
+	bLoaded = false;
+
 	FString Raw;
 	if (!FFileHelper::LoadFileToString(Raw, *Path))
 	{
@@ -66,11 +142,14 @@ void UCardDatabaseSubsystem::LoadCards(const FString& Path)
 		return;
 	}
 
+	int32 SkippedEntries = 0;
+	int32 DuplicateEntries = 0;
 	for (const TSharedPtr<FJsonValue>& Entry : *Entries)
 	{
 		const TSharedPtr<FJsonObject> Object = Entry.IsValid() ? Entry->AsObject() : nullptr;
 		if (!Object.IsValid())
 		{
+			++SkippedEntries;
 			continue;
 		}
 		FCardRecord Card;
@@ -84,18 +163,34 @@ void UCardDatabaseSubsystem::LoadCards(const FString& Path)
 		Card.Atk = CardReadInt(Object, TEXT("atk"));
 		Card.Def = CardReadInt(Object, TEXT("def"));
 		Card.Description = CardReadString(Object, TEXT("description"));
-		if (Card.Id > 0)
+		if (Card.Id <= 0 || Card.Name.IsEmpty() || Card.CardType.IsEmpty())
 		{
-			CardsById.Add(Card.Id, MoveTemp(Card));
+			++SkippedEntries;
+			continue;
 		}
+		if (CardsById.Contains(Card.Id))
+		{
+			++DuplicateEntries;
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Duplicate card id %d; the later record replaces the earlier one."), Card.Id);
+		}
+		CardsById.Add(Card.Id, MoveTemp(Card));
 	}
 
 	bLoaded = CardsById.Num() > 0;
-	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded %d cards for the duel database."), CardsById.Num());
+	if (!bLoaded)
+	{
+		LoadError = TEXT("Card database contains no valid card records.");
+		UE_LOG(LogDuelAcademyIsland, Error, TEXT("%s"), *LoadError);
+		return;
+	}
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded %d cards for the duel database (%d skipped, %d duplicate ids)."),
+		CardsById.Num(), SkippedEntries, DuplicateEntries);
 }
 
 void UCardDatabaseSubsystem::LoadDecks(const FString& Path)
 {
+	Decks.Reset();
+
 	FString Raw;
 	if (!FFileHelper::LoadFileToString(Raw, *Path))
 	{
@@ -117,49 +212,57 @@ void UCardDatabaseSubsystem::LoadDecks(const FString& Path)
 		return;
 	}
 
+	int32 SkippedEntries = 0;
+	int32 DuplicateEntries = 0;
 	for (const TSharedPtr<FJsonValue>& Entry : *Entries)
 	{
 		const TSharedPtr<FJsonObject> Object = Entry.IsValid() ? Entry->AsObject() : nullptr;
 		if (!Object.IsValid())
 		{
+			++SkippedEntries;
 			continue;
 		}
 
 		FStarterDeckDef Deck;
-		Deck.Id = CardReadString(Object, TEXT("id"));
+		Deck.Id = CardReadString(Object, TEXT("id")).TrimStartAndEnd();
 		Deck.Name = CardReadString(Object, TEXT("name"));
 		Deck.Subtitle = CardReadString(Object, TEXT("subtitle"));
 		Deck.Description = CardReadString(Object, TEXT("description"));
 		Deck.Accent = CardReadString(Object, TEXT("accent"));
-
-		const TArray<TSharedPtr<FJsonValue>>* Cards = nullptr;
-		if (Object->TryGetArrayField(TEXT("cards"), Cards))
+		const int32 SkippedCards = CardReadIntArray(Object, TEXT("cards"), Deck.Cards)
+			+ CardReadIntArray(Object, TEXT("extra"), Deck.Extra);
+		if (SkippedCards > 0)
 		{
-			for (const TSharedPtr<FJsonValue>& Value : *Cards)
-			{
-				Deck.Cards.Add(static_cast<int32>(Value->AsNumber()));
-			}
-		}
-		const TArray<TSharedPtr<FJsonValue>>* Extra = nullptr;
-		if (Object->TryGetArrayField(TEXT("extra"), Extra))
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *Extra)
-			{
-				Deck.Extra.Add(static_cast<int32>(Value->AsNumber()));
-			}
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Deck '%s' ignored %d malformed card id(s)."), *Deck.Id, SkippedCards);
 		}
 
-		if (!Deck.Id.IsEmpty() && Deck.Cards.Num() > 0)
+		if (Deck.Id.IsEmpty() || Deck.Cards.Num() == 0)
 		{
-			Decks.Add(MoveTemp(Deck));
+			++SkippedEntries;
+			continue;
 		}
+		if (Decks.ContainsByPredicate([&Deck](const FStarterDeckDef& Existing)
+			{
+				return Existing.Id.Equals(Deck.Id, ESearchCase::IgnoreCase);
+			}))
+		{
+			++DuplicateEntries;
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Duplicate deck id '%s'; the first decklist wins."), *Deck.Id);
+			continue;
+		}
+		Decks.Add(MoveTemp(Deck));
 	}
 
-	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded %d decklists."), Decks.Num());
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded %d decklists (%d skipped, %d duplicate ids)."),
+		Decks.Num(), SkippedEntries, DuplicateEntries);
 }
 
 void UCardDatabaseSubsystem::LoadFusions(const FString& Path)
 {
+	Fusions.Reset();
+
 	FString Raw;
 	if (!FFileHelper::LoadFileToString(Raw, *Path))
 	{
@@ -181,11 +284,13 @@ void UCardDatabaseSubsystem::LoadFusions(const FString& Path)
 		return;
 	}
 
+	int32 SkippedEntries = 0;
 	for (const TSharedPtr<FJsonValue>& Entry : *Entries)
 	{
 		const TSharedPtr<FJsonObject> Object = Entry.IsValid() ? Entry->AsObject() : nullptr;
 		if (!Object.IsValid())
 		{
+			++SkippedEntries;
 			continue;
 		}
 
@@ -193,32 +298,28 @@ void UCardDatabaseSubsystem::LoadFusions(const FString& Path)
 		Recipe.Result = CardReadInt(Object, TEXT("result"));
 		Recipe.Name = CardReadString(Object, TEXT("name"));
 		Recipe.MaterialsType = CardReadString(Object, TEXT("materialsType"));
-		Recipe.AnyCount = CardReadInt(Object, TEXT("anyCount"));
-
-		const TArray<TSharedPtr<FJsonValue>>* Materials = nullptr;
-		if (Object->TryGetArrayField(TEXT("materials"), Materials))
+		Recipe.AnyCount = FMath::Max(0, CardReadInt(Object, TEXT("anyCount")));
+		const int32 SkippedMaterials = CardReadIntArray(Object, TEXT("materials"), Recipe.Materials)
+			+ CardReadStringArray(Object, TEXT("fusionTypes"), Recipe.FusionTypes);
+		if (SkippedMaterials > 0)
 		{
-			for (const TSharedPtr<FJsonValue>& Value : *Materials)
-			{
-				Recipe.Materials.Add(static_cast<int32>(Value->AsNumber()));
-			}
-		}
-		const TArray<TSharedPtr<FJsonValue>>* FusionTypes = nullptr;
-		if (Object->TryGetArrayField(TEXT("fusionTypes"), FusionTypes))
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *FusionTypes)
-			{
-				Recipe.FusionTypes.Add(Value->AsString());
-			}
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Fusion recipe for card %d ignored %d malformed field(s)."),
+				Recipe.Result, SkippedMaterials);
 		}
 
 		if (Recipe.Result > 0 && (Recipe.Materials.Num() > 0 || Recipe.AnyCount > 0))
 		{
 			Fusions.Add(MoveTemp(Recipe));
 		}
+		else
+		{
+			++SkippedEntries;
+		}
 	}
 
-	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded %d fusion recipes."), Fusions.Num());
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded %d fusion recipes (%d skipped)."),
+		Fusions.Num(), SkippedEntries);
 }
 
 const FCardRecord* UCardDatabaseSubsystem::FindCard(int32 CardId) const
@@ -243,18 +344,51 @@ const FStarterDeckDef* UCardDatabaseSubsystem::FindDeck(const FString& DeckId) c
 
 bool UCardDatabaseSubsystem::RegisterDeck(const FStarterDeckDef& Deck)
 {
-	if (Deck.Id.IsEmpty() || Deck.Cards.Num() == 0)
+	const FString DeckId = Deck.Id.TrimStartAndEnd();
+	if (DeckId.IsEmpty() || Deck.Cards.Num() == 0)
 	{
+		return false;
+	}
+	for (const int32 CardId : Deck.Cards)
+	{
+		if (CardId <= 0)
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("RegisterDeck('%s') contains invalid card id %d and was ignored."), *DeckId, CardId);
+			return false;
+		}
+	}
+	for (const int32 CardId : Deck.Extra)
+	{
+		if (CardId <= 0)
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("RegisterDeck('%s') contains invalid Extra card id %d and was ignored."), *DeckId, CardId);
+			return false;
+		}
+	}
+	if (Decks.ContainsByPredicate([&DeckId](const FStarterDeckDef& Starter)
+		{
+			return Starter.Id.Equals(DeckId, ESearchCase::IgnoreCase);
+		}))
+	{
+		// FindDeck resolves starters first, so registering a colliding id would
+		// be a silent no-op.  Refuse it instead of pretending it succeeded.
+		UE_LOG(LogDuelAcademyIsland, Warning,
+			TEXT("RegisterDeck('%s') collides with a starter deck and was ignored."), *DeckId);
 		return false;
 	}
 	for (FStarterDeckDef& Existing : RegisteredDecks)
 	{
-		if (Existing.Id.Equals(Deck.Id, ESearchCase::IgnoreCase))
+		if (Existing.Id.Equals(DeckId, ESearchCase::IgnoreCase))
 		{
 			Existing = Deck;
+			Existing.Id = DeckId;
 			return true;
 		}
 	}
-	RegisteredDecks.Add(Deck);
+	FStarterDeckDef Registered = Deck;
+	Registered.Id = DeckId;
+	RegisteredDecks.Add(MoveTemp(Registered));
 	return true;
 }

@@ -323,7 +323,15 @@ def _check_target(
         report.error(location, f"{context}: target is missing a zone")
     count = target.get("count")
     if isinstance(count, dict):
-        if count.get("min", 0) > count.get("max", 0):
+        minimum = count.get("min")
+        maximum = count.get("max", minimum)
+        if (
+            isinstance(minimum, int)
+            and not isinstance(minimum, bool)
+            and isinstance(maximum, int)
+            and not isinstance(maximum, bool)
+            and minimum > maximum
+        ):
             report.error(location, f"{context}: target count min is greater than max")
     chooser = target.get("chooser")
     if chooser and chooser not in {"controller", "opponent", "random"}:
@@ -348,6 +356,8 @@ def _check_condition(report: Report, location: str, condition) -> None:
             _check_condition(report, f"{location}.{key}[{index}]", child)
     if "not" in condition:
         _check_condition(report, f"{location}.not", condition["not"])
+    if "count_filter" in condition:
+        _check_condition(report, f"{location}.count_filter", condition["count_filter"])
 
 
 def _check_operations(
@@ -487,9 +497,10 @@ def validate_script_payload(
         if not isinstance(script, dict):
             continue
         script_id = script.get("id")
-        if script_id in seen_ids:
-            report.error(location, f"duplicate script id '{script_id}'")
-        seen_ids.add(script_id)
+        if isinstance(script_id, str):
+            if script_id in seen_ids:
+                report.error(location, f"duplicate script id '{script_id}'")
+            seen_ids.add(script_id)
         trigger = script.get("trigger", "")
         _check_condition(report, f"{location}:{script_id}", script.get("condition"))
         has_target = isinstance(script.get("target"), dict) or isinstance(
@@ -561,7 +572,13 @@ def validate_manifest(
         )
     seen: set[int] = set()
     for entry in entries:
+        if not isinstance(entry, dict):
+            report.error("card_effect_manifest.json", "manifest entry is not an object")
+            continue
         card_id = entry.get("id")
+        if not isinstance(card_id, int) or isinstance(card_id, bool):
+            report.error("card_effect_manifest.json", f"manifest entry has invalid id {card_id!r}")
+            continue
         if card_id in seen:
             report.error("card_effect_manifest.json", f"duplicate manifest id {card_id}")
         seen.add(card_id)
@@ -665,6 +682,9 @@ def validate_fusions(report: Report, cards: list[dict]) -> dict:
             report.error(location, "recipe must be an object")
             continue
         result = recipe.get("result")
+        if not isinstance(result, int) or isinstance(result, bool):
+            report.error(location, f"result {result!r} is not an integer card id")
+            continue
         if result in seen:
             report.error(location, f"duplicate recipe for result {result}")
         seen.add(result)
@@ -786,6 +806,9 @@ def validate_rituals(report: Report, cards: list[dict]) -> dict:
             report.error(location, "ritual entry must be an object")
             continue
         monster_id = ritual.get("monster")
+        if not isinstance(monster_id, int) or isinstance(monster_id, bool):
+            report.error(location, f"monster {monster_id!r} is not an integer card id")
+            continue
         if monster_id in seen:
             report.error(location, f"duplicate ritual entry for monster {monster_id}")
         seen.add(monster_id)
@@ -888,7 +911,16 @@ def validate(root: Path | None = None) -> tuple[Report, dict]:
         manifest = {}
     else:
         manifest = data.load_json(data.MANIFEST_PATH)
-        validate_manifest(report, manifest, card_index, data.script_files())
+        try:
+            script_files = data.script_files()
+        except ValueError as exc:
+            report.error(
+                "Content/Data/Effects/scripts",
+                str(exc),
+                "keep exactly one Effect/scripts/<card_id>.json per card",
+            )
+            script_files = {}
+        validate_manifest(report, manifest, card_index, script_files)
     manifest_by_id = data.manifest_index(manifest) if manifest else {}
 
     script_paths = sorted(data.SCRIPTS_DIR.glob("*.json")) if data.SCRIPTS_DIR.exists() else []

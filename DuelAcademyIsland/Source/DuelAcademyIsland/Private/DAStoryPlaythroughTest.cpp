@@ -13,6 +13,9 @@
 #include "DAProfileSubsystem.h"
 #include "DACalendarSubsystem.h"
 #include "DAInventorySubsystem.h"
+#include "DAOpponentSubsystem.h"
+#include "DASaveGame.h"
+#include "DASettings.h"
 #include "DATitleSystem.h"
 #include "DuelAcademyIsland.h"
 
@@ -23,9 +26,13 @@
 #include "HAL/IConsoleManager.h"
 #include "HAL/PlatformMisc.h"
 #include "HAL/PlatformTime.h"
+#include "Kismet/GameplayStatics.h"
 #include "Misc/CommandLine.h"
+#include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
 #include "Misc/ScopeExit.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 #include "Templates/Function.h"
 
 namespace
@@ -1834,16 +1841,494 @@ bool UDAStorySubsystem::RunStoryPlaythroughTest()
 	AddCheck(TEXT("no unknown command types"), TotalUnknownCommands == 0, FString::FromInt(TotalUnknownCommands));
 	AddCheck(TEXT("no unknown outcome types"), TotalUnknownOutcomes == 0, FString::FromInt(TotalUnknownOutcomes));
 
+	RestoreSnapshot();
+
+	// ------------------------------------------------------------ persistence regressions
+	{
+		UDASaveSubsystem* SaveSubsystem = GameInstance ? GameInstance->GetSubsystem<UDASaveSubsystem>() : nullptr;
+		UDASettings* Settings = GameInstance ? GameInstance->GetSubsystem<UDASettings>() : nullptr;
+		AddCheck(TEXT("save subsystem available"), SaveSubsystem != nullptr, FString());
+		AddCheck(TEXT("settings subsystem available"), Settings != nullptr, FString());
+
+		if (SaveSubsystem && Settings && !bRunning)
+		{
+			TSharedPtr<FJsonObject> LoadProfileSnapshot = MakeShared<FJsonObject>();
+			TSharedPtr<FJsonObject> LoadCalendarSnapshot = MakeShared<FJsonObject>();
+			TSharedPtr<FJsonObject> SettingsSnapshot = MakeShared<FJsonObject>();
+			Profile->WriteSaveData(LoadProfileSnapshot);
+			Calendar->WriteSaveData(LoadCalendarSnapshot);
+			Settings->WriteSaveData(SettingsSnapshot);
+			const FString LoadStorySnapshot = SaveState();
+			const FString PlayerNameBefore = Profile->GetPlayerName();
+			const int32 DPBefore = Profile->GetDP();
+			const int32 YearBefore = Calendar->GetYear();
+			const int32 MonthBefore = Calendar->GetMonthIndex();
+			const int32 DayBefore = Calendar->GetDay();
+
+			// A malformed provider section must fail before profile/calendar state
+			// is touched. The payload would otherwise rename the player and move
+			// the calendar to Year 2.
+			TSharedPtr<FJsonObject> BadRoot = MakeShared<FJsonObject>();
+			BadRoot->SetNumberField(TEXT("version"), UDASaveSubsystem::CurrentVersion);
+			Profile->WriteSaveData(BadRoot);
+			Calendar->WriteSaveData(BadRoot);
+			TSharedPtr<FJsonObject> BadSettings = MakeShared<FJsonObject>();
+			Settings->WriteSaveData(BadSettings);
+			BadRoot->SetObjectField(TEXT("settings"), BadSettings);
+
+			const TSharedPtr<FJsonObject>* BadProfileObject = nullptr;
+			if (BadRoot->TryGetObjectField(TEXT("profile"), BadProfileObject) && BadProfileObject && BadProfileObject->IsValid())
+			{
+				(*BadProfileObject)->SetStringField(TEXT("name"), TEXT("SHOULDNOT"));
+				(*BadProfileObject)->SetNumberField(TEXT("dp"), 1);
+			}
+			const TSharedPtr<FJsonObject>* BadCalendarObject = nullptr;
+			if (BadRoot->TryGetObjectField(TEXT("calendar"), BadCalendarObject) && BadCalendarObject && BadCalendarObject->IsValid())
+			{
+				(*BadCalendarObject)->SetNumberField(TEXT("year"), 2);
+				(*BadCalendarObject)->SetNumberField(TEXT("month_index"), 5);
+				(*BadCalendarObject)->SetNumberField(TEXT("day"), 5);
+			}
+			TSharedPtr<FJsonObject> BadStory = MakeShared<FJsonObject>();
+			BadStory->SetNumberField(TEXT("version"), 1);
+			BadStory->SetStringField(TEXT("state"), TEXT("{not valid json"));
+			BadRoot->SetObjectField(TEXT("story"), BadStory);
+
+			FString BadLoadError;
+			const bool bBadLoad = SaveSubsystem->LoadPayloadJsonWithContext(
+				UDASaveSubsystem::SerializeCanonicalJson(BadRoot), Profile, Calendar, Settings, BadLoadError);
+			AddCheck(TEXT("malformed provider section is rejected"), !bBadLoad, BadLoadError);
+			AddCheck(TEXT("failed load leaves the profile untouched"),
+				Profile->GetPlayerName().Equals(PlayerNameBefore) && Profile->GetDP() == DPBefore,
+				FString::Printf(TEXT("%s/%d"), *Profile->GetPlayerName(), Profile->GetDP()));
+			AddCheck(TEXT("failed load leaves the calendar untouched"),
+				Calendar->GetYear() == YearBefore && Calendar->GetMonthIndex() == MonthBefore && Calendar->GetDay() == DayBefore,
+				Calendar->GetFullDateText());
+			AddCheck(TEXT("failed load leaves the story state untouched"), SaveState().Equals(LoadStorySnapshot), FString());
+
+			// The world provider validates before apply too: a structurally
+			// invalid world section must not rename/move anything.
+			BadRoot->RemoveField(TEXT("story"));
+			TSharedPtr<FJsonObject> BadWorld = MakeShared<FJsonObject>();
+			BadWorld->SetNumberField(TEXT("version"), 1);
+			BadWorld->SetStringField(TEXT("portals"), TEXT("not-an-array"));
+			BadRoot->SetObjectField(TEXT("world"), BadWorld);
+			FString BadWorldError;
+			const bool bBadWorldLoad = SaveSubsystem->LoadPayloadJsonWithContext(
+				UDASaveSubsystem::SerializeCanonicalJson(BadRoot), Profile, Calendar, Settings, BadWorldError);
+			AddCheck(TEXT("malformed world section is rejected"), !bBadWorldLoad, BadWorldError);
+			AddCheck(TEXT("failed world load leaves the profile untouched"),
+				Profile->GetPlayerName().Equals(PlayerNameBefore) && Profile->GetDP() == DPBefore,
+				FString::Printf(TEXT("%s/%d"), *Profile->GetPlayerName(), Profile->GetDP()));
+			AddCheck(TEXT("failed world load leaves the calendar untouched"),
+				Calendar->GetYear() == YearBefore && Calendar->GetMonthIndex() == MonthBefore
+					&& Calendar->GetDay() == DayBefore,
+				Calendar->GetFullDateText());
+			AddCheck(TEXT("failed world load leaves the story state untouched"),
+				SaveState().Equals(LoadStorySnapshot), FString());
+
+			// Pending duel state round-trips without replaying the duel command.
+			FString DuelSceneId;
+			int32 DuelCommandIndex = INDEX_NONE;
+			for (const TPair<FString, FDAStoryScene>& Pair : Scenes)
+			{
+				for (int32 SceneCommandIndex = 0; SceneCommandIndex < Pair.Value.Commands.Num(); ++SceneCommandIndex)
+				{
+					if (Pair.Value.Commands[SceneCommandIndex].Type == EDAStoryCommandType::Duel)
+					{
+						DuelSceneId = Pair.Key;
+						DuelCommandIndex = SceneCommandIndex;
+						break;
+					}
+				}
+				if (DuelCommandIndex != INDEX_NONE)
+				{
+					break;
+				}
+			}
+			AddCheck(TEXT("a duel scene is available for persistence testing"), DuelCommandIndex != INDEX_NONE, DuelSceneId);
+
+			if (DuelCommandIndex != INDEX_NONE)
+			{
+				CurrentEventId = TEXT("E99Persistence");
+				CurrentSceneId = DuelSceneId;
+				CurrentCommands = Scenes.FindRef(CurrentSceneId).Commands;
+				CommandIndex = DuelCommandIndex;
+				bRunning = true;
+				bFreeRoam = false;
+				bWaitingForDuel = true;
+				bResumePendingDuel = false;
+				PendingDuel = FDAStoryPendingDuel();
+				PendingDuel.OpponentId = TEXT("jaden");
+				PendingDuel.OpponentName = TEXT("Jaden");
+				PendingDuel.OpponentDeckId = TEXT("jaden_elemental");
+				PendingDuel.Mode = TEXT("story");
+				PendingDuel.OnWin = TEXT("win.scene");
+				PendingDuel.OnLose = TEXT("lose.scene");
+				PendingDuel.OnDraw = TEXT("draw.scene");
+				PendingDuel.bTutorial = false;
+				PendingDuel.bAwardDP = false;
+				PendingDuel.PreWinsJaden = Profile->GetCounter(TEXT("wins_jaden"));
+				PendingDuel.PreWinsSyrus = Profile->GetCounter(TEXT("wins_syrus"));
+				PendingDuel.PreWinsTotal = Profile->GetCounter(TEXT("wins_total"));
+				PendingDuel.PreDuels = Profile->GetCounter(TEXT("duels_total"));
+				PendingDuel.PreDraws = Profile->GetCounter(TEXT("draws_total"));
+				PendingDuel.PreLosses = Profile->GetCounter(TEXT("losses_total"));
+
+				const FString PendingState = SaveState();
+				PendingDuel = FDAStoryPendingDuel();
+				bWaitingForDuel = false;
+				CommandIndex = 0;
+
+				FString PendingError;
+				AddCheck(TEXT("pending duel state loads"), LoadState(PendingState, PendingError), PendingError);
+				AddCheck(TEXT("pending duel restores the opponent"),
+					PendingDuel.OpponentId == TEXT("jaden") && PendingDuel.OpponentDeckId == TEXT("jaden_elemental"),
+					PendingDuel.OpponentId);
+				AddCheck(TEXT("pending duel restores branch scenes"),
+					PendingDuel.OnWin == TEXT("win.scene") && PendingDuel.OnLose == TEXT("lose.scene")
+						&& PendingDuel.OnDraw == TEXT("draw.scene"),
+					FString::Printf(TEXT("%s/%s/%s"), *PendingDuel.OnWin, *PendingDuel.OnLose, *PendingDuel.OnDraw));
+				AddCheck(TEXT("pending duel restores the command index"), CommandIndex == DuelCommandIndex,
+					FString::FromInt(CommandIndex));
+				AddCheck(TEXT("pending duel restores awaiting-result state"),
+					bWaitingForDuel && bResumePendingDuel && !bPendingContinue, FString());
+
+				// If the duel UI already recorded the result, loading must resolve
+				// the saved branch instead of presenting the duel again.
+				PendingDuel.OnWin.Reset();
+				PendingDuel.OnLose.Reset();
+				PendingDuel.OnDraw.Reset();
+				const FString RecordedResultState = SaveState();
+				Profile->IncrementCounter(TEXT("duels_total"), 1);
+				Profile->IncrementCounter(TEXT("wins_total"), 1);
+				const int32 RecordedDuels = Profile->GetCounter(TEXT("duels_total"));
+				const int32 RecordedWins = Profile->GetCounter(TEXT("wins_total"));
+				FString RecordedResultError;
+				AddCheck(TEXT("pending duel with a recorded result loads"),
+					LoadState(RecordedResultState, RecordedResultError), RecordedResultError);
+				AddCheck(TEXT("recorded result resolves without replaying the duel"),
+					!bWaitingForDuel && !bResumePendingDuel && bPendingContinue, FString());
+				AddCheck(TEXT("recorded result is not counted again"),
+					Profile->GetCounter(TEXT("duels_total")) == RecordedDuels
+						&& Profile->GetCounter(TEXT("wins_total")) == RecordedWins,
+					FString::Printf(TEXT("%d/%d"), Profile->GetCounter(TEXT("duels_total")),
+						Profile->GetCounter(TEXT("wins_total"))));
+
+				// Inference must cover every opponent, not only Jaden/Syrus:
+				// a Chazz win only moves wins_total (plus wins_chazz).
+				PendingDuel = FDAStoryPendingDuel();
+				PendingDuel.OpponentId = TEXT("chazz");
+				PendingDuel.PreWinsTotal = Profile->GetCounter(TEXT("wins_total"));
+				PendingDuel.PreWinsJaden = Profile->GetCounter(TEXT("wins_jaden"));
+				PendingDuel.PreWinsSyrus = Profile->GetCounter(TEXT("wins_syrus"));
+				PendingDuel.PreDraws = Profile->GetCounter(TEXT("draws_total"));
+				Profile->IncrementCounter(TEXT("wins_total"), 1);
+				bool bInferredWon = false;
+				bool bInferredDraw = false;
+				InferPendingDuelResult(bInferredWon, bInferredDraw);
+				AddCheck(TEXT("pending duel infers a non-Jaden win"), bInferredWon && !bInferredDraw, FString());
+
+				Profile->IncrementCounter(TEXT("draws_total"), 1);
+				InferPendingDuelResult(bInferredWon, bInferredDraw);
+				AddCheck(TEXT("pending duel prefers a draw"), !bInferredWon && bInferredDraw, FString());
+			}
+
+			// The outcome ledger makes non-reward event effects idempotent when
+			// an event is interrupted and replayed.
+			TArray<TSharedPtr<FJsonObject>> Outcomes;
+			TSharedPtr<FJsonObject> GrantDP = MakeShared<FJsonObject>();
+			GrantDP->SetStringField(TEXT("type"), TEXT("grant_dp"));
+			GrantDP->SetNumberField(TEXT("amount"), 11);
+			Outcomes.Add(GrantDP);
+			TSharedPtr<FJsonObject> GrantPack = MakeShared<FJsonObject>();
+			GrantPack->SetStringField(TEXT("type"), TEXT("grant_pack"));
+			GrantPack->SetStringField(TEXT("pack_id"), TEXT("basic_1a"));
+			GrantPack->SetNumberField(TEXT("count"), 1);
+			Outcomes.Add(GrantPack);
+
+			const int32 PackCountBefore = PendingPackGrants.FindRef(TEXT("basic_1a"));
+			const int32 LedgerDPBefore = Profile->GetDP();
+			const FString LedgerContext = TEXT("test:outcome-idempotency");
+			AppliedOutcomeKeys.Remove(LedgerContext + TEXT(":0"));
+			AppliedOutcomeKeys.Remove(LedgerContext + TEXT(":1"));
+			ApplyOutcomes(Outcomes, LedgerContext);
+			ApplyOutcomes(Outcomes, LedgerContext);
+			AddCheck(TEXT("replayed outcomes grant DP once"), Profile->GetDP() - LedgerDPBefore == 11,
+				FString::FromInt(Profile->GetDP() - LedgerDPBefore));
+			AddCheck(TEXT("replayed outcomes grant packs once"),
+				PendingPackGrants.FindRef(TEXT("basic_1a")) - PackCountBefore == 1,
+				FString::FromInt(PendingPackGrants.FindRef(TEXT("basic_1a")) - PackCountBefore));
+
+			const FString LedgerState = SaveState();
+			FString LedgerLoadError;
+			AddCheck(TEXT("outcome ledger persists"), LoadState(LedgerState, LedgerLoadError), LedgerLoadError);
+			ApplyOutcomes(Outcomes, LedgerContext);
+			AddCheck(TEXT("outcome ledger survives a save/load"), Profile->GetDP() - LedgerDPBefore == 11,
+				FString::FromInt(Profile->GetDP() - LedgerDPBefore));
+
+			// Nested story objects are canonical: insertion order must not change
+			// the serialized bytes.
+			const TMap<FString, int32> SavedPacks = PendingPackGrants;
+			const TMap<FString, FString> SavedObjectives = Objectives;
+			PendingPackGrants.Reset();
+			Objectives.Reset();
+			PendingPackGrants.Add(TEXT("basic_1a"), 1);
+			PendingPackGrants.Add(TEXT("master_fusions"), 2);
+			Objectives.Add(TEXT("objective_a"), TEXT("First"));
+			Objectives.Add(TEXT("objective_b"), TEXT("Second"));
+			const FString CanonicalA = SaveState();
+
+			PendingPackGrants.Reset();
+			Objectives.Reset();
+			PendingPackGrants.Add(TEXT("master_fusions"), 2);
+			PendingPackGrants.Add(TEXT("basic_1a"), 1);
+			Objectives.Add(TEXT("objective_b"), TEXT("Second"));
+			Objectives.Add(TEXT("objective_a"), TEXT("First"));
+			const FString CanonicalB = SaveState();
+			PendingPackGrants = SavedPacks;
+			Objectives = SavedObjectives;
+			AddCheck(TEXT("nested story state is canonical"), CanonicalA == CanonicalB, FString());
+
+			// Opponent runtime state (cooldowns, daily limits and duel counters)
+			// is an additive save section and must survive a real slot round-trip.
+			if (UDAOpponentSubsystem* Opponents = GameInstance->GetSubsystem<UDAOpponentSubsystem>())
+			{
+				const FDAOpponentRuntimeState PreviousOpponentState = Opponents->GetRuntimeState();
+				const bool bProfileWasInitialized = Profile->IsInitialized();
+				if (!bProfileWasInitialized)
+				{
+					// SaveSlot rejects uninitialized profiles; this test only needs a
+					// valid save context. The snapshot below restores it afterwards.
+					Profile->InitializeNewGame(TEXT("PERSIST"));
+				}
+
+				const FDAOpponentDef* CooldownOpponent = nullptr;
+				for (const FDAOpponentDef& Opponent : Opponents->GetOpponents())
+				{
+					if (Opponent.DuelRequest.CooldownDays >= 2
+						&& !Opponent.Role.Equals(TEXT("exam"), ESearchCase::IgnoreCase))
+					{
+						CooldownOpponent = &Opponent;
+						break;
+					}
+				}
+
+				if (CooldownOpponent)
+				{
+					FDAOpponentRuntimeState TestState;
+					TestState.LastRequestDay.Add(CooldownOpponent->Id, 10);
+					TestState.RequestDay = 10;
+					TestState.RequestsToday.Add(CooldownOpponent->Id, 1);
+					TestState.Wins.Add(CooldownOpponent->Id, 4);
+					TestState.Losses.Add(CooldownOpponent->Id, 2);
+					TestState.Draws.Add(CooldownOpponent->Id, 1);
+					Opponents->SetRuntimeState(TestState);
+
+					const FString OpponentSlotName = TEXT("DAStoryPlaythroughTest_Opponents");
+					FString OpponentSaveError;
+					const bool bOpponentSaved = SaveSubsystem->SaveNamedSlotWithContext(
+						OpponentSlotName, -1, Profile, Calendar, Settings, OpponentSaveError);
+					AddCheck(TEXT("opponent runtime state saves through the provider"), bOpponentSaved,
+						OpponentSaveError);
+
+					// Inspect the real file so the assertions cover provider
+					// registration and BuildPayload, not only the read methods.
+					bool bPayloadInspected = false;
+					TArray<uint8> SaveBytes;
+					const FString SavePath = UDASaveSubsystem::GetSaveFilePath(OpponentSlotName);
+					if (FFileHelper::LoadFileToArray(SaveBytes, *SavePath) && SaveBytes.Num() > 16)
+					{
+						TArray<uint8> SaveArchive;
+						SaveArchive.Append(SaveBytes.GetData(), SaveBytes.Num() - 16);
+						if (UDASaveGame* SaveObject = Cast<UDASaveGame>(UGameplayStatics::LoadGameFromMemory(SaveArchive)))
+						{
+							TSharedPtr<FJsonObject> SavedPayload;
+							const TSharedRef<TJsonReader<>> PayloadReader =
+								TJsonReaderFactory<>::Create(SaveObject->JsonPayload);
+							if (FJsonSerializer::Deserialize(PayloadReader, SavedPayload) && SavedPayload.IsValid())
+							{
+								bPayloadInspected = true;
+								AddCheck(TEXT("real save payload contains the opponents section"),
+									SavedPayload->HasField(TEXT("opponents")), FString());
+								AddCheck(TEXT("real save payload contains the world section"),
+									SavedPayload->HasField(TEXT("world")), FString());
+							}
+						}
+					}
+					AddCheck(TEXT("real save payload is inspectable"), bPayloadInspected, SavePath);
+
+					Opponents->ResetRuntimeState();
+					FString OpponentLoadError;
+					const bool bOpponentLoaded = bOpponentSaved && SaveSubsystem->LoadNamedSlotWithContext(
+						OpponentSlotName, Profile, Calendar, Settings, OpponentLoadError);
+					AddCheck(TEXT("opponent runtime state loads through the provider"), bOpponentLoaded,
+						OpponentLoadError);
+
+					if (bOpponentLoaded)
+					{
+						const FDAOpponentRuntimeState& LoadedState = Opponents->GetRuntimeState();
+						AddCheck(TEXT("opponent cooldown day round-trips"),
+							LoadedState.LastRequestDay.FindRef(CooldownOpponent->Id) == 10,
+							FString::FromInt(LoadedState.LastRequestDay.FindRef(CooldownOpponent->Id)));
+						AddCheck(TEXT("opponent request day and counters round-trip"),
+							LoadedState.RequestDay == 10
+								&& LoadedState.RequestsToday.FindRef(CooldownOpponent->Id) == 1
+								&& LoadedState.Wins.FindRef(CooldownOpponent->Id) == 4
+								&& LoadedState.Losses.FindRef(CooldownOpponent->Id) == 2
+								&& LoadedState.Draws.FindRef(CooldownOpponent->Id) == 1,
+							FString::Printf(TEXT("day %d, %d requested today"), LoadedState.RequestDay,
+								LoadedState.RequestsToday.FindRef(CooldownOpponent->Id)));
+
+						FString LoadedCooldownReason;
+						const bool bBlockedAfterLoad = !Opponents->CanRequestDuel(
+							CooldownOpponent->Id, 11, 99999, LoadedCooldownReason);
+						AddCheck(TEXT("loaded opponent cooldown still blocks an early request"),
+							bBlockedAfterLoad, LoadedCooldownReason);
+						const bool bAllowedAfterLoad = Opponents->CanRequestDuel(
+							CooldownOpponent->Id, 10 + CooldownOpponent->DuelRequest.CooldownDays, 99999,
+							LoadedCooldownReason);
+						AddCheck(TEXT("loaded opponent cooldown expires after its days"),
+							bAllowedAfterLoad, LoadedCooldownReason);
+					}
+
+					FString DeleteError;
+					SaveSubsystem->DeleteNamedSlot(OpponentSlotName, DeleteError);
+				}
+				else
+				{
+					AddInfo(TEXT("no roster opponent with a multi-day cooldown; opponent persistence case skipped"));
+				}
+
+				// A save written before the opponents section existed must load the
+				// lane's defaults, never the previous session's cooldown state.
+				FDAOpponentRuntimeState StaleState;
+				StaleState.LastRequestDay.Add(TEXT("jaden"), 99);
+				StaleState.RequestDay = 99;
+				StaleState.RequestsToday.Add(TEXT("jaden"), 5);
+				Opponents->SetRuntimeState(StaleState);
+
+				TSharedPtr<FJsonObject> LegacyRoot = MakeShared<FJsonObject>();
+				LegacyRoot->SetNumberField(TEXT("version"), UDASaveSubsystem::CurrentVersion);
+				Profile->WriteSaveData(LegacyRoot);
+				Calendar->WriteSaveData(LegacyRoot);
+				TSharedPtr<FJsonObject> LegacySettings = MakeShared<FJsonObject>();
+				Settings->WriteSaveData(LegacySettings);
+				LegacyRoot->SetObjectField(TEXT("settings"), LegacySettings);
+
+				FString LegacyError;
+				const bool bLegacyLoaded = SaveSubsystem->LoadPayloadJsonWithContext(
+					UDASaveSubsystem::SerializeCanonicalJson(LegacyRoot), Profile, Calendar, Settings, LegacyError);
+				AddCheck(TEXT("payload without an opponents section loads"), bLegacyLoaded, LegacyError);
+				AddCheck(TEXT("absent opponents section loads defaults"),
+					Opponents->GetRuntimeState().LastRequestDay.Num() == 0
+						&& Opponents->GetRuntimeState().RequestDay == -1
+						&& Opponents->GetRuntimeState().Wins.Num() == 0,
+					FString::FromInt(Opponents->GetRuntimeState().LastRequestDay.Num()));
+
+				Opponents->SetRuntimeState(PreviousOpponentState);
+				if (!bProfileWasInitialized)
+				{
+					FString ProfileRestoreError;
+					Profile->ReadSaveData(LoadProfileSnapshot, ProfileRestoreError);
+					Calendar->ReadSaveData(LoadCalendarSnapshot, ProfileRestoreError);
+					if (!ProfileRestoreError.IsEmpty())
+					{
+						AddInfo(FString::Printf(TEXT("opponent persistence profile restore warning: %s"),
+							*ProfileRestoreError));
+					}
+				}
+			}
+
+			// Calendar upper bound must not wrap backwards.
+			Calendar->SetDate(UDACalendarSubsystem::MaxSupportedYear, 11, 30, EDADayPeriod::Night);
+			const int32 AbsoluteBeforeWrap = Calendar->GetAbsoluteDay();
+			Calendar->AdvanceDay();
+			AddCheck(TEXT("calendar does not wrap at MaxSupportedYear"),
+				Calendar->GetYear() == UDACalendarSubsystem::MaxSupportedYear
+					&& Calendar->GetMonthIndex() == 11 && Calendar->GetDay() == 30
+					&& Calendar->GetAbsoluteDay() >= AbsoluteBeforeWrap,
+				Calendar->GetFullDateText());
+			AddCheck(TEXT("max-year February stays inside the supported range"),
+				Calendar->GetDaysInMonth(UDACalendarSubsystem::MaxSupportedYear, 4) == 28,
+				FString::FromInt(Calendar->GetDaysInMonth(UDACalendarSubsystem::MaxSupportedYear, 4)));
+			int32 NextExamYear = 0;
+			int32 NextExamMonth = 0;
+			int32 NextExamDay = 0;
+			const bool bHasNextExam = Calendar->GetNextExamDate(NextExamYear, NextExamMonth, NextExamDay);
+			AddCheck(TEXT("max-year next exam never moves backwards"),
+				!bHasNextExam
+					|| (NextExamYear <= UDACalendarSubsystem::MaxSupportedYear
+						&& Calendar->GetAbsoluteDayFor(NextExamYear, NextExamMonth, NextExamDay) >= Calendar->GetAbsoluteDay()),
+				bHasNextExam ? FString::Printf(TEXT("%d-%d-%d"), NextExamYear, NextExamMonth, NextExamDay) : FString(TEXT("<none>")));
+
+			// Profile.initialized round-trips, with legacy payloads defaulting true.
+			TSharedPtr<FJsonObject> InitializedProbe = MakeShared<FJsonObject>();
+			Profile->WriteSaveData(InitializedProbe);
+			const TSharedPtr<FJsonObject>* ProbeProfile = nullptr;
+			if (InitializedProbe->TryGetObjectField(TEXT("profile"), ProbeProfile) && ProbeProfile && ProbeProfile->IsValid())
+			{
+				(*ProbeProfile)->SetBoolField(TEXT("initialized"), false);
+			}
+			FString InitError;
+			AddCheck(TEXT("profile initialized round-trips"), Profile->ReadSaveData(InitializedProbe, InitError),
+				InitError);
+			AddCheck(TEXT("profile initialized false is preserved"), !Profile->IsInitialized(), FString());
+
+			// Duel-request cooldowns from roster data are enforced.
+			if (UDAOpponentSubsystem* Opponents = GameInstance->GetSubsystem<UDAOpponentSubsystem>())
+			{
+				const FDAOpponentRuntimeState PreviousOpponentState = Opponents->GetRuntimeState();
+				const FDAOpponentDef* CooldownOpponent = nullptr;
+				for (const FDAOpponentDef& Opponent : Opponents->GetOpponents())
+				{
+					if (Opponent.DuelRequest.CooldownDays >= 2
+						&& !Opponent.Role.Equals(TEXT("exam"), ESearchCase::IgnoreCase))
+					{
+						CooldownOpponent = &Opponent;
+						break;
+					}
+				}
+
+				if (CooldownOpponent)
+				{
+					FDAOpponentRuntimeState CooldownState;
+					CooldownState.LastRequestDay.Add(CooldownOpponent->Id, 10);
+					Opponents->SetRuntimeState(CooldownState);
+
+					FString CooldownReason;
+					const bool bBlocked = !Opponents->CanRequestDuel(CooldownOpponent->Id, 11, 99999, CooldownReason);
+					AddCheck(TEXT("opponent cooldown blocks an early request"), bBlocked, CooldownReason);
+					const bool bAllowed = Opponents->CanRequestDuel(
+						CooldownOpponent->Id, 10 + CooldownOpponent->DuelRequest.CooldownDays, 99999, CooldownReason);
+					AddCheck(TEXT("opponent cooldown expires after its days"), bAllowed, CooldownReason);
+				}
+				else
+				{
+					AddInfo(TEXT("no roster opponent with a multi-day cooldown; cooldown case skipped"));
+				}
+				Opponents->SetRuntimeState(PreviousOpponentState);
+			}
+
+			FString RestoreError;
+			LoadState(StorySnapshot, RestoreError);
+			Profile->ReadSaveData(ProfileSnapshot, RestoreError);
+			Calendar->ReadSaveData(CalendarSnapshot, RestoreError);
+			Settings->ReadSaveData(SettingsSnapshot, RestoreError);
+			if (!RestoreError.IsEmpty())
+			{
+				AddInfo(FString::Printf(TEXT("persistence snapshot restore warning: %s"), *RestoreError));
+			}
+		}
+	}
+
 	const bool bAllPass = Failed == 0 && EventFailures == 0 && CompletedCount == 35;
 	const double Elapsed = FPlatformTime::Seconds() - StartTime;
-
 	Report.Add(FString::Printf(
 		TEXT("SUMMARY %s: %d/%d events started, %d/%d events completed, %d/%d story duels resolved (%d/%d full campaign), %d/%d email contacts, %d pending packs, %d checks passed, %d checks failed, %d event failures"),
 		bAllPass ? TEXT("PASS") : TEXT("FAIL"), StartedCount, 35, CompletedCount, 35,
 		TotalDuelResolved, TotalDuelCommands, FullCampaignDuelResolved, FullCampaignDuelCommands,
 		UnlockedEmails, ExpectedEmails, PendingPackGrants.Num(), Passed, Failed, EventFailures));
-
-	RestoreSnapshot();
 
 	LastPlaythroughReport = FString::Join(Report, TEXT("\n"));
 	LastPlaythroughReport += FString::Printf(TEXT("\n%s in %.3fs"),

@@ -25,6 +25,7 @@ import collections
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -179,6 +180,11 @@ DECK_MAP: list[dict[str, Any]] = [
         "theme_ids": [18, 50, 110, 127, 140, 229, 362, 373, 419, 460, 836, 885, 1021, 1060, 1085, 1126],
     },
     {
+        "id": "sheppard_year1", "canon": "sheppard_year1", "opponent": "sheppard",
+        "name": "Chancellor Sheppard - Year 1", "variant": "base",
+        "themes": ["Dragon", "Burst", "Megamorph", "Sebek", "Dragon's Mirror"],
+    },
+    {
         "id": "syrus_roids", "canon": "syrus_year1", "opponent": "syrus",
         "name": "Syrus Truesdale - Vehicroid", "variant": "base",
         "themes": ["Roid", "Machine", "Warrior"],
@@ -244,11 +250,23 @@ def load_json(path: Path) -> Any:
         return json.load(handle)
 
 
-def write_json(path: Path, value: Any) -> None:
+def _write_text_atomic(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as handle:
-        json.dump(value, handle, indent=2, ensure_ascii=False)
-        handle.write("\n")
+    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name):
+            try:
+                os.unlink(temp_name)
+            except OSError:
+                pass
+
+
+def write_json(path: Path, value: Any) -> None:
+    _write_text_atomic(path, json.dumps(value, indent=2, ensure_ascii=False) + "\n")
 
 
 def card_name_map(cards: dict[int, dict]) -> dict[str, int]:
@@ -652,7 +670,8 @@ def write_report(rows: list[dict], rules: Rules, path: Path) -> None:
         f"- Runtime opponent decks imported: **{len(rows)}**",
         f"- Generated fill slots across runtime variants: **{sum(row['deck'].get('generated_fill', 0) for row in rows)}**",
         "- A04 audit before import: **30/36 constructed decks failed** (old shells with banned/limited cards).",
-        "- A04 audit after import: **36/36 constructed decks pass**; full runtime name/copy audit: **31/31 pass**.",
+        f"- A04 audit after import: **all constructed decks pass**; full runtime name/copy audit: "
+        f"**{len(rows)}/{len(rows)} pass**.",
         "- Canon records not converted (starters/event-only/unknown variants): see the table below.",
         "",
         "## Runtime mapping",
@@ -674,7 +693,7 @@ def write_report(rows: list[dict], rules: Rules, path: Path) -> None:
         "## Canon records not converted to runtime opponent decks",
         "",
         "These remain A01/canon records (starters, event-only decks, or unknown variants)",
-        "and are not referenced by the current 31-deck runtime roster.",
+        f"and are not referenced by the current {len(rows)}-deck runtime roster.",
         "",
         "| Canon deck | Status | Unresolved slots | Reason |",
         "| --- | --- | ---: | --- |",
@@ -695,15 +714,14 @@ def write_report(rows: list[dict], rules: Rules, path: Path) -> None:
         "",
         "Run `python Tools/opponents/import_canon_decks.py --check` for the full constructed-deck audit.",
         "",
-        "## Known A06 coordination items (not edited here)",
+        "## Notes",
         "",
-        "- `Data/decks.json` `jaden` still has four cards named `Luster Dragon`; A04's id-based static audit does not reject it, but the player-deck name-copy rule would. The runtime opponent copy is normalised to three and records the swap.",
-        "- `Tools/economy/sync_canon.py` still writes `max_extra: 20`, and `DAEconomyTests.cpp` still asserts 20-card Extra Deck legality. The shared rules file and `DADeckLogic` load the new 15-card value, but A06 must update those two files or the next sync/test run will reintroduce 20.",
+        "- `Data/decks.json` `jaden` has three printed `Luster Dragon` copies (ids 780 x2 and 663 x1); the runtime opponent copy keeps the same three-card count.",
+        "- `Tools/economy/sync_canon.py` and `DAEconomyTests.cpp` both use the 15-card Extra Deck cap checked by this importer.",
         "",
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as handle:
-        handle.write("\n".join(lines))
+    _write_text_atomic(path, "\n".join(lines))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -712,11 +730,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--report", default=str(DEFAULT_REPORT), help="markdown report path")
     args = parser.parse_args(argv)
 
-    cards = {int(card["id"]): card for card in load_json(CARDS_PATH)}
-    rules = Rules(load_json(RULES_PATH), cards)
-    canon = load_json(CANON_DECKS)
-    names = card_name_map(cards)
-    roster_raw = load_json(DATA / "Opponents" / "roster.json")
+    try:
+        cards = {int(card["id"]): card for card in load_json(CARDS_PATH)}
+        rules = Rules(load_json(RULES_PATH), cards)
+        canon = load_json(CANON_DECKS)
+        names = card_name_map(cards)
+        roster_raw = load_json(DATA / "Opponents" / "roster.json")
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"error: cannot load opponent deck inputs: {exc}", file=sys.stderr)
+        return 2
     roster = {str(entry["id"]): entry for entry in roster_raw.get("duelists", [])}
     canon_by_id = {str(entry["id"]): entry for entry in canon.get("decks", [])}
 

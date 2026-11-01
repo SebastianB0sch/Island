@@ -14,5 +14,6 @@ namespace DAEconomyTests
 		UDAInventorySubsystem* Inventory,
 		UDAShopSubsystem* Shop,
 		UDADeckLogic* DeckLogic,
-		UCardDatabaseSubsystem* Database);
+		UCardDatabaseSubsystem* Database,
+		int32* OutFailures = nullptr);
 }

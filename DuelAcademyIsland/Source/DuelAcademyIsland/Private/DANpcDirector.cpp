@@ -69,6 +69,19 @@ void ADANpcDirector::RegisterSpawnPoint(ADANpcSpawnPoint* SpawnPoint)
 		return;
 	}
 
+	// Keep the first registration of an id. Overwriting it would orphan the NPC
+	// that the previous point already spawned (and made deterministic ordering
+	// depend on the caller).
+	if (const TWeakObjectPtr<ADANpcSpawnPoint>* Existing = SpawnPoints.Find(SpawnPoint->SpawnPointId))
+	{
+		if (Existing->IsValid() && Existing->Get() != SpawnPoint)
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Duplicate NPC spawn point id '%s'; keeping the first registration."), *SpawnPoint->SpawnPointId);
+			return;
+		}
+	}
+
 	SpawnPoints.Add(SpawnPoint->SpawnPointId, SpawnPoint);
 
 	if (SpawnPoint->bSpawnOnBeginPlay && !SpawnPoint->IsOccupied())
@@ -80,6 +93,13 @@ void ADANpcDirector::RegisterSpawnPoint(ADANpcSpawnPoint* SpawnPoint)
 void ADANpcDirector::UnregisterSpawnPoint(ADANpcSpawnPoint* SpawnPoint)
 {
 	if (!SpawnPoint)
+	{
+		return;
+	}
+	// Only the registered owner of an id may remove it; a rejected duplicate
+	// must not despawn the surviving point's NPC.
+	const TWeakObjectPtr<ADANpcSpawnPoint>* Registered = SpawnPoints.Find(SpawnPoint->SpawnPointId);
+	if (!Registered || Registered->Get() != SpawnPoint)
 	{
 		return;
 	}
@@ -102,16 +122,28 @@ int32 ADANpcDirector::RefreshSpawnPoints()
 			Points.Add(Point);
 		}
 	}
+	// Keep duplicate-id resolution independent of actor iteration order.
+	Points.Sort([](const ADANpcSpawnPoint& A, const ADANpcSpawnPoint& B)
+	{
+		if (A.SpawnPointId != B.SpawnPointId)
+		{
+			return A.SpawnPointId < B.SpawnPointId;
+		}
+		return A.GetName() < B.GetName();
+	});
 
 	for (ADANpcSpawnPoint* Point : Points)
 	{
 		if (Point && !Point->SpawnPointId.IsEmpty())
 		{
 			const TWeakObjectPtr<ADANpcSpawnPoint>* Existing = SpawnPoints.Find(Point->SpawnPointId);
-			if (Existing && Existing->IsValid())
+			if (Existing && Existing->IsValid() && Existing->Get() != Point)
 			{
 				UE_LOG(LogDuelAcademyIsland, Warning,
 					TEXT("Duplicate NPC spawn point id '%s'; keeping the first registration."), *Point->SpawnPointId);
+				// Release anything the losing point still holds so it cannot
+				// survive as an unregistered orphan.
+				Point->DespawnNpc();
 				continue;
 			}
 			SpawnPoints.Add(Point->SpawnPointId, Point);
@@ -187,19 +219,32 @@ void ADANpcDirector::ApplySchedule(const FString& ScheduleId, const FString& Wee
 
 	TArray<FString> Ids;
 	SpawnPoints.GetKeys(Ids);
+	// TMap key order is not a spawn contract: sort so the same schedule always
+	// spawns NPCs in the same order (navigation and save diffs stay stable).
+	Ids.Sort();
 
 	for (const FString& Id : Ids)
 	{
 		ADANpcSpawnPoint* Point = SpawnPoints.FindRef(Id).Get();
 		if (!Point)
 		{
+			// The spawn point was destroyed at runtime. Its NPC is not reachable
+			// through a registered point any more, so destroy it instead of
+			// leaving an owner-only orphan behind.
+			AActor* Orphan = ActiveNpcs.FindRef(Id).Get();
 			SpawnPoints.Remove(Id);
 			ActiveNpcs.Remove(Id);
+			if (IsValid(Orphan))
+			{
+				OnNpcDespawned.Broadcast(Id, Orphan);
+				Orphan->Destroy();
+			}
 			continue;
 		}
 
 		const bool bShouldBeActive = Point->MatchesSchedule(CurrentScheduleId, CurrentWeekday, CurrentPeriod, ActiveEvent);
-		const bool bHasNpc = ActiveNpcs.Contains(Id) && ActiveNpcs.FindRef(Id).IsValid();
+		AActor* PointNpc = Point->GetSpawnedNpc();
+		const bool bHasNpc = IsValid(PointNpc);
 
 		if (bShouldBeActive && !bHasNpc)
 		{
@@ -209,7 +254,62 @@ void ADANpcDirector::ApplySchedule(const FString& ScheduleId, const FString& Wee
 		{
 			DespawnAtPoint(Id);
 		}
+		else if (bShouldBeActive && bHasNpc)
+		{
+			// Points can be occupied by an NPC spawned outside this map (or the
+			// active map can be stale after a level reload); re-adopt it.
+			ActiveNpcs.Add(Id, PointNpc);
+		}
 	}
+}
+
+void ADANpcDirector::RestoreScheduleState(bool bInApplied, const FString& InScheduleId,
+	const FString& InWeekday, const FString& InPeriod, const FString& InEvent)
+{
+	// Set the event before the filter so ApplySchedule evaluates the restored
+	// event exactly once (calling SetActiveEvent first would re-run the old
+	// filter, then the restored one).
+	ActiveEvent = InEvent;
+
+	if (!bInApplied)
+	{
+		const bool bHadSchedule = bHasAppliedSchedule;
+		bHasAppliedSchedule = false;
+		CurrentScheduleId.Reset();
+		CurrentWeekday.Reset();
+		CurrentPeriod.Reset();
+
+		if (!bHadSchedule)
+		{
+			return;
+		}
+
+		// The save predates the first schedule application: restore the
+		// begin-play baseline instead of leaving the previous session's cast
+		// spawned by the schedule that was just cleared.
+		TArray<FString> Ids;
+		SpawnPoints.GetKeys(Ids);
+		Ids.Sort();
+		for (const FString& Id : Ids)
+		{
+			ADANpcSpawnPoint* Point = SpawnPoints.FindRef(Id).Get();
+			if (Point && !Point->bSpawnOnBeginPlay && Point->IsOccupied())
+			{
+				DespawnAtPoint(Id);
+			}
+		}
+		for (const FString& Id : Ids)
+		{
+			ADANpcSpawnPoint* Point = SpawnPoints.FindRef(Id).Get();
+			if (Point && Point->bSpawnOnBeginPlay && !Point->IsOccupied())
+			{
+				SpawnAtPoint(Id);
+			}
+		}
+		return;
+	}
+
+	ApplySchedule(InScheduleId, InWeekday, InPeriod);
 }
 
 void ADANpcDirector::SetActiveEvent(const FString& EventId)
@@ -219,6 +319,14 @@ void ADANpcDirector::SetActiveEvent(const FString& EventId)
 		return;
 	}
 	ActiveEvent = EventId;
+
+	// Before the first ApplySchedule the filter is empty (wildcard). Re-applying
+	// it here would spawn every point, so only record the event until the
+	// schedule owner applies a real period.
+	if (!bHasAppliedSchedule)
+	{
+		return;
+	}
 
 	// Event overrides are evaluated by the spawn point; re-run the current filter.
 	ApplySchedule(CurrentScheduleId, CurrentWeekday, CurrentPeriod);
@@ -237,13 +345,24 @@ AActor* ADANpcDirector::SpawnAtPoint(const FString& SpawnPointId)
 		return nullptr;
 	}
 
+	// Adopt an NPC that the point already holds (external spawn or a reloaded
+	// active map) instead of broadcasting a second spawn for it.
+	if (AActor* Occupant = Point->GetSpawnedNpc(); IsValid(Occupant))
+	{
+		ActiveNpcs.Add(SpawnPointId, Occupant);
+		return Occupant;
+	}
+
 	AActor* Npc = Point->SpawnNpc(this);
-	if (Npc)
+	// A spawn listener may already have destroyed the NPC; do not publish a
+	// dead actor into the active map or the director delegate.
+	if (IsValid(Npc))
 	{
 		ActiveNpcs.Add(SpawnPointId, Npc);
 		OnNpcSpawned.Broadcast(SpawnPointId, Npc);
+		return IsValid(Npc) ? Npc : nullptr;
 	}
-	return Npc;
+	return nullptr;
 }
 
 void ADANpcDirector::DespawnAtPoint(const FString& SpawnPointId)
@@ -254,6 +373,7 @@ void ADANpcDirector::DespawnAtPoint(const FString& SpawnPointId)
 	{
 		Npc = Found->Get();
 	}
+	AActor* PointNpc = Point ? Point->GetSpawnedNpc() : nullptr;
 	ActiveNpcs.Remove(SpawnPointId);
 
 	if (Npc)
@@ -265,7 +385,9 @@ void ADANpcDirector::DespawnAtPoint(const FString& SpawnPointId)
 	{
 		Point->DespawnNpc();
 	}
-	else if (Npc)
+	// If the active map and the point disagree (external spawn / reload), make
+	// sure the bookkeeping NPC does not survive as an orphan.
+	if (IsValid(Npc) && Npc != PointNpc)
 	{
 		Npc->Destroy();
 	}
@@ -319,6 +441,12 @@ bool ADANpcDirector::TeleportNpcToPoint(const FString& NpcId, const FString& Spa
 
 	Npc->SetActorLocationAndRotation(Point->GetSpawnLocation(), Point->GetSpawnRotation(), false, nullptr,
 		ETeleportType::TeleportPhysics);
+	// Wandering is anchored at BeginPlay's location; move the anchor with the
+	// NPC or it will stroll back to the old spot.
+	if (ADAStudentNPC* Student = Cast<ADAStudentNPC>(Npc))
+	{
+		Student->SetWanderHome(Npc->GetActorLocation());
+	}
 	return true;
 }
 
@@ -340,6 +468,10 @@ bool ADANpcDirector::MoveNpcToLocation(const FString& NpcId, FVector Location, f
 
 	Npc->SetActorLocationAndRotation(Location, FRotator(0.f, Yaw, 0.f), false, nullptr,
 		ETeleportType::TeleportPhysics);
+	if (ADAStudentNPC* Student = Cast<ADAStudentNPC>(Npc))
+	{
+		Student->SetWanderHome(Location);
+	}
 	return true;
 }
 

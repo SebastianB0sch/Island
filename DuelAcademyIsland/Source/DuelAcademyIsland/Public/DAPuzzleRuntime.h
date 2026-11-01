@@ -75,8 +75,19 @@ public:
 	/** Loads one puzzle file.  Returns false with a detailed OutError on bad JSON. */
 	static bool LoadPuzzleFile(const FString& Path, FDAPuzzleDefinition& OutPuzzle, FString& OutError);
 
-	/** Loads every P*.json in Directory in deterministic filename order. */
+	/**
+	 * Loads every P*.json in Directory in deterministic filename order.
+	 * OutPuzzles is reset first; on failure it is left empty rather than
+	 * partially populated.  Duplicate puzzle ids are rejected.
+	 */
 	static bool LoadPuzzleDirectory(const FString& Directory, TArray<FDAPuzzleDefinition>& OutPuzzles, FString& OutError);
+
+	/**
+	 * Loads one puzzle by its plain file stem.  Unsafe ids (separators, parent
+	 * components, non-slug characters) are rejected before touching the file
+	 * system, so callers never need to concatenate Content paths themselves.
+	 */
+	static bool LoadPuzzleById(const FString& PuzzleId, FDAPuzzleDefinition& OutPuzzle, FString& OutError);
 
 	/** Builds the fixed board consumed by FDuelEngine::StartScenario. */
 	static bool BuildScenario(const FDAPuzzleDefinition& Puzzle, FDuelScenario& OutScenario, FString& OutError);
@@ -84,11 +95,19 @@ public:
 	/**
 	 * Starts the authored scenario and executes every solution step through the
 	 * engine.  A puzzle passes only when the player wins on the final step.
+	 *
+	 * Replay owns no profile, save or reward state: it creates a transient duel,
+	 * validates the authored line and returns.  Callers must grant the puzzle
+	 * reward exactly once on the successful transition (never from Replay).
 	 */
 	static bool Replay(UCardDatabaseSubsystem* Database, const FDAPuzzleDefinition& Puzzle,
 		FDAPuzzleReplayResult& OutResult, FString& OutError);
 
-	/** Convenience wrapper used by the exam suite for the authored timed puzzle. */
+	/**
+	 * Convenience wrapper used by the exam suite for the authored timed puzzle.
+	 * PuzzleId must be a plain file stem (letters, digits, '_' or '-'); path
+	 * separators and parent-directory components are rejected.
+	 */
 	static bool ReplayById(UCardDatabaseSubsystem* Database, const FString& PuzzleId,
 		FDAPuzzleReplayResult& OutResult, FString& OutError);
 };

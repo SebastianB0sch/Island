@@ -1,6 +1,7 @@
 #include "DADuelRulesSelfTest.h"
 
 #include "DADuelEngine.h"
+#include "DADuelistAI.h"
 #include "DACardRecords.h"
 #include "DuelAcademyIsland.h"
 
@@ -11,6 +12,26 @@
 #include "HAL/PlatformMisc.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
+
+namespace DADuelSelfTestArgs
+{
+	DUELACADEMYISLAND_API int32 ParseRequestedIterations(int32 DefaultIterations, int32 MaxIterations, bool* OutRequested)
+	{
+		const int32 ClampedDefault = FMath::Clamp(DefaultIterations, 1, MaxIterations);
+		FString CountText;
+		const bool bRequested = FParse::Value(FCommandLine::Get(), TEXT("DADuelSelfTest="), CountText);
+		if (OutRequested)
+		{
+			*OutRequested = bRequested;
+		}
+		if (!bRequested)
+		{
+			return ClampedDefault;
+		}
+		const int32 Parsed = FCString::Atoi(*CountText);
+		return Parsed > 0 ? FMath::Clamp(Parsed, 1, MaxIterations) : ClampedDefault;
+	}
+}
 
 namespace
 {
@@ -57,6 +78,31 @@ namespace
 			}
 		}
 		return 0;
+	}
+
+	int32 FindUidInSide(const FDuelEngine& Duel, EDuelOwner Side, int32 CardId)
+	{
+		const FDuelSide& State = Duel.GetSide(Side);
+		auto FindInArray = [CardId](const TArray<FDuelCard>& Cards) -> int32
+		{
+			for (const FDuelCard& Card : Cards)
+			{
+				if (Card.IsValid() && Card.Data.Id == CardId)
+				{
+					return Card.Uid;
+				}
+			}
+			return 0;
+		};
+		int32 Uid = FindInArray(State.Monsters);
+		if (Uid == 0) Uid = FindInArray(State.Spells);
+		if (Uid == 0 && State.Field.IsValid() && State.Field.Data.Id == CardId) Uid = State.Field.Uid;
+		if (Uid == 0) Uid = FindInArray(State.Hand);
+		if (Uid == 0) Uid = FindInArray(State.Deck);
+		if (Uid == 0) Uid = FindInArray(State.Graveyard);
+		if (Uid == 0) Uid = FindInArray(State.Banished);
+		if (Uid == 0) Uid = FindInArray(State.Extra);
+		return Uid;
 	}
 
 	const FCardRecord* FindRecordByPredicate(UCardDatabaseSubsystem* Database,
@@ -106,6 +152,13 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 	}
 	Report.Check(Main40.Num() == 40, TEXT("synthetic 40-card Main Deck was built"));
 	Report.Check(FusionId > 0, TEXT("synthetic Extra Deck has a Fusion Monster"));
+	if (Main40.Num() < 2)
+	{
+		// Every deck check below indexes Main40[0]/[1]; a malformed card
+		// database must not turn a failed check into an OOB crash.
+		LogReport(Report);
+		return Report;
+	}
 
 	{
 		FDuelEngine Duel(Database, 41);
@@ -316,6 +369,61 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 		}
 	}
 
+	// ---- negated chain-link cleanup --------------------------------------
+	{
+		const FCardRecord* NormalSpell = FindRecordByPredicate(Database, [](const FCardRecord& Card)
+		{
+			return Card.Name == TEXT("Sparks") && Card.CardType == TEXT("Spell");
+		});
+		const TArray<int32> ChainCards = BuildMainDeck(Database, 2);
+		Report.Check(NormalSpell != nullptr && ChainCards.Num() >= 2,
+			TEXT("negated-chain test cards were found"));
+		if (NormalSpell && ChainCards.Num() >= 2)
+		{
+			FDuelScenario ChainScenario;
+			ChainScenario.Id = TEXT("SELFTEST_CHAIN_NEGATE");
+			ChainScenario.Name = TEXT("Negated chain cleanup");
+			ChainScenario.PlayerDeck = TArray<int32>{ ChainCards[0] };
+			ChainScenario.OpponentDeck = TArray<int32>{ ChainCards[1] };
+			ChainScenario.bPlayerGoesFirst = true;
+			ChainScenario.bDrawOnFirstTurn = false;
+
+			FDuelScenarioCard SpellField;
+			SpellField.CardId = NormalSpell->Id;
+			SpellField.Zone = EDuelZone::SpellTrap;
+			SpellField.ZoneIndex = 0;
+			ChainScenario.PlayerField.Add(SpellField);
+
+			FDuelEngine ChainDuel(Database, 51);
+			FString ChainError;
+			Report.Check(ChainDuel.StartScenario(ChainScenario, ChainError),
+				TEXT("negated-chain scenario starts"));
+			if (ChainDuel.GetSide(EDuelOwner::Player).Spells[0].IsValid())
+			{
+				const int32 SpellUid = ChainDuel.GetSide(EDuelOwner::Player).Spells[0].Uid;
+				FDuelChainLink Link;
+				Link.CardUid = SpellUid;
+				Link.Controller = EDuelOwner::Player;
+				Link.Speed = EDuelSpellSpeed::Speed1;
+				Link.LinkType = EDuelChainLinkType::Spell;
+				Link.Label = NormalSpell->Name;
+				Link.bCardEffect = true;
+				Report.Check(ChainDuel.StartChain(Link, ChainError) == 1,
+					TEXT("negated-chain link starts"));
+				Report.Check(ChainDuel.NegateChainLink(1, ChainError),
+					TEXT("chain link can be negated"));
+				Report.Check(ChainDuel.ResolveChain(ChainError) == 1 && !ChainDuel.IsChainOpen(),
+					TEXT("negated chain resolves and closes"));
+				Report.Check(!ChainDuel.GetSide(EDuelOwner::Player).Spells[0].IsValid(),
+					TEXT("a negated one-shot Spell leaves the field"));
+			}
+			else
+			{
+				Report.Check(false, TEXT("negated-chain scenario placed a Spell"));
+			}
+		}
+	}
+
 	// ---- timing / quick-play / counter trap ------------------------------
 	{
 		FDuelEngine Duel(Database, 44);
@@ -363,6 +471,31 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 				TEXT("Counter Trap is illegal in Main Phase 1"));
 			Report.Check(Duel.GetSpellSpeed(CounterCard) == EDuelSpellSpeed::Speed3,
 				TEXT("Counter Trap is Spell Speed 3"));
+
+			// Scripted activation rules must agree with the spell-speed query.
+			const int32 ScriptedCounterId = 2147483000;
+			FDuelActivationRule ScriptedCounterRule;
+			ScriptedCounterRule.bCounterTrap = true;
+			Duel.SetActivationRule(ScriptedCounterId, ScriptedCounterRule);
+			FDuelCard ScriptedCounterCard;
+			ScriptedCounterCard.Data.Id = ScriptedCounterId;
+			ScriptedCounterCard.Data.CardType = TEXT("Trap");
+			ScriptedCounterCard.Data.Subtype = TEXT("Normal");
+			ScriptedCounterCard.Controller = EDuelOwner::Player;
+			Report.Check(Duel.GetSpellSpeed(ScriptedCounterCard) == EDuelSpellSpeed::Speed3,
+				TEXT("a scripted Counter Trap reports Spell Speed 3"));
+
+			const int32 ScriptedQuickId = 2147483001;
+			FDuelActivationRule ScriptedQuickRule;
+			ScriptedQuickRule.bQuickEffect = true;
+			Duel.SetActivationRule(ScriptedQuickId, ScriptedQuickRule);
+			FDuelCard ScriptedQuickCard;
+			ScriptedQuickCard.Data.Id = ScriptedQuickId;
+			ScriptedQuickCard.Data.CardType = TEXT("Spell");
+			ScriptedQuickCard.Data.Subtype = TEXT("Normal");
+			ScriptedQuickCard.Controller = EDuelOwner::Player;
+			Report.Check(Duel.GetSpellSpeed(ScriptedQuickCard) == EDuelSpellSpeed::Speed2,
+				TEXT("a scripted Quick-Play reports Spell Speed 2"));
 		}
 	}
 
@@ -397,7 +530,8 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 				TEXT("ante transfers the loser's card to the winner"));
 
 			const FDuelResultStats& Stats = Duel.GetResultStats();
-			Report.Check(Stats.bPlayerWon && Stats.Turns > 0 && Stats.OpponentLp == 0,
+			Report.Check(Stats.bPlayerWon && !Stats.bDraw && !Duel.IsDraw()
+				&& Stats.Turns > 0 && Stats.OpponentLp == 0,
 				TEXT("result statistics are populated on duel end"));
 		}
 	}
@@ -457,7 +591,7 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 				TEXT("scenario turn limit is tracked"));
 			Report.Check(!ScenarioDuel.CheckScenarioTimeout(30.f), TEXT("scenario timeout does not fire early"));
 			Report.Check(ScenarioDuel.CheckScenarioTimeout(61.f) && ScenarioDuel.IsOver()
-				&& ScenarioDuel.GetWinner() == EDuelOwner::Opponent,
+				&& !ScenarioDuel.IsDraw() && ScenarioDuel.GetWinner() == EDuelOwner::Opponent,
 				TEXT("scenario timeout ends the duel as a loss"));
 
 			FDuelEngine TimeoutDuel(Database, 47);
@@ -468,6 +602,270 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 		{
 			Report.Check(false, TEXT("puzzle scenario test cards were built"));
 		}
+	}
+
+	// ---- draw semantics / simultaneous endings ---------------------------
+	{
+		const FCardRecord* Sparks = FindRecordByPredicate(Database, [](const FCardRecord& Card)
+		{
+			return Card.Name == TEXT("Sparks") && Card.CardType == TEXT("Spell");
+		});
+		const FCardRecord* CardDestruction = FindRecordByPredicate(Database, [](const FCardRecord& Card)
+		{
+			return Card.Name == TEXT("Card Destruction") && Card.CardType == TEXT("Spell");
+		});
+		const TArray<int32> Filler = BuildMainDeck(Database, 4);
+
+		Report.Check(Sparks != nullptr && CardDestruction != nullptr && Filler.Num() >= 4,
+			TEXT("draw-semantics test cards were found"));
+		if (Sparks && CardDestruction && Filler.Num() >= 4)
+		{
+			// A damage effect that brings the last Life Points of both sides to
+			// zero at the same time must be a draw, not an opponent win.
+			FDuelScenario DoubleKoScenario;
+			DoubleKoScenario.Id = TEXT("SELFTEST_DRAW_KO");
+			DoubleKoScenario.Name = TEXT("Double KO");
+			DoubleKoScenario.PlayerLp = 100;
+			DoubleKoScenario.OpponentLp = 100;
+			DoubleKoScenario.PlayerHand = TArray<int32>{ Sparks->Id, Filler[0] };
+			DoubleKoScenario.PlayerDeck = TArray<int32>{ Filler[1] };
+			DoubleKoScenario.OpponentHand = TArray<int32>{ Filler[2] };
+			DoubleKoScenario.OpponentDeck = TArray<int32>{ Filler[3] };
+			DoubleKoScenario.bPlayerGoesFirst = true;
+			DoubleKoScenario.bDrawOnFirstTurn = false;
+
+			FDuelEngine DoubleKoDuel(Database, 48);
+			FString DrawError;
+			Report.Check(DoubleKoDuel.StartScenario(DoubleKoScenario, DrawError),
+				TEXT("double-KO scenario starts"));
+			DoubleKoDuel.GetSideMutable(EDuelOwner::Player).LP = 0;
+			int32 SparksUid = 0;
+			for (const FDuelCard& HandCard : DoubleKoDuel.GetSide(EDuelOwner::Player).Hand)
+			{
+				if (HandCard.Data.Id == Sparks->Id)
+				{
+					SparksUid = HandCard.Uid;
+					break;
+				}
+			}
+			Report.Check(SparksUid != 0 && DoubleKoDuel.ActivateSpell(SparksUid, DrawError),
+				TEXT("double-KO damage spell activates"));
+			Report.Check(DoubleKoDuel.IsOver() && DoubleKoDuel.IsDraw(),
+				TEXT("simultaneous last Life Points end the duel in a draw"));
+			Report.Check(DoubleKoDuel.GetResultStats().bDraw
+				&& !DoubleKoDuel.GetResultStats().bPlayerWon,
+				TEXT("draw outcome is reflected in result statistics"));
+			Report.Check(DoubleKoDuel.GetWinnerName().IsEmpty(),
+				TEXT("a draw does not report a winner name"));
+			Report.Check(!DoubleKoDuel.HasPendingChoice() && !DoubleKoDuel.IsChainOpen(),
+				TEXT("duel-end cleanup clears prompts and the chain stack"));
+
+			// Card Destruction makes both players draw at once.  With both
+			// decks empty this is a draw, not a win for whichever side the
+			// loop happens to process first.
+			FDuelScenario DoubleDeckScenario;
+			DoubleDeckScenario.Id = TEXT("SELFTEST_DRAW_DECK");
+			DoubleDeckScenario.Name = TEXT("Double deck-out");
+			DoubleDeckScenario.PlayerHand = TArray<int32>{ CardDestruction->Id, Filler[0] };
+			DoubleDeckScenario.OpponentHand = TArray<int32>{ Filler[1] };
+			DoubleDeckScenario.bPlayerGoesFirst = true;
+			DoubleDeckScenario.bDrawOnFirstTurn = false;
+
+			FDuelEngine DoubleDeckDuel(Database, 49);
+			Report.Check(DoubleDeckDuel.StartScenario(DoubleDeckScenario, DrawError),
+				TEXT("double deck-out scenario starts"));
+			int32 CardDestructionUid = 0;
+			for (const FDuelCard& HandCard : DoubleDeckDuel.GetSide(EDuelOwner::Player).Hand)
+			{
+				if (HandCard.Data.Id == CardDestruction->Id)
+				{
+					CardDestructionUid = HandCard.Uid;
+					break;
+				}
+			}
+			Report.Check(CardDestructionUid != 0 && DoubleDeckDuel.ActivateSpell(CardDestructionUid, DrawError),
+				TEXT("Card Destruction activates with empty decks"));
+			Report.Check(DoubleDeckDuel.IsOver() && DoubleDeckDuel.IsDraw()
+				&& DoubleDeckDuel.GetResultStats().bDraw,
+				TEXT("simultaneous deck-out ends the duel in a draw"));
+			const FDuelSide& DoubleDeckPlayer = DoubleDeckDuel.GetSide(EDuelOwner::Player);
+			const FDuelSide& DoubleDeckOpponent = DoubleDeckDuel.GetSide(EDuelOwner::Opponent);
+			Report.Check(DoubleDeckPlayer.Hand.Num() == 0 && DoubleDeckOpponent.Hand.Num() == 0
+				&& DoubleDeckPlayer.Deck.Num() == 0 && DoubleDeckOpponent.Deck.Num() == 0,
+				TEXT("Card Destruction resolves both hands before the deck-out draw"));
+			Report.Check(DoubleDeckPlayer.Graveyard.ContainsByPredicate(
+					[CardDestruction](const FDuelCard& C) { return C.Data.Id == CardDestruction->Id; })
+				&& DoubleDeckPlayer.Graveyard.ContainsByPredicate(
+					[&Filler](const FDuelCard& C) { return C.Data.Id == Filler[0]; })
+				&& DoubleDeckOpponent.Graveyard.ContainsByPredicate(
+					[&Filler](const FDuelCard& C) { return C.Data.Id == Filler[1]; }),
+				TEXT("Card Destruction leaves both discarded hands in the Graveyard"));
+			EDuelOwner DrawWinner = EDuelOwner::Player;
+			Report.Check(!DoubleDeckDuel.TryGetWinner(DrawWinner),
+				TEXT("TryGetWinner reports no winner for a drawn duel"));
+
+			// Only one short deck is still a normal loss; the pre-check must
+			// not turn it into a draw.
+			FDuelScenario SingleDeckScenario;
+			SingleDeckScenario.Id = TEXT("SELFTEST_DECK_SHORT");
+			SingleDeckScenario.Name = TEXT("Single Card Destruction deck-out");
+			SingleDeckScenario.PlayerHand = TArray<int32>{ CardDestruction->Id, Filler[0] };
+			SingleDeckScenario.OpponentHand = TArray<int32>{ Filler[1] };
+			SingleDeckScenario.OpponentDeck = TArray<int32>{ Filler[2], Filler[3] };
+			SingleDeckScenario.bPlayerGoesFirst = true;
+			SingleDeckScenario.bDrawOnFirstTurn = false;
+
+			FDuelEngine SingleDeckDuel(Database, 52);
+			Report.Check(SingleDeckDuel.StartScenario(SingleDeckScenario, DrawError),
+				TEXT("single Card Destruction deck-out scenario starts"));
+			int32 SingleCardDestructionUid = 0;
+			for (const FDuelCard& HandCard : SingleDeckDuel.GetSide(EDuelOwner::Player).Hand)
+			{
+				if (HandCard.Data.Id == CardDestruction->Id)
+				{
+					SingleCardDestructionUid = HandCard.Uid;
+					break;
+				}
+			}
+			Report.Check(SingleCardDestructionUid != 0
+				&& SingleDeckDuel.ActivateSpell(SingleCardDestructionUid, DrawError),
+				TEXT("Card Destruction activates with one short deck"));
+			Report.Check(SingleDeckDuel.IsOver() && !SingleDeckDuel.IsDraw()
+				&& SingleDeckDuel.GetWinner() == EDuelOwner::Opponent,
+				TEXT("a one-sided Card Destruction deck-out is a loss"));
+
+			// A single deck-out is still a loss; the draw flag must not leak.
+			FDuelScenario DeckOutScenario;
+			DeckOutScenario.Id = TEXT("SELFTEST_DECK_OUT");
+			DeckOutScenario.Name = TEXT("Single deck-out");
+			DeckOutScenario.PlayerHand = TArray<int32>{ Filler[0] };
+			DeckOutScenario.OpponentDeck = TArray<int32>{ Filler[1], Filler[2] };
+			DeckOutScenario.bPlayerGoesFirst = true;
+			DeckOutScenario.bDrawOnFirstTurn = true;
+
+			FDuelEngine DeckOutDuel(Database, 50);
+			Report.Check(DeckOutDuel.StartScenario(DeckOutScenario, DrawError),
+				TEXT("single deck-out scenario starts"));
+			Report.Check(DeckOutDuel.IsOver() && !DeckOutDuel.IsDraw()
+				&& DeckOutDuel.GetWinner() == EDuelOwner::Opponent
+				&& !DeckOutDuel.GetResultStats().bDraw,
+				TEXT("a single deck-out is a loss, not a draw"));
+			EDuelOwner DeckOutWinner = EDuelOwner::Player;
+			Report.Check(DeckOutDuel.TryGetWinner(DeckOutWinner) && DeckOutWinner == EDuelOwner::Opponent,
+				TEXT("TryGetWinner reports the winning side for a normal result"));
+		}
+	}
+
+	// ---- damage accounting uses actual LP loss ---------------------------
+	{
+		const FCardRecord* Sparks = FindRecordByPredicate(Database, [](const FCardRecord& Card)
+		{
+			return Card.Name == TEXT("Sparks") && Card.CardType == TEXT("Spell");
+		});
+		const FCardRecord* BlueEyes = FindRecordByPredicate(Database, [](const FCardRecord& Card)
+		{
+			return Card.Name == TEXT("Blue-Eyes White Dragon");
+		});
+		const TArray<int32> Filler = BuildMainDeck(Database, 4);
+		Report.Check(Sparks != nullptr && BlueEyes != nullptr && Filler.Num() >= 4,
+			TEXT("damage-accounting test cards were found"));
+		if (Sparks && BlueEyes && Filler.Num() >= 4)
+		{
+			FDuelScenario EffectOverkillScenario;
+			EffectOverkillScenario.Id = TEXT("SELFTEST_EFFECT_OVERKILL");
+			EffectOverkillScenario.Name = TEXT("Effect overkill");
+			EffectOverkillScenario.OpponentLp = 100;
+			EffectOverkillScenario.PlayerHand = TArray<int32>{ Sparks->Id };
+			EffectOverkillScenario.PlayerDeck = TArray<int32>{ Filler[0] };
+			EffectOverkillScenario.OpponentDeck = TArray<int32>{ Filler[1] };
+			EffectOverkillScenario.bPlayerGoesFirst = true;
+			EffectOverkillScenario.bDrawOnFirstTurn = false;
+
+			FDuelEngine EffectOverkillDuel(Database, 53);
+			FString DamageError;
+			Report.Check(EffectOverkillDuel.StartScenario(EffectOverkillScenario, DamageError),
+				TEXT("effect-overkill scenario starts"));
+			const int32 SparksUid = FindUidInSide(EffectOverkillDuel, EDuelOwner::Player, Sparks->Id);
+			Report.Check(SparksUid != 0 && EffectOverkillDuel.ActivateSpell(SparksUid, DamageError),
+				TEXT("effect-overkill damage spell activates"));
+			Report.Check(EffectOverkillDuel.IsOver() && !EffectOverkillDuel.IsDraw()
+				&& EffectOverkillDuel.GetWinner() == EDuelOwner::Player
+				&& EffectOverkillDuel.GetSide(EDuelOwner::Opponent).LP == 0,
+				TEXT("effect overkill still ends in a normal win"));
+			Report.Check(EffectOverkillDuel.GetResultStats().EffectDamageDealt == 100,
+				TEXT("effect damage statistics record the actual LP loss, not the requested 200"));
+
+			FDuelScenario BattleOverkillScenario;
+			BattleOverkillScenario.Id = TEXT("SELFTEST_BATTLE_OVERKILL");
+			BattleOverkillScenario.Name = TEXT("Battle overkill");
+			BattleOverkillScenario.OpponentLp = 100;
+			BattleOverkillScenario.RequiredBattleDamage = 200;
+			BattleOverkillScenario.PlayerDeck = TArray<int32>{ Filler[0] };
+			BattleOverkillScenario.OpponentDeck = TArray<int32>{ Filler[1] };
+			BattleOverkillScenario.bPlayerGoesFirst = true;
+			BattleOverkillScenario.bDrawOnFirstTurn = false;
+			FDuelScenarioCard AttackerSpec;
+			AttackerSpec.CardId = BlueEyes->Id;
+			AttackerSpec.Zone = EDuelZone::Monster;
+			AttackerSpec.ZoneIndex = 0;
+			BattleOverkillScenario.PlayerField.Add(AttackerSpec);
+
+			FDuelEngine BattleOverkillDuel(Database, 54);
+			Report.Check(BattleOverkillDuel.StartScenario(BattleOverkillScenario, DamageError),
+				TEXT("battle-overkill scenario starts"));
+			const int32 AttackerUid = FindUidInSide(BattleOverkillDuel, EDuelOwner::Player, BlueEyes->Id);
+			BattleOverkillDuel.EnterBattlePhase();
+			Report.Check(AttackerUid != 0
+				&& BattleOverkillDuel.ExecuteAttack(EDuelOwner::Player, AttackerUid, 0, DamageError),
+				TEXT("battle-overkill direct attack executes"));
+			Report.Check(BattleOverkillDuel.IsOver() && !BattleOverkillDuel.IsDraw()
+				&& BattleOverkillDuel.GetWinner() == EDuelOwner::Player
+				&& BattleOverkillDuel.GetSide(EDuelOwner::Opponent).LP == 0,
+				TEXT("battle overkill still ends in a normal win"));
+			Report.Check(BattleOverkillDuel.GetResultStats().BattleDamageDealt == 100,
+				TEXT("battle damage statistics record the actual LP loss, not the requested 3000"));
+			Report.Check(!BattleOverkillDuel.IsScenarioObjectiveComplete(),
+				TEXT("a 200-damage objective is not completed by 100 LP of overkill"));
+		}
+	}
+
+	// ---- AI policy legality guards ---------------------------------------
+	{
+		FDAIProfileDef Profile;
+		Profile.Strategy = TEXT("beatdown");
+		FDAIDuelistAI AI;
+		AI.Configure(Profile, 7);
+
+		FDAAIDuelSnapshot Snapshot;
+		Snapshot.bBattlePhase = true;
+		Snapshot.bCanAttackDirectly = false;
+		Snapshot.OwnMonsterIds.Add(11);
+		Snapshot.OpponentMonsterIds.Add(21);
+
+		Report.Check(!AI.ShouldAttack(Snapshot, 11, 21, true),
+			TEXT("AI rejects a direct attack the snapshot says is illegal"));
+		Report.Check(AI.ShouldAttack(Snapshot, 11, 21, false),
+			TEXT("AI accepts an attack whose attacker and target are both legal"));
+		Report.Check(!AI.ShouldAttack(Snapshot, 11, 99, false),
+			TEXT("AI rejects an attack target missing from the snapshot"));
+		Report.Check(!AI.ShouldAttack(Snapshot, 99, 21, false),
+			TEXT("AI rejects an attacker missing from the snapshot"));
+		Snapshot.bCanAttackDirectly = true;
+		Report.Check(AI.ShouldAttack(Snapshot, 11, 0, true),
+			TEXT("AI accepts a legal direct attack"));
+
+		AI.SetCardDatabase(Database);
+		FDAAIDuelSnapshot DecisionSnapshot;
+		DecisionSnapshot.HandCardIds = TArray<int32>{ 1, 2 };
+		const FDAAIDecision FirstDecision = AI.ChooseAction(DecisionSnapshot);
+		const FDAAIDecision SecondDecision = AI.ChooseAction(DecisionSnapshot);
+		Report.Check(FirstDecision.Action == EDAAIAction::NormalSummon
+			&& FirstDecision.CardId == 1,
+			TEXT("AI chooses the highest-scored Main Phase action"));
+		Report.Check(FirstDecision.Action == SecondDecision.Action
+			&& FirstDecision.CardId == SecondDecision.CardId
+			&& FirstDecision.Score == SecondDecision.Score,
+			TEXT("AI decisions are deterministic for the same snapshot"));
 	}
 
 	// ---- existing 137-card regression smoke ------------------------------
@@ -486,15 +884,15 @@ void UDADuelRulesSelfTestSubsystem::Initialize(FSubsystemCollectionBase& Collect
 {
 	Super::Initialize(Collection);
 	const TCHAR* CommandLine = FCommandLine::Get();
-	FString DuelCountText;
-	if (FParse::Value(CommandLine, TEXT("DADuelSelfTest="), DuelCountText))
+	bool bCountedSelfTest = false;
+	const int32 RequestedIterations = DADuelSelfTestArgs::ParseRequestedIterations(24, 10000, &bCountedSelfTest);
+	if (bCountedSelfTest)
 	{
 		// The legacy HUD only recognises a bare -DADuelSelfTest token; owning
 		// the counted form here keeps -DADuelSelfTest=N working without a UI
 		// dependency and gives the release gate a headless entry point.
-		const int32 Parsed = FCString::Atoi(*DuelCountText);
 		bRunDuelGate = true;
-		DuelGateIterations = FMath::Clamp(Parsed > 0 ? Parsed : 24, 1, 10000);
+		DuelGateIterations = RequestedIterations;
 		UE_LOG(LogDuelAcademyIsland, Log, TEXT("DADuelSelfTest=%d: waiting for the card database."), DuelGateIterations);
 		TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
 			FTickerDelegate::CreateUObject(this, &UDADuelRulesSelfTestSubsystem::Tick), 2.0f);

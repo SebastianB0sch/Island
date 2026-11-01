@@ -1593,6 +1593,27 @@ namespace
 		}
 		Context.Save->DeleteNamedSlot(FuzzMigrationSlot, Error);
 
+		// The fuzz owns every file it writes. A primary, backup or temp file
+		// left behind after cleanup would leak into a player's save folder and
+		// could be resurrected by slot enumeration.
+		auto CheckSlotFilesGone = [&Report](const FString& SlotName)
+		{
+			const bool bPrimary = IFileManager::Get().FileExists(*UDASaveSubsystem::GetSaveFilePath(SlotName));
+			const bool bBackup = IFileManager::Get().FileExists(*UDASaveSubsystem::GetSaveFilePath(SlotName + TEXT("_backup")));
+			const bool bTemp = IFileManager::Get().FileExists(*UDASaveSubsystem::GetSaveFilePath(SlotName + TEXT("_tmp")));
+			Report.Quiet(!bPrimary && !bBackup && !bTemp,
+				FString::Printf(TEXT("DASaveFuzz cleanup left files for %s"), *SlotName));
+		};
+		for (int32 Slot = 0; Slot < UDASaveSubsystem::NumSlots; ++Slot)
+		{
+			CheckSlotFilesGone(FuzzSlotNameForIndex(Slot));
+		}
+		for (int32 Slot = 0; Slot < 4; ++Slot)
+		{
+			CheckSlotFilesGone(FString::Printf(TEXT("%s_%d"), FuzzCorruptSlot, Slot));
+		}
+		CheckSlotFilesGone(FuzzMigrationSlot);
+
 		UE_LOG(LogDuelAcademyIsland, Display,
 			TEXT("=== DASaveFuzz summary: %d states, %d corruption cases, %d migration cases, %d checks, %d failure(s), seed 0x%08X, max save size %d bytes ==="),
 			Count, CorruptionCases, MigrationCases, Report.Checks, Report.Failures,
@@ -2001,6 +2022,8 @@ namespace
 		}
 
 		Context.Save->DeleteNamedSlot(TwelveMonthSlot, Error);
+		Report.Quiet(!IFileManager::Get().FileExists(*UDASaveSubsystem::GetSaveFilePath(TwelveMonthSlot)),
+			TEXT("DATwelveMonthTest cleanup removed the test save slot"));
 
 		UE_LOG(LogDuelAcademyIsland, Display,
 			TEXT("=== DATwelveMonthTest summary: %d days, %d months, %d saves, %d loads, %d random save days, %d exam days, %d checks, %d failure(s), max save size %d bytes ==="),

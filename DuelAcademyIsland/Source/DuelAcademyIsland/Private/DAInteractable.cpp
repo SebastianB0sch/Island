@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "DAHUD.h"
 #include "DACalendarSubsystem.h"
+#include "DAIslandManager.h"
 #include "DAIslandSubsystem.h"
 #include "DAStorySubsystem.h"
 #include "DAStudentCharacter.h"
@@ -52,6 +53,9 @@ ADAInteractable::ADAInteractable()
 void ADAInteractable::BeginPlay()
 {
 	Super::BeginPlay();
+	// A non-finite radius passes the focus distance test (NaN compares false)
+	// and would make the actor interactable from anywhere on the island.
+	Radius = FMath::IsFinite(Radius) ? FMath::Max(Radius, 0.f) : 300.f;
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
 		Sub->RegisterInteractable(this);
@@ -171,6 +175,14 @@ void ADAInteractable::Interact(ADAStudentCharacter* By)
 		{
 			// Resting advances one campaign day, mirroring the GBA bed/wait flow.
 			Calendar->Sleep();
+			// Keep the visual day/night cycle in step with the calendar date.
+			if (Sub)
+			{
+				if (ADAIslandManager* Manager = Sub->GetManager())
+				{
+					Manager->SetCalendarTime(Calendar->GetAbsoluteDay(), static_cast<float>(Calendar->GetHour()));
+				}
+			}
 		}
 		if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(this))
 		{
@@ -229,14 +241,27 @@ void ADAInteractable::OpenBoosterPack(ADAStudentCharacter* By)
 	{
 		return;
 	}
-	++PacksOpened;
 	FRandomStream Rng(FMath::Rand());
 	const TArray<DuelAcademy::FCardDef>& All = DuelAcademy::Cards();
+	if (All.Num() == 0)
+	{
+		FDAMessage Msg;
+		Msg.Title = TEXT("Card Shop");
+		Msg.Body = TEXT("The card catalogue is empty.");
+		Msg.Duration = 5.f;
+		Sub->PushMessage(Msg);
+		return;
+	}
+	++PacksOpened;
 	FString Body = FString::Printf(TEXT("Booster pack #%d - you pulled:\n"), PacksOpened);
 	bool bUltra = false;
 	for (int32 i = 0; i < 5; ++i)
 	{
 		const int32 Index = DuelAcademy::PullCardIndex(Rng);
+		if (!All.IsValidIndex(Index))
+		{
+			continue;
+		}
 		const DuelAcademy::FCardDef& C = All[Index];
 		if (C.Atk > 0 || C.Def > 0)
 		{

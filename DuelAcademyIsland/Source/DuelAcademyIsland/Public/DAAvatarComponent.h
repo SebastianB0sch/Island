@@ -162,6 +162,7 @@ private:
 	FName CurrentAnim = NAME_None;
 	FName CurrentAction = NAME_None;
 	float LandTimer = 0.f;
+	float LastAirVerticalSpeed = 0.f;
 	bool bWasInAir = false;
 
 	float Phase = 0.f;

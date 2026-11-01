@@ -8,7 +8,10 @@
 #include "DuelAcademyIsland.h"
 
 #include "Engine/GameInstance.h"
+#include "Dom/JsonObject.h"
 #include "Misc/Paths.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 namespace
 {
@@ -232,6 +235,17 @@ namespace
 		{
 			Inventory->AddCard(CardId, Copies);
 		}
+	}
+
+	TSharedPtr<FJsonObject> ParseJsonObjectForTest(const FString& Json)
+	{
+		TSharedPtr<FJsonObject> Object;
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Json);
+		if (!FJsonSerializer::Deserialize(Reader, Object))
+		{
+			return nullptr;
+		}
+		return Object;
 	}
 
 	void TestCatalogue(FTestReport& Report, UDAShopSubsystem* Shop, UCardDatabaseSubsystem* Database)
@@ -1138,18 +1152,544 @@ namespace
 		Shop->ResetPurchaseState();
 		DeckLogic->ResetToDefaults();
 	}
+
+	void TestInventoryTransactionality(
+		FTestReport& Report,
+		UDAInventorySubsystem* Inventory,
+		UDAShopSubsystem* Shop,
+		UCardDatabaseSubsystem* Database)
+	{
+		Inventory->ResetCollection();
+		Inventory->SetMaxOwnedCopies(3);
+		Shop->ResetPurchaseState();
+		Shop->SetDebugDP(1000);
+
+		// Provider write -> validate -> read round-trip.
+		Inventory->AddCard(1, 2);
+		Inventory->AddCard(2, 1);
+		TSharedPtr<FJsonObject> Section = MakeShared<FJsonObject>();
+		Report.CheckTrue(Inventory->WriteSaveSection(Section), TEXT("inventory write section succeeds"));
+		FString Error;
+		Report.CheckTrue(Inventory->ValidateSaveSection(Section, Error), TEXT("inventory written section validates"));
+		const int32 SavedOne = Inventory->GetCount(1);
+		const int32 SavedTwo = Inventory->GetCount(2);
+		Report.CheckTrue(Inventory->ReadSaveSection(Section, Error), TEXT("inventory written section reads back"));
+
+		const TCHAR* BadSections[] = {
+			TEXT("{\"counts\":{\"1x\":2}}"),
+			TEXT("{\"counts\":{\"0\":2}}"),
+			TEXT("{\"counts\":{\"1\":-1}}"),
+			TEXT("{\"counts\":{\"1\":2.5}}"),
+			TEXT("{\"counts\":{\"1\":true}}"),
+			TEXT("{\"counts\":[]}"),
+			TEXT("{\"counts\":{\"1\":2},\"max_owned_copies\":-1}"),
+			TEXT("{\"counts\":{\"1\":2},\"pending_ante\":[{\"card_id\":0,\"duel_id\":\"d\"}]}"),
+			TEXT("{\"counts\":{\"1\":2},\"pending_ante\":[{\"card_id\":1,\"duel_id\":\"\"}]}")
+		};
+		for (const TCHAR* Json : BadSections)
+		{
+			const TSharedPtr<FJsonObject> Bad = ParseJsonObjectForTest(Json);
+			Report.CheckTrue(Bad.IsValid(), FString::Printf(TEXT("inventory malformed fixture parses: %s"), Json));
+			Report.CheckTrue(!Inventory->ReadSaveSection(Bad, Error), FString::Printf(TEXT("inventory rejects malformed section: %s"), Json));
+			Report.CheckTrue(!Inventory->ImportStateJson(Json, Error), FString::Printf(TEXT("inventory JSON rejects malformed payload: %s"), Json));
+			Report.CheckEqual(Inventory->GetCount(1), SavedOne, FString::Printf(TEXT("inventory count 1 preserved: %s"), Json));
+			Report.CheckEqual(Inventory->GetCount(2), SavedTwo, FString::Printf(TEXT("inventory count 2 preserved: %s"), Json));
+		}
+
+		Report.CheckTrue(Inventory->ImportStateJson(TEXT("{\"counts\":{}}"), Error), TEXT("empty inventory imports"));
+		Report.CheckEqual(Inventory->GetCollectionSize(), 0, TEXT("empty inventory import clears the trunk"));
+		Report.CheckTrue(Inventory->ImportStateJson(TEXT("{\"counts\":{\"1\":0}}"), Error), TEXT("explicit zero count entry is accepted"));
+		Report.CheckEqual(Inventory->GetCount(1), 0, TEXT("explicit zero count means not owned"));
+
+		// 0 is the documented unlimited cap and must survive the struct payload.
+		Inventory->ResetCollection();
+		Inventory->SetMaxOwnedCopies(0);
+		Report.CheckEqual(Inventory->AddCard(1, 5), 5, TEXT("unlimited cap stores five copies"));
+		const FDAEInventorySaveData UnlimitedData = Inventory->GetSaveData();
+		Report.CheckEqual(UnlimitedData.MaxOwnedCopies, 0, TEXT("unlimited cap is saved as zero"));
+		Inventory->SetMaxOwnedCopies(3);
+		Inventory->ResetCollection();
+		Report.CheckTrue(Inventory->ApplySaveData(UnlimitedData, Error), TEXT("unlimited inventory payload applies"));
+		Report.CheckEqual(Inventory->GetMaxOwnedCopies(), 0, TEXT("unlimited cap round-trips"));
+		Report.CheckEqual(Inventory->GetCount(1), 5, TEXT("unlimited count round-trips"));
+		Inventory->SetMaxOwnedCopies(3);
+
+		// Invalid ante records are filtered instead of poisoning the queue.
+		FDAEInventorySaveData AnteData;
+		AnteData.MaxOwnedCopies = 3;
+		FDAEAnteRecord BadAnte;
+		BadAnte.CardId = 0;
+		BadAnte.DuelId = TEXT("bad");
+		AnteData.PendingAnte.Add(BadAnte);
+		FDAEAnteRecord GoodAnte;
+		GoodAnte.CardId = 1;
+		GoodAnte.DuelId = TEXT("duel_ante");
+		GoodAnte.Source = TEXT("test");
+		AnteData.PendingAnte.Add(GoodAnte);
+		Report.CheckTrue(Inventory->ApplySaveData(AnteData, Error), TEXT("inventory payload with a bad ante record applies"));
+		const TArray<FDAEAnteRecord> PendingAnte = Inventory->GetPendingAnte();
+		Report.CheckEqual(PendingAnte.Num(), 1, TEXT("invalid ante record is dropped"));
+		Report.CheckEqual(PendingAnte[0].CardId, 1, TEXT("valid ante record survives"));
+
+		// A duel can stake only one ante card; a retried call must not remove a
+		// second copy that ReturnAnteCard would never give back.
+		Inventory->ResetCollection();
+		Inventory->AddCard(1, 2);
+		Report.CheckTrue(Inventory->RemoveCardForAnte(1, TEXT("duel_dup"), TEXT("test")), TEXT("first ante for a duel succeeds"));
+		Report.CheckTrue(!Inventory->RemoveCardForAnte(1, TEXT("duel_dup"), TEXT("test")), TEXT("duplicate ante for the same duel is rejected"));
+		Report.CheckEqual(Inventory->GetCount(1), 1, TEXT("duplicate ante does not remove a second copy"));
+		Report.CheckEqual(Inventory->GetPendingAnte().Num(), 1, TEXT("duplicate ante leaves one stake"));
+		Report.CheckTrue(Inventory->ReturnAnteCard(TEXT("duel_dup")), TEXT("ante for the duel returns"));
+
+		// Aggregation saturates rather than overflowing int32.
+		FDAEInventorySaveData BigData;
+		BigData.MaxOwnedCopies = 3;
+		BigData.Counts.Add(1, TNumericLimits<int32>::Max());
+		BigData.Counts.Add(2, TNumericLimits<int32>::Max());
+		Report.CheckTrue(Inventory->ApplySaveData(BigData, Error), TEXT("oversized inventory payload applies"));
+		Report.CheckEqual(Inventory->GetCollectionSize(), TNumericLimits<int32>::Max(), TEXT("collection size saturates"));
+		const FDAECollectionStats BigStats = Inventory->GetCollectionStats();
+		Report.CheckEqual(BigStats.TotalCards, TNumericLimits<int32>::Max(), TEXT("collection total saturates"));
+		for (const FDAERarityCount& Entry : BigStats.RarityCounts)
+		{
+			Report.CheckTrue(Entry.Count >= 0, TEXT("rarity count never wraps negative"));
+		}
+		for (const TPair<FString, int32>& Pair : BigStats.TypeCounts)
+		{
+			Report.CheckTrue(Pair.Value >= 0, TEXT("type count never wraps negative"));
+		}
+
+		// Unknown ids from an older content set stay owned but do not inflate
+		// catalogue completion.
+		Inventory->ResetCollection();
+		FDAEInventorySaveData UnknownData;
+		UnknownData.MaxOwnedCopies = 3;
+		UnknownData.Counts.Add(1, 1);
+		UnknownData.Counts.Add(999999, 1);
+		Report.CheckTrue(Inventory->ApplySaveData(UnknownData, Error), TEXT("inventory payload with an unknown id applies"));
+		const FDAECollectionStats UnknownStats = Inventory->GetCollectionStats();
+		Report.CheckEqual(UnknownStats.UniqueCards, 2, TEXT("unknown owned id is still counted as owned"));
+		Report.CheckTrue(FMath::IsNearlyEqual(UnknownStats.CompletionPercent, 100.f / 1200.f, 0.01f),
+			TEXT("unknown owned id does not inflate catalogue completion"));
+
+		// A pack that fails after earlier slots were added must roll back every
+		// copy it already inserted.
+		Inventory->ResetCollection();
+		Inventory->SetMaxOwnedCopies(3);
+		FDAEPackDef Broken;
+		Broken.Id = TEXT("broken_pack");
+		Broken.PackSize = 2;
+		Broken.bAllCards = true;
+		Broken.DuplicateDPPerCard = 25;
+		FDAEPackSlot AnySlot;
+		AnySlot.Type = EDAEPackSlotType::AnyCard;
+		Broken.Slots.Add(AnySlot);
+		FDAEPackSlot FixedSlot;
+		FixedSlot.Type = EDAEPackSlotType::FixedRarity;
+		FixedSlot.Rarity = EDAECardRarity::Common;
+		Broken.Slots.Add(FixedSlot);
+		const FDAEPackOpenResult BrokenResult = Inventory->OpenPackDefinition(Broken, 123, true);
+		Report.CheckTrue(!BrokenResult.bSuccess, TEXT("pack with a missing fixed pool fails"));
+		Report.CheckTrue(BrokenResult.ErrorCode == TEXT("empty_pool"), TEXT("pack rollback reports empty_pool"));
+		Report.CheckEqual(Inventory->GetCollectionSize(), 0, TEXT("pack rollback removes earlier slots"));
+		Report.CheckEqual(BrokenResult.Cards.Num(), 0, TEXT("failed pack exposes no partial reveals"));
+		Report.CheckEqual(BrokenResult.DPFromDuplicates, 0, TEXT("failed pack exposes no duplicate DP"));
+
+		// A non-all-cards pack with AnyCard slots draws from its rarity pools.
+		Inventory->ResetCollection();
+		FDAEPackDef AnyPoolPack;
+		AnyPoolPack.Id = TEXT("any_pool_pack");
+		AnyPoolPack.PackSize = 2;
+		AnyPoolPack.bAllCards = false;
+		AnyPoolPack.DuplicateDPPerCard = 25;
+		FDAERarityPool AnyPool;
+		AnyPool.Rarity = EDAECardRarity::Common;
+		AnyPool.Cards = { 1, 2, 3 };
+		AnyPoolPack.Pools.Add(AnyPool);
+		FDAEPackSlot AnyPoolSlot;
+		AnyPoolSlot.Type = EDAEPackSlotType::AnyCard;
+		AnyPoolPack.Slots.Add(AnyPoolSlot);
+		FDAEPackSlot AnyPoolFixed;
+		AnyPoolFixed.Type = EDAEPackSlotType::FixedRarity;
+		AnyPoolFixed.Rarity = EDAECardRarity::Common;
+		AnyPoolPack.Slots.Add(AnyPoolFixed);
+		const FDAEPackOpenResult AnyPoolResult = Inventory->OpenPackDefinition(AnyPoolPack, 42, true);
+		Report.CheckTrue(AnyPoolResult.bSuccess, TEXT("AnyCard slots can draw from a non-all-cards pool"));
+		Report.CheckEqual(AnyPoolResult.Cards.Num(), 2, TEXT("AnyCard pool pack reveals two cards"));
+		Report.CheckEqual(Inventory->GetCollectionSize(), 2, TEXT("AnyCard pool pack adds two cards"));
+		bool bAnyPoolIds = true;
+		for (const FDAEPackCardReveal& Card : AnyPoolResult.Cards)
+		{
+			if (Card.CardId != 1 && Card.CardId != 2 && Card.CardId != 3) bAnyPoolIds = false;
+		}
+		Report.CheckTrue(bAnyPoolIds, TEXT("AnyCard pool pack stays inside its pool"));
+
+		Inventory->ResetCollection();
+		FDAEPackDef Basic;
+		Report.CheckTrue(Shop->GetPackDef(TEXT("basic_1a"), Basic), TEXT("basic_1a exists for pack validation"));
+		if (Basic.Pools.Num() > 0 && Basic.Pools[0].Cards.Num() > 0)
+		{
+			FDAEPackDef MissingCard = Basic;
+			MissingCard.Pools[0].Cards[0] = 999999;
+			const FDAEPackOpenResult MissingResult = Inventory->OpenPackDefinition(MissingCard, 456, true);
+			Report.CheckTrue(!MissingResult.bSuccess, TEXT("pack with an unknown pool card fails"));
+			Report.CheckTrue(MissingResult.ErrorCode == TEXT("invalid_pool_card"), TEXT("unknown pool card reports invalid_pool_card"));
+			Report.CheckEqual(Inventory->GetCollectionSize(), 0, TEXT("invalid pack leaves the trunk untouched"));
+		}
+
+		// Unknown pack ids fail cleanly through both entry points.
+		const FDAEPackOpenResult UnknownOpen = Inventory->OpenPack(TEXT("missing_pack"), 1);
+		Report.CheckTrue(!UnknownOpen.bSuccess, TEXT("unknown pack open fails"));
+		Report.CheckTrue(UnknownOpen.ErrorCode == TEXT("pack_not_found"), TEXT("unknown pack open reports pack_not_found"));
+		const FDAEPackOpenResult UnknownPreview = Inventory->PreviewPack(TEXT("missing_pack"), 1);
+		Report.CheckTrue(!UnknownPreview.bSuccess, TEXT("unknown pack preview fails"));
+		Report.CheckTrue(UnknownPreview.ErrorCode == TEXT("pack_not_found"), TEXT("unknown pack preview reports pack_not_found"));
+
+		// Preview rolls nothing into the collection.
+		Inventory->ResetCollection();
+		const FDAEPackOpenResult Preview = Inventory->PreviewPack(TEXT("basic_1a"), 2468);
+		Report.CheckTrue(Preview.bSuccess, TEXT("preview succeeds"));
+		Report.CheckEqual(Preview.Cards.Num(), 5, TEXT("preview returns five cards"));
+		Report.CheckEqual(Inventory->GetCollectionSize(), 0, TEXT("preview does not mutate the trunk"));
+
+		Inventory->ResetCollection();
+		Inventory->SetMaxOwnedCopies(3);
+		Shop->ResetPurchaseState();
+	}
+
+	void TestShopState(FTestReport& Report, UDAInventorySubsystem* Inventory, UDAShopSubsystem* Shop)
+	{
+		Inventory->ResetCollection();
+		Shop->ResetPurchaseState();
+		Shop->SetDebugDP(500);
+		FDAEUnlockContext Context;
+		Context.DayNumber = 100;
+		SetShopContext(Shop, Context);
+
+		// Unknown pack ids do not spend DP or touch the trunk.
+		FDAEPurchaseResult Missing;
+		Report.CheckTrue(!Shop->PurchasePack(TEXT("missing_pack"), 1, Missing), TEXT("unknown pack purchase fails"));
+		Report.CheckEqual(static_cast<int32>(Missing.Block), static_cast<int32>(EDAEPurchaseBlock::PackNotFound), TEXT("unknown pack block reason"));
+		Report.CheckEqual(Shop->GetDP(), 500, TEXT("unknown pack leaves DP untouched"));
+		Report.CheckEqual(Inventory->GetCollectionSize(), 0, TEXT("unknown pack leaves inventory untouched"));
+
+		FDAEPackDef Basic;
+		Report.CheckTrue(Shop->GetPackDef(TEXT("basic_1a"), Basic), TEXT("basic_1a exists for shop state tests"));
+
+		FString Error;
+		TSharedPtr<FJsonObject> ShopSection = MakeShared<FJsonObject>();
+		Report.CheckTrue(Shop->WriteSaveSection(ShopSection), TEXT("shop write section succeeds"));
+		Report.CheckTrue(Shop->ValidateSaveSection(ShopSection, Error), TEXT("shop written section validates"));
+
+		// Lifetime purchase counters drive the sold-out gate.
+		FDAEShopSaveData StockData = Shop->GetSaveData();
+		StockData.PurchaseCounts.Reset();
+		StockData.PurchaseCounts.Add(TEXT("basic_1a"), Basic.Stock);
+		Report.CheckTrue(Shop->ApplySaveData(StockData, Error), TEXT("sold-out fixture applies"));
+		Report.CheckEqual(Shop->GetRemainingStock(TEXT("basic_1a")), 0, TEXT("stock counter reaches zero"));
+		FDAEPurchaseResult SoldOut;
+		Report.CheckTrue(!Shop->PurchasePack(TEXT("basic_1a"), 2, SoldOut), TEXT("sold-out pack purchase fails"));
+		Report.CheckEqual(static_cast<int32>(SoldOut.Block), static_cast<int32>(EDAEPurchaseBlock::SoldOut), TEXT("sold-out block reason"));
+		Report.CheckEqual(Shop->GetDP(), 500, TEXT("sold-out purchase leaves DP untouched"));
+
+		// Negative counters and days are filtered by the struct path.
+		FDAEShopSaveData Dirty;
+		Dirty.CachedDP = -50;
+		Dirty.LastPurchaseDay.Add(TEXT("basic_1a"), -5);
+		Dirty.PurchaseCounts.Add(TEXT("basic_1a"), -3);
+		Report.CheckTrue(Shop->ApplySaveData(Dirty, Error), TEXT("dirty shop payload applies"));
+		Report.CheckEqual(Shop->GetDP(), 0, TEXT("negative cached DP clamps to zero"));
+		Report.CheckEqual(Shop->GetLastPurchaseDay(TEXT("basic_1a")), -1, TEXT("negative last purchase day is dropped"));
+		Report.CheckEqual(Shop->GetPurchaseCount(TEXT("basic_1a")), 0, TEXT("negative purchase count is dropped"));
+
+		// Next-available-day arithmetic must not wrap.
+		FDAEShopSaveData MaxDay = Shop->GetSaveData();
+		MaxDay.CachedDP = 100;
+		MaxDay.PurchaseCounts.Reset();
+		MaxDay.LastPurchaseDay.Reset();
+		MaxDay.LastPurchaseDay.Add(TEXT("basic_1a"), TNumericLimits<int32>::Max());
+		Report.CheckTrue(Shop->ApplySaveData(MaxDay, Error), TEXT("max-day fixture applies"));
+		Report.CheckEqual(Shop->GetNextAvailableDay(TEXT("basic_1a")), TNumericLimits<int32>::Max(), TEXT("next available day saturates"));
+		FDAEPackView MaxView;
+		Report.CheckTrue(Shop->GetPackView(TEXT("basic_1a"), MaxView), TEXT("max-day pack view exists"));
+		Report.CheckEqual(MaxView.NextAvailableDay, TNumericLimits<int32>::Max(), TEXT("pack view next day saturates"));
+		Report.CheckTrue(MaxView.NextAvailableDay >= 0, TEXT("pack view next day never goes negative"));
+
+		// Provider validation is transactional and rejects malformed fields.
+		const TSharedPtr<FJsonObject> GoodSection = ParseJsonObjectForTest(Shop->ExportStateJson());
+		Report.CheckTrue(GoodSection.IsValid(), TEXT("shop save section parses"));
+		Report.CheckTrue(Shop->ValidateSaveSection(GoodSection, Error), TEXT("shop save section validates"));
+		const TCHAR* BadSections[] = {
+			TEXT("{}"),
+			TEXT("{\"cached_dp\":-1}"),
+			TEXT("{\"cached_dp\":1.5}"),
+			TEXT("{\"internal_wallet\":\"yes\"}"),
+			TEXT("{\"purchase_counts\":[]}"),
+			TEXT("{\"purchase_counts\":{\"basic_1a\":-1}}"),
+			TEXT("{\"purchase_counts\":{\"basic_1a\":true}}"),
+			TEXT("{\"last_purchase_day\":{\"basic_1a\":-2}}"),
+			TEXT("{\"last_purchase_day\":{\"\":2}}")
+		};
+		for (const TCHAR* Json : BadSections)
+		{
+			const TSharedPtr<FJsonObject> Bad = ParseJsonObjectForTest(Json);
+			Report.CheckTrue(Bad.IsValid(), FString::Printf(TEXT("shop malformed fixture parses: %s"), Json));
+			Report.CheckTrue(!Shop->ReadSaveSection(Bad, Error), FString::Printf(TEXT("shop rejects malformed section: %s"), Json));
+			Report.CheckEqual(Shop->GetDP(), 100, FString::Printf(TEXT("shop DP preserved: %s"), Json));
+			Report.CheckEqual(Shop->GetLastPurchaseDay(TEXT("basic_1a")), TNumericLimits<int32>::Max(),
+				FString::Printf(TEXT("shop restock clock preserved: %s"), Json));
+		}
+
+		// A rewound/new-game clock is treated as a completed restock instead of
+		// soft-locking the pack for the whole backwards difference.
+		Context.DayNumber = 50;
+		SetShopContext(Shop, Context);
+		Report.CheckTrue(Shop->CanPurchase(TEXT("basic_1a"), Error), TEXT("rewound restock clock is treated as restocked"));
+
+		// Duplicate compensation saturates at INT_MAX instead of going negative.
+		Inventory->ResetCollection();
+		Shop->ResetPurchaseState();
+		Shop->SetDebugDP(TNumericLimits<int32>::Max());
+		Context.DayNumber = 200;
+		SetShopContext(Shop, Context);
+		for (const int32 CardId : CollectPoolIds(Basic))
+		{
+			Inventory->AddCard(CardId, 3);
+		}
+		FDAEPurchaseResult Saturated;
+		Report.CheckTrue(Shop->PurchasePack(TEXT("basic_1a"), 9, Saturated), TEXT("duplicate-heavy purchase at max DP succeeds"));
+		Report.CheckEqual(Saturated.DPAfter, TNumericLimits<int32>::Max(), TEXT("duplicate compensation saturates"));
+		Report.CheckEqual(Shop->GetDP(), TNumericLimits<int32>::Max(), TEXT("shop DP never wraps negative"));
+
+		// The documented purchase_limit=1-per-restock assumption must match the
+		// shipped catalogue. Fail loudly if content changes without a new policy.
+		bool bPurchaseLimitIsOne = true;
+		bool bRestockPositive = true;
+		for (const FDAEPackDef& Pack : Shop->GetPacksRef())
+		{
+			if (Pack.PurchaseLimit != 1) bPurchaseLimitIsOne = false;
+			if (Pack.RestockDays <= 0) bRestockPositive = false;
+		}
+		Report.CheckTrue(bPurchaseLimitIsOne, TEXT("every shipped pack uses purchase_limit 1"));
+		Report.CheckTrue(bRestockPositive, TEXT("every shipped pack has a positive restock window"));
+
+		Inventory->ResetCollection();
+		Shop->ResetPurchaseState();
+	}
+
+	void TestDeckState(
+		FTestReport& Report,
+		UDAInventorySubsystem* Inventory,
+		UDADeckLogic* DeckLogic,
+		UCardDatabaseSubsystem* Database)
+	{
+		Inventory->ResetCollection();
+		Inventory->SetMaxOwnedCopies(3);
+		DeckLogic->ResetToDefaults();
+
+		TSharedPtr<FJsonObject> Section = MakeShared<FJsonObject>();
+		Report.CheckTrue(DeckLogic->WriteSaveSection(Section), TEXT("deck write section succeeds"));
+		FString Error;
+		Report.CheckTrue(DeckLogic->ValidateSaveSection(Section, Error), TEXT("deck written section validates"));
+
+		const FString SavedJson = DeckLogic->ExportStateJson();
+		const FString SavedActive = DeckLogic->GetActiveDeckId();
+		const int32 SavedDeckCount = DeckLogic->GetPlayerDecksRef().Num();
+		DeckLogic->ResetToDefaults();
+		Report.CheckTrue(DeckLogic->ImportStateJson(SavedJson, Error), TEXT("deck JSON round-trip imports"));
+		Report.CheckEqual(DeckLogic->GetPlayerDecksRef().Num(), SavedDeckCount, TEXT("deck round-trip preserves the deck count"));
+		Report.CheckTrue(DeckLogic->GetActiveDeckId() == SavedActive, TEXT("deck round-trip preserves the active deck"));
+
+		// Malformed save sections are rejected without replacing live decks.
+		const TCHAR* BadSections[] = {
+			TEXT("{\"decks\":[{\"id\":\"player_1\",\"name\":\"A\",\"main\":[1],\"extra\":[]},{\"id\":\"Player_1\",\"name\":\"B\",\"main\":[2],\"extra\":[]}]}"),
+			TEXT("{\"decks\":[{\"id\":\"x\",\"name\":\"X\",\"main\":[\"1\"],\"extra\":[]}]}"),
+			TEXT("{\"decks\":[{\"id\":\"x\",\"name\":\"X\",\"main\":[1.5],\"extra\":[]}]}"),
+			TEXT("{\"decks\":[{\"id\":\"x\",\"name\":\"X\",\"main\":[0],\"extra\":[]}]}"),
+			TEXT("{\"decks\":[{\"id\":\"x\",\"name\":\"X\",\"main\":[],\"extra\":true}]}"),
+			TEXT("{\"decks\":[{\"id\":\"x\",\"name\":\"X\",\"main\":[]}],\"active_deck_id\":1}")
+		};
+		for (const TCHAR* Json : BadSections)
+		{
+			const TSharedPtr<FJsonObject> Bad = ParseJsonObjectForTest(Json);
+			Report.CheckTrue(Bad.IsValid(), FString::Printf(TEXT("deck malformed fixture parses: %s"), Json));
+			Report.CheckTrue(!DeckLogic->ValidateSaveSection(Bad, Error), FString::Printf(TEXT("deck rejects malformed section: %s"), Json));
+			Report.CheckTrue(!DeckLogic->ImportStateJson(Json, Error), FString::Printf(TEXT("deck import rejects malformed payload: %s"), Json));
+			Report.CheckEqual(DeckLogic->GetPlayerDecksRef().Num(), SavedDeckCount, FString::Printf(TEXT("deck count preserved: %s"), Json));
+			Report.CheckTrue(DeckLogic->GetActiveDeckId() == SavedActive, FString::Printf(TEXT("active deck preserved: %s"), Json));
+		}
+
+		// Unknown cards and main/extra separation.
+		const TArray<int32> NonFusion = PickNonFusionCards(Database, DeckLogic->GetRules(), 1);
+		const TArray<int32> Fusions = PickFusionCards(Database, DeckLogic->GetRules(), 1);
+		Report.CheckEqual(NonFusion.Num(), 1, TEXT("found a non-fusion card for deck tests"));
+		Report.CheckEqual(Fusions.Num(), 1, TEXT("found a fusion card for deck tests"));
+		if (NonFusion.Num() == 1 && Fusions.Num() == 1)
+		{
+			TArray<FDAEDeckError> Errors;
+			const FDAEDeck UnknownDeck = BuildDeck({ 999999 }, {});
+			Report.CheckTrue(!UDADeckLogic::ValidateDeckAgainstRules(UnknownDeck, DeckLogic->GetRules(), Database, nullptr, false, Errors),
+				TEXT("unknown card id is rejected"));
+			Report.CheckTrue(HasErrorCode(Errors, TEXT("unknown_card")), TEXT("unknown card reports unknown_card"));
+
+			const FDAEDeck FusionInMain = BuildDeck({ Fusions[0] }, {});
+			Report.CheckTrue(!UDADeckLogic::ValidateDeckAgainstRules(FusionInMain, DeckLogic->GetRules(), Database, nullptr, false, Errors),
+				TEXT("fusion in the main deck is rejected"));
+			Report.CheckTrue(HasErrorCode(Errors, TEXT("fusion_in_main")), TEXT("fusion in main reports fusion_in_main"));
+
+			const FDAEDeck NonFusionInExtra = BuildDeck({}, { NonFusion[0] });
+			Report.CheckTrue(!UDADeckLogic::ValidateDeckAgainstRules(NonFusionInExtra, DeckLogic->GetRules(), Database, nullptr, false, Errors),
+				TEXT("non-fusion in the extra deck is rejected"));
+			Report.CheckTrue(HasErrorCode(Errors, TEXT("invalid_extra_card")), TEXT("non-fusion in extra reports invalid_extra_card"));
+		}
+
+		// AnyCount fusion recipes (F.G.D. needs five Dragon monsters) must use
+		// the same matching rule as FDuelEngine::FindFusionOption.
+		const FFusionRecipeDef* AnyCountRecipe = nullptr;
+		for (const FFusionRecipeDef& Recipe : Database->GetFusions())
+		{
+			if (Recipe.AnyCount > 0)
+			{
+				AnyCountRecipe = &Recipe;
+				break;
+			}
+		}
+		Report.CheckTrue(AnyCountRecipe != nullptr, TEXT("an AnyCount fusion recipe exists"));
+		if (AnyCountRecipe)
+		{
+			TArray<int32> MatchingMonsters;
+			for (const TPair<int32, FCardRecord>& Pair : Database->GetCards())
+			{
+				if (!Pair.Value.IsMonster())
+				{
+					continue;
+				}
+				if (!AnyCountRecipe->MaterialsType.IsEmpty()
+					&& Pair.Value.MonsterType != AnyCountRecipe->MaterialsType)
+				{
+					continue;
+				}
+				MatchingMonsters.Add(Pair.Key);
+			}
+			Report.CheckTrue(MatchingMonsters.Num() >= AnyCountRecipe->AnyCount,
+				TEXT("enough matching monsters exist for the AnyCount recipe"));
+			if (MatchingMonsters.Num() >= AnyCountRecipe->AnyCount)
+			{
+				Inventory->ResetCollection();
+				for (int32 Index = 0; Index < AnyCountRecipe->AnyCount - 1; ++Index)
+				{
+					Inventory->AddCard(MatchingMonsters[Index], 1);
+				}
+				const bool bMissingMaterials = DeckLogic->GetAvailableFusionRecipes().ContainsByPredicate(
+					[AnyCountRecipe](const FFusionRecipeDef& Recipe) { return Recipe.Result == AnyCountRecipe->Result; });
+				Report.CheckTrue(!bMissingMaterials, TEXT("AnyCount recipe is hidden when too few materials are owned"));
+
+				Inventory->AddCard(MatchingMonsters[AnyCountRecipe->AnyCount - 1], 1);
+				const bool bHasMaterials = DeckLogic->GetAvailableFusionRecipes().ContainsByPredicate(
+					[AnyCountRecipe](const FFusionRecipeDef& Recipe) { return Recipe.Result == AnyCountRecipe->Result; });
+				Report.CheckTrue(bHasMaterials, TEXT("AnyCount recipe appears when enough materials are owned"));
+			}
+		}
+
+		// Copy limit / limited list editing uses the same rules as validation.
+		Inventory->ResetCollection();
+		DeckLogic->ResetToDefaults();
+		FString EditError;
+		const FString LimitDeckId = DeckLogic->CreateDeck(TEXT("Limit Test"), EditError);
+		Report.CheckTrue(!LimitDeckId.IsEmpty(), TEXT("limit test deck is created"));
+		if (!LimitDeckId.IsEmpty() && NonFusion.Num() == 1)
+		{
+			Inventory->AddCard(NonFusion[0], 3);
+			Report.CheckTrue(DeckLogic->AddCardToDeck(LimitDeckId, NonFusion[0], false, EditError), TEXT("first copy is added"));
+			Report.CheckTrue(DeckLogic->AddCardToDeck(LimitDeckId, NonFusion[0], false, EditError), TEXT("second copy is added"));
+			Report.CheckTrue(DeckLogic->AddCardToDeck(LimitDeckId, NonFusion[0], false, EditError), TEXT("third copy is added"));
+			Report.CheckTrue(!DeckLogic->AddCardToDeck(LimitDeckId, NonFusion[0], false, EditError), TEXT("fourth copy is rejected by the copy limit"));
+			Report.CheckTrue(EditError.Contains(TEXT("3 copies")), TEXT("copy-limit message names the limit"));
+
+			Inventory->AddCard(13, 1); // Right Leg of the Forbidden One: Limited 1.
+			Report.CheckTrue(DeckLogic->AddCardToDeck(LimitDeckId, 13, false, EditError), TEXT("first limited copy is added"));
+			Report.CheckTrue(!DeckLogic->AddCardToDeck(LimitDeckId, 13, false, EditError), TEXT("second limited copy is rejected"));
+			Report.CheckTrue(EditError.Contains(TEXT("1 copy")), TEXT("limited message names the limit"));
+		}
+
+		// An illegal/underfilled deck cannot become active; a legal imported
+		// starter deck can.
+		const FString PreviousActive = DeckLogic->GetActiveDeckId();
+		if (!LimitDeckId.IsEmpty())
+		{
+			Report.CheckTrue(!DeckLogic->SetActiveDeck(LimitDeckId, EditError), TEXT("underfilled deck cannot become active"));
+			Report.CheckTrue(DeckLogic->GetActiveDeckId() == PreviousActive, TEXT("failed activation keeps the previous active deck"));
+		}
+
+		const TArray<int32> StarterCards = DeckLogic->GetStarterDeckCards(TEXT("fire"));
+		Report.CheckTrue(StarterCards.Num() > 0, TEXT("fire starter deck exists"));
+		GrantCopies(Inventory, StarterCards, 1);
+		FString StarterId;
+		FString StarterError;
+		Report.CheckTrue(DeckLogic->ImportStarterDeck(TEXT("fire"), TEXT("Starter Copy"), StarterId, StarterError), TEXT("starter deck imports"));
+		const FDAEDeck* StarterDeck = DeckLogic->FindPlayerDeck(StarterId);
+		Report.CheckTrue(StarterDeck && StarterDeck->bStarter, TEXT("imported starter deck keeps its starter flag"));
+		Report.CheckTrue(DeckLogic->SetActiveDeck(StarterId, StarterError), TEXT("legal starter deck becomes active"));
+		Report.CheckTrue(DeckLogic->GetActiveDeckId() == StarterId, TEXT("active deck switches to the starter copy"));
+
+		FString CopyId;
+		FString CopyError;
+		Report.CheckTrue(DeckLogic->CopyDeck(StarterId, TEXT("Starter Copy 2"), CopyId, CopyError), TEXT("starter deck copy succeeds"));
+		const FDAEDeck* CopiedDeck = DeckLogic->FindPlayerDeck(CopyId);
+		Report.CheckTrue(CopiedDeck && !CopiedDeck->bStarter, TEXT("copied deck clears the starter flag"));
+
+		const int32 CountBeforeErase = DeckLogic->GetPlayerDecksRef().Num();
+		Report.CheckTrue(DeckLogic->EraseDeck(StarterId, EditError), TEXT("active deck can be erased"));
+		Report.CheckEqual(DeckLogic->GetPlayerDecksRef().Num(), CountBeforeErase - 1, TEXT("erase removes exactly one deck"));
+		Report.CheckTrue(DeckLogic->GetActiveDeck() != nullptr, TEXT("erasing the active deck selects a fallback"));
+		Report.CheckTrue(DeckLogic->GetActiveDeckId() != StarterId, TEXT("erased deck is no longer active"));
+
+		// Struct saves drop non-positive card ids rather than persisting them.
+		FDAEDeckSaveData FilterData = DeckLogic->GetSaveData();
+		if (FilterData.Decks.Num() > 0)
+		{
+			FilterData.Decks[0].Main.Add(0);
+			FilterData.Decks[0].Main.Add(-7);
+			Report.CheckTrue(DeckLogic->ApplySaveData(FilterData, Error), TEXT("deck payload with invalid ids applies"));
+			bool bNoInvalidIds = true;
+			for (const FDAEDeck& Deck : DeckLogic->GetPlayerDecksRef())
+			{
+				for (const int32 CardId : Deck.Main)
+				{
+					if (CardId <= 0) bNoInvalidIds = false;
+				}
+				for (const int32 CardId : Deck.Extra)
+				{
+					if (CardId <= 0) bNoInvalidIds = false;
+				}
+			}
+			Report.CheckTrue(bNoInvalidIds, TEXT("non-positive card ids are dropped from deck saves"));
+		}
+
+		Inventory->ResetCollection();
+		DeckLogic->ResetToDefaults();
+	}
 }
 
 FString DAEconomyTests::Run(
 	UDAInventorySubsystem* Inventory,
 	UDAShopSubsystem* Shop,
 	UDADeckLogic* DeckLogic,
-	UCardDatabaseSubsystem* Database)
+	UCardDatabaseSubsystem* Database,
+	int32* OutFailures)
 {
 	FTestReport Report;
+	if (OutFailures)
+	{
+		*OutFailures = 0;
+	}
 	if (!Inventory || !Shop || !DeckLogic || !Database)
 	{
 		Report.Check(false, TEXT("all economy subsystems are available"));
+		if (OutFailures)
+		{
+			*OutFailures = Report.Failed;
+		}
 		return Report.ToString();
 	}
 
@@ -1166,6 +1706,9 @@ FString DAEconomyTests::Run(
 	TestDeckCatalogue(Report, DeckLogic, Database);
 	TestDecks(Report, Inventory, DeckLogic, Database);
 	TestShop(Report, Inventory, Shop, DeckLogic);
+	TestInventoryTransactionality(Report, Inventory, Shop, Database);
+	TestShopState(Report, Inventory, Shop);
+	TestDeckState(Report, Inventory, DeckLogic, Database);
 
 	// Leave a clean, playable default state in case the caller did not exit.
 	Inventory->ResetCollection();
@@ -1173,5 +1716,9 @@ FString DAEconomyTests::Run(
 	DeckLogic->ResetToDefaults();
 
 	UE_LOG(LogDuelAcademyIsland, Display, TEXT("DAEconomySelfTest: %d passed, %d failed."), Report.Passed, Report.Failed);
+	if (OutFailures)
+	{
+		*OutFailures = Report.Failed;
+	}
 	return Report.ToString();
 }

@@ -32,10 +32,13 @@ public:
 	void DebugResolveTimed(bool bSolved = true);
 	void DebugFinishPractical();
 	void DebugCompleteExam();
+	/** Begins the timed section and launches the real puzzle duel (no submission). */
+	bool DebugStartTimedDuel();
 
 	const FDAExamResult& GetResult() const { return Result; }
 	bool HasResult() const;
 	int32 GetMonthIndex() const { return MonthIndex; }
+	bool IsTimedDuelActive() const { return bTimedDuelActive; }
 
 	FDAExamUIClosedSignature OnClosed;
 
@@ -54,6 +57,11 @@ private:
 	void SyncPanelFromPhase();
 	void SubmitAnswer(int32 AnswerIndex);
 	void StartTimed();
+	void LaunchTimedDuel();
+	void PollTimedDuel();
+	void CancelTimedDuel();
+	void FinishTimedResult(bool bSolved, int32 TurnsUsed, float SecondsUsed);
+	void RestoreExamInputMode();
 	void StartPractical();
 	void FinishPracticalAndResult();
 	void HandleClickAtMouse();
@@ -86,6 +94,10 @@ private:
 	int32 HoveredAnswer = INDEX_NONE;
 	bool bOpen = false;
 	bool bOutcomeApplied = false;
+	bool bTimedDuelActive = false;
+	FString TimedDuelToken;
+	int32 TimedTurnLimit = 0;
+	int32 TimedTimeLimit = 0;
 
 	float Elapsed = 0.f;
 	float StatusTime = 0.f;

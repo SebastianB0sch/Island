@@ -176,6 +176,9 @@ private:
 	void Diamond(const FVector2D& C, float R, const FLinearColor& Color);
 	FVector2D Measure(const FString& Str, float InScale, UFont* Font = nullptr) const;
 	TArray<FString> WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+	FString Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+
+	void MoveChoiceSelection(int32 Delta, bool bWrap);
 
 	void DrawPortrait(float X, float Y, float Size, const FDADialogueLine& Line, float Alpha);
 	void DrawHistoryOverlay();

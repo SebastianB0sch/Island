@@ -13,7 +13,7 @@ import re
 import sys
 from pathlib import Path
 
-from canon_common import CANON_DIR, ensure_dirs, read_json, utc_now, write_json
+from canon_common import CANON_DIR, CACHE_DIR, ensure_dirs, read_json, utc_now, write_json
 
 GUIDE = "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events"
 FAQ = "https://gamefaqs.gamespot.com/gba/928593-yu-gi-oh-gx-duel-academy/faqs/41359"
@@ -538,7 +538,7 @@ def attach_dialogue(events: list[dict], dialogue_previews: dict[int, str]) -> No
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path,
-                        default=Path(r"C:\Users\Sebas\AppData\Local\Temp\opencode\gxcanon\guide_wikitext.json"))
+                        default=CACHE_DIR / "guide_wikitext.json")
     args = parser.parse_args()
     ensure_dirs()
     by_name, by_id = load_cards()

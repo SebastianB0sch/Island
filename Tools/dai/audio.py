@@ -7,6 +7,7 @@ they are perfectly periodic: they loop seamlessly in Unreal (bLooping).
 
 import math
 import os
+import tempfile
 import wave
 
 import numpy as np
@@ -21,11 +22,23 @@ def _write(path, x, sr=SR):
     peak = np.max(np.abs(x)) + 1e-9
     x = x / peak * 0.85
     data = (x * 32767).astype("<i2")
-    with wave.open(path, "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(sr)
-        w.writeframes(data.tobytes())
+    directory = os.path.dirname(os.path.abspath(path))
+    os.makedirs(directory, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=os.path.basename(path) + ".", suffix=".wav", dir=directory)
+    os.close(fd)
+    try:
+        with wave.open(temp_name, "wb") as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(sr)
+            w.writeframes(data.tobytes())
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name):
+            try:
+                os.unlink(temp_name)
+            except OSError:
+                pass
 
 
 def band_noise(n, lo, hi, seed, tilt=0.0):
@@ -72,7 +85,6 @@ def birds(dur=20.0, seed=5):
     n = int(SR * dur)
     r = np.random.default_rng(seed)
     out = wind(dur) * 0.15
-    t_all = np.arange(n) / SR
     for _ in range(int(dur * 1.6)):
         start = r.uniform(0, dur - 0.6)
         notes = r.integers(2, 6)

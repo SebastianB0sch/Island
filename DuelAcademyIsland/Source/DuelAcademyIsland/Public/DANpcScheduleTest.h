@@ -45,6 +45,7 @@ private:
 	void RunEventCases();
 	void RunSpawnDespawnCases();
 	void RunRefreshCases();
+	void RunWorldStatePersistenceCases();
 	void VerifyActiveSet(const FString& CaseName, const FString& ScheduleId, const FString& Weekday,
 		const FString& Period, const FString& Event);
 	bool ExpectedActive(const FDANpcSchedulePointData& Point, const FString& ScheduleId, const FString& Weekday,

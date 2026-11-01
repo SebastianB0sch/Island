@@ -7,6 +7,7 @@
 #include "DAIslandSubsystem.h"
 #include "DATypes.h"
 #include "DAStudentCharacter.h"
+#include "DuelAcademyIsland.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/Controller.h"
@@ -74,6 +75,8 @@ void ADAInteriorPortal::BeginPlay()
 		Trigger->OnComponentEndOverlap.AddDynamic(this, &ADAInteriorPortal::HandleEndOverlap);
 	}
 
+	ValidatePairing();
+
 	if (bInteractable)
 	{
 		if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
@@ -94,9 +97,76 @@ void ADAInteriorPortal::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		World->GetTimerManager().ClearTimer(TeleportTimer);
 		World->GetTimerManager().ClearTimer(SuppressTimer);
+		// The pending finish will never run; do not leave the fade-out up.
+		if (bTeleportPending)
+		{
+			if (APlayerController* PC = World->GetFirstPlayerController())
+			{
+				if (PC->PlayerCameraManager && FadeInSeconds > 0.f)
+				{
+					PC->PlayerCameraManager->StartCameraFade(1.f, 0.f, FadeInSeconds, FadeColor, false, false);
+				}
+			}
+			bTeleportPending = false;
+		}
 	}
 
 	Super::EndPlay(EndPlayReason);
+}
+
+void ADAInteriorPortal::ValidatePairing() const
+{
+	if (PortalId.IsEmpty())
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Portal %s has an empty PortalId; it cannot be paired or saved."), *GetName());
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	int32 SameIdCount = 0;
+	for (TActorIterator<ADAInteriorPortal> It(World); It; ++It)
+	{
+		if (*It && (*It)->PortalId == PortalId)
+		{
+			++SameIdCount;
+		}
+	}
+	if (SameIdCount > 1)
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning,
+			TEXT("Portal id '%s' is used by %d actors; FindLinkedPortal resolves the first match."),
+			*PortalId, SameIdCount);
+	}
+
+	if (TargetPortalId.IsEmpty())
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Portal %s has no TargetPortalId and only uses its fallback target."), *PortalId);
+		return;
+	}
+	if (TargetPortalId == PortalId)
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Portal %s targets itself; the link is ignored."), *PortalId);
+		return;
+	}
+
+	const ADAInteriorPortal* Linked = FindLinkedPortal();
+	if (!Linked)
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning,
+			TEXT("Portal %s targets missing portal '%s'; the fallback target is used."), *PortalId, *TargetPortalId);
+		return;
+	}
+	if (Linked->TargetPortalId != PortalId)
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning,
+			TEXT("Portal %s links to %s, but %s links back to '%s' instead of '%s'."),
+			*PortalId, *Linked->PortalId, *Linked->PortalId, *Linked->TargetPortalId, *PortalId);
+	}
 }
 
 // ---------------------------------------------------------------------------- overlap
@@ -168,6 +238,15 @@ bool ADAInteriorPortal::TryUse(AActor* User)
 		return false;
 	}
 
+	// Refuse an unconfigured portal rather than teleporting the player to the
+	// world origin (which the fall rescue would then treat as a real arrival).
+	if (TargetLocation.IsNearlyZero() && (!bSnapToLinkedPortal || !FindLinkedPortal()))
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning,
+			TEXT("Portal %s has no reachable destination; use cancelled."), *PortalId);
+		return false;
+	}
+
 	CooldownUntil = World->GetTimeSeconds() + FMath::Max(0.1f, CooldownSeconds);
 	bUsed = true;
 
@@ -231,25 +310,30 @@ void ADAInteriorPortal::BeginTeleport(AActor* User)
 
 void ADAInteriorPortal::FinishTeleport()
 {
-	if (AActor* User = PendingUser.Get())
+	AActor* User = PendingUser.Get();
+	if (User)
 	{
 		ApplyArrival(User);
+	}
 
-		APlayerController* PC = nullptr;
-		if (const APawn* Pawn = Cast<APawn>(User))
-		{
-			PC = Cast<APlayerController>(Pawn->GetController());
-		}
-		if (!PC && GetWorld())
-		{
-			PC = GetWorld()->GetFirstPlayerController();
-		}
+	// Fade back in even if the user disappeared during the fade-out; otherwise
+	// the camera would stay black until the next transition.
+	APlayerController* PC = nullptr;
+	if (const APawn* Pawn = Cast<APawn>(User))
+	{
+		PC = Cast<APlayerController>(Pawn->GetController());
+	}
+	if (!PC && GetWorld())
+	{
+		PC = GetWorld()->GetFirstPlayerController();
+	}
+	if (PC && PC->PlayerCameraManager && FadeInSeconds > 0.f)
+	{
+		PC->PlayerCameraManager->StartCameraFade(1.f, 0.f, FadeInSeconds, FadeColor, false, false);
+	}
 
-		if (PC && PC->PlayerCameraManager && FadeInSeconds > 0.f)
-		{
-			PC->PlayerCameraManager->StartCameraFade(1.f, 0.f, FadeInSeconds, FadeColor, false, false);
-		}
-
+	if (User)
+	{
 		OnPortalUsed.Broadcast(this, User);
 	}
 
@@ -264,13 +348,6 @@ void ADAInteriorPortal::ApplyArrival(AActor* User)
 		return;
 	}
 
-	// Interior cells are generated far below the island; tell the character so
-	// its fall-out-of-world rescue and swimming logic do not undo the teleport.
-	if (ADAStudentCharacter* Character = Cast<ADAStudentCharacter>(User))
-	{
-		Character->SetInInterior(PendingLocation.Z < -20000.f);
-	}
-
 	if (const APawn* Pawn = Cast<APawn>(User))
 	{
 		if (UPawnMovementComponent* Movement = Pawn->GetMovementComponent())
@@ -282,11 +359,22 @@ void ADAInteriorPortal::ApplyArrival(AActor* User)
 	User->SetActorLocationAndRotation(PendingLocation, FRotator(0.f, PendingYaw, 0.f), false, nullptr,
 		ETeleportType::TeleportPhysics);
 
+	// Interior cells are generated far below the island; tell the character so
+	// its fall-out-of-world rescue and swimming logic do not undo the teleport.
+	// Called after the move so leaving a cell can re-anchor the rescue at the
+	// arrival point.
+	if (ADAStudentCharacter* Character = Cast<ADAStudentCharacter>(User))
+	{
+		Character->SetInInterior(PendingLocation.Z < -20000.f);
+	}
+
 	if (APawn* Pawn = Cast<APawn>(User))
 	{
 		if (AController* Controller = Pawn->GetController())
 		{
-			Controller->SetControlRotation(FRotator(0.f, PendingYaw, 0.f));
+			// Keep the player's look pitch; only the yaw belongs to the door.
+			const FRotator Current = Controller->GetControlRotation();
+			Controller->SetControlRotation(FRotator(Current.Pitch, PendingYaw, 0.f));
 		}
 	}
 }
@@ -323,6 +411,8 @@ void ADAInteriorPortal::SuppressFor(AActor* User)
 	if (UWorld* World = GetWorld())
 	{
 		const float SafetySeconds = FMath::Max(0.75f, CooldownSeconds + FadeOutSeconds + FadeInSeconds + 0.25f);
+		// Refresh, don't stack: an old timer must not clear a newer suppression.
+		World->GetTimerManager().ClearTimer(SuppressTimer);
 		World->GetTimerManager().SetTimer(SuppressTimer, this, &ADAInteriorPortal::ClearSuppression, SafetySeconds, false);
 	}
 }
@@ -362,15 +452,22 @@ ADAInteriorPortal* ADAInteriorPortal::FindLinkedPortal() const
 		return nullptr;
 	}
 
+	ADAInteriorPortal* Best = nullptr;
 	for (TActorIterator<ADAInteriorPortal> It(World); It; ++It)
 	{
 		ADAInteriorPortal* Other = *It;
-		if (Other && Other != this && Other->PortalId == TargetPortalId)
+		if (!Other || Other == this || Other->PortalId != TargetPortalId)
 		{
-			return Other;
+			continue;
+		}
+		// Duplicate ids are invalid (logged at BeginPlay), but picking by name
+		// keeps the resolution deterministic instead of depending on iteration order.
+		if (!Best || Other->GetName() < Best->GetName())
+		{
+			Best = Other;
 		}
 	}
-	return nullptr;
+	return Best;
 }
 
 FDAPortalSaveState ADAInteriorPortal::GetSaveState() const
@@ -384,12 +481,102 @@ FDAPortalSaveState ADAInteriorPortal::GetSaveState() const
 
 void ADAInteriorPortal::ApplySaveState(const FDAPortalSaveState& State)
 {
-	if (!State.PortalId.IsEmpty() && State.PortalId != PortalId)
+	// An empty save id is not a wildcard: applying it to every portal would
+	// overwrite unrelated door state after a malformed payload.
+	if (State.PortalId.IsEmpty() || State.PortalId != PortalId)
 	{
 		return;
 	}
+	// Assigning both flags is idempotent, so a retried load cannot toggle state.
 	bLocked = State.bLocked;
 	bUsed = State.bUsed;
+}
+
+void ADAInteriorPortal::CollectSaveStates(UWorld* World, TArray<FDAPortalSaveState>& OutStates)
+{
+	OutStates.Reset();
+	if (!World)
+	{
+		return;
+	}
+
+	TArray<ADAInteriorPortal*> Portals;
+	for (TActorIterator<ADAInteriorPortal> It(World); It; ++It)
+	{
+		ADAInteriorPortal* Portal = *It;
+		if (Portal && !Portal->PortalId.IsEmpty())
+		{
+			Portals.Add(Portal);
+		}
+	}
+	Portals.Sort([](const ADAInteriorPortal& A, const ADAInteriorPortal& B)
+	{
+		if (A.PortalId != B.PortalId)
+		{
+			return A.PortalId < B.PortalId;
+		}
+		return A.GetName() < B.GetName();
+	});
+
+	TSet<FString> SeenIds;
+	for (ADAInteriorPortal* Portal : Portals)
+	{
+		if (SeenIds.Contains(Portal->PortalId))
+		{
+			continue;
+		}
+		SeenIds.Add(Portal->PortalId);
+		OutStates.Add(Portal->GetSaveState());
+	}
+}
+
+int32 ADAInteriorPortal::ApplySaveStates(UWorld* World, const TArray<FDAPortalSaveState>& States)
+{
+	if (!World)
+	{
+		return 0;
+	}
+
+	// Resolve each id once, deterministically (duplicate actor ids keep the
+	// name-ordered first actor, matching FindLinkedPortal).
+	TMap<FString, ADAInteriorPortal*> PortalsById;
+	for (TActorIterator<ADAInteriorPortal> It(World); It; ++It)
+	{
+		ADAInteriorPortal* Portal = *It;
+		if (!Portal || Portal->PortalId.IsEmpty())
+		{
+			continue;
+		}
+		ADAInteriorPortal*& Existing = PortalsById.FindOrAdd(Portal->PortalId);
+		if (!Existing || Portal->GetName() < Existing->GetName())
+		{
+			Existing = Portal;
+		}
+	}
+
+	int32 Applied = 0;
+	TSet<FString> SeenIds;
+	for (const FDAPortalSaveState& State : States)
+	{
+		// Empty ids are not wildcards, and duplicate entries must not let a
+		// later row overwrite the first one.
+		if (State.PortalId.IsEmpty() || SeenIds.Contains(State.PortalId))
+		{
+			continue;
+		}
+		SeenIds.Add(State.PortalId);
+
+		ADAInteriorPortal* Target = PortalsById.FindRef(State.PortalId);
+		if (!Target)
+		{
+			// Unknown id (actor not loaded, content removed, or a hand-edited
+			// save): ignore it rather than failing the whole load.
+			continue;
+		}
+		Target->ApplySaveState(State);
+		++Applied;
+	}
+	return Applied;
 }
 
 // ---------------------------------------------------------------------------- interactable

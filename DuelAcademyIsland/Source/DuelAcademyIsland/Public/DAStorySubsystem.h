@@ -124,6 +124,7 @@ struct FDAStoryPendingDuel
 	FString OnLose;
 	FString OnDraw;
 	bool bTutorial = false;
+	bool bAwardDP = true;
 	bool bOpened = false;
 	float Elapsed = 0.f;
 	int32 PreWinsJaden = 0;
@@ -131,6 +132,7 @@ struct FDAStoryPendingDuel
 	int32 PreWinsTotal = 0;
 	int32 PreDuels = 0;
 	int32 PreDraws = 0;
+	int32 PreLosses = 0;
 };
 
 /**
@@ -140,7 +142,8 @@ struct FDAStoryPendingDuel
  *   StartOpening() / StartOpeningFresh() -> StartEvent("E01") -> PumpQueue
  *   Dialogue/Choice commands pause; A09 callbacks resume on the next tick.
  *   Advance()/Choose() are for input/automation/tests.
- *   SaveState()/LoadState() serialize the queue and applied rewards.
+ *   SaveState()/LoadState() serialize the queue, pending duel, applied rewards
+ *   and the event/outcome idempotency ledger.
  */
 UCLASS()
 class DUELACADEMYISLAND_API UDAStorySubsystem : public UGameInstanceSubsystem, public IDASavePayloadProvider
@@ -314,6 +317,7 @@ public:
 	// IDASavePayloadProvider
 	virtual FString GetSaveSectionName() const override;
 	virtual bool WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const override;
+	virtual bool ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const override;
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) override;
 
 private:
@@ -346,9 +350,12 @@ private:
 	void TryStartNextAvailableEvent();
 
 	void ApplyEventOutcomes(const FString& EventId);
-	void ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Outcomes);
+	void ApplyOutcomes(const TArray<TSharedPtr<FJsonObject>>& Outcomes, const FString& ContextKey);
 	void ApplyRewardById(const FString& RewardId);
 	void ApplyRewardCommand(const FDAStoryCommand& Command);
+	void GrantCardReward(int32 CardId, int32 Count);
+	bool AddPendingPackGrant(const FString& PackId, int32 Count);
+	void ApplyTitleReward(const FString& Title);
 	void ApplySetFlag(const FString& Flag, bool bValue);
 	void ApplyDeckGrant(const FString& DeckId);
 	bool EnsureStarterDeck(const FString& PreferredDeck = TEXT("fire"));
@@ -367,6 +374,13 @@ private:
 	void ResolvePendingDuel(bool bWon, bool bDraw);
 	void SimulateDuelResult(bool bWon, bool bDraw);
 	void CapturePendingDuel(const FDAStoryCommand& Command);
+
+	/**
+	 * Infer an opened duel's result from the profile counters captured at duel
+	 * start. Uses wins_total (not only wins_jaden) so a pending duel against any
+	 * opponent resolves correctly after a save/load.
+	 */
+	void InferPendingDuelResult(bool& bOutWon, bool& bOutDraw) const;
 
 	void SetCalendarFromJson(const TSharedPtr<FJsonObject>& Object);
 	void SetObjective(const FString& Id, const FString& Text);
@@ -406,6 +420,7 @@ private:
 
 	TSet<FString> CompletedEvents;
 	TSet<FString> AppliedRewardIds;
+	TSet<FString> AppliedOutcomeKeys;
 	TSet<FString> FullCampaignEventIds;
 	TSet<FString> UnlockedDuels;
 
@@ -427,6 +442,8 @@ private:
 	bool bWaitingForTimer = false;
 	bool bPendingContinue = false;
 	bool bPendingTextInput = false;
+	/** A pending duel was restored from a save and must be re-presented to the player. */
+	bool bResumePendingDuel = false;
 	bool bDialogueDelegatesBound = false;
 	bool bSaveProviderRegistered = false;
 	bool bAutoOpeningRequested = false;

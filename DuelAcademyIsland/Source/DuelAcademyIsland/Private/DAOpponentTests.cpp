@@ -4,8 +4,20 @@
 
 #include "DAOpponentSubsystem.h"
 #include "DADuelistAI.h"
+#include "Engine/GameInstance.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
+
+namespace
+{
+	UDAOpponentSubsystem* MakeOpponentSubsystemForTest()
+	{
+		// A GameInstanceSubsystem must be outered to a GameInstance; creating
+		// it directly in the transient package triggers a ClassWithin ensure.
+		UGameInstance* Outer = NewObject<UGameInstance>(GetTransientPackage());
+		return NewObject<UDAOpponentSubsystem>(Outer);
+	}
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDAOpponentRosterTest, "DuelAcademy.Opponents.Roster",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -13,7 +25,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDAOpponentRosterTest, "DuelAcademy.Opponents.R
 bool FDAOpponentRosterTest::RunTest(const FString& Parameters)
 {
 	(void)Parameters;
-	UDAOpponentSubsystem* Opponents = NewObject<UDAOpponentSubsystem>(GetTransientPackage());
+	UDAOpponentSubsystem* Opponents = MakeOpponentSubsystemForTest();
 	if (!TestNotNull(TEXT("Opponent subsystem created"), Opponents))
 	{
 		return false;
@@ -27,7 +39,7 @@ bool FDAOpponentRosterTest::RunTest(const FString& Parameters)
 	}
 
 	TestTrue(TEXT("At least 25 duelists"), Opponents->GetOpponents().Num() >= 25);
-	TestEqual(TEXT("Thirty-one runtime opponent decks"), Opponents->GetDecks().Num(), 31);
+	TestEqual(TEXT("Thirty-two runtime opponent decks"), Opponents->GetDecks().Num(), 32);
 	for (const FDAOpponentDeckDef& RuntimeDeck : Opponents->GetDecks())
 	{
 		TestTrue(FString::Printf(TEXT("Deck %s has a 40-60 main deck"), *RuntimeDeck.Id),

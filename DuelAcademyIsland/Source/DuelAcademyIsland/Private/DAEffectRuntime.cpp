@@ -13,6 +13,10 @@
 
 namespace
 {
+	/** Bounds for effect-driven event cascades so a trigger loop cannot stall a duel. */
+	constexpr int32 MaxPendingEffectEvents = 64;
+	constexpr int32 MaxEffectEventsPerCascade = 128;
+
 	FString ReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Key, const FString& Default = FString())
 	{
 		FString Value;
@@ -190,6 +194,15 @@ namespace
 		return Known.Contains(Op);
 	}
 
+	bool IsKnownTargetRef(const FString& Value)
+	{
+		static const TSet<FString> Known = {
+			TEXT("$self"), TEXT("$target"), TEXT("$cost"), TEXT("$trigger"),
+			TEXT("$attacker"), TEXT("$attack_target"), TEXT("$equipped")
+		};
+		return Known.Contains(Value);
+	}
+
 	bool IsKnownZone(const FString& Zone)
 	{
 		static const TSet<FString> Known = {
@@ -259,7 +272,13 @@ namespace
 			}
 			for (const TSharedPtr<FJsonValue>& Value : *Values)
 			{
-				if (!ValidateConditionJson(Value.IsValid() ? Value->AsObject() : nullptr, OutError, Depth + 1))
+				const TSharedPtr<FJsonObject> Child = Value.IsValid() ? Value->AsObject() : nullptr;
+				if (!Child.IsValid())
+				{
+					OutError = TEXT("condition list contains a non-object entry");
+					return false;
+				}
+				if (!ValidateConditionJson(Child, OutError, Depth + 1))
 				{
 					return false;
 				}
@@ -387,6 +406,15 @@ namespace
 					return false;
 				}
 			}
+			else if (Op->HasField(TEXT("target")))
+			{
+				FString TargetRef;
+				if (!Op->TryGetStringField(TEXT("target"), TargetRef) || !IsKnownTargetRef(TargetRef))
+				{
+					OutError = FString::Printf(TEXT("uses unknown target reference '%s'"), *TargetRef);
+					return false;
+				}
+			}
 			const FString Destination = ReadString(Op, TEXT("destination"));
 			if (!Destination.IsEmpty() && !IsKnownZone(Destination))
 			{
@@ -409,12 +437,18 @@ namespace
 			for (const TCHAR* BranchKey : { TEXT("success_operations"), TEXT("failure_operations") })
 			{
 				const TArray<TSharedPtr<FJsonValue>>* Branch = nullptr;
-				if (Op->TryGetArrayField(BranchKey, Branch) && Branch)
+				if (!Op->HasField(BranchKey))
 				{
-					if (!ValidateOperationJsonArray(*Branch, OutError, Depth + 1))
-					{
-						return false;
-					}
+					continue;
+				}
+				if (!Op->TryGetArrayField(BranchKey, Branch) || !Branch)
+				{
+					OutError = FString::Printf(TEXT("uses a non-array %s"), BranchKey);
+					return false;
+				}
+				if (!ValidateOperationJsonArray(*Branch, OutError, Depth + 1))
+				{
+					return false;
 				}
 			}
 		}
@@ -425,6 +459,11 @@ namespace
 	{
 		return Zone.Contains(TEXT("monster")) || Zone.Contains(TEXT("spell_trap"))
 			|| Zone.Contains(TEXT("field")) || Zone == TEXT("self") || Zone == TEXT("opponent");
+	}
+
+	bool IsGraveyardZoneString(const FString& Zone)
+	{
+		return Zone == TEXT("self_graveyard") || Zone == TEXT("opponent_graveyard");
 	}
 }
 
@@ -458,17 +497,22 @@ bool FDAEffectRuntime::LoadScriptsFromDirectory(const FString& Directory, FStrin
 	}
 
 	int32 Loaded = 0;
+	// A public reload must not leave a partially loaded directory behind when a
+	// later file fails validation.  The snapshot is only a few hundred scripts.
+	const TMap<int32, TArray<FDEffectScript>> OriginalScripts = ScriptsByCard;
 	for (const FString& File : Files)
 	{
 		FString JsonText;
 		const FString Path = Directory / File;
 		if (!FFileHelper::LoadFileToString(JsonText, *Path))
 		{
+			ScriptsByCard = OriginalScripts;
 			OutError = FString::Printf(TEXT("Could not read effect script '%s'."), *Path);
 			return false;
 		}
 		if (!LoadScriptJsonText(JsonText, OutError))
 		{
+			ScriptsByCard = OriginalScripts;
 			OutError = FString::Printf(TEXT("%s: %s"), *Path, *OutError);
 			return false;
 		}
@@ -476,6 +520,7 @@ bool FDAEffectRuntime::LoadScriptsFromDirectory(const FString& Directory, FStrin
 	}
 	if (Loaded == 0)
 	{
+		ScriptsByCard = OriginalScripts;
 		OutError = TEXT("No effect scripts were loaded.");
 		return false;
 	}
@@ -532,8 +577,13 @@ bool FDAEffectRuntime::LoadScriptJsonText(const FString& JsonText, FString& OutE
 		}
 
 		const TSharedPtr<FJsonObject>* Condition = nullptr;
-		if (Object->TryGetObjectField(TEXT("condition"), Condition) && Condition && Condition->IsValid())
+		if (Object->HasField(TEXT("condition")))
 		{
+			if (!Object->TryGetObjectField(TEXT("condition"), Condition) || !Condition || !Condition->IsValid())
+			{
+				OutError = FString::Printf(TEXT("Card %d script '%s' has a non-object condition."), CardId, *Script.Id);
+				return false;
+			}
 			Script.Condition = *Condition;
 			if (!ValidateConditionJson(Script.Condition, OutError))
 			{
@@ -542,8 +592,13 @@ bool FDAEffectRuntime::LoadScriptJsonText(const FString& JsonText, FString& OutE
 			}
 		}
 		const TSharedPtr<FJsonObject>* Target = nullptr;
-		if (Object->TryGetObjectField(TEXT("target"), Target) && Target && Target->IsValid())
+		if (Object->HasField(TEXT("target")))
 		{
+			if (!Object->TryGetObjectField(TEXT("target"), Target) || !Target || !Target->IsValid())
+			{
+				OutError = FString::Printf(TEXT("Card %d script '%s' has a non-object target."), CardId, *Script.Id);
+				return false;
+			}
 			Script.Target = *Target;
 			if (!ValidateTargetJson(Script.Target, OutError))
 			{
@@ -553,8 +608,13 @@ bool FDAEffectRuntime::LoadScriptJsonText(const FString& JsonText, FString& OutE
 		}
 
 		const TArray<TSharedPtr<FJsonValue>>* Costs = nullptr;
-		if (Object->TryGetArrayField(TEXT("cost"), Costs) && Costs)
+		if (Object->HasField(TEXT("cost")))
 		{
+			if (!Object->TryGetArrayField(TEXT("cost"), Costs) || !Costs)
+			{
+				OutError = FString::Printf(TEXT("Card %d script '%s' has a non-array cost."), CardId, *Script.Id);
+				return false;
+			}
 			for (const TSharedPtr<FJsonValue>& CostValue : *Costs)
 			{
 				const TSharedPtr<FJsonObject> Cost = CostValue.IsValid() ? CostValue->AsObject() : nullptr;
@@ -570,11 +630,24 @@ bool FDAEffectRuntime::LoadScriptJsonText(const FString& JsonText, FString& OutE
 					return false;
 				}
 				const TSharedPtr<FJsonObject>* CostTarget = nullptr;
-				if (Cost->TryGetObjectField(TEXT("target"), CostTarget) && CostTarget && CostTarget->IsValid())
+				if (Cost->HasField(TEXT("target")))
 				{
-					if (!ValidateTargetJson(*CostTarget, OutError))
+					if (Cost->TryGetObjectField(TEXT("target"), CostTarget) && CostTarget && CostTarget->IsValid())
 					{
-						return false;
+						if (!ValidateTargetJson(*CostTarget, OutError))
+						{
+							return false;
+						}
+					}
+					else
+					{
+						FString CostTargetRef;
+						if (!Cost->TryGetStringField(TEXT("target"), CostTargetRef) || !IsKnownTargetRef(CostTargetRef))
+						{
+							OutError = FString::Printf(TEXT("Card %d script '%s' uses unknown cost target reference '%s'."),
+								CardId, *Script.Id, *CostTargetRef);
+							return false;
+						}
 					}
 				}
 				const FString CostZone = ReadString(Cost, TEXT("zone"));
@@ -622,10 +695,24 @@ bool FDAEffectRuntime::LoadScriptJsonText(const FString& JsonText, FString& OutE
 		}
 		else
 		{
-			const FString OnceValue = ReadString(Object, TEXT("once_per_turn"));
-			if (OnceValue == TEXT("duel"))
+			FString OnceValue;
+			if (Object->TryGetStringField(TEXT("once_per_turn"), OnceValue))
 			{
-				Script.bOncePerDuel = true;
+				if (OnceValue == TEXT("duel"))
+				{
+					Script.bOncePerDuel = true;
+				}
+				else
+				{
+					OutError = FString::Printf(TEXT("Card %d script '%s' has invalid once_per_turn '%s'."),
+						CardId, *Script.Id, *OnceValue);
+					return false;
+				}
+			}
+			else if (Object->HasField(TEXT("once_per_turn")))
+			{
+				OutError = FString::Printf(TEXT("Card %d script '%s' has a non-bool once_per_turn."), CardId, *Script.Id);
+				return false;
 			}
 		}
 		Script.SourceText = ReadString(Object, TEXT("source_text"));
@@ -637,8 +724,23 @@ bool FDAEffectRuntime::LoadScriptJsonText(const FString& JsonText, FString& OutE
 		OutError = FString::Printf(TEXT("Card %d has an empty scripts array."), CardId);
 		return false;
 	}
-	TArray<FDEffectScript>& Existing = ScriptsByCard.FindOrAdd(CardId);
-	Existing.Append(Parsed);
+	const TArray<FDEffectScript>* ExistingScripts = ScriptsByCard.Find(CardId);
+	TSet<FString> NewIds;
+	for (const FDEffectScript& Script : Parsed)
+	{
+		// Reloading the same file must not register every trigger twice.
+		if (NewIds.Contains(Script.Id)
+			|| (ExistingScripts && ExistingScripts->ContainsByPredicate([&Script](const FDEffectScript& Loaded)
+			{
+				return Loaded.Id == Script.Id;
+			})))
+		{
+			OutError = FString::Printf(TEXT("Card %d has duplicate script id '%s'."), CardId, *Script.Id);
+			return false;
+		}
+		NewIds.Add(Script.Id);
+	}
+	ScriptsByCard.FindOrAdd(CardId).Append(Parsed);
 	return true;
 }
 
@@ -657,6 +759,7 @@ void FDAEffectRuntime::ResetForNewDuel()
 	BattleDamageMultipliers.Reset();
 	ContinuousBattleDamageMultipliers.Reset();
 	CannotAttackUids.Reset();
+	CannotAttackUidsThisTurn.Reset();
 	MustAttackUids.Reset();
 	DirectAttackAllowedUids.Reset();
 	DirectAttackForbiddenUids.Reset();
@@ -687,10 +790,8 @@ void FDAEffectRuntime::ResetForNewDuel()
 	SpecialSummonLockSides.Reset();
 	ContinuousNormalSummonLockSides.Reset();
 	ContinuousSpecialSummonLockSides.Reset();
-	NegatedActivationUids.Reset();
 	LastRandomResult = 0;
 	LastRandomResults.Reset();
-	AttackRestrictionExpiryTurn = -1;
 	bTrapActivationLocked = false;
 	bTrapEffectNegated = false;
 	bSpellActivationLocked = false;
@@ -698,6 +799,9 @@ void FDAEffectRuntime::ResetForNewDuel()
 	bAttackNegated = false;
 	bExecuting = false;
 	bRecomputing = false;
+	bDispatchingEvents = false;
+	bEventBudgetWarned = false;
+	PendingEvents.Reset();
 	PromptCount = 0;
 	ExecutedScripts = 0;
 	FailedScripts = 0;
@@ -1213,7 +1317,8 @@ void FDAEffectRuntime::OnCounterTrapResponse(FDuelCard& Trap, int32 TargetChainL
 	FireEvent(Event);
 }
 
-void FDAEffectRuntime::OnDestroyed(const FDuelCard& Card, bool bByBattle, const FString& Reason)
+void FDAEffectRuntime::OnDestroyed(const FDuelCard& Card, bool bByBattle, const FString& Reason,
+	bool bToGraveyard)
 {
 	FDEffectEvent Event;
 	Event.Trigger = EDEffectTrigger::OnDestroy;
@@ -1232,14 +1337,25 @@ void FDAEffectRuntime::OnDestroyed(const FDuelCard& Card, bool bByBattle, const 
 		FireEvent(Event);
 	}
 
-	Event.Trigger = EDEffectTrigger::OnSentToGraveyard;
-	FireEvent(Event);
+	// The engine tells us the actual destination.  A destruction replaced by
+	// banish/return still fires on_destroy, but it must not masquerade as a
+	// Graveyard move.  For a real Graveyard destruction the queued dispatch is
+	// still verified so an explicit destroy-then-banish script stays silent.
+	if (bToGraveyard)
+	{
+		Event.Trigger = EDEffectTrigger::OnSentToGraveyard;
+		FireEventInternal(Event, true);
+	}
 	ClearCardState(Card.Uid);
 	RecomputeContinuous();
 }
 
 void FDAEffectRuntime::OnSentToGraveyard(const FDuelCard& Card, bool bFromField, const FString& Reason)
 {
+	// The engine's authoritative MoveToGrave calls this exactly once per move.
+	// Clearing here keeps direct engine moves and effect sends consistent with
+	// the old send-to-grave operation path, which cleared state separately.
+	ClearCardState(Card.Uid);
 	FDEffectEvent Event;
 	Event.Trigger = EDEffectTrigger::OnSentToGraveyard;
 	Event.SourceCard = Card;
@@ -1267,11 +1383,15 @@ void FDAEffectRuntime::OnCardLeftField(const FDuelCard& Card)
 
 int32 FDAEffectRuntime::FireEvent(const FDEffectEvent& Event)
 {
-	if (!Engine || bExecuting)
+	return FireEventInternal(Event, false);
+}
+
+int32 FDAEffectRuntime::FireEventInternal(const FDEffectEvent& Event, bool bRequireGraveyardDestination)
+{
+	if (!Engine)
 	{
 		return 0;
 	}
-	bExecuting = true;
 
 	FDEffectEvent LocalEvent = Event;
 	if (LocalEvent.SourceController != LocalEvent.SourceCard.Controller
@@ -1288,6 +1408,35 @@ int32 FDAEffectRuntime::FireEvent(const FDEffectEvent& Event)
 	{
 		LocalEvent.SourceZoneAtEvent = ZoneStringOf(LocalEvent.SourceCard);
 	}
+
+	// Effects run synchronously inside DispatchEvent.  Any event raised by their
+	// operations is queued and handled FIFO after the current effect, never by
+	// re-entering a script that is already on the stack.
+	if (bDispatchingEvents || bExecuting)
+	{
+		EnqueueEvent(LocalEvent, bRequireGraveyardDestination);
+		return 0;
+	}
+
+	bDispatchingEvents = true;
+	bEventBudgetWarned = false;
+	int32 Started = DispatchEvent(LocalEvent);
+	Started += DrainQueuedEvents();
+	PendingEvents.Reset();
+	bDispatchingEvents = false;
+	return Started;
+}
+
+int32 FDAEffectRuntime::DispatchEvent(const FDEffectEvent& Event)
+{
+	if (!Engine)
+	{
+		return 0;
+	}
+	const bool bPreviousExecuting = bExecuting;
+	bExecuting = true;
+
+	const FDEffectEvent& LocalEvent = Event;
 
 	int32 Started = 0;
 	TSet<FString> Seen;
@@ -1392,7 +1541,73 @@ int32 FDAEffectRuntime::FireEvent(const FDEffectEvent& Event)
 		}
 	}
 
-	bExecuting = false;
+	bExecuting = bPreviousExecuting;
+	return Started;
+}
+
+void FDAEffectRuntime::EnqueueEvent(const FDEffectEvent& Event, bool bRequireGraveyardDestination)
+{
+	if (PendingEvents.Num() >= MaxPendingEffectEvents)
+	{
+		if (!bEventBudgetWarned && Engine)
+		{
+			Engine->Log(FString::Printf(TEXT("Effect event queue is full; dropping '%s' event."),
+				*TriggerToString(Event.Trigger)), TEXT("effect"));
+			bEventBudgetWarned = true;
+		}
+		return;
+	}
+	FPendingEffectEvent Pending;
+	Pending.Event = Event;
+	Pending.bRequireGraveyardDestination = bRequireGraveyardDestination;
+	PendingEvents.Add(Pending);
+}
+
+int32 FDAEffectRuntime::DrainQueuedEvents()
+{
+	int32 Started = 0;
+	int32 Dispatched = 0;
+	while (Engine && !Engine->bWinnerSet && PendingEvents.Num() > 0)
+	{
+		if (Dispatched >= MaxEffectEventsPerCascade)
+		{
+			if (!bEventBudgetWarned)
+			{
+				Engine->Log(TEXT("Effect event cascade limit reached; dropping queued events."), TEXT("effect"));
+				bEventBudgetWarned = true;
+			}
+			PendingEvents.Reset();
+			break;
+		}
+
+		FPendingEffectEvent Pending = PendingEvents[0];
+		PendingEvents.RemoveAt(0);
+		if (Pending.bRequireGraveyardDestination
+			&& !IsGraveyardZoneString(ZoneStringOf(Pending.Event.EventCard)))
+		{
+			continue;
+		}
+		++Dispatched;
+		Started += DispatchEvent(Pending.Event);
+	}
+	if (Engine && Engine->bWinnerSet)
+	{
+		PendingEvents.Reset();
+	}
+	return Started;
+}
+
+int32 FDAEffectRuntime::DrainPendingEvents()
+{
+	if (!Engine || bDispatchingEvents)
+	{
+		return 0;
+	}
+	bDispatchingEvents = true;
+	bEventBudgetWarned = false;
+	const int32 Started = DrainQueuedEvents();
+	PendingEvents.Reset();
+	bDispatchingEvents = false;
 	return Started;
 }
 
@@ -1622,19 +1837,11 @@ bool FDAEffectRuntime::EvaluateCondition(const TSharedPtr<FJsonObject>& Conditio
 		if (Equipped < Number) return false;
 	}
 
-	auto CountConditionZone = [this, &Condition, &Subject, &SourceCard, &Event](const FString& Zone) -> int32
+	auto CountConditionZone = [this, &Condition, &SourceCard, &Event](const FString& Zone) -> int32
 	{
 		const TSharedPtr<FJsonObject>* CountFilter = nullptr;
 		Condition->TryGetObjectField(TEXT("count_filter"), CountFilter);
-		int32 Count = 0;
-		for (const FDuelCard& Card : CollectCandidates(Zone, SourceCard, Event))
-		{
-			if (!CountFilter || MatchesFilter(Card, CountFilter ? *CountFilter : nullptr, SourceCard, Event))
-			{
-				++Count;
-			}
-		}
-		return Count;
+		return CountMatchingZoneCards(Zone, SourceCard, Event, CountFilter ? *CountFilter : nullptr);
 	};
 	int32 CountTotal = 0;
 	bool bHasCount = false;
@@ -2056,11 +2263,16 @@ bool FDAEffectRuntime::TryStartScript(const FDEffectScript& Script, const FDuelC
 		if (SourceCard.Controller == EDuelOwner::Player)
 		{
 			++PromptCount;
-			Engine->RequestOptionalTrigger(SourceCard, Prompt, true,
+			const int32 RequestId = Engine->RequestOptionalTrigger(SourceCard, Prompt, true,
 				[this, Context](bool bActivate)
 				{
 					ContinueAfterOptional(Context, bActivate);
 				});
+			if (RequestId == 0)
+			{
+				--PromptCount;
+				return false;
+			}
 		}
 		else
 		{
@@ -2359,6 +2571,10 @@ void FDAEffectRuntime::ContinueAfterTargets(FDEffectContext Context, const TArra
 		++FailedScripts;
 		Engine->Log(FString::Printf(TEXT("Effect %s cost failed: %s"), *Context.Script.Id, *Error), TEXT("effect"));
 		bExecuting = bPreviousExecuting;
+		if (!bPreviousExecuting && !bDispatchingEvents)
+		{
+			DrainPendingEvents();
+		}
 		return;
 	}
 
@@ -2386,6 +2602,13 @@ void FDAEffectRuntime::ContinueAfterTargets(FDEffectContext Context, const TArra
 		}
 	}
 	bExecuting = bPreviousExecuting;
+
+	// A manual activation is not inside FireEvent, so its effect-driven events
+	// have to be drained here once the script is no longer on the stack.
+	if (!bPreviousExecuting && !bDispatchingEvents)
+	{
+		DrainPendingEvents();
+	}
 
 	if (!Engine->bWinnerSet)
 	{
@@ -2525,11 +2748,13 @@ bool FDAEffectRuntime::PayCosts(const FDEffectContext& Context, FString& OutErro
 		{
 			for (int32 Uid : Targets)
 			{
+				const FDuelCard* Card = Engine->FindCard(Uid);
+				const bool bFromField = Card && IsFieldZoneString(ZoneStringOf(*Card));
 				FDuelCard Copy;
 				if (Engine->RemoveFromZone(Copy, Uid))
 				{
 					Engine->CleanupEquips(Copy);
-					Engine->MoveToGrave(Copy);
+					Engine->MoveToGrave(Copy, Context.Script.Id, bFromField);
 					Engine->Log(FString::Printf(TEXT("%s is tributed for %s."), *CardName(Copy), *Context.Script.Id), TEXT("cost"));
 				}
 			}
@@ -2538,10 +2763,13 @@ bool FDAEffectRuntime::PayCosts(const FDEffectContext& Context, FString& OutErro
 		{
 			for (int32 Uid : Targets)
 			{
+				const FDuelCard* Card = Engine->FindCard(Uid);
+				const bool bFromField = Card && IsFieldZoneString(ZoneStringOf(*Card));
 				FDuelCard Copy;
 				if (Engine->RemoveFromZone(Copy, Uid))
 				{
-					Engine->MoveToGrave(Copy);
+					Engine->CleanupEquips(Copy);
+					Engine->MoveToGrave(Copy, Context.Script.Id, bFromField);
 				}
 			}
 		}
@@ -2552,6 +2780,7 @@ bool FDAEffectRuntime::PayCosts(const FDEffectContext& Context, FString& OutErro
 				FDuelCard Copy;
 				if (Engine->RemoveFromZone(Copy, Uid))
 				{
+					Engine->CleanupEquips(Copy);
 					Engine->MoveToBanished(Copy);
 				}
 			}
@@ -2563,6 +2792,7 @@ bool FDAEffectRuntime::PayCosts(const FDEffectContext& Context, FString& OutErro
 				FDuelCard Copy;
 				if (Engine->RemoveFromZone(Copy, Uid))
 				{
+					Engine->CleanupEquips(Copy);
 					Engine->MoveToHand(Copy);
 				}
 			}
@@ -2574,6 +2804,7 @@ bool FDAEffectRuntime::PayCosts(const FDEffectContext& Context, FString& OutErro
 				FDuelCard Copy;
 				if (Engine->RemoveFromZone(Copy, Uid))
 				{
+					Engine->CleanupEquips(Copy);
 					Engine->MoveToDeckBottom(Copy);
 				}
 			}
@@ -2652,36 +2883,7 @@ bool FDAEffectRuntime::ResolveCostTargets(const TSharedPtr<FJsonObject>& Cost, c
 	const TSharedPtr<FJsonObject>* TargetObject = nullptr;
 	if (Cost->TryGetObjectField(TEXT("target"), TargetObject) && TargetObject && TargetObject->IsValid())
 	{
-		const FString Zone = ReadString(*TargetObject, TEXT("zone"));
-		const TSharedPtr<FJsonObject>* Filter = nullptr;
-		(*TargetObject)->TryGetObjectField(TEXT("filter"), Filter);
-		TArray<FDuelCard> Candidates = CollectCandidates(Zone, Context.SourceCard, Context.Event);
-		int32 Count = 1;
-		FString CountString;
-		const TSharedPtr<FJsonObject>* CountObject = nullptr;
-		if ((*TargetObject)->TryGetStringField(TEXT("count"), CountString) && CountString == TEXT("all"))
-		{
-			Count = Candidates.Num();
-		}
-		else if ((*TargetObject)->TryGetObjectField(TEXT("count"), CountObject) && CountObject && CountObject->IsValid())
-		{
-			Count = ReadInt(*CountObject, TEXT("max"), ReadInt(*CountObject, TEXT("min"), 1));
-		}
-		else
-		{
-			(*TargetObject)->TryGetNumberField(TEXT("count"), Count);
-		}
-		for (const FDuelCard& Card : Candidates)
-		{
-			if (OutUids.Num() >= FMath::Max(0, Count))
-			{
-				break;
-			}
-			if (MatchesFilter(Card, Filter ? *Filter : nullptr, Context.SourceCard, Context.Event))
-			{
-				OutUids.Add(Card.Uid);
-			}
-		}
+		ResolveTargetObjectUids(*TargetObject, Context.SourceCard, Context.Event, OutUids);
 		return OutUids.Num() > 0;
 	}
 
@@ -2729,39 +2931,97 @@ bool FDAEffectRuntime::ResolveOperationTargets(const TSharedPtr<FJsonObject>& Op
 	const TSharedPtr<FJsonObject>* TargetObject = nullptr;
 	if (Operation->TryGetObjectField(TEXT("target"), TargetObject) && TargetObject && TargetObject->IsValid())
 	{
-		const FString Zone = ReadString(*TargetObject, TEXT("zone"));
-		const TSharedPtr<FJsonObject>* Filter = nullptr;
-		(*TargetObject)->TryGetObjectField(TEXT("filter"), Filter);
-		const TArray<FDuelCard> Candidates = CollectCandidates(Zone, SourceCard, Event);
-		int32 Count = 1;
-		FString CountString;
-		const TSharedPtr<FJsonObject>* CountObject = nullptr;
-		if ((*TargetObject)->TryGetStringField(TEXT("count"), CountString) && CountString == TEXT("all"))
-		{
-			Count = Candidates.Num();
-		}
-		else if ((*TargetObject)->TryGetObjectField(TEXT("count"), CountObject) && CountObject && CountObject->IsValid())
-		{
-			Count = ReadInt(*CountObject, TEXT("max"), ReadInt(*CountObject, TEXT("min"), 1));
-		}
-		else
-		{
-			(*TargetObject)->TryGetNumberField(TEXT("count"), Count);
-		}
-		for (const FDuelCard& Card : Candidates)
-		{
-			if (OutUids.Num() >= FMath::Max(0, Count))
-			{
-				break;
-			}
-			if (MatchesFilter(Card, Filter ? *Filter : nullptr, SourceCard, Event))
-			{
-				OutUids.Add(Card.Uid);
-			}
-		}
+		ResolveTargetObjectUids(*TargetObject, SourceCard, Event, OutUids);
 		return OutUids.Num() > 0;
 	}
 	return false;
+}
+
+bool FDAEffectRuntime::ResolveTargetObjectUids(const TSharedPtr<FJsonObject>& TargetObject,
+	const FDuelCard& SourceCard, const FDEffectEvent& Event, TArray<int32>& OutUids) const
+{
+	OutUids.Reset();
+	if (!TargetObject.IsValid())
+	{
+		return false;
+	}
+	const FString Zone = ReadString(TargetObject, TEXT("zone"));
+	const TSharedPtr<FJsonObject>* Filter = nullptr;
+	TargetObject->TryGetObjectField(TEXT("filter"), Filter);
+	const TArray<FDuelCard> Candidates = CollectCandidates(Zone, SourceCard, Event);
+	int32 Count = 1;
+	FString CountString;
+	const TSharedPtr<FJsonObject>* CountObject = nullptr;
+	if (TargetObject->TryGetStringField(TEXT("count"), CountString) && CountString == TEXT("all"))
+	{
+		Count = Candidates.Num();
+	}
+	else if (TargetObject->TryGetObjectField(TEXT("count"), CountObject) && CountObject && CountObject->IsValid())
+	{
+		Count = ReadInt(*CountObject, TEXT("max"), ReadInt(*CountObject, TEXT("min"), 1));
+	}
+	else
+	{
+		TargetObject->TryGetNumberField(TEXT("count"), Count);
+	}
+	for (const FDuelCard& Card : Candidates)
+	{
+		if (OutUids.Num() >= FMath::Max(0, Count))
+		{
+			break;
+		}
+		if (MatchesFilter(Card, Filter ? *Filter : nullptr, SourceCard, Event))
+		{
+			OutUids.Add(Card.Uid);
+		}
+	}
+	return OutUids.Num() > 0;
+}
+
+bool FDAEffectRuntime::ResolveOperationTargetsOrDefault(const TSharedPtr<FJsonObject>& Operation,
+	const FDEffectContext& Context, TArray<int32>& OutUids) const
+{
+	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, OutUids);
+	if (OutUids.Num() == 0)
+	{
+		OutUids.Add(Context.SourceCard.Uid);
+	}
+	return OutUids.Num() > 0;
+}
+
+bool FDAEffectRuntime::CollectWholeZoneOperationTargets(const TSharedPtr<FJsonObject>& Operation,
+	const FDuelCard& SourceCard, const FDEffectEvent& Event, TArray<int32>& OutUids) const
+{
+	OutUids.Reset();
+	if (!Operation.IsValid())
+	{
+		return false;
+	}
+	const TSharedPtr<FJsonObject>* TargetObject = nullptr;
+	if (!Operation->TryGetObjectField(TEXT("target"), TargetObject) || !TargetObject || !TargetObject->IsValid())
+	{
+		return false;
+	}
+	const FString Zone = ReadString(*TargetObject, TEXT("zone"));
+	const bool bWholeZoneTarget = !(*TargetObject)->HasField(TEXT("count"))
+		&& (Zone == TEXT("all_monsters") || Zone == TEXT("all_spell_traps")
+			|| Zone == TEXT("all_cards") || Zone == TEXT("all_hands")
+			|| Zone == TEXT("all_cards_and_hands"));
+	if (!bWholeZoneTarget)
+	{
+		return false;
+	}
+
+	const TSharedPtr<FJsonObject>* Filter = nullptr;
+	(*TargetObject)->TryGetObjectField(TEXT("filter"), Filter);
+	for (const FDuelCard& Candidate : CollectCandidates(Zone, SourceCard, Event))
+	{
+		if (MatchesFilter(Candidate, Filter ? *Filter : nullptr, SourceCard, Event))
+		{
+			OutUids.Add(Candidate.Uid);
+		}
+	}
+	return true;
 }
 
 bool FDAEffectRuntime::ExecuteDraw(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context, FString& OutError)
@@ -2892,6 +3152,7 @@ bool FDAEffectRuntime::ExecuteBanish(const TSharedPtr<FJsonObject>& Operation, c
 		FDuelCard Copy;
 		if (Engine->RemoveFromZone(Copy, Uid))
 		{
+			Engine->CleanupEquips(Copy);
 			Engine->MoveToBanished(Copy);
 		}
 	}
@@ -2921,12 +3182,17 @@ bool FDAEffectRuntime::ExecuteSendToGrave(const TSharedPtr<FJsonObject>& Operati
 {
 	TArray<int32> Targets;
 	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
+	const FString Reason = ReadString(Operation, TEXT("reason"), Context.Script.Id);
 	for (int32 Uid : Targets)
 	{
+		const FDuelCard* Card = Engine->FindCard(Uid);
+		const bool bFromField = Card && IsFieldZoneString(ZoneStringOf(*Card));
 		FDuelCard Copy;
 		if (Engine->RemoveFromZone(Copy, Uid))
 		{
-			Engine->MoveToGrave(Copy);
+			Engine->CleanupEquips(Copy);
+			// MoveToGrave owns the single Graveyard notification.
+			Engine->MoveToGrave(Copy, Reason, bFromField);
 		}
 	}
 	return true;
@@ -2959,7 +3225,7 @@ bool FDAEffectRuntime::ExecuteSummon(const TSharedPtr<FJsonObject>& Operation, c
 		}
 		if (!Engine->PlaceMonster(Copy.Owner, Copy, bFaceUp, Position))
 		{
-			Engine->MoveToGrave(Copy);
+			Engine->MoveToGrave(Copy, TEXT("no monster zone"), false);
 			continue;
 		}
 		if (FDuelCard* Placed = Engine->FindMonster(Uid))
@@ -2993,11 +3259,17 @@ bool FDAEffectRuntime::ExecuteSet(const TSharedPtr<FJsonObject>& Operation, cons
 		}
 		if (Copy.IsMonster())
 		{
-			Engine->PlaceMonster(Copy.Owner, Copy, false, EDuelPosition::Defense);
+			if (!Engine->PlaceMonster(Copy.Owner, Copy, false, EDuelPosition::Defense))
+			{
+				Engine->MoveToGrave(Copy, TEXT("no monster zone"), false);
+			}
 		}
 		else
 		{
-			Engine->PlaceSpellTrap(Copy.Owner, Copy, false, false);
+			if (!Engine->PlaceSpellTrap(Copy.Owner, Copy, false, false))
+			{
+				Engine->MoveToGrave(Copy, TEXT("no spell trap zone"), false);
+			}
 		}
 	}
 	return true;
@@ -3038,12 +3310,10 @@ bool FDAEffectRuntime::ExecuteStatModifier(const TSharedPtr<FJsonObject>& Operat
 	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
 	const FString Mode = ReadString(Operation, TEXT("mode"));
 	const FString Counter = ReadString(Operation, TEXT("counter"));
-	int32 Amount = ReadInt(Operation, TEXT("amount"), 0);
-	if (Mode == TEXT("per_counter") && !Counter.IsEmpty() && Targets.Num() > 0)
-	{
-		Amount *= GetCounterCount(Targets[0], Counter);
-	}
-	else if (!Mode.IsEmpty() && Mode != TEXT("flat"))
+	const int32 BaseAmount = ReadInt(Operation, TEXT("amount"), 0);
+	int32 Amount = BaseAmount;
+	if (!Mode.IsEmpty() && Mode != TEXT("flat")
+		&& (Mode != TEXT("per_counter") || Counter.IsEmpty()))
 	{
 		Amount = ComputeDynamicAmount(Operation, Context, Context.SourceCard);
 	}
@@ -3060,22 +3330,27 @@ bool FDAEffectRuntime::ExecuteStatModifier(const TSharedPtr<FJsonObject>& Operat
 	for (int32 Uid : Targets)
 	{
 		const FDuelCard* TargetCard = Engine->FindCard(Uid);
+		// per_counter is per target: multi-target scripts must use each card's
+		// own counters instead of the first target's count.
+		int32 TargetAmount = (Mode == TEXT("per_counter") && !Counter.IsEmpty())
+			? BaseAmount * GetCounterCount(Uid, Counter)
+			: Amount;
 		if (Mode == TEXT("set_atk") || Mode == TEXT("set_def"))
 		{
 			if (!TargetCard) continue;
-			Amount = ReadInt(Operation, TEXT("amount"), bAtk ? TargetCard->Data.Atk : TargetCard->Data.Def)
+			TargetAmount = ReadInt(Operation, TEXT("amount"), bAtk ? TargetCard->Data.Atk : TargetCard->Data.Def)
 				- (bAtk ? TargetCard->Data.Atk : TargetCard->Data.Def);
 		}
 		FDEffectModifier Modifier;
 		Modifier.Uid = Uid;
-		Modifier.Atk = bAtk ? Amount : 0;
-		Modifier.Def = bAtk ? 0 : Amount;
+		Modifier.Atk = bAtk ? TargetAmount : 0;
+		Modifier.Def = bAtk ? 0 : TargetAmount;
 		Modifier.ExpiryTurn = ExpiryTurn;
 		Modifier.SourceId = Context.Script.Id;
 		Modifier.Duration = Duration;
 		LingeringModifiers.Add(Modifier);
 		Engine->EmitVisual(EDuelVisualEventType::Effect, Context.SourceCard.Controller, Context.SourceCard.Uid > 0 ? &Context.SourceCard : nullptr,
-			Amount, bAtk ? TEXT("ATK") : TEXT("DEF"));
+			TargetAmount, bAtk ? TEXT("ATK") : TEXT("DEF"));
 	}
 	return true;
 }
@@ -3120,11 +3395,7 @@ bool FDAEffectRuntime::ExecuteCounter(const TSharedPtr<FJsonObject>& Operation, 
 	bool bRemove, FString& OutError)
 {
 	TArray<int32> Targets;
-	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
-	if (Targets.Num() == 0)
-	{
-		Targets.Add(Context.SourceCard.Uid);
-	}
+	ResolveOperationTargetsOrDefault(Operation, Context, Targets);
 	const FString Counter = ReadString(Operation, TEXT("counter"), TEXT("spell"));
 	const int32 Amount = FMath::Max(1, ReadInt(Operation, TEXT("amount"), ReadInt(Operation, TEXT("count"), 1)));
 	for (int32 Uid : Targets)
@@ -3162,16 +3433,18 @@ bool FDAEffectRuntime::ExecuteReturn(const TSharedPtr<FJsonObject>& Operation, c
 		{
 			continue;
 		}
-		const EDuelOwner Owner = Card->Owner;
 		FDuelCard Copy;
 		if (!Engine->RemoveFromZone(Copy, Uid))
 		{
 			continue;
 		}
+		Engine->CleanupEquips(Copy);
 		if (Op == TEXT("return_to_extra"))
 		{
+			// Let the engine route the card to the Extra Deck so the leave-field
+			// trigger and card bookkeeping still run.
 			Copy.bExtra = true;
-			Engine->SideRef(Owner).Extra.Add(Copy);
+			Engine->MoveToDeckBottom(Copy);
 		}
 		else if (Op == TEXT("return_to_deck"))
 		{
@@ -3309,11 +3582,13 @@ bool FDAEffectRuntime::ExecuteRitual(const TSharedPtr<FJsonObject>& Operation, c
 	const int32 RitualUid = RitualMonster->Uid;
 	for (int32 Uid : Tributes)
 	{
+		const FDuelCard* Tribute = Engine->FindCard(Uid);
+		const bool bFromField = Tribute && IsFieldZoneString(ZoneStringOf(*Tribute));
 		FDuelCard Copy;
 		if (Engine->RemoveFromZone(Copy, Uid))
 		{
 			Engine->CleanupEquips(Copy);
-			Engine->MoveToGrave(Copy);
+			Engine->MoveToGrave(Copy, TEXT("ritual tribute"), bFromField);
 		}
 	}
 	FDuelCard Copy;
@@ -3324,7 +3599,7 @@ bool FDAEffectRuntime::ExecuteRitual(const TSharedPtr<FJsonObject>& Operation, c
 	}
 	if (!Engine->PlaceMonster(Context.SourceCard.Controller, Copy, true, EDuelPosition::Attack))
 	{
-		Engine->MoveToGrave(Copy);
+		Engine->MoveToGrave(Copy, TEXT("no monster zone"), false);
 		OutError = TEXT("ritual summon had no room");
 		return false;
 	}
@@ -3379,7 +3654,6 @@ bool FDAEffectRuntime::ExecuteNegate(const TSharedPtr<FJsonObject>& Operation, c
 		if (Targets.Contains(Link.CardUid))
 		{
 			Link.bNegated = true;
-			NegatedActivationUids.Add(Link.CardUid);
 		}
 	}
 	if (Context.Event.ChainLink > 0)
@@ -3389,16 +3663,13 @@ bool FDAEffectRuntime::ExecuteNegate(const TSharedPtr<FJsonObject>& Operation, c
 			if (Link.LinkIndex == Context.Event.ChainLink && (Targets.Num() == 0 || Targets.Contains(Link.CardUid)))
 			{
 				Link.bNegated = true;
-				NegatedActivationUids.Add(Link.CardUid);
 			}
 		}
 	}
 	if (Engine->ChainLinks.Num() > 0 && Targets.Num() == 0 && Context.Event.ChainLink <= 0)
 	{
 		Engine->ChainLinks.Last().bNegated = true;
-		NegatedActivationUids.Add(Engine->ChainLinks.Last().CardUid);
 	}
-	bTrapEffectNegated = true;
 	return true;
 }
 
@@ -3439,15 +3710,22 @@ int32 FDAEffectRuntime::CountZoneForOperation(const TSharedPtr<FJsonObject>& Ope
 	const FDEffectContext& Context, const FDuelCard& Subject, const FString& Zone,
 	const TSharedPtr<FJsonObject>& Filter) const
 {
+	(void)Operation;
+	(void)Subject;
+	return CountMatchingZoneCards(Zone, Context.SourceCard, Context.Event, Filter);
+}
+
+int32 FDAEffectRuntime::CountMatchingZoneCards(const FString& Zone, const FDuelCard& SourceCard,
+	const FDEffectEvent& Event, const TSharedPtr<FJsonObject>& Filter) const
+{
 	int32 Count = 0;
-	for (const FDuelCard& Card : CollectCandidates(Zone, Context.SourceCard, Context.Event))
+	for (const FDuelCard& Card : CollectCandidates(Zone, SourceCard, Event))
 	{
-		if (!Filter.IsValid() || EvaluateCondition(Filter, Card, Context.SourceCard, Context.Event))
+		if (MatchesFilter(Card, Filter, SourceCard, Event))
 		{
 			++Count;
 		}
 	}
-	(void)Subject;
 	return Count;
 }
 
@@ -3563,10 +3841,6 @@ bool FDAEffectRuntime::ExecuteAttackLock(const TSharedPtr<FJsonObject>& Operatio
 	const FString Player = ReadString(Operation, TEXT("player"), TEXT("self"));
 	const FString Duration = Context.Script.Duration;
 	const bool bTurnScoped = Duration == TEXT("until_end_of_turn");
-	if (bTurnScoped)
-	{
-		AttackRestrictionExpiryTurn = Engine->TurnNumber;
-	}
 
 	auto ApplySide = [this, &Mode, bTurnScoped](EDuelOwner Side)
 	{
@@ -3626,10 +3900,15 @@ bool FDAEffectRuntime::ExecuteAttackLock(const TSharedPtr<FJsonObject>& Operatio
 		}
 		else
 		{
-			CannotAttackUids.Add(Uid);
+			// A turn-scoped lock on specific cards must not become permanent:
+			// CannotAttackUids is only cleared when the card leaves the field.
 			if (bTurnScoped)
 			{
-				CannotAttackSidesThisTurn.Add(static_cast<uint8>(Card->Controller));
+				CannotAttackUidsThisTurn.Add(Uid);
+			}
+			else
+			{
+				CannotAttackUids.Add(Uid);
 			}
 		}
 	}
@@ -3641,11 +3920,7 @@ bool FDAEffectRuntime::ExecuteAttackDirectly(const TSharedPtr<FJsonObject>& Oper
 {
 	(void)OutError;
 	TArray<int32> Targets;
-	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
-	if (Targets.Num() == 0)
-	{
-		Targets.Add(Context.SourceCard.Uid);
-	}
+	ResolveOperationTargetsOrDefault(Operation, Context, Targets);
 	for (int32 Uid : Targets)
 	{
 		DirectAttackAllowedUids.Add(Uid);
@@ -3658,11 +3933,7 @@ bool FDAEffectRuntime::ExecutePiercing(const TSharedPtr<FJsonObject>& Operation,
 {
 	(void)OutError;
 	TArray<int32> Targets;
-	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
-	if (Targets.Num() == 0)
-	{
-		Targets.Add(Context.SourceCard.Uid);
-	}
+	ResolveOperationTargetsOrDefault(Operation, Context, Targets);
 	for (int32 Uid : Targets)
 	{
 		PiercingUids.Add(Uid);
@@ -3675,32 +3946,50 @@ bool FDAEffectRuntime::ExecuteDestructionReplacement(const TSharedPtr<FJsonObjec
 {
 	(void)OutError;
 	TArray<int32> Targets;
-	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
-	if (Targets.Num() == 0)
-	{
-		Targets.Add(Context.SourceCard.Uid);
-	}
+	ResolveOperationTargetsOrDefault(Operation, Context, Targets);
 	const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("cannot_be_destroyed"));
 	for (int32 Uid : Targets)
 	{
-		if (Mode.Contains(TEXT("battle")) && !Mode.Contains(TEXT("effect")))
+		RegisterDestructionReplacement(Uid, Mode, false);
+	}
+	return true;
+}
+
+void FDAEffectRuntime::RegisterDestructionReplacement(int32 Uid, const FString& Mode, bool bContinuous)
+{
+	if (Mode.Contains(TEXT("battle")) && !Mode.Contains(TEXT("effect")))
+	{
+		if (bContinuous)
+		{
+			ContinuousPreventBattleDestructionUids.Add(Uid);
+		}
+		else
 		{
 			PreventBattleDestructionUids.Add(Uid);
 		}
-		else if (Mode.Contains(TEXT("banish")))
+	}
+	else if (Mode.Contains(TEXT("banish")))
+	{
+		if (bContinuous)
+		{
+			ContinuousBanishInsteadOfGraveUids.Add(Uid);
+		}
+		else
 		{
 			BanishInsteadOfGraveUids.Add(Uid);
 		}
-		else if (Mode.Contains(TEXT("destroy") ) && Mode.Contains(TEXT("cannot")))
+	}
+	else
+	{
+		if (bContinuous)
 		{
-			PreventDestructionUids.Add(Uid);
+			ContinuousPreventDestructionUids.Add(Uid);
 		}
 		else
 		{
 			PreventDestructionUids.Add(Uid);
 		}
 	}
-	return true;
 }
 
 bool FDAEffectRuntime::ExecutePositionLock(const TSharedPtr<FJsonObject>& Operation,
@@ -3708,11 +3997,7 @@ bool FDAEffectRuntime::ExecutePositionLock(const TSharedPtr<FJsonObject>& Operat
 {
 	(void)OutError;
 	TArray<int32> Targets;
-	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
-	if (Targets.Num() == 0)
-	{
-		Targets.Add(Context.SourceCard.Uid);
-	}
+	ResolveOperationTargetsOrDefault(Operation, Context, Targets);
 	const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("cannot_change"));
 	for (int32 Uid : Targets)
 	{
@@ -3733,11 +4018,7 @@ bool FDAEffectRuntime::ExecuteSpiritReturn(const TSharedPtr<FJsonObject>& Operat
 {
 	(void)OutError;
 	TArray<int32> Targets;
-	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
-	if (Targets.Num() == 0)
-	{
-		Targets.Add(Context.SourceCard.Uid);
-	}
+	ResolveOperationTargetsOrDefault(Operation, Context, Targets);
 	for (int32 Uid : Targets)
 	{
 		SpiritReturnUids.Add(Uid);
@@ -3774,7 +4055,7 @@ bool FDAEffectRuntime::ExecuteUnionEquip(const TSharedPtr<FJsonObject>& Operatio
 		}
 		if (!Engine->PlaceSpellTrap(Copy.Owner, Copy, true, false))
 		{
-			Engine->MoveToGrave(Copy);
+			Engine->MoveToGrave(Copy, TEXT("no spell trap zone"), true);
 			OutError = TEXT("no Spell/Trap zone for the Union monster");
 			return false;
 		}
@@ -3805,7 +4086,7 @@ bool FDAEffectRuntime::ExecuteUnionEquip(const TSharedPtr<FJsonObject>& Operatio
 	const EDuelPosition Position = PositionValue == TEXT("defense") ? EDuelPosition::Defense : EDuelPosition::Attack;
 	if (!Engine->PlaceMonster(Copy.Owner, Copy, true, Position))
 	{
-		Engine->MoveToGrave(Copy);
+		Engine->MoveToGrave(Copy, TEXT("no monster zone"), true);
 		OutError = TEXT("no monster zone for the Union monster");
 		return false;
 	}
@@ -3822,11 +4103,7 @@ bool FDAEffectRuntime::ExecuteInherentSummon(const TSharedPtr<FJsonObject>& Oper
 	const FDEffectContext& Context, FString& OutError)
 {
 	TArray<int32> Targets;
-	ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
-	if (Targets.Num() == 0)
-	{
-		Targets.Add(Context.SourceCard.Uid);
-	}
+	ResolveOperationTargetsOrDefault(Operation, Context, Targets);
 	const FString PositionValue = ReadString(Operation, TEXT("position"), TEXT("attack"));
 	const EDuelPosition Position = PositionValue == TEXT("defense") ? EDuelPosition::Defense : EDuelPosition::Attack;
 	for (int32 Uid : Targets)
@@ -3836,6 +4113,7 @@ bool FDAEffectRuntime::ExecuteInherentSummon(const TSharedPtr<FJsonObject>& Oper
 		{
 			continue;
 		}
+		const bool bFromField = IsFieldZoneString(ZoneStringOf(*Card));
 		FDuelCard Copy;
 		if (!Engine->RemoveFromZone(Copy, Uid))
 		{
@@ -3843,7 +4121,7 @@ bool FDAEffectRuntime::ExecuteInherentSummon(const TSharedPtr<FJsonObject>& Oper
 		}
 		if (!Engine->PlaceMonster(Copy.Owner, Copy, true, Position))
 		{
-			Engine->MoveToGrave(Copy);
+			Engine->MoveToGrave(Copy, TEXT("no monster zone"), bFromField);
 			continue;
 		}
 		if (FDuelCard* Placed = Engine->FindMonster(Uid))
@@ -3942,31 +4220,7 @@ bool FDAEffectRuntime::ApplyContinuousStat(const TSharedPtr<FJsonObject>& Operat
 	}
 	else if (Operation->HasField(TEXT("target")))
 	{
-		const TSharedPtr<FJsonObject>* TargetObject = nullptr;
-		Operation->TryGetObjectField(TEXT("target"), TargetObject);
-		bool bWholeZoneTarget = false;
-		if (TargetObject && TargetObject->IsValid())
-		{
-			const FString Zone = ReadString(*TargetObject, TEXT("zone"));
-			bWholeZoneTarget = !(*TargetObject)->HasField(TEXT("count"))
-				&& (Zone == TEXT("all_monsters") || Zone == TEXT("all_spell_traps")
-					|| Zone == TEXT("all_cards") || Zone == TEXT("all_hands")
-					|| Zone == TEXT("all_cards_and_hands"));
-		}
-		if (bWholeZoneTarget)
-		{
-			const FString Zone = ReadString(*TargetObject, TEXT("zone"));
-			const TSharedPtr<FJsonObject>* Filter = nullptr;
-			(*TargetObject)->TryGetObjectField(TEXT("filter"), Filter);
-			for (const FDuelCard& Candidate : CollectCandidates(Zone, Card, Context.Event))
-			{
-				if (MatchesFilter(Candidate, Filter ? *Filter : nullptr, Card, Context.Event))
-				{
-					Targets.Add(Candidate.Uid);
-				}
-			}
-		}
-		else
+		if (!CollectWholeZoneOperationTargets(Operation, Card, Context.Event, Targets))
 		{
 			ResolveOperationTargets(Operation, Context, Card, Context.Event, Targets);
 		}
@@ -4024,7 +4278,10 @@ bool FDAEffectRuntime::ApplyContinuousRestriction(const TSharedPtr<FJsonObject>&
 	TArray<int32> Targets;
 	if (Operation->HasField(TEXT("target")))
 	{
-		ResolveOperationTargets(Operation, Context, Card, Context.Event, Targets);
+		if (!CollectWholeZoneOperationTargets(Operation, Card, Context.Event, Targets))
+		{
+			ResolveOperationTargets(Operation, Context, Card, Context.Event, Targets);
+		}
 	}
 	else if (Context.Script.Trigger == EDEffectTrigger::EquipContinuous)
 	{
@@ -4156,8 +4413,7 @@ bool FDAEffectRuntime::ExecuteOperation(const TSharedPtr<FJsonObject>& Operation
 	if (Op == TEXT("battle_damage_modifier"))
 	{
 		TArray<int32> Targets;
-		ResolveOperationTargets(Operation, Context, Context.SourceCard, Context.Event, Targets);
-		if (Targets.Num() == 0) Targets.Add(Context.SourceCard.Uid);
+		ResolveOperationTargetsOrDefault(Operation, Context, Targets);
 		const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("zero"));
 		const float Multiplier = Mode == TEXT("half") ? 0.5f : (Mode == TEXT("double") ? 2.f : 0.f);
 		for (int32 Uid : Targets)
@@ -4425,18 +4681,7 @@ void FDAEffectRuntime::RecomputeContinuous()
 					const FString Mode = ReadString(Operation, TEXT("mode"), TEXT("cannot_be_destroyed"));
 					for (int32 Uid : Targets)
 					{
-						if (Mode.Contains(TEXT("battle")) && !Mode.Contains(TEXT("effect")))
-						{
-							ContinuousPreventBattleDestructionUids.Add(Uid);
-						}
-						else if (Mode.Contains(TEXT("banish")))
-						{
-							ContinuousBanishInsteadOfGraveUids.Add(Uid);
-						}
-						else
-						{
-							ContinuousPreventDestructionUids.Add(Uid);
-						}
+						RegisterDestructionReplacement(Uid, Mode, true);
 					}
 				}
 				else if (Op == TEXT("battle_position_lock"))
@@ -4589,7 +4834,8 @@ bool FDAEffectRuntime::CanCardAttack(const FDuelCard& Attacker) const
 	{
 		return false;
 	}
-	if (CannotAttackUids.Contains(Attacker.Uid) || ContinuousCannotAttackUids.Contains(Attacker.Uid))
+	if (CannotAttackUids.Contains(Attacker.Uid) || CannotAttackUidsThisTurn.Contains(Attacker.Uid)
+		|| ContinuousCannotAttackUids.Contains(Attacker.Uid))
 	{
 		return false;
 	}
@@ -4742,30 +4988,15 @@ bool FDAEffectRuntime::ShouldStayOnFieldAfterActivation(const FDuelCard& Card) c
 
 bool FDAEffectRuntime::HasEquipStatScript(int32 CardId) const
 {
-	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(CardId);
-	if (!Scripts)
-	{
-		return false;
-	}
-	for (const FDEffectScript& Script : *Scripts)
-	{
-		if (Script.Trigger != EDEffectTrigger::EquipContinuous)
-		{
-			continue;
-		}
-		for (const TSharedPtr<FJsonObject>& Operation : Script.Operations)
-		{
-			const FString Op = ReadString(Operation, TEXT("op"));
-			if (Op == TEXT("modify_atk") || Op == TEXT("modify_def"))
-			{
-				return true;
-			}
-		}
-	}
-	return false;
+	return HasContinuousStatScript(CardId, EDEffectTrigger::EquipContinuous);
 }
 
 bool FDAEffectRuntime::HasFieldStatScript(int32 CardId) const
+{
+	return HasContinuousStatScript(CardId, EDEffectTrigger::FieldContinuous);
+}
+
+bool FDAEffectRuntime::HasContinuousStatScript(int32 CardId, EDEffectTrigger Trigger) const
 {
 	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(CardId);
 	if (!Scripts)
@@ -4774,7 +5005,7 @@ bool FDAEffectRuntime::HasFieldStatScript(int32 CardId) const
 	}
 	for (const FDEffectScript& Script : *Scripts)
 	{
-		if (Script.Trigger != EDEffectTrigger::FieldContinuous)
+		if (Script.Trigger != Trigger)
 		{
 			continue;
 		}
@@ -4953,6 +5184,7 @@ void FDAEffectRuntime::ClearCardState(int32 Uid)
 	RedirectBattleDamageUids.Remove(Uid);
 	BattleDamageZeroUids.Remove(Uid);
 	CannotAttackUids.Remove(Uid);
+	CannotAttackUidsThisTurn.Remove(Uid);
 	MustAttackUids.Remove(Uid);
 	DirectAttackAllowedUids.Remove(Uid);
 	DirectAttackForbiddenUids.Remove(Uid);
@@ -4990,10 +5222,10 @@ void FDAEffectRuntime::ResetTurnRestrictions()
 {
 	CannotAttackSidesThisTurn.Reset();
 	CannotAttackDirectlySidesThisTurn.Reset();
+	CannotAttackUidsThisTurn.Reset();
 	MaxAttackersThisTurn.Reset();
 	NormalSummonLockSides.Reset();
 	SpecialSummonLockSides.Reset();
-	AttackRestrictionExpiryTurn = -1;
 }
 
 void FDAEffectRuntime::ExpireLingering(EDuelOwner EndingSide, bool bBattlePhaseOnly)

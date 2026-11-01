@@ -159,12 +159,10 @@ public:
 	static EDAAIStrategy StrategyFromString(const FString& StrategyId);
 
 private:
-	int32 ScoreCardId(int32 CardId) const;
 	int32 StrategyBonus(const FCardRecord& Card) const;
 
 	FDAIProfileDef Profile;
 	EDAAIStrategy Strategy = EDAAIStrategy::Beatdown;
 	const UCardDatabaseSubsystem* Database = nullptr;
-	FRandomStream Random;
 	bool bConfigured = false;
 };

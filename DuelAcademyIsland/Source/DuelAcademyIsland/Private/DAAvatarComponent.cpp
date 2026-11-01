@@ -214,8 +214,22 @@ void UDAAvatarComponent::TickNative(float DeltaTime, float GroundSpeed, bool bIn
 		return;
 	}
 
+	// A new jump/fall supersedes a landing take that is still counting down.
+	// Without this a short hop after a hard landing can replay (or freeze on)
+	// the tail of the previous Land pose.
+	if (bInAir && !bWasInAir)
+	{
+		LandTimer = 0.f;
+	}
+	// Remember the descent speed: by the frame IsFalling() turns false the
+	// character movement component has usually already zeroed velocity.Z.
+	if (bInAir)
+	{
+		LastAirVerticalSpeed = VerticalSpeed;
+	}
 	// A landing take plays once after touching down; while it runs it takes priority over locomotion.
-	if (bWasInAir && !bInAir && VerticalSpeed < -50.f)
+	// Heuristic: a step-down slower than 50 cm/s reads as walking, not a jump landing.
+	if (bWasInAir && !bInAir && LastAirVerticalSpeed < -50.f)
 	{
 		if (UAnimSequence* Land = FindAnim(TEXT("Land")))
 		{
@@ -339,6 +353,11 @@ void UDAAvatarComponent::TickSingleNode(float DeltaTime, float GroundSpeed, bool
 void UDAAvatarComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// BodyScale 0/NaN makes the figure invisible or emits NaN transforms; a
+	// zero stride would also divide by zero in the procedural gait below.
+	BodyScale = FMath::IsFinite(BodyScale) && BodyScale > 0.f ? FMath::Clamp(BodyScale, 0.05f, 10.f) : 1.f;
+	StrideSpeed = FMath::IsFinite(StrideSpeed) ? FMath::Max(StrideSpeed, 1.f) : 600.f;
 
 	if (bPreferSkeletal && SetupSkeletal())
 	{

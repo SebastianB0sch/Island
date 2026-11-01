@@ -78,6 +78,17 @@ struct FDuelFx
 	}
 };
 
+/** Terminal payload for a fixed-scenario duel (exam timed puzzles). */
+struct FDAScenarioDuelResult
+{
+	bool bSolved = false;
+	bool bTimedOut = false;
+	int32 TurnsUsed = 0;
+	float SecondsUsed = 0.0f;
+	FString ScenarioId;
+	FString EndReason;
+};
+
 /**
  * Self-contained duel session: owns the deterministic rules engine and draws
  * the full Canvas board (deck picker, hand, field, piles, log, result).
@@ -95,6 +106,18 @@ public:
 	void OpenDeckSelect(const FString& OpponentId = TEXT("jaden"), const FString& OpponentName = TEXT("Jaden Yuki"),
 		const FString& OpponentDeckId = TEXT("jaden"), const FString& Mode = TEXT("free"), bool bInAwardDP = true);
 	void StartDuelWithDeck(const FString& DeckId);
+
+	/**
+	 * Starts a fixed authored scenario (puzzle/exam) without a deck picker and
+	 * tracks the scenario turn/time limit.  The terminal result is held until
+	 * ConsumeScenarioDuelResult, so the caller can close the result screen first.
+	 */
+	bool StartScenarioDuel(const FDuelScenario& Scenario, const FString& Mode, bool bInAwardDP, FString& OutError);
+	bool IsScenarioDuelActive() const { return bDuelScenarioActive; }
+	bool ConsumeScenarioDuelResult(FDAScenarioDuelResult& OutResult);
+	/** Records a cancelled duel as a loss, then closes the board. */
+	void AbortScenarioDuel();
+
 	void CloseDuel();
 
 	void Update(float DeltaSeconds);
@@ -137,7 +160,10 @@ private:
 	void UpdateDuel(float DeltaSeconds);
 	void PumpDuelVisualEvents(float DeltaSeconds);
 	void UpdateDuelVisuals(float DeltaSeconds);
+	bool IsDuelPresentationActive() const;
 	void SpawnDuelFx(const FDuelVisualEvent& Event);
+	void ResolveDuelFxPath(FDuelFx& OutFx, const FDuelVisualEvent& Event);
+	void SpawnDuelFxReaction(const FDuelVisualEvent& Event);
 	FVector2D DuelCardCenter(int32 Uid, EDuelOwner FallbackSide, bool bMonsterFallback) const;
 	FVector2D DuelZoneCenter(EDuelOwner Side, int32 Zone, bool bMonster) const;
 	bool GetDuelCardFx(int32 Uid, float& OutOffsetX, float& OutOffsetY, float& OutScale, float& OutAlpha) const;
@@ -152,6 +178,10 @@ private:
 	void DrawDuel();
 	void DrawDuelDeckSelect();
 	void DrawDuelActive();
+	void DrawDuelLog();
+	void DrawDuelHand(const FDuelSide& PlayerSide);
+	void DrawDuelCommandPanel(const FDuelSide& PlayerSide, const FDuelCard* Selected,
+		bool bPlayerTurn, bool bAiTurn, bool bChoicePending);
 	void DrawDuelResult();
 	void DrawDuelPile();
 	void DrawDuelChoice();
@@ -170,16 +200,31 @@ private:
 		const FString& Expression = FString());
 	void DrawDuelCutIn();
 	void DrawDuelFx();
+	void DrawDuelFxFrame(const FLinearColor& Color, float X, float Y, float W, float H, float Thickness);
+	void DrawDuelFxDraw(const FDuelFx& Fx, float T, float Ease, const FLinearColor& SideColor);
+	void DrawDuelFxSummon(const FDuelFx& Fx, float T);
+	void DrawDuelFxSpellTrap(const FDuelFx& Fx, float T);
+	void DrawDuelFxAttack(const FDuelFx& Fx, float T);
+	void DrawDuelFxDamage(const FDuelFx& Fx, float T);
+	void DrawDuelFxDestroy(const FDuelFx& Fx, float T, float Ease);
+	void DrawDuelFxTransfer(const FDuelFx& Fx, float T, float Ease, const FLinearColor& SideColor);
+	void DrawDuelFxPosition(const FDuelFx& Fx, float T);
+	void DrawDuelFxFusion(const FDuelFx& Fx, float T);
+	void DrawDuelFxCost(const FDuelFx& Fx, float T, float Alpha);
+	void DrawDuelFxCounter(const FDuelFx& Fx, float T);
+	void DrawDuelFxEffect(const FDuelFx& Fx, float T, float Alpha);
 	void DrawDuelEventBanner();
 	void DrawDuelButton(const FString& Label, const FString& Action, int32 Value,
 		float X, float Y, float W, float H, bool bEnabled = true,
 		FLinearColor Accent = FLinearColor(0.58f, 0.45f, 0.20f, 0.75f));
 	void AddDuelHit(const FString& Action, int32 Value, float X, float Y, float W, float H, const FString& Payload = FString());
 	void HandleDuelHit(const FString& Action, int32 Value, const FString& Payload = FString());
+	void HandleDuelChoiceHit(const FString& Action, int32 Value);
+	bool IsDuelHoverRect(float X, float Y, float W, float H) const;
 	void DuelBeginTribute(int32 HandUid, bool bSet);
 	void DuelConfirmTribute();
 	void DuelCancelTribute();
-	void DuelShowMessage(const FString& Message, const FLinearColor& Color = FLinearColor(0.95f, 0.6f, 0.4f, 1.0f));
+	void DuelShowMessage(const FString& Message, const FLinearColor& Color = FLinearColor(0.95f, 0.74f, 0.38f, 1.0f));
 	FDuelCard* GetDuelSelectedCard();
 
 	float DX(float X) const { return DuelOffsetX + X * DuelScale + DuelShakeX; }
@@ -211,6 +256,7 @@ private:
 	float DuelMessageTimer = 0.0f;
 	float DuelResultEnterTime = 0.0f;
 	FString DuelMessage;
+	FLinearColor DuelMessageColor = FLinearColor(0.95f, 0.74f, 0.38f, 1.0f);
 	bool bDuelResultWon = false;
 	bool bDuelResultNotified = false;
 	float DuelScale = 1.0f;
@@ -228,6 +274,16 @@ private:
 	FString DuelModeString = TEXT("free");
 	bool bDuelAwardDP = true;
 	int32 DuelResultDpEarned = 0;
+
+	/** One unique token per duel; guards profile rewards against duplicate notification. */
+	FString DuelResultToken;
+
+	// Fixed-scenario (timed puzzle) completion state.  It deliberately survives
+	// CloseDuel so the examining screen can consume the terminal result.
+	bool bDuelScenarioActive = false;
+	bool bScenarioResultValid = false;
+	float DuelScenarioElapsed = 0.0f;
+	FDAScenarioDuelResult ScenarioDuelResult;
 
 	/** True when the result screen should tell the story subsystem on close. */
 	bool bStoryResultPending = false;

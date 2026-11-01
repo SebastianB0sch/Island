@@ -252,6 +252,35 @@ namespace
 		Test.CheckInt(Test.Profile->RecordDuelResult(Loss), 0, TEXT("RecordDuelResult loss grants no DP"));
 		Test.CheckInt(Test.Profile->GetDP(), 3310, TEXT("RecordDuelResult loss keeps DP"));
 		Test.CheckInt(Test.Profile->GetCounter(TEXT("duels_total")), 2, TEXT("RecordDuelResult counts losses"));
+
+		// A retried/recreated timed result must not pay twice.
+		Test.Profile->InitializeNewGame(TEXT("Idempotent Duelist"));
+		FDAProfileDuelResult TimedWin;
+		TimedWin.bPlayerWon = true;
+		TimedWin.Turns = 10;
+		TimedWin.PlayerLp = 4000;
+		TimedWin.BattleDamageDealt = 2000;
+		TimedWin.MonstersDestroyedByBattle = 3;
+		TimedWin.OpponentId = TEXT("P001");
+		TimedWin.Mode = TEXT("timed_puzzle");
+		bool bAlreadyApplied = false;
+		const FString Token = TEXT("selftest_timed_result_1");
+		Test.CheckInt(Test.Profile->RecordDuelResultOnce(TimedWin, Token, bAlreadyApplied), 310,
+			TEXT("RecordDuelResultOnce awards the first submission"));
+		Test.Check(!bAlreadyApplied, TEXT("first token submission is not a duplicate"));
+		Test.CheckInt(Test.Profile->GetCounter(TEXT("timed_clears")), 1,
+			TEXT("first timed submission increments timed_clears"));
+		Test.CheckInt(Test.Profile->GetDP(), 3310, TEXT("first timed submission awards DP"));
+		Test.CheckInt(Test.Profile->RecordDuelResultOnce(TimedWin, Token, bAlreadyApplied), 0,
+			TEXT("duplicate token submission awards no DP"));
+		Test.Check(bAlreadyApplied, TEXT("duplicate token submission is flagged"));
+		Test.CheckInt(Test.Profile->GetCounter(TEXT("timed_clears")), 1,
+			TEXT("duplicate submission does not increment timed_clears"));
+		Test.CheckInt(Test.Profile->GetCounter(TEXT("duels_total")), 1,
+			TEXT("duplicate submission does not increment duels_total"));
+		Test.CheckInt(Test.Profile->GetDP(), 3310, TEXT("duplicate submission does not award DP"));
+		Test.Check(Test.Profile->IsResultTokenApplied(Token), TEXT("applied result token is queryable"));
+		Test.Check(!Test.Profile->TryMarkResultTokenApplied(Token), TEXT("applied result token cannot be claimed twice"));
 	}
 
 	void TestTitles(FProfileSelfTestContext& Test)
@@ -312,6 +341,17 @@ namespace
 		Test.CheckString(Test.Profile->GetTemporaryTitle(), FString(), TEXT("temporary title expires"));
 		Test.CheckString(Test.Profile->GetTitle(), TEXT("Apprentice Duelist"), TEXT("title reverts after expiry"));
 
+		// Dropout Boy is terminal for display: an active temporary story title
+		// must not hide the exam-failure state.
+		Test.Profile->InitializeNewGame(TEXT("Dropout Temp"));
+		Test.Check(Test.Titles->GrantTemporaryTitle(Test.Profile, TEXT("occult_duelist"), 2),
+			TEXT("dropout precedence: temporary title granted"));
+		Test.Titles->ApplyExamOutcome(Test.Profile, 100, 300);
+		Test.CheckString(Test.Profile->GetTitle(), TEXT("Dropout Boy"),
+			TEXT("dropout precedence: failed exam sets Dropout Boy"));
+		Test.CheckString(Test.Titles->EvaluateTitle(Test.Profile), TEXT("Dropout Boy"),
+			TEXT("dropout precedence: temporary title does not hide Dropout Boy"));
+
 		Test.Profile->InitializeNewGame(TEXT("Dorm Test"));
 		FDAExamOutcome Passed = Test.Titles->ApplyExamOutcome(Test.Profile, 450, 300);
 		Test.Check(Passed.Outcome == EDAExamOutcomeKind::Passed, TEXT("exam pass outcome"));
@@ -335,6 +375,29 @@ namespace
 		Test.Check(Test.Titles->RecoverFromDropout(Test.Profile, true), TEXT("recovery duel clears dropout"));
 		Test.Check(!Test.Profile->GetFlag(TEXT("dropout_boy")), TEXT("recovery clears the dropout flag"));
 		Test.CheckString(Test.Profile->GetTitle(), TEXT("Apprentice Duelist"), TEXT("title after dropout recovery"));
+
+		// Exam outcome counters and promotion are applied under one persisted
+		// token: replaying the result screen cannot promote or count twice.
+		Test.Profile->InitializeNewGame(TEXT("Outcome Token"));
+		const FString OutcomeToken = TEXT("exam_outcome:selftest_attempt");
+		bool bFirstOutcome = Test.Profile->TryMarkResultTokenApplied(OutcomeToken);
+		if (bFirstOutcome)
+		{
+			Test.Titles->ApplyExamOutcome(Test.Profile, 450, 300, true);
+		}
+		Test.Check(bFirstOutcome, TEXT("exam outcome token is claimed once"));
+		Test.CheckInt(Test.Profile->GetCounter(TEXT("exams_passed")), 1, TEXT("exam outcome counts one pass"));
+		Test.CheckEnum(Test.Profile->GetDorm(), EDADorm::Ra, TEXT("exam outcome promotes once"));
+		bool bSecondOutcome = Test.Profile->TryMarkResultTokenApplied(OutcomeToken);
+		if (bSecondOutcome)
+		{
+			Test.Titles->ApplyExamOutcome(Test.Profile, 450, 300, true);
+		}
+		Test.Check(!bSecondOutcome, TEXT("duplicate exam outcome token is rejected"));
+		Test.CheckInt(Test.Profile->GetCounter(TEXT("exams_passed")), 1,
+			TEXT("duplicate exam outcome does not increment exams_passed"));
+		Test.CheckEnum(Test.Profile->GetDorm(), EDADorm::Ra,
+			TEXT("duplicate exam outcome does not promote again"));
 	}
 
 	void TestSave(FProfileSelfTestContext& Test)
@@ -354,6 +417,8 @@ namespace
 		Test.Profile->MarkEmailRead(TEXT("jaden"), TEXT("jaden_01"));
 		Test.Profile->AddDuelRequest(TEXT("jaden"), TEXT("duel_01"));
 		Test.Profile->AddPlaytime(125.0);
+		Test.Check(Test.Profile->TryMarkResultTokenApplied(TEXT("selftest_persisted_token")),
+			TEXT("save round-trip token is claimed"));
 		Test.Calendar->SetDate(1, 3, 12, EDADayPeriod::PM);
 		Test.Settings->SetBgmVolume(0.25f);
 		Test.Settings->SetSfxVolume(0.5f);
@@ -397,6 +462,10 @@ namespace
 		Test.Check(Test.Profile->IsEmailRead(TEXT("jaden"), TEXT("jaden_01")), TEXT("loaded email read"));
 		Test.Check(Test.Profile->HasPendingDuelRequest(TEXT("jaden")), TEXT("loaded duel request"));
 		Test.CheckString(Test.Profile->GetPlaytimeText(), TEXT("02:05"), TEXT("loaded playtime"));
+		Test.Check(Test.Profile->IsResultTokenApplied(TEXT("selftest_persisted_token")),
+			TEXT("loaded result token survives the save round-trip"));
+		Test.Check(!Test.Profile->IsResultTokenApplied(TEXT("selftest_never_claimed")),
+			TEXT("unknown result token is not applied"));
 		Test.CheckInt(Test.Calendar->GetMonthIndex(), 3, TEXT("loaded calendar month"));
 		Test.CheckInt(Test.Calendar->GetDay(), 12, TEXT("loaded calendar day"));
 		Test.Check(Test.Calendar->GetPeriod() == EDADayPeriod::PM, TEXT("loaded calendar period"));

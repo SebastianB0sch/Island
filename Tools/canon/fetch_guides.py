@@ -18,7 +18,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from canon_common import LOCAL_ONLY_DIR
+from canon_common import LOCAL_ONLY_DIR, write_text
 
 API = "https://yugipedia.com/api.php"
 UA = "GXCanonResearch/0.1 (local canon verification)"
@@ -83,7 +83,7 @@ def main() -> int:
         for future in as_completed({pool.submit(fetch, page): page for page in todo}):
             title, text = future.result()
             cache[title] = text
-    args.out.write_text(json.dumps(cache, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
+    write_text(args.out, json.dumps(cache, ensure_ascii=False, indent=1, sort_keys=True))
     empty = [page for page in PAGES if not cache.get(page)]
     print(f"wrote {args.out}; empty={len(empty)}")
     return 0

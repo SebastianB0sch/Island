@@ -68,6 +68,112 @@ namespace
 		default:                                         return TEXT("Unavailable.");
 		}
 	}
+
+	bool ReadNonNegativeSaveInt(const TSharedPtr<FJsonValue>& Value, int32& OutNumber)
+	{
+		int32 Parsed = 0;
+		if (!DAEconomyJson::TryReadInt(Value, Parsed) || Parsed < 0)
+		{
+			return false;
+		}
+		OutNumber = Parsed;
+		return true;
+	}
+
+	bool ReadSaveIntMap(
+		const TSharedPtr<FJsonObject>& Object,
+		const TCHAR* Field,
+		TMap<FString, int32>& OutMap,
+		FString& OutError)
+	{
+		if (!Object.IsValid() || !Object->HasField(Field))
+		{
+			return true;
+		}
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid() || Value->Type != EJson::Object)
+		{
+			OutError = FString::Printf(TEXT("Shop save field '%s' must be an object."), Field);
+			return false;
+		}
+		const TSharedPtr<FJsonObject> MapObject = Value->AsObject();
+		if (!MapObject.IsValid())
+		{
+			OutError = FString::Printf(TEXT("Shop save field '%s' must be an object."), Field);
+			return false;
+		}
+		for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : MapObject->Values)
+		{
+			int32 Number = 0;
+			if (Pair.Key.IsEmpty() || !ReadNonNegativeSaveInt(Pair.Value, Number))
+			{
+				OutError = FString::Printf(TEXT("Shop save field '%s' has an invalid entry '%s'."), Field, *Pair.Key);
+				return false;
+			}
+			OutMap.Add(Pair.Key, Number);
+		}
+		return true;
+	}
+
+	bool ValidateShopSectionObject(const TSharedPtr<FJsonObject>& Object, FString& OutError)
+	{
+		if (!Object.IsValid())
+		{
+			OutError = TEXT("Shop save section is missing.");
+			return false;
+		}
+		if (!Object->HasField(TEXT("cached_dp"))
+			&& !Object->HasField(TEXT("internal_wallet"))
+			&& !Object->HasField(TEXT("last_purchase_day"))
+			&& !Object->HasField(TEXT("purchase_counts")))
+		{
+			OutError = TEXT("Shop save section has no shop state.");
+			return false;
+		}
+
+		if (Object->HasField(TEXT("cached_dp")))
+		{
+			int32 CachedDP = 0;
+			if (!ReadNonNegativeSaveInt(Object->TryGetField(TEXT("cached_dp")), CachedDP))
+			{
+				OutError = TEXT("Shop save section has an invalid cached_dp value.");
+				return false;
+			}
+		}
+		if (Object->HasField(TEXT("internal_wallet")))
+		{
+			const TSharedPtr<FJsonValue> Value = Object->TryGetField(TEXT("internal_wallet"));
+			if (!Value.IsValid() || Value->Type != EJson::Boolean)
+			{
+				OutError = TEXT("Shop save section has an invalid internal_wallet value.");
+				return false;
+			}
+		}
+
+		TMap<FString, int32> Scratch;
+		if (!ReadSaveIntMap(Object, TEXT("last_purchase_day"), Scratch, OutError))
+		{
+			return false;
+		}
+		Scratch.Reset();
+		if (!ReadSaveIntMap(Object, TEXT("purchase_counts"), Scratch, OutError))
+		{
+			return false;
+		}
+
+		OutError.Reset();
+		return true;
+	}
+
+	int32 SafeNextAvailableDay(int32 LastPurchaseDay, int32 RestockDays)
+	{
+		if (LastPurchaseDay < 0)
+		{
+			return -1;
+		}
+		const int64 Next = static_cast<int64>(LastPurchaseDay) + FMath::Max(1, RestockDays);
+		return static_cast<int32>(FMath::Min<int64>(Next, TNumericLimits<int32>::Max()));
+	}
 }
 
 void UDAShopSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -120,6 +226,11 @@ bool UDAShopSubsystem::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) con
 	return true;
 }
 
+bool UDAShopSubsystem::ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const
+{
+	return ValidateShopSectionObject(InSection, OutError);
+}
+
 bool UDAShopSubsystem::ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError)
 {
 	if (!InSection.IsValid())
@@ -127,7 +238,22 @@ bool UDAShopSubsystem::ReadSaveSection(const TSharedPtr<FJsonObject>& InSection,
 		OutError = TEXT("Shop save section is missing.");
 		return false;
 	}
+	if (!ValidateShopSectionObject(InSection, OutError))
+	{
+		return false;
+	}
 	return ImportStateJson(DAEconomyJson::WriteObject(InSection), OutError);
+}
+
+void UDAShopSubsystem::ResetSaveSectionState()
+{
+	// Keep the HUD's wallet handlers wired; only reset the persisted purchase
+	// state and the legacy cached wallet fields.
+	LastPurchaseDay.Reset();
+	PurchaseCounts.Reset();
+	CachedDP = 3000;
+	bInternalWallet = true;
+	OnShopChanged.Broadcast();
 }
 
 bool UDAShopSubsystem::LoadPacks(FString& OutError)
@@ -229,8 +355,8 @@ bool UDAShopSubsystem::LoadPacks(FString& OutError)
 		Pack.Price = DAEconomyJson::ReadInt(Entry, TEXT("price"));
 		Pack.PackSize = DAEconomyJson::ReadInt(Entry, TEXT("pack_size"), 5);
 		Pack.RestockDays = DAEconomyJson::ReadInt(Entry, TEXT("restock_days"), 7);
-		Pack.PurchaseLimit = FMath::Max(1, DAEconomyJson::ReadInt(Entry, TEXT("purchase_limit"), 1));
-		Pack.Stock = FMath::Max(0, DAEconomyJson::ReadInt(Entry, TEXT("stock"), 0));
+		Pack.PurchaseLimit = DAEconomyJson::ReadInt(Entry, TEXT("purchase_limit"), 1);
+		Pack.Stock = DAEconomyJson::ReadInt(Entry, TEXT("stock"), 0);
 		Pack.DuplicateDPPerCard = DAEconomyJson::ReadInt(Entry, TEXT("duplicate_dp_per_card"), DefaultDuplicateDP);
 		Pack.bAllCards = DAEconomyJson::ReadBool(Entry, TEXT("all_cards"));
 		Pack.bPreferUnowned = DAEconomyJson::ReadBool(Entry, TEXT("prefer_unowned"));
@@ -417,8 +543,10 @@ void UDAShopSubsystem::SetWalletHandlers(
 	TFunction<bool(int32)> InSpendDP,
 	TFunction<void(int32, const FString&)> InCreditDP)
 {
-	if (!InGetDP || !InSpendDP)
+	if (!InGetDP || !InSpendDP || !InCreditDP)
 	{
+		// Credit is required so a failed open can always refund the charge.
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Shop: wallet handlers ignored; get, spend and credit are all required."));
 		ClearWalletHandlers();
 		return;
 	}
@@ -481,7 +609,8 @@ void UDAShopSubsystem::CreditDP(int32 Amount, const FString& Reason)
 		CreditDPHandler(Amount, Reason);
 		return;
 	}
-	CachedDP += Amount;
+	CachedDP = static_cast<int32>(FMath::Clamp<int64>(
+		static_cast<int64>(CachedDP) + Amount, 0, TNumericLimits<int32>::Max()));
 }
 
 bool UDAShopSubsystem::IsConditionMet(const FDAEUnlockCondition& Condition, FString& OutReason) const
@@ -625,12 +754,11 @@ int32 UDAShopSubsystem::GetLastPurchaseDay(const FString& PackId) const
 int32 UDAShopSubsystem::GetNextAvailableDay(const FString& PackId) const
 {
 	const FDAEPackDef* Pack = FindPack(PackId);
-	const int32 Last = GetLastPurchaseDay(PackId);
-	if (!Pack || Last < 0)
+	if (!Pack)
 	{
 		return -1;
 	}
-	return Last + FMath::Max(1, Pack->RestockDays);
+	return SafeNextAvailableDay(GetLastPurchaseDay(PackId), Pack->RestockDays);
 }
 
 int32 UDAShopSubsystem::GetPurchaseCount(const FString& PackId) const
@@ -645,7 +773,8 @@ int32 UDAShopSubsystem::GetRemainingStock(const FString& PackId) const
 	{
 		return -1;
 	}
-	return FMath::Max(0, Pack->Stock - GetPurchaseCount(PackId));
+	const int64 Remaining = static_cast<int64>(Pack->Stock) - static_cast<int64>(GetPurchaseCount(PackId));
+	return static_cast<int32>(FMath::Clamp<int64>(Remaining, 0, TNumericLimits<int32>::Max()));
 }
 
 bool UDAShopSubsystem::CheckPurchase(const FString& PackId, FString& OutReason, EDAEPurchaseBlock& OutBlock) const
@@ -664,6 +793,12 @@ bool UDAShopSubsystem::CheckPurchase(const FString& PackId, FString& OutReason, 
 	{
 		OutBlock = EDAEPurchaseBlock::InvalidPack;
 		OutReason = TEXT("This booster pack has no cards in its pool.");
+		return false;
+	}
+	if (Pack->Price <= 0)
+	{
+		OutBlock = EDAEPurchaseBlock::InvalidPack;
+		OutReason = TEXT("This booster pack has an invalid price.");
 		return false;
 	}
 	FString UnlockReason;
@@ -703,10 +838,24 @@ bool UDAShopSubsystem::CheckPurchase(const FString& PackId, FString& OutReason, 
 	if (Context.DayNumber >= 0 && LastDay >= 0)
 	{
 		const int32 RestockDays = FMath::Max(1, Pack->RestockDays);
-		if (Context.DayNumber - LastDay < RestockDays)
+		const int64 ElapsedDays = static_cast<int64>(Context.DayNumber) - static_cast<int64>(LastDay);
+		if (ElapsedDays < 0)
 		{
+			// A new game or a legacy/non-absolute clock can move the day
+			// backwards. Treat that as a completed restock instead of blocking
+			// the pack for the whole difference; the next purchase records the
+			// current day again. (DAHUD's absolute-day bug is tracked separately.)
+			UE_LOG(LogDuelAcademyIsland, Verbose,
+				TEXT("Shop: restock day moved backwards for '%s' (last %d, now %d); treating as restocked."),
+				*PackId, LastDay, Context.DayNumber);
+		}
+		else if (ElapsedDays < RestockDays)
+		{
+			// Keep the arithmetic 64-bit and clamp the display value.
+			const int64 WaitedDays = FMath::Clamp<int64>(
+				static_cast<int64>(RestockDays) - ElapsedDays, 0, TNumericLimits<int32>::Max());
 			OutBlock = EDAEPurchaseBlock::Restocking;
-			OutReason = FString::Printf(TEXT("Sold out. Restocks in %d day(s)."), RestockDays - (Context.DayNumber - LastDay));
+			OutReason = FString::Printf(TEXT("Sold out. Restocks in %d day(s)."), static_cast<int32>(WaitedDays));
 			return false;
 		}
 	}
@@ -746,7 +895,7 @@ FDAEPackView UDAShopSubsystem::MakeView(const FDAEPackDef& Pack) const
 	const int32 Last = View.LastPurchaseDay;
 	if (Last >= 0)
 	{
-		View.NextAvailableDay = Last + FMath::Max(1, Pack.RestockDays);
+		View.NextAvailableDay = SafeNextAvailableDay(Last, Pack.RestockDays);
 	}
 	return View;
 }
@@ -794,7 +943,9 @@ void UDAShopSubsystem::MarkPurchased(const FString& PackId)
 	{
 		LastPurchaseDay.Add(PackId, Context.DayNumber);
 	}
-	PurchaseCounts.FindOrAdd(PackId)++;
+	int32& Count = PurchaseCounts.FindOrAdd(PackId);
+	Count = static_cast<int32>(FMath::Clamp<int64>(
+		static_cast<int64>(Count) + 1, 0, TNumericLimits<int32>::Max()));
 }
 
 bool UDAShopSubsystem::PurchasePack(const FString& PackId, int32 Seed, FDAEPurchaseResult& OutResult)
@@ -1063,42 +1214,45 @@ bool UDAShopSubsystem::ImportStateJson(const FString& Json, FString& OutError)
 	}
 
 	const TSharedPtr<FJsonObject> Object = Root->AsObject();
+	if (!ValidateShopSectionObject(Object, OutError))
+	{
+		return false;
+	}
+
 	TMap<FString, int32> NewLast;
 	TMap<FString, int32> NewCounts;
-
-	const TSharedPtr<FJsonObject>* LastObject = nullptr;
-	if (Object->TryGetObjectField(TEXT("last_purchase_day"), LastObject) && LastObject && LastObject->IsValid())
+	if (!ReadSaveIntMap(Object, TEXT("last_purchase_day"), NewLast, OutError)
+		|| !ReadSaveIntMap(Object, TEXT("purchase_counts"), NewCounts, OutError))
 	{
-		for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : (*LastObject)->Values)
-		{
-			if (Pair.Value.IsValid())
-			{
-				NewLast.Add(Pair.Key, static_cast<int32>(Pair.Value->AsNumber()));
-			}
-		}
+		return false;
 	}
-	const TSharedPtr<FJsonObject>* CountObject = nullptr;
-	if (Object->TryGetObjectField(TEXT("purchase_counts"), CountObject) && CountObject && CountObject->IsValid())
+
+	int32 NewCachedDP = CachedDP;
+	if (Object->HasField(TEXT("cached_dp"))
+		&& !ReadNonNegativeSaveInt(Object->TryGetField(TEXT("cached_dp")), NewCachedDP))
 	{
-		for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : (*CountObject)->Values)
-		{
-			if (Pair.Value.IsValid())
-			{
-				NewCounts.Add(Pair.Key, static_cast<int32>(Pair.Value->AsNumber()));
-			}
-		}
+		OutError = TEXT("Shop JSON has an invalid cached_dp value.");
+		return false;
 	}
 
 	LastPurchaseDay = MoveTemp(NewLast);
 	PurchaseCounts = MoveTemp(NewCounts);
-	Object->TryGetNumberField(TEXT("cached_dp"), CachedDP);
-	CachedDP = FMath::Max(0, CachedDP);
-	Object->TryGetBoolField(TEXT("internal_wallet"), bInternalWallet);
+	CachedDP = FMath::Max(0, NewCachedDP);
+	if (Object->HasField(TEXT("internal_wallet")))
+	{
+		Object->TryGetBoolField(TEXT("internal_wallet"), bInternalWallet);
+	}
 	if (bInternalWallet)
 	{
 		GetDPHandler = nullptr;
 		SpendDPHandler = nullptr;
 		CreditDPHandler = nullptr;
+	}
+	else if (!GetDPHandler || !SpendDPHandler || !CreditDPHandler)
+	{
+		// A save written with A02's wallet needs all three handlers. Without
+		// them the cached fallback wallet remains authoritative.
+		bInternalWallet = true;
 	}
 	OnShopChanged.Broadcast();
 	return true;
@@ -1122,8 +1276,23 @@ bool UDAShopSubsystem::ApplySaveData(const FDAEShopSaveData& Data, FString& OutE
 		OutError = TEXT("Unknown shop save version.");
 		return false;
 	}
-	LastPurchaseDay = Data.LastPurchaseDay;
-	PurchaseCounts = Data.PurchaseCounts;
+
+	LastPurchaseDay.Reset();
+	for (const TPair<FString, int32>& Pair : Data.LastPurchaseDay)
+	{
+		if (!Pair.Key.IsEmpty() && Pair.Value >= 0)
+		{
+			LastPurchaseDay.Add(Pair.Key, Pair.Value);
+		}
+	}
+	PurchaseCounts.Reset();
+	for (const TPair<FString, int32>& Pair : Data.PurchaseCounts)
+	{
+		if (!Pair.Key.IsEmpty() && Pair.Value >= 0)
+		{
+			PurchaseCounts.Add(Pair.Key, Pair.Value);
+		}
+	}
 	CachedDP = FMath::Max(0, Data.CachedDP);
 	bInternalWallet = Data.bInternalWallet;
 	if (bInternalWallet)
@@ -1132,7 +1301,7 @@ bool UDAShopSubsystem::ApplySaveData(const FDAEShopSaveData& Data, FString& OutE
 		SpendDPHandler = nullptr;
 		CreditDPHandler = nullptr;
 	}
-	else if (!GetDPHandler || !SpendDPHandler)
+	else if (!GetDPHandler || !SpendDPHandler || !CreditDPHandler)
 	{
 		// The save expected A02's wallet; if it has not registered yet, keep the
 		// cached DP intact and leave the fallback active until SetWalletHandlers.

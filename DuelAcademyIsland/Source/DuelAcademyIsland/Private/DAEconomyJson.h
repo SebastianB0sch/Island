@@ -33,32 +33,69 @@ namespace DAEconomyJson
 
 	inline FString ReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, const FString& Default = FString())
 	{
-		FString Value;
-		if (Object.IsValid() && Object->TryGetStringField(Field, Value))
+		const TSharedPtr<FJsonValue> Value = Object.IsValid() ? Object->TryGetField(Field) : nullptr;
+		FString Text;
+		if (!Value.IsValid() || Value->Type != EJson::String || !Value->TryGetString(Text))
 		{
-			return Value;
+			return Default;
 		}
-		return Default;
+		return Text;
+	}
+
+	/**
+	 * Reads an integer field.  Only a real JSON number with an integral value in
+	 * int32 range is accepted.  In particular JSON booleans are not numbers:
+	 * UE's generic number conversion would silently turn true/false into 1/0,
+	 * which previously let malformed card ids and weights through.
+	 */
+	inline bool TryReadInt(const TSharedPtr<FJsonValue>& Value, int32& OutValue)
+	{
+		if (!Value.IsValid() || Value->Type != EJson::Number)
+		{
+			return false;
+		}
+		double Number = 0.0;
+		if (!Value->TryGetNumber(Number) || !FMath::IsFinite(Number)
+			|| FMath::FloorToDouble(Number) != Number
+			|| Number < static_cast<double>(TNumericLimits<int32>::Min())
+			|| Number > static_cast<double>(TNumericLimits<int32>::Max()))
+		{
+			return false;
+		}
+		OutValue = static_cast<int32>(Number);
+		return true;
+	}
+
+	/** Strict positive card-id reader; used by save-section validators. */
+	inline bool TryReadCardId(const TSharedPtr<FJsonValue>& Value, int32& OutCardId)
+	{
+		int32 Parsed = 0;
+		if (!TryReadInt(Value, Parsed) || Parsed <= 0)
+		{
+			return false;
+		}
+		OutCardId = Parsed;
+		return true;
 	}
 
 	inline int32 ReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
 	{
-		int32 Value = Default;
-		if (Object.IsValid() && Object->TryGetNumberField(Field, Value))
-		{
-			return Value;
-		}
-		return Default;
+		const TSharedPtr<FJsonValue> Value = Object.IsValid() ? Object->TryGetField(Field) : nullptr;
+		int32 Parsed = 0;
+		return TryReadInt(Value, Parsed) ? Parsed : Default;
 	}
 
 	inline bool ReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bDefault = false)
 	{
+		// Require a JSON boolean. UE's numeric conversion would also accept 1/0
+		// here, which can hide malformed content flags.
+		const TSharedPtr<FJsonValue> Value = Object.IsValid() ? Object->TryGetField(Field) : nullptr;
 		bool bValue = bDefault;
-		if (Object.IsValid() && Object->TryGetBoolField(Field, bValue))
+		if (!Value.IsValid() || Value->Type != EJson::Boolean || !Value->TryGetBool(bValue))
 		{
-			return bValue;
+			return bDefault;
 		}
-		return bDefault;
+		return bValue;
 	}
 
 	inline TArray<int32> ReadIntArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
@@ -69,9 +106,13 @@ namespace DAEconomyJson
 		{
 			for (const TSharedPtr<FJsonValue>& Value : *Array)
 			{
-				if (Value.IsValid())
+				// This helper is used for card-id lists.  Skip booleans,
+				// strings, fractional numbers and non-positive ids instead of
+				// coercing them into a bogus card id such as 0 or 1.
+				int32 Parsed = 0;
+				if (TryReadInt(Value, Parsed) && Parsed > 0)
 				{
-					Values.Add(static_cast<int32>(Value->AsNumber()));
+					Values.Add(Parsed);
 				}
 			}
 		}
@@ -86,9 +127,10 @@ namespace DAEconomyJson
 		{
 			for (const TSharedPtr<FJsonValue>& Value : *Array)
 			{
-				if (Value.IsValid())
+				FString Text;
+				if (Value.IsValid() && Value->Type == EJson::String && Value->TryGetString(Text))
 				{
-					Values.Add(Value->AsString());
+					Values.Add(MoveTemp(Text));
 				}
 			}
 		}

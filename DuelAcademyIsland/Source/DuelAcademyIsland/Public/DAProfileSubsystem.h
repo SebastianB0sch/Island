@@ -204,6 +204,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Profile")
 	int32 RecordDuelResult(const FDAProfileDuelResult& Result);
 
+	/**
+	 * Idempotent duel submission.  The first call with ResultToken applies the
+	 * full result (counters, timed_clears, DP, title reevaluation); later calls
+	 * with the same token change nothing and set bAlreadyApplied.  An empty
+	 * token falls back to the legacy, non-idempotent RecordDuelResult.
+	 */
+	int32 RecordDuelResultOnce(const FDAProfileDuelResult& Result, const FString& ResultToken,
+		bool& bAlreadyApplied);
+
+	/** True when ResultToken was already applied and persisted with this profile. */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Profile")
+	bool IsResultTokenApplied(const FString& ResultToken) const;
+
+	/**
+	 * Claims a result token before its effects are applied.  Returns true only
+	 * for the first caller; a false return means the result already happened.
+	 * Invalid or empty tokens are rejected (false).  The claim is autosaved.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Profile")
+	bool TryMarkResultTokenApplied(const FString& ResultToken);
+
 	// ---------------------------------------------------------------- flags
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Profile")
 	bool GetFlag(const FString& Flag) const;
@@ -378,6 +399,10 @@ private:
 
 	UPROPERTY()
 	TMap<FString, int32> Counters;
+
+	/** Persisted, bounded FIFO of result tokens whose rewards were applied. */
+	UPROPERTY()
+	TArray<FString> AppliedResultTokens;
 
 	UPROPERTY()
 	TMap<FString, FDAEmailState> Emails;

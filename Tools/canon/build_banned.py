@@ -46,7 +46,7 @@ def parse_rows(text: str) -> list[dict]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path,
-                        default=Path(r"C:\Users\Sebas\AppData\Local\Temp\opencode\gxcanon\guide_wikitext.json"))
+                        default=CACHE_DIR / "guide_wikitext.json")
     args = parser.parse_args()
     ensure_dirs()
     CACHE_DIR.mkdir(parents=True, exist_ok=True)

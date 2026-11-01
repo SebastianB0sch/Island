@@ -6,6 +6,7 @@
 #include "DADuelEngine.h"
 
 #include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -78,20 +79,134 @@ namespace
 		return nullptr;
 	}
 
-	void PuzzleReadIntArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<int32>& Out)
+	bool PuzzleReadCardIdArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field,
+		const FString& Label, TArray<int32>& Out, FString& OutError)
 	{
 		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
 		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values))
 		{
-			return;
+			return true;
 		}
+		int32 Index = 0;
 		for (const TSharedPtr<FJsonValue>& Value : *Values)
 		{
-			if (Value.IsValid())
+			double Number = 0.0;
+			const bool bNumeric = Value.IsValid() && Value->Type == EJson::Number
+				&& Value->TryGetNumber(Number);
+			if (!bNumeric || !FMath::IsFinite(Number) || Number < 1.0
+				|| Number > static_cast<double>(TNumericLimits<int32>::Max())
+				|| FMath::FloorToDouble(Number) != Number)
 			{
-				Out.Add(static_cast<int32>(Value->AsNumber()));
+				OutError = FString::Printf(TEXT("%s.%s[%d] is not a positive card id."),
+					*Label, Field, Index);
+				return false;
+			}
+			Out.Add(static_cast<int32>(Number));
+			++Index;
+		}
+		return true;
+	}
+
+	bool PuzzleIdIsSafe(const FString& PuzzleId)
+	{
+		if (PuzzleId.IsEmpty() || PuzzleId.Len() > 64)
+		{
+			return false;
+		}
+		for (const TCHAR Character : PuzzleId)
+		{
+			if (!FChar::IsAlnum(Character) && Character != TEXT('_') && Character != TEXT('-'))
+			{
+				return false;
 			}
 		}
+		return true;
+	}
+
+	bool PuzzleValidateCardIds(const TArray<int32>& CardIds, const FString& Label, FString& OutError)
+	{
+		for (int32 Index = 0; Index < CardIds.Num(); ++Index)
+		{
+			if (CardIds[Index] <= 0)
+			{
+				OutError = FString::Printf(TEXT("%s[%d] is not a positive card id."), *Label, Index);
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool PuzzleValidateField(const TArray<FDuelScenarioCard>& Field, const FString& Label, FString& OutError)
+	{
+		TSet<int32> UsedZones;
+		for (int32 Index = 0; Index < Field.Num(); ++Index)
+		{
+			const FDuelScenarioCard& Card = Field[Index];
+			if (Card.CardId <= 0)
+			{
+				OutError = FString::Printf(TEXT("%s[%d] is not a positive card id."), *Label, Index);
+				return false;
+			}
+			if (Card.Zone != EDuelZone::Monster && Card.Zone != EDuelZone::SpellTrap)
+			{
+				OutError = FString::Printf(TEXT("%s[%d] is not a monster or Spell/Trap."), *Label, Index);
+				return false;
+			}
+			if (Card.ZoneIndex < 0 || Card.ZoneIndex >= 5)
+			{
+				OutError = FString::Printf(TEXT("%s[%d] has zone index %d outside 0-4."),
+					*Label, Index, Card.ZoneIndex);
+				return false;
+			}
+			const int32 ZoneKey = static_cast<int32>(Card.Zone) * 8 + Card.ZoneIndex;
+			if (UsedZones.Contains(ZoneKey))
+			{
+				OutError = FString::Printf(TEXT("%s[%d] reuses zone %d."), *Label, Index, Card.ZoneIndex);
+				return false;
+			}
+			UsedZones.Add(ZoneKey);
+		}
+		return true;
+	}
+
+	bool PuzzleStartingFieldMatches(const FDuelSide& Side, const TArray<FDuelScenarioCard>& Authored,
+		const FString& Label, FString& OutError)
+	{
+		for (const FDuelScenarioCard& Spec : Authored)
+		{
+			const TArray<FDuelCard>& Zones = Spec.Zone == EDuelZone::Monster ? Side.Monsters : Side.Spells;
+			if (!Zones.IsValidIndex(Spec.ZoneIndex) || !Zones[Spec.ZoneIndex].IsValid())
+			{
+				OutError = FString::Printf(TEXT("%s card %d is missing from zone %d."),
+					*Label, Spec.CardId, Spec.ZoneIndex);
+				return false;
+			}
+			const FDuelCard& Card = Zones[Spec.ZoneIndex];
+			if (Card.Data.Id != Spec.CardId)
+			{
+				OutError = FString::Printf(TEXT("%s zone %d contains card %d instead of card %d."),
+					*Label, Spec.ZoneIndex, Card.Data.Id, Spec.CardId);
+				return false;
+			}
+			if (Card.bFaceUp == Spec.bFaceDown)
+			{
+				OutError = FString::Printf(TEXT("%s card %d has the wrong face-up state."),
+					*Label, Spec.CardId);
+				return false;
+			}
+			if (Spec.Zone == EDuelZone::Monster)
+			{
+				const EDuelPosition Expected = (Spec.bDefense || Spec.bFaceDown)
+					? EDuelPosition::Defense : EDuelPosition::Attack;
+				if (Card.Position != Expected)
+				{
+					OutError = FString::Printf(TEXT("%s card %d has the wrong battle position."),
+						*Label, Spec.CardId);
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	bool PuzzleReadSide(const TSharedPtr<FJsonObject>& Side, const TCHAR* Label,
@@ -109,10 +224,13 @@ namespace
 			OutError = FString::Printf(TEXT("%s.lp must be positive."), Label);
 			return false;
 		}
-		PuzzleReadIntArray(Side, TEXT("hand"), OutHand);
-		PuzzleReadIntArray(Side, TEXT("deck"), OutDeck);
-		PuzzleReadIntArray(Side, TEXT("graveyard"), OutGraveyard);
-		PuzzleReadIntArray(Side, TEXT("extra"), OutExtra);
+		if (!PuzzleReadCardIdArray(Side, TEXT("hand"), Label, OutHand, OutError)
+			|| !PuzzleReadCardIdArray(Side, TEXT("deck"), Label, OutDeck, OutError)
+			|| !PuzzleReadCardIdArray(Side, TEXT("graveyard"), Label, OutGraveyard, OutError)
+			|| !PuzzleReadCardIdArray(Side, TEXT("extra"), Label, OutExtra, OutError))
+		{
+			return false;
+		}
 
 		const TArray<TSharedPtr<FJsonValue>>* FieldValues = nullptr;
 		if (Side->TryGetArrayField(TEXT("field"), FieldValues))
@@ -198,39 +316,71 @@ namespace
 				return false;
 			}
 			FDAPuzzleSolutionStep Step;
-			Step.Action = PuzzleReadString(StepObject, TEXT("action"));
+			Step.Action = PuzzleReadString(StepObject, TEXT("action")).TrimStartAndEnd().ToLower();
 			Step.CardId = PuzzleReadInt(StepObject, TEXT("card_id"));
 			Step.AttackerCardId = PuzzleReadInt(StepObject, TEXT("attacker_card_id"));
-			Step.Position = PuzzleReadString(StepObject, TEXT("position")).ToLower();
-			PuzzleReadIntArray(StepObject, TEXT("tribute_card_ids"), Step.TributeCardIds);
+			Step.Position = PuzzleReadString(StepObject, TEXT("position")).TrimStartAndEnd().ToLower();
 			if (Step.Action.IsEmpty())
 			{
 				OutError = TEXT("solution step has no action.");
 				return false;
 			}
-			FString TargetText;
-			if (StepObject->TryGetStringField(TEXT("target"), TargetText))
+			if (!PuzzleReadCardIdArray(StepObject, TEXT("tribute_card_ids"), TEXT("solution"),
+					Step.TributeCardIds, OutError))
 			{
-				Step.bTargetDirect = TargetText.Equals(TEXT("direct"), ESearchCase::IgnoreCase);
-				if (!Step.bTargetDirect)
+				return false;
+			}
+			if (StepObject->HasField(TEXT("target")))
+			{
+				FString TargetText;
+				if (StepObject->TryGetStringField(TEXT("target"), TargetText))
 				{
-					// UE's JSON reader may coerce a numeric target into a string;
-					// accept both "363" and 363 as a card id.
-					const int32 ParsedTarget = FCString::Atoi(*TargetText);
-					if (ParsedTarget > 0)
+					TargetText.TrimStartAndEndInline();
+					Step.bTargetDirect = TargetText.Equals(TEXT("direct"), ESearchCase::IgnoreCase);
+					if (!Step.bTargetDirect)
 					{
-						Step.TargetCardId = ParsedTarget;
-					}
-					else
-					{
-						OutError = FString::Printf(TEXT("solution step target '%s' is not supported."), *TargetText);
-						return false;
+						// UE's JSON reader may coerce a numeric target into a string;
+						// accept both "363" and 363 as a card id.
+						const int32 ParsedTarget = FCString::Atoi(*TargetText);
+						if (ParsedTarget > 0)
+						{
+							Step.TargetCardId = ParsedTarget;
+						}
+						else
+						{
+							OutError = FString::Printf(TEXT("solution step target '%s' is not supported."), *TargetText);
+							return false;
+						}
 					}
 				}
+				else if (!StepObject->TryGetNumberField(TEXT("target"), Step.TargetCardId)
+					|| Step.TargetCardId <= 0)
+				{
+					OutError = TEXT("solution step target must be 'direct' or a positive card id.");
+					return false;
+				}
 			}
-			else
+			const bool bNeedsCard = Step.Action == TEXT("normal_summon")
+				|| Step.Action == TEXT("activate_spell")
+				|| Step.Action == TEXT("set_spell_trap")
+				|| Step.Action == TEXT("activate_trap")
+				|| Step.Action == TEXT("change_position");
+			if (bNeedsCard && Step.CardId <= 0)
 			{
-				Step.TargetCardId = PuzzleReadInt(StepObject, TEXT("target"));
+				OutError = FString::Printf(TEXT("solution step action '%s' has no card_id."), *Step.Action);
+				return false;
+			}
+			if (Step.Action == TEXT("attack") && Step.AttackerCardId <= 0)
+			{
+				OutError = TEXT("solution attack step has no attacker_card_id.");
+				return false;
+			}
+			if (Step.Action == TEXT("change_position")
+				&& Step.Position != TEXT("attack") && Step.Position != TEXT("defense"))
+			{
+				OutError = FString::Printf(TEXT("solution change_position step has invalid position '%s'."),
+					*Step.Position);
+				return false;
 			}
 			OutSolution.Add(MoveTemp(Step));
 		}
@@ -281,6 +431,35 @@ namespace
 			}
 		}
 		return 0;
+	}
+
+	bool PuzzleAutoAnswerChoices(FDuelEngine& Duel, int32 StepIndex, FString& OutError)
+	{
+		// Choices can chain (an answered trigger may enqueue another request).
+		// Drain the queue rather than assuming exactly one pending choice.
+		constexpr int32 MaxResolvedChoices = 64;
+		int32 ResolvedChoices = 0;
+		while (Duel.HasPendingChoice())
+		{
+			FString ChoiceError;
+			if (!Duel.AutoAnswerPendingChoice(&ChoiceError))
+			{
+				OutError = StepIndex >= 0
+					? FString::Printf(TEXT("step %d could not resolve a choice: %s"), StepIndex, *ChoiceError)
+					: FString::Printf(TEXT("could not resolve a pending choice after the solution: %s"), *ChoiceError);
+				return false;
+			}
+			if (++ResolvedChoices > MaxResolvedChoices)
+			{
+				OutError = StepIndex >= 0
+					? FString::Printf(TEXT("step %d left more than %d chained choices unresolved."),
+						StepIndex, MaxResolvedChoices)
+					: FString::Printf(TEXT("solution left more than %d chained choices unresolved."),
+						MaxResolvedChoices);
+				return false;
+			}
+		}
+		return true;
 	}
 
 	bool PuzzleExecuteStep(FDuelEngine& Duel, const FDAPuzzleSolutionStep& Step,
@@ -491,6 +670,11 @@ bool FDAPuzzleRuntime::LoadPuzzleFile(const FString& Path, FDAPuzzleDefinition& 
 		OutError = FString::Printf(TEXT("%s has no puzzle id."), *Path);
 		return false;
 	}
+	if (!PuzzleIdIsSafe(Puzzle.Id))
+	{
+		OutError = FString::Printf(TEXT("%s: puzzle id '%s' is not a plain file stem."), *Path, *Puzzle.Id);
+		return false;
+	}
 	if (Puzzle.Level < 1 || Puzzle.Level > 5)
 	{
 		OutError = FString::Printf(TEXT("%s: level %d is outside 1-5."), *Puzzle.Id, Puzzle.Level);
@@ -529,6 +713,8 @@ bool FDAPuzzleRuntime::LoadPuzzleFile(const FString& Path, FDAPuzzleDefinition& 
 bool FDAPuzzleRuntime::LoadPuzzleDirectory(const FString& Directory, TArray<FDAPuzzleDefinition>& OutPuzzles, FString& OutError)
 {
 	OutError.Reset();
+	OutPuzzles.Reset();
+
 	TArray<FString> Files;
 	IFileManager::Get().FindFiles(Files, *FPaths::Combine(Directory, TEXT("P*.json")), true, false);
 	Files.Sort();
@@ -537,6 +723,10 @@ bool FDAPuzzleRuntime::LoadPuzzleDirectory(const FString& Directory, TArray<FDAP
 		OutError = FString::Printf(TEXT("No puzzle files found in '%s'."), *Directory);
 		return false;
 	}
+
+	TArray<FDAPuzzleDefinition> Loaded;
+	TSet<FString> SeenIds;
+	Loaded.Reserve(Files.Num());
 	for (const FString& File : Files)
 	{
 		FDAPuzzleDefinition Puzzle;
@@ -544,8 +734,16 @@ bool FDAPuzzleRuntime::LoadPuzzleDirectory(const FString& Directory, TArray<FDAP
 		{
 			return false;
 		}
-		OutPuzzles.Add(MoveTemp(Puzzle));
+		const FString IdKey = Puzzle.Id.ToLower();
+		if (SeenIds.Contains(IdKey))
+		{
+			OutError = FString::Printf(TEXT("Duplicate puzzle id '%s' in '%s'."), *Puzzle.Id, *File);
+			return false;
+		}
+		SeenIds.Add(IdKey);
+		Loaded.Add(MoveTemp(Puzzle));
 	}
+	OutPuzzles = MoveTemp(Loaded);
 	return true;
 }
 
@@ -553,6 +751,54 @@ bool FDAPuzzleRuntime::BuildScenario(const FDAPuzzleDefinition& Puzzle, FDuelSce
 {
 	OutError.Reset();
 	OutScenario = FDuelScenario();
+	if (Puzzle.Id.IsEmpty())
+	{
+		OutError = TEXT("Puzzle has no id.");
+		return false;
+	}
+	if (Puzzle.PlayerLp <= 0 || Puzzle.OpponentLp <= 0)
+	{
+		OutError = FString::Printf(TEXT("%s: both starting life totals must be positive."), *Puzzle.Id);
+		return false;
+	}
+	if (Puzzle.TurnLimit < 1)
+	{
+		OutError = FString::Printf(TEXT("%s: turn_limit must be at least 1."), *Puzzle.Id);
+		return false;
+	}
+	if (Puzzle.TimeLimitSeconds < 0)
+	{
+		OutError = FString::Printf(TEXT("%s: time_limit cannot be negative."), *Puzzle.Id);
+		return false;
+	}
+	struct FCardListRef
+	{
+		const TArray<int32>* Cards = nullptr;
+		const TCHAR* Label = TEXT("");
+	};
+	const FCardListRef CardLists[] = {
+		{ &Puzzle.PlayerHand, TEXT("player.hand") },
+		{ &Puzzle.PlayerDeck, TEXT("player.deck") },
+		{ &Puzzle.PlayerGraveyard, TEXT("player.graveyard") },
+		{ &Puzzle.PlayerExtra, TEXT("player.extra") },
+		{ &Puzzle.OpponentHand, TEXT("opponent_state.hand") },
+		{ &Puzzle.OpponentDeck, TEXT("opponent_state.deck") },
+		{ &Puzzle.OpponentGraveyard, TEXT("opponent_state.graveyard") },
+		{ &Puzzle.OpponentExtra, TEXT("opponent_state.extra") },
+	};
+	for (const FCardListRef& Entry : CardLists)
+	{
+		if (!PuzzleValidateCardIds(*Entry.Cards, Entry.Label, OutError))
+		{
+			return false;
+		}
+	}
+	if (!PuzzleValidateField(Puzzle.PlayerField, TEXT("player.field"), OutError)
+		|| !PuzzleValidateField(Puzzle.OpponentField, TEXT("opponent_state.field"), OutError))
+	{
+		return false;
+	}
+
 	OutScenario.Id = Puzzle.Id;
 	OutScenario.Name = Puzzle.Title;
 	OutScenario.Objective = Puzzle.Objective;
@@ -582,16 +828,26 @@ bool FDAPuzzleRuntime::Replay(UCardDatabaseSubsystem* Database, const FDAPuzzleD
 {
 	OutResult = FDAPuzzleReplayResult();
 	OutError.Reset();
+	auto Fail = [&OutResult, &OutError](const FString& Message)
+	{
+		OutError = Message;
+		OutResult.Error = Message;
+		return false;
+	};
+
 	if (!Database)
 	{
-		OutError = TEXT("A card database is required to replay puzzles.");
-		return false;
+		return Fail(TEXT("A card database is required to replay puzzles."));
+	}
+	if (Puzzle.Solution.Num() == 0)
+	{
+		return Fail(FString::Printf(TEXT("%s: solution is empty."), *Puzzle.Id));
 	}
 
 	FDuelScenario Scenario;
 	if (!BuildScenario(Puzzle, Scenario, OutError))
 	{
-		return false;
+		return Fail(OutError);
 	}
 
 	FDuelEngine Duel(Database, Puzzle.Seed);
@@ -599,8 +855,7 @@ bool FDAPuzzleRuntime::Replay(UCardDatabaseSubsystem* Database, const FDAPuzzleD
 	Duel.SetLegacyAutomaticTraps(true);
 	if (!Duel.StartScenario(Scenario, OutError))
 	{
-		OutError = FString::Printf(TEXT("start failed: %s"), *OutError);
-		return false;
+		return Fail(FString::Printf(TEXT("start failed: %s"), *OutError));
 	}
 	OutResult.bStarted = true;
 	OutResult.PlayerLp = Duel.GetSide(EDuelOwner::Player).LP;
@@ -611,8 +866,7 @@ bool FDAPuzzleRuntime::Replay(UCardDatabaseSubsystem* Database, const FDAPuzzleD
 	if (Active.Id != Puzzle.Id || Active.Objective != Puzzle.Objective || Active.Seed != Puzzle.Seed
 		|| Active.TurnLimit != Puzzle.TurnLimit || !FMath::IsNearlyEqual(Active.TimeLimitSeconds, (float)Puzzle.TimeLimitSeconds))
 	{
-		OutError = TEXT("scenario metadata does not match the puzzle JSON.");
-		return false;
+		return Fail(TEXT("scenario metadata does not match the puzzle JSON."));
 	}
 	int32 ExpectedPlayerMonsters = 0;
 	int32 ExpectedPlayerSpells = 0;
@@ -657,35 +911,32 @@ bool FDAPuzzleRuntime::Replay(UCardDatabaseSubsystem* Database, const FDAPuzzleD
 		|| PuzzleCountSpellTraps(Player) != ExpectedPlayerSpells
 		|| PuzzleCountSpellTraps(Opponent) != ExpectedOpponentSpells)
 	{
-		OutError = TEXT("starting board does not match the authored puzzle state.");
-		return false;
+		return Fail(TEXT("starting board does not match the authored puzzle state."));
+	}
+	if (!PuzzleStartingFieldMatches(Player, Puzzle.PlayerField, TEXT("player.field"), OutError)
+		|| !PuzzleStartingFieldMatches(Opponent, Puzzle.OpponentField, TEXT("opponent_state.field"), OutError))
+	{
+		return Fail(OutError);
 	}
 	if (Duel.GetScenarioPlayerTurnsTaken() != 1
 		|| Duel.GetScenarioTurnsRemaining() != FMath::Max(0, Puzzle.TurnLimit - 1))
 	{
-		OutError = TEXT("scenario turn counter is not in the authored first-turn state.");
-		return false;
+		return Fail(TEXT("scenario turn counter is not in the authored first-turn state."));
 	}
 	if (Duel.CheckScenarioTimeout(FMath::Max(0.f, (float)Puzzle.TimeLimitSeconds - 0.5f)) || Duel.IsOver())
 	{
-		OutError = TEXT("scenario timed out before the authored solution started.");
-		return false;
+		return Fail(TEXT("scenario timed out before the authored solution started."));
 	}
 
 	for (int32 StepIndex = 0; StepIndex < Puzzle.Solution.Num(); ++StepIndex)
 	{
 		if (!PuzzleExecuteStep(Duel, Puzzle.Solution[StepIndex], StepIndex, OutResult, OutError))
 		{
-			return false;
+			return Fail(OutError);
 		}
-		if (Duel.HasPendingChoice())
+		if (!PuzzleAutoAnswerChoices(Duel, StepIndex, OutError))
 		{
-			FString ChoiceError;
-			if (!Duel.AutoAnswerPendingChoice(&ChoiceError))
-			{
-				OutError = FString::Printf(TEXT("step %d could not resolve a choice: %s"), StepIndex, *ChoiceError);
-				return false;
-			}
+			return Fail(OutError);
 		}
 		++OutResult.StepsExecuted;
 		OutResult.PlayerLp = Duel.GetSide(EDuelOwner::Player).LP;
@@ -695,24 +946,23 @@ bool FDAPuzzleRuntime::Replay(UCardDatabaseSubsystem* Database, const FDAPuzzleD
 			const bool bLastStep = StepIndex == Puzzle.Solution.Num() - 1;
 			if (!bLastStep)
 			{
-				OutError = FString::Printf(TEXT("duel ended after step %d, before the final authored step."), StepIndex);
-				return false;
+				return Fail(FString::Printf(TEXT("duel ended after step %d, before the final authored step."), StepIndex));
 			}
 			break;
 		}
 	}
 
-	if (!Duel.IsOver() || Duel.GetWinner() != EDuelOwner::Player || Duel.GetSide(EDuelOwner::Opponent).LP > 0)
+	if (!PuzzleAutoAnswerChoices(Duel, INDEX_NONE, OutError))
 	{
-		OutError = FString::Printf(TEXT("solution did not win (phase %d, player LP %d, opponent LP %d)."),
-			static_cast<int32>(Duel.GetPhase()), Duel.GetSide(EDuelOwner::Player).LP,
-			Duel.GetSide(EDuelOwner::Opponent).LP);
-		return false;
+		return Fail(OutError);
 	}
-	if (Duel.HasPendingChoice())
+	// A win is authoritative: alternate objectives (Exodia, deck-out, scenario
+	// objective completion) end the duel without reducing the opponent to 0 LP.
+	if (!Duel.IsOver() || Duel.GetWinner() != EDuelOwner::Player)
 	{
-		OutError = TEXT("solution left a pending choice unresolved.");
-		return false;
+		return Fail(FString::Printf(TEXT("solution did not win (phase %d, player LP %d, opponent LP %d)."),
+			static_cast<int32>(Duel.GetPhase()), Duel.GetSide(EDuelOwner::Player).LP,
+			Duel.GetSide(EDuelOwner::Opponent).LP));
 	}
 
 	OutResult.bWon = true;
@@ -722,21 +972,38 @@ bool FDAPuzzleRuntime::Replay(UCardDatabaseSubsystem* Database, const FDAPuzzleD
 	return true;
 }
 
-bool FDAPuzzleRuntime::ReplayById(UCardDatabaseSubsystem* Database, const FString& PuzzleId,
-	FDAPuzzleReplayResult& OutResult, FString& OutError)
+bool FDAPuzzleRuntime::LoadPuzzleById(const FString& PuzzleId, FDAPuzzleDefinition& OutPuzzle, FString& OutError)
 {
-	OutResult = FDAPuzzleReplayResult();
 	OutError.Reset();
 	if (PuzzleId.IsEmpty())
 	{
 		OutError = TEXT("Puzzle id is empty.");
 		return false;
 	}
-	const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Puzzles"), PuzzleId + TEXT(".json"));
-	FDAPuzzleDefinition Puzzle;
-	if (!LoadPuzzleFile(Path, Puzzle, OutError))
+	if (!PuzzleIdIsSafe(PuzzleId))
 	{
+		OutError = FString::Printf(TEXT("Puzzle id '%s' contains unsupported characters."), *PuzzleId);
 		return false;
+	}
+	const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Puzzles"), PuzzleId + TEXT(".json"));
+	return LoadPuzzleFile(Path, OutPuzzle, OutError);
+}
+
+bool FDAPuzzleRuntime::ReplayById(UCardDatabaseSubsystem* Database, const FString& PuzzleId,
+	FDAPuzzleReplayResult& OutResult, FString& OutError)
+{
+	OutResult = FDAPuzzleReplayResult();
+	OutError.Reset();
+	auto Fail = [&OutResult, &OutError](const FString& Message)
+	{
+		OutError = Message;
+		OutResult.Error = Message;
+		return false;
+	};
+	FDAPuzzleDefinition Puzzle;
+	if (!LoadPuzzleById(PuzzleId, Puzzle, OutError))
+	{
+		return Fail(OutError);
 	}
 	return Replay(Database, Puzzle, OutResult, OutError);
 }

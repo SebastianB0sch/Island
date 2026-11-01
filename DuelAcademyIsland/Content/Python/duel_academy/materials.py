@@ -518,13 +518,17 @@ def build_terrain():
     uv = g.node(unreal.MaterialExpressionTextureCoordinate)
     splat_a = g.tex("SplatA", T("T_TerrainSplatA"), S_MSK, uv)
     splat_b = g.tex("SplatB", T("T_TerrainSplatB"), S_MSK, uv)
-    world_m = 3072.0
+    try:
+        world_m = float(C.load_json("layout.json")["world"]["size"]) / 100.0
+    except Exception:  # noqa: BLE001 - layout.json is optional for a material-only rebuild
+        world_m = 3072.0
     # large-scale brightness variation breaks up visible tiling
     var = g.tex("VariationNoise", T("T_Noise"), S_LIN, g.mul(uv, g.const(6.0)))
     var2 = g.tex("VariationNoise2", T("T_Noise"), S_LIN, g.mul(uv, g.const(41.0)), param=False)
     vmix = g.add(g.mul(var, g.const(0.6), "R"), g.mul(var2, g.const(0.4), "R"))
     brightness = g.lerp(g.const(0.82), g.const(1.15), vmix)
     color = normal = rough = None
+    n_out, r_out = "RGB", "R"
     for name, splat in TERRAIN_LAYERS:
         tile_m = float(info.get(name, {}).get("tile_m", 4.0))
         luv = g.mul(uv, g.scalar(f"{name}Tiles", world_m / tile_m))
@@ -533,7 +537,6 @@ def build_terrain():
         r = g.tex(f"{name}Rough", T(f"T_Terrain_{name}_R"), S_MSK, luv)
         if splat is None:
             color, normal, rough = c, n, r
-            n_out, r_out = "RGB", "R"
             continue
         tex_node = splat_a if splat[0] == "A" else splat_b
         color = g.lerp(color, c, tex_node, "", "", splat[1])

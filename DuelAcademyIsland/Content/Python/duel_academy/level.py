@@ -1,7 +1,6 @@
 """Assemble /Game/DuelAcademy/Maps/DuelAcademyIsland from Data/layout.json."""
 
 import json
-import math
 import os
 
 import unreal
@@ -588,7 +587,9 @@ def clear_generated():
 def open_or_create_map():
     C.ensure_dir(C.ROOT + "/Maps")
     if C.exists(C.MAP_PATH):
-        les().load_level(C.MAP_PATH)
+        loaded = les().load_level(C.MAP_PATH)
+        if loaded is False:
+            raise RuntimeError(f"could not load {C.MAP_PATH}")
         clear_generated()
         return False
     try:

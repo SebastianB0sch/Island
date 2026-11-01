@@ -14,6 +14,30 @@ class UFont;
 class UGameInstance;
 class UWorld;
 
+namespace DAUIText
+{
+	/**
+	 * Shorten Str with a trailing ellipsis until MeasureWidth(Str) fits.
+	 * MeasureWidth is a callable taking the candidate FString and returning
+	 * its width in canvas pixels. Shared so the Canvas screens that do not
+	 * derive from FDAUIScreen still use the same truncation contract.
+	 */
+	template <typename TMeasureWidth>
+	FString EllipsizeMeasured(const FString& Str, float MaxWidth, TMeasureWidth&& MeasureWidth)
+	{
+		if (!FMath::IsFinite(MaxWidth))
+		{
+			return Str;
+		}
+		FString Out = Str;
+		while (Out.Len() > 4 && MeasureWidth(Out) > MaxWidth)
+		{
+			Out = Out.LeftChop(4) + TEXT("...");
+		}
+		return Out;
+	}
+}
+
 struct FDAUIHitTarget
 {
 	FString Action;
@@ -59,6 +83,8 @@ protected:
 	void Diamond(const FVector2D& C, float R, const FLinearColor& Color);
 	FVector2D Measure(const FString& Str, float InScale, UFont* Font = nullptr) const;
 	TArray<FString> WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+	/** Shorten Str with an ellipsis until it measures within MaxWidth. */
+	FString Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
 	void PlaySfx(const TCHAR* SoundName, float Volume = 1.f) const;
 
 	TWeakObjectPtr<ADAHUD> OwnerHUD;

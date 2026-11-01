@@ -88,6 +88,10 @@ void ADAStudentCharacter::PawnClientRestart()
 	Super::PawnClientRestart();
 	CreateInput();
 	AddMappingContext();
+	// A respawn/possession must not inherit a sprint held by the previous pawn,
+	// and the interaction target belongs to the old view.
+	bSprinting = false;
+	FocusedInteractable.Reset();
 }
 
 // ------------------------------------------------------------------------ input setup
@@ -328,12 +332,17 @@ void ADAStudentCharacter::OnInteract(const FInputActionValue& V)
 		return;
 	}
 	UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this);
-	if (Sub && Sub->GetActiveMessage() && Sub->GetActiveMessageAge() > 0.3f && !FocusedInteractable.IsValid())
+	if (Sub && Sub->GetActiveMessage() && !FocusedInteractable.IsValid())
 	{
-		Sub->DismissMessage();
+		// Ignore the same key press that just opened a message. The old guard
+		// fell through to an unconditional dismiss, so it never protected it.
+		if (Sub->GetActiveMessageAge() > 0.3f)
+		{
+			Sub->DismissMessage();
+		}
 		return;
 	}
-	if (AActor* Target = FocusedInteractable.Get())
+	if (AActor* Target = FocusedInteractable.Get(); IsValid(Target))
 	{
 		if (IDAInteractableInterface* I = Cast<IDAInteractableInterface>(Target))
 		{
@@ -342,10 +351,6 @@ void ADAStudentCharacter::OnInteract(const FInputActionValue& V)
 				I->Interact(this);
 			}
 		}
-	}
-	else if (Sub && Sub->GetActiveMessage())
-	{
-		Sub->DismissMessage();
 	}
 }
 
@@ -518,7 +523,7 @@ void ADAStudentCharacter::OnTimeSkip(const FInputActionValue& V)
 	{
 		if (ADAIslandManager* M = Sub->GetManager())
 		{
-			M->SetHour(static_cast<float>(Calendar->GetHour()));
+			M->SetCalendarTime(Calendar->GetAbsoluteDay(), static_cast<float>(Calendar->GetHour()));
 		}
 	}
 }
@@ -550,13 +555,32 @@ void ADAStudentCharacter::FastTravelTo(ADALocationVolume* Zone)
 		}
 		PC->SetControlRotation(FRotator(-10.f, Zone->SpawnYaw, 0.f));
 	}
-	if (bSwimming)
+	// Fast travel always lands on the island, never in a generated interior cell.
+	bInInterior = false;
+	bSprinting = false;
+	FocusedInteractable.Reset();
+	bSwimming = false;
+	SwimAlpha = 0.f;
+	if (Avatar)
 	{
-		bSwimming = false;
-		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+		Avatar->SwimAlpha = 0.f;
+	}
+	UCharacterMovementComponent* Move = GetCharacterMovement();
+	if (Move && (Move->MovementMode == MOVE_Flying || Move->MovementMode == MOVE_Swimming))
+	{
+		// Do not inherit a stale swim/fly mode from the departure point; the
+		// water query can re-enter swimming at the destination next tick.
+		Move->SetMovementMode(MOVE_Falling);
 	}
 	SetActorLocationAndRotation(Zone->SpawnLocation, FRotator(0.f, Zone->SpawnYaw, 0.f), false, nullptr, ETeleportType::TeleportPhysics);
-	GetCharacterMovement()->Velocity = FVector::ZeroVector;
+	if (Move)
+	{
+		Move->Velocity = FVector::ZeroVector;
+	}
+	// Re-anchor the fall-out-of-world rescue at the destination instead of the
+	// place the player left from.
+	SafeLocation = GetActorLocation();
+	SafeTimer = 0.f;
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
 		Sub->PlayUISound(TEXT("A_CardDraw"), 0.7f);
@@ -574,17 +598,21 @@ void ADAStudentCharacter::UpdateFocus()
 		return;
 	}
 	const FVector Me = GetActorLocation();
-	const FVector Fwd = GetActorForwardVector();
+	// The character only faces its last movement direction; the camera (control
+	// rotation) is what the player actually aims with when choosing an object.
+	const FVector Fwd = Controller
+		? FRotationMatrix(FRotator(0.f, Controller->GetControlRotation().Yaw, 0.f)).GetUnitAxis(EAxis::X)
+		: GetActorForwardVector();
 	float BestScore = TNumericLimits<float>::Max();
 	for (const TWeakObjectPtr<AActor>& Weak : Sub->GetInteractables())
 	{
 		AActor* Actor = Weak.Get();
-		if (!Actor || Actor == this)
+		if (!IsValid(Actor) || Actor == this || Actor->IsHidden())
 		{
 			continue;
 		}
 		const IDAInteractableInterface* I = Cast<IDAInteractableInterface>(Actor);
-		if (!I)
+		if (!I || !I->CanInteract(this))
 		{
 			continue;
 		}
@@ -608,8 +636,20 @@ void ADAStudentCharacter::UpdateSwimming(float DeltaSeconds)
 {
 	UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this);
 	UCharacterMovementComponent* Move = GetCharacterMovement();
-	if (!Sub || !Move)
+	if (!Move)
 	{
+		return;
+	}
+	if (!Sub)
+	{
+		// Without the world subsystem there is no water query; never leave the
+		// character stuck in flying mode or the avatar stuck in its swim pose.
+		if (bSwimming)
+		{
+			bSwimming = false;
+			Move->SetMovementMode(MOVE_Falling);
+		}
+		SwimAlpha = FMath::FInterpTo(SwimAlpha, 0.f, DeltaSeconds, 5.f);
 		return;
 	}
 
@@ -657,6 +697,16 @@ void ADAStudentCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	UCharacterMovementComponent* Move = GetCharacterMovement();
+	if (!Move)
+	{
+		return;
+	}
+	// UI input modes can swallow the shift-release event while a map/duel is open.
+	// Drop the flag so closing the UI cannot leave the character sprinting.
+	if (bSprinting && (IsMovementBlocked() || !Controller))
+	{
+		bSprinting = false;
+	}
 	Move->MaxWalkSpeed = bSprinting ? SprintSpeed : WalkSpeed;
 
 	UpdateSwimming(DeltaSeconds);
@@ -670,7 +720,16 @@ void ADAStudentCharacter::Tick(float DeltaSeconds)
 	if (FocusTimer <= 0.f)
 	{
 		FocusTimer = 0.1f;
-		UpdateFocus();
+		if (IsMovementBlocked())
+		{
+			// Do not keep (or acquire) a world target behind a menu/dialogue; the
+			// HUD draws its prompt without checking the UI state.
+			FocusedInteractable.Reset();
+		}
+		else
+		{
+			UpdateFocus();
+		}
 	}
 
 	// Camera zoom easing
@@ -688,6 +747,18 @@ void ADAStudentCharacter::Tick(float DeltaSeconds)
 	}
 	if (!bInInterior && GetActorLocation().Z < -8000.0)
 	{
+		// The rescue is a full reset: drop any swim/fly state along with the
+		// velocity so the character does not hover or stay prone after arriving.
+		bSwimming = false;
+		SwimAlpha = 0.f;
+		if (Avatar)
+		{
+			Avatar->SwimAlpha = 0.f;
+		}
+		if (Move->MovementMode == MOVE_Flying || Move->MovementMode == MOVE_Swimming)
+		{
+			Move->SetMovementMode(MOVE_Falling);
+		}
 		SetActorLocation(SafeLocation + FVector(0.0, 0.0, 200.0), false, nullptr, ETeleportType::TeleportPhysics);
 		Move->Velocity = FVector::ZeroVector;
 	}
@@ -695,10 +766,24 @@ void ADAStudentCharacter::Tick(float DeltaSeconds)
 
 void ADAStudentCharacter::SetInInterior(bool bNewInInterior)
 {
+	const bool bWasInInterior = bInInterior;
 	bInInterior = bNewInInterior;
+	if (bWasInInterior && !bInInterior)
+	{
+		// Leaving a cell re-anchors the fall rescue at the arrival point.
+		SafeLocation = GetActorLocation();
+		SafeTimer = 0.f;
+	}
 	if (bInInterior)
 	{
 		bSwimming = false;
+		// Interior cells sit below the water plane; snap the prone swim pose off
+		// instead of letting it fade out inside the cell.
+		SwimAlpha = 0.f;
+		if (Avatar)
+		{
+			Avatar->SwimAlpha = 0.f;
+		}
 		if (UCharacterMovementComponent* Move = GetCharacterMovement())
 		{
 			if (Move->MovementMode == MOVE_Flying || Move->MovementMode == MOVE_Swimming)

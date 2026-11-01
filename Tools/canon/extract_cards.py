@@ -16,9 +16,9 @@ from collections import Counter
 from pathlib import Path
 
 from canon_common import (
-    CANON_DIR, CARD_STATS_BASE, DEFAULT_ROM, TARGET_CARDS, TOTAL_CARDS,
-    canonical_card_record, card_fingerprint, count_by, ensure_dirs, load_rom,
-    read_json, sha256_bytes, sha256_file, utc_now, write_json,
+    CANON_DIR, CARD_STATS_BASE, DEFAULT_ROM, ROM_SOURCE_LABEL, TARGET_CARDS,
+    TOTAL_CARDS, canonical_card_record, card_fingerprint, count_by, ensure_dirs,
+    load_rom, read_json, sha256_bytes, sha256_file, utc_now, write_json,
 )
 
 COMPARE_FIELDS = [
@@ -82,7 +82,7 @@ def main() -> int:
         "schema_version": 1,
         "generated_utc": utc_now(),
         "source": {
-            "rom": str(args.rom),
+            "rom": ROM_SOURCE_LABEL,
             "rom_sha256": sha256_bytes(rom),
             "rom_size": len(rom),
             "header": rom_header(rom),

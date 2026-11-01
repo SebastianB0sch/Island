@@ -5,8 +5,10 @@
 #include "DACardRecords.h"
 #include "DuelAcademyIsland.h"
 #include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
 #include "Engine/GameInstance.h"
 #include "HAL/FileManager.h"
+#include "Subsystems/SubsystemCollection.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
@@ -66,10 +68,18 @@ namespace
 		{
 			for (const TSharedPtr<FJsonValue>& Value : *Values)
 			{
-				if (Value.IsValid())
+				if (!Value.IsValid() || Value->Type != EJson::Number)
 				{
-					Out.Add(static_cast<int32>(Value->AsNumber()));
+					continue;
 				}
+				const double Number = Value->AsNumber();
+				if (!FMath::IsFinite(Number))
+				{
+					continue;
+				}
+				Out.Add(static_cast<int32>(FMath::Clamp(
+					Number, static_cast<double>(TNumericLimits<int32>::Min()),
+					static_cast<double>(TNumericLimits<int32>::Max()))));
 			}
 		}
 	}
@@ -116,6 +126,99 @@ namespace
 		}
 	}
 
+	void OppWriteIntMap(const TMap<FString, int32>& Map, TSharedPtr<FJsonObject>& OutObject)
+	{
+		OutObject = MakeShared<FJsonObject>();
+		for (const TPair<FString, int32>& Pair : Map)
+		{
+			if (!Pair.Key.IsEmpty())
+			{
+				OutObject->SetNumberField(Pair.Key, Pair.Value);
+			}
+		}
+	}
+
+	void OppReadIntMap(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TMap<FString, int32>& OutMap)
+	{
+		const TSharedPtr<FJsonObject> Source = ReadObject(Object, Field);
+		if (!Source.IsValid())
+		{
+			return;
+		}
+		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : Source->Values)
+		{
+			const FString Key(*Pair.Key);
+			if (Key.IsEmpty() || !Pair.Value.IsValid() || Pair.Value->Type != EJson::Number)
+			{
+				continue;
+			}
+			const double Number = Pair.Value->AsNumber();
+			if (!FMath::IsFinite(Number))
+			{
+				continue;
+			}
+			OutMap.Add(Key, static_cast<int32>(FMath::Clamp(
+				Number, 0.0, static_cast<double>(TNumericLimits<int32>::Max()))));
+		}
+	}
+
+	void OppWriteSortedStringArray(const TArray<FString>& Values, const TCHAR* Field,
+		const TSharedPtr<FJsonObject>& OutObject)
+	{
+		TArray<FString> Sorted = Values;
+		Sorted.Sort();
+		TArray<TSharedPtr<FJsonValue>> Array;
+		for (const FString& Value : Sorted)
+		{
+			if (!Value.IsEmpty())
+			{
+				Array.Add(MakeShared<FJsonValueString>(Value));
+			}
+		}
+		OutObject->SetArrayField(Field, Array);
+	}
+
+	void OppReadStringArrayField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& Out)
+	{
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values) || !Values)
+		{
+			return;
+		}
+		for (const TSharedPtr<FJsonValue>& Value : *Values)
+		{
+			if (Value.IsValid() && Value->Type == EJson::String)
+			{
+				const FString Text = Value->AsString();
+				if (!Text.IsEmpty())
+				{
+					Out.AddUnique(Text);
+				}
+			}
+		}
+	}
+
+	bool OppIsStringArrayField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	{
+		if (!Object.IsValid() || !Object->HasField(Field))
+		{
+			return true;
+		}
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (!Object->TryGetArrayField(Field, Values) || !Values)
+		{
+			return false;
+		}
+		for (const TSharedPtr<FJsonValue>& Value : *Values)
+		{
+			if (!Value.IsValid() || Value->Type != EJson::String)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	bool LoadJson(const FString& Path, TSharedPtr<FJsonValue>& OutRoot, FString& OutError)
 	{
 		FString Raw;
@@ -137,8 +240,46 @@ namespace
 void UDAOpponentSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	// Runtime state is now part of the save payload; make sure the save
+	// subsystem exists before registering, regardless of creation order.
+	Collection.InitializeDependency<UDASaveSubsystem>();
+
 	FString Error;
 	Reload(Error);
+	TryRegisterSaveProvider();
+}
+
+void UDAOpponentSubsystem::Deinitialize()
+{
+	if (bSaveProviderRegistered)
+	{
+		if (UGameInstance* GameInstance = GetGameInstance())
+		{
+			if (UDASaveSubsystem* Save = GameInstance->GetSubsystem<UDASaveSubsystem>())
+			{
+				Save->UnregisterPayloadProvider(this);
+			}
+		}
+		bSaveProviderRegistered = false;
+	}
+	Super::Deinitialize();
+}
+
+void UDAOpponentSubsystem::TryRegisterSaveProvider()
+{
+	if (bSaveProviderRegistered)
+	{
+		return;
+	}
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (UDASaveSubsystem* Save = GameInstance->GetSubsystem<UDASaveSubsystem>())
+		{
+			Save->RegisterPayloadProvider(this);
+			bSaveProviderRegistered = true;
+		}
+	}
 }
 
 bool UDAOpponentSubsystem::Reload(FString& OutError)
@@ -833,6 +974,25 @@ bool UDAOpponentSubsystem::CanRequestDuel(const FString& OpponentId, int32 DayIn
 			return false;
 		}
 	}
+
+	// CooldownDays applies between request days; MaxPerDay already covers
+	// multiple requests on the same day.
+	if (const int32* LastDay = RuntimeState.LastRequestDay.Find(OpponentId))
+	{
+		const int64 ElapsedDays = static_cast<int64>(DayIndex) - static_cast<int64>(*LastDay);
+		if (ElapsedDays < 0)
+		{
+			OutReason = TEXT("The current day is earlier than this opponent's last request.");
+			return false;
+		}
+		const int64 CooldownDays = FMath::Max(0, Opponent->DuelRequest.CooldownDays);
+		if (ElapsedDays > 0 && CooldownDays > 0 && ElapsedDays < CooldownDays)
+		{
+			OutReason = FString::Printf(TEXT("This opponent needs %lld more day(s) before another request."),
+				CooldownDays - ElapsedDays);
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -847,6 +1007,7 @@ bool UDAOpponentSubsystem::ConsumeDuelRequest(const FString& OpponentId, int32 D
 		return false;
 	}
 	RuntimeState.RequestsToday.FindOrAdd(OpponentId)++;
+	RuntimeState.LastRequestDay.Add(OpponentId, DayIndex);
 	return true;
 }
 
@@ -857,4 +1018,190 @@ void UDAOpponentSubsystem::ResetDailyRequests(int32 DayIndex)
 		RuntimeState.RequestDay = DayIndex;
 		RuntimeState.RequestsToday.Reset();
 	}
+}
+
+// ------------------------------------------------------------------------ persistence
+
+FString UDAOpponentSubsystem::GetSaveSectionName() const
+{
+	return TEXT("opponents");
+}
+
+bool UDAOpponentSubsystem::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const
+{
+	if (!OutSection.IsValid())
+	{
+		OutSection = MakeShared<FJsonObject>();
+	}
+	OutSection->SetNumberField(TEXT("version"), 1);
+
+	TSharedPtr<FJsonObject> Wins;
+	OppWriteIntMap(RuntimeState.Wins, Wins);
+	OutSection->SetObjectField(TEXT("wins"), Wins);
+
+	TSharedPtr<FJsonObject> Losses;
+	OppWriteIntMap(RuntimeState.Losses, Losses);
+	OutSection->SetObjectField(TEXT("losses"), Losses);
+
+	TSharedPtr<FJsonObject> Draws;
+	OppWriteIntMap(RuntimeState.Draws, Draws);
+	OutSection->SetObjectField(TEXT("draws"), Draws);
+
+	TSharedPtr<FJsonObject> RequestsToday;
+	OppWriteIntMap(RuntimeState.RequestsToday, RequestsToday);
+	OutSection->SetObjectField(TEXT("requests_today"), RequestsToday);
+
+	// LastRequestDay drives DuelRequest.CooldownDays; RequestDay scopes the
+	// per-day request counters. Both must survive a save or the limits reset.
+	TSharedPtr<FJsonObject> LastRequestDay;
+	OppWriteIntMap(RuntimeState.LastRequestDay, LastRequestDay);
+	OutSection->SetObjectField(TEXT("last_request_day"), LastRequestDay);
+	OutSection->SetNumberField(TEXT("request_day"), RuntimeState.RequestDay);
+
+	TSharedPtr<FJsonObject> Emails = MakeShared<FJsonObject>();
+	for (const TPair<FString, FDAOpponentEmailRuntime>& Pair : RuntimeState.Emails)
+	{
+		if (Pair.Key.IsEmpty())
+		{
+			continue;
+		}
+		TSharedPtr<FJsonObject> EmailObject = MakeShared<FJsonObject>();
+		EmailObject->SetBoolField(TEXT("unlocked"), Pair.Value.bUnlocked);
+		OppWriteSortedStringArray(Pair.Value.UnlockedThreads, TEXT("unlocked_threads"), EmailObject);
+		OppWriteSortedStringArray(Pair.Value.ReadThreads, TEXT("read_threads"), EmailObject);
+		Emails->SetObjectField(Pair.Key, EmailObject);
+	}
+	OutSection->SetObjectField(TEXT("emails"), Emails);
+
+	return true;
+}
+
+bool UDAOpponentSubsystem::ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const
+{
+	if (!InSection.IsValid())
+	{
+		OutError = TEXT("Opponent save section is missing.");
+		return false;
+	}
+
+	if (InSection->HasField(TEXT("version")))
+	{
+		double Version = 0.0;
+		if (!InSection->TryGetNumberField(TEXT("version"), Version) || !FMath::IsFinite(Version))
+		{
+			OutError = TEXT("Opponent save section has an invalid version.");
+			return false;
+		}
+	}
+
+	static const TCHAR* const MapFields[] = {
+		TEXT("wins"), TEXT("losses"), TEXT("draws"), TEXT("requests_today"), TEXT("last_request_day")
+	};
+	for (const TCHAR* Field : MapFields)
+	{
+		if (!InSection->HasField(Field))
+		{
+			continue;
+		}
+		const TSharedPtr<FJsonObject>* MapObject = nullptr;
+		if (!InSection->TryGetObjectField(Field, MapObject) || !MapObject || !MapObject->IsValid())
+		{
+			OutError = FString::Printf(TEXT("Opponent save field '%s' is not an object."), Field);
+			return false;
+		}
+	}
+
+	if (InSection->HasField(TEXT("request_day")))
+	{
+		int32 RequestDay = -1;
+		if (!InSection->TryGetNumberField(TEXT("request_day"), RequestDay))
+		{
+			OutError = TEXT("Opponent save field 'request_day' is not a number.");
+			return false;
+		}
+	}
+
+	if (InSection->HasField(TEXT("emails")))
+	{
+		const TSharedPtr<FJsonObject>* EmailsObject = nullptr;
+		if (!InSection->TryGetObjectField(TEXT("emails"), EmailsObject) || !EmailsObject || !EmailsObject->IsValid())
+		{
+			OutError = TEXT("Opponent save field 'emails' is not an object.");
+			return false;
+		}
+		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : (*EmailsObject)->Values)
+		{
+			if (!Pair.Value.IsValid() || Pair.Value->Type != EJson::Object || !Pair.Value->AsObject().IsValid())
+			{
+				OutError = FString::Printf(TEXT("Opponent save email '%s' is not an object."), *FString(*Pair.Key));
+				return false;
+			}
+			const TSharedPtr<FJsonObject> EmailObject = Pair.Value->AsObject();
+			if (EmailObject->HasField(TEXT("unlocked")))
+			{
+				bool bUnlocked = false;
+				if (!EmailObject->TryGetBoolField(TEXT("unlocked"), bUnlocked))
+				{
+					OutError = FString::Printf(TEXT("Opponent save email '%s' has an invalid unlocked flag."), *FString(*Pair.Key));
+					return false;
+				}
+			}
+			if (!OppIsStringArrayField(EmailObject, TEXT("unlocked_threads"))
+				|| !OppIsStringArrayField(EmailObject, TEXT("read_threads")))
+			{
+				OutError = FString::Printf(TEXT("Opponent save email '%s' has an invalid thread list."), *FString(*Pair.Key));
+				return false;
+			}
+		}
+	}
+
+	OutError.Reset();
+	return true;
+}
+
+bool UDAOpponentSubsystem::ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError)
+{
+	if (!ValidateSaveSection(InSection, OutError))
+	{
+		return false;
+	}
+
+	FDAOpponentRuntimeState Loaded;
+	OppReadIntMap(InSection, TEXT("wins"), Loaded.Wins);
+	OppReadIntMap(InSection, TEXT("losses"), Loaded.Losses);
+	OppReadIntMap(InSection, TEXT("draws"), Loaded.Draws);
+	OppReadIntMap(InSection, TEXT("requests_today"), Loaded.RequestsToday);
+	OppReadIntMap(InSection, TEXT("last_request_day"), Loaded.LastRequestDay);
+	InSection->TryGetNumberField(TEXT("request_day"), Loaded.RequestDay);
+
+	const TSharedPtr<FJsonObject> Emails = ReadObject(InSection, TEXT("emails"));
+	if (Emails.IsValid())
+	{
+		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : Emails->Values)
+		{
+			const FString OpponentId(*Pair.Key);
+			if (OpponentId.IsEmpty() || !Pair.Value.IsValid() || Pair.Value->Type != EJson::Object)
+			{
+				continue;
+			}
+			const TSharedPtr<FJsonObject> EmailObject = Pair.Value->AsObject();
+			if (!EmailObject.IsValid())
+			{
+				continue;
+			}
+			FDAOpponentEmailRuntime& Email = Loaded.Emails.FindOrAdd(OpponentId);
+			EmailObject->TryGetBoolField(TEXT("unlocked"), Email.bUnlocked);
+			OppReadStringArrayField(EmailObject, TEXT("unlocked_threads"), Email.UnlockedThreads);
+			OppReadStringArrayField(EmailObject, TEXT("read_threads"), Email.ReadThreads);
+		}
+	}
+
+	RuntimeState = MoveTemp(Loaded);
+	OutError.Reset();
+	return true;
+}
+
+void UDAOpponentSubsystem::ResetSaveSectionState()
+{
+	RuntimeState = FDAOpponentRuntimeState();
 }

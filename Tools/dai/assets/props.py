@@ -730,8 +730,10 @@ def export_all(out_dir, log=print):
             co.name = f"UCX_{name}_{i:02d}"
             co.data.materials.clear()
             objs.append(co)
-        blend.export_fbx(objs, os.path.join(out_dir, name + ".fbx"))
-        blend.delete(objs)
+        try:
+            blend.export_fbx(objs, os.path.join(out_dir, name + ".fbx"))
+        finally:
+            blend.delete(objs)
         n_tp += is_thirdparty(name)
     log(f"  props: {len(REGISTRY)} meshes exported ({n_tp} from curated third-party packs)")
 

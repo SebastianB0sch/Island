@@ -219,11 +219,24 @@ FAnimInstanceProxy* UDAAvatarAnimInstance::CreateAnimInstanceProxy()
 void UDAAvatarAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
+	// A reinitialised instance must not inherit a previous mesh's action slot or
+	// blend state; Configure() only replaces the locomotion takes.
+	GroundSpeed = VerticalSpeed = SwimAlpha = DuelAlpha = 0.f;
+	bInAir = false;
+	SmoothedSpeed = 0.f;
+	BlendedGroundSpeed = 0.f;
 	Phase = 0.f;
 	IdleTime = 0.f;
+	IdleBlend = 1.f;
+	WalkBlendValue = RunBlendValue = 0.f;
+	WalkBlend = RunBlend = 0.f;
+	ActionSequenceA = nullptr;
+	ActionSequenceB = nullptr;
 	ActionTimeA = ActionTimeB = 0.f;
 	ActionWeightA = ActionWeightB = 0.f;
 	ActionTargetA = 0.f;
+	ActionPlayRateA = ActionPlayRateB = 1.f;
+	bActionLoopA = bActionLoopB = false;
 }
 
 void UDAAvatarAnimInstance::Configure(const TMap<FName, TObjectPtr<UAnimSequence>>& InAnims, float InWalkSpeed, float InRunSpeed)
@@ -257,20 +270,33 @@ void UDAAvatarAnimInstance::SetAction(UAnimSequence* Sequence, bool bLoop, float
 	{
 		return;
 	}
+	const bool bActionWasCleared = ActionTargetA <= KINDA_SMALL_NUMBER;
 	if (ActionSequenceA == Sequence)
 	{
 		bActionLoopA = bLoop;
 		ActionTargetA = FMath::Clamp(InTargetWeight, 0.f, 1.f);
 		ActionPlayRateA = FMath::Max(0.f, InPlayRate);
+		if (bActionWasCleared)
+		{
+			// ClearAction() leaves the old A at its final frame until the weight
+			// has faded. Re-triggering the same take (a second landing, another
+			// wave) must start it again, not resume the clamped tail.
+			ActionTimeA = 0.f;
+		}
 		return;
 	}
 
-	// Crossfade: the outgoing action keeps its clock and weight in B while A starts the new one.
-	ActionSequenceB = ActionSequenceA;
-	ActionTimeB = ActionTimeA;
-	ActionWeightB = ActionWeightA;
-	ActionPlayRateB = ActionPlayRateA;
-	bActionLoopB = bActionLoopA;
+	// Crossfade: the outgoing action keeps its clock and weight in B while A starts
+	// the new one. If the still-fading B is the stronger pose, keep it instead of
+	// cutting a rapid Jump -> Fall -> Land chain short.
+	if (ActionWeightB <= 0.002f || ActionWeightA >= ActionWeightB)
+	{
+		ActionSequenceB = ActionSequenceA;
+		ActionTimeB = ActionTimeA;
+		ActionWeightB = ActionWeightA;
+		ActionPlayRateB = ActionPlayRateA;
+		bActionLoopB = bActionLoopA;
+	}
 
 	ActionSequenceA = Sequence;
 	ActionTimeA = 0.f;
@@ -388,7 +414,15 @@ void UDAAvatarAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	// Action layer: crossfade in/out and keep a second outgoing action alive during switches.
 	ActionWeightA = FMath::FInterpTo(ActionWeightA, ActionTargetA, Dt, ActionBlendSpeed);
 	ActionWeightB = FMath::FInterpTo(ActionWeightB, 0.f, Dt, ActionBlendSpeed);
-	if (ActionWeightB < 0.002f && ActionTargetA > 0.f)
+	// Drop finished slots so their sequences do not linger at zero weight. A is
+	// only released after its fade-out; B always fades out on its own.
+	if (ActionWeightA < 0.002f && ActionTargetA <= KINDA_SMALL_NUMBER)
+	{
+		ActionSequenceA = nullptr;
+		ActionTimeA = 0.f;
+		ActionWeightA = 0.f;
+	}
+	if (ActionSequenceB && ActionWeightB < 0.002f)
 	{
 		ActionSequenceB = nullptr;
 		ActionTimeB = 0.f;

@@ -117,7 +117,9 @@ public:
 	 * Narrow registration hook for A07 opponent decks.  Keeps the card database
 	 * as the single deck-id resolver used by FDuelEngine::Start without making
 	 * the A06 economy/deck-editor code learn the Opponents directory.
-	 * Re-registering the same id replaces the previous entry.
+	 * Re-registering the same registered id replaces the previous entry.
+	 * Ids that collide with a starter deck return false because FindDeck
+	 * resolves starters first.
 	 */
 	bool RegisterDeck(const FStarterDeckDef& Deck);
 

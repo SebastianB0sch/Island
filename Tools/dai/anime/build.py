@@ -13,13 +13,12 @@ Unreal's shared Skeleton imports without a "regenerate skeleton" merge.
     python Tools/preview_anime.py [ids...]          # Cycles lineup render
 """
 
-import json
 import os
 
 import bpy
 
 from .. import config as C
-from .. import palette, thirdparty
+from .. import jsonio, palette, thirdparty
 from ..character import export_skeletal
 from . import body as B
 from . import cast as CAST
@@ -184,12 +183,13 @@ def preview_material(name):
     col = nt.nodes.new("ShaderNodeRGB")
     col.outputs[0].default_value = (*lin, 1.0)
     src = col.outputs[0]
+    tex = None
     if spec.get("base"):
         img_path = os.path.join(C.OUT_TEXTURES, spec["base"] + ".png")
         tex = nt.nodes.new("ShaderNodeTexImage")
         tex.image = bpy.data.images.load(img_path, check_existing=True)
         src = tex.outputs["Color"]
-    alpha = tex.outputs["Alpha"] if spec.get("base") and spec.get("masked") else None
+    alpha = tex.outputs["Alpha"] if tex is not None and spec.get("masked") else None
     toon = nt.nodes.new("ShaderNodeBsdfToon")
     toon.component = "DIFFUSE"
     toon.inputs["Size"].default_value = 0.85
@@ -374,20 +374,101 @@ def _merge_rig(base, arm, mesh, log=print):
     mesh.matrix_world = world
 
 
+def _cast_output_files(info):
+    """Manifest FBX paths (relative to SourceAssets) for one cast.json document."""
+    files = set()
+
+    def add(rel):
+        if isinstance(rel, str) and rel:
+            files.add(rel.replace("\\", "/"))
+
+    for entry in (info.get("meshes") or {}).values():
+        if isinstance(entry, dict):
+            add(entry.get("file"))
+    for group in (info.get("groups") or {}).values():
+        if not isinstance(group, dict):
+            continue
+        for key in ("base_mesh", "duel_disk"):
+            item = group.get(key) or {}
+            if isinstance(item, dict):
+                add(item.get("file"))
+        for anim in (group.get("anims") or {}).values():
+            if isinstance(anim, dict):
+                add(anim.get("file"))
+    return files
+
+
+def _cast_output_textures(info):
+    """Texture paths (relative to SourceAssets/Textures) referenced by the cast materials."""
+    textures = set()
+    for spec in (info.get("materials") or {}).values():
+        base = spec.get("base") if isinstance(spec, dict) else None
+        if isinstance(base, str) and base.startswith(TEX_REL + "/"):
+            textures.add(base + ".png")
+    return textures
+
+
+def _remove_generated(root, rel, prefix):
+    """Delete one generated file only if it stays under root and its prefix."""
+    rel = rel.replace("\\", "/")
+    if not rel.startswith(prefix):
+        return False
+    path = os.path.realpath(os.path.join(root, *rel.split("/")))
+    root_real = os.path.realpath(root)
+    try:
+        if os.path.commonpath((root_real, path)) != root_real:
+            return False
+    except ValueError:
+        return False
+    if not os.path.isfile(path):
+        return False
+    os.remove(path)
+    return True
+
+
+def _prune_previous_outputs(old_info, new_info, log):
+    """Remove files the previous cast.json owned but the new manifest no longer does.
+
+    This runs only after the new cast.json has been written atomically, so an
+    interrupted export leaves the previous manifests and meshes usable.  It is
+    skipped for a partial (``only=...``) build, which intentionally keeps the
+    rest of the cast.
+    """
+    if not isinstance(old_info, dict):
+        return 0
+    removed = 0
+    for rel in sorted(_cast_output_files(old_info) - _cast_output_files(new_info)):
+        try:
+            removed += _remove_generated(C.OUT_DIR, rel, OUT_REL + "/")
+        except OSError as exc:
+            log(f"  !! anime: could not remove stale {rel}: {exc}")
+    for rel in sorted(_cast_output_textures(old_info) - _cast_output_textures(new_info)):
+        try:
+            removed += _remove_generated(C.OUT_TEXTURES, rel, TEX_REL + "/")
+        except OSError as exc:
+            log(f"  !! anime: could not remove stale {rel}: {exc}")
+    if removed:
+        log(f"  anime: removed {removed} stale generated file(s)")
+    return removed
+
+
 def build(log=print, only=None):
     """Every cast member, grouped by skeleton: all members built on the same base model (or the procedural
     fallback rig) share one skeleton, one set of A_Anime_<Group>_<State> takes and one duel disk."""
-    import shutil
     from .. import blend
     out_dir = os.path.join(C.OUT_DIR, OUT_REL)
-    # Remove only the generated takes (keep any user subfolders such as a hand-made Combined/
-    # set); the texture folder is fully generated.
     os.makedirs(out_dir, exist_ok=True)
-    for entry in os.scandir(out_dir):
-        if entry.is_file() and entry.name.lower().endswith((".fbx", ".json")):
-            os.remove(entry.path)
-    shutil.rmtree(os.path.join(C.OUT_TEXTURES, TEX_REL), ignore_errors=True)
     os.makedirs(os.path.join(C.OUT_TEXTURES, TEX_REL), exist_ok=True)
+    # Keep the previous manifest until the new one is complete: the individual
+    # FBX/PNG writers are atomic, and stale files are pruned below only after
+    # cast.json has been replaced.
+    old_info = None
+    cast_path = os.path.join(C.OUT_DATA, "cast.json")
+    if os.path.exists(cast_path):
+        try:
+            old_info = jsonio.read_json(cast_path)
+        except (OSError, ValueError) as exc:
+            log(f"  !! anime: previous cast.json unreadable ({exc}); stale files will not be pruned")
     entries = CAST.all_entries()
     order = [CAST.PLAYER] + [c for c in entries if c != CAST.PLAYER]
     if only:
@@ -446,8 +527,12 @@ def build(log=print, only=None):
     mats = palette.material_json()
     info["materials"] = {k: mats[k] for k in sorted(used) if k in mats}
     os.makedirs(C.OUT_DATA, exist_ok=True)
-    with open(os.path.join(C.OUT_DATA, "cast.json"), "w") as fp:
-        json.dump(info, fp, indent=1)
+    jsonio.write_json(cast_path, info, indent=1)
+    if only is None:
+        try:
+            _prune_previous_outputs(old_info, info, log)
+        except Exception as exc:  # noqa: BLE001 - cleanup must not fail a successful export
+            log(f"  !! anime: stale-file cleanup failed ({exc}); files left in place")
     annotate_layout(log)
     return info
 
@@ -457,12 +542,10 @@ def annotate_layout(log=print):
     path = os.path.join(C.OUT_DATA, "layout.json")
     if not os.path.exists(path):
         return
-    with open(path) as fp:
-        layout = json.load(fp)
+    layout = jsonio.read_json(path)
     CAST.assign_npcs(layout.get("npcs", []))
-    with open(path, "w") as fp:
-        json.dump(layout, fp, separators=(",", ":"))
-    named = [n["cast"] for n in layout.get("npcs", []) if not n.get("tint", True)]
+    jsonio.write_json(path, layout, separators=(",", ":"))
+    named = [n["cast"] for n in layout.get("npcs", []) if n.get("cast") and not n.get("tint", True)]
     log(f"  anime: layout.json npcs cast ({len(named)} named: {', '.join(named)})")
 
 
@@ -481,8 +564,11 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
     src_key = dict((s, k) for s, k, _ in TAKES).get(state)
     src = spec = None
     if src_key:
-        spec = thirdparty.registry()["anime"][src_key]
-        src = RT.Source(thirdparty.tp_path(spec["file"]))
+        spec = thirdparty.registry().get("anime", {}).get(src_key)
+        if spec is not None:
+            src = RT.Source(thirdparty.tp_path(spec["file"]))
+        else:
+            log(f"  !! anime: no source registered for {src_key}; rendering the rest pose")
     shared = None
     spacing = 0.85
     for i, cid in enumerate(ids):

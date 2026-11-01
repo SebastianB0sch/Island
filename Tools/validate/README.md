@@ -25,9 +25,10 @@ bad arguments.
 | Check | What it validates |
 | --- | --- |
 | `cards` | 1,200 unique ids 1..1200, required fields, card type/subtype/attribute consistency, monster levels, spell/trap rules. |
-| `canon_*` | A01 extracts: 35 events, 100 puzzles (20/level), 48 packs, 31 decks, 25 opponents, 12-cycle exams, 14 titles, 63 banlist cards, calendar. Complete canon records must be structurally valid; unknown canon is a gap. |
+| `canon_*` | A01 extracts: 35 events, 100 puzzles (20/level), 48 packs, 37 canon decks, 28 opponents, 12-cycle exams, 14 titles, 63 banlist cards, calendar. Complete canon records must be structurally valid; unknown canon is a gap. |
+| `canon_manifest` | `Content/Data/Canon/manifest.json` lists every published extract with a matching SHA-256 and byte size; duplicate, missing or out-of-tree entries fail. |
 | `fusions` | Result is a fusion monster, materials/ids valid, `fusionTypes`, duplicate/generic/unresolved recipes, coverage vs 76 fusion monsters. |
-| `decks` | 40..60 main, <=20 extra, <=15 side, valid ids, <=3 copies, forbidden/limited/semi limits, fusion monsters in extra. |
+| `decks` | 40..60 main, <=15 extra, <=15 side, valid ids, <=3 copies, forbidden/limited/semi limits, fusion monsters in extra. |
 | `limitations` | Banlist ids valid, buckets disjoint. |
 | `packs` | 48 packs, price/size/pool, valid card ids, slot totals, rarity weights, unlock refs, pool coverage. |
 | `opponents` | Unique roster ids, decks/evolution refs, AI profile, difficulty, dorm, schedule, email hook. |

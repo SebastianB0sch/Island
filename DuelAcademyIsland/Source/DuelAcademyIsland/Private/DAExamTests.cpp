@@ -2,8 +2,20 @@
 
 #include "Misc/AutomationTest.h"
 #include "DAExamSubsystem.h"
+#include "Engine/GameInstance.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
+
+namespace
+{
+	UDAExamSubsystem* MakeExamSubsystemForTest()
+	{
+		// A GameInstanceSubsystem must be outered to a GameInstance; creating
+		// it directly in the transient package triggers a ClassWithin ensure.
+		UGameInstance* Outer = NewObject<UGameInstance>(GetTransientPackage());
+		return NewObject<UDAExamSubsystem>(Outer);
+	}
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDAExamScoringTest, "DuelAcademy.Exams.Scoring",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -11,7 +23,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDAExamScoringTest, "DuelAcademy.Exams.Scoring"
 bool FDAExamScoringTest::RunTest(const FString& Parameters)
 {
 	(void)Parameters;
-	UDAExamSubsystem* Exam = NewObject<UDAExamSubsystem>(GetTransientPackage());
+	UDAExamSubsystem* Exam = MakeExamSubsystemForTest();
 	if (!TestNotNull(TEXT("Exam subsystem created"), Exam))
 	{
 		return false;
@@ -67,11 +79,32 @@ bool FDAExamScoringTest::RunTest(const FString& Parameters)
 		return false;
 	}
 	TestFalse(TEXT("Timed puzzle selected"), Exam->GetSelectedPuzzleId().IsEmpty());
-	if (!TestTrue(TEXT("Submit timed result"), Exam->SubmitTimedResult(true, 1, 20.f, Error)))
+	TestFalse(TEXT("Attempt token is available for outcome scoping"), Exam->GetAttemptToken().IsEmpty());
+	const FString TimedToken = TEXT("timed:automation:1");
+	bool bAlreadyApplied = false;
+	if (!TestTrue(TEXT("Submit timed result"),
+			Exam->SubmitTimedResultOnce(true, 1, 20.f, TimedToken, Error, bAlreadyApplied)))
 	{
 		AddError(Error);
 		return false;
 	}
+	TestFalse(TEXT("First timed submission is not a duplicate"), bAlreadyApplied);
+	TestEqual(TEXT("Timed token is recorded"), Exam->GetTimedResultToken(), TimedToken);
+	TestTrue(TEXT("Timed turns recorded"), Exam->GetTimedTurns() == 1);
+	if (!TestTrue(TEXT("Duplicate timed result is accepted as already applied"),
+			Exam->SubmitTimedResultOnce(true, 99, 999.f, TimedToken, Error, bAlreadyApplied)))
+	{
+		AddError(Error);
+		return false;
+	}
+	TestTrue(TEXT("Duplicate timed result is flagged"), bAlreadyApplied);
+	TestEqual(TEXT("Duplicate timed result keeps the original turns"), Exam->GetTimedTurns(), 1);
+	TestTrue(TEXT("Duplicate timed result keeps the original seconds"),
+		FMath::IsNearlyEqual(Exam->GetTimedSeconds(), 20.f, KINDA_SMALL_NUMBER));
+	TestFalse(TEXT("A different timed token is rejected"),
+		Exam->SubmitTimedResultOnce(false, 0, 0.f, TEXT("timed:automation:2"), Error, bAlreadyApplied));
+	TestTrue(TEXT("Timed phase remains done after duplicates"),
+		Exam->GetPhase() == EDAExamPhase::TimedDone);
 	if (!TestTrue(TEXT("Begin practical"), Exam->BeginPractical(Error)))
 	{
 		AddError(Error);
@@ -132,7 +165,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDAExamCycleTest, "DuelAcademy.Exams.Cycles",
 bool FDAExamCycleTest::RunTest(const FString& Parameters)
 {
 	(void)Parameters;
-	UDAExamSubsystem* Exam = NewObject<UDAExamSubsystem>(GetTransientPackage());
+	UDAExamSubsystem* Exam = MakeExamSubsystemForTest();
 	if (!TestNotNull(TEXT("Exam subsystem created"), Exam))
 	{
 		return false;
@@ -165,6 +198,10 @@ bool FDAExamCycleTest::RunTest(const FString& Parameters)
 	}
 
 	TestTrue(TEXT("Month 1 starts"), Exam->StartExam(1, 1234, Error));
+	const FString FirstAttemptToken = Exam->GetAttemptToken();
+	TestFalse(TEXT("StartExam creates an attempt token"), FirstAttemptToken.IsEmpty());
+	TestTrue(TEXT("Month 1 restarts"), Exam->StartExam(1, 1234, Error));
+	TestFalse(TEXT("A new attempt gets a new token"), Exam->GetAttemptToken() == FirstAttemptToken);
 	TestEqual(TEXT("Month 1 selects the authored timed puzzle"),
 		Exam->PickTimedPuzzle(1), Exam->GetCycle(1)->TimedPuzzleId);
 	TestTrue(TEXT("Month 1 question set matches the cycle"),

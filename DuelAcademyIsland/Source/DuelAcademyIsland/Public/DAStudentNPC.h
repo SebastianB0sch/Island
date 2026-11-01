@@ -73,6 +73,10 @@ public:
 	virtual bool CanInteract(const ADAStudentCharacter* By) const override;
 	virtual void Interact(ADAStudentCharacter* By) override;
 
+	/** Re-anchor the wander area after the director moves this NPC (schedule/teleport). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
+	void SetWanderHome(const FVector& NewHome);
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
 	TObjectPtr<UDAAvatarComponent> Avatar;

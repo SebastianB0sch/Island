@@ -17,8 +17,11 @@ owns the slot layout / odds overlay and the deck rules wrapper.
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -59,10 +62,20 @@ def load(path: Path):
 
 
 def write(path: Path, value) -> None:
+    """Serialize with json.dump(indent=2, ensure_ascii=False) + newline, atomically."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as handle:
-        json.dump(value, handle, indent=2, ensure_ascii=False)
-        handle.write("\n")
+    payload = json.dumps(value, indent=2, ensure_ascii=False) + "\n"
+    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(payload)
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name):
+            try:
+                os.unlink(temp_name)
+            except OSError:
+                pass
 
 
 def restock_days(text: str | None, fallback: int) -> int:
@@ -78,7 +91,17 @@ def restock_days(text: str | None, fallback: int) -> int:
     return 7
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Sync A06 shop packs, rarity hints and the year-1 banlist from Canon."
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="build and validate the documents without writing any output",
+    )
+    args = parser.parse_args(argv)
+
     if not CANON_PACKS.exists():
         print(f"missing canon packs: {CANON_PACKS}", file=sys.stderr)
         return 1
@@ -86,10 +109,15 @@ def main() -> int:
         print(f"missing canon banned list: {CANON_BANNED}", file=sys.stderr)
         return 1
 
-    canon = load(CANON_PACKS)
-    shop = load(SHOP_PACKS)
-    banned = load(CANON_BANNED)
-    cards = load(CARDS)
+    try:
+        canon = load(CANON_PACKS)
+        shop = load(SHOP_PACKS)
+        banned = load(CANON_BANNED)
+        cards = load(CARDS)
+        decks = load(DECKS)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"error: cannot load economy inputs: {exc}", file=sys.stderr)
+        return 2
 
     rank = {rarity: index for index, rarity in enumerate(RARITY_ORDER)}
     rarity_by_card: dict[int, str] = {}
@@ -183,21 +211,16 @@ def main() -> int:
         "Calendar packs use month_at_least until A02 exposes exact last-week/day windows.",
         "Dorothy's Gift materialises A01's full_pool=true as all 1,200 card ids at copy weight 1; any-card slots still prefer unowned cards.",
     ]
-    write(SHOP_PACKS, shop)
-
-    write(
-        RARITY,
-        {
-            "schema": 1,
-            "canon_status": "provisional",
-            "source": "Derived from Content/Data/Canon/packs.json pools (highest rarity per card).",
-            "notes": "Global rarity is only a collection/filter hint. A card can have different rarities in different packs.",
-            "rarities": [
-                {"card_id": card_id, "rarity": rarity_by_card[card_id]}
-                for card_id in sorted(rarity_by_card)
-            ],
-        },
-    )
+    rarity_doc = {
+        "schema": 1,
+        "canon_status": "provisional",
+        "source": "Derived from Content/Data/Canon/packs.json pools (highest rarity per card).",
+        "notes": "Global rarity is only a collection/filter hint. A card can have different rarities in different packs.",
+        "rarities": [
+            {"card_id": card_id, "rarity": rarity_by_card[card_id]}
+            for card_id in sorted(rarity_by_card)
+        ],
+    }
 
     banned_ids = []
     limited = []
@@ -212,40 +235,41 @@ def main() -> int:
         elif status == "Semi-Limited":
             semi_limited.append({"card_id": card_id, "limit": 2, "name": card.get("name", ""), "reason": "GX1 year 1 Semi-Limited"})
 
-    write(
-        RULES,
-        {
-            "schema": 1,
-            "canon_status": "canon_year_1",
-            "source": "Content/Data/Canon/banned_list.json (A01, Yugipedia GX1 banned list), year_1 statuses.",
-            "notes": "Year 1 list is applied to deck construction. Year 2/3 lists remain in Canon/banned_list.json for later story phases.",
-            "max_owned_copies": 3,
-            "rules": {
-                "min_main": 40,
-                "max_main": 60,
-                "max_extra": 15,
-                "max_copies": 3,
-                "max_side": 0,
-                "max_player_decks": 24,
-                "deck_name_min_length": 1,
-                "deck_name_max_length": 24,
-            },
-            "banned": banned_ids,
-            "limited": limited,
-            "semi_limited": semi_limited,
-            "schema_notes": {
-                "banned": "Array of card ids or {card_id, name, reason}. Forbidden in year 1.",
-                "limited": "Array of {card_id, limit, name, reason}; limit is 1.",
-                "semi_limited": "Array of {card_id, limit, name, reason}; limit is 2.",
-            },
+    rules_doc = {
+        "schema": 1,
+        "canon_status": "canon_year_1",
+        "source": "Content/Data/Canon/banned_list.json (A01, Yugipedia GX1 banned list), year_1 statuses.",
+        "notes": "Year 1 list is applied to deck construction. Year 2/3 lists remain in Canon/banned_list.json for later story phases.",
+        "max_owned_copies": 3,
+        "rules": {
+            "min_main": 40,
+            "max_main": 60,
+            "max_extra": 15,
+            "max_copies": 3,
+            "max_side": 0,
+            "max_player_decks": 24,
+            "deck_name_min_length": 1,
+            "deck_name_max_length": 24,
         },
-    )
+        "banned": banned_ids,
+        "limited": limited,
+        "semi_limited": semi_limited,
+        "schema_notes": {
+            "banned": "Array of card ids or {card_id, name, reason}. Forbidden in year 1.",
+            "limited": "Array of {card_id, limit, name, reason}; limit is 1.",
+            "semi_limited": "Array of {card_id, limit, name, reason}; limit is 2.",
+        },
+    }
+    if not args.check:
+        write(SHOP_PACKS, shop)
+        write(RARITY, rarity_doc)
+        write(RULES, rules_doc)
 
     # Sanity: the default player deck must be legal under the year 1 list.
     banned_set = {entry["card_id"] for entry in banned_ids}
     limited_map = {entry["card_id"]: entry["limit"] for entry in limited}
     semi_map = {entry["card_id"]: entry["limit"] for entry in semi_limited}
-    for deck in load(DECKS):
+    for deck in decks:
         counts: dict[int, int] = {}
         for card_id in deck["cards"]:
             counts[card_id] = counts.get(card_id, 0) + 1
@@ -257,7 +281,10 @@ def main() -> int:
             if card_id in semi_map and count > semi_map[card_id]:
                 print(f"WARNING: {deck['id']} exceeds semi-limited card {card_id}", file=sys.stderr)
 
-    print(f"synced {len(new_packs)} packs, {len(banned_ids)} forbidden, {len(limited)} limited, {len(semi_limited)} semi-limited")
+    print(
+        f"{'checked' if args.check else 'synced'} {len(new_packs)} packs, "
+        f"{len(banned_ids)} forbidden, {len(limited)} limited, {len(semi_limited)} semi-limited"
+    )
     return 0
 
 

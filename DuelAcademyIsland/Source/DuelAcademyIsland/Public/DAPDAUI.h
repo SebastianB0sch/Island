@@ -252,6 +252,7 @@ private:
 	void Diamond(const FVector2D& C, float R, const FLinearColor& Color);
 	FVector2D Measure(const FString& Str, float InScale, UFont* Font = nullptr) const;
 	TArray<FString> WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+	FString Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
 	void AddHit(const FString& Action, int32 Index, float X, float Y, float W, float H,
 		const FString& Payload = FString());
 	void HandleClickAtMouse();

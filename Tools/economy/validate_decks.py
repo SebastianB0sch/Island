@@ -48,9 +48,15 @@ def main() -> int:
         if not ok:
             failures.append(f"{code}: {detail}")
 
-    rules_doc = load(RULES)
-    rules = rules_doc.get("rules", {}) or {}
-    cards = load(CARDS)
+    try:
+        rules_doc = load(RULES)
+        rules = rules_doc.get("rules", {}) or {}
+        cards = load(CARDS)
+        starter_decks = load(STARTER_DECKS)
+        player_doc = load(PLAYER_DECKS)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"error: cannot load A06 deck data: {exc}", file=sys.stderr)
+        return 2
     card_names = {int(card["id"]): str(card.get("name", "")) for card in cards}
     card_ids = set(card_names)
 
@@ -75,9 +81,8 @@ def main() -> int:
     }
 
     deck_records: list[tuple[str, dict, str]] = []
-    for deck in load(STARTER_DECKS):
+    for deck in starter_decks:
         deck_records.append(("Content/Data/decks.json", deck, "cards"))
-    player_doc = load(PLAYER_DECKS)
     for deck in player_doc.get("decks", []):
         deck_records.append(("Content/Data/Decks/player_decks.json", deck, "main"))
 

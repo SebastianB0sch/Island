@@ -21,7 +21,7 @@ python Tools\integration\run_smoke.py --self-tests
 # Opening story self-test (explicit; the editor harness may stay open)
 python Tools\integration\run_smoke.py --story-selftest
 
-# A07: 100 puzzle replays + 12 exam cycles in one headless process
+# A07: authored puzzle replays + 12 exam cycles in one headless process
 python Tools\integration\run_smoke.py --a07-selftest
 python Tools\integration\run_smoke.py --puzzle-selftest
 python Tools\integration\run_smoke.py --exam-selftest
@@ -37,19 +37,37 @@ Reports and logs land in `Docs/Integration/reports/`:
 
 ```text
 reports/
-├─ validate-<timestamp>.json
-├─ smoke-<timestamp>.json
+├─ validate-<run>.json
+├─ smoke-<run>.json
 ├─ automation/
 └─ logs/
-   ├─ validate-<timestamp>.log
-   ├─ duel-selftest-<timestamp>.log
-   └─ automation-<timestamp>.log
+   ├─ validate-<run>.log
+   ├─ duel-selftest-<run>.log
+   └─ automation-<run>.log
 ```
 
-`--report PATH` overrides the smoke report path. `--timeout N` sets the
-per-step timeout (default 1800 s). `UE_EDITOR` or `--ue-editor` selects the
-editor executable; the default is
+`<run>` is `YYYYMMDD-HHMMSS-ffffff-PID-N`, so two runs in the same second (or
+two processes, or two steps in one process) cannot overwrite each other.
+`--report PATH` overrides the smoke report path and `--validate-report PATH`
+overrides the validator report; relative values for `--report`,
+`--validate-report`, `--report-dir` and
+`--uproject` resolve against the **current directory**. This changed in pass 2:
+`--report`/`--validate-report` used to resolve against the repository root.
+Running the commands below from the repository root is unchanged.
+
+`--timeout N` sets the per-step timeout (default 1800 s). A timed-out step is
+killed as a process tree: `taskkill /T` on Windows and the child process group
+on POSIX. This matters because `UnrealEditor-Cmd` can leave helper processes
+alive when only the direct child is killed.
+
+`UE_EDITOR` or `--ue-editor` selects the editor executable; the default is
 `C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe`.
+
+Generated `logs/*.log` and `smoke*.json` / `validate*.json` files are ignored by
+Git. Curated gate evidence (`GATE*_TEST_RESULTS.md`, `smoke_selftests.json`,
+`validate_baseline.json`, `validate_strict.json`, and the tracked reference
+logs) stays in the repository; use `git add -f` when a new artifact becomes
+curated evidence.
 
 ## Exact commands
 
@@ -128,11 +146,18 @@ the actual timed-puzzle solve. See `Docs/Puzzles/PUZZLE_ENGINE_TESTS.md`.
 
 Do not add `-game` to the automation command: the current editor target then
 reports "The game module 'DuelAcademyIsland' could not be found". `-TestExit`
-is also omitted; `Quit` and the runner's log inspection are enough. The runner
-treats "No automation tests matched" as a skip, not a failure.
+is also omitted; `Quit` and the runner's log inspection are enough. Unreal treats
+an empty filter as a critical error and exits non-zero, so the runner treats
+"No automation tests matched" as a skip **only when the same log also contains a
+`TEST COMPLETE` marker and no failed-test marker**. A timeout or interrupted run
+without the completion marker stays failed even if its partial log contains a
+no-tests sentence. A normal successful run must log
+`TEST COMPLETE. EXIT CODE: 0`; a missing marker or a nonzero `EXIT CODE` on a
+run that actually executed tests fails.
 
 No `IMPLEMENT_SIMPLE_AUTOMATION_TEST` suites exist in the baseline yet. The
-runner reports `skip` when the filter matches nothing. Lane owners should add
+runner reports `skip` on a completed empty-filter run (including Unreal's
+non-zero `-1` exit). Lane owners should add
 tests under their own module/unit names and give A10 the filter string:
 
 - A02 `DuelAcademy.Profile`, `DuelAcademy.Calendar`, `DuelAcademy.Save`
@@ -144,7 +169,7 @@ tests under their own module/unit names and give A10 the filter string:
 - A08 `DuelAcademy.World`
 - A09 `DuelAcademy.UI`
 
-### 4. Package (release gate, A10 only)
+### 5. Package (release gate, A10 only)
 
 ```powershell
 "C:\Program Files\Epic Games\UE_5.8\Engine\Build\BatchFiles\RunUAT.bat" BuildCookRun `
@@ -153,6 +178,22 @@ tests under their own module/unit names and give A10 the filter string:
   -cook -build -stage -pak -archive `
   -archivedirectory="C:\dev\GX\Build"
 ```
+
+## Harness tests
+
+The runner's pure helpers (log parsing, step planning, report paths, timeout
+handling) and a real child-process tree fixture have stdlib-only unit tests:
+
+```powershell
+python -m unittest discover -s Tools/tests -v
+```
+
+The suite does not need Unreal or a renderer. It covers failed/timed-out steps
+that must not be upgraded by a `PASS` line, missing/zero-check/malformed
+self-test summaries, automation no-tests vs. crashes, missing automation
+completion markers, relative report paths, and whole-tree termination of a
+fixture that spawns a long-lived grandchild. CI runs the same command on
+ubuntu-latest plus `run_smoke.py --validate` and `--all --dry-run`.
 
 ## Gate workflow
 
@@ -166,11 +207,15 @@ tests under their own module/unit names and give A10 the filter string:
 
 ## Current limitations
 
-- All four stable headless self-tests pass: duel 24/0 stalls, profile 182/182,
-  duel rules 57/57, economy 119/119. A03 reports story 14/14 and A09 generated
-  10 UI screenshots; those are recorded in `Docs/PORT_STATUS.md`.
-- The duel self-test switch runs a fixed 24 duels; 1,000-duel proof is pending A04.
-- No automation tests exist yet; the filter currently skips.
+- All four stable headless self-tests pass: duel 24/0 stalls, profile PASS,
+  duel rules 102/102, economy 446/446. A07 reports puzzles 105/105 and exams
+  104/104, A03's full-campaign playthrough passes, A09 generated 10 UI
+  screenshots, and the `DuelAcademy` automation filter runs 5 tests.
+- The duel self-test defaults to 24 duels; pass `--iterations 1000` (or
+  `-DADuelSelfTest=1000`) for the release proof. The 1,000-duel gate evidence is
+  in `Docs/PORT_STATUS.md` and `Docs/Integration/reports/GATE3_TEST_RESULTS.md`.
+- The `DuelAcademy` automation filter currently runs 5 tests (exam cycles,
+  exam scoring, opponent roster, puzzle level 1 and the puzzle runtime loader).
 - The runner does not package; the BuildCookRun command above is the release
   command, run manually by A10.
 - The runner never downloads assets or starts the editor GUI.

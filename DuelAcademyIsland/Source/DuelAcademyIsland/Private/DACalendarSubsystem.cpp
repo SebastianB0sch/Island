@@ -315,6 +315,18 @@ void UDACalendarSubsystem::AdvancePeriod()
 void UDACalendarSubsystem::AdvanceDay()
 {
 	const EDADayPeriod OldPeriod = Period;
+
+	// Do not wrap the school year back to October at the upper bound: that
+	// moved the absolute day backwards and could re-run year-1 content.
+	if (Year >= MaxSupportedYear && MonthIndex >= 11 && Day >= GetDaysInMonth(MaxSupportedYear, 11))
+	{
+		Period = EDADayPeriod::AM;
+		Hour = GetPeriodStartHour(Period);
+		Weekday = ComputeWeekday(Year, MonthIndex, Day);
+		BroadcastDateChanged(OldPeriod, false);
+		return;
+	}
+
 	++Day;
 	if (Day > GetDaysInMonth(Year, MonthIndex))
 	{
@@ -491,8 +503,13 @@ bool UDACalendarSubsystem::GetNextExamDate(int32& OutYear, int32& OutMonthIndex,
 	for (int32 Offset = 0; Offset <= 12; ++Offset)
 	{
 		int32 CandidateMonth = MonthIndex + Offset;
-		const int32 CandidateYear = FMath::Min(Year + CandidateMonth / 12, MaxSupportedYear);
+		int32 CandidateYear = Year + CandidateMonth / 12;
 		CandidateMonth %= 12;
+		if (CandidateYear > MaxSupportedYear)
+		{
+			// No exam remains inside the supported date range.
+			return false;
+		}
 		const int32 ExamDay = GetExamDay(CandidateYear, CandidateMonth);
 		if (Offset == 0 && ExamDay < Day)
 		{
@@ -578,7 +595,11 @@ bool UDACalendarSubsystem::IsLeapYear(int32 InYear)
 
 int32 UDACalendarSubsystem::GetCalendarYearForMonth(int32 InYear, int32 InMonthIndex) const
 {
-	return FMath::Clamp(InYear, 1, MaxSupportedYear) + (InMonthIndex >= 3 ? 1 : 0);
+	// Calendar year, not school year: February of school year N falls in
+	// calendar year N+1. Keep the ballpark conversion but clamp the upper bound
+	// so the max supported school year cannot produce an out-of-range year.
+	return FMath::Min(MaxSupportedYear,
+		FMath::Clamp(InYear, 1, MaxSupportedYear) + (InMonthIndex >= 3 ? 1 : 0));
 }
 
 void UDACalendarSubsystem::ParseExamWeekday(const FString& Value)

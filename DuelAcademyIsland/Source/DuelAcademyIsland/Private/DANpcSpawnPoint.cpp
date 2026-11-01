@@ -177,11 +177,13 @@ AActor* ADANpcSpawnPoint::SpawnNpc(ADANpcDirector* Director)
 		return nullptr;
 	}
 
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	Params.Owner = Director;
-
-	AActor* Npc = GetWorld()->SpawnActor<AActor>(ClassToSpawn, GetSpawnLocation(), GetSpawnRotation(), Params);
+	// Configure the NPC before FinishSpawning: BeginPlay copies Dorm/WanderRadius
+	// into the avatar and resolves DisplayName into a duelist id + deck. Setting
+	// those after SpawnActor (which runs BeginPlay immediately) silently lost the
+	// dorm tint, the per-point wander radius and the named-duelist flag.
+	const FTransform SpawnTransform(GetSpawnRotation(), GetSpawnLocation());
+	AActor* Npc = GetWorld()->SpawnActorDeferred<AActor>(ClassToSpawn, SpawnTransform, Director, nullptr,
+		ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 	if (!Npc)
 	{
 		return nullptr;
@@ -199,6 +201,15 @@ AActor* ADANpcSpawnPoint::SpawnNpc(ADANpcDirector* Director)
 			Student->DisplayName = DisplayName;
 		}
 	}
+
+	Npc->FinishSpawning(SpawnTransform);
+	if (!IsValid(Npc))
+	{
+		return nullptr;
+	}
+	// FinishSpawning can clear the deferred owner in some engine paths; the
+	// director's NPC census depends on this link, so restore it explicitly.
+	Npc->SetOwner(Director);
 
 	SpawnedNpc = Npc;
 	OnNpcSpawned.Broadcast(this, Npc);

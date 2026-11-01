@@ -66,6 +66,9 @@ void ADAFloatingActor::BeginPlay()
 	BaseLocation = GetActorLocation();
 	BaseRotation = GetActorRotation();
 	Phase = FMath::FRandRange(0.f, 2.f * PI);
+	Amplitude = FMath::IsFinite(Amplitude) ? Amplitude : 0.f;
+	Period = FMath::IsFinite(Period) ? FMath::Max(Period, 0.5f) : 5.f;
+	Sway = FMath::IsFinite(Sway) ? Sway : 0.f;
 }
 
 void ADAFloatingActor::Tick(float DeltaSeconds)
@@ -102,7 +105,11 @@ void ADAEmitter::BeginPlay()
 {
 	Super::BeginPlay();
 	Rng.Initialize(static_cast<int32>(GetUniqueID() * 31u + 7u));
-	const float S = FMath::Max(EffectScale, 0.05f);
+	EffectScale = FMath::IsFinite(EffectScale) ? FMath::Max(EffectScale, 0.05f) : 1.f;
+	// A negative rate would run particle ages backwards and feed a negative
+	// fraction into the opacity curve (NaN); zero freezes the plume.
+	Rate = FMath::IsFinite(Rate) ? FMath::Max(Rate, 0.f) : 1.f;
+	const float S = EffectScale;
 	int32 Count = 12;
 	FLinearColor Color(0.95f, 0.95f, 0.97f);
 	switch (Kind)
@@ -244,6 +251,8 @@ ADALighthouseBeam::ADALighthouseBeam()
 void ADALighthouseBeam::BeginPlay()
 {
 	Super::BeginPlay();
+	RotationSpeed = FMath::IsFinite(RotationSpeed) ? RotationSpeed : 0.f;
+	BeamLength = FMath::IsFinite(BeamLength) ? FMath::Max(BeamLength, 0.f) : 0.f;
 	UMaterialInterface* Beam = LoadObject<UMaterialInterface>(nullptr, DuelAcademy::BeamMaterial, nullptr, LOAD_NoWarn | LOAD_Quiet);
 	for (UStaticMeshComponent* B : { BeamA.Get(), BeamB.Get() })
 	{
@@ -273,6 +282,7 @@ void ADALighthouseBeam::Tick(float DeltaSeconds)
 			Night = M->GetNightFactor();
 		}
 	}
+	Night = FMath::IsFinite(Night) ? FMath::Clamp(Night, 0.f, 1.f) : 1.f;
 	Intensity = FMath::FInterpTo(Intensity, Night, DeltaSeconds, 1.5f);
 	const bool bOn = Intensity > 0.05f;
 	SpotA->SetIntensity(300000.f * Intensity);
@@ -298,6 +308,8 @@ void ADAAmbientSound::BeginPlay()
 	{
 		return;
 	}
+	Radius = FMath::IsFinite(Radius) ? FMath::Max(Radius, 1.f) : 4000.f;
+	Volume = FMath::IsFinite(Volume) ? FMath::Max(Volume, 0.f) : 1.f;
 	Audio->SetSound(Sound);
 	Audio->bAllowSpatialization = true;
 	Audio->bOverrideAttenuation = true;
@@ -307,7 +319,11 @@ void ADAAmbientSound::BeginPlay()
 	Audio->AttenuationOverrides.AttenuationShapeExtents = FVector(Radius * 0.2f, 0.0, 0.0);
 	Audio->AttenuationOverrides.FalloffDistance = Radius;
 	Audio->SetVolumeMultiplier(Volume);
-	Audio->Play(FMath::FRandRange(0.f, 5.f));
+	// Randomising the start phase desynchronises nearby ambiences, but seeking
+	// past the clip length can leave a short loop silent.
+	const float Duration = Sound->GetDuration();
+	const float MaxStart = Duration > 0.f ? FMath::Max(0.f, FMath::Min(5.f, Duration) - 0.01f) : 0.f;
+	Audio->Play(FMath::FRandRange(0.f, MaxStart));
 }
 
 // ======================================================================== ADADoor

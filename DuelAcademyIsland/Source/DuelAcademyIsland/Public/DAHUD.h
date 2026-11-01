@@ -60,6 +60,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
 	void StartDuelWithDeck(const FString& DeckId);
 
+	/** Starts the exam's timed puzzle as a fixed scenario without a deck picker. */
+	bool StartExamTimedDuel(const FDuelScenario& Scenario, FString& OutError);
+	bool IsExamTimedDuelOpen() const;
+	bool ConsumeExamTimedDuelResult(FDAScenarioDuelResult& OutResult);
+	void AbortExamTimedDuel();
+
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
 	void CloseDuel();
 

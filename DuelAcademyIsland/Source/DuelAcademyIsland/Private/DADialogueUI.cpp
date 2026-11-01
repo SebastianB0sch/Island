@@ -6,6 +6,7 @@
 #include "DACharacterPortraitSubsystem.h"
 #include "DAHUD.h"
 #include "DAIslandSubsystem.h"
+#include "DAUIScreen.h"
 #include "DuelAcademyIsland.h"
 #include "Dom/JsonObject.h"
 #include "Engine/Canvas.h"
@@ -104,6 +105,7 @@ void FDADialogueUI::Begin(const TArray<FDADialogueLine>& InLines, const FString&
 	SkipTimer = 0.f;
 	Elapsed = 0.f;
 	ChoiceSelection = 0;
+	HistoryScroll = 0;
 	bHistoryOpen = false;
 	bEscapeClose = true;
 	bOpen = true;
@@ -134,12 +136,18 @@ void FDADialogueUI::Close()
 	LastShownLine = INDEX_NONE;
 	HitTargets.Reset();
 	ConversationId.Reset();
+	Revealed = 0.f;
+	AutoTimer = 0.f;
+	SkipTimer = 0.f;
+	ChoiceSelection = 0;
+	HistoryScroll = 0;
 	OnDialogueClosed.Broadcast(ClosedId);
 }
 
 bool FDADialogueUI::IsWaitingForChoice() const
 {
-	return bOpen && !bTyping && Lines.IsValidIndex(LineIndex) && Lines[LineIndex].bChoice;
+	return bOpen && !bTyping && Lines.IsValidIndex(LineIndex) && Lines[LineIndex].bChoice
+		&& Lines[LineIndex].Options.Num() > 0;
 }
 
 void FDADialogueUI::GoToLine(int32 NewIndex)
@@ -154,6 +162,7 @@ void FDADialogueUI::GoToLine(int32 NewIndex)
 	AutoTimer = 0.f;
 	SkipTimer = 0.f;
 	ChoiceSelection = 0;
+	HitTargets.Reset();
 	bTyping = !Lines[NewIndex].GetDisplayText().IsEmpty();
 
 	const FDADialogueLine& NewLine = Lines[NewIndex];
@@ -221,7 +230,7 @@ bool FDADialogueUI::Advance()
 		PlaySfx(TEXT("A_UIClick"), 0.45f);
 		return true;
 	}
-	if (Line.bChoice)
+	if (Line.bChoice && Line.Options.Num() > 0)
 	{
 		return false;
 	}
@@ -298,6 +307,12 @@ void FDADialogueUI::ToggleHistory()
 {
 	bHistoryOpen = !bHistoryOpen;
 	HistoryScroll = 0;
+	if (bHistoryOpen)
+	{
+		// The overlay's hit targets are registered on the next Draw; drop the
+		// dialogue's targets so a same-frame click cannot advance the line.
+		HitTargets.Reset();
+	}
 	PlaySfx(TEXT("A_UIClick"), 0.4f);
 }
 
@@ -310,6 +325,33 @@ void FDADialogueUI::ScrollHistory(int32 Delta)
 void FDADialogueUI::SetTextSpeed(float InCharsPerSecond)
 {
 	CharsPerSecond = FMath::Clamp(InCharsPerSecond, 10.f, 10000.f);
+}
+
+void FDADialogueUI::MoveChoiceSelection(int32 Delta, bool bWrap)
+{
+	if (!Lines.IsValidIndex(LineIndex))
+	{
+		return;
+	}
+	const int32 NumOptions = Lines[LineIndex].Options.Num();
+	if (NumOptions <= 0)
+	{
+		return;
+	}
+	int32 NewSelection = ChoiceSelection + Delta;
+	if (bWrap)
+	{
+		NewSelection = ((NewSelection % NumOptions) + NumOptions) % NumOptions;
+	}
+	else
+	{
+		NewSelection = FMath::Clamp(NewSelection, 0, NumOptions - 1);
+	}
+	if (NewSelection != ChoiceSelection)
+	{
+		ChoiceSelection = NewSelection;
+		PlaySfx(TEXT("A_UIClick"), 0.3f);
+	}
 }
 
 // ------------------------------------------------------------------------ update
@@ -397,6 +439,14 @@ void FDADialogueUI::Update(float DeltaSeconds)
 		{
 			ScrollHistory(-1);
 		}
+		if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollUp))
+		{
+			ScrollHistory(1);
+		}
+		if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollDown))
+		{
+			ScrollHistory(-1);
+		}
 		if (PlayerOwner->WasInputKeyJustPressed(EKeys::Escape))
 		{
 			bHistoryOpen = false;
@@ -421,15 +471,23 @@ void FDADialogueUI::Update(float DeltaSeconds)
 			&& (PlayerOwner->WasInputKeyJustPressed(EKeys::Up) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_DPad_Up)
 				|| PlayerOwner->WasInputKeyJustPressed(EKeys::W)))
 		{
-			ChoiceSelection = (ChoiceSelection - 1 + NumOptions) % NumOptions;
-			PlaySfx(TEXT("A_UIClick"), 0.3f);
+			MoveChoiceSelection(-1, true);
 		}
 		if (NumOptions > 0
 			&& (PlayerOwner->WasInputKeyJustPressed(EKeys::Down) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_DPad_Down)
 				|| PlayerOwner->WasInputKeyJustPressed(EKeys::S)))
 		{
-			ChoiceSelection = (ChoiceSelection + 1) % NumOptions;
-			PlaySfx(TEXT("A_UIClick"), 0.3f);
+			MoveChoiceSelection(1, true);
+		}
+		// Mouse wheel scrolls the choice window.  It clamps instead of wrapping
+		// so a single notch never jumps from the first option to the last.
+		if (NumOptions > 0 && PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollUp))
+		{
+			MoveChoiceSelection(-1, false);
+		}
+		if (NumOptions > 0 && PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollDown))
+		{
+			MoveChoiceSelection(1, false);
 		}
 
 		static const FKey NumberKeys[] = {
@@ -608,6 +666,12 @@ void FDADialogueUI::HandleClickAtMouse()
 			return;
 		}
 	}
+	if (bHistoryOpen)
+	{
+		// History is modal even before its full-screen close target has been
+		// registered for this frame.
+		return;
+	}
 	if (IsWaitingForChoice())
 	{
 		Choose(ChoiceSelection);
@@ -623,6 +687,20 @@ void FDADialogueUI::HandleHit(const FDADialogueHitTarget& Hit)
 	if (Hit.Action == TEXT("choice"))
 	{
 		Choose(Hit.Index);
+	}
+	else if (Hit.Action == TEXT("choice.up"))
+	{
+		if (IsWaitingForChoice())
+		{
+			MoveChoiceSelection(-1, false);
+		}
+	}
+	else if (Hit.Action == TEXT("choice.down"))
+	{
+		if (IsWaitingForChoice())
+		{
+			MoveChoiceSelection(1, false);
+		}
 	}
 	else if (Hit.Action == TEXT("history"))
 	{
@@ -768,6 +846,14 @@ TArray<FString> FDADialogueUI::WrapText(const FString& Str, float MaxWidth, floa
 	return Out;
 }
 
+FString FDADialogueUI::Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font) const
+{
+	return DAUIText::EllipsizeMeasured(Str, MaxWidth, [this, InScale, Font](const FString& Candidate)
+	{
+		return Measure(Candidate, InScale, Font).X;
+	});
+}
+
 // ------------------------------------------------------------------------ draw
 
 void FDADialogueUI::Draw(UCanvas* InCanvas)
@@ -797,9 +883,28 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	const int32 NumOptions = Line.bChoice ? Line.Options.Num() : 0;
 	const float W = FMath::Min(CW - 120.f * S, 1180.f * S);
 	const float BaseH = 248.f * S;
-	const float H = BaseH + NumOptions * 46.f * S;
+	const float PanelBottom = CH - 46.f * S;
+	const float SafeTop = CH * 0.07f + 12.f * S;
+	float H = BaseH + NumOptions * 46.f * S;
+	float Y = PanelBottom - H;
+	const float OptionH = 38.f * S;
+	const float OptionStep = 46.f * S;
+	float OptionY0 = Y + BaseH - 16.f * S;
+	int32 FirstOption = 0;
+	int32 VisibleOptions = NumOptions;
+	if (Y < SafeTop && NumOptions > 0)
+	{
+		// Keep the panel on screen for large choice sets and show a window of
+		// rows around the highlighted option.  The window follows the
+		// selection, so keyboard navigation reaches every option.
+		Y = SafeTop;
+		H = PanelBottom - Y;
+		OptionY0 = Y + BaseH - 16.f * S;
+		const float OptionArea = PanelBottom - 16.f * S - OptionY0;
+		VisibleOptions = FMath::Clamp(FMath::FloorToInt(OptionArea / OptionStep), 1, NumOptions);
+		FirstOption = FMath::Clamp(ChoiceSelection - VisibleOptions / 2, 0, NumOptions - VisibleOptions);
+	}
 	const float X = (CW - W) * 0.5f;
-	const float Y = CH - H - 46.f * S;
 
 	DrawPanel(X, Y, W, H, DialogueAlpha(DlgInk, 0.96f), Accent);
 	AddHit(TEXT("advance"), INDEX_NONE, X, Y, W, H);
@@ -811,10 +916,11 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	// Name plate.
 	const float TX = X + 24.f * S + PortraitSize + 26.f * S;
 	const float TextW = W - (TX - X) - 28.f * S;
-	DrawText(Line.GetDisplayName(), TX, Y + 18.f * S, Accent, 1.35f, false, GetFont(true));
+	DrawText(Ellipsize(Line.GetDisplayName(), TextW, 1.35f, GetFont(true)), TX, Y + 18.f * S,
+		Accent, 1.35f, false, GetFont(true));
 	if (!Line.SpeakerTitle.IsEmpty())
 	{
-		DrawText(Line.SpeakerTitle, TX, Y + 52.f * S, DlgMuted, 0.8f);
+		DrawText(Ellipsize(Line.SpeakerTitle, TextW, 0.8f), TX, Y + 52.f * S, DlgMuted, 0.8f);
 	}
 	DrawRect(DialogueAlpha(Accent, 0.55f), TX, Y + 80.f * S, TextW, 2.f * S);
 
@@ -828,7 +934,7 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 		DrawText(Wrapped[Index], TX, TextY, DlgPaper, 1.0f);
 		TextY += LineH;
 	}
-	if (bTyping && Wrapped.Num() > MaxTextLines)
+	if (Wrapped.Num() > MaxTextLines)
 	{
 		DrawText(TEXT("..."), TX, Y + 96.f * S + MaxTextLines * LineH, DialogueAlpha(DlgPaper, 0.6f), 1.0f);
 	}
@@ -848,16 +954,15 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	{
 		const float OptionX = TX;
 		const float OptionW = TextW;
-		const float OptionH = 38.f * S;
-		const float OptionY0 = Y + BaseH - 16.f * S;
 		float MouseX = -1.f;
 		float MouseY = -1.f;
 		const bool bHasMouse = PlayerOwner && PlayerOwner->GetMousePosition(MouseX, MouseY);
 		const FVector2D Mouse(MouseX, MouseY);
 
-		for (int32 Index = 0; Index < NumOptions; ++Index)
+		for (int32 VisibleIndex = 0; VisibleIndex < VisibleOptions; ++VisibleIndex)
 		{
-			const float OY = OptionY0 + Index * 46.f * S;
+			const int32 Index = FirstOption + VisibleIndex;
+			const float OY = OptionY0 + VisibleIndex * OptionStep;
 			const bool bSelected = Index == ChoiceSelection;
 			const bool bHovered = bHasMouse
 				&& Mouse.X >= OptionX && Mouse.X <= OptionX + OptionW
@@ -868,9 +973,41 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 				DrawRect(DialogueAlpha(Accent, 1.f), OptionX, OY, 4.f * S, OptionH);
 			}
 			const FString Label = FString::Printf(TEXT("%d.  %s"), Index + 1, *Line.Options[Index]);
-			DrawText(Label, OptionX + 14.f * S, OY + 7.f * S,
+			DrawText(Ellipsize(Label, OptionW - 34.f * S, 0.95f), OptionX + 14.f * S, OY + 7.f * S,
 				bSelected ? DlgPaper : DialogueAlpha(DlgPaper, 0.82f), 0.95f);
 			AddHit(TEXT("choice"), Index, OptionX, OY, OptionW, OptionH);
+		}
+
+		// Overflow arrows are real click targets, in addition to the wheel and
+		// Up/Down.  They are registered after the rows so they win the hit test
+		// in their small corner region, and they only move the selection while
+		// the choice is actually accepting input.
+		const float ArrowW = 26.f * S;
+		const float ArrowH = 22.f * S;
+		const float ArrowX = OptionX + OptionW - ArrowW - 2.f * S;
+		const bool bHasHiddenAbove = FirstOption > 0;
+		const bool bHasHiddenBelow = FirstOption + VisibleOptions < NumOptions;
+		if (bHasHiddenAbove)
+		{
+			const float ArrowY = OptionY0 - 20.f * S;
+			const bool bHovered = bHasMouse
+				&& Mouse.X >= ArrowX && Mouse.X <= ArrowX + ArrowW
+				&& Mouse.Y >= ArrowY && Mouse.Y <= ArrowY + ArrowH;
+			DrawRect(DialogueAlpha(Accent, bHovered ? 0.22f : 0.08f), ArrowX, ArrowY, ArrowW, ArrowH);
+			DrawText(TEXT("^"), ArrowX + 8.f * S, ArrowY + 2.f * S,
+				DialogueAlpha(DlgMuted, 0.95f), 0.7f);
+			AddHit(TEXT("choice.up"), INDEX_NONE, ArrowX, ArrowY, ArrowW, ArrowH);
+		}
+		if (bHasHiddenBelow)
+		{
+			const float ArrowY = OptionY0 + VisibleOptions * OptionStep - 10.f * S;
+			const bool bHovered = bHasMouse
+				&& Mouse.X >= ArrowX && Mouse.X <= ArrowX + ArrowW
+				&& Mouse.Y >= ArrowY && Mouse.Y <= ArrowY + ArrowH;
+			DrawRect(DialogueAlpha(Accent, bHovered ? 0.22f : 0.08f), ArrowX, ArrowY, ArrowW, ArrowH);
+			DrawText(TEXT("v"), ArrowX + 8.f * S, ArrowY + 2.f * S,
+				DialogueAlpha(DlgMuted, 0.95f), 0.7f);
+			AddHit(TEXT("choice.down"), INDEX_NONE, ArrowX, ArrowY, ArrowW, ArrowH);
 		}
 	}
 
@@ -883,7 +1020,7 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 		ButtonX -= ButtonW;
 		DrawRect(DialogueAlpha(bActive ? Accent : FLinearColor(0.f, 0.f, 0.f), bActive ? 0.35f : 0.42f),
 			ButtonX, ButtonY, ButtonW, ButtonH);
-		DrawText(Label, ButtonX + 10.f * S, ButtonY + 4.f * S,
+		DrawText(Ellipsize(Label, ButtonW - 16.f * S, 0.68f), ButtonX + 10.f * S, ButtonY + 4.f * S,
 			bActive ? Accent : DialogueAlpha(DlgPaper, 0.7f), 0.68f);
 		AddHit(Action, INDEX_NONE, ButtonX, ButtonY, ButtonW, ButtonH);
 		ButtonX -= 8.f * S;
@@ -914,11 +1051,12 @@ void FDADialogueUI::Draw(UCanvas* InCanvas)
 	{
 		Hint = DAUIData::Label(TEXT("dialogue.hint.finish"), TEXT("E / SPACE  FINISH"));
 	}
-	const FVector2D HintSize = Measure(Hint, 0.72f);
+	const FString HintText = Ellipsize(Hint, W - 48.f * S, 0.72f);
+	const FVector2D HintSize = Measure(HintText, 0.72f);
 	const float HintAlpha = 0.55f + 0.35f * FMath::Abs(FMath::Sin(Elapsed * 3.f));
 	const float HintX = NumOptions > 0 ? X : X + W - HintSize.X - 24.f * S;
 	const float HintY = NumOptions > 0 ? Y - 28.f * S : Y + H - 28.f * S;
-	DrawText(Hint, HintX, HintY, DialogueAlpha(Accent, HintAlpha), 0.72f);
+	DrawText(HintText, HintX, HintY, DialogueAlpha(Accent, HintAlpha), 0.72f);
 
 	if (bHistoryOpen)
 	{
@@ -983,7 +1121,7 @@ void FDADialogueUI::DrawPortrait(float X, float Y, float Size, const FDADialogue
 
 	if (!Line.Expression.IsEmpty())
 	{
-		DrawText(Line.Expression.ToUpper(), X + 8.f * S, Y + Size - 22.f * S,
+		DrawText(Ellipsize(Line.Expression.ToUpper(), Size - 16.f * S, 0.6f), X + 8.f * S, Y + Size - 22.f * S,
 			DialogueAlpha(Accent, 0.85f * Alpha), 0.6f);
 	}
 }
@@ -1004,7 +1142,8 @@ void FDADialogueUI::DrawHistoryOverlay()
 	const float Y = (CH - H) * 0.5f;
 	DrawPanel(X, Y, W, H, DialogueAlpha(DlgInk, 0.98f), DlgGold);
 
-	DrawText(DAUIData::Label(TEXT("dialogue.history.title"), TEXT("DIALOGUE LOG")),
+	DrawText(Ellipsize(DAUIData::Label(TEXT("dialogue.history.title"), TEXT("DIALOGUE LOG")),
+		W - 160.f * S, 1.4f, GetFont(true)),
 		X + 28.f * S, Y + 20.f * S, DlgGold, 1.4f, false, GetFont(true));
 	DrawText(FString::Printf(TEXT("%d entries"), History.Num()), X + W - 130.f * S, Y + 26.f * S,
 		DlgMuted, 0.72f);
@@ -1045,7 +1184,7 @@ void FDADialogueUI::DrawHistoryOverlay()
 		}
 	}
 
-	DrawText(TEXT("H / ESC close    Up / Down scroll"), X + 28.f * S, Y + H - 32.f * S,
+	DrawText(TEXT("H / ESC close    Up / Down / wheel scroll"), X + 28.f * S, Y + H - 32.f * S,
 		DialogueAlpha(DlgMuted, 0.9f), 0.72f);
 	DrawText(TEXT("CLOSE"), X + W - 96.f * S, Y + H - 34.f * S, DialogueAlpha(DlgGold, 0.9f), 0.75f);
 }

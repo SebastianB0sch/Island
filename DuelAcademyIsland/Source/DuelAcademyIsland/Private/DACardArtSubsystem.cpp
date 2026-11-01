@@ -9,6 +9,9 @@
 void UCardArtSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+	ArtCache.Reset();
+	CardBack = nullptr;
+	bBackLoadAttempted = false;
 	ArtDirectory = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/CardArt"));
 }
 
@@ -69,6 +72,10 @@ UTexture2D* UCardArtSubsystem::GetCardBack()
 
 bool UCardArtSubsystem::HasCardArt(int32 CardId) const
 {
+	if (CardId <= 0)
+	{
+		return false;
+	}
 	if (ArtCache.Contains(CardId))
 	{
 		return ArtCache.FindRef(CardId) != nullptr;

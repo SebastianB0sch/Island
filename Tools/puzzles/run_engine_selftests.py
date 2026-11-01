@@ -25,6 +25,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -39,7 +40,25 @@ MODES = {
 
 
 def _now_slug() -> str:
-    return _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    now = _dt.datetime.now()
+    return f"{now:%Y%m%d-%H%M%S}-{now.microsecond:06d}-{os.getpid()}"
+
+
+def _write_text_atomic(path: Path, text: str) -> None:
+    """Write the run log atomically so a killed runner cannot truncate it."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
+    temp_path = Path(temp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temp_path, path)
+    finally:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except OSError:
+                pass
 
 
 def _resolve_editor(explicit: str) -> Path | None:
@@ -74,6 +93,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--log", default="", help="log path (default: Docs/Integration/reports/logs/...)")
     parser.add_argument("--json", action="store_true", help="print a JSON result")
     args = parser.parse_args(argv)
+    if args.timeout < 1:
+        print("error: --timeout must be >= 1", file=sys.stderr)
+        return 2
 
     editor = _resolve_editor(args.ue_editor)
     if editor is None or not editor.exists():
@@ -126,12 +148,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: cannot execute {editor}: {exc}", file=sys.stderr)
         return 2
 
-    log_path.write_text(
-        f"COMMAND: {subprocess.list2cmdline(command)}\n"
-        f"STARTED: {started.isoformat()}\n"
-        f"RETURNCODE: {returncode if returncode is not None else 'timeout'}\n\n{output}",
-        encoding="utf-8",
-    )
+    try:
+        _write_text_atomic(
+            log_path,
+            f"COMMAND: {subprocess.list2cmdline(command)}\n"
+            f"STARTED: {started.isoformat()}\n"
+            f"RETURNCODE: {returncode if returncode is not None else 'timeout'}\n\n{output}",
+        )
+    except OSError as exc:
+        print(f"error: cannot write log {log_path}: {exc}", file=sys.stderr)
+        return 2
 
     text = log_path.read_text(encoding="utf-8", errors="replace")
     summaries = _parse_summaries(text)

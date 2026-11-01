@@ -74,6 +74,11 @@ ADAStudentNPC::ADAStudentNPC()
 void ADAStudentNPC::BeginPlay()
 {
 	Rng.Initialize(static_cast<int32>(GetUniqueID() * 7919u + 17u));
+	// WanderRadius drives a centre + random offset; a negative or NaN radius
+	// moves the NPC to invalid targets (NaN never compares below the stop
+	// distance, so it would keep pushing forever).
+	WanderRadius = FMath::IsFinite(WanderRadius) ? FMath::Max(WanderRadius, 0.f) : 0.f;
+	StrollSpeed = FMath::IsFinite(StrollSpeed) ? FMath::Max(StrollSpeed, 1.f) : 140.f;
 	if (Avatar)
 	{
 		Avatar->Dorm = Dorm;
@@ -157,6 +162,18 @@ FString ADAStudentNPC::GetInteractName() const
 	return DisplayName.IsEmpty() ? DuelAcademy::DormName(Dorm) + TEXT(" student") : DisplayName;
 }
 
+void ADAStudentNPC::SetWanderHome(const FVector& NewHome)
+{
+	Home = NewHome;
+	Target = NewHome;
+	IdleTime = Rng.FRandRange(0.5f, 2.f);
+	StuckTime = 0.f;
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->StopMovementImmediately();
+	}
+}
+
 bool ADAStudentNPC::CanInteract(const ADAStudentCharacter* By) const
 {
 	const ADAHUD* HUD = GetDuelHUD(this);
@@ -173,7 +190,7 @@ void ADAStudentNPC::Interact(ADAStudentCharacter* By)
 		const FString StoryNpcId = !DuelOpponentId.IsEmpty() ? DuelOpponentId : DisplayName;
 		if (Story->NotifyTalkToNPC(StoryNpcId))
 		{
-			TalkTime = GetWorld()->GetTimeSeconds();
+			TalkTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.f;
 			bHasTalked = true;
 			return;
 		}
@@ -197,7 +214,7 @@ void ADAStudentNPC::Interact(ADAStudentCharacter* By)
 	{
 		return;
 	}
-	TalkTime = GetWorld()->GetTimeSeconds();
+	TalkTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.f;
 	bHasTalked = true;
 	FString Line = Said[LineIndex % Said.Num()];
 	++LineIndex;
@@ -229,11 +246,16 @@ void ADAStudentNPC::PickNewTarget()
 
 bool ADAStudentNPC::IsSafeAhead(const FVector& Dir) const
 {
+	const UWorld* World = GetWorld();
+	if (!World)
+	{
+		return false;
+	}
 	// Refuse to walk off ledges / into water: probe the ground 1.2 m ahead.
 	const FVector Start = GetActorLocation() + Dir * 120.0;
 	FHitResult Hit;
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(DANpcLedge), false, this);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, Start - FVector(0.0, 0.0, 260.0), ECC_Visibility, Params);
+	const bool bHit = World->LineTraceSingleByChannel(Hit, Start, Start - FVector(0.0, 0.0, 260.0), ECC_Visibility, Params);
 	if (!bHit)
 	{
 		return false;

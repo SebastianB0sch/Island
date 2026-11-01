@@ -9,6 +9,7 @@
 #include "DAIslandSubsystem.h"
 #include "DASaveGame.h"
 #include "DASettings.h"
+#include "DAUIScreen.h"
 #include "DuelAcademyIsland.h"
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
@@ -122,10 +123,12 @@ void FDATitleScreen::Open()
 	bOpen = true;
 	Elapsed = 0.f;
 	HoveredIndex = INDEX_NONE;
+	HitTargets.Reset();
 	StatusMessage.Reset();
 	StatusTime = 0.f;
 	bStatusError = false;
 	CreditsScroll = 0;
+	ContinueScroll = 0;
 
 	LoadOptionsFromSettings();
 	RefreshSlots();
@@ -144,6 +147,7 @@ void FDATitleScreen::Close()
 	bOpen = false;
 	HitTargets.Reset();
 	HoveredIndex = INDEX_NONE;
+	ContinueScroll = 0;
 	OnClosed.Broadcast();
 }
 
@@ -151,6 +155,7 @@ void FDATitleScreen::ShowPanel(EDATitlePanel InPanel)
 {
 	Panel = InPanel;
 	HoveredIndex = INDEX_NONE;
+	HitTargets.Reset();
 	Selection = 0;
 
 	switch (Panel)
@@ -160,6 +165,7 @@ void FDATitleScreen::ShowPanel(EDATitlePanel InPanel)
 		break;
 	case EDATitlePanel::Continue:
 		RefreshSlots();
+		ContinueScroll = 0;
 		for (int32 Index = 0; Index < Slots.Num(); ++Index)
 		{
 			if (Slots[Index].bExists && !Slots[Index].bCorrupt)
@@ -213,6 +219,7 @@ void FDATitleScreen::RefreshSlots()
 			Slots.Add(View);
 		}
 		UpdateSelectionClamp();
+		HitTargets.Reset();
 		return;
 	}
 
@@ -249,6 +256,7 @@ void FDATitleScreen::RefreshSlots()
 	}
 
 	UpdateSelectionClamp();
+	HitTargets.Reset();
 }
 
 bool FDATitleScreen::HasAnySave() const
@@ -473,6 +481,20 @@ void FDATitleScreen::MoveSelection(int32 Delta)
 	}
 }
 
+void FDATitleScreen::MoveContinueSelection(int32 Delta)
+{
+	if (Panel != EDATitlePanel::Continue || Slots.Num() == 0)
+	{
+		return;
+	}
+	const int32 NewSelection = FMath::Clamp(Selection + Delta, 0, Slots.Num() - 1);
+	if (NewSelection != Selection)
+	{
+		Selection = NewSelection;
+		PlaySfx(TEXT("A_UIClick"), 0.25f);
+	}
+}
+
 void FDATitleScreen::ActivateMainItem()
 {
 	switch (Selection)
@@ -569,6 +591,7 @@ void FDATitleScreen::BackToMain()
 	Panel = EDATitlePanel::Main;
 	Selection = HasUsableSave() ? 1 : 0;
 	HoveredIndex = INDEX_NONE;
+	HitTargets.Reset();
 	CreditsScroll = 0;
 	PlaySfx(TEXT("A_UIClick"), 0.35f);
 }
@@ -642,6 +665,16 @@ void FDATitleScreen::Update(float DeltaSeconds)
 			const int32 MaxScroll = FMath::Max(0, CreditsLines.Num() - GetVisibleCreditLines());
 			CreditsScroll = FMath::Clamp(CreditsScroll + GetVisibleCreditLines(), 0, MaxScroll);
 		}
+		if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollUp))
+		{
+			const int32 MaxScroll = FMath::Max(0, CreditsLines.Num() - GetVisibleCreditLines());
+			CreditsScroll = FMath::Clamp(CreditsScroll - 1, 0, MaxScroll);
+		}
+		if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollDown))
+		{
+			const int32 MaxScroll = FMath::Max(0, CreditsLines.Num() - GetVisibleCreditLines());
+			CreditsScroll = FMath::Clamp(CreditsScroll + 1, 0, MaxScroll);
+		}
 		if (bBack || PlayerOwner->WasInputKeyJustPressed(EKeys::Enter)
 			|| PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar)
 			|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Bottom))
@@ -678,6 +711,20 @@ void FDATitleScreen::Update(float DeltaSeconds)
 		|| PlayerOwner->WasInputKeyJustPressed(EKeys::S))
 	{
 		MoveSelection(1);
+	}
+
+	if (Panel == EDATitlePanel::Continue)
+	{
+		// The save list scrolls with the wheel as well as Up/Down.  Wheel steps
+		// clamp at the ends, so one notch never wraps to the opposite slot.
+		if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollUp))
+		{
+			MoveContinueSelection(-1);
+		}
+		if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollDown))
+		{
+			MoveContinueSelection(1);
+		}
 	}
 
 	if (Panel == EDATitlePanel::Options)
@@ -749,6 +796,13 @@ void FDATitleScreen::HandleHit(const FDATitleHitTarget& Hit)
 	{
 		Selection = Hit.Index;
 		ActivateContinueSlot();
+	}
+	else if (Hit.Action == TEXT("continue.scroll"))
+	{
+		if (Panel == EDATitlePanel::Continue)
+		{
+			MoveContinueSelection(Hit.Index);
+		}
 	}
 	else if (Hit.Action == TEXT("option"))
 	{
@@ -878,6 +932,14 @@ TArray<FString> FDATitleScreen::WrapText(const FString& Str, float MaxWidth, flo
 	return Out;
 }
 
+FString FDATitleScreen::Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font) const
+{
+	return DAUIText::EllipsizeMeasured(Str, MaxWidth, [this, InScale, Font](const FString& Candidate)
+	{
+		return Measure(Candidate, InScale, Font).X;
+	});
+}
+
 // ------------------------------------------------------------------------ draw
 
 void FDATitleScreen::Draw(UCanvas* InCanvas)
@@ -975,27 +1037,29 @@ void FDATitleScreen::DrawMain()
 	DrawRect(TitleAlpha(TitleGold, 0.3f), PanelX + 22.f * S, PanelY + 48.f * S, PanelW - 44.f * S, 1.f * S);
 
 	const int32 Latest = GetLatestSlotIndex();
+	const float SummaryW = PanelW - 44.f * S;
 	if (Slots.IsValidIndex(Latest))
 	{
 		const FDATitleSlotView& Slot = Slots[Latest];
 		float LineY = PanelY + 64.f * S;
 		const float LineH = 25.f * S;
-		DrawText(FString::Printf(TEXT("%s  -  %s"), *Slot.Label, *Slot.PlayerName),
+		DrawText(Ellipsize(FString::Printf(TEXT("%s  -  %s"), *Slot.Label, *Slot.PlayerName), SummaryW, 0.95f),
 			PanelX + 22.f * S, LineY, TitlePaper, 0.95f);
 		LineY += LineH;
-		DrawText(FString::Printf(TEXT("%s  -  %s"), *Slot.Dorm, *Slot.Title),
+		DrawText(Ellipsize(FString::Printf(TEXT("%s  -  %s"), *Slot.Dorm, *Slot.Title), SummaryW, 0.78f),
 			PanelX + 22.f * S, LineY, TitleMuted, 0.78f);
 		LineY += LineH;
-		DrawText(Slot.DateLine, PanelX + 22.f * S, LineY, TitleMuted, 0.75f);
+		DrawText(Ellipsize(Slot.DateLine, SummaryW, 0.75f), PanelX + 22.f * S, LineY, TitleMuted, 0.75f);
 		LineY += LineH;
-		DrawText(FString::Printf(TEXT("DP %d      PLAY %s"), Slot.DP, *Slot.Playtime),
+		DrawText(Ellipsize(FString::Printf(TEXT("DP %d      PLAY %s"), Slot.DP, *Slot.Playtime), SummaryW, 0.78f),
 			PanelX + 22.f * S, LineY, TitleGold, 0.78f);
 	}
 	else
 	{
 		DrawText(DAUIData::Label(TEXT("title.no_save"), TEXT("NO SAVE DATA")),
 			PanelX + 22.f * S, PanelY + 72.f * S, TitleMuted, 1.05f, false, GetFont(true));
-		DrawText(DAUIData::Label(TEXT("title.no_save_hint"), TEXT("Start a new game to begin your first year.")),
+		DrawText(Ellipsize(DAUIData::Label(TEXT("title.no_save_hint"), TEXT("Start a new game to begin your first year.")),
+			SummaryW, 0.76f),
 			PanelX + 22.f * S, PanelY + 108.f * S, TitleMuted, 0.76f);
 	}
 
@@ -1017,7 +1081,7 @@ void FDATitleScreen::DrawMenuButton(const FString& Label, int32 Index, float X, 
 		DrawRect(TitleAlpha(Accent, 0.95f), X, Y, 5.f * UIScale, H);
 		DrawRect(TitleAlpha(Accent, 0.35f), X, Y + H - 1.f * UIScale, W, 1.f * UIScale);
 	}
-	DrawText(Label, X + 24.f * UIScale, Y + 12.f * UIScale,
+	DrawText(Ellipsize(Label, W - 64.f * UIScale, 1.15f, GetFont(true)), X + 24.f * UIScale, Y + 12.f * UIScale,
 		bHighlight ? TitlePaper : TitleAlpha(bAvailable ? TitlePaper : TitleMuted, 0.72f), 1.15f,
 		false, GetFont(true));
 
@@ -1042,18 +1106,65 @@ void FDATitleScreen::DrawContinue()
 	DrawPanel(PanelX, PanelY, PanelW, PanelH, TitleAlpha(TitleInk, 0.94f), TitleGold);
 	DrawText(DAUIData::Label(TEXT("title.continue.title"), TEXT("CONTINUE")),
 		PanelX + 34.f * S, PanelY + 24.f * S, TitleGold, 1.7f, false, GetFont(true));
-	DrawText(DAUIData::Label(TEXT("title.continue.hint"),
-		TEXT("Choose a save slot. Empty slots are kept visible.")),
+	DrawText(Ellipsize(DAUIData::Label(TEXT("title.continue.hint"),
+		TEXT("Choose a save slot. Empty slots are kept visible.")), PanelW - 68.f * S, 0.78f),
 		PanelX + 36.f * S, PanelY + 74.f * S, TitleMuted, 0.78f);
 	DrawRect(TitleAlpha(TitleGold, 0.3f), PanelX + 34.f * S, PanelY + 104.f * S, PanelW - 68.f * S, 1.f * S);
 
 	const float CardsTop = PanelY + 124.f * S;
-	const float CardH = FMath::Max(92.f * S, (PanelH - 210.f * S) / FMath::Max(1, Slots.Num()));
+	const float AvailableH = FMath::Max(0.f, PanelH - 210.f * S);
+	// Space between the first card and the top of the back button.  A list
+	// only scrolls when it would actually run into the button.
+	const float CardAreaH = FMath::Max(0.f, PanelH - 176.f * S);
 	const float CardGap = 8.f * S;
-	for (int32 Index = 0; Index < Slots.Num(); ++Index)
+	const float MinCardH = 92.f * S;
+	const int32 NumSlots = Slots.Num();
+	int32 VisibleCount = NumSlots;
+	float CardH = FMath::Max(MinCardH, AvailableH / FMath::Max(1, NumSlots));
+	if (NumSlots > 0 && CardH * NumSlots + CardGap * (NumSlots - 1) > CardAreaH)
 	{
+		// A save list larger than the panel scrolls instead of running under
+		// the back button.  Small lists keep the original stretched layout.
+		CardH = MinCardH;
+		VisibleCount = FMath::Clamp(
+			FMath::FloorToInt((AvailableH + CardGap) / (CardH + CardGap)), 1, NumSlots);
+	}
+	if (Selection < ContinueScroll)
+	{
+		ContinueScroll = Selection;
+	}
+	else if (Selection >= ContinueScroll + VisibleCount)
+	{
+		ContinueScroll = Selection - VisibleCount + 1;
+	}
+	ContinueScroll = FMath::Clamp(ContinueScroll, 0, FMath::Max(0, NumSlots - VisibleCount));
+	for (int32 Visible = 0; Visible < VisibleCount; ++Visible)
+	{
+		const int32 Index = ContinueScroll + Visible;
+		if (!Slots.IsValidIndex(Index))
+		{
+			continue;
+		}
 		DrawSlotCard(Slots[Index], Index, PanelX + 34.f * S,
-			CardsTop + Index * (CardH + CardGap), PanelW - 68.f * S, CardH, Index == Selection);
+			CardsTop + Visible * (CardH + CardGap), PanelW - 68.f * S, CardH, Index == Selection);
+	}
+	if (VisibleCount < NumSlots)
+	{
+		const float ArrowX = PanelX + PanelW * 0.5f;
+		const float ArrowW = 40.f * S;
+		const float ArrowH = 18.f * S;
+		if (ContinueScroll > 0)
+		{
+			const float ArrowY = CardsTop - ArrowH - 2.f * S;
+			DrawText(TEXT("^"), ArrowX, ArrowY, TitleMuted, 0.8f, true);
+			AddHit(TEXT("continue.scroll"), -1, ArrowX - ArrowW * 0.5f, ArrowY, ArrowW, ArrowH);
+		}
+		if (ContinueScroll + VisibleCount < NumSlots)
+		{
+			const float ArrowY = CardsTop + VisibleCount * (CardH + CardGap) + 1.f * S;
+			DrawText(TEXT("v"), ArrowX, ArrowY, TitleMuted, 0.8f, true);
+			AddHit(TEXT("continue.scroll"), 1, ArrowX - ArrowW * 0.5f, ArrowY, ArrowW, ArrowH);
+		}
 	}
 
 	DrawBackButton(PanelX, PanelY, PanelW, PanelH);
@@ -1072,8 +1183,11 @@ void FDATitleScreen::DrawSlotCard(const FDATitleSlotView& Slot, int32 Index, flo
 		DrawRect(TitleAlpha(Accent, bSelected ? 0.20f : (bHovered ? 0.10f : 0.045f)), X, Y, W, H);
 	}
 	DrawRect(TitleAlpha(Accent, bOccupied || Slot.bCorrupt ? 0.95f : 0.35f), X, Y, 4.f * S, H);
-	DrawText(Slot.Label, X + 18.f * S, Y + 10.f * S, bOccupied || Slot.bCorrupt ? Accent : TitleMuted,
-		0.86f, false, GetFont(true));
+	FString LabelText = Slot.Label;
+	if (LabelText.IsEmpty())
+	{
+		LabelText = TEXT("SAVE SLOT");
+	}
 
 	FString Badge;
 	if (Slot.bCorrupt)
@@ -1088,30 +1202,35 @@ void FDATitleScreen::DrawSlotCard(const FDATitleSlotView& Slot, int32 Index, flo
 	{
 		Badge = DAUIData::Label(TEXT("title.backup_slot"), TEXT("BACKUP USED"));
 	}
+	const FVector2D BadgeSize = Badge.IsEmpty() ? FVector2D::ZeroVector : Measure(Badge, 0.68f);
+	DrawText(Ellipsize(LabelText, W - BadgeSize.X - 54.f * S, 0.86f, GetFont(true)),
+		X + 18.f * S, Y + 10.f * S, bOccupied || Slot.bCorrupt ? Accent : TitleMuted,
+		0.86f, false, GetFont(true));
 	if (!Badge.IsEmpty())
 	{
-		const FVector2D BadgeSize = Measure(Badge, 0.68f);
 		DrawText(Badge, X + W - BadgeSize.X - 18.f * S, Y + 14.f * S,
 			Slot.bCorrupt ? TitleRed : TitleMuted, 0.68f);
 	}
 
 	if (bOccupied)
 	{
-		DrawText(Slot.PlayerName, X + 18.f * S, Y + 36.f * S, TitlePaper, 1.0f);
+		DrawText(Ellipsize(Slot.PlayerName, W - 36.f * S, 1.0f), X + 18.f * S, Y + 36.f * S, TitlePaper, 1.0f);
 		const FString Middle = FString::Printf(TEXT("%s  -  %s"), *Slot.Dorm, *Slot.Title);
-		DrawText(Middle, X + 18.f * S, Y + 60.f * S, TitleMuted, 0.75f);
+		DrawText(Ellipsize(Middle, W - 36.f * S, 0.75f), X + 18.f * S, Y + 60.f * S, TitleMuted, 0.75f);
 		const FString Right = FString::Printf(TEXT("%s      DP %d      PLAY %s"),
 			*Slot.DateLine, Slot.DP, *Slot.Playtime);
-		DrawText(Right, X + 18.f * S, Y + H - 28.f * S, TitleGold, 0.72f);
+		DrawText(Ellipsize(Right, W - 36.f * S, 0.72f), X + 18.f * S, Y + H - 28.f * S, TitleGold, 0.72f);
 	}
 	else if (Slot.bCorrupt)
 	{
-		DrawText(DAUIData::Label(TEXT("title.corrupt_hint"), TEXT("This save cannot be read.")),
+		DrawText(Ellipsize(DAUIData::Label(TEXT("title.corrupt_hint"), TEXT("This save cannot be read.")),
+			W - 36.f * S, 0.82f),
 			X + 18.f * S, Y + 40.f * S, TitleRed, 0.82f);
 	}
 	else
 	{
-		DrawText(DAUIData::Label(TEXT("title.empty_hint"), TEXT("No save data. Start a new game.")),
+		DrawText(Ellipsize(DAUIData::Label(TEXT("title.empty_hint"), TEXT("No save data. Start a new game.")),
+			W - 36.f * S, 0.82f),
 			X + 18.f * S, Y + 40.f * S, TitleMuted, 0.82f);
 	}
 
@@ -1171,10 +1290,11 @@ void FDATitleScreen::DrawOptionRow(const FString& Label, const FString& Value, i
 		DrawRect(TitleAlpha(TitleGold, bSelected ? 0.20f : 0.09f), X, Y, W, H);
 		DrawRect(TitleAlpha(TitleGold, 0.95f), X, Y, 4.f * S, H);
 	}
-	DrawText(Label, X + 18.f * S, Y + 12.f * S, bSelected ? TitlePaper : TitleAlpha(TitlePaper, 0.82f), 0.95f);
 	const FString ValueText = FString::Printf(TEXT("<  %s  >"), *Value);
-	const FVector2D Size = Measure(ValueText, 0.92f);
-	DrawText(ValueText, X + W - Size.X - 18.f * S, Y + 12.f * S, bSelected ? TitleGold : TitleMuted, 0.92f);
+	const FVector2D ValueSize = Measure(ValueText, 0.92f);
+	DrawText(Ellipsize(Label, W - ValueSize.X - 52.f * S, 0.95f), X + 18.f * S, Y + 12.f * S,
+		bSelected ? TitlePaper : TitleAlpha(TitlePaper, 0.82f), 0.95f);
+	DrawText(ValueText, X + W - ValueSize.X - 18.f * S, Y + 12.f * S, bSelected ? TitleGold : TitleMuted, 0.92f);
 	AddHit(TEXT("option"), Index, X, Y, W, H);
 }
 
@@ -1253,7 +1373,8 @@ void FDATitleScreen::DrawConfirmNewGame()
 
 	DrawRect(FLinearColor(0.f, 0.f, 0.f, 0.55f), 0.f, 0.f, CW, CH);
 	DrawPanel(PanelX, PanelY, PanelW, PanelH, TitleAlpha(TitleInk, 0.97f), TitleRed);
-	DrawText(DAUIData::Label(TEXT("title.confirm.title"), TEXT("START A NEW GAME?")),
+	const FString ConfirmTitle = DAUIData::Label(TEXT("title.confirm.title"), TEXT("START A NEW GAME?"));
+	DrawText(Ellipsize(ConfirmTitle, PanelW - 60.f * S, 1.45f, GetFont(true)),
 		PanelX + 30.f * S, PanelY + 24.f * S, TitleRed, 1.45f, false, GetFont(true));
 	const FString Body = DAUIData::Label(TEXT("title.confirm.body"),
 		TEXT("Existing autosave progress will be replaced as the new game saves. Manual slots are kept."));
@@ -1281,7 +1402,8 @@ void FDATitleScreen::DrawConfirmNewGame()
 		const FString Label = Index == 0
 			? DAUIData::Label(TEXT("title.confirm.start"), TEXT("START NEW GAME"))
 			: DAUIData::Label(TEXT("title.confirm.cancel"), TEXT("CANCEL"));
-		DrawText(Label, PanelX + 50.f * S, Y + 12.f * S, bSelected ? TitlePaper : TitleMuted, 1.0f);
+		DrawText(Ellipsize(Label, ButtonW - 30.f * S, 1.0f), PanelX + 50.f * S, Y + 12.f * S,
+			bSelected ? TitlePaper : TitleMuted, 1.0f);
 		AddHit(TEXT("confirm"), Index, PanelX + 30.f * S, Y, ButtonW, ButtonH);
 	}
 }
@@ -1332,8 +1454,9 @@ void FDATitleScreen::DrawFooter()
 	}
 	if (!Hint.IsEmpty())
 	{
-		const FVector2D Size = Measure(Hint, 0.66f);
-		DrawText(Hint, CW - 24.f * S - Size.X, CH - H + 8.f * S, TitleAlpha(TitleMuted, 0.72f), 0.66f);
+		const FString HintText = Ellipsize(Hint, CW * 0.55f, 0.66f);
+		const FVector2D Size = Measure(HintText, 0.66f);
+		DrawText(HintText, CW - 24.f * S - Size.X, CH - H + 8.f * S, TitleAlpha(TitleMuted, 0.72f), 0.66f);
 	}
 }
 
@@ -1353,10 +1476,6 @@ void FDATitleScreen::DrawStatus()
 	const FLinearColor Accent = bStatusError ? TitleRed : TitleGold;
 	DrawRect(TitleAlpha(TitleInk, 0.92f), X, Y, W, H);
 	DrawRect(TitleAlpha(Accent, 0.95f), X, Y, 4.f * S, H);
-	FString Message = StatusMessage;
-	while (Message.Len() > 4 && Measure(Message, 0.8f).X > W - 32.f * S)
-	{
-		Message = Message.LeftChop(4) + TEXT("...");
-	}
-	DrawText(Message, X + 16.f * S, Y + 8.f * S, bStatusError ? TitleRed : TitlePaper, 0.8f);
+	DrawText(Ellipsize(StatusMessage, W - 32.f * S, 0.8f), X + 16.f * S, Y + 8.f * S,
+		bStatusError ? TitleRed : TitlePaper, 0.8f);
 }

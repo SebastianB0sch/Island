@@ -44,10 +44,18 @@ python Tools/validate/validate_all.py --report Docs/Integration/reports/validate
 not hand-edit it. A report records the tool version, timestamp, counts, checks
 and findings so a gate review can diff two runs.
 
-Recommended gate commands:
+Generated `logs/*.log` and `smoke*.json` / `validate*.json` files are ignored by
+Git. Curated evidence such as `GATE*_TEST_RESULTS.md`,
+`smoke_selftests.json`, `validate_baseline.json`, `validate_strict.json` and the
+tracked reference logs stays committed. Use `git add -f` only when a new run
+artifact becomes curated evidence.
+
+Recommended gate commands (run from the repository root; relative paths resolve
+against the current directory):
 
 ```powershell
 python Tools/validate/validate_all.py --report Docs/Integration/reports/validate.json
+python Tools/canon/validate_canon.py --report Docs/Integration/reports/canon-validation.md
 python Tools/integration/run_smoke.py --validate --report Docs/Integration/reports/smoke.json
 python Tools/integration/run_smoke.py --self-tests --report Docs/Integration/reports/smoke_selftests.json
 ```
@@ -61,11 +69,14 @@ python Tools/integration/run_smoke.py --self-tests --report Docs/Integration/rep
    `Tools/integration`.
 4. Record the fixture in `baseline.json` if it becomes a release gate.
 
-## Current known state (2026-10-30)
+## Current known state (2026-10-31)
 
 The validator passes baseline mode with zero structural errors. The remaining
 findings are content gaps and pre-contract data shapes; see `baseline.json`,
-`Docs/PORT_STATUS.md` and the latest report. The UE self-test suite is green:
-duel 24/0 stalls, profile 182 checks/0 failures, duel rules 57/57, economy
-119/119, story 14/14, and UI generated 10 screenshots. The earlier profile
-crash log is kept as regression evidence.
+`Docs/PORT_STATUS.md` and the latest report. The canon validator passes 290
+checks with zero errors and one warning, including the 21 file hashes in
+`Content/Data/Canon/manifest.json`. The UE self-test suite is green: duel 24/0
+stalls, profile PASS, duel rules 102/102, economy 446/446, puzzles 105/105,
+exams 104/104, full-campaign story playthrough PASS, automation 5/5, and UI
+generated 10 screenshots. The earlier profile crash log is kept as regression
+evidence.

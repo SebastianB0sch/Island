@@ -6,14 +6,15 @@
 
 FDAIDuelistAI::FDAIDuelistAI()
 {
-	Random.Initialize(0);
 }
 
 void FDAIDuelistAI::Configure(const FDAIProfileDef& InProfile, int32 InSeed)
 {
+	// The policy is deliberately deterministic: ties break on snapshot order,
+	// so the seed is kept for API compatibility but does not drive a roll.
+	(void)InSeed;
 	Profile = InProfile;
 	Strategy = StrategyFromString(Profile.Strategy);
-	Random.Initialize(InSeed);
 	bConfigured = true;
 }
 
@@ -209,19 +210,6 @@ int32 FDAIDuelistAI::ScoreCard(const FCardRecord& Card) const
 	return Score;
 }
 
-int32 FDAIDuelistAI::ScoreCardId(int32 CardId) const
-{
-	if (!Database)
-	{
-		return 0;
-	}
-	if (const FCardRecord* Card = Database->FindCard(CardId))
-	{
-		return ScoreCard(*Card);
-	}
-	return 0;
-}
-
 FDAAIDecision FDAIDuelistAI::ChooseAction(const FDAAIDuelSnapshot& Snapshot) const
 {
 	FDAAIDecision Decision;
@@ -344,21 +332,25 @@ bool FDAIDuelistAI::ShouldAttack(const FDAAIDuelSnapshot& Snapshot, int32 Attack
 	{
 		return false;
 	}
-	if (bDirect)
-	{
-		return GetWeight(TEXT("direct_attack"), 0.8f) >= 0.25f;
-	}
-	if (TargetCardId == 0)
-	{
-		return false;
-	}
 	if (Snapshot.OpponentLp <= 0)
 	{
 		return false;
 	}
-	const int32 AttackWeight = GetThreshold(TEXT("attack_into_set_atk"), 1900);
-	(void)AttackerCardId;
-	(void)AttackWeight;
+	// The adapter passes concrete ids from the snapshot.  Reject ids that are
+	// not actually on the proposed side instead of trusting the caller: a
+	// stale or invented attacker would otherwise be reported as a legal play.
+	if (AttackerCardId != 0 && !Snapshot.OwnMonsterIds.Contains(AttackerCardId))
+	{
+		return false;
+	}
+	if (bDirect)
+	{
+		return Snapshot.bCanAttackDirectly && GetWeight(TEXT("direct_attack"), 0.8f) >= 0.25f;
+	}
+	if (TargetCardId == 0 || !Snapshot.OpponentMonsterIds.Contains(TargetCardId))
+	{
+		return false;
+	}
 	return GetWeight(TEXT("attack"), 0.8f) >= 0.45f;
 }
 

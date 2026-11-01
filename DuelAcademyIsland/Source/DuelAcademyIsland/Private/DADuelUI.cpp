@@ -23,6 +23,7 @@
 #include "GameFramework/PlayerController.h"
 #include "HAL/PlatformTime.h"
 #include "Misc/CommandLine.h"
+#include "Misc/Guid.h"
 #include "Misc/Parse.h"
 #include "RenderUtils.h"
 #include "TextureResource.h"
@@ -339,7 +340,8 @@ void FDADuelUI::NotifyDuelFinished(bool bPlayerWon)
 			Result.MonstersDestroyedByBattle = Stats.MonstersDestroyedByBattle;
 			Result.bWentSecond = Stats.bWentSecond;
 			Result.bAwardDP = bDuelAwardDP;
-			DpEarned = Profile->RecordDuelResult(Result);
+			bool bAlreadyApplied = false;
+			DpEarned = Profile->RecordDuelResultOnce(Result, DuelResultToken, bAlreadyApplied);
 		}
 		if (UDAOpponentSubsystem* Opponents = GameInstance->GetSubsystem<UDAOpponentSubsystem>())
 		{
@@ -361,6 +363,19 @@ void FDADuelUI::NotifyDuelFinished(bool bPlayerWon)
 			? FString::Printf(TEXT("You defeated %s.%s"), *DuelOpponentName, *RewardLine)
 			: FString::Printf(TEXT("%s wins this one. Challenge them again any time."), *DuelOpponentName));
 	DuelResultColor = bDraw ? FLinearColor(0.72f, 0.72f, 0.78f) : (bWon ? Gold : FLinearColor(0.85f, 0.3f, 0.25f));
+
+	if (bDuelScenarioActive && !bScenarioResultValid)
+	{
+		ScenarioDuelResult = FDAScenarioDuelResult();
+		ScenarioDuelResult.bSolved = bWon;
+		ScenarioDuelResult.bTimedOut = Stats.EndReason.Contains(TEXT("time limit"), ESearchCase::IgnoreCase);
+		ScenarioDuelResult.TurnsUsed = DuelEngine ? DuelEngine->GetScenarioPlayerTurnsTaken() : 0;
+		ScenarioDuelResult.SecondsUsed = DuelScenarioElapsed;
+		ScenarioDuelResult.ScenarioId = DuelEngine ? DuelEngine->GetActiveScenario().Id : FString();
+		ScenarioDuelResult.EndReason = Stats.EndReason;
+		bScenarioResultValid = true;
+	}
+
 	if (ADAStudentCharacter* Student = PlayerOwner ? Cast<ADAStudentCharacter>(PlayerOwner->GetPawn()) : nullptr)
 	{
 		Student->SetDuelPose(false);
@@ -399,8 +414,14 @@ void FDADuelUI::OpenDeckSelect(const FString& OpponentId, const FString& Opponen
 	DuelMessageTimer = 0.0f;
 	bDuelResultWon = false;
 	bDuelResultNotified = false;
+	bDuelResultDraw = false;
 	DuelResultTitle.Empty();
 	DuelResultMessage.Empty();
+	DuelResultToken.Reset();
+	bDuelScenarioActive = false;
+	bScenarioResultValid = false;
+	DuelScenarioElapsed = 0.0f;
+	ScenarioDuelResult = FDAScenarioDuelResult();
 	PlaySfx(TEXT("A_UIClick"), 0.9f);
 
 	PlayerOwner = OwnerHUD.IsValid() ? OwnerHUD->GetOwningPlayerController() : nullptr;
@@ -430,6 +451,11 @@ void FDADuelUI::StartDuelWithDeck(const FString& DeckId)
 	DuelEngine->SetDuelMode(DuelModeString);
 	DuelMode = EDuelUiMode::Duel;
 	DuelResultDpEarned = 0;
+	DuelResultToken = FString::Printf(TEXT("duel:%s"), *FGuid::NewGuid().ToString(EGuidFormats::Digits));
+	bDuelScenarioActive = false;
+	bScenarioResultValid = false;
+	DuelScenarioElapsed = 0.0f;
+	ScenarioDuelResult = FDAScenarioDuelResult();
 	bStoryResultPending = false;
 	bStoryResultWon = false;
 	bStoryResultDraw = false;
@@ -447,6 +473,7 @@ void FDADuelUI::StartDuelWithDeck(const FString& DeckId)
 	DuelAiTimer = 0.0f;
 	bDuelResultWon = false;
 	bDuelResultNotified = false;
+	bDuelResultDraw = false;
 	DuelIncomingEvents.Reset();
 	DuelFx.Reset();
 	DuelEventPumpTimer = 0.0f;
@@ -489,12 +516,158 @@ void FDADuelUI::StartDuelWithDeck(const FString& DeckId)
 	PlaySfx(TEXT("A_DuelStart"), 0.8f);
 }
 
+bool FDADuelUI::StartScenarioDuel(const FDuelScenario& Scenario, const FString& Mode, bool bInAwardDP, FString& OutError)
+{
+	OutError.Reset();
+	if (IsOpen())
+	{
+		OutError = TEXT("A duel screen is already open.");
+		return false;
+	}
+	UCardDatabaseSubsystem* Cards = GetGameInstance() ? GetGameInstance()->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
+	if (!Cards || !Cards->IsLoaded())
+	{
+		OutError = TEXT("Card database is not loaded.");
+		return false;
+	}
+
+	FDuelScenario ActiveScenario = Scenario;
+	ActiveScenario.Mode = Mode.IsEmpty() ? TEXT("timed_puzzle") : Mode;
+	DuelEngine = MakeUnique<FDuelEngine>(Cards, Scenario.Seed != 0 ? Scenario.Seed : static_cast<int32>(FPlatformTime::Cycles()));
+	if (!DuelEngine->StartScenario(ActiveScenario, OutError))
+	{
+		DuelEngine.Reset();
+		return false;
+	}
+
+	DuelOpponentId = Scenario.Id.IsEmpty() ? TEXT("puzzle") : Scenario.Id;
+	DuelOpponentName = Scenario.Name.IsEmpty() ? TEXT("Puzzle Duelist") : Scenario.Name;
+	DuelOpponentDeckId = DuelOpponentId;
+	DuelModeString = ActiveScenario.Mode;
+	bDuelAwardDP = bInAwardDP;
+	DuelMode = EDuelUiMode::Duel;
+	DuelResultDpEarned = 0;
+	DuelResultToken = FString::Printf(TEXT("scenario:%s:%s"), *DuelOpponentId,
+		*FGuid::NewGuid().ToString(EGuidFormats::Digits));
+	bStoryResultPending = false;
+	bStoryResultWon = false;
+	bStoryResultDraw = false;
+	bDuelScenarioActive = true;
+	bScenarioResultValid = false;
+	DuelScenarioElapsed = 0.0f;
+	ScenarioDuelResult = FDAScenarioDuelResult();
+
+	DuelSelectedUid = 0;
+	DuelTributeHandUid = 0;
+	bDuelTributeSet = false;
+	DuelTributeUids.Reset();
+	DuelChoiceRequestId = 0;
+	DuelChoicePage = 0;
+	DuelChoiceSelected.Reset();
+	DuelChoiceCardUids.Reset();
+	DuelPileType = EDuelPileType::None;
+	DuelMessage.Empty();
+	DuelMessageTimer = 0.0f;
+	DuelAiTimer = 0.0f;
+	bDuelResultWon = false;
+	bDuelResultNotified = false;
+	bDuelResultDraw = false;
+	DuelResultTitle.Empty();
+	DuelResultMessage.Empty();
+	DuelIncomingEvents.Reset();
+	DuelFx.Reset();
+	DuelEventPumpTimer = 0.0f;
+	DuelPlayerLpDisplay = static_cast<float>(Scenario.PlayerLp);
+	DuelOpponentLpDisplay = static_cast<float>(Scenario.OpponentLp);
+	DuelPlayerLpHit = 0.0f;
+	DuelOpponentLpHit = 0.0f;
+	DuelShakeTime = 0.0f;
+	DuelShakeStrength = 0.0f;
+	DuelFlashTime = 0.0f;
+	DuelEventBannerTime = 0.0f;
+	DuelEventBannerTitle.Empty();
+	DuelEventBannerSubtitle.Empty();
+	DuelIntroTime = 0.0f;
+	DuelOpponentPortraitPulse = 0.0f;
+	DuelPlayerPortraitPulse = 0.0f;
+	DuelCutInCharacter.Empty();
+	DuelCutInExpression.Empty();
+	DuelCutInTitle.Empty();
+	DuelCutInSubtitle.Empty();
+	DuelCutInTime = 0.0f;
+	DuelCutInAge = 0.0f;
+	DuelCutInPriority = 0;
+	DuelResultDelay = 0.0f;
+	bDuelResultPending = false;
+	bDuelPlayerLowLpWarned = false;
+	bDuelOpponentLowLpWarned = false;
+	DuelEventGap = 0.22f;
+	bDuelEventsPrimed = true;
+	bDuelAutoEndTurnDone = false;
+
+	PlayerOwner = OwnerHUD.IsValid() ? OwnerHUD->GetOwningPlayerController() : nullptr;
+	if (PlayerOwner)
+	{
+		PlayerOwner->bShowMouseCursor = true;
+		PlayerOwner->SetInputMode(FInputModeGameAndUI());
+	}
+	ShowBanner(DuelOpponentName.ToUpper(), TEXT("TIMED PUZZLE"));
+	ShowToast(TEXT("Solve the puzzle before the turn or time limit expires."),
+		FLinearColor(0.55f, 0.82f, 0.95f));
+	PlaySfx(TEXT("A_DuelStart"), 0.8f);
+	return true;
+}
+
+bool FDADuelUI::ConsumeScenarioDuelResult(FDAScenarioDuelResult& OutResult)
+{
+	if (!bScenarioResultValid)
+	{
+		return false;
+	}
+	OutResult = ScenarioDuelResult;
+	bScenarioResultValid = false;
+	return true;
+}
+
+void FDADuelUI::AbortScenarioDuel()
+{
+	if (!bDuelScenarioActive)
+	{
+		return;
+	}
+	if (!bScenarioResultValid)
+	{
+		ScenarioDuelResult = FDAScenarioDuelResult();
+		ScenarioDuelResult.bSolved = false;
+		ScenarioDuelResult.TurnsUsed = DuelEngine ? DuelEngine->GetScenarioPlayerTurnsTaken() : 0;
+		ScenarioDuelResult.SecondsUsed = DuelScenarioElapsed;
+		ScenarioDuelResult.ScenarioId = DuelEngine ? DuelEngine->GetActiveScenario().Id : DuelOpponentId;
+		ScenarioDuelResult.EndReason = TEXT("The timed puzzle was cancelled.");
+		bScenarioResultValid = true;
+	}
+	CloseDuel();
+}
+
 void FDADuelUI::CloseDuel()
 {
 	const bool bNotifyStory = bStoryResultPending;
 	const bool bStoryWon = bStoryResultWon;
 	const bool bStoryDraw = bStoryResultDraw;
 	bStoryResultPending = false;
+
+	// A scenario closed before its result screen still produces one terminal
+	// result; the exam path turns it into a failed timed section.
+	if (bDuelScenarioActive && !bScenarioResultValid && DuelMode != EDuelUiMode::Result)
+	{
+		ScenarioDuelResult = FDAScenarioDuelResult();
+		ScenarioDuelResult.bSolved = false;
+		ScenarioDuelResult.TurnsUsed = DuelEngine ? DuelEngine->GetScenarioPlayerTurnsTaken() : 0;
+		ScenarioDuelResult.SecondsUsed = DuelScenarioElapsed;
+		ScenarioDuelResult.ScenarioId = DuelEngine ? DuelEngine->GetActiveScenario().Id : DuelOpponentId;
+		ScenarioDuelResult.EndReason = TEXT("The duel was closed before a result.");
+		bScenarioResultValid = true;
+	}
+	bDuelScenarioActive = false;
 
 	if (DuelMode != EDuelUiMode::None)
 	{
@@ -717,6 +890,12 @@ void FDADuelUI::DrawPanel(float X, float Y, float Width, float Height, const FLi
 	DrawRect(Fill, X + 1.0f, Y + 1.0f, Width - 2.0f, Height - 2.0f);
 }
 
+bool FDADuelUI::IsDuelHoverRect(float X, float Y, float W, float H) const
+{
+	return DuelMousePosition.X >= DX(X) && DuelMousePosition.X <= DX(X + W)
+		&& DuelMousePosition.Y >= DY(Y) && DuelMousePosition.Y <= DY(Y + H);
+}
+
 float FDADuelUI::DuelTextScale(float Scale) const
 {
 	return DuelMode == EDuelUiMode::None ? Scale : Scale * DuelTextBoost;
@@ -804,6 +983,12 @@ float FDADuelUI::DrawWrappedText(const FString& Text, float X, float Y, float Ma
 // Duel flow
 // ---------------------------------------------------------------------------
 
+bool FDADuelUI::IsDuelPresentationActive() const
+{
+	return DuelCutInTime > 0.0f || DuelEventBannerTime > 0.0f
+		|| DuelIncomingEvents.Num() > 0 || DuelFx.Num() > 0;
+}
+
 void FDADuelUI::UpdateDuel(float DeltaSeconds)
 {
 	if (DuelMode == EDuelUiMode::None)
@@ -871,6 +1056,14 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 		DuelPileType = EDuelPileType::None;
 	}
 
+	// Fixed scenarios own their own clocks; the rules engine does not advance
+	// time itself, so the live board is the only place the limit can fire.
+	if (bDuelScenarioActive && DuelMode == EDuelUiMode::Duel && DuelEngine && !DuelEngine->HasWinner())
+	{
+		DuelScenarioElapsed += FMath::Max(0.0f, DeltaSeconds);
+		DuelEngine->CheckScenarioTimeout(DuelScenarioElapsed);
+	}
+
 	if (DuelMode == EDuelUiMode::Duel && DuelEngine)
 	{
 		if (DuelEngine->HasWinner())
@@ -883,11 +1076,44 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 				DuelResultDelay = 3.2f;
 			}
 			DuelResultDelay = FMath::Max(0.0f, DuelResultDelay - DeltaSeconds);
+
+			// This branch returns before the shared presentation-skip block, so
+			// honour the skip hint here as well.  Clicking a cut-in is a skip
+			// target too, but the hit list is owned by Draw.
+			if (IsDuelPresentationActive() && PlayerOwner)
+			{
+				bool bSkipRequested = PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar)
+					|| PlayerOwner->WasInputKeyJustPressed(EKeys::RightMouseButton);
+				if (!bSkipRequested && PlayerOwner->WasInputKeyJustPressed(EKeys::LeftMouseButton))
+				{
+					float MouseX = 0.0f;
+					float MouseY = 0.0f;
+					if (PlayerOwner->GetMousePosition(MouseX, MouseY))
+					{
+						const FVector2D Mouse(MouseX, MouseY);
+						for (int32 I = DuelHitTargets.Num() - 1; I >= 0; --I)
+						{
+							const FDuelHitTarget& Hit = DuelHitTargets[I];
+							if (Hit.Action == TEXT("skipfx") && Hit.Contains(Mouse))
+							{
+								bSkipRequested = true;
+								break;
+							}
+						}
+					}
+				}
+				if (bSkipRequested)
+				{
+					SkipDuelPresentation();
+				}
+			}
+
 			const bool bReelIdle = DuelIncomingEvents.Num() == 0 && DuelFx.Num() == 0;
 			if (DuelResultDelay <= 0.0f || (bReelIdle && DuelResultDelay < 1.0f))
 			{
 				DuelMode = EDuelUiMode::Result;
-				bDuelResultWon = DuelEngine->GetWinner() == EDuelOwner::Player;
+				bDuelResultDraw = DuelEngine->GetResultStats().bDraw;
+				bDuelResultWon = !bDuelResultDraw && DuelEngine->GetWinner() == EDuelOwner::Player;
 				bDuelResultNotified = false;
 				DuelResultEnterTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
 				DuelSelectedUid = 0;
@@ -982,8 +1208,7 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 		const FDuelChoiceRequest* PendingChoice = DuelEngine ? DuelEngine->GetPendingChoice() : nullptr;
 		const bool bChoicePending = PendingChoice != nullptr && PendingChoice->Side == EDuelOwner::Player;
 
-		const bool bPresentationActive = DuelCutInTime > 0.0f || DuelEventBannerTime > 0.0f
-			|| DuelIncomingEvents.Num() > 0 || DuelFx.Num() > 0;
+		const bool bPresentationActive = IsDuelPresentationActive();
 		if (!bChoicePending && bPresentationActive
 			&& (PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar)
 				|| PlayerOwner->WasInputKeyJustPressed(EKeys::RightMouseButton)))
@@ -1065,13 +1290,27 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 	}
 	else if (DuelMode == EDuelUiMode::Result && PlayerOwner)
 	{
-		if (PlayerOwner->WasInputKeyJustPressed(EKeys::Enter) || PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar))
+		const bool bConfirm = PlayerOwner->WasInputKeyJustPressed(EKeys::Enter)
+			|| PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar);
+		if (bDuelScenarioActive)
 		{
-			OpenDeckSelect(DuelOpponentId, DuelOpponentName, DuelOpponentDeckId);
+			// Scenario duels belong to their caller (exam); there is no rematch
+			// picker, and any confirm/back dismisses the result for the caller.
+			if (bConfirm || PlayerOwner->WasInputKeyJustPressed(EKeys::Escape))
+			{
+				CloseDuel();
+			}
 		}
-		if (PlayerOwner->WasInputKeyJustPressed(EKeys::Escape))
+		else
 		{
-			CloseDuel();
+			if (bConfirm)
+			{
+				OpenDeckSelect(DuelOpponentId, DuelOpponentName, DuelOpponentDeckId);
+			}
+			if (PlayerOwner->WasInputKeyJustPressed(EKeys::Escape))
+			{
+				CloseDuel();
+			}
 		}
 	}
 }
@@ -1261,6 +1500,13 @@ void FDADuelUI::SpawnDuelFx(const FDuelVisualEvent& Event)
 	Fx.bDirect = Event.bDirect;
 	Fx.Text = Event.Text;
 
+	ResolveDuelFxPath(Fx, Event);
+	SpawnDuelFxReaction(Event);
+	DuelFx.Add(Fx);
+}
+
+void FDADuelUI::ResolveDuelFxPath(FDuelFx& Fx, const FDuelVisualEvent& Event)
+{
 	const bool bPlayer = Event.Side == EDuelOwner::Player;
 	DuelEventBannerDuration = 1.0f;
 	const FVector2D PlayerHand(800.0f, 818.0f);
@@ -1464,19 +1710,30 @@ void FDADuelUI::SpawnDuelFx(const FDuelVisualEvent& Event)
 		break;
 	case EDuelVisualEventType::Win:
 		Fx.Duration = 1.3f;
-		DuelEventBannerTitle = bPlayer ? TEXT("DUEL WON") : TEXT("DUEL LOST");
-		DuelEventBannerSubtitle = TEXT("THE DUEL IS OVER");
-		DuelEventBannerColor = bPlayer ? Gold : FLinearColor(0.86f, 0.38f, 0.32f);
-		DuelEventBannerTime = 1.8f;
-		DuelEventBannerDuration = 1.8f;
-		if (bPlayer) DuelPlayerPortraitPulse = 1.0f; else DuelOpponentPortraitPulse = 1.0f;
-		DuelFlashColor = bPlayer ? FLinearColor(0.16f, 0.12f, 0.04f, 0.18f) : FLinearColor(0.18f, 0.02f, 0.02f, 0.2f);
-		DuelFlashTime = 0.5f;
+		{
+			const bool bDraw = DuelEngine && DuelEngine->GetResultStats().bDraw;
+			DuelEventBannerTitle = bDraw ? TEXT("DUEL DRAW")
+				: (bPlayer ? TEXT("DUEL WON") : TEXT("DUEL LOST"));
+			DuelEventBannerSubtitle = bDraw ? TEXT("BOTH DUELISTS AT 0 LP") : TEXT("THE DUEL IS OVER");
+			DuelEventBannerColor = bDraw ? FLinearColor(0.72f, 0.72f, 0.80f)
+				: (bPlayer ? Gold : FLinearColor(0.86f, 0.38f, 0.32f));
+			DuelEventBannerTime = 1.8f;
+			DuelEventBannerDuration = 1.8f;
+			if (bPlayer) DuelPlayerPortraitPulse = 1.0f; else DuelOpponentPortraitPulse = 1.0f;
+			DuelFlashColor = bDraw ? FLinearColor(0.06f, 0.06f, 0.08f, 0.16f)
+				: (bPlayer ? FLinearColor(0.16f, 0.12f, 0.04f, 0.18f) : FLinearColor(0.18f, 0.02f, 0.02f, 0.2f));
+			DuelFlashTime = 0.5f;
+		}
 		break;
 	default:
 		Fx.Duration = 0.5f;
 		break;
 	}
+}
+
+void FDADuelUI::SpawnDuelFxReaction(const FDuelVisualEvent& Event)
+{
+	const bool bPlayer = Event.Side == EDuelOwner::Player;
 
 	// Pick the dramatic reaction beats.  These are presentation-only; they
 	// never change the rules state or block the player's input.
@@ -1546,15 +1803,20 @@ void FDADuelUI::SpawnDuelFx(const FDuelVisualEvent& Event)
 		}
 		break;
 	case EDuelVisualEventType::Win:
-		CutIn(bPlayer ? TEXT("laugh") : TEXT("sad"),
-			bPlayer ? TEXT("DUEL WON") : TEXT("DUEL LOST"),
-			bPlayer ? FString::Printf(TEXT("%s DEFEATED"), *DuelOpponentName.ToUpper()) : FString::Printf(TEXT("%s WINS"), *DuelOpponentName.ToUpper()), 100, 3.0f);
+		if (DuelEngine && DuelEngine->GetResultStats().bDraw)
+		{
+			CutIn(TEXT("determined"), TEXT("DUEL DRAW"), TEXT("BOTH DUELISTS AT 0 LP"), 100, 3.0f);
+		}
+		else
+		{
+			CutIn(bPlayer ? TEXT("laugh") : TEXT("sad"),
+				bPlayer ? TEXT("DUEL WON") : TEXT("DUEL LOST"),
+				bPlayer ? FString::Printf(TEXT("%s DEFEATED"), *DuelOpponentName.ToUpper()) : FString::Printf(TEXT("%s WINS"), *DuelOpponentName.ToUpper()), 100, 3.0f);
+		}
 		break;
 	default:
 		break;
 	}
-
-	DuelFx.Add(Fx);
 }
 
 FVector2D FDADuelUI::DuelCardCenter(int32 Uid, EDuelOwner FallbackSide, bool bMonsterFallback) const
@@ -1759,6 +2021,7 @@ void FDADuelUI::DuelShowMessage(const FString& Message, const FLinearColor& Colo
 {
 	PlayCue(OwnerHUD.Get(), EDASfx::Deny, 0.5f);
 	DuelMessage = Message;
+	DuelMessageColor = Color;
 	DuelMessageTimer = 4.0f;
 }
 
@@ -1970,6 +2233,80 @@ void FDADuelUI::SkipDuelPresentation()
 	}
 }
 
+void FDADuelUI::HandleDuelChoiceHit(const FString& Action, int32 Value)
+{
+	if (!DuelEngine)
+	{
+		return;
+	}
+	const FDuelChoiceRequest* Request = DuelEngine->GetPendingChoice();
+	if (!Request || Request->Side != EDuelOwner::Player)
+	{
+		return;
+	}
+	if (Action == TEXT("choiceoption"))
+	{
+		HandleDuelChoiceOption(Value);
+		return;
+	}
+	if (Action == TEXT("select") && Value != 0)
+	{
+		// Prefer an enabled option if the same card appears more than once
+		// (for example, different modes of the same target).  Fall back to
+		// a disabled one so its reason is shown instead of swallowing the
+		// click.
+		const FDuelChoiceOption* Option = Request->Options.FindByPredicate(
+			[Value](const FDuelChoiceOption& Candidate)
+			{
+				return Candidate.CardUid == Value && Candidate.bEnabled;
+			});
+		if (!Option)
+		{
+			Option = Request->Options.FindByPredicate(
+				[Value](const FDuelChoiceOption& Candidate) { return Candidate.CardUid == Value; });
+		}
+		if (Option)
+		{
+			HandleDuelChoiceOption(Option->Id);
+		}
+		return;
+	}
+	if (Action == TEXT("choiceconfirm"))
+	{
+		SubmitDuelChoice();
+		return;
+	}
+	if (Action == TEXT("choicecancel"))
+	{
+		FString Error;
+		const int32 RequestId = Request->RequestId;
+		if (DuelEngine->CancelChoice(RequestId, Error))
+		{
+			DuelChoiceRequestId = 0;
+			DuelChoicePage = 0;
+			DuelChoiceSelected.Reset();
+			DuelChoiceCardUids.Reset();
+			DuelEventPumpTimer = 0.0f;
+		}
+		else if (!Error.IsEmpty())
+		{
+			DuelShowMessage(Error);
+		}
+		return;
+	}
+	if (Action == TEXT("choiceprev"))
+	{
+		DuelChoicePage = FMath::Max(0, DuelChoicePage - 1);
+		return;
+	}
+	if (Action == TEXT("choicenext"))
+	{
+		DuelChoicePage = FMath::Min(
+			FMath::Max(0, FMath::DivideAndRoundUp(Request->Options.Num(), 8) - 1),
+			DuelChoicePage + 1);
+	}
+}
+
 void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString& Payload)
 {
 	UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("DUELHIT action=%s value=%d payload=%s"), *Action, Value, *Payload);
@@ -2009,11 +2346,11 @@ void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString&
 	}
 	if (DuelMode == EDuelUiMode::Result)
 	{
-		if (Action == TEXT("rematch"))
+		if (Action == TEXT("rematch") && !bDuelScenarioActive)
 		{
 			OpenDeckSelect(DuelOpponentId, DuelOpponentName, DuelOpponentDeckId);
 		}
-		else if (Action == TEXT("return"))
+		else if (Action == TEXT("return") || (Action == TEXT("rematch") && bDuelScenarioActive))
 		{
 			CloseDuel();
 		}
@@ -2034,73 +2371,7 @@ void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString&
 	// matching option, so equips and searches can be aimed directly.
 	if (DuelEngine->HasPendingChoice())
 	{
-		const FDuelChoiceRequest* Request = DuelEngine->GetPendingChoice();
-		if (!Request || Request->Side != EDuelOwner::Player)
-		{
-			return;
-		}
-		if (Action == TEXT("choiceoption"))
-		{
-			HandleDuelChoiceOption(Value);
-			return;
-		}
-		if (Action == TEXT("select") && Value != 0)
-		{
-			// Prefer an enabled option if the same card appears more than once
-			// (for example, different modes of the same target).  Fall back to
-			// a disabled one so its reason is shown instead of swallowing the
-			// click.
-			const FDuelChoiceOption* Option = Request->Options.FindByPredicate(
-				[Value](const FDuelChoiceOption& Candidate)
-				{
-					return Candidate.CardUid == Value && Candidate.bEnabled;
-				});
-			if (!Option)
-			{
-				Option = Request->Options.FindByPredicate(
-					[Value](const FDuelChoiceOption& Candidate) { return Candidate.CardUid == Value; });
-			}
-			if (Option)
-			{
-				HandleDuelChoiceOption(Option->Id);
-			}
-			return;
-		}
-		if (Action == TEXT("choiceconfirm"))
-		{
-			SubmitDuelChoice();
-			return;
-		}
-		if (Action == TEXT("choicecancel"))
-		{
-			FString Error;
-			const int32 RequestId = Request->RequestId;
-			if (DuelEngine->CancelChoice(RequestId, Error))
-			{
-				DuelChoiceRequestId = 0;
-				DuelChoicePage = 0;
-				DuelChoiceSelected.Reset();
-				DuelChoiceCardUids.Reset();
-				DuelEventPumpTimer = 0.0f;
-			}
-			else if (!Error.IsEmpty())
-			{
-				DuelShowMessage(Error);
-			}
-			return;
-		}
-		if (Action == TEXT("choiceprev"))
-		{
-			DuelChoicePage = FMath::Max(0, DuelChoicePage - 1);
-			return;
-		}
-		if (Action == TEXT("choicenext"))
-		{
-			DuelChoicePage = FMath::Min(
-				FMath::Max(0, FMath::DivideAndRoundUp(Request->Options.Num(), 8) - 1),
-				DuelChoicePage + 1);
-			return;
-		}
+		HandleDuelChoiceHit(Action, Value);
 		return;
 	}
 
@@ -2111,8 +2382,14 @@ void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString&
 	}
 	if (Action == TEXT("pile"))
 	{
+		const int32 PileType = Value % 10;
+		if (PileType < static_cast<int32>(EDuelPileType::Deck)
+			|| PileType > static_cast<int32>(EDuelPileType::Banished))
+		{
+			return;
+		}
 		DuelPileOwner = (Value / 10) == 0 ? EDuelOwner::Player : EDuelOwner::Opponent;
-		DuelPileType = static_cast<EDuelPileType>(Value % 10);
+		DuelPileType = static_cast<EDuelPileType>(PileType);
 		return;
 	}
 	if (Action == TEXT("select"))
@@ -2571,16 +2848,431 @@ void FDADuelUI::DrawDuelHudBar(const FDuelSide& Side, const FString& CharacterId
 	}
 }
 
+void FDADuelUI::DrawDuelFxFrame(const FLinearColor& Color, float X, float Y, float W, float H, float Thickness)
+{
+	DrawRect(Color, X, Y, W, Thickness);
+	DrawRect(Color, X, Y + H - Thickness, W, Thickness);
+	DrawRect(Color, X, Y, Thickness, H);
+	DrawRect(Color, X + W - Thickness, Y, Thickness, H);
+}
+
+void FDADuelUI::DrawDuelFxDraw(const FDuelFx& Fx, float T, float Ease, const FLinearColor& SideColor)
+{
+	const float Arc = FMath::Sin(T * PI) * (Fx.Side == EDuelOwner::Player ? -42.0f : 42.0f);
+	const float CX = FMath::Lerp(Fx.Source.X, Fx.Target.X, Ease);
+	const float CY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, Ease) + Arc;
+	const float W = FMath::Lerp(44.0f, 72.0f, Ease);
+	const float H = W * 1.45f;
+	for (int32 Ghost = 2; Ghost >= 1; --Ghost)
+	{
+		const float GhostEase = FMath::Clamp(Ease - Ghost * 0.07f, 0.0f, 1.0f);
+		const float GX = FMath::Lerp(Fx.Source.X, Fx.Target.X, GhostEase);
+		const float GY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, GhostEase) + Arc;
+		DrawDuelCardFace(Fx.CardId, Fx.bFaceDown, DX(GX) - DS(W * 0.5f),
+			DY(GY) - DS(H * 0.5f) - DS(Ghost * 5.0f), DS(W), DS(H),
+			0.16f * (1.0f - T) / Ghost);
+	}
+	DrawDuelCardFace(Fx.CardId, Fx.bFaceDown, DX(CX) - DS(W) * 0.5f, DY(CY) - DS(H) * 0.5f,
+		DS(W), DS(H), FMath::Clamp(T * 4.0f, 0.0f, 1.0f) * (1.0f - FMath::Pow(T, 8.0f)));
+	DrawRect(FLinearColor(SideColor.R, SideColor.G, SideColor.B, 0.16f * (1.0f - T)),
+		DX(CX) - DS(W) * 0.7f, DY(CY) - DS(H) * 0.7f, DS(W) * 1.4f, DS(H) * 1.4f);
+	// A small glint at the card's destination.
+	const float Glint = FMath::Clamp((T - 0.7f) / 0.3f, 0.0f, 1.0f);
+	if (Glint > 0.0f)
+	{
+		DrawLine(DX(Fx.Target.X - 20.0f), DY(Fx.Target.Y), DX(Fx.Target.X + 20.0f),
+			DY(Fx.Target.Y), FLinearColor(1.0f, 0.94f, 0.72f, 0.55f * (1.0f - Glint)), 2.0f);
+		DrawLine(DX(Fx.Target.X), DY(Fx.Target.Y - 24.0f), DX(Fx.Target.X),
+			DY(Fx.Target.Y + 24.0f), FLinearColor(1.0f, 0.94f, 0.72f, 0.55f * (1.0f - Glint)), 2.0f);
+	}
+}
+
+void FDADuelUI::DrawDuelFxSummon(const FDuelFx& Fx, float T)
+{
+	const bool bSummon = Fx.Type == EDuelVisualEventType::Summon;
+	const FLinearColor RingColor = bSummon
+		? FLinearColor(0.94f, 0.78f, 0.34f) : FLinearColor(0.38f, 0.62f, 0.88f);
+	const float Ring = 1.0f + T * 1.5f;
+	const float RingAlpha = (1.0f - T) * 0.5f;
+
+	// A soft column of light sells the card arriving on the field.
+	for (int32 I = 0; I < 4; ++I)
+	{
+		const float Spread = 42.0f + I * 18.0f;
+		const float ColumnAlpha = (1.0f - T) * (0.10f - I * 0.018f);
+		DrawRect(FLinearColor(RingColor.R, RingColor.G, RingColor.B, FMath::Max(0.0f, ColumnAlpha)),
+			DX(Fx.Target.X - Spread), DY(Fx.Target.Y - 130.0f - I * 8.0f),
+			DS(Spread * 2.0f), DS(210.0f + I * 12.0f));
+	}
+
+	DrawDuelFxFrame(FLinearColor(RingColor.R, RingColor.G, RingColor.B, RingAlpha),
+		DX(Fx.Target.X) - DS(58.0f * Ring), DY(Fx.Target.Y) - DS(78.0f * Ring),
+		DS(116.0f * Ring), DS(156.0f * Ring), FMath::Max(1.0f, DS(2.0f)));
+
+	// The card itself drops from the hand and settles into the zone.
+	const float CardT = FMath::Clamp(T / 0.62f, 0.0f, 1.0f);
+	if (CardT < 1.0f)
+	{
+		const float CardEase = FMath::InterpEaseOut(0.0f, 1.0f, CardT, 2.0f);
+		const float CX = FMath::Lerp(Fx.Source.X, Fx.Target.X, CardEase);
+		const float CY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, CardEase)
+			+ FMath::Sin(CardT * PI) * -20.0f;
+		const float CardW = FMath::Lerp(62.0f, 86.0f, CardEase);
+		const float CardH = CardW * 1.45f;
+		DrawDuelCardFace(Fx.CardId, Fx.bFaceDown || !bSummon, DX(CX) - DS(CardW) * 0.5f,
+			DY(CY) - DS(CardH) * 0.5f, DS(CardW), DS(CardH),
+			FMath::Clamp(CardT * 4.0f, 0.0f, 1.0f) * (1.0f - FMath::Pow(CardT, 5.0f)));
+	}
+
+	if (!Fx.Text.IsEmpty())
+	{
+		DrawShadowText(Fx.Text.ToUpper(), RingColor, DX(Fx.Target.X), DY(Fx.Target.Y - 108.0f),
+			GetFont(false), 0.62f * DuelScale, true);
+	}
+}
+
+void FDADuelUI::DrawDuelFxSpellTrap(const FDuelFx& Fx, float T)
+{
+	const bool bSpell = Fx.Type == EDuelVisualEventType::Spell;
+	const FLinearColor Color = bSpell
+		? FLinearColor(0.26f, 0.86f, 0.64f) : FLinearColor(0.76f, 0.48f, 0.98f);
+	const float Pulse = 1.0f + FMath::Sin(T * PI) * 0.7f;
+	const float Aura = (1.0f - T);
+
+	// Rotating rune ring at the card's destination.
+	DrawDuelFxFrame(FLinearColor(Color.R, Color.G, Color.B, 0.36f * Aura),
+		DX(Fx.Target.X) - DS(58.0f * Pulse), DY(Fx.Target.Y) - DS(80.0f * Pulse),
+		DS(116.0f * Pulse), DS(160.0f * Pulse), FMath::Max(1.0f, DS(2.0f)));
+	for (int32 Rune = 0; Rune < 8; ++Rune)
+	{
+		const float Angle = Rune * PI * 0.25f + T * 1.6f;
+		const float Inner = 68.0f;
+		const float Outer = 84.0f;
+		DrawLine(DX(Fx.Target.X + FMath::Cos(Angle) * Inner),
+			DY(Fx.Target.Y + FMath::Sin(Angle) * Inner * 1.32f),
+			DX(Fx.Target.X + FMath::Cos(Angle) * Outer),
+			DY(Fx.Target.Y + FMath::Sin(Angle) * Outer * 1.32f),
+			FLinearColor(Color.R, Color.G, Color.B, 0.42f * Aura), 2.0f);
+	}
+
+	// Casting flash at the hand.
+	const float Cast = FMath::Clamp(T / 0.22f, 0.0f, 1.0f);
+	DrawRect(FLinearColor(Color.R, Color.G, Color.B, 0.22f * (1.0f - Cast)),
+		DX(Fx.Source.X) - DS(40.0f + Cast * 28.0f), DY(Fx.Source.Y) - DS(54.0f + Cast * 38.0f),
+		DS(80.0f + Cast * 56.0f), DS(108.0f + Cast * 76.0f));
+
+	DrawLine(DX(Fx.Source.X), DY(Fx.Source.Y), DX(Fx.Target.X), DY(Fx.Target.Y),
+		FLinearColor(Color.R, Color.G, Color.B, 0.52f * Aura), 3.0f);
+	const float CardT = FMath::Clamp(T / 0.55f, 0.0f, 1.0f);
+	if (CardT < 1.0f)
+	{
+		const float CX = FMath::Lerp(Fx.Source.X, Fx.Target.X, FMath::InterpEaseOut(0.0f, 1.0f, CardT, 2.0f));
+		const float CY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, FMath::InterpEaseOut(0.0f, 1.0f, CardT, 2.0f));
+		const float Spin = FMath::Sin(CardT * PI) * 10.0f;
+		DrawDuelCardFace(Fx.CardId, false, DX(CX) - DS(36.0f), DY(CY) - DS(52.0f) - DS(Spin),
+			DS(72.0f), DS(104.0f), (1.0f - CardT * 0.5f));
+	}
+	// The card itself already carries its name; a large floating label
+	// here covered the row above the Spell & Trap Zone.
+}
+
+void FDADuelUI::DrawDuelFxAttack(const FDuelFx& Fx, float T)
+{
+	const float Charge = FMath::Clamp(T / 0.24f, 0.0f, 1.0f);
+	const float StrikeT = FMath::Clamp((T - 0.20f) / 0.40f, 0.0f, 1.0f);
+	const float ReturnT = FMath::Clamp((T - 0.66f) / 0.34f, 0.0f, 1.0f);
+	const float Travel = StrikeT < 1.0f
+		? FMath::InterpEaseOut(0.0f, 1.0f, StrikeT, 2.0f)
+		: 1.0f - FMath::InterpEaseIn(0.0f, 1.0f, ReturnT, 2.0f);
+	const float Arc = FMath::Sin(T * PI) * -14.0f;
+	const FVector2D CardPos = FVector2D(
+		FMath::Lerp(Fx.Source.X, Fx.Target.X, Travel * 0.76f),
+		FMath::Lerp(Fx.Source.Y, Fx.Target.Y, Travel * 0.76f) + Arc * Travel);
+	const float CardW = 80.0f;
+	const float CardH = 116.0f;
+
+	// Anticipation: a tightening ring at the attacker's zone.
+	if (T < 0.28f)
+	{
+		const float R = 44.0f + Charge * 26.0f;
+		const float A = (1.0f - Charge) * 0.55f;
+		DrawDuelFxFrame(FLinearColor(1.0f, 0.82f, 0.38f, A), DX(Fx.Source.X) - DS(R),
+			DY(Fx.Source.Y) - DS(R * 1.35f), DS(R * 2.0f), DS(R * 2.7f),
+			FMath::Max(1.0f, DS(2.0f)));
+	}
+
+	// Motion ghosts behind the attacking card.
+	for (int32 Ghost = 3; Ghost >= 1; --Ghost)
+	{
+		const float GhostTravel = FMath::Clamp(Travel - Ghost * 0.055f, 0.0f, 1.0f);
+		const float GhostX = FMath::Lerp(Fx.Source.X, Fx.Target.X, GhostTravel * 0.76f);
+		const float GhostY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, GhostTravel * 0.76f)
+			+ Arc * GhostTravel;
+		DrawDuelCardFace(Fx.CardId, false, DX(GhostX) - DS(CardW) * 0.5f,
+			DY(GhostY) - DS(CardH) * 0.5f, DS(CardW), DS(CardH),
+			0.10f * (1.0f - T) * (4 - Ghost) * 0.33f);
+	}
+
+	// Speed lines between the card and the target.
+	const float SpeedAlpha = FMath::Sin(T * PI) * 0.75f;
+	for (int32 LineOffset = -1; LineOffset <= 1; ++LineOffset)
+	{
+		const float Offset = LineOffset * 11.0f;
+		DrawLine(DX(CardPos.X + Offset), DY(CardPos.Y + Offset * 0.35f),
+			DX(Fx.Target.X + Offset * 0.6f), DY(Fx.Target.Y + Offset * 0.35f),
+			FLinearColor(1.0f, 0.82f, 0.40f, 0.55f * SpeedAlpha), 2.0f);
+	}
+
+	DrawDuelCardFace(Fx.CardId, false, DX(CardPos.X) - DS(CardW) * 0.5f,
+		DY(CardPos.Y) - DS(CardH) * 0.5f, DS(CardW), DS(CardH),
+		FMath::Clamp(0.35f + Travel * 0.9f, 0.0f, 1.0f));
+
+	// Impact starburst and a short white flash at contact.
+	const float Impact = FMath::Clamp((T - 0.55f) / 0.18f, 0.0f, 1.0f);
+	if (Impact > 0.0f)
+	{
+		const float R = 24.0f + Impact * 46.0f;
+		const float A = 1.0f - Impact;
+		DrawDuelFxFrame(FLinearColor(1.0f, 0.88f, 0.55f, 0.55f * A),
+			DX(Fx.Target.X) - DS(R), DY(Fx.Target.Y) - DS(R), DS(R * 2.0f), DS(R * 2.0f),
+			FMath::Max(1.0f, DS(2.0f)));
+		for (int32 Ray = 0; Ray < 8; ++Ray)
+		{
+			const float Angle = Ray * PI * 0.25f + 0.2f;
+			DrawLine(DX(Fx.Target.X + FMath::Cos(Angle) * R * 0.45f),
+				DY(Fx.Target.Y + FMath::Sin(Angle) * R * 0.45f),
+				DX(Fx.Target.X + FMath::Cos(Angle) * R * 1.35f),
+				DY(Fx.Target.Y + FMath::Sin(Angle) * R * 1.35f),
+				FLinearColor(1.0f, 0.76f, 0.34f, 0.55f * A), 2.0f);
+		}
+		DrawRect(FLinearColor(1.0f, 0.96f, 0.86f, 0.22f * A), DX(Fx.Target.X) - DS(R * 0.7f),
+			DY(Fx.Target.Y) - DS(R * 0.7f), DS(R * 1.4f), DS(R * 1.4f));
+	}
+}
+
+void FDADuelUI::DrawDuelFxDamage(const FDuelFx& Fx, float T)
+{
+	const bool bDamage = Fx.Type == EDuelVisualEventType::Damage;
+	const FLinearColor Color = bDamage ? FLinearColor(1.0f, 0.40f, 0.32f) : FLinearColor(0.50f, 0.94f, 0.60f);
+	const float Rise = T * 58.0f;
+	const FString Number = FString::Printf(TEXT("%s%d"), bDamage ? TEXT("-") : TEXT("+"), Fx.Amount);
+	const float Pop = 1.0f + (1.0f - T) * 0.55f;
+
+	// Impact/support burst behind the floating number.
+	const float Burst = FMath::Clamp(T / 0.4f, 0.0f, 1.0f);
+	const float Radius = 28.0f + Burst * 58.0f;
+	DrawDuelFxFrame(FLinearColor(Color.R, Color.G, Color.B, 0.34f * (1.0f - Burst)),
+		DX(Fx.Source.X) - DS(Radius), DY(Fx.Source.Y) - DS(Radius),
+		DS(Radius * 2.0f), DS(Radius * 2.0f), FMath::Max(1.0f, DS(2.0f)));
+	for (int32 Ray = 0; Ray < 8; ++Ray)
+	{
+		const float Angle = Ray * PI * 0.25f + (bDamage ? 0.15f : 0.35f);
+		DrawLine(DX(Fx.Source.X + FMath::Cos(Angle) * Radius * 0.55f),
+			DY(Fx.Source.Y + FMath::Sin(Angle) * Radius * 0.55f),
+			DX(Fx.Source.X + FMath::Cos(Angle) * Radius * 1.2f),
+			DY(Fx.Source.Y + FMath::Sin(Angle) * Radius * 1.2f),
+			FLinearColor(Color.R, Color.G, Color.B, 0.42f * (1.0f - Burst)), 2.0f);
+	}
+
+	if (bDamage)
+	{
+		DrawRect(FLinearColor(1.0f, 0.20f, 0.14f, 0.10f * (1.0f - T)), 0.0f, 0.0f,
+			Canvas->ClipX, Canvas->ClipY);
+	}
+	else
+	{
+		for (int32 Spark = 0; Spark < 6; ++Spark)
+		{
+			const float Angle = Spark * PI / 3.0f + Fx.Elapsed * 1.2f;
+			const float SparkR = 26.0f + Spark * 13.0f;
+			const float SparkY = FMath::Sin(T * PI + Spark) * 10.0f - T * 40.0f;
+			DrawRect(FLinearColor(0.55f, 1.0f, 0.62f, 0.6f * (1.0f - T)),
+				DX(Fx.Source.X + FMath::Cos(Angle) * SparkR),
+				DY(Fx.Source.Y + SparkY + FMath::Sin(Angle) * 10.0f),
+				DS(5.0f), DS(9.0f));
+		}
+	}
+
+	DrawShadowText(Number, Color, DX(Fx.Source.X), DY(Fx.Source.Y + 18.0f - Rise),
+		GetFont(true), (1.2f * Pop) * DuelScale, true);
+	if (bDamage && Fx.Amount >= 2000)
+	{
+		DrawShadowText(TEXT("CRITICAL"), FLinearColor(1.0f, 0.78f, 0.38f), DX(Fx.Source.X),
+			DY(Fx.Source.Y - 14.0f - Rise * 0.35f), GetFont(false), 0.62f * DuelScale, true);
+	}
+	if (!Fx.Text.IsEmpty())
+	{
+		DrawShadowText(Fx.Text, Color, DX(Fx.Source.X), DY(Fx.Source.Y + 42.0f - Rise * 0.65f),
+			GetFont(false), 0.5f * DuelScale, true);
+	}
+}
+
+void FDADuelUI::DrawDuelFxDestroy(const FDuelFx& Fx, float T, float Ease)
+{
+	const float GhostAlpha = (1.0f - T) * 0.9f;
+	const float W = FMath::Lerp(88.0f, 22.0f, Ease);
+	const float H = W * 1.45f;
+	DrawDuelCardFace(Fx.CardId, false, DX(Fx.Source.X) - DS(W) * 0.5f,
+		DY(Fx.Source.Y) - DS(H) * 0.5f, DS(W), DS(H), GhostAlpha);
+
+	// Implosion ring, then card shards flying outward.
+	const float Ring = 34.0f + T * 74.0f;
+	DrawDuelFxFrame(FLinearColor(1.0f, 0.72f, 0.32f, 0.45f * (1.0f - T)),
+		DX(Fx.Source.X) - DS(Ring), DY(Fx.Source.Y) - DS(Ring * 1.35f),
+		DS(Ring * 2.0f), DS(Ring * 2.7f), FMath::Max(1.0f, DS(2.0f)));
+	for (int32 Shard = 0; Shard < 10; ++Shard)
+	{
+		const float Angle = Shard * PI * 0.2f + 0.3f;
+		const float Distance = 16.0f + T * (48.0f + (Shard % 3) * 18.0f);
+		const float SX = Fx.Source.X + FMath::Cos(Angle) * Distance;
+		const float SY = Fx.Source.Y + FMath::Sin(Angle) * Distance * 1.25f - T * 16.0f;
+		const float Size = 7.0f - T * 4.0f;
+		DrawRect(FLinearColor(1.0f, 0.78f, 0.42f, 0.55f * (1.0f - T)),
+			DX(SX), DY(SY), DS(Size), DS(Size * 1.8f));
+	}
+	for (int32 Slash = 0; Slash < 4; ++Slash)
+	{
+		const float Offset = (Slash - 1.5f) * 22.0f;
+		DrawLine(DX(Fx.Source.X - 42.0f + Offset), DY(Fx.Source.Y - 60.0f),
+			DX(Fx.Source.X + 42.0f + Offset), DY(Fx.Source.Y + 60.0f),
+			FLinearColor(1.0f, 0.80f, 0.44f, 0.55f * (1.0f - T)), 2.0f);
+	}
+}
+
+void FDADuelUI::DrawDuelFxTransfer(const FDuelFx& Fx, float T, float Ease, const FLinearColor& SideColor)
+{
+	FLinearColor Color = SideColor;
+	if (Fx.Type == EDuelVisualEventType::Discard) Color = FLinearColor(0.88f, 0.48f, 0.38f);
+	else if (Fx.Type == EDuelVisualEventType::Banish) Color = FLinearColor(0.72f, 0.46f, 0.96f);
+	else if (Fx.Type == EDuelVisualEventType::Search) Color = FLinearColor(0.42f, 0.88f, 0.78f);
+	else if (Fx.Type == EDuelVisualEventType::Mill) Color = FLinearColor(0.62f, 0.58f, 0.48f);
+	else if (Fx.Type == EDuelVisualEventType::Return) Color = FLinearColor(0.46f, 0.82f, 0.52f);
+
+	const float Arc = FMath::Sin(T * PI) * (Fx.Type == EDuelVisualEventType::Search ? -26.0f : 26.0f);
+	const float CX = FMath::Lerp(Fx.Source.X, Fx.Target.X, Ease);
+	const float CY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, Ease) + Arc;
+	const float W = FMath::Lerp(52.0f, 40.0f, Ease);
+	const float H = W * 1.45f;
+	DrawDuelCardFace(Fx.CardId, Fx.bFaceDown, DX(CX) - DS(W) * 0.5f, DY(CY) - DS(H) * 0.5f,
+		DS(W), DS(H), FMath::Clamp(T * 5.0f, 0.0f, 1.0f) * (1.0f - FMath::Pow(T, 6.0f)));
+	DrawRect(FLinearColor(Color.R, Color.G, Color.B, 0.14f * (1.0f - T)),
+		DX(CX) - DS(W) * 0.75f, DY(CY) - DS(H) * 0.75f, DS(W) * 1.5f, DS(H) * 1.5f);
+	if (!Fx.Text.IsEmpty())
+	{
+		DrawShadowText(Fx.Text.ToUpper(), Color, DX(CX), DY(CY - 78.0f),
+			GetFont(false), 0.52f * DuelScale, true);
+	}
+}
+
+void FDADuelUI::DrawDuelFxPosition(const FDuelFx& Fx, float T)
+{
+	const float Ring = 1.0f + T * 1.2f;
+	const float RingAlpha = (1.0f - T) * 0.7f;
+	const FLinearColor Color(0.54f, 0.78f, 0.98f, RingAlpha);
+	DrawDuelFxFrame(Color, DX(Fx.Target.X) - DS(50.0f * Ring), DY(Fx.Target.Y) - DS(68.0f * Ring),
+		DS(100.0f * Ring), DS(136.0f * Ring), FMath::Max(1.0f, DS(2.0f)));
+	DrawRect(FLinearColor(0.08f, 0.16f, 0.24f, 0.06f * (1.0f - T)),
+		DX(Fx.Target.X) - DS(45.0f * Ring), DY(Fx.Target.Y) - DS(63.0f * Ring),
+		DS(90.0f * Ring), DS(126.0f * Ring));
+	if (!Fx.Text.IsEmpty())
+	{
+		DrawShadowText(Fx.Text.ToUpper(), Color, DX(Fx.Target.X), DY(Fx.Target.Y - 84.0f),
+			GetFont(false), 0.55f * DuelScale, true);
+	}
+}
+
+void FDADuelUI::DrawDuelFxFusion(const FDuelFx& Fx, float T)
+{
+	const bool bFusion = Fx.Type == EDuelVisualEventType::Fusion;
+	const FLinearColor Color = bFusion ? FLinearColor(0.94f, 0.72f, 0.28f) : FLinearColor(0.94f, 0.48f, 0.28f);
+	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.30f * (1.0f - T)), 0.0f, 0.0f,
+		Canvas->ClipX, Canvas->ClipY);
+	const float Inflate = FMath::Clamp(T / 0.28f, 0.0f, 1.0f);
+	const float CardW = FMath::Lerp(40.0f, 132.0f, FMath::InterpEaseOut(0.0f, 1.0f, Inflate, 2.0f));
+	const float CardH = CardW * 1.45f;
+	const float Spin = T * 260.0f;
+	for (int32 I = 0; I < 2; ++I)
+	{
+		const float R = 80.0f + I * 28.0f + FMath::Sin(T * PI * 2.0f + I) * 8.0f;
+		DrawDuelFxFrame(FLinearColor(Color.R, Color.G, Color.B, 0.22f * (1.0f - T)),
+			DX(Fx.Target.X) - DS(R), DY(Fx.Target.Y) - DS(R), DS(R * 2.0f), DS(R * 2.0f),
+			FMath::Max(1.0f, DS(2.0f)));
+	}
+	DrawRect(FLinearColor(Color.R, Color.G, Color.B, 0.06f * (1.0f - T)),
+		DX(Fx.Target.X) - DS(86.0f), DY(Fx.Target.Y) - DS(86.0f), DS(172.0f), DS(172.0f));
+	DrawDuelCardFace(Fx.CardId, false, DX(Fx.Target.X) - DS(CardW) * 0.5f,
+		DY(Fx.Target.Y) - DS(CardH) * 0.5f, DS(CardW), DS(CardH), Inflate);
+	const float RayLength = 170.0f + 12.0f * FMath::Sin(Spin);
+	for (int32 Ray = 0; Ray < 12; ++Ray)
+	{
+		const float Angle = Spin * PI / 180.0f + Ray * PI / 6.0f;
+		const float Inner = 92.0f;
+		DrawLine(DX(Fx.Target.X + FMath::Cos(Angle) * Inner),
+			DY(Fx.Target.Y + FMath::Sin(Angle) * Inner),
+			DX(Fx.Target.X + FMath::Cos(Angle) * RayLength),
+			DY(Fx.Target.Y + FMath::Sin(Angle) * RayLength),
+			FLinearColor(Color.R, Color.G, Color.B, 0.26f * (1.0f - T)), 2.0f);
+	}
+	const float Seal = 118.0f;
+	for (int32 Tick = 0; Tick < 16; ++Tick)
+	{
+		const float Angle = -Spin * PI / 220.0f + Tick * PI / 8.0f;
+		DrawLine(DX(Fx.Target.X + FMath::Cos(Angle) * Seal),
+			DY(Fx.Target.Y + FMath::Sin(Angle) * Seal * 1.16f),
+			DX(Fx.Target.X + FMath::Cos(Angle) * (Seal + 14.0f)),
+			DY(Fx.Target.Y + FMath::Sin(Angle) * (Seal + 14.0f) * 1.16f),
+			FLinearColor(Color.R, Color.G, Color.B, 0.36f * (1.0f - T)), 2.0f);
+	}
+	if (!Fx.Text.IsEmpty())
+	{
+		DrawShadowText(Fx.Text.ToUpper(), Paper, DX(Fx.Target.X), DY(Fx.Target.Y + 118.0f),
+			GetFont(false), 0.52f * DuelScale, true);
+	}
+}
+
+void FDADuelUI::DrawDuelFxCost(const FDuelFx& Fx, float T, float Alpha)
+{
+	const FLinearColor Color(0.98f, 0.78f, 0.34f, Alpha);
+	const float Rise = T * 48.0f;
+	DrawShadowText(FString::Printf(TEXT("-%d LP"), Fx.Amount), Color,
+		DX(Fx.Source.X), DY(Fx.Source.Y + 12.0f - Rise), GetFont(false),
+		(0.88f + (1.0f - T) * 0.25f) * DuelScale, true);
+	if (!Fx.Text.IsEmpty())
+	{
+		DrawShadowText(Fx.Text.ToUpper(), Color, DX(Fx.Source.X), DY(Fx.Source.Y + 36.0f - Rise * 0.6f),
+			GetFont(false), 0.44f * DuelScale, true);
+	}
+}
+
+void FDADuelUI::DrawDuelFxCounter(const FDuelFx& Fx, float T)
+{
+	const float Ring = 1.0f + T * 0.9f;
+	const FLinearColor Color(0.98f, 0.80f, 0.30f, (1.0f - T) * 0.85f);
+	DrawDuelFxFrame(Color, DX(Fx.Target.X) - DS(42.0f * Ring), DY(Fx.Target.Y) - DS(58.0f * Ring),
+		DS(84.0f * Ring), DS(116.0f * Ring), FMath::Max(1.0f, DS(2.0f)));
+	for (int32 I = 0; I < 6; ++I)
+	{
+		const float Angle = I * PI / 3.0f + T * 2.0f;
+		DrawRect(Color, DX(Fx.Target.X + FMath::Cos(Angle) * 54.0f * Ring),
+			DY(Fx.Target.Y + FMath::Sin(Angle) * 70.0f * Ring), DS(5.0f), DS(5.0f));
+	}
+	DrawShadowText(FString::Printf(TEXT("%s +1"), *Fx.Text.ToUpper()), Color,
+		DX(Fx.Target.X), DY(Fx.Target.Y - 88.0f), GetFont(false), 0.52f * DuelScale, true);
+	if (Fx.Amount > 1)
+	{
+		DrawShadowText(FString::Printf(TEXT("x%d"), Fx.Amount), Color,
+			DX(Fx.Target.X), DY(Fx.Target.Y - 66.0f), GetFont(false), 0.46f * DuelScale, true);
+	}
+}
+
+void FDADuelUI::DrawDuelFxEffect(const FDuelFx& Fx, float T, float Alpha)
+{
+	DrawShadowText(Fx.Text.ToUpper(), FLinearColor(0.80f, 0.90f, 1.0f, Alpha),
+		DX(Fx.Target.X), DY(Fx.Target.Y - 20.0f * T), GetFont(false), 0.58f * DuelScale, true);
+}
+
 void FDADuelUI::DrawDuelFx()
 {
-	auto DrawFrame = [this](const FLinearColor& Color, float X, float Y, float W, float H, float Thickness)
-	{
-		DrawRect(Color, X, Y, W, Thickness);
-		DrawRect(Color, X, Y + H - Thickness, W, Thickness);
-		DrawRect(Color, X, Y, Thickness, H);
-		DrawRect(Color, X + W - Thickness, Y, Thickness, H);
-	};
-
 	for (const FDuelFx& Fx : DuelFx)
 	{
 		const float Local = Fx.Elapsed - Fx.Delay;
@@ -2596,280 +3288,27 @@ void FDADuelUI::DrawDuelFx()
 
 		if (Fx.Type == EDuelVisualEventType::Draw)
 		{
-			const float Arc = FMath::Sin(T * PI) * (Fx.Side == EDuelOwner::Player ? -42.0f : 42.0f);
-			const float CX = FMath::Lerp(Fx.Source.X, Fx.Target.X, Ease);
-			const float CY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, Ease) + Arc;
-			const float W = FMath::Lerp(44.0f, 72.0f, Ease);
-			const float H = W * 1.45f;
-			for (int32 Ghost = 2; Ghost >= 1; --Ghost)
-			{
-				const float GhostEase = FMath::Clamp(Ease - Ghost * 0.07f, 0.0f, 1.0f);
-				const float GX = FMath::Lerp(Fx.Source.X, Fx.Target.X, GhostEase);
-				const float GY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, GhostEase) + Arc;
-				DrawDuelCardFace(Fx.CardId, Fx.bFaceDown, DX(GX) - DS(W * 0.5f),
-					DY(GY) - DS(H * 0.5f) - DS(Ghost * 5.0f), DS(W), DS(H),
-					0.16f * (1.0f - T) / Ghost);
-			}
-			DrawDuelCardFace(Fx.CardId, Fx.bFaceDown, DX(CX) - DS(W) * 0.5f, DY(CY) - DS(H) * 0.5f,
-				DS(W), DS(H), FMath::Clamp(T * 4.0f, 0.0f, 1.0f) * (1.0f - FMath::Pow(T, 8.0f)));
-			DrawRect(FLinearColor(SideColor.R, SideColor.G, SideColor.B, 0.16f * (1.0f - T)),
-				DX(CX) - DS(W) * 0.7f, DY(CY) - DS(H) * 0.7f, DS(W) * 1.4f, DS(H) * 1.4f);
-			// A small glint at the card's destination.
-			const float Glint = FMath::Clamp((T - 0.7f) / 0.3f, 0.0f, 1.0f);
-			if (Glint > 0.0f)
-			{
-				DrawLine(DX(Fx.Target.X - 20.0f), DY(Fx.Target.Y), DX(Fx.Target.X + 20.0f),
-					DY(Fx.Target.Y), FLinearColor(1.0f, 0.94f, 0.72f, 0.55f * (1.0f - Glint)), 2.0f);
-				DrawLine(DX(Fx.Target.X), DY(Fx.Target.Y - 24.0f), DX(Fx.Target.X),
-					DY(Fx.Target.Y + 24.0f), FLinearColor(1.0f, 0.94f, 0.72f, 0.55f * (1.0f - Glint)), 2.0f);
-			}
+			DrawDuelFxDraw(Fx, T, Ease, SideColor);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Summon || Fx.Type == EDuelVisualEventType::SetCard)
 		{
-			const bool bSummon = Fx.Type == EDuelVisualEventType::Summon;
-			const FLinearColor RingColor = bSummon
-				? FLinearColor(0.94f, 0.78f, 0.34f) : FLinearColor(0.38f, 0.62f, 0.88f);
-			const float Ring = 1.0f + T * 1.5f;
-			const float RingAlpha = (1.0f - T) * 0.5f;
-
-			// A soft column of light sells the card arriving on the field.
-			for (int32 I = 0; I < 4; ++I)
-			{
-				const float Spread = 42.0f + I * 18.0f;
-				const float ColumnAlpha = (1.0f - T) * (0.10f - I * 0.018f);
-				DrawRect(FLinearColor(RingColor.R, RingColor.G, RingColor.B, FMath::Max(0.0f, ColumnAlpha)),
-					DX(Fx.Target.X - Spread), DY(Fx.Target.Y - 130.0f - I * 8.0f),
-					DS(Spread * 2.0f), DS(210.0f + I * 12.0f));
-			}
-
-			DrawFrame(FLinearColor(RingColor.R, RingColor.G, RingColor.B, RingAlpha),
-				DX(Fx.Target.X) - DS(58.0f * Ring), DY(Fx.Target.Y) - DS(78.0f * Ring),
-				DS(116.0f * Ring), DS(156.0f * Ring), FMath::Max(1.0f, DS(2.0f)));
-
-			// The card itself drops from the hand and settles into the zone.
-			const float CardT = FMath::Clamp(T / 0.62f, 0.0f, 1.0f);
-			if (CardT < 1.0f)
-			{
-				const float CardEase = FMath::InterpEaseOut(0.0f, 1.0f, CardT, 2.0f);
-				const float CX = FMath::Lerp(Fx.Source.X, Fx.Target.X, CardEase);
-				const float CY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, CardEase)
-					+ FMath::Sin(CardT * PI) * -20.0f;
-				const float CardW = FMath::Lerp(62.0f, 86.0f, CardEase);
-				const float CardH = CardW * 1.45f;
-				DrawDuelCardFace(Fx.CardId, Fx.bFaceDown || !bSummon, DX(CX) - DS(CardW) * 0.5f,
-					DY(CY) - DS(CardH) * 0.5f, DS(CardW), DS(CardH),
-					FMath::Clamp(CardT * 4.0f, 0.0f, 1.0f) * (1.0f - FMath::Pow(CardT, 5.0f)));
-			}
-
-			if (!Fx.Text.IsEmpty())
-			{
-				DrawShadowText(Fx.Text.ToUpper(), RingColor, DX(Fx.Target.X), DY(Fx.Target.Y - 108.0f),
-					GetFont(false), 0.62f * DuelScale, true);
-			}
+			DrawDuelFxSummon(Fx, T);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Spell || Fx.Type == EDuelVisualEventType::Trap)
 		{
-			const bool bSpell = Fx.Type == EDuelVisualEventType::Spell;
-			const FLinearColor Color = bSpell
-				? FLinearColor(0.26f, 0.86f, 0.64f) : FLinearColor(0.76f, 0.48f, 0.98f);
-			const float Pulse = 1.0f + FMath::Sin(T * PI) * 0.7f;
-			const float Aura = (1.0f - T);
-
-			// Rotating rune ring at the card's destination.
-			DrawFrame(FLinearColor(Color.R, Color.G, Color.B, 0.36f * Aura),
-				DX(Fx.Target.X) - DS(58.0f * Pulse), DY(Fx.Target.Y) - DS(80.0f * Pulse),
-				DS(116.0f * Pulse), DS(160.0f * Pulse), FMath::Max(1.0f, DS(2.0f)));
-			for (int32 Rune = 0; Rune < 8; ++Rune)
-			{
-				const float Angle = Rune * PI * 0.25f + T * 1.6f;
-				const float Inner = 68.0f;
-				const float Outer = 84.0f;
-				DrawLine(DX(Fx.Target.X + FMath::Cos(Angle) * Inner),
-					DY(Fx.Target.Y + FMath::Sin(Angle) * Inner * 1.32f),
-					DX(Fx.Target.X + FMath::Cos(Angle) * Outer),
-					DY(Fx.Target.Y + FMath::Sin(Angle) * Outer * 1.32f),
-					FLinearColor(Color.R, Color.G, Color.B, 0.42f * Aura), 2.0f);
-			}
-
-			// Casting flash at the hand.
-			const float Cast = FMath::Clamp(T / 0.22f, 0.0f, 1.0f);
-			DrawRect(FLinearColor(Color.R, Color.G, Color.B, 0.22f * (1.0f - Cast)),
-				DX(Fx.Source.X) - DS(40.0f + Cast * 28.0f), DY(Fx.Source.Y) - DS(54.0f + Cast * 38.0f),
-				DS(80.0f + Cast * 56.0f), DS(108.0f + Cast * 76.0f));
-
-			DrawLine(DX(Fx.Source.X), DY(Fx.Source.Y), DX(Fx.Target.X), DY(Fx.Target.Y),
-				FLinearColor(Color.R, Color.G, Color.B, 0.52f * Aura), 3.0f);
-			const float CardT = FMath::Clamp(T / 0.55f, 0.0f, 1.0f);
-			if (CardT < 1.0f)
-			{
-				const float CX = FMath::Lerp(Fx.Source.X, Fx.Target.X, FMath::InterpEaseOut(0.0f, 1.0f, CardT, 2.0f));
-				const float CY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, FMath::InterpEaseOut(0.0f, 1.0f, CardT, 2.0f));
-				const float Spin = FMath::Sin(CardT * PI) * 10.0f;
-				DrawDuelCardFace(Fx.CardId, false, DX(CX) - DS(36.0f), DY(CY) - DS(52.0f) - DS(Spin),
-					DS(72.0f), DS(104.0f), (1.0f - CardT * 0.5f));
-			}
-			// The card itself already carries its name; a large floating label
-			// here covered the row above the Spell & Trap Zone.
+			DrawDuelFxSpellTrap(Fx, T);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Attack)
 		{
-			const float Charge = FMath::Clamp(T / 0.24f, 0.0f, 1.0f);
-			const float StrikeT = FMath::Clamp((T - 0.20f) / 0.40f, 0.0f, 1.0f);
-			const float ReturnT = FMath::Clamp((T - 0.66f) / 0.34f, 0.0f, 1.0f);
-			const float Travel = StrikeT < 1.0f
-				? FMath::InterpEaseOut(0.0f, 1.0f, StrikeT, 2.0f)
-				: 1.0f - FMath::InterpEaseIn(0.0f, 1.0f, ReturnT, 2.0f);
-			const float Arc = FMath::Sin(T * PI) * -14.0f;
-			const FVector2D CardPos = FVector2D(
-				FMath::Lerp(Fx.Source.X, Fx.Target.X, Travel * 0.76f),
-				FMath::Lerp(Fx.Source.Y, Fx.Target.Y, Travel * 0.76f) + Arc * Travel);
-			const float CardW = 80.0f;
-			const float CardH = 116.0f;
-
-			// Anticipation: a tightening ring at the attacker's zone.
-			if (T < 0.28f)
-			{
-				const float R = 44.0f + Charge * 26.0f;
-				const float A = (1.0f - Charge) * 0.55f;
-				DrawFrame(FLinearColor(1.0f, 0.82f, 0.38f, A), DX(Fx.Source.X) - DS(R),
-					DY(Fx.Source.Y) - DS(R * 1.35f), DS(R * 2.0f), DS(R * 2.7f),
-					FMath::Max(1.0f, DS(2.0f)));
-			}
-
-			// Motion ghosts behind the attacking card.
-			for (int32 Ghost = 3; Ghost >= 1; --Ghost)
-			{
-				const float GhostTravel = FMath::Clamp(Travel - Ghost * 0.055f, 0.0f, 1.0f);
-				const float GhostX = FMath::Lerp(Fx.Source.X, Fx.Target.X, GhostTravel * 0.76f);
-				const float GhostY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, GhostTravel * 0.76f)
-					+ Arc * GhostTravel;
-				DrawDuelCardFace(Fx.CardId, false, DX(GhostX) - DS(CardW) * 0.5f,
-					DY(GhostY) - DS(CardH) * 0.5f, DS(CardW), DS(CardH),
-					0.10f * (1.0f - T) * (4 - Ghost) * 0.33f);
-			}
-
-			// Speed lines between the card and the target.
-			const float SpeedAlpha = FMath::Sin(T * PI) * 0.75f;
-			for (int32 LineOffset = -1; LineOffset <= 1; ++LineOffset)
-			{
-				const float Offset = LineOffset * 11.0f;
-				DrawLine(DX(CardPos.X + Offset), DY(CardPos.Y + Offset * 0.35f),
-					DX(Fx.Target.X + Offset * 0.6f), DY(Fx.Target.Y + Offset * 0.35f),
-					FLinearColor(1.0f, 0.82f, 0.40f, 0.55f * SpeedAlpha), 2.0f);
-			}
-
-			DrawDuelCardFace(Fx.CardId, false, DX(CardPos.X) - DS(CardW) * 0.5f,
-				DY(CardPos.Y) - DS(CardH) * 0.5f, DS(CardW), DS(CardH),
-				FMath::Clamp(0.35f + Travel * 0.9f, 0.0f, 1.0f));
-
-			// Impact starburst and a short white flash at contact.
-			const float Impact = FMath::Clamp((T - 0.55f) / 0.18f, 0.0f, 1.0f);
-			if (Impact > 0.0f)
-			{
-				const float R = 24.0f + Impact * 46.0f;
-				const float A = 1.0f - Impact;
-				DrawFrame(FLinearColor(1.0f, 0.88f, 0.55f, 0.55f * A),
-					DX(Fx.Target.X) - DS(R), DY(Fx.Target.Y) - DS(R), DS(R * 2.0f), DS(R * 2.0f),
-					FMath::Max(1.0f, DS(2.0f)));
-				for (int32 Ray = 0; Ray < 8; ++Ray)
-				{
-					const float Angle = Ray * PI * 0.25f + 0.2f;
-					DrawLine(DX(Fx.Target.X + FMath::Cos(Angle) * R * 0.45f),
-						DY(Fx.Target.Y + FMath::Sin(Angle) * R * 0.45f),
-						DX(Fx.Target.X + FMath::Cos(Angle) * R * 1.35f),
-						DY(Fx.Target.Y + FMath::Sin(Angle) * R * 1.35f),
-						FLinearColor(1.0f, 0.76f, 0.34f, 0.55f * A), 2.0f);
-				}
-				DrawRect(FLinearColor(1.0f, 0.96f, 0.86f, 0.22f * A), DX(Fx.Target.X) - DS(R * 0.7f),
-					DY(Fx.Target.Y) - DS(R * 0.7f), DS(R * 1.4f), DS(R * 1.4f));
-			}
+			DrawDuelFxAttack(Fx, T);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Damage || Fx.Type == EDuelVisualEventType::Heal)
 		{
-			const bool bDamage = Fx.Type == EDuelVisualEventType::Damage;
-			const FLinearColor Color = bDamage ? FLinearColor(1.0f, 0.40f, 0.32f) : FLinearColor(0.50f, 0.94f, 0.60f);
-			const float Rise = T * 58.0f;
-			const FString Number = FString::Printf(TEXT("%s%d"), bDamage ? TEXT("-") : TEXT("+"), Fx.Amount);
-			const float Pop = 1.0f + (1.0f - T) * 0.55f;
-
-			// Impact/support burst behind the floating number.
-			const float Burst = FMath::Clamp(T / 0.4f, 0.0f, 1.0f);
-			const float Radius = 28.0f + Burst * 58.0f;
-			DrawFrame(FLinearColor(Color.R, Color.G, Color.B, 0.34f * (1.0f - Burst)),
-				DX(Fx.Source.X) - DS(Radius), DY(Fx.Source.Y) - DS(Radius),
-				DS(Radius * 2.0f), DS(Radius * 2.0f), FMath::Max(1.0f, DS(2.0f)));
-			for (int32 Ray = 0; Ray < 8; ++Ray)
-			{
-				const float Angle = Ray * PI * 0.25f + (bDamage ? 0.15f : 0.35f);
-				DrawLine(DX(Fx.Source.X + FMath::Cos(Angle) * Radius * 0.55f),
-					DY(Fx.Source.Y + FMath::Sin(Angle) * Radius * 0.55f),
-					DX(Fx.Source.X + FMath::Cos(Angle) * Radius * 1.2f),
-					DY(Fx.Source.Y + FMath::Sin(Angle) * Radius * 1.2f),
-					FLinearColor(Color.R, Color.G, Color.B, 0.42f * (1.0f - Burst)), 2.0f);
-			}
-
-			if (bDamage)
-			{
-				DrawRect(FLinearColor(1.0f, 0.20f, 0.14f, 0.10f * (1.0f - T)), 0.0f, 0.0f,
-					Canvas->ClipX, Canvas->ClipY);
-			}
-			else
-			{
-				for (int32 Spark = 0; Spark < 6; ++Spark)
-				{
-					const float Angle = Spark * PI / 3.0f + Fx.Elapsed * 1.2f;
-					const float SparkR = 26.0f + Spark * 13.0f;
-					const float SparkY = FMath::Sin(T * PI + Spark) * 10.0f - T * 40.0f;
-					DrawRect(FLinearColor(0.55f, 1.0f, 0.62f, 0.6f * (1.0f - T)),
-						DX(Fx.Source.X + FMath::Cos(Angle) * SparkR),
-						DY(Fx.Source.Y + SparkY + FMath::Sin(Angle) * 10.0f),
-						DS(5.0f), DS(9.0f));
-				}
-			}
-
-			DrawShadowText(Number, Color, DX(Fx.Source.X), DY(Fx.Source.Y + 18.0f - Rise),
-				GetFont(true), (1.2f * Pop) * DuelScale, true);
-			if (bDamage && Fx.Amount >= 2000)
-			{
-				DrawShadowText(TEXT("CRITICAL"), FLinearColor(1.0f, 0.78f, 0.38f), DX(Fx.Source.X),
-					DY(Fx.Source.Y - 14.0f - Rise * 0.35f), GetFont(false), 0.62f * DuelScale, true);
-			}
-			if (!Fx.Text.IsEmpty())
-			{
-				DrawShadowText(Fx.Text, Color, DX(Fx.Source.X), DY(Fx.Source.Y + 42.0f - Rise * 0.65f),
-					GetFont(false), 0.5f * DuelScale, true);
-			}
+			DrawDuelFxDamage(Fx, T);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Destroy)
 		{
-			const float GhostAlpha = (1.0f - T) * 0.9f;
-			const float W = FMath::Lerp(88.0f, 22.0f, Ease);
-			const float H = W * 1.45f;
-			DrawDuelCardFace(Fx.CardId, false, DX(Fx.Source.X) - DS(W) * 0.5f,
-				DY(Fx.Source.Y) - DS(H) * 0.5f, DS(W), DS(H), GhostAlpha);
-
-			// Implosion ring, then card shards flying outward.
-			const float Ring = 34.0f + T * 74.0f;
-			DrawFrame(FLinearColor(1.0f, 0.72f, 0.32f, 0.45f * (1.0f - T)),
-				DX(Fx.Source.X) - DS(Ring), DY(Fx.Source.Y) - DS(Ring * 1.35f),
-				DS(Ring * 2.0f), DS(Ring * 2.7f), FMath::Max(1.0f, DS(2.0f)));
-			for (int32 Shard = 0; Shard < 10; ++Shard)
-			{
-				const float Angle = Shard * PI * 0.2f + 0.3f;
-				const float Distance = 16.0f + T * (48.0f + (Shard % 3) * 18.0f);
-				const float SX = Fx.Source.X + FMath::Cos(Angle) * Distance;
-				const float SY = Fx.Source.Y + FMath::Sin(Angle) * Distance * 1.25f - T * 16.0f;
-				const float Size = 7.0f - T * 4.0f;
-				DrawRect(FLinearColor(1.0f, 0.78f, 0.42f, 0.55f * (1.0f - T)),
-					DX(SX), DY(SY), DS(Size), DS(Size * 1.8f));
-			}
-			for (int32 Slash = 0; Slash < 4; ++Slash)
-			{
-				const float Offset = (Slash - 1.5f) * 22.0f;
-				DrawLine(DX(Fx.Source.X - 42.0f + Offset), DY(Fx.Source.Y - 60.0f),
-					DX(Fx.Source.X + 42.0f + Offset), DY(Fx.Source.Y + 60.0f),
-					FLinearColor(1.0f, 0.80f, 0.44f, 0.55f * (1.0f - T)), 2.0f);
-			}
+			DrawDuelFxDestroy(Fx, T, Ease);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Discard ||
 			Fx.Type == EDuelVisualEventType::Banish ||
@@ -2877,132 +3316,31 @@ void FDADuelUI::DrawDuelFx()
 			Fx.Type == EDuelVisualEventType::Mill ||
 			Fx.Type == EDuelVisualEventType::Return)
 		{
-			FLinearColor Color = SideColor;
-			if (Fx.Type == EDuelVisualEventType::Discard) Color = FLinearColor(0.88f, 0.48f, 0.38f);
-			else if (Fx.Type == EDuelVisualEventType::Banish) Color = FLinearColor(0.72f, 0.46f, 0.96f);
-			else if (Fx.Type == EDuelVisualEventType::Search) Color = FLinearColor(0.42f, 0.88f, 0.78f);
-			else if (Fx.Type == EDuelVisualEventType::Mill) Color = FLinearColor(0.62f, 0.58f, 0.48f);
-			else if (Fx.Type == EDuelVisualEventType::Return) Color = FLinearColor(0.46f, 0.82f, 0.52f);
-
-			const float Arc = FMath::Sin(T * PI) * (Fx.Type == EDuelVisualEventType::Search ? -26.0f : 26.0f);
-			const float CX = FMath::Lerp(Fx.Source.X, Fx.Target.X, Ease);
-			const float CY = FMath::Lerp(Fx.Source.Y, Fx.Target.Y, Ease) + Arc;
-			const float W = FMath::Lerp(52.0f, 40.0f, Ease);
-			const float H = W * 1.45f;
-			DrawDuelCardFace(Fx.CardId, Fx.bFaceDown, DX(CX) - DS(W) * 0.5f, DY(CY) - DS(H) * 0.5f,
-				DS(W), DS(H), FMath::Clamp(T * 5.0f, 0.0f, 1.0f) * (1.0f - FMath::Pow(T, 6.0f)));
-			DrawRect(FLinearColor(Color.R, Color.G, Color.B, 0.14f * (1.0f - T)),
-				DX(CX) - DS(W) * 0.75f, DY(CY) - DS(H) * 0.75f, DS(W) * 1.5f, DS(H) * 1.5f);
-			if (!Fx.Text.IsEmpty())
-			{
-				DrawShadowText(Fx.Text.ToUpper(), Color, DX(CX), DY(CY - 78.0f),
-					GetFont(false), 0.52f * DuelScale, true);
-			}
+			DrawDuelFxTransfer(Fx, T, Ease, SideColor);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Position)
 		{
-			const float Ring = 1.0f + T * 1.2f;
-			const float RingAlpha = (1.0f - T) * 0.7f;
-			const FLinearColor Color(0.54f, 0.78f, 0.98f, RingAlpha);
-			DrawFrame(Color, DX(Fx.Target.X) - DS(50.0f * Ring), DY(Fx.Target.Y) - DS(68.0f * Ring),
-				DS(100.0f * Ring), DS(136.0f * Ring), FMath::Max(1.0f, DS(2.0f)));
-			DrawRect(FLinearColor(0.08f, 0.16f, 0.24f, 0.06f * (1.0f - T)),
-				DX(Fx.Target.X) - DS(45.0f * Ring), DY(Fx.Target.Y) - DS(63.0f * Ring),
-				DS(90.0f * Ring), DS(126.0f * Ring));
-			if (!Fx.Text.IsEmpty())
-			{
-				DrawShadowText(Fx.Text.ToUpper(), Color, DX(Fx.Target.X), DY(Fx.Target.Y - 84.0f),
-					GetFont(false), 0.55f * DuelScale, true);
-			}
+			DrawDuelFxPosition(Fx, T);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Fusion || Fx.Type == EDuelVisualEventType::Ritual)
 		{
-			const bool bFusion = Fx.Type == EDuelVisualEventType::Fusion;
-			const FLinearColor Color = bFusion ? FLinearColor(0.94f, 0.72f, 0.28f) : FLinearColor(0.94f, 0.48f, 0.28f);
-			DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.30f * (1.0f - T)), 0.0f, 0.0f,
-				Canvas->ClipX, Canvas->ClipY);
-			const float Inflate = FMath::Clamp(T / 0.28f, 0.0f, 1.0f);
-			const float CardW = FMath::Lerp(40.0f, 132.0f, FMath::InterpEaseOut(0.0f, 1.0f, Inflate, 2.0f));
-			const float CardH = CardW * 1.45f;
-			const float Spin = T * 260.0f;
-			for (int32 I = 0; I < 2; ++I)
-			{
-				const float R = 80.0f + I * 28.0f + FMath::Sin(T * PI * 2.0f + I) * 8.0f;
-				DrawFrame(FLinearColor(Color.R, Color.G, Color.B, 0.22f * (1.0f - T)),
-					DX(Fx.Target.X) - DS(R), DY(Fx.Target.Y) - DS(R), DS(R * 2.0f), DS(R * 2.0f),
-					FMath::Max(1.0f, DS(2.0f)));
-			}
-			DrawRect(FLinearColor(Color.R, Color.G, Color.B, 0.06f * (1.0f - T)),
-				DX(Fx.Target.X) - DS(86.0f), DY(Fx.Target.Y) - DS(86.0f), DS(172.0f), DS(172.0f));
-			DrawDuelCardFace(Fx.CardId, false, DX(Fx.Target.X) - DS(CardW) * 0.5f,
-				DY(Fx.Target.Y) - DS(CardH) * 0.5f, DS(CardW), DS(CardH), Inflate);
-			const float RayLength = 170.0f + 12.0f * FMath::Sin(Spin);
-			for (int32 Ray = 0; Ray < 12; ++Ray)
-			{
-				const float Angle = Spin * PI / 180.0f + Ray * PI / 6.0f;
-				const float Inner = 92.0f;
-				DrawLine(DX(Fx.Target.X + FMath::Cos(Angle) * Inner),
-					DY(Fx.Target.Y + FMath::Sin(Angle) * Inner),
-					DX(Fx.Target.X + FMath::Cos(Angle) * RayLength),
-					DY(Fx.Target.Y + FMath::Sin(Angle) * RayLength),
-					FLinearColor(Color.R, Color.G, Color.B, 0.26f * (1.0f - T)), 2.0f);
-			}
-			const float Seal = 118.0f;
-			for (int32 Tick = 0; Tick < 16; ++Tick)
-			{
-				const float Angle = -Spin * PI / 220.0f + Tick * PI / 8.0f;
-				DrawLine(DX(Fx.Target.X + FMath::Cos(Angle) * Seal),
-					DY(Fx.Target.Y + FMath::Sin(Angle) * Seal * 1.16f),
-					DX(Fx.Target.X + FMath::Cos(Angle) * (Seal + 14.0f)),
-					DY(Fx.Target.Y + FMath::Sin(Angle) * (Seal + 14.0f) * 1.16f),
-					FLinearColor(Color.R, Color.G, Color.B, 0.36f * (1.0f - T)), 2.0f);
-			}
-			if (!Fx.Text.IsEmpty())
-			{
-				DrawShadowText(Fx.Text.ToUpper(), Paper, DX(Fx.Target.X), DY(Fx.Target.Y + 118.0f),
-					GetFont(false), 0.52f * DuelScale, true);
-			}
+			DrawDuelFxFusion(Fx, T);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Cost)
 		{
-			const FLinearColor Color(0.98f, 0.78f, 0.34f, Alpha);
-			const float Rise = T * 48.0f;
-			DrawShadowText(FString::Printf(TEXT("-%d LP"), Fx.Amount), Color,
-				DX(Fx.Source.X), DY(Fx.Source.Y + 12.0f - Rise), GetFont(false),
-				(0.88f + (1.0f - T) * 0.25f) * DuelScale, true);
-			if (!Fx.Text.IsEmpty())
-			{
-				DrawShadowText(Fx.Text.ToUpper(), Color, DX(Fx.Source.X), DY(Fx.Source.Y + 36.0f - Rise * 0.6f),
-					GetFont(false), 0.44f * DuelScale, true);
-			}
+			DrawDuelFxCost(Fx, T, Alpha);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Counter)
 		{
-			const float Ring = 1.0f + T * 0.9f;
-			const FLinearColor Color(0.98f, 0.80f, 0.30f, (1.0f - T) * 0.85f);
-			DrawFrame(Color, DX(Fx.Target.X) - DS(42.0f * Ring), DY(Fx.Target.Y) - DS(58.0f * Ring),
-				DS(84.0f * Ring), DS(116.0f * Ring), FMath::Max(1.0f, DS(2.0f)));
-			for (int32 I = 0; I < 6; ++I)
-			{
-				const float Angle = I * PI / 3.0f + T * 2.0f;
-				DrawRect(Color, DX(Fx.Target.X + FMath::Cos(Angle) * 54.0f * Ring),
-					DY(Fx.Target.Y + FMath::Sin(Angle) * 70.0f * Ring), DS(5.0f), DS(5.0f));
-			}
-			DrawShadowText(FString::Printf(TEXT("%s +1"), *Fx.Text.ToUpper()), Color,
-				DX(Fx.Target.X), DY(Fx.Target.Y - 88.0f), GetFont(false), 0.52f * DuelScale, true);
-			if (Fx.Amount > 1)
-			{
-				DrawShadowText(FString::Printf(TEXT("x%d"), Fx.Amount), Color,
-					DX(Fx.Target.X), DY(Fx.Target.Y - 66.0f), GetFont(false), 0.46f * DuelScale, true);
-			}
+			DrawDuelFxCounter(Fx, T);
 		}
 		else if (Fx.Type == EDuelVisualEventType::Effect && !Fx.Text.IsEmpty())
 		{
-			DrawShadowText(Fx.Text.ToUpper(), FLinearColor(0.80f, 0.90f, 1.0f, Alpha),
-				DX(Fx.Target.X), DY(Fx.Target.Y - 20.0f * T), GetFont(false), 0.58f * DuelScale, true);
+			DrawDuelFxEffect(Fx, T, Alpha);
 		}
 	}
 }
+
 
 void FDADuelUI::DrawDuelEventBanner()
 {
@@ -3194,7 +3532,6 @@ void FDADuelUI::DrawDuelActive()
 	const FDuelSide& OpponentSide = DuelEngine->GetSide(EDuelOwner::Opponent);
 	const bool bPlayerTurn = DuelEngine->IsPlayerTurn();
 	const bool bAiTurn = DuelEngine->IsAwaitingAi() || !bPlayerTurn;
-	const bool bMain = DuelEngine->GetPhase() == EDuelPhase::Main1 || DuelEngine->GetPhase() == EDuelPhase::Main2;
 	const bool bChoicePending = DuelEngine->HasPendingChoice();
 	FDuelCard* Selected = DuelEngine->FindCard(DuelSelectedUid);
 	const int32 EquipTargetHighlightUid = Selected ? Selected->EquippedToUid : 0;
@@ -3219,38 +3556,12 @@ void FDADuelUI::DrawDuelActive()
 		DrawRect(FLinearColor(0.30f, 0.44f, 0.52f, 0.12f), DX(430.0f), DY(LaneY), DS(730.0f), DS(1.0f));
 	}
 
-	// Left duel log.
-	DrawPanel(DX(24.0f), DY(110.0f), DS(340.0f), DS(760.0f), FLinearColor(0.018f, 0.032f, 0.05f, 0.94f), DuelLine);
-	DrawShadowText(TEXT("DUEL LOG"), Gold, DX(42.0f), DY(126.0f), GetFont(false), 0.78f * DuelScale, false);
-	DrawRect(DuelLine, DX(42.0f), DY(150.0f), DS(304.0f), 1.0f);
-	const TArray<FDuelLogEntry>& Entries = DuelEngine->GetLog();
-	const int32 FirstEntry = FMath::Max(0, Entries.Num() - 17);
-	float LogY = 162.0f;
-	for (int32 I = Entries.Num() - 1; I >= FirstEntry; --I)
-	{
-		const FDuelLogEntry& Entry = Entries[I];
-		FLinearColor LogColor = Paper;
-		if (Entry.Tone == TEXT("turn")) LogColor = Gold;
-		else if (Entry.Tone == TEXT("phase")) LogColor = Muted;
-		else if (Entry.Tone == TEXT("battle")) LogColor = FLinearColor(0.96f, 0.58f, 0.36f);
-		else if (Entry.Tone == TEXT("damage") || Entry.Tone == TEXT("destroy")) LogColor = FLinearColor(0.95f, 0.42f, 0.38f);
-		else if (Entry.Tone == TEXT("heal")) LogColor = FLinearColor(0.55f, 0.9f, 0.62f);
-		else if (Entry.Tone == TEXT("spell")) LogColor = AccentCyan;
-		else if (Entry.Tone == TEXT("trap")) LogColor = FLinearColor(0.80f, 0.62f, 0.96f);
-		else if (Entry.Tone == TEXT("summon")) LogColor = FLinearColor(0.62f, 0.9f, 0.66f);
-		else if (Entry.Tone == TEXT("effect")) LogColor = FLinearColor(0.72f, 0.82f, 0.96f);
-		else if (Entry.Tone == TEXT("draw")) LogColor = FLinearColor(0.82f, 0.82f, 0.74f);
-		DrawShadowText(DuelTrim(Entry.Message, 50), LogColor, DX(42.0f), DY(LogY), GetFont(false), 0.58f * DuelScale, false);
-		LogY += 38.0f;
-	}
-	DrawShadowText(FString::Printf(TEXT("TURN %d   %s"), DuelEngine->GetTurnNumber(), *DuelEngine->GetPhaseLabel()),
-		Muted, DX(42.0f), DY(842.0f), GetFont(false), 0.6f * DuelScale, false);
+	DrawDuelLog();
 
 	// Board helper lambdas.
 	auto IsHoverRect = [this](float X, float Y, float W, float H)
 	{
-		return DuelMousePosition.X >= DX(X) && DuelMousePosition.X <= DX(X + W)
-			&& DuelMousePosition.Y >= DY(Y) && DuelMousePosition.Y <= DY(Y + H);
+		return IsDuelHoverRect(X, Y, W, H);
 	};
 	auto DrawEmptyZone = [this](float X, float Y, float W, float H, const FString& Label)
 	{
@@ -3403,31 +3714,119 @@ void FDADuelUI::DrawDuelActive()
 	DrawPile(TEXT("GRAVE"), PlayerSide.Graveyard.Num(), 3, EDuelOwner::Player, 1040.0f, 714.0f);
 	DrawPile(TEXT("BANISH"), PlayerSide.Banished.Num(), 4, EDuelOwner::Player, 1040.0f, 756.0f);
 
-	// Player hand.
-	const int32 HandCount = PlayerSide.Hand.Num();
-	if (HandCount > 0)
-	{
-		const float CardW = 72.0f;
-		const float CardH = 104.0f;
-		// Keep the hand inside the playmat and clear of the right-hand pile
-		// column, even at the 7-8 card hand limit.
-		const float Spacing = FMath::Min(80.0f,
-			(480.0f - CardW) / FMath::Max(1, HandCount - 1));
-		const float TotalWidth = (HandCount - 1) * Spacing + CardW;
-		const float StartX = 800.0f - TotalWidth * 0.5f;
-		for (int32 I = 0; I < HandCount; ++I)
-		{
-			const FDuelCard& Card = PlayerSide.Hand[I];
-			const bool bSelectedCard = DuelSelectedUid == Card.Uid || IsDuelChoiceSelected(Card.Uid);
-			const float CardY = 766.0f - (bSelectedCard ? 8.0f : 0.0f);
-			DrawDuelCard(Card, DX(StartX + I * Spacing), DY(CardY), DS(CardW), DS(CardH), !Card.bFaceUp,
-				bSelectedCard, IsHoverRect(StartX + I * Spacing, CardY, CardW, CardH) || IsDuelChoiceTarget(Card.Uid),
-				false, IsDuelChoiceTarget(Card.Uid));
-			AddDuelHit(DuelEngine->IsAwaitingDiscard() ? TEXT("discard") : TEXT("select"), Card.Uid,
-				DX(StartX + I * Spacing), DY(CardY), DS(CardW), DS(CardH));
-		}
-	}
+	DrawDuelHand(PlayerSide);
+	DrawDuelCommandPanel(PlayerSide, Selected, bPlayerTurn, bAiTurn, bChoicePending);
 
+	// Message / hint strip.
+	FString Hint = TEXT("Click a card to inspect it. B enters Battle. N ends the turn. Esc deselects.");
+	if (bChoicePending)
+	{
+		Hint = TEXT("ANSWER THE CHOICE. CLICK A HIGHLIGHTED CARD OR AN OPTION.");
+	}
+	else if (DuelEngine->HasWinner())
+	{
+		Hint = IsDuelPresentationActive()
+			? TEXT("SPACE / RIGHT-CLICK OR CLICK A CUT-IN TO SKIP.")
+			: TEXT("THE DUEL IS OVER.");
+	}
+	else if (DuelEngine->IsAwaitingDiscard())
+	{
+		Hint = FString::Printf(TEXT("DISCARD %d CARD(S) TO THE 6-CARD HAND LIMIT"), DuelEngine->GetDiscardCount());
+	}
+	else if (IsDuelPresentationActive())
+	{
+		Hint = TEXT("SPACE / RIGHT-CLICK OR CLICK A CUT-IN TO SKIP.");
+	}
+	if (DuelMessageTimer > 0.0f && !DuelMessage.IsEmpty())
+	{
+		Hint = DuelMessage;
+	}
+	DrawPanel(DX(540.0f), DY(872.0f), DS(480.0f), DS(22.0f), FLinearColor(0.018f, 0.035f, 0.05f, 0.95f), DuelLine);
+	DrawShadowText(DuelTrim(Hint, 62), DuelMessageTimer > 0.0f ? DuelMessageColor : Muted,
+		DX(780.0f), DY(876.0f), GetFont(false), 0.52f * DuelScale, true);
+
+	// Low-LP heartbeat vignette.  It is deliberately subtle so it never
+	// competes with the board text.
+	const bool bPlayerLow = DuelPlayerLpDisplay <= 2000.0f;
+	const bool bOpponentLow = DuelOpponentLpDisplay <= 2000.0f;
+	if (bPlayerLow || bOpponentLow)
+	{
+		const float Now = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+		const float Pulse = 0.5f + 0.5f * FMath::Sin(Now * 4.6f);
+		const FLinearColor LowColor(0.86f, 0.10f, 0.08f, (0.08f + Pulse * 0.06f));
+		const float Edge = FMath::Max(3.0f, DS(7.0f));
+		DrawRect(LowColor, 0.0f, 0.0f, Canvas->ClipX, Edge);
+		DrawRect(LowColor, 0.0f, Canvas->ClipY - Edge, Canvas->ClipX, Edge);
+		DrawRect(LowColor, 0.0f, 0.0f, Edge, Canvas->ClipY);
+		DrawRect(LowColor, Canvas->ClipX - Edge, 0.0f, Edge, Canvas->ClipY);
+	}
+}
+
+void FDADuelUI::DrawDuelLog()
+{
+	// Left duel log.
+	DrawPanel(DX(24.0f), DY(110.0f), DS(340.0f), DS(760.0f), FLinearColor(0.018f, 0.032f, 0.05f, 0.94f), DuelLine);
+	DrawShadowText(TEXT("DUEL LOG"), Gold, DX(42.0f), DY(126.0f), GetFont(false), 0.78f * DuelScale, false);
+	DrawRect(DuelLine, DX(42.0f), DY(150.0f), DS(304.0f), 1.0f);
+	const TArray<FDuelLogEntry>& Entries = DuelEngine->GetLog();
+	const int32 FirstEntry = FMath::Max(0, Entries.Num() - 17);
+	float LogY = 162.0f;
+	for (int32 I = Entries.Num() - 1; I >= FirstEntry; --I)
+	{
+		const FDuelLogEntry& Entry = Entries[I];
+		FLinearColor LogColor = Paper;
+		if (Entry.Tone == TEXT("turn")) LogColor = Gold;
+		else if (Entry.Tone == TEXT("phase")) LogColor = Muted;
+		else if (Entry.Tone == TEXT("battle")) LogColor = FLinearColor(0.96f, 0.58f, 0.36f);
+		else if (Entry.Tone == TEXT("damage") || Entry.Tone == TEXT("destroy")) LogColor = FLinearColor(0.95f, 0.42f, 0.38f);
+		else if (Entry.Tone == TEXT("heal")) LogColor = FLinearColor(0.55f, 0.9f, 0.62f);
+		else if (Entry.Tone == TEXT("spell")) LogColor = AccentCyan;
+		else if (Entry.Tone == TEXT("trap")) LogColor = FLinearColor(0.80f, 0.62f, 0.96f);
+		else if (Entry.Tone == TEXT("summon")) LogColor = FLinearColor(0.62f, 0.9f, 0.66f);
+		else if (Entry.Tone == TEXT("effect")) LogColor = FLinearColor(0.72f, 0.82f, 0.96f);
+		else if (Entry.Tone == TEXT("draw")) LogColor = FLinearColor(0.82f, 0.82f, 0.74f);
+		DrawShadowText(DuelTrim(Entry.Message, 50), LogColor, DX(42.0f), DY(LogY), GetFont(false), 0.58f * DuelScale, false);
+		LogY += 38.0f;
+	}
+	DrawShadowText(FString::Printf(TEXT("TURN %d   %s"), DuelEngine->GetTurnNumber(), *DuelEngine->GetPhaseLabel()),
+		Muted, DX(42.0f), DY(842.0f), GetFont(false), 0.6f * DuelScale, false);
+}
+
+void FDADuelUI::DrawDuelHand(const FDuelSide& PlayerSide)
+{
+	if (!DuelEngine)
+	{
+		return;
+	}
+	const int32 HandCount = PlayerSide.Hand.Num();
+	if (HandCount <= 0)
+	{
+		return;
+	}
+	const float CardW = 72.0f;
+	const float CardH = 104.0f;
+	// Keep the hand inside the playmat and clear of the right-hand pile
+	// column, even at the 7-8 card hand limit.
+	const float Spacing = FMath::Min(80.0f,
+		(480.0f - CardW) / FMath::Max(1, HandCount - 1));
+	const float TotalWidth = (HandCount - 1) * Spacing + CardW;
+	const float StartX = 800.0f - TotalWidth * 0.5f;
+	for (int32 I = 0; I < HandCount; ++I)
+	{
+		const FDuelCard& Card = PlayerSide.Hand[I];
+		const bool bSelectedCard = DuelSelectedUid == Card.Uid || IsDuelChoiceSelected(Card.Uid);
+		const float CardY = 766.0f - (bSelectedCard ? 8.0f : 0.0f);
+		DrawDuelCard(Card, DX(StartX + I * Spacing), DY(CardY), DS(CardW), DS(CardH), !Card.bFaceUp,
+			bSelectedCard, IsDuelHoverRect(StartX + I * Spacing, CardY, CardW, CardH) || IsDuelChoiceTarget(Card.Uid),
+			false, IsDuelChoiceTarget(Card.Uid));
+		AddDuelHit(DuelEngine->IsAwaitingDiscard() ? TEXT("discard") : TEXT("select"), Card.Uid,
+			DX(StartX + I * Spacing), DY(CardY), DS(CardW), DS(CardH));
+	}
+}
+
+void FDADuelUI::DrawDuelCommandPanel(const FDuelSide& PlayerSide, const FDuelCard* Selected,
+	bool bPlayerTurn, bool bAiTurn, bool bChoicePending)
+{
 	// Right detail/action panel.
 	const float RX = 1216.0f;
 	const float RY = 110.0f;
@@ -3443,7 +3842,10 @@ void FDADuelUI::DrawDuelActive()
 		int32 PlayerMonsterCount = 0;
 		int32 OppMonsterCount = 0;
 		for (const FDuelCard& Monster : PlayerSide.Monsters) if (Monster.IsValid()) ++PlayerMonsterCount;
-		for (const FDuelCard& Monster : OpponentSide.Monsters) if (Monster.IsValid()) ++OppMonsterCount;
+		for (const FDuelCard& Monster : DuelEngine->GetSide(EDuelOwner::Opponent).Monsters)
+		{
+			if (Monster.IsValid()) ++OppMonsterCount;
+		}
 		DrawShadowText(TEXT("HOW TO PLAY"), Muted, DX(RX + 20.0f), DY(RY + 48.0f), GetFont(false), 0.62f * DuelScale, false);
 		DrawWrappedText(
 			TEXT("Click a hand card to inspect it. Summon or Set it from the action list. Select a monster in the Battle Phase to see its attack targets."),
@@ -3536,6 +3938,7 @@ void FDADuelUI::DrawDuelActive()
 				DX(RX + 20.0f), DY(RY + 92.0f), DS(RW - 40.0f), GetFont(false), 0.66f * DuelScale, Muted, 3.0f);
 		}
 
+		const bool bMain = DuelEngine->GetPhase() == EDuelPhase::Main1 || DuelEngine->GetPhase() == EDuelPhase::Main2;
 		if (Selected->Controller == EDuelOwner::Player && bPlayerTurn && !bAiTurn && bMain && !bChoicePending)
 		{
 			float ActionY = FMath::Min(FMath::Max(RY + 520.0f, DetailTextEndY + 10.0f), RY + 612.0f);
@@ -3643,45 +4046,6 @@ void FDADuelUI::DrawDuelActive()
 	{
 		DrawWrappedText(FString::Printf(TEXT("%s is dueling...\n%s"), *DuelOpponentName, *DuelEngine->GetLastAiMessage()),
 			DX(RX + 20.0f), DY(RY + 560.0f), DS(RW - 40.0f), GetFont(false), 0.7f * DuelScale, GoldSoft, 3.0f);
-	}
-
-	// Message / hint strip.
-	FString Hint = TEXT("Click a card to inspect it. B enters Battle. N ends the turn. Esc deselects.");
-	if (bChoicePending)
-	{
-		Hint = TEXT("ANSWER THE CHOICE. CLICK A HIGHLIGHTED CARD OR AN OPTION.");
-	}
-	else if (DuelEngine->IsAwaitingDiscard())
-	{
-		Hint = FString::Printf(TEXT("DISCARD %d CARD(S) TO THE 6-CARD HAND LIMIT"), DuelEngine->GetDiscardCount());
-	}
-	else if (DuelCutInTime > 0.0f || DuelEventBannerTime > 0.0f
-		|| DuelIncomingEvents.Num() > 0 || DuelFx.Num() > 0)
-	{
-		Hint = TEXT("SPACE / RIGHT-CLICK OR CLICK A CUT-IN TO SKIP.");
-	}
-	if (DuelMessageTimer > 0.0f && !DuelMessage.IsEmpty())
-	{
-		Hint = DuelMessage;
-	}
-	DrawPanel(DX(540.0f), DY(872.0f), DS(480.0f), DS(22.0f), FLinearColor(0.018f, 0.035f, 0.05f, 0.95f), DuelLine);
-	DrawShadowText(DuelTrim(Hint, 62), DuelMessageTimer > 0.0f ? FLinearColor(0.95f, 0.74f, 0.38f) : Muted,
-		DX(780.0f), DY(876.0f), GetFont(false), 0.52f * DuelScale, true);
-
-	// Low-LP heartbeat vignette.  It is deliberately subtle so it never
-	// competes with the board text.
-	const bool bPlayerLow = DuelPlayerLpDisplay <= 2000.0f;
-	const bool bOpponentLow = DuelOpponentLpDisplay <= 2000.0f;
-	if (bPlayerLow || bOpponentLow)
-	{
-		const float Now = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
-		const float Pulse = 0.5f + 0.5f * FMath::Sin(Now * 4.6f);
-		const FLinearColor LowColor(0.86f, 0.10f, 0.08f, (0.08f + Pulse * 0.06f));
-		const float Edge = FMath::Max(3.0f, DS(7.0f));
-		DrawRect(LowColor, 0.0f, 0.0f, Canvas->ClipX, Edge);
-		DrawRect(LowColor, 0.0f, Canvas->ClipY - Edge, Canvas->ClipX, Edge);
-		DrawRect(LowColor, 0.0f, 0.0f, Edge, Canvas->ClipY);
-		DrawRect(LowColor, Canvas->ClipX - Edge, 0.0f, Edge, Canvas->ClipY);
 	}
 }
 
@@ -3926,7 +4290,7 @@ void FDADuelUI::DrawDuelChoice()
 	if (DuelMessageTimer > 0.0f && !DuelMessage.IsEmpty())
 	{
 		ChoiceHint = DuelMessage;
-		ChoiceHintColor = FLinearColor(0.95f, 0.74f, 0.38f);
+		ChoiceHintColor = DuelMessageColor;
 	}
 	DrawShadowText(DuelTrim(ChoiceHint, 52), ChoiceHintColor,
 		DX(X + W * 0.5f), DY(Y + H - 26.0f), GetFont(false), 0.46f * DuelScale, true);
@@ -3942,13 +4306,14 @@ void FDADuelUI::DrawDuelResult()
 	const float Elapsed = FMath::Max(0.0f, Now - DuelResultEnterTime);
 	const float Ease = 1.0f - FMath::Pow(1.0f - FMath::Clamp(Elapsed / 0.52f, 0.0f, 1.0f), 3.0f);
 	const float ResultFade = FMath::Clamp(Elapsed / 0.34f, 0.0f, 1.0f);
+	const bool bDraw = bDuelResultDraw;
 	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.68f), 0.0f, 0.0f, Canvas->ClipX, Canvas->ClipY);
 	for (int32 Band = 0; Band < 7; ++Band)
 	{
 		DrawRect(FLinearColor(0.16f, 0.30f, 0.40f, 0.018f + Band * 0.004f),
 			DX(0.0f), DY(120.0f + Band * 96.0f), Canvas->ClipX, DS(38.0f));
 	}
-	if (!bDuelResultWon)
+	if (!bDuelResultWon && !bDraw)
 	{
 		DrawRect(FLinearColor(0.22f, 0.01f, 0.01f, 0.12f), 0.0f, 0.0f, Canvas->ClipX, Canvas->ClipY);
 	}
@@ -3957,7 +4322,9 @@ void FDADuelUI::DrawDuelResult()
 	const float Y = 160.0f;
 	const float W = 920.0f;
 	const float H = 560.0f;
-	const FLinearColor Accent = bDuelResultWon ? FLinearColor(0.90f, 0.70f, 0.28f) : FLinearColor(0.80f, 0.42f, 0.34f);
+	const FLinearColor Accent = bDraw
+		? FLinearColor(0.72f, 0.72f, 0.80f)
+		: (bDuelResultWon ? FLinearColor(0.90f, 0.70f, 0.28f) : FLinearColor(0.80f, 0.42f, 0.34f));
 	DrawPanel(DX(X), DY(Y), DS(W), DS(H), FLinearColor(0.018f, 0.034f, 0.052f, 0.99f), Accent);
 	DrawRect(Accent, DX(X), DY(Y), DS(W), DS(4.0f));
 	DrawRect(FLinearColor(Accent.R, Accent.G, Accent.B, 0.28f), DX(X), DY(Y + 4.0f), DS(W), DS(1.0f));
@@ -3978,11 +4345,17 @@ void FDADuelUI::DrawDuelResult()
 		}
 	}
 
+	const FString ResultTitle = bDraw ? TEXT("DUEL DRAW") : (bDuelResultWon ? TEXT("DUEL WON") : TEXT("DUEL LOST"));
 	DrawShadowText(TEXT("DUEL RESULT"), Muted, DX(X + W * 0.5f), DY(Y - 30.0f),
 		GetFont(false), 0.72f * DuelScale, true);
-	DrawShadowText(bDuelResultWon ? TEXT("DUEL WON") : TEXT("DUEL LOST"), Accent,
+	DrawShadowText(ResultTitle, Accent,
 		DX(X + W * 0.5f), DY(Y + 24.0f), GetFont(true), 1.9f * DuelScale, true);
-	DrawShadowText(bDuelResultWon ? FString::Printf(TEXT("%s DEFEATED"), *DuelOpponentName.ToUpper()) : FString::Printf(TEXT("%s WINS THE DUEL"), *DuelOpponentName.ToUpper()), Paper,
+	const FString ResultSubtitle = bDraw
+		? FString::Printf(TEXT("%s  -  DRAW"), *DuelOpponentName.ToUpper())
+		: (bDuelResultWon
+			? FString::Printf(TEXT("%s DEFEATED"), *DuelOpponentName.ToUpper())
+			: FString::Printf(TEXT("%s WINS THE DUEL"), *DuelOpponentName.ToUpper()));
+	DrawShadowText(ResultSubtitle, Paper,
 		DX(X + W * 0.5f), DY(Y + 82.0f), GetFont(false), 0.84f * DuelScale, true);
 
 	const float PortraitW = 228.0f;
@@ -3990,14 +4363,15 @@ void FDADuelUI::DrawDuelResult()
 	const float PortraitY = Y + 118.0f;
 	const float LeftSlide = (1.0f - Ease) * -260.0f;
 	const float RightSlide = (1.0f - Ease) * 260.0f;
-	const float JadenAlpha = bDuelResultWon ? 0.56f : 1.0f;
-	const float PlayerAlpha = bDuelResultWon ? 1.0f : 0.56f;
+	const float JadenAlpha = bDraw ? 1.0f : (bDuelResultWon ? 0.56f : 1.0f);
+	const float PlayerAlpha = bDraw ? 1.0f : (bDuelResultWon ? 1.0f : 0.56f);
 	DrawDuelPortrait(DuelOpponentId, DX(X + 44.0f + LeftSlide), DY(PortraitY), DS(PortraitW), DS(PortraitH),
-		bDuelResultWon ? FLinearColor(0.52f, 0.38f, 0.22f) : Accent, JadenAlpha, false,
-		bDuelResultWon ? TEXT("sad") : TEXT("laugh"));
+		bDraw ? FLinearColor(0.56f, 0.54f, 0.48f) : (bDuelResultWon ? FLinearColor(0.52f, 0.38f, 0.22f) : Accent),
+		JadenAlpha, false, bDraw ? FString() : (bDuelResultWon ? TEXT("sad") : TEXT("laugh")));
 	DrawDuelPortrait(TEXT("player"), DX(X + W - 44.0f - PortraitW + RightSlide), DY(PortraitY),
-		DS(PortraitW), DS(PortraitH), bDuelResultWon ? Accent : FLinearColor(0.52f, 0.34f, 0.30f),
-		PlayerAlpha, false, bDuelResultWon ? TEXT("laugh") : TEXT("sad"));
+		DS(PortraitW), DS(PortraitH),
+		bDraw ? FLinearColor(0.52f, 0.54f, 0.62f) : (bDuelResultWon ? Accent : FLinearColor(0.52f, 0.34f, 0.30f)),
+		PlayerAlpha, false, bDraw ? FString() : (bDuelResultWon ? TEXT("laugh") : TEXT("sad")));
 
 	DrawShadowText(DuelOpponentName.ToUpper(), Gold, DX(X + 44.0f + PortraitW * 0.5f), DY(PortraitY + PortraitH + 8.0f),
 		GetFont(false), 0.68f * DuelScale, true);
@@ -4010,18 +4384,30 @@ void FDADuelUI::DrawDuelResult()
 		DuelEngine->GetSide(EDuelOwner::Player).LP, *DuelOpponentName.ToUpper(),
 		DuelEngine->GetSide(EDuelOwner::Opponent).LP, DuelEngine->GetTurnNumber()),
 		FLinearColor(0.7f, 0.78f, 0.8f), DX(X + W * 0.5f), DY(Y + 418.0f), GetFont(false), 0.68f * DuelScale, true);
-	DrawWrappedText(
-		bDuelResultWon
+	const FString ResultQuote = bDraw
+		? TEXT("\"A draw. Neither of us could break through - we settle this another time.\"")
+		: (bDuelResultWon
 			? TEXT("\"Good duel. You read the field better than I did - come back for a rematch whenever you want.\"")
-			: TEXT("\"That was a solid attempt. Shuffle up, rethink your plays, and challenge me again.\""),
+			: TEXT("\"That was a solid attempt. Shuffle up, rethink your plays, and challenge me again.\""));
+	DrawWrappedText(ResultQuote,
 		DX(X + 110.0f), DY(Y + 444.0f), DS(W - 220.0f), GetFont(false), 0.70f * DuelScale, Paper, 3.0f);
 
-	DrawDuelButton(TEXT("REMATCH"), TEXT("rematch"), 0, X + 226.0f, Y + 492.0f, 220.0f, 44.0f,
-		true, Accent);
-	DrawDuelButton(TEXT("RETURN TO ISLAND"), TEXT("return"), 0, X + 474.0f, Y + 492.0f, 220.0f, 44.0f,
-		true, FLinearColor(0.42f, 0.68f, 0.86f));
-	DrawShadowText(TEXT("Enter: rematch     Esc: return to the island"), Muted,
-		DX(X + W * 0.5f), DY(Y + 544.0f), GetFont(false), 0.55f * DuelScale, true);
+	if (bDuelScenarioActive)
+	{
+		DrawDuelButton(TEXT("CONTINUE"), TEXT("return"), 0, X + (W - 220.0f) * 0.5f, Y + 492.0f,
+			220.0f, 44.0f, true, FLinearColor(0.42f, 0.68f, 0.86f));
+		DrawShadowText(TEXT("Enter / Esc: continue the exam"), Muted,
+			DX(X + W * 0.5f), DY(Y + 544.0f), GetFont(false), 0.55f * DuelScale, true);
+	}
+	else
+	{
+		DrawDuelButton(TEXT("REMATCH"), TEXT("rematch"), 0, X + 226.0f, Y + 492.0f, 220.0f, 44.0f,
+			true, Accent);
+		DrawDuelButton(TEXT("RETURN TO ISLAND"), TEXT("return"), 0, X + 474.0f, Y + 492.0f, 220.0f, 44.0f,
+			true, FLinearColor(0.42f, 0.68f, 0.86f));
+		DrawShadowText(TEXT("Enter: rematch     Esc: return to the island"), Muted,
+			DX(X + W * 0.5f), DY(Y + 544.0f), GetFont(false), 0.55f * DuelScale, true);
+	}
 }
 
 void FDADuelUI::DrawDuelPile()

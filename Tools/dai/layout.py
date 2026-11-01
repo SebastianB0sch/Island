@@ -19,9 +19,10 @@ import random
 
 import numpy as np
 
+from . import atomic
 from . import config as C
-from . import palette, terrain
-from .assets import AssetSet, load_placements
+from . import jsonio, palette, terrain
+from .assets import load_placements
 from .assets import props as P
 from .assets import avatar as AV
 
@@ -98,10 +99,11 @@ class Layout:
         from . import blend
         rel = os.path.join("Meshes", folder, f"SM_{name}.fbx")
         path = os.path.join(C.OUT_DIR, rel)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
         obj = mb.build("SM_" + name)
-        blend.export_fbx([obj], path)
-        blend.delete([obj])
+        try:
+            blend.export_fbx([obj], path)
+        finally:
+            blend.delete([obj])
         self.manifest.append(dict(file=rel.replace(os.sep, "/"), name=f"SM_{name}", folder=folder.replace(os.sep, "/"),
                                   collision=collision, nanite=False, category="location"))
 
@@ -417,7 +419,6 @@ class Layout:
                         ok[m] = sub
             return ok
 
-        h_all = None
         counts = {}
 
         def emit(asset, x, y, z, scale_lo, scale_hi, sink=0.15):
@@ -602,10 +603,12 @@ class Layout:
     # ------------------------------------------------------------------ minimap
     def minimap(self, size=2048):
         from PIL import Image, ImageDraw
-        from .terrain import Terrain
         # recompute the base map from cached height + colour map
         h = self.hf.a
-        col = np.asarray(Image.open(os.path.join(C.OUT_TEXTURES, "T_TerrainColor.png")).convert("RGB")).astype(np.float32) / 255.0
+        colour_path = os.path.join(C.OUT_TEXTURES, "T_TerrainColor.png")
+        if not os.path.exists(colour_path):
+            raise FileNotFoundError(f"{colour_path} missing - run the textures and terrain stages first")
+        col = np.asarray(Image.open(colour_path).convert("RGB")).astype(np.float32) / 255.0
         from scipy import ndimage
         hz = ndimage.zoom(h, size / h.shape[0], order=1)[:size, :size]
         cz = ndimage.zoom(col, (size / col.shape[0], size / col.shape[1], 1), order=1)[:size, :size]
@@ -637,7 +640,7 @@ class Layout:
             colr = tuple(int(c * 255) for c in C.LOCATIONS.get(key, {}).get("color", (0.8, 0.8, 0.8)))
             fill = tuple(int(0.55 * c + 0.45 * 235) for c in colr)
             d.polygon([px(p) for p in poly], fill=fill, outline=(60, 60, 70))
-        pil.save(os.path.join(C.OUT_TEXTURES, "T_IslandMap.png"), optimize=True)
+        atomic.save_image(pil, os.path.join(C.OUT_TEXTURES, "T_IslandMap.png"), optimize=True)
         self.log("  minimap: T_IslandMap.png")
 
     # ------------------------------------------------------------------ write
@@ -677,12 +680,9 @@ class Layout:
             interacts=self.interacts, emitters=self.emitters, audio=self.audio, npcs=self.npcs,
             specials=self.specials, doors=self.doors, zones=self.zones(),
         )
-        with open(os.path.join(C.OUT_DATA, "layout.json"), "w") as fp:
-            json.dump(layout, fp, separators=(",", ":"))
-        with open(os.path.join(C.OUT_DATA, "materials.json"), "w") as fp:
-            json.dump(palette.material_json(), fp, indent=1)
-        with open(os.path.join(C.OUT_DATA, "assets.json"), "w") as fp:
-            json.dump(self.manifest, fp, indent=1)
+        jsonio.write_json(os.path.join(C.OUT_DATA, "layout.json"), layout, separators=(",", ":"))
+        jsonio.write_json(os.path.join(C.OUT_DATA, "materials.json"), palette.material_json(), indent=1)
+        jsonio.write_json(os.path.join(C.OUT_DATA, "assets.json"), self.manifest, indent=1)
         n_inst = sum(len(v["items"]) for v in inst.values())
         self.log(f"  layout.json: {len(self.static)} static, {len(self.floating)} floating, {n_inst} instances, "
                  f"{len(self.lights)} lights, {len(self.texts)} texts, {len(self.interacts)} interactables, "
@@ -706,8 +706,10 @@ def export_avatar(manifest, log=print):
     os.makedirs(out, exist_ok=True)
     for name, fn in AV.PARTS.items():
         o = fn().build("SM_" + name)
-        blend.export_fbx([o], os.path.join(out, f"SM_{name}.fbx"))
-        blend.delete([o])
+        try:
+            blend.export_fbx([o], os.path.join(out, f"SM_{name}.fbx"))
+        finally:
+            blend.delete([o])
         manifest.append(dict(file=f"Meshes/Characters/SM_{name}.fbx", name=f"SM_{name}", folder="Characters",
                              collision="none", nanite=False, category="character"))
     log(f"  avatar: {len(AV.PARTS)} parts")

@@ -21,10 +21,12 @@ from __future__ import annotations
 import argparse
 import collections
 import datetime as _dt
+import hashlib
 import json
 import os
 import re
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
@@ -39,6 +41,7 @@ TOOL_VERSION = "1.1.0"
 DEFAULT_ROOT = HERE.parents[1]
 LEVEL_ORDER = {"info": 0, "gap": 1, "warning": 2, "error": 3}
 CHECK_STATUS = {"pass", "warn", "fail", "gap", "info"}
+CHECK_RANK = {"pass": 0, "info": 1, "gap": 2, "warn": 3, "fail": 4}
 
 CARD_TYPES = {
     "Normal Monster",
@@ -210,6 +213,19 @@ class Report:
     def check(self, key: str, status: str, summary: str, owner: str = "") -> None:
         if status not in CHECK_STATUS:
             raise ValueError(f"bad check status: {status}")
+        # A check key identifies one validator. Schema helpers and the owning
+        # validator both report the same key, so merge instead of emitting
+        # duplicate checks with contradictory statuses.
+        for existing in self.checks:
+            if existing.key != key:
+                continue
+            if CHECK_RANK[status] > CHECK_RANK[existing.status]:
+                existing.status = status
+                if summary and summary != existing.summary:
+                    existing.summary = f"{existing.summary}; {summary}" if existing.summary else summary
+                if owner:
+                    existing.owner = owner
+            return
         self.checks.append(Check(key, status, summary, owner))
 
     def counts(self) -> dict[str, int]:
@@ -220,10 +236,13 @@ class Report:
 
     def result(self) -> str:
         counts = self.counts()
-        failed = counts["error"] > 0
-        if self.strict and (counts["warning"] > 0 or counts["gap"] > 0):
+        statuses = {check.status for check in self.checks}
+        # A failed check is a failure even if the validator forgot to attach a
+        # finding to the non-dict/malformed entry that caused it.
+        failed = counts["error"] > 0 or "fail" in statuses
+        if self.strict and (counts["warning"] > 0 or counts["gap"] > 0 or statuses & {"warn", "gap"}):
             failed = True
-        if self.fail_on_gaps and counts["gap"] > 0:
+        if self.fail_on_gaps and (counts["gap"] > 0 or "gap" in statuses):
             failed = True
         return "FAIL" if failed else "PASS"
 
@@ -324,8 +343,8 @@ def _no_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict:
 
 
 def load_json(path: Path, report: Report, *, required: bool = False) -> Any:
-    if not path.exists():
-        if required:
+    if not path.is_file():
+        if required or path.exists():
             report.error(
                 "file_missing",
                 f"required file not found: {rel_path(report, path)}",
@@ -345,12 +364,29 @@ def load_json(path: Path, report: Report, *, required: bool = False) -> Any:
         )
         report.json_errors.append(rel_path(report, path))
         return None
+    except UnicodeDecodeError as exc:
+        report.error(
+            "json_encoding",
+            f"file is not valid UTF-8: {exc}",
+            file=rel_path(report, path),
+            hint="save the file as UTF-8 (no BOM)",
+        )
+        report.json_errors.append(rel_path(report, path))
+        return None
     except ValueError as exc:
         report.error(
             "json_duplicate_key",
             str(exc),
             file=rel_path(report, path),
             hint="JSON objects must not repeat keys",
+        )
+        report.json_errors.append(rel_path(report, path))
+        return None
+    except OSError as exc:
+        report.error(
+            "file_unreadable",
+            f"cannot read file: {exc}",
+            file=rel_path(report, path),
         )
         report.json_errors.append(rel_path(report, path))
         return None
@@ -482,6 +518,7 @@ def make_context(root: Path, data_dir: Path, contracts_dir: Path) -> Context:
 
 
 def validate_cards(ctx: Context, report: Report) -> None:
+    warnings_before = report.counts()["warning"]
     path = ctx.data_dir / "cards.json"
     ctx.dataset_presence["cards"] = path.exists()
     if not path.exists():
@@ -678,7 +715,9 @@ def validate_cards(ctx: Context, report: Report) -> None:
             owner="A01",
         )
 
-    status = "fail" if errors else ("warn" if report.counts()["warning"] else "pass")
+    status = "fail" if errors else (
+        "warn" if report.counts()["warning"] > warnings_before else "pass"
+    )
     report.check(
         "cards",
         status,
@@ -704,9 +743,117 @@ def validate_canon_reference(ctx: Context, report: Report) -> None:
         report.check("canon", "gap", "no canon directory", owner="A01")
         return
 
+    # The published manifest is the hash inventory for the canonical extracts.
+    # A stale hash is a real error: it means a downstream sync can silently use
+    # bytes that were never verified against the manifest.
+    manifest_path = canon / "manifest.json"
+    manifest_errors = 0
+    manifest_entries: list = []
+    if not manifest_path.is_file():
+        report.error(
+            "canon_manifest_missing",
+            "Content/Data/Canon/manifest.json is missing",
+            file="Content/Data/Canon/manifest.json",
+            owner="A01",
+            hint="run Tools/canon/build_manifest.py after the extraction step",
+        )
+        manifest_errors += 1
+    else:
+        manifest_doc = load_json(manifest_path, report)
+        manifest_entries = manifest_doc.get("files", []) if isinstance(manifest_doc, dict) else []
+        if not isinstance(manifest_entries, list) or not manifest_entries:
+            report.error(
+                "canon_manifest_shape",
+                "Canon/manifest.json must contain a non-empty files array",
+                file="Content/Data/Canon/manifest.json",
+                owner="A01",
+            )
+            manifest_errors += 1
+            manifest_entries = []
+        seen_manifest_paths: set[str] = set()
+        for entry in manifest_entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
+                report.error(
+                    "canon_manifest_shape",
+                    f"malformed manifest entry {entry!r}",
+                    file="Content/Data/Canon/manifest.json",
+                    owner="A01",
+                )
+                manifest_errors += 1
+                continue
+            rel = entry["path"]
+            if rel in seen_manifest_paths:
+                report.error(
+                    "canon_manifest_duplicate",
+                    f"manifest lists {rel} more than once",
+                    file="Content/Data/Canon/manifest.json",
+                    owner="A01",
+                )
+                manifest_errors += 1
+                continue
+            seen_manifest_paths.add(rel)
+            path = (ctx.root / rel).resolve()
+            try:
+                path.relative_to(canon.resolve())
+            except ValueError:
+                report.error(
+                    "canon_manifest_path",
+                    f"manifest path escapes Content/Data/Canon: {rel}",
+                    file="Content/Data/Canon/manifest.json",
+                    owner="A01",
+                )
+                manifest_errors += 1
+                continue
+            if not path.is_file():
+                report.error(
+                    "canon_manifest_missing_file",
+                    f"manifest file is missing: {rel}",
+                    file="Content/Data/Canon/manifest.json",
+                    owner="A01",
+                )
+                manifest_errors += 1
+                continue
+            expected_hash = entry.get("sha256")
+            actual_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+            if not isinstance(expected_hash, str) or actual_hash != expected_hash:
+                report.error(
+                    "canon_manifest_hash",
+                    f"manifest hash mismatch: {rel}",
+                    file="Content/Data/Canon/manifest.json",
+                    owner="A01",
+                    hint="run Tools/canon/build_manifest.py --refresh-hashes for a sanitized/re-serialized file, or the full build when content changed",
+                )
+                manifest_errors += 1
+            expected_size = entry.get("bytes")
+            if (
+                isinstance(expected_size, int)
+                and not isinstance(expected_size, bool)
+                and expected_size != path.stat().st_size
+            ):
+                report.error(
+                    "canon_manifest_size",
+                    f"manifest byte-size mismatch: {rel} ({expected_size} != {path.stat().st_size})",
+                    file="Content/Data/Canon/manifest.json",
+                    owner="A01",
+                )
+                manifest_errors += 1
+    report.check(
+        "canon_manifest",
+        "fail" if manifest_errors else "pass",
+        f"{len(manifest_entries)} file hashes",
+        owner="A01",
+    )
+
     def items(name: str, key: str) -> tuple[Any, list]:
         path = canon / name
-        if not path.exists():
+        if not path.is_file():
+            report.gap(
+                "canon_file_missing",
+                f"canon extract is missing: {rel_path(report, path)}",
+                file=rel_path(report, path),
+                owner="A01",
+                hint="A01 must publish every canon extract, even when a record set is empty",
+            )
             return None, []
         document = load_json(path, report)
         return document, collection(document, key) if document is not None else []
@@ -1503,7 +1650,14 @@ def validate_decks(ctx: Context, report: Report) -> None:
                             owner="A06",
                         )
 
-    status = "fail" if errors else "pass"
+    if not ctx.decks:
+        report.gap(
+            "decks_empty",
+            "deck files exist but contain no deck records",
+            owner="A06",
+            hint="wrap the records in decks[] or publish one deck object per file",
+        )
+    status = "fail" if errors else ("gap" if not ctx.decks else "pass")
     report.check("decks", status, f"{len(ctx.decks)} decks; {len(ctx.deck_cards)} distinct cards", owner="A06")
 
 
@@ -2467,9 +2621,17 @@ def validate_anchors(ctx: Context, report: Report) -> None:
             if loc_id is not None and loc_id not in ctx.locations:
                 report.gap("interior_location", f"interior {cell_id} references unknown location {loc_id!r}", file=rel_path(report, cells_path), owner="A08")
 
+    if not ctx.locations or not ctx.anchors:
+        report.gap(
+            "anchors_empty",
+            f"anchors.json defines {len(ctx.locations)} location(s) and {len(ctx.anchors)} anchor(s)",
+            file=rel_path(report, path),
+            owner="A08",
+            hint="a published world must define at least one location and anchor",
+        )
     report.check(
         "anchors",
-        "fail" if errors else "pass",
+        "fail" if errors else ("gap" if not ctx.locations or not ctx.anchors else "pass"),
         f"{len(ctx.locations)} locations, {len(ctx.anchors)} anchors, {len(cells)} interiors, {len(ctx.portals)} portals, {len(ctx.spawns)} spawns",
         owner="A08",
     )
@@ -3112,6 +3274,14 @@ def _normalize_legacy_event(event: dict) -> dict:
     return out
 
 
+def _is_legacy_event(event: Any) -> bool:
+    """True when an event uses the A03 pre-contract when/outcomes/rewards-array shape."""
+    return (
+        isinstance(event, dict)
+        and ("when" in event or "outcomes" in event or isinstance(event.get("rewards"), list))
+    )
+
+
 def validate_events(ctx: Context, report: Report) -> None:
     candidates = [ctx.data_dir / "Story" / "events.json", ctx.data_dir / "Story" / "opening.json"]
     candidates.extend(glob_json(ctx.data_dir / "Story" / "events"))
@@ -3139,13 +3309,15 @@ def validate_events(ctx: Context, report: Report) -> None:
             if isinstance(event, dict) and event.get("id") not in known_ids:
                 raw_items.append(event)
                 known_ids.add(event.get("id"))
-    legacy_events = any(
-        isinstance(event, dict)
-        and ("when" in event or "outcomes" in event or isinstance(event.get("rewards"), list))
-        for event in raw_items
-    )
+    legacy_events = any(_is_legacy_event(event) for event in raw_items)
     if legacy_events:
-        items = [_normalize_legacy_event(event) for event in raw_items if isinstance(event, dict)]
+        # Only normalize the legacy records. A mixed bundle can contain v1
+        # records whose fields would otherwise be dropped by the legacy mapper.
+        items = [
+            _normalize_legacy_event(event) if _is_legacy_event(event) else event
+            for event in raw_items
+            if isinstance(event, dict)
+        ]
         report.info(
             "event_shape",
             "events use A03's accepted when/requirements/outcomes/rewards-array shape and scene ids; validator normalizes them, v1 date/requires/rewards wrapper is optional",
@@ -3514,9 +3686,16 @@ def validate_dialogue(ctx: Context, report: Report) -> None:
             errors += 1
         ctx.dialogue[key] = line
 
+    if not ctx.dialogue:
+        report.gap(
+            "dialogue_empty",
+            "dialogue files exist but contain no lines",
+            owner="A03",
+            hint="publish lines{} or nodes{} entries before scenes reference them",
+        )
     report.check(
         "dialogue",
-        "fail" if errors else "pass",
+        "fail" if errors else ("gap" if not ctx.dialogue else "pass"),
         f"{len(ctx.dialogue)} dialogue lines; {len(ctx.referenced_text_keys)} referenced by scenes",
         owner="A03",
     )
@@ -3680,7 +3859,14 @@ def validate_scenes(ctx: Context, report: Report) -> None:
             errors += 1
 
     ctx.scene_ids = set(seen_ids)
-    report.check("scenes", "fail" if errors else "pass", f"{len(seen_ids)} scene queues", owner="A03")
+    if not seen_ids:
+        report.gap(
+            "scenes_empty",
+            "scene files exist but define no scenes",
+            owner="A03",
+            hint="publish one scene object per file or a scenes{} bundle with entries",
+        )
+    report.check("scenes", "fail" if errors else ("gap" if not seen_ids else "pass"), f"{len(seen_ids)} scene queues", owner="A03")
 
 
 def validate_emails(ctx: Context, report: Report) -> None:
@@ -3767,7 +3953,18 @@ def validate_emails(ctx: Context, report: Report) -> None:
                 if ctx.decks and request.get("deck") not in ctx.decks:
                     report.error("email_duel_deck", f"duel request {request_id} references unknown deck {request.get('deck')}", file=file_label, path=where, owner="A03")
                     errors += 1
-        report.check("emails", "fail" if errors else "pass", f"{len(doc['contacts'])} contacts; {len(ctx.emails)} messages", owner="A03")
+        if not ctx.emails:
+            report.gap(
+                "emails_empty",
+                "contacts exist but contain no messages",
+                owner="A03",
+            )
+        report.check(
+            "emails",
+            "fail" if errors else ("gap" if not ctx.emails else "pass"),
+            f"{len(doc['contacts'])} contacts; {len(ctx.emails)} messages",
+            owner="A03",
+        )
         return
 
     apply_schema(doc, "emails", file_label, report, key="emails")
@@ -3834,7 +4031,13 @@ def validate_emails(ctx: Context, report: Report) -> None:
                 elif ctx.packs and pack_id not in ctx.packs:
                     report.error("email_pack_ref", f"email {email_id} references unknown pack {pack_id}", file=file_label, path=where, owner="A03")
                     errors += 1
-    report.check("emails", "fail" if errors else "pass", f"{len(ctx.emails)} emails", owner="A03")
+    if not ctx.emails:
+        report.gap(
+            "emails_empty",
+            "email files exist but contain no messages",
+            owner="A03",
+        )
+    report.check("emails", "fail" if errors else ("gap" if not ctx.emails else "pass"), f"{len(ctx.emails)} emails", owner="A03")
 
 
 def validate_schedules(ctx: Context, report: Report) -> None:
@@ -3972,7 +4175,18 @@ def validate_schedules(ctx: Context, report: Report) -> None:
                 file=rel_path(report, path),
                 owner="A07",
             )
-    report.check("schedules", "fail" if errors else "pass", f"{len(ctx.schedules)} schedules", owner="A03")
+    if not ctx.schedules:
+        report.gap(
+            "schedules_empty",
+            "schedule files exist but contain no NPC schedules",
+            owner="A03",
+        )
+    report.check(
+        "schedules",
+        "fail" if errors else ("gap" if not ctx.schedules else "pass"),
+        f"{len(ctx.schedules)} schedules",
+        owner="A03",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -4598,6 +4812,24 @@ def print_report(report: Report, *, verbose: bool = False, json_output: bool = F
         print("  (--fail-on-gaps: gaps fail the run)")
 
 
+def write_report(path: Path, document: dict[str, Any]) -> None:
+    """Write the JSON report atomically with stable UTF-8 / LF bytes."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+    handle_fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
+    temp_path = Path(temp_name)
+    try:
+        with os.fdopen(handle_fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(payload)
+        os.replace(temp_path, path)
+    finally:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except OSError:
+                pass
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Validate Duel Academy port data against Docs/Contracts.",
@@ -4621,6 +4853,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true", help="print the report as JSON")
     parser.add_argument("--report", type=Path, default=None, help="write a JSON report to this path")
     parser.add_argument("--verbose", action="store_true", help="show info and passing checks")
+    parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--version", action="version", version=f"validate_all {TOOL_VERSION}")
     return parser
 
@@ -4667,7 +4900,7 @@ def main(argv: list[str] | None = None) -> int:
         cross_check(ctx, report)
     except Exception as exc:  # pragma: no cover - defensive CLI boundary
         report.error("internal_error", f"{type(exc).__name__}: {exc}", owner="A10")
-        if "--debug" in (argv or sys.argv):
+        if args.debug:
             raise
 
     print_report(report, verbose=args.verbose, json_output=args.json)
@@ -4676,8 +4909,11 @@ def main(argv: list[str] | None = None) -> int:
         report_path = args.report
         if not report_path.is_absolute():
             report_path = root / report_path
-        report_path.parent.mkdir(parents=True, exist_ok=True)
-        report_path.write_text(json.dumps(report.as_dict(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        try:
+            write_report(report_path, report.as_dict())
+        except OSError as exc:
+            print(f"error: cannot write report {report_path}: {exc}", file=sys.stderr)
+            return 2
         if not args.json:
             print(f"Report: {report_path}")
 

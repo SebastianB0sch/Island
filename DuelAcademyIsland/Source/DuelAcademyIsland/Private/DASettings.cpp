@@ -83,14 +83,59 @@ namespace
 		return Fallback;
 	}
 
-	float SettingsReadFloat(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float Default)
+	/** Reads an optional field without coercing types; sets OutError on a type mismatch. */
+	bool ReadStringField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, FString& OutValue, FString& OutError)
 	{
-		double Value = Default;
-		if (Object.IsValid() && Object->TryGetNumberField(Field, Value) && FMath::IsFinite(Value))
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid())
 		{
-			return static_cast<float>(Value);
+			return true;
 		}
-		return Default;
+		if (Value->Type != EJson::String)
+		{
+			OutError = FString::Printf(TEXT("Settings field '%s' must be a string."), Field);
+			return false;
+		}
+		OutValue = Value->AsString();
+		return true;
+	}
+
+	bool ReadBoolField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool& OutValue, FString& OutError)
+	{
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid())
+		{
+			return true;
+		}
+		if (Value->Type != EJson::Boolean)
+		{
+			OutError = FString::Printf(TEXT("Settings field '%s' must be a boolean."), Field);
+			return false;
+		}
+		OutValue = Value->AsBool();
+		return true;
+	}
+
+	bool ReadVolumeField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float& OutValue, FString& OutError)
+	{
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid())
+		{
+			return true;
+		}
+		if (Value->Type != EJson::Number)
+		{
+			OutError = FString::Printf(TEXT("Settings field '%s' must be a number."), Field);
+			return false;
+		}
+		const double Number = Value->AsNumber();
+		if (!FMath::IsFinite(Number))
+		{
+			OutError = FString::Printf(TEXT("Settings field '%s' is not finite."), Field);
+			return false;
+		}
+		OutValue = FMath::Clamp(static_cast<float>(Number), 0.f, 1.f);
+		return true;
 	}
 }
 
@@ -112,7 +157,7 @@ void UDASettings::BuildDefaultControls()
 	DefaultControls.Add(TEXT("Jump"), TEXT("Space"));
 	DefaultControls.Add(TEXT("Sprint"), TEXT("Left Shift"));
 	DefaultControls.Add(TEXT("PDA"), TEXT("Tab"));
-	DefaultControls.Add(TEXT("DuelDisk"), TEXT("J"));
+	DefaultControls.Add(TEXT("DuelDisk"), TEXT("F"));
 	DefaultControls.Add(TEXT("Pause"), TEXT("Escape"));
 	DefaultControls.Add(TEXT("DuelConfirm"), TEXT("Enter"));
 	DefaultControls.Add(TEXT("DuelCancel"), TEXT("Escape"));
@@ -317,7 +362,16 @@ void UDASettings::ResetControl(const FString& Action)
 	{
 		return;
 	}
-	if (const FString* DefaultKey = DefaultControls.Find(ActionKey))
+	const FString* DefaultKey = DefaultControls.Find(ActionKey);
+	const FString* Existing = Controls.Find(ActionKey);
+	const bool bChanged = DefaultKey
+		? (!Existing || !Existing->Equals(*DefaultKey, ESearchCase::CaseSensitive))
+		: Existing != nullptr;
+	if (!bChanged)
+	{
+		return;
+	}
+	if (DefaultKey)
 	{
 		Controls.Add(ActionKey, *DefaultKey);
 	}
@@ -360,44 +414,97 @@ bool UDASettings::ReadJson(const TSharedPtr<FJsonObject>& Root, FString& OutErro
 		return false;
 	}
 
+	// Parse into locals and commit only after the whole object validates, so a
+	// malformed save cannot leave settings half applied (the save layer calls
+	// ResetToDefaults before ReadSaveData).
+	EDAAnimationSpeed NewAnimationSpeed = AnimationSpeed;
+	bool bNewConfirmActivation = bConfirmActivation;
+	EDATextSpeed NewTextSpeed = TextSpeed;
+	float NewBgmVolume = BgmVolume;
+	float NewSfxVolume = SfxVolume;
+	bool bNewSubtitles = bSubtitles;
+	FString NewLanguageKey = LanguageKey;
+	TMap<FString, FString> NewControls = Controls;
+
 	FString AnimationText;
-	if (Root->TryGetStringField(TEXT("animation_speed"), AnimationText))
+	if (!ReadStringField(Root, TEXT("animation_speed"), AnimationText, OutError))
 	{
-		AnimationSpeed = StringToAnimationSpeed(AnimationText, AnimationSpeed);
+		return false;
 	}
-	Root->TryGetBoolField(TEXT("confirm_activation"), bConfirmActivation);
+	if (!AnimationText.IsEmpty())
+	{
+		NewAnimationSpeed = StringToAnimationSpeed(AnimationText, NewAnimationSpeed);
+	}
+
+	if (!ReadBoolField(Root, TEXT("confirm_activation"), bNewConfirmActivation, OutError))
+	{
+		return false;
+	}
 
 	FString TextSpeedText;
-	if (Root->TryGetStringField(TEXT("text_speed"), TextSpeedText))
+	if (!ReadStringField(Root, TEXT("text_speed"), TextSpeedText, OutError))
 	{
-		TextSpeed = StringToTextSpeed(TextSpeedText, TextSpeed);
+		return false;
+	}
+	if (!TextSpeedText.IsEmpty())
+	{
+		NewTextSpeed = StringToTextSpeed(TextSpeedText, NewTextSpeed);
 	}
 
-	BgmVolume = FMath::Clamp(SettingsReadFloat(Root, TEXT("bgm_volume"), BgmVolume), 0.0f, 1.0f);
-	SfxVolume = FMath::Clamp(SettingsReadFloat(Root, TEXT("sfx_volume"), SfxVolume), 0.0f, 1.0f);
-	Root->TryGetBoolField(TEXT("subtitles"), bSubtitles);
+	if (!ReadVolumeField(Root, TEXT("bgm_volume"), NewBgmVolume, OutError)
+		|| !ReadVolumeField(Root, TEXT("sfx_volume"), NewSfxVolume, OutError)
+		|| !ReadBoolField(Root, TEXT("subtitles"), bNewSubtitles, OutError))
+	{
+		return false;
+	}
 
 	FString Language;
-	if (Root->TryGetStringField(TEXT("language"), Language) && !Language.TrimStartAndEnd().IsEmpty())
+	if (!ReadStringField(Root, TEXT("language"), Language, OutError))
 	{
-		LanguageKey = Language.TrimStartAndEnd();
+		return false;
+	}
+	const FString TrimmedLanguage = Language.TrimStartAndEnd();
+	if (!TrimmedLanguage.IsEmpty())
+	{
+		NewLanguageKey = TrimmedLanguage;
 	}
 
-	const TSharedPtr<FJsonObject>* ControlsObject = nullptr;
-	if (Root->TryGetObjectField(TEXT("controls"), ControlsObject) && ControlsObject && ControlsObject->IsValid())
+	if (const TSharedPtr<FJsonValue> ControlsValue = Root->TryGetField(TEXT("controls")))
 	{
-		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : (*ControlsObject)->Values)
+		if (ControlsValue->Type != EJson::Object || !ControlsValue->AsObject().IsValid())
 		{
-			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::String)
+			OutError = TEXT("Settings field 'controls' must be an object.");
+			return false;
+		}
+		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : ControlsValue->AsObject()->Values)
+		{
+			const FString ActionKey = SettingsJsonKeyToString(Pair.Key).TrimStartAndEnd();
+			if (ActionKey.IsEmpty())
 			{
-				const FString KeyText = Pair.Value->AsString().TrimStartAndEnd();
-				if (!KeyText.IsEmpty())
-				{
-					Controls.Add(SettingsJsonKeyToString(Pair.Key), KeyText);
-				}
+				OutError = TEXT("Settings control names must not be empty.");
+				return false;
+			}
+			if (!Pair.Value.IsValid() || Pair.Value->Type != EJson::String)
+			{
+				OutError = FString::Printf(TEXT("Settings control '%s' must be a string."), *ActionKey);
+				return false;
+			}
+			const FString KeyText = Pair.Value->AsString().TrimStartAndEnd();
+			if (!KeyText.IsEmpty())
+			{
+				NewControls.Add(ActionKey, KeyText);
 			}
 		}
 	}
+
+	AnimationSpeed = NewAnimationSpeed;
+	bConfirmActivation = bNewConfirmActivation;
+	TextSpeed = NewTextSpeed;
+	BgmVolume = NewBgmVolume;
+	SfxVolume = NewSfxVolume;
+	bSubtitles = bNewSubtitles;
+	LanguageKey = NewLanguageKey;
+	Controls = MoveTemp(NewControls);
 
 	OnSettingsChanged.Broadcast();
 	OutError.Reset();

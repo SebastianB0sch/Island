@@ -74,6 +74,7 @@ namespace
 			TEXT("DAStorySelfTest"),
 			TEXT("DANewGameTest"),
 			TEXT("DAGameplayUITest"),
+			TEXT("DAExamTimedDuelTest"),
 			TEXT("DADuelScreenshot"),
 			TEXT("DADuelSelfTest"),
 			TEXT("DADialogueTest"),
@@ -467,12 +468,72 @@ void ADAHUD::BeginPlay()
 		After(9.1f, [](ADAHUD* HUD) { HUD->ClosePDA(); });
 		After(9.8f, [](ADAHUD* HUD) { FPlatformMisc::RequestExit(false); });
 	}
+
+	// Headless regression for the live timed-puzzle path: written -> real puzzle
+	// duel -> terminal result -> SubmitTimedResultOnce -> TimedDone.
+	if (FParse::Param(FCommandLine::Get(), TEXT("DAExamTimedDuelTest")))
+	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
+		After(1.0f, [](ADAHUD* HUD) { HUD->PrepareGameplayUITestState(); });
+		After(1.6f, [](ADAHUD* HUD) { HUD->OpenExam(1); });
+		After(2.0f, [](ADAHUD* HUD)
+		{
+			if (FDAExamUI* Exam = HUD->GetExamUI())
+			{
+				Exam->DebugAnswerAllWritten();
+			}
+		});
+		After(2.4f, [](ADAHUD* HUD)
+		{
+			if (FDAExamUI* Exam = HUD->GetExamUI())
+			{
+				Exam->DebugStartTimedDuel();
+			}
+		});
+		After(2.8f, [](ADAHUD* HUD) { HUD->DebugFinishDuelWin(); });
+		After(9.0f, [](ADAHUD* HUD)
+		{
+			UGameInstance* GameInstance = HUD->GetGameInstance();
+			UDAExamSubsystem* Exam = GameInstance ? GameInstance->GetSubsystem<UDAExamSubsystem>() : nullptr;
+			UDAProfileSubsystem* Profile = GameInstance ? GameInstance->GetSubsystem<UDAProfileSubsystem>() : nullptr;
+			const bool bPhaseDone = Exam && Exam->GetPhase() == EDAExamPhase::TimedDone;
+			const bool bSolved = Exam && Exam->IsTimedSolved();
+			const int32 TimedClears = Profile ? Profile->GetCounter(TEXT("timed_clears")) : -1;
+			const bool bTokenRecorded = Exam && !Exam->GetTimedResultToken().IsEmpty();
+			const bool bPassed = bPhaseDone && bSolved && bTokenRecorded && TimedClears == 1;
+			UE_LOG(LogDuelAcademyIsland, Display,
+				TEXT("DAExamTimedDuelTest: %s phase=%d solved=%d token=%d timed_clears=%d"),
+				bPassed ? TEXT("PASS") : TEXT("FAIL"), Exam ? static_cast<int32>(Exam->GetPhase()) : -1,
+				bSolved ? 1 : 0, bTokenRecorded ? 1 : 0, TimedClears);
+			FPlatformMisc::RequestExitWithStatus(false, bPassed ? 0 : 1, TEXT("DAExamTimedDuelTest"));
+		});
+	}
 }
 
 void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& OpponentName, const FString& OpponentDeckId,
 	const FString& Mode, bool bAwardDP)
 {
-	if (IsTitleOpen() || IsGameplayUIOpen())
+	// Same modal policy as the shop/deck/exam openers: refuse while the title
+	// or a duel owns the screen, otherwise close every other overlay first.
+	// Story duel commands are pumped only after dialogue closes, so closing a
+	// leftover dialogue here cannot desync the story queue.
+	if (IsDuelOpen() || IsTitleOpen())
 	{
 		return;
 	}
@@ -480,7 +541,33 @@ void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& Oppone
 	{
 		DuelUI = MakeUnique<FDADuelUI>(this);
 	}
+	if (IsShopOpen())
+	{
+		CloseShop();
+	}
+	if (IsDeckEditorOpen())
+	{
+		CloseDeckEditor();
+	}
+	if (IsExamOpen())
+	{
+		CloseExam();
+	}
+	bHelpOpen = false;
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	if (IsPDAOpen())
+	{
+		ClosePDA();
+	}
+	if (IsDialogueOpen())
+	{
+		CloseDialogue();
+	}
 	DuelUI->OpenDeckSelect(OpponentId, OpponentName, OpponentDeckId, Mode, bAwardDP);
+	UpdateInputMode();
 }
 
 void ADAHUD::CloseDuel()
@@ -496,6 +583,39 @@ void ADAHUD::StartDuelWithDeck(const FString& DeckId)
 	if (DuelUI.IsValid())
 	{
 		DuelUI->StartDuelWithDeck(DeckId);
+	}
+}
+
+bool ADAHUD::StartExamTimedDuel(const FDuelScenario& Scenario, FString& OutError)
+{
+	OutError.Reset();
+	if (IsTitleOpen() || IsDuelOpen())
+	{
+		OutError = TEXT("Another duel screen is already open.");
+		return false;
+	}
+	if (!DuelUI.IsValid())
+	{
+		DuelUI = MakeUnique<FDADuelUI>(this);
+	}
+	return DuelUI->StartScenarioDuel(Scenario, TEXT("timed_puzzle"), true, OutError);
+}
+
+bool ADAHUD::IsExamTimedDuelOpen() const
+{
+	return DuelUI.IsValid() && DuelUI->IsOpen() && DuelUI->IsScenarioDuelActive();
+}
+
+bool ADAHUD::ConsumeExamTimedDuelResult(FDAScenarioDuelResult& OutResult)
+{
+	return DuelUI.IsValid() && DuelUI->ConsumeScenarioDuelResult(OutResult);
+}
+
+void ADAHUD::AbortExamTimedDuel()
+{
+	if (DuelUI.IsValid())
+	{
+		DuelUI->AbortScenarioDuel();
 	}
 }
 
@@ -545,11 +665,11 @@ void ADAHUD::BeginDialogue(const TArray<FDADialogueLine>& Lines, const FString& 
 		DialogueUI = MakeUnique<FDADialogueUI>(this);
 		DialogueUI->OnDialogueClosed.AddUObject(this, &ADAHUD::HandleDialogueClosed);
 	}
+	bHelpOpen = false;
 	if (bMapOpen)
 	{
 		ToggleMap();
 	}
-	bHelpOpen = false;
 	DialogueUI->Begin(Lines, ConversationId);
 	UpdateInputMode();
 }
@@ -582,11 +702,11 @@ void ADAHUD::OpenPDA(EDAPDATab Tab)
 		PDAUI->OnAction.AddUObject(this, &ADAHUD::HandlePDAAction);
 		PDAUI->OnClosed.AddUObject(this, &ADAHUD::HandlePDAClosed);
 	}
+	bHelpOpen = false;
 	if (bMapOpen)
 	{
 		ToggleMap();
 	}
-	bHelpOpen = false;
 	PDAUI->Open(Tab);
 	UpdateInputMode();
 }
@@ -831,6 +951,7 @@ void ADAHUD::OpenTitle()
 		TitleScreen->OnOptionsChanged.AddUObject(this, &ADAHUD::HandleTitleOptionsChanged);
 		TitleScreen->OnClosed.AddUObject(this, &ADAHUD::HandleTitleClosed);
 	}
+	bHelpOpen = false;
 	if (bMapOpen)
 	{
 		ToggleMap();
@@ -843,7 +964,6 @@ void ADAHUD::OpenTitle()
 	{
 		CloseDialogue();
 	}
-	bHelpOpen = false;
 	TitleScreen->Open();
 	UpdateInputMode();
 }
@@ -990,11 +1110,10 @@ void ADAHUD::WireEconomySystems()
 		if (Calendar)
 		{
 			Context.MonthIndex = Calendar->GetMonthIndex() + 1;
-			Context.DayNumber = Calendar->GetDay();
-			for (int32 Month = 0; Month < Calendar->GetMonthIndex(); ++Month)
-			{
-				Context.DayNumber += Calendar->GetDaysInMonth(Calendar->GetYear(), Month);
-			}
+			// FDAEUnlockContext::DayNumber is an absolute campaign day, not a
+			// day-of-year. Using the month-relative value reset shop restocks at
+			// the school-year boundary.
+			Context.DayNumber = Calendar->GetAbsoluteDay();
 		}
 		return Context;
 	});
@@ -1062,6 +1181,7 @@ void ADAHUD::OpenShop()
 	{
 		CloseExam();
 	}
+	bHelpOpen = false;
 	if (bMapOpen)
 	{
 		ToggleMap();
@@ -1074,7 +1194,6 @@ void ADAHUD::OpenShop()
 	{
 		CloseDialogue();
 	}
-	bHelpOpen = false;
 	ShopUI->Open();
 	UpdateInputMode();
 }
@@ -1107,6 +1226,7 @@ void ADAHUD::OpenDeckEditor(const FString& DeckId)
 	{
 		CloseExam();
 	}
+	bHelpOpen = false;
 	if (bMapOpen)
 	{
 		ToggleMap();
@@ -1119,7 +1239,6 @@ void ADAHUD::OpenDeckEditor(const FString& DeckId)
 	{
 		CloseDialogue();
 	}
-	bHelpOpen = false;
 	DeckUI->Open(DeckId);
 	UpdateInputMode();
 }
@@ -1152,6 +1271,7 @@ void ADAHUD::OpenExam(int32 MonthIndex)
 	{
 		CloseDeckEditor();
 	}
+	bHelpOpen = false;
 	if (bMapOpen)
 	{
 		ToggleMap();
@@ -1164,7 +1284,6 @@ void ADAHUD::OpenExam(int32 MonthIndex)
 	{
 		CloseDialogue();
 	}
-	bHelpOpen = false;
 	ExamUI->Open(MonthIndex);
 	UpdateInputMode();
 }
@@ -1265,6 +1384,23 @@ void ADAHUD::Tick(float DeltaSeconds)
 		PDAUI->Update(DeltaSeconds);
 	}
 
+	// Help is the top input layer over the map/gameplay while no modal screen
+	// is above it.  Escape/back closes only help and is consumed before the
+	// map key block can navigate, travel or close the map underneath.
+	if (bHelpOpen && !IsDuelOpen() && !IsPDAOpen() && !IsDialogueOpen()
+		&& !IsTitleOpen() && !IsGameplayUIOpen())
+	{
+		if (APlayerController* PC = GetOwningPlayerController())
+		{
+			if (PC->WasInputKeyJustPressed(EKeys::Escape)
+				|| PC->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Right))
+			{
+				bHelpOpen = false;
+				return;
+			}
+		}
+	}
+
 	// P is polled here (like the map keys) so it works in GameAndUI mode and
 	// does not need a new Enhanced Input action in the shared student pawn.
 	if (!IsDuelOpen() && !IsDialogueOpen() && !bGameplayUIWasOpen && !IsGameplayUIOpen())
@@ -1297,7 +1433,8 @@ void ADAHUD::Tick(float DeltaSeconds)
 	// The island map is drawn with the mouse cursor visible (GameAndUI input mode). In that mode the
 	// Enhanced Input bindings for Enter and the mouse click can be swallowed, so poll the map keys here,
 	// exactly like the duel UI does.
-	if (bMapOpen && !IsDuelOpen() && !IsPDAOpen() && !IsDialogueOpen() && !IsGameplayUIOpen())
+	if (bMapOpen && !bHelpOpen && !IsDuelOpen() && !IsPDAOpen() && !IsDialogueOpen()
+		&& !IsGameplayUIOpen())
 	{
 		if (APlayerController* PC = GetOwningPlayerController())
 		{
@@ -1441,7 +1578,10 @@ FVector2D ADAHUD::WorldToMapUV(const FVector& World) const
 
 void ADAHUD::ToggleMap()
 {
-	if (IsDuelOpen() || IsDialogueOpen() || IsPDAOpen() || IsTitleOpen() || IsGameplayUIOpen())
+	// Help over the map must close first; callers that intentionally replace
+	// the map with another modal clear bHelpOpen before invoking this.
+	if (bHelpOpen || IsDuelOpen() || IsDialogueOpen() || IsPDAOpen() || IsTitleOpen()
+		|| IsGameplayUIOpen())
 	{
 		return;
 	}
@@ -1670,6 +1810,12 @@ void ADAHUD::DrawHUD()
 	if (bMapOpen && Sub)
 	{
 		DrawMap(Sub);
+		// Help takes precedence over the map so F1 never opens an invisible
+		// panel that only appears after the map is closed.
+		if (bHelpOpen)
+		{
+			DrawHelp();
+		}
 		return;
 	}
 

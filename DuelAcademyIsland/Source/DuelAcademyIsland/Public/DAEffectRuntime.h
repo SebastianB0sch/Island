@@ -140,12 +140,26 @@ public:
 	void OnBattleDestroyByAttacker(FDuelCard& Attacker, const FDuelCard& Destroyed);
 	void OnPositionChanged(FDuelCard& Card, EDuelPosition PreviousPosition);
 	void OnCounterTrapResponse(FDuelCard& Trap, int32 TargetChainLink);
-	void OnDestroyed(const FDuelCard& Card, bool bByBattle, const FString& Reason);
+	/**
+	 * Destruction notification.  bToGraveyard is supplied explicitly by the
+	 * engine (false when a replacement effect banishes/returns the card) so
+	 * on_destroy still fires for every destruction while on_sent_to_graveyard
+	 * only fires when the card actually reached the Graveyard.
+	 */
+	void OnDestroyed(const FDuelCard& Card, bool bByBattle, const FString& Reason, bool bToGraveyard = true);
 	void OnSentToGraveyard(const FDuelCard& Card, bool bFromField, const FString& Reason);
 	void OnCardLeftField(const FDuelCard& Card);
 	void RecomputeContinuous();
 
-	/** Generic fire entry for custom triggers and the self-test. */
+	/**
+	 * Generic fire entry for custom triggers and the self-test.
+	 *
+	 * Events raised while another event/effect is executing are queued and
+	 * dispatched FIFO once the current effect finishes, so effect-driven
+	 * summons/destruction/leave-field events are not dropped.  The return value
+	 * is the number of scripts started for this event and its queued cascade;
+	 * a nested call returns 0 because its event is only queued.
+	 */
 	int32 FireEvent(const FDEffectEvent& Event);
 
 	/** Execute a manual / ignition script by its position in the card's script list. */
@@ -208,6 +222,13 @@ public:
 	void ResetTestStats();
 
 private:
+	struct FPendingEffectEvent
+	{
+		FDEffectEvent Event;
+		/** Skip at dispatch time if the card no longer sits in a Graveyard. */
+		bool bRequireGraveyardDestination = false;
+	};
+
 	struct FDEffectContext
 	{
 		FDEffectScript Script;
@@ -243,6 +264,7 @@ private:
 	TMap<int32, float> BattleDamageMultipliers;
 	TMap<int32, float> ContinuousBattleDamageMultipliers;
 	TSet<int32> CannotAttackUids;
+	TSet<int32> CannotAttackUidsThisTurn;
 	TSet<int32> MustAttackUids;
 	TSet<int32> DirectAttackAllowedUids;
 	TSet<int32> DirectAttackForbiddenUids;
@@ -273,8 +295,6 @@ private:
 	TSet<uint8> SpecialSummonLockSides;
 	TSet<uint8> ContinuousNormalSummonLockSides;
 	TSet<uint8> ContinuousSpecialSummonLockSides;
-	TSet<int32> NegatedActivationUids;
-	int32 AttackRestrictionExpiryTurn = -1;
 	int32 LastRandomResult = 0;
 	TArray<int32> LastRandomResults;
 	bool bTrapActivationLocked = false;
@@ -284,11 +304,19 @@ private:
 	bool bAttackNegated = false;
 	bool bExecuting = false;
 	bool bRecomputing = false;
+	bool bDispatchingEvents = false;
+	bool bEventBudgetWarned = false;
+	TArray<FPendingEffectEvent> PendingEvents;
 	int32 PromptCount = 0;
 	int32 ExecutedScripts = 0;
 	int32 FailedScripts = 0;
 
 	FString ScriptKey(int32 SourceUid, const FDEffectScript& Script) const;
+	int32 FireEventInternal(const FDEffectEvent& Event, bool bRequireGraveyardDestination);
+	int32 DispatchEvent(const FDEffectEvent& Event);
+	void EnqueueEvent(const FDEffectEvent& Event, bool bRequireGraveyardDestination);
+	int32 DrainQueuedEvents();
+	int32 DrainPendingEvents();
 	FString TriggerToString(EDEffectTrigger Trigger) const;
 	EDEffectTrigger TriggerFromString(const FString& Value) const;
 	FString CardName(const FDuelCard& Card) const;
@@ -315,6 +343,12 @@ private:
 		const FDEffectEvent& Event, TArray<int32>& OutUids, TArray<int32>& OutCandidateUids,
 		bool& bOutNeedsPrompt, EDuelOwner& OutChooser, int32& OutMin, int32& OutMax, FString& OutPrompt) const;
 	bool ResolveOperationTargets(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
+		const FDuelCard& SourceCard, const FDEffectEvent& Event, TArray<int32>& OutUids) const;
+	bool ResolveOperationTargetsOrDefault(const TSharedPtr<FJsonObject>& Operation,
+		const FDEffectContext& Context, TArray<int32>& OutUids) const;
+	bool CollectWholeZoneOperationTargets(const TSharedPtr<FJsonObject>& Operation,
+		const FDuelCard& SourceCard, const FDEffectEvent& Event, TArray<int32>& OutUids) const;
+	bool ResolveTargetObjectUids(const TSharedPtr<FJsonObject>& TargetObject,
 		const FDuelCard& SourceCard, const FDEffectEvent& Event, TArray<int32>& OutUids) const;
 	bool ResolveCostTargets(const TSharedPtr<FJsonObject>& Cost, const FDEffectContext& Context,
 		TArray<int32>& OutUids) const;
@@ -365,11 +399,15 @@ private:
 		const FDuelCard& Subject) const;
 	int32 CountZoneForOperation(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
 		const FDuelCard& Subject, const FString& Zone, const TSharedPtr<FJsonObject>& Filter) const;
+	int32 CountMatchingZoneCards(const FString& Zone, const FDuelCard& SourceCard,
+		const FDEffectEvent& Event, const TSharedPtr<FJsonObject>& Filter) const;
 	bool ApplyContinuousStat(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
 		bool bAtk);
 	bool ApplyContinuousRestriction(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context);
+	void RegisterDestructionReplacement(int32 Uid, const FString& Mode, bool bContinuous);
 
 	void ClearCardState(int32 Uid);
 	void ExpireLingering(EDuelOwner EndingSide, bool bBattlePhaseOnly);
 	void ResetTurnRestrictions();
+	bool HasContinuousStatScript(int32 CardId, EDEffectTrigger Trigger) const;
 };

@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import sys
+import tempfile
 from typing import Any
 
 ROOT_DEFAULT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -410,23 +411,49 @@ def build_puzzle(pid: str, level: int, template: str, variant: int,
     return puzzle
 
 
-def main() -> int:
+def _write_json(path: str, value: Any) -> None:
+    """Write json.dump(indent=2) + newline bytes atomically (same format as before)."""
+    payload = json.dumps(value, indent=2) + "\n"
+    directory = os.path.dirname(os.path.abspath(path))
+    os.makedirs(directory, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=os.path.basename(path) + ".", suffix=".tmp", dir=directory)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(payload)
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name):
+            try:
+                os.unlink(temp_name)
+            except OSError:
+                pass
+
+
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Generate P021-P100 for Duel Academy.")
     parser.add_argument("--root", default=ROOT_DEFAULT)
     parser.add_argument("--canon", default="", help="Optional Canon/puzzles.json path")
     parser.add_argument("--no-canon", action="store_true", help="Do not attach canon reference metadata")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     root = os.path.abspath(args.root)
-    cards = load_cards(root)
+    try:
+        cards = load_cards(root)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"error: cannot load cards: {exc}", file=sys.stderr)
+        return 2
     puzzle_dir = os.path.join(root, "DuelAcademyIsland", "Content", "Data", "Puzzles")
     os.makedirs(puzzle_dir, exist_ok=True)
 
     canon = None
     canon_path = args.canon or os.path.join(root, "DuelAcademyIsland", "Content", "Data", "Canon", "puzzles.json")
     if not args.no_canon and os.path.exists(canon_path):
-        with open(canon_path, encoding="utf-8") as handle:
-            canon = {p["id"]: p for p in json.load(handle).get("puzzles", [])}
+        try:
+            with open(canon_path, encoding="utf-8") as handle:
+                canon = {p["id"]: p for p in json.load(handle).get("puzzles", [])}
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"error: cannot load canon puzzles: {exc}", file=sys.stderr)
+            return 2
 
     next_id = 21
     count = 0
@@ -443,9 +470,7 @@ def main() -> int:
                 for cid in referenced:
                     if cid not in cards:
                         raise SystemExit(f"{pid}: unknown card id {cid}")
-                with open(os.path.join(puzzle_dir, pid + ".json"), "w", encoding="utf-8") as handle:
-                    json.dump(puzzle, handle, indent=2)
-                    handle.write("\n")
+                _write_json(os.path.join(puzzle_dir, pid + ".json"), puzzle)
                 count += 1
                 next_id += 1
 

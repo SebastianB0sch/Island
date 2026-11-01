@@ -65,6 +65,35 @@ namespace
 		Definition.bPermanent = bPermanent;
 		return Definition;
 	}
+
+	/**
+	 * Prestige order is authoritative; the id is a stable tie-break so two
+	 * titles with the same order always evaluate in the same sequence.
+	 */
+	void SortTitleDefinitions(TArray<FDATitleDefinition>& InOut)
+	{
+		InOut.Sort([](const FDATitleDefinition& A, const FDATitleDefinition& B)
+		{
+			if (A.Order != B.Order)
+			{
+				return A.Order < B.Order;
+			}
+			const int32 IdCompare = A.Id.Compare(B.Id, ESearchCase::IgnoreCase);
+			if (IdCompare != 0)
+			{
+				return IdCompare < 0;
+			}
+			return A.Name.Compare(B.Name, ESearchCase::IgnoreCase) < 0;
+		});
+	}
+
+	const FDATitleDefinition* FindLoadedById(const TArray<FDATitleDefinition>& Definitions, const FString& Id)
+	{
+		return Definitions.FindByPredicate([&Id](const FDATitleDefinition& Definition)
+		{
+			return Definition.Id.Equals(Id, ESearchCase::IgnoreCase);
+		});
+	}
 }
 
 // ------------------------------------------------------------------------ lifecycle
@@ -182,11 +211,8 @@ void UDATitleSystem::UseDefaultDefinitions()
 	Society.Description = TEXT("Temporary title while aligned with the Society of Light.");
 	Defaults.Add(Society);
 
+	SortTitleDefinitions(Defaults);
 	Definitions = MoveTemp(Defaults);
-	Definitions.Sort([](const FDATitleDefinition& A, const FDATitleDefinition& B)
-	{
-		return A.Order < B.Order;
-	});
 	DefaultTitleId = TEXT("apprentice_duelist");
 	PromotionScore = 400;
 	bDemoteOnFail = true;
@@ -216,17 +242,27 @@ bool UDATitleSystem::LoadDefinitions()
 		return false;
 	}
 
-	const FString LoadedDefault = ReadString(Root, TEXT("default_title"), TEXT("apprentice_duelist"));
-	DefaultTitleId = LoadedDefault;
+	// Parse into locals first so a malformed file cannot leave the subsystem
+	// with a half-applied mixture of old and new configuration.
+	FString LoadedDefault = ReadString(Root, TEXT("default_title"), TEXT("apprentice_duelist")).TrimStartAndEnd();
+	if (LoadedDefault.IsEmpty())
+	{
+		LoadedDefault = TEXT("apprentice_duelist");
+	}
+	int32 LoadedPromotionScore = 400;
+	bool bLoadedDemoteOnFail = true;
+	FString LoadedDropoutTitle = TEXT("dropout_boy");
+	FString LoadedDropoutFlag = TEXT("dropout_boy");
+	FString LoadedRecoveryOpponent = TEXT("fonda_fontaine");
 
 	const TSharedPtr<FJsonObject>* DormRules = nullptr;
 	if (Root->TryGetObjectField(TEXT("dorm_rules"), DormRules) && DormRules && DormRules->IsValid())
 	{
-		PromotionScore = FMath::Max(0, ReadInt(*DormRules, TEXT("promotion_score"), 400));
-		bDemoteOnFail = ReadBool(*DormRules, TEXT("demote_on_fail"), true);
-		DropoutTitleId = ReadString(*DormRules, TEXT("dropout_title"), TEXT("dropout_boy"));
-		DropoutFlag = ReadString(*DormRules, TEXT("dropout_flag"), TEXT("dropout_boy"));
-		RecoveryOpponentId = ReadString(*DormRules, TEXT("recovery_opponent"), TEXT("fonda_fontaine"));
+		LoadedPromotionScore = FMath::Max(0, ReadInt(*DormRules, TEXT("promotion_score"), 400));
+		bLoadedDemoteOnFail = ReadBool(*DormRules, TEXT("demote_on_fail"), true);
+		LoadedDropoutTitle = ReadString(*DormRules, TEXT("dropout_title"), TEXT("dropout_boy")).TrimStartAndEnd();
+		LoadedDropoutFlag = ReadString(*DormRules, TEXT("dropout_flag"), TEXT("dropout_boy")).TrimStartAndEnd();
+		LoadedRecoveryOpponent = ReadString(*DormRules, TEXT("recovery_opponent"), TEXT("fonda_fontaine")).TrimStartAndEnd();
 	}
 
 	const TArray<TSharedPtr<FJsonValue>>* TitleArray = nullptr;
@@ -238,20 +274,52 @@ bool UDATitleSystem::LoadDefinitions()
 	}
 
 	TArray<FDATitleDefinition> Loaded;
+	TSet<FString> SeenIds;
+	TSet<FString> SeenNames;
+	int32 SkippedEntries = 0;
+	int32 DuplicateIds = 0;
+	Loaded.Reserve(TitleArray->Num());
 	for (const TSharedPtr<FJsonValue>& Value : *TitleArray)
 	{
 		const TSharedPtr<FJsonObject> Object = Value.IsValid() ? Value->AsObject() : nullptr;
 		if (!Object.IsValid())
 		{
+			++SkippedEntries;
 			continue;
 		}
 		FDATitleDefinition Definition;
-		Definition.Id = ReadString(Object, TEXT("id"));
+		Definition.Id = ReadString(Object, TEXT("id")).TrimStartAndEnd();
 		if (Definition.Id.IsEmpty())
 		{
+			++SkippedEntries;
 			continue;
 		}
-		Definition.Name = ReadString(Object, TEXT("name"), Definition.Id);
+		const FString IdKey = Definition.Id.ToLower();
+		if (SeenIds.Contains(IdKey))
+		{
+			++DuplicateIds;
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Duplicate title id '%s' ignored."), *Definition.Id);
+			continue;
+		}
+		SeenIds.Add(IdKey);
+
+		Definition.Name = ReadString(Object, TEXT("name")).TrimStartAndEnd();
+		if (Definition.Name.IsEmpty())
+		{
+			Definition.Name = Definition.Id;
+		}
+		const FString NameKey = Definition.Name.ToLower();
+		if (SeenNames.Contains(NameKey))
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Title '%s' shares display name '%s'; name lookups resolve to the first title."),
+				*Definition.Id, *Definition.Name);
+		}
+		else
+		{
+			SeenNames.Add(NameKey);
+		}
+
 		Definition.Description = ReadString(Object, TEXT("description"));
 		Definition.Order = ReadInt(Object, TEXT("order"));
 		Definition.bPermanent = ReadBool(Object, TEXT("permanent"), true);
@@ -267,10 +335,14 @@ bool UDATitleSystem::LoadDefinitions()
 		Definition.bRequiresKingOfGames = ReadBool(Object, TEXT("requires_king_of_games"), false);
 		Definition.bRequiresDorm = ReadBool(Object, TEXT("requires_dorm"), false);
 		Definition.RequiredDorm = DuelAcademyProfile::ParseDorm(ReadString(Object, TEXT("required_dorm"), TEXT("Slifer")));
-		Definition.RequiredFlag = ReadString(Object, TEXT("required_flag"));
+		Definition.RequiredFlag = ReadString(Object, TEXT("required_flag")).TrimStartAndEnd();
 		Loaded.Add(MoveTemp(Definition));
 	}
 
+	if (SkippedEntries > 0)
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Skipped %d malformed title entries."), SkippedEntries);
+	}
 	if (Loaded.Num() == 0)
 	{
 		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Title data contains no valid titles; using defaults."));
@@ -278,14 +350,50 @@ bool UDATitleSystem::LoadDefinitions()
 		return false;
 	}
 
-	Loaded.Sort([](const FDATitleDefinition& A, const FDATitleDefinition& B)
+	SortTitleDefinitions(Loaded);
+	if (!FindLoadedById(Loaded, LoadedDefault))
 	{
-		return A.Order < B.Order;
-	});
+		const FDATitleDefinition* Fallback = Loaded.FindByPredicate([](const FDATitleDefinition& Definition)
+		{
+			return Definition.bPermanent && !Definition.bFailState;
+		});
+		LoadedDefault = Fallback ? Fallback->Id : Loaded[0].Id;
+		UE_LOG(LogDuelAcademyIsland, Warning,
+			TEXT("Configured default title is not defined; falling back to '%s'."), *LoadedDefault);
+	}
+	if (!FindLoadedById(Loaded, LoadedDropoutTitle))
+	{
+		const FDATitleDefinition* FailState = Loaded.FindByPredicate([](const FDATitleDefinition& Definition)
+		{
+			return Definition.bFailState;
+		});
+		if (FailState)
+		{
+			LoadedDropoutTitle = FailState->Id;
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("Configured dropout title is not defined; falling back to '%s'."), *LoadedDropoutTitle);
+		}
+	}
+	if (LoadedDropoutFlag.IsEmpty())
+	{
+		LoadedDropoutFlag = TEXT("dropout_boy");
+	}
+	if (LoadedRecoveryOpponent.IsEmpty())
+	{
+		LoadedRecoveryOpponent = TEXT("fonda_fontaine");
+	}
+
 	Definitions = MoveTemp(Loaded);
+	DefaultTitleId = LoadedDefault;
+	PromotionScore = LoadedPromotionScore;
+	bDemoteOnFail = bLoadedDemoteOnFail;
+	DropoutTitleId = LoadedDropoutTitle;
+	DropoutFlag = LoadedDropoutFlag;
+	RecoveryOpponentId = LoadedRecoveryOpponent;
 	bDefinitionsLoaded = true;
 
-	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded %d title definitions."), Definitions.Num());
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded %d title definitions (%d duplicate ids ignored)."),
+		Definitions.Num(), DuplicateIds);
 	return true;
 }
 
@@ -299,9 +407,14 @@ void UDATitleSystem::EnsureDefinitionsLoaded()
 
 const FDATitleDefinition* UDATitleSystem::FindById(const FString& Id) const
 {
+	const FString Wanted = Id.TrimStartAndEnd();
+	if (Wanted.IsEmpty())
+	{
+		return nullptr;
+	}
 	for (const FDATitleDefinition& Definition : Definitions)
 	{
-		if (Definition.Id.Equals(Id, ESearchCase::IgnoreCase))
+		if (Definition.Id.Equals(Wanted, ESearchCase::IgnoreCase))
 		{
 			return &Definition;
 		}
@@ -311,10 +424,15 @@ const FDATitleDefinition* UDATitleSystem::FindById(const FString& Id) const
 
 const FDATitleDefinition* UDATitleSystem::FindDefinition(const FString& TitleIdOrName) const
 {
+	const FString Wanted = TitleIdOrName.TrimStartAndEnd();
+	if (Wanted.IsEmpty())
+	{
+		return nullptr;
+	}
 	for (const FDATitleDefinition& Definition : Definitions)
 	{
-		if (Definition.Id.Equals(TitleIdOrName, ESearchCase::IgnoreCase)
-			|| Definition.Name.Equals(TitleIdOrName, ESearchCase::IgnoreCase))
+		if (Definition.Id.Equals(Wanted, ESearchCase::IgnoreCase)
+			|| Definition.Name.Equals(Wanted, ESearchCase::IgnoreCase))
 		{
 			return &Definition;
 		}
@@ -364,6 +482,13 @@ FString UDATitleSystem::GetDefaultTitle() const
 	{
 		return Definition->Name;
 	}
+	for (const FDATitleDefinition& Definition : Definitions)
+	{
+		if (Definition.bPermanent && !Definition.bFailState)
+		{
+			return Definition.Name;
+		}
+	}
 	return TEXT("Apprentice Duelist");
 }
 
@@ -372,6 +497,13 @@ FString UDATitleSystem::GetDropoutTitleName() const
 	if (const FDATitleDefinition* Definition = FindById(DropoutTitleId))
 	{
 		return Definition->Name;
+	}
+	for (const FDATitleDefinition& Definition : Definitions)
+	{
+		if (Definition.bFailState)
+		{
+			return Definition.Name;
+		}
 	}
 	return TEXT("Dropout Boy");
 }
@@ -386,6 +518,13 @@ FString UDATitleSystem::EvaluateTitle(const UDAProfileSubsystem* Profile)
 		return GetDefaultTitle();
 	}
 
+	// The fail state is terminal for display purposes: a temporary story title
+	// must not hide Dropout Boy while the exam-failure flags are set.
+	if (Profile->GetFlag(DropoutFlag) || Profile->GetFlag(TEXT("dropout")))
+	{
+		return GetDropoutTitleName();
+	}
+
 	const FString Temporary = Profile->GetTemporaryTitle();
 	if (!Temporary.IsEmpty() && Profile->GetTemporaryTitleDaysRemaining() > 0)
 	{
@@ -394,11 +533,6 @@ FString UDATitleSystem::EvaluateTitle(const UDAProfileSubsystem* Profile)
 			return Definition->Name;
 		}
 		return Temporary;
-	}
-
-	if (Profile->GetFlag(DropoutFlag) || Profile->GetFlag(TEXT("dropout")))
-	{
-		return GetDropoutTitleName();
 	}
 
 	const FDATitleDefinition* Best = nullptr;
@@ -571,8 +705,9 @@ bool UDATitleSystem::PromoteDorm(UDAProfileSubsystem* Profile)
 	{
 		return false;
 	}
-	EDADorm Target = Profile->GetDorm();
-	if (!GetPromotionTarget(Profile->GetDorm(), Target) || Target == Profile->GetDorm())
+	const EDADorm Current = Profile->GetDorm();
+	EDADorm Target = Current;
+	if (!GetPromotionTarget(Current, Target) || Target == Current)
 	{
 		return false;
 	}

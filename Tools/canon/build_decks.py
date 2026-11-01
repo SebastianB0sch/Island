@@ -212,7 +212,7 @@ def curated_deck(did: str, source: dict, deck_type: str) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path,
-                        default=Path("Tools/canon/cache/guide_wikitext.json"),
+                        default=CACHE_DIR / "guide_wikitext.json",
                         help="optional wikitext cache; only needed when decks_facts.json is absent")
     args = parser.parse_args()
     ensure_dirs()

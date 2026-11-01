@@ -178,6 +178,14 @@ TArray<FString> FDAUIScreen::WrapText(const FString& Str, float MaxWidth, float 
 	return Out;
 }
 
+FString FDAUIScreen::Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font) const
+{
+	return DAUIText::EllipsizeMeasured(Str, MaxWidth, [this, InScale, Font](const FString& Candidate)
+	{
+		return Measure(Candidate, InScale, Font).X;
+	});
+}
+
 void FDAUIScreen::PlaySfx(const TCHAR* SoundName, float Volume) const
 {
 	if (OwnerHUD.IsValid())

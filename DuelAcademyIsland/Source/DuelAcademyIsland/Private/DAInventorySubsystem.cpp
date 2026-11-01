@@ -8,6 +8,7 @@
 #include "DAStorySubsystem.h"
 #include "DuelAcademyIsland.h"
 
+#include "Algo/Unique.h"
 #include "Dom/JsonObject.h"
 #include "Engine/GameInstance.h"
 #include "HAL/PlatformMisc.h"
@@ -47,6 +48,157 @@ namespace
 			}
 		}
 		return false;
+	}
+
+	/** Saturating int32 addition used by aggregation and DP counters. */
+	int32 SaturatingAdd(int32 Base, int64 Delta)
+	{
+		return static_cast<int32>(FMath::Clamp<int64>(
+			static_cast<int64>(Base) + Delta, 0, TNumericLimits<int32>::Max()));
+	}
+
+	/**
+	 * Parses a counts-object key.  The save writer always emits canonical
+	 * positive decimal card ids, so "1x", "1.0", " 1" and "01" are malformed.
+	 */
+	bool ParseCardCountKey(const FString& Key, int32& OutCardId)
+	{
+		if (Key.IsEmpty() || Key.Len() > 10)
+		{
+			return false;
+		}
+		int64 Parsed = 0;
+		for (const TCHAR Character : Key)
+		{
+			if (Character < TEXT('0') || Character > TEXT('9'))
+			{
+				return false;
+			}
+			Parsed = Parsed * 10 + static_cast<int64>(Character - TEXT('0'));
+			if (Parsed > TNumericLimits<int32>::Max())
+			{
+				return false;
+			}
+		}
+		if (Parsed <= 0 || (Key.Len() > 1 && Key[0] == TEXT('0')))
+		{
+			return false;
+		}
+		OutCardId = static_cast<int32>(Parsed);
+		return true;
+	}
+
+	bool ReadSaveCount(const TSharedPtr<FJsonValue>& Value, int32& OutCount)
+	{
+		int32 Parsed = 0;
+		if (!DAEconomyJson::TryReadInt(Value, Parsed) || Parsed < 0)
+		{
+			return false;
+		}
+		OutCount = Parsed;
+		return true;
+	}
+
+	bool ReadSaveNonNegative(const TSharedPtr<FJsonValue>& Value, int32& OutNumber)
+	{
+		int32 Parsed = 0;
+		if (!DAEconomyJson::TryReadInt(Value, Parsed) || Parsed < 0)
+		{
+			return false;
+		}
+		OutNumber = Parsed;
+		return true;
+	}
+
+	/**
+	 * Shared non-mutating validator for the inventory save section.  Both the
+	 * provider validation hook and ImportStateJson use it so a malformed save
+	 * is rejected instead of silently dropping entries (which used to turn
+	 * {"1x": 3} into a card-1 grant or an empty collection).
+	 */
+	bool ValidateInventorySectionObject(const TSharedPtr<FJsonObject>& Object, FString& OutError)
+	{
+		if (!Object.IsValid())
+		{
+			OutError = TEXT("Inventory save section is missing.");
+			return false;
+		}
+
+		const TSharedPtr<FJsonObject>* CountsObject = nullptr;
+		if (!Object->TryGetObjectField(TEXT("counts"), CountsObject) || !CountsObject || !CountsObject->IsValid())
+		{
+			OutError = TEXT("Inventory save section is missing the counts object.");
+			return false;
+		}
+		for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : (*CountsObject)->Values)
+		{
+			int32 CardId = 0;
+			int32 Count = 0;
+			if (!ParseCardCountKey(Pair.Key, CardId))
+			{
+				OutError = FString::Printf(TEXT("Inventory save section has an invalid card id '%s'."), *Pair.Key);
+				return false;
+			}
+			if (!ReadSaveCount(Pair.Value, Count))
+			{
+				OutError = FString::Printf(TEXT("Inventory save section has an invalid count for card %d."), CardId);
+				return false;
+			}
+		}
+
+		if (Object->HasField(TEXT("max_owned_copies")))
+		{
+			int32 MaxOwned = 0;
+			if (!ReadSaveNonNegative(Object->TryGetField(TEXT("max_owned_copies")), MaxOwned))
+			{
+				OutError = TEXT("Inventory save section has an invalid max_owned_copies value.");
+				return false;
+			}
+		}
+
+		if (Object->HasField(TEXT("pending_ante")))
+		{
+			const TArray<TSharedPtr<FJsonValue>>* AnteArray = nullptr;
+			if (!Object->TryGetArrayField(TEXT("pending_ante"), AnteArray) || !AnteArray)
+			{
+				OutError = TEXT("Inventory save section has a non-array pending_ante value.");
+				return false;
+			}
+			for (const TSharedPtr<FJsonValue>& Value : *AnteArray)
+			{
+				const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
+				if (!Entry.IsValid())
+				{
+					OutError = TEXT("Inventory save section has a non-object ante entry.");
+					return false;
+				}
+				int32 CardId = 0;
+				if (!DAEconomyJson::TryReadCardId(Entry->TryGetField(TEXT("card_id")), CardId))
+				{
+					OutError = TEXT("Inventory save section has an invalid ante card id.");
+					return false;
+				}
+				const TSharedPtr<FJsonValue> DuelValue = Entry->TryGetField(TEXT("duel_id"));
+				FString DuelId;
+				if (!DuelValue.IsValid() || DuelValue->Type != EJson::String
+					|| !DuelValue->TryGetString(DuelId) || DuelId.IsEmpty())
+				{
+					OutError = TEXT("Inventory save section has an ante record without a duel id.");
+					return false;
+				}
+				const TSharedPtr<FJsonValue> SourceValue = Entry->TryGetField(TEXT("source"));
+				FString Source;
+				if (SourceValue.IsValid()
+					&& (SourceValue->Type != EJson::String || !SourceValue->TryGetString(Source)))
+				{
+					OutError = TEXT("Inventory save section has an invalid ante source.");
+					return false;
+				}
+			}
+		}
+
+		OutError.Reset();
+		return true;
 	}
 }
 
@@ -112,14 +264,25 @@ bool UDAInventorySubsystem::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection
 	return true;
 }
 
+bool UDAInventorySubsystem::ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const
+{
+	return ValidateInventorySectionObject(InSection, OutError);
+}
+
 bool UDAInventorySubsystem::ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError)
 {
-	if (!InSection.IsValid())
+	if (!ValidateSaveSection(InSection, OutError))
 	{
-		OutError = TEXT("Inventory save section is missing.");
 		return false;
 	}
 	return ImportStateJson(DAEconomyJson::WriteObject(InSection), OutError);
+}
+
+void UDAInventorySubsystem::ResetSaveSectionState()
+{
+	// A legacy payload with no inventory section must not leave a previous
+	// session's trunk in memory.
+	ResetCollection();
 }
 
 void UDAInventorySubsystem::Deinitialize()
@@ -149,12 +312,18 @@ void UDAInventorySubsystem::LoadOwnershipLimit()
 	}
 
 	int32 Value = MaxOwnedCopies;
-	if (!Object->TryGetNumberField(TEXT("max_owned_copies"), Value))
+	int32 Parsed = 0;
+	if (DAEconomyJson::TryReadInt(Object->TryGetField(TEXT("max_owned_copies")), Parsed))
+	{
+		Value = Parsed;
+	}
+	else
 	{
 		const TSharedPtr<FJsonObject>* RulesObject = nullptr;
-		if (Object->TryGetObjectField(TEXT("rules"), RulesObject) && RulesObject && RulesObject->IsValid())
+		if (Object->TryGetObjectField(TEXT("rules"), RulesObject) && RulesObject && RulesObject->IsValid()
+			&& DAEconomyJson::TryReadInt((*RulesObject)->TryGetField(TEXT("max_owned_copies")), Parsed))
 		{
-			(*RulesObject)->TryGetNumberField(TEXT("max_owned_copies"), Value);
+			Value = Parsed;
 		}
 	}
 	// Older save/profile data may omit the field; keep the 3-copy default.
@@ -217,14 +386,20 @@ int32 UDAInventorySubsystem::AddCard(int32 CardId, int32 Count)
 	}
 
 	int32& Owned = Counts.FindOrAdd(CardId);
-	const int32 Space = MaxOwnedCopies > 0 ? FMath::Max(0, MaxOwnedCopies - Owned) : Count;
-	const int32 Added = FMath::Min(Count, Space);
+	const int64 Space = MaxOwnedCopies > 0
+		? FMath::Max<int64>(0, static_cast<int64>(MaxOwnedCopies) - Owned)
+		: Count;
+	const int32 Requested = static_cast<int32>(FMath::Min<int64>(Count, Space));
+	const int32 OldOwned = Owned;
+	const int32 NewOwned = static_cast<int32>(FMath::Clamp<int64>(
+		static_cast<int64>(OldOwned) + Requested, 0, TNumericLimits<int32>::Max()));
+	const int32 Added = NewOwned - OldOwned;
 	if (Added <= 0)
 	{
 		return 0;
 	}
 
-	Owned += Added;
+	Owned = NewOwned;
 	OnCollectionChanged.Broadcast(CardId, Owned);
 	return Added;
 }
@@ -262,7 +437,7 @@ bool UDAInventorySubsystem::CanAddCard(int32 CardId, int32 Count) const
 	{
 		return true;
 	}
-	return GetCount(CardId) + Count <= MaxOwnedCopies;
+	return static_cast<int64>(GetCount(CardId)) + Count <= MaxOwnedCopies;
 }
 
 bool UDAInventorySubsystem::IsKnownCard(int32 CardId) const
@@ -304,12 +479,15 @@ TArray<int32> UDAInventorySubsystem::GetCollectionCards() const
 
 int32 UDAInventorySubsystem::GetCollectionSize() const
 {
-	int32 Total = 0;
+	int64 Total = 0;
 	for (const TPair<int32, int32>& Pair : Counts)
 	{
-		Total += Pair.Value;
+		if (Pair.Value > 0)
+		{
+			Total += Pair.Value;
+		}
 	}
-	return Total;
+	return static_cast<int32>(FMath::Clamp<int64>(Total, 0, TNumericLimits<int32>::Max()));
 }
 
 int32 UDAInventorySubsystem::GetCatalogSize() const
@@ -325,6 +503,7 @@ FDAECollectionStats UDAInventorySubsystem::GetCollectionStats() const
 	const UGameInstance* GI = GetGameInstance();
 	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
 	Stats.CatalogSize = Database ? Database->GetCardCount() : 0;
+	int32 KnownUniqueCards = 0;
 
 	for (const EDAECardRarity Rarity : { EDAECardRarity::Common, EDAECardRarity::Rare, EDAECardRarity::SuperRare, EDAECardRarity::UltraRare, EDAECardRarity::SecretRare })
 	{
@@ -341,14 +520,14 @@ FDAECollectionStats UDAInventorySubsystem::GetCollectionStats() const
 			continue;
 		}
 		Stats.UniqueCards++;
-		Stats.TotalCards += Pair.Value;
+		Stats.TotalCards = SaturatingAdd(Stats.TotalCards, Pair.Value);
 
 		const EDAECardRarity Rarity = GetCardRarity(Pair.Key);
 		for (FDAERarityCount& Entry : Stats.RarityCounts)
 		{
 			if (Entry.Rarity == Rarity)
 			{
-				Entry.Count += Pair.Value;
+				Entry.Count = SaturatingAdd(Entry.Count, Pair.Value);
 				break;
 			}
 		}
@@ -356,24 +535,31 @@ FDAECollectionStats UDAInventorySubsystem::GetCollectionStats() const
 		const FCardRecord* Card = Database ? Database->FindCard(Pair.Key) : nullptr;
 		if (!Card)
 		{
+			// Legacy saves can contain ids that were later removed from
+			// cards.json. They remain owned counts above, but must not inflate
+			// catalogue completion (which is a fraction of the current catalog).
 			continue;
 		}
+		KnownUniqueCards++;
 		if (!Card->CardType.IsEmpty())
 		{
-			Stats.TypeCounts.FindOrAdd(Card->CardType) += Pair.Value;
+			int32& TypeCount = Stats.TypeCounts.FindOrAdd(Card->CardType);
+			TypeCount = SaturatingAdd(TypeCount, Pair.Value);
 		}
 		if (!Card->Attribute.IsEmpty() && Card->Attribute != TEXT("NONE"))
 		{
-			Stats.AttributeCounts.FindOrAdd(Card->Attribute) += Pair.Value;
+			int32& AttributeCount = Stats.AttributeCounts.FindOrAdd(Card->Attribute);
+			AttributeCount = SaturatingAdd(AttributeCount, Pair.Value);
 		}
 		if (!Card->MonsterType.IsEmpty() && Card->IsMonster())
 		{
-			Stats.MonsterTypeCounts.FindOrAdd(Card->MonsterType) += Pair.Value;
+			int32& MonsterTypeCount = Stats.MonsterTypeCounts.FindOrAdd(Card->MonsterType);
+			MonsterTypeCount = SaturatingAdd(MonsterTypeCount, Pair.Value);
 		}
 	}
 
 	Stats.CompletionPercent = Stats.CatalogSize > 0
-		? (static_cast<float>(Stats.UniqueCards) * 100.f / static_cast<float>(Stats.CatalogSize))
+		? FMath::Clamp(static_cast<float>(KnownUniqueCards) * 100.f / static_cast<float>(Stats.CatalogSize), 0.f, 100.f)
 		: 0.f;
 	return Stats;
 }
@@ -640,6 +826,7 @@ FDAEPackOpenResult UDAInventorySubsystem::ConsumePendingPackGrant(const FString&
 		Failed.bSuccess = false;
 		Failed.ErrorCode = TEXT("grant_consume_failed");
 		Failed.ErrorMessage = TEXT("The pending pack grant could not be consumed; the pack was rolled back.");
+		Failed.Cards.Reset();
 		Failed.DPFromDuplicates = 0;
 		return Failed;
 	}
@@ -667,6 +854,10 @@ FDAEPackOpenResult UDAInventorySubsystem::OpenPackDefinition(const FDAEPackDef& 
 		Result.bSuccess = false;
 		Result.ErrorCode = Code;
 		Result.ErrorMessage = Message;
+		// A failed open is fully rolled back; do not expose partial reveals or
+		// duplicate compensation that was never credited.
+		Result.Cards.Reset();
+		Result.DPFromDuplicates = 0;
 		return Result;
 	};
 
@@ -701,12 +892,29 @@ FDAEPackOpenResult UDAInventorySubsystem::OpenPackDefinition(const FDAEPackDef& 
 	if (Pack.bAllCards)
 	{
 		Database->GetCards().GetKeys(AllCardIds);
-		AllCardIds.Sort();
 	}
+	else
+	{
+		// An AnyCard slot in a non-all-cards pack draws from the union of the
+		// materialised rarity pools. validate_packs.py allows this shape, and
+		// treating it as an empty all-cards pool made the pack impossible to open.
+		for (const FDAERarityPool& Pool : Pack.Pools)
+		{
+			AllCardIds.Append(Pool.Cards);
+		}
+	}
+	AllCardIds.Sort();
+	AllCardIds.SetNum(Algo::Unique(AllCardIds));
 
 	TSet<int32> PickedThisPack;
 	TArray<int32> AddedCards;
-	TMap<int32, int32> SimulatedCounts = Counts; // used only for previews
+	TMap<int32, int32> SimulatedCounts;
+	if (!bAddToCollection)
+	{
+		// Preview state is simulated from a copy of the trunk; a real open
+		// reads the live counts instead, so skip the copy on that path.
+		SimulatedCounts = Counts;
+	}
 
 	auto PickFromPool = [&Rng, &PickedThisPack, &Pack](const TArray<int32>& Pool) -> int32
 	{
@@ -805,7 +1013,7 @@ FDAEPackOpenResult UDAInventorySubsystem::OpenPackDefinition(const FDAEPackDef& 
 			if (Reveal.bDuplicate)
 			{
 				Reveal.DuplicateDP = Pack.DuplicateDPPerCard;
-				Result.DPFromDuplicates += Reveal.DuplicateDP;
+				Result.DPFromDuplicates = SaturatingAdd(Result.DPFromDuplicates, Reveal.DuplicateDP);
 			}
 			PickedThisPack.Add(CardId);
 			Result.Cards.Add(Reveal);
@@ -903,7 +1111,7 @@ FDAEPackOpenResult UDAInventorySubsystem::OpenPackDefinition(const FDAEPackDef& 
 		if (Reveal.bDuplicate)
 		{
 			Reveal.DuplicateDP = Pack.DuplicateDPPerCard;
-			Result.DPFromDuplicates += Reveal.DuplicateDP;
+			Result.DPFromDuplicates = SaturatingAdd(Result.DPFromDuplicates, Reveal.DuplicateDP);
 		}
 		PickedThisPack.Add(CardId);
 		Result.Cards.Add(Reveal);
@@ -921,12 +1129,29 @@ int32 UDAInventorySubsystem::ResolveSeed(int32 Seed)
 	}
 	static uint32 Counter = 0;
 	const uint64 Cycles = FPlatformTime::Cycles64();
-	return static_cast<int32>((Cycles ^ (static_cast<uint64>(++Counter) * 2654435761u)) & 0x7fffffff);
+	const int32 Candidate = static_cast<int32>((Cycles ^ (static_cast<uint64>(++Counter) * 2654435761u)) & 0x7fffffff);
+	// 0 means "pick a seed" at the public API boundary, so never report a
+	// generated seed of 0 (the pack was still opened deterministically by the
+	// FRandomStream, but callers rely on a non-zero Seed to replay a reveal).
+	return Candidate != 0 ? Candidate : 1;
 }
 
 bool UDAInventorySubsystem::RemoveCardForAnte(int32 CardId, const FString& DuelId, const FString& Source)
 {
-	if (DuelId.IsEmpty() || RemoveCard(CardId, 1) != 1)
+	if (DuelId.IsEmpty())
+	{
+		return false;
+	}
+	if (PendingAnte.ContainsByPredicate([&DuelId](const FDAEAnteRecord& Record)
+		{
+			return Record.DuelId.Equals(DuelId, ESearchCase::IgnoreCase);
+		}))
+	{
+		// One ante stake per duel. Without this guard a retried call could
+		// remove a second copy while ReturnAnteCard only returns one of them.
+		return false;
+	}
+	if (RemoveCard(CardId, 1) != 1)
 	{
 		return false;
 	}
@@ -1031,6 +1256,11 @@ bool UDAInventorySubsystem::ImportStateJson(const FString& Json, FString& OutErr
 	}
 
 	const TSharedPtr<FJsonObject> Object = Root->AsObject();
+	if (!ValidateInventorySectionObject(Object, OutError))
+	{
+		return false;
+	}
+
 	const TSharedPtr<FJsonObject>* CountsObject = nullptr;
 	if (!Object->TryGetObjectField(TEXT("counts"), CountsObject) || !CountsObject || !CountsObject->IsValid())
 	{
@@ -1041,9 +1271,18 @@ bool UDAInventorySubsystem::ImportStateJson(const FString& Json, FString& OutErr
 	TMap<int32, int32> NewCounts;
 	for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : (*CountsObject)->Values)
 	{
-		const int32 CardId = FCString::Atoi(*Pair.Key);
-		const int32 Count = Pair.Value.IsValid() ? static_cast<int32>(Pair.Value->AsNumber()) : 0;
-		if (CardId > 0 && Count > 0)
+		int32 CardId = 0;
+		int32 Count = 0;
+		// Validation above guarantees these succeed; keep the defensive checks
+		// so a future validator change cannot install a partial collection.
+		if (!ParseCardCountKey(Pair.Key, CardId) || !ReadSaveCount(Pair.Value, Count))
+		{
+			OutError = TEXT("Inventory JSON contains an invalid count entry.");
+			return false;
+		}
+		// The save schema allows an explicit zero (meaning "not owned"), while
+		// the writer omits zero entries; treat both as absent.
+		if (Count > 0)
 		{
 			NewCounts.Add(CardId, Count);
 		}
@@ -1058,21 +1297,35 @@ bool UDAInventorySubsystem::ImportStateJson(const FString& Json, FString& OutErr
 			const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
 			if (!Entry.IsValid())
 			{
-				continue;
+				OutError = TEXT("Inventory JSON contains an invalid ante entry.");
+				return false;
 			}
 			FDAEAnteRecord Record;
-			Record.CardId = DAEconomyJson::ReadInt(Entry, TEXT("card_id"));
+			if (!DAEconomyJson::TryReadCardId(Entry->TryGetField(TEXT("card_id")), Record.CardId))
+			{
+				OutError = TEXT("Inventory JSON contains an invalid ante card id.");
+				return false;
+			}
 			Record.DuelId = DAEconomyJson::ReadString(Entry, TEXT("duel_id"));
 			Record.Source = DAEconomyJson::ReadString(Entry, TEXT("source"));
-			if (Record.CardId > 0)
+			if (Record.DuelId.IsEmpty())
 			{
-				NewAnte.Add(Record);
+				OutError = TEXT("Inventory JSON contains an ante record without a duel id.");
+				return false;
 			}
+			NewAnte.Add(MoveTemp(Record));
 		}
 	}
 
 	int32 NewMax = MaxOwnedCopies;
-	Object->TryGetNumberField(TEXT("max_owned_copies"), NewMax);
+	if (Object->HasField(TEXT("max_owned_copies")))
+	{
+		if (!ReadSaveNonNegative(Object->TryGetField(TEXT("max_owned_copies")), NewMax))
+		{
+			OutError = TEXT("Inventory JSON has an invalid max_owned_copies value.");
+			return false;
+		}
+	}
 
 	Counts = MoveTemp(NewCounts);
 	PendingAnte = MoveTemp(NewAnte);
@@ -1115,11 +1368,21 @@ bool UDAInventorySubsystem::ApplySaveData(const FDAEInventorySaveData& Data, FSt
 	}
 
 	Counts = MoveTemp(NewCounts);
-	PendingAnte = Data.PendingAnte;
-	if (Data.MaxOwnedCopies > 0)
+
+	TArray<FDAEAnteRecord> NewAnte;
+	NewAnte.Reserve(Data.PendingAnte.Num());
+	for (const FDAEAnteRecord& Record : Data.PendingAnte)
 	{
-		MaxOwnedCopies = Data.MaxOwnedCopies;
+		if (Record.CardId > 0 && !Record.DuelId.IsEmpty())
+		{
+			NewAnte.Add(Record);
+		}
 	}
+	PendingAnte = MoveTemp(NewAnte);
+
+	// 0 is a documented "unlimited" setting, so it must round-trip instead of
+	// silently keeping the previous cap.
+	MaxOwnedCopies = FMath::Max(0, Data.MaxOwnedCopies);
 	OnInventoryReset.Broadcast();
 	OnAnteChanged.Broadcast(PendingAnte.Num());
 	return true;
@@ -1145,16 +1408,19 @@ bool UDAInventorySubsystem::TickSelfTest(float DeltaSeconds)
 		if (SelfTestAttempts > 30)
 		{
 			UE_LOG(LogDuelAcademyIsland, Error, TEXT("DAEconomySelfTest: timed out waiting for subsystems."));
-			FPlatformMisc::RequestExit(false);
+			FPlatformMisc::RequestExitWithStatus(false, 1, TEXT("DAEconomySelfTest"));
 			return false;
 		}
 		return true;
 	}
 
-	const FString Report = DAEconomyTests::Run(this, Shop, DeckLogic, Database);
+	int32 Failures = 0;
+	const FString Report = DAEconomyTests::Run(this, Shop, DeckLogic, Database, &Failures);
 	UE_LOG(LogDuelAcademyIsland, Display, TEXT("%s"), *Report);
 	UE_LOG(LogDuelAcademyIsland, Display, TEXT("DAEconomySelfTest: finished; requesting exit."));
-	FPlatformMisc::RequestExit(false);
+	// The self-test harness treats the process exit code as authoritative, so
+	// a failed check must not exit 0.
+	FPlatformMisc::RequestExitWithStatus(false, Failures > 0 ? 1 : 0, TEXT("DAEconomySelfTest"));
 	return false;
 }
 

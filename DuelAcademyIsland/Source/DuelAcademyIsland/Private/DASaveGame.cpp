@@ -52,12 +52,23 @@ namespace
 
 	bool IsSafeSlotName(const FString& Name)
 	{
-		return !Name.IsEmpty()
-			&& Name.Len() <= 64
-			&& !Name.Contains(TEXT("/"))
-			&& !Name.Contains(TEXT("\\"))
-			&& !Name.Contains(TEXT(":"))
-			&& !Name.Contains(TEXT(".."));
+		if (Name.IsEmpty() || Name.Len() > 64
+			|| Name.StartsWith(TEXT(".")) || Name.EndsWith(TEXT("."))
+			|| Name.StartsWith(TEXT(" ")) || Name.EndsWith(TEXT(" ")))
+		{
+			return false;
+		}
+		for (const TCHAR Character : Name)
+		{
+			if (Character < 0x20 || Character == 0x7f || Character == TEXT('/') || Character == TEXT('\\')
+				|| Character == TEXT(':') || Character == TEXT('*') || Character == TEXT('?')
+				|| Character == TEXT('"') || Character == TEXT('<') || Character == TEXT('>')
+				|| Character == TEXT('|'))
+			{
+				return false;
+			}
+		}
+		return !Name.Contains(TEXT(".."));
 	}
 
 	FString PeriodToKey(EDADayPeriod Period)
@@ -842,6 +853,23 @@ bool UDASaveSubsystem::LoadNamedSlotWithContext(const FString& SlotName, UDAProf
 	return true;
 }
 
+bool UDASaveSubsystem::LoadPayloadJsonWithContext(const FString& Json, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError)
+{
+	if (!Profile || !Calendar || !Settings)
+	{
+		OutError = TEXT("Load failed: missing progression context.");
+		return false;
+	}
+
+	TSharedPtr<FJsonObject> Root;
+	if (!ParseJsonObject(Json, Root))
+	{
+		OutError = TEXT("Payload is not a valid JSON object.");
+		return false;
+	}
+	return ApplyPayload(Root, Profile, Calendar, Settings, OutError);
+}
+
 bool UDASaveSubsystem::DeleteSlot(int32 SlotIndex, FString& OutError)
 {
 	if (!IsValidSlotIndex(SlotIndex))
@@ -1069,6 +1097,7 @@ bool UDASaveSubsystem::BuildPayload(int32 LogicalSlotIndex, const FString& SlotN
 	Meta->SetStringField(TEXT("period"), PeriodToKey(Calendar->GetPeriod()));
 	Root->SetObjectField(TEXT("meta"), Meta);
 
+	TSet<FString> UsedSectionNames;
 	for (const TWeakObjectPtr<UObject>& WeakProvider : PayloadProviders)
 	{
 		UObject* ProviderObject = WeakProvider.Get();
@@ -1083,6 +1112,16 @@ bool UDASaveSubsystem::BuildPayload(int32 LogicalSlotIndex, const FString& SlotN
 			OutError = FString::Printf(TEXT("Save provider '%s' uses a reserved or invalid section name."), *SectionName);
 			return false;
 		}
+		// Root sections are a flat namespace. Reject duplicates instead of
+		// letting a later provider silently overwrite an earlier section.
+		const FString SectionKey = SectionName.ToLower();
+		if (UsedSectionNames.Contains(SectionKey))
+		{
+			OutError = FString::Printf(TEXT("Save provider '%s' uses a duplicate section name."), *SectionName);
+			return false;
+		}
+		UsedSectionNames.Add(SectionKey);
+
 		TSharedPtr<FJsonObject> Section = MakeShared<FJsonObject>();
 		if (!Provider->WriteSaveSection(Section))
 		{
@@ -1097,7 +1136,105 @@ bool UDASaveSubsystem::BuildPayload(int32 LogicalSlotIndex, const FString& SlotN
 	return true;
 }
 
+bool UDASaveSubsystem::ValidatePayload(const TSharedPtr<FJsonObject>& Root, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError) const
+{
+	if (!Root.IsValid() || !Profile || !Calendar || !Settings)
+	{
+		OutError = TEXT("Cannot validate an empty save payload.");
+		return false;
+	}
+
+	const TSharedPtr<FJsonObject>* ProfileObject = nullptr;
+	if (!Root->TryGetObjectField(TEXT("profile"), ProfileObject) || !ProfileObject || !ProfileObject->IsValid())
+	{
+		OutError = TEXT("Save payload has no profile object.");
+		return false;
+	}
+
+	for (const TWeakObjectPtr<UObject>& WeakProvider : PayloadProviders)
+	{
+		UObject* ProviderObject = WeakProvider.Get();
+		IDASavePayloadProvider* Provider = Cast<IDASavePayloadProvider>(ProviderObject);
+		if (!Provider)
+		{
+			continue;
+		}
+		const FString SectionName = Provider->GetSaveSectionName();
+		if (!Root->HasField(SectionName))
+		{
+			// Sections may be absent in older saves. Providers that own
+			// transient runtime state reset it in ResetSaveSectionState during
+			// apply; the rest keep their live state.
+			continue;
+		}
+
+		const TSharedPtr<FJsonObject>* Section = nullptr;
+		if (!Root->TryGetObjectField(SectionName, Section) || !Section || !Section->IsValid())
+		{
+			OutError = FString::Printf(TEXT("Save provider '%s' section is not an object."), *SectionName);
+			return false;
+		}
+
+		FString ProviderError;
+		if (!Provider->ValidateSaveSection(*Section, ProviderError))
+		{
+			OutError = FString::Printf(TEXT("Save provider '%s' section is invalid: %s"), *SectionName, *ProviderError);
+			return false;
+		}
+	}
+
+	OutError.Reset();
+	return true;
+}
+
 bool UDASaveSubsystem::ApplyPayload(const TSharedPtr<FJsonObject>& Root, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError) const
+{
+	// Phase 1: validate every provider section before touching live state.
+	if (!ValidatePayload(Root, Profile, Calendar, Settings, OutError))
+	{
+		return false;
+	}
+
+	// Capture the complete current state so a late provider failure can roll the
+	// load back. Building the snapshot also exercises every provider's write path
+	// before any mutation happens.
+	FString SnapshotJson;
+	if (!BuildPayload(-1, TEXT("__rollback"), Profile, Calendar, Settings, SnapshotJson, OutError))
+	{
+		OutError = FString::Printf(TEXT("Could not snapshot the current state before loading: %s"), *OutError);
+		return false;
+	}
+	TSharedPtr<FJsonObject> SnapshotRoot;
+	if (!ParseJsonObject(SnapshotJson, SnapshotRoot))
+	{
+		OutError = TEXT("Could not parse the rollback snapshot.");
+		return false;
+	}
+
+	// Phase 2: apply. Validation is best-effort; rollback is the safety net for
+	// providers whose read path can still fail after validation.
+	FString ApplyError;
+	if (ApplyPayloadInPlace(Root, Profile, Calendar, Settings, ApplyError))
+	{
+		OutError.Reset();
+		return true;
+	}
+
+	FString RollbackError;
+	if (!ApplyPayloadInPlace(SnapshotRoot, Profile, Calendar, Settings, RollbackError))
+	{
+		UE_LOG(LogDuelAcademyIsland, Error, TEXT("Save load rollback failed: %s"), *RollbackError);
+		OutError = FString::Printf(TEXT("%s (rollback also failed: %s)"), *ApplyError, *RollbackError);
+	}
+	else
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Save load failed and was rolled back: %s"), *ApplyError);
+		OutError = ApplyError;
+	}
+	return false;
+}
+
+bool UDASaveSubsystem::ApplyPayloadInPlace(const TSharedPtr<FJsonObject>& Root, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError) const
 {
 	if (!Root.IsValid() || !Profile || !Calendar || !Settings)
 	{
@@ -1143,7 +1280,10 @@ bool UDASaveSubsystem::ApplyPayload(const TSharedPtr<FJsonObject>& Root, UDAProf
 		const TSharedPtr<FJsonObject>* Section = nullptr;
 		if (!Root->TryGetObjectField(SectionName, Section) || !Section || !Section->IsValid())
 		{
-			// Sections may be absent in older saves; the provider keeps its defaults.
+			// Sections may be absent in older saves. Most providers keep the live
+			// state (the old save never described the lane); providers whose
+			// section represents transient runtime state reset to defaults.
+			Provider->ResetSaveSectionState();
 			continue;
 		}
 		if (!Provider->ReadSaveSection(*Section, OutError))
@@ -1367,6 +1507,11 @@ int32 UDASaveSubsystem::GetVersionFromJson(const FString& Json)
 	return -1;
 }
 
+FString UDASaveSubsystem::SerializeCanonicalJson(const TSharedPtr<FJsonObject>& Root)
+{
+	return SerializeCanonical(Root);
+}
+
 bool UDASaveSubsystem::MigrateJson(FString& Json, int32 FromVersion, FString& OutError) const
 {
 	TSharedPtr<FJsonObject> Root;
@@ -1380,7 +1525,9 @@ bool UDASaveSubsystem::MigrateJson(FString& Json, int32 FromVersion, FString& Ou
 	int32 JsonVersion = -1;
 	if (Root->TryGetNumberField(TEXT("version"), JsonVersion) && JsonVersion >= 0)
 	{
-		Version = FMath::Max(Version, JsonVersion);
+		// The JSON schema version is authoritative when present. A stale or
+		// optimistic caller argument must not skip a required migration.
+		Version = JsonVersion;
 	}
 	if (Version < 0)
 	{

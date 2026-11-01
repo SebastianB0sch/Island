@@ -64,6 +64,12 @@ void FDADeckUI::Open(const FString& DeckId)
 	bEditingName = false;
 	bRenameMode = false;
 	bConfirmErase = false;
+	bDeckExtraSelection = false;
+	bExtraMode = false;
+	CollectionSelection = 0;
+	DeckCardSelection = 0;
+	HoveredIndex = INDEX_NONE;
+	HitTargets.Reset();
 	StatusMessage.Reset();
 	StatusTime = 0.f;
 	bStatusError = false;
@@ -85,6 +91,12 @@ void FDADeckUI::Close()
 	}
 	bOpen = false;
 	HitTargets.Reset();
+	bShowRecipes = false;
+	bEditingName = false;
+	bRenameMode = false;
+	bConfirmErase = false;
+	PendingSwapCardId = 0;
+	bPendingSwapExtra = false;
 	OnClosed.Broadcast();
 }
 
@@ -97,6 +109,7 @@ void FDADeckUI::RefreshAll(bool bSelectDeckId)
 		DeckMain.Reset();
 		DeckExtra.Reset();
 		Collection.Reset();
+		Recipes.Reset();
 		CurrentDeckId.Reset();
 		return;
 	}
@@ -170,6 +183,7 @@ void FDADeckUI::RefreshDeckCards()
 	DeckCardScroll = FMath::Clamp(DeckCardScroll, 0, FMath::Max(0, Count - 1));
 	PendingSwapCardId = 0;
 	bPendingSwapExtra = false;
+	HitTargets.Reset();
 }
 
 void FDADeckUI::RefreshCollection()
@@ -191,6 +205,7 @@ void FDADeckUI::RefreshCollection()
 	CollectionSelection = Collection.Num() > 0
 		? FMath::Clamp(CollectionSelection, 0, Collection.Num() - 1) : 0;
 	CollectionScroll = FMath::Clamp(CollectionScroll, 0, FMath::Max(0, Collection.Num() - 1));
+	HitTargets.Reset();
 }
 
 const FDAEDeck* FDADeckUI::GetCurrentDeck() const
@@ -377,6 +392,7 @@ void FDADeckUI::BeginRename()
 	bRenameMode = true;
 	bEditingName = true;
 	Focus = EDAFocus::Decks;
+	HitTargets.Reset();
 	PlaySfx(TEXT("A_UIClick"), 0.4f);
 }
 
@@ -456,6 +472,7 @@ void FDADeckUI::EraseCurrentDeck()
 	}
 	EraseDeckId = Deck->Id;
 	bConfirmErase = true;
+	HitTargets.Reset();
 	PlaySfx(TEXT("A_UIClick"), 0.35f);
 }
 
@@ -545,12 +562,14 @@ void FDADeckUI::UpdateNameEditor()
 	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Enter) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Bottom))
 	{
 		CommitNameEdit();
+		HitTargets.Reset();
 		return;
 	}
 	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Escape) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Right))
 	{
 		bEditingName = false;
 		bRenameMode = false;
+		HitTargets.Reset();
 	}
 }
 
@@ -648,6 +667,7 @@ void FDADeckUI::Update(float DeltaSeconds)
 			|| PlayerOwner->WasInputKeyJustPressed(EKeys::Q) || PlayerOwner->WasInputKeyJustPressed(EKeys::F))
 		{
 			bShowRecipes = false;
+			HitTargets.Reset();
 		}
 		if (PlayerOwner->WasInputKeyJustPressed(EKeys::LeftMouseButton))
 		{
@@ -793,14 +813,16 @@ void FDADeckUI::HandleHit(const FDAUIHitTarget& Hit)
 	}
 	else if (Hit.Action == TEXT("collection"))
 	{
-		CollectionSelection = Hit.Index;
+		CollectionSelection = Collection.Num() > 0
+			? FMath::Clamp(Hit.Index, 0, Collection.Num() - 1) : 0;
 		Focus = EDAFocus::Collection;
 		PlaySfx(TEXT("A_UIClick"), 0.22f);
 	}
 	else if (Hit.Action == TEXT("deckmain") || Hit.Action == TEXT("deckextra"))
 	{
 		bDeckExtraSelection = Hit.Action == TEXT("deckextra");
-		DeckCardSelection = Hit.Index;
+		const TArray<int32>& List = bDeckExtraSelection ? DeckExtra : DeckMain;
+		DeckCardSelection = List.Num() > 0 ? FMath::Clamp(Hit.Index, 0, List.Num() - 1) : 0;
 		Focus = EDAFocus::DeckCards;
 		PlaySfx(TEXT("A_UIClick"), 0.22f);
 	}
@@ -948,19 +970,21 @@ void FDADeckUI::DrawHeader()
 	const FDAEDeck* Deck = GetCurrentDeck();
 	if (Deck)
 	{
-		DrawText(Deck->Name, 28.f * S, 44.f * S, DeckPaper, 0.9f);
+		DrawText(Ellipsize(Deck->Name, CW * 0.42f - 60.f * S, 0.9f), 28.f * S, 44.f * S, DeckPaper, 0.9f);
 		DrawText(FString::Printf(TEXT("MAIN %d/%d   EXTRA %d/%d"), Deck->Main.Num(),
 			GetDeckLogic() ? GetDeckLogic()->GetRules().MaxMain : 60, Deck->Extra.Num(),
 			GetDeckLogic() ? GetDeckLogic()->GetRules().MaxExtra : 20),
 			CW * 0.42f, 16.f * S, DeckMuted, 0.78f);
 		const FString Validation = GetDeckLogic() ? GetDeckLogic()->GetDeckValidationMessage(*Deck) : FString();
-		DrawText(Validation.IsEmpty() ? TEXT("LEGAL") : Validation,
+		const float ValidationW = FMath::Max(80.f * S, CW - 280.f * S - CW * 0.42f - 20.f * S);
+		DrawText(Ellipsize(Validation.IsEmpty() ? FString(TEXT("LEGAL")) : Validation, ValidationW, 0.72f),
 			CW * 0.42f, 44.f * S, Validation.IsEmpty() ? DeckGreen : DeckRed, 0.72f);
 		const FString ActiveId = GetDeckLogic() ? GetDeckLogic()->GetActiveDeckId() : FString();
-		DrawText(FString::Printf(TEXT("ACTIVE: %s"), *ActiveId),
+		DrawText(Ellipsize(FString::Printf(TEXT("ACTIVE: %s"), *ActiveId), 250.f * S, 0.72f),
 			CW - 280.f * S, 16.f * S, DeckMuted, 0.72f);
 	}
-	DrawText(TEXT("TAB focus   ENTER activate   N new   C copy   R rename   DEL erase   Q recipes"),
+	DrawText(Ellipsize(TEXT("TAB focus   ENTER activate   N new   C copy   R rename   DEL erase   Q recipes"),
+		740.f * S, 0.66f),
 		CW - 760.f * S, 44.f * S, DeckMuted, 0.66f);
 }
 
@@ -1000,11 +1024,19 @@ void FDADeckUI::DrawDeckSlots()
 			DrawRect(DeckAlpha(DeckGold, 0.2f), X + 8.f * S, RY, W - 16.f * S, RowH - 4.f * S);
 			DrawRect(DeckGold, X + 8.f * S, RY, 4.f * S, RowH - 4.f * S);
 		}
-		DrawText(Decks[Index].Name, X + 20.f * S, RY + 5.f * S, bSelected ? DeckPaper : DeckMuted, 0.82f);
+		DrawText(Ellipsize(Decks[Index].Name, W - 40.f * S, 0.82f), X + 20.f * S, RY + 5.f * S,
+			bSelected ? DeckPaper : DeckMuted, 0.82f);
 		DrawText(FString::Printf(TEXT("%d/%d%s"), Decks[Index].Main.Num(), Decks[Index].Extra.Num(),
 			bActive ? TEXT("  ACTIVE") : TEXT("")), X + 20.f * S, RY + 25.f * S,
 			bActive ? DeckGreen : DeckMuted, 0.64f);
 		AddHit(TEXT("deck"), Index, X + 8.f * S, RY, W - 16.f * S, RowH - 4.f * S);
+	}
+	if (Decks.Num() == 0)
+	{
+		const FString Empty = GetDeckLogic()
+			? FString(TEXT("No decks yet. Press N to create one."))
+			: FString(TEXT("Deck subsystem unavailable."));
+		DrawText(Ellipsize(Empty, W - 32.f * S, 0.78f), X + 16.f * S, Top + 8.f * S, DeckMuted, 0.78f);
 	}
 
 	const float ButtonH = 30.f * S;
@@ -1079,6 +1111,23 @@ void FDADeckUI::DrawCollectionPanel()
 		DrawCardRow(Collection[Index], Index, X + 8.f * S, Top + (Index - CollectionScroll) * RowH,
 			W - 16.f * S, RowH - 3.f * S, Index == CollectionSelection, false);
 	}
+	if (Collection.Num() == 0)
+	{
+		FString Empty;
+		if (!GetDeckLogic())
+		{
+			Empty = TEXT("Deck/inventory subsystem unavailable.");
+		}
+		else if (FilterMode == 0)
+		{
+			Empty = TEXT("Your trunk is empty. Win duels and open packs to collect cards.");
+		}
+		else
+		{
+			Empty = TEXT("No owned cards match this filter.");
+		}
+		DrawText(Ellipsize(Empty, W - 32.f * S, 0.8f), X + 16.f * S, Top + 8.f * S, DeckMuted, 0.8f);
+	}
 
 	const float AddW = 190.f * S;
 	const float AddH = 36.f * S;
@@ -1086,10 +1135,12 @@ void FDADeckUI::DrawCollectionPanel()
 	const float AddY = Y + H - AddH - 12.f * S;
 	DrawRect(DeckAlpha(DeckGold, 0.22f), AddX, AddY, AddW, AddH);
 	DrawRect(DeckGold, AddX, AddY, 4.f * S, AddH);
-	DrawText(PendingSwapCardId != 0 ? TEXT("[ENTER] COMPLETE SWAP") : TEXT("[ENTER] ADD / SWAP"),
+	DrawText(Ellipsize(PendingSwapCardId != 0 ? TEXT("[ENTER] COMPLETE SWAP") : TEXT("[ENTER] ADD / SWAP"),
+		AddW - 22.f * S, 0.72f),
 		AddX + 14.f * S, AddY + 7.f * S, DeckPaper, 0.72f);
 	AddHit(TEXT("add"), INDEX_NONE, AddX, AddY, AddW, AddH);
-	DrawText(FString::Printf(TEXT("FILTER %s   SORT %s   OWNED ONLY"), *GetFilterLabel(), *GetSortLabel()),
+	DrawText(Ellipsize(FString::Printf(TEXT("FILTER %s   SORT %s   OWNED ONLY"), *GetFilterLabel(), *GetSortLabel()),
+		W - 240.f * S, 0.66f),
 		X + 220.f * S, AddY + 9.f * S, DeckMuted, 0.66f);
 }
 
@@ -1104,8 +1155,6 @@ void FDADeckUI::DrawCardRow(int32 CardId, int32 Index, float X, float Y, float W
 		DrawRect(DeckAlpha(Accent, 0.2f), X, Y, W, H);
 		DrawRect(Accent, X, Y, 4.f * S, H);
 	}
-	DrawText(Card ? Card->Name : FString::Printf(TEXT("Card %d"), CardId),
-		X + 14.f * S, Y + 4.f * S, bSelected ? DeckPaper : DeckMuted, 0.76f);
 	FString Right;
 	if (bDeckRow)
 	{
@@ -1116,8 +1165,12 @@ void FDADeckUI::DrawCardRow(int32 CardId, int32 Index, float X, float Y, float W
 		const int32 Owned = GetInventory() ? GetInventory()->GetCount(CardId) : 0;
 		Right = Card ? FString::Printf(TEXT("%s  x%d"), *Card->CardType, Owned) : FString::Printf(TEXT("x%d"), Owned);
 	}
-	const FVector2D Size = Measure(Right, 0.62f);
-	DrawText(Right, X + W - Size.X - 12.f * S, Y + 12.f * S, DeckMuted, 0.62f);
+	const FString FittedRight = Ellipsize(Right, FMath::Max(40.f * S, W * 0.45f), 0.62f);
+	const FVector2D FittedSize = Measure(FittedRight, 0.62f);
+	const FString CardName = Card ? Card->Name : FString::Printf(TEXT("Card %d"), CardId);
+	DrawText(Ellipsize(CardName, W - FittedSize.X - 38.f * S, 0.76f),
+		X + 14.f * S, Y + 4.f * S, bSelected ? DeckPaper : DeckMuted, 0.76f);
+	DrawText(FittedRight, X + W - FittedSize.X - 12.f * S, Y + 12.f * S, DeckMuted, 0.62f);
 
 	if (bDeckRow)
 	{
@@ -1139,7 +1192,8 @@ void FDADeckUI::DrawDeckPanel()
 	DrawPanel(X, Y, W, H, DeckAlpha(DeckInk, 0.9f), DeckAlpha(DeckGold, 0.7f));
 	const FDAEDeck* Deck = GetCurrentDeck();
 	DrawText(TEXT("CURRENT DECK"), X + 16.f * S, Y + 12.f * S, DeckGold, 0.95f, false, GetFont(true));
-	DrawText(Deck ? Deck->Name : TEXT("No deck"), X + 16.f * S, Y + 40.f * S, DeckPaper, 0.85f);
+	DrawText(Ellipsize(Deck ? Deck->Name : TEXT("No deck"), W - 32.f * S, 0.85f),
+		X + 16.f * S, Y + 40.f * S, DeckPaper, 0.85f);
 
 	const float TabY = Y + 70.f * S;
 	const float TabW = (W - 32.f * S) * 0.5f;
@@ -1189,11 +1243,11 @@ void FDADeckUI::DrawDeckPanel()
 	AddHit(TEXT("swap"), INDEX_NONE, X + 28.f * S + ButtonW, ButtonY, ButtonW, ButtonH);
 
 	const FString Validation = Deck && GetDeckLogic() ? GetDeckLogic()->GetDeckValidationMessage(*Deck) : FString();
-	DrawText(Validation.IsEmpty() ? TEXT("DECK LEGAL") : Validation, X + 16.f * S, Y + H - 48.f * S,
-		Validation.IsEmpty() ? DeckGreen : DeckRed, 0.72f);
+	DrawText(Ellipsize(Validation.IsEmpty() ? FString(TEXT("DECK LEGAL")) : Validation, W - 32.f * S, 0.72f),
+		X + 16.f * S, Y + H - 48.f * S, Validation.IsEmpty() ? DeckGreen : DeckRed, 0.72f);
 	if (PendingSwapCardId != 0)
 	{
-		DrawText(FString::Printf(TEXT("SWAPPING OUT: %s"), *GetCardName(PendingSwapCardId)),
+		DrawText(Ellipsize(FString::Printf(TEXT("SWAPPING OUT: %s"), *GetCardName(PendingSwapCardId)), W - 32.f * S, 0.68f),
 			X + 16.f * S, Y + H - 24.f * S, DeckGold, 0.68f);
 	}
 }
@@ -1223,15 +1277,25 @@ void FDADeckUI::DrawRecipesOverlay()
 	{
 		const FFusionRecipeDef& Recipe = Recipes[Index];
 		FString Materials;
-		for (int32 MaterialIndex = 0; MaterialIndex < Recipe.Materials.Num(); ++MaterialIndex)
+		if (Recipe.AnyCount > 0)
 		{
-			if (MaterialIndex > 0)
-			{
-				Materials += TEXT(" + ");
-			}
-			Materials += GetCardName(Recipe.Materials[MaterialIndex]);
+			Materials = Recipe.MaterialsType.IsEmpty()
+				? FString::Printf(TEXT("%d monsters"), Recipe.AnyCount)
+				: FString::Printf(TEXT("%d %s monsters"), Recipe.AnyCount, *Recipe.MaterialsType);
 		}
-		DrawText(FString::Printf(TEXT("%s  =  %s"), *Materials, *GetCardName(Recipe.Result)),
+		else
+		{
+			for (int32 MaterialIndex = 0; MaterialIndex < Recipe.Materials.Num(); ++MaterialIndex)
+			{
+				if (MaterialIndex > 0)
+				{
+					Materials += TEXT(" + ");
+				}
+				Materials += GetCardName(Recipe.Materials[MaterialIndex]);
+			}
+		}
+		const FString RecipeLine = FString::Printf(TEXT("%s  =  %s"), *Materials, *GetCardName(Recipe.Result));
+		DrawText(Ellipsize(RecipeLine, W - 52.f * S, 0.72f),
 			X + 26.f * S, LY, DeckPaper, 0.72f);
 		LY += LineH;
 	}
@@ -1256,7 +1320,8 @@ void FDADeckUI::DrawNameEditor()
 	const float Y = (CH - H) * 0.5f;
 	DrawPanel(X, Y, W, H, DeckAlpha(DeckInk, 0.98f), DeckGold);
 	DrawText(bRenameMode ? TEXT("RENAME DECK") : TEXT("DECK NAME"), X + 24.f * S, Y + 18.f * S, DeckGold, 1.2f, false, GetFont(true));
-	DrawText(NameBuffer.IsEmpty() ? TEXT("_") : NameBuffer, X + 24.f * S, Y + 72.f * S, DeckPaper, 1.1f);
+	DrawText(Ellipsize(NameBuffer.IsEmpty() ? FString(TEXT("_")) : NameBuffer, W - 48.f * S, 1.1f),
+		X + 24.f * S, Y + 72.f * S, DeckPaper, 1.1f);
 	DrawRect(DeckAlpha(DeckGold, 0.5f), X + 24.f * S, Y + 108.f * S, W - 48.f * S, 1.f * S);
 	DrawText(TEXT("Type letters/numbers/space. BACKSPACE edits. ENTER saves. ESC cancels."),
 		X + 24.f * S, Y + 122.f * S, DeckMuted, 0.66f);
@@ -1287,7 +1352,8 @@ void FDADeckUI::DrawEraseConfirm()
 	{
 		return Deck.Id == EraseDeckId;
 	});
-	DrawText(FString::Printf(TEXT("%s will be removed."), EraseDeck ? *EraseDeck->Name : TEXT("This deck")),
+	DrawText(Ellipsize(FString::Printf(TEXT("%s will be removed."), EraseDeck ? *EraseDeck->Name : TEXT("This deck")),
+		W - 48.f * S, 0.8f),
 		X + 24.f * S, Y + 64.f * S, DeckMuted, 0.8f);
 	DrawText(TEXT("This cannot be undone."), X + 24.f * S, Y + 96.f * S, DeckMuted, 0.76f);
 	const float BtnW = 150.f * S;
@@ -1314,8 +1380,12 @@ void FDADeckUI::DrawFooter()
 	case EDAFocus::DeckCards: Hint = TEXT("DECK: UP/DOWN select   LEFT/RIGHT main/extra   ENTER remove   G swap"); break;
 	default: break;
 	}
-	DrawText(Hint, 20.f * S, CH - H + 7.f * S, DeckMuted, 0.66f);
-	DrawText(TEXT("TAB focus   Q recipes   ESC close"), Canvas->ClipX - 300.f * S, CH - H + 7.f * S, DeckMuted, 0.66f);
+	const FString CloseHint = TEXT("TAB focus   Q recipes   ESC close");
+	const FVector2D CloseSize = Measure(CloseHint, 0.66f);
+	const float CloseX = Canvas->ClipX - 20.f * S - CloseSize.X;
+	DrawText(Ellipsize(Hint, FMath::Max(80.f * S, CloseX - 40.f * S), 0.66f),
+		20.f * S, CH - H + 7.f * S, DeckMuted, 0.66f);
+	DrawText(CloseHint, CloseX, CH - H + 7.f * S, DeckMuted, 0.66f);
 }
 
 void FDADeckUI::DrawStatus()
@@ -1331,10 +1401,6 @@ void FDADeckUI::DrawStatus()
 	const float Y = Canvas->ClipY - 84.f * S;
 	DrawRect(DeckAlpha(DeckInk, 0.94f), X, Y, W, H);
 	DrawRect(bStatusError ? DeckRed : DeckGold, X, Y, 4.f * S, H);
-	FString Message = StatusMessage;
-	while (Message.Len() > 4 && Measure(Message, 0.76f).X > W - 30.f * S)
-	{
-		Message = Message.LeftChop(4) + TEXT("...");
-	}
-	DrawText(Message, X + 14.f * S, Y + 8.f * S, bStatusError ? DeckRed : DeckPaper, 0.76f);
+	DrawText(Ellipsize(StatusMessage, W - 30.f * S, 0.76f), X + 14.f * S, Y + 8.f * S,
+		bStatusError ? DeckRed : DeckPaper, 0.76f);
 }

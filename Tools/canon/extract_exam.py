@@ -13,7 +13,8 @@ from pathlib import Path
 
 from canon_common import (
     CANON_DIR, DEFAULT_ROM, EXAM_TEXT_BASE, EXAM_TEXT_END, EXAM_TEXT_START,
-    ascii_strings, ensure_dirs, load_rom, u32, write_json, utc_now,
+    ROM_SOURCE_LABEL, ascii_strings, ensure_dirs, load_rom, u32, write_json,
+    utc_now,
 )
 
 PRACTICALS = [
@@ -96,7 +97,7 @@ def main() -> int:
         "schema_version": 1,
         "generated_utc": utc_now(),
         "source": {
-            "rom": str(args.rom),
+            "rom": ROM_SOURCE_LABEL,
             "text_base": f"0x{EXAM_TEXT_BASE:06X}",
             "text_range": [f"0x{EXAM_TEXT_START:06X}", f"0x{EXAM_TEXT_END:06X}"],
             "guide": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Events",

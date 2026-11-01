@@ -42,7 +42,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Settings")
 	void ResetToDefaults();
 
-	/** Loads Content/Data/Profile/settings.json. Returns false and keeps defaults if missing. */
+	/** Loads Content/Data/Profile/settings.json. Returns false and keeps defaults if missing or malformed. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Settings")
 	bool LoadDefaults();
 

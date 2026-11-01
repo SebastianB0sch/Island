@@ -36,6 +36,77 @@ namespace
 		return OutCards.Num() > 0;
 	}
 
+	/**
+	 * Save sections are produced by WriteSaveSection and therefore use canonical
+	 * positive integer ids.  A malformed entry is a corrupt save rather than a
+	 * card to silently drop.
+	 */
+	bool ValidateCardIdArrayField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, FString& OutError)
+	{
+		if (!Object.IsValid() || !Object->HasField(Field))
+		{
+			return true;
+		}
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (!Object->TryGetArrayField(Field, Values) || !Values)
+		{
+			OutError = FString::Printf(TEXT("Deck save field '%s' must be an array."), Field);
+			return false;
+		}
+		for (const TSharedPtr<FJsonValue>& Value : *Values)
+		{
+			int32 CardId = 0;
+			if (!DAEconomyJson::TryReadCardId(Value, CardId))
+			{
+				OutError = FString::Printf(TEXT("Deck save field '%s' contains an invalid card id."), Field);
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool ValidateDeckSaveEntry(const TSharedPtr<FJsonObject>& Entry, FString& OutError)
+	{
+		if (!Entry.IsValid())
+		{
+			OutError = TEXT("Deck save section contains a non-object Deck.");
+			return false;
+		}
+		if (!ValidateCardIdArrayField(Entry, TEXT("main"), OutError)
+			|| !ValidateCardIdArrayField(Entry, TEXT("extra"), OutError))
+		{
+			return false;
+		}
+		if (Entry->HasField(TEXT("bStarter")))
+		{
+			const TSharedPtr<FJsonValue> Value = Entry->TryGetField(TEXT("bStarter"));
+			if (!Value.IsValid() || Value->Type != EJson::Boolean)
+			{
+				OutError = TEXT("Deck save section has an invalid bStarter value.");
+				return false;
+			}
+		}
+		if (Entry->HasField(TEXT("is_starter")))
+		{
+			const TSharedPtr<FJsonValue> Value = Entry->TryGetField(TEXT("is_starter"));
+			if (!Value.IsValid() || Value->Type != EJson::Boolean)
+			{
+				OutError = TEXT("Deck save section has an invalid is_starter value.");
+				return false;
+			}
+		}
+		if (Entry->HasField(TEXT("bPlayerDeck")))
+		{
+			const TSharedPtr<FJsonValue> Value = Entry->TryGetField(TEXT("bPlayerDeck"));
+			if (!Value.IsValid() || Value->Type != EJson::Boolean)
+			{
+				OutError = TEXT("Deck save section has an invalid bPlayerDeck value.");
+				return false;
+			}
+		}
+		return true;
+	}
+
 	bool ParseDeckObject(const TSharedPtr<FJsonObject>& Object, FDAEDeck& OutDeck)
 	{
 		if (!Object.IsValid())
@@ -43,7 +114,7 @@ namespace
 			return false;
 		}
 		OutDeck = FDAEDeck();
-		OutDeck.Id = DAEconomyJson::ReadString(Object, TEXT("id"));
+		OutDeck.Id = DAEconomyJson::ReadString(Object, TEXT("id")).TrimStartAndEnd();
 		OutDeck.Name = DAEconomyJson::ReadString(Object, TEXT("name"));
 		OutDeck.bStarter = DAEconomyJson::ReadBool(Object, TEXT("bStarter"), DAEconomyJson::ReadBool(Object, TEXT("is_starter")));
 		OutDeck.bPlayerDeck = true;
@@ -123,12 +194,22 @@ TArray<FString> UDADeckLogic::GetDeckIds() const
 
 void UDADeckLogic::SetActiveDeckId(const FString& DeckId)
 {
-	if (FindPlayerDeck(DeckId))
+	const FString RequestedId = DeckId.TrimStartAndEnd();
+	if (const FDAEDeck* Deck = FindPlayerDeck(RequestedId))
 	{
-		ActiveDeckId = DeckId;
+		ActiveDeckId = Deck->Id;
 	}
 	else if (PlayerDecks.Num() > 0)
 	{
+		if (!RequestedId.IsEmpty())
+		{
+			// Story deck grants pass starter recipe ids ("fire") rather than
+			// player deck ids. Make the fallback visible instead of silently
+			// activating an unrelated deck.
+			UE_LOG(LogDuelAcademyIsland, Warning,
+				TEXT("DeckLogic: active deck '%s' is not a player Deck; falling back to '%s'."),
+				*RequestedId, *PlayerDecks[0].Id);
+		}
 		ActiveDeckId = PlayerDecks[0].Id;
 	}
 	OnDecksChanged.Broadcast(ActiveDeckId);
@@ -159,14 +240,70 @@ bool UDADeckLogic::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const
 	return true;
 }
 
-bool UDADeckLogic::ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError)
+bool UDADeckLogic::ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const
 {
 	if (!InSection.IsValid())
 	{
 		OutError = TEXT("Deck save section is missing.");
 		return false;
 	}
+
+	const TArray<TSharedPtr<FJsonValue>>* DeckArray = nullptr;
+	if (!InSection->TryGetArrayField(TEXT("decks"), DeckArray) || !DeckArray || DeckArray->Num() == 0)
+	{
+		OutError = TEXT("Deck save section has no decks.");
+		return false;
+	}
+	if (DeckArray->Num() > MaxPlayerDecks)
+	{
+		OutError = TEXT("Deck save section contains too many Decks.");
+		return false;
+	}
+	if (InSection->HasField(TEXT("active_deck_id")))
+	{
+		const TSharedPtr<FJsonValue> ActiveValue = InSection->TryGetField(TEXT("active_deck_id"));
+		if (!ActiveValue.IsValid() || ActiveValue->Type != EJson::String)
+		{
+			OutError = TEXT("Deck save section has an invalid active_deck_id.");
+			return false;
+		}
+	}
+
+	TSet<FString> SeenIds;
+	for (const TSharedPtr<FJsonValue>& Value : *DeckArray)
+	{
+		const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
+		if (!ValidateDeckSaveEntry(Entry, OutError))
+		{
+			return false;
+		}
+		FDAEDeck Deck;
+		if (!ParseDeckObject(Entry, Deck) || SeenIds.Contains(Deck.Id.ToLower()))
+		{
+			OutError = TEXT("Deck save section contains an invalid or duplicate Deck.");
+			return false;
+		}
+		SeenIds.Add(Deck.Id.ToLower());
+	}
+
+	OutError.Reset();
+	return true;
+}
+
+bool UDADeckLogic::ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError)
+{
+	if (!ValidateSaveSection(InSection, OutError))
+	{
+		return false;
+	}
 	return ImportStateJson(DAEconomyJson::WriteObject(InSection), OutError);
+}
+
+void UDADeckLogic::ResetSaveSectionState()
+{
+	// No deck section in an old payload means the save never described player
+	// decks; restore the shipped defaults instead of retaining live decks.
+	ResetToDefaults();
 }
 
 bool UDADeckLogic::LoadRules(FString& OutError)
@@ -209,23 +346,16 @@ bool UDADeckLogic::LoadRules(FString& OutError)
 		}
 		for (const TSharedPtr<FJsonValue>& Value : *Array)
 		{
-			if (!Value.IsValid())
+			int32 CardId = 0;
+			if (DAEconomyJson::TryReadCardId(Value, CardId))
 			{
+				OutSet.Add(CardId);
 				continue;
 			}
-			if (Value->Type == EJson::Number)
-			{
-				const int32 CardId = static_cast<int32>(Value->AsNumber());
-				if (CardId > 0)
-				{
-					OutSet.Add(CardId);
-				}
-			}
-			else if (Value->Type == EJson::Object)
+			if (Value.IsValid() && Value->Type == EJson::Object)
 			{
 				const TSharedPtr<FJsonObject> Entry = Value->AsObject();
-				const int32 CardId = DAEconomyJson::ReadInt(Entry, TEXT("card_id"));
-				if (CardId > 0)
+				if (DAEconomyJson::TryReadCardId(Entry.IsValid() ? Entry->TryGetField(TEXT("card_id")) : nullptr, CardId))
 				{
 					OutSet.Add(CardId);
 				}
@@ -241,27 +371,22 @@ bool UDADeckLogic::LoadRules(FString& OutError)
 		}
 		for (const TSharedPtr<FJsonValue>& Value : *Array)
 		{
-			if (!Value.IsValid())
+			int32 CardId = 0;
+			if (DAEconomyJson::TryReadCardId(Value, CardId))
 			{
+				OutMap.Add(CardId, DefaultLimit);
 				continue;
 			}
-			if (Value->Type == EJson::Number)
-			{
-				const int32 CardId = static_cast<int32>(Value->AsNumber());
-				if (CardId > 0)
-				{
-					OutMap.Add(CardId, DefaultLimit);
-				}
-			}
-			else if (Value->Type == EJson::Object)
+			if (Value.IsValid() && Value->Type == EJson::Object)
 			{
 				const TSharedPtr<FJsonObject> Entry = Value->AsObject();
-				const int32 CardId = DAEconomyJson::ReadInt(Entry, TEXT("card_id"));
-				const int32 Limit = DAEconomyJson::ReadInt(Entry, TEXT("limit"), DefaultLimit);
-				if (CardId > 0)
+				if (!Entry.IsValid()
+					|| !DAEconomyJson::TryReadCardId(Entry->TryGetField(TEXT("card_id")), CardId))
 				{
-					OutMap.Add(CardId, FMath::Max(0, Limit));
+					continue;
 				}
+				const int32 Limit = DAEconomyJson::ReadInt(Entry, TEXT("limit"), DefaultLimit);
+				OutMap.Add(CardId, FMath::Max(0, Limit));
 			}
 		}
 	};
@@ -304,16 +429,18 @@ bool UDADeckLogic::LoadPlayerDeckFile(FString& OutError)
 		return false;
 	}
 
+	MaxPlayerDecks = FMath::Max(MaxPlayerDecks, DAEconomyJson::ReadInt(Object, TEXT("max_player_decks"), MaxPlayerDecks));
+
 	TSet<FString> SeenIds;
 	for (const TSharedPtr<FJsonValue>& Value : *DeckArray)
 	{
 		const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
 		FDAEDeck Deck;
-		if (!ParseDeckObject(Entry, Deck) || SeenIds.Contains(Deck.Id))
+		if (!ParseDeckObject(Entry, Deck) || SeenIds.Contains(Deck.Id.ToLower()))
 		{
 			continue;
 		}
-		SeenIds.Add(Deck.Id);
+		SeenIds.Add(Deck.Id.ToLower());
 		PlayerDecks.Add(MoveTemp(Deck));
 	}
 
@@ -322,8 +449,17 @@ bool UDADeckLogic::LoadPlayerDeckFile(FString& OutError)
 		OutError = TEXT("Player deck JSON produced no valid decks.");
 		return false;
 	}
+	if (PlayerDecks.Num() > MaxPlayerDecks)
+	{
+		// Save validation rejects a section with more Decks than the limit, so
+		// keep the loaded content and raise the slot capacity instead of
+		// silently producing an unsaveable player state.
+		UE_LOG(LogDuelAcademyIsland, Warning,
+			TEXT("DeckLogic: %d default decks exceed max_player_decks=%d; raising the limit."),
+			PlayerDecks.Num(), MaxPlayerDecks);
+		MaxPlayerDecks = PlayerDecks.Num();
+	}
 
-	MaxPlayerDecks = FMath::Max(MaxPlayerDecks, DAEconomyJson::ReadInt(Object, TEXT("max_player_decks"), MaxPlayerDecks));
 	DefaultStarterCards = DAEconomyJson::ReadIntArray(Object, TEXT("starter_cards"));
 	if (DefaultStarterCards.Num() == 0)
 	{
@@ -337,8 +473,12 @@ bool UDADeckLogic::LoadPlayerDeckFile(FString& OutError)
 		DefaultStarterCards.Sort();
 	}
 
-	ActiveDeckId = DAEconomyJson::ReadString(Object, TEXT("default_deck_id"));
-	if (!FindPlayerDeck(ActiveDeckId))
+	ActiveDeckId = DAEconomyJson::ReadString(Object, TEXT("default_deck_id")).TrimStartAndEnd();
+	if (const FDAEDeck* DefaultDeck = FindPlayerDeck(ActiveDeckId))
+	{
+		ActiveDeckId = DefaultDeck->Id;
+	}
+	else
 	{
 		ActiveDeckId = PlayerDecks[0].Id;
 	}
@@ -657,6 +797,13 @@ bool UDADeckLogic::CanUseCard(const FDAEDeck& Deck, int32 CardId, bool bExtra, F
 		return false;
 	}
 	const int32 Limit = Rules.GetCopyLimit(CardId);
+	if (Limit <= 0)
+	{
+		// A limited-list row with limit 0 behaves like a ban in
+		// ValidateDeckAgainstRules; keep editing consistent with validation.
+		OutError = TEXT("This card is forbidden and cannot be used in your Deck.");
+		return false;
+	}
 	if (CurrentCopies >= Limit)
 	{
 		OutError = (Rules.Limited.Contains(CardId) || Rules.SemiLimited.Contains(CardId))
@@ -875,7 +1022,7 @@ bool UDADeckLogic::SetActiveDeck(const FString& DeckId, FString& OutError)
 		return false;
 	}
 	ActiveDeckId = Deck->Id;
-	BroadcastChanged(DeckId);
+	BroadcastChanged(ActiveDeckId);
 	return true;
 }
 
@@ -934,6 +1081,56 @@ bool UDADeckLogic::ImportStarterDeck(const FString& StarterId, const FString& Ne
 	return true;
 }
 
+bool UDADeckLogic::EnsureStarterDeck(const FString& StarterId, const FString& NewName,
+	FString& OutDeckId, bool& bOutCreated, FString& OutError)
+{
+	OutDeckId.Reset();
+	bOutCreated = false;
+	OutError.Reset();
+	if (StarterId.IsEmpty())
+	{
+		OutError = TEXT("A starter Deck id is required.");
+		return false;
+	}
+
+	if (const FDAEDeck* Existing = FindPlayerDeck(StarterId))
+	{
+		OutDeckId = Existing->Id;
+		return true;
+	}
+	if (PlayerDecks.Num() >= MaxPlayerDecks)
+	{
+		OutError = TEXT("You cannot create any more Decks.");
+		return false;
+	}
+
+	UGameInstance* GI = GetGameInstance();
+	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
+	const FStarterDeckDef* Starter = Database ? Database->FindDeck(StarterId) : nullptr;
+	if (!Starter)
+	{
+		OutError = TEXT("That starter Deck does not exist.");
+		return false;
+	}
+	if (!ValidateDeckName(NewName, OutError))
+	{
+		return false;
+	}
+
+	FDAEDeck Deck;
+	Deck.Id = StarterId;
+	Deck.Name = NewName.TrimStartAndEnd();
+	Deck.Main = Starter->Cards;
+	Deck.Extra = Starter->Extra;
+	Deck.bStarter = true;
+	Deck.bPlayerDeck = true;
+	OutDeckId = Deck.Id;
+	PlayerDecks.Add(MoveTemp(Deck));
+	bOutCreated = true;
+	BroadcastChanged(OutDeckId);
+	return true;
+}
+
 TArray<FFusionRecipeDef> UDADeckLogic::GetAvailableFusionRecipes() const
 {
 	UGameInstance* GI = GetGameInstance();
@@ -947,6 +1144,38 @@ TArray<FFusionRecipeDef> UDADeckLogic::GetAvailableFusionRecipes() const
 	TArray<FFusionRecipeDef> Available;
 	for (const FFusionRecipeDef& Recipe : Database->GetFusions())
 	{
+		if (Recipe.AnyCount > 0)
+		{
+			// Mirror FDuelEngine::FindFusionOption: an AnyCount recipe needs
+			// that many owned monsters of MaterialsType (or any monster when
+			// the type is blank). Named Materials are not used for this class of
+			// recipe; F.G.D. ("5 Dragon monsters") is the shipped example.
+			int64 MatchingOwned = 0;
+			const int64 Required = static_cast<int64>(Recipe.AnyCount);
+			for (const TPair<int32, FCardRecord>& Pair : Database->GetCards())
+			{
+				const FCardRecord& Card = Pair.Value;
+				if (!Card.IsMonster())
+				{
+					continue;
+				}
+				if (!Recipe.MaterialsType.IsEmpty() && Card.MonsterType != Recipe.MaterialsType)
+				{
+					continue;
+				}
+				MatchingOwned += static_cast<int64>(Inventory->GetCount(Pair.Key));
+				if (MatchingOwned >= Required)
+				{
+					break;
+				}
+			}
+			if (MatchingOwned >= Required)
+			{
+				Available.Add(Recipe);
+			}
+			continue;
+		}
+
 		if (Recipe.Materials.Num() == 0)
 		{
 			continue;
@@ -1110,19 +1339,35 @@ bool UDADeckLogic::ApplySaveData(const FDAEDeckSaveData& Data, FString& OutError
 	TArray<FDAEDeck> NewDecks;
 	for (const FDAEDeck& Source : Data.Decks)
 	{
-		if (Source.Id.IsEmpty() || SeenIds.Contains(Source.Id))
+		const FString DeckId = Source.Id.TrimStartAndEnd();
+		const FString IdKey = DeckId.ToLower();
+		if (DeckId.IsEmpty() || SeenIds.Contains(IdKey))
 		{
 			OutError = TEXT("Deck save contains an invalid or duplicate Deck id.");
 			return false;
 		}
-		SeenIds.Add(Source.Id);
+		SeenIds.Add(IdKey);
 		FDAEDeck Deck = Source;
+		Deck.Id = DeckId;
 		Deck.bPlayerDeck = true;
+		// The struct API is also used by tools/tests; never persist a
+		// non-positive card id from a hand-built payload.
+		Deck.Main.RemoveAll([](int32 CardId) { return CardId <= 0; });
+		Deck.Extra.RemoveAll([](int32 CardId) { return CardId <= 0; });
 		NewDecks.Add(MoveTemp(Deck));
 	}
 
 	PlayerDecks = MoveTemp(NewDecks);
-	ActiveDeckId = SeenIds.Contains(Data.ActiveDeckId) ? Data.ActiveDeckId : PlayerDecks[0].Id;
+	const FString ActiveDeck = Data.ActiveDeckId.TrimStartAndEnd();
+	ActiveDeckId = PlayerDecks[0].Id;
+	for (const FDAEDeck& Deck : PlayerDecks)
+	{
+		if (Deck.Id.Equals(ActiveDeck, ESearchCase::IgnoreCase))
+		{
+			ActiveDeckId = Deck.Id;
+			break;
+		}
+	}
 	OnDecksChanged.Broadcast(ActiveDeckId);
 	return true;
 }
@@ -1159,6 +1404,10 @@ bool UDADeckLogic::ImportStateJson(const FString& Json, FString& OutError)
 		return false;
 	}
 	const TSharedPtr<FJsonObject> Object = Root->AsObject();
+	if (!ValidateSaveSection(Object, OutError))
+	{
+		return false;
+	}
 
 	const TArray<TSharedPtr<FJsonValue>>* DeckArray = nullptr;
 	if (!Object->TryGetArrayField(TEXT("decks"), DeckArray) || !DeckArray || DeckArray->Num() == 0)
@@ -1178,18 +1427,26 @@ bool UDADeckLogic::ImportStateJson(const FString& Json, FString& OutError)
 	{
 		const TSharedPtr<FJsonObject> Entry = Value.IsValid() ? Value->AsObject() : nullptr;
 		FDAEDeck Deck;
-		if (!ParseDeckObject(Entry, Deck) || SeenIds.Contains(Deck.Id))
+		if (!ParseDeckObject(Entry, Deck) || SeenIds.Contains(Deck.Id.ToLower()))
 		{
 			OutError = TEXT("Deck JSON contains an invalid or duplicate Deck.");
 			return false;
 		}
-		SeenIds.Add(Deck.Id);
+		SeenIds.Add(Deck.Id.ToLower());
 		NewDecks.Add(MoveTemp(Deck));
 	}
 
 	PlayerDecks = MoveTemp(NewDecks);
-	const FString Active = DAEconomyJson::ReadString(Object, TEXT("active_deck_id"));
-	ActiveDeckId = SeenIds.Contains(Active) ? Active : PlayerDecks[0].Id;
+	const FString Active = DAEconomyJson::ReadString(Object, TEXT("active_deck_id")).TrimStartAndEnd();
+	ActiveDeckId = PlayerDecks[0].Id;
+	for (const FDAEDeck& Deck : PlayerDecks)
+	{
+		if (Deck.Id.Equals(Active, ESearchCase::IgnoreCase))
+		{
+			ActiveDeckId = Deck.Id;
+			break;
+		}
+	}
 	OnDecksChanged.Broadcast(ActiveDeckId);
 	return true;
 }

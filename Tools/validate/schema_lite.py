@@ -41,6 +41,8 @@ def load_schema(path: Path) -> dict:
             schema = json.load(fh)
     except FileNotFoundError as exc:
         raise SchemaError(f"schema not found: {path}") from exc
+    except OSError as exc:
+        raise SchemaError(f"cannot read schema {path}: {exc}") from exc
     except json.JSONDecodeError as exc:
         raise SchemaError(f"invalid schema JSON {path}: {exc}") from exc
     if not isinstance(schema, dict):
@@ -145,6 +147,11 @@ def _validate(
     expected = schema.get("type")
     if expected is not None:
         allowed = expected if isinstance(expected, list) else [expected]
+        unknown = [t for t in allowed if not isinstance(t, str) or t not in _TYPE_CHECKS]
+        if unknown:
+            # A typo such as "integerr" must not turn the check into a no-op.
+            errors.append(f"{path}: schema declares unknown type(s) {unknown!r}")
+            return
         if not any(_matches_type(value, t) for t in allowed):
             errors.append(
                 f"{path}: expected {'/'.join(str(t) for t in allowed)}, got {_type_name(value)}"

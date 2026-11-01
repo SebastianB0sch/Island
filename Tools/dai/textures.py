@@ -9,14 +9,15 @@ Procedural, tileable textures (numpy + Pillow).
 Everything is periodic so it tiles seamlessly.
 """
 
-import json
 import math
 import os
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from . import atomic
 from . import config as C
+from . import jsonio
 
 rng = np.random.default_rng(C.SEED)
 
@@ -72,11 +73,11 @@ def normal_from_height(h, strength=4.0):
 
 
 def save_gray(a, path):
-    Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8), "L").save(path, optimize=True)
+    atomic.save_image(Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8), "L"), path, optimize=True)
 
 
 def save_rgb(a, path):
-    Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8), "RGB").save(path, optimize=True)
+    atomic.save_image(Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8), "RGB"), path, optimize=True)
 
 
 def norm01(a):
@@ -332,7 +333,7 @@ def build_textures(log=print):
     save_rgb(np.ones((8, 8, 3), np.float32), os.path.join(C.OUT_TEXTURES, "T_White.png"))
     save_rgb(np.tile(np.array([0.5, 0.5, 1.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_FlatNormal.png"))
     save_rgb(np.tile(np.array([1.0, 1.0, 0.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_DefaultMask.png"))
-    log(f"  textures: {len(sets_lo) * 2 + 4} written")
+    log(f"  textures: {len(sets_lo) * 2 + 7} written")
     os.makedirs(C.OUT_DATA, exist_ok=True)
     build_photo_textures(log)
     return sorted(sets_lo)
@@ -442,16 +443,14 @@ def build_photo_textures(log=print):
             nrm = np.asarray(Image.open(os.path.join(C.OUT_TEXTURES, f"T_{det}_N.png")).convert("RGB")).astype(np.float32) / 255.0
             rough = np.full(d.shape, 0.9, np.float32)
             source = "procedural"
-        Image.fromarray((np.clip(bc, 0, 1) * 255).astype(np.uint8), "RGB").save(bc_path, quality=92)
+        atomic.save_image(Image.fromarray((np.clip(bc, 0, 1) * 255).astype(np.uint8), "RGB"), bc_path, quality=92)
         save_rgb(nrm, n_path)
         save_gray(rough, r_path)
         mean = bc.reshape(-1, 3).mean(0)
         layer_info[layer] = dict(mean_srgb=[float(x) for x in mean], source=source,
                                  tile_m=float((spec or {}).get("tile_m", TERRAIN_DEFAULT_TILE_M[layer])))
     os.makedirs(C.CACHE_DIR, exist_ok=True)
-    with open(os.path.join(C.CACHE_DIR, "terrain_layers.json"), "w") as fp:
-        json.dump(layer_info, fp, indent=1)
-    with open(os.path.join(C.OUT_DATA, "terrain_layers.json"), "w") as fp:
-        json.dump(layer_info, fp, indent=1)
+    jsonio.write_json(os.path.join(C.CACHE_DIR, "terrain_layers.json"), layer_info, indent=1)
+    jsonio.write_json(os.path.join(C.OUT_DATA, "terrain_layers.json"), layer_info, indent=1)
     n_photo = sum(1 for v in layer_info.values() if v["source"] == "photo")
     log(f"  photo textures: {n_detail} detail sets, terrain layers {n_photo}/{len(layer_info)} from photo sets")

@@ -240,6 +240,15 @@ public:
 	bool BeginTimed(const FString& PuzzleId, FString& OutError);
 	bool SubmitTimedResult(bool bSolved, int32 TurnsUsed, float SecondsUsed, FString& OutError);
 
+	/**
+	 * Idempotent timed submission used by the live puzzle path.  Repeating the
+	 * call with the same ResultToken returns true with bAlreadyApplied and does
+	 * not change the recorded result; a different token is rejected.  An empty
+	 * token preserves the legacy SubmitTimedResult behaviour.
+	 */
+	bool SubmitTimedResultOnce(bool bSolved, int32 TurnsUsed, float SecondsUsed, const FString& ResultToken,
+		FString& OutError, bool& bAlreadyApplied);
+
 	bool BeginPractical(FString& OutError);
 	void RecordPracticalEvent(const FString& ObjectiveId, int32 Amount = 1);
 
@@ -257,6 +266,10 @@ public:
 	int32 GetSeed() const { return Seed; }
 	FString GetExamId() const;
 	FString GetSelectedPuzzleId() const { return SelectedPuzzleId; }
+
+	/** Unique per exam attempt; used to scope exam outcome/result tokens. */
+	FString GetAttemptToken() const;
+	const FString& GetTimedResultToken() const { return TimedResultToken; }
 
 	const TArray<FString>& GetCurrentQuestionIds() const { return CurrentQuestionIds; }
 	const TArray<FString>& GetPuzzleIds() const { return PuzzleIds; }
@@ -277,6 +290,7 @@ public:
 	const TArray<FDAGradeBand>& GetGradeBands() const { return GradeBands; }
 
 	int32 GetPracticalPoints() const;
+	bool IsTimedSolved() const { return bTimedSolved; }
 	int32 GetTimedTurns() const { return TimedTurns; }
 	float GetTimedSeconds() const { return TimedSeconds; }
 	int32 GetPassMark() const { return PassMark; }
@@ -318,6 +332,8 @@ private:
 	TMap<FString, int32> WrittenAnswers;
 	TArray<FDAExamPracticalProgress> PracticalProgress;
 	FString SelectedPuzzleId;
+	FString AttemptToken;
+	FString TimedResultToken;
 	FDAExamResult Result;
 
 	EDAExamPhase Phase = EDAExamPhase::None;

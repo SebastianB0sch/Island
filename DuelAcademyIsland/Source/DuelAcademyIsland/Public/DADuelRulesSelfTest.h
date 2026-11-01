@@ -15,6 +15,22 @@
 
 class UCardDatabaseSubsystem;
 
+/**
+ * Single owner for the -DADuelSelfTest=N launch argument.  The diagnostics
+ * batch and the rules-self-test subsystem both need the same clamped count;
+ * keeping the parse here avoids the two drifting apart.
+ */
+namespace DADuelSelfTestArgs
+{
+	/**
+	 * Iteration count from -DADuelSelfTest=N, clamped to [1, MaxIterations].
+	 * DefaultIterations is used when the switch is absent or its value is not
+	 * positive.  OutRequested (optional) reports whether the switch was present.
+	 */
+	DUELACADEMYISLAND_API int32 ParseRequestedIterations(int32 DefaultIterations, int32 MaxIterations,
+		bool* OutRequested = nullptr);
+}
+
 struct FDuelRulesSelfTestReport
 {
 	int32 Passed = 0;

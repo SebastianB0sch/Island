@@ -3,7 +3,10 @@
 #include "DAPortalTest.h"
 
 #include "DAInteriorPortal.h"
+#include "DAIslandSubsystem.h"
 #include "DuelAcademyIsland.h"
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
@@ -106,6 +109,7 @@ void UDAPortalTestSubsystem::CollectPortals(UWorld* World)
 	Check(Returns.Num() == 10, FString::Printf(TEXT("10 interior return portals (found %d)"), Returns.Num()));
 
 	TSet<FString> Ids;
+	TSet<FString> LinkedTargets;
 	for (const ADAInteriorPortal* Portal : Portals)
 	{
 		Check(!Portal->PortalId.IsEmpty(), TEXT("portal has a non-empty id"));
@@ -113,6 +117,23 @@ void UDAPortalTestSubsystem::CollectPortals(UWorld* World)
 		Ids.Add(Portal->PortalId);
 		Check(!Portal->InteriorId.IsEmpty(), FString::Printf(TEXT("portal %s names an interior"), *Portal->PortalId));
 		Check(!Portal->TargetLocation.IsNearlyZero(), FString::Printf(TEXT("portal %s has a destination"), *Portal->PortalId));
+
+		Check(!Portal->TargetPortalId.IsEmpty(), FString::Printf(TEXT("%s names a paired portal"), *Portal->PortalId));
+		Check(Portal->TargetPortalId != Portal->PortalId, FString::Printf(TEXT("%s does not link to itself"), *Portal->PortalId));
+		if (!Portal->TargetPortalId.IsEmpty())
+		{
+			Check(!LinkedTargets.Contains(Portal->TargetPortalId),
+				FString::Printf(TEXT("%s is the only portal linked to %s"), *Portal->PortalId, *Portal->TargetPortalId));
+			LinkedTargets.Add(Portal->TargetPortalId);
+
+			const ADAInteriorPortal* Linked = Portal->FindLinkedPortal();
+			Check(Linked != nullptr, FString::Printf(TEXT("%s links to its paired portal"), *Portal->PortalId));
+			if (Linked)
+			{
+				Check(Linked->TargetPortalId == Portal->PortalId,
+					FString::Printf(TEXT("%s / %s are reciprocal"), *Portal->PortalId, *Linked->PortalId));
+			}
+		}
 	}
 
 	for (const ADAInteriorPortal* Entry : Entries)
@@ -131,6 +152,189 @@ void UDAPortalTestSubsystem::CollectPortals(UWorld* World)
 				FString::Printf(TEXT("%s arrival returns outside"), *Entry->PortalId));
 		}
 	}
+
+	VerifySaveStateContract();
+	VerifyWorldSaveStateContract();
+}
+
+void UDAPortalTestSubsystem::VerifyWorldSaveStateContract()
+{
+	UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+	UDAIslandSubsystem* Island = World ? World->GetSubsystem<UDAIslandSubsystem>() : nullptr;
+	Check(Island != nullptr, TEXT("island subsystem owns the world save section"));
+	if (!Island)
+	{
+		return;
+	}
+	Check(Island->GetSaveSectionName() == TEXT("world"), TEXT("world save section name is stable"));
+
+	ADAInteriorPortal* Portal = Portals.Num() > 0 ? Portals[0].Get() : nullptr;
+	if (!Portal)
+	{
+		Check(false, TEXT("world save-state probe has a portal"));
+		return;
+	}
+	const bool bOriginalLocked = Portal->bLocked;
+	const bool bOriginalUsed = Portal->bUsed;
+	const TArray<FString> OriginalDiscovered = Island->GetDiscoveredLocationIds();
+
+	TSharedPtr<FJsonObject> OriginalSection;
+	Check(Island->WriteSaveSection(OriginalSection), TEXT("world save section writes"));
+
+	// Round trip: mutate a portal, export the section, clear it, re-import.
+	Portal->bLocked = true;
+	Portal->bUsed = true;
+	TSharedPtr<FJsonObject> MutatedSection;
+	Check(Island->WriteSaveSection(MutatedSection), TEXT("world save section captures portal state"));
+	Portal->bLocked = false;
+	Portal->bUsed = false;
+
+	FString Error;
+	Check(Island->ReadSaveSection(MutatedSection, Error),
+		FString::Printf(TEXT("world save section reads (%s)"), *Error));
+	Check(Island->HasPendingWorldState(), TEXT("world save state is queued for the deferred pass"));
+	Check(!Portal->IsPortalLocked() && !Portal->bUsed,
+		TEXT("world save state is not applied during read"));
+	Check(Island->ApplyPendingWorldState(), TEXT("queued world save state applies"));
+	Check(Portal->IsPortalLocked() && Portal->bUsed, TEXT("world save round-trip restores portal flags"));
+	Check(Island->ApplyPendingWorldState(), TEXT("world save apply is idempotent"));
+	Check(Portal->IsPortalLocked() && Portal->bUsed,
+		TEXT("re-applying world save state keeps portal flags"));
+
+	// Duplicate, unknown and empty ids must never overwrite live doors.
+	TSharedPtr<FJsonObject> HostileSection = MakeShared<FJsonObject>();
+	HostileSection->SetNumberField(TEXT("version"), 1);
+	TArray<TSharedPtr<FJsonValue>> PortalRows;
+	{
+		TSharedPtr<FJsonObject> First = MakeShared<FJsonObject>();
+		First->SetStringField(TEXT("id"), Portal->PortalId);
+		First->SetBoolField(TEXT("locked"), false);
+		First->SetBoolField(TEXT("used"), false);
+		PortalRows.Add(MakeShared<FJsonValueObject>(First));
+
+		TSharedPtr<FJsonObject> Duplicate = MakeShared<FJsonObject>();
+		Duplicate->SetStringField(TEXT("id"), Portal->PortalId);
+		Duplicate->SetBoolField(TEXT("locked"), true);
+		Duplicate->SetBoolField(TEXT("used"), true);
+		PortalRows.Add(MakeShared<FJsonValueObject>(Duplicate));
+
+		TSharedPtr<FJsonObject> Unknown = MakeShared<FJsonObject>();
+		Unknown->SetStringField(TEXT("id"), TEXT("__missing_portal__"));
+		Unknown->SetBoolField(TEXT("locked"), true);
+		Unknown->SetBoolField(TEXT("used"), true);
+		PortalRows.Add(MakeShared<FJsonValueObject>(Unknown));
+
+		TSharedPtr<FJsonObject> Empty = MakeShared<FJsonObject>();
+		Empty->SetStringField(TEXT("id"), FString());
+		Empty->SetBoolField(TEXT("locked"), true);
+		Empty->SetBoolField(TEXT("used"), true);
+		PortalRows.Add(MakeShared<FJsonValueObject>(Empty));
+	}
+	HostileSection->SetArrayField(TEXT("portals"), PortalRows);
+
+	Portal->bLocked = true;
+	Portal->bUsed = true;
+	Check(Island->ReadSaveSection(HostileSection, Error),
+		FString::Printf(TEXT("world save section accepts duplicate/unknown ids (%s)"), *Error));
+	Check(Island->ApplyPendingWorldState(), TEXT("world save state with duplicate ids applies"));
+	Check(!Portal->IsPortalLocked() && !Portal->bUsed,
+		TEXT("duplicate portal ids keep the first entry"));
+	Check(Island->ApplyPendingWorldState(), TEXT("duplicate world save state re-applies"));
+	Check(!Portal->IsPortalLocked() && !Portal->bUsed,
+		TEXT("duplicate portal ids stay stable on retry"));
+
+	// A saved portal that has no live actor yet must not fail the load or touch
+	// the other doors, so the same payload can be retried after the actor exists.
+	TSharedPtr<FJsonObject> MissingActorSection = MakeShared<FJsonObject>();
+	MissingActorSection->SetNumberField(TEXT("version"), 1);
+	TArray<TSharedPtr<FJsonValue>> MissingRows;
+	{
+		TSharedPtr<FJsonObject> Missing = MakeShared<FJsonObject>();
+		Missing->SetStringField(TEXT("id"), TEXT("__not_spawned_yet__"));
+		Missing->SetBoolField(TEXT("locked"), true);
+		Missing->SetBoolField(TEXT("used"), true);
+		MissingRows.Add(MakeShared<FJsonValueObject>(Missing));
+	}
+	MissingActorSection->SetArrayField(TEXT("portals"), MissingRows);
+	Check(Island->ReadSaveSection(MissingActorSection, Error),
+		FString::Printf(TEXT("world save section accepts an id without a live actor (%s)"), *Error));
+	Check(Island->ApplyPendingWorldState(),
+		TEXT("world save state with an unknown actor id still applies"));
+	Check(!Portal->IsPortalLocked() && !Portal->bUsed,
+		TEXT("unknown portal ids do not touch unrelated doors"));
+
+	// Zone discovery round-trips through the same section.
+	TSharedPtr<FJsonObject> DiscoverySection = MakeShared<FJsonObject>();
+	DiscoverySection->SetNumberField(TEXT("version"), 1);
+	TArray<TSharedPtr<FJsonValue>> DiscoveredRows;
+	DiscoveredRows.Add(MakeShared<FJsonValueString>(TEXT("__test_zone_a__")));
+	DiscoveredRows.Add(MakeShared<FJsonValueString>(TEXT("__test_zone_b__")));
+	DiscoverySection->SetArrayField(TEXT("discovered"), DiscoveredRows);
+	Check(Island->ReadSaveSection(DiscoverySection, Error),
+		FString::Printf(TEXT("world save section accepts discovered ids (%s)"), *Error));
+	Check(Island->ApplyPendingWorldState(), TEXT("world discovered state applies"));
+	const TArray<FString> RestoredIds = Island->GetDiscoveredLocationIds();
+	Check(RestoredIds.Num() == 2 && RestoredIds.Contains(TEXT("__test_zone_a__"))
+			&& RestoredIds.Contains(TEXT("__test_zone_b__")),
+		TEXT("world save restores discovered zone ids"));
+
+	// Restore the live world exactly as it was before the probe.
+	if (OriginalSection.IsValid())
+	{
+		Check(Island->ReadSaveSection(OriginalSection, Error),
+			FString::Printf(TEXT("world save snapshot restores (%s)"), *Error));
+		Check(Island->ApplyPendingWorldState(), TEXT("world save snapshot applies"));
+	}
+	Island->RestoreDiscoveredLocationIds(OriginalDiscovered);
+	Portal->bLocked = bOriginalLocked;
+	Portal->bUsed = bOriginalUsed;
+	Check(!Island->HasPendingWorldState(), TEXT("world save state queue is empty after restore"));
+}
+
+void UDAPortalTestSubsystem::VerifySaveStateContract()
+{
+	ADAInteriorPortal* Portal = Portals.Num() > 0 ? Portals[0].Get() : nullptr;
+	if (!Portal)
+	{
+		Check(false, TEXT("portal save-state probe has a portal"));
+		return;
+	}
+
+	// Mutate and restore the live portal so the probe cannot affect the walk.
+	const FString SavedId = Portal->PortalId;
+	const bool bSavedLocked = Portal->bLocked;
+	const bool bSavedUsed = Portal->bUsed;
+
+	const FDAPortalSaveState Snapshot = Portal->GetSaveState();
+	Check(Snapshot.PortalId == SavedId && Snapshot.bLocked == bSavedLocked && Snapshot.bUsed == bSavedUsed,
+		TEXT("portal save state mirrors the live portal"));
+
+	FDAPortalSaveState State;
+	State.PortalId = SavedId;
+	State.bLocked = true;
+	State.bUsed = true;
+
+	Portal->bLocked = false;
+	Portal->bUsed = false;
+	Portal->ApplySaveState(State);
+	Check(Portal->IsPortalLocked() && Portal->bUsed, TEXT("portal save state applies to the matching id"));
+
+	FDAPortalSaveState WrongId = State;
+	WrongId.PortalId = SavedId + TEXT("_mismatch");
+	Portal->bLocked = false;
+	Portal->bUsed = false;
+	Portal->ApplySaveState(WrongId);
+	Check(!Portal->IsPortalLocked() && !Portal->bUsed, TEXT("portal save state ignores a different id"));
+
+	FDAPortalSaveState EmptyId = State;
+	EmptyId.PortalId.Reset();
+	Portal->bLocked = false;
+	Portal->bUsed = false;
+	Portal->ApplySaveState(EmptyId);
+	Check(!Portal->IsPortalLocked() && !Portal->bUsed, TEXT("portal save state ignores an empty id"));
+
+	Portal->bLocked = bSavedLocked;
+	Portal->bUsed = bSavedUsed;
 }
 
 void UDAPortalTestSubsystem::BeginEntry()
@@ -151,6 +355,8 @@ void UDAPortalTestSubsystem::BeginEntry()
 	{
 		Check(false, TEXT("entry pawn and portal are available"));
 		++EntryIndex;
+		// Do not leave the state machine waiting on a teleport that never began.
+		Stage = 0;
 		return;
 	}
 
@@ -161,6 +367,10 @@ void UDAPortalTestSubsystem::BeginEntry()
 	// so either the overlap or this explicit call may start the use.
 	const bool bAccepted = Portal->bUsed || Portal->TryUse(Pawn);
 	Check(bAccepted, FString::Printf(TEXT("%s accepts use"), *Portal->PortalId));
+	if (const ADAInteriorPortal* Linked = Portal->FindLinkedPortal())
+	{
+		Check(Linked->IsOnCooldown(), FString::Printf(TEXT("%s arms the return portal cooldown"), *Portal->PortalId));
+	}
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Portal test: entering %s -> %s (%s)"),
 		*Portal->PortalId, *Portal->InteriorId, *Expected.ToCompactString());
 }

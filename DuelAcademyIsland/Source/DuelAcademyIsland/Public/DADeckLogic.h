@@ -1,6 +1,6 @@
 // Duel Academy Island - deck construction / validation logic.
 //
-// Owns the player's deck slots, the 40-60 main / 20 extra / 3-copy / banned &
+// Owns the player's deck slots, the 40-60 main / 15 extra / 3-copy / banned &
 // limited rules, sorting/filtering views, starter decks and the deck save
 // payload. It never mutates the duel engine or the UI.
 
@@ -19,7 +19,7 @@ class UDAInventorySubsystem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDAOnDecksChanged, const FString&, DeckId);
 
-/** One player deck slot. Main = 40-60, Extra = 0-20. */
+/** One player deck slot. Main = 40-60, Extra = 0-15. */
 USTRUCT(BlueprintType)
 struct FDAEDeck
 {
@@ -125,7 +125,9 @@ public:
 	// ------------------------------------------------ A02 save/profile interfaces
 	virtual FString GetSaveSectionName() const override { return TEXT("decks"); }
 	virtual bool WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const override;
+	virtual bool ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const override;
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) override;
+	virtual void ResetSaveSectionState() override;
 	virtual TArray<FString> GetDeckIds() const override;
 	virtual void SetActiveDeckId(const FString& DeckId) override;
 
@@ -218,6 +220,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Economy|Deck")
 	bool ImportStarterDeck(const FString& StarterId, const FString& NewName, FString& OutNewDeckId, FString& OutError);
+
+	/**
+	 * Import a starter recipe as a stable player deck id (the recipe id), or
+	 * return the existing player deck for that recipe. Used by the new-game
+	 * opening so selecting fire/water/wind is actually reflected in the deck
+	 * list and repeated grants are idempotent.
+	 */
+	bool EnsureStarterDeck(const FString& StarterId, const FString& NewName,
+		FString& OutDeckId, bool& bOutCreated, FString& OutError);
 
 	UFUNCTION(BlueprintPure, Category = "Economy|Deck")
 	TArray<int32> GetDefaultStarterCards() const { return DefaultStarterCards; }
