@@ -7,7 +7,6 @@ Duel Academy Island - one-click editor build.
     Command line:    UnrealEditor-Cmd DuelAcademyIsland.uproject -ExecutePythonScript="<project>/Content/Python/build_island_cli.py"
 """
 
-import os
 import time
 
 import unreal

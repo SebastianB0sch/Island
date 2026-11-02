@@ -21,7 +21,7 @@ import numpy as np
 
 from . import config as C
 from . import palette, terrain
-from .assets import AssetSet, load_placements
+from .assets import load_placements
 from .assets import props as P
 from .assets import avatar as AV
 
@@ -397,7 +397,6 @@ class Layout:
                         ok[m] = sub
             return ok
 
-        h_all = None
         counts = {}
 
         def emit(asset, x, y, z, scale_lo, scale_hi, sink=0.15):
@@ -582,7 +581,6 @@ class Layout:
     # ------------------------------------------------------------------ minimap
     def minimap(self, size=2048):
         from PIL import Image, ImageDraw
-        from .terrain import Terrain
         # recompute the base map from cached height + colour map
         h = self.hf.a
         col = np.asarray(Image.open(os.path.join(C.OUT_TEXTURES, "T_TerrainColor.png")).convert("RGB")).astype(np.float32) / 255.0

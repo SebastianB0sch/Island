@@ -5,10 +5,8 @@ in Docs/Canon/VALIDATION.md.
 """
 from __future__ import annotations
 
-import json
 import sys
 from collections import Counter
-from pathlib import Path
 
 from canon_common import (
     CANON_DIR, DOCS_DIR, REPO_ROOT, TOOLS_DIR, read_json, sha256_file, utc_now,
@@ -39,7 +37,7 @@ def main() -> int:
     report = Report()
     cards = read_json(CANON_DIR.parent / "cards.json")
     card_ids = {int(c["id"]) for c in cards}
-    card_names = {int(c["id"]): c["name"] for c in cards}
+    {int(c["id"]): c["name"] for c in cards}
     report.check("cards.count", len(cards) == 1200 and card_ids == CARD_IDS,
                  f"{len(cards)} records, ids 1..1200")
     manifest = read_json(CANON_DIR / "cards_manifest.json")

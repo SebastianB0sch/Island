@@ -8,10 +8,8 @@ condition list where it is not.
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import sys
-from pathlib import Path
 
 from canon_common import CANON_DIR, ensure_dirs, read_json, utc_now, write_json
 
@@ -536,10 +534,7 @@ def attach_dialogue(events: list[dict], dialogue_previews: dict[int, str]) -> No
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--source", type=Path,
-                        default=Path(r"C:\Users\Sebas\AppData\Local\Temp\opencode\gxcanon\guide_wikitext.json"))
-    args = parser.parse_args()
+    argparse.ArgumentParser(description=__doc__).parse_args()
     ensure_dirs()
     by_name, by_id = load_cards()
 

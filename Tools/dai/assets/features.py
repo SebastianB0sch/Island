@@ -15,8 +15,8 @@ from mathutils import Vector
 from . import AssetSet
 from .. import config as C
 from .. import terrain
-from ..geo import MeshBuilder, TAU
-from .props import blob, tube
+from ..geo import TAU
+from .props import blob
 
 _cache = {}
 

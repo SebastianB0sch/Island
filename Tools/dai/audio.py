@@ -72,7 +72,7 @@ def birds(dur=20.0, seed=5):
     n = int(SR * dur)
     r = np.random.default_rng(seed)
     out = wind(dur) * 0.15
-    t_all = np.arange(n) / SR
+    np.arange(n) / SR
     for _ in range(int(dur * 1.6)):
         start = r.uniform(0, dur - 0.6)
         notes = r.integers(2, 6)

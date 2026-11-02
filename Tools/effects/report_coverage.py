@@ -118,7 +118,7 @@ def build_report() -> str:
     by_id = data.cards_by_id(cards)
     manifest = data.load_json(data.MANIFEST_PATH)
     entries = manifest["cards"]
-    index = {entry["id"]: entry for entry in entries}
+    {entry["id"]: entry for entry in entries}
     decks = data.load_decks()
     deck_membership: dict[int, list[str]] = {}
     for deck in decks:
@@ -606,7 +606,7 @@ def build_report() -> str:
             "effects stay pending rather than being approximated."
         )
     lines.append(
-        f"4. **Fusion 1156 UFOroid Fighter** is unresolved: its text mixes one named material with a generic `1 Warrior-Type monster` slot, which the current recipe model cannot express."
+        "4. **Fusion 1156 UFOroid Fighter** is unresolved: its text mixes one named material with a generic `1 Warrior-Type monster` slot, which the current recipe model cannot express."
     )
     lines.append(
         "5. **Contact Fusion** (745, 747, 774, 775) and **Power Bond / Fusion Gate** are data-valid but not resolved by the current engine. A04 needs the primitives listed in `RUNTIME_INTERFACE.md`."

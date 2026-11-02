@@ -81,7 +81,7 @@ def extract_fusion_candidates(cards: list[dict]) -> list[dict]:
         key=lambda item: int(item["id"]),
     ):
         result_id = int(card["id"])
-        description = (card.get("description") or "").strip()
+        (card.get("description") or "").strip()
         material_names: list[str] = []
         materials: list[int] = []
         unresolved_names: list[str] = []

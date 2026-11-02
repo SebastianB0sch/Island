@@ -19,7 +19,6 @@ import argparse
 import json
 import os
 import sys
-from typing import Any
 
 ROOT_DEFAULT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 

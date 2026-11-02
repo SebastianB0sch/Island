@@ -1,7 +1,6 @@
 """Assemble /Game/DuelAcademy/Maps/DuelAcademyIsland from Data/layout.json."""
 
 import json
-import math
 import os
 
 import unreal

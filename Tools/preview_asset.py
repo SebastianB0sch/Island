@@ -12,7 +12,6 @@ Run with the Blender-as-a-module interpreter (pip install bpy, Python 3.13).
 
 import argparse
 import importlib
-import math
 import os
 import sys
 

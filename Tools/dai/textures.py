@@ -14,7 +14,7 @@ import math
 import os
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 from . import config as C
 
@@ -100,8 +100,8 @@ def tiles(n, cols, rows, grout=0.03, offset_rows=False, bevel=0.06, seed=0):
     col = np.floor(gu)
     fu = gu - col
     fv = gv - row
-    du = np.minimum(fu, 1 - fu) / cols * n / n
-    dv = np.minimum(fv, 1 - fv) / rows
+    np.minimum(fu, 1 - fu) / cols * n / n
+    np.minimum(fv, 1 - fv) / rows
     d = np.minimum(np.minimum(fu, 1 - fu) * (1.0 / cols), np.minimum(fv, 1 - fv) * (1.0 / rows))
     h = np.clip((d - grout * 0.5) / bevel, 0, 1)
     r = np.random.default_rng(seed)
@@ -187,7 +187,7 @@ def make_detail_set(n=512):
     fu = gu % 1.0
     fv = gv - row
     arc = np.sqrt(np.clip(1 - (2 * fu - 1) ** 2, 0, 1)) * 0.25
-    hgt = np.clip(fv - (0.0 + arc * 0.0), 0, 1)
+    np.clip(fv - (0.0 + arc * 0.0), 0, 1)
     edge = np.clip((fv - arc * 0.3) / 0.05, 0, 1)
     rid = np.random.default_rng(19).random((rows + 1, cols * 2 + 2))[(row % rows).astype(int), (np.floor(gu) % (cols * 2)).astype(int)]
     side = np.clip(np.minimum(fu, 1 - fu) / 0.05, 0, 1)
@@ -264,7 +264,7 @@ def lava(n=512):
     cells = 1 - np.abs(band(n, 3, 14, 42)) * 2.5
     cr = np.clip(1 - np.abs(band(n, 4, 18, 43)) * 10, 0, 1)
     heat = np.clip(cr * 0.9 + np.clip(spectral(n, 2.0, 44), 0, 1) * 0.4, 0, 1)
-    crust = np.clip(cells, 0, 1)
+    np.clip(cells, 0, 1)
     col = np.stack([0.15 + heat * 1.0, 0.05 + heat ** 1.6 * 0.6, 0.03 + heat ** 3 * 0.25], -1)
     return np.clip(col, 0, 1)
 

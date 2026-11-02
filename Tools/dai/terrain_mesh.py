@@ -123,7 +123,6 @@ def flat_square(name, half, z, cells, mat):
 
 def build_water(h, export=True, log=print):
     """Ocean plane, sea floor plane and lake surface."""
-    from .terrain import grid
     objs = {}
     ocean = flat_square("SM_Ocean", 20000.0, 0.0, 40, "M_Ocean")
     seafloor = flat_square("SM_SeaFloor", 20000.0, C.SEA_FLOOR - 0.4, 8, "M_Sand")
