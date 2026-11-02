@@ -5478,10 +5478,6 @@ PENDING_REASONS = {
         "pending",
         "a face-up continuous card's trigger cannot be gated on its own face-up state",
     ),
-    "runtime_special_summon_position": (
-        "pending",
-        "special_summon is fixed to face-up Attack Position; this card needs Defense or face-down",
-    ),
     "runtime_send_to_grave_schema": (
         "pending",
         "selected-card Deck-to-Graveyard send is not exposed by the current schema",
@@ -5736,7 +5732,7 @@ PENDING_REASONS = {
     ),
     "runtime_special_summon_position": (
         "pending",
-        "special_summon is fixed to face-up Attack Position",
+        "special_summon is fixed to face-up Attack Position; this card needs Defense or face-down",
     ),
     "vanilla_ritual_procedure": (
         "vanilla",
