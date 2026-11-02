@@ -201,6 +201,11 @@ DECK_MAP: list[dict[str, Any]] = [
         "theme_ids": [336, 447, 148, 463, 579, 811, 590, 908, 499],
     },
     {
+        "id": "sheppard_year1", "canon": "sheppard_year1", "opponent": "sheppard",
+        "name": "Chancellor Sheppard - Year 1", "variant": "base",
+        "themes": ["Dragon"],
+    },
+    {
         "id": "torrey_insect", "canon": "torrey_year1", "opponent": "torrey",
         "name": "Torrey - Insect", "variant": "base",
         "themes": ["Insect", "Fiend", "Zombie", "Spellcaster"],
