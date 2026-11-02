@@ -51,7 +51,34 @@ def count(path: Path, data) -> int | None:
     return None
 
 
+def rehash() -> int:
+    """Refresh only the per-file sha256/bytes entries of an existing manifest.
+
+    Needs no ROM, so text-only edits to canon files (e.g. scrubbing a local
+    path) can be re-sealed on any machine.
+    """
+    path = CANON_DIR / "manifest.json"
+    manifest = read_json(path)
+    changed = 0
+    for item in manifest["files"]:
+        target = REPO_ROOT / item["path"]
+        if not target.exists():
+            print(f"missing: {item['path']}")
+            continue
+        digest, size = sha256_file(target), target.stat().st_size
+        if item.get("sha256") != digest or item.get("bytes") != size:
+            item["sha256"], item["bytes"] = digest, size
+            changed += 1
+            print(f"rehashed: {item['path']}")
+    if changed:
+        write_json(path, manifest)
+    print(f"{changed} manifest entr{'y' if changed == 1 else 'ies'} updated")
+    return 0
+
+
 def main() -> int:
+    if "--rehash" in sys.argv[1:]:
+        return rehash()
     ensure_dirs()
     rom = load_rom(DEFAULT_ROM)
     files = []

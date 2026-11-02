@@ -244,10 +244,10 @@ def main() -> int:
     for item in top["files"]:
         path = REPO_ROOT / item["path"]
         if not path.exists():
-            report.errors.append(f"manifest missing file {item['path']}")
-        elif sha256_file(path) != item["sha256"]:
-            report.errors.append(f"manifest hash mismatch {item['path']}")
-    report.check("manifest.hashes", not any("hash mismatch" in e for e in report.errors), "")
+            report.check("manifest.files", False, f"missing {item['path']}")
+        else:
+            report.check("manifest.hashes", sha256_file(path) == item["sha256"],
+                         f"hash mismatch {item['path']} (run build_manifest.py --rehash)")
 
     lines = [
         "# Canon validation report",

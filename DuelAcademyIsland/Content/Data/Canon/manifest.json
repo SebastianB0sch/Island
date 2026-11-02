@@ -38,8 +38,8 @@
   "files": [
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/cards_manifest.json",
-      "sha256": "4f6368b0f955ddfe373f246241fd87464892c918e20414fec5c539134a69d08e",
-      "bytes": 97886,
+      "sha256": "5ec865d9b776b3f8b9d7c9afb88f481bf2471df67035d16e1eda8bba0f3a1b0c",
+      "bytes": 97843,
       "records": 1200
     },
     {
@@ -86,8 +86,8 @@
     },
     {
       "path": "DuelAcademyIsland/Content/Data/Canon/exams.json",
-      "sha256": "6da155602e5d21cff27f4c253e2467974cf46347af86e410d67fdb5641a19458",
-      "bytes": 88779,
+      "sha256": "3c314f3490128353ad4c830ed4f0c3fb21bbd767b51d4e05085bca89b2c0a11b",
+      "bytes": 88736,
       "records": 89
     },
     {

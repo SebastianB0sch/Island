@@ -1,6 +1,6 @@
 # Canon validation report
 
-Generated: 2026-10-31T10:00:56+00:00
+Generated: 2026-11-02T15:51:57+00:00
 
 - Errors: **0**
 - Warnings: **1**
@@ -296,7 +296,27 @@ Generated: 2026-10-31T10:00:56+00:00
 | `text.name_pointer_pools` | PASS | {'full_base_expected': '0x146CB14', 'full_first_pointer': '0x0946CB14', 'full_first_pointer_matches': True, 'short_base_expected': '0x146CC32', 'short_first_pointer': '0x0946CC32', 'short_first_pointer_matches': True} |
 | `legal.no_rom_or_save` | PASS | [] |
 | `legal.no_full_dialogue` | PASS | [] |
-| `manifest.hashes` | PASS |  |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/cards_manifest.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/card_name_overrides.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/calendar.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/titles.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/packs.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/opponents.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/decks.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/puzzles.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/exams.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/events.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/banned_list.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/dp_rules.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/emails.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/locations.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/dialogue_keys.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/text/dialogue_index.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/text/name_table.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/text/ui_strings.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/text/title_strings.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/text/dialogue_control_codes.json (run build_manifest.py --rehash) |
+| `manifest.hashes` | PASS | hash mismatch DuelAcademyIsland/Content/Data/Canon/text/script_segments.json (run build_manifest.py --rehash) |
 
 ## Warnings
 
