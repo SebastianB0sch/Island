@@ -349,7 +349,6 @@ def bench():
 def signpost():
     mb = MeshBuilder("signpost")
     mb.box((0, 0, 1.3), (0.14, 0.14, 2.9), "M_DarkWood")
-    random.Random(5)
     for k, (z, a) in enumerate([(2.45, 15), (2.05, -25), (1.65, 160)]):
         with mb.at((0, 0, z), rot=a):
             mb.box((0.6, 0, 0), (1.15, 0.05, 0.28), "M_Wood")

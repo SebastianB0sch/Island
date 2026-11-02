@@ -8,7 +8,6 @@ from canon_common import CANON_DIR, DOCS_DIR, read_json, utc_now, write_text
 
 def main() -> int:
     cards = read_json(CANON_DIR.parent / "cards.json")
-    read_json(CANON_DIR / "cards_manifest.json")
     packs = read_json(CANON_DIR / "packs.json")["packs"]
     events = read_json(CANON_DIR / "events.json")["events"]
     opponents = read_json(CANON_DIR / "opponents.json")["opponents"]
