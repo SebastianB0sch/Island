@@ -233,7 +233,6 @@ def bamboo_fence(mb, pts, h, rng, mat=WOOD):
 
 # ---------------------------------------------------------------- terrace + pools
 def _terrace(mb, nc, rng):
-    rounded_rect(TX0, TX1, TY0, TY1, TCR)
     outer = rounded_rect(TX0, TX1, TY0, TY1, TCR, off=0.45)
     inner = rounded_rect(TX0, TX1, TY0, TY1, TCR, off=-0.6)
     # retaining wall down to -4 and a dressed coping

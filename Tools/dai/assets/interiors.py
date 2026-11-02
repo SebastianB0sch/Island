@@ -78,7 +78,6 @@ def _room_shell(shell, nocol, cell, theme):
     shell.box_mm((x0 - 0.18, y0 - 0.18, h + 0.005), (x1 + 0.18, y1 + 0.18, h + 0.22), theme["ceiling"])
 
     # baseboards and crown moulding (segmented around the door on the +Y wall)
-    _z0, _z1 = 0.0, 0.12
     for (a, b) in (((x0 + 0.02, y0 + 0.02), (x1 - 0.02, y0 + 0.02)),
                    ((x0 + 0.02, y0 + 0.02), (x0 + 0.02, y1 - 0.02)),
                    ((x1 - 0.02, y0 + 0.02), (x1 - 0.02, y1 - 0.02))):
