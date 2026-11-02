@@ -9,7 +9,6 @@ import argparse
 import json
 import sys
 from collections import Counter
-from pathlib import Path
 
 from build_manifest import FILES as MANIFEST_FILES, MANIFEST_PATH_PREFIX
 from canon_common import (
@@ -153,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
     report = Report()
     cards = read_json(CANON_DIR.parent / "cards.json")
     card_ids = {int(c["id"]) for c in cards}
-    card_names = {int(c["id"]): c["name"] for c in cards}
+    {int(c["id"]): c["name"] for c in cards}
     report.check("cards.count", len(cards) == 1200 and card_ids == CARD_IDS,
                  f"{len(cards)} records, ids 1..1200")
     manifest = read_json(CANON_DIR / "cards_manifest.json")

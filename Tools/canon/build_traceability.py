@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 from canon_common import CANON_DIR, DOCS_DIR, read_json, utc_now, write_text
 
 
 def main() -> int:
     cards = read_json(CANON_DIR.parent / "cards.json")
-    card_manifest = read_json(CANON_DIR / "cards_manifest.json")
+    read_json(CANON_DIR / "cards_manifest.json")
     packs = read_json(CANON_DIR / "packs.json")["packs"]
     events = read_json(CANON_DIR / "events.json")["events"]
     opponents = read_json(CANON_DIR / "opponents.json")["opponents"]
@@ -132,10 +131,10 @@ def main() -> int:
 
     lines += ["", "## Exams and text", "", "| ID | Type | Source | Confidence |",
               "| --- | --- | --- | --- |",
-              f"| written_exam_bank | question templates | ROM 0x1430F2C | high templates / low keys |",
-              f"| practical_exam_1..7 | practical definitions | ROM 0x146C23E | high |",
-              f"| dialogue_index | 4,527 strings | ROM 0x13F6DF0 / 0x14280A0 | high offsets, local-only text |",
-              f"| name_table | 26 full / 26 short names | ROM 0x146CB14 / 0x146CC32 | exact |",
+              "| written_exam_bank | question templates | ROM 0x1430F2C | high templates / low keys |",
+              "| practical_exam_1..7 | practical definitions | ROM 0x146C23E | high |",
+              "| dialogue_index | 4,527 strings | ROM 0x13F6DF0 / 0x14280A0 | high offsets, local-only text |",
+              "| name_table | 26 full / 26 short names | ROM 0x146CB14 / 0x146CC32 | exact |",
               ""]
 
     write_text(DOCS_DIR / "TRACEABILITY.md", "\n".join(lines) + "\n")

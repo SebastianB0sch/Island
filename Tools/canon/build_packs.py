@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from canon_common import (
-    CANON_DIR, CACHE_DIR, REPO_ROOT, ensure_dirs, read_json, utc_now, write_json,
+    CANON_DIR, CACHE_DIR, DEFAULT_GUIDE_SOURCE, REPO_ROOT, ensure_dirs, read_json, utc_now, write_json,
 )
 
 PACK_PAGES = [
@@ -300,7 +300,7 @@ def parse_unlock(raw: str | None) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path,
-                        default=CACHE_DIR / "guide_wikitext.json")
+                        default=DEFAULT_GUIDE_SOURCE)
     args = parser.parse_args()
     ensure_dirs()
     CACHE_DIR.mkdir(parents=True, exist_ok=True)

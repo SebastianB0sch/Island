@@ -24,7 +24,6 @@ An AssetSet contains
 """
 
 import importlib
-import math
 
 from ..geo import MeshBuilder
 from .. import palette

@@ -6,7 +6,7 @@ import re
 import sys
 from pathlib import Path
 
-from canon_common import CANON_DIR, CACHE_DIR, ensure_dirs, read_json, utc_now, write_json
+from canon_common import CANON_DIR, CACHE_DIR, DEFAULT_GUIDE_SOURCE, ensure_dirs, read_json, utc_now, write_json
 
 GUIDE = "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy/Banned_List"
 
@@ -46,7 +46,7 @@ def parse_rows(text: str) -> list[dict]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path,
-                        default=CACHE_DIR / "guide_wikitext.json")
+                        default=DEFAULT_GUIDE_SOURCE)
     args = parser.parse_args()
     ensure_dirs()
     CACHE_DIR.mkdir(parents=True, exist_ok=True)

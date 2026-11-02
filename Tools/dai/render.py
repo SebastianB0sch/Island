@@ -11,7 +11,6 @@ import os
 
 import bpy
 import numpy as np
-from mathutils import Vector
 
 from . import blend
 from . import config as C
@@ -153,7 +152,7 @@ def build_scene(log=print, scatter=True, detail_props=True):
     lay = jsonio.read_json(os.path.join(C.OUT_DATA, "layout.json"))
     h = np.load(os.path.join(C.CACHE_DIR, "height.npy"))
     # terrain with baked colour map
-    t = terrain_mesh.build_preview_terrain(h, quads=1008)
+    terrain_mesh.build_preview_terrain(h, quads=1008)
     _terrain_material(blend.material("M_Terrain"))
     terrain_mesh.build_water(h, export=False, log=lambda *_: None)
     for wname in ("M_Ocean", "M_LakeWater"):

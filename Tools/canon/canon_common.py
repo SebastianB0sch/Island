@@ -31,7 +31,11 @@ LOCAL_ONLY_DIR = Path(
 # extracts record this stable placeholder instead of the local path so the
 # committed data and its manifest hashes do not depend on the workstation.
 ROM_SOURCE_LABEL = "$GX_ROM"
-DEFAULT_ROM = Path(os.environ.get("GX_ROM", "GX_ROM.gba"))
+DEFAULT_ROM = Path(os.environ.get("GX_ROM", str(REPO_ROOT / "GX_ROM.gba")))
+# Wikitext snapshot written by fetch_guides.py. Only read when the derived
+# *_facts.json cache for a builder is missing; set GX_GUIDE_WIKITEXT to use a
+# snapshot stored outside the repository.
+DEFAULT_GUIDE_SOURCE = Path(os.environ.get("GX_GUIDE_WIKITEXT", str(CACHE_DIR / "guide_wikitext.json")))
 TARGET_CARDS = REPO_ROOT / "DuelAcademyIsland" / "Content" / "Data" / "cards.json"
 
 ROM_SIZE = 32 * 1024 * 1024

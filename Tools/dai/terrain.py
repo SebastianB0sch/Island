@@ -626,7 +626,6 @@ class Terrain:
         img = col * (0.55 + 0.6 * shade[..., None])
         # water
         X, Y, _ = grid(size)
-        lake_mask = None
         sea = h < 0.0
         depth = np.clip(-h / 45.0, 0, 1)
         sea_col = np.stack([lerp(0.35, 0.05, depth), lerp(0.75, 0.25, depth), lerp(0.85, 0.50, depth)], -1)

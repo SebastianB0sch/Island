@@ -23,7 +23,6 @@ import collections
 import datetime as _dt
 import hashlib
 import json
-import os
 import re
 import sys
 import tempfile
