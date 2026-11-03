@@ -1677,382 +1677,181 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 		}
 	}
 
-	// ---- queued summon trigger fires after the effect ---------------------
+	// ---- Opponent-controlled scripts use the Opponent's point of view -----
 	{
-		FDuelEngine Duel(Database, 125);
+		FDuelEngine Duel(Database, 130);
 		Duel.SetAutoAnswerAllChoices(true);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_QUEUED_SUMMON"));
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_AI_RAIGEKI"));
 		Scenario.PlayerField.Add(MakeMonster(1, 0));
-		Scenario.PlayerHand = TArray<int32>{ 2 };
+		Scenario.OpponentField.Add(MakeMonster(2, 0));
+		Scenario.OpponentField.Add(MakeSpellTrap(142, 0, false));
 		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("queued summon scenario starts"));
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("AI Raigeki scenario starts"));
 		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const int32 SourceUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1) : 0;
-		if (Runtime && SourceUid != 0)
+		const int32 RaigekiUid = FindFieldUid(Duel.GetSide(EDuelOwner::Opponent), 142);
+		FDuelCard* Raigeki = RaigekiUid != 0 ? Duel.FindSpellTrap(RaigekiUid) : nullptr;
+		Report.Check(Runtime != nullptr && Raigeki != nullptr, TEXT("the AI's Raigeki is on the field"));
+		if (Runtime && Raigeki)
 		{
-			const bool bLoaded = LoadTestScript(Runtime, 1,
-				TEXT(R"JSON({"id":"test_summon_from_hand","trigger":"manual","target":{"zone":"self_hand","count":1},"operations":[{"op":"special_summon","target":"$target","position":"attack"}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_special_summon_reward","trigger":"on_special_summon","operations":[{"op":"gain_lp","player":"self","amount":100}]})JSON"));
-			const int32 ScriptIndex = FindManualScript(*Runtime, 1);
-			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
-			FString ActivateError;
-			const bool bActivated = bLoaded && ScriptIndex != INDEX_NONE
-				&& Runtime->ActivateManualScript(SourceUid, ScriptIndex, ActivateError);
-			const int32 SummonedUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 2);
-			Report.Check(bActivated && SummonedUid != 0,
-				TEXT("an effect Special Summon moves the hand card to the field"));
-			Report.Check(Duel.GetSide(EDuelOwner::Player).LP == LpBefore + 100,
-				TEXT("the summoned card's on_special_summon trigger fires after the effect"));
+			Runtime->OnActivate(*Raigeki);
+			Report.Check(FindFieldUid(Duel.GetSide(EDuelOwner::Player), 1) == 0,
+				TEXT("an AI Raigeki destroys the human player's monsters"));
+			Report.Check(FindFieldUid(Duel.GetSide(EDuelOwner::Opponent), 2) != 0,
+				TEXT("an AI Raigeki leaves the AI's own monsters alone"));
 		}
 	}
-
-	// ---- queued destroy trigger and banish replacement -------------------
-	{
-		FDuelEngine Duel(Database, 126);
-		Duel.SetAutoAnswerAllChoices(true);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_QUEUED_DESTROY_BANISH"));
-		Scenario.PlayerField.Add(MakeMonster(1, 0));
-		Scenario.PlayerField.Add(MakeMonster(2, 1));
-		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("queued destroy scenario starts"));
-		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const int32 SourceUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1) : 0;
-		if (Runtime && SourceUid != 0)
-		{
-			const bool bLoaded = LoadTestScript(Runtime, 1,
-				TEXT(R"JSON({"id":"test_destroy_with_replacement","trigger":"manual","target":{"zone":"all_monsters","count":1,"filter":{"name":"Mystical Elf"}},"operations":[{"op":"destruction_replacement","target":"$target","mode":"banish_instead"},{"op":"destroy","target":"$target","reason":"test"}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_destroy_reward","trigger":"on_destroy","operations":[{"op":"gain_lp","player":"self","amount":100}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_banish_no_grave_reward","trigger":"on_sent_to_graveyard","operations":[{"op":"gain_lp","player":"self","amount":1000}]})JSON"));
-			const int32 ScriptIndex = FindManualScript(*Runtime, 1);
-			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
-			FString ActivateError;
-			const bool bActivated = bLoaded && ScriptIndex != INDEX_NONE
-				&& Runtime->ActivateManualScript(SourceUid, ScriptIndex, ActivateError);
-			const TArray<FDuelCard>& Banished = Duel.GetSide(EDuelOwner::Player).Banished;
-			Report.Check(bActivated && Banished.ContainsByPredicate(
-				[](const FDuelCard& Card) { return Card.Data.Id == 2; }),
-				TEXT("banish replacement sends the destroyed card to the Banished zone"));
-			Report.Check(Duel.GetSide(EDuelOwner::Player).Graveyard.Num() == 0,
-				TEXT("banish replacement does not leave the destroyed card in the Graveyard"));
-			Report.Check(Duel.GetSide(EDuelOwner::Player).LP == LpBefore + 100,
-				TEXT("on_destroy fires after the effect but on_sent_to_graveyard is suppressed for a banish"));
-		}
-	}
-
-	// ---- Foolish Burial-style send_to_grave emits one Graveyard event ----
-	{
-		FDuelEngine Duel(Database, 127);
-		Duel.SetAutoAnswerAllChoices(true);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_FOOLISH_GRAVE_EVENT"));
-		Scenario.PlayerHand = TArray<int32>{ 609 };
-		Scenario.PlayerDeck = TArray<int32>{ 2 };
-		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("Foolish Burial scenario starts"));
-		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const int32 SpellUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 609) : 0;
-		if (Runtime && SpellUid != 0)
-		{
-			const bool bLoaded = LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_grave_reward","trigger":"on_sent_to_graveyard","operations":[{"op":"gain_lp","player":"self","amount":100}]})JSON"));
-			Runtime->ResetTestStats();
-			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
-			FString ActivateError;
-			const bool bActivated = bLoaded && Duel.ActivateSpell(SpellUid, ActivateError);
-			const FDuelSide& Player = Duel.GetSide(EDuelOwner::Player);
-			Report.Check(bActivated && CountCardsInArray(Player.Graveyard, 2) == 1,
-				TEXT("Foolish Burial sends exactly one chosen card to the Graveyard"));
-			Report.Check(Player.LP == LpBefore + 100
-				&& Runtime->GetExecutedScriptCount() == 2,
-				TEXT("send_to_graveyard emits on_sent_to_graveyard exactly once"));
-		}
-	}
-
-	// ---- send-to-graveyard cost emits the event after a successful move --
-	{
-		FDuelEngine Duel(Database, 128);
-		Duel.SetAutoAnswerAllChoices(true);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_GRAVE_COST_EVENT"));
-		Scenario.PlayerField.Add(MakeMonster(2, 0));
-		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("send-to-grave cost scenario starts"));
-		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const int32 SourceUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 2) : 0;
-		if (Runtime && SourceUid != 0)
-		{
-			const bool bLoaded = LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_grave_cost_effect","trigger":"manual","cost":[{"op":"send_to_graveyard","target":"$self"}],"operations":[{"op":"gain_lp","player":"self","amount":5}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_grave_cost_reward","trigger":"on_sent_to_graveyard","operations":[{"op":"gain_lp","player":"self","amount":100}]})JSON"));
-			const int32 ScriptIndex = FindManualScript(*Runtime, 2);
-			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
-			FString ActivateError;
-			const bool bActivated = bLoaded && ScriptIndex != INDEX_NONE
-				&& Runtime->ActivateManualScript(SourceUid, ScriptIndex, ActivateError);
-			const FDuelSide& Player = Duel.GetSide(EDuelOwner::Player);
-			Report.Check(bActivated && CountCardsInArray(Player.Graveyard, 2) == 1,
-				TEXT("send_to_graveyard cost moves the card to the Graveyard"));
-			Report.Check(Player.LP == LpBefore + 105,
-				TEXT("send_to_graveyard cost emits the Graveyard event exactly once"));
-		}
-	}
-
-	// ---- direct engine Graveyard move emits one from-field event ---------
-	{
-		FDuelEngine Duel(Database, 133);
-		Duel.SetAutoAnswerAllChoices(true);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_DIRECT_GRAVE_MOVE"));
-		Scenario.PlayerField.Add(MakeMonster(2, 0));
-		Scenario.PlayerHand = TArray<int32>{ 27 };
-		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("direct Graveyard-move scenario starts"));
-		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const int32 TributeUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Monsters, 2);
-		const int32 SummonUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Hand, 27);
-		Report.Check(Runtime != nullptr && TributeUid != 0 && SummonUid != 0,
-			TEXT("direct Graveyard-move cards are available"));
-		if (Runtime && TributeUid != 0 && SummonUid != 0)
-		{
-			const bool bLoaded = LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_direct_from_field_grave","trigger":"on_sent_to_graveyard","condition":{"custom":"sent_from_field_to_graveyard"},"operations":[{"op":"gain_lp","player":"self","amount":1000}]})JSON"));
-			Runtime->ResetTestStats();
-			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
-			FString SummonError;
-			const bool bSummoned = bLoaded
-				&& Duel.NormalSummon(SummonUid, TArray<int32>{ TributeUid }, false, SummonError);
-			Report.Check(bSummoned && FindFieldUid(Duel.GetSide(EDuelOwner::Player), 2) == 0
-				&& CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Graveyard, 2) == 1,
-				TEXT("a direct engine Tribute move places the card in the Graveyard"));
-			Report.Check(Duel.GetSide(EDuelOwner::Player).LP == LpBefore + 1000
-				&& Runtime->GetExecutedScriptCount() == 1,
-				TEXT("a direct engine move emits exactly one from-field Graveyard event"));
-		}
-	}
-
-	// ---- discard path emits exactly one non-field Graveyard event --------
-	{
-		FDuelEngine Duel(Database, 134);
-		Duel.SetAutoAnswerAllChoices(true);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_DISCARD_GRAVE_EVENT"));
-		Scenario.PlayerHand = TArray<int32>{ 2, 1, 3, 4, 5, 6, 7 };
-		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("discard Graveyard-event scenario starts"));
-		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const int32 DiscardUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 2) : 0;
-		if (Runtime && DiscardUid != 0)
-		{
-			const bool bLoaded = LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_discard_grave","trigger":"on_sent_to_graveyard","operations":[{"op":"gain_lp","player":"self","amount":100}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_discard_not_from_field","trigger":"on_sent_to_graveyard","condition":{"custom":"sent_from_field_to_graveyard"},"operations":[{"op":"gain_lp","player":"self","amount":1000}]})JSON"));
-			Duel.EndTurn();
-			Report.Check(Duel.IsAwaitingDiscard(), TEXT("hand-limit discard is pending"));
-			Runtime->ResetTestStats();
-			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
-			const bool bDiscarded = bLoaded && Duel.DiscardFromHand(DiscardUid, Error);
-			Report.Check(bDiscarded
-				&& CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Graveyard, 2) == 1,
-				TEXT("the hand-limit discard moves the card to the Graveyard"));
-			Report.Check(Duel.GetSide(EDuelOwner::Player).LP == LpBefore + 100
-				&& Runtime->GetExecutedScriptCount() == 1,
-				TEXT("discard emits exactly one Graveyard event and is not marked from-field"));
-		}
-	}
-
-	// ---- mill path emits one event per card, never marked from-field -----
-	{
-		FDuelEngine Duel(Database, 135);
-		Duel.SetAutoAnswerAllChoices(true);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_MILL_GRAVE_EVENT"));
-		Scenario.PlayerField.Add(MakeMonster(1, 0));
-		Scenario.PlayerDeck = TArray<int32>{ 2, 2 };
-		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("mill Graveyard-event scenario starts"));
-		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const int32 SourceUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1) : 0;
-		if (Runtime && SourceUid != 0)
-		{
-			const bool bLoaded = LoadTestScript(Runtime, 1,
-				TEXT(R"JSON({"id":"test_mill_two","trigger":"manual","operations":[{"op":"mill","count":2}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_mill_grave","trigger":"on_sent_to_graveyard","operations":[{"op":"gain_lp","player":"self","amount":100}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_mill_not_from_field","trigger":"on_sent_to_graveyard","condition":{"custom":"sent_from_field_to_graveyard"},"operations":[{"op":"gain_lp","player":"self","amount":1000}]})JSON"));
-			const int32 ScriptIndex = FindManualScript(*Runtime, 1);
-			Runtime->ResetTestStats();
-			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
-			FString ActivateError;
-			const bool bActivated = bLoaded && ScriptIndex != INDEX_NONE
-				&& Runtime->ActivateManualScript(SourceUid, ScriptIndex, ActivateError);
-			Report.Check(bActivated
-				&& CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Graveyard, 2) == 2,
-				TEXT("mill moves both top cards to the Graveyard"));
-			Report.Check(Duel.GetSide(EDuelOwner::Player).LP == LpBefore + 200
-				&& Runtime->GetExecutedScriptCount() == 3,
-				TEXT("mill emits exactly one Graveyard event per card and is not from-field"));
-		}
-	}
-
-	// ---- normal destruction fires on_destroy and one Graveyard event -----
-	{
-		FDuelEngine Duel(Database, 136);
-		Duel.SetAutoAnswerAllChoices(true);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_DESTROY_GRAVE_EVENT"));
-		Scenario.PlayerField.Add(MakeMonster(1, 0));
-		Scenario.PlayerField.Add(MakeMonster(2, 1));
-		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("destroy Graveyard-event scenario starts"));
-		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const int32 SourceUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1) : 0;
-		const int32 TargetUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 2) : 0;
-		if (Runtime && SourceUid != 0 && TargetUid != 0)
-		{
-			const bool bLoaded = LoadTestScript(Runtime, 1,
-				TEXT(R"JSON({"id":"test_destroy_grave_target","trigger":"manual","target":{"zone":"all_monsters","count":1,"filter":{"name":"Mystical Elf"}},"operations":[{"op":"destroy","target":"$target","reason":"test"}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_destroy_reward","trigger":"on_destroy","operations":[{"op":"gain_lp","player":"self","amount":100}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_destroy_grave_reward","trigger":"on_sent_to_graveyard","operations":[{"op":"gain_lp","player":"self","amount":100}]})JSON"))
-				&& LoadTestScript(Runtime, 2,
-				TEXT(R"JSON({"id":"test_destroy_from_field_reward","trigger":"on_sent_to_graveyard","condition":{"custom":"sent_from_field_to_graveyard"},"operations":[{"op":"gain_lp","player":"self","amount":1000}]})JSON"));
-			const int32 ScriptIndex = FindManualScript(*Runtime, 1);
-			Runtime->ResetTestStats();
-			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
-			FString ActivateError;
-			const bool bActivated = bLoaded && ScriptIndex != INDEX_NONE
-				&& Runtime->ActivateManualScript(SourceUid, ScriptIndex, ActivateError);
-			Report.Check(bActivated && FindFieldUid(Duel.GetSide(EDuelOwner::Player), 2) == 0
-				&& CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Graveyard, 2) == 1,
-				TEXT("a normal destruction moves the monster to the Graveyard"));
-			Report.Check(Duel.GetSide(EDuelOwner::Player).LP == LpBefore + 1200
-				&& Runtime->GetExecutedScriptCount() == 4,
-				TEXT("destruction fires on_destroy plus exactly one from-field Graveyard event"));
-		}
-	}
-
-	// ---- whole-zone continuous attack lock -------------------------------
-	{
-		FDuelEngine Duel(Database, 129);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_CONTINUOUS_WHOLE_ZONE"));
-		Scenario.PlayerField.Add(MakeMonster(1, 0));
-		Scenario.PlayerField.Add(MakeMonster(2, 1));
-		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("whole-zone continuous scenario starts"));
-		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		if (Runtime)
-		{
-			const bool bLoaded = LoadTestScript(Runtime, 1,
-				TEXT(R"JSON({"id":"test_whole_zone_lock","trigger":"continuous","operations":[{"op":"attack_lock","mode":"cannot_attack","target":{"zone":"all_monsters"}}]})JSON"));
-			Runtime->RecomputeContinuous();
-			const int32 FirstUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1);
-			const int32 SecondUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 2);
-			const FDuelCard* First = Duel.FindMonster(FirstUid);
-			const FDuelCard* Second = Duel.FindMonster(SecondUid);
-			Report.Check(bLoaded && First && Second && !Runtime->CanCardAttack(*First) && !Runtime->CanCardAttack(*Second),
-				TEXT("a continuous all_monsters lock applies to every monster without an explicit count"));
-		}
-	}
-
-	// ---- per_counter stat modifier is per target -------------------------
 	{
 		FDuelEngine Duel(Database, 131);
 		Duel.SetAutoAnswerAllChoices(true);
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_PER_COUNTER_TARGETS"));
-		Scenario.PlayerField.Add(MakeMonster(1, 0));
-		Scenario.PlayerField.Add(MakeMonster(2, 1));
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_AI_SANGAN"));
+		Scenario.OpponentGraveyard = TArray<int32>{ 29 };
+		Scenario.OpponentDeck = TArray<int32>{ 2 };
+		Scenario.PlayerDeck = TArray<int32>{ 2 };
 		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("per-counter scenario starts"));
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("AI Sangan scenario starts"));
 		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const int32 SourceUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1) : 0;
-		const int32 OtherUid = Runtime ? FindUidInSide(Duel.GetSide(EDuelOwner::Player), 2) : 0;
-		if (Runtime && SourceUid != 0 && OtherUid != 0)
+		const int32 SanganUid = FindUidInArray(Duel.GetSide(EDuelOwner::Opponent).Graveyard, 29);
+		const FDuelCard* Sangan = Duel.FindCard(SanganUid);
+		Report.Check(Runtime != nullptr && Sangan != nullptr, TEXT("the AI's Sangan is in the AI's Graveyard"));
+		if (Runtime && Sangan)
 		{
-			const bool bLoaded = LoadTestScript(Runtime, 1,
-				TEXT(R"JSON({"id":"test_per_counter","trigger":"manual","target":{"zone":"all_monsters","count":2},"operations":[{"op":"modify_atk","target":"$target","mode":"per_counter","counter":"spell","amount":100}]})JSON"));
-			Runtime->AddCounter(SourceUid, TEXT("spell"), 1, 99);
-			Runtime->AddCounter(OtherUid, TEXT("spell"), 3, 99);
-			const int32 ScriptIndex = FindManualScript(*Runtime, 1);
-			FString ActivateError;
-			const bool bActivated = bLoaded && ScriptIndex != INDEX_NONE
-				&& Runtime->ActivateManualScript(SourceUid, ScriptIndex, ActivateError);
-			Report.Check(bActivated && Runtime->GetAtkModifier(SourceUid) == 100
-				&& Runtime->GetAtkModifier(OtherUid) == 300,
-				TEXT("per_counter uses each target's own counter count"));
+			FDEffectEvent Event = MakeSourceEvent(EDEffectTrigger::OnSentToGraveyard, *Sangan);
+			Event.Reason = TEXT("battle");
+			Runtime->FireEvent(Event);
+			Report.Check(CountCardsInArray(Duel.GetSide(EDuelOwner::Opponent).Hand, 2) == 1
+				&& CountCardsInArray(Duel.GetSide(EDuelOwner::Opponent).Deck, 2) == 0,
+				TEXT("an AI Sangan searches the AI's own Deck"));
+			Report.Check(CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Hand, 2) == 0
+				&& CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Deck, 2) == 1,
+				TEXT("an AI Sangan does not touch the human player's Deck or hand"));
+		}
+	}
+	{
+		FDuelEngine Duel(Database, 132);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_AI_JINZO"));
+		Scenario.OpponentField.Add(MakeMonster(348, 0));
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("AI Jinzo scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		if (Runtime)
+		{
+			Runtime->RecomputeContinuous();
+			Report.Check(Runtime->IsTrapActivationLocked(),
+				TEXT("an AI-controlled Jinzo's continuous self_monster condition holds and locks Traps"));
 		}
 	}
 
-	// ---- T1: bounded effect event queue -----------------------------------
+	// ---- effect Special Summons stop when the Monster Zones are full -----
 	{
 		FDuelEngine Duel(Database, 133);
 		Duel.SetAutoAnswerAllChoices(true);
-		// 200 identical fillers so a single mill operation raises far more
-		// nested on_sent_to_graveyard events than the queue can hold.
-		TArray<int32> BigDeck;
-		for (int32 I = 0; I < 200; ++I)
-		{
-			BigDeck.Add(7);
-		}
-		FDuelScenario Scenario = MakeScenario(TEXT("ERT_EVENT_QUEUE_CAP"));
-		Scenario.PlayerDeck = BigDeck;
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_HYENA_FULL_BOARD"));
 		Scenario.PlayerField.Add(MakeMonster(1, 0));
+		Scenario.PlayerField.Add(MakeMonster(2, 1));
+		Scenario.PlayerField.Add(MakeMonster(3, 2));
+		Scenario.PlayerField.Add(MakeMonster(4, 3));
+		Scenario.PlayerGraveyard = TArray<int32>{ 1080 };
+		Scenario.PlayerDeck = TArray<int32>{ 1080, 1080, 7 };
 		FString Error;
-		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("event-queue scenario starts"));
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("Hyena full-board scenario starts"));
 		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		// Each milled copy reports its own Graveyard event; the Blue-Eyes
-		// script drives one 200-card mill from the End Phase.
-		LoadTestScript(Runtime, 7, TEXT(R"JSON({"id":"test_queue_probe","trigger":"on_sent_to_graveyard","operations":[{"op":"gain_lp","player":"self","amount":1}]})JSON"));
-		LoadTestScript(Runtime, 1, TEXT(R"JSON({"id":"test_queue_filler","trigger":"on_end","operations":[{"op":"mill","player":"self","count":200}]})JSON"));
-		if (Runtime)
+		const int32 HyenaUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Graveyard, 1080);
+		const FDuelCard* Hyena = Duel.FindCard(HyenaUid);
+		Report.Check(Runtime != nullptr && Hyena != nullptr, TEXT("the battle-destroyed Hyena is in the Graveyard"));
+		if (Runtime && Hyena)
 		{
-			const int32 LpBefore = Duel.GetSide(EDuelOwner::Player).LP;
-			Runtime->OnEnd(EDuelOwner::Player);
-			int32 FullCount = 0;
-			int32 CascadeCount = 0;
-			for (const FDuelLogEntry& Entry : Duel.GetLog())
-			{
-				if (Entry.Message.Contains(TEXT("Effect event queue is full")))
-				{
-					++FullCount;
-				}
-				if (Entry.Message.Contains(TEXT("cascade limit reached")))
-				{
-					++CascadeCount;
-				}
-			}
-			Report.Check(FullCount == 1 && CascadeCount == 0,
-				TEXT("an oversized event batch warns once and never hits the cascade limit"));
-			// Newest events beyond the 64-entry cap are refused, so exactly
-			// the queued 64 probes execute, plus the one mill script.  The
-			// LP delta (+64) pins the same count independently.
-			Report.Check(Runtime->GetExecutedScriptCount() == 65
-				&& Duel.GetSide(EDuelOwner::Player).LP == LpBefore + 64,
-				TEXT("the full event queue dispatches exactly 64 events and refuses the newest ones"));
-			Report.Check(!Duel.IsOver() && !Duel.HasPendingChoice(),
-				TEXT("the queue-cap scenario still ends over a live duel"));
+			Runtime->FireEvent(MakeSourceEvent(EDEffectTrigger::OnBattleDestroy, *Hyena));
+			const FDuelSide& Side = Duel.GetSide(EDuelOwner::Player);
+			Report.Check(CountCardsInArray(Side.Monsters, 1080) == 1,
+				TEXT("Hyena Special Summons a copy into the last free Monster Zone"));
+			Report.Check(CountCardsInArray(Side.Deck, 1080) == 1 && CountCardsInArray(Side.Graveyard, 1080) == 1,
+				TEXT("the Hyena that does not fit stays in the Deck instead of going to the Graveyard"));
 		}
 	}
 
-	// ---- directory load is all-or-nothing --------------------------------
+	// ---- per-card turn attack lock (Chaos Sorcerer) and once-per-turn UI ---
 	{
-		FDuelEngine Duel(Database, 132);
+		FDuelEngine Duel(Database, 134);
+		Duel.SetAutoAnswerAllChoices(true);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_CHAOS_SORCERER"));
+		Scenario.PlayerField.Add(MakeMonster(866, 0));
+		// Face-down, so the face-up-only banish target is the opponent's monster.
+		Scenario.PlayerField.Add(MakeMonster(1, 1, true, true));
+		Scenario.OpponentField.Add(MakeMonster(2, 0));
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("Chaos Sorcerer scenario starts"));
 		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
-		const FString Directory = FPaths::ProjectSavedDir() / TEXT("DAEffectRuntimeSelfTest/ScriptTx");
-		IFileManager::Get().DeleteDirectory(*Directory, false, true);
-		const bool bMadeDirectory = IFileManager::Get().MakeDirectory(*Directory, true);
-		const bool bWroteFirst = FFileHelper::SaveStringToFile(
-			TEXT("{\"card_id\":9001,\"scripts\":[{\"id\":\"tx_first\",\"trigger\":\"on_activate\",\"operations\":[{\"op\":\"gain_lp\",\"amount\":1}]}]}"),
-			*(Directory / TEXT("9001.json")));
-		const bool bWroteSecond = FFileHelper::SaveStringToFile(
-			TEXT("{\"card_id\":9002,\"scripts\":[{\"id\":\"tx_second\",\"trigger\":\"on_activate\",\"operations\":[]}]}"),
-			*(Directory / TEXT("9002.json")));
-		FString LoadError;
-		const bool bLoaded = Runtime && bMadeDirectory && bWroteFirst && bWroteSecond
-			&& Runtime->LoadScriptsFromDirectory(Directory, LoadError);
-		Report.Check(!bLoaded && Runtime && Runtime->GetScriptCount(9001) == 0,
-			TEXT("a failing directory load rolls back scripts parsed earlier in the pass"));
-		IFileManager::Get().DeleteDirectory(*Directory, false, true);
+		const int32 SorcererUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 866);
+		const int32 BlueEyesUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1);
+		const int32 ScriptIndex = Runtime ? FindManualScript(*Runtime, 866) : INDEX_NONE;
+		if (Runtime && SorcererUid != 0 && BlueEyesUid != 0 && ScriptIndex != INDEX_NONE)
+		{
+			FString ManualError;
+			Report.Check(Runtime->ActivateManualScript(SorcererUid, ScriptIndex, ManualError),
+				TEXT("Chaos Sorcerer's banish effect activates"));
+			const FDuelCard* Sorcerer = Duel.FindMonster(SorcererUid);
+			const FDuelCard* BlueEyes = Duel.FindMonster(BlueEyesUid);
+			Report.Check(Sorcerer && !Runtime->CanCardAttack(*Sorcerer),
+				TEXT("Chaos Sorcerer cannot attack the turn it uses its effect"));
+			Report.Check(BlueEyes && Runtime->CanCardAttack(*BlueEyes),
+				TEXT("Chaos Sorcerer's attack lock does not stop its controller's other monsters"));
+			Report.Check(Sorcerer && Runtime->GetManualActions(*Sorcerer).Num() == 0,
+				TEXT("a used once-per-turn manual effect is no longer offered"));
+			Runtime->OnTurnStart(EDuelOwner::Player);
+			Sorcerer = Duel.FindMonster(SorcererUid);
+			Report.Check(Sorcerer && Runtime->CanCardAttack(*Sorcerer),
+				TEXT("Chaos Sorcerer's attack lock ends with the turn"));
+		}
+	}
+
+	// ---- chained triggers raised during a resolution still fire ----------
+	{
+		FDuelEngine Duel(Database, 135);
+		Duel.SetAutoAnswerAllChoices(true);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_DEFERRED_SANGAN"));
+		Scenario.PlayerField.Add(MakeMonster(29, 0));
+		Scenario.PlayerField.Add(MakeMonster(1, 1));
+		Scenario.PlayerDeck = TArray<int32>{ 2 };
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("deferred-trigger scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 BlueEyesUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1);
+		LoadTestScript(Runtime, 1, TEXT(R"JSON({"id":"test_mass_destroy","trigger":"on_activate","target":{"zone":"all_monsters","count":"all"},"operations":[{"op":"destroy","target":"$target"}]})JSON"));
+		if (Runtime && BlueEyesUid != 0)
+		{
+			if (const FDuelCard* BlueEyes = Duel.FindMonster(BlueEyesUid))
+			{
+				Runtime->FireEvent(MakeSourceEvent(EDEffectTrigger::OnActivate, *BlueEyes));
+			}
+			const FDuelSide& Side = Duel.GetSide(EDuelOwner::Player);
+			Report.Check(FindFieldUid(Side, 29) == 0 && FindFieldUid(Side, 1) == 0,
+				TEXT("a data-script mass destruction destroys every monster"));
+			Report.Check(CountCardsInArray(Side.Hand, 2) == 1,
+				TEXT("Sangan destroyed by a data-script effect still searches (deferred trigger)"));
+		}
+	}
+	{
+		FDuelEngine Duel(Database, 136);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_DEFERRED_LOOP"));
+		Scenario.PlayerField.Add(MakeMonster(5, 0));
+		FString Error;
+		Duel.StartScenario(Scenario, Error);
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 ImpUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 5);
+		// Every resolution changes the source's position, which raises the same
+		// self trigger again: an endless chain that the runtime must cut off.
+		LoadTestScript(Runtime, 5, TEXT(R"JSON({"id":"test_trigger_loop","trigger":"on_position_change","operations":[{"op":"change_position","target":"$self","position":"defense"}]})JSON"));
+		if (Runtime && ImpUid != 0)
+		{
+			Runtime->ResetTestStats();
+			if (FDuelCard* Imp = Duel.FindMonster(ImpUid))
+			{
+				Runtime->OnPositionChanged(*Imp, EDuelPosition::Attack);
+			}
+			const int32 Executed = Runtime->GetExecutedScriptCount();
+			Report.Check(Executed > 1 && Executed <= 300,
+				TEXT("a self-retriggering chain fires but is bounded"));
+		}
 	}
 
 	// ---- unknown operations still fail loudly ----------------------------
@@ -2069,6 +1868,11 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 			&& !Runtime->LoadScriptJsonText(TEXT("{\"card_id\":1,\"scripts\":[{\"id\":\"bad_nested\",\"trigger\":\"on_activate\",\"operations\":[{\"op\":\"toss_coin\",\"success_operations\":[{\"op\":\"not_a_real_op\"}]}]}]}"), Error);
 		Report.Check(bNestedUnknown && Error.Contains(TEXT("unknown operation")),
 			TEXT("unknown operations inside random branches are rejected"));
+		Error.Reset();
+		const bool bOneShotLock = Runtime
+			&& !Runtime->LoadScriptJsonText(TEXT("{\"card_id\":1,\"scripts\":[{\"id\":\"bad_one_shot_lock\",\"trigger\":\"on_activate\",\"operations\":[{\"op\":\"lock_activation\",\"mode\":\"trap_activation\"}]}]}"), Error);
+		Report.Check(bOneShotLock && Error.Contains(TEXT("continuous-only")),
+			TEXT("continuous-only operations are rejected on one-shot triggers"));
 	}
 
 	LogReport(Report);

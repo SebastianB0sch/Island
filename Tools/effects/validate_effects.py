@@ -59,19 +59,30 @@ CUSTOM_PREDICATES = {
     "attack_declared_against_controller",
 }
 
+# Ops whose state A04's runtime rebuilds in RecomputeContinuous(); a one-shot
+# use would be wiped immediately, so they are only legal on these triggers.
+CONTINUOUS_TRIGGERS = {"continuous", "equip_continuous", "field_continuous"}
+CONTINUOUS_ONLY_OPS = {
+    "lock_activation",
+    "allow_fusion",
+    "redirect_battle_damage",
+    "prevent_battle_damage",
+    "battle_damage_zero",
+}
+
 # Required/optional fields per operation. The schema owns the full field list;
 # this table owns semantic requirements that JSON Schema cannot express cleanly.
 OP_SPECS: dict[str, dict] = {
     "add_counter": {"required": {"target", "counter", "amount"}, "optional": {"max"}},
     "allow_fusion": {"required": {"fusion_type"}, "optional": {"banish_materials"}},
     "attack_directly": {"required": {"target"}, "optional": {}},
-    "attack_lock": {"required": set(), "optional": {"target", "mode", "player", "amount", "side_wide"}},
-    "banish": {"required": {"target"}, "optional": {"destination", "reason"}},
-    "battle_damage_modifier": {"required": {"target"}, "optional": {"mode", "amount"}},
+    "attack_lock": {"required": set(), "optional": {"target", "mode", "player", "side_wide"}},
+    "banish": {"required": {"target"}, "optional": {"reason"}},
+    "battle_damage_modifier": {"required": {"target"}, "optional": {"mode"}},
     "battle_damage_zero": {"required": {"target"}, "optional": {}},
     "battle_position_lock": {"required": {"target"}, "optional": {"mode"}},
     "change_position": {"required": {"target", "position"}, "optional": {}},
-    "control": {"required": {"target"}, "optional": {"to"}},
+    "control": {"required": {"target"}, "optional": set()},
     "copy": {"required": {"target"}, "optional": {"name", "card_id"}},
     "damage": {"required": {"amount"}, "optional": {"player", "reason", "mode", "count_zone", "count_zones", "count_filter", "multiplier", "divisor"}},
     "declare_name": {"required": {"name"}, "optional": {}},
@@ -93,13 +104,12 @@ OP_SPECS: dict[str, dict] = {
     "mill": {"required": {"count"}, "optional": {"player", "reason"}},
     "modify_atk": {"required": {"target", "amount"}, "optional": {"counter", "mode", "count_zone", "count_zones", "count_filter", "multiplier", "divisor"}},
     "modify_def": {"required": {"target", "amount"}, "optional": {"counter", "mode", "count_zone", "count_zones", "count_filter", "multiplier", "divisor"}},
-    "must_attack": {"required": set(), "optional": {"target", "mode", "player", "amount", "side_wide"}},
     "negate": {"required": {"target"}, "optional": {"mode"}},
     "negate_activation": {"required": {"target"}, "optional": {"mode"}},
     "negate_attack": {"required": set(), "optional": {"target", "mode"}},
     "piercing": {"required": {"target"}, "optional": {}},
     "place_counter": {"required": {"target", "counter", "amount"}, "optional": {"max"}},
-    "prevent_battle_damage": {"required": {"target"}, "optional": {"player"}},
+    "prevent_battle_damage": {"required": set(), "optional": set()},
     "redirect_attack": {"required": {"target"}, "optional": {"to"}},
     "redirect_battle_damage": {"required": {"target"}, "optional": {"to"}},
     "remove_counter": {"required": {"target", "counter", "count"}, "optional": {}},
@@ -112,14 +122,14 @@ OP_SPECS: dict[str, dict] = {
     "search": {"required": {"target"}, "optional": {"destination", "reveal", "shuffle"}},
     "send_to_grave": {"required": {"target"}, "optional": {"reason"}},
     "send_to_graveyard": {"required": {"target"}, "optional": {"reason"}},
-    "set": {"required": {"target"}, "optional": {"position"}},
+    "set": {"required": {"target"}, "optional": set()},
     "shuffle": {"required": set(), "optional": {"player"}},
     "skip_phase": {"required": set(), "optional": {"player", "mode"}},
     "special_summon": {"required": {"target"}, "optional": {"position"}},
     "spirit_return": {"required": {"target"}, "optional": {}},
     "summon": {"required": {"target"}, "optional": {"position"}},
     "summon_lock": {"required": set(), "optional": {"player", "mode"}},
-    "take_control": {"required": {"target"}, "optional": {"to"}},
+    "take_control": {"required": {"target"}, "optional": set()},
     "toss_coin": {"required": set(), "optional": {"count", "success_min", "success_max", "threshold", "success_operations", "failure_operations"}},
     "union_equip": {"required": {"target"}, "optional": {"position"}},
     "union_unequip": {"required": {"target"}, "optional": {"position"}},
@@ -129,18 +139,22 @@ COST_SPECS: dict[str, dict] = {
     "pay_lp": {"required": {"amount"}, "optional": {}},
     "discard": {"required": {"target"}, "optional": {"count"}},
     "discard_random": {"required": {"target"}, "optional": {"count"}},
-    "tribute": {"required": {"target"}, "optional": {"count"}},
-    "send_to_graveyard": {"required": {"target"}, "optional": {"count"}},
-    "banish": {"required": {"target"}, "optional": {"count"}},
-    "return_to_hand": {"required": {"target"}, "optional": {"count"}},
-    "return_to_deck": {"required": {"target"}, "optional": {"count"}},
+    # The runtime takes the number of cards from the target selector's own
+    # count, so a cost-level count is only honoured for discards.
+    "tribute": {"required": {"target"}, "optional": {}},
+    "send_to_graveyard": {"required": {"target"}, "optional": {}},
+    "banish": {"required": {"target"}, "optional": {}},
+    "return_to_hand": {"required": {"target"}, "optional": {}},
+    "return_to_deck": {"required": {"target"}, "optional": {}},
     "reveal": {"required": {"target"}, "optional": {}},
-    "mill": {"required": {"count"}, "optional": {"player"}},
+    # mill pays from the controller's Deck; change_position toggles the target;
+    # shuffle shuffles the controller's Deck.
+    "mill": {"required": {"count"}, "optional": {}},
     "remove_counter": {"required": {"target", "counter", "count"}, "optional": {}},
-    "change_position": {"required": {"target", "position"}, "optional": {}},
+    "change_position": {"required": {"target"}, "optional": {}},
     "skip_draw": {"required": {}, "optional": {}},
     "destroy_self": {"required": {}, "optional": {}},
-    "shuffle": {"required": {"target"}, "optional": {}},
+    "shuffle": {"required": {}, "optional": {}},
 }
 
 TRIGGER_REFERENCES = {
@@ -312,7 +326,7 @@ def _check_target(
     known_refs: set[str],
 ) -> None:
     if isinstance(target, str):
-        if target not in {"$self", "$target", "$cost", "$trigger", "$attacker", "$attack_target", "$equipped"}:
+        if target not in {"$self", "$target", "$trigger", "$attacker", "$attack_target", "$equipped"}:
             report.error(location, f"{context}: unknown target reference '{target}'")
         return
     if not isinstance(target, dict):
@@ -403,9 +417,7 @@ def _check_operations(
         if isinstance(target, str):
             if target == "$target" and not has_target:
                 report.error(op_location, "uses $target but the script has no target selector")
-            if target == "$cost" and not has_cost:
-                report.error(op_location, "uses $cost but the script has no cost")
-            if target.startswith("$") and target not in {"$self", "$target", "$cost", "$trigger", "$equipped"}.union(
+            if target.startswith("$") and target not in {"$self", "$target", "$trigger", "$equipped"}.union(
                 TRIGGER_REFERENCES.get(trigger, set())
             ):
                 report.error(
@@ -414,6 +426,15 @@ def _check_operations(
                 )
         elif target is not None:
             _check_target(report, op_location, target, f"operation '{op}'", set())
+        if op in CONTINUOUS_ONLY_OPS and trigger not in CONTINUOUS_TRIGGERS:
+            report.error(
+                op_location,
+                f"operation '{op}' is only valid on continuous triggers, not '{trigger}'",
+                "A04's runtime recomputes this state from the board; use a continuous/"
+                "equip_continuous/field_continuous script",
+            )
+        if op == "skip_phase" and operation.get("mode", "draw") != "draw":
+            report.error(op_location, f"skip_phase mode '{operation.get('mode')}' is not supported (only 'draw')")
         if op == "allow_fusion" and operation.get("fusion_type") not in FUSION_TYPES:
             report.error(op_location, f"unknown fusion_type '{operation.get('fusion_type')}'")
         if op in {"draw", "discard", "mill", "inflict_damage", "gain_lp"}:

@@ -114,7 +114,6 @@ public:
 	int32 GetLoadedScriptCount() const;
 	bool HasScript(int32 CardId) const { return ScriptsByCard.Contains(CardId); }
 	int32 GetScriptCount(int32 CardId) const;
-	FString GetScriptId(int32 CardId, int32 ScriptIndex) const;
 	EDEffectTrigger GetScriptTrigger(int32 CardId, int32 ScriptIndex) const;
 
 	// Event bus (called by the engine and by the self-test).
@@ -175,7 +174,6 @@ public:
 	int32 GetSpellSpeedOverride(int32 CardId) const;
 	bool IsTrapActivationLocked() const { return bTrapActivationLocked; }
 	bool IsCardActivationLocked(const FDuelCard& Card) const;
-	bool IsTrapEffectNegated() const { return bTrapEffectNegated; }
 	bool IsSpellActivationLocked() const { return bSpellActivationLocked; }
 	bool IsMonsterEffectLocked() const { return bMonsterEffectLocked; }
 	bool IsFusionAllowed(const FString& FusionType) const { return AllowedFusionTypes.Contains(FusionType); }
@@ -184,7 +182,7 @@ public:
 	bool IsBattleDamageZeroFor(int32 CardUid) const { return BattleDamageZeroUids.Contains(CardUid); }
 	float GetBattleDamageMultiplier(int32 CardUid) const;
 	bool HasPiercing(int32 CardUid) const { return PiercingUids.Contains(CardUid) || ContinuousPiercingUids.Contains(CardUid); }
-	bool HasExtraAttack(int32 CardUid) const { return ExtraAttackUids.Contains(CardUid) || ContinuousExtraAttackUids.Contains(CardUid); }
+	bool HasExtraAttack(int32 CardUid) const { return ContinuousExtraAttackUids.Contains(CardUid); }
 
 	/** Battle permission checks.  These fold continuous and turn-scoped locks. */
 	bool CanCardAttack(const FDuelCard& Attacker) const;
@@ -234,9 +232,7 @@ private:
 		FDEffectScript Script;
 		FDuelCard SourceCard;
 		FDEffectEvent Event;
-		EDuelOwner Chooser = EDuelOwner::Player;
 		TArray<int32> TargetUids;
-		TArray<int32> CostUids;
 	};
 
 	struct FDEffectModifier
@@ -264,12 +260,12 @@ private:
 	TMap<int32, float> BattleDamageMultipliers;
 	TMap<int32, float> ContinuousBattleDamageMultipliers;
 	TSet<int32> CannotAttackUids;
+	/** Per-card attack locks that end with the turn (e.g. Chaos Sorcerer). */
 	TSet<int32> CannotAttackUidsThisTurn;
 	TSet<int32> MustAttackUids;
 	TSet<int32> DirectAttackAllowedUids;
 	TSet<int32> DirectAttackForbiddenUids;
 	TSet<int32> PiercingUids;
-	TSet<int32> ExtraAttackUids;
 	TSet<int32> CannotChangePositionUids;
 	TSet<int32> EndBattleDefenseUids;
 	TSet<int32> PreventDestructionUids;
@@ -295,6 +291,8 @@ private:
 	TSet<uint8> SpecialSummonLockSides;
 	TSet<uint8> ContinuousNormalSummonLockSides;
 	TSet<uint8> ContinuousSpecialSummonLockSides;
+	/** Events raised while a script resolves; fired once the resolution ends. */
+	TArray<FDEffectEvent> DeferredEvents;
 	int32 LastRandomResult = 0;
 	TArray<int32> LastRandomResults;
 	bool bTrapActivationLocked = false;
@@ -304,24 +302,19 @@ private:
 	bool bAttackNegated = false;
 	bool bExecuting = false;
 	bool bRecomputing = false;
-	bool bDispatchingEvents = false;
-	bool bEventBudgetWarned = false;
-	TArray<FPendingEffectEvent> PendingEvents;
+	bool bFlushingDeferred = false;
 	int32 PromptCount = 0;
 	int32 ExecutedScripts = 0;
 	int32 FailedScripts = 0;
 
 	FString ScriptKey(int32 SourceUid, const FDEffectScript& Script) const;
-	int32 FireEventInternal(const FDEffectEvent& Event, bool bRequireGraveyardDestination);
-	int32 DispatchEvent(const FDEffectEvent& Event);
-	void EnqueueEvent(const FDEffectEvent& Event, bool bRequireGraveyardDestination);
-	int32 DrainQueuedEvents();
-	int32 DrainPendingEvents();
-	FString TriggerToString(EDEffectTrigger Trigger) const;
 	EDEffectTrigger TriggerFromString(const FString& Value) const;
 	FString CardName(const FDuelCard& Card) const;
 	FString ZoneStringOf(const FDuelCard& Card) const;
 	EDuelOwner Other(EDuelOwner Side) const;
+	/** "self" / "opponent" / "both" relative to Controller ("both" lists Controller first). */
+	TArray<EDuelOwner> ResolvePlayers(const FString& Player, EDuelOwner Controller) const;
+	void FlushDeferredEvents();
 
 	bool EvaluateCondition(const TSharedPtr<FJsonObject>& Condition, const FDuelCard& Subject,
 		const FDuelCard& SourceCard, const FDEffectEvent& Event, bool bContinuousRegistration = false) const;
@@ -335,7 +328,8 @@ private:
 	TArray<FDuelCard> CollectCandidates(const FString& Zone, const FDuelCard& SourceCard,
 		const FDEffectEvent& Event) const;
 	TArray<FDuelCard> CollectCardsInZone(const FString& Zone, EDuelOwner Side) const;
-	TArray<FDuelCard> CollectAllCards() const;
+	/** Every face-up monster on both sides (field-wide continuous stat default). */
+	void AddAllFaceUpMonsters(TArray<int32>& OutUids) const;
 	bool MatchesFilter(const FDuelCard& Candidate, const TSharedPtr<FJsonObject>& Filter,
 		const FDuelCard& SourceCard, const FDEffectEvent& Event) const;
 
@@ -352,8 +346,14 @@ private:
 		const FDuelCard& SourceCard, const FDEffectEvent& Event, TArray<int32>& OutUids) const;
 	bool ResolveCostTargets(const TSharedPtr<FJsonObject>& Cost, const FDEffectContext& Context,
 		TArray<int32>& OutUids) const;
+	/** Cards selected by an inline target object ({zone, filter, count}) in deterministic order. */
+	void CollectTargetObjectUids(const TSharedPtr<FJsonObject>& TargetObject, const FDuelCard& SourceCard,
+		const FDEffectEvent& Event, TArray<int32>& OutUids) const;
 
 	bool TryStartScript(const FDEffectScript& Script, const FDuelCard& SourceCard, const FDEffectEvent& Event);
+	/** TryStartScript for a player-initiated activation; bOutFailed reports a cost/target/operation failure. */
+	bool TryStartTopLevelScript(const FDEffectScript& Script, const FDuelCard& SourceCard,
+		const FDEffectEvent& Event, bool& bOutFailed);
 	void ContinueAfterOptional(FDEffectContext Context, bool bActivate);
 	void ContinueToTargets(FDEffectContext Context);
 	void ContinueAfterTargets(FDEffectContext Context, const TArray<int32>& TargetUids);
@@ -397,17 +397,16 @@ private:
 
 	int32 ComputeDynamicAmount(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
 		const FDuelCard& Subject) const;
-	int32 CountZoneForOperation(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
-		const FDuelCard& Subject, const FString& Zone, const TSharedPtr<FJsonObject>& Filter) const;
-	int32 CountMatchingZoneCards(const FString& Zone, const FDuelCard& SourceCard,
-		const FDEffectEvent& Event, const TSharedPtr<FJsonObject>& Filter) const;
+	int32 CountZoneForOperation(const FDEffectContext& Context, const FString& Zone,
+		const TSharedPtr<FJsonObject>& Filter) const;
 	bool ApplyContinuousStat(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context,
 		bool bAtk);
 	bool ApplyContinuousRestriction(const TSharedPtr<FJsonObject>& Operation, const FDEffectContext& Context);
 	void RegisterDestructionReplacement(int32 Uid, const FString& Mode, bool bContinuous);
 
 	void ClearCardState(int32 Uid);
-	void ExpireLingering(EDuelOwner EndingSide, bool bBattlePhaseOnly);
+	void ExpireLingering(bool bBattlePhaseOnly);
+	bool HasStatScriptForTrigger(int32 CardId, EDEffectTrigger Trigger) const;
 	void ResetTurnRestrictions();
 	bool HasContinuousStatScript(int32 CardId, EDEffectTrigger Trigger) const;
 };
