@@ -419,7 +419,7 @@ struct FDAOpponentRuntimeState
 	UPROPERTY(BlueprintReadOnly, Category = "Opponent")
 	TMap<FString, int32> RequestsToday;
 
-	/** Last day a request was consumed per opponent; drives DuelRequest.CooldownDays. */
+	/** Day index of each opponent's most recent accepted duel request (cooldown_days). */
 	UPROPERTY(BlueprintReadOnly, Category = "Opponent")
 	TMap<FString, int32> LastRequestDay;
 
@@ -459,8 +459,10 @@ struct FDAOpponentDuelOutcome
  *
  * Baseline contract:
  *  - A09 asks for a duelist, a deck id and an AI profile; it does not read JSON.
- *  - RuntimeState is persisted by this subsystem as the additive "opponents"
- *    save section; it only touches disk through UDASaveSubsystem.
+ *  - FDAOpponentRuntimeState is session-only and not saved: campaign wins live
+ *    in the profile's wins_<id> counters (saved), which ResolveDeckFor reads.
+ *    Request and email helpers are a library for a future PDA challenge flow;
+ *    nothing in gameplay consumes them yet.
  *  - A04's duel request should carry FDAOpponentDef::DefaultDeck or
  *    ResolveDeckFor(). Puzzle/exam requests are owned by UDAExamSubsystem.
  */
