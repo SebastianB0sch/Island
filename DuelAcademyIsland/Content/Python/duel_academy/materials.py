@@ -14,9 +14,10 @@ Masters (in /Game/DuelAcademy/Materials):
   M_DA_Beam        additive light beam
   M_DA_Waterfall   translucent panning water sheet
   M_DA_Terrain     splat-mapped terrain (8 layers)
-  M_DA_Toon        anime cast: BaseTex * Tint with a flat "fill" light (cel look), dimmer at night
+  M_DA_Toon        anime cast, interiors and furniture: BaseTex * Tint (* optional detail texture) with a flat
+                   "fill" light (cel look), dimmer at night
   M_DA_ToonMasked  same, alpha-masked + two-sided (hair cards, eyelashes, cut-out clothes)
-  M_DA_Outline     unlit ink line of the cast's inverted-hull outlines
+  M_DA_Outline     unlit ink line of the inverted-hull outlines (cast and furniture)
   MPC_DuelAcademy  NightFactor / TimeOfDay (driven by ADAIslandManager)
 """
 
@@ -465,6 +466,10 @@ def build_toon(name, mpc, masked=False):
     uv = g.node(unreal.MaterialExpressionTextureCoordinate)
     base = g.tex("BaseTex", T("T_White"), S_COL, uv)
     col = g.mul(base, g.vector("Tint", (1, 1, 1)), "RGB", "")
+    # optional tiling detail (planks, tiles, tatami weave) for interior surfaces; off (0) for the cast
+    det = g.tex("DetailTex", T("T_Grunge_D"), S_LIN, g.mul(uv, g.scalar("Tiling", 1.0)))
+    detail = g.lerp(g.const(1.0), g.mul(det, g.const(2.0), "R"), g.scalar("DetailStrength", 0.0))
+    col = g.mul(col, detail)
     g.out(col, unreal.MaterialProperty.MP_BASE_COLOR)
     day = g.sub(g.const(1.0), g.mul(night_factor(g, mpc), g.const(0.75)))
     g.out(g.mul(g.mul(col, g.scalar("Fill", 0.45)), day), unreal.MaterialProperty.MP_EMISSIVE_COLOR)
@@ -616,6 +621,11 @@ def build_instances(palette, masters):
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
                 MEL.set_material_instance_scalar_parameter_value(mi, "Fill", float(spec.get("fill", 0.45)))
                 MEL.set_material_instance_scalar_parameter_value(mi, "Roughness", float(spec.get("rough", 0.85)))
+                detail = spec.get("detail")
+                if detail and T(f"T_{detail}_D"):
+                    MEL.set_material_instance_texture_parameter_value(mi, "DetailTex", T(f"T_{detail}_D"))
+                    MEL.set_material_instance_scalar_parameter_value(mi, "DetailStrength", float(spec.get("detail_strength", 0.55)))
+                    MEL.set_material_instance_scalar_parameter_value(mi, "Tiling", float(spec.get("tiling", 1.0)))
                 if spec.get("base"):
                     tex = T(spec["base"])
                     if tex:

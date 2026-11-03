@@ -1,0 +1,25 @@
+asset_id: polyhaven_ornate_mirror_01
+title: Ornate Mirror 01 (Poly Haven)
+category: interiors
+main_file: ornate_mirror_01_1k.gltf
+catalog_use: SM_Int_Mirror
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/ornate_mirror_01
+description: Free 8K model - Victorian-style arched mirror with gilded floral crest, carved rope trim and aged, speckled glass showing subtle patina.
+polycount: 14246
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/ornate_mirror_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/ornate_mirror_01/ornate_mirror_01_1k.gltf
+    -> ornate_mirror_01_1k.gltf  md5 834501c79f6045083367606fd8f30c9f  sha256 2d9bb949df65d6470395959fb7976af6fcc1b3ad7d85084918ad543ee71850f6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ornate_mirror_01/ornate_mirror_01_arm_1k.jpg
+    -> textures/ornate_mirror_01_arm_1k.jpg  md5 0e7d993bec7cc5913bf73f51821b09ad  sha256 0efbcf5ffae8afbcea89c3fdd7f82951f03067abe6236388303713273ea44752
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/ornate_mirror_01/ornate_mirror_01.bin
+    -> ornate_mirror_01.bin  md5 0be4cf0dda17d51c4a279ce4912b1b3f  sha256 31ce7eadeb57ffa0d302ea36e4d5de64db91f9a823f1ede8158b45d9ec863a4a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ornate_mirror_01/ornate_mirror_01_diff_1k.jpg
+    -> textures/ornate_mirror_01_diff_1k.jpg  md5 d2103c8f1e72c86d7911a06da6161cd1  sha256 7b131a08fcf21cb823d7c4914829c2c35215612cdadb241387c20657d6b25a62
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ornate_mirror_01/ornate_mirror_01_nor_gl_1k.jpg
+    -> textures/ornate_mirror_01_nor_gl_1k.jpg  md5 bea34985dd1cc0d3dd20478df6b1e7b3  sha256 bfa3a35070f0c5f4fa8e7127ffe536001cc6f65c3896e377d7a2a38f9358d3be
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/ornate_mirror_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

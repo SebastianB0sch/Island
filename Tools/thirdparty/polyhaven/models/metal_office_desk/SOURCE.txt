@@ -1,0 +1,25 @@
+asset_id: polyhaven_metal_office_desk
+title: Metal Office Desk (Poly Haven)
+category: interiors
+main_file: metal_office_desk_1k.gltf
+catalog_use: SM_Int_OfficeDesk
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/metal_office_desk
+description: Free 8k metal office desk model with worn grey finish, dual pedestal drawers, chrome handles and tapered legs - sturdy industrial mid-century look.
+polycount: 6898
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/metal_office_desk, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/metal_office_desk/metal_office_desk_1k.gltf
+    -> metal_office_desk_1k.gltf  md5 723956efef6da35ad41494efa5c3b820  sha256 f07032a5ee89aacceebf10fd9fa192c22775ae81861cfb0bdb1594497179373c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/metal_office_desk/metal_office_desk_nor_gl_1k.jpg
+    -> textures/metal_office_desk_nor_gl_1k.jpg  md5 bcf6793df61d9b5f097f2b9518866c45  sha256 f57eb004937e46392151b803e0cb1d88983958d01ad11d93df78a82cfcc6c407
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/metal_office_desk/metal_office_desk_diff_1k.jpg
+    -> textures/metal_office_desk_diff_1k.jpg  md5 6a27263c95811fa902ddea6476d610e9  sha256 1f02e3e77e8f82a3600664c991bd45c1c187452d61e9ede4336c6f90f7fa3139
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/metal_office_desk/metal_office_desk_arm_1k.jpg
+    -> textures/metal_office_desk_arm_1k.jpg  md5 fb76b1e17f07592608d3f144fce4bfce  sha256 752916dd9bf8a163dc7e0d3673900791ee6d558bbe23894263ac92b42387f51b
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/metal_office_desk/metal_office_desk.bin
+    -> metal_office_desk.bin  md5 96f258b9a64d36ca011f44de23da7c65  sha256 65b558f41a75ad4822e31cc2a97eb34ed359199279a6bfbd650deb27cef78767
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/metal_office_desk
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

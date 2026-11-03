@@ -1,0 +1,25 @@
+asset_id: polyhaven_chinese_stool
+title: Chinese Stool (Poly Haven)
+category: interiors
+main_file: chinese_stool_1k.gltf
+catalog_use: SM_Int_Stool
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/chinese_stool
+description: Free 8K model of a vintage Chinese wooden stool - antique, ornate joinery with rounded legs and traditional Asian design, ideal for period interiors.
+polycount: 1090
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/chinese_stool, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/chinese_stool/chinese_stool_1k.gltf
+    -> chinese_stool_1k.gltf  md5 260547e2e492af393aedd6a6a460c3a1  sha256 6db83b16076496830f956780890480d3cb1e34c80359b5ea8cb0e7afd42572c6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chinese_stool/chinese_stool_diff_1k.jpg
+    -> textures/chinese_stool_diff_1k.jpg  md5 10519c09d42b36c461540f3e727df211  sha256 a7f84ff302df80b079b47a268ecaea6e9f072b51d7e5dcebdeb7ee6278595e85
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chinese_stool/chinese_stool_arm_1k.jpg
+    -> textures/chinese_stool_arm_1k.jpg  md5 d73e325e36b12467d98283648bf98c10  sha256 59fb42eb0c3c1684905d94bbf11fd640921325e19dfe8b46cae04ac5b7be36d5
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/chinese_stool/chinese_stool.bin
+    -> chinese_stool.bin  md5 a2951579ea0f4421b754331fb748d6f2  sha256 e35c9440fc0751aa9346e6edbfe0bf948f0f7dd1b40be2ef57d0b6debec5b8af
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chinese_stool/chinese_stool_nor_gl_1k.jpg
+    -> textures/chinese_stool_nor_gl_1k.jpg  md5 8b15a90085107867de316844cf03b3d7  sha256 a44344f2d8ea289ec7642272de42d449059f2f2b175cf64d5db5d2447c56f7aa
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/chinese_stool
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

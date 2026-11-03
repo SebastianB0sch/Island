@@ -59,7 +59,7 @@ class Placer:
     def mesh(self, name):
         m = self.meshes.get(name)
         if m is None:
-            for folder in ("Props", "Terrain", "Water", "Roads", "Characters"):
+            for folder in ("Props", "Doors", "Terrain", "Water", "Roads", "Characters"):
                 m = C.load(f"{C.MESH_DIR}/{folder}/{name}")
                 if m:
                     break
@@ -311,6 +311,36 @@ class Placer:
                 a = self.spawn(beam_cls, self.loc(s["loc"]), self.yaw(s["yaw"]), "LighthouseBeam", "Gameplay/fx")
                 if "beam_length" in s["props"]:
                     C.set_props(a, beam_length=float(s["props"]["beam_length"]))
+
+    def doors(self):
+        """One ADADoor per doorway (automatic swing / slide doors, see DAWorldActors.h)."""
+        cls = C.native_class("DADoor")
+        enum = getattr(unreal, "DADoorMode", None)
+        if cls is None:
+            C.warn("DADoor class missing - doorways stay open")
+            return
+        n = 0
+        for d in self.layout.get("doors", []):
+            mesh = self.mesh(d["mesh"])
+            if mesh is None:
+                C.warn(f"missing door leaf {d['mesh']}")
+                continue
+            a = self.spawn(cls, self.loc(d["loc"]), self.yaw(d["yaw"]), f"Door_{d.get('group', 'misc')}_{n:03d}",
+                           f"Island/{d.get('group', 'misc')}/doors")
+            if a is None:
+                continue
+            # Y mirrored import (ysign -1) flips which side is outside
+            swing = int(d.get("swing", 0)) * (1 if self.ysign > 0 else -1)
+            C.set_props(a, leaf_mesh=mesh, width=float(d["width"]), height=float(d["height"]), double=bool(d["double"]),
+                        swing_side=swing)
+            if enum is not None:
+                C.set_props(a, mode=enum.SLIDE if d.get("mode") == "slide" else enum.SWING)
+            try:
+                a.refresh_door()
+            except Exception as e:  # noqa: BLE001
+                C.warn(f"door refresh: {e}")
+            n += 1
+        C.log(f"doors: {n}")
 
     def player_start(self):
         ps = self.layout["player_start"]

@@ -1,0 +1,25 @@
+asset_id: polyhaven_Television_01
+title: Television 01 (Poly Haven)
+category: interiors
+main_file: Television_01_1k.gltf
+catalog_use: SM_Int_TV
+author: Gabriel Radić
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/Television_01
+description: Free 4K model of a vintage tabletop CRT TV with wood casing, scratched metal bezel, worn knobs and speaker grille, smudged glass and realistic weathering.
+polycount: 1918
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/Television_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/Television_01/Television_01_1k.gltf
+    -> Television_01_1k.gltf  md5 9456aa7effd3cb41a0e753d74293b1c3  sha256 ef4376366ea956519c1a1d06146a8e8cc2bb0fcbd5c6b9f919a54ce31d05d530
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/Television_01/Television_01.bin
+    -> Television_01.bin  md5 d28775c3746a6e7b0afa5fd217acbc44  sha256 fc32dd3e6722cfa093910d8b5b4e6173b0c92a13d58b55b8e9c6007a9218b0a0
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Television_01/Television_01_arm_1k.jpg
+    -> textures/Television_01_arm_1k.jpg  md5 b83392294cc663520e448f698b86da56  sha256 b55594884fec13e47e22d1fdc3c89a528728454f65a7c26b482d9f3ec9200015
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Television_01/Television_01_diff_1k.jpg
+    -> textures/Television_01_diff_1k.jpg  md5 bf1b3d0563c279557acfed2402c421b1  sha256 38e45263d115ab2832a4a2e99f93f03ff5f49c0aa0d5256528677a77c3ca4568
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Television_01/Television_01_nor_gl_1k.jpg
+    -> textures/Television_01_nor_gl_1k.jpg  md5 3adb4f6549cc69edf82ccd8daa8e13cd  sha256 289519da9f2fa5aeca0246bbb6d42ea1b03e5f54865d8881d3b1e0b3116d300f
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/Television_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

@@ -1,0 +1,31 @@
+asset_id: polyhaven_fancy_picture_frame_01
+title: Fancy Picture Frame 01 (Poly Haven)
+category: interiors
+main_file: fancy_picture_frame_01_1k.gltf
+catalog_use: SM_Int_Painting
+author: Rob Tuytel, Rico Cilliers
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/fancy_picture_frame_01
+description: Free 8K model - ornate antique gilt picture frame with beaded and rope molding around a warm Dutch oil landscape of a mill, bridge, river and distant riders.
+polycount: 938
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/fancy_picture_frame_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/fancy_picture_frame_01/fancy_picture_frame_01_1k.gltf
+    -> fancy_picture_frame_01_1k.gltf  md5 40491160e255225326cb1c1146dd5d48  sha256 c54803abf9e43c28a6b3fe76b38a60e827647a4f9a10747e6d4efba842289578
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fancy_picture_frame_01/fancy_picture_frame_01_nor_gl_1k.jpg
+    -> textures/fancy_picture_frame_01_nor_gl_1k.jpg  md5 23f759eb934c191140da30761f832442  sha256 b200c284bbdc9c16f6705b1f4c7bca2486898d83333f2e490d298c4422ee4b4a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fancy_picture_frame_01/fancy_picture_frame_01_canvas_diff_1k.jpg
+    -> textures/fancy_picture_frame_01_canvas_diff_1k.jpg  md5 11a8824c54066ce7f46be6cc2223ff75  sha256 86619612e96004b3c8dd61a6e745edda46b8d1793d5a1fb8306abed11448ffd9
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/fancy_picture_frame_01/fancy_picture_frame_01.bin
+    -> fancy_picture_frame_01.bin  md5 aeaeb6fcb58e4fa3cdd8a084d7757072  sha256 5d5a01ce8b89f1fbea87bac0ca9ab24771f0d2827ab0308f19878007e45f442f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fancy_picture_frame_01/fancy_picture_frame_01_canvas_rough_1k.jpg
+    -> textures/fancy_picture_frame_01_canvas_rough_1k.jpg  md5 106564b4147a2aa199214641e21b2da6  sha256 58efa8c350534ef0161e37a6eeed480cab611c992deae9df5d64797cef5a269e
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fancy_picture_frame_01/fancy_picture_frame_01_canvas_nor_gl_1k.jpg
+    -> textures/fancy_picture_frame_01_canvas_nor_gl_1k.jpg  md5 ec41bf924450fca040afb0d299ea1294  sha256 a77c51fc74606c177b79a1f2e5ebafde1e1d4f6ca851f3f39469afadae0e66ab
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fancy_picture_frame_01/fancy_picture_frame_01_rough_1k.jpg
+    -> textures/fancy_picture_frame_01_rough_1k.jpg  md5 66d1fe3bb6963788e049a814b3eb93c0  sha256 a393111f86fa9ffb8fa09f26c7f72a2a519f4120e9a68ee462280444a8a6055f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fancy_picture_frame_01/fancy_picture_frame_01_diff_1k.jpg
+    -> textures/fancy_picture_frame_01_diff_1k.jpg  md5 8506baa4f1cf9ea2a07e060fb3303ff5  sha256 e511bd3a45b6979d505a652bc21bbb7b0d1cffb9908c67d9b5cd0d77b732a1b1
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/fancy_picture_frame_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

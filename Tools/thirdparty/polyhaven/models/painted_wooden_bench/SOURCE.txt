@@ -1,0 +1,25 @@
+asset_id: polyhaven_painted_wooden_bench
+title: Painted Wooden Bench (Poly Haven)
+category: interiors
+main_file: painted_wooden_bench_1k.gltf
+catalog_use: SM_Int_Bench
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/painted_wooden_bench
+description: Free 4K painted wooden bench model with worn, antique red finish, rustic farmhouse charm, compact seating and lower shelf - great aged prop for interiors.
+polycount: 630
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/painted_wooden_bench, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/painted_wooden_bench/painted_wooden_bench_1k.gltf
+    -> painted_wooden_bench_1k.gltf  md5 784a49250144aa5299a93c1f3b6968d7  sha256 2289ab82f3fe3045bf18f7b9541743d2c65b9f071cb34bbe424d2bc998f3e507
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_bench/painted_wooden_bench_diff_1k.jpg
+    -> textures/painted_wooden_bench_diff_1k.jpg  md5 60c7d0f34f52b1003345d318e35f468d  sha256 9bc533313091ee71eaca5fa6334b71d27935d9d75311f64df6a53c28a67c435c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_bench/painted_wooden_bench_nor_gl_1k.jpg
+    -> textures/painted_wooden_bench_nor_gl_1k.jpg  md5 08b74bebcff262c14beae35a4f7b3405  sha256 a0f53740d77fc61aac01de0b7e1ae6109445d1756839f739ae31fdf10c9911f2
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_bench/painted_wooden_bench_arm_1k.jpg
+    -> textures/painted_wooden_bench_arm_1k.jpg  md5 754ecc7f47b1e5d032e45e22334954f1  sha256 878785565eeff706b8f1e4db7e3d794a544e9cf0e56cee424d9a271ab4ead47e
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/painted_wooden_bench/painted_wooden_bench.bin
+    -> painted_wooden_bench.bin  md5 ed331b50f955852f007313c1a75c2e2d  sha256 5799bcb20924105cccd6424de8cdb8e67eb57fddc19c395befeac634a7b2e013
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/painted_wooden_bench
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

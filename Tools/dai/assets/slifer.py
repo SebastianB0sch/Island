@@ -11,12 +11,20 @@ Layout (x along the coast):
     x  11   ..  20   dining hall annex with a covered deck/porch (y -6.4 .. -3)
     y  -22           wooden fence along the cliff side (gap at x = 0)
 
-Meshes: Slifer_Main, Slifer_Dining, Slifer_Yard, Slifer_NoCol.
+Interiors: every front door opens into a dorm room (101-106 downstairs, 201-206 off the walkway): genkan
+with a shoe shelf, a tiny WC, tatami, the famous Slifer triple bunk bed, a kotatsu, a desk under the window,
+TV, posters. 101 is Jaden, Syrus and Chumley's room, 206 Professor Banner's study (with Pharaoh's basket).
+The dining hall gets doors for its entrance and kitchen.
+
+Meshes: Slifer_Main, Slifer_Dining, Slifer_Yard, Slifer_NoCol, Slifer_Interior, Slifer_Interior_NoCol.
 """
 
 import math
 
+import random
+
 from . import AssetSet
+from . import interior as K
 from .. import palette
 
 palette.register({
@@ -107,8 +115,10 @@ def door(mb, u, z, w=0.9, h=2.0, panel=DOOR, frame=TRIM, knob_side=1):
 
 
 def window(mb, u, z, w, h, frame=TRIM, glass=GLASS, mullion=True, sill=True):
-    """Framed window on a wall face at local y=0 (outside = -y)."""
-    mb.box((u, -0.02, z + h / 2), (w, 0.04, h), glass, skip=("+y",))
+    """Framed window on a wall face at local y=0 (outside = -y). glass=None: frame only (the wall has a real
+    opening with its own glass)."""
+    if glass:
+        mb.box((u, -0.02, z + h / 2), (w, 0.04, h), glass, skip=("+y",))
     fw = 0.09
     mb.box((u - w / 2 - fw / 2, -0.05, z + h / 2), (fw, 0.1, h + 2 * fw), frame, skip=("+y",))
     mb.box((u + w / 2 + fw / 2, -0.05, z + h / 2), (fw, 0.1, h + 2 * fw), frame, skip=("+y",))
@@ -120,13 +130,148 @@ def window(mb, u, z, w, h, frame=TRIM, glass=GLASS, mullion=True, sill=True):
         mb.box((u, -0.1, z - fw - 0.03), (w + 0.3, 0.2, 0.06), frame, skip=("+y",))
 
 
+
+# ------------------------------------------------------------------ hollow storeys + dorm rooms
+SLAB = 0.2                     # upper floor slab (its underside is the ground-floor ceiling)
+WT = 0.2                       # outer wall thickness
+STEP = 0.08                    # genkan step up to the room floor
+IN_WALL = K.PLASTER_CREAM
+
+
+def _x0(i):
+    return X0 + i * RW
+
+
+def _shell(aset, mb):
+    """Outer walls of both storeys with real door / window openings, the upper floor slab and the top
+    ceiling. Exterior trims, frames, lamps and plates stay in _main_block."""
+    for (zb, zt) in ((ZG, Z2), (Z2, ZW)):
+        up = zb > ZG
+        s_ops, n_ops = [], []
+        for i in range(NROOMS):
+            x0 = _x0(i)
+            s_ops.append(K.Door(x0 + 1.05, 0.9, 2.05, "slifer", trim=None, trim_in=K.TRIM_WOOD))
+            s_ops.append(K.Window(x0 + 2.95, 1.4, 0.95, 1.95, frame=TRIM, mullions=1))
+            n_ops.append(K.Window(x0 + 2.4, 1.0, 1.0 if up else 0.9, (1.0 if up else 0.9) + 0.75, frame=TRIM))
+            n_ops.append(K.Window(x0 + 0.9, 0.5, 1.35 if up else 1.5, (1.35 if up else 1.5) + 0.4, frame=TRIM,
+                                  mullions=0))
+        rel = 1.0 if up else 1.1
+        sides = {"s": s_ops, "n": n_ops,
+                 "e": [K.Window(-1.0, 1.0, rel, rel + 0.9, frame=TRIM)],
+                 "w": [K.Window(-1.6, 1.0, rel, rel + 0.9, frame=TRIM)]}
+        K.shell(aset, mb, X0, YF, X1, YB, zb, zt - zb, WT, WALL, inner=IN_WALL, sides=sides, base=K.TRIM_WOOD)
+        # party walls between the rooms
+        for i in range(1, NROOMS):
+            x = _x0(i)
+            K.wall(aset, mb, (x + 0.06, YF + WT), (x + 0.06, YB - WT), zb, zt - zb, 0.12, IN_WALL, inner=IN_WALL)
+    K.slab(mb, X0 + WT, YF + WT, X1 - WT, YB - WT, Z2, SLAB, top=K.WOODFLOOR, bottom=K.CEIL, side=IN_WALL)
+    K.slab(mb, X0, YF, X1, YB, ZW, 0.1, top=WALL, bottom=K.CEIL)
+
+
+def _rooms(aset, mb, nc):
+    rng = random.Random(7)
+    blankets_all = [("M_IntFabricRed", "M_IntFabricYellow", "M_IntFabricBlue"),
+                    ("M_IntFabricBlue", "M_IntFabricWhite", "M_IntFabricRed"),
+                    ("M_IntFabricGreen", "M_IntFabricRed", "M_IntFabricOrange"),
+                    ("M_IntFabricPurple", "M_IntFabricBlue", "M_IntFabricYellow")]
+    posters = ["DUEL!", "NEVER GIVE UP", "SLIFER RED", "DECK MASTER", "GET YOUR GAME ON!", "CARD OF THE WEEK"]
+    for floor, zf in ((1, ZG), (2, Z2)):
+        ceil = (Z2 - SLAB) if floor == 1 else ZW - 0.1
+        for i in range(NROOMS):
+            num = f"{floor}0{i + 1}"
+            x0 = _x0(i)
+            rx0 = (X0 + WT) if i == 0 else x0 + 0.06
+            rx1 = (X1 - WT) if i == NROOMS - 1 else x0 + RW - 0.06
+            ry0, ry1 = YF + WT, YB - WT
+            zr = zf + STEP
+            gx1 = x0 + 1.9                      # genkan (entry) right edge
+            gy1 = ry0 + 0.95                    # genkan depth
+            # ---- floors: concrete genkan, raised wooden floor with tatami, tiled WC
+            mb.box_mm((rx0, ry0, zf), (gx1, gy1, zf + 0.01), "M_IntConcrete", skip=("-z",))
+            mb.box_mm((rx0, gy1, zf), (rx1, ry1, zr), K.WOODFLOOR, mats={"-y": K.TRIM_WOOD})
+            mb.box_mm((gx1, ry0, zf), (rx1, gy1, zr), K.WOODFLOOR, mats={"-x": K.TRIM_WOOD})
+            mb.box_mm((rx0, gy1 - 0.02, zr - 0.04), (gx1, gy1 + 0.1, zr + 0.005), K.TRIM_WOOD)   # step nosing
+            K.tatami(mb, rx0, gy1 + 0.1, rx1, 2.95, zr + 0.03)
+            # ---- WC in the back-left corner (vent window above the toilet)
+            wx1 = x0 + 1.7
+            K.wall(aset, mb, (rx0, 2.95), (wx1, 2.95), zr, ceil - zr, 0.1, IN_WALL, inner=K.PLASTER_SKY,
+                   openings=[K.Door((wx1 - rx0) / 2, 0.75, 2.0, "slifer_inner", trim=K.TRIM_WOOD)])
+            K.wall(aset, mb, (wx1, 2.95), (wx1, ry1), zr, ceil - zr, 0.1, IN_WALL, inner=K.PLASTER_SKY)
+            with mb.at((0, 0, zr)):
+                K.toilet_room(mb, rx0, 3.05, wx1 - 0.1, ry1)
+            nc.box((x0 + 0.9, 3.9, ceil - 0.02), (0.3, 0.3, 0.02), K.PANEL_LIGHT)
+            # ---- room contents
+            jaden = num == "101"
+            banner = num == "206"
+            with mb.at((0, 0, zr)), nc.at((0, 0, zr)):
+                if banner:
+                    K.single_bed(mb, nc, rx1 - 0.55, 1.8, -90.0, blanket="M_IntFabricGreen", length=2.0, width=0.95)
+                    K.bookcase(mb, nc, rx0 + 0.18, 0.9, 90.0, w=1.2, h=min(2.0, ceil - zr - 0.1), rng_seed=i)
+                else:
+                    K.bunk_bed(mb, nc, rx1 - 0.52, 1.75, -90.0, levels=3,
+                               blankets=blankets_all[0] if jaden else rng.choice(blankets_all[1:]), gap=0.6,
+                               length=2.0, width=0.92)
+                    K.kotatsu(mb, nc, x0 + 1.95, 0.85, 0.0, quilt=rng.choice(("M_IntFabricOrange", "M_IntFabricRed",
+                                                                                "M_IntFabricBlue")))
+                K.desk(mb, nc, x0 + 2.95, ry0 + 0.32, 180.0, w=1.1, d=0.55, hutch=False, rng_seed=i + floor * 10)
+                K.wardrobe(mb, rx0 + 0.31, 2.25, 90.0, w=1.2, d=0.6, h=min(2.0, ceil - zr - 0.15))
+                # shoe shelf in the genkan
+                mb.box_mm((rx0, ry0 + 0.05, 0.0), (rx0 + 0.32, ry0 + 0.85, 0.85), K.WOOD)
+                for k in range(3):
+                    nc.box((rx0 + 0.2, ry0 + 0.25 + k * 0.22, 0.87), (0.24, 0.1, 0.07), rng.choice(K.FABRICS))
+            # genkan shoes on the concrete (below the step)
+            for k in range(2):
+                nc.box((x0 + 0.85 + k * 0.35, ry0 + 0.55, zf + 0.05), (0.12, 0.28, 0.08), rng.choice(("M_IntFabricRed", "M_IntBlack")))
+            # props
+            aset.prop("SM_Int_WoodChair", (x0 + 2.95, ry0 + 0.95, zr), 0.0)
+            if banner:
+                aset.prop("SM_Int_Armchair", (x0 + 2.2, 0.3, zr + 0.03), 200.0)
+                aset.prop("SM_Int_SideTable", (x0 + 1.5, 0.7, zr + 0.03), 0.0)
+                aset.prop("SM_Int_TeaSet", (x0 + 1.5, 0.7, zr + 0.65), 30.0)
+                aset.prop("SM_Int_Basket", (x0 + 2.6, 1.6, zr + 0.03), 15.0)        # Pharaoh's basket
+                aset.prop("SM_Int_DeskLamp", (x0 + 3.35, ry0 + 0.35, zr + 0.78), 200.0)
+                aset.prop("SM_Int_Books", (x0 + 2.6, ry0 + 0.3, zr + 0.78), 180.0)
+                K.nameplate(mb, aset, x0 + 1.05 + 0.75, YF - 0.005, zf + 1.6, 0.0, "Prof. Banner", w=0.55, h=0.11)
+            else:
+                # TV on a low cabinet against the left wall, facing the kotatsu
+                mb.box_mm((rx0, 0.35, zr), (rx0 + 0.42, 1.35, zr + 0.42), K.WOOD_DARK)
+                aset.prop("SM_Int_TV", (rx0 + 0.22, 0.85, zr + 0.42), 90.0)
+                if rng.random() < 0.6:
+                    aset.prop("SM_Int_Box", (rx1 - 0.3, -1.35, zr + 0.03), rng.uniform(-20, 20))
+            aset.prop("SM_Int_WallClock", (rx0 + 0.02, -0.6, zr + 1.75), 90.0) if i % 2 == 0 else None
+            # posters on the party wall above the bunk / bookcase side
+            pw = rx1 - 0.01 if not banner else rx0 + 0.01
+            pyaw = -90.0 if not banner else 90.0
+            K.poster(nc, aset, pw, -0.9, zr + 1.55, pyaw, 0.55, 0.75, K.POSTERS[(i + floor) % 4],
+                     text=(posters[(i + 2 * floor) % len(posters)] if not jaden else "GET YOUR GAME ON!"),
+                     text_size=0.07)
+            if jaden:
+                K.poster(nc, aset, rx0 + 0.01, -0.9, zr + 1.5, 90.0, 0.6, 0.45, "M_IntPoster1", text="DUEL ACADEMY",
+                         text_size=0.08)
+                aset.prop("SM_Int_Pillows", (x0 + 1.95, -0.25, zr + 0.03), 10.0)
+                for k in range(5):     # a deck spread out on the kotatsu
+                    nc.box((x0 + 1.75 + k * 0.09, 0.75, zr + 0.415), (0.06, 0.085, 0.004), "M_CardBack")
+            # curtains inside the front window
+            K.curtains(nc, (X0, YF), (X1, YF), x0 + 2.95 - X0, 1.4, zf + 0.95, zf + 1.95,
+                       ("M_IntFabricRed", "M_SliferLaundryWhite", "M_IntFabricBlue")[(i + floor) % 3], wall_thick=WT)
+            # light: flush ceiling lamp (+ a ceiling fan upstairs, where the ceiling is higher)
+            K.panel_light(aset, nc, x0 + 2.4, 0.4, ceil, w=0.55, d=0.55, intensity=2600.0, radius=6.5,
+                          color=(1.0, 0.88, 0.7))
+            if floor == 2 and not banner:
+                aset.prop("SM_Int_CeilingFan", (x0 + 2.4, 1.6, ceil), i * 23.0)
+    # preview cameras (Tools/preview_asset.py slifer --views inside)
+    K.camera(aset, "room101", (X0 + 0.8, YF + 0.5, ZG + 1.55), (X0 + 3.4, 2.6, ZG + 0.9), 15.0)
+    K.camera(aset, "room204", (_x0(3) + 0.8, YF + 0.5, Z2 + 1.6), (_x0(3) + 3.4, 2.6, Z2 + 0.9), 15.0)
+    K.camera(aset, "room206_banner", (_x0(5) + 0.8, YF + 0.5, Z2 + 1.6), (_x0(5) + 3.0, 2.6, Z2 + 0.9), 15.0)
+    K.camera(aset, "walkway", (X1 - 0.5, YWK + 0.4, Z2 + 1.6), (X0 + 4.0, YF, Z2 + 1.2), 20.0)
+
 # ------------------------------------------------------------------ main block
 def _main_block(aset, mb, nc):
     # foundation / plinth and the concrete apron under the walkway
     mb.box_mm((X0 - 0.1, YF - 0.1, FOUND), (X1 + 0.1, YB + 0.1, ZG), CONC)
     mb.box_mm((ROOF_X0 + 0.15, YWK - 0.2, FOUND), (X1 + 0.25, YF - 0.1, 0.1), CONC)
-    # body (solid, closed rooms)
-    mb.box_mm((X0, YF, ZG), (X1, YB, ZW), WALL, skip=("-z",))
+    # body: hollow storeys (real door / window openings, rooms inside - see _rooms)
+    _shell(aset, mb)
     for x, sgn in ((X0, -1), (X1, 1)):
         tri = [(x, YF, ZW), (x, YB, ZW), (x, YR, ZR - 0.16)]
         mb.poly(tri if sgn > 0 else list(reversed(tri)), WALL)
@@ -154,16 +299,15 @@ def _main_block(aset, mb, nc):
             x0 = X0 + i * RW
             ud, uw = x0 + 1.05, x0 + 2.95
             with mb.at((0, YF, 0)):
-                door(mb, ud, z)
-                window(mb, uw, z + 0.95, 1.4, 1.0)
-                mb.box((ud, -0.07, z + 1.62), (0.26, 0.02, 0.13), "M_WindowFrame")   # number plate
+                window(mb, uw, z + 0.95, 1.4, 1.0, glass=None)
+                mb.box((ud, -0.07, z + 2.32), (0.26, 0.02, 0.13), "M_WindowFrame")   # number plate
             # porch lamp next to the door
             with mb.at((0, YF, 0)):
                 mb.box((ud + 0.8, -0.06, z + 2.2), (0.14, 0.12, 0.08), "M_DarkMetal", skip=("+y",))
                 mb.box((ud + 0.8, -0.16, z + 2.12), (0.18, 0.18, 0.04), "M_DarkMetal")
             nc.box((ud + 0.8, YF - 0.16, z + 2.0), (0.12, 0.12, 0.16), "M_LampGlow")
             aset.light((ud + 0.8, YF - 0.35, z + 1.9), (1.0, 0.78, 0.48), 2500.0, 6.0, night_only=True)
-            aset.text(f"{floor}0{i + 1}", (ud, YF - 0.105, z + 1.62), 0.0, size=0.09, color=(0.15, 0.08, 0.05))
+            aset.text(f"{floor}0{i + 1}", (ud, YF - 0.105, z + 2.29), 0.0, size=0.09, color=(0.15, 0.08, 0.05))
             if floor == 1:   # concrete stoop
                 mb.box_mm((ud - 0.65, YF - 0.45, 0.0), (ud + 0.65, YF, ZG), CONC)
 
@@ -173,8 +317,8 @@ def _main_block(aset, mb, nc):
         for z in (ZG + 1.15, Z2 + 1.0):
             for i in range(NROOMS):
                 x = X0 + i * RW + 2.4
-                window(mb, -x, z, 1.0, 0.75)
-                window(mb, -(X0 + i * RW + 0.9), z + 0.35, 0.5, 0.4, mullion=False)   # bathroom vent
+                window(mb, -x, z, 1.0, 0.75, glass=None)
+                window(mb, -(X0 + i * RW + 0.9), z + 0.35, 0.5, 0.4, mullion=False, glass=None)   # WC vent
         # weathered patch boards (run-down charm)
         for k, (u, zz, ang) in enumerate(((-(-6.4), 1.2, 3), (-(-6.1), 1.6, -2), (-(2.5), 4.7, 2))):
             with mb.at((u, -0.03, zz), rot_y=ang):
@@ -202,11 +346,11 @@ def _main_block(aset, mb, nc):
     with mb.at((X1, 0, 0), rot=90):
         # local u = world y ; outward = +x
         for z in (ZG + 1.1, Z2 + 1.0):
-            window(mb, -1.0 + 0.0, z, 1.0, 0.9)
+            window(mb, -1.0 + 0.0, z, 1.0, 0.9, glass=None)
     with mb.at((X0, 0, 0), rot=-90):
         # local u = -y ; outward = -x
-        window(mb, 1.6, Z2 + 1.0, 1.0, 0.9)
-        window(mb, 1.6, ZG + 1.1, 1.0, 0.9)
+        window(mb, 1.6, Z2 + 1.0, 1.0, 0.9, glass=None)
+        window(mb, 1.6, ZG + 1.1, 1.0, 0.9, glass=None)
 
     # ---------------- upper walkway along the front
     slab(mb, [(X0, YWK, Z2), (X1, YWK, Z2), (X1, YF, Z2), (X0, YF, Z2)], 0.2, "M_Wood",
@@ -308,16 +452,6 @@ def _main_block(aset, mb, nc):
     mb.box((bx, YWK - 0.04, Z2 + 0.6), (4.1, 0.08, 0.8), WALL)
     mb.box((bx, YWK - 0.1, Z2 + 0.6), (3.9, 0.06, 0.64), DOOR)
     aset.text("SLIFER RED DORM", (bx, YWK - 0.155, Z2 + 0.58), 0.0, size=0.4, color=(1.0, 0.96, 0.86))
-    # curtains behind some windows (front side)
-    for floor, z in ((0, ZG), (1, Z2)):
-        for i in range(NROOMS):
-            k = floor * NROOMS + i
-            if k % 3 == 1:
-                continue
-            uw = X0 + i * RW + 2.95
-            mat = ("M_SliferLaundryWhite", "M_Fabric", "M_SliferLaundryBlue")[k % 3]
-            side = -1 if k % 2 else 1
-            mb.box((uw + side * 0.4, YF - 0.045, z + 0.95 + 0.5), (0.55, 0.01, 0.98), mat)
     # rusty patches on the corrugated roof
     for (px, py, w, d) in ((-15.5, -2.5, 1.8, 1.6), (-3.0, 3.6, 2.2, 1.2), (5.2, -3.8, 1.4, 1.5), (-8.0, -0.9, 1.0, 1.2)):
         y0, y1 = py - d / 2, py + d / 2
@@ -434,8 +568,10 @@ def _dining(aset, mb, nc):
                 p = (bx, ty + s * 0.25, DZ + 0.78)
                 mb.cylinder(p, 0.12, 0.07, "M_WindowFrame", seg=10, radius_top=0.15)
                 mb.cylinder((p[0], p[1], p[2] + 0.055), 0.12, 0.01, "M_SliferCurry", seg=10)
+    aset.door((DX0 + 2.5, DY0 + 0.1, DZ), 0.0, 1.6, 2.55, "slifer", double=True)
     # partition with the serving counter window
     PY = 3.0
+    aset.door((DX0 + 0.2 + 7.4, PY + 0.075, DZ), 0.0, 0.9, 2.1, "slifer_inner")
     mb.wall((DX0 + 0.2, PY), (DX1 - 0.2, PY), DZ, DWH, 0.15, "M_CreamWall",
             openings=[dict(u=4.0, w=3.0, z0=0.95, z1=2.1), dict(u=7.4, w=0.9, z0=0.0, z1=2.1)])
     mb.box_mm((DX0 + 0.2 + 2.5, PY - 0.3, DZ + 0.9), (DX0 + 0.2 + 5.5, PY + 0.45, DZ + 0.97), "M_Wood")
@@ -594,7 +730,10 @@ def build():
     din = aset.mesh("Slifer_Dining")
     yard = aset.mesh("Slifer_Yard")
     nc = aset.mesh("Slifer_NoCol")
+    inner = aset.mesh("Slifer_Interior")
+    inner_nc = aset.mesh("Slifer_Interior_NoCol")
     _main_block(aset, main, nc)
+    _rooms(aset, inner, inner_nc)
     _dining(aset, din, nc)
     _yard(aset, yard, nc)
     _sockets(aset)

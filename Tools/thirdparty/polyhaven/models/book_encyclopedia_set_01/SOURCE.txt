@@ -1,0 +1,31 @@
+asset_id: polyhaven_book_encyclopedia_set_01
+title: Book Encyclopedia Set 01 (Poly Haven)
+category: interiors
+main_file: book_encyclopedia_set_01_1k.gltf
+catalog_use: SM_Int_Books
+author: John Malcolm
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/book_encyclopedia_set_01
+description: Free 8K set of vintage leather-bound encyclopedia volumes with gold-embossed spines, alphabetic labels and realistic wear, warm brown tones.
+polycount: 67306
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/book_encyclopedia_set_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/book_encyclopedia_set_01/book_encyclopedia_set_01_1k.gltf
+    -> book_encyclopedia_set_01_1k.gltf  md5 d0a77d421a6ea2c9d82bcaaa64e8479b  sha256 89eb80fffd619ebbe5043d632bd8cf25b2d68a3614aee2f356e850c69ae498ba
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/book_encyclopedia_set_01/book_encyclopedia_set_01_cover_diff_1k.jpg
+    -> textures/book_encyclopedia_set_01_cover_diff_1k.jpg  md5 00a10b1b5a28efa4670d68a089a64ef3  sha256 a456aae6ef0ab24769527cccac5313a802ad253584c49fc10a377ce75969d382
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/book_encyclopedia_set_01/book_encyclopedia_set_01.bin
+    -> book_encyclopedia_set_01.bin  md5 ac617be6503e537c5d1a16a94313e866  sha256 bbc726698b6e40ab5537b73e082f7bb4db97b9e6f978f52cdaf763dddc85d9ba
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/book_encyclopedia_set_01/book_encyclopedia_set_01_paper_nor_gl_1k.jpg
+    -> textures/book_encyclopedia_set_01_paper_nor_gl_1k.jpg  md5 816a51a0b6520cf5e08751089722fc46  sha256 705f4380c654c44d086ceb120595078e562438c6e4ba01458d2d23fd61483d9d
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/book_encyclopedia_set_01/book_encyclopedia_set_01_cover_arm_1k.jpg
+    -> textures/book_encyclopedia_set_01_cover_arm_1k.jpg  md5 0e5788b0ee9ce810823356e187c31a8c  sha256 ab19b627092da77770de2212a04785940feb2df0957cab8993742a6b8b3f7bff
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/book_encyclopedia_set_01/book_encyclopedia_set_01_cover_nor_gl_1k.jpg
+    -> textures/book_encyclopedia_set_01_cover_nor_gl_1k.jpg  md5 488fa9696ad4f1773a2d81f3af7b6c76  sha256 17ad410f2d1aab487e47c729a5b988ea4e4d196679c8696331b7960e77a91c17
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/book_encyclopedia_set_01/book_encyclopedia_set_01_paper_diff_1k.jpg
+    -> textures/book_encyclopedia_set_01_paper_diff_1k.jpg  md5 7798b8e38721a4fc1ed45319ecc81b67  sha256 b552d6829b75db7a75012bb761068c63507b69e8e944597ea53f6d1a70efa36c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/book_encyclopedia_set_01/book_encyclopedia_set_01_paper_roughness_1k.jpg
+    -> textures/book_encyclopedia_set_01_paper_roughness_1k.jpg  md5 b8e5b8431b0c53b20d83ec0bcff51747  sha256 62d875e9427f5d71f1bb4d9dc9569e34465bfd3067b8b13f5644b73e23a09fa3
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/book_encyclopedia_set_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

@@ -1,0 +1,25 @@
+asset_id: polyhaven_potted_plant_04
+title: Potted Plant 04 (Poly Haven)
+category: interiors
+main_file: potted_plant_04_1k.gltf
+catalog_use: SM_Int_PottedPlant
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/potted_plant_04
+description: Free 8K potted succulent model - small zebra haworthia in a weathered ceramic pot. Realistic textures and natural detail; ideal for interior decor scenes.
+polycount: 6097
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/potted_plant_04, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/potted_plant_04/potted_plant_04_1k.gltf
+    -> potted_plant_04_1k.gltf  md5 077d481764145f6e5e256593aab427bb  sha256 b3a3bc3e97da75844999c4da07b7104b6c023f729a7c045979929b9504184339
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/potted_plant_04/potted_plant_04.bin
+    -> potted_plant_04.bin  md5 03774ca8e28e2aa30fb26cb68d5e0093  sha256 158c1d27503d4845eb3573f00c01ae3f4f77f1d6ca8754c67bf1762745946f7f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_04/potted_plant_04_nor_gl_1k.jpg
+    -> textures/potted_plant_04_nor_gl_1k.jpg  md5 1c0b87906fd92c7b7ce5508110976474  sha256 66e4627f6691a2d8104a6c53a39b41daddbd5bad8103e73f372c39166a3dcb07
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_04/potted_plant_04_arm_1k.jpg
+    -> textures/potted_plant_04_arm_1k.jpg  md5 ed0030c6085bba45b6f63f3043b0b237  sha256 7f3288345570ef700c851ea382ed267490ffc8c901ccc31f2ec5507e4d098e48
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_04/potted_plant_04_diff_1k.jpg
+    -> textures/potted_plant_04_diff_1k.jpg  md5 4a72fb3667fd3686ca4014f6676f59c4  sha256 8693a971557fbafb12a24a2e23c1a04ab6b04ecdc4d26808c5ad3516a4971f24
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/potted_plant_04
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

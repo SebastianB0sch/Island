@@ -1,0 +1,31 @@
+asset_id: polyhaven_hanging_picture_frame_02
+title: Hanging Picture Frame 02 (Poly Haven)
+category: interiors
+main_file: hanging_picture_frame_02_1k.gltf
+catalog_use: SM_Int_Frame
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/hanging_picture_frame_02
+description: Free 8K model of a vintage wooden hanging picture frame with distressed white finish and faded painted artwork - perfect for decorative wall scenes and period interiors.
+polycount: 3678
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/hanging_picture_frame_02, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/hanging_picture_frame_02/hanging_picture_frame_02_1k.gltf
+    -> hanging_picture_frame_02_1k.gltf  md5 4db648e1f6ba5444a53adb31c81c8705  sha256 ea9a1d44e8d794e224a5342204669a328b57d64d5df629d1d5d86e60e27245e5
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hanging_picture_frame_02/hanging_picture_frame_02_diff_1k.jpg
+    -> textures/hanging_picture_frame_02_diff_1k.jpg  md5 906c164baad3f02b67244998b7558a9c  sha256 575f2b6481b9e02474750ded776a0b490744228cb64d9b346f28bd78b9cf5897
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hanging_picture_frame_02/hanging_picture_frame_02_artwork_diff_1k.jpg
+    -> textures/hanging_picture_frame_02_artwork_diff_1k.jpg  md5 4cc4caf766c1889ae5d7e8c71acbe19b  sha256 7e26aee962965fb201975ef5a99e2751a24c4b461b48e8348cea9f31cde027c2
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hanging_picture_frame_02/hanging_picture_frame_02_arm_1k.jpg
+    -> textures/hanging_picture_frame_02_arm_1k.jpg  md5 01e09bbe488c7a2953b5a207fdf192ca  sha256 67378630bc6bb69799f8ee0fde4ab11ecd9e7a43ed3dfef402fdd784d8c2cea3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hanging_picture_frame_02/hanging_picture_frame_02_artwork_nor_gl_1k.jpg
+    -> textures/hanging_picture_frame_02_artwork_nor_gl_1k.jpg  md5 5682ebd5c7acef6af307013b707affb0  sha256 8a700c0d7d3f464177ead95879d60a8bf43ef77c034881379b2c036406ab9e27
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hanging_picture_frame_02/hanging_picture_frame_02_artwork_roughness_1k.jpg
+    -> textures/hanging_picture_frame_02_artwork_roughness_1k.jpg  md5 ffe5f1805a7219ce745c950b71115bec  sha256 305018ab800cbd02d61c08f9c5a422c2777f2b5cbb20579f671be56a1fb21853
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/hanging_picture_frame_02/hanging_picture_frame_02.bin
+    -> hanging_picture_frame_02.bin  md5 3e88b7525d7bf9b8f33660100c953cff  sha256 0ed5813c8b30f63807ffac962e47135d3248b3804e07cb93862c13e29bed83d8
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hanging_picture_frame_02/hanging_picture_frame_02_nor_gl_1k.jpg
+    -> textures/hanging_picture_frame_02_nor_gl_1k.jpg  md5 bc686a415608ae66bd88f70d081fd572  sha256 79367cf9d7e4981263dd1439297585148d6c93500acaffa7afeb534351e68b86
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/hanging_picture_frame_02
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

@@ -1,0 +1,25 @@
+asset_id: polyhaven_GothicCabinet_01
+title: Gothic Cabinet 01 (Poly Haven)
+category: interiors
+main_file: GothicCabinet_01_1k.gltf
+catalog_use: SM_Int_Wardrobe
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/GothicCabinet_01
+description: Free 4K model: vintage Gothic wooden cabinet with ornate carved panels, iron hinges and stacked shelving - characterful furniture for period interiors.
+polycount: 12170
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/GothicCabinet_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/GothicCabinet_01/GothicCabinet_01_1k.gltf
+    -> GothicCabinet_01_1k.gltf  md5 d6ec468ab981336f76f35f10d566e460  sha256 1b3506f78e263c66e90d4a84b9efa883fe0bb02a13ff8ead2b3a265024e045ce
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/GothicCabinet_01/GothicCabinet_01.bin
+    -> GothicCabinet_01.bin  md5 4c2f20b4b5fbf8c33b86b04dcf805c5f  sha256 f1019b130872cad82d5bf5e27528a980fabbd69a9128340e5eb7530ea2d7c17b
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/GothicCabinet_01/GothicCabinet_01_nor_gl_1k.jpg
+    -> textures/GothicCabinet_01_nor_gl_1k.jpg  md5 a2912d1111ac0a4877af75280e539763  sha256 8c413ff4acbc3b4c7b58cb08e9a921f1781817a24533e0e9af6880ef40bfd68c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/GothicCabinet_01/GothicCabinet_01_diff_1k.jpg
+    -> textures/GothicCabinet_01_diff_1k.jpg  md5 67ce3b2ce0a43cd209114084d49de35c  sha256 9b9586d9a840045d3f27ea4237ec56d713212fb877aceb2d0fc1cb75c7d59b98
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/GothicCabinet_01/GothicCabinet_01_arm_1k.jpg
+    -> textures/GothicCabinet_01_arm_1k.jpg  md5 8f88a6ca9bde9970644ba65086a33f39  sha256 46b4a66b23836d37d5771ec024abfdc935c7b2bb17d73e2d802abca37edb6994
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/GothicCabinet_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

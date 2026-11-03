@@ -1,0 +1,31 @@
+asset_id: polyhaven_vintage_radio_transceiver
+title: Vintage Radio Transceiver (Poly Haven)
+category: interiors
+main_file: vintage_radio_transceiver_1k.gltf
+catalog_use: SM_Int_Radio
+author: Mateusz Sadek
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/vintage_radio_transceiver
+description: Free 4K model of a vintage military radio transceiver with weathered olive-drab case, frequency dial, cables, whip antenna, desk mic and Morse key.
+polycount: 42350
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/vintage_radio_transceiver, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/vintage_radio_transceiver/vintage_radio_transceiver_1k.gltf
+    -> vintage_radio_transceiver_1k.gltf  md5 abe85407660ef17f41faab948c7833ac  sha256 556b668305968576b00d9f809070cb6b193b62d30c39e46b8c05cc34911757c3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_radio_transceiver/vintage_radio_transceiver_nor_gl_1k.jpg
+    -> textures/vintage_radio_transceiver_nor_gl_1k.jpg  md5 854e6576a2f1e61ca311071baa89a435  sha256 2f8136500d3a82cdab92efb12f6871656b4f6f920aa85f639156ba22c97b2ce4
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_radio_transceiver/vintage_radio_transceiver_diff_1k.jpg
+    -> textures/vintage_radio_transceiver_diff_1k.jpg  md5 368967f76872933710e77959659bda95  sha256 a730d1fa041bdead966ed04d501638de839ebde0163a64becac2132d9268bfe6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_radio_transceiver/vintage_radio_transceiver_arm_1k.jpg
+    -> textures/vintage_radio_transceiver_arm_1k.jpg  md5 0bd1286f0c4cebbea0f3498e4453f72e  sha256 86e404440f9ccea0d6d554810bb5d98d4d7c6052271a97c82180238f1d0b6450
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_radio_transceiver/vintage_radio_transceiver_accessories_nor_gl_1k.jpg
+    -> textures/vintage_radio_transceiver_accessories_nor_gl_1k.jpg  md5 f61ff0918376a7f7a0b40ab3ccbc20ef  sha256 0d64ee0718c78f49ad5ef9a13c4eddb92afa9a9dd0f52da1c5bd5778e1367d6b
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_radio_transceiver/vintage_radio_transceiver_accessories_diff_1k.jpg
+    -> textures/vintage_radio_transceiver_accessories_diff_1k.jpg  md5 858f7c7cf0c1ab38457b4dc70abbd82b  sha256 54b544c6fd2e478ae75e1e5ac0361d95c423b6be393819e6df8965e119d53c3a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_radio_transceiver/vintage_radio_transceiver_accessories_arm_1k.jpg
+    -> textures/vintage_radio_transceiver_accessories_arm_1k.jpg  md5 1951d58a87ae545213f642a0f4b30148  sha256 c3aa2b5f4bfe0fbc7409556b400b2159edb14d6b77cd14e501c6b875144db362
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/vintage_radio_transceiver/vintage_radio_transceiver.bin
+    -> vintage_radio_transceiver.bin  md5 81b1c00a7fe0254f6d507bb80111368f  sha256 392976de8f78517141a42c8a4685463c8db508d3ce4ac04e7235d6a5374c0de1
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/vintage_radio_transceiver
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

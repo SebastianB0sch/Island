@@ -1,0 +1,506 @@
+{
+ "_comment": "Interior furniture and decor: CC0 Poly Haven models (1k glTF). toon=true re-paints the base colour into flat cel colours and drops normal/ORM maps; outline = inverted-hull ink line thickness in metres. Every entry has a procedural fallback (Tools/dai/assets/furniture.py).",
+ "props": {
+  "SM_Int_SchoolDesk": {
+   "file": "polyhaven/models/SchoolDesk_01/SchoolDesk_01_1k.gltf",
+   "height": 0.76,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_SchoolChair": {
+   "file": "polyhaven/models/SchoolChair_01/SchoolChair_01_1k.gltf",
+   "height": 0.82,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Armchair": {
+   "file": "polyhaven/models/ArmChair_01/ArmChair_01_1k.gltf",
+   "height": 0.95,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Sofa": {
+   "file": "polyhaven/models/Sofa_01/Sofa_01_1k.gltf",
+   "width": 2.1,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_SofaB": {
+   "file": "polyhaven/models/sofa_02/sofa_02_1k.gltf",
+   "width": 1.9,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_WoodChair": {
+   "file": "polyhaven/models/painted_wooden_chair_01/painted_wooden_chair_01_1k.gltf",
+   "height": 0.9,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_DiningChair": {
+   "file": "polyhaven/models/dining_chair_02/dining_chair_02_1k.gltf",
+   "height": 1.0,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 7000
+  },
+  "SM_Int_BarStool": {
+   "file": "polyhaven/models/bar_chair_round_01/bar_chair_round_01_1k.gltf",
+   "height": 0.78,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 5000
+  },
+  "SM_Int_Ottoman": {
+   "file": "polyhaven/models/Ottoman_01/Ottoman_01_1k.gltf",
+   "height": 0.45,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Stool": {
+   "file": "polyhaven/models/chinese_stool/chinese_stool_1k.gltf",
+   "height": 0.45,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_GreenChair": {
+   "file": "polyhaven/models/GreenChair_01/GreenChair_01_1k.gltf",
+   "height": 0.85,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_OfficeChair": {
+   "file": "polyhaven/models/modern_arm_chair_01/modern_arm_chair_01_1k.gltf",
+   "height": 0.95,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Bench": {
+   "file": "polyhaven/models/painted_wooden_bench/painted_wooden_bench_1k.gltf",
+   "width": 1.6,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Table": {
+   "file": "polyhaven/models/WoodenTable_01/WoodenTable_01_1k.gltf",
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "width": 1.8
+  },
+  "SM_Int_RoundTable": {
+   "file": "polyhaven/models/round_wooden_table_01/round_wooden_table_01_1k.gltf",
+   "height": 0.75,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_CoffeeTable": {
+   "file": "polyhaven/models/coffee_table_round_01/coffee_table_round_01_1k.gltf",
+   "height": 0.45,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_OfficeDesk": {
+   "file": "polyhaven/models/metal_office_desk/metal_office_desk_1k.gltf",
+   "height": 0.76,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_LowTable": {
+   "file": "polyhaven/models/chinese_tea_table/chinese_tea_table_1k.gltf",
+   "height": 0.38,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_SideTable": {
+   "file": "polyhaven/models/side_table_01/side_table_01_1k.gltf",
+   "height": 0.6,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Console": {
+   "file": "polyhaven/models/ClassicConsole_01/ClassicConsole_01_1k.gltf",
+   "height": 0.85,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_GrandBed": {
+   "file": "polyhaven/models/GothicBed_01/GothicBed_01_1k.gltf",
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 10000,
+   "width": 2.2
+  },
+  "SM_Int_Nightstand": {
+   "file": "polyhaven/models/ClassicNightstand_01/ClassicNightstand_01_1k.gltf",
+   "height": 0.6,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_NightstandB": {
+   "file": "polyhaven/models/painted_wooden_nightstand/painted_wooden_nightstand_1k.gltf",
+   "height": 0.55,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Bookshelf": {
+   "file": "polyhaven/models/wooden_bookshelf_worn/wooden_bookshelf_worn_1k.gltf",
+   "height": 2.0,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Shelves": {
+   "file": "polyhaven/models/painted_wooden_shelves/painted_wooden_shelves_1k.gltf",
+   "height": 1.8,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_SteelShelves": {
+   "file": "polyhaven/models/steel_frame_shelves_01/steel_frame_shelves_01_1k.gltf",
+   "height": 2.0,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Cabinet": {
+   "file": "polyhaven/models/painted_wooden_cabinet/painted_wooden_cabinet_1k.gltf",
+   "height": 1.8,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Wardrobe": {
+   "file": "polyhaven/models/GothicCabinet_01/GothicCabinet_01_1k.gltf",
+   "height": 2.1,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 9000
+  },
+  "SM_Int_DisplayShelves": {
+   "file": "polyhaven/models/wooden_display_shelves_01/wooden_display_shelves_01_1k.gltf",
+   "height": 1.8,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "rotate": 90
+  },
+  "SM_Int_Chandelier": {
+   "file": "polyhaven/models/Chandelier_02/Chandelier_02_1k.gltf",
+   "height": 1.1,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 9000,
+   "origin": "top"
+  },
+  "SM_Int_CeilingLamp": {
+   "file": "polyhaven/models/modern_ceiling_lamp_01/modern_ceiling_lamp_01_1k.gltf",
+   "height": 0.6,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "origin": "top"
+  },
+  "SM_Int_IndustrialLamp": {
+   "file": "polyhaven/models/hanging_industrial_lamp/hanging_industrial_lamp_1k.gltf",
+   "height": 0.9,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "origin": "top"
+  },
+  "SM_Int_CeilingFan": {
+   "file": "polyhaven/models/ceiling_fan/ceiling_fan_1k.gltf",
+   "width": 1.3,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 6000,
+   "origin": "top"
+  },
+  "SM_Int_DeskLamp": {
+   "file": "polyhaven/models/desk_lamp_arm_01/desk_lamp_arm_01_1k.gltf",
+   "height": 0.5,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 5000
+  },
+  "SM_Int_OilLamp": {
+   "file": "polyhaven/models/vintage_oil_lamp/vintage_oil_lamp_1k.gltf",
+   "height": 0.45,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_PottedPlant": {
+   "file": "polyhaven/models/potted_plant_04/potted_plant_04_1k.gltf",
+   "height": 0.6,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_PottedPlantB": {
+   "file": "polyhaven/models/potted_plant_02/potted_plant_02_1k.gltf",
+   "height": 1.4,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 9000
+  },
+  "SM_Int_Painting": {
+   "file": "polyhaven/models/fancy_picture_frame_01/fancy_picture_frame_01_1k.gltf",
+   "width": 1.0,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Frame": {
+   "file": "polyhaven/models/hanging_picture_frame_02/hanging_picture_frame_02_1k.gltf",
+   "width": 0.6,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Mirror": {
+   "file": "polyhaven/models/ornate_mirror_01/ornate_mirror_01_1k.gltf",
+   "height": 1.2,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 6000
+  },
+  "SM_Int_WallClock": {
+   "file": "polyhaven/models/wall_clock/wall_clock_1k.gltf",
+   "width": 0.4,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_GrandfatherClock": {
+   "file": "polyhaven/models/vintage_grandfather_clock_01/vintage_grandfather_clock_01_1k.gltf",
+   "height": 2.1,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 8000
+  },
+  "SM_Int_Chalkboard": {
+   "file": "polyhaven/models/standing_chalkboard_01/standing_chalkboard_01_1k.gltf",
+   "height": 1.6,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_TV": {
+   "file": "polyhaven/models/Television_01/Television_01_1k.gltf",
+   "height": 0.45,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Register": {
+   "file": "polyhaven/models/CashRegister_01/CashRegister_01_1k.gltf",
+   "height": 0.3,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 5000
+  },
+  "SM_Int_Bust": {
+   "file": "polyhaven/models/marble_bust_01/marble_bust_01_1k.gltf",
+   "height": 0.7,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 6000
+  },
+  "SM_Int_Books": {
+   "file": "polyhaven/models/book_encyclopedia_set_01/book_encyclopedia_set_01_1k.gltf",
+   "width": 0.5,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 4000
+  },
+  "SM_Int_Box": {
+   "file": "polyhaven/models/cardboard_box_01/cardboard_box_01_1k.gltf",
+   "height": 0.45,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 3000
+  },
+  "SM_Int_Lifebuoy": {
+   "file": "polyhaven/models/lifebuoy/lifebuoy_1k.gltf",
+   "height": 0.75,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 5000
+  },
+  "SM_Int_Radio": {
+   "file": "polyhaven/models/vintage_radio_transceiver/vintage_radio_transceiver_1k.gltf",
+   "height": 0.35,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 6000
+  },
+  "SM_Int_Extinguisher": {
+   "file": "polyhaven/models/korean_fire_extinguisher_01/korean_fire_extinguisher_01_1k.gltf",
+   "height": 0.6,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 4000
+  },
+  "SM_Int_WetFloor": {
+   "file": "polyhaven/models/WetFloorSign_01/WetFloorSign_01_1k.gltf",
+   "height": 0.62,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Basket": {
+   "file": "polyhaven/models/wicker_basket_01/wicker_basket_01_1k.gltf",
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 4000,
+   "width": 0.5
+  },
+  "SM_Int_Bucket": {
+   "file": "polyhaven/models/wooden_bucket_01/wooden_bucket_01_1k.gltf",
+   "height": 0.3,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_FoldingScreen": {
+   "file": "polyhaven/models/chinese_screen_panels/chinese_screen_panels_1k.gltf",
+   "height": 1.8,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Pillows": {
+   "file": "polyhaven/models/throw_pillows_01/throw_pillows_01_1k.gltf",
+   "width": 0.9,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Suitcase": {
+   "file": "polyhaven/models/vintage_suitcase/vintage_suitcase_1k.gltf",
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 4000,
+   "width": 0.7
+  },
+  "SM_Int_Stove": {
+   "file": "polyhaven/models/electric_stove/electric_stove_1k.gltf",
+   "height": 0.9,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 6000
+  },
+  "SM_Int_Candelabra": {
+   "file": "polyhaven/models/brass_candleholders/brass_candleholders_1k.gltf",
+   "height": 0.4,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 5000
+  },
+  "SM_Int_OldBed": {
+   "file": "polyhaven/models/old_bed_frame/old_bed_frame_1k.gltf",
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 8000,
+   "width": 2.0
+  },
+  "SM_Int_RockingChair": {
+   "file": "polyhaven/models/Rockingchair_01/Rockingchair_01_1k.gltf",
+   "height": 1.0,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 7000
+  },
+  "SM_Int_ProjectorScreen": {
+   "file": "polyhaven/models/projector_screen/projector_screen_1k.gltf",
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "height": 2.4
+  },
+  "SM_Int_HandTruck": {
+   "file": "polyhaven/models/hand_truck/hand_truck_1k.gltf",
+   "height": 1.2,
+   "collision": "hull",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 5000
+  },
+  "SM_Int_RubberDuck": {
+   "file": "polyhaven/models/rubber_duck_toy/rubber_duck_toy_1k.gltf",
+   "height": 0.12,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 2000
+  },
+  "SM_Int_Microwave": {
+   "file": "polyhaven/models/vintage_microwave/vintage_microwave_1k.gltf",
+   "height": 0.3,
+   "collision": "box",
+   "toon": true,
+   "outline": 0.008
+  },
+  "SM_Int_Kettle": {
+   "file": "polyhaven/models/vintage_electric_kettle/vintage_electric_kettle_1k.gltf",
+   "height": 0.25,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 4000
+  },
+  "SM_Int_TeaSet": {
+   "file": "polyhaven/models/tea_set_01/tea_set_01_1k.gltf",
+   "width": 0.5,
+   "collision": "none",
+   "toon": true,
+   "outline": 0.008,
+   "max_tris": 6000
+  }
+ }
+}

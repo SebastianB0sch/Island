@@ -12,7 +12,9 @@
 #include "DATypes.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/OverlapResult.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -306,4 +308,144 @@ void ADAAmbientSound::BeginPlay()
 	Audio->AttenuationOverrides.FalloffDistance = Radius;
 	Audio->SetVolumeMultiplier(Volume);
 	Audio->Play(FMath::FRandRange(0.f, 5.f));
+}
+
+// ======================================================================== ADADoor
+
+ADADoor::ADADoor()
+{
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	RootComponent = Root;
+	Root->SetMobility(EComponentMobility::Static);
+	PivotA = CreateDefaultSubobject<USceneComponent>(TEXT("PivotA"));
+	PivotA->SetupAttachment(Root);
+	PivotB = CreateDefaultSubobject<USceneComponent>(TEXT("PivotB"));
+	PivotB->SetupAttachment(Root);
+	auto MakeLeaf = [this](const TCHAR* Name, USceneComponent* Parent)
+	{
+		UStaticMeshComponent* Leaf = CreateDefaultSubobject<UStaticMeshComponent>(Name);
+		Leaf->SetupAttachment(Parent);
+		Leaf->SetCollisionProfileName(UCollisionProfile::BlockAllDynamic_ProfileName);
+		// never trap a pawn or yank the camera; the door opens before anyone reaches it anyway
+		Leaf->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+		Leaf->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		Leaf->SetCanEverAffectNavigation(false);
+		return Leaf;
+	};
+	LeafA = MakeLeaf(TEXT("LeafA"), PivotA);
+	LeafB = MakeLeaf(TEXT("LeafB"), PivotB);
+	for (USceneComponent* C : { PivotA.Get(), PivotB.Get() })
+	{
+		C->SetMobility(EComponentMobility::Movable);
+	}
+	LeafA->SetMobility(EComponentMobility::Movable);
+	LeafB->SetMobility(EComponentMobility::Movable);
+}
+
+void ADADoor::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	RefreshDoor();
+}
+
+void ADADoor::RefreshDoor()
+{
+	LeafA->SetStaticMesh(LeafMesh);
+	LeafB->SetStaticMesh(bDouble ? LeafMesh.Get() : nullptr);
+	LeafB->SetVisibility(bDouble);
+	LeafB->SetCollisionEnabled(bDouble ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	ApplyPose();
+}
+
+void ADADoor::BeginPlay()
+{
+	Super::BeginPlay();
+	RefreshDoor();
+	CheckTimer = FMath::FRandRange(0.f, 0.15f);   // spread the checks of ~200 doors over frames
+}
+
+bool ADADoor::FindPawn(FVector& OutLocalPos) const
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return false;
+	}
+	const FVector Center = GetActorLocation() + FVector(0.0, 0.0, Height * 0.5);
+	TArray<FOverlapResult> Hits;
+	World->OverlapMultiByObjectType(Hits, Center, FQuat::Identity, FCollisionObjectQueryParams(ECC_Pawn),
+		FCollisionShape::MakeSphere(TriggerRadius));
+	double Best = TNumericLimits<double>::Max();
+	bool bFound = false;
+	for (const FOverlapResult& H : Hits)
+	{
+		const AActor* A = H.GetActor();
+		if (!A || !A->IsA<APawn>())
+		{
+			continue;
+		}
+		const double D = FVector::DistSquared(A->GetActorLocation(), Center);
+		if (D < Best)
+		{
+			Best = D;
+			OutLocalPos = GetActorTransform().InverseTransformPosition(A->GetActorLocation());
+			bFound = true;
+		}
+	}
+	return bFound;
+}
+
+void ADADoor::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	CheckTimer -= DeltaSeconds;
+	if (CheckTimer <= 0.f)
+	{
+		CheckTimer = 0.15f;
+		bool bCheck = Alpha > 0.f || Target > 0.f;
+		if (!bCheck)
+		{
+			const APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0);
+			bCheck = !Player || FVector::DistSquared(Player->GetActorLocation(), GetActorLocation()) < FMath::Square(ActiveDistance);
+		}
+		if (bCheck)
+		{
+			FVector Local;
+			const bool bPawn = FindPawn(Local);
+			if (bPawn && Target <= 0.f && Alpha <= KINDA_SMALL_NUMBER)
+			{
+				// choose the side once per opening: away from the pawn, unless the doorway forces one
+				Side = SwingSide != 0 ? float(FMath::Sign(SwingSide)) : (Local.Y >= 0.0 ? -1.f : 1.f);
+			}
+			Target = bPawn ? 1.f : 0.f;
+		}
+	}
+	if (!FMath::IsNearlyEqual(Alpha, Target))
+	{
+		const float Step = DeltaSeconds / FMath::Max(OpenTime, 0.05f);
+		Alpha = Target > Alpha ? FMath::Min(Alpha + Step, Target) : FMath::Max(Alpha - Step, Target);
+		ApplyPose();
+	}
+}
+
+void ADADoor::ApplyPose()
+{
+	const float LeafWidth = bDouble ? Width * 0.5f : Width;
+	// ease in / out
+	const float E = Alpha * Alpha * (3.f - 2.f * Alpha);
+	if (Mode == EDADoorMode::Slide)
+	{
+		PivotA->SetRelativeLocationAndRotation(FVector(-Width * 0.5f - E * LeafWidth * 0.95f, 0.0, 0.0), FRotator::ZeroRotator);
+		PivotB->SetRelativeLocationAndRotation(FVector(Width * 0.5f + E * LeafWidth * 0.95f, 0.0, 0.0), FRotator(0.f, 180.f, 0.f));
+	}
+	else
+	{
+		// FRotator yaw turns +X towards +Y: leaf A (towards +X) swings to +Y with a positive angle,
+		// leaf B (turned 180 deg, towards -X) with a negative one
+		const float Angle = E * OpenAngle * Side;
+		PivotA->SetRelativeLocationAndRotation(FVector(-Width * 0.5f, 0.0, 0.0), FRotator(0.f, Angle, 0.f));
+		PivotB->SetRelativeLocationAndRotation(FVector(Width * 0.5f, 0.0, 0.0), FRotator(0.f, 180.f - Angle, 0.f));
+	}
 }

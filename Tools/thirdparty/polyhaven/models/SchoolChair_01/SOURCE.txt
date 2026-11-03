@@ -1,0 +1,25 @@
+asset_id: polyhaven_SchoolChair_01
+title: School Chair 01 (Poly Haven)
+category: interiors
+main_file: SchoolChair_01_1k.gltf
+catalog_use: SM_Int_SchoolChair
+author: Ethan Place
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/SchoolChair_01
+description: Free 4K model of a classic navy plastic school chair with tubular black metal legs, three-slot molded back, visible scuffs, and realistic painted-metal wear.
+polycount: 5072
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/SchoolChair_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/SchoolChair_01/SchoolChair_01_1k.gltf
+    -> SchoolChair_01_1k.gltf  md5 dea922d55d029fb99085b50196d1eec0  sha256 1db6aca4bf379c2d568b2068492dcfcda15d764c0c3d98a970055af25b46281e
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolChair_01/SchoolChair_01_nor_gl_1k.jpg
+    -> textures/SchoolChair_01_nor_gl_1k.jpg  md5 223a0e5d115fb86cf1ae675fe73dc04a  sha256 4ee930562ad26e8c98af75e8aa6577d01cb56f6d22628f4e95c385e5364f0623
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolChair_01/SchoolChair_01_diff_1k.jpg
+    -> textures/SchoolChair_01_diff_1k.jpg  md5 2d5c9c77d97ba2edd5084a9d72b5dd63  sha256 f10ae4dbddfb056ef716770ebd96e0eff0aa6f0b5ad0f263ff51c5cade6e1d8f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolChair_01/SchoolChair_01_arm_1k.jpg
+    -> textures/SchoolChair_01_arm_1k.jpg  md5 559daea007902aae5b5d5623a34b3a13  sha256 ff773eb01c9d59130dc3cc0274951ac626d73fa1b2f7eee519af4ca80835568b
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/SchoolChair_01/SchoolChair_01.bin
+    -> SchoolChair_01.bin  md5 d1f13f71f9f9979cde18c798e25dd9d3  sha256 7d64d556ba88d3962778085b9a190f1adb0d84e667bca8ef032c0ae34b31a9fe
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/SchoolChair_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

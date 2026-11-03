@@ -1,0 +1,25 @@
+asset_id: polyhaven_painted_wooden_nightstand
+title: Painted Wooden Nightstand (Poly Haven)
+category: interiors
+main_file: painted_wooden_nightstand_1k.gltf
+catalog_use: SM_Int_NightstandB
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/painted_wooden_nightstand
+description: Free 4K model of a painted wooden nightstand with worn blue paint, single drawer and tapered legs - vintage, aged bedside table for authentic bedroom scenes.
+polycount: 470
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/painted_wooden_nightstand, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/painted_wooden_nightstand/painted_wooden_nightstand_1k.gltf
+    -> painted_wooden_nightstand_1k.gltf  md5 eff35aa15d8408d030156df43c8c9bb3  sha256 fbdc51ee41f2ee2dc7c455cd6f8321ff14e80c7a7d1e7736b194ca0b3e48b304
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_nightstand/painted_wooden_nightstand_nor_gl_1k.jpg
+    -> textures/painted_wooden_nightstand_nor_gl_1k.jpg  md5 4598a8c32374362f3a3e18fac2b0decc  sha256 2d7574ce96c1202bc37ad49fd219a2f918028e102a6d1743714bc90032295c15
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/painted_wooden_nightstand/painted_wooden_nightstand.bin
+    -> painted_wooden_nightstand.bin  md5 7643d3fb660b2416d38c2e7964ba816d  sha256 67b0834c6d0337bd144a1f72045bfe4de029618766b344fa9ffc4c3fc3ee8865
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_nightstand/painted_wooden_nightstand_arm_1k.jpg
+    -> textures/painted_wooden_nightstand_arm_1k.jpg  md5 d4ef49fba68617442d8366c635167aaf  sha256 c3724c444d74f5b0e65904de0633bfe99db76f8c9b9211703aeeab62b02031ef
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_nightstand/painted_wooden_nightstand_diff_1k.jpg
+    -> textures/painted_wooden_nightstand_diff_1k.jpg  md5 7ca7bf109ce5eea128b8c2b478795858  sha256 bf7447441b2f78c847d7c4cda8b80e604853e2b559ffe03b41c0e4b3bff8ed9f
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/painted_wooden_nightstand
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

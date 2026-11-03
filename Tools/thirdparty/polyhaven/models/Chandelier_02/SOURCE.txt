@@ -1,0 +1,25 @@
+asset_id: polyhaven_Chandelier_02
+title: Chandelier 02 (Poly Haven)
+category: interiors
+main_file: Chandelier_02_1k.gltf
+catalog_use: SM_Int_Chandelier
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/Chandelier_02
+description: Free 4K model of an elegant vintage hanging ceiling chandelier, an ornate brass six-arm fixture with pleated fabric shades - ideal for classic interior scenes.
+polycount: 21514
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/Chandelier_02, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/Chandelier_02/Chandelier_02_1k.gltf
+    -> Chandelier_02_1k.gltf  md5 6a03851c1ca7211f64fd461b71f83b15  sha256 d52ea299a0831a6851d50901d6719367454ffc61c1fed871cdcfc7db6b775dfd
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/Chandelier_02/Chandelier_02.bin
+    -> Chandelier_02.bin  md5 6ce2faad38996422637d46daf4ed6a1c  sha256 54190a815836aa2c9883c607372b37400ba8a6ef8449634973eeb370a511e4d9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Chandelier_02/Chandelier_02_nor_gl_1k.jpg
+    -> textures/Chandelier_02_nor_gl_1k.jpg  md5 be75f18fe549734a71f5e9e2745355be  sha256 cf33462f36f9abbbcf3d9962bbae6a72f6e21faa4d12e358feffab1e88cdcd7f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Chandelier_02/Chandelier_02_diff_1k.jpg
+    -> textures/Chandelier_02_diff_1k.jpg  md5 b87d921112a524ffcab302260d26889d  sha256 c9db61618859d9ff3ae34a2dfa66ff781981fed75f6b485add075395533ca791
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Chandelier_02/Chandelier_02_arm_1k.jpg
+    -> textures/Chandelier_02_arm_1k.jpg  md5 8d81bc3862530c82c4f037e5134e4fb8  sha256 77236142800bba6203fca273ff6164d6bfc5548470883c33e043ab97589eb515
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/Chandelier_02
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

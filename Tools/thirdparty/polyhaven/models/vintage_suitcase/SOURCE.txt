@@ -1,0 +1,31 @@
+asset_id: polyhaven_vintage_suitcase
+title: Vintage Suitcase (Poly Haven)
+category: interiors
+main_file: vintage_suitcase_1k.gltf
+catalog_use: SM_Int_Suitcase
+author: Maximilian Schuster
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/vintage_suitcase
+description: Free 8K vintage suitcase model with worn green leather, stitched edges, rusted clasps and weathered travel stickers, showing rustic, hand-made aged character.
+polycount: 16474
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/vintage_suitcase, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/vintage_suitcase/vintage_suitcase_1k.gltf
+    -> vintage_suitcase_1k.gltf  md5 08c32e1963eb74610fb291520c8345b4  sha256 5d040fdb26c5d97d5d60518ef4875cc72effcabe0a5f68f50e8970013e57a589
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_suitcase/vintage_suitcase_01_arm_1k.jpg
+    -> textures/vintage_suitcase_01_arm_1k.jpg  md5 4db295f083c12d9d98d43c9bc8c76312  sha256 cde01b9b4bee1e23060add6a4d166a48f69d3470a5b5cde35acd1e6738351796
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_suitcase/vintage_suitcase_01_nor_gl_1k.jpg
+    -> textures/vintage_suitcase_01_nor_gl_1k.jpg  md5 7927cc4e0cbaa387a8f1478e47bdcae3  sha256 77ea4998ae6c0d51b3ed72831216b814d8852c51c24d8bc99da83fe29b6535a5
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_suitcase/vintage_suitcase_01_diff_1k.jpg
+    -> textures/vintage_suitcase_01_diff_1k.jpg  md5 8b9025506413eb45ba15518ebaa06f35  sha256 f226a5adb38e8e50b88f05eafbc1b3716797d325b2820aca3685618eef5e5f39
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_suitcase/vintage_suitcase_02_arm_1k.jpg
+    -> textures/vintage_suitcase_02_arm_1k.jpg  md5 bb480c03d08335160e00c1ec215134f2  sha256 01a6da086159d09b1bce5b98a5a485b905926d1dd531c3484ee44ba77b3d9b2d
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_suitcase/vintage_suitcase_02_nor_gl_1k.jpg
+    -> textures/vintage_suitcase_02_nor_gl_1k.jpg  md5 309c88cf867f62b285353d4f087c1c97  sha256 e79c275b94a2383bad5037d186e8c7807e78cac18f7f439cfe51b16fbe3d8ee6
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/vintage_suitcase/vintage_suitcase.bin
+    -> vintage_suitcase.bin  md5 0a7a8d06b2c579beabbd36916866a7a9  sha256 8a29ec4465a213c8d81b2d472358eae295da3221b54bebeae699f0d2cb7a32eb
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_suitcase/vintage_suitcase_02_diff_1k.jpg
+    -> textures/vintage_suitcase_02_diff_1k.jpg  md5 3793b2ab0206acf8272271468b23c7cd  sha256 d8d82b8d08c9400f6f2a9f9736175ba0555ed6c5132cdd97a273d19be3f9db76
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/vintage_suitcase
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

@@ -1,0 +1,31 @@
+asset_id: polyhaven_standing_chalkboard_01
+title: Standing Chalkboard 01 (Poly Haven)
+category: interiors
+main_file: standing_chalkboard_01_1k.gltf
+catalog_use: SM_Int_Chalkboard
+author: ParzivalCG
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/standing_chalkboard_01
+description: Free 4K model: wooden A-frame standing chalkboard with a worn oak frame, matte smudged slate surface and folding metal hinges, rustic cafe/deli signage.
+polycount: 2372
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/standing_chalkboard_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/standing_chalkboard_01/standing_chalkboard_01_1k.gltf
+    -> standing_chalkboard_01_1k.gltf  md5 7cdb491ebdea655db8402f7d6fc817c6  sha256 95e3a825067d6a96adf1e732ff088485bc8edc1f87e79f707c97a44702be0574
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/standing_chalkboard_01/standing_chalkboard_01.bin
+    -> standing_chalkboard_01.bin  md5 cd6fb01779de556d67b5a1040713e10c  sha256 5d848d6ed6dd5c69a99620bbddc7516b2175cbc4b1fdefc02538c27dd8ddeb69
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/standing_chalkboard_01/standing_chalkboard_01_frame_nor_gl_1k.jpg
+    -> textures/standing_chalkboard_01_frame_nor_gl_1k.jpg  md5 7b570f34247aa1941034dd4ee4adf818  sha256 941c640d2d9aa63fe78302569868ceb1277bdd85a503faf5ac5a14fef6c85ef7
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/standing_chalkboard_01/standing_chalkboard_01_board_arm_1k.jpg
+    -> textures/standing_chalkboard_01_board_arm_1k.jpg  md5 fbfa85956df0e211831097ef2bbbb4b2  sha256 090e2f7e70170e2d22c710ff19fb368a78c1c010cf59a51bde9b8647d6cf3b4d
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/standing_chalkboard_01/standing_chalkboard_01_board_diff_1k.jpg
+    -> textures/standing_chalkboard_01_board_diff_1k.jpg  md5 315f374eeaf271ebbe16b075f963715f  sha256 27a77bb4472385470469a2dcc25c2dc4e3ce303d46ba2fb60f5e6b1f6242fc4f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/standing_chalkboard_01/standing_chalkboard_01_frame_arm_1k.jpg
+    -> textures/standing_chalkboard_01_frame_arm_1k.jpg  md5 1a0b1fc41babcefaf5636951091bce8d  sha256 a2922087465730645fbf32724fa4c44a276d91d339e5c97ff421826de171ec4a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/standing_chalkboard_01/standing_chalkboard_01_board_nor_gl_1k.jpg
+    -> textures/standing_chalkboard_01_board_nor_gl_1k.jpg  md5 34058a613e1d9766b9ca99513930dbdb  sha256 3ac29c09203e61c4d96eded3f90c4247a0178214913a94cffb7dfd55a5f4b9f3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/standing_chalkboard_01/standing_chalkboard_01_frame_diff_1k.jpg
+    -> textures/standing_chalkboard_01_frame_diff_1k.jpg  md5 f0cfde6754ea0c32d9c3ba9dcc7126b9  sha256 37bb9789728b29eb30d02f82ad96d8a123d7dda14438314f40d2721ce8ab7617
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/standing_chalkboard_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

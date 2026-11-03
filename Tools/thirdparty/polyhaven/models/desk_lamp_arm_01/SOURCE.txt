@@ -1,0 +1,25 @@
+asset_id: polyhaven_desk_lamp_arm_01
+title: Desk Lamp Arm 01 (Poly Haven)
+category: interiors
+main_file: desk_lamp_arm_01_1k.gltf
+catalog_use: SM_Int_DeskLamp
+author: Yann Kervran, Kuutti Siitonen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/desk_lamp_arm_01
+description: Free 8K model of an industrial, rigged desk lamp arm - clamp-mounted, articulated with springs, vintage workshop style.
+polycount: 25710
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/desk_lamp_arm_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/desk_lamp_arm_01/desk_lamp_arm_01_1k.gltf
+    -> desk_lamp_arm_01_1k.gltf  md5 29b204485d30e66ee3f183ef45bf4bb3  sha256 2ac8389afc1519449a9cfdf7efd9fa36780a2177bb47ab58f7a7dda7d247dc8c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/desk_lamp_arm_01/desk_lamp_arm_01_nor_gl_1k.jpg
+    -> textures/desk_lamp_arm_01_nor_gl_1k.jpg  md5 5aabbfe920ea6726d5299be7d6224551  sha256 feefedc3835ecef3634e97a24977451671f8f57747a023f48cd14c84bc73513a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/desk_lamp_arm_01/desk_lamp_arm_01_arm_1k.jpg
+    -> textures/desk_lamp_arm_01_arm_1k.jpg  md5 0b887af80f561216baa3da94d001d51a  sha256 206404c79fb7dcf8e2c4558c13544342f87d2190526231a1750c3c9adc256fbc
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/desk_lamp_arm_01/desk_lamp_arm_01_diff_1k.jpg
+    -> textures/desk_lamp_arm_01_diff_1k.jpg  md5 a5c1bf5465da39ca6ca9039dd4e3fd66  sha256 159eb178aba3271bd555cbe07ca36431d8af9a006f0b8e9d8c67030cbdc9e4d3
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/desk_lamp_arm_01/desk_lamp_arm_01.bin
+    -> desk_lamp_arm_01.bin  md5 29ffa5bb6bee35b066e46073124fee1a  sha256 07f34e32abecbaa63d28b9d12d6a0eb82b775a0f50c92327655909d72ff8489b
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/desk_lamp_arm_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

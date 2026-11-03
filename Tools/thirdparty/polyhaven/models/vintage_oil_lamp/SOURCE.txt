@@ -1,0 +1,33 @@
+asset_id: polyhaven_vintage_oil_lamp
+title: Vintage Oil Lamp (Poly Haven)
+category: interiors
+main_file: vintage_oil_lamp_1k.gltf
+catalog_use: SM_Int_OilLamp
+author: Monsta3D
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/vintage_oil_lamp
+description: Free 4K model, ornate Victorian oil lamp with brass base, floral porcelain globe, tall glass chimney and lit wick - detailed antique decorative charm.
+polycount: 7208
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/vintage_oil_lamp, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/vintage_oil_lamp/vintage_oil_lamp_1k.gltf
+    -> vintage_oil_lamp_1k.gltf  md5 95aefcb2ccfad1f5e10dd69522ec09ed  sha256 ae570b98ea30b0337f62d8e7f551c03a05de00b238f3fac8f1ca5a1f1dbd1add
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_oil_lamp/vintage_oil_lamp_glass_diff_1k.jpg
+    -> textures/vintage_oil_lamp_glass_diff_1k.jpg  md5 3f2ed8af86381524fb7c02a023950309  sha256 dbe33017c012a00c74419bb8f05b16a2eeee5e06e2ceab49a80462d25c7a7c0a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_oil_lamp/vintage_oil_lamp_nor_gl_1k.jpg
+    -> textures/vintage_oil_lamp_nor_gl_1k.jpg  md5 09ac342783f48e29152415890215c3b7  sha256 54db7efff64c4117782e25851544a0eb4881e5e28a13a06917a16d15ce26b1db
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_oil_lamp/vintage_oil_lamp_flame_diff_1k.jpg
+    -> textures/vintage_oil_lamp_flame_diff_1k.jpg  md5 b37858e7969def84f786a54f8e952904  sha256 827c6a4fa9274141636cee9415f416a32937f2f257901bbe8488b22b862509f1
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_oil_lamp/vintage_oil_lamp_diff_1k.jpg
+    -> textures/vintage_oil_lamp_diff_1k.jpg  md5 fd73c81fc05f116ca4f908badb5b8974  sha256 a96cc1383fb056618eca80a0cf4ae192286c8752f8e83cb52f9fec02ca94a471
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/vintage_oil_lamp/vintage_oil_lamp.bin
+    -> vintage_oil_lamp.bin  md5 b43f17a0f09d6c14d45eb1099eb1077f  sha256 4064065c8e288beaa58639c139c801db337bfc6183e73378a9177157f0587167
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_oil_lamp/vintage_oil_lamp_glass_nor_gl_1k.jpg
+    -> textures/vintage_oil_lamp_glass_nor_gl_1k.jpg  md5 40b084dae82420f972a3399e04cea91f  sha256 2752589c8f6c7724bf2aa5d097010bd9257fff8ca0f85add13ec2ac702909df0
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_oil_lamp/vintage_oil_lamp_arm_1k.jpg
+    -> textures/vintage_oil_lamp_arm_1k.jpg  md5 5a385b1f8bea13f7d8ce47a1f6583db1  sha256 004b7b6238632e4fc9e2ad7e76529caa292cfd96f5a42d6564531207f25c3e92
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_oil_lamp/vintage_oil_lamp_glass_arm_1k.jpg
+    -> textures/vintage_oil_lamp_glass_arm_1k.jpg  md5 35280190a34ca941710131a51e4c8d2a  sha256 0ef2b0eb2087895851be979afc5ccb2c11076f71bc667f9e586b7f8038efc158
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/vintage_oil_lamp
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

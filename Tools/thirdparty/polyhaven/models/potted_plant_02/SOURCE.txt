@@ -1,0 +1,31 @@
+asset_id: polyhaven_potted_plant_02
+title: Potted Plant 02 (Poly Haven)
+category: interiors
+main_file: potted_plant_02_1k.gltf
+catalog_use: SM_Int_PottedPlantB
+author: Rico Cilliers
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/potted_plant_02
+description: Free 8K model. Realistic terracotta pot with weathered rim, textured soil, and variegated green, heart-shaped leaves with pronounced veins.
+polycount: 69806
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/potted_plant_02, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/potted_plant_02/potted_plant_02_1k.gltf
+    -> potted_plant_02_1k.gltf  md5 9999d7e6c51018a85551840e1bdae656  sha256 c533dcce0d1aa4379eb7db04601a04983f8df2422b28578de922655a416e64a9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_02/potted_plant_02_leaves_diff_1k.jpg
+    -> textures/potted_plant_02_leaves_diff_1k.jpg  md5 e8a026bd7bfa6497729d855c59da03ce  sha256 3643dce6e6c0a9f40129bd837ec1a11802e8f43ea43cb29e58219d82e0ac632b
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/potted_plant_02/potted_plant_02.bin
+    -> potted_plant_02.bin  md5 cdbd4619b2596c9c469ad34676085fa8  sha256 9c9812482c78a59789ed32fa842b4cbd9365e09c900c31ebb998e5efe627fe97
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_02/potted_plant_02_pot_rough_1k.jpg
+    -> textures/potted_plant_02_pot_rough_1k.jpg  md5 68ed80fa32791fb0e81df61a75de40b4  sha256 4e92ad8ee0f098050785d9a025e2c5a7d55bc7a7f7e1916cc7627fc7824a938f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_02/potted_plant_02_leaves_rough_1k.jpg
+    -> textures/potted_plant_02_leaves_rough_1k.jpg  md5 ba934a78cc6496d934c014eb8a33af37  sha256 ac8959f70c0e91e77f3cd6fd3f73578b8aed64ac6c33fc34ac027a4e88276960
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_02/potted_plant_02_pot_diff_1k.jpg
+    -> textures/potted_plant_02_pot_diff_1k.jpg  md5 97e149c93eb0d962e491d4c82d3ce477  sha256 684949bf24821d7e951d46915366b5a388d2e4ccaaa9d5284e718c83604705e9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_02/potted_plant_02_leaves_nor_gl_1k.jpg
+    -> textures/potted_plant_02_leaves_nor_gl_1k.jpg  md5 2420d5c0ab87426f5318a5e91d1ea3bb  sha256 e0fe090ff7a511729c9bbe59df7288b400430fdab178529443dec75e0f06007d
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_02/potted_plant_02_pot_nor_gl_1k.jpg
+    -> textures/potted_plant_02_pot_nor_gl_1k.jpg  md5 fbb44ccc1c6564b2837b79a11ed45d58  sha256 981a68721c8b7b9ac26b96d0210334599d5e8f529362f505082c071a0a58e86c
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/potted_plant_02
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

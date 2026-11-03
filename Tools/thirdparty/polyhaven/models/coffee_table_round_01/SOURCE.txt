@@ -1,0 +1,25 @@
+asset_id: polyhaven_coffee_table_round_01
+title: Coffee Table Round 01 (Poly Haven)
+category: interiors
+main_file: coffee_table_round_01_1k.gltf
+catalog_use: SM_Int_CoffeeTable
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/coffee_table_round_01
+description: Free 8K model - round coffee table with white marble top and looping metal legs; sleek contemporary silhouette with subtle veining and matte metallic finish.
+polycount: 4044
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/coffee_table_round_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/coffee_table_round_01/coffee_table_round_01_1k.gltf
+    -> coffee_table_round_01_1k.gltf  md5 fa8772e8942e1863230b6745105c9a8e  sha256 58fe785584f8999f760e590b04ce74f83962d42c9440ab9415910f63a31165dc
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/coffee_table_round_01/coffee_table_round_01_diff_1k.jpg
+    -> textures/coffee_table_round_01_diff_1k.jpg  md5 601977ab1b864988194728e1dda076a8  sha256 422b4a24a4459e1fd6d121aae4f1097dd3e467c7a8036bb1d003f955302f1d28
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/coffee_table_round_01/coffee_table_round_01_arm_1k.jpg
+    -> textures/coffee_table_round_01_arm_1k.jpg  md5 b44425836ab0c932fe4ff136ce6f2fe8  sha256 7221b03af475555092abd650798facbb945bf4acf02e48f8697f012d8515bf52
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/coffee_table_round_01/coffee_table_round_01.bin
+    -> coffee_table_round_01.bin  md5 a664b067fa0ae9b6e0a8fa5878986816  sha256 9605a0c156bff4ec87e8717a79978d85d4e750d21b3193a3d08bed16e8666035
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/coffee_table_round_01/coffee_table_round_01_nor_gl_1k.jpg
+    -> textures/coffee_table_round_01_nor_gl_1k.jpg  md5 81a9885a83ff0b259514e8bce38b6b69  sha256 a5912db1918b1ec925efb19179675cafc8832b082f80b2ea35c3a58b45e1aec4
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/coffee_table_round_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

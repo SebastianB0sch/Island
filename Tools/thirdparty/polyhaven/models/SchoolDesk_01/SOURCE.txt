@@ -1,0 +1,25 @@
+asset_id: polyhaven_SchoolDesk_01
+title: School Desk 01 (Poly Haven)
+category: interiors
+main_file: SchoolDesk_01_1k.gltf
+catalog_use: SM_Int_SchoolDesk
+author: Ethan Place
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/SchoolDesk_01
+description: Free 4K model of a classic single-seat school desk with a wood top, gray metal storage shelf and adjustable tubular metal legs with worn finish.
+polycount: 4162
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/SchoolDesk_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/SchoolDesk_01/SchoolDesk_01_1k.gltf
+    -> SchoolDesk_01_1k.gltf  md5 f327b010a117ab6af3dec7538cdf23ee  sha256 9d840b58a9e66ce9dc3d8d5396fb97cf954b12dc27adaf41b8cc78ae1a6404eb
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolDesk_01/SchoolDesk_01_diff_1k.jpg
+    -> textures/SchoolDesk_01_diff_1k.jpg  md5 f6be3e2428c88c86c1a328798b592e5e  sha256 4fed6d98265c6be27b9e6c9b010a5bba55a9aca4edfcc3fae9a12309ca6a5b94
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolDesk_01/SchoolDesk_01_nor_gl_1k.jpg
+    -> textures/SchoolDesk_01_nor_gl_1k.jpg  md5 b79a0c557ecea2c7d79433ac70547a43  sha256 64de8791fec46894945136190504127d194c1fc8d999e15c639dc94d053581be
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/SchoolDesk_01/SchoolDesk_01_arm_1k.jpg
+    -> textures/SchoolDesk_01_arm_1k.jpg  md5 34b3a4444d2a2b0266e3bf3a6dfc9b2c  sha256 ee1e2ea17ca21471b8a4822400ddc6bd3a4d441822a7eb429bef8cb1ab6dd43d
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/SchoolDesk_01/SchoolDesk_01.bin
+    -> SchoolDesk_01.bin  md5 af08b1337236d6b951ea9805032abd32  sha256 80d0ece097fde9b1efe15a9babfb6bb1573d228bab6e02e3806cb5eca39c2c0c
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/SchoolDesk_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

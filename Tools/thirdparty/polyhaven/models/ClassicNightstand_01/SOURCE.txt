@@ -1,0 +1,25 @@
+asset_id: polyhaven_ClassicNightstand_01
+title: Classic Nightstand 01 (Poly Haven)
+category: interiors
+main_file: ClassicNightstand_01_1k.gltf
+catalog_use: SM_Int_Nightstand
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/ClassicNightstand_01
+description: Free 4K model of a vintage Victorian Gothic wooden nightstand - ornate carved details, cabriole legs and open shelf; perfect decorative table/furniture prop.
+polycount: 2002
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/ClassicNightstand_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/ClassicNightstand_01/ClassicNightstand_01_1k.gltf
+    -> ClassicNightstand_01_1k.gltf  md5 8c2c91db450dd05773d052450e5b5816  sha256 e8218ceead6c07d2641a0bd54974a67b13dd7ebc110e07e9738e17c206c7b892
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ClassicNightstand_01/ClassicNightstand_01_arm_1k.jpg
+    -> textures/ClassicNightstand_01_arm_1k.jpg  md5 c935951f5c188a202957753dd42b2e70  sha256 2a2ba3094e6baedebdddc1660684f42aa8556e405ef8e540f08ffa5a083adbf3
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/ClassicNightstand_01/ClassicNightstand_01.bin
+    -> ClassicNightstand_01.bin  md5 a97360812af4796a6abf592b4f893b51  sha256 1ac0f3065df040e5a85c3807fa07947de7185ad40ed064f3399fa9fc93387a7f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ClassicNightstand_01/ClassicNightstand_01_nor_gl_1k.jpg
+    -> textures/ClassicNightstand_01_nor_gl_1k.jpg  md5 2238bf1c92152c6650cc3e45263e8b3d  sha256 42692b8c2645559db4803135c9e3b1e1f11bd8b2022bbe0b750f4c3e5d65c225
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ClassicNightstand_01/ClassicNightstand_01_diff_1k.jpg
+    -> textures/ClassicNightstand_01_diff_1k.jpg  md5 5c4482658007e18e9c73666e44b955b7  sha256 aa841a5dcea9154bb1a26eb1be37d6b69fc8b2777f3dfcc3f7c7880c7048a5c6
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/ClassicNightstand_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

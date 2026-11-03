@@ -1,0 +1,31 @@
+asset_id: polyhaven_modern_arm_chair_01
+title: Modern Arm Chair 01 (Poly Haven)
+category: interiors
+main_file: modern_arm_chair_01_1k.gltf
+catalog_use: SM_Int_OfficeChair
+author: Vibrant Nordic
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/modern_arm_chair_01
+description: Free 8K model, modern wooden armchair with warm oak frame and plush black leather cushions - contemporary lounge styling with clean lines and wear detailing.
+polycount: 8916
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/modern_arm_chair_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/modern_arm_chair_01/modern_arm_chair_01_1k.gltf
+    -> modern_arm_chair_01_1k.gltf  md5 a5ce303bc2962fe98b733fcdfa5a842b  sha256 d31be520add2603447b43acedbdacf9516866f7c89e9ea9230c9edbac9cc6e6a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_arm_chair_01/modern_arm_chair_01_pillow_nor_gl_1k.jpg
+    -> textures/modern_arm_chair_01_pillow_nor_gl_1k.jpg  md5 6804f34108fcc755f0c84dd3c638270c  sha256 2717b9d22e1d3533e3c7436a0230b00b1d25bf396246679825c8db08edaba0a8
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_arm_chair_01/modern_arm_chair_01_legs_nor_gl_1k.jpg
+    -> textures/modern_arm_chair_01_legs_nor_gl_1k.jpg  md5 7cece7eccf75588af5b5df9b095d2c97  sha256 af328e8530884907cf0d38a675338bb4e2b03c56ed2d21eb5abf505bb67c11de
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_arm_chair_01/modern_arm_chair_01_pillow_arm_1k.jpg
+    -> textures/modern_arm_chair_01_pillow_arm_1k.jpg  md5 772495ddbf26ca3de4b31298f10113b9  sha256 fec333290ddfd70e78428251874d30d5410d6d0a956dd84922b0d3f3596e4b7a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_arm_chair_01/modern_arm_chair_01_legs_diff_1k.jpg
+    -> textures/modern_arm_chair_01_legs_diff_1k.jpg  md5 778f1897e07ff81b2bc338f3d463ad1f  sha256 6291421a8db6cd9bbbc8c141aa087465d698427249f813d24c6e5ccdbf0bf536
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_arm_chair_01/modern_arm_chair_01_legs_arm_1k.jpg
+    -> textures/modern_arm_chair_01_legs_arm_1k.jpg  md5 9c69cb001df175bddf6d1c2436567fb7  sha256 c76b65200a52cf649a865baf7f879dc34277b923edaac7ec8164eaf7c51c935d
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/modern_arm_chair_01/modern_arm_chair_01.bin
+    -> modern_arm_chair_01.bin  md5 5a8f2ea1c79ea484140e484b2a621670  sha256 8755f2f498c0bb165660379d1b045465751c16bbeaf553c8dd76bb14c16d1ff6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_arm_chair_01/modern_arm_chair_01_pillow_diff_1k.jpg
+    -> textures/modern_arm_chair_01_pillow_diff_1k.jpg  md5 2e4f64c633c3cb1656ad3eabdb3f0607  sha256 f1935436b460ad5c03ac7ff9d1e1b4aaedcdc9a503d79c257beb8cdac2e9e1f7
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/modern_arm_chair_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

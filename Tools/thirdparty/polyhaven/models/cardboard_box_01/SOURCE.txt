@@ -1,0 +1,25 @@
+asset_id: polyhaven_cardboard_box_01
+title: Cardboard Box 01 (Poly Haven)
+category: interiors
+main_file: cardboard_box_01_1k.gltf
+catalog_use: SM_Int_Box
+author: Rahul Chaudhary
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/cardboard_box_01
+description: Free 4K model of a worn, creased cardboard box with torn flaps, taped seams and a weathered strap - aged, dented paper texture and realistic damage.
+polycount: 16952
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/cardboard_box_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/cardboard_box_01/cardboard_box_01_1k.gltf
+    -> cardboard_box_01_1k.gltf  md5 84572b118cc3640acdd9e978869bb3ee  sha256 6038bcc5bba5a08a5f6643a265977e37e3d14553e62981e144c33a89f10b78e1
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/cardboard_box_01/cardboard_box_01_arm_1k.jpg
+    -> textures/cardboard_box_01_arm_1k.jpg  md5 39ea452f95d71ec1362e47dff453c706  sha256 5db63828d0f904c6a8d9c83afc912260b2a27261c15a28d06360519384574d2b
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/cardboard_box_01/cardboard_box_01.bin
+    -> cardboard_box_01.bin  md5 64bea3a77434981017b8a06da4ccb0df  sha256 7212d43b4cb56459e46d31ab34dc7c310fcfbe170f4a588416dea07ae5628a4b
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/cardboard_box_01/cardboard_box_01_diff_1k.jpg
+    -> textures/cardboard_box_01_diff_1k.jpg  md5 a306e586325d1759ba3225d2b6ad5121  sha256 122c7ba8c5935e289804a730b480677a4bffdf74a45c91970cba682df92e171c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/cardboard_box_01/cardboard_box_01_nor_gl_1k.jpg
+    -> textures/cardboard_box_01_nor_gl_1k.jpg  md5 24768abd73f71cfdd7f5be92b18634a7  sha256 d2d1f529a851966b65411b5094510dd9eba03cd5c0a89921f79325c377a8e8eb
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/cardboard_box_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

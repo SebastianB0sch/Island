@@ -1,0 +1,25 @@
+asset_id: polyhaven_lifebuoy
+title: Lifebuoy (Poly Haven)
+category: interiors
+main_file: lifebuoy_1k.gltf
+catalog_use: SM_Int_Lifebuoy
+author: Hank Kaamura
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/lifebuoy
+description: Free 8K weathered red lifebuoy with cracked paint, salt stains, faded stencils, and a loose pale rope; crisp scuffs and surface detail.
+polycount: 10728
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/lifebuoy, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/lifebuoy/lifebuoy_1k.gltf
+    -> lifebuoy_1k.gltf  md5 295742069c8a9e56260b769322996e5b  sha256 d9c76a8f2471249f314b3efcffe0d3956ba2d3f0b8ba528cc0f2b861561580f3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/lifebuoy/lifebuoy_nor_gl_1k.jpg
+    -> textures/lifebuoy_nor_gl_1k.jpg  md5 f8a80ee65e4776d228114f37104fbd37  sha256 df02aca2cca3aa87daa0f1d4cd5fa2584d60ecea85672517fa334aea725dbf23
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/lifebuoy/lifebuoy_diff_1k.jpg
+    -> textures/lifebuoy_diff_1k.jpg  md5 c956bce9e530911e95771507547e8a6f  sha256 f0095beca9e97996692ffdab3d3ace3fae64a3c3adf5c8eff71172add4e4cb2e
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/lifebuoy/lifebuoy_arm_1k.jpg
+    -> textures/lifebuoy_arm_1k.jpg  md5 a00a461982827a2faaa0c6d940740d51  sha256 fe33182e45c2b1049195641a8081ab22e90e520b2c0dafa9cce568a53af7a207
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/lifebuoy/lifebuoy.bin
+    -> lifebuoy.bin  md5 4e38cfbae96b6bdfd4ca4ddad06888dd  sha256 aa45c8d43ee11e12a4ab9f46bfb06d1baa6c687d61776ad9b06ea6b5664c0bc2
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/lifebuoy
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

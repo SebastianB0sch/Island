@@ -1,0 +1,25 @@
+asset_id: polyhaven_chinese_screen_panels
+title: Chinese Screen Panels (Poly Haven)
+category: interiors
+main_file: chinese_screen_panels_1k.gltf
+catalog_use: SM_Int_FoldingScreen
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/chinese_screen_panels
+description: Free 8K Chinese screen panels - ornate antique wooden room divider with painted peacocks, floral Asian motifs and vintage patina.
+polycount: 784
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/chinese_screen_panels, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/chinese_screen_panels/chinese_screen_panels_1k.gltf
+    -> chinese_screen_panels_1k.gltf  md5 757c0dbdcbb0eae54e6dfa8ea812caaa  sha256 80eea5b87ed1355f4628c791dc14d7c45ce77888ee9314aa97d92438d43b61a2
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chinese_screen_panels/chinese_screen_panels_arm_1k.jpg
+    -> textures/chinese_screen_panels_arm_1k.jpg  md5 2280069ab77f92ddab27cd93098d5253  sha256 fec093ccc5d21ed333c3ef489c0b71cc067359a6fbda62146fb39826425d5f93
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chinese_screen_panels/chinese_screen_panels_diff_1k.jpg
+    -> textures/chinese_screen_panels_diff_1k.jpg  md5 5aa7494de265d99a25e0c86daa2137a5  sha256 2240dd186b02a778871cc55348e392f05f9bc451882896ec7457895cf7cbcb9d
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/chinese_screen_panels/chinese_screen_panels.bin
+    -> chinese_screen_panels.bin  md5 f3ec2d7d0c14165e764e930112a31616  sha256 34a2f03180313ed4dbf6ac8dd6c0277b1b873929daf6bf8f06a209af6c9b2fc3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chinese_screen_panels/chinese_screen_panels_nor_gl_1k.jpg
+    -> textures/chinese_screen_panels_nor_gl_1k.jpg  md5 5aefa3e752c297f545890b23f1d3397d  sha256 e887b7e2ce2483fe835ddc8978dd42704505d110ec72e07c84bfef916205ef80
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/chinese_screen_panels
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

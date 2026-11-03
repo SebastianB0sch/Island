@@ -1,0 +1,25 @@
+asset_id: polyhaven_steel_frame_shelves_01
+title: Steel Frame Shelves 01 (Poly Haven)
+category: interiors
+main_file: steel_frame_shelves_01_1k.gltf
+catalog_use: SM_Int_SteelShelves
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/steel_frame_shelves_01
+description: Free 8K model of a modern industrial steel-frame shelf with five wooden planks, sturdy metal frame and clean lines, ideal for commercial or home interiors.
+polycount: 4348
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/steel_frame_shelves_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/steel_frame_shelves_01/steel_frame_shelves_01_1k.gltf
+    -> steel_frame_shelves_01_1k.gltf  md5 36c93aa3e2757523e3f6336d628033ff  sha256 4eff8994825d654e337f8dc425e959ed6add7f4773188c87ba64402d9edd9842
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/steel_frame_shelves_01/steel_frame_shelves_01_diff_1k.jpg
+    -> textures/steel_frame_shelves_01_diff_1k.jpg  md5 65520a03f0caf855bcb74a7842a0f937  sha256 85e205b334e15e05bec9b02be1258da6ab949ae908aa57e0bee6b94ba45b4415
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/steel_frame_shelves_01/steel_frame_shelves_01_nor_gl_1k.jpg
+    -> textures/steel_frame_shelves_01_nor_gl_1k.jpg  md5 a87fd3930fc88524d1f43c23e2725fc0  sha256 2a67ed7dd4f53c3e225396e6381992b768fe58b5261be703d540678e366e46ed
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/steel_frame_shelves_01/steel_frame_shelves_01_arm_1k.jpg
+    -> textures/steel_frame_shelves_01_arm_1k.jpg  md5 2adddc4cd4dc2be76c171791bb5338cd  sha256 858629eeaa8f68ddb4fc1a813afe6ed988ded3d6d49184ec45a14611760f0bb3
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/steel_frame_shelves_01/steel_frame_shelves_01.bin
+    -> steel_frame_shelves_01.bin  md5 5728ceb7ff0d9b0b5ba5e7ef970aced9  sha256 306d7e72d12a5d3047b8a189f8d0add51075eaf7f51f935286fda4e1c16dd066
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/steel_frame_shelves_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

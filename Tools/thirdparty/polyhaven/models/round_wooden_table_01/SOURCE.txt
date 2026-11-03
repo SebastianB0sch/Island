@@ -1,0 +1,25 @@
+asset_id: polyhaven_round_wooden_table_01
+title: Round Wooden Table 01 (Poly Haven)
+category: interiors
+main_file: round_wooden_table_01_1k.gltf
+catalog_use: SM_Int_RoundTable
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/round_wooden_table_01
+description: Free 8K model of a vintage round wooden table with a turned pedestal, splayed legs, dark polished finish and subtle surface wear.
+polycount: 8640
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/round_wooden_table_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/round_wooden_table_01/round_wooden_table_01_1k.gltf
+    -> round_wooden_table_01_1k.gltf  md5 9a2ad4a55a88ee7493a842026d944abc  sha256 dd09c1663b10d15a1fda12ba4f53743e8b8379b17254a78be22100d584738b48
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/round_wooden_table_01/round_wooden_table_01_nor_gl_1k.jpg
+    -> textures/round_wooden_table_01_nor_gl_1k.jpg  md5 3d0f124a495db5eeca16db53c188729d  sha256 5f80ed76e2eccaea8ab7c0cc9c85d29cc9b164aabfa2403304e1ec79dc47150c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/round_wooden_table_01/round_wooden_table_01_arm_1k.jpg
+    -> textures/round_wooden_table_01_arm_1k.jpg  md5 2dc3f86e564b407141c6c216760d8bb6  sha256 32b5056dc36e3081987c20cd03f15e73298266c1aff3e573b832e9dd0f8145b9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/round_wooden_table_01/round_wooden_table_01_diff_1k.jpg
+    -> textures/round_wooden_table_01_diff_1k.jpg  md5 4be9c5bc6b73f42541fb461c19169c56  sha256 d83659d8d584bbadf160760b825f990c6264901e33051643d19fcd389b0d19ae
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/round_wooden_table_01/round_wooden_table_01.bin
+    -> round_wooden_table_01.bin  md5 b907851fab9d7552cef8a12858acc869  sha256 c2635368bc86239a73fafdd8bce20b4261155ce7241e95e809a753ed4693f157
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/round_wooden_table_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

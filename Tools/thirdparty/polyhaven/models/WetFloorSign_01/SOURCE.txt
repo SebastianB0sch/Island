@@ -1,0 +1,25 @@
+asset_id: polyhaven_WetFloorSign_01
+title: Wet Floor Sign 01 (Poly Haven)
+category: interiors
+main_file: WetFloorSign_01_1k.gltf
+catalog_use: SM_Int_WetFloor
+author: Fran Calvente
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/WetFloorSign_01
+description: Free 4K model of a yellow plastic A-frame wet floor sign with molded handle, bold "CAUTION / WET FLOOR" icon and worn scuffs and grime for realistic detail.
+polycount: 228
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/WetFloorSign_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/WetFloorSign_01/WetFloorSign_01_1k.gltf
+    -> WetFloorSign_01_1k.gltf  md5 d69f7dfcdf087109e5b6269bbd4b2277  sha256 ba5b10d2de7bb60b77dc3e44a96446181a078e35597947a490a4b6de906059e4
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/WetFloorSign_01/WetFloorSign_01_arm_1k.jpg
+    -> textures/WetFloorSign_01_arm_1k.jpg  md5 a77d2ff7c1ecf95da1830d8ec94efebb  sha256 6cd1d7c6648c36d2d66a7ddfc620ea78374ac770a5726f879b6914366e133e1a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/WetFloorSign_01/WetFloorSign_01_nor_gl_1k.jpg
+    -> textures/WetFloorSign_01_nor_gl_1k.jpg  md5 ee729a65845b94147710d554ffa46b5f  sha256 62269358f3b30569783c1872613d1d70d5eda36babe5b5f04fcfd5e92de1af62
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/WetFloorSign_01/WetFloorSign_01_diff_1k.jpg
+    -> textures/WetFloorSign_01_diff_1k.jpg  md5 831604f9f4bacc1308c4cbe4e05e575d  sha256 01e18486a858defc0f44a73ec5037c4bee770bae88e7fed5beb6877df120fa90
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/WetFloorSign_01/WetFloorSign_01.bin
+    -> WetFloorSign_01.bin  md5 2a027a15ce3f42cbc2e9392361fd180b  sha256 d23cdec8975ac452d64ae97b08f1eecd22e38f052bd5d588d352dbc0f0373af0
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/WetFloorSign_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

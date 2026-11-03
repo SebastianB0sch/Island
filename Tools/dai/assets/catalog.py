@@ -59,3 +59,8 @@ CATALOG = {
     "SM_Planter":         "Square stone planter 1.5 m with shrub",
     "SM_DuelDummy":       "Duel practice stand (duel disk on a post) ~1.4 m",
 }
+
+# interior furniture + decor (Poly Haven CC0, procedural stand-ins in furniture.py)
+from .furniture import CATALOG as _INTERIOR  # noqa: E402
+
+CATALOG.update(_INTERIOR)

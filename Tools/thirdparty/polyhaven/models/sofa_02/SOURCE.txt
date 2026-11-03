@@ -1,0 +1,25 @@
+asset_id: polyhaven_sofa_02
+title: Sofa 02 (Poly Haven)
+category: interiors
+main_file: sofa_02_1k.gltf
+catalog_use: SM_Int_SofaB
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/sofa_02
+description: Free 4K model of a tufted leather sofa with carved wood frame - elegant vintage couch/prop with realistic leather and fabric cushions.
+polycount: 2728
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/sofa_02, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/sofa_02/sofa_02_1k.gltf
+    -> sofa_02_1k.gltf  md5 ec2590dc8433a523d0fe9e507766c16f  sha256 5df114209f9b956ccd4831eaeef469a81339ab371d0056eb6d5d29eee08eb431
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/sofa_02/sofa_02_diff_1k.jpg
+    -> textures/sofa_02_diff_1k.jpg  md5 0452c7d8dd3ef414d5ed3055085028a1  sha256 4ff65c782578b52eee89cb96cc4e258ce1b6848e1a7655019af1f7207c749840
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/sofa_02/sofa_02_arm_1k.jpg
+    -> textures/sofa_02_arm_1k.jpg  md5 78799d978a1117ba83dbffed9af0fa33  sha256 f2813f32cd9ec42a9080590d0953ac9e272d9baa0b22fdb5910bf325157393c6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/sofa_02/sofa_02_nor_gl_1k.jpg
+    -> textures/sofa_02_nor_gl_1k.jpg  md5 968528a369bced172d34275dba5aebf1  sha256 c97a359703a8ce1cee62cbd9dc4013b611d821afb7769810983b464ebc5d0cfe
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/sofa_02/sofa_02.bin
+    -> sofa_02.bin  md5 024d6f57a7c2ee7915430cd6e1c2651e  sha256 cb337e03211be0309afa1ded2b6cbb2d402c0f794aaf8828fba559d27a42d3f5
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/sofa_02
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

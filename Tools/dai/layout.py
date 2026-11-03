@@ -71,6 +71,8 @@ class Layout:
         self.audio = []
         self.npcs = []
         self.specials = []
+        self.doors = []
+        self.door_leaves = {}    # mesh name -> (style, leaf width, height)
         self.clearings = []      # (x, y, r) world metres
         self.footprints = []     # (key, [(x,y)...]) for the minimap
         self.manifest = []
@@ -141,6 +143,15 @@ class Layout:
                         self.footprints.append((key, [xf.point((c[0], c[1], 0))[:2] for c in corners]))
             self.place_sockets(aset, xf, key)
             self.log(f"  {key:14s} {n_mesh} meshes, {len(aset.sockets)} sockets")
+        if export:
+            self.export_door_leaves()
+
+    def export_door_leaves(self):
+        from .assets import doors as DR
+        for name, (style, lw, h) in sorted(self.door_leaves.items()):
+            mb = DR.build_leaf(style, lw, h)
+            self.export_mesh(mb, name[3:], "Doors", "complex")
+        self.log(f"  doors: {len(self.doors)} doorways, {len(self.door_leaves)} leaf meshes")
 
     def place_sockets(self, aset, xf, key):
         for s in aset.sockets:
@@ -189,6 +200,15 @@ class Layout:
                                           sway=pr.get("sway", 0.4)))
             elif t == "camera":
                 continue
+            elif t == "door":
+                from .assets import doors as DR
+                lw = DR.leaf_width(pr["width"], pr["double"])
+                mesh = DR.leaf_name(pr["style"], lw, pr["height"])
+                self.door_leaves[mesh] = (pr["style"], lw, pr["height"])
+                # UE frame: local +Y is outside (Blender -Y); SwingSide +1 = towards outside
+                self.doors.append(dict(mesh=mesh, loc=ue_loc(p), yaw=ue_yaw(yaw), width=round(pr["width"] * 100.0, 1),
+                                       height=round(pr["height"] * 100.0, 1), double=pr["double"], mode=pr["mode"],
+                                       swing={"auto": 0, "out": 1, "in": -1}[pr["swing"]], group=key))
             else:
                 extra = {}
                 for k, v in pr.items():
@@ -558,6 +578,8 @@ class Layout:
                  "SM_FlowerBush_White", "SM_Bush_A", "SM_Bush_B", "SM_Pebbles_A"}
         inst = {}
         for k, v in sorted(self.instances.items()):
+            if k.startswith("SM_Int_"):      # furniture is only ever seen from inside or through a window
+                cull.setdefault(k, [6000, 9000])
             inst[k] = dict(folder="Props", collision=k not in nocol, cull=cull.get(k, [0, 0]),
                            shadow=k not in ("SM_GrassClump_A", "SM_Fern_A"), items=v)
         start = [z for z in self.zones() if z["id"] == "harbor"][0]["spawn"]
@@ -575,7 +597,7 @@ class Layout:
             player_start=start,
             static=self.static, floating=self.floating, instances=inst, lights=self.lights, texts=self.texts,
             interacts=self.interacts, emitters=self.emitters, audio=self.audio, npcs=self.npcs,
-            specials=self.specials, zones=self.zones(),
+            specials=self.specials, doors=self.doors, zones=self.zones(),
         )
         with open(os.path.join(C.OUT_DATA, "layout.json"), "w") as fp:
             json.dump(layout, fp, separators=(",", ":"))
@@ -587,7 +609,7 @@ class Layout:
         self.log(f"  layout.json: {len(self.static)} static, {len(self.floating)} floating, {n_inst} instances, "
                  f"{len(self.lights)} lights, {len(self.texts)} texts, {len(self.interacts)} interactables, "
                  f"{len(self.emitters)} emitters, {len(self.audio)} sounds, {len(self.npcs)} npcs, "
-                 f"{len(self.specials)} specials")
+                 f"{len(self.specials)} specials, {len(self.doors)} doors")
 
 
 # --------------------------------------------------------------------------- shared asset exports

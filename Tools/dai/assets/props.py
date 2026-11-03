@@ -648,6 +648,9 @@ def _registry():
         "SM_Stump_A": stump,
         "SM_Pebbles_A": pebbles,
     }
+    from . import furniture
+    for name, fn in furniture.BUILDERS.items():
+        R[name] = (lambda fn=fn, name=name: (lambda mb: (mb, furniture.collision(name, mb)))(fn()))
     missing = set(CATALOG) - set(R)
     assert not missing, f"catalog entries without geometry: {missing}"
     return R
@@ -661,6 +664,10 @@ PROP_LIGHTS = {
     "SM_StoneLantern": dict(offset=(0, 0, 1.08), color=(1.0, 0.7, 0.4), intensity=600.0, radius=6.0, night_only=True),
     "SM_Buoy": dict(offset=(0, 0, 1.2), color=(1.0, 0.3, 0.2), intensity=300.0, radius=8.0, night_only=True),
 }
+
+from .furniture import LIGHTS as _INTERIOR_LIGHTS  # noqa: E402
+
+PROP_LIGHTS.update(_INTERIOR_LIGHTS)
 
 # Props that bob on water in UE
 FLOATING_PROPS = {"SM_Rowboat", "SM_Buoy", "SM_FishingBoat"}

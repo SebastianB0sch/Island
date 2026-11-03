@@ -19,6 +19,7 @@ An AssetSet contains
       audio     sound = A_Ocean | A_Wind | A_Forest | A_Volcano | A_Waterfall | A_HotSpring | A_Crowd, radius
       npc       dorm = slifer | ra | obelisk | white, wander radius
       spawn     player start candidates
+      door      automatic door in a doorway (style, width, height, double, mode, swing) -> ADADoor
       lighthouse_beam / floating (boats bob) / waterfall etc. special kinds
 """
 
@@ -71,6 +72,14 @@ class AssetSet:
 
     def npc(self, pos, yaw=0.0, dorm="slifer", wander=8.0):
         self.socket("npc", pos, yaw, dorm=dorm, wander=wander)
+
+    def door(self, pos, yaw=0.0, width=0.9, height=2.1, style="wood", double=False, mode=None, swing="auto"):
+        """Automatic door (see assets/doors.py). pos = bottom centre of the opening on the wall's middle
+        plane, yaw = wall frame with local -Y outside. The leaves are separate meshes (Meshes/Doors)."""
+        from .doors import default_mode
+        assert swing in ("auto", "in", "out"), swing
+        self.socket("door", pos, yaw, width=float(width), height=float(height), style=style, double=bool(double),
+                    mode=mode or default_mode(style), swing=swing)
 
     def special(self, kind, pos, yaw=0.0, **props):
         self.socket(kind, pos, yaw, **props)

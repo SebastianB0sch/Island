@@ -1,0 +1,25 @@
+asset_id: polyhaven_old_bed_frame
+title: Old Bed Frame (Poly Haven)
+category: interiors
+main_file: old_bed_frame_1k.gltf
+catalog_use: SM_Int_OldBed
+author: Luca B
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/old_bed_frame
+description: Free 8K old metal bed frame with tubular rails, wire mesh base, chipped white paint and rust stains. Sturdy single-size vintage look with worn details.
+polycount: 49990
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/old_bed_frame, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/old_bed_frame/old_bed_frame_1k.gltf
+    -> old_bed_frame_1k.gltf  md5 c89bd90f816adc4a0ef7af72d868be51  sha256 661055e76d292ae5ec812f05077a6870414527c2d63947574ea8fc739e16de08
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/old_bed_frame/old_bed_frame_nor_gl_1k.jpg
+    -> textures/old_bed_frame_nor_gl_1k.jpg  md5 c202f1b179d7a418ccca622582734f67  sha256 4c3d5132ae537a70d30216bb6055273fd00735e13b6c9d5064e0e545227ecba1
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/old_bed_frame/old_bed_frame_diff_1k.jpg
+    -> textures/old_bed_frame_diff_1k.jpg  md5 f8ce1aa5413c1473f3bfa5ba95ea72ee  sha256 eb9929f07eb43f530562a6ba05d0653f937474ab76e0e5dccea40ec64744a6e0
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/old_bed_frame/old_bed_frame_arm_1k.jpg
+    -> textures/old_bed_frame_arm_1k.jpg  md5 7da561d54a3373144e1744e83c901181  sha256 c1f265ff346ede024bd869f7aaab9421212ebc9bedd4e0478cf0c2bec9dd315e
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/old_bed_frame/old_bed_frame.bin
+    -> old_bed_frame.bin  md5 f385c21ecbcb1da63cfe79cd22124c59  sha256 1dcb3b5d335bd55d9f5a494adb284260042fc663e5c21b9b581a8b301dfffdd3
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/old_bed_frame
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

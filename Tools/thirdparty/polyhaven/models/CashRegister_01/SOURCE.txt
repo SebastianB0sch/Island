@@ -1,0 +1,31 @@
+asset_id: polyhaven_CashRegister_01
+title: Cash Register 01 (Poly Haven)
+category: interiors
+main_file: CashRegister_01_1k.gltf
+catalog_use: SM_Int_Register
+author: Joe Seabuhr
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/CashRegister_01
+description: Free 8K vintage cash register model with worn cream finish, metal base and open coin drawer, featuring detailed keys, levers, decals, scratches & grime.
+polycount: 9927
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/CashRegister_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/CashRegister_01/CashRegister_01_1k.gltf
+    -> CashRegister_01_1k.gltf  md5 8fdef843898a54d6638f140b9737873b  sha256 323992ca49ac5527e62029ec8e554d2bd74b618784209b5abdf2abf50b941559
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_arm_1k.jpg
+    -> textures/CashRegister_01_arm_1k.jpg  md5 8f3266ec573baa42e166bf8f21062539  sha256 b2d66b5fcb70ebba6803265936302889fe9d952dca904fb4a8dcd8d884af6d53
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_nor_gl_1k.jpg
+    -> textures/CashRegister_01_nor_gl_1k.jpg  md5 c45f9c81b08964a27f62e20b142a4fd9  sha256 80e75c35d47e2eb4910932866e66e921d38cd8fc88753eaca4b70f86252c8638
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_diff_1k.jpg
+    -> textures/CashRegister_01_diff_1k.jpg  md5 bfa598c754195bfd8e639f169c58a379  sha256 0f048e68054f480d773a6d997a5a853610fde80ecb5bae1c3994ed434c02ce84
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_glass_arm_1k.jpg
+    -> textures/CashRegister_01_glass_arm_1k.jpg  md5 daf5fe84e6ef58508d6527088248609c  sha256 bba4ed60cc9cf3df8862fc4ce6ed18d911013545b0928f3f8c20319819c14497
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/CashRegister_01/CashRegister_01.bin
+    -> CashRegister_01.bin  md5 49c3cfeaf3b53d89cadab7875ffbd28a  sha256 51cfd1329ae1700faaf4d1ce6116f73e795b6a31af7e86fbbb1047b57aa0fe3f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_glass_nor_gl_1k.jpg
+    -> textures/CashRegister_01_glass_nor_gl_1k.jpg  md5 6f835dd387298bbd5094706384e88a9e  sha256 312e24f0f5d025a82bfb2fbc989ac239099ff8b4c46d3cd0125f07da18bd228a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/CashRegister_01/CashRegister_01_glass_diff_1k.jpg
+    -> textures/CashRegister_01_glass_diff_1k.jpg  md5 1bf914670750e0a77cb21a84e0109807  sha256 25607764f4956a2c59657b0eb4384a1623040ff7fa55acf18d69b2d6facfc1ec
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/CashRegister_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

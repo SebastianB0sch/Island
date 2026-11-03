@@ -1,6 +1,6 @@
 // Duel Academy Island - small data-driven world actors spawned by the editor build script:
 // instanced scatter, floating (bobbing) meshes, smoke/steam/mist emitters, lighthouse beam,
-// ambient sound emitters.
+// ambient sound emitters, automatic doors.
 
 #pragma once
 
@@ -201,4 +201,99 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
 	TObjectPtr<UAudioComponent> Audio;
+};
+
+UENUM(BlueprintType)
+enum class EDADoorMode : uint8
+{
+	/** Hinged leaves that swing open (away from whoever approaches). */
+	Swing,
+	/** Leaves that slide sideways into the wall (shoji, automatic glass doors). */
+	Slide
+};
+
+/**
+ * Automatic door placed in every doorway by the build script. One or two leaves (the mesh's pivot is the
+ * hinge, the leaf extends along +X); opens when a pawn (player or student) comes close and closes again
+ * behind them. The leaves never block pawns, so nobody gets stuck on a door that is still opening.
+ * Actor frame: origin = bottom centre of the doorway, local +Y = outside.
+ */
+UCLASS()
+class DUELACADEMYISLAND_API ADADoor : public AActor
+{
+	GENERATED_BODY()
+
+public:
+	ADADoor();
+
+	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
+
+	/** Re-applies mesh / width / leaf layout after the properties were changed from code. */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
+	void RefreshDoor();
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy")
+	float GetOpenAlpha() const { return Alpha; }
+
+	/** Mesh of ONE leaf: pivot at the hinge, leaf along +X, LeafWidth wide. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	TObjectPtr<UStaticMesh> LeafMesh;
+
+	/** Clear width of the doorway (cm). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float Width = 90.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float Height = 210.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	bool bDouble = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	EDADoorMode Mode = EDADoorMode::Swing;
+
+	/** 0 = open away from the pawn, +1 = always towards outside (+Y), -1 = always towards inside. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	int32 SwingSide = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float OpenAngle = 92.f;
+
+	/** Seconds for a full open / close. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float OpenTime = 0.55f;
+
+	/** A pawn closer than this (cm, from the doorway centre) opens the door. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float TriggerRadius = 230.f;
+
+	/** Doors this far from the player (cm) stop checking for students while closed. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float ActiveDistance = 4500.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
+	TObjectPtr<USceneComponent> Root;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
+	TObjectPtr<USceneComponent> PivotA;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
+	TObjectPtr<USceneComponent> PivotB;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
+	TObjectPtr<UStaticMeshComponent> LeafA;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
+	TObjectPtr<UStaticMeshComponent> LeafB;
+
+private:
+	void ApplyPose();
+	bool FindPawn(FVector& OutLocalPos) const;
+
+	float Alpha = 0.f;
+	float Target = 0.f;
+	float Side = 1.f;
+	float CheckTimer = 0.f;
 };

@@ -1,0 +1,25 @@
+asset_id: polyhaven_Rockingchair_01
+title: Rockingchair 01 (Poly Haven)
+category: interiors
+main_file: Rockingchair_01_1k.gltf
+catalog_use: SM_Int_RockingChair
+author: Jorge Camacho
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/Rockingchair_01
+description: Free 4K model, solid wood vintage rocking chair with slatted back, curved legs, armrests, turned spindles and an antique worn finish.
+polycount: 11866
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/Rockingchair_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/Rockingchair_01/Rockingchair_01_1k.gltf
+    -> Rockingchair_01_1k.gltf  md5 be16c0788ccab5a881425e8b2857439d  sha256 eb8c3a8f9c2c1bd6ca6d76804b8361dd0fd779498249d554536e5683e08f565b
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Rockingchair_01/Rockingchair_01_diff_1k.jpg
+    -> textures/Rockingchair_01_diff_1k.jpg  md5 39a5b09e0349f2dc6892d4c827c1cc45  sha256 d42426fe153296909d45abcbc4e91a3410b90d5a9cd58f01b1fa9af93a712ef0
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Rockingchair_01/Rockingchair_01_nor_gl_1k.jpg
+    -> textures/Rockingchair_01_nor_gl_1k.jpg  md5 35bb8e3e3395cd6e189110b1c04caf59  sha256 225008fcb16b3ee3b16372b4085d60e20dd660ab30b6a489b77b7e25a874b391
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Rockingchair_01/Rockingchair_01_arm_1k.jpg
+    -> textures/Rockingchair_01_arm_1k.jpg  md5 a3c5ee77580f0d833d643394baa00716  sha256 21c6a462d6865a6e839b7dfe966f845df885a6dfe3ad64b3a87438db1598cf5d
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/Rockingchair_01/Rockingchair_01.bin
+    -> Rockingchair_01.bin  md5 cd7cd396a8acd87802321d51cbe79725  sha256 6c7c3c32a033a3697d9adf3e8c9d966265cf11b519717d92c1eb5a9cffe736e2
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/Rockingchair_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

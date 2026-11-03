@@ -113,6 +113,7 @@ def build_island(import_assets=True, interactive=True):
         placer.audio()
         placer.npcs()
         placer.specials()
+        placer.doors()
         placer.player_start()
         level.set_world_settings()
         slow.enter_progress_frame(2, "Saving")

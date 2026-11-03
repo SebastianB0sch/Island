@@ -33,7 +33,7 @@ def socket_markers(aset):
     for s in aset.sockets:
         mat = colours.get(s["type"], "M_DuelFieldGlow")
         x, y, z = s["pos"]
-        if s["type"] == "prop":
+        if s["type"] in ("prop", "door", "camera"):
             continue
         mb.box((x, y, z), (0.4, 0.4, 0.4), mat)
     return mb
@@ -47,6 +47,8 @@ def main():
     ap.add_argument("--res", default="1100x800")
     ap.add_argument("--views", default="front,back,top")
     ap.add_argument("--no-props", action="store_true")
+    ap.add_argument("--door-angle", type=float, default=35.0, help="door leaves posed this far open (deg)")
+    ap.add_argument("--camera", default=None, help="only render interior camera sockets whose label contains this")
     args = ap.parse_args()
     res = tuple(int(v) for v in args.res.split("x"))
     out_dir = os.path.join(C.DOCS_DIR, "previews")
@@ -79,6 +81,8 @@ def main():
                 objs += P.instance_props_for_preview(aset)
             except Exception as e:  # props module may not exist yet
                 print("   (props not instanced:", e, ")")
+        from dai.assets import doors as DR
+        objs += DR.preview_objects(aset, open_deg=args.door_angle)
         mk = socket_markers(aset)
         if mk.verts:
             objs.append(mk.build())
@@ -103,10 +107,13 @@ def main():
             # interior views come from sockets: aset.special("camera", pos, target=(x, y, z), lens=18)
             cams = [s for s in aset.sockets if s["type"] == "camera"]
             for i, s in enumerate(cams):
+                if args.camera and args.camera not in str(s["props"].get("label", "")):
+                    continue
                 cam = blend.camera(f"InCam{i}", Vector(s["pos"]), Vector(s["props"]["target"]),
                                    lens=s["props"].get("lens", 18.0))
                 blend.setup_render(res, args.samples)
-                blend.render(cam, os.path.join(out_dir, f"{key}_inside{i}.png"))
+                label = s["props"].get("label")
+                blend.render(cam, os.path.join(out_dir, f"{key}_inside_{label}.png" if label else f"{key}_inside{i}.png"))
         print(f"   previews -> {out_dir}/{key}_*.png")
 
 

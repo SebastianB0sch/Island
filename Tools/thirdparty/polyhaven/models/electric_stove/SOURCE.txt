@@ -1,0 +1,25 @@
+asset_id: polyhaven_electric_stove
+title: Electric Stove (Poly Haven)
+category: interiors
+main_file: electric_stove_1k.gltf
+catalog_use: SM_Int_Stove
+author: Kuutti Siitonen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/electric_stove
+description: Free 8K model: compact white electric stove with four worn hotplates, front control knobs, oven window and subtle rust/weathering; rigged.
+polycount: 13914
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/electric_stove, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/electric_stove/electric_stove_1k.gltf
+    -> electric_stove_1k.gltf  md5 1ec96abe416e022f792ace742d33947a  sha256 3be4d1b9ec0ead3c41ea8ef09d61e3b7611b69cbeea26a40ea87355acb0b3c55
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/electric_stove/electric_stove.bin
+    -> electric_stove.bin  md5 9846b43c4af868f79a95635fb9bd354d  sha256 66f210539346b8f339b7519664ad6fa9b74d0932d8445b6b7e40eabcb40cd4f9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/electric_stove/electric_stove_nor_gl_1k.jpg
+    -> textures/electric_stove_nor_gl_1k.jpg  md5 611bcfac2fc0eb84c8727bee1d2bfc15  sha256 66a2f47cd0f218dc4650927e11c169b438251521b4efc556f031aa3a3b57c4f6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/electric_stove/electric_stove_arm_1k.jpg
+    -> textures/electric_stove_arm_1k.jpg  md5 f6dd650e669f6cb8f767265a3cf80f95  sha256 8ca9f3f56a8e4ba6f67b6748af09aed2b02bf76c451a71ee962374e52e0b4aa2
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/electric_stove/electric_stove_diff_1k.jpg
+    -> textures/electric_stove_diff_1k.jpg  md5 dd6ba5a62587e4172853321ec58388fe  sha256 61bc269714bf37f2bf057c113c17664e224c998c78ea50f1ed85b5d2e6f2e938
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/electric_stove
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

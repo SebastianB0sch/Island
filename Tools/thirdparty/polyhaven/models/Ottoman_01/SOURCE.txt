@@ -1,0 +1,25 @@
+asset_id: polyhaven_Ottoman_01
+title: Ottoman 01 (Poly Haven)
+category: interiors
+main_file: Ottoman_01_1k.gltf
+catalog_use: SM_Int_Ottoman
+author: Caspian Fortune
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/Ottoman_01
+description: Free 4K model: dark brown leather ottoman with stacked, cushioned tiers, visible stitching, subtle creases and short black feet.
+polycount: 4240
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/Ottoman_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/Ottoman_01/Ottoman_01_1k.gltf
+    -> Ottoman_01_1k.gltf  md5 48acca9b9feae8092e95e291b9e8107b  sha256 cb515553924d7ca85b94807aba7d7d5110fafa0fedf7132573b105ac8b900584
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Ottoman_01/Ottoman_01_arm_1k.jpg
+    -> textures/Ottoman_01_arm_1k.jpg  md5 79da86b6af7c611f753821fc35bafa54  sha256 e894458d15a90e22e4290198929c8fb76e872526fe1f0bdf6d395a91d438bc7c
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/Ottoman_01/Ottoman_01.bin
+    -> Ottoman_01.bin  md5 7acac7b0744e80e7988c531677d6d57b  sha256 ca62a1ee87a30c69142ff15f1bca216842448f57d5b3d64de1d627014b347117
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Ottoman_01/Ottoman_01_diff_1k.jpg
+    -> textures/Ottoman_01_diff_1k.jpg  md5 20121319f4f9346481bce2abfcb1d2b0  sha256 03f05a4a2e54ea1e6829a7d1b43dcfad5d2873078bd72534dc46e692c01f97a5
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Ottoman_01/Ottoman_01_nor_gl_1k.jpg
+    -> textures/Ottoman_01_nor_gl_1k.jpg  md5 1e9fd1ac43f716b9e6e97a656517a275  sha256 3220215de4173c81c4128619a0000ce5368a3d125409f5e7d64e1269e258d923
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/Ottoman_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

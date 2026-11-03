@@ -1,0 +1,25 @@
+asset_id: polyhaven_marble_bust_01
+title: Marble Bust 01 (Poly Haven)
+category: interiors
+main_file: marble_bust_01_1k.gltf
+catalog_use: SM_Int_Bust
+author: Rico Cilliers
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/marble_bust_01
+description: Free 8K model: a marble Renaissance-style male bust with finely carved features, subtle surface veining, light weathering and a round plinth.
+polycount: 17456
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/marble_bust_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/marble_bust_01/marble_bust_01_1k.gltf
+    -> marble_bust_01_1k.gltf  md5 599d6dd71c2dcdffa064b1c1d85882f4  sha256 b6f192fc01be4349470b66f6f6948bd37620267bdbc86f4568e4d078f97ff09b
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/marble_bust_01/marble_bust_01.bin
+    -> marble_bust_01.bin  md5 1c62c1189a0e8985618c1662e1bd25a3  sha256 0bb757c1bd00bfe42005c84e7f76df98ce04a532e595a2ddda8a0335cd959e33
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/marble_bust_01/marble_bust_01_nor_gl_1k.jpg
+    -> textures/marble_bust_01_nor_gl_1k.jpg  md5 134149a7e8f142fcb605f0bde52b3ff6  sha256 3d355904cd54c2de90d5d4310b80d43816fa2dd509f0a3445d654eab8e237c5f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/marble_bust_01/marble_bust_01_diff_1k.jpg
+    -> textures/marble_bust_01_diff_1k.jpg  md5 aede40cc2b092d91a5f72598c911da4f  sha256 cbb7dccdc62d7eaa240eef7b4956969bf6e73c7338b64f1378629838ea22383c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/marble_bust_01/marble_bust_01_rough_1k.jpg
+    -> textures/marble_bust_01_rough_1k.jpg  md5 9fdff7b2b17d12fcc478de3021f561dd  sha256 1c4502352dc936dd1f1c1a81b418706df1ce0445949874215015325f9b8921fb
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/marble_bust_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

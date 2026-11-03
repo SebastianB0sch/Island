@@ -1,0 +1,25 @@
+asset_id: polyhaven_painted_wooden_chair_01
+title: Painted Wooden Chair 01 (Poly Haven)
+category: interiors
+main_file: painted_wooden_chair_01_1k.gltf
+catalog_use: SM_Int_WoodChair
+author: Kuutti Siitonen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/painted_wooden_chair_01
+description: Free 8K painted wooden chair, distressed white farmhouse piece with slatted seat, decorative back splat, square legs and simple stretchers.
+polycount: 724
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/painted_wooden_chair_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/painted_wooden_chair_01/painted_wooden_chair_01_1k.gltf
+    -> painted_wooden_chair_01_1k.gltf  md5 28e739db9799cdadf820ead2b486d463  sha256 34f55ebe1851b89c045dc62d4461c848de3b93c0668e752a2b5f6cbed2d91a5e
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_chair_01/painted_wooden_chair_01_diff_1k.jpg
+    -> textures/painted_wooden_chair_01_diff_1k.jpg  md5 94c34f4a211eec5bd30017564e09be4c  sha256 de67d1f8a0318616a7ee769cbe5c513301c2b25056542d011bb4359498f9e25d
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_chair_01/painted_wooden_chair_01_nor_gl_1k.jpg
+    -> textures/painted_wooden_chair_01_nor_gl_1k.jpg  md5 5150e3034d2f69b0d7f0576955e51e3e  sha256 27301c3ac6a7daf9e0ba418ec85feaa44cc898e61d048211bca57133f22e1807
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/painted_wooden_chair_01/painted_wooden_chair_01.bin
+    -> painted_wooden_chair_01.bin  md5 7fd011acaef4730770108a7932191768  sha256 eaf952048db1e770c45898049b8abe28deb83d3dbbaad81d5e7e43e22a322295
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_chair_01/painted_wooden_chair_01_arm_1k.jpg
+    -> textures/painted_wooden_chair_01_arm_1k.jpg  md5 2ee02ed8f2dda4303428eaf6443f928a  sha256 9d2de0ea0d630e8e5af05424b1f41b1ae4a80465d27a78eb471cd7f8556db84e
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/painted_wooden_chair_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

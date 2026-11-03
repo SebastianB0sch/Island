@@ -1,0 +1,25 @@
+asset_id: polyhaven_painted_wooden_cabinet
+title: Painted Wooden Cabinet (Poly Haven)
+category: interiors
+main_file: painted_wooden_cabinet_1k.gltf
+catalog_use: SM_Int_Cabinet
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/painted_wooden_cabinet
+description: Free 4K model: a weathered painted wooden cabinet with chipped farmhouse paint, colonial details, two drawers and double-door storage - rustic, antique character.
+polycount: 2227
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/painted_wooden_cabinet, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/painted_wooden_cabinet/painted_wooden_cabinet_1k.gltf
+    -> painted_wooden_cabinet_1k.gltf  md5 43f7a37a61773dadbafd46ab51b97c9e  sha256 ce04543cdb10e05fe9c2cc08e9c118b16c1c717a07bcbfac9b99859465c8d1ed
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_cabinet/painted_wooden_cabinet_diff_1k.jpg
+    -> textures/painted_wooden_cabinet_diff_1k.jpg  md5 cab7d6088249cb2687e0c79b2cdf62c5  sha256 2dbed9f9ec8e49fc2e87de8cd86e2029a80e9001b5102b4e47c7dfa913f34d89
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_cabinet/painted_wooden_cabinet_arm_1k.jpg
+    -> textures/painted_wooden_cabinet_arm_1k.jpg  md5 616ce8f1c545087c463b79e7bea952a6  sha256 34e0bcb00a62704d85161d41e844e798d4f894e416e7769079d50a21d561d171
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_cabinet/painted_wooden_cabinet_nor_gl_1k.jpg
+    -> textures/painted_wooden_cabinet_nor_gl_1k.jpg  md5 e39fdc39e2fce036fd7a904ea3862671  sha256 e94edf68faeaf68016c28da9b9f299bb38c57463acd94130ecf98dcaef790016
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/painted_wooden_cabinet/painted_wooden_cabinet.bin
+    -> painted_wooden_cabinet.bin  md5 c86f9e483a0da1d5a9f68b08099a4166  sha256 1023d773d84c42f2709ec297247d90b0e2833e37241fbe852e2f33b41ae10cda
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/painted_wooden_cabinet
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

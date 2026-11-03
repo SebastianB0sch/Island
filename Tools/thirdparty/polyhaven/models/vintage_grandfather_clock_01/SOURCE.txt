@@ -1,0 +1,25 @@
+asset_id: polyhaven_vintage_grandfather_clock_01
+title: Vintage Grandfather Clock 01 (Poly Haven)
+category: interiors
+main_file: vintage_grandfather_clock_01_1k.gltf
+catalog_use: SM_Int_GrandfatherClock
+author: Yann Kervran, James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/vintage_grandfather_clock_01
+description: Free 8K model - ornate vintage wooden grandfather clock with antique brass dial and moonphase, fully rigged for animation; ideal for decorative or period sets.
+polycount: 12604
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/vintage_grandfather_clock_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/vintage_grandfather_clock_01/vintage_grandfather_clock_01_1k.gltf
+    -> vintage_grandfather_clock_01_1k.gltf  md5 4d2f771bb5d436d90a51a3898fca91d7  sha256 5d3aa1d5daabe830aed603e448a8f14f3993ec8a1116e083c181420a4fe1573a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_grandfather_clock_01/vintage_grandfather_clock_01_nor_gl_1k.jpg
+    -> textures/vintage_grandfather_clock_01_nor_gl_1k.jpg  md5 59d8c7699450fe8fb995defdda657911  sha256 a41aff853e19918f81c6b3d2a4b14034ca002b136779f8e5daa10d33cbdbecf7
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_grandfather_clock_01/vintage_grandfather_clock_01_diff_1k.jpg
+    -> textures/vintage_grandfather_clock_01_diff_1k.jpg  md5 8cbc3cc8f787da9ab3f251ee2be1ad25  sha256 2da73ab925dd5c18aa4c428f34519919a115dc45c37cf27976a3a15323ef7d9f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_grandfather_clock_01/vintage_grandfather_clock_01_arm_1k.jpg
+    -> textures/vintage_grandfather_clock_01_arm_1k.jpg  md5 3ec5c1e3facd0cdad5fb8879eabd26b3  sha256 e0425b70773bc624f296f3b83f3a8001ac05f3d2cbcd1b1e1bd79dd1ca4b94de
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/vintage_grandfather_clock_01/vintage_grandfather_clock_01.bin
+    -> vintage_grandfather_clock_01.bin  md5 4f5932b271405233d3b7ce175d0030e1  sha256 a6369fa664dd13d281e87c63f0ba31a0350291c93322fd10ec63f2ba4d252fd3
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/vintage_grandfather_clock_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

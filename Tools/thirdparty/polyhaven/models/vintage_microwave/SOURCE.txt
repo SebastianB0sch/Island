@@ -1,0 +1,25 @@
+asset_id: polyhaven_vintage_microwave
+title: Vintage Microwave (Poly Haven)
+category: interiors
+main_file: vintage_microwave_1k.gltf
+catalog_use: SM_Int_Microwave
+author: Adam Nekola
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/vintage_microwave
+description: Free 8K model of a vintage microwave with analog controls, boxy form, subtle wear, crisp details, clean geometry, and realistic materials.
+polycount: 8120
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/vintage_microwave, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/vintage_microwave/vintage_microwave_1k.gltf
+    -> vintage_microwave_1k.gltf  md5 2af73fa4765d4371b70c2de4674d7d4b  sha256 d44f101ca3826e4ae4976bc4de96f31f15ea00f95775e41dc1eaf54aa598c8e0
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_microwave/vintage_microwave_nor_gl_1k.jpg
+    -> textures/vintage_microwave_nor_gl_1k.jpg  md5 cec11ae69aabd698c38169f6bf83e72f  sha256 9fd35346f2a6afa85d07c0904a3a8337dababb7347ee3c207e9243303e437b8c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_microwave/vintage_microwave_diff_1k.jpg
+    -> textures/vintage_microwave_diff_1k.jpg  md5 acf65eaa51d62786edb4f06a38d5febd  sha256 09a23468f70a41b16a3ae97b53940ff4178f5466a6e3a4ad4dfea416ed6691de
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_microwave/vintage_microwave_arm_1k.jpg
+    -> textures/vintage_microwave_arm_1k.jpg  md5 b4bf762c62df47f152013165eabeae0a  sha256 740abbcdda87c94e5bc2f40e3c9e8f7798e4ca6ca44ecd70f20c2c5b503f1ee0
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/vintage_microwave/vintage_microwave.bin
+    -> vintage_microwave.bin  md5 0e74727ecfad916fba4ce0c79a7d9903  sha256 f09ab1eb99ca23e7a3496ead7372de9281018c11ae5b2e9eb50f1d06f2bfe4a3
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/vintage_microwave
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

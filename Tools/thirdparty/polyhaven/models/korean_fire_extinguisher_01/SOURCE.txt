@@ -1,0 +1,37 @@
+asset_id: polyhaven_korean_fire_extinguisher_01
+title: Korean Fire Extinguisher 01 (Poly Haven)
+category: interiors
+main_file: korean_fire_extinguisher_01_1k.gltf
+catalog_use: SM_Int_Extinguisher
+author: UM JOORIN
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/korean_fire_extinguisher_01
+description: Free 8K model of a red Korean fire extinguisher with weathered paint, pressure gauge, hose and yellow strap, mounted on a scuffed base.
+polycount: 9913
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/korean_fire_extinguisher_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_1k.gltf
+    -> korean_fire_extinguisher_01_1k.gltf  md5 842e3c682b1bd286ba90af70848a0fbf  sha256 565f9e41909165c2bead24b722746e29ba55e8eb5e541f61fe0d1ef7e66d2ecf
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_paper_nor_gl_1k.jpg
+    -> textures/korean_fire_extinguisher_01_paper_nor_gl_1k.jpg  md5 a168897334529d98a67df80a486076ed  sha256 caaa26dd438e827e994c69605091d58ecc6a152813ece776cc561e0b24a8433a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_paper_diff_1k.jpg
+    -> textures/korean_fire_extinguisher_01_paper_diff_1k.jpg  md5 bfe0fd9be862d04df812e7d3fb6d2c29  sha256 2d56948aa72a9bad6133db3e6b17fa0df1a56cdf25db4b7e21e6ceb21999a038
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_body_nor_gl_1k.jpg
+    -> textures/korean_fire_extinguisher_01_body_nor_gl_1k.jpg  md5 684dc2f34e0673fd5ecdb71a87366031  sha256 b6ba7a7cafa04557c93dc63b44260b635863f0a95f8ba1445b75758dac3443d3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_paper_arm_1k.jpg
+    -> textures/korean_fire_extinguisher_01_paper_arm_1k.jpg  md5 4d30630a842d22459188b53848538fd1  sha256 542b45184bb0ea66cdd2f180792148c45d45862a12f1ac341f798e53029015b9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_glass_diff_1k.jpg
+    -> textures/korean_fire_extinguisher_01_glass_diff_1k.jpg  md5 15c48dd9f2a9b11647f5212179bc0d30  sha256 ca7e49959126aa51e2d4ab440aeb9f7ff17a8a6d025b116f6327f2343ee041af
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_glass_nor_gl_1k.jpg
+    -> textures/korean_fire_extinguisher_01_glass_nor_gl_1k.jpg  md5 1da8b9a645f7e0940ea9505879d8f489  sha256 3b299c54cb9b6f72d4f79e6ecd2f8cfcc618292c87881de1d17892b5ca668896
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_glass_arm_1k.jpg
+    -> textures/korean_fire_extinguisher_01_glass_arm_1k.jpg  md5 377ae0f369cfa52b2589f36f6d4a3be4  sha256 412712fddc3654d801949889f78c9ee92d8855624a1fe1057be29a38e766bda0
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/korean_fire_extinguisher_01/korean_fire_extinguisher_01.bin
+    -> korean_fire_extinguisher_01.bin  md5 e4b0452f70679815817e0b6f87ba5e52  sha256 a460dd65b63477bb641196d77393258af0c8a6e2a64728156cb45d92658c86bd
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_body_diff_1k.jpg
+    -> textures/korean_fire_extinguisher_01_body_diff_1k.jpg  md5 5e893385064d90ba8bef74a9625409ef  sha256 2d874513cfb6d7485b67e936ee32e7af14992da6a5eedf980dbdfc32a2119987
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/korean_fire_extinguisher_01/korean_fire_extinguisher_01_body_arm_1k.jpg
+    -> textures/korean_fire_extinguisher_01_body_arm_1k.jpg  md5 e4367435179d89d78d4c8f14fe6f2ee9  sha256 2c8fa0a85d5acc5f4e784ecefd8bfd16e1aafd112e553bfcece0c81c9b129eea
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/korean_fire_extinguisher_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

@@ -1,0 +1,25 @@
+asset_id: polyhaven_rubber_duck_toy
+title: Rubber Duck Toy (Poly Haven)
+category: interiors
+main_file: rubber_duck_toy_1k.gltf
+catalog_use: SM_Int_RubberDuck
+author: Plat251
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/rubber_duck_toy
+description: Free 4K model: cute yellow rubber duck with glossy plastic, bright red beak, simple cartoon eyes and light scuffs/grime for a slightly worn, playful look.
+polycount: 4288
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/rubber_duck_toy, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rubber_duck_toy/rubber_duck_toy_1k.gltf
+    -> rubber_duck_toy_1k.gltf  md5 da655b3c5bd4dcf29bc60a7b7bfe903c  sha256 dcf036297843dad2775841fc41208fae8c776066848d3f6e26efa42eb98d5016
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rubber_duck_toy/rubber_duck_toy_diff_1k.jpg
+    -> textures/rubber_duck_toy_diff_1k.jpg  md5 49b9676f8d253baf6c054771fd023608  sha256 c968d6185c3ec57a430818e6af85c2ba2880c7ee19ccb1a0171730926175cfd6
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/rubber_duck_toy/rubber_duck_toy.bin
+    -> rubber_duck_toy.bin  md5 2ab5ea380067b76e3ba7e8db8ad0844a  sha256 381e1373b99a4ff23d5ee02cb66bfb5e7d897eaa280581f19b652c38ffd83314
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rubber_duck_toy/rubber_duck_toy_arm_1k.jpg
+    -> textures/rubber_duck_toy_arm_1k.jpg  md5 6128a89af1c8e20e432b54abf30c9371  sha256 07df1a805350811e8522dafce6133b98ce2f191326e7256315a15dfaaa4193a0
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rubber_duck_toy/rubber_duck_toy_nor_gl_1k.jpg
+    -> textures/rubber_duck_toy_nor_gl_1k.jpg  md5 fb224351ee15cb9c0607d3a28a49ce1d  sha256 fc00541d9708328f383498914a5ed9935231a87f15ec002d5675af3f2347b544
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/rubber_duck_toy
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

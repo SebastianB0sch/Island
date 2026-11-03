@@ -1,0 +1,25 @@
+asset_id: polyhaven_GreenChair_01
+title: Green Chair 01 (Poly Haven)
+category: interiors
+main_file: GreenChair_01_1k.gltf
+catalog_use: SM_Int_GreenChair
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/GreenChair_01
+description: Free 4K model of a vintage Gothic wooden armchair with carved decorative details, green fabric upholstery and elegant curved legs; ideal for period interiors.
+polycount: 4213
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/GreenChair_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/GreenChair_01/GreenChair_01_1k.gltf
+    -> GreenChair_01_1k.gltf  md5 a891e84c1aa77d8f163609b347c1b421  sha256 d1e4946ac99ab9e64c82d802fe5cd49d962750e34b8d284762b3fe2b00ba8a45
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/GreenChair_01/GreenChair_01_arm_1k.jpg
+    -> textures/GreenChair_01_arm_1k.jpg  md5 b986c428c4db443ed08f7925a08531f1  sha256 d522e08441f3d54977e085b9e54de125efea7e963d3f433a5bd74cad031d2178
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/GreenChair_01/GreenChair_01_nor_gl_1k.jpg
+    -> textures/GreenChair_01_nor_gl_1k.jpg  md5 19a8e67d3bf9153e9f68a28f1507aaee  sha256 008b49786f8395301b15b398856f56bd04357096ce542da76f1a3dcad8c28fc8
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/GreenChair_01/GreenChair_01_diff_1k.jpg
+    -> textures/GreenChair_01_diff_1k.jpg  md5 7304f991bdcd2c534243bc7e86c62c43  sha256 fb7ec456b37dc95fb73d0b08bfa2802c304a40263517d05e674657ad356cfac4
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/GreenChair_01/GreenChair_01.bin
+    -> GreenChair_01.bin  md5 9c84856d32c4d61b87fb5eba1f8339a3  sha256 9070a41bcf38005997fe71a49e50b942b427ec05938413c9dc204df0b781e410
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/GreenChair_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

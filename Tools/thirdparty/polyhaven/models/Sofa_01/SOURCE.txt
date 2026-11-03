@@ -1,0 +1,25 @@
+asset_id: polyhaven_Sofa_01
+title: Sofa 01 (Poly Haven)
+category: interiors
+main_file: Sofa_01_1k.gltf
+catalog_use: SM_Int_Sofa
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/Sofa_01
+description: Free 4K vintage Victorian wooden sofa - decorative gothic-style upholstered couch with carved frame, elegant seating prop for period interiors.
+polycount: 4101
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/Sofa_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/Sofa_01/Sofa_01_1k.gltf
+    -> Sofa_01_1k.gltf  md5 b5f8106d38a9e8dcb52b883663bbeed1  sha256 dc9d331a24fc8994606ae5a283826cb28feb3166782f59d006d0f10cc92cc830
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Sofa_01/Sofa_01_diff_1k.jpg
+    -> textures/Sofa_01_diff_1k.jpg  md5 a4d07c6c0fd696cb6fa4bd5bad1debc3  sha256 1772047e7887a9ec44878e0720eda0829abfa744dec6ca03b492a31c4dc51cab
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Sofa_01/Sofa_01_nor_gl_1k.jpg
+    -> textures/Sofa_01_nor_gl_1k.jpg  md5 7e4aca2b86e09375d25182c7bd4580db  sha256 1d89009f9fba3b6967d63cb718606b3049d2423bc031da12ee228718a0571e84
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/Sofa_01/Sofa_01.bin
+    -> Sofa_01.bin  md5 77b6d42bd17eed825d5d65c769c71f0c  sha256 c8af86de6db09a6d49703e0e51cf8acafa23fb2ee945e66a48225dced3a154e1
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Sofa_01/Sofa_01_arm_1k.jpg
+    -> textures/Sofa_01_arm_1k.jpg  md5 c7b757edd1f5fb506341be0063b9a3eb  sha256 fc5db69e4cf5cf9f881b2d134fae69c4e3b1a96378f131752ef48060bf0c5e39
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/Sofa_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

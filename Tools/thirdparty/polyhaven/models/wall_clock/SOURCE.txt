@@ -1,0 +1,27 @@
+asset_id: polyhaven_wall_clock
+title: Wall Clock (Poly Haven)
+category: interiors
+main_file: wall_clock_1k.gltf
+catalog_use: SM_Int_WallClock
+author: PierreB3D
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/wall_clock
+description: Free 4K model of a modern wall clock with a worn metal bezel, clear glass, bold numerals, gray hour/minute hands, and a slim red second hand on a clean dial.
+polycount: 3658
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/wall_clock, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/wall_clock/wall_clock_1k.gltf
+    -> wall_clock_1k.gltf  md5 86c50202813c717074d1bc72ddad9109  sha256 4e67385443e808bc709c054c1de5be1e83d4bf07eb0893884c301fec0bae8bc6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wall_clock/wall_clock_nor_gl_1k.jpg
+    -> textures/wall_clock_nor_gl_1k.jpg  md5 d6404c2ffb48b17fbeed2cb9bf187a29  sha256 6138946e055828e92d5e0d8d50c75e3d2da0ea789dd6512b30f85f0e18435d00
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wall_clock/wall_clock_diff_1k.jpg
+    -> textures/wall_clock_diff_1k.jpg  md5 32e8346296eebf4776e7e917f0080c7f  sha256 012bfc3ceecd5e35679fe5764e33b6d1b8a631ad4fc9f5b267af25ad10468672
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wall_clock/wall_clock_arm_1k.jpg
+    -> textures/wall_clock_arm_1k.jpg  md5 6d962d1263bd5b34e16a69fa5473e8ac  sha256 c78aabec7bb4af4fd6818be1099523e59bf12d88c872530b2260cdea08d81968
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wall_clock/wall_clock_glass_arm_1k.jpg
+    -> textures/wall_clock_glass_arm_1k.jpg  md5 5e84b53fb7e087f4114de28d70787f5c  sha256 42804955958b3d0fdc1da8d4c4e8e909b04f659ae1b02911e148abe0741b8b84
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/wall_clock/wall_clock.bin
+    -> wall_clock.bin  md5 f1399287d9ad2fa2cfb303e95bbdbc45  sha256 61d9fe03e871508230160de546ef505f3f4405b1e82c167536945a483a8bb639
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/wall_clock
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

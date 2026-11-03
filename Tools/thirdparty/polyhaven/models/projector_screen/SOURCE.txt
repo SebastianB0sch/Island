@@ -1,0 +1,31 @@
+asset_id: polyhaven_projector_screen
+title: Projector Screen (Poly Haven)
+category: interiors
+main_file: projector_screen_1k.gltf
+catalog_use: SM_Int_ProjectorScreen
+author: PeterM
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/projector_screen
+description: Free 8K model of a portable projector screen: teal metal roll case, white fabric with subtle stains and creases, black edges, tripod stand with rubber feet.
+polycount: 8727
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/projector_screen, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/projector_screen/projector_screen_1k.gltf
+    -> projector_screen_1k.gltf  md5 5ab22d856ef3e7c0c40af6314b5167a4  sha256 ce979c8042956e0f33c5f551262f81ecd43d0e929ee2400a1a460febf800f144
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/projector_screen/projector_screen_frame_nor_gl_1k.jpg
+    -> textures/projector_screen_frame_nor_gl_1k.jpg  md5 5af340c52736d6940e2978a98dd62d53  sha256 12f03e1078d35991c1c9c8dea7ad8bd735c6886d37532e141c5e55fc1cd9f173
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/projector_screen/projector_screen_frame_diff_1k.jpg
+    -> textures/projector_screen_frame_diff_1k.jpg  md5 053f8612237beb221bbda2d6968ef62c  sha256 962a1dc02084f7cfb17175979a7232255ccb34b41a9a263ec75fe1c8ea6381c6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/projector_screen/projector_screen_frame_arm_1k.jpg
+    -> textures/projector_screen_frame_arm_1k.jpg  md5 d409e79fb2ef6fda0c1069b6668d7f39  sha256 32fd6d1ab57d559566408fec08ca9fc00c34493b2b56d41c7dcb25aa9604204d
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/projector_screen/projector_screen_nor_gl_1k.jpg
+    -> textures/projector_screen_nor_gl_1k.jpg  md5 fd54590685c08c7ca846cdb4c9f216b5  sha256 86351f77145b1758bec7f6421a6f4fa4196b598d751254fb7b5826d4f04756c3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/projector_screen/projector_screen_diff_1k.jpg
+    -> textures/projector_screen_diff_1k.jpg  md5 ebd3232ff335b0e4bb7ecf781dc9393e  sha256 77c865b5c7b267b83ee67e309ea053400774a0e0a082186d7cd3d1990fc31527
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/projector_screen/projector_screen_arm_1k.jpg
+    -> textures/projector_screen_arm_1k.jpg  md5 247f974f2bb53ac014255d09a58d0381  sha256 cfdcd1e4b62a49cc18824002eec93b6bc01d2cb6f8a2d437e38bfce756cc7b24
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/projector_screen/projector_screen.bin
+    -> projector_screen.bin  md5 6d76dfa1496319bfb1130b1d27812b48  sha256 fd88ad21af99db9a2f64d454604d0d5a0488df6ff94eaacf33379f677dd40c2c
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/projector_screen
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

@@ -177,11 +177,14 @@ def build_scene(log=print, scatter=True, detail_props=True):
         if key not in C.LOCATIONS:
             continue
         aset = fn()
+        placed = None
         for name, mb in aset.meshes.items():
             if not mb.verts:
                 continue
             nm = "SM_" + name
             entries = static_by_mesh.get(nm, []) + floating_by_mesh.get(nm, [])
+            if entries and nm in static_by_mesh and placed is None:
+                placed = static_by_mesh[nm][0]
             if not entries:
                 continue
             ob = mb.build(nm)
@@ -192,6 +195,11 @@ def build_scene(log=print, scatter=True, detail_props=True):
                 o.location = _from_ue(e["loc"])
                 o.rotation_euler = (0, 0, math.radians(-e["yaw"]))
                 n += 1
+        if placed is not None:     # closed door leaves (ADADoor in Unreal)
+            from .assets import doors as DR
+            for o in DR.preview_objects(aset, open_deg=0.0):
+                o.location = _from_ue(placed["loc"])
+                o.rotation_euler = (0, 0, math.radians(-placed["yaw"]))
     log(f"  preview: {n} location meshes")
     # roads (world-space FBX)
     for e in lay["static"]:

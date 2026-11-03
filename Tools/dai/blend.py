@@ -58,6 +58,31 @@ def material(name):
             mat.surface_render_method = "BLENDED"
         except Exception:
             pass
+    if kind == "toon":     # M_DA_Toon: lit colour + a flat emissive "fill" of the same colour
+        _set_input(bsdf, ("Emission Color", "Emission"), (*lin, 1.0))
+        _set_input(bsdf, ("Emission Strength",), spec.get("fill", 0.35) * 0.6)
+        _set_input(bsdf, ("Specular IOR Level",), 0.15)
+    if kind == "outline":  # inverted-hull ink: dark where the hull's far side faces us, invisible elsewhere
+        out = next(n for n in nt.nodes if n.type == "OUTPUT_MATERIAL")
+        geo = nt.nodes.new("ShaderNodeNewGeometry")
+        emi = nt.nodes.new("ShaderNodeEmission")
+        emi.inputs["Color"].default_value = (*lin, 1.0)
+        tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+        mix = nt.nodes.new("ShaderNodeMixShader")
+        lp = nt.nodes.new("ShaderNodeLightPath")       # only camera rays see the ink (it must not cast shadows)
+        inv = nt.nodes.new("ShaderNodeMath")
+        inv.operation = "SUBTRACT"
+        inv.inputs[0].default_value = 1.0
+        nt.links.new(lp.outputs["Is Camera Ray"], inv.inputs[1])
+        mx = nt.nodes.new("ShaderNodeMath")
+        mx.operation = "MAXIMUM"
+        nt.links.new(geo.outputs["Backfacing"], mx.inputs[0])
+        nt.links.new(inv.outputs[0], mx.inputs[1])
+        nt.links.new(mx.outputs[0], mix.inputs[0])
+        nt.links.new(emi.outputs[0], mix.inputs[1])
+        nt.links.new(tr.outputs[0], mix.inputs[2])
+        nt.links.new(mix.outputs[0], out.inputs[0])
+        mat.use_backface_culling = True
     if kind == "water":
         bsdf.inputs["Roughness"].default_value = 0.03
         _set_input(bsdf, ("Transmission Weight", "Transmission"), 0.0)

@@ -1,0 +1,25 @@
+asset_id: polyhaven_wooden_bookshelf_worn
+title: Wooden Bookshelf Worn (Poly Haven)
+category: interiors
+main_file: wooden_bookshelf_worn_1k.gltf
+catalog_use: SM_Int_Bookshelf
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/wooden_bookshelf_worn
+description: Free 4K model of a worn wooden bookshelf with multiple shelves, distressed weathered grain, layered plywood edges, visible nail holes and rustic vintage finish.
+polycount: 10106
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/wooden_bookshelf_worn, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/wooden_bookshelf_worn/wooden_bookshelf_worn_1k.gltf
+    -> wooden_bookshelf_worn_1k.gltf  md5 f8bb25dfb3c646e5c4f420d800276928  sha256 a1c5b3f1e71ae0b5eb73047e8097bceaa5f17e5d2d0d7ae1b8053d5ec0878fc6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_bookshelf_worn/wooden_bookshelf_worn_nor_gl_1k.jpg
+    -> textures/wooden_bookshelf_worn_nor_gl_1k.jpg  md5 0e6f33c00eec432dd17178a4e5feb4f2  sha256 90ffb1b3f7bb638d5a7e1a2b244a260d623e314a6010a6b8c23c57203e510ac9
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/wooden_bookshelf_worn/wooden_bookshelf_worn.bin
+    -> wooden_bookshelf_worn.bin  md5 3842de1943f58cdafb3a25d384b2400f  sha256 170758113b50132380ab46943f6eab18f2714460dead065aae37241a94abf0f9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_bookshelf_worn/wooden_bookshelf_worn_arm_1k.jpg
+    -> textures/wooden_bookshelf_worn_arm_1k.jpg  md5 7252efe4bd18f6dfdc014a9f4ccdf065  sha256 41b3aca38fb55cb300d971016a597c80425da3744a6d33d82fe78f9dbe609eaa
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_bookshelf_worn/wooden_bookshelf_worn_diff_1k.jpg
+    -> textures/wooden_bookshelf_worn_diff_1k.jpg  md5 8f92c92e6473010e7df9b11f32d1234a  sha256 970f60178decadd0d8fb1e5872f718350a49b027fd69469210c41ead350cba56
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/wooden_bookshelf_worn
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

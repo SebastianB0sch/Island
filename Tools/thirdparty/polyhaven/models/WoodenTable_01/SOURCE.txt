@@ -1,0 +1,25 @@
+asset_id: polyhaven_WoodenTable_01
+title: Wooden Table 01 (Poly Haven)
+category: interiors
+main_file: WoodenTable_01_1k.gltf
+catalog_use: SM_Int_Table
+author: Ethan Place
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/WoodenTable_01
+description: Free 4K model: vintage wooden coffee table with warm worn patina, visible grain, rounded corners, stretcher base and scuffed edges.
+polycount: 952
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/WoodenTable_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/WoodenTable_01/WoodenTable_01_1k.gltf
+    -> WoodenTable_01_1k.gltf  md5 585f78ec50d4b57dc239f9a9a2259fea  sha256 413804e054055c397b4cfbd0916027097d2a20853b165b533007a46d131e1d17
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/WoodenTable_01/WoodenTable_01.bin
+    -> WoodenTable_01.bin  md5 b764ee635684db5cc2c06288d51a3c14  sha256 1083a3442969d27e18e6a7a454bc164407439e3908bf8f17f5fb24d58cd0172e
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/WoodenTable_01/WoodenTable_01_nor_gl_1k.jpg
+    -> textures/WoodenTable_01_nor_gl_1k.jpg  md5 ac08715658eaf47e6df70a6026231fd2  sha256 330655534ea1fc7c7387b5d2ba5ca3231711a9fa680b980933a3a9c82cdb1c67
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/WoodenTable_01/WoodenTable_01_diff_1k.jpg
+    -> textures/WoodenTable_01_diff_1k.jpg  md5 be2bf3134566e1280412d191bd6657f8  sha256 9535de577ad6b64deb68457af14240dd9b6d82143da0b6d2bf337660ebd855f3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/WoodenTable_01/WoodenTable_01_arm_1k.jpg
+    -> textures/WoodenTable_01_arm_1k.jpg  md5 266842045283ef1ea475386172e8aa2f  sha256 ad876f814215006d35f74670d4fc14a9f6eab386a9307764521449464a1cd6ef
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/WoodenTable_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

@@ -1,0 +1,25 @@
+asset_id: polyhaven_wicker_basket_01
+title: Wicker Basket 01 (Poly Haven)
+category: interiors
+main_file: wicker_basket_01_1k.gltf
+catalog_use: SM_Int_Basket
+author: Kuutti Siitonen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/wicker_basket_01
+description: Free 8K wicker basket model with hand-woven twine, dark weathered wood tones, tight rectangular weave, braided rim and realistic grain with subtle wear.
+polycount: 22276
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/wicker_basket_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/wicker_basket_01/wicker_basket_01_1k.gltf
+    -> wicker_basket_01_1k.gltf  md5 6910bb33f9b29c30e41c06342cba4f9b  sha256 9ad86c33f00f46a18c9bc8bfc28c0036090ee819f7270d0028ec408512c04094
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wicker_basket_01/wicker_basket_01_arm_1k.jpg
+    -> textures/wicker_basket_01_arm_1k.jpg  md5 e456e1e051da9b8433162de9cb96cb61  sha256 5150638cbcd8f1bc07b76af3b60b31a4c5e7d38ce66ac8906b9c3192f3283b9a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wicker_basket_01/wicker_basket_01_nor_gl_1k.jpg
+    -> textures/wicker_basket_01_nor_gl_1k.jpg  md5 4cca87156e77045fd29562b09609b41d  sha256 d06024a37ef330d05bf128b8488f72769af05e72d266ffbc810d7f09ea2b32f9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wicker_basket_01/wicker_basket_01_diff_1k.jpg
+    -> textures/wicker_basket_01_diff_1k.jpg  md5 54c05d9c5e4f92930cbbf67e4770fc61  sha256 15156c7855d5642f6bb594edfad5bcdcfe11f87f3e109956cb9e8fdb15fef921
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/wicker_basket_01/wicker_basket_01.bin
+    -> wicker_basket_01.bin  md5 154e2cd9157175591e3585e706925fa9  sha256 8e96025ffcdc64a7e75d1aa980f2491b1219912a4554272cd1e192a966c399f8
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/wicker_basket_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

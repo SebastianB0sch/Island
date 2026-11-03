@@ -143,6 +143,7 @@ MATERIALS = {
     "M_Steam":          dict(kind="smoke", color=_c(0.95, 0.95, 0.97), opacity=0.35),
     "M_LampGlow":       dict(kind="emissive", color=_c(1.00, 0.85, 0.55), strength=15.0),
     "M_Beam":           dict(kind="beam", color=_c(1.00, 0.93, 0.70), strength=1.5),
+    "M_InkOutline":     dict(kind="outline", color=_c(0.09, 0.06, 0.07), rough=1.0, detail=None),
     "M_Terrain":        dict(kind="terrain", color=_c(0.4, 0.6, 0.3), rough=0.95, detail=None),
 
     # ------------------------------------------------------------ avatar

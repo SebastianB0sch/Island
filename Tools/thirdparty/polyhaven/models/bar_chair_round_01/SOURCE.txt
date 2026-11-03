@@ -1,0 +1,25 @@
+asset_id: polyhaven_bar_chair_round_01
+title: Bar Chair Round 01 (Poly Haven)
+category: interiors
+main_file: bar_chair_round_01_1k.gltf
+catalog_use: SM_Int_BarStool
+author: Dairon Sanchez
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/bar_chair_round_01
+description: Free 4K model, vintage wooden bar stool with round seat, carved beaded trim, hexagonal legs, circular footrest and worn finish.
+polycount: 14373
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/bar_chair_round_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/bar_chair_round_01/bar_chair_round_01_1k.gltf
+    -> bar_chair_round_01_1k.gltf  md5 86fccd0ffcf70b942d1b2ff70445c2b9  sha256 6a8f92123245268cbb69fc96f305ee710b32a7a06761b143d3049eaabfcbdd32
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/bar_chair_round_01/bar_chair_round_01_arm_1k.jpg
+    -> textures/bar_chair_round_01_arm_1k.jpg  md5 48228bfd8b20bf805fd78b1198d5a67f  sha256 9f34b279bdd1527ec19fc3a3bb0ce374f0c0ba2dc05dfbd58f561bc317bd36c7
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/bar_chair_round_01/bar_chair_round_01.bin
+    -> bar_chair_round_01.bin  md5 3b9777a403670ddbde5cda533a5359ae  sha256 2bda85d89beb91097998b25293f10e72686b972aecffd2c14d1b5412cc1da276
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/bar_chair_round_01/bar_chair_round_01_diff_1k.jpg
+    -> textures/bar_chair_round_01_diff_1k.jpg  md5 f2f927c0536c4570fddb3825da824f36  sha256 1b3912fe1102b4082d7421aeb2e2717d3ebe914d261700f8710c0fdb7d7463bb
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/bar_chair_round_01/bar_chair_round_01_nor_gl_1k.jpg
+    -> textures/bar_chair_round_01_nor_gl_1k.jpg  md5 6c93ccdb5df8cf731f52be5a4e0317bb  sha256 91e4310863002228003d100be83e0524832e532d05f27ef8ed62675b116f0bd1
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/bar_chair_round_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

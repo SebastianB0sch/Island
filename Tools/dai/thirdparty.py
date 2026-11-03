@@ -185,6 +185,8 @@ def _normalise(obj, spec):
         s = spec["scale"]
     if spec.get("origin", "base") == "base":
         off = Vector((-(mn[0] + mx[0]) / 2, -(mn[1] + mx[1]) / 2, -mn[2] + spec.get("z_offset", 0.0)))
+    elif spec["origin"] == "top":   # ceiling fixtures: origin at the top centre, hanging down -Z
+        off = Vector((-(mn[0] + mx[0]) / 2, -(mn[1] + mx[1]) / 2, -mx[2] + spec.get("z_offset", 0.0)))
     else:
         off = Vector((0, 0, spec.get("z_offset", 0.0)))
     me.transform(Matrix.Translation(off))
@@ -269,9 +271,78 @@ def _safe(name):
     return "".join(ch if ch.isalnum() else "_" for ch in name.split(".")[0]).strip("_") or "Mat"
 
 
+def cel_paint(path, colors=14, saturation=1.25, brightness=1.06):
+    """Re-paint a photo base-colour texture as flat anime-background colour fields: denoise, merge similar
+    colours (median cut, no dithering), clean up speckles, then lift saturation a little."""
+    from PIL import Image, ImageEnhance, ImageFilter
+    im = Image.open(path)
+    alpha = im.getchannel("A") if im.mode == "RGBA" else None
+    rgb = im.convert("RGB")
+    w, h = rgb.size
+    small = rgb.resize((max(32, w // 2), max(32, h // 2)), Image.LANCZOS)
+    small = small.filter(ImageFilter.MedianFilter(7)).filter(ImageFilter.MedianFilter(5))
+    q = small.quantize(colors=colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB")
+    q = q.filter(ImageFilter.MedianFilter(3))
+    q = ImageEnhance.Color(q).enhance(saturation)
+    q = ImageEnhance.Brightness(q).enhance(brightness)
+    q = q.resize((w, h), Image.BILINEAR)
+    if alpha is not None:
+        q.putalpha(alpha)
+        q.save(path, optimize=True)
+    elif path.lower().endswith(".jpg"):
+        q.save(path, quality=90)
+    else:
+        q.save(path, optimize=True)
+
+
+def _swap_preview_image(img, path):
+    """Point the Blender image at the processed file so previews show what Unreal gets."""
+    try:
+        img.filepath = path
+        img.reload()
+    except Exception:  # noqa: BLE001 - previews only
+        pass
+
+
+def add_outline(obj, thick):
+    """Anime ink line: an inverted hull (vertices pushed out along the welded normals, faces flipped) in the
+    unlit, one-sided M_InkOutline slot - only its far side shows, as a dark rim around the silhouette."""
+    if not thick:
+        return
+    from . import blend
+    me = obj.data
+    dims = obj.dimensions
+    thick = min(float(thick), max(min(dims), 0.05) * 0.04, 0.02)
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-4)
+    bm.normal_update()
+    for v in bm.verts:
+        v.co += v.normal * thick
+    bmesh.ops.reverse_faces(bm, faces=bm.faces[:])
+    mat = blend.material("M_InkOutline")
+    if mat.name not in [m.name for m in me.materials if m]:
+        me.materials.append(mat)
+    idx = [m.name if m else "" for m in me.materials].index(mat.name)
+    for f in bm.faces:
+        f.material_index = idx
+        f.smooth = True
+    hull = bpy.data.meshes.new(me.name + "_ink")
+    bm.to_mesh(hull)
+    bm.free()
+    for m in me.materials:
+        hull.materials.append(m)
+    ho = bpy.data.objects.new(obj.name + "_ink", hull)
+    bpy.context.scene.collection.objects.link(ho)
+    ho.matrix_world = obj.matrix_world
+    with bpy.context.temp_override(active_object=obj, selected_editable_objects=[obj, ho], selected_objects=[obj, ho]):
+        bpy.ops.object.join()
+
+
 def extract_materials(obj, asset, spec):
     """Rename material slots to MT_<asset>_<n>, export their textures, register palette entries."""
     foliage = [f.lower() for f in spec.get("foliage", [])]
+    toon = bool(spec.get("toon"))
     tex_dir = os.path.join(TEX_OUT, asset)
     max_size = spec.get("max_texture", 1024)
     for i, slot in enumerate(obj.material_slots):
@@ -284,6 +355,8 @@ def extract_materials(obj, asset, spec):
         is_foliage = any(f in orig.lower() for f in foliage)
         entry = dict(kind="pbr_foliage" if is_foliage else "pbr", color=(1.0, 1.0, 1.0), rough=0.8, metallic=0.0,
                      detail=None, source_material=orig)
+        if toon:   # anime look: cel-painted texture on M_DA_Toon (flat fill light), no normal / ORM maps
+            entry.update(kind="toon", fill=float(spec.get("fill", 0.35)), rough=0.85)
         bsdf = None
         if mat.node_tree:
             bsdf = next((n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
@@ -296,16 +369,29 @@ def extract_materials(obj, asset, spec):
                                 mode="RGBA" if ext == ".png" else None)
                 if p:
                     entry["base"] = f"ThirdParty/{asset}/" + os.path.splitext(os.path.basename(p))[0]
+                    if toon:
+                        marker = os.path.join(C.CACHE_DIR, "cel", os.path.relpath(p, TEX_OUT) + ".done")
+                        os.makedirs(os.path.dirname(marker), exist_ok=True)
+                        if not os.path.exists(marker) or os.path.getmtime(marker) < os.path.getmtime(p):
+                            cel_paint(p)
+                            open(marker, "w").close()
+                        _swap_preview_image(img, p)
             else:
                 entry["color"] = _srgb(bc.default_value)
             if bsdf.inputs["Alpha"].is_linked or is_foliage:
                 entry["masked"] = True
             nimg, _ = _image_from(bsdf.inputs["Normal"])
+            if toon:
+                nimg = None
+                if bsdf.inputs["Normal"].is_linked:     # flat-shaded preview, like the toon master
+                    mat.node_tree.links.remove(bsdf.inputs["Normal"].links[0])
             if nimg is not None:
                 p = _save_image(nimg, os.path.join(tex_dir, f"T_{asset}_{i}_N.png"), max_size)
                 if p:
                     entry["normal"] = f"ThirdParty/{asset}/T_{asset}_{i}_N"
             rimg, rch = _image_from(bsdf.inputs["Roughness"])
+            if toon:
+                rimg = None
             if rimg is not None:
                 p = _save_image(rimg, os.path.join(tex_dir, f"T_{asset}_{i}_ORM.png"), max_size)
                 if p:
@@ -419,6 +505,10 @@ def build_prop(name):
     _normalise(obj, spec)
     extract_materials(obj, asset, spec)
     bpy.context.view_layer.update()   # refresh obj.dimensions / bounds after the mesh-level transforms
+    if spec.get("outline"):
+        add_outline(obj, spec["outline"])
+        obj = bpy.context.view_layer.objects.get(name) or obj
+        bpy.context.view_layer.update()
     _built[name] = obj
     return obj
 

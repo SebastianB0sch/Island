@@ -1,0 +1,25 @@
+asset_id: polyhaven_hand_truck
+title: Hand Truck (Poly Haven)
+category: interiors
+main_file: hand_truck_1k.gltf
+catalog_use: SM_Int_HandTruck
+author: Mutanzom3D
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/hand_truck
+description: Free 8K hand truck model with chipped red paint, rusted steel frame, worn toe plate, and rubber wheels. Realistic wear, curved handles, and solid bars.
+polycount: 13220
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/hand_truck, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/hand_truck/hand_truck_1k.gltf
+    -> hand_truck_1k.gltf  md5 9f0d19a6fc0418571c9bb8ac6a9527ce  sha256 303029ba829f2975ebed80f6f36e38d57cec87379e7214fcfb7d8e6e921c8e58
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hand_truck/hand_truck_nor_gl_1k.jpg
+    -> textures/hand_truck_nor_gl_1k.jpg  md5 79838fd3b5cca1b279f214dafc1b49c0  sha256 8674bbaa5562c24efceef0ab77f374ffe32fa583ef5dc2a44846305aa0fd8f79
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hand_truck/hand_truck_diff_1k.jpg
+    -> textures/hand_truck_diff_1k.jpg  md5 e9c6cd9441438ab958a12dfb171b2e3c  sha256 a1c528e0c88a03a96b89215eab228083f9dd66a502174936bccc0fe427ce345a
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hand_truck/hand_truck_arm_1k.jpg
+    -> textures/hand_truck_arm_1k.jpg  md5 01b854e843038d86de83252e132bd8b8  sha256 30ceadb1fa303f36dc0372a5681203e69715546219838e1bc0634c274407204c
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/hand_truck/hand_truck.bin
+    -> hand_truck.bin  md5 ee7c3a8a47349187da8d605900aac5bf  sha256 2a7ca50cdfac207defa68f71600f37e7cdd05d35bc94139df5269ea7d8b7a214
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/hand_truck
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

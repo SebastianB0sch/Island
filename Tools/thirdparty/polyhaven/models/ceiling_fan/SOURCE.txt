@@ -1,0 +1,29 @@
+asset_id: polyhaven_ceiling_fan
+title: Ceiling Fan (Poly Haven)
+category: interiors
+main_file: ceiling_fan_1k.gltf
+catalog_use: SM_Int_CeilingFan
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/ceiling_fan
+description: Free 4K model of a sleek matte-black ceiling fan with four curved blades, brushed metal hub and integrated frosted light diffuser; modern, low-profile fixture.
+polycount: 16356
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/ceiling_fan, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/ceiling_fan/ceiling_fan_1k.gltf
+    -> ceiling_fan_1k.gltf  md5 c5ec36847eb915c1cc924a70edd88854  sha256 be84d4ce1cbbbee21c5f588d5dfde41297f4ecbddedbb0f05e5cb01ddb8ede1b
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ceiling_fan/ceiling_fan_emissive_1k.jpg
+    -> textures/ceiling_fan_emissive_1k.jpg  md5 778d0adc5af793919e26c21da0d18032  sha256 460d12108893202bfa8261dcfcf521e1bf5063ff12b189939f34b5e1032a3ede
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ceiling_fan/ceiling_fan_spec_1k.jpg
+    -> textures/ceiling_fan_spec_1k.jpg  md5 7ba7036733c1e57ed3e9c3f01ac056ca  sha256 a8ab87ed40265af3ea4cdd3b941251fef0912cf48cb490db93ba7c653e520b1f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ceiling_fan/ceiling_fan_nor_gl_1k.jpg
+    -> textures/ceiling_fan_nor_gl_1k.jpg  md5 c81e02695e4c8528b192b458f2db23c2  sha256 debd38190fdcd65687c5b3752a4f7ba5db30d1e1ac4d59afc05c3f0c93d27c1f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ceiling_fan/ceiling_fan_diff_1k.jpg
+    -> textures/ceiling_fan_diff_1k.jpg  md5 75f1c808dcd3ba2d7c22b00c724105b0  sha256 a9fb7032da0ce9fac50de7fe02ca2644ae3d925a5e4a73f006fb4902fd5db27b
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ceiling_fan/ceiling_fan_arm_1k.jpg
+    -> textures/ceiling_fan_arm_1k.jpg  md5 d1356bc14a05ecc25ae96d093e43c546  sha256 af123055dc185abd34342cfe58df87cc1bf61144831157181c9af03c542339c5
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/ceiling_fan/ceiling_fan.bin
+    -> ceiling_fan.bin  md5 f073b4dd387c8a6f9374307fc4b6f1df  sha256 06ad4d0cfc71b92e3a8c3fb6540b58ad41c389bb7baae82f9fa21a9286040b28
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/ceiling_fan
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03

@@ -1,0 +1,25 @@
+asset_id: polyhaven_ArmChair_01
+title: Arm Chair 01 (Poly Haven)
+category: interiors
+main_file: ArmChair_01_1k.gltf
+catalog_use: SM_Int_Armchair
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/ArmChair_01
+description: Free (CC0) vintage Victorian armchair 3D model - varnished carved wood frame, upholstered seat; gothic/classic styling ideal for interiors, period scenes, and renders.
+polycount: 5626
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/ArmChair_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/ArmChair_01/ArmChair_01_1k.gltf
+    -> ArmChair_01_1k.gltf  md5 39d1e4b0ffdde688c98335c9621e3aae  sha256 91e39d5b35f36c8074b7b6432f6fd77f5f1a257c4d6af3924c0b263eb674286b
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ArmChair_01/Armchair_01_diff_1k.jpg
+    -> textures/Armchair_01_diff_1k.jpg  md5 9166f2c24f2114a5fa5513950ed9b9ae  sha256 db30fc9ab61ac50c91ab7573583d2855a2910df1ecade02b89e3e8ab8d4e4c2d
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/ArmChair_01/ArmChair_01.bin
+    -> ArmChair_01.bin  md5 fbd842795fdec75d94f1335c28acfc0e  sha256 42a4206ea8bb3f7c3c1500ca3e408e084e8687cd3cc9cbf095b3344e215e0db6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ArmChair_01/Armchair_01_nor_gl_1k.jpg
+    -> textures/Armchair_01_nor_gl_1k.jpg  md5 8541821edd6dcb319b7f9841d849fbbe  sha256 f5e4a43a12e79537e53e27c2bd4c5296b3e191cd6b301afce9fafd9d38238dde
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ArmChair_01/Armchair_01_arm_1k.jpg
+    -> textures/Armchair_01_arm_1k.jpg  md5 2ea528244dd6fc0deb2af1a555c0a312  sha256 d272c68e8180f2a381314ac0cef5a9165d15d951a0558cb40a17af71cf6a51c6
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/ArmChair_01
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-03
