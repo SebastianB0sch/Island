@@ -33,6 +33,10 @@ volumetric clouds and a full day/night cycle.)*
 | **Hot Springs** | Volcanic onsen with steaming rock pools. |
 | **Forest, West Cliffs (Sunset Point), sea stacks** | Dense jungle with a hidden spirit shrine, cliff-top viewpoint deck, roaming students. |
 
+**Every building can be entered.** Each door on the island is a real doorway with an automatic door (it swings
+open away from you as you walk up, shoji and glass doors slide) and leads into a furnished interior designed
+after its building - see [Interiors](#interiors) below.
+
 The exact architecture of the anime's buildings was never published, so every building is a
 faithful-in-spirit interpretation of the show's style (colours, silhouettes, dorm hierarchy, the
 Egyptian-god theming), not a copy of any copyrighted asset. All card names in the card shop are original.
@@ -92,6 +96,36 @@ a `SOURCE.txt`, register it under `"anime_models"` in `Tools/thirdparty/registry
 character's `model` at it in `Tools/dai/anime/cast.py` and run `Tools/build_island.py cast`. Check the
 model's license allows redistribution before committing it.
 
+## Interiors
+
+![Interiors](Docs/renders/interiors.jpg)
+
+Behind every door there is a room built in the style of its building and kept in the show's anime look:
+
+* **Cel-shaded interiors**: walls, floors and fittings use the same cel material as the cast (`M_DA_Toon`: flat
+  colour with a soft fill light, a faint plank / tile / tatami detail), and the furniture gets the anime
+  treatment too (see below).
+* **Open-source furniture**: 67 CC0 models from [Poly Haven](https://polyhaven.com) (sofas, armchairs, school
+  desks and chairs, beds, wardrobes, bookshelves, chandeliers and lamps, plants, paintings, clocks, a CRT TV, a
+  cash register, lifebuoys, a rubber duck ...), fetched md5-verified by `Tools/fetch_polyhaven.py` and
+  registered in `Tools/thirdparty/registry/interiors.json`. On import (`"toon": true`) their photo textures are
+  re-painted into flat cel colours, the normal / ORM maps are dropped and an inverted-hull **ink outline** is
+  added, so they sit in the anime scenes instead of looking photographic. Every model has a procedural
+  stand-in (`Tools/dai/assets/furniture.py`), so the build never depends on the downloads.
+* **GX pieces modelled by the pipeline** (`Tools/dai/assets/interior.py`): the Slifer triple bunk beds, kotatsu
+  tables with mikan, tatami rooms, curved lecture-hall tiers, chalkboards with duel theory, lockers, bulletin
+  boards, posters, kitchens, fireplaces, a grand piano, spiral stairs.
+* **Automatic doors** (`ADADoor`, C++): one actor per doorway with a leaf mesh in the building's door style
+  (`Tools/dai/assets/doors.py`); it opens when the player or a student comes close and closes behind them.
+  The leaves never block anyone, so nobody gets stuck on a door.
+
+| Building | Inside |
+|---|---|
+| **Slifer Red Dorm** | 12 dorm rooms (101-106, 201-206 off the walkway): genkan, tatami, triple bunk bed, kotatsu, desk under the window, CRT TV, WC. Room 101 is Jaden, Syrus and Chumley's; 206 is Professor Banner's study (with Pharaoh's basket). Dining hall with kitchen door. |
+
+Preview any room without Unreal: `.venv/bin/python Tools/preview_asset.py slifer --views inside` renders every
+interior camera of a location (`--camera room101` for one) to `Docs/previews/`.
+
 ## Gameplay features
 
 * Third-person anime student (the cast's generic boy) — switch your **dorm jacket**
@@ -102,6 +136,7 @@ model's license allows redistribution before committing it.
 * **Holographic duels** on the Grand Duel Arena field, the gym practice fields and the beach court.
 * **Card Shop**: open booster packs (32 original cards, rarities from Common to Ultra Rare), track your collection.
 * Signs with lore everywhere, students from all three dorms who wander around and chat (E).
+* Walk into every building: automatic doors, furnished rooms on every floor that has a door.
 * **Day/night cycle** (Lumen GI, sky atmosphere, moon): lamps, windows and the lighthouse turn on at
   night, the crater glows. Time controls: **T** pause, **[ ]** speed, **N** skip 3 h.
 * Swimmable ocean and lake (single-layer water), volcano smoke, hot-spring steam, waterfall mist,
@@ -156,6 +191,10 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/geo.py                MeshBuilder modelling kit (walls with openings, roofs, lathes, stairs ...)
   dai/palette.py            material palette (slot names -> UE material instances)
   dai/assets/*.py           one module per location (academy, dorms, harbor, ...) + props + avatar
+  dai/assets/interior.py    interior kit: cel palette, walls with doors/windows, stairs, lights, GX furniture
+  dai/assets/doors.py       door styles -> SM_Door_* leaf meshes for the automatic doors
+  dai/assets/furniture.py   SM_Int_* furniture catalog (Poly Haven CC0) + procedural stand-ins
+  fetch_polyhaven.py        downloads / verifies the CC0 Poly Haven models + writes their SOURCE.txt
   dai/layout.py             places everything, scatters vegetation, writes layout.json
   dai/textures.py           detail/normal maps from the photo sets (procedural fallback), terrain layers
   dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction
@@ -227,9 +266,10 @@ In Landscape mode → *Import from file*: **Location** X = -153600, Y = -153600,
 | Fern, grass clumps, tropical undergrowth | Poly Haven photoscans (CC0) |
 | Boulders, rock faces, cliffs, coastal rocks, driftwood, stumps, pebbles | Poly Haven photoscans (CC0); basalt by yonimantz (CC BY 4.0) |
 | Street lamps, bins, drums, buoys, picnic tables | Poly Haven (CC0), Khronos glTF samples (CC0) |
+| Interior furniture and decor (67 models: seating, tables, beds, storage, lighting, decor, appliances) | Poly Haven (CC0), cel-painted + ink outline by the pipeline |
 | Benches, signposts, fences, crates, containers, rowboats, beach umbrellas and chairs, stone lanterns | Sketchfab authors (CC BY 4.0) |
 | Fishing trawlers | Poly by Google (CC BY 3.0) |
-| Duel Academy buildings, dorms, arena, harbor, lighthouse, ferry, volcano/waterfall features, flagpoles, bollards, duel dummies, vending machines, sounds | original, built by the pipeline in `Tools/` |
+| Duel Academy buildings, dorms, arena, harbor, lighthouse, ferry, volcano/waterfall features, flagpoles, bollards, duel dummies, vending machines, interiors, door leaves, sounds | original, built by the pipeline in `Tools/` |
 
 Every third-party folder under `Tools/thirdparty/` has a `SOURCE.txt`; [CREDITS.md](CREDITS.md) lists all of
 them with the required CC BY attribution text (also shown in-game on the F1 controls panel).
