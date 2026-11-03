@@ -122,6 +122,20 @@ Behind every door there is a room built in the style of its building and kept in
 | Building | Inside |
 |---|---|
 | **Slifer Red Dorm** | 12 dorm rooms (101-106, 201-206 off the walkway): genkan, tatami, triple bunk bed, kotatsu, desk under the window, CRT TV, WC. Room 101 is Jaden, Syrus and Chumley's; 206 is Professor Banner's study (with Pharaoh's basket). Dining hall with kitchen door. |
+| **Ra Yellow Dorm** | Entrance hall with sun-emblem floor, reception and oak staircase; lounge with fireplace and piano, duel practice room, study, supervisor's office, laundry, kitchen; 22 twin dorm rooms behind the 30 balcony French doors, washrooms, landing lounge, top-floor library and Bastion's room 309 with chalk equations on every wall; rebuilt cafeteria serving line. 68 doors. |
+| **Obelisk Blue Dorm** | Double-height marble foyer with imperial staircase, banners and busts; library, lounge with billiards, music room, banquet hall with a 28-seat table, kitchen, duel salon, trophy hall; rooms 201-208 and four suites (bedroom + study with fireplaces) off the balconies. 41 doors. |
+| **Obelisk Blue Girls' Dorm** | Pink chequered foyer with twin staircases, parlour, garden hall to the conservatory, library, tea room, dining room, salon and music gallery; four suites with canopy beds, vanities and tea nooks in the turrets. 24 doors. |
+| **Duel Academy** | Four tiered GX lecture halls (curved desk rows, 9 m blackboards, crest screens), corridors with lockers, duelist waiting rooms behind the arena gates; pavilion classrooms, infirmary, staff room, alchemy lab, library, music room, student council, cafeteria, Hall of Legends, computer room, duel club; tower stair halls; Chancellor Sheppard's and Dr. Crowler's offices, faculty rooms; admissions and duel disk service in the lobby; glazed card shop front. 60 doors. |
+| **Harbor** | Warehouse 01 hall with racks, lamps and site office; warehouse 02 card-carton hall with a rare card vault; ferry terminal waiting hall, ticket office and a spiral stair to the harbour master's room; ferry saloon, sky lounge and bridge. |
+| **Lighthouse** | Store room and a 75-step spiral stair up the tower to the keeper's watch room; furnished keeper's hut. |
+| **Abandoned Dorm** | Dusty library with toppled shelves, portrait salon under dust sheets, shadow-duel ritual room with a glowing chalk field, a ruined upstairs dorm room; the back door opens again. |
+| **Duel Gym** | Coach's office, equipment store, locker room and showers behind the hall. |
+| **Hot Springs** | Men's and women's changing rooms with baskets and vanities, bandai reception, washing areas with tap stations (and rubber ducks), shoji and glass sliding doors. |
+| **Lifeguard tower, spirit shrine** | Open structures: dressed with a lookout chair, radio and lifebuoy / an offering box and candles. |
+
+Every room has its own light sockets and an interior preview camera (about 140 in total). Not walk-in: the
+attics and the upper storeys that have no outside door (Duel Academy wings and pavilions, the Obelisk dorms'
+second floors).
 
 Preview any room without Unreal: `.venv/bin/python Tools/preview_asset.py slifer --views inside` renders every
 interior camera of a location (`--camera room101` for one) to `Docs/previews/`.

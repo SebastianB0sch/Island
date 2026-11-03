@@ -169,7 +169,7 @@ CAST = {
                "Koalas are the most underrated monsters, you know.",
                "Repeating a year isn't so bad. You get to know all the good nap spots.",
                "My dad makes hot sauce. I'm going to make it big with my cards instead!"],
-        spawn=dict(group="slifer", dorm="slifer", nth=2),
+        spawn=dict(group="slifer", dorm="slifer", nth=0),
     ),
     # ------------------------------------------------------------------ Ra Yellow
     "bastion": dict(
@@ -192,7 +192,7 @@ CAST = {
                "My dorm room walls are covered in equations. The cleaning staff have given up.",
                "Ra Yellow is the perfect middle ground: the cafeteria is excellent and nobody expects too much.",
                "Every duel is just a problem waiting for the right formula."],
-        spawn=dict(group="ra", dorm="ra", nth=0),
+        spawn=dict(group="ra", dorm="ra", nth=5),
     ),
     # ------------------------------------------------------------------ Obelisk Blue
     "chazz": dict(
@@ -214,7 +214,7 @@ CAST = {
                "You want an autograph? Get in line. Behind my brothers' business cards.",
                "Ojama Yellow, get back in the deck before somebody sees you!",
                "I didn't lose. I'm just letting everybody else catch up."],
-        spawn=dict(group="obelisk_boys", dorm="obelisk", nth=0),
+        spawn=dict(group="obelisk_boys", dorm="obelisk", nth=7),
     ),
     "zane": dict(
         name="Zane Truesdale", dorm="obelisk", scale=1.1, model="vroid_c",
@@ -274,7 +274,7 @@ CAST = {
                    mouth=dict(kind="smile", w=0.08), blush=0.3),
         lines=["Alexis is the Queen of Obelisk Blue. Everybody knows that.",
                "Did you see that Slifer slacker sneak past the girls' dorm again?"],
-        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=1),
+        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=6),
     ),
     "mindy": dict(
         name="Mindy", dorm="obelisk", scale=0.97, model="vroid_a",
@@ -291,7 +291,7 @@ CAST = {
                    mouth=dict(kind="open", w=0.08), blush=0.3),
         lines=["Ooh, are you new? Which dorm are you in? Wait, let me guess...",
                "The lake by our dorm is so pretty at sunset!"],
-        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=2),
+        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=7),
     ),
     # ------------------------------------------------------------------ staff
     "crowler": dict(
