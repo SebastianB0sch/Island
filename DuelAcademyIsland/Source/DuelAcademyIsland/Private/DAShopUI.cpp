@@ -5,30 +5,13 @@
 #include "CanvasItem.h"
 #include "DACardArtSubsystem.h"
 #include "DAShopSubsystem.h"
+#include "DAUIStyle.h"
 #include "DuelAcademyIsland.h"
 #include "Engine/Canvas.h"
 #include "Engine/Texture2D.h"
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
 #include "TextureResource.h"
-
-namespace
-{
-	const FLinearColor ShopGold(1.f, 0.78f, 0.25f);
-	const FLinearColor ShopInk(0.008f, 0.014f, 0.028f);
-	const FLinearColor ShopPaper(0.95f, 0.95f, 0.97f);
-	const FLinearColor ShopMuted(0.58f, 0.63f, 0.72f);
-	const FLinearColor ShopCyan(0.35f, 0.82f, 0.92f);
-	const FLinearColor ShopGreen(0.42f, 0.82f, 0.48f);
-	const FLinearColor ShopRed(0.90f, 0.28f, 0.24f);
-	const FLinearColor ShopPurple(0.72f, 0.44f, 0.95f);
-
-	FLinearColor ShopAlpha(FLinearColor C, float A)
-	{
-		C.A = A;
-		return C;
-	}
-}
 
 FDAShopUI::FDAShopUI(ADAHUD* InOwner)
 	: FDAUIScreen(InOwner)
@@ -59,10 +42,7 @@ void FDAShopUI::Open()
 	ListScroll = 0;
 	ConfirmSelection = 0;
 	HoveredIndex = INDEX_NONE;
-	HitTargets.Reset();
-	StatusMessage.Reset();
-	StatusTime = 0.f;
-	bStatusError = false;
+	ClearStatus();
 
 	if (UDAShopSubsystem* Shop = GetShop())
 	{
@@ -70,6 +50,46 @@ void FDAShopUI::Open()
 	}
 	RefreshCatalogue(false);
 	PlaySfx(TEXT("A_UIClick"), 0.45f);
+	OpenPendingGrants();
+}
+
+void FDAShopUI::OpenPendingGrants()
+{
+	UDAShopSubsystem* Shop = GetShop();
+	if (!Shop)
+	{
+		return;
+	}
+	const int32 DPBefore = Shop->GetDP();
+	TArray<FDAEPackOpenResult> Grants;
+	const int32 Opened = Shop->OpenPendingPackGrants(Grants);
+	if (Opened <= 0 || Grants.Num() == 0)
+	{
+		return;
+	}
+
+	// Show every granted card on one reveal panel.
+	LastPurchase = FDAEPurchaseResult();
+	LastPurchase.bPurchased = true;
+	LastPurchase.PackId = Grants[0].PackId;
+	LastPurchase.DPBefore = DPBefore;
+	LastPurchase.Open = Grants[0];
+	LastPurchase.Open.Cards.Reset();
+	LastPurchase.Open.DPFromDuplicates = 0;
+	for (const FDAEPackOpenResult& Grant : Grants)
+	{
+		LastPurchase.Open.Cards.Append(Grant.Cards);
+		LastPurchase.Open.DPFromDuplicates += Grant.DPFromDuplicates;
+	}
+	LastPurchase.DPAfter = Shop->GetDP();
+	LastPurchase.Open.DPBefore = LastPurchase.DPBefore;
+	LastPurchase.Open.DPAfter = LastPurchase.DPAfter;
+
+	Elapsed = 0.f;
+	Panel = EPanel::Reveal;
+	SetStatus(FString::Printf(TEXT("Opened %d gift pack%s."), Opened, Opened == 1 ? TEXT("") : TEXT("s")), false);
+	PlaySfx(TEXT("A_CardDraw"), 0.9f);
+	RefreshCatalogue(true);
 }
 
 void FDAShopUI::Close()
@@ -175,13 +195,6 @@ FString FDAShopUI::GetCategoryLine() const
 	return Categories.IsValidIndex(CategoryIndex) ? Categories[CategoryIndex] : FString(TEXT("ALL"));
 }
 
-void FDAShopUI::SetStatus(const FString& Message, bool bError)
-{
-	StatusMessage = Message;
-	StatusTime = 5.0f;
-	bStatusError = bError;
-}
-
 void FDAShopUI::MoveSelection(int32 Delta)
 {
 	const int32 Count = Filtered.Num();
@@ -244,7 +257,9 @@ void FDAShopUI::DoPurchase()
 
 	const FString PackId = Pack->PackId;
 	LastPurchase = FDAEPurchaseResult();
-	const bool bPurchased = Shop->PurchasePack(PackId, FMath::Rand(), LastPurchase);
+	// Seed 0 lets UDAInventorySubsystem::ResolveSeed pick a 64-bit cycle-counter
+	// seed; FMath::Rand() is only 15 bits on MSVC (32,768 possible reveals per pack).
+	const bool bPurchased = Shop->PurchasePack(PackId, 0, LastPurchase);
 	if (bPurchased)
 	{
 		Elapsed = 0.f;
@@ -269,15 +284,7 @@ void FDAShopUI::Update(float DeltaSeconds)
 	}
 	PlayerOwner = GetPlayerController();
 	Elapsed += DeltaSeconds;
-	if (StatusTime > 0.f)
-	{
-		StatusTime -= DeltaSeconds;
-		if (StatusTime <= 0.f)
-		{
-			StatusTime = 0.f;
-			StatusMessage.Reset();
-		}
-	}
+	TickStatus(DeltaSeconds);
 
 	HoveredIndex = INDEX_NONE;
 	FVector2D Mouse;
@@ -397,18 +404,10 @@ void FDAShopUI::Update(float DeltaSeconds)
 
 void FDAShopUI::HandleClickAtMouse()
 {
-	FVector2D Mouse;
-	if (!GetMousePosition(Mouse))
+	FDAUIHitTarget Hit;
+	if (FindHitAtMouse(Hit))
 	{
-		return;
-	}
-	for (int32 Index = HitTargets.Num() - 1; Index >= 0; --Index)
-	{
-		if (HitTargets[Index].Contains(Mouse))
-		{
-			HandleHit(HitTargets[Index]);
-			return;
-		}
+		HandleHit(Hit);
 	}
 }
 
@@ -483,17 +482,17 @@ void FDAShopUI::DrawHeader()
 	const float CW = Canvas->ClipX;
 	const float S = UIScale;
 	const float H = 84.f * S;
-	DrawRect(FLinearColor(ShopInk.R, ShopInk.G, ShopInk.B, 0.96f), 0.f, 0.f, CW, H);
-	DrawRect(ShopAlpha(ShopGold, 0.6f), 0.f, H - 2.f * S, CW, 2.f * S);
-	DrawText(TEXT("DOROTHY'S CARD SHOP"), 32.f * S, 12.f * S, ShopGold, 1.65f, false, GetFont(true));
-	DrawText(TEXT("BOOSTER PACKS  -  A06 INVENTORY + DP"), 34.f * S, 52.f * S, ShopMuted, 0.72f);
+	DrawRect(FLinearColor(DAUIStyle::Ink.R, DAUIStyle::Ink.G, DAUIStyle::Ink.B, 0.96f), 0.f, 0.f, CW, H);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.6f), 0.f, H - 2.f * S, CW, 2.f * S);
+	DrawText(TEXT("DOROTHY'S CARD SHOP"), 32.f * S, 12.f * S, DAUIStyle::Gold, 1.65f, false, GetFont(true));
+	DrawText(TEXT("BOOSTER PACKS  -  A06 INVENTORY + DP"), 34.f * S, 52.f * S, DAUIStyle::Muted, 0.72f);
 
 	UDAShopSubsystem* Shop = GetShop();
 	const FString DP = FString::Printf(TEXT("DP %d"), Shop ? Shop->GetDP() : 0);
 	const FVector2D Size = Measure(DP, 1.15f, GetFont(true));
-	DrawText(DP, CW - 32.f * S - Size.X, 18.f * S, ShopGold, 1.15f, false, GetFont(true));
-	DrawText(Ellipsize(FString::Printf(TEXT("CATEGORY  %s"), *GetCategoryLine()), 260.f * S, 0.7f),
-		CW - 300.f * S, 54.f * S, ShopMuted, 0.7f);
+	DrawText(DP, CW - 32.f * S - Size.X, 18.f * S, DAUIStyle::Gold, 1.15f, false, GetFont(true));
+	DrawText(FString::Printf(TEXT("CATEGORY  %s"), *GetCategoryLine()),
+		CW - 300.f * S, 54.f * S, DAUIStyle::Muted, 0.7f);
 }
 
 void FDAShopUI::DrawBrowse()
@@ -511,11 +510,11 @@ void FDAShopUI::DrawBrowse()
 		const bool bSelected = Index == CategoryIndex;
 		if (bSelected)
 		{
-			DrawRect(ShopAlpha(ShopGold, 0.22f), X, Top, TabW - 6.f * S, TabH);
-			DrawRect(ShopGold, X, Top + TabH - 3.f * S, TabW - 6.f * S, 3.f * S);
+			DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.22f), X, Top, TabW - 6.f * S, TabH);
+			DrawRect(DAUIStyle::Gold, X, Top + TabH - 3.f * S, TabW - 6.f * S, 3.f * S);
 		}
-		DrawText(Ellipsize(Categories[Index], TabW - 10.f * S, 0.72f), X + TabW * 0.5f, Top + 8.f * S,
-			bSelected ? ShopGold : ShopMuted, 0.72f, true);
+		DrawText(Categories[Index], X + TabW * 0.5f, Top + 8.f * S,
+			bSelected ? DAUIStyle::Gold : DAUIStyle::Muted, 0.72f, true);
 		AddHit(TEXT("category"), Index, X, Top, TabW - 6.f * S, TabH);
 	}
 
@@ -526,23 +525,15 @@ void FDAShopUI::DrawBrowse()
 	const float DetailX = ListX + ListW + 18.f * S;
 	const float DetailW = CW - DetailX - Margin;
 
-	DrawPanel(ListX, ContentY, ListW, ContentH, ShopAlpha(ShopInk, 0.9f), ShopAlpha(ShopGold, 0.7f));
-	DrawText(TEXT("PACKS"), ListX + 18.f * S, ContentY + 12.f * S, ShopGold, 0.95f, false, GetFont(true));
-	DrawText(Ellipsize(FString::Printf(TEXT("%d in %s"), Filtered.Num(), *GetCategoryLine()),
-		ListW - 36.f * S, 0.7f), ListX + 18.f * S, ContentY + 36.f * S, ShopMuted, 0.7f);
+	DrawPanel(ListX, ContentY, ListW, ContentH, DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.9f), DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.7f));
+	DrawText(TEXT("PACKS"), ListX + 18.f * S, ContentY + 12.f * S, DAUIStyle::Gold, 0.95f, false, GetFont(true));
+	DrawText(FString::Printf(TEXT("%d in %s"), Filtered.Num(), *GetCategoryLine()),
+		ListX + 18.f * S, ContentY + 36.f * S, DAUIStyle::Muted, 0.7f);
 
 	const float RowH = 56.f * S;
 	const float RowsTop = ContentY + 58.f * S;
 	const int32 VisibleRows = FMath::Max(1, FMath::FloorToInt((ContentH - 66.f * S) / RowH));
-	if (Selection < ListScroll)
-	{
-		ListScroll = Selection;
-	}
-	else if (Selection >= ListScroll + VisibleRows)
-	{
-		ListScroll = Selection - VisibleRows + 1;
-	}
-	ListScroll = FMath::Clamp(ListScroll, 0, FMath::Max(0, Filtered.Num() - VisibleRows));
+	KeepRowVisible(Selection, Filtered.Num(), VisibleRows, ListScroll);
 
 	for (int32 Index = ListScroll; Index < Filtered.Num() && Index < ListScroll + VisibleRows; ++Index)
 	{
@@ -556,60 +547,54 @@ void FDAShopUI::DrawBrowse()
 
 	if (ListScroll > 0)
 	{
-		DrawText(TEXT("^"), ListX + ListW * 0.5f, ContentY + 48.f * S, ShopMuted, 0.7f, true);
+		DrawText(TEXT("^"), ListX + ListW * 0.5f, ContentY + 48.f * S, DAUIStyle::Muted, 0.7f, true);
 	}
 	if (ListScroll + VisibleRows < Filtered.Num())
 	{
-		DrawText(TEXT("v"), ListX + ListW * 0.5f, ContentY + ContentH - 24.f * S, ShopMuted, 0.7f, true);
+		DrawText(TEXT("v"), ListX + ListW * 0.5f, ContentY + ContentH - 24.f * S, DAUIStyle::Muted, 0.7f, true);
 	}
 
-	DrawPanel(DetailX, ContentY, DetailW, ContentH, ShopAlpha(ShopInk, 0.85f), ShopAlpha(ShopMuted, 0.4f));
+	DrawPanel(DetailX, ContentY, DetailW, ContentH, DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.85f), DAUIStyle::WithAlpha(DAUIStyle::Muted, 0.4f));
 	const FDAEPackView* Pack = GetSelectedPack();
 	if (!Pack)
 	{
-		const FString Empty = GetShop()
-			? FString(TEXT("No booster packs in this category."))
-			: FString(TEXT("Card shop subsystem unavailable."));
-		DrawText(Ellipsize(Empty, DetailW - 48.f * S, 0.9f),
-			DetailX + 24.f * S, ContentY + 28.f * S, ShopMuted, 0.9f);
+		DrawText(TEXT("No booster packs in this category."), DetailX + 24.f * S, ContentY + 28.f * S, DAUIStyle::Muted, 0.9f);
 		return;
 	}
 
-	DrawText(Ellipsize(Pack->Name, DetailW - 48.f * S, 1.35f, GetFont(true)),
-		DetailX + 24.f * S, ContentY + 22.f * S, ShopGold, 1.35f, false, GetFont(true));
-	DrawText(Ellipsize(FString::Printf(TEXT("%s  -  %d CARDS  -  %d DP"), *Pack->Category, Pack->PackSize, Pack->Price),
-		DetailW - 48.f * S, 0.78f),
-		DetailX + 24.f * S, ContentY + 62.f * S, ShopMuted, 0.78f);
-	DrawRect(ShopAlpha(ShopGold, 0.35f), DetailX + 24.f * S, ContentY + 92.f * S, DetailW - 48.f * S, 1.f * S);
+	DrawText(Pack->Name, DetailX + 24.f * S, ContentY + 22.f * S, DAUIStyle::Gold, 1.35f, false, GetFont(true));
+	DrawText(FString::Printf(TEXT("%s  -  %d CARDS  -  %d DP"), *Pack->Category, Pack->PackSize, Pack->Price),
+		DetailX + 24.f * S, ContentY + 62.f * S, DAUIStyle::Muted, 0.78f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.35f), DetailX + 24.f * S, ContentY + 92.f * S, DetailW - 48.f * S, 1.f * S);
 
 	float Y = ContentY + 108.f * S;
 	for (const FString& Line : WrapText(Pack->UnlockReason.IsEmpty() ? TEXT("Available.") : Pack->UnlockReason,
 		DetailW - 48.f * S, 0.82f))
 	{
-		DrawText(Line, DetailX + 24.f * S, Y, ShopPaper, 0.82f);
+		DrawText(Line, DetailX + 24.f * S, Y, DAUIStyle::Paper, 0.82f);
 		Y += Measure(TEXT("Ag"), 0.82f).Y + 3.f * S;
 	}
 	Y += 10.f * S;
-	DrawText(Ellipsize(GetPackStatusLine(*Pack), DetailW - 48.f * S, 0.82f), DetailX + 24.f * S, Y,
-		Pack->bCanPurchase ? ShopGreen : ShopRed, 0.82f);
+	DrawText(GetPackStatusLine(*Pack), DetailX + 24.f * S, Y,
+		Pack->bCanPurchase ? DAUIStyle::Green : DAUIStyle::Red, 0.82f);
 	Y += 28.f * S;
-	DrawText(Ellipsize(FString::Printf(TEXT("RESTOCK %d DAYS   LAST PURCHASE DAY %d   NEXT DAY %d"),
-		Pack->RestockDays, Pack->LastPurchaseDay, Pack->NextAvailableDay), DetailW - 48.f * S, 0.72f),
-		DetailX + 24.f * S, Y, ShopMuted, 0.72f);
+	DrawText(FString::Printf(TEXT("RESTOCK %d DAYS   LAST PURCHASE DAY %d   NEXT DAY %d"),
+		Pack->RestockDays, Pack->LastPurchaseDay, Pack->NextAvailableDay),
+		DetailX + 24.f * S, Y, DAUIStyle::Muted, 0.72f);
 
 	const float ButtonW = FMath::Min(260.f * S, DetailW - 48.f * S);
 	const float ButtonH = 48.f * S;
 	const float ButtonX = DetailX + 24.f * S;
 	const float ButtonY = ContentY + ContentH - ButtonH - 18.f * S;
-	DrawRect(ShopAlpha(Pack->bCanPurchase ? ShopGold : ShopMuted, 0.2f), ButtonX, ButtonY, ButtonW, ButtonH);
-	DrawRect(Pack->bCanPurchase ? ShopGold : ShopMuted, ButtonX, ButtonY, 4.f * S, ButtonH);
+	DrawRect(DAUIStyle::WithAlpha(Pack->bCanPurchase ? DAUIStyle::Gold : DAUIStyle::Muted, 0.2f), ButtonX, ButtonY, ButtonW, ButtonH);
+	DrawRect(Pack->bCanPurchase ? DAUIStyle::Gold : DAUIStyle::Muted, ButtonX, ButtonY, 4.f * S, ButtonH);
 	DrawText(Pack->bCanPurchase ? TEXT("[ENTER] BUY PACK") : TEXT("LOCKED"),
-		ButtonX + 16.f * S, ButtonY + 12.f * S, Pack->bCanPurchase ? ShopPaper : ShopMuted, 0.9f);
+		ButtonX + 16.f * S, ButtonY + 12.f * S, Pack->bCanPurchase ? DAUIStyle::Paper : DAUIStyle::Muted, 0.9f);
 	AddHit(TEXT("buy"), INDEX_NONE, ButtonX, ButtonY, ButtonW, ButtonH);
 
 	const float CloseW = 110.f * S;
-	DrawRect(ShopAlpha(ShopMuted, 0.16f), DetailX + DetailW - CloseW - 24.f * S, ButtonY, CloseW, ButtonH);
-	DrawText(TEXT("CLOSE"), DetailX + DetailW - CloseW, ButtonY + 12.f * S, ShopMuted, 0.82f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Muted, 0.16f), DetailX + DetailW - CloseW - 24.f * S, ButtonY, CloseW, ButtonH);
+	DrawText(TEXT("CLOSE"), DetailX + DetailW - CloseW, ButtonY + 12.f * S, DAUIStyle::Muted, 0.82f);
 	AddHit(TEXT("close"), INDEX_NONE, DetailX + DetailW - CloseW - 24.f * S, ButtonY, CloseW, ButtonH);
 }
 
@@ -617,20 +602,22 @@ void FDAShopUI::DrawPackRow(const FDAEPackView& Pack, int32 FilteredIndex, float
 {
 	const float S = UIScale;
 	const bool bHovered = FilteredIndex == HoveredIndex;
-	const FLinearColor Accent = Pack.bCanPurchase ? ShopGold : ShopMuted;
+	const FLinearColor Accent = Pack.bCanPurchase ? DAUIStyle::Gold : DAUIStyle::Muted;
 	if (bSelected || bHovered)
 	{
-		DrawRect(ShopAlpha(Accent, bSelected ? 0.2f : 0.08f), X, Y, W, H);
+		DrawRect(DAUIStyle::WithAlpha(Accent, bSelected ? 0.2f : 0.08f), X, Y, W, H);
 		DrawRect(Accent, X, Y, 4.f * S, H);
 	}
+	DrawText(Pack.Name, X + 16.f * S, Y + 6.f * S,
+		Pack.bCanPurchase ? DAUIStyle::Paper : DAUIStyle::Muted, 0.85f);
 	const FString Price = FString::Printf(TEXT("%d DP"), Pack.Price);
 	const FVector2D PriceSize = Measure(Price, 0.8f);
 	DrawText(Ellipsize(Pack.Name, W - PriceSize.X - 40.f * S, 0.85f), X + 16.f * S, Y + 6.f * S,
 		Pack.bCanPurchase ? ShopPaper : ShopMuted, 0.85f);
 	DrawText(Price, X + W - PriceSize.X - 12.f * S, Y + 6.f * S,
-		Pack.bCanPurchase ? ShopGold : ShopMuted, 0.8f);
-	DrawText(Ellipsize(GetPackStatusLine(Pack), W - 32.f * S, 0.66f), X + 16.f * S, Y + 28.f * S,
-		Pack.bCanPurchase ? ShopGreen : ShopMuted, 0.66f);
+		Pack.bCanPurchase ? DAUIStyle::Gold : DAUIStyle::Muted, 0.8f);
+	DrawText(GetPackStatusLine(Pack), X + 16.f * S, Y + 28.f * S,
+		Pack.bCanPurchase ? DAUIStyle::Green : DAUIStyle::Muted, 0.66f);
 	AddHit(TEXT("pack"), FilteredIndex, X, Y, W, H);
 }
 
@@ -646,19 +633,16 @@ void FDAShopUI::DrawConfirm()
 	const float H = 320.f * S;
 	const float X = (CW - W) * 0.5f;
 	const float Y = (CH - H) * 0.5f;
-	DrawPanel(X, Y, W, H, ShopAlpha(ShopInk, 0.97f), ShopGold);
-	DrawText(TEXT("CONFIRM PURCHASE"), X + 28.f * S, Y + 20.f * S, ShopGold, 1.35f, false, GetFont(true));
-	DrawText(Ellipsize(Pack ? Pack->Name : TEXT("Pack"), W - 60.f * S, 1.05f),
-		X + 30.f * S, Y + 68.f * S, ShopPaper, 1.05f);
+	DrawPanel(X, Y, W, H, DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.97f), DAUIStyle::Gold);
+	DrawText(TEXT("CONFIRM PURCHASE"), X + 28.f * S, Y + 20.f * S, DAUIStyle::Gold, 1.35f, false, GetFont(true));
+	DrawText(Pack ? Pack->Name : TEXT("Pack"), X + 30.f * S, Y + 68.f * S, DAUIStyle::Paper, 1.05f);
 	UDAShopSubsystem* Shop = GetShop();
 	const int32 DP = Shop ? Shop->GetDP() : 0;
 	const int32 Price = Pack ? Pack->Price : 0;
-	DrawText(Ellipsize(FString::Printf(TEXT("PRICE %d DP      BALANCE %d DP      AFTER %d DP"), Price, DP, DP - Price),
-		W - 60.f * S, 0.82f),
-		X + 30.f * S, Y + 104.f * S, DP >= Price ? ShopMuted : ShopRed, 0.82f);
-	DrawText(Ellipsize(TEXT("The pack will be opened immediately and cards added to your trunk."),
-		W - 60.f * S, 0.76f),
-		X + 30.f * S, Y + 138.f * S, ShopMuted, 0.76f);
+	DrawText(FString::Printf(TEXT("PRICE %d DP      BALANCE %d DP      AFTER %d DP"), Price, DP, DP - Price),
+		X + 30.f * S, Y + 104.f * S, DP >= Price ? DAUIStyle::Muted : DAUIStyle::Red, 0.82f);
+	DrawText(TEXT("The pack will be opened immediately and cards added to your trunk."),
+		X + 30.f * S, Y + 138.f * S, DAUIStyle::Muted, 0.76f);
 
 	AddHit(TEXT("cancel"), INDEX_NONE, X, Y, W, H);
 	const float ButtonW = W - 60.f * S;
@@ -667,14 +651,14 @@ void FDAShopUI::DrawConfirm()
 	{
 		const bool bSelected = Index == ConfirmSelection;
 		const float BY = Y + H - 120.f * S + Index * (ButtonH + 8.f * S);
-		const FLinearColor Accent = Index == 0 ? ShopGold : ShopMuted;
+		const FLinearColor Accent = Index == 0 ? DAUIStyle::Gold : DAUIStyle::Muted;
 		if (bSelected)
 		{
-			DrawRect(ShopAlpha(Accent, 0.2f), X + 30.f * S, BY, ButtonW, ButtonH);
+			DrawRect(DAUIStyle::WithAlpha(Accent, 0.2f), X + 30.f * S, BY, ButtonW, ButtonH);
 			DrawRect(Accent, X + 30.f * S, BY, 4.f * S, ButtonH);
 		}
 		DrawText(Index == 0 ? TEXT("BUY PACK") : TEXT("CANCEL"), X + 48.f * S, BY + 12.f * S,
-			bSelected ? ShopPaper : ShopMuted, 0.95f);
+			bSelected ? DAUIStyle::Paper : DAUIStyle::Muted, 0.95f);
 		AddHit(TEXT("confirm"), Index, X + 30.f * S, BY, ButtonW, ButtonH);
 	}
 }
@@ -685,11 +669,10 @@ void FDAShopUI::DrawReveal()
 	const float CH = Canvas->ClipY;
 	const float S = UIScale;
 	const int32 Count = LastPurchase.Open.Cards.Num();
-	DrawText(TEXT("PACK OPENED"), CW * 0.5f, 112.f * S, ShopGold, 1.8f, true, GetFont(true));
-	DrawText(Ellipsize(FString::Printf(TEXT("DUPLICATE DP +%d      DP %d -> %d"),
+	DrawText(TEXT("PACK OPENED"), CW * 0.5f, 112.f * S, DAUIStyle::Gold, 1.8f, true, GetFont(true));
+	DrawText(FString::Printf(TEXT("DUPLICATE DP +%d      DP %d -> %d"),
 		LastPurchase.Open.DPFromDuplicates, LastPurchase.Open.DPBefore, LastPurchase.Open.DPAfter),
-		CW - 64.f * S, 0.85f),
-		CW * 0.5f, 158.f * S, ShopMuted, 0.85f, true);
+		CW * 0.5f, 158.f * S, DAUIStyle::Muted, 0.85f, true);
 
 	const float Margin = 32.f * S;
 	const float CardW = FMath::Max(0.f, FMath::Min((CW - Margin * 2.f - 4.f * 12.f * S) / FMath::Max(1, Count), 240.f * S));
@@ -715,9 +698,9 @@ void FDAShopUI::DrawReveal()
 	const float ButtonH = 46.f * S;
 	const float ButtonX = (CW - ButtonW) * 0.5f;
 	const float ButtonY = CH - 92.f * S;
-	DrawRect(ShopAlpha(ShopGold, 0.2f), ButtonX, ButtonY, ButtonW, ButtonH);
-	DrawRect(ShopGold, ButtonX, ButtonY, 4.f * S, ButtonH);
-	DrawText(TEXT("[ENTER] CONTINUE"), ButtonX + 40.f * S, ButtonY + 11.f * S, ShopPaper, 0.92f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.2f), ButtonX, ButtonY, ButtonW, ButtonH);
+	DrawRect(DAUIStyle::Gold, ButtonX, ButtonY, 4.f * S, ButtonH);
+	DrawText(TEXT("[ENTER] CONTINUE"), ButtonX + 40.f * S, ButtonY + 11.f * S, DAUIStyle::Paper, 0.92f);
 	AddHit(TEXT("reveal_close"), INDEX_NONE, 0.f, 0.f, CW, CH);
 }
 
@@ -732,9 +715,9 @@ void FDAShopUI::DrawRevealCard(const FDAEPackCardReveal& Card, int32 Index, floa
 	const float Alpha = FMath::Clamp((Elapsed - Delay) / 0.22f, 0.f, 1.f);
 	const FLinearColor Rarity = RarityColor(Card.Rarity);
 
-	DrawRect(ShopAlpha(ShopInk, 0.92f * Alpha), X, Y, W, H);
-	DrawRect(ShopAlpha(Rarity, 0.9f * Alpha), X, Y, W, 3.f * S);
-	DrawRect(ShopAlpha(Rarity, 0.9f * Alpha), X, Y + H - 3.f * S, W, 3.f * S);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.92f * Alpha), X, Y, W, H);
+	DrawRect(DAUIStyle::WithAlpha(Rarity, 0.9f * Alpha), X, Y, W, 3.f * S);
+	DrawRect(DAUIStyle::WithAlpha(Rarity, 0.9f * Alpha), X, Y + H - 3.f * S, W, 3.f * S);
 
 	const float ArtH = H * 0.48f;
 	if (UCardArtSubsystem* Art = GetCardArt())
@@ -748,26 +731,26 @@ void FDAShopUI::DrawRevealCard(const FDAEPackCardReveal& Card, int32 Index, floa
 		}
 		else
 		{
-			DrawRect(ShopAlpha(ShopMuted, 0.12f * Alpha), X + 10.f * S, Y + 12.f * S, W - 20.f * S, ArtH);
-			DrawText(TEXT("NO ART"), X + W * 0.5f, Y + 12.f * S + ArtH * 0.42f, ShopMuted, 0.7f, true);
+			DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Muted, 0.12f * Alpha), X + 10.f * S, Y + 12.f * S, W - 20.f * S, ArtH);
+			DrawText(TEXT("NO ART"), X + W * 0.5f, Y + 12.f * S + ArtH * 0.42f, DAUIStyle::Muted, 0.7f, true);
 		}
 	}
 
 	float TextY = Y + ArtH + 22.f * S;
-	DrawText(Ellipsize(Card.Name, W - 24.f * S, 0.8f), X + 12.f * S, TextY, ShopAlpha(ShopPaper, Alpha), 0.8f);
+	DrawText(Card.Name, X + 12.f * S, TextY, DAUIStyle::WithAlpha(DAUIStyle::Paper, Alpha), 0.8f);
 	TextY += 24.f * S;
-	DrawText(DAEconomy::RarityToString(Card.Rarity), X + 12.f * S, TextY, ShopAlpha(Rarity, Alpha), 0.68f);
+	DrawText(DAEconomy::RarityToString(Card.Rarity), X + 12.f * S, TextY, DAUIStyle::WithAlpha(Rarity, Alpha), 0.68f);
 	TextY += 22.f * S;
 	const FString State = Card.bDuplicate ? FString(TEXT("DUPLICATE")) : FString(TEXT("NEW"));
-	DrawText(State, X + 12.f * S, TextY, ShopAlpha(Card.bDuplicate ? ShopMuted : ShopGreen, Alpha), 0.7f);
+	DrawText(State, X + 12.f * S, TextY, DAUIStyle::WithAlpha(Card.bDuplicate ? DAUIStyle::Muted : DAUIStyle::Green, Alpha), 0.7f);
 	TextY += 22.f * S;
 	DrawText(FString::Printf(TEXT("OWNED %d -> %d"), Card.OwnedBefore, Card.OwnedAfter),
-		X + 12.f * S, TextY, ShopAlpha(ShopMuted, Alpha), 0.66f);
+		X + 12.f * S, TextY, DAUIStyle::WithAlpha(DAUIStyle::Muted, Alpha), 0.66f);
 	if (Card.DuplicateDP > 0)
 	{
 		TextY += 20.f * S;
 		DrawText(FString::Printf(TEXT("+%d DP"), Card.DuplicateDP), X + 12.f * S, TextY,
-			ShopAlpha(ShopGold, Alpha), 0.72f);
+			DAUIStyle::WithAlpha(DAUIStyle::Gold, Alpha), 0.72f);
 	}
 }
 
@@ -775,12 +758,12 @@ FLinearColor FDAShopUI::RarityColor(EDAECardRarity Rarity) const
 {
 	switch (Rarity)
 	{
-	case EDAECardRarity::Rare:       return ShopCyan;
-	case EDAECardRarity::SuperRare:  return ShopPurple;
-	case EDAECardRarity::UltraRare:  return ShopGold;
-	case EDAECardRarity::SecretRare: return ShopRed;
+	case EDAECardRarity::Rare:       return DAUIStyle::Cyan;
+	case EDAECardRarity::SuperRare:  return DAUIStyle::Purple;
+	case EDAECardRarity::UltraRare:  return DAUIStyle::Gold;
+	case EDAECardRarity::SecretRare: return DAUIStyle::Red;
 	case EDAECardRarity::Common:
-	default:                         return ShopMuted;
+	default:                         return DAUIStyle::Muted;
 	}
 }
 
@@ -791,14 +774,13 @@ void FDAShopUI::DrawFooter()
 	const float S = UIScale;
 	const float H = 32.f * S;
 	DrawRect(FLinearColor(0.004f, 0.008f, 0.018f, 0.94f), 0.f, CH - H, CW, H);
-	DrawText(Ellipsize(TEXT("UP / DOWN browse      LEFT / RIGHT category      ENTER buy      ESC close"),
-		CW - 48.f * S, 0.7f),
-		24.f * S, CH - H + 8.f * S, ShopMuted, 0.7f);
+	DrawText(TEXT("UP / DOWN browse      LEFT / RIGHT category      ENTER buy      ESC close"),
+		24.f * S, CH - H + 8.f * S, DAUIStyle::Muted, 0.7f);
 }
 
 void FDAShopUI::DrawStatus()
 {
-	if (StatusMessage.IsEmpty() || !Canvas)
+	if (StatusText.IsEmpty() || !Canvas)
 	{
 		return;
 	}
@@ -807,9 +789,9 @@ void FDAShopUI::DrawStatus()
 	const float H = 42.f * S;
 	const float X = 24.f * S;
 	const float Y = Canvas->ClipY - 94.f * S;
-	const FLinearColor Accent = bStatusError ? ShopRed : ShopGold;
-	DrawRect(ShopAlpha(ShopInk, 0.94f), X, Y, W, H);
+	const FLinearColor Accent = bStatusIsError ? DAUIStyle::Red : DAUIStyle::Gold;
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.94f), X, Y, W, H);
 	DrawRect(Accent, X, Y, 4.f * S, H);
-	DrawText(Ellipsize(StatusMessage, W - 32.f * S, 0.8f), X + 16.f * S, Y + 9.f * S,
-		bStatusError ? ShopRed : ShopPaper, 0.8f);
+	DrawText(TruncateToWidth(StatusText, W - 32.f * S, 0.8f), X + 16.f * S, Y + 9.f * S,
+		bStatusIsError ? DAUIStyle::Red : DAUIStyle::Paper, 0.8f);
 }

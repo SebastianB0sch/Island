@@ -5,28 +5,11 @@
 #include "DAInventorySubsystem.h"
 #include "DADuelEngine.h"
 #include "DACardRecords.h"
+#include "DAUIStyle.h"
 #include "DuelAcademyIsland.h"
 #include "Engine/Canvas.h"
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
-
-namespace
-{
-	const FLinearColor DeckGold(1.f, 0.78f, 0.25f);
-	const FLinearColor DeckInk(0.008f, 0.014f, 0.028f);
-	const FLinearColor DeckPaper(0.95f, 0.95f, 0.97f);
-	const FLinearColor DeckMuted(0.58f, 0.63f, 0.72f);
-	const FLinearColor DeckCyan(0.35f, 0.82f, 0.92f);
-	const FLinearColor DeckGreen(0.42f, 0.82f, 0.48f);
-	const FLinearColor DeckRed(0.90f, 0.28f, 0.24f);
-	const FLinearColor DeckPurple(0.72f, 0.44f, 0.95f);
-
-	FLinearColor DeckAlpha(FLinearColor C, float A)
-	{
-		C.A = A;
-		return C;
-	}
-}
 
 FDADeckUI::FDADeckUI(ADAHUD* InOwner)
 	: FDAUIScreen(InOwner)
@@ -64,15 +47,7 @@ void FDADeckUI::Open(const FString& DeckId)
 	bEditingName = false;
 	bRenameMode = false;
 	bConfirmErase = false;
-	bDeckExtraSelection = false;
-	bExtraMode = false;
-	CollectionSelection = 0;
-	DeckCardSelection = 0;
-	HoveredIndex = INDEX_NONE;
-	HitTargets.Reset();
-	StatusMessage.Reset();
-	StatusTime = 0.f;
-	bStatusError = false;
+	ClearStatus();
 	CurrentDeckId = DeckId;
 	DeckIndex = 0;
 	DeckScroll = 0;
@@ -248,13 +223,6 @@ FString FDADeckUI::GetSortLabel() const
 {
 	static const TCHAR* Labels[] = { TEXT("ID"), TEXT("NAME"), TEXT("ATK"), TEXT("LEVEL") };
 	return Labels[FMath::Clamp(SortMode, 0, 3)];
-}
-
-void FDADeckUI::SetStatus(const FString& Message, bool bError)
-{
-	StatusMessage = Message;
-	StatusTime = 5.f;
-	bStatusError = bError;
 }
 
 void FDADeckUI::MoveSelection(int32 Delta)
@@ -476,6 +444,24 @@ void FDADeckUI::EraseCurrentDeck()
 	PlaySfx(TEXT("A_UIClick"), 0.35f);
 }
 
+void FDADeckUI::ConfirmErase()
+{
+	UDADeckLogic* Logic = GetDeckLogic();
+	FString Error;
+	if (Logic && !EraseDeckId.IsEmpty() && Logic->EraseDeck(EraseDeckId, Error))
+	{
+		CurrentDeckId.Reset();
+		DeckIndex = 0;
+		RefreshAll(false);
+		SetStatus(TEXT("Deck erased."), false);
+	}
+	else if (!Error.IsEmpty())
+	{
+		SetStatus(Error, true);
+	}
+	bConfirmErase = false;
+}
+
 void FDADeckUI::SetCurrentDeckActive()
 {
 	UDADeckLogic* Logic = GetDeckLogic();
@@ -581,29 +567,7 @@ void FDADeckUI::Update(float DeltaSeconds)
 	}
 	PlayerOwner = GetPlayerController();
 	Elapsed += DeltaSeconds;
-	if (StatusTime > 0.f)
-	{
-		StatusTime -= DeltaSeconds;
-		if (StatusTime <= 0.f)
-		{
-			StatusTime = 0.f;
-			StatusMessage.Reset();
-		}
-	}
-
-	HoveredIndex = INDEX_NONE;
-	FVector2D Mouse;
-	if (GetMousePosition(Mouse))
-	{
-		for (const FDAUIHitTarget& Hit : HitTargets)
-		{
-			if ((Hit.Action == TEXT("deck") || Hit.Action == TEXT("collection")
-				|| Hit.Action == TEXT("deckmain") || Hit.Action == TEXT("deckextra")) && Hit.Contains(Mouse))
-			{
-				HoveredIndex = Hit.Index;
-			}
-		}
-	}
+	TickStatus(DeltaSeconds);
 
 	if (!PlayerOwner)
 	{
@@ -630,20 +594,7 @@ void FDADeckUI::Update(float DeltaSeconds)
 		if (PlayerOwner->WasInputKeyJustPressed(EKeys::Enter) || PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar)
 			|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Bottom))
 		{
-			UDADeckLogic* Logic = GetDeckLogic();
-			FString Error;
-			if (Logic && !EraseDeckId.IsEmpty() && Logic->EraseDeck(EraseDeckId, Error))
-			{
-				CurrentDeckId.Reset();
-				DeckIndex = 0;
-				RefreshAll(false);
-				SetStatus(TEXT("Deck erased."), false);
-			}
-			else if (!Error.IsEmpty())
-			{
-				SetStatus(Error, true);
-			}
-			bConfirmErase = false;
+			ConfirmErase();
 			return;
 		}
 		if (PlayerOwner->WasInputKeyJustPressed(EKeys::LeftMouseButton))
@@ -801,18 +752,10 @@ void FDADeckUI::Update(float DeltaSeconds)
 
 void FDADeckUI::HandleClickAtMouse()
 {
-	FVector2D Mouse;
-	if (!GetMousePosition(Mouse))
+	FDAUIHitTarget Hit;
+	if (FindHitAtMouse(Hit))
 	{
-		return;
-	}
-	for (int32 Index = HitTargets.Num() - 1; Index >= 0; --Index)
-	{
-		if (HitTargets[Index].Contains(Mouse))
-		{
-			HandleHit(HitTargets[Index]);
-			return;
-		}
+		HandleHit(Hit);
 	}
 }
 
@@ -924,20 +867,7 @@ void FDADeckUI::HandleHit(const FDAUIHitTarget& Hit)
 	}
 	else if (Hit.Action == TEXT("erase_ok"))
 	{
-		UDADeckLogic* Logic = GetDeckLogic();
-		FString Error;
-		if (Logic && !EraseDeckId.IsEmpty() && Logic->EraseDeck(EraseDeckId, Error))
-		{
-			CurrentDeckId.Reset();
-			DeckIndex = 0;
-			RefreshAll(false);
-			SetStatus(TEXT("Deck erased."), false);
-		}
-		else if (!Error.IsEmpty())
-		{
-			SetStatus(Error, true);
-		}
-		bConfirmErase = false;
+		ConfirmErase();
 	}
 	else if (Hit.Action == TEXT("erase_cancel"))
 	{
@@ -956,7 +886,7 @@ void FDADeckUI::Draw(UCanvas* InCanvas)
 		return;
 	}
 	BeginFrame(InCanvas);
-	DrawRect(FLinearColor(DeckInk.R, DeckInk.G, DeckInk.B, 0.96f), 0.f, 0.f, Canvas->ClipX, Canvas->ClipY);
+	DrawRect(FLinearColor(DAUIStyle::Ink.R, DAUIStyle::Ink.G, DAUIStyle::Ink.B, 0.96f), 0.f, 0.f, Canvas->ClipX, Canvas->ClipY);
 	DrawHeader();
 	DrawDeckSlots();
 	DrawCollectionPanel();
@@ -983,27 +913,25 @@ void FDADeckUI::DrawHeader()
 	const float S = UIScale;
 	const float H = 76.f * S;
 	DrawRect(FLinearColor(0.004f, 0.009f, 0.02f, 0.96f), 0.f, 0.f, CW, H);
-	DrawRect(DeckAlpha(DeckGold, 0.55f), 0.f, H - 2.f * S, CW, 2.f * S);
-	DrawText(TEXT("DECK CONSTRUCTION"), 28.f * S, 10.f * S, DeckGold, 1.55f, false, GetFont(true));
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.55f), 0.f, H - 2.f * S, CW, 2.f * S);
+	DrawText(TEXT("DECK CONSTRUCTION"), 28.f * S, 10.f * S, DAUIStyle::Gold, 1.55f, false, GetFont(true));
 	const FDAEDeck* Deck = GetCurrentDeck();
 	if (Deck)
 	{
-		DrawText(Ellipsize(Deck->Name, CW * 0.42f - 60.f * S, 0.9f), 28.f * S, 44.f * S, DeckPaper, 0.9f);
+		DrawText(Deck->Name, 28.f * S, 44.f * S, DAUIStyle::Paper, 0.9f);
 		DrawText(FString::Printf(TEXT("MAIN %d/%d   EXTRA %d/%d"), Deck->Main.Num(),
 			GetDeckLogic() ? GetDeckLogic()->GetRules().MaxMain : 60, Deck->Extra.Num(),
 			GetDeckLogic() ? GetDeckLogic()->GetRules().MaxExtra : 20),
-			CW * 0.42f, 16.f * S, DeckMuted, 0.78f);
+			CW * 0.42f, 16.f * S, DAUIStyle::Muted, 0.78f);
 		const FString Validation = GetDeckLogic() ? GetDeckLogic()->GetDeckValidationMessage(*Deck) : FString();
-		const float ValidationW = FMath::Max(80.f * S, CW - 280.f * S - CW * 0.42f - 20.f * S);
-		DrawText(Ellipsize(Validation.IsEmpty() ? FString(TEXT("LEGAL")) : Validation, ValidationW, 0.72f),
-			CW * 0.42f, 44.f * S, Validation.IsEmpty() ? DeckGreen : DeckRed, 0.72f);
+		DrawText(Validation.IsEmpty() ? TEXT("LEGAL") : Validation,
+			CW * 0.42f, 44.f * S, Validation.IsEmpty() ? DAUIStyle::Green : DAUIStyle::Red, 0.72f);
 		const FString ActiveId = GetDeckLogic() ? GetDeckLogic()->GetActiveDeckId() : FString();
-		DrawText(Ellipsize(FString::Printf(TEXT("ACTIVE: %s"), *ActiveId), 250.f * S, 0.72f),
-			CW - 280.f * S, 16.f * S, DeckMuted, 0.72f);
+		DrawText(FString::Printf(TEXT("ACTIVE: %s"), *ActiveId),
+			CW - 280.f * S, 16.f * S, DAUIStyle::Muted, 0.72f);
 	}
-	DrawText(Ellipsize(TEXT("TAB focus   ENTER activate   N new   C copy   R rename   DEL erase   Q recipes"),
-		740.f * S, 0.66f),
-		CW - 760.f * S, 44.f * S, DeckMuted, 0.66f);
+	DrawText(TEXT("TAB focus   ENTER activate   N new   C copy   R rename   DEL erase   Q recipes"),
+		CW - 760.f * S, 44.f * S, DAUIStyle::Muted, 0.66f);
 }
 
 void FDADeckUI::DrawDeckSlots()
@@ -1013,23 +941,15 @@ void FDADeckUI::DrawDeckSlots()
 	const float Y = 90.f * S;
 	const float W = Canvas->ClipX * 0.235f;
 	const float H = Canvas->ClipY - Y - 50.f * S;
-	DrawPanel(X, Y, W, H, DeckAlpha(DeckInk, 0.9f), DeckAlpha(DeckGold, 0.7f));
-	DrawText(TEXT("DECKS"), X + 16.f * S, Y + 12.f * S, DeckGold, 0.95f, false, GetFont(true));
+	DrawPanel(X, Y, W, H, DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.9f), DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.7f));
+	DrawText(TEXT("DECKS"), X + 16.f * S, Y + 12.f * S, DAUIStyle::Gold, 0.95f, false, GetFont(true));
 	DrawText(FString::Printf(TEXT("%d / %d"), Decks.Num(), GetDeckLogic() ? GetDeckLogic()->GetMaxPlayerDecks() : 24),
-		X + W - 68.f * S, Y + 16.f * S, DeckMuted, 0.7f);
+		X + W - 68.f * S, Y + 16.f * S, DAUIStyle::Muted, 0.7f);
 
 	const float RowH = 48.f * S;
 	const float Top = Y + 46.f * S;
 	const int32 Visible = FMath::Max(1, FMath::FloorToInt((H - 210.f * S) / RowH));
-	if (DeckIndex < DeckScroll)
-	{
-		DeckScroll = DeckIndex;
-	}
-	else if (DeckIndex >= DeckScroll + Visible)
-	{
-		DeckScroll = DeckIndex - Visible + 1;
-	}
-	DeckScroll = FMath::Clamp(DeckScroll, 0, FMath::Max(0, Decks.Num() - Visible));
+	KeepRowVisible(DeckIndex, Decks.Num(), Visible, DeckScroll);
 
 	const FString ActiveId = GetDeckLogic() ? GetDeckLogic()->GetActiveDeckId() : FString();
 	for (int32 Index = DeckScroll; Index < Decks.Num() && Index < DeckScroll + Visible; ++Index)
@@ -1039,14 +959,13 @@ void FDADeckUI::DrawDeckSlots()
 		const bool bActive = Decks[Index].Id == ActiveId;
 		if (bSelected)
 		{
-			DrawRect(DeckAlpha(DeckGold, 0.2f), X + 8.f * S, RY, W - 16.f * S, RowH - 4.f * S);
-			DrawRect(DeckGold, X + 8.f * S, RY, 4.f * S, RowH - 4.f * S);
+			DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.2f), X + 8.f * S, RY, W - 16.f * S, RowH - 4.f * S);
+			DrawRect(DAUIStyle::Gold, X + 8.f * S, RY, 4.f * S, RowH - 4.f * S);
 		}
-		DrawText(Ellipsize(Decks[Index].Name, W - 40.f * S, 0.82f), X + 20.f * S, RY + 5.f * S,
-			bSelected ? DeckPaper : DeckMuted, 0.82f);
+		DrawText(Decks[Index].Name, X + 20.f * S, RY + 5.f * S, bSelected ? DAUIStyle::Paper : DAUIStyle::Muted, 0.82f);
 		DrawText(FString::Printf(TEXT("%d/%d%s"), Decks[Index].Main.Num(), Decks[Index].Extra.Num(),
 			bActive ? TEXT("  ACTIVE") : TEXT("")), X + 20.f * S, RY + 25.f * S,
-			bActive ? DeckGreen : DeckMuted, 0.64f);
+			bActive ? DAUIStyle::Green : DAUIStyle::Muted, 0.64f);
 		AddHit(TEXT("deck"), Index, X + 8.f * S, RY, W - 16.f * S, RowH - 4.f * S);
 	}
 	if (Decks.Num() == 0)
@@ -1066,11 +985,11 @@ void FDADeckUI::DrawDeckSlots()
 		const float BX = X + 12.f * S + (Index % 2) * (W - 24.f * S) * 0.5f;
 		const float BY = ButtonY + (Index / 2) * (ButtonH + 6.f * S);
 		const float BW = (W - 24.f * S) * 0.5f - 4.f * S;
-		DrawRect(DeckAlpha(DeckMuted, 0.16f), BX, BY, BW, ButtonH);
-		DrawText(Labels[Index], BX + 10.f * S, BY + 6.f * S, DeckPaper, 0.64f);
+		DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Muted, 0.16f), BX, BY, BW, ButtonH);
+		DrawText(Labels[Index], BX + 10.f * S, BY + 6.f * S, DAUIStyle::Paper, 0.64f);
 		AddHit(Actions[Index], INDEX_NONE, BX, BY, BW, ButtonH);
 	}
-	DrawText(TEXT("Q RECIPES / V ACTIVE"), X + 16.f * S, Y + H - 24.f * S, DeckMuted, 0.62f);
+	DrawText(TEXT("Q RECIPES / V ACTIVE"), X + 16.f * S, Y + H - 24.f * S, DAUIStyle::Muted, 0.62f);
 }
 
 void FDADeckUI::DrawCollectionPanel()
@@ -1080,9 +999,9 @@ void FDADeckUI::DrawCollectionPanel()
 	const float Y = 90.f * S;
 	const float W = Canvas->ClipX * 0.365f;
 	const float H = Canvas->ClipY - Y - 50.f * S;
-	DrawPanel(X, Y, W, H, DeckAlpha(DeckInk, 0.86f), DeckAlpha(DeckMuted, 0.4f));
-	DrawText(TEXT("COLLECTION"), X + 16.f * S, Y + 12.f * S, DeckGold, 0.95f, false, GetFont(true));
-	DrawText(FString::Printf(TEXT("%d cards"), Collection.Num()), X + W - 88.f * S, Y + 16.f * S, DeckMuted, 0.7f);
+	DrawPanel(X, Y, W, H, DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.86f), DAUIStyle::WithAlpha(DAUIStyle::Muted, 0.4f));
+	DrawText(TEXT("COLLECTION"), X + 16.f * S, Y + 12.f * S, DAUIStyle::Gold, 0.95f, false, GetFont(true));
+	DrawText(FString::Printf(TEXT("%d cards"), Collection.Num()), X + W - 88.f * S, Y + 16.f * S, DAUIStyle::Muted, 0.7f);
 
 	const float ChipY = Y + 42.f * S;
 	static const TCHAR* FilterLabels[] = { TEXT("ALL"), TEXT("MON"), TEXT("SPELL"), TEXT("TRAP") };
@@ -1092,39 +1011,29 @@ void FDADeckUI::DrawCollectionPanel()
 	{
 		const float FX = X + 12.f * S + Index * ChipW;
 		const bool bSel = Index == FilterMode;
-		DrawRect(DeckAlpha(bSel ? DeckGold : DeckMuted, bSel ? 0.22f : 0.1f), FX, ChipY, ChipW - 3.f * S, 24.f * S);
+		DrawRect(DAUIStyle::WithAlpha(bSel ? DAUIStyle::Gold : DAUIStyle::Muted, bSel ? 0.22f : 0.1f), FX, ChipY, ChipW - 3.f * S, 24.f * S);
 		DrawText(FilterLabels[Index], FX + (ChipW - 3.f * S) * 0.5f, ChipY + 4.f * S,
-			bSel ? DeckGold : DeckMuted, 0.6f, true);
+			bSel ? DAUIStyle::Gold : DAUIStyle::Muted, 0.6f, true);
 		AddHit(TEXT("filter"), Index, FX, ChipY, ChipW - 3.f * S, 24.f * S);
 	}
-	DrawText(TEXT("SORT"), X + 12.f * S, ChipY + 32.f * S, DeckMuted, 0.6f);
+	DrawText(TEXT("SORT"), X + 12.f * S, ChipY + 32.f * S, DAUIStyle::Muted, 0.6f);
 	for (int32 Index = 0; Index < 4; ++Index)
 	{
 		const float SX = X + 58.f * S + Index * ChipW;
 		const bool bSel = Index == SortMode;
-		DrawRect(DeckAlpha(bSel ? DeckCyan : DeckMuted, bSel ? 0.22f : 0.1f), SX, ChipY + 28.f * S, ChipW - 3.f * S, 22.f * S);
+		DrawRect(DAUIStyle::WithAlpha(bSel ? DAUIStyle::Cyan : DAUIStyle::Muted, bSel ? 0.22f : 0.1f), SX, ChipY + 28.f * S, ChipW - 3.f * S, 22.f * S);
 		DrawText(SortLabels[Index], SX + (ChipW - 3.f * S) * 0.5f, ChipY + 31.f * S,
-			bSel ? DeckCyan : DeckMuted, 0.58f, true);
+			bSel ? DAUIStyle::Cyan : DAUIStyle::Muted, 0.58f, true);
 		AddHit(TEXT("sort"), Index, SX, ChipY + 28.f * S, ChipW - 3.f * S, 22.f * S);
 	}
 	DrawText(TEXT("X EXTRA MODE"), X + W - 132.f * S, ChipY + 32.f * S,
-		bExtraMode ? DeckGold : DeckMuted, 0.6f);
+		bExtraMode ? DAUIStyle::Gold : DAUIStyle::Muted, 0.6f);
 	AddHit(TEXT("extra"), INDEX_NONE, X + W - 138.f * S, ChipY + 24.f * S, 126.f * S, 30.f * S);
 
 	const float RowH = 42.f * S;
 	const float Top = ChipY + 64.f * S;
-	// U6: the ADD/SWAP button sits 48S above the panel bottom, so keep 154S
-	// cleared (was 132S) or the last grid row slides partly underneath it.
-	const int32 Visible = FMath::Max(1, FMath::FloorToInt((H - 154.f * S) / RowH));
-	if (CollectionSelection < CollectionScroll)
-	{
-		CollectionScroll = CollectionSelection;
-	}
-	else if (CollectionSelection >= CollectionScroll + Visible)
-	{
-		CollectionScroll = CollectionSelection - Visible + 1;
-	}
-	CollectionScroll = FMath::Clamp(CollectionScroll, 0, FMath::Max(0, Collection.Num() - Visible));
+	const int32 Visible = FMath::Max(1, FMath::FloorToInt((H - 132.f * S) / RowH));
+	KeepRowVisible(CollectionSelection, Collection.Num(), Visible, CollectionScroll);
 
 	for (int32 Index = CollectionScroll; Index < Collection.Num() && Index < CollectionScroll + Visible; ++Index)
 	{
@@ -1153,28 +1062,28 @@ void FDADeckUI::DrawCollectionPanel()
 	const float AddH = 36.f * S;
 	const float AddX = X + 12.f * S;
 	const float AddY = Y + H - AddH - 12.f * S;
-	DrawRect(DeckAlpha(DeckGold, 0.22f), AddX, AddY, AddW, AddH);
-	DrawRect(DeckGold, AddX, AddY, 4.f * S, AddH);
-	DrawText(Ellipsize(PendingSwapCardId != 0 ? TEXT("[ENTER] COMPLETE SWAP") : TEXT("[ENTER] ADD / SWAP"),
-		AddW - 22.f * S, 0.72f),
-		AddX + 14.f * S, AddY + 7.f * S, DeckPaper, 0.72f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.22f), AddX, AddY, AddW, AddH);
+	DrawRect(DAUIStyle::Gold, AddX, AddY, 4.f * S, AddH);
+	DrawText(PendingSwapCardId != 0 ? TEXT("[ENTER] COMPLETE SWAP") : TEXT("[ENTER] ADD / SWAP"),
+		AddX + 14.f * S, AddY + 7.f * S, DAUIStyle::Paper, 0.72f);
 	AddHit(TEXT("add"), INDEX_NONE, AddX, AddY, AddW, AddH);
-	DrawText(Ellipsize(FString::Printf(TEXT("FILTER %s   SORT %s   OWNED ONLY"), *GetFilterLabel(), *GetSortLabel()),
-		W - 240.f * S, 0.66f),
-		X + 220.f * S, AddY + 9.f * S, DeckMuted, 0.66f);
+	DrawText(FString::Printf(TEXT("FILTER %s   SORT %s   OWNED ONLY"), *GetFilterLabel(), *GetSortLabel()),
+		X + 220.f * S, AddY + 9.f * S, DAUIStyle::Muted, 0.66f);
 }
 
 void FDADeckUI::DrawCardRow(int32 CardId, int32 Index, float X, float Y, float W, float H, bool bSelected, bool bDeckRow)
 {
 	const float S = UIScale;
 	const FCardRecord* Card = FindCard(CardId);
-	const FLinearColor Accent = bDeckRow ? DeckGold : (Card && Card->IsSpell() ? DeckCyan :
-		(Card && Card->IsTrap() ? DeckPurple : DeckMuted));
+	const FLinearColor Accent = bDeckRow ? DAUIStyle::Gold : (Card && Card->IsSpell() ? DAUIStyle::Cyan :
+		(Card && Card->IsTrap() ? DAUIStyle::Purple : DAUIStyle::Muted));
 	if (bSelected)
 	{
-		DrawRect(DeckAlpha(Accent, 0.2f), X, Y, W, H);
+		DrawRect(DAUIStyle::WithAlpha(Accent, 0.2f), X, Y, W, H);
 		DrawRect(Accent, X, Y, 4.f * S, H);
 	}
+	DrawText(Card ? Card->Name : FString::Printf(TEXT("Card %d"), CardId),
+		X + 14.f * S, Y + 4.f * S, bSelected ? DAUIStyle::Paper : DAUIStyle::Muted, 0.76f);
 	FString Right;
 	if (bDeckRow)
 	{
@@ -1185,12 +1094,8 @@ void FDADeckUI::DrawCardRow(int32 CardId, int32 Index, float X, float Y, float W
 		const int32 Owned = GetInventory() ? GetInventory()->GetCount(CardId) : 0;
 		Right = Card ? FString::Printf(TEXT("%s  x%d"), *Card->CardType, Owned) : FString::Printf(TEXT("x%d"), Owned);
 	}
-	const FString FittedRight = Ellipsize(Right, FMath::Max(40.f * S, W * 0.45f), 0.62f);
-	const FVector2D FittedSize = Measure(FittedRight, 0.62f);
-	const FString CardName = Card ? Card->Name : FString::Printf(TEXT("Card %d"), CardId);
-	DrawText(Ellipsize(CardName, W - FittedSize.X - 38.f * S, 0.76f),
-		X + 14.f * S, Y + 4.f * S, bSelected ? DeckPaper : DeckMuted, 0.76f);
-	DrawText(FittedRight, X + W - FittedSize.X - 12.f * S, Y + 12.f * S, DeckMuted, 0.62f);
+	const FVector2D Size = Measure(Right, 0.62f);
+	DrawText(Right, X + W - Size.X - 12.f * S, Y + 12.f * S, DAUIStyle::Muted, 0.62f);
 
 	if (bDeckRow)
 	{
@@ -1209,21 +1114,20 @@ void FDADeckUI::DrawDeckPanel()
 	const float Y = 90.f * S;
 	const float W = Canvas->ClipX - X - 20.f * S;
 	const float H = Canvas->ClipY - Y - 50.f * S;
-	DrawPanel(X, Y, W, H, DeckAlpha(DeckInk, 0.9f), DeckAlpha(DeckGold, 0.7f));
+	DrawPanel(X, Y, W, H, DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.9f), DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.7f));
 	const FDAEDeck* Deck = GetCurrentDeck();
-	DrawText(TEXT("CURRENT DECK"), X + 16.f * S, Y + 12.f * S, DeckGold, 0.95f, false, GetFont(true));
-	DrawText(Ellipsize(Deck ? Deck->Name : TEXT("No deck"), W - 32.f * S, 0.85f),
-		X + 16.f * S, Y + 40.f * S, DeckPaper, 0.85f);
+	DrawText(TEXT("CURRENT DECK"), X + 16.f * S, Y + 12.f * S, DAUIStyle::Gold, 0.95f, false, GetFont(true));
+	DrawText(Deck ? Deck->Name : TEXT("No deck"), X + 16.f * S, Y + 40.f * S, DAUIStyle::Paper, 0.85f);
 
 	const float TabY = Y + 70.f * S;
 	const float TabW = (W - 32.f * S) * 0.5f;
 	const bool bMain = !bDeckExtraSelection;
-	DrawRect(DeckAlpha(bMain ? DeckGold : DeckMuted, bMain ? 0.2f : 0.08f), X + 16.f * S, TabY, TabW - 4.f * S, 30.f * S);
-	DrawRect(DeckAlpha(!bMain ? DeckCyan : DeckMuted, !bMain ? 0.2f : 0.08f), X + 16.f * S + TabW, TabY, TabW - 4.f * S, 30.f * S);
+	DrawRect(DAUIStyle::WithAlpha(bMain ? DAUIStyle::Gold : DAUIStyle::Muted, bMain ? 0.2f : 0.08f), X + 16.f * S, TabY, TabW - 4.f * S, 30.f * S);
+	DrawRect(DAUIStyle::WithAlpha(!bMain ? DAUIStyle::Cyan : DAUIStyle::Muted, !bMain ? 0.2f : 0.08f), X + 16.f * S + TabW, TabY, TabW - 4.f * S, 30.f * S);
 	DrawText(FString::Printf(TEXT("MAIN %d"), DeckMain.Num()), X + 16.f * S + TabW * 0.5f, TabY + 7.f * S,
-		bMain ? DeckGold : DeckMuted, 0.72f, true);
+		bMain ? DAUIStyle::Gold : DAUIStyle::Muted, 0.72f, true);
 	DrawText(FString::Printf(TEXT("EXTRA %d"), DeckExtra.Num()), X + 16.f * S + TabW * 1.5f, TabY + 7.f * S,
-		!bMain ? DeckCyan : DeckMuted, 0.72f, true);
+		!bMain ? DAUIStyle::Cyan : DAUIStyle::Muted, 0.72f, true);
 	AddHit(TEXT("tab_main"), INDEX_NONE, X + 16.f * S, TabY, TabW - 4.f * S, 30.f * S);
 	AddHit(TEXT("tab_extra"), INDEX_NONE, X + 16.f * S + TabW, TabY, TabW - 4.f * S, 30.f * S);
 
@@ -1231,15 +1135,7 @@ void FDADeckUI::DrawDeckPanel()
 	const float RowH = 40.f * S;
 	const float Top = TabY + 44.f * S;
 	const int32 Visible = FMath::Max(1, FMath::FloorToInt((H - 210.f * S) / RowH));
-	if (DeckCardSelection < DeckCardScroll)
-	{
-		DeckCardScroll = DeckCardSelection;
-	}
-	else if (DeckCardSelection >= DeckCardScroll + Visible)
-	{
-		DeckCardScroll = DeckCardSelection - Visible + 1;
-	}
-	DeckCardScroll = FMath::Clamp(DeckCardScroll, 0, FMath::Max(0, List.Num() - Visible));
+	KeepRowVisible(DeckCardSelection, List.Num(), Visible, DeckCardScroll);
 
 	for (int32 Index = DeckCardScroll; Index < List.Num() && Index < DeckCardScroll + Visible; ++Index)
 	{
@@ -1249,26 +1145,26 @@ void FDADeckUI::DrawDeckPanel()
 	if (List.Num() == 0)
 	{
 		DrawText(bDeckExtraSelection ? TEXT("Extra deck is empty.") : TEXT("Main deck is empty."),
-			X + 16.f * S, Top + 8.f * S, DeckMuted, 0.8f);
+			X + 16.f * S, Top + 8.f * S, DAUIStyle::Muted, 0.8f);
 	}
 
 	const float ButtonH = 34.f * S;
 	const float ButtonY = Y + H - 92.f * S;
 	const float ButtonW = (W - 44.f * S) * 0.5f;
-	DrawRect(DeckAlpha(DeckMuted, 0.16f), X + 16.f * S, ButtonY, ButtonW, ButtonH);
-	DrawText(TEXT("[ENTER] REMOVE"), X + 26.f * S, ButtonY + 8.f * S, DeckPaper, 0.7f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Muted, 0.16f), X + 16.f * S, ButtonY, ButtonW, ButtonH);
+	DrawText(TEXT("[ENTER] REMOVE"), X + 26.f * S, ButtonY + 8.f * S, DAUIStyle::Paper, 0.7f);
 	AddHit(TEXT("remove"), INDEX_NONE, X + 16.f * S, ButtonY, ButtonW, ButtonH);
-	DrawRect(DeckAlpha(DeckCyan, 0.16f), X + 28.f * S + ButtonW, ButtonY, ButtonW, ButtonH);
-	DrawText(TEXT("G / CLICK SWAP"), X + 38.f * S + ButtonW, ButtonY + 8.f * S, DeckCyan, 0.7f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Cyan, 0.16f), X + 28.f * S + ButtonW, ButtonY, ButtonW, ButtonH);
+	DrawText(TEXT("G / CLICK SWAP"), X + 38.f * S + ButtonW, ButtonY + 8.f * S, DAUIStyle::Cyan, 0.7f);
 	AddHit(TEXT("swap"), INDEX_NONE, X + 28.f * S + ButtonW, ButtonY, ButtonW, ButtonH);
 
 	const FString Validation = Deck && GetDeckLogic() ? GetDeckLogic()->GetDeckValidationMessage(*Deck) : FString();
-	DrawText(Ellipsize(Validation.IsEmpty() ? FString(TEXT("DECK LEGAL")) : Validation, W - 32.f * S, 0.72f),
-		X + 16.f * S, Y + H - 48.f * S, Validation.IsEmpty() ? DeckGreen : DeckRed, 0.72f);
+	DrawText(Validation.IsEmpty() ? TEXT("DECK LEGAL") : Validation, X + 16.f * S, Y + H - 48.f * S,
+		Validation.IsEmpty() ? DAUIStyle::Green : DAUIStyle::Red, 0.72f);
 	if (PendingSwapCardId != 0)
 	{
-		DrawText(Ellipsize(FString::Printf(TEXT("SWAPPING OUT: %s"), *GetCardName(PendingSwapCardId)), W - 32.f * S, 0.68f),
-			X + 16.f * S, Y + H - 24.f * S, DeckGold, 0.68f);
+		DrawText(FString::Printf(TEXT("SWAPPING OUT: %s"), *GetCardName(PendingSwapCardId)),
+			X + 16.f * S, Y + H - 24.f * S, DAUIStyle::Gold, 0.68f);
 	}
 }
 
@@ -1283,11 +1179,11 @@ void FDADeckUI::DrawRecipesOverlay()
 	const float H = FMath::Min(CH * 0.76f, 760.f * S);
 	const float X = (CW - W) * 0.5f;
 	const float Y = (CH - H) * 0.5f;
-	DrawPanel(X, Y, W, H, DeckAlpha(DeckInk, 0.98f), DeckCyan);
-	DrawText(TEXT("AVAILABLE FUSION RECIPES"), X + 26.f * S, Y + 18.f * S, DeckCyan, 1.25f, false, GetFont(true));
+	DrawPanel(X, Y, W, H, DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.98f), DAUIStyle::Cyan);
+	DrawText(TEXT("AVAILABLE FUSION RECIPES"), X + 26.f * S, Y + 18.f * S, DAUIStyle::Cyan, 1.25f, false, GetFont(true));
 	DrawText(FString::Printf(TEXT("%d recipes from your current trunk"), Recipes.Num()),
-		X + 26.f * S, Y + 52.f * S, DeckMuted, 0.72f);
-	DrawRect(DeckAlpha(DeckCyan, 0.3f), X + 26.f * S, Y + 76.f * S, W - 52.f * S, 1.f * S);
+		X + 26.f * S, Y + 52.f * S, DAUIStyle::Muted, 0.72f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Cyan, 0.3f), X + 26.f * S, Y + 76.f * S, W - 52.f * S, 1.f * S);
 
 	const float LineH = 24.f * S;
 	const int32 Visible = FMath::Max(1, FMath::FloorToInt((H - 150.f * S) / LineH));
@@ -1303,27 +1199,15 @@ void FDADeckUI::DrawRecipesOverlay()
 				? FString::Printf(TEXT("%d monsters"), Recipe.AnyCount)
 				: FString::Printf(TEXT("%d %s monsters"), Recipe.AnyCount, *Recipe.MaterialsType);
 		}
-		else
-		{
-			for (int32 MaterialIndex = 0; MaterialIndex < Recipe.Materials.Num(); ++MaterialIndex)
-			{
-				if (MaterialIndex > 0)
-				{
-					Materials += TEXT(" + ");
-				}
-				Materials += GetCardName(Recipe.Materials[MaterialIndex]);
-			}
-		}
-		const FString RecipeLine = FString::Printf(TEXT("%s  =  %s"), *Materials, *GetCardName(Recipe.Result));
-		DrawText(Ellipsize(RecipeLine, W - 52.f * S, 0.72f),
-			X + 26.f * S, LY, DeckPaper, 0.72f);
+		DrawText(FString::Printf(TEXT("%s  =  %s"), *Materials, *GetCardName(Recipe.Result)),
+			X + 26.f * S, LY, DAUIStyle::Paper, 0.72f);
 		LY += LineH;
 	}
 	if (Recipes.Num() == 0)
 	{
-		DrawText(TEXT("No fusion recipe materials are owned yet."), X + 26.f * S, LY, DeckMuted, 0.8f);
+		DrawText(TEXT("No fusion recipe materials are owned yet."), X + 26.f * S, LY, DAUIStyle::Muted, 0.8f);
 	}
-	DrawText(TEXT("UP / DOWN scroll      Q / F / ESC close"), X + 26.f * S, Y + H - 30.f * S, DeckMuted, 0.68f);
+	DrawText(TEXT("UP / DOWN scroll      Q / F / ESC close"), X + 26.f * S, Y + H - 30.f * S, DAUIStyle::Muted, 0.68f);
 	AddHit(TEXT("recipes_close"), INDEX_NONE, 0.f, 0.f, CW, CH);
 }
 
@@ -1338,20 +1222,19 @@ void FDADeckUI::DrawNameEditor()
 	const float H = 220.f * S;
 	const float X = (CW - W) * 0.5f;
 	const float Y = (CH - H) * 0.5f;
-	DrawPanel(X, Y, W, H, DeckAlpha(DeckInk, 0.98f), DeckGold);
-	DrawText(bRenameMode ? TEXT("RENAME DECK") : TEXT("DECK NAME"), X + 24.f * S, Y + 18.f * S, DeckGold, 1.2f, false, GetFont(true));
-	DrawText(Ellipsize(NameBuffer.IsEmpty() ? FString(TEXT("_")) : NameBuffer, W - 48.f * S, 1.1f),
-		X + 24.f * S, Y + 72.f * S, DeckPaper, 1.1f);
-	DrawRect(DeckAlpha(DeckGold, 0.5f), X + 24.f * S, Y + 108.f * S, W - 48.f * S, 1.f * S);
+	DrawPanel(X, Y, W, H, DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.98f), DAUIStyle::Gold);
+	DrawText(bRenameMode ? TEXT("RENAME DECK") : TEXT("DECK NAME"), X + 24.f * S, Y + 18.f * S, DAUIStyle::Gold, 1.2f, false, GetFont(true));
+	DrawText(NameBuffer.IsEmpty() ? TEXT("_") : NameBuffer, X + 24.f * S, Y + 72.f * S, DAUIStyle::Paper, 1.1f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.5f), X + 24.f * S, Y + 108.f * S, W - 48.f * S, 1.f * S);
 	DrawText(TEXT("Type letters/numbers/space. BACKSPACE edits. ENTER saves. ESC cancels."),
-		X + 24.f * S, Y + 122.f * S, DeckMuted, 0.66f);
+		X + 24.f * S, Y + 122.f * S, DAUIStyle::Muted, 0.66f);
 	const float BtnW = 150.f * S;
 	const float BtnH = 34.f * S;
-	DrawRect(DeckAlpha(DeckGold, 0.2f), X + 24.f * S, Y + H - 48.f * S, BtnW, BtnH);
-	DrawText(TEXT("SAVE"), X + 62.f * S, Y + H - 40.f * S, DeckPaper, 0.75f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Gold, 0.2f), X + 24.f * S, Y + H - 48.f * S, BtnW, BtnH);
+	DrawText(TEXT("SAVE"), X + 62.f * S, Y + H - 40.f * S, DAUIStyle::Paper, 0.75f);
 	AddHit(TEXT("name_ok"), INDEX_NONE, X + 24.f * S, Y + H - 48.f * S, BtnW, BtnH);
-	DrawRect(DeckAlpha(DeckMuted, 0.16f), X + 190.f * S, Y + H - 48.f * S, BtnW, BtnH);
-	DrawText(TEXT("CANCEL"), X + 224.f * S, Y + H - 40.f * S, DeckMuted, 0.75f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Muted, 0.16f), X + 190.f * S, Y + H - 48.f * S, BtnW, BtnH);
+	DrawText(TEXT("CANCEL"), X + 224.f * S, Y + H - 40.f * S, DAUIStyle::Muted, 0.75f);
 	AddHit(TEXT("name_cancel"), INDEX_NONE, X + 190.f * S, Y + H - 48.f * S, BtnW, BtnH);
 }
 
@@ -1366,23 +1249,22 @@ void FDADeckUI::DrawEraseConfirm()
 	const float H = 220.f * S;
 	const float X = (CW - W) * 0.5f;
 	const float Y = (CH - H) * 0.5f;
-	DrawPanel(X, Y, W, H, DeckAlpha(DeckInk, 0.98f), DeckRed);
-	DrawText(TEXT("ERASE DECK?"), X + 24.f * S, Y + 18.f * S, DeckRed, 1.2f, false, GetFont(true));
+	DrawPanel(X, Y, W, H, DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.98f), DAUIStyle::Red);
+	DrawText(TEXT("ERASE DECK?"), X + 24.f * S, Y + 18.f * S, DAUIStyle::Red, 1.2f, false, GetFont(true));
 	const FDAEDeck* EraseDeck = Decks.FindByPredicate([this](const FDAEDeck& Deck)
 	{
 		return Deck.Id == EraseDeckId;
 	});
-	DrawText(Ellipsize(FString::Printf(TEXT("%s will be removed."), EraseDeck ? *EraseDeck->Name : TEXT("This deck")),
-		W - 48.f * S, 0.8f),
-		X + 24.f * S, Y + 64.f * S, DeckMuted, 0.8f);
-	DrawText(TEXT("This cannot be undone."), X + 24.f * S, Y + 96.f * S, DeckMuted, 0.76f);
+	DrawText(FString::Printf(TEXT("%s will be removed."), EraseDeck ? *EraseDeck->Name : TEXT("This deck")),
+		X + 24.f * S, Y + 64.f * S, DAUIStyle::Muted, 0.8f);
+	DrawText(TEXT("This cannot be undone."), X + 24.f * S, Y + 96.f * S, DAUIStyle::Muted, 0.76f);
 	const float BtnW = 150.f * S;
 	const float BtnH = 34.f * S;
-	DrawRect(DeckAlpha(DeckRed, 0.2f), X + 24.f * S, Y + H - 48.f * S, BtnW, BtnH);
-	DrawText(TEXT("ERASE"), X + 60.f * S, Y + H - 40.f * S, DeckPaper, 0.75f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Red, 0.2f), X + 24.f * S, Y + H - 48.f * S, BtnW, BtnH);
+	DrawText(TEXT("ERASE"), X + 60.f * S, Y + H - 40.f * S, DAUIStyle::Paper, 0.75f);
 	AddHit(TEXT("erase_ok"), INDEX_NONE, X + 24.f * S, Y + H - 48.f * S, BtnW, BtnH);
-	DrawRect(DeckAlpha(DeckMuted, 0.16f), X + 190.f * S, Y + H - 48.f * S, BtnW, BtnH);
-	DrawText(TEXT("CANCEL"), X + 224.f * S, Y + H - 40.f * S, DeckMuted, 0.75f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Muted, 0.16f), X + 190.f * S, Y + H - 48.f * S, BtnW, BtnH);
+	DrawText(TEXT("CANCEL"), X + 224.f * S, Y + H - 40.f * S, DAUIStyle::Muted, 0.75f);
 	AddHit(TEXT("erase_cancel"), INDEX_NONE, X + 190.f * S, Y + H - 48.f * S, BtnW, BtnH);
 }
 
@@ -1400,17 +1282,13 @@ void FDADeckUI::DrawFooter()
 	case EDAFocus::DeckCards: Hint = TEXT("DECK: UP/DOWN select   LEFT/RIGHT main/extra   ENTER remove   G swap"); break;
 	default: break;
 	}
-	const FString CloseHint = TEXT("TAB focus   Q recipes   ESC close");
-	const FVector2D CloseSize = Measure(CloseHint, 0.66f);
-	const float CloseX = Canvas->ClipX - 20.f * S - CloseSize.X;
-	DrawText(Ellipsize(Hint, FMath::Max(80.f * S, CloseX - 40.f * S), 0.66f),
-		20.f * S, CH - H + 7.f * S, DeckMuted, 0.66f);
-	DrawText(CloseHint, CloseX, CH - H + 7.f * S, DeckMuted, 0.66f);
+	DrawText(Hint, 20.f * S, CH - H + 7.f * S, DAUIStyle::Muted, 0.66f);
+	DrawText(TEXT("TAB focus   Q recipes   ESC close"), Canvas->ClipX - 300.f * S, CH - H + 7.f * S, DAUIStyle::Muted, 0.66f);
 }
 
 void FDADeckUI::DrawStatus()
 {
-	if (StatusMessage.IsEmpty() || !Canvas)
+	if (StatusText.IsEmpty() || !Canvas)
 	{
 		return;
 	}
@@ -1419,8 +1297,8 @@ void FDADeckUI::DrawStatus()
 	const float H = 40.f * S;
 	const float X = 20.f * S;
 	const float Y = Canvas->ClipY - 84.f * S;
-	DrawRect(DeckAlpha(DeckInk, 0.94f), X, Y, W, H);
-	DrawRect(bStatusError ? DeckRed : DeckGold, X, Y, 4.f * S, H);
-	DrawText(Ellipsize(StatusMessage, W - 30.f * S, 0.76f), X + 14.f * S, Y + 8.f * S,
-		bStatusError ? DeckRed : DeckPaper, 0.76f);
+	DrawRect(DAUIStyle::WithAlpha(DAUIStyle::Ink, 0.94f), X, Y, W, H);
+	DrawRect(bStatusIsError ? DAUIStyle::Red : DAUIStyle::Gold, X, Y, 4.f * S, H);
+	DrawText(TruncateToWidth(StatusText, W - 30.f * S, 0.76f), X + 14.f * S, Y + 8.f * S,
+		bStatusIsError ? DAUIStyle::Red : DAUIStyle::Paper, 0.76f);
 }

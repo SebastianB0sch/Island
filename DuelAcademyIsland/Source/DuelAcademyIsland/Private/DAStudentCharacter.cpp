@@ -378,12 +378,17 @@ void ADAStudentCharacter::OnMap(const FInputActionValue& V)
 	{
 		return;
 	}
-	HUD->ToggleMap();
+	if (ADAHUD* HUD = GetDAHUD())
+	{
+		HUD->ToggleMap();
+	}
 }
 
 void ADAStudentCharacter::OnJacket(const FInputActionValue& V)
 {
-	if (!IsWorldInputAllowed())
+	// Blocked by every modal UI, not just duels: these keys (J/F/T/[/]/N) are
+	// also typed into name entry and used as deck-editor shortcuts.
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -403,7 +408,7 @@ void ADAStudentCharacter::OnJacket(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnDuelDisk(const FInputActionValue& V)
 {
-	if (!IsWorldInputAllowed())
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -430,7 +435,7 @@ void ADAStudentCharacter::OnHelp(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimePause(const FInputActionValue& V)
 {
-	if (!IsWorldInputAllowed())
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -445,7 +450,7 @@ void ADAStudentCharacter::OnTimePause(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeFaster(const FInputActionValue& V)
 {
-	if (!IsWorldInputAllowed())
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -460,7 +465,7 @@ void ADAStudentCharacter::OnTimeFaster(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeSlower(const FInputActionValue& V)
 {
-	if (!IsWorldInputAllowed())
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -475,7 +480,7 @@ void ADAStudentCharacter::OnTimeSlower(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeSkip(const FInputActionValue& V)
 {
-	if (!IsWorldInputAllowed())
+	if (IsMovementBlocked())
 	{
 		return;
 	}
