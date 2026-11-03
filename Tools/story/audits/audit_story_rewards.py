@@ -1,15 +1,28 @@
-import json, collections
+#!/usr/bin/env python3
+"""Report-only audit: canon event requirements/rewards vs the runtime story graph.
 
-ROOT = r"C:\dev\GX\DuelAcademyIsland\Content\Data"
-canon = json.load(open(ROOT + r"\Canon\events.json", encoding="utf-8"))["events"]
-runtime = {e["id"]: e for e in json.load(open(ROOT + r"\Story\events.json", encoding="utf-8"))["events"]}
+    python Tools/story/audits/audit_story_rewards.py
+"""
+import collections
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # Tools/, for the shared common package
+from common.jsonio import read_json  # noqa: E402
+from common.paths import DATA_DIR as ROOT  # noqa: E402
+
+canon = read_json(ROOT / "Canon" / "events.json")["events"]
+runtime = {e["id"]: e for e in read_json(ROOT / "Story" / "events.json")["events"]}
 
 same_req = 0
 diff_req = 0
 missing_rewards = []
 for ce in canon:
     i = ce["id"]
-    re_ = runtime[i]
+    re_ = runtime.get(i)
+    if re_ is None:
+        print(i, "MISSING FROM RUNTIME")
+        continue
     ct = [x.get("type") for x in ce.get("requirements", [])]
     rt = [x.get("type") for x in re_.get("requirements", [])]
     if ct == rt:
@@ -38,7 +51,7 @@ for i, m in missing_rewards:
 # choice counts
 print("\ncanon choices:", sum(len(e.get("choices", [])) for e in canon))
 print("runtime event choices:", sum(len(e.get("choices", [])) for e in runtime.values()))
-scenes = json.load(open(ROOT + r"\Story\scenes\full_campaign.json", encoding="utf-8"))["scenes"]
+scenes = read_json(ROOT / "Story" / "scenes" / "full_campaign.json")["scenes"]
 print("runtime scene choice commands:", sum(1 for s in scenes.values() for c in s.get("commands", []) if c.get("type") == "choice"))
-dialogue = json.load(open(ROOT + r"\Story\dialogue\full_campaign.json", encoding="utf-8"))["lines"]
+dialogue = read_json(ROOT / "Story" / "dialogue" / "full_campaign.json")["lines"]
 print("runtime dialogue-embedded choices:", sum(1 for v in dialogue.values() if v.get("choices")))

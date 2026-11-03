@@ -9,11 +9,14 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sys
 import unicodedata
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "DuelAcademyIsland" / "Content" / "Data"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
+from common.jsonio import read_json as load_json, write_json  # noqa: E402,F401  (re-exported as data.*)
+from common.paths import DATA_DIR as DATA, REPO_ROOT as ROOT  # noqa: E402
+
 CARDS_PATH = DATA / "cards.json"
 DECKS_PATH = DATA / "decks.json"
 FUSIONS_PATH = DATA / "fusions.json"
@@ -89,19 +92,6 @@ RITUAL_SPELL_PATTERN = re.compile(
 RITUAL_SPELL_TARGET_PATTERN = re.compile(
     r'Ritual Summon(?:ed with the Ritual Spell Card,?)?\s+"([^"]+)"', re.I
 )
-
-
-def load_json(path: Path):
-    with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
-
-
-def write_json(path: Path, payload) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, indent=2, ensure_ascii=False)
-    with path.open("w", encoding="utf-8", newline="\n") as handle:
-        handle.write(text)
-        handle.write("\n")
 
 
 def load_cards() -> list[dict]:
@@ -270,9 +260,8 @@ def usage_sources() -> dict[int, set[str]]:
         if not directory.exists():
             continue
         for path in sorted(directory.rglob("*.json")):
-            try:
-                payload = load_json(path)
-            except (OSError, json.JSONDecodeError):
+            payload = _safe_load(path)
+            if payload is None:
                 continue
             found = set()
             _walk_card_keys(payload, found)
@@ -313,9 +302,15 @@ def _ids_from(value) -> set[int]:
 
 
 def _safe_load(path: Path):
+    """Load an optional dataset; a missing file is None, an unreadable one warns."""
+    if not path.exists():
+        return None
     try:
         return load_json(path)
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError) as exc:
+        # Do not drop a broken file silently: its cards would fall out of the
+        # usage tiers and coverage lanes without any visible signal.
+        print(f"WARNING effect_data: skipping unreadable {path.relative_to(ROOT)}: {exc}", file=sys.stderr)
         return None
 
 

@@ -21,48 +21,24 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json
-import os
-import re
 import subprocess
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
-DEFAULT_UPROJECT = ROOT / "DuelAcademyIsland" / "DuelAcademyIsland.uproject"
-DEFAULT_UE_EDITOR = Path(r"C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe")
-MODES = {
-    "puzzles": "-DAPuzzleSelfTest",
-    "exams": "-DAExamSelfTest",
-    "combined": "-DAPuzzleExamSelfTest",
-}
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "integration"))
+from ue_common import (  # noqa: E402
+    DEFAULT_UPROJECT,
+    ROOT,
+    SELFTEST_SWITCHES,
+    headless_game_command,
+    now_slug as _now_slug,
+    parse_suite_summaries as _parse_summaries,
+    resolve_editor as _resolve_editor,
+    selftest_verdict,
+)
 
-
-def _now_slug() -> str:
-    return _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-
-
-def _resolve_editor(explicit: str) -> Path | None:
-    if explicit:
-        return Path(explicit).expanduser().resolve()
-    env = os.environ.get("UE_EDITOR") or os.environ.get("UNREAL_EDITOR")
-    if env:
-        return Path(env).expanduser().resolve()
-    if DEFAULT_UE_EDITOR.exists():
-        return DEFAULT_UE_EDITOR
-    return None
-
-
-def _parse_summaries(text: str) -> dict[str, dict[str, int | str]]:
-    result: dict[str, dict[str, int | str]] = {}
-    pattern = re.compile(r"(PuzzleSelfTest|ExamSelfTest): (\d+) passed, (\d+) failed\.\s*(ALL PASS|FAILURES PRESENT)")
-    for match in pattern.finditer(text):
-        result[match.group(1)] = {
-            "passed": int(match.group(2)),
-            "failed": int(match.group(3)),
-            "status": match.group(4),
-        }
-    return result
+# --mode -> ue_common self-test kind
+MODES = {"puzzles": "puzzle", "exams": "exam", "combined": "a07"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -89,19 +65,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    command = [
-        str(editor),
-        str(uproject),
-        "-game",
-        "-nullrhi",
-        "-nosound",
-        "-unattended",
-        "-nop4",
-        MODES[args.mode],
-        "-log",
-        "-stdout",
-        "-FullStdOutLogOutput",
-    ]
+    kind = MODES[args.mode]
+    command = headless_game_command(editor, uproject, SELFTEST_SWITCHES[kind])
     started = _dt.datetime.now(_dt.timezone.utc)
     try:
         completed = subprocess.run(
@@ -140,13 +105,8 @@ def main(argv: list[str] | None = None) -> int:
     required = ["PuzzleSelfTest", "ExamSelfTest"] if args.mode == "combined" else (
         ["PuzzleSelfTest"] if args.mode == "puzzles" else ["ExamSelfTest"]
     )
-    suites_ok = all(
-        key in summaries and summaries[key]["failed"] == 0 and summaries[key]["status"] == "ALL PASS"
-        for key in required
-    )
-    passed = returncode == 0 and not timed_out and suites_ok and not failure_lines
-    if args.mode == "combined":
-        passed = passed and combined_ok
+    suites_ok, verdict_note = selftest_verdict(kind, text)
+    passed = returncode == 0 and not timed_out and suites_ok
 
     for key in required:
         summary = summaries.get(key)
@@ -156,7 +116,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{key}: {summary['passed']} passed, {summary['failed']} failed. {summary['status']}")
     if args.mode == "combined":
         print(f"A07SelfTest: {'BOTH SUITES PASS' if combined_ok else 'FAILURES PRESENT'}")
-    print(f"Result: {'PASS' if passed else 'FAIL'}")
+    print(f"Result: {'PASS' if passed else 'FAIL'}" + ("" if suites_ok else f" ({verdict_note})"))
     print(f"Log: {log_path}")
 
     if args.json:

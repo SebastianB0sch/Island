@@ -653,11 +653,11 @@ class Layout:
             interacts=self.interacts, emitters=self.emitters, audio=self.audio, npcs=self.npcs,
             specials=self.specials, zones=self.zones(),
         )
-        with open(os.path.join(C.OUT_DATA, "layout.json"), "w") as fp:
+        with open(os.path.join(C.OUT_DATA, "layout.json"), "w", encoding="utf-8", newline="\n") as fp:
             json.dump(layout, fp, separators=(",", ":"))
-        with open(os.path.join(C.OUT_DATA, "materials.json"), "w") as fp:
+        with open(os.path.join(C.OUT_DATA, "materials.json"), "w", encoding="utf-8", newline="\n") as fp:
             json.dump(palette.material_json(), fp, indent=1)
-        with open(os.path.join(C.OUT_DATA, "assets.json"), "w") as fp:
+        with open(os.path.join(C.OUT_DATA, "assets.json"), "w", encoding="utf-8", newline="\n") as fp:
             json.dump(self.manifest, fp, indent=1)
         n_inst = sum(len(v["items"]) for v in inst.values())
         self.log(f"  layout.json: {len(self.static)} static, {len(self.floating)} floating, {n_inst} instances, "

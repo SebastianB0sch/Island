@@ -31,8 +31,12 @@ STAGES = ["textures", "terrain", "meshes", "audio", "layout", "cast", "render"]
 
 
 def main(argv):
+    unknown = [a for a in argv if a not in STAGES and a not in ("all", "--render")]
+    if unknown:
+        # A typo must not silently fall back to the full (multi-minute) rebuild.
+        sys.exit(f"unknown stage(s): {' '.join(unknown)}; valid: all, --render, {', '.join(STAGES)}")
     stages = [a for a in argv if a in STAGES] or [s for s in STAGES if s != "render"] + (["render"] if "--render" in argv else [])
-    if argv and argv[0] == "all":
+    if "all" in argv:
         stages = STAGES
     import numpy as np
     from dai import blend, config as C

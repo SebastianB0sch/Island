@@ -17,12 +17,13 @@ owns the slot layout / odds overlay and the deck rules wrapper.
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "DuelAcademyIsland" / "Content" / "Data"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
+from common.jsonio import read_json as load, write_json as write  # noqa: E402
+from common.paths import DATA_DIR as DATA  # noqa: E402
+
 CANON_PACKS = DATA / "Canon" / "packs.json"
 CANON_BANNED = DATA / "Canon" / "banned_list.json"
 SHOP_PACKS = DATA / "Shop" / "packs.json"
@@ -51,18 +52,6 @@ CALENDAR_MONTHS = {
     "basic_3c": 8,
     "basic_4c": 9,
 }
-
-
-def load(path: Path):
-    with path.open(encoding="utf-8") as handle:
-        return json.load(handle)
-
-
-def write(path: Path, value) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as handle:
-        json.dump(value, handle, indent=2, ensure_ascii=False)
-        handle.write("\n")
 
 
 def restock_days(text: str | None, fallback: int) -> int:

@@ -19,6 +19,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -377,7 +378,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Extract and report without writing any output file.",
+        help="Extract and compare with the committed files; exit 1 if any would change.",
     )
     parser.add_argument(
         "--candidates-only",
@@ -398,9 +399,7 @@ def main(argv: list[str] | None = None) -> int:
     print("Fusion:", fusion_summary(candidates))
     print("Ritual:", ritual_summary(rituals))
 
-    if args.check:
-        return 0
-
+    outputs: list[tuple[Path, object]] = []
     if not args.rituals_only:
         payload = {
             "schema_version": 1,
@@ -409,17 +408,27 @@ def main(argv: list[str] | None = None) -> int:
             "summary": fusion_summary(candidates),
             "candidates": candidates,
         }
-        data.write_json(data.CANDIDATES_PATH, payload)
-        print(f"Wrote {data.CANDIDATES_PATH.relative_to(data.ROOT)}")
+        outputs.append((data.CANDIDATES_PATH, payload))
         if not args.candidates_only:
-            data.write_json(
-                data.FUSIONS_PATH, canonical_fusion_recipes(candidates)
-            )
-            print(f"Wrote {data.FUSIONS_PATH.relative_to(data.ROOT)}")
-
+            outputs.append((data.FUSIONS_PATH, canonical_fusion_recipes(candidates)))
     if not args.candidates_only:
-        data.write_json(data.RITUALS_PATH, rituals)
-        print(f"Wrote {data.RITUALS_PATH.relative_to(data.ROOT)}")
+        outputs.append((data.RITUALS_PATH, rituals))
+
+    if args.check:
+        stale = [
+            path for path, value in outputs
+            if not path.exists()
+            or path.read_text(encoding="utf-8") != json.dumps(value, indent=2, ensure_ascii=False) + "\n"
+        ]
+        for path in stale:
+            print(f"STALE {path.relative_to(data.ROOT)} (run without --check to regenerate)")
+        if not stale:
+            print("all outputs up to date")
+        return 1 if stale else 0
+
+    for path, value in outputs:
+        data.write_json(path, value)
+        print(f"Wrote {path.relative_to(data.ROOT)}")
 
     return 0
 

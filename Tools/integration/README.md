@@ -29,7 +29,7 @@ python Tools\integration\run_smoke.py --exam-selftest
 # Full gate: validator + self-tests + A07 puzzle/exam suites + automation tests
 python Tools\integration\run_smoke.py --all --automation-filter DuelAcademy
 
-# Print commands without launching anything
+# Print commands without launching anything (result SKIPPED, exit 2)
 python Tools\integration\run_smoke.py --all --dry-run
 ```
 
@@ -129,11 +129,16 @@ the actual timed-puzzle solve. See `Docs/Puzzles/PUZZLE_ENGINE_TESTS.md`.
 Do not add `-game` to the automation command: the current editor target then
 reports "The game module 'DuelAcademyIsland' could not be found". `-TestExit`
 is also omitted; `Quit` and the runner's log inspection are enough. The runner
-treats "No automation tests matched" as a skip, not a failure.
+treats "No automation tests matched" as a failure (Unreal itself exits -1 there):
+a filter that runs nothing is not a pass.
 
-No `IMPLEMENT_SIMPLE_AUTOMATION_TEST` suites exist in the baseline yet. The
-runner reports `skip` when the filter matches nothing. Lane owners should add
-tests under their own module/unit names and give A10 the filter string:
+Self-test steps are judged by `Tools/integration/ue_common.py` (shared with
+`Tools/puzzles/run_engine_selftests.py`): a step passes only when the process
+exits 0 **and** its summary line is present with zero failures. A log without
+the summary (misspelled switch, crash before the test) fails.
+
+Lane owners add tests under their own module/unit names and give A10 the
+filter string:
 
 - A02 `DuelAcademy.Profile`, `DuelAcademy.Calendar`, `DuelAcademy.Save`
 - A03 `DuelAcademy.Story`
@@ -170,7 +175,8 @@ tests under their own module/unit names and give A10 the filter string:
   duel rules 57/57, economy 119/119. A03 reports story 14/14 and A09 generated
   10 UI screenshots; those are recorded in `Docs/PORT_STATUS.md`.
 - The duel self-test switch runs a fixed 24 duels; 1,000-duel proof is pending A04.
-- No automation tests exist yet; the filter currently skips.
+- Automation suites exist for `DuelAcademy.Opponents`, `DuelAcademy.Puzzles`
+  and `DuelAcademy.Exams`; a filter matching none of them fails the step.
 - The runner does not package; the BuildCookRun command above is the release
   command, run manually by A10.
 - The runner never downloads assets or starts the editor GUI.

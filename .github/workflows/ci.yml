@@ -28,11 +28,54 @@ jobs:
         run: |
           python - <<'PY'
           import json, pathlib, sys
+          paths = (list(pathlib.Path("Tools/thirdparty/registry").glob("*.json"))
+                   + list(pathlib.Path("DuelAcademyIsland/SourceAssets/Data").glob("*.json"))
+                   + list(pathlib.Path("DuelAcademyIsland/Content/Data").rglob("*.json")))
           bad = 0
-          for p in list(pathlib.Path("Tools/thirdparty/registry").glob("*.json")) + list(pathlib.Path("DuelAcademyIsland/SourceAssets/Data").glob("*.json")):
+          for p in paths:
               try:
                   json.loads(p.read_text(encoding="utf-8"))
               except Exception as e:
                   print(f"::error file={p}::{e}"); bad += 1
-          sys.exit(bad)
+          print(f"{len(paths)} JSON file(s) parsed, {bad} invalid")
+          sys.exit(1 if bad else 0)  # not sys.exit(bad): 256 errors would exit 0
           PY
+      # Every data validator is stdlib-only (jsonschema is optional) and the
+      # whole set runs in a few seconds. All run; the step fails if any fails.
+      - name: Data validators
+        run: |
+          failed=0
+          run() { echo "::group::$*"; python "$@" || { echo "::error::$* failed"; failed=1; }; echo "::endgroup::"; }
+          run Tools/validate/validate_all.py --require-datasets
+          run Tools/puzzles/validate.py
+          run Tools/opponents/import_canon_decks.py --check
+          run Tools/economy/validate_decks.py
+          run Tools/economy/validate_packs.py
+          run Tools/effects/validate_effects.py
+          run Tools/effects/test_effects.py
+          run Tools/effects/audit.py
+          run Tools/effects/generate_scripts.py --check
+          run Tools/effects/extract_fusion_recipes.py --check
+          run Tools/canon/validate_canon.py
+          run Tools/world/validate_layout.py --strict
+          run Tools/world/test_interiors.py
+          exit $failed
+      # Re-run the deterministic generators; committed generated data and docs
+      # must be byte-identical to what they produce.
+      - name: Generated data is up to date
+        run: |
+          set -e
+          python Tools/effects/build_manifest.py
+          python Tools/effects/extract_fusion_recipes.py
+          python Tools/effects/generate_scripts.py --write
+          python Tools/effects/coverage.py          # before report_coverage: it reads coverage_by_deck.json
+          python Tools/effects/report_coverage.py
+          python Tools/economy/sync_canon.py
+          python Tools/puzzles/generate_puzzles.py
+          python Tools/puzzles/generate_exams.py
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            git diff --stat
+            echo "::error::generated files differ from the committed ones; run the generators above and commit the result"
+            exit 1
+          fi

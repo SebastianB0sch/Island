@@ -6,6 +6,7 @@ It uses only the Python standard library and never needs Unreal.
 ```powershell
 python Tools\validate\validate_all.py
 python Tools\validate\validate_all.py --strict
+python Tools\validate\validate_all.py --require-datasets
 python Tools\validate\validate_all.py --json --report Content\Data\Integration\reports\validate.json
 ```
 
@@ -18,6 +19,10 @@ bad arguments.
   incomplete content are `GAP` findings, so early lanes can run it.
 - **Strict**: warnings and gaps also fail. Use at a content gate.
 - `--fail-on-gaps`: only gaps fail; warnings remain warnings.
+- `--require-datasets`: a missing dataset (a whole lane absent: cards, canon,
+  decks, packs, opponents, puzzles, exams, anchors, events, dialogue, scenes,
+  emails, schedules, effects, ...) is an error instead of a gap. Known content
+  gaps still pass. CI runs with this flag.
 - `--verbose`: show info and passing checks.
 
 ## Checks

@@ -12,10 +12,14 @@ Unreal install. The UE steps are explicit because they launch the editor
 headless and can take minutes; they are stubs for automation suites that A02,
 A03, A04, A07 and A09 have not published yet.
 
+Self-test and automation steps pass only when their summary line is present
+and reports zero failures (see ue_common.py); a log with no summary, or an
+automation filter that matches no tests, is a failure.
+
 Exit codes:
-    0  every requested step passed (or was intentionally skipped)
+    0  every requested step passed
     1  a requested step failed
-    2  configuration error (missing project/editor)
+    2  configuration error (missing project/editor), or nothing ran (--dry-run)
 """
 
 from __future__ import annotations
@@ -23,7 +27,6 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json
-import os
 import subprocess
 import sys
 import time
@@ -31,12 +34,20 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
-DEFAULT_UPROJECT = ROOT / "DuelAcademyIsland" / "DuelAcademyIsland.uproject"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ue_common import (  # noqa: E402
+    DEFAULT_UPROJECT,
+    ROOT,
+    SELFTEST_SWITCHES,
+    automation_verdict,
+    headless_game_command,
+    now_slug as _now_slug,
+    resolve_editor,
+    selftest_verdict,
+)
+
 DEFAULT_REPORT_DIR = ROOT / "Docs" / "Integration" / "reports"
-DEFAULT_UE_EDITOR = Path(r"C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe")
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.1.0"
 
 
 @dataclass
@@ -76,6 +87,8 @@ class SmokeReport:
             return "FAIL"
         if any(step.status == "blocked" for step in self.steps):
             return "BLOCKED"
+        if all(step.status == "skip" for step in self.steps):
+            return "SKIPPED"
         return "PASS"
 
     def to_dict(self) -> dict[str, Any]:
@@ -88,21 +101,6 @@ class SmokeReport:
             "uproject": self.uproject,
             "steps": [step.to_dict() for step in self.steps],
         }
-
-
-def _now_slug() -> str:
-    return _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-
-
-def _resolve_editor(args: argparse.Namespace) -> Path | None:
-    if args.ue_editor:
-        return Path(args.ue_editor).expanduser().resolve()
-    env = os.environ.get("UE_EDITOR") or os.environ.get("UNREAL_EDITOR")
-    if env:
-        return Path(env).expanduser().resolve()
-    if DEFAULT_UE_EDITOR.exists():
-        return DEFAULT_UE_EDITOR
-    return None
 
 
 def _run_step(
@@ -174,37 +172,12 @@ def _validator_step(report_path: Path, *, strict: bool) -> Step:
 def _duel_selftest_step(editor: Path, uproject: Path, iterations: int) -> Step:
     # A04: the counted form is owned by UDADuelRulesSelfTestSubsystem so it also
     # works when the HUD is not the launch path.
-    command = [
-        str(editor),
-        str(uproject),
-        "-game",
-        "-nullrhi",
-        "-nosound",
-        "-unattended",
-        "-nop4",
-        f"-DADuelSelfTest={iterations}",
-        "-log",
-        "-stdout",
-        "-FullStdOutLogOutput",
-    ]
+    command = headless_game_command(editor, uproject, f"{SELFTEST_SWITCHES['duel']}={iterations}")
     return Step(name="duel-selftest", command=command)
 
 
 def _selftest_step(name: str, switch: str, editor: Path, uproject: Path) -> Step:
-    command = [
-        str(editor),
-        str(uproject),
-        "-game",
-        "-nullrhi",
-        "-nosound",
-        "-unattended",
-        "-nop4",
-        switch,
-        "-log",
-        "-stdout",
-        "-FullStdOutLogOutput",
-    ]
-    return Step(name=name, command=command)
+    return Step(name=name, command=headless_game_command(editor, uproject, switch))
 
 
 def _automation_step(editor: Path, uproject: Path, filter_name: str, report_dir: Path) -> Step:
@@ -225,104 +198,43 @@ def _automation_step(editor: Path, uproject: Path, filter_name: str, report_dir:
     return Step(name="automation", command=command)
 
 
+# run_smoke step name -> ue_common self-test kind
+STEP_KINDS = {
+    "duel-selftest": "duel",
+    "profile-selftest": "profile",
+    "duelrules-selftest": "duelrules",
+    "economy-selftest": "economy",
+    "story-selftest": "story",
+    "puzzle-selftest": "puzzle",
+    "exam-selftest": "exam",
+    "a07-selftest": "a07",
+}
+
+
 def _inspect_log(step: Step) -> None:
-    """Extract a known self-test / automation summary from a captured log."""
+    """Judge a captured UE log with the strict summary parser (ue_common)."""
+    if step.status in ("blocked", "skip"):
+        return
     log_path = Path(step.log) if step.log else None
     if not log_path or not log_path.exists():
         return
     text = log_path.read_text(encoding="utf-8", errors="replace")
-    if step.name == "duel-selftest":
-        for line in text.splitlines():
-            if "Duel self-test:" in line:
-                step.note = line.strip()
-                if "stalls" in line:
-                    try:
-                        stalls = int(line.split("stalls")[0].strip().split()[-1])
-                    except (ValueError, IndexError):
-                        stalls = 0
-                    if stalls > 0:
-                        step.status = "fail"
-                        step.note = f"{line.strip()} (stalls > 0)"
-                    elif "RESULT FAIL" in line:
-                        step.status = "fail"
-                        step.note = line.strip()
-                    elif step.status == "pass":
-                        step.note = line.strip()
-                break
-    elif step.name in {"profile-selftest", "duelrules-selftest", "economy-selftest", "story-selftest",
-                       "puzzle-selftest", "exam-selftest"}:
-        markers = {
-            "profile-selftest": "DAProfileSelfTest",
-            "duelrules-selftest": "Duel rules self-test:",
-            "economy-selftest": "DAEconomySelfTest:",
-            "story-selftest": "StorySelfTest:",
-            "puzzle-selftest": "PuzzleSelfTest:",
-            "exam-selftest": "ExamSelfTest:",
-        }
-        marker = markers[step.name]
-        summary_seen = False
-        for line in text.splitlines():
-            stripped = line.strip()
-            if "[FAIL]" in stripped and step.name == "profile-selftest":
-                step.note = stripped
-                step.status = "fail"
-            if marker not in stripped:
-                continue
-            if "scheduled" in stripped:
-                continue
-            step.note = stripped
-            if "FAILED" in stripped or "FAILURES PRESENT" in stripped:
-                step.status = "fail"
-                summary_seen = True
-            elif "PASSED" in stripped or "ALL PASS" in stripped or ("PASS" in stripped and "FAIL" not in stripped):
-                step.status = "pass"
-                summary_seen = True
-            elif " passed," in stripped and " failed." in stripped:
-                try:
-                    failed = int(stripped.split(" failed.")[0].strip().split()[-1])
-                except (ValueError, IndexError):
-                    failed = 1
-                step.status = "pass" if failed == 0 else "fail"
-                summary_seen = True
-            if summary_seen:
-                break
-        if step.name == "profile-selftest":
-            for line in text.splitlines():
-                if "Assertion failed" in line:
-                    step.status = "fail"
-                    step.note = line.strip()
-                    break
-    elif step.name == "a07-selftest":
-        required = {"PuzzleSelfTest:", "ExamSelfTest:"}
-        seen: set[str] = set()
-        for line in text.splitlines():
-            stripped = line.strip()
-            for marker in required:
-                if marker in stripped and "scheduled" not in stripped:
-                    step.note = stripped
-                    seen.add(marker)
-                    if "FAILURES PRESENT" in stripped:
-                        step.status = "fail"
-        if "A07SelfTest: BOTH SUITES PASS" in text and len(seen) == 2 and step.status != "fail":
-            step.status = "pass"
-            step.note = "A07SelfTest: BOTH SUITES PASS"
-        elif "A07SelfTest: FAILURES PRESENT" in text:
-            step.status = "fail"
-            step.note = "A07SelfTest: FAILURES PRESENT"
-        elif step.status == "pass":
-            step.status = "fail"
-            step.note = "missing one or both A07 suite summaries"
-    elif step.name == "automation":
-        failures = [line for line in text.splitlines() if "Automation Test Failed" in line or "Result: Failed" in line]
-        if failures:
-            step.status = "fail"
-            step.note = failures[0].strip()
-        elif "No automation tests matched" in text or "No tests found" in text or "0 tests" in text:
-            step.status = "skip"
-            step.note = "no automation tests matched the filter"
-        elif "**** TEST COMPLETE. EXIT CODE: 0 ****" in text and step.status == "fail":
-            step.status = "pass"
-            step.note = "automation completed with exit code 0"
+    if step.name == "automation":
+        step.status, note = automation_verdict(text, step.returncode)
+        step.note = note or step.note
+        return
+    kind = STEP_KINDS.get(step.name)
+    if kind is None:
+        return
+    if step.returncode is None:  # timeout: keep the failure from _run_step
+        return
+    passed, note = selftest_verdict(kind, text)
+    if passed and step.returncode != 0:
+        step.status = "fail"
+        step.note = f"{note} (but exit code {step.returncode})"
+    else:
+        step.status = "pass" if passed else "fail"
+        step.note = note
 
 
 def _print_human(report: SmokeReport, *, json_output: bool) -> None:
@@ -410,7 +322,7 @@ def main(argv: list[str] | None = None) -> int:
     run_validate = not args.no_validate and (
         args.validate or run_all or not (wants_selftests or args.automation)
     )
-    editor = _resolve_editor(args) if (wants_selftests or args.automation) else None
+    editor = resolve_editor(args.ue_editor) if (wants_selftests or args.automation) else None
 
     report = SmokeReport(
         generated_at=_dt.datetime.now(_dt.timezone.utc).isoformat(),
@@ -433,24 +345,24 @@ def main(argv: list[str] | None = None) -> int:
 
     selftest_jobs: list[tuple[str, str]] = []
     if args.duel_selftest or run_selftests:
-        selftest_jobs.append(("duel-selftest", "-DADuelSelfTest"))
+        selftest_jobs.append(("duel-selftest", SELFTEST_SWITCHES["duel"]))
     if args.profile_selftest or run_selftests:
-        selftest_jobs.append(("profile-selftest", "-DAProfileSelfTest"))
+        selftest_jobs.append(("profile-selftest", SELFTEST_SWITCHES["profile"]))
     if args.duelrules_selftest or run_selftests:
-        selftest_jobs.append(("duelrules-selftest", "-DADuelRulesSelfTest"))
+        selftest_jobs.append(("duelrules-selftest", SELFTEST_SWITCHES["duelrules"]))
     if args.economy_selftest or run_selftests:
-        selftest_jobs.append(("economy-selftest", "-DAEconomySelfTest"))
+        selftest_jobs.append(("economy-selftest", SELFTEST_SWITCHES["economy"]))
     if args.story_selftest:
-        selftest_jobs.append(("story-selftest", "-DAStorySelfTest"))
+        selftest_jobs.append(("story-selftest", SELFTEST_SWITCHES["story"]))
     if run_all and not args.a07_selftest and not args.puzzle_selftest and not args.exam_selftest:
-        selftest_jobs.append(("a07-selftest", "-DAPuzzleExamSelfTest"))
+        selftest_jobs.append(("a07-selftest", SELFTEST_SWITCHES["a07"]))
     if args.a07_selftest:
-        selftest_jobs.append(("a07-selftest", "-DAPuzzleExamSelfTest"))
+        selftest_jobs.append(("a07-selftest", SELFTEST_SWITCHES["a07"]))
     else:
         if args.puzzle_selftest:
-            selftest_jobs.append(("puzzle-selftest", "-DAPuzzleSelfTest"))
+            selftest_jobs.append(("puzzle-selftest", SELFTEST_SWITCHES["puzzle"]))
         if args.exam_selftest:
-            selftest_jobs.append(("exam-selftest", "-DAExamSelfTest"))
+            selftest_jobs.append(("exam-selftest", SELFTEST_SWITCHES["exam"]))
 
     for name, switch in selftest_jobs:
         if editor is None:
@@ -495,9 +407,10 @@ def main(argv: list[str] | None = None) -> int:
     if not args.json:
         print(f"Report: {report_path}")
 
-    if report.result() == "PASS":
+    result = report.result()
+    if result == "PASS":
         return 0
-    return 1 if report.result() == "FAIL" else 2
+    return 1 if result == "FAIL" else 2
 
 
 if __name__ == "__main__":

@@ -25,6 +25,13 @@ Tools/canon/.local_only/
 Tools/canon/cache/
 Docs/previews/
 
+# run_smoke.py / run_engine_selftests.py per-run reports and logs (timestamped;
+# curated evidence under these folders stays tracked and can be added with -f)
+Docs/Integration/reports/smoke-*.json
+Docs/Integration/reports/validate-*.json
+Docs/Integration/reports/automation/
+Docs/Integration/reports/logs/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9].log
+
 # Packaged builds and staging
 Builds/
 

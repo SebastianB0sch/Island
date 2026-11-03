@@ -5,8 +5,10 @@ in Docs/Canon/VALIDATION.md.
 """
 from __future__ import annotations
 
+import re
 import sys
 from collections import Counter
+from pathlib import Path
 
 from canon_common import (
     CANON_DIR, DOCS_DIR, REPO_ROOT, TOOLS_DIR, read_json, sha256_file, utc_now,
@@ -31,6 +33,18 @@ class Report:
         self.checks.append((name, "PASS" if ok else "WARN", detail))
         if not ok:
             self.warnings.append(f"{name}: {detail}")
+
+
+GENERATED_LINE = re.compile(r"^Generated: .*$", re.M)
+
+
+def write_report(path: Path, text: str) -> None:
+    """Rewrite the report only when something other than its timestamp changed."""
+    if path.exists():
+        current = path.read_text(encoding="utf-8")
+        if GENERATED_LINE.sub("", current) == GENERATED_LINE.sub("", text):
+            return
+    write_text(path, text)
 
 
 def main() -> int:
@@ -263,7 +277,7 @@ def main() -> int:
         lines += ["", "## Errors", ""] + [f"- {e}" for e in report.errors]
     if report.warnings:
         lines += ["", "## Warnings", ""] + [f"- {w}" for w in report.warnings]
-    write_text(DOCS_DIR / "VALIDATION.md", "\n".join(lines) + "\n")
+    write_report(DOCS_DIR / "VALIDATION.md", "\n".join(lines) + "\n")
 
     print(f"checks: {len(report.checks)}  errors: {len(report.errors)}  warnings: {len(report.warnings)}")
     for error in report.errors:

@@ -59,11 +59,15 @@ Run the runtime suites from the editor/game command line:
 Data validators:
 
 ```text
-python Tools/validate/validate_all.py      # PASS, known gaps listed
-python Tools/puzzles/validate.py           # 141 checks, 0 failures
-python Tools/opponents/import_canon_decks.py --check  # 31/31 runtime decks, 36/36 constructed
-python Tools/effects/audit.py              # PASS; 119 scripted + 321 vanilla, 760 pending
+python Tools/validate/validate_all.py --require-datasets   # PASS, known gaps listed
+python Tools/puzzles/validate.py           # opponents, AI, puzzles, exams
+python Tools/opponents/import_canon_decks.py --check  # runtime + constructed deck legality
+python Tools/effects/audit.py              # PASS; rewrites the effect manifest + Docs/Effects/COVERAGE.md
+python Tools/canon/validate_canon.py       # canon extracts + manifest hashes
 ```
+
+CI (`.github/workflows/ci.yml`) runs every data validator and then re-runs the deterministic
+generators followed by `git diff --exit-code`, so committed generated data must match its generator.
 
 Still open before calling the port complete: the 760 pending card effects, an in-engine playthrough of events E02–E33 (the data and self-test are in, but not a full scripted run), interior cell generation/entry tests, shop/deck/exam UI interaction wiring, exact GBA dialogue (the full text is local-only), and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md).
 
@@ -231,6 +235,7 @@ UnrealEditor-Cmd DuelAcademyIsland/DuelAcademyIsland.uproject -ExecutePythonScri
 ```
 Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy" module)
   build_island.py           runs every stage -> DuelAcademyIsland/SourceAssets
+  build_island_blender.py   same, from a Blender install: blender -b -P Tools/build_island_blender.py -- <stages>
   preview_asset.py          render previews of a single location module
   dai/config.py             island layout: locations, heights, paths, volcano, lake ...
   dai/terrain.py            heightfield, splat maps, colour map, Landscape heightmap
@@ -247,8 +252,11 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
                             idle/walk/run gait solver (gait.py, foot-planting IK + validation); CC0 takes
                             retargeted onto every skeleton, cast.json
                             (cast.py = who is who; a procedural fallback builds anyone without a model)
-  dai/credits.py            CREDITS.md from the SOURCE.txt files
+  dai/credits.py            draft CREDITS.md table from the SOURCE.txt files (CREDITS.md is now curated by hand)
   thirdparty/               curated CC0 / CC-BY source assets + registry/*.json
+  common/                   shared stdlib helpers for the data tools (repo paths, UTF-8 JSON I/O)
+  canon/ economy/ effects/ opponents/ puzzles/ story/ validate/ world/ integration/
+                            data builders and validators for Content/Data (stdlib only; run in CI)
   dai/audio.py              synthesized seamless ambience loops and UI sounds
   dai/render.py             Cycles preview renders (Docs/renders)
 DuelAcademyIsland/          the Unreal Engine 5.8 project

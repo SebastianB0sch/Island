@@ -16,11 +16,15 @@ as reference metadata only.
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import sys
+from pathlib import Path
 
-ROOT_DEFAULT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
+from common.jsonio import read_json, write_json  # noqa: E402
+from common.paths import REPO_ROOT  # noqa: E402
+
+ROOT_DEFAULT = str(REPO_ROOT)
 
 TEMPLATES = [
     "direct_attack",
@@ -39,8 +43,7 @@ TIME_BY_LEVEL = {2: 45, 3: 60, 4: 75, 5: 90}
 
 
 def load_cards(root: str) -> dict[int, dict]:
-    with open(os.path.join(root, "DuelAcademyIsland", "Content", "Data", "cards.json"), encoding="utf-8") as handle:
-        return {card["id"]: card for card in json.load(handle)}
+    return {card["id"]: card for card in read_json(os.path.join(root, "DuelAcademyIsland", "Content", "Data", "cards.json"))}
 
 
 def mon(card_id: int, position: str = "attack", face_up: bool = True) -> dict:
@@ -176,7 +179,8 @@ def t_ritual(level: int, variant: int, cards: dict[int, dict]):
             # Jack's Knight is Level 5 so the engine's lowest-level ritual
             # tribute pass cannot consume the field body (Level 4 hand
             # materials are the intended tributes).
-            dict(hand=[843, 841, 2, 165], field=[749], lp=4300),
+            dict(hand=[843, 841, 2, 165], field=[749], lp=4300,
+                 note="The field body is Level 5; the two Level 4 hand monsters are the deterministic ritual tributes."),
             dict(hand=[843, 841, 234, 195], field=[363], lp=4900),
         ],
         4: [
@@ -194,6 +198,8 @@ def t_ritual(level: int, variant: int, cards: dict[int, dict]):
     solution = [spell_action(843), atk_action(841)]
     solution += [atk_action(cid) for cid in spec["field"]]
     notes = "Ritual Summon Legendary Flame Lord with Incandescent Ordeal, then attack for exact LP."
+    if spec.get("note"):
+        notes += " " + spec["note"]
     return player, opponent, solution, notes
 
 
@@ -369,6 +375,12 @@ BUILDERS = {
 }
 
 
+# Per-puzzle provenance notes appended to the generated "source" string.
+SOURCE_NOTES = {
+    "P047": "P047's field body is Level 5 so A04's lowest-level ritual tribute selection cannot consume it.",
+}
+
+
 def build_puzzle(pid: str, level: int, template: str, variant: int,
                  cards: dict[int, dict], canon: dict | None) -> dict:
     player, opponent, solution, notes = BUILDERS[template](level, variant, cards)
@@ -391,7 +403,8 @@ def build_puzzle(pid: str, level: int, template: str, variant: int,
         "confidence": "low",
         "source": ("Port-authored setup from Tools/puzzles/generate_puzzles.py "
                    f"template '{template}', level {level}, variant {variant + 1}. "
-                   "The line uses engine-supported cards but is not a GBA fixed-board reconstruction."),
+                   "The line uses engine-supported cards but is not a GBA fixed-board reconstruction."
+                   + (f" {SOURCE_NOTES[pid]}" if pid in SOURCE_NOTES else "")),
         "notes": notes,
     }
     if canon and pid in canon:
@@ -424,8 +437,7 @@ def main() -> int:
     canon = None
     canon_path = args.canon or os.path.join(root, "DuelAcademyIsland", "Content", "Data", "Canon", "puzzles.json")
     if not args.no_canon and os.path.exists(canon_path):
-        with open(canon_path, encoding="utf-8") as handle:
-            canon = {p["id"]: p for p in json.load(handle).get("puzzles", [])}
+        canon = {p["id"]: p for p in read_json(canon_path).get("puzzles", [])}
 
     next_id = 21
     count = 0
@@ -442,9 +454,8 @@ def main() -> int:
                 for cid in referenced:
                     if cid not in cards:
                         raise SystemExit(f"{pid}: unknown card id {cid}")
-                with open(os.path.join(puzzle_dir, pid + ".json"), "w", encoding="utf-8") as handle:
-                    json.dump(puzzle, handle, indent=2)
-                    handle.write("\n")
+                # Puzzle files are stored ASCII-escaped (json.dump's default); keep the bytes stable.
+                write_json(os.path.join(puzzle_dir, pid + ".json"), puzzle, ensure_ascii=True)
                 count += 1
                 next_id += 1
 

@@ -126,5 +126,5 @@ def build_island(import_assets=True, interactive=True):
     return True
 
 
-def rebuild_level():
-    return build_island(import_assets=False)
+def rebuild_level(interactive=True):
+    return build_island(import_assets=False, interactive=interactive)

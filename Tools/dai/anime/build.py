@@ -446,7 +446,7 @@ def build(log=print, only=None):
     mats = palette.material_json()
     info["materials"] = {k: mats[k] for k in sorted(used) if k in mats}
     os.makedirs(C.OUT_DATA, exist_ok=True)
-    with open(os.path.join(C.OUT_DATA, "cast.json"), "w") as fp:
+    with open(os.path.join(C.OUT_DATA, "cast.json"), "w", encoding="utf-8", newline="\n") as fp:
         json.dump(info, fp, indent=1)
     annotate_layout(log)
     return info
@@ -457,10 +457,10 @@ def annotate_layout(log=print):
     path = os.path.join(C.OUT_DATA, "layout.json")
     if not os.path.exists(path):
         return
-    with open(path) as fp:
+    with open(path, encoding="utf-8") as fp:
         layout = json.load(fp)
     CAST.assign_npcs(layout.get("npcs", []))
-    with open(path, "w") as fp:
+    with open(path, "w", encoding="utf-8", newline="\n") as fp:
         json.dump(layout, fp, separators=(",", ":"))
     named = [n["cast"] for n in layout.get("npcs", []) if not n.get("tint", True)]
     log(f"  anime: layout.json npcs cast ({len(named)} named: {', '.join(named)})")

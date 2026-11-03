@@ -444,9 +444,9 @@ def build_photo_textures(log=print):
         layer_info[layer] = dict(mean_srgb=[float(x) for x in mean], source=source,
                                  tile_m=float((spec or {}).get("tile_m", TERRAIN_DEFAULT_TILE_M[layer])))
     os.makedirs(C.CACHE_DIR, exist_ok=True)
-    with open(os.path.join(C.CACHE_DIR, "terrain_layers.json"), "w") as fp:
+    with open(os.path.join(C.CACHE_DIR, "terrain_layers.json"), "w", encoding="utf-8", newline="\n") as fp:
         json.dump(layer_info, fp, indent=1)
-    with open(os.path.join(C.OUT_DATA, "terrain_layers.json"), "w") as fp:
+    with open(os.path.join(C.OUT_DATA, "terrain_layers.json"), "w", encoding="utf-8", newline="\n") as fp:
         json.dump(layer_info, fp, indent=1)
     n_photo = sum(1 for v in layer_info.values() if v["source"] == "photo")
     log(f"  photo textures: {n_detail} detail sets, terrain layers {n_photo}/{len(layer_info)} from photo sets")

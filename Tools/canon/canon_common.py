@@ -6,14 +6,17 @@ The ROM is never copied into the repository; it is read in place.
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import struct
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
+from common.jsonio import read_json, write_json, write_text  # noqa: E402,F401  (re-exported)
+from common.paths import REPO_ROOT  # noqa: E402
+
 CANON_DIR = REPO_ROOT / "DuelAcademyIsland" / "Content" / "Data" / "Canon"
 DOCS_DIR = REPO_ROOT / "Docs" / "Canon"
 TOOLS_DIR = REPO_ROOT / "Tools" / "canon"
@@ -106,24 +109,6 @@ def sha256_file(path: Path) -> str:
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-
-
-def read_json(path: Path) -> Any:
-    with path.open(encoding="utf-8") as fh:
-        return json.load(fh)
-
-
-def write_json(path: Path, value: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as fh:
-        json.dump(value, fh, ensure_ascii=False, indent=2)
-        fh.write("\n")
-
-
-def write_text(path: Path, value: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as fh:
-        fh.write(value)
 
 
 def u16(rom: bytes, offset: int) -> int:

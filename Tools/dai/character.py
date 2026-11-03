@@ -278,7 +278,7 @@ def build(log=print):
         info["anims"][state] = f"{OUT_REL}/{name}.fbx"
     _assign(arm, None)
     os.makedirs(C.OUT_DATA, exist_ok=True)
-    with open(os.path.join(C.OUT_DATA, "character.json"), "w") as fp:
+    with open(os.path.join(C.OUT_DATA, "character.json"), "w", encoding="utf-8", newline="\n") as fp:
         json.dump(info, fp, indent=1)
     tris = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
     log(f"  character: SK_Student {tris} tris, {len(arm.data.bones)} bones, anims {sorted(info['anims'])}, "
