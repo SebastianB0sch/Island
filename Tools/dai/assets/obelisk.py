@@ -1056,7 +1056,7 @@ def _flight(mb, x, y, z0, z1, yaw, width, run=0.3, mat=MARBLE, carpet=None, cw=N
     return run * n
 
 
-def _rail(mb, p0, p1, post=K.TRIM_GOLD, rail=K.WOOD_DARK, h=0.95, spacing=0.28, newel=None):
+def _rail(mb, p0, p1, post=K.TRIM_GOLD, rail=K.WOOD_DARK, h=0.95, spacing=0.34, newel=None):
     """Balustrade between two 3D points on a floor / stair nosing line (may slope)."""
     L = math.dist(p0[:2], p1[:2])
     n = max(1, int(L / spacing))
@@ -1077,6 +1077,26 @@ def _plinth_bust(f, mb, x, y, yaw=0.0, mat=MARBLE, cap=K.TRIM_GOLD):
     mb.box((x, y, 0.55), (0.5, 0.5, 1.1), mat)
     mb.box((x, y, 1.13), (0.6, 0.6, 0.06), cap)
     f.prop("SM_Int_Bust", x, y, yaw, z=1.16)
+
+
+_SHELF_Z = (0.107, 0.378, 0.649, 0.93, 1.24)     # shelf tops of SM_Int_Bookshelf (2.0 m tall, 1.33 m wide)
+
+
+def _bookshelf(f, x, y, yaw, seed=0):
+    """Catalog bookshelf filled with rows of books (cheap clusters, no collision); local frame of f."""
+    import random
+    rnd = random.Random(seed + int(abs(x * 13 + y * 7)))
+    f.prop("SM_Int_Bookshelf", x, y, yaw)
+    with f.nc.at((x, y, 0.0), rot=yaw):
+        for z in _SHELF_Z:
+            u = -0.6
+            while u < 0.5:
+                w = rnd.uniform(0.18, 0.34)
+                if rnd.random() < 0.85:
+                    h = rnd.uniform(0.17, 0.24)
+                    f.nc.box((u + w / 2, -0.02, z + h / 2), (w, 0.24, h), rnd.choice(K.FABRICS[:7] + (K.WOOD_DARK,)),
+                             skip=("-z", "+y"))
+                u += w + 0.03
 
 
 def _chandelier(f, x, y, zc, scale=1.0):
@@ -2033,10 +2053,10 @@ def _boys_foyer(aset, mb, nc, r):
         for (a, b, c, d) in ((-11.0, -0.4, 11.0, 0.0), (-11.0, 7.6, 11.0, 8.0), (-11.0, -0.4, -10.6, 8.0),
                              (10.6, -0.4, 11.0, 8.0)):
             mb.box_mm((a, b, 0.0), (c, d, 0.004), MARBLE_NAVY, skip=("-z",))
-        for (cx, cy) in ((-6.0, 3.8), (6.0, 3.8)):
-            mb.prism(circle(24, 1.6, cx, cy), 0.0, 0.004, MARBLE_NAVY, cap_bottom=False)
-            mb.slab_ring(circle(24, 1.75, cx, cy), circle(24, 1.6, cx, cy), 0.0, 0.006, K.TRIM_GOLD)
         K.rug(mb, -1.3, -1.55, 1.3, 8.0, 0.006, red, K.TRIM_GOLD)
+        for sx in (-1, 1):       # runners on the first-floor landings, stair top -> wing corridor
+            xa, xb = sorted((sx * 6.8, sx * 12.6))
+            K.rug(mb, xa, 13.2, xb, 14.6, B_Z1 - r["z"], red, K.TRIM_GOLD)
         # busts guarding the entrance, benches, plants
         for sx in (-1, 1):
             _plinth_bust(f, mb, sx * 3.2, -0.9, 0.0)
@@ -2083,12 +2103,12 @@ def _boys_library(aset, mb, nc, r):
     with f:
         K.rug(mb, -3.0, 17.4, 3.0, 28.0, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
         # bookshelves along the foyer wall and the side walls
-        for x in (-7.5, -6.4, -5.3, -4.2, 4.2, 5.3, 6.4, 7.5):
-            f.prop("SM_Int_Bookshelf", x, 16.4, 180.0)
+        for x in (-6.1, -4.7, -3.3, -1.9, 1.9, 3.3, 4.7, 6.1):
+            _bookshelf(f, x, 16.52, 180.0)
         K.bookcase(mb, nc, 0.0, 16.4, 180.0, w=2.4, h=2.4, shelves=6, rng_seed=3)
         for sx in (-1, 1):
-            for y in (17.6, 18.7, 19.8, 25.2, 26.3, 27.4):
-                f.prop("SM_Int_Bookshelf", sx * 12.4, y, -90.0 * sx)
+            for y in (17.6, 19.0, 25.6, 27.0):
+                _bookshelf(f, sx * 12.3, y, -90.0 * sx)
             # reading tables with lamps and chairs
             for (y) in (20.6, 24.2):
                 f.prop("SM_Int_Table", sx * 6.0, y, 0.0)
@@ -3429,10 +3449,10 @@ def _girls_library(aset, mb, nc, r):
     zc = r["zc"] - r["z"]
     with f:
         K.rug(mb, -16.6, 18.6, -10.4, 23.6, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
-        for x in (-19.6, -18.6, -15.0, -11.0, -10.0):
-            f.prop("SM_Int_Bookshelf", x, 25.4, 0.0)
-        for y in (17.8, 19.0, 20.2, 21.4):
-            f.prop("SM_Int_Bookshelf", -21.4, y, 90.0)
+        for x in (-18.35, -14.95, -10.9):
+            _bookshelf(f, x, 25.3, 0.0)
+        for y in (17.4, 18.8, 20.2, 21.6):
+            _bookshelf(f, -21.3, y, 90.0)
         K.bookcase(mb, nc, -7.6, 18.6, -90.0, w=2.2, h=2.3, shelves=5, mat="M_IntTrimWhite", rng_seed=12)
         K.bookcase(mb, nc, -7.6, 22.6, -90.0, w=2.2, h=2.3, shelves=5, mat="M_IntTrimWhite", rng_seed=13)
         f.prop("SM_Int_Table", -13.5, 21.1, 0.0)
@@ -3536,7 +3556,7 @@ def _girls_salon(aset, mb, nc, r, rc, rg):
         f.prop("SM_Int_WoodChair", 2.6, 19.0, -60.0)
         for x in (-5.8, -3.0, 3.0, 5.8):
             if abs(x) > 4:
-                f.prop("SM_Int_Bookshelf", x, 26.4, 0.0)
+                _bookshelf(f, x, 26.3, 0.0)
         f.prop("SM_Int_GreenChair", 2.4, 24.9, 160.0)
         f.prop("SM_Int_GreenChair", -2.4, 24.9, 200.0)
         f.prop("SM_Int_PottedPlantB", 4.3, 17.0, 0.0)
@@ -3612,8 +3632,8 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
         f.light(tx + sx * 0.8, ty - qy * 0.8, 2.6, 900.0, 4.0)
     _curtains(nc, r, "M_IntFabricPink", rod=K.TRIM_GOLD)
     if num in (1, 4):
-        K.camera(aset, "bedroom%d" % num, (door_x - sx * 0.6, (r["y0"] + 0.6) if not front else (r["y1"] - 0.6),
-                                           r["z"] + 1.7), (tx + sx * 0.5, ty, r["z"] + 0.9), 15.0)
+        K.camera(aset, "bedroom%d" % num, (door_x + sx * 0.5, (r["y0"] if front else r["y1"]) + qy * 1.6, r["z"] + 1.7),
+                 (tx + sx * 1.5, inner_y, r["z"] + 0.8), 14.0)
 
 
 def _girls_conservatory_door(aset, mb):
@@ -3621,7 +3641,7 @@ def _girls_conservatory_door(aset, mb):
     aset.door((-27.5, 8.75, 0.15), 0.0, 2.0, 2.55, "girls", True)
     mb.box_mm((-28.8, 7.7, -0.3), (-26.2, 8.6, 0.15), MARBLE, skip=("-z",))       # landing + step outside
     mb.box_mm((-28.8, 7.35, -0.3), (-26.2, 7.7, 0.075), MARBLE, skip=("-z",))
-    K.camera(aset, "conservatory", (-23.0, 20.6, 1.85), (-30.0, 10.0, 0.8), 15.0)
+    K.camera(aset, "conservatory", (-24.4, 18.2, 1.85), (-27.5, 8.75, 1.3), 16.0)
 
 
 def build_girls():

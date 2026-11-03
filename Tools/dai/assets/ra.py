@@ -1349,7 +1349,7 @@ def _interior(aset, mb, nc):
     K.camera(aset, "dorm_back", (-13.25, 1.35, z2 + 1.7), (-13.25, 6.6, z2 + 0.9), 14.0)
     K.camera(aset, "misawa", (8.3, 6.3, z3 + 1.7), (8.0, 1.3, z3 + 1.4), 13.0)
     K.camera(aset, "misawa_eq", (6.2, 3.0, z3 + 1.6), (10.5, 4.6, z3 + 1.9), 16.0)
-    K.camera(aset, "washroom", (16.6, -1.5, z3 + 1.7), (20.5, -5.6, z3 + 0.8), 14.0)
+    K.camera(aset, "washroom", (20.9, -6.2, z3 + 1.7), (17.2, -1.6, z3 + 0.9), 14.0)
     K.camera(aset, "stairs", (3.0, -0.4, ZG + 1.6), (-4.2, 5.5, ZG + 2.4), 14.0)
 
 
