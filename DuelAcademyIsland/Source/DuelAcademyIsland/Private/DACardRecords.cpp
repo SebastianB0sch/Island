@@ -1,34 +1,12 @@
 #include "DACardRecords.h"
 
 #include "DuelAcademyIsland.h"
+#include "DAJson.h"
 #include "Dom/JsonObject.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
-
-namespace
-{
-	FString CardReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
-	{
-		FString Value;
-		if (Object.IsValid())
-		{
-			Object->TryGetStringField(Field, Value);
-		}
-		return Value;
-	}
-
-	int32 CardReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
-	{
-		int32 Value = Default;
-		if (Object.IsValid())
-		{
-			Object->TryGetNumberField(Field, Value);
-		}
-		return Value;
-	}
-}
 
 void UCardDatabaseSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -74,16 +52,16 @@ void UCardDatabaseSubsystem::LoadCards(const FString& Path)
 			continue;
 		}
 		FCardRecord Card;
-		Card.Id = CardReadInt(Object, TEXT("id"));
-		Card.Name = CardReadString(Object, TEXT("name"));
-		Card.CardType = CardReadString(Object, TEXT("card_type"));
-		Card.MonsterType = CardReadString(Object, TEXT("monster_type"));
-		Card.Subtype = CardReadString(Object, TEXT("subtype"));
-		Card.Attribute = CardReadString(Object, TEXT("attribute"));
-		Card.Level = CardReadInt(Object, TEXT("level"));
-		Card.Atk = CardReadInt(Object, TEXT("atk"));
-		Card.Def = CardReadInt(Object, TEXT("def"));
-		Card.Description = CardReadString(Object, TEXT("description"));
+		Card.Id = DAJson::ReadInt(Object, TEXT("id"));
+		Card.Name = DAJson::ReadString(Object, TEXT("name"));
+		Card.CardType = DAJson::ReadString(Object, TEXT("card_type"));
+		Card.MonsterType = DAJson::ReadString(Object, TEXT("monster_type"));
+		Card.Subtype = DAJson::ReadString(Object, TEXT("subtype"));
+		Card.Attribute = DAJson::ReadString(Object, TEXT("attribute"));
+		Card.Level = DAJson::ReadInt(Object, TEXT("level"));
+		Card.Atk = DAJson::ReadInt(Object, TEXT("atk"));
+		Card.Def = DAJson::ReadInt(Object, TEXT("def"));
+		Card.Description = DAJson::ReadString(Object, TEXT("description"));
 		if (Card.Id > 0)
 		{
 			CardsById.Add(Card.Id, MoveTemp(Card));
@@ -126,28 +104,14 @@ void UCardDatabaseSubsystem::LoadDecks(const FString& Path)
 		}
 
 		FStarterDeckDef Deck;
-		Deck.Id = CardReadString(Object, TEXT("id"));
-		Deck.Name = CardReadString(Object, TEXT("name"));
-		Deck.Subtitle = CardReadString(Object, TEXT("subtitle"));
-		Deck.Description = CardReadString(Object, TEXT("description"));
-		Deck.Accent = CardReadString(Object, TEXT("accent"));
+		Deck.Id = DAJson::ReadString(Object, TEXT("id"));
+		Deck.Name = DAJson::ReadString(Object, TEXT("name"));
+		Deck.Subtitle = DAJson::ReadString(Object, TEXT("subtitle"));
+		Deck.Description = DAJson::ReadString(Object, TEXT("description"));
+		Deck.Accent = DAJson::ReadString(Object, TEXT("accent"));
 
-		const TArray<TSharedPtr<FJsonValue>>* Cards = nullptr;
-		if (Object->TryGetArrayField(TEXT("cards"), Cards))
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *Cards)
-			{
-				Deck.Cards.Add(static_cast<int32>(Value->AsNumber()));
-			}
-		}
-		const TArray<TSharedPtr<FJsonValue>>* Extra = nullptr;
-		if (Object->TryGetArrayField(TEXT("extra"), Extra))
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *Extra)
-			{
-				Deck.Extra.Add(static_cast<int32>(Value->AsNumber()));
-			}
-		}
+		DAJson::AppendIntArray(Object, TEXT("cards"), Deck.Cards);
+		DAJson::AppendIntArray(Object, TEXT("extra"), Deck.Extra);
 
 		if (!Deck.Id.IsEmpty() && Deck.Cards.Num() > 0)
 		{
@@ -190,27 +154,13 @@ void UCardDatabaseSubsystem::LoadFusions(const FString& Path)
 		}
 
 		FFusionRecipeDef Recipe;
-		Recipe.Result = CardReadInt(Object, TEXT("result"));
-		Recipe.Name = CardReadString(Object, TEXT("name"));
-		Recipe.MaterialsType = CardReadString(Object, TEXT("materialsType"));
-		Recipe.AnyCount = CardReadInt(Object, TEXT("anyCount"));
+		Recipe.Result = DAJson::ReadInt(Object, TEXT("result"));
+		Recipe.Name = DAJson::ReadString(Object, TEXT("name"));
+		Recipe.MaterialsType = DAJson::ReadString(Object, TEXT("materialsType"));
+		Recipe.AnyCount = DAJson::ReadInt(Object, TEXT("anyCount"));
 
-		const TArray<TSharedPtr<FJsonValue>>* Materials = nullptr;
-		if (Object->TryGetArrayField(TEXT("materials"), Materials))
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *Materials)
-			{
-				Recipe.Materials.Add(static_cast<int32>(Value->AsNumber()));
-			}
-		}
-		const TArray<TSharedPtr<FJsonValue>>* FusionTypes = nullptr;
-		if (Object->TryGetArrayField(TEXT("fusionTypes"), FusionTypes))
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *FusionTypes)
-			{
-				Recipe.FusionTypes.Add(Value->AsString());
-			}
-		}
+		DAJson::AppendIntArray(Object, TEXT("materials"), Recipe.Materials);
+		DAJson::AppendStringArray(Object, TEXT("fusionTypes"), Recipe.FusionTypes);
 
 		if (Recipe.Result > 0 && (Recipe.Materials.Num() > 0 || Recipe.AnyCount > 0))
 		{

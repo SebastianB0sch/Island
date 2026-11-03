@@ -16,6 +16,7 @@
 
 class UCardDatabaseSubsystem;
 class UDAInventorySubsystem;
+class FJsonObject;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDAOnDecksChanged, const FString&, DeckId);
 
@@ -267,9 +268,12 @@ private:
 	FDAEDeck* FindMutable(const FString& DeckId);
 	FString MakeDeckId() const;
 	bool ValidateDeckName(const FString& Name, FString& OutError) const;
-	bool CardBelongsInExtra(int32 CardId) const;
 	bool CanUseCard(const FDAEDeck& Deck, int32 CardId, bool bExtra, FString& OutError) const;
 	void BroadcastChanged(const FString& DeckId);
+	const UCardDatabaseSubsystem* GetDatabase() const;
+	const UDAInventorySubsystem* GetInventory() const;
+	/** Writes version/active deck/decks into Out (save section and ExportStateJson). */
+	void WriteStateFields(FJsonObject& Out) const;
 
 	TArray<FDAEDeck> PlayerDecks;
 	FString ActiveDeckId;

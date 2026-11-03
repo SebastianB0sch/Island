@@ -205,7 +205,8 @@ public:
 	int32 GetBattleAtk(const FDuelCard& Card, const FDuelCard* Target) const;
 	int32 GetEffectiveLevel(const FDuelCard& Card) const;
 	int32 GetTributeCount(const FDuelCard& Card) const;
-	bool HasUmi(EDuelOwner Side) const;
+	/** True while Umi (or A Legendary Ocean / Maiden of the Aqua) affects the whole field. */
+	bool HasUmi() const;
 
 	TArray<FDuelActionInfo> GetHandActions(int32 Uid);
 	TArray<FDuelActionInfo> GetMonsterActions(int32 Uid);
@@ -233,8 +234,6 @@ public:
 	void EndTurn();
 	bool DiscardFromHand(int32 Uid, FString& OutError);
 	void RunOpponentTurn();
-
-	int32 GetCardArtId(const FDuelCard& Card) const { return Card.Data.Id; }
 
 	/** Debug/self-test helper: simulate a complete AI-vs-AI duel. */
 	static FString RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterations);
@@ -384,6 +383,8 @@ private:
 	bool IsCardInSideDeck(EDuelOwner Side, int32 CardId) const;
 
 	// ---- setup and turn flow ----
+	/** Empties a side and gives it fresh zones, its display name and Lp. */
+	void ResetSide(EDuelOwner Side, int32 Lp);
 	void SetupSide(EDuelOwner Side, const FString& DeckId);
 	/** Release-gate helper: structural checks shared by the AI smoke test and scenario probes. */
 	bool CheckDuelStateInvariants(int32 ExpectedPlayerCards, int32 ExpectedOpponentCards,
@@ -393,9 +394,6 @@ private:
 	void StartTurn(EDuelOwner Side);
 	void Draw(EDuelOwner Side, int32 Count, bool bSilent = false);
 	void FinishPlayerTurn();
-	void StartOpponentTurnInternal();
-	void EndOpponentTurnInternal();
-	void BeginNextTurn();
 	void CheckWinner();
 	void EndDuel(EDuelOwner WinnerSide, const FString& Reason);
 
@@ -403,18 +401,19 @@ private:
 	EDuelOwner Other(EDuelOwner Side) const;
 	FDuelSide& SideRef(EDuelOwner Side);
 	const FDuelSide& SideRef(EDuelOwner Side) const;
-	FString SideName(EDuelOwner Side) const;
 	bool IsMainPhase() const;
 	bool CanPlayerAct() const;
 	bool RemoveFromZone(FDuelCard& OutCard, int32 Uid);
 	bool PlaceMonster(EDuelOwner Side, FDuelCard Card, bool bFaceUp, EDuelPosition Position, int32 Zone = -1);
 	bool PlaceSpellTrap(EDuelOwner Side, FDuelCard Card, bool bFaceUp, bool bFieldZone = false);
 	void MoveToGrave(FDuelCard Card);
+	/** Tribute/cost path for a monster taken from a Monster Zone: cleans equips and effect state, then graves it. */
+	void SendFieldMonsterToGrave(FDuelCard Card);
 	void MoveToHand(FDuelCard Card);
 	void MoveToBanished(FDuelCard Card);
+	void MoveToDeck(FDuelCard Card, bool bTop);
 	void MoveToDeckBottom(FDuelCard Card);
 	void MoveToDeckTop(FDuelCard Card);
-	void RemoveFromGrave(EDuelOwner Side, int32 Uid);
 	void DiscardCard(FDuelCard Card, const FString& Reason = FString());
 	void Mill(EDuelOwner Side, int32 Count);
 	void BanishTop(EDuelOwner Side, int32 Count);
@@ -423,7 +422,6 @@ private:
 	int32 CountMonsters(EDuelOwner Side) const;
 	int32 CountSpells(EDuelOwner Side) const;
 	TArray<FDuelCard*> OwnMonsters(EDuelOwner Side);
-	TArray<FDuelCard*> FaceUpMonsters(EDuelOwner Side);
 	FDuelCard* ChooseMonster(EDuelOwner Side, TFunctionRef<bool(const FDuelCard&)> Predicate, bool bStrongest = true);
 	FDuelCard* FindMonsterByName(EDuelOwner Side, const FString& Name);
 	FDuelCard* FindMonsterInHand(EDuelOwner Side, const FString& Name);
@@ -436,22 +434,24 @@ private:
 	bool IsHarpieLady(const FDuelCard& Card) const;
 	bool IsElementalHero(const FDuelCard& Card) const;
 	bool IsDragon(const FDuelCard& Card) const;
-	bool IsWarrior(const FDuelCard& Card) const;
 	bool CanBeSpecialSummonedByEffect(const FDuelCard& Card) const;
 
 	// ---- stats and continuous effects ----
 	int32 EquipAtkBonus(const FDuelCard& Card) const;
 	int32 EquipDefBonus(const FDuelCard& Card) const;
 	bool HasField(EDuelOwner Side, const TCHAR* Name) const;
+	/** The face-up Field Spell currently in play (either side), or nullptr. */
+	const FDuelCard* GetActiveField() const;
 	bool IsPersistentSpellTrap(const FDuelCard& Card) const;
 	bool IsFieldSpellCard(const FDuelCard& Card) const;
 	bool IsManualTrapCard(const FDuelCard& Card) const;
-	bool IsContinuousTrap(const FString& Name) const;
 
 	// ---- summoning ----
 	bool CanSpecialSummon(const FDuelCard& Card);
 	FString SpecialSummonLabel(const FDuelCard& Card) const;
 	bool PerformSpecialSummon(FDuelCard& Card, EDuelOwner Side);
+	/** Banishes the first monster of Attribute from Side's Graveyard (summon cost). */
+	bool BanishGraveMonsterOfAttribute(EDuelOwner Side, const TCHAR* Attribute, FString* OutName = nullptr);
 	void OnSummon(FDuelCard& Card, bool bSpecial, int32 TributeCount = 0, bool bFlipSummon = false);
 	void TriggerEndPhaseEffects(EDuelOwner Side);
 	void TriggerSummonTraps(FDuelCard& Summoned, bool bNormalSummon);
@@ -464,12 +464,15 @@ private:
 	bool CanAttack(const FDuelCard& Card) const;
 	void ResolveBattle(FDuelCard& Attacker, FDuelCard* Target);
 	void AfterAttack(FDuelCard& Attacker);
+	/** Lets Mermaid Knight / Gray Wing / scripted extra attackers swing again. */
+	void RearmExtraAttack(FDuelCard& Attacker);
 	FDuelCard* PickAttackTrap(EDuelOwner Defender, FDuelCard& Attacker, FDuelCard* Target);
 	bool ResolveAttackTrap(FDuelCard& Trap, EDuelOwner Defender, FDuelCard& Attacker, FDuelCard*& Target, EDuelOwner AttackerSide);
-	FDuelCard* PickSummonTrap(EDuelOwner Defender, FDuelCard& Summoned, bool bNormalSummon);
 	void TriggerFlipEffect(FDuelCard& Card, EDuelOwner Side);
 	void DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Attacker, bool bWasFaceDown, const FString& Reason);
 	void DestroySpellTrap(FDuelCard& Card, bool bByEffect);
+	/** Consequence for the monster tied to Snatch Steal / Premature Burial / Call of the Haunted / Autonomous Action Unit when that card leaves the field. */
+	void ReleaseLinkedMonster(const FString& SpellName, int32 LinkedUid);
 	void DestroyAllMonsters(const FString& Reason);
 	void DestroyAllSpellTraps(bool bByEffect);
 	void ReturnSpellTrapToHand(FDuelCard& Spell);
@@ -487,17 +490,20 @@ private:
 	bool IsLegalEquipTarget(const FDuelCard& Card, EDuelOwner Side, const FString& Name) const;
 	void QueueEquipTargetChoice(FDuelCard& Equip, EDuelOwner Side, const FString& Name);
 	void ResolveSpell(FDuelCard& Card);
-	bool ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bAutomatic);
+	/** Shared tail of every Spell activation once the card is on the field. */
+	void ResolvePlacedSpell(EDuelOwner Side, int32 Uid, const FString& Name);
+	bool ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side);
 	void ResolveTrap(FDuelCard& Trap);
-	bool TryCounterSpell(EDuelOwner Caster, EDuelOwner Defender);
-	bool TryCounterTrap(EDuelOwner Caster, EDuelOwner Defender);
+	/** Defender may answer a Spell with Magic Jammer / a Trap with Seven Tools of the Bandit. */
+	bool TryCounterSpell(EDuelOwner Defender);
+	bool TryCounterTrap(EDuelOwner Defender);
+	/** Seven Tools check for TrapSide's Trap; destroys and logs the Trap when negated. */
+	bool TryNegateTrapActivation(EDuelOwner TrapSide, int32 TrapUid, const FString& TrapName);
 	bool ActivateRitual();
 	bool PerformFusion(const FString& FusionType);
 	bool FindFusionOption(EDuelOwner Side, const FString& FusionType, int32* OutResult, TArray<int32>* OutMaterialUids) const;
 	bool HasEquipTarget(EDuelOwner Side, const FString& Name) const;
-	FDuelCard* ChooseEquipTarget(EDuelOwner Side, const FString& Name);
 	TArray<FDuelActionInfo> GetMonsterEffectActionsFor(const FDuelCard& Card);
-	bool CanActivateMonsterEffect(const FDuelCard& Card);
 	bool IsNormalSummonLocked(const FDuelCard& Card) const;
 
 	// ---- AI ----
@@ -510,14 +516,15 @@ private:
 	void AiActivateMonsterEffects();
 	void AiActivateManualTraps();
 	void AiDiscardToLimit();
-	bool AiAttackWith(FDuelCard& Attacker);
 	int32 AiCardValue(const FDuelCard& Card) const;
+	/** Removes the first lowest (or highest) AiCardValue card from Side's hand. */
+	bool PopHandCardByValue(EDuelOwner Side, bool bLowest, FDuelCard& OutCard);
+	bool PopHandCardByValue(EDuelOwner Side, bool bLowest, FDuelCard& OutCard, TFunctionRef<bool(const FDuelCard&)> Skip);
 
 	void OnSpellActivated();
 	FDuelVisualEvent& EmitVisual(EDuelVisualEventType Type, EDuelOwner Side, const FDuelCard* Card = nullptr,
 		int32 Amount = 0, const FString& Text = FString(), bool bFaceDown = false);
 	void Log(const FString& Message, const FString& Tone = TEXT("normal"));
-	FString Verb(EDuelOwner Side, const TCHAR* ThirdPerson, const TCHAR* SecondPerson) const;
 
 	UCardDatabaseSubsystem* Database = nullptr;
 	FRandomStream Random;

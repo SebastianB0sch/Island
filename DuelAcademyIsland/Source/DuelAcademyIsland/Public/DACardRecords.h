@@ -126,7 +126,6 @@ public:
 	const TArray<FFusionRecipeDef>& GetFusions() const { return Fusions; }
 	int32 GetCardCount() const { return CardsById.Num(); }
 	bool IsLoaded() const { return bLoaded; }
-	const FString& GetLoadError() const { return LoadError; }
 
 private:
 	void LoadCards(const FString& Path);
