@@ -12,10 +12,14 @@ Unreal install. The UE steps are explicit because they launch the editor
 headless and can take minutes; they are stubs for automation suites that A02,
 A03, A04, A07 and A09 have not published yet.
 
+Self-test and automation steps pass only when their summary line is present
+and reports zero failures (see ue_common.py); a log with no summary, or an
+automation filter that matches no tests, is a failure.
+
 Exit codes:
-    0  every requested step passed (or was intentionally skipped)
+    0  every requested step passed
     1  a requested step failed
-    2  configuration error (missing project/editor)
+    2  configuration error (missing project/editor), or nothing ran (--dry-run)
 """
 
 from __future__ import annotations
@@ -23,9 +27,6 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json
-import os
-import re
-import signal
 import subprocess
 import sys
 import tempfile
@@ -34,12 +35,20 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
-DEFAULT_UPROJECT = ROOT / "DuelAcademyIsland" / "DuelAcademyIsland.uproject"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ue_common import (  # noqa: E402
+    DEFAULT_UPROJECT,
+    ROOT,
+    SELFTEST_SWITCHES,
+    automation_verdict,
+    headless_game_command,
+    now_slug as _now_slug,
+    resolve_editor,
+    selftest_verdict,
+)
+
 DEFAULT_REPORT_DIR = ROOT / "Docs" / "Integration" / "reports"
-DEFAULT_UE_EDITOR = Path(r"C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe")
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.1.0"
 
 # Log markers and final-summary formats emitted by the in-engine self-tests.
 # The summary (not the first "PASS" line) decides the outcome; per-check lines
@@ -119,6 +128,8 @@ class SmokeReport:
             return "FAIL"
         if any(step.status == "blocked" for step in self.steps):
             return "BLOCKED"
+        if all(step.status == "skip" for step in self.steps):
+            return "SKIPPED"
         return "PASS"
 
     def to_dict(self) -> dict[str, Any]:
@@ -131,131 +142,6 @@ class SmokeReport:
             "uproject": self.uproject,
             "steps": [step.to_dict() for step in self.steps],
         }
-
-
-def _resolve_editor(args: argparse.Namespace, *, require_exists: bool = True) -> Path | None:
-    if args.ue_editor:
-        return Path(args.ue_editor).expanduser().resolve()
-    env = os.environ.get("UE_EDITOR") or os.environ.get("UNREAL_EDITOR")
-    if env:
-        return Path(env).expanduser().resolve()
-    if DEFAULT_UE_EDITOR.exists() or not require_exists:
-        return DEFAULT_UE_EDITOR
-    return None
-
-
-def _resolve_cli_path(value: str, *, base: Path | None = None) -> Path:
-    """Resolve a CLI path against the current directory unless it is absolute.
-
-    ``--report``, ``--validate-report``, ``--report-dir`` and ``--uproject``
-    all follow this rule so relative paths mean the same thing before and
-    after a run started from outside the repository.
-    """
-    path = Path(value).expanduser()
-    if not path.is_absolute():
-        path = (base or Path.cwd()) / path
-    return path.resolve()
-
-
-def _output_text(value: str | bytes | None) -> str:
-    """Normalise captured subprocess output for log files."""
-    if value is None:
-        return ""
-    if isinstance(value, bytes):
-        return value.decode("utf-8", errors="replace")
-    return value
-
-
-def _write_text_atomic(path: Path, text: str) -> None:
-    """Write UTF-8 text through a same-directory temp file.
-
-    Reports and step logs are gate evidence; an interrupted run must not leave
-    a half-written JSON report that later parses as valid-but-empty.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
-    temp_path = Path(temp_name)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(text)
-        os.replace(temp_path, path)
-    finally:
-        if temp_path.exists():
-            try:
-                temp_path.unlink()
-            except OSError:
-                pass
-
-
-def _popen_tree_kwargs(platform: str | None = None) -> dict[str, Any]:
-    """Popen kwargs that isolate a step in a killable process group."""
-    if (platform or os.name) == "nt":
-        return {"creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)}
-    return {"start_new_session": True}
-
-
-def _terminate_process_tree(proc: subprocess.Popen, *, grace_seconds: float = 2.0) -> None:
-    """Terminate ``proc`` and its descendants; safe after the child exited.
-
-    ``subprocess.run(timeout=...)`` only kills the direct child. Editors such
-    as ``UnrealEditor-Cmd`` spawn helpers that would otherwise keep running
-    and hold the captured pipes open.
-    """
-    if proc.poll() is not None:
-        return
-    if os.name == "nt":
-        # taskkill /T walks the child tree. Fall back to proc.kill() when the
-        # utility is unavailable or the process exits mid-call.
-        try:
-            subprocess.run(
-                ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=grace_seconds,
-                check=False,
-            )
-        except (OSError, subprocess.SubprocessError):
-            pass
-        if proc.poll() is None:
-            try:
-                proc.kill()
-            except OSError:
-                pass
-        try:
-            proc.wait(timeout=grace_seconds)
-        except subprocess.TimeoutExpired:
-            pass
-        return
-
-    # POSIX: start_new_session=True made the child a process-group leader, so
-    # killing the group also kills its helpers.
-    try:
-        os.killpg(proc.pid, signal.SIGTERM)
-    except (ProcessLookupError, PermissionError):
-        try:
-            proc.kill()
-        except OSError:
-            pass
-        return
-    try:
-        proc.wait(timeout=grace_seconds)
-    except subprocess.TimeoutExpired:
-        pass
-    try:
-        os.killpg(proc.pid, getattr(signal, "SIGKILL", signal.SIGTERM))
-    except (ProcessLookupError, PermissionError):
-        pass
-    try:
-        proc.wait(timeout=grace_seconds)
-    except subprocess.TimeoutExpired:
-        pass
-
-
-def _format_step_log(command: list[str], status_line: str, stdout: str = "", stderr: str = "") -> str:
-    text = f"COMMAND: {subprocess.list2cmdline(command)}\n{status_line}\n"
-    if stdout or stderr:
-        text += f"\n--- stdout ---\n{stdout}\n\n--- stderr ---\n{stderr}\n"
-    return text
 
 
 def _run_step(
@@ -348,37 +234,12 @@ def _validator_step(report_path: Path, *, strict: bool) -> Step:
 def _duel_selftest_step(editor: Path, uproject: Path, iterations: int) -> Step:
     # A04: the counted form is owned by UDADuelRulesSelfTestSubsystem so it also
     # works when the HUD is not the launch path.
-    command = [
-        str(editor),
-        str(uproject),
-        "-game",
-        "-nullrhi",
-        "-nosound",
-        "-unattended",
-        "-nop4",
-        f"-DADuelSelfTest={iterations}",
-        "-log",
-        "-stdout",
-        "-FullStdOutLogOutput",
-    ]
+    command = headless_game_command(editor, uproject, f"{SELFTEST_SWITCHES['duel']}={iterations}")
     return Step(name="duel-selftest", command=command)
 
 
 def _selftest_step(name: str, switch: str, editor: Path, uproject: Path) -> Step:
-    command = [
-        str(editor),
-        str(uproject),
-        "-game",
-        "-nullrhi",
-        "-nosound",
-        "-unattended",
-        "-nop4",
-        switch,
-        "-log",
-        "-stdout",
-        "-FullStdOutLogOutput",
-    ]
-    return Step(name=name, command=command)
+    return Step(name=name, command=headless_game_command(editor, uproject, switch))
 
 
 def _automation_step(editor: Path, uproject: Path, filter_name: str, report_dir: Path) -> Step:
@@ -399,191 +260,43 @@ def _automation_step(editor: Path, uproject: Path, filter_name: str, report_dir:
     return Step(name="automation", command=command)
 
 
-def _mark_failed(step: Step, note: str) -> None:
-    step.status = "fail"
-    step.note = note
-
-
-def _duel_selftest_failure_reason(summary: str) -> str:
-    """Return why a ``Duel self-test:`` summary line failed, or "" if it passed."""
-    if "RESULT FAIL" in summary:
-        return "RESULT FAIL"
-    if "stalls" not in summary:
-        return "missing stalls field"
-    try:
-        stalls = int(summary.split("stalls")[0].strip().split()[-1])
-    except (ValueError, IndexError):
-        return "unparsable stalls field"
-    if stalls > 0:
-        return f"stalls {stalls}"
-    return ""
-
-
-def _inspect_duel_selftest(step: Step, text: str) -> None:
-    summary = ""
-    for raw_line in text.splitlines():
-        if "Duel self-test:" in raw_line:
-            summary = raw_line.strip()
-    if not summary:
-        if step.status == "pass":
-            _mark_failed(step, "missing 'Duel self-test:' summary in log")
-        return
-    reason = _duel_selftest_failure_reason(summary)
-    if reason:
-        _mark_failed(step, f"{summary} ({reason})")
-    elif step.status == "pass":
-        step.note = summary
-
-
-def _inspect_named_selftest(step: Step, text: str) -> None:
-    marker = _SELFTEST_MARKERS[step.name]
-    summary_re = _SELFTEST_SUMMARIES[step.name]
-    failure_line = ""
-    summary_line = ""
-    summary_seen = False
-    summary_failed = False
-    zero_check_line = ""
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
-        if step.name == "profile-selftest" and "[FAIL]" in line:
-            failure_line = line
-        if step.name == "story-selftest" and re.search(r"StorySelfTest:\s+FAIL\b", line):
-            failure_line = line
-        match = summary_re.search(line)
-        if not match:
-            continue
-        summary_line = line
-        summary_seen = True
-        if step.name in {"profile-selftest", "story-selftest"}:
-            summary_failed = summary_failed or match.group(1) not in {"PASSED", "PASS"}
-        else:
-            passed, failed = int(match.group(1)), int(match.group(2))
-            summary_failed = summary_failed or failed != 0
-            if passed + failed == 0:
-                zero_check_line = line
-    if failure_line:
-        _mark_failed(step, failure_line)
-    elif summary_seen and summary_failed:
-        _mark_failed(step, summary_line)
-    elif not summary_seen:
-        if step.status == "pass":
-            _mark_failed(step, f"missing {marker} summary in log")
-    elif zero_check_line:
-        _mark_failed(step, f"{zero_check_line} (0 checks reported)")
-    elif step.status == "pass":
-        step.note = summary_line
-
-
-def _inspect_a07_selftest(step: Step, text: str) -> None:
-    suites = {
-        "PuzzleSelfTest:": _SELFTEST_SUMMARIES["puzzle-selftest"],
-        "ExamSelfTest:": _SELFTEST_SUMMARIES["exam-selftest"],
-    }
-    seen: set[str] = set()
-    checks_by_suite: dict[str, int] = {}
-    failure_line = ""
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
-        if "A07SelfTest: FAILURES PRESENT" in line:
-            failure_line = line
-        for marker, summary_re in suites.items():
-            match = summary_re.search(line)
-            if not match:
-                continue
-            seen.add(marker)
-            passed, failed = int(match.group(1)), int(match.group(2))
-            checks_by_suite[marker] = passed + failed
-            if failed:
-                failure_line = line
-    if failure_line:
-        _mark_failed(step, failure_line)
-    elif "A07SelfTest: BOTH SUITES PASS" in text and seen == set(suites) and all(checks_by_suite.values()):
-        if step.status == "pass":
-            step.note = "A07SelfTest: BOTH SUITES PASS"
-    elif seen and any(checks == 0 for checks in checks_by_suite.values()):
-        _mark_failed(step, "A07 suites reported 0 checks")
-    elif step.status == "pass":
-        _mark_failed(step, "missing one or both A07 suite summaries")
-
-
-def _inspect_automation(step: Step, text: str) -> None:
-    failures = [line.strip() for line in text.splitlines()
-                if "Automation Test Failed" in line or "Result: Failed" in line]
-    if failures:
-        _mark_failed(step, failures[0])
-        return
-    completion = _AUTOMATION_COMPLETE.search(text)
-    if _NO_AUTOMATION_TESTS.search(text):
-        # Unreal exits non-zero (-1 / 255) when a filter matches nothing, so
-        # the no-tests marker and a completion line are the skip contract.
-        # A timeout or an interrupted/crashed run must never become an
-        # intentional skip, even if a partial log happens to contain both.
-        if step.returncode is None:
-            return
-        if completion is None:
-            if step.status == "pass":
-                _mark_failed(step, "no tests matched but the log has no TEST COMPLETE marker")
-            return
-        completion_code = int(completion.group(1))
-        if completion_code not in {0, -1} or step.returncode not in {0, -1, 255}:
-            _mark_failed(
-                step,
-                f"no-tests text with unexpected completion/exit "
-                f"({completion.group(0)}, process exit {step.returncode})",
-            )
-            return
-        step.status = "skip"
-        step.note = "no automation tests matched the filter"
-        return
-    if completion and int(completion.group(1)) != 0:
-        _mark_failed(step, completion.group(0))
-        return
-    if step.status != "pass":
-        return
-    if completion:
-        step.note = "automation completed with exit code 0"
-    else:
-        _mark_failed(step, "missing 'TEST COMPLETE. EXIT CODE:' marker in log")
+# run_smoke step name -> ue_common self-test kind
+STEP_KINDS = {
+    "duel-selftest": "duel",
+    "profile-selftest": "profile",
+    "duelrules-selftest": "duelrules",
+    "economy-selftest": "economy",
+    "story-selftest": "story",
+    "puzzle-selftest": "puzzle",
+    "exam-selftest": "exam",
+    "a07-selftest": "a07",
+}
 
 
 def _inspect_log(step: Step) -> None:
-    """Extract a known self-test / automation summary from a captured log.
-
-    The process return code is authoritative for failures: inspection may
-    downgrade a passing step when the log reports a failed check, but it never
-    turns a failed, timed-out or blocked step into a pass.
-    """
+    """Judge a captured UE log with the strict summary parser (ue_common)."""
+    if step.status in ("blocked", "skip"):
+        return
     log_path = Path(step.log) if step.log else None
     if not log_path or not log_path.exists():
         return
     text = log_path.read_text(encoding="utf-8", errors="replace")
-    if step.name == "duel-selftest":
-        _inspect_duel_selftest(step, text)
-    elif step.name in _SELFTEST_MARKERS:
-        _inspect_named_selftest(step, text)
-    elif step.name == "a07-selftest":
-        _inspect_a07_selftest(step, text)
-    elif step.name == "automation":
-        _inspect_automation(step, text)
-
-
-def _run_and_inspect(
-    step: Step,
-    *,
-    timeout: int,
-    report_dir: Path,
-    dry_run: bool,
-) -> Step:
-    step = _run_step(step, timeout=timeout, log_dir=report_dir / "logs", dry_run=dry_run)
-    _inspect_log(step)
-    return step
-
-
-def _report_path(prefix: str, explicit: str, report_dir: Path) -> Path:
-    """Resolve an explicit report path or build the default under ``report_dir``."""
-    if explicit:
-        return _resolve_cli_path(explicit)
-    return report_dir / f"{prefix}-{_now_slug()}.json"
+    if step.name == "automation":
+        step.status, note = automation_verdict(text, step.returncode)
+        step.note = note or step.note
+        return
+    kind = STEP_KINDS.get(step.name)
+    if kind is None:
+        return
+    if step.returncode is None:  # timeout: keep the failure from _run_step
+        return
+    passed, note = selftest_verdict(kind, text)
+    if passed and step.returncode != 0:
+        step.status = "fail"
+        step.note = f"{note} (but exit code {step.returncode})"
+    else:
+        step.status = "pass" if passed else "fail"
+        step.note = note
 
 
 def _print_human(report: SmokeReport, *, json_output: bool) -> None:
@@ -674,7 +387,7 @@ def main(argv: list[str] | None = None) -> int:
     run_validate = not args.no_validate and (
         args.validate or run_all or not needs_project
     )
-    editor = _resolve_editor(args, require_exists=not args.dry_run) if needs_project else None
+    editor = resolve_editor(args.ue_editor) if (wants_selftests or args.automation) else None
 
     report = SmokeReport(
         generated_at=_dt.datetime.now(_dt.timezone.utc).isoformat(),
@@ -695,24 +408,24 @@ def main(argv: list[str] | None = None) -> int:
 
     selftest_jobs: list[tuple[str, str]] = []
     if args.duel_selftest or run_selftests:
-        selftest_jobs.append(("duel-selftest", "-DADuelSelfTest"))
+        selftest_jobs.append(("duel-selftest", SELFTEST_SWITCHES["duel"]))
     if args.profile_selftest or run_selftests:
-        selftest_jobs.append(("profile-selftest", "-DAProfileSelfTest"))
+        selftest_jobs.append(("profile-selftest", SELFTEST_SWITCHES["profile"]))
     if args.duelrules_selftest or run_selftests:
-        selftest_jobs.append(("duelrules-selftest", "-DADuelRulesSelfTest"))
+        selftest_jobs.append(("duelrules-selftest", SELFTEST_SWITCHES["duelrules"]))
     if args.economy_selftest or run_selftests:
-        selftest_jobs.append(("economy-selftest", "-DAEconomySelfTest"))
+        selftest_jobs.append(("economy-selftest", SELFTEST_SWITCHES["economy"]))
     if args.story_selftest:
-        selftest_jobs.append(("story-selftest", "-DAStorySelfTest"))
+        selftest_jobs.append(("story-selftest", SELFTEST_SWITCHES["story"]))
     if run_all and not args.a07_selftest and not args.puzzle_selftest and not args.exam_selftest:
-        selftest_jobs.append(("a07-selftest", "-DAPuzzleExamSelfTest"))
+        selftest_jobs.append(("a07-selftest", SELFTEST_SWITCHES["a07"]))
     if args.a07_selftest:
-        selftest_jobs.append(("a07-selftest", "-DAPuzzleExamSelfTest"))
+        selftest_jobs.append(("a07-selftest", SELFTEST_SWITCHES["a07"]))
     else:
         if args.puzzle_selftest:
-            selftest_jobs.append(("puzzle-selftest", "-DAPuzzleSelfTest"))
+            selftest_jobs.append(("puzzle-selftest", SELFTEST_SWITCHES["puzzle"]))
         if args.exam_selftest:
-            selftest_jobs.append(("exam-selftest", "-DAExamSelfTest"))
+            selftest_jobs.append(("exam-selftest", SELFTEST_SWITCHES["exam"]))
 
     for name, switch in selftest_jobs:
         if editor is None:
@@ -759,9 +472,10 @@ def main(argv: list[str] | None = None) -> int:
     if not args.json:
         print(f"Report: {report_path}")
 
-    if report.result() == "PASS":
+    result = report.result()
+    if result == "PASS":
         return 0
-    return 1 if report.result() == "FAIL" else 2
+    return 1 if result == "FAIL" else 2
 
 
 if __name__ == "__main__":

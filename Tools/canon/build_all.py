@@ -1,7 +1,10 @@
 """Run the full canon pipeline in dependency order.
 
-Offline path: all guide-derived facts are cached under Tools/canon/cache/.
-Only the ROM and the target cards.json are required.
+Requires the ROM (GX_ROM) and the target cards.json. Guide-derived facts are
+read from the local, gitignored Tools/canon/cache/*_facts.json; on a fresh
+checkout the builders rebuild that cache from a wikitext snapshot
+(GX_GUIDE_WIKITEXT, or Tools/canon/cache/guide_wikitext.json written by
+fetch_guides.py).
 """
 from __future__ import annotations
 

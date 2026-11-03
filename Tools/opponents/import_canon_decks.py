@@ -22,15 +22,15 @@ from __future__ import annotations
 
 import argparse
 import collections
-import json
 import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
-DATA = ROOT / "DuelAcademyIsland" / "Content" / "Data"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
+from common.jsonio import read_json as load_json, write_json, write_text  # noqa: E402
+from common.paths import DATA_DIR as DATA, REPO_ROOT as ROOT  # noqa: E402
+
 CANON_DECKS = DATA / "Canon" / "decks.json"
 RUNTIME_DIR = DATA / "Opponents" / "decks"
 RULES_PATH = DATA / "Rules" / "banned_limited.json"
@@ -247,30 +247,6 @@ SAFE_FILL_IDS = [
     1, 2, 18, 23, 40, 148, 234, 363, 380, 397, 402, 403, 420, 425, 436,
     463, 499, 547, 552, 590, 655, 702, 766, 780, 1109, 1192,
 ]
-
-
-def load_json(path: Path) -> Any:
-    with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
-
-
-def _write_text_atomic(path: Path, text: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(text)
-        os.replace(temp_name, path)
-    finally:
-        if os.path.exists(temp_name):
-            try:
-                os.unlink(temp_name)
-            except OSError:
-                pass
-
-
-def write_json(path: Path, value: Any) -> None:
-    _write_text_atomic(path, json.dumps(value, indent=2, ensure_ascii=False) + "\n")
 
 
 def card_name_map(cards: dict[int, dict]) -> dict[str, int]:
@@ -724,8 +700,7 @@ def write_report(rows: list[dict], rules: Rules, path: Path) -> None:
         "- `Tools/economy/sync_canon.py` and `DAEconomyTests.cpp` both use the 15-card Extra Deck cap checked by this importer.",
         "",
     ]
-    path.parent.mkdir(parents=True, exist_ok=True)
-    _write_text_atomic(path, "\n".join(lines))
+    write_text(path, "\n".join(lines))
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -14,14 +14,17 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
-import json
 import os
 import sys
 import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT_DEFAULT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
+from common.jsonio import read_json as load_json  # noqa: E402
+from common.paths import REPO_ROOT  # noqa: E402
+
+ROOT_DEFAULT = str(REPO_ROOT)
 CARD_MIN, CARD_MAX = 1, 1200
 DUELIST_ROLES = {"ranked", "staff", "event", "exam"}
 DORMS = {"Slifer", "Ra", "Obelisk", "Staff", "Event", "Exam"}
@@ -65,11 +68,6 @@ class Validator:
             return True
         self.fail(label, detail)
         return False
-
-
-def load_json(path: str) -> object:
-    with open(path, "r", encoding="utf-8") as handle:
-        return json.load(handle)
 
 
 def data_path(root: str, *parts: str) -> str:

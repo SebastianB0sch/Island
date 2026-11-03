@@ -5,10 +5,10 @@ in Docs/Canon/VALIDATION.md.
 """
 from __future__ import annotations
 
-import argparse
-import json
+import re
 import sys
 from collections import Counter
+from pathlib import Path
 
 from build_manifest import FILES as MANIFEST_FILES, MANIFEST_PATH_PREFIX
 from canon_common import (
@@ -131,24 +131,19 @@ class Report:
             self.warnings.append(f"{name}: {detail}")
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Validate the canon dataset.")
-    parser.add_argument(
-        "--report",
-        type=Path,
-        nargs="?",
-        const=DOCS_DIR / "VALIDATION.md",
-        default=None,
-        help="write the Markdown report to this path "
-             "(no value: Docs/Canon/VALIDATION.md). No report is written by "
-             "default; the doc refresh is a deliberate step because it "
-             "changes the committed file.",
-    )
-    # Kept for older invocations (CI used to pass it): reports are now off by
-    # default, so this flag is a no-op.
-    parser.add_argument("--no-report", action="store_true", help="ignored; no report is written unless --report is given")
-    args = parser.parse_args(argv)
+GENERATED_LINE = re.compile(r"^Generated: .*$", re.M)
 
+
+def write_report(path: Path, text: str) -> None:
+    """Rewrite the report only when something other than its timestamp changed."""
+    if path.exists():
+        current = path.read_text(encoding="utf-8")
+        if GENERATED_LINE.sub("", current) == GENERATED_LINE.sub("", text):
+            return
+    write_text(path, text)
+
+
+def main() -> int:
     report = Report()
     cards = read_json(CANON_DIR.parent / "cards.json")
     card_ids = {int(c["id"]) for c in cards}
@@ -431,16 +426,7 @@ def main(argv: list[str] | None = None) -> int:
         lines += ["", "## Errors", ""] + [f"- {e}" for e in report.errors]
     if report.warnings:
         lines += ["", "## Warnings", ""] + [f"- {w}" for w in report.warnings]
-    if args.report:
-        report_path = args.report.expanduser()
-        if not report_path.is_absolute():
-            report_path = Path.cwd() / report_path
-        try:
-            report_path.parent.mkdir(parents=True, exist_ok=True)
-            write_text(report_path, "\n".join(lines) + "\n")
-        except OSError as exc:
-            print(f"error: cannot write report {report_path}: {exc}", file=sys.stderr)
-            return 2
+    write_report(DOCS_DIR / "VALIDATION.md", "\n".join(lines) + "\n")
 
     print(f"checks: {len(report.checks)}  errors: {len(report.errors)}  warnings: {len(report.warnings)}")
     for error in report.errors:

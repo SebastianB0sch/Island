@@ -21,112 +21,25 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json
-import os
-import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "integration"))
+from ue_common import (  # noqa: E402
+    DEFAULT_UPROJECT,
+    ROOT,
+    SELFTEST_SWITCHES,
+    headless_game_command,
+    now_slug as _now_slug,
+    parse_suite_summaries as _parse_summaries,
+    resolve_editor as _resolve_editor,
+    selftest_verdict,
+)
 
-from Tools.integration import run_smoke as _smoke  # noqa: E402  (path setup)
-
-DEFAULT_UPROJECT = ROOT / "DuelAcademyIsland" / "DuelAcademyIsland.uproject"
-DEFAULT_UE_EDITOR = Path(r"C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe")
-MODES = {
-    "puzzles": "-DAPuzzleSelfTest",
-    "exams": "-DAExamSelfTest",
-    "combined": "-DAPuzzleExamSelfTest",
-}
-
-
-def _now_slug() -> str:
-    now = _dt.datetime.now()
-    return f"{now:%Y%m%d-%H%M%S}-{now.microsecond:06d}-{os.getpid()}"
-
-
-def _write_text_atomic(path: Path, text: str) -> None:
-    """Write the run log atomically so a killed runner cannot truncate it."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
-    temp_path = Path(temp_name)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(text)
-        os.replace(temp_path, path)
-    finally:
-        if temp_path.exists():
-            try:
-                temp_path.unlink()
-            except OSError:
-                pass
-
-
-def _resolve_editor(explicit: str) -> Path | None:
-    if explicit:
-        return Path(explicit).expanduser().resolve()
-    env = os.environ.get("UE_EDITOR") or os.environ.get("UNREAL_EDITOR")
-    if env:
-        return Path(env).expanduser().resolve()
-    if DEFAULT_UE_EDITOR.exists():
-        return DEFAULT_UE_EDITOR
-    return None
-
-
-def _execute(command: list[str], cwd: Path, timeout: int) -> tuple[int | None, str, bool]:
-    """Run ``command``, kill the whole process tree on timeout.
-
-    Uses Tools/integration/run_smoke.py's ``_popen_tree_kwargs`` /
-    ``_terminate_process_tree`` helpers so every runner grows the same single
-    strategy (an UnrealEditor-Cmd child spawns helpers that must die too).
-    The timeout still bounds the direct child exactly like
-    ``subprocess.run(timeout=...)`` did: a child that exits in time keeps its
-    return code and captured output.
-    """
-    proc = subprocess.Popen(
-        command,
-        cwd=str(cwd),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        **_smoke._popen_tree_kwargs(),
-    )
-    try:
-        stdout, stderr = proc.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired as exc:
-        partial_stdout = exc.stdout if isinstance(exc.stdout, str) else ""
-        partial_stderr = exc.stderr if isinstance(exc.stderr, str) else ""
-        _smoke._terminate_process_tree(proc)
-        try:
-            stdout, stderr = proc.communicate(timeout=5)
-        except subprocess.TimeoutExpired:
-            stdout, stderr = "", ""
-        output = (
-            f"TIMEOUT after {timeout}s\n\n"
-            f"--- stdout ---\n{partial_stdout or stdout}\n\n"
-            f"--- stderr ---\n{partial_stderr or stderr}\n"
-        )
-        return None, output, True
-    output = f"--- stdout ---\n{stdout}\n\n--- stderr ---\n{stderr}\n"
-    return proc.returncode, output, False
-
-
-def _parse_summaries(text: str) -> dict[str, dict[str, int | str]]:
-    result: dict[str, dict[str, int | str]] = {}
-    pattern = re.compile(r"(PuzzleSelfTest|ExamSelfTest): (\d+) passed, (\d+) failed\.\s*(ALL PASS|FAILURES PRESENT)")
-    for match in pattern.finditer(text):
-        result[match.group(1)] = {
-            "passed": int(match.group(2)),
-            "failed": int(match.group(3)),
-            "status": match.group(4),
-        }
-    return result
+# --mode -> ue_common self-test kind
+MODES = {"puzzles": "puzzle", "exams": "exam", "combined": "a07"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -156,19 +69,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    command = [
-        str(editor),
-        str(uproject),
-        "-game",
-        "-nullrhi",
-        "-nosound",
-        "-unattended",
-        "-nop4",
-        MODES[args.mode],
-        "-log",
-        "-stdout",
-        "-FullStdOutLogOutput",
-    ]
+    kind = MODES[args.mode]
+    command = headless_game_command(editor, uproject, SELFTEST_SWITCHES[kind])
     started = _dt.datetime.now(_dt.timezone.utc)
     try:
         returncode, output, timed_out = _execute(command, ROOT, args.timeout)
@@ -194,13 +96,8 @@ def main(argv: list[str] | None = None) -> int:
     required = ["PuzzleSelfTest", "ExamSelfTest"] if args.mode == "combined" else (
         ["PuzzleSelfTest"] if args.mode == "puzzles" else ["ExamSelfTest"]
     )
-    suites_ok = all(
-        key in summaries and summaries[key]["failed"] == 0 and summaries[key]["status"] == "ALL PASS"
-        for key in required
-    )
-    passed = returncode == 0 and not timed_out and suites_ok and not failure_lines
-    if args.mode == "combined":
-        passed = passed and combined_ok
+    suites_ok, verdict_note = selftest_verdict(kind, text)
+    passed = returncode == 0 and not timed_out and suites_ok
 
     for key in required:
         summary = summaries.get(key)
@@ -210,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{key}: {summary['passed']} passed, {summary['failed']} failed. {summary['status']}")
     if args.mode == "combined":
         print(f"A07SelfTest: {'BOTH SUITES PASS' if combined_ok else 'FAILURES PRESENT'}")
-    print(f"Result: {'PASS' if passed else 'FAIL'}")
+    print(f"Result: {'PASS' if passed else 'FAIL'}" + ("" if suites_ok else f" ({verdict_note})"))
     print(f"Log: {log_path}")
 
     if args.json:

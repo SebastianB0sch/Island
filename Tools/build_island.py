@@ -94,33 +94,15 @@ def missing_stage_inputs(stages):
 
 
 def main(argv):
-    try:
-        stages = parse_stages(argv)
-    except ValueError as error:
-        print(f"build_island: {error}", file=sys.stderr)
-        print(f"stages: {' '.join(STAGES)}  (or all, --render)", file=sys.stderr)
-        return 2
-    if stages is None:
-        print(__doc__)
-        return 0
-
-    # Dependency guard first (stdlib imports only): running a stage before its
-    # producer must fail with exit 2, not with a deep traceback.
-    from dai import config as C
-    from dai.cache import StampedCacheError
-    problems = missing_stage_inputs(stages)
-    if problems:
-        for stage, producer, path in problems:
-            print(f"build_island: the {stage} stage needs {path} (built by the {producer} stage)",
-                  file=sys.stderr)
-        first_stage, producer, _path = problems[0]
-        print(f"build_island: run the {producer} stage first\n"
-              f"build_island:   python Tools/build_island.py {producer} {first_stage}\n"
-              f"build_island: or rebuild everything without staging: python Tools/build_island.py",
-              file=sys.stderr)
-        return 2
-
-    from dai import blend
+    unknown = [a for a in argv if a not in STAGES and a not in ("all", "--render")]
+    if unknown:
+        # A typo must not silently fall back to the full (multi-minute) rebuild.
+        sys.exit(f"unknown stage(s): {' '.join(unknown)}; valid: all, --render, {', '.join(STAGES)}")
+    stages = [a for a in argv if a in STAGES] or [s for s in STAGES if s != "render"] + (["render"] if "--render" in argv else [])
+    if "all" in argv:
+        stages = STAGES
+    import numpy as np
+    from dai import blend, config as C
     t_all = time.time()
     log = lambda m: print(m, flush=True)
     for st in STAGES:

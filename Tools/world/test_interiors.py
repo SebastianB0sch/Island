@@ -12,13 +12,14 @@ Usage:
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-WORLD = ROOT / "DuelAcademyIsland" / "Content" / "Data" / "World"
-TOOLS = ROOT / "Tools"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
+from common.jsonio import read_json  # noqa: E402
+from common.paths import DATA_DIR, TOOLS_DIR as TOOLS  # noqa: E402
+
+WORLD = DATA_DIR / "World"
 
 
 def inside(point, box, margin=0.0):
@@ -28,8 +29,8 @@ def inside(point, box, margin=0.0):
 
 
 def main() -> int:
-    cells = {c["id"]: c for c in json.loads((WORLD / "interiors.json").read_text(encoding="utf-8"))["cells"]}
-    portals = json.loads((WORLD / "portals.json").read_text(encoding="utf-8"))["portals"]
+    cells = {c["id"]: c for c in read_json(WORLD / "interiors.json")["cells"]}
+    portals = read_json(WORLD / "portals.json")["portals"]
     errors = []
     print("Portal route simulation")
     for cid, cell in cells.items():

@@ -206,6 +206,9 @@ def main() -> int:
     parser.add_argument("--rom", type=Path, default=DEFAULT_ROM)
     args = parser.parse_args()
     ensure_dirs()
+    # Load the ROM before writing anything: a missing ROM must not leave the
+    # earlier outputs rewritten with fresh timestamps.
+    rom = load_rom(args.rom)
 
     months = [month_record(year, month) for year, month in MONTH_ORDER]
     write_json(CANON_DIR / "calendar.json", {
@@ -309,7 +312,6 @@ def main() -> int:
         "contacts": [contacts[key] for key in sorted(contacts)],
     })
 
-    rom = load_rom(args.rom)
     location_strings = ascii_strings(rom, 0x13F6FD0, 0x13F7420, 4)
     write_json(CANON_DIR / "locations.json", {
         "schema_version": 1,

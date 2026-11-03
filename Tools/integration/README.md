@@ -29,7 +29,7 @@ python Tools\integration\run_smoke.py --exam-selftest
 # Full gate: validator + self-tests + A07 puzzle/exam suites + automation tests
 python Tools\integration\run_smoke.py --all --automation-filter DuelAcademy
 
-# Print commands without launching anything
+# Print commands without launching anything (result SKIPPED, exit 2)
 python Tools\integration\run_smoke.py --all --dry-run
 ```
 
@@ -146,19 +146,17 @@ the actual timed-puzzle solve. See `Docs/Puzzles/PUZZLE_ENGINE_TESTS.md`.
 
 Do not add `-game` to the automation command: the current editor target then
 reports "The game module 'DuelAcademyIsland' could not be found". `-TestExit`
-is also omitted; `Quit` and the runner's log inspection are enough. Unreal treats
-an empty filter as a critical error and exits non-zero, so the runner treats
-"No automation tests matched" as a skip **only when the same log also contains a
-`TEST COMPLETE` marker and no failed-test marker**. A timeout or interrupted run
-without the completion marker stays failed even if its partial log contains a
-no-tests sentence. A normal successful run must log
-`TEST COMPLETE. EXIT CODE: 0`; a missing marker or a nonzero `EXIT CODE` on a
-run that actually executed tests fails.
+is also omitted; `Quit` and the runner's log inspection are enough. The runner
+treats "No automation tests matched" as a failure (Unreal itself exits -1 there):
+a filter that runs nothing is not a pass.
 
-No `IMPLEMENT_SIMPLE_AUTOMATION_TEST` suites exist in the baseline yet. The
-runner reports `skip` on a completed empty-filter run (including Unreal's
-non-zero `-1` exit). Lane owners should add
-tests under their own module/unit names and give A10 the filter string:
+Self-test steps are judged by `Tools/integration/ue_common.py` (shared with
+`Tools/puzzles/run_engine_selftests.py`): a step passes only when the process
+exits 0 **and** its summary line is present with zero failures. A log without
+the summary (misspelled switch, crash before the test) fails.
+
+Lane owners add tests under their own module/unit names and give A10 the
+filter string:
 
 - A02 `DuelAcademy.Profile`, `DuelAcademy.Calendar`, `DuelAcademy.Save`
 - A03 `DuelAcademy.Story`
@@ -207,15 +205,12 @@ ubuntu-latest plus `run_smoke.py --validate` and `--all --dry-run`.
 
 ## Current limitations
 
-- All four stable headless self-tests pass: duel 24/0 stalls, profile PASS,
-  duel rules 102/102, economy 446/446. A07 reports puzzles 105/105 and exams
-  104/104, A03's full-campaign playthrough passes, A09 generated 10 UI
-  screenshots, and the `DuelAcademy` automation filter runs 5 tests.
-- The duel self-test defaults to 24 duels; pass `--iterations 1000` (or
-  `-DADuelSelfTest=1000`) for the release proof. The 1,000-duel gate evidence is
-  in `Docs/PORT_STATUS.md` and `Docs/Integration/reports/GATE3_TEST_RESULTS.md`.
-- The `DuelAcademy` automation filter currently runs 5 tests (exam cycles,
-  exam scoring, opponent roster, puzzle level 1 and the puzzle runtime loader).
+- All four stable headless self-tests pass: duel 24/0 stalls, profile 182/182,
+  duel rules 57/57, economy 119/119. A03 reports story 14/14 and A09 generated
+  10 UI screenshots; those are recorded in `Docs/PORT_STATUS.md`.
+- The duel self-test switch runs a fixed 24 duels; 1,000-duel proof is pending A04.
+- Automation suites exist for `DuelAcademy.Opponents`, `DuelAcademy.Puzzles`
+  and `DuelAcademy.Exams`; a filter matching none of them fails the step.
 - The runner does not package; the BuildCookRun command above is the release
   command, run manually by A10.
 - The runner never downloads assets or starts the editor GUI.

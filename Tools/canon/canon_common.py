@@ -6,15 +6,17 @@ The ROM is never copied into the repository; it is read in place.
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import struct
-import tempfile
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
+from common.jsonio import read_json, write_json, write_text  # noqa: E402,F401  (re-exported)
+from common.paths import REPO_ROOT  # noqa: E402
+
 CANON_DIR = REPO_ROOT / "DuelAcademyIsland" / "Content" / "Data" / "Canon"
 DOCS_DIR = REPO_ROOT / "Docs" / "Canon"
 TOOLS_DIR = REPO_ROOT / "Tools" / "canon"
@@ -110,36 +112,6 @@ def sha256_file(path: Path) -> str:
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-
-
-def read_json(path: Path) -> Any:
-    with path.open(encoding="utf-8") as fh:
-        return json.load(fh)
-
-
-def _atomic_write_text(path: Path, value: str) -> None:
-    """Write UTF-8/LF text atomically so an interrupted build cannot truncate canon data."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
-    temp_path = Path(temp_name)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(value)
-        os.replace(temp_path, path)
-    finally:
-        if temp_path.exists():
-            try:
-                temp_path.unlink()
-            except OSError:
-                pass
-
-
-def write_json(path: Path, value: Any) -> None:
-    _atomic_write_text(path, json.dumps(value, ensure_ascii=False, indent=2) + "\n")
-
-
-def write_text(path: Path, value: str) -> None:
-    _atomic_write_text(path, value)
 
 
 def u16(rom: bytes, offset: int) -> int:

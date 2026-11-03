@@ -25,20 +25,12 @@ Tools/canon/.local_only/
 Tools/canon/cache/
 Docs/previews/
 
-# Generated integration reports/logs (run_smoke.py defaults). Curated gate
-# evidence is tracked explicitly; `git add -f` a new evidence artifact.
-Docs/Integration/reports/logs/*.log
+# run_smoke.py / run_engine_selftests.py per-run reports and logs (timestamped;
+# curated evidence under these folders stays tracked and can be added with -f)
+Docs/Integration/reports/smoke-*.json
+Docs/Integration/reports/validate-*.json
 Docs/Integration/reports/automation/
-Docs/Integration/reports/smoke*.json
-!Docs/Integration/reports/smoke_selftests.json
-Docs/Integration/reports/validate*.json
-!Docs/Integration/reports/validate_baseline.json
-!Docs/Integration/reports/validate_strict.json
-
-# Generated canon validation report (only written through an explicit
-# --report path). The tracked copy is Docs/Canon/VALIDATION.md, refreshed
-# deliberately because its timestamp changes on every regeneration.
-Docs/Integration/reports/canon-validation.md
+Docs/Integration/reports/logs/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9].log
 
 # Packaged builds and staging
 Builds/

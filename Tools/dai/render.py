@@ -73,7 +73,8 @@ def _terrain_material(mat):
     nt = mat.node_tree
     bsdf = nt.nodes["Principled BSDF"]
     tex = os.path.join(C.OUT_TEXTURES, "{}")
-    info = jsonio.read_json(os.path.join(C.OUT_DATA, "terrain_layers.json"))
+    with open(os.path.join(C.OUT_DATA, "terrain_layers.json"), encoding="utf-8") as fp:
+        info = json.load(fp)
     uv = nt.nodes.new("ShaderNodeUVMap")
 
     def image(name, vector, colour=True, alpha=False):
@@ -149,7 +150,8 @@ def _terrain_material(mat):
 
 def build_scene(log=print, scatter=True, detail_props=True):
     blend.reset_scene()
-    lay = jsonio.read_json(os.path.join(C.OUT_DATA, "layout.json"))
+    with open(os.path.join(C.OUT_DATA, "layout.json"), encoding="utf-8") as fp:
+        lay = json.load(fp)
     h = np.load(os.path.join(C.CACHE_DIR, "height.npy"))
     # terrain with baked colour map
     terrain_mesh.build_preview_terrain(h, quads=1008)
