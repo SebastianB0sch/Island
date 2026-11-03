@@ -14,20 +14,21 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import bpy  # noqa: E402,F401  (provides mathutils)
 from mathutils import Vector  # noqa: E402
 
 from dai import blend, config as C  # noqa: E402
 
 PICKS = [
     ("slifer", "slifer", "room101"),
-    ("ra", "ra", ""),
-    ("obelisk", "obelisk_boys", ""),
-    ("obelisk", "obelisk_girls", ""),
-    ("academy", "academy", ""),
-    ("harbor", "lighthouse", ""),
-    ("harbor", "harbor", ""),
-    ("hotsprings", "hotsprings", ""),
-    ("abandoned", "abandoned", ""),
+    ("ra", "ra", "misawa"),
+    ("obelisk", "obelisk_boys", "foyer"),
+    ("academy", "academy", "wingE_hallA_tiers"),
+    ("obelisk", "obelisk_girls", "tea_room"),
+    ("harbor", "lighthouse", "lh_hut"),
+    ("hotsprings", "hotsprings", "changing_men"),
+    ("abandoned", "abandoned", "ritual"),
+    ("harbor", "harbor", "wh01_hall"),
 ]
 TILE = (640, 400)
 
