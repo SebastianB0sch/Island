@@ -2310,12 +2310,12 @@ def _boys_pantry(aset, mb, nc, r):
     rng = random.Random(11)
     with f:
         for y in (16.0, 19.0, 22.0):
-            f.prop("SM_Int_SteelShelves", 31.6, y, 90.0)
-            with mb.at((33.0, y, 0.0), rot=-90.0), nc.at((33.0, y, 0.0), rot=-90.0):
+            f.prop("SM_Int_SteelShelves", 29.75, {16.0: 15.6, 19.0: 17.8, 22.0: 24.0}[y], 90.0)
+            with mb.at((32.6, y, 0.0), rot=90.0), nc.at((32.6, y, 0.0), rot=90.0):
                 _store_shelf(mb, nc, rng)
         for y in (16.6, 18.8, 21.0):
             for k in range(2):
-                f.prop("SM_Int_Box", 31.0 + k * 0.1, y + k * 0.5, rng.uniform(-15, 15), z=0.0)
+                f.prop("SM_Int_Box", 33.6 + k * 0.1, y + k * 0.5, rng.uniform(-15, 15), z=0.0)
         for y in (26.0, 28.4):
             f.prop("SM_Int_Cabinet", 29.75, y, 90.0)
         for k in range(8):
@@ -2503,7 +2503,7 @@ def _boys_corridor(aset, mb, nc, r, rp, sx):
         f.prop("SM_Int_Console", sx * 37.8, 15.35, 0.0)
         f.prop("SM_Int_Candelabra", sx * 37.8, 15.35, 0.0, z=0.85)
     if sx < 0:
-        K.camera(aset, "corridor", (-13.8, 13.0, r["z"] + 1.7), (-40.0, 14.4, r["z"] + 1.2), 18.0)
+        K.camera(aset, "corridor", (-13.8, 14.6, r["z"] + 1.7), (-40.0, 13.6, r["z"] + 1.2), 18.0)
 
 
 def build_boys():
