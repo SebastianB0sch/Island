@@ -5,12 +5,7 @@
 #include "DAProfileSubsystem.h"
 #include "DuelAcademyIsland.h"
 
-#include "Dom/JsonObject.h"
-#include "Dom/JsonValue.h"
-#include "Misc/FileHelper.h"
-#include "Misc/Paths.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
+#include "DAJson.h"
 
 namespace
 {
@@ -24,36 +19,6 @@ namespace
 		case EDADorm::Slifer:
 		default:               return 0;
 		}
-	}
-
-	FString ReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, const FString& Default = FString())
-	{
-		FString Value;
-		if (Object.IsValid() && Object->TryGetStringField(Field, Value))
-		{
-			return Value;
-		}
-		return Default;
-	}
-
-	int32 ReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
-	{
-		int32 Value = Default;
-		if (Object.IsValid())
-		{
-			Object->TryGetNumberField(Field, Value);
-		}
-		return Value;
-	}
-
-	bool ReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool Default = false)
-	{
-		bool bValue = Default;
-		if (Object.IsValid())
-		{
-			Object->TryGetBoolField(Field, bValue);
-		}
-		return bValue;
 	}
 
 	FDATitleDefinition MakeTitle(const TCHAR* Id, const TCHAR* Name, int32 Order, bool bPermanent = true)
@@ -213,56 +178,43 @@ void UDATitleSystem::UseDefaultDefinitions()
 
 	SortTitleDefinitions(Defaults);
 	Definitions = MoveTemp(Defaults);
+	// Stable: equal Order values keep their authored order.
+	Definitions.StableSort([](const FDATitleDefinition& A, const FDATitleDefinition& B)
+	{
+		return A.Order < B.Order;
+	});
 	DefaultTitleId = TEXT("apprentice_duelist");
 	PromotionScore = 400;
 	bDemoteOnFail = true;
 	DropoutTitleId = TEXT("dropout_boy");
 	DropoutFlag = TEXT("dropout_boy");
-	RecoveryOpponentId = TEXT("fonda_fontaine");
+	RecoveryOpponentId = TEXT("fontaine");
 	bDefinitionsLoaded = true;
 }
 
 bool UDATitleSystem::LoadDefinitions()
 {
-	const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Profile/titles.json"));
-	FString Raw;
-	if (!FFileHelper::LoadFileToString(Raw, *Path))
-	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Title data not found at %s; using defaults."), *Path);
-		UseDefaultDefinitions();
-		return false;
-	}
-
+	const FString Path = DAJson::ContentDataPath(TEXT("Profile/titles.json"));
 	TSharedPtr<FJsonObject> Root;
-	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
-	if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
+	FString LoadError;
+	if (!DAJson::LoadObjectFile(Path, Root, LoadError))
 	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Title data at %s could not be parsed; using defaults."), *Path);
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Title data unavailable (%s); using defaults."), *LoadError);
 		UseDefaultDefinitions();
 		return false;
 	}
 
-	// Parse into locals first so a malformed file cannot leave the subsystem
-	// with a half-applied mixture of old and new configuration.
-	FString LoadedDefault = ReadString(Root, TEXT("default_title"), TEXT("apprentice_duelist")).TrimStartAndEnd();
-	if (LoadedDefault.IsEmpty())
-	{
-		LoadedDefault = TEXT("apprentice_duelist");
-	}
-	int32 LoadedPromotionScore = 400;
-	bool bLoadedDemoteOnFail = true;
-	FString LoadedDropoutTitle = TEXT("dropout_boy");
-	FString LoadedDropoutFlag = TEXT("dropout_boy");
-	FString LoadedRecoveryOpponent = TEXT("fonda_fontaine");
+	const FString LoadedDefault = DAJson::ReadString(Root, TEXT("default_title"), TEXT("apprentice_duelist"));
+	DefaultTitleId = LoadedDefault;
 
 	const TSharedPtr<FJsonObject>* DormRules = nullptr;
 	if (Root->TryGetObjectField(TEXT("dorm_rules"), DormRules) && DormRules && DormRules->IsValid())
 	{
-		LoadedPromotionScore = FMath::Max(0, ReadInt(*DormRules, TEXT("promotion_score"), 400));
-		bLoadedDemoteOnFail = ReadBool(*DormRules, TEXT("demote_on_fail"), true);
-		LoadedDropoutTitle = ReadString(*DormRules, TEXT("dropout_title"), TEXT("dropout_boy")).TrimStartAndEnd();
-		LoadedDropoutFlag = ReadString(*DormRules, TEXT("dropout_flag"), TEXT("dropout_boy")).TrimStartAndEnd();
-		LoadedRecoveryOpponent = ReadString(*DormRules, TEXT("recovery_opponent"), TEXT("fonda_fontaine")).TrimStartAndEnd();
+		PromotionScore = FMath::Max(0, DAJson::ReadInt(*DormRules, TEXT("promotion_score"), 400));
+		bDemoteOnFail = DAJson::ReadBool(*DormRules, TEXT("demote_on_fail"), true);
+		DropoutTitleId = DAJson::ReadString(*DormRules, TEXT("dropout_title"), TEXT("dropout_boy"));
+		DropoutFlag = DAJson::ReadString(*DormRules, TEXT("dropout_flag"), TEXT("dropout_boy"));
+		RecoveryOpponentId = DAJson::ReadString(*DormRules, TEXT("recovery_opponent"), TEXT("fontaine"));
 	}
 
 	const TArray<TSharedPtr<FJsonValue>>* TitleArray = nullptr;
@@ -288,54 +240,29 @@ bool UDATitleSystem::LoadDefinitions()
 			continue;
 		}
 		FDATitleDefinition Definition;
-		Definition.Id = ReadString(Object, TEXT("id")).TrimStartAndEnd();
+		Definition.Id = DAJson::ReadString(Object, TEXT("id"));
 		if (Definition.Id.IsEmpty())
 		{
 			++SkippedEntries;
 			continue;
 		}
-		const FString IdKey = Definition.Id.ToLower();
-		if (SeenIds.Contains(IdKey))
-		{
-			++DuplicateIds;
-			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Duplicate title id '%s' ignored."), *Definition.Id);
-			continue;
-		}
-		SeenIds.Add(IdKey);
-
-		Definition.Name = ReadString(Object, TEXT("name")).TrimStartAndEnd();
-		if (Definition.Name.IsEmpty())
-		{
-			Definition.Name = Definition.Id;
-		}
-		const FString NameKey = Definition.Name.ToLower();
-		if (SeenNames.Contains(NameKey))
-		{
-			UE_LOG(LogDuelAcademyIsland, Warning,
-				TEXT("Title '%s' shares display name '%s'; name lookups resolve to the first title."),
-				*Definition.Id, *Definition.Name);
-		}
-		else
-		{
-			SeenNames.Add(NameKey);
-		}
-
-		Definition.Description = ReadString(Object, TEXT("description"));
-		Definition.Order = ReadInt(Object, TEXT("order"));
-		Definition.bPermanent = ReadBool(Object, TEXT("permanent"), true);
-		Definition.bFailState = ReadBool(Object, TEXT("fail_state"), false);
-		Definition.MinWinsTotal = FMath::Max(0, ReadInt(Object, TEXT("min_wins_total")));
-		Definition.MinDuelsTotal = FMath::Max(0, ReadInt(Object, TEXT("min_duels_total")));
-		Definition.MinTimedClears = FMath::Max(0, ReadInt(Object, TEXT("min_timed_clears")));
-		Definition.MinWrittenCorrect = FMath::Max(0, ReadInt(Object, TEXT("min_written_correct")));
-		Definition.MinCardsOwned = FMath::Max(0, ReadInt(Object, TEXT("min_cards_owned")));
-		Definition.MinStoryEvents = FMath::Max(0, ReadInt(Object, TEXT("min_story_events")));
-		Definition.MinDP = FMath::Max(0, ReadInt(Object, TEXT("min_dp")));
-		Definition.bRequiresExamPassed = ReadBool(Object, TEXT("requires_exam_passed"), false);
-		Definition.bRequiresKingOfGames = ReadBool(Object, TEXT("requires_king_of_games"), false);
-		Definition.bRequiresDorm = ReadBool(Object, TEXT("requires_dorm"), false);
-		Definition.RequiredDorm = DuelAcademyProfile::ParseDorm(ReadString(Object, TEXT("required_dorm"), TEXT("Slifer")));
-		Definition.RequiredFlag = ReadString(Object, TEXT("required_flag")).TrimStartAndEnd();
+		Definition.Name = DAJson::ReadString(Object, TEXT("name"), Definition.Id);
+		Definition.Description = DAJson::ReadString(Object, TEXT("description"));
+		Definition.Order = DAJson::ReadInt(Object, TEXT("order"));
+		Definition.bPermanent = DAJson::ReadBool(Object, TEXT("permanent"), true);
+		Definition.bFailState = DAJson::ReadBool(Object, TEXT("fail_state"), false);
+		Definition.MinWinsTotal = FMath::Max(0, DAJson::ReadInt(Object, TEXT("min_wins_total")));
+		Definition.MinDuelsTotal = FMath::Max(0, DAJson::ReadInt(Object, TEXT("min_duels_total")));
+		Definition.MinTimedClears = FMath::Max(0, DAJson::ReadInt(Object, TEXT("min_timed_clears")));
+		Definition.MinWrittenCorrect = FMath::Max(0, DAJson::ReadInt(Object, TEXT("min_written_correct")));
+		Definition.MinCardsOwned = FMath::Max(0, DAJson::ReadInt(Object, TEXT("min_cards_owned")));
+		Definition.MinStoryEvents = FMath::Max(0, DAJson::ReadInt(Object, TEXT("min_story_events")));
+		Definition.MinDP = FMath::Max(0, DAJson::ReadInt(Object, TEXT("min_dp")));
+		Definition.bRequiresExamPassed = DAJson::ReadBool(Object, TEXT("requires_exam_passed"), false);
+		Definition.bRequiresKingOfGames = DAJson::ReadBool(Object, TEXT("requires_king_of_games"), false);
+		Definition.bRequiresDorm = DAJson::ReadBool(Object, TEXT("requires_dorm"), false);
+		Definition.RequiredDorm = DuelAcademyProfile::ParseDorm(DAJson::ReadString(Object, TEXT("required_dorm"), TEXT("Slifer")));
+		Definition.RequiredFlag = DAJson::ReadString(Object, TEXT("required_flag"));
 		Loaded.Add(MoveTemp(Definition));
 	}
 
@@ -350,8 +277,8 @@ bool UDATitleSystem::LoadDefinitions()
 		return false;
 	}
 
-	SortTitleDefinitions(Loaded);
-	if (!FindLoadedById(Loaded, LoadedDefault))
+	// Stable: equal Order values keep their authored order.
+	Loaded.StableSort([](const FDATitleDefinition& A, const FDATitleDefinition& B)
 	{
 		const FDATitleDefinition* Fallback = Loaded.FindByPredicate([](const FDATitleDefinition& Definition)
 		{

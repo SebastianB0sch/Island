@@ -2,89 +2,11 @@
 
 #include "DAExamSubsystem.h"
 
+#include "DACalendarSubsystem.h"
+#include "DAJson.h"
 #include "DuelAcademyIsland.h"
-#include "Dom/JsonObject.h"
+#include "Engine/GameInstance.h"
 #include "HAL/FileManager.h"
-#include "Misc/FileHelper.h"
-#include "Misc/Guid.h"
-#include "Misc/Paths.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
-
-namespace
-{
-	FString ExReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
-	{
-		FString Value;
-		if (Object.IsValid())
-		{
-			Object->TryGetStringField(Field, Value);
-		}
-		return Value;
-	}
-
-	int32 ExReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
-	{
-		int32 Value = Default;
-		if (Object.IsValid())
-		{
-			Object->TryGetNumberField(Field, Value);
-		}
-		return Value;
-	}
-
-	bool ExReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bDefault = false)
-	{
-		bool bValue = bDefault;
-		if (Object.IsValid())
-		{
-			Object->TryGetBoolField(Field, bValue);
-		}
-		return bValue;
-	}
-
-	TSharedPtr<FJsonObject> ExReadObject(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
-	{
-		const TSharedPtr<FJsonObject>* Found = nullptr;
-		if (Object.IsValid() && Object->TryGetObjectField(Field, Found) && Found && Found->IsValid())
-		{
-			return *Found;
-		}
-		return nullptr;
-	}
-
-	void ExReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& Out)
-	{
-		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
-		if (Object.IsValid() && Object->TryGetArrayField(Field, Values))
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *Values)
-			{
-				if (Value.IsValid())
-				{
-					Out.Add(Value->AsString());
-				}
-			}
-		}
-	}
-
-	bool ExLoadJson(const FString& Path, TSharedPtr<FJsonValue>& OutRoot, FString& OutError)
-	{
-		FString Raw;
-		if (!FFileHelper::LoadFileToString(Raw, *Path))
-		{
-			OutError = FString::Printf(TEXT("File not found: %s"), *Path);
-			return false;
-		}
-		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
-		if (!FJsonSerializer::Deserialize(Reader, OutRoot) || !OutRoot.IsValid())
-		{
-			OutError = FString::Printf(TEXT("JSON parse failed: %s"), *Path);
-			return false;
-		}
-		return true;
-	}
-}
 
 void UDAExamSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -162,7 +84,7 @@ bool UDAExamSubsystem::Reload(FString& OutError)
 bool UDAExamSubsystem::LoadQuestionsFile(const FString& Path, FString& OutError)
 {
 	TSharedPtr<FJsonValue> Root;
-	if (!ExLoadJson(Path, Root, OutError))
+	if (!DAJson::LoadFile(Path, Root, OutError))
 	{
 		return false;
 	}
@@ -187,15 +109,15 @@ bool UDAExamSubsystem::LoadQuestionsFile(const FString& Path, FString& OutError)
 			continue;
 		}
 		FDAExamQuestion Question;
-		Question.Id = ExReadString(QuestionObject, TEXT("id"));
-		Question.Topic = ExReadString(QuestionObject, TEXT("topic"));
-		Question.Difficulty = ExReadInt(QuestionObject, TEXT("difficulty"), 1);
-		Question.Text = ExReadString(QuestionObject, TEXT("text"));
-		ExReadStringArray(QuestionObject, TEXT("options"), Question.Options);
-		Question.AnswerIndex = ExReadInt(QuestionObject, TEXT("answer_index"));
-		Question.Explanation = ExReadString(QuestionObject, TEXT("explanation"));
-		Question.Confidence = ExReadString(QuestionObject, TEXT("confidence"));
-		Question.Source = ExReadString(QuestionObject, TEXT("source"));
+		Question.Id = DAJson::ReadString(QuestionObject, TEXT("id"));
+		Question.Topic = DAJson::ReadString(QuestionObject, TEXT("topic"));
+		Question.Difficulty = DAJson::ReadInt(QuestionObject, TEXT("difficulty"), 1);
+		Question.Text = DAJson::ReadString(QuestionObject, TEXT("text"));
+		DAJson::AppendStringArray(QuestionObject, TEXT("options"), Question.Options);
+		Question.AnswerIndex = DAJson::ReadInt(QuestionObject, TEXT("answer_index"));
+		Question.Explanation = DAJson::ReadString(QuestionObject, TEXT("explanation"));
+		Question.Confidence = DAJson::ReadString(QuestionObject, TEXT("confidence"));
+		Question.Source = DAJson::ReadString(QuestionObject, TEXT("source"));
 		if (Question.Id.IsEmpty() || Question.Options.Num() == 0)
 		{
 			continue;
@@ -218,9 +140,9 @@ bool UDAExamSubsystem::LoadQuestionsFile(const FString& Path, FString& OutError)
 			{
 				continue;
 			}
-			const int32 SetMonth = ExReadInt(SetObject, TEXT("month_index"));
+			const int32 SetMonth = DAJson::ReadInt(SetObject, TEXT("month_index"));
 			TArray<FString> SetQuestions;
-			ExReadStringArray(SetObject, TEXT("question_ids"), SetQuestions);
+			DAJson::AppendStringArray(SetObject, TEXT("question_ids"), SetQuestions);
 			if (SetMonth > 0 && SetQuestions.Num() > 0)
 			{
 				ExamSets.Add(SetMonth, MoveTemp(SetQuestions));
@@ -233,7 +155,7 @@ bool UDAExamSubsystem::LoadQuestionsFile(const FString& Path, FString& OutError)
 bool UDAExamSubsystem::LoadPracticalsFile(const FString& Path, FString& OutError)
 {
 	TSharedPtr<FJsonValue> Root;
-	if (!ExLoadJson(Path, Root, OutError))
+	if (!DAJson::LoadFile(Path, Root, OutError))
 	{
 		return false;
 	}
@@ -243,14 +165,14 @@ bool UDAExamSubsystem::LoadPracticalsFile(const FString& Path, FString& OutError
 		OutError = TEXT("practicals.json root must be an object.");
 		return false;
 	}
-	PracticalOpponent = ExReadString(Object, TEXT("opponent"));
-	PracticalDeck = ExReadString(Object, TEXT("deck"));
-	PracticalPlayerLp = ExReadInt(Object, TEXT("player_lp"), 8000);
-	PracticalOpponentLp = ExReadInt(Object, TEXT("opponent_lp"), 8000);
-	PracticalTurnLimit = ExReadInt(Object, TEXT("turn_limit"), 10);
-	PracticalTimeLimit = ExReadInt(Object, TEXT("time_limit"), 600);
-	PracticalPassPoints = ExReadInt(Object, TEXT("pass_points"), 120);
-	PracticalMax = ExReadInt(Object, TEXT("max_points"), 200);
+	PracticalOpponent = DAJson::ReadString(Object, TEXT("opponent"));
+	PracticalDeck = DAJson::ReadString(Object, TEXT("deck"));
+	PracticalPlayerLp = DAJson::ReadInt(Object, TEXT("player_lp"), 8000);
+	PracticalOpponentLp = DAJson::ReadInt(Object, TEXT("opponent_lp"), 8000);
+	PracticalTurnLimit = DAJson::ReadInt(Object, TEXT("turn_limit"), 10);
+	PracticalTimeLimit = DAJson::ReadInt(Object, TEXT("time_limit"), 600);
+	PracticalPassPoints = DAJson::ReadInt(Object, TEXT("pass_points"), 120);
+	PracticalMax = DAJson::ReadInt(Object, TEXT("max_points"), 200);
 
 	const TArray<TSharedPtr<FJsonValue>>* ObjectiveValues = nullptr;
 	if (!Object->TryGetArrayField(TEXT("objectives"), ObjectiveValues))
@@ -266,12 +188,12 @@ bool UDAExamSubsystem::LoadPracticalsFile(const FString& Path, FString& OutError
 			continue;
 		}
 		FDAExamPracticalObjective Objective;
-		Objective.Id = ExReadString(ObjectiveObject, TEXT("id"));
-		Objective.Label = ExReadString(ObjectiveObject, TEXT("label"));
-		Objective.Event = ExReadString(ObjectiveObject, TEXT("event"));
-		Objective.Target = FMath::Max(1, ExReadInt(ObjectiveObject, TEXT("target"), 1));
-		Objective.Points = FMath::Max(0, ExReadInt(ObjectiveObject, TEXT("points")));
-		Objective.bRepeatable = ExReadBool(ObjectiveObject, TEXT("repeatable"), true);
+		Objective.Id = DAJson::ReadString(ObjectiveObject, TEXT("id"));
+		Objective.Label = DAJson::ReadString(ObjectiveObject, TEXT("label"));
+		Objective.Event = DAJson::ReadString(ObjectiveObject, TEXT("event"));
+		Objective.Target = DAJson::ReadInt(ObjectiveObject, TEXT("target"), 1);
+		Objective.Points = DAJson::ReadInt(ObjectiveObject, TEXT("points"));
+		Objective.bRepeatable = DAJson::ReadBool(ObjectiveObject, TEXT("repeatable"), true);
 		if (!Objective.Id.IsEmpty())
 		{
 			PracticalObjectives.Add(MoveTemp(Objective));
@@ -283,7 +205,7 @@ bool UDAExamSubsystem::LoadPracticalsFile(const FString& Path, FString& OutError
 bool UDAExamSubsystem::LoadScoringFile(const FString& Path, FString& OutError)
 {
 	TSharedPtr<FJsonValue> Root;
-	if (!ExLoadJson(Path, Root, OutError))
+	if (!DAJson::LoadFile(Path, Root, OutError))
 	{
 		return false;
 	}
@@ -294,22 +216,22 @@ bool UDAExamSubsystem::LoadScoringFile(const FString& Path, FString& OutError)
 		return false;
 	}
 
-	MaxPoints = ExReadInt(Object, TEXT("max_points"), 500);
-	PassMark = ExReadInt(Object, TEXT("pass_mark"), 300);
-	if (const TSharedPtr<FJsonObject> Sections = ExReadObject(Object, TEXT("sections")))
+	MaxPoints = DAJson::ReadInt(Object, TEXT("max_points"), 500);
+	PassMark = DAJson::ReadInt(Object, TEXT("pass_mark"), 300);
+	if (const TSharedPtr<FJsonObject> Sections = DAJson::ReadObject(Object, TEXT("sections")))
 	{
-		if (const TSharedPtr<FJsonObject> Written = ExReadObject(Sections, TEXT("written")))
+		if (const TSharedPtr<FJsonObject> Written = DAJson::ReadObject(Sections, TEXT("written")))
 		{
-			WrittenMax = ExReadInt(Written, TEXT("max_points"), 200);
-			PointsPerCorrect = ExReadInt(Written, TEXT("points_per_correct"), 20);
+			WrittenMax = DAJson::ReadInt(Written, TEXT("max_points"), 200);
+			PointsPerCorrect = DAJson::ReadInt(Written, TEXT("points_per_correct"), 20);
 		}
-		if (const TSharedPtr<FJsonObject> Timed = ExReadObject(Sections, TEXT("timed")))
+		if (const TSharedPtr<FJsonObject> Timed = DAJson::ReadObject(Sections, TEXT("timed")))
 		{
-			TimedMax = ExReadInt(Timed, TEXT("max_points"), 100);
+			TimedMax = DAJson::ReadInt(Timed, TEXT("max_points"), 100);
 		}
-		if (const TSharedPtr<FJsonObject> Practical = ExReadObject(Sections, TEXT("practical")))
+		if (const TSharedPtr<FJsonObject> Practical = DAJson::ReadObject(Sections, TEXT("practical")))
 		{
-			PracticalMax = ExReadInt(Practical, TEXT("max_points"), 200);
+			PracticalMax = DAJson::ReadInt(Practical, TEXT("max_points"), 200);
 		}
 	}
 
@@ -324,9 +246,9 @@ bool UDAExamSubsystem::LoadScoringFile(const FString& Path, FString& OutError)
 				continue;
 			}
 			FDAGradeBand Band;
-			Band.MinPoints = ExReadInt(BandObject, TEXT("min_points"));
-			Band.Grade = ExReadString(BandObject, TEXT("grade"));
-			Band.Label = ExReadString(BandObject, TEXT("label"));
+			Band.MinPoints = DAJson::ReadInt(BandObject, TEXT("min_points"));
+			Band.Grade = DAJson::ReadString(BandObject, TEXT("grade"));
+			Band.Label = DAJson::ReadString(BandObject, TEXT("label"));
 			GradeBands.Add(MoveTemp(Band));
 		}
 	}
@@ -337,7 +259,7 @@ bool UDAExamSubsystem::LoadScoringFile(const FString& Path, FString& OutError)
 bool UDAExamSubsystem::LoadCyclesFile(const FString& Path, FString& OutError)
 {
 	TSharedPtr<FJsonValue> Root;
-	if (!ExLoadJson(Path, Root, OutError))
+	if (!DAJson::LoadFile(Path, Root, OutError))
 	{
 		return false;
 	}
@@ -371,24 +293,24 @@ bool UDAExamSubsystem::LoadCyclesFile(const FString& Path, FString& OutError)
 		}
 
 		FDAExamCycle Cycle;
-		Cycle.MonthIndex = ExReadInt(CycleObject, TEXT("month_index"));
-		Cycle.ExamId = ExReadString(CycleObject, TEXT("exam_id"));
-		Cycle.WrittenSetId = ExReadString(CycleObject, TEXT("written_set_id"));
-		Cycle.TimedPuzzleId = ExReadString(CycleObject, TEXT("timed_puzzle_id"));
-		Cycle.PracticalObjectiveId = ExReadString(CycleObject, TEXT("practical_objective_id"));
-		Cycle.PassMark = ExReadInt(CycleObject, TEXT("pass_mark"), PassMark);
-		Cycle.MaxPoints = ExReadInt(CycleObject, TEXT("max_points"), MaxPoints);
-		ExReadStringArray(CycleObject, TEXT("question_ids"), Cycle.QuestionIds);
-		if (const TSharedPtr<FJsonObject> Scoring = ExReadObject(CycleObject, TEXT("scoring")))
+		Cycle.MonthIndex = DAJson::ReadInt(CycleObject, TEXT("month_index"));
+		Cycle.ExamId = DAJson::ReadString(CycleObject, TEXT("exam_id"));
+		Cycle.WrittenSetId = DAJson::ReadString(CycleObject, TEXT("written_set_id"));
+		Cycle.TimedPuzzleId = DAJson::ReadString(CycleObject, TEXT("timed_puzzle_id"));
+		Cycle.PracticalObjectiveId = DAJson::ReadString(CycleObject, TEXT("practical_objective_id"));
+		Cycle.PassMark = DAJson::ReadInt(CycleObject, TEXT("pass_mark"), PassMark);
+		Cycle.MaxPoints = DAJson::ReadInt(CycleObject, TEXT("max_points"), MaxPoints);
+		DAJson::AppendStringArray(CycleObject, TEXT("question_ids"), Cycle.QuestionIds);
+		if (const TSharedPtr<FJsonObject> Scoring = DAJson::ReadObject(CycleObject, TEXT("scoring")))
 		{
-			Cycle.PassMark = ExReadInt(Scoring, TEXT("pass_mark"), Cycle.PassMark);
-			Cycle.MaxPoints = ExReadInt(Scoring, TEXT("max_points"), Cycle.MaxPoints);
+			Cycle.PassMark = DAJson::ReadInt(Scoring, TEXT("pass_mark"), Cycle.PassMark);
+			Cycle.MaxPoints = DAJson::ReadInt(Scoring, TEXT("max_points"), Cycle.MaxPoints);
 		}
-		if (const TSharedPtr<FJsonObject> Reward = ExReadObject(CycleObject, TEXT("reward")))
+		if (const TSharedPtr<FJsonObject> Reward = DAJson::ReadObject(CycleObject, TEXT("reward")))
 		{
-			Cycle.DPReward = ExReadInt(Reward, TEXT("dp"), 0);
+			Cycle.DPReward = DAJson::ReadInt(Reward, TEXT("dp"), 0);
 		}
-		Cycle.DPReward = ExReadInt(CycleObject, TEXT("dp_reward"), Cycle.DPReward);
+		Cycle.DPReward = DAJson::ReadInt(CycleObject, TEXT("dp_reward"), Cycle.DPReward);
 
 		if (Cycle.MonthIndex < 1 || Cycle.MonthIndex > 12)
 		{
@@ -802,13 +724,14 @@ bool UDAExamSubsystem::FinishExam(FDAExamResult& OutResult, FString& OutError)
 		ActivePassMark = Cycle->PassMark;
 		Result.DPReward = Cycle->DPReward;
 	}
-	const int64 TotalPoints = static_cast<int64>(Result.WrittenPoints)
-		+ Result.TimedPoints + Result.PracticalPoints;
-	Result.TotalPoints = static_cast<int32>(FMath::Clamp<int64>(
-		TotalPoints, 0, TNumericLimits<int32>::Max()));
+	Result.TotalPoints = Result.WrittenPoints + Result.TimedPoints + Result.PracticalPoints;
+	Result.PassMark = ActivePassMark;
 	Result.bPassed = Result.TotalPoints >= ActivePassMark;
 	Result.Grade = GradeForPoints(Result.TotalPoints);
 	Result.TitleOutcome = Result.bPassed ? TEXT("promotion_eligible") : TEXT("Dropout Boy");
+	// Provisional hint only: the real promotion/demotion is decided by
+	// UDATitleSystem::ApplyExamOutcome (titles.json promotion_score), and
+	// FDAExamUI overwrites this field with the applied outcome.
 	Result.DormOutcome = Result.bPassed
 		? (Result.TotalPoints >= 450 ? TEXT("promotion_candidate") : TEXT("retain"))
 		: TEXT("dropout");
@@ -894,6 +817,15 @@ FString UDAExamSubsystem::PickTimedPuzzle(int32 InMonthIndex) const
 
 bool UDAExamSubsystem::IsExamDay(const FString& Weekday) const
 {
+	// Single source of truth: the calendar's data-driven exam weekday
+	// (calendar.json exam.weekday). Friday only when no calendar exists.
+	if (const UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (const UDACalendarSubsystem* Calendar = GameInstance->GetSubsystem<UDACalendarSubsystem>())
+		{
+			return Weekday.Equals(Calendar->GetWeekdayName(Calendar->GetExamWeekday()), ESearchCase::IgnoreCase);
+		}
+	}
 	return Weekday.Equals(TEXT("Friday"), ESearchCase::IgnoreCase);
 }
 

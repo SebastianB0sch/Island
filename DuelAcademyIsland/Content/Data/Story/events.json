@@ -845,6 +845,15 @@
           "type": "set_flag",
           "flag": "event_07_cleared",
           "value": true
+        },
+        {
+          "type": "grant_card",
+          "card_id": 602,
+          "count": 1
+        },
+        {
+          "type": "temporary_title",
+          "value": "Occult Duelist"
         }
       ],
       "rewards": [
@@ -3098,6 +3107,16 @@
         {
           "type": "set_flag",
           "flag": "event_24_cleared",
+          "value": true
+        },
+        {
+          "type": "grant_card",
+          "card_id": 921,
+          "count": 1
+        },
+        {
+          "type": "set_flag",
+          "flag": "blair_revealed",
           "value": true
         }
       ],

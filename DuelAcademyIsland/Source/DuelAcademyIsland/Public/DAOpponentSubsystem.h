@@ -480,17 +480,9 @@ public:
 	const FDAOpponentDeckDef* FindDeck(const FString& DeckId) const;
 	const FDAIProfileDef* FindAIProfile(const FString& ProfileId) const;
 
-	/** Raw deck arrays for an A04/A06 adapter; false when the deck id is unknown. */
-	bool GetDeckCards(const FString& DeckId, TArray<int32>& OutMain, TArray<int32>& OutExtra) const;
-
 	const TArray<FDAOpponentDef>& GetOpponents() const { return Opponents; }
 	const TArray<FDAOpponentDeckDef>& GetDecks() const { return DeckList; }
 	const TArray<FDAIProfileDef>& GetAIProfiles() const { return AIProfileList; }
-	TArray<FString> GetDuelistIds() const;
-	TArray<FString> GetDeckIds() const;
-
-	/** Ranked duelists sorted by rank, then event/staff/exam. */
-	TArray<const FDAOpponentDef*> GetDuelistsByRank() const;
 
 	/** Dorm/title/flag/day gate. Empty reason on success. */
 	bool IsDuelistUnlocked(const FString& OpponentId, const FString& PlayerTitle, const FString& PlayerDorm,

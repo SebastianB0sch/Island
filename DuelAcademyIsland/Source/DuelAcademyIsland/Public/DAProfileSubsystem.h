@@ -391,7 +391,7 @@ public:
 
 private:
 	bool TickPlaytime(float DeltaSeconds);
-	void ApplyCounterDelta(const FString& Counter, int32 Delta);
+	void RequestProgressionAutosave(const FString& Reason);
 
 	/** Marks the token in memory; returns false when absent/already applied. No save. */
 	bool MarkResultTokenAppliedInternal(const FString& Token);
