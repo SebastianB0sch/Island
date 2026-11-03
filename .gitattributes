@@ -5,3 +5,6 @@
 *.umap binary
 *.vrm binary
 *.glb binary
+# Canon manifests hash raw file bytes; keep their JSON line endings portable.
+DuelAcademyIsland/Content/Data/Canon/** text eol=lf
+DuelAcademyIsland/Content/Data/cards.json text eol=lf
