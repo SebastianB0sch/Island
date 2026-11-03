@@ -94,10 +94,14 @@ public:
 	/** Restore this lane's state. Return false to fail the load. */
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) = 0;
 
-	/** The loaded save has no section for this lane (e.g. an older save). The
-	 *  default keeps the current state; lanes whose state must not leak between
-	 *  sessions reset here. */
-	virtual void OnSaveSectionMissing() {}
+	/**
+	 * Called when a payload has no section for this provider, i.e. the save was
+	 * written before the section existed. The default keeps the live state
+	 * (older saves simply did not describe this lane). Override when an absent
+	 * section means "this lane's defaults"; for example persisted cooldowns must
+	 * not leak from the previous session into an older save.
+	 */
+	virtual void ResetSaveSectionState() {}
 };
 
 /** UI-facing metadata for one slot. Populated without loading the profile. */

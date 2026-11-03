@@ -65,6 +65,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy")
 	AActor* GetFocusedInteractable() const { return FocusedInteractable.Get(); }
 
+	void AddCardToCollection(const FString& CardName) { CardCollection.Add(CardName); }
+	int32 GetCollectionSize() const { return CardCollection.Num(); }
+
 	bool IsSwimming() const { return bSwimming; }
 	bool IsSprinting() const { return bSprinting; }
 
@@ -157,6 +160,7 @@ private:
 	TMap<FName, TObjectPtr<UInputAction>> Actions;
 
 	TWeakObjectPtr<AActor> FocusedInteractable;
+	TSet<FString> CardCollection;
 	bool bSprinting = false;
 	bool bSwimming = false;
 	bool bInInterior = false;

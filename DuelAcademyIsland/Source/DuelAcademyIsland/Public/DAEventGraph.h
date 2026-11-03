@@ -26,6 +26,7 @@ struct FDAEventDefinition
 	TSharedPtr<FJsonObject> Trigger;
 	TArray<TSharedPtr<FJsonObject>> Requirements;
 	TArray<TSharedPtr<FJsonObject>> Outcomes;
+	TArray<FString> SceneQueue;
 	TSharedPtr<FJsonObject> Raw;
 };
 
@@ -33,9 +34,8 @@ struct FDAEventDefinition
  * Event graph: triggers, requirements, completion state and availability.
  *
  * Completion is stored in the profile as event_<id>_cleared as well as in the
- * story subsystem's serialized state. Requirements come from "requirements"
- * (or the contract alias "requires"); effects come only from "outcomes" --
- * the per-event "rewards" array is documentation and is never executed.
+ * story subsystem's serialized state. The graph accepts both the authored
+ * (opening.json) and contract (requires/rewards) condition shapes.
  */
 class DUELACADEMYISLAND_API FDAEventGraph
 {

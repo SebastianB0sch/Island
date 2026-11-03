@@ -553,8 +553,12 @@ def build(log=print, only=None):
         log("  !! anime: no previous cast.json to merge the partial build into; "
             "the published manifest only covers its rebuilt members")
     os.makedirs(C.OUT_DATA, exist_ok=True)
-    with open(os.path.join(C.OUT_DATA, "cast.json"), "w", encoding="utf-8", newline="\n") as fp:
-        json.dump(info, fp, indent=1)
+    jsonio.write_json(cast_path, published, indent=1)
+    if only is None:
+        try:
+            _prune_previous_outputs(old_info, info, log)
+        except Exception as exc:  # noqa: BLE001 - cleanup must not fail a successful export
+            log(f"  !! anime: stale-file cleanup failed ({exc}); files left in place")
     annotate_layout(log)
     return published
 
@@ -564,12 +568,10 @@ def annotate_layout(log=print):
     path = os.path.join(C.OUT_DATA, "layout.json")
     if not os.path.exists(path):
         return
-    with open(path, encoding="utf-8") as fp:
-        layout = json.load(fp)
+    layout = jsonio.read_json(path)
     CAST.assign_npcs(layout.get("npcs", []))
-    with open(path, "w", encoding="utf-8", newline="\n") as fp:
-        json.dump(layout, fp, separators=(",", ":"))
-    named = [n["cast"] for n in layout.get("npcs", []) if not n.get("tint", True)]
+    jsonio.write_json(path, layout, separators=(",", ":"))
+    named = [n["cast"] for n in layout.get("npcs", []) if n.get("cast") and not n.get("tint", True)]
     log(f"  anime: layout.json npcs cast ({len(named)} named: {', '.join(named)})")
 
 

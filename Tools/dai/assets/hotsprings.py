@@ -247,6 +247,7 @@ def bamboo_fence(mb, pts, h, rng, mat=WOOD):
 
 # ---------------------------------------------------------------- terrace + pools
 def _terrace(mb, nc, rng):
+    outline = rounded_rect(TX0, TX1, TY0, TY1, TCR)
     outer = rounded_rect(TX0, TX1, TY0, TY1, TCR, off=0.45)
     inner = rounded_rect(TX0, TX1, TY0, TY1, TCR, off=-0.6)
     # retaining wall down to -4 and a dressed coping
@@ -506,7 +507,7 @@ def _bathhouse(mb, nc, rng):
     # roof
     cx, cy = (BX0 + BX1) / 2, (BY0 + BY1) / 2
     hw, hd = (BX1 - BX0) / 2, (BY1 - BY0) / 2
-    jp_roof(mb, (cx, cy), hw + 1.5, hd + 1.5, BTOP + 0.15, 3.1, hw + 0.12, hd + 0.12, BTOP - 0.05)
+    zt = jp_roof(mb, (cx, cy), hw + 1.5, hd + 1.5, BTOP + 0.15, 3.1, hw + 0.12, hd + 0.12, BTOP - 0.05)
     # red paper lanterns under the front eave
     lanterns = []
     for x in (BX0 + bw * 0.5, BX0 + bw * 3.0, BX0 + bw * 5.5):

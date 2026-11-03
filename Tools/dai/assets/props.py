@@ -11,7 +11,7 @@ import math
 import os
 import random
 
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 from ..geo import MeshBuilder, TAU
 from .. import blend, palette
@@ -349,6 +349,7 @@ def bench():
 def signpost():
     mb = MeshBuilder("signpost")
     mb.box((0, 0, 1.3), (0.14, 0.14, 2.9), "M_DarkWood")
+    rnd = random.Random(5)
     for k, (z, a) in enumerate([(2.45, 15), (2.05, -25), (1.65, 160)]):
         with mb.at((0, 0, z), rot=a):
             mb.box((0.6, 0, 0), (1.15, 0.05, 0.28), "M_Wood")
@@ -502,6 +503,7 @@ def buoy():
 def beach_umbrella():
     mb = MeshBuilder("umbrella")
     mb.cylinder((0, 0, -0.3), 0.04, 2.9, "M_Metal", seg=6)
+    rows = []
     for k in range(8):
         a0 = TAU * k / 8
         a1 = TAU * (k + 1) / 8

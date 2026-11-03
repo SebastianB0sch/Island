@@ -2,14 +2,24 @@
 
 #include "DASettings.h"
 
-#include "DAJson.h"
 #include "DASaveGame.h"
 #include "DuelAcademyIsland.h"
 
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
 #include "Engine/GameInstance.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 namespace
 {
+	FString SettingsJsonKeyToString(const FJsonObject::FStringType& Key)
+	{
+		return FString(*Key);
+	}
+
 	FString AnimationSpeedToString(EDAAnimationSpeed Speed)
 	{
 		switch (Speed)
@@ -72,6 +82,96 @@ namespace
 		}
 		return Fallback;
 	}
+
+	/** Reads an optional field without coercing types; sets OutError on a type mismatch. */
+	bool ReadStringField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, FString& OutValue, FString& OutError)
+	{
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid())
+		{
+			return true;
+		}
+		if (Value->Type != EJson::String)
+		{
+			OutError = FString::Printf(TEXT("Settings field '%s' must be a string."), Field);
+			return false;
+		}
+		OutValue = Value->AsString();
+		return true;
+	}
+
+	/**
+	 * Reads a speed field that the save schema (save.v1.schema.json) declares as
+	 * an integer index while the runtime writers emit canonical names. The
+	 * golden saves store animation_speed as the integer 2, so accept both:
+	 * strings pass through unchanged (gameplay already accepts "0".."3"), an
+	 * integral number 0..3 is coerced to its decimal string, and anything else
+	 * is rejected so a corrupt settings block cannot load half-applied.
+	 */
+	bool ReadSpeedField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, FString& OutValue, FString& OutError)
+	{
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid())
+		{
+			return true;
+		}
+		if (Value->Type == EJson::String)
+		{
+			OutValue = Value->AsString();
+			return true;
+		}
+		if (Value->Type == EJson::Number)
+		{
+			const double Number = Value->AsNumber();
+			if (FMath::IsFinite(Number)
+				&& FMath::FloorToDouble(Number) == Number
+				&& Number >= 0.0 && Number <= 3.0)
+			{
+				OutValue = FString::FromInt(static_cast<int32>(Number));
+				return true;
+			}
+		}
+		OutError = FString::Printf(TEXT("Settings field '%s' must be a string or a speed index 0..3."), Field);
+		return false;
+	}
+
+	bool ReadBoolField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool& OutValue, FString& OutError)
+	{
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid())
+		{
+			return true;
+		}
+		if (Value->Type != EJson::Boolean)
+		{
+			OutError = FString::Printf(TEXT("Settings field '%s' must be a boolean."), Field);
+			return false;
+		}
+		OutValue = Value->AsBool();
+		return true;
+	}
+
+	bool ReadVolumeField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float& OutValue, FString& OutError)
+	{
+		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
+		if (!Value.IsValid())
+		{
+			return true;
+		}
+		if (Value->Type != EJson::Number)
+		{
+			OutError = FString::Printf(TEXT("Settings field '%s' must be a number."), Field);
+			return false;
+		}
+		const double Number = Value->AsNumber();
+		if (!FMath::IsFinite(Number))
+		{
+			OutError = FString::Printf(TEXT("Settings field '%s' is not finite."), Field);
+			return false;
+		}
+		OutValue = FMath::Clamp(static_cast<float>(Number), 0.f, 1.f);
+		return true;
+	}
 }
 
 void UDASettings::Initialize(FSubsystemCollectionBase& Collection)
@@ -116,23 +216,25 @@ bool UDASettings::LoadDefaults()
 {
 	ResetToDefaults();
 
-	const FString Path = DAJson::ContentDataPath(TEXT("Profile/settings.json"));
-	TSharedPtr<FJsonObject> Root;
-	FString LoadError;
-	if (!DAJson::LoadObjectFile(Path, Root, LoadError))
+	const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Profile/settings.json"));
+	FString Raw;
+	if (!FFileHelper::LoadFileToString(Raw, *Path))
 	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Settings data unavailable (%s); using defaults."), *LoadError);
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Settings data not found at %s; using defaults."), *Path);
+		return false;
+	}
+
+	TSharedPtr<FJsonObject> Root;
+	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
+	if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Settings data at %s could not be parsed; using defaults."), *Path);
 		return false;
 	}
 
 	FString Error;
 	const bool bResult = ReadJson(Root, Error);
-	if (bResult)
-	{
-		// settings.json controls are the defaults ResetControl restores.
-		DefaultControls = Controls;
-	}
-	else
+	if (!bResult)
 	{
 		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Settings data at %s was invalid: %s"), *Path, *Error);
 	}
@@ -384,9 +486,12 @@ bool UDASettings::ReadJson(const TSharedPtr<FJsonObject>& Root, FString& OutErro
 		NewTextSpeed = StringToTextSpeed(TextSpeedText, NewTextSpeed);
 	}
 
-	BgmVolume = FMath::Clamp(static_cast<float>(DAJson::ReadFiniteDouble(Root, TEXT("bgm_volume"), BgmVolume)), 0.0f, 1.0f);
-	SfxVolume = FMath::Clamp(static_cast<float>(DAJson::ReadFiniteDouble(Root, TEXT("sfx_volume"), SfxVolume)), 0.0f, 1.0f);
-	Root->TryGetBoolField(TEXT("subtitles"), bSubtitles);
+	if (!ReadVolumeField(Root, TEXT("bgm_volume"), NewBgmVolume, OutError)
+		|| !ReadVolumeField(Root, TEXT("sfx_volume"), NewSfxVolume, OutError)
+		|| !ReadBoolField(Root, TEXT("subtitles"), bNewSubtitles, OutError))
+	{
+		return false;
+	}
 
 	FString Language;
 	if (!ReadStringField(Root, TEXT("language"), Language, OutError))
@@ -411,11 +516,18 @@ bool UDASettings::ReadJson(const TSharedPtr<FJsonObject>& Root, FString& OutErro
 			const FString ActionKey = SettingsJsonKeyToString(Pair.Key).TrimStartAndEnd();
 			if (ActionKey.IsEmpty())
 			{
-				const FString KeyText = Pair.Value->AsString().TrimStartAndEnd();
-				if (!KeyText.IsEmpty())
-				{
-					Controls.Add(DAJson::KeyToString(Pair.Key), KeyText);
-				}
+				OutError = TEXT("Settings control names must not be empty.");
+				return false;
+			}
+			if (!Pair.Value.IsValid() || Pair.Value->Type != EJson::String)
+			{
+				OutError = FString::Printf(TEXT("Settings control '%s' must be a string."), *ActionKey);
+				return false;
+			}
+			const FString KeyText = Pair.Value->AsString().TrimStartAndEnd();
+			if (!KeyText.IsEmpty())
+			{
+				NewControls.Add(ActionKey, KeyText);
 			}
 		}
 	}

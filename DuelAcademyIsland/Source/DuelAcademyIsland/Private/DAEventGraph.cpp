@@ -5,7 +5,6 @@
 #include "DAInventorySubsystem.h"
 #include "DAProfileSubsystem.h"
 #include "DACalendarSubsystem.h"
-#include "DAJson.h"
 #include "DuelAcademyIsland.h"
 
 #include "Dom/JsonValue.h"
@@ -13,6 +12,21 @@
 
 namespace
 {
+	int32 MonthNumberToIndex(int32 MonthNumber)
+	{
+		return ((MonthNumber - 10) % 12 + 12) % 12;
+	}
+
+	FString StoryReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, const FString& Fallback = FString())
+	{
+		FString Value;
+		if (Object.IsValid() && Object->TryGetStringField(Field, Value))
+		{
+			return Value;
+		}
+		return Fallback;
+	}
+
 	/** Maps "Slifer Red", "Slifer" and save keys onto one comparable token. */
 	FString NormalizeDormKey(const FString& Value)
 	{
@@ -36,6 +50,26 @@ namespace
 		return Lower;
 	}
 
+	int32 StoryReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Fallback = 0)
+	{
+		int32 Value = Fallback;
+		if (Object.IsValid())
+		{
+			Object->TryGetNumberField(Field, Value);
+		}
+		return Value;
+	}
+
+	bool StoryReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bFallback = false)
+	{
+		bool bValue = bFallback;
+		if (Object.IsValid())
+		{
+			Object->TryGetBoolField(Field, bValue);
+		}
+		return bValue;
+	}
+
 	bool CompareInt(int32 Left, const FString& Op, int32 Right)
 	{
 		if (Op == TEXT("!=")) return Left != Right;
@@ -44,6 +78,23 @@ namespace
 		if (Op == TEXT("<"))  return Left < Right;
 		if (Op == TEXT("<=")) return Left <= Right;
 		return Left == Right;
+	}
+
+	TArray<TSharedPtr<FJsonObject>> ReadObjectArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	{
+		TArray<TSharedPtr<FJsonObject>> Result;
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (Object.IsValid() && Object->TryGetArrayField(Field, Values) && Values)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *Values)
+			{
+				if (Value.IsValid() && Value->AsObject().IsValid())
+				{
+					Result.Add(Value->AsObject());
+				}
+			}
+		}
+		return Result;
 	}
 }
 
@@ -83,14 +134,14 @@ bool FDAEventGraph::MergeFromJson(const TSharedPtr<FJsonObject>& Root, const TSe
 		}
 
 		FDAEventDefinition Event;
-		Event.Id = DAJson::ReadString(Object, TEXT("id"));
-		Event.Title = DAJson::ReadString(Object, TEXT("title"), Event.Id);
-		Event.Scene = DAJson::ReadString(Object, TEXT("scene"));
-		Event.Priority = DAJson::ReadInt(Object, TEXT("priority"), 0);
-		Event.bOnce = DAJson::ReadBool(Object, TEXT("once"), true);
-		Event.bRepeatable = DAJson::ReadBool(Object, TEXT("repeatable"), false);
-		Event.bOptional = DAJson::ReadBool(Object, TEXT("optional"), false);
-		Event.bCanonEvent = DAJson::ReadBool(Object, TEXT("canon_event"), false);
+		Event.Id = StoryReadString(Object, TEXT("id"));
+		Event.Title = StoryReadString(Object, TEXT("title"), Event.Id);
+		Event.Scene = StoryReadString(Object, TEXT("scene"));
+		Event.Priority = StoryReadInt(Object, TEXT("priority"), 0);
+		Event.bOnce = StoryReadBool(Object, TEXT("once"), true);
+		Event.bRepeatable = StoryReadBool(Object, TEXT("repeatable"), false);
+		Event.bOptional = StoryReadBool(Object, TEXT("optional"), false);
+		Event.bCanonEvent = StoryReadBool(Object, TEXT("canon_event"), false);
 		Event.Raw = Object;
 
 		const TSharedPtr<FJsonObject>* TriggerObject = nullptr;
@@ -99,12 +150,24 @@ bool FDAEventGraph::MergeFromJson(const TSharedPtr<FJsonObject>& Root, const TSe
 			Event.Trigger = *TriggerObject;
 		}
 
-		Event.Requirements = DAJson::ReadObjectArray(Object, TEXT("requirements"));
+		Event.Requirements = ReadObjectArray(Object, TEXT("requirements"));
 		if (Event.Requirements.Num() == 0)
 		{
-			Event.Requirements = DAJson::ReadObjectArray(Object, TEXT("requires"));
+			Event.Requirements = ReadObjectArray(Object, TEXT("requires"));
 		}
-		Event.Outcomes = DAJson::ReadObjectArray(Object, TEXT("outcomes"));
+		Event.Outcomes = ReadObjectArray(Object, TEXT("outcomes"));
+
+		const TArray<TSharedPtr<FJsonValue>>* QueueValues = nullptr;
+		if (Object->TryGetArrayField(TEXT("scene_queue"), QueueValues) && QueueValues)
+		{
+			for (const TSharedPtr<FJsonValue>& QueueValue : *QueueValues)
+			{
+				if (QueueValue.IsValid())
+				{
+					Event.SceneQueue.Add(QueueValue->AsString());
+				}
+			}
+		}
 
 		if (Event.Id.IsEmpty())
 		{
@@ -176,15 +239,15 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 		return true;
 	}
 
-	const bool bNegate = DAJson::ReadBool(Condition, TEXT("negate"), false);
-	const FString Kind = DAJson::ReadString(Condition, TEXT("type"));
+	const bool bNegate = StoryReadBool(Condition, TEXT("negate"), false);
+	const FString Kind = StoryReadString(Condition, TEXT("type"));
 
 	bool bResult = false;
 
 	if (Kind.IsEmpty())
 	{
-		const TArray<TSharedPtr<FJsonObject>> AllConditions = DAJson::ReadObjectArray(Condition, TEXT("all"));
-		const TArray<TSharedPtr<FJsonObject>> AnyConditions = DAJson::ReadObjectArray(Condition, TEXT("any"));
+		const TArray<TSharedPtr<FJsonObject>> AllConditions = ReadObjectArray(Condition, TEXT("all"));
+		const TArray<TSharedPtr<FJsonObject>> AnyConditions = ReadObjectArray(Condition, TEXT("any"));
 		if (AllConditions.Num() > 0)
 		{
 			bResult = EvaluateConditionArray(AllConditions, Profile, Calendar, OutReason);
@@ -209,14 +272,14 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("all") || Kind == TEXT("any"))
 	{
-		TArray<TSharedPtr<FJsonObject>> Nested = DAJson::ReadObjectArray(Condition, TEXT("conditions"));
+		TArray<TSharedPtr<FJsonObject>> Nested = ReadObjectArray(Condition, TEXT("conditions"));
 		if (Nested.Num() == 0)
 		{
-			Nested = DAJson::ReadObjectArray(Condition, TEXT("all"));
+			Nested = ReadObjectArray(Condition, TEXT("all"));
 		}
 		if (Nested.Num() == 0)
 		{
-			Nested = DAJson::ReadObjectArray(Condition, TEXT("any"));
+			Nested = ReadObjectArray(Condition, TEXT("any"));
 		}
 		if (Kind == TEXT("any"))
 		{
@@ -250,11 +313,11 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	{
 		const FString Flag = Kind == TEXT("new_game")
 			? TEXT("new_game")
-			: DAJson::ReadString(Condition, TEXT("id"), DAJson::ReadString(Condition, TEXT("flag")));
+			: StoryReadString(Condition, TEXT("id"), StoryReadString(Condition, TEXT("flag")));
 		bool bExpected = true;
 		if (Kind == TEXT("flag"))
 		{
-			bExpected = DAJson::ReadBool(Condition, TEXT("value"), true);
+			bExpected = StoryReadBool(Condition, TEXT("value"), true);
 		}
 		const bool bHasFlag = Profile && (Profile->GetFlag(Flag) || (Kind == TEXT("new_game") && Profile->GetFlag(TEXT("new_game_started"))));
 		bResult = bHasFlag == bExpected;
@@ -265,10 +328,10 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("counter"))
 	{
-		const FString Counter = DAJson::ReadString(Condition, TEXT("id"), DAJson::ReadString(Condition, TEXT("counter")));
+		const FString Counter = StoryReadString(Condition, TEXT("id"), StoryReadString(Condition, TEXT("counter")));
 		const int32 Value = Profile ? Profile->GetCounter(Counter) : 0;
-		const int32 Expected = DAJson::ReadInt(Condition, TEXT("value"), 0);
-		const FString Op = DAJson::ReadString(Condition, TEXT("op"), TEXT(">="));
+		const int32 Expected = StoryReadInt(Condition, TEXT("value"), 0);
+		const FString Op = StoryReadString(Condition, TEXT("op"), TEXT(">="));
 		bResult = CompareInt(Value, Op, Expected);
 		if (!bResult)
 		{
@@ -277,11 +340,10 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("event") || Kind == TEXT("event_complete"))
 	{
-		const FString EventId = DAJson::ReadString(Condition, TEXT("id"), DAJson::ReadString(Condition, TEXT("event")));
+		const FString EventId = StoryReadString(Condition, TEXT("id"), StoryReadString(Condition, TEXT("event")));
 		const bool bComplete = Profile && Profile->GetFlag(EventCompletionFlag(EventId));
-		const FString State = DAJson::ReadString(Condition, TEXT("state"), TEXT("complete"));
-		bResult = State.IsEmpty() || State == TEXT("complete") ? bComplete : true;
-		if (!bResult)
+		const FString State = StoryReadString(Condition, TEXT("state"), TEXT("complete"));
+		if (State.IsEmpty() || State.Equals(TEXT("complete"), ESearchCase::IgnoreCase))
 		{
 			bResult = bComplete;
 			if (!bResult)
@@ -309,15 +371,15 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 			OutReason = TEXT("calendar is unavailable");
 			return false;
 		}
-		const int32 TargetYear = DAJson::ReadInt(Condition, TEXT("year"), Calendar->GetYear());
-		const int32 MonthNumber = DAJson::ReadInt(Condition, TEXT("month"),
-			DAJson::ReadInt(Condition, TEXT("calendar_month"), Calendar->GetMonthNumber()));
-		const int32 TargetMonthIndex = DAJson::ReadInt(Condition, TEXT("month_index"), UDACalendarSubsystem::MonthNumberToIndex(MonthNumber));
+		const int32 TargetYear = StoryReadInt(Condition, TEXT("year"), Calendar->GetYear());
+		const int32 MonthNumber = StoryReadInt(Condition, TEXT("month"),
+			StoryReadInt(Condition, TEXT("calendar_month"), Calendar->GetMonthNumber()));
+		const int32 TargetMonthIndex = StoryReadInt(Condition, TEXT("month_index"), MonthNumberToIndex(MonthNumber));
 		const bool bHasDay = Condition->HasField(TEXT("day"));
-		const int32 TargetDay = DAJson::ReadInt(Condition, TEXT("day"), 1);
+		const int32 TargetDay = StoryReadInt(Condition, TEXT("day"), 1);
 		const int32 TargetAbsolute = Calendar->GetAbsoluteDayFor(TargetYear, TargetMonthIndex, TargetDay);
 		const int32 CurrentAbsolute = Calendar->GetAbsoluteDay();
-		const FString Op = DAJson::ReadString(Condition, TEXT("op"), Kind == TEXT("date_at_least") ? TEXT(">=") : TEXT("=="));
+		const FString Op = StoryReadString(Condition, TEXT("op"), Kind == TEXT("date_at_least") ? TEXT(">=") : TEXT("=="));
 		if (!bHasDay && Op == TEXT("=="))
 		{
 			// A date without a day means "any time in this month" (E09 festival).
@@ -328,12 +390,12 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 			bResult = CompareInt(CurrentAbsolute, Op, TargetAbsolute);
 		}
 
-		const FString ExpectedWeekday = DAJson::ReadString(Condition, TEXT("weekday"));
+		const FString ExpectedWeekday = StoryReadString(Condition, TEXT("weekday"));
 		if (bResult && !ExpectedWeekday.IsEmpty())
 		{
 			bResult = Calendar->GetWeekdayName(Calendar->GetWeekday()).Equals(ExpectedWeekday, ESearchCase::IgnoreCase);
 		}
-		const FString ExpectedPeriod = DAJson::ReadString(Condition, TEXT("period"));
+		const FString ExpectedPeriod = StoryReadString(Condition, TEXT("period"));
 		if (bResult && !ExpectedPeriod.IsEmpty())
 		{
 			bResult = Calendar->GetPeriodName(Calendar->GetPeriod()).Equals(ExpectedPeriod, ESearchCase::IgnoreCase);
@@ -345,7 +407,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("weekday"))
 	{
-		const FString Expected = DAJson::ReadString(Condition, TEXT("value"));
+		const FString Expected = StoryReadString(Condition, TEXT("value"));
 		bResult = Calendar && Calendar->GetWeekdayName(Calendar->GetWeekday()).Equals(Expected, ESearchCase::IgnoreCase);
 		if (!bResult)
 		{
@@ -354,7 +416,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("period"))
 	{
-		const FString Expected = DAJson::ReadString(Condition, TEXT("value"));
+		const FString Expected = StoryReadString(Condition, TEXT("value"));
 		bResult = Calendar && Calendar->GetPeriodName(Calendar->GetPeriod()).Equals(Expected, ESearchCase::IgnoreCase);
 		if (!bResult)
 		{
@@ -363,7 +425,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("dorm"))
 	{
-		const FString Expected = NormalizeDormKey(DAJson::ReadString(Condition, TEXT("value")));
+		const FString Expected = NormalizeDormKey(StoryReadString(Condition, TEXT("value")));
 		const FString Actual = NormalizeDormKey(Profile ? DuelAcademyProfile::DormToSaveKey(Profile->GetDorm()) : FString());
 		bResult = Actual.Equals(Expected, ESearchCase::IgnoreCase);
 		if (!bResult)
@@ -381,7 +443,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("title"))
 	{
-		const FString Expected = DAJson::ReadString(Condition, TEXT("value"));
+		const FString Expected = StoryReadString(Condition, TEXT("value"));
 		const FString Actual = Profile ? Profile->GetTitle() : FString();
 		bResult = Actual.Equals(Expected, ESearchCase::IgnoreCase) || Actual.Contains(Expected, ESearchCase::IgnoreCase);
 		if (!bResult)
@@ -391,8 +453,8 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("card"))
 	{
-		const int32 CardId = DAJson::ReadInt(Condition, TEXT("id"), DAJson::ReadInt(Condition, TEXT("card_id"), 0));
-		const int32 MinCount = DAJson::ReadInt(Condition, TEXT("min_count"), 1);
+		const int32 CardId = StoryReadInt(Condition, TEXT("id"), StoryReadInt(Condition, TEXT("card_id"), 0));
+		const int32 MinCount = StoryReadInt(Condition, TEXT("min_count"), 1);
 		int32 Count = 0;
 		if (Profile)
 		{
@@ -415,8 +477,8 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("wins_against_each"))
 	{
-		const int32 WinsPerDuelist = DAJson::ReadInt(Condition, TEXT("count"), 10);
-		const int32 RequiredDuelists = DAJson::ReadInt(Condition, TEXT("duelists"), 20);
+		const int32 WinsPerDuelist = StoryReadInt(Condition, TEXT("count"), 10);
+		const int32 RequiredDuelists = StoryReadInt(Condition, TEXT("duelists"), 20);
 		static const TCHAR* const Duelists[] = {
 			TEXT("jaden"), TEXT("syrus"), TEXT("chumley"), TEXT("bastion"), TEXT("chazz"),
 			TEXT("zane"), TEXT("alexis"), TEXT("jasmine"), TEXT("mindy"), TEXT("crowler"),
@@ -439,7 +501,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 	}
 	else if (Kind == TEXT("written_correct_percent"))
 	{
-		const int32 Percent = DAJson::ReadInt(Condition, TEXT("percent"), 60);
+		const int32 Percent = StoryReadInt(Condition, TEXT("percent"), 60);
 		const int32 Correct = Profile ? Profile->GetCounter(TEXT("written_correct")) : 0;
 		const int32 Total = Profile ? Profile->GetCounter(TEXT("written_total")) : 0;
 		bResult = Total > 0 && static_cast<int64>(Correct) * 100 >= static_cast<int64>(Percent) * Total;
@@ -461,7 +523,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 		// Stable per-day roll: re-evaluating the same event on the same day
 		// cannot flicker between available and unavailable. The next eligible
 		// day rolls again, so an optional event eventually happens.
-		const FString Chance = DAJson::ReadString(Condition, TEXT("value"), TEXT("1/1"));
+		const FString Chance = StoryReadString(Condition, TEXT("value"), TEXT("1/1"));
 		FString Numerator;
 		FString Denominator;
 		if (!Chance.Split(TEXT("/"), &Numerator, &Denominator))
@@ -471,7 +533,7 @@ bool FDAEventGraph::EvaluateCondition(const TSharedPtr<FJsonObject>& Condition,
 		}
 		const int32 Num = FMath::Max(0, FCString::Atoi(*Numerator));
 		const int32 Den = FMath::Max(1, FCString::Atoi(*Denominator));
-		const FString Seed = DAJson::ReadString(Condition, TEXT("seed"), TEXT("random"));
+		const FString Seed = StoryReadString(Condition, TEXT("seed"), TEXT("random"));
 		const int32 Day = Calendar ? Calendar->GetAbsoluteDay() : 0;
 		const int32 Period = Calendar ? static_cast<int32>(Calendar->GetPeriod()) : 0;
 		const uint32 Roll = HashCombine(HashCombine(GetTypeHash(Seed), static_cast<uint32>(Day)),
@@ -522,22 +584,8 @@ bool FDAEventGraph::EvaluateTrigger(const FDAEventDefinition& Event, const UDAPr
 		return true;
 	}
 
-	const FString Kind = DAJson::ReadString(Event.Trigger, TEXT("type"));
-	if (Kind == TEXT("new_game"))
-	{
-		const bool bStarted = Profile && (Profile->GetFlag(TEXT("new_game")) || Profile->GetFlag(TEXT("new_game_started")));
-		if (!bStarted)
-		{
-			OutReason = TEXT("new game has not started");
-		}
-		return bStarted;
-	}
-	if (Kind == TEXT("date") || Kind == TEXT("flag") || Kind == TEXT("event") || Kind == TEXT("event_complete")
-		|| Kind == TEXT("weekday") || Kind == TEXT("period") || Kind == TEXT("exam_day"))
-	{
-		return EvaluateCondition(Event.Trigger, Profile, Calendar, OutReason);
-	}
-	if (Kind == TEXT("talk") || Kind == TEXT("always"))
+	const FString Kind = StoryReadString(Event.Trigger, TEXT("type"));
+	if (Kind.IsEmpty())
 	{
 		// A genuinely empty trigger (no type field and no children) silently
 		// continues; the event is available whenever its requirements pass.

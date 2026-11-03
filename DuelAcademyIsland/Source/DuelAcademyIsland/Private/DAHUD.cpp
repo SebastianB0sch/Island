@@ -126,26 +126,6 @@ void ADAHUD::BeginPlay()
 	WireEconomySystems();
 	ApplySettingsToUI();
 
-	// One-shot timer helper shared by every screenshot/test harness below; the
-	// weak pointers keep a harness from touching a HUD destroyed mid-run.
-	const TWeakObjectPtr<ADAHUD> WeakThis(this);
-	auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
-	{
-		if (!WeakThis.IsValid())
-		{
-			return;
-		}
-		FTimerHandle Timer;
-		WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
-			[WeakThis, Fn]()
-			{
-				if (ADAHUD* HUD = WeakThis.Get())
-				{
-					Fn(HUD);
-				}
-			}), Delay, false);
-	};
-
 	// Debug harnesses (only active with the matching command-line switch):
 	//   -DADuelSelfTest   run the AI-vs-AI rules self-test after the world settles
 	//   -DADuelScreenshot capture the deck picker and an active duel board
@@ -167,6 +147,23 @@ void ADAHUD::BeginPlay()
 
 	if (FParse::Param(FCommandLine::Get(), TEXT("DADuelScreenshot")))
 	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
 		After(1.0f, [](ADAHUD* HUD) { HUD->OpenDuelDeckSelect(TEXT("jaden"), TEXT("Jaden Yuki"), TEXT("jaden")); });
 		After(2.2f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelDeck.png"), false, false); });
 		After(3.0f, [](ADAHUD* HUD) { HUD->StartDuelWithDeck(TEXT("fire")); });
@@ -182,6 +179,23 @@ void ADAHUD::BeginPlay()
 
 	if (FParse::Param(FCommandLine::Get(), TEXT("DADuelChoiceScreenshot")))
 	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
 		After(0.8f, [](ADAHUD* HUD) { HUD->CloseTitle(); });
 		After(1.0f, [](ADAHUD* HUD) { HUD->DebugOpenDuelEquipChoice(); });
 		After(2.2f, [](ADAHUD* HUD) { FScreenshotRequest::RequestScreenshot(TEXT("DADuelChoice.png"), false, false); });
@@ -193,6 +207,23 @@ void ADAHUD::BeginPlay()
 	// the engine: -DALocomotionTest.
 	if (FParse::Param(FCommandLine::Get(), TEXT("DALocomotionTest")))
 	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
 		After(1.0f, [](ADAHUD* HUD)
 		{
 			HUD->CloseTitle();
@@ -259,6 +290,24 @@ void ADAHUD::BeginPlay()
 
 	if (FParse::Param(FCommandLine::Get(), TEXT("DAUITest")))
 	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
+
 		float T = 1.0f;
 		for (int32 Index = 0; Index < DAPDATabCount; ++Index)
 		{
@@ -343,6 +392,24 @@ void ADAHUD::BeginPlay()
 	//   PDA deck/mail/save tabs at the requested resolution, then exits.
 	if (FParse::Param(FCommandLine::Get(), TEXT("DAGameplayUITest")))
 	{
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
+
 		After(0.6f, [](ADAHUD* HUD)
 		{
 			HUD->PrepareGameplayUITestState();
@@ -474,8 +541,19 @@ void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& Oppone
 	{
 		DuelUI = MakeUnique<FDADuelUI>(this);
 	}
-	// The duel takes over input; do not leave the map/PDA/help behind it with a
-	// stale cursor state. Dialogue is left alone: closing it would advance story.
+	if (IsShopOpen())
+	{
+		CloseShop();
+	}
+	if (IsDeckEditorOpen())
+	{
+		CloseDeckEditor();
+	}
+	if (IsExamOpen())
+	{
+		CloseExam();
+	}
+	bHelpOpen = false;
 	if (bMapOpen)
 	{
 		ToggleMap();
@@ -484,7 +562,10 @@ void ADAHUD::OpenDuelDeckSelect(const FString& OpponentId, const FString& Oppone
 	{
 		ClosePDA();
 	}
-	bHelpOpen = false;
+	if (IsDialogueOpen())
+	{
+		CloseDialogue();
+	}
 	DuelUI->OpenDeckSelect(OpponentId, OpponentName, OpponentDeckId, Mode, bAwardDP);
 	UpdateInputMode();
 }
@@ -850,7 +931,18 @@ void ADAHUD::OpenTitle()
 		return;
 	}
 	bTitleWasShown = true;
-	CloseOtherLayers(EDALayer::None);
+	if (IsShopOpen())
+	{
+		CloseShop();
+	}
+	if (IsDeckEditorOpen())
+	{
+		CloseDeckEditor();
+	}
+	if (IsExamOpen())
+	{
+		CloseExam();
+	}
 	if (!TitleScreen.IsValid())
 	{
 		TitleScreen = MakeUnique<FDATitleScreen>(this);
@@ -858,6 +950,19 @@ void ADAHUD::OpenTitle()
 		TitleScreen->OnContinue.AddUObject(this, &ADAHUD::HandleTitleContinue);
 		TitleScreen->OnOptionsChanged.AddUObject(this, &ADAHUD::HandleTitleOptionsChanged);
 		TitleScreen->OnClosed.AddUObject(this, &ADAHUD::HandleTitleClosed);
+	}
+	bHelpOpen = false;
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	if (IsPDAOpen())
+	{
+		ClosePDA();
+	}
+	if (IsDialogueOpen())
+	{
+		CloseDialogue();
 	}
 	TitleScreen->Open();
 	UpdateInputMode();
@@ -1037,8 +1142,7 @@ void ADAHUD::PrepareGameplayUITestState()
 	}
 	if (Calendar)
 	{
-		// LoadCalendarData resets to defaults and then applies calendar.json overrides.
-		Calendar->LoadCalendarData();
+		Calendar->ResetToDefaults();
 	}
 	if (Decks)
 	{
@@ -1069,26 +1173,15 @@ void ADAHUD::OpenShop()
 		ShopUI = MakeUnique<FDAShopUI>(this);
 		ShopUI->OnClosed.AddUObject(this, &ADAHUD::HandleShopClosed);
 	}
-	CloseOtherLayers(EDALayer::Shop);
-	ShopUI->Open();
-	UpdateInputMode();
-}
-
-void ADAHUD::CloseOtherLayers(EDALayer Keep)
-{
-	if (Keep != EDALayer::Shop && IsShopOpen())
-	{
-		CloseShop();
-	}
-	if (Keep != EDALayer::DeckEditor && IsDeckEditorOpen())
+	if (IsDeckEditorOpen())
 	{
 		CloseDeckEditor();
 	}
-	if (Keep != EDALayer::Exam && IsExamOpen())
+	if (IsExamOpen())
 	{
 		CloseExam();
 	}
-	// The gameplay screens are closed first so ToggleMap's own modal guard lets it close the map.
+	bHelpOpen = false;
 	if (bMapOpen)
 	{
 		ToggleMap();
@@ -1101,7 +1194,8 @@ void ADAHUD::CloseOtherLayers(EDALayer Keep)
 	{
 		CloseDialogue();
 	}
-	bHelpOpen = false;
+	ShopUI->Open();
+	UpdateInputMode();
 }
 
 void ADAHUD::CloseShop()
@@ -1124,7 +1218,27 @@ void ADAHUD::OpenDeckEditor(const FString& DeckId)
 		DeckUI = MakeUnique<FDADeckUI>(this);
 		DeckUI->OnClosed.AddUObject(this, &ADAHUD::HandleDeckClosed);
 	}
-	CloseOtherLayers(EDALayer::DeckEditor);
+	if (IsShopOpen())
+	{
+		CloseShop();
+	}
+	if (IsExamOpen())
+	{
+		CloseExam();
+	}
+	bHelpOpen = false;
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	if (IsPDAOpen())
+	{
+		ClosePDA();
+	}
+	if (IsDialogueOpen())
+	{
+		CloseDialogue();
+	}
 	DeckUI->Open(DeckId);
 	UpdateInputMode();
 }
@@ -1149,7 +1263,27 @@ void ADAHUD::OpenExam(int32 MonthIndex)
 		ExamUI = MakeUnique<FDAExamUI>(this);
 		ExamUI->OnClosed.AddUObject(this, &ADAHUD::HandleExamClosed);
 	}
-	CloseOtherLayers(EDALayer::Exam);
+	if (IsShopOpen())
+	{
+		CloseShop();
+	}
+	if (IsDeckEditorOpen())
+	{
+		CloseDeckEditor();
+	}
+	bHelpOpen = false;
+	if (bMapOpen)
+	{
+		ToggleMap();
+	}
+	if (IsPDAOpen())
+	{
+		ClosePDA();
+	}
+	if (IsDialogueOpen())
+	{
+		CloseDialogue();
+	}
 	ExamUI->Open(MonthIndex);
 	UpdateInputMode();
 }
@@ -1465,21 +1599,29 @@ void ADAHUD::ToggleMap()
 		return;
 	}
 	bMapOpen = !bMapOpen;
-	// Only map can be open here (guard above), so UpdateInputMode picks exactly
-	// GameAndUI + cursor when opening and GameOnly when closing.
-	UpdateInputMode();
-	if (bMapOpen)
+	if (APlayerController* PC = GetOwningPlayerController())
 	{
-		// Pre-select the zone we are standing in.
-		if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+		PC->bShowMouseCursor = bMapOpen;
+		if (bMapOpen)
 		{
-			const TArray<ADALocationVolume*> Zones = Sub->GetZones();
-			const int32 Current = Zones.IndexOfByKey(Sub->GetCurrentZone());
-			if (Current != INDEX_NONE)
+			FInputModeGameAndUI Mode;
+			Mode.SetHideCursorDuringCapture(false);
+			PC->SetInputMode(Mode);
+			// Pre-select the zone we are standing in.
+			if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 			{
-				MapSelection = Current;
+				const TArray<ADALocationVolume*> Zones = Sub->GetZones();
+				const int32 Current = Zones.IndexOfByKey(Sub->GetCurrentZone());
+				if (Current != INDEX_NONE)
+				{
+					MapSelection = Current;
+				}
+				Sub->PlayUISound(TEXT("A_UIClick"), 0.5f);
 			}
-			Sub->PlayUISound(TEXT("A_UIClick"), 0.5f);
+		}
+		else
+		{
+			PC->SetInputMode(FInputModeGameOnly());
 		}
 	}
 }
@@ -1871,10 +2013,9 @@ void ADAHUD::DrawMinimap(UDAIslandSubsystem* Sub)
 	Text(Zone ? Zone->DisplayName : FString(TEXT("Duel Academy Island")), X0 + Size * 0.5f, Y0 + Size + 8.f * S(), HudPaper, 0.9f, true);
 	const int32 Total = Sub->GetZones().Num();
 	FString Progress = FString::Printf(TEXT("Explored %d / %d"), Sub->NumDiscovered(), Total);
-	// The trunk lives in UDAInventorySubsystem.
-	if (const UDAInventorySubsystem* Inventory = GetGameInstance() ? GetGameInstance()->GetSubsystem<UDAInventorySubsystem>() : nullptr)
+	if (const ADAStudentCharacter* Student = Cast<ADAStudentCharacter>(Pawn))
 	{
-		Progress += FString::Printf(TEXT("    Cards %d"), Inventory->GetDistinctCardsOwned());
+		Progress += FString::Printf(TEXT("    Cards %d"), Student->GetCollectionSize());
 	}
 	Text(Progress, X0 + Size * 0.5f, Y0 + Size + 30.f * S(), HudAlpha(HudPaper, 0.7f), 0.75f, true);
 }

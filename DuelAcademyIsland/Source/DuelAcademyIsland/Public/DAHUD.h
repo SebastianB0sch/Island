@@ -20,9 +20,6 @@ class UFont;
 class UTexture2D;
 class ADAStudentCharacter;
 
-/** Modal layer kept open by ADAHUD::CloseOtherLayers (not reflected; kept out of the UCLASS body). */
-enum class EDALayer : uint8 { None, Shop, DeckEditor, Exam };
-
 UCLASS()
 class DUELACADEMYISLAND_API ADAHUD : public AHUD
 {
@@ -127,24 +124,30 @@ public:
 	/** Test-only: seed the transient profile/decks/inventory/mail state used by -DAGameplayUITest. */
 	void PrepareGameplayUITestState();
 
+	/** Debug-only: log the planted-foot speed measured by the -DALocomotionTest harness. */
+	void LogLocomotionStats(const FString& Label);
+
 	/** Debug-only: log the world-space speed of the planted ball joints (foot-slide check). */
 	void LogFootPlantStats(const FString& Label);
 
 	FDADialogueUI* GetDialogueUI() const { return DialogueUI.Get(); }
 	FDAPDAUI* GetPDAUI() const { return PDAUI.Get(); }
+	FDATitleScreen* GetTitleScreen() const { return TitleScreen.Get(); }
+	FDAShopUI* GetShopUI() const { return ShopUI.Get(); }
+	FDADeckUI* GetDeckUI() const { return DeckUI.Get(); }
 	FDAExamUI* GetExamUI() const { return ExamUI.Get(); }
 
 	/**
-	 * The only arbiter of cursor/input mode for the non-duel layers. Public so
-	 * FDADuelUI can hand control back when a duel closes over another layer.
-	 * No-op while a duel is open (the duel UI owns input then).
+	 * Integration seam for pinned cross-workstream contract #1
+	 * (FDADuelUI::WasDeckSelectClosedWithoutResult, consumed by the story
+	 * workstream): the duel board itself stays private to the HUD flow
+	 * otherwise, so nothing outside that one consumption should call this.
 	 */
-	void UpdateInputMode();
+	FDADuelUI* GetDuelUI() const { return DuelUI.Get(); }
 
 private:
 	// ---------------------------------------------------------------- UI hosting
-	/** Closes every modal layer except Keep (shop/deck/exam/map/PDA/dialogue/help). */
-	void CloseOtherLayers(EDALayer Keep);
+	void UpdateInputMode();
 	void ApplySettingsToUI();
 	void WireEconomySystems();
 	void HandlePDAAction(FName ActionId, const FString& Payload);

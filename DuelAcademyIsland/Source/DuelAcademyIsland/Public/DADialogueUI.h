@@ -12,7 +12,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DAUIScreen.h"
 
 class ADAHUD;
 class APlayerController;
@@ -79,8 +78,21 @@ struct FDADialogueLine
 	}
 };
 
-/** One clickable region registered while drawing (alias kept for existing code). */
-using FDADialogueHitTarget = FDAUIHitTarget;
+/** One clickable region registered while drawing (hit-tested next frame). */
+struct FDADialogueHitTarget
+{
+	FString Action;
+	int32 Index = INDEX_NONE;
+	float X = 0.f;
+	float Y = 0.f;
+	float W = 0.f;
+	float H = 0.f;
+
+	bool Contains(const FVector2D& Point) const
+	{
+		return Point.X >= X && Point.X <= X + W && Point.Y >= Y && Point.Y <= Y + H;
+	}
+};
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FDADialogueClosedSignature, const FString& /*ConversationId*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FDADialogueChoiceSignature, const FString& /*ConversationId*/, int32 /*OptionIndex*/);
@@ -92,11 +104,11 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FDADialogueLineSignature, const FString& /*
  * the same pattern the map and duel UI use (Enhanced Input can swallow keys in
  * GameAndUI mode).
  */
-class FDADialogueUI : public FDAUIScreen
+class FDADialogueUI
 {
 public:
 	explicit FDADialogueUI(ADAHUD* InOwner);
-	virtual ~FDADialogueUI() override;
+	~FDADialogueUI();
 
 	// ------------------------------------------------------------------ lifecycle
 	void Begin(const TArray<FDADialogueLine>& InLines, const FString& InConversationId = FString());
@@ -144,7 +156,7 @@ public:
 
 	// ------------------------------------------------------------------ frame
 	void Update(float DeltaSeconds);
-	virtual void Draw(UCanvas* InCanvas) override;
+	void Draw(UCanvas* InCanvas);
 
 	// ------------------------------------------------------------------ integration
 	FDADialogueClosedSignature OnDialogueClosed;
@@ -152,22 +164,39 @@ public:
 	FDADialogueLineSignature OnLineShown;
 
 private:
-	// ---- helpers (canvas primitives, fonts, hit targets: FDAUIScreen) ----
+	// ---- helpers ----
+	UWorld* GetWorld() const;
+	UGameInstance* GetGameInstance() const;
 	UCharacterPortraitSubsystem* GetPortraitArt() const;
+	UFont* GetFont(bool bLarge) const;
 
+	void DrawRect(const FLinearColor& Color, float X, float Y, float W, float H);
+	void DrawText(const FString& Str, float X, float Y, const FLinearColor& Color, float InScale,
+		bool bCenter = false, UFont* Font = nullptr);
 	void DrawTexture(UTexture2D* Texture, float X, float Y, float W, float H, const FLinearColor& Tint);
-	/** Dialogue-styled panel (5px accent bar); intentionally hides FDAUIScreen::DrawPanel. */
 	void DrawPanel(float X, float Y, float W, float H, const FLinearColor& Fill, const FLinearColor& Accent);
+	void Diamond(const FVector2D& C, float R, const FLinearColor& Color);
+	FVector2D Measure(const FString& Str, float InScale, UFont* Font = nullptr) const;
+	TArray<FString> WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+	FString Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+
+	void MoveChoiceSelection(int32 Delta, bool bWrap);
 
 	void DrawPortrait(float X, float Y, float Size, const FDADialogueLine& Line, float Alpha);
 	void DrawHistoryOverlay();
+	void AddHit(const FString& Action, int32 Index, float X, float Y, float W, float H);
 	void HandleClickAtMouse();
 	void HandleHit(const FDADialogueHitTarget& Hit);
 	void UpdateTextEntry();
 	void GoToLine(int32 NewIndex);
 	void PushLineToHistory();
+	void PlaySfx(const TCHAR* SoundName, float Volume = 1.f) const;
 
-	// ---- runtime (owner, canvas, scale and hit targets live in FDAUIScreen) ----
+	// ---- owner / runtime ----
+	TWeakObjectPtr<ADAHUD> OwnerHUD;
+	APlayerController* PlayerOwner = nullptr;
+	UCanvas* Canvas = nullptr;
+
 	TArray<FDADialogueLine> Lines;
 	FString ConversationId;
 	int32 LineIndex = 0;
@@ -178,6 +207,7 @@ private:
 	float AutoTimer = 0.f;
 	float SkipTimer = 0.f;
 	float Elapsed = 0.f;
+	float UIScale = 1.f;
 
 	bool bOpen = false;
 	bool bTyping = false;
@@ -196,6 +226,7 @@ private:
 	int32 HistoryScroll = 0;
 
 	TArray<FString> History;
+	TArray<FDADialogueHitTarget> HitTargets;
 };
 
 /**

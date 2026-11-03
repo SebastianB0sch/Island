@@ -5,7 +5,7 @@
     "demote_on_fail": true,
     "dropout_title": "dropout_boy",
     "dropout_flag": "dropout_boy",
-    "recovery_opponent": "fontaine",
+    "recovery_opponent": "fonda_fontaine",
     "note": "Provisional thresholds until A01 publishes the canon title table."
   },
   "titles": [
@@ -139,7 +139,7 @@
       "min_timed_clears": 80,
       "min_written_correct": 180,
       "min_cards_owned": 1000,
-      "min_story_events": 29,
+      "min_story_events": 33,
       "requires_exam_passed": true,
       "requires_king_of_games": true
     },
@@ -175,10 +175,9 @@
       "id": "prince_of_games",
       "name": "Prince of Games",
       "description": "Reached the final promotion duel and lost; the throne waits for next year.",
-      "order": 95,
+      "order": 90,
       "permanent": true,
-      "min_wins_total": 200,
-      "required_flag": "prince_of_games"
+      "min_wins_total": 200
     }
   ]
 }

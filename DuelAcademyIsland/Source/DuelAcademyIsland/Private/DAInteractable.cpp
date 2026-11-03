@@ -10,6 +10,7 @@
 #include "DAIslandSubsystem.h"
 #include "DAStorySubsystem.h"
 #include "DAStudentCharacter.h"
+#include "DACardDatabase.h"
 #include "Engine/GameInstance.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -155,7 +156,7 @@ void ADAInteractable::Interact(ADAStudentCharacter* By)
 	switch (Kind)
 	{
 	case EDAInteractKind::CardShop:
-		OpenCardShop(By);
+		OpenBoosterPack(By);
 		break;
 	case EDAInteractKind::DuelField:
 		StartDuel(By);
@@ -233,24 +234,63 @@ void ADAInteractable::Interact(ADAStudentCharacter* By)
 
 // ------------------------------------------------------------------------ card shop
 
-void ADAInteractable::OpenCardShop(ADAStudentCharacter* By)
+void ADAInteractable::OpenBoosterPack(ADAStudentCharacter* By)
 {
-	// The counter opens the same A06 shop as the B hotkey: DP-priced packs that
-	// go into the UDAInventorySubsystem trunk (no free pulls, no side collection).
-	APlayerController* PC = By ? Cast<APlayerController>(By->GetController()) : nullptr;
-	if (ADAHUD* HUD = PC ? Cast<ADAHUD>(PC->GetHUD()) : nullptr)
+	UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this);
+	if (!Sub)
 	{
-		HUD->OpenShop();
 		return;
 	}
-	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+	FRandomStream Rng(FMath::Rand());
+	const TArray<DuelAcademy::FCardDef>& All = DuelAcademy::Cards();
+	if (All.Num() == 0)
 	{
 		FDAMessage Msg;
 		Msg.Title = TEXT("Card Shop");
-		Msg.Body = TEXT("The card shop is closed right now.");
-		Msg.Accent = FLinearColor(0.95f, 0.55f, 0.15f);
-		Msg.Duration = 4.f;
+		Msg.Body = TEXT("The card catalogue is empty.");
+		Msg.Duration = 5.f;
 		Sub->PushMessage(Msg);
+		return;
+	}
+	++PacksOpened;
+	FString Body = FString::Printf(TEXT("Booster pack #%d - you pulled:\n"), PacksOpened);
+	bool bUltra = false;
+	for (int32 i = 0; i < 5; ++i)
+	{
+		const int32 Index = DuelAcademy::PullCardIndex(Rng);
+		if (!All.IsValidIndex(Index))
+		{
+			continue;
+		}
+		const DuelAcademy::FCardDef& C = All[Index];
+		if (C.Atk > 0 || C.Def > 0)
+		{
+			Body += FString::Printf(TEXT("  [%s]  %s  (%s, ATK %d / DEF %d)\n"), DuelAcademy::RarityName(C.Rarity), C.Name, C.Type, C.Atk, C.Def);
+		}
+		else
+		{
+			Body += FString::Printf(TEXT("  [%s]  %s  (%s)\n"), DuelAcademy::RarityName(C.Rarity), C.Name, C.Type);
+		}
+		bUltra |= C.Rarity == DuelAcademy::ERarity::UltraRare;
+		if (By)
+		{
+			By->AddCardToCollection(C.Name);
+		}
+	}
+	if (By)
+	{
+		Body += FString::Printf(TEXT("\nCollection: %d / %d different cards"), By->GetCollectionSize(), All.Num());
+	}
+	FDAMessage Msg;
+	Msg.Title = bUltra ? TEXT("Card Shop - ULTRA RARE PULL!") : TEXT("Card Shop");
+	Msg.Body = Body;
+	Msg.Accent = bUltra ? FLinearColor(1.f, 0.85f, 0.2f) : FLinearColor(0.95f, 0.55f, 0.15f);
+	Msg.Duration = 12.f;
+	Sub->PushMessage(Msg);
+	Sub->PlayUISound(TEXT("A_CardDraw"), 0.9f);
+	if (bUltra)
+	{
+		Sub->PlayUISound(TEXT("A_Discover"), 0.9f);
 	}
 }
 

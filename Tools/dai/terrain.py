@@ -559,9 +559,8 @@ class Terrain:
         tints = dict(palette.TERRAIN_LAYERS)
         info_path = os.path.join(C.CACHE_DIR, "terrain_layers.json")
         if os.path.exists(info_path):
-            with open(info_path, encoding="utf-8") as fp:
-                for k, v in json.load(fp).items():
-                    tints[k] = tuple(v["mean_srgb"])
+            for k, v in jsonio.read_json(info_path).items():
+                tints[k] = tuple(v["mean_srgb"])
         rng_n = fbm(res, 25.0, 3, seed=C.SEED + 40)
         for name, w in layers.items():
             c = np.array(tints[name], np.float32)
@@ -608,10 +607,10 @@ class Terrain:
         for key, (w, inner) in self.pad_masks.items():
             occ = np.maximum(occ, inner)
         occ = np.maximum(occ, (self.lake_q < 1.04).astype(np.float32))
-        np.save(os.path.join(C.CACHE_DIR, "occupied.npy"), occ.astype(np.float32))
-        np.save(os.path.join(C.CACHE_DIR, "d_in.npy"), self.d_in.astype(np.float32))
-        with open(os.path.join(C.CACHE_DIR, "terrain_info.json"), "w", encoding="utf-8", newline="\n") as fp:
-            json.dump(dict(info=self.info, paths=self.paths), fp)
+        save_npy(os.path.join(C.CACHE_DIR, "occupied.npy"), occ.astype(np.float32))
+        save_npy(os.path.join(C.CACHE_DIR, "d_in.npy"), self.d_in.astype(np.float32))
+        jsonio.write_json(os.path.join(C.CACHE_DIR, "terrain_info.json"), dict(info=self.info, paths=self.paths))
+        write_cache_stamp()
         log("  saved heightmap, splats, colour map, caches")
 
     def minimap(self, size=2048):
@@ -627,6 +626,7 @@ class Terrain:
         img = col * (0.55 + 0.6 * shade[..., None])
         # water
         X, Y, _ = grid(size)
+        lake_mask = None
         sea = h < 0.0
         depth = np.clip(-h / 45.0, 0, 1)
         sea_col = np.stack([lerp(0.35, 0.05, depth), lerp(0.75, 0.25, depth), lerp(0.85, 0.50, depth)], -1)
@@ -662,8 +662,7 @@ def load_cached():
     h = np.load(os.path.join(C.CACHE_DIR, "height.npy"))
     forest = np.load(os.path.join(C.CACHE_DIR, "forest.npy"))
     slope = np.load(os.path.join(C.CACHE_DIR, "slope.npy"))
-    with open(os.path.join(C.CACHE_DIR, "terrain_info.json"), encoding="utf-8") as fp:
-        meta = json.load(fp)
+    meta = jsonio.read_json(os.path.join(C.CACHE_DIR, "terrain_info.json"))
     return Field(h), Field(forest), Field(slope), meta
 
 

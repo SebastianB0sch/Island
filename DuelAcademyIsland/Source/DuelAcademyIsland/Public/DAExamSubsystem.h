@@ -186,10 +186,6 @@ struct FDAExamResult
 	UPROPERTY(BlueprintReadOnly, Category = "Exam")
 	int32 TotalPoints = 0;
 
-	/** Pass mark that decided bPassed (the cycle's, falling back to scoring.json). */
-	UPROPERTY(BlueprintReadOnly, Category = "Exam")
-	int32 PassMark = 300;
-
 	UPROPERTY(BlueprintReadOnly, Category = "Exam")
 	bool bPassed = false;
 
@@ -232,7 +228,7 @@ public:
 
 	bool Reload(FString& OutError);
 
-	/** Starts the written section for exam month 1-12 (1 = October, i.e. calendar MonthIndex + 1). */
+	/** Starts the written section for the given month (1-12). */
 	bool StartExam(int32 MonthIndex, int32 Seed, FString& OutError);
 
 	/** Reset/retry the written section of the current exam. */
@@ -306,7 +302,6 @@ public:
 	int32 GetPracticalOpponentLp() const { return PracticalOpponentLp; }
 	const FString& GetPracticalOpponent() const { return PracticalOpponent; }
 	const FString& GetPracticalDeck() const { return PracticalDeck; }
-	/** True when Weekday matches the calendar's data-driven exam weekday. */
 	bool IsExamDay(const FString& Weekday) const;
 	bool HasResult() const { return bResultValid; }
 	const FDAExamResult& GetResult() const { return Result; }

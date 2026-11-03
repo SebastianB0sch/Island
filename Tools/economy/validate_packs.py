@@ -18,14 +18,13 @@ Run from the repo root:
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
-from common.jsonio import read_json as load  # noqa: E402
-from common.paths import DATA_DIR as DATA  # noqa: E402
-
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "DuelAcademyIsland" / "Content" / "Data"
 SHOP_PACKS = DATA / "Shop" / "packs.json"
 CANON_PACKS = DATA / "Canon" / "packs.json"
 CARDS = DATA / "cards.json"
@@ -48,6 +47,11 @@ UNLOCK_TYPES = {
     "month_at_least",
     "flag",
 }
+
+
+def load(path: Path):
+    with path.open(encoding="utf-8") as handle:
+        return json.load(handle)
 
 
 def canonical_rarity(text) -> str | None:

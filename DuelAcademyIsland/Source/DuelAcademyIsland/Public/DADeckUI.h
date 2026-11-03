@@ -56,8 +56,6 @@ private:
 	void CreateNewDeck();
 	void CopyCurrentDeck();
 	void EraseCurrentDeck();
-	/** Erases EraseDeckId after the confirmation prompt (keyboard or click). */
-	void ConfirmErase();
 	void SetCurrentDeckActive();
 	void CycleFilter();
 	void CycleSort();
@@ -65,6 +63,7 @@ private:
 	void UpdateNameEditor();
 	void HandleClickAtMouse();
 	void HandleHit(const FDAUIHitTarget& Hit);
+	void SetStatus(const FString& Message, bool bError = false);
 
 	const FDAEDeck* GetCurrentDeck() const;
 	FString GetCurrentDeckId() const;
@@ -101,6 +100,7 @@ private:
 	int32 RecipeScroll = 0;
 	int32 FilterMode = 0;
 	int32 SortMode = 0;
+	int32 HoveredIndex = INDEX_NONE;
 	int32 PendingSwapCardId = 0;
 	bool bPendingSwapExtra = false;
 	bool bDeckExtraSelection = false;
@@ -115,5 +115,8 @@ private:
 	FString NameBuffer;
 	FString EditDeckId;
 	FString EraseDeckId;
+	FString StatusMessage;
+	float StatusTime = 0.f;
+	bool bStatusError = false;
 	float Elapsed = 0.f;
 };

@@ -17,7 +17,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DAUIScreen.h"
 
 class ADAHUD;
 class APlayerController;
@@ -165,8 +164,22 @@ struct FDAPDAViewModel
 	FString FooterNote;
 };
 
-/** Clickable region registered while drawing (alias kept for existing code). */
-using FDAPDAHitTarget = FDAUIHitTarget;
+/** Clickable region registered while drawing. */
+struct FDAPDAHitTarget
+{
+	FString Action;
+	FString Payload;
+	int32 Index = INDEX_NONE;
+	float X = 0.f;
+	float Y = 0.f;
+	float W = 0.f;
+	float H = 0.f;
+
+	bool Contains(const FVector2D& Point) const
+	{
+		return Point.X >= X && Point.X <= X + W && Point.Y >= Y && Point.Y <= Y + H;
+	}
+};
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FDAPDATabChangedSignature, EDAPDATab /*NewTab*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FDAPDAActionSignature, FName /*ActionId*/, const FString& /*Payload*/);
@@ -177,11 +190,11 @@ DECLARE_MULTICAST_DELEGATE(FDAPDAClosedSignature);
  * it after the world HUD. All input is polled (keyboard, gamepad and mouse),
  * matching the existing map/duel UI pattern.
  */
-class FDAPDAUI : public FDAUIScreen
+class FDAPDAUI
 {
 public:
 	explicit FDAPDAUI(ADAHUD* InOwner);
-	virtual ~FDAPDAUI() override;
+	~FDAPDAUI();
 
 	// ------------------------------------------------------------------ lifecycle
 	void Open(EDAPDATab Tab = EDAPDATab::Map);
@@ -199,7 +212,7 @@ public:
 
 	// ------------------------------------------------------------------ frame
 	void Update(float DeltaSeconds);
-	virtual void Draw(UCanvas* InCanvas) override;
+	void Draw(UCanvas* InCanvas);
 
 	// ------------------------------------------------------------------ data / integration
 	/** Calls ViewModelBuilder (when bound) and rebuilds the placeholder data. */
@@ -224,15 +237,28 @@ public:
 	void SetSelection(int32 InSelection);
 
 private:
-	// ---- helpers (canvas primitives, fonts, hit targets: FDAUIScreen) ----
+	// ---- helpers ----
+	UWorld* GetWorld() const;
+	UGameInstance* GetGameInstance() const;
+	UFont* GetFont(bool bLarge) const;
+
 	void BuildPlaceholderViewModel();
 	void NormalizeViewModel();
 
-	/** PDA-styled panel (thin top rule); intentionally hides FDAUIScreen::DrawPanel. */
+	void DrawRect(const FLinearColor& Color, float X, float Y, float W, float H);
+	void DrawText(const FString& Str, float X, float Y, const FLinearColor& Color, float InScale,
+		bool bCenter = false, UFont* Font = nullptr);
 	void DrawPanel(float X, float Y, float W, float H, const FLinearColor& Fill, const FLinearColor& Accent);
+	void Diamond(const FVector2D& C, float R, const FLinearColor& Color);
+	FVector2D Measure(const FString& Str, float InScale, UFont* Font = nullptr) const;
+	TArray<FString> WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+	FString Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+	void AddHit(const FString& Action, int32 Index, float X, float Y, float W, float H,
+		const FString& Payload = FString());
 	void HandleClickAtMouse();
 	void HandleHit(const FDAPDAHitTarget& Hit);
 	void ActivateRow(int32 Index);
+	void PlaySfx(const TCHAR* SoundName, float Volume = 1.f) const;
 
 	int32 RowCountForTab(EDAPDATab Tab) const;
 	void EnsureSelectionVisible(int32 VisibleRows);
@@ -252,14 +278,20 @@ private:
 	void DrawFooter();
 
 	// ---- runtime ----
+	TWeakObjectPtr<ADAHUD> OwnerHUD;
+	APlayerController* PlayerOwner = nullptr;
+	UCanvas* Canvas = nullptr;
+
 	EDAPDATab ActiveTab = EDAPDATab::Map;
 	int32 Selection = 0;
 	int32 ListScroll = 0;
 	int32 HoveredTab = INDEX_NONE;
 	int32 HoveredRow = INDEX_NONE;
 	int32 PendingLoadSelection = INDEX_NONE;
+	float UIScale = 1.f;
 	float Elapsed = 0.f;
 	bool bOpen = false;
 
 	FDAPDAViewModel ViewModel;
+	TArray<FDAPDAHitTarget> HitTargets;
 };

@@ -149,11 +149,6 @@ namespace
 
 void UDADeckLogic::Initialize(FSubsystemCollectionBase& Collection)
 {
-	// The card database (deck fallback), profile (deck provider) and save
-	// (payload provider) subsystems must exist before this one registers with them.
-	Collection.InitializeDependency<UCardDatabaseSubsystem>();
-	Collection.InitializeDependency<UDAProfileSubsystem>();
-	Collection.InitializeDependency<UDASaveSubsystem>();
 	Super::Initialize(Collection);
 
 	FString Error;
@@ -166,10 +161,9 @@ void UDADeckLogic::Initialize(FSubsystemCollectionBase& Collection)
 		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("DeckLogic: %s (falling back to decks.json)"), *Error);
 		if (!LoadDefaultDeckFallback(Error))
 		{
-			// Keep going: the save/profile providers must still be registered
-			// so a saved deck section can be restored.
 			LoadError = Error;
 			UE_LOG(LogDuelAcademyIsland, Error, TEXT("DeckLogic: %s"), *LoadError);
+			return;
 		}
 	}
 
@@ -188,18 +182,6 @@ void UDADeckLogic::Initialize(FSubsystemCollectionBase& Collection)
 	}
 
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("DeckLogic: loaded %d player decks (active '%s')."), PlayerDecks.Num(), *ActiveDeckId);
-}
-
-const UCardDatabaseSubsystem* UDADeckLogic::GetDatabase() const
-{
-	UGameInstance* GI = GetGameInstance();
-	return GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
-}
-
-const UDAInventorySubsystem* UDADeckLogic::GetInventory() const
-{
-	UGameInstance* GI = GetGameInstance();
-	return GI ? GI->GetSubsystem<UDAInventorySubsystem>() : nullptr;
 }
 
 TArray<FString> UDADeckLogic::GetDeckIds() const
@@ -259,10 +241,14 @@ void UDADeckLogic::SetActiveDeckId(const FString& DeckId)
 	OnDecksChanged.Broadcast(ActiveDeckId);
 }
 
-void UDADeckLogic::WriteStateFields(FJsonObject& Out) const
+bool UDADeckLogic::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const
 {
-	Out.SetNumberField(TEXT("version"), 1);
-	Out.SetStringField(TEXT("active_deck_id"), ActiveDeckId);
+	if (!OutSection.IsValid())
+	{
+		OutSection = MakeShared<FJsonObject>();
+	}
+	OutSection->SetNumberField(TEXT("version"), DeckSaveSectionVersion);
+	OutSection->SetStringField(TEXT("active_deck_id"), ActiveDeckId);
 
 	TArray<TSharedPtr<FJsonValue>> Decks;
 	for (const FDAEDeck& Deck : PlayerDecks)
@@ -276,16 +262,7 @@ void UDADeckLogic::WriteStateFields(FJsonObject& Out) const
 		Entry->SetBoolField(TEXT("bPlayerDeck"), Deck.bPlayerDeck);
 		Decks.Add(MakeShared<FJsonValueObject>(Entry));
 	}
-	Out.SetArrayField(TEXT("decks"), Decks);
-}
-
-bool UDADeckLogic::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const
-{
-	if (!OutSection.IsValid())
-	{
-		OutSection = MakeShared<FJsonObject>();
-	}
-	WriteStateFields(*OutSection);
+	OutSection->SetArrayField(TEXT("decks"), Decks);
 	return true;
 }
 
@@ -555,7 +532,8 @@ bool UDADeckLogic::LoadPlayerDeckFile(FString& OutError)
 
 bool UDADeckLogic::LoadDefaultDeckFallback(FString& OutError)
 {
-	const UCardDatabaseSubsystem* Database = GetDatabase();
+	UGameInstance* GI = GetGameInstance();
+	UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
 	if (!Database || Database->GetDecks().Num() == 0)
 	{
 		OutError = TEXT("No player decks and no starter decks in decks.json.");
@@ -678,6 +656,14 @@ bool UDADeckLogic::ValidateDeckName(const FString& Name, FString& OutError) cons
 	return true;
 }
 
+bool UDADeckLogic::CardBelongsInExtra(int32 CardId) const
+{
+	UGameInstance* GI = GetGameInstance();
+	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
+	const FCardRecord* Card = Database ? Database->FindCard(CardId) : nullptr;
+	return Card && Card->CardType.Contains(TEXT("Fusion"));
+}
+
 bool UDADeckLogic::ValidateDeckAgainstRules(
 	const FDAEDeck& Deck,
 	const FDAEDeckRules& InRules,
@@ -787,15 +773,17 @@ bool UDADeckLogic::ValidateDeckAgainstRules(
 
 bool UDADeckLogic::ValidateDeck(const FDAEDeck& Deck, TArray<FDAEDeckError>& OutErrors) const
 {
-	const UCardDatabaseSubsystem* Database = GetDatabase();
-	const UDAInventorySubsystem* Inventory = GetInventory();
+	UGameInstance* GI = GetGameInstance();
+	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
+	const UDAInventorySubsystem* Inventory = GI ? GI->GetSubsystem<UDAInventorySubsystem>() : nullptr;
 	ValidateDeckAgainstRules(Deck, Rules, Database, Inventory, true, OutErrors);
 	return OutErrors.Num() == 0;
 }
 
 bool UDADeckLogic::ValidateDeckWithoutOwnership(const FDAEDeck& Deck, TArray<FDAEDeckError>& OutErrors) const
 {
-	const UCardDatabaseSubsystem* Database = GetDatabase();
+	UGameInstance* GI = GetGameInstance();
+	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
 	ValidateDeckAgainstRules(Deck, Rules, Database, nullptr, false, OutErrors);
 	return OutErrors.Num() == 0;
 }
@@ -822,8 +810,9 @@ FString UDADeckLogic::GetDeckValidationMessage(const FDAEDeck& Deck) const
 
 bool UDADeckLogic::CanUseCard(const FDAEDeck& Deck, int32 CardId, bool bExtra, FString& OutError) const
 {
-	const UCardDatabaseSubsystem* Database = GetDatabase();
-	const UDAInventorySubsystem* Inventory = GetInventory();
+	UGameInstance* GI = GetGameInstance();
+	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
+	const UDAInventorySubsystem* Inventory = GI ? GI->GetSubsystem<UDAInventorySubsystem>() : nullptr;
 	const FCardRecord* Card = Database ? Database->FindCard(CardId) : nullptr;
 	if (!Card)
 	{
@@ -862,10 +851,9 @@ bool UDADeckLogic::CanUseCard(const FDAEDeck& Deck, int32 CardId, bool bExtra, F
 	}
 	if (CurrentCopies >= Limit)
 	{
-		// Unlisted cards have Limit == MaxCopies, so one message covers every case.
-		OutError = Limit <= 0
-			? FString(TEXT("This card is forbidden and cannot be used in your Deck."))
-			: CopyLimitMessage(Limit);
+		OutError = (Rules.Limited.Contains(CardId) || Rules.SemiLimited.Contains(CardId))
+			? CopyLimitMessage(Limit)
+			: CopyLimitMessage(Rules.MaxCopies);
 		return false;
 	}
 
@@ -1085,13 +1073,15 @@ bool UDADeckLogic::SetActiveDeck(const FString& DeckId, FString& OutError)
 
 TArray<FStarterDeckDef> UDADeckLogic::GetStarterDecks() const
 {
-	const UCardDatabaseSubsystem* Database = GetDatabase();
+	UGameInstance* GI = GetGameInstance();
+	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
 	return Database ? Database->GetDecks() : TArray<FStarterDeckDef>();
 }
 
 TArray<int32> UDADeckLogic::GetStarterDeckCards(const FString& StarterId) const
 {
-	const UCardDatabaseSubsystem* Database = GetDatabase();
+	UGameInstance* GI = GetGameInstance();
+	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
 	const FStarterDeckDef* Deck = Database ? Database->FindDeck(StarterId) : nullptr;
 	if (!Deck)
 	{
@@ -1110,7 +1100,8 @@ bool UDADeckLogic::ImportStarterDeck(const FString& StarterId, const FString& Ne
 		OutError = TEXT("You cannot create any more Decks.");
 		return false;
 	}
-	const UCardDatabaseSubsystem* Database = GetDatabase();
+	UGameInstance* GI = GetGameInstance();
+	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
 	const FStarterDeckDef* Starter = Database ? Database->FindDeck(StarterId) : nullptr;
 	if (!Starter)
 	{
@@ -1187,8 +1178,9 @@ bool UDADeckLogic::EnsureStarterDeck(const FString& StarterId, const FString& Ne
 
 TArray<FFusionRecipeDef> UDADeckLogic::GetAvailableFusionRecipes() const
 {
-	const UCardDatabaseSubsystem* Database = GetDatabase();
-	const UDAInventorySubsystem* Inventory = GetInventory();
+	UGameInstance* GI = GetGameInstance();
+	const UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
+	const UDAInventorySubsystem* Inventory = GI ? GI->GetSubsystem<UDAInventorySubsystem>() : nullptr;
 	if (!Database || !Inventory)
 	{
 		return TArray<FFusionRecipeDef>();
@@ -1257,7 +1249,8 @@ TArray<FFusionRecipeDef> UDADeckLogic::GetAvailableFusionRecipes() const
 
 TArray<int32> UDADeckLogic::SortCardIds(const TArray<int32>& CardIds, EDAECardSortKey SortKey, bool bDescending) const
 {
-	const UDAInventorySubsystem* Inventory = GetInventory();
+	UGameInstance* GI = GetGameInstance();
+	const UDAInventorySubsystem* Inventory = GI ? GI->GetSubsystem<UDAInventorySubsystem>() : nullptr;
 	if (Inventory)
 	{
 		return Inventory->SortCards(CardIds, SortKey, bDescending);
@@ -1269,8 +1262,9 @@ TArray<int32> UDADeckLogic::SortCardIds(const TArray<int32>& CardIds, EDAECardSo
 
 TArray<int32> UDADeckLogic::FilterCardIds(const TArray<int32>& CardIds, const FDAECardFilter& Filter) const
 {
-	const UCardDatabaseSubsystem* Database = GetDatabase();
-	const UDAInventorySubsystem* Inventory = GetInventory();
+	UGameInstance* GI = GetGameInstance();
+	UCardDatabaseSubsystem* Database = GI ? GI->GetSubsystem<UCardDatabaseSubsystem>() : nullptr;
+	UDAInventorySubsystem* Inventory = GI ? GI->GetSubsystem<UDAInventorySubsystem>() : nullptr;
 	if (!Database)
 	{
 		return TArray<int32>();
@@ -1350,7 +1344,8 @@ TArray<int32> UDADeckLogic::FilterCardIds(const TArray<int32>& CardIds, const FD
 
 TArray<int32> UDADeckLogic::GetCollectionView(const FDAECardFilter& Filter, EDAECardSortKey SortKey, bool bDescending) const
 {
-	const UDAInventorySubsystem* Inventory = GetInventory();
+	UGameInstance* GI = GetGameInstance();
+	UDAInventorySubsystem* Inventory = GI ? GI->GetSubsystem<UDAInventorySubsystem>() : nullptr;
 	if (!Inventory)
 	{
 		return TArray<int32>();
@@ -1425,7 +1420,22 @@ bool UDADeckLogic::ApplySaveData(const FDAEDeckSaveData& Data, FString& OutError
 FString UDADeckLogic::ExportStateJson() const
 {
 	const TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
-	WriteStateFields(*Root);
+	Root->SetNumberField(TEXT("version"), 1);
+	Root->SetStringField(TEXT("active_deck_id"), ActiveDeckId);
+
+	TArray<TSharedPtr<FJsonValue>> Decks;
+	for (const FDAEDeck& Deck : PlayerDecks)
+	{
+		const TSharedPtr<FJsonObject> Entry = MakeShared<FJsonObject>();
+		Entry->SetStringField(TEXT("id"), Deck.Id);
+		Entry->SetStringField(TEXT("name"), Deck.Name);
+		Entry->SetArrayField(TEXT("main"), DAEconomyJson::IntArrayToJson(Deck.Main));
+		Entry->SetArrayField(TEXT("extra"), DAEconomyJson::IntArrayToJson(Deck.Extra));
+		Entry->SetBoolField(TEXT("bStarter"), Deck.bStarter);
+		Entry->SetBoolField(TEXT("bPlayerDeck"), Deck.bPlayerDeck);
+		Decks.Add(MakeShared<FJsonValueObject>(Entry));
+	}
+	Root->SetArrayField(TEXT("decks"), Decks);
 	return DAEconomyJson::WriteObject(Root);
 }
 

@@ -20,11 +20,11 @@
     "pending": 493,
     "unsupported": 0,
     "pending_by_priority": {
-      "story_event_decks": 124,
+      "story_event_decks": 119,
       "opponent_decks": 13,
       "puzzle_decks": 0,
       "starter_decks": 0,
-      "shop_packs": 356,
+      "shop_packs": 361,
       "story_rewards": 0,
       "long_tail": 0
     },
@@ -110,14 +110,14 @@
     },
     "categories": {
       "story_event_decks": {
-        "cards": 378,
-        "pending": 124,
-        "covered": 254
+        "cards": 368,
+        "pending": 119,
+        "covered": 249
       },
       "opponent_decks": {
-        "cards": 434,
-        "pending": 137,
-        "covered": 297
+        "cards": 425,
+        "pending": 132,
+        "covered": 293
       },
       "puzzle_decks": {
         "cards": 42,
@@ -148,9 +148,9 @@
   },
   "categories": {
     "story_event_decks": {
-      "cards": 378,
-      "pending": 124,
-      "covered": 254,
+      "cards": 368,
+      "pending": 119,
+      "covered": 249,
       "pending_ids": [
         17,
         52,
@@ -158,7 +158,6 @@
         153,
         229,
         244,
-        282,
         330,
         331,
         336,
@@ -178,7 +177,6 @@
         499,
         500,
         503,
-        505,
         526,
         546,
         553,
@@ -192,8 +190,6 @@
         614,
         625,
         649,
-        661,
-        662,
         669,
         672,
         673,
@@ -233,7 +229,6 @@
         945,
         948,
         949,
-        951,
         953,
         958,
         974,
@@ -355,6 +350,11 @@
               "event_id": "E15",
               "title": "Chazz Reborn",
               "opponent": "Chazz Princeton"
+            },
+            {
+              "event_id": "E28",
+              "title": "Battle for the Chocolate!",
+              "opponent": "Chazz Princeton"
             }
           ],
           "opponent": "chazz",
@@ -417,11 +417,6 @@
             {
               "event_id": "E25",
               "title": "The Power of a Maiden's Love",
-              "opponent": "Blair Flannigan"
-            },
-            {
-              "event_id": "E28",
-              "title": "Battle for the Chocolate!",
               "opponent": "Blair Flannigan"
             }
           ],
@@ -501,11 +496,6 @@
               "event_id": "E12",
               "title": "Pride of the Elite",
               "opponent": "Topher"
-            },
-            {
-              "event_id": "E17",
-              "title": "The Goblin King",
-              "opponent": "Goblin King"
             }
           ],
           "opponent": "topher",
@@ -683,34 +673,14 @@
               "event_id": "E17",
               "title": "The Goblin King",
               "opponent": "Brier"
+            },
+            {
+              "event_id": "E17",
+              "title": "The Goblin King",
+              "opponent": "Brier"
             }
           ],
           "opponent": "brier",
-          "category": null,
-          "level": null
-        },
-        {
-          "id": "sheppard_year1",
-          "name": "Chancellor Sheppard - Year 1",
-          "cards": 29,
-          "pending": 6,
-          "pending_ids": [
-            282,
-            503,
-            505,
-            661,
-            662,
-            951
-          ],
-          "source": "Opponents/decks/sheppard_year1.json",
-          "events": [
-            {
-              "event_id": "E33",
-              "title": "The Duel King",
-              "opponent": "Chancellor Sheppard"
-            }
-          ],
-          "opponent": "sheppard",
           "category": null,
           "level": null
         },
@@ -926,9 +896,9 @@
       ]
     },
     "opponent_decks": {
-      "cards": 434,
-      "pending": 137,
-      "covered": 297,
+      "cards": 425,
+      "pending": 132,
+      "covered": 293,
       "pending_ids": [
         9,
         17,
@@ -939,7 +909,6 @@
         229,
         244,
         245,
-        282,
         298,
         299,
         300,
@@ -963,7 +932,6 @@
         499,
         500,
         503,
-        505,
         526,
         546,
         553,
@@ -977,8 +945,6 @@
         614,
         625,
         649,
-        661,
-        662,
         669,
         672,
         673,
@@ -1021,7 +987,6 @@
         945,
         948,
         949,
-        951,
         953,
         958,
         974,
@@ -1175,6 +1140,11 @@
               "event_id": "E15",
               "title": "Chazz Reborn",
               "opponent": "Chazz Princeton"
+            },
+            {
+              "event_id": "E28",
+              "title": "Battle for the Chocolate!",
+              "opponent": "Chazz Princeton"
             }
           ],
           "opponent": "chazz",
@@ -1264,11 +1234,6 @@
             {
               "event_id": "E25",
               "title": "The Power of a Maiden's Love",
-              "opponent": "Blair Flannigan"
-            },
-            {
-              "event_id": "E28",
-              "title": "Battle for the Chocolate!",
               "opponent": "Blair Flannigan"
             }
           ],
@@ -1396,11 +1361,6 @@
               "event_id": "E12",
               "title": "Pride of the Elite",
               "opponent": "Topher"
-            },
-            {
-              "event_id": "E17",
-              "title": "The Goblin King",
-              "opponent": "Goblin King"
             }
           ],
           "opponent": "topher",
@@ -1663,34 +1623,14 @@
               "event_id": "E17",
               "title": "The Goblin King",
               "opponent": "Brier"
+            },
+            {
+              "event_id": "E17",
+              "title": "The Goblin King",
+              "opponent": "Brier"
             }
           ],
           "opponent": "brier",
-          "category": null,
-          "level": null
-        },
-        {
-          "id": "sheppard_year1",
-          "name": "Chancellor Sheppard - Year 1",
-          "cards": 29,
-          "pending": 6,
-          "pending_ids": [
-            282,
-            503,
-            505,
-            661,
-            662,
-            951
-          ],
-          "source": "Opponents/decks/sheppard_year1.json",
-          "events": [
-            {
-              "event_id": "E33",
-              "title": "The Duel King",
-              "opponent": "Chancellor Sheppard"
-            }
-          ],
-          "opponent": "sheppard",
           "category": null,
           "level": null
         },
@@ -6316,33 +6256,11 @@
       "labels": [
         "deck:blair_toon",
         "event:E25",
-        "event:E28",
         "pack:basic_1c",
         "pack:dorothys_gift",
         "pack:invitation_to_the_dark",
         "pack:power_destructions",
         "pack:spellcasters_dance"
-      ]
-    },
-    {
-      "id": 282,
-      "name": "Megamorph",
-      "type": "Spell",
-      "tier": 2,
-      "priority": "story_event_decks",
-      "pending_reason_code": "runtime_equip_stat",
-      "pending_reason": "runtime_equip_stat: equip stat bonuses are not applied by the runtime (only a hardcoded engine list works)",
-      "categories": [
-        "story_event_decks",
-        "opponent_decks",
-        "shop_packs"
-      ],
-      "labels": [
-        "deck:sheppard_year1",
-        "event:E33",
-        "pack:be_quick",
-        "pack:dorothys_gift",
-        "pack:equipments"
       ]
     },
     {
@@ -6361,7 +6279,6 @@
       "labels": [
         "deck:blair_toon",
         "event:E25",
-        "event:E28",
         "pack:dorothys_gift",
         "pack:effect_monsters_special",
         "pack:residents_of_the_sea"
@@ -6406,7 +6323,6 @@
       "labels": [
         "deck:topher_goblin",
         "event:E12",
-        "event:E17",
         "pack:dorothys_gift",
         "pack:effect_monsters",
         "pack:invitation_to_the_dark",
@@ -6435,6 +6351,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:beasts_in_fight",
         "pack:dorothys_gift",
         "pack:power_destructions",
@@ -6524,7 +6441,6 @@
       "labels": [
         "deck:blair_toon",
         "event:E25",
-        "event:E28",
         "pack:dorothys_gift",
         "pack:effect_monsters_special"
       ]
@@ -6572,7 +6488,6 @@
         "event:E20",
         "event:E23",
         "event:E25",
-        "event:E28",
         "pack:dorothys_gift",
         "pack:trap_collection_1"
       ]
@@ -6636,7 +6551,6 @@
       "labels": [
         "deck:blair_toon",
         "event:E25",
-        "event:E28",
         "pack:basic_1c",
         "pack:dorothys_gift",
         "pack:spellcasters_dance"
@@ -6686,7 +6600,6 @@
         "deck:mimicry_stall",
         "deck:topher_goblin",
         "event:E12",
-        "event:E17",
         "event:E19",
         "event:E28",
         "pack:basic_2a",
@@ -6737,7 +6650,6 @@
         "deck:mimicry_stall",
         "deck:topher_goblin",
         "event:E12",
-        "event:E17",
         "event:E19",
         "event:E28",
         "pack:dorothys_gift",
@@ -6785,37 +6697,15 @@
         "deck:bastion_chem",
         "deck:bastion_chem_plus",
         "deck:dimitri_copycat",
-        "deck:sheppard_year1",
         "deck:zane_cyber",
         "deck:zane_cyber_end",
         "event:E04b",
         "event:E05",
         "event:E23",
         "event:E26",
-        "event:E33",
         "pack:dorothys_gift",
         "pack:trap_special_1",
         "reward:E31"
-      ]
-    },
-    {
-      "id": 505,
-      "name": "Sebek's Blessing",
-      "type": "Spell",
-      "tier": 2,
-      "priority": "story_event_decks",
-      "pending_reason_code": "multi_clause",
-      "pending_reason": "multi_clause: multiple clauses remain; at least one clause is outside the current runtime",
-      "categories": [
-        "story_event_decks",
-        "opponent_decks",
-        "shop_packs"
-      ],
-      "labels": [
-        "deck:sheppard_year1",
-        "event:E33",
-        "pack:dorothys_gift",
-        "pack:spell_special_1"
       ]
     },
     {
@@ -6932,7 +6822,6 @@
       "labels": [
         "deck:blair_toon",
         "event:E25",
-        "event:E28",
         "pack:dorothys_gift",
         "pack:trap_special_2"
       ]
@@ -6975,7 +6864,6 @@
         "deck:mimicry_stall",
         "deck:topher_goblin",
         "event:E12",
-        "event:E17",
         "pack:basic_2b",
         "pack:dorothys_gift",
         "pack:pyrogen"
@@ -7022,7 +6910,6 @@
         "deck:mimicry_stall",
         "deck:topher_goblin",
         "event:E12",
-        "event:E17",
         "event:E19",
         "event:E28",
         "pack:basic_2b",
@@ -7119,50 +7006,6 @@
         "event:E28",
         "pack:dorothys_gift",
         "pack:the_warriors"
-      ]
-    },
-    {
-      "id": 661,
-      "name": "Dragon's Rage",
-      "type": "Trap",
-      "tier": 2,
-      "priority": "story_event_decks",
-      "pending_reason_code": "runtime_piercing",
-      "pending_reason": "runtime_piercing: piercing battle damage is not an operation",
-      "categories": [
-        "story_event_decks",
-        "opponent_decks",
-        "shop_packs"
-      ],
-      "labels": [
-        "deck:sheppard_year1",
-        "event:E33",
-        "pack:basic_2c",
-        "pack:continuous_effects",
-        "pack:dorothys_gift",
-        "pack:dragons_in_flight"
-      ]
-    },
-    {
-      "id": 662,
-      "name": "Burst Breath",
-      "type": "Trap",
-      "tier": 2,
-      "priority": "story_event_decks",
-      "pending_reason_code": "runtime_unimplemented_effect",
-      "pending_reason": "runtime_unimplemented_effect: the effect needs a trigger/operation combination that is not implemented",
-      "categories": [
-        "story_event_decks",
-        "opponent_decks",
-        "shop_packs"
-      ],
-      "labels": [
-        "deck:sheppard_year1",
-        "event:E33",
-        "pack:basic_2c",
-        "pack:dorothys_gift",
-        "pack:dragons_in_flight",
-        "pack:trap_special_1"
       ]
     },
     {
@@ -7346,7 +7189,6 @@
       "labels": [
         "deck:blair_toon",
         "event:E25",
-        "event:E28",
         "pack:dorothys_gift",
         "pack:effect_monsters_special",
         "pack:spellcasters_dance"
@@ -7368,7 +7210,6 @@
       "labels": [
         "deck:blair_toon",
         "event:E25",
-        "event:E28",
         "pack:dorothys_gift",
         "pack:effect_monsters_special",
         "pack:spellcasters_dance"
@@ -7390,7 +7231,6 @@
       "labels": [
         "deck:topher_goblin",
         "event:E12",
-        "event:E17",
         "pack:dorothys_gift",
         "pack:effect_monsters_special",
         "pack:the_warriors"
@@ -7462,6 +7302,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:dorothys_gift",
         "pack:effect_monsters_special",
         "pack:expert_1"
@@ -7488,6 +7329,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:dorothys_gift",
         "pack:effect_monsters_special",
         "pack:expert_1"
@@ -7675,6 +7517,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:basic_3b",
         "pack:dorothys_gift",
         "pack:expert_2",
@@ -7727,6 +7570,7 @@
         "event:E15",
         "event:E16",
         "event:E17",
+        "event:E28",
         "pack:basic_3b",
         "pack:dorothys_gift",
         "pack:expert_2",
@@ -7801,6 +7645,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:basic_3b",
         "pack:dorothys_gift",
         "pack:expert_2",
@@ -7875,7 +7720,6 @@
         "deck:topher_goblin",
         "event:E02",
         "event:E12",
-        "event:E17",
         "event:E19",
         "event:E28",
         "pack:basic_3c",
@@ -7925,7 +7769,6 @@
       "labels": [
         "deck:blair_toon",
         "event:E25",
-        "event:E28",
         "pack:basic_3c",
         "pack:dorothys_gift",
         "pack:expert_4",
@@ -8044,6 +7887,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:beasts_in_fight",
         "pack:dorothys_gift",
         "pack:expert_4"
@@ -8069,7 +7913,6 @@
         "deck:blair_toon",
         "event:E25",
         "event:E26",
-        "event:E28",
         "pack:basic_3c",
         "pack:dorothys_gift",
         "pack:spellcasters_dance",
@@ -8097,29 +7940,6 @@
         "pack:dorothys_gift",
         "pack:expert_4",
         "pack:fairy_dance"
-      ]
-    },
-    {
-      "id": 951,
-      "name": "Burst Stream of Destruction",
-      "type": "Spell",
-      "tier": 2,
-      "priority": "story_event_decks",
-      "pending_reason_code": "runtime_attack_lock",
-      "pending_reason": "runtime_attack_lock: attack-declaration locks are not implemented",
-      "categories": [
-        "story_event_decks",
-        "opponent_decks",
-        "shop_packs"
-      ],
-      "labels": [
-        "deck:sheppard_year1",
-        "event:E33",
-        "pack:basic_3c",
-        "pack:dorothys_gift",
-        "pack:dragons_in_flight",
-        "pack:expert_4",
-        "pack:spell_special_1"
       ]
     },
     {
@@ -8294,6 +8114,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:beasts_in_fight",
         "pack:dorothys_gift"
       ]
@@ -8318,6 +8139,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:beasts_in_fight",
         "pack:dorothys_gift",
         "reward:E21"
@@ -8342,6 +8164,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:beasts_in_fight",
         "pack:dorothys_gift"
       ]
@@ -8412,6 +8235,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "event:E29",
         "pack:basic_4a",
         "pack:dorothys_gift"
@@ -8759,7 +8583,6 @@
       "labels": [
         "deck:topher_goblin",
         "event:E12",
-        "event:E17",
         "pack:dorothys_gift",
         "pack:trap_collection_2"
       ]
@@ -8783,6 +8606,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:dorothys_gift",
         "pack:invitation_to_the_dark"
       ]
@@ -8830,6 +8654,7 @@
         "event:E12",
         "event:E13",
         "event:E15",
+        "event:E28",
         "pack:dorothys_gift",
         "pack:the_machines"
       ]
@@ -9071,7 +8896,6 @@
       "labels": [
         "deck:blair_toon",
         "event:E25",
-        "event:E28",
         "pack:basic_4c",
         "pack:dorothys_gift",
         "pack:invitation_to_the_dark",
@@ -9751,6 +9575,23 @@
         "pack:basic_2a",
         "pack:dorothys_gift",
         "pack:spell_collection_1"
+      ]
+    },
+    {
+      "id": 282,
+      "name": "Megamorph",
+      "type": "Spell",
+      "tier": 2,
+      "priority": "shop_packs",
+      "pending_reason_code": "runtime_equip_stat",
+      "pending_reason": "runtime_equip_stat: equip stat bonuses are not applied by the runtime (only a hardcoded engine list works)",
+      "categories": [
+        "shop_packs"
+      ],
+      "labels": [
+        "pack:be_quick",
+        "pack:dorothys_gift",
+        "pack:equipments"
       ]
     },
     {
@@ -10748,6 +10589,22 @@
       ]
     },
     {
+      "id": 505,
+      "name": "Sebek's Blessing",
+      "type": "Spell",
+      "tier": 2,
+      "priority": "shop_packs",
+      "pending_reason_code": "multi_clause",
+      "pending_reason": "multi_clause: multiple clauses remain; at least one clause is outside the current runtime",
+      "categories": [
+        "shop_packs"
+      ],
+      "labels": [
+        "pack:dorothys_gift",
+        "pack:spell_special_1"
+      ]
+    },
+    {
       "id": 506,
       "name": "Luminous Soldier",
       "type": "Effect Monster",
@@ -11627,6 +11484,42 @@
       "labels": [
         "pack:dorothys_gift",
         "pack:dragons_in_flight"
+      ]
+    },
+    {
+      "id": 661,
+      "name": "Dragon's Rage",
+      "type": "Trap",
+      "tier": 2,
+      "priority": "shop_packs",
+      "pending_reason_code": "runtime_piercing",
+      "pending_reason": "runtime_piercing: piercing battle damage is not an operation",
+      "categories": [
+        "shop_packs"
+      ],
+      "labels": [
+        "pack:basic_2c",
+        "pack:continuous_effects",
+        "pack:dorothys_gift",
+        "pack:dragons_in_flight"
+      ]
+    },
+    {
+      "id": 662,
+      "name": "Burst Breath",
+      "type": "Trap",
+      "tier": 2,
+      "priority": "shop_packs",
+      "pending_reason_code": "runtime_unimplemented_effect",
+      "pending_reason": "runtime_unimplemented_effect: the effect needs a trigger/operation combination that is not implemented",
+      "categories": [
+        "shop_packs"
+      ],
+      "labels": [
+        "pack:basic_2c",
+        "pack:dorothys_gift",
+        "pack:dragons_in_flight",
+        "pack:trap_special_1"
       ]
     },
     {
@@ -13824,6 +13717,25 @@
         "pack:dorothys_gift",
         "pack:expert_4",
         "pack:spell_special_2"
+      ]
+    },
+    {
+      "id": 951,
+      "name": "Burst Stream of Destruction",
+      "type": "Spell",
+      "tier": 2,
+      "priority": "shop_packs",
+      "pending_reason_code": "runtime_attack_lock",
+      "pending_reason": "runtime_attack_lock: attack-declaration locks are not implemented",
+      "categories": [
+        "shop_packs"
+      ],
+      "labels": [
+        "pack:basic_3c",
+        "pack:dorothys_gift",
+        "pack:dragons_in_flight",
+        "pack:expert_4",
+        "pack:spell_special_1"
       ]
     },
     {

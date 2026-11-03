@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 from canon_common import (
-    CANON_DIR, CACHE_DIR, DEFAULT_GUIDE_SOURCE, ensure_dirs, read_json, utc_now, write_json,
+    CANON_DIR, CACHE_DIR, REPO_ROOT, ensure_dirs, read_json, utc_now, write_json,
 )
 
 STARTER_PAGE = "Yu-Gi-Oh! GX Duel Academy/Starter Decks"
@@ -212,7 +212,7 @@ def curated_deck(did: str, source: dict, deck_type: str) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path,
-                        default=DEFAULT_GUIDE_SOURCE,
+                        default=CACHE_DIR / "guide_wikitext.json",
                         help="optional wikitext cache; only needed when decks_facts.json is absent")
     args = parser.parse_args()
     ensure_dirs()

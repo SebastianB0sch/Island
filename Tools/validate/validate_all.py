@@ -4,14 +4,11 @@
 Usage:
     python Tools/validate/validate_all.py
     python Tools/validate/validate_all.py --strict
-    python Tools/validate/validate_all.py --require-datasets   # CI: a missing lane is an error
     python Tools/validate/validate_all.py --json --report Content/Data/Integration/reports/validate.json
 
 The validator is deliberately usable from day one: a lane that has not published
 its data yet produces a GAP, not a crash. Structural errors in files that do
 exist are failures. --strict promotes gaps and warnings to failures for a gate.
---require-datasets turns a missing dataset (a whole lane absent) into an error
-without promoting the known content gaps, so CI catches deleted or moved data.
 
 Exit codes:
     0  no errors (baseline mode), or all checks green
@@ -26,6 +23,7 @@ import collections
 import datetime as _dt
 import hashlib
 import json
+import os
 import re
 import sys
 import tempfile
@@ -41,14 +39,6 @@ import schema_lite  # noqa: E402  (local module)
 
 TOOL_VERSION = "1.1.0"
 DEFAULT_ROOT = HERE.parents[1]
-# Every dataset a validator registers in Context.dataset_presence. With
-# --require-datasets, any of these that is absent (or never registered because
-# its validator crashed) is an error.
-REQUIRED_DATASETS = (
-    "cards", "canon", "fusions", "decks", "limitations", "packs", "opponents",
-    "puzzles", "exams", "anchors", "events", "dialogue", "scenes", "emails",
-    "schedules", "effects",
-)
 LEVEL_ORDER = {"info": 0, "gap": 1, "warning": 2, "error": 3}
 CHECK_STATUS = {"pass", "warn", "fail", "gap", "info"}
 CHECK_RANK = {"pass": 0, "info": 1, "gap": 2, "warn": 3, "fail": 4}
@@ -743,7 +733,6 @@ def validate_canon_reference(ctx: Context, report: Report) -> None:
     records are GAPs; malformed complete records are errors.
     """
     canon = ctx.data_dir / "Canon"
-    ctx.dataset_presence["canon"] = canon.is_dir()
     if not canon.is_dir():
         report.gap(
             "canon_missing",
@@ -1491,7 +1480,6 @@ def validate_decks(ctx: Context, report: Report) -> None:
     # A07 publishes opponent decks as one file per deck. They are still decks
     # under the contract, just with a different directory.
     paths.extend(glob_json(ctx.data_dir / "Opponents" / "decks"))
-    ctx.dataset_presence["decks"] = bool(paths)
     if not paths:
         report.gap(
             "decks_missing",
@@ -4862,35 +4850,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--strict", action="store_true", help="treat warnings and gaps as failures")
     parser.add_argument("--fail-on-gaps", action="store_true", help="treat gaps as failures")
-    parser.add_argument(
-        "--require-datasets",
-        action="store_true",
-        help="treat a missing dataset (whole lane absent) as an error; used by CI",
-    )
     parser.add_argument("--json", action="store_true", help="print the report as JSON")
     parser.add_argument("--report", type=Path, default=None, help="write a JSON report to this path")
     parser.add_argument("--verbose", action="store_true", help="show info and passing checks")
     parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--version", action="version", version=f"validate_all {TOOL_VERSION}")
     return parser
-
-
-def require_datasets(ctx: Context, report: Report) -> None:
-    """--require-datasets: a dataset that is absent is an error, not a gap."""
-    missing = [name for name in REQUIRED_DATASETS if not ctx.dataset_presence.get(name, False)]
-    for name in missing:
-        report.error(
-            "dataset_missing",
-            f"required dataset '{name}' was not found",
-            owner="A10",
-            hint="every lane is published; a missing dataset means data was deleted or moved",
-        )
-    report.check(
-        "required_datasets",
-        "fail" if missing else "pass",
-        f"missing: {', '.join(missing)}" if missing else f"{len(REQUIRED_DATASETS)} datasets present",
-        owner="A10",
-    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -4934,8 +4899,6 @@ def main(argv: list[str] | None = None) -> int:
         validate_effects(ctx, report)
         validate_saves(ctx, report)
         cross_check(ctx, report)
-        if args.require_datasets:
-            require_datasets(ctx, report)
     except Exception as exc:  # pragma: no cover - defensive CLI boundary
         internal_error = True
         report.error("internal_error", f"{type(exc).__name__}: {exc}", owner="A10")

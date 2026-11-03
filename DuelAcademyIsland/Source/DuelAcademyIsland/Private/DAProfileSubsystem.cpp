@@ -3,7 +3,6 @@
 #include "DAProfileSubsystem.h"
 
 #include "DACalendarSubsystem.h"
-#include "DAJson.h"
 #include "DATitleSystem.h"
 #include "DASaveGame.h"
 #include "DuelAcademyIsland.h"
@@ -21,6 +20,80 @@ namespace
 
 	/** Keeps playtime safe for int64 text conversion and JSON serialization. */
 	constexpr double MaxPlaytimeSeconds = 1.0e15;
+
+	/**
+	 * Bounded so a long play session cannot grow the save file without limit.
+	 */
+	constexpr int32 MaxAppliedResultTokens = 256;
+	constexpr int32 MaxResultTokenLength = 160;
+
+	/**
+	 * Legacy saves can carry uncapped temporary-title day counts (E.g. an
+	 * int32 max read from a hand-migrated file); anything beyond a full school
+	 * year is junk and clamps at read. Values 1..365 round-trip unchanged.
+	 */
+	constexpr int32 MaxTemporaryTitleDays = 365;
+
+	/**
+	 * Older writers could store a temporary title without its day count; treat
+	 * the missing count as a grace window instead of silently dropping the
+	 * title at load. An explicit zero still means "expired".
+	 */
+	constexpr int32 DefaultTemporaryTitleGraceDays = 7;
+
+	FString ProfileNormalizeResultToken(const FString& InToken)
+	{
+		const FString Token = InToken.TrimStartAndEnd();
+		if (Token.IsEmpty() || Token.Len() > MaxResultTokenLength)
+		{
+			return FString();
+		}
+		for (const TCHAR Character : Token)
+		{
+			if (Character == TCHAR('\n') || Character == TCHAR('\r') || Character == TCHAR('\0'))
+			{
+				return FString();
+			}
+		}
+		return Token;
+	}
+
+	FString ProfileJsonKeyToString(const FJsonObject::FStringType& Key)
+	{
+		return FString(*Key);
+	}
+
+	/** Practice/tutorial duels record no competitive counters or DP. */
+	bool ProfileIsTutorialMode(const FDAProfileDuelResult& Result)
+	{
+		return Result.Mode.Equals(TEXT("tutorial"), ESearchCase::IgnoreCase);
+	}
+
+	double ProfileReadClampedDouble(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, double Default, double Min, double Max)
+	{
+		double Value = Default;
+		if (Object.IsValid() && Object->TryGetNumberField(Field, Value) && FMath::IsFinite(Value))
+		{
+			return FMath::Clamp(Value, Min, Max);
+		}
+		return Default;
+	}
+
+	void ProfileReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& OutValues)
+	{
+		OutValues.Reset();
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (Object.IsValid() && Object->TryGetArrayField(Field, Values) && Values)
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *Values)
+			{
+				if (Value.IsValid() && Value->Type == EJson::String)
+				{
+					OutValues.Add(Value->AsString());
+				}
+			}
+		}
+	}
 }
 
 EDADorm DuelAcademyProfile::ParseDorm(const FString& Value, EDADorm Fallback)
@@ -141,9 +214,7 @@ void UDAProfileSubsystem::InitializeNewGame(const FString& InName)
 	{
 		if (UDACalendarSubsystem* Calendar = GameInstance->GetSubsystem<UDACalendarSubsystem>())
 		{
-			// LoadCalendarData resets the date and re-applies calendar.json
-			// (period hours, exam rule); ResetToDefaults alone would drop them.
-			Calendar->LoadCalendarData();
+			Calendar->ResetToDefaults();
 		}
 	}
 
@@ -506,6 +577,11 @@ int32 UDAProfileSubsystem::IncrementCounter(const FString& Counter, int32 Amount
 	return static_cast<int32>(NewValue);
 }
 
+void UDAProfileSubsystem::ApplyCounterDelta(const FString& Counter, int32 Delta)
+{
+	IncrementCounter(Counter, Delta);
+}
+
 // ------------------------------------------------------------------------ dorm / title
 
 void UDAProfileSubsystem::SetDorm(EDADorm NewDorm)
@@ -849,11 +925,26 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 	Source->TryGetStringField(TEXT("gender"), Gender);
 	Source->TryGetStringField(TEXT("title"), Title);
 	Source->TryGetStringField(TEXT("temporary_title"), TemporaryTitle);
-	TemporaryTitleDaysRemaining = static_cast<int32>(DAJson::ReadClampedDouble(
-		Source, TEXT("temporary_title_days"), 0.0, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
-	DP = static_cast<int32>(DAJson::ReadClampedDouble(
+	// Older payloads omit this field; they were written by an initialized
+	// profile, so default to true and preserve backward compatibility.
+	bool bLoadedInitialized = true;
+	Source->TryGetBoolField(TEXT("initialized"), bLoadedInitialized);
+	// P4-11: legacy payloads could store an uncapped day count, and older
+	// writers could omit the count entirely while keeping the title. A present
+	// count clamps at read; a missing count gets a bounded grace window when a
+	// title is actually saved. An explicit zero still means "expired".
+	{
+		double RawDays = 0.0;
+		const bool bHasDays = Source->TryGetNumberField(TEXT("temporary_title_days"), RawDays)
+			&& FMath::IsFinite(RawDays);
+		TemporaryTitleDaysRemaining = bHasDays
+			? static_cast<int32>(FMath::Clamp(FMath::FloorToDouble(RawDays),
+				0.0, static_cast<double>(MaxTemporaryTitleDays)))
+			: (TemporaryTitle.IsEmpty() ? 0 : DefaultTemporaryTitleGraceDays);
+	}
+	DP = static_cast<int32>(ProfileReadClampedDouble(
 		Source, TEXT("dp"), 3000.0, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
-	PlaytimeSeconds = DAJson::ReadClampedDouble(
+	PlaytimeSeconds = ProfileReadClampedDouble(
 		Source, TEXT("playtime_seconds"), 0.0, 0.0, MaxPlaytimeSeconds);
 
 	FString DormKey;
@@ -910,7 +1001,7 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 		{
 			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::Boolean && Pair.Value->AsBool())
 			{
-				Flags.Add(DAJson::KeyToString(Pair.Key), true);
+				Flags.Add(ProfileJsonKeyToString(Pair.Key), true);
 			}
 		}
 	}
@@ -930,7 +1021,7 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 				}
 				const int32 Value = static_cast<int32>(FMath::Clamp(
 					RawValue, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
-				Counters.Add(DAJson::KeyToString(Pair.Key), Value);
+				Counters.Add(ProfileJsonKeyToString(Pair.Key), Value);
 			}
 		}
 	}
@@ -952,9 +1043,9 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 			}
 			FDAEmailState State;
 			ContactObject->TryGetBoolField(TEXT("unlocked"), State.bUnlocked);
-			State.ReadIds = DAJson::ReadStringArrayStrict(ContactObject, TEXT("read"));
-			State.PendingDuelRequests = DAJson::ReadStringArrayStrict(ContactObject, TEXT("requests"));
-			Emails.Add(DAJson::KeyToString(Pair.Key), MoveTemp(State));
+			ProfileReadStringArray(ContactObject, TEXT("read"), State.ReadIds);
+			ProfileReadStringArray(ContactObject, TEXT("requests"), State.PendingDuelRequests);
+			Emails.Add(ProfileJsonKeyToString(Pair.Key), MoveTemp(State));
 		}
 	}
 

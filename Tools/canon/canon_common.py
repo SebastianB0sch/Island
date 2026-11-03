@@ -6,17 +6,15 @@ The ROM is never copied into the repository; it is read in place.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import struct
-import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
-from common.jsonio import read_json, write_json, write_text  # noqa: E402,F401  (re-exported)
-from common.paths import REPO_ROOT  # noqa: E402
-
+REPO_ROOT = Path(__file__).resolve().parents[2]
 CANON_DIR = REPO_ROOT / "DuelAcademyIsland" / "Content" / "Data" / "Canon"
 DOCS_DIR = REPO_ROOT / "Docs" / "Canon"
 TOOLS_DIR = REPO_ROOT / "Tools" / "canon"
@@ -33,11 +31,7 @@ LOCAL_ONLY_DIR = Path(
 # extracts record this stable placeholder instead of the local path so the
 # committed data and its manifest hashes do not depend on the workstation.
 ROM_SOURCE_LABEL = "$GX_ROM"
-DEFAULT_ROM = Path(os.environ.get("GX_ROM", str(REPO_ROOT / "GX_ROM.gba")))
-# Wikitext snapshot written by fetch_guides.py. Only read when the derived
-# *_facts.json cache for a builder is missing; set GX_GUIDE_WIKITEXT to use a
-# snapshot stored outside the repository.
-DEFAULT_GUIDE_SOURCE = Path(os.environ.get("GX_GUIDE_WIKITEXT", str(CACHE_DIR / "guide_wikitext.json")))
+DEFAULT_ROM = Path(os.environ.get("GX_ROM", "GX_ROM.gba"))
 TARGET_CARDS = REPO_ROOT / "DuelAcademyIsland" / "Content" / "Data" / "cards.json"
 
 ROM_SIZE = 32 * 1024 * 1024
@@ -112,6 +106,36 @@ def sha256_file(path: Path) -> str:
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def read_json(path: Path) -> Any:
+    with path.open(encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _atomic_write_text(path: Path, value: str) -> None:
+    """Write UTF-8/LF text atomically so an interrupted build cannot truncate canon data."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
+    temp_path = Path(temp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(value)
+        os.replace(temp_path, path)
+    finally:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except OSError:
+                pass
+
+
+def write_json(path: Path, value: Any) -> None:
+    _atomic_write_text(path, json.dumps(value, ensure_ascii=False, indent=2) + "\n")
+
+
+def write_text(path: Path, value: str) -> None:
+    _atomic_write_text(path, value)
 
 
 def u16(rom: bytes, offset: int) -> int:

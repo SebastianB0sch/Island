@@ -539,6 +539,7 @@
               "enum": [
                 "$self",
                 "$target",
+                "$cost",
                 "$trigger",
                 "$attacker",
                 "$attack_target",
@@ -782,6 +783,7 @@
         "mill",
         "modify_atk",
         "modify_def",
+        "must_attack",
         "negate",
         "negate_activation",
         "negate_attack",

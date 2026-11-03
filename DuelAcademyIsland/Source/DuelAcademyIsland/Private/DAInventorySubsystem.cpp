@@ -213,10 +213,6 @@ namespace
 
 void UDAInventorySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	// The profile (inventory provider) and save (payload provider) subsystems
-	// must exist before this one registers with them.
-	Collection.InitializeDependency<UDAProfileSubsystem>();
-	Collection.InitializeDependency<UDASaveSubsystem>();
 	Super::Initialize(Collection);
 
 	LoadOwnershipLimit();
@@ -251,7 +247,29 @@ bool UDAInventorySubsystem::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection
 	{
 		OutSection = MakeShared<FJsonObject>();
 	}
-	WriteStateFields(*OutSection);
+	OutSection->SetNumberField(TEXT("version"), InventorySaveSectionVersion);
+	OutSection->SetNumberField(TEXT("max_owned_copies"), MaxOwnedCopies);
+
+	const TSharedPtr<FJsonObject> CountsObject = MakeShared<FJsonObject>();
+	for (const TPair<int32, int32>& Pair : Counts)
+	{
+		if (Pair.Value > 0)
+		{
+			CountsObject->SetNumberField(FString::FromInt(Pair.Key), Pair.Value);
+		}
+	}
+	OutSection->SetObjectField(TEXT("counts"), CountsObject);
+
+	TArray<TSharedPtr<FJsonValue>> AnteArray;
+	for (const FDAEAnteRecord& Record : PendingAnte)
+	{
+		const TSharedPtr<FJsonObject> Entry = MakeShared<FJsonObject>();
+		Entry->SetNumberField(TEXT("card_id"), Record.CardId);
+		Entry->SetStringField(TEXT("duel_id"), Record.DuelId);
+		Entry->SetStringField(TEXT("source"), Record.Source);
+		AnteArray.Add(MakeShared<FJsonValueObject>(Entry));
+	}
+	OutSection->SetArrayField(TEXT("pending_ante"), AnteArray);
 	return true;
 }
 
@@ -266,7 +284,7 @@ bool UDAInventorySubsystem::ReadSaveSection(const TSharedPtr<FJsonObject>& InSec
 	{
 		return false;
 	}
-	return ApplyStateObject(*InSection, OutError);
+	return ImportStateJson(DAEconomyJson::WriteObject(InSection), OutError);
 }
 
 void UDAInventorySubsystem::ResetSaveSectionState()
@@ -708,11 +726,6 @@ TArray<int32> UDAInventorySubsystem::SortCards(const TArray<int32>& CardIds, EDA
 	return Result;
 }
 
-int32 UDAInventorySubsystem::ClampToOwnershipLimit(int32 Count) const
-{
-	return MaxOwnedCopies > 0 ? FMath::Min(Count, MaxOwnedCopies) : Count;
-}
-
 void UDAInventorySubsystem::SetMaxOwnedCopies(int32 NewMax)
 {
 	MaxOwnedCopies = FMath::Max(0, NewMax);
@@ -955,57 +968,6 @@ FDAEPackOpenResult UDAInventorySubsystem::OpenPackDefinition(const FDAEPackDef& 
 		return nullptr;
 	};
 
-	// Undo every copy this call added so a bad pack never half-applies.
-	auto RollBack = [this, &AddedCards]()
-	{
-		for (int32 Index = AddedCards.Num() - 1; Index >= 0; --Index)
-		{
-			RemoveCard(AddedCards[Index], 1);
-		}
-		AddedCards.Reset();
-	};
-
-	// Reveal bookkeeping shared by every slot type: add (or simulate adding)
-	// one copy, flag duplicates past the ownership cap and accrue their DP.
-	auto RevealCard = [this, &Pack, &Result, Database, bAddToCollection, &SimulatedCounts, &AddedCards, &PickedThisPack]
-		(int32 CardId, EDAECardRarity Rarity)
-	{
-		FDAEPackCardReveal Reveal;
-		Reveal.CardId = CardId;
-		Reveal.Rarity = Rarity;
-		if (const FCardRecord* Card = Database->FindCard(CardId))
-		{
-			Reveal.Name = Card->Name;
-		}
-		const int32 OwnedBefore = bAddToCollection ? GetCount(CardId) : SimulatedCounts.FindRef(CardId);
-		Reveal.OwnedBefore = OwnedBefore;
-		Reveal.bNew = OwnedBefore == 0;
-
-		if (bAddToCollection)
-		{
-			const int32 Added = AddCard(CardId, 1);
-			if (Added > 0)
-			{
-				AddedCards.Add(CardId);
-			}
-			Reveal.bDuplicate = Added == 0;
-			Reveal.OwnedAfter = GetCount(CardId);
-		}
-		else
-		{
-			Reveal.bDuplicate = MaxOwnedCopies > 0 && OwnedBefore >= MaxOwnedCopies;
-			Reveal.OwnedAfter = Reveal.bDuplicate ? OwnedBefore : OwnedBefore + 1;
-			SimulatedCounts.FindOrAdd(CardId) = Reveal.OwnedAfter;
-		}
-		if (Reveal.bDuplicate)
-		{
-			Reveal.DuplicateDP = Pack.DuplicateDPPerCard;
-			Result.DPFromDuplicates += Reveal.DuplicateDP;
-		}
-		PickedThisPack.Add(CardId);
-		Result.Cards.Add(Reveal);
-	};
-
 	for (const FDAEPackSlot& Slot : Pack.Slots)
 	{
 		const TArray<int32>* ChosenPool = nullptr;
@@ -1028,13 +990,47 @@ FDAEPackOpenResult UDAInventorySubsystem::OpenPackDefinition(const FDAEPackDef& 
 			}
 			if (Candidates.Num() == 0)
 			{
-				// AllCardIds is only filled for all_cards packs; an AnyCard slot in
-				// any other pack lands here, possibly after earlier slots added cards.
-				RollBack();
 				return Fail(TEXT("empty_pool"), TEXT("This booster pack has no cards to reveal."));
 			}
 			const int32 CardId = PickFromPool(Candidates);
-			RevealCard(CardId, GetCardRarity(CardId));
+			ChosenRarity = GetCardRarity(CardId);
+			ChosenPool = nullptr;
+
+			// Add the card immediately; the common path below handles reveal bookkeeping.
+			FDAEPackCardReveal Reveal;
+			Reveal.CardId = CardId;
+			Reveal.Rarity = ChosenRarity;
+			if (const FCardRecord* Card = Database->FindCard(CardId))
+			{
+				Reveal.Name = Card->Name;
+			}
+			const int32 OwnedBefore = bAddToCollection ? GetCount(CardId) : SimulatedCounts.FindRef(CardId);
+			Reveal.OwnedBefore = OwnedBefore;
+			Reveal.bNew = OwnedBefore == 0;
+
+			if (bAddToCollection)
+			{
+				const int32 Added = AddCard(CardId, 1);
+				if (Added > 0)
+				{
+					AddedCards.Add(CardId);
+				}
+				Reveal.bDuplicate = Added == 0;
+				Reveal.OwnedAfter = GetCount(CardId);
+			}
+			else
+			{
+				Reveal.bDuplicate = MaxOwnedCopies > 0 && OwnedBefore >= MaxOwnedCopies;
+				Reveal.OwnedAfter = Reveal.bDuplicate ? OwnedBefore : OwnedBefore + 1;
+				SimulatedCounts.FindOrAdd(CardId) = Reveal.OwnedAfter;
+			}
+			if (Reveal.bDuplicate)
+			{
+				Reveal.DuplicateDP = Pack.DuplicateDPPerCard;
+				Result.DPFromDuplicates = SaturatingAdd(Result.DPFromDuplicates, Reveal.DuplicateDP);
+			}
+			PickedThisPack.Add(CardId);
+			Result.Cards.Add(Reveal);
 			continue;
 		}
 
@@ -1081,18 +1077,58 @@ FDAEPackOpenResult UDAInventorySubsystem::OpenPackDefinition(const FDAEPackDef& 
 
 		if (!ChosenPool || ChosenPool->Num() == 0)
 		{
-			RollBack();
+			// Roll back any cards already added so a bad pack never half-applies.
+			for (int32 Index = AddedCards.Num() - 1; Index >= 0; --Index)
+			{
+				RemoveCard(AddedCards[Index], 1);
+			}
 			return Fail(TEXT("empty_pool"), FString::Printf(TEXT("Booster pack '%s' has no cards for a slot."), *Pack.Id));
 		}
 
 		const int32 CardId = PickFromPool(*ChosenPool);
 		if (CardId <= 0)
 		{
-			RollBack();
+			for (int32 Index = AddedCards.Num() - 1; Index >= 0; --Index)
+			{
+				RemoveCard(AddedCards[Index], 1);
+			}
 			return Fail(TEXT("empty_pool"), FString::Printf(TEXT("Booster pack '%s' has no cards for a slot."), *Pack.Id));
 		}
 
-		RevealCard(CardId, ChosenRarity);
+		FDAEPackCardReveal Reveal;
+		Reveal.CardId = CardId;
+		Reveal.Rarity = ChosenRarity;
+		if (const FCardRecord* Card = Database->FindCard(CardId))
+		{
+			Reveal.Name = Card->Name;
+		}
+		const int32 OwnedBefore = bAddToCollection ? GetCount(CardId) : SimulatedCounts.FindRef(CardId);
+		Reveal.OwnedBefore = OwnedBefore;
+		Reveal.bNew = OwnedBefore == 0;
+
+		if (bAddToCollection)
+		{
+			const int32 Added = AddCard(CardId, 1);
+			if (Added > 0)
+			{
+				AddedCards.Add(CardId);
+			}
+			Reveal.bDuplicate = Added == 0;
+			Reveal.OwnedAfter = GetCount(CardId);
+		}
+		else
+		{
+			Reveal.bDuplicate = MaxOwnedCopies > 0 && OwnedBefore >= MaxOwnedCopies;
+			Reveal.OwnedAfter = Reveal.bDuplicate ? OwnedBefore : OwnedBefore + 1;
+			SimulatedCounts.FindOrAdd(CardId) = Reveal.OwnedAfter;
+		}
+		if (Reveal.bDuplicate)
+		{
+			Reveal.DuplicateDP = Pack.DuplicateDPPerCard;
+			Result.DPFromDuplicates = SaturatingAdd(Result.DPFromDuplicates, Reveal.DuplicateDP);
+		}
+		PickedThisPack.Add(CardId);
+		Result.Cards.Add(Reveal);
 	}
 
 	Result.bSuccess = true;
@@ -1199,10 +1235,11 @@ int32 UDAInventorySubsystem::ReturnAllAnte()
 	return Returned;
 }
 
-void UDAInventorySubsystem::WriteStateFields(FJsonObject& Out) const
+FString UDAInventorySubsystem::ExportStateJson() const
 {
-	Out.SetNumberField(TEXT("version"), 1);
-	Out.SetNumberField(TEXT("max_owned_copies"), MaxOwnedCopies);
+	const TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
+	Root->SetNumberField(TEXT("version"), InventorySaveSectionVersion);
+	Root->SetNumberField(TEXT("max_owned_copies"), MaxOwnedCopies);
 
 	const TSharedPtr<FJsonObject> CountsObject = MakeShared<FJsonObject>();
 	for (const TPair<int32, int32>& Pair : Counts)
@@ -1212,7 +1249,7 @@ void UDAInventorySubsystem::WriteStateFields(FJsonObject& Out) const
 			CountsObject->SetNumberField(FString::FromInt(Pair.Key), Pair.Value);
 		}
 	}
-	Out.SetObjectField(TEXT("counts"), CountsObject);
+	Root->SetObjectField(TEXT("counts"), CountsObject);
 
 	TArray<TSharedPtr<FJsonValue>> AnteArray;
 	for (const FDAEAnteRecord& Record : PendingAnte)
@@ -1223,13 +1260,8 @@ void UDAInventorySubsystem::WriteStateFields(FJsonObject& Out) const
 		Entry->SetStringField(TEXT("source"), Record.Source);
 		AnteArray.Add(MakeShared<FJsonValueObject>(Entry));
 	}
-	Out.SetArrayField(TEXT("pending_ante"), AnteArray);
-}
+	Root->SetArrayField(TEXT("pending_ante"), AnteArray);
 
-FString UDAInventorySubsystem::ExportStateJson() const
-{
-	const TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
-	WriteStateFields(*Root);
 	return DAEconomyJson::WriteObject(Root);
 }
 
@@ -1242,13 +1274,15 @@ bool UDAInventorySubsystem::ImportStateJson(const FString& Json, FString& OutErr
 		OutError = TEXT("Inventory JSON could not be parsed.");
 		return false;
 	}
-	return ApplyStateObject(*Root->AsObject(), OutError);
-}
 
-bool UDAInventorySubsystem::ApplyStateObject(const FJsonObject& Object, FString& OutError)
-{
+	const TSharedPtr<FJsonObject> Object = Root->AsObject();
+	if (!ValidateInventorySectionObject(Object, OutError))
+	{
+		return false;
+	}
+
 	const TSharedPtr<FJsonObject>* CountsObject = nullptr;
-	if (!Object.TryGetObjectField(TEXT("counts"), CountsObject) || !CountsObject || !CountsObject->IsValid())
+	if (!Object->TryGetObjectField(TEXT("counts"), CountsObject) || !CountsObject || !CountsObject->IsValid())
 	{
 		OutError = TEXT("Inventory JSON is missing the counts object.");
 		return false;
@@ -1270,13 +1304,13 @@ bool UDAInventorySubsystem::ApplyStateObject(const FJsonObject& Object, FString&
 		// the writer omits zero entries; treat both as absent.
 		if (Count > 0)
 		{
-			NewCounts.Add(CardId, ClampToOwnershipLimit(Count));
+			NewCounts.Add(CardId, Count);
 		}
 	}
 
 	TArray<FDAEAnteRecord> NewAnte;
 	const TArray<TSharedPtr<FJsonValue>>* AnteArray = nullptr;
-	if (Object.TryGetArrayField(TEXT("pending_ante"), AnteArray) && AnteArray)
+	if (Object->TryGetArrayField(TEXT("pending_ante"), AnteArray) && AnteArray)
 	{
 		for (const TSharedPtr<FJsonValue>& Value : *AnteArray)
 		{
@@ -1303,10 +1337,19 @@ bool UDAInventorySubsystem::ApplyStateObject(const FJsonObject& Object, FString&
 		}
 	}
 
-	// "max_owned_copies" in the payload is informational only: the ownership
-	// rule comes from Data/Rules (LoadOwnershipLimit), never from a save.
+	int32 NewMax = MaxOwnedCopies;
+	if (Object->HasField(TEXT("max_owned_copies")))
+	{
+		if (!ReadSaveNonNegative(Object->TryGetField(TEXT("max_owned_copies")), NewMax))
+		{
+			OutError = TEXT("Inventory JSON has an invalid max_owned_copies value.");
+			return false;
+		}
+	}
+
 	Counts = MoveTemp(NewCounts);
 	PendingAnte = MoveTemp(NewAnte);
+	MaxOwnedCopies = FMath::Max(0, NewMax);
 	OnInventoryReset.Broadcast();
 	OnAnteChanged.Broadcast(PendingAnte.Num());
 	return true;
@@ -1339,13 +1382,30 @@ bool UDAInventorySubsystem::ApplySaveData(const FDAEInventorySaveData& Data, FSt
 	{
 		if (Pair.Key > 0 && Pair.Value > 0)
 		{
-			NewCounts.Add(Pair.Key, ClampToOwnershipLimit(Pair.Value));
+			NewCounts.Add(Pair.Key, Pair.Value);
 		}
 	}
 
-	// Data.MaxOwnedCopies is informational only (see ApplyStateObject).
 	Counts = MoveTemp(NewCounts);
-	PendingAnte = Data.PendingAnte;
+
+	TArray<FDAEAnteRecord> NewAnte;
+	NewAnte.Reserve(Data.PendingAnte.Num());
+	for (const FDAEAnteRecord& Record : Data.PendingAnte)
+	{
+		// Normalize the duel id at entry so the one-stake guard and return
+		// lookups match the runtime path (RemoveCardForAnte) everywhere.
+		FDAEAnteRecord Normalized = Record;
+		Normalized.DuelId = DAEconomy::NormalizeIdKey(Normalized.DuelId);
+		if (Normalized.CardId > 0 && !Normalized.DuelId.IsEmpty())
+		{
+			NewAnte.Add(MoveTemp(Normalized));
+		}
+	}
+	PendingAnte = MoveTemp(NewAnte);
+
+	// 0 is a documented "unlimited" setting, so it must round-trip instead of
+	// silently keeping the previous cap.
+	MaxOwnedCopies = FMath::Max(0, Data.MaxOwnedCopies);
 	OnInventoryReset.Broadcast();
 	OnAnteChanged.Broadcast(PendingAnte.Num());
 	return true;

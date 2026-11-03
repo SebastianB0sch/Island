@@ -419,7 +419,7 @@ struct FDAOpponentRuntimeState
 	UPROPERTY(BlueprintReadOnly, Category = "Opponent")
 	TMap<FString, int32> RequestsToday;
 
-	/** Day index of each opponent's most recent accepted duel request (cooldown_days). */
+	/** Last day a request was consumed per opponent; drives DuelRequest.CooldownDays. */
 	UPROPERTY(BlueprintReadOnly, Category = "Opponent")
 	TMap<FString, int32> LastRequestDay;
 
@@ -459,10 +459,8 @@ struct FDAOpponentDuelOutcome
  *
  * Baseline contract:
  *  - A09 asks for a duelist, a deck id and an AI profile; it does not read JSON.
- *  - FDAOpponentRuntimeState is session-only and not saved: campaign wins live
- *    in the profile's wins_<id> counters (saved), which ResolveDeckFor reads.
- *    Request and email helpers are a library for a future PDA challenge flow;
- *    nothing in gameplay consumes them yet.
+ *  - RuntimeState is persisted by this subsystem as the additive "opponents"
+ *    save section; it only touches disk through UDASaveSubsystem.
  *  - A04's duel request should carry FDAOpponentDef::DefaultDeck or
  *    ResolveDeckFor(). Puzzle/exam requests are owned by UDAExamSubsystem.
  */
@@ -482,9 +480,17 @@ public:
 	const FDAOpponentDeckDef* FindDeck(const FString& DeckId) const;
 	const FDAIProfileDef* FindAIProfile(const FString& ProfileId) const;
 
+	/** Raw deck arrays for an A04/A06 adapter; false when the deck id is unknown. */
+	bool GetDeckCards(const FString& DeckId, TArray<int32>& OutMain, TArray<int32>& OutExtra) const;
+
 	const TArray<FDAOpponentDef>& GetOpponents() const { return Opponents; }
 	const TArray<FDAOpponentDeckDef>& GetDecks() const { return DeckList; }
 	const TArray<FDAIProfileDef>& GetAIProfiles() const { return AIProfileList; }
+	TArray<FString> GetDuelistIds() const;
+	TArray<FString> GetDeckIds() const;
+
+	/** Ranked duelists sorted by rank, then event/staff/exam. */
+	TArray<const FDAOpponentDef*> GetDuelistsByRank() const;
 
 	/** Dorm/title/flag/day gate. Empty reason on success. */
 	bool IsDuelistUnlocked(const FString& OpponentId, const FString& PlayerTitle, const FString& PlayerDorm,

@@ -510,6 +510,7 @@ def validate(arm, action, gait, log=print, raise_on_error=True):
             knee_max = max(knee_max, math.degrees(th.angle(cf)))
         zs.append(min(frame_z))
         pelvis_z.append((arm.matrix_world @ arm.pose.bones["pelvis"].head).z)
+    dur = max(1, f1 - f0) / scene.render.fps
     # Ground speed: median backward velocity of the lowest contact point while it is planted.
     speeds = []
     for side in ("l", "r"):

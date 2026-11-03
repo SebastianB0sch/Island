@@ -171,43 +171,7 @@
         {
           "type": "grant_card",
           "card_id": 342,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "event_02_lost",
-              "value": false
-            },
-            {
-              "type": "flag",
-              "flag": "event_02_draw",
-              "value": false
-            }
-          ]
-        },
-        {
-          "type": "grant_card",
-          "card_id": 242,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "event_02_lost",
-              "value": true
-            }
-          ]
-        },
-        {
-          "type": "grant_card",
-          "card_id": 837,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "event_02_draw",
-              "value": true
-            }
-          ]
+          "count": 1
         },
         {
           "type": "set_flag",
@@ -881,15 +845,6 @@
           "type": "set_flag",
           "flag": "event_07_cleared",
           "value": true
-        },
-        {
-          "type": "grant_card",
-          "card_id": 602,
-          "count": 1
-        },
-        {
-          "type": "temporary_title",
-          "value": "Occult Duelist"
         }
       ],
       "rewards": [
@@ -3144,16 +3099,6 @@
           "type": "set_flag",
           "flag": "event_24_cleared",
           "value": true
-        },
-        {
-          "type": "grant_card",
-          "card_id": 921,
-          "count": 1
-        },
-        {
-          "type": "set_flag",
-          "flag": "blair_revealed",
-          "value": true
         }
       ],
       "rewards": [
@@ -4046,111 +3991,7 @@
         {
           "type": "grant_card",
           "card_id": 1153,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_syrus",
-              "value": false
-            },
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_chumley",
-              "value": false
-            },
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_bastion",
-              "value": false
-            },
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_alexis",
-              "value": false
-            },
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_chazz",
-              "value": false
-            },
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_zane",
-              "value": false
-            }
-          ]
-        },
-        {
-          "type": "grant_card",
-          "card_id": 1147,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_syrus",
-              "value": true
-            }
-          ]
-        },
-        {
-          "type": "grant_card",
-          "card_id": 1125,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_chumley",
-              "value": true
-            }
-          ]
-        },
-        {
-          "type": "grant_card",
-          "card_id": 503,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_bastion",
-              "value": true
-            }
-          ]
-        },
-        {
-          "type": "grant_card",
-          "card_id": 1025,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_alexis",
-              "value": true
-            }
-          ]
-        },
-        {
-          "type": "grant_card",
-          "card_id": 839,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_chazz",
-              "value": true
-            }
-          ]
-        },
-        {
-          "type": "grant_card",
-          "card_id": 1152,
-          "count": 1,
-          "conditions": [
-            {
-              "type": "flag",
-              "flag": "walk_home_first_partner_zane",
-              "value": true
-            }
-          ]
+          "count": 1
         },
         {
           "type": "set_flag",

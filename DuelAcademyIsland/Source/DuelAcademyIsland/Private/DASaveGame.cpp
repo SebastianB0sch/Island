@@ -8,7 +8,6 @@
 
 #include "DASaveGame.h"
 
-#include "DAJson.h"
 #include "DAProfileSubsystem.h"
 #include "DASettings.h"
 #include "DuelAcademyIsland.h"
@@ -70,6 +69,31 @@ namespace
 			}
 		}
 		return !Name.Contains(TEXT(".."));
+	}
+
+	FString PeriodToKey(EDADayPeriod Period)
+	{
+		switch (Period)
+		{
+		case EDADayPeriod::PM:    return TEXT("PM");
+		case EDADayPeriod::Night: return TEXT("Night");
+		case EDADayPeriod::AM:
+		default:                  return TEXT("AM");
+		}
+	}
+
+	EDADayPeriod KeyToPeriod(const FString& Key)
+	{
+		if (Key.Equals(TEXT("PM"), ESearchCase::IgnoreCase))
+		{
+			return EDADayPeriod::PM;
+		}
+		if (Key.Equals(TEXT("Night"), ESearchCase::IgnoreCase)
+			|| Key.Equals(TEXT("NIGHT"), ESearchCase::IgnoreCase))
+		{
+			return EDADayPeriod::Night;
+		}
+		return EDADayPeriod::AM;
 	}
 
 	void AppendJsonString(const FString& In, FString& Out)
@@ -196,6 +220,27 @@ namespace
 		return Out;
 	}
 
+	bool ParseJsonObject(const FString& Json, TSharedPtr<FJsonObject>& OutRoot)
+	{
+		OutRoot.Reset();
+		if (Json.IsEmpty())
+		{
+			return false;
+		}
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Json);
+		return FJsonSerializer::Deserialize(Reader, OutRoot) && OutRoot.IsValid();
+	}
+
+	FString ReadStringField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, const TCHAR* Default = TEXT(""))
+	{
+		FString Value;
+		if (Object.IsValid() && Object->TryGetStringField(Field, Value))
+		{
+			return Value;
+		}
+		return Default;
+	}
+
 	/** Trailer appended to the serialized USaveGame archive. */
 	constexpr uint32 SaveFileMagic = 0x53415044; // "DAPS"
 	constexpr uint32 SaveFileFormatVersion = 1;
@@ -289,6 +334,20 @@ namespace
 		return true;
 	}
 
+	TSharedPtr<FJsonObject> MakeDefaultSettingsJson()
+	{
+		TSharedPtr<FJsonObject> Settings = MakeShared<FJsonObject>();
+		Settings->SetStringField(TEXT("animation_speed"), TEXT("normal"));
+		Settings->SetBoolField(TEXT("confirm_activation"), true);
+		Settings->SetStringField(TEXT("text_speed"), TEXT("normal"));
+		Settings->SetNumberField(TEXT("bgm_volume"), 0.8);
+		Settings->SetNumberField(TEXT("sfx_volume"), 0.8);
+		Settings->SetBoolField(TEXT("subtitles"), true);
+		Settings->SetStringField(TEXT("language"), TEXT("en"));
+		Settings->SetObjectField(TEXT("controls"), MakeShared<FJsonObject>());
+		return Settings;
+	}
+
 	void EnsureObjectField(const TSharedPtr<FJsonObject>& Root, const TCHAR* Field, TSharedPtr<FJsonObject>& OutObject)
 	{
 		const TSharedPtr<FJsonObject>* Existing = nullptr;
@@ -374,7 +433,19 @@ namespace
 		MoveStringField(Root, Profile, TEXT("gender"));
 		MoveDoubleField(Root, Profile, TEXT("playtime_seconds"));
 
-		// Missing, non-string and empty identity fields all fall back below.
+		if (!Profile->HasField(TEXT("name")))
+		{
+			Profile->SetStringField(TEXT("name"), TEXT("New Student"));
+		}
+		if (!Profile->HasField(TEXT("dorm")))
+		{
+			Profile->SetStringField(TEXT("dorm"), TEXT("Slifer"));
+		}
+		if (!Profile->HasField(TEXT("title")))
+		{
+			Profile->SetStringField(TEXT("title"), TEXT("Apprentice Duelist"));
+		}
+
 		FString ProfileName;
 		FString ProfileDorm;
 		FString ProfileTitle;
@@ -423,7 +494,8 @@ namespace
 		}
 		if (MonthNumber != 0 && !Calendar->HasField(TEXT("month_index")))
 		{
-			Calendar->SetNumberField(TEXT("month_index"), UDACalendarSubsystem::MonthNumberToIndex(MonthNumber));
+			const int32 Converted = ((MonthNumber - 10) % 12 + 12) % 12;
+			Calendar->SetNumberField(TEXT("month_index"), Converted);
 		}
 		Calendar->RemoveField(TEXT("month"));
 
@@ -446,9 +518,7 @@ namespace
 
 		if (!Root->HasField(TEXT("settings")))
 		{
-			// An empty object means "all defaults": ApplyPayload loads
-			// settings.json first, so defaults are not duplicated here.
-			Root->SetObjectField(TEXT("settings"), MakeShared<FJsonObject>());
+			Root->SetObjectField(TEXT("settings"), MakeDefaultSettingsJson());
 		}
 
 		TSharedPtr<FJsonObject> Flags;
@@ -470,15 +540,15 @@ namespace
 		EnsureObjectField(Root, TEXT("meta"), Meta);
 		if (!Meta->HasField(TEXT("name")))
 		{
-			Meta->SetStringField(TEXT("name"), DAJson::ReadString(Profile, TEXT("name"), TEXT("New Student")));
+			Meta->SetStringField(TEXT("name"), ReadStringField(Profile, TEXT("name"), TEXT("New Student")));
 		}
 		if (!Meta->HasField(TEXT("title")))
 		{
-			Meta->SetStringField(TEXT("title"), DAJson::ReadString(Profile, TEXT("title"), TEXT("Apprentice Duelist")));
+			Meta->SetStringField(TEXT("title"), ReadStringField(Profile, TEXT("title"), TEXT("Apprentice Duelist")));
 		}
 		if (!Meta->HasField(TEXT("dorm")))
 		{
-			Meta->SetStringField(TEXT("dorm"), DAJson::ReadString(Profile, TEXT("dorm"), TEXT("Slifer")));
+			Meta->SetStringField(TEXT("dorm"), ReadStringField(Profile, TEXT("dorm"), TEXT("Slifer")));
 		}
 		if (!Meta->HasField(TEXT("dp")))
 		{
@@ -730,17 +800,6 @@ bool UDASaveSubsystem::LoadSlotWithContext(int32 SlotIndex, UDAProfileSubsystem*
 
 bool UDASaveSubsystem::LoadNamedSlotWithContext(const FString& SlotName, UDAProfileSubsystem* Profile, UDACalendarSubsystem* Calendar, UDASettings* Settings, FString& OutError, bool* bOutRecoveredFromBackup)
 {
-	// Named (test/debug) slots have no logical index; the four UI slots do.
-	int32 LogicalSlotIndex = -1;
-	for (int32 Index = 0; Index < NumSlots; ++Index)
-	{
-		if (GetSlotName(Index) == SlotName)
-		{
-			LogicalSlotIndex = Index;
-			break;
-		}
-	}
-
 	if (bOutRecoveredFromBackup)
 	{
 		*bOutRecoveredFromBackup = false;
@@ -749,14 +808,14 @@ bool UDASaveSubsystem::LoadNamedSlotWithContext(const FString& SlotName, UDAProf
 	{
 		SetError(TEXT("Load failed: missing progression context."));
 		OutError = LastError;
-		OnLoadCompleted.Broadcast(LogicalSlotIndex, false);
+		OnLoadCompleted.Broadcast(-1, false);
 		return false;
 	}
 	if (!IsSafeSlotName(SlotName))
 	{
 		SetError(FString::Printf(TEXT("Invalid save slot name '%s'."), *SlotName));
 		OutError = LastError;
-		OnLoadCompleted.Broadcast(LogicalSlotIndex, false);
+		OnLoadCompleted.Broadcast(-1, false);
 		return false;
 	}
 
@@ -765,22 +824,22 @@ bool UDASaveSubsystem::LoadNamedSlotWithContext(const FString& SlotName, UDAProf
 	if (!ReadPayloadFile(SlotName, Json, bUsedBackup, OutError))
 	{
 		SetError(OutError);
-		OnLoadCompleted.Broadcast(LogicalSlotIndex, false);
+		OnLoadCompleted.Broadcast(-1, false);
 		return false;
 	}
 
 	TSharedPtr<FJsonObject> Root;
-	if (!DAJson::ParseObject(Json, Root))
+	if (!ParseJsonObject(Json, Root))
 	{
 		SetError(FString::Printf(TEXT("Save slot '%s' contains invalid JSON."), *SlotName));
 		OutError = LastError;
-		OnLoadCompleted.Broadcast(LogicalSlotIndex, false);
+		OnLoadCompleted.Broadcast(-1, false);
 		return false;
 	}
 	if (!ApplyPayload(Root, Profile, Calendar, Settings, OutError))
 	{
 		SetError(OutError);
-		OnLoadCompleted.Broadcast(LogicalSlotIndex, false);
+		OnLoadCompleted.Broadcast(-1, false);
 		return false;
 	}
 
@@ -790,7 +849,7 @@ bool UDASaveSubsystem::LoadNamedSlotWithContext(const FString& SlotName, UDAProf
 	}
 	LastError.Reset();
 	OutError.Reset();
-	OnLoadCompleted.Broadcast(LogicalSlotIndex, true);
+	OnLoadCompleted.Broadcast(-1, true);
 	return true;
 }
 
@@ -925,7 +984,7 @@ FDASaveSlotInfo UDASaveSubsystem::GetSlotInfo(const FString& SlotName, int32 Slo
 	}
 
 	TSharedPtr<FJsonObject> Root;
-	if (!DAJson::ParseObject(Json, Root))
+	if (!ParseJsonObject(Json, Root))
 	{
 		Info.bCorrupt = true;
 		return Info;
@@ -952,7 +1011,7 @@ FDASaveSlotInfo UDASaveSubsystem::GetSlotInfo(const FString& SlotName, int32 Slo
 		FString PeriodText;
 		if ((*Meta)->TryGetStringField(TEXT("period"), PeriodText))
 		{
-			Info.Period = UDACalendarSubsystem::ParsePeriod(PeriodText);
+			Info.Period = KeyToPeriod(PeriodText);
 		}
 	}
 
@@ -1046,7 +1105,7 @@ bool UDASaveSubsystem::BuildPayload(int32 LogicalSlotIndex, const FString& SlotN
 	Meta->SetNumberField(TEXT("month"), Calendar->GetMonthNumber());
 	Meta->SetNumberField(TEXT("month_index"), Calendar->GetMonthIndex());
 	Meta->SetNumberField(TEXT("day"), Calendar->GetDay());
-	Meta->SetStringField(TEXT("period"), UDACalendarSubsystem::PeriodToSaveKey(Calendar->GetPeriod()));
+	Meta->SetStringField(TEXT("period"), PeriodToKey(Calendar->GetPeriod()));
 	Root->SetObjectField(TEXT("meta"), Meta);
 
 	TSet<FString> UsedSectionNames;
@@ -1194,16 +1253,6 @@ bool UDASaveSubsystem::ApplyPayloadInPlace(const TSharedPtr<FJsonObject>& Root, 
 		return false;
 	}
 
-	// Validate before mutating anything: the profile reader is the only core
-	// reader that can reject a payload, so a missing profile must not leave the
-	// calendar and settings already overwritten by the rejected save.
-	const TSharedPtr<FJsonObject>* ProfileCheck = nullptr;
-	if (!Root->TryGetObjectField(TEXT("profile"), ProfileCheck) || !ProfileCheck || !ProfileCheck->IsValid())
-	{
-		OutError = TEXT("Profile save data has no 'profile' object.");
-		return false;
-	}
-
 	// The calendar writes a root "calendar" object; ReadSaveData also accepts
 	// legacy payloads that placed year/month/day/period directly at the root.
 	if (!Calendar->ReadSaveData(Root, OutError))
@@ -1211,15 +1260,18 @@ bool UDASaveSubsystem::ApplyPayloadInPlace(const TSharedPtr<FJsonObject>& Root, 
 		return false;
 	}
 
-	// Data-driven defaults (settings.json) for any field the save omits.
-	Settings->LoadDefaults();
 	const TSharedPtr<FJsonObject>* SettingsObject = nullptr;
 	if (Root->TryGetObjectField(TEXT("settings"), SettingsObject) && SettingsObject && SettingsObject->IsValid())
 	{
+		Settings->ResetToDefaults();
 		if (!Settings->ReadSaveData(*SettingsObject, OutError))
 		{
 			return false;
 		}
+	}
+	else
+	{
+		Settings->ResetToDefaults();
 	}
 
 	if (!Profile->ReadSaveData(Root, OutError))
@@ -1239,10 +1291,10 @@ bool UDASaveSubsystem::ApplyPayloadInPlace(const TSharedPtr<FJsonObject>& Root, 
 		const TSharedPtr<FJsonObject>* Section = nullptr;
 		if (!Root->TryGetObjectField(SectionName, Section) || !Section || !Section->IsValid())
 		{
-			// Sections may be absent in older saves. An empty object is not
-			// passed because the inventory and deck providers reject it; each
-			// provider decides instead (story resets, economy keeps its state).
-			Provider->OnSaveSectionMissing();
+			// Sections may be absent in older saves. Most providers keep the live
+			// state (the old save never described the lane); providers whose
+			// section represents transient runtime state reset to defaults.
+			Provider->ResetSaveSectionState();
 			continue;
 		}
 		if (!Provider->ReadSaveSection(*Section, OutError))
@@ -1385,7 +1437,7 @@ bool UDASaveSubsystem::ReadPayloadFromSlotName(const FString& SlotName, FString&
 	}
 
 	TSharedPtr<FJsonObject> Root;
-	if (!DAJson::ParseObject(Save->JsonPayload, Root))
+	if (!ParseJsonObject(Save->JsonPayload, Root))
 	{
 		OutError = FString::Printf(TEXT("Save slot '%s' contains invalid JSON."), *SlotName);
 		return false;
@@ -1454,7 +1506,7 @@ bool UDASaveSubsystem::ReadPayloadFile(const FString& SlotName, FString& OutJson
 int32 UDASaveSubsystem::GetVersionFromJson(const FString& Json)
 {
 	TSharedPtr<FJsonObject> Root;
-	if (!DAJson::ParseObject(Json, Root))
+	if (!ParseJsonObject(Json, Root))
 	{
 		return -1;
 	}
@@ -1474,18 +1526,18 @@ FString UDASaveSubsystem::SerializeCanonicalJson(const TSharedPtr<FJsonObject>& 
 bool UDASaveSubsystem::MigrateJson(FString& Json, int32 FromVersion, FString& OutError) const
 {
 	TSharedPtr<FJsonObject> Root;
-	if (!DAJson::ParseObject(Json, Root))
+	if (!ParseJsonObject(Json, Root))
 	{
 		OutError = TEXT("Cannot migrate: payload is not valid JSON.");
 		return false;
 	}
 
-	// The payload's own schema version is authoritative when present (matches
-	// ReadPayloadFromSlotName); FromVersion is only the fallback.
 	int32 Version = FromVersion;
 	int32 JsonVersion = -1;
 	if (Root->TryGetNumberField(TEXT("version"), JsonVersion) && JsonVersion >= 0)
 	{
+		// The JSON schema version is authoritative when present. A stale or
+		// optimistic caller argument must not skip a required migration.
 		Version = JsonVersion;
 	}
 	if (Version < 0)

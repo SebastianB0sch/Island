@@ -32,7 +32,7 @@ This branch (`port/baseline`) ports the single-player campaign of the GBA game i
 
 Implemented so far:
 
-- **Campaign backbone:** 37 event definitions (35 canon + the opening checkpoint/free duel), 68 scenes, 161 dialogue lines, 6 email contacts, schedules, flags and rewards. The opening (`E01`/`E01b`) is fully runnable; the 35-event campaign scaffold validates and is reachable with progress.
+- **Campaign backbone:** 37 event definitions (35 canon + the opening checkpoint/free duel), 56 scenes, 161 dialogue lines, 6 email contacts, schedules, flags and rewards. The opening (`E01`/`E01b`) is fully runnable; the 35-event campaign scaffold validates and is reachable with progress.
 - **Progression:** profile, 12-month calendar, DP, titles, dorm promotion/demotion, Dropout Boy recovery, flags, counters and settings.
 - **Save/load:** 3 slots + autosave, atomic writes, checksum trailer, backup recovery, corruption detection and v0→v1 migration.
 - **Duel content:** 26 duelists / 32 decks, 100 timed puzzles, 12 exam cycles, 48 booster packs, the full 1,200-card database, 76 Fusion recipes and 22 Ritual procedures.
@@ -59,17 +59,13 @@ Run the runtime suites from the editor/game command line:
 Data validators:
 
 ```text
-python Tools/validate/validate_all.py --require-datasets   # PASS, known gaps listed
-python Tools/puzzles/validate.py           # opponents, AI, puzzles, exams
-python Tools/opponents/import_canon_decks.py --check  # runtime + constructed deck legality
-python Tools/effects/audit.py              # PASS; rewrites the effect manifest + Docs/Effects/COVERAGE.md
-python Tools/canon/validate_canon.py       # canon extracts + manifest hashes
+python Tools/validate/validate_all.py      # PASS, known gaps listed
+python Tools/puzzles/validate.py           # 145 checks, 0 failures
+python Tools/opponents/import_canon_decks.py --check  # 32/32 runtime decks, 37/37 constructed
+python Tools/effects/audit.py              # PASS; 362 scripted + 345 vanilla, 493 pending
 ```
 
-CI (`.github/workflows/ci.yml`) runs every data validator and then re-runs the deterministic
-generators followed by `git diff --exit-code`, so committed generated data must match its generator.
-
-Still open before calling the port complete: the 760 pending card effects, an in-engine playthrough of events E02–E33 (the data and self-test are in, but not a full scripted run), interior cell generation/entry tests, shop/deck/exam UI interaction wiring, exact GBA dialogue (the full text is local-only), and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md).
+Still open before calling the port complete: the 493 pending card effects, exact GBA dialogue (the full text is local-only), renderer/interaction QA for the shop/deck/exam screens, interior generation/entry polish, and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md). The full E02–E33 campaign playthrough is covered by `-DAStoryPlaythroughTest`.
 
 ## What's on the island
 
@@ -284,7 +280,6 @@ UnrealEditor-Cmd DuelAcademyIsland/DuelAcademyIsland.uproject -ExecutePythonScri
 ```
 Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy" module)
   build_island.py           runs every stage -> DuelAcademyIsland/SourceAssets
-  build_island_blender.py   same, from a Blender install: blender -b -P Tools/build_island_blender.py -- <stages>
   preview_asset.py          render previews of a single location module
   dai/config.py             island layout: locations, heights, paths, volcano, lake ...
   dai/terrain.py            heightfield, splat maps, colour map, Landscape heightmap
@@ -305,11 +300,8 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
                             idle/walk/run gait solver (gait.py, foot-planting IK + validation); CC0 takes
                             retargeted onto every skeleton, cast.json
                             (cast.py = who is who; a procedural fallback builds anyone without a model)
-  dai/credits.py            draft CREDITS.md table from the SOURCE.txt files (CREDITS.md is now curated by hand)
+  dai/credits.py            CREDITS.md from the SOURCE.txt files
   thirdparty/               curated CC0 / CC-BY source assets + registry/*.json
-  common/                   shared stdlib helpers for the data tools (repo paths, UTF-8 JSON I/O)
-  canon/ economy/ effects/ opponents/ puzzles/ story/ validate/ world/ integration/
-                            data builders and validators for Content/Data (stdlib only; run in CI)
   dai/audio.py              synthesized seamless ambience loops and UI sounds
   dai/render.py             Cycles preview renders (Docs/renders)
 DuelAcademyIsland/          the Unreal Engine 5.8 project

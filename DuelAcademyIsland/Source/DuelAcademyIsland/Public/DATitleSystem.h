@@ -225,7 +225,7 @@ private:
 	FString DropoutFlag = TEXT("dropout_boy");
 
 	UPROPERTY()
-	FString RecoveryOpponentId = TEXT("fontaine");
+	FString RecoveryOpponentId = TEXT("fonda_fontaine");
 
 	bool bDefinitionsLoaded = false;
 };

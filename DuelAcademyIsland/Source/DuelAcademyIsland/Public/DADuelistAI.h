@@ -135,6 +135,8 @@ struct FDAAIDecision
 class DUELACADEMYISLAND_API FDAIDuelistAI
 {
 public:
+	FDAIDuelistAI();
+
 	void Configure(const FDAIProfileDef& InProfile, int32 InSeed = 0);
 	void SetCardDatabase(const UCardDatabaseSubsystem* InDatabase) { Database = InDatabase; }
 
@@ -148,6 +150,7 @@ public:
 	/** One abstract decision for the supplied snapshot. Returns None/EndTurn when no play is sensible. */
 	FDAAIDecision ChooseAction(const FDAAIDuelSnapshot& Snapshot) const;
 
+	bool ShouldAttack(const FDAAIDuelSnapshot& Snapshot, int32 AttackerCardId, int32 TargetCardId, bool bDirect) const;
 	bool ShouldSetTrap(const FDAAIDuelSnapshot& Snapshot) const;
 
 	float GetWeight(const FString& Key, float Default = 0.5f) const;

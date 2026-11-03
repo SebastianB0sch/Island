@@ -17,14 +17,15 @@ owns the slot layout / odds overlay and the deck rules wrapper.
 
 from __future__ import annotations
 
+import argparse
+import json
+import os
 import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
-from common.jsonio import read_json as load, write_json as write  # noqa: E402
-from common.paths import DATA_DIR as DATA  # noqa: E402
-
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "DuelAcademyIsland" / "Content" / "Data"
 CANON_PACKS = DATA / "Canon" / "packs.json"
 CANON_BANNED = DATA / "Canon" / "banned_list.json"
 SHOP_PACKS = DATA / "Shop" / "packs.json"
@@ -53,6 +54,28 @@ CALENDAR_MONTHS = {
     "basic_3c": 8,
     "basic_4c": 9,
 }
+
+
+def load(path: Path):
+    with path.open(encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def write(path: Path, value) -> None:
+    """Serialize with json.dump(indent=2, ensure_ascii=False) + newline, atomically."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(value, indent=2, ensure_ascii=False) + "\n"
+    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(payload)
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name):
+            try:
+                os.unlink(temp_name)
+            except OSError:
+                pass
 
 
 def restock_days(text: str | None, fallback: int) -> int:

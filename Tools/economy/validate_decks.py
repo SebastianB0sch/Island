@@ -17,21 +17,25 @@ Run from the repo root:
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from collections import Counter
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # Tools/, for the shared common package
-from common.jsonio import read_json as load  # noqa: E402
-from common.paths import DATA_DIR as DATA  # noqa: E402
-
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "DuelAcademyIsland" / "Content" / "Data"
 RULES = DATA / "Rules" / "banned_limited.json"
 CARDS = DATA / "cards.json"
 STARTER_DECKS = DATA / "decks.json"
 PLAYER_DECKS = DATA / "Decks" / "player_decks.json"
 
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
+
+
+def load(path: Path):
+    with path.open(encoding="utf-8") as handle:
+        return json.load(handle)
 
 
 def main() -> int:

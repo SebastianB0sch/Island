@@ -12,8 +12,9 @@ The figure faces -Y (Blender) like every other asset; the C++ side rotates it.
 Material slot "M_Jacket" is recoloured per dorm at runtime.
 """
 
+import math
 
-from ..geo import MeshBuilder
+from ..geo import MeshBuilder, TAU
 from .props import blob, tube
 
 HIP_HEIGHT = 0.93

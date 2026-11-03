@@ -67,7 +67,7 @@
     {
       "id": "story_exemption",
       "description": "A story event may exempt the player from one exam; A03 supplies the flag.",
-      "flag": "exam_exempt_next"
+      "flag": "exam_exempt"
     }
   ],
   "confidence": "low",

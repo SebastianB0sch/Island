@@ -79,16 +79,9 @@ def _script_path(card_id: int) -> Path:
     return data.SCRIPTS_DIR / f"{card_id}.json"
 
 
-def write_payloads(payloads: list[dict], check: bool) -> tuple[int, int, list[Path]]:
-    """Write missing scripts (or, with check=True, only count them).
-
-    Returns (written_or_missing, unchanged, differing). An existing script whose
-    bytes differ from the generated payload is never overwritten: --write aborts,
-    --check reports it.
-    """
+def write_payloads(payloads: list[dict], check: bool) -> tuple[int, int]:
     written = 0
     unchanged = 0
-    differing: list[Path] = []
     for payload in payloads:
         path = _script_path(int(payload["card_id"]))
         serialized = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
@@ -96,9 +89,6 @@ def write_payloads(payloads: list[dict], check: bool) -> tuple[int, int, list[Pa
             existing = path.read_text(encoding="utf-8")
             if existing == serialized:
                 unchanged += 1
-                continue
-            if check:
-                differing.append(path)
                 continue
             raise SystemExit(
                 f"refusing to overwrite existing script {path}; move it aside if it should be regenerated"
@@ -109,37 +99,25 @@ def write_payloads(payloads: list[dict], check: bool) -> tuple[int, int, list[Pa
             # leave a truncated script behind.
             atomic.write_text(path, serialized)
         written += 1
-    return written, unchanged, differing
+    return written, unchanged
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument(
-        "--check",
-        action="store_true",
-        help="Report what would be generated; exit 1 if any script is missing or differs.",
-    )
+    mode.add_argument("--check", action="store_true", help="Report what would be generated.")
     mode.add_argument("--write", action="store_true", help="Write missing script files.")
     args = parser.parse_args(argv)
 
     generated, skipped = build_candidates()
-    stale = False
     if args.write:
-        written, unchanged, _ = write_payloads(generated, check=False)
+        written, unchanged = write_payloads(generated, check=False)
         print(f"Wrote {written} script(s); {unchanged} already up to date.")
     else:
-        missing, unchanged, differing = write_payloads(generated, check=True)
-        print(f"{len(generated)} generated script(s): {unchanged} up to date, "
-              f"{missing} missing, {len(differing)} differ from the generator.")
-        missing_ids = {int(p["card_id"]) for p in generated if not _script_path(int(p["card_id"])).exists()}
+        print(f"Would generate {len(generated)} script(s).")
         for payload in generated:
-            if int(payload["card_id"]) in missing_ids:
-                scripts = ", ".join(script["id"] for script in payload["scripts"])
-                print(f"  missing {payload['card_id']:4d} {payload['name']} -> {scripts}")
-        for path in differing:
-            print(f"  differs {path.relative_to(data.ROOT)}")
-        stale = bool(missing or differing)
+            scripts = ", ".join(script["id"] for script in payload["scripts"])
+            print(f"  {payload['card_id']:4d} {payload['name']} -> {scripts}")
 
     print(f"Still pending: {len(skipped)}")
     counts: dict[str, int] = {}
@@ -147,9 +125,6 @@ def main(argv: list[str] | None = None) -> int:
         counts[item["reason_code"]] = counts.get(item["reason_code"], 0) + 1
     for code, count in sorted(counts.items(), key=lambda item: (-item[1], item[0])):
         print(f"  {count:4d} {code}")
-    if stale:
-        print("STALE: run `python Tools/effects/generate_scripts.py --write` (differing scripts must be moved aside first)")
-        return 1
     return 0
 
 

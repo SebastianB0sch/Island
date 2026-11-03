@@ -301,13 +301,7 @@ New condition keys: `turn`, `phase`, `name_contains`, `name_on_field`,
 `has_attacked`, `is_turn_player`, `event_source_is_self` and `field_scan`.
 
 New target zones: `deck_top`, `equipped_monster`, `self_all`,
-`opponent_all` and `all_cards_and_hands`.  `deck_top` is the top card of the
-script controller's own Deck; `hand` collects both hands.
-
-All `self_*` / `opponent_*` zones, conditions and selectors are relative to
-the **controller of the card whose script is resolving**.  An AI-controlled
-Raigeki (`opponent_monster`) destroys the human player's monsters, and an AI
-Sangan (`self_deck`) searches the AI's Deck.  For `equip_continuous` scripts the
+`opponent_all` and `all_cards_and_hands`.  For `equip_continuous` scripts the
 condition subject and a `$self` stat target are the **equipped monster**, not
 the Equip Spell itself; `$equipped` is an explicit alias.  A missing stat
 target on `field_continuous` applies to every face-up monster, and a target
@@ -320,7 +314,6 @@ object (`{"zone": "all_monsters", "filter": ...}`) applies team-wide.
 | `modify_atk` / `modify_def` | `amount`, `mode`, `counter`, `count_zone`, `count_zones`, `count_filter`, `multiplier`, `divisor` | Modes: `flat`, `per_counter`, `per_card`/`count`, `per_level`, `per_atk`/`atk`, `per_def`/`def`, `half_atk`, `half_def`, `per_hand`, `per_graveyard`, `per_banished`, `per_deck`, `per_extra`, `per_monster`, `per_spell_trap`, `set_atk`, `set_def`. |
 | `inflict_damage` / `gain_lp` | same dynamic fields | Damage/LP amount can use any of the dynamic modes. |
 | `battle_damage_modifier` | `mode`: `zero`, `half`, `double` | Applied to battle damage dealt/received by the target. |
-| `lock_activation` / `allow_fusion` / `redirect_battle_damage` / `prevent_battle_damage` / `battle_damage_zero` | see §4 | **Continuous-only**: legal only on `continuous`, `equip_continuous` and `field_continuous` scripts (loader and validator both reject other triggers), because `RecomputeContinuous()` owns this state. |
 | `piercing` | `target` | Continuous or lingering piercing permission. |
 | `extra_attack` / `attack_directly` | `target`, optional `count` | Battle-phase permissions; extra attacks also work through continuous scripts. |
 
@@ -333,7 +326,7 @@ equip list, so a card is never counted twice.
 
 | Op | Fields | Behaviour |
 | --- | --- | --- |
-| `attack_lock` | `target`, `mode`, `player`, `side_wide` | `cannot_attack`, `cannot_attack_directly`, `max_attackers`/`only_one_attacker` (always one attacker). Side-wide `until_end_of_turn` locks also cover monsters summoned later in the turn; a targeted `until_end_of_turn` lock (Chaos Sorcerer) applies only to its targets and ends at the next turn start. The `must_attack` op was removed: the engine never queries `MustAttack()`. |
+| `attack_lock` / `must_attack` | `target`, `mode`, `player`, `amount`, `side_wide` | `cannot_attack`, `cannot_attack_directly`, `must_attack`, `max_attackers`/`only_one_attacker`. `until_end_of_turn` locks also cover monsters summoned later in the turn. |
 | `negate_attack` | none | Sets the one-shot attack-negation flag consumed by the engine after `on_attack_target`. |
 | `battle_position_lock` | `target`, `mode` | `cannot_change` or `defense_at_end` (applied by `OnBattleEnd`). |
 | `destruction_replacement` / `destroy_replace` | `target`, `mode` | `cannot_be_destroyed`, `cannot_be_destroyed_by_battle`, `banish_instead`. Effect-destruction still works when only battle immunity is registered. |
@@ -347,11 +340,6 @@ equip list, so a card is never counted twice.
   "face_down"`; face-down Defense is a Set, not a Flip Summon.
 - `return_to_deck` accepts `"destination": "deck_top"` or
   `"position": "top"`.  `deck_top` is the card the next `Draw` takes.
-  `"shuffle": true` shuffles the owner's Deck afterwards.
-- `special_summon` / `summon` stop when the summoning side has no free Monster
-  Zone; remaining targets stay where they are (Hyena, Giant Germ).
-- `skip_phase` supports only `"mode": "draw"`; `player` is `self` (default),
-  `opponent` or `both`.
 - `roll_die` / `toss_coin` use the duel's seeded `FRandomStream`.  `count`,
   `success_min`, `success_max` and `threshold` control the result, and
   `success_operations` / `failure_operations` contain nested operation arrays.
@@ -406,25 +394,10 @@ in a different zone.
 
 ### 9.8 Runtime self-test
 
-`-DAEffectRuntimeSelfTest` and `da.EffectRuntimeSelfTest` have **172**
-`Report.Check` call sites (some are conditional), including a load regression
-for all **253** script files / **312** script entries, focused
-single/continuous/cleanup cases for every primitive above, explicit
-two-copy/other-card source-binding cases, Opponent-side cases (AI Raigeki, AI
-Sangan, AI Jinzo), a full-board Hyena summon, Chaos Sorcerer's per-card turn
-lock, and chained-trigger cases (effect-destroyed Sangan, bounded self-loop).
-
-### 9.9 Chained triggers
-
-Events raised while a script is resolving (a Raigeki destroying Sangan, a
-special summon, a position change) are queued and fired once the resolution
-ends, in order, with the zone snapshot taken when they were raised.  The
-queue holds at most 64 pending events and one drain fires at most 256, so a
-self-retriggering script cannot loop forever.
-
-Cost `zone` shorthand (`{"op": "discard", "zone": "self_hand", "count": 1,
-"filter": ...}`) honours `filter` and `count` (default 1).  `$cost` is no
-longer a target reference.
+`-DAEffectRuntimeSelfTest` and `da.EffectRuntimeSelfTest` now run **124**
+checks, including a load regression for all **253** script files / **312**
+script entries and focused single/continuous/cleanup cases for every
+primitive above, plus explicit two-copy/other-card source-binding cases.
 
 ## 10. Non-goals and boundaries
 

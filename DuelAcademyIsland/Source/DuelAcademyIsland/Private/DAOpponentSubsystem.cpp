@@ -3,44 +3,237 @@
 #include "DAOpponentSubsystem.h"
 
 #include "DACardRecords.h"
-#include "DAJson.h"
-#include "DAProfileSubsystem.h"
 #include "DuelAcademyIsland.h"
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
 #include "Engine/GameInstance.h"
 #include "HAL/FileManager.h"
+#include "Subsystems/SubsystemCollection.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 namespace
 {
+	FString OppReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	{
+		FString Value;
+		if (Object.IsValid())
+		{
+			Object->TryGetStringField(Field, Value);
+		}
+		return Value;
+	}
+
+	int32 OppReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
+	{
+		int32 Value = Default;
+		if (Object.IsValid())
+		{
+			Object->TryGetNumberField(Field, Value);
+		}
+		return Value;
+	}
+
+	bool OppReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bDefault = false)
+	{
+		bool bValue = bDefault;
+		if (Object.IsValid())
+		{
+			Object->TryGetBoolField(Field, bValue);
+		}
+		return bValue;
+	}
+
+	void OppReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& Out)
+	{
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (Object.IsValid() && Object->TryGetArrayField(Field, Values))
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *Values)
+			{
+				if (Value.IsValid())
+				{
+					Out.Add(Value->AsString());
+				}
+			}
+		}
+	}
+
+	void ReadIntArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<int32>& Out)
+	{
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (Object.IsValid() && Object->TryGetArrayField(Field, Values))
+		{
+			for (const TSharedPtr<FJsonValue>& Value : *Values)
+			{
+				if (!Value.IsValid() || Value->Type != EJson::Number)
+				{
+					continue;
+				}
+				const double Number = Value->AsNumber();
+				if (!FMath::IsFinite(Number))
+				{
+					continue;
+				}
+				Out.Add(static_cast<int32>(FMath::Clamp(
+					Number, static_cast<double>(TNumericLimits<int32>::Min()),
+					static_cast<double>(TNumericLimits<int32>::Max()))));
+			}
+		}
+	}
+
+	TSharedPtr<FJsonObject> ReadObject(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	{
+		const TSharedPtr<FJsonObject>* Found = nullptr;
+		if (Object.IsValid() && Object->TryGetObjectField(Field, Found) && Found && Found->IsValid())
+		{
+			return *Found;
+		}
+		return nullptr;
+	}
+
 	void ReadNumberMap(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TMap<FString, float>& Out)
 	{
-		const TSharedPtr<FJsonObject> MapObject = DAJson::ReadObject(Object, Field);
+		const TSharedPtr<FJsonObject> MapObject = ReadObject(Object, Field);
 		if (!MapObject.IsValid())
 		{
 			return;
 		}
-		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : MapObject->Values)
+		for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : MapObject->Values)
 		{
 			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::Number)
 			{
-				Out.Add(DAJson::KeyToString(Pair.Key), static_cast<float>(Pair.Value->AsNumber()));
+				Out.Add(Pair.Key, static_cast<float>(Pair.Value->AsNumber()));
 			}
 		}
 	}
 
 	void ReadBoolMap(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TMap<FString, bool>& Out)
 	{
-		const TSharedPtr<FJsonObject> MapObject = DAJson::ReadObject(Object, Field);
+		const TSharedPtr<FJsonObject> MapObject = ReadObject(Object, Field);
 		if (!MapObject.IsValid())
 		{
 			return;
 		}
-		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : MapObject->Values)
+		for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : MapObject->Values)
 		{
 			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::Boolean)
 			{
-				Out.Add(DAJson::KeyToString(Pair.Key), Pair.Value->AsBool());
+				Out.Add(Pair.Key, Pair.Value->AsBool());
 			}
 		}
+	}
+
+	void OppWriteIntMap(const TMap<FString, int32>& Map, TSharedPtr<FJsonObject>& OutObject)
+	{
+		OutObject = MakeShared<FJsonObject>();
+		for (const TPair<FString, int32>& Pair : Map)
+		{
+			if (!Pair.Key.IsEmpty())
+			{
+				OutObject->SetNumberField(Pair.Key, Pair.Value);
+			}
+		}
+	}
+
+	void OppReadIntMap(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TMap<FString, int32>& OutMap)
+	{
+		const TSharedPtr<FJsonObject> Source = ReadObject(Object, Field);
+		if (!Source.IsValid())
+		{
+			return;
+		}
+		for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : Source->Values)
+		{
+			const FString Key(*Pair.Key);
+			if (Key.IsEmpty() || !Pair.Value.IsValid() || Pair.Value->Type != EJson::Number)
+			{
+				continue;
+			}
+			const double Number = Pair.Value->AsNumber();
+			if (!FMath::IsFinite(Number))
+			{
+				continue;
+			}
+			OutMap.Add(Key, static_cast<int32>(FMath::Clamp(
+				Number, 0.0, static_cast<double>(TNumericLimits<int32>::Max()))));
+		}
+	}
+
+	void OppWriteSortedStringArray(const TArray<FString>& Values, const TCHAR* Field,
+		const TSharedPtr<FJsonObject>& OutObject)
+	{
+		TArray<FString> Sorted = Values;
+		Sorted.Sort();
+		TArray<TSharedPtr<FJsonValue>> Array;
+		for (const FString& Value : Sorted)
+		{
+			if (!Value.IsEmpty())
+			{
+				Array.Add(MakeShared<FJsonValueString>(Value));
+			}
+		}
+		OutObject->SetArrayField(Field, Array);
+	}
+
+	void OppReadStringArrayField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& Out)
+	{
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values) || !Values)
+		{
+			return;
+		}
+		for (const TSharedPtr<FJsonValue>& Value : *Values)
+		{
+			if (Value.IsValid() && Value->Type == EJson::String)
+			{
+				const FString Text = Value->AsString();
+				if (!Text.IsEmpty())
+				{
+					Out.AddUnique(Text);
+				}
+			}
+		}
+	}
+
+	bool OppIsStringArrayField(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
+	{
+		if (!Object.IsValid() || !Object->HasField(Field))
+		{
+			return true;
+		}
+		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
+		if (!Object->TryGetArrayField(Field, Values) || !Values)
+		{
+			return false;
+		}
+		for (const TSharedPtr<FJsonValue>& Value : *Values)
+		{
+			if (!Value.IsValid() || Value->Type != EJson::String)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool LoadJson(const FString& Path, TSharedPtr<FJsonValue>& OutRoot, FString& OutError)
+	{
+		FString Raw;
+		if (!FFileHelper::LoadFileToString(Raw, *Path))
+		{
+			OutError = FString::Printf(TEXT("File not found: %s"), *Path);
+			return false;
+		}
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
+		if (!FJsonSerializer::Deserialize(Reader, OutRoot) || !OutRoot.IsValid())
+		{
+			OutError = FString::Printf(TEXT("JSON parse failed: %s"), *Path);
+			return false;
+		}
+		return true;
 	}
 }
 
@@ -162,7 +355,7 @@ bool UDAOpponentSubsystem::Reload(FString& OutError)
 bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError)
 {
 	TSharedPtr<FJsonValue> Root;
-	if (!DAJson::LoadFile(Path, Root, OutError))
+	if (!LoadJson(Path, Root, OutError))
 	{
 		return false;
 	}
@@ -190,30 +383,30 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 		}
 
 		FDAOpponentDef Duelist;
-		Duelist.Id = DAJson::ReadString(Object, TEXT("id"));
+		Duelist.Id = OppReadString(Object, TEXT("id"));
 		if (Duelist.Id.IsEmpty())
 		{
 			continue;
 		}
-		Duelist.Name = DAJson::ReadString(Object, TEXT("name"));
-		DAJson::AppendStringArray(Object, TEXT("aliases"), Duelist.Aliases);
-		Duelist.Role = DAJson::ReadString(Object, TEXT("role"));
-		Duelist.Rank = DAJson::ReadInt(Object, TEXT("rank"));
-		Duelist.Dorm = DAJson::ReadString(Object, TEXT("dorm"));
-		Duelist.Year = DAJson::ReadInt(Object, TEXT("year"), 1);
-		Duelist.Title = DAJson::ReadString(Object, TEXT("title"));
-		Duelist.AIProfile = DAJson::ReadString(Object, TEXT("ai_profile"));
-		DAJson::AppendStringArray(Object, TEXT("decks"), Duelist.Decks);
-		DAJson::AppendIntArray(Object, TEXT("signature_card_ids"), Duelist.SignatureCardIds);
-		DAJson::AppendStringArray(Object, TEXT("signature_cards"), Duelist.SignatureCards);
-		DAJson::AppendIntArray(Object, TEXT("canon_gift_card_ids"), Duelist.CanonGiftCardIds);
-		Duelist.CanonSource = DAJson::ReadString(Object, TEXT("canon_source"));
-		Duelist.CanonConfidence = DAJson::ReadString(Object, TEXT("canon_confidence"));
-		Duelist.DefaultDeck = DAJson::ReadString(Object, TEXT("default_deck"));
-		DAJson::AppendIntArray(Object, TEXT("ante"), Duelist.Ante);
-		Duelist.Confidence = DAJson::ReadString(Object, TEXT("confidence"));
-		Duelist.Source = DAJson::ReadString(Object, TEXT("source"));
-		Duelist.Notes = DAJson::ReadString(Object, TEXT("notes"));
+		Duelist.Name = OppReadString(Object, TEXT("name"));
+		OppReadStringArray(Object, TEXT("aliases"), Duelist.Aliases);
+		Duelist.Role = OppReadString(Object, TEXT("role"));
+		Duelist.Rank = OppReadInt(Object, TEXT("rank"));
+		Duelist.Dorm = OppReadString(Object, TEXT("dorm"));
+		Duelist.Year = OppReadInt(Object, TEXT("year"), 1);
+		Duelist.Title = OppReadString(Object, TEXT("title"));
+		Duelist.AIProfile = OppReadString(Object, TEXT("ai_profile"));
+		OppReadStringArray(Object, TEXT("decks"), Duelist.Decks);
+		ReadIntArray(Object, TEXT("signature_card_ids"), Duelist.SignatureCardIds);
+		OppReadStringArray(Object, TEXT("signature_cards"), Duelist.SignatureCards);
+		ReadIntArray(Object, TEXT("canon_gift_card_ids"), Duelist.CanonGiftCardIds);
+		Duelist.CanonSource = OppReadString(Object, TEXT("canon_source"));
+		Duelist.CanonConfidence = OppReadString(Object, TEXT("canon_confidence"));
+		Duelist.DefaultDeck = OppReadString(Object, TEXT("default_deck"));
+		ReadIntArray(Object, TEXT("ante"), Duelist.Ante);
+		Duelist.Confidence = OppReadString(Object, TEXT("confidence"));
+		Duelist.Source = OppReadString(Object, TEXT("source"));
+		Duelist.Notes = OppReadString(Object, TEXT("notes"));
 
 		const TArray<TSharedPtr<FJsonValue>>* EvolutionValues = nullptr;
 		if (Object->TryGetArrayField(TEXT("evolution_rules"), EvolutionValues))
@@ -226,13 +419,13 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 					continue;
 				}
 				FDAOpponentEvolutionRule Rule;
-				Rule.Id = DAJson::ReadString(EvolutionObject, TEXT("id"));
-				Rule.AfterWins = DAJson::ReadInt(EvolutionObject, TEXT("after_wins"), 1);
-				Rule.Counter = DAJson::ReadString(EvolutionObject, TEXT("counter"));
-				Rule.Deck = DAJson::ReadString(EvolutionObject, TEXT("deck"));
-				Rule.Description = DAJson::ReadString(EvolutionObject, TEXT("description"));
-				Rule.Confidence = DAJson::ReadString(EvolutionObject, TEXT("confidence"));
-				Rule.Source = DAJson::ReadString(EvolutionObject, TEXT("source"));
+				Rule.Id = OppReadString(EvolutionObject, TEXT("id"));
+				Rule.AfterWins = OppReadInt(EvolutionObject, TEXT("after_wins"), 1);
+				Rule.Counter = OppReadString(EvolutionObject, TEXT("counter"));
+				Rule.Deck = OppReadString(EvolutionObject, TEXT("deck"));
+				Rule.Description = OppReadString(EvolutionObject, TEXT("description"));
+				Rule.Confidence = OppReadString(EvolutionObject, TEXT("confidence"));
+				Rule.Source = OppReadString(EvolutionObject, TEXT("source"));
 				Duelist.EvolutionRules.Add(MoveTemp(Rule));
 			}
 		}
@@ -248,9 +441,9 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 					continue;
 				}
 				FDAOpponentLocation Location;
-				Location.Zone = DAJson::ReadString(LocationObject, TEXT("zone"));
-				Location.Interior = DAJson::ReadString(LocationObject, TEXT("interior"));
-				Location.Name = DAJson::ReadString(LocationObject, TEXT("name"));
+				Location.Zone = OppReadString(LocationObject, TEXT("zone"));
+				Location.Interior = OppReadString(LocationObject, TEXT("interior"));
+				Location.Name = OppReadString(LocationObject, TEXT("name"));
 				Duelist.Locations.Add(MoveTemp(Location));
 			}
 		}
@@ -266,27 +459,27 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 					continue;
 				}
 				FDAOpponentScheduleSlot Slot;
-				DAJson::AppendStringArray(ScheduleObject, TEXT("weekdays"), Slot.Weekdays);
-				DAJson::AppendStringArray(ScheduleObject, TEXT("periods"), Slot.Periods);
-				Slot.Zone = DAJson::ReadString(ScheduleObject, TEXT("zone"));
-				Slot.Interior = DAJson::ReadString(ScheduleObject, TEXT("interior"));
+				OppReadStringArray(ScheduleObject, TEXT("weekdays"), Slot.Weekdays);
+				OppReadStringArray(ScheduleObject, TEXT("periods"), Slot.Periods);
+				Slot.Zone = OppReadString(ScheduleObject, TEXT("zone"));
+				Slot.Interior = OppReadString(ScheduleObject, TEXT("interior"));
 				Duelist.Schedule.Add(MoveTemp(Slot));
 			}
 		}
 
-		if (const TSharedPtr<FJsonObject> AccessObject = DAJson::ReadObject(Object, TEXT("access")))
+		if (const TSharedPtr<FJsonObject> AccessObject = ReadObject(Object, TEXT("access")))
 		{
-			Duelist.Access.RequiresFlag = DAJson::ReadString(AccessObject, TEXT("requires_flag"));
-			Duelist.Access.RequiresTitle = DAJson::ReadString(AccessObject, TEXT("requires_title"));
-			Duelist.Access.RequiresDorm = DAJson::ReadString(AccessObject, TEXT("requires_dorm"));
-			Duelist.Access.bEventOnly = DAJson::ReadBool(AccessObject, TEXT("event_only"));
-			Duelist.Access.MinDay = DAJson::ReadInt(AccessObject, TEXT("min_day"));
+			Duelist.Access.RequiresFlag = OppReadString(AccessObject, TEXT("requires_flag"));
+			Duelist.Access.RequiresTitle = OppReadString(AccessObject, TEXT("requires_title"));
+			Duelist.Access.RequiresDorm = OppReadString(AccessObject, TEXT("requires_dorm"));
+			Duelist.Access.bEventOnly = OppReadBool(AccessObject, TEXT("event_only"));
+			Duelist.Access.MinDay = OppReadInt(AccessObject, TEXT("min_day"));
 		}
 
-		if (const TSharedPtr<FJsonObject> EmailObject = DAJson::ReadObject(Object, TEXT("email")))
+		if (const TSharedPtr<FJsonObject> EmailObject = ReadObject(Object, TEXT("email")))
 		{
-			Duelist.Email.UnlockFlag = DAJson::ReadString(EmailObject, TEXT("unlock_flag"));
-			Duelist.Email.Address = DAJson::ReadString(EmailObject, TEXT("address"));
+			Duelist.Email.UnlockFlag = OppReadString(EmailObject, TEXT("unlock_flag"));
+			Duelist.Email.Address = OppReadString(EmailObject, TEXT("address"));
 			const TArray<TSharedPtr<FJsonValue>>* ThreadValues = nullptr;
 			if (EmailObject->TryGetArrayField(TEXT("threads"), ThreadValues))
 			{
@@ -298,20 +491,20 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 						continue;
 					}
 					FDAOpponentEmailThread Thread;
-					Thread.Id = DAJson::ReadString(ThreadObject, TEXT("id"));
-					Thread.Subject = DAJson::ReadString(ThreadObject, TEXT("subject"));
-					Thread.UnlockFlag = DAJson::ReadString(ThreadObject, TEXT("unlock_flag"));
+					Thread.Id = OppReadString(ThreadObject, TEXT("id"));
+					Thread.Subject = OppReadString(ThreadObject, TEXT("subject"));
+					Thread.UnlockFlag = OppReadString(ThreadObject, TEXT("unlock_flag"));
 					Duelist.Email.Threads.Add(MoveTemp(Thread));
 				}
 			}
 		}
 
-		if (const TSharedPtr<FJsonObject> RequestObject = DAJson::ReadObject(Object, TEXT("duel_request")))
+		if (const TSharedPtr<FJsonObject> RequestObject = ReadObject(Object, TEXT("duel_request")))
 		{
-			Duelist.DuelRequest.UnlockFlag = DAJson::ReadString(RequestObject, TEXT("unlock_flag"));
-			Duelist.DuelRequest.MinWins = DAJson::ReadInt(RequestObject, TEXT("min_wins"));
-			Duelist.DuelRequest.CooldownDays = DAJson::ReadInt(RequestObject, TEXT("cooldown_days"), 1);
-			Duelist.DuelRequest.MaxPerDay = DAJson::ReadInt(RequestObject, TEXT("max_per_day"), 1);
+			Duelist.DuelRequest.UnlockFlag = OppReadString(RequestObject, TEXT("unlock_flag"));
+			Duelist.DuelRequest.MinWins = OppReadInt(RequestObject, TEXT("min_wins"));
+			Duelist.DuelRequest.CooldownDays = OppReadInt(RequestObject, TEXT("cooldown_days"), 1);
+			Duelist.DuelRequest.MaxPerDay = OppReadInt(RequestObject, TEXT("max_per_day"), 1);
 		}
 
 		const TArray<TSharedPtr<FJsonValue>>* GiftValues = nullptr;
@@ -325,26 +518,26 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 					continue;
 				}
 				FDAOpponentGift Gift;
-				Gift.Id = DAJson::ReadString(GiftObject, TEXT("id"));
-				Gift.Type = DAJson::ReadString(GiftObject, TEXT("type"));
-				Gift.Amount = DAJson::ReadInt(GiftObject, TEXT("amount"));
-				Gift.CardId = DAJson::ReadInt(GiftObject, TEXT("card_id"));
-				Gift.Event = DAJson::ReadString(GiftObject, TEXT("event"));
-				Gift.Confidence = DAJson::ReadString(GiftObject, TEXT("confidence"));
-				Gift.Source = DAJson::ReadString(GiftObject, TEXT("source"));
+				Gift.Id = OppReadString(GiftObject, TEXT("id"));
+				Gift.Type = OppReadString(GiftObject, TEXT("type"));
+				Gift.Amount = OppReadInt(GiftObject, TEXT("amount"));
+				Gift.CardId = OppReadInt(GiftObject, TEXT("card_id"));
+				Gift.Event = OppReadString(GiftObject, TEXT("event"));
+				Gift.Confidence = OppReadString(GiftObject, TEXT("confidence"));
+				Gift.Source = OppReadString(GiftObject, TEXT("source"));
 				Duelist.Gifts.Add(MoveTemp(Gift));
 			}
 		}
 
-		if (const TSharedPtr<FJsonObject> WalkObject = DAJson::ReadObject(Object, TEXT("walk_home")))
+		if (const TSharedPtr<FJsonObject> WalkObject = ReadObject(Object, TEXT("walk_home")))
 		{
-			Duelist.WalkHome.bEnabled = DAJson::ReadBool(WalkObject, TEXT("enabled"));
-			Duelist.WalkHome.Zone = DAJson::ReadString(WalkObject, TEXT("zone"));
-			DAJson::AppendStringArray(WalkObject, TEXT("weekdays"), Duelist.WalkHome.Weekdays);
-			Duelist.WalkHome.Period = DAJson::ReadString(WalkObject, TEXT("period"));
-			Duelist.WalkHome.Flag = DAJson::ReadString(WalkObject, TEXT("flag"));
-			Duelist.WalkHome.Confidence = DAJson::ReadString(WalkObject, TEXT("confidence"));
-			Duelist.WalkHome.Source = DAJson::ReadString(WalkObject, TEXT("source"));
+			Duelist.WalkHome.bEnabled = OppReadBool(WalkObject, TEXT("enabled"));
+			Duelist.WalkHome.Zone = OppReadString(WalkObject, TEXT("zone"));
+			OppReadStringArray(WalkObject, TEXT("weekdays"), Duelist.WalkHome.Weekdays);
+			Duelist.WalkHome.Period = OppReadString(WalkObject, TEXT("period"));
+			Duelist.WalkHome.Flag = OppReadString(WalkObject, TEXT("flag"));
+			Duelist.WalkHome.Confidence = OppReadString(WalkObject, TEXT("confidence"));
+			Duelist.WalkHome.Source = OppReadString(WalkObject, TEXT("source"));
 		}
 
 		if (!OpponentIndex.Contains(Duelist.Id))
@@ -364,7 +557,7 @@ bool UDAOpponentSubsystem::LoadRosterFile(const FString& Path, FString& OutError
 bool UDAOpponentSubsystem::LoadDeckFile(const FString& Path, FString& OutError)
 {
 	TSharedPtr<FJsonValue> Root;
-	if (!DAJson::LoadFile(Path, Root, OutError))
+	if (!LoadJson(Path, Root, OutError))
 	{
 		return false;
 	}
@@ -376,21 +569,21 @@ bool UDAOpponentSubsystem::LoadDeckFile(const FString& Path, FString& OutError)
 	}
 
 	FDAOpponentDeckDef Deck;
-	Deck.Id = DAJson::ReadString(Object, TEXT("id"));
+	Deck.Id = OppReadString(Object, TEXT("id"));
 	if (Deck.Id.IsEmpty())
 	{
 		OutError = FString::Printf(TEXT("Deck has no id: %s"), *Path);
 		return false;
 	}
-	Deck.Opponent = DAJson::ReadString(Object, TEXT("opponent"));
-	Deck.Name = DAJson::ReadString(Object, TEXT("name"));
-	Deck.Variant = DAJson::ReadString(Object, TEXT("variant"));
-	Deck.Confidence = DAJson::ReadString(Object, TEXT("confidence"));
-	Deck.Source = DAJson::ReadString(Object, TEXT("source"));
-	Deck.Notes = DAJson::ReadString(Object, TEXT("notes"));
-	DAJson::AppendIntArray(Object, TEXT("cards"), Deck.Cards);
-	DAJson::AppendIntArray(Object, TEXT("extra"), Deck.Extra);
-	DAJson::AppendIntArray(Object, TEXT("side"), Deck.Side);
+	Deck.Opponent = OppReadString(Object, TEXT("opponent"));
+	Deck.Name = OppReadString(Object, TEXT("name"));
+	Deck.Variant = OppReadString(Object, TEXT("variant"));
+	Deck.Confidence = OppReadString(Object, TEXT("confidence"));
+	Deck.Source = OppReadString(Object, TEXT("source"));
+	Deck.Notes = OppReadString(Object, TEXT("notes"));
+	ReadIntArray(Object, TEXT("cards"), Deck.Cards);
+	ReadIntArray(Object, TEXT("extra"), Deck.Extra);
+	ReadIntArray(Object, TEXT("side"), Deck.Side);
 
 	if (DeckIndex.Contains(Deck.Id))
 	{
@@ -427,7 +620,7 @@ void UDAOpponentSubsystem::LoadAIProfileDirectory(const FString& Directory, TArr
 		const FString Path = FPaths::Combine(Directory, File);
 		TSharedPtr<FJsonValue> Root;
 		FString Error;
-		if (!DAJson::LoadFile(Path, Root, Error))
+		if (!LoadJson(Path, Root, Error))
 		{
 			OutWarnings.Add(Error);
 			continue;
@@ -440,26 +633,26 @@ void UDAOpponentSubsystem::LoadAIProfileDirectory(const FString& Directory, TArr
 		}
 
 		FDAIProfileDef Profile;
-		Profile.Id = DAJson::ReadString(Object, TEXT("id"));
+		Profile.Id = OppReadString(Object, TEXT("id"));
 		if (Profile.Id.IsEmpty() || AIProfileIndex.Contains(Profile.Id))
 		{
 			OutWarnings.Add(FString::Printf(TEXT("AI profile missing/duplicate id: %s"), *Path));
 			continue;
 		}
-		Profile.Label = DAJson::ReadString(Object, TEXT("label"));
-		Profile.Strategy = DAJson::ReadString(Object, TEXT("strategy"));
-		Profile.Difficulty = DAJson::ReadInt(Object, TEXT("difficulty"), 2);
+		Profile.Label = OppReadString(Object, TEXT("label"));
+		Profile.Strategy = OppReadString(Object, TEXT("strategy"));
+		Profile.Difficulty = OppReadInt(Object, TEXT("difficulty"), 2);
 		double Aggression = 0.7;
 		Object->TryGetNumberField(TEXT("aggression"), Aggression);
 		Profile.Aggression = static_cast<float>(Aggression);
 		ReadNumberMap(Object, TEXT("weights"), Profile.Weights);
 		ReadNumberMap(Object, TEXT("thresholds"), Profile.Thresholds);
 		ReadBoolMap(Object, TEXT("thresholds"), Profile.BoolThresholds);
-		DAJson::AppendStringArray(Object, TEXT("preferred_card_names"), Profile.PreferredCardNames);
-		DAJson::AppendStringArray(Object, TEXT("avoid_card_names"), Profile.AvoidCardNames);
-		Profile.Confidence = DAJson::ReadString(Object, TEXT("confidence"));
-		Profile.Source = DAJson::ReadString(Object, TEXT("source"));
-		Profile.Notes = DAJson::ReadString(Object, TEXT("notes"));
+		OppReadStringArray(Object, TEXT("preferred_card_names"), Profile.PreferredCardNames);
+		OppReadStringArray(Object, TEXT("avoid_card_names"), Profile.AvoidCardNames);
+		Profile.Confidence = OppReadString(Object, TEXT("confidence"));
+		Profile.Source = OppReadString(Object, TEXT("source"));
+		Profile.Notes = OppReadString(Object, TEXT("notes"));
 
 		AIProfileIndex.Add(Profile.Id, AIProfileList.Num());
 		AIProfileList.Add(MoveTemp(Profile));
@@ -491,6 +684,67 @@ const FDAIProfileDef* UDAOpponentSubsystem::FindAIProfile(const FString& Profile
 		return AIProfileList.IsValidIndex(*Index) ? &AIProfileList[*Index] : nullptr;
 	}
 	return nullptr;
+}
+
+bool UDAOpponentSubsystem::GetDeckCards(const FString& DeckId, TArray<int32>& OutMain, TArray<int32>& OutExtra) const
+{
+	const FDAOpponentDeckDef* Deck = FindDeck(DeckId);
+	if (!Deck)
+	{
+		OutMain.Reset();
+		OutExtra.Reset();
+		return false;
+	}
+	OutMain = Deck->Cards;
+	OutExtra = Deck->Extra;
+	return true;
+}
+
+TArray<FString> UDAOpponentSubsystem::GetDuelistIds() const
+{
+	TArray<FString> Ids;
+	Ids.Reserve(Opponents.Num());
+	for (const FDAOpponentDef& Opponent : Opponents)
+	{
+		Ids.Add(Opponent.Id);
+	}
+	return Ids;
+}
+
+TArray<FString> UDAOpponentSubsystem::GetDeckIds() const
+{
+	TArray<FString> Ids;
+	Ids.Reserve(DeckList.Num());
+	for (const FDAOpponentDeckDef& Deck : DeckList)
+	{
+		Ids.Add(Deck.Id);
+	}
+	return Ids;
+}
+
+TArray<const FDAOpponentDef*> UDAOpponentSubsystem::GetDuelistsByRank() const
+{
+	TArray<const FDAOpponentDef*> Result;
+	Result.Reserve(Opponents.Num());
+	for (const FDAOpponentDef& Opponent : Opponents)
+	{
+		Result.Add(&Opponent);
+	}
+	Result.Sort([](const FDAOpponentDef& A, const FDAOpponentDef& B)
+	{
+		const bool bARanked = A.Role.Equals(TEXT("ranked"), ESearchCase::IgnoreCase) && A.Rank > 0;
+		const bool bBRanked = B.Role.Equals(TEXT("ranked"), ESearchCase::IgnoreCase) && B.Rank > 0;
+		if (bARanked != bBRanked)
+		{
+			return bARanked;
+		}
+		if (A.Rank != B.Rank)
+		{
+			return A.Rank < B.Rank;
+		}
+		return A.Id < B.Id;
+	});
+	return Result;
 }
 
 bool UDAOpponentSubsystem::IsDuelistUnlocked(const FString& OpponentId, const FString& PlayerTitle,
@@ -628,27 +882,16 @@ FDAOpponentDuelOutcome UDAOpponentSubsystem::RecordDuelResult(const FString& Opp
 	Outcome.Wins = GetWins(OpponentId);
 	Outcome.Losses = GetLosses(OpponentId);
 
-	// Same rule evaluation as ResolveDeckFor (which honours each rule's
-	// "counter"): the default wins_<id> counter is this subsystem's own tally,
-	// any other counter is read from the profile when one is available.
 	const FDAOpponentDef* Opponent = FindOpponent(OpponentId);
-	const FString DefaultCounter = FString::Printf(TEXT("wins_%s"), *OpponentId);
-	const UGameInstance* GameInstance = GetGameInstance();
-	const UDAProfileSubsystem* Profile = GameInstance ? GameInstance->GetSubsystem<UDAProfileSubsystem>() : nullptr;
-	TMap<FString, int32> Counters;
-	Counters.Add(DefaultCounter, Outcome.Wins);
+	int32 BestWins = -1;
 	for (const FDAOpponentEvolutionRule& Rule : Opponent->EvolutionRules)
 	{
-		if (!Rule.Counter.IsEmpty() && Rule.Counter != DefaultCounter && !Counters.Contains(Rule.Counter))
+		if (Outcome.Wins >= Rule.AfterWins && Rule.AfterWins >= BestWins && FindDeck(Rule.Deck))
 		{
-			Counters.Add(Rule.Counter, Profile ? Profile->GetCounter(Rule.Counter) : 0);
+			BestWins = Rule.AfterWins;
+			Outcome.EvolutionDeckId = Rule.Deck;
+			Outcome.bEvolutionUnlocked = true;
 		}
-	}
-	const FString Evolved = ResolveDeckFor(OpponentId, Counters);
-	if (!Evolved.IsEmpty() && Evolved != Opponent->DefaultDeck)
-	{
-		Outcome.EvolutionDeckId = Evolved;
-		Outcome.bEvolutionUnlocked = true;
 	}
 	return Outcome;
 }
@@ -721,16 +964,6 @@ bool UDAOpponentSubsystem::CanRequestDuel(const FString& OpponentId, int32 DayIn
 	{
 		OutReason = FString::Printf(TEXT("Requires %d total wins."), Opponent->DuelRequest.MinWins);
 		return false;
-	}
-	if (const int32* LastDay = RuntimeState.LastRequestDay.Find(OpponentId))
-	{
-		const int32 Cooldown = FMath::Max(0, Opponent->DuelRequest.CooldownDays);
-		// Same-day repeats are governed by max_per_day below.
-		if (DayIndex > *LastDay && DayIndex - *LastDay < Cooldown)
-		{
-			OutReason = FString::Printf(TEXT("This opponent can be challenged again in %d day(s)."), Cooldown - (DayIndex - *LastDay));
-			return false;
-		}
 	}
 	if (RuntimeState.RequestDay == DayIndex)
 	{
