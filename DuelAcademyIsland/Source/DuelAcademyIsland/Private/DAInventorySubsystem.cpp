@@ -52,6 +52,10 @@ namespace
 
 void UDAInventorySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
+	// The profile (inventory provider) and save (payload provider) subsystems
+	// must exist before this one registers with them.
+	Collection.InitializeDependency<UDAProfileSubsystem>();
+	Collection.InitializeDependency<UDASaveSubsystem>();
 	Super::Initialize(Collection);
 
 	LoadOwnershipLimit();
