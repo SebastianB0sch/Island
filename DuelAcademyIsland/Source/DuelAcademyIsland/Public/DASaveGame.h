@@ -80,6 +80,11 @@ public:
 
 	/** Restore this lane's state. Return false to fail the load. */
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) = 0;
+
+	/** The loaded save has no section for this lane (e.g. an older save). The
+	 *  default keeps the current state; lanes whose state must not leak between
+	 *  sessions reset here. */
+	virtual void OnSaveSectionMissing() {}
 };
 
 /** UI-facing metadata for one slot. Populated without loading the profile. */

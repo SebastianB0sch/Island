@@ -314,6 +314,7 @@ public:
 	virtual FString GetSaveSectionName() const override;
 	virtual bool WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const override;
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) override;
+	virtual void OnSaveSectionMissing() override { ResetRuntimeState(); }
 
 private:
 	bool Tick(float DeltaSeconds);
