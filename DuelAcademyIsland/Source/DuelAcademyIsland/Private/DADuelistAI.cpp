@@ -4,15 +4,24 @@
 
 #include "DACardRecords.h"
 
-FDAIDuelistAI::FDAIDuelistAI()
+namespace
 {
+	// Fallback weights used when a profile omits a key.  Some keys deliberately
+	// use different fallbacks at different call sites; each value is named for
+	// the place it is used so none of them changes silently.
+	constexpr float DefaultNonMonsterBaseWeight = 0.5f;   // "set_trap"/"removal" in the ScoreCard base value
+	constexpr float DefaultAttackWeight = 0.8f;
+	constexpr float DefaultDirectAttackWeight = 0.8f;
+	constexpr float DefaultBigMonsterWeight = 0.6f;
+	constexpr float DefaultSetTrapWeight = 0.7f;
+	constexpr float DefaultRemovalActionWeight = 0.6f;    // "removal" when scoring a Spell activation
+	constexpr float DefaultStallWeight = 0.1f;
+	constexpr float DefaultSummonWeight = 1.0f;
 }
 
-void FDAIDuelistAI::Configure(const FDAIProfileDef& InProfile, int32 InSeed)
+void FDAIDuelistAI::Configure(const FDAIProfileDef& InProfile, int32 /*InSeed*/)
 {
-	// The policy is deliberately deterministic: ties break on snapshot order,
-	// so the seed is kept for API compatibility but does not drive a roll.
-	(void)InSeed;
+	// The policy is fully deterministic; the seed is accepted for API stability.
 	Profile = InProfile;
 	Strategy = StrategyFromString(Profile.Strategy);
 	bConfigured = true;
@@ -182,7 +191,7 @@ int32 FDAIDuelistAI::ScoreCard(const FCardRecord& Card) const
 	}
 	else
 	{
-		Score = 8 + FMath::RoundToInt(GetWeight(Card.IsTrap() ? TEXT("set_trap") : TEXT("removal"), 0.5f) * 8.f);
+		Score = 8 + FMath::RoundToInt(GetWeight(Card.IsTrap() ? TEXT("set_trap") : TEXT("removal"), DefaultNonMonsterBaseWeight) * 8.f);
 	}
 
 	if (Profile.PreferredCardNames.Contains(Card.Name))
@@ -197,15 +206,15 @@ int32 FDAIDuelistAI::ScoreCard(const FCardRecord& Card) const
 
 	if (Card.IsMonster())
 	{
-		Score += FMath::RoundToInt(GetWeight(TEXT("attack"), 0.8f) * 8.f);
+		Score += FMath::RoundToInt(GetWeight(TEXT("attack"), DefaultAttackWeight) * 8.f);
 		if (Card.Atk >= 2400)
 		{
-			Score += FMath::RoundToInt(GetWeight(TEXT("big_monster"), 0.6f) * 10.f);
+			Score += FMath::RoundToInt(GetWeight(TEXT("big_monster"), DefaultBigMonsterWeight) * 10.f);
 		}
 	}
 	else if (Card.IsTrap())
 	{
-		Score += FMath::RoundToInt(GetWeight(TEXT("set_trap"), 0.7f) * 8.f);
+		Score += FMath::RoundToInt(GetWeight(TEXT("set_trap"), DefaultSetTrapWeight) * 8.f);
 	}
 	return Score;
 }
@@ -226,7 +235,7 @@ FDAAIDecision FDAIDuelistAI::ChooseAction(const FDAAIDuelSnapshot& Snapshot) con
 			Decision.Reason = TEXT("No attackers.");
 			return Decision;
 		}
-		if (Snapshot.bCanAttackDirectly && GetWeight(TEXT("direct_attack"), 0.8f) >= 0.25f)
+		if (Snapshot.bCanAttackDirectly && GetWeight(TEXT("direct_attack"), DefaultDirectAttackWeight) >= 0.25f)
 		{
 			Decision.Action = EDAAIAction::DirectAttack;
 			Decision.CardId = Snapshot.OwnMonsterIds[0];
@@ -234,12 +243,12 @@ FDAAIDecision FDAIDuelistAI::ChooseAction(const FDAAIDuelSnapshot& Snapshot) con
 			Decision.Reason = TEXT("Direct attack available.");
 			return Decision;
 		}
-		if (Snapshot.OpponentMonsterIds.Num() > 0 && GetWeight(TEXT("attack"), 0.8f) >= 0.35f)
+		if (Snapshot.OpponentMonsterIds.Num() > 0 && GetWeight(TEXT("attack"), DefaultAttackWeight) >= 0.35f)
 		{
 			Decision.Action = EDAAIAction::Attack;
 			Decision.CardId = Snapshot.OwnMonsterIds[0];
 			Decision.TargetCardId = Snapshot.OpponentMonsterIds[0];
-			Decision.Score = FMath::RoundToInt(GetWeight(TEXT("attack"), 0.8f) * 100.f);
+			Decision.Score = FMath::RoundToInt(GetWeight(TEXT("attack"), DefaultAttackWeight) * 100.f);
 			Decision.Reason = TEXT("Attack the opposing board.");
 			return Decision;
 		}
@@ -276,9 +285,9 @@ FDAAIDecision FDAIDuelistAI::ChooseAction(const FDAAIDuelSnapshot& Snapshot) con
 			{
 				continue;
 			}
-			const bool bSet = GetWeight(TEXT("stall"), 0.1f) >= 0.7f && Snapshot.OwnMonsterIds.Num() == 0;
+			const bool bSet = GetWeight(TEXT("stall"), DefaultStallWeight) >= 0.7f && Snapshot.OwnMonsterIds.Num() == 0;
 			const EDAAIAction Action = bSet ? EDAAIAction::SetMonster : EDAAIAction::NormalSummon;
-			const int32 ActionScore = CardScore + (bSet ? FMath::RoundToInt(GetWeight(TEXT("stall"), 0.1f) * 10.f) : FMath::RoundToInt(GetWeight(TEXT("summon"), 1.0f) * 8.f));
+			const int32 ActionScore = CardScore + (bSet ? FMath::RoundToInt(GetWeight(TEXT("stall"), DefaultStallWeight) * 10.f) : FMath::RoundToInt(GetWeight(TEXT("summon"), DefaultSummonWeight) * 8.f));
 			if (ActionScore > BestScore)
 			{
 				BestScore = ActionScore;
@@ -288,7 +297,7 @@ FDAAIDecision FDAIDuelistAI::ChooseAction(const FDAAIDuelSnapshot& Snapshot) con
 		}
 		else if (Card->IsSpell())
 		{
-			const int32 ActionScore = CardScore + FMath::RoundToInt(GetWeight(TEXT("removal"), 0.6f) * 6.f);
+			const int32 ActionScore = CardScore + FMath::RoundToInt(GetWeight(TEXT("removal"), DefaultRemovalActionWeight) * 6.f);
 			if (ActionScore > BestScore)
 			{
 				BestScore = ActionScore;
@@ -302,7 +311,7 @@ FDAAIDecision FDAIDuelistAI::ChooseAction(const FDAAIDuelSnapshot& Snapshot) con
 			{
 				continue;
 			}
-			const int32 ActionScore = CardScore + FMath::RoundToInt(GetWeight(TEXT("set_trap"), 0.7f) * 6.f);
+			const int32 ActionScore = CardScore + FMath::RoundToInt(GetWeight(TEXT("set_trap"), DefaultSetTrapWeight) * 6.f);
 			if (ActionScore > BestScore)
 			{
 				BestScore = ActionScore;
@@ -326,36 +335,8 @@ FDAAIDecision FDAIDuelistAI::ChooseAction(const FDAAIDuelSnapshot& Snapshot) con
 	return Decision;
 }
 
-bool FDAIDuelistAI::ShouldAttack(const FDAAIDuelSnapshot& Snapshot, int32 AttackerCardId, int32 TargetCardId, bool bDirect) const
-{
-	if (!bConfigured || Snapshot.bBattlePhase == false)
-	{
-		return false;
-	}
-	if (Snapshot.OpponentLp <= 0)
-	{
-		return false;
-	}
-	// The adapter passes concrete ids from the snapshot.  Reject ids that are
-	// not actually on the proposed side instead of trusting the caller: a
-	// stale or invented attacker would otherwise be reported as a legal play.
-	if (AttackerCardId != 0 && !Snapshot.OwnMonsterIds.Contains(AttackerCardId))
-	{
-		return false;
-	}
-	if (bDirect)
-	{
-		return Snapshot.bCanAttackDirectly && GetWeight(TEXT("direct_attack"), 0.8f) >= 0.25f;
-	}
-	if (TargetCardId == 0 || !Snapshot.OpponentMonsterIds.Contains(TargetCardId))
-	{
-		return false;
-	}
-	return GetWeight(TEXT("attack"), 0.8f) >= 0.45f;
-}
-
 bool FDAIDuelistAI::ShouldSetTrap(const FDAAIDuelSnapshot& Snapshot) const
 {
 	(void)Snapshot;
-	return GetWeight(TEXT("set_trap"), 0.7f) >= 0.5f;
+	return GetWeight(TEXT("set_trap"), DefaultSetTrapWeight) >= 0.5f;
 }

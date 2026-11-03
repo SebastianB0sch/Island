@@ -1,105 +1,12 @@
 #include "DACardRecords.h"
 
 #include "DuelAcademyIsland.h"
+#include "DAJson.h"
 #include "Dom/JsonObject.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
-
-namespace
-{
-	FString CardReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
-	{
-		if (!Object.IsValid())
-		{
-			return FString();
-		}
-		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
-		FString Text;
-		if (!Value.IsValid() || Value->Type != EJson::String || !Value->TryGetString(Text))
-		{
-			return FString();
-		}
-		return Text;
-	}
-
-	int32 CardReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
-	{
-		if (!Object.IsValid())
-		{
-			return Default;
-		}
-		// Require a real JSON number with an integral value in int32 range.
-		// TryGetNumberField(int32) also accepts booleans (true -> 1) and rounds
-		// fractional values, which would let malformed card rows through.
-		const TSharedPtr<FJsonValue> Value = Object->TryGetField(Field);
-		if (!Value.IsValid() || Value->Type != EJson::Number)
-		{
-			return Default;
-		}
-		double Number = 0.0;
-		if (!Value->TryGetNumber(Number) || !FMath::IsFinite(Number)
-			|| FMath::FloorToDouble(Number) != Number
-			|| Number < static_cast<double>(TNumericLimits<int32>::Min())
-			|| Number > static_cast<double>(TNumericLimits<int32>::Max()))
-		{
-			return Default;
-		}
-		return static_cast<int32>(Number);
-	}
-
-	int32 CardReadIntArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<int32>& Out)
-	{
-		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
-		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values))
-		{
-			return 0;
-		}
-		int32 Skipped = 0;
-		for (const TSharedPtr<FJsonValue>& Value : *Values)
-		{
-			double Number = 0.0;
-			if (!Value.IsValid() || Value->Type != EJson::Number
-				|| !Value->TryGetNumber(Number) || !FMath::IsFinite(Number)
-				|| Number < 1.0 || Number > static_cast<double>(TNumericLimits<int32>::Max())
-				|| FMath::FloorToDouble(Number) != Number)
-			{
-				++Skipped;
-				continue;
-			}
-			Out.Add(static_cast<int32>(Number));
-		}
-		return Skipped;
-	}
-
-	int32 CardReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& Out)
-	{
-		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
-		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values))
-		{
-			return 0;
-		}
-		int32 Skipped = 0;
-		for (const TSharedPtr<FJsonValue>& Value : *Values)
-		{
-			FString Text;
-			if (!Value.IsValid() || Value->Type != EJson::String || !Value->TryGetString(Text))
-			{
-				++Skipped;
-				continue;
-			}
-			Text.TrimStartAndEndInline();
-			if (Text.IsEmpty())
-			{
-				++Skipped;
-				continue;
-			}
-			Out.Add(MoveTemp(Text));
-		}
-		return Skipped;
-	}
-}
 
 void UCardDatabaseSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -153,17 +60,17 @@ void UCardDatabaseSubsystem::LoadCards(const FString& Path)
 			continue;
 		}
 		FCardRecord Card;
-		Card.Id = CardReadInt(Object, TEXT("id"));
-		Card.Name = CardReadString(Object, TEXT("name"));
-		Card.CardType = CardReadString(Object, TEXT("card_type"));
-		Card.MonsterType = CardReadString(Object, TEXT("monster_type"));
-		Card.Subtype = CardReadString(Object, TEXT("subtype"));
-		Card.Attribute = CardReadString(Object, TEXT("attribute"));
-		Card.Level = CardReadInt(Object, TEXT("level"));
-		Card.Atk = CardReadInt(Object, TEXT("atk"));
-		Card.Def = CardReadInt(Object, TEXT("def"));
-		Card.Description = CardReadString(Object, TEXT("description"));
-		if (Card.Id <= 0 || Card.Name.IsEmpty() || Card.CardType.IsEmpty())
+		Card.Id = DAJson::ReadInt(Object, TEXT("id"));
+		Card.Name = DAJson::ReadString(Object, TEXT("name"));
+		Card.CardType = DAJson::ReadString(Object, TEXT("card_type"));
+		Card.MonsterType = DAJson::ReadString(Object, TEXT("monster_type"));
+		Card.Subtype = DAJson::ReadString(Object, TEXT("subtype"));
+		Card.Attribute = DAJson::ReadString(Object, TEXT("attribute"));
+		Card.Level = DAJson::ReadInt(Object, TEXT("level"));
+		Card.Atk = DAJson::ReadInt(Object, TEXT("atk"));
+		Card.Def = DAJson::ReadInt(Object, TEXT("def"));
+		Card.Description = DAJson::ReadString(Object, TEXT("description"));
+		if (Card.Id > 0)
 		{
 			++SkippedEntries;
 			continue;
@@ -224,18 +131,14 @@ void UCardDatabaseSubsystem::LoadDecks(const FString& Path)
 		}
 
 		FStarterDeckDef Deck;
-		Deck.Id = CardReadString(Object, TEXT("id")).TrimStartAndEnd();
-		Deck.Name = CardReadString(Object, TEXT("name"));
-		Deck.Subtitle = CardReadString(Object, TEXT("subtitle"));
-		Deck.Description = CardReadString(Object, TEXT("description"));
-		Deck.Accent = CardReadString(Object, TEXT("accent"));
-		const int32 SkippedCards = CardReadIntArray(Object, TEXT("cards"), Deck.Cards)
-			+ CardReadIntArray(Object, TEXT("extra"), Deck.Extra);
-		if (SkippedCards > 0)
-		{
-			UE_LOG(LogDuelAcademyIsland, Warning,
-				TEXT("Deck '%s' ignored %d malformed card id(s)."), *Deck.Id, SkippedCards);
-		}
+		Deck.Id = DAJson::ReadString(Object, TEXT("id"));
+		Deck.Name = DAJson::ReadString(Object, TEXT("name"));
+		Deck.Subtitle = DAJson::ReadString(Object, TEXT("subtitle"));
+		Deck.Description = DAJson::ReadString(Object, TEXT("description"));
+		Deck.Accent = DAJson::ReadString(Object, TEXT("accent"));
+
+		DAJson::AppendIntArray(Object, TEXT("cards"), Deck.Cards);
+		DAJson::AppendIntArray(Object, TEXT("extra"), Deck.Extra);
 
 		if (Deck.Id.IsEmpty() || Deck.Cards.Num() == 0)
 		{
@@ -295,18 +198,13 @@ void UCardDatabaseSubsystem::LoadFusions(const FString& Path)
 		}
 
 		FFusionRecipeDef Recipe;
-		Recipe.Result = CardReadInt(Object, TEXT("result"));
-		Recipe.Name = CardReadString(Object, TEXT("name"));
-		Recipe.MaterialsType = CardReadString(Object, TEXT("materialsType"));
-		Recipe.AnyCount = FMath::Max(0, CardReadInt(Object, TEXT("anyCount")));
-		const int32 SkippedMaterials = CardReadIntArray(Object, TEXT("materials"), Recipe.Materials)
-			+ CardReadStringArray(Object, TEXT("fusionTypes"), Recipe.FusionTypes);
-		if (SkippedMaterials > 0)
-		{
-			UE_LOG(LogDuelAcademyIsland, Warning,
-				TEXT("Fusion recipe for card %d ignored %d malformed field(s)."),
-				Recipe.Result, SkippedMaterials);
-		}
+		Recipe.Result = DAJson::ReadInt(Object, TEXT("result"));
+		Recipe.Name = DAJson::ReadString(Object, TEXT("name"));
+		Recipe.MaterialsType = DAJson::ReadString(Object, TEXT("materialsType"));
+		Recipe.AnyCount = DAJson::ReadInt(Object, TEXT("anyCount"));
+
+		DAJson::AppendIntArray(Object, TEXT("materials"), Recipe.Materials);
+		DAJson::AppendStringArray(Object, TEXT("fusionTypes"), Recipe.FusionTypes);
 
 		if (Recipe.Result > 0 && (Recipe.Materials.Num() > 0 || Recipe.AnyCount > 0))
 		{

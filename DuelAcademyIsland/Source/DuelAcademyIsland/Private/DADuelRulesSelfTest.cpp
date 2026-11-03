@@ -369,57 +369,121 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 		}
 	}
 
-	// ---- negated chain-link cleanup --------------------------------------
+	// ---- card legality regressions ---------------------------------------
 	{
-		const FCardRecord* NormalSpell = FindRecordByPredicate(Database, [](const FCardRecord& Card)
+		auto FindByName = [Database](const TCHAR* Name)
 		{
-			return Card.Name == TEXT("Sparks") && Card.CardType == TEXT("Spell");
-		});
-		const TArray<int32> ChainCards = BuildMainDeck(Database, 2);
-		Report.Check(NormalSpell != nullptr && ChainCards.Num() >= 2,
-			TEXT("negated-chain test cards were found"));
-		if (NormalSpell && ChainCards.Num() >= 2)
+			return FindRecordByPredicate(Database, [Name](const FCardRecord& Card) { return Card.Name == Name; });
+		};
+		const FCardRecord* PotOfGreed = FindByName(TEXT("Pot of Greed"));
+		const FCardRecord* Wings = FindByName(TEXT("Transcendent Wings"));
+		const FCardRecord* Kuriboh = FindByName(TEXT("Winged Kuriboh"));
+		const FCardRecord* KuribohLv10 = FindByName(TEXT("Winged Kuriboh LV10"));
+		const FCardRecord* HaneHane = FindByName(TEXT("Hane-Hane"));
+		const FCardRecord* FusionRecord = FusionId > 0 ? Database->FindCard(FusionId) : nullptr;
+		Report.Check(PotOfGreed && Wings && Kuriboh && KuribohLv10 && HaneHane && FusionRecord,
+			TEXT("card legality regression test cards were found"));
+
+		auto CanActivate = [](const TArray<FDuelActionInfo>& Actions)
 		{
-			FDuelScenario ChainScenario;
-			ChainScenario.Id = TEXT("SELFTEST_CHAIN_NEGATE");
-			ChainScenario.Name = TEXT("Negated chain cleanup");
-			ChainScenario.PlayerDeck = TArray<int32>{ ChainCards[0] };
-			ChainScenario.OpponentDeck = TArray<int32>{ ChainCards[1] };
-			ChainScenario.bPlayerGoesFirst = true;
-			ChainScenario.bDrawOnFirstTurn = false;
-
-			FDuelScenarioCard SpellField;
-			SpellField.CardId = NormalSpell->Id;
-			SpellField.Zone = EDuelZone::SpellTrap;
-			SpellField.ZoneIndex = 0;
-			ChainScenario.PlayerField.Add(SpellField);
-
-			FDuelEngine ChainDuel(Database, 51);
-			FString ChainError;
-			Report.Check(ChainDuel.StartScenario(ChainScenario, ChainError),
-				TEXT("negated-chain scenario starts"));
-			if (ChainDuel.GetSide(EDuelOwner::Player).Spells[0].IsValid())
+			return Actions.ContainsByPredicate([](const FDuelActionInfo& Action)
 			{
-				const int32 SpellUid = ChainDuel.GetSide(EDuelOwner::Player).Spells[0].Uid;
-				FDuelChainLink Link;
-				Link.CardUid = SpellUid;
-				Link.Controller = EDuelOwner::Player;
-				Link.Speed = EDuelSpellSpeed::Speed1;
-				Link.LinkType = EDuelChainLinkType::Spell;
-				Link.Label = NormalSpell->Name;
-				Link.bCardEffect = true;
-				Report.Check(ChainDuel.StartChain(Link, ChainError) == 1,
-					TEXT("negated-chain link starts"));
-				Report.Check(ChainDuel.NegateChainLink(1, ChainError),
-					TEXT("chain link can be negated"));
-				Report.Check(ChainDuel.ResolveChain(ChainError) == 1 && !ChainDuel.IsChainOpen(),
-					TEXT("negated chain resolves and closes"));
-				Report.Check(!ChainDuel.GetSide(EDuelOwner::Player).Spells[0].IsValid(),
-					TEXT("a negated one-shot Spell leaves the field"));
+				return Action.Action == EDuelAction::ActivateSpell;
+			});
+		};
+
+		// Pot of Greed must not deck its caster out.
+		if (PotOfGreed)
+		{
+			FDuelEngine Duel(Database, 45);
+			Duel.Start(TEXT("fire"), TEXT("jaden"));
+			FDuelSide& Me = Duel.GetSideMutable(EDuelOwner::Player);
+			if (Duel.IsPlayerTurn() && Me.Hand.Num() > 0 && Me.Deck.Num() >= 2)
+			{
+				Me.Hand[0].Data = *PotOfGreed;
+				const int32 PotUid = Me.Hand[0].Uid;
+				Me.Deck.SetNum(2);
+				Report.Check(CanActivate(Duel.GetHandActions(PotUid)),
+					TEXT("Pot of Greed can be activated with two cards in the Deck"));
+				Me.Deck.SetNum(1);
+				Report.Check(!CanActivate(Duel.GetHandActions(PotUid)),
+					TEXT("Pot of Greed cannot be activated with one card in the Deck"));
 			}
 			else
 			{
-				Report.Check(false, TEXT("negated-chain scenario placed a Spell"));
+				Report.Check(false, TEXT("Pot of Greed test duel started"));
+			}
+		}
+
+		// Transcendent Wings needs two cards besides itself.
+		if (Wings && Kuriboh && KuribohLv10)
+		{
+			FDuelEngine Duel(Database, 46);
+			Duel.Start(TEXT("fire"), TEXT("jaden"));
+			FDuelSide& Me = Duel.GetSideMutable(EDuelOwner::Player);
+			if (Duel.IsPlayerTurn() && Me.Hand.Num() >= 2 && Me.Deck.Num() >= 3 && !Me.Monsters[0].IsValid())
+			{
+				FDuelCard KuribohCard = Me.Deck.Pop();
+				KuribohCard.Data = *Kuriboh;
+				KuribohCard.Controller = EDuelOwner::Player;
+				KuribohCard.bFaceUp = true;
+				KuribohCard.Position = EDuelPosition::Attack;
+				Me.Monsters[0] = KuribohCard;
+				Me.Deck[0].Data = *KuribohLv10;
+
+				Me.Hand.SetNum(2);
+				Me.Hand[0].Data = *Wings;
+				const int32 WingsUid = Me.Hand[0].Uid;
+				Report.Check(!CanActivate(Duel.GetHandActions(WingsUid)),
+					TEXT("Transcendent Wings cannot pay its cost with only one other card"));
+				Me.Hand.Add(Me.Deck.Pop());
+				Report.Check(CanActivate(Duel.GetHandActions(WingsUid)),
+					TEXT("Transcendent Wings can be activated with two other cards"));
+			}
+			else
+			{
+				Report.Check(false, TEXT("Transcendent Wings test duel started"));
+			}
+		}
+
+		// A bounced Fusion Monster returns to the Extra Deck (Hane-Hane flip).
+		if (HaneHane && FusionRecord)
+		{
+			FDuelEngine Duel(Database, 47);
+			Duel.Start(TEXT("fire"), TEXT("jaden"));
+			FDuelSide& Me = Duel.GetSideMutable(EDuelOwner::Player);
+			FDuelSide& Them = Duel.GetSideMutable(EDuelOwner::Opponent);
+			if (Duel.IsPlayerTurn() && Me.Deck.Num() > 0 && Them.Deck.Num() > 0
+				&& !Me.Monsters[0].IsValid() && !Them.Monsters[0].IsValid())
+			{
+				FDuelCard Flipper = Me.Deck.Pop();
+				Flipper.Data = *HaneHane;
+				Flipper.Controller = EDuelOwner::Player;
+				Flipper.bFaceUp = false;
+				Flipper.Position = EDuelPosition::Defense;
+				Flipper.SetTurn = 0;
+				const int32 FlipperUid = Flipper.Uid;
+				Me.Monsters[0] = Flipper;
+
+				FDuelCard FusionCard = Them.Deck.Pop();
+				FusionCard.Data = *FusionRecord;
+				FusionCard.Controller = EDuelOwner::Opponent;
+				FusionCard.bFaceUp = true;
+				FusionCard.Position = EDuelPosition::Attack;
+				const int32 FusionUid = FusionCard.Uid;
+				Them.Monsters[0] = FusionCard;
+
+				FString FlipError;
+				const bool bFlipped = Duel.FlipSummon(FlipperUid, FlipError);
+				const FDuelSide& After = Duel.GetSide(EDuelOwner::Opponent);
+				auto IsFusionCard = [FusionUid](const FDuelCard& Card) { return Card.Uid == FusionUid; };
+				Report.Check(bFlipped && After.Extra.ContainsByPredicate(IsFusionCard)
+					&& !After.Hand.ContainsByPredicate(IsFusionCard),
+					TEXT("a bounced Fusion Monster returns to the Extra Deck, not the hand"));
+			}
+			else
+			{
+				Report.Check(false, TEXT("Fusion bounce test duel started"));
 			}
 		}
 	}
