@@ -39,6 +39,7 @@ Docs/Integration/reports/validate*.json
 # --report path). The tracked copy is Docs/Canon/VALIDATION.md, refreshed
 # deliberately because its timestamp changes on every regeneration.
 Docs/Integration/reports/canon-validation.md
+Docs/Integration/reports/logs/*.log
 
 # Packaged builds and staging
 Builds/
