@@ -989,6 +989,11 @@ void UDAStorySubsystem::NotifyWalkHome(const FString& PartnerId)
 	Profile->SetFlag(FString::Printf(TEXT("walk_home_%s_%d"), *Id, Count), true);
 	if (Count >= 3)
 	{
+		// E31 rewards the first partner to reach three walks (card_by_partner).
+		if (!Profile->GetFlag(TEXT("walk_home_partner_3")))
+		{
+			Profile->SetFlag(FString::Printf(TEXT("walk_home_first_partner_%s"), *Id), true);
+		}
 		Profile->SetFlag(TEXT("walk_home_partner_3"), true);
 		UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: walked home with %s three times."), *Id);
 	}

@@ -101,9 +101,9 @@
           "opponent_deck_id": "pharaoh_guardian",
           "player_deck": "active",
           "mode": "story",
-          "on_win": "",
-          "on_lose": "",
-          "on_draw": "",
+          "on_win": "full.E02_win",
+          "on_lose": "full.E02_lose",
+          "on_draw": "full.E02_draw",
           "optional": false,
           "story_critical": true,
           "counts_as_win": true,
@@ -2742,6 +2742,102 @@
       "source": "port-scaffold",
       "confidence": "medium",
       "notes": "Leaving Jaden keeps E24 available for a later retry."
+    },
+    "full.E02_win": {
+      "id": "full.E02_win",
+      "event_id": "E02",
+      "location": "slifer",
+      "anchor": "slifer_banner_room_desk",
+      "camera_anchor": "slifer_banner_room_camera",
+      "cast": [
+        "banner",
+        "narrator"
+      ],
+      "required_anchors": [
+        "slifer_banner_room_camera",
+        "slifer_banner_room_desk"
+      ],
+      "title": "Pharaoh's True Power - Win",
+      "commands": [
+        {
+          "type": "set_flag",
+          "flag": "event_02_won",
+          "value": true
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "E02 win branch: sets event_02_won so card_by_result grants the matching card."
+    },
+    "full.E02_lose": {
+      "id": "full.E02_lose",
+      "event_id": "E02",
+      "location": "slifer",
+      "anchor": "slifer_banner_room_desk",
+      "camera_anchor": "slifer_banner_room_camera",
+      "cast": [
+        "banner",
+        "narrator"
+      ],
+      "required_anchors": [
+        "slifer_banner_room_camera",
+        "slifer_banner_room_desk"
+      ],
+      "title": "Pharaoh's True Power - Loss",
+      "commands": [
+        {
+          "type": "set_flag",
+          "flag": "event_02_lost",
+          "value": true
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "E02 loss branch: sets event_02_lost so card_by_result grants the matching card."
+    },
+    "full.E02_draw": {
+      "id": "full.E02_draw",
+      "event_id": "E02",
+      "location": "slifer",
+      "anchor": "slifer_banner_room_desk",
+      "camera_anchor": "slifer_banner_room_camera",
+      "cast": [
+        "banner",
+        "narrator"
+      ],
+      "required_anchors": [
+        "slifer_banner_room_camera",
+        "slifer_banner_room_desk"
+      ],
+      "title": "Pharaoh's True Power - Draw",
+      "commands": [
+        {
+          "type": "set_flag",
+          "flag": "event_02_draw",
+          "value": true
+        },
+        {
+          "type": "end",
+          "next_scene": "",
+          "enter_free_roam": false,
+          "complete_event": true
+        }
+      ],
+      "source": "port-scaffold",
+      "confidence": "medium",
+      "notes": "E02 draw branch: sets event_02_draw so card_by_result grants the matching card."
     }
   }
 }
