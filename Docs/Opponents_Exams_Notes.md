@@ -440,7 +440,7 @@ Add to the save schema (via A02, not this lane):
 
 * `FDAOpponentRuntimeState` â€” wins/losses/draws, email read/unread state, daily request counters.
 * Exam history: month, total, written correct, timed solved, practical points, pass/fail, grade.
-* Exam retry counters and `exam_exempt` flag.
+* Exam retry counters and `exam_exempt_next` flag (set by story E23, consumed by the exam screen).
 * Current title/dorm (already A02-owned) â€” `FDAExamResult::TitleOutcome`/`DormOutcome` are recommendations only.
 
 ### 4.4 A05 â€” effect/fusion gaps exposed by the decks
