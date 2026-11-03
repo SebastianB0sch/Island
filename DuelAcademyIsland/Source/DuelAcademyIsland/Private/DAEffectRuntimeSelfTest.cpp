@@ -1608,6 +1608,183 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 		}
 	}
 
+	// ---- Opponent-controlled scripts use the Opponent's point of view -----
+	{
+		FDuelEngine Duel(Database, 130);
+		Duel.SetAutoAnswerAllChoices(true);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_AI_RAIGEKI"));
+		Scenario.PlayerField.Add(MakeMonster(1, 0));
+		Scenario.OpponentField.Add(MakeMonster(2, 0));
+		Scenario.OpponentField.Add(MakeSpellTrap(142, 0, false));
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("AI Raigeki scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 RaigekiUid = FindFieldUid(Duel.GetSide(EDuelOwner::Opponent), 142);
+		FDuelCard* Raigeki = RaigekiUid != 0 ? Duel.FindSpellTrap(RaigekiUid) : nullptr;
+		Report.Check(Runtime != nullptr && Raigeki != nullptr, TEXT("the AI's Raigeki is on the field"));
+		if (Runtime && Raigeki)
+		{
+			Runtime->OnActivate(*Raigeki);
+			Report.Check(FindFieldUid(Duel.GetSide(EDuelOwner::Player), 1) == 0,
+				TEXT("an AI Raigeki destroys the human player's monsters"));
+			Report.Check(FindFieldUid(Duel.GetSide(EDuelOwner::Opponent), 2) != 0,
+				TEXT("an AI Raigeki leaves the AI's own monsters alone"));
+		}
+	}
+	{
+		FDuelEngine Duel(Database, 131);
+		Duel.SetAutoAnswerAllChoices(true);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_AI_SANGAN"));
+		Scenario.OpponentGraveyard = TArray<int32>{ 29 };
+		Scenario.OpponentDeck = TArray<int32>{ 2 };
+		Scenario.PlayerDeck = TArray<int32>{ 2 };
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("AI Sangan scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 SanganUid = FindUidInArray(Duel.GetSide(EDuelOwner::Opponent).Graveyard, 29);
+		const FDuelCard* Sangan = Duel.FindCard(SanganUid);
+		Report.Check(Runtime != nullptr && Sangan != nullptr, TEXT("the AI's Sangan is in the AI's Graveyard"));
+		if (Runtime && Sangan)
+		{
+			FDEffectEvent Event = MakeSourceEvent(EDEffectTrigger::OnSentToGraveyard, *Sangan);
+			Event.Reason = TEXT("battle");
+			Runtime->FireEvent(Event);
+			Report.Check(CountCardsInArray(Duel.GetSide(EDuelOwner::Opponent).Hand, 2) == 1
+				&& CountCardsInArray(Duel.GetSide(EDuelOwner::Opponent).Deck, 2) == 0,
+				TEXT("an AI Sangan searches the AI's own Deck"));
+			Report.Check(CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Hand, 2) == 0
+				&& CountCardsInArray(Duel.GetSide(EDuelOwner::Player).Deck, 2) == 1,
+				TEXT("an AI Sangan does not touch the human player's Deck or hand"));
+		}
+	}
+	{
+		FDuelEngine Duel(Database, 132);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_AI_JINZO"));
+		Scenario.OpponentField.Add(MakeMonster(348, 0));
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("AI Jinzo scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		if (Runtime)
+		{
+			Runtime->RecomputeContinuous();
+			Report.Check(Runtime->IsTrapActivationLocked(),
+				TEXT("an AI-controlled Jinzo's continuous self_monster condition holds and locks Traps"));
+		}
+	}
+
+	// ---- effect Special Summons stop when the Monster Zones are full -----
+	{
+		FDuelEngine Duel(Database, 133);
+		Duel.SetAutoAnswerAllChoices(true);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_HYENA_FULL_BOARD"));
+		Scenario.PlayerField.Add(MakeMonster(1, 0));
+		Scenario.PlayerField.Add(MakeMonster(2, 1));
+		Scenario.PlayerField.Add(MakeMonster(3, 2));
+		Scenario.PlayerField.Add(MakeMonster(4, 3));
+		Scenario.PlayerGraveyard = TArray<int32>{ 1080 };
+		Scenario.PlayerDeck = TArray<int32>{ 1080, 1080, 7 };
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("Hyena full-board scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 HyenaUid = FindUidInArray(Duel.GetSide(EDuelOwner::Player).Graveyard, 1080);
+		const FDuelCard* Hyena = Duel.FindCard(HyenaUid);
+		Report.Check(Runtime != nullptr && Hyena != nullptr, TEXT("the battle-destroyed Hyena is in the Graveyard"));
+		if (Runtime && Hyena)
+		{
+			Runtime->FireEvent(MakeSourceEvent(EDEffectTrigger::OnBattleDestroy, *Hyena));
+			const FDuelSide& Side = Duel.GetSide(EDuelOwner::Player);
+			Report.Check(CountCardsInArray(Side.Monsters, 1080) == 1,
+				TEXT("Hyena Special Summons a copy into the last free Monster Zone"));
+			Report.Check(CountCardsInArray(Side.Deck, 1080) == 1 && CountCardsInArray(Side.Graveyard, 1080) == 1,
+				TEXT("the Hyena that does not fit stays in the Deck instead of going to the Graveyard"));
+		}
+	}
+
+	// ---- per-card turn attack lock (Chaos Sorcerer) and once-per-turn UI ---
+	{
+		FDuelEngine Duel(Database, 134);
+		Duel.SetAutoAnswerAllChoices(true);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_CHAOS_SORCERER"));
+		Scenario.PlayerField.Add(MakeMonster(866, 0));
+		// Face-down, so the face-up-only banish target is the opponent's monster.
+		Scenario.PlayerField.Add(MakeMonster(1, 1, true, true));
+		Scenario.OpponentField.Add(MakeMonster(2, 0));
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("Chaos Sorcerer scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 SorcererUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 866);
+		const int32 BlueEyesUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1);
+		const int32 ScriptIndex = Runtime ? FindManualScript(*Runtime, 866) : INDEX_NONE;
+		if (Runtime && SorcererUid != 0 && BlueEyesUid != 0 && ScriptIndex != INDEX_NONE)
+		{
+			FString ManualError;
+			Report.Check(Runtime->ActivateManualScript(SorcererUid, ScriptIndex, ManualError),
+				TEXT("Chaos Sorcerer's banish effect activates"));
+			const FDuelCard* Sorcerer = Duel.FindMonster(SorcererUid);
+			const FDuelCard* BlueEyes = Duel.FindMonster(BlueEyesUid);
+			Report.Check(Sorcerer && !Runtime->CanCardAttack(*Sorcerer),
+				TEXT("Chaos Sorcerer cannot attack the turn it uses its effect"));
+			Report.Check(BlueEyes && Runtime->CanCardAttack(*BlueEyes),
+				TEXT("Chaos Sorcerer's attack lock does not stop its controller's other monsters"));
+			Report.Check(Sorcerer && Runtime->GetManualActions(*Sorcerer).Num() == 0,
+				TEXT("a used once-per-turn manual effect is no longer offered"));
+			Runtime->OnTurnStart(EDuelOwner::Player);
+			Sorcerer = Duel.FindMonster(SorcererUid);
+			Report.Check(Sorcerer && Runtime->CanCardAttack(*Sorcerer),
+				TEXT("Chaos Sorcerer's attack lock ends with the turn"));
+		}
+	}
+
+	// ---- chained triggers raised during a resolution still fire ----------
+	{
+		FDuelEngine Duel(Database, 135);
+		Duel.SetAutoAnswerAllChoices(true);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_DEFERRED_SANGAN"));
+		Scenario.PlayerField.Add(MakeMonster(29, 0));
+		Scenario.PlayerField.Add(MakeMonster(1, 1));
+		Scenario.PlayerDeck = TArray<int32>{ 2 };
+		FString Error;
+		Report.Check(Duel.StartScenario(Scenario, Error), TEXT("deferred-trigger scenario starts"));
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 BlueEyesUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 1);
+		LoadTestScript(Runtime, 1, TEXT(R"JSON({"id":"test_mass_destroy","trigger":"on_activate","target":{"zone":"all_monsters","count":"all"},"operations":[{"op":"destroy","target":"$target"}]})JSON"));
+		if (Runtime && BlueEyesUid != 0)
+		{
+			if (const FDuelCard* BlueEyes = Duel.FindMonster(BlueEyesUid))
+			{
+				Runtime->FireEvent(MakeSourceEvent(EDEffectTrigger::OnActivate, *BlueEyes));
+			}
+			const FDuelSide& Side = Duel.GetSide(EDuelOwner::Player);
+			Report.Check(FindFieldUid(Side, 29) == 0 && FindFieldUid(Side, 1) == 0,
+				TEXT("a data-script mass destruction destroys every monster"));
+			Report.Check(CountCardsInArray(Side.Hand, 2) == 1,
+				TEXT("Sangan destroyed by a data-script effect still searches (deferred trigger)"));
+		}
+	}
+	{
+		FDuelEngine Duel(Database, 136);
+		FDuelScenario Scenario = MakeScenario(TEXT("ERT_DEFERRED_LOOP"));
+		Scenario.PlayerField.Add(MakeMonster(5, 0));
+		FString Error;
+		Duel.StartScenario(Scenario, Error);
+		FDAEffectRuntime* Runtime = Duel.GetEffectRuntime();
+		const int32 ImpUid = FindUidInSide(Duel.GetSide(EDuelOwner::Player), 5);
+		// Every resolution changes the source's position, which raises the same
+		// self trigger again: an endless chain that the runtime must cut off.
+		LoadTestScript(Runtime, 5, TEXT(R"JSON({"id":"test_trigger_loop","trigger":"on_position_change","operations":[{"op":"change_position","target":"$self","position":"defense"}]})JSON"));
+		if (Runtime && ImpUid != 0)
+		{
+			Runtime->ResetTestStats();
+			if (FDuelCard* Imp = Duel.FindMonster(ImpUid))
+			{
+				Runtime->OnPositionChanged(*Imp, EDuelPosition::Attack);
+			}
+			const int32 Executed = Runtime->GetExecutedScriptCount();
+			Report.Check(Executed > 1 && Executed <= 300,
+				TEXT("a self-retriggering chain fires but is bounded"));
+		}
+	}
+
 	// ---- unknown operations still fail loudly ----------------------------
 	{
 		FDuelEngine Duel(Database, 120);
@@ -1622,6 +1799,11 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 			&& !Runtime->LoadScriptJsonText(TEXT("{\"card_id\":1,\"scripts\":[{\"id\":\"bad_nested\",\"trigger\":\"on_activate\",\"operations\":[{\"op\":\"toss_coin\",\"success_operations\":[{\"op\":\"not_a_real_op\"}]}]}]}"), Error);
 		Report.Check(bNestedUnknown && Error.Contains(TEXT("unknown operation")),
 			TEXT("unknown operations inside random branches are rejected"));
+		Error.Reset();
+		const bool bOneShotLock = Runtime
+			&& !Runtime->LoadScriptJsonText(TEXT("{\"card_id\":1,\"scripts\":[{\"id\":\"bad_one_shot_lock\",\"trigger\":\"on_activate\",\"operations\":[{\"op\":\"lock_activation\",\"mode\":\"trap_activation\"}]}]}"), Error);
+		Report.Check(bOneShotLock && Error.Contains(TEXT("continuous-only")),
+			TEXT("continuous-only operations are rejected on one-shot triggers"));
 	}
 
 	LogReport(Report);
