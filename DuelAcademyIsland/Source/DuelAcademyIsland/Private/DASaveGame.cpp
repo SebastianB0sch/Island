@@ -1291,10 +1291,10 @@ bool UDASaveSubsystem::ApplyPayloadInPlace(const TSharedPtr<FJsonObject>& Root, 
 		const TSharedPtr<FJsonObject>* Section = nullptr;
 		if (!Root->TryGetObjectField(SectionName, Section) || !Section || !Section->IsValid())
 		{
-			// Sections may be absent in older saves. Most providers keep the live
-			// state (the old save never described the lane); providers whose
-			// section represents transient runtime state reset to defaults.
-			Provider->ResetSaveSectionState();
+			// Sections may be absent in older saves. An empty object is not
+			// passed because the inventory and deck providers reject it; each
+			// provider decides instead (story resets, economy keeps its state).
+			Provider->OnSaveSectionMissing();
 			continue;
 		}
 		if (!Provider->ReadSaveSection(*Section, OutError))
