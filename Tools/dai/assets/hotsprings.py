@@ -671,7 +671,7 @@ def _bath_interior(aset, mb, nc):
         x_out = BX0 + WT if side < 0 else BX1 - WT
         _cubbies(mb, aset, x_out - side * 0.225, -9.75, 90.0 if side < 0 else -90.0, seed=3 + side)
         _key_lockers(mb, nc, mx(-14.2, side), DIV_Y - 0.235, 0.0)
-        aset.prop("SM_Int_Bench", (mx(-14.2, side), -9.75, BFL), 90.0)
+        aset.prop("SM_Int_Bench", (mx(-14.2, side), -9.75, BFL), 90.0 if side < 0 else -90.0)
         nc.box((mx(-14.2, side), -9.5, BFL + 0.47), (0.3, 0.45, 0.04), "M_IntFabricWhite" if side < 0 else "M_IntFabricPink")
         # vanity counter with mirrors and stools on the partition
         xv = pxw if side < 0 else pxe
@@ -706,7 +706,6 @@ def _bath_interior(aset, mb, nc):
         nc.box((0, 0.31, 1.5), (0.6, 0.01, 0.12), "M_IntPoster1")
     aset.text("COFFEE MILK", (-14.75, -11.07 + 0.33, BFL + 1.47), 180.0, size=0.07, color=(1, 1, 1))
     aset.prop("SM_Int_FoldingScreen", (mx(-14.4, 1), -10.95, BFL), 200.0)
-    aset.prop("SM_Int_PottedPlantB", (BX1 - WT - 0.35, gy1 + 0.35, BFL), 0.0)
     for (x, txt, col) in ((-14.75, "BATH MANNERS", "M_IntPoster2"), (mx(-14.75, 1), "BATH MANNERS", "M_IntPoster4")):
         K.poster(nc, aset, x, gy1, BFL + 2.0, 180.0, 0.62, 0.42, col, txt, (1, 1, 1), 0.06)
         for k, line in enumerate(("1. Wash before you soak", "2. No towels in the water", "3. No duel disks in the bath!")):
@@ -749,6 +748,10 @@ def _bath_interior(aset, mb, nc):
         _washi_light(aset, nc, mx(-13.6, side), (y0 + y1) / 2)
         _washi_light(aset, nc, mx(-10.9, side), (y0 + y1) / 2)
         aset.emitter("steam", (mx(-12.0, side), (y0 + y1) / 2, BFL + 1.6), 0.35, rate=0.4)
+
+    # a family of rubber ducks escaped into the big outdoor pool
+    for (x, y, yaw) in ((6.2, 4.4, 30.0), (6.6, 4.1, 60.0), (6.95, 3.9, 75.0), (10.5, 8.2, 200.0)):
+        aset.prop("SM_Int_RubberDuck", (x, y, WATER - 0.02), yaw)
 
     # ---------------- preview cameras
     K.camera(aset, "changing_men", (-11.0, -8.45, BFL + 1.7), (-15.2, -10.9, BFL + 0.7), 16.0)

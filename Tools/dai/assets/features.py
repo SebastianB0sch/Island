@@ -336,6 +336,34 @@ def build_beach():
                 for y in (-1.1, 1.1):
                     lg.box((x, y, 3.75), (0.08, 0.08, 1.3), "M_WindowFrame")
             lg.stairs((0, 2.4, 0), -90, 0.9, 12, 0.25, 0.2, "M_Wood", solid=False)
+        # the lookout itself is an open platform (no hut, 1.3 m under the sun roof) - dressed for duty:
+        # lifeguard chair facing the sea, radio on a side table, lifebuoy on the railing, binoculars
+        tyaw = yaw_sea + 90
+        ty = math.radians(tyaw)
+
+        def P(px, py, pz):
+            return (lx + px * math.cos(ty) - py * math.sin(ty), ly + px * math.sin(ty) + py * math.cos(ty), z + pz)
+        deck = 3.125
+        a.prop("SM_Int_WoodChair", P(-0.2, 0.2, deck), tyaw)
+        a.prop("SM_Int_SideTable", P(0.75, 0.55, deck), tyaw)
+        a.prop("SM_Int_Radio", P(0.75, 0.55, deck + 0.6), tyaw + 15)
+        a.prop("SM_Int_Lifebuoy", P(-1.4, -0.3, deck + 0.25), tyaw - 90)
+        a.prop("SM_Int_Bucket", P(0.9, -0.9, deck), tyaw)
+        lgd = a.mesh("Beach_Lifeguard_NoCol")
+        with lgd.at((lx, ly, z), rot=tyaw):
+            with lgd.at((0.45, -1.3, deck + 0.99), rot=8):
+                for sx in (-0.045, 0.045):
+                    with lgd.at((sx, 0, 0), rot_x=90):
+                        lgd.cylinder((0, 0, -0.08), 0.035, 0.16, "M_Black", seg=8)
+                lgd.box((0, 0, 0), (0.05, 0.06, 0.03), "M_Black")
+            lgd.box((-0.2, 0.2, deck + 0.47), (0.55, 0.5, 0.05), "M_LighthouseRed")      # seat cushion
+            lgd.box((0, -1.32, deck + 0.6), (1.2, 0.02, 0.3), "M_LighthouseRed")           # sign board
+            lgd.cylinder((1.15, -1.15, deck + 1.0), 0.015, 1.2, "M_WindowFrame", seg=6)    # flag pole
+            lgd.box((1.15, -1.0, deck + 1.95), (0.02, 0.3, 0.22), "M_AcademyYellow")
+        tx, ty2, tz = P(0, -1.345, deck + 0.53)
+        a.text("LIFEGUARD", (tx, ty2, tz), tyaw, size=0.16, color=(1, 1, 1))
+        a.light(P(0, 0, 4.1), color=(1.0, 0.9, 0.7), intensity=800.0, radius=6.0, night_only=True)
+        a.special("camera", P(-2.6, 2.2, deck + 1.6), target=P(0.2, -0.4, deck + 0.5), lens=20.0, label="lookout")
         a.special("clearing", (lx, ly, z), radius=6.0)
         net = a.mesh("Beach_Volleyball")
         nx, ny = L(a, mx2, my2)
@@ -377,6 +405,17 @@ def build_forest():
         sh.box((0, 1.5, 1.5), (2.6, 2.0, 0.6), "M_Wood")
         sh.gable_roof((0, 1.5, 1.8), 3.0, 2.4, 1.1, "M_OldRoof", overhang=0.6, thick=0.15, gable_mat="M_DarkWood")
         sh.box((0, 0.28, 1.0), (0.9, 0.05, 0.9), "M_Gold")
+        # the shrine is a tiny hokora (1.8 m to the eaves) - no room inside; offerings in front of it:
+        # offering box, cards left for luck, two candles
+        sh.box((0, -0.45, 0.3), (0.9, 0.5, 0.6), "M_DarkWood")
+        for k in range(5):
+            sh.box((-0.32 + 0.16 * k, -0.45, 0.61), (0.06, 0.5, 0.03), "M_Wood")
+        for k, (cx, rot) in enumerate(((-0.25, 10), (0.05, -6), (0.3, 22))):
+            with sh.at((cx, 0.12, 0.002), rot=rot):
+                sh.box((0, 0, 0.004), (0.065, 0.09, 0.008 + 0.006 * k), "M_CardBack")
+        for x in (-1.0, 1.0):
+            sh.cylinder((x, -0.2, 0.0), 0.03, 0.22, "M_WindowFrame", seg=6)
+            sh.cone((x, -0.2, 0.225), 0.02, 0.06, "M_LampGlow", seg=5)
         # gate posts
         for x in (-1.8, 1.8):
             sh.cylinder((x, -3.6, 0.0), 0.16, 3.4, "M_LighthouseRed", seg=10)
@@ -388,6 +427,10 @@ def build_forest():
         px, py = lx + x * c - (-1.2) * s, ly + x * s + (-1.2) * c
         a.prop("SM_StoneLantern", (px, py, base), -40)
     a.light((lx, ly, base + 2.0), color=(0.55, 0.85, 1.0), intensity=1500.0, radius=12.0, night_only=True)
+    cx_, cy_ = rot2(1.2, -3.2, -40)
+    tx_, ty_ = rot2(0.0, 0.6, -40)
+    a.special("camera", (lx + cx_, ly + cy_, base + 1.6), target=(lx + tx_, ly + ty_, base + 0.8), lens=22.0,
+              label="shrine")
     a.emitter("mist", (lx, ly, base + 0.5), scale=1.5, rate=0.5)
     a.interact("sign", (lx - 3.0 * s, ly + 3.0 * c, base + 1.0), -40, title="Forest Shrine",
                text="A tiny shrine hidden in the woods. Students leave their favourite cards here for luck - "
