@@ -159,9 +159,10 @@ def wall(aset, mb, p0, p1, z0, h, thick, mat, inner=None, openings=(), trim=None
                 _architrave(mb, o.c, o.z0, o.w, o.h, thick, 1, o.trim_in or trim_in)
                 # reveal lining (jambs + head) so the cut through the wall looks finished
                 lm = o.trim_in or trim_in or inner or mat
-                mb.box((o.c - o.w / 2 - 0.01, thick / 2, o.z0 + o.h / 2), (0.02, thick, o.h), lm)
-                mb.box((o.c + o.w / 2 + 0.01, thick / 2, o.z0 + o.h / 2), (0.02, thick, o.h), lm)
-                mb.box((o.c, thick / 2, o.z0 + o.h + 0.01), (o.w + 0.04, thick, 0.02), lm)
+                # 5 mm proud of the cut faces (inside the opening) so the two surfaces never z-fight
+                mb.box((o.c - o.w / 2 + 0.0025, thick / 2, o.z0 + o.h / 2), (0.005, thick, o.h), lm)
+                mb.box((o.c + o.w / 2 - 0.0025, thick / 2, o.z0 + o.h / 2), (0.005, thick, o.h), lm)
+                mb.box((o.c, thick / 2, o.z0 + o.h - 0.0025), (o.w, thick, 0.005), lm)
         else:
             with mb.at((p0[0], p0[1], z0), rot=yaw):
                 fr = o.frame or trim or "M_WindowFrame"

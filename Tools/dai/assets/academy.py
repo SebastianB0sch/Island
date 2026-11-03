@@ -563,6 +563,10 @@ class Ctx:
         self.a.door(self.P(x, y, z), self.F.yaw(yaw), w, h, style, double, None, swing)
 
     def npc(self, x, y, yaw, dorm, wander=2.0, z=FLOOR):
+        # every other indoor student only: rooms stay lively without doubling the island's character count
+        self.a._indoor_npcs = getattr(self.a, "_indoor_npcs", 0) + 1
+        if self.a._indoor_npcs % 2 == 0:
+            return
         self.a.npc(self.P(x, y, z), self.F.yaw(yaw), dorm=dorm, wander=wander)
 
     def cam(self, label, pos, target, lens=18.0):
@@ -2543,7 +2547,7 @@ def _exec_desk(C, x, y, yaw, w=2.4, d=1.0, mat="M_IntWoodDark"):
 
 
 def _gear(C, x, y, z, r=0.45, mat=K.TRIM_GOLD):
-    """'Ancient gear' model on a stand (vertical, facing local -Y)."""
+    """Clockwork gear-golem model on a stand (vertical, facing local -Y)."""
     with C.mb.at(C.P(x, y, z), rot=C.F.yaw(0.0), rot_x=90.0):
         C.mb.cylinder((0, 0, -0.05), r, 0.1, mat, seg=16)
         C.mb.cylinder((0, 0, -0.07), r * 0.35, 0.14, K.METAL, seg=10)
@@ -2655,7 +2659,7 @@ def _annex_interior(C):
     C.prop("SM_Int_Wardrobe", 7.3, 63.25, z, 180.0)
     C.box(12.2, 72.0, z, 12.8, 72.6, z + 0.9, K.MARBLEFLOOR)
     _gear(C, 12.5, 72.3, z + 1.45)
-    C.wtext("ANCIENT GEAR - MODEL", 12.5, 72.0, z + 0.55, 0.0, 0.07, (0.15, 0.1, 0.05))
+    C.wtext("CLOCKWORK GOLEM - MODEL", 12.5, 72.0, z + 0.55, 0.0, 0.07, (0.15, 0.1, 0.05))
     C.kit(K.piano, 8.0, 72.4, 160.0)
     for x in (8.0, 11.6, 15.2):
         banner(C.nc, C.P(x, y1 - 0.06, EB_TOP - 0.2), C.F.yaw(0.0), 0.9, 2.2, "M_AcademyBlue", notch=0.35)
