@@ -1930,7 +1930,7 @@ def _terminal_tower(A, wm, mb, nc, x0, y0, x1, y1, scx, scy, tz):
             nc.box((fx, y0 + 0.25, 2.2), (0.3, 0.01, 0.3), cols[k % 5])
     for px, py in ((40.5, 15.5), (40.5, 19.8), (44.0, 15.2)):
         K.panel_light(A, nc, px, py, tz + 2.45)
-    K.camera(A, "ticket_office", (45.3, 15.3, 1.75), (39.6, 13.9, 1.0), 15.0)
+    K.camera(A, "ticket_office", (45.4, 14.7, 1.75), (39.6, 14.6, 1.0), 15.0)
     K.camera(A, "terminal_lobby", (39.0, 16.9, 1.7), (44.0, 21.6, 2.2), 15.0)
     K.camera(A, "harbor_master", (38.7, 22.3, tz + 1.75), (43.5, 14.0, tz + 0.6), 15.0)
 
