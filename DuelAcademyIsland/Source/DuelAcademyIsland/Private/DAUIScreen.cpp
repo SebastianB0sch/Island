@@ -188,3 +188,75 @@ void FDAUIScreen::PlaySfx(const TCHAR* SoundName, float Volume) const
 		}
 	}
 }
+
+bool FDAUIScreen::FindHitAt(const FVector2D& Point, FDAUIHitTarget& OutHit) const
+{
+	for (int32 Index = HitTargets.Num() - 1; Index >= 0; --Index)
+	{
+		if (HitTargets[Index].Contains(Point))
+		{
+			OutHit = HitTargets[Index];
+			return true;
+		}
+	}
+	return false;
+}
+
+bool FDAUIScreen::FindHitAtMouse(FDAUIHitTarget& OutHit) const
+{
+	FVector2D Mouse;
+	return GetMousePosition(Mouse) && FindHitAt(Mouse, OutHit);
+}
+
+void FDAUIScreen::KeepRowVisible(int32 Selection, int32 Count, int32 VisibleRows, int32& InOutScroll)
+{
+	if (VisibleRows <= 0)
+	{
+		return;
+	}
+	if (Selection < InOutScroll)
+	{
+		InOutScroll = Selection;
+	}
+	else if (Selection >= InOutScroll + VisibleRows)
+	{
+		InOutScroll = Selection - VisibleRows + 1;
+	}
+	InOutScroll = FMath::Clamp(InOutScroll, 0, FMath::Max(0, Count - VisibleRows));
+}
+
+void FDAUIScreen::SetStatus(const FString& Message, bool bError, float Seconds)
+{
+	StatusText = Message;
+	StatusTimeLeft = Seconds;
+	bStatusIsError = bError;
+}
+
+void FDAUIScreen::TickStatus(float DeltaSeconds)
+{
+	if (StatusTimeLeft > 0.f)
+	{
+		StatusTimeLeft -= DeltaSeconds;
+		if (StatusTimeLeft <= 0.f)
+		{
+			ClearStatus();
+		}
+	}
+}
+
+void FDAUIScreen::ClearStatus()
+{
+	StatusText.Reset();
+	StatusTimeLeft = 0.f;
+	bStatusIsError = false;
+}
+
+FString FDAUIScreen::TruncateToWidth(const FString& Str, float MaxWidth, float InScale, UFont* Font) const
+{
+	FString Result = Str;
+	while (Result.Len() > 4 && Measure(Result, InScale, Font).X > MaxWidth)
+	{
+		Result = Result.LeftChop(4) + TEXT("...");
+	}
+	return Result;
+}

@@ -48,28 +48,12 @@ namespace
 }
 
 FDATitleScreen::FDATitleScreen(ADAHUD* InOwner)
-	: OwnerHUD(InOwner)
+	: FDAUIScreen(InOwner)
 {
-	PlayerOwner = InOwner ? InOwner->GetOwningPlayerController() : nullptr;
 	LoadOptionsFromSettings();
 }
 
 FDATitleScreen::~FDATitleScreen() = default;
-
-UWorld* FDATitleScreen::GetWorld() const
-{
-	return OwnerHUD.IsValid() ? OwnerHUD->GetWorld() : nullptr;
-}
-
-UGameInstance* FDATitleScreen::GetGameInstance() const
-{
-	return OwnerHUD.IsValid() ? OwnerHUD->GetGameInstance() : nullptr;
-}
-
-APlayerController* FDATitleScreen::GetPlayerController() const
-{
-	return OwnerHUD.IsValid() ? OwnerHUD->GetOwningPlayerController() : nullptr;
-}
 
 UDASaveSubsystem* FDATitleScreen::GetSaveSubsystem() const
 {
@@ -87,26 +71,6 @@ UDACalendarSubsystem* FDATitleScreen::GetCalendar() const
 {
 	UGameInstance* GameInstance = GetGameInstance();
 	return GameInstance ? GameInstance->GetSubsystem<UDACalendarSubsystem>() : nullptr;
-}
-
-UFont* FDATitleScreen::GetFont(bool bLarge) const
-{
-	if (OwnerHUD.IsValid())
-	{
-		return bLarge ? OwnerHUD->GetBigFont() : OwnerHUD->GetSmallFont();
-	}
-	return bLarge ? (GEngine ? GEngine->GetLargeFont() : nullptr) : (GEngine ? GEngine->GetMediumFont() : nullptr);
-}
-
-void FDATitleScreen::PlaySfx(const TCHAR* SoundName, float Volume) const
-{
-	if (OwnerHUD.IsValid())
-	{
-		if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(OwnerHUD.Get()))
-		{
-			Sub->PlayUISound(SoundName, Volume);
-		}
-	}
 }
 
 // ------------------------------------------------------------------------ lifecycle
@@ -440,7 +404,7 @@ void FDATitleScreen::UpdateSelectionClamp()
 {
 	const int32 Count = Panel == EDATitlePanel::Continue
 		? Slots.Num()
-		: (Panel == EDATitlePanel::ConfirmNewGame ? 2 : (Panel == EDATitlePanel::Main ? 4 : 4));
+		: (Panel == EDATitlePanel::ConfirmNewGame ? 2 : 4);
 	Selection = Count > 0 ? FMath::Clamp(Selection, 0, Count - 1) : 0;
 }
 
@@ -717,24 +681,11 @@ void FDATitleScreen::Update(float DeltaSeconds)
 
 void FDATitleScreen::HandleClickAtMouse()
 {
-	if (!PlayerOwner)
+	// Copy the hit: handlers may close the title, which resets HitTargets.
+	FDATitleHitTarget Hit;
+	if (FindHitAtMouse(Hit))
 	{
-		return;
-	}
-	float MouseX = -1.f;
-	float MouseY = -1.f;
-	if (!PlayerOwner->GetMousePosition(MouseX, MouseY))
-	{
-		return;
-	}
-	const FVector2D Mouse(MouseX, MouseY);
-	for (int32 Index = HitTargets.Num() - 1; Index >= 0; --Index)
-	{
-		if (HitTargets[Index].Contains(Mouse))
-		{
-			HandleHit(HitTargets[Index]);
-			return;
-		}
+		HandleHit(Hit);
 	}
 }
 
@@ -766,118 +717,6 @@ void FDATitleScreen::HandleHit(const FDATitleHitTarget& Hit)
 	}
 }
 
-void FDATitleScreen::AddHit(const FString& Action, int32 Index, float X, float Y, float W, float H)
-{
-	FDATitleHitTarget Hit;
-	Hit.Action = Action;
-	Hit.Index = Index;
-	Hit.X = X;
-	Hit.Y = Y;
-	Hit.W = W;
-	Hit.H = H;
-	HitTargets.Add(MoveTemp(Hit));
-}
-
-// ------------------------------------------------------------------------ drawing helpers
-
-void FDATitleScreen::DrawRect(const FLinearColor& Color, float X, float Y, float W, float H)
-{
-	if (!Canvas || W <= 0.f || H <= 0.f)
-	{
-		return;
-	}
-	FCanvasTileItem Tile(FVector2D(X, Y), GWhiteTexture, FVector2D(W, H), Color);
-	Tile.BlendMode = SE_BLEND_Translucent;
-	Canvas->DrawItem(Tile);
-}
-
-void FDATitleScreen::DrawText(const FString& Str, float X, float Y, const FLinearColor& Color, float InScale,
-	bool bCenter, UFont* Font)
-{
-	if (!Canvas || Str.IsEmpty())
-	{
-		return;
-	}
-	UFont* F = Font ? Font : GetFont(false);
-	if (!F)
-	{
-		return;
-	}
-	FCanvasTextItem Item(FVector2D(X, Y), FText::FromString(Str), F, Color);
-	Item.Scale = FVector2D(InScale * UIScale, InScale * UIScale);
-	Item.bCentreX = bCenter;
-	Item.EnableShadow(FLinearColor(0.f, 0.f, 0.f, 0.8f * Color.A), FVector2D(1.2f * UIScale, 1.2f * UIScale));
-	Canvas->DrawItem(Item);
-}
-
-void FDATitleScreen::DrawPanel(float X, float Y, float W, float H, const FLinearColor& Fill, const FLinearColor& Accent)
-{
-	DrawRect(Fill, X, Y, W, H);
-	DrawRect(TitleAlpha(Accent, 0.95f), X, Y, 4.f * UIScale, H);
-	DrawRect(TitleAlpha(Accent, 0.45f), X, Y + H - 2.f * UIScale, W, 2.f * UIScale);
-}
-
-void FDATitleScreen::Diamond(const FVector2D& C, float R, const FLinearColor& Color)
-{
-	if (!Canvas)
-	{
-		return;
-	}
-	const FVector2D T(C.X, C.Y - R);
-	const FVector2D B(C.X, C.Y + R);
-	const FVector2D L(C.X - R, C.Y);
-	const FVector2D Rt(C.X + R, C.Y);
-
-	FCanvasTriangleItem Tri1(T, Rt, B, GWhiteTexture);
-	Tri1.SetColor(Color);
-	Tri1.BlendMode = SE_BLEND_Translucent;
-	Canvas->DrawItem(Tri1);
-
-	FCanvasTriangleItem Tri2(T, B, L, GWhiteTexture);
-	Tri2.SetColor(Color);
-	Tri2.BlendMode = SE_BLEND_Translucent;
-	Canvas->DrawItem(Tri2);
-}
-
-FVector2D FDATitleScreen::Measure(const FString& Str, float InScale, UFont* Font) const
-{
-	const UFont* F = Font ? Font : GetFont(false);
-	if (!F || Str.IsEmpty())
-	{
-		return FVector2D::ZeroVector;
-	}
-	const float K = InScale * UIScale;
-	return FVector2D(F->GetStringSize(*Str) * K, F->GetStringHeightSize(*Str) * K);
-}
-
-TArray<FString> FDATitleScreen::WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font) const
-{
-	TArray<FString> Out;
-	TArray<FString> Paragraphs;
-	Str.ParseIntoArray(Paragraphs, TEXT("\n"), false);
-	for (const FString& Para : Paragraphs)
-	{
-		TArray<FString> Words;
-		Para.ParseIntoArray(Words, TEXT(" "), true);
-		FString Line;
-		for (const FString& Word : Words)
-		{
-			const FString Candidate = Line.IsEmpty() ? Word : Line + TEXT(" ") + Word;
-			if (!Line.IsEmpty() && Measure(Candidate, InScale, Font).X > MaxWidth)
-			{
-				Out.Add(Line);
-				Line = Word;
-			}
-			else
-			{
-				Line = Candidate;
-			}
-		}
-		Out.Add(Line);
-	}
-	return Out;
-}
-
 // ------------------------------------------------------------------------ draw
 
 void FDATitleScreen::Draw(UCanvas* InCanvas)
@@ -886,9 +725,7 @@ void FDATitleScreen::Draw(UCanvas* InCanvas)
 	{
 		return;
 	}
-	Canvas = InCanvas;
-	UIScale = FMath::Clamp(Canvas->ClipY / 1080.f, 0.6f, 2.5f);
-	HitTargets.Reset();
+	BeginFrame(InCanvas);
 
 	DrawBackground();
 	switch (Panel)

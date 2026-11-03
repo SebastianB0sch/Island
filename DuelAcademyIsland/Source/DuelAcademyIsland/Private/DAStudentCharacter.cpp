@@ -361,59 +361,11 @@ void ADAStudentCharacter::OnMap(const FInputActionValue& V)
 	}
 }
 
-void ADAStudentCharacter::OnMenuUp(const FInputActionValue& V)
-{
-	if (ADAHUD* HUD = GetDAHUD())
-	{
-		HUD->MoveMapSelection(-1);
-	}
-}
-
-void ADAStudentCharacter::OnMenuDown(const FInputActionValue& V)
-{
-	if (ADAHUD* HUD = GetDAHUD())
-	{
-		HUD->MoveMapSelection(1);
-	}
-}
-
-void ADAStudentCharacter::OnMenuSelect(const FInputActionValue& V)
-{
-	if (ADAHUD* HUD = GetDAHUD())
-	{
-		if (HUD->IsMapOpen())
-		{
-			if (ADALocationVolume* Zone = HUD->GetSelectedZone())
-			{
-				HUD->ToggleMap();
-				FastTravelTo(Zone);
-			}
-		}
-	}
-}
-
-void ADAStudentCharacter::OnClick(const FInputActionValue& V)
-{
-	if (IsDuelOpen())
-	{
-		return;
-	}
-	if (ADAHUD* HUD = GetDAHUD())
-	{
-		if (HUD->IsMapOpen())
-		{
-			if (ADALocationVolume* Zone = HUD->PickZoneUnderCursor())
-			{
-				HUD->ToggleMap();
-				FastTravelTo(Zone);
-			}
-		}
-	}
-}
-
 void ADAStudentCharacter::OnJacket(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	// Blocked by every modal UI, not just duels: these keys (J/F/T/[/]/N) are
+	// also typed into name entry and used as deck-editor shortcuts.
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -433,7 +385,7 @@ void ADAStudentCharacter::OnJacket(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnDuelDisk(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -454,7 +406,7 @@ void ADAStudentCharacter::OnHelp(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimePause(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -469,7 +421,7 @@ void ADAStudentCharacter::OnTimePause(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeFaster(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -484,7 +436,7 @@ void ADAStudentCharacter::OnTimeFaster(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeSlower(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (IsMovementBlocked())
 	{
 		return;
 	}
@@ -499,7 +451,7 @@ void ADAStudentCharacter::OnTimeSlower(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnTimeSkip(const FInputActionValue& V)
 {
-	if (IsDuelOpen())
+	if (IsMovementBlocked())
 	{
 		return;
 	}

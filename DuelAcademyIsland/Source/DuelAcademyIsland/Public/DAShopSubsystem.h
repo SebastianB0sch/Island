@@ -13,6 +13,8 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "DAShopSubsystem.generated.h"
 
+class FJsonObject;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDAOnPackPurchased, const FDAEPurchaseResult&, Result, int32, RemainingDP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDAOnShopChanged);
 
@@ -111,6 +113,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Economy|Shop")
 	bool PurchasePack(const FString& PackId, int32 Seed, FDAEPurchaseResult& OutResult);
 
+	/**
+	 * Opens every A03 story pack grant still queued (Inventory ConsumePendingPackGrant)
+	 * and credits their duplicate DP through the active wallet. Returns the number of
+	 * packs opened; each successful reveal is appended to OutResults.
+	 */
+	int32 OpenPendingPackGrants(TArray<FDAEPackOpenResult>& OutResults);
+
 	/** Data validation used by the self-test and A10; logs and returns the problem list. */
 	TArray<FString> ValidateCatalogue() const;
 
@@ -186,6 +195,9 @@ private:
 	void CreditDP(int32 Amount, const FString& Reason);
 	void MarkPurchased(const FString& PackId);
 	FDAEPackView MakeView(const FDAEPackDef& Pack) const;
+	/** Shared by ExportStateJson/WriteSaveSection and ImportStateJson/ReadSaveSection. */
+	void WriteStateFields(FJsonObject& Out) const;
+	bool ApplyStateObject(const FJsonObject& Object, FString& OutError);
 
 	TArray<FDAEPackDef> Packs;
 	TMap<FString, int32> PackIndexById;

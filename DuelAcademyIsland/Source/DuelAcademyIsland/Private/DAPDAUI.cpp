@@ -212,43 +212,12 @@ namespace
 }
 
 FDAPDAUI::FDAPDAUI(ADAHUD* InOwner)
-	: OwnerHUD(InOwner)
+	: FDAUIScreen(InOwner)
 {
-	PlayerOwner = InOwner ? InOwner->GetOwningPlayerController() : nullptr;
 	RefreshViewModel();
 }
 
 FDAPDAUI::~FDAPDAUI() = default;
-
-UWorld* FDAPDAUI::GetWorld() const
-{
-	return OwnerHUD.IsValid() ? OwnerHUD->GetWorld() : nullptr;
-}
-
-UGameInstance* FDAPDAUI::GetGameInstance() const
-{
-	return OwnerHUD.IsValid() ? OwnerHUD->GetGameInstance() : nullptr;
-}
-
-UFont* FDAPDAUI::GetFont(bool bLarge) const
-{
-	if (OwnerHUD.IsValid())
-	{
-		return bLarge ? OwnerHUD->GetBigFont() : OwnerHUD->GetSmallFont();
-	}
-	return bLarge ? (GEngine ? GEngine->GetLargeFont() : nullptr) : (GEngine ? GEngine->GetMediumFont() : nullptr);
-}
-
-void FDAPDAUI::PlaySfx(const TCHAR* SoundName, float Volume) const
-{
-	if (OwnerHUD.IsValid())
-	{
-		if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(OwnerHUD.Get()))
-		{
-			Sub->PlayUISound(SoundName, Volume);
-		}
-	}
-}
 
 // ------------------------------------------------------------------------ lifecycle
 
@@ -1318,24 +1287,12 @@ void FDAPDAUI::ActivateRow(int32 Index)
 
 void FDAPDAUI::HandleClickAtMouse()
 {
-	if (!PlayerOwner)
+	// Copy the hit: a row can close the PDA (fast travel, deck/exam open), which
+	// resets HitTargets while HandleHit is still running.
+	FDAPDAHitTarget Hit;
+	if (FindHitAtMouse(Hit))
 	{
-		return;
-	}
-	float MouseX = -1.f;
-	float MouseY = -1.f;
-	if (!PlayerOwner->GetMousePosition(MouseX, MouseY))
-	{
-		return;
-	}
-	const FVector2D Mouse(MouseX, MouseY);
-	for (int32 Index = HitTargets.Num() - 1; Index >= 0; --Index)
-	{
-		if (HitTargets[Index].Contains(Mouse))
-		{
-			HandleHit(HitTargets[Index]);
-			return;
-		}
+		HandleHit(Hit);
 	}
 }
 
@@ -1378,115 +1335,11 @@ void FDAPDAUI::HandleHit(const FDAPDAHitTarget& Hit)
 
 // ------------------------------------------------------------------------ drawing helpers
 
-void FDAPDAUI::AddHit(const FString& Action, int32 Index, float X, float Y, float W, float H, const FString& Payload)
-{
-	FDAPDAHitTarget Hit;
-	Hit.Action = Action;
-	Hit.Index = Index;
-	Hit.X = X;
-	Hit.Y = Y;
-	Hit.W = W;
-	Hit.H = H;
-	Hit.Payload = Payload;
-	HitTargets.Add(MoveTemp(Hit));
-}
-
-void FDAPDAUI::DrawRect(const FLinearColor& Color, float X, float Y, float W, float H)
-{
-	if (!Canvas || W <= 0.f || H <= 0.f)
-	{
-		return;
-	}
-	FCanvasTileItem Tile(FVector2D(X, Y), GWhiteTexture, FVector2D(W, H), Color);
-	Tile.BlendMode = SE_BLEND_Translucent;
-	Canvas->DrawItem(Tile);
-}
-
-void FDAPDAUI::DrawText(const FString& Str, float X, float Y, const FLinearColor& Color, float InScale,
-	bool bCenter, UFont* Font)
-{
-	if (!Canvas || Str.IsEmpty())
-	{
-		return;
-	}
-	UFont* F = Font ? Font : GetFont(false);
-	if (!F)
-	{
-		return;
-	}
-	FCanvasTextItem Item(FVector2D(X, Y), FText::FromString(Str), F, Color);
-	Item.Scale = FVector2D(InScale * UIScale, InScale * UIScale);
-	Item.bCentreX = bCenter;
-	Item.EnableShadow(FLinearColor(0.f, 0.f, 0.f, 0.8f * Color.A), FVector2D(1.2f * UIScale, 1.2f * UIScale));
-	Canvas->DrawItem(Item);
-}
-
 void FDAPDAUI::DrawPanel(float X, float Y, float W, float H, const FLinearColor& Fill, const FLinearColor& Accent)
 {
 	DrawRect(Fill, X, Y, W, H);
 	DrawRect(PdaAlpha(Accent, 0.95f), X, Y, 3.f * UIScale, H);
 	DrawRect(PdaAlpha(Accent, 0.35f), X, Y, W, 1.f * UIScale);
-}
-
-void FDAPDAUI::Diamond(const FVector2D& C, float R, const FLinearColor& Color)
-{
-	if (!Canvas)
-	{
-		return;
-	}
-	const FVector2D T(C.X, C.Y - R);
-	const FVector2D B(C.X, C.Y + R);
-	const FVector2D L(C.X - R, C.Y);
-	const FVector2D Rt(C.X + R, C.Y);
-
-	FCanvasTriangleItem Tri1(T, Rt, B, GWhiteTexture);
-	Tri1.SetColor(Color);
-	Tri1.BlendMode = SE_BLEND_Translucent;
-	Canvas->DrawItem(Tri1);
-
-	FCanvasTriangleItem Tri2(T, B, L, GWhiteTexture);
-	Tri2.SetColor(Color);
-	Tri2.BlendMode = SE_BLEND_Translucent;
-	Canvas->DrawItem(Tri2);
-}
-
-FVector2D FDAPDAUI::Measure(const FString& Str, float InScale, UFont* Font) const
-{
-	const UFont* F = Font ? Font : GetFont(false);
-	if (!F || Str.IsEmpty())
-	{
-		return FVector2D::ZeroVector;
-	}
-	const float K = InScale * UIScale;
-	return FVector2D(F->GetStringSize(*Str) * K, F->GetStringHeightSize(*Str) * K);
-}
-
-TArray<FString> FDAPDAUI::WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font) const
-{
-	TArray<FString> Out;
-	TArray<FString> Paragraphs;
-	Str.ParseIntoArray(Paragraphs, TEXT("\n"), false);
-	for (const FString& Para : Paragraphs)
-	{
-		TArray<FString> Words;
-		Para.ParseIntoArray(Words, TEXT(" "), true);
-		FString Line;
-		for (const FString& Word : Words)
-		{
-			const FString Candidate = Line.IsEmpty() ? Word : Line + TEXT(" ") + Word;
-			if (!Line.IsEmpty() && Measure(Candidate, InScale, Font).X > MaxWidth)
-			{
-				Out.Add(Line);
-				Line = Word;
-			}
-			else
-			{
-				Line = Candidate;
-			}
-		}
-		Out.Add(Line);
-	}
-	return Out;
 }
 
 void FDAPDAUI::EnsureSelectionVisible(int32 VisibleRows)
@@ -1495,16 +1348,7 @@ void FDAPDAUI::EnsureSelectionVisible(int32 VisibleRows)
 	{
 		return;
 	}
-	if (Selection < ListScroll)
-	{
-		ListScroll = Selection;
-	}
-	else if (Selection >= ListScroll + VisibleRows)
-	{
-		ListScroll = Selection - VisibleRows + 1;
-	}
-	const int32 Count = RowCountForTab(ActiveTab);
-	ListScroll = FMath::Clamp(ListScroll, 0, FMath::Max(0, Count - VisibleRows));
+	KeepRowVisible(Selection, RowCountForTab(ActiveTab), VisibleRows, ListScroll);
 }
 
 // ------------------------------------------------------------------------ draw
@@ -1515,9 +1359,7 @@ void FDAPDAUI::Draw(UCanvas* InCanvas)
 	{
 		return;
 	}
-	Canvas = InCanvas;
-	UIScale = FMath::Clamp(Canvas->ClipY / 1080.f, 0.6f, 2.5f);
-	HitTargets.Reset();
+	BeginFrame(InCanvas);
 
 	DrawRect(FLinearColor(0.004f, 0.01f, 0.022f, 0.94f), 0.f, 0.f, Canvas->ClipX, Canvas->ClipY);
 	DrawHeader();

@@ -117,22 +117,25 @@ public:
 	/** Test-only: seed the transient profile/decks/inventory/mail state used by -DAGameplayUITest. */
 	void PrepareGameplayUITestState();
 
-	/** Debug-only: log the planted-foot speed measured by the -DALocomotionTest harness. */
-	void LogLocomotionStats(const FString& Label);
-
 	/** Debug-only: log the world-space speed of the planted ball joints (foot-slide check). */
 	void LogFootPlantStats(const FString& Label);
 
 	FDADialogueUI* GetDialogueUI() const { return DialogueUI.Get(); }
 	FDAPDAUI* GetPDAUI() const { return PDAUI.Get(); }
-	FDATitleScreen* GetTitleScreen() const { return TitleScreen.Get(); }
-	FDAShopUI* GetShopUI() const { return ShopUI.Get(); }
-	FDADeckUI* GetDeckUI() const { return DeckUI.Get(); }
 	FDAExamUI* GetExamUI() const { return ExamUI.Get(); }
+
+	/**
+	 * The only arbiter of cursor/input mode for the non-duel layers. Public so
+	 * FDADuelUI can hand control back when a duel closes over another layer.
+	 * No-op while a duel is open (the duel UI owns input then).
+	 */
+	void UpdateInputMode();
 
 private:
 	// ---------------------------------------------------------------- UI hosting
-	void UpdateInputMode();
+	/** Closes every modal layer except Keep (shop/deck/exam/map/PDA/dialogue/help). */
+	enum class EDALayer : uint8 { None, Shop, DeckEditor, Exam };
+	void CloseOtherLayers(EDALayer Keep);
 	void ApplySettingsToUI();
 	void WireEconomySystems();
 	void HandlePDAAction(FName ActionId, const FString& Payload);

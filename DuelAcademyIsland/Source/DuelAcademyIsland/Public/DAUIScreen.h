@@ -61,9 +61,31 @@ protected:
 	TArray<FString> WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
 	void PlaySfx(const TCHAR* SoundName, float Volume = 1.f) const;
 
+	/**
+	 * Copies the top-most (last drawn) hit target containing Point. Handlers get a
+	 * copy because many of them close the screen, which resets HitTargets and
+	 * would free the strings of a hit passed by reference.
+	 */
+	bool FindHitAt(const FVector2D& Point, FDAUIHitTarget& OutHit) const;
+	bool FindHitAtMouse(FDAUIHitTarget& OutHit) const;
+
+	/** Scrolls InOutScroll so Selection stays inside [Scroll, Scroll + VisibleRows) and the list stays in range. */
+	static void KeepRowVisible(int32 Selection, int32 Count, int32 VisibleRows, int32& InOutScroll);
+
+	/** Transient status line shared by the gameplay screens. */
+	void SetStatus(const FString& Message, bool bError = false, float Seconds = 5.f);
+	void TickStatus(float DeltaSeconds);
+	void ClearStatus();
+	/** Trims Str (appending "...") until it measures at most MaxWidth. */
+	FString TruncateToWidth(const FString& Str, float MaxWidth, float InScale, UFont* Font = nullptr) const;
+
 	TWeakObjectPtr<ADAHUD> OwnerHUD;
 	APlayerController* PlayerOwner = nullptr;
 	UCanvas* Canvas = nullptr;
 	float UIScale = 1.f;
 	TArray<FDAUIHitTarget> HitTargets;
+
+	FString StatusText;
+	float StatusTimeLeft = 0.f;
+	bool bStatusIsError = false;
 };

@@ -3,6 +3,7 @@
 #include "DAEconomyJson.h"
 #include "DAInventorySubsystem.h"
 #include "DACardRecords.h"
+#include "DAStorySubsystem.h"
 #include "DuelAcademyIsland.h"
 
 #include "Algo/Unique.h"
@@ -100,23 +101,7 @@ bool UDAShopSubsystem::WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) con
 	{
 		OutSection = MakeShared<FJsonObject>();
 	}
-	OutSection->SetNumberField(TEXT("version"), 1);
-	OutSection->SetNumberField(TEXT("cached_dp"), CachedDP);
-	OutSection->SetBoolField(TEXT("internal_wallet"), bInternalWallet);
-
-	const TSharedPtr<FJsonObject> LastObject = MakeShared<FJsonObject>();
-	for (const TPair<FString, int32>& Pair : LastPurchaseDay)
-	{
-		LastObject->SetNumberField(Pair.Key, Pair.Value);
-	}
-	OutSection->SetObjectField(TEXT("last_purchase_day"), LastObject);
-
-	const TSharedPtr<FJsonObject> CountObject = MakeShared<FJsonObject>();
-	for (const TPair<FString, int32>& Pair : PurchaseCounts)
-	{
-		CountObject->SetNumberField(Pair.Key, Pair.Value);
-	}
-	OutSection->SetObjectField(TEXT("purchase_counts"), CountObject);
+	WriteStateFields(*OutSection);
 	return true;
 }
 
@@ -127,7 +112,7 @@ bool UDAShopSubsystem::ReadSaveSection(const TSharedPtr<FJsonObject>& InSection,
 		OutError = TEXT("Shop save section is missing.");
 		return false;
 	}
-	return ImportStateJson(DAEconomyJson::WriteObject(InSection), OutError);
+	return ApplyStateObject(*InSection, OutError);
 }
 
 bool UDAShopSubsystem::LoadPacks(FString& OutError)
@@ -871,6 +856,50 @@ bool UDAShopSubsystem::PurchasePack(const FString& PackId, int32 Seed, FDAEPurch
 	return true;
 }
 
+int32 UDAShopSubsystem::OpenPendingPackGrants(TArray<FDAEPackOpenResult>& OutResults)
+{
+	UGameInstance* GI = GetGameInstance();
+	UDAInventorySubsystem* Inventory = GI ? GI->GetSubsystem<UDAInventorySubsystem>() : nullptr;
+	UDAStorySubsystem* Story = GI ? GI->GetSubsystem<UDAStorySubsystem>() : nullptr;
+	if (!Inventory || !Story)
+	{
+		return 0;
+	}
+
+	int32 Opened = 0;
+	// GetPendingPackGrants returns a copy, so consuming grants cannot invalidate the loop.
+	for (const FString& PackId : Story->GetPendingPackGrants())
+	{
+		// A grant can be queued more than once (count > 1); the guard bounds a
+		// misbehaving queue that reports success without consuming.
+		for (int32 Guard = 0; Guard < 64; ++Guard)
+		{
+			const FDAEPackOpenResult Result = Inventory->ConsumePendingPackGrant(PackId, 0);
+			if (!Result.bSuccess)
+			{
+				if (Result.ErrorCode != TEXT("no_pending_grant"))
+				{
+					UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Shop: pending grant '%s' could not be opened: %s"),
+						*PackId, *Result.ErrorMessage);
+				}
+				break;
+			}
+			if (Result.DPFromDuplicates > 0)
+			{
+				CreditDP(Result.DPFromDuplicates, FString::Printf(TEXT("grant_duplicate:%s"), *PackId));
+			}
+			OutResults.Add(Result);
+			++Opened;
+		}
+	}
+
+	if (Opened > 0)
+	{
+		OnShopChanged.Broadcast();
+	}
+	return Opened;
+}
+
 TArray<FString> UDAShopSubsystem::ValidateCatalogue() const
 {
 	TArray<FString> Issues;
@@ -973,6 +1002,11 @@ TArray<FString> UDAShopSubsystem::ValidateCatalogue() const
 					Issues.Add(FString::Printf(TEXT("Pack '%s' slot %d has no non-empty rarity pool."), *Pack.Id, SlotIndex));
 				}
 			}
+			else if (Slot.Type == EDAEPackSlotType::AnyCard && !Pack.bAllCards)
+			{
+				// OpenPackDefinition only builds the any-card candidate list for all_cards packs.
+				Issues.Add(FString::Printf(TEXT("Pack '%s' slot %d is an any-card slot but the pack is not all_cards."), *Pack.Id, SlotIndex));
+			}
 		}
 
 		TSet<int32> PackPool;
@@ -1028,27 +1062,31 @@ TArray<FString> UDAShopSubsystem::ValidateCatalogue() const
 	return Issues;
 }
 
-FString UDAShopSubsystem::ExportStateJson() const
+void UDAShopSubsystem::WriteStateFields(FJsonObject& Out) const
 {
-	const TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
-	Root->SetNumberField(TEXT("version"), 1);
-	Root->SetNumberField(TEXT("cached_dp"), CachedDP);
-	Root->SetBoolField(TEXT("internal_wallet"), bInternalWallet);
+	Out.SetNumberField(TEXT("version"), 1);
+	Out.SetNumberField(TEXT("cached_dp"), CachedDP);
+	Out.SetBoolField(TEXT("internal_wallet"), bInternalWallet);
 
 	const TSharedPtr<FJsonObject> LastObject = MakeShared<FJsonObject>();
 	for (const TPair<FString, int32>& Pair : LastPurchaseDay)
 	{
 		LastObject->SetNumberField(Pair.Key, Pair.Value);
 	}
-	Root->SetObjectField(TEXT("last_purchase_day"), LastObject);
+	Out.SetObjectField(TEXT("last_purchase_day"), LastObject);
 
 	const TSharedPtr<FJsonObject> CountObject = MakeShared<FJsonObject>();
 	for (const TPair<FString, int32>& Pair : PurchaseCounts)
 	{
 		CountObject->SetNumberField(Pair.Key, Pair.Value);
 	}
-	Root->SetObjectField(TEXT("purchase_counts"), CountObject);
+	Out.SetObjectField(TEXT("purchase_counts"), CountObject);
+}
 
+FString UDAShopSubsystem::ExportStateJson() const
+{
+	const TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
+	WriteStateFields(*Root);
 	return DAEconomyJson::WriteObject(Root);
 }
 
@@ -1061,13 +1099,16 @@ bool UDAShopSubsystem::ImportStateJson(const FString& Json, FString& OutError)
 		OutError = TEXT("Shop JSON could not be parsed.");
 		return false;
 	}
+	return ApplyStateObject(*Root->AsObject(), OutError);
+}
 
-	const TSharedPtr<FJsonObject> Object = Root->AsObject();
+bool UDAShopSubsystem::ApplyStateObject(const FJsonObject& Object, FString& OutError)
+{
 	TMap<FString, int32> NewLast;
 	TMap<FString, int32> NewCounts;
 
 	const TSharedPtr<FJsonObject>* LastObject = nullptr;
-	if (Object->TryGetObjectField(TEXT("last_purchase_day"), LastObject) && LastObject && LastObject->IsValid())
+	if (Object.TryGetObjectField(TEXT("last_purchase_day"), LastObject) && LastObject && LastObject->IsValid())
 	{
 		for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : (*LastObject)->Values)
 		{
@@ -1078,7 +1119,7 @@ bool UDAShopSubsystem::ImportStateJson(const FString& Json, FString& OutError)
 		}
 	}
 	const TSharedPtr<FJsonObject>* CountObject = nullptr;
-	if (Object->TryGetObjectField(TEXT("purchase_counts"), CountObject) && CountObject && CountObject->IsValid())
+	if (Object.TryGetObjectField(TEXT("purchase_counts"), CountObject) && CountObject && CountObject->IsValid())
 	{
 		for (const TPair<FString, TSharedPtr<FJsonValue>>& Pair : (*CountObject)->Values)
 		{
@@ -1091,15 +1132,12 @@ bool UDAShopSubsystem::ImportStateJson(const FString& Json, FString& OutError)
 
 	LastPurchaseDay = MoveTemp(NewLast);
 	PurchaseCounts = MoveTemp(NewCounts);
-	Object->TryGetNumberField(TEXT("cached_dp"), CachedDP);
+	Object.TryGetNumberField(TEXT("cached_dp"), CachedDP);
 	CachedDP = FMath::Max(0, CachedDP);
-	Object->TryGetBoolField(TEXT("internal_wallet"), bInternalWallet);
-	if (bInternalWallet)
-	{
-		GetDPHandler = nullptr;
-		SpendDPHandler = nullptr;
-		CreditDPHandler = nullptr;
-	}
+	// "internal_wallet" is informational only. Wallet wiring is runtime state
+	// owned by the host (ADAHUD::WireEconomySystems); a save must never unhook a
+	// live A02 wallet, nor claim one that has not registered.
+	bInternalWallet = !(GetDPHandler && SpendDPHandler);
 	OnShopChanged.Broadcast();
 	return true;
 }
@@ -1125,19 +1163,10 @@ bool UDAShopSubsystem::ApplySaveData(const FDAEShopSaveData& Data, FString& OutE
 	LastPurchaseDay = Data.LastPurchaseDay;
 	PurchaseCounts = Data.PurchaseCounts;
 	CachedDP = FMath::Max(0, Data.CachedDP);
-	bInternalWallet = Data.bInternalWallet;
-	if (bInternalWallet)
-	{
-		GetDPHandler = nullptr;
-		SpendDPHandler = nullptr;
-		CreditDPHandler = nullptr;
-	}
-	else if (!GetDPHandler || !SpendDPHandler)
-	{
-		// The save expected A02's wallet; if it has not registered yet, keep the
-		// cached DP intact and leave the fallback active until SetWalletHandlers.
-		bInternalWallet = true;
-	}
+	// Data.bInternalWallet is informational only; see ImportStateJson. If A02's
+	// wallet has not registered yet the cached DP stays intact and the fallback
+	// remains active until SetWalletHandlers.
+	bInternalWallet = !(GetDPHandler && SpendDPHandler);
 	OnShopChanged.Broadcast();
 	return true;
 }

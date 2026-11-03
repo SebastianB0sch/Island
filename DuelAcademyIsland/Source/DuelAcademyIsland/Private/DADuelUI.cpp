@@ -541,7 +541,14 @@ void FDADuelUI::CloseDuel()
 	{
 		Student->SetDuelPose(false);
 	}
-	if (PlayerOwner)
+	// DuelMode is None now, so the HUD restores the cursor/input mode for
+	// whatever layer is still open (map, PDA, dialogue) instead of forcing
+	// game-only input underneath it.
+	if (ADAHUD* HUD = OwnerHUD.Get())
+	{
+		HUD->UpdateInputMode();
+	}
+	else if (PlayerOwner)
 	{
 		PlayerOwner->SetInputMode(FInputModeGameOnly());
 		PlayerOwner->bShowMouseCursor = false;
@@ -942,9 +949,11 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 		{
 			for (int32 I = DuelHitTargets.Num() - 1; I >= 0; --I)
 			{
-				const FDuelHitTarget& Hit = DuelHitTargets[I];
-				if (Hit.Contains(FVector2D(MouseX, MouseY)))
+				if (DuelHitTargets[I].Contains(FVector2D(MouseX, MouseY)))
 				{
+					// Copy: HandleDuelHit can close the duel, which resets DuelHitTargets
+					// while the Action/Payload references would still be in use.
+					const FDuelHitTarget Hit = DuelHitTargets[I];
 					HandleDuelHit(Hit.Action, Hit.Value, Hit.Payload);
 					break;
 				}

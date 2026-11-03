@@ -118,10 +118,6 @@ private:
 	void OnSprintStop(const FInputActionValue& V);
 	void OnInteract(const FInputActionValue& V);
 	void OnMap(const FInputActionValue& V);
-	void OnMenuUp(const FInputActionValue& V);
-	void OnMenuDown(const FInputActionValue& V);
-	void OnMenuSelect(const FInputActionValue& V);
-	void OnClick(const FInputActionValue& V);
 	void OnJacket(const FInputActionValue& V);
 	void OnDuelDisk(const FInputActionValue& V);
 	void OnHelp(const FInputActionValue& V);

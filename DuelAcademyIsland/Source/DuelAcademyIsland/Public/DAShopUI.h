@@ -28,8 +28,6 @@ public:
 	void Update(float DeltaSeconds);
 	virtual void Draw(UCanvas* InCanvas) override;
 
-	const FDAEPurchaseResult& GetLastPurchase() const { return LastPurchase; }
-
 	FDAShopUIClosedSignature OnClosed;
 
 private:
@@ -49,9 +47,10 @@ private:
 	void ChangeCategory(int32 Delta);
 	void OpenConfirm();
 	void DoPurchase();
+	/** Opens queued A03 story pack grants and shows them on the reveal panel. */
+	void OpenPendingGrants();
 	void HandleClickAtMouse();
 	void HandleHit(const FDAUIHitTarget& Hit);
-	void SetStatus(const FString& Message, bool bError = false);
 
 	const FDAEPackView* GetSelectedPack() const;
 	FString GetPackStatusLine(const FDAEPackView& Pack) const;
@@ -81,7 +80,4 @@ private:
 
 	FDAEPurchaseResult LastPurchase;
 	float Elapsed = 0.f;
-	float StatusTime = 0.f;
-	FString StatusMessage;
-	bool bStatusError = false;
 };

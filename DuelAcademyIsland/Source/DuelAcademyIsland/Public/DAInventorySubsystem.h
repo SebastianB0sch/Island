@@ -175,6 +175,9 @@ private:
 	void ScheduleSelfTest();
 	bool TickSelfTest(float DeltaSeconds);
 	static int32 ResolveSeed(int32 Seed);
+	/** Shared by ExportStateJson/WriteSaveSection and ImportStateJson/ReadSaveSection. */
+	void WriteStateFields(FJsonObject& Out) const;
+	bool ApplyStateObject(const FJsonObject& Object, FString& OutError);
 
 	UPROPERTY()
 	TMap<int32, int32> Counts;
