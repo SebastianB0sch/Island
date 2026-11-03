@@ -1779,8 +1779,9 @@ def _boys_rooms():
                                 coffer=(3.4, K.TRIM_WHITE, None))
         for i, (k, rect) in enumerate((("A", (13.4, 0.4, 22.5, 12.0)), ("B", (22.7, 0.4, 28.6, 12.0)),
                                        ("C", (13.4, 15.8, 22.5, 27.6)), ("D", (22.7, 15.8, 28.6, 27.6)),
-                                       ("SF", (29.4, -2.6, 40.6, 12.0)), ("SB", (29.4, 15.8, 40.6, 30.6)))):
-            wall = themes[(i + (3 if sx > 0 else 0)) % len(themes)]
+                                       ("SF", (29.4, -2.6, 40.6, 4.4)), ("SB", (29.4, 23.55, 40.6, 30.6)),
+                                       ("SFs", (29.4, 4.6, 40.6, 12.0)), ("SBs", (29.4, 15.8, 40.6, 23.35)))):
+            wall = themes[((i if i < 6 else i - 2) + (3 if sx > 0 else 0)) % len(themes)]
             R[k + "_" + s] = _room(k + "_" + s, 1, _mx(rect, sx), Z1, B_C1, wall,
                                    "M_IntCarpetBlue" if i % 2 else K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD),
                                    panels=K.TRIM_GOLD if wall != WALL_IVORY else K.TRIM_WHITE,
@@ -1841,8 +1842,11 @@ def _boys_partitions(aset, mb, R):
         H(12.1, 22.6, 28.6, Z1, 11.2, R["B_" + s]["wall"], R["corr_" + s]["wall"], [(sx * 25.6, 1.0, 2.4, D, False, Z1)])
         H(15.7, 13.4, 22.6, Z1, 11.2, R["corr_" + s]["wall"], R["C_" + s]["wall"], [(sx * 18.0, 1.0, 2.4, D, False, Z1)])
         H(15.7, 22.6, 28.6, Z1, 11.2, R["corr_" + s]["wall"], R["D_" + s]["wall"], [(sx * 25.6, 1.0, 2.4, D, False, Z1)])
-        H(12.1, 29.4, 40.6, Z1, 11.2, R["SF_" + s]["wall"], R["pcorr_" + s]["wall"], [(sx * 35.0, 1.2, 2.5, D, False, Z1)])
-        H(15.7, 29.4, 40.6, Z1, 11.2, R["pcorr_" + s]["wall"], R["SB_" + s]["wall"], [(sx * 35.0, 1.2, 2.5, D, False, Z1)])
+        H(12.1, 29.4, 40.6, Z1, 11.2, R["SFs_" + s]["wall"], R["pcorr_" + s]["wall"], [(sx * 35.0, 1.2, 2.5, D, False, Z1)])
+        H(15.7, 29.4, 40.6, Z1, 11.2, R["pcorr_" + s]["wall"], R["SBs_" + s]["wall"], [(sx * 35.0, 1.2, 2.5, D, False, Z1)])
+        # suites: bedroom (balcony / garden side) | sitting room & study (corridor side)
+        H(4.5, 29.4, 40.6, Z1, 11.2, R["SF_" + s]["wall"], R["SFs_" + s]["wall"], [(sx * 30.8, 1.4, 2.5, D, True, Z1)])
+        H(23.45, 29.4, 40.6, Z1, 11.2, R["SBs_" + s]["wall"], R["SB_" + s]["wall"], [(sx * 30.8, 1.4, 2.5, D, True, Z1)])
         for (ya, yb, lo, hi) in ((0.4, 12.0, "A", "B"), (15.8, 27.6, "C", "D")):
             a, b = (sx * 22.6, ya), (sx * 22.6, yb)
             inner_side, outer_side = R[lo + "_" + s]["wall"], R[hi + "_" + s]["wall"]
@@ -2010,6 +2014,69 @@ def _bedroom(aset, mb, nc, r, door_side, door_v, bed_side, rng, curtain="M_IntFa
                     label, mat=K.TRIM_GOLD if not girls else "M_IntFabricPink", color=(0.12, 0.1, 0.25), w=0.62, h=0.16)
 
 
+def _boys_suite(aset, mb, nc, rb, rs, sx, front, label, rng):
+    """End-pavilion suite: bedroom on the balcony / garden side, sitting room & study on the corridor side.
+    Local frame: origin on the dividing wall at the pavilion centre, bedroom at local -y, sitting room at +y;
+    o = local x sign of the outer wall (side windows)."""
+    yp = 4.5 if front else 23.45
+    rot = 0.0 if front else 180.0
+    f = Frame(aset, mb, nc, sx * 35.0, yp, rb["z"], rot)
+    o = sx if front else -sx
+    zc = rb["zc"] - rb["z"]
+    side_o, side_i = ("e", "w") if o > 0 else ("w", "e")
+    db = (4.4 - (-2.6)) if front else (30.6 - 23.55)
+    ds = (12.0 - 4.6) if front else (23.35 - 15.8)
+    wy = _wall_yaw
+    with f:
+        # ---- bedroom (local y < 0)
+        K.rug(mb, -2.2, -4.1, 2.2, -0.2, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+        f.prop("SM_Int_GrandBed", 0.0, -1.35, 0.0)
+        for s_ in (-1, 1):
+            f.prop("SM_Int_Nightstand", s_ * 1.55, -0.4, 0.0)
+            f.prop("SM_Int_OilLamp", s_ * 1.55, -0.4, 0.0, z=0.6)
+        f.prop("SM_Int_Ottoman", 0.0, -2.85, 0.0)
+        _portrait(f, 0.0, -0.1, 1.75, "n", 1.4)
+        for y in (-2.9, -4.3):
+            f.prop("SM_Int_Wardrobe", -o * 5.3, y, wy(side_i))
+        f.prop("SM_Int_Console", -o * 5.35, -5.8, wy(side_i))
+        f.prop("SM_Int_Mirror", -o * 5.6, -5.8, wy(side_i), z=1.0)
+        f.prop("SM_Int_Candelabra", -o * 5.35, -6.05, 0.0, z=0.85)
+        K.fireplace(mb, nc, f.a, o * 5.6, -3.8, wy(side_o), w=1.2, h=1.2, mat=MARBLE)
+        _portrait(f, o * 5.6, -3.8, 1.75, side_o, 0.9)
+        K.rug(mb, min(o * 2.8, o * 4.9), -4.9, max(o * 2.8, o * 4.9), -2.7, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        for y in (-3.0, -4.6):
+            f.prop("SM_Int_Armchair", o * 3.6, y, -90.0 * o + (25.0 if y > -3.8 else -25.0) * o)
+        f.prop("SM_Int_SideTable", o * 3.3, -3.8, 0.0)
+        f.prop("SM_Int_PottedPlantB", o * 5.15, -db + 0.45, 0.0)
+        f.prop("SM_Int_PottedPlantB", -o * 5.15, -1.75, 0.0)
+        _chandelier(f, 0.0, -db / 2, zc, 1.0)
+        # ---- sitting room & study (local y > 0)
+        K.rug(mb, min(-o * 0.4, -o * 4.4), 1.6, max(-o * 0.4, -o * 4.4), 6.0, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+        K.fireplace(mb, nc, f.a, -o * 5.6, 3.8, wy(side_i), w=1.6, h=1.3, mat=MARBLE)
+        _portrait(f, -o * 5.6, 3.8, 1.85, side_i, 1.2)
+        K.sofa_set(f.a, -o * 1.3, 3.8, -90.0 * o)
+        f.prop("SM_Int_TeaSet", -o * 2.6, 3.8, 0.0, z=0.45)
+        K.desk(mb, nc, o * 5.27, 3.83, wy(side_o), w=1.3, d=0.6, top=K.WOOD_DARK, legs=K.WOOD_DARK, hutch=True,
+               rng_seed=rng.randint(0, 99))
+        f.prop("SM_Int_OfficeChair", o * 4.55, 3.83, wy(side_o) + 180.0)
+        f.prop("SM_Int_DeskLamp", o * 5.35, 3.4, wy(side_o), z=0.76)
+        for x in (2.4, 3.9):
+            _bookshelf(f, o * x, ds - 0.3, 0.0)
+        f.prop("SM_Int_DisplayShelves", -o * 2.6, ds - 0.25, 0.0)
+        f.prop("SM_Int_GrandfatherClock", -o * 4.4, ds - 0.2, 0.0)
+        _portrait(f, o * 2.6, 0.1, 1.6, "s", 1.1)
+        _portrait(f, -o * 2.2, 0.1, 1.6, "s", 1.1)
+        _plinth_bust(f, mb, o * 0.3, 0.45, 180.0)
+        f.prop("SM_Int_PottedPlantB", o * 5.15, ds - 0.45, 0.0)
+        f.prop("SM_Int_PottedPlant", -o * 5.2, 0.6, 0.0)
+        _chandelier(f, -o * 1.5, ds / 2, zc, 1.0)
+    for r in (rb, rs):
+        _curtains(nc, r, "M_IntFabricNavy")
+    yy = rs["y1"] + 0.2 if front else rs["y0"] - 0.2
+    K.nameplate(mb, aset, sx * 35.0 + sx * 0.95, yy, rs["z"] + 1.55, 180.0 if front else 0.0, label,
+                mat=K.TRIM_GOLD, color=(0.12, 0.1, 0.25), w=0.9, h=0.16)
+
+
 # ----------------------------------------------------------------------------- boys: rooms
 def _boys_furnish(aset, mb, nc, R):
     import random
@@ -2032,15 +2099,16 @@ def _boys_furnish(aset, mb, nc, R):
             _bedroom(aset, mb, nc, R[k + "_" + s], side, sx * dv, outer if k in ("A", "C") else inner, rng,
                      label=str(num))
             num += 1
-        for (k, side, lab) in (("SF", "n", "KING SUITE" if sx > 0 else "EMPEROR SUITE"),
-                               ("SB", "s", "ROYAL SUITE" if sx > 0 else "GRAND SUITE")):
-            _bedroom(aset, mb, nc, R[k + "_" + s], side, sx * 35.0, inner, rng, label=lab)
+        for (k, front, lab) in (("SF", True, "KING SUITE" if sx > 0 else "EMPEROR SUITE"),
+                                ("SB", False, "ROYAL SUITE" if sx > 0 else "GRAND SUITE")):
+            _boys_suite(aset, mb, nc, R[k + "_" + s], R[k + "s_" + s], sx, front, lab, rng)
     # first-floor balcony of the suites: a couple of chairs outside the French doors
     for sx in (-1, 1):
         for x in (31.0, 39.0):
             aset.prop("SM_Int_WoodChair", (sx * x + sx * 0.0, -4.0, B_Z1), 180.0 + 20.0 * sx)
         aset.prop("SM_Int_SideTable", (sx * 33.0, -4.1, B_Z1), 0.0)
-    K.camera(aset, "suite", (36.0, 11.2, B_Z1 + 1.65), (33.0, -2.0, B_Z1 + 1.0), 15.0)
+    K.camera(aset, "suite", (39.9, -1.9, B_Z1 + 1.7), (31.0, 3.6, B_Z1 + 0.8), 14.0)
+    K.camera(aset, "suite_study", (36.1, 10.5, B_Z1 + 1.7), (30.0, 5.0, B_Z1 + 0.9), 14.0)
     K.camera(aset, "room201", (-14.0, 11.4, B_Z1 + 1.65), (-21.0, 1.5, B_Z1 + 0.9), 15.0)
 
 
@@ -3628,12 +3696,39 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
         # tea for two in the turret
         _tea_table(f, tx + sx * 1.0, ty - qy * 1.0, chairs=2, chair="SM_Int_GreenChair", stand=False,
                    a0=45.0 * sx * qy)
+        # sitting nook between the window wall and the bed
+        y_win = r["y0"] if front else r["y1"]
+        sy0 = y_win + qy * 2.25
+        K.rug(mb, cx - 1.9, min(sy0 - qy * 0.6, sy0 + qy * 2.2), cx + 1.9, max(sy0 - qy * 0.6, sy0 + qy * 2.2), 0.0,
+              "M_IntCarpetYellow", K.TRIM_GOLD)
+        f.prop("SM_Int_SofaB", cx, sy0, 180.0 if front else 0.0)
+        f.prop("SM_Int_CoffeeTable", cx, sy0 + qy * 1.3, 0.0)
+        f.prop("SM_Int_TeaSet", cx, sy0 + qy * 1.3, 30.0, z=0.45)
+        for s_ in (-1, 1):
+            f.prop("SM_Int_GreenChair", cx + s_ * 1.45, sy0 + qy * 1.6, s_ * 90.0 + (0.0 if front else 180.0) * 0)
+        f.prop("SM_Int_Ottoman", cx, by - qy * 1.55, 0.0)
+        f.prop("SM_Int_Pillows", cx, by + qy * 0.6, 0.0 if front else 180.0, z=0.62)
+        # writing desk + painting between the side windows of the outer wall
+        x_out = r["x0"] if sx < 0 else r["x1"]
+        dy = 11.35 if front else 18.35
+        K.desk(mb, nc, x_out - sx * 0.33, dy, 90.0 if sx < 0 else -90.0, w=1.1, d=0.6, top=K.TRIM_WHITE,
+               legs=K.TRIM_WHITE, hutch=False, rng_seed=num)
+        f.prop("SM_Int_WoodChair", x_out - sx * 1.0, dy, -90.0 if sx < 0 else 90.0)
+        f.prop("SM_Int_DeskLamp", x_out - sx * 0.3, dy + 0.35, 90.0 if sx < 0 else -90.0, z=0.76)
+        _vase(nc, x_out - sx * 0.3, dy - 0.35, 0.76, 0.7, flowers=("M_IntFabricPink", "M_FlowerWhite"))
+        _portrait(f, x_out, dy, 1.45, "w" if sx < 0 else "e", 0.8)
+        # shelves between the vanity and the door, paintings, plants
+        f.prop("SM_Int_Shelves", door_x + sx * 0.2, 8.0 if front else 22.0, 90.0 if sx > 0 else -90.0)
+        _portrait(f, sx * (15.15 if front else 15.65), y_win, 1.4, "s" if front else "n", 0.8)
+        _portrait(f, cx, inner_y, 1.85, "n" if front else "s", 0.9)
+        f.prop("SM_Int_PottedPlantB", door_x + sx * 0.45, y_win + qy * 0.45, 0.0)
+        f.prop("SM_Int_PottedPlant", x_out - sx * 0.4, inner_y - qy * 0.4, 0.0)
         _chandelier(f, cx, (r["y0"] + r["y1"]) / 2, zc, 0.8)
         f.light(tx + sx * 0.8, ty - qy * 0.8, 2.6, 900.0, 4.0)
     _curtains(nc, r, "M_IntFabricPink", rod=K.TRIM_GOLD)
     if num in (1, 4):
-        K.camera(aset, "bedroom%d" % num, (door_x + sx * 0.5, (r["y0"] if front else r["y1"]) + qy * 1.6, r["z"] + 1.7),
-                 (tx + sx * 1.5, inner_y, r["z"] + 0.8), 14.0)
+        K.camera(aset, "bedroom%d" % num, (tx - sx * 0.7, ty + qy * 0.7, r["z"] + 1.7),
+                 (door_x, inner_y - qy * 1.8, r["z"] + 0.9), 14.0)
 
 
 def _girls_conservatory_door(aset, mb):
