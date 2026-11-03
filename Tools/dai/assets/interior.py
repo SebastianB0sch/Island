@@ -717,45 +717,48 @@ def lecture_tiers(mb, nc, aset, cx, cy, z0, r0, rows, depth, rise, a0, a1, desk_
                 mb.prism(sp, zt + rise, zt + rise + 0.4, "M_IntWoodDark")
 
 
-def sofa_set(aset, x, y, yaw, table=True, chairs=True, sofa="SM_Int_Sofa", rug_mb=None, rug_mat=None):
-    """Sofa facing local -Y at (x, y), coffee table and two armchairs in front (catalog props)."""
+def sofa_set(aset, x, y, yaw, table=True, chairs=True, sofa="SM_Int_Sofa", rug_mb=None, rug_mat=None, z=0.0):
+    """Sofa facing local -Y at (x, y, z), coffee table and two armchairs in front, turned towards the table."""
     def P(dx, dy):
         a = math.radians(yaw)
         return (x + dx * math.cos(a) - dy * math.sin(a), y + dx * math.sin(a) + dy * math.cos(a))
     px, py = P(0, 0)
-    aset.prop(sofa, (px, py, 0.0), yaw)
+    aset.prop(sofa, (px, py, z), yaw)
     if table:
         tx, ty = P(0, -1.3)
-        aset.prop("SM_Int_CoffeeTable", (tx, ty, 0.0), yaw)
+        aset.prop("SM_Int_CoffeeTable", (tx, ty, z), yaw)
     if chairs:
         for s in (-1, 1):
             cx, cy = P(s * 1.7, -1.4)
-            aset.prop("SM_Int_Armchair", (cx, cy, 0.0), yaw + 180 - s * 70)
+            aset.prop("SM_Int_Armchair", (cx, cy, z), yaw + 180 + s * 70)
     if rug_mb is not None and rug_mat:
         cx, cy = P(0, -1.2)
-        rug(rug_mb, cx - 1.9, cy - 1.3, cx + 1.9, cy + 1.3, 0.0, rug_mat, "M_IntTrimGold")
+        rug(rug_mb, cx - 1.9, cy - 1.3, cx + 1.9, cy + 1.3, z, rug_mat, "M_IntTrimGold")
 
 
-def dining_table(aset, x, y, yaw, chairs=6, table="SM_Int_Table", chair="SM_Int_WoodChair", length=1.8, side=0.55):
-    """Table (long side along local x) with chairs on both long sides (+ the ends when chairs is odd)."""
+def dining_table(aset, x, y, yaw, chairs=6, table="SM_Int_Table", chair="SM_Int_WoodChair", length=1.8, side=0.55,
+                 z=0.0):
+    """Table (long side along local x) at floor height z with chairs on both long sides (+ one end when chairs
+    is odd), every chair facing the table."""
     a = math.radians(yaw)
 
     def P(dx, dy):
         return (x + dx * math.cos(a) - dy * math.sin(a), y + dx * math.sin(a) + dy * math.cos(a))
-    aset.prop(table, (x, y, 0.0), yaw)
+    aset.prop(table, (x, y, z), yaw)
     per = chairs // 2
     for i in range(per):
         dx = -length / 2 + length * (i + 0.5) / per
         for s in (-1, 1):
             px, py = P(dx, s * side)
-            aset.prop(chair, (px, py, 0.0), yaw + (0 if s < 0 else 180))
+            aset.prop(chair, (px, py, z), yaw + (180 if s < 0 else 0))
     if chairs % 2:
         px, py = P(length / 2 + 0.45, 0)
-        aset.prop(chair, (px, py, 0.0), yaw + 90)
+        aset.prop(chair, (px, py, z), yaw - 90)
 
 
-def fireplace(mb, nc, aset, x, y, yaw, w=1.6, h=1.3, mat="M_IntMarbleFloor", trim=TRIM_GOLD):
-    """Fireplace against a wall (back at +Y local), glowing embers + warm light."""
+def fireplace(mb, nc, aset, x, y, yaw, w=1.6, h=1.3, mat="M_IntMarbleFloor", trim=TRIM_GOLD, z=0.0):
+    """Fireplace against a wall (back at +Y local), glowing embers + warm light. Geometry is built at z = 0 of
+    the builders' current frame (wrap in mb.at for upper floors); z lifts the light socket to match."""
     with _at(mb, x, y, 0.0, yaw):
         mb.box((0, 0.15, h / 2), (w, 0.3, h), mat)
         mb.box((0, 0.0, h + 0.05), (w + 0.3, 0.45, 0.1), mat)
@@ -767,7 +770,7 @@ def fireplace(mb, nc, aset, x, y, yaw, w=1.6, h=1.3, mat="M_IntMarbleFloor", tri
             nc.box((-0.2 + k * 0.2, -0.05, 0.16), (0.14, 0.4, 0.08), WOOD_DARK)
         nc.box((0, -0.06, 0.25), (w * 0.4, 0.05, 0.22), "M_IntFire")
     lx, ly, _ = wall_point(x, y, yaw, 0.6, 0.0)
-    aset.light((lx, ly, 0.5), (1.0, 0.55, 0.25), 2500.0, 6.0, night_only=False)
+    aset.light((lx, ly, z + 0.5), (1.0, 0.55, 0.25), 2500.0, 6.0, night_only=False)
 
 
 def piano(mb, nc, x, y, yaw, mat=BLACK):
@@ -802,8 +805,8 @@ def bath_tub(mb, x, y, yaw, l=1.6, w=0.75, water=None):
             mb.box((0, 0, 0.45), (l - 0.12, w - 0.12, 0.02), water)
 
 
-def plant_corner(aset, x, y, big=True):
-    aset.prop("SM_Int_PottedPlantB" if big else "SM_Int_PottedPlant", (x, y, 0.0), (x * 53 + y * 31) % 360)
+def plant_corner(aset, x, y, big=True, z=0.0):
+    aset.prop("SM_Int_PottedPlantB" if big else "SM_Int_PottedPlant", (x, y, z), (x * 53 + y * 31) % 360)
 
 
 def camera(aset, label, pos, target, lens=18.0):
