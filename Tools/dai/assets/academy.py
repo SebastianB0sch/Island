@@ -15,8 +15,10 @@ Everything here is an original, anime-inspired interpretation (no official bluep
 """
 
 import math
+from contextlib import contextmanager
 
 from . import AssetSet
+from . import interior as K
 from .. import palette
 
 palette.register({
@@ -49,6 +51,17 @@ LTOP = 18.5                       # lobby wall top (hip roof eave)
 LCEIL = 16.5                      # lobby ceiling
 FIELD = (24.0, 14.0, 0.5)         # duel field size / height
 T_N, T_R0, T_D, T_RISE = 15, 20.0, 0.9, 0.45   # arena tiers
+DUEL_W, DUEL_H = 4.4, 4.4         # duelist gate (arena -> waiting room)
+# classroom wings (east coords; the west wing is the mirror image)
+WY0, WY1, WXO = 2.0, 28.0, 88.5
+W_TOP = 10.9                      # top of the hollow part of the wings (lid underside = W_CEIL)
+W_CEIL = 10.6
+CORR_Y = (2.4, 7.0)               # wing corridor (inside faces)
+DR_X = (37.77, 47.5)              # duelist waiting room
+HALL_A = (47.8, 67.75)
+HALL_B = (68.05, 87.85)
+HALL_Y = (7.3, 27.6)
+EB_TOP = 6.4                      # end blocks / annex: ground floor ceiling
 
 
 # ---------------------------------------------------------------------------- small helpers
@@ -282,15 +295,11 @@ def banner(mb, top_center, yaw, w, h, mat, notch=0.7, rod=True):
                 mb.box((sx * (w / 2 + 0.3), 0, 0.06), (0.18, 0.18, 0.18), "M_Gold")
 
 
-def door(mb, pos, yaw, w=2.8, h=3.6, mat="M_AcademyBlue", frame="M_Gold", glass=True):
-    """Closed double door on a wall face. pos = bottom centre on the wall face, front = local -Y."""
+def door_frame(mb, pos, yaw, w=2.8, h=3.6, frame="M_Gold"):
+    """Gold portal frame around a real doorway (w x h clear opening) on a wall face.
+    pos = bottom centre on the wall face, front = local -Y. The leaves are automatic doors (aset.door)."""
     hw = w / 2
     with mb.at(pos, rot=yaw):
-        for sx in (-1, 1):
-            mb.box((sx * hw / 2, -0.06, h / 2), (hw - 0.05, 0.12, h), mat, skip=("+y",))
-            if glass:
-                mb.box((sx * hw / 2, -0.125, h * 0.68), (hw * 0.55, 0.02, h * 0.38), "M_Glass", skip=("+y",))
-            mb.box((sx * 0.16, -0.17, h * 0.45), (0.07, 0.08, 0.6), "M_Gold", skip=("+y",))
         mb.box((-hw - 0.15, -0.12, (h + 0.3) / 2), (0.3, 0.24, h + 0.3), frame, skip=("+y",))
         mb.box((hw + 0.15, -0.12, (h + 0.3) / 2), (0.3, 0.24, h + 0.3), frame, skip=("+y",))
         mb.box((0, -0.12, h + 0.15), (w + 0.6, 0.24, 0.3), frame, skip=("+y",))
@@ -345,6 +354,394 @@ def garden_bed(mb, aset, pts, flowers, tree="SM_BroadTree_C", palms=()):
         aset.prop("SM_PalmTree_B", (px, py, 0.38), (px * 7 + py * 3) % 360)
 
 
+# ============================================================================ interior toolkit
+WARM = (1.0, 0.9, 0.75)
+IN_WALL = K.PLASTER_WHITE          # inside face of the academy walls
+BLUE_T = "M_IntAcadBlue"           # cel versions of the academy blue for interiors
+NAVY_T = "M_IntAcadNavy"
+palette.register({
+    "M_IntAcadBlue": dict(kind="toon", color=(0.16, 0.33, 0.78), rough=0.6, fill=0.3),
+    "M_IntAcadNavy": dict(kind="toon", color=(0.09, 0.15, 0.40), rough=0.6, fill=0.3),
+    "M_IntDuelMat":  dict(kind="toon", color=(0.10, 0.22, 0.45), rough=0.8, fill=0.3, detail="Fabric",
+                          tiling=2.0, detail_strength=0.3),
+    "M_IntFlaskGlow": dict(kind="emissive", color=(0.45, 1.0, 0.65), strength=3.0),
+})
+
+
+def win_us(L, count, w):
+    """Window centres along a facade segment, exactly as MeshBuilder.facade_windows spaces them."""
+    margin = (L / count - w) / 2
+    step = (L - 2 * margin) / count
+    return [margin + step * (i + 0.5) for i in range(count)]
+
+
+def fwin(mb, p0, p1, z, count, w, h, cut=None, glass="M_Glass", frame="M_WindowFrame", depth=0.06):
+    """One row of MeshBuilder.facade_windows. Windows for which cut((x, y)) is true are real openings in a
+    hollow wall: they keep their exterior frame + sill but lose the opaque facade pane (the clear pane sits
+    in the wall opening, see K.Window)."""
+    L = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
+    yaw = math.degrees(math.atan2(p1[1] - p0[1], p1[0] - p0[0]))
+    ux, uy = (p1[0] - p0[0]) / L, (p1[1] - p0[1]) / L
+    fw = 0.1
+    with mb.at((p0[0], p0[1], 0.0), rot=yaw):
+        for u in win_us(L, count, w):
+            c = (p0[0] + ux * u, p0[1] + uy * u)
+            if not (cut and cut(c)):
+                mb.box((u, -depth / 2, z + h / 2), (w, depth, h), glass, skip=("+y",))
+            mb.box((u - w / 2 - fw / 2, -depth, z + h / 2), (fw, depth * 2, h + 2 * fw), frame, skip=("+y",))
+            mb.box((u + w / 2 + fw / 2, -depth, z + h / 2), (fw, depth * 2, h + 2 * fw), frame, skip=("+y",))
+            mb.box((u, -depth, z + h + fw / 2), (w, depth * 2, fw), frame, skip=("+y",))
+            mb.box((u, -depth * 2, z - fw / 2), (w + 0.3, depth * 4, fw), frame, skip=("+y",))
+
+
+def win_pos(p0, p1, count, w):
+    """World centres (x, y) of the windows of a facade_windows segment."""
+    L = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
+    ux, uy = (p1[0] - p0[0]) / L, (p1[1] - p0[1]) / L
+    return [(p0[0] + ux * u, p0[1] + uy * u) for u in win_us(L, count, w)]
+
+
+def WIN(c, w, z0, z1):
+    """Cut window (clear pane + frame + inside sill) for K.wall."""
+    return K.Window(c, w, z0, z1, glass="M_IntGlassClear", frame="M_WindowFrame", mullions=0,
+                    sill=K.TRIM_WHITE)
+
+
+class Fr:
+    """2D authoring frame: local (x, y) -> world, a rotation (multiples of 90 deg) and an optional mirror.
+    Used so one interior can be authored once and placed on both (mirrored) sides of the academy."""
+
+    def __init__(self, m=(1.0, 0.0, 0.0, 1.0), o=(0.0, 0.0)):
+        self.m, self.o = m, o
+
+    @staticmethod
+    def make(ox=0.0, oy=0.0, rot=0.0, mx=False):
+        ca, sa = round(math.cos(rot * D2R), 9), round(math.sin(rot * D2R), 9)
+        a, b, c, d = ca, -sa, sa, ca
+        if mx:
+            a, c = -a, -c
+        return Fr((a, b, c, d), (ox, oy))
+
+    def sub(self, ox, oy, rot=0.0, mx=False):
+        L = Fr.make(ox, oy, rot, mx)
+        a, b, c, d = self.m
+        e, f, g, h = L.m
+        return Fr((a * e + b * g, a * f + b * h, c * e + d * g, c * f + d * h), self.p(*L.o))
+
+    def p(self, x, y):
+        a, b, c, d = self.m
+        return (a * x + b * y + self.o[0], c * x + d * y + self.o[1])
+
+    def v(self, x, y):
+        a, b, c, d = self.m
+        return (a * x + b * y, c * x + d * y)
+
+    @property
+    def mirrored(self):
+        a, b, c, d = self.m
+        return a * d - b * c < 0
+
+    def yaw(self, t):
+        fx, fy = self.v(math.sin(t * D2R), -math.cos(t * D2R))
+        return round(math.degrees(math.atan2(fx, -fy)), 6)
+
+    def rect(self, x0, y0, x1, y1):
+        ax, ay = self.p(x0, y0)
+        bx, by = self.p(x1, y1)
+        return min(ax, bx), min(ay, by), max(ax, bx), max(ay, by)
+
+    def side(self, s):
+        v = {"+x": (1, 0), "-x": (-1, 0), "+y": (0, 1), "-y": (0, -1)}.get(s)
+        if v is None:
+            return s
+        wx, wy = self.v(*v)
+        if abs(wx) > abs(wy):
+            return "+x" if wx > 0 else "-x"
+        return "+y" if wy > 0 else "-y"
+
+
+class Ctx:
+    """Everything an interior needs: the AssetSet, the collision mesh, the no-collision dressing mesh and
+    an authoring frame. All coordinates passed to the methods are LOCAL to the frame."""
+
+    def __init__(self, aset, mb, nc, F=None):
+        self.a, self.mb, self.nc, self.F = aset, mb, nc, F or Fr()
+
+    def sub(self, ox, oy, rot=0.0, mx=False):
+        return Ctx(self.a, self.mb, self.nc, self.F.sub(ox, oy, rot, mx))
+
+    def P(self, x, y, z):
+        return (*self.F.p(x, y), z)
+
+    # --- geometry
+    def box(self, x0, y0, z0, x1, y1, z1, mat, mats=None, skip=(), nc=False):
+        a, b, c, d = self.F.rect(x0, y0, x1, y1)
+        (self.nc if nc else self.mb).box_mm(
+            (a, b, z0), (c, d, z1), mat, skip=tuple(self.F.side(s) for s in skip),
+            mats={self.F.side(k): v for k, v in mats.items()} if mats else None)
+
+    def wall(self, p0, p1, z0, h, t, mat, inner=None, ops=(), mb=None, **kw):
+        a, b = self.F.p(*p0), self.F.p(*p1)
+        if self.F.mirrored:
+            L = math.hypot(b[0] - a[0], b[1] - a[1])
+            new = []
+            for o in ops:
+                o2 = K._copy(o)
+                o2.c = L - o.c
+                new.append(o2)
+            ops, a, b = new, b, a
+        return K.wall(self.a, mb or self.mb, a, b, z0, h, t, mat, inner, ops, **kw)
+
+    def poly_prism(self, pts, z0, z1, mat, top=None, bottom=True, nc=False):
+        w = [self.F.p(*q) for q in pts]
+        if not K._ccw(w):
+            w.reverse()
+        (self.nc if nc else self.mb).prism(w, z0, z1, mat, top_mat=top, cap_bottom=bottom)
+
+    @contextmanager
+    def at(self, x, y, z, yaw=0.0):
+        """Local transform for small compound pieces (rotated, never mirrored)."""
+        with self.mb.at(self.P(x, y, z), rot=self.F.yaw(yaw)), self.nc.at(self.P(x, y, z), rot=self.F.yaw(yaw)):
+            yield
+
+    @contextmanager
+    def zat(self, z):
+        with self.mb.at((0, 0, z)), self.nc.at((0, 0, z)):
+            yield
+
+    def kit(self, fn, x, y, yaw, z=FLOOR, **kw):
+        """Kit furniture that is modelled at z = 0 (beds, desks, bookcases, lockers ...)."""
+        with self.zat(z):
+            fn(self.mb, self.nc, *self.F.p(x, y), self.F.yaw(yaw), **kw)
+
+    def floor(self, x0, y0, x1, y1, mat, z=FLOOR, planks=False, along="x"):
+        a, b, c, d = self.F.rect(x0, y0, x1, y1)
+        if planks:
+            if along in ("x", "y") and abs(self.F.m[0]) < 0.5:
+                along = "y" if along == "x" else "x"
+            K.floor_planks(self.mb, a, b, c, d, z + 0.004, mat, along=along, pitch=0.3)
+        else:
+            self.mb.box_mm((a, b, z - 0.02), (c, d, z + 0.004), mat, skip=("-z",))
+
+    def rug(self, x0, y0, x1, y1, mat, border=None, z=FLOOR + 0.005):
+        a, b, c, d = self.F.rect(x0, y0, x1, y1)
+        K.rug(self.nc, a, b, c, d, z, mat, border)
+
+    def wainscot(self, p0, p1, z0, h, mat, cap=K.TRIM_GOLD, gaps=()):
+        """Panelling on the face p0->p1 (room on the LEFT, local)."""
+        a, b = self.F.p(*p0), self.F.p(*p1)
+        L = math.hypot(b[0] - a[0], b[1] - a[1])
+        if self.F.mirrored:
+            a, b = b, a
+            gaps = [(L - g1, L - g0) for g0, g1 in gaps]
+        K.wainscot(self.nc, a, b, z0, h, mat, cap, gaps)
+
+    # --- sockets
+    def prop(self, name, x, y, z=FLOOR, yaw=0.0, scale=1.0):
+        self.a.prop(name, self.P(x, y, z), self.F.yaw(yaw), scale)
+
+    def light(self, x, y, z, intensity=3000.0, radius=9.0, color=WARM):
+        self.a.light(self.P(x, y, z), color, intensity, radius, night_only=False)
+
+    def panel(self, x, y, z, w=1.2, d=0.3, intensity=3500.0, radius=9.0, light=True):
+        x_, y_ = self.F.p(x, y)
+        ww, dd = (w, d) if abs(self.F.m[0]) > 0.5 else (d, w)
+        self.nc.box((x_, y_, z - 0.03), (ww + 0.06, dd + 0.06, 0.04), K.TRIM_WHITE)
+        self.nc.box((x_, y_, z - 0.055), (ww, dd, 0.012), K.PANEL_LIGHT)
+        if light:
+            self.a.light((x_, y_, z - 0.4), (1.0, 0.95, 0.85), intensity, radius, night_only=False)
+
+    def text(self, s, x, y, z, yaw, size=0.2, color=(0.15, 0.1, 0.08), emissive=False):
+        self.a.text(s, self.P(x, y, z), self.F.yaw(yaw), size=size, color=color, emissive=emissive)
+
+    def wtext(self, s, x, y, z, yaw, size=0.2, color=(0.15, 0.1, 0.08), out=0.03, emissive=False):
+        """Text on a wall face at (x, y) (local), standing `out` metres proud towards local -Y of yaw."""
+        a = math.radians(yaw)
+        self.text(s, x + math.sin(a) * out, y - math.cos(a) * out, z, yaw, size, color, emissive)
+
+    def door(self, x, y, z, yaw, w, h, style, double=False, swing="auto"):
+        self.a.door(self.P(x, y, z), self.F.yaw(yaw), w, h, style, double, None, swing)
+
+    def npc(self, x, y, yaw, dorm, wander=2.0, z=FLOOR):
+        self.a.npc(self.P(x, y, z), self.F.yaw(yaw), dorm=dorm, wander=wander)
+
+    def cam(self, label, pos, target, lens=18.0):
+        K.camera(self.a, label, self.P(*pos), self.P(*target), lens)
+
+    # --- kit wrappers that take world coordinates
+    def poster(self, x, y, z, yaw, w, h, mat, text=None, color=(1, 1, 1), size=None):
+        K.poster(self.nc, self.a, *self.F.p(x, y), z, self.F.yaw(yaw), w, h, mat, text, color, size)
+
+    def bulletin(self, x, y, z, yaw, w=1.4, h=0.9, title=None, seed=1):
+        K.bulletin(self.nc, self.a, *self.F.p(x, y), z, self.F.yaw(yaw), w, h, title, seed)
+
+    def blackboard(self, x, y, z, yaw, w, h, lines=(), size=0.13):
+        K.blackboard(self.mb, self.nc, self.a, *self.F.p(x, y), z, self.F.yaw(yaw), w, h, lines, size=size)
+
+    def plate(self, x, y, z, yaw, s, w=0.9, h=0.2, mat=BLUE_T, color=(1.0, 0.88, 0.45)):
+        K.nameplate(self.nc, self.a, *self.F.p(x, y), z, self.F.yaw(yaw), s, mat, color, w, h)
+
+    def lockers(self, x, y, yaw, n, **kw):
+        with self.zat(kw.pop("z", FLOOR)):
+            K.lockers(self.mb, self.nc, self.a, *self.F.p(x, y), self.F.yaw(yaw), n=n, **kw)
+
+
+def clip_rect(poly, x0, y0, x1, y1):
+    """Sutherland-Hodgman clip of a convex polygon against an axis aligned rectangle."""
+    def clip(pts, inside, inter):
+        out = []
+        for i in range(len(pts)):
+            cur, prev = pts[i], pts[i - 1]
+            if inside(cur):
+                if not inside(prev):
+                    out.append(inter(prev, cur))
+                out.append(cur)
+            elif inside(prev):
+                out.append(inter(prev, cur))
+        return out
+
+    def ix(xv):
+        return lambda p, q: (xv, p[1] + (q[1] - p[1]) * (xv - p[0]) / (q[0] - p[0]))
+
+    def iy(yv):
+        return lambda p, q: (p[0] + (q[0] - p[0]) * (yv - p[1]) / (q[1] - p[1]), yv)
+
+    for inside, inter in ((lambda p: p[0] >= x0 - 1e-9, ix(x0)), (lambda p: p[0] <= x1 + 1e-9, ix(x1)),
+                          (lambda p: p[1] >= y0 - 1e-9, iy(y0)), (lambda p: p[1] <= y1 + 1e-9, iy(y1))):
+        poly = clip(poly, inside, inter)
+        if len(poly) < 3:
+            return []
+    out = []
+    for p in poly:
+        if not out or math.hypot(p[0] - out[-1][0], p[1] - out[-1][1]) > 1e-5:
+            out.append(p)
+    if len(out) > 2 and math.hypot(out[0][0] - out[-1][0], out[0][1] - out[-1][1]) < 1e-5:
+        out.pop()
+    if len(out) < 3:
+        return []
+    area = 0.0
+    for i in range(len(out)):
+        area += out[i - 1][0] * out[i][1] - out[i][0] * out[i - 1][1]
+    return out if abs(area) > 1e-4 else []
+
+
+def sector(c, r0, r1, a, b):
+    return [polar(r0, a, c), polar(r0, b, c), polar(r1, b, c), polar(r1, a, c)]
+
+
+def lecture_tiers(C, c, rect, z0, r0, rows, depth, rise, aisles, ahalf=5.0, seg=10.0,
+                  step="M_IntWoodFloor", riser="M_IntWood", desk="M_IntWood", seat="M_IntFabricBlue"):
+    """Curved stepped seating of the GX lecture hall, clipped to the room rectangle (local coords).
+    Tiers face the centre c (the teacher's podium), span 0..180 deg, the last tier runs on to the back wall.
+    Radial aisles at the given angles climb in half steps (rise / 2 <= 0.2 m). Every tier carries a curved
+    desk on its inner edge with a bench behind it."""
+    x0, y0, x1, y1 = rect
+    spans, cur = [], 0.0
+    for a in sorted(aisles):
+        spans.append((cur, a - ahalf))
+        cur = a + ahalf
+    spans.append((cur, 180.0))
+
+    def piece(r_in, r_out, a, b, za, zb, mat, top, bottom=False):
+        pts = clip_rect(sector(c, r_in, r_out, a, b), x0, y0, x1, y1)
+        if pts:
+            C.poly_prism(pts, za, zb, mat, top=top, bottom=bottom)
+
+    for k in range(rows):
+        r_in = r0 + depth * k
+        r_out = r_in + depth if k < rows - 1 else 60.0
+        zt = z0 + rise * (k + 1)
+        for (a0, a1) in spans:
+            n = max(1, int(math.ceil((a1 - a0) / seg - 1e-6)))
+            for i in range(n):
+                a = a0 + (a1 - a0) * i / n
+                b = a0 + (a1 - a0) * (i + 1) / n
+                piece(r_in, r_out, a, b, z0, zt, riser, step)
+                piece(r_in + 0.05, r_in + 0.45, a, b, zt + 0.68, zt + 0.72, desk, desk, True)    # desk top
+                piece(r_in + 0.05, r_in + 0.08, a, b, zt, zt + 0.68, "M_IntWoodDark", None)     # modesty panel
+                piece(r_in + 0.78, r_in + 1.13, a, b, zt, zt + 0.44, "M_IntWoodDark", seat)      # bench
+        for a in aisles:
+            rm = r_in + min(depth, 2.0) / 2
+            piece(r_in, rm, a - ahalf, a + ahalf, z0, zt - rise / 2, riser, step)
+            piece(rm, r_out if k < rows - 1 else r_in + depth, a - ahalf, a + ahalf, z0, zt, riser, step)
+            if k == rows - 1:
+                piece(r_in + depth, 60.0, a - ahalf, a + ahalf, z0, zt, riser, step)
+            # gold nosing on the aisle steps
+            piece(r_in, r_in + 0.05, a - ahalf, a + ahalf, zt - rise / 2, zt - rise / 2 + 0.006, K.TRIM_GOLD,
+                  None)
+            piece(rm, rm + 0.05, a - ahalf, a + ahalf, zt, zt + 0.006, K.TRIM_GOLD, None)
+
+
+def duel_disk(C, x, y, z, yaw):
+    """Small GX style duel disk lying on a shelf / table (dressing)."""
+    with C.at(x, y, z, yaw):
+        C.nc.cylinder((0, 0, 0), 0.09, 0.06, "M_IntMetal", seg=10)
+        C.nc.box((0.0, 0.0, 0.035), (0.32, 0.1, 0.03), "M_IntMetal")
+        C.nc.box((0.33, 0.0, 0.02), (0.5, 0.17, 0.02), BLUE_T)
+        for k in range(5):
+            C.nc.box((0.13 + k * 0.1, 0.0, 0.032), (0.07, 0.1, 0.006), "M_IntPaper")
+        C.nc.cylinder((0, 0, 0.06), 0.05, 0.01, "M_IntScreen", seg=10)
+
+
+def card_fan(C, x, y, z, n=5, yaw=0.0, mats=("M_CardPack", "M_CardPackBlue", "M_CardPackPurple", "M_IntPaper")):
+    """A few duel monster cards scattered on a table (dressing)."""
+    for i in range(n):
+        with C.at(x + (i - n / 2) * 0.09, y + ((i * 37) % 5) * 0.02, z, yaw + (i * 23) % 50 - 25):
+            C.nc.box((0, 0, 0.003), (0.06, 0.087, 0.006), mats[i % len(mats)])
+
+
+def plinth_bust(C, x, y, yaw, mat="M_Marble", z=FLOOR):
+    C.box(x - 0.3, y - 0.3, z, x + 0.3, y + 0.3, z + 1.05, mat)
+    C.box(x - 0.34, y - 0.34, z + 1.05, x + 0.34, y + 0.34, z + 1.1, K.TRIM_GOLD)
+    C.prop("SM_Int_Bust", x, y, z + 1.1, yaw)
+
+
+def trophy(C, x, y, z, s=1.0, mat=K.TRIM_GOLD):
+    C.nc.lathe([(0.07 * s, 0.0), (0.07 * s, 0.03 * s), (0.025 * s, 0.05 * s), (0.02 * s, 0.14 * s),
+                (0.09 * s, 0.22 * s), (0.08 * s, 0.3 * s)], mat, seg=10, center=C.P(x, y, z))
+
+
+def chair_row(C, x0, x1, y, z, yaw, name="SM_Int_WoodChair", step=0.7):
+    n = max(1, int((x1 - x0) / step) + 1)
+    for i in range(n):
+        C.prop(name, x0 + (x1 - x0) * (i / (n - 1) if n > 1 else 0.5), y, z, yaw)
+
+
+def dining(C, x, y, yaw=0.0, chairs=6, table="SM_Int_Table", chair="SM_Int_WoodChair", length=1.6, side=0.6,
+           z=FLOOR):
+    """Table (long side along local x of yaw) with chairs on both long sides."""
+    a = math.radians(yaw)
+
+    def Pp(dx, dy):
+        return (x + dx * math.cos(a) - dy * math.sin(a), y + dx * math.sin(a) + dy * math.cos(a))
+    C.prop(table, x, y, z, yaw)
+    per = chairs // 2
+    for i in range(per):
+        dx = -length / 2 + length * (i + 0.5) / per
+        for s in (-1, 1):
+            px, py = Pp(dx, s * side)
+            C.prop(chair, px, py, z, yaw + (180 if s < 0 else 0))      # sitter faces the table
+    if chairs % 2:
+        px, py = Pp(length / 2 + 0.5, 0)
+        C.prop(chair, px, py, z, yaw - 90)
+
+
+def sofa_corner(C, x, y, yaw, z=FLOOR, rug=None):
+    """Sofa facing local -Y (of yaw) with a coffee table and two armchairs (catalog props)."""
+    a = math.radians(yaw)
+
+    def Pp(dx, dy):
+        return (x + dx * math.cos(a) - dy * math.sin(a), y + dx * math.sin(a) + dy * math.cos(a))
+    C.prop("SM_Int_Sofa", x, y, z, yaw)
+    C.prop("SM_Int_CoffeeTable", *Pp(0, -1.3), z, yaw)
+    for s in (-1, 1):
+        C.prop("SM_Int_Armchair", *Pp(s * 1.7, -1.5), z, yaw + 180 + s * 70)     # turned towards the table
+    if rug:
+        cx, cy = Pp(0, -1.2)
+        hw, hd = (1.9, 1.3) if abs(math.cos(a)) > 0.5 else (1.3, 1.9)
+        C.rug(cx - hw, cy - hd, cx + hw, cy + hd, rug, K.TRIM_GOLD, z + 0.01)
+
+
 # ============================================================================ ACADEMY
 def _podium_and_steps(mb):
     # lobby + portico podium (floor of the walkable interior route)
@@ -370,7 +767,32 @@ def _podium_and_steps(mb):
         mb.pyramid((cx, -80.3, FLOOR + 7.3), 1.3, 1.3, 1.1, "M_Gold")
 
 
-def _lobby_shell(mb):
+def glass_screen(mb, aset, pos, yaw, W, H, dw, dh, style, frame="M_AcademyBlue", trim="M_Gold"):
+    """Glazed screen filling a W x H opening (pos = bottom centre on the wall's middle plane, local -Y outside)
+    with a central double automatic door dw x dh, side lights with kick plates and a transom light."""
+    hw = W / 2
+    with mb.at(pos, rot=yaw):
+        for sx in (-1, 1):
+            mb.box((sx * (dw / 2 + 0.1), 0, H / 2), (0.2, 0.22, H), trim)            # door posts
+            mb.box((sx * (hw - 0.06), 0, H / 2), (0.12, 0.18, H), frame)             # edge posts
+            side = hw - 0.12 - (dw / 2 + 0.2)
+            cx = sx * (dw / 2 + 0.2 + side / 2)
+            mb.box((cx, 0, 0.09), (side, 0.16, 0.18), frame)                          # kick rail
+            mb.box((cx, 0, (0.18 + dh) / 2), (side, 0.03, dh - 0.18), "M_GlassClear")
+            if side > 2.0:
+                mb.box((cx, 0, dh / 2), (0.08, 0.14, dh), frame)                      # mullion
+            mb.box((cx, 0, dh * 0.5), (side, 0.12, 0.08), frame)                      # mid rail
+        mb.box((0, 0, dh + 0.1), (W - 0.24, 0.22, 0.2), trim)                         # transom bar
+        if H - dh > 0.6:
+            mb.box((0, 0, (dh + 0.2 + H) / 2), (W - 0.24, 0.03, H - dh - 0.2), "M_GlassClear")
+            n = max(1, int(W / 2.5))
+            for k in range(1, n):
+                mb.box((-hw + W * k / n, 0, (dh + 0.2 + H) / 2), (0.08, 0.14, H - dh - 0.2), frame)
+        mb.box((0, 0, H - 0.06), (W, 0.18, 0.12), frame)
+    aset.door(pos, yaw, dw, dh, style, double=True)
+
+
+def _lobby_shell(mb, aset):
     split = 9.0                       # wall built in two layers so windows can stack
     win = dict(glass="M_Glass", frame="M_WindowFrame")
     low = {0: [dict(u=LX, w=10.0, z0=0.0, z1=split)], 1: [], 2: [dict(u=LX, w=12.0, z0=0.0, z1=split)], 3: []}
@@ -410,8 +832,11 @@ def _lobby_shell(mb):
     r = (2 * LX - (LY1 - LY0)) / 2
     mb.beam((-r, cy, LTOP + 5.0), (r, cy, LTOP + 5.0), 0.4, 0.4, "M_Gold")
     # threshold strips in the portal passages
-    mb.box_mm((-6.0, LY1 - LWALL, FLOOR), (6.0, LY1 + DT, FLOOR + 0.02), "M_MarbleFloor")
-    mb.box_mm((-5.0, LY0, FLOOR), (5.0, LY0 + LWALL, FLOOR + 0.02), "M_Gold")
+    mb.box_mm((-6.0, LY1 - LWALL, FLOOR - 0.05), (6.0, LY1 + DT, FLOOR + 0.005), "M_MarbleFloor")
+    mb.box_mm((-5.0, LY0, FLOOR - 0.05), (5.0, LY0 + LWALL, FLOOR + 0.005), "M_Gold")
+    # glazed screens with automatic doors in the two monumental openings
+    glass_screen(mb, aset, (0.0, LY0 + LWALL / 2, FLOOR), 0.0, 10.0, 9.0, 4.0, 4.4, "academy")
+    glass_screen(mb, aset, (0.0, LY1 + 0.1, FLOOR), 0.0, 12.0, 9.0, 5.0, 4.6, "academy")
 
 
 def _portico(mb, aset):
@@ -468,6 +893,8 @@ def _drum(mb, nocol):
         ops = []
         if abs(mid - 270.0) < 0.1:
             ops = [dict(u=L / 2, w=12.0, z0=FLOOR + 4.0, z1=FLOOR + 4.0 + 9.0)]
+        elif mid in (0.0, 180.0):    # duelist passages into the waiting rooms of the classroom wings
+            ops = [dict(u=L / 2, w=DUEL_W, z0=FLOOR + 4.0, z1=FLOOR + 4.0 + DUEL_H)]
         mb.wall(a, b, -4.0, DH + 4.0, DT, "M_AcademyWall", openings=ops)
         if mid in win_faces:
             mb.facade_windows(a, b, [12.6], 2, 2.2, 8.6)
@@ -541,8 +968,12 @@ def _pyramid(mb):
     mb.pyramid((cx, cy, top + H - cap_h + 0.1), cap_w, cap_w, cap_h + 0.25, "M_Gold")
 
 
-def _wing_facade_common(mb, xa, xb, y0, y1, eave, roof_h, ridge_axis="x"):
-    mb.box_mm((xa, y0, -4.0), (xb, y1, eave - 1.4), "M_AcademyWall")
+def _wing_facade_common(mb, xa, xb, y0, y1, eave, roof_h, ridge_axis="x", hollow=None):
+    if hollow:      # (z0, z1): a walk-in storey; its walls are built separately
+        mb.box_mm((xa, y0, -4.0), (xb, y1, hollow[0]), "M_AcademyWall", mats={"+z": K.MARBLEFLOOR})
+        mb.box_mm((xa, y0, hollow[1]), (xb, y1, eave - 1.4), "M_AcademyWall", mats={"-z": K.CEIL})
+    else:
+        mb.box_mm((xa, y0, -4.0), (xb, y1, eave - 1.4), "M_AcademyWall")
     rect_band(mb, xa, y0, xb, y1, -4.0, FLOOR, 0.25, "M_AcademyStone")
     for z in (6.4, 10.9, 15.4):
         rect_band(mb, xa, y0, xb, y1, z, z + 0.2, 0.16, "M_AcademyBlue")
@@ -578,19 +1009,19 @@ def drum_mid_y(x, face_mid):
     return DC[1] + (RM * COS_H - (x - DC[0]) * ca) / sa
 
 
-def _wings(mb, nocol):
+def _wings(mb, nocol, aset):
     """Classroom wings E/W of the drum. Their inner end follows the drum mid-wall so nothing pokes
     into the arena."""
-    y0, y1, xo, eave, rh = 2.0, 28.0, 88.5, 20.5, 6.5
+    y0, y1, xo, eave, rh = WY0, WY1, WXO, 20.5, 6.5
     xa_ = drum_mid_x(y0, -22.5)
-    v1 = polar(RM, -11.25, DC)
-    v2 = polar(RM, 11.25, DC)
-    base = [(xa_, y0), (xo, y0), (xo, y1), (xa_, y1), v2, v1]
     for s in (-1, 1):
-        pts = [(x * s, y) for x, y in base]
-        if s < 0:
-            pts.reverse()
-        mb.prism(pts, -4.0, eave - 1.4, "M_AcademyWall", cap_top=False, cap_bottom=False)
+        # outer skin of the solid parts (below the floor, above the hollow storey). The drum-side faces sit
+        # inside the drum wall and the outer end inside the end block, so only the long faces are needed.
+        for (za, zb) in ((-4.0, FLOOR), (W_TOP, eave - 1.4)):
+            for (ax, ay), (bx, by) in (((xa_, y0), (xo, y0)), ((xo, y1), (xa_, y1))):
+                (pa, pb) = ((s * ax, ay), (s * bx, by)) if s > 0 else ((s * bx, by), (s * ax, ay))
+                mb.quad((*pa, za), (*pb, za), (*pb, zb), (*pa, zb), "M_AcademyWall")
+        _wing_shell(mb, nocol, aset, s)
         bx0, bx1 = sorted((s * 34.7, s * xo))
         side_out = "e" if s > 0 else "w"
         rect_band(mb, bx0, y0, bx1, y1, -4.0, FLOOR, 0.25, "M_AcademyStone", sides="sn" + side_out)
@@ -604,24 +1035,32 @@ def _wings(mb, nocol):
         mb.hip_roof((cx, (y0 + y1) / 2, eave), w, y1 - y0, rh, "M_AcademyRoof", overhang=1.0)
         r = (w - (y1 - y0)) / 2
         mb.beam((cx - r, (y0 + y1) / 2, eave + rh), (cx + r, (y0 + y1) / 2, eave + rh), 0.4, 0.4, "M_Gold")
-        # windows (only on the free part of the facade)
+        # windows (only on the free part of the facade); the ground row (and the hall clerestory) are real
         wa, wb = sorted((s * 40.0, s * 88.0))
         n = 14
-        mb.facade_windows((wa, y0), (wb, y0), ROWS, n, 1.7, 2.5)
-        mb.facade_windows((wb, y1), (wa, y1), ROWS, n, 1.7, 2.5)
+        mb.facade_windows((wa, y0), (wb, y0), ROWS[1:], n, 1.7, 2.5)
+        mb.facade_windows((wb, y1), (wa, y1), ROWS[2:], n, 1.7, 2.5)
+        fwin(mb, (wa, y0), (wb, y0), ROWS[0], n, 1.7, 2.5, cut=lambda c: abs(abs(c[0]) - 64.0) > 2.4)
+        fwin(mb, (wb, y1), (wa, y1), ROWS[0], n, 1.7, 2.5, cut=lambda c: abs(c[0]) < DR_X[1])
+        fwin(mb, (wb, y1), (wa, y1), ROWS[1], n, 1.7, 2.5, cut=lambda c: abs(c[0]) > DR_X[1])
         bay = (wb - wa) / n
+        xd = s * 64.0
         for k in range(0, n + 1, 2):
             x = wa + k * bay
-            mb.box_mm((x - 0.45, y0 - 0.35, FLOOR), (x + 0.45, y0 + 0.1, 19.1), "M_AcademyWall")
+            z0p = 6.0 if abs(x - xd) < 0.5 else FLOOR      # the pilaster at the door starts above the portal
+            mb.box_mm((x - 0.45, y0 - 0.35, z0p), (x + 0.45, y0 + 0.1, 19.1), "M_AcademyWall")
             mb.box_mm((x - 0.45, y1 - 0.1, FLOOR), (x + 0.45, y1 + 0.35, 19.1), "M_AcademyWall")
         # roof dormers on both long slopes
         for x in (47.5, 54.4, 68.1, 75.0):
             dormer(mb, (s * x, y0), 0.0, eave, rh / 13.0)
             dormer(mb, (s * x, y1), 180.0, eave, rh / 13.0)
-        # central door with steps
-        xd = s * 64.0
-        mb.box_mm((xd - 2.4, y0 - 0.3, FLOOR), (xd + 2.4, y0 + 0.1, 6.0), "M_AcademyBlue")
-        door(mb, (xd, y0 - 0.3, FLOOR), 0.0, 2.8, 3.4)
+        # central portal with steps: blue surround around the real doorway, gold frame, automatic doors
+        for (a, b, za, zb) in ((xd - 2.4, xd - 1.4, FLOOR, 6.0), (xd + 1.4, xd + 2.4, FLOOR, 6.0),
+                               (xd - 1.4, xd + 1.4, FLOOR + 3.4, 6.0)):
+            mb.box_mm((a, y0 - 0.3, za), (b, y0 + 0.1, zb), "M_AcademyBlue")
+        door_frame(mb, (xd, y0 - 0.3, FLOOR), 0.0, 2.8, 3.4)
+        mb.box_mm((xd - 1.4, y0 - 0.32, FLOOR - 0.2), (xd + 1.4, CORR_Y[0] + 0.02, FLOOR + 0.01), "M_Marble")
+        aset.door((xd, (y0 - 0.3 + CORR_Y[0]) / 2, FLOOR), 0.0, 2.8, 3.4, "academy", double=True)
         entry_steps(mb, (xd, y0 - 0.3), 0.0, 4.2)
         # dorm banners on the pilasters
         cols = ("M_AcademyRed", "M_AcademyYellow") if s < 0 else ("M_AcademyBlue", "M_AcademyYellow")
@@ -629,53 +1068,115 @@ def _wings(mb, nocol):
             banner(nocol, (xx, y0 - 0.5, 18.6), 0.0, 2.2, 9.0, cols[j])
 
 
-def _end_blocks(mb):
+def _end_blocks(mb, nocol, aset):
     y0, y1 = -40.0, 50.0
     for s in (-1, 1):
         xa, xb = sorted((s * 88.0, s * 114.0))
-        _wing_facade_common(mb, xa, xb, y0, y1, 22.4, 8.0, ridge_axis="y")
+        _wing_facade_common(mb, xa, xb, y0, y1, 22.4, 8.0, ridge_axis="y", hollow=(FLOOR, EB_TOP))
         xo, xi = s * 114.0, s * 88.0
-        rows = ROWS + [19.6]
+        rows = ROWS[1:] + [19.6]
+        yd = -19.0
+
+        def cut(c):     # every ground-floor window is real except the two hidden behind the side portal
+            return not (abs(abs(c[0]) - 88.0) < 0.1 and abs(c[1] - yd) < 2.4)
         if s > 0:
-            mb.facade_windows((xo, y0), (xo, y1), rows, 26, 1.7, 2.5)
-            mb.facade_windows((xi, 2.0), (xi, y0), rows, 12, 1.7, 2.5)
-            mb.facade_windows((xi, y1), (xi, 28.0), rows, 6, 1.7, 2.5)
+            segs = [((xo, y0), (xo, y1), 26), ((xi, 2.0), (xi, y0), 12), ((xi, y1), (xi, 28.0), 6)]
             segs_s = [((88.0, y0), (94.0, y0)), ((108.0, y0), (114.0, y0))]
             segs_n = [((94.0, y1), (88.0, y1)), ((114.0, y1), (108.0, y1))]
         else:
-            mb.facade_windows((xo, y1), (xo, y0), rows, 26, 1.7, 2.5)
-            mb.facade_windows((xi, y0), (xi, 2.0), rows, 12, 1.7, 2.5)
-            mb.facade_windows((xi, 28.0), (xi, y1), rows, 6, 1.7, 2.5)
+            segs = [((xo, y1), (xo, y0), 26), ((xi, y0), (xi, 2.0), 12), ((xi, 28.0), (xi, y1), 6)]
             segs_s = [((-114.0, y0), (-108.0, y0)), ((-94.0, y0), (-88.0, y0))]
             segs_n = [((-108.0, y1), (-114.0, y1)), ((-88.0, y1), (-94.0, y1))]
-        for p0, p1 in segs_s + segs_n:
-            mb.facade_windows(p0, p1, rows, 1, 1.7, 2.5)
-        # pilasters on the forecourt face
+        segs += [(p0, p1, 1) for p0, p1 in segs_s + segs_n]
+        for p0, p1, n in segs:
+            mb.facade_windows(p0, p1, rows, n, 1.7, 2.5)
+            fwin(mb, p0, p1, ROWS[0], n, 1.7, 2.5, cut=cut)
+        # pilasters on the forecourt face (the one on the portal axis starts above the portal)
         for k in range(0, 13, 3):
             y = y0 + k * (2.0 - y0) / 12
             xa_, xb_ = sorted((xi, xi - s * 0.35))
-            mb.box_mm((xa_, y - 0.45, FLOOR), (xb_, y + 0.45, 21.0), "M_AcademyWall")
+            mb.box_mm((xa_, y - 0.45, 6.0 if abs(y - yd) < 0.1 else FLOOR), (xb_, y + 0.45, 21.0), "M_AcademyWall")
+        _end_block_shell(mb, nocol, aset, s)
         # roof dormers (outer slope + forecourt slope)
         sl = 8.0 / 13.0
         for y in (-26.0, -14.0, -2.0, 10.0, 22.0, 34.0):
             dormer(mb, (xo, y), 90.0 * s, 22.4, sl)
         for y in (-26.0, -12.0, 38.0):
             dormer(mb, (xi, y), -90.0 * s, 22.4, sl)
-        # side door into the forecourt
-        yd = -19.0
+        # side portal into the forecourt: blue surround around the real doorway
         with mb.at((xi, yd, 0.0), rot=-90.0 * s):
-            mb.box((0.0, -0.15, 4.0), (4.8, 0.3, 4.0), "M_AcademyBlue")
-        door(mb, (xi - s * 0.3, yd, FLOOR), -90.0 * s, 2.8, 3.4)
+            for (cx, w, za, zb) in ((-1.9, 1.0, FLOOR, 6.0), (1.9, 1.0, FLOOR, 6.0), (0.0, 2.8, FLOOR + 3.4, 6.0)):
+                mb.box((cx, -0.15, (za + zb) / 2), (w, 0.3, zb - za), "M_AcademyBlue")
+            mb.box((0.0, 0.1, FLOOR - 0.095), (2.8, 0.85, 0.21), "M_Marble")
+        door_frame(mb, (xi - s * 0.3, yd, FLOOR), -90.0 * s, 2.8, 3.4)
+        aset.door((xi + s * 0.1, yd, FLOOR), -90.0 * s, 2.8, 3.4, "academy", double=True)
         entry_steps(mb, (xi - s * 0.3, yd), -90.0 * s, 4.2)
 
 
-def _rear_annex(mb):
-    """Two-storey service annex behind the arena (flat roof); its south side follows the drum wall."""
+def _wing_shell(mb, nocol, aset, s):
+    """Hollow storey of a classroom wing (east coords, mirrored for s < 0): outer walls with the real
+    ground-floor / clerestory windows and the main portal, floor slab and the lid under the solid upper part."""
+    C = Ctx(aset, mb, nocol, Fr.make(mx=s < 0))
+    x_in = 34.6                       # wall ends are buried in the drum wall
+    hz = W_TOP - FLOOR
+    ops = [WIN(x - x_in, 1.7, 1.0, 3.5) for x, _ in win_pos((40.0, WY0), (88.0, WY0), 14, 1.7)
+           if abs(x - 64.0) > 2.4]
+    ops.append(K.Door(64.0 - x_in, 2.8, 3.4, style=None, trim_in=K.TRIM_GOLD))
+    C.wall((x_in, WY0), (88.0, WY0), FLOOR, hz, CORR_Y[0] - WY0, "M_AcademyWall", inner=IN_WALL, ops=ops,
+           base=BLUE_T)
+    ops = []
+    for x, _ in win_pos((88.0, WY1), (40.0, WY1), 14, 1.7):
+        ops.append(WIN(88.0 - x, 1.7, 1.0, 3.5) if x < DR_X[1] else WIN(88.0 - x, 1.7, 5.5, 8.0))
+    C.wall((88.0, WY1), (x_in, WY1), FLOOR, hz, WY1 - HALL_Y[1], "M_AcademyWall", inner=IN_WALL, ops=ops,
+           base=BLUE_T)
+    C.box(37.27, WY0, FLOOR - 0.3, 88.0, WY1, FLOOR, "M_AcademyStone", mats={"+z": K.MARBLEFLOOR},
+          skip=("-y", "+y"))
+    C.box(37.27, WY0, W_CEIL, 88.0, WY1, W_TOP, "M_AcademyWall", mats={"-z": K.CEIL}, skip=("-y", "+y"))
+
+
+EB_T = 0.5
+EB_CX = (99.0, 103.0)             # end block corridor (inside faces)
+EB_WX = (88.5, 98.75)             # west rooms (forecourt side)
+EB_EX = (103.25, 113.5)           # east rooms (outer side)
+
+
+def _end_block_shell(mb, nocol, aset, s):
+    """Ground storey walls of an end pavilion (east coords, mirrored for s < 0)."""
+    C = Ctx(aset, mb, nocol, Fr.make(mx=s < 0))
+    h, t = EB_TOP - FLOOR, EB_T
+    outer = [y for _, y in win_pos((114.0, -40.0), (114.0, 50.0), 26, 1.7)]
+    fc_s = [y for _, y in win_pos((88.0, 2.0), (88.0, -40.0), 12, 1.7)]
+    fc_n = [y for _, y in win_pos((88.0, 50.0), (88.0, 28.0), 6, 1.7)]
+    kw = dict(inner=IN_WALL, base=BLUE_T)
+    tower = K.Door(13.0, 2.2, 2.7, "academy", double=True, trim_in=K.TRIM_GOLD, trim=K.TRIM_GOLD)
+    C.wall((88.0, -40.0), (114.0, -40.0), FLOOR, h, t, "M_AcademyWall",
+           ops=[WIN(3.0, 1.7, 1.0, 3.5), tower, WIN(23.0, 1.7, 1.0, 3.5)], **kw)
+    C.wall((114.0, 50.0), (88.0, 50.0), FLOOR, h, t, "M_AcademyWall",
+           ops=[WIN(3.0, 1.7, 1.0, 3.5), tower, WIN(23.0, 1.7, 1.0, 3.5)], **kw)
+    C.wall((114.0, -39.5), (114.0, 49.5), FLOOR, h, t, "M_AcademyWall",
+           ops=[WIN(y + 39.5, 1.7, 1.0, 3.5) for y in outer], **kw)
+    C.wall((88.0, 49.5), (88.0, 28.0), FLOOR, h, t, "M_AcademyWall",
+           ops=[WIN(49.5 - y, 1.7, 1.0, 3.5) for y in fc_n], **kw)
+    C.wall((88.0, 28.0), (88.0, 2.0), FLOOR, h, t, IN_WALL,
+           ops=[K.Door(28.0 - 4.7, 2.0, 2.8, "academy_wood", double=True, trim=K.TRIM_GOLD,
+                       trim_in=K.TRIM_GOLD)], **kw)
+    C.wall((88.0, 2.0), (88.0, -39.5), FLOOR, h, t, "M_AcademyWall",
+           ops=[WIN(2.0 - y, 1.7, 1.0, 3.5) for y in fc_s if abs(y + 19.0) > 2.4]
+           + [K.Door(21.0, 2.8, 3.4, style=None, trim_in=K.TRIM_GOLD)], **kw)
+
+
+ANX_Y = (53.0, 75.5)              # rear annex ground floor (inside faces)
+
+
+def _rear_annex(mb, nocol, aset):
+    """Two-storey service annex behind the arena (flat roof); its south side follows the drum wall.
+    The ground floor is walk-in (faculty offices), the upper floor stays solid."""
     xa, xb, y1, top = -20.0, 20.0, 76.0, 10.0
     ys = drum_mid_y(xb, 67.5)
     w1, e1 = polar(RM, 101.25, DC), polar(RM, 78.75, DC)
     pts = [(xa, ys), w1, e1, (xb, ys), (xb, y1), (xa, y1)]
-    mb.prism(pts, -4.0, top, "M_AcademyWall", cap_top=False, cap_bottom=False)
+    mb.prism(pts, -4.0, FLOOR, "M_AcademyWall", cap_top=False, cap_bottom=False)
+    mb.prism(pts, EB_TOP, top, "M_AcademyWall", cap_top=False, cap_bottom=False)
     for piece in ([(xa, ys), w1, (w1[0], y1), (xa, y1)], [w1, e1, (e1[0], y1), (w1[0], y1)],
                   [e1, (xb, ys), (xb, y1), (e1[0], y1)]):
         mb.poly([(x, y, top) for x, y in piece], "M_AcademyRoof")
@@ -691,13 +1192,30 @@ def _rear_annex(mb):
     for x, y in ((-10.0, 64.0), (10.0, 64.0), (0.0, 70.0)):
         mb.box_mm((x - 2.0, y - 1.4, top), (x + 2.0, y + 1.4, top + 1.5), "M_Metal")
         mb.box_mm((x - 1.3, y - 0.8, top + 1.5), (x + 1.3, y + 0.8, top + 1.8), "M_DarkMetal")
-    mb.facade_windows((xb, y1), (3.2, y1), [3.0], 4, 1.7, 2.5)
-    mb.facade_windows((-3.2, y1), (xa, y1), [3.0], 4, 1.7, 2.5)
+    allcut = lambda c: True  # noqa: E731
+    fwin(mb, (xb, y1), (3.2, y1), 3.0, 4, 1.7, 2.5, cut=allcut)
+    fwin(mb, (-3.2, y1), (xa, y1), 3.0, 4, 1.7, 2.5, cut=allcut)
     mb.facade_windows((xb, y1), (xa, y1), [7.0], 9, 1.7, 1.6)
-    mb.facade_windows((xb, 54.0), (xb, y1), [3.0, 7.0], 5, 1.7, 2.0)
-    mb.facade_windows((xa, y1), (xa, 54.0), [3.0, 7.0], 5, 1.7, 2.0)
-    # rear entrance (closed) with canopy
-    door(mb, (0.0, y1, FLOOR), 180.0, 2.8, 3.4)
+    mb.facade_windows((xb, 54.0), (xb, y1), [7.0], 5, 1.7, 2.0)
+    mb.facade_windows((xa, y1), (xa, 54.0), [7.0], 5, 1.7, 2.0)
+    fwin(mb, (xb, 54.0), (xb, y1), 3.0, 5, 1.7, 2.0, cut=allcut)
+    fwin(mb, (xa, y1), (xa, 54.0), 3.0, 5, 1.7, 2.0, cut=allcut)
+    # ground floor walls (inside the footprint, outer faces on the old skin)
+    C = Ctx(aset, mb, nocol)
+    h, kw = EB_TOP - FLOOR, dict(inner=IN_WALL, base=BLUE_T)
+    nx = [x for x, _ in win_pos((xb, y1), (3.2, y1), 4, 1.7) + win_pos((-3.2, y1), (xa, y1), 4, 1.7)]
+    sy = [y for _, y in win_pos((xb, 54.0), (xb, y1), 5, 1.7)]
+    C.wall((xb, y1), (xa, y1), FLOOR, h, 0.5, "M_AcademyWall",
+           ops=[WIN(xb - x, 1.7, 1.0, 3.5) for x in nx]
+           + [K.Door(xb, 2.8, 3.4, "academy", double=True, trim_in=K.TRIM_GOLD)], **kw)
+    C.wall((xb, 46.6), (xb, y1 - 0.5), FLOOR, h, 0.5, "M_AcademyWall",
+           ops=[WIN(y - 46.6, 1.7, 1.0, 3.0) for y in sy], **kw)
+    C.wall((xa, y1 - 0.5), (xa, 46.6), FLOOR, h, 0.5, "M_AcademyWall",
+           ops=[WIN(y1 - 0.5 - y, 1.7, 1.0, 3.0) for y in sy], **kw)
+    C.box(xa + 0.5, ANX_Y[0], FLOOR - 0.3, xb - 0.5, ANX_Y[1], FLOOR, "M_AcademyStone", mats={"+z": K.MARBLEFLOOR})
+    C.box(xa + 0.5, ANX_Y[0] - 0.5, EB_TOP, xb - 0.5, ANX_Y[1], EB_TOP + 0.3, "M_AcademyWall", mats={"-z": K.CEIL})
+    # rear entrance with canopy
+    door_frame(mb, (0.0, y1, FLOOR), 180.0, 2.8, 3.4)
     entry_steps(mb, (0.0, y1), 180.0, 5.0)
     mb.box_mm((-3.4, y1, 5.9), (3.4, y1 + 2.4, 6.25), "M_AcademyBlue")
     mb.box_mm((-3.5, y1, 6.25), (3.5, y1 + 2.5, 6.4), "M_Gold")
@@ -705,11 +1223,38 @@ def _rear_annex(mb):
         mb.cylinder((sx * 3.0, y1 + 2.0, FLOOR), 0.18, 3.9, "M_Gold", seg=10)
 
 
+TW_H, TW_CEIL = 6.0, 8.3           # tower base half size / ground hall ceiling
+
+
+def tower_frame(cx, cy, front):
+    """Local frame of a tower base: origin at the centre, the entrance in the local south (-y) wall."""
+    return Fr.make(cx, cy, 0.0 if front else 180.0, mx=cx < 0)
+
+
 def _tower(mb, nocol, aset, cx, cy, accent, front):
-    h = 6.0
+    h = TW_H
     zt = 11.0
-    mb.box_mm((cx - h, cy - h, -4.0), (cx + h, cy + h, zt), "M_AcademyWall")
-    rect_band(mb, cx - h, cy - h, cx + h, cy + h, -4.0, FLOOR - 1.0, 0.3, "M_AcademyStone")
+    # walk-in ground hall: solid plinth below, solid top (balcony floor) above the hall ceiling
+    mb.box_mm((cx - h, cy - h, -4.0), (cx + h, cy + h, 0.0), "M_AcademyWall", mats={"+z": K.MARBLEFLOOR})
+    mb.box_mm((cx - h, cy - h, TW_CEIL), (cx + h, cy + h, zt), "M_AcademyWall", mats={"-z": K.CEIL})
+    C = Ctx(aset, mb, nocol, tower_frame(cx, cy, front))
+    kw = dict(inner=IN_WALL, base=BLUE_T)
+    wy = [2.8667 - 6.0, 0.0, 6.0 - 2.8667]          # side window centres (local y), as facade_windows spaces them
+    C.wall((-h, -h), (h, -h), 0.0, TW_CEIL, 0.5, "M_AcademyWall",
+           ops=[K.Door(h, 3.0, 3.8, "academy", double=True, trim_in=K.TRIM_GOLD)], **kw)
+    C.wall((h, -h + 0.5), (h, h), 0.0, TW_CEIL, 0.5, "M_AcademyWall",
+           ops=[WIN(y + h - 0.5, 1.4, 3.0, 6.6) for y in wy], **kw)
+    C.wall((-h, h), (-h, -h + 0.5), 0.0, TW_CEIL, 0.5, "M_AcademyWall",
+           ops=[WIN(h - y, 1.4, 3.0, 6.6) for y in wy], **kw)
+    # stone plinth band, interrupted by the doorway
+    rect_band(mb, cx - h, cy - h, cx + h, cy + h, -4.0, FLOOR - 1.0, 0.3, "M_AcademyStone",
+              sides="new" if front else "sew")
+    o = 0.3
+    yb0, yb1 = (cy - h - o, cy - h + 0.3) if front else (cy + h - 0.3, cy + h + o)
+    for xa_, xb_ in ((cx - h - o, cx - 1.8), (cx + 1.8, cx + h + o)):
+        mb.box_mm((xa_, yb0, -4.0), (xb_, yb1, FLOOR - 1.0), "M_AcademyStone")
+    ys0, ys1 = (cy - h - o, cy - h) if front else (cy + h, cy + h + o)
+    mb.box_mm((cx - 1.8, ys0, -4.0), (cx + 1.8, ys1, 0.0), "M_AcademyStone")
     rect_band(mb, cx - h, cy - h, cx + h, cy + h, 8.3, 9.5, 0.18, "M_AcademyBlue")
     rect_band(mb, cx - h, cy - h, cx + h, cy + h, 9.5, 9.75, 0.3, "M_Gold")
     rect_band(mb, cx - h, cy - h, cx + h, cy + h, 9.75, zt, 0.65, "M_AcademyRoof")
@@ -717,11 +1262,11 @@ def _tower(mb, nocol, aset, cx, cy, accent, front):
     e = h - 0.3
     mb.railing([(cx - e, cy - e, zt), (cx + e, cy - e, zt), (cx + e, cy + e, zt), (cx - e, cy + e, zt),
                 (cx - e, cy - e, zt)], 1.1, "M_Gold", post_spacing=1.7)
-    # door on the outer face, windows on the sides
+    # portal frame on the outer face, real windows on the sides
     fy = cy - h if front else cy + h
-    door(mb, (cx, fy, 0.0), 0.0 if front else 180.0, 3.0, 3.8)
+    door_frame(mb, (cx, fy, 0.0), 0.0 if front else 180.0, 3.0, 3.8)
     for p0, p1 in (((cx + h, cy - h), (cx + h, cy + h)), ((cx - h, cy + h), (cx - h, cy - h))):
-        mb.facade_windows(p0, p1, [3.0], 3, 1.4, 3.6)
+        fwin(mb, p0, p1, 3.0, 3, 1.4, 3.6, cut=lambda c: True)
     # tapered obelisk shaft
     z0, z1 = zt, 47.0
     b0, b1 = 4.1, 2.5
@@ -785,7 +1330,7 @@ def _lobby_interior(mb, nocol, aset):
         g = polar(3.3, 90 + 120 * i, ec)
         mb.cylinder((*g, FLOOR), 0.45, 0.03, m, seg=16, cap_bottom=False)
     # wainscot on the long walls
-    for s in (-1, 1):
+    for s in (1,):      # (the west wall has the admissions office / duel disk service rooms in front)
         xa, xb = sorted((s * inx, s * (inx - 0.06)))
         mb.box_mm((xa, LY0 + LWALL, FLOOR), (xb, -61.5, FLOOR + 1.2), "M_AcademyBlue")
         mb.box_mm((xa, -29.0 + 2.0, FLOOR), (xb, LY1 - LWALL, FLOOR + 1.2), "M_AcademyBlue")
@@ -838,14 +1383,12 @@ def _lobby_interior(mb, nocol, aset):
     aset.interact("sign", (-19.4, -45.0, FLOOR + 1.0), 90.0, title="Reception",
                   text="Welcome to Duel Academy! The Grand Duel Arena is straight ahead, "
                        "the Card Shop is on your right.")
-    # staff doors
-    for y in (-61.0, -28.0):
-        door(mb, (wx, y, FLOOR), 90.0, 2.4, 3.4, mat="M_DarkWood")
+    # (the staff doors open into the rooms built by _lobby_rooms)
     # trophy case near the arena portal (west) and vending machines (east)
-    mb.box_mm((-24.0, -27.4, FLOOR), (-15.0, -24.3, FLOOR + 0.9), "M_DarkWood")
-    mb.box_mm((-23.8, -27.2, FLOOR + 0.9), (-15.2, -24.5, FLOOR + 2.6), "M_GlassClear")
-    mb.box_mm((-24.0, -27.4, FLOOR + 2.6), (-15.0, -24.3, FLOOR + 2.75), "M_DarkWood")
-    for i, x in enumerate((-22.5, -19.5, -16.5)):
+    mb.box_mm((-19.6, -27.4, FLOOR), (-12.6, -24.3, FLOOR + 0.9), "M_DarkWood")
+    mb.box_mm((-19.4, -27.2, FLOOR + 0.9), (-12.8, -24.5, FLOOR + 2.6), "M_GlassClear")
+    mb.box_mm((-19.6, -27.4, FLOOR + 2.6), (-12.6, -24.3, FLOOR + 2.75), "M_DarkWood")
+    for i, x in enumerate((-17.7, -16.1, -14.5)):
         mb.cylinder((x, -25.8, FLOOR + 0.9), 0.25, 0.25, "M_DarkWood", seg=8)
         mb.lathe([(0.12, FLOOR + 1.15), (0.1, FLOOR + 1.5), (0.35, FLOOR + 1.9), (0.3, FLOOR + 2.0)],
                  "M_Gold", seg=12, center=(x, -25.8, 0.0))
@@ -860,7 +1403,7 @@ def _lobby_interior(mb, nocol, aset):
     for p, yaw, d in (((-4.0, -50.0), 20.0, "slifer"), ((5.0, -38.0), 160.0, "obelisk"),
                       ((14.5, -45.0), -90.0, "ra"), ((-13.0, -30.0), 0.0, "obelisk")):
         aset.npc((p[0], p[1], FLOOR), yaw, dorm=d, wander=4.0)
-    aset.special("camera", (0.0, -63.5, 5.0), target=(0.0, -26.0, 8.5), lens=16)
+    K.camera(aset, "lobby", (0.0, -63.5, 5.0), (0.0, -26.0, 8.5), 16)
 
 
 # ---------------------------------------------------------------------------- interior: card shop
@@ -868,6 +1411,7 @@ def _card_shop(mb, aset):
     X0, X1, Y0, Y1 = 18.0, LX - LWALL, -60.0, -30.0
     SH = 6.5
     clear = dict(glass="M_GlassClear", frame="M_Gold")
+    glass_screen(mb, aset, (X0 + 0.25, -45.0, FLOOR), -90.0, 9.0, 4.2, 3.0, 2.8, "glass", frame="M_Gold")
     mb.wall((X0, Y1), (X0, Y0), FLOOR, SH, 0.5, "M_AcademyWall",
             openings=[dict(u=15.0, w=9.0, z0=0.0, z1=4.2),
                       dict(u=4.6, w=5.4, z0=0.9, z1=3.9, **clear),
@@ -947,7 +1491,7 @@ def _card_shop(mb, aset):
                   text="Booster packs, fresh from the mainland! Trade, buy and build your deck.")
     aset.npc((24.0, -45.0, FLOOR), -90.0, dorm="white", wander=1.0)
     aset.npc((20.5, -55.0, FLOOR), 0.0, dorm="ra", wander=2.0)
-    aset.special("camera", (11.0, -38.0, 4.2), target=(26.0, -47.0, 3.4), lens=18)
+    K.camera(aset, "card_shop", (11.0, -38.0, 4.2), (26.0, -47.0, 3.4), 18)
 
 
 # ---------------------------------------------------------------------------- interior: arena
@@ -1103,7 +1647,7 @@ def _arena(mb, nocol, aset):
             # duelist door in the drum wall
             mid = (g0 + g1) / 2
             dpos = polar(DIN - 0.02, mid, C)
-            door(mb, (dpos[0], dpos[1], FLOOR), mid + 270.0, 4.4, 5.0)
+            door_frame(mb, (dpos[0], dpos[1], FLOOR), mid + 270.0, DUEL_W, DUEL_H)
             aset.light((*polar(DIN - 3.0, mid, C), 7.0), (1.0, 0.6, 0.3), 3000, 10)
     # ---- inner drum wall decoration
     drum_band_inner(mb, DRIN + 0.3, DRIN - 0.25, 10.0, 11.0, "M_AcademyBlue", skip_mid=(270.0,))
@@ -1171,8 +1715,8 @@ def _arena(mb, nocol, aset):
         aset.npc((p[0], p[1], FLOOR), ang - 90.0, dorm=dorms[(i + 1) % 3], wander=2.5)
     aset.npc((C[0] - 10.6, C[1], zf), -90.0 + 180.0, dorm="obelisk", wander=0.5)
     aset.npc((C[0] - 3.0, C[1] - 12.0, FLOOR), 0.0, dorm="slifer", wander=3.0)
-    aset.special("camera", (C[0] + 21.0, C[1] - 25.0, 12.5), target=(C[0], C[1], 4.0), lens=16)
-    aset.special("camera", (C[0], C[1] - 33.5, 4.2), target=(C[0], C[1] + 20.0, 14.0), lens=16)
+    K.camera(aset, "arena", (C[0] + 21.0, C[1] - 25.0, 12.5), (C[0], C[1], 4.0), 16)
+    K.camera(aset, "arena_portal", (C[0], C[1] - 33.5, 4.2), (C[0], C[1] + 20.0, 14.0), 16)
 
 
 def _academy_dressing(mb, aset):
@@ -1230,20 +1774,1048 @@ def build_academy():
     arena = aset.mesh("Academy_Arena")
     towers = aset.mesh("Academy_Towers")
     nocol = aset.mesh("Academy_NoCol")
+    inc = aset.mesh("Academy_Interior_NoCol")
     _podium_and_steps(main)
-    _lobby_shell(main)
+    _lobby_shell(main, aset)
     _portico(main, aset)
     _drum(main, nocol)
     _pyramid(main)
-    _wings(main, nocol)
-    _end_blocks(main)
-    _rear_annex(main)
+    _wings(main, nocol, aset)
+    _end_blocks(main, nocol, aset)
+    _rear_annex(main, nocol, aset)
     _towers(towers, nocol, aset)
     _lobby_interior(inter, nocol, aset)
     _card_shop(inter, aset)
     _arena(arena, nocol, aset)
     _academy_dressing(main, aset)
+    _interiors(aset, inter, inc)
     return aset
+
+
+# ---------------------------------------------------------------------------- interiors: classroom wings
+def _plate_door(C, x, y, yaw, s, z=FLOOR + 2.55):
+    """Room sign above / beside a door (x, y on the corridor face, yaw: -Y towards the corridor)."""
+    C.plate(x, y, z, yaw, s, w=max(1.0, 0.13 * len(s) + 0.3), h=0.26)
+
+
+def _wing_interior(C, s):
+    side = "EAST" if s > 0 else "WEST"
+    cy0, cy1 = CORR_Y
+    hall_doors = {HALL_A: (49.5, 66.0), HALL_B: (70.0, 86.0)}
+    # ---------------- corridor (y 2.4 .. 7.0) along the south facade
+    C.box(37.5, cy0, FLOOR, 38.0, cy1, 6.2, IN_WALL)
+    C.box(38.0, cy0, 6.2, 88.0, cy1, 6.4, IN_WALL, mats={"-z": K.CEIL})
+    hz = W_CEIL - FLOOR
+    kw = dict(base=BLUE_T, trim=K.TRIM_WOOD, trim_in=K.TRIM_WOOD)
+    C.wall((37.77, cy1), (47.65, cy1), FLOOR, hz, 0.3, IN_WALL, inner=IN_WALL,
+           ops=[K.Door(42.5 - 37.77, 1.0, 2.2, "classroom")], **kw)
+    for (x0, x1), xs in hall_doors.items():
+        a, b = (47.65, 67.9) if x0 == HALL_A[0] else (67.9, 88.0)
+        C.wall((a, cy1), (b, cy1), FLOOR, hz, 0.3, IN_WALL, inner=IN_WALL,
+               ops=[K.Door(x - a, 1.0, 2.2, "classroom") for x in xs], **kw)
+    doors = [42.5] + [x for xs in hall_doors.values() for x in xs]
+    C.wainscot((88.0, cy1), (38.0, cy1), FLOOR, 0.9, BLUE_T,
+               gaps=[(88.0 - x - 0.62, 88.0 - x + 0.62) for x in doors])
+    C.wainscot((38.0, cy0), (88.0, cy0), FLOOR, 0.85, BLUE_T, gaps=[(64.0 - 38.0 - 1.55, 64.0 - 38.0 + 1.55)])
+    C.rug(38.6, 4.0, 86.8, 5.4, BLUE_T, K.TRIM_GOLD)
+    for x in range(41, 88, 5):
+        C.panel(x, 4.7, 6.2, 1.2, 0.35, light=(x - 41) % 10 == 0, intensity=3500, radius=10)
+    # lockers, notice boards, benches under the windows, plants
+    C.lockers(54.8, cy1 - 0.24, 0.0, 18, d=0.45)
+    C.lockers(75.3, cy1 - 0.24, 0.0, 18, d=0.45)
+    C.bulletin(61.6, cy1, FLOOR + 1.2, 0.0, 2.4, 1.1, "ACADEMY NOTICES", seed=3 + s)
+    C.bulletin(81.6, cy1, FLOOR + 1.2, 0.0, 1.6, 1.0, "CLUBS", seed=5 + s)
+    C.poster(45.2, cy1, FLOOR + 1.7, 0.0, 1.0, 1.4, "M_IntPoster2", "DUEL!")
+    for x in (44.2, 57.4, 71.0, 80.5):
+        C.prop("SM_Int_Bench", x, cy0 + 0.35, FLOOR, 180.0)
+    for x in (38.6, 87.4):
+        C.prop("SM_Int_PottedPlantB", x, cy0 + 0.5, FLOOR, 0.0)
+    C.prop("SM_Int_Extinguisher", 67.6, cy1 - 0.2, FLOOR, 0.0)
+    C.prop("SM_Int_WallClock", 64.0, cy1, FLOOR + 3.2, 0.0)
+    C.wtext(f"{side} WING - LECTURE HALLS", 38.0, 4.7, FLOOR + 3.3, 90.0, 0.3, (0.1, 0.2, 0.55))
+    C.plate(38.0, 4.7, FLOOR + 2.8, 90.0, "<- GRAND DUEL ARENA", w=2.4, h=0.3)
+    _plate_door(C, 42.5, cy1, 0.0, "DUELIST WAITING ROOM")
+    for (x0, x1), xs in hall_doors.items():
+        for x in xs:
+            _plate_door(C, x, cy1, 0.0, "LECTURE HALL " + ("A" if x0 == HALL_A[0] else "B"))
+    for x, yy, d in ((52.0, 4.2, "slifer"), (70.5, 5.6, "ra"), (79.0, 3.6, "obelisk")):
+        C.npc(x, yy, 90.0, d, 3.0)
+    C.cam(f"wing{side[0]}_corridor", (38.6, 2.9, FLOOR + 1.75), (70.0, 6.0, FLOOR + 1.0), 18)
+    _duelist_room(C, side)
+    _lecture_hall(C, HALL_A, f"LECTURE HALL {side[0]}-A", hall_doors[HALL_A], side, 0)
+    _lecture_hall(C, HALL_B, f"LECTURE HALL {side[0]}-B", hall_doors[HALL_B], side, 1)
+    # hall partitions and the lining against the end pavilion
+    C.wall((HALL_B[0], HALL_Y[0]), (HALL_B[0], HALL_Y[1]), FLOOR, W_CEIL - FLOOR, 0.3, IN_WALL, inner=IN_WALL,
+           base=BLUE_T)
+    C.box(87.85, HALL_Y[0], FLOOR, 88.0, HALL_Y[1], W_CEIL, IN_WALL)
+
+
+def _duelist_room(C, side):
+    x0, x1 = DR_X
+    y0, y1 = HALL_Y
+    zc = 7.0
+    C.wall((37.27, y1), (37.27, y0), FLOOR, W_CEIL - FLOOR, 0.5, IN_WALL, inner=IN_WALL,
+           ops=[K.Door(y1 - DC[1], DUEL_W, DUEL_H, None, trim_in=K.TRIM_GOLD)], base=BLUE_T)
+    C.door((37.27 + DIN) / 2 + 0.25, DC[1], FLOOR, -90.0, DUEL_W, DUEL_H, "academy", double=True)
+    C.wall((x1 + 0.3, y0), (x1 + 0.3, y1), FLOOR, W_CEIL - FLOOR, 0.3, IN_WALL, inner=IN_WALL, base=BLUE_T)
+    C.box(x0, y0, zc, x1, y1, zc + 0.2, IN_WALL, mats={"-z": K.CEIL})
+    C.floor(x0, y0, x1, y1, "M_IntTileBlue")
+    C.rug(40.3, 9.0, 46.6, 26.4, NAVY_T, K.TRIM_GOLD)
+    C.wainscot((x0, y1), (x0, y0), FLOOR, 1.0, BLUE_T, gaps=[(y1 - 17.4, y1 - 12.6)])
+    C.wainscot((x1, y0), (x1, y1), FLOOR, 1.0, BLUE_T)
+    # gate sign + light strip over the duelist gate
+    C.plate(x0 + 0.01, DC[1], FLOOR + 4.75, 90.0, f"{side} GATE  -  GRAND DUEL ARENA", w=3.6, h=0.32,
+            mat=NAVY_T)
+    C.box(x0, DC[1] - 2.4, FLOOR + 4.55, x0 + 0.05, DC[1] + 2.4, FLOOR + 4.6, "M_DuelFieldGlow", nc=True)
+    # lockers + benches
+    C.lockers(x1 - 0.24, 11.6, -90.0, 10)
+    C.lockers(x1 - 0.24, 21.8, -90.0, 10)
+    for y in (11.6, 21.8):
+        C.prop("SM_Int_Bench", 45.2, y, FLOOR, 90.0)
+    # deck-check table with duel disks and cards
+    dining(C, 41.6, 21.6, 90.0, chairs=4, length=1.4, side=0.75)
+    card_fan(C, 41.6, 21.4, FLOOR + 0.79, 6)
+    duel_disk(C, 41.5, 22.2, FLOOR + 0.78, 30.0)
+    # duel disk rack on the west wall
+    for z in (FLOOR + 1.3, FLOOR + 1.9):
+        C.box(x0, 23.0, z - 0.03, x0 + 0.42, 26.6, z, "M_IntWood", nc=True)
+        for k in range(3):
+            duel_disk(C, x0 + 0.22, 23.6 + k * 1.2, z, 90.0)
+    C.plate(x0 + 0.01, 24.8, FLOOR + 2.45, 90.0, "LOANER DUEL DISKS", w=1.9, h=0.22)
+    # live feed monitor on the corridor wall, sofa corner under the windows
+    C.box(44.0, y0, FLOOR + 1.9, 47.2, y0 + 0.08, FLOOR + 3.7, "M_IntBlack", nc=True)
+    C.box(44.1, y0 + 0.08, FLOOR + 2.0, 47.1, y0 + 0.1, FLOOR + 3.6, "M_IntScreen", nc=True)
+    C.wtext("LIVE  -  ARENA", 45.6, y0 + 0.1, FLOOR + 3.1, 180.0, 0.24, (1, 1, 1), emissive=True)
+    sofa_corner(C, 42.2, y1 - 0.55, 0.0)
+    C.prop("SM_VendingMachine", x0 + 0.5, 8.9, FLOOR, 90.0)
+    C.prop("SM_Int_PottedPlantB", x1 - 0.5, y1 - 0.5, FLOOR, 0.0)
+    C.prop("SM_Int_PottedPlant", x0 + 0.5, 18.3, FLOOR, 0.0)
+    C.poster(x1, 16.7, FLOOR + 2.3, -90.0, 1.0, 1.4, "M_IntPoster1", "WIN WITH HONOR", size=0.1)
+    for y in (12.0, 22.0):
+        C.panel(42.6, y, zc, 1.4, 0.4, intensity=3500, radius=10)
+    C.npc(44.5, 16.5, -90.0, "obelisk" if side == "EAST" else "slifer", 2.0)
+    C.cam(f"wing{side[0]}_duelist_room", (46.8, 26.8, FLOOR + 1.8), (38.0, 13.0, FLOOR + 1.6), 16)
+
+
+def _lecture_hall(C, xr, title, doors, side, idx):
+    x0, x1 = xr
+    y0, y1 = HALL_Y
+    xc = (x0 + x1) / 2
+    zc = W_CEIL
+    C.floor(x0, y0, x1, y1, "M_IntWoodFloor")
+    # stage: dais, lectern, teacher's desk, blackboard and the big screen
+    C.box(xc - 3.2, y0, FLOOR, xc + 3.2, 9.3, FLOOR + 0.2, "M_IntWood", mats={"+z": BLUE_T})
+    C.box(xc - 3.2, 9.3, FLOOR + 0.17, xc + 3.2, 9.36, FLOOR + 0.2, K.TRIM_GOLD)
+    C.box(xc + 1.6, 8.25, FLOOR + 0.2, xc + 2.3, 8.75, FLOOR + 1.25, "M_IntWoodDark", mats={"+y": BLUE_T})
+    C.box(xc + 1.55, 8.2, FLOOR + 1.25, xc + 2.35, 8.8, FLOOR + 1.3, K.TRIM_GOLD)
+    C.prop("SM_Int_OfficeDesk", xc - 1.2, 8.5, FLOOR + 0.2, 0.0)
+    C.prop("SM_Int_OfficeChair", xc - 1.2, 7.85, FLOOR + 0.2, 180.0)
+    C.prop("SM_Int_Books", xc - 1.5, 8.5, FLOOR + 0.96, 0.0)
+    lines = ([title, "DUEL THEORY 101", "ATK 2400 vs DEF 2100 -> destroyed!", "Tribute: Lv 5-6 = 1  /  Lv 7+ = 2",
+              "Traps: set first - activate later!"] if idx == 0 else
+             [title, "MONSTER TYPES & ATTRIBUTES", "LIGHT / DARK / EARTH / WATER / FIRE / WIND",
+              "Fusion = Polymerization + materials", "Homework: build a 40 card deck"])
+    C.blackboard(xc, y0, FLOOR + 1.0, 180.0, 9.0, 1.5, lines, size=0.15)
+    C.box(xc - 3.6, y0, FLOOR + 3.2, xc + 3.6, y0 + 0.08, FLOOR + 6.9, "M_IntBlack", nc=True)
+    C.box(xc - 3.45, y0 + 0.08, FLOOR + 3.35, xc + 3.45, y0 + 0.1, FLOOR + 6.75, "M_IntScreen", nc=True)
+    C.wtext("DUEL ACADEMY", xc, y0 + 0.1, FLOOR + 5.4, 180.0, 0.55, (1, 1, 1), emissive=True)
+    C.wtext(title, xc, y0 + 0.1, FLOOR + 4.5, 180.0, 0.3, (1.0, 0.9, 0.5), emissive=True)
+    roundel(C.nc, C.P(xc, y0 + 0.02, FLOOR + 7.6), C.F.yaw(180.0), 0.55, "M_AcademyYellow")
+    # the GX tiers
+    lecture_tiers(C, (xc, 9.6), (x0, y0, x1, y1), FLOOR, 4.5, 9, 1.25, 0.4, (45.0, 90.0, 135.0))
+    # side walls: wainscot, dorm banners, clock; ceiling beams and lights
+    C.wainscot((x0, y1), (x0, y0), FLOOR, 1.0, BLUE_T)
+    C.wainscot((x1, y0), (x1, y1), FLOOR, 1.0, BLUE_T)
+    cols = ("M_AcademyRed", "M_AcademyYellow", "M_AcademyBlue")
+    for k, y in enumerate((15.5, 21.5)):
+        banner(C.nc, C.P(x0 + 0.08, y, zc - 0.4), C.F.yaw(90.0), 1.8, 3.6, cols[(k + idx) % 3])
+        banner(C.nc, C.P(x1 - 0.08, y, zc - 0.4), C.F.yaw(-90.0), 1.8, 3.6, cols[(k + idx + 1) % 3])
+    C.prop("SM_Int_WallClock", x0 + 0.03, 10.4, FLOOR + 3.4, 90.0)
+    for bx in (xc - 5.0, xc + 5.0):
+        C.box(bx - 0.25, y0, zc - 0.45, bx + 0.25, y1, zc, BLUE_T, nc=True)
+    for by in (13.5, 20.5):
+        C.box(x0, by - 0.2, zc - 0.35, x1, by + 0.2, zc, BLUE_T, nc=True)
+    for px in (xc - 7.5, xc - 2.5, xc + 2.5, xc + 7.5):
+        for py in (10.5, 17.0, 24.0):
+            C.panel(px, py, zc, 1.4, 0.45, light=abs(px - xc) < 3, intensity=7000, radius=15)
+    # a few students on the tiers
+    dorms = ("slifer", "ra", "obelisk")
+    for k, (a, r) in enumerate(((70.0, 7.05), (112.0, 9.55), (30.0, 12.05), (150.0, 8.3))):
+        px, py = polar(r, a, (xc, 9.6))
+        if x0 + 0.5 < px < x1 - 0.5:
+            C.npc(px, py, a - 90.0, dorms[(k + idx) % 3], 0.5, z=FLOOR + 0.4 * (int((r - 4.5) / 1.25) + 1))
+    C.npc(xc, 8.2, 0.0, "white", 1.0, z=FLOOR + 0.2)
+    lbl = f"wing{side[0]}_hall{'AB'[idx]}"
+    C.cam(lbl, (xc + 7.0, y1 - 1.0, FLOOR + 3.6 + 1.7), (xc - 1.0, y0, FLOOR + 2.4), 16)
+    C.cam(lbl + "_tiers", (xc - 2.0, y0 + 0.6, FLOOR + 1.9), (xc + 1.5, y1, FLOOR + 3.5), 16)
+
+
+# ---------------------------------------------------------------------------- interiors: end pavilions
+# room rectangles (east coords, inside faces); partitions are 0.25 m
+EB_W = {"W1": (-39.5, -25.825), "W2": (-25.575, -12.425), "W3": (-12.175, 2.15), "W4": (2.4, 7.0),
+        "W5": (7.25, 28.0), "W6": (28.25, 49.5)}
+EB_E = {"E1": (-39.5, -8.7), "E2": (-8.45, 11.66), "E3": (11.91, 28.63), "E4": (28.88, 49.5)}
+# corridor doors: y -> (width, height, style, double, sign)
+EB_DOORS_W = [(-28.0, "classroom"), (-37.4, "classroom"), (-5.0, "office"), (10.5, "office"), (25.4, "office"),
+              (31.6, "classroom")]
+EB_DOORS_E = [(-24.0, "academy_wood"), (1.6, "classroom"), (14.4, "classroom"), (26.4, "classroom"),
+              (39.0, "academy_wood")]
+
+
+def _end_block_interior(C, s):
+    side = "EAST" if s > 0 else "WEST"
+    z, h = FLOOR, EB_TOP - FLOOR
+    cx0, cx1 = EB_CX
+    kw = dict(base=BLUE_T, trim=K.TRIM_WOOD, trim_in=K.TRIM_WOOD)
+
+    def D(y, style, c):
+        wide = style == "academy_wood"
+        return K.Door(c, 1.8 if wide else 1.0, 2.4 if wide else 2.2, style, double=wide)
+    opsw = [D(y, st, y + 39.5) for y, st in EB_DOORS_W]
+    opsw += [K.Door(-19.0 + 39.5, 2.4, 2.6, "glass", double=True, trim=K.TRIM_GOLD, trim_in=K.TRIM_GOLD),
+             K.Door(4.7 + 39.5, 3.6, 3.0, None, trim=K.TRIM_GOLD, trim_in=K.TRIM_GOLD)]
+    C.wall((cx0, -39.5), (cx0, 49.5), z, h, 0.25, IN_WALL, inner=IN_WALL, ops=opsw, **kw)
+    C.wall((cx1, 49.5), (cx1, -39.5), z, h, 0.25, IN_WALL, inner=IN_WALL,
+           ops=[D(y, st, 49.5 - y) for y, st in EB_DOORS_E], **kw)
+    for (ya, yb) in ((-25.825, -25.575), (-12.425, -12.175), (2.15, 2.4), (7.0, 7.25), (28.0, 28.25)):
+        C.box(EB_WX[0], ya, z, EB_WX[1], yb, EB_TOP, IN_WALL)
+    for (ya, yb) in ((-8.7, -8.45), (11.66, 11.91), (28.63, 28.88)):
+        C.box(EB_EX[0], ya, z, EB_EX[1], yb, EB_TOP, IN_WALL)
+    # ---------------- corridor (tower to tower)
+    gaps_w = [(y + 39.5 - 0.62, y + 39.5 + 0.62) for y, _ in EB_DOORS_W] + [(20.5 - 1.3, 20.5 + 1.3),
+                                                                              (44.2 - 1.9, 44.2 + 1.9)]
+    C.wainscot((cx0, 49.5), (cx0, -39.5), z, 0.9, BLUE_T,
+               gaps=[(89.0 - b, 89.0 - a) for a, b in gaps_w])
+    C.wainscot((cx1, -39.5), (cx1, 49.5), z, 0.9, BLUE_T,
+               gaps=[(y + 39.5 - 1.02, y + 39.5 + 1.02) for y, _ in EB_DOORS_E])
+    C.rug(100.0, -38.2, 102.0, 48.2, BLUE_T, K.TRIM_GOLD)
+    for y in range(-36, 48, 6):
+        C.panel(101.0, y, EB_TOP, 1.2, 0.35, light=(y + 36) % 12 == 0, intensity=3500, radius=10)
+    # corridor dressing between the doors
+    C.lockers(cx0 + 0.24, -9.0, 90.0, 9)
+    C.lockers(cx1 - 0.24, -15.5, -90.0, 12)
+    C.lockers(cx1 - 0.24, 33.0, -90.0, 8)
+    C.bulletin(cx0, 17.0, z + 1.1, 90.0, 2.0, 1.0, "STUDENT COUNCIL NEWS", seed=11 + s)
+    C.bulletin(cx1, 7.0, z + 1.1, -90.0, 2.0, 1.0, "EXAM SCHEDULE", seed=13 + s)
+    C.bulletin(cx1, 44.5, z + 1.1, -90.0, 1.6, 1.0, "DUEL RANKINGS", seed=17 + s)
+    C.poster(cx0, 38.5, z + 1.6, 90.0, 0.9, 1.2, "M_IntPoster3", "SPRING FESTIVAL", (0.3, 0.1, 0.0), 0.08)
+    C.poster(cx0, -32.5, z + 1.6, 90.0, 0.9, 1.2, "M_IntPoster4", "DUEL CLUB", size=0.1)
+    for y in (-32.0, 21.0, 46.0):
+        C.prop("SM_Int_Bench", cx1 - 0.3, y, z, -90.0)
+    for y in (-38.9, 48.9):
+        for x in (cx0 + 0.45, cx1 - 0.45):
+            C.prop("SM_Int_PottedPlantB", x, y, z, 0.0)
+    C.prop("SM_Int_Extinguisher", cx0 + 0.2, 0.6, z, 0.0)
+    C.prop("SM_Int_WallClock", cx1 - 0.03, -2.0, z + 2.9, -90.0)
+    C.wtext(f"{side} PAVILION", cx1, -24.0 - 2.4, z + 3.4, -90.0, 0.26, (0.1, 0.2, 0.55))
+    for y, d in ((-30.0, "ra"), (5.0, "slifer"), (36.0, "obelisk")):
+        C.npc(101.0, y, 0.0, d, 6.0)
+    C.cam(f"pav{side[0]}_corridor", (101.0, -38.8, z + 1.75), (101.0, 20.0, z + 1.2), 18)
+    # door signs
+    names_w = {"W1": "CLASSROOM 1-A" if s > 0 else "CLASSROOM 2-A",
+               "W3": "INFIRMARY" if s > 0 else "STUDENT COUNCIL",
+               "W5": "STAFF ROOM" if s > 0 else "CAFETERIA",
+               "W6": "ALCHEMY LAB" if s > 0 else "DUEL PRACTICE"}
+    names_e = {"E1": "LIBRARY" if s > 0 else "HALL OF LEGENDS", "E2": "MUSIC ROOM" if s > 0 else "COMPUTER ROOM",
+               "E3": "CLASSROOM 1-B" if s > 0 else "CLASSROOM 2-B",
+               "E4": "STUDENT LOUNGE" if s > 0 else "DUEL CLUB"}
+    for y, n in ((-28.0, "W1"), (-5.0, "W3"), (10.5, "W5"), (31.6, "W6")):
+        _plate_door(C, cx0, y, 90.0, names_w[n])
+    for y, n in ((-24.0, "E1"), (1.6, "E2"), (14.4, "E3"), (39.0, "E4")):
+        _plate_door(C, cx1, y, -90.0, names_e[n], z=z + 2.75 if n in ("E1", "E4") else z + 2.55)
+    _plate_door(C, cx0, -19.0, 90.0, "ENTRANCE", z=z + 2.95)
+    _plate_door(C, cx0, 4.7, 90.0, f"{side} WING", z=z + 3.4)
+    # ---------------- rooms
+    W, E = EB_W, EB_E
+    Cw1 = C.sub((EB_WX[0] + EB_WX[1]) / 2, (W["W1"][0] + W["W1"][1]) / 2, 180.0)
+    room_classroom(Cw1, EB_WX[1] - EB_WX[0], W["W1"][1] - W["W1"][0], names_w["W1"],
+                   f"pav{side[0]}_classroom_a", s, back_window=(EB_WX[0] + EB_WX[1]) / 2 - 91.0)
+    Ce3 = C.sub((EB_EX[0] + EB_EX[1]) / 2, (E["E3"][0] + E["E3"][1]) / 2, 0.0)
+    room_classroom(Ce3, EB_EX[1] - EB_EX[0], E["E3"][1] - E["E3"][0], names_e["E3"],
+                   f"pav{side[0]}_classroom_b", -s)
+    room_genkan(C, side)
+    room_link(C, side)
+    if s > 0:
+        room_infirmary(C)
+        room_staff(C)
+        room_alchemy(C)
+        room_library(C)
+        room_music(C)
+        room_lounge(C, "STUDENT LOUNGE", "pavE_lounge")
+    else:
+        room_council(C)
+        room_cafeteria(C)
+        room_practice(C)
+        room_legends(C)
+        room_computers(C)
+        room_lounge(C, "DUEL CLUB", "pavW_club")
+
+
+def room_classroom(C, w, d, name, cam, seed, back_window=None):
+    """Ordinary classroom in a frame centred on the room: blackboard on local -y, windows on +x, corridor
+    doors on -x (one near the front, one near the back)."""
+    hw, hd = w / 2, d / 2
+    z = FLOOR
+    C.floor(-hw, -hd, hw, hd, "M_IntWoodFloor", planks=True, along="y")
+    C.box(-2.8, -hd, z, 2.8, -hd + 1.3, z + 0.18, "M_IntWood", mats={"+z": "M_IntWoodFloor"})
+    lines = [name, "Card effects resolve LAST IN, FIRST OUT", "Chain Link 1 -> 2 -> 3 ... resolve 3 -> 2 -> 1",
+             "Quiz on Friday!"]
+    C.blackboard(0.0, -hd, z + 0.95, 180.0, min(5.0, w - 3.4), 1.25, lines, size=0.12)
+    C.prop("SM_Int_OfficeDesk", 0.0, -hd + 0.75, z + 0.18, 0.0)
+    C.prop("SM_Int_Books", -0.3, -hd + 0.75, z + 0.94, 0.0)
+    C.prop("SM_Int_WallClock", 0.0, -hd + 0.03, z + 3.0, 180.0)
+    C.prop("SM_Int_Chalkboard", hw - 0.7, -hd + 1.0, z, -30.0)
+    cols = 5
+    xs = [-hw + 1.9 + i * (w - 3.0) / (cols - 1) for i in range(cols)]
+    nrow = max(3, min(8, int((d - 5.2) / 1.25) + 1))
+    for j in range(nrow):
+        y = -hd + 3.0 + j * 1.25
+        for x in xs:
+            C.prop("SM_Int_SchoolDesk", x, y, z, 180.0)
+            C.prop("SM_Int_SchoolChair", x, y + 0.48, z, 0.0)
+    lx1 = hw if back_window is None else back_window - 1.0
+    n = int((lx1 - (-hw + 1.4)) / 0.4)
+    C.lockers(-hw + 1.4 + n * 0.2, hd - 0.24, 0.0, n)
+    C.bulletin(-1.6, hd, z + 2.25, 0.0, 2.6, 0.9, "CLASS NEWS", seed=21 + seed)
+    C.poster(-hw, -hd + 2.6, z + 1.7, 90.0, 0.7, 1.0, "M_IntPoster2", "RULES", size=0.09)
+    C.wainscot((hw, -hd), (hw, hd), z, 0.85, BLUE_T)
+    for px in (-hw / 2, hw / 2):
+        for py in (-hd / 2, hd / 2):
+            C.panel(px, py, EB_TOP, 1.2, 0.4, intensity=3000, radius=9)
+    C.npc(xs[1], -hd + 3.0 + 0.48, 0.0, "slifer", 0.3)
+    C.npc(xs[3], -hd + 3.0 + 1.25 * 2 + 0.48, 0.0, "ra", 0.3)
+    C.npc(1.4, -hd + 1.0, 180.0, "white", 1.0, z=z + 0.18)
+    C.cam(cam, (hw - 0.7, hd - 0.9, z + 1.8), (-0.8, -hd, z + 1.1), 17)
+
+
+def _shoe_rack(C, x0, x1, y, face, h=1.8, d=0.4):
+    """Getabako (shoe lockers) along local x; back on y, cubbies facing +y (face=1) or -y (face=-1)."""
+    ya, yb = sorted((y, y + face * d))
+    yf = y + face * d
+    C.box(x0, ya, FLOOR, x1, yb, FLOOR + h, "M_IntWood")
+    n = int((x1 - x0) / 0.32)
+    for i in range(1, n):
+        x = x0 + (x1 - x0) * i / n
+        C.box(x - 0.01, min(yf, yf + face * 0.01), FLOOR + 0.1, x + 0.01, max(yf, yf + face * 0.01), FLOOR + h - 0.05,
+              "M_IntWoodDark", nc=True)
+    for k in range(1, 6):
+        zz = FLOOR + 0.1 + (h - 0.15) * k / 6
+        C.box(x0, min(yf, yf + face * 0.012), zz - 0.012, x1, max(yf, yf + face * 0.012), zz + 0.012,
+              "M_IntWoodDark", nc=True)
+
+
+def room_genkan(C, side):
+    x0, x1 = EB_WX
+    y0, y1 = EB_W["W2"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, K.TILE)
+    C.rug(90.0, -20.6, 92.2, -17.4, "M_IntWoodDark")
+    for k in range(10):         # sunoko duck-board
+        C.box(90.15 + k * 0.2, -20.4, z + 0.02, 90.28 + k * 0.2, -17.6, z + 0.06, "M_IntWood", nc=True)
+    _shoe_rack(C, 90.6, 97.6, y0, 1)
+    _shoe_rack(C, 90.6, 97.6, y1, -1)
+    for y in (-22.9, -15.1):
+        C.prop("SM_Int_Bench", 94.0, y, z, 0.0 if y > -19 else 180.0)
+    C.prop("SM_Int_Bucket", 89.1, -23.2, z, 0.0)
+    C.prop("SM_Int_PottedPlantB", 89.0, -13.0, z, 0.0)
+    C.prop("SM_Int_PottedPlantB", 98.2, -25.0, z, 0.0)
+    C.prop("SM_Int_WetFloor", 91.4, -20.8, z, 60.0)
+    C.plate(94.1, y1, z + 2.35, 0.0, "PLEASE CHANGE INTO YOUR INDOOR SHOES!", w=3.6, h=0.24)
+    C.bulletin(94.1, y0, z + 2.1, 180.0, 2.4, 0.9, "LOST & FOUND", seed=31)
+    C.wtext(f"DUEL ACADEMY - {side} PAVILION", 98.75, -19.0, z + 3.35, -90.0, 0.24, (0.1, 0.2, 0.55))
+    for x in (91.5, 96.0):
+        K.pendant(C.a, *C.F.p(x, -19.0), EB_TOP, "lamp")
+    C.npc(93.0, -18.0, 90.0, "ra", 2.0)
+    C.cam(f"pav{side[0]}_entrance", (98.3, -13.0, z + 1.75), (88.5, -21.0, z + 1.4), 17)
+
+
+def room_link(C, side):
+    """Short gallery between the end pavilion corridor and the wing corridor."""
+    y0, y1 = EB_W["W4"]
+    z = FLOOR
+    C.rug(89.8, 3.9, 98.4, 5.5, BLUE_T, K.TRIM_GOLD)
+    C.wainscot((EB_WX[0], y0), (EB_WX[1], y0), z, 0.9, BLUE_T)
+    C.wainscot((EB_WX[1], y1), (EB_WX[0], y1), z, 0.9, BLUE_T)
+    for x in (91.0, 96.0):
+        C.prop("SM_Int_Painting", x, y1 - 0.03, z + 1.5, 0.0)
+        C.prop("SM_Int_Frame", x, y0 + 0.03, z + 1.6, 180.0)
+    C.panel(93.6, 4.7, EB_TOP, 1.2, 0.35, intensity=3000, radius=9)
+
+
+def room_infirmary(C):
+    x0, x1 = EB_WX
+    y0, y1 = EB_W["W3"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, "M_IntLinoleum")
+    C.wainscot((x1, y0), (x1, y1), z, 1.0, "M_IntPlasterMint", K.TRIM_WHITE, gaps=[(-5.0 - y0 - 0.62, -5.0 - y0 + 0.62)])
+    C.wainscot((x1, y1), (x0, y1), z, 1.0, "M_IntPlasterMint", K.TRIM_WHITE)
+    # three beds with curtain rails
+    for k, x in enumerate((90.0, 92.7, 95.4)):
+        C.kit(K.single_bed, x, y1 - 1.1, -90.0, blanket="M_IntFabricWhite" if k != 1 else "M_IntFabricBlue",
+              frame=K.METAL)
+        C.prop("SM_Int_NightstandB", x + 0.85, y1 - 0.35, z, 0.0)
+    for x in (91.35, 94.05, 96.75):     # curtain dividers on ceiling rails
+        C.box(x - 0.015, y1 - 2.3, z + 0.3, x + 0.015, y1, z + 2.4, "M_IntFabricWhite", nc=True)
+        C.box(x - 0.02, y1 - 2.35, z + 2.4, x + 0.02, y1, z + 2.45, K.METAL, nc=True)
+        C.box(x - 0.01, y1 - 2.33, z + 2.45, x + 0.01, y1 - 2.31, z + 4.4, K.METAL, nc=True)
+    C.box(96.75, y1 - 2.35, z + 2.4, 98.0, y1 - 2.3, z + 2.45, K.METAL, nc=True)
+    C.box(96.8, y1 - 2.33, z + 0.3, 97.9, y1 - 2.31, z + 2.4, "M_IntFabricWhite", nc=True)
+    # nurse's desk, cabinets, sink, screen
+    C.prop("SM_Int_OfficeDesk", 96.7, -10.0, z, 90.0)
+    C.prop("SM_Int_OfficeChair", 97.6, -10.0, z, -90.0)
+    C.prop("SM_Int_DeskLamp", 96.6, -10.5, z + 0.76, 0.0)
+    for x in (91.4, 92.4):
+        C.prop("SM_Int_Cabinet", x, y0 + 0.25, z, 180.0)
+    C.box(89.1, y0, z, 90.6, y0 + 0.6, z + 0.9, K.TRIM_WHITE, mats={"+z": K.METAL})
+    C.box(89.4, y0 + 0.1, z + 0.86, 90.3, y0 + 0.5, z + 0.92, "M_IntSteelBlue", nc=True)
+    C.prop("SM_Int_Mirror", 89.85, y0 + 0.03, z + 1.25, 180.0)
+    C.prop("SM_Int_FoldingScreen", 93.6, -6.3, z, 90.0)
+    C.prop("SM_Int_Ottoman", 92.0, -8.0, z, 0.0)
+    C.prop("SM_Int_PottedPlantB", 98.2, y1 - 0.5, z, 0.0)
+    C.poster(x1, -8.8, z + 1.6, -90.0, 0.8, 1.1, K.TRIM_WHITE, "E  F P  T O Z", (0.1, 0.1, 0.1), 0.08)
+    C.poster(x1, 0.4, z + 1.6, -90.0, 0.8, 1.1, "M_IntPoster2", "WASH YOUR HANDS!", size=0.07)
+    C.poster(93.5, y0, z + 1.9, 180.0, 1.3, 0.8, "M_IntPoster1", "GET WELL SOON, DUELISTS!", size=0.07)
+    for py in (-8.0, -1.5):
+        C.panel(93.6, py, EB_TOP, 1.4, 0.4, intensity=3000, radius=9)
+    C.npc(96.0, -9.6, 0.0, "white", 1.5)
+    C.cam("pavE_infirmary", (98.2, -11.6, z + 1.8), (90.0, 1.2, z + 0.8), 17)
+
+
+def room_staff(C):
+    x0, x1 = EB_WX
+    y0, y1 = EB_W["W5"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, "M_IntCarpetBlue")
+    for yc in (14.0, 21.4):
+        for k in range(3):
+            y = yc - 1.45 + k * 1.45
+            C.prop("SM_Int_OfficeDesk", 93.0, y, z, -90.0)
+            C.prop("SM_Int_OfficeDesk", 94.4, y, z, 90.0)
+            C.prop("SM_Int_OfficeChair", 92.1, y, z, 90.0)
+            C.prop("SM_Int_OfficeChair", 95.3, y, z, -90.0)
+            C.prop("SM_Int_Books", 93.2, y + 0.3, z + 0.76, 90.0)
+        C.prop("SM_Int_DeskLamp", 94.3, yc + 1.2, z + 0.76, 0.0)
+    C.prop("SM_Int_OfficeDesk", 93.7, 9.0, z, 0.0)
+    C.prop("SM_Int_OfficeChair", 93.7, 8.35, z, 180.0)
+    for k in range(18):
+        C.prop("SM_Int_Bookshelf" if k < 9 else "SM_Int_Cabinet", x0 + 0.22, 8.4 + k * 1.05, z, 90.0)
+    C.box(90.6, y1 - 0.06, z + 1.0, 96.4, y1, z + 2.3, K.TRIM_WHITE, nc=True)
+    C.box(90.5, y1 - 0.05, z + 0.97, 96.5, y1 - 0.01, z + 2.33, K.METAL, nc=True)
+    for i, t in enumerate(("STAFF SCHEDULE", "Mon: Duel Theory / Alchemy", "Tue: Card History / P.E.",
+                           "Wed: School-wide duel tournament!", "Thu: Field trip - volcano (be careful)")):
+        C.wtext(t, 93.5, y1 - 0.06, z + 2.1 - i * 0.24, 0.0, 0.11 if i else 0.16, (0.1, 0.15, 0.4))
+    C.box(97.4, y1 - 0.6, z, 98.7, y1 - 0.01, z + 0.9, "M_IntWood", mats={"+z": K.TRIM_WHITE})
+    C.prop("SM_Int_Kettle", 97.7, y1 - 0.3, z + 0.9, 0.0)
+    C.prop("SM_Int_TeaSet", 98.2, y1 - 0.3, z + 0.9, 0.0)
+    C.box(97.6, 16.8, z, 98.6, 17.8, z + 1.15, K.TRIM_WHITE, mats={"+z": "M_IntSteelBlue"})    # copier
+    C.prop("SM_Int_PottedPlantB", 98.1, 7.9, z, 0.0)
+    C.prop("SM_Int_WallClock", 93.6, y0 + 0.03, z + 2.9, 180.0)
+    for py in (11.0, 17.7, 24.4):
+        C.panel(93.6, py, EB_TOP, 1.4, 0.4, intensity=3200, radius=9)
+    C.npc(92.1, 14.0, 90.0, "white", 0.5)
+    C.npc(95.3, 21.4, -90.0, "white", 0.5)
+    C.cam("pavE_staff_room", (98.1, 27.4, z + 1.8), (90.5, 9.0, z + 0.9), 17)
+
+
+def _flask(C, x, y, z, mat="M_IntFlaskGlow"):
+    C.nc.lathe([(0.06, 0.0), (0.06, 0.06), (0.02, 0.14), (0.02, 0.2)], "M_IntGlassClear", seg=8,
+               center=C.P(x, y, z))
+    C.nc.cylinder(C.P(x, y, z + 0.005), 0.052, 0.05, mat, seg=8)
+
+
+def room_alchemy(C):
+    x0, x1 = EB_WX
+    y0, y1 = EB_W["W6"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, "M_IntTileBlue")
+    for yc in (33.4, 37.6, 41.8):
+        C.box(91.2, yc - 0.55, z, 96.2, yc + 0.55, z + 0.9, "M_IntWood", mats={"+z": "M_IntBlack"})
+        for k, x in enumerate((91.8, 93.0, 94.4, 95.6)):
+            _flask(C, x, yc + (0.2 if k % 2 else -0.15), z + 0.9,
+                   ("M_IntFlaskGlow", "M_IntFabricPurple", "M_IntFabricOrange", "M_IntScreen")[k])
+            for sy in (-1, 1):
+                C.prop("SM_Int_Stool", x, yc + sy * 0.95, z, 0.0)
+    # teacher's bench with the bubbling cauldron, blackboard on the north wall
+    C.box(92.6, 45.6, z, 97.4, 46.6, z + 0.9, "M_IntWoodDark", mats={"+z": "M_IntBlack"})
+    C.mb.lathe([(0.3, 0.0), (0.45, 0.12), (0.5, 0.4), (0.42, 0.62)], "M_IntBlack", seg=14,
+               center=C.P(96.0, 47.6, z), cap_top=False)
+    C.nc.cylinder(C.P(96.0, 47.6, z + 0.52), 0.42, 0.02, "M_IntFlaskGlow", seg=14)
+    C.light(96.0, 47.6, z + 1.0, 1200.0, 4.0, (0.5, 1.0, 0.6))
+    C.blackboard(95.6, y1, z + 1.0, 0.0, 4.4, 1.3,
+                 ["ALCHEMY  -  Prof. Banner", "Fusion = Polymerization + 2 materials",
+                  "Fe + S -> FeS   (do NOT eat it)", "Homework: p. 42 - 48"], size=0.12)
+    for k in range(6):
+        C.prop("SM_Int_Shelves", x1 - 0.18, 34.4 + k * 1.0 if k < 3 else 35.0 + k * 1.0 + 2.6, z, -90.0)
+    C.poster(x0, 29.2, z + 1.6, 90.0, 0.8, 1.1, "M_IntPoster4", "THE ART OF ALCHEMY", size=0.06)
+    # the professor's cat on its cushion
+    C.prop("SM_Int_Basket", 89.6, 47.9, z, 20.0)
+    C.nc.sphere(C.P(89.6, 47.9, z + 0.28), 0.17, "M_IntFabricYellow", seg=10, rings=6, scale=(1.3, 1.0, 0.8))
+    C.nc.sphere(C.P(89.82, 47.75, z + 0.42), 0.1, "M_IntFabricYellow", seg=10, rings=6)
+    for px in (91.0, 94.4, 97.0):
+        K.pendant(C.a, *C.F.p(px, 37.6), EB_TOP, "industrial")
+    C.npc(94.9, 46.1, 0.0, "white", 1.0)
+    C.npc(92.9, 36.8, 180.0, "slifer", 1.0)
+    C.cam("pavE_alchemy_lab", (98.2, 29.0, z + 1.8), (91.5, 47.0, z + 1.0), 17)
+
+
+def room_library(C):
+    x0, x1 = EB_EX
+    y0, y1 = EB_E["E1"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, "M_IntCarpetRed")
+    C.rug(104.5, -21.6, 112.6, -9.6, "M_IntCarpetYellow", K.TRIM_GOLD)
+    # book stacks (double sided) in the south half, wall shelves along the corridor wall
+    for yc in (-37.0, -33.6, -30.2):
+        for k in range(5):
+            x = 105.6 + k * 1.0
+            C.prop("SM_Int_Bookshelf", x, yc - 0.18, z, 0.0)
+            C.prop("SM_Int_Bookshelf", x, yc + 0.18, z, 180.0)
+    for y in [-38.8 + k * 1.05 for k in range(11)] + [-21.6 + k * 1.05 for k in range(12)]:
+        if not (-25.4 < y < -22.6):
+            C.prop("SM_Int_Bookshelf", x0 + 0.18, y, z, 90.0)
+    # reading tables by the windows and in the north half
+    for y in (-37.2, -33.6, -30.0):
+        C.prop("SM_Int_RoundTable", 112.0, y, z, 0.0)
+        C.prop("SM_Int_WoodChair", 112.0, y - 0.85, z, 180.0)
+        C.prop("SM_Int_WoodChair", 112.0, y + 0.85, z, 0.0)
+    for x in (107.0, 111.0):
+        for y in (-19.6, -15.6, -11.6):
+            dining(C, x, y, 0.0, chairs=4, length=1.2, side=0.7)
+            C.prop("SM_Int_DeskLamp", x + 0.45, y + 0.15, z + 0.76, 200.0)
+            C.prop("SM_Int_Books", x - 0.3, y - 0.1, z + 0.76, 15.0)
+    # librarian's counter by the door
+    C.box(104.6, -27.6, z, 107.6, -26.9, z + 1.05, "M_IntWoodDark", mats={"+z": "M_IntWood"})
+    C.prop("SM_Int_Register", 105.2, -27.25, z + 1.05, 180.0)
+    C.prop("SM_Int_Books", 106.6, -27.25, z + 1.05, 0.0)
+    C.npc(106.0, -28.2, 0.0, "white", 0.5)
+    C.prop("SM_Int_GrandfatherClock", 104.4, y1 - 0.2, z, 0.0)
+    C.mb.cylinder(C.P(112.8, -24.0, z), 0.18, 0.9, "M_IntWoodDark", seg=8)              # globe
+    C.nc.sphere(C.P(112.8, -24.0, z + 1.15), 0.28, "M_IntPoster2", seg=12, rings=8)
+    C.plate(108.6, y1, z + 3.1, 0.0, "LIBRARY  -  QUIET PLEASE", w=3.2, h=0.3, mat=NAVY_T)
+    for py in (-33.6, -15.6):
+        K.pendant(C.a, *C.F.p(108.4, py), EB_TOP, "chandelier")
+    for py in (-24.0,):
+        C.panel(108.4, py, EB_TOP, 1.4, 0.4, intensity=3000, radius=10)
+    C.npc(111.0, -15.0, 90.0, "obelisk", 0.5)
+    C.npc(108.0, -35.3, 0.0, "ra", 1.5)
+    C.cam("pavE_library", (113.0, -9.3, z + 1.9), (105.5, -30.0, z + 0.9), 17)
+    C.cam("pavE_library_stacks", (110.6, -38.9, z + 1.7), (104.0, -28.0, z + 1.2), 17)
+
+
+def room_music(C):
+    x0, x1 = EB_EX
+    y0, y1 = EB_E["E2"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, "M_IntWoodFloor", planks=True)
+    cen = (111.2, 0.5)
+    C.box(cen[0] - 0.6, cen[1] - 0.6, z, cen[0] + 0.6, cen[1] + 0.6, z + 0.15, "M_IntWood")      # conductor
+    C.box(cen[0] - 0.4, cen[1] - 0.05, z + 0.15, cen[0] - 0.36, cen[1] + 0.05, z + 1.2, K.METAL, nc=True)
+    for r, n in ((3.4, 7), (5.0, 9)):
+        for i in range(n):
+            a = 125.0 + 110.0 * i / (n - 1)
+            px, py = polar(r, a, cen)
+            C.prop("SM_Int_WoodChair", px, py, z, a - 90.0)
+            if r < 4:
+                mx, my = polar(r - 0.7, a, cen)
+                with C.at(mx, my, z, a - 90.0):
+                    C.nc.box((0, 0, 0.55), (0.02, 0.02, 1.1), K.METAL)
+                    C.nc.box((0, 0, 1.12), (0.45, 0.02, 0.32), K.BLACK)
+    C.kit(K.piano, 110.6, 8.4, -60.0)
+    C.blackboard(107.6, y0, z + 1.0, 180.0, 4.6, 1.2,
+                 ["MUSIC", "Do  Re  Mi  Fa  So  La  Ti  Do", "Academy anthem - practice for the festival!"],
+                 size=0.12)
+    for k, x in enumerate((105.0, 106.6, 108.2, 109.8)):
+        C.prop("SM_Int_Frame", x, y1 - 0.03, z + 1.9, 0.0)
+    C.prop("SM_Int_Cabinet", x0 + 0.3, -6.6, z, 90.0)
+    C.prop("SM_Int_Cabinet", x0 + 0.3, -5.6, z, 90.0)
+    C.prop("SM_Int_Radio", x0 + 0.35, -6.1, z + 1.8, 90.0)
+    C.prop("SM_Int_PottedPlantB", 113.0, y0 + 0.5, z, 0.0)
+    for py in (-4.0, 6.0):
+        C.panel(108.4, py, EB_TOP, 1.4, 0.4, intensity=3000, radius=10)
+    C.npc(cen[0], cen[1], 90.0, "white", 0.3, z=z + 0.15)
+    C.cam("pavE_music_room", (x0 + 0.6, y1 - 0.6, z + 1.8), (112.0, -2.0, z + 1.0), 17)
+
+
+def room_lounge(C, title, cam):
+    x0, x1 = EB_EX
+    y0, y1 = EB_E["E4"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, "M_IntWoodFloor", planks=True)
+    sofa_corner(C, 109.0, y1 - 0.6, 0.0, rug="M_IntCarpetBlue")
+    C.box(107.9, 44.3, z, 110.1, 44.8, z + 0.5, "M_IntWoodDark")
+    C.prop("SM_Int_TV", 109.0, 44.55, z + 0.5, 180.0)
+    # duel table with a play mat in the middle
+    C.box(106.2, 34.4, z, 110.6, 36.6, z + 0.74, "M_IntWoodDark", mats={"+z": "M_IntDuelMat"})
+    for sx in (-1, 1):
+        for k in range(5):
+            cxk, cyk = 108.4 + (k - 2) * 0.36, 35.5 + sx * 0.5
+            C.box(cxk - 0.12, cyk - 0.16, z + 0.741, cxk + 0.12, cyk + 0.16, z + 0.745, "M_DuelFieldGlow", nc=True)
+        C.prop("SM_Int_WoodChair", 108.4, 35.5 + sx * 1.6, z, 0.0 if sx > 0 else 180.0)
+    card_fan(C, 108.0, 35.0, z + 0.75, 5)
+    card_fan(C, 108.8, 36.0, z + 0.75, 5, 180.0)
+    duel_disk(C, 107.0, 35.5, z + 0.75, 0.0)
+    for y in (31.0, 32.3):
+        C.prop("SM_VendingMachine", x0 + 0.5, y, z, 90.0)
+    for k in range(4):
+        C.prop("SM_Int_DisplayShelves", x0 + 0.2, 43.0 + k * 1.05, z, 90.0)
+    for y in (39.6, 41.0):
+        C.prop("SM_Int_Ottoman", 112.2, y, z, 0.0)
+    C.prop("SM_Int_PottedPlantB", 113.0, y0 + 0.5, z, 0.0)
+    C.poster(110.5, y0, z + 1.6, 180.0, 1.4, 1.0, "M_IntPoster1", title, size=0.12)
+    C.poster(106.5, y0, z + 1.6, 180.0, 0.8, 1.1, "M_IntPoster3", "TOURNAMENT SIGN-UP", (0.2, 0.1, 0.0), 0.06)
+    for py in (33.0, 42.0):
+        K.pendant(C.a, *C.F.p(108.4, py), EB_TOP, "fan")
+        C.panel(105.0, py, EB_TOP, 1.2, 0.35, intensity=3000, radius=10)
+    C.npc(108.4, 37.1, 180.0, "slifer", 0.3)
+    C.npc(108.4, 33.9, 0.0, "obelisk", 0.3)
+    C.cam(cam, (x0 + 0.7, y0 + 0.6, z + 1.8), (111.0, 46.0, z + 0.7), 17)
+
+
+def room_council(C):
+    x0, x1 = EB_WX
+    y0, y1 = EB_W["W3"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, "M_IntWoodFloorDark", planks=True)
+    C.rug(90.4, -8.6, 96.4, -0.4, "M_IntCarpetRed", K.TRIM_GOLD)
+    for y in (-5.8, -3.2):
+        C.prop("SM_Int_Table", 93.4, y, z, 90.0)
+    for y in (-6.6, -5.0, -3.4, -1.8):
+        C.prop("SM_Int_DiningChair", 92.55, y + 0.4, z, 90.0)
+        C.prop("SM_Int_DiningChair", 94.25, y + 0.4, z, -90.0)
+    C.prop("SM_Int_OfficeChair", 93.4, -0.9, z, 0.0)
+    C.prop("SM_Int_OfficeChair", 93.4, -8.1, z, 180.0)
+    for y in (-6.0, -3.0):
+        C.prop("SM_Int_Books", 93.4, y, z + 0.76, 90.0)
+    C.mb.lathe([(0.25, 0.0), (0.25, 0.08), (0.04, 0.12), (0.04, 2.4)], K.TRIM_GOLD, seg=8,
+               center=C.P(89.2, y1 - 0.5, z))
+    for k, (x, col) in enumerate(((90.6, "M_AcademyRed"), (93.4, "M_AcademyYellow"), (96.2, "M_AcademyBlue"))):
+        banner(C.nc, C.P(x, y1 - 0.06, z + 4.0), C.F.yaw(0.0), 1.3, 2.6, col)
+    for k in range(4):
+        C.prop("SM_Int_DisplayShelves", 90.6 + k * 1.05, y0 + 0.2, z, 180.0)
+    for k in range(5):
+        trophy(C, 90.4 + k * 0.85 + (k > 1) * 0.6, y0 + 0.2, z + 1.8, 1.0 + 0.3 * (k % 2))
+    C.box(97.0, y0 + 0.4, z + 1.0, 98.7, y0 + 0.44, z + 2.2, K.TRIM_WHITE, nc=True)
+    C.prop("SM_Int_PottedPlantB", 98.1, y1 - 0.5, z, 0.0)
+    C.poster(x0, -3.0, z + 1.7, 90.0, 1.2, 0.8, "M_IntPoster3", "SCHOOL FESTIVAL PLAN", (0.2, 0.1, 0.0), 0.07)
+    for py in (-8.0, -1.5):
+        K.pendant(C.a, *C.F.p(93.4, py), EB_TOP, "chandelier")
+    C.npc(93.4, -1.2, 180.0, "obelisk", 0.5)
+    C.npc(92.6, -5.4, 90.0, "ra", 0.3)
+    C.cam("pavW_council", (98.2, -11.6, z + 1.8), (91.0, 1.0, z + 0.9), 17)
+
+
+def room_cafeteria(C):
+    x0, x1 = EB_WX
+    y0, y1 = EB_W["W5"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, K.TILE)
+    # serving counter along the west wall with the menu board above it
+    C.box(88.5, 9.0, z, 89.4, 22.0, z + 0.95, "M_IntWood", mats={"+z": K.METAL})
+    C.box(89.4, 9.0, z + 0.95, 89.9, 22.0, z + 1.0, K.TRIM_WHITE)
+    C.box(88.5, 9.0, z + 1.5, 88.9, 22.0, z + 1.55, K.METAL, nc=True)
+    for k in range(6):
+        C.nc.box(C.P(89.0, 10.5 + k * 2.0, z + 0.98), (0.45, 0.6, 0.06), K.METAL)
+    C.box(88.5, 12.0, z + 2.3, 88.56, 19.0, z + 3.9, K.BLACK, nc=True)
+    for i, t in enumerate(("TODAY'S MENU", "Curry rice ......... 300 DP", "Ramen ............. 250 DP",
+                           "Golden egg bread .. SOLD OUT!", "Onigiri set ........ 150 DP")):
+        C.wtext(t, 88.56, 15.5, z + 3.6 - i * 0.32, 90.0, 0.24 if i == 0 else 0.15,
+                (1.0, 0.85, 0.35) if i == 0 else (1, 1, 1), out=0.02)
+    for x in (91.6, 95.4):
+        for y in (10.2, 14.4, 18.6, 22.8):
+            dining(C, x, y, 90.0, chairs=6, length=1.4, side=0.7)
+    for k in range(3):
+        C.prop("SM_VendingMachine", 90.4 + k * 1.15, y1 - 0.5, z, 0.0)
+    C.prop("SM_Int_Bucket", 89.0, 8.0, z, 0.0)
+    C.prop("SM_Int_PottedPlantB", 98.1, y1 - 0.6, z, 0.0)
+    C.poster(x1, 18.0, z + 1.7, -90.0, 0.9, 1.2, "M_IntPoster1", "EAT WELL, DUEL WELL!", size=0.07)
+    for py in (11.0, 17.7, 24.4):
+        C.panel(93.6, py, EB_TOP, 1.4, 0.4, intensity=3200, radius=9)
+    C.npc(88.9, 16.0, 90.0, "white", 0.5)
+    for (x, y, d) in ((91.0, 14.4, "slifer"), (95.9, 18.6, "ra"), (94.7, 10.2, "obelisk")):
+        C.npc(x, y, 90.0, d, 0.5)
+    C.cam("pavW_cafeteria", (98.1, 27.3, z + 1.8), (89.5, 11.0, z + 1.0), 17)
+
+
+def room_practice(C):
+    x0, x1 = EB_WX
+    y0, y1 = EB_W["W6"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, "M_IntCarpetBlue")
+    for (xc, yc) in ((91.6, 33.6), (95.6, 33.6), (91.6, 39.6), (95.6, 39.6), (93.6, 45.4)):
+        C.box(xc - 0.75, yc - 1.25, z, xc + 0.75, yc + 1.25, z + 0.72, "M_IntWoodDark", mats={"+z": "M_IntDuelMat"})
+        for sy in (-1, 1):
+            for k in range(3):
+                cx = xc + (k - 1) * 0.42
+                cy = yc + sy * 0.5
+                C.box(cx - 0.15, cy - 0.11, z + 0.721, cx + 0.15, cy + 0.11, z + 0.725, "M_DuelFieldGlow", nc=True)
+            C.prop("SM_Int_Stool", xc, yc + sy * 1.65, z, 0.0)
+        card_fan(C, xc, yc - 0.85, z + 0.73, 4, 90.0)
+    C.blackboard(95.0, y1, z + 1.0, 0.0, 4.0, 1.2, ["DUEL PRACTICE", "Summon sickness? Not in this room!",
+                                                     "Tournament ladder posted Friday"], size=0.12)
+    for k in range(5):
+        C.prop("SM_Int_SteelShelves", x1 - 0.3, 35.0 + k * 1.3, z, -90.0)
+        for j in range(3):
+            C.nc.box(C.P(x1 - 0.3, 35.0 + k * 1.3 - 0.35 + j * 0.35, z + 1.05), (0.2, 0.25, 0.12),
+                     ("M_CardPackBlue", "M_CardPackPurple", "M_CardPack")[j])
+    C.poster(x0, 29.2, z + 1.6, 90.0, 0.8, 1.1, "M_IntPoster2", "DECK RULES: 40-60", size=0.06)
+    for py in (34.0, 40.0, 46.0):
+        C.panel(93.6, py, EB_TOP, 1.4, 0.4, intensity=3200, radius=9)
+    C.npc(91.6, 31.95, 0.0, "slifer", 0.3)
+    C.npc(91.6, 35.25, 180.0, "obelisk", 0.3)
+    C.npc(95.6, 41.25, 180.0, "ra", 0.3)
+    C.cam("pavW_practice", (98.2, 29.0, z + 1.8), (90.5, 46.0, z + 0.8), 17)
+
+
+def _vitrine(C, x, y, w=1.2, d=0.7, content="cards", seed=0):
+    C.box(x - w / 2, y - d / 2, FLOOR, x + w / 2, y + d / 2, FLOOR + 0.9, "M_IntWoodDark")
+    C.box(x - w / 2 + 0.03, y - d / 2 + 0.03, FLOOR + 0.9, x + w / 2 - 0.03, y + d / 2 - 0.03, FLOOR + 1.45,
+          "M_IntGlassClear")
+    C.box(x - w / 2, y - d / 2, FLOOR + 1.45, x + w / 2, y + d / 2, FLOOR + 1.5, K.TRIM_GOLD)
+    if content == "cards":
+        card_fan(C, x, y, FLOOR + 0.91, 4, (seed * 37) % 90)
+    else:
+        trophy(C, x, y, FLOOR + 0.9, 1.4)
+
+
+def room_legends(C):
+    """Hall of Legends: the academy's duel museum (west pavilion, in place of the library)."""
+    x0, x1 = EB_EX
+    y0, y1 = EB_E["E1"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, K.MARBLEFLOOR)
+    C.rug(105.2, -38.0, 111.6, -10.2, "M_IntCarpetRed", K.TRIM_GOLD)
+    # giant card replica on the south wall
+    C.box(105.9, y0, z + 0.4, 111.1, y0 + 0.15, z + 3.9, K.TRIM_GOLD)
+    C.box(106.1, y0 + 0.15, z + 0.6, 110.9, y0 + 0.18, z + 3.7, "M_CardPack", nc=True)
+    C.box(106.4, y0 + 0.18, z + 1.7, 110.6, y0 + 0.2, z + 3.4, "M_IntPoster2", nc=True)
+    C.wtext("THE LEGENDARY DRAGON", 108.5, y0 + 0.2, z + 1.2, 180.0, 0.18, (0.15, 0.1, 0.05))
+    for y in (-35.0, -29.0, -23.0, -17.0, -11.0):
+        _vitrine(C, 106.4, y, content="cards", seed=int(-y))
+        _vitrine(C, 110.6, y, content="trophy" if int(-y) % 2 else "cards", seed=int(-y) + 1)
+    for y in (-32.0, -20.0):
+        plinth_bust(C, 108.5, y, 0.0)
+    for k, y in enumerate((-36.5, -31.0, -18.0, -12.5)):
+        C.prop("SM_Int_Painting", x0 + 0.05, y, z + 1.4, 90.0)
+        C.wtext(("FIRST CHAMPION", "THE KING OF GAMES", "GX CUP WINNERS", "FOUNDER'S DUEL")[k], x0, y, z + 1.15,
+                90.0, 0.08, (0.15, 0.1, 0.05))
+    C.plate(108.5, y1, z + 3.1, 0.0, "HALL OF LEGENDS", w=2.8, h=0.32, mat=NAVY_T)
+    for py in (-33.6, -15.6):
+        K.pendant(C.a, *C.F.p(108.5, py), EB_TOP, "chandelier")
+    C.panel(108.5, -24.6, EB_TOP, 1.4, 0.4, intensity=3000, radius=10)
+    C.npc(108.5, -26.0, 90.0, "obelisk", 3.0)
+    C.cam("pavW_hall_of_legends", (112.9, -9.4, z + 1.9), (106.5, -38.0, z + 1.6), 17)
+
+
+def room_computers(C):
+    x0, x1 = EB_EX
+    y0, y1 = EB_E["E2"]
+    z = FLOOR
+    C.floor(x0, y0, x1, y1, "M_IntLinoleum")
+    for y in (-5.6, -2.6, 0.4, 3.4, 6.4):
+        for x in (106.2, 109.8):
+            C.prop("SM_Int_OfficeDesk", x, y, z, 180.0)
+            C.prop("SM_Int_OfficeChair", x, y + 0.6, z, 0.0)
+            for dx in (-0.35, 0.35):
+                C.nc.box(C.P(x + dx, y + 0.05, z + 0.76), (0.4, 0.38, 0.36), K.TRIM_WHITE)
+                C.nc.box(C.P(x + dx, y + 0.245, z + 0.96), (0.3, 0.01, 0.22), "M_IntScreen")
+    C.prop("SM_Int_ProjectorScreen", 108.0, y0 + 0.4, z, 180.0)
+    for k in range(3):
+        C.prop("SM_Int_SteelShelves", x0 + 0.3, -6.8 + k * 1.3, z, 90.0)
+        C.nc.box(C.P(x0 + 0.3, -6.8 + k * 1.3, z + 1.0), (0.4, 0.9, 1.6), K.BLACK)
+        C.nc.box(C.P(x0 + 0.51, -6.8 + k * 1.3, z + 1.5), (0.01, 0.6, 0.04), "M_DuelFieldGlow")
+    C.poster(108.0, y1, z + 1.7, 0.0, 1.6, 0.9, "M_IntPoster2", "DUEL DATABASE v2", size=0.09)
+    C.prop("SM_Int_PottedPlantB", 113.0, y1 - 0.5, z, 0.0)
+    for py in (-4.0, 1.6, 7.2):
+        C.panel(108.0, py, EB_TOP, 1.4, 0.4, intensity=3000, radius=9)
+    C.npc(106.2, 1.0, 0.0, "ra", 0.2)
+    C.npc(109.8, 4.0, 0.0, "slifer", 0.2)
+    C.cam("pavW_computer_room", (x0 + 0.6, y1 - 0.6, z + 1.8), (112.0, -7.0, z + 0.8), 17)
+
+
+# ---------------------------------------------------------------------------- interiors: rear annex
+def _exec_desk(C, x, y, yaw, w=2.4, d=1.0, mat="M_IntWoodDark"):
+    """Big executive desk (user side local -Y), gold trimmed."""
+    with C.at(x, y, FLOOR, yaw):
+        C.mb.box((0, 0, 0.76), (w, d, 0.05), "M_IntWood")
+        C.mb.box((0, 0.1, 0.37), (w - 0.1, d - 0.25, 0.74), mat)
+        C.nc.box((0, d / 2 - 0.12 + 0.005, 0.5), (w - 0.3, 0.01, 0.06), K.TRIM_GOLD)
+        C.nc.box((0, 0.0, 0.79), (0.5, 0.35, 0.01), "M_IntPaper")
+
+
+def _gear(C, x, y, z, r=0.45, mat=K.TRIM_GOLD):
+    """'Ancient gear' model on a stand (vertical, facing local -Y)."""
+    with C.mb.at(C.P(x, y, z), rot=C.F.yaw(0.0), rot_x=90.0):
+        C.mb.cylinder((0, 0, -0.05), r, 0.1, mat, seg=16)
+        C.mb.cylinder((0, 0, -0.07), r * 0.35, 0.14, K.METAL, seg=10)
+        for k in range(12):
+            a = k * 30.0
+            px, py = polar(r + 0.06, a)
+            with C.mb.at((px, py, 0.0), rot=a):
+                C.mb.box((0, 0, 0), (0.14, 0.12, 0.1), mat)
+
+
+def _annex_interior(C):
+    z = FLOOR
+    y0, y1 = ANX_Y
+    h = EB_TOP - z
+    kw = dict(base=BLUE_T, trim=K.TRIM_GOLD, trim_in=K.TRIM_WOOD)
+
+    def DD(c):
+        return K.Door(c, 1.8, 2.6, "academy_wood", double=True)
+    C.box(-19.5, 52.5, z, 19.5, y0, EB_TOP, IN_WALL)
+    C.wall((-4.0, y0), (-4.0, y1), z, h, 0.25, IN_WALL, inner=IN_WALL, ops=[DD(58.0 - y0), DD(68.5 - y0)], **kw)
+    C.wall((4.0, y1), (4.0, y0), z, h, 0.25, IN_WALL, inner=IN_WALL, ops=[DD(y1 - 68.5), DD(y1 - 58.0)], **kw)
+    for s in (-1, 1):
+        a, b = sorted((s * 4.25, s * 19.5))
+        C.box(a, 62.6, z, b, 62.85, EB_TOP, IN_WALL)
+    # ---------------- faculty hall
+    C.rug(-1.3, 53.6, 1.3, 73.8, "M_IntCarpetRed", K.TRIM_GOLD)
+    emblem(C.nc, (0.0, y0, z + 2.45), 1.1, yaw=180.0, depth=0.18)
+    C.prop("SM_Int_Console", 0.0, y0 + 0.25, z, 180.0)
+    C.prop("SM_Int_PottedPlant", -0.4, y0 + 0.25, z + 0.85, 0.0)
+    trophy(C, 0.35, y0 + 0.25, z + 0.85, 1.2)
+    C.wtext("DUEL ACADEMY  -  FACULTY", 0.0, y0, z + 4.05, 180.0, 0.24, (0.1, 0.2, 0.55))
+    for s in (-1, 1):
+        x = s * 4.0
+        for y in (54.6, 63.3, 73.4):
+            C.prop("SM_Int_Painting", x - s * 0.04, y, z + 1.5, -90.0 * s)
+        C.prop("SM_Int_Bench", x - s * 0.3, 63.3, z, -90.0 * s)
+        plinth_bust(C, s * 2.9, 55.6, 180.0)
+        C.prop("SM_Int_PottedPlantB", s * 3.4, 74.9, z, 0.0)
+    for y in (58.5, 69.5):
+        K.pendant(C.a, 0.0, y, EB_TOP, "chandelier")
+    _plate_door(C, -4.0, 68.5, 90.0, "CHANCELLOR SHEPPARD", z=z + 2.95)
+    _plate_door(C, -4.0, 58.0, 90.0, "FACULTY MEETING ROOM", z=z + 2.95)
+    _plate_door(C, 4.0, 68.5, -90.0, "DR. CROWLER", z=z + 2.95)
+    _plate_door(C, 4.0, 58.0, -90.0, "FACULTY LOUNGE", z=z + 2.95)
+    C.npc(0.0, 65.0, 180.0, "white", 4.0)
+    C.cam("annex_faculty_hall", (0.0, 74.3, z + 1.75), (0.0, 53.0, z + 2.0), 18)
+    # ---------------- Chancellor Sheppard's office
+    C.floor(-19.5, 62.85, -4.25, y1, "M_IntCarpetBlue")
+    C.rug(-17.6, 65.2, -10.4, 72.6, "M_IntCarpetRed", K.TRIM_GOLD)
+    C.wainscot((-19.5, y1), (-19.5, 62.85), z, 1.0, "M_IntWoodPanel", K.TRIM_GOLD)
+    C.wainscot((-4.25, 62.85), (-4.25, y1), z, 1.0, "M_IntWoodPanel", K.TRIM_GOLD, gaps=[(4.65, 6.65)])
+    _exec_desk(C, -15.4, 69.0, -90.0)
+    C.prop("SM_Int_OfficeChair", -16.6, 69.0, z, 90.0)
+    C.prop("SM_Int_DeskLamp", -15.5, 70.0, z + 0.79, 0.0)
+    C.prop("SM_Int_Books", -15.5, 68.0, z + 0.79, 90.0)
+    duel_disk(C, -15.3, 69.1, z + 0.79, 20.0)
+    for y in (68.2, 69.8):
+        C.prop("SM_Int_GreenChair", -13.5, y, z, -90.0)
+    for k, (y, col) in enumerate(((66.93, "M_AcademyRed"), (70.79, "M_AcademyYellow"), (63.6, "M_AcademyBlue"))):
+        C.mb.lathe([(0.2, 0.0), (0.2, 0.06), (0.03, 0.1), (0.03, 3.6)], K.TRIM_GOLD, seg=8,
+                   center=C.P(-18.9, y, z))
+        banner(C.nc, C.P(-18.75, y, z + 3.4), C.F.yaw(90.0), 0.9, 1.6, col, notch=0.35)
+    # the big video wall
+    C.box(-14.2, 62.85, z + 1.15, -8.2, 62.95, z + 3.75, "M_IntBlack", nc=True)
+    C.box(-14.05, 62.95, z + 1.3, -8.35, 62.97, z + 3.6, "M_IntScreen", nc=True)
+    C.wtext("INCOMING VIDEO CALL ...", -11.2, 62.97, z + 2.4, 180.0, 0.2, (1, 1, 1), emissive=True)
+    for y in (63.5, 64.55, 65.6, 70.9, 71.95, 73.0, 74.05):
+        C.prop("SM_Int_Bookshelf", -4.43, y, z, -90.0)
+    sofa_corner(C, -10.8, y1 - 0.55, 0.0)
+    C.prop("SM_Int_Console", -6.2, 63.1, z, 180.0)
+    for k in range(3):
+        trophy(C, -6.8 + k * 0.6, 63.1, z + 0.85, 1.0 + 0.4 * (k == 1))
+    C.prop("SM_Int_GrandfatherClock", -18.9, 63.15, z, 180.0)
+    C.prop("SM_Int_PottedPlantB", -18.9, 74.9, z, 0.0)
+    K.pendant(C.a, -12.0, 69.0, EB_TOP, "chandelier")
+    C.light(-12.0, 64.5, EB_TOP - 0.5, 2500, 8)
+    C.npc(-16.6, 69.0, 90.0, "white", 0.5)
+    C.cam("annex_chancellor", (-4.9, 63.5, z + 1.8), (-17.5, 72.5, z + 1.0), 17)
+    # ---------------- faculty meeting room
+    C.floor(-19.5, y0, -4.25, 62.6, "M_IntCarpetBlue")
+    for x in (-12.9, -11.1):
+        C.prop("SM_Int_Table", x, 57.8, z, 0.0)
+    for x in (-13.6, -12.6, -11.4, -10.4):
+        C.prop("SM_Int_DiningChair", x, 57.05, z, 180.0)
+        C.prop("SM_Int_DiningChair", x, 58.55, z, 0.0)
+    C.prop("SM_Int_DiningChair", -14.6, 57.8, z, 90.0)
+    C.prop("SM_Int_DiningChair", -9.4, 57.8, z, -90.0)
+    C.prop("SM_Int_ProjectorScreen", -12.0, y0 + 0.4, z, 180.0)
+    for k in range(3):
+        C.prop("SM_Int_Cabinet", -5.0, 54.2 + k * 0.95 if k < 2 else 61.6, z, -90.0)
+    C.prop("SM_Int_PottedPlantB", -18.9, 53.6, z, 0.0)
+    C.poster(-11.0, 62.6, z + 1.7, 0.0, 1.4, 0.9, "M_IntPoster3", "SCHOOL YEAR PLAN", (0.2, 0.1, 0.0), 0.08)
+    for x in (-14.0, -10.0):
+        K.pendant(C.a, x, 57.8, EB_TOP, "lamp")
+    C.cam("annex_meeting_room", (-4.9, 62.0, z + 1.8), (-17.0, 55.0, z + 0.9), 17)
+    # ---------------- Dr. Crowler's office
+    C.floor(4.25, 62.85, 19.5, y1, "M_IntCarpetRed")
+    C.rug(10.4, 65.2, 17.6, 72.6, "M_IntCarpetBlue", K.TRIM_GOLD)
+    C.wainscot((19.5, 62.85), (19.5, y1), z, 1.2, "M_IntWallpaperBlue", K.TRIM_GOLD)
+    C.wainscot((4.25, y1), (4.25, 62.85), z, 1.2, "M_IntWallpaperBlue", K.TRIM_GOLD, gaps=[(5.95, 7.95)])
+    _exec_desk(C, 15.4, 69.0, 90.0, mat=NAVY_T)
+    C.prop("SM_Int_OfficeChair", 16.6, 69.0, z, -90.0)
+    C.prop("SM_Int_Candelabra", 15.5, 70.0, z + 0.79, 0.0)
+    C.prop("SM_Int_Books", 15.5, 68.0, z + 0.79, 90.0)
+    for y in (68.2, 69.8):
+        C.prop("SM_Int_DiningChair", 13.5, y, z, 90.0)
+    C.prop("SM_Int_Mirror", 10.5, 62.88, z + 1.0, 180.0)
+    C.prop("SM_Int_Wardrobe", 6.0, 63.25, z, 180.0)
+    C.prop("SM_Int_Wardrobe", 7.3, 63.25, z, 180.0)
+    C.box(12.2, 72.0, z, 12.8, 72.6, z + 0.9, K.MARBLEFLOOR)
+    _gear(C, 12.5, 72.3, z + 1.45)
+    C.wtext("ANCIENT GEAR - MODEL", 12.5, 72.0, z + 0.55, 0.0, 0.07, (0.15, 0.1, 0.05))
+    C.kit(K.piano, 8.0, 72.4, 160.0)
+    for x in (8.0, 11.6, 15.2):
+        banner(C.nc, C.P(x, y1 - 0.06, EB_TOP - 0.2), C.F.yaw(0.0), 0.9, 2.2, "M_AcademyBlue", notch=0.35)
+    C.prop("SM_Int_Painting", 4.29, 73.0, z + 1.6, 90.0)
+    C.prop("SM_Int_PottedPlantB", 18.9, 74.9, z, 0.0)
+    K.pendant(C.a, 12.0, 69.0, EB_TOP, "chandelier")
+    C.light(12.0, 64.5, EB_TOP - 0.5, 2500, 8)
+    C.npc(16.6, 69.0, -90.0, "white", 0.5)
+    C.cam("annex_crowler", (4.9, 63.5, z + 1.8), (17.5, 72.5, z + 1.0), 17)
+    # ---------------- faculty lounge
+    C.floor(4.25, y0, 19.5, 62.6, "M_IntWoodFloor", planks=True)
+    with C.zat(z):
+        K.kitchen_run(C.mb, C.nc, 9.4, y0, 14.6, against="-y")
+    C.box(14.7, y0, z, 15.6, y0 + 0.7, z + 1.9, K.TRIM_WHITE)                     # fridge
+    C.box(14.68, y0 + 0.7, z + 1.1, 14.72, y0 + 0.72, z + 1.6, K.METAL, nc=True)
+    C.prop("SM_Int_Microwave", 10.0, y0 + 0.3, z + 0.9, 180.0)
+    C.prop("SM_Int_Kettle", 13.9, y0 + 0.3, z + 0.9, 0.0)
+    dining(C, 8.5, 58.5, 0.0, chairs=4, length=1.2, side=0.7)
+    C.prop("SM_Int_TeaSet", 8.5, 58.5, z + 0.76, 0.0)
+    sofa_corner(C, 15.5, 62.0, 0.0, rug="M_IntCarpetYellow")
+    C.box(14.4, 57.3, z, 16.6, 57.8, z + 0.5, "M_IntWoodDark")
+    C.prop("SM_Int_TV", 15.5, 57.55, z + 0.5, 180.0)
+    C.prop("SM_Int_PottedPlantB", 18.9, 53.6, z, 0.0)
+    C.prop("SM_Int_WallClock", 19.47, 58.0, z + 2.8, -90.0)
+    C.poster(4.25, 54.6, z + 1.7, 90.0, 0.8, 1.0, "M_IntPoster4", "STAFF ONLY", size=0.08)
+    for py in (55.5, 60.0):
+        K.pendant(C.a, 11.5, py, EB_TOP, "lamp")
+    C.npc(8.0, 58.0, 0.0, "white", 1.0)
+    C.cam("annex_faculty_lounge", (4.9, 62.0, z + 1.8), (17.0, 54.0, z + 0.9), 17)
+
+
+# ---------------------------------------------------------------------------- interiors: lobby side rooms
+def _lobby_room(C, y0, y1, ydoor, title, hall_side):
+    """Small room against the lobby's west wall (inside x -29 .. -22.25, y y0 .. y1) with a blue / gold fascia
+    like the card shop. hall_side: 'n' or 's' - the second wall that faces the lobby."""
+    z, h = FLOOR, 5.0
+    kw = dict(base=BLUE_T, trim="M_Gold", trim_in=K.TRIM_WOOD)
+    ya, yb = (y0, y1 + 0.25) if hall_side == "n" else (y0 - 0.25, y1)
+    C.wall((-22.0, ya), (-22.0, yb), z, h, 0.25, "M_AcademyWall", inner=K.PLASTER_CREAM,
+           ops=[K.Door(ydoor - ya, 1.8, 2.8, "academy_wood", double=True)], **kw)
+    if hall_side == "n":
+        C.wall((-22.25, yb), (-29.0, yb), z, h, 0.25, "M_AcademyWall", inner=K.PLASTER_CREAM, **kw)
+    else:
+        C.wall((-29.0, ya), (-22.25, ya), z, h, 0.25, "M_AcademyWall", inner=K.PLASTER_CREAM, **kw)
+    C.box(-29.0, ya, z + h, -22.0, yb, z + h + 0.35, "M_AcademyWall", mats={"-z": K.CEIL})
+    # fascia: blue band with gold lines on the two hall-facing sides
+    e0, e1 = (ya, yb + 0.18) if hall_side == "n" else (ya - 0.18, yb)
+    C.box(-22.0, e0, z + h - 0.6, -21.82, e1, z + h + 0.35, "M_AcademyBlue")
+    f0, f1 = (yb, yb + 0.18) if hall_side == "n" else (ya - 0.18, ya)
+    C.box(-29.0, f0, z + h - 0.6, -22.0, f1, z + h + 0.35, "M_AcademyBlue")
+    for zz in (z + h - 0.66, z + h + 0.35):
+        C.box(-21.84, e0 - 0.02, zz, -21.78, e1 + 0.02, zz + 0.06, "M_Gold")
+    C.text(title, -21.77, (y0 + y1) / 2, z + h - 0.38, 90.0, 0.42, (1.0, 0.86, 0.4), emissive=True)
+    C.floor(-29.0, y0, -22.25, y1, "M_IntCarpetBlue")
+    C.wainscot((-29.0, y1), (-29.0, y0), z, 1.0, BLUE_T)
+
+
+def _lobby_rooms(C):
+    z = FLOOR
+    # ---------------- admissions office (south-west corner)
+    y0, y1 = LY0 + LWALL, -54.25
+    _lobby_room(C, y0, y1, -61.0, "ADMISSIONS", "n")
+    C.box(-25.2, -63.6, z, -24.6, -58.4, z + 1.0, "M_IntWood", mats={"+x": BLUE_T})
+    C.box(-25.3, -63.7, z + 1.0, -24.5, -58.3, z + 1.06, "M_Marble")
+    for y in (-62.4, -59.6):
+        C.prop("SM_Int_OfficeDesk", -27.4, y, z, -90.0)
+        C.prop("SM_Int_OfficeChair", -28.25, y, z, 90.0)
+        C.prop("SM_Int_DeskLamp", -27.4, y + 0.45, z + 0.76, 0.0)
+    for x in (-28.4, -27.5, -26.6):
+        C.prop("SM_Int_Cabinet", x, y1 - 0.25, z, 0.0)
+    C.poster(-24.4, y1, z + 2.6, 0.0, 1.6, 1.0, "M_IntPoster2", "ENTRANCE EXAM RESULTS", size=0.08)
+    C.box(-23.0, y1 - 0.6, z, -22.4, y1 - 0.05, z + 1.2, K.TRIM_WHITE)                       # water cooler
+    C.nc.cylinder(C.P(-22.7, y1 - 0.33, z + 1.2), 0.15, 0.4, "M_IntGlassClear", seg=10)
+    C.prop("SM_Int_PottedPlantB", -23.0, y0 + 0.5, z, 0.0)
+    C.prop("SM_Int_WallClock", -28.97, -57.5, z + 3.2, 90.0)
+    for y in (-62.0, -57.0):
+        K.pendant(C.a, -25.6, y, z + 5.0, "lamp")
+    C.npc(-26.6, -60.0, 90.0, "white", 0.5)
+    C.cam("lobby_admissions", (-22.9, -54.9, z + 1.8), (-28.5, -63.5, z + 0.9), 17)
+    # ---------------- duel disk service (north-west corner)
+    y0, y1 = -33.75, LY1 - LWALL
+    _lobby_room(C, y0, y1, -28.0, "DUEL DISK SERVICE", "s")
+    C.box(-29.0, -32.4, z, -28.2, -25.0, z + 0.95, K.METAL, mats={"+z": "M_IntWood"})
+    for k in range(4):
+        duel_disk(C, -28.6, -31.6 + k * 1.6, z + 0.95, 90.0 + 15 * k)
+    C.box(-28.98, -30.0, z + 1.4, -28.94, -27.0, z + 2.6, "M_IntBlack", nc=True)
+    C.box(-28.94, -29.9, z + 1.5, -28.92, -27.1, z + 2.5, "M_IntScreen", nc=True)
+    C.wtext("DISK DIAGNOSTICS: OK", -28.92, -28.5, z + 2.0, 90.0, 0.12, (1, 1, 1), out=0.01, emissive=True)
+    for k in range(4):
+        C.prop("SM_Int_SteelShelves", -27.6 + k * 1.3, y1 - 0.3, z, 0.0)
+        for j in range(2):
+            duel_disk(C, -27.75 + k * 1.3, y1 - 0.3, z + 0.7 + j * 0.6, 0.0)
+    C.box(-25.0, -31.6, z, -24.4, -25.4, z + 1.0, BLUE_T, mats={"+x": "M_IntWood"})
+    C.box(-25.1, -31.7, z + 1.0, -24.3, -25.3, z + 1.06, K.TRIM_WHITE)
+    duel_disk(C, -24.7, -27.0, z + 1.06, 70.0)
+    for k in range(2):
+        C.prop("SM_Int_Stool", -27.6, -31.0 + k * 3.0, z, 0.0)
+    C.prop("SM_Int_Box", -25.8, y0 + 0.4, z, 10.0)
+    C.prop("SM_Int_Box", -25.2, y0 + 0.4, z, -20.0)
+    C.prop("SM_Int_HandTruck", -23.0, y0 + 0.5, z, 30.0)
+    C.poster(-26.0, y0, z + 2.2, 180.0, 1.8, 1.0, "M_IntPoster1", "REPAIRS & UPGRADES", size=0.09)
+    K.pendant(C.a, -25.6, -30.6, z + 5.0, "industrial")
+    K.pendant(C.a, -25.6, -26.4, z + 5.0, "industrial")
+    C.npc(-25.6, -28.4, 90.0, "white", 0.5)
+    C.cam("lobby_duel_disk_service", (-22.9, -33.2, z + 1.8), (-28.6, -24.0, z + 0.9), 17)
+
+
+# ---------------------------------------------------------------------------- interiors: towers
+TOWER_NAMES = {(-1, True): "SLIFER TOWER", (1, True): "RA TOWER", (-1, False): "OBELISK TOWER (NORTH-WEST)",
+               (1, False): "OBELISK TOWER (NORTH-EAST)"}
+
+
+def _tower_interior(C, accent, name, cam):
+    """Stair hall in a tower base (tower frame: entrance in the local south wall at ground level, the landing
+    at FLOOR in the back leads through the end pavilion wall into its corridor)."""
+    i = TW_H - 0.5          # inside half width
+    C.box(-i, 2.5, 0.0, i, TW_H, FLOOR, "M_AcademyWall", mats={"+z": K.MARBLEFLOOR, "-y": IN_WALL})
+    C.box(-i, 2.45, FLOOR - 0.12, i, 2.55, FLOOR + 0.004, K.TRIM_GOLD)
+    n, run = 10, 0.3
+    ys = 2.5 - n * run
+    a = math.degrees(math.atan2(*reversed(C.F.v(0.0, 1.0))))
+    with C.mb.at(C.P(0.0, ys, 0.0), rot=a):
+        C.mb.stairs((0, 0, 0), 0.0, 3.6, n, FLOOR / n, run, K.MARBLEFLOOR)
+    for k in range(n):        # red carpet runner
+        C.box(-1.1, ys + k * run, FLOOR / n * (k + 1), 1.1, ys + (k + 1) * run, FLOOR / n * (k + 1) + 0.01,
+              "M_IntCarpetRed", nc=True)
+    C.rug(-1.1, 2.55, 1.1, 5.0, "M_IntCarpetRed", K.TRIM_GOLD, z=FLOOR + 0.005)
+    for sx in (-1, 1):
+        x = sx * 1.9
+        C.mb.beam(C.P(x, ys - 0.1, 0.95), C.P(x, 2.5, FLOOR + 0.95), 0.07, 0.06, K.TRIM_GOLD)
+        for k in range(0, n + 1, 2):
+            C.box(x - 0.02, ys + k * run + 0.1, FLOOR / n * k, x + 0.02, ys + k * run + 0.14, FLOOR / n * k + 0.95,
+                  K.TRIM_GOLD)
+        K.railing(C.mb, [C.F.p(sx * i, 2.6), C.F.p(sx * 1.9, 2.6)], FLOOR, 1.0, K.TRIM_GOLD, spacing=0.3)
+        plinth_bust(C, sx * 3.3, ys - 0.6, 0.0, z=0.0)
+        C.prop("SM_Int_Bench", sx * (i - 0.3), -2.0, 0.0, -90.0 * sx)
+        C.prop("SM_Int_PottedPlantB", sx * (i - 0.5), -i + 0.5, 0.0, 0.0)
+        C.prop("SM_Int_PottedPlant", sx * (i - 0.4), TW_H - 0.4, FLOOR, 0.0)
+    C.rug(-2.0, -3.9, 2.0, -1.2, accent, K.TRIM_GOLD, z=0.005)
+    banner(C.nc, C.P(0.0, TW_H - 0.06, TW_CEIL - 0.3), C.F.yaw(0.0), 1.8, 2.6, accent)
+    C.wtext(name, 0.0, -i, 5.0, 180.0, 0.3, (0.1, 0.2, 0.55))
+    C.wtext("PAVILION  ^", 0.0, TW_H, FLOOR + 3.1, 0.0, 0.2, (0.1, 0.2, 0.55))
+    K.pendant(C.a, *C.F.p(0.0, -1.8), TW_CEIL, "chandelier")
+    C.light(0.0, 4.2, FLOOR + 3.0, 2500, 8)
+    C.cam(cam, (-i + 0.7, -i + 0.6, 1.7), (1.2, TW_H, 3.0), 17)
+
+
+def _interiors(aset, mb, nc):
+    for (cx, cy, accent, front) in ((-101.0, -46.0, "M_AcademyRed", True), (101.0, -46.0, "M_AcademyYellow", True),
+                                    (-101.0, 56.0, "M_AcademyBlue", False), (101.0, 56.0, "M_AcademyBlue", False)):
+        s = 1 if cx > 0 else -1
+        name = TOWER_NAMES[(s, front)]
+        cam = f"tower_{'E' if s > 0 else 'W'}{'S' if front else 'N'}"
+        _tower_interior(Ctx(aset, mb, nc, tower_frame(cx, cy, front)), accent, name, cam)
+    _annex_interior(Ctx(aset, mb, nc))
+    _lobby_rooms(Ctx(aset, mb, nc))
+    for s in (-1, 1):
+        C = Ctx(aset, mb, nc, Fr.make(mx=s < 0))
+        _wing_interior(C, s)
+        _end_block_interior(C, s)
 
 
 # ============================================================================ PLAZA

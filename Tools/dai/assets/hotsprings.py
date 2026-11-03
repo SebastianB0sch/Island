@@ -8,6 +8,13 @@ upturned eaves, a bamboo water spout, bamboo fence screens, a rest pavilion and
 a red tea umbrella looking out over the sea (local +X / +Y). A small wooden
 torii-like gate with a "HOT SPRINGS" plaque marks the entrance at ground level.
 
+The bathhouse is walk-in: each genkan (blue noren = men, red = women) has sliding
+shoji doors into a changing room (wooden cubbies with baskets, lockers, vanity,
+bench, scales, coffee-milk fridge) with the bandai reception booth straddling the
+partition between both sides; sliding glass doors lead on into the washing areas
+(low taps, stools, buckets, a mural of the volcano) whose shoji side doors open
+onto the terrace and the pools.
+
 Local space: origin = pad centre at ground level, front faces -Y; the trail
 arrives at about (0, -45).
 """
@@ -16,6 +23,7 @@ import math
 import random
 
 from . import AssetSet
+from . import interior as K
 from .. import palette
 
 palette.register({
@@ -53,6 +61,12 @@ BX0, BX1, BY0, BY1 = -15.8, -3.0, -13.0, -5.0
 BFL = DECK + 0.45               # bathhouse floor
 BTOP = BFL + 3.25               # wall top
 NAGESHI = BFL + 2.65
+WT = 0.15                       # bathhouse wall thickness (walls sit inside the facade line)
+GEN_Y = BY0 + 1.45              # back wall line of the genkan alcoves (doors)
+DIV_Y = -8.1                    # changing room | washing area divider (south face)
+PART_X = -9.4                   # men | women partition (centre)
+CEIL_Z = BFL + 3.0              # interior ceiling
+SIDE_DOOR_Y = -6.0              # side exits from the washing areas (west = men, east = women)
 
 
 # ---------------------------------------------------------------- helpers
@@ -400,7 +414,8 @@ def _bathhouse(mb, nc, rng):
     bw = (BX1 - BX0) / nb
     ent = (1, 4)
     gd = 1.6
-    # interior core with alcoves cut out
+    # front wall blocks between / beside the genkan alcoves (solid), alcove ceilings; the rest of the
+    # house is hollow (walls + rooms: _bath_interior)
     xs = [BX0]
     for b in ent:
         xs += [BX0 + b * bw + 0.11, BX0 + (b + 1) * bw - 0.11]
@@ -408,10 +423,9 @@ def _bathhouse(mb, nc, rng):
     for i in range(len(xs) - 1):
         xa, xb = xs[i], xs[i + 1]
         if i % 2 == 1:   # alcove column
-            mb.box_mm((xa, BY0 + gd, BFL), (xb, BY1, BTOP), "M_CreamWall")
             mb.box_mm((xa, BY0, NAGESHI), (xb, BY0 + gd, BTOP), "M_CreamWall", mats={"-z": DARK})
         else:
-            mb.box_mm((xa, BY0, BFL), (xb, BY1, BTOP), "M_CreamWall")
+            mb.box_mm((xa, BY0, BFL), (xb, BY0 + gd, BTOP), "M_CreamWall", mats={"+y": K.PLASTER_CREAM})
 
     def shoji_bay(u0, u1, z0, frame_yaw_face=True):
         w = u1 - u0
@@ -445,19 +459,31 @@ def _bathhouse(mb, nc, rng):
             mb.box((length / 2, -0.1, BFL + 0.06), (length + 0.24, 0.16, 0.12), DARK)
 
     face((BX0, BY0), 0, BX1 - BX0, nb, ent)
-    face((BX1, BY0), 90, BY1 - BY0, 4)
+    face((BX1, BY0), 90, BY1 - BY0, 4, (3,))        # bay 3 = women's side exit
     face((BX1, BY1), 180, BX1 - BX0, nb)
-    face((BX0, BY1), -90, BY1 - BY0, 4)
+    face((BX0, BY1), -90, BY1 - BY0, 4, (0,))       # bay 0 = men's side exit
+    # side exits from the washing areas: transom panel over the sliding door, short noren, step stones
+    for (org, yaw, u, mat, sx) in (((BX1, BY0), 90, SIDE_DOOR_Y - BY0, "M_NorenRed", 1),
+                                   ((BX0, BY1), -90, BY1 - SIDE_DOOR_Y, "M_NorenBlue", -1)):
+        with mb.at((org[0], org[1], 0), rot=yaw), nc.at((org[0], org[1], 0), rot=yaw):
+            mb.box((u, -0.03, (BFL + 2.2 + NAGESHI) / 2), (1.78, 0.06, NAGESHI - BFL - 2.2), "M_ShojiPaper", skip=("+y",))
+            mb.box((u, -0.08, BFL + 2.25), (1.78, 0.08, 0.1), DARK, skip=("+y",))
+            for k in range(1, 4):
+                mb.box((u - 0.89 + 1.78 * k / 4, -0.07, (BFL + 2.3 + NAGESHI) / 2), (0.025, 0.03, NAGESHI - BFL - 2.3),
+                       DARK, skip=("+y",))
+            for j in range(2):
+                nc.box((u - 0.42 + 0.84 * j, -0.14, NAGESHI - 0.3), (0.8, 0.02, 0.6), mat)
+            mb.beam((u - 0.95, -0.14, NAGESHI + 0.02), (u + 0.95, -0.14, NAGESHI + 0.02), 0.05, 0.05, "M_Bamboo")
+        ex = BX1 + 1.1 if sx > 0 else BX0 - 0.6
+        for k, top in enumerate((DECK + 0.30, DECK + 0.15)):
+            a, b = sorted((ex + sx * 0.42 * k, ex + sx * 0.42 * (k + 1)))
+            mb.box_mm((a, SIDE_DOOR_Y - 0.7, DECK - 0.1), (b, SIDE_DOOR_Y + 0.7, top), EDGE)
     # genkan: closed sliding doors at the back, shoe shelves, step stones, noren
     for k, b in enumerate(ent):
         u0, u1 = BX0 + b * bw + 0.11, BX0 + (b + 1) * bw - 0.11
         ucen = (u0 + u1) / 2
-        yb = BY0 + gd
-        for s in (-1, 1):
-            mb.box((ucen + s * (u1 - u0) / 4, yb - 0.04, BFL + 1.1), ((u1 - u0) / 2 - 0.04, 0.06, 2.2), "M_ShojiPaper")
-            for kk in range(1, 4):
-                mb.box((ucen + s * (u1 - u0) / 4, yb - 0.08, BFL + 2.2 * kk / 4), ((u1 - u0) / 2 - 0.1, 0.03, 0.03), DARK)
-        mb.box((ucen, yb - 0.05, BFL + 2.25), (u1 - u0, 0.1, 0.1), DARK)
+        # (the closed shoji panels are a real doorway with sliding shoji doors now, see _bath_interior)
+        mb.box((ucen, GEN_Y - 0.05, BFL + 2.25), (u1 - u0, 0.1, 0.1), DARK)
         mb.box((u0 + 0.22, BY0 + 0.95, BFL + 0.6), (0.4, 0.9, 1.2), WOOD)
         for kk in range(3):
             mb.box((u0 + 0.43, BY0 + 0.95, BFL + 0.25 + kk * 0.38), (0.02, 0.85, 0.02), DARK)
@@ -493,6 +519,243 @@ def _bathhouse(mb, nc, rng):
         mb.cylinder((lx, ly, lz - 0.38), 0.15, 0.07, "M_Black", seg=10)
         lanterns.append((lx, ly, lz))
     return lanterns
+
+
+# ---------------------------------------------------------------- bathhouse interior
+def _cubbies(mb, aset, x, y, yaw, cols=6, rows=3, cw=0.47, ch=0.55, d=0.45, seed=0):
+    """Open wooden cubby shelves with wicker baskets (origin bottom centre, back at +Y, open side -Y)."""
+    rnd = random.Random(seed)
+    w, h = cols * cw, rows * ch + 0.08
+    a = math.radians(yaw)
+    with mb.at((x, y, BFL), rot=yaw):
+        mb.box((0, d / 2 - 0.01, h / 2), (w, 0.02, h), WOOD)
+        for i in range(cols + 1):
+            mb.box((-w / 2 + i * cw, 0, h / 2), (0.03, d, h), WOOD)
+        for k in range(rows + 1):
+            mb.box((0, 0, 0.04 + k * ch), (w + 0.03, d, 0.03), WOOD)
+        mb.box((0, 0, h + 0.03), (w + 0.1, d + 0.06, 0.05), DARK)
+        mb.box((0, -d / 2 + 0.02, 0.02), (w, 0.04, 0.04), DARK)
+    for k in range(rows):
+        for i in range(cols):
+            if rnd.random() < 0.25:
+                continue
+            lx, ly = -w / 2 + cw * (i + 0.5), -0.02
+            px, py = x + lx * math.cos(a) - ly * math.sin(a), y + lx * math.sin(a) + ly * math.cos(a)
+            aset.prop("SM_Int_Basket", (px, py, BFL + 0.055 + k * ch), yaw + rnd.uniform(-8, 8), 0.95)
+
+
+def _key_lockers(mb, nc, x, y, yaw, cols=5, rows=3, cw=0.4, d=0.45, h=1.8):
+    """Wooden shoe-box style lockers with brass key tags (doors at -Y)."""
+    w = cols * cw
+    with mb.at((x, y, BFL), rot=yaw), nc.at((x, y, BFL), rot=yaw):
+        mb.box((0, 0, h / 2 + 0.05), (w, d, h), WOOD)
+        mb.box((0, 0, 0.025), (w, d - 0.05, 0.05), DARK)
+        rh = h / rows
+        for k in range(rows):
+            for i in range(cols):
+                cx, cz = -w / 2 + cw * (i + 0.5), 0.05 + rh * (k + 0.5)
+                nc.box((cx, -d / 2 - 0.006, cz), (cw - 0.04, 0.012, rh - 0.04), "M_IntWoodDark")
+                nc.box((cx, -d / 2 - 0.015, cz + rh * 0.2), (0.05, 0.01, 0.08), "M_Gold")
+                nc.box((cx, -d / 2 - 0.016, cz + rh * 0.12), (0.035, 0.008, 0.04), "M_RedFelt")
+
+
+def _washi_light(aset, nc, x, y, z=CEIL_Z):
+    """Square paper ceiling lamp (andon style) + its light."""
+    nc.box((x, y, z - 0.03), (0.7, 0.7, 0.06), DARK)
+    nc.box((x, y, z - 0.2), (0.6, 0.6, 0.28), "M_ShojiPaper")
+    nc.box((x, y, z - 0.345), (0.56, 0.56, 0.01), "M_IntWarmGlow")
+    for s in (-1, 1):
+        nc.box((x + s * 0.3, y, z - 0.2), (0.03, 0.62, 0.3), DARK)
+        nc.box((x, y + s * 0.3, z - 0.2), (0.62, 0.03, 0.3), DARK)
+    aset.light((x, y, z - 0.6), (1.0, 0.85, 0.62), 2600.0, 7.0, night_only=False)
+
+
+def _jp_room(mb, x0, y0, x1, y1, z_rail=BFL + 2.2):
+    """Japanese room trim: wooden ceiling with battens, corner posts and a nageshi rail."""
+    K.ceiling(mb, x0, y0, x1, y1, CEIL_Z, "M_IntCeilingWood")
+    x = x0 + 0.6
+    while x < x1 - 0.3:
+        mb.box_mm((x - 0.025, y0, CEIL_Z - 0.04), (x + 0.025, y1, CEIL_Z), DARK)
+        x += 0.6
+    for (cx, cy) in ((x0, y0), (x1, y0), (x1, y1), (x0, y1)):
+        mb.box((cx + (0.05 if cx == x0 else -0.05), cy + (0.05 if cy == y0 else -0.05), (BFL + CEIL_Z) / 2),
+               (0.1, 0.1, CEIL_Z - BFL), DARK)
+    for (a, b, c, d) in ((x0, y0, x1, y0 + 0.05), (x0, y1 - 0.05, x1, y1), (x0, y0, x0 + 0.05, y1), (x1 - 0.05, y0, x1, y1)):
+        mb.box_mm((a, b, z_rail), (c, d, z_rail + 0.1), DARK)
+
+
+def _wash_station(mb, nc, aset, x, y_wall, rng):
+    """Low tap + mirror on the back wall (wall face at y_wall, room towards -y), stool and bucket."""
+    mb.box((x, y_wall - 0.012, BFL + 1.18), (0.46, 0.02, 0.55), "M_IntMetal")                  # mirror
+    mb.box((x, y_wall - 0.012, BFL + 1.18), (0.52, 0.015, 0.61), "M_IntTrimWhite")
+    for s in (-1, 1):
+        mb.box((x + s * 0.12, y_wall - 0.33, BFL + 0.72), (0.05, 0.06, 0.06), "M_IntMetal")      # taps
+        mb.box((x + s * 0.12, y_wall - 0.36, BFL + 0.74), (0.07, 0.02, 0.02), "M_IntFabricRed" if s < 0 else "M_IntFabricBlue")
+    mb.box((x, y_wall - 0.28, BFL + 0.66), (0.4, 0.06, 0.06), "M_IntMetal")
+    mb.cylinder((x + 0.3, y_wall - 0.04, BFL + 0.75), 0.015, 0.45, "M_IntMetal", seg=6)          # hand shower
+    mb.cylinder((x + 0.3, y_wall - 0.06, BFL + 1.18), 0.035, 0.12, "M_IntMetal", seg=8)
+    for k, m in enumerate(("M_IntFabricPink", "M_IntFabricGreen", "M_IntFabricWhite")):
+        nc.cylinder((x - 0.18 + 0.08 * k, y_wall - 0.12, BFL + 0.6), 0.03, rng.uniform(0.12, 0.18), m, seg=6)
+    stool(mb, (x, y_wall - 0.85, BFL), rng.uniform(-8, 8))
+    bucket(mb, (x - 0.32, y_wall - 0.6, BFL), r=0.13, h=0.18)
+
+
+def _mural(mb, nc, xf, yc, yaw, w=2.5, z0=BFL + 1.15, h=1.75):
+    """Sento wall painting of the island's volcano over the sea; (xf, yc) on the wall face."""
+    with nc.at((xf, yc, z0), rot=yaw):
+        nc.box((0, -0.006, h / 2), (w, 0.012, h), K.PLASTER_SKY)
+        nc.box((0, -0.008, h * 0.12), (w, 0.012, h * 0.24), "M_IntFabricBlue")                    # sea
+        for k in range(5):                                                                        # wave crests
+            nc.box((-w / 2 + w * (k + 0.5) / 5, -0.016, h * 0.22), (w * 0.12, 0.006, 0.03), "M_IntFabricWhite")
+        y = -0.016
+        pts = [(-w * 0.42, h * 0.24), (w * 0.38, h * 0.24), (w * 0.08, h * 0.82), (-w * 0.12, h * 0.82)]
+        nc.poly([(p[0], y, p[1]) for p in pts], "M_IntSteelBlue")                                 # volcano
+        cap = [(-w * 0.2, h * 0.66), (w * 0.15, h * 0.66), (w * 0.08, h * 0.82), (-w * 0.12, h * 0.82)]
+        nc.poly([(p[0], y - 0.004, p[1]) for p in cap], "M_IntFabricWhite")                        # ash cap
+        nc.box((-0.02 * w, y - 0.008, h * 0.86), (w * 0.12, 0.006, h * 0.07), "M_IntFabricOrange")  # glow / smoke
+        for (cx, cz, cw) in ((-w * 0.33, h * 0.85, w * 0.22), (w * 0.3, h * 0.7, w * 0.26)):
+            nc.box((cx, y, cz), (cw, 0.006, h * 0.08), "M_IntFabricWhite")                        # clouds
+        nc.box((0, -0.004, h / 2), (w + 0.1, 0.008, h + 0.1), DARK)                                 # frame
+
+
+def _bath_interior(aset, mb, nc):
+    rng = random.Random(77)
+    PL, TILE = K.PLASTER_CREAM, "M_IntTileWhite"
+    pxw, pxe = PART_X - WT / 2, PART_X + WT / 2
+    ym = DIV_Y + WT / 2
+    gy1 = BY0 + 1.6                      # room side of the front blocks
+    # ---------------- walls
+    bw = (BX1 - BX0) / 6
+    for b in (1, 4):                     # genkan doorways (sliding shoji)
+        xa, xb = BX0 + b * bw + 0.11, BX0 + (b + 1) * bw - 0.11
+        K.wall(aset, mb, (xa, GEN_Y), (xb, GEN_Y), BFL, BTOP - BFL, WT, "M_CreamWall", inner=PL,
+               openings=[K.Door((xb - xa) / 2 + 0.1, 1.4, 2.2, "shoji", trim=DARK, trim_in=DARK)])
+    K.wall(aset, mb, (BX1, BY1), (BX0, BY1), BFL, BTOP - BFL, WT, "M_CreamWall", inner=TILE)
+    K.wall(aset, mb, (BX0, BY1), (BX0, ym), BFL, BTOP - BFL, WT, "M_CreamWall", inner=TILE,
+           openings=[K.Door(BY1 - SIDE_DOOR_Y, 1.6, 2.2, "shoji", trim=DARK, trim_in=DARK)])
+    K.wall(aset, mb, (BX0, ym), (BX0, gy1), BFL, BTOP - BFL, WT, "M_CreamWall", inner=PL)
+    K.wall(aset, mb, (BX1, gy1), (BX1, ym), BFL, BTOP - BFL, WT, "M_CreamWall", inner=PL)
+    K.wall(aset, mb, (BX1, ym), (BX1, BY1), BFL, BTOP - BFL, WT, "M_CreamWall", inner=TILE,
+           openings=[K.Door(SIDE_DOOR_Y - ym, 1.6, 2.2, "shoji", trim=DARK, trim_in=DARK)])
+    K.wall(aset, mb, (pxe, -10.0), (pxe, DIV_Y), BFL, BTOP - BFL, WT, PL, inner=PL)
+    K.wall(aset, mb, (pxe, DIV_Y), (pxe, BY1 - WT), BFL, BTOP - BFL, WT, TILE, inner=TILE)
+    K.wall(aset, mb, (BX0 + WT, DIV_Y), (pxw, DIV_Y), BFL, BTOP - BFL, WT, PL, inner=TILE,
+           openings=[K.Door(-12.2 - (BX0 + WT), 1.2, 2.1, "glass", trim_in=K.TRIM_WOOD, trim=K.TRIM_WOOD)])
+    K.wall(aset, mb, (pxe, DIV_Y), (BX1 - WT, DIV_Y), BFL, BTOP - BFL, WT, PL, inner=TILE,
+           openings=[K.Door(-6.6 - pxe, 1.2, 2.1, "glass", trim_in=K.TRIM_WOOD, trim=K.TRIM_WOOD)])
+
+    rooms = {"men_ch": (BX0 + WT, gy1, pxw, DIV_Y), "wom_ch": (pxe, gy1, BX1 - WT, DIV_Y),
+             "men_wa": (BX0 + WT, DIV_Y + WT, pxw, BY1 - WT), "wom_wa": (pxe, DIV_Y + WT, BX1 - WT, BY1 - WT)}
+    for key, (x0, y0, x1, y1) in rooms.items():
+        _jp_room(mb, x0, y0, x1, y1)
+        if key.endswith("ch"):
+            K.floor_planks(mb, x0, y0, x1, y1, BFL + 0.004, mat=K.WOODFLOOR, seam="M_IntWoodDark")
+            K.wainscot(mb, (x0, y0), (x1, y0), BFL, 0.1, DARK, gaps=[(1.0, 5.2)])
+        else:
+            mb.box_mm((x0, y0, BFL - 0.01), (x1, y1, BFL + 0.004), "M_IntTileBlue", skip=("-z",))
+            for t in range(1, int((x1 - x0) / 0.6)):
+                mb.box_mm((x0 + t * 0.6 - 0.006, y0, BFL + 0.004), (x0 + t * 0.6 + 0.006, y1, BFL + 0.006),
+                          "M_IntTileWhite", skip=("-z",))
+            gap = {"men_wa": ("w", (y1 - SIDE_DOOR_Y - 0.95, y1 - SIDE_DOOR_Y + 0.95), "s", (-12.2 - x0 - 0.75, -12.2 - x0 + 0.75)),
+                   "wom_wa": ("e", (SIDE_DOOR_Y - y0 - 0.95, SIDE_DOOR_Y - y0 + 0.95), "s", (-6.6 - x0 - 0.75, -6.6 - x0 + 0.75))}[key]
+            gaps = {gap[0]: [gap[1]], gap[2]: [gap[3]]}
+            for (k, (p0, p1)) in (("s", ((x0, y0), (x1, y0))), ("e", ((x1, y0), (x1, y1))), ("n", ((x1, y1), (x0, y1))),
+                                  ("w", ((x0, y1), (x0, y0)))):
+                K.wainscot(mb, p0, p1, BFL, 0.9, "M_IntTileBlue", cap=K.TRIM_WHITE, gaps=gaps.get(k, ()))
+
+    # ---------------- changing rooms (men west / women east, mirrored about the partition)
+    def mx(x, side):
+        return x if side < 0 else 2 * PART_X - x
+
+    for side in (-1, 1):
+        x_out = BX0 + WT if side < 0 else BX1 - WT
+        _cubbies(mb, aset, x_out - side * 0.225, -9.75, 90.0 if side < 0 else -90.0, seed=3 + side)
+        _key_lockers(mb, nc, mx(-14.2, side), DIV_Y - 0.235, 0.0)
+        aset.prop("SM_Int_Bench", (mx(-14.2, side), -9.75, BFL), 90.0)
+        nc.box((mx(-14.2, side), -9.5, BFL + 0.47), (0.3, 0.45, 0.04), "M_IntFabricWhite" if side < 0 else "M_IntFabricPink")
+        # vanity counter with mirrors and stools on the partition
+        xv = pxw if side < 0 else pxe
+        a, b = sorted((xv, xv - side * 0.45))
+        mb.box_mm((a, -9.9, BFL), (b, -8.35, BFL + 0.72), WOOD)
+        mb.box_mm((a - 0.02, -9.92, BFL + 0.72), (b + 0.02, -8.33, BFL + 0.76), K.TRIM_WHITE)
+        for y in (-9.5, -8.75):
+            aset.prop("SM_Int_Mirror", (xv, y, BFL + 0.95), -90.0 if side < 0 else 90.0)
+            aset.prop("SM_Int_Stool", (xv - side * 0.85, y, BFL), 0.0)
+        nc.box((xv - side * 0.2, -9.15, BFL + 0.78), (0.18, 0.12, 0.05), "M_IntPaper")       # tissue box
+        if side < 0:   # hair dryer
+            nc.cylinder((xv - side * 0.25, -8.55, BFL + 0.76), 0.045, 0.1, "M_IntFabricWhite", seg=8)
+        else:
+            aset.prop("SM_Int_PottedPlant", (xv - side * 0.22, -8.55, BFL + 0.76), 0.0)
+        # bathroom scales
+        sxs = mx(-11.0, side)
+        mb.box((sxs, -8.6, BFL + 0.05), (0.38, 0.32, 0.1), K.TRIM_WHITE)
+        mb.box((sxs, -8.73, BFL + 0.5), (0.06, 0.06, 0.9), K.TRIM_WHITE)
+        mb.cylinder((sxs, -8.73, BFL + 0.95), 0.14, 0.06, K.TRIM_WHITE, seg=12)
+        nc.cylinder((sxs, -8.66, BFL + 0.96), 0.11, 0.01, "M_IntPaper", seg=12)
+        aset.prop("SM_Int_CeilingFan", (mx(-12.7, side), -9.75, CEIL_Z), 0.0)
+        _washi_light(aset, nc, mx(-14.0, side), -9.75)
+        _washi_light(aset, nc, mx(-11.2, side), -9.75)
+    # men: coffee-milk fridge; women: folding screen and a plant
+    with mb.at((-14.75, -11.07, BFL)), nc.at((-14.75, -11.07, BFL)):
+        mb.box((0, 0, 0.8), (0.7, 0.6, 1.6), K.TRIM_WHITE)
+        nc.box((0, 0.305, 0.85), (0.56, 0.01, 1.1), "M_IntGlassClear")
+        nc.box((0, 0.2, 0.85), (0.56, 0.01, 1.1), "M_IntLightPanel")
+        for k in range(3):
+            for i in range(5):
+                nc.cylinder((-0.22 + 0.11 * i, 0.25, 0.38 + k * 0.36), 0.035, 0.14, ("M_IntPaper", "M_IntWood")[(i + k) % 2], seg=6)
+        nc.box((0, 0.31, 1.5), (0.6, 0.01, 0.12), "M_IntPoster1")
+    aset.text("COFFEE MILK", (-14.75, -11.07 + 0.33, BFL + 1.47), 180.0, size=0.07, color=(1, 1, 1))
+    aset.prop("SM_Int_FoldingScreen", (mx(-14.4, 1), -10.95, BFL), 200.0)
+    aset.prop("SM_Int_PottedPlantB", (BX1 - WT - 0.35, gy1 + 0.35, BFL), 0.0)
+    for (x, txt, col) in ((-14.75, "BATH MANNERS", "M_IntPoster2"), (mx(-14.75, 1), "BATH MANNERS", "M_IntPoster4")):
+        K.poster(nc, aset, x, gy1, BFL + 2.0, 180.0, 0.62, 0.42, col, txt, (1, 1, 1), 0.06)
+        for k, line in enumerate(("1. Wash before you soak", "2. No towels in the water", "3. No duel disks in the bath!")):
+            aset.text(line, K.wall_point(x, gy1, 180.0, 0.02, BFL + 1.92 - k * 0.06), 180.0, size=0.035, color=(1, 1, 1))
+
+    # ---------------- bandai: the raised reception booth overlooking both changing rooms
+    bx0, bx1, by0, by1 = PART_X - 1.15, PART_X + 1.15, gy1, -10.0
+    mb.box_mm((bx0, by0, BFL), (bx1, by1, BFL + 0.75), WOOD, mats={"+z": "M_IntTatami"})
+    for (a, b, c, d) in ((bx0, by0, bx0 + 0.1, by1), (bx1 - 0.1, by0, bx1, by1), (bx0, by1 - 0.1, bx1, by1)):
+        mb.box_mm((a, b, BFL + 0.75), (c, d, BFL + 1.05), WOOD)
+        mb.box_mm((a - 0.05, b, BFL + 1.05), (c + 0.05, d + (0.05 if d == by1 else 0.0), BFL + 1.09), DARK)
+    nc.box((PART_X, -10.85, BFL + 0.79), (0.5, 0.5, 0.08), "M_RedFelt")                          # zabuton
+    aset.prop("SM_Int_TeaSet", (PART_X + 0.45, -10.45, BFL + 0.75), 10.0)
+    aset.prop("SM_Int_Kettle", (PART_X - 0.65, -11.05, BFL + 0.75), 0.0)
+    aset.prop("SM_Int_Register", (PART_X - 0.55, -10.35, BFL + 0.75), 0.0)
+    mb.box((PART_X, by1 - 0.05, BFL + 2.45), (0.04, 0.04, 0.5), DARK)
+    nc.box((PART_X, -10.7, BFL + 2.3), (0.04, 1.2, 0.32), WOOD)
+    for (dx, yaw) in ((-0.03, -90.0), (0.03, 90.0)):
+        aset.text("RECEPTION", (PART_X + dx, -10.7, BFL + 2.24), yaw, size=0.14, color=(0.2, 0.1, 0.05))
+    aset.text("Towel 100 DP - Coffee milk 120 DP", (PART_X - 0.62, -10.7, BFL + 1.12), -90.0, size=0.05,
+              color=(0.2, 0.1, 0.05))
+    aset.npc((PART_X, -10.8, BFL + 0.75), 0.0, "white", 0.0)
+
+    # ---------------- washing areas
+    for side in (-1, 1):
+        x0, y0, x1, y1 = rooms["men_wa" if side < 0 else "wom_wa"]
+        xs = (-13.6, -12.4, -11.2, -10.0)
+        a, b = sorted((mx(-14.2, side), mx(-9.6, side)))
+        mb.box_mm((a, y1 - 0.24, BFL + 0.55), (b, y1, BFL + 0.6), TILE)                         # ledge
+        for x in xs:
+            _wash_station(mb, nc, aset, mx(x, side), y1, rng)
+        xf = pxw if side < 0 else pxe
+        _mural(mb, nc, xf, (y0 + y1) / 2, -90.0 if side < 0 else 90.0)
+        for k in range(3):   # bucket pyramid by the glass door
+            bucket(mb, (mx(-10.2 + 0.36 * (k % 2) + (0.18 if k == 2 else 0.0), side), y0 + 0.35 + (0.0 if k < 2 else 0.0),
+                        BFL + (0.0 if k < 2 else 0.24)))
+        aset.prop("SM_Int_RubberDuck", (mx(-11.75, side), y1 - 0.12, BFL + 0.6), 160.0 if side < 0 else 200.0)
+        aset.prop("SM_Int_RubberDuck", (mx(-12.9, side), y1 - 1.3, BFL), 120.0)
+        aset.prop("SM_Int_WetFloor", (mx(-15.0, side), y0 + 0.45, BFL), 30.0 * side)
+        _washi_light(aset, nc, mx(-13.6, side), (y0 + y1) / 2)
+        _washi_light(aset, nc, mx(-10.9, side), (y0 + y1) / 2)
+        aset.emitter("steam", (mx(-12.0, side), (y0 + y1) / 2, BFL + 1.6), 0.35, rate=0.4)
+
+    # ---------------- preview cameras
+    K.camera(aset, "changing_men", (-11.0, -8.45, BFL + 1.7), (-15.2, -10.9, BFL + 0.7), 16.0)
+    K.camera(aset, "changing_women", (-7.8, -8.45, BFL + 1.7), (-3.6, -10.9, BFL + 0.7), 16.0)
+    K.camera(aset, "bandai", (-12.6, -8.6, BFL + 1.8), (-9.4, -10.8, BFL + 1.0), 18.0)
+    K.camera(aset, "wash_men", (-15.3, -7.7, BFL + 1.7), (-9.6, -5.6, BFL + 0.8), 16.0)
+    K.camera(aset, "wash_women", (-3.5, -7.7, BFL + 1.7), (-9.2, -5.9, BFL + 1.2), 16.0)
 
 
 def _beds_and_paths(mb, rng):
@@ -687,6 +950,7 @@ def build():
     _terrace(terrace, nc, rng)
     spout = _waterfall(terrace, nc, rng)
     lanterns = _bathhouse(house, nc, rng)
+    _bath_interior(aset, aset.mesh("Onsen_Interior"), aset.mesh("Onsen_Interior_NoCol"))
     _washplace(garden, rng)
     spots = _beds_and_paths(terrace, rng)
     _garden(garden, nc, rng)
