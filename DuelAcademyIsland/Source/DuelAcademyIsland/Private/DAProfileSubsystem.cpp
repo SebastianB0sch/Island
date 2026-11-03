@@ -3,6 +3,7 @@
 #include "DAProfileSubsystem.h"
 
 #include "DACalendarSubsystem.h"
+#include "DAJson.h"
 #include "DATitleSystem.h"
 #include "DASaveGame.h"
 #include "DuelAcademyIsland.h"
@@ -20,37 +21,6 @@ namespace
 
 	/** Keeps playtime safe for int64 text conversion and JSON serialization. */
 	constexpr double MaxPlaytimeSeconds = 1.0e15;
-
-	FString ProfileJsonKeyToString(const FJsonObject::FStringType& Key)
-	{
-		return FString(*Key);
-	}
-
-	double ProfileReadClampedDouble(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, double Default, double Min, double Max)
-	{
-		double Value = Default;
-		if (Object.IsValid() && Object->TryGetNumberField(Field, Value) && FMath::IsFinite(Value))
-		{
-			return FMath::Clamp(Value, Min, Max);
-		}
-		return Default;
-	}
-
-	void ProfileReadStringArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<FString>& OutValues)
-	{
-		OutValues.Reset();
-		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
-		if (Object.IsValid() && Object->TryGetArrayField(Field, Values) && Values)
-		{
-			for (const TSharedPtr<FJsonValue>& Value : *Values)
-			{
-				if (Value.IsValid() && Value->Type == EJson::String)
-				{
-					OutValues.Add(Value->AsString());
-				}
-			}
-		}
-	}
 }
 
 EDADorm DuelAcademyProfile::ParseDorm(const FString& Value, EDADorm Fallback)
@@ -171,7 +141,9 @@ void UDAProfileSubsystem::InitializeNewGame(const FString& InName)
 	{
 		if (UDACalendarSubsystem* Calendar = GameInstance->GetSubsystem<UDACalendarSubsystem>())
 		{
-			Calendar->ResetToDefaults();
+			// LoadCalendarData resets the date and re-applies calendar.json
+			// (period hours, exam rule); ResetToDefaults alone would drop them.
+			Calendar->LoadCalendarData();
 		}
 	}
 
@@ -460,11 +432,6 @@ int32 UDAProfileSubsystem::IncrementCounter(const FString& Counter, int32 Amount
 		TNumericLimits<int32>::Max());
 	Counters.Add(Key, static_cast<int32>(NewValue));
 	return static_cast<int32>(NewValue);
-}
-
-void UDAProfileSubsystem::ApplyCounterDelta(const FString& Counter, int32 Delta)
-{
-	IncrementCounter(Counter, Delta);
 }
 
 // ------------------------------------------------------------------------ dorm / title
@@ -803,11 +770,11 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 	Source->TryGetStringField(TEXT("gender"), Gender);
 	Source->TryGetStringField(TEXT("title"), Title);
 	Source->TryGetStringField(TEXT("temporary_title"), TemporaryTitle);
-	TemporaryTitleDaysRemaining = static_cast<int32>(ProfileReadClampedDouble(
+	TemporaryTitleDaysRemaining = static_cast<int32>(DAJson::ReadClampedDouble(
 		Source, TEXT("temporary_title_days"), 0.0, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
-	DP = static_cast<int32>(ProfileReadClampedDouble(
+	DP = static_cast<int32>(DAJson::ReadClampedDouble(
 		Source, TEXT("dp"), 3000.0, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
-	PlaytimeSeconds = ProfileReadClampedDouble(
+	PlaytimeSeconds = DAJson::ReadClampedDouble(
 		Source, TEXT("playtime_seconds"), 0.0, 0.0, MaxPlaytimeSeconds);
 
 	FString DormKey;
@@ -843,7 +810,7 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 		{
 			if (Pair.Value.IsValid() && Pair.Value->Type == EJson::Boolean && Pair.Value->AsBool())
 			{
-				Flags.Add(ProfileJsonKeyToString(Pair.Key), true);
+				Flags.Add(DAJson::KeyToString(Pair.Key), true);
 			}
 		}
 	}
@@ -863,7 +830,7 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 				}
 				const int32 Value = static_cast<int32>(FMath::Clamp(
 					RawValue, 0.0, static_cast<double>(TNumericLimits<int32>::Max())));
-				Counters.Add(ProfileJsonKeyToString(Pair.Key), Value);
+				Counters.Add(DAJson::KeyToString(Pair.Key), Value);
 			}
 		}
 	}
@@ -885,9 +852,9 @@ bool UDAProfileSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FStr
 			}
 			FDAEmailState State;
 			ContactObject->TryGetBoolField(TEXT("unlocked"), State.bUnlocked);
-			ProfileReadStringArray(ContactObject, TEXT("read"), State.ReadIds);
-			ProfileReadStringArray(ContactObject, TEXT("requests"), State.PendingDuelRequests);
-			Emails.Add(ProfileJsonKeyToString(Pair.Key), MoveTemp(State));
+			State.ReadIds = DAJson::ReadStringArrayStrict(ContactObject, TEXT("read"));
+			State.PendingDuelRequests = DAJson::ReadStringArrayStrict(ContactObject, TEXT("requests"));
+			Emails.Add(DAJson::KeyToString(Pair.Key), MoveTemp(State));
 		}
 	}
 

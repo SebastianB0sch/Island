@@ -347,7 +347,6 @@ public:
 private:
 	bool TickPlaytime(float DeltaSeconds);
 	void RequestProgressionAutosave(const FString& Reason);
-	void ApplyCounterDelta(const FString& Counter, int32 Delta);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy|Profile", meta = (AllowPrivateAccess = "true"))
 	FString PlayerName;

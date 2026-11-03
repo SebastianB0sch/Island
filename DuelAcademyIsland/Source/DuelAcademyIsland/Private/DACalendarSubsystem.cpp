@@ -2,17 +2,12 @@
 
 #include "DACalendarSubsystem.h"
 
+#include "DAJson.h"
 #include "DAProfileSubsystem.h"
 #include "DuelAcademyIsland.h"
 
-#include "Dom/JsonObject.h"
-#include "Dom/JsonValue.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
-#include "Misc/FileHelper.h"
-#include "Misc/Paths.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
 
 namespace
 {
@@ -33,10 +28,6 @@ namespace
 	const TCHAR* const WeekdayNames[7] = {
 		TEXT("Sunday"), TEXT("Monday"), TEXT("Tuesday"), TEXT("Wednesday"),
 		TEXT("Thursday"), TEXT("Friday"), TEXT("Saturday")
-	};
-
-	const TCHAR* const WeekdayShortNames[7] = {
-		TEXT("Sun"), TEXT("Mon"), TEXT("Tue"), TEXT("Wed"), TEXT("Thu"), TEXT("Fri"), TEXT("Sat")
 	};
 
 	FString PeriodKey(EDADayPeriod Period)
@@ -108,17 +99,6 @@ namespace
 		return Fallback;
 	}
 
-	int32 CalendarReadClampedInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default, int32 Min, int32 Max)
-	{
-		double Value = Default;
-		if (Object.IsValid() && Object->TryGetNumberField(Field, Value) && FMath::IsFinite(Value))
-		{
-			return static_cast<int32>(FMath::Clamp(
-				Value, static_cast<double>(Min), static_cast<double>(Max)));
-		}
-		return Default;
-	}
-
 	int32 CountLeapYearsUpTo(int32 InYear)
 	{
 		if (InYear <= 0)
@@ -134,8 +114,7 @@ namespace
 void UDACalendarSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	ResetToDefaults();
-	LoadCalendarData();
+	LoadCalendarData(); // Resets to defaults first, then applies calendar.json.
 }
 
 void UDACalendarSubsystem::Deinitialize()
@@ -183,28 +162,21 @@ bool UDACalendarSubsystem::LoadCalendarData()
 {
 	ResetToDefaults();
 
-	const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Profile/calendar.json"));
-	FString Raw;
-	if (!FFileHelper::LoadFileToString(Raw, *Path))
-	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Calendar data not found at %s; using defaults."), *Path);
-		return false;
-	}
-
+	const FString Path = DAJson::ContentDataPath(TEXT("Profile/calendar.json"));
 	TSharedPtr<FJsonObject> Root;
-	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
-	if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
+	FString LoadError;
+	if (!DAJson::LoadObjectFile(Path, Root, LoadError))
 	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Calendar data at %s could not be parsed; using defaults."), *Path);
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Calendar data unavailable (%s); using defaults."), *LoadError);
 		return false;
 	}
 
 	const TSharedPtr<FJsonObject>* Start = nullptr;
 	if (Root->TryGetObjectField(TEXT("start"), Start) && Start && Start->IsValid())
 	{
-		const int32 StartYear = CalendarReadClampedInt(*Start, TEXT("year"), 1, 1, MaxSupportedYear);
-		const int32 StartMonth = CalendarReadClampedInt(*Start, TEXT("month_index"), 0, 0, 11);
-		const int32 StartDay = CalendarReadClampedInt(*Start, TEXT("day"), 7, 1, 31);
+		const int32 StartYear = DAJson::ReadClampedInt(*Start, TEXT("year"), 1, 1, MaxSupportedYear);
+		const int32 StartMonth = DAJson::ReadClampedInt(*Start, TEXT("month_index"), 0, 0, 11);
+		const int32 StartDay = DAJson::ReadClampedInt(*Start, TEXT("day"), 7, 1, 31);
 		EDADayPeriod StartPeriod = EDADayPeriod::AM;
 		FString PeriodText;
 		if ((*Start)->TryGetStringField(TEXT("period"), PeriodText))
@@ -218,9 +190,9 @@ bool UDACalendarSubsystem::LoadCalendarData()
 	if (Root->TryGetObjectField(TEXT("period_hours"), PeriodHoursObject) && PeriodHoursObject && PeriodHoursObject->IsValid())
 	{
 		PeriodHours.SetNum(3);
-		PeriodHours[0] = CalendarReadClampedInt(*PeriodHoursObject, TEXT("AM"), 8, 0, 23);
-		PeriodHours[1] = CalendarReadClampedInt(*PeriodHoursObject, TEXT("PM"), 14, 0, 23);
-		PeriodHours[2] = CalendarReadClampedInt(*PeriodHoursObject, TEXT("Night"), 20, 0, 23);
+		PeriodHours[0] = DAJson::ReadClampedInt(*PeriodHoursObject, TEXT("AM"), 8, 0, 23);
+		PeriodHours[1] = DAJson::ReadClampedInt(*PeriodHoursObject, TEXT("PM"), 14, 0, 23);
+		PeriodHours[2] = DAJson::ReadClampedInt(*PeriodHoursObject, TEXT("Night"), 20, 0, 23);
 		Hour = GetPeriodStartHour(Period);
 	}
 
@@ -237,7 +209,7 @@ bool UDACalendarSubsystem::LoadCalendarData()
 		{
 			ExamWeekRule = StringToExamWeek(WeekText, EDAExamWeekRule::Last);
 		}
-		ExamPassMark = CalendarReadClampedInt(*Exam, TEXT("pass_mark"), 300, 0, TNumericLimits<int32>::Max());
+		ExamPassMark = DAJson::ReadClampedInt(*Exam, TEXT("pass_mark"), 300, 0, TNumericLimits<int32>::Max());
 	}
 
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded school calendar: year %d, month %s, day %d, exam weekday %s (%s)."),
@@ -581,14 +553,9 @@ int32 UDACalendarSubsystem::GetCalendarYearForMonth(int32 InYear, int32 InMonthI
 	return FMath::Clamp(InYear, 1, MaxSupportedYear) + (InMonthIndex >= 3 ? 1 : 0);
 }
 
-void UDACalendarSubsystem::ParseExamWeekday(const FString& Value)
+int32 UDACalendarSubsystem::MonthNumberToIndex(int32 MonthNumber)
 {
-	ExamWeekday = StringToWeekday(Value, EDADayOfWeek::Friday);
-}
-
-void UDACalendarSubsystem::ParseExamWeekRule(const FString& Value)
-{
-	ExamWeekRule = StringToExamWeek(Value, EDAExamWeekRule::Last);
+	return ((MonthNumber - 10) % 12 + 12) % 12;
 }
 
 FString UDACalendarSubsystem::PeriodToSaveKey(EDADayPeriod InPeriod)
@@ -642,7 +609,7 @@ bool UDACalendarSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FSt
 	int32 LoadedYear = 1;
 	int32 LoadedMonthIndex = 0;
 	int32 LoadedDay = 7;
-	LoadedYear = CalendarReadClampedInt(Source, TEXT("year"), 1, 1, MaxSupportedYear);
+	LoadedYear = DAJson::ReadClampedInt(Source, TEXT("year"), 1, 1, MaxSupportedYear);
 	double RawMonthIndex = 0.0;
 	if (Source->TryGetNumberField(TEXT("month_index"), RawMonthIndex) && FMath::IsFinite(RawMonthIndex))
 	{
@@ -650,10 +617,10 @@ bool UDACalendarSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FSt
 	}
 	else
 	{
-		const int32 MonthNumber = CalendarReadClampedInt(Source, TEXT("month"), 10, 1, 12);
-		LoadedMonthIndex = ((MonthNumber - 10) % 12 + 12) % 12;
+		const int32 MonthNumber = DAJson::ReadClampedInt(Source, TEXT("month"), 10, 1, 12);
+		LoadedMonthIndex = MonthNumberToIndex(MonthNumber);
 	}
-	LoadedDay = CalendarReadClampedInt(Source, TEXT("day"), 7, 1, 31);
+	LoadedDay = DAJson::ReadClampedInt(Source, TEXT("day"), 7, 1, 31);
 
 	EDADayPeriod LoadedPeriod = EDADayPeriod::AM;
 	FString PeriodText;

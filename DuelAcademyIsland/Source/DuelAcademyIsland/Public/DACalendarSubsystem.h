@@ -72,7 +72,11 @@ public:
 	/** Loads Content/Data/Profile/calendar.json, falling back to hardcoded defaults. */
 	bool LoadCalendarData();
 
-	/** Canonical new-game date and period. Does not notify listeners. */
+	/**
+	 * Canonical new-game date and period plus the hardcoded period-hour/exam
+	 * defaults. Broadcasts OnCalendarChanged and OnVisualHourChanged. Prefer
+	 * LoadCalendarData() for a new game so calendar.json overrides survive.
+	 */
 	void ResetToDefaults();
 
 	// ---------------------------------------------------------------- date
@@ -188,6 +192,16 @@ public:
 
 	static bool IsLeapYear(int32 InYear);
 
+	// ---------------------------------------------------------------- shared conversions
+	/** Calendar month number (October = 10, January = 1) -> MonthIndex 0..11. */
+	static int32 MonthNumberToIndex(int32 MonthNumber);
+
+	/** Stable save/data key: "AM", "PM", "Night". */
+	static FString PeriodToSaveKey(EDADayPeriod InPeriod);
+
+	/** Case-insensitive "AM"/"PM"/"Night"; anything else returns Fallback. */
+	static EDADayPeriod ParsePeriod(const FString& Value, EDADayPeriod Fallback = EDADayPeriod::AM);
+
 	// ---------------------------------------------------------------- persistence
 	void WriteSaveData(TSharedPtr<FJsonObject>& Root) const;
 	bool ReadSaveData(const TSharedPtr<FJsonObject>& Root, FString& OutError);
@@ -220,10 +234,6 @@ private:
 	void NotifyProfileDayChanged();
 	EDADayOfWeek ComputeWeekday(int32 InYear, int32 InMonthIndex, int32 InDay) const;
 	int32 GetCalendarYearForMonth(int32 InYear, int32 InMonthIndex) const;
-	void ParseExamWeekday(const FString& Value);
-	void ParseExamWeekRule(const FString& Value);
-	static FString PeriodToSaveKey(EDADayPeriod InPeriod);
-	static EDADayPeriod ParsePeriod(const FString& Value, EDADayPeriod Fallback);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy|Calendar", meta = (AllowPrivateAccess = "true"))
 	int32 Year = 1;

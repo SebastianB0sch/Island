@@ -5,95 +5,11 @@
 #include "DACardRecords.h"
 #include "DADuelEngine.h"
 
-#include "Dom/JsonObject.h"
+#include "DAJson.h"
 #include "HAL/FileManager.h"
-#include "Misc/FileHelper.h"
-#include "Misc/Paths.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
 
 namespace
 {
-	bool PuzzleReadJsonFile(const FString& Path, TSharedPtr<FJsonObject>& OutObject, FString& OutError)
-	{
-		FString Raw;
-		if (!FFileHelper::LoadFileToString(Raw, *Path))
-		{
-			OutError = FString::Printf(TEXT("Could not read puzzle file '%s'."), *Path);
-			return false;
-		}
-		TSharedPtr<FJsonValue> Root;
-		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
-		if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
-		{
-			OutError = FString::Printf(TEXT("Puzzle JSON parse failed: '%s'."), *Path);
-			return false;
-		}
-		OutObject = Root->AsObject();
-		if (!OutObject.IsValid())
-		{
-			OutError = FString::Printf(TEXT("Puzzle JSON root is not an object: '%s'."), *Path);
-			return false;
-		}
-		return true;
-	}
-
-	FString PuzzleReadString(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
-	{
-		FString Value;
-		if (Object.IsValid())
-		{
-			Object->TryGetStringField(Field, Value);
-		}
-		return Value;
-	}
-
-	int32 PuzzleReadInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default = 0)
-	{
-		int32 Value = Default;
-		if (Object.IsValid())
-		{
-			Object->TryGetNumberField(Field, Value);
-		}
-		return Value;
-	}
-
-	bool PuzzleReadBool(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, bool bDefault = false)
-	{
-		bool bValue = bDefault;
-		if (Object.IsValid())
-		{
-			Object->TryGetBoolField(Field, bValue);
-		}
-		return bValue;
-	}
-
-	TSharedPtr<FJsonObject> PuzzleReadObject(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field)
-	{
-		const TSharedPtr<FJsonObject>* Found = nullptr;
-		if (Object.IsValid() && Object->TryGetObjectField(Field, Found) && Found && Found->IsValid())
-		{
-			return *Found;
-		}
-		return nullptr;
-	}
-
-	void PuzzleReadIntArray(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, TArray<int32>& Out)
-	{
-		const TArray<TSharedPtr<FJsonValue>>* Values = nullptr;
-		if (!Object.IsValid() || !Object->TryGetArrayField(Field, Values))
-		{
-			return;
-		}
-		for (const TSharedPtr<FJsonValue>& Value : *Values)
-		{
-			if (Value.IsValid())
-			{
-				Out.Add(static_cast<int32>(Value->AsNumber()));
-			}
-		}
-	}
-
 	bool PuzzleReadSide(const TSharedPtr<FJsonObject>& Side, const TCHAR* Label,
 		int32& OutLp, TArray<int32>& OutHand, TArray<int32>& OutDeck, TArray<int32>& OutGraveyard,
 		TArray<int32>& OutExtra, TArray<FDuelScenarioCard>& OutField, FString& OutError)
@@ -103,16 +19,16 @@ namespace
 			OutError = FString::Printf(TEXT("%s state is missing."), Label);
 			return false;
 		}
-		OutLp = PuzzleReadInt(Side, TEXT("lp"));
+		OutLp = DAJson::ReadInt(Side, TEXT("lp"));
 		if (OutLp <= 0)
 		{
 			OutError = FString::Printf(TEXT("%s.lp must be positive."), Label);
 			return false;
 		}
-		PuzzleReadIntArray(Side, TEXT("hand"), OutHand);
-		PuzzleReadIntArray(Side, TEXT("deck"), OutDeck);
-		PuzzleReadIntArray(Side, TEXT("graveyard"), OutGraveyard);
-		PuzzleReadIntArray(Side, TEXT("extra"), OutExtra);
+		DAJson::AppendIntArray(Side, TEXT("hand"), OutHand);
+		DAJson::AppendIntArray(Side, TEXT("deck"), OutDeck);
+		DAJson::AppendIntArray(Side, TEXT("graveyard"), OutGraveyard);
+		DAJson::AppendIntArray(Side, TEXT("extra"), OutExtra);
 
 		const TArray<TSharedPtr<FJsonValue>>* FieldValues = nullptr;
 		if (Side->TryGetArrayField(TEXT("field"), FieldValues))
@@ -127,12 +43,12 @@ namespace
 					return false;
 				}
 				FDuelScenarioCard Card;
-				Card.CardId = PuzzleReadInt(Entry, TEXT("card_id"));
+				Card.CardId = DAJson::ReadInt(Entry, TEXT("card_id"));
 				Card.Zone = EDuelZone::Monster;
 				Card.ZoneIndex = ZoneIndex++;
-				const FString Position = PuzzleReadString(Entry, TEXT("position")).ToLower();
+				const FString Position = DAJson::ReadString(Entry, TEXT("position")).ToLower();
 				Card.bDefense = Position == TEXT("defense");
-				Card.bFaceDown = !PuzzleReadBool(Entry, TEXT("face_up"), true);
+				Card.bFaceDown = !DAJson::ReadBool(Entry, TEXT("face_up"), true);
 				if (Card.CardId <= 0 || Card.ZoneIndex >= 5 || (!Position.IsEmpty() && Position != TEXT("attack") && Position != TEXT("defense")))
 				{
 					OutError = FString::Printf(TEXT("%s.field entry is invalid (card %d, position '%s')."),
@@ -140,11 +56,6 @@ namespace
 					return false;
 				}
 				OutField.Add(Card);
-			}
-			if (ZoneIndex > 5)
-			{
-				OutError = FString::Printf(TEXT("%s.field has more than five monsters."), Label);
-				return false;
 			}
 		}
 
@@ -161,21 +72,16 @@ namespace
 					return false;
 				}
 				FDuelScenarioCard Card;
-				Card.CardId = PuzzleReadInt(Entry, TEXT("card_id"));
+				Card.CardId = DAJson::ReadInt(Entry, TEXT("card_id"));
 				Card.Zone = EDuelZone::SpellTrap;
 				Card.ZoneIndex = ZoneIndex++;
-				Card.bFaceDown = !PuzzleReadBool(Entry, TEXT("face_up"), false);
+				Card.bFaceDown = !DAJson::ReadBool(Entry, TEXT("face_up"), false);
 				if (Card.CardId <= 0 || Card.ZoneIndex >= 5)
 				{
 					OutError = FString::Printf(TEXT("%s.spell_traps entry is invalid (card %d)."), Label, Card.CardId);
 					return false;
 				}
 				OutField.Add(Card);
-			}
-			if (ZoneIndex > 5)
-			{
-				OutError = FString::Printf(TEXT("%s.spell_traps has more than five cards."), Label);
-				return false;
 			}
 		}
 		return true;
@@ -198,11 +104,11 @@ namespace
 				return false;
 			}
 			FDAPuzzleSolutionStep Step;
-			Step.Action = PuzzleReadString(StepObject, TEXT("action"));
-			Step.CardId = PuzzleReadInt(StepObject, TEXT("card_id"));
-			Step.AttackerCardId = PuzzleReadInt(StepObject, TEXT("attacker_card_id"));
-			Step.Position = PuzzleReadString(StepObject, TEXT("position")).ToLower();
-			PuzzleReadIntArray(StepObject, TEXT("tribute_card_ids"), Step.TributeCardIds);
+			Step.Action = DAJson::ReadString(StepObject, TEXT("action"));
+			Step.CardId = DAJson::ReadInt(StepObject, TEXT("card_id"));
+			Step.AttackerCardId = DAJson::ReadInt(StepObject, TEXT("attacker_card_id"));
+			Step.Position = DAJson::ReadString(StepObject, TEXT("position")).ToLower();
+			DAJson::AppendIntArray(StepObject, TEXT("tribute_card_ids"), Step.TributeCardIds);
 			if (Step.Action.IsEmpty())
 			{
 				OutError = TEXT("solution step has no action.");
@@ -230,7 +136,7 @@ namespace
 			}
 			else
 			{
-				Step.TargetCardId = PuzzleReadInt(StepObject, TEXT("target"));
+				Step.TargetCardId = DAJson::ReadInt(StepObject, TEXT("target"));
 			}
 			OutSolution.Add(MoveTemp(Step));
 		}
@@ -465,25 +371,25 @@ bool FDAPuzzleRuntime::LoadPuzzleFile(const FString& Path, FDAPuzzleDefinition& 
 {
 	OutError.Reset();
 	TSharedPtr<FJsonObject> Root;
-	if (!PuzzleReadJsonFile(Path, Root, OutError))
+	if (!DAJson::LoadObjectFile(Path, Root, OutError))
 	{
 		return false;
 	}
 
 	FDAPuzzleDefinition Puzzle;
-	Puzzle.Id = PuzzleReadString(Root, TEXT("id"));
-	Puzzle.Title = PuzzleReadString(Root, TEXT("title"));
-	Puzzle.Objective = PuzzleReadString(Root, TEXT("objective"));
-	Puzzle.Opponent = PuzzleReadString(Root, TEXT("opponent"));
-	Puzzle.Template = PuzzleReadString(Root, TEXT("template"));
-	Puzzle.Level = PuzzleReadInt(Root, TEXT("level"));
-	Puzzle.Seed = PuzzleReadInt(Root, TEXT("seed"));
-	Puzzle.TurnLimit = PuzzleReadInt(Root, TEXT("turn_limit"));
-	Puzzle.TimeLimitSeconds = PuzzleReadInt(Root, TEXT("time_limit"));
-	Puzzle.bEngineReady = PuzzleReadBool(Root, TEXT("engine_ready"), false);
-	if (const TSharedPtr<FJsonObject> Reward = PuzzleReadObject(Root, TEXT("reward")))
+	Puzzle.Id = DAJson::ReadString(Root, TEXT("id"));
+	Puzzle.Title = DAJson::ReadString(Root, TEXT("title"));
+	Puzzle.Objective = DAJson::ReadString(Root, TEXT("objective"));
+	Puzzle.Opponent = DAJson::ReadString(Root, TEXT("opponent"));
+	Puzzle.Template = DAJson::ReadString(Root, TEXT("template"));
+	Puzzle.Level = DAJson::ReadInt(Root, TEXT("level"));
+	Puzzle.Seed = DAJson::ReadInt(Root, TEXT("seed"));
+	Puzzle.TurnLimit = DAJson::ReadInt(Root, TEXT("turn_limit"));
+	Puzzle.TimeLimitSeconds = DAJson::ReadInt(Root, TEXT("time_limit"));
+	Puzzle.bEngineReady = DAJson::ReadBool(Root, TEXT("engine_ready"), false);
+	if (const TSharedPtr<FJsonObject> Reward = DAJson::ReadObject(Root, TEXT("reward")))
 	{
-		Puzzle.RewardDp = PuzzleReadInt(Reward, TEXT("dp"));
+		Puzzle.RewardDp = DAJson::ReadInt(Reward, TEXT("dp"));
 	}
 
 	if (Puzzle.Id.IsEmpty())
@@ -502,13 +408,13 @@ bool FDAPuzzleRuntime::LoadPuzzleFile(const FString& Path, FDAPuzzleDefinition& 
 		return false;
 	}
 
-	if (!PuzzleReadSide(PuzzleReadObject(Root, TEXT("player")), TEXT("player"), Puzzle.PlayerLp,
+	if (!PuzzleReadSide(DAJson::ReadObject(Root, TEXT("player")), TEXT("player"), Puzzle.PlayerLp,
 			Puzzle.PlayerHand, Puzzle.PlayerDeck, Puzzle.PlayerGraveyard, Puzzle.PlayerExtra,
 			Puzzle.PlayerField, OutError))
 	{
 		return false;
 	}
-	if (!PuzzleReadSide(PuzzleReadObject(Root, TEXT("opponent_state")), TEXT("opponent_state"), Puzzle.OpponentLp,
+	if (!PuzzleReadSide(DAJson::ReadObject(Root, TEXT("opponent_state")), TEXT("opponent_state"), Puzzle.OpponentLp,
 			Puzzle.OpponentHand, Puzzle.OpponentDeck, Puzzle.OpponentGraveyard, Puzzle.OpponentExtra,
 			Puzzle.OpponentField, OutError))
 	{

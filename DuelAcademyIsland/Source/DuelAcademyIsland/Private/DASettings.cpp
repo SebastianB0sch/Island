@@ -2,24 +2,14 @@
 
 #include "DASettings.h"
 
+#include "DAJson.h"
 #include "DASaveGame.h"
 #include "DuelAcademyIsland.h"
 
-#include "Dom/JsonObject.h"
-#include "Dom/JsonValue.h"
 #include "Engine/GameInstance.h"
-#include "Misc/FileHelper.h"
-#include "Misc/Paths.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
 
 namespace
 {
-	FString SettingsJsonKeyToString(const FJsonObject::FStringType& Key)
-	{
-		return FString(*Key);
-	}
-
 	FString AnimationSpeedToString(EDAAnimationSpeed Speed)
 	{
 		switch (Speed)
@@ -82,16 +72,6 @@ namespace
 		}
 		return Fallback;
 	}
-
-	float SettingsReadFloat(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, float Default)
-	{
-		double Value = Default;
-		if (Object.IsValid() && Object->TryGetNumberField(Field, Value) && FMath::IsFinite(Value))
-		{
-			return static_cast<float>(Value);
-		}
-		return Default;
-	}
 }
 
 void UDASettings::Initialize(FSubsystemCollectionBase& Collection)
@@ -136,25 +116,23 @@ bool UDASettings::LoadDefaults()
 {
 	ResetToDefaults();
 
-	const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Profile/settings.json"));
-	FString Raw;
-	if (!FFileHelper::LoadFileToString(Raw, *Path))
-	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Settings data not found at %s; using defaults."), *Path);
-		return false;
-	}
-
+	const FString Path = DAJson::ContentDataPath(TEXT("Profile/settings.json"));
 	TSharedPtr<FJsonObject> Root;
-	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
-	if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
+	FString LoadError;
+	if (!DAJson::LoadObjectFile(Path, Root, LoadError))
 	{
-		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Settings data at %s could not be parsed; using defaults."), *Path);
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Settings data unavailable (%s); using defaults."), *LoadError);
 		return false;
 	}
 
 	FString Error;
 	const bool bResult = ReadJson(Root, Error);
-	if (!bResult)
+	if (bResult)
+	{
+		// settings.json controls are the defaults ResetControl restores.
+		DefaultControls = Controls;
+	}
+	else
 	{
 		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Settings data at %s was invalid: %s"), *Path, *Error);
 	}
@@ -373,8 +351,8 @@ bool UDASettings::ReadJson(const TSharedPtr<FJsonObject>& Root, FString& OutErro
 		TextSpeed = StringToTextSpeed(TextSpeedText, TextSpeed);
 	}
 
-	BgmVolume = FMath::Clamp(SettingsReadFloat(Root, TEXT("bgm_volume"), BgmVolume), 0.0f, 1.0f);
-	SfxVolume = FMath::Clamp(SettingsReadFloat(Root, TEXT("sfx_volume"), SfxVolume), 0.0f, 1.0f);
+	BgmVolume = FMath::Clamp(static_cast<float>(DAJson::ReadFiniteDouble(Root, TEXT("bgm_volume"), BgmVolume)), 0.0f, 1.0f);
+	SfxVolume = FMath::Clamp(static_cast<float>(DAJson::ReadFiniteDouble(Root, TEXT("sfx_volume"), SfxVolume)), 0.0f, 1.0f);
 	Root->TryGetBoolField(TEXT("subtitles"), bSubtitles);
 
 	FString Language;
@@ -393,7 +371,7 @@ bool UDASettings::ReadJson(const TSharedPtr<FJsonObject>& Root, FString& OutErro
 				const FString KeyText = Pair.Value->AsString().TrimStartAndEnd();
 				if (!KeyText.IsEmpty())
 				{
-					Controls.Add(SettingsJsonKeyToString(Pair.Key), KeyText);
+					Controls.Add(DAJson::KeyToString(Pair.Key), KeyText);
 				}
 			}
 		}

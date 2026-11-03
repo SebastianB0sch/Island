@@ -26,6 +26,15 @@ namespace
 		C.A = A;
 		return C;
 	}
+
+	/** Set once a month's exam outcome is applied (or waived); blocks retakes. */
+	FString ExamTakenFlag(int32 MonthIndex)
+	{
+		return FString::Printf(TEXT("exam_taken_m%d"), MonthIndex);
+	}
+
+	/** Written by the story's exam_exemption outcome; scoring.json names the same flag. */
+	const TCHAR* const ExamExemptFlag = TEXT("exam_exempt_next");
 }
 
 FDAExamUI::FDAExamUI(ADAHUD* InOwner)
@@ -72,8 +81,34 @@ void FDAExamUI::Open(int32 InMonthIndex, int32 Seed)
 	const EDAExamPhase Phase = Exam->GetPhase();
 	if (Phase == EDAExamPhase::None || Phase == EDAExamPhase::Finished)
 	{
+		UGameInstance* GameInstance = GetGameInstance();
+		UDAProfileSubsystem* Profile = GameInstance ? GameInstance->GetSubsystem<UDAProfileSubsystem>() : nullptr;
+		if (Profile && Profile->GetFlag(ExamTakenFlag(MonthIndex)))
+		{
+			// One attempt per month. Re-opening right after finishing shows the
+			// result card; otherwise explain why no new exam starts.
+			if (Phase == EDAExamPhase::Finished && Exam->HasResult() && Exam->GetMonthIndex() == MonthIndex)
+			{
+				SyncPanelFromPhase();
+				PlaySfx(TEXT("A_UIClick"), 0.45f);
+				return;
+			}
+			Panel = EPanel::Error;
+			SetStatus(FString::Printf(TEXT("You have already taken the %s exam."), *GetMonthLabel()), true);
+			return;
+		}
+		if (Profile && Profile->GetFlag(ExamExemptFlag))
+		{
+			// Story exemption (scoring.json "exemptions"): waives exactly one exam.
+			Profile->ClearFlag(ExamExemptFlag);
+			Profile->SetFlag(ExamTakenFlag(MonthIndex), true);
+			Panel = EPanel::Error;
+			SetStatus(FString::Printf(TEXT("You are exempt from the %s exam."), *GetMonthLabel()), false);
+			return;
+		}
+
 		FString Error;
-		if (!Exam->StartExam(MonthIndex, Seed != 0 ? Seed : FMath::Rand(), Error))
+		if (!Exam->StartExam(MonthIndex, Seed != 0 ? Seed : FMath::RandHelper(MAX_int32), Error))
 		{
 			Panel = EPanel::Error;
 			SetStatus(Error.IsEmpty() ? TEXT("Could not start the exam.") : Error, true);
@@ -294,15 +329,19 @@ void FDAExamUI::FinishPracticalAndResult()
 		if (Profile)
 		{
 			Profile->IncrementCounter(TEXT("written_correct"), FMath::Max(0, Result.WrittenCorrect));
-			Profile->IncrementCounter(TEXT("written_total"), 10);
+			Profile->IncrementCounter(TEXT("written_total"), Exam->GetQuestionCount());
+			Profile->SetFlag(ExamTakenFlag(Result.MonthIndex), true);
 			if (Result.DPReward > 0)
 			{
 				Profile->AwardDP(Result.DPReward);
 			}
 			if (Titles)
 			{
-				const bool bPromotionEligible = Result.TotalPoints >= 450;
-				Titles->ApplyExamOutcome(Profile, Result.TotalPoints, Exam->GetPassMark(), bPromotionEligible);
+				// Use the cycle pass mark that decided Result.bPassed, and let the
+				// title system's data-driven promotion_score gate promotion.
+				const FDAExamOutcome Outcome = Titles->ApplyExamOutcome(Profile, Result.TotalPoints, Result.PassMark, true);
+				Result.DormOutcome = Outcome.bPromoted ? TEXT("promoted")
+					: (Outcome.bDemoted ? TEXT("demoted") : (Result.bPassed ? TEXT("retain") : TEXT("dropout")));
 			}
 		}
 	}
@@ -540,7 +579,9 @@ void FDAExamUI::HandleClickAtMouse()
 	{
 		if (HitTargets[Index].Contains(Mouse))
 		{
-			HandleHit(HitTargets[Index]);
+			// HandleHit can redraw/close and reset HitTargets; act on a copy.
+			const FDAUIHitTarget Hit = HitTargets[Index];
+			HandleHit(Hit);
 			return;
 		}
 	}

@@ -126,7 +126,6 @@ struct FDAStoryPendingDuel
 	bool bTutorial = false;
 	bool bOpened = false;
 	float Elapsed = 0.f;
-	int32 PreWinsJaden = 0;
 	int32 PreWinsSyrus = 0;
 	int32 PreWinsTotal = 0;
 	int32 PreDuels = 0;
@@ -339,7 +338,6 @@ private:
 	bool PumpQueue();
 	bool ExecuteCommand(const FDAStoryCommand& Command, bool& bOutBlocked);
 	void StartScene(const FString& SceneId, int32 StartIndex = 0);
-	int32 FindCommandIndexForKey(const FString& Key) const;
 	int32 FindCommandIndexForKey(const FString& SceneId, const FString& Key) const;
 	void FinishScene();
 	void FinishEvent(bool bComplete, bool bEnterFreeRoam);
@@ -351,6 +349,12 @@ private:
 	void ApplyRewardCommand(const FDAStoryCommand& Command);
 	void ApplySetFlag(const FString& Flag, bool bValue);
 	void ApplyDeckGrant(const FString& DeckId);
+	/** Shared by grant_card outcomes and card rewards: card_id|card, count. */
+	void GrantStoryCard(const TSharedPtr<FJsonObject>& Source);
+	/** Shared by grant_pack outcomes, pack rewards and reward commands. */
+	void QueuePackGrant(const FString& PackId, int32 Count);
+	/** Shared by set_title outcomes and title rewards; clears the dropout flags. */
+	void ApplyStoryTitle(const FString& Title);
 	bool EnsureStarterDeck(const FString& PreferredDeck = TEXT("fire"));
 
 	bool EvaluateConditions(const TArray<TSharedPtr<FJsonObject>>& Conditions) const;
@@ -363,7 +367,6 @@ private:
 	FString GetPlayerNameSpelled() const;
 	void BuildDialogueLine(const FDAStoryLine& Line, bool bChoice, FDADialogueLine& OutLine) const;
 
-	void RequestContinue();
 	void ResolvePendingDuel(bool bWon, bool bDraw);
 	void SimulateDuelResult(bool bWon, bool bDraw);
 	void CapturePendingDuel(const FDAStoryCommand& Command);
