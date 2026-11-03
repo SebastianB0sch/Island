@@ -2664,7 +2664,7 @@ def _annex_interior(C):
     K.pendant(C.a, 12.0, 69.0, EB_TOP, "chandelier")
     C.light(12.0, 64.5, EB_TOP - 0.5, 2500, 8)
     C.npc(16.6, 69.0, -90.0, "white", 0.5)
-    C.cam("annex_crowler", (4.9, 63.5, z + 1.8), (17.5, 72.5, z + 1.0), 17)
+    C.cam("annex_crowler", (5.0, 66.4, z + 1.8), (17.5, 70.5, z + 1.0), 17)
     # ---------------- faculty lounge
     C.floor(4.25, y0, 19.5, 62.6, "M_IntWoodFloor", planks=True)
     with C.zat(z):
