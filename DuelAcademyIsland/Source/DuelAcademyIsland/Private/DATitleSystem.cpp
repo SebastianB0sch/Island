@@ -190,7 +190,9 @@ void UDATitleSystem::UseDefaultDefinitions()
 	KingOfGames.MinTimedClears = 80;
 	KingOfGames.MinWrittenCorrect = 180;
 	KingOfGames.MinCardsOwned = 1000;
-	KingOfGames.MinStoryEvents = 33;
+	// Events every campaign completes (E27/E29/E30 and the optional E18/E31/E32
+	// are situational); the E33 king_of_games flag is the real gate.
+	KingOfGames.MinStoryEvents = 29;
 	KingOfGames.bRequiresExamPassed = true;
 	KingOfGames.bRequiresKingOfGames = true;
 	Defaults.Add(KingOfGames);

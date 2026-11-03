@@ -139,7 +139,7 @@
       "min_timed_clears": 80,
       "min_written_correct": 180,
       "min_cards_owned": 1000,
-      "min_story_events": 33,
+      "min_story_events": 29,
       "requires_exam_passed": true,
       "requires_king_of_games": true
     },
