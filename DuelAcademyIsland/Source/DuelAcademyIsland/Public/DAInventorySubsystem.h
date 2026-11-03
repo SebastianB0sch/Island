@@ -171,6 +171,8 @@ public:
 
 private:
 	void LoadOwnershipLimit();
+	/** Count capped at MaxOwnedCopies (unchanged when ownership is unlimited). */
+	int32 ClampToOwnershipLimit(int32 Count) const;
 	void LoadRarityMap();
 	void ScheduleSelfTest();
 	bool TickSelfTest(float DeltaSeconds);

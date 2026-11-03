@@ -508,6 +508,11 @@ TArray<int32> UDAInventorySubsystem::SortCards(const TArray<int32>& CardIds, EDA
 	return Result;
 }
 
+int32 UDAInventorySubsystem::ClampToOwnershipLimit(int32 Count) const
+{
+	return MaxOwnedCopies > 0 ? FMath::Min(Count, MaxOwnedCopies) : Count;
+}
+
 void UDAInventorySubsystem::SetMaxOwnedCopies(int32 NewMax)
 {
 	MaxOwnedCopies = FMath::Max(0, NewMax);
@@ -1011,7 +1016,7 @@ bool UDAInventorySubsystem::ApplyStateObject(const FJsonObject& Object, FString&
 		const int32 Count = Pair.Value.IsValid() ? static_cast<int32>(Pair.Value->AsNumber()) : 0;
 		if (CardId > 0 && Count > 0)
 		{
-			NewCounts.Add(CardId, Count);
+			NewCounts.Add(CardId, ClampToOwnershipLimit(Count));
 		}
 	}
 
@@ -1037,12 +1042,10 @@ bool UDAInventorySubsystem::ApplyStateObject(const FJsonObject& Object, FString&
 		}
 	}
 
-	int32 NewMax = MaxOwnedCopies;
-	Object.TryGetNumberField(TEXT("max_owned_copies"), NewMax);
-
+	// "max_owned_copies" in the payload is informational only: the ownership
+	// rule comes from Data/Rules (LoadOwnershipLimit), never from a save.
 	Counts = MoveTemp(NewCounts);
 	PendingAnte = MoveTemp(NewAnte);
-	MaxOwnedCopies = FMath::Max(0, NewMax);
 	OnInventoryReset.Broadcast();
 	OnAnteChanged.Broadcast(PendingAnte.Num());
 	return true;
@@ -1071,7 +1074,7 @@ bool UDAInventorySubsystem::ApplySaveData(const FDAEInventorySaveData& Data, FSt
 	{
 		if (Pair.Key > 0 && Pair.Value > 0)
 		{
-			NewCounts.Add(Pair.Key, Pair.Value);
+			NewCounts.Add(Pair.Key, ClampToOwnershipLimit(Pair.Value));
 		}
 	}
 	if (Data.Counts.Num() > 0 && NewCounts.Num() == 0)
@@ -1080,12 +1083,9 @@ bool UDAInventorySubsystem::ApplySaveData(const FDAEInventorySaveData& Data, FSt
 		return false;
 	}
 
+	// Data.MaxOwnedCopies is informational only (see ApplyStateObject).
 	Counts = MoveTemp(NewCounts);
 	PendingAnte = Data.PendingAnte;
-	if (Data.MaxOwnedCopies > 0)
-	{
-		MaxOwnedCopies = Data.MaxOwnedCopies;
-	}
 	OnInventoryReset.Broadcast();
 	OnAnteChanged.Broadcast(PendingAnte.Num());
 	return true;
