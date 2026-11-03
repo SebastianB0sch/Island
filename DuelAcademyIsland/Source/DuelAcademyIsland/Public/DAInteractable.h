@@ -68,7 +68,7 @@ public:
 	virtual void Interact(ADAStudentCharacter* By) override;
 
 private:
-	void OpenBoosterPack(ADAStudentCharacter* By);
+	void OpenCardShop(ADAStudentCharacter* By);
 	void StartDuel(ADAStudentCharacter* By);
 
 	UPROPERTY(VisibleAnywhere, Category = "Duel Academy")
@@ -83,5 +83,4 @@ private:
 #endif
 
 	float MarkerTime = 0.f;
-	int32 PacksOpened = 0;
 };

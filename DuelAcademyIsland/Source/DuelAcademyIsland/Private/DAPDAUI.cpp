@@ -390,7 +390,7 @@ void FDAPDAUI::BuildPlaceholderViewModel()
 	}
 	else
 	{
-		ViewModel.Profile.Cards = Student ? Student->GetCollectionSize() : 0;
+		ViewModel.Profile.Cards = 0;
 		if (Student)
 		{
 			ViewModel.Profile.DormName = DuelAcademy::DormName(Student->GetDorm());
