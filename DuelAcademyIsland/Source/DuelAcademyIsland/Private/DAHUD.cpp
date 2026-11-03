@@ -1871,8 +1871,7 @@ void ADAHUD::DrawMinimap(UDAIslandSubsystem* Sub)
 	Text(Zone ? Zone->DisplayName : FString(TEXT("Duel Academy Island")), X0 + Size * 0.5f, Y0 + Size + 8.f * S(), HudPaper, 0.9f, true);
 	const int32 Total = Sub->GetZones().Num();
 	FString Progress = FString::Printf(TEXT("Explored %d / %d"), Sub->NumDiscovered(), Total);
-	// The trunk lives in UDAInventorySubsystem; ADAStudentCharacter's legacy
-	// CardCollection only tracks the old free E-key booster.
+	// The trunk lives in UDAInventorySubsystem.
 	if (const UDAInventorySubsystem* Inventory = GetGameInstance() ? GetGameInstance()->GetSubsystem<UDAInventorySubsystem>() : nullptr)
 	{
 		Progress += FString::Printf(TEXT("    Cards %d"), Inventory->GetDistinctCardsOwned());
