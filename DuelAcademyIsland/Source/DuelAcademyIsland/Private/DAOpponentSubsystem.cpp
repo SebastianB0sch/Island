@@ -4,6 +4,7 @@
 
 #include "DACardRecords.h"
 #include "DAJson.h"
+#include "DAProfileSubsystem.h"
 #include "DuelAcademyIsland.h"
 #include "Engine/GameInstance.h"
 #include "HAL/FileManager.h"
@@ -589,16 +590,27 @@ FDAOpponentDuelOutcome UDAOpponentSubsystem::RecordDuelResult(const FString& Opp
 	Outcome.Wins = GetWins(OpponentId);
 	Outcome.Losses = GetLosses(OpponentId);
 
+	// Same rule evaluation as ResolveDeckFor (which honours each rule's
+	// "counter"): the default wins_<id> counter is this subsystem's own tally,
+	// any other counter is read from the profile when one is available.
 	const FDAOpponentDef* Opponent = FindOpponent(OpponentId);
-	int32 BestWins = -1;
+	const FString DefaultCounter = FString::Printf(TEXT("wins_%s"), *OpponentId);
+	const UGameInstance* GameInstance = GetGameInstance();
+	const UDAProfileSubsystem* Profile = GameInstance ? GameInstance->GetSubsystem<UDAProfileSubsystem>() : nullptr;
+	TMap<FString, int32> Counters;
+	Counters.Add(DefaultCounter, Outcome.Wins);
 	for (const FDAOpponentEvolutionRule& Rule : Opponent->EvolutionRules)
 	{
-		if (Outcome.Wins >= Rule.AfterWins && Rule.AfterWins >= BestWins && FindDeck(Rule.Deck))
+		if (!Rule.Counter.IsEmpty() && Rule.Counter != DefaultCounter && !Counters.Contains(Rule.Counter))
 		{
-			BestWins = Rule.AfterWins;
-			Outcome.EvolutionDeckId = Rule.Deck;
-			Outcome.bEvolutionUnlocked = true;
+			Counters.Add(Rule.Counter, Profile ? Profile->GetCounter(Rule.Counter) : 0);
 		}
+	}
+	const FString Evolved = ResolveDeckFor(OpponentId, Counters);
+	if (!Evolved.IsEmpty() && Evolved != Opponent->DefaultDeck)
+	{
+		Outcome.EvolutionDeckId = Evolved;
+		Outcome.bEvolutionUnlocked = true;
 	}
 	return Outcome;
 }
@@ -672,6 +684,16 @@ bool UDAOpponentSubsystem::CanRequestDuel(const FString& OpponentId, int32 DayIn
 		OutReason = FString::Printf(TEXT("Requires %d total wins."), Opponent->DuelRequest.MinWins);
 		return false;
 	}
+	if (const int32* LastDay = RuntimeState.LastRequestDay.Find(OpponentId))
+	{
+		const int32 Cooldown = FMath::Max(0, Opponent->DuelRequest.CooldownDays);
+		// Same-day repeats are governed by max_per_day below.
+		if (DayIndex > *LastDay && DayIndex - *LastDay < Cooldown)
+		{
+			OutReason = FString::Printf(TEXT("This opponent can be challenged again in %d day(s)."), Cooldown - (DayIndex - *LastDay));
+			return false;
+		}
+	}
 	if (RuntimeState.RequestDay == DayIndex)
 	{
 		const int32* Count = RuntimeState.RequestsToday.Find(OpponentId);
@@ -695,6 +717,7 @@ bool UDAOpponentSubsystem::ConsumeDuelRequest(const FString& OpponentId, int32 D
 		return false;
 	}
 	RuntimeState.RequestsToday.FindOrAdd(OpponentId)++;
+	RuntimeState.LastRequestDay.Add(OpponentId, DayIndex);
 	return true;
 }
 

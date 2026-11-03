@@ -69,6 +69,12 @@ bool FDAOpponentRosterTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Jaden duel request available"), Opponents->CanRequestDuel(TEXT("jaden"), 10, 0, Reason));
 	TestTrue(TEXT("Consume Jaden duel request"), Opponents->ConsumeDuelRequest(TEXT("jaden"), 10, 0, Reason));
 	TestFalse(TEXT("Only one Jaden request per day"), Opponents->CanRequestDuel(TEXT("jaden"), 10, 0, Reason));
+	TestTrue(TEXT("Jaden (1-day cooldown) available next day"), Opponents->CanRequestDuel(TEXT("jaden"), 11, 0, Reason));
+
+	// Zane: cooldown_days 2, min_wins 10.
+	TestTrue(TEXT("Consume Zane duel request"), Opponents->ConsumeDuelRequest(TEXT("zane"), 20, 10, Reason));
+	TestFalse(TEXT("Zane cooldown blocks the next day"), Opponents->CanRequestDuel(TEXT("zane"), 21, 10, Reason));
+	TestTrue(TEXT("Zane available after the cooldown"), Opponents->CanRequestDuel(TEXT("zane"), 22, 10, Reason));
 
 	// Syrus evolves after three wins.
 	FDAOpponentDuelOutcome Outcome;
