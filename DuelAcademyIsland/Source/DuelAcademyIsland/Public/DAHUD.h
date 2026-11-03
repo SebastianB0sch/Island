@@ -20,6 +20,9 @@ class UFont;
 class UTexture2D;
 class ADAStudentCharacter;
 
+/** Modal layer kept open by ADAHUD::CloseOtherLayers (not reflected; kept out of the UCLASS body). */
+enum class EDALayer : uint8 { None, Shop, DeckEditor, Exam };
+
 UCLASS()
 class DUELACADEMYISLAND_API ADAHUD : public AHUD
 {
@@ -141,7 +144,6 @@ public:
 private:
 	// ---------------------------------------------------------------- UI hosting
 	/** Closes every modal layer except Keep (shop/deck/exam/map/PDA/dialogue/help). */
-	enum class EDALayer : uint8 { None, Shop, DeckEditor, Exam };
 	void CloseOtherLayers(EDALayer Keep);
 	void ApplySettingsToUI();
 	void WireEconomySystems();
