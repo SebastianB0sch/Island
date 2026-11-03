@@ -458,6 +458,17 @@ namespace
 		Report.CheckTrue(Inventory->ImportStateJson(InventoryJson, InventoryError), TEXT("inventory JSON imports"));
 		Report.CheckEqual(Inventory->GetCount(1), SavedCount, TEXT("inventory JSON round-trip preserves counts"));
 		Report.CheckEqual(Inventory->GetCollectionSize(), 5, TEXT("inventory JSON round-trip preserves total"));
+
+		// A save can never raise the data-driven ownership cap or hold more copies.
+		Inventory->ResetCollection();
+		Inventory->SetMaxOwnedCopies(0);
+		Inventory->AddCard(1, 10);
+		const FString OverCapJson = Inventory->ExportStateJson();
+		Inventory->SetMaxOwnedCopies(3);
+		Inventory->ResetCollection();
+		Report.CheckTrue(Inventory->ImportStateJson(OverCapJson, InventoryError), TEXT("over-cap inventory JSON imports"));
+		Report.CheckEqual(Inventory->GetCount(1), 3, TEXT("imported counts are clamped to the ownership cap"));
+		Report.CheckEqual(Inventory->GetMaxOwnedCopies(), 3, TEXT("saved max_owned_copies does not override the rule"));
 	}
 
 	void TestPacks(FTestReport& Report, UDAInventorySubsystem* Inventory, UDAShopSubsystem* Shop, UCardDatabaseSubsystem* Database)
