@@ -1291,10 +1291,9 @@ bool UDASaveSubsystem::ApplyPayloadInPlace(const TSharedPtr<FJsonObject>& Root, 
 		const TSharedPtr<FJsonObject>* Section = nullptr;
 		if (!Root->TryGetObjectField(SectionName, Section) || !Section || !Section->IsValid())
 		{
-			// Sections may be absent in older saves. An empty object is not
-			// passed because the inventory and deck providers reject it; each
-			// provider decides instead (story resets, economy keeps its state).
-			Provider->OnSaveSectionMissing();
+			// Sections may be absent in older saves; providers decide whether to
+			// retain or reset their runtime state.
+			Provider->ResetSaveSectionState();
 			continue;
 		}
 		if (!Provider->ReadSaveSection(*Section, OutError))

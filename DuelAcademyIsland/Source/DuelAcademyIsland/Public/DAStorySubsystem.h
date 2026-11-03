@@ -353,7 +353,7 @@ public:
 	virtual bool WriteSaveSection(TSharedPtr<FJsonObject>& OutSection) const override;
 	virtual bool ValidateSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) const override;
 	virtual bool ReadSaveSection(const TSharedPtr<FJsonObject>& InSection, FString& OutError) override;
-	virtual void OnSaveSectionMissing() override { ResetRuntimeState(); }
+	virtual void ResetSaveSectionState() override { ResetRuntimeState(); }
 
 private:
 	bool Tick(float DeltaSeconds);
