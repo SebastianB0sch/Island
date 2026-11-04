@@ -103,7 +103,21 @@ class Layout:
         blend.export_fbx([obj], path)
         blend.delete([obj])
         self.manifest.append(dict(file=rel.replace(os.sep, "/"), name=f"SM_{name}", folder=folder.replace(os.sep, "/"),
-                                  collision=collision, nanite=False, category="location"))
+                                  collision=collision, nanite=self.nanite_ok(mb), category="location"))
+
+    NANITE_MIN_TRIS = 40000
+    # Nanite can't draw these (translucent / special shading); a mesh using any of them stays a classic mesh
+    NANITE_BLOCKERS = {"glass", "water", "smoke", "beam", "hologram", "waterfall", "lava"}
+
+    def nanite_ok(self, mb):
+        """Dense, opaque location meshes (furnished interiors run to several 100k triangles) go on Nanite:
+        Unreal then streams and culls them per cluster, so the detail costs little. Meshes with translucent
+        materials (window glass, water ...) stay classic meshes."""
+        tris = sum(len(f) - 2 for f in mb.faces)
+        if tris < self.NANITE_MIN_TRIS:
+            return False
+        kinds = {palette.MATERIALS.get(m, {}).get("kind", "opaque") for m in set(mb.face_mats)}
+        return not (kinds & self.NANITE_BLOCKERS)
 
     # ------------------------------------------------------------------ locations
     def place_locations(self, export=True):

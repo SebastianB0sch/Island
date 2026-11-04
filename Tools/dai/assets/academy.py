@@ -1084,7 +1084,7 @@ def glass_screen(mb, aset, pos, yaw, W, H, dw, dh, style, frame="M_AcademyBlue",
 
 def _lobby_shell(mb, aset):
     split = 9.0                       # wall built in two layers so windows can stack
-    win = dict(glass="M_Glass", frame="M_WindowFrame")
+    win = dict(glass="M_GlassClear", frame="M_WindowFrame")     # real windows: the hall is walk-in
     low = {0: [dict(u=LX, w=10.0, z0=0.0, z1=split)], 1: [], 2: [dict(u=LX, w=12.0, z0=0.0, z1=split)], 3: []}
     up = {0: [], 1: [], 2: [], 3: []}
     for x in (11.0, 19.0, 26.8):
@@ -1258,6 +1258,27 @@ def _pyramid(mb):
     mb.pyramid((cx, cy, top + H - cap_h + 0.1), cap_w, cap_w, cap_h + 0.25, "M_Gold")
 
 
+def _open_soffit(mb, n0, eave, xa, y0, xb, y1):
+    """Replace the flat underside of a hip roof (faces from index n0) by a soffit ring under the overhang, so the
+    roof space above the top storey's ceiling is not closed off below the eave."""
+    keep, zs = [], None
+    for i in range(n0, len(mb.faces)):
+        zz = [mb.verts[k].z for k in mb.faces[i]]
+        if max(zz) - min(zz) < 1e-3 and max(zz) < eave:
+            zs = zz[0]
+            continue
+        keep.append(i)
+    idx = list(range(n0)) + keep
+    mb.faces = [mb.faces[i] for i in idx]
+    mb.face_mats = [mb.face_mats[i] for i in idx]
+    mb.face_smooth = [mb.face_smooth[i] for i in idx]
+    if zs is not None:
+        o = 1.0
+        for (a, b, c, d) in ((xa - o, y0 - o, xb + o, y0), (xa - o, y1, xb + o, y1 + o), (xa - o, y0, xa, y1),
+                             (xb, y0, xb + o, y1)):
+            mb.box_mm((a, b, zs), (c, d, zs + 0.01), "M_AcademyRoof")
+
+
 def _wing_facade_common(mb, xa, xb, y0, y1, eave, roof_h, ridge_axis="x", hollow=None):
     if hollow:      # (z0, z1): a walk-in storey; its walls are built separately
         mb.box_mm((xa, y0, -4.0), (xb, y1, hollow[0]), "M_AcademyWall", mats={"+z": K.MARBLEFLOOR})
@@ -1277,8 +1298,11 @@ def _wing_facade_common(mb, xa, xb, y0, y1, eave, roof_h, ridge_axis="x", hollow
         r = max(0.0, (w - d) / 2)
         mb.beam((cx - r, cy, eave + roof_h), (cx + r, cy, eave + roof_h), 0.4, 0.4, "M_Gold")
     else:
+        n0 = len(mb.faces)
         with mb.at((cx, cy, eave), rot=90):
             mb.hip_roof((0, 0, 0), d, w, roof_h, "M_AcademyRoof", overhang=1.0)
+        if hollow and hollow[1] > eave - 1.5:
+            _open_soffit(mb, n0, eave, xa, y0, xb, y1)
             r = max(0.0, (d - w) / 2)
             mb.beam((-r, 0, roof_h), (r, 0, roof_h), 0.4, 0.4, "M_Gold")
 
@@ -1313,15 +1337,15 @@ def _wings(mb, nocol, aset):
                 (pa, pb) = ((s * ax, ay), (s * bx, by)) if s > 0 else ((s * bx, by), (s * ax, ay))
                 mb.quad((*pa, za), (*pb, za), (*pb, zb), (*pa, zb), "M_AcademyWall")
         _wing_shell(mb, nocol, aset, s)
-        bx0, bx1 = sorted((s * 34.7, s * xo))
-        side_out = "e" if s > 0 else "w"
+        bx0, bx1 = sorted((s * 34.7, s * 88.0))
+        side_out = ""
         rect_band(mb, bx0, y0, bx1, y1, -4.0, FLOOR, 0.25, "M_AcademyStone", sides="sn" + side_out)
         for z in (6.4, 10.9, 15.4):
             rect_band(mb, bx0, y0, bx1, y1, z, z + 0.2, 0.16, "M_AcademyBlue", sides="sn" + side_out)
         rect_band(mb, bx0, y0, bx1, y1, eave - 1.4, eave - 1.15, 0.3, "M_Gold", sides="sn" + side_out)
         rect_band(mb, bx0, y0, bx1, y1, eave - 1.15, eave, 0.7, "M_AcademyBlue", sides="sn" + side_out)
         # hip roof starts just inside the drum wall (overhang 1 m)
-        ra, rb = sorted((s * 37.2, s * xo))
+        ra, rb = sorted((s * 37.2, s * 87.0))
         cx, w = (ra + rb) / 2, rb - ra
         mb.hip_roof((cx, (y0 + y1) / 2, eave), w, y1 - y0, rh, "M_AcademyRoof", overhang=1.0)
         r = (w - (y1 - y0)) / 2
@@ -3655,11 +3679,13 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
         C.prop("SM_Int_Vitrine", xa + 1.1, y1 - 0.36, z, 0.0)
         C.dt("coat_hooks", x1 if dw < 0 else x0, y1 - 1.6, z + 1.75, WALL_YAW[wall_far], 4, "white", 3, seed)
     elif kind == "club":
-        for k in range(2):
-            dining(C, cx, y0 + 2.6 + k * 3.2 if d > 7 else cy, 0.0, chairs=6, length=1.4, z=z, seed=seed + k)
-            if k == 1:
-                C.dt("card_spread", cx - 0.4, y0 + 5.8, z + 0.744, 0.0, 5, seed)
-                C.dt("deck_box", cx + 0.5, y0 + 5.8, z + 0.744, 20.0, "M_IntFabricRed")
+        nr, nc_ = max(1, int((d - 3.4) / 3.2)), max(1, int((xb - xa) / 3.6))
+        for k in range(nr):
+            for i in range(nc_):
+                tx, ty = xa + (xb - xa) * (i + 0.5) / nc_, y0 + 2.4 + k * 3.2
+                dining(C, tx, ty, 0.0, chairs=6, length=1.4, z=z, seed=seed + k)
+                C.dt("card_spread", tx - 0.4, ty, z + 0.744, 0.0, 5, seed + k + i)
+                C.dt("deck_box", tx + 0.5, ty, z + 0.744, 20.0, ("M_IntFabricRed", "M_IntFabricBlue")[(k + i) % 2])
         C.prop("SM_Int_SofaB", cx, y1 - 0.5, z, 180.0)
         C.prop("SM_Int_CoffeeTableB", cx, y1 - 1.5, z, 0.0)
         for k in range(2):
@@ -3667,9 +3693,10 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
         C.poster(cx, y0, z + 1.6, 180.0, 1.4, 0.9, K.POSTERS[seed % 4], name, size=0.08)
         C.clutter(x0, y0, x1, y1, "dorm", 4, seed, clear=[(cx - 2.0, y0, cx + 2.0, y1)], z=z)
     elif kind == "art":
-        for j in range(2):
-            for i in range(3):
-                ex, ey = xa + 0.8 + i * (xb - xa - 1.6) / 2, y0 + 2.4 + j * 2.8
+        ni_ = max(3, int((xb - xa - 0.6) / 1.8))
+        for j in range(max(2, int((d - 4.0) / 2.6))):
+            for i in range(ni_):
+                ex, ey = xa + 0.8 + i * (xb - xa - 1.6) / (ni_ - 1), y0 + 2.4 + j * 2.6
                 with C.at(ex, ey, z, rnd.uniform(-20, 20)):
                     C.nc.beam((-0.3, 0.15, 0.0), (0.0, 0.0, 1.7), 0.03, 0.03, "M_IntWood")
                     C.nc.beam((0.3, 0.15, 0.0), (0.0, 0.0, 1.7), 0.03, 0.03, "M_IntWood")
@@ -3682,6 +3709,8 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
         for k in range(2):
             C.prop("SM_Int_Shelves", xb - 0.5 - k * 0.6, y0 + 0.2, z, 180.0)
         C.prop("SM_Int_PlanterBox", cx + 2.0, y1 - 0.25, z, 0.0)
+        for k in range(int((xb - xa) / 2.0)):
+            C.prop("SM_Int_Frame", xa + 1.0 + k * 2.0, y0 + 0.02, z + 1.7, 180.0)
     elif kind == "staff":
         for k in range(max(2, int((d - 3.0) / 2.2))):
             for (xd, yaw) in ((cx - 0.48, -90.0), (cx + 0.48, 90.0)):
@@ -3694,11 +3723,11 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
         C.poster(cx, y1, z + 1.6, 0.0, 1.6, 0.8, K.POSTERS[seed % 4], name, size=0.07)
         C.prop("SM_Int_PottedPlantB", xb - 0.4, y1 - 0.45, z, 0.0)
     elif kind == "library":
-        nj, ni = min(4, max(2, int((d - 4.0) / 1.6))), min(6, int((xb - xa) / 1.4))
+        nj, ni = min(6, max(2, int((d - 4.0) / 1.6))), min(8, int((xb - xa) / 1.4))
         for j in range(nj):
             for i in range(ni):
                 shelf_prop(C, "SM_Int_Bookshelf", xa + 0.7 + i * 1.4, y0 + 1.6 + j * 1.6, 180.0 if j % 2 else 0.0,
-                           seed * 10 + j * 3 + i, z=z, fill=0.35)
+                           seed * 10 + j * 3 + i, z=z, fill=0.25 if nj * ni > 24 else 0.35)
         for k in range(max(0, int((d - 4.0 - nj * 1.6) / 2.6))):
             dining(C, cx, y0 + 2.2 + nj * 1.6 + k * 2.6, 0.0, chairs=6, length=1.6, z=z)
         dining(C, cx, y1 - 1.5, 0.0, chairs=6, length=1.6, z=z)
