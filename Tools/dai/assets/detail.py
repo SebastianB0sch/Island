@@ -264,7 +264,7 @@ def dress_room(aset, mb, nc, x0, y0, x1, y1, z, z_ceil, style="dorm", seed=0, sk
         ex = dx if on in "sn" else (x0 if on == "w" else x1)
         ey = dy if on in "ew" else (y0 if on == "s" else y1)
         exit_sign(nc, aset, ex, ey, min(z_ceil - 0.15, z + 2.45), yaw)
-    if st.get("calendar"):
+    if st.get("calendar") and any(n not in skip_walls for n in walls):
         names = [n for n in walls if n not in skip_walls]
         n = rnd.choice(names)
         a, b, yaw = walls[n]
