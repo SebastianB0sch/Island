@@ -97,7 +97,15 @@ Egyptian-god theming), not a copy of any copyrighted asset. All card names in th
 
 ![Anime cast](Docs/renders/cast.jpg)
 
-*Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy and Dr. Crowler (Cycles preview).*
+*Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy and Dr. Crowler (Cycles preview), at their heights, cel shaded, in draped uniforms).*
+
+![Cast portraits](Docs/renders/cast_portraits.jpg)
+
+*Cel-shaded close-ups: smoothed anime face normals, coloured shadows, rim light, hair highlight arcs.*
+
+![Talk take](Docs/renders/cast_talk.jpg)
+
+*The Talk take over the contrapposto idle.*
 
 Everyone on the island is an **anime character model**: the VRoid sample avatars (VRoid Project / pixiv,
 whose terms allow modification and redistribution) restyled by the pipeline after the characters' official
