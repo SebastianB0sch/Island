@@ -1076,6 +1076,68 @@ def _hull_mat(zc):
     return HULL
 
 
+PORT_Z, PORT_R = 1.3, 0.22
+PORTHOLES = [-30.0 + 2.4 * k for k in range(20)]          # x of every porthole (both sides)
+LD_Z, LD_C = 0.2, 2.9                                     # lower (cabin) deck floor / ceiling, ship-local
+LD_X0, LD_X1 = -31.2, 16.8
+LD_HOLE = (-7.15, -1.0, -3.4, 1.0)                        # stairwell saloon -> cabin deck (x0, y0, x1, y1)
+
+
+def _hull_hw(x, z):
+    """Hull half width at ship-local x (not station xn) and height z."""
+    xb = 35.0 - (F_DECK - z) * 0.45
+    xs = -35.0 + max(0.0, -z) * 0.55
+    xn = (x - xs) / (xb - xs) * 70.0 - 35.0
+    return _f_plan(xn) * _f_factor(z)
+
+
+def _ld_lining(x):
+    """Inner lining of the cabin deck (0.25 m inside the hull at its narrowest height)."""
+    return min(_hull_hw(x, LD_Z), _hull_hw(x + 1.2, LD_Z), _hull_hw(x - 1.2, LD_Z)) - 0.25
+
+
+def _holed_quad(mb, a, b, c, d, m, holes, v0, v1, flip=False):
+    """Quad a-b-c-d (u along a->b, v along a->d) minus rectangular holes [(u0, u1)] spanning v0..v1."""
+    if not holes:
+        if flip:
+            mb.quad(a, d, c, b, m, smooth=True)
+        else:
+            mb.quad(a, b, c, d, m, smooth=True)
+        return
+
+    def P(u, v):
+        return tuple((1 - u) * (1 - v) * a[k] + u * (1 - v) * b[k] + u * v * c[k] + (1 - u) * v * d[k] for k in range(3))
+
+    def rect(u0, u1, w0, w1):
+        if u1 - u0 < 1e-4 or w1 - w0 < 1e-4:
+            return
+        A, B, C, D = P(u0, w0), P(u1, w0), P(u1, w1), P(u0, w1)
+        if flip:
+            mb.quad(A, D, C, B, m, smooth=True)
+        else:
+            mb.quad(A, B, C, D, m, smooth=True)
+    rect(0.0, 1.0, 0.0, v0)
+    rect(0.0, 1.0, v1, 1.0)
+    u = 0.0
+    for h0, h1 in sorted(holes):
+        rect(u, h0, v0, v1)
+        u = h1
+    rect(u, 1.0, v0, v1)
+
+
+def _deck_around_hole(mb, xa, xb, hw, z, mat):
+    """Main-deck quad xa..xb (half width hw, height z) with the LD_HOLE stairwell left open."""
+    hx0, hy0, hx1, hy1 = LD_HOLE
+    pieces = [(xa, -hw, xb, hy0), (xa, hy1, xb, hw)]
+    if xa < hx0:
+        pieces.append((xa, hy0, min(xb, hx0), hy1))
+    if xb > hx1:
+        pieces.append((max(xa, hx1), hy0, xb, hy1))
+    for x0, y0, x1, y1 in pieces:
+        if x1 - x0 > 1e-4:
+            mb.quad((x0, y0, z), (x1, y0, z), (x1, y1, z), (x0, y1, z), mat)
+
+
 def _ferry(mb, aset):
     nl, ns = len(_F_LEVELS), len(_F_XN)
 
@@ -1088,19 +1150,30 @@ def _ferry(mb, aset):
         return (x, s * _f_plan(xn) * f, z)
 
     # ---------------------------------------------------------------- hull shell
+    jp = [k for k, (zz, f) in enumerate(_F_LEVELS) if zz == 0.9][0]          # band holding the portholes
+    pv0, pv1 = (PORT_Z - PORT_R - 0.9) / 0.95, (PORT_Z + PORT_R - 0.9) / 0.95
     for i in range(ns - 1):
         for j in range(nl - 1):
             for s in (-1, 1):
                 a, b, c, d = V(i, j, s), V(i + 1, j, s), V(i + 1, j + 1, s), V(i, j + 1, s)
                 m = _hull_mat((a[2] + c[2]) / 2)
-                if s < 0:
-                    mb.quad(a, b, c, d, m, smooth=True)
-                else:
-                    mb.quad(a, d, c, b, m, smooth=True)
+                holes = []
+                if j == jp:            # real porthole openings: cut square holes (the brass rings cover the corners)
+                    vm = (pv0 + pv1) / 2
+                    xl, xr = a[0] + vm * (d[0] - a[0]), b[0] + vm * (c[0] - b[0])
+                    for xp in PORTHOLES:
+                        u0, u1 = (xp - PORT_R - xl) / (xr - xl), (xp + PORT_R - xl) / (xr - xl)
+                        if u1 > 0.0 and u0 < 1.0:
+                            holes.append((max(u0, 0.0), min(u1, 1.0)))
+                _holed_quad(mb, a, b, c, d, m, holes, pv0, pv1, flip=s > 0)
         # keel
         mb.quad(V(i, 0, -1), V(i, 0, 1), V(i + 1, 0, 1), V(i + 1, 0, -1), BOTTOM)
-        # main deck
-        mb.quad(V(i, nl - 1, -1), V(i + 1, nl - 1, -1), V(i + 1, nl - 1, 1), V(i, nl - 1, 1), DECK)
+        # main deck (stairwell down to the cabin deck cut out)
+        qa, qb = V(i, nl - 1, -1), V(i + 1, nl - 1, 1)
+        if qb[0] <= LD_HOLE[0] or qa[0] >= LD_HOLE[2]:
+            mb.quad(V(i, nl - 1, -1), V(i + 1, nl - 1, -1), V(i + 1, nl - 1, 1), V(i, nl - 1, 1), DECK)
+        else:
+            _deck_around_hole(mb, qa[0], qb[0], qb[1], qa[2], DECK)
     for j in range(nl - 1):
         a, b, c, d = V(0, j, -1), V(0, j + 1, -1), V(0, j + 1, 1), V(0, j, 1)
         mb.quad(a, b, c, d, _hull_mat((a[2] + b[2]) / 2))                       # transom
@@ -1132,14 +1205,19 @@ def _ferry(mb, aset):
         pts = [a, b, (b[0], b[1], b[2] + bh), (a[0], a[1], a[2] + bh)]
         mb.poly(pts if s < 0 else list(reversed(pts)), HULL)
 
-    # portholes along the hull (above the blue stripes)
+    # portholes along the hull (above the blue stripes): real openings, clear glass, brass rings, reveal tubes
     for s in (-1, 1):
-        x = -30.0
-        while x <= 16.0:
-            hw = _f_plan(x) * _f_factor(1.3)
-            with mb.at((x, s * hw, 1.3), rot_x=90):
-                mb.cylinder((0, 0, -0.06), 0.22, 0.12, GLASS, seg=10, smooth=False)
-            x += 2.4
+        for x in PORTHOLES:
+            hw = _hull_hw(x, PORT_Z)
+            yl = _ld_lining(x)
+            L = hw - yl
+            with mb.at((x, s * hw, PORT_Z), rot_x=90):
+                k = 1 if s > 0 else -1                              # local z towards the inside (rot_x 90: +z -> -y)
+                mb.cylinder((0, 0, -0.01 if k > 0 else -L + 0.01), PORT_R, L, "M_IntMetal", seg=12, smooth=False,
+                            cap_top=False, cap_bottom=False)
+                mb.cylinder((0, 0, k * 0.08 - 0.005), PORT_R + 0.01, 0.01, "M_GlassClear", seg=12, smooth=False)
+                mb.torus((0, 0, -k * 0.02), PORT_R + 0.06, 0.055, TRIM, seg=14, tube_seg=4)
+                mb.torus((0, 0, k * (L + 0.01)), PORT_R + 0.06, 0.05, "M_IntTrimGold", seg=14, tube_seg=4)
     # anchors / hawse plates at the bow
     for s in (-1, 1):
         xa = 30.0
@@ -1171,7 +1249,7 @@ def _ferry(mb, aset):
         mb.box_mm((xd0, ya, 6.1), (xd1, yb, 6.2), TRIM)
         ya, yb = sorted((s * 5.67, s * 5.73))
         mb.box_mm((xd0 - 1.2, ya, F_DECK + 0.02), (xd0 - 0.12, yb, 6.08), STRIPE)
-        mb.box((xd0 - 0.66, s * 5.74, 5.5), (0.4, 0.02, 0.4), GLASS)
+        mb.box((xd0 - 0.66, s * 5.74, 5.5), (0.4, 0.02, 0.4), "M_GlassClear")
         mb.box((xd0 - 1.25, s * 5.68, 5.0), (0.1, 0.08, 0.05), DMETAL)                  # hook
     ops[10] = [K.Door(5.6, 1.9, 2.1, None, z0=0.05, trim_in=K.TRIM_WOOD)]
     _ship_walls(mb, d1, 3.95, 3.05, ops, K.PLASTER_CREAM)
@@ -1222,7 +1300,7 @@ def _ferry(mb, aset):
     mb.box_mm((3.94, 0.5, 10.3), (4.0, 0.6, 12.5), TRIM)
     mb.box_mm((3.94, -0.5, 12.4), (4.0, 0.5, 12.5), TRIM)
     mb.box_mm((3.87, -1.68, 10.32), (3.93, -0.62, 12.38), STRIPE)
-    mb.box((3.86, -1.15, 11.75), (0.02, 0.35, 0.35), GLASS)
+    mb.box((3.86, -1.15, 11.75), (0.02, 0.35, 0.35), "M_GlassClear")
     _ferry_interior(mb, aset, d1, d2, br)
 
     # funnel (blue, gold band, black top), raked aft
@@ -1412,6 +1490,229 @@ def _ship_fixtures(mb, aset, W, x0, x1, hw, z, zc, exits=(), outlets=True, seed=
         aset.text("EXIT", W(p[0], p[1], p[2]), yaw, size=0.07, color=(1, 1, 1))
 
 
+def _ferry_lower_deck(mb, aset, W, lights):
+    """Cabin deck inside the hull (floor 0.2, ceiling 2.9, behind the portholes): a stair lobby under the saloon's
+    cross aisle, side corridors along the engine casing, and 18 four-berth cabins (two portholes each). All of it
+    is modelled into the floating ferry mesh."""
+    z0, zc = LD_Z, LD_C
+    h = zc - z0
+    hx0, hy0, hx1, hy1 = LD_HOLE
+    bounds = [LD_X0 + 2.4 * k for k in range(21)]                          # -31.2 .. 16.8 (between portholes)
+    # floor / ceiling strips following the lining, hull lining with porthole openings, end bulkheads
+    for xa, xb in zip(bounds, bounds[1:]):
+        ya, yb = _ld_lining(xa), _ld_lining(xb)
+        pieces = [(-1, 1)] if (xb <= hx0 or xa >= hx1) else [(-1, None), (None, 1)]
+        for zz, mat, up in ((z0, "M_IntLinoleum", True), (zc, K.CEIL, False)):
+            def q(x0, x1, y0a, y0b, y1a, y1b):
+                pts = [(x0, y0a, zz), (x1, y0b, zz), (x1, y1b, zz), (x0, y1a, zz)]
+                mb.poly(pts if up else pts[::-1], mat)
+            if xb <= hx0 or xa >= hx1 or zz == z0:
+                q(xa, xb, -ya, -yb, ya, yb)
+            else:
+                q(xa, xb, -ya, -yb, hy0, hy0)
+                q(xa, xb, hy1, hy1, ya, yb)
+                if xa < hx0:
+                    q(xa, hx0, hy0, hy0, hy1, hy1)
+                if xb > hx1:
+                    q(hx1, xb, hy0, hy0, hy1, hy1)
+        xp = (xa + xb) / 2
+        v0, v1 = (PORT_Z - PORT_R - z0) / h, (PORT_Z + PORT_R - z0) / h
+        u0, u1 = 0.5 - PORT_R / (xb - xa), 0.5 + PORT_R / (xb - xa)
+        for sgn in (-1, 1):
+            a, b = (xa, sgn * ya, z0), (xb, sgn * yb, z0)
+            c, d = (xb, sgn * yb, zc), (xa, sgn * ya, zc)
+            _holed_quad(mb, a, b, c, d, K.PLASTER_CREAM, [(u0, u1)], v0, v1, flip=sgn < 0)
+            mb.box((xp, sgn * (ya - 0.12), z0 + 0.06), (xb - xa, 0.03, 0.12), K.TRIM_WOOD)          # skirting
+    for xe, sgn in ((LD_X0, 1), (LD_X1, -1)):
+        ye = _ld_lining(xe)
+        pts = [(xe, -ye, z0), (xe, ye, z0), (xe, ye, zc), (xe, -ye, zc)]
+        mb.poly(pts if sgn > 0 else pts[::-1], K.PLASTER_CREAM)
+    # stair shaft between the cabin-deck ceiling and the saloon floor + the switchback stair
+    for (p0, p1) in (((hx0, hy0), (hx1, hy0)), ((hx1, hy0), (hx1, hy1)), ((hx1, hy1), (hx0, hy1)), ((hx0, hy1), (hx0, hy0))):
+        pts = [(p0[0], p0[1], zc), (p1[0], p1[1], zc), (p1[0], p1[1], F_DECK - 0.01), (p0[0], p0[1], F_DECK - 0.01)]
+        mb.poly(pts[::-1], K.PLASTER_CREAM)
+    zm = z0 + 11 * (F_DECK - z0) / 21
+    mb.box_mm((hx0, hy0, zm - 0.12), (hx0 + 0.95, hy1, zm), "M_IntWoodDark", mats={"+z": "M_IntLinoleum"})
+    K.stairs(mb, hx1 + 0.28, -0.5, z0, zm, 180.0, 0.95, mat="M_IntWood", riser="M_IntWoodDark", rail=K.TRIM_WOOD,
+             rail_sides=(1, -1))
+    K.stairs(mb, hx0 + 0.95, 0.5, zm, F_DECK, 0.0, 0.95, mat="M_IntWood", riser="M_IntWoodDark", rail=K.TRIM_WOOD,
+             rail_sides=(1, -1))
+    for yy in (hy0 + 0.03, hy1 - 0.03):
+        K.railing(mb, [(hx0 + 0.02, yy), (hx0 + 0.95, yy)], zm, h=1.0, mat=K.TRIM_WOOD)
+    K.railing(mb, [(hx1, -0.02), (hx1, hy0), (hx0, hy0), (hx0, hy1), (hx1, hy1)], F_DECK, h=1.0, mat=K.TRIM_WOOD)
+    # walls: engine casing (|y| < 2.3) with the lobby cut out, corridor walls (|y| = 3.5) with cabin doorways,
+    # partitions every two portholes
+    lob0, lob1 = -7.2, -2.4
+    kw = dict(trim_in=K.TRIM_WOOD, trim=K.TRIM_WOOD)
+    for sgn in (-1, 1):
+        for xa, xb in ((LD_X0, lob0), (lob1, LD_X1)):
+            p0, p1 = ((xa, sgn * 2.3), (xb, sgn * 2.3)) if sgn > 0 else ((xb, sgn * 2.3), (xa, sgn * 2.3))
+            K.wall(None, mb, p0, p1, z0, h, 0.1, K.PLASTER_CREAM, inner=K.PLASTER_CREAM, **kw)
+            cab = [(c0, c0 + 4.8) for c0 in bounds[::2][:-1] if xa <= c0 < xb]
+            ops = [K.Door((c0 + 2.4 - xa) if sgn < 0 else (xb - c0 - 2.4), 0.9, 2.05, None) for c0, c1 in cab]
+            p0, p1 = ((xb, sgn * 3.5), (xa, sgn * 3.5)) if sgn > 0 else ((xa, sgn * 3.5), (xb, sgn * 3.5))
+            K.wall(None, mb, p0, p1, z0, h, 0.1, K.PLASTER_CREAM, inner=K.PLASTER_CREAM, openings=ops, **kw)
+        for xe in (lob0, lob1):
+            K.wall(None, mb, (xe, -2.3), (xe, 2.3), z0, h, 0.1, K.PLASTER_CREAM, inner=K.PLASTER_CREAM)
+            K.wall(None, mb, (xe, 2.3), (xe, -2.3), z0, h, 0.1, K.PLASTER_CREAM, inner=K.PLASTER_CREAM)
+        for xb_ in bounds[::2]:
+            if xb_ in (LD_X0, LD_X1):
+                continue
+            yl = _ld_lining(xb_)
+            K.wall(None, mb, (xb_, sgn * 3.55), (xb_, sgn * (yl - 0.01)), z0, h, 0.1, K.PLASTER_CREAM,
+                   inner=K.PLASTER_CREAM)
+    # cabins: two bunks, porthole table with stools, lockers, coat hooks with dorm jackets, luggage
+    rnd = random.Random(77)
+    dorms = ("slifer", "ra", "obelisk", "slifer", "ra")
+    blank = {"slifer": "M_IntFabricRed", "ra": "M_IntFabricYellow", "obelisk": "M_IntFabricBlue"}
+    num = 0
+    for sgn in (-1, 1):
+        for c0 in bounds[::2][:-1]:
+            if lob0 <= c0 < lob1:
+                continue
+            num += 1
+            c1 = c0 + 4.8
+            yl = _ld_lining(c0 + 2.4)
+            dorm = dorms[num % len(dorms)]
+            bc = blank[dorm]
+            with mb.at((0.0, 0.0, z0)):
+                yb = sgn * (yl - 1.05)
+                for xbk in (c0 + 0.5, c1 - 0.5):
+                    K.bunk_bed(mb, mb, xbk, yb, 90.0, levels=2, blankets=(bc, "M_IntFabricWhite"), length=2.0,
+                               width=0.85, ladder=False)
+                mb.box((c0 + 2.4, sgn * (yl - 0.3), 0.72), (0.9, 0.55, 0.04), "M_IntWood")
+                mb.box((c0 + 2.4, sgn * (yl - 0.1), 0.36), (0.08, 0.08, 0.72), "M_IntMetal")
+                for dx in (-0.5, 0.5):
+                    mb.cylinder((c0 + 2.4 + dx, sgn * (yl - 0.55), 0.0), 0.17, 0.45, "M_IntWoodDark", seg=8)
+                DT.mug(mb, c0 + 2.2, sgn * (yl - 0.35), 0.74, seed=num)
+                if num % 2:
+                    DT.card_spread(mb, c0 + 2.5, sgn * (yl - 0.3), 0.742, 0.0, 4, seed=num)
+                    DT.deck_box(mb, c0 + 2.8, sgn * (yl - 0.2), 0.74, 15.0, bc)
+                else:
+                    DT.book_stack(mb, c0 + 2.6, sgn * (yl - 0.3), 0.74, 0.0, 2, seed=num)
+                K.lockers(mb, mb, None, c0 + 3.4, sgn * 3.8, 0.0 if sgn < 0 else 180.0, n=2, w=0.45, d=0.5, h=1.8)
+                DT.coat_hooks(mb, c0 + 1.25, sgn * 3.5, 1.7, 0.0 if sgn < 0 else 180.0, n=2, dorm=dorm, seed=num)
+                if rnd.random() < 0.7:
+                    mb.box((c0 + 1.5, sgn * (yl - 2.4), 0.25), (0.45, 0.25, 0.5), rnd.choice(K.FABRICS))
+                mb.box((c0 + 2.4, sgn * (3.6 + 0.6), 0.004), (1.4, 0.9, 0.008), bc)                  # rug
+                mb.box((c0 + 2.4, sgn * (yl - 1.0), h - 0.03), (0.6, 0.3, 0.03), K.PANEL_LIGHT)
+                # timber wainscot round the cabin (below the portholes), shelf, mirror, picture
+                px0, px1 = c0 + (0.1 if sgn < 0 else 0.0), c1 - (0.1 if sgn > 0 else 0.0)
+                if sgn > 0:
+                    loop = [((px0, 3.5), (px1, 3.5), [(c0 + 1.95 - px0, c0 + 2.85 - px0)]),
+                            ((px1, 3.5), (px1, yl), []), ((px1, yl), (px0, yl), []), ((px0, yl), (px0, 3.5), [])]
+                else:
+                    loop = [((px0, -yl), (px1, -yl), []), ((px1, -yl), (px1, -3.5), []),
+                            ((px1, -3.5), (px0, -3.5), [(px1 - c0 - 2.85, px1 - c0 - 1.95)]), ((px0, -3.5), (px0, -yl), [])]
+                for a_, b_, g_ in loop:
+                    K.wainscot(mb, a_, b_, 0.0, 0.95, "M_IntWood", cap=K.TRIM_WOOD, gaps=g_)
+                mb.box((c0 + 2.4, sgn * (yl - 0.13), 1.75), (1.4, 0.24, 0.03), "M_IntWood")
+                DT.book_row(mb, c0 + 1.85, c0 + 2.9, sgn * (yl - 0.13), 1.765, 0.2, seed=num)
+                for xpic in (px0 + 0.02, px1 - 0.02):
+                    mb.box((xpic, sgn * (yl - 1.05), 2.15), (0.02, 0.5, 0.36), "M_IntWoodDark")
+                    mb.box((xpic + (0.012 if xpic < c0 + 2.4 else -0.012), sgn * (yl - 1.05), 2.15), (0.004, 0.42, 0.28),
+                           K.POSTERS[(num + int(xpic)) % 4])
+            lights([(c0 + 2.4, sgn * (yl - 1.2))], z0 + 2.3, 1200.0, 4.5)
+            mb.box((c0 + 3.15, sgn * 3.39, z0 + 1.7), (0.32, 0.02, 0.12), K.TRIM_WHITE)
+            aset.text(f"CABIN {num:02d}", W(c0 + 3.15, sgn * 3.375, z0 + 1.67), 0.0 if sgn > 0 else 180.0,
+                      size=0.055, color=(0.15, 0.1, 0.08))
+    # corridors: panel lights, fire points, notices; lobby: benches, vending, deck plan, life-jacket locker
+    with mb.at((0.0, 0.0, z0)):
+        for sgn in (-1, 1):
+            for xa, xb in ((LD_X0, lob0), (lob1, LD_X1)):
+                x = xa + 2.4
+                while x < xb - 1.0:
+                    mb.box((x, sgn * 2.9, h - 0.03), (1.0, 0.25, 0.03), K.PANEL_LIGHT)
+                    x += 4.8
+                cab_x = [c0 + 2.4 for c0 in bounds[::2][:-1] if xa <= c0 < xb]
+                if sgn > 0:
+                    K.wainscot(mb, (xa, 2.4), (xb, 2.4), 0.0, 1.0, "M_IntWood", cap=K.TRIM_WOOD)
+                    K.wainscot(mb, (xb, 3.4), (xa, 3.4), 0.0, 1.0, "M_IntWood", cap=K.TRIM_WOOD,
+                               gaps=[(xb - cx - 0.5, xb - cx + 0.5) for cx in cab_x])
+                else:
+                    K.wainscot(mb, (xb, -2.4), (xa, -2.4), 0.0, 1.0, "M_IntWood", cap=K.TRIM_WOOD)
+                    K.wainscot(mb, (xa, -3.4), (xb, -3.4), 0.0, 1.0, "M_IntWood", cap=K.TRIM_WOOD,
+                               gaps=[(cx - xa - 0.5, cx - xa + 0.5) for cx in cab_x])
+                mb.box_mm((xa, sgn * 2.47 - 0.025, 0.93), (xb, sgn * 2.47 + 0.025, 0.98), "M_IntTrimGold")   # handrail
+                for k, cx in enumerate(cab_x):
+                    if k % 2:
+                        K.poster(mb, aset, cx, sgn * 2.4, 1.6, 180.0 if sgn > 0 else 0.0, 0.5, 0.7,
+                                 K.POSTERS[(k + (sgn > 0)) % 4])
+                xm = (xa + xb) / 2
+                with mb.at((xm, sgn * 2.4, 1.2), rot=180.0 if sgn > 0 else 0.0):
+                    mb.box((0, -0.06, 0.0), (0.5, 0.12, 0.7), "M_AcademyRed")                 # fire-hose cabinet
+                    mb.box((0, -0.122, 0.05), (0.4, 0.004, 0.5), "M_GlassClear")
+                _wall_map(mb, aset, xm - 2.0, sgn * 2.4, 1.2, 180.0 if sgn > 0 else 0.0, 0.7, 0.5, None, seed=int(xm))
+            lights([(x_, sgn * 2.9) for x_ in (-24.0, -12.0, 2.4, 12.0)], z0 + 2.4, 1500.0, 6.0)
+            for xb_ in ((-6.0, -3.6) if sgn < 0 else (-3.6,)):                                 # lobby benches
+                mb.box((xb_, sgn * (_ld_lining(xb_) - 0.3), 0.42), (1.6, 0.45, 0.08), "M_IntFabricBlue")
+                mb.box((xb_, sgn * (_ld_lining(xb_) - 0.1), 0.25), (1.6, 0.1, 0.5), "M_IntWoodDark")
+        # purser's desk (starboard), drinks machine, waiting table with a card game, luggage rack, plants
+        K.counter(mb, -6.9, 4.9, -4.9, 5.5, h=1.0, body=BLUE, top=K.TRIM_WHITE)
+        mb.box_mm((-6.9, 6.4, 0.0), (-4.9, _ld_lining(-6.0) - 0.02, 0.9), "M_IntWoodDark")
+        mb.cylinder((-5.9, 6.0, 0.0), 0.2, 0.5, "M_IntMetal", seg=8)
+        mb.box((-5.9, 6.0, 0.55), (0.45, 0.45, 0.08), "M_IntFabricNavy")
+        DT.paper_stack(mb, -6.4, 5.2, 1.0, 10.0, 4, seed=3)
+        mb.box((-5.4, 5.25, 1.04), (0.3, 0.2, 0.08), "M_IntBlack")
+        mb.box((-5.4, 5.32, 1.22), (0.32, 0.03, 0.22), "M_IntScreen")
+        DT.mug(mb, -5.0, 5.3, 1.0, seed=8)
+        mb.box_mm((-3.3, 4.0, 0.0), (-2.5, 4.9, 1.8), "M_IntFabricBlue")                      # drinks machine
+        mb.box_mm((-3.31, 4.1, 0.7), (-3.29, 4.8, 1.6), "M_IntGlassClear")
+        for k in range(4):
+            for j in range(3):
+                mb.cylinder((-3.15, 4.2 + k * 0.17, 0.75 + j * 0.3), 0.035, 0.14, K.FABRICS[(k + j) % 7], seg=6)
+        mb.cylinder((-4.6, -4.3, 0.0), 0.06, 0.72, "M_IntMetal", seg=8)
+        mb.cylinder((-4.6, -4.3, 0.72), 0.45, 0.04, "M_IntWood", seg=16)
+        for a in (0.0, 120.0, 240.0):
+            r_ = math.radians(a)
+            mb.cylinder((-4.6 + math.cos(r_) * 0.75, -4.3 + math.sin(r_) * 0.75, 0.0), 0.18, 0.45, "M_IntFabricRed", seg=8)
+        DT.card_spread(mb, -4.6, -4.3, 0.762, 30.0, 5, seed=21)
+        DT.deck_box(mb, -4.35, -4.1, 0.76, 0.0, "M_IntFabricYellow")
+        DT.duel_disk(mb, -4.9, -4.55, 0.76, 60.0)
+        with mb.at((-3.0, -2.2, 0.0), rot=90.0):                                              # luggage rack
+            for zz in (0.3, 1.0):
+                mb.box((0, 0, zz), (1.4, 0.5, 0.04), "M_IntMetal")
+            for sx in (-1, 1):
+                for sy in (-1, 1):
+                    mb.box((sx * 0.68, sy * 0.23, 0.7), (0.04, 0.04, 1.4), "M_IntMetal")
+            for k, c in enumerate(("M_IntFabricRed", "M_IntFabricNavy", "M_IntFabricGreen")):
+                mb.box((-0.42 + k * 0.42, 0, 0.32 + 0.22), (0.36, 0.22, 0.44), c)
+            mb.box((0.2, 0, 1.02 + 0.15), (0.6, 0.4, 0.3), "M_IntWoodDark")
+        for (px_, py_) in ((-6.85, -6.2), (-6.75, 3.5)):
+            mb.cylinder((px_, py_, 0.0), 0.22, 0.45, "M_IntWoodDark", seg=10)
+            mb.sphere((px_, py_, 0.95), 0.45, "M_IntFabricGreen", seg=10, rings=6)
+        for k, yy in enumerate((-5.6, 3.9)):
+            K.poster(mb, aset, lob0 + (0.1 if yy < 0 else 0.0), yy, 1.6, 90.0, 0.6, 0.85, K.POSTERS[k + 1])
+        mb.box((-5.9, 5.2, h - 0.35), (1.4, 0.06, 0.3), BLUE)
+        for sy in (-0.6, 0.6):
+            mb.box((-5.9 + sy, 5.2, h - 0.1), (0.02, 0.02, 0.2), "M_IntMetal")
+        mb.box_mm((-7.1, -4.6, 0.0), (-6.25, -3.8, 1.8), "M_IntFabricRed")                      # vending machine
+        mb.box_mm((-6.26, -4.5, 0.75), (-6.24, -3.9, 1.65), "M_IntScreen")
+        mb.box_mm((-7.1, 1.6, 0.0), (-6.5, 2.9, 0.9), ORANGE)                                  # life-jacket locker
+        _wall_map(mb, aset, lob1 - 0.1, 4.6, 1.0, -90.0, 1.0, 0.7, None, seed=12)
+        mb.box_mm((lob0 + 0.1, -2.2, 1.1), (lob0 + 0.11, -1.25, 1.8), "M_IntCork")
+        for k in range(3):
+            mb.box_mm((lob0 + 0.11, -2.1 + k * 0.28, 1.25 + (k % 2) * 0.15), (lob0 + 0.115, -1.9 + k * 0.28,
+                       1.55 + (k % 2) * 0.15), ("M_IntPaper", "M_IntPoster1", "M_IntPaper")[k])
+        for xx in (-5.0, -3.0):
+            mb.box((xx, -4.2, h - 0.03), (1.0, 0.3, 0.03), K.PANEL_LIGHT)
+            mb.box((xx, 4.2, h - 0.03), (1.0, 0.3, 0.03), K.PANEL_LIGHT)
+        mb.cylinder((-2.65, -2.5, 0.0), 0.09, 0.6, "M_AcademyRed", seg=8)
+        _ship_fixtures(mb, aset, W, LD_X0, LD_X1, 6.7, 0.0, h, exits=[(lob0 + 0.1, 1.65, 90.0), (lob1 - 0.1, -1.65, -90.0)],
+                       outlets=False, seed=4)
+    aset.text("BOOSTER PACKS", W(-6.23, -4.2, z0 + 1.72), -90.0, size=0.08, color=(1, 1, 1), emissive=True)
+    aset.text("FORWARD CABINS", W(lob1 - 0.12, 1.65, z0 + 2.0), -90.0, size=0.08, color=(0.1, 0.25, 0.62))
+    aset.text("AFT CABINS", W(lob0 + 0.12, -1.65, z0 + 2.0), 90.0, size=0.08, color=(0.1, 0.25, 0.62))
+    aset.text("LIFE JACKETS", W(-6.48, 2.25, z0 + 0.6), 90.0, size=0.07, color=(1, 1, 1))
+    aset.text("PURSER", W(-5.9, 5.165, z0 + h - 0.38), 0.0, size=0.12, color=(1, 1, 1))
+    aset.text("INFORMATION", W(-5.9, 4.88, z0 + 0.75), 0.0, size=0.08, color=(1, 1, 1))
+    aset.text("NOTICES", W(lob0 + 0.12, -1.72, z0 + 1.88), 90.0, size=0.06, color=(0.2, 0.12, 0.06))
+    lights([(-5.0, 0.0)], z0 + 2.4, 2500.0, 7.0)
+    _ship_cam(aset, "ferry_lower_lobby", (-2.8, 4.8, z0 + 1.7), (-6.8, -2.0, z0 + 0.9))
+    _ship_cam(aset, "ferry_lower_cabin", (-14.4, -3.75, z0 + 1.65), (-12.4, -6.4, z0 + 0.7))
+    _ship_cam(aset, "ferry_lower_corridor", (-8.0, 2.9, z0 + 1.65), (-28.0, 2.9, z0 + 0.9))
+
+
 def _ferry_interior(mb, aset, d1, d2, br):
     """Passenger saloon (deck 1), sky lounge with duel tables (deck 2) and the bridge (deck 3). Everything is
     part of the floating ferry mesh so it bobs with the hull (catalog props would not)."""
@@ -1426,8 +1727,14 @@ def _ferry_interior(mb, aset, d1, d2, br):
 
     # ---------------------------------------------------------------- deck 1: passenger saloon
     z = F_DECK
-    mb.prism(_rounded_rect(-23.8, 10.5, 5.4, 3.6), z - 0.01, z + 0.008, "M_IntCarpetBlue", cap_bottom=False)
-    mb.box_mm((-23.8, -0.6, z + 0.008), (10.0, 0.6, z + 0.012), "M_IntCarpetRed")
+    hx0, hy0, hx1, hy1 = LD_HOLE                    # stairwell down to the cabin deck
+    for x0_, y0_, x1_, y1_ in ((-23.8, -5.4, 10.5, hy0), (-23.8, hy1, 10.5, 5.4), (-23.8, hy0, hx0, hy1),
+                               (hx1, hy0, 10.5, hy1)):
+        mb.box_mm((x0_, y0_, z - 0.01), (x1_, y1_, z + 0.008), "M_IntCarpetBlue", skip=("-z",))
+    mb.prism(_rounded_rect(10.5, 10.5, 5.4, 3.6)[1:-1], z - 0.01, z + 0.008, "M_IntCarpetBlue", cap_bottom=False)
+    for xa_, xb_ in ((-23.8, hx0), (hx1, 10.0)):
+        mb.box_mm((xa_, -0.6, z + 0.008), (xb_, 0.6, z + 0.012), "M_IntCarpetRed")
+    _ferry_lower_deck(mb, aset, W, lights)
     mb.poly([(x, y, 6.95) for x, y in reversed(d1)], K.CEIL)
     for yy in (-2.2, 2.2):
         mb.box_mm((-22.5, yy - 0.12, 6.93), (9.5, yy + 0.12, 6.95), K.PANEL_LIGHT)

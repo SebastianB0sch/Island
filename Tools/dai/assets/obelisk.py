@@ -437,12 +437,36 @@ def _door_surround(mb, u, z, w, h, surround, fan_glass, fan, depth):
 
 
 def dormer(mb, w, h, depth, z0, wall, roof, frame, glass=GLASS, arch=False, finial_mat=None,
-           head_mat=None):
-    """Dormer in a frame whose origin is the dormer's front-centre at the eave (front faces -y)."""
-    mb.box_mm((-w / 2, 0.0, z0), (w / 2, depth, z0 + h), wall, skip=("-z",))
+           head_mat=None, walk=None):
+    """Dormer in a frame whose origin is the dormer's front-centre at the eave (front faces -y).
+    walk=(inner_mat, depth_in, z_ceil, sill_depth): walk-in dormer - real window (clear glass) in a 0.12 m front
+    wall, solid cheeks reaching depth_in into the attic, a niche ceiling at z_ceil and a window-seat board over
+    the first sill_depth metres (the rest of the exterior identical)."""
+    if walk:
+        inner, din, zin, sd = walk
+        ww = w - 0.75
+        top = 0.3 + (h - 0.75 if arch else h - 0.65)
+        mb.wall((-w / 2, 0.0), (w / 2, 0.0), z0, h, 0.12, wall, [dict(u=w / 2, w=ww, z0=0.3, z1=top)], inner_mat=inner)
+        if arch:          # spandrels between the arched head and the rectangular cut
+            zs, r = z0 + top - ww / 2, ww / 2
+            for s_ in (-1, 1):
+                arc = [(s_ * r * math.cos(math.pi / 2 * k / 4), zs + r * math.sin(math.pi / 2 * k / 4)) for k in range(5)]
+                for k in range(4):
+                    A, B = arc[k], arc[k + 1]
+                    for (yy, m_, wnt) in ((0.0, wall, (0, -1, 0)), (0.12, inner, (0, 1, 0))):
+                        _face(mb, [(s_ * r, yy, zs + r), (A[0], yy, A[1]), (B[0], yy, B[1])], m_, wnt)
+        for s_ in (-1, 1):
+            mb.box_mm((min(s_ * w / 2, s_ * (w / 2 - 0.1)), 0.0, z0), (max(s_ * w / 2, s_ * (w / 2 - 0.1)), din, z0 + h),
+                      wall, mats={"-x" if s_ > 0 else "+x": inner})
+        mb.box_mm((-w / 2 + 0.1, 0.12, zin), (w / 2 - 0.1, din, zin + 0.1), inner, mats={"-z": K.CEIL})
+        mb.box_mm((-w / 2 + 0.1, 0.12, z0 - 0.06), (w / 2 - 0.1, sd, z0), K.TRIM_WHITE)
+        mb.box_mm((-w / 2, depth - 0.02, z0 + h - 0.1), (w / 2, depth, z0 + h), wall)
+    else:
+        mb.box_mm((-w / 2, 0.0, z0), (w / 2, depth, z0 + h), wall, skip=("-z",))
     mb.gable_roof((0.0, depth / 2, z0 + h), w, depth, w * 0.42, roof, overhang=0.18, thick=0.12,
                   gable_mat=wall, ridge_axis="y")
     ww = w - 0.75
+    glass = CLEAR if walk else glass
     if arch:
         window(mb, 0.0, z0 + 0.3, ww, h - 0.75 - ww / 2, frame, glass, arch=True, fw=0.12, seg=6,
                sill_mat=head_mat or frame)
@@ -499,11 +523,58 @@ def block_shell(mb, x0, y0, x1, y1, top, fl, bands, wall=WALL, base=MARBLE, band
                       skip=("-z", "+z"))
 
 
-def mansard_x(mb, x0, x1, y0, y1, z0, ov, h1, in1, h2, mat, kink_mat=None, crest_mat=None):
-    """Mansard roof extruded along X (open ends hidden in neighbouring blocks)."""
+def _clip(poly, axis, val, keep_ge):
+    """Sutherland-Hodgman clip of a 3D polygon by the half-space coord[axis] >= val (keep_ge) or <= val."""
+    out = []
+    n = len(poly)
+    for i in range(n):
+        a, b = poly[i], poly[(i + 1) % n]
+        ina = a[axis] >= val - 1e-9 if keep_ge else a[axis] <= val + 1e-9
+        inb = b[axis] >= val - 1e-9 if keep_ge else b[axis] <= val + 1e-9
+        if ina:
+            out.append(a)
+        if ina != inb and abs(b[axis] - a[axis]) > 1e-12:
+            t = (val - a[axis]) / (b[axis] - a[axis])
+            out.append(tuple(a[q] + (b[q] - a[q]) * t for q in range(3)))
+    return out
+
+
+def _face_holes(mb, poly, mat, want, axis, holes):
+    """Planar polygon minus rectangular holes [(a0, a1, zlo, zhi)]: a along world axis `axis`, z = height."""
+    pieces = [list(poly)]
+    for (a0, a1, zlo, zhi) in holes:
+        nxt = []
+        for pc in pieces:
+            mid = _clip(_clip(pc, axis, a0, True), axis, a1, False)
+            for q in (_clip(pc, axis, a0, False), _clip(pc, axis, a1, True), _clip(mid, 2, zlo, False),
+                      _clip(mid, 2, zhi, True)):
+                if len(q) >= 3:
+                    nxt.append(q)
+        pieces = nxt
+    for q in pieces:
+        e = [math.dist(q[i], q[(i + 1) % len(q)]) for i in range(len(q))]
+        if sum(e) > 0.02 and max(e) > 0.005:
+            _face(mb, q, mat, want)
+
+
+def mansard_x(mb, x0, x1, y0, y1, z0, ov, h1, in1, h2, mat, kink_mat=None, crest_mat=None, holes=None):
+    """Mansard roof extruded along X. holes (walk-in attic): {"s"|"n": [(x0, x1, zlo, zhi)] in the lower
+    slopes (dormers), "x0"|"x1": [(y0, y1, zlo, zhi)] in the end caps}; no underside then."""
     ya, yb, yc = y0 - ov, y1 + ov, (y0 + y1) / 2
     prof = [(ya, z0), (yb, z0), (yb - in1, z0 + h1), (yc, z0 + h1 + h2), (ya + in1, z0 + h1)]
-    prism_yz(mb, prof, x0, x1, mat)
+    if holes is None:
+        prism_yz(mb, prof, x0, x1, mat)
+    else:
+        n = len(prof)
+        cy, cz = sum(p[0] for p in prof) / n, sum(p[1] for p in prof) / n
+        for i in range(1, n):
+            p, q = prof[i], prof[(i + 1) % n]
+            quad = [(x0, p[0], p[1]), (x1, p[0], p[1]), (x1, q[0], q[1]), (x0, q[0], q[1])]
+            want = (0.0, (p[0] + q[0]) / 2 - cy, (p[1] + q[1]) / 2 - cz)
+            hl = holes.get("n", ()) if i == 1 else holes.get("s", ()) if i == n - 1 else ()
+            _face_holes(mb, quad, mat, want, 0, hl)
+        for (x, key, sgn) in ((x0, "x0", -1), (x1, "x1", 1)):
+            _face_holes(mb, [(x, y, z) for y, z in prof], mat, (sgn, 0, 0), 1, holes.get(key, ()))
     if kink_mat:
         for y in (ya + in1, yb - in1):
             mb.box_mm((x0, y - 0.13, z0 + h1 - 0.1), (x1, y + 0.13, z0 + h1 + 0.1), kink_mat)
@@ -512,11 +583,26 @@ def mansard_x(mb, x0, x1, y0, y1, z0, ov, h1, in1, h2, mat, kink_mat=None, crest
 
 
 def pavilion_roof(mb, x0, y0, x1, y1, z0, ov, h1, in1, h2, mat, kink_mat=None, crest_mat=None,
-                  flat_mat=None):
-    """Steep French pavilion roof: sloped frustum + hipped (or flat) top. Returns top rect & ridge."""
+                  flat_mat=None, holes=None):
+    """Steep French pavilion roof: sloped frustum + hipped (or flat) top. Returns top rect & ridge.
+    holes (walk-in attic): {"s"|"n": [(x0, x1, zlo, zhi)], "w"|"e": [(y0, y1, zlo, zhi)], "cap": [(x0, y0, x1, y1)]}
+    - dormer openings in the slopes, a stair hole in the flat top; no underside then."""
     b = (x0 - ov, y0 - ov, x1 + ov, y1 + ov)
     t = (b[0] + in1, b[1] + in1, b[2] - in1, b[3] - in1)
-    frustum(mb, b, t, z0, z0 + h1, mat, cap_mat=flat_mat)
+    if holes is None:
+        frustum(mb, b, t, z0, z0 + h1, mat, cap_mat=flat_mat)
+    else:
+        z1 = z0 + h1
+        B = [(b[0], b[1]), (b[2], b[1]), (b[2], b[3]), (b[0], b[3])]
+        T = [(t[0], t[1]), (t[2], t[1]), (t[2], t[3]), (t[0], t[3])]
+        for i, (key, want, axis) in enumerate((("s", (0, -1, 0.3), 0), ("e", (1, 0, 0.3), 1), ("n", (0, 1, 0.3), 0),
+                                              ("w", (-1, 0, 0.3), 1))):
+            j = (i + 1) % 4
+            quad = [(B[i][0], B[i][1], z0), (B[j][0], B[j][1], z0), (T[j][0], T[j][1], z1), (T[i][0], T[i][1], z1)]
+            _face_holes(mb, quad, mat, want, axis, holes.get(key, ()))
+        if flat_mat:
+            for (a, b_, c, d) in _cells(t[0], t[1], t[2], t[3], holes.get("cap", ())):
+                mb.poly([(a, b_, z1), (c, b_, z1), (c, d, z1), (a, d, z1)], flat_mat)
     ridge = None
     if not flat_mat:
         ridge = hip_top(mb, t[0], t[1], t[2], t[3], z0 + h1, h2, mat)
@@ -1075,8 +1161,8 @@ def hollow_shell(mb, x0, y0, x1, y1, top, fl, bands, base=MARBLE, band_mat=TRIM,
         _base_ring(mb, x0, y0, x1, y1, fl + 0.3, fl + 0.45, 0.24, base_band, joins, skip=())
     for z in bands:
         _base_ring(mb, x0, y0, x1, y1, z - 0.14, z + 0.14, 0.1, band_mat, joins, skip=())
-    mb.box_mm((x0 - 0.22, y0 - 0.22, top - 0.95), (x1 + 0.22, y1 + 0.22, top - 0.6), cornice[0], skip=("+z",))
-    mb.box_mm((x0 - 0.5, y0 - 0.5, top - 0.6), (x1 + 0.5, y1 + 0.5, top), cornice[1])
+    _base_ring(mb, x0, y0, x1, y1, top - 0.95, top - 0.6, 0.22, cornice[0], joins, skip=("+z",))
+    _base_ring(mb, x0, y0, x1, y1, top - 0.6, top, 0.5, cornice[1], joins, skip=())
     if pilasters:
         tc = T - 0.02
         for (cx, cy, sx, sy) in ((x0, y0, 1, 1), (x1, y0, -1, 1), (x1, y1, -1, -1), (x0, y1, 1, -1)):
@@ -1347,47 +1433,57 @@ def _boys_building(mb, nc, aset):
             window(mb, u, 7.65, 1.5, 2.55, FRAME, head="pediment", head_mat=TRIM, sill_mat=MARBLE)
             window(mb, u, 12.05, 1.4, 2.1, FRAME, head="lintel", head_mat=TRIM, sill_mat=MARBLE)
         door(mb, 13.0, FL, 2.6, 3.4, leaf=TRIM, surround=MARBLE, handle=GOLD)
-    # --------------------------------------------------------------- roofs
+    # --------------------------------------------------------------- roofs (walk-in attic storey under them)
+    pas = [(13.3, 14.5, 14.9, 17.35)]                  # attic passages wing <-> centre / end pavilion
     for sx in (-1, 1):
         x0, x1 = (12.7, 29.3) if sx > 0 else (-29.3, -12.7)
-        mansard_x(mb, x0, x1, 0.0, 28.0, 15.6, 0.55, 4.2, 1.7, 1.5, ROOF, kink_mat=TRIM, crest_mat=GOLD)
-        # dormers front and back
+        dh = [tuple(sorted((sx * xd - 0.9, sx * xd + 0.9))) + (15.59, 18.3) for xd in (16.6, 21.0, 25.4)]
+        mansard_x(mb, x0, x1, 0.0, 28.0, 15.6, 0.55, 4.2, 1.7, 1.5, ROOF, kink_mat=TRIM, crest_mat=GOLD,
+                  holes={"s": dh, "n": dh, "x0": pas, "x1": pas})
+        # dormers front and back (walk-in: they open into the attic rooms)
         for xd in (16.6, 21.0, 25.4):
             xx = sx * xd
             with mb.at((xx, -0.5, 0.0)):
-                dormer(mb, 1.8, 2.7, 2.6, 15.6, WALL, ROOF, FRAME, head_mat=TRIM)
+                dormer(mb, 1.8, 2.7, 2.6, 15.6, WALL, ROOF, FRAME, head_mat=TRIM, walk=(WALL_IVORY, 1.9, B_C3W, 0.5))
             with mb.at((xx, 28.5, 0.0), rot=180):
-                dormer(mb, 1.8, 2.7, 2.6, 15.6, WALL, ROOF, FRAME, head_mat=TRIM)
+                dormer(mb, 1.8, 2.7, 2.6, 15.6, WALL, ROOF, FRAME, head_mat=TRIM, walk=(WALL_IVORY, 1.9, B_C3W, 0.5))
         for xc in (17.0, 25.0):
             chimney(mb, sx * xc, 14.0, 20.0, 24.2)
         # end pavilion roofs
         ex0, ex1 = (29.0, 41.0) if sx > 0 else (-41.0, -29.0)
+        ecx = (ex0 + ex1) / 2
+        side_h = [(yd + 2.0 - 0.9, yd + 2.0 + 0.9, 16.59, 19.4) for yd in (2.0, 9.0, 16.0, 23.0)]
+        fb = [(ecx - 1.0, ecx + 1.0, 16.59, 19.6)]
+        ph = {"s": fb, "n": fb, ("e" if sx > 0 else "w"): side_h, ("w" if sx > 0 else "e"): pas}
         t, ridge = pavilion_roof(mb, ex0, -3.0, ex1, 31.0, 16.6, 0.55, 6.4, 2.3, 1.6, ROOF,
-                                 kink_mat=TRIM, crest_mat=GOLD)
+                                 kink_mat=TRIM, crest_mat=GOLD, holes=ph)
         for r in ridge:
             finial(mb, r[0], r[1], r[2] + 0.1, 1.2)
-        ecx = (ex0 + ex1) / 2
+        wk = (WALL_IVORY, 1.9, B_C3P, 0.5)
         with mb.at((ecx, -3.5, 0.0)):
-            dormer(mb, 2.0, 3.0, 3.0, 16.6, WALL, ROOF, FRAME, arch=True, finial_mat=GOLD, head_mat=TRIM)
+            dormer(mb, 2.0, 3.0, 3.0, 16.6, WALL, ROOF, FRAME, arch=True, finial_mat=GOLD, head_mat=TRIM, walk=wk)
         with mb.at((ecx, 31.5, 0.0), rot=180):
-            dormer(mb, 2.0, 3.0, 3.0, 16.6, WALL, ROOF, FRAME, arch=True, finial_mat=GOLD, head_mat=TRIM)
+            dormer(mb, 2.0, 3.0, 3.0, 16.6, WALL, ROOF, FRAME, arch=True, finial_mat=GOLD, head_mat=TRIM, walk=wk)
         xo = ex1 + 0.5 if sx > 0 else ex0 - 0.5
         for yd in (2.0, 9.0, 16.0, 23.0):
             with mb.at((xo, yd + 2.0, 0.0), rot=90 if sx > 0 else -90):
-                dormer(mb, 1.8, 2.8, 3.0, 16.6, WALL, ROOF, FRAME, head_mat=TRIM)
+                dormer(mb, 1.8, 2.8, 3.0, 16.6, WALL, ROOF, FRAME, head_mat=TRIM, walk=wk)
 
-    # centre: pavilion roof with flat top, balustrade and the dome
+    # centre: pavilion roof with flat top, balustrade and the dome (the stair to the cupola rises through it)
+    ch = {"s": [(xd - 1.0, xd + 1.0, 17.39, 20.3) for xd in (-7.5, 7.5)],
+          "n": [(xd - 1.0, xd + 1.0, 17.39, 20.3) for xd in (-7.5, 0.0, 7.5)], "cap": [(-1.35, 12.65, 1.35, 15.35)]}
     t, _ = pavilion_roof(mb, -13.0, -2.0, 13.0, 30.0, 17.4, 0.55, 4.4, 1.8, 0.0, ROOF, kink_mat=TRIM,
-                         flat_mat=ROOF)
+                         flat_mat=ROOF, holes=ch)
     ztop = 17.4 + 4.4
     iron_railing(mb, [(t[0] + 0.3, t[1] + 0.3), (t[2] - 0.3, t[1] + 0.3), (t[2] - 0.3, t[3] - 0.3),
                       (t[0] + 0.3, t[3] - 0.3), (t[0] + 0.3, t[1] + 0.3)], ztop, 0.9, GOLD, spacing=0.5)
+    wk = (WALL_IVORY, 1.9, B_C3C, 0.5)
     for xd in (-7.5, 7.5):
         with mb.at((xd, -2.5, 0.0)):
-            dormer(mb, 2.0, 2.9, 2.6, 17.4, WALL, ROOF, FRAME, arch=True, head_mat=TRIM)
+            dormer(mb, 2.0, 2.9, 2.6, 17.4, WALL, ROOF, FRAME, arch=True, head_mat=TRIM, walk=wk)
     for xd in (-7.5, 0.0, 7.5):
         with mb.at((xd, 30.5, 0.0), rot=180):
-            dormer(mb, 2.0, 2.9, 2.6, 17.4, WALL, ROOF, FRAME, arch=True, head_mat=TRIM)
+            dormer(mb, 2.0, 2.9, 2.6, 17.4, WALL, ROOF, FRAME, arch=True, head_mat=TRIM, walk=wk)
     _boys_dome(mb, nc, 0.0, 14.0, ztop)
 
     # --------------------------------------------------------------- portico
@@ -1771,8 +1867,13 @@ B_C0 = 6.74          # ground floor ceilings (just under the first floor slabs)
 B_C1 = 11.15         # first floor ceilings
 B_Z2 = 11.5
 B_C2 = 14.75         # second floor ceilings (3.25 m)
-B_BANDS_INT = [(1.7, 6.8, 0), (6.8, 11.2, 1), (11.2, 14.9, 2), (14.9, 99.0, None)]
+B_BANDS_INT = [(1.7, 6.8, 0), (6.8, 11.2, 1), (11.2, 14.9, 2), (14.9, 99.0, 3)]
 B_HOLE = (-0.62, 16.1, 3.62, 18.1)    # stairwell games room -> second floor hall
+# attic storey under the roofs (floor / flat ceiling / top of the upright knee wall), per block
+B_Z3W, B_C3W, B_K3W = 15.05, 18.2, 17.0       # wings (mansard)
+B_Z3P, B_C3P, B_K3P = 16.05, 19.3, 18.3       # end pavilions
+B_Z3C, B_C3C, B_K3C = 16.85, 19.9, 18.9       # centre block (the cupola stair starts here)
+B_CUP = 22.3                                  # cupola floor (top of the dome's drum base)
 B_DOOR = "obelisk_inner"
 NAVY_TXT = (0.12, 0.2, 0.5)
 
@@ -1847,7 +1948,7 @@ def _boys_rooms():
             t = "_" if lv == 1 else "2_"
             R["corr" + t + s] = _room("corr" + t + s, lv, _mx((13.4, 12.2, 28.6, 15.6), sx), ZL, ZC, WALL_IVORY,
                                       K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.9, seams=K.WOOD_DARK,
-                                      coffer=(3.4, K.TRIM_WHITE, None))
+                                      coffer=(3.4, K.TRIM_WHITE, None) if lv == 1 else None)
             R["pcorr" + t + s] = _room("pcorr" + t + s, lv, _mx((29.4, 12.2, 40.6, 15.6), sx), ZL, ZC, WALL_IVORY,
                                        K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.9, seams=K.WOOD_DARK,
                                        coffer=(3.4, K.TRIM_WHITE, None))
@@ -1861,6 +1962,33 @@ def _boys_rooms():
                                      dado=(K.TRIM_WHITE, K.TRIM_GOLD), coffer=(2.4, K.TRIM_WHITE, K.TRIM_GOLD),
                                      panels=K.TRIM_GOLD if wall != WALL_IVORY else K.TRIM_WHITE,
                                      seams=None if (i + lv) % 2 == 0 else K.WOOD_DARK)
+    # attic storey (under the mansards, the pavilion roofs and the centre roof): wing attic suites, an artist's
+    # studio / box room and servants' rooms in the end pavilions, servants' hall + linen store + cupola stair hall
+    # in the centre
+    att = dict(cornice=None, dado=(K.WOOD, K.TRIM_WOOD), dado_h=0.75, skirting=K.TRIM_WOOD)
+    for sx in (-1, 1):
+        s = "w" if sx < 0 else "e"
+        R["corr3_" + s] = _room("corr3_" + s, 3, _mx((13.4, 12.2, 28.6, 15.6), sx), B_Z3W, B_C3W, WALL_IVORY,
+                                K.WOODFLOOR, seams=K.WOOD_DARK, holes=[_mx((20.55, 14.4, 24.65, 15.62), sx)], **att)
+        for i, (k, rect) in enumerate((("A", (13.4, 0.4, 22.5, 12.0)), ("B", (22.7, 0.4, 28.6, 12.0)),
+                                       ("C", (13.4, 15.8, 22.5, 27.6)), ("D", (22.7, 15.8, 28.6, 27.6)))):
+            R[k + "3_" + s] = _room(k + "3_" + s, 3, _mx(rect, sx), B_Z3W, B_C3W,
+                                    ("M_IntWallpaperBlue", WALL_IVORY, K.PLASTER_SKY, WALL_IVORY)[(i + (sx > 0)) % 4],
+                                    K.WOODFLOOR if i % 2 else "M_IntCarpetBlue", seams=K.WOOD_DARK if i % 2 else None,
+                                    **att)
+        R["pcorr3_" + s] = _room("pcorr3_" + s, 3, _mx((29.4, 12.2, 40.6, 15.6), sx), B_Z3P, B_C3P, K.PLASTER_CREAM,
+                                 K.WOODFLOOR, seams=K.WOOD_DARK, holes=[_mx((29.3, 13.28, 31.12, 14.52), sx)], **att)
+        R["pfront3_" + s] = _room("pfront3_" + s, 3, _mx((29.4, -2.6, 40.6, 12.0), sx), B_Z3P, B_C3P,
+                                  K.PLASTER_CREAM if sx < 0 else K.PLASTER_WHITE, K.WOODFLOOR, seams=K.WOOD_DARK, **att)
+        R["pback3_" + s] = _room("pback3_" + s, 3, _mx((29.4, 15.8, 40.6, 30.6), sx), B_Z3P, B_C3P, K.PLASTER_SKY,
+                                 K.WOODFLOOR, seams=K.WOOD_DARK, **att)
+    R["hall3"] = _room("hall3", 3, (-12.6, 10.0, 12.6, 17.9), B_Z3C, B_C3C, WALL_IVORY, K.WOODFLOOR, seams=K.WOOD_DARK,
+                       holes=[(-12.7, 13.28, -9.75, 14.52), (9.75, 13.28, 12.7, 14.52)],
+                       cut_ceiling=[(-1.35, 12.65, 1.35, 15.35)], **att)
+    R["front3"] = _room("front3", 3, (-12.6, -1.6, 12.6, 9.8), B_Z3C, B_C3C, K.PLASTER_CREAM, K.WOODFLOOR,
+                        seams=K.WOOD_DARK, **att)
+    R["back3"] = _room("back3", 3, (-12.6, 18.1, 12.6, 29.6), B_Z3C, B_C3C, K.PLASTER_WHITE, K.WOODFLOOR,
+                       seams=K.WOOD_DARK, **att)
     return R
 
 
@@ -1891,9 +2019,11 @@ def _boys_partitions(aset, mb, R):
         J(13.0, 12.1, 15.7, 11.2, 14.9, R["corr2_" + s]["wall"], R["hall2"]["wall"], [(13.9, 1.6, 2.6, D, True, B_Z2)])
         J(13.0, 15.7, 20.0, 11.2, 14.9, R["C2_" + s]["wall"], R["hall2"]["wall"], [])
         J(13.0, 20.0, 28.0, 11.2, 14.9, R["C2_" + s]["wall"], R["study2"]["wall"], [])
-        J(13.0, 0.0, 28.0, 14.9, 15.6, W, W, [])
-        a, b = ((13.0, 0.0), (13.0, 28.0)) if sx > 0 else ((-13.0, 28.0), (-13.0, 0.0))
-        mb.wall(a, b, 15.6, 17.4 - 15.6, 0.4, W)                       # centre block wall above the wing
+        # attic storey: centre block wall above the wing, with the passage door (steps up into the centre attic)
+        for (ya, yb, wr, cr, dr) in ((0.0, 9.9, "A3_", "front3", []), (9.9, 12.1, "A3_", "hall3", []),
+                                     (12.1, 15.7, "corr3_", "hall3", [(13.9, 1.2, 2.2, D, False, B_Z3W)]),
+                                     (15.7, 18.0, "C3_", "hall3", []), (18.0, 28.0, "C3_", "back3", [])):
+            J(13.0, ya, yb, 14.9, 17.4, R[wr + s]["wall"], R[cr]["wall"], dr)
         # wing | end pavilion (x = 29)
         pav0, pav1 = (R["duel"], R["trophy"]) if sx < 0 else (R["kitchen"], R["pantry"])
         J(29.0, 0.0, 12.1, Z0, 6.8, pav0["wall"], wing0, [(9.0 if sx < 0 else 6.0, 1.8, 3.0, D, True, Z0)])
@@ -1910,9 +2040,10 @@ def _boys_partitions(aset, mb, R):
               [(13.9, 1.6, 2.8 if lv == 1 else 2.6, D, True, ZL)])
             J(29.0, 15.7, 23.45, z0_, z1_, R["SBs" + t_ + s]["wall"], R["D" + t_ + s]["wall"], [])
             J(29.0, 23.45, 28.0, z0_, z1_, R["SB" + t_ + s]["wall"], R["D" + t_ + s]["wall"], [])
-        J(29.0, 0.0, 28.0, 14.9, 15.6, W, W, [])
-        a, b = ((29.0, 28.0), (29.0, 0.0)) if sx > 0 else ((-29.0, 0.0), (-29.0, 28.0))
-        mb.wall(a, b, 15.6, 16.6 - 15.6, 0.4, W)                       # end pavilion wall above the wing
+        J(29.0, 0.0, 12.1, 14.9, 16.6, R["pfront3_" + s]["wall"], R["B3_" + s]["wall"], [])
+        J(29.0, 12.1, 15.7, 14.9, 17.4, R["pcorr3_" + s]["wall"], R["corr3_" + s]["wall"],
+          [(13.9, 1.2, 2.2, D, False, B_Z3W)])
+        J(29.0, 15.7, 28.0, 14.9, 16.6, R["pback3_" + s]["wall"], R["D3_" + s]["wall"], [])
 
         # first floor: corridor walls, room splits (thin partitions, on centre lines)
         def H(y, xa, xb, z0, z1, south, north, doors, t=0.2):
@@ -1959,6 +2090,140 @@ def _boys_partitions(aset, mb, R):
     _pw(aset, mb, (-12.6, 12.0), (12.6, 12.0), 11.2, 14.9, 0.4, W, R["hall2"]["wall"])
     _pw(aset, mb, (-12.6, 20.0), (12.6, 20.0), 11.2, 14.9, 0.2, R["hall2"]["wall"], R["study2"]["wall"],
         [(-6.0, 1.6, 2.6, D, True, B_Z2), (6.0, 1.6, 2.6, D, True, B_Z2)])
+    _boys_attic(aset, mb, R)
+
+
+def _attic_side(mb, p0, p1, n, ztop, zk, zc, inset, mat, holes=(), mitre=(False, False)):
+    """Inside of a roof storey along one outer wall: an upright knee wall from the wall top ztop to zk, then a
+    ceiling sloping in by `inset` up to the flat ceiling zc. p0 -> p1 on the inner wall face, n = unit normal
+    into the room; holes = [(a0, a1)] world spans (along the wall) where dormer niches open; mitre = whether the
+    slope meets another slope at p0 / p1 (corner)."""
+    axis = 0 if abs(p1[0] - p0[0]) > abs(p1[1] - p0[1]) else 1
+    ux, uy = (p1[0] - p0[0]), (p1[1] - p0[1])
+    L = math.hypot(ux, uy)
+    ux, uy = ux / L, uy / L
+    knee = [(p0[0], p0[1], ztop), (p1[0], p1[1], ztop), (p1[0], p1[1], zk), (p0[0], p0[1], zk)]
+    hl = [(a0, a1, ztop - 0.01, zk + 0.01) for (a0, a1) in holes]
+    _face_holes(mb, knee, mat, (n[0], n[1], 0.0), axis, hl)
+    e0 = inset if mitre[0] else 0.0
+    e1 = inset if mitre[1] else 0.0
+    q0 = (p0[0] + n[0] * inset + ux * e0, p0[1] + n[1] * inset + uy * e0, zc)
+    q1 = (p1[0] + n[0] * inset - ux * e1, p1[1] + n[1] * inset - uy * e1, zc)
+    slope = [(p0[0], p0[1], zk), (p1[0], p1[1], zk), q1, q0]
+    hl = [(a0, a1, zk - 1.0, zc + 1.0) for (a0, a1) in holes]
+    _face_holes(mb, slope, mat, (n[0], n[1], 1.2), axis, hl)
+
+
+def _attic_upright(mb, p0, p1, n, z0, z1, mat, holes=()):
+    """Single-sided upright wall face (inside of a room, above a lower party wall)."""
+    axis = 0 if abs(p1[0] - p0[0]) > abs(p1[1] - p0[1]) else 1
+    _face_holes(mb, [(p0[0], p0[1], z0), (p1[0], p1[1], z0), (p1[0], p1[1], z1), (p0[0], p0[1], z1)], mat,
+                (n[0], n[1], 0.0), axis, holes)
+
+
+def _attic_split(aset, mb, a, b, z0, zk, zc, t, right, left, doors, sloped_end, inset):
+    """Partition in a roof storey that runs into a sloped outer wall at `sloped_end` ('a' or 'b'): full height
+    where the flat ceiling is, cut down under the sloping ceiling (a triangle follows the slope)."""
+    L, ux, uy, _ = _dir(a, b)
+    _pw(aset, mb, a, b, z0, zk, t, right, left, doors)
+    if sloped_end == "a":
+        a2 = (a[0] + ux * inset, a[1] + uy * inset)
+        _pw(aset, mb, a2, b, zk, zc, t, right, left)
+        tip, foot = a2, a
+    else:
+        b2 = (b[0] - ux * inset, b[1] - uy * inset)
+        _pw(aset, mb, a, b2, zk, zc, t, right, left)
+        tip, foot = b2, b
+    nx, ny = -uy * t / 2, ux * t / 2
+    for (sgn, m_) in ((1, left), (-1, right)):
+        _face(mb, [(foot[0] + sgn * nx, foot[1] + sgn * ny, zk), (tip[0] + sgn * nx, tip[1] + sgn * ny, zk),
+                   (tip[0] + sgn * nx, tip[1] + sgn * ny, zc)], m_, (sgn * nx, sgn * ny, 0.0))
+
+
+def _boys_attic(aset, mb, R):
+    """Attic storey: partitions, the inside of the roofs (knee walls + sloping ceilings with the dormer niches),
+    the flights linking the three attic levels, the stair from the second floor and the cupola stair."""
+    D = B_DOOR
+    for sx in (-1, 1):
+        s = "w" if sx < 0 else "e"
+
+        def H(y, xa, xb, z0, z1, south, north, doors, t=0.2):
+            a, b = (sx * xa, y), (sx * xb, y)
+            if sx < 0:
+                a, b = b, a
+            _pw(aset, mb, a, b, z0, z1, t, south, north, doors)
+
+        def k(n_):
+            return R[n_ + "3_" + s]["wall"]
+        # wing attic: corridor walls, suite splits (cut under the sloping ceilings)
+        for (y, lo, hi) in ((12.1, "A", "corr"), (15.7, "corr", "C")):
+            H(y, 13.4, 22.6, B_Z3W, B_C3W, k(lo), k(hi), [(sx * 18.0, 1.0, 2.1, D, False, B_Z3W)])
+        for (y, lo, hi) in ((12.1, "B", "corr"), (15.7, "corr", "D")):
+            H(y, 22.6, 28.6, B_Z3W, B_C3W, k(lo), k(hi), [(sx * 25.6, 1.0, 2.1, D, False, B_Z3W)])
+        for (ya, yb, lo, hi, end) in ((0.4, 12.0, "A", "B", "a"), (15.8, 27.6, "C", "D", "b")):
+            a, b = (sx * 22.6, ya), (sx * 22.6, yb)
+            r_, l_ = (k(hi), k(lo)) if sx > 0 else (k(lo), k(hi))
+            _attic_split(aset, mb, a, b, B_Z3W, B_K3W, B_C3W, 0.2, r_, l_, [], end, 1.0)
+        # pavilion attic: corridor walls (cut under the sloping ceiling of the outer wall)
+        for (y, lo, hi) in ((12.1, "pfront", "pcorr"), (15.7, "pcorr", "pback")):
+            a, b = (sx * 29.4, y), (sx * 40.6, y)
+            south, north = k(lo), k(hi)
+            if sx < 0:
+                a, b = b, a
+            _attic_split(aset, mb, a, b, B_Z3P, B_K3P, B_C3P, 0.2, south, north,
+                         [(sx * 35.0, 1.2, 2.1, D, False, B_Z3P)], "b" if sx > 0 else "a", 1.0)
+        # inside of the roofs
+        x0, x1 = sorted((sx * 13.4, sx * 28.6))
+        dw = [tuple(sorted((sx * xd - 0.8, sx * xd + 0.8))) for xd in (16.6, 21.0, 25.4)]
+        _attic_side(mb, (x0, 0.4), (x1, 0.4), (0, 1), 15.6, B_K3W, B_C3W, 1.0, k("A"), dw)
+        _attic_side(mb, (x1, 27.6), (x0, 27.6), (0, -1), 15.6, B_K3W, B_C3W, 1.0, k("C"), dw)
+        _attic_upright(mb, (sx * 13.4, 0.4), (sx * 13.4, 27.6), (sx, 0), 17.4, B_C3W, k("A"))
+        _attic_upright(mb, (sx * 28.6, 0.4), (sx * 28.6, 27.6), (-sx, 0), 16.6, B_C3W, k("B"),
+                       [(12.1, 15.7, 16.5, 17.4)])
+        px0, px1 = sorted((sx * 29.4, sx * 40.6))
+        xo = sx * 40.6
+        fb = [tuple(sorted((sx * 35.0 - 0.9, sx * 35.0 + 0.9)))]
+        side = [(yd + 2.0 - 0.8, yd + 2.0 + 0.8) for yd in (2.0, 9.0, 16.0, 23.0)]
+        mo = (sx < 0, sx > 0)
+        _attic_side(mb, (px0, -2.6), (px1, -2.6), (0, 1), 16.6, B_K3P, B_C3P, 1.0, k("pfront"), fb, mo)
+        _attic_side(mb, (px1, 30.6), (px0, 30.6), (0, -1), 16.6, B_K3P, B_C3P, 1.0, k("pback"), fb, mo[::-1])
+        if sx > 0:
+            _attic_side(mb, (xo, -2.6), (xo, 30.6), (-1, 0), 16.6, B_K3P, B_C3P, 1.0, k("pfront"), side, (True, True))
+        else:
+            _attic_side(mb, (xo, 30.6), (xo, -2.6), (1, 0), 16.6, B_K3P, B_C3P, 1.0, k("pfront"), side, (True, True))
+        _attic_upright(mb, (sx * 29.4, -2.6), (sx * 29.4, 30.6), (sx, 0), 16.6, B_C3P, k("pcorr"),
+                       [(12.1, 15.7, 16.5, 17.4)])
+        _attic_upright(mb, (sx * 12.6, -1.6), (sx * 12.6, 29.6), (-sx, 0), 17.4, B_C3C, R["hall3"]["wall"])
+        # flights: second floor corridor -> wing attic, wing attic -> pavilion attic / centre attic
+        _flight(mb, sx * 19.0, 15.0, B_Z2, B_Z3W, 0.0 if sx > 0 else 180.0, 1.1, run=0.28, carpet="M_IntCarpetRed",
+                cw=0.7, base=B_Z2, nose=K.TRIM_GOLD)
+        _rail(mb, (sx * 19.05, 14.42, B_Z2), (sx * 24.55, 14.42, B_Z3W), newel=MARBLE)
+        _rail(mb, (sx * 20.5, 14.36, B_Z3W), (sx * 24.3, 14.36, B_Z3W), newel=K.WOOD_DARK)
+        _rail(mb, (sx * 20.5, 14.36, B_Z3W), (sx * 20.5, 15.55, B_Z3W))
+        _flight(mb, sx * 29.4, 13.9, B_Z3W, B_Z3P, 0.0 if sx > 0 else 180.0, 1.2, run=0.28, base=B_Z3W,
+                nose=K.TRIM_GOLD)
+        _flight(mb, sx * 12.6, 13.9, B_Z3W, B_Z3C, 180.0 if sx > 0 else 0.0, 1.2, run=0.28, base=B_Z3W,
+                nose=K.TRIM_GOLD)
+        for y in (13.24, 14.56):
+            _rail(mb, (sx * 29.45, y, B_Z3P), (sx * 31.1, y, B_Z3P), post=K.WOOD_DARK)
+            _rail(mb, (sx * 12.55, y, B_Z3C), (sx * 9.8, y, B_Z3C), post=K.WOOD_DARK)
+    # centre attic: front servants' hall | cupola stair hall | linen store
+    for (y, south, north) in ((9.9, "front3", "hall3"), (18.0, "hall3", "back3")):
+        _pw(aset, mb, (-12.6, y), (12.6, y), B_Z3C, B_C3C, 0.2, R[south]["wall"], R[north]["wall"],
+            [(-5.0, 1.0, 2.1, D, False, B_Z3C), (5.0, 1.0, 2.1, D, False, B_Z3C)])
+    fd = [(xd - 0.9, xd + 0.9) for xd in (-7.5, 7.5)]
+    bd = [(xd - 0.9, xd + 0.9) for xd in (-7.5, 0.0, 7.5)]
+    _attic_side(mb, (-12.6, -1.6), (12.6, -1.6), (0, 1), 17.4, B_K3C, B_C3C, 1.0, R["front3"]["wall"], fd)
+    _attic_side(mb, (12.6, 29.6), (-12.6, 29.6), (0, -1), 17.4, B_K3C, B_C3C, 1.0, R["back3"]["wall"], bd)
+    # cupola stair: spiral through the attic ceiling and the flat roof into the dome's drum
+    K.spiral_stairs(mb, 0.0, 14.0, B_Z3C, B_CUP, 0.1, 1.15, a0=0.0, step_deg=22.0, mat=MARBLE, core=K.TRIM_GOLD,
+                    rail=K.TRIM_GOLD)
+    n = 16
+    for i in range(n):
+        a0_, a1_ = TAU * i / n, TAU * (i + 1) / n
+        p = [(math.cos(a) * 1.3, 14.0 + math.sin(a) * 1.3) for a in (a0_, a1_)]
+        _face(mb, [(p[0][0], p[0][1], B_C3C), (p[1][0], p[1][1], B_C3C), (p[1][0], p[1][1], B_CUP - 0.1),
+                   (p[0][0], p[0][1], B_CUP - 0.1)], WALL_IVORY, (-(p[0][0] + p[1][0]), 28.0 - p[0][1] - p[1][1], 0))
 
 
 def _boys_stairs(aset, mb, nc):
