@@ -97,7 +97,7 @@ Egyptian-god theming), not a copy of any copyrighted asset. All card names in th
 
 ![Anime cast](Docs/renders/cast.jpg)
 
-*Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy and Dr. Crowler (Cycles preview), at their heights, cel shaded, in draped uniforms).*
+*Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy and Dr. Crowler (Cycles preview: real heights, cel shading, draped uniforms).*
 
 ![Cast portraits](Docs/renders/cast_portraits.jpg)
 
