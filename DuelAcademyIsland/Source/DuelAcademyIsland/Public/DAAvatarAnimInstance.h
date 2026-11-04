@@ -67,6 +67,12 @@ public:
 	/** Turn the head towards a world location (bEnable false eases back to the animation). */
 	void SetLookAtTarget(const FVector& WorldLocation, bool bEnable);
 
+	/** Self-test / debug: spring chains on this skeleton, the largest spring deflection (degrees) of the last
+	 *  evaluated frame, and the current look-at weight (-DACastLifeTest). */
+	int32 GetSpringChainCount() const { return SpringChainCount; }
+	float GetSpringDeflection() const { return SpringDeflection; }
+	float GetLookAlpha() const { return LookAlpha; }
+
 	/** Turn the spring chains on or off (e.g. for a debug comparison). */
 	UPROPERTY(Transient, BlueprintReadWrite, Category = "Duel Academy|Animation")
 	bool bSecondaryMotion = true;
@@ -108,6 +114,10 @@ private:
 	TMap<FName, float> EmotionTargets;
 	TMap<FName, float> EmotionWeights;
 	FRandomStream FaceRng;
+
+	// spring stats copied back from the proxy (previous frame)
+	int32 SpringChainCount = 0;
+	float SpringDeflection = 0.f;
 
 	// look-at
 	FVector LookTargetWorld = FVector::ZeroVector;

@@ -123,6 +123,9 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 	FCompactPoseBoneIndex HeadIndex = FCompactPoseBoneIndex(INDEX_NONE);
 	FCompactPoseBoneIndex NeckIndex = FCompactPoseBoneIndex(INDEX_NONE);
 	FVector LastHeadWorld = FVector::ZeroVector;
+	// stats for the game thread (read in NativeUpdateAnimation, after the previous evaluation)
+	int32 StatChains = 0;
+	float StatMaxDeflection = 0.f;
 
 	void BuildChains(const FReferenceSkeleton& Ref)
 	{
@@ -269,6 +272,8 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 			LastHeadWorld = HeadCenterW;
 		}
 		const FVector GravityDir(0.0, 0.0, -1.0);
+		int32 ValidChains = 0;
+		float MaxDeflection = 0.f;
 		for (FDASpringChain& Chain : Chains)
 		{
 			if (!Chain.bValid)
@@ -334,12 +339,16 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 					continue;
 				}
 				const FQuat Delta = FQuat::FindBetweenNormals(AnimCS, SimCS);
+				MaxDeflection = FMath::Max(MaxDeflection, FMath::RadiansToDegrees(static_cast<float>(Delta.GetAngle())));
 				FTransform NewCS = BoneCS;
 				NewCS.SetRotation((Delta * BoneCS.GetRotation()).GetNormalized());
 				CS.SetComponentSpaceTransform(B, NewCS);
 			}
 			Chain.bInitialised = true;
+			++ValidChains;
 		}
+		StatChains = ValidChains;
+		StatMaxDeflection = MaxDeflection;
 		SimDt = 0.f;
 	}
 
@@ -891,5 +900,7 @@ void UDAAvatarAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 	Proxy.SimDt = Dt;
 	Proxy.bSprings = bSecondaryMotion;
+	SpringChainCount = Proxy.StatChains;
+	SpringDeflection = Proxy.StatMaxDeflection;
 	UpdateFace(Dt);
 }

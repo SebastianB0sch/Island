@@ -54,6 +54,7 @@ Run the runtime suites from the editor/game command line:
 -DAPuzzleExamSelfTest     # both A07 suites in one process
 -DAUITest                 # 8 PDA + 2 dialogue screenshots
 -DATitleTest / -DANewGameTest
+-DACastLifeTest           # anime cast: cel materials + stencil + PP, face morphs, lip-sync, springs, look-at
 ```
 
 Data validators:
@@ -406,6 +407,12 @@ percentage, knee range, loop closure). To check the runtime blend and planted fe
 ```text
 UnrealEditor-Cmd DuelAcademyIsland.uproject /Game/DuelAcademy/Maps/DuelAcademyIsland -game -windowed -DALocomotionTest
 ```
+
+`-DACastLifeTest` checks the cast's runtime layer the same way: the player's mesh must carry the face
+morph targets and use `M_DA_Cel*` on its slots with custom-depth stencil 1, `PP_DA_Cel` must load, the
+visemes must move while it talks, the spring chains must deflect while it sprints and stops, and the head
+must turn to a look-at target. It logs `DACastLifeTest: PASS|FAIL <check>`, saves `DACastLife*.png` and
+exits with status 0 only if every check passed.
 
 It teleports to the plaza, walks, sprints and stops from a side camera, saves `DAWalk*/DARun*/DAStop`
 screenshots and logs the planted ball-joint speed (about 7 cm/s at the 1.5 m/s walk and 13 cm/s at

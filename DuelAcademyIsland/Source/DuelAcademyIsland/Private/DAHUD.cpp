@@ -17,6 +17,11 @@
 #include "DASettings.h"
 #include "DAShopSubsystem.h"
 #include "DAStudentCharacter.h"
+#include "DAAvatarAnimInstance.h"
+#include "DAAvatarComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "Materials/Material.h"
+#include "Materials/MaterialInterface.h"
 #include "DAStorySubsystem.h"
 #include "DAExamSubsystem.h"
 #include "DACardRecords.h"
@@ -262,6 +267,153 @@ void ADAHUD::BeginPlay()
 		After(6.0f, [](ADAHUD* HUD) { HUD->LogFootPlantStats(TEXT("run")); HUD->LocomotionSamples.Reset(); HUD->bLocomotionTest = false; });
 		After(6.8f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DAStop.png"), false, false); });
 		After(7.8f, [](ADAHUD*) { FPlatformMisc::RequestExit(false); });
+	}
+
+	// Anime cast "life layer" self-test (-DACastLifeTest): checks the cel shading setup (M_DA_Cel materials,
+	// custom-depth stencil, PP_DA_Cel), the face morph targets and runtime visemes, the spring chains
+	// (secondary motion while the player walks and stops) and the look-at; logs PASS / FAIL per check, saves
+	// DACastLife*.png and exits with status 0 (all passed) or 1.
+	if (FParse::Param(FCommandLine::Get(), TEXT("DACastLifeTest")))
+	{
+		struct FCastLifeState
+		{
+			float MaxViseme = 0.f;
+			float MaxDeflection = 0.f;
+			float MaxLook = 0.f;
+		};
+		TSharedRef<FCastLifeState> State = MakeShared<FCastLifeState>();
+		TWeakObjectPtr<ADAHUD> WeakThis(this);
+		auto After = [WeakThis](float Delay, TFunction<void(ADAHUD*)> Fn)
+		{
+			if (!WeakThis.IsValid())
+			{
+				return;
+			}
+			FTimerHandle Timer;
+			WeakThis->GetWorldTimerManager().SetTimer(Timer, FTimerDelegate::CreateWeakLambda(WeakThis.Get(),
+				[WeakThis, Fn]()
+				{
+					if (ADAHUD* HUD = WeakThis.Get())
+					{
+						Fn(HUD);
+					}
+				}), Delay, false);
+		};
+		auto Parts = [](ADAHUD* HUD, ADAStudentCharacter*& OutChar, UDAAvatarComponent*& OutAvatar,
+			USkeletalMeshComponent*& OutMesh, UDAAvatarAnimInstance*& OutAnim)
+		{
+			APlayerController* PC = HUD->GetOwningPlayerController();
+			OutChar = PC ? Cast<ADAStudentCharacter>(PC->GetPawn()) : nullptr;
+			OutAvatar = OutChar ? OutChar->FindComponentByClass<UDAAvatarComponent>() : nullptr;
+			OutMesh = nullptr;
+			if (OutChar)
+			{
+				TArray<USkeletalMeshComponent*> Meshes;
+				OutChar->GetComponents<USkeletalMeshComponent>(Meshes);
+				for (USkeletalMeshComponent* Mesh : Meshes)
+				{
+					if (Mesh && Mesh->GetSkeletalMeshAsset() && Cast<UDAAvatarAnimInstance>(Mesh->GetAnimInstance()))
+					{
+						OutMesh = Mesh;
+						break;
+					}
+				}
+			}
+			OutAnim = OutMesh ? Cast<UDAAvatarAnimInstance>(OutMesh->GetAnimInstance()) : nullptr;
+		};
+		After(1.0f, [Parts](ADAHUD* HUD)
+		{
+			HUD->CloseTitle();
+			ADAStudentCharacter* Char; UDAAvatarComponent* Avatar; USkeletalMeshComponent* Mesh; UDAAvatarAnimInstance* Anim;
+			Parts(HUD, Char, Avatar, Mesh, Anim);
+			if (!Char)
+			{
+				return;
+			}
+			Char->SetActorLocation(FVector(0.f, 4000.f, 3700.f), false, nullptr, ETeleportType::TeleportPhysics);
+			Char->SetActorRotation(FRotator(0.f, 0.f, 0.f));
+			Char->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			// walk, then sprint and stop: the hair / cloth springs have to lag and swing
+			HUD->LocomotionTestChar = Char;
+			HUD->bLocomotionTest = true;
+			HUD->bLocomotionSprint = true;
+			if (Avatar)
+			{
+				Avatar->SetTalking(true);
+				Avatar->SetEmotion(TEXT("Joy"), 0.5f);
+				// a point to the front left at eye height: the head has to turn there
+				Avatar->SetLookAt(Char->GetActorLocation() + Char->GetActorForwardVector() * 200.0 +
+					Char->GetActorRightVector() * -150.0 + FVector(0.0, 0.0, 70.0), true);
+			}
+		});
+		for (int32 i = 0; i < 30; ++i)
+		{
+			After(1.2f + i * 0.1f, [Parts, State](ADAHUD* HUD)
+			{
+				ADAStudentCharacter* Char; UDAAvatarComponent* Avatar; USkeletalMeshComponent* Mesh; UDAAvatarAnimInstance* Anim;
+				Parts(HUD, Char, Avatar, Mesh, Anim);
+				if (Mesh)
+				{
+					for (const TCHAR* V : { TEXT("A"), TEXT("I"), TEXT("U"), TEXT("E"), TEXT("O") })
+					{
+						State->MaxViseme = FMath::Max(State->MaxViseme, Mesh->GetMorphTarget(V));
+					}
+				}
+				if (Anim)
+				{
+					State->MaxDeflection = FMath::Max(State->MaxDeflection, Anim->GetSpringDeflection());
+					State->MaxLook = FMath::Max(State->MaxLook, Anim->GetLookAlpha());
+				}
+				if (Avatar && Char)
+				{
+					Avatar->SetLookAt(Char->GetActorLocation() + Char->GetActorForwardVector() * 200.0 +
+						Char->GetActorRightVector() * -150.0 + FVector(0.0, 0.0, 70.0), true);
+				}
+			});
+		}
+		After(2.4f, [](ADAHUD* HUD) { HUD->bLocomotionTest = false; });      // stop: the springs settle
+		After(2.6f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DACastLifeStop.png"), false, false); });
+		After(4.4f, [](ADAHUD*) { FScreenshotRequest::RequestScreenshot(TEXT("DACastLifeTalk.png"), false, false); });
+		After(4.6f, [Parts, State](ADAHUD* HUD)
+		{
+			ADAStudentCharacter* Char; UDAAvatarComponent* Avatar; USkeletalMeshComponent* Mesh; UDAAvatarAnimInstance* Anim;
+			Parts(HUD, Char, Avatar, Mesh, Anim);
+			bool bAll = true;
+			auto Check = [&bAll](const TCHAR* Name, bool bOk, const FString& Detail)
+			{
+				bAll &= bOk;
+				UE_LOG(LogDuelAcademyIsland, Display, TEXT("DACastLifeTest: %s %s (%s)"), bOk ? TEXT("PASS") : TEXT("FAIL"), Name, *Detail);
+			};
+			const USkeletalMesh* Asset = Mesh ? Mesh->GetSkeletalMeshAsset() : nullptr;
+			Check(TEXT("cast mesh"), Asset != nullptr && Anim != nullptr, Asset ? Asset->GetName() : TEXT("no anime cast mesh / native anim instance"));
+			int32 Morphs = 0;
+			for (const TCHAR* M : { TEXT("Blink"), TEXT("A"), TEXT("I"), TEXT("U"), TEXT("E"), TEXT("O"), TEXT("Joy"), TEXT("Angry") })
+			{
+				Morphs += (Asset && Asset->FindMorphTarget(M)) ? 1 : 0;
+			}
+			Check(TEXT("face morph targets"), Morphs == 8, FString::Printf(TEXT("%d/8 imported"), Morphs));
+			Check(TEXT("lip-sync"), State->MaxViseme > 0.2f, FString::Printf(TEXT("max viseme weight %.2f"), State->MaxViseme));
+			Check(TEXT("cel stencil"), Mesh && Mesh->bRenderCustomDepth && Mesh->CustomDepthStencilValue == DuelAcademy::CastStencil,
+				FString::Printf(TEXT("custom depth %d stencil %d"), Mesh && Mesh->bRenderCustomDepth ? 1 : 0, Mesh ? Mesh->CustomDepthStencilValue : -1));
+			int32 Cel = 0;
+			int32 Slots = Mesh ? Mesh->GetNumMaterials() : 0;
+			for (int32 i = 0; i < Slots; ++i)
+			{
+				const UMaterialInterface* Mat = Mesh->GetMaterial(i);
+				const UMaterial* Base = Mat ? Mat->GetBaseMaterial() : nullptr;
+				Cel += (Base && Base->GetName().StartsWith(TEXT("M_DA_Cel"))) ? 1 : 0;
+			}
+			Check(TEXT("cel materials"), Cel > 0 && Cel >= Slots - 2, FString::Printf(TEXT("%d/%d slots on M_DA_Cel*"), Cel, Slots));
+			const UMaterialInterface* PP = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/DuelAcademy/Materials/PP_DA_Cel.PP_DA_Cel"),
+				nullptr, LOAD_NoWarn | LOAD_Quiet);
+			Check(TEXT("cel post process"), PP != nullptr, PP ? TEXT("PP_DA_Cel loaded") : TEXT("PP_DA_Cel missing"));
+			Check(TEXT("spring chains"), Anim && Anim->GetSpringChainCount() > 0,
+				FString::Printf(TEXT("%d chains"), Anim ? Anim->GetSpringChainCount() : 0));
+			Check(TEXT("secondary motion"), State->MaxDeflection > 2.f, FString::Printf(TEXT("max spring deflection %.1f deg"), State->MaxDeflection));
+			Check(TEXT("look-at"), State->MaxLook > 0.5f, FString::Printf(TEXT("max look weight %.2f"), State->MaxLook));
+			UE_LOG(LogDuelAcademyIsland, Display, TEXT("DACastLifeTest: %s"), bAll ? TEXT("ALL PASSED") : TEXT("FAILED"));
+			FPlatformMisc::RequestExitWithStatus(false, bAll ? 0 : 1, TEXT("DACastLifeTest"));
+		});
 	}
 
 	// UI debug harnesses:
