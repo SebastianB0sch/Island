@@ -21,14 +21,14 @@ from dai import blend, config as C  # noqa: E402
 
 PICKS = [
     ("slifer", "slifer", "room101"),
-    ("ra", "ra", "misawa"),
-    ("obelisk", "obelisk_boys", "foyer"),
-    ("academy", "academy", "wingE_hallA_tiers"),
+    ("ra", "ra", "attic_obs"),
+    ("obelisk", "obelisk_boys", "4f_cupola"),
+    ("academy", "academy", "pavE_3f_physics_lab"),
     ("obelisk", "obelisk_girls", "tea_room"),
-    ("harbor", "lighthouse", "lh_hut"),
-    ("hotsprings", "hotsprings", "changing_men"),
-    ("abandoned", "abandoned", "ritual"),
-    ("harbor", "harbor", "wh01_hall"),
+    ("harbor", "lighthouse", "lh_g3_lookout"),
+    ("hotsprings", "hotsprings", "wash_men"),
+    ("abandoned", "abandoned", "clockwork"),
+    ("harbor", "harbor", "ferry_lower_cabin"),
 ]
 TILE = (640, 400)
 
@@ -51,6 +51,8 @@ def render_pick(module, placement, label, out, samples):
     P.instance_props_for_preview(aset)
     DR.preview_objects(aset, open_deg=55.0)
     blend.setup_world(sun_elev=38, sun_azim=210)
+    from dai import inspect
+    inspect.add_socket_lights(aset)          # lit like the Unreal level (light sockets + fixtures)
     s = cams[0]
     cam = blend.camera("InCam", Vector(s["pos"]), Vector(s["props"]["target"]), lens=s["props"].get("lens", 18.0))
     blend.setup_render(TILE, samples)
