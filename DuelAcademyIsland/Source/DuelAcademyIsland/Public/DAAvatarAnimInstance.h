@@ -11,6 +11,15 @@
 //
 // The anime takes are authored at 1.50 m/s walk and 4.20 m/s run (A_Anime_<Group>_Walk/Run).
 // UDAAvatarComponent feeds ground speed / air / swim / duel state every tick.
+//
+// On top of the blended takes the proxy runs the procedural "life" layer anime game characters have:
+//   * secondary motion: VRM-style verlet spring chains on the hair (VRoid HairJoint-* bones), the skirt and
+//     coat-tail cloth bones (skirt_* / coattail_*, Tools/dai/anime/outfit.py) and the J_Sec_* helpers, in
+//     world space so they swing when the character starts, stops and turns; a head sphere keeps hair out of
+//     the face
+//   * look-at: neck + head turn towards a target (the player while talking), clamped and eased
+//   * face: random blinks (sometimes double), lip-sync visemes while talking, eased emotions - all on the
+//     face morph targets exported with the cast (Blink, A/I/U/E/O, Joy/Angry/Sorrow/Surprised/Fun)
 
 #pragma once
 
@@ -49,6 +58,19 @@ public:
 	/** Update the weight of the current action while it is active (Duel pose / Swim alpha). */
 	void SetActionWeight(float InTargetWeight);
 
+	/** Lip-sync: cycle the mouth visemes while true. */
+	void SetTalking(bool bInTalking) { bTalking = bInTalking; }
+
+	/** Ease an emotion morph (Joy, Angry, Sorrow, Surprised, Fun) towards Weight; NAME_None clears all. */
+	void SetEmotion(FName Emotion, float Weight);
+
+	/** Turn the head towards a world location (bEnable false eases back to the animation). */
+	void SetLookAtTarget(const FVector& WorldLocation, bool bEnable);
+
+	/** Turn the spring chains on or off (e.g. for a debug comparison). */
+	UPROPERTY(Transient, BlueprintReadWrite, Category = "Duel Academy|Animation")
+	bool bSecondaryMotion = true;
+
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Animation")
 	float GetLocomotionPhase() const { return Phase; }
 
@@ -71,6 +93,26 @@ protected:
 
 private:
 	void UpdateActionTimes(float DeltaSeconds);
+	void UpdateFace(float Dt);
+
+	// face
+	bool bTalking = false;
+	bool bHasFace = false;
+	float BlinkTimer = 2.f;
+	float BlinkClock = -1.f;
+	bool bDoubleBlink = false;
+	float TalkClock = 0.f;
+	float VisemeHold = 0.f;
+	int32 Viseme = 0;
+	float VisemeWeights[5] = { 0.f, 0.f, 0.f, 0.f, 0.f };
+	TMap<FName, float> EmotionTargets;
+	TMap<FName, float> EmotionWeights;
+	FRandomStream FaceRng;
+
+	// look-at
+	FVector LookTargetWorld = FVector::ZeroVector;
+	bool bLookAt = false;
+	float LookAlpha = 0.f;
 
 	float GroundSpeed = 0.f;
 	float SwimAlpha = 0.f;

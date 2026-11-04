@@ -158,6 +158,56 @@ animations.
 
 *Walk and run cycles rendered from the gait solver: heel strike, flat, heel-off and toe-off; a real flight phase and stance compression in the run, with the arms and shoulders counter-swinging.*
 
+### Anime rendering, cloth and animation
+
+The cast is rendered, dressed and animated with the techniques current anime games use, all built from
+free tools (Blender as a Python module, numpy / scipy, Unreal's own C++):
+
+* **Cel shading** (`Tools/dai/anime/cel.py`): every cast material is classed as skin, face, hair, cloth or flat
+  (eyes, brows, lashes, mouth). Each class has a hard half-Lambert light/shadow step with a coloured shadow
+  (warm for skin, cool for cloth and hair), a rim light on the side the key light comes from, and an
+  "angel ring" highlight arc on hair. In Unreal the characters stay lit by the real scene (Lumen GI, cast
+  shadows, interior lamps, the night): `M_DA_Cel` turns specular off (no plastic sheen) and adds the rim
+  and hair highlight from the key-light direction that `ADAIslandManager` publishes (`MPC_DuelAcademy`
+  `SunDirection`, sun by day and moon by night). The stencil-masked post-process `PP_DA_Cel` then bands the
+  lighting on the cast (custom stencil 1) into a lit tone and a shadow tone with a saturated, cooler
+  shadow colour. The Cycles previews evaluate the same ramp.
+* **Anime face normals** (`Tools/dai/anime/shading.py`): the face's corner normals are blended towards an
+  ellipsoid fitted round the skull, so the face shades as one clean shape instead of throwing blotchy
+  nose and lip shadows. They are exported as custom normals and imported as such.
+* **Cloth drape** (`Tools/dai/anime/drape.py`): tailored garments no longer shrink-wrap the body. Every
+  horizontal slice of a jacket, shirt or skirt is pushed out to the convex hull of itself and the layers
+  under it, then hangs from its widest point above (chest, shoulder blades, seat). Sleeves become round
+  tubes that widen towards the cuff, trousers get straight legs that run from the thigh to the hem, and
+  shrink-free Taubin smoothing removes the remaining anatomy. The open edges (hems, cuffs, the jacket
+  front) get a turned-in band, so the fabric has visible thickness, and crease lines are painted into the
+  cloth textures: elbow and armpit folds, waist pull lines, knee and crotch folds, hem stacking and pleat
+  lines. Everything is computed by position, so vertices split along UV seams move together and the cloth
+  never cracks open.
+* **Cloth bones**: skirts and long coats get eight two-segment bone chains round the hem (`skirt_*`,
+  `coattail_*`). They carry 72 % of the hem, and the thighs carry the rest, so the legs still push the
+  fabric. Their rest pose comes from body landmarks only, so the shared skeleton stays identical across the
+  members of a group.
+* **Secondary motion** (`UDAAvatarAnimInstance`): a VRM-style verlet spring solver in the native
+  animation proxy swings the hair (the VRoid `HairJoint-*` chains), the skirt and coat-tail bones and the
+  `J_Sec_*` coat helpers in world space. They lag, overshoot and settle when a character starts, stops or
+  turns, and a head sphere keeps hair out of the face. It runs after the blended takes, so it works on every
+  clip.
+* **Facial animation**: the VRoid blendshapes are kept as 16 **morph targets** relative to each
+  character's baked resting expression (`Blink`, `Blink_L/R`, the visemes `A I U E O`, `Joy`, `Angry`,
+  `Sorrow`, `Surprised`, `Fun`, `EyeJoy`, `BrowAngry`, `BrowSorrow`). At runtime the characters blink every
+  2-6 s (one in five is a double blink) and lip-sync while speaking, and emotions ease in and out
+  (`UDAAvatarComponent::SetTalking / SetEmotion`). NPCs smile a little while you chat with them.
+* **Look-at**: neck and head turn towards the player while talking or standing close (clamped to 65° yaw and
+  28° pitch, split 40 / 60 between neck and head, released when you walk behind them).
+* **Takes**: the idle stands in contrapposto (the weight on one leg, hip shifted over it, the free knee
+  relaxed and the shoulders counter-tilted) with breathing on top. A new **Talk** take raises a hand
+  palm-up in two explanatory beats with head nods, and plays over the idle while a character speaks.
+* **Real heights**: each character has a standing height in cm (`cast.py` `height`: students 153-183 cm,
+  Crowler 186 cm, generic boys 170 cm and girls 160 cm ±5 %). The runtime scale is derived from the base
+  model's measured height, so a door, a stair step and a 1.5 m/s walk read at the same human scale as
+  the people using them.
+
 **Using your own models.** The likenesses are limited by what is freely redistributable: faces are the
 VRoid samples' own and hairstyles are restyled from their cuts. Any rigged humanoid **VRM / glTF / FBX** (VRoid Hub, Sketchfab,
 Fab, a model you made in VRoid Studio …) can replace them: put it in `Tools/thirdparty/<pack>/<asset>/` with

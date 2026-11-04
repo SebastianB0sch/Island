@@ -76,6 +76,8 @@ namespace DuelAcademy
 
 	/** Content paths of assets created by the editor build script. */
 	inline constexpr const TCHAR* AvatarFolder = TEXT("/Game/DuelAcademy/Meshes/Characters/");
+	/** Custom depth stencil value of the anime cast meshes (PP_DA_Cel bands their lighting). */
+	inline constexpr int32 CastStencil = 1;
 	inline constexpr const TCHAR* HologramMaterial = TEXT("/Game/DuelAcademy/Materials/M_DA_Hologram.M_DA_Hologram");
 	inline constexpr const TCHAR* CardBackMaterial = TEXT("/Game/DuelAcademy/Materials/MI_M_CardBack.MI_M_CardBack");
 	inline constexpr const TCHAR* SmokeMaterial = TEXT("/Game/DuelAcademy/Materials/M_DA_Smoke.M_DA_Smoke");

@@ -18,7 +18,13 @@ Masters (in /Game/DuelAcademy/Materials):
                    "fill" light (cel look), dimmer at night
   M_DA_ToonMasked  same, alpha-masked + two-sided (hair cards, eyelashes, cut-out clothes)
   M_DA_Outline     unlit ink line of the inverted-hull outlines (cast and furniture)
-  MPC_DuelAcademy  NightFactor / TimeOfDay (driven by ADAIslandManager)
+  M_DA_Cel         anime cast (cast.json kind "cel", Tools/dai/anime/cel.py): lit base colour without specular
+                   (no plastic sheen), a rim light on the side the key light comes from and an "angel ring"
+                   highlight on hair; M_DA_CelMasked is the alpha-masked two-sided variant
+  PP_DA_Cel        post-process (stencil 1 = the cast, set by UDAAvatarComponent): bands the real scene lighting
+                   (Lumen GI, shadows, lamps, night) on the cast into a lit and a shadow tone with a saturated,
+                   cooler shadow colour - the cel look without giving up the engine's lighting
+  MPC_DuelAcademy  NightFactor / TimeOfDay / SunDirection (driven by ADAIslandManager)
 """
 
 import unreal
@@ -178,6 +184,16 @@ def build_mpc():
         p.set_editor_property("default_value", v)
         params.append(p)
     mpc.set_editor_property("scalar_parameters", params)
+    vparams = []
+    for n, v in (("SunDirection", (0.3, 0.2, 0.93, 1.0)),):
+        p = unreal.CollectionVectorParameter()
+        p.set_editor_property("parameter_name", n)
+        p.set_editor_property("default_value", unreal.LinearColor(*v))
+        vparams.append(p)
+    try:
+        mpc.set_editor_property("vector_parameters", vparams)
+    except Exception as e:  # noqa: BLE001
+        C.warn(f"MPC vector parameters: {e}")
     unreal.EditorAssetLibrary.save_loaded_asset(mpc)
     return mpc
 
@@ -494,6 +510,108 @@ def build_outline(mpc):
     return g.finish()
 
 
+def _smooth_band(g, x, lo, hi):
+    """saturate((x - lo) / (hi - lo)): a linear step from lo to hi (hi < lo flips it)."""
+    return g.one_input(unreal.MaterialExpressionSaturate, g.mul(g.sub(x, g.const(lo)), g.const(1.0 / (hi - lo))))
+
+
+def build_cel(name, mpc, masked=False):
+    """Anime cast master (see the module docstring and Tools/dai/anime/cel.py)."""
+    g = Graph(name)
+    if masked:
+        g.settings(blend_mode=unreal.BlendMode.BLEND_MASKED, two_sided=True)
+    uv = g.node(unreal.MaterialExpressionTextureCoordinate)
+    base = g.tex("BaseTex", T("T_White"), S_COL, uv)
+    col = g.mul(base, g.vector("Tint", (1, 1, 1)), "RGB", "")
+    g.out(col, unreal.MaterialProperty.MP_BASE_COLOR)
+    g.out(g.const(0.0), unreal.MaterialProperty.MP_SPECULAR)
+    g.out(g.const(1.0), unreal.MaterialProperty.MP_ROUGHNESS)
+    g.out(g.const(0.0), unreal.MaterialProperty.MP_METALLIC)
+    key = g.node(unreal.MaterialExpressionCollectionParameter, collection=mpc, parameter_name="SunDirection")
+    key_dir = g.one_input(unreal.MaterialExpressionComponentMask, key, "", r=True, g=True, b=True, a=False)
+    key_w = g.one_input(unreal.MaterialExpressionComponentMask, key, "", r=False, g=False, b=False, a=True)
+    n = g.node(unreal.MaterialExpressionVertexNormalWS)
+    v = g.node(unreal.MaterialExpressionCameraVectorWS)
+    ndl = g.op(unreal.MaterialExpressionDotProduct, n, key_dir)
+    # lit side of the half-Lambert ramp (the post process does the actual banding with real shadows)
+    lit = _smooth_band(g, g.add(g.mul(ndl, g.const(0.5)), g.const(0.5)), 0.40, 0.55)
+    day = g.sub(g.const(1.0), g.mul(night_factor(g, mpc), g.const(0.7)))
+    # rim: thin bright edge on the silhouette, on the side the key light comes from
+    ndv = g.op(unreal.MaterialExpressionDotProduct, n, v)
+    edge = _smooth_band(g, ndv, 0.32, 0.20)
+    side = _smooth_band(g, g.op(unreal.MaterialExpressionDotProduct, key_dir, g.mul(v, g.const(-1.0))), -0.6, 0.2)
+    rim = g.mul(g.mul(edge, side), g.scalar("Rim", 0.18))
+    rim_col = g.lerp(col, g.const3((1.0, 0.98, 0.95)), g.const(0.55))
+    emissive = g.mul(rim_col, rim)
+    # angel ring on hair: annulus of N.H (cel.RING_NH)
+    h = g.one_input(unreal.MaterialExpressionNormalize, g.add(v, key_dir))
+    nh = g.op(unreal.MaterialExpressionDotProduct, n, h)
+    ring = g.mul(_smooth_band(g, nh, 0.785, 0.80), _smooth_band(g, nh, 0.875, 0.86))
+    ring = g.mul(g.mul(ring, lit), g.scalar("HairSpec", 0.0))
+    emissive = g.add(emissive, g.mul(g.const3((1.0, 0.97, 0.92)), g.mul(ring, g.const(2.0))))
+    # a little self-illumination so the shadow side never goes muddy (anime shadows are a colour, not black)
+    emissive = g.add(emissive, g.mul(col, g.scalar("Fill", 0.08)))
+    g.out(g.mul(g.mul(emissive, day), key_w), unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    if masked:
+        g.out(base, unreal.MaterialProperty.MP_OPACITY_MASK, "A")
+        try:
+            g.settings(opacity_mask_clip_value=0.5)
+        except Exception:  # noqa: BLE001
+            pass
+    g.settings(used_with_skeletal_mesh=True)
+    return g.finish()
+
+
+def build_cel_post(name="PP_DA_Cel"):
+    """Stencil-masked cel banding of the cast's lighting (the module docstring)."""
+    g = Graph(name)
+    g.settings(material_domain=unreal.MaterialDomain.MD_POST_PROCESS)
+    try:
+        g.settings(blendable_location=unreal.BlendableLocation.BL_SCENE_COLOR_BEFORE_DOF)
+    except Exception:  # noqa: BLE001 - older enum spelling
+        g.settings(blendable_location=unreal.BlendableLocation.BL_BEFORE_TONEMAPPING)
+
+    def scene(tid):
+        return g.node(unreal.MaterialExpressionSceneTexture, scene_texture_id=tid)
+    sc = g.one_input(unreal.MaterialExpressionComponentMask, scene(unreal.SceneTextureId.PPI_POST_PROCESS_INPUT0), "Color",
+                     r=True, g=True, b=True, a=False)
+    dif = g.one_input(unreal.MaterialExpressionComponentMask, scene(unreal.SceneTextureId.PPI_DIFFUSE_COLOR), "Color",
+                      r=True, g=True, b=True, a=False)
+    stencil = scene(unreal.SceneTextureId.PPI_CUSTOM_STENCIL)
+    luma = g.const3((0.3, 0.59, 0.11))
+    dif_l = g.op(unreal.MaterialExpressionDotProduct, dif, luma)
+    # light arriving at the pixel (colour) = scene colour / albedo
+    light = g.op(unreal.MaterialExpressionDivide, sc, g.op(unreal.MaterialExpressionMax, dif, g.const(0.03)))
+    lum = g.op(unreal.MaterialExpressionMax, g.op(unreal.MaterialExpressionDotProduct, light, luma), g.const(1e-4))
+    hue = g.lerp(g.const3((1, 1, 1)), g.op(unreal.MaterialExpressionDivide, light, lum), g.const(0.6))
+    exposure = g.node(unreal.MaterialExpressionEyeAdaptation)
+    lum_e = g.mul(lum, exposure)                    # display-referred light level (~1 = fully lit)
+    thr, soft = g.scalar("Threshold", 0.42), g.scalar("Softness", 0.06)
+    lit = g.one_input(unreal.MaterialExpressionSaturate,
+                      g.add(g.op(unreal.MaterialExpressionDivide, g.sub(lum_e, thr), soft), g.const(0.5)))
+    lit_level = g.scalar("LitLevel", 1.0)
+    # lit band: flat, but brighter-than-lit highlights (rim, hair ring, a lamp right next to them) survive
+    lit_v = g.add(lit_level, g.mul(g.op(unreal.MaterialExpressionMax, g.sub(lum_e, lit_level), g.const(0.0)), g.const(0.6)))
+    shadow_v = g.lerp(g.scalar("ShadowLevel", 0.52), lum_e, g.const(0.2))
+    band = g.op(unreal.MaterialExpressionDivide, g.lerp(shadow_v, lit_v, lit), g.op(unreal.MaterialExpressionMax, exposure, g.const(1e-4)))
+    # shadow colour: more saturated and a touch cooler than the albedo (cel shading's coloured shadows)
+    sat = g.op(unreal.MaterialExpressionDivide, dif, g.op(unreal.MaterialExpressionMax, dif_l, g.const(1e-3)))
+    shadow_tint = g.mul(g.lerp(g.const3((1, 1, 1)), sat, g.scalar("ShadowSaturation", 0.35)), g.const3((0.88, 0.88, 1.0)))
+    tint = g.lerp(shadow_tint, g.const3((1, 1, 1)), lit)
+    cel = g.mul(g.mul(g.mul(dif, hue), band), tint)
+    # only the cast (stencil 1) and only lit surfaces with an albedo (the unlit ink outline keeps its colour)
+    st = g.one_input(unreal.MaterialExpressionComponentMask, stencil, "Color", r=True, g=False, b=False, a=False)
+    is_cast = g.one_input(unreal.MaterialExpressionSaturate,
+                          g.sub(g.const(1.0), g.one_input(unreal.MaterialExpressionAbs, g.sub(st, g.const(1.0)))))
+    has_albedo = _smooth_band(g, dif_l, 0.01, 0.03)
+    k = g.mul(g.mul(is_cast, has_albedo), g.scalar("Strength", 1.0))
+    g.out(g.lerp(sc, cel, k), unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    MEL.layout_material_expressions(g.mat)
+    MEL.recompile_material(g.mat)
+    unreal.EditorAssetLibrary.save_loaded_asset(g.mat)
+    return g.mat
+
+
 TERRAIN_LAYERS = [
     # layer, splat (texture, channel) - Grass is the base layer (weight = whatever the others leave)
     ("Grass", None),
@@ -562,6 +680,7 @@ KIND_PARENT = {
     "beam": "M_DA_Beam", "waterfall": "M_DA_Waterfall", "terrain": "M_DA_Terrain",
     "pbr": "M_DA_PBR", "pbr_foliage": "M_DA_PBRFoliage",
     "toon": "M_DA_Toon", "toon_masked": "M_DA_ToonMasked", "outline": "M_DA_Outline",
+    "cel": "M_DA_Cel", "cel_masked": "M_DA_CelMasked",
 }
 
 CHANNEL = {"R": (1, 0, 0), "G": (0, 1, 0), "B": (0, 0, 1), "A": (0, 0, 0)}
@@ -573,8 +692,8 @@ def build_instances(palette, masters):
     out = {}
     for name, spec in palette.items():
         kind = spec.get("kind", "opaque")
-        if kind == "toon" and spec.get("masked"):
-            kind = "toon_masked"
+        if kind in ("toon", "cel") and spec.get("masked"):
+            kind = kind + "_masked"
         parent = masters.get(KIND_PARENT.get(kind, "M_DA_Master"))
         if parent is None:
             continue
@@ -635,6 +754,19 @@ def build_instances(palette, masters):
                         MEL.set_material_instance_texture_parameter_value(mi, "BaseTex", tex)
                     else:
                         C.warn(f"{mi_name}: texture {spec['base']} missing")
+            elif kind in ("cel", "cel_masked"):
+                MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
+                MEL.set_material_instance_scalar_parameter_value(mi, "Rim", float(spec.get("rim", 0.18)))
+                MEL.set_material_instance_scalar_parameter_value(mi, "HairSpec", float(spec.get("spec", 0.0)))
+                # flat parts (eyes, brows, mouth) glow a little more so the post-process never darkens them
+                fill = 0.35 if spec.get("cel") == "flat" else 0.08
+                MEL.set_material_instance_scalar_parameter_value(mi, "Fill", fill)
+                if spec.get("base"):
+                    tex = T(spec["base"])
+                    if tex:
+                        MEL.set_material_instance_texture_parameter_value(mi, "BaseTex", tex)
+                    else:
+                        C.warn(f"{mi_name}: texture {spec['base']} missing")
             elif kind == "outline":
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
             elif kind == "glass":
@@ -684,7 +816,10 @@ def build_all(palette):
                      ("M_DA_PBRFoliage", lambda: build_pbr("M_DA_PBRFoliage", foliage=True)),
                      ("M_DA_Toon", lambda: build_toon("M_DA_Toon", mpc)),
                      ("M_DA_ToonMasked", lambda: build_toon("M_DA_ToonMasked", mpc, masked=True)),
-                     ("M_DA_Outline", lambda: build_outline(mpc))):
+                     ("M_DA_Outline", lambda: build_outline(mpc)),
+                     ("M_DA_Cel", lambda: build_cel("M_DA_Cel", mpc)),
+                     ("M_DA_CelMasked", lambda: build_cel("M_DA_CelMasked", mpc, masked=True)),
+                     ("PP_DA_Cel", build_cel_post)):
         try:
             masters[name] = fn()
         except Exception as e:  # noqa: BLE001

@@ -8,7 +8,8 @@ procedural fallback (head.py / hair.py / body.py / face.py) builds the character
 
   name       display name (HUD dialogue title)
   dorm       slifer | ra | obelisk | white | teacher   (HUD accent, NPC behaviour)
-  scale      uniform runtime scale (the skeleton is shared; Syrus is small, Zane tall)
+  height     standing height in cm without hair (the runtime uniform scale is derived from it and the base
+             model's measured height, see scale_of; the skeleton is shared, so heights differ by scale only)
   body       {"female", "belly", "coat" (None | "long" | "tails"), "skirt", "boots", "open" (jacket V depth 0..1)}
   colors     sRGB colours of the outfit parts (jacket, trim, inner, pants, shoes, skirt, socks, coat ...)
   hair       {"style": hair.STYLES key, "color", "color2" (second tone), ...style params}
@@ -108,7 +109,7 @@ def _girl(jacket=None, trim=None, skirt=None, boots=None, **kw):
 CAST = {
     # ------------------------------------------------------------------ Slifer Red
     "jaden": dict(
-        name="Jaden Yuki", dorm="slifer", scale=1.0, model="vroid_c",
+        name="Jaden Yuki", dorm="slifer", height=168, model="vroid_c",
         body=dict(open=1.0),
         outfit=dict(_academy(SLIFER_RED, SLIFER_DARK, (0.20, 0.20, 0.23), UNIFORM_PANTS, open_=1.0,
                              coat=dict(shield=dict(color=WHITE, border=SLIFER_DARK, w=0.15, side=0.09, point=0.07)))),
@@ -129,7 +130,7 @@ CAST = {
         spawn=dict(group="slifer", dorm="slifer", nth=0),
     ),
     "syrus": dict(
-        name="Syrus Truesdale", dorm="slifer", scale=0.84, model="vroid_c",
+        name="Syrus Truesdale", dorm="slifer", height=153, model="vroid_c",
         body=dict(open=0.75),
         outfit=dict(_academy(SLIFER_RED, SLIFER_DARK, (0.98, 0.84, 0.22), UNIFORM_PANTS, open_=0.0)),
         hairdo=dict(spike=dict(lift=0.45, up=0.1, length=1.45, front_lift=0.25, front_length=1.2, crown_lift=0.3, volume=1.08),
@@ -149,7 +150,7 @@ CAST = {
         spawn=dict(group="slifer", dorm="slifer", nth=1),
     ),
     "chumley": dict(
-        name="Chumley Huffington", dorm="slifer", scale=1.02, model="vroid_c",
+        name="Chumley Huffington", dorm="slifer", height=171, model="vroid_c",
         body=dict(open=0.9, belly=1.0),
         outfit=dict(_academy(WHITE, SLIFER_RED, (0.94, 0.93, 0.88), (0.30, 0.30, 0.34), open_=0.0,
                               coat=dict(collar_color=SLIFER_RED),
@@ -173,7 +174,7 @@ CAST = {
     ),
     # ------------------------------------------------------------------ Ra Yellow
     "bastion": dict(
-        name="Bastion Misawa", dorm="ra", scale=1.04, model="vroid_c",
+        name="Bastion Misawa", dorm="ra", height=176, model="vroid_c",
         body=dict(open=0.35),
         # Duel Links portrait: green turtleneck under a gold-collared Ra Yellow jacket
         outfit=dict(_academy(RA_YELLOW, RA_DARK, (0.36, 0.58, 0.30), (0.22, 0.24, 0.30), open_=0.0,
@@ -196,7 +197,7 @@ CAST = {
     ),
     # ------------------------------------------------------------------ Obelisk Blue
     "chazz": dict(
-        name="Chazz Princeton", dorm="obelisk", scale=1.03, model="vroid_c",
+        name="Chazz Princeton", dorm="obelisk", height=174, model="vroid_c",
         body=dict(open=0.6, coat="long"),
         outfit=dict(_coat((0.07, 0.07, 0.09), (0.40, 0.40, 0.44), (0.45, 0.32, 0.42), (0.10, 0.12, 0.26),
                            open_=0.7, collar=0.09)),
@@ -217,7 +218,7 @@ CAST = {
         spawn=dict(group="obelisk_boys", dorm="obelisk", nth=7),
     ),
     "zane": dict(
-        name="Zane Truesdale", dorm="obelisk", scale=1.1, model="vroid_c",
+        name="Zane Truesdale", dorm="obelisk", height=183, model="vroid_c",
         body=dict(open=0.3, coat="long"),
         outfit=dict(_coat(WHITE, (0.22, 0.30, 0.72), (0.07, 0.07, 0.08), (0.12, 0.13, 0.20), open_=0.0, collar=0.08,
                           coat=dict(tails=0.25, loose=0.012, collar_color=WHITE, collar_trim=OBELISK_TRIM,
@@ -241,7 +242,7 @@ CAST = {
         spawn=dict(group="lighthouse", dorm="obelisk", nth=0),
     ),
     "alexis": dict(
-        name="Alexis Rhodes", dorm="obelisk", scale=1.0, model="vroid_a",
+        name="Alexis Rhodes", dorm="obelisk", height=162, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(gloves=dict(color=(0.22, 0.30, 0.72), trim=OBELISK_TRIM, trims=("front",), trim_w=0.006)),
         hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
@@ -260,7 +261,7 @@ CAST = {
         spawn=dict(group="obelisk_girls", dorm="obelisk", nth=0),
     ),
     "jasmine": dict(
-        name="Jasmine", dorm="obelisk", scale=0.98, model="vroid_a",
+        name="Jasmine", dorm="obelisk", height=160, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         # Tag Force Special portrait: auburn shoulder-length hair flaring out in points, a tuft on top
@@ -277,7 +278,7 @@ CAST = {
         spawn=dict(group="obelisk_girls", dorm="obelisk", nth=6),
     ),
     "mindy": dict(
-        name="Mindy", dorm="obelisk", scale=0.97, model="vroid_a",
+        name="Mindy", dorm="obelisk", height=158, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         # Tag Force Special portrait / anime: charcoal bob flipping out in wings at the shoulders
@@ -295,7 +296,7 @@ CAST = {
     ),
     # ------------------------------------------------------------------ staff
     "crowler": dict(
-        name="Dr. Vellian Crowler", dorm="teacher", scale=1.12, model="vroid_c",
+        name="Dr. Vellian Crowler", dorm="teacher", height=186, model="vroid_c",
         body=dict(open=0.2, coat="long"),
         outfit=dict(_coat((0.16, 0.30, 0.66), (0.92, 0.78, 0.30), WHITE, (0.16, 0.30, 0.66), open_=0.0, collar=0.0,
                              cuff=(0.96, 0.62, 0.78), width=0.05,
@@ -360,7 +361,7 @@ def student_entry(key):
         outfit = _academy(WHITE, (0.72, 0.72, 0.72), (0.62, 0.65, 0.69), (0.22, 0.24, 0.30), open_=0.0,
                           trim=(0.55, 0.55, 0.55), coat=dict(tint=True))
         outfit["shirt"]["turtleneck"] = True
-    return dict(name="Student", dorm="any", scale=1.0, body=body, colors=colors, model=s.get("model"), outfit=outfit,
+    return dict(name="Student", dorm="any", height=GENERIC_HEIGHT[female], body=body, colors=colors, model=s.get("model"), outfit=outfit,
                 hair=dict(s["hair"], color=TINT_BASE), face=face, extras=s.get("extras", []),
                 tint=["hair"] if female else ["jacket", "hair"], lines=[])
 
@@ -368,12 +369,29 @@ def student_entry(key):
 # The playable student: a generic look with a dorm-tinted jacket (J switches dorms in game)
 PLAYER = "student_m1"
 
+# Standing height (crown, without hair) of each base model in its rest pose, metres - measured from the VRoid
+# samples (Tools/dai/anime/models.load: highest skin / face vertex). Used to turn the cast's heights into the
+# runtime scale, so 168 cm means 168 cm on the island (doors, stairs and the 1.5 m/s walk are human scale).
+BASE_HEIGHT = {"vroid_a": 1.550, "vroid_b": 1.511, "vroid_c": 1.743}
+FALLBACK_HEIGHT = 1.70           # the procedural fallback body
+GENERIC_HEIGHT = {False: 170, True: 160}   # generic students (NPCs vary +-5 % round this)
+
+
+def scale_of(entry):
+    """Runtime uniform scale of a cast entry: its height over the base model's own height."""
+    if "height" not in entry:
+        return float(entry.get("scale", 1.0))
+    base = BASE_HEIGHT.get(entry.get("model"), FALLBACK_HEIGHT)
+    return round(entry["height"] / 100.0 / base, 3)
+
 
 def all_entries():
-    """{cast id: full entry} for everything the pipeline builds."""
-    out = dict(CAST)
+    """{cast id: full entry} for everything the pipeline builds (with the derived "scale")."""
+    out = {k: dict(v) for k, v in CAST.items()}
     for k in STUDENTS:
         out[k] = student_entry(k)
+    for e in out.values():
+        e["scale"] = scale_of(e)
     return out
 
 
@@ -402,7 +420,7 @@ def assign_npcs(npcs):
                 n["cast"] = cid
                 n["name"] = c["name"]
                 n["lines"] = list(c["lines"])
-                n["scale"] = c["scale"]
+                n["scale"] = scale_of(c)
                 n["tint"] = False
                 used.add(id(n))
                 break
@@ -417,6 +435,6 @@ def assign_npcs(npcs):
         n["cast"] = looks[(h // 100) % len(looks)]
         n.pop("name", None)
         n.pop("lines", None)
-        n["scale"] = round(0.95 + (h % 11) * 0.01, 2)
+        n["scale"] = round(scale_of(student_entry(n["cast"])) * (0.95 + (h % 11) * 0.01), 3)
         n["tint"] = True
     return npcs

@@ -295,6 +295,15 @@ void ADAIslandManager::ApplyTimeOfDay()
 	{
 		UKismetMaterialLibrary::SetScalarParameterValue(this, ParameterCollection, TEXT("NightFactor"), NightFactor);
 		UKismetMaterialLibrary::SetScalarParameterValue(this, ParameterCollection, TEXT("TimeOfDay"), SafeHour);
+		// Key light for the anime cast's cel material (rim light / hair highlight, M_DA_Cel): the direction
+		// *towards* the sun by day and the moon by night, so the rim always sits on the side the light comes from.
+		const FRotator SunRot(-Elevation, SunYaw, 0.f);
+		const FRotator MoonRot(-MoonElevation, SunYaw + 160.f, 0.f);
+		const FVector ToSun = -SunRot.Vector();
+		const FVector ToMoon = -MoonRot.Vector();
+		const FVector ToKey = (ToSun * (1.f - NightFactor) + ToMoon * NightFactor).GetSafeNormal(KINDA_SMALL_NUMBER, FVector::UpVector);
+		UKismetMaterialLibrary::SetVectorParameterValue(this, ParameterCollection, TEXT("SunDirection"),
+			FLinearColor(ToKey.X, ToKey.Y, ToKey.Z, 1.f - 0.6f * NightFactor));
 	}
 
 	if (HasActorBegunPlay())
