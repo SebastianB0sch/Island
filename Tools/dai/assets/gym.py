@@ -20,11 +20,13 @@ import random
 
 from . import AssetSet
 from . import interior as K
+from . import detail as DT
 from .. import palette
 
 palette.register({
     "M_GymCeiling":   dict(kind="opaque", color=(0.80, 0.73, 0.60), rough=0.8, detail="Planks", tiling=0.5),
     "M_GymRib":       dict(kind="opaque", color=(0.88, 0.90, 0.90), rough=0.5, metallic=0.4, detail=None),
+    "M_GalleryFloor": dict(kind="opaque", color=(0.22, 0.26, 0.34), rough=0.8, detail="Concrete", tiling=0.5),
     "M_CourtPaint":   dict(kind="opaque", color=(0.16, 0.36, 0.62), rough=0.6, detail="Concrete", tiling=0.25),
 })
 
@@ -314,8 +316,8 @@ def _interior(mb, nc, rng):
         for side in (-1, 1):
             nc.box((cx + side * (FIELD_W / 2 + 0.005), cy, FLG + 0.2), (0.02, FIELD_D - 0.4, 0.06), GLOW)
 
-    # bleachers along the back wall: 6 tiers x 0.42 m, aisles with 0.21 m steps
-    tiers, rise = 6, 0.42
+    # bleachers along the back wall: 6 tiers x 0.36 m, aisles with two 0.18 m steps per tier
+    tiers, rise = 6, 0.36
     yb0, yb1 = 18.0, GY1 - WT
     depth = (yb1 - yb0) / tiers
     for (bx0, bx1) in ((-26.6, -2.9), (2.9, 26.6)):
@@ -449,17 +451,26 @@ def _annexes(aset, mb, nc):
     x0, x1, y0, y1 = -(GX1 - WT), -PART - AT, AY0, AY1 - AT
     K.floor_planks(mb, x0, y0, x1, y1, FLG + 0.006)
     K.wainscot(mb, (x0, y0), (x1, y0), FLG, 0.1, K.TRIM_WOOD)
-    aset.prop("SM_Int_OfficeDesk", (-27.6, -11.9, FLG), 0.0)
+    with mb.at((-27.6, -11.9, FLG)):        # steel office desk with a drawer pedestal (top 0.76 m)
+        mb.box((0, 0, 0.74), (1.8, 0.85, 0.04), "M_IntTrimWhite")
+        mb.box((0.6, 0, 0.36), (0.45, 0.8, 0.72), "M_IntSteelBlue")
+        mb.box((-0.87, 0, 0.36), (0.04, 0.8, 0.72), "M_IntSteelBlue")
+        mb.box((-0.2, 0.38, 0.45), (1.3, 0.02, 0.5), "M_IntSteelBlue")
+        for k in range(3):
+            mb.box((0.6, -0.405, 0.15 + 0.22 * k), (0.4, 0.012, 0.18), "M_IntMetal")
+            mb.box((0.6, -0.415, 0.2 + 0.22 * k), (0.12, 0.012, 0.02), "M_IntWoodDark")
     aset.prop("SM_Int_OfficeChair", (-27.6, -12.75, FLG), 180.0)
     for x in (-28.1, -27.1):
         aset.prop("SM_Int_WoodChair", (x, -10.85, FLG), 0.0 + (x + 27.6) * 20)
-    aset.prop("SM_Int_DeskLamp", (-28.15, -11.75, FLG + 0.76), 30.0)
-    aset.prop("SM_Int_Books", (-27.0, -11.7, FLG + 0.76), 0.0)
-    nc.box((-27.55, -12.0, FLG + 0.765), (0.42, 0.3, 0.01), "M_IntPaper")
-    nc.box((-27.45, -11.95, FLG + 0.775), (0.3, 0.21, 0.01), "M_IntPoster2")
-    _trophy(nc, -27.05, -12.1, FLG + 0.76, 0.8)
-    for y in (-12.95, -11.95):
-        aset.prop("SM_Int_Cabinet", (x0 + 0.24, y, FLG), 90.0)
+    DT.desk_set(nc, aset, -27.6, -11.9, FLG + 0.76, 0.0, kind="office", seed=11, w=1.8, d=0.85)
+    aset.prop("SM_Int_Books", (-26.95, -11.62, FLG + 0.76), 0.0)
+    nc.box((-27.0, -12.15, FLG + 0.765), (0.3, 0.21, 0.01), "M_IntPoster2")
+    _trophy(nc, -28.3, -11.6, FLG + 0.76, 0.8)
+    DT.duel_disk(nc, -27.95, -12.15, FLG + 0.76, 15.0)
+    DT.deck_box(nc, -26.85, -12.1, FLG + 0.76, 20.0, "M_IntFabricYellow")
+    DT.card_spread(nc, -27.25, -12.15, FLG + 0.766, 0.0, 4, 2)
+    aset.prop("SM_Int_Cabinet", (x0 + 0.33, -12.95, FLG), 90.0)
+    aset.prop("SM_Int_Drawers", (x0 + 0.27, -11.05, FLG), 90.0)
     mb.box_mm((x1 - 0.5, -13.3, FLG), (x1, -11.3, FLG + 0.9), K.WOOD)                       # trophy sideboard
     mb.box_mm((x1 - 0.52, -13.32, FLG + 0.9), (x1, -11.28, FLG + 0.94), K.TRIM_WHITE)
     for k, y in enumerate((-13.0, -12.55, -12.05, -11.6)):
@@ -517,10 +528,20 @@ def _annexes(aset, mb, nc):
     # ---------------- locker room
     x0, x1 = AX + AT, PART
     _floor(mb, x0, y0, x1, y1, "M_IntLinoleum")
-    K.lockers(mb, nc, aset, 21.2, y1 - 0.235, 0.0, n=9)
-    K.lockers(mb, nc, aset, x0 + 0.235, -12.3, 90.0, n=6, mat="M_IntSteelBlue")
-    for y in (-11.75, -12.95):
-        aset.prop("SM_Int_Bench", (20.6, y, FLG), 0.0)
+    with mb.at((0, 0, FLG)), nc.at((0, 0, FLG)):      # (the kit builds lockers from z = 0)
+        K.lockers(mb, nc, aset, 21.2, y1 - 0.235, 0.0, n=9)
+        K.lockers(mb, nc, aset, x0 + 0.235, -12.3, 90.0, n=6, mat="M_IntSteelBlue")
+    for y in (-11.75, -12.95):               # slatted changing benches
+        with mb.at((20.6, y, FLG)):
+            for sx in (-1, 1):
+                mb.box((sx * 0.75, 0, 0.21), (0.06, 0.3, 0.42), K.METAL)
+            for k in range(3):
+                mb.box((0, -0.1 + 0.1 * k, 0.44), (1.7, 0.08, 0.03), K.WOOD)
+            mb.box((0, 0, 0.12), (1.5, 0.3, 0.02), K.METAL)
+        for k in range(2):                   # trainers under the bench
+            with nc.at((20.1 + 0.9 * k, y + 0.05, FLG + 0.135), rot=10.0 * k):
+                for s_ in (-1, 1):
+                    nc.box((s_ * 0.065, 0, 0.04), (0.1, 0.27, 0.08), ("M_IntFabricWhite", "M_IntFabricRed")[k])
     nc.box((20.1, -11.75, FLG + 0.47), (0.5, 0.32, 0.03), "M_IntFabricWhite")             # towels
     nc.box((21.2, -12.95, FLG + 0.47), (0.45, 0.3, 0.04), "M_IntFabricYellow")
     for (x, y, a, m) in ((19.0, -13.3, 10, "M_IntFabricRed"), (22.4, -12.9, 20, "M_IntFabricBlue")):   # sports bags
@@ -531,7 +552,7 @@ def _annexes(aset, mb, nc):
     aset.text("SHOWERS", K.wall_point(x1, -11.2, -90.0, 0.02, FLG + 2.3), -90.0, size=0.14, color=(0.1, 0.2, 0.5))
     _blinds(nc, 20.5)
     K.panel_light(aset, nc, 20.1, -11.8, zc)
-    K.camera(aset, "lockers", (17.4, -13.25, FLG + 1.7), (22.6, -10.7, FLG + 0.9), 18.0)
+    K.camera(aset, "lockers", (17.75, -13.2, FLG + 1.7), (22.6, -10.7, FLG + 0.9), 18.0)
 
     # ---------------- showers
     x0, x1 = PART + AT, GX1 - WT
@@ -553,7 +574,7 @@ def _annexes(aset, mb, nc):
     aset.prop("SM_Int_WetFloor", (24.6, -12.5, FLG), 30.0)
     _blinds(nc, 26.5)
     K.panel_light(aset, nc, 26.5, -11.8, zc)
-    K.camera(aset, "showers", (23.8, -13.3, FLG + 1.8), (28.5, -10.7, FLG + 0.8), 18.0)
+    K.camera(aset, "showers", (28.9, -11.6, FLG + 1.7), (24.0, -13.4, FLG + 1.0), 18.0)
 
 
 def _canopy_and_sign(mb, nc):
@@ -683,8 +704,8 @@ def _sockets(aset, rng):
     # students
     aset.npc((-13.0, -2.5, FLG), 90.0, "slifer", 4.0)
     aset.npc((13.0, 8.0, FLG), -90.0, "ra", 4.0)
-    aset.npc((-8.0, 20.5, FLG + 0.84), 180.0, "obelisk", 2.0)
-    aset.npc((10.0, 21.5, FLG + 1.26), 180.0, "slifer", 2.0)
+    aset.npc((-8.0, 20.5, FLG + 0.72), 180.0, "obelisk", 2.0)
+    aset.npc((10.0, 21.5, FLG + 1.08), 180.0, "slifer", 2.0)
     aset.npc((45.0, -8.0, 0.1), 90.0, "ra", 6.0)
     aset.npc((6.0, -26.0, FLG), 0.0, "obelisk", 6.0)
     aset.npc((17.0, -16.5, FLG), 0.0, "white", 2.0)
@@ -695,6 +716,509 @@ def _sockets(aset, rng):
     # doors: sliding glass at the entrance, metal double door at the back
     aset.door((0.0, GY0 + WT / 2, FLG), 0.0, ENT_W, ENT_H, "glass", double=True)
     aset.door((0.0, GY1 - WT / 2, FLG), 180.0, BACK_W, BACK_H, "metal", double=True)
+
+
+# ---------------------------------------------------------------- detail pass: rooms, gallery, court
+ZG = FLG + AH + 0.25          # top of the annex roofs = floor of the upper galleries
+
+
+def _ball_cart(mb, nc, x, y, yaw, mats=("M_IntFabricOrange", "M_IntFabricWhite", "M_IntFabricYellow"), r=0.12):
+    with mb.at((x, y, FLG), rot=yaw), nc.at((x, y, FLG), rot=yaw):
+        mb.box_mm((-0.45, -0.3, 0.15), (0.45, 0.3, 0.2), "M_Metal")
+        for sx in (-1, 1):
+            for sy in (-1, 1):
+                mb.box((sx * 0.43, sy * 0.28, 0.45), (0.03, 0.03, 0.75), "M_Metal")
+                nc.cylinder((sx * 0.4, sy * 0.25, 0.0), 0.05, 0.05, "M_Black", seg=8)
+            mb.box((sx * 0.43, 0, 0.8), (0.03, 0.6, 0.03), "M_Metal")
+        for sy in (-1, 1):
+            mb.box((0, sy * 0.28, 0.8), (0.9, 0.03, 0.03), "M_Metal")
+        k = 0
+        for iz in range(2):
+            for ix in range(3):
+                for iy in range(2):
+                    nc.sphere((-0.26 + ix * 0.26, -0.13 + iy * 0.26, 0.21 + r + iz * 2 * r), r, mats[k % len(mats)],
+                              seg=10, rings=6)
+                    k += 1
+
+
+def _table(mb, nc, x, y, z, yaw, w, d, h=0.74, top="M_IntTrimWhite", legs="M_Metal", skirt=None):
+    with mb.at((x, y, z), rot=yaw):
+        mb.box((0, 0, h - 0.02), (w, d, 0.04), top)
+        for sx in (-1, 1):
+            for sy in (-1, 1):
+                mb.box((sx * (w / 2 - 0.05), sy * (d / 2 - 0.05), (h - 0.04) / 2), (0.04, 0.04, h - 0.04), legs)
+        if skirt:
+            mb.box((0, -d / 2 + 0.01, h - 0.25), (w, 0.02, 0.4), skirt)
+
+
+def _office_more(aset, mb, nc, rng):
+    x0, x1, y0, y1 = -(GX1 - WT), -PART - AT, AY0, AY1 - AT
+    z = FLG
+    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, z + AH, style="office", seed=3,
+                  keep_clear=[(-28.1, y0, -24.9, y0), (-29.25, y1, -26.95, y1)])
+    DT.blinds(nc, -26.5, y0, z + 1.2, z + 2.6, 180.0, 3.0, slats_open=0.45)
+    # mini fridge with the kettle and mugs, between the blackboard and the door
+    mb.box((-26.3, y1 - 0.28, z + 0.43), (0.5, 0.52, 0.86), K.TRIM_WHITE)
+    nc.box((-26.1, y1 - 0.545, z + 0.62), (0.02, 0.012, 0.3), K.METAL)
+    aset.prop("SM_Int_Kettle", (-26.42, y1 - 0.3, z + 0.86), 20.0)
+    for k in range(2):
+        DT.mug(nc, -26.18 + 0.05 * k, y1 - 0.2 - 0.12 * k, z + 0.86, seed=k + 1, coffee=False)
+    DT.coat_hooks(nc, -23.95, y1, z + 1.75, 0.0, n=3, dorm="white", jackets=1, seed=2)
+    # shelf of binders over the cabinet, team photos over the notice board, things on top of the cabinet
+    mb.box((x0 + 0.14, -12.95, z + 1.95), (0.28, 1.2, 0.03), K.WOOD)
+    # (DT.shelf_fill's book/office branch passes its arguments to book_row in the wrong order - kit bug -
+    # so the shelf is filled here: a row of books and a run of binders)
+    DT.book_row(nc, x0 + 0.14, x0 + 0.14 + 0.6, -12.4, z + 1.965, 0.22, -90.0, seed=7, lean=False)
+    for k in range(7):
+        nc.box((x0 + 0.14, -13.1 + 0.075 * k, z + 1.965 + 0.16), (0.24, 0.06, 0.32),
+               ("M_IntFabricBlue", "M_IntFabricRed", "M_IntTrimWhite", "M_IntFabricYellow")[k % 4])
+    DT.book_stack(nc, x0 + 0.3, -13.3, z + 1.18, 90.0, 3, 4)
+    _trophy(nc, x0 + 0.3, -12.6, z + 1.18, 1.2)
+    nc.box((x0 + 0.33, -12.95, z + 1.2), (0.3, 0.35, 0.04), "M_IntPaper")
+    for k, y in enumerate((-12.95, -12.3, -11.65)):
+        K.poster(nc, aset, x1, y, z + 2.45, -90.0, 0.5, 0.38, ("M_IntPoster2", "M_IntPoster3", "M_IntPoster1")[k])
+    K.rug(nc, -28.9, -13.25, -26.2, -10.5, z + 0.006, "M_IntFabricNavy", K.TRIM_WHITE)
+    DT.floor_clutter(nc, aset, x0, y0, x1, y1, z, kind="office", n=4, seed=5,
+                     clear=[(-28.7, -13.6, -26.5, -10.5), (x0, -13.6, x0 + 0.7, -10.4), (-25.6, -10.9, -24.4, y1),
+                            (x1 - 0.6, -13.4, x1, -11.2)])
+    nc.cylinder((-24.0, -13.3, z), 0.16, 0.34, "M_IntSteelBlue", seg=12, cap_top=False)         # waste bin
+    for k in range(3):
+        rbox(nc, (-24.0 + rng.uniform(-0.05, 0.05), -13.3 + rng.uniform(-0.05, 0.05), z + 0.3 + 0.03 * k),
+             (0.12, 0.12, 0.08), "M_IntPaper", yaw=rng.uniform(0, 90))
+
+
+def _store_more(aset, mb, nc, rng):
+    x0, x1, y0, y1 = -PART, -AX - AT, AY0, AY1 - AT
+    z = FLG
+    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, z + AH, style="service", seed=4,
+                  keep_clear=[(-22.0, y0, -19.0, y0)])
+    levels = [z + h for h in (0.08, 0.6, 1.12, 1.64)]
+    for k, y in enumerate((-12.8, -11.55)):
+        DT.shelf_fill(nc, aset, x0 + 0.27, y, levels, 90.0, 1.0, 0.45, kind="store", seed=20 + k)
+        DT.shelf_fill(nc, aset, x1 - 0.27, y - 0.2, levels, -90.0, 1.0, 0.45, kind="store", seed=30 + k)
+    _ball_cart(mb, nc, -19.3, -11.9, 8.0, ("M_IntFabricOrange",), r=0.12)
+    # a bin of bats, a stack of hurdles, jump ropes on hooks, a rolled net
+    nc.cylinder((-21.3, -10.4, z), 0.2, 0.55, "M_IntSteelBlue", seg=12, cap_top=False)
+    for k in range(4):
+        a = math.tau * k / 4
+        rbox(nc, (-21.3 + math.cos(a) * 0.08, -10.4 + math.sin(a) * 0.08, z + 0.5), (0.06, 0.06, 0.85),
+             ("M_IntWood", "M_IntWoodDark")[k % 2], pitch=8 * math.cos(a), roll=8 * math.sin(a))
+    for k in range(5):
+        with mb.at((-18.9, -13.3 + 0.04 * k, z + 0.02 * k)):
+            for sx in (-1, 1):
+                mb.box((sx * 0.38, 0, 0.3), (0.03, 0.03, 0.6), "M_Metal")
+                mb.box((sx * 0.38, 0, 0.01), (0.03, 0.4, 0.02), "M_Metal")
+            mb.box((0, 0, 0.58), (0.8, 0.02, 0.1), ("M_IntFabricRed", "M_IntTrimWhite")[k % 2])
+    for k in range(3):
+        nc.box((-17.35, y1 - 0.03, z + 1.7), (0.03, 0.06, 0.03), K.METAL)
+        with nc.at((-17.6 + 0.25 * k - 0.0, y1 - 0.05, z + 1.7)):
+            for s in (-1, 1):
+                nc.box((s * 0.04, 0, -0.45), (0.012, 0.012, 0.9), ("M_IntFabricRed", "M_IntFabricBlue", "M_IntFabricYellow")[k])
+    with nc.at((-22.2, -10.9, z), rot=20.0), nc.at((0, 0, 0.2), rot_y=90.0):
+        nc.cylinder((0, 0, -0.6), 0.2, 1.2, "M_IntFabricWhite", seg=10)
+    aset.prop("SM_Int_Ladder", (-17.4, -12.6, z), -90.0)
+
+
+def _locker_more(aset, mb, nc, rng):
+    x0, x1, y0, y1 = AX + AT, PART, AY0, AY1 - AT
+    z = FLG
+    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, z + AH, style="service", seed=6, keep_clear=[(19.0, y0, 22.0, y0)])
+    DT.coat_hooks(nc, x1, -12.6, z + 1.75, -90.0, n=4, dorm="ra", jackets=2, seed=3)
+    # bags and boxes on top of the lockers, a mirror with a shelf, a drinks crate
+    for (x, y, a, m) in ((19.4, y1 - 0.25, 10, "M_IntFabricRed"), (20.6, y1 - 0.25, -5, "M_IntFabricNavy"),
+                         (22.6, y1 - 0.25, 0, "M_IntFabricGreen"), (x0 + 0.25, -13.0, 80, "M_IntFabricYellow")):
+        with nc.at((x, y, z + 1.9), rot=a):
+            nc.box((0, 0, 0.15), (0.5, 0.3, 0.3), m)
+            nc.box((0, 0, 0.32), (0.2, 0.04, 0.05), m)
+    aset.prop("SM_Int_Box", (21.5, y1 - 0.25, z + 1.9), 5.0)
+    with nc.at((x1, -13.15, z)):
+        nc.box((-0.02, 0, 1.25), (0.02, 0.5, 1.4), "M_IntGlassClear")
+        nc.box((-0.012, 0, 1.25), (0.01, 0.56, 1.46), K.WOOD)
+        nc.box((-0.08, 0, 0.45), (0.14, 0.5, 0.03), K.WOOD)
+        nc.cylinder((-0.08, -0.12, 0.465), 0.03, 0.14, "M_IntFabricBlue", seg=8)
+        nc.box((-0.08, 0.1, 0.48), (0.08, 0.16, 0.03), "M_IntFabricPink")
+    with mb.at((18.0, -13.25, z), rot=12.0):
+        mb.box((0, 0, 0.15), (0.45, 0.32, 0.3), "M_IntFabricBlue")
+        for k in range(6):
+            nc.cylinder((-0.15 + 0.15 * (k % 3), -0.08 + 0.16 * (k // 3), 0.3), 0.035, 0.22,
+                        ("M_IntGlassClear", "M_IntFabricOrange")[k % 2], seg=8)
+    K.poster(nc, aset, 21.6, y0, z + 2.75, 180.0, 0.8, 0.3, "M_AcademyBlue", "TEAM SPIRIT", (1, 1, 1), 0.08)
+    # ribbed rubber mats along the benches
+    for y in (-12.35, -11.15, -13.45):
+        nc.box((20.6, y, z + 0.008), (3.4, 0.62 if y != -13.45 else 0.25, 0.012), "M_Black")
+        for k in range(16):
+            nc.box((19.0 + 0.21 * k, y, z + 0.016), (0.04, 0.6 if y != -13.45 else 0.23, 0.006), "M_DarkMetal")
+    aset.prop("SM_Int_WallClock", (x0, -10.6, z + 2.45), 90.0)
+    # cable tray and pipes under the ceiling along the back wall (the hall side)
+    nc.box(((x0 + x1) / 2, y1 - 0.25, z + AH - 0.12), (x1 - x0, 0.3, 0.05), K.METAL)
+    for k in range(4):
+        nc.box(((x0 + x1) / 2, y1 - 0.33 + 0.05 * k, z + AH - 0.08), (x1 - x0, 0.03, 0.03),
+               ("M_Black", "M_AcademyBlue", "M_Black", "M_AcademyYellow")[k])
+    nc.box(((x0 + x1) / 2, y1 - 0.55, z + AH - 0.1), (x1 - x0, 0.08, 0.08), "M_AcademyRed")
+    nc.cylinder((22.7, -13.25, z), 0.22, 0.6, "M_IntFabricBlue", seg=12, cap_top=False)            # towel bin
+    nc.sphere((22.7, -13.25, z + 0.6), 0.18, "M_IntFabricWhite", seg=8, rings=5)
+    for (x, y, a) in ((19.6, -11.75, 20.0), (21.4, -12.95, -30.0)):
+        DT.deck_box(nc, x, y, z + 0.47, a, "M_IntFabricYellow")
+
+
+def _showers_more(aset, mb, nc, rng):
+    x0, x1, y0, y1 = PART + AT, GX1 - WT, AY0, AY1 - AT
+    z = FLG
+    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, z + AH, style="service", seed=7, keep_clear=[(25.0, y0, 28.0, y0)])
+    # curtains on the stall rail (half drawn), towel hooks by the door, a slatted bench, slippers
+    nc.box((26.55, y1 - 1.0, z + 2.0), (4.4, 0.03, 0.03), K.METAL)
+    for k, xs in enumerate((24.9, 26.0, 27.1, 28.2)):
+        frac = (0.55, 0.9, 0.35, 0.7)[k]
+        cw = 1.05 * frac
+        cx = xs - 0.52 + cw / 2
+        for j in range(4):
+            nc.box((cx - cw / 2 + cw * (j + 0.5) / 4, y1 - 1.0 + (0.02 if j % 2 else -0.02), z + 1.15),
+                   (cw / 4 + 0.01, 0.02, 1.7), ("M_IntFabricWhite", "M_IntFabricBlue")[k % 2])
+    for k in range(4):
+        yy = -12.0 - 0.38 * k
+        nc.box((x0 + 0.03, yy, z + 1.65), (0.05, 0.03, 0.03), K.METAL)
+        if k != 2:
+            nc.box((x0 + 0.05, yy, z + 1.35), (0.03, 0.3, 0.55), ("M_IntFabricWhite", "M_IntFabricBlue", "M_IntFabricYellow",
+                                                                   "M_IntFabricPink")[k])
+    with mb.at((26.4, -12.45, z)):
+        for sx in (-1, 1):
+            mb.box((sx * 0.6, 0, 0.21), (0.06, 0.36, 0.42), K.METAL)
+        for k in range(4):
+            mb.box((0, -0.15 + 0.1 * k, 0.43), (1.5, 0.07, 0.03), K.WOOD)
+    nc.box((26.1, -12.4, z + 0.47), (0.45, 0.3, 0.06), "M_IntFabricWhite")
+    for (x, y, a, m) in ((25.4, -12.9, 15, "M_IntFabricBlue"), (27.6, -11.9, -40, "M_IntFabricRed")):
+        with nc.at((x, y, z), rot=a):
+            for s in (-1, 1):
+                nc.box((s * 0.06, 0, 0.015), (0.1, 0.26, 0.03), m)
+    # vanity with two basins and a mirror on the front wall (west of the window)
+    with mb.at((24.25, y0, z)), nc.at((24.25, y0, z)):
+        mb.box((0, 0.27, 0.42), (1.4, 0.52, 0.84), K.TRIM_WHITE)
+        mb.box((0, 0.28, 0.86), (1.46, 0.56, 0.04), "M_IntMarbleFloor")
+        for dx in (-0.35, 0.35):
+            nc.cylinder((dx, 0.3, 0.86), 0.17, 0.01, "M_IntWater", seg=12)
+            nc.cylinder((dx, 0.08, 0.88), 0.015, 0.16, K.METAL, seg=6)
+            nc.beam((dx, 0.08, 1.03), (dx, 0.18, 1.0), 0.02, 0.02, K.METAL)
+        nc.box((0, 0.01, 1.7), (1.3, 0.02, 0.85), "M_IntGlassClear")
+        nc.box((0, 0.015, 1.7), (1.38, 0.01, 0.93), K.METAL)
+        for k in range(4):
+            nc.cylinder((-0.55 + 0.12 * k, 0.1, 0.88), 0.03, 0.12 + 0.03 * (k % 2),
+                        ("M_IntFabricPink", "M_IntFabricBlue", "M_IntTrimWhite", "M_IntFabricGreen")[k], seg=8)
+    nc.box((x1 - 0.03, -12.0, z + 2.35), (0.02, 2.6, 0.04), K.METAL)
+    for k in range(6):                       # towels over the rail, a soap dispenser + caddy at every shower
+        nc.box((x1 - 0.06, -13.15 + 0.45 * k, z + 2.1), (0.03, 0.34, 0.5), ("M_IntFabricWhite", "M_IntFabricBlue",
+                                                                          "M_IntFabricYellow")[k % 3])
+    for y in (-13.0, -12.0, -11.0):
+        nc.box((x1 - 0.06, y - 0.3, z + 1.5), (0.1, 0.12, 0.2), K.TRIM_WHITE)
+    for x in (24.9, 26.0, 27.1, 28.2):
+        nc.box((x - 0.3, y1 - 0.06, z + 1.5), (0.12, 0.1, 0.2), K.TRIM_WHITE)
+        with nc.at((x + 0.3, y1 - 0.1, z + 1.1)):
+            nc.box((0, 0, 0), (0.3, 0.12, 0.02), K.METAL)
+            for j in range(3):
+                nc.cylinder((-0.09 + 0.09 * j, 0.0, 0.01), 0.03, 0.12 + 0.03 * j, ("M_IntFabricPink", "M_IntFabricGreen",
+                            "M_IntFabricOrange")[j], seg=8)
+    aset.prop("SM_Int_Bucket", (28.9, -12.5, z), 0.0)
+    K.poster(nc, aset, x0, -13.3, z + 1.75, 90.0, 0.42, 0.6, "M_IntPoster2", "RINSE FIRST", (1, 1, 1), 0.05)
+    with mb.at((x0 + 0.45, -10.55, z), rot=8.0), nc.at((x0 + 0.45, -10.55, z), rot=8.0):   # towel hamper
+        mb.box((0, 0, 0.45), (0.6, 0.45, 0.7), "M_IntFabricBlue")
+        for s_ in (-1, 1):
+            nc.cylinder((s_ * 0.25, 0, 0.0), 0.04, 0.08, "M_Black", seg=8)
+        nc.sphere((0, 0, 0.82), 0.2, "M_IntFabricWhite", seg=8, rings=5)
+        nc.sphere((0.12, 0.05, 0.85), 0.14, "M_IntFabricYellow", seg=8, rings=5)
+    # wooden duckboards on the tiles in front of the showers
+    for (x, y, w, d) in ((26.55, y1 - 0.6, 4.3, 0.9), (x1 - 0.55, -12.0, 0.9, 2.9)):
+        n = int((w if w > d else d) / 0.11)
+        for k in range(n):
+            if w > d:
+                nc.box((x - w / 2 + 0.11 * (k + 0.5), y, z + 0.03), (0.08, d, 0.025), K.WOOD)
+            else:
+                nc.box((x, y - d / 2 + 0.11 * (k + 0.5), z + 0.03), (w, 0.08, 0.025), K.WOOD)
+        nc.box((x, y, z + 0.008), (w - 0.1, d - 0.1, 0.016), "M_IntWoodDark")
+    # hot + cold supply pipes along the top of the walls with a drop to every shower, a towel shelf by the door
+    for (dz, m) in ((2.55, "M_AcademyRed"), (2.65, "M_AcademyBlue")):
+        nc.box((x1 - 0.06, -12.0, z + dz), (0.05, 3.4, 0.05), m)
+        nc.box((26.55, y1 - 0.06, z + dz), (4.4, 0.05, 0.05), m)
+    for y in (-13.0, -12.0, -11.0):
+        nc.box((x1 - 0.06, y, z + 2.38), (0.04, 0.04, 0.34), K.METAL)
+    for x in (24.9, 26.0, 27.1, 28.2):
+        nc.box((x, y1 - 0.06, z + 2.38), (0.04, 0.04, 0.34), K.METAL)
+    with mb.at((x0 + 0.2, -12.6, z)), nc.at((x0 + 0.2, -12.6, z)):
+        for k in range(4):
+            mb.box((0, 0, 0.3 + 0.45 * k), (0.4, 0.8, 0.03), K.WOOD)
+        for s_ in (-1, 1):
+            mb.box((0, s_ * 0.39, 0.85), (0.4, 0.03, 1.7), K.WOOD)
+        for k in range(3):
+            for j in range(2):
+                nc.box((0, -0.18 + 0.36 * j, 0.36 + 0.45 * k), (0.34, 0.3, 0.12 + 0.04 * (k % 2)),
+                       ("M_IntFabricWhite", "M_IntFabricBlue", "M_IntFabricYellow")[(k + j) % 3])
+    aset.prop("SM_Int_WallClock", (x0, -12.9, z + 2.4), 90.0)
+    aset.text("SHOWERS", K.wall_point(x1, -12.0, -90.0, 0.02, z + 2.7), -90.0, size=0.14, color=(0.1, 0.2, 0.5))
+    aset.prop("SM_Int_Broom", (x1 - 0.25, -10.4, z), -90.0)
+
+
+def _first_aid(aset, mb, nc, rng):
+    """First-aid corner in the hall: west of the bleachers."""
+    x0, x1, y0, y1 = GX0 + WT, -26.75, 18.0, GY1 - WT
+    z = FLG
+    nc.box_mm((x0 + 0.06, y0 + 0.4, z + 0.006), (x1 - 0.3, y1 - 0.4, z + 0.012), "M_IntFabricBlue")
+    aset.prop("SM_Int_DayBed", (-29.05, 20.6, z), 90.0)
+    nc.box((-29.05, 20.15, z + 0.62), (0.7, 0.9, 0.05), "M_IntFabricWhite")
+    nc.box((-29.05, 21.3, z + 0.66), (0.5, 0.3, 0.1), "M_IntFabricWhite")
+    # medicine cabinet with a red cross
+    with mb.at((x0 + 0.06, 23.2, z), rot=90.0), nc.at((x0 + 0.06, 23.2, z), rot=90.0):
+        mb.box((0, -0.23, 0.95), (1.0, 0.46, 1.9), K.TRIM_WHITE)
+        nc.box((0, -0.465, 1.45), (0.4, 0.01, 0.12), "M_AcademyRed")
+        nc.box((0, -0.465, 1.45), (0.12, 0.01, 0.4), "M_AcademyRed")
+        nc.box((0, -0.463, 0.95), (0.008, 0.01, 1.8), K.METAL)
+        for s in (-1, 1):
+            nc.box((s * 0.06, -0.48, 1.0), (0.02, 0.03, 0.15), K.METAL)
+    # stretcher on wall brackets above the padding, AED + sign on the bleacher end wall
+    with mb.at((x0 + 0.12, 19.6, z + 2.3)):
+        for s in (-1, 1):
+            mb.box((0, s * 0.95, -0.1), (0.2, 0.06, 0.06), K.METAL)
+        mb.box((0.05, 0, 0.0), (0.06, 2.1, 0.06), K.METAL)
+        mb.box((0.05, 0, 0.5), (0.06, 2.1, 0.06), K.METAL)
+        mb.box((0.06, 0, 0.25), (0.02, 1.8, 0.48), "M_AcademyRed")
+    with nc.at((x1, 20.6, z + 1.25), rot=-90.0):
+        nc.box((0, -0.06, 0), (0.4, 0.12, 0.45), "M_IntFabricGreen")
+        nc.box((0, -0.125, 0.05), (0.18, 0.01, 0.18), K.TRIM_WHITE)
+    aset.text("AED", K.wall_point(x1, 20.6, -90.0, 0.14, z + 1.38), -90.0, size=0.08, color=(1, 1, 1))
+    K.poster(nc, aset, x1, 22.6, z + 2.1, -90.0, 0.9, 0.45, K.TRIM_WHITE, text="FIRST AID",
+             text_color=(0.75, 0.05, 0.05), text_size=0.13)
+    aset.prop("SM_Int_FoldingScreen", (-27.9, 19.3, z), 70.0)
+    aset.prop("SM_Int_PlasticChair", (-28.05, 21.2, z), -90.0)
+    aset.prop("SM_Int_SideTable", (-29.2, 22.1, z), 90.0)
+    nc.cylinder((-29.25, 22.0, z + 0.55), 0.06, 0.2, "M_IntGlassClear", seg=10)
+    for k in range(3):
+        nc.cylinder((-29.1, 22.15 + 0.07 * k, z + 0.55), 0.03, 0.09, K.TRIM_WHITE, seg=8)
+    # cool box, crutches, bin
+    with mb.at((-27.3, 24.9, z), rot=15.0):
+        mb.box((0, 0, 0.2), (0.6, 0.4, 0.4), "M_IntFabricBlue")
+        mb.box((0, 0, 0.42), (0.62, 0.42, 0.05), K.TRIM_WHITE)
+    for k in range(2):
+        rbox(nc, (x0 + 0.2, 24.3 + 0.12 * k, z + 0.62), (0.04, 0.04, 1.25), K.METAL, pitch=-10.0, roll=4 * k)
+    nc.cylinder((-28.3, 25.25, z), 0.16, 0.4, K.TRIM_WHITE, seg=12)
+    nc.cylinder((-28.3, 25.25, z + 0.4), 0.165, 0.03, "M_AcademyRed", seg=12)
+    aset.light((-28.2, 21.5, z + 3.0), (1.0, 0.97, 0.92), 2200.0, 7.0)
+    K.camera(aset, "firstaid", (-27.0, 18.25, z + 1.65), (-29.4, 23.6, z + 0.8), 16.0)
+
+
+def _gallery(aset, mb, nc, rng, sx):
+    """Upper level on top of an annex: a steel stair from the court and a railed gallery (team lounge in the
+    west, weights corner in the east)."""
+    lo, hi = sorted((sx * AX, sx * (GX1 - WT)))
+    y0, y1 = AY0, AY1
+    z = ZG
+    mb.box_mm((lo, y0, z), (hi, y1, z + 0.012), "M_GalleryFloor", skip=("-z",))
+    # stair (19 x 0.18 m risers, 0.28 m treads) and the landing at the roof edge
+    K.stairs(mb, sx * 11.48, -9.4, FLG, z, 0.0 if sx > 0 else 180.0, 1.0, mat=K.METAL, stringer="M_DarkMetal",
+             rail="M_Metal", rail_sides=(1, -1))
+    la, lb = sorted((sx * AX, sx * (AX + 0.8)))
+    mb.box_mm((la, -9.9, z - 0.12), (lb, -8.9, z), K.METAL, mats={"+z": "M_GalleryFloor"})
+    for xx in (la + 0.04, lb - 0.04):
+        mb.box((xx, -8.95, (FLG + z) / 2), (0.08, 0.08, z - FLG), "M_DarkMetal")
+    xe = sx * (AX + 0.8)
+    mb.railing([(xe, -9.9, z), (xe, -8.9, z)], 1.0, "M_Metal", post_spacing=1.0)
+    # railing along the gallery edge and the end, leaving the landing open
+    xa = sx * (AX + 0.85)
+    mb.railing([(xa, y1 - 0.04, z), (sx * (GX1 - WT - 0.05), y1 - 0.04, z)], 1.05, "M_Metal", post_spacing=1.6)
+    mb.railing([(sx * (AX + 0.04), y1 - 0.04, z), (sx * (AX + 0.04), y0 + 0.05, z)], 1.05, "M_Metal", post_spacing=1.2)
+    for k in range(int((hi - lo - 1.0) / 0.12)):
+        xx = xa + sx * 0.12 * (k + 1)
+        if abs(xx) < GX1 - WT - 0.1:
+            nc.box((xx, y1 - 0.04, z + 0.55), (0.015, 0.015, 0.95), "M_Metal")
+    for k in range(int((y1 - y0) / 0.12)):
+        nc.box((sx * (AX + 0.04), y0 + 0.12 * (k + 0.5), z + 0.55), (0.015, 0.015, 0.95), "M_Metal")
+    if sx < 0:
+        # team lounge: spectator chairs at the rail, sofa, easel board, cooler table, kit bags
+        for k in range(5):
+            aset.prop("SM_Int_PlasticChair", (-28.4 + 1.25 * k, -10.6, z), 180.0 + rng.uniform(-8, 8))
+        aset.prop("SM_Int_SofaB", (-25.0, y0 + 0.45, z), 180.0)
+        aset.prop("SM_Int_Chalkboard", (-21.6, -12.6, z), 200.0)
+        _table(mb, nc, -18.4, -12.95, z, 0.0, 1.4, 0.7)
+        nc.cylinder((-18.8, -13.0, z + 0.74), 0.15, 0.45, "M_IntGlassClear", seg=12)
+        nc.cylinder((-18.8, -13.0, z + 0.74), 0.13, 0.35, "M_IntWater", seg=12)
+        for k in range(4):
+            nc.cylinder((-18.3 + 0.09 * k, -12.8, z + 0.74), 0.035, 0.1, K.TRIM_WHITE, seg=8, cap_top=False)
+        aset.prop("SM_Int_Box", (-18.0, -12.95, z + 0.74), 15.0)
+        for (x, a, m) in ((-27.0, 30.0, "M_IntFabricRed"), (-23.0, -10.0, "M_IntFabricBlue")):
+            with mb.at((x, -11.4, z + 0.15), rot=a), mb.at((0, 0, 0), rot_y=90):
+                mb.cylinder((0, 0, -0.3), 0.15, 0.6, m, seg=10)
+        nc.box((-24.0, y1 - 0.02, z + 0.75), (3.2, 0.02, 0.6), "M_AcademyYellow")      # banner on the rail
+        aset.text("GO RA YELLOW!", (-24.0, y1 + 0.01, z + 0.68), 180.0, size=0.28, color=(0.55, 0.1, 0.05))
+        aset.prop("SM_Int_PottedPlantB", (-17.4, y0 + 0.4, z), 0.0)
+        with mb.at((0, 0, z)), nc.at((0, 0, z)):
+            K.lockers(mb, nc, aset, -28.6, y0 + 0.23, 180.0, n=5, mat="M_AcademyYellow")
+        mb.box((-22.6, y0 + 0.25, z + 0.3), (1.6, 0.45, 0.6), K.WOOD)
+        aset.prop("SM_Int_TVB", (-22.6, y0 + 0.3, z + 0.6), 180.0)
+        aset.prop("SM_Int_Gamepad", (-22.1, y0 + 0.3, z + 0.6), 160.0)
+        DT.deck_box(nc, -23.15, y0 + 0.25, z + 0.6, 10.0, "M_IntFabricRed")
+        for k, x in enumerate((-29.0, -23.5, -17.6)):
+            K.poster(nc, aset, x, y0, z + 1.75 + 0.3 * (k == 1), 180.0, 0.6, 0.85,
+                     ("M_IntPoster1", "M_IntPoster3", "M_IntPoster2")[k], ("GX CUP", "TEAM RA", "TRAIN HARD")[k],
+                     (1, 1, 1), 0.07)
+        K.camera(aset, "gallery_w", (-17.2, -10.4, z + 1.65), (-28.0, -12.9, z + 0.6), 18.0)
+    else:
+        # weights corner: benches + barbells, a dumbbell rack, exercise bikes, mats, a mirror
+        for (bx, by) in ((25.2, -11.9), (27.6, -11.9)):
+            with mb.at((bx, by, z)), nc.at((bx, by, z)):
+                mb.box((0, 0, 0.42), (0.3, 1.2, 0.08), "M_ArenaSeat")
+                for sy in (-1, 1):
+                    mb.box((0, sy * 0.5, 0.2), (0.25, 0.06, 0.4), "M_DarkMetal")
+                for sx2 in (-1, 1):
+                    mb.box((sx2 * 0.35, 0.45, 0.6), (0.05, 0.05, 1.2), "M_DarkMetal")
+                with nc.at((0, 0.45, 1.05), rot_y=90.0):
+                    nc.cylinder((0, 0, -0.9), 0.015, 1.8, K.METAL, seg=6)
+                    for s in (-1, 1):
+                        nc.cylinder((0, 0, s * 0.62 - 0.03), 0.22, 0.06, "M_Black", seg=14)
+        with mb.at((21.6, y0 + 0.35, z)), nc.at((21.6, y0 + 0.35, z)):
+            for k in range(2):
+                mb.box((0, 0, 0.35 + 0.35 * k), (1.6, 0.4, 0.04), "M_DarkMetal")
+            for sx2 in (-1, 1):
+                mb.box((sx2 * 0.78, 0, 0.4), (0.05, 0.4, 0.8), "M_DarkMetal")
+            for k in range(2):
+                for j in range(6):
+                    with nc.at((-0.6 + 0.24 * j, 0.0, 0.43 + 0.35 * k), rot_y=90.0):
+                        r = 0.05 + 0.01 * j
+                        nc.cylinder((0, 0, -0.12), r, 0.05, "M_Black", seg=10)
+                        nc.cylinder((0, 0, 0.07), r, 0.05, "M_Black", seg=10)
+                        nc.cylinder((0, 0, -0.07), 0.015, 0.14, K.METAL, seg=6)
+        for bx in (18.4, 19.6):
+            with mb.at((bx, -12.4, z)), nc.at((bx, -12.4, z)):
+                mb.box((0, 0, 0.04), (0.5, 1.0, 0.08), "M_DarkMetal")
+                mb.beam((0, -0.35, 0.08), (0, -0.05, 0.75), 0.07, 0.07, "M_DarkMetal")
+                mb.box((0, -0.05, 0.8), (0.28, 0.32, 0.08), "M_Black")
+                mb.beam((0, 0.2, 0.08), (0, 0.4, 1.05), 0.06, 0.06, "M_DarkMetal")
+                mb.box((0, 0.42, 1.08), (0.5, 0.06, 0.04), "M_DarkMetal")
+                with nc.at((0, 0.12, 0.35), rot_y=90.0):
+                    nc.cylinder((0, 0, -0.04), 0.2, 0.08, "M_AcademyRed", seg=14)
+                nc.box((0, 0.44, 1.12), (0.16, 0.06, 0.1), "M_Screen")
+        nc.box_mm((24.4, y0 + 0.012, z + 0.3), (28.6, y0 + 0.03, z + 1.75), "M_IntGlassClear")
+        nc.box_mm((24.35, y0 + 0.005, z + 0.25), (28.65, y0 + 0.015, z + 1.8), K.METAL)
+        for k in range(4):
+            with nc.at((22.6 + 0.3 * k, -10.6, z + 0.12), rot=90.0), nc.at((0, 0, 0), rot_y=90.0):
+                nc.cylinder((0, 0, -0.32), 0.1, 0.64, ("M_IntFabricPurple", "M_IntFabricGreen", "M_IntFabricPink",
+                                                       "M_IntFabricBlue")[k], seg=10)
+        aset.prop("SM_Int_Box", (29.1, -10.5, z), 20.0)
+        for k, x in enumerate((18.2, 23.4)):
+            K.poster(nc, aset, x, y0, z + 1.9, 180.0, 0.6, 0.85, ("M_IntPoster4", "M_IntPoster2")[k],
+                     ("NO PAIN", "LP 8000")[k], (1, 1, 1), 0.07)
+        mb.box((29.2, -12.3, z + 0.5), (0.4, 0.4, 1.0), K.TRIM_WHITE)            # water fountain
+        nc.cylinder((29.15, -12.3, z + 1.0), 0.12, 0.04, K.METAL, seg=10)
+        with mb.at((19.0, -10.6, z)):                                              # scales
+            mb.box((0, 0, 0.04), (0.4, 0.45, 0.08), K.TRIM_WHITE)
+            mb.box((0, 0.2, 0.6), (0.06, 0.06, 1.1), K.METAL)
+            mb.box((0, 0.18, 1.2), (0.25, 0.08, 0.2), K.TRIM_WHITE)
+        nc.box((24.0, y1 - 0.02, z + 0.75), (3.2, 0.02, 0.6), "M_ObeliskTrim")
+        aset.text("OBELISK BLUE", (24.0, y1 + 0.01, z + 0.68), 180.0, size=0.28, color=(1.0, 1.0, 1.0))
+        K.camera(aset, "gallery_e", (17.2, -10.4, z + 1.65), (28.0, -12.9, z + 0.6), 18.0)
+    for xx in (sx * 20.5, sx * 26.5):
+        aset.light((xx, -11.8, z + 2.6), (1.0, 0.96, 0.9), 2500.0, 8.0)
+
+
+def _court_more(aset, mb, nc, rng):
+    z = FLG
+    # basketball hoops on the gable walls
+    for sx in (-1, 1):
+        x = sx * (GX1 - WT)
+        with mb.at((x, 2.5, z), rot=90.0 * sx), nc.at((x, 2.5, z), rot=90.0 * sx):
+            for s in (-1, 1):
+                mb.beam((s * 0.5, -0.02, 3.6), (s * 0.3, -1.1, 3.5), 0.08, 0.08, "M_Metal")
+            mb.box((0, -1.15, 3.45), (1.8, 0.05, 1.05), K.TRIM_WHITE)
+            nc.box((0, -1.18, 3.3), (0.59, 0.01, 0.45), "M_AcademyRed")
+            nc.box((0, -1.185, 3.3), (0.51, 0.012, 0.37), K.TRIM_WHITE)
+            nc.torus((0, -1.45, 3.05 - z + FLG), 0.23, 0.012, "M_AcademyRed", seg=16, tube_seg=4)
+            for k in range(10):
+                a = math.tau * k / 10
+                nc.beam((math.cos(a) * 0.23, -1.45 + math.sin(a) * 0.23, 3.05), (math.cos(a) * 0.13,
+                        -1.45 + math.sin(a) * 0.13, 2.65), 0.008, 0.008, K.TRIM_WHITE)
+    # painted run-off band around the playing area and the keys under the hoops (sports-hall floor paint)
+    zp = FLG + 0.002
+    for (a, b, c, d) in ((GX0 + WT, -9.5, -26.0, 18.0), (26.0, -9.5, GX1 - WT, 18.0), (-26.0, 14.5, 26.0, 18.0)):
+        flat_quad(nc, a, b, c, d, zp, "M_CourtPaint")
+    for sx in (-1, 1):
+        a, b = sorted((sx * 26.0, sx * 20.2))
+        flat_quad(nc, a, 0.6, b, 4.4, zp, "M_CourtPaint")
+    # sponsor-style boards along the side walls above the padding
+    boards = (("M_AcademyBlue", "DUEL ACADEMY"), ("M_AcademyRed", "GX SPORTS"), ("M_AcademyYellow", "CARD KINGDOM"),
+              ("M_ObeliskTrim", "TEAM SPIRIT"))
+    for sx in (-1, 1):
+        x = sx * (GX1 - WT - 0.03)
+        for k, y in enumerate((-6.5, -1.0, 4.5, 10.0, 15.0)):
+            m, txt = boards[(k + (sx > 0)) % 4]
+            nc.box((x, y, FLG + 2.35), (0.04, 4.6, 0.9), m)
+            aset.text(txt, (x - sx * 0.03, y, FLG + 2.22), -90.0 * sx, size=0.32, color=(1, 1, 1))
+    # team benches and the scorer's table in front of the bleachers
+    for x in (-21.0, -18.6, 18.6, 21.0):
+        aset.prop("SM_Int_Bench", (x, 16.7, z), 0.0)
+    _table(mb, nc, 0.0, 16.2, z, 0.0, 2.4, 0.7, skirt="M_AcademyBlue")
+    aset.text("OFFICIAL", (0.0, 16.2 - 0.38, z + 0.4), 0.0, size=0.18, color=(1, 1, 1))
+    for k in range(3):
+        aset.prop("SM_Int_PlasticChair", (-0.8 + 0.8 * k, 16.95, z), 0.0)
+    aset.prop("SM_Int_Laptop", (-0.5, 16.25, z + 0.74), 0.0)
+    aset.prop("SM_Int_Clipboard", (0.35, 16.1, z + 0.74), 10.0)
+    mb.box((0.85, 16.2, z + 0.79), (0.2, 0.14, 0.1), "M_DarkMetal")
+    nc.cylinder((0.85, 16.2, z + 0.84), 0.04, 0.02, "M_AcademyRed", seg=10)
+    DT.paper_stack(nc, 0.0, 16.3, z + 0.74, 0.0, 5, 3)
+    for k in range(4):
+        nc.cylinder((-0.95 + 0.1 * k, 16.4, z + 0.74), 0.035, 0.22, ("M_IntFabricBlue", "M_IntGlassClear")[k % 2], seg=8)
+    # ball carts by the courtside, duel-disk racks by the practice fields
+    _ball_cart(mb, nc, -27.0, 9.0, 0.0)
+    _ball_cart(mb, nc, 27.0, -2.0, 90.0, ("M_IntFabricOrange",))
+    for (cx, cy) in FIELDS:
+        with mb.at((cx, cy - FIELD_D / 2 - 1.3, z)):
+            for s in (-1, 1):
+                mb.box((s * 0.75, 0, 0.75), (0.05, 0.3, 1.5), "M_Metal")
+                mb.box((s * 0.75, 0, 0.02), (0.1, 0.5, 0.04), "M_Metal")
+            mb.box((0, 0, 1.5), (1.55, 0.05, 0.05), "M_Metal")
+            mb.box((0, 0, 0.9), (1.55, 0.05, 0.05), "M_Metal")
+        for k in range(3):
+            _duel_disk(mb, cx - 0.5 + 0.5 * k, cy - FIELD_D / 2 - 1.3 + 0.12, z + 1.2, 0.0)
+        aset.text("DUEL DISKS", (cx, cy - FIELD_D / 2 - 1.3 - 0.05, z + 1.62), 0.0, size=0.1, color=(0.1, 0.2, 0.5))
+    # banners hanging from the roof arches over the bleachers
+    cols = (("M_Fabric", "SLIFER RED"), ("M_AcademyYellow", "RA YELLOW"), ("M_ObeliskTrim", "OBELISK BLUE"),
+            ("M_AcademyBlue", "DUEL ACADEMY"))
+    for k, x in enumerate((-21.0, -9.0, 9.0, 21.0)):
+        yb = 19.5
+        zt = ZC + math.sqrt(R ** 2 - (yb - YC) ** 2) - 0.7
+        m, txt = cols[k]
+        nc.box((x, yb, zt), (1.7, 0.06, 0.06), "M_Gold")
+        nc.box((x, yb, zt - 2.2), (1.5, 0.02, 4.3), m)
+        nc.box((x, yb - 0.02, zt - 3.5), (0.9, 0.02, 0.9), FRAME)
+        for s in (-1, 1):
+            nc.box((x + s * 0.8, yb, zt + 0.35), (0.02, 0.02, 0.7), "M_DarkMetal")
+        aset.text(txt, (x, yb - 0.04, zt - 1.2), 0.0, size=0.2, color=(1, 1, 1))
+    # cheer banners on the first bleacher tier, bags and drinks on the seats
+    for (x, m, txt) in ((-16.0, "M_Fabric", "GO SLIFER!"), (14.0, "M_ObeliskTrim", "OBELISK #1"),
+                        (-6.0, "M_AcademyYellow", "RA RA RA!")):
+        nc.box((x, 17.98, z + 0.2), (3.0, 0.02, 0.38), m)
+        aset.text(txt, (x, 17.95, z + 0.12), 0.0, size=0.22, color=(1, 1, 1))
+    for k in range(10):
+        t = rng.randint(0, 5)
+        x = rng.choice((rng.uniform(-25.0, -16.0), rng.uniform(-13.0, -4.0), rng.uniform(4.0, 13.0), rng.uniform(16.0, 25.0)))
+        y = 18.0 + t * (GY1 - WT - 18.0) / 6 + 0.25
+        if rng.random() < 0.5:
+            nc.cylinder((x, y, z + 0.36 * (t + 1) + 0.05), 0.04, 0.14, rng.choice(("M_IntFabricRed", "M_IntTrimWhite")), seg=8)
+        else:
+            with nc.at((x, y, z + 0.36 * (t + 1) + 0.05), rot=rng.uniform(0, 180)):
+                nc.box((0, 0, 0.12), (0.34, 0.18, 0.24), rng.choice(("M_IntFabricNavy", "M_IntFabricRed", "M_IntFabricGreen")))
+    # exit sign over the back door, wall clock, extinguishers
+    DT.exit_sign(nc, aset, 0.0, GY1 - WT, z + BACK_H + 0.3, 0.0)
+    aset.prop("SM_Int_WallClock", (GX0 + WT, 2.5, z + 6.0), 90.0)
+    for (x, y, a) in ((GX0 + WT + 0.25, 15.5, 90.0), (GX1 - WT - 0.25, 15.5, -90.0), (2.4, GY1 - WT - 0.25, 0.0)):
+        aset.prop("SM_Int_Extinguisher", (x, y, z), a)
+
+
+def _detail_pass(aset, rng):
+    mb, nc = aset.mesh("Gym_Annex"), aset.mesh("Gym_Annex_NoCol")
+    _office_more(aset, mb, nc, rng)
+    _store_more(aset, mb, nc, rng)
+    _locker_more(aset, mb, nc, rng)
+    _showers_more(aset, mb, nc, rng)
+    inner, inc = aset.mesh("Gym_Interior"), aset.mesh("Gym_NoCol")
+    _first_aid(aset, inner, inc, rng)
+    for sx in (-1, 1):
+        _gallery(aset, mb, nc, rng, sx)
+    _court_more(aset, inner, inc, rng)
 
 
 def build():
@@ -713,6 +1237,7 @@ def build():
     _annexes(aset, aset.mesh("Gym_Annex"), aset.mesh("Gym_Annex_NoCol"))
     _grounds(grounds, nc, rng)
     _sockets(aset, rng)
+    _detail_pass(aset, random.Random(77))     # own random stream: the exterior keeps its sequence
     return aset
 
 

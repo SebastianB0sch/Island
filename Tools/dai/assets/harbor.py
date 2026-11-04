@@ -27,6 +27,7 @@ import random
 
 from . import AssetSet
 from . import interior as K
+from . import detail as DT
 from .. import config as C
 from .. import palette
 
@@ -35,6 +36,9 @@ palette.register({
                             detail="Corrugated", tiling=0.5),
     "M_LifeboatOrange": dict(kind="opaque", color=(0.98, 0.45, 0.08), rough=0.5, detail=None),
     "M_HelipadLight": dict(kind="emissive", color=(0.35, 1.00, 0.45), strength=8.0),
+    "M_HarborHiVis": dict(kind="toon", color=(0.86, 1.00, 0.12), rough=0.8, fill=0.4),
+    "M_HarborReflect": dict(kind="toon", color=(0.86, 0.88, 0.90), rough=0.2, metallic=0.6, fill=0.35),
+    "M_HarborWrap": dict(kind="glass", color=(0.92, 0.95, 0.98), rough=0.1, opacity=0.25),
 })
 
 TAU = math.tau
@@ -272,9 +276,9 @@ def _tri_in(mb, x, y0, y1, z0, z1, mat, facing):
     mb.poly(tri if facing > 0 else list(reversed(tri)), mat)
 
 
-def _pallet(mb, x, y, yaw=0.0, mat="M_IntWood"):
-    """Euro pallet 1.2 x 1.0 x 0.14 (top at z 0.14)."""
-    with mb.at((x, y, 0.0), rot=yaw):
+def _pallet(mb, x, y, yaw=0.0, mat="M_IntWood", z=0.0):
+    """Euro pallet 1.2 x 1.0 x 0.14 (top at z + 0.14)."""
+    with mb.at((x, y, z), rot=yaw):
         for sy in (-0.42, 0.0, 0.42):
             mb.box((0, sy, 0.05), (1.2, 0.14, 0.1), "M_IntWoodDark")
         for k in range(5):
@@ -343,14 +347,355 @@ def _rack(mb, nc, aset, rnd, x0, yc, bays, bay=2.75, depth=1.2, levels=(1.5, 3.0
                             if rnd.random() < 0.8:
                                 aset.prop("SM_Barrel", (px + bx, yc + by, 0.0), rnd.uniform(0, 360), scale=0.62)
                 else:
-                    _pallet(mb, px, yc, 90.0)
-                    hgt = rnd.uniform(0.6, 1.15)
-                    nc.box((px, yc, 0.14 + hgt / 2), (0.95, 1.12, hgt), rnd.choice(CARTONS[:3]))
-                    nc.box((px, yc, 0.14 + hgt + 0.01), (0.97, 1.14, 0.02), "M_IntFabricWhite")   # stretch wrap
+                    _pallet(mb, px, yc, 90.0, z=z)
+                    _wrapped_load(nc, rnd, px, yc, z + 0.14, 90.0, rnd.uniform(0.6, 1.15) if z < 4.0 else 0.7,
+                                  simple=z > 0.0)
 
 
 def _fill_light(aset, x, y, z, intensity=3000.0, radius=9.0):
     aset.light((x, y, z), (1.0, 0.86, 0.66), intensity, radius, night_only=False)
+
+
+# ================================================================== detail helpers (working-harbour life)
+def _abs_off(A):
+    """Total socket offset of a (nested) _Shifted view."""
+    ox = oy = oz = 0.0
+    while isinstance(A, _Shifted):
+        ox, oy, oz = ox + A.off[0], oy + A.off[1], oz + A.off[2]
+        A = A.base
+    return ox, oy, oz
+
+
+def _dress(A, mb, nc, x0, y0, x1, y1, z, z_ceil, style, seed=0, **kw):
+    """DT.dress_room for rooms built in a shifted frame: the door sockets are looked up in the same local
+    space as the room bounds (dress_room reads aset.sockets, which hold placement coordinates)."""
+    ox, oy, oz = _abs_off(A)
+    view = _Shifted(A, (0.0, 0.0, 0.0))
+    view.sockets = [dict(s, pos=[s["pos"][0] - ox, s["pos"][1] - oy, s["pos"][2] - oz]) for s in A.sockets
+                    if s["type"] == "door"]
+    DT.dress_room(view, mb, nc, x0, y0, x1, y1, z, z_ceil, style=style, seed=seed, **kw)
+
+
+def _wrapped_load(nc, rnd, x, y, z, yaw, hgt, w=1.0, d=1.18, simple=False):
+    """Cartons stacked on a pallet top (z) in layers, shrink-wrapped (clear film + white top sheet).
+    simple: one carton block (out-of-reach rack levels; keeps the triangle count down)."""
+    with nc.at((x, y, z), rot=yaw):
+        if simple:
+            nc.box((0, 0, hgt / 2), (d - 0.02, w - 0.02, hgt - 0.01), rnd.choice(CARTONS[:3]))
+            nc.box((0, 0, hgt + 0.012), (d + 0.01, w + 0.01, 0.006), "M_IntFabricWhite")
+            nc.box((d / 2 + 0.002, 0.0, hgt * 0.6), (0.004, 0.21, 0.15), "M_IntPaper")
+            return
+        layers = max(1, int(hgt / 0.3))
+        lh = hgt / layers
+        for k in range(layers):
+            for i in range(3):
+                for j in range(2):
+                    if k == layers - 1 and rnd.random() < 0.25:
+                        continue
+                    nc.box((-d / 3 + i * d / 3, -w / 4 + j * w / 2, k * lh + lh / 2), (d / 3 - 0.015, w / 2 - 0.015,
+                           lh - 0.012), rnd.choice(CARTONS[:3]))
+        nc.box((0, 0, hgt / 2 + 0.01), (d + 0.02, w + 0.02, hgt + 0.02), "M_HarborWrap")
+        nc.box((0, 0, hgt + 0.025), (d + 0.03, w + 0.03, 0.006), "M_IntFabricWhite")
+        nc.box((d / 2 + 0.012, 0.0, hgt * 0.6), (0.004, 0.21, 0.15), "M_IntPaper")       # shipping label
+
+
+def _forklift(mb, nc, x, y, yaw, fork_z=0.08, load=None, rnd=None):
+    """Counterbalance forklift (2.3 m body + 1.1 m forks along local +x, 1.1 m wide, guard 2.15 m)."""
+    with mb.at((x, y, 0.0), rot=yaw), nc.at((x, y, 0.0), rot=yaw):
+        mb.box_mm((-1.0, -0.52, 0.18), (0.85, 0.52, 0.95), CRANE_Y)                       # chassis
+        mb.box_mm((-1.2, -0.55, 0.15), (-0.8, 0.55, 1.08), DMETAL)                         # counterweight
+        mb.box_mm((0.45, -0.55, 0.18), (0.9, 0.55, 0.62), CRANE_Y)                          # front fenders
+        for wx, r in ((0.6, 0.31), (-0.85, 0.26)):
+            for s in (-1, 1):
+                with mb.at((wx, s * 0.47, r), rot_x=90):
+                    mb.cylinder((0, 0, -0.11), r, 0.22, "M_Black", seg=12)
+                    mb.cylinder((0, 0, -0.115 if s < 0 else 0.11), r * 0.55, 0.005, "M_IntMetal", seg=10)
+        mb.box_mm((-0.62, -0.25, 0.95), (-0.25, 0.25, 1.06), "M_IntBlack")                 # seat
+        mb.box_mm((-0.66, -0.25, 1.06), (-0.58, 0.25, 1.5), "M_IntBlack")
+        mb.box_mm((0.12, -0.2, 0.95), (0.42, 0.2, 1.2), CRANE_Y)                           # dash
+        with mb.at((0.15, 0.0, 1.38), rot_y=-35):
+            mb.torus((0, 0, 0), 0.17, 0.02, "M_IntBlack", seg=12, tube_seg=4)
+        mb.cylinder((0.25, 0.0, 1.15), 0.025, 0.22, "M_IntBlack", seg=6)
+        for k in range(3):                                                                  # levers
+            nc.box((0.38, -0.12 + k * 0.08, 1.32), (0.02, 0.02, 0.2), "M_IntBlack")
+            nc.sphere((0.38, -0.12 + k * 0.08, 1.43), 0.025, "M_IntFabricRed", seg=6, rings=4)
+        for gx in (-0.85, 0.52):                                                            # overhead guard
+            for s in (-1, 1):
+                mb.box((gx, s * 0.48, 1.55), (0.07, 0.07, 1.2), DMETAL)
+        mb.box_mm((-0.9, -0.52, 2.13), (0.57, 0.52, 2.18), DMETAL)
+        for k in range(6):
+            mb.box((-0.75 + k * 0.24, 0.0, 2.12), (0.05, 0.98, 0.04), DMETAL)
+        nc.cylinder((-0.3, 0.0, 2.18), 0.06, 0.06, "M_LifeboatOrange", seg=8)               # beacon
+        for s in (-1, 1):                                                                   # mast
+            mb.box((0.98, s * 0.32, 1.15), (0.1, 0.12, 2.15), DMETAL)
+        for zz in (0.25, 1.2, 2.15):
+            mb.box((0.98, 0.0, zz), (0.1, 0.76, 0.08), DMETAL)
+        mb.box_mm((1.05, -0.5, fork_z), (1.1, 0.5, fork_z + 0.55), DMETAL)                  # carriage
+        for s in (-1, 1):
+            mb.box_mm((1.1, s * 0.3 - 0.06, fork_z), (2.2, s * 0.3 + 0.06, fork_z + 0.05), DMETAL)
+        nc.box((-1.21, 0.0, 0.85), (0.005, 0.35, 0.12), "M_IntBlack")
+        if load:
+            _pallet(mb, 1.65, 0.0, 0.0, z=fork_z + 0.05)
+            _wrapped_load(nc, rnd or random.Random(1), 1.65, 0.0, fork_z + 0.19, 0.0, load)
+
+
+def _pallet_jack(mb, x, y, yaw):
+    """Hand pallet truck: forks along local +x (1.15 m), tiller handle at the -x end."""
+    with mb.at((x, y, 0.0), rot=yaw):
+        for s in (-1, 1):
+            mb.box_mm((0.0, s * 0.28 - 0.08, 0.04), (1.15, s * 0.28 + 0.08, 0.085), "M_LifeboatOrange")
+        mb.box_mm((-0.3, -0.36, 0.04), (0.02, 0.36, 0.3), "M_LifeboatOrange")
+        mb.cylinder((-0.2, 0.0, 0.3), 0.07, 0.25, "M_LifeboatOrange", seg=8)
+        mb.beam((-0.2, 0.0, 0.5), (-0.55, 0.0, 1.15), 0.035, 0.035, "M_IntBlack")
+        mb.box((-0.57, 0.0, 1.17), (0.06, 0.28, 0.06), "M_IntBlack")
+        with mb.at((-0.2, 0.0, 0.09), rot_x=90):
+            mb.cylinder((0, 0, -0.12), 0.09, 0.24, "M_Black", seg=10)
+
+
+def _crate_mesh(mb, x, y, z, yaw=0.0, s=0.96):
+    """Slatted wooden crate (mesh, so things can be stacked on it) - same size as SM_Crate."""
+    with mb.at((x, y, z), rot=yaw):
+        mb.box((0, 0, s / 2), (s - 0.04, s - 0.04, s - 0.02), "M_IntWood")
+        for k in (-1, 1):
+            mb.box((0, k * (s / 2 - 0.01), s * 0.5), (s, 0.03, s), "M_IntWoodDark")
+            mb.box((k * (s / 2 - 0.01), 0, s * 0.5), (0.03, s, s), "M_IntWoodDark")
+        mb.box((0, 0, s - 0.01), (s, s, 0.02), "M_IntWoodDark")
+        for k in range(3):
+            mb.box((0, -s / 2 - 0.012, s * (0.2 + k * 0.3)), (s - 0.1, 0.02, 0.12), "M_IntWood")
+
+
+def _ticket_machine(mb, nc, A, x, y, yaw, label="TICKETS"):
+    """Self-service ticket machine (0.7 x 0.45 x 1.7 m), screen + keypad + slots facing local -Y."""
+    with mb.at((x, y, 0.0), rot=yaw):
+        mb.box((0, 0, 0.85), (0.7, 0.45, 1.7), BLUE)
+        mb.box((0, -0.05, 1.72), (0.74, 0.5, 0.06), TRIM)
+        mb.box((0, -0.25, 1.05), (0.6, 0.1, 0.06), TRIM)                         # keypad shelf
+    with nc.at((x, y, 0.0), rot=yaw):
+        nc.box((0, -0.227, 1.38), (0.46, 0.006, 0.34), "M_IntScreen")
+        nc.box((0, -0.228, 1.62), (0.6, 0.006, 0.1), "M_IntTrimWhite")
+        for i in range(3):
+            for j in range(4):
+                nc.box((-0.08 + i * 0.06, -0.28 - j * 0.02, 1.085), (0.045, 0.018, 0.012), "M_IntMetal")
+        nc.box((0.2, -0.29, 1.085), (0.12, 0.05, 0.012), "M_IntBlack")             # card reader
+        nc.box((0.0, -0.227, 0.55), (0.3, 0.006, 0.05), "M_IntBlack")              # ticket slot
+        nc.box((0.0, -0.24, 0.45), (0.36, 0.03, 0.12), "M_IntMetal")
+        nc.box((0.22, -0.227, 0.85), (0.08, 0.006, 0.16), "M_IntBlack")            # coin slot
+    A.text(label, K.wall_point(x, y, yaw, 0.235, 1.6), yaw, size=0.07, color=(0.1, 0.25, 0.62))
+
+
+def _luggage_cart(mb, nc, x, y, yaw, bags=2, seed=0):
+    """Airport-style luggage trolley (1.0 x 0.6 m, handle at local -x) with a couple of bags."""
+    rnd = random.Random(seed)
+    with mb.at((x, y, 0.0), rot=yaw):
+        mb.box((0.05, 0, 0.2), (0.9, 0.58, 0.04), "M_IntMetal")
+        for s in (-1, 1):
+            mb.box((0.5, s * 0.27, 0.45), (0.04, 0.04, 0.5), "M_IntMetal")
+            mb.beam((-0.4, s * 0.27, 0.2), (-0.5, s * 0.27, 1.0), 0.035, 0.035, "M_IntMetal")
+        mb.box((-0.5, 0, 1.0), (0.05, 0.6, 0.05), BLUE)
+        mb.box((0.5, 0, 0.68), (0.04, 0.58, 0.04), "M_IntMetal")
+        for wx in (-0.35, 0.4):
+            for s in (-1, 1):
+                with mb.at((wx, s * 0.24, 0.08), rot_x=90):
+                    mb.cylinder((0, 0, -0.025), 0.08, 0.05, "M_Black", seg=8)
+    with nc.at((x, y, 0.0), rot=yaw):
+        z = 0.22
+        for k in range(bags):
+            h = rnd.uniform(0.2, 0.3)
+            c = rnd.choice(("M_IntFabricRed", "M_IntFabricNavy", "M_IntFabricGreen", "M_IntWoodDark", "M_IntFabricPurple"))
+            nc.box((0.05, 0, z + h / 2), (rnd.uniform(0.6, 0.8), rnd.uniform(0.4, 0.5), h), c)
+            nc.box((0.05, 0, z + h + 0.02), (0.18, 0.03, 0.04), "M_IntBlack")
+            z += h
+
+
+def _card_spinner(mb, nc, x, y, seed=0):
+    """Rotating postcard / trading-card stand (0.55 m across, 1.75 m high)."""
+    rnd = random.Random(seed)
+    mb.cylinder((x, y, 0.0), 0.28, 0.03, "M_IntMetal", seg=12)
+    mb.cylinder((x, y, 0.0), 0.025, 1.75, "M_IntMetal", seg=8)
+    mb.sphere((x, y, 1.77), 0.04, "M_IntFabricRed", seg=8, rings=4)
+    for t in range(4):
+        z = 0.55 + t * 0.3
+        for f in range(4):
+            a = f * 90.0 + t * 20.0
+            with nc.at((x, y, z), rot=a):
+                nc.box((0, -0.2, 0.0), (0.34, 0.012, 0.012), "M_IntMetal")
+                for c in range(3):
+                    nc.box((-0.11 + c * 0.11, -0.21, 0.08), (0.1, 0.006, 0.15),
+                           rnd.choice(K.POSTERS + ("M_IntPaper", "M_CardBack")))
+
+
+def _souvenir_table(mb, nc, A, x, y, yaw, seed=0):
+    """Tiered souvenir display (1.4 x 0.7 m): plush toys, mugs, keychain board, booster packs, island snow globes."""
+    rnd = random.Random(seed)
+    with mb.at((x, y, 0.0), rot=yaw):
+        mb.box((0, 0, 0.4), (1.4, 0.7, 0.8), "M_IntWood")
+        mb.box((0, 0.12, 0.95), (1.4, 0.4, 0.3), "M_IntWood")
+        mb.box((0, 0.22, 1.25), (1.4, 0.2, 0.3), "M_IntWood")
+        mb.box((0, 0.33, 1.5), (1.4, 0.04, 0.8), BLUE)                             # back board
+    with nc.at((x, y, 0.0), rot=yaw):
+        for k in range(6):                                                         # plushies
+            px = -0.58 + k * 0.23
+            c = rnd.choice(("M_IntFabricRed", "M_IntFabricYellow", "M_IntFabricBlue", "M_IntFabricPink"))
+            nc.sphere((px, -0.2, 0.89), 0.08, c, seg=8, rings=5)
+            nc.sphere((px, -0.2, 1.0), 0.06, c, seg=8, rings=5)
+        for k in range(8):                                                         # mugs on tier 1
+            DT.mug(nc, -0.6 + k * 0.17, 0.0, 1.1, seed=seed + k, coffee=False)
+        for k in range(10):                                                        # booster packs on tier 2
+            nc.box((-0.62 + k * 0.135, 0.17, 1.47), (0.09, 0.02, 0.15), K.POSTERS[k % 4])
+        for k in range(5):                                                         # snow globes
+            nc.sphere((-0.5 + k * 0.25, 0.27, 1.45), 0.05, "M_IntGlassClear", seg=8, rings=5)
+        for i in range(5):                                                         # keychains on the board
+            for j in range(3):
+                nc.box((-0.55 + i * 0.27, 0.305, 1.65 + j * 0.14), (0.05, 0.01, 0.07),
+                       rnd.choice(K.FABRICS + ("M_IntTrimGold",)))
+    A.text("SOUVENIRS", K.wall_point(*DT._P(x, y, yaw, 0.0, 0.31), yaw, 0.0, 1.85), yaw, size=0.09, color=(1.0, 0.9, 0.3))
+
+
+def _vest_hooks(nc, x, y, z, yaw, n=4, vests=3, helmets=True):
+    """Hook rail with hi-vis vests (and hard hats on a shelf above): (x, y) on the wall, local -Y into the room."""
+    w = n * 0.3
+    with nc.at((x, y, z), rot=yaw):
+        nc.box((0, -0.01, 0), (w, 0.02, 0.08), "M_IntWood")
+        for k in range(n):
+            u = -w / 2 + 0.15 + k * 0.3
+            nc.box((u, -0.05, 0.0), (0.02, 0.07, 0.02), "M_DetSilver")
+            if k < vests:
+                m = "M_HarborHiVis" if k % 3 != 2 else "M_LifeboatOrange"
+                nc.box((u, -0.07, -0.33), (0.26, 0.05, 0.6), m)
+                nc.box((u, -0.072, -0.42), (0.265, 0.05, 0.035), "M_HarborReflect")
+                nc.box((u, -0.072, -0.25), (0.265, 0.05, 0.035), "M_HarborReflect")
+                for s in (-1, 1):
+                    nc.box((u + s * 0.08, -0.068, -0.04), (0.05, 0.04, 0.12), m)
+        if helmets:
+            nc.box((0, -0.12, 0.3), (w, 0.24, 0.02), "M_IntWood")
+            for k in range(min(n, 3)):
+                u = -w / 2 + 0.2 + k * 0.35
+                nc.sphere((u, -0.12, 0.31), 0.13, ("M_CrateYellow", "M_IntTrimWhite", "M_LifeboatOrange")[k % 3],
+                          seg=10, rings=5, hemi=True)
+                nc.cylinder((u, -0.12, 0.31), 0.15, 0.012, ("M_CrateYellow", "M_IntTrimWhite", "M_LifeboatOrange")[k % 3],
+                            seg=10)
+
+
+def _wall_clipboards(nc, x, y, z, yaw, n=3, seed=0):
+    """Clipboards hanging on nails along a wall / rack post (x, y on the face, local -Y outwards)."""
+    rnd = random.Random(seed)
+    with nc.at((x, y, z), rot=yaw):
+        for k in range(n):
+            u = (k - (n - 1) / 2) * 0.32
+            dz = rnd.uniform(-0.04, 0.04)
+            nc.box((u, -0.01, dz), (0.23, 0.012, 0.32), "M_IntWoodDark")
+            nc.box((u, -0.018, dz - 0.02), (0.2, 0.004, 0.26), "M_IntPaper")
+            nc.box((u, -0.022, dz + 0.13), (0.09, 0.012, 0.035), "M_DetSilver")
+            for r in range(4):
+                nc.box((u - 0.02, -0.0205, dz + 0.06 - r * 0.045), (0.13, 0.002, 0.008), "M_IntBlack")
+
+
+def _wall_shelf(nc, aset, x, y, z, yaw, w, items, d=0.25, seed=0):
+    """Short wall shelf with brackets; items: sequence of catalog names placed along it."""
+    with nc.at((x, y, z), rot=yaw):
+        nc.box((0, -d / 2, -0.015), (w, d, 0.03), "M_IntWood")
+        for s in (-1, 1):
+            nc.box((s * (w / 2 - 0.08), -0.09, -0.1), (0.02, 0.16, 0.16), "M_IntMetal")
+    for i, it in enumerate(items):
+        u = -w / 2 + w * (i + 0.5) / len(items)
+        px, py = DT._P(x, y, yaw, u, -d / 2)
+        aset.prop(it, (px, py, z), yaw + random.Random(seed + i).uniform(-12, 12))
+
+
+def _wall_map(nc, aset, x, y, z, yaw, w=1.2, h=0.85, title=None, seed=0):
+    """Framed sea chart / island map on a wall: sea, island, routes, pins (x, y on the wall, -Y into room)."""
+    rnd = random.Random(seed)
+    with nc.at((x, y, z), rot=yaw):
+        nc.box((0, -0.012, 0), (w + 0.08, 0.024, h + 0.08), "M_IntWoodDark")
+        nc.box((0, -0.026, 0), (w, 0.006, h), "M_IntPoster2")
+        nc.box((-w * 0.1, -0.031, -h * 0.05), (w * 0.34, 0.004, h * 0.42), "M_IntFabricGreen")
+        nc.box((-w * 0.05, -0.032, h * 0.08), (w * 0.12, 0.004, h * 0.14), "M_IntFabricYellow")
+        for k in range(6):
+            nc.box((rnd.uniform(-w * 0.42, w * 0.42), -0.034, rnd.uniform(-h * 0.4, h * 0.4)), (0.025, 0.006, 0.025),
+                   "M_IntFabricRed")
+        for k in range(3):
+            nc.box((rnd.uniform(-w * 0.3, w * 0.3), -0.033, rnd.uniform(-h * 0.35, h * 0.35)),
+                   (rnd.uniform(0.2, 0.5), 0.003, 0.008), "M_IntTrimWhite")
+    if title:
+        aset.text(title, K.wall_point(x, y, yaw, 0.04, z + h / 2 - 0.09), yaw, size=0.06, color=(1, 1, 1))
+
+
+def _first_aid(nc, aset, x, y, z, yaw):
+    """Wall first-aid cabinet (white box, green cross) at centre height z."""
+    with nc.at((x, y, z), rot=yaw):
+        nc.box((0, -0.06, 0), (0.4, 0.12, 0.45), "M_IntTrimWhite")
+        nc.box((0, -0.122, 0.02), (0.16, 0.004, 0.05), "M_DetExit")
+        nc.box((0, -0.122, 0.02), (0.05, 0.004, 0.16), "M_DetExit")
+
+
+def _whiteboard(nc, aset, x, y, z, yaw, w=1.2, h=0.8, lines=(), seed=0):
+    """Whiteboard with marker writing (text) and a tray (x, y on the wall, local -Y into the room)."""
+    with nc.at((x, y, z), rot=yaw):
+        nc.box((0, -0.012, h / 2), (w + 0.04, 0.024, h + 0.04), "M_IntMetal")
+        nc.box((0, -0.026, h / 2), (w, 0.005, h), "M_IntTrimWhite")
+        nc.box((0, -0.05, -0.01), (w * 0.7, 0.06, 0.02), "M_IntMetal")
+        for k, m in enumerate(("M_IntFabricRed", "M_IntFabricBlue", "M_IntBlack")):
+            nc.box((-0.2 + k * 0.14, -0.05, 0.005), (0.12, 0.018, 0.018), m)
+        for k in range(3):
+            nc.box((w * 0.3, -0.03, h - 0.2 - k * 0.2), (0.25, 0.004, 0.16), ("M_IntPoster3", "M_IntPaper", "M_IntPoster1")[k])
+    for i, t in enumerate(lines):
+        aset.text(t, K.wall_point(x, y, yaw, 0.035, z + h - 0.14 - i * 0.12), yaw, size=0.065, color=(0.1, 0.15, 0.45))
+
+
+def _water_cooler(mb, nc, x, y, yaw):
+    with mb.at((x, y, 0.0), rot=yaw):
+        mb.box((0, 0, 0.5), (0.32, 0.32, 1.0), "M_IntTrimWhite")
+    with nc.at((x, y, 0.0), rot=yaw):
+        nc.cylinder((0, 0, 1.0), 0.13, 0.42, "M_HarborWrap", seg=12)
+        nc.cylinder((0, 0, 1.0), 0.12, 0.3, "M_IntWater", seg=12)
+        for s, m in ((-1, "M_IntFabricBlue"), (1, "M_IntFabricRed")):
+            nc.box((s * 0.07, -0.17, 0.78), (0.04, 0.03, 0.05), m)
+        nc.box((0, -0.17, 0.62), (0.22, 0.04, 0.02), "M_IntMetal")
+        nc.cylinder((0.22, 0, 0.0), 0.04, 0.6, "M_IntTrimWhite", seg=8)                    # cup dispenser
+
+
+def _fridge(mb, nc, x, y, yaw, h=1.75):
+    with mb.at((x, y, 0.0), rot=yaw):
+        mb.box((0, 0, h / 2), (0.6, 0.65, h), "M_IntTrimWhite")
+    with nc.at((x, y, 0.0), rot=yaw):
+        nc.box((0, -0.326, h * 0.62), (0.58, 0.004, 0.006), "M_IntMetal")
+        nc.box((0.24, -0.34, h * 0.75), (0.03, 0.03, 0.3), "M_IntMetal")
+        nc.box((0.24, -0.34, h * 0.4), (0.03, 0.03, 0.25), "M_IntMetal")
+        for k in range(4):
+            nc.box((-0.12 + k * 0.08, -0.328, h * 0.8 - (k % 2) * 0.1), (0.06, 0.004, 0.06), K.POSTERS[k % 4])
+
+
+def _coffee_machine(nc, x, y, z, yaw):
+    with nc.at((x, y, z), rot=yaw):
+        nc.box((0, 0, 0.19), (0.26, 0.32, 0.38), "M_IntBlack")
+        nc.box((0, -0.05, 0.06), (0.22, 0.2, 0.02), "M_IntMetal")
+        nc.cylinder((0, -0.05, 0.07), 0.05, 0.1, "M_IntGlassClear", seg=10)
+        nc.box((0, -0.162, 0.3), (0.12, 0.004, 0.05), "M_IntScreen")
+
+
+def _round_switch(nc, ang, z, r):
+    """Light switch / outlet on a curved wall at polar angle ang (deg), radius r (wall face)."""
+    x, y, _ = _polar(r, ang)
+    DT.switch(nc, x, y, z, ang - 90.0)
+
+
+def _round_outlet(nc, ang, z, r):
+    x, y, _ = _polar(r, ang)
+    DT.outlet(nc, x, y, z, ang - 90.0)
+
+
+def _hall_services(A, mb, nc, x0, y0, x1, y1, zc, seed=0):
+    """dress_room for a tall industrial hall + the pipework it implies: sprinkler mains along x (the heads hang
+    from them at zc) and ducts from the two ceiling vents to the nearest gable wall."""
+    _dress(A, mb, nc, x0, y0, x1, y1, 0.0, zc, "service", seed=seed)
+    ny = max(1, int((y1 - y0) / 3.0))
+    for j in range(ny):
+        y = y0 + (y1 - y0) * (j + 0.5) / ny
+        nc.box_mm((x0, y - 0.03, zc + 0.065), (x1, y + 0.03, zc + 0.125), "M_IntFabricRed")
+    for fx, fy in ((0.25, 0.7), (0.75, 0.3)):
+        vx, vy = x0 + (x1 - x0) * fx, y0 + (y1 - y0) * fy
+        xe = x0 if fx < 0.5 else x1
+        nc.box_mm((min(vx, xe), vy - 0.3, zc + 0.02), (max(vx, xe), vy + 0.3, zc + 0.5), "M_IntMetal")
 
 
 def _bw_path():
@@ -642,6 +987,32 @@ def _pier(aset, mb, nc):
     mb.hip_roof((PIER_X, (sy_0 + sy_1) / 2, 2.9), 5.6, 5.6, 1.5, ROOF_BLUE, overhang=0.5, thick=0.18)
     mb.box((PIER_X, sy_1 - 0.05, 1.15), (5.0, 0.08, 1.6), PWOOD)                      # back screen
     aset.prop("SM_Bench", (PIER_X, sy_1 - 0.9, 0.0), 0.0)
+    # shelter life: notice + tide boards on the screen, rod rack, cooler, tackle, bucket, boots, life ring
+    fy = sy_1 - 0.09
+    K.bulletin(nc, aset, PIER_X - 1.75, fy, 1.05, 0.0, 0.8, 0.75, title="PIER RULES", rng_seed=41)
+    with nc.at((PIER_X + 1.75, fy, 1.05)):
+        nc.box((0, -0.015, 0.4), (0.8, 0.03, 0.8), BLUE)
+        nc.box((0, -0.032, 0.36), (0.7, 0.004, 0.6), "M_IntTrimWhite")
+        for k in range(6):
+            nc.box((0, -0.035, 0.6 - k * 0.09), (0.6, 0.002, 0.012), "M_IntBlack")
+    aset.text("TIDE TABLE", (PIER_X + 1.75, fy - 0.04, 1.73), 0.0, size=0.07, color=(1, 1, 1))
+    aset.prop("SM_Int_Lifebuoy", (PIER_X, sy_1 - 0.01, 0.95), 180.0)
+    with mb.at((sx0 + 0.35, -106.0, 0.0)):                                              # fishing-rod rack
+        for dy in (-0.5, 0.5):
+            mb.box((0, dy, 0.6), (0.06, 0.06, 1.2), "M_DarkWood")
+        mb.box((0, 0, 1.15), (0.08, 1.1, 0.06), "M_DarkWood")
+        mb.box((0, 0, 0.25), (0.25, 1.1, 0.05), "M_DarkWood")
+    for k in range(4):
+        yy = -106.4 + k * 0.27
+        nc.beam((sx0 + 0.38, yy, 0.27), (sx0 + 0.3, yy + 0.05, 2.3), 0.025, 0.025, ("M_IntBlack", "M_IntFabricRed")[k % 2])
+        nc.cylinder((sx0 + 0.42, yy, 0.55), 0.05, 0.06, "M_IntMetal", seg=8)
+    with nc.at((PIER_X + 1.9, -105.4, 0.0), rot=10.0):                                  # cooler box
+        nc.box((0, 0, 0.2), (0.62, 0.4, 0.4), "M_IntFabricBlue")
+        nc.box((0, 0, 0.42), (0.64, 0.42, 0.05), "M_IntTrimWhite")
+    aset.prop("SM_Int_Toolbox", (PIER_X + 1.95, -104.45, 0.0), -20.0)
+    aset.prop("SM_Int_Bucket", (PIER_X - 1.95, -104.3, 0.0), 0.0)
+    aset.prop("SM_Int_Boots", (PIER_X - 1.6, -105.3, 0.0), 30.0)
+    K.camera(aset, "pier_shelter", (sx0 + 0.6, sy_0 + 0.3, 1.6), (PIER_X + 0.5, sy_1 - 0.3, 0.7), 15.0)
     aset.light((PIER_X, (sy_0 + sy_1) / 2, 2.6), (1.0, 0.85, 0.6), 2500.0, 9.0, night_only=True)
     nc.box((PIER_X, (sy_0 + sy_1) / 2, 2.66), (0.6, 0.6, 0.06), GLOW)
     # life rings
@@ -1018,6 +1389,29 @@ def _ship_cam(aset, label, pos, target):
     aset.special("camera", pos, target=target, lens=15.0, label=label)
 
 
+def _ship_fixtures(mb, aset, W, x0, x1, hw, z, zc, exits=(), outlets=True, seed=0):
+    """What dress_room adds to a building, for a ship deck (everything in the floating mesh, z = deck level):
+    sprinklers + smoke detector on the ceiling, outlets under the side windows, green exit signs over doors
+    (exits: [(x, y, yaw)] points on the inner wall face, local -Y into the room)."""
+    nx, ny = max(1, int((x1 - x0) / 3.0)), max(1, int(2 * hw / 3.0))
+    for i in range(nx):
+        for j in range(ny):
+            DT.ceiling_fixture(mb, x0 + (x1 - x0) * (i + 0.5) / nx, -hw + 2 * hw * (j + 0.5) / ny, zc, "sprinkler")
+    DT.ceiling_fixture(mb, (x0 + x1) / 2 + 0.6, 0.4, zc, "smoke")
+    if outlets:
+        n = max(1, int((x1 - x0) / 3.2))
+        for k in range(n):
+            px = x0 + (x1 - x0) * (k + 0.5) / n
+            DT.outlet(mb, px, -hw, z + 0.3, 180.0)
+            DT.outlet(mb, px, hw, z + 0.3, 0.0)
+    for ex, ey, yaw in exits:
+        with mb.at((ex, ey, z + 2.38), rot=yaw):
+            mb.box((0, -0.04, 0), (0.36, 0.08, 0.16), "M_DetSwitch")
+            mb.box((0, -0.081, 0), (0.32, 0.004, 0.12), "M_DetExit")
+        p = K.wall_point(ex, ey, yaw, 0.09, z + 2.345)
+        aset.text("EXIT", W(p[0], p[1], p[2]), yaw, size=0.07, color=(1, 1, 1))
+
+
 def _ferry_interior(mb, aset, d1, d2, br):
     """Passenger saloon (deck 1), sky lounge with duel tables (deck 2) and the bridge (deck 3). Everything is
     part of the floating ferry mesh so it bobs with the hull (catalog props would not)."""
@@ -1081,6 +1475,17 @@ def _ferry_interior(mb, aset, d1, d2, br):
         aset.text("LIFE JACKETS", W(-23.27, s * 3.4, z + 0.5), 90.0, size=0.14, color=(1, 1, 1))
     aset.text("SNACK BAR", W(8.26, 0.0, z + 2.5), -90.0, size=0.24, color=(1.0, 0.85, 0.3), emissive=True)
     lights([(-19.0, 0.0), (-12.0, 0.0), (-5.0, 0.0), (2.0, 0.0), (8.0, 0.0)], z + 2.6)
+    with mb.at((0.0, 0.0, 0.0)):
+        _ship_fixtures(mb, aset, W, -23.8, 10.5, 5.4, z, 6.95, exits=[(-23.8, 0.0, 90.0), (GANG_SHIP_X, -5.4, 180.0),
+                                                                       (GANG_SHIP_X, 5.4, 0.0)], outlets=False, seed=1)
+    rs = random.Random(91)
+    for k in range(9):                                                                  # passengers' things
+        sx = rs.choice((-1, 1))
+        px, py = -21.8 + rs.randint(0, 12) * 1.0 + 0.03, sx * (1.85 + rs.choice((-0.55, 0.0, 0.55)))
+        if rs.random() < 0.5:
+            DT.paper_stack(mb, px, py, z + 0.43, rs.uniform(0, 90), 3, seed=k)
+        else:
+            mb.box((px, py, z + 0.55), (0.3, 0.38, 0.24), rs.choice(K.FABRICS))
     _ship_cam(aset, "ferry_saloon", (-23.0, 3.4, z + 1.8), (6.0, -1.5, z + 0.8))
 
     # ---------------------------------------------------------------- deck 2: sky lounge (duel tables, cafe)
@@ -1118,6 +1523,62 @@ def _ferry_interior(mb, aset, d1, d2, br):
     aset.text("SKY LOUNGE", W(-14.78, 2.2, z + 2.0), 90.0, size=0.2, color=(1.0, 0.85, 0.3))
     aset.text("DUEL TABLES - PLEASE RETURN YOUR CARDS", W(-14.78, -2.4, z + 2.0), 90.0, size=0.1, color=(1, 1, 1))
     lights([(-11.0, 0.0), (-5.5, 0.0), (0.5, 0.0), (6.5, 0.0)], z + 2.3)
+    with mb.at((0.0, 0.0, z)):
+        # ceiling: varnished beams (skip the light panels) and pendant shades over the booths
+        bx = -13.6
+        while bx < 9.2:
+            if all(abs(bx - lx) > 0.75 for lx in (-11.0, -5.5, 0.5, 6.5)):
+                mb.box((bx, 0.0, 2.6), (0.14, 10.8, 0.1), "M_IntWood")
+            bx += 1.7
+        mb.box_mm((-14.8, -0.08, 2.58), (9.5, 0.08, 2.65), "M_IntWoodDark")
+        for s in (-1, 1):
+            for x in (-12.6, -6.0, 0.6):
+                mb.cylinder((x, s * 4.75, 2.1), 0.01, 0.55, "M_IntBlack", seg=4)
+                mb.cylinder((x, s * 4.75, 1.92), 0.22, 0.18, "M_IntTrimWhite", seg=12, radius_top=0.08, cap_bottom=False)
+                mb.cylinder((x, s * 4.75, 1.91), 0.12, 0.02, K.GLOW, seg=8)
+                # table settings: mugs, a card game, menu tent
+                DT.mug(mb, x - 0.22, s * 4.75 - 0.18, 0.74, seed=int(x * 3) + s)
+                DT.mug(mb, x + 0.22, s * 4.75 + 0.15, 0.74, seed=int(x * 5) - s)
+                DT.card_spread(mb, x, s * 4.75 - 0.05, 0.742, 90.0, 4, seed=int(x) + s)
+                with mb.at((x, s * 4.75 + 0.25, 0.74)):
+                    mb.box((0, 0, 0.06), (0.12, 0.05, 0.12), "M_IntPoster3")
+        # duel tables: decks, duel disks, life-point notepads
+        for x in (-8.5, -3.0):
+            for sx in (-1, 1):
+                DT.deck_box(mb, x + sx * 0.75, -0.3, 0.795, 10.0 * sx, "M_IntFabricRed" if sx < 0 else "M_IntFabricBlue")
+                mb.box((x + sx * 0.6, 0.38, 0.8), (0.1, 0.14, 0.006), "M_IntPaper")
+        # cafe: espresso machine, cake dome, cups, back bar with shelves, hanging menu
+        mb.box((8.7, -1.9, 1.3), (0.4, 0.5, 0.4), "M_IntMetal")
+        mb.box((8.55, -1.9, 1.2), (0.12, 0.3, 0.02), "M_IntBlack")
+        mb.cylinder((8.7, 1.2, 1.1), 0.2, 0.02, "M_IntTrimWhite", seg=12)
+        mb.cylinder((8.7, 1.2, 1.12), 0.08, 0.06, "M_IntFabricPink", seg=10)
+        mb.sphere((8.7, 1.2, 1.12), 0.18, "M_IntGlassClear", seg=10, rings=5, hemi=True)
+        mb.box_mm((9.9, -1.8, 0.0), (10.5, 1.8, 0.9), "M_IntWoodDark")
+        mb.box_mm((9.88, -1.82, 0.9), (10.52, 1.82, 0.94), K.TRIM_WHITE)
+        for zz in (1.35, 1.75):
+            mb.box_mm((10.2, -1.8, zz - 0.03), (10.5, 1.8, zz), "M_IntWood")
+            for k in range(12):
+                mb.cylinder((10.35, -1.65 + k * 0.3, zz), 0.045, 0.1 + (k % 3) * 0.04,
+                            ("M_IntTrimWhite", "M_IntFabricRed", "M_IntGlassClear", "M_IntFabricGreen")[k % 4], seg=8)
+        mb.box((9.0, 0.0, 2.15), (0.06, 2.2, 0.55), "M_IntBlack")
+        for sy in (-0.9, 0.9):
+            mb.box((9.0, sy, 2.52), (0.02, 0.02, 0.2), "M_IntMetal")
+        # stern wall: booster-pack vending machine, notice board + island chart, extinguisher
+        mb.box_mm((-14.8, -3.65, 0.0), (-14.0, -2.75, 1.8), "M_IntFabricRed")
+        mb.box_mm((-14.01, -3.5, 0.75), (-13.99, -2.9, 1.65), "M_IntScreen")
+        mb.box_mm((-14.02, -3.55, 0.15), (-13.98, -2.85, 0.4), "M_IntBlack")
+        _wall_map(mb, aset, -14.8, 3.1, 0.9, 90.0, 1.0, 0.75, None, seed=5)
+        mb.box_mm((-14.8, 1.55, 0.95), (-14.77, 2.35, 1.65), "M_IntCork")
+        for k in range(4):
+            mb.box_mm((-14.77, 1.62 + k * 0.18, 1.2 + (k % 2) * 0.2), (-14.765, 1.76 + k * 0.18, 1.4 + (k % 2) * 0.2),
+                      ("M_IntPaper", "M_IntPoster1", "M_IntPaper", "M_IntPoster3")[k])
+        mb.cylinder((-14.6, -1.4, 0.0), 0.09, 0.6, "M_AcademyRed", seg=8)
+        mb.cylinder((-14.6, -1.4, 0.6), 0.03, 0.1, "M_IntBlack", seg=6)
+        _ship_fixtures(mb, aset, W, -14.8, 9.5, 5.4, 0.0, 2.65, exits=[(-14.8, 0.0, 90.0)], outlets=False, seed=2)
+    aset.text("BOOSTER PACKS", W(-13.98, -3.2, z + 1.72), 90.0, size=0.09, color=(1, 1, 1), emissive=True)
+    aset.text("NOTICES", W(-14.75, 1.95, z + 1.68), 90.0, size=0.07, color=(0.2, 0.12, 0.06))
+    aset.text("TODAY: CURRY BREAD 150", W(8.96, 0.0, z + 2.25), -90.0, size=0.08, color=(1.0, 0.9, 0.4), emissive=True)
+    aset.text("ISLAND CAFE", W(8.96, 0.0, z + 2.05), -90.0, size=0.11, color=(1, 1, 1), emissive=True)
     for x in (-11.0, -5.5, 0.5, 6.5):
         mb.box((x, 0.0, 9.93), (1.2, 0.3, 0.03), K.PANEL_LIGHT)
     _ship_cam(aset, "ferry_lounge", (-14.4, -4.0, z + 1.75), (8.0, 2.0, z + 0.7))
@@ -1163,6 +1624,77 @@ def _ferry_interior(mb, aset, d1, d2, br):
         mb.box_mm((4.2, 3.4, 1.5), (4.45, 5.2, 1.55), "M_IntWood")                 # shelf with logbooks
         for k in range(8):
             mb.box((4.32, 3.55 + k * 0.2, 1.67), (0.2, 0.06, 0.24), K.FABRICS[k % 7])
+    with mb.at((0.0, 0.0, z)):
+        # overhead panel above the helm, radar pedestal, officer's chair, floor mat
+        for sy in (-2.4, 2.4):
+            mb.box((10.35, sy, 2.54), (0.04, 0.04, 0.22), "M_IntMetal")
+        mb.box_mm((10.0, -2.6, 2.25), (10.7, 2.6, 2.43), STEEL)
+        for k in range(20):
+            mb.box((10.0 - 0.005, -2.4 + k * 0.25, 2.34), (0.01, 0.06, 0.04), K.FABRICS[k % 6])
+        for k in range(4):
+            mb.box((10.0 - 0.006, -1.95 + k * 1.3, 2.3), (0.01, 0.4, 0.06), "M_IntScreen")
+        mb.box_mm((9.35, -3.3, 0.0), (10.45, 3.3, 0.012), "M_IntBlack")
+        mb.cylinder((9.2, -3.5, 0.0), 0.2, 0.95, STEEL, seg=10)
+        with mb.at((9.2, -3.5, 1.05), rot_y=25.0):
+            mb.box((0, 0, 0), (0.55, 0.55, 0.2), STEEL)
+            mb.cylinder((-0.0, 0.0, 0.1), 0.2, 0.012, "M_IntScreen", seg=16)
+        mb.cylinder((8.3, -2.1, 0.0), 0.1, 0.6, STEEL, seg=8)
+        mb.box((8.3, -2.1, 0.66), (0.55, 0.55, 0.12), "M_IntFabricBlue")
+        mb.box((8.02, -2.1, 1.0), (0.1, 0.55, 0.6), "M_IntFabricBlue")
+        # chart table: drawers, chart work (rulers, dividers), logbook, binoculars, coffee
+        for k in range(4):
+            mb.box_mm((5.4, -4.9 + k * 0.38, 0.1), (5.41, -4.6 + k * 0.38, 0.8), "M_IntWoodDark")
+        mb.box((4.85, -4.2, 0.935), (0.06, 0.6, 0.008), "M_IntTrimWhite")
+        mb.beam((4.6, -4.5, 0.94), (4.75, -4.3, 0.94), 0.01, 0.01, "M_IntMetal")
+        mb.box((4.6, -3.65, 0.95), (0.22, 0.3, 0.035), "M_IntFabricNavy")
+        DT.mug(mb, 5.2, -3.6, 0.93, seed=7)
+        for sx in (-0.04, 0.04):
+            with mb.at((5.15, -4.75 + sx, 0.97), rot_y=90):
+                mb.cylinder((0, 0, -0.08), 0.03, 0.16, "M_IntBlack", seg=8)
+        # radio corner: headphones, clock + barometer on the aft wall, deck box + duel disk of the mate
+        mb.torus((4.7, 4.75, 0.82), 0.08, 0.015, "M_IntBlack", seg=10, tube_seg=4)
+        for k, (yy, m) in enumerate(((3.0, "M_IntTrimWhite"), (2.4, "M_IntTrimGold"))):
+            with mb.at((4.24, yy, 1.85), rot_y=90):
+                mb.cylinder((0, 0, -0.03), 0.14, 0.04, "M_IntWoodDark", seg=14)
+                mb.cylinder((0, 0, 0.01), 0.11, 0.01, m, seg=14)
+        DT.deck_box(mb, 4.6, 3.55, 0.78, 20.0, "M_IntFabricYellow")
+        # aft wall: flag locker, life jackets, notice board, extinguisher
+        mb.box_mm((4.2, 0.9, 0.9), (4.6, 2.0, 1.8), "M_IntWood")
+        for i in range(4):
+            for j in range(3):
+                mb.box((4.61, 1.0 + i * 0.27 + 0.1, 1.05 + j * 0.28), (0.02, 0.18, 0.12),
+                       K.FABRICS[(i + j * 2) % 7])
+        for k in range(3):
+            mb.box((4.3, -1.0 - k * 0.42, 1.35), (0.18, 0.36, 0.55), ORANGE)
+            mb.box((4.22, -1.0 - k * 0.42, 1.64), (0.04, 0.04, 0.04), "M_IntMetal")
+        mb.box_mm((4.2, -3.3, 1.0), (4.23, -2.4, 1.7), "M_IntCork")
+        for k in range(3):
+            mb.box_mm((4.23, -3.2 + k * 0.28, 1.1 + (k % 2) * 0.15), (4.235, -3.0 + k * 0.28, 1.4 + (k % 2) * 0.15),
+                      ("M_IntPaper", "M_IntPoster2", "M_IntPaper")[k])
+        mb.cylinder((4.4, -0.85, 0.0), 0.09, 0.6, "M_AcademyRed", seg=8)
+        # low chart cabinets under the side windows with an Aldis signal lamp and the log books
+        mb.box_mm((5.6, -5.8, 0.0), (7.9, -5.3, 0.9), "M_IntWood")
+        mb.box_mm((5.6, 5.3, 0.0), (9.6, 5.8, 0.9), "M_IntWood")
+        mb.cylinder((7.3, -5.55, 0.9), 0.12, 0.25, "M_IntBlack", seg=10)
+        mb.cylinder((7.3, -5.55, 1.15), 0.1, 0.02, "M_IntTrimGold", seg=10)
+        DT.book_stack(mb, 6.2, -5.55, 0.9, 0.0, 4, seed=3)
+        DT.book_stack(mb, 8.8, 5.55, 0.9, 90.0, 3, seed=4)
+        DT.paper_stack(mb, 6.6, 5.55, 0.9, 0.0, 5, seed=5)
+        # ECDIS / navigation console island, rubber floor matting, ceiling beams + cable tray
+        mb.box_mm((6.6, 1.3, 0.0), (7.4, 3.1, 0.9), STEEL)
+        with mb.at((7.0, 2.2, 0.9), rot_y=15.0):
+            mb.box((0, 0, 0.02), (0.7, 1.7, 0.04), "M_IntBlack")
+            for k in range(2):
+                mb.box((0, -0.42 + k * 0.84, 0.045), (0.5, 0.7, 0.006), "M_IntScreen")
+        mb.box_mm((5.2, -1.6, 0.006), (9.35, 1.1, 0.014), "M_IntBlack")
+        for bxx in (5.5, 7.6, 9.6):
+            mb.box((bxx, 0.0, 2.6), (0.14, 11.6, 0.1), "M_IntWood")
+        mb.box_mm((4.2, -0.2, 2.55), (10.0, 0.2, 2.62), "M_IntMetal")
+        for k in range(6):
+            mb.box((4.6 + k * 0.95, 0.0, 2.54), (0.04, 0.36, 0.02), "M_IntBlack")
+        _ship_fixtures(mb, aset, W, 4.2, 10.0, 5.8, 0.0, 2.65, exits=[(4.2, 0.0, 90.0)], outlets=False, seed=3)
+    aset.text("WATCH ROTA", W(4.25, -2.85, z + 1.62), 90.0, size=0.06, color=(0.2, 0.12, 0.06))
+    aset.text("LIFE JACKETS", W(4.42, -1.42, z + 1.0), 90.0, size=0.06, color=(1, 1, 1))
     lights([(7.0, 0.0), (5.0, 3.0)], z + 2.2, 2500.0, 7.0)
     mb.box((7.0, 0.0, 12.93), (1.0, 0.3, 0.03), K.PANEL_LIGHT)
     _ship_cam(aset, "ferry_bridge", (4.7, -2.6, z + 1.75), (11.0, 1.2, z + 0.9))
@@ -1239,6 +1771,9 @@ def _warehouse(aset, mb, nc, im, inc, cx, cy, number, dock):
             aset.light((xc, y0 - 1.2, 7.4), (1.0, 0.92, 0.75), 6000.0, 18.0, night_only=True)
             mb.box((xc, y0 - 0.45, 7.35), (0.7, 0.5, 0.3), DMETAL)
             nc.box((xc, y0 - 0.45, 7.18), (0.55, 0.38, 0.04), GLOW)
+        for x, dw, dz, dh, dbl, md in doors:                                            # entrance aprons
+            mb.box_mm((x - dw / 2 - 0.3, y0 - 1.8, -0.2), (x + dw / 2 + 0.3, y0 - 0.46 if md else y0 - 0.12, 0.01),
+                      DCONC, skip=("-z",))
         for sx in (-1, 1):
             mb.box_mm((cx + sx * 0.55 - (0.1 if sx < 0 else 0.0), y0 - 0.1, 0.0),
                       (cx + sx * 0.55 + (0.1 if sx > 0 else 0.0), y0, 2.35), TRIM)
@@ -1293,6 +1828,7 @@ def _warehouse(aset, mb, nc, im, inc, cx, cy, number, dock):
             _wh02_interior(A, im, inc, number)
         else:
             _wh01_interior(A, im, inc, number)
+        _hall_services(A, im, inc, -w / 2 + T, -d / 2 + T, w / 2 - T, d / 2 - T, H - 0.62 - 0.11 - fz, seed=len(number))
 
 
 def _wh_trusses(aset, mb, x0, x1, y0, y1, H, rh, T):
@@ -1342,13 +1878,13 @@ def _wh01_interior(A, mb, nc, number):
         if i % 3 == 0:
             A.prop("SM_Crate", (px, py, 0.14), rnd.uniform(-6, 6))
             if i == 0:
-                A.prop("SM_Int_Box", (px, py, 1.34), 20.0)
+                A.prop("SM_Int_Box", (px, py, 1.10), 20.0)
         else:
             for bx in (-0.25, 0.25):
                 for by in (-0.3, 0.3):
                     A.prop("SM_Int_Box", (px + bx, py + by, 0.14), rnd.uniform(-10, 10))
-                    if rnd.random() < 0.5:
-                        A.prop("SM_Int_Box", (px + bx, py + by, 0.59), rnd.uniform(-10, 10))
+                    if rnd.random() < 0.5:                                      # second layer (NoCol cartons)
+                        nc.box((px + bx, py + by, 0.14 + 0.36 + 0.17), (0.38, 0.5, 0.34), CARTONS[0])
     A.prop("SM_Int_HandTruck", (1.7, -8.7, 0.0), 25.0)
     A.prop("SM_Int_Extinguisher", (1.3, -9.45, 0.0), 0.0)
     A.prop("SM_Int_Extinguisher", (-19.4, 0.6, 0.0), 90.0)
@@ -1374,13 +1910,18 @@ def _wh01_interior(A, mb, nc, number):
     A.prop("SM_Int_DeskLamp", (19.4, 0.4, 0.91), -90.0)
     A.prop("SM_Int_Stool", (18.4, -0.4, 0.0), 0.0)
     K.lockers(mb, nc, A, 19.4, 2.6, -90.0, n=5)
-    # site office (NE corner): glazed partition walls, flat roof used as storage
+    # site office + crew break room (NE corner): glazed partition walls, flat roof used as storage
     ox0, oy0 = 9.5, 4.5
     K.wall(A, mb, (ox0, oy0), (19.7, oy0), 0.0, 3.0, 0.15, K.PLASTER_WHITE, inner=K.PLASTER_CREAM,
-           openings=[K.Door(2.0, 0.95, 2.1, "office"), K.Window(5.6, 3.2, 1.0, 2.2), K.Window(8.75, 1.7, 1.0, 2.2)],
+           openings=[K.Door(2.0, 0.95, 2.1, "office"), K.Window(3.75, 1.9, 1.0, 2.2), K.Door(5.9, 0.95, 2.1, "office"),
+                     K.Window(8.15, 2.6, 1.0, 2.2)],
            trim=K.TRIM_WHITE, trim_in=K.TRIM_WHITE, base=K.TRIM_WOOD)
     K.wall(A, mb, (ox0, 9.7), (ox0, oy0), 0.0, 3.0, 0.15, K.PLASTER_WHITE, inner=K.PLASTER_CREAM,
            openings=[K.Window(2.6, 2.4, 1.0, 2.2)], trim=K.TRIM_WHITE, trim_in=K.TRIM_WHITE, base=K.TRIM_WOOD)
+    px_ = 14.6                                                     # office | break room partition
+    K.wall(A, mb, (px_, 9.64), (px_, oy0 + 0.15), 0.0, 3.0, 0.12, K.PLASTER_CREAM, inner=K.PLASTER_CREAM,
+           openings=[K.Door(9.64 - 5.75, 0.9, 2.1, "office")], trim=K.TRIM_WHITE, trim_in=K.TRIM_WHITE,
+           base=K.TRIM_WOOD)
     mb.box_mm((ox0, oy0, 3.0), (19.7, 9.7, 3.14), STEEL, mats={"-z": K.CEIL})
     mb.box_mm((ox0 + 0.15, oy0 + 0.15, 0.0), (19.7, 9.7, 0.01), "M_IntLinoleum", skip=("-z",))
     K.wainscot(mb, (19.64, oy0 + 0.15), (19.64, 9.64), 0.01, 2.99, K.PLASTER_CREAM)    # cover the steel walls
@@ -1389,25 +1930,94 @@ def _wh01_interior(A, mb, nc, number):
         A.prop("SM_Int_Box", (px + 0.3, py + 2.0, 3.14), rnd.uniform(0, 90))
     A.prop("SM_Crate", (12.6, 7.6, 3.14), 0.0)
     K.nameplate(mb, A, 12.9, oy0, 1.85, 0.0, "SITE OFFICE", w=0.7, h=0.16)
-    A.prop("SM_Int_OfficeDesk", (15.6, 9.24, 0.0), 0.0)
-    A.prop("SM_Int_OfficeChair", (15.6, 8.5, 0.0), 180.0)
-    A.prop("SM_Int_Radio", (16.05, 9.35, 0.76), 0.0)
-    A.prop("SM_Int_DeskLamp", (15.0, 9.4, 0.76), 20.0)
-    nc.box((15.4, 9.1, 0.765), (0.42, 0.3, 0.01), "M_IntPaper")
-    nc.box((15.5, 9.05, 0.775), (0.3, 0.22, 0.012), "M_IntPoster2")
-    A.prop("SM_Int_Cabinet", (11.0, 9.38, 0.0), 0.0)
-    A.prop("SM_Int_Cabinet", (12.0, 9.38, 0.0), 0.0)
-    A.prop("SM_Int_SofaB", (19.12, 6.6, 0.0), -90.0)
-    A.prop("SM_Int_CoffeeTable", (18.0, 6.6, 0.0), 0.0)
-    A.prop("SM_Int_SideTable", (19.3, 8.95, 0.0), 0.0)
-    A.prop("SM_Int_Kettle", (19.3, 8.95, 0.6), 0.0)
-    A.prop("SM_Int_PottedPlant", (10.1, 9.2, 0.0), 0.0)
-    A.prop("SM_Int_WallClock", (17.4, 9.64, 2.15), 0.0)
-    A.prop("SM_Int_Extinguisher", (19.4, 5.0, 0.0), -90.0)
-    K.bulletin(nc, A, 13.4, 9.62, 1.15, 0.0, 1.4, 0.9, title="SHIPPING SCHEDULE", rng_seed=11)
-    K.poster(nc, A, ox0 + 0.15, 5.4, 1.7, 90.0, 0.6, 0.85, "M_IntPoster4", "KC-7")
-    K.panel_light(A, nc, 12.6, 7.1, 3.0)
-    K.panel_light(A, nc, 16.8, 7.1, 3.0)
+    K.nameplate(mb, A, 17.2, oy0, 1.85, 0.0, "CREW ROOM", w=0.6, h=0.16)
+    fx0, fy0, fx1, fy1 = ox0 + 0.15, oy0 + 0.15, px_, 9.64                  # office inner box
+    bx0, bx1 = px_ + 0.12, 19.64                                            # break room inner x
+    _dress(A, mb, nc, fx0, fy0, fx1, fy1, 0.0, 3.0, "office", seed=12, ac=False)
+    _dress(A, mb, nc, bx0, fy0, bx1, fy1, 0.0, 3.0, "office", seed=13)
+    for wx, ww in ((12.3 + 0.95, 1.9), (16.35 + 1.3, 2.6)):
+        DT.blinds(nc, wx, fy0, 1.0, 2.2, 180.0, ww - 0.1, 0.45)
+    DT.blinds(nc, fx0, 7.1, 1.0, 2.2, 90.0, 2.3, 0.3)
+    # -- office: desk, files, shipping schedule
+    K.desk(mb, nc, 12.0, 9.22, 0.0, w=1.8, d=0.8, top=K.TRIM_WHITE, legs=STEEL, hutch=False, clutter=False)
+    DT.desk_set(nc, A, 12.0, 9.22, 0.76, 0.0, "office", seed=21, w=1.8, d=0.8)
+    A.prop("SM_Int_OfficeChair", (12.0, 8.3, 0.0), 180.0)
+    A.prop("SM_Int_PlasticChair", (13.3, 7.4, 0.0), 160.0)
+    A.prop("SM_Int_Cabinet", (10.3, 9.31, 0.0), 0.0)
+    A.prop("SM_Int_Radio", (10.3, 9.38, 1.18), 0.0)
+    A.prop("SM_Int_Drawers", (13.85, 9.37, 0.0), 0.0)
+    DT.paper_stack(nc, 13.7, 9.37, 1.88, 0.0, 9, seed=3)
+    K.bookcase(mb, nc, fx1 - 0.18, 8.05, -90.0, w=1.0, d=0.34, h=1.9, shelves=5, mat=STEEL, rng_seed=6)
+    _whiteboard(nc, A, fx1, 6.85, 0.95, -90.0, 1.1, 0.8, ("ETA FERRY  MON 10:00", "WH02: 412 CRATES", "CALL CRANE 3"))
+    K.bulletin(nc, A, 10.3, fy1, 1.7, 0.0, 1.1, 0.75, title="SHIPPING SCHEDULE", rng_seed=11)
+    A.prop("SM_Int_WallClock", (12.0, fy1, 2.35), 0.0)
+    K.poster(nc, A, fx0, 5.4, 1.7, 90.0, 0.6, 0.85, "M_IntPoster4", "KC-7")
+    _wall_map(nc, A, fx0, 9.0, 1.45, 90.0, 0.9, 0.65, "SEA ROUTES", seed=4)
+    A.prop("SM_Int_PottedPlant", (13.3, 4.95, 0.0), 0.0)
+    A.prop("SM_Int_Extinguisher", (fx0 + 0.25, 4.95, 0.0), 90.0)
+    nc.cylinder((10.75, 8.45, 0.0), 0.15, 0.32, STEEL, seg=12, cap_top=False)          # waste bin
+    DT.paper_stack(nc, 10.75, 8.45, 0.25, 30.0, 2, seed=8)
+    A.prop("SM_Int_Box", (10.2, 8.3, 0.0), 10.0)
+    nc.box_mm((11.1, 7.8, 0.01), (12.9, 9.1, 0.016), "M_HarborWrap")                    # chair mat
+    _wall_shelf(nc, A, 12.0, fy1, 1.75, 0.0, 1.5, (), d=0.28)
+    for k in range(14):                                                                    # binders
+        nc.box((11.4 + k * 0.065, fy1 - 0.15, 1.75 + 0.16), (0.055, 0.26, 0.32),
+               ("M_IntFabricBlue", "M_IntFabricRed", "M_IntTrimWhite", "M_IntFabricYellow")[k % 4])
+    A.prop("SM_Int_Frame", (13.85, fy1, 2.15), 0.0)
+    mb.box((10.0, 6.9, 0.35), (0.5, 0.6, 0.7), STEEL)                                      # printer stand
+    nc.box((10.0, 6.9, 0.85), (0.45, 0.45, 0.3), "M_IntTrimWhite")
+    nc.box((10.0, 6.66, 0.9), (0.3, 0.01, 0.02), "M_IntBlack")
+    DT.paper_stack(nc, 10.0, 6.9, 1.0, 90.0, 3, seed=31)
+    A.prop("SM_Int_Box", (10.0, 7.75, 0.0), 5.0)
+    A.prop("SM_Int_RoundTableB", (11.4, 6.25, 0.0), 0.0)
+    for a in (180.0, 0.0):
+        A.prop("SM_Int_PlasticChair", (11.4 + math.cos(math.radians(a)) * 0.72, 6.25, 0.0), a - 90.0)
+    DT.paper_stack(nc, 11.3, 6.2, 0.75, 20.0, 5, seed=41)
+    DT.mug(nc, 11.6, 6.0, 0.75, seed=42)
+    K.panel_light(A, nc, 12.1, 7.1, 3.0)
+    # -- break room: kitchenette, lockers with hi-vis vests, sofa corner, card table
+    K.kitchen_run(mb, nc, 15.0, fy1, 17.55, against="+y")
+    A.prop("SM_Int_Kettle", (15.25, 9.3, 0.9), 20.0)
+    _coffee_machine(nc, 16.35, 9.35, 0.9, 0.0)
+    A.prop("SM_Int_Microwave", (17.25, 9.33, 0.9), 0.0)
+    for k in range(3):
+        DT.mug(nc, 16.62 + k * 0.1, 9.1, 0.9, seed=k + 4, coffee=False)
+    _fridge(mb, nc, 18.0, 9.3, 0.0)
+    _water_cooler(mb, nc, 19.38, 5.0, -90.0)
+    K.lockers(mb, nc, A, bx0 + 0.235, 7.9, 90.0, n=5)
+    _vest_hooks(nc, bx1, 8.45, 1.75, -90.0, n=3, vests=3)
+    A.prop("SM_Int_SofaB", (19.2, 6.4, 0.0), -90.0)
+    A.prop("SM_Int_CoffeeTableB", (18.05, 6.4, 0.0), 90.0)
+    DT.mug(nc, 18.0, 6.1, 0.39, seed=9)
+    DT.paper_stack(nc, 18.05, 6.7, 0.39, 80.0, 3, seed=19)
+    K.bulletin(nc, A, bx1, 6.4, 1.25, -90.0, 1.3, 0.8, title="CREW NOTICES", rng_seed=14)
+    with mb.at((px_ + 0.12, 7.9, 2.38), rot=90.0):                                     # wall TV over the lockers
+        mb.box((0, -0.03, 0), (1.0, 0.06, 0.58), "M_IntBlack")
+    nc.box((px_ + 0.185, 7.9, 2.38), (0.004, 0.92, 0.5), "M_IntScreen")
+    A.prop("SM_Int_RoundTableB", (16.85, 6.75, 0.0), 0.0)
+    for a in (200.0, 320.0, 80.0):
+        r = math.radians(a)
+        A.prop("SM_Int_PlasticChair", (16.85 + math.cos(r) * 0.72, 6.75 + math.sin(r) * 0.72, 0.0), a - 90.0)
+    DT.card_spread(nc, 16.75, 6.7, 0.75, 10.0, 5, seed=2)
+    DT.deck_box(nc, 17.05, 6.95, 0.75, 30.0, "M_IntFabricBlue")
+    DT.mug(nc, 16.6, 7.0, 0.75, seed=1)
+    nc.cylinder((18.6, 5.0, 0.0), 0.16, 0.34, "M_IntFabricGreen", seg=12, cap_top=False)   # recycling bin
+    A.prop("SM_Int_PottedPlantB", (19.25, 9.25, 0.0), 0.0)
+    A.prop("SM_Int_WallClock", (17.2, fy1, 2.45), 0.0)
+    K.panel_light(A, nc, 17.2, 7.1, 3.0)
+    # -- hall life: forklift, pallet jack, vests by the personnel door, clipboards, first aid, rota
+    _forklift(mb, nc, 7.6, -3.3, 180.0, load=0.9, rnd=rnd)
+    _pallet_jack(mb, -13.2, -6.8, 15.0)
+    _vest_hooks(nc, -1.7, -9.7, 1.75, 180.0, n=3, vests=2)
+    _first_aid(nc, A, 1.4, -9.7, 1.55, 180.0)
+    _wall_clipboards(nc, 5.45, 2.6, 1.35, 90.0, n=1, seed=3)
+    K.bulletin(nc, A, -19.7, 5.6, 1.2, 90.0, 1.3, 0.85, title="SHIFT ROTA", rng_seed=17)
+    _first_aid(nc, A, -19.7, 7.0, 1.55, 90.0)
+    A.prop("SM_Int_ToolCart", (17.6, -2.9, 0.0), 90.0)
+    A.prop("SM_Int_Broom", (19.3, -5.4, 0.0), -90.0)
+    A.prop("SM_Int_Dustpan", (19.0, -5.9, 0.0), -60.0)
+    A.prop("SM_Int_TrashBag", (-12.0, -9.2, 0.0), 30.0)
+    A.prop("SM_Int_WetFloor", (-1.4, -6.6, 0.0), 20.0)
     # signs, posters, floor markings
     K.poster(nc, A, -3.4, -9.7, 2.1, 180.0, 1.0, 1.4, "M_IntPoster3", "SAFETY FIRST!", text_color=(0.2, 0.1, 0.05))
     K.poster(nc, A, 3.4, -9.7, 2.1, 180.0, 1.0, 1.4, "M_IntPoster1", "NO SMOKING")
@@ -1419,7 +2029,8 @@ def _wh01_interior(A, mb, nc, number):
     for yy in (-5.6, 0.9, 4.15, 8.1):
         nc.box_mm((-16.6, yy - 0.06, 0.0), (8.3 if yy > 6 else 5.4, yy + 0.06, 0.012), YELLOW)
     K.camera(A, "wh01_hall", (13.5, -8.6, 3.2), (-8.0, 4.5, 1.4), 15.0)
-    K.camera(A, "wh01_office", (10.25, 5.5, 1.7), (17.8, 9.2, 0.9), 16.0)
+    K.camera(A, "wh01_office", (9.95, 5.15, 1.65), (13.4, 9.3, 0.9), 16.0)
+    K.camera(A, "wh01_crew", (15.1, 5.05, 1.65), (19.0, 8.7, 0.9), 16.0)
 
 
 def _wh02_interior(A, mb, nc, number):
@@ -1436,17 +2047,32 @@ def _wh02_interior(A, mb, nc, number):
         for k in range(21):
             with mb.at((0.0, -2.5 + k * 0.25, 0.77), rot_y=90):
                 mb.cylinder((0, 0, -0.42), 0.035, 0.84, "M_IntMetal", seg=6, cap_top=False, cap_bottom=False)
+        mb.box_mm((-0.4, -2.55, 0.805), (0.4, 2.55, 0.815), "M_IntBlack")                       # belt
     for k, yy in enumerate((-5.2, -3.9, -2.4, -1.4)):
-        A.prop("SM_Int_Box", (rnd.uniform(-0.12, 0.12), yy, 0.81), rnd.uniform(-20, 20))
+        A.prop("SM_Int_Box", (rnd.uniform(-0.12, 0.12), yy, 0.815), rnd.uniform(-20, 20))
     # packing tables
     for px in (-2.4, 2.4):
-        A.prop("SM_Int_Table", (px, 0.6, 0.0), 0.0)
-        A.prop("SM_Int_Stool", (px - 0.4, -0.2, 0.0), 0.0)
-        A.prop("SM_Int_Stool", (px + 0.5, -0.2, 0.0), 0.0)
-        A.prop("SM_Int_Box", (px + 0.45, 0.65, 0.76), 15.0)
-        nc.box((px - 0.3, 0.55, 0.77), (0.45, 0.35, 0.02), "M_IntCork")
-        nc.cylinder((px - 0.6, 0.85, 0.76), 0.06, 0.05, "M_IntPaper", seg=10)      # tape roll
-        nc.box((px - 0.2, 0.9, 0.79), (0.3, 0.2, 0.06), "M_IntMetal")                # parcel scale
+        mb.box((px, 0.6, 0.88), (1.8, 0.8, 0.04), "M_IntWood")
+        for sx in (-1, 1):
+            for sy in (-1, 1):
+                mb.box((px + sx * 0.85, 0.6 + sy * 0.35, 0.43), (0.05, 0.05, 0.86), STEEL)
+        mb.box((px, 0.6, 0.18), (1.75, 0.75, 0.03), STEEL)
+        for k in range(3):
+            A.prop("SM_Int_Box", (px - 0.56 + k * 0.56, 0.6, 0.195), 90.0 + k * 3)
+        with mb.at((px, 0.95, 1.25)):                                                   # kraft paper roll
+            for sx in (-1, 1):
+                mb.box((sx * 0.8, 0.05, 0.0), (0.04, 0.04, 0.74), STEEL)
+            with mb.at((0, 0.05, 0.3), rot_y=90):
+                mb.cylinder((0, 0, -0.75), 0.07, 1.5, "M_IntCork", seg=10)
+        A.prop("SM_Int_MetalStool", (px - 0.4, -0.25, 0.0), 0.0)
+        A.prop("SM_Int_MetalStool", (px + 0.5, -0.25, 0.0), 0.0)
+        A.prop("SM_Int_Box", (px + 0.45, 0.65, 0.9), 15.0)
+        nc.box((px - 0.3, 0.55, 0.91), (0.45, 0.35, 0.02), "M_IntCork")
+        nc.cylinder((px - 0.6, 0.85, 0.9), 0.06, 0.05, "M_IntPaper", seg=10)       # tape roll
+        nc.box((px - 0.2, 0.9, 0.93), (0.3, 0.2, 0.06), "M_IntMetal")                # parcel scale
+        nc.box((px - 0.2, 0.8, 0.931), (0.12, 0.004, 0.04), "M_IntScreen")
+        A.prop("SM_Int_Clipboard", (px + 0.05, 0.3, 0.9), 10.0 + px * 5)
+        DT.card_spread(nc, px - 0.45, 0.25, 0.9, 5.0, 4, seed=int(px * 10))
     # steel shelving aisles (procedural shelves stocked with card cartons)
     for row_y, yaw in ((9.35, 0.0), (6.95, 0.0), (6.35, 180.0), (3.95, 0.0), (3.35, 180.0)):
         x = -12.2
@@ -1505,7 +2131,7 @@ def _wh02_interior(A, mb, nc, number):
     A.prop("SM_Int_TeaSet", (-17.0, 6.0, 0.75), 30.0)
     A.prop("SM_Int_Bench", (-17.0, 9.35, 0.0), 180.0)
     A.prop("SM_Int_SideTable", (-14.6, 9.35, 0.0), 0.0)
-    A.prop("SM_Int_TV", (-14.6, 9.35, 0.6), 0.0)
+    A.prop("SM_Int_TV", (-14.6, 9.35, 0.56), 0.0)
     K.lockers(mb, nc, A, -19.4, 2.6, 90.0, n=6)
     K.bulletin(nc, A, -19.62, 5.6, 1.2, 90.0, 1.4, 0.9, title="BREAK ROOM", rng_seed=4)
     A.prop("SM_Int_PottedPlantB", (-14.6, 7.6, 0.0), 0.0)
@@ -1516,8 +2142,9 @@ def _wh02_interior(A, mb, nc, number):
         nc.box((px, py, 0.14 + hgt / 2), (1.0, 1.15, hgt), CARTONS[i % 3])
         nc.box((px, py, 0.15 + hgt), (1.02, 1.17, 0.02), "M_IntFabricWhite")
     A.prop("SM_Int_HandTruck", (-13.8, -2.2, 0.0), -30.0)
-    for i, (px, py, pz) in enumerate(((15.2, -5.4, 0.0), (16.6, -5.4, 0.0), (18.0, -5.4, 0.0), (15.9, -5.4, 1.2),
-                                      (17.3, -5.4, 1.2), (17.8, -3.6, 0.0))):
+    for px in (15.2, 16.6):
+        _crate_mesh(mb, px, -5.4, 0.0, 0.0)
+    for i, (px, py, pz) in enumerate(((18.0, -5.4, 0.0), (15.2, -5.4, 0.96), (16.6, -5.4, 0.96), (17.8, -3.6, 0.0))):
         A.prop("SM_Crate", (px, py, pz), (i * 17) % 20 - 10)
     A.prop("SM_Int_Extinguisher", (-6.0, -9.45, 0.0), 0.0)
     A.prop("SM_Int_Extinguisher", (6.0, -9.45, 0.0), 0.0)
@@ -1528,6 +2155,20 @@ def _wh02_interior(A, mb, nc, number):
            color=(0.95, 0.95, 0.95))
     for xx in (-9.0, 0.0, 9.0):
         nc.box_mm((xx - 2.0, -6.4, 0.0), (xx + 2.0, -6.28, 0.012), YELLOW)
+    # hall life: forklift with a load, pallet jack, hi-vis vests, dispatch board, clipboards, first aid
+    _forklift(mb, nc, -8.6, -2.9, 180.0, fork_z=0.35, load=1.0, rnd=rnd)
+    _pallet_jack(mb, 7.6, -4.6, 160.0)
+    _vest_hooks(nc, -19.7, -0.2, 1.75, 90.0, n=4, vests=3)
+    _first_aid(nc, A, -19.7, -1.6, 1.55, 90.0)
+    _whiteboard(nc, A, -13.5, -9.7, 1.0, 180.0, 1.6, 0.9, ("DISPATCH - TODAY", "BOOSTERS  412 CRATES", "DUEL DISKS  36",
+                                                            "ACADEMY MAIL  2 BAGS"))
+    _wall_clipboards(nc, 9.6 - 0.04, 6.0, 1.4, -90.0, n=2, seed=9)
+    K.bulletin(nc, A, 13.5, -9.7, 1.2, 180.0, 1.3, 0.85, title="SAFETY NOTICES", rng_seed=23)
+    A.prop("SM_Int_TrashBag", (-11.0, -9.2, 0.0), 10.0)
+    A.prop("SM_Int_Broom", (19.3, -1.4, 0.0), -90.0)
+    A.prop("SM_Int_WetFloor", (-4.2, -6.0, 0.0), 30.0)
+    DT.card_spread(nc, -17.0, 5.68, 0.75, 0.0, 5, seed=7)
+    DT.deck_box(nc, -16.6, 6.3, 0.75, -15.0, "M_IntFabricYellow")
     K.camera(A, "wh02_hall", (-15.5, -8.4, 3.0), (6.0, 6.0, 1.0), 15.0)
     K.camera(A, "wh02_vault", (10.1, 2.9, 1.7), (17.5, 8.6, 0.8), 16.0)
 
@@ -1587,9 +2228,8 @@ def _crane(aset, mb, nc):
     # trolley, operator cab, ropes and spreader with a container
     ty = -45.0
     mb.box_mm((x - 3.3, ty - 1.6, top - 0.5), (x + 3.3, ty + 1.6, top), DMETAL)
-    mb.box_mm((x + 0.9, ty - 1.2, top - 3.0), (x + 3.0, ty + 1.2, top - 0.5), WHITE)
-    mb.box_mm((x + 0.85, ty - 1.25, top - 2.4), (x + 3.05, ty - 1.15, top - 1.0), GLASS)
-    mb.box_mm((x + 0.8, ty - 1.25, top - 3.1), (x + 3.1, ty + 1.25, top - 3.0), BLUE)
+    # operator cab (hollow, walk-in) hanging under the trolley, reached by a steel stair tower + catwalk
+    _crane_cab(aset, mb, nc, x, ty, top)
     sz = 6.6
     mb.box_mm((x - 3.1, ty - 1.25, sz), (x + 3.1, ty + 1.25, sz + 0.4), Y)
     mb.box_mm((x - 1.0, ty - 0.6, sz + 0.4), (x + 1.0, ty + 0.6, sz + 0.9), Y)
@@ -1598,6 +2238,119 @@ def _crane(aset, mb, nc):
             nc.beam((x + rx, ty + ryy, sz + 0.9), (x + rx * 1.2, ty + ryy, top - 0.5), 0.05, 0.05, DMETAL)
     aset.prop("SM_Container_Yellow", (x, ty, sz - 2.62), 0.0)
     aset.light((x, ty, top - 0.6), (1.0, 0.95, 0.85), 8000.0, 25.0, night_only=True)
+
+
+def _crane_cab(aset, mb, nc, x, ty, top):
+    """Operator cab under the trolley (floor 9.0, glass front + floor window towards the sea), the catwalk from
+    the stair tower on the land side, and the switchback stair (0.18 m risers, 0.28 m treads, 5 flights)."""
+    Y = CRANE_Y
+    X0, X1, Y0, Y1 = x + 0.9, x + 3.0, ty - 1.2, ty + 1.2
+    fz, cz = top - 3.0, top - 0.6                  # cab floor 9.0, ceiling 11.4
+    cx = (X0 + X1) / 2
+    # floor slab with a glazed hatch in front of the seat (operators look straight down at the spreader)
+    hx0, hx1, hy0, hy1 = cx - 0.45, cx + 0.45, Y0 + 0.15, Y0 + 0.85
+    for a, b in (((X0 - 0.1, Y0 - 0.05), (X1 + 0.1, hy0)), ((X0 - 0.1, hy1), (X1 + 0.1, Y1 + 0.05)),
+                 ((X0 - 0.1, hy0), (hx0, hy1)), ((hx1, hy0), (X1 + 0.1, hy1))):
+        mb.box_mm((a[0], a[1], fz - 0.1), (b[0], b[1], fz), BLUE, mats={"+z": "M_IntMetal"})
+    mb.box_mm((hx0, hy0, fz - 0.06), (hx1, hy1, fz - 0.03), GLASS_IN)
+    for a, b in (((hx0 - 0.04, hy0 - 0.04), (hx1 + 0.04, hy0)), ((hx0 - 0.04, hy1), (hx1 + 0.04, hy1 + 0.04))):
+        mb.box_mm((a[0], a[1], fz - 0.1), (b[0], b[1], fz + 0.01), "M_IntBlack")
+    kw = dict(trim=TRIM, trim_in=K.TRIM_WHITE)
+    h = cz - fz
+    for p0, p1, ops in (((X0, Y0), (X1, Y0), [K.Window(1.05, 1.8, 0.35, 2.1, frame=TRIM, mullions=1)]),
+                        ((X1, Y0), (X1, Y1), [K.Window(1.0, 1.2, 0.9, 2.0, frame=TRIM)]),
+                        ((X1, Y1), (X0, Y1), [K.Door(1.05, 0.9, 2.05, "metal")]),
+                        ((X0, Y1), (X0, Y0), [K.Window(1.4, 1.2, 0.9, 2.0, frame=TRIM)])):
+        K.wall(aset, mb, p0, p1, fz, h, 0.1, WHITE, inner=K.PLASTER_WHITE, openings=ops, **kw)
+    mb.box_mm((X0 - 0.05, Y0 - 0.05, cz), (X1 + 0.05, Y1 + 0.05, top - 0.5), WHITE, mats={"-z": K.CEIL})
+    mb.box_mm((X0 - 0.15, Y0 - 0.35, cz + 0.02), (X1 + 0.15, Y0, cz + 0.08), BLUE)            # sun visor
+    # ---- inside: seat with joystick armrests, side consoles, radio shelf, extinguisher, vest, clipboard
+    ix0, ix1, iy0, iy1 = X0 + 0.1, X1 - 0.1, Y0 + 0.1, Y1 - 0.1
+    sy = ty
+    with mb.at((cx, sy, fz)), nc.at((cx, sy, fz)):
+        mb.cylinder((0, 0, 0.0), 0.22, 0.04, "M_IntMetal", seg=10)
+        mb.cylinder((0, 0, 0.04), 0.05, 0.38, "M_IntMetal", seg=8)
+        mb.box((0, 0, 0.47), (0.5, 0.5, 0.1), "M_IntBlack")
+        mb.box((0, 0.27, 0.85), (0.5, 0.08, 0.7), "M_IntBlack")
+        mb.box((0, 0.29, 1.27), (0.28, 0.08, 0.16), "M_IntBlack")                              # headrest
+        for s in (-1, 1):
+            mb.box((s * 0.34, -0.05, 0.6), (0.16, 0.5, 0.12), STEEL)
+            mb.box((s * 0.34, 0.1, 0.33), (0.08, 0.08, 0.3), STEEL)
+            nc.box((s * 0.34, -0.12, 0.665), (0.12, 0.2, 0.01), "M_IntBlack")
+            nc.cylinder((s * 0.34, -0.15, 0.665), 0.02, 0.15, "M_IntBlack", seg=8)               # joysticks
+            nc.sphere((s * 0.34, -0.15, 0.83), 0.035, "M_IntFabricRed" if s < 0 else "M_IntBlack", seg=8, rings=5)
+            for k in range(3):
+                nc.box((s * 0.34 + (k - 1) * 0.035, -0.25, 0.67), (0.025, 0.025, 0.012), K.FABRICS[k + (s > 0) * 3])
+    for s, xa, xb in ((-1, ix0, ix0 + 0.38), (1, ix1 - 0.38, ix1)):                             # side consoles
+        mb.box_mm((xa, iy0, fz), (xb, iy0 + 1.15, fz + 0.75), STEEL)
+        with nc.at(((xa + xb) / 2, iy0 + 0.6, fz + 0.75), rot_y=-s * 18):
+            nc.box((0, 0, 0.01), (0.32, 1.05, 0.02), "M_IntBlack")
+            nc.box((0, -0.25, 0.022), (0.24, 0.3, 0.004), "M_IntScreen")
+            nc.box((0, 0.2, 0.022), (0.24, 0.3, 0.004), "M_IntScreen")
+            for k in range(6):
+                nc.box((-0.08 + (k % 3) * 0.08, 0.45 - (k // 3) * 0.06 - 0.05, 0.025), (0.04, 0.035, 0.01),
+                       K.FABRICS[k])
+    with mb.at((ix1, iy1 - 0.35, fz + 1.15), rot=-90.0), nc.at((ix1, iy1 - 0.35, fz + 1.15), rot=-90.0):
+        mb.box((0, -0.15, -0.015), (0.6, 0.3, 0.03), STEEL)                                  # radio shelf
+        nc.box((0.05, -0.14, 0.07), (0.32, 0.22, 0.14), "M_IntBlack")                        # VHF radio
+        nc.box((0.05, -0.252, 0.08), (0.12, 0.004, 0.05), "M_IntScreen")
+        for k in range(3):
+            nc.cylinder((-0.06 + k * 0.08, -0.255, 0.045), 0.012, 0.01, "M_IntMetal", seg=6)
+        nc.box((-0.2, -0.17, 0.05), (0.06, 0.1, 0.1), "M_IntBlack")                           # handset
+        nc.cylinder((0.18, -0.12, 0.14), 0.006, 0.35, "M_IntBlack", seg=4)                    # antenna
+    nc.cylinder((ix1 - 0.19, iy0 + 1.0, fz + 0.75), 0.04, 0.24, "M_IntFabricGreen", seg=8)    # thermos
+    with nc.at((ix0 + 0.19, iy0 + 0.95, fz + 0.75)):                                          # logbook
+        nc.box((0, 0, 0.012), (0.2, 0.28, 0.024), "M_IntFabricNavy")
+    aset.prop("SM_Int_Extinguisher", (ix0 + 0.18, iy1 - 0.2, fz), 90.0)
+    _vest_hooks(nc, ix0, iy1 - 0.4, fz + 1.75, 90.0, n=1, vests=1, helmets=False)
+    _wall_clipboards(nc, ix0 + 0.15, iy1, fz + 1.5, 0.0, n=1, seed=4)
+    DT.blinds(nc, cx, iy0, fz + 0.35, fz + 2.1, 180.0, 1.7, 0.2)
+    _dress(aset, mb, nc, ix0, iy0, ix1, iy1, fz, cz, "service", seed=71)
+    K.panel_light(aset, nc, cx, iy0 + 0.55, cz, w=0.6, d=0.25, intensity=1500.0, radius=4.0)
+    aset.text("CRANE 3", (X1 + 0.03, ty + 0.3, cz - 0.25), -90.0 + 180.0, size=0.18, color=(0.1, 0.25, 0.62))
+    K.camera(aset, "crane_cab", (X1 - 0.75, Y1 - 0.4, fz + 1.65), (cx - 0.2, Y0 - 0.4, fz + 0.4), 13.0)
+    # ---- catwalk from the cab door to the stair tower (hangs from the boom girder above)
+    cw0, cw1 = cx - 0.55, cx + 0.55
+    yc0, yc1 = Y1, RAIL_LAND + 0.8
+    mb.box_mm((cw0, yc0, fz - 0.06), (cw1, yc1, fz), "M_IntMetal", mats={"-z": DMETAL})
+    for xx in (cw0 + 0.03, cw1 - 0.03):
+        mb.railing([(xx, yc0 + 0.05, fz), (xx, yc1, fz)], 1.0, Y, post_spacing=1.2, post_size=0.05, rail_size=0.05)
+    yh = yc0 + 0.6
+    while yh < yc1:
+        for xx in (cw0, cw1):
+            mb.box((xx, yh, (fz + top) / 2), (0.05, 0.05, top - fz), DMETAL)
+        mb.box_mm((cw0 - 0.05, yh - 0.04, top - 0.08), (x + 2.85, yh + 0.04, top), DMETAL)
+        yh += 2.4
+    # ---- stair tower (land side of the rail): lane A climbs south, lane B north
+    la, lb, wd = cx - 0.5, cx + 0.5, 0.9
+    ys, yn = yc1, yc1 + 1.0 + 2.8 + 1.0           # south / north faces of the tower
+    tx0, tx1 = la - 0.45, lb + 0.45
+    for (k, lane, yaw, ystart) in ((0, la, -90.0, yn - 1.0), (1, lb, 90.0, ys + 1.0), (2, la, -90.0, yn - 1.0),
+                                   (3, lb, 90.0, ys + 1.0), (4, la, -90.0, yn - 1.0)):
+        K.stairs(mb, lane, ystart, k * 1.8, (k + 1) * 1.8, yaw, wd, mat="M_IntMetal", riser=None, stringer=DMETAL,
+                 rail=Y, run=0.28, rail_sides=(1, -1))
+    for z in (1.8, 5.4, fz):                                                              # south landings
+        mb.box_mm((tx0, ys, z - 0.08), (tx1, ys + 1.0, z), "M_IntMetal", mats={"-z": DMETAL})
+    for z in (3.6, 7.2):                                                                  # north landings
+        mb.box_mm((tx0, yn - 1.0, z - 0.08), (tx1, yn, z), "M_IntMetal", mats={"-z": DMETAL})
+    rk = dict(post_spacing=0.8, post_size=0.05, rail_size=0.05)
+    for z in (1.8, 5.4):
+        mb.railing([(tx0 + 0.03, ys + 1.0, z), (tx0 + 0.03, ys + 0.03, z), (tx1 - 0.03, ys + 0.03, z),
+                    (tx1 - 0.03, ys + 1.0, z)], 1.0, Y, **rk)
+    for z in (3.6, 7.2):
+        mb.railing([(tx0 + 0.03, yn - 1.0, z), (tx0 + 0.03, yn - 0.03, z), (tx1 - 0.03, yn - 0.03, z),
+                    (tx1 - 0.03, yn - 1.0, z)], 1.0, Y, **rk)
+    mb.railing([(cw0, ys + 0.03, fz), (tx0 + 0.03, ys + 0.03, fz), (tx0 + 0.03, ys + 1.0, fz)], 1.0, Y, **rk)
+    mb.railing([(cw1, ys + 0.03, fz), (tx1 - 0.03, ys + 0.03, fz), (tx1 - 0.03, ys + 1.0, fz),
+                (lb - wd / 2, ys + 1.0, fz)], 1.0, Y, **rk)
+    for px in (tx0 - 0.06, tx1 + 0.06):                                                   # tower posts
+        for py in (ys - 0.06, yn + 0.06):
+            mb.box((px, py, (fz + 1.1) / 2), (0.12, 0.12, fz + 1.1), Y)
+    for z in (1.8, 3.6, 5.4, 7.2):
+        for px in (tx0 - 0.06, tx1 + 0.06):
+            mb.beam((px, ys - 0.06, z - 1.7), (px, yn + 0.06, z), 0.06, 0.06, Y)
+    nc.box((cx - 0.5, yn + 0.08, 1.5), (0.6, 0.02, 0.4), "M_CrateYellow")
+    aset.text("CRANE CAB - STAFF ONLY", (cx - 0.5, yn + 0.1, 1.48), 180.0, size=0.06, color=(0.1, 0.1, 0.1))
 
 
 # ================================================================== TERMINAL
@@ -1620,6 +2373,8 @@ def _terminal(aset, mb, nc, im, inc):
     mb.box_mm((hx0 + WT, hy0 + WT, -0.2), (hx1 - WT, hy1 - WT, 0.005), "M_IntTileWhite", skip=("-z",))
     for yy in (hy0, hy1):                                                                  # door thresholds
         mb.box_mm((28.88, yy - 0.12, -0.2), (31.12, yy + 0.12, 0.005), "M_IntTileWhite", skip=("-z",))
+    mb.box_mm((28.4, hy0 - 1.6, -0.2), (31.6, hy0 - 0.12, 0.01), DCONC, skip=("-z",))      # entrance aprons
+    mb.box_mm((28.4, hy1 + 0.12, -0.2), (31.6, hy1 + 1.6, 0.01), DCONC, skip=("-z",))
     s1 = _frames(mb, (hx0, hy0), (28.6, hy0), 1.0, 2, 1.8, 2.0)
     s2 = _frames(mb, (31.4, hy0), (hx1, hy0), 1.0, 2, 1.8, 2.0)
     n1 = _frames(mb, (hx1, hy1), (31.4, hy1), 1.0, 2, 1.8, 2.0)
@@ -1822,8 +2577,73 @@ def _terminal_hall(A, wm, mb, nc, x0, y0, x1, y1):
         with mb.at((30.0, yy, 3.25), rot=yw):
             mb.box((0, -0.03, 0), (2.6, 0.06, 0.5), BLUE)
         A.text(txt, (p[0], p[1], 3.17), yw, size=0.2, color=(1, 1, 1))
+    # ---- detail pass: ticket machines, luggage carts, departures board, souvenir + card stand, posters
+    _dress(A, mb, nc, x0, y0, x1, y1, 0.0, ch, "office", seed=31, ac=False, keep_clear=[(x0, 14.0, x0, 22.0)])
+    for yy in (16.35, 17.15):
+        _ticket_machine(mb, nc, A, x1 - 0.24, yy, -90.0)
+    A.text("SELF-SERVICE TICKETS", (x1 - 0.02, 16.75, 2.0), -90.0, size=0.09, color=(0.1, 0.25, 0.62))
+    _luggage_cart(mb, nc, 24.2, 12.85, 0.0, 2, seed=1)
+    _luggage_cart(mb, nc, 24.7, 23.2, 180.0, 3, seed=2)
+    _luggage_cart(mb, nc, 33.0, 12.95, 90.0, 0, seed=3)
+    # hanging departures / arrivals board over the north entrance (double-sided)
+    bz = 3.0
+    for sx in (-1, 1):
+        mb.box((30.0 + sx * 1.3, 21.4, (bz + 0.8 + ch) / 2), (0.03, 0.03, ch - bz - 0.8), "M_IntMetal")
+    mb.box((30.0, 21.4, bz + 0.4), (3.0, 0.16, 0.85), BLUE)
+    for sy, yw, head in ((-1, 0.0, "DEPARTURES"), (1, 180.0, "ARRIVALS")):
+        nc.box((30.0, 21.4 + sy * 0.085, bz + 0.38), (2.8, 0.01, 0.7), "M_IntBlack")
+        rows = [(head, (1, 1, 1)), ("10:00  DOMINO CITY      GATE 1", (1.0, 0.85, 0.3)),
+                ("13:30  NORTH ACADEMY    GATE 1", (0.4, 1.0, 0.5)), ("16:00  BATTLE CITY      GATE 2", (1.0, 0.85, 0.3))]
+        if sy > 0:
+            rows = [(head, (1, 1, 1)), ("09:40  DOMINO CITY      LANDED", (0.4, 1.0, 0.5)),
+                    ("12:15  KAIBA PORT       ON TIME", (1.0, 0.85, 0.3)), ("17:20  NORTH ACADEMY    ON TIME", (1.0, 0.85, 0.3))]
+        for i, (t, col) in enumerate(rows):
+            A.text(t, (30.0, 21.4 + sy * 0.095, bz + 0.62 - i * 0.16), yw, size=0.13 if i == 0 else 0.1, color=col,
+                   emissive=True)
+    # souvenir corner + card spinner by the kiosk
+    _souvenir_table(mb, nc, A, 35.95, 23.33, 0.0, seed=5)
+    _card_spinner(mb, nc, 32.1, 21.9, seed=6)
+    A.prop("SM_Int_PottedPlantC", (36.75, 21.95, 0.0), 0.0)
+    # posters on the window piers + east wall
+    for (px, py, yw, mat, t1, t2) in ((25.3, y0, 180.0, "M_IntPoster3", "ISLAND", "SUMMER FEST"),
+                                      (34.69, y0, 180.0, "M_IntPoster1", "DOMINO CITY", "BY SEA"),
+                                      (25.3, y1, 0.0, "M_IntPoster4", "SPIRIT", "TOURS"),
+                                      (34.69, y1, 0.0, "M_IntPoster2", "TOURNAMENT", "SAT 14:00"),
+                                      (x1, 22.6, -90.0, "M_IntPoster1", "DUEL ACADEMY", "OPEN CAMPUS")):
+        K.poster(nc, A, px, py, 1.95, yw, 0.62, 0.88, mat, t1, text_size=0.075)
+        A.text(t2, K.wall_point(px, py, yw, 0.02, 1.7), yw, size=0.06, color=(1, 1, 1))
+    A.prop("SM_Int_WetFloor", (29.1, 22.2, 0.0), 200.0)
+    # dorm banners over the west windows, bunting across the hall, entrance mats, floor arrows
+    for yy, mat, name in ((14.73, "M_IntFabricRed", "SLIFER"), (18.0, "M_IntFabricYellow", "RA"),
+                          (21.27, "M_IntFabricBlue", "OBELISK")):
+        nc.box((x0 + 0.02, yy, 4.27), (0.04, 1.0, 0.04), "M_IntTrimGold")
+        nc.box((x0 + 0.03, yy, 3.65), (0.012, 0.8, 1.2), mat)
+        nc.box((x0 + 0.032, yy, 3.75), (0.01, 0.4, 0.4), "M_IntTrimWhite")
+        A.text(name, (x0 + 0.045, yy, 3.3), 90.0, size=0.12, color=(1, 1, 1))
+    for by in (15.2, 20.8):
+        n = 30
+        for k in range(n):
+            t = (k + 0.5) / n
+            bxk = x0 + 0.3 + (x1 - x0 - 0.6) * t
+            zz = 4.05 - 0.35 * math.sin(math.pi * t)
+            with nc.at((bxk, by, zz)):
+                nc.box((0, 0, -0.12), (0.2, 0.006, 0.24), K.FABRICS[k % 6])
+        nc.box_mm((x0 + 0.3, by - 0.004, 4.04), (x1 - 0.3, by + 0.004, 4.05), "M_IntMetal")
+    for yy, yw in ((y0 + 0.65, 0.0), (y1 - 0.65, 180.0)):
+        nc.box((30.0, yy, 0.012), (2.4, 1.2, 0.012), "M_IntFabricNavy")
+        nc.box((30.0, yy, 0.0185), (2.2, 1.0, 0.002), "M_IntFabricBlue")
+    for k in range(4):                                                                   # "to the ferry" arrows
+        with nc.at((30.0, 14.6 - k * 0.55 + 1.6, 0.012), rot=0.0):
+            for sx in (-1, 1):
+                with nc.at((sx * 0.14, 0, 0), rot=sx * 40.0):
+                    nc.box((0, 0, 0.0), (0.42, 0.09, 0.004), "M_AcademyYellow")
+    for (px, py, yw, c) in ((26.4, 15.15, 95.0, "M_IntFabricNavy"), (24.6, 21.0, 80.0, "M_IntFabricRed"),
+                            (26.4, 18.95, 100.0, "M_IntFabricGreen")):
+        with nc.at((px, py, 0.0), rot=yw):                                               # travellers' bags
+            nc.box((0, 0, 0.2), (0.45, 0.25, 0.4), c)
+            nc.box((0, 0, 0.43), (0.2, 0.04, 0.06), "M_IntBlack")
     K.camera(A, "terminal_hall", (23.0, 12.9, 1.8), (35.5, 21.5, 1.2), 15.0)
-    K.camera(A, "terminal_hall_east", (36.6, 23.0, 2.1), (25.0, 13.5, 0.9), 15.0)
+    K.camera(A, "terminal_hall_east", (37.3, 22.45, 1.95), (25.0, 13.5, 0.9), 15.0)
 
 
 def _terminal_tower(A, wm, mb, nc, x0, y0, x1, y1, scx, scy, tz):
@@ -1844,13 +2664,31 @@ def _terminal_tower(A, wm, mb, nc, x0, y0, x1, y1, scx, scy, tz):
     nc.box((gx0 + 0.3, 15.2, 1.012), (0.35, 0.3, 0.025), "M_IntPaper")                  # ticket rolls
     nc.cylinder((gx0 + 0.3, 14.3, 1.0), 0.06, 0.1, "M_IntPaper", seg=10)
     nc.box((41.3, y0 + 0.3, 0.962), (0.4, 0.28, 0.012), "M_IntPoster2")
-    A.prop("SM_Int_Cabinet", (44.7, py - 0.25, 0.0), 0.0)
+    A.prop("SM_Int_Cabinet", (44.7, py - 0.35, 0.0), 0.0)
     mb.box((x1 - 0.35, 13.9, 0.45), (0.6, 0.6, 0.9), "M_IntBlack")                       # safe
     mb.box((x1 - 0.66, 13.9, 0.55), (0.04, 0.16, 0.16), "M_IntTrimGold")
     A.prop("SM_Int_Kettle", (x1 - 0.35, 13.9, 0.9), 0.0)
     K.poster(nc, A, 40.0, py, 1.6, 0.0, 0.7, 0.9, "M_IntPoster3", "FARES", text_color=(0.2, 0.1, 0.05))
     A.prop("SM_Int_WallClock", (43.0, py, 2.25), 0.0)
     K.panel_light(A, nc, 42.0, 14.75, 3.0)
+    _dress(A, mb, nc, gx0, y0, x1, py, 0.0, 3.0, "office", seed=41, ac=False)
+    A.prop("SM_Int_Laptop", (40.95, y0 + 0.33, 0.95), 0.0)
+    nc.box((43.0, y0 + 0.35, 1.0), (0.3, 0.3, 0.1), "M_IntTrimWhite")                     # ticket printer
+    nc.box((43.0, y0 + 0.19, 1.03), (0.12, 0.01, 0.006), "M_IntBlack")
+    DT.paper_stack(nc, 41.6, y0 + 0.22, 0.95, 90.0, 4, seed=5)
+    A.prop("SM_Int_Stapler", (gx0 + 0.3, 13.95, 1.0), 90.0)
+    nc.box((gx0 + 0.28, 15.6, 1.03), (0.18, 0.22, 0.06), "M_IntBlack")                    # desk phone
+    nc.box((gx0 + 0.28, 15.6, 1.07), (0.05, 0.2, 0.04), "M_IntBlack")
+    DT.mug(nc, 43.28, y0 + 0.42, 0.95, seed=3)
+    DT.coat_hooks(nc, 38.9, py, 1.75, 0.0, n=2, dorm="obelisk", jackets=1, seed=2)
+    _whiteboard(nc, A, 42.95, py, 1.05, 0.0, 1.0, 0.7, ("TODAY: 2 SAILINGS", "STUDENT FARE -50%"))
+    with nc.at((x1, 13.9, 1.55), rot=-90.0):                                             # key cabinet
+        nc.box((0, -0.04, 0), (0.4, 0.08, 0.5), "M_IntWoodDark")
+        for i in range(3):
+            for j in range(4):
+                nc.box((-0.12 + i * 0.12, -0.085, 0.15 - j * 0.1), (0.02, 0.01, 0.05), "M_IntTrimGold")
+    A.prop("SM_Int_Box", (44.6, 14.8, 0.0), 30.0)
+    nc.cylinder((39.1, 13.55, 0.0), 0.15, 0.32, STEEL, seg=12, cap_top=False)
     # ---- stair lobby (harbor office reception)
     K.spiral_stairs(mb, scx, scy, 0.0, tz, 0.14, 1.15, a0=-100.0, step_deg=20.0, mat=STEEL, core=STEEL,
                     rail=K.TRIM_WOOD)
@@ -1872,6 +2710,27 @@ def _terminal_tower(A, wm, mb, nc, x0, y0, x1, y1, scx, scy, tz):
     K.nameplate(wm, A, 42.0, y1, 1.95, 0.0, "HARBOR MASTER  2F", w=1.1, h=0.18)
     K.pendant(A, 41.2, 19.0, 5.6, "lamp")
     _fill_light(A, 41.5, 18.5, 2.6, 2500.0, 8.0)
+    _dress(A, mb, nc, gx0, py + 0.15, x1, y1, 0.0, 5.6, "office", seed=42, ac=False)
+    K.counter(mb, 38.55, 21.95, 40.35, 22.55, h=1.0, body=BLUE, top=K.TRIM_WHITE)            # reception
+    nc.cylinder((39.95, 22.15, 1.0), 0.05, 0.03, "M_IntTrimGold", seg=10)                  # desk bell
+    nc.sphere((39.95, 22.15, 1.03), 0.04, "M_IntTrimGold", seg=8, rings=4, hemi=True)
+    DT.paper_stack(nc, 39.3, 22.2, 1.0, 10.0, 5, seed=7)
+    with nc.at((38.95, 22.4, 1.0)):                                                        # brochure rack
+        nc.box((0, 0.05, 0.15), (0.5, 0.06, 0.3), "M_IntMetal")
+        for k in range(4):
+            nc.box((-0.18 + k * 0.12, 0.0, 0.17), (0.1, 0.02, 0.22), K.POSTERS[k % 4])
+    A.text("INFORMATION", (39.45, 21.93, 0.75), 0.0, size=0.1, color=(1, 1, 1))
+    _wall_map(nc, A, gx0, 17.2, 1.35, 90.0, 1.0, 0.75, "ISLAND WATERS", seed=3)
+    A.prop("SM_Int_Frame", (gx0 + 0.02, 18.85, 2.35), 90.0)
+    A.prop("SM_Int_Frame", (gx0 + 0.02, 17.2, 2.45), 90.0)
+    A.prop("SM_Int_WallClock", (42.0, y1, 2.45), 0.0)
+    _water_cooler(mb, nc, x1 - 0.2, 19.3, -90.0)
+    nc.cylinder((44.6, 16.95, 0.0), 0.13, 0.55, "M_IntWoodDark", seg=10, cap_top=False)    # umbrella stand
+    for k, m in enumerate(("M_IntFabricRed", "M_IntFabricNavy", "M_IntFabricYellow")):
+        nc.beam((44.6 + 0.04 * (k - 1), 16.95, 0.1), (44.6 + 0.09 * (k - 1), 16.95 + 0.05 * k - 0.05, 0.92), 0.05, 0.05, m)
+    with nc.at((42.6, 19.6, 0.0)):                                                         # mooring-rope coil
+        nc.torus((0, 0, 0.05), 0.3, 0.05, "M_IntCork", seg=14, tube_seg=5)
+        nc.torus((0, 0, 0.14), 0.27, 0.05, "M_IntCork", seg=14, tube_seg=5)
     # ---- control room (harbor master's office)
     K.ceiling(wm, x0 + 0.2, y0 - 0.05, x1 + 0.05, y1 + 0.05, tz + 2.45, cornice=K.TRIM_WHITE)
     for a, b in (((scx - 1.25, scy), (scx - 1.25, y1)), ((scx, scy - 1.25), (scx, scy)),
@@ -1879,12 +2738,11 @@ def _terminal_tower(A, wm, mb, nc, x0, y0, x1, y1, scx, scy, tz):
         K.railing(mb, [(a[0], a[1]), (b[0], b[1])], tz, h=1.0, mat=K.TRIM_WOOD)
     U = _Shifted(A, (0.0, 0.0, tz))
     with mb.at((0.0, 0.0, tz)), nc.at((0.0, 0.0, tz)):
-        U.prop("SM_Int_OfficeDesk", (41.0, 13.95, 0.0), 180.0)
-        U.prop("SM_Int_OfficeChair", (41.0, 14.75, 0.0), 0.0)
-        U.prop("SM_Int_Radio", (41.45, 13.85, 0.76), 180.0)
-        U.prop("SM_Int_DeskLamp", (40.45, 13.8, 0.76), 160.0)
-        nc.box((40.95, 14.05, 0.765), (0.5, 0.35, 0.01), "M_IntPaper")
-        U.text("HARBOR MASTER", (41.0, 14.33, 0.62), 180.0, size=0.08, color=(0.1, 0.2, 0.5))
+        K.desk(mb, nc, 41.0, 13.63, 180.0, w=1.8, d=0.8, top="M_IntWood", legs="M_IntWoodDark", hutch=False,
+               clutter=False)
+        DT.desk_set(nc, U, 41.0, 13.63, 0.76, 180.0, "office", seed=47, w=1.8, d=0.8)
+        U.prop("SM_Int_OfficeChair", (41.0, 14.55, 0.0), 0.0)
+        U.text("HARBOR MASTER", (41.0, 14.04, 0.62), 180.0, size=0.08, color=(0.1, 0.2, 0.5))
         # chart table with a sea chart of the island
         mb.box((41.2, 18.6, 0.93), (1.8, 1.1, 0.05), "M_IntWood")
         for sx in (-1, 1):
@@ -1904,7 +2762,9 @@ def _terminal_tower(A, wm, mb, nc, x0, y0, x1, y1, scx, scy, tz):
             nc.box((0.35, -0.12, 0.91), (0.5, 0.25, 0.01), "M_IntScreen")
             for k in range(6):
                 nc.box((-0.1 + k * 0.08, -0.22, 0.905), (0.04, 0.04, 0.02), K.FABRICS[k])
-        U.prop("SM_Int_Radio", (x1 - 0.3, 17.55, 0.9), -90.0)
+        U.prop("SM_Int_Radio", (x1 - 0.18, 17.0, 1.2), -90.0)
+        nc.box((x1 - 0.4, 15.95, 0.93), (0.12, 0.2, 0.06), "M_IntBlack")                  # VHF handset
+        DT.mug(nc, x1 - 0.5, 16.3, 0.9, seed=11)
         # telescope on a tripod looking out to sea
         with mb.at((39.0, 13.9, 0.0)):
             for a in (0.0, 120.0, 240.0):
@@ -1913,16 +2773,26 @@ def _terminal_tower(A, wm, mb, nc, x0, y0, x1, y1, scx, scy, tz):
             with mb.at((0, 0, 1.2), rot=-90.0, rot_y=-80.0):
                 mb.cylinder((0, 0, -0.3), 0.05, 0.75, "M_IntTrimGold", seg=10, radius_top=0.035)
         # logbook consoles under the north glass, coat stand, plant
-        for px in (39.6, 40.9):
-            U.prop("SM_Int_Console", (px, y1 - 0.42, 0.0), 0.0)
-            U.prop("SM_Int_Books", (px, y1 - 0.42, 0.85), 0.0)
-        mb.cylinder((38.75, y1 - 0.5, 0.0), 0.2, 0.03, "M_IntWoodDark", seg=10)
-        mb.cylinder((38.75, y1 - 0.5, 0.0), 0.025, 1.75, "M_IntWoodDark", seg=6)
-        nc.cylinder((38.75, y1 - 0.5, 1.75), 0.14, 0.06, "M_IntFabricWhite", seg=12)          # captain's cap
-        nc.cylinder((38.75, y1 - 0.5, 1.72), 0.17, 0.03, "M_IntBlack", seg=12)
+        for px in (39.17, 40.77):
+            U.prop("SM_Int_Console", (px, 22.47, 0.0), 0.0)
+            U.prop("SM_Int_Books", (px - 0.3, 22.5, 0.96), 0.0)
+        DT.book_stack(nc, 41.15, 22.45, 0.95, 10.0, 4, seed=3)
+        mb.cylinder((38.6, 17.3, 0.0), 0.2, 0.03, "M_IntWoodDark", seg=10)                    # coat stand
+        mb.cylinder((38.6, 17.3, 0.0), 0.025, 1.75, "M_IntWoodDark", seg=6)
+        nc.cylinder((38.6, 17.3, 1.75), 0.14, 0.06, "M_IntFabricWhite", seg=12)              # captain's cap
+        nc.cylinder((38.6, 17.3, 1.72), 0.17, 0.03, "M_IntBlack", seg=12)
+        nc.box((38.6, 17.42, 1.25), (0.42, 0.08, 0.75), "M_IntFabricNavy")                   # uniform jacket
         U.prop("SM_Int_PottedPlant", (x1 - 0.35, y0 + 0.4, 0.0), 0.0)
-        U.prop("SM_Int_Lifebuoy", (scx - 1.32, 22.1, 0.15), -90.0)
-        U.prop("SM_Int_Lifebuoy", (45.1, scy - 1.32, 0.15), 0.0)
+        U.prop("SM_Int_Cabinet", (38.53, 20.2, 0.0), 90.0)
+        U.prop("SM_Int_Kettle", (38.5, 19.85, 1.18), 90.0)
+        _coffee_machine(nc, 38.5, 20.45, 1.18, 90.0)
+        DT.mug(nc, 38.6, 20.68, 1.18, seed=13)
+        U.prop("SM_Int_GreenChair", (39.6, 15.9, 0.0), 20.0)
+        U.prop("SM_Int_Compass", (41.7, 18.85, 0.96), 0.0)
+        U.prop("SM_Int_Binoculars", (41.85, 18.3, 0.96), 30.0)
+        U.prop("SM_Int_Magnifier", (40.75, 18.4, 0.96), 40.0)
+        DT.paper_stack(nc, 40.6, 18.9, 0.96, 30.0, 3, seed=9)
+        _dress(U, mb, nc, 38.2, 13.2, 45.8, 22.8, 0.0, 2.45, "service", seed=43, skip_walls=("s", "n", "w", "e"))
         # signal-flag garland under the ceiling
         cols = ("M_IntFabricRed", "M_IntFabricYellow", "M_IntFabricBlue", "M_IntFabricWhite", "M_IntFabricGreen")
         for k in range(14):
@@ -1930,9 +2800,9 @@ def _terminal_tower(A, wm, mb, nc, x0, y0, x1, y1, scx, scy, tz):
             nc.box((fx, y0 + 0.25, 2.2), (0.3, 0.01, 0.3), cols[k % 5])
     for px, py in ((40.5, 15.5), (40.5, 19.8), (44.0, 15.2)):
         K.panel_light(A, nc, px, py, tz + 2.45)
-    K.camera(A, "ticket_office", (45.4, 14.7, 1.75), (39.6, 14.6, 1.0), 15.0)
+    K.camera(A, "ticket_office", (44.15, 15.0, 1.7), (38.6, 14.1, 1.0), 15.0)   # x < 44.28: outside the palm's AABB
     K.camera(A, "terminal_lobby", (39.0, 16.9, 1.7), (44.0, 21.6, 2.2), 15.0)
-    K.camera(A, "harbor_master", (38.7, 22.3, tz + 1.75), (43.5, 14.0, tz + 0.6), 15.0)
+    K.camera(A, "harbor_master", (38.5, 21.5, tz + 1.7), (43.5, 14.0, tz + 0.6), 15.0)
 
 
 # ================================================================== HELIPORT
@@ -2001,6 +2871,116 @@ def _heliport(aset, mb, nc):
                   text="Visiting pros and VIP guests of the Chancellor land here. Keep clear of the pad!")
     aset.prop("SM_LampPost", (cx + 3.4, y1 + 2.0, 0.0), 0.0)
     aset.prop("SM_LampPost", (cx - 3.4, y1 + 2.0, 0.0), 0.0)
+
+
+def _heli_hut(aset, mb, nc, im, inc):
+    """Heliport terminal hut west of the pad (harbor style: white walls, blue band, blue hip roof): a check-in /
+    dispatch room with VIP waiting chairs (entrance north) and the pilot lounge (door east, towards the pad)."""
+    X0, X1, Y0, Y1, H = -199.6, -190.4, 13.6, 20.0, 3.2
+    WT = 0.2
+    x0, x1, y0, y1 = X0 + WT, X1 - WT, Y0 + WT, Y1 - WT          # inner box
+    px = -195.0                                                  # partition (west face)
+    ch = 2.7                                                     # ceiling (the roof soffit sits at 2.75)
+    # plinth strip, floor, entrance aprons
+    for a, b in (((X0 - 0.08, Y0 - 0.08), (X1 + 0.08, Y0)), ((X0 - 0.08, Y1), (X1 + 0.08, Y1 + 0.08)),
+                 ((X0 - 0.08, Y0), (X0, Y1)), ((X1, Y0), (X1 + 0.08, Y1))):
+        mb.box_mm((a[0], a[1], 0.0), (b[0], b[1], 0.4), CONC)
+    mb.box_mm((x0, y0, -0.2), (x1, y1, 0.005), "M_IntTileWhite", skip=("-z",))
+    mb.box_mm((-198.0, Y1 + 0.08, -0.2), (-196.4, Y1 + 1.6, 0.01), DCONC, skip=("-z",))
+    mb.box_mm((X1 + 0.08, 14.3, -0.2), (X1 + 1.6, 15.9, 0.01), DCONC, skip=("-z",))
+    mb.box_mm((-198.0, Y1 - 0.12, -0.2), (-196.4, Y1 + 0.08, 0.005), "M_IntTileWhite", skip=("-z",))
+    mb.box_mm((X1 - 0.12, 14.3, -0.2), (X1 + 0.08, 15.9, 0.005), "M_IntTileWhite", skip=("-z",))
+    # walls with real windows + doors
+    kw = dict(trim=TRIM, trim_in=K.TRIM_WHITE, base=K.TRIM_WOOD)
+    s_ops = [K.Window(2.4, 1.6, 1.0, 2.2, frame=TRIM, mullions=1), K.Window(6.8, 1.6, 1.0, 2.2, frame=TRIM, mullions=1)]
+    e_ops = [K.Door(15.1 - Y0, 1.0, 2.15, "glass"), K.Window(18.2 - Y0, 1.4, 1.0, 2.2, frame=TRIM, mullions=1)]
+    n_ops = [K.Door(X1 - (-197.2), 1.0, 2.15, "glass"), K.Window(X1 - (-192.9), 1.4, 1.0, 2.2, frame=TRIM, mullions=1)]
+    w_ops = [K.Window(Y1 - 16.8, 1.4, 1.0, 2.2, frame=TRIM, mullions=1)]
+    for p0, p1, ops in (((X0, Y0), (X1, Y0), s_ops), ((X1, Y0), (X1, Y1), e_ops), ((X1, Y1), (X0, Y1), n_ops),
+                        ((X0, Y1), (X0, Y0), w_ops)):
+        K.wall(aset, mb, p0, p1, 0.0, H, WT, WHITE, inner=K.PLASTER_WHITE, openings=ops, **kw)
+    mb.box_mm((X0 - 0.1, Y0 - 0.1, H - 0.35), (X1 + 0.1, Y1 + 0.1, H), BLUE)
+    mb.hip_roof(((X0 + X1) / 2, (Y0 + Y1) / 2, H), X1 - X0, Y1 - Y0, 1.3, ROOF_BLUE, overhang=0.5)
+    K.wall(aset, im, (px, y1), (px, y0), 0.0, ch, 0.12, K.PLASTER_WHITE, inner=K.PLASTER_WHITE,
+           openings=[K.Door(y1 - 18.8, 0.9, 2.1, "office")], trim_in=K.TRIM_WHITE, trim=K.TRIM_WHITE, base=K.TRIM_WOOD)
+    K.ceiling(im, x0, y0, x1, y1, ch, cornice=K.TRIM_WHITE)
+    # outside: sign, door lamps, wind / weather board
+    aset.text("HELIPORT TERMINAL", ((X0 + X1) / 2, Y1 + 0.03, H - 0.22), 180.0, size=0.22, color=(1, 1, 1))
+    for lx, ly, ly2 in ((-197.2, Y1 + 0.12, Y1 + 0.7), (X1 + 0.12, 15.1, 15.1)):
+        nc.box((lx, ly, 2.55), (0.25, 0.08, 0.15) if ly2 != ly else (0.08, 0.25, 0.15), GLOW)
+    aset.light((-197.2, Y1 + 0.7, 2.5), (1.0, 0.88, 0.65), 1500.0, 6.0, night_only=True)
+    aset.light((X1 + 0.7, 15.1, 2.5), (1.0, 0.88, 0.65), 1500.0, 6.0, night_only=True)
+
+    A = aset
+    rnd = random.Random(61)
+    # ---------------------------------------------------------------- check-in / dispatch (west room)
+    wx0, wx1 = x0, px
+    _dress(A, im, inc, wx0, y0, wx1, y1, 0.0, ch, "office", seed=61)
+    K.counter(im, -198.4, 14.75, -196.2, 15.35, h=1.0, body=BLUE, top=K.TRIM_WHITE)
+    DT.desk_set(inc, A, -197.3, 15.05, 1.0, 0.0, "reception", seed=62, w=2.2, d=0.6)
+    A.prop("SM_Int_OfficeChair", (-197.3, 14.32, 0.0), 0.0)
+    A.text("CHECK-IN", (-197.3, 15.36, 0.72), 180.0, size=0.12, color=(1, 1, 1))
+    with im.at((-195.75, 15.05, 0.0)):                                                  # luggage scale
+        im.box((0, 0, 0.05), (0.6, 0.6, 0.1), "M_IntMetal")
+        im.box((0.25, 0, 0.55), (0.06, 0.06, 1.0), "M_IntMetal")
+    inc.box((-195.5, 15.05, 1.05), (0.04, 0.2, 0.14), "M_IntScreen")
+    for i, yy in enumerate((16.35, 18.45)):
+        A.prop("SM_Int_Armchair", (-198.9, yy, 0.0), 90.0)
+    A.prop("SM_Int_SideTable", (-198.95, 17.4, 0.0), 90.0)
+    DT.paper_stack(inc, -198.95, 17.4, 0.55, 20.0, 4, seed=4)
+    A.prop("SM_Int_PottedPlantC", (-198.95, 19.3, 0.0), 0.0)
+    _whiteboard(inc, A, wx1, 16.8, 1.0, -90.0, 1.4, 0.85, ("WEATHER  14:00", "WIND 220 / 12 KT", "VIS 10 KM  CLOUD FEW",
+                                                          "NEXT ARRIVAL  15:30"))
+    _wall_map(inc, A, wx1, 14.6, 1.3, -90.0, 0.8, 0.6, "APPROACH", seed=7)
+    K.bulletin(inc, A, -198.6, y1, 1.15, 0.0, 0.9, 0.75, title="VISITOR INFO", rng_seed=31)
+    A.prop("SM_Int_WallClock", (-196.0, y1, 2.35), 0.0)
+    K.poster(inc, A, x0, 15.0, 1.6, 90.0, 0.55, 0.8, "M_IntPoster2", "FLY", text_size=0.08)
+    A.prop("SM_Int_Extinguisher", (-195.4, 19.5, 0.0), -90.0)
+    _luggage_cart(im, inc, -196.2, 17.4, 0.0, 2, seed=8)
+    A.prop("SM_Int_CeilingFan", (-197.4, 18.3, ch), 0.0)
+    A.prop("SM_Int_CoffeeTableB", (-198.05, 17.4, 0.0), 90.0)
+    DT.paper_stack(inc, -198.1, 17.0, 0.39, 15.0, 4, seed=13)
+    with inc.at((-198.0, 17.75, 0.39), rot=30.0):                                         # model helicopter
+        inc.box((0, 0, 0.05), (0.22, 0.08, 0.08), "M_AcademyBlue")
+        inc.box((-0.17, 0, 0.06), (0.16, 0.02, 0.03), "M_AcademyBlue")
+        inc.box((0, 0, 0.1), (0.36, 0.02, 0.004), "M_IntBlack")
+        inc.box((0, 0, 0.1), (0.02, 0.36, 0.004), "M_IntBlack")
+        inc.box((0, 0, 0.002), (0.18, 0.12, 0.004), "M_IntMetal")
+    with im.at((-195.6, y0, 1.85)):                                                       # flight-info screen
+        im.box((0, 0.03, 0), (0.8, 0.06, 0.48), "M_IntBlack")
+    inc.box((-195.6, y0 + 0.065, 1.85), (0.72, 0.004, 0.4), "M_IntScreen")
+    A.text("FLIGHT INFO", (-195.6, y0 + 0.07, 2.0), 180.0, size=0.06, color=(1, 1, 1), emissive=True)
+    A.prop("SM_Int_Painting", (x0, 18.75, 1.45), 90.0)
+    A.prop("SM_Int_PottedPlantB", (-198.95, 14.25, 0.0), 0.0)
+    K.panel_light(A, inc, -197.2, 16.8, ch)
+    # ---------------------------------------------------------------- pilot lounge (east room)
+    ex0, ex1 = px + 0.12, x1
+    _dress(A, im, inc, ex0, y0, ex1, y1, 0.0, ch, "office", seed=63)
+    K.lockers(im, inc, A, ex0 + 0.23, 17.4, 90.0, n=4)
+    with im.at((ex0, 17.4, 2.3), rot=90.0):                                             # wall TV over the lockers
+        im.box((0, -0.03, 0), (1.0, 0.06, 0.56), "M_IntBlack")
+    inc.box((ex0 + 0.065, 17.4, 2.3), (0.004, 0.92, 0.48), "M_IntScreen")
+    A.prop("SM_Int_Sofa", (-190.97, 17.35, 0.0), -90.0)
+    A.prop("SM_Int_CoffeeTableB", (-192.05, 17.35, 0.0), 90.0)
+    DT.mug(inc, -192.0, 17.0, 0.39, seed=5)
+    DT.paper_stack(inc, -192.1, 17.7, 0.39, 60.0, 3, seed=6)
+    K.kitchen_run(im, inc, -193.85, y1, -192.05, against="+y", upper=False)
+    _coffee_machine(inc, -193.55, 19.5, 0.9, 0.0)
+    A.prop("SM_Int_Kettle", (-192.35, 19.48, 0.9), 0.0)
+    _fridge(im, inc, -191.55, 19.45, 0.0)
+    A.prop("SM_Int_RoundTableB", (-193.15, 15.2, 0.0), 0.0)
+    for a in (150.0, 30.0):
+        r = math.radians(a)
+        A.prop("SM_Int_PlasticChair", (-193.15 + math.cos(r) * 0.72, 15.2 + math.sin(r) * 0.72, 0.0), a - 90.0)
+    DT.card_spread(inc, -193.2, 15.15, 0.75, 0.0, 5, seed=11)
+    DT.deck_box(inc, -192.9, 15.35, 0.75, 20.0, "M_IntFabricBlue")
+    DT.mug(inc, -193.45, 15.4, 0.75, seed=12)
+    _vest_hooks(inc, ex1, 19.25, 1.75, -90.0, n=2, vests=2, helmets=True)
+    K.bulletin(inc, A, -191.25, y0, 1.2, 180.0, 0.9, 0.7, title="FLIGHT NOTICES", rng_seed=33)
+    A.prop("SM_Int_PottedPlantB", (-194.4, 14.25, 0.0), 0.0)
+    K.panel_light(A, inc, -192.7, 16.8, ch)
+    K.camera(A, "heli_checkin", (-195.5, 19.4, 1.65), (-198.6, 15.0, 0.9), 15.0)
+    K.camera(A, "heli_lounge", (-194.6, 15.0, 1.65), (-191.0, 18.6, 0.9), 15.0)
 
 
 def _windsock(nc, pivot, yaw):
@@ -2247,6 +3227,7 @@ def build_harbor():
     with term.at(TERM_OFF), nc.at(TERM_OFF), im.at(TERM_OFF), inc.at(TERM_OFF):
         _terminal(_Shifted(aset, TERM_OFF), term, nc, im, inc)
     _heliport(aset, aset.mesh("Harbor_Heliport"), nc)
+    _heli_hut(aset, aset.mesh("Harbor_Heliport"), nc, im, inc)
     _breakwater(aset, aset.mesh("Harbor_Breakwater"), nc)
     _dressing(aset)
     return aset
@@ -2265,6 +3246,7 @@ LH_WALL = 0.3          # tower wall thickness (outer skin -> inner skin)
 LH_DOOR = (70.0, 110.0, 0.95, 3.35)   # doorway through the shaft: angles (deg) and z range
 LH_WATCH = 15.15       # watch room floor (top of the spiral stair)
 LH_STAIR_R = 1.0       # spiral stair outer radius
+LH_STEP = 22.5         # spiral step angle: 16 treads per turn -> 0.275 m run on the 0.7 m walk line, 3.0 m headroom
 
 
 def _lh_ro(z):
@@ -2334,6 +3316,38 @@ def _polar(r, adeg, z=0.0):
     return (r * math.cos(a), r * math.sin(a), z)
 
 
+def _ring_shelf(mb, nc, z, a0, a1, depth=0.22, seed=0, skip=()):
+    """Curved wall shelf around the inside of the lighthouse shaft (top at z) with keeper's clutter on it: logbooks,
+    jars, tins, a ship in a bottle, a storm lantern. skip: [(a, b)] angle ranges left free."""
+    rw = _lh_ri(z + 0.2) - 0.01
+    _polar_slab(mb, rw - depth, rw + 0.02, a0, a1, z, 0.03, "M_IntWood", "M_IntWoodDark", "M_IntWoodDark")
+    rnd = random.Random(seed)
+    a = a0 + 4.0
+    while a < a1 - 4.0:
+        if any(sa <= a <= sb for sa, sb in skip):
+            a += 3.0
+            continue
+        x, y, _ = _polar(rw - depth / 2, a)
+        nc.box(_polar(rw - 0.05, a, z - 0.08), (0.03, 0.03, 0.16), "M_IntMetal")
+        pick = rnd.random()
+        if pick < 0.4:
+            DT.book_stack(nc, x, y, z, a, rnd.randint(2, 4), seed=int(a))
+        elif pick < 0.65:
+            for k in range(3):
+                nc.cylinder(_polar(rw - depth / 2, a - 2.0 + k * 2.0, z), 0.04, rnd.uniform(0.1, 0.18),
+                            rnd.choice(("M_IntGlassClear", "M_IntTrimGold", "M_AcademyRed", "M_IntFabricGreen")), seg=8)
+        elif pick < 0.8:
+            with nc.at((x, y, z), rot=a):                                                   # ship in a bottle
+                with nc.at((0, 0, 0.06), rot_y=90):
+                    nc.cylinder((0, 0, -0.14), 0.055, 0.28, "M_IntGlassClear", seg=10)
+                nc.box((0, 0, 0.045), (0.035, 0.16, 0.03), "M_ShipHull")
+                nc.box((0, 0, 0.08), (0.004, 0.08, 0.06), "M_IntTrimWhite")
+        else:
+            nc.cylinder((x, y, z), 0.07, 0.22, "M_IntBlack", seg=8)                           # storm lantern
+            nc.cylinder((x, y, z + 0.05), 0.055, 0.12, K.GLOW, seg=8)
+        a += rnd.uniform(9.0, 14.0)
+
+
 def _lighthouse_tower_inside(aset, tw, mb, nc):
     """Hollow shaft: inner skin, doorway jambs, round ground room, spiral stair up to the watch room."""
     a0d, a1d, dz0, dz1 = LH_DOOR
@@ -2355,15 +3369,63 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     zt = LH_WATCH
     n_steps = int(round((zt - 0.95) / 0.19))
     a_start = 270.0
-    a_top = (a_start + 20.0 * n_steps) % 360.0              # end angle of the top step
+    a_top = (a_start + LH_STEP * n_steps) % 360.0           # end angle of the top step
     rh = LH_STAIR_R + 0.07
     _polar_slab(mb, rh, _lh_ri(zt) + 0.04, 0.0, 360.0, zt, 0.15, "M_IntWoodFloor", "M_IntCeilingWood",
                 "M_IntWoodDark", caps=False)
     _polar_slab(mb, 0.15, rh, a_top, a_top + 110.0, zt, 0.15, "M_IntWoodFloor", "M_IntCeilingWood", "M_IntWoodDark")
     rail = [_polar(rh, a_top + 110.0 + k * 10.0)[:2] for k in range(int((360.0 - 130.0) / 10.0) + 1)]
     K.railing(mb, rail, zt, h=1.0, mat=K.TRIM_WOOD, spacing=0.18)
-    K.spiral_stairs(mb, 0.0, 0.0, 0.95, zt, 0.15, LH_STAIR_R, a0=a_start, step_deg=20.0, mat=STEEL,
-                    core=LH_R, rail=K.TRIM_WOOD)
+    K.spiral_stairs(mb, 0.0, 0.0, 0.95, zt, 0.15, LH_STAIR_R, a0=a_start, step_deg=LH_STEP, mat=STEEL,
+                    core=LH_R, rail=None)
+    # window galleries: annular platforms flush with a tread, so the shaft windows can be reached (and cleaned)
+    rise = (zt - 0.95) / n_steps
+    gals = []
+    for g_step, ga0, ga1, entry_ccw in ((27, None, 330.0, False), (61, 130.0, None, True)):
+        zg = 0.95 + rise * (g_step + 1)
+        ta = (a_start + LH_STEP * g_step) % 360.0                                    # entry tread angles
+        tb = ta + LH_STEP
+        a0g = ta if ga0 is None else ga0
+        a1g = tb if ga1 is None else ga1
+        gals.append((g_step, zg, a0g, a1g, ta, tb))
+        rout = _lh_ri(zg) + 0.04
+        _polar_slab(mb, rh, rout, a0g, a1g, zg, 0.12, "M_IntWoodFloor", "M_IntWoodDark", "M_IntWoodDark", caps=True)
+        for k in range(int((a1g - a0g) / 15.0) + 1):                                 # joists under the planks
+            a = a0g + 2.0 + k * 15.0
+            nc.beam(_polar(rh + 0.02, a, zg - 0.13), _polar(rout - 0.06, a, zg - 0.13), 0.08, 0.12, "M_IntWoodDark")
+        # inner rail (open at the entry tread) + rails across both ends
+        ra, rb = (a0g, ta) if entry_ccw else (tb, a1g)
+        pts = [_polar(rh + 0.03, ra + (rb - ra) * k / max(1, int((rb - ra) / 8.0)))[:2]
+               for k in range(max(1, int((rb - ra) / 8.0)) + 1)]
+        K.railing(mb, pts, zg, h=1.0, mat=K.TRIM_WOOD, spacing=0.18)
+        for a in (a0g, a1g):
+            if (a == ta or a == tb):
+                continue
+            K.railing(mb, [_polar(rh + 0.03, a + (1.0 if a == a0g else -1.0))[:2],
+                           _polar(_lh_ri(zg + 0.5) - 0.05, a + (1.0 if a == a0g else -1.0))[:2]], zg, h=1.0,
+                      mat=K.TRIM_WOOD, spacing=0.18)
+        if not entry_ccw:          # the CW end at the entry tread drops to the tread below: rail across it
+            K.railing(mb, [_polar(rh + 0.03, ta + 0.5)[:2], _polar(_lh_ri(zg + 0.5) - 0.05, ta + 0.5)[:2]], zg, h=1.0,
+                      mat=K.TRIM_WOOD, spacing=0.18)
+        else:
+            K.railing(mb, [_polar(rh + 0.03, tb - 0.5)[:2], _polar(_lh_ri(zg + 0.5) - 0.05, tb - 0.5)[:2]], zg, h=1.0,
+                      mat=K.TRIM_WOOD, spacing=0.18)
+    # stair hand rail (kit rail re-drawn with gaps at the gallery entries)
+    skip = set()
+    for g_step, *_ in gals:
+        skip |= {g_step - 1, g_step, g_step + 1}
+    prev = None
+    for i in range(n_steps):
+        am = math.radians(a_start + LH_STEP * (i + 0.5) + 1.0)
+        z = 0.95 + rise * (i + 1)
+        p = (math.cos(am) * (LH_STAIR_R - 0.05), math.sin(am) * (LH_STAIR_R - 0.05))
+        if i in skip:
+            prev = None
+            continue
+        mb.box((p[0], p[1], z + 0.45), (0.035, 0.035, 0.9), K.TRIM_WOOD)
+        if prev is not None:
+            mb.beam((prev[0], prev[1], prev[2] + 0.92), (p[0], p[1], z + 0.92), 0.05, 0.05, K.TRIM_WOOD)
+        prev = (p[0], p[1], z)
     # ceiling of the watch room (under the gallery deck) with the hatch to the lantern
     tw.poly([_polar(2.72, 10.0 * k, 18.3) for k in reversed(range(36))], "M_IntCeilingWood")
     hx, hy, _ = _polar(1.55, 140.0)
@@ -2400,8 +3462,10 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
         r = math.sqrt(max(_lh_ri(z + 1.0) ** 2 - (width / 2) ** 2, 0.0)) - inset - depth / 2
         x, y, _ = _polar(r, adeg)
         aset.prop(asset, (x, y, z), adeg - 90.0)
-    wall_prop("SM_Int_Shelves", 200.0, 0.3, 0.9)
-    wall_prop("SM_Int_SteelShelves", 158.0, 0.5, 1.2)
+    wall_prop("SM_Int_Shelves", 262.0, 0.37, 0.51)       # angles near 90-degree multiples keep the AABBs tight
+    sx_, sy_, _ = _polar(math.sqrt(_lh_ri(2.95) ** 2 - 0.55 ** 2) - 0.02 - 0.225, 180.0)
+    with mb.at((0.0, 0.0, 0.95)), nc.at((0.0, 0.0, 0.95)):
+        _shelf_unit(mb, nc, random.Random(31), sx_, sy_, 90.0, w=1.1, d=0.45, h=2.0, levels=5)
     for adeg, z in ((40.0, 2.1), (130.0, 2.1)):
         x, y, _ = _polar(_lh_ri(z) - 0.03, adeg)
         aset.prop("SM_Int_Lifebuoy", (x, y, z - 0.4), adeg - 90.0)
@@ -2443,17 +3507,266 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
                 nc.cylinder((0, 0, -0.08), 0.03, 0.16, "M_IntBlack", seg=8)
     aset.prop("SM_Int_Radio", _polar(r + 0.05, 205.0, zr + 0.76), 200.0 + 90.0)
     aset.prop("SM_Int_Stool", _polar(1.45, 200.0, zr), 0.0)
-    x, y, _ = _polar(_lh_ri(zr + 1.2) - 0.03, 260.0)
-    aset.prop("SM_Int_Lifebuoy", (x, y, zr + 0.9), 260.0 - 90.0)
+    x, y, _ = _polar(_lh_ri(zr + 1.2) - 0.03, 80.0)
+    aset.prop("SM_Int_Lifebuoy", (x, y, zr + 0.9), 80.0 - 90.0)
     x, y, _ = _polar(_lh_ri(zr + 1.5) - 0.03, 305.0)
     aset.prop("SM_Int_WallClock", (x, y, zr + 1.35), 305.0 - 90.0)
     aset.text("LAMP ROOM - KEEPER ONLY", _polar(_lh_ri(zr + 2.2) - 0.03, 125.0, zr + 2.2), 125.0 - 90.0, size=0.07,
               color=(0.85, 0.15, 0.1))
     aset.prop("SM_Int_CeilingLamp", _polar(1.5, 40.0, 18.3), 0.0)
+    aset.prop("SM_Int_CeilingLamp", _polar(1.55, 212.0, 18.3), 0.0)
+    # ---------------------------------------------------------------- detail pass
+    ri0 = _lh_ri(1.9)
+    # ground room: switch by the door, outlets, oilskins + boots, tool board over the bench, storm lantern
+    _round_switch(nc, 116.0, 0.95 + 1.1, _lh_ri(2.05) - 0.005)
+    for adeg in (20.0, 240.0, 300.0):
+        _round_outlet(nc, adeg, 0.95 + 0.3, _lh_ri(1.25) - 0.005)
+    for k, adeg in enumerate((143.0, 150.0, 157.0)):
+        x, y, _ = _polar(_lh_ri(2.6) - 0.06, adeg)
+        with nc.at((x, y, 2.75), rot=adeg - 90.0):
+            nc.box((0, 0.03, 0.0), (0.03, 0.06, 0.03), "M_DetSilver")
+            nc.box((0, -0.04, -0.4), (0.38, 0.08, 0.75), "M_IntFabricYellow" if k != 1 else ORANGE)
+            nc.box((0, -0.045, -0.06), (0.16, 0.06, 0.1), "M_IntFabricYellow" if k != 1 else ORANGE)
+    bx, by, _ = _polar(2.2, 138.0)
+    aset.prop("SM_Int_Boots", (bx, by, 0.95), 0.0)
+    for zc_, rr, adeg in ((0.95, 2.4, 161.0), (LH_WATCH, 1.66, 160.0)):                   # sea chests
+        with mb.at(_polar(rr, adeg, zc_), rot=adeg - 90.0):
+            mb.box((0, 0, 0.21), (0.62, 0.4, 0.42), "M_IntWoodDark")
+            mb.box((0, 0, 0.44), (0.64, 0.42, 0.05), "M_IntWood")
+            for sx in (-1, 1):
+                mb.box((sx * 0.22, -0.205, 0.22), (0.05, 0.01, 0.4), "M_IntTrimGold")
+            mb.box((0, -0.21, 0.36), (0.08, 0.02, 0.06), "M_IntTrimGold")
+        DT.book_stack(nc, *_polar(rr, adeg)[:2], zc_ + 0.465, adeg, 2, seed=int(adeg))
+    x, y, _ = _polar(ri0 - 0.02, 335.0)
+    with nc.at((x, y, 1.95), rot=335.0 - 90.0):                                         # tool board
+        nc.box((0, -0.01, 0.4), (1.1, 0.02, 0.75), "M_IntCork")
+        rt = random.Random(12)
+        for k in range(8):
+            nc.box((-0.42 + k * 0.12, -0.03, rt.uniform(0.2, 0.55)), (0.03, 0.02, rt.uniform(0.15, 0.3)),
+                   rt.choice((STEEL, "M_IntFabricRed", "M_IntBlack", "M_IntTrimGold")))
+    lx, ly, _ = _polar(2.5, 35.0)
+    aset.prop("SM_Int_Lantern", (lx, ly, 0.95), 30.0)
+    tx, ty_, _ = _polar(2.05, 237.0)
+    with mb.at((tx, ty_, 0.95)):                                                         # retired Fresnel lens on show
+        mb.box((0, 0, 0.4), (0.55, 0.55, 0.8), "M_IntWoodDark")
+        mb.box((0, 0, 0.82), (0.6, 0.6, 0.04), "M_IntTrimGold")
+    nc.lathe([(0.18, 0.0), (0.24, 0.12), (0.26, 0.3), (0.24, 0.48), (0.18, 0.6)], "M_IntGlassClear", seg=14,
+             cap_bottom=True, cap_top=True, center=(tx, ty_, 0.95 + 0.84))
+    for k in range(5):
+        nc.torus((tx, ty_, 0.95 + 0.9 + k * 0.1), 0.25 + (0.02 if k in (1, 2, 3) else 0.0), 0.012, "M_IntTrimGold",
+                 seg=14, tube_seg=3)
+    aset.text("FIRST-ORDER LENS 1962-1998", (tx + 0.33 * math.cos(math.radians(237.0 + 180.0)),
+              ty_ + 0.33 * math.sin(math.radians(237.0 + 180.0)), 0.95 + 0.6), 237.0 + 90.0, size=0.035,
+              color=(1.0, 0.9, 0.5))
+    x, y, _ = _polar(_lh_ri(3.3) - 0.05, 200.0)
+    with nc.at((x, y, 3.3), rot=200.0 - 90.0):                                           # crossed oars
+        for sgn in (-1, 1):
+            with nc.at((0, 0, 0), rot_y=sgn * 35.0):
+                nc.box((0, 0, 0), (0.05, 0.04, 2.0), "M_IntWood")
+                nc.box((0, 0, 0.85), (0.16, 0.03, 0.42), "M_IntWood")
+    x, y, _ = _polar(_lh_ri(3.4) - 0.07, 160.0)
+    with nc.at((x, y, 3.4), rot=160.0 - 90.0, rot_x=90):                                 # ship's wheel
+        nc.torus((0, 0, 0), 0.38, 0.03, "M_IntWoodDark", seg=16, tube_seg=4)
+        for k in range(8):
+            a = math.tau * k / 8
+            nc.beam((0, 0, 0), (math.cos(a) * 0.5, math.sin(a) * 0.5, 0), 0.035, 0.035, "M_IntWoodDark")
+        nc.cylinder((0, 0, -0.04), 0.07, 0.08, "M_IntTrimGold", seg=8)
+    for k in range(26):                                                                  # signal-flag garland
+        a = 140.0 + k * 5.0
+        zz = 3.75 - 0.2 * math.sin(math.pi * k / 25)
+        x, y, _ = _polar(_lh_ri(zz) - 0.06, a)
+        with nc.at((x, y, zz), rot=a - 90.0):
+            nc.box((0, 0, -0.12), (0.18, 0.006, 0.22), K.FABRICS[k % 7])
+    x, y, _ = _polar(_lh_ri(1.7) - 0.02, 250.0)
+    with nc.at((x, y, 1.7), rot=250.0 - 90.0, rot_x=90):                                 # coiled hose on a hook
+        for k in range(3):
+            nc.torus((0, -0.12, 0.0 + k * 0.035), 0.2 - k * 0.01, 0.025, "M_IntFabricGreen", seg=14, tube_seg=4)
+    x, y, _ = _polar(_lh_ri(1.7) - 0.01, 278.0)
+    with nc.at((x, y, 1.7), rot=278.0 - 90.0):                                           # fuse box
+        nc.box((0, -0.06, 0), (0.4, 0.12, 0.5), "M_IntMetal")
+        nc.box((0, -0.122, 0.0), (0.34, 0.004, 0.42), STEEL)
+        nc.box((0.12, -0.13, 0.0), (0.03, 0.02, 0.08), "M_IntBlack")
+    x, y, _ = _polar(_lh_ri(2.0) - 0.015, 228.0)
+    with nc.at((x, y, 2.0), rot=228.0 - 90.0):                                          # framed tide chart
+        nc.box((0, -0.01, 0), (0.55, 0.02, 0.42), "M_IntWoodDark")
+        nc.box((0, -0.022, 0), (0.47, 0.005, 0.34), "M_IntPoster2")
+    x, y, _ = _polar(_lh_ri(2.6) - 0.01, 92.0)                                       # plaque over the door
+    with nc.at((x, y, 3.65), rot=92.0 - 90.0):
+        nc.box((0, -0.01, 0), (0.7, 0.02, 0.22), "M_IntTrimGold")
+    x, y, _ = _polar(_lh_ri(2.3) - 0.03, 15.0)
+    aset.prop("SM_Int_WallClock", (x, y, 2.15), 15.0 - 90.0)
+    aset.text("DUEL ACADEMY LIGHT  EST. 1962", _polar(_lh_ri(3.6) - 0.04, 90.0, 3.6), 0.0, size=0.045,
+              color=(0.25, 0.15, 0.05))
+    # hoist: a rope + tackle from a beam under the watch-room floor down to the store (hauls lamp oil up)
+    hx_, hy_, _ = _polar(1.75, 60.0)
+    nc.box((hx_, hy_, LH_WATCH - 0.23), (0.12, 0.12, 0.1), "M_IntWoodDark")
+    nc.cylinder((hx_, hy_, LH_WATCH - 0.45), 0.09, 0.2, STEEL, seg=10)
+    nc.cylinder((hx_ - 0.04, hy_, 7.6), 0.012, LH_WATCH - 0.45 - 7.6, "M_IntCork", seg=4)
+    nc.cylinder((hx_ + 0.04, hy_, 2.2), 0.012, LH_WATCH - 0.45 - 2.2, "M_IntCork", seg=4)
+    nc.cylinder((hx_ - 0.04, hy_, 7.15), 0.2, 0.45, "M_IntWood", seg=10, cap_top=False)      # basket on the rope
+    nc.cylinder((hx_ + 0.04, hy_, 2.0), 0.05, 0.2, STEEL, seg=8)                           # cleat end
+    # stair shaft: framed charts and keepers' photographs beside every window, a brass ship's bell
+    for z, adeg in ((4.4, 150.0), (7.6, 300.0), (10.8, 90.0), (13.9, 225.0)):
+        for k, da in enumerate((-24.0, 24.0)):
+            a = adeg + da
+            x, y, _ = _polar(_lh_ri(z) - 0.015, a)
+            with nc.at((x, y, z - 0.1), rot=a - 90.0):
+                w, h = (0.62, 0.48) if k == 0 else (0.42, 0.56)
+                nc.box((0, -0.01, 0), (w + 0.08, 0.02, h + 0.08), "M_IntWoodDark")
+                nc.box((0, -0.022, 0), (w, 0.005, h), ("M_IntPoster2", "M_IntPaper", "M_IntPoster4", "M_IntPoster3")[
+                    (int(adeg) // 10 + k) % 4])
+                if k == 0:
+                    nc.box((-0.08, -0.026, 0.02), (w * 0.4, 0.004, h * 0.4), "M_IntFabricGreen")
+    bx, by, _ = _polar(_lh_ri(6.2) - 0.18, 30.0)
+    with nc.at((bx, by, 6.2), rot=30.0 - 90.0):
+        nc.box((0, 0.13, 0.25), (0.05, 0.12, 0.05), "M_IntWoodDark")
+        nc.lathe([(0.03, 0.0), (0.1, 0.05), (0.12, 0.18), (0.11, 0.22)], "M_IntTrimGold", seg=12, cap_bottom=False,
+                 cap_top=True, center=(0, 0, 0.02))
+    _ring_shelf(mb, nc, 2.3, 165.0, 300.0, seed=3)
+    with mb.at(_polar(2.2, 205.0, 0.95)):                                                 # lamp-oil tank
+        mb.cylinder((0, 0, 0.0), 0.34, 0.95, "M_AcademyRed", seg=14)
+        mb.cylinder((0, 0, 0.95), 0.3, 0.06, "M_IntMetal", seg=14)
+    tx_, ty2, _ = _polar(1.86, 205.0)
+    nc.box((tx_, ty2, 1.2), (0.06, 0.06, 0.06), "M_IntTrimGold")
+    aset.text("LAMP OIL", _polar(2.2 - 0.35, 205.0, 1.55), 205.0 + 90.0, size=0.07, color=(1, 1, 1))
+    for k, adeg in enumerate((22.0, 28.0)):                                               # sacks of sand / rags
+        with nc.at(_polar(2.45, adeg, 0.95), rot=adeg):
+            nc.box((0, 0, 0.18), (0.5, 0.35, 0.36), "M_IntFabricBeige")
+            nc.box((0.0, 0, 0.38), (0.12, 0.2, 0.06), "M_IntFabricBeige")
+    x, y, _ = _polar(_lh_ri(2.3) - 0.02, 112.0)
+    with nc.at((x, y, 1.9), rot=112.0 - 90.0):                                            # storm notice
+        nc.box((0, -0.01, 0), (0.42, 0.02, 0.55), "M_IntTrimWhite")
+        for k in range(6):
+            nc.box((0, -0.022, 0.18 - k * 0.07), (0.32, 0.004, 0.02), "M_IntBlack" if k else "M_AcademyRed")
+    # gallery 1 (archive, under the 300-degree window) and gallery 2 (lamp store, by the 225-degree window)
+    (_, z1g, *_), (_, z2g, *_) = gals
+
+    def gpos(zg, adeg, depth, width):
+        r = math.sqrt(max(_lh_ri(zg + 1.6) ** 2 - (width / 2) ** 2, 0.0)) - 0.02 - depth / 2
+        return _polar(r, adeg)
+
+    for adeg in (205.0, 238.0):
+        p = gpos(z1g, adeg, 0.32, 0.9)
+        with mb.at((0.0, 0.0, z1g)), nc.at((0.0, 0.0, z1g)):
+            K.bookcase(mb, nc, p[0], p[1], adeg - 90.0, w=0.9, d=0.32, h=1.9, shelves=5, rng_seed=int(adeg))
+    p = gpos(z1g, 270.0, 0.6, 1.0)
+    with mb.at((p[0], p[1], z1g), rot=180.0), nc.at((p[0], p[1], z1g), rot=180.0):        # chart chest
+        mb.box((0, 0, 0.4), (1.0, 0.6, 0.8), "M_IntWoodDark")
+        for k in range(4):
+            nc.box((0, -0.302, 0.12 + k * 0.18), (0.9, 0.004, 0.14), "M_IntWood")
+            nc.box((0, -0.31, 0.16 + k * 0.18), (0.12, 0.02, 0.025), "M_IntTrimGold")
+        nc.box((0, 0, 0.805), (0.85, 0.5, 0.004), "M_IntPaper")
+        nc.box((0.05, 0, 0.81), (0.75, 0.42, 0.004), "M_IntPoster2")
+        nc.box((-0.1, 0.05, 0.814), (0.25, 0.18, 0.003), "M_IntFabricGreen")
+    aset.prop("SM_Int_Magnifier", (p[0] - 0.15, p[1] + 0.1, z1g + 0.8), 20.0)
+    p = gpos(z1g, 300.0, 0.4, 1.0)
+    with mb.at((p[0], p[1], z1g), rot=300.0 - 90.0):                                     # window bench
+        mb.box((0, 0, 0.42), (1.0, 0.4, 0.06), "M_IntWood")
+        for sx in (-1, 1):
+            mb.box((sx * 0.45, 0, 0.2), (0.06, 0.36, 0.4), "M_IntWoodDark")
+    DT.book_stack(nc, *DT._P(p[0], p[1], 300.0 - 90.0, 0.3, 0.0), z1g + 0.45, 300.0, 3, seed=8)
+    for adeg in (318.0, 326.0):
+        aset.prop("SM_Barrel", _polar(2.0, adeg, z1g), adeg * 2.0, scale=0.62)
+    x, y, _ = _polar(_lh_ri(z1g + 1.95) - 0.08, 252.0)
+    with nc.at((x, y, z1g + 1.95), rot=252.0 - 90.0):
+        nc.box((0, 0.0, 0), (0.22, 0.12, 0.3), "M_IntBlack")
+        nc.box((0, -0.07, 0), (0.15, 0.04, 0.2), K.GLOW)
+    aset.light(_polar(_lh_ri(z1g + 1.9) - 0.5, 252.0, z1g + 1.9), (1.0, 0.82, 0.58), 2000.0, 6.0, night_only=False)
+    aset.text("ARCHIVE", _polar(_lh_ri(z1g + 2.15) - 0.02, 222.0, z1g + 2.15), 222.0 - 90.0, size=0.1,
+              color=(0.3, 0.18, 0.08))
+    p = gpos(z2g, 150.0, 0.35, 0.9)
+    with mb.at((0.0, 0.0, z2g)), nc.at((0.0, 0.0, z2g)):
+        _shelf_unit(mb, nc, random.Random(5), p[0], p[1], 150.0 - 90.0, w=0.9, d=0.35, h=1.6, levels=4)
+    with nc.at((*_polar(1.72, 178.0)[:2], z2g), rot=178.0):                               # crate of spare prisms
+        nc.box((0, 0, 0.17), (0.5, 0.4, 0.34), "M_IntWood")
+        for k in range(3):
+            nc.box((-0.14 + k * 0.14, 0, 0.36), (0.1, 0.3, 0.06), "M_IntGlassClear")
+    for k, adeg in enumerate((136.0, 140.5)):
+        with nc.at((*_polar(1.8, adeg)[:2], z2g), rot=adeg):                               # lamp-oil cans
+            nc.box((0, 0, 0.2), (0.24, 0.16, 0.4), "M_AcademyRed")
+            nc.cylinder((0.06, 0, 0.4), 0.025, 0.05, "M_IntMetal", seg=6)
+    aset.light(_polar(1.7, 170.0, z2g + 1.9), (1.0, 0.82, 0.58), 1500.0, 5.0, night_only=False)
+    aset.text("LAMP STORE", _polar(_lh_ri(z2g + 2.0) - 0.02, 180.0, z2g + 2.0), 180.0 - 90.0, size=0.08,
+              color=(0.3, 0.18, 0.08))
+    K.camera(aset, "lh_gallery", _polar(1.45, 182.0, z1g + 1.6), _polar(2.1, 285.0, z1g + 0.7), 14.0)
+    _ring_shelf(mb, nc, LH_WATCH + 1.95, 250.0, 370.0, seed=9, skip=[(355.0, 385.0)])
+    _ring_shelf(mb, nc, LH_WATCH + 1.45, 186.0, 221.0, seed=19)
+    x, y, _ = _polar(_lh_ri(LH_WATCH + 1.4) - 0.015, 178.0)
+    with nc.at((x, y, LH_WATCH + 1.35), rot=178.0 - 90.0):                               # keepers' photograph
+        nc.box((0, -0.01, 0), (0.36, 0.02, 0.28), "M_IntWoodDark")
+        nc.box((0, -0.022, 0), (0.3, 0.005, 0.22), "M_IntPaper")
+        nc.box((0, -0.025, -0.02), (0.22, 0.004, 0.12), "M_IntWoodDark")
+    for k, (adeg, mat) in enumerate(((280.0, "M_IntPoster3"), (325.0, "M_IntPaper"))):
+        x, y, _ = _polar(_lh_ri(LH_WATCH + 1.2) - 0.015, adeg)
+        with nc.at((x, y, LH_WATCH + 1.15), rot=adeg - 90.0):
+            nc.box((0, -0.01, 0), (0.46, 0.02, 0.4), "M_IntWoodDark")
+            nc.box((0, -0.022, 0), (0.38, 0.005, 0.32), mat)
+            for j in range(6 if k == 0 else 0):
+                nc.box((-0.13 + (j % 3) * 0.13, -0.026, 0.07 - (j // 3) * 0.13), (0.09, 0.004, 0.08), K.FABRICS[j])
+    aset.text("SIGNAL FLAGS", _polar(_lh_ri(LH_WATCH + 1.45) - 0.04, 280.0, LH_WATCH + 1.42), 280.0 - 90.0, size=0.04,
+              color=(0.2, 0.12, 0.06))
+    # watch room: logbook case, chart rack, lens-maintenance bench + tool board, spare lamps, barometer,
+    # first aid, extinguisher, switch / outlets / smoke detector
+    zr = zt
+    rw = _lh_ri(zr + 1.0)
+
+    def ring_pos(adeg, depth, width, z=0.0):
+        r = math.sqrt(max(_lh_ri(zr + 1.6) ** 2 - (width / 2) ** 2, 0.0)) - 0.02 - depth / 2
+        return _polar(r, adeg, z)
+
+    p = ring_pos(255.0, 0.28, 0.8)
+    K.bookcase(mb, nc, p[0], p[1], 255.0 - 90.0, w=0.8, d=0.28, h=1.5, shelves=4, rng_seed=17)
+    p = ring_pos(40.0, 0.4, 0.9)
+    with mb.at((p[0], p[1], zr), rot=40.0 - 90.0), nc.at((p[0], p[1], zr), rot=40.0 - 90.0):
+        mb.box((0, 0, 0.86), (0.9, 0.4, 0.04), "M_IntWood")                                 # lens bench
+        for sx in (-1, 1):
+            mb.box((sx * 0.42, 0, 0.42), (0.05, 0.36, 0.84), "M_IntWoodDark")
+        mb.box((0, 0, 0.2), (0.85, 0.36, 0.03), "M_IntWoodDark")
+        nc.box((-0.25, 0.0, 0.89), (0.3, 0.22, 0.02), "M_IntFabricWhite")                    # chamois cloths
+        nc.box((-0.25, 0.0, 0.91), (0.26, 0.2, 0.02), "M_IntFabricYellow")
+        for k in range(3):                                                                    # polish tins
+            nc.cylinder((0.05 + k * 0.09, -0.08, 0.88), 0.035, 0.05, ("M_IntTrimGold", "M_IntFabricRed", STEEL)[k], seg=10)
+        nc.box((0.3, 0.05, 0.9), (0.16, 0.05, 0.04), "M_IntWoodDark")                       # lens brush
+        nc.box((0.3, 0.0, 0.9), (0.12, 0.06, 0.02), "M_IntFabricWhite")
+        nc.sphere((0.2, 0.1, 0.94), 0.06, "M_IntGlassClear", seg=8, rings=5)                # spare lamp bulb
+        nc.box((-0.2, 0.05, 0.27), (0.4, 0.28, 0.14), "M_IntWood")                          # bulb crate
+        for k in range(3):
+            nc.sphere((-0.33 + k * 0.13, 0.05, 0.38), 0.05, "M_IntGlassClear", seg=8, rings=5)
+    x, y, _ = _polar(_lh_ri(zr + 1.6) - 0.02, 40.0)
+    with nc.at((x, y, zr + 1.25), rot=40.0 - 90.0):                                     # lens tool board
+        nc.box((0, -0.01, 0.3), (0.85, 0.02, 0.6), "M_IntCork")
+        for k in range(6):
+            nc.box((-0.32 + k * 0.13, -0.03, 0.3), (0.035, 0.02, 0.28), ("M_IntTrimGold", STEEL, "M_IntWoodDark")[k % 3])
+    aset.text("LENS CARE", _polar(_lh_ri(zr + 1.6) - 0.05, 40.0, zr + 1.95), 40.0 - 90.0, size=0.06,
+              color=(0.2, 0.12, 0.06))
+    p = ring_pos(110.0, 0.35, 0.35)
+    with mb.at((p[0], p[1], zr)), nc.at((p[0], p[1], zr)):                                 # chart rack (rolled charts)
+        mb.cylinder((0, 0, 0), 0.17, 0.55, "M_IntWood", seg=10, cap_top=False)
+        for k in range(6):
+            a = k * 60.0
+            nc.cylinder((0.07 * math.cos(math.radians(a)), 0.07 * math.sin(math.radians(a)), 0.1), 0.03, 0.85,
+                        ("M_IntPaper", "M_IntPoster2", "M_IntPaper")[k % 3], seg=6)
+    x, y, _ = _polar(_lh_ri(zr + 1.5) - 0.02, 345.0)
+    with nc.at((x, y, zr + 1.5), rot=345.0 - 90.0):                                     # barometer
+        nc.box((0, -0.015, 0), (0.12, 0.03, 0.6), "M_IntWoodDark")
+    with nc.at((x, y, zr + 1.62), rot=345.0 - 90.0, rot_x=90):
+        nc.cylinder((0, 0, 0.03), 0.1, 0.02, "M_IntTrimGold", seg=14)
+        nc.cylinder((0, 0, 0.05), 0.085, 0.003, "M_IntTrimWhite", seg=14)
+    _wall_map(nc, aset, *_polar(_lh_ri(zr + 1.5) - 0.02, 160.0)[:2], zr + 1.15, 160.0 - 90.0, 0.6, 0.5, None, seed=2)
+    x, y, _ = _polar(_lh_ri(zr + 1.5) - 0.02, 230.0)
+    _first_aid(nc, aset, x, y, zr + 1.45, 230.0 - 90.0)
+    ex, ey, _ = _polar(1.75, 175.0)
+    aset.prop("SM_Int_Extinguisher", (ex, ey, zr), 175.0 - 90.0)
+    _round_switch(nc, a_top + 8.0, zr + 1.1, _lh_ri(zr + 1.1) - 0.005)
+    for adeg in (200.0, 30.0):
+        _round_outlet(nc, adeg + 18.0, zr + 0.3, _lh_ri(zr + 0.3) - 0.005)
+    DT.ceiling_fixture(nc, *_polar(1.6, 300.0)[:2], 18.3, "smoke")
+    DT.book_stack(nc, *_polar(1.62, 195.0)[:2], zr + 0.76, 200.0, 3, seed=5)
+    DT.mug(nc, *_polar(1.55, 213.0)[:2], zr + 0.76, seed=6)
     # cameras
     K.camera(aset, "lh_ground", _polar(2.2, 75.0, 2.55), _polar(2.2, 220.0, 1.6), 14.0)
-    K.camera(aset, "lh_stair", _polar(2.25, 250.0, 2.2), (0.0, 0.0, 11.0), 14.0)
-    K.camera(aset, "lh_watch", _polar(1.45, 25.0, zr + 1.7), _polar(1.6, 205.0, zr + 0.8), 14.0)
+    K.camera(aset, "lh_stair", _polar(2.3, 250.0, 2.0), _polar(1.2, 40.0, 9.0), 14.0)
+    K.camera(aset, "lh_watch", _polar(1.5, 112.0, zr + 1.65), _polar(1.65, 215.0, zr + 0.8), 14.0)
 
 
 def _keeper_hut(aset, pf, mb, nc):
@@ -2481,6 +3794,9 @@ def _keeper_hut(aset, pf, mb, nc):
     pf.box_mm((8.5, hy1, 0.35), (8.6, hy1 + 0.08, 2.5), TRIM)
     pf.box_mm((7.6, hy1, 2.4), (8.5, hy1 + 0.08, 2.5), TRIM)
     aset.light((8.05, hy1 + 0.6, 2.6), (1.0, 0.85, 0.6), 2000.0, 6.0, night_only=True)
+    # stone stoop + two steps down to the platform (the hut floor sits on a 0.35 m plinth)
+    pf.box_mm((7.35, hy1 + 0.1, 0.0), (8.75, hy1 + 0.95, 0.35), "M_OldStone", skip=("-z",))
+    pf.box_mm((7.35, hy1 + 0.95, 0.0), (8.75, hy1 + 1.25, 0.205), "M_OldStone", skip=("-z",))
     nc.box((8.05, hy1 + 0.12, 2.65), (0.25, 0.08, 0.15), GLOW)
     # vaulted wooden ceiling under the roof planes + ridge beam
     xa, xb = hx0 + 0.2, hx1 - 0.2
@@ -2509,7 +3825,17 @@ def _keeper_hut(aset, pf, mb, nc):
         H.prop("SM_Int_RockingChair", (9.3, 1.85, 0.0), 25.0)
         K.rug(mb, 7.4, 0.95, 9.7, 2.25, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
         H.prop("SM_Int_SideTable", (8.55, 1.45, 0.0), 0.0)
-        H.prop("SM_Int_TeaSet", (8.55, 1.45, 0.6), 20.0)
+        H.prop("SM_Int_TeaSet", (8.55, 1.45, 0.56), 20.0)
+        # keeper's things: logbooks, binoculars, mug, sea chart, boots, nightstand, fishing rod, sea chest
+        nc.box((8.35, 0.0, 0.775), (0.22, 0.3, 0.03), "M_IntFabricNavy")
+        nc.box((8.35, 0.0, 0.792), (0.2, 0.28, 0.004), "M_IntPaper")
+        H.prop("SM_Int_Binoculars", (7.9, -0.02, 0.76), 160.0)
+        DT.mug(nc, 7.72, 0.25, 0.76, seed=4)
+        H.prop("SM_Int_NightstandB", (6.5, 2.35, 0.0), 90.0)
+        H.prop("SM_Int_Books", (6.5, 2.35, 0.62), 90.0)
+        H.prop("SM_Int_Boots", (9.25, 2.78, 0.0), 0.0)
+        nc.beam((10.3, 2.95, 0.02), (10.25, 2.9, 2.0), 0.02, 0.02, "M_IntWoodDark")         # fishing rod
+        _wall_map(nc, H, 9.2, hy1 - 0.2, 1.3, 0.0, 0.6, 0.45, None, seed=8)
         H.prop("SM_Int_Shelves", (10.23, 2.45, 0.0), -90.0)
         H.prop("SM_Int_Lifebuoy", (6.85, hy1 - 0.2, 0.95), 0.0)
         H.prop("SM_Int_Frame", (hx0 + 0.2, 2.5, 1.4), 90.0)
@@ -2518,6 +3844,7 @@ def _keeper_hut(aset, pf, mb, nc):
         nc.box((7.05, hy1 - 0.27, 1.25), (0.38, 0.1, 0.8), "M_IntFabricYellow")       # raincoat on a hook
         nc.box((7.05, hy1 - 0.22, 1.68), (0.06, 0.06, 0.06), "M_IntWoodDark")
         K.pendant(H, 8.3, cy, zr_ - 0.15 - fz, "lamp")
+    DT.dress_room(aset, mb, nc, hx0 + 0.2, hy0 + 0.2, hx1 - 0.2, hy1 - 0.2, fz, 3.45, style="dorm", seed=7, ac=False)
     K.camera(aset, "lh_hut", (6.5, 2.75, fz + 1.65), (10.0, 0.4, fz + 0.7), 15.0)
 
 
