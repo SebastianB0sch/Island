@@ -332,9 +332,11 @@ def shelf_fill(nc, aset, x, y, z_levels, yaw, width, depth, kind="books", seed=0
             pick = rnd.random()
             gx, gy = _P(x, y, yaw, u, 0.0)
             if kind in ("books", "office") and pick < 0.6:
-                seg = rnd.uniform(0.25, 0.55)
-                book_row(nc, *(_P(x, y, yaw, u, 0.0)), z, depth * 0.8, yaw, seed=seed * 31 + i * 7 + int(u * 100))
-                u += seg
+                seg = min(rnd.uniform(0.25, 0.55), width / 2 - 0.05 - u)
+                px, py = _P(x, y, yaw, u, 0.0)
+                # book_row runs along its frame's x from (px, py), turned by yaw: start px, end px + seg
+                book_row(nc, px, px + seg, py, z, depth * 0.8, yaw, seed=seed * 31 + i * 7 + int(u * 100))
+                u += seg + 0.02
             elif kind == "kitchen" and pick < 0.5:
                 for k in range(rnd.randint(2, 4)):
                     px, py = _P(x, y, yaw, u + 0.05 + k * 0.1, 0.0)
@@ -348,8 +350,8 @@ def shelf_fill(nc, aset, x, y, z_levels, yaw, width, depth, kind="books", seed=0
                     nc.box((0, 0, 0), (bw, depth * 0.85, bh), "M_ShopShelf")
                     nc.box((0, -depth * 0.43, bh * 0.1), (bw * 0.5, 0.004, bh * 0.25), "M_IntPaper")
                 u += bw + 0.03
-            elif pick < 0.75:
-                px, py = _P(x, y, yaw, u + 0.1, 0.0)
+            elif pick < 0.75 and u + 0.24 <= width / 2:
+                px, py = _P(x, y, yaw, u + 0.12, 0.0)
                 aset.prop(rnd.choice(("SM_Int_VaseB", "SM_Int_PhotoFrame", "SM_Int_PottedPlant", "SM_Int_Candlestick",
                                       "SM_Int_HorseStatue", "SM_Int_AlarmClock") if kind != "kitchen" else
                                      ("SM_Int_Jug", "SM_Int_Pot", "SM_Int_Bowl", "SM_Int_EnamelPot")),
@@ -396,14 +398,14 @@ def desk_set(nc, aset, x, y, z, yaw, kind="student", seed=0, w=1.1, d=0.6):
                                                                             "M_IntFabricYellow", "M_IntWoodDark")))
             px, py = P(-0.3, 0.15)
             book_stack(nc, px, py, z, yaw, 3, seed + 1)
-        if kind in ("teacher", "office", "reception"):
-            px, py = P(-0.35, 0.1)
+        if kind in ("teacher", "office", "reception") and w >= 1.3:   # room for more only on wide desks
+            px, py = P(-w / 2 + 0.55, 0.05)
             aset.prop("SM_Int_Clipboard", (px, py, z), yaw + rnd.uniform(-15, 15))
-            px, py = P(0.4, 0.02)
+            px, py = P(w / 2 - 0.45, 0.02)
             aset.prop("SM_Int_Stapler", (px, py, z), yaw + 200)
         if kind == "reception":
-            px, py = P(-0.45, -0.15)
-            aset.prop("SM_Int_Notepads", (px, py, z), yaw)
+            px, py = P(w / 2 - 0.3, -d / 2 + 0.35)
+            paper_stack(nc, px, py, z, yaw + 90, 4, seed + 3)
     elif kind == "vanity":
         for k in range(5):
             px, py = P(-0.3 + k * 0.12, d / 2 - 0.12)

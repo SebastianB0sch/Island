@@ -22,14 +22,26 @@ from mathutils import Matrix, Vector
 from mathutils.bvhtree import BVHTree
 
 # props whose origin is at the TOP (hung from the ceiling)
-CEILING_PROPS = {"SM_Int_Chandelier", "SM_Int_CeilingLamp", "SM_Int_IndustrialLamp", "SM_Int_CeilingFan"}
+CEILING_PROPS = {"SM_Int_Chandelier", "SM_Int_CeilingLamp", "SM_Int_IndustrialLamp", "SM_Int_CeilingFan",
+                 "SM_Int_ChandelierB", "SM_Int_LanternLamp", "SM_Int_CageLight"}
 # props hung on a wall (back at local +Y)
-WALL_PROPS = {"SM_Int_Painting", "SM_Int_Frame", "SM_Int_Mirror", "SM_Int_WallClock", "SM_Int_Lifebuoy"}
+WALL_PROPS = {"SM_Int_Painting", "SM_Int_Frame", "SM_Int_Mirror", "SM_Int_WallClock", "SM_Int_Lifebuoy",
+              "SM_Int_PaintingB", "SM_Int_FrameC", "SM_Int_WallSconce", "SM_Int_WallLamp", "SM_Int_FireAlarm",
+              "SM_Int_Dartboard", "SM_Int_SecurityCam", "SM_Int_UtilityBox", "SM_Int_SecurityLight", "SM_Int_Postcards"}
 # small things that may sit on other furniture (tables, shelves) - grounding is checked against any surface
 SMALL_PROPS = {"SM_Int_Books", "SM_Int_TeaSet", "SM_Int_Kettle", "SM_Int_RubberDuck", "SM_Int_DeskLamp",
                "SM_Int_OilLamp", "SM_Int_Candelabra", "SM_Int_Register", "SM_Int_TV", "SM_Int_Radio",
                "SM_Int_Microwave", "SM_Int_Pillows", "SM_Int_Bust", "SM_Int_Basket", "SM_Int_Bucket",
-               "SM_Int_PottedPlant", "SM_Int_Box", "SM_Int_Suitcase"}
+               "SM_Int_PottedPlant", "SM_Int_Box", "SM_Int_Suitcase",
+               # detail props (real size) that live on tables, desks, shelves and counters
+               "SM_Int_Pot", "SM_Int_EnamelPot", "SM_Int_Jug", "SM_Int_Bowl", "SM_Int_CuttingBoard", "SM_Int_Cake",
+               "SM_Int_Apple", "SM_Int_Bananas", "SM_Int_Lemon", "SM_Int_Croissant", "SM_Int_Goblets", "SM_Int_Binder",
+               "SM_Int_Clipboard", "SM_Int_Notepads", "SM_Int_Stationery", "SM_Int_Laptop", "SM_Int_Stapler",
+               "SM_Int_AlarmClock", "SM_Int_Magnifier", "SM_Int_MantelClock", "SM_Int_Camera", "SM_Int_Gamepad",
+               "SM_Int_TVB", "SM_Int_Chess", "SM_Int_PhotoFrame", "SM_Int_PhotoFrameB", "SM_Int_Binoculars",
+               "SM_Int_Compass", "SM_Int_CatStatue", "SM_Int_HorseStatue", "SM_Int_VaseA", "SM_Int_VaseB",
+               "SM_Int_VaseC", "SM_Int_Shell", "SM_Int_Candlestick", "SM_Int_Hat", "SM_Int_Toolbox", "SM_Int_Lantern",
+               "SM_Int_Ukulele", "SM_Int_Ball"}
 # materials that count as bare architecture for the detail-coverage metric
 BARE_PREFIXES = ("M_IntPlaster", "M_IntWallpaper", "M_IntCeiling", "M_IntWoodFloor", "M_IntTatami",
                  "M_IntTile", "M_IntMarbleFloor", "M_IntCarpet", "M_IntLinoleum", "M_IntConcrete",

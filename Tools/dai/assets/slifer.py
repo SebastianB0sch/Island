@@ -863,6 +863,21 @@ def _dining_detail(aset, mb, nc):
         with nc.at((18.6 + (k % 2) * 0.1, 3.75 + k * 0.05, DZ + 0.12 + k * 0.2), rot=10.0 * k):
             nc.box((0, 0, 0), (0.55, 0.38, 0.2), "M_SliferLaundryWhite")
     nc.box((18.6, 3.55, DZ + 0.62), (0.3, 0.004, 0.12), "M_IntFabricRed")
+    mb.box_mm((12.5, 4.45, DZ + 1.8), (14.9, 4.8, DZ + 2.45), K.TRIM_WHITE)          # upper cupboards
+    for k in range(4):
+        nc.box((12.8 + k * 0.6, 4.448, DZ + 2.12), (0.56, 0.004, 0.6), "M_IntTrimWhite")
+        nc.box((13.0 + k * 0.6, 4.44, DZ + 1.9), (0.1, 0.02, 0.025), K.METAL)
+    nc.box((15.3, 4.45, DZ + 0.006 + 0.02), (6.0, 0.55, 0.012), K.BLACK)               # rubber mat
+    # partition (kitchen face): plate rack, pegboard with pans + utensils, a calendar
+    mb.box_mm((11.4, ky0, DZ + 1.2), (13.5, ky0 + 0.3, DZ + 1.23), K.WOOD)
+    mb.box_mm((11.4, ky0, DZ + 1.65), (13.5, ky0 + 0.3, DZ + 1.68), K.WOOD)
+    for k in range(9):
+        nc.cylinder((11.6 + k * 0.22, ky0 + 0.15, DZ + 1.23), 0.1, 0.012 * (2 + k % 3), K.TRIM_WHITE, seg=12)
+        nc.cylinder((11.6 + k * 0.22, ky0 + 0.15, DZ + 1.68), 0.05, 0.1, DT.MUGS[k % 4], seg=8)
+    nc.box((17.4, ky0 + 0.01, DZ + 1.65), (1.2, 0.02, 0.8), "M_IntCork")
+    for k in range(4):
+        nc.cylinder((16.95 + k * 0.3, ky0 + 0.06, DZ + 1.5), 0.13 - 0.015 * k, 0.03, K.METAL, seg=12) \
+            if k % 2 else nc.box((16.95 + k * 0.3, ky0 + 0.04, DZ + 1.7), (0.05, 0.02, 0.35), K.WOOD_DARK)
     aset.prop("SM_Int_Bucket", (12.6, 3.5, DZ), 0.0)
     aset.prop("SM_Int_Broom", (11.4, 3.4, DZ), 90.0)
     K.panel_light(aset, nc, 15.5, (ky0 + ky1) / 2, CE, w=1.2, d=0.3, intensity=2400.0, radius=6.0)
@@ -874,7 +889,7 @@ def _dining_detail(aset, mb, nc):
         mb.box_mm((x - 0.06, yi0, CE - 0.2), (x + 0.06, yi1, CE), "M_DarkWood")
     K.bulletin(nc, aset, 12.3, PY, DF + 1.3, 0.0, w=1.1, h=0.75, title="DORM NEWS", rng_seed=9)
     K.camera(aset, "dining", (11.6, -2.35, DF + 1.6), (18.0, 2.2, DF + 0.9), 16.0)
-    K.camera(aset, "dining_kitchen", (19.3, 3.55, DF + 1.6), (12.4, 4.35, DF + 1.0), 16.0)
+    K.camera(aset, "dining_kitchen", (17.9, 3.4, DF + 1.6), (11.8, 4.35, DF + 1.0), 16.0)
 
 
 # ------------------------------------------------------------------ yard / site dressing
