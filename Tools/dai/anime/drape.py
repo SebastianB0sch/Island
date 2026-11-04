@@ -210,7 +210,7 @@ def _hull_radius(pts2, center, angles):
     return out
 
 
-def _torso(co, sel, axis_y, z_top, taper=0.28, ease=0.004, bins=48, under=None, hull=True):
+def _torso(co, sel, axis_y, z_top, taper=0.28, ease=0.004, bins=48, under=None, hull=True, trunk=None):
     """Hang the selected rows of co from their widest point above, per direction round the torso; with hull,
     every horizontal slice is also pushed out to the convex hull of itself and the layer below (`under`), so
     the fabric spans hollows instead of following them (between the legs, the chest, the small of the back)."""
@@ -230,6 +230,9 @@ def _torso(co, sel, axis_y, z_top, taper=0.28, ease=0.004, bins=48, under=None, 
     if hull:
         angles = np.arange(bins) / bins * 2 * math.pi - math.pi
         src = p if under is None or not len(under) else np.vstack([p, under])
+        if trunk is not None:                 # (z above which, |x| limit): keep the arm roots out of the hull
+            zt, xt = trunk
+            src = src[(src[:, 2] <= zt) | (np.abs(src[:, 0]) < xt)]
         for j in range(nz):
             z = z_top - j * 0.01
             sl = src[np.abs(src[:, 2] - z) < 0.006]
@@ -275,6 +278,9 @@ def _collide(co, normals, under_pts, under_nrm, clear):
 
 
 # --------------------------------------------------------------------------- the pass
+ARM_REACH = 0.085          # sleeve vertices lie within this distance of the arm's bone axis (m)
+
+
 class Drape:
     """Owned by a outfit.Tailor: remembers the draped layers so each new one collides with the ones below."""
 
@@ -313,12 +319,26 @@ class Drape:
         co = w.co
         ax = np.abs(co[:, 0])
         arm = (ax > r.shoulder_x + 0.025) & (co[:, 2] > r.shoulder_z - 0.16)
+        # a sleeve vertex also has to lie round the arm: flank / belly vertices out at the armpit (Chumley's
+        # widened trunk) stay torso, or the sleeve tube would inflate them into shoulder wings
+        for s_, sg in (("l", 1), ("r", -1)):
+            side = arm & (co[:, 0] * sg > 0)
+            if side.any():
+                q, _, _ = _project(co[side], self.arm_axis[s_])
+                near = np.linalg.norm(co[side] - q, axis=1) < ARM_REACH
+                idx = np.nonzero(side)[0]
+                arm[idx[~near]] = False
         leg = (co[:, 2] < r.crotch - 0.01) & ~arm if legs else np.zeros(len(co), bool)
         top = torso_top if torso_top is not None else r.neck - 0.035
         torso = ~arm & ~leg & (co[:, 2] < top)
-        under = self.layer_pts[(np.abs(self.layer_pts[:, 0]) < r.shoulder_x + 0.01) &
-                               (self.layer_pts[:, 2] < top) & (self.layer_pts[:, 2] > co[:, 2].min() - 0.01)]
-        _torso(co, torso, self.axis_y, top, taper=taper, ease=ease, under=under, hull=hull)
+        lp = self.layer_pts
+        # under the T-pose's level arms the slices would reach out along the arm and the hull would flare the
+        # jacket sides into wings once the arms hang down: near the armpits only the trunk counts
+        armpit = lp[:, 2] > r.shoulder_z - 0.2
+        under = lp[(np.abs(lp[:, 0]) < np.where(armpit, r.shoulder_x - 0.035, r.shoulder_x + 0.01)) &
+                   (lp[:, 2] < top) & (lp[:, 2] > co[:, 2].min() - 0.01)]
+        self._hull_x = (r.shoulder_z - 0.2, r.shoulder_x - 0.035)
+        _torso(co, torso, self.axis_y, top, taper=taper, ease=ease, under=under, hull=hull, trunk=self._hull_x)
         if sleeves:
             for s, sg in (("l", 1), ("r", -1)):
                 sel = arm & (co[:, 0] * sg > 0)
@@ -339,7 +359,7 @@ class Drape:
         co = w.co
         # the torso already clears the convex hull of the layer below (re-checked after smoothing); a point /
         # normal collision test misreads concave layers (between the legs), so only the limbs use it
-        _torso(co, torso, self.axis_y, top, taper=taper, ease=ease * 0.5, under=under, hull=hull)
+        _torso(co, torso, self.axis_y, top, taper=taper, ease=ease * 0.5, under=under, hull=hull, trunk=self._hull_x)
         limbs = ~torso
         if limbs.any():
             sub = co[limbs]
