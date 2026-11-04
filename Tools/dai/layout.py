@@ -51,6 +51,37 @@ class Xform:
         return (self.x + lx, self.y + ly, self.z + (p[2] if len(p) > 2 else 0.0))
 
 
+NANITE_MIN_TRIS = 40000
+# Nanite can't draw these (translucent / special shading)
+NANITE_BLOCKERS = {"glass", "water", "smoke", "beam", "hologram", "waterfall", "lava"}
+
+
+def split_translucent(meshes, skip=()):
+    """Dense meshes that also carry a few translucent faces (window glass, vitrines, water) are split: the
+    translucent faces go to <name>_Glass (<name>_Glass_NoCol for no-collision meshes; same collision rule as
+    the source, so glass still blocks the way), so the opaque bulk can use Nanite. `skip`: names to keep whole
+    (floating meshes - both halves must move together)."""
+    from .geo import MeshBuilder
+    out = {}
+    for name, mb in meshes.items():
+        tris = sum(len(f) - 2 for f in mb.faces)
+        kinds = [palette.MATERIALS.get(m, {}).get("kind", "opaque") in NANITE_BLOCKERS for m in mb.face_mats]
+        if name in skip or tris < NANITE_MIN_TRIS or not any(kinds) or all(kinds):
+            out[name] = mb
+            continue
+        opaque, trans = MeshBuilder(name), MeshBuilder(name + "_Glass")
+        for f, m, sm, k in zip(mb.faces, mb.face_mats, mb.face_smooth, kinds):
+            dst = trans if k else opaque
+            base = len(dst.verts)
+            dst.verts.extend(mb.verts[i].copy() for i in f)
+            dst.faces.append(tuple(range(base, base + len(f))))
+            dst.face_mats.append(m)
+            dst.face_smooth.append(sm)
+        out[name] = opaque
+        out[name[:-len("_NoCol")] + "_Glass_NoCol" if name.endswith("_NoCol") else name + "_Glass"] = trans
+    return out
+
+
 # --------------------------------------------------------------------------- main
 class Layout:
     def __init__(self, log=print):
@@ -105,9 +136,11 @@ class Layout:
         self.manifest.append(dict(file=rel.replace(os.sep, "/"), name=f"SM_{name}", folder=folder.replace(os.sep, "/"),
                                   collision=collision, nanite=self.nanite_ok(mb), category="location"))
 
-    NANITE_MIN_TRIS = 40000
-    # Nanite can't draw these (translucent / special shading); a mesh using any of them stays a classic mesh
-    NANITE_BLOCKERS = {"glass", "water", "smoke", "beam", "hologram", "waterfall", "lava"}
+    def split_translucent(self, meshes, skip=()):
+        return split_translucent(meshes, skip)
+
+    NANITE_MIN_TRIS = NANITE_MIN_TRIS          # module constants (shared with split_translucent / render.py)
+    NANITE_BLOCKERS = NANITE_BLOCKERS
 
     def nanite_ok(self, mb):
         """Dense, opaque location meshes (furnished interiors run to several 100k triangles) go on Nanite:
@@ -138,7 +171,8 @@ class Layout:
                 xf = Xform(x0, y0, z0, loc["yaw"])
             floating_meshes = {s["props"].get("mesh") for s in aset.sockets if s["type"] == "floating"}
             n_mesh = 0
-            for name, mb in aset.meshes.items():
+            floating_meshes = {s["props"].get("mesh") for s in aset.sockets if s["type"] == "floating"}
+            for name, mb in self.split_translucent(aset.meshes, skip=floating_meshes).items():
                 if not mb.verts:
                     continue
                 collision = "none" if name.endswith("_NoCol") else "complex"

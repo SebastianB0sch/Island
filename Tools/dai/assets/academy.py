@@ -577,9 +577,9 @@ class Ctx:
         self.a.door(self.P(x, y, z), self.F.yaw(yaw), w, h, style, double, None, swing)
 
     def npc(self, x, y, yaw, dorm, wander=2.0, z=FLOOR):
-        # every other indoor student only: rooms stay lively without doubling the island's character count
+        # one in four indoor students: rooms stay lively without flooding the island with characters
         self.a._indoor_npcs = getattr(self.a, "_indoor_npcs", 0) + 1
-        if self.a._indoor_npcs % 2 == 0:
+        if self.a._indoor_npcs % 4 != 1:
             return
         self.a.npc(self.P(x, y, z), self.F.yaw(yaw), dorm=dorm, wander=wander)
 

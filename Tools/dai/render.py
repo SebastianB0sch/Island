@@ -178,7 +178,9 @@ def build_scene(log=print, scatter=True, detail_props=True):
             continue
         aset = fn()
         placed = None
-        for name, mb in aset.meshes.items():
+        from .layout import split_translucent
+        floating = {s["props"].get("mesh") for s in aset.sockets if s["type"] == "floating"}
+        for name, mb in split_translucent(aset.meshes, skip=floating).items():
             if not mb.verts:
                 continue
             nm = "SM_" + name
