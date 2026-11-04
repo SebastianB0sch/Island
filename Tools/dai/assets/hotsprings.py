@@ -752,7 +752,6 @@ def _bath_interior(aset, mb, nc):
                         BFL + (0.0 if k < 2 else 0.24)))
         aset.prop("SM_Int_RubberDuck", (mx(-11.75, side), y1 - 0.12, BFL + 0.6), 160.0 if side < 0 else 200.0)
         aset.prop("SM_Int_RubberDuck", (mx(-12.9, side), y1 - 1.3, BFL), 120.0)
-        aset.prop("SM_Int_WetFloor", (mx(-15.0, side), y0 + 0.45, BFL), 30.0 * side)
         _washi_light(aset, nc, mx(-13.6, side), (y0 + y1) / 2)
         _washi_light(aset, nc, mx(-10.9, side), (y0 + y1) / 2)
         aset.emitter("steam", (mx(-12.0, side), (y0 + y1) / 2, BFL + 1.6), 0.35, rate=0.4)
@@ -765,8 +764,8 @@ def _bath_interior(aset, mb, nc):
     K.camera(aset, "changing_men", (-11.0, -8.45, BFL + 1.7), (-15.2, -10.9, BFL + 0.7), 16.0)
     K.camera(aset, "changing_women", (-7.8, -8.45, BFL + 1.7), (-3.6, -10.9, BFL + 0.7), 16.0)
     K.camera(aset, "bandai", (-12.6, -8.6, BFL + 1.8), (-9.4, -10.8, BFL + 1.0), 18.0)
-    K.camera(aset, "wash_men", (-15.3, -7.7, BFL + 1.7), (-9.6, -5.6, BFL + 0.8), 16.0)
-    K.camera(aset, "wash_women", (-3.5, -7.7, BFL + 1.7), (-9.2, -5.9, BFL + 1.2), 16.0)
+    K.camera(aset, "wash_men", (-12.2, -7.65, BFL + 1.65), (-14.8, -5.2, BFL + 0.9), 16.0)
+    K.camera(aset, "wash_women", (-6.6, -7.65, BFL + 1.65), (-4.0, -5.2, BFL + 0.9), 16.0)
 
 
 # ---------------------------------------------------------------- detail pass (changing rooms, bandai, washing, pavilion)
@@ -909,20 +908,47 @@ def _bath_more(aset, mb, nc):
                 nc.box((xb, y1 - 0.15, BFL + 0.83), (0.01, 0.06, 0.01), "M_Black")
             nc.box((mx(xs - 0.2, side), y1 - 0.12, BFL + 0.61), (0.12, 0.08, 0.02), "M_IntFabricWhite")  # face towel
         # the pouring basin and one more station on the divider, a potted bamboo by the side door
-        _kakeyu(mb, nc, mx(-14.3, side), y0, rng)
+        _kakeyu(mb, nc, mx(-14.2, side), y0, rng)
         with mb.at((mx(-10.4, side), y0, 0.0), rot=180.0), nc.at((mx(-10.4, side), y0, 0.0), rot=180.0):
             _wash_station(mb, nc, aset, 0.0, 0.0, rng)
-        aset.prop("SM_Int_PottedPlantC", (mx(-15.3, side), -7.55, BFL), rng.uniform(0, 360))
+        aset.prop("SM_Int_PottedPlant", (mx(-14.7, side), y0 + 0.04, BFL + 0.55), rng.uniform(0, 360))
         # towel bar by the side door, a sento clock + rules over the glass door
         xw = x0 if side < 0 else x1
         nc.box((xw - side * 0.05, -7.3, BFL + 1.6), (0.04, 0.8, 0.03), "M_IntMetal")
         for j in range(2):
             nc.box((xw - side * 0.07, -7.5 + 0.4 * j, BFL + 1.35), (0.03, 0.32, 0.5), ("M_IntFabricWhite", "M_NorenBlue")[j])
-        aset.prop("SM_Int_WallClock", (mx(-12.2, side), y0, BFL + 2.65), 180.0)
-        K.poster(nc, aset, mx(-14.3, side), y0, BFL + 1.6, 180.0, 0.7, 0.45, "M_IntPoster2", "RINSE FIRST, THEN SOAK",
+        aset.prop("SM_Int_WallClock", (mx(-15.25, side), y0, BFL + 1.5), 180.0)
+        K.poster(nc, aset, mx(-14.2, side), y0, BFL + 1.6, 180.0, 0.7, 0.45, "M_IntPoster2", "RINSE FIRST, THEN SOAK",
                  (1, 1, 1), 0.04)
         for k in range(3):   # stacked stools by the door
             stool(mb, (mx(-11.15, side), y0 + 0.4, BFL + 0.33 * k), 8.0 * k)
+        # a row of little local adverts over the mirrors (a sento tradition), a drain grate, a duckboard
+        ads = (("CARD SHOP", "M_IntPoster1"), ("ISLAND CLINIC", "M_IntPaper"), ("TOME BAKERY", "M_IntPoster3"),
+               ("DUEL DISK REPAIR", "M_IntPoster2"), ("FERRY TIMES", "M_IntPaper"), ("SEA VIEW INN", "M_IntPoster4"))
+        for j, xa in enumerate((-14.4, -13.6, -12.8, -12.0, -11.2, -10.4)):
+            txt, m = ads[(j + (side > 0) * 2) % len(ads)]
+            K.poster(nc, aset, mx(xa, side), y1, BFL + 1.85, 0.0, 0.7, 0.32, m, txt,
+                     (0.15, 0.08, 0.05) if m == "M_IntPaper" else (1, 1, 1), 0.045)
+        for j, xa in enumerate((-15.1, -11.0)):
+            txt, m = ads[(j + 3 + (side > 0)) % len(ads)]
+            K.poster(nc, aset, mx(xa, side), y0, BFL + 2.45, 180.0, 0.7, 0.32, m, txt,
+                     (0.15, 0.08, 0.05) if m == "M_IntPaper" else (1, 1, 1), 0.045)
+        # slatted ranma (ventilation transom) above the rail: steam escapes into the roof space
+        for (p0, p1) in (((x1, y1), (x0, y1)), ((x0, y1), (x0, y0)) if side < 0 else ((x1, y0), (x1, y1)),
+                         ((x0, y0), (x1, y0))):
+            L, _, _, yaw = K._frame2d(p0, p1)
+            with nc.at((p0[0], p0[1], BFL + 2.32), rot=yaw):
+                nc.box((L / 2, 0.015, 0.0), (L, 0.03, 0.04), DARK)
+                nc.box((L / 2, 0.015, 0.56), (L, 0.03, 0.04), DARK)
+                nc.box((L / 2, 0.004, 0.28), (L, 0.008, 0.52), "M_IntWoodDark")
+                for j in range(int(L / 0.12)):
+                    nc.box((0.06 + 0.12 * j, 0.025, 0.28), (0.025, 0.02, 0.52), WOOD)
+        a_, b_ = sorted((mx(-14.6, side), mx(-9.7, side)))
+        nc.box_mm((a_, y1 - 0.5, BFL + 0.003), (b_, y1 - 0.36, BFL + 0.009), "M_IntMetal")
+        for j in range(int((b_ - a_) / 0.06)):
+            nc.box((a_ + 0.03 + 0.06 * j, y1 - 0.43, BFL + 0.0095), (0.02, 0.12, 0.002), "M_Black")
+        for j in range(8):
+            nc.box((mx(-12.2, side) - 0.42 + 0.12 * j, y0 + 0.5, BFL + 0.02), (0.08, 0.7, 0.025), WOOD)
 
     # ---------------- rest pavilion: cushions, low table with tea and a duel in progress, lantern, sandals
     ax, ay, z = 19.0, 13.5, DECK + 0.08

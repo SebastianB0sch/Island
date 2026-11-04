@@ -401,10 +401,16 @@ def _room_more(aset, mb, nc, i, floor, x0, rx0, rx1, zf, zr, ceil, rng):
     else:
         for k in range(3):
             _manga(nc, x0 + 2.2 + k * 0.35, -1.3, zr + 0.03, 20.0 * k, 6 + k, 60 + k)
-        aset.prop("SM_Int_Frame", (rx1, -0.9, zr + 1.55), -90.0)
+        aset.prop("SM_Int_Frame", (rx1, -1.25, zr + 1.45), -90.0)
         aset.prop("SM_Int_Frame", (rx1, 1.0, zr + 1.55), -90.0)
         for k in range(4):                                                         # alchemy flasks
             nc.cylinder((rx0 + 0.18, 0.55 + k * 0.2, zr + 2.0 + 0.0), 0.045, 0.12, "M_IntGlassClear", seg=8)
+        with mb.at((0, 0, zr)), nc.at((0, 0, zr)):
+            K.bookcase(mb, nc, rx0 + 0.17, -0.75, 90.0, w=1.1, d=0.3, h=1.8, shelves=5, rng_seed=207)
+        aset.prop("SM_Int_PottedPlantC", (rx1 - 0.42, -1.45, zr + 0.03), 0.0)
+        K.poster(nc, aset, rx1 - 0.01, 0.05, zr + 1.72, -90.0, 1.3, 0.55, "M_IntPaper", text="ELEMENTS OF ALCHEMY",
+                 text_color=(0.3, 0.2, 0.1), text_size=0.06)
+        nc.box((x0 + 2.2, 0.3, zr + 0.06), (1.6, 1.1, 0.012), "M_IntFabricGreen")         # rug under the armchair
         K.poster(nc, aset, x0 + 1.7, 3.9, zr + 1.5, 90.0, 0.6, 0.8, "M_IntPaper", text="ALCHEMY",
                  text_color=(0.2, 0.4, 0.2), text_size=0.08)
 
@@ -525,8 +531,8 @@ def _main_block(aset, mb, nc):
 
     # ---------------- exterior staircase (west end, climbs from the back towards the sea)
     SX0, SX1 = LX + 0.06, X0 - 0.04            # stair width ~1.6 m
-    n_tread, rise, run = 11, Z2 / 12.0, 0.3     # 12 risers of 0.25 m
-    y_start = 0.6 + n_tread * run               # bottom edge (y = 3.9)
+    n_tread, rise, run = 15, Z2 / 16.0, 0.28    # 16 risers of 0.1875 m, 0.28 m going
+    y_start = 0.6 + n_tread * run               # bottom edge (y = 4.8)
     for i in range(n_tread):
         zt = rise * (i + 1)
         ya, yb2 = y_start - run * (i + 1), y_start - run * i
@@ -610,6 +616,19 @@ def _main_block(aset, mb, nc):
     for px in (-15.6, -6.2, 6.8):
         mb.cylinder((px, YF - 0.45, 0.1), 0.22, 0.4, "M_RustMetal", seg=10, radius_top=0.26)
         nc.sphere((px, YF - 0.45, 0.72), 0.32, "M_LeavesBush", seg=8, rings=6)
+    # walkway life: sandals outside some doors, a broom + bucket by the stair, a crate of drinks, a plant
+    r = random.Random(3)
+    for i in (0, 1, 3, 4):
+        ud = X0 + i * RW + 1.05
+        for k in range(2 if i % 2 else 1):
+            for s in (-1, 1):
+                nc.box((ud + 0.55 + k * 0.3 + s * 0.06, YF - 0.35, Z2 + 0.02), (0.1, 0.25, 0.03),
+                       r.choice(("M_IntFabricRed", "M_SliferLaundryBlue", "M_IntBlack")))
+    aset.prop("SM_Int_Broom", (X0 - 0.4, -3.6, Z2), 90.0)
+    aset.prop("SM_Int_Bucket", (X0 - 0.7, -4.2, Z2), 0.0)
+    aset.prop("SM_Crate", (X1 - 0.45, YF - 0.5, Z2), 10.0, 0.6)
+    nc.cylinder((-3.4, YF - 0.35, Z2), 0.16, 0.3, "M_RustMetal", seg=10, radius_top=0.19)
+    nc.sphere((-3.4, YF - 0.35, Z2 + 0.5), 0.24, "M_LeavesBush", seg=8, rings=6)
     # stair landing lamp
     nc.box((LX + 0.12, -1.0, Z2 + 2.1), (0.14, 0.14, 0.18), "M_LampGlow")
     mb.box((LX + 0.12, -1.0, Z2 + 2.25), (0.2, 0.2, 0.08), "M_DarkMetal")

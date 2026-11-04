@@ -568,6 +568,11 @@ palette.register({
     "M_ObIntMarbleRose": K._t((0.97, 0.79, 0.85), "Marble", 0.3, 0.45, rough=0.15),
     "M_ObIntDuelMat":    dict(kind="emissive", color=(0.25, 0.55, 1.0), strength=1.4),
     "M_ObIntCrystal":    dict(kind="emissive", color=(0.80, 0.92, 1.0), strength=2.0),
+    "M_ObIntFriezeGold":  K._t((0.80, 0.64, 0.34), "Fabric", 4.0, 0.6),
+    "M_ObIntFriezeBlue":  K._t((0.42, 0.55, 0.82), "Fabric", 4.0, 0.6),
+    "M_ObIntFriezeNavy":  K._t((0.18, 0.25, 0.52), "Fabric", 4.0, 0.6),
+    "M_ObIntFriezeCream": K._t((0.93, 0.86, 0.70), "Fabric", 4.0, 0.6),
+    "M_ObIntFriezePink":  K._t((0.93, 0.66, 0.74), "Fabric", 4.0, 0.6),
     "M_ObIntRugRed":     K._t((0.62, 0.12, 0.14), "Fabric", 2.5, 0.55),
     "M_ObIntRugBlue":    K._t((0.17, 0.27, 0.58), "Fabric", 2.5, 0.55),
     "M_ObIntRugRose":    K._t((0.88, 0.58, 0.66), "Fabric", 2.5, 0.55),
@@ -700,6 +705,8 @@ def _room(name, fl, rect, z, zc, wall, floor, ceil=K.CEIL, cornice=K.TRIM_GOLD, 
           panels=None, seams=None):
     """Register a room. rect = clear inner area (x0, y0, x1, y1); fl = storey index used to pick the inner
     finish of the outer walls; levels = storeys whose outer-wall finish this room provides (double height)."""
+    if dado and zc - z >= 3.9:
+        dado_h = max(dado_h, 1.15)          # tall rooms: a panelled dado brings the walls down to human scale
     r = dict(name=name, fl=fl, x0=rect[0], y0=rect[1], x1=rect[2], y1=rect[3], z=z, zc=zc, wall=wall, floor=floor,
              ceil=ceil, cornice=cornice, dado=dado, dado_h=dado_h, skirting=skirting, levels=levels or (fl,),
              slab=slab, holes=holes, gaps=gaps or {}, cut_ceiling=cut_ceiling, open=open, coffer=coffer, panels=panels,
@@ -745,6 +752,33 @@ def _build_rooms(mb, nc):
             _dress_sides(mb, r, r["skirting"], 0.13, 0.02, None)
         if r["dado"]:
             _dress_sides(mb, r, r["dado"][0], r["dado_h"], 0.03, r["dado"][1])
+        if _frieze_h(r):
+            _frieze(mb, r)
+
+
+_FRIEZES = {WALL_NAVY: "M_ObIntFriezeGold", WALL_IVORY: "M_ObIntFriezeBlue", "M_IntWallpaperBlue": "M_ObIntFriezeNavy",
+            "M_IntWallpaperRed": "M_ObIntFriezeGold", WALL_ROSE: "M_ObIntFriezeCream", WALL_LILAC: "M_ObIntFriezePink",
+            "M_IntWoodPanel": "M_ObIntFriezeGold"}
+
+
+def _frieze_h(r):
+    """Height above the floor of the picture rail in a tall room (None: no frieze)."""
+    if not r["ceil"] or not r["dado"] or r["zc"] - r["z"] < 3.5:
+        return None
+    return r["zc"] - r["z"] - 1.0
+
+
+def _frieze(mb, r):
+    """Picture rail and a stencilled frieze between it and the cornice: the upper wall of a tall room becomes a
+    band of decoration, the plain wall below it is a normal ~3 m room height."""
+    zr = _frieze_h(r)
+    mat = _FRIEZES.get(r["wall"], "M_ObIntFriezeCream")
+    for side, (p0, p1) in _sides(r).items():
+        if side in r["open"]:
+            continue
+        gaps = _side_gaps(r, side, 99.0, zmin=zr)
+        _strip(mb, p0, p1, r["z"] + zr, r["zc"] - r["z"] - zr - 0.16, 0.012, mat, r, gaps=gaps)
+        _strip(mb, p0, p1, r["z"] + zr - 0.06, 0.06, 0.05, K.TRIM_GOLD, r, gaps=gaps)
 
 
 def _coffers(mb, r, step, mat, edge=None):
@@ -767,7 +801,7 @@ def _coffers(mb, r, step, mat, edge=None):
 def _wall_panels(mb, r, mat, bar=0.05):
     """Moulded wall panels (thin frames) between the openings of every wall above the dado."""
     za = (r["dado_h"] if r["dado"] else 0.3) + 0.3
-    zb = r["zc"] - r["z"] - 0.55
+    zb = r["zc"] - r["z"] - 0.55 if not _frieze_h(r) else _frieze_h(r) - 0.25
     if zb - za < 0.8:
         return
     for side, (p0, p1) in _sides(r).items():
@@ -833,7 +867,7 @@ def _sides(r):
     return {"s": ((x0, y0), (x1, y0)), "e": ((x1, y0), (x1, y1)), "n": ((x1, y1), (x0, y1)), "w": ((x0, y1), (x0, y0))}
 
 
-def _side_gaps(r, side, zmax):
+def _side_gaps(r, side, zmax, zmin=None):
     """u-intervals (from the side's p0) blocked by openings on that side below zmax (relative to the floor)."""
     p0, p1 = _sides(r)[side]
     L, ux, uy, _ = _dir(p0, p1)
@@ -841,6 +875,8 @@ def _side_gaps(r, side, zmax):
     gaps = []
     for o in _P["open"]:
         if o["axis"] != axis or o["z0"] - r["z"] > zmax or o["z1"] < r["z"] + 0.05 or o["z0"] > r["zc"]:
+            continue
+        if zmin is not None and o["z1"] < r["z"] + zmin:
             continue
         if axis == "x":
             if not (p0[1] - 1.0 <= o["y"] <= p0[1] + 1.0) or abs(o["y"] - p0[1]) > 0.95:
@@ -1112,8 +1148,16 @@ def _bookshelf(f, x, y, yaw, seed=0):
                 u += w + 0.03
 
 
-def _chandelier(f, x, y, zc, scale=1.0):
-    f.prop("SM_Int_Chandelier", x, y, 0.0, z=zc, scale=scale)
+def _chandelier(f, x, y, zc, scale=1.0, drop=True):
+    """Chandelier; under a tall ceiling (> 3.6 m) it hangs on a gilt rod so its crown sits ~2.75 m + its height
+    above the floor (the room reads at human scale and the light is where people are)."""
+    top = zc
+    if drop and zc > 3.6:
+        top = min(zc, max(2.75 + 0.85 * scale, 3.3))
+    if top < zc - 0.05:
+        f.mb.cylinder((x, y, top + 0.03), 0.022, zc - top - 0.03, K.TRIM_GOLD, seg=6)
+        f.mb.cylinder((x, y, top), 0.07, 0.03, K.TRIM_GOLD, seg=10)
+    f.prop("SM_Int_Chandelier", x, y, 0.0, z=top, scale=scale)
     f.nc.cylinder((x, y, zc - 0.012), 0.24 * scale, 0.012, K.TRIM_GOLD, seg=10)
 
 
@@ -1780,15 +1824,17 @@ def _boys_rooms():
                       dado=(K.WOOD_DARK, K.TRIM_GOLD), panels=K.TRIM_GOLD)
     R["trophy"] = _room("trophy", 0, (-40.6, 12.2, -29.4, 30.6), Z0, B_C0, "M_IntWallpaperRed", K.MARBLEFLOOR,
                         dado=(K.WOOD_DARK, K.TRIM_GOLD), coffer=(3.0, K.TRIM_WHITE, K.TRIM_GOLD), panels=K.TRIM_GOLD)
-    R["kitchen"] = _room("kitchen", 0, (29.4, -2.6, 40.6, 12.0), Z0, B_C0, K.TILE, "M_IntTileBlue", cornice=K.TRIM_WHITE)
+    R["kitchen"] = _room("kitchen", 0, (29.4, -2.6, 40.6, 12.0), Z0, B_C0, K.TILE, "M_IntTileBlue", cornice=K.TRIM_WHITE,
+                         dado=("M_ObIntDelftTile", K.TRIM_WHITE), dado_h=1.5, coffer=(2.4, K.WOOD_DARK, None))
     R["pantry"] = _room("pantry", 0, (29.4, 12.2, 40.6, 30.6), Z0, B_C0, K.PLASTER_CREAM, K.WOODFLOOR,
-                        cornice=K.TRIM_WHITE, dado=(K.WOOD, K.TRIM_WOOD), seams=K.WOOD_DARK)
+                        cornice=K.TRIM_WHITE, dado=(K.WOOD, K.TRIM_WOOD), seams=K.WOOD_DARK,
+                        coffer=(2.4, K.WOOD_DARK, None))
     # first floor behind the foyer gallery: games room (the stair to the second floor runs along its south wall)
     R["games"] = _room("games", 1, (-12.6, 16.2, 12.6, 29.6), Z1, B_C1, WALL_NAVY, "M_IntWoodFloorDark",
                        dado=(K.WOOD_DARK, K.TRIM_GOLD), panels=K.TRIM_GOLD, seams=K.WOOD_DARK, cut_ceiling=[B_HOLE])
     # second floor, centre block: stair hall (over the back of the foyer) and the study hall behind it
     R["hall2"] = _room("hall2", 2, (-12.6, 12.2, 12.6, 19.9), B_Z2, B_C2, WALL_IVORY, K.MARBLEFLOOR,
-                       holes=[B_HOLE], dado=(K.TRIM_WHITE, K.TRIM_GOLD), panels=K.TRIM_GOLD,
+                       holes=[B_HOLE], dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=1.0, panels=K.TRIM_GOLD,
                        coffer=(3.2, K.TRIM_WHITE, K.TRIM_GOLD))
     R["study2"] = _room("study2", 2, (-12.6, 20.1, 12.6, 29.6), B_Z2, B_C2, "M_IntWoodPanel", "M_IntWoodFloorDark",
                         dado=(K.WOOD_DARK, K.TRIM_GOLD), coffer=(2.8, K.WOOD_DARK, K.TRIM_GOLD), seams=K.WOOD_DARK)
@@ -1812,7 +1858,7 @@ def _boys_rooms():
                 wall = themes[((i if i < 6 else i - 2) + (3 if sx > 0 else 0) + lv - 1) % len(themes)]
                 R[k + t + s] = _room(k + t + s, lv, _mx(rect, sx), ZL, ZC, wall,
                                      "M_IntCarpetBlue" if (i + lv) % 2 == 0 else K.WOODFLOOR,
-                                     dado=(K.TRIM_WHITE, K.TRIM_GOLD),
+                                     dado=(K.TRIM_WHITE, K.TRIM_GOLD), coffer=(2.4, K.TRIM_WHITE, K.TRIM_GOLD),
                                      panels=K.TRIM_GOLD if wall != WALL_IVORY else K.TRIM_WHITE,
                                      seams=None if (i + lv) % 2 == 0 else K.WOOD_DARK)
     return R
@@ -2247,6 +2293,10 @@ def _bedroom(aset, mb, nc, r, door_side, door_v, bed_side, rng, curtain="M_IntFa
         f.prop("SM_Int_Ottoman", b * (hw - 2.45), by, 90.0)
         DT.duel_disk(nc, b * (hw - 2.45), by + 0.1, 0.62, 80.0)
         _portrait(f, b * hw, by, 1.6, bs, 2.0)
+        for s in (-1, 1):
+            _portrait(f, b * hw, by + s * 1.75, 1.6, bs, 1.1)
+        if W > 7.0:
+            f.prop("SM_Int_FoldingScreen", b * (hw - 2.7), hd - 1.5, 25.0 * b)
         _cushions(nc, b * (hw - 0.3), by, 0.62, _wall_yaw(bs), 2, (blanket, K.TRIM_GOLD), w=0.9)
         # wardrobe + jackets by the door
         f.prop("SM_Int_Wardrobe", b * (hw - 0.9), hd - 0.6, 0.0)
@@ -2677,7 +2727,6 @@ def _boys_kitchen(aset, mb, nc, r):
                        ((29.4, 12.0), (29.4, -2.6))):
             L_, ux, uy, yaw = _dir(a, b)
             with mb.at((a[0], a[1], 0.0), rot=yaw):
-                mb.box((L_ / 2, 0.012, 1.0), (L_, 0.024, 0.16), "M_ObIntDelftTile")
                 mb.box((L_ / 2, 0.012, 2.45), (L_, 0.024, 0.1), "M_ObIntDelftTile")
         # the range island under a great copper hood
         mb.box_mm((34.6, 6.6, 0.0), (37.4, 7.6, 0.86), K.BLACK)
@@ -3085,13 +3134,19 @@ def _boys_games(aset, mb, nc, r):
             nc.cylinder((0, 0, 0.038), 0.02, 0.004, "M_IntFabricRed", seg=8)
         f.prop("SM_Int_Vitrine", 12.24, 27.4, -90.0)
         K.poster(nc, f.a, 12.6, 20.6, 1.75, -90.0, 0.6, 0.85, "M_IntPoster2", text="OBELISK CUP", text_size=0.07)
-        K.poster(nc, f.a, -12.6, 18.1, 1.75, 90.0, 0.6, 0.85, "M_IntPoster3", text="DUEL RANKINGS", text_size=0.06)
+        K.bookcase(mb, nc, -12.39, 17.6, 90.0, w=1.4, d=0.42, h=2.7, shelves=7, mat=K.WOOD_DARK, rng_seed=17)
+        K.poster(nc, f.a, 12.6, 25.55, 1.75, -90.0, 0.6, 0.85, "M_IntPoster3", text="DUEL RANKINGS", text_size=0.06)
         _plant(f, 12.0, 29.0)
         _plant(f, -12.0, 17.0)
         _plant(f, 5.3, 16.75)
         for (x, y) in ((-7.0, 19.5), (0.0, 25.5), (8.0, 19.5), (8.0, 27.0), (-3.0, 19.5)):
             _chandelier(f, x, y, zc, 0.9)
         f.light(0.0, 23.0, 2.8, 2500.0, 10.0)
+        for y in (19.55, 22.9, 26.25):          # beamed ceiling (beams run clear of the stairwell)
+            mb.box_mm((-12.6, y - 0.14, zc - 0.32), (12.6, y + 0.14, zc), K.WOOD_DARK, skip=("+z",))
+            mb.box_mm((-12.6, y - 0.03, zc - 0.33), (12.6, y + 0.03, zc - 0.32), K.TRIM_GOLD, skip=("+z",))
+        for x in (-6.3, 6.3):
+            mb.box_mm((x - 0.14, 18.3, zc - 0.32), (x + 0.14, 29.6, zc), K.WOOD_DARK, skip=("+z",))
     _gallery(f, r, ("n",), z=1.75, scale=1.0, pitch=1.8)
     _gallery(f, r, ("s",), z=1.9, scale=1.3, skip=[("s", -3.6, 3.8)])
     _curtains(nc, r, "M_IntFabricNavy")
@@ -3114,6 +3169,7 @@ def _boys_hall2(aset, mb, nc, r):
             _plant(f, sx * 12.0, 19.3)
             _plinth_bust(f, mb, sx * 9.8, 19.45, 180.0)
         f.prop("SM_Int_GrandfatherClock", -2.4, 12.45, 180.0)
+        f.prop("SM_Int_ChineseCabinet", 1.3, 12.5, 180.0)
         f.prop("SM_Int_RoundTableB", 5.5, 17.0, 0.0)
         _vase(nc, 5.5, 17.0, 0.75, 1.6, flowers=("M_FlowerWhite", "M_IntFabricBlue", "M_FlowerRed"))
         f.prop("SM_Int_Bench", -3.2, 18.8, 180.0)
@@ -4176,7 +4232,7 @@ def _girls_foyer(aset, mb, nc, r):
         for sx in (-1, 1):
             for y in (22.4, 20.3, 18.2):
                 _portrait(f, sx * 6.6, y, 1.6 + (23.6 - y) * 0.61, "e" if sx > 0 else "w", 1.6)
-            _chandelier(f, sx * 5.8, 20.0, G_C1 - r["z"], 1.3)
+            _chandelier(f, sx * 5.8, 20.0, G_C1 - r["z"], 1.3, drop=False)
     _dress(aset, mb, nc, r, 31)
     aset.npc((-2.5, 6.0, r["z"]), 160.0, dorm="obelisk", wander=3.0)
     aset.npc((2.0, 18.0, r["z"]), 20.0, dorm="obelisk", wander=3.0)
@@ -4290,6 +4346,7 @@ def _girls_tearoom(aset, mb, nc, r):
         _plant(f, 7.9, 4.9)
         _plant(f, 21.1, 12.9)
         f.prop("SM_Int_Cabinet", 16.0, 13.08, 180.0)
+        f.prop("SM_Int_Vitrine", 9.3, 13.05, 0.0)
         _doily(f, 16.0, 13.08, 1.18, 1.0, 0.4, 0.0, "M_IntFabricPink")
         for k in range(4):
             nc.cylinder((15.6 + k * 0.25, 13.1, 1.184), 0.07, 0.012, "M_IntTrimWhite", seg=10)
