@@ -986,10 +986,16 @@ def dining(C, x, y, yaw=0.0, chairs=6, table="SM_Int_DiningTable", chair="SM_Int
     def Pp(dx, dy):
         return (x + dx * math.cos(a) - dy * math.sin(a), y + dx * math.sin(a) + dy * math.cos(a))
     if table == "SM_Int_DiningTable":
-        C.prop(table, x, y, z, yaw, 0.9)
-        side, length = max(side, 0.82), max(length, 1.3)
+        side, length = max(side, 0.72), max(length, 1.3)
+        tl, tw = length + 0.5, 0.9
+        with C.at(x, y, z, yaw):
+            C.mb.box((0, 0, 0.72), (tl, tw, 0.04), "M_IntWood")
+            C.mb.box((0, 0, 0.66), (tl - 0.12, tw - 0.12, 0.08), "M_IntWoodDark")
+            for sx in (-1, 1):
+                for sy in (-1, 1):
+                    C.mb.box((sx * (tl / 2 - 0.08), sy * (tw / 2 - 0.08), 0.33), (0.06, 0.06, 0.66), "M_IntWoodDark")
         if setting:
-            on_top(C, x, y, z + 0.733, yaw, 1.9, 1.1, setting, seed, "M_IntFabricWhite", True, chairs, length)
+            on_top(C, x, y, z + 0.74, yaw, tl - 0.2, tw - 0.15, setting, seed, "M_IntFabricWhite", True, chairs, length)
     else:
         C.prop(table, x, y, z, yaw)
     per = chairs // 2
@@ -1822,11 +1828,11 @@ def _card_shop(mb, aset):
     _vitrine_at(C, 27.4, -58.4, FLOOR, "cards")
     _vitrine_at(C, 27.4, -31.6, FLOOR, "cards")
     dining(C, 20.6, -35.4, 90.0, chairs=4, length=1.2, chair="SM_Int_DiningChair")
-    with C.at(20.6, -35.4, FLOOR + 0.733, 90.0):
+    with C.at(20.6, -35.4, FLOOR + 0.74, 90.0):
         C.mb.box((0, 0, 0.002), (1.8, 1.0, 0.004), "M_IntDuelMat")
     for k in range(4):
-        C.dt("card_spread", 20.3 + (k % 2) * 0.6, -36.0 + (k // 2) * 1.2, FLOOR + 0.737, 90.0, 5, k)
-        C.dt("deck_box", 20.0 + (k % 2) * 1.2, -35.4 + (k // 2) * 0.3 - 0.15, FLOOR + 0.737, 0.0,
+        C.dt("card_spread", 20.3 + (k % 2) * 0.6, -36.0 + (k // 2) * 1.2, FLOOR + 0.744, 90.0, 5, k)
+        C.dt("deck_box", 20.0 + (k % 2) * 1.2, -35.4 + (k // 2) * 0.3 - 0.15, FLOOR + 0.744, 0.0,
              ("M_IntFabricRed", "M_IntFabricBlue", "M_IntFabricYellow", "M_IntWoodDark")[k])
     C.text("TRADING TABLE", 19.3, -35.4, FLOOR + 1.2, -90.0, 0.08, (0.1, 0.2, 0.55))
     for k in range(4):
@@ -2542,7 +2548,16 @@ def room_base(C, x0, y0, x1, y1, seed, style="school", win=None, wl=(), z=FLOOR,
             ceiling_ac(C, ax, ay, zc)
     if wains:
         wainscot_room(C, x0, y0, x1, y1, z, wains)
-    C.dress(x0, y0, x1, y1, zc, style, seed, z=z, skip=((win,) if win else ()), clear=clear, ac=ac)
+    kit = {"school": "japanese", "office": "japanese", "service": "japanese"}.get(style, style)
+    C.dress(x0, y0, x1, y1, zc, kit, seed, z=z, skip=((win,) if win else ()), clear=clear, ac=ac)
+    if style in ("school", "service") and (x1 - x0) * (y1 - y0) > 60:
+        a, b, c, d = C.F.rect(x0, y0, x1, y1)
+        drs = DTL._doors_on(C.a, a, b, c, d, z)
+        if drs:
+            on, px, py, w = drs[0]
+            yaw = {"s": 180.0, "n": 0.0, "w": 90.0, "e": -90.0}[on]
+            ex, ey = (px, b if on == "s" else d) if on in "sn" else (a if on == "w" else c, py)
+            DTL.exit_sign(C.nc, C.a, ex, ey, min(zc - 0.15, z + 2.45), yaw)
     return zc
 
 
@@ -2731,11 +2746,11 @@ def room_classroom(C, w, d, name, cam, seed, wl=(), end_win=None, z=FLOOR, lines
     if hd - 0.5 - yb > 2.2:
         yc = (yb + hd - 0.5) / 2
         dining(C, -1.6, yc, 0.0, chairs=6, length=1.4, z=z)
-        with C.at(-1.6, yc, z + 0.733, 0.0):
+        with C.at(-1.6, yc, z + 0.74, 0.0):
             C.mb.box((0, 0, 0.002), (1.9, 1.1, 0.004), "M_IntFabricWhite")
-        C.dt("paper_stack", -2.0, yc, z + 0.737, 0.0, 5, seed)
-        C.dt("book_stack", -1.0, yc + 0.1, z + 0.737, 0.0, 3, seed)
-        C.dt("card_spread", -1.6, yc - 0.2, z + 0.737, 0.0, 5, seed)
+        C.dt("paper_stack", -2.0, yc, z + 0.744, 0.0, 5, seed)
+        C.dt("book_stack", -1.0, yc + 0.1, z + 0.744, 0.0, 3, seed)
+        C.dt("card_spread", -1.6, yc - 0.2, z + 0.744, 0.0, 5, seed)
         C.box(1.2, hd - 0.85, z, 2.4, hd - 0.45, z + 0.8, "M_IntWood")
         C.box(1.25, hd - 0.82, z + 0.8, 2.35, hd - 0.48, z + 1.25, "M_IntGlassClear")             # aquarium
         C.box(1.27, hd - 0.8, z + 0.81, 2.33, hd - 0.5, z + 1.15, "M_IntWater", nc=True)
@@ -2901,7 +2916,7 @@ def room_stairhall(C, side, s):
     C.cam(f"pav{side[0]}_stairs", (x0 + 0.5, y1 - 0.35, z + 1.7), (109.0, y0, z + 2.6), 16)
 
 
-SHELF_LV = {"SM_Int_Bookshelf": ((0.108, 0.392, 0.672, 0.96, 1.277, 1.663), 1.25, 0.5, 0.26),
+SHELF_LV = {"SM_Int_Bookshelf": ((0.392, 0.672, 0.96, 1.277, 1.663), 1.25, 0.5, 0.26),
             "SM_Int_SteelShelves": ((0.134, 0.64, 1.146, 1.652), 1.0, 0.45, 0.45),
             "SM_Int_MetalRack": ((0.43, 0.92, 1.41), 0.85, 0.5, 0.45)}
 
@@ -2927,7 +2942,7 @@ def shelf_books(C, x, y, yaw, levels, width, depth, seed=0, fill=0.85, max_h=0.2
                              rnd.choice(("M_ShopShelf", "M_IntPaper", "M_IntWood", "M_IntSteelBlue")), skip=("+y", "-z"))
                     u += bw + 0.02
                     continue
-                bw = rnd.uniform(0.03, 0.07)
+                bw = rnd.uniform(0.045, 0.09)
                 bh = min(max_h, rnd.uniform(0.18, 0.29))
                 C.nc.box((u + bw / 2, -depth * 0.1, zl + bh / 2), (bw, depth * 0.7, bh), rnd.choice(DTL.BOOKS),
                          skip=("+y", "-z"))
@@ -3142,9 +3157,9 @@ def room_library(C):
     for x in (107.0, 111.0):
         for y in (-19.6, -15.6, -11.6):
             dining(C, x, y, 0.0, chairs=4, length=1.2, side=0.7)
-            reading_lamp(C, x + 0.45, y + 0.25, z + 0.735, 0.0)
-            C.dt("book_stack", x - 0.4, y - 0.15, z + 0.735, 15.0, 3, int(x - y))
-            C.dt("paper_stack", x + 0.1, y - 0.3, z + 0.735, 0.0, 2, int(x + y))
+            reading_lamp(C, x + 0.45, y + 0.25, z + 0.744, 0.0)
+            C.dt("book_stack", x - 0.4, y - 0.15, z + 0.744, 15.0, 3, int(x - y))
+            C.dt("paper_stack", x + 0.1, y - 0.3, z + 0.744, 0.0, 2, int(x + y))
     # librarian's counter by the door, card catalogue, returns, globe, armchairs
     C.box(104.6, -27.6, z, 107.6, -26.9, z + 1.05, "M_IntWoodDark", mats={"+z": "M_IntWood"})
     C.prop("SM_Int_Register", 105.2, -27.25, z + 1.05, 180.0)
@@ -4035,12 +4050,12 @@ def _annex_upper(C):
     C.nc.sphere(C.P(-11.8, 68.4, z + 1.15), 0.32, NAVY_T, seg=14, rings=8)
     C.nc.torus(C.P(-11.8, 68.4, z + 1.15), 0.36, 0.015, K.TRIM_GOLD, seg=20, tube_seg=4)
     dining(C, -15.4, 66.8, 0.0, chairs=6, length=1.4, setting=None, z=z)
-    with C.at(-15.4, 66.8, z + 0.733, 0.0):
+    with C.at(-15.4, 66.8, z + 0.74, 0.0):
         C.mb.box((0, 0, 0.002), (1.9, 1.1, 0.004), NAVY_T)
     for k in range(4):         # star charts on the table
         C.nc.box(C.P(-16.0 + k * 0.4, 66.75 + (k % 2) * 0.15, z + 0.74), (0.34, 0.26, 0.003), "M_IntPaper")
-    C.prop("SM_Int_Binoculars", -14.7, 67.0, z + 0.737, 30.0)
-    C.prop("SM_Int_Compass", -15.9, 66.6, z + 0.737, 0.0)
+    C.prop("SM_Int_Binoculars", -14.7, 67.0, z + 0.744, 30.0)
+    C.prop("SM_Int_Compass", -15.9, 66.6, z + 0.744, 0.0)
     for k in range(3):
         C.poster(x1, 64.6 + k * 1.3, z + 1.55, -90.0, 0.9, 0.9, NAVY_T, ("ORION", "THE BIG DIPPER", "CASSIOPEIA")[k],
                  (0.9, 0.85, 0.5), 0.06)
