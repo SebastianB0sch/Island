@@ -3754,6 +3754,9 @@ def _boys_attic_furnish(aset, mb, nc, R):
                 nc.cylinder((x - 0.36 + k * 0.24, 9.5, zt), 0.09, 0.012 + 0.03 * k, "M_IntTrimWhite", seg=10)
         for (x, a) in ((-3.7, 90.0), (3.7, -90.0)):
             f.prop("SM_Int_Armchair", x, 4.4, a)
+        for x in (-9.0, 9.0):
+            f.prop("SM_Int_GreenChair", x, 0.4, 180.0 + (20.0 if x < 0 else -20.0))
+            _plant(f, x + (1.3 if x < 0 else -1.3), -0.9)
         f.prop("SM_Int_Drawers", 12.23, 1.2, -90.0)
         for y in (6.6, 8.0):                    # plate racks + copper pans on the east wall
             mb.box_mm((12.38, y - 0.6, 1.6), (12.6, y + 0.6, 1.63), K.WOOD_DARK)
@@ -3765,7 +3768,7 @@ def _boys_attic_furnish(aset, mb, nc, R):
         nc.box((0.0, 4.4, 2.55), (4.6, 0.04, 0.04), K.WOOD)              # clothes airer over the table
         for k in range(6):
             nc.box((-2.0 + k * 0.8, 4.4, 2.25), (0.6, 0.02, 0.55), ("M_IntFabricWhite", "M_IntFabricBlue")[k % 2])
-        _rug(mb, -2.0, 1.6, 2.0, 7.2, 0.0, "M_IntCarpetRed")
+        _rug(mb, -4.2, 1.2, 4.2, 7.6, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
         for x in (-4.0, 0.0, 4.0):
             f.prop("SM_Int_CeilingLamp", x, 4.4, 0.0, z=zc)
         _plant(f, 12.0, 9.2)
@@ -3863,10 +3866,13 @@ def _boys_cupola(aset, mb, nc):
         for k in range(4):
             a = math.radians(45.0 + 90.0 * k)
             _plant(f, math.cos(a) * 4.6, math.sin(a) * 4.6)
-        for k in range(6):
-            a = math.radians(60.0 * k)
-            cx_, cy_ = math.cos(a) * 3.3, math.sin(a) * 3.3
-            _rug(mb, cx_ - 0.7, cy_ - 0.7, cx_ + 0.7, cy_ + 0.7, 0.0, ("M_IntCarpetRed", "M_IntCarpetBlue")[k % 2])
+        mb.slab_ring(circle(32, 3.9), circle(32, 1.5), 0.0, 0.012, "M_ObIntRugBlue")       # round carpet
+        mb.slab_ring(circle(32, 3.75), circle(32, 3.6), 0.012, 0.016, K.TRIM_GOLD)
+        mb.slab_ring(circle(32, 1.75), circle(32, 1.6), 0.012, 0.016, K.TRIM_GOLD)
+        for k in range(16):           # gilded ribs on the painted sky ceiling
+            a = TAU * k / 16
+            nc.beam((math.cos(a) * 0.5, math.sin(a) * 0.5, B_CUP_C - B_CUP - 0.03),
+                    (math.cos(a) * 5.2, math.sin(a) * 5.2, B_CUP_C - B_CUP - 0.03), 0.08, 0.04, K.TRIM_GOLD)
         f.prop("SM_Int_GreenChair", 2.6, -2.6, 140.0)
         f.prop("SM_Int_SideTable", 3.3, -1.9, 0.0)
         f.prop("SM_Int_OilLamp", 3.3, -1.9, 0.0, z=0.55)
@@ -5142,7 +5148,10 @@ def _girls_attic_furnish(aset, mb, nc, R):
                 DT.shelf_fill(nc, f.a, dx, dy, [0.3, 0.62], yaw, 0.42, 0.3, "books", seed=int(dx * 10))
             _portrait(f, qx * 2.3, 0.0, 1.2, "n" if qy > 0 else "s", 1.3)
             _portrait(f, 0.0, qy * 2.3, 1.2, "e" if qx > 0 else "w", 1.3)
-            _rug(mb, -qx * 1.6 - 0.9, -qy * 1.6 - 0.9, -qx * 1.6 + 0.9, -qy * 1.6 + 0.9, 0.0, "M_IntCarpetRose")
+            m3 = math.radians((a0 + a1) / 2 + 95.0)
+            _rug(mb, math.cos(m3) * 1.5 - 0.8, math.sin(m3) * 1.5 - 0.8, math.cos(m3) * 1.5 + 0.8, math.sin(m3) * 1.5 + 0.8,
+                 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
+            _chandelier(f, 0.0, 0.0, 9.4, 1.0)
             f.light(0.0, 0.0, 2.2, 900.0, 4.0)
     tx, ty = G_TURRETS[0]
     K.camera(aset, "3f_turret", (tx + 0.6, ty - 0.4, G_ZT + 1.5), (tx - 2.0, ty - 2.0, G_ZT + 0.1), 14.0)
