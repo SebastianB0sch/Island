@@ -1139,7 +1139,7 @@ def _court_more(aset, mb, nc, rng):
         a, b = sorted((sx * 26.0, sx * 20.2))
         flat_quad(nc, a, 0.6, b, 4.4, zp, "M_CourtPaint")
     # sponsor-style boards along the side walls above the padding
-    boards = (("M_AcademyBlue", "DUEL ACADEMY"), ("M_AcademyRed", "GX SPORTS"), ("M_AcademyYellow", "CARD KINGDOM"),
+    boards = (("M_AcademyBlue", "DUEL ACADEMY"), ("M_AcademyRed", "GX SPORTS"), ("M_AcademyYellow", "ISLAND CARD CO."),
               ("M_ObeliskTrim", "TEAM SPIRIT"))
     for sx in (-1, 1):
         x = sx * (GX1 - WT - 0.03)
