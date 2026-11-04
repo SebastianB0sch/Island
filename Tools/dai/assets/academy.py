@@ -1707,7 +1707,8 @@ def _lobby_interior(mb, nocol, aset):
         sofa_corner(C, x, y, yaw, rug="M_IntCarpetBlue")
     for x in (-11.0, 11.0):               # palms at the column feet, information stands
         for y in (-59.0, -43.0, -27.0):
-            C.prop("SM_Int_PottedPlantC", x + (1.7 if x > 0 else -1.7), y, FLOOR, y * 7.0)
+            C.prop("SM_Int_PottedPlantC", x + (1.7 if x > 0 else -1.7), y - (1.6 if y > -30 else 0.0), FLOOR,
+                   y * 7.0)
     for k, (x, t) in enumerate(((-4.5, "WELCOME NEW STUDENTS!"), (4.5, "DORM CUP - THIS WEEK"))):
         with C.at(x, -58.5, FLOOR, 0.0):
             C.mb.box((0, 0, 0.9), (0.06, 0.06, 1.8), K.TRIM_GOLD)
@@ -2074,7 +2075,8 @@ def _concourse(Cx, z):
     for i, a in enumerate(range(18, 360, 24)):
         if any(g0 - 7 < a < g1 + 7 for g0, g1 in ((252.0, 288.0), (-9.0, 9.0), (171.0, 189.0), (351.0, 369.0))):
             continue
-        if any(abs(a - c) < 10.0 for c in (50.0, 90.0, 130.0, 220.5, 319.5)):
+        if any(abs(a - c) < 10.0 for c in (50.0, 90.0, 130.0, 220.5, 319.5)) or \
+                min((a - 11.25) % 22.5, 22.5 - (a - 11.25) % 22.5) < 5.0:
             continue
         r = wall_r(a)
         px, py = polar(r - 0.5, a, DC)
@@ -2199,6 +2201,18 @@ def _wing_interior(C, s):
     wl = [x for x, _ in win_pos((40.0, WY0), (88.0, WY0), 14, 1.7) if abs(x - 64.0) > 2.4]
     room_base(C, 38.0, cy0, 88.0, cy1, 30 + s, "school", win="-y", wl=wl, lights=(10, 1), lw=(1.2, 0.3),
               light_every=2, ac=False, wains=None, clear=[(62.0, cy0, 66.0, cy0 + 0.3)])
+    for k, x in enumerate(range(44, 88, 7)):                  # banners hung across the corridor
+        C.box(x - 0.02, cy0, CZ - 0.18, x + 0.02, cy1, CZ - 0.14, K.METAL, nc=True)
+        C.box(x - 0.01, 3.9, CZ - 0.85, x + 0.01, 5.5, CZ - 0.18, ("M_AcademyRed", "M_AcademyYellow",
+                                                                   "M_AcademyBlue")[k % 3], nc=True)
+    for x, _ in win_pos((40.0, WY0), (88.0, WY0), 14, 1.7)[:-1]:      # glazed notice cases on the window piers
+        xp = x + 1.714
+        if abs(xp - 64.0) > 2.2:
+            C.box(xp - 0.5, cy0, FLOOR + 1.25, xp + 0.5, cy0 + 0.08, FLOOR + 2.05, "M_IntCork", nc=True)
+            C.box(xp - 0.53, cy0 + 0.08, FLOOR + 1.22, xp + 0.53, cy0 + 0.1, FLOOR + 2.08, "M_IntGlassClear", nc=True)
+            C.box(xp - 0.4, cy0 + 0.081, FLOOR + 1.35, xp - 0.05, cy0 + 0.083, FLOOR + 1.85, "M_IntPaper", nc=True)
+            C.box(xp + 0.05, cy0 + 0.081, FLOOR + 1.45, xp + 0.4, cy0 + 0.083, FLOOR + 1.95,
+                  K.POSTERS[int(xp) % 4], nc=True)
     for k, x in enumerate((50.6, 59.0, 72.6, 84.0)):       # trophy cases + club posters between the lockers
         _vitrine(C, x, cy1 - 0.4, 1.4, 0.55, "trophy" if k % 2 else "cards", seed=k + s)
         C.poster(x, cy1, FLOOR + 1.85, 0.0, 0.7, 0.5, K.POSTERS[k % 4], ("KENDO", "DUEL", "TENNIS", "CHORUS")[k],
@@ -2250,6 +2264,10 @@ def _wing_upper(C, s):
     room_base(C, 38.0, cy0, 88.0, cy1, 50 + s, "school", win="-y", wl=wl, z=z, lights=(10, 1), light_every=2,
               ac=False, wains=BLUE_T, drape="curtain", drape_mat="M_IntFabricNavy")
     C.rug(39.0, 4.1, 87.0, 5.3, "M_IntCarpetRed", K.TRIM_GOLD, z=z + 0.005)
+    for k, x in enumerate(range(44, 88, 7)):              # banners hung across the gallery
+        C.box(x - 0.02, cy0, UCZ - 0.18, x + 0.02, cy1, UCZ - 0.14, K.METAL, nc=True)
+        C.box(x - 0.01, 3.9, UCZ - 1.0, x + 0.01, 5.5, UCZ - 0.18, ("M_AcademyBlue", "M_AcademyRed",
+                                                                    "M_AcademyYellow")[k % 3], nc=True)
     obs = {xc + dx for (a, b) in (HALL_A, HALL_B) for xc in [(a + b) / 2] for dx in (-7.9, -5.4, 5.4, 7.9)}
     for k, x in enumerate(sorted(obs)):            # benches under the hall windows, exhibition boards between
         if k % 2 == 0:
@@ -2492,7 +2510,7 @@ def wainscot_room(C, x0, y0, x1, y1, z, mat=K.WOOD, h=0.95, cap=K.TRIM_WOOD, ski
 
 def room_base(C, x0, y0, x1, y1, seed, style="school", win=None, wl=(), z=FLOOR, zc=None, recess=None,
               drape="roller", drape_mat="M_DetBlind", lights=(2, 3), lw=(1.2, 0.3), clear=(), ac=None,
-              grid=(0.6, 1.2), light_every=2, extra_win=(), ceil=True, wains=K.WOOD, hung=True):
+              grid=(0.6, 1.2), light_every=2, extra_win=(), ceil=True, wains=K.WOOD, hung=True, coffer=None):
     """Ceiling, window treatment, lights and the fixtures of every room (switches, outlets, detectors ...).
     win: the window wall ('-x', '+x', '-y', '+y') with window centres wl; extra_win: [(side, centres)]."""
     up = z > 4.0
@@ -2500,7 +2518,7 @@ def room_base(C, x0, y0, x1, y1, seed, style="school", win=None, wl=(), z=FLOOR,
     rec = tuple(recess) if recess is not None else tuple(sd for sd, _ in ([(win, wl)] if win else []) + list(extra_win))
     if ceil:
         finish(C, x0, y0, x1, y1, zc, rec, zc + 0.45, None if style == "palace" else grid,
-               coffer=K.TRIM_WOOD if style == "palace" else None)
+               coffer=coffer or (K.TRIM_WOOD if style == "palace" else None))
     top = z + (3.4 if up else 3.5)
     for sd, cs in ([(win, wl)] if win else []) + list(extra_win):
         wc = {"-x": x0, "+x": x1, "-y": y0, "+y": y1}[sd]
@@ -2535,6 +2553,11 @@ def _corridor(C, s, z, doors_w, doors_e, names, up=False, reserve_w=(), reserve_
     zc = room_base(C, cx0, -39.5, cx1, 49.5, 40 + s + (5 if up else 0), "school", z=z, lights=(1, 15),
                    lw=(1.2, 0.35), light_every=3, ac=False, wains=None)
     C.rug(100.0, -38.2, 102.0, 48.2, BLUE_T, K.TRIM_GOLD, z=z + 0.005)
+    for k, y in enumerate(range(-30, 48, 9)):      # dorm banners hung across the corridor
+        C.box(cx0, y - 0.02, zc - 0.18, cx1, y + 0.02, zc - 0.14, K.METAL, nc=True)
+        C.box(100.2, y - 0.01, zc - 0.85, 101.8, y + 0.01, zc - 0.18,
+              ("M_AcademyRed", "M_AcademyYellow", "M_AcademyBlue")[k % 3], nc=True)
+        C.box(100.2, y - 0.015, zc - 0.88, 101.8, y + 0.015, zc - 0.84, K.TRIM_GOLD, nc=True)
     for y, st in doors_w:
         if (y, "W") in names:
             hang_sign(C, cx0, y - 0.85, z + 2.3, 1, names[(y, "W")])
@@ -3797,6 +3820,11 @@ def _annex_interior(C):
         C.prop("SM_Int_GrandfatherClock", s * 3.2, y0 + 0.3, z, 180.0)
     for y in (66.5, 71.5):
         K.pendant(C.a, *C.F.p(0.0, y), EB_TOP, "chandelier")
+    for xx in (-3.75, -1.25, 1.25, 3.75):        # cased beams (not over the stair well)
+        C.box(xx - 0.12, y0, EB_TOP - 0.22, xx + 0.12, y1, EB_TOP, K.TRIM_WOOD, nc=True)
+    for yy in [y0 + k * 2.25 for k in range(11)]:
+        if not (sy0 - 0.2 < yy < sy1 + 0.2):
+            C.box(-3.75, yy - 0.12, EB_TOP - 0.22, 3.75, yy + 0.12, EB_TOP, K.TRIM_WOOD, nc=True)
     C.dress(-3.75, y0, 3.75, y1, EB_TOP, "palace", 101, ac=False)
     _plate_door(C, -4.0, 68.5, 90.0, "CHANCELLOR SHEPPARD", z=z + 2.95)
     _plate_door(C, -4.0, 58.0, 90.0, "FACULTY MEETING ROOM", z=z + 2.95)
@@ -3849,7 +3877,7 @@ def _annex_interior(C):
     # ---------------- faculty meeting room
     ya, yb = y0, 62.6
     C.floor(x0, ya, x1, yb, "M_IntCarpetBlue")
-    room_base(C, x0, ya, x1, yb, 103, "office", win="-x", wl=wins(ANX_WIN_S, ya, yb), lights=(2, 2),
+    room_base(C, x0, ya, x1, yb, 103, "office", win="-x", wl=wins(ANX_WIN_S, ya, yb), coffer=K.WOOD_DARK, lights=(2, 2),
               clear=[(x0, ya, x1, ya + 0.6)])
     conf_table(C, -14.6, 57.2, -9.4, 58.6)
     for x in (-14.0, -12.9, -11.8, -10.7, -9.9):
@@ -3912,7 +3940,7 @@ def _annex_interior(C):
     # ---------------- faculty lounge
     ya, yb = y0, 62.6
     C.floor(x0, ya, x1, yb, "M_IntWoodFloor", planks=True)
-    room_base(C, x0, ya, x1, yb, 107, "office", win="+x", wl=wins(ANX_WIN_S, ya, yb), lights=(2, 2),
+    room_base(C, x0, ya, x1, yb, 107, "office", win="+x", wl=wins(ANX_WIN_S, ya, yb), coffer=K.WOOD_DARK, lights=(2, 2),
               drape="curtain", drape_mat="M_IntFabricBeige", clear=[(9.0, ya, 15.8, ya + 0.8)])
     with C.zat(z):
         K.kitchen_run(C.mb, C.nc, 9.4, ya, 14.6, against="-y")
@@ -3961,7 +3989,7 @@ def _annex_upper(C):
     for x in (sx0, sx1):
         stair_rail(C, x, sy0, z, x, sy1 - 0.0, z, mat=K.TRIM_GOLD)
     stair_rail(C, sx0, sy0, z, sx1, sy0, z, mat=K.TRIM_GOLD)
-    room_base(C, -3.75, y0, 3.75, y1, 120, "palace", z=z, zc=ANX_TOP, ceil=False, lights=(0, 0), wains=BLUE_T,
+    room_base(C, -3.75, y0, 3.75, y1, 120, "palace", z=z, zc=ANX_TOP - 0.01, lights=(0, 0), wains=BLUE_T,
               win="+y", wl=wins(ANX_WIN_NU, -3.75, 3.75, 0.2))
     K.pendant(C.a, *C.F.p(0.0, (sy0 + sy1) / 2), ANX_TOP, "chandelier")
     K.pendant(C.a, *C.F.p(0.0, 69.5), ANX_TOP, "chandelier")
@@ -3993,7 +4021,7 @@ def _annex_upper(C):
     x0, x1, ya, yb = -19.5, -4.25, 62.85, y1
     C.floor(x0, ya, x1, yb, "M_IntCarpetBlue", z=z)
     room_base(C, x0, ya, x1, yb, 122, "school", win="+y", wl=wins(ANX_WIN_NU, x0, x1), z=z, zc=ANX_TOP,
-              recess=(), extra_win=[("-x", wins(ANX_WIN_S, ya, yb))], lights=(2, 2), drape="curtain",
+              recess=(), extra_win=[("-x", wins(ANX_WIN_S, ya, yb))], coffer=K.WOOD_DARK, lights=(2, 2), drape="curtain",
               drape_mat="M_IntFabricNavy", wains=NAVY_T, clear=[(x0, ya, x0 + 3.0, ya + 0.5)])
     for k, x in enumerate(wins(ANX_WIN_NU, x0, x1)):        # telescope on a tripod at each north window
         with C.at(x, yb - 1.0, z, 180.0 + (k * 13) % 30 - 15):
@@ -4028,7 +4056,7 @@ def _annex_upper(C):
     x0, x1, ya, yb = 4.25, 19.5, y0, 62.6
     C.floor(x0, ya, x1, yb, "M_IntLinoleum", z=z)
     room_base(C, x0, ya, x1, yb, 125, "office", win="+x", wl=wins(ANX_WIN_S, ya, yb), z=z, zc=ANX_TOP,
-              recess=(), lights=(3, 2), clear=[(x0, ya, x1, ya + 0.6)])
+              recess=(), coffer=K.WOOD_DARK, lights=(3, 2), clear=[(x0, ya, x1, ya + 0.6)])
     for k, x in enumerate((6.0, 7.4)):
         C.box(x - 0.5, ya + 0.1, z, x + 0.5, ya + 0.75, z + 1.1, K.TRIM_WHITE, mats={"+z": "M_IntSteelBlue"})
         C.box(x - 0.45, ya + 0.15, z + 1.1, x + 0.45, ya + 0.7, z + 1.22, K.TRIM_WHITE)
@@ -4051,7 +4079,7 @@ def _annex_upper(C):
     x0, x1, ya, yb = 4.25, 19.5, 62.85, y1
     C.floor(x0, ya, x1, yb, "M_IntCarpetRed", z=z)
     room_base(C, x0, ya, x1, yb, 129, "office", win="+y", wl=wins(ANX_WIN_NU, x0, x1), z=z, zc=ANX_TOP,
-              recess=(), extra_win=[("+x", wins(ANX_WIN_S, ya, yb))], lights=(2, 2), drape="curtain",
+              recess=(), extra_win=[("+x", wins(ANX_WIN_S, ya, yb))], coffer=K.WOOD_DARK, lights=(2, 2), drape="curtain",
               drape_mat="M_IntFabricRed", wains=K.WOOD_DARK, clear=[(x0, ya, x0 + 0.6, yb)])
     # sound-proofed booth wall with a window, mixing desk in front of it
     C.box(10.0, 67.6, z, 19.5, 67.8, ANX_TOP, "M_IntCork")

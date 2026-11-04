@@ -1187,6 +1187,15 @@ def _court_more(aset, mb, nc, rng):
         for s in (-1, 1):
             nc.box((x + s * 0.8, yb, zt + 0.35), (0.02, 0.02, 0.7), "M_DarkMetal")
         aset.text(txt, (x, yb - 0.04, zt - 1.2), 0.0, size=0.2, color=(1, 1, 1))
+    # championship pennants over the court (one per season, hung from the arches)
+    for k, x in enumerate((-24.0, -18.0, -12.0, -6.0, 6.0, 12.0, 18.0, 24.0)):
+        for j, yb in enumerate((-3.0, 8.0)):
+            zt = ZC + math.sqrt(R ** 2 - (yb - YC) ** 2) - 0.5
+            m = ("M_Fabric", "M_AcademyYellow", "M_ObeliskTrim", "M_AcademyBlue")[(k + j) % 4]
+            nc.box((x, yb, zt - 0.2), (0.05, 0.05, 0.4), "M_DarkMetal")
+            nc.box((x, yb, zt - 0.42), (0.06, 1.3, 0.05), "M_Gold")
+            nc.box((x, yb, zt - 1.525), (0.04, 1.2, 2.15), m)
+            aset.text("GX %d" % (2000 + k + 8 * j), (x - 0.04, yb, zt - 1.4), -90.0, size=0.22, color=(1, 1, 1))
     # cheer banners on the first bleacher tier, bags and drinks on the seats
     for (x, m, txt) in ((-16.0, "M_Fabric", "GO SLIFER!"), (14.0, "M_ObeliskTrim", "OBELISK #1"),
                         (-6.0, "M_AcademyYellow", "RA RA RA!")):

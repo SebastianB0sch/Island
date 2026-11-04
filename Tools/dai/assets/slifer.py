@@ -336,6 +336,15 @@ def _room_more(aset, mb, nc, i, floor, x0, rx0, rx1, zf, zr, ceil, rng):
                             gaps=0.05)
     for k in range(2):
         _manga(nc, sx0 + 0.2 + k * 0.8, ry1 - 0.5, zr + 0.03, 0.0, r.randint(4, 9), i + k + floor)
+    # washitsu carpentry: nageshi rail round the room at door-head height, corner posts, ceiling battens
+    zn = zr + 2.0
+    for (a0, b0, a1, b1) in ((rx0, ry0, rx1, ry0 + 0.04), (rx0, ry0, rx0 + 0.04, 2.95), (rx1 - 0.04, ry0, rx1, ry1)):
+        mb.box_mm((a0, b0, zn), (a1, b1, zn + 0.1), K.WOOD)
+    for (px, py) in ((rx0, ry0), (rx1 - 0.1, ry0), (rx1 - 0.1, ry1 - 0.1)):
+        mb.box_mm((px, py, zf), (px + 0.1, py + 0.1, ceil), K.WOOD)
+    for k in range(int((ry1 - ry0) / 0.45)):
+        y = ry0 + 0.3 + k * 0.45
+        nc.box(((rx0 + rx1) / 2, y, ceil - 0.012), (rx1 - rx0, 0.035, 0.024), K.WOOD)
     # zabuton round the kotatsu (not in Banner's study)
     if not banner:
         for dx, dy in ((0.0, -0.85), (-0.85, 0.0), (0.0, 0.85)):
@@ -348,6 +357,40 @@ def _room_more(aset, mb, nc, i, floor, x0, rx0, rx1, zf, zr, ceil, rng):
             _manga(nc, x0 + 1.0 + k * 0.55, -1.25 + (k % 2) * 0.3, zr + 0.03, r.uniform(0, 90), r.randint(3, 8),
                    i * 5 + k + floor)
         _hanging_laundry(nc, x0 + 0.8, rx1 - 1.1, 2.75, zr + 2.05, i + floor * 3)
+        # party wall in front of the bunk: colour-box tower (manga, deck boxes, figures) + mini fridge
+        tx = rx1 - 0.16
+        mb.box_mm((rx1 - 0.32, -0.75, zr), (rx1, 0.45, zr + 1.15), K.TRIM_WHITE)
+        for lv in (0.03, 0.4, 0.77):
+            for k, yy in enumerate((-0.45, 0.15)):
+                nc.box((rx1 - 0.321, yy, zr + lv + 0.17), (0.004, 0.56, 0.33), K.BLACK)
+                if r.random() < 0.75:
+                    DT.book_row(nc, tx, tx + 0.5, yy - 0.26, zr + lv + 0.02, 0.2, yaw=90.0, max_h=0.19,
+                                seed=i * 13 + k + int(lv * 10), gaps=0.08)
+        DT.deck_box(nc, tx, -0.3, zr + 1.15, 15.0 * i, "M_IntFabricRed")
+        DT.deck_box(nc, tx + 0.02, -0.15, zr + 1.15, 40.0, "M_IntFabricBlue")
+        nc.box((tx, 0.2, zr + 1.25), (0.08, 0.06, 0.2), "M_IntFabricYellow")             # figure
+        mb.box_mm((rx1 - 0.48, -1.65, zr), (rx1 - 0.02, -1.15, zr + 0.82), K.TRIM_WHITE)   # mini fridge
+        nc.box((rx1 - 0.485, -1.4, zr + 0.6), (0.01, 0.03, 0.2), K.METAL)
+        nc.cylinder((rx1 - 0.25, -1.35, zr + 0.82), 0.033, 0.12, "M_IntFabricOrange", seg=8)   # soda can
+        # a guest futon spread out on the tatami (somebody always sleeps over)
+        K.futon(nc, x0 + 3.3, -0.45, 90.0, mat=("M_IntFabricRed", "M_SliferLaundryBlue")[i % 2])
+        K.poster(nc, aset, x0 + 4.0, ry0, zr + 1.65, 180.0, 0.38, 0.52, K.POSTERS[(i + 3) % 4],
+                 text=("DRAW", "WIN", "GX", "ACE")[i % 4], text_size=0.05)
+        aset.prop("SM_Int_Mirror", (rx0, -1.25, zr + 1.0), 90.0)
+        # tansu chest against the left wall with a few things on top
+        mb.box_mm((rx0, -0.7, zr), (rx0 + 0.45, 0.25, zr + 0.75), K.WOOD_DARK)
+        for k in range(3):
+            nc.box((rx0 + 0.452, -0.225, zr + 0.13 + k * 0.24), (0.004, 0.88, 0.2), K.WOOD)
+            nc.box((rx0 + 0.47, -0.225, zr + 0.13 + k * 0.24), (0.02, 0.12, 0.025), K.METAL)
+        aset.prop("SM_Int_AlarmClock", (rx0 + 0.22, -0.45, zr + 0.75), 90.0)
+        _manga(nc, rx0 + 0.22, 0.0, zr + 0.75, 0.0, 6, i + 40)
+        # big Slifer tapestry on the party wall above the futon
+        with nc.at((rx1 - 0.01, -0.6, zr + 1.55), rot=-90.0):
+            nc.box((0, -0.006, 0), (1.6, 0.012, 0.69), "M_IntFabricRed")
+            nc.box((0, -0.004, 0), (1.66, 0.008, 0.75), "M_IntFabricYellow")
+            nc.box((0, -0.009, 0.36), (1.7, 0.02, 0.03), K.WOOD)
+        aset.text("SLIFER RED", K.wall_point(rx1 - 0.01, -0.6, -90.0, 0.02, zr + 1.47), -90.0, size=0.16,
+                  color=(1.0, 0.85, 0.2))
         K.poster(nc, aset, rx1 - 0.01, -1.85, zr + 1.55, -90.0, 0.42, 0.6, K.POSTERS[(i + 2) % 4],
                  text=("HERO!", "DRAW!", "FUSION", "LV 4")[(i + floor) % 4], text_size=0.06)
         K.poster(nc, aset, x0 + 1.7, 3.9, zr + 1.5, 90.0, 0.5, 0.65, K.POSTERS[(i + 1) % 4],
@@ -808,6 +851,9 @@ def _dining_detail(aset, mb, nc):
                   keep_clear=[(11.2, 4.2, 19.8, 4.8)])
     K.poster(nc, aset, 11.2, 3.95, DF + 1.6, 90.0, 0.4, 0.55, "M_IntPaper", text="WASH HANDS!",
              text_color=(0.6, 0.1, 0.05), text_size=0.04)
+    for x in (11.9, 13.5, 15.1, 16.4, 18.0, 19.3):                        # exposed ceiling joists
+        mb.box_mm((x - 0.06, yi0, CE - 0.2), (x + 0.06, yi1, CE), "M_DarkWood")
+    K.bulletin(nc, aset, 12.3, PY, DF + 1.3, 0.0, w=1.1, h=0.75, title="DORM NEWS", rng_seed=9)
     K.camera(aset, "dining", (11.6, -2.35, DF + 1.6), (18.0, 2.2, DF + 0.9), 16.0)
     K.camera(aset, "dining_kitchen", (19.3, 3.55, DF + 1.6), (12.4, 4.35, DF + 1.0), 16.0)
 
