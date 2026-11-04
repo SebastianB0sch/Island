@@ -1,0 +1,23 @@
+asset_id: polyhaven_plastic_monobloc_chair_01
+title: Plastic Monobloc Chair 01 (Poly Haven)
+category: interiors
+main_file: plastic_monobloc_chair_01_1k.gltf
+catalog_use: SM_Int_PlasticChair
+author: Kuutti Siitonen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/plastic_monobloc_chair_01
+description: Free 4K model: weathered white plastic monobloc chair with scuffs, dirt and faded finish, classic cheap outdoor stacking design showing age and wear.
+polycount: 3356
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/plastic_monobloc_chair_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/plastic_monobloc_chair_01/plastic_monobloc_chair_01_1k.gltf
+    -> plastic_monobloc_chair_01_1k.gltf  md5 b0ac94e52b406e1815af47d9d84eadb4  sha256 899bf148139ab8d1718c25ec06112a652631f9476b5aaeeacb9eb1da9b7f1d3a
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/plastic_monobloc_chair_01/plastic_monobloc_chair_01.bin
+    -> plastic_monobloc_chair_01.bin  md5 cff97136a9c4bb57c62937cbb7d33a79  sha256 db5c778488d01d7e7d3409e2cda53ee8f6dd523a327c080000d549dd0f83b375
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/plastic_monobloc_chair_01/plastic_monobloc_chair_01_diff_1k.jpg
+    -> textures/plastic_monobloc_chair_01_diff_1k.jpg  md5 c36dfe0f38d6ca1632ba426c598e6764  sha256 fdd1255a02bf684cfcff2eae75c0e3eea0db1fb5ecbfbd8c4f9beab8fd83ff6c
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/plastic_monobloc_chair_01
+not_redistributed: textures/plastic_monobloc_chair_01_arm_1k.jpg, textures/plastic_monobloc_chair_01_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py plastic_monobloc_chair_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

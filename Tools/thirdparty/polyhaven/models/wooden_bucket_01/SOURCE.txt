@@ -20,6 +20,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_bucket_01/wooden_bucket_01_nor_gl_1k.jpg
     -> textures/wooden_bucket_01_nor_gl_1k.jpg  md5 68ad3de3f685798a8d46c070da840e5a  sha256 ae12106f8dd1e69813d42d714e9c99b70af3b5fcce6953cfbf8d8a741b4da40f
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/wooden_bucket_01
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py wooden_bucket_01` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

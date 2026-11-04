@@ -1,0 +1,23 @@
+asset_id: polyhaven_jug_01
+title: Jug 01 (Poly Haven)
+category: interiors
+main_file: jug_01_1k.gltf
+catalog_use: SM_Int_Jug
+author: Kuutti Siitonen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/jug_01
+description: Free 8K model of a white ceramic milk jug featuring glossy antique glazing, a metallic rim, rounded handle, and a hand-painted pink tulip bouquet decal.
+polycount: 5770
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/jug_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/jug_01/jug_01_1k.gltf
+    -> jug_01_1k.gltf  md5 b8b3c0c9faf48e2370485a04288da9c4  sha256 87dc40eb3e45b0185699f18cf5988b81fe5b1a01f0cf76c1daa93774878d7e44
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/jug_01/jug_01.bin
+    -> jug_01.bin  md5 f4818dd15e25681e1fcf718c9c488998  sha256 2dd3772547ae41cc7beeaa5f002e741cfe2c014ed4717731c5076810154bedb9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/jug_01/jug_01_diff_1k.jpg
+    -> textures/jug_01_diff_1k.jpg  md5 ffe6e4999d473e6969c1432fa1ea5e21  sha256 c716b455f46c1fa06745383f4237bb587a196c919e0af8b19fe207db192b74e4
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/jug_01
+not_redistributed: textures/jug_01_nor_gl_1k.jpg, textures/jug_01_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py jug_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

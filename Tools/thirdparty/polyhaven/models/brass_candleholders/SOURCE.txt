@@ -40,6 +40,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/brass_candleholders/brass_candleholders.bin
     -> brass_candleholders.bin  md5 ea4f625bd0ef542c0026bbcf61370b71  sha256 a2f406ea19e6e606ba6b618958cb496b2c18a41fa580409512afd6e644878d51
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/brass_candleholders
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py brass_candleholders` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

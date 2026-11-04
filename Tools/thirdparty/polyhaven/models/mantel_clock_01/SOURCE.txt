@@ -1,0 +1,23 @@
+asset_id: polyhaven_mantel_clock_01
+title: Mantel Clock 01 (Poly Haven)
+category: interiors
+main_file: mantel_clock_01_1k.gltf
+catalog_use: SM_Int_MantelClock
+author: Yann Kervran, Rico Cilliers
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/mantel_clock_01
+description: Free 8K mantel clock model - ornate vintage wooden shelf clock with carved floral details, brass bezel and aged face; decorative, rigged for animation.
+polycount: 29742
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/mantel_clock_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/mantel_clock_01/mantel_clock_01_1k.gltf
+    -> mantel_clock_01_1k.gltf  md5 768ccf9a56c73b0ef542c93922fdb5db  sha256 e4c4f264175626fa14f12409ee5d687cf7f0d68fd1881cb7eb927c5f112de6ab
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/mantel_clock_01/mantel_clock_01_diff_1k.jpg
+    -> textures/mantel_clock_01_diff_1k.jpg  md5 a012d80ace15cc37f75e8679702bb92f  sha256 278062fa68c0f763ecd55d59ed31873bfb7fb004a83ec7a3e5e26b31d3d1e23f
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/mantel_clock_01/mantel_clock_01.bin
+    -> mantel_clock_01.bin  md5 200740e20c08d0c370b608af6a17e9f9  sha256 95e2b4820daaea592aa3e354bb06aa78c2e747fb89939b54eaf51140294d40c7
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/mantel_clock_01
+not_redistributed: textures/mantel_clock_01_arm_1k.jpg, textures/mantel_clock_01_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py mantel_clock_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,23 @@
+asset_id: polyhaven_lemon
+title: Lemon (Poly Haven)
+category: interiors
+main_file: lemon_1k.gltf
+catalog_use: SM_Int_Lemon
+author: Kuutti Siitonen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/lemon
+description: Free 4K model of a realistic lemon with detailed bumpy rind, natural blemishes, glossy waxy surface, organic irregular shape and a visible stem nub.
+polycount: 4012
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/lemon, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/lemon/lemon_1k.gltf
+    -> lemon_1k.gltf  md5 79ad40158b71f7d08d7dcc4efc060468  sha256 b9cbb0cda757eee2e8f76b9fe9021b0ef208d10a61bae4ac73d5f2c1c20865e3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/lemon/lemon_diff_1k.jpg
+    -> textures/lemon_diff_1k.jpg  md5 86c47e7daf0f9ba4aa0563be6cb7297c  sha256 8b77be29d3032852bc6c1e327aefcc83377c405dcd437f85d2aac8b33f921618
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/lemon/lemon.bin
+    -> lemon.bin  md5 357973be23fd9b4bcf2a212ef30ecc31  sha256 af5a040a7c14cf7d3537ed387ba2d2257feed2dbafb2f922ee566bf01abb859e
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/lemon
+not_redistributed: textures/lemon_nor_gl_1k.jpg, textures/lemon_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py lemon` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

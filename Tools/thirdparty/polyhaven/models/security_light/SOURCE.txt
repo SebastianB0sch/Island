@@ -1,0 +1,23 @@
+asset_id: polyhaven_security_light
+title: Security Light (Poly Haven)
+category: interiors
+main_file: security_light_1k.gltf
+catalog_use: SM_Int_SecurityLight
+author: Maximilian Schuster
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/security_light
+description: Free 8K model: weathered industrial security light with fluted metal shade, textured frosted glass housing, and a sturdy mounting bracket.
+polycount: 4668
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/security_light, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/security_light/security_light_1k.gltf
+    -> security_light_1k.gltf  md5 727025a49f3ccbbf14905b577190932b  sha256 d82d2191df1e30a75c2f2ce07a8abefcd52b0e8eabc819e2ac854da0f16fba18
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/security_light/security_light.bin
+    -> security_light.bin  md5 396e444f26305c6bc7ad0747ee3f899e  sha256 3d45d473d7ad4ace4ce93790db96dd7d6decbd0180b59a7a2774c690594e70e2
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/security_light/security_light_diff_1k.jpg
+    -> textures/security_light_diff_1k.jpg  md5 b7c8f67d7a5b0db24d578eb9154fd1bf  sha256 2e7064d89f03ef51bffda6f78c86baac1edba3346f82f243aa0c33b20fa8b0e5
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/security_light
+not_redistributed: textures/security_light_nor_gl_1k.jpg, textures/security_light_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py security_light` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

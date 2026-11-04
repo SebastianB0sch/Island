@@ -1,0 +1,23 @@
+asset_id: polyhaven_utility_box_01
+title: Utility Box 01 (Poly Haven)
+category: interiors
+main_file: utility_box_01_1k.gltf
+catalog_use: SM_Int_UtilityBox
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/utility_box_01
+description: Free 8K model of an industrial urban utility box - weathered metal cabinet with rivets, high‑voltage stickers, latch and grime; great for city and road scenes.
+polycount: 4404
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/utility_box_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/utility_box_01/utility_box_01_1k.gltf
+    -> utility_box_01_1k.gltf  md5 a9154d210827ea508c59cb5917ca1d0f  sha256 5b9f8c45f2640c9dd831dc3450529e45b24c987208ddcf73010fe717ce8c454e
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/utility_box_01/utility_box_01_diff_1k.jpg
+    -> textures/utility_box_01_diff_1k.jpg  md5 3e76f9da5032c98ed48e1b3e4cad2511  sha256 6a703a4cdf20c3fc3d0400fa815e5a1834836c96c207bdb57ba9e4a5db3a5532
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/utility_box_01/utility_box_01.bin
+    -> utility_box_01.bin  md5 5fa84789b367c3f04786e3ba92333c50  sha256 e4249eb754d7802154eed36bb12070dc24c90fc331f355d60ef7570d61fc0f5c
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/utility_box_01
+not_redistributed: textures/utility_box_01_nor_gl_1k.jpg, textures/utility_box_01_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py utility_box_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

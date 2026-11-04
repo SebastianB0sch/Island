@@ -20,6 +20,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/painted_wooden_bench/painted_wooden_bench.bin
     -> painted_wooden_bench.bin  md5 ed331b50f955852f007313c1a75c2e2d  sha256 5799bcb20924105cccd6424de8cdb8e67eb57fddc19c395befeac634a7b2e013
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/painted_wooden_bench
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py painted_wooden_bench` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

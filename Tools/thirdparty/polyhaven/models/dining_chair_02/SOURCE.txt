@@ -20,6 +20,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dining_chair_02/dining_chair_02_arm_1k.jpg
     -> textures/dining_chair_02_arm_1k.jpg  md5 2b16c9ddb3ea83d200b02de54a4fdcb8  sha256 0a81c0c886baa1e65d94fb6fb90ab4751bee319888ecf1c428ae62042d8a5b15
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/dining_chair_02
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py dining_chair_02` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

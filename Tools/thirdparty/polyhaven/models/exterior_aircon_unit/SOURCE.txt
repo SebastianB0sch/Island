@@ -1,0 +1,29 @@
+asset_id: polyhaven_exterior_aircon_unit
+title: Exterior Aircon Unit (Poly Haven)
+category: interiors
+main_file: exterior_aircon_unit_1k.gltf
+catalog_use: SM_Int_Aircon
+author: Monsta3D
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/exterior_aircon_unit
+description: Free 4K exterior aircon unit model with clean and heavily weathered variants, detailed grille and fan, mounting brackets and realistic rust and chipped paint.
+polycount: 18986
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/exterior_aircon_unit, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/exterior_aircon_unit/exterior_aircon_unit_1k.gltf
+    -> exterior_aircon_unit_1k.gltf  md5 10beccfb1bf0c973a0729be8970532a9  sha256 f19d85c76948903047c2846068aeaa376d5e956a410675268cb6cb6aac5d97c2
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/exterior_aircon_unit/exterior_aircon_unit_01_opacity_1k.jpg
+    -> textures/exterior_aircon_unit_01_opacity_1k.jpg  md5 f253dbcb057612371dd1b6d37095c6ba  sha256 c19feb434c2b01923fbb3e16ace3aa6d9cb16b05c2a5c479ad237759b2d331d6
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/exterior_aircon_unit/exterior_aircon_unit.bin
+    -> exterior_aircon_unit.bin  md5 971c2cfcbc29256d7872eafe74352279  sha256 b4b9ad082bdaa8f8b437bc14d9981caeaf318334499d4bf65d616fb2ec0c5ca8
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/exterior_aircon_unit/exterior_aircon_unit_rusted_01_diff_1k.jpg
+    -> textures/exterior_aircon_unit_rusted_01_diff_1k.jpg  md5 7b9fba8819918dc388c49f05b5522575  sha256 a8771db98ed7f3d46ce48fd70867f58a74a2530666c339f8dcc14f3e5de86d0b
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/exterior_aircon_unit/exterior_aircon_unit_01_diff_1k.jpg
+    -> textures/exterior_aircon_unit_01_diff_1k.jpg  md5 81003ea4afe59ed4dac090791e41f562  sha256 2ae5005b4836d2c91d1e712d9acf425c7dcc4973b7c0fc6f23da9afaa6381da6
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/exterior_aircon_unit/exterior_aircon_unit_rusted_02_opacity_1k.jpg
+    -> textures/exterior_aircon_unit_rusted_02_opacity_1k.jpg  md5 0540ff18330b76e4e55053d5bd21f59e  sha256 a86bcaf9c4858cf250fd67c9a0ee362504454b9972ff6e1ac44e38bac3213421
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/exterior_aircon_unit
+not_redistributed: textures/exterior_aircon_unit_01_nor_gl_1k.jpg, textures/exterior_aircon_unit_rusted_01_arm_1k.jpg, textures/exterior_aircon_unit_01_arm_1k.jpg, textures/exterior_aircon_unit_02_arm_1k.jpg, textures/exterior_aircon_unit_rusted_02_arm_1k.jpg, textures/exterior_aircon_unit_02_nor_gl_1k.jpg, textures/exterior_aircon_unit_rusted_01_nor_gl_1k.jpg, textures/exterior_aircon_unit_rusted_02_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py exterior_aircon_unit` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

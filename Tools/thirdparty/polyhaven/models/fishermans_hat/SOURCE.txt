@@ -1,0 +1,23 @@
+asset_id: polyhaven_fishermans_hat
+title: Fishermans Hat (Poly Haven)
+category: interiors
+main_file: fishermans_hat_1k.gltf
+catalog_use: SM_Int_Hat
+author: PierreB3D
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/fishermans_hat
+description: Free 4K model of a khaki fisherman's hat with wide stitched brim, canvas texture, metal eyelets, fabric band, and subtle wear.
+polycount: 10304
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/fishermans_hat, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/fishermans_hat/fishermans_hat_1k.gltf
+    -> fishermans_hat_1k.gltf  md5 9d4756098d273327604542d9baf3759c  sha256 5178f62b9238f27624f99b32b590085233bfa373f97e5b999eb111f8b3f1c473
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/fishermans_hat/fishermans_hat_diff_1k.jpg
+    -> textures/fishermans_hat_diff_1k.jpg  md5 648031d0b7ff236c84311bc6864673a2  sha256 68d281ac3b8d01a195ea4fc68dd6e403b7589a2c8fa950b7a732ae2e7bea6e5d
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/fishermans_hat/fishermans_hat.bin
+    -> fishermans_hat.bin  md5 71b6c9679454ac8be1ed5e6b79be44d1  sha256 793a27019bd1d99302452729a3feb0cd271b3f268f059a8fec60ec0c23a443e1
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/fishermans_hat
+not_redistributed: textures/fishermans_hat_nor_gl_1k.jpg, textures/fishermans_hat_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py fishermans_hat` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

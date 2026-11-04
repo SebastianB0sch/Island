@@ -1,0 +1,25 @@
+asset_id: polyhaven_hanging_picture_frame_03
+title: Hanging Picture Frame 03 (Poly Haven)
+category: interiors
+main_file: hanging_picture_frame_03_1k.gltf
+catalog_use: SM_Int_FrameC
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/hanging_picture_frame_03
+description: Free 8K - ornate oval wooden hanging picture frame with varnished vintage finish, carved floral details and antique photo insert; decorative wall prop.
+polycount: 24348
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/hanging_picture_frame_03, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/hanging_picture_frame_03/hanging_picture_frame_03_1k.gltf
+    -> hanging_picture_frame_03_1k.gltf  md5 e34b163b57cb61523094326c6b6a34ea  sha256 39223fc47a8714cdf4db3b4d68042a02207db5ec3947bf021e47203540e21ddd
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hanging_picture_frame_03/hanging_picture_frame_03_diff_1k.jpg
+    -> textures/hanging_picture_frame_03_diff_1k.jpg  md5 eb74af517920a3e3a585caa7738dc21f  sha256 a75f9cd4535bbdbf46d8be686b9a6c1edc5db6fd00ae373c7469f349665f52bd
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/hanging_picture_frame_03/hanging_picture_frame_03_artwork_diff_1k.jpg
+    -> textures/hanging_picture_frame_03_artwork_diff_1k.jpg  md5 181540c5304ae5cd0e024e1d57a888a4  sha256 1f6c82a48a0ea02d7a66956282d734ee39860ac5ca98afb4dd81f6a496f2176e
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/hanging_picture_frame_03/hanging_picture_frame_03.bin
+    -> hanging_picture_frame_03.bin  md5 01220ffd91ddb834804c2df336915f1e  sha256 e96c6046c6e5b6c8174a53d5956b6147eeec16cb426aa2a8d761216381b75561
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/hanging_picture_frame_03
+not_redistributed: textures/hanging_picture_frame_03_nor_gl_1k.jpg, textures/hanging_picture_frame_03_artwork_rough_1k.jpg, textures/hanging_picture_frame_03_arm_1k.jpg, textures/hanging_picture_frame_03_rough_1k.jpg, textures/hanging_picture_frame_03_artwork_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py hanging_picture_frame_03` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,23 @@
+asset_id: polyhaven_Chandelier_01
+title: Chandelier 01 (Poly Haven)
+category: interiors
+main_file: Chandelier_01_1k.gltf
+catalog_use: SM_Int_ChandelierB
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/Chandelier_01
+description: Free 4K model of an ornate vintage brass chandelier with six fabric shades, decorative beads and hanging ceiling mount, detailed for archviz and games.
+polycount: 26860
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/Chandelier_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/Chandelier_01/Chandelier_01_1k.gltf
+    -> Chandelier_01_1k.gltf  md5 4750f709fd968452ffefd3315e13818f  sha256 19a63453965dde6ace3159e2059c30adee81905e95a6beaf62b7f47d9283e724
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/Chandelier_01/Chandelier_01.bin
+    -> Chandelier_01.bin  md5 bb72e9fd9d5c2b25c307130807598dc8  sha256 f476cc0c0eed8ccc31c49fc797e00ac6a0c8666c345aa933a9accd5762c06cd1
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Chandelier_01/Chandelier_01_diff_1k.jpg
+    -> textures/Chandelier_01_diff_1k.jpg  md5 361990948d40e7dc4f252ffc66702c6f  sha256 b52eaa35e990d61842006ee8c4a24e08c82e36d87e9ff7a751a6400547a0eba2
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/Chandelier_01
+not_redistributed: textures/Chandelier_01_nor_gl_1k.jpg, textures/Chandelier_01_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py Chandelier_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,23 @@
+asset_id: polyhaven_television_02
+title: Television 02 (Poly Haven)
+category: interiors
+main_file: television_02_1k.gltf
+catalog_use: SM_Int_TVB
+author: Benny Weimer
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/television_02
+description: Free 8K model of a chunky retro CRT TV with scuffed glass, plastic bezel, push buttons, and vented metal speaker panel with sunburst decal and worn edges.
+polycount: 2310
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/television_02, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/television_02/television_02_1k.gltf
+    -> television_02_1k.gltf  md5 7fac593c38eda87404e5fd77a0da6979  sha256 8e7d7cb6bbdb5713b7d4ed21ece7c0f9c41912359c2c0f5065b7e77f5bf4cdcf
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/television_02/television_02_diff_1k.jpg
+    -> textures/television_02_diff_1k.jpg  md5 a80b482e7aa0b57c93978c11cc0d0a1b  sha256 216bc64108a79f3728e4f0fa2927da2491a3c3f5c619c8d48418c2aad84afb5e
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/television_02/television_02.bin
+    -> television_02.bin  md5 2d486ed0c0d589cdb4b2acaf65242773  sha256 73f1d3519f7bdacca24c892e2614ff756d5d27f5c33fb518cb8aac9154fa710b
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/television_02
+not_redistributed: textures/television_02_nor_gl_1k.jpg, textures/television_02_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py television_02` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

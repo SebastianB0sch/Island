@@ -20,6 +20,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/metal_office_desk/metal_office_desk.bin
     -> metal_office_desk.bin  md5 96f258b9a64d36ca011f44de23da7c65  sha256 65b558f41a75ad4822e31cc2a97eb34ed359199279a6bfbd650deb27cef78767
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/metal_office_desk
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py metal_office_desk` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

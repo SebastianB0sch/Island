@@ -1,0 +1,23 @@
+asset_id: polyhaven_baseball_bat
+title: Baseball Bat (Poly Haven)
+category: interiors
+main_file: baseball_bat_1k.gltf
+catalog_use: SM_Int_BaseballBat
+author: Enrique Martín
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/baseball_bat
+description: Free 8K model of a worn wooden baseball bat with visible grain, scratches, scuffs and a tape-wrapped grip - realistic, game-ready prop.
+polycount: 2672
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/baseball_bat, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/baseball_bat/baseball_bat_1k.gltf
+    -> baseball_bat_1k.gltf  md5 c67d0dd527b456cea9f627146ed1b726  sha256 a55e57c03f986a82713c4751e6e6372d39b5f25eee9bbd31576b62bbebe0fa59
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/baseball_bat/baseball_bat_diff_1k.jpg
+    -> textures/baseball_bat_diff_1k.jpg  md5 7ecb115c430aaac127701b2b7e154746  sha256 b542dc267c1b6abf8fcc3e864976be0269baaff2c00d1c98e58a60631ab6559a
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/baseball_bat/baseball_bat.bin
+    -> baseball_bat.bin  md5 fc392542820c15b72cd8c594848669e9  sha256 884a4120d81c38e9370861f21c36a6fb3e53ad0d72eb0833ce9f9b9853e5199b
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/baseball_bat
+not_redistributed: textures/baseball_bat_nor_gl_1k.jpg, textures/baseball_bat_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py baseball_bat` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,23 @@
+asset_id: polyhaven_tool_cart
+title: Tool Cart (Poly Haven)
+category: interiors
+main_file: tool_cart_1k.gltf
+catalog_use: SM_Int_ToolCart
+author: Savva Zakharov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/tool_cart
+description: Free 8K model of a worn green metal tool cart with raised-lip top, lower shelf, two side drawers, riveted frame, chipped paint, rust, and casters.
+polycount: 29394
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/tool_cart, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/tool_cart/tool_cart_1k.gltf
+    -> tool_cart_1k.gltf  md5 ee595e0f3abd65a685266c11574cbc2f  sha256 ba4290f62b37dc08d4f99da2b3c78d8cb584bd229e8805ce586ed3f3b5303759
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/tool_cart/tool_cart_diff_1k.jpg
+    -> textures/tool_cart_diff_1k.jpg  md5 ef4fa51d6dec090496d15e25ad913422  sha256 3a3e18efa54d18f2d01ad51cb40f8edd9af76e054a6a9c21324bc14fe49be965
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/tool_cart/tool_cart.bin
+    -> tool_cart.bin  md5 10b9d918d7ba72cd7b91b3cd2b784abd  sha256 3962637a4faec733b10d9970bfeea6696a48b6fd361fda085cc3d122138f6aaa
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/tool_cart
+not_redistributed: textures/tool_cart_nor_gl_1k.jpg, textures/tool_cart_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py tool_cart` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

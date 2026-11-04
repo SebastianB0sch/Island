@@ -1,0 +1,23 @@
+asset_id: polyhaven_gallinera_chair
+title: Gallinera Chair (Poly Haven)
+category: interiors
+main_file: gallinera_chair_1k.gltf
+catalog_use: SM_Int_CafeChair
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/gallinera_chair
+description: Free 4K model: dark-stained antique Filipino gallinera chair with carved floral backrest, slatted sides and front storage door, solid wooden frame.
+polycount: 11560
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/gallinera_chair, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/gallinera_chair/gallinera_chair_1k.gltf
+    -> gallinera_chair_1k.gltf  md5 60a61e7a479b8e9f9a0ec1ba5fef26bd  sha256 0fd80d1f770fb6ce0be9ff1e07f925e18e582c8a55358d3c77d6e0fdb3f13536
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/gallinera_chair/gallinera_chair_diff_1k.jpg
+    -> textures/gallinera_chair_diff_1k.jpg  md5 2a1254d88dcf9ff1cd2a2baf800be6aa  sha256 5ef6f2564539bfe252583f4e8a979d6a6dd3f4b33f3fdff63af3c6885c2dcbe0
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/gallinera_chair/gallinera_chair.bin
+    -> gallinera_chair.bin  md5 6d859113c6157ee9f8153fbc50260a05  sha256 9e1b03d6aa8207f042e5ea47fc24ac6bb3c9d43df5bbe205731d9ea176040742
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/gallinera_chair
+not_redistributed: textures/gallinera_chair_nor_gl_1k.jpg, textures/gallinera_chair_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py gallinera_chair` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

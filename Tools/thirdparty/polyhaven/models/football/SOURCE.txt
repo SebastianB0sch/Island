@@ -1,0 +1,23 @@
+asset_id: polyhaven_football
+title: Football (Poly Haven)
+category: interiors
+main_file: football_1k.gltf
+catalog_use: SM_Int_Ball
+author: Amal Kumar
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/football
+description: Free 4K model of a battered, partially deflated football with scuffed panels, faded blue paint, dirt, grime and realistic shed/garden wear. Inflated and deflated versions.
+polycount: 4296
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/football, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/football/football_1k.gltf
+    -> football_1k.gltf  md5 ed4244d26380b21489d5366dc420c42b  sha256 85d0bcd1135c479891e91c287cb571d321dde82b355b79180ea11a00b60f1dfa
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/football/football.bin
+    -> football.bin  md5 20f38f11c0051a66b151f90d679ec53e  sha256 89e30e582fca1f33361d247e1bad6012c9e04d81191504327c64cbf64c80b4d1
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/football/football_diff_1k.jpg
+    -> textures/football_diff_1k.jpg  md5 22d15d332c83c73b2b68581a5d8148b1  sha256 b014796d1be23ac40f11f23082fef1dbe0ba6b66e618709d992df6eb86f4a2a4
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/football
+not_redistributed: textures/football_arm_1k.jpg, textures/football_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py football` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

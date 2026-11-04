@@ -26,6 +26,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/projector_screen/projector_screen.bin
     -> projector_screen.bin  md5 6d76dfa1496319bfb1130b1d27812b48  sha256 fd88ad21af99db9a2f64d454604d0d5a0488df6ff94eaacf33379f677dd40c2c
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/projector_screen
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py projector_screen` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

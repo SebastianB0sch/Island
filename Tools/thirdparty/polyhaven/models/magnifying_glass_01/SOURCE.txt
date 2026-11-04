@@ -1,0 +1,23 @@
+asset_id: polyhaven_magnifying_glass_01
+title: Magnifying Glass 01 (Poly Haven)
+category: interiors
+main_file: magnifying_glass_01_1k.gltf
+catalog_use: SM_Int_Magnifier
+author: Nazar Borodavka
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/magnifying_glass_01
+description: Free 8K model of a classic magnifying glass with a slightly worn convex lens, subtle scratches and dust, and a matte black metal frame and handle.
+polycount: 7240
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/magnifying_glass_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/magnifying_glass_01/magnifying_glass_01_1k.gltf
+    -> magnifying_glass_01_1k.gltf  md5 2ff0fc8378d69d10f6221c12fbb78237  sha256 6f370a5ec6f2412f3390e18305e89def8e35f0e00a8e4532a683140a091e82fd
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/magnifying_glass_01/magnifying_glass_01_diff_1k.jpg
+    -> textures/magnifying_glass_01_diff_1k.jpg  md5 7d1288b4ddb69d748011798c77115dd8  sha256 6f0142ef415cb12492354689dc1bab6fed5200846fe5df4227a1c9b6bff20b7a
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/magnifying_glass_01/magnifying_glass_01.bin
+    -> magnifying_glass_01.bin  md5 26b09b8afbfef0965f85b08483afabef  sha256 04b21b47548e3ab8555a26451808f0077493b9b24dafb5ac765b9d1da28a7859
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/magnifying_glass_01
+not_redistributed: textures/magnifying_glass_01_arm_1k.jpg, textures/magnifying_glass_01_nor_gl_1k.jpg, textures/magnifying_glass_01_rough_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py magnifying_glass_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

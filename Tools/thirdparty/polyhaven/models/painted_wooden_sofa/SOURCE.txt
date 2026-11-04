@@ -1,0 +1,23 @@
+asset_id: polyhaven_painted_wooden_sofa
+title: Painted Wooden Sofa (Poly Haven)
+category: interiors
+main_file: painted_wooden_sofa_1k.gltf
+catalog_use: SM_Int_WoodSofa
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/painted_wooden_sofa
+description: Free 4K model of a painted wooden sofa - vintage outdoor bench-style couch with distressed aged paint, carved details and a simple cushion.
+polycount: 5826
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/painted_wooden_sofa, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/painted_wooden_sofa/painted_wooden_sofa_1k.gltf
+    -> painted_wooden_sofa_1k.gltf  md5 2648c458e6639629c5dcb67fcbf07e6c  sha256 6c164f83190b71473ceca47d857c504b972fabf22c8de329747fbefb3a95b070
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/painted_wooden_sofa/painted_wooden_sofa_diff_1k.jpg
+    -> textures/painted_wooden_sofa_diff_1k.jpg  md5 cfd6c30bb84de70eac4762a2cce0b85e  sha256 b00059b1a037120881f26d5fbffca55892e5e4a2df56be28a4c9fdfdcbbf99aa
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/painted_wooden_sofa/painted_wooden_sofa.bin
+    -> painted_wooden_sofa.bin  md5 2f100a29d9fad10d59edf90e5ce0ef03  sha256 e1889d4b622f1063ab4f09ee458b7c5a1c80b7284c693eae012d093c66465838
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/painted_wooden_sofa
+not_redistributed: textures/painted_wooden_sofa_nor_gl_1k.jpg, textures/painted_wooden_sofa_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py painted_wooden_sofa` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

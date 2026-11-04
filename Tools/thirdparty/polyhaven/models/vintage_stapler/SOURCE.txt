@@ -1,0 +1,23 @@
+asset_id: polyhaven_vintage_stapler
+title: Vintage Stapler (Poly Haven)
+category: interiors
+main_file: vintage_stapler_1k.gltf
+catalog_use: SM_Int_Stapler
+author: Mateusz Sadek
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/vintage_stapler
+description: Free 4k model of a vintage teal metal stapler with worn paint, scratches, brass rivets and chrome striker; retro script label and realistic aged details.
+polycount: 4370
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/vintage_stapler, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/vintage_stapler/vintage_stapler_1k.gltf
+    -> vintage_stapler_1k.gltf  md5 d5add4d0c46e1cd96967f2f01b8eaa51  sha256 0cd8f8200e4b9756cd7873a12567252c8fae9e74284b1a610b7cba760be39f2e
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_stapler/vintage_stapler_diff_1k.jpg
+    -> textures/vintage_stapler_diff_1k.jpg  md5 e7a5f1f3fb9937024a54e18ab837372a  sha256 37bbfabfef6ee261dfcb63c99334af0389976ee3b58d80d279c4a430397ae020
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/vintage_stapler/vintage_stapler.bin
+    -> vintage_stapler.bin  md5 fc3a928755e317c199bb6639e773eb29  sha256 7ffa9b1cc3722dd4de8cd754851884c3897f4e281ebe55defc7fc7d3223b27bf
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/vintage_stapler
+not_redistributed: textures/vintage_stapler_nor_gl_1k.jpg, textures/vintage_stapler_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py vintage_stapler` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

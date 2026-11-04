@@ -1,0 +1,23 @@
+asset_id: polyhaven_dustpan
+title: Dustpan (Poly Haven)
+category: interiors
+main_file: dustpan_1k.gltf
+catalog_use: SM_Int_Dustpan
+author: Balen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/dustpan
+description: Free 4K model of a vintage metal dustpan with chipped green paint, rust patina, dented tray, ridged sides, and a handle hole with detailed grime and wear.
+polycount: 4332
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/dustpan, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/dustpan/dustpan_1k.gltf
+    -> dustpan_1k.gltf  md5 735ae3d79b90ac4468632f47fa5f3d02  sha256 68011bba3b576e5af7e03988c2796c87bba35cacd15e355e001ded4c7add68d8
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dustpan/dustpan_diff_1k.jpg
+    -> textures/dustpan_diff_1k.jpg  md5 6acc557516cfd6f890e4d710b17f0bd5  sha256 6dbfaddae00c9d1cd323c4ab3a9350441c3c55c378cd8068cfd786680faa8a20
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/dustpan/dustpan.bin
+    -> dustpan.bin  md5 c2aa7bac8e36c6dddfb5ccb292f1dcba  sha256 14d316b081ed949f8897fcc26bdc7abb8775c630ad4fe69712f9eacf2e027c30
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/dustpan
+not_redistributed: textures/dustpan_nor_gl_1k.jpg, textures/dustpan_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py dustpan` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,23 @@
+asset_id: polyhaven_alarm_clock_01
+title: Alarm Clock 01 (Poly Haven)
+category: interiors
+main_file: alarm_clock_01_1k.gltf
+catalog_use: SM_Int_AlarmClock
+author: Yann Kervran, James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/alarm_clock_01
+description: Free 8K rigged model of a retro aqua twin-bell bedside alarm clock with worn metal, Roman numerals, and animatable parts.
+polycount: 13006
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/alarm_clock_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/alarm_clock_01/alarm_clock_01_1k.gltf
+    -> alarm_clock_01_1k.gltf  md5 8b21feb17dbc39d8dda7a9cf2b12deea  sha256 ca16e83e334e28f8eaf2bf1fbf8ce043b7e4fe5d0e171d01a264b12f5f42a78c
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/alarm_clock_01/alarm_clock_01_diff_1k.jpg
+    -> textures/alarm_clock_01_diff_1k.jpg  md5 27a85fe476bc1c0debe34b37ac824ad8  sha256 deb82094c2c1aa8cda0a0ce7192b193a81c5376743344503764abbcd2db19ac1
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/alarm_clock_01/alarm_clock_01.bin
+    -> alarm_clock_01.bin  md5 276d0e4b0863c2d5ab976abaa5ea0451  sha256 74b589dc31596fe9350e8ef6d123571955d58cee9955060d831fa0f3055758c6
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/alarm_clock_01
+not_redistributed: textures/alarm_clock_01_nor_gl_1k.jpg, textures/alarm_clock_01_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py alarm_clock_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

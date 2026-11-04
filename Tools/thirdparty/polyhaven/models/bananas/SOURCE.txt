@@ -1,0 +1,23 @@
+asset_id: polyhaven_bananas
+title: Bananas (Poly Haven)
+category: interiors
+main_file: bananas_1k.gltf
+catalog_use: SM_Int_Bananas
+author: Alexander Shulha
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/bananas
+description: Free 8K model of ripe bananas: four singles and a small bunch, clean geometry with natural curves, scuffed tips and speckled yellow skins.
+polycount: 46868
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/bananas, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/bananas/bananas_1k.gltf
+    -> bananas_1k.gltf  md5 b710301bd65174db1d3a6dccccb299e0  sha256 4709a758c91cbfb5df7df23fb6d9ed21778ed0030c260b11f9171ed28659e700
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/bananas/bananas_diff_1k.jpg
+    -> textures/bananas_diff_1k.jpg  md5 e874066e400c0c04220723288505506c  sha256 b659aca29f68d038c942cf37f3a89c206c8fea81ff69a5c89d6d7b139bdca6d9
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/bananas/bananas.bin
+    -> bananas.bin  md5 1e1c9dfb934eb50a8edbd6ab848dc11a  sha256 c98b7dbabd8ceb70c9b8ea92611c7c7833dd86c118c8013b941eb379bee26774
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/bananas
+not_redistributed: textures/bananas_nor_gl_1k.jpg, textures/bananas_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py bananas` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

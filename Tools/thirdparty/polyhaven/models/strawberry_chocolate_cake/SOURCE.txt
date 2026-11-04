@@ -1,0 +1,23 @@
+asset_id: polyhaven_strawberry_chocolate_cake
+title: Strawberry Chocolate Cake (Poly Haven)
+category: interiors
+main_file: strawberry_chocolate_cake_1k.gltf
+catalog_use: SM_Int_Cake
+author: Kuutti Siitonen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/strawberry_chocolate_cake
+description: Free 8K model of a rustic chocolate cake topped with glossy strawberry slices and chocolate shavings. Rich texture and hand-made look.
+polycount: 27054
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/strawberry_chocolate_cake, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/strawberry_chocolate_cake/strawberry_chocolate_cake_1k.gltf
+    -> strawberry_chocolate_cake_1k.gltf  md5 060570af2cd543750b34d5a520dcc695  sha256 cae0a3cf0c83d04606d04badfcf06f6f5408df456e4d0c4e13d6f0ba52b085c2
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/strawberry_chocolate_cake/strawberry_chocolate_cake.bin
+    -> strawberry_chocolate_cake.bin  md5 4d0586780a0c750d3be11676476faf11  sha256 c7245b0f1aaefc170631d7fd2c4a32321334df0ae72a0adddf55a2b008776d61
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/strawberry_chocolate_cake/strawberry_chocolate_cake_diff_1k.jpg
+    -> textures/strawberry_chocolate_cake_diff_1k.jpg  md5 a652617eedc0c3c16b938c37f78efb96  sha256 6c0670e81b69de69a388eb215689f794b5f020d3b687861363fb492c110e7c78
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/strawberry_chocolate_cake
+not_redistributed: textures/strawberry_chocolate_cake_arm_1k.jpg, textures/strawberry_chocolate_cake_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py strawberry_chocolate_cake` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -49,6 +49,10 @@ def main():
     ap.add_argument("--no-props", action="store_true")
     ap.add_argument("--door-angle", type=float, default=35.0, help="door leaves posed this far open (deg)")
     ap.add_argument("--camera", default=None, help="only render interior camera sockets whose label contains this")
+    ap.add_argument("--lit", action="store_true", help="light sockets + fixture props become real lights (like Unreal)")
+    ap.add_argument("--scale-ref", action="store_true",
+                    help="stand a 1.75 m student on the floor where each interior camera looks (judge scale)")
+    ap.add_argument("--dim-sky", type=float, default=1.0, help="sky/sun strength (0.3 = evening, shows lamps)")
     args = ap.parse_args()
     res = tuple(int(v) for v in args.res.split("x"))
     out_dir = os.path.join(C.DOCS_DIR, "previews")
@@ -86,7 +90,10 @@ def main():
         mk = socket_markers(aset)
         if mk.verts:
             objs.append(mk.build())
-        blend.setup_world(sun_elev=40, sun_azim=200)
+        blend.setup_world(sun_elev=40, sun_azim=200, strength=args.dim_sky, sun_strength=4.0 * args.dim_sky)
+        if args.lit:
+            from dai import inspect
+            print(f"   lit: {inspect.add_socket_lights(aset)} lights")
         views = args.views.split(",")
         if "front" in views:
             blend.preview_asset(objs, os.path.join(out_dir, f"{key}_front.png"), res=res,
@@ -106,9 +113,33 @@ def main():
         if "inside" in views:
             # interior views come from sockets: aset.special("camera", pos, target=(x, y, z), lens=18)
             cams = [s for s in aset.sockets if s["type"] == "camera"]
+            refs = []
             for i, s in enumerate(cams):
                 if args.camera and args.camera not in str(s["props"].get("label", "")):
                     continue
+                for o in refs:
+                    bpy.data.objects.remove(o)
+                refs = []
+                if args.scale_ref:
+                    from dai import inspect
+                    tgt, pos = Vector(s["props"]["target"]), Vector(s["pos"])
+                    d = (tgt - pos)
+                    d.z = 0
+                    foot = pos + d * 0.55
+                    bpy.context.view_layer.update()
+                    dg = bpy.context.evaluated_depsgraph_get()
+                    start, ground = foot.copy(), None
+                    for _ in range(8):      # skip the hidden prop prototypes parked at the origin
+                        hit = bpy.context.scene.ray_cast(dg, start, Vector((0, 0, -1)), distance=6.0)
+                        if not hit[0]:
+                            break
+                        if hit[4].hide_render or hit[4].name.endswith("_proto") or hit[4].name.startswith("Sockets"):
+                            start = hit[1] - Vector((0, 0, 0.01))
+                            continue
+                        ground = hit[1]
+                        break
+                    foot = ground if ground is not None else foot - Vector((0, 0, 1.55))   # cameras sit ~1.55 m up
+                    refs.append(inspect.scale_figure(foot, math.degrees(math.atan2(-d.x, d.y)) + 180.0))
                 cam = blend.camera(f"InCam{i}", Vector(s["pos"]), Vector(s["props"]["target"]),
                                    lens=s["props"].get("lens", 18.0))
                 blend.setup_render(res, args.samples)

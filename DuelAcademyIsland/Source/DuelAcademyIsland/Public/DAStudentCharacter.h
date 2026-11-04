@@ -77,6 +77,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Camera")
 	float MaxZoom = 1400.f;
 
+	/** Under a roof (walking into a building through its door) the camera pulls in to at most this boom
+	 *  length (cm) and eases back out to the player's own zoom outdoors - no loading, no separate interior. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Camera")
+	float IndoorZoom = 240.f;
+
+	/** A ceiling closer than this above the head (cm) counts as indoors. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Camera")
+	float IndoorCeilingCheck = 900.f;
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Camera")
+	bool IsIndoors() const { return bIndoors; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
 	TObjectPtr<USpringArmComponent> CameraBoom;
@@ -135,6 +147,8 @@ private:
 	bool bDuelPose = false;
 	bool bManualDuelPose = false;
 	float TargetZoom = 520.f;
+	bool bIndoors = false;
+	float IndoorTimer = 0.f;
 	float SwimAlpha = 0.f;
 	float FocusTimer = 0.f;
 	FVector SafeLocation = FVector::ZeroVector;

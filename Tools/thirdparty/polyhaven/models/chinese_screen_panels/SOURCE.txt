@@ -20,6 +20,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chinese_screen_panels/chinese_screen_panels_nor_gl_1k.jpg
     -> textures/chinese_screen_panels_nor_gl_1k.jpg  md5 5aefa3e752c297f545890b23f1d3397d  sha256 e887b7e2ce2483fe835ddc8978dd42704505d110ec72e07c84bfef916205ef80
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/chinese_screen_panels
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py chinese_screen_panels` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

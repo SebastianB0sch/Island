@@ -24,6 +24,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/hanging_industrial_lamp/hanging_industrial_lamp.bin
     -> hanging_industrial_lamp.bin  md5 7148574f0db05abe68f7e51565abe2ce  sha256 12e8293535e816f1e8bebc94e95da092599909d3c1b9b6cc7384d90307db06ca
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/hanging_industrial_lamp
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py hanging_industrial_lamp` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

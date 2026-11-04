@@ -1,0 +1,23 @@
+asset_id: polyhaven_vintage_wooden_drawer_01
+title: Vintage Wooden Drawer 01 (Poly Haven)
+category: interiors
+main_file: vintage_wooden_drawer_01_1k.gltf
+catalog_use: SM_Int_Dresser
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/vintage_wooden_drawer_01
+description: Free 8K model of a vintage wooden six-drawer filing cabinet with worn patina and brass label handles - ideal for period office, study, or furniture scenes.
+polycount: 5184
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/vintage_wooden_drawer_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/vintage_wooden_drawer_01/vintage_wooden_drawer_01_1k.gltf
+    -> vintage_wooden_drawer_01_1k.gltf  md5 88e36661f5a778b4b5b2c4a3715c4e11  sha256 4080ecdac2228759dd41a5d5705b984f993bbf6b0f66570824a9dcbbeaa49e51
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_wooden_drawer_01/vintage_wooden_drawer_01_diff_1k.jpg
+    -> textures/vintage_wooden_drawer_01_diff_1k.jpg  md5 983becd2ca5b299d5ff79b25cafbd78e  sha256 c911ab368803c5510d0bbfbbbfc7e0047c25895da8169dd8c6c0e98b12699c2f
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/vintage_wooden_drawer_01/vintage_wooden_drawer_01.bin
+    -> vintage_wooden_drawer_01.bin  md5 61ea9192d2199cd76f54623942b5bde4  sha256 1c9982901f1ad4f4bb431b239f893e6fbf7953d9f16a1369e418554c7f0fbd89
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/vintage_wooden_drawer_01
+not_redistributed: textures/vintage_wooden_drawer_01_nor_gl_1k.jpg, textures/vintage_wooden_drawer_01_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py vintage_wooden_drawer_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

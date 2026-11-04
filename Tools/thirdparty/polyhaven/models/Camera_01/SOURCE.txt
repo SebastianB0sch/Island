@@ -1,0 +1,27 @@
+asset_id: polyhaven_Camera_01
+title: Camera 01 (Poly Haven)
+category: interiors
+main_file: Camera_01_1k.gltf
+catalog_use: SM_Int_Camera
+author: Rajil Jose Macatangay
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/Camera_01
+description: Free vintage rangefinder camera model with ornate wear, leather strap and detailed lens - high-res prop for retro scenes, stills, animations, and product shots.
+polycount: 26987
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/Camera_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/Camera_01/Camera_01_1k.gltf
+    -> Camera_01_1k.gltf  md5 c3fa6a2e13db2b6c6802725306089139  sha256 9c5ca3104579c84ffcebdee5c6e5e09821fe8d4a5cd9ce95ed32d81507450ee3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_body_diff_1k.jpg
+    -> textures/Camera_01_body_diff_1k.jpg  md5 1ceb37036b60b4231c93d0cf383de3da  sha256 89b77ec525e933f9f2702e2ccb0c8ba32ecef31dac241bc034e3eddc9481f4f7
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/Camera_01/Camera_01.bin
+    -> Camera_01.bin  md5 055c3af4c5dca45bfa4a3d9348563b88  sha256 d3d2c78458a4823bc9821c2ba3994c95d15b044c7a1444ba089b163f74c3fcf2
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_lens_body_diff_1k.jpg
+    -> textures/Camera_01_lens_body_diff_1k.jpg  md5 45854840be875f1ea86cf8d830023922  sha256 aafa05c5b106b960b21547ef9d4662083dfc7138261cbab1f10e143afe046b68
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/Camera_01/Camera_01_strap_diff_1k.jpg
+    -> textures/Camera_01_strap_diff_1k.jpg  md5 c8bf1a037fddbc8447ce491059a4e443  sha256 3d4c9cb463b330b7ea4fc713f6dc90a0c5e6d9d3ba707b6921fe0a2d1f9ab146
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/Camera_01
+not_redistributed: textures/Camera_01_lens_body_arm_1k.jpg, textures/Camera_01_strap_arm_1k.jpg, textures/Camera_01_lens_body_nor_gl_1k.jpg, textures/Camera_01_body_nor_gl_1k.jpg, textures/Camera_01_body_arm_1k.jpg, textures/Camera_01_strap_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py Camera_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

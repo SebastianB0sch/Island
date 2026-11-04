@@ -24,6 +24,7 @@ import math
 import random
 
 from . import AssetSet
+from . import detail as DT
 from . import interior as K
 from .. import palette
 
@@ -254,6 +255,30 @@ def _rooms(aset, mb, nc):
             # curtains inside the front window
             K.curtains(nc, (X0, YF), (X1, YF), x0 + 2.95 - X0, 1.4, zf + 0.95, zf + 1.95,
                        ("M_IntFabricRed", "M_SliferLaundryWhite", "M_IntFabricBlue")[(i + floor) % 3], wall_thick=WT)
+            # ---- the lived-in layer: fixtures, desk things, jackets, clutter (real sizes)
+            DT.dress_room(aset, mb, nc, rx0, ry0, rx1, ry1, zr, ceil, style="japanese", seed=i + 10 * floor,
+                          ac=floor == 2 and i % 2 == 0,
+                          keep_clear=[(rx0, 2.9, x0 + 1.75, ry1), (rx0, 1.6, rx0 + 0.7, 2.9),
+                                      (rx1 - 1.1, 0.7, rx1, 2.8), (rx0, 0.3, rx0 + 0.5, 1.4)])
+            DT.desk_set(nc, aset, x0 + 2.95, ry0 + 0.32, zr + 0.76, 180.0,
+                        kind="teacher" if banner else "student", seed=i + 7 * floor, w=1.1, d=0.55)
+            DT.coat_hooks(nc, rx0 + 0.001, ry0 + 0.45, zf + 1.7, 90.0, n=3, dorm="white" if banner else "slifer",
+                          jackets=1 if banner else 2 + (i % 2), seed=i)
+            if not banner:
+                DT.floor_clutter(nc, aset, rx0, gy1 + 0.1, rx1, 2.9, zr + 0.03, "dorm", n=4, seed=i * 3 + floor,
+                                 clear=[(x0 + 1.0, -0.2, x0 + 2.9, 1.9), (rx1 - 1.1, 0.7, rx1, 2.8),
+                                        (rx0, 0.3, rx0 + 0.5, 1.4), (rx0, 1.6, rx0 + 0.7, 2.9),
+                                        (x0 + 2.2, gy1, x0 + 3.7, gy1 + 0.9)])
+                # wall shelf over the TV: manga, deck boxes, a duel disk
+                mb.box_mm((rx0, 0.45, zr + 1.35), (rx0 + 0.25, 1.25, zr + 1.38), K.WOOD)
+                # (book_row runs along the frame's x: origin on the shelf, turned 90 deg to follow the wall)
+                DT.book_row(nc, rx0 + 0.12, rx0 + 0.12 + 0.75, 0.48, zr + 1.38, 0.16, yaw=90.0, max_h=0.19, seed=i)
+                DT.duel_disk(nc, x0 + 1.9, 1.6, zr + 0.03, 25.0 + i * 40)
+                if jaden:
+                    DT.deck_box(nc, x0 + 2.15, 0.95, zr + 0.415, 20.0, "M_IntFabricRed")
+            else:
+                DT.shelf_fill(nc, aset, rx0 + 0.18, 0.9, [zr + 0.45, zr + 0.85], 90.0, 1.1, 0.28, "decor", seed=55)
+                aset.prop("SM_Int_CatStatue", (x0 + 2.6, 1.6, zr + 0.06), 160.0)     # Pharaoh dozing in the basket
             # light: flush ceiling lamp (+ a ceiling fan upstairs, where the ceiling is higher)
             K.panel_light(aset, nc, x0 + 2.4, 0.4, ceil, w=0.55, d=0.55, intensity=2600.0, radius=6.5,
                           color=(1.0, 0.88, 0.7))

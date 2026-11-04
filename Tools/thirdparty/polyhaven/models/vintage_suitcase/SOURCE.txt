@@ -26,6 +26,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_suitcase/vintage_suitcase_02_diff_1k.jpg
     -> textures/vintage_suitcase_02_diff_1k.jpg  md5 3793b2ab0206acf8272271468b23c7cd  sha256 d8d82b8d08c9400f6f2a9f9736175ba0555ed6c5132cdd97a273d19be3f9db76
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/vintage_suitcase
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py vintage_suitcase` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04
