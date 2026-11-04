@@ -18,6 +18,7 @@ from contextlib import contextmanager
 
 from . import AssetSet
 from . import interior as K
+from . import detail as DT
 from .. import palette
 
 TAU = math.pi * 2.0
@@ -567,6 +568,13 @@ palette.register({
     "M_ObIntMarbleRose": K._t((0.97, 0.79, 0.85), "Marble", 0.3, 0.45, rough=0.15),
     "M_ObIntDuelMat":    dict(kind="emissive", color=(0.25, 0.55, 1.0), strength=1.4),
     "M_ObIntCrystal":    dict(kind="emissive", color=(0.80, 0.92, 1.0), strength=2.0),
+    "M_ObIntRugRed":     K._t((0.62, 0.12, 0.14), "Fabric", 2.5, 0.55),
+    "M_ObIntRugBlue":    K._t((0.17, 0.27, 0.58), "Fabric", 2.5, 0.55),
+    "M_ObIntRugRose":    K._t((0.88, 0.58, 0.66), "Fabric", 2.5, 0.55),
+    "M_ObIntRugYellow":  K._t((0.90, 0.70, 0.25), "Fabric", 2.5, 0.55),
+    "M_ObIntRugIvory":   K._t((0.94, 0.89, 0.76), "Fabric", 2.5, 0.5),
+    "M_ObIntDelftTile":  K._t((0.30, 0.45, 0.85), "FloorTiles", 1.6, 0.5, rough=0.3),
+    "M_ObIntCopper":     dict(kind="toon", color=(0.86, 0.48, 0.28), rough=0.3, metallic=0.7, fill=0.35),
 })
 WALL_NAVY, WALL_IVORY, WALL_ROSE, WALL_LILAC = ("M_ObIntWallNavy", "M_ObIntWallIvory", "M_ObIntWallRose",
                                                 "M_ObIntWallLilac")
@@ -890,8 +898,7 @@ def _ext_walls(aset, mb, segs, bands, T=0.4, outer=WALL, frame=FRAME, sill=MARBL
             if abs(dx * nx + dy * ny) < 0.03 and -0.01 < u < L + 0.01:
                 holes.append(dict(h, u=u))
         for bi, (za, zb, fl) in enumerate(bands):
-            if bi == len(bands) - 1:
-                zb = top
+            zb = top if bi == len(bands) - 1 else min(zb, top)
             if zb <= za + 1e-3:
                 continue
             cuts = {0.0, L}
@@ -934,6 +941,12 @@ def _dress_hole(aset, mb, p0, yaw, h, T, outer, inner, frame, sill, trim_in, roo
     wx, wy = p0[0] + math.cos(a) * u - math.sin(a) * T / 2, p0[1] + math.sin(a) * u + math.cos(a) * T / 2
     _open(wx, wy, z0, z1 + r, w, axis)
     with mb.at((p0[0], p0[1], 0.0), rot=yaw):
+        if h["kind"] == "open":      # walk-through opening into a bay: lined reveals, a marble threshold
+            for s_ in (-1, 1):
+                mb.box((u + s_ * (w / 2 - 0.0025), T / 2, (z0 + z1) / 2), (0.005, T, z1 - z0), trim_in or inner)
+            mb.box((u, T / 2, z1 - 0.0025), (w, T, 0.005), trim_in or inner)
+            mb.box_mm((u - w / 2, 0.0, z0 - 0.3), (u + w / 2, T - E_IN, z0), MARBLE, skip=("-z",))
+            return
         if h["kind"] == "door":
             aset.door((wx, wy, z0), yaw, w, z1 - z0, h["style"] or "obelisk", h["double"])
             # threshold (the room floor runs E_IN under the wall, the rest of the depth is marble)
@@ -1118,13 +1131,13 @@ def _portrait(f, x, y, z, side, scale=1.2, kind=None):
     top, low, spot = _CANVAS[k]
     s = scale
     with f.nc.at((x, y, z), rot=_wall_yaw(side)):
-        f.nc.box((0.0, -0.006, 0.33 * s), (0.84 * s, 0.008, 0.48 * s), top)
-        f.nc.box((0.0, -0.01, 0.2 * s), (0.84 * s, 0.006, 0.22 * s), low)
+        f.nc.box((0.0, -0.006, 0.28 * s), (0.5 * s, 0.006, 0.26 * s), top)
+        f.nc.box((0.0, -0.008, 0.1 * s), (0.5 * s, 0.006, 0.1 * s), low)
         if k == 2:
-            f.nc.box((0.0, -0.012, 0.33 * s), (0.16 * s, 0.006, 0.26 * s), spot)
-            f.nc.box((0.0, -0.012, 0.36 * s), (0.3 * s, 0.006, 0.05 * s), spot)
+            f.nc.box((0.0, -0.01, 0.25 * s), (0.1 * s, 0.006, 0.18 * s), spot)
+            f.nc.box((0.0, -0.01, 0.28 * s), (0.2 * s, 0.006, 0.035 * s), spot)
         else:
-            f.nc.box((0.12 * s, -0.012, 0.33 * s), (0.12 * s, 0.006, 0.1 * s), spot)
+            f.nc.box((0.08 * s, -0.01, 0.27 * s), (0.08 * s, 0.006, 0.07 * s), spot)
 
 
 def _long_table(mb, nc, x, y, length, width, cloth="M_IntFabricWhite", runner=None, mat=K.WOOD_DARK, h=0.76):
@@ -1707,28 +1720,32 @@ def _boys_gate(mb, nc, aset):
 
 # ----------------------------------------------------------------------------- boys: walk-in palace
 # Storeys: ground floor at B_FL (2.0, the portico level), first floor at B_Z1 (7.05, the end-pavilion balcony
-# level), second floor and attics stay closed (their windows remain facade dressing on a solid wall).
+# level), second floor at B_Z2 (11.5, the lintel-window storey under the mansards, reached by a stair in the games
+# room behind the foyer gallery); only the attics (dormers in the roofs) stay closed.
 B_Z1 = 7.05
 B_C0 = 6.74          # ground floor ceilings (just under the first floor slabs)
 B_C1 = 11.15         # first floor ceilings
-B_BANDS_INT = [(1.7, 6.8, 0), (6.8, 11.2, 1), (11.2, 99.0, None)]
+B_Z2 = 11.5
+B_C2 = 14.75         # second floor ceilings (3.25 m)
+B_BANDS_INT = [(1.7, 6.8, 0), (6.8, 11.2, 1), (11.2, 14.9, 2), (14.9, 99.0, None)]
+B_HOLE = (-0.62, 16.1, 3.62, 18.1)    # stairwell games room -> second floor hall
 B_DOOR = "obelisk_inner"
 NAVY_TXT = (0.12, 0.2, 0.5)
 
 
 def _boys_faces():
-    f = {(-13.0, -2.0, 13.0, -2.0): 11.0, (13.0, 30.0, -13.0, 30.0): 7.0}
+    f = {(-13.0, -2.0, 13.0, -2.0): 11.0, (13.0, 30.0, -13.0, 30.0): 14.6}
     for sx in (-1, 1):
         def X(a, b):
             return (a, b) if sx > 0 else (-b, -a)
         wx0, wx1 = X(13.0, 29.0)
         rf = rect_faces(wx0, 0.0, wx1, 28.0)
         for k in ("front", "back"):
-            f[(*rf[k][0], *rf[k][1])] = 11.0
+            f[(*rf[k][0], *rf[k][1])] = 14.6
         ex0, ex1 = X(29.0, 41.0)
         rf = rect_faces(ex0, -3.0, ex1, 31.0)
         for k in ("front", "back", "right" if sx > 0 else "left"):
-            f[(*rf[k][0], *rf[k][1])] = 11.0
+            f[(*rf[k][0], *rf[k][1])] = 14.6
     return f
 
 
@@ -1766,26 +1783,38 @@ def _boys_rooms():
     R["kitchen"] = _room("kitchen", 0, (29.4, -2.6, 40.6, 12.0), Z0, B_C0, K.TILE, "M_IntTileBlue", cornice=K.TRIM_WHITE)
     R["pantry"] = _room("pantry", 0, (29.4, 12.2, 40.6, 30.6), Z0, B_C0, K.PLASTER_CREAM, K.WOODFLOOR,
                         cornice=K.TRIM_WHITE, dado=(K.WOOD, K.TRIM_WOOD), seams=K.WOOD_DARK)
+    # first floor behind the foyer gallery: games room (the stair to the second floor runs along its south wall)
+    R["games"] = _room("games", 1, (-12.6, 16.2, 12.6, 29.6), Z1, B_C1, WALL_NAVY, "M_IntWoodFloorDark",
+                       dado=(K.WOOD_DARK, K.TRIM_GOLD), panels=K.TRIM_GOLD, seams=K.WOOD_DARK, cut_ceiling=[B_HOLE])
+    # second floor, centre block: stair hall (over the back of the foyer) and the study hall behind it
+    R["hall2"] = _room("hall2", 2, (-12.6, 12.2, 12.6, 19.9), B_Z2, B_C2, WALL_IVORY, K.MARBLEFLOOR,
+                       holes=[B_HOLE], dado=(K.TRIM_WHITE, K.TRIM_GOLD), panels=K.TRIM_GOLD,
+                       coffer=(3.2, K.TRIM_WHITE, K.TRIM_GOLD))
+    R["study2"] = _room("study2", 2, (-12.6, 20.1, 12.6, 29.6), B_Z2, B_C2, "M_IntWoodPanel", "M_IntWoodFloorDark",
+                        dado=(K.WOOD_DARK, K.TRIM_GOLD), coffer=(2.8, K.WOOD_DARK, K.TRIM_GOLD), seams=K.WOOD_DARK)
     themes = [WALL_NAVY, "M_IntWallpaperBlue", WALL_IVORY, WALL_NAVY, WALL_IVORY, "M_IntWallpaperBlue"]
     for sx in (-1, 1):
         s = "w" if sx < 0 else "e"
         R["landing_" + s] = _room("landing_" + s, 1, _mx((6.8, 12.2, 12.6, 15.8), sx), Z1, None, WALL_IVORY,
                                   K.MARBLEFLOOR, ceil=None, cornice=None, skirting=None, levels=())
-        R["corr_" + s] = _room("corr_" + s, 1, _mx((13.4, 12.2, 28.6, 15.6), sx), Z1, B_C1, WALL_IVORY,
-                               K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.9, seams=K.WOOD_DARK,
-                               coffer=(3.4, K.TRIM_WHITE, None))
-        R["pcorr_" + s] = _room("pcorr_" + s, 1, _mx((29.4, 12.2, 40.6, 15.6), sx), Z1, B_C1, WALL_IVORY,
-                                K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.9, seams=K.WOOD_DARK,
-                                coffer=(3.4, K.TRIM_WHITE, None))
-        for i, (k, rect) in enumerate((("A", (13.4, 0.4, 22.5, 12.0)), ("B", (22.7, 0.4, 28.6, 12.0)),
-                                       ("C", (13.4, 15.8, 22.5, 27.6)), ("D", (22.7, 15.8, 28.6, 27.6)),
-                                       ("SF", (29.4, -2.6, 40.6, 4.4)), ("SB", (29.4, 23.55, 40.6, 30.6)),
-                                       ("SFs", (29.4, 4.6, 40.6, 12.0)), ("SBs", (29.4, 15.8, 40.6, 23.35)))):
-            wall = themes[((i if i < 6 else i - 2) + (3 if sx > 0 else 0)) % len(themes)]
-            R[k + "_" + s] = _room(k + "_" + s, 1, _mx(rect, sx), Z1, B_C1, wall,
-                                   "M_IntCarpetBlue" if i % 2 else K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD),
-                                   panels=K.TRIM_GOLD if wall != WALL_IVORY else K.TRIM_WHITE,
-                                   seams=None if i % 2 else K.WOOD_DARK)
+        for (lv, ZL, ZC) in ((1, Z1, B_C1), (2, B_Z2, B_C2)):
+            t = "_" if lv == 1 else "2_"
+            R["corr" + t + s] = _room("corr" + t + s, lv, _mx((13.4, 12.2, 28.6, 15.6), sx), ZL, ZC, WALL_IVORY,
+                                      K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.9, seams=K.WOOD_DARK,
+                                      coffer=(3.4, K.TRIM_WHITE, None))
+            R["pcorr" + t + s] = _room("pcorr" + t + s, lv, _mx((29.4, 12.2, 40.6, 15.6), sx), ZL, ZC, WALL_IVORY,
+                                       K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.9, seams=K.WOOD_DARK,
+                                       coffer=(3.4, K.TRIM_WHITE, None))
+            for i, (k, rect) in enumerate((("A", (13.4, 0.4, 22.5, 12.0)), ("B", (22.7, 0.4, 28.6, 12.0)),
+                                           ("C", (13.4, 15.8, 22.5, 27.6)), ("D", (22.7, 15.8, 28.6, 27.6)),
+                                           ("SF", (29.4, -2.6, 40.6, 4.4)), ("SB", (29.4, 23.55, 40.6, 30.6)),
+                                           ("SFs", (29.4, 4.6, 40.6, 12.0)), ("SBs", (29.4, 15.8, 40.6, 23.35)))):
+                wall = themes[((i if i < 6 else i - 2) + (3 if sx > 0 else 0) + lv - 1) % len(themes)]
+                R[k + t + s] = _room(k + t + s, lv, _mx(rect, sx), ZL, ZC, wall,
+                                     "M_IntCarpetBlue" if (i + lv) % 2 == 0 else K.WOODFLOOR,
+                                     dado=(K.TRIM_WHITE, K.TRIM_GOLD),
+                                     panels=K.TRIM_GOLD if wall != WALL_IVORY else K.TRIM_WHITE,
+                                     seams=None if (i + lv) % 2 == 0 else K.WOOD_DARK)
     return R
 
 
@@ -1811,8 +1840,12 @@ def _boys_partitions(aset, mb, R):
         J(13.0, 12.1, 15.7, 6.8, 11.2, R["corr_" + s]["wall"], R["foyer"]["wall"],
           [(13.9, 1.6, 2.8, D, True, Z1)])
         J(13.0, 15.7, 16.0, 6.8, 11.2, R["C_" + s]["wall"], R["foyer"]["wall"], [])
-        J(13.0, 16.0, 28.0, 6.8, 11.2, R["C_" + s]["wall"], W, [])
-        J(13.0, 0.0, 28.0, 11.2, 15.6, W, W, [])
+        J(13.0, 16.0, 28.0, 6.8, 11.2, R["C_" + s]["wall"], R["games"]["wall"], [])
+        J(13.0, 0.0, 12.1, 11.2, 14.9, R["A2_" + s]["wall"], W, [])
+        J(13.0, 12.1, 15.7, 11.2, 14.9, R["corr2_" + s]["wall"], R["hall2"]["wall"], [(13.9, 1.6, 2.6, D, True, B_Z2)])
+        J(13.0, 15.7, 20.0, 11.2, 14.9, R["C2_" + s]["wall"], R["hall2"]["wall"], [])
+        J(13.0, 20.0, 28.0, 11.2, 14.9, R["C2_" + s]["wall"], R["study2"]["wall"], [])
+        J(13.0, 0.0, 28.0, 14.9, 15.6, W, W, [])
         a, b = ((13.0, 0.0), (13.0, 28.0)) if sx > 0 else ((-13.0, 28.0), (-13.0, 0.0))
         mb.wall(a, b, 15.6, 17.4 - 15.6, 0.4, W)                       # centre block wall above the wing
         # wing | end pavilion (x = 29)
@@ -1823,11 +1856,15 @@ def _boys_partitions(aset, mb, R):
             J(29.0, 14.0, 28.0, Z0, 6.8, pav1["wall"], R["music"]["wall"], [(21.0, 1.8, 3.0, D, True, Z0)])
         else:
             J(29.0, 12.1, 28.0, Z0, 6.8, pav1["wall"], R["dining"]["wall"], [(21.0, 1.8, 3.0, D, True, Z0)])
-        J(29.0, 0.0, 12.1, 6.8, 11.2, R["SF_" + s]["wall"], R["B_" + s]["wall"], [])
-        J(29.0, 12.1, 15.7, 6.8, 11.2, R["pcorr_" + s]["wall"], R["corr_" + s]["wall"],
-          [(13.9, 1.6, 2.8, D, True, Z1)])
-        J(29.0, 15.7, 28.0, 6.8, 11.2, R["SB_" + s]["wall"], R["D_" + s]["wall"], [])
-        J(29.0, 0.0, 28.0, 11.2, 15.6, W, W, [])
+        for (lv, ZL, z0_, z1_) in ((1, Z1, 6.8, 11.2), (2, B_Z2, 11.2, 14.9)):
+            t_ = "_" if lv == 1 else "2_"
+            J(29.0, 0.0, 4.5, z0_, z1_, R["SF" + t_ + s]["wall"], R["B" + t_ + s]["wall"], [])
+            J(29.0, 4.5, 12.1, z0_, z1_, R["SFs" + t_ + s]["wall"], R["B" + t_ + s]["wall"], [])
+            J(29.0, 12.1, 15.7, z0_, z1_, R["pcorr" + t_ + s]["wall"], R["corr" + t_ + s]["wall"],
+              [(13.9, 1.6, 2.8 if lv == 1 else 2.6, D, True, ZL)])
+            J(29.0, 15.7, 23.45, z0_, z1_, R["SBs" + t_ + s]["wall"], R["D" + t_ + s]["wall"], [])
+            J(29.0, 23.45, 28.0, z0_, z1_, R["SB" + t_ + s]["wall"], R["D" + t_ + s]["wall"], [])
+        J(29.0, 0.0, 28.0, 14.9, 15.6, W, W, [])
         a, b = ((29.0, 28.0), (29.0, 0.0)) if sx > 0 else ((-29.0, 0.0), (-29.0, 28.0))
         mb.wall(a, b, 15.6, 16.6 - 15.6, 0.4, W)                       # end pavilion wall above the wing
 
@@ -1838,22 +1875,28 @@ def _boys_partitions(aset, mb, R):
                 a, b = b, a
             _pw(aset, mb, a, b, z0, z1, t, south, north, doors)
 
-        H(12.1, 13.4, 22.6, Z1, 11.2, R["A_" + s]["wall"], R["corr_" + s]["wall"], [(sx * 18.0, 1.0, 2.4, D, False, Z1)])
-        H(12.1, 22.6, 28.6, Z1, 11.2, R["B_" + s]["wall"], R["corr_" + s]["wall"], [(sx * 25.6, 1.0, 2.4, D, False, Z1)])
-        H(15.7, 13.4, 22.6, Z1, 11.2, R["corr_" + s]["wall"], R["C_" + s]["wall"], [(sx * 18.0, 1.0, 2.4, D, False, Z1)])
-        H(15.7, 22.6, 28.6, Z1, 11.2, R["corr_" + s]["wall"], R["D_" + s]["wall"], [(sx * 25.6, 1.0, 2.4, D, False, Z1)])
-        H(12.1, 29.4, 40.6, Z1, 11.2, R["SFs_" + s]["wall"], R["pcorr_" + s]["wall"], [(sx * 35.0, 1.2, 2.5, D, False, Z1)])
-        H(15.7, 29.4, 40.6, Z1, 11.2, R["pcorr_" + s]["wall"], R["SBs_" + s]["wall"], [(sx * 35.0, 1.2, 2.5, D, False, Z1)])
-        # suites: bedroom (balcony / garden side) | sitting room & study (corridor side)
-        H(4.5, 29.4, 40.6, Z1, 11.2, R["SF_" + s]["wall"], R["SFs_" + s]["wall"], [(sx * 30.8, 1.4, 2.5, D, True, Z1)])
-        H(23.45, 29.4, 40.6, Z1, 11.2, R["SBs_" + s]["wall"], R["SB_" + s]["wall"], [(sx * 30.8, 1.4, 2.5, D, True, Z1)])
-        for (ya, yb, lo, hi) in ((0.4, 12.0, "A", "B"), (15.8, 27.6, "C", "D")):
-            a, b = (sx * 22.6, ya), (sx * 22.6, yb)
-            inner_side, outer_side = R[lo + "_" + s]["wall"], R[hi + "_" + s]["wall"]
-            if sx > 0:
-                _pw(aset, mb, a, b, Z1, 11.2, 0.2, outer_side, inner_side)
-            else:
-                _pw(aset, mb, a, b, Z1, 11.2, 0.2, inner_side, outer_side)
+        for (lv, ZL, zt) in ((1, Z1, 11.2), (2, B_Z2, 14.9)):
+            t_ = "_" if lv == 1 else "2_"
+
+            def k(n):
+                return R[n + t_ + s]["wall"]
+            dh = 2.4 if lv == 1 else 2.2
+            H(12.1, 13.4, 22.6, ZL, zt, k("A"), k("corr"), [(sx * 18.0, 1.0, dh, D, False, ZL)])
+            H(12.1, 22.6, 28.6, ZL, zt, k("B"), k("corr"), [(sx * 25.6, 1.0, dh, D, False, ZL)])
+            H(15.7, 13.4, 22.6, ZL, zt, k("corr"), k("C"), [(sx * 18.0, 1.0, dh, D, False, ZL)])
+            H(15.7, 22.6, 28.6, ZL, zt, k("corr"), k("D"), [(sx * 25.6, 1.0, dh, D, False, ZL)])
+            H(12.1, 29.4, 40.6, ZL, zt, k("SFs"), k("pcorr"), [(sx * 35.0, 1.2, dh + 0.1, D, False, ZL)])
+            H(15.7, 29.4, 40.6, ZL, zt, k("pcorr"), k("SBs"), [(sx * 35.0, 1.2, dh + 0.1, D, False, ZL)])
+            # suites: bedroom (balcony / garden side) | sitting room & study (corridor side)
+            H(4.5, 29.4, 40.6, ZL, zt, k("SF"), k("SFs"), [(sx * 30.8, 1.4, dh + 0.1, D, True, ZL)])
+            H(23.45, 29.4, 40.6, ZL, zt, k("SBs"), k("SB"), [(sx * 30.8, 1.4, dh + 0.1, D, True, ZL)])
+            for (ya, yb, lo, hi) in ((0.4, 12.0, "A", "B"), (15.8, 27.6, "C", "D")):
+                a, b = (sx * 22.6, ya), (sx * 22.6, yb)
+                inner_side, outer_side = k(lo), k(hi)
+                if sx > 0:
+                    _pw(aset, mb, a, b, ZL, zt, 0.2, outer_side, inner_side)
+                else:
+                    _pw(aset, mb, a, b, ZL, zt, 0.2, inner_side, outer_side)
         # ground floor of the end pavilion: front room | back room
         front, back = (R["duel"], R["trophy"]) if sx < 0 else (R["kitchen"], R["pantry"])
         H(12.1, 29.4, 40.6, Z0, 6.8, front["wall"], back["wall"],
@@ -1864,7 +1907,12 @@ def _boys_partitions(aset, mb, R):
     # centre block: foyer | library (foyer side runs up to the first floor ceiling)
     _pw(aset, mb, (-12.6, 16.0), (12.6, 16.0), Z0, 6.8, 0.4, R["foyer"]["wall"], R["library"]["wall"],
         [(-9.7, 1.8, 3.0, D, True, Z0), (9.7, 1.8, 3.0, D, True, Z0)])
-    _pw(aset, mb, (-12.6, 16.0), (12.6, 16.0), 6.8, 11.2, 0.4, R["foyer"]["wall"], W)
+    _pw(aset, mb, (-12.6, 16.0), (12.6, 16.0), 6.8, 11.2, 0.4, R["foyer"]["wall"], R["games"]["wall"],
+        [(-9.7, 1.6, 2.6, D, True, Z1), (9.7, 1.6, 2.6, D, True, Z1)])
+    # second floor, centre block: closed void over the foyer | stair hall | study hall
+    _pw(aset, mb, (-12.6, 12.0), (12.6, 12.0), 11.2, 14.9, 0.4, W, R["hall2"]["wall"])
+    _pw(aset, mb, (-12.6, 20.0), (12.6, 20.0), 11.2, 14.9, 0.2, R["hall2"]["wall"], R["study2"]["wall"],
+        [(-6.0, 1.6, 2.6, D, True, B_Z2), (6.0, 1.6, 2.6, D, True, B_Z2)])
 
 
 def _boys_stairs(aset, mb, nc):
@@ -1875,7 +1923,7 @@ def _boys_stairs(aset, mb, nc):
     red = "M_IntCarpetRed"
     _flight(mb, 0.0, 8.0, Z0, zm, 90.0, 4.0, carpet=red, cw=2.4, base=Z0, nose=K.TRIM_GOLD)
     mb.box_mm((-2.6, 12.2, Z0), (2.6, 15.8, zm), MARBLE, skip=("-z",), mats={"+z": K.MARBLEFLOOR})
-    K.rug(mb, -1.2, 12.2, 1.2, 15.6, zm, red, K.TRIM_GOLD)
+    _rug(mb, -1.2, 12.2, 1.2, 15.6, zm, red, K.TRIM_GOLD)
     for sx in (-1, 1):
         _flight(mb, sx * 2.6, 14.8, zm, Z1, 0.0 if sx > 0 else 180.0, 2.0, carpet=red, cw=1.3, base=Z0,
                 nose=K.TRIM_GOLD)
@@ -1891,6 +1939,14 @@ def _boys_stairs(aset, mb, nc):
             column(mb, sx * x, 12.5, Z0, 0.26, B_C0 - Z0 + 0.01, MARBLE, cap_mat=K.TRIM_GOLD, seg=12)
         mb.box_mm((sx * 6.8 if sx > 0 else -12.6, 12.2, B_C0 - 0.35), (12.6 if sx > 0 else -6.8, 12.5, B_C0 + 0.01),
                   MARBLE)
+    # games room -> second floor stair hall: one straight flight along the games room's south wall
+    # (25 risers of 0.178 m, 0.28 m treads), arriving at the east end of the stairwell B_HOLE
+    x0 = B_HOLE[2] - 25 * 0.28
+    _flight(mb, x0, 17.0, Z1, B_Z2, 0.0, 1.6, run=0.28, carpet="M_IntCarpetRed", cw=1.0, base=Z1, nose=K.TRIM_GOLD)
+    _rail(mb, (x0 + 0.05, 17.84, Z1), (B_HOLE[2] - 0.05, 17.84, B_Z2), newel=MARBLE)
+    _rail(mb, (B_HOLE[0] - 0.04, 16.2, B_Z2), (B_HOLE[0] - 0.04, B_HOLE[3] + 0.04, B_Z2), newel=MARBLE)
+    _rail(mb, (B_HOLE[0] - 0.04, B_HOLE[3] + 0.04, B_Z2), (B_HOLE[2] - 0.3, B_HOLE[3] + 0.04, B_Z2), newel=MARBLE)
+    _rail(mb, (B_HOLE[0], 16.08, B_Z2), (B_HOLE[2] - 0.3, 16.08, B_Z2))
 
 
 def _boys_interior(aset, main, mb, nc):
@@ -1948,10 +2004,225 @@ def _frame_room(aset, mb, nc, r, rot=0.0):
     return Frame(aset, mb, nc, (r["x0"] + r["x1"]) / 2, (r["y0"] + r["y1"]) / 2, r["z"], rot)
 
 
+def _dress(aset, mb, nc, r, seed, style="palace", clear=()):
+    """The detail kit's fixtures (switches by every door, outlets, smoke detector, ceiling rose) for room r."""
+    DT.dress_room(aset, mb, nc, r["x0"], r["y0"], r["x1"], r["y1"], r["z"], r["zc"], style=style, seed=seed,
+                  ac=False, keep_clear=clear)
+
+
+def _gallery(f, r, sides, z=1.5, scale=2.0, pitch=2.8, skip=(), margin=0.5, kind=None):
+    """Paintings hung along the free stretches of the walls `sides` of room r (between its doors / windows and
+    the world-coordinate spans in `skip` [(side, a, b)] where tall furniture stands). f: any frame of the room."""
+    wf = Frame(f.aset, f.mb, f.nc, 0.0, 0.0, r["z"])
+    with wf:
+        _gallery_in(wf, r, sides, z, scale, pitch, skip, margin, kind)
+
+
+def _gallery_in(f, r, sides, z, scale, pitch, skip, margin, kind):
+    for side in sides:
+        p0, p1 = _sides(r)[side]
+        L, ux, uy, _ = _dir(p0, p1)
+        gaps = list(_side_gaps(r, side, 99.0))
+        for (sd, a, b) in skip:
+            if sd == side:
+                gaps.append(tuple(sorted((_along(p0, ux, uy, a), _along(p0, ux, uy, b)))))
+        u = margin
+        for (a, b) in sorted(gaps) + [(L - margin, L)]:
+            if a - u > 0.6 * scale + 0.4:
+                n = max(1, int((a - u) / pitch))
+                for k in range(n):
+                    c = u + (a - u) * (k + 0.5) / n
+                    _portrait(f, p0[0] + ux * c, p0[1] + uy * c, z, side, scale, kind)
+            u = max(u, b)
+
+
+def _doily(f, x, y, z, w, d=None, yaw=0.0, mat="M_IntFabricWhite"):
+    """Cloth / tray on top of a catalog table (round when d is None) - a real surface for the things on it."""
+    if d is None:
+        f.mb.cylinder((x, y, z), w, 0.004, mat, seg=16)
+    else:
+        with f.mb.at((x, y, z), rot=yaw):
+            f.mb.box((0, 0, 0.002), (w, d, 0.004), mat)
+    return z + 0.004
+
+
+_RUGS = {"M_IntCarpetRed": ("M_ObIntRugRed", "M_ObIntRugIvory"), "M_IntCarpetBlue": ("M_ObIntRugBlue", "M_ObIntRugIvory"),
+         "M_IntCarpetRose": ("M_ObIntRugRose", "M_ObIntRugIvory"), "M_IntCarpetYellow": ("M_ObIntRugYellow", "M_ObIntRugRose")}
+
+
+def _rug(mb, x0, y0, x1, y1, z, mat, border=None, bw=0.12):
+    """Area rug (a furnishing, not a fitted carpet): woven field, gilt outer border, contrasting inner border and
+    a medallion on rugs big enough for one."""
+    field, accent = _RUGS.get(mat, (mat, "M_ObIntRugIvory"))
+    K.rug(mb, x0, y0, x1, y1, z, field, border, bw)
+    w, d = x1 - x0, y1 - y0
+    if min(w, d) > 1.2:
+        i = 0.32
+        for (a, b, c, e) in ((x0 + i, y0 + i, x1 - i, y0 + i + 0.08), (x0 + i, y1 - i - 0.08, x1 - i, y1 - i),
+                             (x0 + i, y0 + i, x0 + i + 0.08, y1 - i), (x1 - i - 0.08, y0 + i, x1 - i, y1 - i)):
+            mb.box_mm((a, b, z + 0.012), (c, e, z + 0.015), accent, skip=("-z",))
+    if min(w, d) > 2.2 and max(w, d) < 9.0:
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        mb.cylinder((cx, cy, z + 0.012), min(w, d) * 0.18, 0.004, accent, seg=16)
+        mb.cylinder((cx, cy, z + 0.016), min(w, d) * 0.1, 0.003, field if border is None else border, seg=12)
+
+
+def _cushions(nc, x, y, z, yaw, n=3, mats=("M_IntFabricNavy", K.TRIM_GOLD), w=1.2):
+    """Throw cushions leaning against a sofa back (seat height z, back towards local +y)."""
+    with nc.at((x, y, z), rot=yaw):
+        for k in range(n):
+            u = -w / 2 + w * (k + 0.5) / n
+            with nc.at((u, 0.0, 0.17), rot=(k * 29) % 24 - 12, rot_x=-14):
+                nc.box((0, 0, 0), (0.4, 0.12, 0.36), mats[k % len(mats)])
+
+
+def _seating(f, x, y, yaw, sofa="SM_Int_Sofa", chair="SM_Int_Armchair", rug="M_IntCarpetRed", seed=0, tea=True,
+             lamps=True, cushions=("M_IntFabricNavy", K.TRIM_GOLD), rug_w=4.6, rug_d=3.4, cards=False):
+    """Sofa (back towards local +y, yaw a multiple of 90) facing a coffee table, two armchairs turned in, side
+    tables with lamps, a rug; tea or books + deck boxes on the table. Frame f (local = world xy)."""
+    a = math.radians(yaw)
+    c, s_ = math.cos(a), math.sin(a)
+
+    def P(dx, dy):
+        return (x + dx * c - dy * s_, y + dx * s_ + dy * c)
+    cx, cy = P(0.0, -1.2)
+    hx, hy = (rug_w / 2, rug_d / 2) if abs(c) > 0.5 else (rug_d / 2, rug_w / 2)
+    _rug(f.mb, cx - hx, cy - hy, cx + hx, cy + hy, 0.0, rug, K.TRIM_GOLD)
+    f.prop(sofa, *P(0, 0), yaw)
+    f.prop("SM_Int_CoffeeTable", cx, cy, yaw)
+    zt = _doily(f, cx, cy, 0.49, 0.45, mat="M_IntFabricWhite")
+    for k in (-1, 1):
+        f.prop(chair, *P(k * 1.8, -1.35), yaw - k * 105.0)
+        if lamps:
+            px, py = P(k * 1.15, 0.02)
+            f.prop("SM_Int_SideTable", px, py, yaw)
+            f.prop("SM_Int_OilLamp" if k < 0 else "SM_Int_PottedPlant", px, py, yaw, z=0.55)
+    if tea:
+        DT.table_set(f.nc, f.a, cx, cy, zt, yaw, "tea", seed=seed)
+    else:
+        DT.book_stack(f.nc, *P(-0.3, -1.1), zt, yaw, 3, seed)
+        DT.mug(f.nc, *P(0.25, -1.3), zt, seed)
+    if cards:
+        DT.card_spread(f.nc, *P(0.1, -1.45), zt, yaw, 5, seed)
+        DT.deck_box(f.nc, *P(-0.35, -1.35), zt, yaw + 20, "M_IntFabricNavy")
+    _cushions(f.nc, *P(0, 0.08), 0.42, yaw, 3, cushions)
+
+
+def _off(x, y, side, d):
+    """Point d metres into the room from the wall point (x, y) on wall `side`."""
+    a = math.radians(_wall_yaw(side))
+    return (x + math.sin(a) * d, y - math.cos(a) * d)
+
+
+def _console(f, x, y, side, mirror=True, flowers=("M_FlowerWhite", "M_IntFabricBlue"), seed=0, lamp=False):
+    """Console table against wall `side` (x, y on the wall face): mirror or painting above, flowers, a candelabra
+    (or a lamp) and a couple of books on top."""
+    yaw = _wall_yaw(side)
+    a = math.radians(yaw)
+    cx, cy = _off(x, y, side, 0.31)
+
+    def top(dx, dy=0.0):
+        return (cx + math.cos(a) * dx - math.sin(a) * dy, cy + math.sin(a) * dx + math.cos(a) * dy)
+    f.prop("SM_Int_Console", cx, cy, yaw)
+    if mirror:
+        f.prop("SM_Int_Mirror", x, y, yaw, z=1.2, scale=1.25)
+    else:
+        _portrait(f, x, y, 1.35, side, 1.5)
+    _vase(f.nc, *top(-0.45, 0.05), 0.95, 1.0, flowers=flowers)
+    f.prop("SM_Int_OilLamp" if lamp else "SM_Int_Candelabra", *top(0.45, 0.05), yaw, z=0.95)
+    DT.book_stack(f.nc, *top(0.02, -0.05), 0.95, yaw, 2, seed)
+
+
+def _chess_table(f, x, y, yaw=0.0, chair="SM_Int_DiningChair"):
+    """Small round table with a chess set (on a cloth) and two chairs facing each other along local x."""
+    f.prop("SM_Int_RoundTableB", x, y, yaw)
+    zt = _doily(f, x, y, 0.75, 0.36, mat="M_IntFabricNavy")
+    f.prop("SM_Int_Chess", x, y, yaw + 12.0, z=zt)
+    a = math.radians(yaw)
+    for k in (-1, 1):
+        f.prop(chair, x + math.cos(a) * k * 0.72, y + math.sin(a) * k * 0.72, yaw + (90.0 if k > 0 else -90.0))
+
+
+def _plant(f, x, y, big=True):
+    f.prop("SM_Int_PottedPlantB" if big else "SM_Int_PottedPlantC", x, y, (x * 53 + y * 31) % 360)
+
+
+def _wall_shelf(f, x, y, side, w=1.0, z=1.45, seed=0, kind="books"):
+    """A short wall shelf on wall `side` (x, y = centre on the wall face): books + a trophy, or deck boxes."""
+    yaw = _wall_yaw(side)
+    a = math.radians(yaw)
+    with f.mb.at((x, y, z), rot=yaw):
+        f.mb.box((0, -0.12, -0.015), (w, 0.24, 0.03), K.WOOD_DARK)
+        for s in (-1, 1):
+            f.mb.box((s * (w / 2 - 0.15), -0.03, -0.09), (0.03, 0.06, 0.15), K.TRIM_GOLD)
+    sx0, sy0 = _off(x - math.cos(a) * (w / 2 - 0.04), y - math.sin(a) * (w / 2 - 0.04), side, 0.12)
+    if kind == "books":
+        DT.book_row(f.nc, sx0, sx0 + w * 0.62, sy0, z, 0.18, yaw=yaw, max_h=0.26, seed=seed)
+    else:
+        for k in range(5):
+            DT.deck_box(f.nc, sx0 + math.cos(a) * (0.08 + k * 0.11), sy0 + math.sin(a) * (0.08 + k * 0.11), z, yaw,
+                        ("M_IntFabricNavy", "M_IntFabricBlue", K.TRIM_GOLD, "M_IntFabricRed", "M_IntFabricWhite")[k])
+    tx, ty = _off(x + math.cos(a) * (w / 2 - 0.16), y + math.sin(a) * (w / 2 - 0.16), side, 0.12)
+    DT.trophy(f.nc, tx, ty, z, 0.9)
+
+
+def _ensuite(f, mb, nc, xa, xb, ya, yb, door_wall, door_c, zc, room_wall, tile="M_IntTileBlue", wall_in=K.TILE):
+    """Bathroom in a room corner (frame f, local coords): xa / yb are the room's own walls, xb / ya the new
+    0.12 m partitions (door_wall 'x' = the one at x = xb, 'y' = the one at y = ya; door_c = door centre along it).
+    Tiled floor and wainscot, bath tub, WC, basin cabinet + mirror, towel, a ceiling light."""
+    T = 0.12
+    dx = 1 if xb > xa else -1
+    dy = 1 if yb > ya else -1
+    x0, x1 = sorted((xa, xb))
+    y0, y1 = sorted((ya, yb))
+    dk = dict(trim=K.TRIM_GOLD, trim_in=K.TRIM_WHITE)
+    pa, pb = ((x0, ya), (x1, ya)) if dy > 0 else ((x1, ya), (x0, ya))
+    ops = [K.Door(abs(door_c - pa[0]), 0.9, 2.1, B_DOOR, **dk)] if door_wall == "y" else []
+    K.wall(f.a, mb, pa, pb, 0.0, zc, T, room_wall, inner=wall_in, openings=ops)
+    qa, qb = ((xb, y0), (xb, y1)) if dx > 0 else ((xb, y1), (xb, y0))
+    ops = [K.Door(abs(door_c - qa[1]), 0.9, 2.1, B_DOOR, **dk)] if door_wall == "x" else []
+    K.wall(f.a, mb, qa, qb, 0.0, zc, T, room_wall, inner=wall_in, openings=ops)
+    ix0, ix1 = sorted((xa, xb - dx * T))
+    iy0, iy1 = sorted((ya + dy * T, yb))
+    mb.box_mm((ix0, iy0, 0.0), (ix1, iy1, 0.012), tile, skip=("-z",))
+    tw = 0.06       # tiles over the room's own walls (in front of its dado / panels)
+    mb.box_mm((min(xa, xa + dx * tw), iy0, 0.0), (max(xa, xa + dx * tw), iy1, 1.45), wall_in, skip=("-z",))
+    mb.box_mm((ix0, min(yb, yb - dy * tw), 0.0), (ix1, max(yb, yb - dy * tw), 1.45), wall_in, skip=("-z",))
+    tl = min(1.7, abs(yb - ya) - 0.35)
+    tx, ty = xa + dx * 0.46, yb - dy * (tl / 2 + 0.08)
+    K.bath_tub(mb, tx, ty, 90.0, l=tl, w=0.78, water="M_IntWater")
+    mb.box((tx, ty, 0.555), (0.82, tl + 0.04, 0.03), K.TRIM_GOLD)
+    yawb = 0.0 if dy > 0 else 180.0
+    span = abs(xb - xa)
+    for (u, what) in ((1.3, "wc"), (min(2.25, span - 0.5), "basin")):
+        px, py = xa + dx * u, yb - dy * 0.3
+        with mb.at((px, py, 0.0), rot=yawb):
+            if what == "wc":
+                mb.box((0, 0.0, 0.2), (0.38, 0.5, 0.4), "M_IntTrimWhite")
+                mb.box((0, 0.2, 0.6), (0.4, 0.16, 0.4), "M_IntTrimWhite")
+            else:
+                mb.box((0, 0.05, 0.42), (0.5, 0.42, 0.84), K.WOOD_DARK)
+                mb.box((0, 0.05, 0.86), (0.56, 0.46, 0.04), MARBLE)
+        if what == "basin":
+            with nc.at((px, py, 0.0), rot=yawb):
+                nc.cylinder((0, 0.03, 0.86), 0.16, 0.025, "M_IntTrimWhite", seg=12)
+                nc.box((0, 0.22, 0.97), (0.03, 0.1, 0.12), K.METAL)
+                nc.cylinder((0.18, 0.12, 0.88), 0.03, 0.14, "M_IntFabricBlue", seg=8)
+                nc.box((-0.42, 0.25, 1.05), (0.32, 0.04, 0.5), "M_IntFabricWhite")       # towel on a rail
+                nc.box((-0.42, 0.24, 1.29), (0.4, 0.03, 0.03), K.TRIM_GOLD)
+            f.prop("SM_Int_Mirror", px, yb, yawb, z=1.15)
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    nc.box((cx, cy, zc - 0.03), (0.5, 0.5, 0.04), K.TRIM_WHITE)
+    nc.box((cx, cy, zc - 0.055), (0.42, 0.42, 0.012), K.PANEL_LIGHT)
+    f.light(cx, cy, zc - 0.4, 900.0, 4.0)
+
+
 def _bedroom(aset, mb, nc, r, door_side, door_v, bed_side, rng, curtain="M_IntFabricNavy", blanket="M_IntFabricNavy",
-             label=None, girls=False):
-    """Lavish single room. door_side = room side ('n'/'s') holding the entrance (at world x = door_v);
-    bed_side = world side ('e'/'w') whose wall takes the headboard."""
+             label=None, girls=False, seed=0):
+    """Student room of the palace (lavish, but at human scale): door side = room side ('n'/'s') holding the
+    entrance (at world x = door_v); bed_side = world side ('e'/'w') whose wall takes the headboard. The corner
+    by the door on the other side becomes an en-suite bathroom; desk + deck shelf by the window, a reading
+    corner, wardrobe and blue dorm jackets by the door."""
     rot = 0.0 if door_side == "n" else 180.0
     f = _frame_room(aset, mb, nc, r, rot)
     W, D = r["x1"] - r["x0"], r["y1"] - r["y0"]
@@ -1960,61 +2231,68 @@ def _bedroom(aset, mb, nc, r, door_side, door_v, bed_side, rng, curtain="M_IntFa
     b = (1 if bed_side == "e" else -1) * (1 if rot == 0 else -1)
     bs, os_ = ("e", "w") if b > 0 else ("w", "e")
     zc = r["zc"] - r["z"]
-    wood = K.WOOD_DARK if not girls else K.TRIM_WHITE
+    by = -0.4
+    bw = min(3.0, hw + b * dx - 0.6)
     with f:
-        by = -hd * 0.12
-        K.rug(mb, min(b * (hw - 3.4), b * (hw - 0.2)), by - 2.0, max(b * (hw - 3.4), b * (hw - 0.2)), by + 2.0, 0.0,
-              "M_IntCarpetRed" if not girls else "M_IntCarpetRose", K.TRIM_GOLD)
-        f.prop("SM_Int_GrandBed", b * (hw - 1.2), by, _wall_yaw(bs))
+        clear = []
+        if bw >= 2.2:       # en-suite bathroom in the door-wall corner opposite the bed
+            _ensuite(f, mb, nc, -b * hw, -b * (hw - bw), hd - 2.7, hd, "x", hd - 1.55, zc, r["wall"])
+            clear.append((min(-b * hw, -b * (hw - bw)) - 0.1, hd - 2.9, max(-b * hw, -b * (hw - bw)) + 0.6, hd))
+        _rug(mb, min(b * (hw - 3.6), b * (hw - 0.2)), by - 2.0, max(b * (hw - 3.6), b * (hw - 0.2)), by + 2.0, 0.0,
+              "M_IntCarpetRed", K.TRIM_GOLD)
+        f.prop("SM_Int_GrandBed", b * (hw - 1.06), by, _wall_yaw(bs))
         for s in (-1, 1):
-            f.prop("SM_Int_Nightstand" if not girls else "SM_Int_NightstandB", b * (hw - 0.3), by + s * 1.5,
-                   _wall_yaw(bs))
-            f.prop("SM_Int_OilLamp", b * (hw - 0.3), by + s * 1.5, 0.0, z=0.6)
-        _portrait(f, b * hw, by, 1.65, bs, 1.1)
-        if girls:     # canopy over the bed
-            for sx in (-1, 1):
-                for sy in (-1, 1):
-                    mb.box((b * (hw - 1.2) + sx * 1.15, by + sy * 1.15, 1.25), (0.07, 0.07, 2.5), K.TRIM_WHITE)
-            nc.box((b * (hw - 1.2), by, 2.5), (2.4, 2.4, 0.06), "M_IntFabricPink")
-            for sy in (-1, 1):
-                nc.box((b * (hw - 1.2), by + sy * 1.2, 2.25), (2.4, 0.02, 0.5), "M_IntFabricPink")
-            nc.box((b * (hw - 1.2) - b * 1.2, by, 2.25), (0.02, 2.4, 0.5), "M_IntFabricPink")
-        # wardrobe + mirror on the door wall, bed side corner
-        f.prop("SM_Int_Wardrobe" if not girls else "SM_Int_Cabinet", b * (hw - 0.9), hd - 0.35, 0.0)
-        if abs(b * (hw - 2.3) - dx) > 1.6:
-            f.prop("SM_Int_Mirror", b * (hw - 2.3), hd, 0.0, z=0.9)
-        if abs(-b * (hw - 0.75) - dx) > 1.7:
-            f.prop("SM_Int_Bookshelf" if not girls else "SM_Int_Shelves", -b * (hw - 0.75), hd - 0.2, 0.0)
-        # desk near the window on the other side wall
-        K.desk(mb, nc, -b * (hw - 0.33), -hd + 1.6, _wall_yaw(os_), w=1.2, d=0.6, top=wood,
-               legs=wood, hutch=W > 7.0, rng_seed=rng.randint(0, 99))
-        f.prop("SM_Int_OfficeChair" if not girls else "SM_Int_WoodChair", -b * (hw - 1.05), -hd + 1.6,
-               _wall_yaw(os_) + 180.0)
-        f.prop("SM_Int_DeskLamp", -b * (hw - 0.3), -hd + 1.2, _wall_yaw(os_), z=0.76)
-        # sitting corner
+            f.prop("SM_Int_Nightstand", b * (hw - 0.24), by + s * 1.14, _wall_yaw(bs))
+            f.prop("SM_Int_OilLamp" if s < 0 else "SM_Int_PottedPlant", b * (hw - 0.24), by + s * 1.14, 0.0, z=0.7)
+        f.prop("SM_Int_Ottoman", b * (hw - 2.45), by, 90.0)
+        DT.duel_disk(nc, b * (hw - 2.45), by + 0.1, 0.62, 80.0)
+        _portrait(f, b * hw, by, 1.6, bs, 2.0)
+        _cushions(nc, b * (hw - 0.3), by, 0.62, _wall_yaw(bs), 2, (blanket, K.TRIM_GOLD), w=0.9)
+        # wardrobe + jackets by the door
+        f.prop("SM_Int_Wardrobe", b * (hw - 0.9), hd - 0.6, 0.0)
+        DT.coat_hooks(nc, dx + b * 0.95, hd, 1.75, 0.0, n=2, dorm="obelisk", jackets=2, seed=seed)
+        # desk + deck shelf by the window on the other side wall, bookshelf behind it
+        dy = -hd + 1.7
+        K.desk(mb, nc, -b * (hw - 0.31), dy, _wall_yaw(os_), w=1.3, d=0.6, top=K.WOOD_DARK, legs=K.WOOD_DARK,
+               hutch=False, clutter=False)
+        DT.desk_set(nc, f.a, -b * (hw - 0.31), dy, 0.76, _wall_yaw(os_), "student", seed=seed, w=1.3, d=0.6)
+        f.prop("SM_Int_OfficeChair", -b * (hw - 1.15), dy, _wall_yaw(os_) + 180.0)
+        _wall_shelf(f, -b * hw, dy, os_, 1.2, 1.5, seed, "decks")
+        _bookshelf(f, -b * (hw - 0.31), dy + 1.7, _wall_yaw(os_), seed)
+        # reading corner by the window
+        sx_, sy_ = b * min(1.0, hw - 2.8), -hd + 1.6
         if W > 7.0:
-            sx_ = -b * hw * 0.15
-            sy_ = -hd + 2.6
-            K.rug(mb, sx_ - 1.6, sy_ - 1.2, sx_ + 1.6, sy_ + 1.2, 0.0, "M_IntCarpetBlue" if not girls else "M_IntCarpetYellow",
-                  K.TRIM_GOLD)
-            f.prop("SM_Int_CoffeeTable", sx_, sy_, 0.0)
-            f.prop("SM_Int_Armchair" if not girls else "SM_Int_GreenChair", sx_ - 1.1, sy_, -90.0)
-            f.prop("SM_Int_Armchair" if not girls else "SM_Int_GreenChair", sx_ + 1.1, sy_, 90.0)
-            f.prop("SM_Int_TeaSet" if girls else "SM_Int_Books", sx_, sy_, 30.0, z=0.45)
+            _rug(mb, sx_ - 1.5, sy_ - 1.0, sx_ + 1.5, sy_ + 1.0, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+            f.prop("SM_Int_CoffeeTableB", sx_, sy_, 0.0)
+            f.prop("SM_Int_Armchair", sx_ - 1.05, sy_ + 0.1, 90.0)
+            f.prop("SM_Int_Armchair", sx_ + 1.05, sy_ + 0.1, -90.0)
+            DT.card_spread(nc, sx_ - 0.1, sy_, 0.39, 0.0, 6, seed)
+            DT.deck_box(nc, sx_ + 0.35, sy_ + 0.1, 0.39, 25.0, "M_IntFabricNavy")
+            DT.mug(nc, sx_ - 0.4, sy_ + 0.15, 0.39, seed)
+            clear.append((sx_ - 1.6, sy_ - 1.1, sx_ + 1.6, sy_ + 1.1))
         else:
-            f.prop("SM_Int_Armchair" if not girls else "SM_Int_GreenChair", b * (hw - 0.7), -hd + 1.3, 220.0 * b)
-        f.prop("SM_Int_PottedPlantB", b * (hw - 0.45), -hd + 0.45, 0.0)
-        _chandelier(f, 0.0, 0.0, zc, 0.9)
-        f.light(0.0, 0.0, zc - 1.2, 1800.0, 7.0)
+            f.prop("SM_Int_Armchair", b * (hw - 0.75), -hd + 0.95, 180.0 + 35.0 * b)
+            f.prop("SM_Int_SideTable", b * (hw - 0.35), -hd + 1.9, 0.0)
+            DT.book_stack(nc, b * (hw - 0.35), -hd + 1.9, 0.55, 10.0, 3, seed)
+        _plant(f, b * (hw - 0.45), -hd + 0.45 if W > 7.0 else -hd + 2.75)
+        if abs(b * (hw - 2.3) - dx) > 1.4 and hw > 3.5:
+            f.prop("SM_Int_Mirror", b * (hw - 2.3), hd, 0.0, z=1.0, scale=1.3)
+        clear += [(min(b * (hw - 2.9), b * hw), by - 1.6, max(b * (hw - 2.9), b * hw), by + 1.6),
+                  (min(b * (hw - 1.8), b * hw), hd - 1.3, max(b * (hw - 1.8), b * hw), hd),
+                  (min(-b * hw, -b * (hw - 1.6)), -hd, max(-b * hw, -b * (hw - 1.6)), dy + 2.5),
+                  (dx - 0.8, hd - 1.2, dx + 0.8, hd)]
+        DT.floor_clutter(nc, f.a, -hw, -hd, hw, hd, 0.0, "dorm", n=4, seed=seed, clear=clear)
+        _chandelier(f, b * 0.5, 0.0, zc, 0.9)
+        f.light(b * 0.5, 0.0, zc - 1.2, 1800.0, 7.0)
     _curtains(nc, r, curtain)
+    _dress(aset, mb, nc, r, seed)
     if label:
-        # nameplate on the corridor side of the entrance wall
         yy = r["y1"] + 0.2 if door_side == "n" else r["y0"] - 0.2
         K.nameplate(mb, aset, door_v + (0.85 if door_v > 0 else -0.85), yy, r["z"] + 1.55, 180.0 if door_side == "n" else 0.0,
                     label, mat=K.TRIM_GOLD if not girls else "M_IntFabricPink", color=(0.12, 0.1, 0.25), w=0.62, h=0.16)
 
 
-def _boys_suite(aset, mb, nc, rb, rs, sx, front, label, rng):
+def _boys_suite(aset, mb, nc, rb, rs, sx, front, label, rng, seed=0):
     """End-pavilion suite: bedroom on the balcony / garden side, sitting room & study on the corridor side.
     Local frame: origin on the dividing wall at the pavilion centre, bedroom at local -y, sitting room at +y;
     o = local x sign of the outer wall (side windows)."""
@@ -2029,49 +2307,61 @@ def _boys_suite(aset, mb, nc, rb, rs, sx, front, label, rng):
     wy = _wall_yaw
     with f:
         # ---- bedroom (local y < 0)
-        K.rug(mb, -2.2, -4.1, 2.2, -0.2, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
-        f.prop("SM_Int_GrandBed", 0.0, -1.35, 0.0)
+        _rug(mb, -2.2, -4.1, 2.2, -0.2, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+        f.prop("SM_Int_GrandBed", 0.0, -1.15, 0.0)
         for s_ in (-1, 1):
-            f.prop("SM_Int_Nightstand", s_ * 1.55, -0.4, 0.0)
-            f.prop("SM_Int_OilLamp", s_ * 1.55, -0.4, 0.0, z=0.6)
-        f.prop("SM_Int_Ottoman", 0.0, -2.85, 0.0)
-        _portrait(f, 0.0, -0.1, 1.75, "n", 1.4)
-        for y in (-2.9, -4.3):
-            f.prop("SM_Int_Wardrobe", -o * 5.3, y, wy(side_i))
-        f.prop("SM_Int_Console", -o * 5.35, -5.8, wy(side_i))
-        f.prop("SM_Int_Mirror", -o * 5.6, -5.8, wy(side_i), z=1.0)
-        f.prop("SM_Int_Candelabra", -o * 5.35, -6.05, 0.0, z=0.85)
+            f.prop("SM_Int_Nightstand", s_ * 1.14, -0.33, 0.0)
+            f.prop("SM_Int_OilLamp", s_ * 1.14, -0.33, 0.0, z=0.7)
+        _cushions(nc, 0.0, -0.45, 0.62, 0.0, 3, ("M_IntFabricNavy", K.TRIM_GOLD, "M_IntFabricWhite"), w=1.1)
+        f.prop("SM_Int_Ottoman", 0.0, -2.65, 0.0)
+        DT.duel_disk(nc, -0.1, -2.6, 0.62, 10.0)
+        _portrait(f, 0.0, -0.1, 1.65, "n", 2.0)
+        for s_ in (-1, 1):
+            _portrait(f, s_ * 2.5, -0.1, 1.45, "n", 1.4)
+        f.prop("SM_Int_Wardrobe", -o * 5.02, -2.9, wy(side_i))
+        _console(f, -o * 5.6, -5.0, side_i, seed=seed)
+        DT.coat_hooks(nc, -o * 5.6, -1.2, 1.75, wy(side_i), n=3, dorm="obelisk", jackets=2, seed=seed)
         K.fireplace(mb, nc, f.a, o * 5.6, -3.8, wy(side_o), w=1.2, h=1.2, mat=MARBLE)
-        _portrait(f, o * 5.6, -3.8, 1.75, side_o, 0.9)
-        K.rug(mb, min(o * 2.8, o * 4.9), -4.9, max(o * 2.8, o * 4.9), -2.7, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        _portrait(f, o * 5.6, -3.8, 1.75, side_o, 1.1)
+        f.prop("SM_Int_MantelClock", o * 5.47, -3.8, wy(side_o), z=1.3)
+        _rug(mb, min(o * 2.6, o * 4.9), -4.9, max(o * 2.6, o * 4.9), -2.7, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
         for y in (-3.0, -4.6):
-            f.prop("SM_Int_Armchair", o * 3.6, y, -90.0 * o + (25.0 if y > -3.8 else -25.0) * o)
-        f.prop("SM_Int_SideTable", o * 3.3, -3.8, 0.0)
-        f.prop("SM_Int_PottedPlantB", o * 5.15, -db + 0.45, 0.0)
-        f.prop("SM_Int_PottedPlantB", -o * 5.15, -1.75, 0.0)
-        _chandelier(f, 0.0, -db / 2, zc, 1.0)
+            f.prop("SM_Int_Armchair", o * 3.5, y, -90.0 * o + (25.0 if y > -3.8 else -25.0) * o)
+        f.prop("SM_Int_SideTable", o * 3.2, -3.8, 0.0)
+        f.prop("SM_Int_TeaSet", o * 3.2, -3.8, 20.0, z=0.55)
+        K.desk(mb, nc, -o * 2.0, -db + 0.31, 0.0 + 180.0, w=1.2, d=0.6, top=K.WOOD_DARK, legs=K.WOOD_DARK,
+               hutch=False, clutter=False)
+        DT.desk_set(nc, f.a, -o * 2.0, -db + 0.31, 0.76, 180.0, "student", seed=seed + 3, w=1.2, d=0.6)
+        f.prop("SM_Int_OfficeChair", -o * 2.0, -db + 1.1, 0.0)
+        _plant(f, o * 2.0, -db + 0.45)
+        _plant(f, -o * 5.15, -db + 0.45)
+        _chandelier(f, 0.0, -db / 2, zc, 1.3)
         # ---- sitting room & study (local y > 0)
-        K.rug(mb, min(-o * 0.4, -o * 4.4), 1.6, max(-o * 0.4, -o * 4.4), 6.0, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
         K.fireplace(mb, nc, f.a, -o * 5.6, 3.8, wy(side_i), w=1.6, h=1.3, mat=MARBLE)
-        _portrait(f, -o * 5.6, 3.8, 1.85, side_i, 1.2)
-        K.sofa_set(f.a, -o * 1.3, 3.8, -90.0 * o)
-        f.prop("SM_Int_TeaSet", -o * 2.6, 3.8, 0.0, z=0.45)
-        K.desk(mb, nc, o * 5.27, 3.83, wy(side_o), w=1.3, d=0.6, top=K.WOOD_DARK, legs=K.WOOD_DARK, hutch=True,
-               rng_seed=rng.randint(0, 99))
-        f.prop("SM_Int_OfficeChair", o * 4.55, 3.83, wy(side_o) + 180.0)
-        f.prop("SM_Int_DeskLamp", o * 5.35, 3.4, wy(side_o), z=0.76)
-        for x in (2.4, 3.9):
-            _bookshelf(f, o * x, ds - 0.3, 0.0)
-        f.prop("SM_Int_DisplayShelves", -o * 2.6, ds - 0.25, 0.0)
-        f.prop("SM_Int_GrandfatherClock", -o * 4.4, ds - 0.2, 0.0)
-        _portrait(f, o * 2.6, 0.1, 1.6, "s", 1.1)
-        _portrait(f, -o * 2.2, 0.1, 1.6, "s", 1.1)
-        _plinth_bust(f, mb, o * 0.3, 0.45, 180.0)
-        f.prop("SM_Int_PottedPlantB", o * 5.15, ds - 0.45, 0.0)
-        f.prop("SM_Int_PottedPlant", -o * 5.2, 0.6, 0.0)
-        _chandelier(f, -o * 1.5, ds / 2, zc, 1.0)
+        _portrait(f, -o * 5.6, 3.8, 1.85, side_i, 1.3)
+        _seating(f, -o * 1.6, 3.8, -90.0 * o, seed=seed, cards=True)
+        K.desk(mb, nc, o * 5.29, 3.83, wy(side_o), w=1.3, d=0.6, top=K.WOOD_DARK, legs=K.WOOD_DARK, hutch=False,
+               clutter=False)
+        DT.desk_set(nc, f.a, o * 5.29, 3.83, 0.76, wy(side_o), "student", seed=seed + 5, w=1.3, d=0.6)
+        f.prop("SM_Int_OfficeChair", o * 4.45, 3.83, wy(side_o) + 180.0)
+        _wall_shelf(f, o * 5.6, 3.83, side_o, 1.2, 1.5, seed, "decks")
+        for x in (2.3, 3.8):
+            _bookshelf(f, o * x, ds - 0.31, 0.0, seed)
+        f.prop("SM_Int_Vitrine", -o * 2.9, ds - 0.36, 0.0)
+        f.prop("SM_Int_GrandfatherClock", -o * 4.75, ds - 0.24, 0.0)
+        _portrait(f, o * 2.6, 0.1, 1.5, "s", 2.0)
+        _portrait(f, -o * 2.2, 0.1, 1.5, "s", 2.0)
+        _plinth_bust(f, mb, o * 0.4, 0.45, 180.0)
+        _chess_table(f, o * 2.6, 1.45, 0.0)
+        for y in (1.6, 6.0):       # built-in bookcases flanking the fireplace
+            K.bookcase(mb, nc, -o * 5.39, y, wy(side_i), w=1.4, d=0.42, h=2.7, shelves=7, mat=K.WOOD_DARK,
+                       rng_seed=int(y * 10) + seed)
+        _plant(f, o * 5.1, ds - 0.5)
+        _chandelier(f, -o * 1.8, ds / 2, zc, 1.3)
+        f.light(o * 4.0, 3.8, 2.6, 1200.0, 5.0)
     for r in (rb, rs):
         _curtains(nc, r, "M_IntFabricNavy")
+        _dress(aset, mb, nc, r, seed + (r is rs))
     yy = rs["y1"] + 0.2 if front else rs["y0"] - 0.2
     K.nameplate(mb, aset, sx * 35.0 + sx * 0.95, yy, rs["z"] + 1.55, 180.0 if front else 0.0, label,
                 mat=K.TRIM_GOLD, color=(0.12, 0.1, 0.25), w=0.9, h=0.16)
@@ -2090,18 +2380,24 @@ def _boys_furnish(aset, mb, nc, R):
     _boys_pantry(aset, mb, nc, R["pantry"])
     _boys_duel(aset, mb, nc, R["duel"])
     _boys_trophy(aset, mb, nc, R["trophy"])
-    num = 201
-    for sx in (-1, 1):
-        s = "w" if sx < 0 else "e"
-        _boys_corridor(aset, mb, nc, R["corr_" + s], R["pcorr_" + s], sx)
-        inner, outer = ("e", "w") if sx < 0 else ("w", "e")
-        for (k, side, dv) in (("A", "n", 18.0), ("B", "n", 25.6), ("C", "s", 18.0), ("D", "s", 25.6)):
-            _bedroom(aset, mb, nc, R[k + "_" + s], side, sx * dv, outer if k in ("A", "C") else inner, rng,
-                     label=str(num))
-            num += 1
-        for (k, front, lab) in (("SF", True, "KING SUITE" if sx > 0 else "EMPEROR SUITE"),
-                                ("SB", False, "ROYAL SUITE" if sx > 0 else "GRAND SUITE")):
-            _boys_suite(aset, mb, nc, R[k + "_" + s], R[k + "s_" + s], sx, front, lab, rng)
+    _boys_games(aset, mb, nc, R["games"])
+    _boys_hall2(aset, mb, nc, R["hall2"])
+    _boys_study2(aset, mb, nc, R["study2"])
+    for lv in (1, 2):
+        t = "_" if lv == 1 else "2_"
+        num = 101 + 100 * lv
+        for sx in (-1, 1):
+            s = "w" if sx < 0 else "e"
+            _boys_corridor(aset, mb, nc, R["corr" + t + s], R["pcorr" + t + s], sx, lv)
+            inner, outer = ("e", "w") if sx < 0 else ("w", "e")
+            for (k, side, dv) in (("A", "n", 18.0), ("B", "n", 25.6), ("C", "s", 18.0), ("D", "s", 25.6)):
+                _bedroom(aset, mb, nc, R[k + t + s], side, sx * dv, outer if k in ("A", "C") else inner, rng,
+                         label=str(num), seed=num)
+                num += 1
+            names = (("KING SUITE", "ROYAL SUITE"), ("EMPEROR SUITE", "GRAND SUITE"))[sx < 0] if lv == 1 else \
+                (("SAPPHIRE SUITE", "AZURE SUITE"), ("COBALT SUITE", "INDIGO SUITE"))[sx < 0]
+            for (k, front, lab) in (("SF", True, names[0]), ("SB", False, names[1])):
+                _boys_suite(aset, mb, nc, R[k + t + s], R[k + "s" + t + s], sx, front, lab, rng, seed=num + front)
     # first-floor balcony of the suites: a couple of chairs outside the French doors
     for sx in (-1, 1):
         for x in (31.0, 39.0):
@@ -2109,7 +2405,9 @@ def _boys_furnish(aset, mb, nc, R):
         aset.prop("SM_Int_SideTable", (sx * 33.0, -4.1, B_Z1), 0.0)
     K.camera(aset, "suite", (39.9, -1.9, B_Z1 + 1.7), (31.0, 3.6, B_Z1 + 0.8), 14.0)
     K.camera(aset, "suite_study", (36.1, 10.5, B_Z1 + 1.7), (30.0, 5.0, B_Z1 + 0.9), 14.0)
-    K.camera(aset, "room201", (-14.0, 11.4, B_Z1 + 1.65), (-21.0, 1.5, B_Z1 + 0.9), 15.0)
+    K.camera(aset, "room201", (-17.1, 11.5, B_Z1 + 1.65), (-20.5, 1.5, B_Z1 + 0.9), 15.0)
+    K.camera(aset, "room305", (17.1, 16.3, B_Z2 + 1.65), (20.5, 26.5, B_Z2 + 0.9), 15.0)
+    K.camera(aset, "suite2_study", (-36.1, 10.5, B_Z2 + 1.7), (-30.0, 5.0, B_Z2 + 0.9), 14.0)
 
 
 def _boys_foyer(aset, mb, nc, r):
@@ -2121,10 +2419,10 @@ def _boys_foyer(aset, mb, nc, r):
         for (a, b, c, d) in ((-11.0, -0.4, 11.0, 0.0), (-11.0, 7.6, 11.0, 8.0), (-11.0, -0.4, -10.6, 8.0),
                              (10.6, -0.4, 11.0, 8.0)):
             mb.box_mm((a, b, 0.0), (c, d, 0.004), MARBLE_NAVY, skip=("-z",))
-        K.rug(mb, -1.3, -1.55, 1.3, 8.0, 0.006, red, K.TRIM_GOLD)
+        _rug(mb, -1.3, -1.55, 1.3, 8.0, 0.006, red, K.TRIM_GOLD)
         for sx in (-1, 1):       # runners on the first-floor landings, stair top -> wing corridor
             xa, xb = sorted((sx * 6.8, sx * 12.6))
-            K.rug(mb, xa, 13.2, xb, 14.6, B_Z1 - r["z"], red, K.TRIM_GOLD)
+            _rug(mb, xa, 13.2, xb, 14.6, B_Z1 - r["z"], red, K.TRIM_GOLD)
         # busts guarding the entrance, benches, plants
         for sx in (-1, 1):
             _plinth_bust(f, mb, sx * 3.2, -0.9, 0.0)
@@ -2141,17 +2439,23 @@ def _boys_foyer(aset, mb, nc, r):
             # under the landings: console + mirror, armchairs
             f.prop("SM_Int_Armchair", sx * 11.6, 13.4, -90.0 * sx)
             f.prop("SM_Int_SideTable", sx * 11.9, 14.6, 0.0)
-            f.prop("SM_Int_Candelabra", sx * 11.9, 14.6, 0.0, z=0.6)
+            f.prop("SM_Int_Candelabra", sx * 11.9, 14.6, 0.0, z=0.55)
             # banners flanking the crest
             nc.box((sx * 4.6, 15.77, 9.6 - r["z"] + 0.0), (1.3, 0.02, 3.6), TRIM)
             nc.box((sx * 4.6, 15.76, 11.35 - r["z"]), (1.4, 0.03, 0.1), K.TRIM_GOLD)
             nc.box((sx * 4.6, 15.76, 9.6 - r["z"] - 1.6), (1.3, 0.03, 0.08), K.TRIM_GOLD)
             with nc.at((sx * 4.6, 15.75, 9.8 - r["z"]), rot_x=90):
                 nc.cylinder((0, 0, 0), 0.38, 0.02, K.TRIM_GOLD, seg=14)
-        f.prop("SM_Int_GrandfatherClock", -12.25, 4.3, 90.0)
-        f.prop("SM_Int_Console", 12.3, 4.3, -90.0)
-        f.prop("SM_Int_Candelabra", 12.3, 4.3, -90.0, z=0.85)
-        f.prop("SM_Int_Mirror", 12.6, 4.3, -90.0, z=1.2)
+        f.prop("SM_Int_GrandfatherClock", -12.36, 3.6, 90.0)
+        _console(f, 12.6, 3.6, "e", seed=1)
+        # the round centre table with a great bouquet, and seating groups along the sides of the hall
+        f.prop("SM_Int_RoundTable", 0.0, 3.4, 0.0)
+        nc.cylinder((0.0, 3.4, 0.755), 0.55, 0.006, "M_IntFabricNavy", seg=16)
+        _vase(nc, 0.0, 3.4, 0.76, 2.0, mat=K.TRIM_GOLD, flowers=("M_FlowerWhite", "M_FlowerBlue", "M_FlowerRed"))
+        for sx in (-1, 1):
+            _seating(f, sx * 7.6, 9.6, 180.0 + 0.0, sofa="SM_Int_SofaB", seed=3 + sx, rug_w=4.4, rug_d=3.0)
+            for y in (0.8, 9.6):
+                _plant(f, sx * 11.95, y + 0.0)
         for (x, y, s) in ((0.0, 1.0, 1.8), (0.0, 6.0, 1.8), (-9.6, 6.0, 1.2), (9.6, 6.0, 1.2)):
             _chandelier(f, x, y, zc, s)
         f.light(0.0, 3.5, 5.0, 6000.0, 16.0)
@@ -2161,44 +2465,52 @@ def _boys_foyer(aset, mb, nc, r):
     aset.text("Noblesse oblige - duel with honour", (0.0, 15.7, 7.75), 0.0, size=0.16, color=NAVY_TXT)
     aset.npc((-4.0, 2.5, r["z"]), 30.0, dorm="obelisk", wander=4.0)
     aset.npc((5.0, 5.0, r["z"]), -120.0, dorm="obelisk", wander=4.0)
+    _dress(aset, mb, nc, r, 2)
     K.camera(aset, "foyer", (0.0, -1.0, r["z"] + 1.75), (0.0, 12.0, r["z"] + 3.6), 14.0)
     K.camera(aset, "foyer_landing", (11.8, 15.2, B_Z1 + 1.7), (-3.0, 1.0, r["z"] + 1.2), 15.0)
 
 
 def _boys_library(aset, mb, nc, r):
+    """Ground-floor library: full-height bookcases with rolling ladders, four reading tables, reading corners."""
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, -3.0, 17.4, 3.0, 28.0, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
-        # bookshelves along the foyer wall and the side walls
-        for x in (-6.1, -4.7, -3.3, -1.9, 1.9, 3.3, 4.7, 6.1):
-            _bookshelf(f, x, 16.52, 180.0)
-        K.bookcase(mb, nc, 0.0, 16.4, 180.0, w=2.4, h=2.4, shelves=6, rng_seed=3)
+        _rug(mb, -2.6, 17.6, 2.6, 28.2, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        for x in (-7.3, -5.85, -4.4, -2.95, 2.95, 4.4, 5.85, 7.3):
+            K.bookcase(mb, nc, x, 16.42, 180.0, w=1.42, d=0.42, h=3.6, shelves=9, mat=K.WOOD_DARK,
+                       rng_seed=int(x * 10) % 97)
+        K.bookcase(mb, nc, 0.0, 16.42, 180.0, w=2.4, d=0.42, h=2.6, shelves=6, mat=K.WOOD_DARK, rng_seed=3)
+        _portrait(f, 0.0, 16.2, 2.85, "s", 1.6)
         for sx in (-1, 1):
-            for y in (17.6, 19.0, 25.6, 27.0):
-                _bookshelf(f, sx * 12.3, y, -90.0 * sx)
-            # reading tables with lamps and chairs
-            for (y) in (20.6, 24.2):
-                f.prop("SM_Int_Table", sx * 6.0, y, 0.0)
-                for cx in (-0.55, 0.55):
-                    f.prop("SM_Int_DiningChair", sx * 6.0 + cx, y - 0.8, 0.0)
-                    f.prop("SM_Int_DiningChair", sx * 6.0 + cx, y + 0.8, 180.0)
-                f.prop("SM_Int_DeskLamp", sx * 6.0 + 0.5, y, 180.0, z=0.76)
-                f.prop("SM_Int_Books", sx * 6.0 - 0.3, y + 0.1, 10.0, z=0.76)
-            # a reading corner by the windows
-            f.prop("SM_Int_Armchair", sx * 2.4, 27.9, 180.0 + sx * 25.0)
-            _plinth_bust(f, mb, sx * 9.7, 28.9, 180.0)
-            _chandelier(f, sx * 6.0, 22.4, zc, 1.0)
-            f.prop("SM_Int_PottedPlantB", sx * 12.0, 29.0, 0.0)
-        # trophy case and a globe-like display in the middle
-        mb.box((0.0, 22.4, 0.45), (1.4, 0.8, 0.9), K.WOOD_DARK)
-        mb.box((0.0, 22.4, 0.92), (1.5, 0.9, 0.04), K.TRIM_GOLD)
-        nc.sphere((0.0, 22.4, 1.35), 0.4, "M_IntFabricBlue", seg=16, rings=10)
-        nc.torus((0.0, 22.4, 1.35), 0.46, 0.025, K.TRIM_GOLD, seg=20, tube_seg=4)
+            for y in (17.0, 18.45, 19.9, 25.1, 26.55, 28.0):
+                K.bookcase(mb, nc, sx * 12.38, y, -90.0 * sx, w=1.42, d=0.42, h=3.6, shelves=9, mat=K.WOOD_DARK,
+                           rng_seed=int(y * 10 + 3 * sx) % 97)
+            f.prop("SM_Int_Ladder", sx * 11.75, 18.45, -90.0 * sx)
+            for y in (20.4, 24.6):
+                _study_table(mb, nc, f, sx * 6.4, y, seed=int(y * 3) + sx)
+                f.prop("SM_Int_CeilingLamp", sx * 6.4, y, 0.0, z=zc)
+            # reading corner by the windows
+            _rug(mb, min(sx * 8.4, sx * 11.6), 26.6, max(sx * 8.4, sx * 11.6), 29.4, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+            f.prop("SM_Int_Armchair", sx * 10.0, 28.4, 180.0 - sx * 20.0)
+            f.prop("SM_Int_Armchair", sx * 8.9, 27.3, 180.0 + sx * 70.0)
+            f.prop("SM_Int_SideTable", sx * 10.4, 27.1, 0.0)
+            f.prop("SM_Int_OilLamp", sx * 10.4, 27.1, 0.0, z=0.55)
+            DT.book_stack(nc, sx * 10.25, 27.0, 0.55, 30.0, 3, 9 + sx)
+            _plinth_bust(f, mb, sx * 5.4, 29.0, 180.0)
+            _plant(f, sx * 12.0, 29.1)
+            _chandelier(f, sx * 6.4, 22.5, zc, 1.0)
+        # globe on its stand in the middle
+        mb.box((0.0, 22.5, 0.45), (1.4, 0.8, 0.9), K.WOOD_DARK)
+        mb.box((0.0, 22.5, 0.92), (1.5, 0.9, 0.04), K.TRIM_GOLD)
+        nc.sphere((0.0, 22.5, 1.35), 0.4, "M_IntFabricBlue", seg=16, rings=10)
+        nc.torus((0.0, 22.5, 1.35), 0.46, 0.025, K.TRIM_GOLD, seg=20, tube_seg=4)
+        for y in (19.2, 25.8):
+            f.prop("SM_Int_Bench", 0.0, y, 0.0 if y > 22 else 180.0)
         f.light(0.0, 22.4, 3.0, 2500.0, 10.0)
-    aset.text("LIBRARY", (0.0, 16.25, r["z"] + 3.35), 180.0, size=0.3, color=GOLD_RGB)
+    aset.text("LIBRARY", (0.0, 16.25, r["z"] + 4.1), 180.0, size=0.3, color=GOLD_RGB)
     _curtains(nc, r, "M_IntFabricRed")
-    K.camera(aset, "library", (11.6, 17.0, r["z"] + 1.75), (-4.0, 27.0, r["z"] + 1.0), 15.0)
+    _dress(aset, mb, nc, r, 12, clear=[(-12.6, 16.2, 12.6, 16.7), (-12.6, 16.2, -12.0, 29.6), (12.0, 16.2, 12.6, 29.6)])
+    K.camera(aset, "library", (11.6, 21.6, r["z"] + 1.75), (-4.0, 27.0, r["z"] + 1.0), 15.0)
 
 
 def random_mod(seed):
@@ -2210,17 +2522,20 @@ def _boys_lounge(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, -27.0, 1.8, -19.0, 8.6, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+        _rug(mb, -27.0, 1.8, -19.0, 8.6, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
         K.fireplace(mb, nc, f.a, -28.6, 4.8, 90.0, w=2.0, h=1.4, mat=MARBLE)
         _portrait(f, -28.6, 4.8, 1.9, "w", 1.7)
         K.sofa_set(f.a, -22.4, 4.8, -90.0)
         # billiards, and a pair of club chairs by the windows
-        K.rug(mb, -19.6, 6.4, -14.6, 11.8, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        _rug(mb, -19.6, 6.4, -14.6, 11.8, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
         _billiard(mb, nc, -17.1, 9.1, 90.0)
         f.prop("SM_Int_Bench", -14.0, 9.1, -90.0)
         f.prop("SM_Int_SofaB", -17.0, 1.25, 0.0)
         f.prop("SM_Int_CoffeeTable", -17.0, 2.7, 0.0)
-        f.prop("SM_Int_TeaSet", -17.0, 2.7, 20.0, z=0.45)
+        DT.table_set(nc, f.a, -17.0, 2.7, _doily(f, -17.0, 2.7, 0.49, 0.45), 0.0, "tea", seed=4)
+        _cushions(nc, -17.0, 1.35, 0.42, 0.0, 3, ("M_IntFabricRed", K.TRIM_GOLD))
+        _wall_shelf(f, -28.6, 12.3, "w", 1.6, 1.6, 5, "decks")
+        DT.card_spread(nc, -23.7, 4.8, 0.49, 90.0, 5, 3)
         f.prop("SM_Int_Armchair", -15.2, 3.3, 120.0)
         # cabinet, plants, clock, piano corner
         f.prop("SM_Int_DisplayShelves", -26.8, 13.65, 180.0)
@@ -2234,6 +2549,8 @@ def _boys_lounge(aset, mb, nc, r):
             _sconce(f, -13.4, y, 2.4, "e")
     aset.npc((-17.5, 8.0, r["z"]), 90.0, dorm="obelisk", wander=2.0)
     _curtains(nc, r, "M_IntFabricRed")
+    _gallery(f, r, ("s",), z=2.2, scale=1.3)
+    _dress(aset, mb, nc, r, 5)
     K.camera(aset, "lounge", (-14.0, 12.9, r["z"] + 1.75), (-26.0, 3.0, r["z"] + 0.9), 15.0)
 
 
@@ -2241,7 +2558,7 @@ def _boys_music(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, -26.6, 17.0, -18.4, 25.6, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        _rug(mb, -26.6, 17.0, -18.4, 25.6, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
         K.piano(mb, nc, -22.5, 22.6, 200.0)
         # music stands
         for (x, y, a) in ((-19.6, 23.4, 120.0), (-19.0, 21.4, 90.0), (-25.4, 19.8, -40.0)):
@@ -2262,7 +2579,7 @@ def _boys_music(aset, mb, nc, r):
             f.prop("SM_Int_WoodChair", qx, qy, math.degrees(a) + 90.0)
         _harp(mb, nc, -15.2, 25.6, 30.0)
         # sitting group by the front partition, sheet-music shelves along the west wall
-        K.rug(mb, -20.0, 14.6, -14.2, 18.4, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+        _rug(mb, -20.0, 14.6, -14.2, 18.4, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
         f.prop("SM_Int_SofaB", -14.1, 16.6, -90.0)
         f.prop("SM_Int_CoffeeTable", -15.6, 16.6, 0.0)
         f.prop("SM_Int_Armchair", -17.4, 16.0, -110.0)
@@ -2277,6 +2594,7 @@ def _boys_music(aset, mb, nc, r):
         f.prop("SM_Int_PottedPlantB", -13.9, 14.6, 0.0)
         _chandelier(f, -21.0, 21.0, zc, 1.2)
     _curtains(nc, r, "M_IntFabricNavy")
+    _dress(aset, mb, nc, r, 6)
     K.camera(aset, "music", (-14.2, 15.0, r["z"] + 1.75), (-24.0, 24.5, r["z"] + 0.9), 15.0)
 
 
@@ -2284,7 +2602,7 @@ def _boys_dining(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, 18.2, 4.6, 23.8, 23.4, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+        _rug(mb, 18.2, 4.6, 23.8, 23.4, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
         with mb.at((21.0, 14.0, 0.0), rot=90.0), nc.at((21.0, 14.0, 0.0), rot=90.0):
             _long_table(mb, nc, 0.0, 0.0, 14.0, 1.6, runner="M_IntFabricNavy")
         for i in range(13):
@@ -2301,21 +2619,26 @@ def _boys_dining(aset, mb, nc, r):
             _place_setting(nc, 21.0, y + (0.6 if y < 10 else -0.6), 0.0)
         K.fireplace(mb, nc, f.a, 13.4, 14.5, 90.0, w=2.0, h=1.4, mat=MARBLE)
         _portrait(f, 13.4, 14.5, 1.9, "w", 1.8)
-        f.prop("SM_Int_Console", 28.35, 14.0, -90.0)
-        f.prop("SM_Int_Candelabra", 28.35, 13.4, -90.0, z=0.85)
-        _vase(nc, 28.35, 14.6, 0.85, 1.2, flowers=("M_FlowerWhite", "M_FlowerRed"))
-        _portrait(f, 28.6, 14.0, 1.8, "e", 1.8)
+        _console(f, 28.6, 14.0, "e", mirror=False, seed=8)
+        # sideboards with the silver, two rows of marble columns carrying the hall
+        for y in (3.4, 10.0, 18.0, 24.6):
+            f.prop("SM_Int_Cabinet", 28.28, y, -90.0)
+            f.prop("SM_Int_Candelabra", 28.28, y - 0.3, -90.0, z=1.18)
+            _vase(nc, 28.28, y + 0.3, 1.18, 0.8, flowers=("M_FlowerWhite", "M_FlowerBlue"))
+        for x in (17.4, 24.6):
+            for y in (6.8, 11.4, 16.6, 21.2):
+                column(mb, x, y, 0.0, 0.26, zc + 0.01, MARBLE, cap_mat=K.TRIM_GOLD, seg=12)
         for (x, y) in ((13.9, 0.9), (28.1, 0.9), (13.9, 27.1), (28.1, 27.1)):
             f.prop("SM_Int_PottedPlantB", x, y, 0.0)
-        f.prop("SM_Int_GrandfatherClock", 28.3, 10.0, -90.0)
+        f.prop("SM_Int_GrandfatherClock", 13.64, 9.6, 90.0)
         for y in (8.0, 14.0, 20.0):
             _chandelier(f, 21.0, y, zc, 1.25)
         # after-dinner corner by the front windows
-        K.rug(mb, 16.4, 0.9, 25.6, 4.4, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        _rug(mb, 16.4, 0.9, 25.6, 4.4, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
         f.prop("SM_Int_SofaB", 18.2, 2.6, 90.0)
         f.prop("SM_Int_SofaB", 23.8, 2.6, -90.0)
         f.prop("SM_Int_CoffeeTable", 21.0, 2.6, 0.0)
-        f.prop("SM_Int_TeaSet", 21.0, 2.6, 0.0, z=0.45)
+        DT.table_set(nc, f.a, 21.0, 2.6, _doily(f, 21.0, 2.6, 0.49, 0.45), 0.0, "tea", seed=9)
         _chandelier(f, 21.0, 2.6, zc, 0.9)
         # buffet at the back
         with mb.at((21.0, 26.6, 0.0)), nc.at((21.0, 26.6, 0.0)):
@@ -2328,6 +2651,8 @@ def _boys_dining(aset, mb, nc, r):
                     nc.sphere((-2.0 + k * 1.0, 0.0, 0.87), 0.17, K.METAL, seg=10, rings=6, hemi=True)
         _chandelier(f, 21.0, 25.4, zc, 0.9)
     _curtains(nc, r, "M_IntFabricNavy")
+    _gallery(f, r, ("w",), z=1.8, scale=1.7, pitch=3.0, skip=[("w", 13.0, 16.0)])
+    _dress(aset, mb, nc, r, 7)
     aset.npc((18.0, 3.0, r["z"]), 40.0, dorm="obelisk", wander=3.0)
     K.camera(aset, "dining", (14.4, 1.4, r["z"] + 1.85), (24.0, 20.0, r["z"] + 0.6), 15.0)
 
@@ -2335,6 +2660,8 @@ def _boys_dining(aset, mb, nc, r):
 def _boys_kitchen(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
+    import random
+    rng = random.Random(5)
     with f:
         # chequered floor tiles
         for i in range(11):
@@ -2344,29 +2671,104 @@ def _boys_kitchen(aset, mb, nc, r):
                               K.TILE, skip=("-z",))
         K.kitchen_run(mb, nc, 29.6, 12.0, 37.6, against="+y")
         with mb.at((29.4, 0.0, 0.0), rot=90.0), nc.at((29.4, 0.0, 0.0), rot=90.0):
-            K.kitchen_run(mb, nc, -2.4, 0.0, 4.0, against="+y", upper=False)
-        # central island + stools
-        K.counter(mb, 32.4, 3.4, 37.6, 4.6, 0.92, body=K.TRIM_WHITE, top=MARBLE)
+            K.kitchen_run(mb, nc, -2.4, 0.0, 4.0, against="+y", upper=True)
+        # blue delft tile frieze around the room (above the worktops)
+        for (a, b) in (((29.4, -2.6), (40.6, -2.6)), ((40.6, -2.6), (40.6, 12.0)), ((40.6, 12.0), (29.4, 12.0)),
+                       ((29.4, 12.0), (29.4, -2.6))):
+            L_, ux, uy, yaw = _dir(a, b)
+            with mb.at((a[0], a[1], 0.0), rot=yaw):
+                mb.box((L_ / 2, 0.012, 1.0), (L_, 0.024, 0.16), "M_ObIntDelftTile")
+                mb.box((L_ / 2, 0.012, 2.45), (L_, 0.024, 0.1), "M_ObIntDelftTile")
+        # the range island under a great copper hood
+        mb.box_mm((34.6, 6.6, 0.0), (37.4, 7.6, 0.86), K.BLACK)
+        mb.box_mm((34.55, 6.55, 0.86), (37.45, 7.65, 0.9), K.METAL)
+        mb.box_mm((34.4, 6.4, 2.25), (37.6, 7.8, 2.35), K.METAL)
+        mb.box_mm((34.5, 6.5, 2.35), (37.5, 7.7, 2.75), "M_ObIntCopper")
+        mb.box_mm((35.6, 6.8, 2.75), (36.4, 7.4, zc), "M_ObIntCopper")
+        for k in range(6):
+            nc.cylinder((34.95 + (k % 3) * 1.05, 6.85 + (k // 3) * 0.5, 0.9), 0.14, 0.012, K.BLACK, seg=12)
+            nc.box((34.95 + (k % 3) * 1.05, 6.57, 0.6), (0.06, 0.04, 0.06), K.METAL)
+        for (x, y, r_, h) in ((34.95, 6.85, 0.16, 0.22), (36.0, 7.35, 0.13, 0.12), (37.05, 6.85, 0.2, 0.3)):
+            nc.cylinder((x, y, 0.912), r_, h, "M_ObIntCopper", seg=12)
+            nc.box((x + r_ + 0.1, y, 0.912 + h * 0.8), (0.22, 0.03, 0.03), K.BLACK)
+        for k in range(8):
+            nc.box((34.7 + k * 0.38, 7.72, 1.85), (0.02, 0.02, 0.4), K.METAL)
+            nc.box((34.7 + k * 0.38, 7.72, 1.6), (0.07, 0.01, 0.12) if k % 2 else (0.03, 0.01, 0.2), K.METAL)
+        # vegetable crates under the east windows
+        for (x, y) in ((39.95, 6.1), (39.95, 6.75), (39.4, 6.4)):
+            mb.box_mm((x - 0.27, y - 0.2, 0.0), (x + 0.27, y + 0.2, 0.28), K.WOOD)
+            for k in range(6):
+                nc.sphere((x - 0.17 + (k % 3) * 0.17, y - 0.08 + (k // 3) * 0.16, 0.3), 0.07,
+                          ("M_FlowerRed", "M_IntFabricOrange", "M_IntFabricGreen")[int(x * 10 + y) % 3], seg=8, rings=5)
+        # tall fridges by the dining-room door
+        for y in (7.9, 8.75):
+            mb.box((29.78, y, 0.97), (0.72, 0.82, 1.94), K.TRIM_WHITE)
+            mb.box((30.15, y + 0.3, 1.2), (0.04, 0.04, 0.6), K.METAL)
+        # the range on the east wall + hood
+        mb.box_mm((39.85, 3.55, 0.0), (40.6, 5.55, 0.9), K.BLACK)
+        mb.box_mm((39.8, 3.5, 0.9), (40.6, 5.6, 0.94), K.METAL)
+        mb.box_mm((39.95, 3.4, 1.7), (40.6, 5.7, 2.3), K.METAL)
+        mb.box_mm((40.1, 3.9, 2.3), (40.6, 5.2, 4.7), K.TRIM_WHITE)
+        for k in range(3):
+            nc.box((39.84, 3.8 + k * 0.6, 0.55), (0.02, 0.45, 0.5), K.METAL)
+            nc.cylinder((40.2, 3.85 + k * 0.6, 0.94), 0.17, 0.2 if k != 1 else 0.12, K.METAL, seg=12)
+        # central island + stools, pot rack above it
+        K.counter(mb, 32.4, 3.4, 37.6, 4.6, 0.9, body=K.TRIM_WHITE, top=MARBLE)
         for x in (33.2, 34.4, 35.6, 36.8):
             f.prop("SM_Int_BarStool", x, 2.75, 0.0)
-        for (x, a) in ((33.0, 0.0), (35.0, 40.0)):
-            nc.cylinder((x, 4.0, 0.92), 0.16, 0.18, K.METAL, seg=12)
-        nc.cylinder((36.6, 4.0, 0.92), 0.22, 0.06, "M_IntWood", seg=12)
-        for k in range(5):
-            nc.sphere((36.5 + 0.08 * (k % 3), 3.95 + 0.07 * (k // 3), 1.0), 0.06, ("M_FlowerRed", "M_IntFabricOrange")[k % 2],
-                      seg=8, rings=5)
-        f.prop("SM_Int_Stove", 40.2, 8.3, -90.0)
-        f.prop("SM_Int_Microwave", 31.0, 11.65, 0.0, z=0.9)
+        DT.table_set(nc, f.a, 34.0, 4.1, 0.9, 0.0, "kitchen", seed=2)
+        f.prop("SM_Int_Pot", 36.4, 4.0, 0.0, z=0.9)
+        f.prop("SM_Int_Jug", 36.9, 3.8, 0.0, z=0.9)
+        for k in range(4):
+            _place_setting(nc, 33.0 + k * 1.2, 3.75, 0.0, h=0.905) if k % 2 else None
+        for x in (32.8, 37.2):
+            nc.box((x, 4.0, (2.25 + zc) / 2), (0.03, 0.03, zc - 2.25), K.METAL)
+        nc.box((35.0, 4.0, 2.25), (4.6, 0.05, 0.05), K.METAL)
+        nc.box((35.0, 3.7, 2.25), (4.6, 0.05, 0.05), K.METAL)
+        nc.box((35.0, 4.3, 2.25), (4.6, 0.05, 0.05), K.METAL)
+        for k in range(9):
+            x = 33.0 + k * 0.45
+            yy = 3.7 if k % 2 else 4.3
+            nc.box((x, yy, 2.12), (0.015, 0.015, 0.22), K.METAL)
+            nc.cylinder((x, yy, 1.78), 0.11 + 0.03 * (k % 3), 0.2, ("M_IntTrimGold", K.METAL, "M_IntFabricRed")[k % 3],
+                        seg=10)
+        # prep table + chef's corner
+        K.counter(mb, 31.0, 9.4, 33.6, 10.3, 0.9, body=K.WOOD, top=K.WOOD_DARK)
+        DT.table_set(nc, f.a, 32.3, 9.85, 0.9, 0.0, "kitchen", seed=4)
+        DT.paper_stack(nc, 33.2, 10.0, 0.9, 10.0, 4, 1)
+        f.prop("SM_Int_Stove", 40.27, 8.3, -90.0)
+        f.prop("SM_Int_Microwave", 31.0, 11.68, 0.0, z=0.9)
         f.prop("SM_Int_Kettle", 36.4, 11.7, 0.0, z=0.9)
-        f.prop("SM_Int_SteelShelves", 33.0, -2.25, 180.0)
-        f.prop("SM_Int_SteelShelves", 37.0, -2.25, 180.0)
+        f.prop("SM_Int_CuttingBoard", 33.5, 11.65, 5.0, z=0.9)
+        for k in range(4):
+            f.prop("SM_Int_Apple", 33.4 + k * 0.08, 11.6, k * 40.0, z=0.94)
+        for x in (33.0, 37.0):
+            with mb.at((x, -2.33, 0.0), rot=180.0), nc.at((x, -2.33, 0.0), rot=180.0):
+                _store_shelf(mb, nc, rng, w=2.2)
+        # staff table between the island and the front windows, copper pans above it
+        _long_table(mb, nc, 34.0, 0.4, 4.0, 1.0, cloth="M_IntFabricBlue", mat=K.WOOD)
+        for k in range(4):
+            for s_ in (-1, 1):
+                f.prop("SM_Int_WoodChair", 32.5 + k * 1.0, 0.4 + s_ * 0.75, 0.0 if s_ < 0 else 180.0)
+        DT.table_set(nc, f.a, 34.0, 0.4, 0.775, 0.0, "cafe", seats=8, seed=6, length=3.6)
+        for (x, y) in ((30.4, 9.9), (30.95, 9.9), (30.4, 9.35)):
+            f.prop("SM_Int_Box", x, y, 0.0)
         f.prop("SM_Int_Extinguisher", 40.3, 11.6, 0.0)
+        f.prop("SM_Int_MetalRack", 40.27, 0.8, -90.0)
+        for k in range(4):
+            for j in range(3):
+                nc.box((40.25, 0.5 + j * 0.3, 0.45 + k * 0.42), (0.36, 0.22, 0.1), ("M_IntCork", "M_IntFabricBeige")[(k + j) % 2])
+        f.prop("SM_Int_ToolCart", 38.3, 9.6, 0.0)
+        for k in range(3):
+            nc.cylinder((37.9 + k * 0.3, 9.6, 0.96), 0.12, 0.06, "M_IntTrimWhite", seg=12)
+        f.prop("SM_Int_Broom", 30.1, 10.9, 90.0)
+        f.prop("SM_Int_Bucket", 30.2, 10.3, 0.0)
+        nc.cylinder((38.0, 7.0, 0.0), 0.22, 0.6, K.METAL, seg=12, cap_top=False)
+        nc.cylinder((38.0, 7.0, 0.58), 0.23, 0.03, K.METAL, seg=12)
         for (x, y) in ((32.0, 1.0), (37.0, 1.0), (32.0, 7.5), (37.0, 7.5)):
             f.prop("SM_Int_IndustrialLamp", x, y, 0.0, z=zc)
-        # chef's pass with plates waiting
-        for k in range(4):
-            _place_setting(nc, 33.0 + k * 1.2, 4.0, 0.0, h=0.93) if k % 2 else None
     K.nameplate(mb, aset, 28.6, 7.6, r["z"] + 2.0, 90.0, "KITCHEN", mat=K.TRIM_GOLD, color=(0.1, 0.1, 0.3), w=0.9, h=0.2)
+    _dress(aset, mb, nc, r, 21, style="service", clear=[(29.4, -2.6, 30.1, 4.1), (29.6, 11.3, 37.7, 12.0)])
     aset.npc((34.5, 6.0, r["z"]), 180.0, dorm="obelisk", wander=2.5)
     K.camera(aset, "kitchen", (40.1, 9.6, r["z"] + 1.75), (30.0, 2.0, r["z"] + 0.8), 15.0)
 
@@ -2377,29 +2779,54 @@ def _boys_pantry(aset, mb, nc, r):
     import random
     rng = random.Random(11)
     with f:
-        for y in (16.0, 19.0, 22.0):
-            f.prop("SM_Int_SteelShelves", 29.75, {16.0: 15.6, 19.0: 17.8, 22.0: 24.0}[y], 90.0)
-            with mb.at((32.6, y, 0.0), rot=90.0), nc.at((32.6, y, 0.0), rot=90.0):
+        for y in (14.0, 16.0, 18.0, 23.9):
+            with mb.at((29.66, y, 0.0), rot=90.0), nc.at((29.66, y, 0.0), rot=90.0):
                 _store_shelf(mb, nc, rng)
-        for y in (16.6, 18.8, 21.0):
-            for k in range(2):
-                f.prop("SM_Int_Box", 33.6 + k * 0.1, y + k * 0.5, rng.uniform(-15, 15), z=0.0)
+        for x in (32.6, 35.4):
+            for y in (16.0, 18.0, 20.0, 22.0):
+                with mb.at((x, y, 0.0), rot=90.0), nc.at((x, y, 0.0), rot=90.0):
+                    _store_shelf(mb, nc, rng)
+                with mb.at((x + 0.52, y, 0.0), rot=-90.0), nc.at((x + 0.52, y, 0.0), rot=-90.0):
+                    _store_shelf(mb, nc, rng)
+        for x in (33.0, 37.0):
+            with mb.at((x, 30.33, 0.0), rot=0.0), nc.at((x, 30.33, 0.0), rot=0.0):
+                _store_shelf(mb, nc, rng)
+        for y in (19.65, 23.4, 27.2):
+            with mb.at((40.33, y, 0.0), rot=-90.0), nc.at((40.33, y, 0.0), rot=-90.0):
+                _store_shelf(mb, nc, rng)
         for y in (26.0, 28.4):
-            f.prop("SM_Int_Cabinet", 29.75, y, 90.0)
+            f.prop("SM_Int_Cabinet", 29.72, y, 90.0)
         for k in range(8):
-            f.prop("SM_Int_Box", 36.0 + (k % 3) * 0.55, 26.0 + (k // 3) * 0.6, rng.uniform(-20, 20), z=0.0)
-        for (x, y) in ((38.8, 18.0), (39.6, 18.6), (38.9, 19.4)):
+            f.prop("SM_Int_Box", 34.6 + (k % 3) * 0.55, 26.2 + (k // 3) * 0.62, rng.uniform(-20, 20))
+        for (x, y) in ((38.6, 14.0), (39.4, 14.6), (38.7, 15.4)):
             mb.cylinder((x, y, 0.0), 0.32, 0.95, K.WOOD, seg=12)
             mb.torus((x, y, 0.2), 0.33, 0.02, K.METAL, seg=12, tube_seg=4)
             mb.torus((x, y, 0.75), 0.33, 0.02, K.METAL, seg=12, tube_seg=4)
-        f.prop("SM_Int_Table", 35.5, 21.5, 90.0)
-        f.prop("SM_Int_Basket", 35.4, 21.0, 0.0, z=0.76)
-        f.prop("SM_Int_Basket", 35.6, 22.2, 40.0, z=0.76)
-        f.prop("SM_Int_Bucket", 37.0, 23.6, 0.0)
-        f.prop("SM_Int_HandTruck", 39.8, 29.6, 200.0)
-        f.prop("SM_Int_Stool", 36.6, 21.0, 0.0)
+        for k in range(6):       # flour / rice sacks
+            nc.box((37.2 + (k % 3) * 0.6, 28.9 + (k // 3) * 0.5, 0.3 + (k // 3) * 0.0), (0.5, 0.4, 0.6),
+                   "M_IntFabricBeige")
+        f.prop("SM_Int_Table", 37.6, 22.0, 90.0)
+        f.prop("SM_Int_Basket", 37.4, 21.6, 0.0, z=0.55)
+        f.prop("SM_Int_Basket", 37.7, 22.6, 40.0, z=0.55)
+        DT.paper_stack(nc, 37.8, 21.1, 0.55, 0.0, 5, 2)
+        f.prop("SM_Int_Stool", 36.6, 21.4, 0.0)
+        f.prop("SM_Int_Bucket", 38.9, 18.4, 0.0)
+        f.prop("SM_Int_HandTruck", 39.9, 29.8, 200.0)
+        # strings of garlic, chillies and hams hanging from a rail
+        nc.box((35.0, 24.4, zc - 1.0), (6.0, 0.05, 0.05), K.WOOD_DARK)
+        for k in range(14):
+            x = 32.2 + k * 0.42
+            nc.box((x, 24.4, zc - 1.25), (0.01, 0.01, 0.45), K.WOOD)
+            nc.sphere((x, 24.4, zc - 1.55), 0.09, ("M_IntFabricWhite", "M_IntFabricRed", "M_IntWoodDark")[k % 3],
+                      seg=8, rings=5)
+        for x in (32.2, 37.8):
+            nc.box((x, 24.4, zc - 0.5), (0.03, 0.03, 1.0), K.METAL)
         for (x, y) in ((33.0, 17.5), (33.0, 24.0), (37.5, 20.0), (36.0, 28.0)):
             f.prop("SM_Int_IndustrialLamp", x, y, 0.0, z=zc)
+    with f:
+        DT.floor_clutter(nc, f.a, 33.4, 24.6, 39.9, 30.6, 0.0, "store", n=10, seed=7,
+                         clear=[(36.5, 28.5, 39.0, 30.6), (39.0, 29.0, 40.6, 30.6)])
+    _dress(aset, mb, nc, r, 22, style="service")
     K.camera(aset, "pantry", (39.8, 13.0, r["z"] + 1.75), (32.0, 25.0, r["z"] + 0.8), 15.0)
 
 
@@ -2494,15 +2921,20 @@ def _boys_duel(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, -38.4, 0.0, -31.6, 9.0, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+        _rug(mb, -38.4, 0.0, -31.6, 9.0, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
         _duel_table(mb, nc, f, -35.0, 2.6, 0.0)
         _duel_table(mb, nc, f, -35.0, 6.8, 0.0)
         K.blackboard(mb, nc, f.a, -29.4, 2.4, 1.0, -90.0, w=3.0, h=1.2, frame=K.WOOD_DARK,
                      lines=("TODAY'S MATCH-UPS", "Chain resolution: last in, first out", "Fusion > Ritual?"))
         with mb.at((-29.9, 5.6, 0.0), rot=-90.0), nc.at((-29.9, 5.6, 0.0), rot=-90.0):
             _cabinet_case(mb, nc, 0.0, 0.0, 1.4, 0.5, 1.9, items=_card_boxes, rng=random_mod(3))
-        f.prop("SM_Int_Console", -40.35, 4.6, 90.0)
-        f.prop("SM_Int_TV", -40.35, 4.6, 90.0, z=0.85)
+        f.prop("SM_Int_Console", -40.29, 4.6, 90.0)
+        f.prop("SM_Int_TV", -40.33, 4.6, 90.0, z=0.95)
+        _wall_shelf(f, -40.6, 8.0, "w", 1.6, 1.6, 6, "decks")
+        DT.card_spread(nc, -35.3, 2.55, 0.91, 0.0, 5, 1)
+        DT.card_spread(nc, -34.7, 6.85, 0.91, 180.0, 5, 2)
+        DT.duel_disk(nc, -36.9, 1.5, 0.0, 200.0)
+        f.prop("SM_Int_Bench", -32.4, 11.7, 0.0)
         f.prop("SM_Int_Armchair", -38.9, 9.8, 230.0)
         f.prop("SM_Int_Armchair", -31.2, 9.8, 130.0)
         f.prop("SM_Int_PottedPlantB", -40.1, 11.5, 0.0)
@@ -2517,6 +2949,7 @@ def _boys_duel(aset, mb, nc, r):
     aset.npc((-35.0 - 1.75, 2.6, r["z"]), -90.0, dorm="obelisk", wander=0.5)
     aset.npc((-35.0 + 1.75, 2.6, r["z"]), 90.0, dorm="obelisk", wander=0.5)
     _curtains(nc, r, "M_IntFabricRed")
+    _dress(aset, mb, nc, r, 8)
     K.camera(aset, "duel_salon", (-30.0, 11.4, r["z"] + 1.8), (-37.5, 1.0, r["z"] + 0.6), 15.0)
 
 
@@ -2524,7 +2957,7 @@ def _boys_trophy(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, -36.4, 13.4, -33.6, 29.6, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        _rug(mb, -36.4, 13.4, -33.6, 29.6, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
         rng = random_mod(9)
         for (y0, n) in ((14.3, 3), (23.2, 3)):
             for k in range(n):
@@ -2541,18 +2974,30 @@ def _boys_trophy(aset, mb, nc, r):
             _chandelier(f, -35.0, y, zc, 1.0)
         f.prop("SM_Int_PottedPlantB", -40.1, 30.1, 0.0)
         f.prop("SM_Int_PottedPlantB", -29.9, 30.1, 0.0)
+        # visitors' benches, the banner of past champions, a ropes line in front of the great trophy
+        for y in (17.4, 21.6):
+            f.prop("SM_Int_Bench", -33.1, y, -90.0)
+        f.prop("SM_Int_Vitrine", -36.0, 30.23, 0.0)
+        for x in (-36.4, -33.6):
+            mb.cylinder((x, 24.6, 0.0), 0.04, 0.95, K.TRIM_GOLD, seg=8)
+            mb.sphere((x, 24.6, 0.98), 0.06, K.TRIM_GOLD, seg=8, rings=5)
+        nc.beam((-36.4, 24.6, 0.88), (-33.6, 24.6, 0.88), 0.04, 0.04, "M_IntFabricRed")
+        for (y, txt) in ((15.2, "2003  K. Fubuki"), (19.6, "2004  J. Manjoume"), (24.0, "2005  ?")):
+            _portrait(f, -40.6, y, 2.1, "w", 1.2)
+        _gallery(f, r, ("e",), z=2.35, scale=1.2, pitch=1.8)
     aset.text("CHAMPIONS OF OBELISK BLUE", (-35.0, 25.38, r["z"] + 0.55), 0.0, size=0.08, color=GOLD_RGB)
     _curtains(nc, r, "M_IntFabricNavy")
+    _dress(aset, mb, nc, r, 9)
     K.camera(aset, "trophy", (-35.0, 12.9, r["z"] + 1.75), (-35.0, 28.0, r["z"] + 1.0), 15.0)
 
 
-def _boys_corridor(aset, mb, nc, r, rp, sx):
+def _boys_corridor(aset, mb, nc, r, rp, sx, lv=1):
     for rr in (r, rp):
         f = Frame(aset, mb, nc, 0.0, 0.0, rr["z"])
         zc = rr["zc"] - rr["z"]
         with f:
             yc = (rr["y0"] + rr["y1"]) / 2
-            K.rug(mb, rr["x0"] + 0.4, yc - 0.8, rr["x1"] - 0.4, yc + 0.8, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+            _rug(mb, rr["x0"] + 0.4, yc - 0.8, rr["x1"] - 0.4, yc + 0.8, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
             n = max(2, int((rr["x1"] - rr["x0"]) / 4.0))
             for k in range(n):
                 x = rr["x0"] + (rr["x1"] - rr["x0"]) * (k + 0.5) / n
@@ -2560,18 +3005,172 @@ def _boys_corridor(aset, mb, nc, r, rp, sx):
         _curtains(nc, rr, "M_IntFabricNavy")
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     with f:
-        # portraits and busts between the room doors
-        for x in (15.6, 21.0, 27.6):
-            _portrait(f, sx * x, 15.6, 1.4, "n", 1.0)
-        for x in (21.0,):
-            _portrait(f, sx * x, 12.2, 1.4, "s", 1.0)
-        f.prop("SM_Int_Console", sx * 15.3, 12.45, 180.0)
-        _vase(nc, sx * 15.3, 12.45, 0.85, 1.1, flowers=("M_FlowerWhite", "M_IntFabricBlue"))
-        f.prop("SM_Int_PottedPlantB", sx * 40.1, 12.7, 0.0)
-        f.prop("SM_Int_Console", sx * 37.8, 15.35, 0.0)
-        f.prop("SM_Int_Candelabra", sx * 37.8, 15.35, 0.0, z=0.85)
+        _console(f, sx * 15.4, 12.2, "s", seed=lv * 7 + sx, mirror=False)
+        f.prop("SM_Int_Bench", sx * 21.8, 15.34, 0.0)
+        _cushions(nc, sx * 21.8, 15.4, 0.45, 0.0, 2, ("M_IntFabricNavy", K.TRIM_GOLD), w=0.8)
+        _plinth_bust(f, mb, sx * 27.9, 12.55, 0.0)
+        _plant(f, sx * 21.8, 12.6, big=False)
+        _console(f, sx * 37.8, 15.6, "n", seed=lv * 9 + sx)
+        _plant(f, sx * 40.1, 12.7)
+        _plant(f, sx * 32.0, 15.2, big=False)
+        _plinth_bust(f, mb, sx * 32.0, 12.55, 0.0)
+    for rr in (r, rp):
+        _gallery(f, rr, ("n", "s"), z=1.55, scale=1.25, pitch=2.2,
+                 skip=[("s", sx * 14.6, sx * 16.2), ("n", sx * 21.0, sx * 22.6), ("n", sx * 37.0, sx * 38.6)])
+        _dress(aset, mb, nc, rr, int(abs(rr["x0"])) + lv)
     if sx < 0:
-        K.camera(aset, "corridor", (-13.8, 14.6, r["z"] + 1.7), (-40.0, 13.6, r["z"] + 1.2), 18.0)
+        K.camera(aset, "corridor" if lv == 1 else "corridor2", (-13.8, 14.6, r["z"] + 1.7), (-40.0, 13.6, r["z"] + 1.2),
+                 18.0)
+
+
+def _boys_games(aset, mb, nc, r):
+    """First-floor games room behind the foyer gallery: billiards and a juice bar (west), duel table and card
+    tables (centre), a TV / console corner (east). The stair to the second floor runs along the south wall."""
+    f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+    zc = r["zc"] - r["z"]
+    with f:
+        # west: billiards, cue rack, score board, juice bar
+        _rug(mb, -10.4, 21.4, -3.6, 25.6, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        _billiard(mb, nc, -7.0, 23.5, 0.0)
+        for x in (-7.8, -6.2):
+            f.prop("SM_Int_IndustrialLamp", x, 23.5, 0.0, z=zc)
+        with mb.at((-12.6, 23.5, 0.0), rot=90.0), nc.at((-12.6, 23.5, 0.0), rot=90.0):
+            mb.box((0, -0.06, 1.0), (1.4, 0.08, 0.06), K.WOOD_DARK)
+            mb.box((0, -0.06, 0.3), (1.4, 0.08, 0.06), K.WOOD_DARK)
+            for k in range(6):
+                nc.box((-0.6 + k * 0.24, -0.1, 0.8), (0.03, 0.03, 1.45), K.WOOD)
+        K.blackboard(mb, nc, f.a, -12.6, 20.4, 1.1, 90.0, w=1.6, h=0.9, frame=K.WOOD_DARK,
+                     lines=("8-BALL LADDER", "1. Manjoume  2. Misawa"), size=0.08)
+        f.prop("SM_Int_Armchair", -10.9, 20.2, 120.0)
+        f.prop("SM_Int_SideTable", -11.9, 21.2, 0.0)
+        DT.mug(nc, -11.9, 21.2, 0.55, 3)
+        K.counter(mb, -12.55, 25.6, -11.75, 29.1, 1.05, body=K.WOOD_DARK, top=MARBLE)
+        for y in (26.1, 27.0, 27.9, 28.7):
+            f.prop("SM_Int_BarStool", -11.2, y, 90.0)
+        for k in range(7):
+            nc.cylinder((-12.15, 25.9 + k * 0.45, 1.05), 0.035, 0.24, ("M_IntGlassClear", "M_IntFabricOrange",
+                                                                         "M_IntFabricGreen")[k % 3], seg=8)
+        _wall_shelf(f, -12.6, 27.35, "w", 2.4, 1.75, 4, "decks")
+        # centre: duel table + two card tables
+        _rug(mb, -2.4, 21.2, 2.4, 24.8, 0.0, "M_IntCarpetRed", K.TRIM_GOLD)
+        _duel_table(mb, nc, f, 0.0, 23.0, 0.0)
+        DT.duel_disk(nc, -1.7, 24.4, 0.0, 30.0)
+        for (x, y) in ((-3.4, 27.4), (3.4, 27.4)):
+            f.prop("SM_Int_RoundTableB", x, y, 0.0)
+            for k in range(3):
+                a = math.radians(90.0 + 120.0 * k)
+                f.prop("SM_Int_DiningChair", x + math.cos(a) * 0.75, y + math.sin(a) * 0.75, math.degrees(a) - 90.0)
+            DT.card_spread(nc, x - 0.05, y - 0.1, 0.75, 15.0, 6, int(x))
+            DT.deck_box(nc, x + 0.22, y + 0.15, 0.75, 40.0, "M_IntFabricNavy")
+            DT.mug(nc, x - 0.25, y + 0.2, 0.75, int(y))
+        # east: console games corner
+        _rug(mb, 7.4, 21.0, 11.6, 26.0, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        f.prop("SM_Int_MediaCabinet", 12.33, 23.5, -90.0)
+        zt = _doily(f, 12.33, 23.5, 0.68, 2.2, 0.4, 90.0, "M_IntFabricNavy")
+        f.prop("SM_Int_TVB", 12.3, 23.5, -90.0, z=zt)
+        DT.book_row(nc, 12.33, 12.33 + 0.7, 22.4, 0.68, 0.2, yaw=90.0, max_h=0.22, seed=7)
+        f.prop("SM_Int_SofaB", 8.3, 23.5, 90.0)
+        _cushions(nc, 8.05, 23.5, 0.4, 90.0, 3, ("M_IntFabricNavy", "M_IntFabricWhite"))
+        f.prop("SM_Int_LowTable", 10.0, 23.5, 0.0)
+        zt = _doily(f, 10.0, 23.5, 0.5, 0.7, 0.7, 0.0, "M_IntFabricWhite")
+        for (dx, dy, a) in ((-0.15, 0.2, 10.0), (0.2, -0.25, -30.0)):
+            f.prop("SM_Int_Gamepad", 10.0 + dx, 23.5 + dy, a, z=zt)
+        f.prop("SM_Int_Bowl", 9.9, 23.3, 0.0, z=zt)
+        for y in (21.7, 25.3):
+            f.prop("SM_Int_Ottoman", 10.3, y, 0.0)
+        with nc.at((12.58, 19.0, 1.73), rot_y=-90.0):     # darts board
+            nc.cylinder((0, 0, 0), 0.23, 0.03, K.BLACK, seg=20)
+            nc.cylinder((0, 0, 0.03), 0.17, 0.004, "M_IntFabricRed", seg=20)
+            nc.cylinder((0, 0, 0.034), 0.1, 0.004, "M_IntFabricGreen", seg=16)
+            nc.cylinder((0, 0, 0.038), 0.02, 0.004, "M_IntFabricRed", seg=8)
+        f.prop("SM_Int_Vitrine", 12.24, 27.4, -90.0)
+        K.poster(nc, f.a, 12.6, 20.6, 1.75, -90.0, 0.6, 0.85, "M_IntPoster2", text="OBELISK CUP", text_size=0.07)
+        K.poster(nc, f.a, -12.6, 18.1, 1.75, 90.0, 0.6, 0.85, "M_IntPoster3", text="DUEL RANKINGS", text_size=0.06)
+        _plant(f, 12.0, 29.0)
+        _plant(f, -12.0, 17.0)
+        _plant(f, 5.3, 16.75)
+        for (x, y) in ((-7.0, 19.5), (0.0, 25.5), (8.0, 19.5), (8.0, 27.0), (-3.0, 19.5)):
+            _chandelier(f, x, y, zc, 0.9)
+        f.light(0.0, 23.0, 2.8, 2500.0, 10.0)
+    _gallery(f, r, ("n",), z=1.75, scale=1.0, pitch=1.8)
+    _gallery(f, r, ("s",), z=1.9, scale=1.3, skip=[("s", -3.6, 3.8)])
+    _curtains(nc, r, "M_IntFabricNavy")
+    _dress(aset, mb, nc, r, 41, clear=[(-3.5, 16.2, 3.7, 18.0)])
+    aset.npc((-6.0, 22.0, r["z"]), 160.0, dorm="obelisk", wander=1.0)
+    aset.npc((9.5, 22.0, r["z"]), 70.0, dorm="obelisk", wander=0.5)
+    K.camera(aset, "games", (11.8, 17.2, r["z"] + 1.7), (-8.0, 26.5, r["z"] + 0.9), 15.0)
+    K.camera(aset, "games_stair", (-10.5, 19.0, r["z"] + 1.7), (3.0, 17.0, r["z"] + 2.2), 15.0)
+
+
+def _boys_hall2(aset, mb, nc, r):
+    """Second-floor stair hall: the portrait gallery between the two wing corridors and the study hall."""
+    f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+    zc = r["zc"] - r["z"]
+    with f:
+        for sx in (-1, 1):
+            _seating(f, sx * 7.4, 12.62, 180.0, seed=50 + sx, cushions=("M_IntFabricWhite", "M_IntFabricNavy"),
+                     rug_d=3.2)
+            _console(f, sx * 3.0, 19.9, "n", seed=60 + sx, mirror=sx < 0)
+            _plant(f, sx * 12.0, 19.3)
+            _plinth_bust(f, mb, sx * 9.8, 19.45, 180.0)
+        f.prop("SM_Int_GrandfatherClock", -2.4, 12.45, 180.0)
+        f.prop("SM_Int_RoundTableB", 5.5, 17.0, 0.0)
+        _vase(nc, 5.5, 17.0, 0.75, 1.6, flowers=("M_FlowerWhite", "M_IntFabricBlue", "M_FlowerRed"))
+        f.prop("SM_Int_Bench", -3.2, 18.8, 180.0)
+        for (x, y, s) in ((-7.0, 16.0, 1.1), (0.0, 14.0, 1.2), (7.0, 16.0, 1.1)):
+            _chandelier(f, x, y, zc, s)
+        f.light(1.5, 17.0, 2.4, 1500.0, 6.0)
+    _gallery(f, r, ("s",), z=1.6, scale=1.6, skip=[("s", -3.0, -1.8)])
+    _gallery(f, r, ("e", "w"), z=1.6, scale=1.3)
+    _dress(aset, mb, nc, r, 70)
+    K.camera(aset, "hall2", (11.6, 19.3, r["z"] + 1.7), (-6.0, 13.0, r["z"] + 0.9), 15.0)
+
+
+def _study_table(mb, nc, f, x, y, L=2.4, Wd=1.0, seed=0):
+    """Library reading table (0.76 m top) along x with four chairs, green-shaded lamps and open work."""
+    mb.box((x, y, 0.74), (L, Wd, 0.04), K.WOOD_DARK)
+    for sx in (-1, 1):
+        mb.box((x + sx * (L / 2 - 0.12), y, 0.36), (0.1, Wd - 0.16, 0.72), K.WOOD_DARK)
+    mb.box((x, y, 0.2), (L - 0.3, 0.08, 0.06), K.WOOD_DARK)
+    mb.box((x, y, 0.761), (L - 0.2, Wd - 0.25, 0.002), "M_IntFabricGreen")
+    for k in (-1, 1):
+        for s in (-1, 1):
+            f.prop("SM_Int_DiningChair", x + k * 0.6, y + s * 0.78, 0.0 if s < 0 else 180.0)
+        DT.desk_set(nc, f.a, x + k * 0.6, y - 0.25 * k, 0.76, 0.0 if k < 0 else 180.0, "student", seed=seed + k,
+                    w=1.0, d=0.5)
+
+
+def _boys_study2(aset, mb, nc, r):
+    """Second-floor study hall: tall bookcases, six reading tables, armchairs by the windows."""
+    f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+    zc = r["zc"] - r["z"]
+    with f:
+        for x in (-11.4, -9.9, -8.4, -3.8, -2.3, -0.8, 0.8, 2.3, 3.8, 8.4, 9.9, 11.4):
+            K.bookcase(mb, nc, x, 20.33, 0.0 + 180.0, w=1.45, d=0.42, h=2.9, shelves=7, mat=K.WOOD_DARK,
+                       rng_seed=int(x * 10) % 97)
+        for sx in (-1, 1):
+            for y in (21.3, 22.8, 24.3, 25.8, 27.3, 28.8):
+                K.bookcase(mb, nc, sx * 12.38, y, -90.0 * sx, w=1.45, d=0.42, h=2.9, shelves=7, mat=K.WOOD_DARK,
+                           rng_seed=int(y * 10 + sx) % 97)
+            f.prop("SM_Int_Ladder", sx * 11.7, 24.3, -90.0 * sx)
+            for y in (22.6, 25.4):
+                _study_table(mb, nc, f, sx * 6.2, y, seed=int(y) + sx)
+            f.prop("SM_Int_Armchair", sx * 9.0, 28.7, 180.0 + sx * 30.0)
+            f.prop("SM_Int_SideTable", sx * 9.0 - sx * 0.85, 29.15, 0.0)
+            DT.book_stack(nc, sx * 9.0 - sx * 0.85, 29.15, 0.55, 15.0, 4, sx + 5)
+            _chandelier(f, sx * 6.2, 24.0, zc, 0.9)
+        _rug(mb, -2.2, 21.6, 2.2, 28.4, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        _study_table(mb, nc, f, 0.0, 24.0, seed=31)
+        f.prop("SM_Int_CoffeeTable", 0.0, 27.5, 0.0)
+        nc.sphere((0.0, 27.5, 0.83), 0.32, "M_IntFabricBlue", seg=16, rings=10)
+        nc.torus((0.0, 27.5, 0.83), 0.37, 0.02, K.TRIM_GOLD, seg=20, tube_seg=4)
+        nc.cylinder((0.0, 27.5, 0.49), 0.05, 0.03, K.TRIM_GOLD, seg=8)
+        _chandelier(f, 0.0, 24.0, zc, 1.0)
+    aset.text("STUDY HALL", (0.0, 20.12, r["z"] + 3.0), 180.0, size=0.22, color=GOLD_RGB)
+    _curtains(nc, r, "M_IntFabricNavy")
+    _dress(aset, mb, nc, r, 80, clear=[(-12.6, 20.1, 12.6, 20.6)])
+    aset.npc((-6.2, 21.6, r["z"]), 0.0, dorm="obelisk", wander=0.3)
+    K.camera(aset, "study2", (11.4, 20.9, r["z"] + 1.7), (-8.0, 28.6, r["z"] + 0.8), 15.0)
 
 
 def build_boys():
@@ -2631,7 +3230,7 @@ def _g_window(mb, u, row, nc=None, w=None, flowers=None):
 def _turret(mb, cx, cy, r, angles, top=15.2, roof_h=8.6, hollow=False):
     """Round corner turret. hollow=True: the two lower storeys are built as a thick ring wall with real
     windows elsewhere (_girls_turrets_inside); here only the upper wall, rings and the roof."""
-    mb.lathe([(r, 9.2 if hollow else -4.0), (r, top)], WALL, 28, cap_top=False, cap_bottom=False, center=(cx, cy, 0.0))
+    mb.lathe([(r, 13.0 if hollow else -4.0), (r, top)], WALL, 28, cap_top=False, cap_bottom=False, center=(cx, cy, 0.0))
     lathe_crisp(mb, [(r + 0.2, -4.0), (r + 0.2, G_FL + 0.3), (r + 0.05, G_FL + 0.45)], MARBLE, 28,
                 center=(cx, cy, 0.0))
     for z in G_BANDS:
@@ -2651,7 +3250,7 @@ def _turret(mb, cx, cy, r, angles, top=15.2, roof_h=8.6, hollow=False):
             window(mb, 0.0, 1.85, 1.0, 2.6, GTRIM, arch=True, keystone=GTRIM, sill_mat=MARBLE, seg=6,
                    rect_glass=not hollow)
             window(mb, 0.0, 6.0, 1.0, 2.3, GTRIM, arch=True, sill_mat=MARBLE, seg=6, rect_glass=not hollow)
-            window(mb, 0.0, 10.0, 1.0, 2.0, GTRIM, arch=True, sill_mat=MARBLE, seg=6)
+            window(mb, 0.0, 10.0, 1.0, 2.0, GTRIM, arch=True, sill_mat=MARBLE, seg=6, rect_glass=not hollow)
             window(mb, 0.0, 13.05, 0.8, 0.45, GTRIM, arch=True, sill_mat=MARBLE, seg=6, mullion=False)
 
 
@@ -2659,7 +3258,10 @@ def _bay_canted(mb, xc, yw, depth=1.4, wb=4.6, wf=2.8, z0=-1.0, z1=9.4):
     """Two-storey canted bay window on the front wall plane y=yw (projects to -y)."""
     yf = yw - depth
     fp = [(xc - wf / 2, yf), (xc + wf / 2, yf), (xc + wb / 2, yw), (xc - wb / 2, yw)]
-    mb.prism(fp, z0, z1, WALL, cap_top=False, cap_bottom=False)
+    if _P is None:
+        mb.prism(fp, z0, z1, WALL, cap_top=False, cap_bottom=False)
+    else:                   # walk-in bay: the facets are walls with real windows (_girls_bays)
+        mb.prism(fp, z0, -0.3, WALL, cap_top=False, cap_bottom=False)
     e = [(xc - wf / 2 - 0.08, yf - 0.1), (xc + wf / 2 + 0.08, yf - 0.1), (xc + wb / 2 + 0.14, yw),
          (xc - wb / 2 - 0.14, yw)]
     mb.prism(e, G_BANDS[0] - 0.16, G_BANDS[0] + 0.16, GTRIM)
@@ -2765,7 +3367,9 @@ def _girls_building(mb, nc, aset):
     # east round bay (two storeys)
     bx, by, br = x1, 15.0, 2.6
     hp = (-math.pi / 2, math.pi / 2)
-    lathe_arc(mb, [(br, -4.0), (br, 9.4)], WALL, *hp, 12, center=(bx, by, 0.0))
+    lathe_arc(mb, [(br, -4.0 if _P is None else 5.35), (br, 9.4)], WALL, *hp, 12, center=(bx, by, 0.0))
+    if _P is not None:
+        lathe_arc(mb, [(br, -4.0), (br, -0.3)], WALL, *hp, 12, center=(bx, by, 0.0))
     lathe_arc(mb, [(br + 0.2, -4.0), (br + 0.2, FL + 0.3)], MARBLE, *hp, 12, center=(bx, by, 0.0))
     lathe_arc(mb, [(br + 0.2, FL + 0.3), (br, FL + 0.3)], MARBLE, *hp, 12, center=(bx, by, 0.0))
     lathe_arc(mb, [(br + 0.1, 5.25), (br + 0.1, 5.55)], GTRIM, *hp, 12, center=(bx, by, 0.0))
@@ -2776,7 +3380,8 @@ def _girls_building(mb, nc, aset):
     for a_deg in (-55.0, 0.0, 55.0):
         a = math.radians(a_deg)
         with mb.at((bx + math.cos(a) * br, by + math.sin(a) * br, 0.0), rot=a_deg + 90):
-            window(mb, 0.0, 1.85, 1.0, 2.8, GTRIM, sill_mat=MARBLE, head="lintel", head_mat=GTRIM, mullion=False)
+            window(mb, 0.0, 1.85, 1.0, 2.8, GTRIM, sill_mat=MARBLE, head="lintel", head_mat=GTRIM, mullion=False,
+                   rect_glass=_P is None)
             window(mb, 0.0, 6.0, 1.0, 2.5, GTRIM, sill_mat=MARBLE, head="lintel", head_mat=GTRIM, mullion=False)
 
     # ------------------------------------------------------------ entrance porch with balcony
@@ -3096,12 +3701,18 @@ def _girls_jetty(mb, nc, aset):
 
 
 # ----------------------------------------------------------------------------- girls: walk-in mansion
-# Ground floor at G_FL (1.2, the terrace level), first floor at G_Z1 (5.6, the porch balcony level). The
-# round corner turrets open into the corner rooms of both storeys; the attic storey stays closed.
+# Ground floor at G_FL (1.2, the terrace level), first floor at G_Z1 (5.6, the porch balcony level), second
+# floor at G_Z2 (9.5, the arched-window storey; ladies' salon + four more suites, reached by a flight from the
+# music gallery). The round corner turrets open into the corner rooms of all three storeys; the two canted front
+# bays open into the rooms behind them (both storeys) and the round east bay into the ground-floor corridor.
+# Only the roof space (dormers) stays closed.
 G_Z1 = 5.6
 G_C0 = 5.24
 G_C1 = 9.15
-G_BANDS_INT = [(-0.3, 5.35, 0), (5.35, 9.2, 1), (9.2, 99.0, None)]
+G_Z2 = 9.5
+G_C2 = 12.85
+G_BANDS_INT = [(-0.3, 5.35, 0), (5.35, 9.2, 1), (9.2, 13.0, 2), (13.0, 99.0, None)]
+G_HOLE = (-0.85, 20.1, 0.85, 24.16)     # stairwell music gallery -> second floor hall
 G_RT = 0.4           # turret wall thickness
 G_DOOR = "girls_inner"
 PINK_TXT = (0.85, 0.35, 0.5)
@@ -3115,8 +3726,17 @@ def _girls_faces():
     f = {}
     for (a, b) in (((x0, y0), (x1, y0)), ((px0, py0), (px1, py0)), ((x1, y1), (x0, y1)), ((px1, py1), (px0, py1)),
                    ((x0, y1), (x0, y0)), ((x1, y0), (x1, y1))):
-        f[(*a, *b)] = 9.0
+        f[(*a, *b)] = 12.6
+    for xc in (-12.8, 12.8):      # canted bay facets
+        for (a, b) in _bay_facets(xc):
+            f[(*a, *b)] = 9.0
     return f
+
+
+def _bay_facets(xc, yw=4.0, depth=1.4, wb=4.6, wf=2.8):
+    yf = yw - depth
+    return [((xc - wb / 2, yw), (xc - wf / 2, yf)), ((xc - wf / 2, yf), (xc + wf / 2, yf)),
+            ((xc + wf / 2, yf), (xc + wb / 2, yw))]
 
 
 def _girls_segments():
@@ -3253,6 +3873,11 @@ def _girls_turrets_inside(mb, R):
         _turret_floor(mb, tx, ty, r_in, a0, a1, G_C0, None, ceiling=K.CEIL, qx=qx, qy=qy)
         _turret_floor(mb, tx, ty, r_in, a0, a1, G_Z1, R[g1]["floor"], qx=qx, qy=qy)
         _turret_floor(mb, tx, ty, r_in, a0, a1, G_C1, None, ceiling=K.CEIL, qx=qx, qy=qy)
+        g2 = g1 + "2"
+        _ring_wall(mb, tx, ty, G_TURRET_R, G_RT, a0, a1, 9.2, 13.0, WALL, R[g2]["wall"],
+                   [(a, 1.0, 10.0, 12.0) for a in angs])
+        _turret_floor(mb, tx, ty, r_in, a0, a1, G_Z2, R[g2]["floor"], qx=qx, qy=qy)
+        _turret_floor(mb, tx, ty, r_in, a0, a1, G_C2, None, ceiling=K.CEIL, qx=qx, qy=qy)
 
 
 def _turret_angles(tx, ty):
@@ -3278,7 +3903,7 @@ def _girls_rooms():
     def room(name, fl, rect, wall, floor, turret=None, **kw):
         if turret:
             kw["gaps"] = tg(rect, *turret)
-        R[name] = _room(name, fl, rect, Z0 if fl == 0 else Z1, G_C0 if fl == 0 else G_C1, wall, floor, **kw)
+        R[name] = _room(name, fl, rect, (Z0, Z1, G_Z2)[fl], (G_C0, G_C1, G_C2)[fl], wall, floor, **kw)
         return R[name]
 
     room("foyer", 0, (-6.6, 1.4, 6.6, 26.6), K.PLASTER_WHITE, K.MARBLEFLOOR, dado=(K.TRIM_WHITE, GTRIM), dado_h=0.6,
@@ -3301,21 +3926,74 @@ def _girls_rooms():
          dado_h=0.3, panels=K.TRIM_WHITE, seams=K.WOOD_DARK, coffer=(2.6, K.TRIM_WHITE, K.TRIM_GOLD))
     room("fcorr", 1, (-6.6, 13.6, 6.6, 16.4), K.PLASTER_WHITE, MARBLE_ROSE, cornice=GTRIM, open="n")
     room("gallery", 1, (-6.6, 16.4, 6.6, 26.6), K.PLASTER_WHITE, MARBLE_ROSE, cornice=GTRIM, open="s",
-         holes=[(-6.7, 16.4, -4.85, 23.6), (4.85, 16.4, 6.7, 23.6)],
+         dado=(K.TRIM_WHITE, GTRIM), panels=GTRIM,
+         holes=[(-6.7, 16.4, -4.85, 23.6), (4.85, 16.4, 6.7, 23.6)], cut_ceiling=[G_HOLE],
          gaps={"w": [(16.3, 23.65)], "e": [(16.3, 23.65)]})
+    # second floor: ladies' salon over the porch, the upper hall (stair arrival) behind it
+    room("lsalon", 2, (-6.6, 1.4, 6.6, 13.4), WALL_ROSE, K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.3,
+         panels=K.TRIM_WHITE, seams=K.WOOD_DARK, coffer=(2.6, K.TRIM_WHITE, K.TRIM_GOLD))
+    room("hall2", 2, (-6.6, 13.6, 6.6, 26.6), WALL_LILAC, MARBLE_ROSE, holes=[G_HOLE], dado=(K.TRIM_WHITE, GTRIM),
+         dado_h=0.6, panels=K.TRIM_WHITE, cornice=GTRIM)
     themes = {"wfs": WALL_ROSE, "wfb": "M_IntWallpaperBlue", "wbs": WALL_LILAC, "wbb": WALL_ROSE,
               "efs": K.PLASTER_MINT, "efb": WALL_LILAC, "ebs": "M_IntWallpaperBlue", "ebb": WALL_ROSE}
+    alt = {WALL_ROSE: WALL_LILAC, "M_IntWallpaperBlue": WALL_ROSE, WALL_LILAC: K.PLASTER_MINT,
+           K.PLASTER_MINT: "M_IntWallpaperBlue"}
     for sx in (-1, 1):
         s = "w" if sx < 0 else "e"
-        room(s + "fs", 1, _mx((7.4, 4.4, 14.1, 14.9), sx), themes[s + "fs"], K.WOODFLOOR, dado=(K.TRIM_WHITE, GTRIM),
-             dado_h=0.3, panels=K.TRIM_WHITE, seams=K.WOOD_DARK)
-        room(s + "fb", 1, _mx((14.3, 4.4, 21.6, 14.9), sx), themes[s + "fb"], "M_IntCarpetRose",
-             turret=(sx * 22.0, 4.0), panels=K.TRIM_WHITE)
-        room(s + "bs", 1, _mx((7.4, 15.1, 14.9, 25.6), sx), themes[s + "bs"], K.WOODFLOOR, dado=(K.TRIM_WHITE, GTRIM),
-             dado_h=0.3, panels=K.TRIM_WHITE, seams=K.WOOD_DARK)
-        room(s + "bb", 1, _mx((15.1, 15.1, 21.6, 25.6), sx), themes[s + "bb"], "M_IntCarpetRose",
-             turret=(sx * 22.0, 26.0), panels=K.TRIM_WHITE)
+        for (lv, t) in ((1, ""), (2, "2")):
+            def th(k):
+                return themes[s + k] if lv == 1 else alt[themes[s + k]]
+            room(s + "fs" + t, lv, _mx((7.4, 4.4, 14.1, 14.9), sx), th("fs"), K.WOODFLOOR, dado=(K.TRIM_WHITE, GTRIM),
+                 dado_h=0.3, panels=K.TRIM_WHITE, seams=K.WOOD_DARK)
+            room(s + "fb" + t, lv, _mx((14.3, 4.4, 21.6, 14.9), sx), th("fb"), "M_IntCarpetRose",
+                 turret=(sx * 22.0, 4.0), panels=K.TRIM_WHITE)
+            room(s + "bs" + t, lv, _mx((7.4, 15.1, 14.9, 25.6), sx), th("bs"), K.WOODFLOOR,
+                 dado=(K.TRIM_WHITE, GTRIM), dado_h=0.3, panels=K.TRIM_WHITE, seams=K.WOOD_DARK)
+            room(s + "bb" + t, lv, _mx((15.1, 15.1, 21.6, 25.6), sx), th("bb"), "M_IntCarpetRose",
+                 turret=(sx * 22.0, 26.0), panels=K.TRIM_WHITE)
+        # the canted front bay (both lower storeys): wall finish of its facets
+        R["bay_" + s] = _room("bay_" + s, 0, (sx * 12.8 - 2.3, 2.6, sx * 12.8 + 2.3, 4.0), G_FL, G_C1,
+                              R["parlour" if sx < 0 else "tea"]["wall"], K.WOODFLOOR, ceil=None, cornice=None,
+                              skirting=None, slab=False, levels=(0, 1))
+    R["rbay"] = _room("rbay", 0, (22.0, 12.4, 24.6, 17.6), G_FL, G_C0, K.PLASTER_MINT, K.TILE, ceil=None, cornice=None,
+                      skirting=None, slab=False)
     return R
+
+
+def _girls_bay_plan():
+    """Walk-through openings from the rooms into the bays (recorded before the outer walls are built)."""
+    for sx in (-1, 1):
+        _P["holes"].append(dict(kind="open", x=sx * 12.8, y=4.0, z0=G_FL, z1=G_FL + 3.3, w=3.6, r=0.0, style=None,
+                                double=False))
+        _P["holes"].append(dict(kind="open", x=sx * 12.45, y=4.0, z0=G_Z1, z1=G_Z1 + 2.9, w=2.9, r=0.0, style=None,
+                                double=False))
+    _P["holes"].append(dict(kind="open", x=22.0, y=15.0, z0=G_FL, z1=G_FL + 3.0, w=2.4, r=0.0, style=None,
+                            double=False))
+
+
+def _girls_bays(aset, main, R):
+    """Canted bays: facet walls with real windows, floors and ceilings; the round east bay's ground floor."""
+    segs = []
+    for sx in (-1, 1):
+        segs += [(a, b, 9.4) for (a, b) in _bay_facets(sx * 12.8)]
+    _ext_walls(aset, main, segs, G_BANDS_INT, T=0.25, outer=WALL, frame=GTRIM, trim_in=GTRIM)
+    for sx in (-1, 1):
+        xc, yw, yf, wb, wf = sx * 12.8, 4.0, 2.6, 4.6, 2.8
+        poly = [(xc - wf / 2, yf), (xc + wf / 2, yf), (xc + wb / 2, yw), (xc + wb / 2, 4.3), (xc - wb / 2, 4.3),
+                (xc - wb / 2, yw)]
+        r0, r1 = (R["parlour"], R["wfs"]) if sx < 0 else (R["tea"], R["efs"])
+        main.prism(poly, G_FL - 0.3, G_FL, K.CEIL, top_mat=r0["floor"])
+        main.poly([(p[0], p[1], G_C0) for p in reversed(poly)], K.CEIL)
+        main.prism(poly, G_Z1 - 0.3, G_Z1, K.CEIL, top_mat=r1["floor"])
+        main.poly([(p[0], p[1], G_C1) for p in reversed(poly)], K.CEIL)
+    # round east bay: ring wall with real windows, half-disc floor and ceiling
+    bx, by, br = 22.0, 15.0, 2.6
+    _ring_wall(main, bx, by, br, 0.25, -90.0, 90.0, -0.3, 5.35, WALL, K.PLASTER_MINT,
+               [(a, 1.0, 1.85, 4.65) for a in (-55.0, 0.0, 55.0)], seg=24)
+    pts = [_ring_point(bx, by, br, 24, -90.0 + 180.0 * k / 12) for k in range(13)]
+    pts = [(bx - 0.4, by - br)] + pts + [(bx - 0.4, by + br)]
+    main.prism(pts, G_FL - 0.3, G_FL, K.CEIL, top_mat="M_IntTileBlue")
+    main.poly([(p[0], p[1], G_C0) for p in reversed(pts)], K.CEIL)
 
 
 def _girls_partitions(aset, mb, R):
@@ -3337,7 +4015,11 @@ def _girls_partitions(aset, mb, R):
         J(13.5, 15.0, 5.35, 9.2, R[s + "fs"]["wall"], R["fcorr"]["wall"], [(14.2, 1.0, 2.4, D, False, Z1)])
         J(15.0, 16.4, 5.35, 9.2, R[s + "bs"]["wall"], R["fcorr"]["wall"], [(15.75, 1.0, 2.4, D, False, Z1)])
         J(16.4, 26.0, 5.35, 9.2, R[s + "bs"]["wall"], R["gallery"]["wall"], [])
-        J(4.0, 26.0, 9.2, 13.6, W, W, [])
+        J(4.0, 13.5, 9.2, 13.0, R[s + "fs2"]["wall"], R["lsalon"]["wall"], [(9.0, 1.0, 2.2, D, False, G_Z2)])
+        J(13.5, 15.0, 9.2, 13.0, R[s + "fs2"]["wall"], R["hall2"]["wall"], [(14.2, 1.0, 2.2, D, False, G_Z2)])
+        J(15.0, 16.4, 9.2, 13.0, R[s + "bs2"]["wall"], R["hall2"]["wall"], [(15.75, 1.0, 2.2, D, False, G_Z2)])
+        J(16.4, 26.0, 9.2, 13.0, R[s + "bs2"]["wall"], R["hall2"]["wall"], [])
+        J(4.0, 26.0, 13.0, 13.6, W, W, [])
         a, b = ((7.0, 4.0), (7.0, 26.0)) if sx > 0 else ((-7.0, 26.0), (-7.0, 4.0))
         mb.wall(a, b, 13.6, 14.4 - 13.6, 0.4, W)                    # pavilion wall above the main roof line
 
@@ -3349,13 +4031,18 @@ def _girls_partitions(aset, mb, R):
 
         H(13.5, 7.4, 21.6, -0.3, G_C0 + 0.06, g_front["wall"], g_corr["wall"], [(sx * 12.0, 1.2, 2.5, D, False, Z0)])
         H(16.5, 7.4, 21.6, -0.3, G_C0 + 0.06, g_corr["wall"], g_back["wall"], [(sx * 12.0, 1.2, 2.5, D, False, Z0)])
-        H(15.0, 7.4, 21.6, Z1, 9.2, R[s + "fs"]["wall"], R[s + "bs"]["wall"], [])
-        # sitting room | bedroom splits
-        for (xs, ya, yb, si, bi, dv) in ((14.2, 4.4, 14.9, "fs", "fb", 10.0), (15.0, 15.1, 25.6, "bs", "bb", 20.0)):
-            a, b = (sx * xs, ya), (sx * xs, yb)
-            inner_m, outer_m = R[s + si]["wall"], R[s + bi]["wall"]
-            right, left = (outer_m, inner_m) if sx > 0 else (inner_m, outer_m)
-            _pw(aset, mb, a, b, Z1, 9.2, 0.2, right, left, [(dv, 1.0, 2.4, D, False, Z1)], trim=GTRIM, trim_in=GTRIM)
+        for (t, ZL, zt) in (("", Z1, 9.2), ("2", G_Z2, 13.0)):
+            H(15.0, 7.4, 21.6, ZL, zt, R[s + "fs" + t]["wall"], R[s + "bs" + t]["wall"], [])
+            # sitting room | bedroom splits
+            for (xs, ya, yb, si, bi, dv) in ((14.2, 4.4, 14.9, "fs", "fb", 10.0), (15.0, 15.1, 25.6, "bs", "bb", 20.0)):
+                a, b = (sx * xs, ya), (sx * xs, yb)
+                inner_m, outer_m = R[s + si + t]["wall"], R[s + bi + t]["wall"]
+                right, left = (outer_m, inner_m) if sx > 0 else (inner_m, outer_m)
+                _pw(aset, mb, a, b, ZL, zt, 0.2, right, left, [(dv, 1.0, 2.4 if t == "" else 2.2, D, False, ZL)],
+                    trim=GTRIM, trim_in=GTRIM)
+    # F2 ladies' salon | upper hall
+    _pw(aset, mb, (-6.6, 13.5), (6.6, 13.5), G_Z2, 13.0, 0.2, R["lsalon"]["wall"], R["hall2"]["wall"],
+        [(0.0, 1.6, 2.4, D, True, G_Z2)], trim=GTRIM, trim_in=GTRIM)
     # F1 salon | landing corridor
     _pw(aset, mb, (-6.6, 13.5), (6.6, 13.5), Z1, 9.2, 0.2, R["salon"]["wall"], R["fcorr"]["wall"],
         [(0.0, 1.6, 2.6, D, True, Z1)], trim=GTRIM, trim_in=GTRIM)
@@ -3369,6 +4056,16 @@ def _girls_stairs(aset, mb, nc):
         _rail(mb, (sx * 4.98, 23.6, Z0), (sx * 4.98, 16.45, Z1), post=K.TRIM_WHITE, rail=GTRIM, newel=MARBLE)
         _rail(mb, (sx * 4.88, 16.45, Z1), (sx * 4.88, 23.62, Z1), post=K.TRIM_WHITE, rail=GTRIM)
         _rail(mb, (sx * 4.88, 23.62, Z1), (sx * 6.55, 23.62, Z1), post=K.TRIM_WHITE, rail=GTRIM, newel=MARBLE)
+    # music gallery -> second floor hall: a light flight on stringers up the gallery's axis (22 x 0.177 m),
+    # from the landing corridor towards the back windows
+    K.stairs(mb, 0.0, 18.0, Z1, G_Z2, 90.0, 1.4, mat=MARBLE_ROSE,
+             riser=K.TRIM_WHITE, stringer=GTRIM, run=0.28)
+    for sx in (-1, 1):
+        _rail(mb, (sx * 0.74, 18.05, Z1), (sx * 0.74, G_HOLE[3] - 0.05, G_Z2), post=K.TRIM_WHITE, rail=GTRIM,
+              newel=MARBLE)
+        _rail(mb, (sx * 0.89, G_HOLE[1] - 0.04, G_Z2), (sx * 0.89, G_HOLE[3] - 0.3, G_Z2), post=K.TRIM_WHITE,
+              rail=GTRIM, newel=MARBLE)
+    _rail(mb, (-0.89, G_HOLE[1] - 0.04, G_Z2), (0.89, G_HOLE[1] - 0.04, G_Z2), post=K.TRIM_WHITE, rail=GTRIM)
     # the vestibule steps from the conservatory door up to the garden hall
     _flight(mb, -20.5, 15.0, 0.15, Z0, 0.0, 2.8, carpet="M_IntCarpetRose", cw=1.4, base=-0.2, nose=K.TRIM_WHITE)
     for y in (13.68, 16.32):
@@ -3377,7 +4074,9 @@ def _girls_stairs(aset, mb, nc):
 
 def _girls_interior(aset, main, mb, nc):
     R = _girls_rooms()
+    _girls_bay_plan()
     _ext_walls(aset, main, _girls_segments(), G_BANDS_INT, outer=WALL, frame=GTRIM, trim_in=GTRIM)
+    _girls_bays(aset, main, R)
     _girls_turrets_inside(main, R)
     _girls_partitions(aset, mb, R)
     _build_rooms(mb, nc)
@@ -3416,13 +4115,17 @@ def _girls_furnish(aset, mb, nc, R):
     _girls_tearoom(aset, mb, nc, R["tea"])
     _girls_dining(aset, mb, nc, R["dining"])
     _girls_salon(aset, mb, nc, R["salon"], R["fcorr"], R["gallery"])
+    _girls_lsalon(aset, mb, nc, R["lsalon"])
+    _girls_hall2(aset, mb, nc, R["hall2"])
     num = 1
-    for sx in (-1, 1):
-        s = "w" if sx < 0 else "e"
-        for (k, front) in (("f", True), ("b", False)):
-            _girls_sitting(aset, mb, nc, R[s + k + "s"], sx, front)
-            _girls_bedroom(aset, mb, nc, R[s + k + "b"], sx, front, num)
-            num += 1
+    for t in ("", "2"):
+        for sx in (-1, 1):
+            s = "w" if sx < 0 else "e"
+            for (k, front) in (("f", True), ("b", False)):
+                _girls_sitting(aset, mb, nc, R[s + k + "s" + t], sx, front, num)
+                _girls_bedroom(aset, mb, nc, R[s + k + "b" + t], sx, front, num)
+                num += 1
+    _girls_bay_seats(aset, mb, nc)
     _girls_conservatory_door(aset, mb)
 
 
@@ -3436,51 +4139,73 @@ def _girls_foyer(aset, mb, nc, r):
                 if (i + j) % 2 == 0 and not (abs(-6.1 + i * 1.0) < 1.2):
                     x, y = -6.6 + i * 1.015, 1.4 + j * 1.008
                     mb.box_mm((x + 0.01, y + 0.01, 0.0), (x + 1.005, y + 0.998, 0.003), MARBLE_ROSE, skip=("-z",))
-        K.rug(mb, -1.0, 1.45, 1.0, 26.55, 0.004, "M_IntCarpetRose", K.TRIM_GOLD)
+        _rug(mb, -1.0, 1.45, 1.0, 26.55, 0.004, "M_IntCarpetRose", K.TRIM_GOLD)
         # centre table with a big bouquet
-        f.prop("SM_Int_RoundTable", 0.0, 8.8, 0.0)
-        nc.cylinder((0.0, 8.8, 0.755), 0.55, 0.006, "M_IntFabricPink", seg=16)
-        _vase(nc, 0.0, 8.8, 0.76, 2.0, mat=K.TRIM_GOLD, flowers=("M_FlowerRed", "M_FlowerWhite", "M_IntFabricPink"))
+        f.prop("SM_Int_RoundTable", 0.0, 6.2, 0.0)
+        nc.cylinder((0.0, 6.2, 0.755), 0.55, 0.006, "M_IntFabricPink", seg=16)
+        for sx in (-1, 1):          # a colonnade down the hall
+            for y in (3.0, 6.6, 10.2, 13.8):
+                column(mb, sx * 3.3, y, 0.0, 0.24, zc + 0.01, MARBLE, cap_mat=GTRIM, seg=12)
+            _plinth_bust(f, mb, sx * 3.3, 24.6, 180.0)
+            _plant(f, sx * 3.3, 16.9)
+            _plant(f, sx * 6.0, 26.0)
+        _vase(nc, 0.0, 6.2, 0.76, 2.0, mat=K.TRIM_GOLD, flowers=("M_FlowerRed", "M_FlowerWhite", "M_IntFabricPink"))
         for sx in (-1, 1):
-            f.prop("SM_Int_Console", sx * 6.35, 5.0, -90.0 * sx)
-            f.prop("SM_Int_Mirror", sx * 6.6, 5.0, -90.0 * sx, z=1.0)
-            _vase(nc, sx * 6.35, 5.5, 0.85, 1.0, flowers=("M_FlowerWhite", "M_IntFabricPink"))
-            f.prop("SM_Int_Candelabra", sx * 6.35, 4.5, 0.0, z=0.85)
-            f.prop("SM_Int_PottedPlantB", sx * 6.1, 1.9, 0.0)
-            f.prop("SM_Int_Bench", sx * 6.25, 11.5, -90.0 * sx)
-            f.prop("SM_Int_PottedPlantB", sx * 3.4, 25.9, 0.0)
-            _portrait(f, sx * 6.6, 11.5, 1.7, "e" if sx > 0 else "w", 1.3)
-            for y in (3.3, 7.0, 12.6):
-                _sconce(f, sx * 6.6, y, 2.3, "e" if sx > 0 else "w")
-        _portrait(f, 0.0, 26.6, 2.75, "n", 1.0)
-        for y in (5.0, 12.5, 20.2):
-            _chandelier(f, 0.0, y, zc, 1.2)
+            side = "e" if sx > 0 else "w"
+            _console(f, sx * 6.6, 4.6, side, flowers=("M_FlowerWhite", "M_IntFabricPink"), seed=2 + sx)
+            _plant(f, sx * 6.1, 1.95)
+            _plant(f, sx * 3.4, 25.95)
+            # a settee group between the two side doors
+            _seating(f, sx * 6.2, 11.75, -90.0 * sx, sofa="SM_Int_SofaB", chair="SM_Int_GreenChair",
+                     rug="M_IntCarpetRose", seed=5 + sx, cushions=("M_IntFabricPink", "M_IntFabricWhite"),
+                     rug_w=4.4, rug_d=3.0)
+            for y in (3.0, 7.2):
+                _sconce(f, sx * 6.6, y, 2.3, side)
+            # under the gallery: tea for two by the stairs, a console on the back wall
+            _tea_table(f, sx * 2.9, 19.4, chairs=2, chair="SM_Int_GreenChair", stand=sx > 0, a0=90.0)
+            _console(f, sx * 2.45, 26.6, "n", mirror=False, flowers=("M_IntFabricPink", "M_FlowerWhite"), seed=7 + sx)
+            f.prop("SM_Int_CeilingLamp", sx * 2.9, 19.4, 0.0, z=zc)
+        for y in (5.0, 12.5):
+            _chandelier(f, 0.0, y, zc, 1.3)
         f.light(0.0, 20.0, 2.0, 2500.0, 9.0)
+    _gallery(f, r, ("e", "w"), z=1.45, scale=1.6, skip=[("e", 3.5, 5.7), ("w", 3.5, 5.7), ("e", 9.4, 14.1),
+                                                          ("w", 9.4, 14.1), ("e", 16.3, 26.6), ("w", 16.3, 26.6)])
+    _gallery(f, r, ("w", "e"), z=1.7, scale=2.2, skip=[("e", 1.4, 9.3), ("w", 1.4, 9.3), ("e", 14.2, 26.6),
+                                                         ("w", 14.2, 26.6)])
+    with f:
+        for sx in (-1, 1):
+            for y in (22.4, 20.3, 18.2):
+                _portrait(f, sx * 6.6, y, 1.6 + (23.6 - y) * 0.61, "e" if sx > 0 else "w", 1.6)
+            _chandelier(f, sx * 5.8, 20.0, G_C1 - r["z"], 1.3)
+    _dress(aset, mb, nc, r, 31)
     aset.npc((-2.5, 6.0, r["z"]), 160.0, dorm="obelisk", wander=3.0)
     aset.npc((2.0, 18.0, r["z"]), 20.0, dorm="obelisk", wander=3.0)
     K.camera(aset, "foyer", (0.0, 1.9, r["z"] + 1.7), (0.0, 22.0, r["z"] + 2.2), 15.0)
-    K.camera(aset, "stairs", (3.0, 26.2, r["z"] + 1.7), (-5.5, 16.0, r["z"] + 3.0), 15.0)
+    K.camera(aset, "stairs", (3.0, 26.2, r["z"] + 1.7), (-5.5, 16.0, r["z"] + 2.0), 15.0)
 
 
 def _girls_parlour(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, -15.8, 5.6, -9.8, 10.8, 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
-        K.fireplace(mb, nc, f.a, -12.8, 4.4, 180.0, w=1.8, h=1.3, mat="M_IntTrimWhite", trim=GTRIM)
-        f.prop("SM_Int_Mirror", -12.8, 4.4, 180.0, z=1.55)
-        K.sofa_set(f.a, -12.8, 8.6, 0.0)
-        f.prop("SM_Int_Pillows", -12.8, 8.75, 0.0, z=0.42)
-        K.piano(mb, nc, -18.6, 10.6, 160.0, mat="M_IntTrimWhite")
+        K.fireplace(mb, nc, f.a, -16.3, 13.4, 0.0, w=1.8, h=1.3, mat="M_IntTrimWhite", trim=GTRIM)
+        f.prop("SM_Int_Mirror", -16.3, 13.4, 0.0, z=1.55, scale=1.3)
+        f.prop("SM_Int_MantelClock", -16.3, 13.28, 180.0, z=1.4)
+        _seating(f, -16.3, 9.2, 180.0, sofa="SM_Int_Sofa", chair="SM_Int_GreenChair", rug="M_IntCarpetRose", seed=11,
+                 cushions=("M_IntFabricPink", "M_IntFabricWhite"))
+        K.piano(mb, nc, -9.6, 10.9, 160.0, mat="M_IntTrimWhite")
         _tea_table(f, -23.0, 3.0, chairs=2, chair="SM_Int_GreenChair", a0=45.0)
-        f.prop("SM_Int_FoldingScreen", -21.0, 12.6, 30.0)
-        f.prop("SM_Int_Cabinet", -9.0, 13.15, 180.0)
-        f.prop("SM_Int_Shelves", -15.0, 13.2, 180.0)
-        f.prop("SM_Int_PottedPlantB", -7.9, 4.9, 0.0)
-        f.prop("SM_Int_WallClock", -7.4, 11.0, -90.0, z=2.2)
-        _chandelier(f, -12.8, 8.0, zc, 1.0)
-        _chandelier(f, -19.6, 6.4, zc, 0.8)
+        f.prop("SM_Int_FoldingScreen", -20.6, 12.6, 30.0)
+        f.prop("SM_Int_Shelves", -19.4, 13.21, 0.0)
+        _plant(f, -7.9, 4.9)
+        _plant(f, -21.0, 7.6, big=False)
+        f.prop("SM_Int_WallClock", -7.4, 11.4, -90.0, z=2.2)
+        _chandelier(f, -16.3, 9.6, zc, 1.1)
+        _chandelier(f, -10.0, 7.0, zc, 0.9)
     _curtains(nc, r, "M_IntFabricPink", rod=K.TRIM_GOLD)
+    _gallery(f, r, ("w",), z=1.5, scale=1.8)
+    _gallery(f, r, ("s",), z=1.5, scale=1.6, skip=[("s", -15.0, -10.6)])
+    _dress(aset, mb, nc, r, 32)
     aset.npc((-12.0, 6.6, r["z"]), 180.0, dorm="obelisk", wander=1.5)
     K.camera(aset, "parlour", (-7.9, 11.4, r["z"] + 1.7), (-20.0, 5.0, r["z"] + 0.8), 15.0)
 
@@ -3491,53 +4216,61 @@ def _girls_halls(aset, mb, nc, R):
         f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
         zc = r["zc"] - r["z"]
         with f:
-            K.rug(mb, r["x0"] + 0.3, 14.3, r["x1"] - 0.3, 15.7, 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
+            _rug(mb, r["x0"] + 0.3, 14.3, r["x1"] - 0.3, 15.7, 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
             for x in (10.0, 17.0):
-                _portrait(f, sx * x, 16.4, 1.5, "n", 0.9)
-                _portrait(f, sx * x, 13.6, 1.5, "s", 0.9)
                 f.prop("SM_Int_CeilingLamp", sx * x, 15.0, 0.0, z=zc)
+            _console(f, sx * 14.3, 16.4, "n", flowers=("M_IntFabricPink", "M_FlowerWhite"), seed=4 + sx)
+            f.prop("SM_Int_Bench", sx * 9.2, 13.86, 180.0)
+            _cushions(nc, sx * 9.2, 13.8, 0.45, 180.0, 2, ("M_IntFabricPink", "M_IntFabricWhite"), w=0.8)
             if sx > 0:
-                f.prop("SM_Int_Console", 21.35, 15.0, -90.0)
-                f.prop("SM_Int_Mirror", 21.6, 15.0, -90.0, z=1.0)
-                _vase(nc, 21.35, 15.0, 0.85, 1.3, flowers=("M_IntFabricPink", "M_FlowerWhite"))
-                f.prop("SM_Int_PottedPlantB", 20.9, 14.0, 0.0)
-                f.prop("SM_Int_PottedPlantB", 20.9, 16.0, 0.0)
+                _plant(f, 20.6, 13.95, big=False)
+                for x in (11.2, 17.6):       # pedestals with flowers, hall chairs
+                    _plinth_bust(f, mb, x, 13.95, 0.0)
+                    f.prop("SM_Int_DiningChair", x - 1.0, 16.05, 180.0)
             else:
-                f.prop("SM_Int_PottedPlant", -18.2, 14.0, 0.0)
-                f.prop("SM_Int_PottedPlant", -18.2, 16.0, 0.0)
+                # garden hall: coat stand with blue dorm jackets, umbrella stand, boots by the garden door
+                DT.coat_hooks(nc, -17.5, 13.6, 1.75, 180.0, n=4, dorm="obelisk", jackets=3, seed=2)
+                nc.cylinder((-16.4, 13.85, 0.0), 0.14, 0.5, K.TRIM_WHITE, seg=12, cap_top=False)
+                for k in range(3):
+                    nc.beam((-16.4 + 0.04 * k, 13.85, 0.05), (-16.38 + 0.05 * k, 13.8 + 0.03 * k, 0.85), 0.02, 0.02,
+                            ("M_IntFabricPink", "M_IntFabricBlue", "M_IntBlack")[k])
+                f.prop("SM_Int_Boots", -18.1, 16.1, 180.0)
+                _plant(f, -15.0, 13.95, big=False)
+        _gallery(f, r, ("n", "s"), z=1.45, scale=1.4, pitch=2.2,
+                 skip=[("n", sx * 13.4, sx * 15.2), ("s", sx * 8.5, sx * 9.9), ("s", sx * 15.8, sx * 18.3)])
+        _dress(aset, mb, nc, r, 33 + sx)
     r = R["vest"]
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     with f:
         f.prop("SM_Int_CeilingLamp", -21.0, 15.0, 0.0, z=r["zc"] - r["z"])
     K.camera(aset, "garden_hall", (-8.0, 15.0, G_FL + 1.65), (-22.0, 15.0, G_FL + 0.6), 16.0)
+    K.camera(aset, "east_bay", (8.0, 14.4, G_FL + 1.65), (23.5, 15.6, G_FL + 0.8), 16.0)
 
 
 def _girls_library(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, -16.6, 18.6, -10.4, 23.6, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        _rug(mb, -16.6, 18.6, -10.4, 23.6, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
         for x in (-18.35, -14.95, -10.9):
-            _bookshelf(f, x, 25.3, 0.0)
+            _bookshelf(f, x, 25.29, 0.0)
         for y in (17.4, 18.8, 20.2, 21.6):
-            _bookshelf(f, -21.3, y, 90.0)
+            _bookshelf(f, -21.29, y, 90.0)
         K.bookcase(mb, nc, -7.6, 18.6, -90.0, w=2.2, h=2.3, shelves=5, mat="M_IntTrimWhite", rng_seed=12)
         K.bookcase(mb, nc, -7.6, 22.6, -90.0, w=2.2, h=2.3, shelves=5, mat="M_IntTrimWhite", rng_seed=13)
-        f.prop("SM_Int_Table", -13.5, 21.1, 0.0)
-        for x in (-14.1, -12.9):
-            f.prop("SM_Int_DiningChair", x, 20.3, 0.0)
-            f.prop("SM_Int_DiningChair", x, 21.9, 180.0)
-        f.prop("SM_Int_DeskLamp", -13.0, 21.2, 180.0, z=0.76)
-        f.prop("SM_Int_Books", -14.0, 21.0, 15.0, z=0.76)
+        _study_table(mb, nc, f, -13.5, 21.1, L=2.4, seed=14)
+        f.prop("SM_Int_CeilingLamp", -13.5, 21.1, 0.0, z=zc)
         f.prop("SM_Int_RockingChair", -23.0, 27.0, 135.0)
         f.prop("SM_Int_SideTable", -23.8, 25.6, 0.0)
-        f.prop("SM_Int_OilLamp", -23.8, 25.6, 0.0, z=0.6)
-        f.prop("SM_Int_GreenChair", -9.2, 17.6, 200.0)
+        f.prop("SM_Int_OilLamp", -23.8, 25.6, 0.0, z=0.55)
+        f.prop("SM_Int_GreenChair", -9.3, 17.5, 200.0)
+        f.prop("SM_Int_SideTable", -10.2, 17.1, 0.0)
+        DT.book_stack(nc, -10.2, 17.1, 0.55, 20.0, 4, 3)
         f.prop("SM_Int_FoldingScreen", -17.5, 17.2, 0.0)
-        f.prop("SM_Int_PottedPlantB", -8.0, 25.0, 0.0)
-        _chandelier(f, -13.5, 21.1, zc, 1.0)
-        _chandelier(f, -20.0, 24.6, zc, 0.7)
+        _plant(f, -8.0, 25.0)
+        _chandelier(f, -20.0, 24.6, zc, 0.8)
     _curtains(nc, r, "M_IntFabricPurple", rod=K.TRIM_GOLD)
+    _dress(aset, mb, nc, r, 35)
     K.camera(aset, "library", (-8.0, 17.2, r["z"] + 1.7), (-20.0, 25.0, r["z"] + 1.0), 15.0)
 
 
@@ -3545,21 +4278,27 @@ def _girls_tearoom(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        for (x, y, a) in ((10.3, 7.0, 0.0), (15.3, 7.2, 30.0), (12.6, 11.0, 10.0), (18.6, 10.6, 50.0)):
+        for (x, y, a) in ((9.6, 7.4, 0.0), (16.6, 7.2, 30.0), (12.6, 10.9, 10.0), (18.6, 10.6, 50.0)):
             _tea_table(f, x, y, chairs=3, chair="SM_Int_WoodChair" if x < 14 else "SM_Int_GreenChair", a0=a)
         _tea_table(f, 23.0, 3.0, chairs=2, chair="SM_Int_GreenChair", a0=-45.0)
-        f.prop("SM_Int_Console", 7.65, 11.0, 90.0)
-        f.prop("SM_Int_TeaSet", 7.65, 10.7, 90.0, z=0.85)
-        f.prop("SM_Int_Kettle", 7.65, 11.5, 90.0, z=0.85)
-        _cake_stand(nc, 7.65, 11.9, 0.85, 1.2)
+        f.prop("SM_Int_Console", 7.71, 11.0, 90.0)
+        f.prop("SM_Int_TeaSet", 7.71, 10.7, 90.0, z=0.95)
+        f.prop("SM_Int_Kettle", 7.71, 11.5, 90.0, z=0.95)
+        _cake_stand(nc, 7.71, 11.95, 0.95, 1.2)
+        f.prop("SM_Int_Mirror", 7.4, 11.0, -90.0 + 180.0, z=1.3)
         f.prop("SM_Int_FoldingScreen", 20.6, 12.5, -30.0)
-        f.prop("SM_Int_PottedPlantB", 7.9, 4.9, 0.0)
-        f.prop("SM_Int_PottedPlantB", 21.1, 12.9, 0.0)
-        f.prop("SM_Int_Cabinet", 16.0, 13.15, 180.0)
-        _portrait(f, 12.8, 4.4, 1.6, "s", 1.2)
+        _plant(f, 7.9, 4.9)
+        _plant(f, 21.1, 12.9)
+        f.prop("SM_Int_Cabinet", 16.0, 13.08, 180.0)
+        _doily(f, 16.0, 13.08, 1.18, 1.0, 0.4, 0.0, "M_IntFabricPink")
+        for k in range(4):
+            nc.cylinder((15.6 + k * 0.25, 13.1, 1.184), 0.07, 0.012, "M_IntTrimWhite", seg=10)
+            nc.cylinder((15.6 + k * 0.25, 13.1, 1.196), 0.04, 0.07, ("M_IntFabricPink", "M_IntTrimWhite")[k % 2], seg=8)
         _chandelier(f, 11.5, 8.8, zc, 1.0)
         _chandelier(f, 17.6, 8.8, zc, 1.0)
     _curtains(nc, r, "M_IntFabricPink", rod=K.TRIM_GOLD)
+    _gallery(f, r, ("n",), z=1.6, scale=1.6, skip=[("n", 15.0, 17.0)])
+    _dress(aset, mb, nc, r, 36)
     aset.npc((15.3, 6.2, r["z"]), 0.0, dorm="obelisk", wander=0.6)
     aset.npc((12.0, 10.3, r["z"]), 150.0, dorm="obelisk", wander=0.6)
     K.camera(aset, "tea_room", (8.0, 12.9, r["z"] + 1.7), (19.5, 5.0, r["z"] + 0.7), 15.0)
@@ -3569,7 +4308,7 @@ def _girls_dining(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, 9.4, 18.8, 19.6, 23.2, 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
+        _rug(mb, 9.4, 18.8, 19.6, 23.2, 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
         _long_table(mb, nc, 14.5, 21.0, 7.6, 1.4, cloth="M_IntFabricWhite", runner="M_IntFabricPink", mat=K.TRIM_WHITE)
         for i in range(7):
             x = 11.5 + i * 1.0
@@ -3582,83 +4321,120 @@ def _girls_dining(aset, mb, nc, r):
                 _vase(nc, x + 0.5, 21.0, 0.78, 0.9, flowers=("M_IntFabricPink", "M_FlowerWhite"))
         for x in (10.0, 19.0):
             f.prop("SM_Int_Armchair", x, 21.0, 90.0 if x < 14 else -90.0)
-        f.prop("SM_Int_Console", 7.65, 21.0, 90.0)
-        f.prop("SM_Int_Mirror", 7.4, 21.0, 90.0, z=1.0)
-        f.prop("SM_Int_Candelabra", 7.65, 20.4, 90.0, z=0.85)
-        _vase(nc, 7.65, 21.6, 0.85, 1.2, flowers=("M_FlowerWhite", "M_IntFabricPink"))
-        f.prop("SM_Int_PottedPlantB", 7.9, 25.1, 0.0)
-        f.prop("SM_Int_PottedPlantB", 7.9, 17.1, 0.0)
+        _console(f, 7.4, 21.0, "w", flowers=("M_FlowerWhite", "M_IntFabricPink"), seed=5)
+        # sideboards between the garden windows, china vitrines on the corridor wall
+        for x in (10.9, 14.95):
+            f.prop("SM_Int_Cabinet", x, 25.28, 0.0)
+            zt = _doily(f, x, 25.28, 1.18, 1.0, 0.4, 0.0, "M_IntFabricPink")
+            f.prop("SM_Int_Candelabra", x - 0.3, 25.3, 0.0, z=zt)
+            _cake_stand(nc, x + 0.3, 25.3, zt, 1.0)
+        for x in (9.4, 16.6):
+            f.prop("SM_Int_Vitrine", x, 16.95, 180.0)
+        _plant(f, 7.9, 25.1)
+        _plant(f, 20.9, 17.1)
         f.prop("SM_Int_GreenChair", 23.0, 27.0, 45.0)
         f.prop("SM_Int_SideTable", 23.6, 25.9, 0.0)
-        _vase(nc, 23.6, 25.9, 0.6, 1.0)
-        _chandelier(f, 12.6, 21.0, zc, 1.0)
-        _chandelier(f, 16.4, 21.0, zc, 1.0)
+        _vase(nc, 23.6, 25.9, 0.55, 1.0)
+        _chandelier(f, 12.6, 21.0, zc, 1.1)
+        _chandelier(f, 16.4, 21.0, zc, 1.1)
     _curtains(nc, r, "M_IntFabricBlue", rod=K.TRIM_GOLD)
+    _gallery(f, r, ("w",), z=1.5, scale=1.8, skip=[("w", 20.0, 22.0)])
+    _dress(aset, mb, nc, r, 37)
     K.camera(aset, "dining", (8.0, 17.2, r["z"] + 1.75), (20.0, 24.6, r["z"] + 0.6), 15.0)
 
 
 def _girls_salon(aset, mb, nc, r, rc, rg):
+    """First floor: the drawing room over the porch, the landing corridor and the music gallery (with the
+    flight up to the second floor on its axis)."""
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.rug(mb, -4.2, 4.6, 4.2, 10.6, 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
-        f.prop("SM_Int_Sofa", 0.0, 10.2, 180.0)
-        f.prop("SM_Int_SofaB", -3.2, 7.4, -90.0)
-        f.prop("SM_Int_SofaB", 3.2, 7.4, 90.0)
-        f.prop("SM_Int_CoffeeTable", 0.0, 7.6, 0.0)
-        f.prop("SM_Int_TeaSet", 0.0, 7.6, 15.0, z=0.45)
-        f.prop("SM_Int_Pillows", 0.0, 10.35, 180.0, z=0.42)
+        K.fireplace(mb, nc, f.a, -3.6, 13.4, 0.0, w=1.6, h=1.2, mat="M_IntTrimWhite", trim=GTRIM)
+        f.prop("SM_Int_Mirror", -3.6, 13.4, 0.0, z=1.5, scale=1.2)
+        f.prop("SM_Int_Vitrine", 3.6, 13.05, 0.0)
         for sx in (-1, 1):
-            f.prop("SM_Int_PottedPlantB", sx * 6.1, 1.9, 0.0)
-            f.prop("SM_Int_DisplayShelves", sx * 4.6, 13.2, 180.0)
-            f.prop("SM_Int_GreenChair", sx * 2.6, 2.6, 180.0 - sx * 30.0)
-        _chandelier(f, 0.0, 7.4, zc, 1.1)
+            _seating(f, sx * 3.6, 8.0, 180.0, sofa="SM_Int_Sofa" if sx < 0 else "SM_Int_SofaB",
+                     chair="SM_Int_GreenChair", rug="M_IntCarpetRose", seed=40 + sx,
+                     cushions=("M_IntFabricPink", "M_IntFabricWhite"), rug_w=4.4, rug_d=3.2)
+            K.desk(mb, nc, sx * 4.6, 1.73, 180.0, w=1.1, d=0.55, top=K.TRIM_WHITE, legs=K.TRIM_WHITE, hutch=False,
+                   clutter=False)
+            DT.desk_set(nc, f.a, sx * 4.6, 1.73, 0.76, 180.0, "vanity" if sx < 0 else "student", seed=41 + sx,
+                        w=1.1, d=0.55)
+            f.prop("SM_Int_WoodChair", sx * 4.6, 2.45, 0.0)
+            _plant(f, sx * 6.15, 1.85)
+            _chandelier(f, sx * 3.6, 8.6, zc, 1.0)
+        _harp(mb, nc, -1.7, 3.0, 200.0)
     _curtains(nc, r, "M_IntFabricPink", rod=K.TRIM_GOLD)
+    _gallery(f, r, ("e", "w"), z=1.45, scale=1.7, skip=[("e", 6.0, 12.0), ("w", 6.0, 12.0)])
+    _dress(aset, mb, nc, r, 42)
     K.camera(aset, "salon", (5.6, 12.8, r["z"] + 1.7), (-2.0, 1.5, r["z"] + 1.0), 15.0)
     # landing + music gallery
     f = Frame(aset, mb, nc, 0.0, 0.0, rg["z"])
     zc = rg["zc"] - rg["z"]
     with f:
-        K.rug(mb, -1.0, 13.7, 1.0, 26.4, 0.004, "M_IntCarpetRose", K.TRIM_GOLD)
-        K.piano(mb, nc, -2.6, 20.0, 150.0, mat="M_IntTrimWhite")
+        _rug(mb, -1.0, 13.7, 1.0, 17.9, 0.004, "M_IntCarpetRose", K.TRIM_GOLD)
+        K.piano(mb, nc, -2.7, 20.2, 150.0, mat="M_IntTrimWhite")
         f.prop("SM_Int_WoodChair", 2.6, 19.0, -60.0)
-        for x in (-5.8, -3.0, 3.0, 5.8):
-            if abs(x) > 4:
-                _bookshelf(f, x, 26.3, 0.0)
-        f.prop("SM_Int_GreenChair", 2.4, 24.9, 160.0)
-        f.prop("SM_Int_GreenChair", -2.4, 24.9, 200.0)
-        f.prop("SM_Int_PottedPlantB", 4.3, 17.0, 0.0)
+        _harp(mb, nc, 2.9, 20.6, 160.0)
+        for (x, y, a) in ((2.2, 19.6, 200.0), (3.6, 19.5, 160.0)):
+            with mb.at((x, y, 0.0), rot=a), nc.at((x, y, 0.0), rot=a):
+                mb.cylinder((0, 0, 0), 0.16, 0.03, K.TRIM_GOLD, seg=8)
+                mb.box((0, 0, 0.6), (0.03, 0.03, 1.2), K.TRIM_GOLD)
+                mb.box((0, 0.0, 1.2), (0.5, 0.03, 0.34), K.TRIM_GOLD)
+                nc.box((0, -0.025, 1.22), (0.42, 0.01, 0.28), "M_IntPaper")
+        for x in (-5.8, 5.8):
+            _bookshelf(f, x, 26.29, 0.0)
+        for x in (-2.3, 2.3):
+            K.bookcase(mb, nc, x, 26.39, 0.0, w=2.0, d=0.42, h=2.4, shelves=6, mat=K.TRIM_WHITE,
+                       rng_seed=int(x * 10) % 97 + 5)
+        for sx in (-1, 1):
+            f.prop("SM_Int_SofaB", sx * 4.05, 17.5, -90.0 * sx)
+            _cushions(nc, sx * 4.3, 17.5, 0.4, -90.0 * sx, 3, ("M_IntFabricPink", "M_IntFabricWhite"))
+            f.prop("SM_Int_SideTable", sx * 4.15, 18.75, 0.0)
+            _vase(nc, sx * 4.15, 18.75, 0.55, 0.9, flowers=("M_IntFabricPink", "M_FlowerWhite"))
+        for x in (-3.0, 3.0):
+            f.prop("SM_Int_GreenChair", x, 24.6, 180.0 + (20.0 if x < 0 else -20.0))
+        _plant(f, 4.3, 17.0)
+        for sx in (-1, 1):
+            _plant(f, sx * 4.4, 22.6)
+            _plinth_bust(f, mb, sx * 4.45, 24.1, 180.0)
         _chandelier(f, 0.0, 15.0, zc, 1.0)
-        _chandelier(f, 0.0, 21.5, zc, 1.0)
+        for sx in (-1, 1):
+            _chandelier(f, sx * 3.1, 21.8, zc, 0.9)
     _curtains(nc, rg, "M_IntFabricPink", rod=K.TRIM_GOLD)
+    _gallery(f, rg, ("n",), z=1.2, scale=1.5, skip=[("n", -6.6, -5.0), ("n", 5.0, 6.6)])
+    _dress(aset, mb, nc, rg, 43, clear=[(-6.6, 16.4, -4.8, 23.7), (4.8, 16.4, 6.6, 23.7)])
     K.camera(aset, "gallery", (0.0, 13.9, rg["z"] + 1.7), (0.0, 25.0, rg["z"] + 0.6), 15.0)
 
 
-def _girls_sitting(aset, mb, nc, r, sx, front):
+def _girls_sitting(aset, mb, nc, r, sx, front, num=0):
+    """Suite sitting room (corridor-less: entered from the hall / salon): sofa group, writing desk with a deck
+    shelf, bookcase; on the first floor the canted bay opens out of the front sitting rooms."""
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     cx, cy = (r["x0"] + r["x1"]) / 2, (r["y0"] + r["y1"]) / 2
     win_y = r["y0"] if front else r["y1"]          # outer wall (windows)
     inner_y = r["y1"] if front else r["y0"]        # suite partition
     sy = 1 if front else -1
+    xo = r["x0"] if sx < 0 else r["x1"]            # partition to the bedroom
+    xj = r["x1"] if sx < 0 else r["x0"]            # wall to the pavilion (doors)
     with f:
-        K.rug(mb, cx - 2.2, cy - 2.0, cx + 2.2, cy + 2.0, 0.0, "M_IntCarpetYellow" if front else "M_IntCarpetRose",
-              K.TRIM_GOLD)
-        f.prop("SM_Int_Sofa", cx, inner_y - sy * 0.55, 0.0 if front else 180.0)
-        f.prop("SM_Int_CoffeeTable", cx, cy + sy * 0.6, 0.0)
-        f.prop("SM_Int_TeaSet", cx, cy + sy * 0.6, 40.0, z=0.45)
-        for s in (-1, 1):
-            f.prop("SM_Int_GreenChair", cx + s * 1.6, cy - sy * 0.1, s * 70.0 + (180.0 if front else 0.0))
-        xo = r["x1"] if sx < 0 else r["x0"]         # partition to the bedroom (inner side, mirrored)
-        xo = r["x0"] if sx < 0 else r["x1"]
-        K.desk(mb, nc, xo - sx * 0.33, win_y + sy * 1.6, 90.0 if sx < 0 else -90.0, w=1.2, d=0.6, top=K.TRIM_WHITE,
-               legs=K.TRIM_WHITE, hutch=True, rng_seed=int(abs(cx * 10)))
-        f.prop("SM_Int_WoodChair", xo - sx * 1.0, win_y + sy * 1.6, 90.0 if sx > 0 else -90.0)
-        f.prop("SM_Int_Shelves", xo - sx * 0.2, inner_y - sy * 1.9, 90.0 if sx < 0 else -90.0)
-        f.prop("SM_Int_PottedPlantB", (r["x1"] - 0.45) if sx < 0 else (r["x0"] + 0.45), win_y + sy * 0.45, 0.0)
-        f.prop("SM_Int_PottedPlant", xo - sx * 0.3, win_y + sy * 0.45, 0.0)
-        _chandelier(f, cx, cy, zc, 0.8)
+        _seating(f, cx, inner_y - sy * 0.45, 0.0 if front else 180.0, sofa="SM_Int_Sofa",
+                 chair="SM_Int_GreenChair", rug="M_IntCarpetYellow" if front else "M_IntCarpetRose",
+                 seed=num, cushions=("M_IntFabricPink", "M_IntFabricWhite"), rug_w=4.2, rug_d=3.0, cards=True)
+        dyy = win_y + sy * 3.4
+        K.desk(mb, nc, xo - sx * 0.31, dyy, 90.0 if sx < 0 else -90.0, w=1.2, d=0.6, top=K.TRIM_WHITE,
+               legs=K.TRIM_WHITE, hutch=False, clutter=False)
+        DT.desk_set(nc, f.a, xo - sx * 0.31, dyy, 0.76, 90.0 if sx < 0 else -90.0, "student", seed=num, w=1.2, d=0.6)
+        f.prop("SM_Int_WoodChair", xo - sx * 1.05, dyy, 90.0 if sx > 0 else -90.0)
+        _wall_shelf(f, xo, dyy, "w" if sx < 0 else "e", 1.2, 1.5, num, "decks")
+        K.bookcase(mb, nc, xo - sx * 0.22, dyy + sy * 1.7, 90.0 if sx < 0 else -90.0, w=1.3, d=0.4, h=2.1, shelves=5,
+                   mat=K.TRIM_WHITE, rng_seed=num)
+        _plant(f, xj + sx * 0.6, win_y + sy * 0.6)
+        _chandelier(f, cx, cy, zc, 0.9)
     _curtains(nc, r, "M_IntFabricPink" if front else "M_IntFabricPurple", rod=K.TRIM_GOLD)
+    _gallery(f, r, ("w" if sx > 0 else "e",), z=1.45, scale=1.6)
+    _dress(aset, mb, nc, r, 60 + num)
 
 
 def _girls_bedroom(aset, mb, nc, r, sx, front, num):
@@ -3670,65 +4446,77 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
     inner_y = r["y1"] if front else r["y0"]
     door_x = r["x1"] if sx < 0 else r["x0"]
     cx = (r["x0"] + r["x1"]) / 2
-    by = inner_y - qy * 1.25
+    by = inner_y - qy * 1.06
+    bx = sx * 19.1                                   # bed (towards the outer wall; the bathroom takes the door corner)
+    side_d = "e" if sx < 0 else "w"
     with f:
-        K.rug(mb, cx - 2.0, min(by - qy * 3.6, by + qy * 1.0), cx + 2.0, max(by - qy * 3.6, by + qy * 1.0), 0.0,
+        # en-suite bathroom in the corner between the suite partition and the inner wall
+        _ensuite(f, mb, nc, door_x, door_x + sx * 2.6, inner_y - qy * 2.7, inner_y, "y", door_x + sx * 1.6, zc,
+                 r["wall"], tile="M_IntTileWhite", wall_in="M_ObIntWallRose")
+        _rug(mb, bx - 2.0, min(by - qy * 3.6, by + qy * 1.0), bx + 2.0, max(by - qy * 3.6, by + qy * 1.0), 0.0,
               "M_IntCarpetRose", K.TRIM_GOLD)
-        f.prop("SM_Int_GrandBed", cx, by, 0.0 if front else 180.0)
+        f.prop("SM_Int_GrandBed", bx, by, 0.0 if front else 180.0)
         for s in (-1, 1):
-            f.prop("SM_Int_NightstandB", cx + s * 1.55, inner_y - qy * 0.3, 0.0 if front else 180.0)
-            f.prop("SM_Int_OilLamp", cx + s * 1.55, inner_y - qy * 0.3, 0.0, z=0.55)
+            f.prop("SM_Int_NightstandB", bx + s * 1.05, inner_y - qy * 0.27, 0.0 if front else 180.0)
+            f.prop("SM_Int_OilLamp" if s < 0 else "SM_Int_PottedPlant", bx + s * 1.05, inner_y - qy * 0.27, 0.0, z=0.62)
         for sxx in (-1, 1):
             for syy in (-1, 1):
-                mb.box((cx + sxx * 1.12, by + syy * 1.15, 1.3), (0.07, 0.07, 2.6), K.TRIM_WHITE)
-        nc.box((cx, by, 2.6), (2.35, 2.4, 0.05), "M_IntFabricPink")
+                mb.box((bx + sxx * 0.82, by + syy * 1.07, 1.3), (0.07, 0.07, 2.6), K.TRIM_WHITE)
+        nc.box((bx, by, 2.6), (1.72, 2.2, 0.05), "M_IntFabricPink")
         for sxx in (-1, 1):
-            nc.box((cx + sxx * 1.17, by, 2.3), (0.02, 2.4, 0.55), "M_IntFabricPink")
-        nc.box((cx, by - qy * 1.2, 2.3), (2.35, 0.02, 0.55), "M_IntFabricPink")
+            nc.box((bx + sxx * 0.86, by, 2.3), (0.02, 2.2, 0.55), "M_IntFabricPink")
+        nc.box((bx, by - qy * 1.1, 2.3), (1.72, 0.02, 0.55), "M_IntFabricPink")
+        _cushions(nc, bx, by + qy * 0.75, 0.62, 0.0 if front else 180.0, 3,
+                  ("M_IntFabricPink", "M_IntFabricWhite", "M_IntFabricPurple"), w=1.1)
+        f.prop("SM_Int_DayBed", bx, by - qy * 1.6, 0.0 if front else 180.0)
+        _cushions(nc, bx, by - qy * 1.75, 0.5, 180.0 if front else 0.0, 2, ("M_IntFabricPink", "M_IntFabricWhite"))
+        _portrait(f, door_x + sx * 0.75, inner_y - qy * 2.7, 1.5, "n" if front else "s", 1.2)
         # vanity + wardrobe on the wall shared with the sitting room
         vy = (r["y0"] + 2.0) if front else (r["y1"] - 2.0)
-        f.prop("SM_Int_Console", door_x + sx * 0.25, vy, 90.0 if sx > 0 else -90.0)
-        f.prop("SM_Int_Mirror", door_x, vy, 90.0 if sx > 0 else -90.0, z=1.0)
-        f.prop("SM_Int_Ottoman", door_x + sx * 0.8, vy, 0.0)
-        _vase(nc, door_x + sx * 0.25, vy + 0.4, 0.85, 0.8, flowers=("M_IntFabricPink", "M_FlowerWhite"))
-        wy = inner_y - qy * 1.0
-        f.prop("SM_Int_Cabinet", door_x + sx * 0.3, wy, 90.0 if sx > 0 else -90.0)
+        _console(f, door_x, vy, side_d, flowers=("M_IntFabricPink", "M_FlowerWhite"), seed=num)
+        f.prop("SM_Int_Ottoman", door_x + sx * 0.85, vy, 90.0)
+        f.prop("SM_Int_Cabinet", door_x + sx * 0.32, inner_y - qy * 3.4, 90.0 if sx > 0 else -90.0)
+        DT.coat_hooks(nc, door_x, (8.85 if front else 21.15), 1.75, _wall_yaw(side_d), n=2, dorm="obelisk",
+                      jackets=2, seed=num)
         # tea for two in the turret
         _tea_table(f, tx + sx * 1.0, ty - qy * 1.0, chairs=2, chair="SM_Int_GreenChair", stand=False,
                    a0=45.0 * sx * qy)
         # sitting nook between the window wall and the bed
         y_win = r["y0"] if front else r["y1"]
-        sy0 = y_win + qy * 2.25
-        K.rug(mb, cx - 1.9, min(sy0 - qy * 0.6, sy0 + qy * 2.2), cx + 1.9, max(sy0 - qy * 0.6, sy0 + qy * 2.2), 0.0,
+        sy0 = y_win + qy * 2.0
+        _rug(mb, cx - 1.9, min(sy0 - qy * 0.6, sy0 + qy * 2.2), cx + 1.9, max(sy0 - qy * 0.6, sy0 + qy * 2.2), 0.0,
               "M_IntCarpetYellow", K.TRIM_GOLD)
         f.prop("SM_Int_SofaB", cx, sy0, 180.0 if front else 0.0)
-        f.prop("SM_Int_CoffeeTable", cx, sy0 + qy * 1.3, 0.0)
-        f.prop("SM_Int_TeaSet", cx, sy0 + qy * 1.3, 30.0, z=0.45)
-        for s_ in (-1, 1):
-            f.prop("SM_Int_GreenChair", cx + s_ * 1.45, sy0 + qy * 1.6, s_ * 90.0 + (0.0 if front else 180.0) * 0)
-        f.prop("SM_Int_Ottoman", cx, by - qy * 1.55, 0.0)
-        f.prop("SM_Int_Pillows", cx, by + qy * 0.6, 0.0 if front else 180.0, z=0.62)
+        _cushions(nc, cx, sy0 - qy * 0.1, 0.4, 180.0 if front else 0.0, 3, ("M_IntFabricPink", "M_IntFabricWhite"))
+        f.prop("SM_Int_CoffeeTable", cx, sy0 + qy * 1.25, 0.0)
+        zt = _doily(f, cx, sy0 + qy * 1.25, 0.49, 0.45, mat="M_IntFabricPink")
+        DT.table_set(nc, f.a, cx, sy0 + qy * 1.25, zt, 0.0, "tea", seed=num)
+        DT.card_spread(nc, cx - 0.2, sy0 + qy * 1.0, zt, 0.0, 4, num)
         # writing desk + painting between the side windows of the outer wall
         x_out = r["x0"] if sx < 0 else r["x1"]
         dy = 11.35 if front else 18.35
-        K.desk(mb, nc, x_out - sx * 0.33, dy, 90.0 if sx < 0 else -90.0, w=1.1, d=0.6, top=K.TRIM_WHITE,
-               legs=K.TRIM_WHITE, hutch=False, rng_seed=num)
+        K.desk(mb, nc, x_out - sx * 0.31, dy, 90.0 if sx < 0 else -90.0, w=1.1, d=0.6, top=K.TRIM_WHITE,
+               legs=K.TRIM_WHITE, hutch=False, clutter=False)
+        DT.desk_set(nc, f.a, x_out - sx * 0.31, dy, 0.76, 90.0 if sx < 0 else -90.0, "vanity", seed=num, w=1.1, d=0.6)
         f.prop("SM_Int_WoodChair", x_out - sx * 1.0, dy, -90.0 if sx < 0 else 90.0)
-        f.prop("SM_Int_DeskLamp", x_out - sx * 0.3, dy + 0.35, 90.0 if sx < 0 else -90.0, z=0.76)
-        _vase(nc, x_out - sx * 0.3, dy - 0.35, 0.76, 0.7, flowers=("M_IntFabricPink", "M_FlowerWhite"))
-        _portrait(f, x_out, dy, 1.45, "w" if sx < 0 else "e", 0.8)
+        _portrait(f, x_out, dy, 1.45, "w" if sx < 0 else "e", 1.6)
         # shelves between the vanity and the door, paintings, plants
         f.prop("SM_Int_Shelves", door_x + sx * 0.2, 8.0 if front else 22.0, 90.0 if sx > 0 else -90.0)
-        _portrait(f, sx * (15.15 if front else 15.65), y_win, 1.4, "s" if front else "n", 0.8)
-        _portrait(f, cx, inner_y, 1.85, "n" if front else "s", 0.9)
-        f.prop("SM_Int_PottedPlantB", door_x + sx * 0.45, y_win + qy * 0.45, 0.0)
-        f.prop("SM_Int_PottedPlant", x_out - sx * 0.4, inner_y - qy * 0.4, 0.0)
-        _chandelier(f, cx, (r["y0"] + r["y1"]) / 2, zc, 0.8)
+        _portrait(f, sx * (15.15 if front else 15.65), y_win, 1.4, "s" if front else "n", 1.5)
+        _portrait(f, bx, inner_y, 1.85, "n" if front else "s", 1.6)
+        _plant(f, door_x + sx * 0.45, y_win + qy * 0.45)
+        DT.floor_clutter(nc, f.a, r["x0"], r["y0"], r["x1"], r["y1"], 0.0, "dorm", n=2, seed=num,
+                         clear=[(min(cx, bx) - 2.2, min(by, sy0) - 1.6, max(cx, bx) + 2.2, max(by, sy0) + 1.6),
+                          (min(door_x, door_x + sx * 1.3), r["y0"], max(door_x, door_x + sx * 1.3), r["y1"]),
+                          (min(x_out, x_out - sx * 1.4), dy - 1.0, max(x_out, x_out - sx * 1.4), dy + 1.0)])
+        _chandelier(f, cx, (r["y0"] + r["y1"]) / 2, zc, 0.9)
         f.light(tx + sx * 0.8, ty - qy * 0.8, 2.6, 900.0, 4.0)
     _curtains(nc, r, "M_IntFabricPink", rod=K.TRIM_GOLD)
-    if num in (1, 4):
-        K.camera(aset, "bedroom%d" % num, (tx - sx * 0.7, ty + qy * 0.7, r["z"] + 1.7),
-                 (door_x, inner_y - qy * 1.8, r["z"] + 0.9), 14.0)
+    _dress(aset, mb, nc, r, 70 + num)
+    if num in (1, 4, 6):
+        y_w = r["y0"] if front else r["y1"]
+        K.camera(aset, "bedroom%d" % num, (door_x + sx * 0.6, y_w + qy * 0.6, r["z"] + 1.7),
+                 (bx, by - qy * 0.5, r["z"] + 0.8), 14.0)
 
 
 def _girls_conservatory_door(aset, mb):
@@ -3737,6 +4525,152 @@ def _girls_conservatory_door(aset, mb):
     mb.box_mm((-28.8, 7.7, -0.3), (-26.2, 8.6, 0.15), MARBLE, skip=("-z",))       # landing + step outside
     mb.box_mm((-28.8, 7.35, -0.3), (-26.2, 7.7, 0.075), MARBLE, skip=("-z",))
     K.camera(aset, "conservatory", (-24.4, 18.2, 1.85), (-27.5, 8.75, 1.3), 16.0)
+
+
+def _window_seat(f, x, y, yaw, w=1.6, cushion="M_IntFabricPink", seed=0):
+    """Upholstered window seat (local -y = into the room) with cushions and a book."""
+    with f.mb.at((x, y, 0.0), rot=yaw):
+        f.mb.box((0, 0, 0.21), (w, 0.5, 0.42), K.TRIM_WHITE)
+        f.mb.box((0, 0, 0.44), (w - 0.04, 0.48, 0.05), cushion)
+    _cushions(f.nc, x, y, 0.47, yaw, 2, (cushion, "M_IntFabricWhite"), w=w * 0.75)
+    a = math.radians(yaw)
+    DT.book_stack(f.nc, x + math.cos(a) * w * 0.3, y + math.sin(a) * w * 0.3, 0.47, yaw + 15, 2, seed)
+
+
+def _girls_bay_seats(aset, mb, nc):
+    """Furniture of the walk-in bays: a window seat and a little flower table in each canted bay (both
+    storeys), a reading nook in the round east bay at the end of the ground-floor corridor."""
+    for sx in (-1, 1):
+        for (z, cush) in ((G_FL, "M_IntFabricPink"), (G_Z1, "M_IntFabricYellow")):
+            f = Frame(aset, mb, nc, sx * 12.8, 0.0, z)
+            with f:
+                _window_seat(f, 0.0, 2.88, 180.0, 2.2, cush, seed=int(z))
+                f.prop("SM_Int_TallSideTable", -1.25 if z > 2 else 1.25, 3.3, 0.0)
+                _vase(nc, -1.25 if z > 2 else 1.25, 3.3, 0.76, 0.8, flowers=("M_IntFabricPink", "M_FlowerWhite"))
+                f.prop("SM_Int_CeilingLamp", 0.0, 3.4, 0.0, z=(G_C0 if z < 2 else G_C1) - z)
+    f = Frame(aset, mb, nc, 0.0, 0.0, G_FL)
+    with f:
+        _window_seat(f, 24.0, 15.0, -90.0, 1.8, "M_IntFabricBlue", seed=3)
+        f.prop("SM_Int_GreenChair", 22.6, 13.4, 150.0)
+        f.prop("SM_Int_SideTable", 23.2, 16.6, 0.0)
+        f.prop("SM_Int_OilLamp", 23.2, 16.6, 0.0, z=0.55)
+        f.prop("SM_Int_CeilingLamp", 22.9, 15.0, 0.0, z=G_C0 - G_FL)
+
+
+def _girls_lsalon(aset, mb, nc, r):
+    """Second floor, over the porch: the ladies' salon (sofa groups, tea, a harp, an embroidery frame)."""
+    f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+    zc = r["zc"] - r["z"]
+    with f:
+        for sx in (-1, 1):
+            _seating(f, sx * 3.4, 11.1, 0.0, sofa="SM_Int_SofaB" if sx < 0 else "SM_Int_Sofa",
+                     chair="SM_Int_GreenChair", rug="M_IntCarpetRose" if sx < 0 else "M_IntCarpetYellow",
+                     seed=50 + sx, cushions=("M_IntFabricPink", "M_IntFabricWhite", "M_IntFabricPurple"),
+                     rug_w=4.4, rug_d=3.2)
+            _tea_table(f, sx * 2.4, 4.0, chairs=3, chair="SM_Int_WoodChair", stand=sx > 0, a0=30.0 * sx)
+            _console(f, sx * 3.6, 13.4, "n", flowers=("M_IntFabricPink", "M_FlowerWhite", "M_IntFabricPurple"),
+                     seed=52 + sx)
+            _plant(f, sx * 6.15, 1.85)
+            _chandelier(f, sx * 3.2, 7.4, zc, 0.9)
+        _harp(mb, nc, -5.5, 6.4, 120.0)
+        f.prop("SM_Int_WoodChair", -4.9, 7.2, 150.0)
+        # embroidery frame on its stand, a basket of yarn
+        with mb.at((5.4, 6.6, 0.0), rot=-60.0), nc.at((5.4, 6.6, 0.0), rot=-60.0):
+            for s_ in (-1, 1):
+                mb.box((s_ * 0.38, 0.0, 0.4), (0.04, 0.04, 0.8), K.WOOD)
+            mb.box((0, 0, 0.82), (0.82, 0.62, 0.03), K.WOOD)
+            nc.box((0, 0, 0.837), (0.74, 0.54, 0.004), "M_IntFabricWhite")
+            for k in range(5):
+                nc.box((-0.2 + k * 0.1, 0.05 * ((k % 2) * 2 - 1), 0.84), (0.06, 0.06, 0.003),
+                       ("M_FlowerRed", "M_IntFabricPink", "M_IntFabricGreen")[k % 3])
+        f.prop("SM_Int_WoodChair", 4.7, 6.0, -150.0)
+        f.prop("SM_Int_Basket", 5.9, 5.6, 20.0)
+        for k in range(3):
+            nc.sphere((5.85 + k * 0.08, 5.6, 0.1), 0.06, ("M_IntFabricPink", "M_IntFabricPurple", "M_IntFabricYellow")[k],
+                      seg=8, rings=5)
+    _curtains(nc, r, "M_IntFabricPink", rod=K.TRIM_GOLD)
+    _gallery(f, r, ("e", "w"), z=1.3, scale=1.7, skip=[("e", 8.0, 10.0), ("w", 8.0, 10.0)])
+    _dress(aset, mb, nc, r, 54)
+    aset.npc((2.0, 4.6, r["z"]), 200.0, dorm="obelisk", wander=0.8)
+    K.camera(aset, "ladies_salon", (5.8, 12.6, r["z"] + 1.6), (-3.0, 2.5, r["z"] + 0.8), 15.0)
+
+
+def _girls_hall2(aset, mb, nc, r):
+    """Second-floor hall around the stair arrival: sewing corner (west), reading corner (east), landing."""
+    f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+    zc = r["zc"] - r["z"]
+    with f:
+        _rug(mb, -1.0, 13.8, 1.0, 20.0, 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
+        # sewing corner: work table with a sewing machine, dress form, bolts of cloth on shelves
+        mb.box_mm((-5.6, 22.0, 0.72), (-3.2, 22.9, 0.76), K.TRIM_WHITE)
+        for (x, y) in ((-5.5, 22.1), (-3.3, 22.1), (-5.5, 22.8), (-3.3, 22.8)):
+            mb.box((x, y, 0.36), (0.06, 0.06, 0.72), K.TRIM_WHITE)
+        nc.box((-4.6, 22.5, 0.86), (0.42, 0.2, 0.2), K.BLACK)
+        nc.box((-4.75, 22.5, 1.0), (0.12, 0.2, 0.12), K.BLACK)
+        nc.box((-4.0, 22.45, 0.765), (0.5, 0.35, 0.01), "M_IntFabricPink")
+        DT.paper_stack(nc, -3.5, 22.6, 0.76, 20.0, 3, 1)
+        f.prop("SM_Int_WoodChair", -4.5, 21.4, 0.0)
+        nc.cylinder((-2.6, 24.2, 0.0), 0.18, 0.03, K.WOOD_DARK, seg=10)
+        nc.cylinder((-2.6, 24.2, 0.03), 0.02, 1.0, K.WOOD_DARK, seg=6)
+        nc.lathe([(0.12, 0.0), (0.17, 0.1), (0.14, 0.3), (0.18, 0.45), (0.12, 0.6), (0.05, 0.66)], "M_IntFabricWhite",
+                 12, center=(-2.6, 24.2, 1.03), cap_top=True)
+        nc.lathe([(0.19, 0.0), (0.3, -0.55)], "M_IntFabricPink", 12, center=(-2.6, 24.2, 1.33), cap_top=False)
+        for k, x in enumerate((-5.8, -4.6)):
+            K.bookcase(mb, nc, x, 26.39, 0.0, w=1.15, d=0.4, h=2.2, shelves=4, mat=K.TRIM_WHITE, rng_seed=60 + k,
+                       fill=0.4)
+        for k in range(6):
+            nc.cylinder((-6.25 + k * 0.33, 26.35, 0.12), 0.1, 0.42, ("M_IntFabricPink", "M_IntFabricBlue",
+                        "M_IntFabricYellow", "M_IntFabricPurple", "M_IntFabricWhite", "M_IntFabricGreen")[k], seg=8)
+        # reading corner: bookcases on the east wall, armchairs, lamp
+        for y in (17.4, 18.85, 20.3, 23.6, 25.05):
+            K.bookcase(mb, nc, 6.39, y, -90.0, w=1.4, d=0.42, h=2.4, shelves=6, mat=K.TRIM_WHITE,
+                       rng_seed=int(y * 7) % 97)
+        _rug(mb, 2.2, 20.8, 5.6, 24.6, 0.0, "M_IntCarpetYellow", K.TRIM_GOLD)
+        for (x, y, a) in ((3.4, 23.6, 200.0), (4.6, 21.6, 120.0)):
+            f.prop("SM_Int_GreenChair", x, y, a)
+        f.prop("SM_Int_SideTable", 4.5, 23.6, 0.0)
+        f.prop("SM_Int_OilLamp", 4.5, 23.6, 0.0, z=0.55)
+        DT.book_stack(nc, 3.6, 22.4, 0.0, 30.0, 5, 7)
+        # landing: bench, console, plants
+        f.prop("SM_Int_Bench", -5.9, 18.0, 90.0)
+        _cushions(nc, -5.95, 18.0, 0.45, 90.0, 2, ("M_IntFabricPink", "M_IntFabricWhite"), w=0.8)
+        _plant(f, -6.1, 16.6, big=False)
+        _plant(f, 5.8, 25.8, big=False)
+        _plant(f, 2.5, 26.1, big=False)
+        _chandelier(f, 0.0, 16.4, zc, 1.0)
+        _chandelier(f, -3.8, 23.0, zc, 0.8)
+        _chandelier(f, 3.8, 23.0, zc, 0.8)
+    _curtains(nc, r, "M_IntFabricPink", rod=K.TRIM_GOLD)
+    _gallery(f, r, ("w",), z=1.4, scale=1.6, skip=[("w", 17.2, 18.8)])
+    _gallery(f, r, ("e",), z=1.4, scale=1.4, skip=[("e", 16.6, 26.6)])
+    _dress(aset, mb, nc, r, 55, clear=[(G_HOLE[0] - 0.1, G_HOLE[1], G_HOLE[2] + 0.1, G_HOLE[3] + 0.1)])
+    K.camera(aset, "hall2", (5.8, 14.2, r["z"] + 1.6), (-3.5, 24.5, r["z"] + 0.8), 15.0)
+
+
+def _gazebo_furnish(nc, aset, cx, cy, z=0.52):
+    """Tea in the garden gazebo: round table with a tea set and cake stand, four cushioned chairs, two benches
+    in the balustraded bays, flower pots."""
+    aset.prop("SM_Int_RoundTable", (cx, cy, z), 0.0)
+    nc.cylinder((cx, cy, z + 0.755), 0.55, 0.006, "M_IntFabricPink", seg=16)
+    aset.prop("SM_Int_TeaSet", (cx + 0.1, cy - 0.05, z + 0.76), 25.0)
+    _cake_stand(nc, cx - 0.25, cy + 0.15, z + 0.76)
+    for k in range(4):
+        a = math.radians(45.0 + 90.0 * k)
+        px, py = cx + math.cos(a) * 0.9, cy + math.sin(a) * 0.9
+        aset.prop("SM_Int_WoodChair", (px, py, z), math.degrees(a) - 90.0)
+        with nc.at((px, py, z + 0.46), rot=math.degrees(a) - 90.0):
+            nc.box((0, 0.02, 0.03), (0.4, 0.4, 0.06), ("M_IntFabricPink", "M_IntFabricWhite")[k % 2])
+    for ang in (45.0, 225.0):
+        a = math.radians(ang)
+        bx, by = cx + math.cos(a) * 3.0, cy + math.sin(a) * 3.0
+        aset.prop("SM_Int_Bench", (bx, by, z), ang - 90.0)
+        with nc.at((bx, by, z), rot=ang - 90.0):
+            for s in (-1, 1):
+                with nc.at((s * 0.32, 0.08, 0.62), rot_x=-14):
+                    nc.box((0, 0, 0), (0.38, 0.12, 0.34), ("M_IntFabricPink", "M_IntFabricYellow")[s > 0])
+    for ang in (135.0, 315.0):
+        a = math.radians(ang)
+        aset.prop("SM_Int_PottedPlantC", (cx + math.cos(a) * 3.05, cy + math.sin(a) * 3.05, z), ang)
 
 
 def build_girls():
@@ -3756,6 +4690,7 @@ def build_girls():
         _plan_end()
     _girls_garden(garden, nc, aset)
     _gazebo(gazebo, nc, aset, *G_GAZEBO)
+    _gazebo_furnish(nc, aset, *G_GAZEBO)
     _girls_jetty(jetty, nc, aset)
     _ext_cams(aset, "girls")
     return aset

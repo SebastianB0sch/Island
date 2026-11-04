@@ -43,6 +43,9 @@ def _is_bare(mat):
         return True
     if mat.endswith(("Wall", "Floor", "Ceiling")):
         return True
+    if mat.startswith("M_") and ("Int" in mat[:8]) and any(k in mat for k in ("Wall", "Floor", "Ceil", "Carpet")) \
+            and not any(k in mat for k in ("Lamp", "Sconce", "Clock", "Rug")):
+        return True             # module-specific wall papers / floors (M_ObIntWallNavy ...) are bare surfaces too
     return mat.startswith(BARE_PREFIXES)
 
 
