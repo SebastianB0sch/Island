@@ -1215,9 +1215,10 @@ def _ferry(mb, aset):
                 k = 1 if s > 0 else -1                              # local z towards the inside (rot_x 90: +z -> -y)
                 mb.cylinder((0, 0, -0.01 if k > 0 else -L + 0.01), PORT_R, L, "M_IntMetal", seg=12, smooth=False,
                             cap_top=False, cap_bottom=False)
-                mb.cylinder((0, 0, k * 0.08 - 0.005), PORT_R + 0.01, 0.01, "M_GlassClear", seg=12, smooth=False)
-                mb.torus((0, 0, -k * 0.02), PORT_R + 0.06, 0.055, TRIM, seg=14, tube_seg=4)
-                mb.torus((0, 0, k * (L + 0.01)), PORT_R + 0.06, 0.05, "M_IntTrimGold", seg=14, tube_seg=4)
+                mb.cylinder((0, 0, k * 0.08 - 0.005), PORT_R + 0.01, 0.01, "M_GlassClear", seg=10, smooth=False,
+                            cap_bottom=False)
+                mb.torus((0, 0, -k * 0.02), PORT_R + 0.06, 0.055, TRIM, seg=12, tube_seg=3)
+                mb.torus((0, 0, k * (L + 0.01)), PORT_R + 0.06, 0.05, "M_IntTrimGold", seg=12, tube_seg=3)
     # anchors / hawse plates at the bow
     for s in (-1, 1):
         xa = 30.0
@@ -1467,14 +1468,18 @@ def _ship_cam(aset, label, pos, target):
     aset.special("camera", pos, target=target, lens=15.0, label=label)
 
 
-def _ship_fixtures(mb, aset, W, x0, x1, hw, z, zc, exits=(), outlets=True, seed=0):
+def _ship_fixtures(mb, aset, W, x0, x1, hw, z, zc, exits=(), outlets=True, seed=0, skip_y=None):
     """What dress_room adds to a building, for a ship deck (everything in the floating mesh, z = deck level):
     sprinklers + smoke detector on the ceiling, outlets under the side windows, green exit signs over doors
     (exits: [(x, y, yaw)] points on the inner wall face, local -Y into the room)."""
     nx, ny = max(1, int((x1 - x0) / 3.0)), max(1, int(2 * hw / 3.0))
     for i in range(nx):
         for j in range(ny):
-            DT.ceiling_fixture(mb, x0 + (x1 - x0) * (i + 0.5) / nx, -hw + 2 * hw * (j + 0.5) / ny, zc, "sprinkler")
+            sx_, sy_ = x0 + (x1 - x0) * (i + 0.5) / nx, -hw + 2 * hw * (j + 0.5) / ny
+            if skip_y and abs(sy_) < skip_y:
+                continue
+            mb.cylinder((sx_, sy_, zc - 0.07), 0.008, 0.07, "M_DetSilver", seg=4, cap_top=False)   # sprinkler head
+            mb.cylinder((sx_, sy_, zc - 0.075), 0.025, 0.006, "M_DetSilver", seg=6)
     DT.ceiling_fixture(mb, (x0 + x1) / 2 + 0.6, 0.4, zc, "smoke")
     if outlets:
         n = max(1, int((x1 - x0) / 3.2))
@@ -1577,9 +1582,15 @@ def _ferry_lower_deck(mb, aset, W, lights):
             bc = blank[dorm]
             with mb.at((0.0, 0.0, z0)):
                 yb = sgn * (yl - 1.05)
-                for xbk in (c0 + 0.5, c1 - 0.5):
-                    K.bunk_bed(mb, mb, xbk, yb, 90.0, levels=2, blankets=(bc, "M_IntFabricWhite"), length=2.0,
-                               width=0.85, ladder=False)
+                for xbk in (c0 + 0.5, c1 - 0.5):                                  # two-tier ship bunks
+                    with mb.at((xbk, yb, 0.0)):
+                        for sx in (-1, 1):
+                            for sy in (-1, 1):
+                                mb.box((sx * 0.4, sy * 0.97, 0.9), (0.05, 0.05, 1.8), "M_IntWood")
+                        for zb_, m_ in ((0.25, bc), (1.25, "M_IntFabricWhite")):
+                            mb.box((0, 0, zb_), (0.85, 2.0, 0.12), "M_IntWoodDark")
+                            mb.box((0, 0.05, zb_ + 0.12), (0.78, 1.85, 0.12), m_)
+                            mb.box((0, -0.8, zb_ + 0.22), (0.5, 0.3, 0.1), "M_IntFabricWhite")
                 mb.box((c0 + 2.4, sgn * (yl - 0.3), 0.72), (0.9, 0.55, 0.04), "M_IntWood")
                 mb.box((c0 + 2.4, sgn * (yl - 0.1), 0.36), (0.08, 0.08, 0.72), "M_IntMetal")
                 for dx in (-0.5, 0.5):
@@ -1591,7 +1602,8 @@ def _ferry_lower_deck(mb, aset, W, lights):
                 else:
                     DT.book_stack(mb, c0 + 2.6, sgn * (yl - 0.3), 0.74, 0.0, 2, seed=num)
                 K.lockers(mb, mb, None, c0 + 3.4, sgn * 3.8, 0.0 if sgn < 0 else 180.0, n=2, w=0.45, d=0.5, h=1.8)
-                DT.coat_hooks(mb, c0 + 1.25, sgn * 3.5, 1.7, 0.0 if sgn < 0 else 180.0, n=2, dorm=dorm, seed=num)
+                DT.coat_hooks(mb, c0 + 1.25, sgn * 3.5, 1.7, 0.0 if sgn < 0 else 180.0, n=2, dorm=dorm, seed=num,
+                              jackets=1)
                 if rnd.random() < 0.7:
                     mb.box((c0 + 1.5, sgn * (yl - 2.4), 0.25), (0.45, 0.25, 0.5), rnd.choice(K.FABRICS))
                 mb.box((c0 + 2.4, sgn * (3.6 + 0.6), 0.004), (1.4, 0.9, 0.008), bc)                  # rug
@@ -1607,7 +1619,7 @@ def _ferry_lower_deck(mb, aset, W, lights):
                 for a_, b_, g_ in loop:
                     K.wainscot(mb, a_, b_, 0.0, 0.95, "M_IntWood", cap=K.TRIM_WOOD, gaps=g_)
                 mb.box((c0 + 2.4, sgn * (yl - 0.13), 1.75), (1.4, 0.24, 0.03), "M_IntWood")
-                DT.book_row(mb, c0 + 1.85, c0 + 2.9, sgn * (yl - 0.13), 1.765, 0.2, seed=num)
+                DT.book_stack(mb, c0 + 2.1, sgn * (yl - 0.13), 1.765, 90.0, 3, seed=num)
                 for xpic in (px0 + 0.02, px1 - 0.02):
                     mb.box((xpic, sgn * (yl - 1.05), 2.15), (0.02, 0.5, 0.36), "M_IntWoodDark")
                     mb.box((xpic + (0.012 if xpic < c0 + 2.4 else -0.012), sgn * (yl - 1.05), 2.15), (0.004, 0.42, 0.28),
@@ -1634,10 +1646,24 @@ def _ferry_lower_deck(mb, aset, W, lights):
                     K.wainscot(mb, (xa, -3.4), (xb, -3.4), 0.0, 1.0, "M_IntWood", cap=K.TRIM_WOOD,
                                gaps=[(cx - xa - 0.5, cx - xa + 0.5) for cx in cab_x])
                 mb.box_mm((xa, sgn * 2.47 - 0.025, 0.93), (xb, sgn * 2.47 + 0.025, 0.98), "M_IntTrimGold")   # handrail
+                for k, (dy, rr, m) in enumerate(((0.12, 0.05, "M_IntMetal"), (0.26, 0.035, "M_AcademyRed"),
+                                                 (0.38, 0.03, "M_IntMetal"))):                  # ceiling services
+                    with mb.at((xa, sgn * (2.4 + dy), h - 0.08 - k * 0.02), rot_y=90):
+                        mb.cylinder((0, 0, 0), rr, xb - xa, m, seg=6, cap_top=False, cap_bottom=False)
+                mb.box_mm((xa + 0.2, sgn * 2.75 - 0.4, 0.003), (xb - 0.2, sgn * 2.75 + 0.4, 0.009), "M_IntCarpetBlue")
                 for k, cx in enumerate(cab_x):
-                    if k % 2:
-                        K.poster(mb, aset, cx, sgn * 2.4, 1.6, 180.0 if sgn > 0 else 0.0, 0.5, 0.7,
-                                 K.POSTERS[(k + (sgn > 0)) % 4])
+                    if k % 2 == 0:                                                              # hanging signs
+                        mb.box((cx + 1.2, sgn * 2.9, h - 0.3), (0.05, 0.7, 0.18), K.TRIM_WHITE)
+                        mb.box((cx + 1.2, sgn * 2.9, h - 0.15), (0.02, 0.02, 0.12), "M_IntMetal")
+                for k, cx in enumerate(cab_x):                     # framed pictures opposite the doors, sconces
+                    with mb.at((cx, sgn * 2.4, 1.6), rot=180.0 if sgn > 0 else 0.0):
+                        mb.box((0, -0.012, 0), (0.62, 0.024, 0.78), "M_IntWoodDark")
+                        mb.box((0, -0.026, 0), (0.52, 0.006, 0.68), K.POSTERS[(k + (sgn > 0)) % 4])
+                        mb.box((0.05, -0.03, -0.05), (0.3, 0.004, 0.3), ("M_IntFabricGreen", "M_IntTrimWhite")[k % 2])
+                    for dxs in (-1.2, 1.2):
+                        with mb.at((cx + dxs, sgn * 2.4, 1.9), rot=180.0 if sgn > 0 else 0.0):
+                            mb.box((0, -0.05, 0), (0.14, 0.1, 0.06), "M_IntTrimGold")
+                            mb.box((0, -0.09, 0.09), (0.16, 0.16, 0.2), K.GLOW)
                 xm = (xa + xb) / 2
                 with mb.at((xm, sgn * 2.4, 1.2), rot=180.0 if sgn > 0 else 0.0):
                     mb.box((0, -0.06, 0.0), (0.5, 0.12, 0.7), "M_AcademyRed")                 # fire-hose cabinet
@@ -1699,7 +1725,7 @@ def _ferry_lower_deck(mb, aset, W, lights):
             mb.box((xx, 4.2, h - 0.03), (1.0, 0.3, 0.03), K.PANEL_LIGHT)
         mb.cylinder((-2.65, -2.5, 0.0), 0.09, 0.6, "M_AcademyRed", seg=8)
         _ship_fixtures(mb, aset, W, LD_X0, LD_X1, 6.7, 0.0, h, exits=[(lob0 + 0.1, 1.65, 90.0), (lob1 - 0.1, -1.65, -90.0)],
-                       outlets=False, seed=4)
+                       outlets=False, seed=4, skip_y=2.3)
     aset.text("BOOSTER PACKS", W(-6.23, -4.2, z0 + 1.72), -90.0, size=0.08, color=(1, 1, 1), emissive=True)
     aset.text("FORWARD CABINS", W(lob1 - 0.12, 1.65, z0 + 2.0), -90.0, size=0.08, color=(0.1, 0.25, 0.62))
     aset.text("AFT CABINS", W(lob0 + 0.12, -1.65, z0 + 2.0), 90.0, size=0.08, color=(0.1, 0.25, 0.62))
@@ -1708,7 +1734,7 @@ def _ferry_lower_deck(mb, aset, W, lights):
     aset.text("INFORMATION", W(-5.9, 4.88, z0 + 0.75), 0.0, size=0.08, color=(1, 1, 1))
     aset.text("NOTICES", W(lob0 + 0.12, -1.72, z0 + 1.88), 90.0, size=0.06, color=(0.2, 0.12, 0.06))
     lights([(-5.0, 0.0)], z0 + 2.4, 2500.0, 7.0)
-    _ship_cam(aset, "ferry_lower_lobby", (-2.8, 4.8, z0 + 1.7), (-6.8, -2.0, z0 + 0.9))
+    _ship_cam(aset, "ferry_lower_lobby", (-4.4, 6.1, z0 + 1.7), (-5.5, -3.0, z0 + 0.8))
     _ship_cam(aset, "ferry_lower_cabin", (-14.4, -3.75, z0 + 1.65), (-12.4, -6.4, z0 + 0.7))
     _ship_cam(aset, "ferry_lower_corridor", (-8.0, 2.9, z0 + 1.65), (-28.0, 2.9, z0 + 0.9))
 
@@ -2529,14 +2555,12 @@ def _crane(aset, mb, nc):
     mb.sphere((x, ay, az + 0.6), 0.25, "M_AcademyRed", seg=8, rings=6)
     aset.light((x, ay, az + 0.9), (1.0, 0.15, 0.1), 2000.0, 8.0, night_only=True)
     # machinery house on the back reach
-    mb.box_mm((x - 3.3, -33.5, top + 1.5), (x + 3.3, by1 + 0.3, top + 4.3), WHITE)
-    mb.box_mm((x - 3.5, -33.7, top + 4.3), (x + 3.5, by1 + 0.5, top + 4.5), BLUE)
-    mb.facade_windows((x - 3.3, -33.5), (x + 3.3, -33.5), [top + 2.6], 3, 1.2, 0.8, glass=GLASS, frame=TRIM)
+    # (walk-in: built by _crane_machinery from the cab code, which knows the stair tower)
     # trolley, operator cab, ropes and spreader with a container
     ty = -45.0
     mb.box_mm((x - 3.3, ty - 1.6, top - 0.5), (x + 3.3, ty + 1.6, top), DMETAL)
     # operator cab (hollow, walk-in) hanging under the trolley, reached by a steel stair tower + catwalk
-    _crane_cab(aset, mb, nc, x, ty, top)
+    _crane_cab(aset, mb, nc, x, ty, top, by1)
     sz = 6.6
     mb.box_mm((x - 3.1, ty - 1.25, sz), (x + 3.1, ty + 1.25, sz + 0.4), Y)
     mb.box_mm((x - 1.0, ty - 0.6, sz + 0.4), (x + 1.0, ty + 0.6, sz + 0.9), Y)
@@ -2547,7 +2571,7 @@ def _crane(aset, mb, nc):
     aset.light((x, ty, top - 0.6), (1.0, 0.95, 0.85), 8000.0, 25.0, night_only=True)
 
 
-def _crane_cab(aset, mb, nc, x, ty, top):
+def _crane_cab(aset, mb, nc, x, ty, top, by1):
     """Operator cab under the trolley (floor 9.0, glass front + floor window towards the sea), the catwalk from
     the stair tower on the land side, and the switchback stair (0.18 m risers, 0.28 m treads, 5 flights)."""
     Y = CRANE_Y
@@ -2644,9 +2668,10 @@ def _crane_cab(aset, mb, nc, x, ty, top):
     for z in (1.8, 5.4):
         mb.railing([(tx0 + 0.03, ys + 1.0, z), (tx0 + 0.03, ys + 0.03, z), (tx1 - 0.03, ys + 0.03, z),
                     (tx1 - 0.03, ys + 1.0, z)], 1.0, Y, **rk)
-    for z in (3.6, 7.2):
-        mb.railing([(tx0 + 0.03, yn - 1.0, z), (tx0 + 0.03, yn - 0.03, z), (tx1 - 0.03, yn - 0.03, z),
-                    (tx1 - 0.03, yn - 1.0, z)], 1.0, Y, **rk)
+    mb.railing([(tx0 + 0.03, yn - 1.0, 3.6), (tx0 + 0.03, yn - 0.03, 3.6), (tx1 - 0.03, yn - 0.03, 3.6),
+                (tx1 - 0.03, yn - 1.0, 3.6)], 1.0, Y, **rk)
+    for xx in (tx0 + 0.03, tx1 - 0.03):                         # 7.2 m landing opens north onto the bridge
+        mb.railing([(xx, yn - 1.0, 7.2), (xx, yn, 7.2)], 1.0, Y, **rk)
     mb.railing([(cw0, ys + 0.03, fz), (tx0 + 0.03, ys + 0.03, fz), (tx0 + 0.03, ys + 1.0, fz)], 1.0, Y, **rk)
     mb.railing([(cw1, ys + 0.03, fz), (tx1 - 0.03, ys + 0.03, fz), (tx1 - 0.03, ys + 1.0, fz),
                 (lb - wd / 2, ys + 1.0, fz)], 1.0, Y, **rk)
@@ -2658,6 +2683,123 @@ def _crane_cab(aset, mb, nc, x, ty, top):
             mb.beam((px, ys - 0.06, z - 1.7), (px, yn + 0.06, z), 0.06, 0.06, Y)
     nc.box((cx - 0.5, yn + 0.08, 1.5), (0.6, 0.02, 0.4), "M_CrateYellow")
     aset.text("CRANE CAB - STAFF ONLY", (cx - 0.5, yn + 0.1, 1.48), 180.0, size=0.06, color=(0.1, 0.1, 0.1))
+    _crane_machinery(aset, mb, nc, x, top, by1, tx0, tx1, la, lb, yn)
+
+
+def _crane_machinery(aset, mb, nc, x, top, by1, tx0, tx1, la, lb, yn):
+    """Walk-in machinery house on the back reach (floor 13.5, real windows towards the sea): hoist winch, trolley
+    drives, switch cabinets, workbench. Reached from the stair tower: a bridge at the 7.2 m landing leads to a
+    second stair stack north of the house (flights 7.2 -> 13.5) and a door in the house's land-side wall."""
+    Y = CRANE_Y
+    X0, X1, Y0, Y1 = x - 3.3, x + 3.3, -33.5, by1 + 0.3
+    fz, cz = top + 1.5, top + 4.3
+    mb.box_mm((X0, Y0, fz - 0.1), (X1, Y1, fz), WHITE, mats={"+z": "M_IntMetal"})
+    us = _frames(mb, (X0, Y0), (X1, Y0), top + 2.6, 3, 1.2, 0.8)
+    dc = X1 - la
+    for p0, p1, ops in (((X0, Y0), (X1, Y0), _wins(us, 1.2, top + 2.6 - fz, top + 3.4 - fz)),
+                        ((X1, Y0), (X1, Y1), []), ((X1, Y1), (X0, Y1), [K.Door(dc, 0.9, 2.05, "metal")]),
+                        ((X0, Y1), (X0, Y0), [])):
+        K.wall(aset, mb, p0, p1, fz, cz - fz, 0.15, WHITE, inner=K.PLASTER_WHITE, openings=ops, trim=TRIM,
+               trim_in=K.TRIM_WHITE)
+    mb.box_mm((X0 - 0.2, Y0 - 0.2, cz), (X1 + 0.2, Y1 + 0.2, cz + 0.2), BLUE, mats={"-z": K.CEIL})
+    ix0, ix1, iy0, iy1 = X0 + 0.15, X1 - 0.15, Y0 + 0.15, Y1 - 0.15
+    with mb.at((0.0, 0.0, fz)), nc.at((0.0, 0.0, fz)):
+        # hoist winch: drum on two pedestals, motor, gearbox, brake
+        for sx in (-1.4, 1.4):
+            mb.box((x + sx, -30.6, 0.4), (0.3, 1.0, 0.8), STEEL)
+        with mb.at((x - 1.3, -30.6, 0.9), rot_y=90):
+            mb.cylinder((0, 0, 0), 0.55, 2.6, Y, seg=16)
+            for k in range(9):
+                mb.torus((0, 0, 0.25 + k * 0.26), 0.56, 0.025, "M_IntBlack", seg=16, tube_seg=3)
+        mb.box((x + 1.9, -30.6, 0.55), (0.6, 0.8, 1.1), DMETAL)                               # gearbox
+        with mb.at((x + 2.2, -30.6, 0.65), rot_y=90):
+            mb.cylinder((0, 0, 0), 0.35, 0.8, "M_AcademyBlue", seg=14)                       # motor
+        with mb.at((x - 1.45, -30.6, 0.9), rot_y=90):
+            mb.cylinder((0, 0, -0.08), 0.62, 0.06, "M_IntMetal", seg=16)                     # brake disc
+        mb.box_mm((x - 1.9, -31.4, 0.0), (x + 2.8, -29.8, 0.06), Y)                           # drip tray / plinth
+        # trolley-drive motors by the sea wall
+        for xx in (x - 2.2, x + 2.2):
+            mb.box((xx, iy0 + 0.6, 0.3), (0.8, 0.6, 0.6), DMETAL)
+            with mb.at((xx, iy0 + 0.6, 0.75), rot_y=90):
+                mb.cylinder((0, 0, -0.35), 0.22, 0.7, "M_AcademyBlue", seg=12)
+        # switch cabinets along the north wall (west of the door)
+        for k in range(4):
+            cxk = ix0 + 0.35 + k * 0.65
+            mb.box((cxk, iy1 - 0.25, 1.0), (0.6, 0.5, 2.0), "M_IntSteelBlue")
+            for j in range(3):
+                nc.box((cxk - 0.15 + j * 0.15, iy1 - 0.505, 1.6), (0.05, 0.01, 0.05),
+                       ("M_DetExit", "M_DetLed", "M_IntTrimGold")[j])
+            nc.box((cxk, iy1 - 0.505, 1.15), (0.3, 0.01, 0.2), "M_IntScreen")
+            nc.box((cxk + 0.22, iy1 - 0.52, 0.9), (0.03, 0.03, 0.15), "M_IntBlack")
+        # workbench + tool board on the east wall, oil drums, rope reel, desk with the log
+        with mb.at((ix1 - 0.35, -29.4, 0.0), rot=-90.0), nc.at((ix1 - 0.35, -29.4, 0.0), rot=-90.0):
+            mb.box((0, 0, 0.88), (1.8, 0.7, 0.05), "M_IntWood")
+            for sx in (-1, 1):
+                mb.box((sx * 0.85, 0, 0.43), (0.06, 0.6, 0.86), STEEL)
+            mb.box((0, 0, 0.2), (1.7, 0.6, 0.03), STEEL)
+            nc.box((0, 0.36, 1.6), (1.6, 0.02, 0.9), "M_IntCork")
+            rt = random.Random(3)
+            for k in range(7):
+                nc.box((-0.6 + k * 0.2, 0.34, rt.uniform(1.4, 1.8)), (0.04, 0.02, rt.uniform(0.15, 0.35)),
+                       rt.choice((STEEL, "M_IntFabricRed", "M_IntBlack", ORANGE)))
+            nc.box((-0.4, 0.0, 0.94), (0.4, 0.22, 0.08), "M_IntFabricRed")
+            nc.cylinder((0.5, 0.1, 0.905), 0.06, 0.18, "M_IntMetal", seg=8)
+        aset.prop("SM_Barrel", (ix0 + 0.4, -31.6, fz), 10.0, scale=0.62)
+        aset.prop("SM_Barrel", (ix0 + 0.4, -32.15, fz), 70.0, scale=0.62)
+        with mb.at((ix0 + 0.5, -28.6, 0.0)):                                                  # spare wire-rope reel
+            with mb.at((0, 0, 0.45), rot_x=90):
+                mb.cylinder((0, 0, -0.3), 0.45, 0.04, "M_IntWood", seg=12)
+                mb.cylinder((0, 0, 0.26), 0.45, 0.04, "M_IntWood", seg=12)
+                mb.cylinder((0, 0, -0.26), 0.32, 0.52, "M_IntMetal", seg=12)
+        K.desk(mb, nc, x + 0.35, iy1 - 0.32, 0.0, w=1.0, d=0.55, top="M_IntWood", legs=STEEL, hutch=False, clutter=False)
+        DT.desk_set(nc, _Shifted(aset, (0.0, 0.0, fz)), x + 0.35, iy1 - 0.32, 0.76, 0.0, "office", seed=81,
+                    w=1.0, d=0.55)
+        mb.cylinder((x + 0.35, iy1 - 0.95, 0.0), 0.2, 0.45, STEEL, seg=8)
+    aset.prop("SM_Int_Extinguisher", (x + 2.4, iy1 - 0.2, fz), 180.0)
+    _vest_hooks(nc, ix0, -29.3, fz + 1.75, 90.0, n=3, vests=2)
+    _first_aid(nc, aset, ix0, -30.4, fz + 1.55, 90.0)
+    _whiteboard(nc, aset, ix1, -31.6, fz + 1.0, -90.0, 1.0, 0.75, ("ROPE CHECK  MON", "GREASE DRUM  WED",
+                                                                 "BRAKE TEST  FRI"))
+    _dress(aset, mb, nc, ix0, iy0, ix1, iy1, fz, cz, "service", seed=82)
+    for px_ in (x - 1.6, x + 1.6):
+        K.panel_light(aset, nc, px_, -30.1, cz, w=1.2, d=0.3, intensity=2500.0, radius=7.0)
+    aset.text("MACHINERY", (X1 - 1.0, Y1 + 0.03, cz - 0.3), 0.0 + 180.0, size=0.16, color=(0.1, 0.25, 0.62))
+    K.camera(aset, "crane_machinery", (ix0 + 0.4, iy1 - 0.9, fz + 1.65), (x + 1.8, -31.4, fz + 0.6), 14.0)
+    # ---- bridge from the 7.2 m landing + second stair stack north of the house (7.2 -> 13.5)
+    rk = dict(post_spacing=0.8, post_size=0.05, rail_size=0.05)
+    wd = 0.9
+    s0 = Y1 + 0.1                                      # south face of the new stack (-26.6)
+    s1 = s0 + 1.0 + 2.8 + 1.0                          # north face
+    mb.box_mm((tx0, yn, 7.12), (tx1, s0, 7.2), "M_IntMetal", mats={"-z": DMETAL})
+    for xx in (tx0 + 0.03, tx1 - 0.03):
+        mb.railing([(xx, yn, 7.2), (xx, s0 + 1.0, 7.2)], 1.0, Y, **rk)
+    for k, (lane, yaw, ystart, za) in enumerate(((lb, 90.0, s0 + 1.0, 7.2), (la, -90.0, s1 - 1.0, 9.0),
+                                                (lb, 90.0, s0 + 1.0, 10.8))):
+        K.stairs(mb, lane, ystart, za, za + 1.8, yaw, wd, mat="M_IntMetal", stringer=DMETAL, rail=Y, run=0.28,
+                 rail_sides=(1, -1))
+    K.stairs(mb, la, s1 - 1.0, 12.6, fz, -90.0, wd, mat="M_IntMetal", stringer=DMETAL, rail=Y, run=0.28,
+             rail_sides=(1, -1))
+    top_y = s1 - 1.0 - 0.28 * round((fz - 12.6) / 0.18)
+    mb.box_mm((tx0, s0, 7.12), (tx1, s0 + 1.0, 7.2), "M_IntMetal", mats={"-z": DMETAL})
+    mb.box_mm((tx0, s0, 10.72), (tx1, s0 + 1.0, 10.8), "M_IntMetal", mats={"-z": DMETAL})
+    for z in (9.0, 12.6):
+        mb.box_mm((tx0, s1 - 1.0, z - 0.08), (tx1, s1, z), "M_IntMetal", mats={"-z": DMETAL})
+        mb.railing([(tx0 + 0.03, s1 - 1.0, z), (tx0 + 0.03, s1 - 0.03, z), (tx1 - 0.03, s1 - 0.03, z),
+                    (tx1 - 0.03, s1 - 1.0, z)], 1.0, Y, **rk)
+    mb.railing([(tx0 + 0.03, s0 + 1.0, 10.8), (tx0 + 0.03, s0 + 0.03, 10.8), (tx1 - 0.03, s0 + 0.03, 10.8),
+                (tx1 - 0.03, s0 + 1.0, 10.8)], 1.0, Y, **rk)
+    for xx in (tx1 - 0.03,):
+        mb.railing([(xx, s0, 7.2), (xx, s0 + 1.0, 7.2)], 1.0, Y, **rk)
+    mb.box_mm((tx0, Y1, fz - 0.08), (la + wd / 2, top_y, fz), "M_IntMetal", mats={"-z": DMETAL})   # top landing
+    mb.railing([(la + wd / 2 - 0.03, Y1 + 0.05, fz), (la + wd / 2 - 0.03, top_y, fz)], 1.0, Y, **rk)
+    mb.railing([(tx0 + 0.03, Y1 + 0.05, fz), (tx0 + 0.03, top_y, fz)], 1.0, Y, **rk)
+    for px in (tx0 - 0.06, tx1 + 0.06):
+        for py in (s0 - 0.06, s1 + 0.06):
+            mb.box((px, py, (fz + 1.1) / 2), (0.12, 0.12, fz + 1.1), Y)
+    for z in (9.0, 10.8, 12.6):
+        for px in (tx0 - 0.06, tx1 + 0.06):
+            mb.beam((px, s0 - 0.06, z - 1.7), (px, s1 + 0.06, z), 0.06, 0.06, Y)
+    K.camera(aset, "crane_stair", (tx1 - 0.2, s0 + 0.3, 7.2 + 1.65), (la, s1 - 0.5, 9.5), 14.0)
 
 
 # ================================================================== TERMINAL
@@ -3577,10 +3719,22 @@ def _lh_ri(z):
     return 2.7
 
 
-def _lh_shell(mb, rows, rfun, matfun, inward, seg=36):
-    """Revolved skin (shared vertices -> smooth like MeshBuilder.lathe) with the doorway left open: the cells
-    inside LH_DOOR are skipped."""
+LH_WINDOWS = [(4.4, 150.0), (7.6, 300.0), (10.8, 90.0), (13.9, 225.0), (16.4, 20.0)]   # (centre z, angle)
+LH_WIN_H, LH_WIN_DA = 0.46, 5.0                            # half height, half angle of the openings
+
+
+def _lh_rows(rows):
+    """Shell rows plus the sill / head of every window inside their range."""
+    lo, hi = min(rows), max(rows)
+    extra = [z + s * LH_WIN_H for z, a in LH_WINDOWS for s in (-1, 1) if lo < z + s * LH_WIN_H < hi]
+    return sorted(set(rows) | set(extra))
+
+
+def _lh_shell(mb, rows, rfun, matfun, inward, seg=72):
+    """Revolved skin (shared vertices -> smooth like MeshBuilder.lathe) with the doorway and the shaft windows
+    left open: the cells inside LH_DOOR / LH_WINDOWS are skipped."""
     a0d, a1d, dz0, dz1 = LH_DOOR
+    rows = _lh_rows(rows)
     base = len(mb.verts)
     for z in rows:
         r = rfun(z)
@@ -3593,6 +3747,9 @@ def _lh_shell(mb, rows, rfun, matfun, inward, seg=36):
         for i in range(seg):
             ad0, ad1 = 360.0 * i / seg, 360.0 * (i + 1) / seg
             if z1 <= dz1 + 1e-6 and ad0 >= a0d - 1e-6 and ad1 <= a1d + 1e-6:
+                continue
+            if any(z0 >= wz - LH_WIN_H - 1e-6 and z1 <= wz + LH_WIN_H + 1e-6 and ad0 >= wa - LH_WIN_DA - 1e-6
+                   and ad1 <= wa + LH_WIN_DA + 1e-6 for wz, wa in LH_WINDOWS):
                 continue
             i2 = (i + 1) % seg
             f = (base + j * seg + i, base + j * seg + i2, base + (j + 1) * seg + i2, base + (j + 1) * seg + i)
@@ -3688,34 +3845,26 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     # window galleries: annular platforms flush with a tread, so the shaft windows can be reached (and cleaned)
     rise = (zt - 0.95) / n_steps
     gals = []
-    for g_step, ga0, ga1, entry_ccw in ((27, None, 330.0, False), (61, 130.0, None, True)):
+    # G1 archive (300-deg window), G2 lamp store (225), G3 lookout (150), G4 weather room (90); the entry tread
+    # (ta..tb) lies inside each ring, the inner edge is railed everywhere else
+    for g_step, a0g, a1g in ((27, 157.5, 330.0), (60, 130.0, 240.0), (10, 112.0, 175.0), (44, 70.0, 202.5)):
         zg = 0.95 + rise * (g_step + 1)
         ta = (a_start + LH_STEP * g_step) % 360.0                                    # entry tread angles
         tb = ta + LH_STEP
-        a0g = ta if ga0 is None else ga0
-        a1g = tb if ga1 is None else ga1
         gals.append((g_step, zg, a0g, a1g, ta, tb))
         rout = _lh_ri(zg) + 0.04
         _polar_slab(mb, rh, rout, a0g, a1g, zg, 0.12, "M_IntWoodFloor", "M_IntWoodDark", "M_IntWoodDark", caps=True)
         for k in range(int((a1g - a0g) / 15.0) + 1):                                 # joists under the planks
             a = a0g + 2.0 + k * 15.0
             nc.beam(_polar(rh + 0.02, a, zg - 0.13), _polar(rout - 0.06, a, zg - 0.13), 0.08, 0.12, "M_IntWoodDark")
-        # inner rail (open at the entry tread) + rails across both ends
-        ra, rb = (a0g, ta) if entry_ccw else (tb, a1g)
-        pts = [_polar(rh + 0.03, ra + (rb - ra) * k / max(1, int((rb - ra) / 8.0)))[:2]
-               for k in range(max(1, int((rb - ra) / 8.0)) + 1)]
-        K.railing(mb, pts, zg, h=1.0, mat=K.TRIM_WOOD, spacing=0.18)
-        for a in (a0g, a1g):
-            if (a == ta or a == tb):
+        for ra, rb in ((a0g, ta), (tb, a1g)):
+            if rb - ra < 1.0:
                 continue
-            K.railing(mb, [_polar(rh + 0.03, a + (1.0 if a == a0g else -1.0))[:2],
-                           _polar(_lh_ri(zg + 0.5) - 0.05, a + (1.0 if a == a0g else -1.0))[:2]], zg, h=1.0,
+            n_ = max(1, int((rb - ra) / 8.0))
+            K.railing(mb, [_polar(rh + 0.03, ra + (rb - ra) * k / n_)[:2] for k in range(n_ + 1)], zg, h=1.0,
                       mat=K.TRIM_WOOD, spacing=0.18)
-        if not entry_ccw:          # the CW end at the entry tread drops to the tread below: rail across it
-            K.railing(mb, [_polar(rh + 0.03, ta + 0.5)[:2], _polar(_lh_ri(zg + 0.5) - 0.05, ta + 0.5)[:2]], zg, h=1.0,
-                      mat=K.TRIM_WOOD, spacing=0.18)
-        else:
-            K.railing(mb, [_polar(rh + 0.03, tb - 0.5)[:2], _polar(_lh_ri(zg + 0.5) - 0.05, tb - 0.5)[:2]], zg, h=1.0,
+        for a, d_ in ((a0g, 0.5), (a1g, -0.5)):
+            K.railing(mb, [_polar(rh + 0.03, a + d_)[:2], _polar(_lh_ri(zg + 0.5) - 0.05, a + d_)[:2]], zg, h=1.0,
                       mat=K.TRIM_WOOD, spacing=0.18)
     # stair hand rail (kit rail re-drawn with gaps at the gallery entries)
     skip = set()
@@ -3744,12 +3893,11 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
         for k in range(10):
             nc.box((0, 0.05, 0.3 + k * 0.3), (0.44, 0.04, 0.04), "M_IntWoodDark")
 
-    # windows (the outside ones stay; inside: bright sky panels in deep reveals)
-    for z, adeg in ((4.4, 150.0), (7.6, 300.0), (10.8, 90.0), (13.9, 225.0), (16.4, 20.0)):
+    # windows: real openings (see the shell), inner trim frame + transom
+    for z, adeg in LH_WINDOWS:
         d = _lh_ri(z) - 0.035
         x, y, _ = _polar(d, adeg)
         with nc.at((x, y, z), rot=adeg - 90.0):
-            nc.box((0, -0.005, 0), (0.62, 0.01, 0.92), K.SKY)
             for sx in (-1, 1):
                 nc.box((sx * 0.34, -0.03, 0), (0.06, 0.06, 1.04), K.TRIM_WHITE)
             nc.box((0, -0.03, 0.49), (0.74, 0.06, 0.06), K.TRIM_WHITE)
@@ -3871,15 +4019,15 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
             with nc.at((0, 0, 0), rot_y=sgn * 35.0):
                 nc.box((0, 0, 0), (0.05, 0.04, 2.0), "M_IntWood")
                 nc.box((0, 0, 0.85), (0.16, 0.03, 0.42), "M_IntWood")
-    x, y, _ = _polar(_lh_ri(3.4) - 0.07, 160.0)
-    with nc.at((x, y, 3.4), rot=160.0 - 90.0, rot_x=90):                                 # ship's wheel
+    x, y, _ = _polar(_lh_ri(3.4) - 0.07, 285.0)
+    with nc.at((x, y, 3.4), rot=285.0 - 90.0, rot_x=90):                                 # ship's wheel
         nc.torus((0, 0, 0), 0.38, 0.03, "M_IntWoodDark", seg=16, tube_seg=4)
         for k in range(8):
             a = math.tau * k / 8
             nc.beam((0, 0, 0), (math.cos(a) * 0.5, math.sin(a) * 0.5, 0), 0.035, 0.035, "M_IntWoodDark")
         nc.cylinder((0, 0, -0.04), 0.07, 0.08, "M_IntTrimGold", seg=8)
     for k in range(26):                                                                  # signal-flag garland
-        a = 140.0 + k * 5.0
+        a = 180.0 + k * 3.4
         zz = 3.75 - 0.2 * math.sin(math.pi * k / 25)
         x, y, _ = _polar(_lh_ri(zz) - 0.06, a)
         with nc.at((x, y, zz), rot=a - 90.0):
@@ -3946,7 +4094,7 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
         for k in range(6):
             nc.box((0, -0.022, 0.18 - k * 0.07), (0.32, 0.004, 0.02), "M_IntBlack" if k else "M_AcademyRed")
     # gallery 1 (archive, under the 300-degree window) and gallery 2 (lamp store, by the 225-degree window)
-    (_, z1g, *_), (_, z2g, *_) = gals
+    (_, z1g, *_), (_, z2g, *_), (_, z3g, *_), (_, z4g, *_) = gals
 
     def gpos(zg, adeg, depth, width):
         r = math.sqrt(max(_lh_ri(zg + 1.6) ** 2 - (width / 2) ** 2, 0.0)) - 0.02 - depth / 2
@@ -3984,7 +4132,7 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     p = gpos(z2g, 150.0, 0.35, 0.9)
     with mb.at((0.0, 0.0, z2g)), nc.at((0.0, 0.0, z2g)):
         _shelf_unit(mb, nc, random.Random(5), p[0], p[1], 150.0 - 90.0, w=0.9, d=0.35, h=1.6, levels=4)
-    with nc.at((*_polar(1.72, 178.0)[:2], z2g), rot=178.0):                               # crate of spare prisms
+    with nc.at((*_polar(1.72, 232.0)[:2], z2g), rot=232.0):                               # crate of spare prisms
         nc.box((0, 0, 0.17), (0.5, 0.4, 0.34), "M_IntWood")
         for k in range(3):
             nc.box((-0.14 + k * 0.14, 0, 0.36), (0.1, 0.3, 0.06), "M_IntGlassClear")
@@ -3996,6 +4144,74 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     aset.text("LAMP STORE", _polar(_lh_ri(z2g + 2.0) - 0.02, 180.0, z2g + 2.0), 180.0 - 90.0, size=0.08,
               color=(0.3, 0.18, 0.08))
     K.camera(aset, "lh_gallery", _polar(1.45, 182.0, z1g + 1.6), _polar(2.1, 285.0, z1g + 0.7), 14.0)
+    p = gpos(z2g, 172.0, 0.35, 0.5)
+    with mb.at((p[0], p[1], z2g), rot=172.0 - 90.0), nc.at((p[0], p[1], z2g), rot=172.0 - 90.0):
+        mb.box((0, 0, 0.65), (0.5, 0.35, 1.3), "M_IntWoodDark")                              # mantle cabinet
+        for k in range(4):
+            nc.box((0, -0.177, 0.18 + k * 0.3), (0.44, 0.006, 0.26), "M_IntWood")
+            nc.box((0, -0.19, 0.28 + k * 0.3), (0.08, 0.02, 0.025), "M_IntTrimGold")
+    _ring_shelf(mb, nc, z2g + 1.45, 182.0, 238.0, seed=29)
+    _ring_shelf(mb, nc, z2g + 0.85, 205.0, 238.0, seed=31)
+    for k, adeg in enumerate((176.0, 186.0, 196.0)):                                      # lantern hooks
+        x, y, _ = _polar(_lh_ri(z2g + 2.0) - 0.12, adeg)
+        nc.box((x, y, z2g + 2.17), (0.03, 0.03, 0.12), "M_IntMetal")
+        nc.cylinder((x, y, z2g + 1.85), 0.07, 0.24, "M_IntBlack", seg=8)
+        nc.cylinder((x, y, z2g + 1.89), 0.055, 0.14, K.GLOW, seg=8)
+    K.camera(aset, "lh_g2_lampstore", _polar(1.35, 225.0, z2g + 1.6), _polar(1.8, 145.0, z2g + 0.7), 14.0)
+    # gallery 3: lookout nook under the 150-degree window (window seat, spyglass, tide tables)
+    p = gpos(z3g, 150.0, 0.4, 1.0)
+    with mb.at((p[0], p[1], z3g), rot=150.0 - 90.0):
+        mb.box((0, 0, 0.42), (1.0, 0.4, 0.06), "M_IntWood")
+        mb.box((0, 0.0, 0.2), (0.96, 0.36, 0.4), "M_IntWoodDark")
+    with nc.at((p[0], p[1], z3g + 0.45), rot=150.0 - 90.0):
+        nc.box((0.25, 0.0, 0.04), (0.4, 0.3, 0.08), "M_IntFabricRed")                         # cushion
+        nc.box((-0.3, 0.02, 0.012), (0.22, 0.3, 0.024), "M_IntFabricNavy")                   # tide tables
+    with mb.at(_polar(1.55, 130.0, z3g)):                                                 # spyglass on a tripod
+        for a in (0.0, 120.0, 240.0):
+            r_ = math.radians(a)
+            mb.beam((0.3 * math.cos(r_), 0.3 * math.sin(r_), 0.0), (0, 0, 1.15), 0.03, 0.03, "M_IntWoodDark")
+        with mb.at((0, 0, 1.2), rot=150.0, rot_y=-85.0):
+            mb.cylinder((0, 0, -0.3), 0.045, 0.7, "M_IntTrimGold", seg=10, radius_top=0.03)
+    p = gpos(z3g, 168.0, 0.3, 0.5)
+    with mb.at((p[0], p[1], z3g)), nc.at((p[0], p[1], z3g)):
+        mb.box((0, 0, 0.35), (0.4, 0.3, 0.7), "M_IntWood")
+        DT.mug(nc, 0.05, 0.0, 0.7, seed=31)
+    x, y, _ = _polar(_lh_ri(z3g + 1.4) - 0.015, 120.0)
+    with nc.at((x, y, z3g + 1.3), rot=120.0 - 90.0):
+        nc.box((0, -0.01, 0), (0.4, 0.02, 0.5), "M_IntWoodDark")
+        nc.box((0, -0.022, 0), (0.32, 0.005, 0.42), "M_IntPoster2")
+    aset.light(_polar(1.7, 140.0, z3g + 1.9), (1.0, 0.82, 0.58), 1500.0, 5.0, night_only=False)
+    K.camera(aset, "lh_g3_lookout", _polar(1.35, 170.0, z3g + 1.6), _polar(2.2, 135.0, z3g + 0.6), 14.0)
+    # gallery 4: weather room under the 90-degree window (desk with the weather log, barograph, books)
+    p = gpos(z4g, 90.0, 0.55, 1.1)
+    with mb.at((p[0], p[1], z4g), rot=90.0 - 90.0), nc.at((p[0], p[1], z4g), rot=90.0 - 90.0):
+        mb.box((0, 0, 0.74), (1.1, 0.55, 0.04), "M_IntWood")
+        for sx in (-1, 1):
+            mb.box((sx * 0.5, 0, 0.36), (0.05, 0.5, 0.72), "M_IntWoodDark")
+        mb.box((0.0, 0.05, 0.84), (0.36, 0.22, 0.16), "M_IntWoodDark")                       # barograph case
+        with nc.at((0.0, 0.05, 0.92), rot_y=90):
+            nc.cylinder((0, 0, -0.12), 0.06, 0.24, "M_IntPaper", seg=10)
+        nc.box((-0.35, -0.08, 0.775), (0.24, 0.32, 0.03), "M_IntFabricNavy")                  # weather log
+        nc.box((-0.35, -0.08, 0.792), (0.22, 0.3, 0.004), "M_IntPaper")
+        nc.box((0.38, -0.05, 0.77), (0.12, 0.18, 0.02), "M_IntScreen")                       # anemometer readout
+    DT.mug(nc, p[0] + 0.3, p[1] - 0.2, z4g + 0.76, seed=33)
+    aset.prop("SM_Int_WoodChair", _polar(1.45, 90.0, z4g), 90.0 + 90.0)
+    p = gpos(z4g, 135.0, 0.3, 0.9)
+    with mb.at((0.0, 0.0, z4g)), nc.at((0.0, 0.0, z4g)):
+        K.bookcase(mb, nc, p[0], p[1], 135.0 - 90.0, w=0.9, d=0.3, h=1.8, shelves=5, rng_seed=44)
+    x, y, _ = _polar(_lh_ri(z4g + 1.5) - 0.02, 70.0 + 6.0)
+    _wall_map(nc, aset, x, y, z4g + 1.2, 76.0 - 90.0, 0.5, 0.4, None, seed=6)
+    p = gpos(z4g, 175.0, 0.4, 0.5)
+    with nc.at((p[0], p[1], z4g), rot=175.0):                                              # wind-instrument crate
+        nc.box((0, 0, 0.2), (0.45, 0.4, 0.4), "M_IntWood")
+        nc.cylinder((0, 0, 0.4), 0.02, 0.4, "M_IntMetal", seg=6)
+        for k in range(3):
+            a = math.radians(k * 120.0)
+            nc.sphere((0.12 * math.cos(a), 0.12 * math.sin(a), 0.8), 0.04, "M_IntTrimWhite", seg=6, rings=4, hemi=True)
+    aset.light(_polar(1.7, 120.0, z4g + 1.9), (1.0, 0.82, 0.58), 1500.0, 5.0, night_only=False)
+    aset.text("WEATHER ROOM", _polar(_lh_ri(z4g + 2.1) - 0.02, 160.0, z4g + 2.1), 160.0 - 90.0, size=0.08,
+              color=(0.3, 0.18, 0.08))
+    K.camera(aset, "lh_g4_weather", _polar(1.4, 175.0, z4g + 1.6), _polar(2.0, 95.0, z4g + 0.7), 14.0)
     _ring_shelf(mb, nc, LH_WATCH + 1.95, 250.0, 370.0, seed=9, skip=[(355.0, 385.0)])
     _ring_shelf(mb, nc, LH_WATCH + 1.45, 186.0, 221.0, seed=19)
     x, y, _ = _polar(_lh_ri(LH_WATCH + 1.4) - 0.015, 178.0)
@@ -4262,12 +4478,22 @@ def build_lighthouse():
     nc.box((0.0, 4.09, 3.55), (0.3, 0.04, 0.06), GLOW)
     aset.light((0.0, 4.6, 3.4), (1.0, 0.85, 0.6), 2000.0, 7.0, night_only=True)
     # small windows spiralling up
-    for z, adeg in ((4.4, 150.0), (7.6, 300.0), (10.8, 90.0), (13.9, 225.0), (16.4, 20.0)):
+    for z, adeg in LH_WINDOWS:                    # real openings: frame ring, clear pane, reveals through the wall
         r = _lh_r(z)
         a = math.radians(adeg)
         with tw.at((math.cos(a) * (r - 0.1), math.sin(a) * (r - 0.1), z), rot=adeg + 90.0):
-            tw.box((0, 0, 0), (0.95, 0.32, 1.25), TRIM)
-            tw.box((0, -0.03, 0), (0.62, 0.32, 0.92), GLASS)
+            for sx in (-1, 1):
+                tw.box((sx * (0.31 + 0.0825), 0, 0), (0.165, 0.32, 1.25), TRIM)
+                tw.box((0, 0, sx * (0.46 + 0.0825)), (0.62, 0.32, 0.165), TRIM)
+            tw.box((0, 0.02, 0), (0.62, 0.03, 0.92), "M_GlassClear")
+        z0w, z1w = z - LH_WIN_H, z + LH_WIN_H
+        for ad, flip in ((adeg - LH_WIN_DA, False), (adeg + LH_WIN_DA, True)):
+            pts = [_polar(_lh_ri(z0w), ad, z0w), _polar(_lh_ro(z0w), ad, z0w), _polar(_lh_ro(z1w), ad, z1w),
+                   _polar(_lh_ri(z1w), ad, z1w)]
+            tw.poly(pts[::-1] if flip else pts, LH_W)
+        for zz in (z0w, z1w):
+            _polar_slab(tw, _lh_ri(zz), _lh_ro(zz), adeg - LH_WIN_DA, adeg + LH_WIN_DA, zz + 0.0005, 0.001, LH_W, LH_W,
+                        LH_W, step=5.0, caps=False)
 
     # ---------------------------------------------------------------- keeper's hut + tower interior
     _keeper_hut(aset, pf, im, inc)
