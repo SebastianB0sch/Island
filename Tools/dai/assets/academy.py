@@ -652,6 +652,7 @@ class Ctx:
 
 # ---------------------------------------------------------------------------- finishing kit (detail pass)
 WALL_YAW = {"-x": 90.0, "+x": -90.0, "-y": 180.0, "+y": 0.0}   # wall fixture yaw (local -Y into the room)
+DTL.STYLES.setdefault("academy_lite", dict(outlets=True, ac=True, smoke=True))   # repeated upper floors
 SD = 0.87                         # SM_Int_SchoolDesk / SchoolChair are modelled at 0.88 m / 0.50 m: 0.77 m top
 EB_WIN_E = [y for _, y in win_pos((114.0, -40.0), (114.0, 50.0), 26, 1.7)]
 EB_WIN_W = ([y for _, y in win_pos((88.0, 2.0), (88.0, -40.0), 12, 1.7) if abs(y + 19.0) > 2.4]
@@ -2342,6 +2343,7 @@ def _wing_upper(C, s):
     C.npc(x0 + 0.9, (y0 + y1) / 2, -90.0, "white", 1.5, z=z + 0.2)
     C.npc(cols[2] + 0.4, y0 + 1.6 + 1.35 * 4, -90.0, "slifer", 0.2, z=z)
     C.cam(f"wing{side[0]}_exam_hall", (x1 - 0.5, y1 - 0.9, z + 1.7), (x0 + 0.5, y0 + 4.0, z + 0.9), 17)
+    _wing_floors(C, s)
 
 
 def _duelist_room(C, side):
@@ -2530,16 +2532,17 @@ def wainscot_room(C, x0, y0, x1, y1, z, mat=K.WOOD, h=0.95, cap=K.TRIM_WOOD, ski
 
 def room_base(C, x0, y0, x1, y1, seed, style="school", win=None, wl=(), z=FLOOR, zc=None, recess=None,
               drape="roller", drape_mat="M_DetBlind", lights=(2, 3), lw=(1.2, 0.3), clear=(), ac=None,
-              grid=(1.2, 1.2), light_every=2, extra_win=(), ceil=True, wains=K.WOOD, hung=True, coffer=None):
+              grid=(1.2, 1.2), light_every=2, extra_win=(), ceil=True, wains=K.WOOD, hung=True, coffer=None,
+              win_top=None, z_up=None):
     """Ceiling, window treatment, lights and the fixtures of every room (switches, outlets, detectors ...).
     win: the window wall ('-x', '+x', '-y', '+y') with window centres wl; extra_win: [(side, centres)]."""
     up = z > 4.0
-    zc = zc or (UCZ if up else CZ)
+    zc = zc or z + 3.3
     rec = tuple(recess) if recess is not None else tuple(sd for sd, _ in ([(win, wl)] if win else []) + list(extra_win))
     if ceil:
-        finish(C, x0, y0, x1, y1, zc, rec, zc + 0.45, None if style == "palace" else grid,
+        finish(C, x0, y0, x1, y1, zc, rec, z_up or zc + 0.45, None if style == "palace" else grid,
                coffer=coffer or (K.TRIM_WOOD if style == "palace" else None))
-    top = z + (3.4 if up else 3.5)
+    top = win_top or z + (3.4 if up else 3.5)
     for sd, cs in ([(win, wl)] if win else []) + list(extra_win):
         wc = {"-x": x0, "+x": x1, "-y": y0, "+y": y1}[sd]
         drapes(C, sd, wc, cs, top - 2.5, top, kind=drape, mat=drape_mat, seed=seed)
@@ -2563,6 +2566,8 @@ def room_base(C, x0, y0, x1, y1, seed, style="school", win=None, wl=(), z=FLOOR,
     if wains:
         wainscot_room(C, x0, y0, x1, y1, z, wains)
     kit = {"school": "japanese", "office": "japanese", "service": "japanese"}.get(style, style)
+    if z > UF + 1.0:
+        kit = "academy_lite" if style != "palace" else "palace"
     C.dress(x0, y0, x1, y1, zc, kit, seed, z=z, skip=((win,) if win else ()), clear=clear, ac=ac)
     if style in ("school", "service") and (x1 - x0) * (y1 - y0) > 60:
         a, b, c, d = C.F.rect(x0, y0, x1, y1)
@@ -2575,12 +2580,14 @@ def room_base(C, x0, y0, x1, y1, seed, style="school", win=None, wl=(), z=FLOOR,
     return zc
 
 
-def _corridor(C, s, z, doors_w, doors_e, names, up=False, reserve_w=(), reserve_e=()):
+def _corridor(C, s, z, doors_w, doors_e, names, up=False, reserve_w=(), reserve_e=(), lvl=None, top=None):
     """Pavilion corridor (x 99 .. 103) of one storey: ceiling, lights, signs, lockers, notice boards ..."""
     cx0, cx1 = EB_CX
     side = "EAST" if s > 0 else "WEST"
-    zc = room_base(C, cx0, -39.5, cx1, 49.5, 40 + s + (5 if up else 0), "school", z=z, lights=(1, 15),
-                   lw=(1.2, 0.35), light_every=3, ac=False, wains=None)
+    lvl = lvl or (2 if up else 1)
+    zc = room_base(C, cx0, -39.5, cx1, 49.5, 40 + s + 5 * lvl, "school", z=z, lights=(1, 15),
+                   lw=(1.2, 0.35), light_every=3, ac=False, wains=None, hung=lvl < 3,
+                   zc=min(z + 3.3, top - 0.05) if top else None)
     C.rug(100.0, -38.2, 102.0, 48.2, BLUE_T, K.TRIM_GOLD, z=z + 0.005)
     for k, y in enumerate(range(-30, 48, 9)):      # dorm banners hung across the corridor
         C.box(cx0, y - 0.02, zc - 0.18, cx1, y + 0.02, zc - 0.14, K.METAL, nc=True)
@@ -2601,7 +2608,9 @@ def _corridor(C, s, z, doors_w, doors_e, names, up=False, reserve_w=(), reserve_
     free_e = [y for y in range(-34, 48, 4) if all(abs(y - d) > 1.6 for d, _ in doors_e)
               and all(not (a - 1.0 < y < b + 1.0) for a, b in reserve_e)]
     for k, y in enumerate(free_w):
-        if k % 3 == 0:
+        if k % 3 == 0 and lvl >= 3:
+            C.poster(cx0, y, z + 1.6, 90.0, 0.6, 0.85, K.POSTERS[k % 4], "NOTICE", size=0.06)
+        elif k % 3 == 0:
             C.bulletin(cx0, y, z + 1.15, 90.0, 1.5, 0.95, None, seed=k + 3 * s)
         elif k % 3 == 1:
             C.poster(cx0, y, z + 1.6, 90.0, 0.6, 0.85, K.POSTERS[k % 4],
@@ -2620,9 +2629,11 @@ def _corridor(C, s, z, doors_w, doors_e, names, up=False, reserve_w=(), reserve_
         elif k % 4 == 2:
             C.poster(cx1, y, z + 1.55, -90.0, 0.7, 1.0, K.POSTERS[(k + 1) % 4],
                      ("CARD OF THE MONTH", "SCHOOL FESTIVAL", "DORM RANKING", "EXAM WEEK")[k // 4 % 4], size=0.06)
+        elif lvl >= 3:
+            C.prop("SM_Int_Frame", cx1 - 0.02, y, z + 1.4, -90.0)
         else:
             C.bulletin(cx1, y, z + 1.15, -90.0, 1.2, 0.85, None, seed=31 + k + s)
-    for y in free_w[1::4]:               # bins
+    for y in (free_w[1::4] if lvl < 3 else ()):               # bins
         C.nc.cylinder(C.P(cx0 + 0.25, y + 1.0, z), 0.17, 0.62, "M_IntSteelBlue", seg=12, cap_top=False)
         C.nc.cylinder(C.P(cx0 + 0.25, y + 1.4, z), 0.17, 0.62, "M_IntFabricGreen", seg=12, cap_top=False)
     for y in free_e[3::4]:               # water fountains
@@ -2632,7 +2643,7 @@ def _corridor(C, s, z, doors_w, doors_e, names, up=False, reserve_w=(), reserve_
         for x in (cx0 + 0.45, cx1 - 0.45):
             C.prop("SM_Int_PottedPlantB", x, y, z, rnd.uniform(0, 90))
     C.prop("SM_Int_WallClock", cx1 - 0.03, -2.0 if not up else -14.8, z + 2.6, -90.0)
-    C.wtext(f"{side} PAVILION  {'2F' if up else '1F'}", cx1, -24.0 - 2.4 if not up else -30.0, z + 2.9, -90.0, 0.22,
+    C.wtext(f"{side} PAVILION  {lvl}F", cx1, -24.0 - 2.4 if not up else -30.0, z + 2.9, -90.0, 0.22,
             (0.1, 0.2, 0.55))
     return zc
 
@@ -3576,6 +3587,306 @@ def room_computers(C):
     C.cam("pavW_computer_room", (x0 + 0.6, y1 - 0.6, z + 1.7), (112.0, -2.0, z + 0.8), 17)
 
 
+# ---------------------------------------------------------------------------- pavilions 3F-5F, wing 3F-4F
+def stair_core(C, zl, zh):
+    """One storey of the pavilion dog-leg stair (stair hall ES): flight up along +x, half landing, flight
+    back along -x arriving next to the corridor; spine wall between the flights and handrails."""
+    xa, y0 = 104.8, EB_E["ES"][0]
+    zm = (zl + zh) / 2
+    L = C.stairs(xa, -7.75, zl, zm, "+x", 1.3, K.MARBLEFLOOR, riser=K.TRIM_WHITE)
+    xb = xa + L
+    C.box(xb, y0, zl, 109.8, -5.5, zm, BLUE_T, mats={"+z": K.MARBLEFLOOR})
+    C.stairs(xb, -6.2, zm, zh, "-x", 1.3, K.MARBLEFLOOR, riser=K.TRIM_WHITE)
+    C.box(xa, -7.1, zl, xb, -6.85, zh - 0.2, IN_WALL, mats={"+y": BLUE_T, "-y": BLUE_T})
+    stair_rail(C, xb, -5.6, zm, xa, -5.6, zh)
+    stair_rail(C, xb, -5.53, zm, 109.8, -5.53, zm)
+    stair_rail(C, 109.77, -5.53, zm, 109.77, y0, zm)
+    C.mb.beam(C.P(xa, y0 + 0.06, zl + 0.9), C.P(xb, y0 + 0.06, zm + 0.9), 0.05, 0.05, K.TRIM_WOOD)
+
+
+# room kinds for the repeated upper floors: mostly instanced catalog furniture
+def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extra_win=(), door_side="-x",
+              zc=None, win_top=None, recess=None):
+    rnd = random.Random(seed)
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    w, d = x1 - x0, y1 - y0
+    floor = {"lab": "M_IntTileBlue", "store": "M_IntLinoleum", "trophy": K.MARBLEFLOOR, "art": "M_IntLinoleum",
+             "club": "M_IntWoodFloor", "staff": "M_IntCarpetBlue", "library": "M_IntCarpetRed"}.get(kind, "M_IntWoodFloor")
+    C.floor(x0, y0, x1, y1, floor, z=z, planks=floor == "M_IntWoodFloor")
+    style = {"store": "service", "trophy": "palace", "staff": "office", "library": "office"}.get(kind, "japanese")
+    room_base(C, x0, y0, x1, y1, seed, style, win=win, wl=wl, z=z, extra_win=extra_win, lights=(2, 2),
+              zc=zc, win_top=win_top, recess=recess, z_up=(win_top + 0.1) if win_top else None,
+              hung=False, grid=None, wains=K.WOOD if kind not in ("store", "trophy") else BLUE_T,
+              drape="roller",
+              drape_mat=("M_IntFabricBlue", "M_IntFabricRed", "M_IntFabricGreen", "M_IntFabricBeige")[seed % 4],
+              clear=[{"-x": (x0, y0, x0 + 0.6, y1), "+x": (x1 - 0.6, y0, x1, y1), "-y": (x0, y0, x1, y0 + 0.6),
+                      "+y": (x0, y1 - 0.6, x1, y1)}[door_side]])
+    dw = -1 if door_side == "-x" else 1                  # the furniture keeps away from the door wall
+    xa, xb = (x0 + 1.4, x1 - 0.6) if dw < 0 else (x0 + 0.6, x1 - 1.4)
+    if door_side in ("-y", "+y"):
+        xa, xb = x0 + 0.6, x1 - 0.6
+    wall_far = "+x" if dw < 0 else "-x"
+    if kind == "classroom":
+        C.blackboard(cx, y0, z + 0.9, 180.0, min(4.5, w - 3.0), 1.2, [name, ("Test on Monday!", "Fusion summons",
+                     "Spell speed 1 / 2 / 3", "Read chapter 5")[seed % 4]], size=0.12)
+        C.prop("SM_Int_OfficeDesk", cx, y0 + 0.9, z, 0.0)
+        C.prop("SM_Int_OfficeChair", cx + 1.6, y0 + 0.9, z, -90.0)
+        C.prop("SM_Int_WallClock", cx, y0 + 0.03, z + 2.35, 180.0)
+        cols = max(3, int((xb - xa) / 1.2))
+        for j in range(max(3, int((d - 4.4) / 1.25))):
+            for i in range(cols):
+                school_desk(C, xa + (xb - xa) * (i + 0.5) / cols, y0 + 2.8 + j * 1.25, seed * 50 + j * 7 + i, z=z,
+                            things=rnd.random() < 0.6)
+        for k in range(3):
+            C.prop("SM_Int_Cabinet", xa + 0.8 + k * 1.25, y1 - 0.33, z, 0.0)
+        C.poster(cx, y1, z + 1.6, 0.0, 1.6, 0.7, K.POSTERS[seed % 4], "CLASS NEWS", size=0.07)
+    elif kind == "lab":
+        for j in range(max(2, int((d - 3.5) / 2.6))):
+            yb = y0 + 2.4 + j * 2.6
+            C.box(xa + 0.3, yb - 0.5, z, xb - 0.3, yb + 0.5, z + 0.9, "M_IntWood", mats={"+z": "M_IntBlack"})
+            C.box(xa + 0.35, yb - 0.12, z + 0.9, xa + 0.85, yb + 0.12, z + 0.93, "M_IntSteelBlue", nc=True)
+            for i in range(int((xb - xa - 0.6) / 1.0)):
+                for sy in (-1, 1):
+                    C.prop("SM_Int_Stool", xa + 0.9 + i * 1.0, yb + sy * 0.9, z, rnd.uniform(-20, 20), 0.75)
+                if i % 2 == 0:
+                    _flask(C, xa + 0.9 + i * 1.0, yb + rnd.uniform(-0.2, 0.2), z + 0.9,
+                           ("M_IntFlaskGlow", "M_IntFabricPurple", "M_IntFabricOrange")[(i + j) % 3])
+        C.blackboard(cx, y0, z + 0.9, 180.0, min(4.5, w - 3.0), 1.2, [name, "Safety first: goggles ON"], size=0.12)
+        C.prop("SM_Int_Vitrine", xa + 1.1, y1 - 0.36, z, 0.0)
+        C.dt("coat_hooks", x1 if dw < 0 else x0, y1 - 1.6, z + 1.75, WALL_YAW[wall_far], 4, "white", 3, seed)
+    elif kind == "club":
+        for k in range(2):
+            dining(C, cx, y0 + 2.6 + k * 3.2 if d > 7 else cy, 0.0, chairs=6, length=1.4, z=z, seed=seed + k)
+            if k == 1:
+                C.dt("card_spread", cx - 0.4, y0 + 5.8, z + 0.744, 0.0, 5, seed)
+                C.dt("deck_box", cx + 0.5, y0 + 5.8, z + 0.744, 20.0, "M_IntFabricRed")
+        C.prop("SM_Int_SofaB", cx, y1 - 0.5, z, 180.0)
+        C.prop("SM_Int_CoffeeTableB", cx, y1 - 1.5, z, 0.0)
+        for k in range(2):
+            C.prop("SM_Int_DisplayShelves", xb - 0.2, y0 + 1.5 + k * 1.1, z, -90.0 if dw < 0 else 90.0)
+        C.poster(cx, y0, z + 1.6, 180.0, 1.4, 0.9, K.POSTERS[seed % 4], name, size=0.08)
+        C.clutter(x0, y0, x1, y1, "dorm", 4, seed, clear=[(cx - 2.0, y0, cx + 2.0, y1)], z=z)
+    elif kind == "art":
+        for j in range(2):
+            for i in range(3):
+                ex, ey = xa + 0.8 + i * (xb - xa - 1.6) / 2, y0 + 2.4 + j * 2.8
+                with C.at(ex, ey, z, rnd.uniform(-20, 20)):
+                    C.nc.beam((-0.3, 0.15, 0.0), (0.0, 0.0, 1.7), 0.03, 0.03, "M_IntWood")
+                    C.nc.beam((0.3, 0.15, 0.0), (0.0, 0.0, 1.7), 0.03, 0.03, "M_IntWood")
+                    C.nc.beam((0.0, -0.35, 0.0), (0.0, 0.0, 1.6), 0.03, 0.03, "M_IntWood")
+                    C.nc.box((0, 0.03, 1.15), (0.6, 0.03, 0.8), K.POSTERS[(i + j) % 4], skip=("+y",))
+                C.prop("SM_Int_Stool", ex, ey - 0.8, z, 0.0, 0.75)
+        dining(C, cx, y1 - 1.6, 0.0, chairs=4, length=1.4, z=z)
+        C.prop("SM_Int_Chalkboard", xb - 0.6, y0 + 0.8, z, -30.0)
+        C.prop("SM_Int_Bust", cx, y1 - 1.6, z + 0.744, 180.0)
+        for k in range(2):
+            C.prop("SM_Int_Shelves", xb - 0.5 - k * 0.6, y0 + 0.2, z, 180.0)
+        C.prop("SM_Int_PlanterBox", cx + 2.0, y1 - 0.25, z, 0.0)
+    elif kind == "staff":
+        for k in range(max(2, int((d - 3.0) / 2.2))):
+            for (xd, yaw) in ((cx - 0.48, -90.0), (cx + 0.48, 90.0)):
+                C.prop("SM_Int_OfficeDesk", xd, y0 + 1.8 + k * 2.2, z, yaw)
+                C.prop("SM_Int_OfficeChair", xd - 0.95 if yaw < 0 else xd + 0.95, y0 + 1.8 + k * 2.2, z, -yaw)
+                if k == 0:
+                    on_top(C, xd, y0 + 1.8 + k * 2.2, z + 0.788, yaw, 1.6, 0.7, "office", seed + k + (yaw > 0))
+        for k in range(3):
+            C.prop("SM_Int_Cabinet", xb - 0.33, y0 + 1.0 + k * 1.25, z, -90.0 if dw < 0 else 90.0)
+        C.poster(cx, y1, z + 1.6, 0.0, 1.6, 0.8, K.POSTERS[seed % 4], name, size=0.07)
+        C.prop("SM_Int_PottedPlantB", xb - 0.4, y1 - 0.45, z, 0.0)
+    elif kind == "library":
+        nj, ni = min(4, max(2, int((d - 4.0) / 1.6))), min(6, int((xb - xa) / 1.4))
+        for j in range(nj):
+            for i in range(ni):
+                shelf_prop(C, "SM_Int_Bookshelf", xa + 0.7 + i * 1.4, y0 + 1.6 + j * 1.6, 180.0 if j % 2 else 0.0,
+                           seed * 10 + j * 3 + i, z=z, fill=0.35)
+        for k in range(max(0, int((d - 4.0 - nj * 1.6) / 2.6))):
+            dining(C, cx, y0 + 2.2 + nj * 1.6 + k * 2.6, 0.0, chairs=6, length=1.6, z=z)
+        dining(C, cx, y1 - 1.5, 0.0, chairs=6, length=1.6, z=z)
+        reading_lamp(C, cx + 0.4, y1 - 1.5, z + 0.74)
+        C.plate(cx, y1, z + 2.3, 0.0, name, w=2.6, h=0.24, mat=NAVY_T)
+    elif kind == "trophy":
+        for j in range(max(2, int((d - 3.0) / 3.0))):
+            for i in range(2):
+                vx, vy = xa + (xb - xa) * (0.25 + 0.5 * i), y0 + 2.0 + j * 3.0
+                C.prop("SM_Int_Vitrine", vx, vy, z, 0.0 if j % 2 else 180.0)
+                trophy(C, vx - 0.4, vy, z + 1.367, 1.0)
+                trophy(C, vx + 0.4, vy, z + 1.367, 1.2)
+                card_fan(C, vx, vy, z + 0.92, 3)
+        for k, col in enumerate(("M_AcademyRed", "M_AcademyYellow", "M_AcademyBlue")):
+            banner(C.nc, C.P(xa + 1.0 + k * (xb - xa - 2.0) / 2, y1 - 0.06, z + 2.6), C.F.yaw(0.0), 1.0, 1.6, col)
+        plinth_bust(C, cx, y1 - 1.2, 180.0, z=z)
+        C.plate(cx, y0, z + 2.3, 180.0, name, w=2.6, h=0.26, mat=NAVY_T)
+    else:   # store
+        for j in range(min(4, max(2, int((d - 2.0) / 2.0)))):
+            for i in range(min(6, int((xb - xa) / 1.15))):
+                shelf_prop(C, "SM_Int_SteelShelves", xa + 0.6 + i * 1.15, y0 + 1.2 + j * 2.0, 0.0 if j % 2 else 180.0,
+                           seed * 7 + j * 5 + i, z=z, fill=0.3, kind="store")
+                if (i + j) % 3 == 0:
+                    C.prop("SM_Int_Box", xa + 0.6 + i * 1.15, y0 + 1.2 + j * 2.0 + (0.6 if j % 2 else -0.6), z, i * 17.0)
+        C.prop("SM_Int_Ladder", xb - 0.6, y1 - 0.4, z, 0.0)
+        C.prop("SM_Int_Box", xa + 0.2, y1 - 0.4, z, 15.0)
+    C.npc(cx, cy, 0.0, ("slifer", "ra", "obelisk", "white")[seed % 4], 1.0, z=z)
+    C.cam(cam, (x1 - 0.6 if dw < 0 else x0 + 0.6, y1 - 0.6, z + 1.65), (cx, y0 + 0.8, z + 0.8), 17)
+
+
+PAV_PLANS = {   # per storey: west row U1 U2 U3 U5 U6, east row V1 V2 V3 V4 V5 (kind, name)
+    3: [("classroom", "CLASSROOM {y}-I"), ("lab", "PHYSICS LAB"), ("classroom", "CLASSROOM {y}-J"),
+        ("art", "ART ROOM"), ("library", "LIBRARY ANNEX"),
+        ("classroom", "CLASSROOM {y}-K"), ("lab", "BIOLOGY LAB"), ("classroom", "CLASSROOM {y}-L"),
+        ("staff", "STAFF ROOM 3F"), ("club", "CARD DESIGN CLUB")],
+    4: [("club", "DUEL RESEARCH CLUB"), ("classroom", "SEMINAR ROOM A"), ("classroom", "SEMINAR ROOM B"),
+        ("trophy", "DORM-RANK TROPHY FLOOR"), ("store", "ARCHIVE"),
+        ("lab", "CHEMISTRY LAB 2"), ("club", "CALLIGRAPHY CLUB"), ("classroom", "SEMINAR ROOM C"),
+        ("art", "PHOTO CLUB"), ("staff", "GUIDANCE OFFICE")],
+    5: [("store", "ATTIC STORAGE"), ("club", "DRAMA CLUB"), ("store", "COSTUME STORE"),
+        ("trophy", "HALL OF CHAMPIONS"), ("art", "ART STUDIO"),
+        ("club", "LIGHT MUSIC CLUB"), ("store", "PROP STORE"), ("club", "GAME CLUB"),
+        ("store", "FESTIVAL STORE 2"), ("art", "PAINTING STUDIO")],
+}
+
+
+def _pav_storeys(C, s):
+    """Pavilion storeys 3F-5F behind the upper window rows; the stair core continues up from 2F."""
+    side = "EAST" if s > 0 else "WEST"
+    cx0, cx1 = EB_CX
+    zl = UF
+    for lvl, (z, top, wz) in zip((3, 4, 5), PAV_FLOORS):
+        stair_core(C, zl, z)
+        zl = z
+        h, sill = top - z, wz - z
+        last = lvl == 5
+        # slab (the stair well stays open below every storey) and the ceiling of the attic storey
+        for (a, b, c, d) in ((88.0, -40.0, 114.0, -7.0), (88.0, -5.55, 114.0, 50.0), (88.0, -7.0, 104.8, -5.55),
+                             (109.8, -7.0, 114.0, -5.55)):
+            C.box(a, b, z - 0.2, c, d, z, "M_AcademyWall", mats={"+z": K.MARBLEFLOOR, "-z": K.CEIL})
+        if last:
+            C.box(88.0, -40.0, top, 114.0, 50.0, PAV_ROOF, "M_AcademyWall", mats={"-z": K.CEIL})
+        kw = dict(inner=IN_WALL, base=BLUE_T)
+
+        def UW(c):
+            return WIN(c, 1.7, sill, sill + 2.5)
+        outer = [y for _, y in win_pos((114.0, -40.0), (114.0, 50.0), 26, 1.7)]
+        fc_s = [y for _, y in win_pos((88.0, 2.0), (88.0, -40.0), 12, 1.7)]
+        fc_n = [y for _, y in win_pos((88.0, 50.0), (88.0, 28.0), 6, 1.7)]
+        tower = [K.Door(13.0, 1.8, 2.4, "glass", double=True, trim=K.TRIM_GOLD, trim_in=K.TRIM_GOLD)] if lvl == 3 else []
+        C.wall((88.0, -40.0), (114.0, -40.0), z, h, 0.5, "M_AcademyWall", ops=[UW(3.0), UW(23.0)] + tower, **kw)
+        C.wall((114.0, 50.0), (88.0, 50.0), z, h, 0.5, "M_AcademyWall", ops=[UW(3.0), UW(23.0)] + tower, **kw)
+        C.wall((114.0, -39.5), (114.0, 49.5), z, h, 0.5, "M_AcademyWall", ops=[UW(y + 39.5) for y in outer], **kw)
+        C.wall((88.0, 49.5), (88.0, 28.0), z, h, 0.5, "M_AcademyWall", ops=[UW(49.5 - y) for y in fc_n], **kw)
+        C.wall((88.0, 28.0), (88.0, 2.0), z, h, 0.5, IN_WALL,
+               ops=[] if last else [K.Door(28.0 - 4.7, 2.4, 2.7, None, trim=K.TRIM_GOLD, trim_in=K.TRIM_GOLD)], **kw)
+        C.wall((88.0, 2.0), (88.0, -39.5), z, h, 0.5, "M_AcademyWall", ops=[UW(2.0 - y) for y in fc_s], **kw)
+        kw = dict(base=BLUE_T, trim=K.TRIM_WOOD, trim_in=K.TRIM_WOOD)
+        opsw = [_door(y, st, y + 39.5) for y, st in EBU_DOORS_W]
+        opsw.append(K.Door(4.7 + 39.5, 3.6, 2.7, None, trim=K.TRIM_GOLD, trim_in=K.TRIM_GOLD))
+        C.wall((cx0, -39.5), (cx0, 49.5), z, h, 0.25, IN_WALL, inner=IN_WALL, ops=opsw, **kw)
+        C.wall((cx1, 49.5), (cx1, -39.5), z, h, 0.25, IN_WALL, inner=IN_WALL,
+               ops=[_door(y, st, 49.5 - y) for y, st in EBU_DOORS_E], **kw)
+        for (ya, yb) in ((-25.825, -25.575), (-12.425, -12.175), (2.15, 2.4), (7.0, 7.25), (28.0, 28.25)):
+            C.box(EB_WX[0], ya, z, EB_WX[1], yb, top, IN_WALL)
+        for (ya, yb) in ((-24.25, -24.0), (-8.7, -8.45), (-3.0, -2.75), (11.66, 11.91), (28.63, 28.88)):
+            C.box(EB_EX[0], ya, z, EB_EX[1], yb, top, IN_WALL)
+        yr = {3: "3", 4: "3", 5: "3"}[lvl]
+        plan = [(k, n.format(y=yr)) for k, n in PAV_PLANS[lvl]]
+        wslots = [EBU_W[k] for k in ("U1", "U2", "U3", "U5", "U6")]
+        eslots = [EBU_E[k] for k in ("V1", "V2", "V3", "V4", "V5")]
+        signs = {}
+        for (a, b), (kind, name) in zip(wslots + eslots, plan):
+            west = (a, b) in wslots
+            dl = [y for y, _ in (EBU_DOORS_W if west else EBU_DOORS_E) if a < y < b]
+            if dl:
+                signs[(dl[0], "W" if west else "E")] = name
+        signs[(-4.0, "E")] = f"STAIRS  {lvl - 1}F / {lvl + 1}F" if not last else f"STAIRS  {lvl - 1}F"
+        zc = _corridor(C, s, z, EBU_DOORS_W, EBU_DOORS_E, signs, up=True, reserve_w=[(17.2, 22.8)],
+                       reserve_e=[(17.8, 22.6)], lvl=lvl, top=top)
+        C.wainscot((cx0, 49.5), (cx0, -39.5), z, 0.9, BLUE_T,
+                   gaps=[(49.5 - y - 0.62, 49.5 - y + 0.62) for y, _ in EBU_DOORS_W] + [(44.8 - 1.9, 44.8 + 1.9)])
+        C.wainscot((cx1, -39.5), (cx1, 49.5), z, 0.9, BLUE_T,
+                   gaps=[(y + 39.5 - 1.02, y + 39.5 + 1.02) for y, _ in EBU_DOORS_E])
+        C.lockers(cx0 + 0.24, 20.0, 90.0, 12, z=z)
+        C.lockers(cx1 - 0.24, 20.2, -90.0, 10, z=z)
+        C.cam(f"pav{side[0]}_{lvl}f_corridor", (101.0, 48.8, z + 1.7), (101.0, -10.0, z + 1.1), 18)
+        tag = ("cl", "lab", "cl", "art", "lib", "cl", "lab", "cl", "st", "club")
+        for i, ((a, b), (kind, name)) in enumerate(zip(wslots + eslots, plan)):
+            west = i < 5
+            xa_, xb_ = EB_WX if west else EB_EX
+            wl = wins(EB_WIN_WU if west else EB_WIN_E, a, b)
+            ew = [("+y" if b > 40 else "-y", [91.0 if west else 111.0])] if (b > 40 or a < -39) else []
+            room_lite(C, xa_, a, xb_, b, kind, name, f"pav{side[0]}_{lvl}f_{name.lower().replace(' ', '_')}",
+                      100 * lvl + 7 * i + (s > 0), z, win="-x" if west else "+x", wl=wl, extra_win=ew,
+                      door_side="+x" if west else "-x", zc=min(z + 3.3, top - 0.05), win_top=wz + 2.5,
+                      recess=() if last else None)
+        # gallery to the wing (3F, 4F) / a reading nook (5F); stair landing
+        y0, y1 = EBU_W["U4"]
+        C.floor(EB_WX[0], y0, EB_WX[1], y1, "M_IntWoodFloor", z=z, planks=True)
+        room_base(C, EB_WX[0], y0, EB_WX[1], y1, 23 + lvl, "school", z=z, zc=zc, lights=(2, 1), ac=False, recess=(),
+                  wains=BLUE_T, hung=False, grid=None)
+        for x in (91.0, 96.0):
+            C.prop("SM_Int_Painting", x, y1 - 0.03, z + 1.5, 0.0)
+        C.prop("SM_Int_Bench", 93.5, y1 - 0.3, z, 180.0)
+        C.prop("SM_Int_PottedPlantB", 89.0 if not last else 93.5, y0 + 0.4, z, 0.0)
+        x0, x1 = EB_EX
+        y0, y1 = EBU_E["ES"]
+        for (a, b, c, d) in ((x0, y0, 104.8, y1), (104.8, -5.55, x1, y1), (109.8, y0, x1, -5.55)):
+            C.floor(a, b, c, d, K.TILE, z=z)
+        room_base(C, x0, y0, x1, y1, 24 + lvl, "school", z=z, win="+x", wl=wins(EB_WIN_E, y0, y1, 0.3),
+                  lights=(0, 0), grid=None, recess=(), zc=top, ceil=False, clear=[(x0, y0, 109.8, y1)], wains=BLUE_T)
+        stair_rail(C, 104.8, -5.55, z, 109.8, -5.55, z)
+        stair_rail(C, 109.8, -5.55, z, 109.8, -7.0, z)
+        if last:
+            stair_rail(C, 104.8, -7.0, z, 109.8, -7.0, z)
+        K.pendant(C.a, *C.F.p(111.8, -4.2), top, "lamp")
+        C.prop("SM_Int_Bench", 112.9, -6.4, z, -90.0)
+        C.prop("SM_Int_PottedPlantB", 113.0, y1 - 0.45, z, 0.0)
+        C.bulletin(107.3, y1, z + 1.1, 0.0, 2.4, 1.0, f"{lvl}F NOTICES", seed=lvl)
+        C.wtext(f"{lvl}F", 103.27, -4.3, z + 2.2, 90.0, 0.3, (0.1, 0.2, 0.55))
+        C.cam(f"pav{side[0]}_stairs_{lvl}f", (x0 + 0.5, y1 - 0.35, z + 1.7), (111.5, y0 + 0.5, z + 0.7), 16)
+
+
+def _wing_floors(C, s):
+    """Wing storeys 3F / 4F behind the row-3 / row-4 windows: a corridor along the south facade (reached from
+    the pavilion) and two halls each - the library annex reading hall, the art studio, the dorm-rank trophy
+    gallery and the club hall."""
+    side = "EAST" if s > 0 else "WEST"
+    x_in, top = 34.6, 19.1
+    ops_s, ops_n = [], []
+    for k, zr in enumerate(ROWS[2:]):
+        ops_s += [WIN(x - x_in, 1.7, zr - W_TOP, zr - W_TOP + 2.5) for x, _ in win_pos((40.0, WY0), (88.0, WY0), 14, 1.7)]
+        ops_n += [WIN(88.0 - x, 1.7, zr - W_TOP, zr - W_TOP + 2.5) for x, _ in win_pos((88.0, WY1), (40.0, WY1), 14, 1.7)]
+    C.wall((x_in, WY0), (88.0, WY0), W_TOP, top - W_TOP, 0.4, "M_AcademyWall", inner=IN_WALL, ops=ops_s, base=BLUE_T)
+    C.wall((88.0, WY1), (x_in, WY1), W_TOP, top - W_TOP, 0.4, "M_AcademyWall", inner=IN_WALL, ops=ops_n, base=BLUE_T)
+    C.box(37.27, WY0, top, 88.0, WY1, top + 0.3, "M_AcademyWall", mats={"-z": K.CEIL})
+    C.box(37.27, WY0 + 0.4, W_TOP, 37.77, WY1 - 0.4, top, IN_WALL)
+    plans = {3: (("library", "LIBRARY ANNEX - READING HALL"), ("art", "ART STUDIO")),
+             4: (("trophy", "DORM-RANK TROPHY GALLERY"), ("club", "CLUB HALL"))}
+    for lvl, (z, ztop, wz) in zip((3, 4), PAV_FLOORS[:2]):
+        C.box(37.77, WY0 + 0.4, z - 0.2, 88.0, WY1 - 0.4, z, "M_AcademyWall", mats={"+z": K.MARBLEFLOOR, "-z": K.CEIL})
+        cy0, cy1 = 2.4, 5.0
+        h = ztop - z
+        kw = dict(base=BLUE_T, trim=K.TRIM_WOOD, trim_in=K.TRIM_WOOD)
+        C.wall((37.77, cy1), (88.0, cy1), z, h, 0.25, IN_WALL, inner=IN_WALL,
+               ops=[K.Door(45.0 - 37.77, 1.8, 2.4, "academy_wood", double=True),
+                    K.Door(75.0 - 37.77, 1.8, 2.4, "academy_wood", double=True)], **kw)
+        C.box(62.0, cy1 + 0.25, z, 62.25, 27.6, ztop, IN_WALL)
+        C.floor(37.77, cy0, 88.0, cy1, "M_IntWoodFloor", z=z, planks=True)
+        wl = [x for x, _ in win_pos((40.0, WY0), (88.0, WY0), 14, 1.7)]
+        room_base(C, 37.77, cy0, 88.0, cy1, 70 + lvl, "school", win="-y", wl=wl, z=z, win_top=wz + 2.5,
+                  z_up=wz + 2.6,
+                  lights=(8, 1), hung=False, grid=None, wains=BLUE_T, ac=False)
+        for k, x in enumerate(range(42, 88, 6)):
+            C.prop("SM_Int_Frame", x, cy1 - 0.02, z + 1.6, 0.0)
+            if k % 2 and abs(x + 3.0 - 45.0) > 2.0 and abs(x + 3.0 - 75.0) > 2.0:
+                C.prop("SM_Int_Bench", x + 3.0, cy1 - 0.3, z, 0.0)
+        C.plate(45.0, cy1, z + 2.5, 0.0, plans[lvl][0][1], w=3.0, h=0.24)
+        C.plate(75.0, cy1, z + 2.5, 0.0, plans[lvl][1][1], w=2.0, h=0.24)
+        C.cam(f"wing{side[0]}_{lvl}f_corridor", (87.4, 2.9, z + 1.7), (50.0, 4.6, z + 1.0), 18)
+        nwl = [x for x, _ in win_pos((88.0, WY1), (40.0, WY1), 14, 1.7)]
+        for (xa, xb), (kind, name) in zip(((37.77, 62.0), (62.25, 88.0)), plans[lvl]):
+            room_lite(C.sub(0.0, 0.0, 0.0), xa, cy1 + 0.25, xb, 27.6, kind, name,
+                      f"wing{side[0]}_{lvl}f_{name.split(' ')[0].lower().replace('-', '_')}", 300 + lvl * 10 + int(xa),
+                      z, win="+y", wl=[x for x in nwl if xa + 0.6 < x < xb - 0.6], door_side="-y", win_top=wz + 2.5)
+
+
 # ---------------------------------------------------------------------------- end pavilions: upper storey
 def _end_block_upper(C, s):
     """Upper storey (floor UF) of an end pavilion, behind the row-2 windows: reached by the stair hall, more
@@ -3675,7 +3986,6 @@ def _end_block_upper(C, s):
               grid=None, recess=(), zc=U_TOP, ceil=False, clear=[(x0, y0, 109.8, y1)], wains=None)
     stair_rail(C, 104.8, -5.55, z, 109.8, -5.55, z)
     stair_rail(C, 109.8, -5.55, z, 109.8, -7.0, z)
-    K.pendant(C.a, *C.F.p(107.3, -6.3), U_TOP, "lamp")
     K.pendant(C.a, *C.F.p(111.8, -4.2), U_TOP, "lamp")
     C.prop("SM_Int_Bench", 112.9, -6.4, z, -90.0)
     C.prop("SM_Int_PottedPlantB", 113.0, y1 - 0.45, z, 0.0)
@@ -3690,6 +4000,7 @@ def _end_block_upper(C, s):
     C.wtext("1F  ENTRANCE  /  LIBRARY  v" if s > 0 else "1F  ENTRANCE  /  HALL OF LEGENDS  v", 103.27, -4.3,
             z + 2.6, 90.0, 0.11, (0.1, 0.2, 0.55))
     C.cam(f"pav{side[0]}_stairs_2f", (x0 + 0.5, y1 - 0.35, z + 1.7), (111.5, y0 + 0.5, z + 0.7), 16)
+    _pav_storeys(C, s)
 
 
 def room_teachers(C, side):

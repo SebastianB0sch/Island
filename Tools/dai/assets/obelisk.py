@@ -394,7 +394,8 @@ def door(mb, u, z, w, h, leaf=TRIM, surround=MARBLE, handle=GOLD, fan_glass=GLAS
     the painted leaf is replaced by a real doorway with an automatic door of `style`."""
     pm = panel_mat or handle
     if _cut_here(z):
-        _record("door", u, z, z + h, w, style=style, double=True)
+        _record("door", u, z, z + h, w, w / 2.0 if fan else 0.0, style=style, double=True)
+        fan_glass = CLEAR          # the fanlight is a real glazed opening over the doorway
     else:
         _door_leaf(mb, u, z, w, h, leaf, handle, pm)
     return _door_surround(mb, u, z, w, h, surround, fan_glass, fan, depth)
@@ -539,15 +540,15 @@ def _clip(poly, axis, val, keep_ge):
     return out
 
 
-def _face_holes(mb, poly, mat, want, axis, holes):
-    """Planar polygon minus rectangular holes [(a0, a1, zlo, zhi)]: a along world axis `axis`, z = height."""
+def _face_holes(mb, poly, mat, want, axis, holes, axis2=2):
+    """Planar polygon minus rectangular holes [(a0, a1, zlo, zhi)]: a along world axis `axis`, z along axis2."""
     pieces = [list(poly)]
     for (a0, a1, zlo, zhi) in holes:
         nxt = []
         for pc in pieces:
             mid = _clip(_clip(pc, axis, a0, True), axis, a1, False)
-            for q in (_clip(pc, axis, a0, False), _clip(pc, axis, a1, True), _clip(mid, 2, zlo, False),
-                      _clip(mid, 2, zhi, True)):
+            for q in (_clip(pc, axis, a0, False), _clip(pc, axis, a1, True), _clip(mid, axis2, zlo, False),
+                      _clip(mid, axis2, zhi, True)):
                 if len(q) >= 3:
                     nxt.append(q)
         pieces = nxt
@@ -1056,6 +1057,22 @@ def _ext_walls(aset, mb, segs, bands, T=0.4, outer=WALL, frame=FRAME, sill=MARBL
                     _dress_hole(aset, mb, p0, yaw, h, T, outer, inner, frame, sill, trim_in, room)
 
 
+def _spandrels(mb, u, z1, r, T, outer, inner):
+    """Fill the two corners between an arched head (radius r, springing at z1) and its rectangular cut."""
+    seg = 8
+    arc = [(u + math.cos(math.pi * i / seg) * r, z1 + math.sin(math.pi * i / seg) * r) for i in range(seg + 1)]
+    for s in (-1, 1):
+        corner = (u + s * r, z1 + r)
+        pts = arc[: seg // 2 + 1] if s > 0 else arc[seg // 2:]
+        for k in range(len(pts) - 1):
+            A, B = pts[k], pts[k + 1]
+            _face(mb, [(corner[0], 0.0, corner[1]), (A[0], 0.0, A[1]), (B[0], 0.0, B[1])], outer, (0, -1, 0))
+            _face(mb, [(corner[0], T, corner[1]), (A[0], T, A[1]), (B[0], T, B[1])], inner, (0, 1, 0))
+            mx, mz = (A[0] + B[0]) / 2, (A[1] + B[1]) / 2
+            _face(mb, [(A[0], 0.0, A[1]), (B[0], 0.0, B[1]), (B[0], T, B[1]), (A[0], T, A[1])], inner,
+                  (u - mx, 0, z1 - mz))
+
+
 def _dress_hole(aset, mb, p0, yaw, h, T, outer, inner, frame, sill, trim_in, room):
     u, w, z0, z1, r = h["u"], h["w"], h["z0"], h["z1"], h["r"]
     axis = "x" if abs(math.cos(math.radians(yaw))) > 0.5 else "y"
@@ -1079,6 +1096,8 @@ def _dress_hole(aset, mb, p0, yaw, h, T, outer, inner, frame, sill, trim_in, roo
                 mb.box((u - w / 2 - bw / 2, yy, z0 + (z1 - z0 + bw) / 2), (bw, 0.03, z1 - z0 + bw), trim_in)
                 mb.box((u + w / 2 + bw / 2, yy, z0 + (z1 - z0 + bw) / 2), (bw, 0.03, z1 - z0 + bw), trim_in)
                 mb.box((u, yy, z1 + bw / 2), (w + 2 * bw, 0.03, bw), trim_in)
+            if r > 0:
+                _spandrels(mb, u, z1, r, T, outer, inner)
             return
         g = "M_GlassClear"
         mb.box((u, T / 2, (z0 + z1) / 2), (w, 0.02, z1 - z0), g)
@@ -1543,12 +1562,19 @@ def _boys_building(mb, nc, aset):
 
 def _boys_dome(mb, nc, cx, cy, z0):
     R = 5.6
-    mb.lathe([(R + 0.6, 0.0), (R + 0.6, 0.5)], MARBLE, 32, cap_top=True, cap_bottom=False, center=(cx, cy, z0))
-    mb.lathe([(R, 0.5), (R, 4.0)], WALL, 32, cap_top=False, cap_bottom=False, center=(cx, cy, z0))
-    lathe_crisp(mb, [(R + 0.15, 1.2), (R + 0.15, 1.45)], TRIM, 32, center=(cx, cy, z0), cap_bottom=True,
-                cap_top=True)
+    walk = _P is not None          # walk-in cupola (lookout room in the drum, reached by the spiral stair)
+    mb.lathe([(R + 0.6, 0.0), (R + 0.6, 0.5)], MARBLE, 32, cap_top=not walk, cap_bottom=False, center=(cx, cy, z0))
+    if walk:
+        mb.slab_ring(circle(32, R + 0.6, cx, cy), circle(32, 1.25, cx, cy), z0 + 0.35, z0 + 0.5, FLOOR)
+        _ring_wall(mb, cx, cy, R, 0.3, 0.0, 360.0, z0 + 0.5, z0 + 4.0, WALL, WALL_IVORY,
+                   [(30.0 * i, 0.9, z0 + 1.75, z0 + 3.2) for i in range(12)], seg=32, frame=FRAME)
+        mb.poly([(p[0], p[1], z0 + 3.95) for p in reversed(circle(32, R - 0.25, cx, cy))], "M_IntPlasterSky")
+    else:
+        mb.lathe([(R, 0.5), (R, 4.0)], WALL, 32, cap_top=False, cap_bottom=False, center=(cx, cy, z0))
+    lathe_crisp(mb, [(R + 0.15, 1.2), (R + 0.15, 1.45)], TRIM, 32, center=(cx, cy, z0), cap_bottom=not walk,
+                cap_top=not walk)
     lathe_crisp(mb, [(R + 0.05, 3.7), (R + 0.3, 4.0), (R + 0.55, 4.25), (R + 0.55, 4.6)], TRIM, 32,
-                center=(cx, cy, z0), cap_top=True, cap_bottom=True)
+                center=(cx, cy, z0), cap_top=True, cap_bottom=not walk)
     # pilasters + windows on the drum
     for i in range(12):
         a = TAU * (i + 0.5) / 12
@@ -1558,7 +1584,17 @@ def _boys_dome(mb, nc, cx, cy, z0):
         a2 = TAU * i / 12
         px, py = cx + math.cos(a2) * (R + 0.02), cy + math.sin(a2) * (R + 0.02)
         with mb.at((px, py, z0), rot=math.degrees(a2) + 90):
-            window(mb, 0.0, 1.75, 0.9, 1.0, FRAME, arch=True, mullion=False, fw=0.1, seg=6)
+            window(mb, 0.0, 1.75, 0.9, 1.0, FRAME, glass=CLEAR if walk else GLASS, arch=True, mullion=False, fw=0.1,
+                   seg=6)
+            if walk:        # spandrels between the arched heads and the rectangular openings
+                zs, r_ = 2.75, 0.45
+                for s_ in (-1, 1):
+                    arc = [(s_ * r_ * math.cos(math.pi / 2 * k / 4), zs + r_ * math.sin(math.pi / 2 * k / 4))
+                           for k in range(5)]
+                    for k in range(4):
+                        A, B = arc[k], arc[k + 1]
+                        for (yy, m_, wnt) in ((0.0, WALL, (0, -1, 0)), (0.32, WALL_IVORY, (0, 1, 0))):
+                            _face(mb, [(s_ * r_, yy, zs + r_), (A[0], yy, A[1]), (B[0], yy, B[1])], m_, wnt)
     zd = z0 + 4.6
     rings = 9
     hs = 1.12
@@ -1874,6 +1910,7 @@ B_Z3W, B_C3W, B_K3W = 15.05, 18.2, 17.0       # wings (mansard)
 B_Z3P, B_C3P, B_K3P = 16.05, 19.3, 18.3       # end pavilions
 B_Z3C, B_C3C, B_K3C = 16.85, 19.9, 18.9       # centre block (the cupola stair starts here)
 B_CUP = 22.3                                  # cupola floor (top of the dome's drum base)
+B_CUP_C = 21.8 + 3.95                         # cupola ceiling (painted sky under the dome)
 B_DOOR = "obelisk_inner"
 NAVY_TXT = (0.12, 0.2, 0.5)
 
@@ -1965,7 +2002,8 @@ def _boys_rooms():
     # attic storey (under the mansards, the pavilion roofs and the centre roof): wing attic suites, an artist's
     # studio / box room and servants' rooms in the end pavilions, servants' hall + linen store + cupola stair hall
     # in the centre
-    att = dict(cornice=None, dado=(K.WOOD, K.TRIM_WOOD), dado_h=0.75, skirting=K.TRIM_WOOD)
+    att = dict(cornice=None, dado=(K.WOOD, K.TRIM_WOOD), dado_h=0.75, skirting=K.TRIM_WOOD,
+               coffer=(1.8, K.WOOD_DARK, None))
     for sx in (-1, 1):
         s = "w" if sx < 0 else "e"
         R["corr3_" + s] = _room("corr3_" + s, 3, _mx((13.4, 12.2, 28.6, 15.6), sx), B_Z3W, B_C3W, WALL_IVORY,
@@ -1977,13 +2015,13 @@ def _boys_rooms():
                                     K.WOODFLOOR if i % 2 else "M_IntCarpetBlue", seams=K.WOOD_DARK if i % 2 else None,
                                     **att)
         R["pcorr3_" + s] = _room("pcorr3_" + s, 3, _mx((29.4, 12.2, 40.6, 15.6), sx), B_Z3P, B_C3P, K.PLASTER_CREAM,
-                                 K.WOODFLOOR, seams=K.WOOD_DARK, holes=[_mx((29.3, 13.28, 31.12, 14.52), sx)], **att)
+                                 K.WOODFLOOR, seams=K.WOOD_DARK, holes=[_mx((29.3, 13.28, 31.92, 14.52), sx)], **att)
         R["pfront3_" + s] = _room("pfront3_" + s, 3, _mx((29.4, -2.6, 40.6, 12.0), sx), B_Z3P, B_C3P,
                                   K.PLASTER_CREAM if sx < 0 else K.PLASTER_WHITE, K.WOODFLOOR, seams=K.WOOD_DARK, **att)
         R["pback3_" + s] = _room("pback3_" + s, 3, _mx((29.4, 15.8, 40.6, 30.6), sx), B_Z3P, B_C3P, K.PLASTER_SKY,
                                  K.WOODFLOOR, seams=K.WOOD_DARK, **att)
     R["hall3"] = _room("hall3", 3, (-12.6, 10.0, 12.6, 17.9), B_Z3C, B_C3C, WALL_IVORY, K.WOODFLOOR, seams=K.WOOD_DARK,
-                       holes=[(-12.7, 13.28, -9.75, 14.52), (9.75, 13.28, 12.7, 14.52)],
+                       holes=[(-12.7, 13.28, -8.95, 14.52), (8.95, 13.28, 12.7, 14.52)],
                        cut_ceiling=[(-1.35, 12.65, 1.35, 15.35)], **att)
     R["front3"] = _room("front3", 3, (-12.6, -1.6, 12.6, 9.8), B_Z3C, B_C3C, K.PLASTER_CREAM, K.WOODFLOOR,
                         seams=K.WOOD_DARK, **att)
@@ -2104,14 +2142,28 @@ def _attic_side(mb, p0, p1, n, ztop, zk, zc, inset, mat, holes=(), mitre=(False,
     ux, uy = ux / L, uy / L
     knee = [(p0[0], p0[1], ztop), (p1[0], p1[1], ztop), (p1[0], p1[1], zk), (p0[0], p0[1], zk)]
     hl = [(a0, a1, ztop - 0.01, zk + 0.01) for (a0, a1) in holes]
-    _face_holes(mb, knee, mat, (n[0], n[1], 0.0), axis, hl)
+    _face_holes(mb, knee, K.WOOD, (n[0], n[1], 0.0), axis, hl)          # boarded knee wall
+    mb.box_mm((min(p0[0], p1[0]) + (n[0] * 0.03 if n[0] < 0 else 0.0), min(p0[1], p1[1]) + (n[1] * 0.03 if n[1] < 0 else 0.0),
+               zk - 0.04), (max(p0[0], p1[0]) + (n[0] * 0.03 if n[0] > 0 else 0.0),
+                            max(p0[1], p1[1]) + (n[1] * 0.03 if n[1] > 0 else 0.0), zk), K.WOOD_DARK)
     e0 = inset if mitre[0] else 0.0
     e1 = inset if mitre[1] else 0.0
     q0 = (p0[0] + n[0] * inset + ux * e0, p0[1] + n[1] * inset + uy * e0, zc)
     q1 = (p1[0] + n[0] * inset - ux * e1, p1[1] + n[1] * inset - uy * e1, zc)
     slope = [(p0[0], p0[1], zk), (p1[0], p1[1], zk), q1, q0]
     hl = [(a0, a1, zk - 1.0, zc + 1.0) for (a0, a1) in holes]
-    _face_holes(mb, slope, mat, (n[0], n[1], 1.2), axis, hl)
+    _face_holes(mb, slope, mat, (n[0] * (zc - zk), n[1] * (zc - zk), -inset), axis, hl)
+    # exposed rafters under the sloping ceiling
+    k = int(L / 0.9)
+    for i in range(1, k):
+        u = L * i / k
+        px, py = p0[0] + ux * u, p0[1] + uy * u
+        a = px if axis == 0 else py
+        if any(a0 - 0.1 < a < a1 + 0.1 for (a0, a1) in holes) or (mitre[0] and u < inset) or \
+                (mitre[1] and u > L - inset):
+            continue
+        mb.beam((px + n[0] * 0.05, py + n[1] * 0.05, zk - 0.06),
+                (px + n[0] * (inset + 0.05), py + n[1] * (inset + 0.05), zc - 0.06), 0.08, 0.1, K.WOOD_DARK)
 
 
 def _attic_upright(mb, p0, p1, n, z0, z1, mat, holes=()):
@@ -2200,13 +2252,16 @@ def _boys_attic(aset, mb, R):
         _rail(mb, (sx * 19.05, 14.42, B_Z2), (sx * 24.55, 14.42, B_Z3W), newel=MARBLE)
         _rail(mb, (sx * 20.5, 14.36, B_Z3W), (sx * 24.3, 14.36, B_Z3W), newel=K.WOOD_DARK)
         _rail(mb, (sx * 20.5, 14.36, B_Z3W), (sx * 20.5, 15.55, B_Z3W))
-        _flight(mb, sx * 29.4, 13.9, B_Z3W, B_Z3P, 0.0 if sx > 0 else 180.0, 1.2, run=0.28, base=B_Z3W,
+        for (xa, xb) in ((29.3, 30.2), (12.7, 11.8)):       # landings inside the doors, then the steps
+            xx = sorted((sx * xa, sx * xb))
+            mb.box_mm((xx[0], 13.28, B_Z3W - 0.3), (xx[1], 14.52, B_Z3W), K.WOODFLOOR, mats={"-z": K.CEIL})
+        _flight(mb, sx * 30.2, 13.9, B_Z3W, B_Z3P, 0.0 if sx > 0 else 180.0, 1.2, run=0.28, base=B_Z3W,
                 nose=K.TRIM_GOLD)
-        _flight(mb, sx * 12.6, 13.9, B_Z3W, B_Z3C, 180.0 if sx > 0 else 0.0, 1.2, run=0.28, base=B_Z3W,
+        _flight(mb, sx * 11.8, 13.9, B_Z3W, B_Z3C, 180.0 if sx > 0 else 0.0, 1.2, run=0.28, base=B_Z3W,
                 nose=K.TRIM_GOLD)
         for y in (13.24, 14.56):
-            _rail(mb, (sx * 29.45, y, B_Z3P), (sx * 31.1, y, B_Z3P), post=K.WOOD_DARK)
-            _rail(mb, (sx * 12.55, y, B_Z3C), (sx * 9.8, y, B_Z3C), post=K.WOOD_DARK)
+            _rail(mb, (sx * 29.45, y, B_Z3P), (sx * 31.9, y, B_Z3P), post=K.WOOD_DARK)
+            _rail(mb, (sx * 12.55, y, B_Z3C), (sx * 9.0, y, B_Z3C), post=K.WOOD_DARK)
     # centre attic: front servants' hall | cupola stair hall | linen store
     for (y, south, north) in ((9.9, "front3", "hall3"), (18.0, "hall3", "back3")):
         _pw(aset, mb, (-12.6, y), (12.6, y), B_Z3C, B_C3C, 0.2, R[south]["wall"], R[north]["wall"],
@@ -2338,6 +2393,7 @@ def _gallery_in(f, r, sides, z, scale, pitch, skip, margin, kind):
             if sd == side:
                 gaps.append(tuple(sorted((_along(p0, ux, uy, a), _along(p0, ux, uy, b)))))
         u = margin
+        gaps = [(max(0.0, a), min(L, b)) for (a, b) in gaps if b > 0.0 and a < L]
         for (a, b) in sorted(gaps) + [(L - margin, L)]:
             if a - u > 0.6 * scale + 0.4:
                 n = max(1, int((a - u) / pitch))
@@ -2599,7 +2655,8 @@ def _bedroom(aset, mb, nc, r, door_side, door_v, bed_side, rng, curtain="M_IntFa
         DT.floor_clutter(nc, f.a, -hw, -hd, hw, hd, 0.0, "dorm", n=4, seed=seed, clear=clear)
         _chandelier(f, b * 0.5, 0.0, zc, 0.9)
         f.light(b * 0.5, 0.0, zc - 1.2, 1800.0, 7.0)
-    _curtains(nc, r, curtain)
+    if curtain:
+        _curtains(nc, r, curtain)
     _dress(aset, mb, nc, r, seed)
     if label:
         yy = r["y1"] + 0.2 if door_side == "n" else r["y0"] - 0.2
@@ -2703,6 +2760,7 @@ def _boys_furnish(aset, mb, nc, R):
     _boys_games(aset, mb, nc, R["games"])
     _boys_hall2(aset, mb, nc, R["hall2"])
     _boys_study2(aset, mb, nc, R["study2"])
+    _boys_attic_furnish(aset, mb, nc, R)
     for lv in (1, 2):
         t = "_" if lv == 1 else "2_"
         num = 101 + 100 * lv
@@ -3325,8 +3383,9 @@ def _boys_corridor(aset, mb, nc, r, rp, sx, lv=1):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     with f:
         _console(f, sx * 15.4, 12.2, "s", seed=lv * 7 + sx, mirror=False)
-        f.prop("SM_Int_Bench", sx * 21.8, 15.34, 0.0)
-        _cushions(nc, sx * 21.8, 15.4, 0.45, 0.0, 2, ("M_IntFabricNavy", K.TRIM_GOLD), w=0.8)
+        if lv == 1:
+            f.prop("SM_Int_Bench", sx * 21.8, 15.34, 0.0)
+            _cushions(nc, sx * 21.8, 15.4, 0.45, 0.0, 2, ("M_IntFabricNavy", K.TRIM_GOLD), w=0.8)
         _plinth_bust(f, mb, sx * 27.9, 12.55, 0.0)
         _plant(f, sx * 21.8, 12.6, big=False)
         _console(f, sx * 37.8, 15.6, "n", seed=lv * 9 + sx)
@@ -3335,7 +3394,8 @@ def _boys_corridor(aset, mb, nc, r, rp, sx, lv=1):
         _plinth_bust(f, mb, sx * 32.0, 12.55, 0.0)
     for rr in (r, rp):
         _gallery(f, rr, ("n", "s"), z=1.55, scale=1.25, pitch=2.2,
-                 skip=[("s", sx * 14.6, sx * 16.2), ("n", sx * 21.0, sx * 22.6), ("n", sx * 37.0, sx * 38.6)])
+                 skip=[("s", sx * 14.6, sx * 16.2), ("n", sx * 21.0, sx * 22.6), ("n", sx * 37.0, sx * 38.6)] +
+                 ([("n", sx * 18.6, sx * 24.8)] if lv == 2 else []))
         _dress(aset, mb, nc, rr, int(abs(rr["x0"])) + lv)
     if sx < 0:
         K.camera(aset, "corridor" if lv == 1 else "corridor2", (-13.8, 14.6, r["z"] + 1.7), (-40.0, 13.6, r["z"] + 1.2),
@@ -3506,6 +3566,300 @@ def _boys_study2(aset, mb, nc, r):
     K.camera(aset, "study2", (11.4, 20.9, r["z"] + 1.7), (-8.0, 28.6, r["z"] + 0.8), 15.0)
 
 
+def _easel(mb, nc, x, y, yaw, canvas=("M_IntPlasterSky", "M_IntFabricGreen")):
+    with mb.at((x, y, 0.0), rot=yaw), nc.at((x, y, 0.0), rot=yaw):
+        for s_ in (-1, 1):
+            mb.beam((s_ * 0.3, 0.0, 0.0), (s_ * 0.06, 0.05, 1.75), 0.04, 0.04, K.WOOD)
+        mb.beam((0.0, 0.45, 0.0), (0.0, 0.08, 1.6), 0.04, 0.04, K.WOOD)
+        mb.box((0, -0.02, 0.78), (0.7, 0.08, 0.04), K.WOOD)
+        nc.box((0, 0.0, 1.15), (0.66, 0.025, 0.72), "M_IntPaper")
+        nc.box((0, -0.015, 1.25), (0.6, 0.006, 0.4), canvas[0])
+        nc.box((0, -0.016, 0.98), (0.6, 0.006, 0.2), canvas[1])
+
+
+def _sheeted(nc, x, y, w, d, h, yaw=0.0):
+    """Furniture stored under a dust sheet."""
+    with nc.at((x, y, 0.0), rot=yaw):
+        nc.box((0, 0, h / 2), (w, d, h), "M_IntFabricWhite")
+        nc.box((0, 0, h + 0.02), (w * 0.8, d * 0.7, 0.05), "M_IntFabricWhite")
+        nc.box((0, -d / 2 - 0.02, 0.05), (w + 0.1, 0.06, 0.1), "M_IntFabricWhite")
+
+
+def _iron_bed_cubicle(f, mb, nc, x, y, yaw, seed=0):
+    """Servant's bed corner: iron bed, nightstand + candle, trunk at the foot, a rag rug."""
+    a = math.radians(yaw)
+
+    def P(dx, dy):
+        return (x + dx * math.cos(a) - dy * math.sin(a), y + dx * math.sin(a) + dy * math.cos(a))
+    f.prop("SM_Int_OldBed", x, y, yaw)
+    nc.box((*P(0.0, -0.1), 0.52), (0.84, 1.6, 0.08), ("M_IntFabricWhite", "M_IntFabricBlue")[seed % 2])
+    nc.box((*P(0.0, 0.75), 0.6), (0.6, 0.32, 0.12), "M_IntFabricWhite")
+    f.prop("SM_Int_NightstandB", *P(0.78, 0.7), yaw)
+    nc.cylinder((*P(0.78, 0.7), 0.62), 0.04, 0.02, K.TRIM_GOLD, seg=8)
+    nc.cylinder((*P(0.78, 0.7), 0.64), 0.012, 0.14, "M_IntTrimWhite", seg=6)
+    rx, ry = P(0.75, -0.3)
+    _rug(mb, rx - 0.35, ry - 0.55, rx + 0.35, ry + 0.55, 0.0, "M_IntCarpetRed")
+
+
+def _boys_attic_furnish(aset, mb, nc, R):
+    import random
+    rng = random.Random(41)
+    num = 401
+    for sx in (-1, 1):
+        s = "w" if sx < 0 else "e"
+        inner, outer = ("e", "w") if sx < 0 else ("w", "e")
+        for (k, side, dv) in (("A", "n", 18.0), ("B", "n", 25.6), ("C", "s", 18.0), ("D", "s", 25.6)):
+            _bedroom(aset, mb, nc, R[k + "3_" + s], side, sx * dv, outer if k in ("A", "C") else inner, rng,
+                     label=str(num), seed=num, curtain=None)
+            num += 1
+        # corridors
+        for (key, hole) in (("corr3_", (20.55, 24.65)), ("pcorr3_", (29.3, 31.95))):
+            r = R[key + s]
+            f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+            zc = r["zc"] - r["z"]
+            with f:
+                xa, xb = sorted((sx * (hole[1] + 0.3), sx * (40.2 if key == "pcorr3_" else 28.2)))
+                _rug(mb, xa, 12.6, xb, 15.2, 0.0, "M_IntCarpetRed", K.TRIM_GOLD) if key == "pcorr3_" else \
+                    _rug(mb, min(sx * 13.8, sx * 28.2), 12.55, max(sx * 13.8, sx * 28.2), 14.15, 0.0, "M_IntCarpetRed",
+                         K.TRIM_GOLD)
+                n = max(2, int((r["x1"] - r["x0"]) / 3.5))
+                for i in range(n):
+                    f.prop("SM_Int_CeilingLamp", r["x0"] + (r["x1"] - r["x0"]) * (i + 0.5) / n, 13.4, 0.0, z=zc)
+                if key == "corr3_":
+                    for x in (14.6, 27.3):
+                        f.prop("SM_Int_Suitcase", sx * x, 15.3, 0.0)
+                    f.prop("SM_Int_Bench", sx * 16.0, 12.47, 180.0)
+                else:
+                    _plant(f, sx * 40.05, 12.75)
+                    f.prop("SM_Int_GrandfatherClock", sx * 37.8, 15.38, 0.0)
+                    _plinth_bust(f, mb, sx * 33.5, 15.25, 180.0)
+            _gallery(f, r, ("s",), z=1.4, scale=1.4, pitch=2.2, skip=[("s", sx * 15.4, sx * 16.6)])
+            _dress(aset, mb, nc, r, 90 + len(key) + sx, clear=[tuple(sorted((sx * hole[0], sx * hole[1]))) + (13.2, 15.6)])
+        # pavilion front: artist's studio (west) / box room (east)
+        r = R["pfront3_" + s]
+        f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+        zc = r["zc"] - r["z"]
+        with f:
+            if sx < 0:
+                _rug(mb, -38.6, 1.0, -31.6, 7.0, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+                for (x, y, a, c) in ((-37.5, 3.2, 200.0, ("M_IntPlasterSky", "M_IntFabricGreen")),
+                                     (-33.0, 2.6, 160.0, ("M_IntPlasterPeach", "M_IntFabricPurple")),
+                                     (-35.6, 6.4, 180.0, ("M_IntFabricNavy", K.TRIM_GOLD))):
+                    _easel(mb, nc, x, y, a, c)
+                    f.prop("SM_Int_Stool", x + 0.2, y + 0.75, 0.0)
+                mb.box_mm((-35.9, 8.7, 0.0), (-34.1, 10.1, 0.3), K.WOOD_DARK)          # model's dais
+                f.prop("SM_Int_GreenChair", -35.0, 9.4, 180.0, z=0.3)
+                nc.box((-35.0, 10.2, 1.2), (2.2, 0.02, 2.4), "M_IntFabricRed")       # drape behind the dais
+                K.counter(mb, -30.0, 4.0, -29.42, 8.0, 0.9, body=K.WOOD, top=K.WOOD_DARK)
+                for k in range(10):
+                    nc.cylinder((-29.72, 4.3 + k * 0.36, 0.9), 0.05, 0.12 + 0.04 * (k % 3),
+                                ("M_IntFabricRed", "M_IntFabricBlue", "M_IntFabricYellow", "M_IntGlassClear")[k % 4], seg=8)
+                for k in range(6):          # canvases leaning against the wall
+                    with nc.at((-29.55, 9.0 + k * 0.32, 0.0), rot=90.0, rot_x=-8):
+                        nc.box((0, 0.0, 0.45), (0.9 - 0.08 * k, 0.03, 0.9), ("M_IntPaper", "M_IntPlasterSky")[k % 2])
+                _plinth_bust(f, mb, -39.6, 9.0, 120.0)
+                f.prop("SM_Int_FoldingScreen", -31.0, 10.6, 30.0)
+                f.prop("SM_Int_Armchair", -38.6, -1.2, 30.0)
+                f.prop("SM_Int_SideTable", -39.6, -0.6, 0.0)
+                DT.book_stack(nc, -39.6, -0.6, 0.55, 0.0, 4, 2)
+                _plant(f, -30.0, -2.0)
+            else:
+                for (x, y, w, d, h) in ((31.0, 0.0, 1.8, 0.9, 0.9), (33.8, -1.2, 1.2, 0.7, 1.4), (37.5, 2.6, 2.0, 1.0, 0.8),
+                                        (31.4, 4.4, 1.0, 1.0, 1.1), (36.0, 7.6, 1.6, 0.8, 1.6), (38.8, 9.6, 1.0, 0.9, 1.0)):
+                    _sheeted(nc, x, y, w, d, h, rng.uniform(-15, 15))
+                for k in range(7):
+                    f.prop("SM_Int_Box", 39.9 - (k % 2) * 0.55, -1.6 + k * 0.62, rng.uniform(-15, 15))
+                for k in range(4):
+                    f.prop("SM_Int_Suitcase", 30.0 + k * 0.0, 7.8 + k * 0.7, 90.0)
+                for k in range(3):
+                    nc.cylinder((34.0 + k * 0.35, 11.3, 0.0), 0.15, 1.9, ("M_IntFabricRed", "M_IntFabricBlue",
+                                                                          "M_IntFabricBeige")[k], seg=10)
+                f.prop("SM_Int_Ladder", 33.0, 10.9, 0.0)
+                _plinth_bust(f, mb, 30.0, 10.9, 90.0)
+            for (x, y) in ((sx * 32.0, 4.6), (sx * 37.5, 4.6)):
+                f.prop("SM_Int_CeilingLamp", x, y, 0.0, z=zc)
+        _gallery(f, r, (inner,), z=1.4, scale=1.5, skip=[(inner, 12.0, 0.0)])
+        _dress(aset, mb, nc, r, 95 + sx)
+        # pavilion back: servants' rooms (two bed alcoves each side of a part-height screen wall)
+        r = R["pback3_" + s]
+        f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+        zc = r["zc"] - r["z"]
+        with f:
+            a_, b_ = ((sx * 29.4, 23.2), (sx * 37.6, 23.2)) if sx > 0 else ((sx * 37.6, 23.2), (sx * 29.4, 23.2))
+            K.wall(f.a, mb, a_, b_, 0.0, 2.3, 0.12, r["wall"], inner=r["wall"])
+            mb.box_mm((min(a_[0], b_[0]), 23.14, 2.3), (max(a_[0], b_[0]), 23.32, 2.36), K.WOOD_DARK)
+            for (y, yaw) in ((17.6, 0.0), (21.6, 180.0), (24.8, 0.0), (28.8, 180.0)):
+                for x in (31.0, 38.2):
+                    _iron_bed_cubicle(f, mb, nc, sx * x, y, yaw, seed=int(x + y))
+            for y in (19.6, 26.8):
+                mb.box_mm((min(sx * 29.42, sx * 29.95), y - 0.4, 0.0), (max(sx * 29.42, sx * 29.95), y + 0.4, 0.8), K.WOOD)
+                mb.box_mm((min(sx * 29.42, sx * 29.97), y - 0.42, 0.8), (max(sx * 29.42, sx * 29.97), y + 0.42, 0.84), MARBLE)
+                nc.cylinder((sx * 29.7, y, 0.84), 0.18, 0.12, "M_IntTrimWhite", seg=12)
+                nc.cylinder((sx * 29.7, y + 0.25, 0.84), 0.07, 0.24, "M_IntTrimWhite", seg=10)
+                DT.coat_hooks(nc, sx * 29.4, y + 1.6, 1.7, -90.0 * sx, n=3, dorm="white", jackets=2, seed=int(y))
+                f.prop("SM_Int_CeilingLamp", sx * 33.0, y, 0.0, z=zc)
+            f.prop("SM_Int_WoodChair", sx * 38.6, 19.0, 90.0 * sx)
+            _plant(f, sx * 39.8, 16.6, big=False)
+        _dress(aset, mb, nc, r, 97 + sx, clear=[(min(a_[0], b_[0]), 23.0, max(a_[0], b_[0]), 23.4)])
+    # centre: stair hall with the cupola spiral, servants' hall, linen store
+    r = R["hall3"]
+    f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+    zc = r["zc"] - r["z"]
+    with f:
+        _rug(mb, -2.6, 11.0, 2.6, 17.0, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        for sx in (-1, 1):
+            f.prop("SM_Int_Bench", sx * 8.6, 17.64, 0.0)
+            _cushions(nc, sx * 8.6, 17.7, 0.45, 0.0, 2, ("M_IntFabricNavy", "M_IntFabricWhite"), w=0.8)
+            _console(f, sx * 7.8, 10.0, "s", seed=7 + sx, mirror=False)
+            for k in range(2):
+                f.prop("SM_Int_Suitcase", sx * 11.0, 17.6 - k * 0.0, 0.0, z=0.0) if k == 0 else None
+            f.prop("SM_Int_CeilingLamp", sx * 6.0, 14.0, 0.0, z=zc)
+        # bell board of the servants' bells
+        with nc.at((-2.4, 17.9, 1.5), rot=0.0):
+            nc.box((0, -0.02, 0.0), (1.8, 0.04, 0.7), K.WOOD_DARK)
+            for k in range(12):
+                nc.cylinder((-0.75 + (k % 6) * 0.3, -0.07, -0.15 + (k // 6) * 0.3), 0.06, 0.05, K.TRIM_GOLD, seg=8)
+        aset.text("ROOM BELLS", f.P(-2.4, 17.82, 1.95), 180.0, size=0.06, color=(0.95, 0.85, 0.5))
+        _plant(f, 12.0, 10.6)
+        _plant(f, -12.0, 17.3)
+    _gallery(f, r, ("s", "n"), z=1.4, scale=1.4, skip=[("n", -3.4, -1.4), ("n", 4.0, 6.0), ("n", -6.0, -4.0),
+                                                      ("s", -9.0, -6.6), ("s", 6.6, 9.0)])
+    _dress(aset, mb, nc, r, 99, clear=[(-1.4, 12.6, 1.4, 15.4)])
+    K.camera(aset, "3f_hall", (11.0, 16.9, r["z"] + 1.65), (-4.0, 12.0, r["z"] + 1.1), 15.0)
+    r = R["front3"]
+    f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+    zc = r["zc"] - r["z"]
+    with f:
+        _long_table(mb, nc, 0.0, 4.4, 6.0, 1.0, cloth=K.WOOD, mat=K.WOOD_DARK)
+        for x in (-1.8, 1.8):
+            for s_ in (-1, 1):
+                f.prop("SM_Int_Bench", x, 4.4 + s_ * 0.8, 0.0 if s_ > 0 else 180.0)
+        DT.table_set(nc, f.a, 0.0, 4.4, 0.775, 0.0, "cafe", seats=8, seed=5, length=5.0)
+        f.prop("SM_Int_Dresser", -11.9, 4.4, 90.0)
+        for k in range(5):
+            nc.cylinder((-12.3, 3.8 + k * 0.3, 1.1), 0.12, 0.012, "M_IntTrimWhite", seg=12)
+        f.prop("SM_Int_Stove", 12.25, 4.4, -90.0)
+        f.prop("SM_Int_Kettle", 12.25, 4.3, -90.0, z=0.86)
+        for (y, a) in ((2.8, -120.0), (6.0, -60.0)):
+            f.prop("SM_Int_Armchair", 10.6, y, a)
+        f.prop("SM_Int_WallClock", 0.0, 9.8, 180.0, z=2.0)
+        DT.coat_hooks(nc, -6.5, 9.8, 1.75, 180.0, n=5, dorm="white", jackets=3, seed=4)
+        DT.coat_hooks(nc, 6.5, 9.8, 1.75, 180.0, n=5, dorm="obelisk", jackets=2, seed=5)
+        K.counter(mb, -12.55, 6.6, -11.95, 9.2, 0.9, body=K.TRIM_WHITE, top=MARBLE)
+        for x in (-2.6, 2.6):
+            f.prop("SM_Int_Cabinet", x, 9.48, 180.0)
+            zt = _doily(f, x, 9.48, 1.18, 1.0, 0.4, 0.0, "M_IntFabricWhite")
+            for k in range(4):
+                nc.cylinder((x - 0.36 + k * 0.24, 9.5, zt), 0.09, 0.012 + 0.03 * k, "M_IntTrimWhite", seg=10)
+        for (x, a) in ((-3.7, 90.0), (3.7, -90.0)):
+            f.prop("SM_Int_Armchair", x, 4.4, a)
+        f.prop("SM_Int_Drawers", 12.3, 1.2, -90.0)
+        _rug(mb, -2.0, 1.6, 2.0, 7.2, 0.0, "M_IntCarpetRed")
+        for x in (-4.0, 0.0, 4.0):
+            f.prop("SM_Int_CeilingLamp", x, 4.4, 0.0, z=zc)
+        _plant(f, 12.0, 9.2)
+    _dress(aset, mb, nc, r, 101)
+    K.camera(aset, "3f_servants_hall", (11.6, 9.2, r["z"] + 1.65), (-6.0, 1.0, r["z"] + 0.8), 15.0)
+    r = R["back3"]
+    f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
+    zc = r["zc"] - r["z"]
+    with f:
+        for x in (-10.0, -6.0, 6.0, 10.0):
+            with mb.at((x, 18.42, 0.0), rot=180.0), nc.at((x, 18.42, 0.0), rot=180.0):
+                _store_shelf(mb, nc, rng, w=2.2, h=2.2, shelves=5)
+        for y in (21.0, 23.2):
+            with mb.at((-12.3, y, 0.0), rot=90.0), nc.at((-12.3, y, 0.0), rot=90.0):
+                _store_shelf(mb, nc, rng, w=2.0, h=2.2, shelves=5)
+        mb.box_mm((-1.6, 22.0, 0.86), (1.6, 22.5, 0.9), K.TRIM_WHITE)            # ironing board
+        for x in (-1.4, 1.4):
+            mb.beam((x, 22.05, 0.0), (x, 22.45, 0.86), 0.03, 0.03, K.METAL)
+        nc.box((0.6, 22.25, 0.93), (0.22, 0.12, 0.08), K.METAL)
+        nc.box((-0.5, 22.25, 0.905), (0.8, 0.35, 0.01), "M_IntFabricWhite")
+        for (x, y) in ((4.2, 25.2), (-4.4, 26.0)):
+            nc.cylinder((x, y, 0.0), 0.12, 0.03, K.WOOD_DARK, seg=10)
+            nc.cylinder((x, y, 0.03), 0.02, 1.0, K.WOOD_DARK, seg=6)
+            nc.lathe([(0.12, 0.0), (0.17, 0.1), (0.14, 0.3), (0.18, 0.45), (0.12, 0.6), (0.05, 0.66)],
+                     "M_IntFabricBlue" if x > 0 else "M_IntFabricWhite", 12, center=(x, y, 1.03), cap_top=True)
+        DT.floor_clutter(nc, f.a, -12.6, 18.1, 12.6, 29.6, 0.0, "dorm", n=6, seed=9,
+                         clear=[(-12.6, 18.1, 12.6, 19.0), (-12.6, 20.0, -11.8, 24.4), (-6.0, 28.8, -9.0, 29.6)])
+        for k in range(4):
+            f.prop("SM_Int_Suitcase", 9.0, 21.0 + k * 0.7, 90.0)
+        _sheeted(nc, 6.0, 26.6, 1.8, 0.9, 1.0, 10.0)
+        _sheeted(nc, -8.0, 22.6, 1.4, 1.4, 0.8, -5.0)
+        for x in (-6.0, 0.0, 6.0):
+            f.prop("SM_Int_CeilingLamp", x, 23.5, 0.0, z=zc)
+    _dress(aset, mb, nc, r, 103)
+    K.camera(aset, "3f_linen", (11.6, 18.7, r["z"] + 1.65), (-6.0, 27.0, r["z"] + 0.8), 15.0)
+    # dormer window seats (cushions) everywhere
+    seats = []
+    for sx in (-1, 1):
+        for xd in (16.6, 21.0, 25.4):
+            seats += [(sx * xd, -0.2, 0.0, 15.6), (sx * xd, 28.2, 180.0, 15.6)]
+        seats += [(sx * 35.0, -3.2, 0.0, 16.6), (sx * 35.0, 31.2, 180.0, 16.6)]
+        seats += [(sx * 41.2, yd + 2.0, 90.0 * sx, 16.6) for yd in (2.0, 9.0, 16.0, 23.0)]
+    seats += [(xd, -2.2, 0.0, 17.4) for xd in (-7.5, 7.5)] + [(xd, 30.2, 180.0, 17.4) for xd in (-7.5, 0.0, 7.5)]
+    for (x, y, a, z) in seats:
+        with nc.at((x, y, z), rot=a):
+            nc.box((0, 0.0, 0.04), (1.3, 0.5, 0.08), ("M_IntFabricNavy", "M_IntFabricBlue")[int(abs(x)) % 2])
+            with nc.at((0.35, 0.05, 0.2), rot_x=-70):
+                nc.box((0, 0, 0), (0.36, 0.12, 0.3), "M_IntFabricWhite")
+    K.camera(aset, "3f_room405", (sx * 17.1, 16.3, B_Z3W + 1.65), (sx * 20.5, 26.5, B_Z3W + 0.9), 15.0)
+    K.camera(aset, "3f_corridor", (-13.9, 13.0, B_Z3W + 1.65), (-28.0, 13.6, B_Z3W + 1.0), 18.0)
+    K.camera(aset, "3f_studio", (-30.0, 11.5, B_Z3P + 1.65), (-37.5, 1.0, B_Z3P + 1.0), 15.0)
+    K.camera(aset, "3f_boxroom", (30.0, 11.5, B_Z3P + 1.65), (37.5, 1.0, B_Z3P + 0.8), 15.0)
+    K.camera(aset, "3f_servants", (-30.0, 16.4, B_Z3P + 1.65), (-37.5, 22.5, B_Z3P + 0.8), 15.0)
+    _boys_cupola(aset, mb, nc)
+
+
+def _boys_cupola(aset, mb, nc):
+    """Lookout room in the dome's drum: benches under the twelve windows, a telescope, a map table."""
+    z = B_CUP
+    f = Frame(aset, mb, nc, 0.0, 14.0, z)
+    with f:
+        for k in range(6):
+            a = math.radians(60.0 * k)
+            f.prop("SM_Int_Bench", math.cos(a) * 4.3, math.sin(a) * 4.3, math.degrees(a) + 90.0)
+        for k in range(12):          # rail round the stair opening (left open on the arrival side)
+            if k in (9, 10):
+                continue
+            a0_, a1_ = TAU * k / 12, TAU * (k + 1) / 12
+            mb.beam((math.cos(a0_) * 1.35, math.sin(a0_) * 1.35, 0.95), (math.cos(a1_) * 1.35, math.sin(a1_) * 1.35, 0.95),
+                    0.05, 0.05, K.TRIM_GOLD)
+            mb.box((math.cos(a0_) * 1.35, math.sin(a0_) * 1.35, 0.47), (0.04, 0.04, 0.95), K.TRIM_GOLD)
+        # telescope on its tripod, aimed out of a window
+        with mb.at((3.0, 1.6, 0.0), rot=30.0), nc.at((3.0, 1.6, 0.0), rot=30.0):
+            for k in range(3):
+                a = TAU * k / 3
+                mb.beam((math.cos(a) * 0.45, math.sin(a) * 0.45, 0.0), (0.0, 0.0, 1.2), 0.035, 0.035, K.WOOD_DARK)
+            mb.beam((-0.55, 0.0, 1.05), (0.6, 0.0, 1.45), 0.13, 0.13, K.TRIM_GOLD)
+        f.prop("SM_Int_RoundTable", -2.6, -1.4, 0.0)
+        zt = _doily(f, -2.6, -1.4, 0.75, 0.4, mat="M_IntPaper")
+        f.prop("SM_Int_Candelabra", -2.8, -1.5, 0.0, z=0.75)
+        for k in range(3):
+            a = math.radians(200.0 + 70.0 * k)
+            f.prop("SM_Int_WoodChair", -2.6 + math.cos(a) * 0.8, -1.4 + math.sin(a) * 0.8, math.degrees(a) - 90.0)
+        f.prop("SM_Int_Armchair", 1.6, -3.2, 20.0)
+        f.prop("SM_Int_Armchair", -0.6, 3.4, 160.0)
+        f.prop("SM_Int_CeilingLamp", 0.0, 0.0, 0.0, z=B_CUP_C - B_CUP)
+        f.light(0.0, 0.0, 2.6, 1500.0, 7.0)
+        for k in range(4):
+            a = math.radians(45.0 + 90.0 * k)
+            _plant(f, math.cos(a) * 4.4, math.sin(a) * 4.4)
+        for k in range(6):
+            a = math.radians(60.0 * k)
+            cx_, cy_ = math.cos(a) * 3.3, math.sin(a) * 3.3
+            _rug(mb, cx_ - 0.7, cy_ - 0.7, cx_ + 0.7, cy_ + 0.7, 0.0, ("M_IntCarpetRed", "M_IntCarpetBlue")[k % 2])
+        f.prop("SM_Int_GreenChair", 2.6, -2.6, 140.0)
+        f.prop("SM_Int_SideTable", 3.3, -1.9, 0.0)
+        f.prop("SM_Int_OilLamp", 3.3, -1.9, 0.0, z=0.55)
+        with nc.at((-1.6, 3.0, 0.0)):        # celestial globe on a stand
+            nc.cylinder((0, 0, 0), 0.2, 0.04, K.WOOD_DARK, seg=10)
+            nc.cylinder((0, 0, 0.04), 0.03, 0.75, K.WOOD_DARK, seg=6)
+            nc.sphere((0, 0, 1.05), 0.28, "M_IntFabricNavy", seg=14, rings=9)
+            nc.torus((0, 0, 1.05), 0.33, 0.015, K.TRIM_GOLD, seg=18, tube_seg=4)
+    K.camera(aset, "4f_cupola", (-4.2, 12.4, z + 1.65), (3.5, 15.5, z + 0.9), 15.0)
+
+
 def build_boys():
     aset = AssetSet("obelisk_boys")
     main = aset.mesh("ObeliskBoys_Main")
@@ -3560,10 +3914,96 @@ def _g_window(mb, u, row, nc=None, w=None, flowers=None):
         window(mb, u, 10.0, w or 1.2, 1.75, GTRIM, arch=True, keystone=GTRIM, sill_mat=MARBLE)
 
 
+def _hip_roof_walk(mb, cx, cy, cz, w, d, h, mat, ov, thick, holes):
+    """MeshBuilder.hip_roof (ridge along x) without the flat underside, which would close the attic: roof
+    planes with dormer holes {"s"|"n": [(x0, x1, zlo, zhi)]}, fascia and a soffit ring under the overhang only."""
+    hw, hd = w / 2 + ov, d / 2 + ov
+    ridge = max(0.0, (w - d) / 2)
+    ze = cz - h * ov / (d / 2)
+    top = cz + h
+    a, b, c, e = (cx - hw, cy - hd, ze), (cx + hw, cy - hd, ze), (cx + hw, cy + hd, ze), (cx - hw, cy + hd, ze)
+    r0, r1 = (cx - ridge, cy, top), (cx + ridge, cy, top)
+    _face_holes(mb, [a, b, r1, r0], mat, (0, -1, 1), 0, holes.get("s", ()))
+    _face_holes(mb, [c, e, r0, r1], mat, (0, 1, 1), 0, holes.get("n", ()))
+    mb.poly([b, c, r1], mat)
+    mb.poly([e, a, r0], mat)
+
+    def lo(p):
+        return (p[0], p[1], p[2] - thick)
+    for p, q in ((a, b), (b, c), (c, e), (e, a)):
+        mb.quad(lo(p), lo(q), q, p, mat)
+    x0, y0, x1, y1 = cx - w / 2, cy - d / 2, cx + w / 2, cy + d / 2
+    z = ze - thick
+    for (pa, pb, pc, pd) in (((a[0], a[1]), (b[0], b[1]), (x1, y0), (x0, y0)), ((b[0], b[1]), (c[0], c[1]), (x1, y1), (x1, y0)),
+                             ((c[0], c[1]), (e[0], e[1]), (x0, y1), (x1, y1)), ((e[0], e[1]), (a[0], a[1]), (x0, y0), (x0, y1))):
+        _face(mb, [(pa[0], pa[1], z), (pb[0], pb[1], z), (pc[0], pc[1], z), (pd[0], pd[1], z)], mat, (0, 0, -1))
+
+
+def _gable_roof_walk(mb, cx, y0, y1, w, cz, h, mat, ov, thick):
+    """The pavilion's gable roof (ridge along y) for a walk-in attic: roof planes with openings where the attic
+    doors pass under the eaves (x = +-7, y 13.6..16.4), boarded inner planes, and both gable walls 0.3 m thick
+    with the round rose windows cut through (glass + frame are drawn by the caller)."""
+    hw = w / 2 + ov
+    ze = cz - h * ov / (w / 2)
+    top = cz + h
+    ya, yb = y0 - ov, y1 + ov
+    door = [(13.5, 16.5, cz - 1.5, cz + 1.05)]
+    for s in (-1, 1):
+        e0, e1 = (cx + s * hw, ya, ze), (cx + s * hw, yb, ze)
+        r0, r1 = (cx, ya, top), (cx, yb, top)
+        _face_holes(mb, [e0, e1, r1, r0], mat, (s, 0, 1), 1, door)
+        lo = [(p[0], p[1], p[2] - thick) for p in (e0, e1, r1, r0)]
+        _face_holes(mb, lo, mat, (-s, 0, -1), 1, door)
+        _face(mb, [lo[0], lo[1], e1, e0], mat, (s, 0, 0))
+        # boarding under the rafters (the attic's sloping ceiling) from the wall top up to the ridge
+        xw = cx + s * (w / 2 - 0.4)
+        zw = ze - thick - 0.03 + (hw - (w / 2 - 0.4)) * h / hw
+        board = [(xw, y0 + 0.3, zw), (xw, y1 - 0.3, zw), (cx, y1 - 0.3, top - thick - 0.03), (cx, y0 + 0.3, top - thick - 0.03)]
+        _face_holes(mb, board, K.WOOD, (-s, 0, -1), 1, door)
+        for k in range(1, 16):           # collar ties + purlins read the roof structure
+            y = y0 + (y1 - y0) * k / 16
+            if abs(y - 15.0) < 1.6:
+                continue
+            mb.beam((xw, y, zw - 0.05), (cx, y, top - thick - 0.1), 0.1, 0.14, K.WOOD_DARK)
+    for k in range(2, 16, 3):
+        y = y0 + (y1 - y0) * k / 16
+        mb.box_mm((cx - 2.6, y - 0.07, cz + 2.95), (cx + 2.6, y + 0.07, cz + 3.13), K.WOOD_DARK)
+    for (yv, s) in ((ya, -1), (yb, 1)):          # verges
+        pts = [(cx - hw, yv, ze), (cx, yv, top), (cx + hw, yv, ze)]
+        low = [(p[0], p[1], p[2] - thick) for p in pts]
+        for i in range(2):
+            _face(mb, [pts[i], pts[i + 1], low[i + 1], low[i]], mat, (0, s, 0))
+    # gable walls with the rose window opening
+    for (yw, s) in ((y0, -1), (y1, 1)):
+        tri = [(cx - w / 2, yw, cz), (cx + w / 2, yw, cz), (cx, yw, top - thick)]
+        rin = [(p[0], yw - s * 0.3, p[2]) for p in tri]
+        sq = [(cx - 1.0, cx + 1.0, 16.2, 18.2)]
+        _face_holes(mb, tri, WALL, (0, s, 0), 0, sq)
+        _face_holes(mb, rin, WALL_LILAC, (0, -s, 0), 0, sq)
+        n = 16
+        circ = [(cx + math.cos(TAU * i / n) * 0.9, 17.2 + math.sin(TAU * i / n) * 0.9) for i in range(n)]
+
+        def onsq(i):
+            a = TAU * i / n
+            c_, s_ = math.cos(a), math.sin(a)
+            k = 1.0 / max(abs(c_), abs(s_))
+            return (cx + c_ * k, 17.2 + s_ * k)
+        for i in range(n):
+            j = (i + 1) % n
+            for (yy, m_, wnt) in ((yw, WALL, (0, s, 0)), (yw - s * 0.3, WALL_LILAC, (0, -s, 0))):
+                pa, pb, qa, qb = circ[i], circ[j], onsq(i), onsq(j)
+                _face(mb, [(pa[0], yy, pa[1]), (pb[0], yy, pb[1]), (qb[0], yy, qb[1]), (qa[0], yy, qa[1])], m_, wnt)
+            pa, pb = circ[i], circ[j]
+            mx, mz = (pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2
+            _face(mb, [(pa[0], yw, pa[1]), (pb[0], yw, pb[1]), (pb[0], yw - s * 0.3, pb[1]), (pa[0], yw - s * 0.3, pa[1])],
+                  WALL_LILAC, (cx - mx, 0, 17.2 - mz))
+
+
 def _turret(mb, cx, cy, r, angles, top=15.2, roof_h=8.6, hollow=False):
     """Round corner turret. hollow=True: the two lower storeys are built as a thick ring wall with real
     windows elsewhere (_girls_turrets_inside); here only the upper wall, rings and the roof."""
-    mb.lathe([(r, 13.0 if hollow else -4.0), (r, top)], WALL, 28, cap_top=False, cap_bottom=False, center=(cx, cy, 0.0))
+    if not hollow:
+        mb.lathe([(r, -4.0), (r, top)], WALL, 28, cap_top=False, cap_bottom=False, center=(cx, cy, 0.0))
     lathe_crisp(mb, [(r + 0.2, -4.0), (r + 0.2, G_FL + 0.3), (r + 0.05, G_FL + 0.45)], MARBLE, 28,
                 center=(cx, cy, 0.0))
     for z in G_BANDS:
@@ -3572,19 +4012,24 @@ def _turret(mb, cx, cy, r, angles, top=15.2, roof_h=8.6, hollow=False):
         if hollow:      # annular caps instead of discs, so the rooms inside stay free
             mb.slab_ring(circle(28, r + 0.1, cx, cy), circle(28, r, cx, cy), z - 0.14, z + 0.14, GTRIM)
     lathe_crisp(mb, [(r + 0.05, top - 0.9), (r + 0.2, top - 0.6), (r + 0.45, top - 0.35), (r + 0.45, top)],
-                GTRIM, 28, center=(cx, cy, 0.0), cap_bottom=True)
+                GTRIM, 28, center=(cx, cy, 0.0), cap_bottom=not hollow)
     mb.lathe([(r + 0.75, top - 0.05), (r + 0.5, top + 0.4), (r * 0.62, top + roof_h * 0.45),
-              (r * 0.2, top + roof_h * 0.88), (0.08, top + roof_h)], GROOF, 28, cap_bottom=True,
+              (r * 0.2, top + roof_h * 0.88), (0.08, top + roof_h)], GROOF, 28, cap_bottom=not hollow,
              center=(cx, cy, 0.0))
     finial(mb, cx, cy, top + roof_h - 0.15, 1.3)
     for a_deg in angles:
         a = math.radians(a_deg)
         with mb.at((cx + math.cos(a) * r, cy + math.sin(a) * r, 0.0), rot=a_deg + 90):
-            window(mb, 0.0, 1.85, 1.0, 2.6, GTRIM, arch=True, keystone=GTRIM, sill_mat=MARBLE, seg=6,
+            g = CLEAR if hollow else GLASS
+            window(mb, 0.0, 1.85, 1.0, 2.6, GTRIM, g, arch=True, keystone=GTRIM, sill_mat=MARBLE, seg=6,
                    rect_glass=not hollow)
-            window(mb, 0.0, 6.0, 1.0, 2.3, GTRIM, arch=True, sill_mat=MARBLE, seg=6, rect_glass=not hollow)
-            window(mb, 0.0, 10.0, 1.0, 2.0, GTRIM, arch=True, sill_mat=MARBLE, seg=6, rect_glass=not hollow)
-            window(mb, 0.0, 13.05, 0.8, 0.45, GTRIM, arch=True, sill_mat=MARBLE, seg=6, mullion=False)
+            window(mb, 0.0, 6.0, 1.0, 2.3, GTRIM, g, arch=True, sill_mat=MARBLE, seg=6, rect_glass=not hollow)
+            window(mb, 0.0, 10.0, 1.0, 2.0, GTRIM, g, arch=True, sill_mat=MARBLE, seg=6, rect_glass=not hollow)
+            window(mb, 0.0, 13.05, 0.8, 0.45, GTRIM, g, arch=True, sill_mat=MARBLE, seg=6, mullion=False,
+                   rect_glass=not hollow)
+            if hollow:          # arched heads are real openings too
+                for (zs, rr, T_) in ((4.45, 0.5, G_RT), (8.3, 0.5, G_RT), (12.0, 0.5, G_RT), (13.5, 0.4, G_RT)):
+                    _spandrels(mb, 0.0, zs, rr, T_, WALL, K.PLASTER_WHITE)
 
 
 def _bay_canted(mb, xc, yw, depth=1.4, wb=4.6, wf=2.8, z0=-1.0, z1=9.4):
@@ -3627,17 +4072,17 @@ def _girls_building(mb, nc, aset):
                  joins=[("w", 4.0, 26.0), ("e", 4.0, 26.0)])
     # ------------------------------------------------------------ roofs
     rh = 6.8
-    mb.hip_roof((0.0, (y0 + y1) / 2, G_TOP), x1 - x0, y1 - y0, rh, GROOF, overhang=0.8, thick=0.3)
+    dh = [(xd - 0.9, xd + 0.9, G_TOP - 0.01, G_TOP + 2.5) for xd in (-12.8, 12.8)]
+    _hip_roof_walk(mb, 0.0, (y0 + y1) / 2, G_TOP, x1 - x0, y1 - y0, rh, GROOF, 0.8, 0.3, {"s": dh, "n": dh})
     mb.box_mm((-11.0, 14.93, G_TOP + rh - 0.02), (11.0, 15.07, G_TOP + rh + 0.18), GOLD)
     gh = 6.0
-    mb.gable_roof((0.0, (py0 + py1) / 2, ptop), px1 - px0, py1 - py0, gh, GROOF, overhang=0.6, thick=0.3,
-                  gable_mat=WALL, ridge_axis="y")
+    _gable_roof_walk(mb, 0.0, py0, py1, px1 - px0, ptop, gh, GROOF, 0.6, 0.3)
     for (yw, rot) in ((py0, 0.0), (py1, 180.0)):
         with mb.at((0.0, yw, 0.0), rot=rot):
             for sx in (-1, 1):
                 mb.beam((sx * 7.1, -0.12, ptop - 0.05), (0.0, -0.12, ptop + gh - 0.38), 0.24, 0.3, GTRIM)
             pts = [(math.cos(TAU * i / 16) * 0.9, -0.03, 17.2 + math.sin(TAU * i / 16) * 0.9) for i in range(16)]
-            mb.poly(pts, GLASS)
+            mb.poly(pts, CLEAR)               # rose window of the attic studio (real opening, _gable_roof_walk)
             arc_band(mb, 0.0, 17.2, 0.9, 1.15, 0.0, TAU, 16, -0.14, 0.0, GTRIM)
             mb.box((0.0, -0.06, 17.2), (0.06, 0.05, 1.8), GTRIM, skip=("+y",))
             mb.box((0.0, -0.06, 17.2), (1.8, 0.05, 0.06), GTRIM, skip=("+y",))
@@ -3651,12 +4096,14 @@ def _girls_building(mb, nc, aset):
         _turret(mb, tx, ty, G_TURRET_R, angs, hollow=True)
     # dormers + chimneys
     for xd in (-12.8, 12.8):
+        wk = (WALL_ROSE, 4.67, G_C3, 0.5)
         with mb.at((xd, y0 - 0.1, 0.0)):
-            dormer(mb, 1.8, 2.5, 5.8, G_TOP, WALL, GROOF, GTRIM, arch=True, finial_mat=GOLD, head_mat=MARBLE)
+            dormer(mb, 1.8, 2.5, 5.8, G_TOP, WALL, GROOF, GTRIM, arch=True, finial_mat=GOLD, head_mat=MARBLE, walk=wk)
         with mb.at((xd, y1 + 0.1, 0.0), rot=180):
-            dormer(mb, 1.8, 2.5, 5.8, G_TOP, WALL, GROOF, GTRIM, arch=True, finial_mat=GOLD, head_mat=MARBLE)
+            dormer(mb, 1.8, 2.5, 5.8, G_TOP, WALL, GROOF, GTRIM, arch=True, finial_mat=GOLD, head_mat=MARBLE, walk=wk)
     for xc in (-15.0, 15.0):
-        chimney(mb, xc, 19.0, 15.5, 21.6, 1.0, 1.8, WALL, GTRIM)
+        chimney(mb, xc, 19.0, 16.05, 21.6, 1.0, 1.8, WALL, GTRIM)
+        mb.box_mm((xc - 0.5, 18.1, G_Z3), (xc + 0.5, 19.9, G_C3), WALL, skip=("-z", "+z"))   # chimney breast
 
     # ------------------------------------------------------------ facades
     fl = ("M_FlowerRed", "M_FlowerWhite")
@@ -4044,7 +4491,10 @@ G_C0 = 5.24
 G_C1 = 9.15
 G_Z2 = 9.5
 G_C2 = 12.85
-G_BANDS_INT = [(-0.3, 5.35, 0), (5.35, 9.2, 1), (9.2, 13.0, 2), (13.0, 99.0, None)]
+G_Z3, G_C3 = 13.15, 16.0         # attic storey under the hip roof (wings) and the pavilion's gable roof
+G_ZT, G_CT2 = 12.85, 12.55       # turret top rooms (floor) / second-floor turret ceiling under them
+G_HOLE3 = (-6.6, 18.9, -5.35, 22.45)    # stairwell second floor hall -> attic
+G_BANDS_INT = [(-0.3, 5.35, 0), (5.35, 9.2, 1), (9.2, 13.0, 2), (13.0, 99.0, 3)]
 G_HOLE = (-0.85, 20.1, 0.85, 24.16)     # stairwell music gallery -> second floor hall
 G_RT = 0.4           # turret wall thickness
 G_DOOR = "girls_inner"
@@ -4189,6 +4639,31 @@ def _turret_floor(mb, cx, cy, r_in, a0, a1, z, top, bottom=K.CEIL, ceiling=None,
             mb.box_mm((x0_, y0_, z - 0.3), (x1_, y1_, z), bottom, mats={"+z": top})
 
 
+def _turret_spiral_xy(tx, ty):
+    a0, a1 = G_TURRET_OPEN[(tx, ty)]
+    m = math.radians((a0 + a1) / 2)
+    return (tx + math.cos(m) * 1.75, ty + math.sin(m) * 1.75)
+
+
+def _turret_disc(mb, tx, ty, r_in, a0, a1, zb, zt, top, hole):
+    """Floor of a turret's top room over its outer sectors (a0..a1): top face at zt, ceiling face at zb below,
+    a square stair hole."""
+    rr = r_in + E_IN
+    a = a0
+    hl = [(hole[0], hole[2], hole[1], hole[3])]
+    while a < a1 - 1e-6:
+        b = min(a + 90.0, a1)
+        pts = [(tx, ty)] + [_ring_point(tx, ty, rr, 28, a + (b - a) * k / 7) for k in range(8)]
+        _face_holes(mb, [(p[0], p[1], zt) for p in pts], top, (0, 0, 1), 0, hl, axis2=1)
+        _face_holes(mb, [(p[0], p[1], zb) for p in pts], K.CEIL, (0, 0, -1), 0, hl, axis2=1)
+        a = b
+    x0, y0, x1, y1 = hole
+    for (p0, p1, n_) in (((x0, y0), (x1, y0), (0, 1)), ((x1, y0), (x1, y1), (-1, 0)), ((x1, y1), (x0, y1), (0, -1)),
+                         ((x0, y1), (x0, y0), (1, 0))):
+        _face(mb, [(p0[0], p0[1], zb), (p1[0], p1[1], zb), (p1[0], p1[1], zt), (p0[0], p0[1], zt)], K.TRIM_WHITE,
+              (n_[0], n_[1], 0))
+
+
 def _girls_turrets_inside(mb, R):
     """Hollow turret storeys: ring walls with real windows, floors and ceilings."""
     rooms = {(-22.0, 4.0): ("parlour", "wfb"), (22.0, 4.0): ("tea", "efb"), (-22.0, 26.0): ("library", "wbb"),
@@ -4199,18 +4674,32 @@ def _girls_turrets_inside(mb, R):
         qx, qy = (1 if tx < 0 else -1), (1 if ty < 10 else -1)
         r_in = G_TURRET_R - G_RT
         _ring_wall(mb, tx, ty, G_TURRET_R, G_RT, a0, a1, -0.3, 5.35, WALL, R[g0]["wall"],
-                   [(a, 1.0, 1.85, 4.45) for a in angs])
+                   [(a, 1.0, 1.85, 4.95) for a in angs])
         _ring_wall(mb, tx, ty, G_TURRET_R, G_RT, a0, a1, 5.35, 9.2, WALL, R[g1]["wall"],
-                   [(a, 1.0, 6.0, 8.3) for a in angs])
+                   [(a, 1.0, 6.0, 8.8) for a in angs])
         _turret_floor(mb, tx, ty, r_in, a0, a1, G_FL, R[g0]["floor"], qx=qx, qy=qy)
         _turret_floor(mb, tx, ty, r_in, a0, a1, G_C0, None, ceiling=K.CEIL, qx=qx, qy=qy)
         _turret_floor(mb, tx, ty, r_in, a0, a1, G_Z1, R[g1]["floor"], qx=qx, qy=qy)
         _turret_floor(mb, tx, ty, r_in, a0, a1, G_C1, None, ceiling=K.CEIL, qx=qx, qy=qy)
         g2 = g1 + "2"
         _ring_wall(mb, tx, ty, G_TURRET_R, G_RT, a0, a1, 9.2, 13.0, WALL, R[g2]["wall"],
-                   [(a, 1.0, 10.0, 12.0) for a in angs])
+                   [(a, 1.0, 10.0, 12.5) for a in angs])
         _turret_floor(mb, tx, ty, r_in, a0, a1, G_Z2, R[g2]["floor"], qx=qx, qy=qy)
-        _turret_floor(mb, tx, ty, r_in, a0, a1, G_C2, None, ceiling=K.CEIL, qx=qx, qy=qy)
+        # top storey: a lookout room in the turret (outer three quarters), up a spiral from the bedroom's alcove
+        _ring_wall(mb, tx, ty, G_TURRET_R, G_RT, a0, a1, 13.0, 15.2, WALL, WALL_LILAC,
+                   [(a, 0.8, 13.05, 13.9) for a in angs])
+        _ring_wall(mb, tx, ty, G_TURRET_R, G_RT, a1, a0 + 360.0, 13.0, 15.2, WALL, WALL_LILAC, [])
+        sc = _turret_spiral_xy(tx, ty)
+        hole = (sc[0] - 0.95, sc[1] - 0.95, sc[0] + 0.95, sc[1] + 0.95)
+        _turret_disc(mb, tx, ty, r_in, a0, a1, G_CT2, G_ZT, R[g2]["floor"], hole)
+        for (p0, p1) in (((tx, ty), (tx + qx * r_in, ty)), ((tx, ty), (tx, ty + qy * r_in))):
+            n_ = (0.0, -qy) if p1[1] == ty else (-qx, 0.0)
+            _attic_upright(mb, p0, p1, n_, G_ZT, 15.2, WALL_LILAC)
+            _attic_upright(mb, p0, p1, (-n_[0], -n_[1]), G_CT2, G_C2, K.CEIL)
+        mb.lathe([(G_TURRET_R - G_RT, 15.15), (G_TURRET_R * 0.55, 15.2 + 8.6 * 0.42), (0.15, 15.2 + 8.6 * 0.85)][::-1],
+                 K.PLASTER_SKY, 28, cap_top=False, cap_bottom=False, center=(tx, ty, 0.0))
+        K.spiral_stairs(mb, sc[0], sc[1], G_Z2, G_ZT, 0.08, 0.85, a0=0.0, step_deg=26.0, mat=K.TRIM_WHITE,
+                        core=GTRIM, rail=GTRIM)
 
 
 def _turret_angles(tx, ty):

@@ -254,11 +254,9 @@ def _shell(aset, mb):
     for sx in (-1, 1):
         inner = "M_LibWallpaper" if sx < 0 else "M_SalonWallpaper"
         toward_hall = "+x" if sx < 0 else "-x"
-        a, b = sorted((sx * X1, sx * 12.0))
-        mb.box_mm((a, Y0, FL), (b, Y1, CZ1), STONE, mats={toward_hall: inner, "+z": VOID})
         a, b = sorted((sx * 12.0, sx * HX))
         mb.box_mm((a, Y0, FL), (b, Y0 + WT, CZ1), STONE, mats={"+y": inner, "+z": VOID})          # front wall
-        mb.box_mm((a, HY1, FL), (b, Y1, CZ1), STONE, mats={"-y": inner, toward_hall: RITW, "+z": VOID})
+        _ground_ends_shell(aset, mb, sx, inner, toward_hall)
         _upper_wing_shell(aset, mb, sx, toward_hall)
         # hall <-> room partition with a real doorway
         if sx < 0:
@@ -304,6 +302,37 @@ def _shell(aset, mb):
     mb.wall((TX, HY0), (TX, Y0), FL, HZ1 - FL, 0.6, STONE, inner_mat=WALLP)
     _tower_shell(mb)
 
+
+GF_KIT = (4.6, 4.6, 12.0, Y1 - WT)          # behind the salon / library (east-wing coordinates, |x|)
+GF_A = (12.6, Y0 + WT, X1 - WT, -1.6)
+GF_B = (12.6, -1.45, X1 - WT, 3.6)
+GF_C = (12.6, 3.75, X1 - WT, Y1 - WT)
+GF_DOOR_SIDE = {1: 1.2, -1: -3.05}           # y of the doorway from the salon (east) / library (west)
+GF_DOOR_BACK = {1: 7.5, -1: 5.6}             # |x| of the doorway from the salon / library into the back room
+
+
+def _ground_ends_shell(aset, mb, sx, inner, toward_hall):
+    """The ground storey beyond the library / salon and behind them used to be solid: now four ruined rooms
+    per wing behind the (still boarded) windows."""
+    a, b = sorted((sx * 12.0, sx * X1))
+    mb.box_mm((a, Y0, FL), (b, Y0 + WT, CZ1), STONE, mats={"+y": U_WALL, "+z": VOID})
+    mb.box_mm((a, Y1 - WT, FL), (b, Y1, CZ1), STONE, mats={"-y": U_WALL, "+z": VOID})
+    g0, g1 = sorted((sx * (X1 - WT), sx * X1))
+    mb.box_mm((g0, Y0 + WT, FL), (g1, Y1 - WT, CZ1), STONE, mats={("-x" if sx > 0 else "+x"): U_WALL, "+z": VOID})
+    k0, k1 = sorted((sx * HX, sx * (HX + WT)))
+    mb.box_mm((k0, HY1, FL), (k1, Y1, CZ1), STONE, mats={toward_hall: RITW, ("+x" if sx > 0 else "-x"): U_WALL,
+                                                       "+z": VOID})
+    k0, k1 = sorted((sx * (HX + WT), sx * 12.0))
+    mb.box_mm((k0, Y1 - WT, FL), (k1, Y1, CZ1), STONE, mats={"-y": U_WALL, "+z": VOID})
+    h = CZ1 - FL
+    door = lambda u: K.Door(u, 0.95, 2.15, "abandoned", z0=FZ - FL, trim="M_DarkWood", trim_in="M_DarkWood")  # noqa
+    ys = GF_DOOR_SIDE[sx]
+    _mwall(aset, mb, sx, (12.0, HY1), (12.0, Y0 + WT), FL, h, WT, inner, U_WALL, [door(HY1 - ys)])
+    _mwall(aset, mb, sx, (12.0, Y1 - WT), (12.0, HY1), FL, h, WT, U_WALL, U_WALL, [door(Y1 - WT - 7.0)])
+    _mwall(aset, mb, sx, (HX + WT, HY1), (12.0, HY1), FL, h, WT, inner, U_WALL,
+           [door(GF_DOOR_BACK[sx] - (HX + WT))])
+    for y in (GF_A[3], GF_C[1] - 0.15):
+        _mwall(aset, mb, sx, (12.6, y), (X1 - WT, y), FL, h, 0.15, U_WALL, U_WALL, [door(14.0 - 12.6)])
 
 # ---------------------------------------------------------------- first floor (dorm corridor) + tower shells
 U_FZ, U_TOP = BED_Z, BED_TOP          # finished floor / ceiling of the first-floor dorm storey (gallery level)
@@ -1208,7 +1237,9 @@ PURPLE = (0.6, 0.4, 1.0)
 def _library(aset, mb, nc, rng):
     x0, y0, x1, y1 = LIB
     K.floor_planks(mb, x0, y0, x1, y1, FZ, mat="M_IntWoodFloorDark", seam=VOID, along="y")
-    _room_wainscot(mb, x0, y0, x1, y1, FZ, 1.0, gaps={"e": [(SDY - y0 - SDW / 2 - 0.12, SDY - y0 + SDW / 2 + 0.12)]})
+    _room_wainscot(mb, x0, y0, x1, y1, FZ, 1.0, gaps={"e": [(SDY - y0 - SDW / 2 - 0.12, SDY - y0 + SDW / 2 + 0.12)],
+                                                      "w": [(y1 - GF_DOOR_SIDE[-1] - 0.6, y1 - GF_DOOR_SIDE[-1] + 0.6)],
+                                                      "n": [(x1 + GF_DOOR_BACK[-1] - 0.6, x1 + GF_DOOR_BACK[-1] + 0.6)]})
     _beams(mb, x0, y0, x1, y1, CZ1)
     K.rug(nc, -11.0, -3.3, -8.6, 0.5, FZ, "M_Carpet", "M_TarnishedGold")
     # boarded windows of the front facade, seen from inside
@@ -1264,7 +1295,7 @@ def _library(aset, mb, nc, rng):
         mb.torus((0, 0, 1.08), 0.33, 0.02, "M_TarnishedGold", seg=14, tube_seg=4)
         mb.sphere((0, 0, 1.08), 0.3, "M_OldBookBlue", seg=12, rings=8)
         mb.sphere((0.05, -0.02, 1.12), 0.302, "M_OldPaper", seg=6, rings=4, scale=(0.6, 1.0, 0.7))
-    aset.prop("SM_Int_GrandfatherClock", (-5.55, y1 - 0.18, FZ), 0.0)
+    aset.prop("SM_Int_GrandfatherClock", (-5.75, y0 + 0.25, FZ), 180.0)
     mb.box((-11.5, -6.85, FZ + 0.5), (0.5, 0.5, 1.0), TRIM)
     aset.prop("SM_Int_Bust", (-11.5, -6.85, FZ + 1.0), 45.0)
     _cobwebs(nc, x0, y0, x1, y1, CZ1 - 0.28, rng)
@@ -1276,7 +1307,9 @@ def _library(aset, mb, nc, rng):
 def _salon(aset, mb, nc, rng):
     x0, y0, x1, y1 = SAL
     K.floor_planks(mb, x0, y0, x1, y1, FZ, mat="M_IntWoodFloorDark", seam=VOID)
-    _room_wainscot(mb, x0, y0, x1, y1, FZ, 1.0, gaps={"w": [(y1 - SDY - SDW / 2 - 0.12, y1 - SDY + SDW / 2 + 0.12)]})
+    _room_wainscot(mb, x0, y0, x1, y1, FZ, 1.0, gaps={"w": [(y1 - SDY - SDW / 2 - 0.12, y1 - SDY + SDW / 2 + 0.12)],
+                                                      "n": [(x1 - GF_DOOR_BACK[1] - 0.6, x1 - GF_DOOR_BACK[1] + 0.6)],
+                                                      "e": [(GF_DOOR_SIDE[1] - y0 - 0.6, GF_DOOR_SIDE[1] - y0 + 0.6)]})
     _beams(mb, x0, y0, x1, y1, CZ1, along="y")
     K.rug(nc, 6.0, -5.6, 10.8, -1.4, FZ, "M_Carpet", "M_TarnishedGold")
     for x in (6.9, 10.5):
@@ -1284,9 +1317,7 @@ def _salon(aset, mb, nc, rng):
     aset.light((8.7, y0 + 0.8, 2.6), MOON, 450.0, 6.0)
     # the portrait gallery: former dorm masters along the north wall, one frame left empty
     for k, x in enumerate((5.7, 7.5, 9.3, 11.0)):
-        if k == 1:   # this one is gone: only a pale patch on the wallpaper and the nail remain
-            nc.box((x, y1 - 0.004, FZ + 2.15), (0.95, 0.008, 1.25), "M_FadedWallpaper")
-            nc.box((x, y1 - 0.03, FZ + 2.9), (0.03, 0.06, 0.03), RUST)
+        if k == 1:   # (the doorway to the old kitchen is here now)
             continue
         _portrait(mb, nc, x, y1, FZ + 2.15, 0.0, 0.95, 1.25, eyes=(k == 2), tilt=(0.0, 0.0, 0.0, -9.0)[k])
     # the founder above the console on the east wall - with glowing eyes
@@ -2694,6 +2725,383 @@ def _keeper_desk(mb, nc, aset, x, y, z, rng):
         _candle(nc, 0.5, 0.2, 0.76, h=0.1)
 
 
+# ---------------------------------------------------------------- ground storey: the rooms beyond / behind the salon + library
+def _gf_rect(sx, r):
+    xa, xb = sorted((sx * r[0], sx * r[2]))
+    return xa, r[1], xb, r[3]
+
+
+def _gf_base(aset, mb, nc, rng, rect, wins, seed, wainscot=1.0, floor="M_IntWoodFloorDark"):
+    """Shared shell dressing: boards, wainscot (open at the doorways), beams, cobwebs, peeling paper, the boarded
+    windows from inside (moonlight through the gaps), a warm light."""
+    x0, y0, x1, y1 = rect
+    if floor == "tile":
+        mb.box_mm((x0, y0, FZ - 0.03), (x1, y1, FZ), "M_IntTileWhite", skip=("-z",))
+    else:
+        K.floor_planks(mb, x0, y0, x1, y1, FZ, mat=floor, seam=VOID, along="x" if (x1 - x0) > (y1 - y0) else "y")
+    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, FZ, CZ1, style="ruin", seed=seed)
+    gaps = {}
+    for (side, px, py, w) in DT._doors_on(aset, x0, y0, x1, y1, FZ):
+        u = {"s": px - x0, "e": py - y0, "n": x1 - px, "w": y1 - py}[side]
+        gaps.setdefault(side, []).append((u - w / 2 - 0.12, u + w / 2 + 0.12))
+    for (side, wx, wy) in wins:
+        u = {"s": wx - x0, "e": wy - y0, "n": x1 - wx, "w": y1 - wy}[side]
+        yaw = {"s": 180.0, "n": 0.0, "w": 90.0, "e": -90.0}[side]
+        _boarded_inside(mb, nc, wx, wy, yaw, 1.25, WIN_ROWS[0][0], WIN_ROWS[0][1], rng)
+        gaps.setdefault(side, []).append((u - 0.8, u + 0.8))
+    _room_wainscot(mb, x0, y0, x1, y1, FZ, wainscot, gaps=gaps)
+    _beams(mb, x0, y0, x1, y1, CZ1, step=1.9, along="x" if (x1 - x0) < (y1 - y0) else "y")
+    _cobwebs(nc, x0, y0, x1, y1, CZ1 - 0.28, rng, size=(0.5, 0.9))
+    for (p0, p1) in (((x0, y0), (x1, y0)), ((x1, y1), (x0, y1))):
+        _peel(nc, p0, p1, FZ + wainscot + 0.1, CZ1, rng, n=4)
+    if wins:
+        side, wx, wy = wins[0]
+        aset.light(K.wall_point(wx, wy, {"s": 180.0, "n": 0.0, "w": 90.0, "e": -90.0}[side], 0.8, 2.6), MOON, 350.0, 5.0)
+    return (x0 + x1) / 2, (y0 + y1) / 2
+
+
+def _jars(nc, x, y, yaw, levels, width, rng):
+    """Jars, crocks and tins on the boards of a shelf unit centred at (x, y), back at local +Y."""
+    with nc.at((x, y, 0.0), rot=yaw):
+        for z in levels:
+            u = -width / 2 + 0.08
+            while u < width / 2 - 0.08:
+                r = rng.uniform(0.04, 0.08)
+                if rng.random() < 0.8:
+                    nc.cylinder((u, 0.0, z), r, rng.uniform(0.1, 0.25), rng.choice(("M_IntGlassClear", "M_OldBrass",
+                                "M_OldBookBrown", "M_IntTrimWhite", RUST)), seg=8)
+                u += 2 * r + 0.04
+
+
+def _dresser(mb, nc, x, y, yaw, rng, w=1.2, h=2.0, d=0.45):
+    """Kitchen dresser / plate rack against a wall (back at local +Y): cupboard base, open rack with plates."""
+    with mb.at((x, y, FZ), rot=yaw), nc.at((x, y, FZ), rot=yaw):
+        mb.box((0, 0, 0.45), (w, d, 0.9), "M_DarkWood")
+        mb.box((0, d / 2 - 0.12, (0.9 + h) / 2), (w, 0.04, h - 0.9), "M_DarkWood")
+        for s_ in (-1, 1):
+            mb.box((s_ * (w / 2 - 0.02), d / 2 - 0.15, (0.9 + h) / 2), (0.04, 0.3, h - 0.9), "M_DarkWood")
+        for k in range(3):
+            zz = 1.2 + 0.3 * k
+            mb.box((0, d / 2 - 0.15, zz), (w, 0.3, 0.03), "M_DarkWood")
+            n = int((w - 0.1) / 0.2)
+            for j in range(n):
+                if rng.random() < 0.2:
+                    continue
+                nc.box((-w / 2 + 0.15 + 0.2 * j, d / 2 - 0.2, zz + 0.11), (0.2, 0.015, 0.2), "M_IntTrimWhite")
+        nc.box((0, -d / 2 - 0.005, 0.45), (w - 0.1, 0.01, 0.75), "M_IntWoodDark")
+
+def _range(mb, nc, x, y, yaw):
+    """Cast-iron kitchen range against a wall (back at +Y), with its hood and flue."""
+    with mb.at((x, y, FZ), rot=yaw), nc.at((x, y, FZ), rot=yaw):
+        mb.box((0, 0, 0.45), (1.6, 0.7, 0.9), "M_Black")
+        mb.box((0, 0, 0.92), (1.66, 0.74, 0.04), "M_DarkMetal")
+        for k in range(3):
+            nc.box((-0.5 + 0.5 * k, -0.355, 0.45), (0.38, 0.01, 0.3), "M_DarkMetal")
+            nc.box((-0.5 + 0.5 * k, -0.365, 0.62), (0.12, 0.02, 0.03), "M_TarnishedGold")
+        mb.box((0, 0.15, 2.0), (1.8, 0.5, 0.7), "M_DarkMetal")
+        mb.box((0, 0.3, 2.9), (0.4, 0.3, 1.2), "M_DarkMetal")
+        nc.cylinder((-0.4, 0.0, 0.94), 0.16, 0.2, "M_DarkMetal", seg=10)
+        nc.cylinder((0.35, -0.05, 0.94), 0.12, 0.14, RUST, seg=10)
+
+
+def _ground_rooms(aset, mb, nc, rng):
+    for sx in (1, -1):
+        kit, a_, b_, c_ = (_gf_rect(sx, r) for r in (GF_KIT, GF_A, GF_B, GF_C))
+        ox = sx * (X1 - WT)
+        # ---------------- behind the salon: the old KITCHEN (east) / behind the library: the LAUNDRY (west)
+        cx, cy = _gf_base(aset, mb, nc, rng, kit, [("n", sx * 6.0, Y1 - WT), ("n", sx * 10.0, Y1 - WT)], 80 + sx,
+                          floor="tile")
+        x0, y0, x1, y1 = kit
+        if sx > 0:
+            _range(mb, nc, 8.0, y1 - 0.36, 0.0)
+            with mb.at((0, 0, FZ)):
+                K.counter(mb, 4.62, y0 + 1.6, 5.22, y1 - 0.1, 0.9, "M_DarkWood", "M_OldStoneTrim")
+            for k, y in enumerate((6.6, 7.4, 8.2, 9.0)):
+                aset.prop(("SM_Int_Pot", "SM_Int_EnamelPot", "SM_Int_Jug", "SM_Int_Bowl")[k], (4.92, y, FZ + 0.9), 30 * k)
+            aset.prop("SM_Int_CuttingBoard", (4.92, 7.8, FZ + 0.9), 90.0)
+            _dresser(mb, nc, 11.72, 5.7, -90.0, rng)
+            for k in range(5):                                             # strings of onions and herbs
+                nc.box((6.4 + 0.25 * k, y1 - 0.06, CZ1 - 0.6), (0.06, 0.06, 0.8), ("M_OldBookBrown", "M_OldBookGreen")[k % 2])
+            with mb.at((8.4, 6.6, FZ)):                                   # scrubbed work table
+                mb.box((0, 0, 0.84), (2.2, 0.9, 0.08), "M_IntWood")
+                for xx in (-1.0, 1.0):
+                    for yy in (-0.38, 0.38):
+                        mb.box((xx, yy, 0.4), (0.08, 0.08, 0.8), "M_DarkWood")
+            DT.table_set(nc, aset, 8.4, 6.6, FZ + 0.88, 0.0, kind="kitchen", seed=3)
+            aset.prop("SM_Int_Stool", (7.6, 5.8, FZ), 20.0)
+            _toppled_chair(mb, (9.6, 5.5, FZ), 60.0, rng)
+            aset.prop("SM_Int_SteelShelves", (11.7, 8.6, FZ), -90.0)
+            _jars(nc, 11.7, 8.6, -90.0, [FZ + h for h in (0.08, 0.6, 1.12, 1.64)], 1.0, rng)
+            with nc.at((8.4, 6.6, CZ1 - 0.6)):                            # pot rack over the table
+                nc.box((0, 0, 0), (1.6, 0.04, 0.04), RUST)
+                for k in range(5):
+                    nc.cylinder((-0.6 + 0.3 * k, 0.0, -0.35), 0.1 - 0.01 * k, 0.16, ("M_TarnishedGold", RUST)[k % 2], seg=8)
+                    nc.box((-0.6 + 0.3 * k, 0.0, -0.1), (0.01, 0.01, 0.2), RUST)
+            for k in range(6):
+                rbox(nc, (rng.uniform(6.0, 10.5), rng.uniform(5.0, 6.0), FZ + 0.01), (0.12, 0.08, 0.01),
+                     "M_IntTrimWhite", yaw=rng.uniform(0, 180))           # broken plates
+            for (x, y) in ((9.9, y1 - 0.4), (10.45, y1 - 0.45)):
+                with mb.at((x, y, FZ)):
+                    mb.cylinder((0, 0, 0), 0.25, 0.55, "M_IntFabricBeige", seg=8)   # flour sacks
+            nc.box((8.0, 8.1, FZ + 0.006), (2.2, 1.1, 0.01), "M_Carpet")           # rag rug before the range
+            with nc.at((0, y1 - 0.04, 0), rot_x=90.0):
+                for k in range(6):
+                    nc.cylinder((9.1 + 0.36 * (k % 3), FZ + 1.35 + 0.42 * (k // 3), 0.0), 0.15 - 0.015 * k, 0.03,
+                                ("M_OldBrass", "M_TarnishedGold")[k % 2], seg=10)
+            with nc.at((6.7, y1 - 0.03, FZ + 1.5)):                        # the cook's chalk board
+                nc.box((0, 0, 0), (0.6, 0.02, 0.8), "M_IntChalkboard")
+                nc.box((0, -0.005, 0), (0.66, 0.012, 0.86), "M_DarkWood")
+            aset.prop("SM_Int_WallClock", (4.6, 5.4, FZ + 2.3), 90.0)
+            aset.prop("SM_Int_Cabinet", (9.9, 4.6 + 0.33, FZ), 180.0)
+            for zz in (1.55, 2.0):                                          # shelves over the counter
+                mb.box((4.74, 7.75, FZ + zz), (0.28, 3.0, 0.03), "M_DarkWood")
+                _jars(nc, 4.74, 7.75, 90.0, [FZ + zz + 0.015], 2.9, rng)
+            aset.prop("SM_Int_Kettle", (9.7, 4.85, FZ + 1.18), 20.0)
+            aset.prop("SM_Int_Jug", (10.2, 4.9, FZ + 1.18), 0.0)
+            for _ in range(10):
+                rbox(nc, (rng.uniform(5.6, 11.4), rng.uniform(5.0, 9.0), FZ + 0.004), (rng.uniform(0.3, 0.7),
+                     rng.uniform(0.2, 0.5), 0.004), rng.choice(("M_Soil", "M_OldPaper", "M_WaterStain")), yaw=rng.uniform(0, 180))
+            label, cam = "gf_kitchen", ((11.4, y0 + 0.4, FZ + 1.65), (6.5, y1 - 0.2, FZ + 1.1))
+        else:
+            for k, x in enumerate((-6.0, -8.3)):                      # copper wash coppers + tubs
+                mb.cylinder((x, y1 - 0.55, FZ), 0.45, 0.85, "M_OldBrass", seg=12)
+                nc.cylinder((x, y1 - 0.55, FZ + 0.75), 0.4, 0.02, "M_MurkyWater", seg=12)
+            mb.box((-10.6, y1 - 0.5, FZ + 0.4), (1.4, 0.7, 0.8), "M_OldStoneTrim")       # stone sink
+            nc.box((-10.6, y1 - 0.5, FZ + 0.79), (1.2, 0.5, 0.02), "M_MurkyWater")
+            with mb.at((-7.4, 6.3, FZ)):                               # mangle
+                for s_ in (-1, 1):
+                    mb.box((s_ * 0.35, 0, 0.55), (0.08, 0.5, 1.1), "M_DarkMetal")
+                for z_ in (0.8, 0.95):
+                    with mb.at((0, 0, z_), rot_y=90.0):
+                        mb.cylinder((0, 0, -0.32), 0.07, 0.64, "M_IntWood", seg=8)
+                mb.torus((0.45, 0, 1.0), 0.25, 0.02, "M_DarkMetal", seg=12, tube_seg=4)
+            with mb.at((-9.8, 6.0, FZ)):                               # ironing table
+                mb.box((0, 0, 0.82), (1.6, 0.5, 0.05), "M_IntWood")
+                for xx in (-0.6, 0.6):
+                    mb.box((xx, 0, 0.4), (0.06, 0.4, 0.8), "M_DarkWood")
+            nc.box((-9.6, 6.0, FZ + 0.85), (0.22, 0.12, 0.1), "M_Black")
+            nc.box((-10.1, 6.0, FZ + 0.85), (0.7, 0.45, 0.01), "M_DustSheet")
+            for k, yl in enumerate((5.4, 7.0, 8.4)):                       # lines of grey sheets still hanging
+                nc.box((-8.3, yl, CZ1 - 0.6), (7.0, 0.01, 0.01), "M_Black")
+                for j in range(3 + k % 2):
+                    xs_ = -5.4 - 1.5 * j - 0.4 * k
+                    if xs_ < -11.6:
+                        continue
+                    ln = rng.uniform(1.3, 2.0)
+                    nc.box((xs_, yl, CZ1 - 0.6 - ln / 2), (1.1, 0.02, ln), "M_DustSheet")
+            for (x, y) in ((-5.0, 7.8), (-11.6, 8.2), (-7.15, 8.2)):
+                aset.prop("SM_Int_Basket", (x, y, FZ), rng.uniform(0, 360))
+            aset.prop("SM_Int_Bucket", (-9.4, y1 - 0.4, FZ), 0.0)
+            aset.prop("SM_Int_Broom", (-11.65, 5.1, FZ), 90.0)
+            label, cam = "gf_laundry", ((-5.0, y0 + 0.4, FZ + 1.65), (-10.4, y1 - 0.8, FZ + 0.9))
+        aset.light((cx, cy, FZ + 2.2), WARM, 420.0, 6.0)
+        K.camera(aset, label, cam[0], cam[1], 16.0)
+        # ---------------- C (back): SCULLERY (east) / BOILER ROOM (west)
+        x0, y0, x1, y1 = c_
+        cx, cy = _gf_base(aset, mb, nc, rng, c_, [("n", sx * 14.0, Y1 - WT), ("n", sx * 18.0, Y1 - WT),
+                                                  ("e" if sx > 0 else "w", ox, 7.6)], 90 + sx, floor="tile")
+        if sx > 0:
+            for k, x in enumerate((14.0, 18.0)):                           # stone sinks under the windows
+                mb.box((x, y1 - 0.35, FZ + 0.4), (1.3, 0.65, 0.8), "M_OldStoneTrim")
+                nc.box((x, y1 - 0.35, FZ + 0.79), (1.1, 0.45, 0.02), "M_MurkyWater")
+            with mb.at((16.0, y1 - 0.25, FZ)):                             # hand pump
+                mb.cylinder((0, 0, 0.8), 0.08, 0.7, "M_DarkMetal", seg=8)
+                mb.beam((0, 0, 1.45), (0.0, -0.4, 1.6), 0.04, 0.04, "M_DarkMetal")
+            mb.box((x1 - 0.3, 5.6, FZ + 0.9), (0.55, 2.4, 0.04), "M_IntWood")       # draining board on brackets
+            for k in range(7):
+                nc.cylinder((x1 - 0.3, 4.7 + 0.3 * k, FZ + 0.92), 0.12, 0.02, "M_IntTrimWhite", seg=10)
+            aset.prop("SM_Int_Shelves", (13.0, y0 + 0.2, FZ), 180.0)
+            _jars(nc, 13.0, y0 + 0.2, 180.0, [FZ + 0.4, FZ + 0.75, FZ + 1.1], 0.45, rng)
+            for (y_a, y_b) in ((4.3, 6.3), (7.9, 9.2)):                    # plate racks on the west wall
+                _dresser(mb, nc, 12.85, (y_a + y_b) / 2, 90.0, rng, w=y_b - y_a, h=1.9, d=0.4)
+            nc.box((16.0, 6.6, CZ1 - 0.5), (3.0, 0.6, 0.04), "M_IntWood")        # drying rack with cloths
+            for k in range(6):
+                nc.box((14.8 + 0.48 * k, 6.6, CZ1 - 0.85), (0.35, 0.02, 0.6), ("M_DustSheet", "M_IntFabricWhite")[k % 2])
+            aset.prop("SM_Int_Cabinet", (16.8, y0 + 0.33, FZ), 180.0)
+            for zz in (1.75, 2.15):                                         # shelves over the cupboard
+                mb.box((16.8, y0 + 0.14, FZ + zz), (2.4, 0.26, 0.03), "M_DarkWood")
+                _jars(nc, 16.8, y0 + 0.14, 180.0, [FZ + zz + 0.015], 2.3, rng)
+            for (bx_, by_) in ((13.45, 8.0), (13.5, 8.65), (14.05, 8.3)):        # water barrels
+                mb.cylinder((bx_, by_, FZ), 0.28, 0.8, "M_IntWood", seg=10)
+                for zz in (0.15, 0.62):
+                    nc.cylinder((bx_, by_, FZ + zz), 0.29, 0.04, RUST, seg=10, cap_top=False, cap_bottom=False)
+            for k in range(4):                                             # aprons on pegs
+                nc.box((x1 - 0.03, 8.4 + 0.25 * k, FZ + 1.75), (0.05, 0.03, 0.03), RUST)
+                nc.box((x1 - 0.06, 8.4 + 0.25 * k, FZ + 1.35), (0.02, 0.22, 0.75), ("M_DustSheet", "M_IntFabricBlue")[k % 2])
+            for (x, y) in ((15.0, 5.3), (15.5, 5.2), (17.4, 6.0)):
+                aset.prop("SM_Int_Bucket", (x, y, FZ), rng.uniform(0, 90))
+            with mb.at((16.6, 6.2, FZ)):                                   # wash tub on a stand
+                for xx in (-0.4, 0.4):
+                    mb.box((xx, 0, 0.3), (0.06, 0.6, 0.6), "M_DarkWood")
+                mb.cylinder((0, 0, 0.6), 0.45, 0.3, "M_IntWood", seg=12, cap_top=False)
+            for x in (14.0, 18.0):                                         # duckboards in front of the sinks
+                for k in range(8):
+                    nc.box((x - 0.63 + 0.18 * k, y1 - 1.1, FZ + 0.03), (0.12, 0.8, 0.025), "M_IntWood")
+            for _ in range(6):
+                rbox(nc, (rng.uniform(13.2, 19.0), rng.uniform(4.3, 7.8), FZ + 0.004), (rng.uniform(0.5, 1.2),
+                     rng.uniform(0.4, 0.9), 0.004), rng.choice(("M_WaterStain", "M_Soil")), yaw=rng.uniform(0, 180))
+            label, cam = "gf_scullery", ((13.2, y0 + 0.35, FZ + 1.65), (18.4, y1 - 0.5, FZ + 1.1))
+        else:
+            with mb.at((-16.6, 7.4, FZ)), nc.at((-16.6, 7.4, FZ)):        # the boiler
+                with mb.at((0, 0, 0.9), rot_y=90.0):
+                    mb.cylinder((0, 0, -1.3), 0.85, 2.6, "M_RustMetal", seg=16)
+                mb.box((0, 0, 0.1), (2.8, 1.4, 0.2), "M_OldStoneTrim")
+                mb.box((1.45, 0, 0.9), (0.1, 0.8, 0.8), "M_DarkMetal")
+                nc.box((1.51, 0, 0.75), (0.02, 0.45, 0.35), "M_IntFire")
+                for k in range(3):
+                    nc.cylinder((-0.6 + 0.6 * k, -0.86, 1.4), 0.1, 0.03, "M_IntTrimWhite", seg=10)
+                mb.cylinder((-0.8, 0.0, 1.7), 0.15, CZ1 - FZ - 1.7, "M_DarkMetal", seg=8)
+            for k in range(3):                                             # pipes along the wall to the radiators
+                nc.box((-15.6, y1 - 0.12, FZ + 2.2 + 0.18 * k), (5.6, 0.1, 0.1), ("M_RustMetal", "M_DarkMetal", RUST)[k])
+            rubble(mb, (-13.4, 5.6), 0.6, 10, rng, mats=("M_Black", "M_DarkMetal"), zc=FZ, size=(0.1, 0.25))
+            aset.prop("SM_Int_Bucket", (-14.5, 5.2, FZ), 0.0)
+            aset.prop("SM_Int_Toolbox", (-18.9, 4.3, FZ), 30.0)
+            aset.prop("SM_Int_Broom", (-13.0, 4.1, FZ), 0.0)
+            nc.box((-14.3, 4.3, FZ + 0.6), (0.06, 0.06, 1.2), "M_IntWood")  # shovel
+            nc.box((-14.3, 4.3, FZ + 0.08), (0.25, 0.3, 0.02), "M_DarkMetal")
+            with mb.at((-18.7, 4.5, FZ)):                                  # coal bunker of boards
+                for k in range(4):
+                    mb.box((0.0, 0.7, 0.12 + 0.24 * k), (1.3, 0.05, 0.2), "M_DarkWood")
+                    mb.box((0.65, 0.0, 0.12 + 0.24 * k), (0.05, 1.4, 0.2), "M_DarkWood")
+                mb.box((0, 0, 0.3), (1.25, 1.35, 0.6), "M_Black")
+            for x in (-19.2, -12.85):                                      # risers to the floors above
+                nc.box((x, 8.8, (FZ + CZ1) / 2), (0.12, 0.12, CZ1 - FZ), "M_RustMetal")
+            with nc.at((-12.65, 5.5, FZ + 1.6), rot=-90.0):                # gauge panel
+                nc.box((0, -0.03, 0), (0.8, 0.06, 0.6), "M_DarkMetal")
+                for k in range(3):
+                    nc.box((-0.25 + 0.25 * k, -0.065, 0.05), (0.16, 0.01, 0.16), "M_IntTrimWhite")
+            aset.prop("SM_Int_MetalRack", (-15.2, y1 - 0.35, FZ), 0.0)
+            aset.prop("SM_Int_ToolCart", (-13.6, 8.6, FZ), 180.0)
+            aset.prop("SM_Int_HandTruck", (-18.9, 6.0, FZ), 90.0)
+            with nc.at((-12.65, 8.2, FZ + 1.5), rot=-90.0):                # tool board
+                nc.box((0, -0.02, 0), (1.2, 0.04, 0.8), "M_IntWood")
+                for k in range(6):
+                    nc.box((-0.45 + 0.18 * k, -0.06, 0.05 * (k % 2)), (0.04, 0.03, 0.5 - 0.05 * k), ("M_DarkMetal", RUST)[k % 2])
+            for k in range(4):                                             # pipes down to the floor
+                nc.box((-17.0 + 1.2 * k, y1 - 0.15, (FZ + CZ1) / 2), (0.1, 0.1, CZ1 - FZ), ("M_RustMetal", "M_DarkMetal")[k % 2])
+            aset.light((-15.07, 7.4, FZ + 0.8), (1.0, 0.45, 0.15), 500.0, 5.0)
+            for _ in range(8):                                             # coal dust tracked across the floor
+                rbox(nc, (rng.uniform(-19.0, -13.0), rng.uniform(4.2, 9.0), FZ + 0.004), (rng.uniform(0.5, 1.4),
+                     rng.uniform(0.4, 1.0), 0.004), "M_Black", yaw=rng.uniform(0, 180))
+            label, cam = "gf_boiler", ((-18.8, 5.6, FZ + 1.65), (-15.5, y1 - 0.6, FZ + 1.0))
+        aset.light((cx, cy, FZ + 2.2), WARM, 380.0, 6.0)
+        K.camera(aset, label, cam[0], cam[1], 16.0)
+        # ---------------- B (middle): the WARDEN'S OFFICE (east) / the NIGHT WATCHMAN'S ROOM (west)
+        x0, y0, x1, y1 = b_
+        cx, cy = _gf_base(aset, mb, nc, rng, b_, [("e" if sx > 0 else "w", ox, -1.2), ("e" if sx > 0 else "w", ox, 3.2)],
+                          100 + sx)
+        fr = _Fr(x0, y0, 0.0, x1 - x0, y1 - y0, FZ)
+        if sx > 0:
+            _old_desk(mb, nc, aset, fr, 3.6, 2.6, 0.0, rng, w=1.5, d=0.75, stuff="papers")
+            aset.prop("SM_Int_OfficeChair", (16.2, 0.4, FZ), 180.0 + 15.0)
+            aset.prop("SM_Int_Drawers", (18.6, y1 - 0.27, FZ), 0.0)
+            with mb.at((x1 - 0.3, -0.6, FZ)):                              # the safe, door ajar
+                mb.box((0, 0, 0.45), (0.6, 0.6, 0.9), "M_DarkMetal")
+                with mb.at((-0.3, -0.3, 0.0), rot=-50.0):
+                    mb.box((0.27, -0.03, 0.45), (0.54, 0.06, 0.84), "M_DarkMetal")
+            with mb.at((15.1, y1 - 0.19, FZ)), nc.at((15.1, y1 - 0.19, FZ)):
+                _old_bookcase(mb, nc, rng, w=1.0, fill=0.75)
+            K.bulletin(nc, aset, 16.55, y1, FZ + 1.2, 0.0, 1.0, 0.8, title="CURFEW 21:00", rng_seed=31)
+            with nc.at((17.0, y0 + 0.02, FZ + 1.6), rot=180.0):           # key board
+                nc.box((0, 0, 0), (0.7, 0.03, 0.5), "M_DarkWood")
+                for k in range(12):
+                    if k % 5 == 2:
+                        continue
+                    nc.box((-0.27 + 0.11 * (k % 6), -0.03, 0.12 - 0.22 * (k // 6)), (0.02, 0.01, 0.07), "M_TarnishedGold")
+            _portrait(mb, nc, x1, 0.6, FZ + 2.05, -90.0, 0.8, 1.0, eyes=True)
+            K.rug(nc, 14.4, -0.5, 18.2, 2.4, FZ + 0.004, "M_Carpet", "M_TarnishedGold")
+            for k, y in enumerate((-0.6, 2.4)):                            # certificates either side of the door
+                K.poster(nc, aset, 12.6, y, FZ + 1.7, 90.0, 0.45, 0.6, "M_OldPaper")
+            aset.prop("SM_Int_Cabinet", (x1 - 0.33, 1.0, FZ), -90.0)
+            for k in range(3):
+                DT.trophy(nc, x1 - 0.3, 0.6 + 0.4 * k, FZ + 1.18, 1.0, "M_TarnishedGold")
+            for k in range(4):
+                rbox(mb, (13.0, 3.2, FZ + 0.17 + 0.33 * k), (0.4, 0.32, 0.32), "M_IntFabricBeige", yaw=8 * k)
+            aset.prop("SM_Int_WoodChair", (15.0, 0.3, FZ), 35.0)
+            aset.prop("SM_Int_GreenChair", (17.6, -0.8, FZ), 200.0)
+            with mb.at((18.9, -1.0, FZ)):                                   # coat stand with the warden's coat
+                mb.cylinder((0, 0, 0), 0.2, 0.04, "M_DarkWood", seg=8)
+                mb.cylinder((0, 0, 0.04), 0.025, 1.75, "M_DarkWood", seg=6)
+                mb.box((0, 0.1, 1.2), (0.45, 0.12, 0.85), "M_Black")
+                mb.box((0, 0.0, 1.78), (0.3, 0.3, 0.12), "M_Black")
+            _papers(nc, 16.0, 0.6, FZ, 1.3, 7, rng)
+            label, cam = "gf_warden", ((13.1, y0 + 0.35, FZ + 1.65), (18.0, y1 - 0.9, FZ + 0.8))
+        else:
+            aset.prop("SM_Int_OldBed", (-18.9, 1.3, FZ), 0.0)
+            nc.box((-18.9, 1.3, FZ + 0.52), (0.8, 1.8, 0.1), "M_OldPaper")
+            nc.box((-18.9, 1.0, FZ + 0.6), (0.85, 1.0, 0.06), "M_IntFabricNavy")
+            aset.prop("SM_Int_Stove", (-13.0, 3.15, FZ), 180.0)
+            aset.prop("SM_Int_Kettle", (-13.0, 3.15, FZ + 0.86), 30.0)
+            aset.prop("SM_Int_SmallTable", (-16.0, 3.25, FZ), 180.0)
+            aset.prop("SM_Int_Lantern", (-15.7, 3.25, FZ + 0.53), 0.0)
+            aset.prop("SM_Int_AlarmClock", (-16.3, 3.25, FZ + 0.53), 160.0)
+            DT.paper_stack(nc, -16.05, 3.2, FZ + 0.53, 10.0, 6, 4)
+            aset.prop("SM_Int_RockingChair", (-15.6, 2.2, FZ), 160.0)
+            DT.coat_hooks(nc, -16.4, y0, FZ + 1.75, 180.0, n=3, dorm="white", jackets=1, seed=7)
+            aset.prop("SM_Int_Boots", (-16.4, y0 + 0.3, FZ), 180.0)
+            aset.prop("SM_Int_WallClock", (x0, 1.0, FZ + 2.3), 90.0)
+            with mb.at((-17.6, y0 + 0.19, FZ), rot=180.0), nc.at((-17.6, y0 + 0.19, FZ), rot=180.0):
+                _old_bookcase(mb, nc, rng, w=1.0, h=1.6, shelves=4, fill=0.6)
+            K.rug(nc, -17.8, -0.6, -14.2, 2.2, FZ + 0.004, "M_Carpet", "M_TarnishedGold")
+            _papers(nc, -15.0, 0.4, FZ, 1.2, 6, rng)
+            label, cam = "gf_watchman", ((-13.1, y0 + 0.35, FZ + 1.65), (-18.4, y1 - 0.9, FZ + 0.8))
+        aset.light((cx, cy, FZ + 2.2), WARM, 380.0, 6.0)
+        K.camera(aset, label, cam[0], cam[1], 16.0)
+        # ---------------- A (front): the COMMON ROOM (east) / the OLD DINING ROOM (west)
+        x0, y0, x1, y1 = a_
+        cx, cy = _gf_base(aset, mb, nc, rng, a_, [("s", sx * 14.1, Y0 + WT), ("s", sx * 17.7, Y0 + WT),
+                                                  ("e" if sx > 0 else "w", ox, -5.6)], 110 + sx)
+        if sx > 0:
+            _cold_fireplace(mb, nc, x1, -3.6, -90.0, rng)
+            _portrait(mb, nc, x1, -3.6, FZ + 2.35, -90.0, 0.9, 1.0)
+            _sheeted(mb, 16.8, -3.6, FZ, 90.0, 2.0, 0.9, 0.85, kind="sofa")
+            _sheeted(mb, 17.8, -5.6, FZ, 20.0, 0.9, 0.85, 0.95)
+            with mb.at((15.0, -5.4, FZ)):                                  # billiard table (dust sheet half off)
+                mb.box((0, 0, 0.7), (2.6, 1.45, 0.16), "M_DarkWood")
+                mb.box((0, 0, 0.785), (2.4, 1.25, 0.01), "M_IntFabricGreen")
+                for xx in (-1.15, 1.15):
+                    for yy in (-0.6, 0.6):
+                        mb.box((xx, yy, 0.31), (0.14, 0.14, 0.62), "M_DarkWood")
+                rbox(mb, (0.5, 0.1, 0.8), (1.8, 1.6, 0.02), "M_DustSheet", yaw=8.0)
+            for k in range(4):
+                nc.sphere((14.3 + 0.12 * k, -5.6 + 0.05 * k, FZ + 0.82), 0.03, ("M_IntTrimWhite", "M_IntFabricRed")[k % 2],
+                          seg=6, rings=4)
+            nc.box((14.6, -4.9, FZ + 0.8), (1.4, 0.02, 0.02), "M_IntWood")
+            aset.prop("SM_Int_Dartboard", (13.0, y1, FZ + 1.6), 0.0)
+            aset.prop("SM_Int_CoffeeTableB", (15.2, -2.7, FZ), 0.0)
+            DT.card_spread(nc, 15.2, -2.7, FZ + 0.39, 0.0, 5, 21)
+            aset.prop("SM_Int_GrandfatherClock", (12.85, -5.0, FZ), 90.0)
+            for k, y in enumerate((-6.6, -3.6, -2.4)):
+                _portrait(mb, nc, 12.6, y, FZ + 1.95 + 0.1 * (k % 2), 90.0, 0.7, 0.9, eyes=(k == 1), tilt=rng.uniform(-6, 6))
+            with mb.at((14.2, -2.1, FZ)):                                  # standard lamp, shade torn
+                mb.cylinder((0, 0, 0), 0.18, 0.03, "M_TarnishedGold", seg=8)
+                mb.cylinder((0, 0, 0.03), 0.015, 1.5, "M_TarnishedGold", seg=6)
+                mb.cylinder((0, 0, 1.45), 0.25, 0.3, "M_DustSheet", seg=10, radius_top=0.15, cap_top=False, cap_bottom=False)
+            aset.prop("SM_Int_Radio", (13.0, -6.9, FZ), 45.0)
+            with mb.at((18.6, y1 - 0.19, FZ)), nc.at((18.6, y1 - 0.19, FZ)):
+                _old_bookcase(mb, nc, rng, w=1.0, fill=0.6)
+            label, cam = "gf_common", ((13.0, y1 - 0.4, FZ + 1.65), (18.4, -6.4, FZ + 0.8))
+        else:
+            for k, y in enumerate((-5.9, -3.1)):                           # two long tables, chairs pushed back
+                aset.prop("SM_Int_DiningTable", (-16.0, y, FZ), 0.0)
+                for j, dx in enumerate((-0.75, 0.0, 0.75)):
+                    for s_ in (-1, 1):
+                        if (j + k + (s_ > 0)) % 4 == 1:
+                            continue
+                        aset.prop("SM_Int_DiningChair", (-16.0 + dx, y + s_ * 0.95, FZ),
+                                  (180.0 if s_ < 0 else 0.0) + rng.uniform(-15, 15))
+                DT.table_set(nc, aset, -16.0, y, FZ + 0.88, 0.0, kind="dining", seats=4, seed=40 + k, length=1.6)
+            _toppled_chair(mb, (-13.8, -4.5, FZ), 140.0, rng)
+            aset.prop("SM_Int_Cabinet", (-19.4 + 0.33, -4.5, FZ), 90.0)
+            aset.prop("SM_Int_Candelabra", (-19.4 + 0.33, -4.5, FZ + 1.18), 90.0)
+            _candles(nc, -19.05, -4.1, FZ + 1.18, rng, 2)
+            for k, x in enumerate((-17.8, -15.6)):
+                _portrait(mb, nc, x, y1, FZ + 2.0, 0.0, 0.8, 1.0, eyes=(k == 0))
+            _hanging_chandelier(mb, -16.0, -4.5, CZ1, tilt=6.0)
+            label, cam = "gf_dining", ((-13.0, y1 - 0.4, FZ + 1.65), (-18.6, -6.6, FZ + 0.8))
+        aset.light((cx, cy, FZ + 2.2), WARM, 420.0, 6.5)
+        K.camera(aset, label, cam[0], cam[1], 16.0)
+
 def _interiors(aset, mb, nc):
     rng = random.Random(4242)   # separate stream: the exterior keeps its own random sequence
     _library(aset, mb, nc, rng)
@@ -2702,6 +3110,7 @@ def _interiors(aset, mb, nc):
     _dorm_room(aset, mb, nc, rng)
     _upper_floor(aset, mb, nc, rng)
     _tower_rooms(aset, mb, nc, rng)
+    _ground_rooms(aset, mb, nc, random.Random(99))
 
 
 def _ivy(nc, rng):
