@@ -33,7 +33,7 @@ palette.register({
 WALL = "M_WhiteWall"
 CONC = "M_Concrete"
 FRAME = "M_WindowFrame"
-GLASS = "M_Glass"
+GLASS = "M_GlassClear"         # real glazing: the court is seen through the front, clerestories and skylight
 ROOF = "M_GymRoof"
 CEIL = "M_GymCeiling"
 LINE = "M_CourtLine"
@@ -720,6 +720,7 @@ def _sockets(aset, rng):
 
 # ---------------------------------------------------------------- detail pass: rooms, gallery, court
 ZG = FLG + AH + 0.25          # top of the annex roofs = floor of the upper galleries
+FG_Y1 = -11.2                 # front gallery (behind the curtain wall's middle row) inner edge
 
 
 def _ball_cart(mb, nc, x, y, yaw, mats=("M_IntFabricOrange", "M_IntFabricWhite", "M_IntFabricYellow"), r=0.12):
@@ -1021,13 +1022,14 @@ def _gallery(aset, mb, nc, rng, sx):
     # railing along the gallery edge and the end, leaving the landing open
     xa = sx * (AX + 0.85)
     mb.railing([(xa, y1 - 0.04, z), (sx * (GX1 - WT - 0.05), y1 - 0.04, z)], 1.05, "M_Metal", post_spacing=1.6)
-    mb.railing([(sx * (AX + 0.04), y1 - 0.04, z), (sx * (AX + 0.04), y0 + 0.05, z)], 1.05, "M_Metal", post_spacing=1.2)
+    # end rail only beside the stair landing: the rest of the end opens onto the front gallery over the foyer
+    mb.railing([(sx * (AX + 0.04), y1 - 0.04, z), (sx * (AX + 0.04), FG_Y1 + 0.05, z)], 1.05, "M_Metal", post_spacing=0.6)
     for k in range(int((hi - lo - 1.0) / 0.12)):
         xx = xa + sx * 0.12 * (k + 1)
         if abs(xx) < GX1 - WT - 0.1:
             nc.box((xx, y1 - 0.04, z + 0.55), (0.015, 0.015, 0.95), "M_Metal")
-    for k in range(int((y1 - y0) / 0.12)):
-        nc.box((sx * (AX + 0.04), y0 + 0.12 * (k + 0.5), z + 0.55), (0.015, 0.015, 0.95), "M_Metal")
+    for k in range(int((y1 - FG_Y1) / 0.12)):
+        nc.box((sx * (AX + 0.04), FG_Y1 + 0.12 * (k + 0.5), z + 0.55), (0.015, 0.015, 0.95), "M_Metal")
     if sx < 0:
         # team lounge: spectator chairs at the rail, sofa, easel board, cooler table, kit bags
         for k in range(5):
@@ -1217,6 +1219,72 @@ def _court_more(aset, mb, nc, rng):
         aset.prop("SM_Int_Extinguisher", (x, y, z), a)
 
 
+def _front_gallery(aset, mb, nc, rng):
+    """Upper foyer: the curtain wall's middle row is a real storey - a gallery bridging both annex galleries
+    behind the glass, over a foyer (reception) at the entrance. Floor at ZG, 1.4-2.4 m deep."""
+    z = ZG
+    y0 = GY0 + WT
+    # slab with a notch in front of the 3.6 m entrance opening (the door head stays clear)
+    for (a, b, c, d) in ((-AX, y0, -3.2, FG_Y1), (3.2, y0, AX, FG_Y1), (-3.2, -12.6, 3.2, FG_Y1)):
+        mb.box_mm((a, b, z - 0.22), (c, d, z), "M_Concrete", mats={"+z": "M_GalleryFloor", "-z": K.CEIL})
+    mb.railing([(-3.2, -12.6, z), (3.2, -12.6, z)], 1.05, "M_Metal", post_spacing=1.0)
+    for x in (-3.2, 3.2):
+        mb.railing([(x, y0 + 0.05, z), (x, -12.6, z)], 1.05, "M_Metal", post_spacing=0.5)
+    mb.railing([(-AX, FG_Y1 + 0.03, z), (AX, FG_Y1 + 0.03, z)], 1.05, "M_Metal", post_spacing=1.6)
+    for k in range(int(2 * AX / 0.12)):
+        nc.box((-AX + 0.12 * (k + 0.5), FG_Y1 + 0.03, z + 0.55), (0.015, 0.015, 0.95), "M_Metal")
+    for x in (-11.0, -5.0, 5.0, 11.0):                     # columns
+        mb.box((x, FG_Y1 + 0.25, (FLG + z) / 2), (0.3, 0.3, z - FLG), "M_Concrete")
+    # foyer ceiling lights under the gallery
+    for x in (-13.0, -8.0, 8.0, 13.0):
+        K.panel_light(aset, nc, x, -12.4, z - 0.22, w=1.2, d=0.3, intensity=2500.0, radius=7.0)
+    # on the gallery: spectator benches at the rail, trophy cases against the glass, plants, a welcome banner
+    for x in (-14.0, -9.5, 9.5, 14.0):
+        with mb.at((x, FG_Y1 - 0.55, z)):
+            for s_ in (-1, 1):
+                mb.box((s_ * 0.7, 0, 0.21), (0.06, 0.38, 0.42), K.METAL)
+            for k in range(3):
+                mb.box((0, -0.12 + 0.12 * k, 0.44), (1.6, 0.1, 0.03), K.WOOD)
+    for x in (-12.0, -6.5, 6.5, 12.0):
+        with mb.at((x, y0 + 0.35, z)), nc.at((x, y0 + 0.35, z)):
+            mb.box((0, 0, 0.35), (1.6, 0.45, 0.7), K.WOOD)
+            nc.box((0, 0, 1.05), (1.56, 0.41, 0.7), "M_IntGlassClear")
+            mb.box((0, 0, 1.42), (1.62, 0.47, 0.04), K.WOOD)
+            for k in range(4):
+                _trophy(nc, -0.55 + 0.37 * k, 0.0, 0.7, (1.0, 1.5, 1.2, 0.9)[k], ("M_Gold", "M_Metal")[k % 2])
+    for x in (-15.6, -3.6, 3.6, 15.6):
+        aset.prop("SM_Int_PottedPlantB", (x, y0 + 0.45, z), rng.uniform(0, 360))
+    nc.box((0.0, FG_Y1 + 0.06, z + 0.75), (5.0, 0.02, 0.6), "M_AcademyBlue")
+    aset.text("WELCOME TO THE DUEL GYM", (0.0, FG_Y1 + 0.09, z + 0.67), 180.0, size=0.26, color=(1, 1, 1))
+    _table(mb, nc, -1.5, -11.9, z, 0.0, 1.0, 0.6)
+    aset.prop("SM_Int_PlasticChair", (-1.5, -12.4, z), 180.0)
+    DT.card_spread(nc, -1.5, -11.9, z + 0.74, 0.0, 5, 8)
+    DT.deck_box(nc, -1.15, -11.75, z + 0.74, 20.0, "M_IntFabricBlue")
+    aset.light((-9.0, -12.4, z + 2.4), (1.0, 0.96, 0.9), 2200.0, 8.0)
+    aset.light((9.0, -12.4, z + 2.4), (1.0, 0.96, 0.9), 2200.0, 8.0)
+    K.camera(aset, "front_gallery_1f", (-15.8, -11.7, z + 1.65), (-2.0, -12.8, z + 0.7), 18.0)
+    # foyer below: entrance mats, a directory board, umbrella stand, benches, reception dressing
+    nc.box((0.0, -12.9, FLG + 0.008), (5.0, 1.2, 0.012), "M_DarkMetal")
+    for k in range(20):
+        nc.box((-2.4 + 0.25 * k, -12.9, FLG + 0.016), (0.05, 1.15, 0.004), "M_Black")
+    with mb.at((4.6, -12.2, FLG), rot=-20.0):
+        mb.box((0, 0, 1.2), (1.1, 0.08, 1.4), "M_AcademyBlue")
+        for s_ in (-1, 1):
+            mb.box((s_ * 0.5, 0, 0.5), (0.06, 0.06, 1.0), K.METAL)
+    aset.text("GYM DIRECTORY", (4.6 + 0.0, -12.2 - 0.05, FLG + 1.65), -20.0, size=0.1, color=(1, 1, 1))
+    for k, line in enumerate(("OFFICE / STORE  <-", "LOCKERS / SHOWERS  ->", "GALLERY  UP")):
+        aset.text(line, (4.6 + 0.017 * (k + 1), -12.25, FLG + 1.45 - 0.17 * k), -20.0, size=0.07, color=(1, 1, 1))
+    nc.cylinder((-3.7, -13.3, FLG), 0.15, 0.5, K.METAL, seg=10, cap_top=False)
+    for k in range(3):
+        rbox(nc, (-3.7 + 0.04 * (k - 1), -13.3, FLG + 0.5), (0.03, 0.03, 0.9), ("M_AcademyRed", "M_Black", "M_AcademyBlue")[k],
+             pitch=(k - 1) * 6)
+    for x in (9.8, 12.8):
+        aset.prop("SM_Int_Bench", (x, -13.25, FLG), 180.0)
+    DT.paper_stack(nc, -7.0, -12.0, FLG + 1.16, 0.0, 4, 2)
+    aset.prop("SM_Int_Register", (-8.6, -12.0, FLG + 1.16), 180.0)
+    aset.prop("SM_Int_PottedPlant", (-5.9, -12.05, FLG + 1.16), 0.0)
+    K.camera(aset, "foyer_gf", (8.0, -11.5, FLG + 1.65), (-8.0, -12.9, FLG + 1.0), 18.0)
+
 def _detail_pass(aset, rng):
     mb, nc = aset.mesh("Gym_Annex"), aset.mesh("Gym_Annex_NoCol")
     _office_more(aset, mb, nc, rng)
@@ -1227,6 +1295,7 @@ def _detail_pass(aset, rng):
     _first_aid(aset, inner, inc, rng)
     for sx in (-1, 1):
         _gallery(aset, mb, nc, rng, sx)
+    _front_gallery(aset, inner, inc, rng)
     _court_more(aset, inner, inc, rng)
 
 

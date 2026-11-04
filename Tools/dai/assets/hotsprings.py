@@ -1043,7 +1043,8 @@ def _washplace(mb, rng):
         x = -13.8 + k * 1.75
         mb.box((x, y - 0.04 + 0.08, BFL + 0.75), (0.05, 0.16, 0.05), "M_Metal")
         mb.box((x, y + 0.14, BFL + 0.72), (0.04, 0.04, 0.1), "M_Metal")
-        mb.box((x, y + 0.05, BFL + 1.25), (0.5, 0.04, 0.6), "M_Glass")
+        mb.box((x, y + 0.05, BFL + 1.25), (0.5, 0.04, 0.6), "M_IntMetal")          # mirror (not a window)
+        mb.box((x, y + 0.04, BFL + 1.25), (0.56, 0.03, 0.66), "M_IntTrimWhite")
         if k < 4:
             stool(mb, (x, y + 1.3, DECK), rng.uniform(-10, 10))
             bucket(mb, (x + 0.25, y + 0.35, DECK + 0.62), r=0.14, h=0.2)

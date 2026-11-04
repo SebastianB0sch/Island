@@ -196,9 +196,9 @@ def _shards(mb, u, z0, w, h, rng):
     x0, x1, za, zb = u - w / 2, u + w / 2, z0, z0 + h
     y = -0.05
     s1, s2 = w * rng.uniform(0.25, 0.45), h * rng.uniform(0.15, 0.3)
-    mb.poly([(x0, y, za), (x0 + s1, y, za), (x0, y, za + s2)], "M_Glass")
-    mb.poly([(x1, y, zb), (x1 - s1 * 0.8, y, zb), (x1, y, zb - s2 * 1.3)], "M_Glass")
-    mb.poly([(x0, y, zb), (x0, y, zb - s2), (x0 + s1 * 0.6, y, zb)], "M_Glass")
+    mb.poly([(x0, y, za), (x0 + s1, y, za), (x0, y, za + s2)], "M_GlassClear")
+    mb.poly([(x1, y, zb), (x1 - s1 * 0.8, y, zb), (x1, y, zb - s2 * 1.3)], "M_GlassClear")
+    mb.poly([(x0, y, zb), (x0, y, zb - s2), (x0 + s1 * 0.6, y, zb)], "M_GlassClear")
 
 
 def facade_trim(mb, origin, yaw, length, courses=(), cornice=None, quoins=(0.6, 11.4), q_ends=(True, True)):
@@ -276,8 +276,7 @@ def _shell(aset, mb):
            openings=[K.Door(HX, 2.2, 3.0, "abandoned", double=True, swing="in", trim_in="M_DarkWood")])
     K.wall(aset, mb, (HX, Y1), (-HX, Y1), CZ1, BED_TOP - CZ1, WT, STONE, inner=WALLP)
     mb.box_mm((-HX, HY1 + WT, CZ1), (HX, Y1 - WT, BED_Z - 0.015), ROT, mats={"-z": ROT})      # floor slab
-    mb.box_mm((-HX, HY1, BED_TOP), (HX, Y1, EAVE), STONE, mats={"-y": WALLP, "-z": ROT, "+z": VOID})
-    mb.box_mm((-HX, TY1, HZ1), (HX, HY1, EAVE), STONE, mats={"-z": ROT, "+z": VOID})
+    _centre_shell(aset, mb)
     # wall plates closing the gap between wall top and roof underside
     zp = ROOF_Z + (Y0 - EAVE_YF) * TAN
     for (a, b) in ((X0 + 0.01, -TX), (TX, X1 - 0.01)):      # (not through the tower rooms)
@@ -314,8 +313,13 @@ U_PARTS = (8.3, 12.0, 15.7)            # cross partitions (|x|), 0.15 thick towa
 U_ROOMS = ((4.6, 8.3), (8.45, 12.0), (12.15, 15.7), (15.85, 19.4))   # |x| spans of the rooms
 U_WALL, U_CWALL, U_CEIL = "M_RuinWall", "M_RuinCorridorWall", "M_RuinCeiling"
 WIN_FRONT = (6.9, 10.5, 14.1, 17.7)    # |x| of the first-floor front windows
-WIN_BACK = (6.0, 10.0, 14.0)           # |x| of the back windows (18 belongs to the nailed-up stairwell)
-WIN_GABLE = (-5.6, -1.2, 3.2)          # y of the gable windows (7.6 = stairwell)
+WIN_BACK = (6.0, 10.0, 14.0, 18.0)     # |x| of the back windows (18 = the stairwell bay)
+WIN_GABLE = (-5.6, -1.2, 3.2, 7.6)     # y of the gable windows (7.6 = the stairwell bay)
+T_FZ, T_TOP = 7.85, 11.0               # second floor (behind the 8.6 m window row): finished floor / ceiling
+T_WB = T_FZ - 0.03
+FL2 = dict(fz=U_FZ, top=U_TOP, row=1, tag="")
+FL3 = dict(fz=T_FZ, top=T_TOP, row=2, tag="_3f")
+STAIR_LAND = 4.65                      # stairwell bay: top landing strip y 4.0 .. 4.65, flights beyond
 TFL = (HZ1 + 0.2, 11.8, 15.6)          # tower floors: store room, keeper's room, clockwork room
 TCEIL = (11.6, 15.4, 19.5)
 TIN = (-TX + 0.6, TY0 + 0.6, TX - 0.6, TY1 - 0.6)   # tower inner faces (x0, y0, x1, y1)
@@ -347,39 +351,63 @@ def _mwall(aset, mb, sx, p0, p1, z0, h, thick, mat, inner=None, openings=(), pla
 
 
 def _upper_wing_shell(aset, mb, sx, toward_hall):
-    """The first floor of a wing used to be one solid block - now: floor slab, outer walls with real window
-    openings, the corridor + room partitions, and the solid second floor above (its windows stay dark)."""
+    """The upper storeys of a wing used to be one solid block - now two walkable dorm floors (first floor at the
+    gallery level, second floor behind the 8.6 m window row): slabs, outer walls with real window openings, the
+    corridor + room partitions, and the stairwell bay (B4) that links them."""
     a, b = sorted((sx * X1, sx * HX))
     mb.box_mm((a, Y0, CZ1), (b, Y1, U_WB), STONE, mats={toward_hall: WALLP, "-z": ROT})            # floor slab
     a2 = sorted((sx * X1, sx * (HX + WT)))
-    mb.box_mm((a2[0], Y0, U_TOP), (a2[1], Y1, EAVE), STONE, mats={"+z": VOID, "-z": U_CEIL})       # 2nd floor
     a3 = sorted((sx * HX, sx * (HX + WT)))
-    mb.box_mm((a3[0], TY1, U_TOP), (a3[1], Y1, EAVE), STONE, mats={toward_hall: WALLP, "+z": VOID, "-z": U_CEIL})
+    s0, s1 = sorted((sx * U_ROOMS[3][0], sx * U_ROOMS[3][1]))                                       # stairwell bay
+    # slab between the floors (open over the stairwell flights), the solid roof-plate block above the 2nd floor
+    K.slab(mb, a2[0], Y0, a2[1], Y1, T_WB, T_WB - U_TOP, STONE, bottom=U_CEIL, side=ROT,
+           holes=[(s0, STAIR_LAND, s1, Y1 - WT)])
+    mb.box_mm((a3[0], TY1, U_TOP), (a3[1], Y1, T_WB), STONE, mats={toward_hall: WALLP, "-z": U_CEIL})
+    mb.box_mm((a2[0], Y0, T_TOP), (a2[1], Y1, EAVE), STONE, mats={"+z": VOID, "-z": U_CEIL})
+    mb.box_mm((a3[0], TY1, T_TOP), (a3[1], Y1, EAVE), STONE, mats={toward_hall: WALLP, "+z": VOID, "-z": U_CEIL})
     mb.box_mm((a3[0], Y0, U_TOP), (a3[1], TY1, HZ1), STONE, mats={toward_hall: WALLP, "-z": U_CEIL})
-    h = U_TOP - U_WB
-    wz0, wz1 = WIN_ROWS[1][0] - U_WB, WIN_ROWS[1][0] + WIN_ROWS[1][1] - U_WB
     xo = HX + WT
-    # outer walls (east-wing coordinates, mirrored for the west wing)
-    _mwall(aset, mb, sx, (xo, Y0), (X1, Y0), U_WB, h, WT, STONE, U_WALL,
-           [dict(u=x - xo, w=1.25, z0=wz0, z1=wz1) for x in WIN_FRONT], plain=True)
-    _mwall(aset, mb, sx, (X1, Y1), (xo, Y1), U_WB, h, WT, STONE, U_WALL,
-           [dict(u=X1 - x, w=1.25, z0=wz0, z1=wz1) for x in WIN_BACK], plain=True)
-    _mwall(aset, mb, sx, (X1, Y0 + WT), (X1, Y1 - WT), U_WB, h, WT, STONE, U_WALL,
-           [dict(u=y - (Y0 + WT), w=1.25, z0=wz0, z1=wz1) for y in WIN_GABLE], plain=True)
-    # hall wall with the doorway from the gallery
-    _mwall(aset, mb, sx, (HX, Y1), (HX, Y0), U_WB, h, WT, WALLP, U_WALL,
-           [K.Door(Y1 - 3.0, 1.0, 2.15, "abandoned", z0=0.03, trim="M_DarkWood", trim_in="M_DarkWood")])
-    # corridor walls with the room doors (B4 = the nailed-up stairwell: no doorway)
-    c0, c1 = U_CORR
-    _mwall(aset, mb, sx, (xo, c0), (X1 - WT, c0), U_WB, h, 0.15, U_WALL, U_CWALL,
-           [K.Door(r0 + 0.75 - xo, 0.95, 2.15, "abandoned", z0=0.03, trim_in="M_DarkWood", trim="M_DarkWood")
-            for (r0, r1) in U_ROOMS])
-    _mwall(aset, mb, sx, (X1 - WT, c1), (xo, c1), U_WB, h, 0.15, U_WALL, U_CWALL,
-           [K.Door(X1 - WT - (r0 + 0.75), 0.95, 2.15, "abandoned", z0=0.03, trim_in="M_DarkWood", trim="M_DarkWood")
-            for (r0, r1) in U_ROOMS[:3]])
-    for x in U_PARTS:
-        _mwall(aset, mb, sx, (x, c0), (x, Y0 + WT), U_WB, h, 0.15, U_WALL, U_WALL)
-        _mwall(aset, mb, sx, (x, Y1 - WT), (x, c1), U_WB, h, 0.15, U_WALL, U_WALL)
+    for fl in (FL2, FL3):
+        wb, top, row = fl["fz"] - 0.03, fl["top"], fl["row"]
+        h = top - wb
+        wz0, wz1 = WIN_ROWS[row][0] - wb, WIN_ROWS[row][0] + WIN_ROWS[row][1] - wb
+        # outer walls (east-wing coordinates, mirrored for the west wing)
+        _mwall(aset, mb, sx, (xo, Y0), (X1, Y0), wb, h, WT, STONE, U_WALL,
+               [dict(u=x - xo, w=1.25, z0=wz0, z1=wz1) for x in WIN_FRONT], plain=True)
+        _mwall(aset, mb, sx, (X1, Y1), (xo, Y1), wb, h, WT, STONE, U_WALL,
+               [dict(u=X1 - x, w=1.25, z0=wz0, z1=wz1) for x in WIN_BACK], plain=True)
+        _mwall(aset, mb, sx, (X1, Y0 + WT), (X1, Y1 - WT), wb, h, WT, STONE, U_WALL,
+               [dict(u=y - (Y0 + WT), w=1.25, z0=wz0, z1=wz1) for y in WIN_GABLE], plain=True)
+        if fl is FL2:   # hall wall with the doorway from the gallery
+            _mwall(aset, mb, sx, (HX, Y1), (HX, Y0), wb, h, WT, WALLP, U_WALL,
+                   [K.Door(Y1 - 3.0, 1.0, 2.15, "abandoned", z0=0.03, trim="M_DarkWood", trim_in="M_DarkWood")])
+        else:           # 2nd floor: doorway into the centre corridor (the lounge floor bridges the two wings)
+            _mwall(aset, mb, sx, (HX, Y1), (HX, TY1), wb, h, WT, U_CWALL, U_WALL,
+                   [K.Door(Y1 - 3.0, 1.0, 2.15, "abandoned", z0=0.03, trim="M_DarkWood", trim_in="M_DarkWood")])
+        # corridor walls with the room doors (B4 = the stairwell, its boards pried off)
+        c0, c1 = U_CORR
+        _mwall(aset, mb, sx, (xo, c0), (X1 - WT, c0), wb, h, 0.15, U_WALL, U_CWALL,
+               [K.Door(r0 + 0.75 - xo, 0.95, 2.15, "abandoned", z0=0.03, trim_in="M_DarkWood", trim="M_DarkWood")
+                for (r0, r1) in U_ROOMS])
+        _mwall(aset, mb, sx, (X1 - WT, c1), (xo, c1), wb, h, 0.15, U_WALL, U_CWALL,
+               [K.Door(X1 - WT - (r0 + 0.75), 0.95, 2.15, "abandoned", z0=0.03, trim_in="M_DarkWood", trim="M_DarkWood")
+                for (r0, r1) in U_ROOMS])
+        for x in U_PARTS:
+            _mwall(aset, mb, sx, (x, c0), (x, Y0 + WT), wb, h, 0.15, U_WALL, U_WALL)
+            _mwall(aset, mb, sx, (x, Y1 - WT), (x, c1), wb, h, 0.15, U_WALL, U_WALL)
+
+
+def _centre_shell(aset, mb):
+    """Above the dorm room and the back of the hall: the 2nd-floor centre corridor and the floor lounge."""
+    mb.box_mm((-HX, HY1, BED_TOP), (HX, Y1, T_WB), STONE, mats={"-y": WALLP, "-z": ROT})            # lounge floor slab
+    mb.box_mm((-HX, TY1, HZ1), (HX, U_CORR[0] + 0.15, EAVE), STONE, mats={"-z": ROT, "+z": VOID, "+y": U_CWALL})
+    mb.box_mm((-HX, U_CORR[0] + 0.15, HZ1), (HX, HY1, T_WB), STONE, mats={"-z": ROT})               # corridor floor
+    mb.box_mm((-HX, U_CORR[0] + 0.15, T_TOP), (HX, Y1, EAVE), STONE, mats={"-z": U_CEIL, "+z": VOID})
+    K.wall(aset, mb, (-HX, U_CORR[1] - 0.15), (HX, U_CORR[1] - 0.15), T_WB, T_TOP - T_WB, 0.15, U_CWALL, inner=U_WALL,
+           openings=[K.Door(HX, 1.6, 2.3, "abandoned", double=True, z0=0.03, trim="M_DarkWood", trim_in="M_DarkWood")])
+    wz0, wz1 = WIN_ROWS[2][0] - T_WB, WIN_ROWS[2][0] + WIN_ROWS[2][1] - T_WB
+    mb.wall((HX, Y1), (-HX, Y1), T_WB, T_TOP - T_WB, WT, STONE, [dict(u=HX - x, w=1.25, z0=wz0, z1=wz1) for x in (2.0, -2.0)],
+            inner_mat=U_WALL)
 
 
 def _tower_shell(mb):
@@ -424,13 +452,14 @@ def _facades(mb, nc, rng):
                     if (fi, bi) in skip:
                         continue
                     st = rng.choice(st_ground if fi == 0 else st_upper)
-                    window(mb, nc, u, z0, 1.25, h, st, rng, dark="open" if fi == 1 and bi not in shut else True)
+                    window(mb, nc, u, z0, 1.25, h, st, rng,
+                           dark="open" if (fi == 2 or (fi == 1 and bi not in shut)) else True)
 
     windows((X0, Y0), 0, bays_wing)
     windows((TX, Y0), 0, bays_wing)
-    windows((X1, Y0), 90, bays_side, shut=(3,))
-    windows((X0, Y1), -90, bays_side, shut=(0,))
-    windows((X1, Y1), 180, bays_back, skip={(0, 4), (0, 5)}, shut=(0, 4, 5, 9))
+    windows((X1, Y0), 90, bays_side)
+    windows((X0, Y1), -90, bays_side)
+    windows((X1, Y1), 180, bays_back, skip={(0, 4), (0, 5)}, shut=(4, 5))
     # trims
     for org, yaw, ln, qe in (((X0, Y0), 0, X1 - TX, (True, False)), ((TX, Y0), 0, X1 - TX, (False, True)),
                              ((X1, Y0), 90, Y1 - Y0, (True, True)), ((X1, Y1), 180, X1 - X0, (True, True)),
@@ -1161,12 +1190,12 @@ def _beams(mb, x0, y0, x1, y1, z, step=1.9, along="x"):
     if along == "x":
         y = y0 + step / 2
         while y < y1 - 0.2:
-            mb.box_mm((x0, y - 0.12, z - 0.28), (x1, y + 0.12, z), ROT)
+            mb.box_mm((x0, y - 0.12, z - 0.28), (x1, y + 0.12, z), "M_DarkWood")
             y += step
     else:
         x = x0 + step / 2
         while x < x1 - 0.2:
-            mb.box_mm((x - 0.12, y0, z - 0.28), (x + 0.12, y1, z), ROT)
+            mb.box_mm((x - 0.12, y0, z - 0.28), (x + 0.12, y1, z), "M_DarkWood")
             x += step
 
 
@@ -1358,8 +1387,53 @@ def _ritual_room(aset, mb, nc, rng):
     aset.interact("duel_field", (cx, cy, FZ + 0.5), 0.0, title="Shadow Duel Field",
                   text="A duel field drawn in chalk. The candles are still burning... who lit them?", radius=4.0)
     _cobwebs(nc, x0, y0, x1, y1, CZ1 - 0.28, rng)
-    K.camera(aset, "ritual", (-3.4, 9.0, FZ + 2.6), (1.0, 6.2, FZ + 0.1), 16.0)
+    _ritual_extras(aset, mb, nc, rng)
+    K.camera(aset, "ritual", (-3.4, 9.0, FZ + 2.6), (0.8, 6.4, FZ + 0.1), 16.0)
 
+
+def _drapes(nc, p0, p1, z0, z1, rng, gaps=(), mat="M_RottenCurtain"):
+    """Moth-eaten black/red hangings along a wall (p0 -> p1, room on the left), torn to different lengths."""
+    L, _, _, yaw = K._frame2d(p0, p1)
+    with nc.at((p0[0], p0[1], 0.0), rot=yaw):
+        nc.box((L / 2, 0.06, z1 + 0.03), (L, 0.03, 0.03), RUST)
+        u = 0.1
+        while u < L - 0.1:
+            w = rng.uniform(0.2, 0.34)
+            if not any(a < u < b for (a, b) in gaps):
+                ln = (z1 - z0) * rng.uniform(0.55, 1.0)
+                nc.box((u + w / 2, 0.05 + 0.02 * (int(u * 10) % 2), z1 - ln / 2), (w, 0.015, ln),
+                       mat if rng.random() < 0.7 else "M_SalonWallpaper")
+            u += w + 0.02
+
+
+def _ritual_extras(aset, mb, nc, rng):
+    x0, y0, x1, y1 = RIT
+    top = CZ1 - 0.3
+    _drapes(nc, (x1, y0), (x1, y1), FZ + 0.4, top, rng, gaps=[(1.3, 3.5)])
+    _drapes(nc, (x0, y1), (x0, y0), FZ + 1.0, top, rng)
+    _drapes(nc, (x1, y1), (x0, y1), FZ + 0.4, top, rng, gaps=[(2.7, 5.3)])
+    # robes on hooks between the two doorways, tall candle stands around the field, grimoires
+    for k in range(4):
+        x = -1.1 + 0.73 * k
+        nc.box((x, y0 + 0.03, FZ + 1.9), (0.04, 0.06, 0.04), RUST)
+        nc.box((x, y0 + 0.07, FZ + 1.3), (0.5, 0.06, 1.2), "M_Black")
+        nc.box((x, y0 + 0.08, FZ + 1.75), (0.22, 0.08, 0.25), "M_Black")
+    for (x, y) in ((-3.3, 5.3), (3.3, 5.3), (-3.3, 8.7), (3.3, 8.7)):
+        mb.cylinder((x, y, FZ), 0.14, 0.04, "M_TarnishedGold", seg=8)
+        mb.cylinder((x, y, FZ + 0.04), 0.025, 1.15, "M_TarnishedGold", seg=6)
+        mb.cylinder((x, y, FZ + 1.19), 0.08, 0.03, "M_TarnishedGold", seg=8)
+        _candle(nc, x, y, FZ + 1.22, h=0.2, r=0.03)
+    aset.light((0.0, 9.0, FZ + 1.6), WARM, 300.0, 4.0)
+    with mb.at((-2.55, 9.2, FZ)), nc.at((-2.55, 9.2, FZ)):
+        _old_bookcase(mb, nc, rng, w=0.8, h=1.7, shelves=4, fill=0.7)
+    _spilled_books(nc, -2.6, 8.6, FZ, 0.5, 6, rng)
+    _papers(nc, 1.0, 5.4, FZ, 1.4, 8, rng)
+    nc.box((0.0, 7.0, FZ + 0.002), (6.6, 3.6, 0.002), "M_Black")     # the field is drawn on a soot-black board
+    _toppled_chair(mb, (2.3, 5.2, FZ), 200.0, rng)
+    _toppled_chair(mb, (-1.2, 8.7, FZ), 20.0, rng)
+    for k in range(3):                     # dropped robes and a mask on the floor
+        rbox(nc, (rng.uniform(-2.5, 2.5), rng.uniform(5.2, 8.8), FZ + 0.02), (0.6, 0.9, 0.04), "M_Black",
+             yaw=rng.uniform(0, 180))
 
 def _dorm_room(aset, mb, nc, rng):
     x0, y0, x1, y1 = RIT
@@ -1638,10 +1712,10 @@ def _room_rect(sx, k, back):
     return xa, ya, xb, yb, sx * (r0 + 0.75)
 
 
-def _upper_room(aset, mb, nc, rng, sx, k, back, variant, number, cam=None):
+def _upper_room(aset, mb, nc, rng, sx, k, back, variant, number, cam=None, fl=FL2):
     """A ruined first-floor dorm room. variant: slept | made | collapsed | diary | sheeted."""
     x0, y0, x1, y1, door_x = _room_rect(sx, k, back)
-    z = U_FZ
+    z = fl["fz"]
     W, D = x1 - x0, y1 - y0
     fr = _Fr(x1, y1, 180.0, W, D, z) if back else _Fr(x0, y0, 0.0, W, D, z)
     du = (door_x - x0) if not back else (x1 - door_x)
@@ -1650,13 +1724,13 @@ def _upper_room(aset, mb, nc, rng, sx, k, back, variant, number, cam=None):
     near = W - far
     ns = -fs
     K.floor_planks(mb, x0, y0, x1, y1, z, mat="M_IntWoodFloorDark", seam=VOID, along="y" if back else "x")
-    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, U_TOP, style="ruin", seed=k + (10 if back else 0))
+    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, fl["top"], style="ruin", seed=k + (10 if back else 0))
     # windows of this room (world)
     wins = [(sx * a, y1 if back else y0) for a in (WIN_BACK if back else WIN_FRONT) if x0 < sx * a < x1]
     gable = []
     if k == 3 and not back:
         gable = [(x1 if sx > 0 else x0, y) for y in WIN_GABLE if y0 < y < y1]
-    wz0, wh = WIN_ROWS[1][0], WIN_ROWS[1][1]
+    wz0, wh = WIN_ROWS[fl["row"]][0], WIN_ROWS[fl["row"]][1]
     for (wx, wy) in wins:
         _win_inside(mb, nc, wx, wy, 0.0 if back else 180.0, 1.25, wz0, wh, rng)
     for (wx, wy) in gable:
@@ -1672,18 +1746,18 @@ def _upper_room(aset, mb, nc, rng, sx, k, back, variant, number, cam=None):
         gaps.setdefault(side, []).append((uu - 0.75, uu + 0.75))
     _room_wainscot(mb, x0, y0, x1, y1, z, 0.9, gaps=gaps)
     for n_, (p0, p1) in wall_n.items():
-        _peel(nc, p0, p1, z + 0.95, U_TOP, rng, n=4 if n_ in "ns" else 7)
+        _peel(nc, p0, p1, z + 0.95, fl["top"], rng, n=4 if n_ in "ns" else 7)
     hole = None
     if variant == "collapsed":
         hole = fr.P(far + fs * 1.6, D * 0.45) + (1.0,)
-    _ceiling_damage(nc, x0, y0, x1, y1, U_TOP, rng, n=3, hole=hole)
-    _beams(mb, x0, y0, x1, y1, U_TOP, step=2.4, along="y" if back else "x")
-    _cobwebs(nc, x0, y0, x1, y1, U_TOP - 0.28, rng, size=(0.45, 0.85))
+    _ceiling_damage(nc, x0, y0, x1, y1, fl["top"], rng, n=3, hole=hole)
+    _beams(mb, x0, y0, x1, y1, fl["top"], step=2.4, along="y" if back else "x")
+    _cobwebs(nc, x0, y0, x1, y1, fl["top"] - 0.28, rng, size=(0.45, 0.85))
     with fr.ctx(mb, nc):
         # cornice + picture rail
         for (a, b) in (((0, 0), (W, 0)), ((W, 0), (W, D)), ((W, D), (0, D)), ((0, D), (0, 0))):
             L, _, (nx_, ny_), yaw = K._frame2d(a, b)
-            with mb.at((a[0], a[1], U_TOP - z), rot=yaw):
+            with mb.at((a[0], a[1], fl["top"] - z), rot=yaw):
                 mb.box((L / 2, 0.06, -0.06), (L, 0.12, 0.12), "M_DarkWood")
             with nc.at((a[0], a[1], 2.35), rot=yaw):
                 nc.box((L / 2, 0.012, 0.0), (L, 0.024, 0.04), "M_DarkWood")
@@ -1803,23 +1877,23 @@ def _upper_room(aset, mb, nc, rng, sx, k, back, variant, number, cam=None):
         K.camera(aset, cam, (p[0], p[1], z + 1.65), (t[0], t[1], z + 0.7), 16.0)
 
 
-def _corridor(aset, mb, nc, rng, sx):
+def _corridor(aset, mb, nc, rng, sx, fl=FL2):
     xa, xb = sorted((sx * (HX + WT), sx * (X1 - WT)))
     y0, y1 = U_CORR[0] + 0.15, U_CORR[1] - 0.15
-    z = U_FZ
+    z = fl["fz"]
     K.floor_planks(mb, xa, y0, xb, y1, z, mat="M_IntWoodFloorDark", seam=VOID, along="y")
-    DT.dress_room(aset, mb, nc, xa, y0, xb, y1, z, U_TOP, style="ruin", seed=40 + (sx > 0))
+    DT.dress_room(aset, mb, nc, xa, y0, xb, y1, z, fl["top"], style="ruin", seed=40 + (sx > 0))
     doors_s = [sx * (r0 + 0.75) for (r0, r1) in U_ROOMS]
-    doors_n = [sx * (r0 + 0.75) for (r0, r1) in U_ROOMS[:3]]
+    doors_n = [sx * (r0 + 0.75) for (r0, r1) in U_ROOMS]
     gaps = {"s": [(x - xa - 0.6, x - xa + 0.6) for x in doors_s], "n": [(xb - x - 0.6, xb - x + 0.6) for x in doors_n],
             ("w" if sx > 0 else "e"): [(0.25, 1.45)],
             ("e" if sx > 0 else "w"): [(0.3, 1.8)] if sx > 0 else [(y1 - 3.95, y1 - 2.45)]}
     _room_wainscot(mb, xa, y0, xb, y1, z, 1.15, gaps=gaps)
-    _peel(nc, (xa, y0), (xb, y0), z + 1.2, U_TOP, rng, n=16)
-    _peel(nc, (xb, y1), (xa, y1), z + 1.2, U_TOP, rng, n=16)
-    _ceiling_damage(nc, xa, y0, xb, y1, U_TOP, rng, n=5)
-    _beams(mb, xa, y0, xb, y1, U_TOP, step=1.2, along="y")
-    _cobwebs(nc, xa, y0, xb, y1, U_TOP - 0.28, rng, size=(0.4, 0.7))
+    _peel(nc, (xa, y0), (xb, y0), z + 1.2, fl["top"], rng, n=16)
+    _peel(nc, (xb, y1), (xa, y1), z + 1.2, fl["top"], rng, n=16)
+    _ceiling_damage(nc, xa, y0, xb, y1, fl["top"], rng, n=5)
+    _beams(mb, xa, y0, xb, y1, fl["top"], step=1.2, along="y")
+    _cobwebs(nc, xa, y0, xb, y1, fl["top"] - 0.28, rng, size=(0.4, 0.7))
     # torn runner, a trail of papers
     x = xa + 0.4
     while x < xb - 0.5:
@@ -1848,12 +1922,12 @@ def _corridor(aset, mb, nc, rng, sx):
     _sconce(mb, nc, aset, sx * 7.3, y1, z + 1.75, 0.0)
     _portrait(mb, nc, sx * 18.45, y1, z + 1.8, 0.0, 0.6, 0.8, eyes=True, tilt=-5.0)
     for k, xm in enumerate((sx * 7.3, sx * 11.0, sx * 14.6, sx * 18.0)):     # dead pendant lamps on chains
-        with nc.at((xm, 3.0, U_TOP)):
+        with nc.at((xm, 3.0, fl["top"])):
             nc.cylinder((0, 0, -0.75), 0.008, 0.75, RUST, seg=4)
             nc.cylinder((0, 0, -0.95), 0.16, 0.2, "M_TarnishedGold", radius_top=0.05, seg=10, cap_bottom=False)
             if k != 2:
                 nc.sphere((0, 0, -0.97), 0.06, "M_IntGlassClear", seg=8, rings=5)
-        nc.cylinder((xm, 3.0, U_TOP - 0.02), 0.08, 0.02, "M_TarnishedGold", seg=8)
+        nc.cylinder((xm, 3.0, fl["top"] - 0.02), 0.08, 0.02, "M_TarnishedGold", seg=8)
     rbox(nc, (sx * 15.8, 3.25, z + 0.02), (0.18, 0.14, 0.04), "M_TarnishedGold", yaw=30)     # the fallen shade
     nc.lathe([(0.0, 0.0), (0.06, 0.0), (0.11, 0.12), (0.1, 0.24), (0.05, 0.34), (0.06, 0.4)], "M_PortraitCanvas", seg=10,
              cap_top=False, center=(sx * 11.12, y1 - 0.38, z + 0.55))
@@ -1872,30 +1946,24 @@ def _corridor(aset, mb, nc, rng, sx):
     _toppled_chair(mb, (sx * 7.0, 2.6, z), rng.uniform(0, 180), rng)
     rbox(mb, (sx * 18.35, y0 + 0.35, z + 1.0), (0.9, 0.05, 2.05), ROT, yaw=8.0 * sx, roll=-18.0)
     _spilled_books(nc, sx * 12.8, 3.1, z, 0.4, 4, rng)
-    # the gable window at the end, and the stairwell door that someone nailed shut
-    _win_inside(mb, nc, sx * (X1 - WT), 3.2, -90.0 * sx, 1.25, WIN_ROWS[1][0], WIN_ROWS[1][1], rng)
+    # the gable window at the end, and the stairwell door (the boards that nailed it shut have been pried off)
+    _win_inside(mb, nc, sx * (X1 - WT), 3.2, -90.0 * sx, 1.25, WIN_ROWS[fl["row"]][0], WIN_ROWS[fl["row"]][1], rng)
     sxd = sx * (U_ROOMS[3][0] + 0.75)
-    with mb.at((sxd, y1, z), rot=0.0), nc.at((sxd, y1, z), rot=0.0):
-        mb.box((0, -0.03, 1.075), (0.95, 0.05, 2.15), ROT)
-        for s in (-1, 1):
-            mb.box((s * 0.52, -0.02, 1.1), (0.09, 0.04, 2.2), "M_DarkWood")
-        mb.box((0, -0.02, 2.2), (1.13, 0.04, 0.09), "M_DarkWood")
-        for k, (zz, p) in enumerate(((0.5, 8), (1.15, -14), (1.75, 5))):
-            rbox(mb, (0, -0.08, zz), (1.4, 0.04, 0.2), BOARD, pitch=p)
-            for s in (-1, 1):
-                nc.box((s * 0.6, -0.105, zz), (0.025, 0.01, 0.025), RUST)
-        nc.box((0.33, -0.06, 1.0), (0.04, 0.03, 0.04), RUST)
-    _scrawl(aset, sxd, y1 - 0.11, 0.0, z + 1.42, ("DO NOT", "ENTER"), 0.12)
+    for k, (dx, dy, a_) in enumerate(((-0.9, -0.5, 20.0), (0.75, -0.35, -35.0), (-0.2, -0.75, 70.0))):
+        rbox(mb, (sxd + dx, y1 + dy, z + 0.03 + 0.04 * k), (1.4, 0.2, 0.04), BOARD, yaw=a_)
+        nc.box((sxd + dx, y1 + dy, z + 0.06 + 0.04 * k), (0.03, 0.03, 0.04), RUST)
+    if fl is FL2:
+        _scrawl(aset, sxd - sx * 1.3, y1 - 0.0, 0.0, z + 1.42, ("DO NOT", "ENTER"), 0.12)
     K.nameplate(mb, aset, sxd + sx * 0.8, y1, z + 1.6, 0.0, "STAIRS", mat="M_TarnishedGold", color=(0.12, 0.08, 0.05))
     rubble(mb, (sxd, y1 - 0.4), 0.35, 5, rng, mats=(STONE, U_CEIL), zc=z, size=(0.08, 0.25))
     aset.light((sx * 17.5, 3.0, z + 2.2), MOON, 300.0, 5.0)
     aset.light((sx * 6.5, 3.0, z + 2.0), WARM, 350.0, 5.0)
-    K.camera(aset, "corridor_" + ("e" if sx > 0 else "w"), (sx * 6.2, 2.5, z + 1.65), (sx * 18.5, 3.2, z + 1.0), 18.0)
+    K.camera(aset, "corridor_" + ("e" if sx > 0 else "w") + fl["tag"], (sx * 6.2, 2.5, z + 1.65), (sx * 18.5, 3.2, z + 1.0), 18.0)
 
 
-def _washroom(aset, mb, nc, rng, sx):
+def _washroom(aset, mb, nc, rng, sx, fl=FL2):
     x0, y0, x1, y1, door_x = _room_rect(sx, 0, True)
-    z = U_FZ
+    z = fl["fz"]
     W, D = x1 - x0, y1 - y0
     fr = _Fr(x1, y1, 180.0, W, D, z)
     du = x1 - door_x
@@ -1903,7 +1971,7 @@ def _washroom(aset, mb, nc, rng, sx):
     fs = 1 if far == 0.0 else -1
     near, ns = W - far, -fs
     mb.box_mm((x0, y0, z - 0.03), (x1, y1, z), "M_IntTileWhite", skip=("-z",))
-    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, U_TOP, style="ruin", seed=50 + (sx > 0))
+    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, fl["top"], style="ruin", seed=50 + (sx > 0))
     with fr.ctx(mb, nc):
         for k in range(1, int(W / 0.3)):
             nc.box((k * 0.3, D / 2, 0.001), (0.008, D, 0.002), "M_Black")
@@ -1993,12 +2061,12 @@ def _washroom(aset, mb, nc, rng, sx):
         nc.box((W / 2, 0.06, 1.4), (1.2, 0.04, 0.03), "M_OldBrass")
         for k in range(2):
             nc.box((W / 2 - 0.25 + 0.5 * k, 0.07, 1.15), (0.4, 0.03, 0.5), ("M_IntFabricWhite", "M_DustSheet")[k])
-        nc.cylinder((W / 2, D * 0.55, U_TOP - z - 0.6), 0.006, 0.6, "M_Black", seg=4)
-        nc.sphere((W / 2, D * 0.55, U_TOP - z - 0.65), 0.05, "M_IntGlassClear", seg=8, rings=5)
+        nc.cylinder((W / 2, D * 0.55, fl["top"] - z - 0.6), 0.006, 0.6, "M_Black", seg=4)
+        nc.sphere((W / 2, D * 0.55, fl["top"] - z - 0.65), 0.05, "M_IntGlassClear", seg=8, rings=5)
         for _ in range(8):
             rbox(nc, (rng.uniform(0.4, W - 0.4), rng.uniform(1.0, D - 1.5), 0.006), (0.15, 0.15, 0.01), "M_RuinTileWall",
                  yaw=rng.uniform(0, 90))
-    _beams(mb, x0, y0, x1, y1, U_TOP, step=1.2, along="x")
+    _beams(mb, x0, y0, x1, y1, fl["top"], step=1.2, along="x")
     with fr.ctx(mb, nc):
         # linen cupboard by the door, towel hooks over the cubicles, the bath rules, toiletry shelves
         with mb.at((near + ns * 0.3, D - 1.55, 0.0), rot=90.0 * ns):
@@ -2036,25 +2104,130 @@ def _washroom(aset, mb, nc, rng, sx):
     aset.prop("SM_Int_Broom", (x, y, z), fr.Y(0.0))
     x, y = fr.P(W / 2, 3.6)
     aset.prop("SM_Int_WetFloor", (x, y, z), fr.Y(rng.uniform(0, 360)))
-    _win_inside(mb, nc, sx * 6.0, y1, 0.0, 1.25, WIN_ROWS[1][0], WIN_ROWS[1][1], rng, curtain=False)
+    _win_inside(mb, nc, sx * 6.0, y1, 0.0, 1.25, WIN_ROWS[fl["row"]][0], WIN_ROWS[fl["row"]][1], rng, curtain=False)
     with fr.ctx(nc):
         _candles(nc, far + fs * 0.3, 3.15, 0.93, rng, 2)
     lx, ly = fr.P(far + fs * 0.9, 3.0)
     aset.light((lx, ly, z + 1.3), WARM, 380.0, 4.5)
-    _cobwebs(nc, x0, y0, x1, y1, U_TOP - 0.28, rng)
-    _ceiling_damage(nc, x0, y0, x1, y1, U_TOP, rng, n=4)
-    _peel(nc, (x0, y0), (x1, y0), z + 1.6, U_TOP, rng, n=3)
+    _cobwebs(nc, x0, y0, x1, y1, fl["top"] - 0.28, rng)
+    _ceiling_damage(nc, x0, y0, x1, y1, fl["top"], rng, n=4)
+    _peel(nc, (x0, y0), (x1, y0), z + 1.6, fl["top"], rng, n=3)
     K.nameplate(mb, aset, door_x + (0.8 if door_x > 0 else -0.8), U_CORR[1] - 0.15, z + 1.6, 0.0, "WASH",
                 mat="M_TarnishedGold", color=(0.12, 0.08, 0.05))
     p = fr.P(far + fs * 0.45, D - 0.35)
     t = fr.P(near + ns * 1.2, 0.6)
-    K.camera(aset, "washroom" + ("_e" if sx > 0 else "_w"), (p[0], p[1], z + 1.65), (t[0], t[1], z + 1.0), 16.0)
+    K.camera(aset, "washroom" + ("_e" if sx > 0 else "_w") + fl["tag"], (p[0], p[1], z + 1.65), (t[0], t[1], z + 1.0), 16.0)
+
+
+def _stairwell(aset, mb, nc, rng, sx):
+    """The old stairwell bay (B4) linking the two dorm floors: dog-leg timber stair, half landing, top landing
+    strip on the 2nd floor; rotten treads, a snapped banister, plaster fallen from the ceiling."""
+    xa, xb = sorted((sx * U_ROOMS[3][0], sx * U_ROOMS[3][1]))
+    y0, y1 = U_CORR[1], Y1 - WT
+    xi = xa if sx > 0 else xb               # side towards the hall (door side)
+    xo = xb if sx > 0 else xa               # gable side
+    zm = (U_FZ + T_FZ) / 2
+    K.floor_planks(mb, xa, y0, xb, y1, U_FZ, mat="M_IntWoodFloorDark", seam=VOID, along="y")
+    K.floor_planks(mb, xa, y0, xb, STAIR_LAND, T_FZ, mat="M_IntWoodFloorDark", seam=VOID)
+    # flight 1 (door side) climbs to the half landing along the back wall, flight 2 (gable side) climbs back
+    _room_wainscot(mb, xa, y0, xb, y1, U_FZ, 1.0, gaps={"s": [(0.0, 1.6)] if sx > 0 else [(xb - xa - 1.6, xb - xa)]})
+    _flight(mb, nc, xi + sx * 0.6, STAIR_LAND, U_FZ, zm, 90.0, 1.05, skip=(4,), rail_side=-sx, rail_gap=(),
+            mat="M_DarkWood")
+    mb.box_mm((xa, STAIR_LAND + 2.8 - 0.02, zm - 0.2), (xb, y1, zm), ROT, mats={"+z": "M_IntWoodFloorDark"})
+    _flight(mb, nc, xo - sx * 0.6, STAIR_LAND + 2.8, zm, T_FZ, -90.0, 1.05, skip=(6,), rail_side=-sx, rail_gap=(6, 9),
+            mat="M_DarkWood")
+    for xx in (xi + sx * 0.08, xo - sx * 0.08):
+        mb.box((xx, y1 - 0.08, (U_FZ + zm) / 2), (0.12, 0.12, zm - U_FZ), ROT)
+    _rail_line(mb, [(xi + sx * 0.05, STAIR_LAND + 0.04), (xo - sx * 1.15, STAIR_LAND + 0.04)], T_FZ)
+    _rail_line(mb, [(xi + sx * 1.2, STAIR_LAND + 2.85), (xo - sx * 1.2, STAIR_LAND + 2.85)], zm)
+    for (fl, zz) in ((FL2, U_FZ), (FL3, T_FZ)):
+        _cobwebs(nc, xa, y0, xb, y1, fl["top"] - 0.28, rng, size=(0.6, 1.0))
+        _peel(nc, (xb, y1), (xa, y1), zz + 0.4, fl["top"], rng, n=6)
+        _win_inside(mb, nc, sx * 18.0, Y1 - WT, 0.0, 1.25, WIN_ROWS[fl["row"]][0], WIN_ROWS[fl["row"]][1], rng)
+        _win_inside(mb, nc, xo, 7.6, -90.0 * sx, 1.25, WIN_ROWS[fl["row"]][0], WIN_ROWS[fl["row"]][1], rng,
+                    curtain=False)
+    _ceiling_damage(nc, xa, y0, xb, y1, T_TOP, rng, n=3, hole=((xa + xb) / 2, 7.0, 0.8))
+    # debris: plaster and laths on the bottom landing, boards that once nailed the door, a dropped lantern
+    rubble(mb, (xi + sx * 1.9, 5.2), 0.6, 9, rng, mats=(STONE, U_CEIL, ROT), zc=U_FZ, size=(0.08, 0.3))
+    planks(mb, (xi + sx * 2.0, 6.2), 0.5, 3, rng, zc=U_FZ, length=(0.8, 1.4))
+    aset.prop("SM_Int_Lantern", (xi + sx * 0.15, y0 + 0.25, T_FZ), 30.0)
+    _portrait(mb, nc, xo, 5.2, zm + 1.55, -90.0 * sx, 0.6, 0.8, eyes=True, tilt=-6.0)
+    _portrait(mb, nc, xi, 8.2, U_FZ + 1.7, 90.0 * sx, 0.5, 0.65, tilt=8.0)
+    _sconce(mb, nc, aset, sx * 18.0, Y1 - WT, zm + 1.9, 0.0)
+    aset.light(((xa + xb) / 2, 6.0, U_FZ + 2.0), WARM, 350.0, 5.0)
+    K.camera(aset, "stair_" + ("e" if sx > 0 else "w") + "_1f", (xi + sx * 0.55, y0 + 0.3, U_FZ + 1.65),
+             (xo - sx * 0.6, 8.0, zm + 0.6), 16.0)
+
+
+def _lounge(aset, mb, nc, rng):
+    """2nd-floor centre: the floor lounge over the dorm room, and the corridor joining both wings."""
+    z = T_FZ
+    c0, c1 = U_CORR[0] + 0.15, U_CORR[1] - 0.15
+    K.floor_planks(mb, -HX, c0, HX, c1, z, mat="M_IntWoodFloorDark", seam=VOID, along="y")
+    _room_wainscot(mb, -HX, c0, HX, c1, z, 1.15, gaps={"n": [(HX - 0.85, HX + 0.85)], "e": [(0.25, 1.45)],
+                                                         "w": [(0.25, 1.45)]})
+    _beams(mb, -HX, c0, HX, c1, T_TOP, step=1.2, along="y")
+    _cobwebs(nc, -HX, c0, HX, c1, T_TOP - 0.28, rng, size=(0.4, 0.7))
+    _peel(nc, (-HX, c0), (HX, c0), z + 1.2, T_TOP, rng, n=8)
+    for k, x in enumerate((-2.4, 0.0, 2.4)):
+        _portrait(mb, nc, x, c0, z + 1.85, 180.0, 0.7, 0.9, eyes=(k == 1), tilt=rng.uniform(-5, 5))
+    nc.box_mm((-3.6, 2.62, z), (3.6, 3.38, z + 0.012), "M_Carpet")
+    _sconce(mb, nc, aset, -1.2, c0, z + 1.75, 180.0)
+    _sconce(mb, nc, aset, 1.2, c0, z + 1.75, 180.0, lit=False)
+    K.camera(aset, "corridor_c_3f", (-3.5, 2.6, z + 1.65), (3.6, 3.4, z + 1.0), 18.0)
+    # the lounge
+    x0, y0, x1, y1 = -HX, HY1, HX, Y1 - WT
+    K.floor_planks(mb, x0, y0, x1, y1, z, mat="M_IntWoodFloorDark", seam=VOID)
+    DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, T_TOP, style="ruin", seed=70)
+    _room_wainscot(mb, x0, y0, x1, y1, z, 1.0, gaps={"s": [(HX - 0.95, HX + 0.95)], "n": [(1.25, 2.75), (5.25, 6.75)]})
+    _beams(mb, x0, y0, x1, y1, T_TOP, step=1.6, along="y")
+    _cobwebs(nc, x0, y0, x1, y1, T_TOP - 0.28, rng, size=(0.6, 1.1))
+    for (p0, p1) in (((x1, y0), (x1, y1)), ((x0, y1), (x0, y0))):
+        _peel(nc, p0, p1, z + 1.05, T_TOP, rng, n=6)
+    _ceiling_damage(nc, x0, y0, x1, y1, T_TOP, rng, n=4)
+    for x in (-2.0, 2.0):
+        _win_inside(mb, nc, x, y1, 0.0, 1.25, WIN_ROWS[2][0], WIN_ROWS[2][1], rng)
+    # cold fireplace on the west wall under the founder's portrait, a sheeted sofa group, a card table where a
+    # duel was never finished, bookcases, a dead chandelier, a gramophone
+    with mb.at((0, 0, z - FZ)), nc.at((0, 0, z - FZ)):
+        _cold_fireplace(mb, nc, x0, 6.8, 90.0, rng)
+    _portrait(mb, nc, x0, 6.8, z + 2.3, 90.0, 0.9, 1.1, eyes=True)
+    for dy in (-0.6, 0.6):
+        _candles(nc, x0 + 0.25, 6.8 + dy, z + 1.44, rng, 2)
+    aset.light((x0 + 0.8, 6.8, z + 1.6), WARM, 450.0, 5.0)
+    _sheeted(mb, -1.6, 6.8, z, -90.0, 2.0, 0.9, 0.85, kind="sofa")
+    _sheeted(mb, 0.6, 5.4, z, 30.0, 0.9, 0.85, 0.95)
+    aset.prop("SM_Int_CoffeeTable", (-0.5, 6.8, z), 0.0)
+    aset.prop("SM_Int_TeaSet", (-0.5, 6.8, z + 0.49), 40.0)
+    aset.prop("SM_Int_RoundTableB", (2.3, 7.4, z), 0.0)
+    for (cx, cy, a_) in ((1.6, 7.3, -80.0), (3.0, 7.5, 95.0)):
+        aset.prop("SM_Int_WoodChair", (cx, cy, z), a_)
+    DT.card_spread(nc, 2.15, 7.3, z + 0.751, 90.0, 5, 11)
+    DT.card_spread(nc, 2.45, 7.5, z + 0.752, -90.0, 3, 12)
+    DT.deck_box(nc, 2.3, 7.75, z + 0.75, 15.0, "M_OldBookRed")
+    _candle(nc, 2.5, 7.1, z + 0.75, h=0.08)
+    aset.light((2.3, 7.4, z + 1.3), WARM, 380.0, 4.5)
+    with mb.at((x1 - 0.19, 5.0, z), rot=-90.0), nc.at((x1 - 0.19, 5.0, z), rot=-90.0):
+        _old_bookcase(mb, nc, rng, w=1.0, fill=0.7)
+    with mb.at((x1 - 0.19, 8.6, z), rot=-90.0), nc.at((x1 - 0.19, 8.6, z), rot=-90.0):
+        _old_bookcase(mb, nc, rng, w=1.0, fill=0.55)
+    _spilled_books(nc, 3.0, 6.0, z, 0.5, 6, rng)
+    _hanging_chandelier(mb, 0.0, 6.7, T_TOP, tilt=-7.0)
+    aset.prop("SM_Int_Radio", (-3.4, y1 - 0.4, z), 160.0)
+    _toppled_chair(mb, (1.1, 4.6, z), 120.0, rng)
+    _papers(nc, 0.5, 6.4, z, 1.6, 8, rng)
+    aset.prop("SM_Int_GrandfatherClock", (3.2, y0 + 0.25, z), 180.0)
+    K.camera(aset, "lounge_3f", (-3.4, 4.45, z + 1.65), (2.6, 8.6, z + 0.7), 16.0)
 
 
 def _upper_floor(aset, mb, nc, rng):
     plan = {1: [("slept", "201"), ("diary", "202"), ("made", "203"), ("collapsed", "204")],
             -1: [("sheeted", "207"), ("slept", "208"), ("collapsed", "209"), ("made", "210")]}
     backs = {1: [("slept", "205"), ("sheeted", "206")], -1: [("made", "211"), ("slept", "212")]}
+    plan3 = {1: [("sheeted", "301"), ("made", "302"), ("slept", "303"), ("sheeted", "304")],
+             -1: [("collapsed", "308"), ("slept", "309"), ("sheeted", "310"), ("made", "311")]}
+    backs3 = {1: [("slept", "305"), ("made", "306"), ("collapsed", "307")],
+              -1: [("sheeted", "312"), ("slept", "313"), ("made", "314")]}
     for sx in (1, -1):
         _corridor(aset, mb, nc, rng, sx)
         _washroom(aset, mb, nc, rng, sx)
@@ -2065,6 +2238,16 @@ def _upper_floor(aset, mb, nc, rng):
             _upper_room(aset, mb, nc, rng, sx, k, False, var, num, cam)
         for k, (var, num) in enumerate(backs[sx]):
             _upper_room(aset, mb, nc, rng, sx, k + 1, True, var, num, "room_" + num if (sx, k) == (1, 0) else None)
+        # second floor (8.6 m window row)
+        _corridor(aset, mb, nc, rng, sx, fl=FL3)
+        for k, (var, num) in enumerate(plan3[sx]):
+            cam = "room_" + num + "_3f" if (sx, k) in ((1, 1), (-1, 0)) else None
+            _upper_room(aset, mb, nc, rng, sx, k, False, var, num, cam, fl=FL3)
+        for k, (var, num) in enumerate(backs3[sx]):
+            cam = "room_" + num + "_3f" if (sx, k) == (1, 1) else None
+            _upper_room(aset, mb, nc, rng, sx, k, True, var, num, cam, fl=FL3)
+        _stairwell(aset, mb, nc, rng, sx)
+    _lounge(aset, mb, nc, rng)
 
 
 # ---------------------------------------------------------------- the clock tower
@@ -2323,11 +2506,11 @@ def _tower_rooms(aset, mb, nc, rng):
     # the bell in its timber frame at the back, the hammer wire
     with mb.at((-0.4, y1 - 0.9, z)):
         for sx_ in (-1, 1):
-            mb.beam((sx_ * 0.9, -0.5, 0.0), (sx_ * 0.6, 0.0, 2.4), 0.14, 0.14, ROT)
-            mb.beam((sx_ * 0.9, 0.5, 0.0), (sx_ * 0.6, 0.0, 2.4), 0.14, 0.14, ROT)
-        mb.box((0, 0, 2.45), (1.6, 0.18, 0.18), ROT)
+            mb.beam((sx_ * 0.9, -0.5, 0.0), (sx_ * 0.6, 0.0, 2.4), 0.14, 0.14, "M_DarkWood")
+            mb.beam((sx_ * 0.9, 0.5, 0.0), (sx_ * 0.6, 0.0, 2.4), 0.14, 0.14, "M_DarkWood")
+        mb.box((0, 0, 2.45), (1.6, 0.18, 0.18), "M_DarkWood")
         for sx_ in (-1, 1):
-            mb.box((sx_ * 0.9, 0, 0.06), (0.18, 1.2, 0.12), ROT)
+            mb.box((sx_ * 0.9, 0, 0.06), (0.18, 1.2, 0.12), "M_DarkWood")
     _bell(mb, nc, -0.4, y1 - 0.9, z + 1.18, 1.25)
     nc.beam((-0.15, y1 - 0.9, z + 1.6), (fx - 0.3, fy + 0.45, z + 1.5), 0.012, 0.012, RUST)
     # keeper's workbench along the west wall (behind the stair rail)
@@ -2378,13 +2561,13 @@ def _timber_frame(mb, x0, y0, x1, y1, z, h, skip=()):
             continue
         L, (ux, uy), (nx, ny), yaw = K._frame2d(p0, p1)
         with mb.at((p0[0], p0[1], z), rot=yaw):
-            mb.box((L / 2, 0.08, h - 0.1), (L, 0.16, 0.2), ROT)
+            mb.box((L / 2, 0.08, h - 0.1), (L, 0.16, 0.2), "M_DarkWood")
             for u in (0.1, L / 2, L - 0.1):
-                mb.box((u, 0.08, h / 2), (0.18, 0.16, h), ROT)
+                mb.box((u, 0.08, h / 2), (0.18, 0.16, h), "M_DarkWood")
             for u in (0.1, L / 2, L - 0.1):        # knee braces under the plate
                 for sg in (-1, 1):
                     if 0.0 < u + sg * 0.7 < L:
-                        mb.beam((u, 0.08, h - 1.0), (u + sg * 0.7, 0.08, h - 0.25), 0.1, 0.1, ROT)
+                        mb.beam((u, 0.08, h - 1.0), (u + sg * 0.7, 0.08, h - 0.25), 0.1, 0.1, "M_DarkWood")
 
 
 def _store_extras(aset, mb, nc, rng, z):
