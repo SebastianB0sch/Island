@@ -2368,23 +2368,26 @@ def _boys_suite(aset, mb, nc, rb, rs, sx, front, label, rng, seed=0):
         _portrait(f, 0.0, -0.1, 1.65, "n", 2.0)
         for s_ in (-1, 1):
             _portrait(f, s_ * 2.5, -0.1, 1.45, "n", 1.4)
+        # en-suite bathroom between the divider and the fireplace (outer side), door towards the bed
+        _ensuite(f, mb, nc, o * 5.6, o * 3.0, -2.9, -0.1, "x", -1.5, zc, rb["wall"])
         f.prop("SM_Int_Wardrobe", -o * 5.02, -2.9, wy(side_i))
         _console(f, -o * 5.6, -5.0, side_i, seed=seed)
         DT.coat_hooks(nc, -o * 5.6, -1.2, 1.75, wy(side_i), n=3, dorm="obelisk", jackets=2, seed=seed)
+        f.prop("SM_Int_FoldingScreen", -o * 3.2, -5.6, -60.0 * o)
         K.fireplace(mb, nc, f.a, o * 5.6, -3.8, wy(side_o), w=1.2, h=1.2, mat=MARBLE)
         _portrait(f, o * 5.6, -3.8, 1.75, side_o, 1.1)
         f.prop("SM_Int_MantelClock", o * 5.47, -3.8, wy(side_o), z=1.3)
-        _rug(mb, min(o * 2.6, o * 4.9), -4.9, max(o * 2.6, o * 4.9), -2.7, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
-        for y in (-3.0, -4.6):
-            f.prop("SM_Int_Armchair", o * 3.5, y, -90.0 * o + (25.0 if y > -3.8 else -25.0) * o)
-        f.prop("SM_Int_SideTable", o * 3.2, -3.8, 0.0)
-        f.prop("SM_Int_TeaSet", o * 3.2, -3.8, 20.0, z=0.55)
+        _rug(mb, min(o * 2.6, o * 4.9), -5.6, max(o * 2.6, o * 4.9), -3.15, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+        for y in (-3.6, -5.05):
+            f.prop("SM_Int_Armchair", o * 3.45, y, -90.0 * o + (25.0 if y > -4.3 else -25.0) * o)
+        f.prop("SM_Int_SideTable", o * 3.15, -4.35, 0.0)
+        f.prop("SM_Int_TeaSet", o * 3.15, -4.35, 20.0, z=0.55)
         K.desk(mb, nc, -o * 2.0, -db + 0.31, 0.0 + 180.0, w=1.2, d=0.6, top=K.WOOD_DARK, legs=K.WOOD_DARK,
                hutch=False, clutter=False)
         DT.desk_set(nc, f.a, -o * 2.0, -db + 0.31, 0.76, 180.0, "student", seed=seed + 3, w=1.2, d=0.6)
         f.prop("SM_Int_OfficeChair", -o * 2.0, -db + 1.1, 0.0)
         _plant(f, o * 2.0, -db + 0.45)
-        _plant(f, -o * 5.15, -db + 0.45)
+        _plant(f, -o * 5.15, -db + 0.5)
         _chandelier(f, 0.0, -db / 2, zc, 1.3)
         # ---- sitting room & study (local y > 0)
         K.fireplace(mb, nc, f.a, -o * 5.6, 3.8, wy(side_i), w=1.6, h=1.3, mat=MARBLE)
@@ -2403,6 +2406,8 @@ def _boys_suite(aset, mb, nc, rb, rs, sx, front, label, rng, seed=0):
         _portrait(f, -o * 2.2, 0.1, 1.5, "s", 2.0)
         _plinth_bust(f, mb, o * 0.4, 0.45, 180.0)
         _chess_table(f, o * 2.6, 1.45, 0.0)
+        for y in (2.5, 5.2):             # screens close the study alcove off the sitting room
+            f.prop("SM_Int_FoldingScreen", o * 3.3, y, 90.0)
         for y in (1.6, 6.0):       # built-in bookcases flanking the fireplace
             K.bookcase(mb, nc, -o * 5.39, y, wy(side_i), w=1.4, d=0.42, h=2.7, shelves=7, mat=K.WOOD_DARK,
                        rng_seed=int(y * 10) + seed)
@@ -2795,7 +2800,7 @@ def _boys_kitchen(aset, mb, nc, r):
             with mb.at((x, -2.33, 0.0), rot=180.0), nc.at((x, -2.33, 0.0), rot=180.0):
                 _store_shelf(mb, nc, rng, w=2.2)
         # staff table between the island and the front windows, copper pans above it
-        _long_table(mb, nc, 34.0, 0.4, 4.0, 1.0, cloth="M_IntFabricBlue", mat=K.WOOD)
+        _long_table(mb, nc, 34.0, 0.4, 4.6, 1.0, cloth=K.WOOD, mat=K.WOOD_DARK)        # the scrubbed staff table
         for k in range(4):
             for s_ in (-1, 1):
                 f.prop("SM_Int_WoodChair", 32.5 + k * 1.0, 0.4 + s_ * 0.75, 0.0 if s_ < 0 else 180.0)
@@ -3138,7 +3143,7 @@ def _boys_games(aset, mb, nc, r):
         K.poster(nc, f.a, 12.6, 25.55, 1.75, -90.0, 0.6, 0.85, "M_IntPoster3", text="DUEL RANKINGS", text_size=0.06)
         _plant(f, 12.0, 29.0)
         _plant(f, -12.0, 17.0)
-        _plant(f, 5.3, 16.75)
+        f.prop("SM_Int_Vitrine", 6.4, 16.55, 180.0)
         for (x, y) in ((-7.0, 19.5), (0.0, 25.5), (8.0, 19.5), (8.0, 27.0), (-3.0, 19.5)):
             _chandelier(f, x, y, zc, 0.9)
         f.light(0.0, 23.0, 2.8, 2500.0, 10.0)
@@ -3147,6 +3152,13 @@ def _boys_games(aset, mb, nc, r):
             mb.box_mm((-12.6, y - 0.03, zc - 0.33), (12.6, y + 0.03, zc - 0.32), K.TRIM_GOLD, skip=("+z",))
         for x in (-6.3, 6.3):
             mb.box_mm((x - 0.14, 18.3, zc - 0.32), (x + 0.14, 29.6, zc), K.WOOD_DARK, skip=("+z",))
+        _chess_table(f, 4.6, 20.2, 0.0)
+        f.prop("SM_Int_FoldingScreen", -9.6, 26.9, -20.0)
+        for k, x in enumerate((-10.0, -4.0, 2.0, 8.0)):       # house pennants hung from the beams
+            with nc.at((x, 22.9, zc - 0.33), rot=0.0):
+                nc.box((0, 0, -0.02), (1.2, 0.02, 0.03), K.TRIM_GOLD)
+                nc.box((0, 0, -0.38), (0.8, 0.012, 0.7), ("M_IntFabricNavy", "M_IntFabricBlue")[k % 2])
+                nc.box((0, -0.008, -0.38), (0.3, 0.004, 0.3), K.TRIM_GOLD)
     _gallery(f, r, ("n",), z=1.75, scale=1.0, pitch=1.8)
     _gallery(f, r, ("s",), z=1.9, scale=1.3, skip=[("s", -3.6, 3.8)])
     _curtains(nc, r, "M_IntFabricNavy")
