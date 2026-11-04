@@ -355,8 +355,12 @@ class Drape:
                       fade=max(0.0, axis[0][2] - (r.crotch - 0.01)) + 0.10)
         # blend the torso / limb seams and take out the remaining anatomy (boundary rows stay on their cuts)
         movable = co[:, 2] < top + 0.01
+        z_edge = co[w.boundary, 2].copy()
         _taubin(w, movable, steps=smooth)
         co = w.co
+        # open edges keep their height: hems / cuts stay exactly on their cut planes (outfit.extend hangs the
+        # free part of a garment from the edges found there)
+        co[w.boundary, 2] = z_edge
         # the torso already clears the convex hull of the layer below (re-checked after smoothing); a point /
         # normal collision test misreads concave layers (between the legs), so only the limbs use it
         _torso(co, torso, self.axis_y, top, taper=taper, ease=ease * 0.5, under=under, hull=hull, trunk=self._hull_x)

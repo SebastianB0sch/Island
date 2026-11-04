@@ -431,15 +431,17 @@ class Tailor:
                     no = -no
                 self.cut("Jacket", (sgn * x0, 0, z0), no,
                          region=lambda c, sgn=sgn: c.y < r.neck_c.y and c.x * sgn > -0.002 and c.z > z0 - 0.02)
+        # cloth: the jacket hangs from the chest / shoulder blades over the shirt and trousers, with round sleeves
+        # that widen a little towards the cuff. The free-hanging part (blazer hem, coat tails) is hung from the
+        # draped hem afterwards, so it keeps its clean cut instead of being re-draped round the legs; then a
+        # turned-in band of fabric thickness runs along every open edge
+        self.drape.garment("Jacket", taper=0.2, ease=0.006 + spec.get("loose", 0.0) * 0.25, clear=0.008,
+                           sleeve_ease=(0.008, 0.02))
         drop = spec.get("drop", r.hem_drop(length))
         if drop > 0:
             long = drop > 0.15
             self.extend("Jacket", self.edges_at("Jacket", hem), drop, spec.get("flare", 0.035 if not long else 0.07),
                         rings=3 if not long else 6, thigh=0.45 if not long else 0.8, front=spec.get("tails", 1.0))
-        # cloth: the jacket hangs from the chest / shoulder blades over the shirt and trousers, round sleeves
-        # that widen a little towards the cuff, and a turned-in band of fabric thickness along every open edge
-        self.drape.garment("Jacket", taper=0.2, ease=0.006 + spec.get("loose", 0.0) * 0.25, clear=0.008,
-                           sleeve_ease=(0.008, 0.02))
         self.drape.rims("Jacket", depth=0.007)
         if spec.get("collar", 0.05):
             trim = spec.get("trim", spec.get("color"))
@@ -473,10 +475,10 @@ class Tailor:
         self.cut("Shirt", (0, 0, hem), (0, 0, -1))
         if turtle:
             self.cut("Shirt", (0, 0, neck), (0, 0, 1), region=lambda c: abs(c.x) < r.neck_r[0] + 0.04)
-        if spec.get("length", "hip") == "hip":
-            self.extend("Shirt", self.edges_at("Shirt", hem), 0.03, 0.012, rings=1, thigh=0.3)
         self.drape.garment("Shirt", taper=0.3, ease=0.003, clear=0.004, sleeve_ease=(0.004, 0.008),
                            torso_top=(neck - 0.02) if turtle else None)
+        if spec.get("length", "hip") == "hip":
+            self.extend("Shirt", self.edges_at("Shirt", hem), 0.03, 0.012, rings=1, thigh=0.3)
 
     def pants(self, spec):
         r = self.rig
@@ -530,9 +532,9 @@ class Tailor:
         self.shell(self.select(inside), 0.010, "Skirt", spec, self.select(inside, every=True))
         self.cut("Skirt", (0, 0, top), (0, 0, 1))
         self.cut("Skirt", (0, 0, cut), (0, 0, -1))
+        self.drape.garment("Skirt", sleeves=False, torso_top=top, taper=0.1, ease=0.002, clear=0.006, smooth=2)
         self.extend("Skirt", self.edges_at("Skirt", cut), spec.get("length", 0.17), 0.06, rings=4, thigh=0.55,
                     pleats=spec.get("pleats", 16))
-        self.drape.garment("Skirt", sleeves=False, torso_top=top, taper=0.1, ease=0.002, clear=0.006, smooth=2)
         self.garments["Skirt"]["hem"] = cut - spec.get("length", 0.17)
         self.garments["Skirt"]["cloth"] = dict(prefix="skirt", cut=cut, drop=spec.get("length", 0.17))
         self.garments["Skirt"]["belt"] = top
