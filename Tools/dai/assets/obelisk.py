@@ -4147,7 +4147,7 @@ def _girls_building(mb, nc, aset):
     # east round bay (two storeys)
     bx, by, br = x1, 15.0, 2.6
     hp = (-math.pi / 2, math.pi / 2)
-    lathe_arc(mb, [(br, -4.0 if _P is None else 5.35), (br, 9.4)], WALL, *hp, 12, center=(bx, by, 0.0))
+    lathe_arc(mb, [(br, -4.0 if _P is None else 9.2), (br, 9.4)], WALL, *hp, 12, center=(bx, by, 0.0))
     if _P is not None:
         lathe_arc(mb, [(br, -4.0), (br, -0.3)], WALL, *hp, 12, center=(bx, by, 0.0))
     lathe_arc(mb, [(br + 0.2, -4.0), (br + 0.2, FL + 0.3)], MARBLE, *hp, 12, center=(bx, by, 0.0))
@@ -4162,7 +4162,8 @@ def _girls_building(mb, nc, aset):
         with mb.at((bx + math.cos(a) * br, by + math.sin(a) * br, 0.0), rot=a_deg + 90):
             window(mb, 0.0, 1.85, 1.0, 2.8, GTRIM, sill_mat=MARBLE, head="lintel", head_mat=GTRIM, mullion=False,
                    rect_glass=_P is None)
-            window(mb, 0.0, 6.0, 1.0, 2.5, GTRIM, sill_mat=MARBLE, head="lintel", head_mat=GTRIM, mullion=False)
+            window(mb, 0.0, 6.0, 1.0, 2.5, GTRIM, sill_mat=MARBLE, head="lintel", head_mat=GTRIM, mullion=False,
+                   rect_glass=_P is None)
 
     # ------------------------------------------------------------ entrance porch with balcony
     for x in (-3.9, -1.9, 1.9, 3.9):
@@ -4779,6 +4780,19 @@ def _girls_rooms():
                               skirting=None, slab=False, levels=(0, 1))
     R["rbay"] = _room("rbay", 0, (22.0, 12.4, 24.6, 17.6), G_FL, G_C0, K.PLASTER_MINT, K.TILE, ceil=None, cornice=None,
                       skirting=None, slab=False)
+    # attic storey: artist's studio + landing under the pavilion's gable roof (rose windows), four rooms under the
+    # hip roof of the wings (dormers)
+    att = dict(cornice=None, dado=(K.WOOD, K.TRIM_WOOD), dado_h=0.75, skirting=K.TRIM_WOOD, seams=K.WOOD_DARK)
+    R["att_studio"] = _room("att_studio", 3, (-6.6, 1.4, 6.6, 13.4), G_Z3, 17.35, WALL_LILAC, K.WOODFLOOR, ceil=None,
+                            **att)
+    R["att_landing"] = _room("att_landing", 3, (-6.6, 13.6, 6.6, 26.6), G_Z3, 17.35, WALL_LILAC, K.WOODFLOOR,
+                             ceil=None, holes=[G_HOLE3], **att)
+    for sx in (-1, 1):
+        s = "w" if sx < 0 else "e"
+        R["att_f" + s] = _room("att_f" + s, 3, _mx((7.4, 4.4, 21.6, 14.9), sx), G_Z3, G_C3,
+                               WALL_ROSE if sx < 0 else K.PLASTER_MINT, K.WOODFLOOR, coffer=(1.8, K.WOOD_DARK, None), **att)
+        R["att_b" + s] = _room("att_b" + s, 3, _mx((7.4, 15.1, 21.6, 25.6), sx), G_Z3, G_C3,
+                               K.PLASTER_CREAM if sx < 0 else WALL_LILAC, K.WOODFLOOR, coffer=(1.8, K.WOOD_DARK, None), **att)
     return R
 
 
@@ -4790,6 +4804,8 @@ def _girls_bay_plan():
         _P["holes"].append(dict(kind="open", x=sx * 12.45, y=4.0, z0=G_Z1, z1=G_Z1 + 2.9, w=2.9, r=0.0, style=None,
                                 double=False))
     _P["holes"].append(dict(kind="open", x=22.0, y=15.0, z0=G_FL, z1=G_FL + 3.0, w=2.4, r=0.0, style=None,
+                            double=False))
+    _P["holes"].append(dict(kind="open", x=22.0, y=13.9, z0=G_Z1, z1=G_Z1 + 2.6, w=1.8, r=0.0, style=None,
                             double=False))
 
 
@@ -4816,6 +4832,11 @@ def _girls_bays(aset, main, R):
     pts = [(bx - 0.4, by - br)] + pts + [(bx - 0.4, by + br)]
     main.prism(pts, G_FL - 0.3, G_FL, K.CEIL, top_mat="M_IntTileBlue")
     main.poly([(p[0], p[1], G_C0) for p in reversed(pts)], K.CEIL)
+    # first floor: the round bay is an alcove of the front east bedroom (window seat behind the bed)
+    _ring_wall(main, bx, by, br, 0.25, -90.0, 90.0, 5.35, 9.2, WALL, R["efb"]["wall"],
+               [(a, 1.0, 6.0, 8.5) for a in (-55.0, 0.0, 55.0)], seg=24)
+    main.prism(pts, G_Z1 - 0.3, G_Z1, K.CEIL, top_mat=R["efb"]["floor"])
+    main.poly([(p[0], p[1], G_C1) for p in reversed(pts)], K.CEIL)
 
 
 def _girls_partitions(aset, mb, R):
@@ -4841,9 +4862,11 @@ def _girls_partitions(aset, mb, R):
         J(13.5, 15.0, 9.2, 13.0, R[s + "fs2"]["wall"], R["hall2"]["wall"], [(14.2, 1.0, 2.2, D, False, G_Z2)])
         J(15.0, 16.4, 9.2, 13.0, R[s + "bs2"]["wall"], R["hall2"]["wall"], [(15.75, 1.0, 2.2, D, False, G_Z2)])
         J(16.4, 26.0, 9.2, 13.0, R[s + "bs2"]["wall"], R["hall2"]["wall"], [])
-        J(4.0, 26.0, 13.0, 13.6, W, W, [])
-        a, b = ((7.0, 4.0), (7.0, 26.0)) if sx > 0 else ((-7.0, 26.0), (-7.0, 4.0))
-        mb.wall(a, b, 13.6, 14.4 - 13.6, 0.4, W)                    # pavilion wall above the main roof line
+        # attic storey: pavilion wall above the main roof line, with the doors from the landing into the wing attics
+        J(4.0, 13.0, 13.0, 14.4, R["att_f" + s]["wall"], R["att_studio"]["wall"], [])
+        J(13.0, 17.0, 13.0, 15.4, R["att_f" + s]["wall"], R["att_landing"]["wall"],
+          [(14.2, 1.0, 2.1, D, False, G_Z3), (15.8, 1.0, 2.1, D, False, G_Z3)])
+        J(17.0, 26.0, 13.0, 14.4, R["att_b" + s]["wall"], R["att_landing"]["wall"], [])
 
         def H(y, xa, xb, z0, z1, south, north, doors, t=0.2):
             a, b = (sx * xa, y), (sx * xb, y)
@@ -4903,6 +4926,7 @@ def _girls_interior(aset, main, mb, nc):
     _girls_partitions(aset, mb, R)
     _build_rooms(mb, nc)
     _girls_stairs(aset, mb, nc)
+    _girls_attic(aset, mb, R)
     _girls_furnish(aset, mb, nc, R)
 
 
@@ -5302,8 +5326,9 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
         DT.coat_hooks(nc, door_x, (8.85 if front else 21.15), 1.75, _wall_yaw(side_d), n=2, dorm="obelisk",
                       jackets=2, seed=num)
         # tea for two in the turret
-        _tea_table(f, tx + sx * 1.0, ty - qy * 1.0, chairs=2, chair="SM_Int_GreenChair", stand=False,
-                   a0=45.0 * sx * qy)
+        if num < 5:      # (upper bedrooms: the spiral up to the turret room stands in the alcove)
+            _tea_table(f, tx + sx * 1.0, ty - qy * 1.0, chairs=2, chair="SM_Int_GreenChair", stand=False,
+                       a0=45.0 * sx * qy)
         # sitting nook between the window wall and the bed
         y_win = r["y0"] if front else r["y1"]
         sy0 = y_win + qy * 2.0
