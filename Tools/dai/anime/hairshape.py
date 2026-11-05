@@ -522,8 +522,12 @@ def shape(obj, face, spec, log=print, skin=None):
         grown = volume(S, co, skull, **spec["volume"])
         co = hold(smooth_field(co, grown, spec.get("coherence", 0.015) * 1.3, iters=2))   # the growth only
     if spec.get("envelope"):
-        long_v = (S.L >= LONG)[S.lab] if S.n else None
-        co = hold(envelope(co, np.array(hc[:]), axes[0], free=long_v, **spec["envelope"]))
+        # locks hanging past the jaw (twin tails, long hair) keep their line; face-framing locks are bounded
+        env = dict(spec["envelope"])
+        jaw_z = env.get("neck_z") if env.get("neck_z") is not None else hc.z - 1.5 * axes[0]
+        tips = np.array([co[idx][np.argmax(S.t[idx])][2] for idx in S.idx]) if S.n else np.zeros(0)
+        hanging = ((S.L >= LONG) & (tips < jaw_z))[S.lab] if S.n else None
+        co = hold(envelope(co, np.array(hc[:]), axes[0], free=hanging, **env))
     obj["da_hair_keep"] = list(spec.get("keep", ()))
     me = obj.data
     me.vertices.foreach_set("co", co.ravel())

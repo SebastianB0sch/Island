@@ -286,8 +286,8 @@ CAST = {
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         # Tag Force Special portrait: auburn shoulder-length hair flaring out in points, a tuft on top
-        hairdo=dict(shape=_shape(flow=dict(lift=0.3, up=-0.55, length=1.3, front_lift=0.05, front_length=1.05, crown_lift=0.3),
-                                 volume=dict(top=2.2, back=2.0, side=1.5, loft=0.015), envelope=dict(side=1.6, jaw=1.55))),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.15, up=-0.55, length=1.2, front_lift=0.05, front_length=1.05, crown_lift=0.15),
+                                 volume=dict(top=2.2, back=2.0, side=1.35, loft=0.015), envelope=dict(side=1.45, jaw=1.35))),
         expression=dict(MTH_Fun=0.3),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
