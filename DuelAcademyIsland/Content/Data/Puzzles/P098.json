@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "id": "P098",
+  "level": 5,
+  "title": "Burn L5-2",
+  "template": "burn",
+  "opponent": "mimicry",
+  "seed": 2098,
+  "turn_limit": 1,
+  "time_limit": 90,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      148
+    ],
+    "field": [
+      {
+        "card_id": 11,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [
+      {
+        "card_id": 1192,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 5000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 148
+    },
+    {
+      "action": "activate_trap",
+      "card_id": 1192
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'burn', level 5, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Burn with Sparks / Spiritual Fire Art - Kurenai, then attack for the remaining LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_098",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      153,
+      370,
+      436,
+      450,
+      453,
+      766,
+      841,
+      843,
+      863,
+      916
+    ],
+    "solution_card_names": [
+      "Autonomous Action Unit",
+      "Fenrir",
+      "Graceful Charity",
+      "Incandescent Ordeal",
+      "Legendary Flame Lord",
+      "Mother Grizzly",
+      "Mystical Space Typhoon",
+      "Salvage",
+      "Sonic Bird",
+      "Swords of Revealing Light"
+    ],
+    "solution_steps": [
+      "Summon Sonic Bird in attack mode and use its effect to get Incandescent Ordeal.",
+      "Ritual summon Legendary Flame Lord by Tributing Sonic Bird and Mother Grizzly.",
+      "Destroy Swords of Revealing Light with Mystical Space Typhoon.",
+      "Use Graceful Charity and discard Autonomous Action Unit and Salvage.",
+      "Use Legendary Flame Lord's effect.",
+      "Special summon Fenrir and go for direct attacks."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

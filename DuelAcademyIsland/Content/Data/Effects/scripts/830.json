@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "card_id": 830,
+  "name": "Dark Magician Knight",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card cannot be Normal Summoned or Set. This card cannot be Special Summoned except by the effect of \"Knight's Title\". If this card is Special Summoned successfully, select 1 card on the field and destroy it.",
+  "notes": [
+    "The summoning restriction is rules text; the script covers the on-summon destruction."
+  ],
+  "scripts": [
+    {
+      "id": "830_special_summon_destroy",
+      "trigger": "on_special_summon",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Dark Magician Knight"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Dark Magician Knight"
+          }
+        ]
+      },
+      "target": {
+        "zone": "all_cards",
+        "count": 1
+      },
+      "source_text": "This card cannot be Normal Summoned or Set. This card cannot be Special Summoned except by the effect of \"Knight's Title\". If this card is Special Summoned successfully, select 1 card on the field and destroy it."
+    }
+  ]
+}

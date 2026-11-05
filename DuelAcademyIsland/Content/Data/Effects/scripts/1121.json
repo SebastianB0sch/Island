@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "card_id": 1121,
+  "name": "Guardian Statue",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "You can flip this card into face-down Defense Position once per turn during your Main Phase. When this card is Flip Summoned successfully, return 1 monster on your opponent's side of the field to the owner's hand.",
+  "notes": [
+    "One ignition set-self script plus one Flip Summon trigger."
+  ],
+  "scripts": [
+    {
+      "id": "1121_manual_set_self",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "change_position",
+          "target": "$self",
+          "position": "face_down"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": true,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "source_text": "You can flip this card into face-down Defense Position once per turn during your Main Phase."
+    },
+    {
+      "id": "1121_flip_summon_bounce",
+      "trigger": "on_flip_summon",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "Guardian Statue"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true,
+            "zone": "self_monster"
+          },
+          {
+            "name": "Guardian Statue"
+          }
+        ]
+      },
+      "target": {
+        "zone": "opponent_monster",
+        "count": 1
+      },
+      "source_text": "When this card is Flip Summoned successfully, return 1 monster on your opponent's side of the field to the owner's hand."
+    }
+  ]
+}

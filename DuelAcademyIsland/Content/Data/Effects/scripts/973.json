@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "card_id": 973,
+  "name": "Spirit of the Pharaoh",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card cannot be Normal Summoned or Set. This card cannot be Special Summoned except by the effect of \"The First Sarcophagus\". When this card is Special Summoned successfully, you can Special Summon up to 4 Level 2 or lower Zombie-Type Normal Monsters from your Graveyard.",
+  "notes": [
+    "The summoning restriction is rules text; the script covers the on-summon revival."
+  ],
+  "scripts": [
+    {
+      "id": "973_revive_zombie_normals",
+      "trigger": "on_special_summon",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Spirit of the Pharaoh"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_graveyard",
+        "count": {
+          "min": 0,
+          "max": 4
+        },
+        "filter": {
+          "all": [
+            {
+              "card_type": "Normal Monster"
+            },
+            {
+              "monster_type": "Zombie"
+            },
+            {
+              "level_max": 2
+            }
+          ]
+        },
+        "optional": true
+      },
+      "source_text": "This card cannot be Normal Summoned or Set. This card cannot be Special Summoned except by the effect of \"The First Sarcophagus\". When this card is Special Summoned successfully, you can Special Summon up to 4 Level 2 or lower Zombie-Type Normal Monsters from your Graveyard."
+    }
+  ]
+}

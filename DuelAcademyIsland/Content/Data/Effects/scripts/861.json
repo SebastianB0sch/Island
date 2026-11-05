@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "card_id": 861,
+  "name": "Chaos Necromancer",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "The ATK of this card becomes the number of Monster Cards in your Graveyard x 300 points.",
+  "notes": [
+    "Base ATK is 0, so the dynamic addition is equivalent to setting the ATK."
+  ],
+  "scripts": [
+    {
+      "id": "861_grave_monster_atk",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 300,
+          "mode": "per_card",
+          "count_zone": "self_graveyard",
+          "count_filter": {
+            "card_type": "Monster"
+          }
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "The ATK of this card becomes the number of Monster Cards in your Graveyard x 300 points."
+    }
+  ]
+}

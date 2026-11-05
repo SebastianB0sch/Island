@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 1081,
+  "name": "Blade Rabbit",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is changed from Attack Position to face-up Defense Position, destroy 1 monster on your opponent's side of the field.",
+  "notes": [
+    "A change to face-up Defense Position is distinguished from a Set by face_up=true."
+  ],
+  "scripts": [
+    {
+      "id": "1081_position_change_destroy",
+      "trigger": "on_position_change",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Blade Rabbit"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true,
+            "zone": "self_monster",
+            "position": "defense"
+          },
+          {
+            "name": "Blade Rabbit"
+          }
+        ]
+      },
+      "target": {
+        "zone": "opponent_monster",
+        "count": 1
+      },
+      "source_text": "When this card is changed from Attack Position to face-up Defense Position, destroy 1 monster on your opponent's side of the field."
+    }
+  ]
+}

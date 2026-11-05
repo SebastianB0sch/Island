@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "card_id": 917,
+  "name": "Ultra Evolution Pill",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Offer 1 Reptile-Type monster on your side of the field as a Tribute. Special Summon 1 Dinosaur-Type Monster from your hand.",
+  "notes": [
+    "The Reptile tribute is the cost; the Dinosaur is summoned in Attack Position."
+  ],
+  "scripts": [
+    {
+      "id": "917_tribute_reptile_summon_dinosaur",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "cost": [
+        {
+          "op": "tribute",
+          "target": {
+            "zone": "self_monster",
+            "count": 1,
+            "filter": {
+              "monster_type": "Reptile"
+            }
+          }
+        }
+      ],
+      "target": {
+        "zone": "self_hand",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "monster_type": "Dinosaur"
+            }
+          ]
+        }
+      },
+      "source_text": "Offer 1 Reptile-Type monster on your side of the field as a Tribute. Special Summon 1 Dinosaur-Type Monster from your hand."
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "card_id": 759,
+  "name": "Vampire Orchis",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this monster is Normal Summoned successfully, you can Special Summon 1 \"Des Dendle\" from your hand.",
+  "notes": [
+    "Special Summons 'Des Dendle' from the hand in Attack Position."
+  ],
+  "scripts": [
+    {
+      "id": "759_normal_summon_special_named",
+      "trigger": "on_normal_summon",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Vampire Orchis"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_hand",
+        "count": 1,
+        "filter": {
+          "name": "Des Dendle"
+        }
+      },
+      "source_text": "When this monster is Normal Summoned successfully, you can Special Summon 1 \"Des Dendle\" from your hand."
+    }
+  ]
+}

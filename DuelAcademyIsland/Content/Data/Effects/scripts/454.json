@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "card_id": 454,
+  "name": "Mystic Tomato",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent to the Graveyard as a result of battle, you can Special Summon 1 DARK monster with an ATK of 1500 or less in face-up Attack Position from your Deck. Then shuffle your Deck.",
+  "notes": [
+    "Recruits a DARK monster with ATK <= 1500 in face-up Attack Position."
+  ],
+  "scripts": [
+    {
+      "id": "454_battle_recruit",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "attribute": "DARK"
+            },
+            {
+              "atk_max": 1500
+            }
+          ]
+        }
+      },
+      "source_text": "When this card is sent to the Graveyard as a result of battle, you can Special Summon 1 DARK monster with an ATK of 1500 or less in face-up Attack Position from your Deck. Then shuffle your Deck.",
+      "condition": {
+        "name": "Mystic Tomato"
+      }
+    }
+  ]
+}

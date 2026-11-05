@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "card_id": 433,
+  "name": "The Reliable Guardian",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increase 1 face-up monster's DEF by 700 points until the end of this turn.",
+  "notes": [
+    "Single-target DEF boost until the end of the turn."
+  ],
+  "scripts": [
+    {
+      "id": "433_boost_def",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "modify_def",
+          "target": "$target",
+          "amount": 700,
+          "mode": "flat"
+        }
+      ],
+      "duration": "until_end_of_turn",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "Increase 1 face-up monster's DEF by 700 points until the end of this turn."
+    }
+  ]
+}

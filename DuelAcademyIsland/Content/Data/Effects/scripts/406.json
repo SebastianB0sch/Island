@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "card_id": 406,
+  "name": "Last Day of Witch",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys all face-up Spellcaster-Type monsters on the field.",
+  "notes": [
+    "All Spellcaster monsters are destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "406_destroy_type",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Last Day of Witch"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "all_monsters",
+        "count": "all",
+        "filter": {
+          "all": [
+            {
+              "monster_type": "Spellcaster",
+              "card_type": "Monster"
+            },
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "Destroys all face-up Spellcaster-Type monsters on the field."
+    }
+  ]
+}

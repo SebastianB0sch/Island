@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "card_id": 1186,
+  "name": "System Down",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Pay 1000 Life Points. Remove from play all Machine-Type monsters on your opponent's side of the field and in their Graveyard.",
+  "notes": [
+    "Two inline all-candidate selectors, one per zone."
+  ],
+  "scripts": [
+    {
+      "id": "1186_system_down",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "banish",
+          "target": {
+            "zone": "opponent_monster",
+            "count": "all",
+            "filter": {
+              "monster_type": "Machine"
+            }
+          }
+        },
+        {
+          "op": "banish",
+          "target": {
+            "zone": "opponent_graveyard",
+            "count": "all",
+            "filter": {
+              "all": [
+                {
+                  "card_type": "Monster"
+                },
+                {
+                  "monster_type": "Machine"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "cost": [
+        {
+          "op": "pay_lp",
+          "amount": 1000
+        }
+      ],
+      "source_text": "Pay 1000 Life Points. Remove from play all Machine-Type monsters on your opponent's side of the field and in their Graveyard."
+    }
+  ]
+}

@@ -4,6 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+#include "DADialogueUI.h"
+#include "DADeckUI.h"
+#include "DADuelUI.h"
+#include "DAExamUI.h"
+#include "DAPDAUI.h"
+#include "DAShopUI.h"
+#include "DATitleScreen.h"
 #include "DAHUD.generated.h"
 
 class ADALocationVolume;
@@ -11,6 +18,7 @@ class ADAIslandManager;
 class UDAIslandSubsystem;
 class UFont;
 class UTexture2D;
+class ADAStudentCharacter;
 
 UCLASS()
 class DUELACADEMYISLAND_API ADAHUD : public AHUD
@@ -18,17 +26,140 @@ class DUELACADEMYISLAND_API ADAHUD : public AHUD
 	GENERATED_BODY()
 
 public:
+	struct FDALocoSample
+	{
+		double Time = 0.0;
+		FVector BallL = FVector::ZeroVector;
+		FVector BallR = FVector::ZeroVector;
+		FVector Actor = FVector::ZeroVector;
+	};
+
 	ADAHUD();
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void DrawHUD() override;
 
 	bool IsMapOpen() const { return bMapOpen; }
+	bool IsDuelOpen() const { return DuelUI.IsValid() && DuelUI->IsOpen(); }
+	bool IsHelpOpen() const { return bHelpOpen; }
+	bool IsPDAOpen() const { return PDAUI.IsValid() && PDAUI->IsOpen(); }
+	bool IsDialogueOpen() const { return DialogueUI.IsValid() && DialogueUI->IsOpen(); }
+	bool IsTitleOpen() const { return TitleScreen.IsValid() && TitleScreen->IsOpen(); }
+	bool IsShopOpen() const { return ShopUI.IsValid() && ShopUI->IsOpen(); }
+	bool IsDeckEditorOpen() const { return DeckUI.IsValid() && DeckUI->IsOpen(); }
+	bool IsExamOpen() const { return ExamUI.IsValid() && ExamUI->IsOpen(); }
+	bool IsGameplayUIOpen() const { return IsShopOpen() || IsDeckEditorOpen() || IsExamOpen(); }
+	bool IsModalOpen() const { return bMapOpen || bHelpOpen || IsDuelOpen() || IsPDAOpen() || IsDialogueOpen() || IsTitleOpen() || IsGameplayUIOpen(); }
+
+	/** Opens the starter-deck picker for a duel against the given opponent. */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
+	void OpenDuelDeckSelect(const FString& OpponentId = TEXT("jaden"),
+		const FString& OpponentName = TEXT("Jaden Yuki"), const FString& OpponentDeckId = TEXT("jaden"),
+		const FString& Mode = TEXT("free"), bool bAwardDP = true);
+
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
+	void StartDuelWithDeck(const FString& DeckId);
+
+	/** Starts the exam's timed puzzle as a fixed scenario without a deck picker. */
+	bool StartExamTimedDuel(const FDuelScenario& Scenario, FString& OutError);
+	bool IsExamTimedDuelOpen() const;
+	bool ConsumeExamTimedDuelResult(FDAScenarioDuelResult& OutResult);
+	void AbortExamTimedDuel();
+
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Duel")
+	void CloseDuel();
+
+	/** Debug-only: summon the first legal monster in the player's opening hand. */
+	void DebugAutoPlayOpening();
+
+	/** Debug-only: select the first card in the player's hand. */
+	void DebugSelectFirstHandCard();
+
+	/** Debug-only: finish the current duel with a player win. */
+	void DebugFinishDuelWin();
+
+	/** Debug-only: open a fixed board with a pending Equip-Spell target choice. */
+	void DebugOpenDuelEquipChoice();
+
+	UFont* GetSmallFont() const { return SmallFont; }
+	UFont* GetBigFont() const { return BigFont; }
+
 	void ToggleMap();
-	void ToggleHelp() { bHelpOpen = !bHelpOpen; }
+	void ToggleHelp();
 	void MoveMapSelection(int32 Delta);
 	ADALocationVolume* GetSelectedZone() const;
 	ADALocationVolume* PickZoneUnderCursor() const { return HoveredZone.Get(); }
+	ADALocationVolume* PickZoneRowUnderCursor() const;
+	/** Closes the map and sends the player to Zone (or the highlighted entry). */
+	void TravelToZone(ADALocationVolume* Zone = nullptr);
+
+	// ---------------------------------------------------------------- dialogue / PDA
+	/** Opens the dialogue box. A03 calls this with a resolved story command queue. */
+	void BeginDialogue(const TArray<FDADialogueLine>& Lines, const FString& ConversationId = FString());
+
+	/** Convenience for a single line (interaction barks, debug). */
+	void BeginDialogueLine(const FDADialogueLine& Line);
+
+	void CloseDialogue();
+
+	void OpenPDA(EDAPDATab Tab = EDAPDATab::Map);
+
+	void ClosePDA();
+
+	void TogglePDA(EDAPDATab Tab = EDAPDATab::Map);
+
+	// ---------------------------------------------------------------- title / new game
+	void OpenTitle();
+	void CloseTitle();
+
+	// ---------------------------------------------------------------- gameplay screens
+	void OpenShop();
+	void CloseShop();
+	void OpenDeckEditor(const FString& DeckId = FString());
+	void CloseDeckEditor();
+	void OpenExam(int32 MonthIndex = 0);
+	void CloseExam();
+
+	/** Test-only: seed the transient profile/decks/inventory/mail state used by -DAGameplayUITest. */
+	void PrepareGameplayUITestState();
+
+	/** Debug-only: log the planted-foot speed measured by the -DALocomotionTest harness. */
+	void LogLocomotionStats(const FString& Label);
+
+	/** Debug-only: log the world-space speed of the planted ball joints (foot-slide check). */
+	void LogFootPlantStats(const FString& Label);
+
+	FDADialogueUI* GetDialogueUI() const { return DialogueUI.Get(); }
+	FDAPDAUI* GetPDAUI() const { return PDAUI.Get(); }
+	FDATitleScreen* GetTitleScreen() const { return TitleScreen.Get(); }
+	FDAShopUI* GetShopUI() const { return ShopUI.Get(); }
+	FDADeckUI* GetDeckUI() const { return DeckUI.Get(); }
+	FDAExamUI* GetExamUI() const { return ExamUI.Get(); }
+
+	/**
+	 * Integration seam for pinned cross-workstream contract #1
+	 * (FDADuelUI::WasDeckSelectClosedWithoutResult, consumed by the story
+	 * workstream): the duel board itself stays private to the HUD flow
+	 * otherwise, so nothing outside that one consumption should call this.
+	 */
+	FDADuelUI* GetDuelUI() const { return DuelUI.Get(); }
+
+private:
+	// ---------------------------------------------------------------- UI hosting
+	void UpdateInputMode();
+	void ApplySettingsToUI();
+	void WireEconomySystems();
+	void HandlePDAAction(FName ActionId, const FString& Payload);
+	void HandlePDAClosed();
+	void HandleDialogueClosed(const FString& ConversationId);
+	void HandleTitleNewGame();
+	void HandleTitleContinue(int32 SlotIndex);
+	void HandleTitleOptionsChanged();
+	void HandleTitleClosed();
+	void HandleShopClosed();
+	void HandleDeckClosed();
+	void HandleExamClosed();
 
 private:
 	// drawing helpers
@@ -41,7 +172,7 @@ private:
 	void Arrow(const FVector2D& C, float R, float YawDeg, const FLinearColor& Color);
 	FVector2D WorldToMapUV(const FVector& World) const;
 	/** Island map list: every location, and under the selected one its fast-travel points inside. */
-	TArray<ADALocationVolume*> GetMapRows(UDAIslandSubsystem* Sub) const;
+	TArray<ADALocationVolume*> GetMapRows(const UDAIslandSubsystem* Sub) const;
 
 	void DrawIntro(float Time);
 	void DrawBanner(UDAIslandSubsystem* Sub, float Time);
@@ -64,11 +195,24 @@ private:
 
 	FVector2D MapMin = FVector2D(-153600.0, -153600.0);
 	FVector2D MapMax = FVector2D(153600.0, 153600.0);
+	TWeakObjectPtr<ADAStudentCharacter> LocomotionTestChar;
+	TArray<FDALocoSample> LocomotionSamples;
 
 	bool bMapOpen = false;
 	bool bHelpOpen = false;
+	bool bTitleWasShown = false;
+	bool bLocomotionTest = false;
+	bool bLocomotionSprint = false;
+	float LocomotionTestStart = 0.f;
 	TWeakObjectPtr<ADALocationVolume> MapSelected;
 	float UIScale = 1.f;
 	float StartTime = 0.f;
+	TUniquePtr<FDADuelUI> DuelUI;
+	TUniquePtr<FDADialogueUI> DialogueUI;
+	TUniquePtr<FDAPDAUI> PDAUI;
+	TUniquePtr<FDATitleScreen> TitleScreen;
+	TUniquePtr<FDAShopUI> ShopUI;
+	TUniquePtr<FDADeckUI> DeckUI;
+	TUniquePtr<FDAExamUI> ExamUI;
 	TWeakObjectPtr<ADALocationVolume> HoveredZone;
 };

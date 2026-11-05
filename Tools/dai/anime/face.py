@@ -11,10 +11,11 @@ Drawn at 4x and downsampled for clean, anti-aliased lines.
 """
 
 import math
-import os
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
+
+from .. import atomic
 
 SIZE = 512
 SS = 4  # supersampling
@@ -275,6 +276,5 @@ def paint(spec, path):
         _brows(c, spec, side)
     _mouth(c, spec)
     img = c.img.resize((SIZE, SIZE), Image.LANCZOS).convert("RGB")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    img.save(path, optimize=True)
+    atomic.save_image(img, path, optimize=True)
     return path

@@ -37,6 +37,7 @@ from PIL import Image
 from scipy import ndimage
 from scipy.spatial import cKDTree
 
+from .. import atomic
 from .. import config as C
 from .. import palette
 
@@ -743,8 +744,7 @@ def paint(me, mat_idx, g, rig, path, size=None):
                 col[(dd < b.get("r", 0.011)) & front] = b["color"]
     img[mask] = col
     img = _dilate(img, mask)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)).save(path, optimize=True)
+    atomic.save_image(Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)), path, optimize=True)
 
 
 def _edge_kind(pts, g, rig):
@@ -800,20 +800,23 @@ def fix_skin(obj, mat_idx, src_png, dst_png, rig, legs=False):
     """Paint the base model's body texture back to bare skin where its painted-on clothing would show with
     the uniform: gloves on the hands (and tights on the legs for skirts). The skin tone is sampled from the
     neck."""
-    img = np.asarray(Image.open(src_png).convert("RGBA")).astype(np.float32) / 255.0
+    with Image.open(src_png) as src_img:
+        img = np.asarray(src_img.convert("RGBA")).astype(np.float32) / 255.0
     h, w = img.shape[:2]
     pos, mask = bake_positions(obj.data, mat_idx, max(h, w))
     if (h, w) != mask.shape:
         pos, mask = pos[:h, :w], mask[:h, :w]
     neck = mask & (pos[..., 2] > rig.neck + 0.005) & (pos[..., 2] < rig.neck + 0.05)
     if not neck.any():
-        Image.fromarray((img * 255 + 0.5).astype(np.uint8)).save(dst_png)
+        atomic.save_image(Image.fromarray((img * 255 + 0.5).astype(np.uint8)), dst_png)
         return dst_png
     ref = np.median(img[neck][:, :3], axis=0)
     region = mask & (np.abs(pos[..., 0]) > rig.wrist_x - 0.06)
     if legs:
         region |= mask & (pos[..., 2] < rig.crotch + 0.03) & (np.abs(pos[..., 0]) < rig.shoulder_x + 0.2)
-    region = ndimage.binary_dilation(region, iterations=3) & ~(mask & ~region)
+    # Grow the recoloured area a little to cover the seam, but never paint texels
+    # that do not belong to the body island (other atlas regions share this texture).
+    region = ndimage.binary_dilation(region, iterations=3) & mask
     img[region, :3] = ref
-    Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)).save(dst_png, optimize=True)
+    atomic.save_image(Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)), dst_png, optimize=True)
     return dst_png

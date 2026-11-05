@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 885,
+  "name": "Dark Mirror Force",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "You can only activate this card when your opponent's monster declares an attack. Remove all monsters in Defense Position on your opponent's side of the field from play.",
+  "notes": [
+    "Triggers on the opponent's attack declaration."
+  ],
+  "scripts": [
+    {
+      "id": "885_dark_mirror_force",
+      "trigger": "on_attack_declared",
+      "operations": [
+        {
+          "op": "banish",
+          "target": "$target",
+          "reason": "Dark Mirror Force"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "opponent"
+      },
+      "target": {
+        "zone": "opponent_monster",
+        "count": "all",
+        "filter": {
+          "all": [
+            {
+              "position": "defense"
+            },
+            {
+              "face_up": true
+            }
+          ]
+        }
+      },
+      "source_text": "You can only activate this card when your opponent's monster declares an attack. Remove all monsters in Defense Position on your opponent's side of the field from play."
+    }
+  ]
+}

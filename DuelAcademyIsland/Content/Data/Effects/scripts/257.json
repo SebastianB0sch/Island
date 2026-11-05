@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "card_id": 257,
+  "name": "Witch of the Black Forest",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent from the field to the Graveyard, move 1 monster with a DEF of 1500 or less from your Deck to your hand. Your Deck is then shuffled.",
+  "notes": [
+    "Searches a monster with DEF <= 1500."
+  ],
+  "scripts": [
+    {
+      "id": "257_sent_search_def",
+      "trigger": "on_sent_to_graveyard",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self"
+          },
+          {
+            "zone": "self_monster"
+          },
+          {
+            "custom": "sent_from_field_to_graveyard"
+          },
+          {
+            "name": "Witch of the Black Forest"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "def_max": 1500
+            }
+          ]
+        }
+      },
+      "source_text": "When this card is sent from the field to the Graveyard, move 1 monster with a DEF of 1500 or less from your Deck to your hand. Your Deck is then shuffled."
+    }
+  ]
+}

@@ -6,7 +6,6 @@ terrain + water + every placed location mesh + all scattered instances
     python Tools/build_island.py render
 """
 
-import json
 import math
 import os
 
@@ -16,7 +15,7 @@ from mathutils import Vector
 
 from . import blend
 from . import config as C
-from . import terrain_mesh
+from . import jsonio, terrain_mesh
 from .assets import load_placements
 from .assets import props as P
 
@@ -75,8 +74,7 @@ def _terrain_material(mat):
     nt = mat.node_tree
     bsdf = nt.nodes["Principled BSDF"]
     tex = os.path.join(C.OUT_TEXTURES, "{}")
-    with open(os.path.join(C.OUT_DATA, "terrain_layers.json")) as fp:
-        info = json.load(fp)
+    info = jsonio.read_json(os.path.join(C.OUT_DATA, "terrain_layers.json"))
     uv = nt.nodes.new("ShaderNodeUVMap")
 
     def image(name, vector, colour=True, alpha=False):
@@ -152,8 +150,7 @@ def _terrain_material(mat):
 
 def build_scene(log=print, scatter=True, detail_props=True):
     blend.reset_scene()
-    with open(os.path.join(C.OUT_DATA, "layout.json")) as fp:
-        lay = json.load(fp)
+    lay = jsonio.read_json(os.path.join(C.OUT_DATA, "layout.json"))
     h = np.load(os.path.join(C.CACHE_DIR, "height.npy"))
     # terrain with baked colour map
     t = terrain_mesh.build_preview_terrain(h, quads=1008)

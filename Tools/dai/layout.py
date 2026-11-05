@@ -19,9 +19,10 @@ import random
 
 import numpy as np
 
+from . import atomic
 from . import config as C
-from . import palette, terrain
-from .assets import AssetSet, load_placements
+from . import jsonio, palette, terrain
+from .assets import load_placements
 from .assets import props as P
 from .assets import avatar as AV
 
@@ -138,10 +139,11 @@ class Layout:
         from . import blend
         rel = os.path.join("Meshes", folder, f"SM_{name}.fbx")
         path = os.path.join(C.OUT_DIR, rel)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
         obj = mb.build("SM_" + name)
-        blend.export_fbx([obj], path)
-        blend.delete([obj])
+        try:
+            blend.export_fbx([obj], path)
+        finally:
+            blend.delete([obj])
         self.manifest.append(dict(file=rel.replace(os.sep, "/"), name=f"SM_{name}", folder=folder.replace(os.sep, "/"),
                                   collision=collision, nanite=self.nanite_ok(mb) if nanite is None else nanite,
                                   category="location"))
@@ -246,6 +248,84 @@ class Layout:
             mb = DR.build_leaf(style, lw, h)
             self.export_mesh(mb, name[3:], "Doors", "complex")
         self.log(f"  doors: {len(self.doors)} doorways, {len(self.door_leaves)} leaf meshes")
+
+    # ------------------------------------------------------------------ interiors
+    def place_interiors(self, export=True):
+        """Build/export the portal-cell interiors listed in Content/Data/World/interiors.json.
+
+        Cells are authored in local metres by `dai.assets.interiors`; this method
+        places each AssetSet at its UE origin and appends its lights/text/interacts
+        to the same layout arrays the existing island uses.  It does not touch any
+        existing location placement.
+        """
+        from .assets import interiors as I
+
+        path = os.path.join(C.UE_PROJECT_DIR, "Content", "Data", "World", "interiors.json")
+        if not os.path.exists(path):
+            self.log(f"  interiors: {path} not found, skipping")
+            return
+        with open(path, "r", encoding="utf-8") as fp:
+            doc = json.load(fp)
+
+        cells = doc.get("cells", [])
+        for cell in cells:
+            cid = str(cell.get("id", "cell"))
+            origin = [float(v) for v in cell.get("origin_ue", [0, 0, 0])]
+            aset = I.build_cell(cell)
+            folder = "Locations/interiors"
+            for name, mb in aset.meshes.items():
+                if not mb.verts:
+                    continue
+                collision = "none" if name.endswith("_NoCol") else "complex"
+                if export:
+                    self.export_mesh(mb, name, folder, collision)
+                self.static.append(dict(mesh=f"SM_{name}", folder=folder, loc=origin, yaw=0.0,
+                                        collision=collision, group="interiors", label=name))
+            self._place_interior_sockets(aset, origin, cid)
+            self.log(f"  interior {cid:24s} {len(aset.meshes)} meshes, {len(aset.sockets)} sockets")
+
+        self.log(f"  interiors: {len(cells)} cells")
+
+    def _place_interior_sockets(self, aset, origin, cid):
+        """Convert local socket positions to UE world and append them to layout arrays."""
+        ox, oy, oz = origin
+
+        def upoint(p):
+            return [round(ox + float(p[0]) * 100.0, 1),
+                    round(oy - float(p[1]) * 100.0, 1),
+                    round(oz + (float(p[2]) if len(p) > 2 else 0.0) * 100.0, 1)]
+
+        for s in aset.sockets:
+            t, p, pr = s["type"], s["pos"], s["props"]
+            loc = upoint(p)
+            yaw = ue_yaw(s["yaw"])
+            if t == "light":
+                L = dict(loc=loc, color=pr.get("color", [1, 0.85, 0.6]),
+                         intensity=pr.get("intensity", 5000.0),
+                         radius=float(pr.get("radius", 12.0)) * 100.0,
+                         night_only=bool(pr.get("night_only", False)),
+                         shadows=bool(pr.get("shadows", False)))
+                if pr.get("spot_pitch") is not None:
+                    L["spot"] = dict(yaw=yaw, pitch=-float(pr["spot_pitch"]), cone=float(pr.get("cone") or 40.0))
+                self.lights.append(L)
+            elif t == "text":
+                self.texts.append(dict(loc=loc, yaw=yaw, text=pr.get("text", ""),
+                                       size=float(pr.get("size", 1.0)) * 100.0,
+                                       color=pr.get("color", [1, 1, 1]),
+                                       emissive=bool(pr.get("emissive", False))))
+            elif t == "interact":
+                self.interacts.append(dict(kind=pr.get("kind", "sign"), loc=loc, yaw=yaw,
+                                           title=pr.get("title", ""), text=pr.get("text", ""),
+                                           radius=float(pr.get("radius", 3.0)) * 100.0,
+                                           group=cid))
+            elif t == "audio":
+                self.audio.append(dict(sound=pr.get("sound", "A_Wind"), loc=loc,
+                                       radius=float(pr.get("radius", 40.0)) * 100.0,
+                                       volume=float(pr.get("volume", 1.0))))
+            elif t == "emitter":
+                self.emitters.append(dict(kind=pr.get("kind", "steam"), loc=loc,
+                                          scale=float(pr.get("scale", 1.0)),
+                                          rate=float(pr.get("rate", 1.0))))
 
     def place_sockets(self, aset, xf, key):
         for s in aset.sockets:
@@ -449,7 +529,6 @@ class Layout:
                         ok[m] = sub
             return ok
 
-        h_all = None
         counts = {}
 
         def emit(asset, x, y, z, scale_lo, scale_hi, sink=0.15):
@@ -779,10 +858,13 @@ class Layout:
     # ------------------------------------------------------------------ minimap
     def minimap(self, size=2048):
         from PIL import Image, ImageDraw
-        from .terrain import Terrain
         # recompute the base map from cached height + colour map
         h = self.hf.a
-        col = np.asarray(Image.open(os.path.join(C.OUT_TEXTURES, "T_TerrainColor.png")).convert("RGB")).astype(np.float32) / 255.0
+        colour_path = os.path.join(C.OUT_TEXTURES, "T_TerrainColor.png")
+        if not os.path.exists(colour_path):
+            raise FileNotFoundError(f"{colour_path} missing - run the textures and terrain stages first")
+        with Image.open(colour_path) as colour:
+            col = np.asarray(colour.convert("RGB")).astype(np.float32) / 255.0
         from scipy import ndimage
         hz = ndimage.zoom(h, size / h.shape[0], order=1)[:size, :size]
         cz = ndimage.zoom(col, (size / col.shape[0], size / col.shape[1], 1), order=1)[:size, :size]
@@ -814,7 +896,7 @@ class Layout:
             colr = tuple(int(c * 255) for c in C.LOCATIONS.get(key, {}).get("color", (0.8, 0.8, 0.8)))
             fill = tuple(int(0.55 * c + 0.45 * 235) for c in colr)
             d.polygon([px(p) for p in poly], fill=fill, outline=(60, 60, 70))
-        pil.save(os.path.join(C.OUT_TEXTURES, "T_IslandMap.png"), optimize=True)
+        atomic.save_image(pil, os.path.join(C.OUT_TEXTURES, "T_IslandMap.png"), optimize=True)
         self.log("  minimap: T_IslandMap.png")
 
     # ------------------------------------------------------------------ write
@@ -857,12 +939,9 @@ class Layout:
             specials=self.specials, doors=self.doors,
             zones=[{k: v for k, v in z.items() if not k.startswith("_")} for z in self.zones()],
         )
-        with open(os.path.join(C.OUT_DATA, "layout.json"), "w") as fp:
-            json.dump(layout, fp, separators=(",", ":"))
-        with open(os.path.join(C.OUT_DATA, "materials.json"), "w") as fp:
-            json.dump(palette.material_json(), fp, indent=1)
-        with open(os.path.join(C.OUT_DATA, "assets.json"), "w") as fp:
-            json.dump(self.manifest, fp, indent=1)
+        jsonio.write_json(os.path.join(C.OUT_DATA, "layout.json"), layout, separators=(",", ":"))
+        jsonio.write_json(os.path.join(C.OUT_DATA, "materials.json"), palette.material_json(), indent=1)
+        jsonio.write_json(os.path.join(C.OUT_DATA, "assets.json"), self.manifest, indent=1)
         n_inst = sum(len(v["items"]) for v in inst.values())
         self.log(f"  layout.json: {len(self.static)} static, {len(self.floating)} floating, {n_inst} instances, "
                  f"{len(self.lights)} lights, {len(self.texts)} texts, {len(self.interacts)} interactables, "
@@ -886,8 +965,10 @@ def export_avatar(manifest, log=print):
     os.makedirs(out, exist_ok=True)
     for name, fn in AV.PARTS.items():
         o = fn().build("SM_" + name)
-        blend.export_fbx([o], os.path.join(out, f"SM_{name}.fbx"))
-        blend.delete([o])
+        try:
+            blend.export_fbx([o], os.path.join(out, f"SM_{name}.fbx"))
+        finally:
+            blend.delete([o])
         manifest.append(dict(file=f"Meshes/Characters/SM_{name}.fbx", name=f"SM_{name}", folder="Characters",
                              collision="none", nanite=False, category="character"))
     log(f"  avatar: {len(AV.PARTS)} parts")

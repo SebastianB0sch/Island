@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "card_id": 643,
+  "name": "Byser Shock",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is Normal Summoned, Flip Summoned, or Special Summoned, return all Set cards on the field to their owner's respective hands.",
+  "notes": [
+    "Set monsters and Set Spell/Trap cards are both face-down field cards."
+  ],
+  "scripts": [
+    {
+      "id": "643_return_set_cards",
+      "trigger": "on_summon",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "Byser Shock"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Byser Shock"
+          }
+        ]
+      },
+      "target": {
+        "zone": "all_cards",
+        "count": "all",
+        "filter": {
+          "face_up": false
+        }
+      },
+      "source_text": "When this card is Normal Summoned, Flip Summoned, or Special Summoned, return all Set cards on the field to their owner's respective hands."
+    }
+  ]
+}

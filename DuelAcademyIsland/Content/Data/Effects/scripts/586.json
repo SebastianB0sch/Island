@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "card_id": 586,
+  "name": "Hysteric Fairy",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Offer 2 monsters on your side of the field as a Tribute to increase your Life Points by 1000 points. Monsters used for a Tribute Summon or that are offered as Tributes due to other cards' effects are excluded.",
+  "notes": [
+    "Two tributes are the cost for 1000 Life Points."
+  ],
+  "scripts": [
+    {
+      "id": "586_tribute_heal",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 1000,
+          "player": "self",
+          "reason": "Hysteric Fairy"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "tribute",
+          "target": {
+            "zone": "self_monster",
+            "count": 2
+          }
+        }
+      ],
+      "source_text": "Offer 2 monsters on your side of the field as a Tribute to increase your Life Points by 1000 points. Monsters used for a Tribute Summon or that are offered as Tributes due to other cards' effects are excluded."
+    }
+  ]
+}

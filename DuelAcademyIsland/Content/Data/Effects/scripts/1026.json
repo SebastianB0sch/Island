@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "card_id": 1026,
+  "name": "Ritual Weapon",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This card can only be equipped to a Ritual Monster of Level 6 or less. Increase the ATK and DEF of the equipped monster by 1500 points.",
+  "notes": [
+    "Only a Level 6 or lower Ritual Monster; +1500 ATK/DEF."
+  ],
+  "scripts": [
+    {
+      "id": "1026_equip_activate",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "equip",
+          "target": "$target"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Ritual Monster"
+            },
+            {
+              "level_max": 6
+            }
+          ]
+        }
+      },
+      "source_text": "Equip this card to a legal monster."
+    },
+    {
+      "id": "1026_equip_continuous",
+      "trigger": "equip_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 1500,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_def",
+          "target": "$self",
+          "amount": 1500,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true
+          },
+          {
+            "card_type": "Ritual Monster"
+          },
+          {
+            "level_max": 6
+          }
+        ]
+      },
+      "source_text": "Apply the equipped monster's continuous bonus."
+    }
+  ]
+}

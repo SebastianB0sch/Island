@@ -123,7 +123,6 @@ def flat_square(name, half, z, cells, mat):
 
 def build_water(h, export=True, log=print):
     """Ocean plane, sea floor plane and lake surface."""
-    from .terrain import grid
     objs = {}
     ocean = flat_square("SM_Ocean", 20000.0, 0.0, 40, "M_Ocean")
     seafloor = flat_square("SM_SeaFloor", 20000.0, C.SEA_FLOOR - 0.4, 8, "M_Sand")
@@ -155,7 +154,8 @@ def build_water(h, export=True, log=print):
             if inside[r, c] or inside[r + 1, c] or inside[r, c + 1] or inside[r + 1, c + 1]:
                 a0 = r * nc + c
                 faces.append((a0, a0 + nc, a0 + nc + 1, a0 + 1))
-    faces = np.array(faces, dtype=np.int64)
+    faces = np.asarray(faces, dtype=np.int64)
+    faces = faces.reshape(-1, 4) if faces.size else np.zeros((0, 4), dtype=np.int64)
     used = np.unique(faces)
     remap = np.full(len(verts), -1, dtype=np.int64)
     remap[used] = np.arange(len(used))

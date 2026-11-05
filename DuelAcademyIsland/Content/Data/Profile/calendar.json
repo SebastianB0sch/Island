@@ -1,0 +1,33 @@
+{
+  "start": {
+    "year": 1,
+    "month_index": 0,
+    "day": 7,
+    "period": "AM"
+  },
+  "period_hours": {
+    "AM": 8,
+    "PM": 14,
+    "Night": 20
+  },
+  "exam": {
+    "weekday": "Friday",
+    "week": "last",
+    "pass_mark": 300,
+    "note": "Provisional until A01 freezes the canon date table. week may be first/second/third/fourth/last; overrides go in the save-versioned exam table once canon lands."
+  },
+  "months": [
+    { "index": 0, "name": "October", "short": "Oct", "days": 31 },
+    { "index": 1, "name": "November", "short": "Nov", "days": 30 },
+    { "index": 2, "name": "December", "short": "Dec", "days": 31 },
+    { "index": 3, "name": "January", "short": "Jan", "days": 31 },
+    { "index": 4, "name": "February", "short": "Feb", "days": 28 },
+    { "index": 5, "name": "March", "short": "Mar", "days": 31 },
+    { "index": 6, "name": "April", "short": "Apr", "days": 30 },
+    { "index": 7, "name": "May", "short": "May", "days": 31 },
+    { "index": 8, "name": "June", "short": "Jun", "days": 30 },
+    { "index": 9, "name": "July", "short": "Jul", "days": 31 },
+    { "index": 10, "name": "August", "short": "Aug", "days": 31 },
+    { "index": 11, "name": "September", "short": "Sep", "days": 30 }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 386,
+  "name": "De-Spell",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys 1 Spell Card on the field. If this card's target is face-down, flip it face-up. If the card is a Spell Card, it is destroyed. If not, it is returned to its face-down position. The flipped card is not activated.",
+  "notes": [
+    "The engine knows the printed type, so only a Spell is selectable."
+  ],
+  "scripts": [
+    {
+      "id": "386_destroy_spell",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "De-Spell"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_spell_trap",
+        "count": 1,
+        "filter": {
+          "card_type": "Spell"
+        }
+      },
+      "source_text": "Destroys 1 Spell Card on the field. If this card's target is face-down, flip it face-up. If the card is a Spell Card, it is destroyed. If not, it is returned to its face-down position. The flipped card is not activated."
+    }
+  ]
+}

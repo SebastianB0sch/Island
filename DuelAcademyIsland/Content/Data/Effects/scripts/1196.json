@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "card_id": 1196,
+  "name": "Rising Energy",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Discard 1 card from your hand. Increase the ATK of 1 face-up monster on the field by 1500 points until the End Phase of this turn.",
+  "notes": [
+    "Discard cost, then a temporary ATK boost."
+  ],
+  "scripts": [
+    {
+      "id": "1196_discard_boost_attack",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$target",
+          "amount": 1500,
+          "mode": "flat"
+        }
+      ],
+      "duration": "until_end_of_turn",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "cost": [
+        {
+          "op": "discard",
+          "target": {
+            "zone": "self_hand",
+            "count": 1
+          }
+        }
+      ],
+      "target": {
+        "zone": "any_monster",
+        "count": 1,
+        "filter": {
+          "face_up": true
+        }
+      },
+      "source_text": "Discard 1 card from your hand. Increase the ATK of 1 face-up monster on the field by 1500 points until the End Phase of this turn."
+    }
+  ]
+}

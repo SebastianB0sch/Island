@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 272,
+  "name": "Queen's Double",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "This monster may attack your opponent's Life Points directly.",
+  "notes": [
+    "Continuous direct-attack permission."
+  ],
+  "scripts": [
+    {
+      "id": "272_attack_directly",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "attack_directly",
+          "target": "$self"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "This monster may attack your opponent's Life Points directly."
+    }
+  ]
+}

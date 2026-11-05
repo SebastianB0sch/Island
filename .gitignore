@@ -1,4 +1,5 @@
 # Unreal Engine
+Build/
 DuelAcademyIsland/Binaries/
 DuelAcademyIsland/Intermediate/
 DuelAcademyIsland/Saved/
@@ -19,7 +20,29 @@ DuelAcademyIsland/Content/Developers/
 __pycache__/
 *.pyc
 Tools/.cache/
+Tools/.blender_site/
+Tools/canon/.local_only/
+Tools/canon/cache/
 Docs/previews/
+
+# Generated integration reports/logs (run_smoke.py defaults). Curated gate
+# evidence is tracked explicitly; `git add -f` a new evidence artifact.
+Docs/Integration/reports/logs/*.log
+Docs/Integration/reports/automation/
+Docs/Integration/reports/smoke*.json
+!Docs/Integration/reports/smoke_selftests.json
+Docs/Integration/reports/validate*.json
+!Docs/Integration/reports/validate_baseline.json
+!Docs/Integration/reports/validate_strict.json
+
+# Generated canon validation report (only written through an explicit
+# --report path). The tracked copy is Docs/Canon/VALIDATION.md, refreshed
+# deliberately because its timestamp changes on every regeneration.
+Docs/Integration/reports/canon-validation.md
+Docs/Integration/reports/logs/*.log
+
+# Packaged builds and staging
+Builds/
 
 # OS
 .DS_Store

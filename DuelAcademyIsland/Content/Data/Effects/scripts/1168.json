@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 1168,
+  "name": "Cybernetic Cyclopean",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "While you have no cards in your hand, increase the ATK of this card by 1000 points.",
+  "notes": [
+    "Continuous self boost; the condition is re-evaluated by the runtime."
+  ],
+  "scripts": [
+    {
+      "id": "1168_attack_boost_empty_hand",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 1000,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "hand_max": 0
+      },
+      "source_text": "While you have no cards in your hand, increase the ATK of this card by 1000 points."
+    }
+  ]
+}

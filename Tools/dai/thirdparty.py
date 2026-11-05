@@ -33,6 +33,7 @@ import math
 import os
 import shutil
 import subprocess
+import time
 
 import bpy  # must come before bmesh (bmesh is provided by the Blender module)
 import bmesh
@@ -40,14 +41,16 @@ import numpy as np
 from mathutils import Matrix, Vector
 
 from . import config as C
-from . import palette
+from . import atomic, cache, palette
 
 TP_DIR = os.path.join(C.TOOLS_DIR, "thirdparty")
 REG_PATH = os.path.join(TP_DIR, "registry.json")
 TEX_OUT = os.path.join(C.OUT_TEXTURES, "ThirdParty")
+# glTF-Transform is picked from the GLTF_TRANSFORM env var first (pin a specific
+# binary), then from PATH; a hung process must not stall the build forever.
+GLTF_TRANSFORM_TIMEOUT = 120.0
 GLTF_TRANSFORM_CANDIDATES = [
     os.environ.get("GLTF_TRANSFORM", ""),
-    "/home/user/tools-node/node_modules/.bin/gltf-transform",
     shutil.which("gltf-transform") or "",
 ]
 
@@ -90,20 +93,44 @@ def has_prop(name):
 # --------------------------------------------------------------------------- import
 def _decode_meshopt(path):
     """Blender's bpy wheel lacks the meshopt decoder; decompress with glTF-Transform when needed."""
-    cache = os.path.join(C.CACHE_DIR, "decoded")
-    os.makedirs(cache, exist_ok=True)
-    out = os.path.join(cache, os.path.basename(path))
-    if os.path.exists(out) and os.path.getmtime(out) >= os.path.getmtime(path):
+    cache_dir = os.path.join(C.CACHE_DIR, "decoded")
+    os.makedirs(cache_dir, exist_ok=True)
+    cache.require_file(path, "meshopt glTF")
+    # Two packs may both ship e.g. "tree.glb"; key the cache by the source path as
+    # well, or one would silently be decoded into the other's cached copy.
+    out = cache.cache_file(cache_dir, path, ".glb")
+    if cache.is_fresh(out, path) and cache.is_glb(out):
         return out
+    attempts = []
     for tool in GLTF_TRANSFORM_CANDIDATES:
-        if tool and os.path.exists(tool):
-            subprocess.run([tool, "copy", path, out], check=True, capture_output=True)
-            return out
-    raise RuntimeError("meshopt-compressed glTF and no gltf-transform available "
-                       "(npm install @gltf-transform/cli and set GLTF_TRANSFORM)")
+        if not tool or not os.path.exists(tool):
+            continue
+        started = time.monotonic()
+        try:
+            # Write next to the cache entry, then publish - a cancelled decode leaves
+            # the previous cache untouched.
+            with atomic.atomic_path(out) as temp_path:
+                # gltf-transform may refuse an existing output path; the unique
+                # temp name is ours, so let the CLI create it.
+                temp_path.unlink()
+                subprocess.run([tool, "copy", path, str(temp_path)], check=True, capture_output=True,
+                               timeout=GLTF_TRANSFORM_TIMEOUT)
+                if not cache.is_glb(temp_path):
+                    raise RuntimeError("gltf-transform produced an invalid GLB")
+        except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+            # SubprocessError covers both a failed exit and a hung process
+            # (TimeoutExpired); surface which tool failed and how long it took.
+            attempts.append(f"{tool} ({time.monotonic() - started:.1f}s): {exc}")
+            continue
+        print(f"  thirdparty: decoding {os.path.basename(path)} with {tool}", flush=True)
+        return out
+    detail = "".join(f"\n  {attempt}" for attempt in attempts)
+    raise RuntimeError("meshopt-compressed glTF and no working gltf-transform available "
+                       "(npm install @gltf-transform/cli and set GLTF_TRANSFORM)" + detail)
 
 
 def import_file(path):
+    cache.require_file(path, "model")
     before = set(bpy.data.objects)
     ext = os.path.splitext(path)[1].lower()
     if ext in (".glb", ".gltf"):
@@ -218,8 +245,13 @@ def _image_from(socket, depth=0):
     return None, None
 
 
-def _save_image(img, path, max_size=2048, mode=None):
-    if os.path.exists(path):
+def _save_image(img, path, max_size=2048, mode=None, use_cache=True, fresh_against=None):
+    """Save / reuse an extracted texture.  With ``fresh_against`` (the source file the
+    image came from) an existing cache entry is only reused when it is not older
+    than that file - replacing a registered model in place used to silently keep
+    its stale cached textures (existence-only freshness)."""
+    if use_cache and os.path.isfile(path) and os.path.getsize(path) > 0 \
+            and (fresh_against is None or cache.is_fresh(path, fresh_against)):
         return path
     w, h = img.size[:]
     if w == 0 or h == 0:
@@ -235,11 +267,10 @@ def _save_image(img, path, max_size=2048, mode=None):
     if max(w, h) > max_size:
         k = max_size / max(w, h)
         pil = pil.resize((max(1, int(w * k)), max(1, int(h * k))), Image.LANCZOS)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
     if path.lower().endswith(".jpg"):
-        pil.convert("RGB").save(path, quality=92)
+        atomic.save_image(pil.convert("RGB"), path, quality=92)
     else:
-        pil.save(path, optimize=True)
+        atomic.save_image(pil, path, optimize=True)
     return path
 
 
@@ -366,7 +397,7 @@ def extract_materials(obj, asset, spec):
             if img is not None:
                 ext = ".png" if (is_foliage or bsdf.inputs["Alpha"].is_linked) else ".jpg"
                 p = _save_image(img, os.path.join(tex_dir, f"T_{asset}_{i}_BC{ext}"), max_size,
-                                mode="RGBA" if ext == ".png" else None)
+                                mode="RGBA" if ext == ".png" else None, use_cache=False)
                 if p:
                     entry["base"] = f"ThirdParty/{asset}/" + os.path.splitext(os.path.basename(p))[0]
                     if toon:
@@ -386,14 +417,14 @@ def extract_materials(obj, asset, spec):
                 if bsdf.inputs["Normal"].is_linked:     # flat-shaded preview, like the toon master
                     mat.node_tree.links.remove(bsdf.inputs["Normal"].links[0])
             if nimg is not None:
-                p = _save_image(nimg, os.path.join(tex_dir, f"T_{asset}_{i}_N.png"), max_size)
+                p = _save_image(nimg, os.path.join(tex_dir, f"T_{asset}_{i}_N.png"), max_size, use_cache=False)
                 if p:
                     entry["normal"] = f"ThirdParty/{asset}/T_{asset}_{i}_N"
             rimg, rch = _image_from(bsdf.inputs["Roughness"])
             if toon:
                 rimg = None
             if rimg is not None:
-                p = _save_image(rimg, os.path.join(tex_dir, f"T_{asset}_{i}_ORM.png"), max_size)
+                p = _save_image(rimg, os.path.join(tex_dir, f"T_{asset}_{i}_ORM.png"), max_size, use_cache=False)
                 if p:
                     entry["orm"] = f"ThirdParty/{asset}/T_{asset}_{i}_ORM"
                     # glTF metallicRoughness: roughness in G, metallic in B (via a Separate Color node)

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 685,
+  "name": "Disappear",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select 1 card from your opponent's Graveyard and remove it from play.",
+  "notes": [
+    "One opponent Graveyard card is banished."
+  ],
+  "scripts": [
+    {
+      "id": "685_banish_grave_card",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "banish",
+          "target": "$target",
+          "reason": "Disappear"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "opponent_graveyard",
+        "count": 1
+      },
+      "source_text": "Select 1 card from your opponent's Graveyard and remove it from play."
+    }
+  ]
+}

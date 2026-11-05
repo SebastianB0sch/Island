@@ -9,7 +9,7 @@ import bpy
 import numpy as np
 from mathutils import Vector
 
-from . import palette
+from . import atomic, palette
 
 
 # --------------------------------------------------------------------------- scene
@@ -165,20 +165,23 @@ def apply_transform(obj):
 # --------------------------------------------------------------------------- export
 def export_fbx(objs, path):
     """Export the given objects (at their current transforms) to a binary FBX for UE."""
-    os.makedirs(os.path.dirname(path), exist_ok=True)
     for o in bpy.context.scene.objects:
         o.select_set(False)
     for o in objs:
         o.select_set(True)
     bpy.context.view_layer.objects.active = objs[0]
-    bpy.ops.export_scene.fbx(
-        filepath=path, use_selection=True, object_types={"MESH"},
-        apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y",
-        mesh_smooth_type="FACE", use_mesh_modifiers=True, add_leaf_bones=False,
-        bake_anim=False, path_mode="STRIP", embed_textures=False, use_custom_props=False,
-        use_tspace=False, colors_type="LINEAR")
-    for o in objs:
-        o.select_set(False)
+    try:
+        # Blender writes the FBX directly; publish it only once the exporter returns.
+        with atomic.atomic_path(path) as temp_path:
+            bpy.ops.export_scene.fbx(
+                filepath=str(temp_path), use_selection=True, object_types={"MESH"},
+                apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y",
+                mesh_smooth_type="FACE", use_mesh_modifiers=True, add_leaf_bones=False,
+                bake_anim=False, path_mode="STRIP", embed_textures=False, use_custom_props=False,
+                use_tspace=False, colors_type="LINEAR")
+    finally:
+        for o in objs:
+            o.select_set(False)
 
 
 # --------------------------------------------------------------------------- rendering
@@ -283,11 +286,15 @@ def camera(name, loc, target, lens=35.0, clip_end=20000.0):
 
 
 def render(cam, path):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    """Render the current frame to ``path`` without exposing a partial image."""
     scene = bpy.context.scene
     scene.camera = cam
-    scene.render.filepath = path
-    bpy.ops.render.render(write_still=True)
+    try:
+        with atomic.atomic_path(path) as temp_path:
+            scene.render.filepath = str(temp_path)
+            bpy.ops.render.render(write_still=True)
+    finally:
+        scene.render.filepath = os.fspath(path)
 
 
 def preview_asset(objs, path, res=(1000, 750), samples=24, azim=-35.0, elev=22.0, dist_mul=1.6,

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 150,
+  "name": "Final Flame",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Inflicts 600 points of Direct Damage to your opponent's Life Points.",
+  "notes": [
+    "Single-clause burn."
+  ],
+  "scripts": [
+    {
+      "id": "150_damage_opponent",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 600,
+          "player": "opponent",
+          "reason": "Final Flame"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Inflicts 600 points of Direct Damage to your opponent's Life Points."
+    }
+  ]
+}

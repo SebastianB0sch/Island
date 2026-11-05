@@ -11,21 +11,29 @@ import wave
 
 import numpy as np
 
+from . import atomic
 from . import config as C
 
 SR = 22050
 
 
 def _write(path, x, sr=SR):
+    """Write a 16-bit mono WAV, atomically (temp + os.replace + fsync via dai.atomic)."""
     x = np.asarray(x, np.float64)
     peak = np.max(np.abs(x)) + 1e-9
     x = x / peak * 0.85
     data = (x * 32767).astype("<i2")
-    with wave.open(path, "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(sr)
-        w.writeframes(data.tobytes())
+    with atomic.atomic_path(path) as temp_path:
+        with wave.open(str(temp_path), "wb") as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(sr)
+            w.writeframes(data.tobytes())
+        # fsync before publishing so an interrupted run cannot leave a truncated
+        # header / data chunk in the published file (write mode: Windows
+        # FlushFileBuffers needs a writable handle).
+        with temp_path.open("r+b") as fp:
+            os.fsync(fp.fileno())
 
 
 def band_noise(n, lo, hi, seed, tilt=0.0):
@@ -72,7 +80,6 @@ def birds(dur=20.0, seed=5):
     n = int(SR * dur)
     r = np.random.default_rng(seed)
     out = wind(dur) * 0.15
-    t_all = np.arange(n) / SR
     for _ in range(int(dur * 1.6)):
         start = r.uniform(0, dur - 0.6)
         notes = r.integers(2, 6)

@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "id": "P041",
+  "level": 3,
+  "title": "Direct Attack L3-1",
+  "template": "direct_attack",
+  "opponent": "mimicry",
+  "seed": 2041,
+  "turn_limit": 1,
+  "time_limit": 60,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 2400,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 160,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'direct_attack', level 3, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Direct attack with Red-Eyes B. Dragon for exactly 2400 damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_041",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      442,
+      477,
+      500,
+      1118,
+      1137
+    ],
+    "solution_card_names": [
+      "Giant Rat",
+      "Mine Golem",
+      "Minefield Eruption",
+      "Premature Burial",
+      "Valkyrion the Magna Warrior"
+    ],
+    "solution_steps": [
+      "Activate Premature Burial to bring a Mine Golem from the Graveyard.",
+      "Summon Giant Rat.",
+      "Enter Battle Phase and attack Valkyrion the Magna Warrior with your Rat, then choose to bring another Mine Golem to the field.",
+      "Activate Minefield Eruption."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

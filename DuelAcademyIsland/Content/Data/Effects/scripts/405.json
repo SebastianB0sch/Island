@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "card_id": 405,
+  "name": "Royal Decree",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "As long as this card remains face-up on the field, negate the effects of all Trap Cards except this card on the field.",
+  "notes": [
+    "Uses the same trap lock primitive as Jinzo."
+  ],
+  "scripts": [
+    {
+      "id": "405_royal_decree_lock",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "lock_activation",
+          "target": {
+            "zone": "all_spell_traps",
+            "count": "all",
+            "filter": {
+              "card_type": "Trap"
+            }
+          },
+          "mode": "trap_activation_and_effects"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_spell_trap"
+      },
+      "source_text": "As long as this card remains face-up on the field, negate the effects of all Trap Cards except this card on the field."
+    }
+  ]
+}

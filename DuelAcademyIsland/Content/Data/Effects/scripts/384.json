@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "card_id": 384,
+  "name": "Raimei",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Decrease your opponent's Life Points by 300 points.",
+  "notes": [
+    "Single-clause burn."
+  ],
+  "scripts": [
+    {
+      "id": "384_damage_opponent",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 300,
+          "player": "opponent",
+          "reason": "Raimei"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "Decrease your opponent's Life Points by 300 points."
+    }
+  ]
+}

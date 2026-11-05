@@ -13,6 +13,8 @@ class UTexture2D;
 class UMaterialParameterCollection;
 class ULightComponent;
 class UBillboardComponent;
+class USkeletalMesh;
+class UDACalendarSubsystem;
 
 /**
  * One per level (spawned by the editor build script). Drives the sun/moon,
@@ -28,8 +30,13 @@ public:
 	ADAIslandManager();
 
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnConstruction(const FTransform& Transform) override;
+
+	/** Editor repair: merge every bone of Mesh into its skeleton's bone tree (saves the skeleton). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Editor")
+	static bool MergeSkeletonBones(USkeletalMesh* Mesh);
 
 	// ---------------------------------------------------------------- scene references
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Sky")
@@ -115,6 +122,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
 	void SetHour(float NewHour);
 
+	/** Set the visual day and hour from the authoritative calendar (AbsoluteDay is 0-based). */
+	void SetCalendarTime(int32 AbsoluteDay, float NewHour);
+
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
 	void AdjustTimeSpeed(float Factor);
 
@@ -124,13 +134,17 @@ public:
 	float GetWaterSurfaceZ(const FVector& WorldLocation) const;
 	bool IsInLake(const FVector& WorldLocation, float Margin = 1.f) const;
 
-	/** "Day 1 - 16:15" style clock text. */
+	/** "Day 7  16:15" style clock text: campaign day number plus visual hour. */
 	FString GetClockText() const;
 
 private:
 	void ApplyTimeOfDay();
 	void GatherNightLights();
 	void SetNightLights(bool bOn);
+	void SanitizeTimeSettings();
+
+	UFUNCTION()
+	void HandleCalendarVisualHour(int32 NewHour);
 
 	UPROPERTY(VisibleAnywhere, Category = "Duel Academy")
 	TObjectPtr<UBillboardComponent> Icon;
@@ -145,4 +159,6 @@ private:
 	bool bNightLightsOn = false;
 	bool bNightLightsInitialised = false;
 	int32 Day = 1;
+
+	TWeakObjectPtr<UDACalendarSubsystem> BoundCalendar;
 };

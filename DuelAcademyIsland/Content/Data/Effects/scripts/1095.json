@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "card_id": 1095,
+  "name": "The Big March of Animals",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Until the End Phase, increase the ATK of all face-up Beast-Type monsters on your side of the field by 200 points for each Beast-Type monster on your side of the field.",
+  "notes": [
+    "Each face-up Beast on your side receives the same per-Beast bonus."
+  ],
+  "scripts": [
+    {
+      "id": "1095_beast_team_boost",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$target",
+          "amount": 200,
+          "mode": "per_card",
+          "count_zone": "self_monster",
+          "count_filter": {
+            "all": [
+              {
+                "face_up": true
+              },
+              {
+                "monster_type": "Beast"
+              }
+            ]
+          }
+        }
+      ],
+      "duration": "until_end_of_turn",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_monster",
+        "count": "all",
+        "filter": {
+          "all": [
+            {
+              "face_up": true
+            },
+            {
+              "monster_type": "Beast"
+            }
+          ]
+        }
+      },
+      "source_text": "Until the End Phase, increase the ATK of all face-up Beast-Type monsters on your side of the field by 200 points for each Beast-Type monster on your side of the field."
+    }
+  ]
+}

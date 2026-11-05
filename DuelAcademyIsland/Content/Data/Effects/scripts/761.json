@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "card_id": 761,
+  "name": "D.D. Crazy Beast",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "A monster destroyed by this card in battle is removed from play.",
+  "notes": [
+    "The destroyed monster is in the Graveyard when the attacker hook resolves; banish it from there."
+  ],
+  "scripts": [
+    {
+      "id": "761_banish_destroyed_monster",
+      "trigger": "on_battle_destroy_by_attacker",
+      "operations": [
+        {
+          "op": "banish",
+          "target": "$trigger",
+          "reason": "D.D. Crazy Beast"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "custom": "battle_involving_self"
+      },
+      "source_text": "A monster destroyed by this card in battle is removed from play."
+    }
+  ]
+}

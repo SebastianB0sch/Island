@@ -1,0 +1,1991 @@
+// Duel Academy Island - PDA shell implementation.
+
+#include "DAPDAUI.h"
+
+#include "CanvasItem.h"
+#include "DACalendarSubsystem.h"
+#include "DACardRecords.h"
+#include "DADeckLogic.h"
+#include "DADialogueUI.h"
+#include "DAHUD.h"
+#include "DAIslandSubsystem.h"
+#include "DALocationVolume.h"
+#include "DAProfileSubsystem.h"
+#include "DASaveGame.h"
+#include "DASettings.h"
+#include "DAStudentCharacter.h"
+#include "DAUIScreen.h"
+#include "DuelAcademyIsland.h"
+#include "Dom/JsonObject.h"
+#include "Engine/Canvas.h"
+#include "Engine/Engine.h"
+#include "Engine/Font.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
+#include "InputCoreTypes.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "RenderUtils.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+
+namespace
+{
+	static_assert(static_cast<int32>(EDAPDATab::Count) == DAPDATabCount, "PDA tab count mismatch");
+
+	const FLinearColor PdaGold(1.f, 0.78f, 0.25f);
+	const FLinearColor PdaInk(0.01f, 0.018f, 0.034f);
+	const FLinearColor PdaPaper(0.95f, 0.95f, 0.97f);
+	const FLinearColor PdaMuted(0.60f, 0.65f, 0.72f);
+	const FLinearColor PdaCyan(0.35f, 0.82f, 0.92f);
+	const FLinearColor PdaRed(0.88f, 0.28f, 0.24f);
+	const FLinearColor PdaGreen(0.42f, 0.82f, 0.48f);
+
+	const TCHAR* WeekdayShort(int32 Weekday)
+	{
+		static const TCHAR* Names[] = {
+			TEXT("SUN"), TEXT("MON"), TEXT("TUE"), TEXT("WED"), TEXT("THU"), TEXT("FRI"), TEXT("SAT")
+		};
+		return Names[((Weekday % 7) + 7) % 7];
+	}
+
+	FLinearColor PdaAlpha(FLinearColor C, float A)
+	{
+		C.A = A;
+		return C;
+	}
+
+	EDAPDATab ClampTab(EDAPDATab Tab)
+	{
+		const int32 Index = FMath::Clamp(static_cast<int32>(Tab), 0, DAPDATabCount - 1);
+		return static_cast<EDAPDATab>(Index);
+	}
+
+	FString PDAMailDisplayName(const FString& ContactId)
+	{
+		FString Fallback = ContactId.Replace(TEXT("_"), TEXT(" "));
+		if (!Fallback.IsEmpty())
+		{
+			Fallback = Fallback.Left(1).ToUpper() + Fallback.Mid(1);
+		}
+		return DAUIData::Label(FString::Printf(TEXT("mail.contact.%s"), *ContactId.ToLower()), Fallback);
+	}
+
+	struct FDAPDAMailContactDef
+	{
+		FString ContactId;
+		TArray<FDAPDAMailView> Messages;
+		FString DuelRequestId;
+		FString DuelRequestOpponent;
+		FString DuelRequestDeck;
+	};
+
+	struct FDAPDAMailCache
+	{
+		bool bAttempted = false;
+		TArray<FDAPDAMailContactDef> Contacts;
+	};
+
+	const FDAPDAMailCache& GetPDAMailCache()
+	{
+		static FDAPDAMailCache Cache;
+		if (Cache.bAttempted)
+		{
+			return Cache;
+		}
+		Cache.bAttempted = true;
+
+		const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Story/emails.json"));
+		FString Raw;
+		if (!FFileHelper::LoadFileToString(Raw, *Path))
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("PDA mail: A03 emails.json not found at %s."), *Path);
+			return Cache;
+		}
+		TSharedPtr<FJsonObject> Root;
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
+		if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
+		{
+			UE_LOG(LogDuelAcademyIsland, Warning, TEXT("PDA mail: could not parse %s."), *Path);
+			return Cache;
+		}
+
+		const TArray<TSharedPtr<FJsonValue>>* ContactValues = nullptr;
+		if (!Root->TryGetArrayField(TEXT("contacts"), ContactValues) || !ContactValues)
+		{
+			return Cache;
+		}
+		for (const TSharedPtr<FJsonValue>& ContactValue : *ContactValues)
+		{
+			const TSharedPtr<FJsonObject>* ContactObject = nullptr;
+			if (!ContactValue.IsValid() || !ContactValue->TryGetObject(ContactObject) || !ContactObject)
+			{
+				continue;
+			}
+			FDAPDAMailContactDef Def;
+			(*ContactObject)->TryGetStringField(TEXT("contact"), Def.ContactId);
+			if (Def.ContactId.IsEmpty())
+			{
+				continue;
+			}
+
+			const TArray<TSharedPtr<FJsonValue>>* MessageValues = nullptr;
+			if ((*ContactObject)->TryGetArrayField(TEXT("messages"), MessageValues) && MessageValues)
+			{
+				for (const TSharedPtr<FJsonValue>& MessageValue : *MessageValues)
+				{
+					const TSharedPtr<FJsonObject>* MessageObject = nullptr;
+					if (!MessageValue.IsValid() || !MessageValue->TryGetObject(MessageObject) || !MessageObject)
+					{
+						continue;
+					}
+					FDAPDAMailView View;
+					View.ContactId = Def.ContactId;
+					(*MessageObject)->TryGetStringField(TEXT("id"), View.Id);
+					(*MessageObject)->TryGetStringField(TEXT("subject"), View.Subject);
+					(*MessageObject)->TryGetStringField(TEXT("body"), View.Body);
+					View.Date = TEXT("INBOX");
+					if (View.Body.Len() > 78)
+					{
+						View.Preview = View.Body.Left(75) + TEXT("...");
+					}
+					else
+					{
+						View.Preview = View.Body;
+					}
+					Def.Messages.Add(MoveTemp(View));
+				}
+			}
+
+			const TArray<TSharedPtr<FJsonValue>>* RequestValues = nullptr;
+			if ((*ContactObject)->TryGetArrayField(TEXT("duel_requests"), RequestValues) && RequestValues && RequestValues->Num() > 0)
+			{
+				const TSharedPtr<FJsonObject>* RequestObject = nullptr;
+				if ((*RequestValues)[0].IsValid() && (*RequestValues)[0]->TryGetObject(RequestObject) && RequestObject)
+				{
+					(*RequestObject)->TryGetStringField(TEXT("id"), Def.DuelRequestId);
+					(*RequestObject)->TryGetStringField(TEXT("opponent"), Def.DuelRequestOpponent);
+					(*RequestObject)->TryGetStringField(TEXT("deck"), Def.DuelRequestDeck);
+				}
+			}
+			Cache.Contacts.Add(MoveTemp(Def));
+		}
+		return Cache;
+	}
+
+	void BuildPDAMail(const UDAProfileSubsystem* Profile, TArray<FDAPDAMailView>& OutMail)
+	{
+		OutMail.Reset();
+		if (!Profile || !Profile->IsInitialized())
+		{
+			return;
+		}
+		for (const FDAPDAMailContactDef& Contact : GetPDAMailCache().Contacts)
+		{
+			if (!Profile->IsEmailUnlocked(Contact.ContactId))
+			{
+				continue;
+			}
+			const FString DisplayName = PDAMailDisplayName(Contact.ContactId);
+			for (const FDAPDAMailView& Message : Contact.Messages)
+			{
+				FDAPDAMailView View = Message;
+				View.From = DisplayName;
+				View.bRead = Profile->IsEmailRead(Contact.ContactId, Message.Id);
+				OutMail.Add(MoveTemp(View));
+			}
+			if (!Contact.DuelRequestId.IsEmpty() && Profile->HasPendingDuelRequest(Contact.ContactId))
+			{
+				FDAPDAMailView View;
+				View.Id = Contact.DuelRequestId;
+				View.ContactId = Contact.ContactId;
+				View.From = DisplayName;
+				View.Subject = DAUIData::Label(TEXT("mail.duel.subject"), TEXT("Duel request"));
+				View.Body = FString::Printf(TEXT("%s has challenged you to a duel."), *DisplayName);
+				View.Preview = View.Body;
+				View.Date = TEXT("INBOX");
+				View.bDuelRequest = true;
+				OutMail.Add(MoveTemp(View));
+			}
+		}
+	}
+}
+
+FDAPDAUI::FDAPDAUI(ADAHUD* InOwner)
+	: OwnerHUD(InOwner)
+{
+	PlayerOwner = InOwner ? InOwner->GetOwningPlayerController() : nullptr;
+	RefreshViewModel();
+}
+
+FDAPDAUI::~FDAPDAUI() = default;
+
+UWorld* FDAPDAUI::GetWorld() const
+{
+	return OwnerHUD.IsValid() ? OwnerHUD->GetWorld() : nullptr;
+}
+
+UGameInstance* FDAPDAUI::GetGameInstance() const
+{
+	return OwnerHUD.IsValid() ? OwnerHUD->GetGameInstance() : nullptr;
+}
+
+UFont* FDAPDAUI::GetFont(bool bLarge) const
+{
+	if (OwnerHUD.IsValid())
+	{
+		return bLarge ? OwnerHUD->GetBigFont() : OwnerHUD->GetSmallFont();
+	}
+	return bLarge ? (GEngine ? GEngine->GetLargeFont() : nullptr) : (GEngine ? GEngine->GetMediumFont() : nullptr);
+}
+
+void FDAPDAUI::PlaySfx(const TCHAR* SoundName, float Volume) const
+{
+	if (OwnerHUD.IsValid())
+	{
+		if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(OwnerHUD.Get()))
+		{
+			Sub->PlayUISound(SoundName, Volume);
+		}
+	}
+}
+
+// ------------------------------------------------------------------------ lifecycle
+
+void FDAPDAUI::Open(EDAPDATab Tab)
+{
+	if (bOpen)
+	{
+		SetTab(Tab);
+		if (ClampTab(Tab) == ActiveTab)
+		{
+			// U9: SetTab early-outs on the unchanged tab, so reopening the PDA
+			// with the same tab would keep the stale view model (mail fetched
+			// before the new message existed). Re-run the per-tab refresh and
+			// reset the row state to match a fresh open.
+			Selection = 0;
+			ListScroll = 0;
+			PendingLoadSelection = INDEX_NONE;
+			HoveredRow = INDEX_NONE;
+			HitTargets.Reset();
+			RefreshViewModel();
+			RefreshRows();
+		}
+		return;
+	}
+	bOpen = true;
+	Elapsed = 0.f;
+	HoveredTab = INDEX_NONE;
+	HoveredRow = INDEX_NONE;
+	HitTargets.Reset();
+	ActiveTab = ClampTab(Tab);
+	Selection = 0;
+	ListScroll = 0;
+	PendingLoadSelection = INDEX_NONE;
+	RefreshViewModel();
+	if (ActiveTab == EDAPDATab::Calendar)
+	{
+		for (int32 Index = 0; Index < ViewModel.Calendar.Days.Num(); ++Index)
+		{
+			if (ViewModel.Calendar.Days[Index].bToday)
+			{
+				Selection = Index;
+				break;
+			}
+		}
+	}
+	RefreshRows();
+	PlaySfx(TEXT("A_UIClick"), 0.55f);
+}
+
+void FDAPDAUI::Close()
+{
+	if (!bOpen)
+	{
+		return;
+	}
+	bOpen = false;
+	HitTargets.Reset();
+	HoveredTab = INDEX_NONE;
+	HoveredRow = INDEX_NONE;
+	PendingLoadSelection = INDEX_NONE;
+	Selection = 0;
+	ListScroll = 0;
+	OnClosed.Broadcast();
+}
+
+void FDAPDAUI::Toggle(EDAPDATab Tab)
+{
+	if (bOpen)
+	{
+		Close();
+	}
+	else
+	{
+		Open(Tab);
+	}
+}
+
+void FDAPDAUI::SetTab(EDAPDATab Tab)
+{
+	const EDAPDATab NewTab = ClampTab(Tab);
+	if (NewTab == ActiveTab && bOpen)
+	{
+		return;
+	}
+	ActiveTab = NewTab;
+	Selection = 0;
+	ListScroll = 0;
+	PendingLoadSelection = INDEX_NONE;
+	HoveredRow = INDEX_NONE;
+	HitTargets.Reset();
+	RefreshViewModel();
+	if (ActiveTab == EDAPDATab::Calendar)
+	{
+		for (int32 Index = 0; Index < ViewModel.Calendar.Days.Num(); ++Index)
+		{
+			if (ViewModel.Calendar.Days[Index].bToday)
+			{
+				Selection = Index;
+				break;
+			}
+		}
+	}
+	RefreshRows();
+	PlaySfx(TEXT("A_UIClick"), 0.4f);
+	OnTabChanged.Broadcast(ActiveTab);
+}
+
+void FDAPDAUI::NextTab(int32 Delta)
+{
+	int32 Index = static_cast<int32>(ActiveTab) + Delta;
+	Index %= DAPDATabCount;
+	if (Index < 0)
+	{
+		Index += DAPDATabCount;
+	}
+	SetTab(static_cast<EDAPDATab>(Index));
+}
+
+const TCHAR* FDAPDAUI::TabFallback(EDAPDATab Tab)
+{
+	switch (Tab)
+	{
+	case EDAPDATab::Map:        return TEXT("MAP");
+	case EDAPDATab::Calendar:   return TEXT("CALENDAR");
+	case EDAPDATab::Deck:       return TEXT("DECK");
+	case EDAPDATab::Mail:       return TEXT("MAIL");
+	case EDAPDATab::Save:       return TEXT("SAVE");
+	case EDAPDATab::Options:    return TEXT("OPTIONS");
+	case EDAPDATab::Records:    return TEXT("RECORDS");
+	case EDAPDATab::Limitation: return TEXT("LIMIT");
+	default:                    return TEXT("?");
+	}
+}
+
+const TCHAR* FDAPDAUI::TabSlug(EDAPDATab Tab)
+{
+	switch (Tab)
+	{
+	case EDAPDATab::Map:        return TEXT("map");
+	case EDAPDATab::Calendar:   return TEXT("calendar");
+	case EDAPDATab::Deck:       return TEXT("deck");
+	case EDAPDATab::Mail:       return TEXT("mail");
+	case EDAPDATab::Save:       return TEXT("save");
+	case EDAPDATab::Options:    return TEXT("options");
+	case EDAPDATab::Records:    return TEXT("records");
+	case EDAPDATab::Limitation: return TEXT("limitation");
+	default:                    return TEXT("unknown");
+	}
+}
+
+FString FDAPDAUI::TabLabel(EDAPDATab Tab)
+{
+	return DAUIData::Label(FString::Printf(TEXT("pda.tab.%s"), TabSlug(Tab)), TabFallback(Tab));
+}
+
+// ------------------------------------------------------------------------ placeholder / live data
+
+void FDAPDAUI::RefreshViewModel()
+{
+	BuildPlaceholderViewModel();
+	if (ViewModelBuilder)
+	{
+		ViewModelBuilder(*this);
+	}
+	NormalizeViewModel();
+	// Row data may have changed under the previous hit targets; drop them and
+	// re-clamp the selection so a click cannot land on a row that is gone.
+	HitTargets.Reset();
+	RefreshRows();
+}
+
+void FDAPDAUI::BuildPlaceholderViewModel()
+{
+	APlayerController* PC = OwnerHUD.IsValid() ? OwnerHUD->GetOwningPlayerController() : nullptr;
+	ADAStudentCharacter* Student = PC ? Cast<ADAStudentCharacter>(PC->GetPawn()) : nullptr;
+	UGameInstance* GameInstance = GetGameInstance();
+	UDAProfileSubsystem* Profile = GameInstance ? GameInstance->GetSubsystem<UDAProfileSubsystem>() : nullptr;
+	UDACalendarSubsystem* Calendar = GameInstance ? GameInstance->GetSubsystem<UDACalendarSubsystem>() : nullptr;
+	UDASaveSubsystem* Save = GameInstance ? GameInstance->GetSubsystem<UDASaveSubsystem>() : nullptr;
+	UDASettings* Settings = GameInstance ? GameInstance->GetSubsystem<UDASettings>() : nullptr;
+	const bool bLiveProfile = Profile && Profile->IsInitialized();
+
+	ViewModel = FDAPDAViewModel();
+	ViewModel.Profile.bPlaceholder = !bLiveProfile;
+	if (bLiveProfile)
+	{
+		ViewModel.Profile.PlayerName = Profile->GetPlayerName().IsEmpty() ? FString(TEXT("New Student")) : Profile->GetPlayerName();
+		ViewModel.Profile.DormName = DuelAcademy::DormName(Profile->GetDorm());
+		ViewModel.Profile.TitleName = Profile->GetTitle().IsEmpty() ? FString(TEXT("Apprentice Duelist")) : Profile->GetTitle();
+		ViewModel.Profile.DP = Profile->GetDP();
+		ViewModel.Profile.Cards = Profile->GetDistinctCardsOwned();
+	}
+	else
+	{
+		ViewModel.Profile.Cards = Student ? Student->GetCollectionSize() : 0;
+		if (Student)
+		{
+			ViewModel.Profile.DormName = DuelAcademy::DormName(Student->GetDorm());
+		}
+	}
+
+	// Calendar: live A02 data when available, otherwise the pass-1 sample month.
+	ViewModel.Calendar = FDAPDACalendarView();
+	if (Calendar)
+	{
+		ViewModel.Profile.DateLine = Calendar->GetFullDateText();
+		ViewModel.Profile.Period = Calendar->GetPeriodName(Calendar->GetPeriod());
+		const int32 Year = Calendar->GetYear();
+		const int32 MonthIndex = FMath::Clamp(Calendar->GetMonthIndex(), 0, 11);
+		const int32 DaysInMonth = FMath::Max(28, Calendar->GetDaysInMonth(Year, MonthIndex));
+		ViewModel.Calendar.MonthName = Calendar->GetMonthName(MonthIndex);
+		ViewModel.Calendar.Year = Year;
+		ViewModel.Calendar.FirstWeekday = static_cast<int32>(Calendar->GetWeekdayForDate(Year, MonthIndex, 1));
+		ViewModel.Calendar.bPlaceholder = false;
+		for (int32 Day = 1; Day <= DaysInMonth; ++Day)
+		{
+			FDAPDACalendarCell Cell;
+			Cell.Day = Day;
+			Cell.bExam = Calendar->IsExamDayFor(Year, MonthIndex, Day);
+			Cell.bToday = Day == Calendar->GetDay();
+			if (Cell.bExam)
+			{
+				Cell.Note = DAUIData::Label(TEXT("pda.calendar.exam"), TEXT("Exam day"));
+			}
+			else if (Cell.bToday)
+			{
+				Cell.Note = DAUIData::Label(TEXT("pda.calendar.today"), TEXT("Today"));
+			}
+			ViewModel.Calendar.Days.Add(Cell);
+		}
+	}
+	else
+	{
+		ViewModel.Calendar.MonthName = DAUIData::Label(TEXT("pda.calendar.month"), TEXT("October"));
+		ViewModel.Calendar.Year = 1;
+		ViewModel.Calendar.FirstWeekday = 0;
+		ViewModel.Calendar.bPlaceholder = true;
+		for (int32 Day = 1; Day <= 31; ++Day)
+		{
+			FDAPDACalendarCell Cell;
+			Cell.Day = Day;
+			Cell.bExam = ((Day - 6) % 7 == 0);
+			Cell.bEvent = (Day == 7);
+			Cell.bToday = (Day == 7);
+			ViewModel.Calendar.Days.Add(Cell);
+		}
+	}
+
+	// Deck tab: A06 player decks only (not the starter catalogue).
+	UDADeckLogic* DeckLogic = GameInstance ? GameInstance->GetSubsystem<UDADeckLogic>() : nullptr;
+	if (DeckLogic)
+	{
+		ViewModel.Deck.bPlaceholder = false;
+		const FString ActiveDeckId = DeckLogic->GetActiveDeckId();
+		for (const FDAEDeck& Deck : DeckLogic->GetPlayerDecksRef())
+		{
+			FDAPDADeckSummary Summary;
+			Summary.Id = Deck.Id;
+			Summary.Name = Deck.Name;
+			Summary.Subtitle = Deck.Id.Equals(ActiveDeckId, ESearchCase::IgnoreCase)
+				? FString(TEXT("ACTIVE DECK")) : FString(TEXT("Player deck"));
+			Summary.MainCount = Deck.Main.Num();
+			Summary.ExtraCount = Deck.Extra.Num();
+			Summary.bValid = DeckLogic->IsDeckLegal(Deck);
+			Summary.Validation = Summary.bValid
+				? FString(TEXT("LEGAL"))
+				: DeckLogic->GetDeckValidationMessage(Deck);
+			if (Summary.Validation.Len() > 54)
+			{
+				Summary.Validation = Summary.Validation.Left(51) + TEXT("...");
+			}
+			ViewModel.Deck.Decks.Add(Summary);
+		}
+	}
+	ViewModel.Deck.Note = DeckLogic
+		? (ViewModel.Deck.Decks.Num() > 0
+			? FString(TEXT("Enter: open the deck editor. N/C/R/Del work there."))
+			: FString(TEXT("No player decks yet. Open the deck editor (N) to create one.")))
+		: FString(TEXT("Deck subsystem unavailable."));
+
+	// Save slots: A02 is the source of truth (0 = autosave, 1..3 = manual).
+	const auto MakeSlotDate = [Calendar](const FDASaveSlotInfo& Info) -> FString
+	{
+		if (!Info.bExists)
+		{
+			return FString(TEXT("EMPTY SLOT"));
+		}
+		if (Info.bCorrupt)
+		{
+			return FString(TEXT("CORRUPT SAVE"));
+		}
+		const FString Month = Calendar
+			? Calendar->GetMonthShortName(FMath::Clamp(Info.MonthIndex, 0, 11))
+			: FString::Printf(TEXT("%d"), Info.MonthIndex + 1);
+		const FString Period = Calendar
+			? Calendar->GetPeriodName(Info.Period)
+			: FString(Info.Period == EDADayPeriod::AM ? TEXT("AM") : (Info.Period == EDADayPeriod::PM ? TEXT("PM") : TEXT("Night")));
+		FString Date = FString::Printf(TEXT("%s %d, Year %d  -  %s"), *Month, Info.Day, Info.Year, *Period);
+		if (Info.bUsingBackup)
+		{
+			Date += TEXT("  (backup)");
+		}
+		return Date;
+	};
+
+	if (Save)
+	{
+		for (const FDASaveSlotInfo& Info : Save->EnumerateSlots())
+		{
+			FDAPDASaveSlotView View;
+			View.Id = Info.SlotName;
+			View.SlotIndex = Info.SlotIndex;
+			View.Label = Info.bIsAutosave ? FString(TEXT("AUTOSAVE")) : FString::Printf(TEXT("SLOT %d"), Info.SlotIndex);
+			View.Date = MakeSlotDate(Info);
+			View.PlayerName = Info.PlayerName.IsEmpty() ? FString(TEXT("New Student")) : Info.PlayerName;
+			View.Dorm = DuelAcademy::DormName(Info.Dorm);
+			View.Title = Info.Title.IsEmpty() ? FString(TEXT("No title")) : Info.Title;
+			View.DP = Info.DP;
+			View.bOccupied = Info.bExists && !Info.bCorrupt;
+			View.bAutosave = Info.bIsAutosave;
+			View.bCorrupt = Info.bCorrupt;
+			View.bUsingBackup = Info.bUsingBackup;
+			ViewModel.SaveSlots.Add(View);
+		}
+	}
+	if (ViewModel.SaveSlots.Num() == 0)
+	{
+		for (int32 Slot = 0; Slot < 4; ++Slot)
+		{
+			FDAPDASaveSlotView View;
+			View.Id = Slot == 0 ? FString(TEXT("autosave")) : FString::Printf(TEXT("slot_%d"), Slot);
+			View.SlotIndex = Slot;
+			View.Label = Slot == 0 ? FString(TEXT("AUTOSAVE")) : FString::Printf(TEXT("SLOT %d"), Slot);
+			View.Date = TEXT("EMPTY SLOT");
+			View.bAutosave = Slot == 0;
+			ViewModel.SaveSlots.Add(View);
+		}
+	}
+
+	// Options: backed by UDASettings (A02) so the title/PDA/dialogue agree.
+	FDAPDAOptionRow TextSpeed;
+	TextSpeed.Id = TEXT("text_speed");
+	TextSpeed.Label = TEXT("Text Speed");
+	TextSpeed.Values.Add(TEXT("Slow"));
+	TextSpeed.Values.Add(TEXT("Normal"));
+	TextSpeed.Values.Add(TEXT("Fast"));
+	TextSpeed.Values.Add(TEXT("Instant"));
+	TextSpeed.ValueIndex = 1;
+	TextSpeed.Help = TEXT("Applied to the dialogue box immediately; stored by UDASettings.");
+	if (Settings)
+	{
+		TextSpeed.ValueIndex = FMath::Clamp(static_cast<int32>(Settings->GetTextSpeed()), 0, 3);
+	}
+	else if (OwnerHUD.IsValid())
+	{
+		if (FDADialogueUI* Dialogue = OwnerHUD->GetDialogueUI())
+		{
+			const float Speed = Dialogue->GetTextSpeed();
+			TextSpeed.ValueIndex = Speed < 35.f ? 0 : (Speed > 500.f ? 3 : (Speed > 65.f ? 2 : 1));
+		}
+	}
+	ViewModel.Options.Add(TextSpeed);
+
+	FDAPDAOptionRow Auto;
+	Auto.Id = TEXT("auto_advance");
+	Auto.Label = TEXT("Auto-Advance");
+	Auto.Values.Add(TEXT("Off"));
+	Auto.Values.Add(TEXT("On"));
+	Auto.ValueIndex = 0;
+	Auto.Help = TEXT("Advances fully revealed dialogue lines automatically.");
+	if (Settings)
+	{
+		Auto.ValueIndex = Settings->GetControl(TEXT("AutoAdvance")).Equals(TEXT("On"), ESearchCase::IgnoreCase) ? 1 : 0;
+	}
+	else if (OwnerHUD.IsValid())
+	{
+		if (FDADialogueUI* Dialogue = OwnerHUD->GetDialogueUI())
+		{
+			Auto.ValueIndex = Dialogue->IsAutoAdvance() ? 1 : 0;
+		}
+	}
+	ViewModel.Options.Add(Auto);
+
+	auto AddVolumeRow = [this, Settings](const TCHAR* Id, const TCHAR* Label, bool bBgm)
+	{
+		FDAPDAOptionRow Row;
+		Row.Id = Id;
+		Row.Label = Label;
+		for (int32 Percent = 0; Percent <= 100; Percent += 10)
+		{
+			Row.Values.Add(FString::Printf(TEXT("%d%%"), Percent));
+		}
+		const float Volume = Settings ? (bBgm ? Settings->GetBgmVolume() : Settings->GetSfxVolume()) : 0.8f;
+		Row.ValueIndex = FMath::Clamp(FMath::RoundToInt(Volume * 10.f), 0, 10);
+		Row.Help = TEXT("Stored in UDASettings; consumed by the audio mix in a later pass.");
+		ViewModel.Options.Add(Row);
+	};
+	AddVolumeRow(TEXT("bgm_volume"), TEXT("BGM Volume"), true);
+	AddVolumeRow(TEXT("sfx_volume"), TEXT("SFX Volume"), false);
+
+	// Records: live A02 profile counters where available.
+	ViewModel.Records.Reset();
+	auto AddRecord = [this](const TCHAR* Label, const FString& Value, bool bHighlight)
+	{
+		FDAPDARecordRow Row;
+		Row.Label = Label;
+		Row.Value = Value;
+		Row.bHighlight = bHighlight;
+		ViewModel.Records.Add(Row);
+	};
+	AddRecord(TEXT("Title"), ViewModel.Profile.TitleName, true);
+	AddRecord(TEXT("Dorm"), ViewModel.Profile.DormName, false);
+	AddRecord(TEXT("DP"), FString::Printf(TEXT("%d"), ViewModel.Profile.DP), true);
+	AddRecord(TEXT("Cards Collected"), FString::Printf(TEXT("%d"), ViewModel.Profile.Cards), false);
+	if (bLiveProfile)
+	{
+		AddRecord(TEXT("Duels Won"), FString::Printf(TEXT("%d"), Profile->GetCounter(TEXT("wins_total"))), false);
+		AddRecord(TEXT("Timed Clears"), FString::Printf(TEXT("%d"), Profile->GetCounter(TEXT("timed_clears"))), false);
+		AddRecord(TEXT("Exam Correct"), FString::Printf(TEXT("%d"), Profile->GetCounter(TEXT("written_correct"))), false);
+	}
+	else
+	{
+		AddRecord(TEXT("Duels Won"), TEXT("0  (placeholder)"), false);
+		AddRecord(TEXT("Timed Clears"), TEXT("0  (placeholder)"), false);
+	}
+
+	ViewModel.Mail.Reset();
+	if (bLiveProfile)
+	{
+		BuildPDAMail(Profile, ViewModel.Mail);
+	}
+
+	if (bLiveProfile)
+	{
+		FString Domains = TEXT("A02 profile");
+		if (Calendar)
+		{
+			Domains += TEXT(", calendar");
+		}
+		if (DeckLogic)
+		{
+			Domains += TEXT(", deck");
+		}
+		if (Save)
+		{
+			Domains += TEXT(", save");
+		}
+		Domains += TEXT(", mail");
+		ViewModel.FooterNote = FString::Printf(TEXT("Live %s data."), *Domains);
+	}
+	else
+	{
+		ViewModel.FooterNote = DAUIData::Label(TEXT("pda.footer.placeholder"),
+			TEXT("PDA shell - panes marked placeholder await A02/A03/A06/A07."));
+	}
+}
+
+void FDAPDAUI::NormalizeViewModel()
+{
+	if (ViewModel.Profile.PlayerName.IsEmpty())
+	{
+		ViewModel.Profile.PlayerName = TEXT("New Student");
+	}
+	if (ViewModel.Profile.DormName.IsEmpty())
+	{
+		ViewModel.Profile.DormName = TEXT("Slifer Red");
+	}
+	if (ViewModel.Profile.TitleName.IsEmpty())
+	{
+		ViewModel.Profile.TitleName = TEXT("Apprentice Duelist");
+	}
+	if (ViewModel.Calendar.Days.Num() == 0)
+	{
+		ViewModel.Calendar.MonthName = DAUIData::Label(TEXT("pda.calendar.month"), TEXT("October"));
+		ViewModel.Calendar.Year = 1;
+		ViewModel.Calendar.FirstWeekday = 0;
+		for (int32 Day = 1; Day <= 31; ++Day)
+		{
+			FDAPDACalendarCell Cell;
+			Cell.Day = Day;
+			Cell.bExam = ((Day - 6) % 7 == 0);
+			Cell.bEvent = (Day == 7);
+			Cell.bToday = (Day == 7);
+			ViewModel.Calendar.Days.Add(Cell);
+		}
+	}
+	ViewModel.Calendar.FirstWeekday = FMath::Clamp(ViewModel.Calendar.FirstWeekday, 0, 6);
+	if (ViewModel.Options.Num() == 0)
+	{
+		FDAPDAOptionRow TextSpeed;
+		TextSpeed.Id = TEXT("text_speed");
+		TextSpeed.Label = TEXT("Text Speed");
+		TextSpeed.Values.Add(TEXT("Slow"));
+		TextSpeed.Values.Add(TEXT("Normal"));
+		TextSpeed.Values.Add(TEXT("Fast"));
+		TextSpeed.Values.Add(TEXT("Instant"));
+		TextSpeed.ValueIndex = 1;
+		ViewModel.Options.Add(TextSpeed);
+	}
+	if (ViewModel.SaveSlots.Num() == 0)
+	{
+		for (int32 Slot = 0; Slot < 4; ++Slot)
+		{
+			FDAPDASaveSlotView View;
+			View.Id = Slot == 0 ? FString(TEXT("autosave")) : FString::Printf(TEXT("slot_%d"), Slot);
+			View.SlotIndex = Slot;
+			View.Label = Slot == 0 ? FString(TEXT("AUTOSAVE")) : FString::Printf(TEXT("SLOT %d"), Slot);
+			View.Date = TEXT("EMPTY SLOT");
+			View.bAutosave = Slot == 0;
+			ViewModel.SaveSlots.Add(View);
+		}
+	}
+}
+
+void FDAPDAUI::RefreshRows()
+{
+	const int32 Count = RowCountForTab(ActiveTab);
+	Selection = Count > 0 ? FMath::Clamp(Selection, 0, Count - 1) : 0;
+	ListScroll = FMath::Clamp(ListScroll, 0, FMath::Max(0, Count - 1));
+}
+
+int32 FDAPDAUI::RowCountForTab(EDAPDATab Tab) const
+{
+	switch (Tab)
+	{
+	case EDAPDATab::Map:
+	{
+		const UDAIslandSubsystem* Sub = OwnerHUD.IsValid() ? UDAIslandSubsystem::Get(OwnerHUD.Get()) : nullptr;
+		return Sub ? Sub->GetZones().Num() : 0;
+	}
+	case EDAPDATab::Calendar:   return ViewModel.Calendar.Days.Num();
+	case EDAPDATab::Deck:       return ViewModel.Deck.Decks.Num();
+	case EDAPDATab::Mail:       return ViewModel.Mail.Num();
+	case EDAPDATab::Save:       return ViewModel.SaveSlots.Num();
+	case EDAPDATab::Options:    return ViewModel.Options.Num();
+	case EDAPDATab::Records:    return ViewModel.Records.Num();
+	case EDAPDATab::Limitation: return ViewModel.Limitations.Num();
+	default:                    return 0;
+	}
+}
+
+FString FDAPDAUI::RowLabel(int32 Index, FString& OutSubtitle, FLinearColor& OutAccent, bool& bOutDisabled) const
+{
+	OutSubtitle.Reset();
+	OutAccent = PdaGold;
+	bOutDisabled = false;
+
+	switch (ActiveTab)
+	{
+	case EDAPDATab::Map:
+	{
+		const UDAIslandSubsystem* Sub = OwnerHUD.IsValid() ? UDAIslandSubsystem::Get(OwnerHUD.Get()) : nullptr;
+		const TArray<ADALocationVolume*> Zones = Sub ? Sub->GetZones() : TArray<ADALocationVolume*>();
+		if (Zones.IsValidIndex(Index) && Zones[Index])
+		{
+			ADALocationVolume* Zone = Zones[Index];
+			OutAccent = Zone->ThemeColor;
+			const bool bDiscovered = Sub->IsDiscovered(Zone);
+			OutSubtitle = bDiscovered ? Zone->Subtitle : FString(TEXT("Unexplored"));
+			bOutDisabled = !Zone->bFastTravel;
+			return Zone->DisplayName.IsEmpty() ? FString(TEXT("Unnamed location")) : Zone->DisplayName;
+		}
+		break;
+	}
+	case EDAPDATab::Calendar:
+	{
+		if (ViewModel.Calendar.Days.IsValidIndex(Index))
+		{
+			const FDAPDACalendarCell& Cell = ViewModel.Calendar.Days[Index];
+			const int32 Weekday = (ViewModel.Calendar.FirstWeekday + Cell.Day - 1) % 7;
+			OutSubtitle = Cell.Note.IsEmpty() ? FString(WeekdayShort(Weekday)) : Cell.Note;
+			OutAccent = Cell.bExam ? PdaRed : (Cell.bEvent ? PdaGold : (Cell.bToday ? PdaCyan : PdaMuted));
+			return FString::Printf(TEXT("%s %d"), WeekdayShort(Weekday), Cell.Day);
+		}
+		break;
+	}
+	case EDAPDATab::Deck:
+	{
+		if (ViewModel.Deck.Decks.IsValidIndex(Index))
+		{
+			const FDAPDADeckSummary& Deck = ViewModel.Deck.Decks[Index];
+			OutSubtitle = FString::Printf(TEXT("%d cards  -  %s"), Deck.MainCount, *Deck.Validation);
+			OutAccent = Deck.bValid ? PdaGreen : PdaRed;
+			return Deck.Name.IsEmpty() ? FString(TEXT("(untitled deck)")) : Deck.Name;
+		}
+		break;
+	}
+	case EDAPDATab::Mail:
+	{
+		if (ViewModel.Mail.IsValidIndex(Index))
+		{
+			const FDAPDAMailView& Mail = ViewModel.Mail[Index];
+			const FString From = Mail.From.IsEmpty() ? FString(TEXT("Unknown sender")) : Mail.From;
+			OutSubtitle = Mail.bRead ? From : FString::Printf(TEXT("%s  (unread)"), *From);
+			OutAccent = Mail.bDuelRequest ? PdaRed : PdaCyan;
+			return Mail.Subject.IsEmpty() ? FString(TEXT("(no subject)")) : Mail.Subject;
+		}
+		break;
+	}
+	case EDAPDATab::Save:
+	{
+		if (ViewModel.SaveSlots.IsValidIndex(Index))
+		{
+			const FDAPDASaveSlotView& Slot = ViewModel.SaveSlots[Index];
+			OutSubtitle = Slot.Date;
+			OutAccent = Slot.bCorrupt ? PdaRed : (Slot.bAutosave ? PdaCyan : (Slot.bOccupied ? PdaGold : PdaMuted));
+			bOutDisabled = !Slot.bOccupied && !Slot.bCorrupt;
+			return Slot.Label.IsEmpty() ? FString(TEXT("SAVE SLOT")) : Slot.Label;
+		}
+		break;
+	}
+	case EDAPDATab::Options:
+	{
+		if (ViewModel.Options.IsValidIndex(Index))
+		{
+			const FDAPDAOptionRow& Option = ViewModel.Options[Index];
+			OutSubtitle = Option.Values.IsValidIndex(Option.ValueIndex) ? Option.Values[Option.ValueIndex] : FString();
+			OutAccent = PdaCyan;
+			return Option.Label.IsEmpty() ? FString(TEXT("(option)")) : Option.Label;
+		}
+		break;
+	}
+	case EDAPDATab::Records:
+	{
+		if (ViewModel.Records.IsValidIndex(Index))
+		{
+			const FDAPDARecordRow& Record = ViewModel.Records[Index];
+			OutSubtitle = Record.Value;
+			OutAccent = Record.bHighlight ? PdaGold : PdaMuted;
+			return Record.Label.IsEmpty() ? FString(TEXT("(record)")) : Record.Label;
+		}
+		break;
+	}
+	case EDAPDATab::Limitation:
+	{
+		if (ViewModel.Limitations.IsValidIndex(Index))
+		{
+			const FDAPDALimitRow& Limit = ViewModel.Limitations[Index];
+			OutSubtitle = Limit.Status;
+			OutAccent = Limit.bBanned ? PdaRed : PdaGold;
+			return Limit.CardName.IsEmpty() ? FString(TEXT("(unknown card)")) : Limit.CardName;
+		}
+		break;
+	}
+	default:
+		break;
+	}
+	return FString();
+}
+
+FString FDAPDAUI::RowDetailTitle(int32 Index) const
+{
+	switch (ActiveTab)
+	{
+	case EDAPDATab::Map:
+	{
+		const UDAIslandSubsystem* Sub = OwnerHUD.IsValid() ? UDAIslandSubsystem::Get(OwnerHUD.Get()) : nullptr;
+		const TArray<ADALocationVolume*> Zones = Sub ? Sub->GetZones() : TArray<ADALocationVolume*>();
+		return Zones.IsValidIndex(Index) && Zones[Index] ? Zones[Index]->DisplayName : FString();
+	}
+	case EDAPDATab::Calendar:
+		if (ViewModel.Calendar.Days.IsValidIndex(Index))
+		{
+			return FString::Printf(TEXT("%s %d"), *ViewModel.Calendar.MonthName, ViewModel.Calendar.Days[Index].Day);
+		}
+		break;
+	case EDAPDATab::Deck:
+		return ViewModel.Deck.Decks.IsValidIndex(Index)
+			? (ViewModel.Deck.Decks[Index].Name.IsEmpty() ? FString(TEXT("(untitled deck)")) : ViewModel.Deck.Decks[Index].Name)
+			: FString();
+	case EDAPDATab::Mail:
+		return ViewModel.Mail.IsValidIndex(Index)
+			? (ViewModel.Mail[Index].Subject.IsEmpty() ? FString(TEXT("(no subject)")) : ViewModel.Mail[Index].Subject)
+			: FString();
+	case EDAPDATab::Save:
+		return ViewModel.SaveSlots.IsValidIndex(Index)
+			? (ViewModel.SaveSlots[Index].Label.IsEmpty() ? FString(TEXT("SAVE SLOT")) : ViewModel.SaveSlots[Index].Label)
+			: FString();
+	case EDAPDATab::Options:
+		return ViewModel.Options.IsValidIndex(Index)
+			? (ViewModel.Options[Index].Label.IsEmpty() ? FString(TEXT("(option)")) : ViewModel.Options[Index].Label)
+			: FString();
+	case EDAPDATab::Records:
+		return ViewModel.Records.IsValidIndex(Index)
+			? (ViewModel.Records[Index].Label.IsEmpty() ? FString(TEXT("(record)")) : ViewModel.Records[Index].Label)
+			: FString();
+	case EDAPDATab::Limitation:
+		return ViewModel.Limitations.IsValidIndex(Index)
+			? (ViewModel.Limitations[Index].CardName.IsEmpty() ? FString(TEXT("(unknown card)")) : ViewModel.Limitations[Index].CardName)
+			: FString();
+	default:
+		break;
+	}
+	return FString();
+}
+
+FString FDAPDAUI::RowDetailBody(int32 Index) const
+{
+	switch (ActiveTab)
+	{
+	case EDAPDATab::Map:
+	{
+		const UDAIslandSubsystem* Sub = OwnerHUD.IsValid() ? UDAIslandSubsystem::Get(OwnerHUD.Get()) : nullptr;
+		const TArray<ADALocationVolume*> Zones = Sub ? Sub->GetZones() : TArray<ADALocationVolume*>();
+		if (Zones.IsValidIndex(Index) && Zones[Index])
+		{
+			ADALocationVolume* Zone = Zones[Index];
+			FString Body = Zone->Subtitle;
+			if (!Zone->Description.IsEmpty())
+			{
+				Body += TEXT("\n\n") + Zone->Description;
+			}
+			if (Zone->bFastTravel)
+			{
+				Body += TEXT("\n\nEnter: fast travel to this location.");
+			}
+			else
+			{
+				Body += TEXT("\n\nThis location cannot be fast-travelled to.");
+			}
+			return Body;
+		}
+		break;
+	}
+	case EDAPDATab::Calendar:
+	{
+		if (ViewModel.Calendar.Days.IsValidIndex(Index))
+		{
+			const FDAPDACalendarCell& Cell = ViewModel.Calendar.Days[Index];
+			const int32 Weekday = (ViewModel.Calendar.FirstWeekday + Cell.Day - 1) % 7;
+			FString Body = FString::Printf(TEXT("%s, %s %d, Year %d"),
+				WeekdayShort(Weekday), *ViewModel.Calendar.MonthName, Cell.Day, ViewModel.Calendar.Year);
+			if (!Cell.Note.IsEmpty())
+			{
+				Body += TEXT("\n\n") + Cell.Note;
+			}
+			if (Cell.bExam)
+			{
+				Body += TEXT("\nExam days are Fridays in the GBA calendar.");
+			}
+			if (ViewModel.Calendar.bPlaceholder)
+			{
+				Body += TEXT("\n\nCalendar data is a placeholder until A02's CalendarSubsystem is connected.");
+			}
+			return Body;
+		}
+		break;
+	}
+	case EDAPDATab::Deck:
+	{
+		if (ViewModel.Deck.Decks.IsValidIndex(Index))
+		{
+			const FDAPDADeckSummary& Deck = ViewModel.Deck.Decks[Index];
+			FString Body = Deck.Subtitle;
+			Body += FString::Printf(TEXT("\n\nMain Deck: %d\nExtra Deck: %d\nStatus: %s"),
+				Deck.MainCount, Deck.ExtraCount, *Deck.Validation);
+			Body += TEXT("\n\nEnter: open the deck editor.");
+			return Body;
+		}
+		break;
+	}
+	case EDAPDATab::Mail:
+	{
+		if (ViewModel.Mail.IsValidIndex(Index))
+		{
+			const FDAPDAMailView& Mail = ViewModel.Mail[Index];
+			FString Body;
+			if (!Mail.From.IsEmpty())
+			{
+				Body += FString::Printf(TEXT("From: %s"), *Mail.From);
+			}
+			if (!Mail.Date.IsEmpty())
+			{
+				Body += FString::Printf(TEXT("\nDate: %s"), *Mail.Date);
+			}
+			Body += TEXT("\n\n");
+			Body += Mail.Body.IsEmpty() ? Mail.Preview : Mail.Body;
+			if (Mail.bDuelRequest)
+			{
+				Body += TEXT("\n\nDuel request - accept via A03's mailbox.");
+			}
+			return Body;
+		}
+		break;
+	}
+	case EDAPDATab::Save:
+	{
+		if (ViewModel.SaveSlots.IsValidIndex(Index))
+		{
+			const FDAPDASaveSlotView& Slot = ViewModel.SaveSlots[Index];
+			const bool bSaveAvailable = GetGameInstance() && GetGameInstance()->GetSubsystem<UDASaveSubsystem>();
+			if (!bSaveAvailable)
+			{
+				return TEXT("Save subsystem unavailable; this slot is a placeholder.");
+			}
+			FString Body;
+			if (Slot.bCorrupt)
+			{
+				Body = TEXT("This save is corrupt and cannot be loaded.");
+			}
+			else if (Slot.bOccupied)
+			{
+				Body = FString::Printf(TEXT("%s\n%s\n%s\n%s\nDP %d"),
+					*Slot.PlayerName, *Slot.Date, *Slot.Dorm, *Slot.Title, Slot.DP);
+				if (Slot.bUsingBackup)
+				{
+					Body += TEXT("\nRecovered from the backup copy.");
+				}
+			}
+			else
+			{
+				Body = TEXT("Empty slot. Start a new game or save here later.");
+			}
+			Body += TEXT("\n\nOccupied slots: press Enter twice to load. Empty slots: press Enter to save.");
+			return Body;
+		}
+		break;
+	}
+	case EDAPDATab::Options:
+	{
+		if (ViewModel.Options.IsValidIndex(Index))
+		{
+			const FDAPDAOptionRow& Option = ViewModel.Options[Index];
+			const FString Value = Option.Values.IsValidIndex(Option.ValueIndex) ? Option.Values[Option.ValueIndex] : FString();
+			return FString::Printf(TEXT("Current: %s\n\n%s\n\nEnter / click: cycle value."), *Value, *Option.Help);
+		}
+		break;
+	}
+	case EDAPDATab::Records:
+	{
+		if (ViewModel.Records.IsValidIndex(Index))
+		{
+			return ViewModel.Records[Index].Value;
+		}
+		break;
+	}
+	case EDAPDATab::Limitation:
+	{
+		if (ViewModel.Limitations.IsValidIndex(Index))
+		{
+			return ViewModel.Limitations[Index].Status;
+		}
+		break;
+	}
+	default:
+		break;
+	}
+	return FString();
+}
+
+// ------------------------------------------------------------------------ update
+
+void FDAPDAUI::Update(float DeltaSeconds)
+{
+	if (!bOpen)
+	{
+		return;
+	}
+	PlayerOwner = OwnerHUD.IsValid() ? OwnerHUD->GetOwningPlayerController() : nullptr;
+	Elapsed += DeltaSeconds;
+	if (!PlayerOwner)
+	{
+		return;
+	}
+
+	// Hovered tab/row from last frame's hit targets.
+	HoveredTab = INDEX_NONE;
+	HoveredRow = INDEX_NONE;
+	float MouseX = -1.f;
+	float MouseY = -1.f;
+	if (PlayerOwner->GetMousePosition(MouseX, MouseY))
+	{
+		const FVector2D Mouse(MouseX, MouseY);
+		for (const FDAPDAHitTarget& Hit : HitTargets)
+		{
+			if (!Hit.Contains(Mouse))
+			{
+				continue;
+			}
+			if (Hit.Action == TEXT("tab"))
+			{
+				HoveredTab = Hit.Index;
+			}
+			else if (Hit.Action == TEXT("row"))
+			{
+				HoveredRow = Hit.Index;
+			}
+		}
+	}
+
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Escape)
+		|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Right))
+	{
+		Close();
+		return;
+	}
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Q)
+		|| PlayerOwner->WasInputKeyJustPressed(EKeys::Left)
+		|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_LeftShoulder))
+	{
+		NextTab(-1);
+	}
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::E)
+		|| PlayerOwner->WasInputKeyJustPressed(EKeys::Right)
+		|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_RightShoulder))
+	{
+		NextTab(1);
+	}
+
+	static const FKey TabKeys[] = {
+		EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four,
+		EKeys::Five, EKeys::Six, EKeys::Seven, EKeys::Eight
+	};
+	for (int32 Index = 0; Index < UE_ARRAY_COUNT(TabKeys); ++Index)
+	{
+		if (PlayerOwner->WasInputKeyJustPressed(TabKeys[Index]))
+		{
+			SetTab(static_cast<EDAPDATab>(Index));
+		}
+	}
+
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Up) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_DPad_Up)
+		|| PlayerOwner->WasInputKeyJustPressed(EKeys::W))
+	{
+		MoveSelection(-1);
+	}
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Down) || PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_DPad_Down)
+		|| PlayerOwner->WasInputKeyJustPressed(EKeys::S))
+	{
+		MoveSelection(1);
+	}
+	// Mouse wheel scrolls the active list without wrapping, so the top and
+	// bottom rows never jump across the list in one notch.
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollUp))
+	{
+		MoveSelection(-1);
+	}
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::MouseScrollDown))
+	{
+		MoveSelection(1);
+	}
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::Enter) || PlayerOwner->WasInputKeyJustPressed(EKeys::SpaceBar)
+		|| PlayerOwner->WasInputKeyJustPressed(EKeys::Gamepad_FaceButton_Bottom))
+	{
+		ActivateSelection();
+	}
+	if (PlayerOwner->WasInputKeyJustPressed(EKeys::LeftMouseButton))
+	{
+		HandleClickAtMouse();
+	}
+}
+
+void FDAPDAUI::MoveSelection(int32 Delta)
+{
+	const int32 Count = RowCountForTab(ActiveTab);
+	if (Count <= 0)
+	{
+		Selection = 0;
+		return;
+	}
+	const int32 NewSelection = FMath::Clamp(Selection + Delta, 0, Count - 1);
+	if (NewSelection != Selection)
+	{
+		Selection = NewSelection;
+		PendingLoadSelection = INDEX_NONE;
+		PlaySfx(TEXT("A_UIClick"), 0.3f);
+	}
+}
+
+bool FDAPDAUI::ActivateSelection()
+{
+	const int32 Count = RowCountForTab(ActiveTab);
+	if (!bOpen || Count <= 0 || Selection < 0 || Selection >= Count)
+	{
+		return false;
+	}
+	ActivateRow(Selection);
+	return true;
+}
+
+void FDAPDAUI::SetSelection(int32 InSelection)
+{
+	const int32 Count = RowCountForTab(ActiveTab);
+	const int32 NewSelection = Count > 0 ? FMath::Clamp(InSelection, 0, Count - 1) : 0;
+	if (NewSelection != Selection)
+	{
+		PendingLoadSelection = INDEX_NONE;
+	}
+	Selection = NewSelection;
+}
+
+void FDAPDAUI::ActivateRow(int32 Index)
+{
+	if (!IsOpen())
+	{
+		return;
+	}
+	PlaySfx(TEXT("A_UIClick"), 0.55f);
+
+	switch (ActiveTab)
+	{
+	case EDAPDATab::Map:
+	{
+		const UDAIslandSubsystem* Sub = OwnerHUD.IsValid() ? UDAIslandSubsystem::Get(OwnerHUD.Get()) : nullptr;
+		const TArray<ADALocationVolume*> Zones = Sub ? Sub->GetZones() : TArray<ADALocationVolume*>();
+		if (!Zones.IsValidIndex(Index) || !Zones[Index])
+		{
+			return;
+		}
+		ADALocationVolume* Zone = Zones[Index];
+		OnAction.Broadcast(FName(TEXT("map.travel")), Zone->DisplayName);
+		if (!Zone->bFastTravel)
+		{
+			ViewModel.FooterNote = TEXT("This location cannot be fast-travelled to.");
+			return;
+		}
+		if (ADAHUD* HUD = OwnerHUD.Get())
+		{
+			HUD->ClosePDA();
+		}
+		APlayerController* PC = PlayerOwner ? PlayerOwner : (OwnerHUD.IsValid() ? OwnerHUD->GetOwningPlayerController() : nullptr);
+		if (ADAStudentCharacter* Student = PC ? Cast<ADAStudentCharacter>(PC->GetPawn()) : nullptr)
+		{
+			Student->FastTravelTo(Zone);
+		}
+		return;
+	}
+	case EDAPDATab::Calendar:
+	{
+		if (!ViewModel.Calendar.Days.IsValidIndex(Index))
+		{
+			return;
+		}
+		OnAction.Broadcast(FName(TEXT("calendar.select")),
+			FString::FromInt(ViewModel.Calendar.Days[Index].Day));
+		if (ViewModel.Calendar.Days[Index].bExam)
+		{
+			OnAction.Broadcast(FName(TEXT("exam.open")), FString());
+		}
+		return;
+	}
+	case EDAPDATab::Deck:
+	{
+		if (!ViewModel.Deck.Decks.IsValidIndex(Index))
+		{
+			return;
+		}
+		OnAction.Broadcast(FName(TEXT("deck.open")), ViewModel.Deck.Decks[Index].Id);
+		return;
+	}
+	case EDAPDATab::Mail:
+	{
+		if (!ViewModel.Mail.IsValidIndex(Index))
+		{
+			return;
+		}
+		FDAPDAMailView& Mail = ViewModel.Mail[Index];
+		if (!Mail.bDuelRequest && !Mail.ContactId.IsEmpty())
+		{
+			if (UGameInstance* GameInstance = GetGameInstance())
+			{
+				if (UDAProfileSubsystem* Profile = GameInstance->GetSubsystem<UDAProfileSubsystem>())
+				{
+					Profile->MarkEmailRead(Mail.ContactId, Mail.Id);
+				}
+			}
+		}
+		Mail.bRead = true;
+		OnAction.Broadcast(FName(TEXT("mail.open")), Mail.Id);
+		return;
+	}
+	case EDAPDATab::Save:
+	{
+		if (!ViewModel.SaveSlots.IsValidIndex(Index))
+		{
+			return;
+		}
+		const FDAPDASaveSlotView& Slot = ViewModel.SaveSlots[Index];
+		if (Slot.bCorrupt)
+		{
+			PendingLoadSelection = INDEX_NONE;
+			ViewModel.FooterNote = TEXT("This save is corrupt and cannot be loaded.");
+			return;
+		}
+		if (!Slot.bOccupied)
+		{
+			PendingLoadSelection = INDEX_NONE;
+			OnAction.Broadcast(FName(TEXT("save.slot")),
+				FString::Printf(TEXT("save:%d"), Slot.SlotIndex));
+			return;
+		}
+		if (PendingLoadSelection != Index)
+		{
+			PendingLoadSelection = Index;
+			ViewModel.FooterNote = FString::Printf(
+				TEXT("Press Enter again to LOAD %s. Choose another slot to cancel."), *Slot.Label);
+			return;
+		}
+		PendingLoadSelection = INDEX_NONE;
+		OnAction.Broadcast(FName(TEXT("save.slot")),
+			FString::Printf(TEXT("load:%d"), Slot.SlotIndex));
+		return;
+	}
+	case EDAPDATab::Options:
+	{
+		if (!ViewModel.Options.IsValidIndex(Index))
+		{
+			return;
+		}
+		FDAPDAOptionRow& Option = ViewModel.Options[Index];
+		if (Option.Values.Num() > 0)
+		{
+			Option.ValueIndex = (Option.ValueIndex + 1) % Option.Values.Num();
+			const FString Value = Option.Values[Option.ValueIndex];
+			OnAction.Broadcast(FName(TEXT("options.changed")),
+				FString::Printf(TEXT("%s=%s"), *Option.Id, *Value));
+		}
+		return;
+	}
+	case EDAPDATab::Records:
+	{
+		if (ViewModel.Records.IsValidIndex(Index))
+		{
+			OnAction.Broadcast(FName(TEXT("records.row")), ViewModel.Records[Index].Label);
+		}
+		return;
+	}
+	case EDAPDATab::Limitation:
+	{
+		if (ViewModel.Limitations.IsValidIndex(Index))
+		{
+			OnAction.Broadcast(FName(TEXT("limitation.row")), ViewModel.Limitations[Index].CardName);
+		}
+		return;
+	}
+	default:
+		return;
+	}
+}
+
+void FDAPDAUI::HandleClickAtMouse()
+{
+	if (!PlayerOwner)
+	{
+		return;
+	}
+	float MouseX = -1.f;
+	float MouseY = -1.f;
+	if (!PlayerOwner->GetMousePosition(MouseX, MouseY))
+	{
+		return;
+	}
+	const FVector2D Mouse(MouseX, MouseY);
+	for (int32 Index = HitTargets.Num() - 1; Index >= 0; --Index)
+	{
+		if (HitTargets[Index].Contains(Mouse))
+		{
+			HandleHit(HitTargets[Index]);
+			return;
+		}
+	}
+}
+
+void FDAPDAUI::HandleHit(const FDAPDAHitTarget& Hit)
+{
+	if (Hit.Action == TEXT("tab"))
+	{
+		SetTab(static_cast<EDAPDATab>(Hit.Index));
+	}
+	else if (Hit.Action == TEXT("row"))
+	{
+		SetSelection(Hit.Index);
+		ActivateRow(Hit.Index);
+	}
+	else if (Hit.Action == TEXT("calendar.day"))
+	{
+		SetSelection(Hit.Index);
+		if (ViewModel.Calendar.Days.IsValidIndex(Hit.Index))
+		{
+			const FDAPDACalendarCell& Cell = ViewModel.Calendar.Days[Hit.Index];
+			OnAction.Broadcast(FName(TEXT("calendar.select")), FString::FromInt(Cell.Day));
+			if (Cell.bExam)
+			{
+				OnAction.Broadcast(FName(TEXT("exam.open")), FString());
+			}
+		}
+	}
+	else if (Hit.Action == TEXT("deck_edit"))
+	{
+		if (ActiveTab == EDAPDATab::Deck)
+		{
+			ActivateRow(Selection);
+		}
+	}
+	else if (Hit.Action == TEXT("close"))
+	{
+		Close();
+	}
+}
+
+// ------------------------------------------------------------------------ drawing helpers
+
+void FDAPDAUI::AddHit(const FString& Action, int32 Index, float X, float Y, float W, float H, const FString& Payload)
+{
+	FDAPDAHitTarget Hit;
+	Hit.Action = Action;
+	Hit.Index = Index;
+	Hit.X = X;
+	Hit.Y = Y;
+	Hit.W = W;
+	Hit.H = H;
+	Hit.Payload = Payload;
+	HitTargets.Add(MoveTemp(Hit));
+}
+
+void FDAPDAUI::DrawRect(const FLinearColor& Color, float X, float Y, float W, float H)
+{
+	if (!Canvas || W <= 0.f || H <= 0.f)
+	{
+		return;
+	}
+	FCanvasTileItem Tile(FVector2D(X, Y), GWhiteTexture, FVector2D(W, H), Color);
+	Tile.BlendMode = SE_BLEND_Translucent;
+	Canvas->DrawItem(Tile);
+}
+
+void FDAPDAUI::DrawText(const FString& Str, float X, float Y, const FLinearColor& Color, float InScale,
+	bool bCenter, UFont* Font)
+{
+	if (!Canvas || Str.IsEmpty())
+	{
+		return;
+	}
+	UFont* F = Font ? Font : GetFont(false);
+	if (!F)
+	{
+		return;
+	}
+	FCanvasTextItem Item(FVector2D(X, Y), FText::FromString(Str), F, Color);
+	Item.Scale = FVector2D(InScale * UIScale, InScale * UIScale);
+	Item.bCentreX = bCenter;
+	Item.EnableShadow(FLinearColor(0.f, 0.f, 0.f, 0.8f * Color.A), FVector2D(1.2f * UIScale, 1.2f * UIScale));
+	Canvas->DrawItem(Item);
+}
+
+void FDAPDAUI::DrawPanel(float X, float Y, float W, float H, const FLinearColor& Fill, const FLinearColor& Accent)
+{
+	DrawRect(Fill, X, Y, W, H);
+	DrawRect(PdaAlpha(Accent, 0.95f), X, Y, 3.f * UIScale, H);
+	DrawRect(PdaAlpha(Accent, 0.35f), X, Y, W, 1.f * UIScale);
+}
+
+void FDAPDAUI::Diamond(const FVector2D& C, float R, const FLinearColor& Color)
+{
+	if (!Canvas)
+	{
+		return;
+	}
+	const FVector2D T(C.X, C.Y - R);
+	const FVector2D B(C.X, C.Y + R);
+	const FVector2D L(C.X - R, C.Y);
+	const FVector2D Rt(C.X + R, C.Y);
+
+	FCanvasTriangleItem Tri1(T, Rt, B, GWhiteTexture);
+	Tri1.SetColor(Color);
+	Tri1.BlendMode = SE_BLEND_Translucent;
+	Canvas->DrawItem(Tri1);
+
+	FCanvasTriangleItem Tri2(T, B, L, GWhiteTexture);
+	Tri2.SetColor(Color);
+	Tri2.BlendMode = SE_BLEND_Translucent;
+	Canvas->DrawItem(Tri2);
+}
+
+FVector2D FDAPDAUI::Measure(const FString& Str, float InScale, UFont* Font) const
+{
+	const UFont* F = Font ? Font : GetFont(false);
+	if (!F || Str.IsEmpty())
+	{
+		return FVector2D::ZeroVector;
+	}
+	const float K = InScale * UIScale;
+	return FVector2D(F->GetStringSize(*Str) * K, F->GetStringHeightSize(*Str) * K);
+}
+
+TArray<FString> FDAPDAUI::WrapText(const FString& Str, float MaxWidth, float InScale, UFont* Font) const
+{
+	TArray<FString> Out;
+	TArray<FString> Paragraphs;
+	Str.ParseIntoArray(Paragraphs, TEXT("\n"), false);
+	for (const FString& Para : Paragraphs)
+	{
+		TArray<FString> Words;
+		Para.ParseIntoArray(Words, TEXT(" "), true);
+		FString Line;
+		for (const FString& Word : Words)
+		{
+			const FString Candidate = Line.IsEmpty() ? Word : Line + TEXT(" ") + Word;
+			if (!Line.IsEmpty() && Measure(Candidate, InScale, Font).X > MaxWidth)
+			{
+				Out.Add(Line);
+				Line = Word;
+			}
+			else
+			{
+				Line = Candidate;
+			}
+		}
+		Out.Add(Line);
+	}
+	return Out;
+}
+
+FString FDAPDAUI::Ellipsize(const FString& Str, float MaxWidth, float InScale, UFont* Font) const
+{
+	return DAUIText::EllipsizeMeasured(Str, MaxWidth, [this, InScale, Font](const FString& Candidate)
+	{
+		return Measure(Candidate, InScale, Font).X;
+	});
+}
+
+void FDAPDAUI::EnsureSelectionVisible(int32 VisibleRows)
+{
+	if (VisibleRows <= 0)
+	{
+		return;
+	}
+	if (Selection < ListScroll)
+	{
+		ListScroll = Selection;
+	}
+	else if (Selection >= ListScroll + VisibleRows)
+	{
+		ListScroll = Selection - VisibleRows + 1;
+	}
+	const int32 Count = RowCountForTab(ActiveTab);
+	ListScroll = FMath::Clamp(ListScroll, 0, FMath::Max(0, Count - VisibleRows));
+}
+
+// ------------------------------------------------------------------------ draw
+
+void FDAPDAUI::Draw(UCanvas* InCanvas)
+{
+	if (!bOpen || !InCanvas)
+	{
+		return;
+	}
+	Canvas = InCanvas;
+	UIScale = FMath::Clamp(Canvas->ClipY / 1080.f, 0.6f, 2.5f);
+	HitTargets.Reset();
+
+	DrawRect(FLinearColor(0.004f, 0.01f, 0.022f, 0.94f), 0.f, 0.f, Canvas->ClipX, Canvas->ClipY);
+	DrawHeader();
+	DrawTabBar();
+	DrawContent();
+	DrawFooter();
+}
+
+void FDAPDAUI::DrawHeader()
+{
+	const float S = UIScale;
+	const float CW = Canvas->ClipX;
+	const float H = 86.f * S;
+	DrawRect(FLinearColor(0.012f, 0.022f, 0.04f, 0.96f), 0.f, 0.f, CW, H);
+	DrawRect(PdaAlpha(PdaGold, 0.55f), 0.f, H - 2.f * S, CW, 2.f * S);
+
+	const FString Title = DAUIData::Label(TEXT("pda.title"), TEXT("DUEL ACADEMY PDA"));
+	DrawText(Ellipsize(Title, CW * 0.5f, 1.6f, GetFont(true)), 32.f * S, 12.f * S, PdaGold, 1.6f, false, GetFont(true));
+	DrawText(Ellipsize(DAUIData::Label(TEXT("pda.subtitle"), TEXT("STUDENT TERMINAL")),
+		CW * 0.5f, 0.72f), 34.f * S, 52.f * S,
+		PdaAlpha(PdaMuted, 0.9f), 0.72f);
+
+	const FDAPDAProfileView& Profile = ViewModel.Profile;
+	const FString Line1 = FString::Printf(TEXT("%s  -  %s"), *Profile.PlayerName, *Profile.DormName);
+	const FString Line2 = Profile.TitleName;
+	const FString Line3 = FString::Printf(TEXT("DP %d    %s    %s"), Profile.DP, *Profile.DateLine, *Profile.Period);
+
+	const float RightX = CW - 32.f * S;
+	const float RightMaxW = FMath::Max(120.f * S, CW * 0.45f);
+	auto RightText = [&](const FString& Str, float Y, const FLinearColor& Color, float Scale, UFont* Font)
+	{
+		const FString Fitted = Ellipsize(Str, RightMaxW, Scale, Font);
+		const FVector2D Size = Measure(Fitted, Scale, Font);
+		DrawText(Fitted, RightX - Size.X, Y, Color, Scale, false, Font);
+	};
+	RightText(Line1, 10.f * S, PdaPaper, 1.0f, GetFont(true));
+	RightText(Line2, 36.f * S, PdaGold, 0.82f, nullptr);
+	RightText(Line3, 58.f * S, PdaAlpha(PdaMuted, 0.95f), 0.72f, nullptr);
+}
+
+void FDAPDAUI::DrawTabBar()
+{
+	const float S = UIScale;
+	const float CW = Canvas->ClipX;
+	const float Y = 86.f * S;
+	const float H = 48.f * S;
+	const float Margin = 32.f * S;
+	const float TabW = (CW - Margin * 2.f) / static_cast<float>(DAPDATabCount);
+
+	DrawRect(FLinearColor(0.008f, 0.016f, 0.03f, 0.9f), 0.f, Y, CW, H);
+	for (int32 Index = 0; Index < DAPDATabCount; ++Index)
+	{
+		const EDAPDATab Tab = static_cast<EDAPDATab>(Index);
+		const bool bSelected = Tab == ActiveTab;
+		const bool bHovered = Index == HoveredTab;
+		const float X = Margin + Index * TabW;
+		if (bSelected)
+		{
+			DrawRect(PdaAlpha(PdaGold, 0.20f), X + 2.f * S, Y + 4.f * S, TabW - 4.f * S, H - 8.f * S);
+			DrawRect(PdaAlpha(PdaGold, 0.95f), X + 2.f * S, Y + H - 3.f * S, TabW - 4.f * S, 3.f * S);
+		}
+		else if (bHovered)
+		{
+			DrawRect(PdaAlpha(PdaGold, 0.08f), X + 2.f * S, Y + 4.f * S, TabW - 4.f * S, H - 8.f * S);
+		}
+		DrawText(Ellipsize(TabLabel(Tab), TabW - 10.f * S, 0.78f), X + TabW * 0.5f, Y + 14.f * S,
+			bSelected ? PdaGold : PdaAlpha(PdaPaper, 0.72f), 0.78f, true);
+		AddHit(TEXT("tab"), Index, X, Y, TabW, H);
+	}
+	DrawRect(PdaAlpha(PdaMuted, 0.25f), 0.f, Y + H, CW, 1.f * S);
+}
+
+void FDAPDAUI::DrawContent()
+{
+	const float S = UIScale;
+	const float CW = Canvas->ClipX;
+	const float CH = Canvas->ClipY;
+	const float ContentY = 144.f * S;
+	const float ContentH = CH - ContentY - 44.f * S;
+	const float Margin = 32.f * S;
+	const float Gap = 18.f * S;
+	const float LeftW = (CW - Margin * 2.f - Gap) * 0.38f;
+	const float LeftX = Margin;
+	const float RightX = LeftX + LeftW + Gap;
+	const float RightW = CW - RightX - Margin;
+
+	DrawListPanel(LeftX, ContentY, LeftW, ContentH);
+	DrawDetailPanel(RightX, ContentY, RightW, ContentH);
+}
+
+void FDAPDAUI::DrawListPanel(float X, float Y, float W, float H)
+{
+	const float S = UIScale;
+	DrawPanel(X, Y, W, H, PdaAlpha(PdaInk, 0.9f), PdaAlpha(PdaGold, 0.7f));
+
+	const int32 Count = RowCountForTab(ActiveTab);
+	const FString Title = TabLabel(ActiveTab);
+	DrawText(Ellipsize(Title, W - 72.f * S, 1.05f, GetFont(true)), X + 20.f * S, Y + 14.f * S,
+		PdaGold, 1.05f, false, GetFont(true));
+	DrawText(FString::Printf(TEXT("%d"), Count), X + W - 46.f * S, Y + 18.f * S,
+		PdaAlpha(PdaMuted, 0.9f), 0.8f);
+	DrawRect(PdaAlpha(PdaMuted, 0.3f), X + 20.f * S, Y + 44.f * S, W - 40.f * S, 1.f * S);
+
+	const float RowH = 46.f * S;
+	const float Top = Y + 54.f * S;
+	const int32 VisibleRows = FMath::Max(1, FMath::FloorToInt((H - 64.f * S) / RowH));
+	EnsureSelectionVisible(VisibleRows);
+
+	if (Count == 0)
+	{
+		const FString Empty = DAUIData::Label(TEXT("pda.empty"), TEXT("No entries yet."));
+		DrawText(Empty, X + 20.f * S, Top + 8.f * S, PdaAlpha(PdaMuted, 0.9f), 0.9f);
+		FString Note;
+		switch (ActiveTab)
+		{
+		case EDAPDATab::Map:
+			Note = TEXT("No locations are available.");
+			break;
+		case EDAPDATab::Deck:
+			Note = ViewModel.Deck.Note;
+			break;
+		case EDAPDATab::Mail:
+			Note = ViewModel.Profile.bPlaceholder
+				? FString(TEXT("Contacts and messages arrive with A03's mailbox."))
+				: FString(TEXT("No messages yet. Contacts write as the story advances."));
+			break;
+		case EDAPDATab::Save:
+			Note = TEXT("Save subsystem unavailable; no save slots can be read.");
+			break;
+		case EDAPDATab::Limitation:
+			Note = TEXT("The banned/limited list arrives with A01/A07 data.");
+			break;
+		default:
+			Note = ViewModel.FooterNote;
+			break;
+		}
+		float NoteY = Top + 42.f * S;
+		for (const FString& Line : WrapText(Note, W - 40.f * S, 0.75f))
+		{
+			DrawText(Line, X + 20.f * S, NoteY, PdaAlpha(PdaMuted, 0.7f), 0.75f);
+			NoteY += Measure(TEXT("Ag"), 0.75f).Y + 4.f * S;
+		}
+		return;
+	}
+
+	for (int32 Index = ListScroll; Index < Count && Index < ListScroll + VisibleRows; ++Index)
+	{
+		FString Subtitle;
+		FLinearColor Accent = PdaGold;
+		bool bDisabled = false;
+		const FString Label = RowLabel(Index, Subtitle, Accent, bDisabled);
+		const float RY = Top + (Index - ListScroll) * RowH;
+		const bool bSelected = Index == Selection;
+		const bool bHovered = Index == HoveredRow;
+
+		if (bSelected)
+		{
+			DrawRect(PdaAlpha(Accent, 0.26f), X + 10.f * S, RY, W - 20.f * S, RowH - 4.f * S);
+		}
+		else if (bHovered)
+		{
+			DrawRect(PdaAlpha(Accent, 0.12f), X + 10.f * S, RY, W - 20.f * S, RowH - 4.f * S);
+		}
+		DrawRect(PdaAlpha(Accent, bDisabled ? 0.4f : 1.f), X + 10.f * S, RY, 4.f * S, RowH - 4.f * S);
+		DrawText(Ellipsize(Label, W - 46.f * S, 0.92f), X + 24.f * S, RY + 5.f * S,
+			bDisabled ? PdaAlpha(PdaMuted, 0.8f) : (bSelected ? PdaPaper : PdaAlpha(PdaPaper, 0.88f)), 0.92f);
+		if (!Subtitle.IsEmpty())
+		{
+			DrawText(Ellipsize(Subtitle, W - 46.f * S, 0.68f), X + 24.f * S, RY + 25.f * S,
+				PdaAlpha(PdaMuted, 0.9f), 0.68f);
+		}
+		AddHit(TEXT("row"), Index, X + 10.f * S, RY, W - 20.f * S, RowH - 4.f * S);
+	}
+
+	if (Count > VisibleRows)
+	{
+		const float TrackY = Top;
+		const float TrackH = VisibleRows * RowH - 8.f * S;
+		const float ThumbH = FMath::Max(24.f * S, TrackH * static_cast<float>(VisibleRows) / static_cast<float>(Count));
+		const int32 MaxScroll = FMath::Max(1, Count - VisibleRows);
+		const float ThumbY = TrackY + (TrackH - ThumbH) * static_cast<float>(ListScroll) / static_cast<float>(MaxScroll);
+		DrawRect(PdaAlpha(PdaMuted, 0.18f), X + W - 10.f * S, TrackY, 3.f * S, TrackH);
+		DrawRect(PdaAlpha(PdaGold, 0.8f), X + W - 10.f * S, ThumbY, 3.f * S, ThumbH);
+	}
+}
+
+void FDAPDAUI::DrawDetailPanel(float X, float Y, float W, float H)
+{
+	const float S = UIScale;
+	DrawPanel(X, Y, W, H, PdaAlpha(PdaInk, 0.82f), PdaAlpha(PdaMuted, 0.4f));
+
+	const int32 Count = RowCountForTab(ActiveTab);
+	const FString Title = (Count > 0) ? RowDetailTitle(Selection) : TabLabel(ActiveTab);
+	DrawText(Ellipsize(Title, W - 48.f * S, 1.35f, GetFont(true)), X + 24.f * S, Y + 18.f * S,
+		PdaGold, 1.35f, false, GetFont(true));
+	DrawRect(PdaAlpha(PdaGold, 0.35f), X + 24.f * S, Y + 56.f * S, W - 48.f * S, 1.f * S);
+
+	if (ActiveTab == EDAPDATab::Calendar)
+	{
+		DrawCalendarGrid(X + 24.f * S, Y + 72.f * S, W - 48.f * S, H - 100.f * S);
+		return;
+	}
+
+	if (Count == 0 || Selection < 0 || Selection >= Count)
+	{
+		FString Empty;
+		switch (ActiveTab)
+		{
+		case EDAPDATab::Map:
+			Empty = TEXT("No locations are available.");
+			break;
+		case EDAPDATab::Deck:
+			Empty = ViewModel.Deck.Note;
+			break;
+		case EDAPDATab::Mail:
+			Empty = ViewModel.Profile.bPlaceholder
+				? FString(TEXT("Contacts and messages arrive with A03's mailbox."))
+				: FString(TEXT("No messages yet. Contacts write as the story advances."));
+			break;
+		case EDAPDATab::Save:
+			Empty = TEXT("No save slots are available.");
+			break;
+		case EDAPDATab::Limitation:
+			Empty = TEXT("The banned/limited list arrives with A01/A07 data.");
+			break;
+		default:
+			Empty = DAUIData::Label(TEXT("pda.detail.empty"), TEXT("No data connected yet."));
+			break;
+		}
+		float EmptyY = Y + 78.f * S;
+		const float EmptyLineH = Measure(TEXT("Ag"), 0.9f).Y + 4.f * S;
+		const float EmptyMaxY = Y + H - 34.f * S;
+		for (const FString& Line : WrapText(Empty, W - 48.f * S, 0.9f))
+		{
+			if (EmptyY + EmptyLineH > EmptyMaxY)
+			{
+				break;
+			}
+			DrawText(Line, X + 24.f * S, EmptyY, PdaAlpha(PdaMuted, 0.9f), 0.9f);
+			EmptyY += EmptyLineH;
+		}
+		return;
+	}
+
+	const bool bShowEditButton = ActiveTab == EDAPDATab::Deck && ViewModel.Deck.Decks.IsValidIndex(Selection);
+	const FString Body = RowDetailBody(Selection);
+	float TextY = Y + 74.f * S;
+	const float LineH = Measure(TEXT("Ag"), 0.92f).Y + 4.f * S;
+	const float MaxY = Y + H - (bShowEditButton ? 58.f : 34.f) * S;
+	for (const FString& Line : WrapText(Body, W - 48.f * S, 0.92f))
+	{
+		if (TextY + LineH > MaxY)
+		{
+			DrawText(TEXT("..."), X + 24.f * S, TextY, PdaAlpha(PdaMuted, 0.8f), 0.92f);
+			break;
+		}
+		DrawText(Line, X + 24.f * S, TextY, PdaPaper, 0.92f);
+		TextY += LineH;
+	}
+
+	if (bShowEditButton)
+	{
+		const float BW = 110.f * S;
+		const float BH = 30.f * S;
+		const float BX = X + W - BW - 24.f * S;
+		const float BY = Y + H - 44.f * S;
+		DrawRect(PdaAlpha(PdaGold, 0.2f), BX, BY, BW, BH);
+		DrawRect(PdaGold, BX, BY, 3.f * S, BH);
+		DrawText(TEXT("EDIT"), BX + 20.f * S, BY + 6.f * S, PdaPaper, 0.74f);
+		AddHit(TEXT("deck_edit"), INDEX_NONE, BX, BY, BW, BH);
+	}
+
+	// Footer action hint per tab.
+	FString Hint;
+	switch (ActiveTab)
+	{
+	case EDAPDATab::Map:       Hint = TEXT("Enter / click: fast travel"); break;
+	case EDAPDATab::Deck:      Hint = TEXT("Enter / click: open deck editor"); break;
+	case EDAPDATab::Mail:      Hint = TEXT("Enter / click: read message"); break;
+	case EDAPDATab::Save:      Hint = TEXT("Enter: save empty / load occupied twice"); break;
+	case EDAPDATab::Options:   Hint = TEXT("Enter / click: cycle value"); break;
+	case EDAPDATab::Records:   Hint = TEXT("A02/A07 counters will replace the placeholders"); break;
+	case EDAPDATab::Limitation: Hint = TEXT("A01/A07 limitation data will populate this list"); break;
+	default:                   Hint = FString(); break;
+	}
+	if (!Hint.IsEmpty())
+	{
+		const float HintW = W - 48.f * S - (bShowEditButton ? 130.f * S : 0.f);
+		DrawText(Ellipsize(Hint, HintW, 0.72f), X + 24.f * S, Y + H - 28.f * S,
+			PdaAlpha(PdaMuted, 0.75f), 0.72f);
+	}
+}
+
+void FDAPDAUI::DrawCalendarGrid(float X, float Y, float W, float H)
+{
+	const float S = UIScale;
+	const float HeaderH = 22.f * S;
+
+	for (int32 Column = 0; Column < 7; ++Column)
+	{
+		DrawText(WeekdayShort(Column), X + (Column + 0.5f) * (W / 7.f), Y,
+			PdaAlpha(PdaMuted, 0.9f), 0.68f, true);
+	}
+
+	const float GridY = Y + HeaderH + 6.f * S;
+	const float CellW = W / 7.f;
+	const float CellH = FMath::Clamp((H - HeaderH - 90.f * S) / 6.f, 44.f * S, 90.f * S);
+	const float Gap = 2.f * S;
+
+	for (int32 GridIndex = 0; GridIndex < 42; ++GridIndex)
+	{
+		const int32 DayIndex = GridIndex - ViewModel.Calendar.FirstWeekday;
+		if (!ViewModel.Calendar.Days.IsValidIndex(DayIndex))
+		{
+			continue;
+		}
+		const FDAPDACalendarCell& Cell = ViewModel.Calendar.Days[DayIndex];
+		const int32 Row = GridIndex / 7;
+		const int32 Column = GridIndex % 7;
+		const float CX = X + Column * CellW;
+		const float CY = GridY + Row * CellH;
+		const bool bSelected = DayIndex == Selection;
+
+		FLinearColor Accent = PdaMuted;
+		if (Cell.bExam)
+		{
+			Accent = PdaRed;
+		}
+		else if (Cell.bEvent)
+		{
+			Accent = PdaGold;
+		}
+		else if (Cell.bToday)
+		{
+			Accent = PdaCyan;
+		}
+
+		DrawRect(PdaAlpha(Accent, bSelected ? 0.35f : 0.10f), CX + Gap, CY + Gap,
+			CellW - Gap * 2.f, CellH - Gap * 2.f);
+		if (Cell.bToday)
+		{
+			DrawRect(PdaAlpha(PdaCyan, 0.9f), CX + Gap, CY + Gap, CellW - Gap * 2.f, 2.f * S);
+		}
+		DrawText(FString::FromInt(Cell.Day), CX + 10.f * S, CY + 8.f * S,
+			bSelected ? PdaPaper : PdaAlpha(PdaPaper, 0.85f), 0.9f, false, GetFont(true));
+		if (Cell.bExam || Cell.bEvent)
+		{
+			DrawRect(PdaAlpha(Accent, 0.95f), CX + CellW - 16.f * S, CY + CellH - 14.f * S, 6.f * S, 6.f * S);
+		}
+		AddHit(TEXT("calendar.day"), DayIndex, CX + Gap, CY + Gap, CellW - Gap * 2.f, CellH - Gap * 2.f);
+	}
+
+	// Legend + placeholder note.
+	const float LegendY = GridY + 6.f * CellH + 10.f * S;
+	DrawRect(PdaAlpha(PdaRed, 0.95f), X, LegendY + 2.f * S, 8.f * S, 8.f * S);
+	DrawText(TEXT("EXAM"), X + 14.f * S, LegendY, PdaAlpha(PdaPaper, 0.8f), 0.68f);
+	DrawRect(PdaAlpha(PdaGold, 0.95f), X + 92.f * S, LegendY + 2.f * S, 8.f * S, 8.f * S);
+	DrawText(TEXT("EVENT"), X + 106.f * S, LegendY, PdaAlpha(PdaPaper, 0.8f), 0.68f);
+	DrawRect(PdaAlpha(PdaCyan, 0.95f), X + 190.f * S, LegendY + 2.f * S, 8.f * S, 8.f * S);
+	DrawText(TEXT("TODAY"), X + 204.f * S, LegendY, PdaAlpha(PdaPaper, 0.8f), 0.68f);
+
+	if (ViewModel.Calendar.bPlaceholder)
+	{
+		DrawText(TEXT("Sample month - A02 replaces this with the live calendar."),
+			X, LegendY + 26.f * S, PdaAlpha(PdaMuted, 0.8f), 0.72f);
+	}
+}
+
+void FDAPDAUI::DrawFooter()
+{
+	const float S = UIScale;
+	const float CW = Canvas->ClipX;
+	const float CH = Canvas->ClipY;
+	const float H = 34.f * S;
+	DrawRect(FLinearColor(0.006f, 0.012f, 0.024f, 0.92f), 0.f, CH - H, CW, H);
+	DrawRect(PdaAlpha(PdaMuted, 0.25f), 0.f, CH - H, CW, 1.f * S);
+
+	const FString Hints = DAUIData::Label(TEXT("pda.footer.hints"),
+		TEXT("Q / E or 1-8: tabs    Up / Down: select    Enter: activate    P / Esc: close"));
+	DrawText(Ellipsize(Hints, CW * 0.6f, 0.72f), 32.f * S, CH - H + 9.f * S,
+		PdaAlpha(PdaPaper, 0.78f), 0.72f);
+
+	const FString Note = Ellipsize(ViewModel.FooterNote, CW * 0.34f, 0.62f);
+	if (!Note.IsEmpty())
+	{
+		const FVector2D Size = Measure(Note, 0.62f);
+		DrawText(Note, CW - 32.f * S - Size.X, CH - H + 11.f * S, PdaAlpha(PdaMuted, 0.65f), 0.62f);
+	}
+}

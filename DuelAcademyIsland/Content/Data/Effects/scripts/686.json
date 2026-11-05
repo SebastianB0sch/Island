@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "card_id": 686,
+  "name": "Bottomless Trap Hole",
+  "card_type": "Trap",
+  "tier": 1,
+  "status": "scripted",
+  "source_text": "When your opponent Normal Summons, Flip Summons, or Special Summons a monster with an ATK of 1500 or more, the monster is destroyed and removed from play.",
+  "notes": [
+    "Demonstrates a summon-response trap with a compound destroy+banish operation chain."
+  ],
+  "scripts": [
+    {
+      "id": "bottomless_destroy_and_banish",
+      "trigger": "on_summon",
+      "condition": {
+        "controller": "opponent",
+        "summon_type": "any",
+        "atk_min": 1500
+      },
+      "target": {
+        "zone": "trigger_source",
+        "count": 1
+      },
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Bottomless Trap Hole"
+        },
+        {
+          "op": "banish",
+          "target": "$target",
+          "reason": "Bottomless Trap Hole"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "source_text": "When your opponent Normal Summons, Flip Summons, or Special Summons a monster with an ATK of 1500 or more..."
+    }
+  ]
+}

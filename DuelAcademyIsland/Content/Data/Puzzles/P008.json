@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "id": "P008",
+  "level": 1,
+  "title": "Reincarnation Line",
+  "opponent": "mimicry",
+  "seed": 1008,
+  "turn_limit": 1,
+  "time_limit": 75,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      2,
+      1065
+    ],
+    "field": [
+      {
+        "card_id": 1106,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 1107,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [
+      1
+    ],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 3000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 1065
+    },
+    {
+      "action": "normal_summon",
+      "card_id": 1,
+      "tribute_card_ids": [
+        1106,
+        1107
+      ]
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "confidence": "medium",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "Monster Reincarnation discards Mystical Elf, returns Blue-Eyes to hand, then Avian and Burstinatrix are tributed for it.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_008",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      397,
+      597,
+      762,
+      840
+    ],
+    "solution_card_names": [
+      "Lightning Vortex",
+      "Spell Canceller",
+      "Tribute to the Doomed",
+      "Tsukuyomi"
+    ],
+    "solution_steps": [
+      "Summon Tsukuyomi and flip Spell Canceller face-down.",
+      "Activate Tribute to the Doomed, discard Lightning Vortex and destroy Spell Canceller.",
+      "Enter Battle Phase and attack with both of your monsters."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}

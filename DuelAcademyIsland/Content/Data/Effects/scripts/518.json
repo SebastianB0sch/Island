@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "card_id": 518,
+  "name": "Arsenal Bug",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "If there are no face-up Insect-Type monsters (except this monster) on your side of the field, both the ATK and DEF of this monster become 1000 points.",
+  "notes": [
+    "The count includes Arsenal Bug itself, so count_max=1 means no other face-up Insect."
+  ],
+  "scripts": [
+    {
+      "id": "518_insect_condition_stats",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$self",
+          "amount": 1000,
+          "mode": "set_atk"
+        },
+        {
+          "op": "modify_def",
+          "target": "$self",
+          "amount": 1000,
+          "mode": "set_def"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "face_up": true,
+            "zone": "self_monster"
+          },
+          {
+            "count_zone": "self_monster",
+            "count_filter": {
+              "all": [
+                {
+                  "face_up": true
+                },
+                {
+                  "monster_type": "Insect"
+                }
+              ]
+            },
+            "count_max": 1
+          }
+        ]
+      },
+      "source_text": "If there are no face-up Insect-Type monsters (except this monster) on your side of the field, both the ATK and DEF of this monster become 1000 points."
+    }
+  ]
+}

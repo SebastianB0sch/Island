@@ -17,20 +17,16 @@ an Unreal-ready skeletal mesh:
   * the retargeted / authored takes are baked onto the model's own skeleton (its proportions)
 """
 
-import json
-import math
-import os
-import re
-import struct
-
 import bpy
 import numpy as np
 from mathutils import Matrix
 from PIL import Image
 
+from .. import atomic, cache
 from .. import config as C
 from .. import palette, thirdparty
 from . import skin as K
+from .vrm import alpha_modes, read_vrm, target_names
 
 TEX_REL = "Characters"
 
@@ -71,41 +67,8 @@ def role_of(mat_name):
 
 
 # --------------------------------------------------------------------------- VRM json
-def _gltf_json(path):
-    with open(path, "rb") as fp:
-        head = fp.read(20)
-        if head[:4] != b"glTF":
-            return None
-        n = struct.unpack_from("<I", head, 12)[0]
-        return json.loads(fp.read(n))
-
-
-def alpha_modes(path):
-    """{material name: OPAQUE | MASK | BLEND} from a .vrm/.glb file ({} for other formats). VRM 0.x keeps the
-    MToon render mode (_BlendMode: 0 opaque, 1 cutout, 2/3 transparent) in its own extension."""
-    j = _gltf_json(path) or {}
-    out = {m.get("name"): m.get("alphaMode", "OPAQUE") for m in j.get("materials", [])}
-    for mp in j.get("extensions", {}).get("VRM", {}).get("materialProperties", []):
-        mode = mp.get("floatProperties", {}).get("_BlendMode", 0)
-        if mode >= 1 and mp.get("name") in out:
-            out[mp["name"]] = "MASK" if mode == 1 else "BLEND"
-    return out
-
-
-def read_vrm(path):
-    """(version 0 | 1 | None, {humanBone: node name}) from a .vrm/.glb file."""
-    j = _gltf_json(path)
-    if j is None:
-        return None, {}
-    names = [nd.get("name") for nd in j.get("nodes", [])]
-    ext = j.get("extensions", {})
-    if "VRMC_vrm" in ext:
-        hb = ext["VRMC_vrm"]["humanoid"]["humanBones"]
-        return 1, {k: names[v["node"]] for k, v in hb.items()}
-    if "VRM" in ext:
-        return 0, {h["bone"]: names[h["node"]] for h in ext["VRM"]["humanoid"]["humanBones"] if "node" in h}
-    return None, {}
-
+# _gltf_json / alpha_modes / read_vrm / target_names live in dai.anime.vrm
+# (stdlib-only so they can be unit-tested without Blender) and are imported above.
 
 # common non-VRM rigs (Mixamo, VRoid FBX exports) when the file carries no humanoid map
 NAME_HINTS = {
@@ -129,17 +92,6 @@ def _select(objs, active):
     bpy.context.view_layer.objects.active = active
 
 
-def target_names(path):
-    """{mesh name: [blendshape name per glTF morph target]} (VRoid keeps them in the mesh extras)."""
-    j = _gltf_json(path) or {}
-    out = {}
-    for m in j.get("meshes", []):
-        names = (m.get("extras") or {}).get("targetNames") or (m["primitives"][0].get("extras") or {}).get("targetNames")
-        if names:
-            out[m.get("name", "").split(".")[0]] = names
-    return out
-
-
 def _bake_expression(obj, names, expression):
     """Mix VRoid blendshapes into the face's rest shape: {"BRW_Angry": 0.6, "EYE_Angry": 0.3, ...} (names after
     "Fcl_", case-insensitive) - a character's resting expression (Chazz's scowl, Crowler's grin)."""
@@ -161,15 +113,19 @@ def _bake_expression(obj, names, expression):
 def load(path, log=print, expression=None):
     """Import a base model. Returns (armature 'root', [meshes]) - T-pose, metres, facing -Y, UE bone names.
     expression: blendshape mix baked into the face (see _bake_expression)."""
+    cache.require_file(path, "anime model")
     version, human = read_vrm(path)
     src = path
     if path.lower().endswith(".vrm"):
-        cache = os.path.join(C.CACHE_DIR, "vrm")
-        os.makedirs(cache, exist_ok=True)
-        src = os.path.join(cache, os.path.splitext(os.path.basename(path))[0] + ".glb")
-        if not os.path.exists(src) or os.path.getmtime(src) < os.path.getmtime(path):
-            with open(path, "rb") as a, open(src, "wb") as b:
-                b.write(a.read())
+        if not cache.is_glb(path):
+            raise RuntimeError(f"{path}: not a valid VRM/GLB file")
+        cache_dir = os.path.join(C.CACHE_DIR, "vrm")
+        os.makedirs(cache_dir, exist_ok=True)
+        src = cache.cache_file(cache_dir, path, ".glb")
+        # Validate the cache: an interrupted copy used to leave a truncated .glb
+        # that still looked newer than the source and was reused forever.
+        if not cache.is_fresh(src, path) or not cache.is_glb(src):
+            atomic.copy_file(path, src)
     objs = thirdparty.import_file(src)
     if version == 0:                     # VRM 0.x faces +Z in glTF: turn the whole import round
         turn = Matrix.Rotation(math.pi, 4, "Z")
@@ -177,9 +133,13 @@ def load(path, log=print, expression=None):
             o.matrix_world = turn @ o.matrix_world
         bpy.context.view_layer.update()
     empties = [o for o in objs if o.type == "EMPTY"]
-    arm = next(o for o in objs if o.type == "ARMATURE")
+    arm = next((o for o in objs if o.type == "ARMATURE"), None)
+    if arm is None:
+        raise RuntimeError(f"{path}: no armature in the imported model")
     meshes = [o for o in objs if o.type == "MESH" and len(o.data.polygons)
               and any(m.type == "ARMATURE" for m in o.modifiers)]
+    if not meshes:
+        raise RuntimeError(f"{path}: no skinned meshes in the imported model")
     for o in objs:
         if o is not arm and o not in meshes and o.type != "EMPTY":
             bpy.data.objects.remove(o, do_unlink=True)
@@ -258,7 +218,8 @@ def _recolor(src_png, dst_png, target, keep=0.0, gradient=None, contrast=1.0):
     """Recolour a texture to `target` (sRGB) keeping its light / dark detail (luminance normalised to the
     dominant tone). keep blends some of the original colour back in. gradient = (colour, v, soft): below
     texture v (VRoid hair strands run from v=1 at the root to v=0 at the tip) blend into a second colour."""
-    img = Image.open(src_png).convert("RGBA")
+    with Image.open(src_png) as src_img:
+        img = src_img.convert("RGBA")
     a = np.asarray(img).astype(np.float32) / 255.0
     rgb, al = a[..., :3], a[..., 3]
     lum = rgb @ np.array([0.299, 0.587, 0.114], np.float32)
@@ -277,8 +238,7 @@ def _recolor(src_png, dst_png, target, keep=0.0, gradient=None, contrast=1.0):
     if keep:
         out = out * (1 - keep) + rgb * keep
     a[..., :3] = np.clip(out, 0, 1)
-    os.makedirs(os.path.dirname(dst_png), exist_ok=True)
-    Image.fromarray((a * 255 + 0.5).astype(np.uint8)).save(dst_png, optimize=True)
+    atomic.save_image(Image.fromarray((a * 255 + 0.5).astype(np.uint8)), dst_png, optimize=True)
 
 
 def _base_image(mat, alpha_mode=None):
@@ -299,12 +259,15 @@ def _base_image(mat, alpha_mode=None):
     return img, masked
 
 
-def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None):
+def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None, source=None):
     """Recolour / extract every material of the base model and rename the slots to palette materials
     (skip: names of materials that are already palette materials, e.g. the tailored uniform)."""
     tint = set(entry.get("tint", []))
     col = entry.get("colors", {})
     hair = entry.get("hair", {})
+    # The vrm_tex cache entries are keyed by source path (like the decoded glTF
+    # cache) so two packs with the same model name cannot collide.
+    tex_cache_key = f"{base}-{cache.source_key(source)}" if source else base
     recolor = {
         "tops": None if "jacket" in tint else col.get("jacket"),
         "bottoms": col.get("skirt") if entry.get("body", {}).get("female") else col.get("pants"),
@@ -330,8 +293,10 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
             img, masked = _base_image(mat, (alpha or {}).get(src_name))
             base_png = None
             if img is not None:
-                base_png = thirdparty._save_image(img, os.path.join(C.CACHE_DIR, "vrm_tex", base, f"{safe}.png"),
-                                                  2048, mode="RGBA")
+                # `fresh_against` reuses the cache only while it is not older than
+                # the registered model file (see thirdparty._save_image).
+                base_png = thirdparty._save_image(img, os.path.join(C.CACHE_DIR, "vrm_tex", tex_cache_key, f"{safe}.png"),
+                                                  2048, mode="RGBA", fresh_against=source)
             if base_png and rig is not None and role == "skin" and "body" in mat.name.lower():
                 from .outfit import fix_skin
                 base_png = fix_skin(obj, slot_idx, base_png, base_png[:-4] + "_bare.png", rig,
@@ -356,9 +321,10 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
             elif base_png:
                 rel = f"{TEX_REL}/{base}/T_{base}_{safe}"
                 dst = os.path.join(C.OUT_TEXTURES, rel + ".png")
-                if not os.path.exists(dst):
-                    os.makedirs(os.path.dirname(dst), exist_ok=True)
-                    Image.open(base_png).save(dst, optimize=True)
+                # Always refresh the output copy: the cache may predate a texture
+                # or material change, and the previous code kept stale files forever.
+                with Image.open(base_png) as cached:
+                    atomic.save_image(cached, dst, optimize=True)
                 name = f"M_Anime_{base}_{safe}"
             else:
                 rel = None
@@ -387,7 +353,8 @@ def _alpha_lookup(obj):
         if spec.get("masked") and spec.get("base"):
             path = os.path.join(C.OUT_TEXTURES, spec["base"] + ".png")
             if os.path.exists(path):
-                tex[i] = np.asarray(Image.open(path).convert("RGBA"))[..., 3]
+                with Image.open(path) as img:
+                    tex[i] = np.asarray(img.convert("RGBA"))[..., 3]
     return tex
 
 
@@ -411,7 +378,8 @@ def add_outline(obj, thickness, skip=("face",)):
         h, w = a.shape
         if a[min(h - 1, max(0, int((1 - v % 1.0) * h))), min(w - 1, max(0, int((u % 1.0) * w)))] < 128:
             hidden.append(f)
-    orig = [f for f in bm.faces if f not in set(hidden)]
+    hidden_set = set(hidden)
+    orig = [f for f in bm.faces if f not in hidden_set]
     if not orig:
         bm.free()
         return
@@ -431,6 +399,10 @@ def add_outline(obj, thickness, skip=("face",)):
         v.co += type(v.co)(d * thickness)
     bmesh.ops.reverse_faces(bm, faces=new_faces)
     mat = bpy.data.materials.get(K.OUTLINE_MAT)
+    if mat is None:
+        # build_model() creates this up front; keep the helper usable on its own.
+        from .build import preview_material
+        mat = preview_material(K.OUTLINE_MAT)
     if mat.name not in me.materials:
         me.materials.append(mat)
     idx = list(me.materials).index(mat)
@@ -470,7 +442,7 @@ def build_model(cid, entry, key_name, log=print):
         more, extra = hairdo.restyle(arm, meshes, entry, key, rig, log)
         alpha.update(more)
         tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
-    materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig)
+    materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig, source=path)
     meshes += extra
     for m in meshes:
         add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses"))

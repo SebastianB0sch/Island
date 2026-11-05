@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "card_id": 1151,
+  "name": "UFOroid",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is destroyed as a result of battle and sent to the Graveyard, you can Special Summon from your Deck 1 Machine-Type monster with an ATK of 1500 or less in face-up Attack Position. Then shuffle your Deck.",
+  "notes": [
+    "Recruits a Machine monster with ATK <= 1500 in face-up Attack Position."
+  ],
+  "scripts": [
+    {
+      "id": "1151_battle_recruit",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "monster_type": "Machine"
+            },
+            {
+              "atk_max": 1500
+            }
+          ]
+        }
+      },
+      "source_text": "When this card is destroyed as a result of battle and sent to the Graveyard, you can Special Summon from your Deck 1 Machine-Type monster with an ATK of 1500 or less in face-up Attack Position. Then shuffle your Deck.",
+      "condition": {
+        "name": "UFOroid"
+      }
+    }
+  ]
+}

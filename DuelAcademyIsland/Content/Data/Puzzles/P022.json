@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "id": "P022",
+  "level": 2,
+  "title": "Direct Attack L2-2",
+  "template": "direct_attack",
+  "opponent": "mimicry",
+  "seed": 2022,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 780,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 1900,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 780,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'direct_attack', level 2, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Direct attack with Luster Dragon for exactly 1900 damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_022",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      166,
+      796,
+      840,
+      1025,
+      1129
+    ],
+    "solution_card_names": [
+      "Big Bang Shot",
+      "Blue-Eyes Ultimate Dragon",
+      "Elemental Hero Flame Wingman",
+      "Fusion Weapon",
+      "Tsukuyomi"
+    ],
+    "solution_steps": [
+      "Summon Tsukuyomi and turn Blue-Eyes Ultimate Dragon face-down.",
+      "Fusion Summon Elemental Hero Flame Wingman.",
+      "Equip him with both Fusion Weapon and Big Bang Shot.",
+      "Enter Battle Phase and attack BEUD with Flame Wingman.",
+      "Attack with Tsukuyomi."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

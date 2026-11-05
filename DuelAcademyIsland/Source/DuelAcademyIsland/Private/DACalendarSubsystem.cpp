@@ -1,0 +1,744 @@
+// Duel Academy Island - school calendar implementation.
+
+#include "DACalendarSubsystem.h"
+
+#include "DAProfileSubsystem.h"
+#include "DuelAcademyIsland.h"
+
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+
+namespace
+{
+	const TCHAR* const MonthNames[12] = {
+		TEXT("October"), TEXT("November"), TEXT("December"),
+		TEXT("January"), TEXT("February"), TEXT("March"),
+		TEXT("April"), TEXT("May"), TEXT("June"),
+		TEXT("July"), TEXT("August"), TEXT("September")
+	};
+
+	const TCHAR* const MonthShortNames[12] = {
+		TEXT("Oct"), TEXT("Nov"), TEXT("Dec"),
+		TEXT("Jan"), TEXT("Feb"), TEXT("Mar"),
+		TEXT("Apr"), TEXT("May"), TEXT("Jun"),
+		TEXT("Jul"), TEXT("Aug"), TEXT("Sep")
+	};
+
+	const TCHAR* const WeekdayNames[7] = {
+		TEXT("Sunday"), TEXT("Monday"), TEXT("Tuesday"), TEXT("Wednesday"),
+		TEXT("Thursday"), TEXT("Friday"), TEXT("Saturday")
+	};
+
+	const TCHAR* const WeekdayShortNames[7] = {
+		TEXT("Sun"), TEXT("Mon"), TEXT("Tue"), TEXT("Wed"), TEXT("Thu"), TEXT("Fri"), TEXT("Sat")
+	};
+
+	FString PeriodKey(EDADayPeriod Period)
+	{
+		switch (Period)
+		{
+		case EDADayPeriod::PM:    return TEXT("PM");
+		case EDADayPeriod::Night: return TEXT("Night");
+		case EDADayPeriod::AM:
+		default:                  return TEXT("AM");
+		}
+	}
+
+	EDADayPeriod KeyToPeriod(const FString& Value, EDADayPeriod Fallback)
+	{
+		if (Value.Equals(TEXT("AM"), ESearchCase::IgnoreCase))
+		{
+			return EDADayPeriod::AM;
+		}
+		if (Value.Equals(TEXT("PM"), ESearchCase::IgnoreCase))
+		{
+			return EDADayPeriod::PM;
+		}
+		if (Value.Equals(TEXT("Night"), ESearchCase::IgnoreCase))
+		{
+			return EDADayPeriod::Night;
+		}
+		return Fallback;
+	}
+
+	EDADayOfWeek StringToWeekday(const FString& Value, EDADayOfWeek Fallback)
+	{
+		const FString Lower = Value.TrimStartAndEnd().ToLower();
+		static const TCHAR* const Names[7] = { TEXT("sunday"), TEXT("monday"), TEXT("tuesday"), TEXT("wednesday"), TEXT("thursday"), TEXT("friday"), TEXT("saturday") };
+		static const TCHAR* const ShortNames[7] = { TEXT("sun"), TEXT("mon"), TEXT("tue"), TEXT("wed"), TEXT("thu"), TEXT("fri"), TEXT("sat") };
+		for (int32 Index = 0; Index < 7; ++Index)
+		{
+			if (Lower == Names[Index] || Lower == ShortNames[Index])
+			{
+				return static_cast<EDADayOfWeek>(Index);
+			}
+		}
+		return Fallback;
+	}
+
+	EDAExamWeekRule StringToExamWeek(const FString& Value, EDAExamWeekRule Fallback)
+	{
+		const FString Lower = Value.TrimStartAndEnd().ToLower();
+		if (Lower == TEXT("first") || Lower == TEXT("1"))
+		{
+			return EDAExamWeekRule::First;
+		}
+		if (Lower == TEXT("second") || Lower == TEXT("2"))
+		{
+			return EDAExamWeekRule::Second;
+		}
+		if (Lower == TEXT("third") || Lower == TEXT("3"))
+		{
+			return EDAExamWeekRule::Third;
+		}
+		if (Lower == TEXT("fourth") || Lower == TEXT("4"))
+		{
+			return EDAExamWeekRule::Fourth;
+		}
+		if (Lower == TEXT("last"))
+		{
+			return EDAExamWeekRule::Last;
+		}
+		return Fallback;
+	}
+
+	int32 CalendarReadClampedInt(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, int32 Default, int32 Min, int32 Max)
+	{
+		double Value = Default;
+		if (Object.IsValid() && Object->TryGetNumberField(Field, Value) && FMath::IsFinite(Value))
+		{
+			return static_cast<int32>(FMath::Clamp(
+				Value, static_cast<double>(Min), static_cast<double>(Max)));
+		}
+		return Default;
+	}
+
+	int32 CountLeapYearsUpTo(int32 InYear)
+	{
+		if (InYear <= 0)
+		{
+			return 0;
+		}
+		return InYear / 4 - InYear / 100 + InYear / 400;
+	}
+}
+
+// ------------------------------------------------------------------------ lifecycle
+
+void UDACalendarSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+	ResetToDefaults();
+	LoadCalendarData();
+}
+
+void UDACalendarSubsystem::Deinitialize()
+{
+	Super::Deinitialize();
+}
+
+UDACalendarSubsystem* UDACalendarSubsystem::Get(const UObject* WorldContext)
+{
+	if (!WorldContext)
+	{
+		return nullptr;
+	}
+	if (const UWorld* World = WorldContext->GetWorld())
+	{
+		if (UGameInstance* GameInstance = World->GetGameInstance())
+		{
+			return GameInstance->GetSubsystem<UDACalendarSubsystem>();
+		}
+	}
+	return nullptr;
+}
+
+void UDACalendarSubsystem::ResetToDefaults()
+{
+	Year = 1;
+	MonthIndex = 0;
+	Day = 7;
+	Period = EDADayPeriod::AM;
+	PeriodHours.Reset();
+	PeriodHours.Add(8);
+	PeriodHours.Add(14);
+	PeriodHours.Add(20);
+	Hour = GetPeriodStartHour(Period);
+	ExamWeekday = EDADayOfWeek::Friday;
+	ExamWeekRule = EDAExamWeekRule::Last;
+	ExamPassMark = 300;
+	Weekday = ComputeWeekday(Year, MonthIndex, Day);
+
+	OnCalendarChanged.Broadcast();
+	OnVisualHourChanged.Broadcast(Hour);
+}
+
+bool UDACalendarSubsystem::LoadCalendarData()
+{
+	ResetToDefaults();
+
+	const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/Profile/calendar.json"));
+	FString Raw;
+	if (!FFileHelper::LoadFileToString(Raw, *Path))
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Calendar data not found at %s; using defaults."), *Path);
+		return false;
+	}
+
+	TSharedPtr<FJsonObject> Root;
+	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Raw);
+	if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Calendar data at %s could not be parsed; using defaults."), *Path);
+		return false;
+	}
+
+	const TSharedPtr<FJsonObject>* Start = nullptr;
+	if (Root->TryGetObjectField(TEXT("start"), Start) && Start && Start->IsValid())
+	{
+		const int32 StartYear = CalendarReadClampedInt(*Start, TEXT("year"), 1, 1, MaxSupportedYear);
+		const int32 StartMonth = CalendarReadClampedInt(*Start, TEXT("month_index"), 0, 0, 11);
+		const int32 StartDay = CalendarReadClampedInt(*Start, TEXT("day"), 7, 1, 31);
+		EDADayPeriod StartPeriod = EDADayPeriod::AM;
+		FString PeriodText;
+		if ((*Start)->TryGetStringField(TEXT("period"), PeriodText))
+		{
+			StartPeriod = KeyToPeriod(PeriodText, EDADayPeriod::AM);
+		}
+		ApplyDateInternal(StartYear, StartMonth, StartDay, StartPeriod);
+	}
+
+	const TSharedPtr<FJsonObject>* PeriodHoursObject = nullptr;
+	if (Root->TryGetObjectField(TEXT("period_hours"), PeriodHoursObject) && PeriodHoursObject && PeriodHoursObject->IsValid())
+	{
+		PeriodHours.SetNum(3);
+		PeriodHours[0] = CalendarReadClampedInt(*PeriodHoursObject, TEXT("AM"), 8, 0, 23);
+		PeriodHours[1] = CalendarReadClampedInt(*PeriodHoursObject, TEXT("PM"), 14, 0, 23);
+		PeriodHours[2] = CalendarReadClampedInt(*PeriodHoursObject, TEXT("Night"), 20, 0, 23);
+		Hour = GetPeriodStartHour(Period);
+	}
+
+	const TSharedPtr<FJsonObject>* Exam = nullptr;
+	if (Root->TryGetObjectField(TEXT("exam"), Exam) && Exam && Exam->IsValid())
+	{
+		FString WeekdayText;
+		if ((*Exam)->TryGetStringField(TEXT("weekday"), WeekdayText))
+		{
+			ExamWeekday = StringToWeekday(WeekdayText, EDADayOfWeek::Friday);
+		}
+		FString WeekText;
+		if ((*Exam)->TryGetStringField(TEXT("week"), WeekText))
+		{
+			ExamWeekRule = StringToExamWeek(WeekText, EDAExamWeekRule::Last);
+		}
+		ExamPassMark = CalendarReadClampedInt(*Exam, TEXT("pass_mark"), 300, 0, TNumericLimits<int32>::Max());
+	}
+
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Loaded school calendar: year %d, month %s, day %d, exam weekday %s (%s)."),
+		Year, *GetMonthName(MonthIndex), Day, *GetWeekdayName(ExamWeekday), *GetPeriodName(Period));
+	OnCalendarChanged.Broadcast();
+	OnVisualHourChanged.Broadcast(Hour);
+	return true;
+}
+
+// ------------------------------------------------------------------------ date
+
+int32 UDACalendarSubsystem::GetMonthNumber() const
+{
+	return ((MonthIndex + 9) % 12) + 1;
+}
+
+void UDACalendarSubsystem::SetDate(int32 InYear, int32 InMonthIndex, int32 InDay, EDADayPeriod InPeriod)
+{
+	const EDADayPeriod OldPeriod = Period;
+	const int32 OldAbsoluteDay = GetAbsoluteDay();
+	ApplyDateInternal(InYear, InMonthIndex, InDay, InPeriod);
+	const bool bDayChanged = OldAbsoluteDay != GetAbsoluteDay();
+	BroadcastDateChanged(OldPeriod, bDayChanged);
+}
+
+bool UDACalendarSubsystem::SkipToDate(int32 InYear, int32 InMonthIndex, int32 InDay, EDADayPeriod InPeriod)
+{
+	const int32 TargetAbsoluteDay = GetAbsoluteDayFor(FMath::Max(1, InYear), FMath::Clamp(InMonthIndex, 0, 11), InDay);
+	const int32 CurrentAbsoluteDay = GetAbsoluteDay();
+	if (TargetAbsoluteDay < CurrentAbsoluteDay)
+	{
+		return false;
+	}
+	if (TargetAbsoluteDay == CurrentAbsoluteDay && GetPeriodRank(InPeriod) < GetPeriodRank(Period))
+	{
+		return false;
+	}
+
+	const EDADayPeriod OldPeriod = Period;
+	if (TargetAbsoluteDay > CurrentAbsoluteDay)
+	{
+		// W13: apply the skipped days arithmetically instead of calling
+		// AdvanceDay() once per day (which re-rolled the weekday and broadcast
+		// a full day change for every skipped day). The month/year rollover
+		// mirrors the canonical AdvanceDay() bound checks.
+		const int32 DeltaDays = TargetAbsoluteDay - CurrentAbsoluteDay;
+		int32 NewDay = Day + DeltaDays;
+		int32 NewMonthIndex = MonthIndex;
+		int32 NewYear = Year;
+		while (NewDay > GetDaysInMonth(NewYear, NewMonthIndex))
+		{
+			NewDay -= GetDaysInMonth(NewYear, NewMonthIndex);
+			++NewMonthIndex;
+			if (NewMonthIndex > 11)
+			{
+				NewMonthIndex = 0;
+				NewYear = FMath::Min(NewYear + 1, MaxSupportedYear);
+			}
+		}
+		ApplyDateInternal(NewYear, NewMonthIndex, NewDay, InPeriod);
+	}
+	else
+	{
+		// Same absolute day: just move the period (and its start hour) forward.
+		Period = InPeriod;
+		Hour = GetPeriodStartHour(Period);
+	}
+
+	// One broadcast for the whole jump, as the callers' notifications expect.
+	BroadcastDateChanged(OldPeriod, TargetAbsoluteDay != CurrentAbsoluteDay);
+	return true;
+}
+
+void UDACalendarSubsystem::AdvancePeriod()
+{
+	switch (Period)
+	{
+	case EDADayPeriod::AM:
+		Period = EDADayPeriod::PM;
+		Hour = GetPeriodStartHour(Period);
+		OnPeriodChanged.Broadcast(EDADayPeriod::AM, EDADayPeriod::PM);
+		OnCalendarChanged.Broadcast();
+		OnVisualHourChanged.Broadcast(Hour);
+		break;
+	case EDADayPeriod::PM:
+		Period = EDADayPeriod::Night;
+		Hour = GetPeriodStartHour(Period);
+		OnPeriodChanged.Broadcast(EDADayPeriod::PM, EDADayPeriod::Night);
+		OnCalendarChanged.Broadcast();
+		OnVisualHourChanged.Broadcast(Hour);
+		break;
+	case EDADayPeriod::Night:
+	default:
+		AdvanceDay();
+		break;
+	}
+}
+
+void UDACalendarSubsystem::AdvanceDay()
+{
+	const EDADayPeriod OldPeriod = Period;
+
+	// Do not wrap the school year back to October at the upper bound: that
+	// moved the absolute day backwards and could re-run year-1 content.
+	if (Year >= MaxSupportedYear && MonthIndex >= 11 && Day >= GetDaysInMonth(MaxSupportedYear, 11))
+	{
+		Period = EDADayPeriod::AM;
+		Hour = GetPeriodStartHour(Period);
+		Weekday = ComputeWeekday(Year, MonthIndex, Day);
+		BroadcastDateChanged(OldPeriod, false);
+		return;
+	}
+
+	++Day;
+	if (Day > GetDaysInMonth(Year, MonthIndex))
+	{
+		Day = 1;
+		++MonthIndex;
+		if (MonthIndex > 11)
+		{
+			MonthIndex = 0;
+			Year = FMath::Min(Year + 1, MaxSupportedYear);
+		}
+	}
+	Weekday = ComputeWeekday(Year, MonthIndex, Day);
+	Period = EDADayPeriod::AM;
+	Hour = GetPeriodStartHour(Period);
+	BroadcastDateChanged(OldPeriod, true);
+}
+
+void UDACalendarSubsystem::Sleep()
+{
+	AdvanceDay();
+}
+
+bool UDACalendarSubsystem::IsWeekend() const
+{
+	return Weekday == EDADayOfWeek::Saturday || Weekday == EDADayOfWeek::Sunday;
+}
+
+void UDACalendarSubsystem::ApplyDateInternal(int32 InYear, int32 InMonthIndex, int32 InDay, EDADayPeriod InPeriod)
+{
+	Year = FMath::Clamp(InYear, 1, MaxSupportedYear);
+	MonthIndex = FMath::Clamp(InMonthIndex, 0, 11);
+	Day = FMath::Clamp(InDay, 1, GetDaysInMonth(Year, MonthIndex));
+	Period = InPeriod;
+	Hour = GetPeriodStartHour(Period);
+	Weekday = ComputeWeekday(Year, MonthIndex, Day);
+}
+
+void UDACalendarSubsystem::BroadcastDateChanged(EDADayPeriod OldPeriod, bool bDayChanged)
+{
+	if (bDayChanged)
+	{
+		OnDayChanged.Broadcast(Year, MonthIndex, Day);
+		NotifyProfileDayChanged();
+	}
+	if (OldPeriod != Period)
+	{
+		OnPeriodChanged.Broadcast(OldPeriod, Period);
+	}
+	OnCalendarChanged.Broadcast();
+	OnVisualHourChanged.Broadcast(Hour);
+	if (IsExamDay())
+	{
+		OnExamDay.Broadcast(Day);
+	}
+}
+
+void UDACalendarSubsystem::BroadcastVisualHour()
+{
+	OnVisualHourChanged.Broadcast(Hour);
+	if (IsExamDay())
+	{
+		OnExamDay.Broadcast(Day);
+	}
+}
+
+void UDACalendarSubsystem::NotifyProfileDayChanged()
+{
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		UDAProfileSubsystem* Profile = GameInstance->GetSubsystem<UDAProfileSubsystem>();
+		if (Profile)
+		{
+			Profile->NotifyDayChanged(Year, MonthIndex, Day);
+
+			// P4-04: "day change" is part of the documented autosave trigger
+			// set (DASaveGame.h). It rides the same cross-subsystem
+			// notification path and is intentionally not reached by
+			// ReadSaveData, so loading a save cannot trigger a save loop.
+			Profile->RequestProgressionAutosave(TEXT("day_change"));
+		}
+	}
+}
+
+// ------------------------------------------------------------------------ months / weekdays
+
+int32 UDACalendarSubsystem::GetDaysInMonth(int32 InYear, int32 InMonthIndex) const
+{
+	static const int32 FixedDays[12] = { 31, 30, 31, 31, 28, 31, 30, 31, 30, 31, 31, 30 };
+	const int32 SafeIndex = FMath::Clamp(InMonthIndex, 0, 11);
+	if (SafeIndex == 4 && IsLeapYear(GetCalendarYearForMonth(FMath::Clamp(InYear, 1, MaxSupportedYear), SafeIndex)))
+	{
+		return 29;
+	}
+	return FixedDays[SafeIndex];
+}
+
+FString UDACalendarSubsystem::GetMonthName(int32 InMonthIndex) const
+{
+	return MonthNames[FMath::Clamp(InMonthIndex, 0, 11)];
+}
+
+FString UDACalendarSubsystem::GetMonthShortName(int32 InMonthIndex) const
+{
+	return MonthShortNames[FMath::Clamp(InMonthIndex, 0, 11)];
+}
+
+FString UDACalendarSubsystem::GetWeekdayName(EDADayOfWeek InWeekday) const
+{
+	return WeekdayNames[FMath::Clamp(static_cast<int32>(InWeekday), 0, 6)];
+}
+
+FString UDACalendarSubsystem::GetPeriodName(EDADayPeriod InPeriod) const
+{
+	return PeriodKey(InPeriod);
+}
+
+FString UDACalendarSubsystem::GetDateText() const
+{
+	return FString::Printf(TEXT("%s, %s %d"), *GetWeekdayName(Weekday), *GetMonthName(MonthIndex), Day);
+}
+
+FString UDACalendarSubsystem::GetFullDateText() const
+{
+	if (Year > 1)
+	{
+		return FString::Printf(TEXT("%s, %s %d, Year %d - %s"), *GetWeekdayName(Weekday), *GetMonthName(MonthIndex), Day, Year, *GetPeriodName(Period));
+	}
+	return FString::Printf(TEXT("%s, %s %d - %s"), *GetWeekdayName(Weekday), *GetMonthName(MonthIndex), Day, *GetPeriodName(Period));
+}
+
+FString UDACalendarSubsystem::GetTimeText() const
+{
+	return FString::Printf(TEXT("%02d:00"), Hour);
+}
+
+// ------------------------------------------------------------------------ exams
+
+int32 UDACalendarSubsystem::GetExamDay(int32 InYear, int32 InMonthIndex) const
+{
+	const int32 SafeYear = FMath::Clamp(InYear, 1, MaxSupportedYear);
+	const int32 SafeMonth = FMath::Clamp(InMonthIndex, 0, 11);
+	const int32 DaysInMonth = GetDaysInMonth(SafeYear, SafeMonth);
+	const EDADayOfWeek FirstWeekday = ComputeWeekday(SafeYear, SafeMonth, 1);
+	const int32 FirstOffset = (static_cast<int32>(ExamWeekday) - static_cast<int32>(FirstWeekday) + 7) % 7;
+	const int32 FirstMatch = 1 + FirstOffset;
+
+	const EDADayOfWeek LastWeekday = ComputeWeekday(SafeYear, SafeMonth, DaysInMonth);
+	const int32 LastOffset = (static_cast<int32>(LastWeekday) - static_cast<int32>(ExamWeekday) + 7) % 7;
+	const int32 LastMatch = DaysInMonth - LastOffset;
+
+	if (ExamWeekRule == EDAExamWeekRule::Last)
+	{
+		return LastMatch;
+	}
+
+	const int32 WeekIndex = FMath::Clamp(static_cast<int32>(ExamWeekRule), 0, 3);
+	const int32 Candidate = FirstMatch + WeekIndex * 7;
+	return Candidate <= DaysInMonth ? Candidate : LastMatch;
+}
+
+bool UDACalendarSubsystem::IsExamDay() const
+{
+	return IsExamDayFor(Year, MonthIndex, Day);
+}
+
+bool UDACalendarSubsystem::IsExamDayFor(int32 InYear, int32 InMonthIndex, int32 InDay) const
+{
+	if (InMonthIndex < 0 || InMonthIndex > 11)
+	{
+		return false;
+	}
+	if (InDay < 1 || InDay > GetDaysInMonth(FMath::Clamp(InYear, 1, MaxSupportedYear), InMonthIndex))
+	{
+		return false;
+	}
+	return GetExamDay(InYear, InMonthIndex) == InDay;
+}
+
+bool UDACalendarSubsystem::GetNextExamDate(int32& OutYear, int32& OutMonthIndex, int32& OutDay) const
+{
+	// P4-13: "on or after today" is deliberate, including the exam day itself
+	// after the exam period has passed (see the header documentation). The
+	// call sites (title/PDA probes, gate tests and the profile self-test) all
+	// expect today's current exam, not the following month's.
+	for (int32 Offset = 0; Offset <= 12; ++Offset)
+	{
+		int32 CandidateMonth = MonthIndex + Offset;
+		int32 CandidateYear = Year + CandidateMonth / 12;
+		CandidateMonth %= 12;
+		if (CandidateYear > MaxSupportedYear)
+		{
+			// No exam remains inside the supported date range.
+			return false;
+		}
+		const int32 ExamDay = GetExamDay(CandidateYear, CandidateMonth);
+		if (Offset == 0 && ExamDay < Day)
+		{
+			continue;
+		}
+		OutYear = CandidateYear;
+		OutMonthIndex = CandidateMonth;
+		OutDay = ExamDay;
+		return true;
+	}
+	return false;
+}
+
+// ------------------------------------------------------------------------ helpers
+
+int32 UDACalendarSubsystem::GetPeriodStartHour(EDADayPeriod InPeriod) const
+{
+	const int32 Index = GetPeriodRank(InPeriod);
+	if (PeriodHours.IsValidIndex(Index))
+	{
+		return PeriodHours[Index];
+	}
+	static const int32 Fallback[3] = { 8, 14, 20 };
+	return Fallback[FMath::Clamp(Index, 0, 2)];
+}
+
+int32 UDACalendarSubsystem::GetPeriodRank(EDADayPeriod InPeriod)
+{
+	switch (InPeriod)
+	{
+	case EDADayPeriod::PM:    return 1;
+	case EDADayPeriod::Night: return 2;
+	case EDADayPeriod::AM:
+	default:                  return 0;
+	}
+}
+
+int32 UDACalendarSubsystem::GetAbsoluteDay() const
+{
+	return GetAbsoluteDayFor(Year, MonthIndex, Day);
+}
+
+int32 UDACalendarSubsystem::GetAbsoluteDayFor(int32 InYear, int32 InMonthIndex, int32 InDay) const
+{
+	const int32 SafeYear = FMath::Clamp(InYear, 1, MaxSupportedYear);
+	const int32 SafeMonth = FMath::Clamp(InMonthIndex, 0, 11);
+	const int32 SafeDay = FMath::Clamp(InDay, 1, GetDaysInMonth(SafeYear, SafeMonth));
+
+	// A school year runs October..September; February belongs to the next
+	// calendar year (YearIndex + 1). The leap count for calendar years 2..SafeYear
+	// is leapCount(SafeYear) because calendar year 1 is not a leap year.
+	const int64 LeapDays = CountLeapYearsUpTo(SafeYear);
+	int64 Days = static_cast<int64>(SafeYear - 1) * 365 + LeapDays;
+	for (int32 Month = 0; Month < SafeMonth; ++Month)
+	{
+		Days += GetDaysInMonth(SafeYear, Month);
+	}
+	Days += SafeDay - 1;
+	return static_cast<int32>(FMath::Clamp<int64>(Days, 0, TNumericLimits<int32>::Max()));
+}
+
+EDADayOfWeek UDACalendarSubsystem::GetWeekdayForDate(int32 InYear, int32 InMonthIndex, int32 InDay) const
+{
+	return ComputeWeekday(InYear, InMonthIndex, InDay);
+}
+
+EDADayOfWeek UDACalendarSubsystem::ComputeWeekday(int32 InYear, int32 InMonthIndex, int32 InDay) const
+{
+	const int32 AbsoluteDay = GetAbsoluteDayFor(InYear, InMonthIndex, InDay);
+	const int32 Mod = ((AbsoluteDay % 7) + 7) % 7;
+	// October 1, Year 1 is a Sunday.
+	return static_cast<EDADayOfWeek>((static_cast<int32>(EDADayOfWeek::Sunday) + Mod) % 7);
+}
+
+bool UDACalendarSubsystem::IsLeapYear(int32 InYear)
+{
+	if (InYear <= 0)
+	{
+		return false;
+	}
+	return (InYear % 4 == 0) && ((InYear % 100 != 0) || (InYear % 400 == 0));
+}
+
+int32 UDACalendarSubsystem::GetCalendarYearForMonth(int32 InYear, int32 InMonthIndex) const
+{
+	// Calendar year, not school year: February of school year N falls in
+	// calendar year N+1. Keep the ballpark conversion but clamp the upper bound
+	// so the max supported school year cannot produce an out-of-range year.
+	return FMath::Min(MaxSupportedYear,
+		FMath::Clamp(InYear, 1, MaxSupportedYear) + (InMonthIndex >= 3 ? 1 : 0));
+}
+
+void UDACalendarSubsystem::ParseExamWeekday(const FString& Value)
+{
+	ExamWeekday = StringToWeekday(Value, EDADayOfWeek::Friday);
+}
+
+void UDACalendarSubsystem::ParseExamWeekRule(const FString& Value)
+{
+	ExamWeekRule = StringToExamWeek(Value, EDAExamWeekRule::Last);
+}
+
+FString UDACalendarSubsystem::PeriodToSaveKey(EDADayPeriod InPeriod)
+{
+	return PeriodKey(InPeriod);
+}
+
+EDADayPeriod UDACalendarSubsystem::ParsePeriod(const FString& Value, EDADayPeriod Fallback)
+{
+	return KeyToPeriod(Value, Fallback);
+}
+
+// ------------------------------------------------------------------------ persistence
+
+void UDACalendarSubsystem::WriteSaveData(TSharedPtr<FJsonObject>& Root) const
+{
+	if (!Root.IsValid())
+	{
+		return;
+	}
+	TSharedPtr<FJsonObject> CalendarObject = MakeShared<FJsonObject>();
+	CalendarObject->SetNumberField(TEXT("year"), Year);
+	CalendarObject->SetNumberField(TEXT("month"), GetMonthNumber());
+	CalendarObject->SetNumberField(TEXT("month_index"), MonthIndex);
+	CalendarObject->SetNumberField(TEXT("day"), Day);
+	CalendarObject->SetStringField(TEXT("period"), PeriodToSaveKey(Period));
+	CalendarObject->SetStringField(TEXT("weekday"), GetWeekdayName(Weekday));
+	CalendarObject->SetNumberField(TEXT("hour"), Hour);
+	Root->SetObjectField(TEXT("calendar"), CalendarObject);
+}
+
+bool UDACalendarSubsystem::ReadSaveData(const TSharedPtr<FJsonObject>& Root, FString& OutError)
+{
+	if (!Root.IsValid())
+	{
+		OutError = TEXT("Calendar save data is missing.");
+		return false;
+	}
+
+	const TSharedPtr<FJsonObject>* CalendarObject = nullptr;
+	const TSharedPtr<FJsonObject>& Source =
+		(Root->TryGetObjectField(TEXT("calendar"), CalendarObject) && CalendarObject && CalendarObject->IsValid())
+			? *CalendarObject
+			: Root;
+
+	const int32 OldYear = Year;
+	const int32 OldMonth = MonthIndex;
+	const int32 OldDay = Day;
+	const EDADayPeriod OldPeriod = Period;
+
+	int32 LoadedYear = 1;
+	int32 LoadedMonthIndex = 0;
+	int32 LoadedDay = 7;
+	LoadedYear = CalendarReadClampedInt(Source, TEXT("year"), 1, 1, MaxSupportedYear);
+	double RawMonthIndex = 0.0;
+	if (Source->TryGetNumberField(TEXT("month_index"), RawMonthIndex) && FMath::IsFinite(RawMonthIndex))
+	{
+		LoadedMonthIndex = static_cast<int32>(FMath::Clamp(RawMonthIndex, 0.0, 11.0));
+	}
+	else
+	{
+		const int32 MonthNumber = CalendarReadClampedInt(Source, TEXT("month"), 10, 1, 12);
+		LoadedMonthIndex = ((MonthNumber - 10) % 12 + 12) % 12;
+	}
+	LoadedDay = CalendarReadClampedInt(Source, TEXT("day"), 7, 1, 31);
+
+	EDADayPeriod LoadedPeriod = EDADayPeriod::AM;
+	FString PeriodText;
+	if (Source->TryGetStringField(TEXT("period"), PeriodText))
+	{
+		LoadedPeriod = ParsePeriod(PeriodText, EDADayPeriod::AM);
+	}
+
+	// W9: the save's hour is authoritative for the visual clock when present;
+	// ApplyDateInternal resets it to the period's start hour, so re-apply after
+	// the date settles. Absent (legacy) keeps the derived period hour.
+	const int32 FallbackHour = GetPeriodStartHour(LoadedPeriod);
+	const int32 LoadedHour = CalendarReadClampedInt(Source, TEXT("hour"), FallbackHour, 0, 23);
+
+	ApplyDateInternal(LoadedYear, LoadedMonthIndex, LoadedDay, LoadedPeriod);
+	Hour = LoadedHour;
+
+	const bool bDateChanged = OldYear != Year || OldMonth != MonthIndex || OldDay != Day;
+	OnCalendarChanged.Broadcast();
+	if (bDateChanged)
+	{
+		OnDayChanged.Broadcast(Year, MonthIndex, Day);
+	}
+	if (OldPeriod != Period)
+	{
+		OnPeriodChanged.Broadcast(OldPeriod, Period);
+	}
+	OnVisualHourChanged.Broadcast(Hour);
+
+	OutError.Reset();
+	return true;
+}

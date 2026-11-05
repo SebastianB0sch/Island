@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "card_id": 1041,
+  "name": "The Creator",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select 1 monster from your Graveyard. Send 1 card from your hand to the Graveyard and Special Summon the selected monster. You can only use this effect once per turn. This card cannot be Special Summoned from the Graveyard.",
+  "notes": [
+    "The discard is a cost; the Graveyard monster returns in Attack Position."
+  ],
+  "scripts": [
+    {
+      "id": "1041_discard_revive_monster",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": true,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "discard",
+          "target": {
+            "zone": "self_hand",
+            "count": 1
+          }
+        }
+      ],
+      "target": {
+        "zone": "self_graveyard",
+        "count": 1,
+        "filter": {
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "Select 1 monster from your Graveyard. Send 1 card from your hand to the Graveyard and Special Summon the selected monster. You can only use this effect once per turn. This card cannot be Special Summoned from the Graveyard."
+    }
+  ]
+}

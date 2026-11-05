@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "card_id": 138,
+  "name": "Sogen",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases the ATK and DEF of all Beast-Warrior and Warrior-Type monsters by 200 points.",
+  "notes": [
+    "+200 ATK/DEF to Beast-Warrior, Warrior monsters."
+  ],
+  "scripts": [
+    {
+      "id": "138_field_stat",
+      "trigger": "field_continuous",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "any": [
+                {
+                  "monster_type": "Beast-Warrior"
+                },
+                {
+                  "monster_type": "Warrior"
+                }
+              ]
+            }
+          },
+          "amount": 200,
+          "mode": "flat"
+        },
+        {
+          "op": "modify_def",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "any": [
+                {
+                  "monster_type": "Beast-Warrior"
+                },
+                {
+                  "monster_type": "Warrior"
+                }
+              ]
+            }
+          },
+          "amount": 200,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_field"
+      },
+      "source_text": "+200 ATK/DEF to Beast-Warrior, Warrior monsters."
+    }
+  ]
+}

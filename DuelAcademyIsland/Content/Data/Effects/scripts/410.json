@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "card_id": 410,
+  "name": "Fusion Sage",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Take 1 \"Polymerization\" from your Deck and add it your hand. The Deck is then shuffled.",
+  "notes": [
+    "Searches 'Polymerization' from the Deck."
+  ],
+  "scripts": [
+    {
+      "id": "410_search_named",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "name": "Polymerization"
+        }
+      },
+      "source_text": "Take 1 \"Polymerization\" from your Deck and add it your hand. The Deck is then shuffled."
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "id": "P056",
+  "level": 3,
+  "title": "Piercing L3-2",
+  "template": "piercing",
+  "opponent": "mimicry",
+  "seed": 2056,
+  "turn_limit": 1,
+  "time_limit": 65,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      593
+    ],
+    "field": [
+      {
+        "card_id": 655,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 700,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 2,
+        "position": "defense",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 593
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 655,
+      "target": 2
+    }
+  ],
+  "reward": {
+    "dp": 160,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'piercing', level 3, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Spear Dragon's built-in piercing damage, boosted by the equipped cards, deals exact battle damage to the Defense Position monster.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_056",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      838
+    ],
+    "solution_card_names": [
+      "Iron Blacksmith Kotetsu"
+    ],
+    "solution_steps": [
+      "Flip summon Iron Blacksmith Kotetsu.",
+      "Select Black Pendant from your Deck, add it to your Hand.",
+      "Summon Gearfried the Iron Knight.",
+      "Equip Gearfriend the Iron Knight with all 3 black pendants."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

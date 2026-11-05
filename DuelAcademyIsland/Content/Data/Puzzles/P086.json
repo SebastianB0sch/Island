@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "id": "P086",
+  "level": 5,
+  "title": "Fusion Summon L5-2",
+  "template": "fusion_summon",
+  "opponent": "mimicry",
+  "seed": 2086,
+  "turn_limit": 1,
+  "time_limit": 95,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      1184
+    ],
+    "field": [
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 363,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [
+      1106,
+      1107
+    ],
+    "deck": [],
+    "extra": [
+      1129
+    ]
+  },
+  "opponent_state": {
+    "lp": 7600,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 1184
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1129,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 363,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'fusion_summon', level 5, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Fusion Summon Elemental Hero Flame Wingman with Miracle Fusion, then attack for exactly 7600.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_086",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      52,
+      163,
+      447,
+      449,
+      595,
+      697
+    ],
+    "solution_card_names": [
+      "Giant Germ",
+      "Offerings to the Doomed",
+      "Pyramid Turtle",
+      "Shadow Ghoul",
+      "Shining Angel",
+      "White Magical Hat"
+    ],
+    "solution_steps": [
+      "Summon Pyramid Turtle in attack mode.",
+      "Run Giant Germ into White Magical Hat and summon another two.",
+      "Run Pyramid Turtle into Shining Angel consecutively and summon another Pyramid turtle. If there is none left, summon Shadow Ghoul.",
+      "Activate Offerings to the Doomed from your hand to destroy Shining Angel.",
+      "Attack directly."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

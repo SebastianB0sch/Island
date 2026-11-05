@@ -1,0 +1,707 @@
+{
+  "schema_version": 1,
+  "description": "Written exam starter bank for the monthly exams. 30 questions support 12 deterministic 10-question sets.",
+  "ruleset": "GBA-era 2006 rules; 8000 LP; 40-60 Main Deck; 20 Fusion Deck",
+  "confidence": "high",
+  "source": "2006-era Yu-Gi-Oh! rules and the GBA manual; GBA-specific answers marked medium until A01 verifies.",
+  "questions": [
+    {
+      "id": "Q001",
+      "topic": "summoning",
+      "difficulty": 1,
+      "text": "How many Normal Summons (including Tribute Summons) may a player perform per turn?",
+      "options": [
+        "Zero",
+        "One",
+        "Two",
+        "Unlimited"
+      ],
+      "answer_index": 1,
+      "explanation": "A player may Normal Summon or Set exactly one monster per turn. Tribute Summoning is a Normal Summon.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q002",
+      "topic": "summoning",
+      "difficulty": 1,
+      "text": "How many Tributes are required to Normal Summon a Level 7 monster?",
+      "options": [
+        "Zero",
+        "One",
+        "Two",
+        "Three"
+      ],
+      "answer_index": 2,
+      "explanation": "Level 7-8 monsters require two Tributes.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q003",
+      "topic": "summoning",
+      "difficulty": 1,
+      "text": "How many Tributes are required to Normal Summon a Level 5 monster?",
+      "options": [
+        "Zero",
+        "One",
+        "Two",
+        "Three"
+      ],
+      "answer_index": 1,
+      "explanation": "Level 5-6 monsters require one Tribute.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q004",
+      "topic": "duel-basics",
+      "difficulty": 1,
+      "text": "How many Life Points does each player start with in a standard duel?",
+      "options": [
+        "4000",
+        "6000",
+        "8000",
+        "10000"
+      ],
+      "answer_index": 2,
+      "explanation": "Duel Academy uses the standard 8000 LP starting total.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q005",
+      "topic": "deck-rules",
+      "difficulty": 1,
+      "text": "What is the legal size of a Main Deck in this game?",
+      "options": [
+        "20-40 cards",
+        "40-60 cards",
+        "50-80 cards",
+        "Exactly 40 cards"
+      ],
+      "answer_index": 1,
+      "explanation": "The Main Deck must contain 40 to 60 cards.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q006",
+      "topic": "deck-rules",
+      "difficulty": 2,
+      "text": "What is the maximum size of the Fusion/Extra Deck in the GBA game?",
+      "options": [
+        "10",
+        "15",
+        "20",
+        "30"
+      ],
+      "answer_index": 2,
+      "explanation": "Duel Academy allows up to 20 Fusion Deck cards.",
+      "confidence": "medium",
+      "source": "GBA rule; TCG of the era used 15"
+    },
+    {
+      "id": "Q007",
+      "topic": "deck-rules",
+      "difficulty": 1,
+      "text": "How many copies of the same card may a deck contain (ignoring the banned/limited list)?",
+      "options": [
+        "One",
+        "Two",
+        "Three",
+        "Four"
+      ],
+      "answer_index": 2,
+      "explanation": "The standard limit is three copies of a card by name.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q008",
+      "topic": "field",
+      "difficulty": 1,
+      "text": "How many Monster Card Zones does each player have?",
+      "options": [
+        "Three",
+        "Four",
+        "Five",
+        "Six"
+      ],
+      "answer_index": 2,
+      "explanation": "Each player has five Monster Card Zones.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q009",
+      "topic": "field",
+      "difficulty": 1,
+      "text": "How many Spell & Trap Card Zones does each player have?",
+      "options": [
+        "Three",
+        "Four",
+        "Five",
+        "Six"
+      ],
+      "answer_index": 2,
+      "explanation": "Each player has five Spell & Trap Card Zones, plus a Field Zone.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q010",
+      "topic": "turn-structure",
+      "difficulty": 2,
+      "text": "What is the hand limit during the End Phase?",
+      "options": [
+        "Four cards",
+        "Five cards",
+        "Six cards",
+        "No limit"
+      ],
+      "answer_index": 2,
+      "explanation": "A player must discard down to six cards in the End Phase.",
+      "confidence": "medium",
+      "source": "GBA-era rule; verify with A01"
+    },
+    {
+      "id": "Q011",
+      "topic": "battle",
+      "difficulty": 1,
+      "text": "When may a monster attack directly?",
+      "options": [
+        "Always",
+        "Only if the opponent controls no monsters",
+        "Only if it has 2000+ ATK",
+        "Only during Main Phase 2"
+      ],
+      "answer_index": 1,
+      "explanation": "A direct attack is allowed when the opponent controls no monsters (unless a card says otherwise).",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q012",
+      "topic": "battle",
+      "difficulty": 1,
+      "text": "A monster attacks an opponent's Defense Position monster with higher DEF. What happens?",
+      "options": [
+        "The attacking player takes the difference as battle damage",
+        "The defending player takes the difference",
+        "Both players take damage",
+        "Nothing happens"
+      ],
+      "answer_index": 0,
+      "explanation": "If ATK is lower than DEF, the attacking player takes the difference as battle damage. The defending player takes no damage from a normal attack on a Defense Position monster.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q013",
+      "topic": "battle",
+      "difficulty": 2,
+      "text": "When an attack targets a face-down Defense Position monster, when is it flipped face-up?",
+      "options": [
+        "Before attackers are declared",
+        "During damage calculation",
+        "During the End Phase",
+        "It is never flipped"
+      ],
+      "answer_index": 1,
+      "explanation": "The monster is flipped face-up during damage calculation, before damage is applied.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q014",
+      "topic": "fusion",
+      "difficulty": 1,
+      "text": "What card is normally required to Fusion Summon a Fusion Monster?",
+      "options": [
+        "Monster Reborn",
+        "Polymerization",
+        "Pot of Greed",
+        "Mirror Force"
+      ],
+      "answer_index": 1,
+      "explanation": "Polymerization (or a card that names itself as a Fusion substitute) performs a standard Fusion Summon.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q015",
+      "topic": "ritual",
+      "difficulty": 1,
+      "text": "What is required to Ritual Summon a Ritual Monster?",
+      "options": [
+        "A Ritual Spell Card and the required Tributes",
+        "A Fusion Monster",
+        "Two Normal Summons",
+        "A Field Spell"
+      ],
+      "answer_index": 0,
+      "explanation": "Ritual Summoning requires the matching Ritual Spell Card and Tributes whose total Level meets the requirement.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q016",
+      "topic": "victory",
+      "difficulty": 1,
+      "text": "What happens when a player cannot draw a card because their Deck is empty?",
+      "options": [
+        "They skip the Draw Phase",
+        "They lose the duel",
+        "They shuffle their Graveyard into the Deck",
+        "They take 1000 damage"
+      ],
+      "answer_index": 1,
+      "explanation": "A player who cannot draw loses by deck-out.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q017",
+      "topic": "victory",
+      "difficulty": 1,
+      "text": "What happens when a player's Life Points reach zero?",
+      "options": [
+        "They lose the duel",
+        "They reset to 100 LP",
+        "They discard their hand",
+        "The duel continues for one more turn"
+      ],
+      "answer_index": 0,
+      "explanation": "Reaching 0 LP loses the duel immediately.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q018",
+      "topic": "turn-structure",
+      "difficulty": 1,
+      "text": "Which phase follows Main Phase 1?",
+      "options": [
+        "End Phase",
+        "Battle Phase",
+        "Draw Phase",
+        "Standby Phase"
+      ],
+      "answer_index": 1,
+      "explanation": "The normal order is Draw, Standby, Main 1, Battle, Main 2, End.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q019",
+      "topic": "turn-structure",
+      "difficulty": 1,
+      "text": "When does Main Phase 2 occur?",
+      "options": [
+        "Before the Battle Phase",
+        "After the Battle Phase",
+        "Instead of the End Phase",
+        "Only on the first turn"
+      ],
+      "answer_index": 1,
+      "explanation": "Main Phase 2 is entered after the Battle Phase, before the End Phase.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q020",
+      "topic": "chain",
+      "difficulty": 2,
+      "text": "When a chain resolves, which effect resolves first?",
+      "options": [
+        "The first effect activated",
+        "The last effect activated",
+        "The effect with the highest Spell Speed",
+        "The turn player chooses"
+      ],
+      "answer_index": 1,
+      "explanation": "Chains resolve last-in, first-out: the last effect activated resolves first.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q021",
+      "topic": "spell-speed",
+      "difficulty": 2,
+      "text": "Which card type has Spell Speed 2?",
+      "options": [
+        "Normal Spell",
+        "Quick-Play Spell",
+        "Ritual Spell",
+        "Normal Trap"
+      ],
+      "answer_index": 1,
+      "explanation": "Quick-Play Spell Cards are Spell Speed 2. Normal Traps are also Spell Speed 2.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q022",
+      "topic": "spell-speed",
+      "difficulty": 2,
+      "text": "What Spell Speed are Counter Trap Cards?",
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "answer_index": 2,
+      "explanation": "Counter Traps are Spell Speed 3 and can respond to Spell Speed 2 effects.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q023",
+      "topic": "traps",
+      "difficulty": 1,
+      "text": "When can a Trap Card normally be activated after it is Set?",
+      "options": [
+        "Immediately",
+        "On the next turn",
+        "Only during the End Phase",
+        "Only during the Draw Phase"
+      ],
+      "answer_index": 1,
+      "explanation": "A Trap must normally remain Set for one turn before it can be activated.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q024",
+      "topic": "field",
+      "difficulty": 1,
+      "text": "Where is a Field Spell Card placed?",
+      "options": [
+        "In the Graveyard",
+        "In the Field Zone",
+        "In the hand",
+        "In the Fusion Deck"
+      ],
+      "answer_index": 1,
+      "explanation": "Field Spell Cards are placed in the Field Zone.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q025",
+      "topic": "card-types",
+      "difficulty": 1,
+      "text": "Which statement about a Normal Monster is correct?",
+      "options": [
+        "It has no effect text",
+        "It cannot attack",
+        "It must be Special Summoned",
+        "It cannot be Set"
+      ],
+      "answer_index": 0,
+      "explanation": "Normal Monsters have no card effects.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q026",
+      "topic": "card-types",
+      "difficulty": 1,
+      "text": "Which statement about an Effect Monster is correct?",
+      "options": [
+        "It always has 0 ATK",
+        "It has an effect that can change the game state",
+        "It cannot be Normal Summoned",
+        "It must be Fusion Summoned"
+      ],
+      "answer_index": 1,
+      "explanation": "Effect Monsters have at least one card effect.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q027",
+      "topic": "victory",
+      "difficulty": 2,
+      "text": "How do you win with Exodia the Forbidden One?",
+      "options": [
+        "Destroy all opponent monsters",
+        "Have all five Forbidden One pieces in hand",
+        "Have 0 cards in your Deck",
+        "Control three Blue-Eyes White Dragons"
+      ],
+      "answer_index": 1,
+      "explanation": "Having all five Exodia pieces in hand wins the duel immediately.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q028",
+      "topic": "position",
+      "difficulty": 1,
+      "text": "When you Set a monster, what position is it in?",
+      "options": [
+        "Face-up Attack",
+        "Face-up Defense",
+        "Face-down Defense",
+        "Face-down Attack"
+      ],
+      "answer_index": 2,
+      "explanation": "A Set monster is placed face-down in Defense Position.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q029",
+      "topic": "position",
+      "difficulty": 2,
+      "text": "What does a Flip Summon do?",
+      "options": [
+        "Changes a face-down Defense monster to face-up Attack",
+        "Changes a face-up Attack monster to Defense",
+        "Destroys a Set monster",
+        "Returns a monster to the hand"
+      ],
+      "answer_index": 0,
+      "explanation": "A Flip Summon flips a face-down Defense Position monster into face-up Attack Position.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    },
+    {
+      "id": "Q030",
+      "topic": "summoning",
+      "difficulty": 2,
+      "text": "Is a Tribute Summon a type of Normal Summon?",
+      "options": [
+        "Yes",
+        "No, it is a Special Summon",
+        "Only for Level 7+ monsters",
+        "Only during Main Phase 2"
+      ],
+      "answer_index": 0,
+      "explanation": "Tribute Summoning is a Normal Summon that uses Tributes, and it uses the once-per-turn Normal Summon.",
+      "confidence": "high",
+      "source": "2006-era Yu-Gi-Oh! rules / GBA manual"
+    }
+  ],
+  "exam_sets": [
+    {
+      "exam_id": "EXAM_01",
+      "month_index": 1,
+      "question_ids": [
+        "Q001",
+        "Q004",
+        "Q007",
+        "Q010",
+        "Q013",
+        "Q016",
+        "Q019",
+        "Q022",
+        "Q025",
+        "Q028"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_02",
+      "month_index": 2,
+      "question_ids": [
+        "Q008",
+        "Q011",
+        "Q014",
+        "Q017",
+        "Q020",
+        "Q023",
+        "Q026",
+        "Q029",
+        "Q002",
+        "Q005"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_03",
+      "month_index": 3,
+      "question_ids": [
+        "Q015",
+        "Q018",
+        "Q021",
+        "Q024",
+        "Q027",
+        "Q030",
+        "Q003",
+        "Q006",
+        "Q009",
+        "Q012"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_04",
+      "month_index": 4,
+      "question_ids": [
+        "Q022",
+        "Q025",
+        "Q028",
+        "Q001",
+        "Q004",
+        "Q007",
+        "Q010",
+        "Q013",
+        "Q016",
+        "Q019"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_05",
+      "month_index": 5,
+      "question_ids": [
+        "Q029",
+        "Q002",
+        "Q005",
+        "Q008",
+        "Q011",
+        "Q014",
+        "Q017",
+        "Q020",
+        "Q023",
+        "Q026"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_06",
+      "month_index": 6,
+      "question_ids": [
+        "Q006",
+        "Q009",
+        "Q012",
+        "Q015",
+        "Q018",
+        "Q021",
+        "Q024",
+        "Q027",
+        "Q030",
+        "Q003"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_07",
+      "month_index": 7,
+      "question_ids": [
+        "Q013",
+        "Q016",
+        "Q019",
+        "Q022",
+        "Q025",
+        "Q028",
+        "Q001",
+        "Q004",
+        "Q007",
+        "Q010"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_08",
+      "month_index": 8,
+      "question_ids": [
+        "Q020",
+        "Q023",
+        "Q026",
+        "Q029",
+        "Q002",
+        "Q005",
+        "Q008",
+        "Q011",
+        "Q014",
+        "Q017"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_09",
+      "month_index": 9,
+      "question_ids": [
+        "Q027",
+        "Q030",
+        "Q003",
+        "Q006",
+        "Q009",
+        "Q012",
+        "Q015",
+        "Q018",
+        "Q021",
+        "Q024"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_10",
+      "month_index": 10,
+      "question_ids": [
+        "Q004",
+        "Q007",
+        "Q010",
+        "Q013",
+        "Q016",
+        "Q019",
+        "Q022",
+        "Q025",
+        "Q028",
+        "Q001"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_11",
+      "month_index": 11,
+      "question_ids": [
+        "Q011",
+        "Q014",
+        "Q017",
+        "Q020",
+        "Q023",
+        "Q026",
+        "Q029",
+        "Q002",
+        "Q005",
+        "Q008"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    },
+    {
+      "exam_id": "EXAM_12",
+      "month_index": 12,
+      "question_ids": [
+        "Q018",
+        "Q021",
+        "Q024",
+        "Q027",
+        "Q030",
+        "Q003",
+        "Q006",
+        "Q009",
+        "Q012",
+        "Q015"
+      ],
+      "confidence": "low",
+      "source": "A07 deterministic set; canonical monthly question assignment not extracted"
+    }
+  ]
+}

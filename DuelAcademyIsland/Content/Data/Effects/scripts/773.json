@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "card_id": 773,
+  "name": "Secret Barrel",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Inflict Direct Damage to your opponent's Life Points equal to the total number of cards on your opponent's side of the field and in your opponent's hand x 200 points.",
+  "notes": [
+    "Counts opponent monsters, Spell/Traps, Field Spell and hand."
+  ],
+  "scripts": [
+    {
+      "id": "773_opponent_cards_burn",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 200,
+          "player": "opponent",
+          "mode": "per_card",
+          "count_zone": "opponent_all",
+          "reason": "Secret Barrel"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "source_text": "Inflict Direct Damage to your opponent's Life Points equal to the total number of cards on your opponent's side of the field and in your opponent's hand x 200 points."
+    }
+  ]
+}

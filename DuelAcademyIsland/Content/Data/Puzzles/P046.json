@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "id": "P046",
+  "level": 3,
+  "title": "Fusion Summon L3-2",
+  "template": "fusion_summon",
+  "opponent": "mimicry",
+  "seed": 2046,
+  "turn_limit": 1,
+  "time_limit": 65,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      381,
+      1106,
+      1107
+    ],
+    "field": [
+      {
+        "card_id": 234,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": [
+      1129
+    ]
+  },
+  "opponent_state": {
+    "lp": 4000,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 381
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1129,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 234,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 160,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'fusion_summon', level 3, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Fusion Summon Elemental Hero Flame Wingman with Polymerization, then attack for exactly 4000.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_046",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      1,
+      110,
+      450,
+      513,
+      905,
+      916
+    ],
+    "solution_card_names": [
+      "Amphibious Bugroth MK-3",
+      "Axe of Despair",
+      "Blue-Eyes White Dragon",
+      "Maiden of the Aqua",
+      "Mother Grizzly",
+      "Salvage"
+    ],
+    "solution_steps": [
+      "Activate Salvage. Return Mother Grizzly and Amphibious Bugroth MK-3 to hand",
+      "Summon Amphibious Bugroth MK-3 and equip it with Axe of Despair",
+      "Enter Battle Phase and attack Blue-Eyes White Dragon with Mother Grizzly",
+      "Special Summon Maiden of the Aqua",
+      "Direct Attack with Amphibious Bugroth MK-3"
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

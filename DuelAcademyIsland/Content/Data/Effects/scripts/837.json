@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 837,
+  "name": "Outstanding Dog Marron",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent to your Graveyard, it is returned to your Deck. Then shuffle your Deck.",
+  "notes": [
+    "Bottom placement followed by a shuffle."
+  ],
+  "scripts": [
+    {
+      "id": "837_grave_recycle_self",
+      "trigger": "on_sent_to_graveyard",
+      "operations": [
+        {
+          "op": "return_to_deck",
+          "target": "$self",
+          "reason": "Outstanding Dog Marron"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is sent to your Graveyard, it is returned to your Deck. Then shuffle your Deck.",
+      "condition": {
+        "name": "Outstanding Dog Marron"
+      }
+    }
+  ]
+}

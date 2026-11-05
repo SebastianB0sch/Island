@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "card_id": 1140,
+  "name": "Rock Bombardment",
+  "card_type": "Trap",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select 1 Rock-Type monster in your Deck and send it to the Graveyard. Inflict 500 points of damage to your opponent's Life Points. The Deck is then shuffled.",
+  "notes": [
+    "Selected Deck card is sent to the Graveyard, then the Deck is shuffled."
+  ],
+  "scripts": [
+    {
+      "id": "1140_send_rock_and_burn",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "send_to_graveyard",
+          "target": "$target",
+          "reason": "Rock Bombardment"
+        },
+        {
+          "op": "inflict_damage",
+          "amount": 500,
+          "player": "opponent",
+          "reason": "Rock Bombardment"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 2,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "monster_type": "Rock"
+            }
+          ]
+        }
+      },
+      "source_text": "Select 1 Rock-Type monster in your Deck and send it to the Graveyard. Inflict 500 points of damage to your opponent's Life Points. The Deck is then shuffled."
+    }
+  ]
+}

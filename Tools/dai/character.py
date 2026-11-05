@@ -24,7 +24,6 @@ Outputs (SourceAssets/):
                                             so UDAAvatarComponent can find the jacket / hair slots
 """
 
-import json
 import os
 
 import bpy
@@ -32,7 +31,7 @@ import numpy as np
 from mathutils import Matrix
 
 from . import config as C
-from . import thirdparty
+from . import atomic, jsonio, thirdparty
 
 OUT_REL = "Meshes/Characters"
 
@@ -172,14 +171,16 @@ def _ground_speed(arm, action):
     return float(np.median(speeds) * 100.0) if speeds else None
 
 
-def export_skeletal(objs, active, path, types, anim=None, simplify=0.0):
+def export_skeletal(objs, active, path, types, anim=None, simplify=0.0, deform_only=True):
     """FBX for Unreal: skinned mesh + armature (anim None) or an armature-only animation take
-    (simplify > 0 drops redundant keys - unanimated helper bones shrink to a couple of keys)."""
+    (simplify > 0 drops redundant keys - unanimated helper bones shrink to a couple of keys).
+    deform_only=False exports every armature bone, including helper bones a particular skinned
+    mesh does not use - needed for the shared anime cast skeleton."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     _select(objs, active)
-    kw = dict(filepath=path, use_selection=True, object_types=types, apply_scale_options="FBX_SCALE_ALL",
+    kw = dict(use_selection=True, object_types=types, apply_scale_options="FBX_SCALE_ALL",
               axis_forward="-Z", axis_up="Y", primary_bone_axis="Y", secondary_bone_axis="X",
-              use_armature_deform_only=True, add_leaf_bones=False, mesh_smooth_type="FACE",
+              use_armature_deform_only=deform_only, add_leaf_bones=False, mesh_smooth_type="FACE",
               use_mesh_modifiers=False, path_mode="STRIP", embed_textures=False, use_tspace=False,
               colors_type="LINEAR")
     if anim is None:
@@ -188,7 +189,11 @@ def export_skeletal(objs, active, path, types, anim=None, simplify=0.0):
         kw.update(bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=False,
                   bake_anim_use_all_actions=False, bake_anim_force_startend_keying=True,
                   bake_anim_simplify_factor=simplify)
-    bpy.ops.export_scene.fbx(**kw)
+    # Exporting into the target directory and replacing only on success keeps a
+    # failed / cancelled Blender run from truncating the previous FBX.
+    with atomic.atomic_path(path) as temp_path:
+        kw["filepath"] = str(temp_path)
+        bpy.ops.export_scene.fbx(**kw)
 
 
 def build(log=print):
@@ -276,8 +281,7 @@ def build(log=print):
         info["anims"][state] = f"{OUT_REL}/{name}.fbx"
     _assign(arm, None)
     os.makedirs(C.OUT_DATA, exist_ok=True)
-    with open(os.path.join(C.OUT_DATA, "character.json"), "w") as fp:
-        json.dump(info, fp, indent=1)
+    jsonio.write_json(os.path.join(C.OUT_DATA, "character.json"), info, indent=1)
     tris = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
     log(f"  character: SK_Student {tris} tris, {len(arm.data.bones)} bones, anims {sorted(info['anims'])}, "
         f"ground speed {info.get('ground_speed', {})} cm/s")

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "card_id": 398,
+  "name": "Soul Release",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select up to 5 cards from either you or your opponent's Graveyard and remove them from the current Duel.",
+  "notes": [
+    "Both Graveyards are candidates; zero to five cards."
+  ],
+  "scripts": [
+    {
+      "id": "398_soul_release",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "banish",
+          "target": "$target",
+          "reason": "Soul Release"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "graveyard",
+        "count": {
+          "min": 0,
+          "max": 5
+        },
+        "optional": true
+      },
+      "source_text": "Select up to 5 cards from either you or your opponent's Graveyard and remove them from the current Duel."
+    }
+  ]
+}

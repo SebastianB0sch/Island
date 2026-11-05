@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "card_id": 430,
+  "name": "Confiscation",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Pay 1000 Life Points to look at your opponent's hand. Select 1 card and discard it to the Graveyard.",
+  "notes": [
+    "Cost is paid before the hand is revealed."
+  ],
+  "scripts": [
+    {
+      "id": "430_confiscation",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "discard",
+          "target": "$target",
+          "reason": "Confiscation"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "cost": [
+        {
+          "op": "pay_lp",
+          "amount": 1000
+        }
+      ],
+      "target": {
+        "zone": "opponent_hand",
+        "count": 1
+      },
+      "source_text": "Pay 1000 Life Points to look at your opponent's hand. Select 1 card and discard it to the Graveyard."
+    }
+  ]
+}

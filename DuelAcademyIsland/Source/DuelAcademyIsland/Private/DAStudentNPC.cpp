@@ -6,11 +6,45 @@
 #include "Components/CapsuleComponent.h"
 #include "DAAvatarComponent.h"
 #include "DACardDatabase.h"
+#include "DAHUD.h"
 #include "DAIslandSubsystem.h"
+#include "DAStorySubsystem.h"
 #include "DAStudentCharacter.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+
+
+namespace
+{
+	ADAHUD* GetDuelHUD(const AActor* Context)
+	{
+		if (const UWorld* World = Context ? Context->GetWorld() : nullptr)
+		{
+			if (APlayerController* PC = World->GetFirstPlayerController())
+			{
+				return Cast<ADAHUD>(PC->GetHUD());
+			}
+		}
+		return nullptr;
+	}
+
+	FString DuelistIdFromName(const FString& Name)
+	{
+		if (Name.Contains(TEXT("Sheppard"), ESearchCase::IgnoreCase)) return TEXT("sheppard");
+		if (Name.Contains(TEXT("Crowler"), ESearchCase::IgnoreCase)) return TEXT("crowler");
+		if (Name.Contains(TEXT("Fontaine"), ESearchCase::IgnoreCase)) return TEXT("fontaine");
+		if (Name.Contains(TEXT("Shadow Duelist"), ESearchCase::IgnoreCase)) return TEXT("shadow_duelist");
+		if (Name.Contains(TEXT("Goblin King"), ESearchCase::IgnoreCase)) return TEXT("topher");
+		FString First = Name;
+		int32 Space = INDEX_NONE;
+		if (Name.FindChar(TEXT(' '), Space))
+		{
+			First = Name.Left(Space);
+		}
+		return First.ToLower();
+	}
+}
 
 ADAStudentNPC::ADAStudentNPC()
 {
@@ -20,7 +54,7 @@ ADAStudentNPC::ADAStudentNPC()
 	bUseControllerRotationYaw = false;
 	UCharacterMovementComponent* Move = GetCharacterMovement();
 	Move->bOrientRotationToMovement = true;
-	Move->RotationRate = FRotator(0.f, 300.f, 0.f);
+	Move->RotationRate = FRotator(0.f, 240.f, 0.f);
 	Move->MaxWalkSpeed = StrollSpeed;
 	Move->BrakingDecelerationWalking = 800.f;
 	Move->SetWalkableFloorAngle(40.f);
@@ -40,6 +74,11 @@ ADAStudentNPC::ADAStudentNPC()
 void ADAStudentNPC::BeginPlay()
 {
 	Rng.Initialize(static_cast<int32>(GetUniqueID() * 7919u + 17u));
+	// WanderRadius drives a centre + random offset; a negative or NaN radius
+	// moves the NPC to invalid targets (NaN never compares below the stop
+	// distance, so it would keep pushing forever).
+	WanderRadius = FMath::IsFinite(WanderRadius) ? FMath::Max(WanderRadius, 0.f) : 0.f;
+	StrollSpeed = FMath::IsFinite(StrollSpeed) ? FMath::Max(StrollSpeed, 1.f) : 140.f;
 	if (Avatar)
 	{
 		Avatar->Dorm = Dorm;
@@ -57,6 +96,46 @@ void ADAStudentNPC::BeginPlay()
 		Avatar->bShowDuelDisk = Rng.FRand() < 0.6f;
 	}
 	Super::BeginPlay();
+
+	if (!DisplayName.IsEmpty())
+	{
+		const FString Id = DuelistIdFromName(DisplayName);
+		static const TMap<FString, FString> DuelistDecks = {
+			{ TEXT("jaden"), TEXT("jaden_year1") },
+			{ TEXT("syrus"), TEXT("syrus_roids") },
+			{ TEXT("chumley"), TEXT("chumley_koala") },
+			{ TEXT("bastion"), TEXT("bastion_chem") },
+			{ TEXT("chazz"), TEXT("chazz_ojama") },
+			{ TEXT("alexis"), TEXT("alexis_cyber") },
+			{ TEXT("jasmine"), TEXT("jasmine_amazoness") },
+			{ TEXT("mindy"), TEXT("mindy_fairy") },
+			{ TEXT("zane"), TEXT("zane_cyber") },
+			{ TEXT("crowler"), TEXT("crowler_ancient_gear") },
+			{ TEXT("banner"), TEXT("banner_alchemy") },
+			{ TEXT("sheppard"), TEXT("sheppard_year1") },
+			{ TEXT("brier"), TEXT("brier_quiz") },
+			{ TEXT("beauregard"), TEXT("beauregard_rock") },
+			{ TEXT("sartyr"), TEXT("sartyr_curry") },
+			{ TEXT("fontaine"), TEXT("fontaine_nurse") },
+			{ TEXT("topher"), TEXT("topher_goblin") },
+			{ TEXT("conklin"), TEXT("conklin_dino") },
+			{ TEXT("damon"), TEXT("damon_exodia") },
+			{ TEXT("dimitri"), TEXT("dimitri_copycat") },
+			{ TEXT("gerard"), TEXT("gerard_quiz") },
+			{ TEXT("blair"), TEXT("blair_toon") },
+			{ TEXT("torrey"), TEXT("torrey_insect") },
+			{ TEXT("shadow_duelist"), TEXT("shadow_duelist_fiend") },
+			{ TEXT("titan"), TEXT("shadow_duelist_fiend") },
+			{ TEXT("mimicry"), TEXT("mimicry_stall") },
+			{ TEXT("pharaoh"), TEXT("pharaoh_guardian") }
+		};
+		if (const FString* Deck = DuelistDecks.Find(Id))
+		{
+			bDuelist = true;
+			DuelOpponentId = Id.StartsWith(TEXT("dr.")) ? TEXT("crowler") : Id;
+			DuelDeckId = *Deck;
+		}
+	}
 
 	Home = GetActorLocation();
 	Target = Home;
@@ -83,14 +162,65 @@ FString ADAStudentNPC::GetInteractName() const
 	return DisplayName.IsEmpty() ? DuelAcademy::DormName(Dorm) + TEXT(" student") : DisplayName;
 }
 
+void ADAStudentNPC::SetWanderHome(const FVector& NewHome)
+{
+	if (WanderPoints.Num() > 0 && FVector::Dist2D(NewHome, Home) > 100.0)
+	{
+		// the precomputed strolls were checked round the old home only: stand at the new one instead
+		WanderPoints.Reset();
+	}
+	Home = NewHome;
+	Target = NewHome;
+	IdleTime = Rng.FRandRange(0.5f, 2.f);
+	StuckTime = 0.f;
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->StopMovementImmediately();
+	}
+}
+
+bool ADAStudentNPC::CanInteract(const ADAStudentCharacter* By) const
+{
+	const ADAHUD* HUD = GetDuelHUD(this);
+	return !HUD || !HUD->IsDuelOpen();
+}
+
 void ADAStudentNPC::Interact(ADAStudentCharacter* By)
 {
+	// Talk-triggered story events are deliberately skipped by the auto-start
+	// path; this is the world interaction that starts them. A named NPC can be
+	// both a story contact and a free duelist, so the story gets first refusal.
+	if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(this))
+	{
+		const FString StoryNpcId = !DuelOpponentId.IsEmpty() ? DuelOpponentId : DisplayName;
+		if (Story->NotifyTalkToNPC(StoryNpcId))
+		{
+			TalkTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.f;
+			bHasTalked = true;
+			return;
+		}
+	}
+
+	if (bDuelist && bHasTalked)
+	{
+		if (ADAHUD* HUD = GetDuelHUD(this))
+		{
+			HUD->OpenDuelDeckSelect(DuelOpponentId, GetInteractName(), DuelDeckId);
+			if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+			{
+				Sub->PlayUISound(TEXT("A_DuelStart"), 1.f);
+			}
+			return;
+		}
+	}
+
 	const TArray<FString>& Said = Lines.Num() > 0 ? Lines : DuelAcademy::NpcLines(Dorm);
 	if (Said.Num() == 0)
 	{
 		return;
 	}
-	TalkTime = GetWorld()->GetTimeSeconds();
+	TalkTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.f;
+	bHasTalked = true;
 	FString Line = Said[LineIndex % Said.Num()];
 	++LineIndex;
 	if (Lines.Num() == 0 && By && By->GetDorm() != Dorm && Dorm == EDADorm::Obelisk && By->GetDorm() == EDADorm::Slifer && Rng.FRand() < 0.5f)
@@ -137,11 +267,16 @@ void ADAStudentNPC::PickNewTarget()
 
 bool ADAStudentNPC::IsSafeAhead(const FVector& Dir) const
 {
+	const UWorld* World = GetWorld();
+	if (!World)
+	{
+		return false;
+	}
 	// Refuse to walk off ledges / into water: probe the ground 1.2 m ahead.
 	const FVector Start = GetActorLocation() + Dir * 120.0;
 	FHitResult Hit;
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(DANpcLedge), false, this);
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, Start - FVector(0.0, 0.0, 260.0), ECC_Visibility, Params);
+	const bool bHit = World->LineTraceSingleByChannel(Hit, Start, Start - FVector(0.0, 0.0, 260.0), ECC_Visibility, Params);
 	if (!bHit)
 	{
 		return false;

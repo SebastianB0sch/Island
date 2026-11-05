@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "id": "P016",
+  "level": 1,
+  "title": "Sparks Finish",
+  "opponent": "mimicry",
+  "seed": 1016,
+  "turn_limit": 1,
+  "time_limit": 30,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      148
+    ],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 200,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 148
+    }
+  ],
+  "reward": {
+    "dp": 100,
+    "cards": []
+  },
+  "confidence": "high",
+  "source": "Engine-ready authored setup/solution for this pass; canonical A01 solution is in canon_reference. No decoded GBA fixed-board table was available when this script was authored.",
+  "notes": "Sparks deals 200 direct damage for the exact finish.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_016",
+    "setup_status": "unknown in A01; this pass ships an engine-ready authored setup",
+    "solution_card_ids": [
+      244,
+      282,
+      477,
+      584,
+      905
+    ],
+    "solution_card_names": [
+      "Amphibious Bugroth MK-3",
+      "Dark Elf",
+      "Empress Mantis",
+      "Megamorph",
+      "Premature Burial"
+    ],
+    "solution_steps": [
+      "Summon Amphibious Bugroth MK-3.",
+      "Activate Premature Burial to summon Dark Elf.",
+      "Equip Megamorph on Bugroth.",
+      "Enter Battle Phase and attack Empress Mantis with Dark Elf.",
+      "Attack directly with Bugroth."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution is recorded for traceability. The fixed board, time limit and reward below are authored and may need revision when A01 publishes the original setup."
+  },
+  "engine_ready": true
+}

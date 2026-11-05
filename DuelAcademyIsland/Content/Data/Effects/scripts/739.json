@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "card_id": 739,
+  "name": "Banner of Courage",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "During your Battle Phase only, increase the ATK of all monsters on your side of the field by 200 points.",
+  "notes": [
+    "Applies at the controller's Battle Phase start and expires with the Battle Phase."
+  ],
+  "scripts": [
+    {
+      "id": "739_battle_phase_team_boost",
+      "trigger": "on_battle_start",
+      "operations": [
+        {
+          "op": "modify_atk",
+          "target": "$target",
+          "amount": 200,
+          "mode": "flat"
+        }
+      ],
+      "duration": "until_end_of_battle_phase",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_spell_trap",
+        "is_turn_player": true
+      },
+      "target": {
+        "zone": "all_monsters",
+        "count": "all",
+        "filter": {
+          "controller": "self"
+        }
+      },
+      "source_text": "During your Battle Phase only, increase the ATK of all monsters on your side of the field by 200 points."
+    }
+  ]
+}

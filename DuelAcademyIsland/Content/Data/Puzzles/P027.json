@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "id": "P027",
+  "level": 2,
+  "title": "Ritual Summon L2-1",
+  "template": "ritual_summon",
+  "opponent": "mimicry",
+  "seed": 2027,
+  "turn_limit": 1,
+  "time_limit": 50,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      843,
+      841,
+      2,
+      165
+    ],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 2400,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 843
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 841,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'ritual_summon', level 2, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Ritual Summon Legendary Flame Lord with Incandescent Ordeal, then attack for exact LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_027",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      442,
+      526,
+      1078,
+      1080
+    ],
+    "solution_card_names": [
+      "Gearfried the Iron Knight",
+      "Giant Rat",
+      "Hyena",
+      "Maji-Gire Panda"
+    ],
+    "solution_steps": [
+      "Summon Maji-Gire Panda.",
+      "Enter Battle Phase.",
+      "Attack Gearfried the Iron Knight with Giant Rat, then select another Giant Rat to Special Summon from the Deck.",
+      "Repeat above step.",
+      "Repeat above step, but this time select a Hyena to Special Summon.",
+      "Attack Gearfried with the Hyena, then select another Hyena to Special Summon.",
+      "Repeat above step.",
+      "Now attack Gearfried with Maji-Gire Panda.",
+      "Attack directly with Hyena."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

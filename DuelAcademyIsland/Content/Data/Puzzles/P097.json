@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "id": "P097",
+  "level": 5,
+  "title": "Burn L5-1",
+  "template": "burn",
+  "opponent": "mimicry",
+  "seed": 2097,
+  "turn_limit": 1,
+  "time_limit": 90,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 11,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 1,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 363,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [
+      {
+        "card_id": 1192,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 7300,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_trap",
+      "card_id": 1192
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 363,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'burn', level 5, variant 1. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Burn with Sparks / Spiritual Fire Art - Kurenai, then attack for the remaining LP.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_097",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      366,
+      411,
+      425,
+      526,
+      649,
+      653,
+      654,
+      709,
+      1083
+    ],
+    "solution_card_names": [
+      "Blast Magician",
+      "Gearfried the Iron Knight",
+      "Marauding Captain",
+      "Reinforcement of the Army",
+      "Sword of Deep-Seated",
+      "The Warrior Returning Alive",
+      "Toon Table of Contents",
+      "Toon World",
+      "Upstart Goblin"
+    ],
+    "solution_steps": [
+      "Use Reinforcement of the Army to get Gearfried the Iron Knight from your deck.",
+      "Activate The Warrior Returning Alive to get Marauding Captain from your graveyard to your hand.",
+      "With Toon Table of Contents, first get the other two Toon tables from your deck, then Toon World.",
+      "Summon Marauding Captain and use him to get out Gearfried.",
+      "Use Upstart Goblin to draw the last card from your deck (Upstart Goblin).",
+      "With this done, equip Sword of Deep-Seated to Gearfried. It will be destroyed and return to the top of your deck.",
+      "Now activate the second Upstart Goblin to draw Sword of Deep-Seated again.",
+      "This time, equip it to any other monster (not Gearfried).",
+      "Activate Toon World.",
+      "Use Blast Magicians effect to destroy both your opponents monsters, and attack directly."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

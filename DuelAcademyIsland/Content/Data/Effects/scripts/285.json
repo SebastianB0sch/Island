@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "card_id": 285,
+  "name": "Eradicating Aerosol",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys all Insect-Type monsters on the field.",
+  "notes": [
+    "All Insect monsters are destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "285_destroy_type",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Eradicating Aerosol"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "all_monsters",
+        "count": "all",
+        "filter": {
+          "monster_type": "Insect",
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "Destroys all Insect-Type monsters on the field."
+    }
+  ]
+}

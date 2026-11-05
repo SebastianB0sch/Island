@@ -1,12 +1,20 @@
 """Assemble /Game/DuelAcademy/Maps/DuelAcademyIsland from Data/layout.json."""
 
-import math
+import json
+import os
 
 import unreal
 
 from . import common as C
 
 EAS = None
+
+
+def world_json(name):
+    """Read a Content/Data/World JSON file (portals, anchors, spawns)."""
+    path = os.path.join(C.project_dir(), "Content", "Data", "World", name)
+    with open(path, "r", encoding="utf-8") as fp:
+        return json.load(fp)
 
 
 def eas():
@@ -121,6 +129,8 @@ class Placer:
         w = self.layout["world"]
         m = self.spawn(cls, unreal.Vector(0, 0, 10000), 0.0, "IslandManager", "Environment")
         lake = w["lake"]
+        # strict: a silently-failed property leaves the manager with a null sun / map /
+        # lake centre, which breaks the day-night cycle and the minimap at runtime.
         C.set_props(m, sun=env.get("sun"), moon=env.get("moon"), sky_light=env.get("sky"), height_fog=env.get("fog"),
                     parameter_collection=mpc, hour=float(self.layout["environment"]["start_hour"]),
                     day_length_minutes=float(self.layout["environment"]["day_minutes"]), map_texture=map_tex,
@@ -128,11 +138,11 @@ class Placer:
                     map_max=unreal.Vector2D(w["map"]["max"][0], w["map"]["max"][1]),
                     sea_level=float(w["sea_level"]), lake_center=self.loc(lake["center"]),
                     lake_radii=unreal.Vector2D(lake["radii"][0], lake["radii"][1]),
-                    lake_yaw=self.yaw(lake["rot"]), lake_level=float(w["lake_level"]))
+                    lake_yaw=self.yaw(lake["rot"]), lake_level=float(w["lake_level"]), strict=True)
         if self.ysign < 0:
             # the map texture's north edge is now at +Y
             C.set_props(m, map_min=unreal.Vector2D(w["map"]["min"][0], w["map"]["max"][1]),
-                        map_max=unreal.Vector2D(w["map"]["max"][0], w["map"]["min"][1]))
+                        map_max=unreal.Vector2D(w["map"]["max"][0], w["map"]["min"][1]), strict=True)
         return m
 
     # ------------------------------------------------------------------ static meshes
@@ -266,7 +276,8 @@ class Placer:
         cls = C.native_class("DAInteractable")
         if cls is None:
             return
-        kinds = {"sign": "SIGN", "card_shop": "CARD_SHOP", "duel_field": "DUEL_FIELD", "info": "INFO"}
+        kinds = {"sign": "SIGN", "card_shop": "CARD_SHOP", "duel_field": "DUEL_FIELD", "info": "INFO",
+                 "room_bed": "ROOM_BED", "walk_home": "WALK_HOME"}
         enum = getattr(unreal, "DAInteractKind", None)
         for it in self.layout["interacts"]:
             a = self.spawn(cls, self.loc(it["loc"]), self.yaw(it["yaw"]), f"Interact_{it.get('title', 'Sign')}"[:60],
@@ -318,6 +329,220 @@ class Placer:
                             body_scale=float(n.get("scale", c.get("scale", 1.0))))
                 if n.get("name"):
                     C.set_props(a, display_name=n["name"], lines=list(n.get("lines", [])))
+
+    def world_actors(self):
+        """Spawn the A08 world data: portals, anchors, interior nav, NPC spawn points and director."""
+        self.portals()
+        self.scene_anchors()
+        self.interior_nav()
+        self.story_interactables()
+        self.npc_spawn_points()
+        self.npc_director()
+
+    def story_interactables(self):
+        """World hooks for E30 (room weekend) and E31 (walk home)."""
+        cls = C.native_class("DAInteractable")
+        enum = getattr(unreal, "DAInteractKind", None)
+        if cls is None or enum is None:
+            return
+        try:
+            anchors = {a["id"]: a for a in world_json("anchors.json").get("anchors", [])}
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"story interactable anchors unavailable: {e}")
+            return
+        hooks = [
+            ("slifer_player_room_bed", "ROOM_BED", "Your Bed",
+             "Spend the weekend in your room. Three weekends make your friends worry.", 220.0),
+            ("ra_player_room_bed", "ROOM_BED", "Your Bed",
+             "Spend the weekend in your room. Three weekends make your friends worry.", 220.0),
+            ("obelisk_player_room_bed", "ROOM_BED", "Your Bed",
+             "Spend the weekend in your room. Three weekends make your friends worry.", 220.0),
+            ("harbor_dock", "WALK_HOME", "Walk Home",
+             "Walk back to the dorm with a friend. Three walks with the same friend will matter.", 300.0),
+        ]
+        for anchor_id, kind_name, title, text, radius in hooks:
+            anchor = anchors.get(anchor_id)
+            if anchor is None:
+                C.warn(f"story hook anchor {anchor_id} missing")
+                continue
+            a = self.spawn(cls, self.loc(anchor["position_ue"]), self.yaw(anchor.get("yaw", 0.0)),
+                           f"Story_{anchor_id}", "Gameplay/story")
+            if a is None:
+                continue
+            C.set_props(a, kind=getattr(enum, kind_name), title=title, text=text, radius=radius,
+                        show_marker=False)
+
+    def portals(self):
+        cls = C.native_class("DAInteriorPortal")
+        if cls is None:
+            C.warn("ADAInteriorPortal missing - interior portals skipped")
+            return
+        try:
+            data = world_json("portals.json")
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"portals.json unavailable: {e}")
+            return
+        for p in data.get("portals", []):
+            a = self.spawn(cls, self.loc(p["location_ue"]), self.yaw(p.get("yaw", 0.0)),
+                           f"Portal_{p['id']}", "Gameplay/portals")
+            if a is None:
+                continue
+            lock = p.get("lock", {}) or {}
+            fade = p.get("fade", {}) or {}
+            C.set_props(a,
+                        portal_id=p.get("id", ""),
+                        interior_id=p.get("interior_id", ""),
+                        target_portal_id=p.get("target_portal_id", ""),
+                        target_location=self.loc(p.get("target_location_ue", [0, 0, 0])),
+                        target_yaw=self.yaw(p.get("target_yaw", 0.0)),
+                        trigger_extent=C.vec(p.get("trigger_extent", [110, 110, 120])),
+                        auto_trigger=bool(p.get("auto_trigger", True)),
+                        interactable=bool(p.get("interactable", True)),
+                        display_name=p.get("display_name", "Door"),
+                        prompt=p.get("prompt", "Enter"),
+                        cooldown_seconds=float(p.get("cooldown", 1.5)),
+                        fade_out_seconds=float(fade.get("out", 0.35)),
+                        fade_in_seconds=float(fade.get("in", 0.35)),
+                        fade_color=C.lc(fade.get("color", [0, 0, 0, 1])),
+                        locked=bool(lock.get("locked", False)),
+                        required_flag=str(lock.get("required_flag", "")),
+                        fail_closed_when_flag_query_missing=bool(lock.get("fail_closed", False)),
+                        lock_reason=str(lock.get("reason", "This door is locked.")),
+                        return_portal=bool(p.get("return_portal", False)))
+
+    def scene_anchors(self):
+        cls = C.native_class("DASceneAnchor")
+        if cls is None:
+            C.warn("ADASceneAnchor missing - scene anchors skipped")
+            return
+        try:
+            data = world_json("anchors.json")
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"anchors.json unavailable: {e}")
+            return
+        enum = getattr(unreal, "DASceneAnchorKind", None)
+        for entry in data.get("anchors", []):
+            a = self.spawn(cls, self.loc(entry["position_ue"]), self.yaw(entry.get("yaw", 0.0)),
+                           f"Anchor_{entry['id']}", "Gameplay/anchors")
+            if a is None:
+                continue
+            kind_name = str(entry.get("kind", "camera")).upper().replace("-", "_")
+            default_kind = getattr(enum, "CAMERA", None) if enum else None
+            kind = getattr(enum, kind_name, default_kind) if enum else None
+            look_at = entry.get("look_at_ue")
+            props = dict(anchor_id=entry.get("id", ""),
+                         fov=float(entry.get("fov", 50.0)),
+                         use_look_at=bool(look_at),
+                         anchor_tags=list(entry.get("tags", [])),
+                         description=entry.get("notes", ""))
+            if kind is not None:
+                props["kind"] = kind
+            if look_at:
+                props["look_at_target"] = self.loc(look_at)
+            C.set_props(a, **props)
+
+    def interior_nav(self):
+        """Place one NavMeshBoundsVolume over each generated interior cell.
+
+        The cells sit far below the island, so without an explicit volume the
+        runtime navmesh would stop at the exterior terrain. Each volume covers
+        the cell's bounds_ue plus a 1.5 m XY margin and 2.5 m of Z headroom,
+        which keeps the floor, door path and every spawn anchor inside.
+        """
+        try:
+            data = world_json("interiors.json")
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"interiors.json unavailable for interior nav: {e}")
+            return
+        cls = getattr(unreal, "NavMeshBoundsVolume", None)
+        if cls is None:
+            C.warn("NavMeshBoundsVolume missing - interior nav skipped")
+            return
+
+        placed = 0
+        for cell in data.get("cells", []):
+            box = cell.get("bounds_ue")
+            if not isinstance(box, (list, tuple)) or len(box) != 6:
+                C.warn(f"interior nav: cell {cell.get('id')} has no valid bounds_ue")
+                continue
+            center = unreal.Vector((box[0] + box[3]) * 0.5, (box[1] + box[4]) * 0.5, (box[2] + box[5]) * 0.5)
+            desired = unreal.Vector((box[3] - box[0]) * 0.5 + 150.0,
+                                    (box[4] - box[1]) * 0.5 + 150.0,
+                                    (box[5] - box[2]) * 0.5 + 250.0)
+            a = self.spawn(cls, center, 0.0, f"Nav_{cell['id']}", "Gameplay/nav")
+            if a is None:
+                continue
+
+            try:
+                origin, extent = a.get_actor_bounds(False)
+            except Exception as e:  # noqa: BLE001
+                C.warn(f"interior nav: {cell['id']} bounds query failed: {e}")
+                origin, extent = center, unreal.Vector(100.0, 100.0, 100.0)
+            if extent.x < 1.0 or extent.y < 1.0 or extent.z < 1.0:
+                # A class-spawned volume can report an empty brush until its
+                # default cube is realized; UE's default volume extent is 100.
+                origin, extent = center, unreal.Vector(100.0, 100.0, 100.0)
+
+            scale = unreal.Vector(desired.x / extent.x, desired.y / extent.y, desired.z / extent.z)
+            a.set_actor_scale3d(scale)
+            offset = origin - a.get_actor_location()
+            offset = unreal.Vector(offset.x * scale.x, offset.y * scale.y, offset.z * scale.z)
+            a.set_actor_location(center - offset, False, False)
+            placed += 1
+
+        C.log(f"placed {placed} interior nav bounds volumes")
+
+    def npc_spawn_points(self):
+        cls = C.native_class("DANpcSpawnPoint")
+        if cls is None:
+            C.warn("ADANpcSpawnPoint missing - schedule spawns skipped")
+            return
+        try:
+            anchors = {a["id"]: a for a in world_json("anchors.json").get("anchors", [])}
+            data = world_json("spawns.json")
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"spawns.json unavailable: {e}")
+            return
+        dorm_enum = getattr(unreal, "DADorm", None)
+        for s in data.get("spawns", []):
+            anchor = anchors.get(s.get("anchor_id"))
+            if anchor is None:
+                C.warn(f"spawn {s.get('id')} references missing anchor {s.get('anchor_id')}")
+                continue
+            a = self.spawn(cls, self.loc(anchor["position_ue"]), self.yaw(anchor.get("yaw", 0.0)),
+                           f"Spawn_{s['id']}", "Gameplay/npcs")
+            if a is None:
+                continue
+            default_dorm = getattr(dorm_enum, "SLIFER", None) if dorm_enum else None
+            dorm = getattr(dorm_enum, str(s.get("dorm", "slifer")).upper(), default_dorm) if dorm_enum else None
+            props = dict(spawn_point_id=s.get("id", ""),
+                         schedule_id=s.get("schedule_id", ""),
+                         schedule_tags=list(s.get("schedule_tags", [])),
+                         spawn_role=s.get("role", "student"),
+                         wander_radius=float(s.get("wander_radius_cm", 500.0)),
+                         event_override=s.get("event_override", ""),
+                         enabled=bool(s.get("enabled", True)),
+                         event_only=bool(s.get("event_only", False)),
+                         spawn_on_begin_play=bool(s.get("spawn_on_begin_play", False)),
+                         spawn_z_offset=float(s.get("spawn_z_offset_cm", 90.0)),
+                         display_name=s.get("display_name", ""))
+            if dorm is not None:
+                props["dorm"] = dorm
+            C.set_props(a, **props)
+
+    def npc_director(self):
+        cls = C.native_class("DANpcDirector")
+        if cls is None:
+            C.warn("ADANpcDirector missing - schedule director skipped")
+            return
+        a = self.spawn(cls, unreal.Vector(0, 0, 0), 0.0, "NPCDirector", "Gameplay/npcs")
+        if a is None:
+            return
+        npc_cls = C.native_class("DAStudentNPC")
+        props = dict(auto_register_spawn_points=True, auto_apply_on_begin_play=False)
+        if npc_cls is not None:
+            props["default_npc_class"] = npc_cls
+        C.set_props(a, **props)
 
     def specials(self):
         beam_cls = C.native_class("DALighthouseBeam")
@@ -379,7 +604,9 @@ def clear_generated():
 def open_or_create_map():
     C.ensure_dir(C.ROOT + "/Maps")
     if C.exists(C.MAP_PATH):
-        les().load_level(C.MAP_PATH)
+        loaded = les().load_level(C.MAP_PATH)
+        if loaded is False:
+            raise RuntimeError(f"could not load {C.MAP_PATH}")
         clear_generated()
         return False
     try:
@@ -404,4 +631,12 @@ def set_world_settings():
 
 
 def save():
-    les().save_current_level()
+    """Save the map, raising when the editor subsystem reports failure.
+
+    The headless CLI turns a False / None result of ``save_current_level`` into
+    a build failure; without this check the build would log success while the
+    replaced actors exist only in the editor's unsaved state.
+    """
+    result = les().save_current_level()
+    if not result:
+        raise RuntimeError(f"map save failed ({C.MAP_PATH}): save_current_level -> {result!r}")

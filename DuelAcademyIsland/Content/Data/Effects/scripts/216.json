@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "card_id": 216,
+  "name": "Needle Ball",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "FLIP: You can inflict 1000 points of Direct Damage to your opponent's Life Points at the cost of 2000 of your own Life Points.",
+  "notes": [
+    "Life Point payment is a cost, so it is checked before damage."
+  ],
+  "scripts": [
+    {
+      "id": "216_flip_pay_life_for_damage",
+      "trigger": "on_flip",
+      "operations": [
+        {
+          "op": "inflict_damage",
+          "amount": 1000,
+          "player": "opponent",
+          "reason": "Needle Ball"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "cost": [
+        {
+          "op": "pay_lp",
+          "amount": 2000
+        }
+      ],
+      "source_text": "FLIP: You can inflict 1000 points of Direct Damage to your opponent's Life Points at the cost of 2000 of your own Life Points."
+    }
+  ]
+}

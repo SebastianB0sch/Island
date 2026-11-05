@@ -15,11 +15,63 @@ the Unreal Editor's own Python + C++.
 *(Cycles previews of the generated island. In Unreal it is lit by Lumen, a dynamic sky atmosphere,
 volumetric clouds and a full day/night cycle.)*
 
+![Duel board](Docs/renders/duel.png)
+
+*The ported duel board: hand, field, card detail, piles, duel log and AI opponent. The deck picker and
+result screen are in `Docs/renders/duel_deck.png` and `duel_result.png`.*
+
+## GBA campaign port (Gate 1)
+
+This branch (`port/baseline`) ports the single-player campaign of the GBA game into the 3D island. The masterplan is [Docs/PORT_MASTERPLAN.md](Docs/PORT_MASTERPLAN.md); live status is [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md).
+
+| ![Title](Docs/renders/port/title.png) | ![Opening](Docs/renders/port/opening.png) |
+|---|---|
+| **Title / New Game / Continue** | **Opening ceremony → Slifer dorm → first free roam** |
+| ![PDA map](Docs/renders/port/pda_map.png) | ![Dialogue](Docs/renders/port/dialogue_choice.png) |
+| **PDA map, calendar, deck, mail, save, options, records, limit** | **Dialogue with portraits, typewriter, choices and history** |
+
+Implemented so far:
+
+- **Campaign backbone:** 37 event definitions (35 canon + the opening checkpoint/free duel), 56 scenes, 161 dialogue lines, 6 email contacts, schedules, flags and rewards. The opening (`E01`/`E01b`) is fully runnable; the 35-event campaign scaffold validates and is reachable with progress.
+- **Progression:** profile, 12-month calendar, DP, titles, dorm promotion/demotion, Dropout Boy recovery, flags, counters and settings.
+- **Save/load:** 3 slots + autosave, atomic writes, checksum trailer, backup recovery, corruption detection and v0→v1 migration.
+- **Duel content:** 26 duelists / 32 decks, 100 timed puzzles, 12 exam cycles, 48 booster packs, the full 1,200-card database, 76 Fusion recipes and 22 Ritual procedures.
+- **Rules:** chain stack, targeting/choice queue, activation timing, Quick-Play/Counter Trap scaffolding, banned/limited list, deck validation, ante, scenarios and result statistics.
+- **Economy:** 1,200-card inventory, 3-copy ownership, deterministic pack opening, 48-pack shop, deck construction/validation.
+- **UI:** title/new game/continue, PDA, dialogue, choices, history, credits, options and debug screenshot harnesses.
+- **World data:** 36 mapped GBA locations, 89 scene anchors, 10 planned interior cells and 20 portal pairs.
+
+Run the runtime suites from the editor/game command line:
+
+```text
+-DAProfileSelfTest        # 182/182
+-DAEconomySelfTest        # 446/446
+-DADuelRulesSelfTest      # 102/102
+-DAStorySelfTest          # 14/14
+-DAFullStorySelfTest      # 20/20, 35/35 reachable with progress
+-DAPuzzleSelfTest         # 100/100 authored puzzles replayed in-engine
+-DAExamSelfTest           # 12/12 monthly exam cycles
+-DAPuzzleExamSelfTest     # both A07 suites in one process
+-DAUITest                 # 8 PDA + 2 dialogue screenshots
+-DATitleTest / -DANewGameTest
+```
+
+Data validators:
+
+```text
+python Tools/validate/validate_all.py      # PASS, known gaps listed
+python Tools/puzzles/validate.py           # 145 checks, 0 failures
+python Tools/opponents/import_canon_decks.py --check  # 32/32 runtime decks, 37/37 constructed
+python Tools/effects/audit.py              # PASS; 362 scripted + 345 vanilla, 493 pending
+```
+
+Still open before calling the port complete: the 493 pending card effects, exact GBA dialogue (the full text is local-only), renderer/interaction QA for the shop/deck/exam screens, interior generation/entry polish, and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md). The full E02–E33 campaign playthrough is covered by `-DAStoryPlaythroughTest`.
+
 ## What's on the island
 
 | Location | What you'll find |
 |---|---|
-| **Duel Academy** (main building) | The landmark: classroom wings, four obelisk towers, a stepped-pyramid **Grand Duel Arena** you can walk into (holographic duels), lobby and **Card Shop** (booster packs). |
+| **Duel Academy** (main building) | The landmark: classroom wings, four obelisk towers, a stepped-pyramid **Grand Duel Arena** you can walk into (full duels), lobby and **Card Shop** (booster packs). |
 | **Academy Plaza** | Fountain courtyard, dorm flags, the direction board and the gate where the harbor road arrives. |
 | **Slifer Red Dorm** | The humble two-storey cliff-top shack with the outdoor walkway, curry-scented dining hall and the best sunset view. |
 | **Ra Yellow Dorm** | Tidy yellow dormitory with its famous cafeteria and sea-side balconies. |
@@ -84,10 +136,27 @@ The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the S
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on
 the arena field) and have their own lines; every other student gets a generic look tinted by dorm.
 
-The bones are renamed to the **UE5 Mannequin** scheme (`pelvis`, `spine_01`, `upperarm_l` …), so the cast plays
-CC0 Quaternius animation takes retargeted onto each model (idle, walk, run, jump / fall / land, wave, yes / no,
-sit, clap, interact) plus hand-authored duel-stance and swim takes — and Unreal's IK Retargeter auto-maps the
-skeletons to Manny/Quinn if you want the engine's own animations.
+The bones are renamed to the **UE5 Mannequin** scheme (`pelvis`, `spine_01`, `upperarm_l` …). Locomotion is
+solved rather than lifted from a stock clip: `Tools/dai/anime/gait.py` generates the **idle, walk and run**
+cycles from a biomechanical gait model. The stance shoe rolls heel → flat → ball → toe, a two-bone leg IK
+plants the ankle on the ground while the pelvis follows the natural bob (lowest at double support, highest at
+midstance), the pelvis sways/yaws under a counter-rotating spine, the head stays level, and the arms swing in
+opposition with bent elbows and relaxed wrists. The run has a real flight phase, stance compression, high heel
+recovery and a forward lean. Every cycle is validated at build time for contact speed, ground penetration,
+contact percentage, knee range and loop closure (the walk measures 1.50 m/s, the run 4.20 m/s).
+
+At runtime a native animation instance (`DAAvatarAnimInstance`) blends **idle → walk → run** by ground speed,
+drives both locomotion clips from one contact phase and solves the cadence from the blended stride length, so
+the planted foot moves at exactly the character's speed (no foot skating from a stroll to a sprint). Jump,
+Fall, Land, Swim and Duel are crossfaded action layers on top. The player moves at a human-scale 1.5 m/s walk
+and 4.2 m/s sprint; NPCs stroll at 1.4 m/s. The other takes (jump / fall / land, wave, yes / no, sit, clap,
+interact) are still CC0 Quaternius takes retargeted onto each model, plus hand-authored duel-stance and swim
+poses — and Unreal's IK Retargeter auto-maps the skeletons to Manny/Quinn if you want the engine's own
+animations.
+
+![Gait](Docs/renders/gait.jpg)
+
+*Walk and run cycles rendered from the gait solver: heel strike, flat, heel-off and toe-off; a real flight phase and stance compression in the run, with the arms and shoulders counter-swinging.*
 
 **Using your own models.** The likenesses are limited by what is freely redistributable: faces are the
 VRoid samples' own and hairstyles are restyled from their cuts. Any rigged humanoid **VRM / glTF / FBX** (VRoid Hub, Sketchfab,
@@ -176,14 +245,21 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 * Third-person anime student (the cast's generic boy) — switch your **dorm jacket**
   (Slifer Red / Ra Yellow / Obelisk Blue / Society of Light white) with **J**; NPC students wear theirs. The
   older CC0 low-poly student and a procedural avatar remain as fallbacks when no cast is imported.
+* **Human-scale locomotion**: a 1.5 m/s walk (WASD) and 4.2 m/s sprint (Shift), with phase-matched
+  idle/walk/run blending, foot-planted cycles and smooth jump/fall/land transitions. The old
+  450/950 cm/s arcade speeds were retired because they made any authored stride skate.
 * Location banners + "**New location discovered**" tracking (17 named locations and 19 rooms), compass, minimap.
 * **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker. The selected
   location opens its list of rooms you can travel straight into - the Academy's main hall, Grand Duel Arena,
   Card Shop, lecture halls, library and faculty annex, every dorm's hall / dining room, the ferry terminal, the
-  lighthouse watch room, the gym foyer, the bathhouse and the abandoned dorm's hall and ritual chamber. Every
+  lighthouse watch room, the gym court, the bathhouse and the abandoned dorm's hall and ritual chamber. Every
   arrival point is checked for room to stand (`Tools/people_check.py`); the volcano point is the **Crater Rim**
   lookout, at the top of the switchback trail from the hot springs and the stone summit stair.
-* **Holographic duels** on the Grand Duel Arena field, the gym practice fields and the beach court.
+* **A full duel system**: a deterministic 1,200-card rules engine (summons, tributes, Fusion and Ritual
+  summons, chains, traps, hand-limit discards and a duelist AI), a Canvas board with hand, field,
+  deck/extra/graveyard/banish piles, card detail, duel log, animations and a result/rematch screen.
+  Duel fields pick a resident opponent; named students (Jaden, Syrus, Bastion, Chazz, Alexis, Zane and
+  Crowler) can also be challenged after talking to them once. Card scans are shown on the board.
 * **Card Shop**: open booster packs (32 original cards, rarities from Common to Ultra Rare), track your collection.
 * Signs with lore everywhere, students from all three dorms who wander around and chat (E). Nobody stands in
   the furniture: at build time every NPC spot is tested as a person-sized capsule against walls, fixtures,
@@ -214,6 +290,12 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 | F | Raise duel disk |
 | T, [ ], N | Pause time, slower / faster, skip 3 hours |
 | F1 or H | Controls overlay |
+| **In a duel** | |
+| Mouse | Select a card, use the action buttons, inspect piles |
+| B | Enter the Battle Phase |
+| N / End | End the turn |
+| Esc | Deselect / close a pile / leave the duel |
+| 1, 2, 3 | Pick a starter deck in the deck picker |
 
 ## Getting started
 
@@ -261,7 +343,8 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction
   dai/character.py          rigged third-party student -> SK_Student + A_Student_<State> FBX
   dai/anime/                anime cast: VRM/glTF base models -> UE5-Mannequin-named skeletons, tailored
-                            uniforms (outfit.py), restyled hair (hairdo.py), ink outlines, CC0 takes
+                            uniforms (outfit.py), restyled hair (hairdo.py), ink outlines; biomechanical
+                            idle/walk/run gait solver (gait.py, foot-planting IK + validation); CC0 takes
                             retargeted onto every skeleton, cast.json
                             (cast.py = who is who; a procedural fallback builds anyone without a model)
   dai/credits.py            CREDITS.md from the SOURCE.txt files
@@ -306,6 +389,17 @@ npm install -g @gltf-transform/cli                 # optional: decodes meshopt-c
 .venv/bin/python Tools/preview_anime.py jaden alexis --state Walk --frame 10   # cast preview render
 ```
 
+The gait solver validates every generated cycle before export (contact speed, penetration, contact
+percentage, knee range, loop closure). To check the runtime blend and planted feet in the engine:
+
+```text
+UnrealEditor-Cmd DuelAcademyIsland.uproject /Game/DuelAcademy/Maps/DuelAcademyIsland -game -windowed -DALocomotionTest
+```
+
+It teleports to the plaza, walks, sprints and stops from a side camera, saves `DAWalk*/DARun*/DAStop`
+screenshots and logs the planted ball-joint speed (about 7 cm/s at the 1.5 m/s walk and 13 cm/s at
+the 4.2 m/s run; 0 would be a perfectly locked foot).
+
 Edit `Tools/dai/config.py` (positions, heights, paths), a location module in `Tools/dai/assets/`, or
 `Tools/dai/palette.py` (colours), regenerate, then *Duel Academy → Build Island* in the editor.
 
@@ -331,6 +425,8 @@ In Landscape mode → *Import from file*: **Location** X = -153600, Y = -153600,
 | Benches, signposts, fences, crates, containers, rowboats, beach umbrellas and chairs, stone lanterns | Sketchfab authors (CC BY 4.0) |
 | Fishing trawlers | Poly by Google (CC BY 3.0) |
 | Duel Academy buildings, dorms, arena, harbor, lighthouse, ferry, volcano/waterfall features, flagpoles, bollards, duel dummies, vending machines, interiors, door leaves, sounds | original, built by the pipeline in `Tools/` |
+| Duel card names, card text, card scans, fusion recipes and starter deck lists | Yu-Gi-Oh! TCG, Konami/Shueisha - non-commercial fan reference; scans via YGOPRODeck, data ported from the reference UE5 duel engine |
+| Duel character busts / expression frames (`Content/Data/Portraits`) | Konami *Duel Links* character renders (fan-project reference set); not redistributable. The in-world island cast remains the project's own VRoid-derived models |
 
 Every third-party folder under `Tools/thirdparty/` has a `SOURCE.txt`; [CREDITS.md](CREDITS.md) lists all of
 them with the required CC BY attribution text (also shown in-game on the F1 controls panel).
@@ -343,4 +439,7 @@ them with the required CC BY attribution text (also shown in-game on the F1 cont
 * Performance: the island uses Nanite foliage, MegaLights for ~300 small lights and Lumen; on low-end
   GPUs lower *Settings → Engine Scalability*.
 * Non-commercial fan project. *Yu-Gi-Oh! GX* and its characters, names and settings belong to their
-  respective owners; this project contains no assets from the show or the games.
+  respective owners. The duel card database uses card names and scans for identification and commentary;
+  the character busts in `Content/Data/Portraits` are Konami *Duel Links* fan-reference renders and must
+  be kept out of any public build. The island's in-world cast is built from the licensed VRoid sample
+  avatars (see [CREDITS.md](CREDITS.md)).

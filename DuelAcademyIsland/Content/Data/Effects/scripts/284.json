@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "card_id": 284,
+  "name": "Acid Rain",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Destroys all Machine-Type monsters on the field.",
+  "notes": [
+    "All Machine monsters are destroyed."
+  ],
+  "scripts": [
+    {
+      "id": "284_destroy_type",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Acid Rain"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "all_monsters",
+        "count": "all",
+        "filter": {
+          "monster_type": "Machine",
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "Destroys all Machine-Type monsters on the field."
+    }
+  ]
+}

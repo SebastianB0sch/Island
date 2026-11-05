@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "id": "P036",
+  "level": 2,
+  "title": "Piercing L2-2",
+  "template": "piercing",
+  "opponent": "mimicry",
+  "seed": 2036,
+  "turn_limit": 1,
+  "time_limit": 50,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [
+      117
+    ],
+    "field": [
+      {
+        "card_id": 655,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 400,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 2,
+        "position": "defense",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 117
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 655,
+      "target": 2
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'piercing', level 2, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Spear Dragon's built-in piercing damage, boosted by the equipped cards, deals exact battle damage to the Defense Position monster.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_036",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      40,
+      117,
+      397,
+      428,
+      436,
+      893,
+      963,
+      969
+    ],
+    "solution_card_names": [
+      "Black Pendant",
+      "Burning Algae",
+      "Kozaky",
+      "Marshmallon",
+      "Mystical Space Typhoon",
+      "Red-Eyes B. Dragon",
+      "Snatch Steal",
+      "Tribute to the Doomed"
+    ],
+    "solution_steps": [
+      "Activate Tribute to the Doomed, discard Black Pendant and destroy Marshmallon.",
+      "Enter Battle Phase and attack with everyone.",
+      "Activate Mystical Space Typhoon and destroy Snatch Steal.",
+      "Enter Main Phase 2 and Summon Red-Eyes B. Dragon by tributing Kozaky and Burning Algae."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

@@ -10,13 +10,21 @@ permissions:
 
 jobs:
   checks:
-    name: Pipeline checks
+    name: Pipeline checks (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      # Actions are pinned to commit SHAs; keep the trailing version comments.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          python-version: "3.13"
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: No merge conflict markers
         run: |
           if git grep -nI -E '^(<<<<<<< |>>>>>>> |=======$)' -- . ':!*.md'; then
@@ -24,6 +32,45 @@ jobs:
           fi
       - name: Python compiles (pipeline + editor scripts)
         run: python -m compileall -q Tools DuelAcademyIsland/Content/Python
+      - name: Integration harness unit tests
+        run: python -m unittest discover -s Tools/tests -v
+      - name: Data contracts (baseline)
+        run: python Tools/validate/validate_all.py
+      - name: Canon extracts and manifest hashes
+        run: python Tools/canon/validate_canon.py --no-report
+      - name: Puzzles, exams and practicals
+        run: python Tools/puzzles/validate.py
+      - name: A06 player decks
+        run: python Tools/economy/validate_decks.py
+      - name: A06 shop pack catalogue
+        run: python Tools/economy/validate_packs.py
+      - name: A08 world layout and portal routes
+        run: |
+          python Tools/world/validate_layout.py
+          python Tools/world/test_interiors.py
+      - name: Opponent deck mapping and legality
+        run: python Tools/opponents/import_canon_decks.py --check
+      - name: Effects, fusions and rituals
+        run: python Tools/effects/validate_effects.py
+      - name: Effect pipeline regression tests
+        run: python Tools/effects/test_effects.py
+      # coverage.py/report_coverage.py --check build in memory; audit.py
+      # regenerates its own derived files (card_effect_manifest.json and
+      # Docs/Effects/COVERAGE.md) and fails on any missed coverage target.
+      - name: Effects coverage reports and audit
+        run: |
+          python Tools/effects/coverage.py --check
+          python Tools/effects/report_coverage.py --check > /dev/null
+          python Tools/effects/audit.py
+      - name: Integration harness (validator and dry run)
+        run: |
+          python Tools/integration/run_smoke.py --validate \
+            --report-dir "$RUNNER_TEMP/smoke" \
+            --validate-report "$RUNNER_TEMP/smoke/validate.json" \
+            --report "$RUNNER_TEMP/smoke/smoke.json"
+          python Tools/integration/run_smoke.py --all --dry-run \
+            --report-dir "$RUNNER_TEMP/smoke-dry" \
+            --report "$RUNNER_TEMP/smoke-dry/smoke.json"
       - name: JSON data and registry parse
         run: |
           python - <<'PY'

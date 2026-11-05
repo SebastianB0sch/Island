@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "card_id": 715,
+  "name": "Newdoria",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent to the Graveyard as a result of battle, select 1 monster on the field and destroy it.",
+  "notes": [
+    "Any monster on the field is a legal target."
+  ],
+  "scripts": [
+    {
+      "id": "715_battle_destroy_monster",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "destroy",
+          "target": "$target",
+          "reason": "Newdoria"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "any_monster",
+        "count": 1
+      },
+      "source_text": "When this card is sent to the Graveyard as a result of battle, select 1 monster on the field and destroy it.",
+      "condition": {
+        "name": "Newdoria"
+      }
+    }
+  ]
+}

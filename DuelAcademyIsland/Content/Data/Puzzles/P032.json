@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "id": "P032",
+  "level": 2,
+  "title": "Trap Negation L2-2",
+  "template": "trap_negation",
+  "opponent": "mimicry",
+  "seed": 2032,
+  "turn_limit": 1,
+  "time_limit": 45,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 8000,
+    "hand": [],
+    "field": [
+      {
+        "card_id": 780,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [
+      {
+        "card_id": 403,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 1900,
+    "hand": [],
+    "field": [],
+    "spell_traps": [
+      {
+        "card_id": 421,
+        "face_up": false,
+        "set_turn": 0
+      }
+    ],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "attack",
+      "attacker_card_id": 780,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 140,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'trap_negation', level 2, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Seven Tools of the Bandit is already Set; the engine auto-negates Mirror Force when the lethal direct attack is declared.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_032",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      205,
+      211,
+      250,
+      378,
+      1198
+    ],
+    "solution_card_names": [
+      "Armed Ninja",
+      "Cockroach Knight",
+      "Conscription",
+      "Insect Barrier",
+      "Lesser Dragon"
+    ],
+    "solution_steps": [
+      "Summon Lesser Dragon.",
+      "Flip Summon Armed Ninja and destroy Insect Barrier.",
+      "Enter Battle Phase and attack Cockroach Knight with Lesser Dragon.",
+      "Activate Conscription.",
+      "Attack with everyone."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

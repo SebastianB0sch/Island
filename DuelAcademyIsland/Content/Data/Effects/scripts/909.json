@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "card_id": 909,
+  "name": "Manju of the Ten Thousand Hands",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is Normal Summoned or Flip Summoned, you can select 1 Ritual Monster Card or 1 Ritual Spell Card from your Deck and add it to your hand.",
+  "notes": [
+    "Searches a Ritual card from the Deck."
+  ],
+  "scripts": [
+    {
+      "id": "909_on_normal_summon_search_ritual",
+      "trigger": "on_normal_summon",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Manju of the Ten Thousand Hands"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "any": [
+            {
+              "card_type": "Ritual Monster"
+            },
+            {
+              "all": [
+                {
+                  "card_type": "Spell"
+                },
+                {
+                  "subtype": "Ritual"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_text": "When this card is Normal Summoned or Flip Summoned, you can select 1 Ritual Monster Card or 1 Ritual Spell Card from your Deck and add it to your hand."
+    },
+    {
+      "id": "909_on_flip_summon_search_ritual",
+      "trigger": "on_flip_summon",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "all": [
+          {
+            "controller": "self",
+            "zone": "self_monster"
+          },
+          {
+            "name": "Manju of the Ten Thousand Hands"
+          }
+        ]
+      },
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "any": [
+            {
+              "card_type": "Ritual Monster"
+            },
+            {
+              "all": [
+                {
+                  "card_type": "Spell"
+                },
+                {
+                  "subtype": "Ritual"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "source_text": "When this card is Normal Summoned or Flip Summoned, you can select 1 Ritual Monster Card or 1 Ritual Spell Card from your Deck and add it to your hand."
+    }
+  ]
+}

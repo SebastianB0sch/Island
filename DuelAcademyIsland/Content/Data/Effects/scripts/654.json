@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "card_id": 654,
+  "name": "The Warrior Returning Alive",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Select 1 Warrior-Type monster in your Graveyard and return it to your hand.",
+  "notes": [
+    "One Warrior-Type monster."
+  ],
+  "scripts": [
+    {
+      "id": "654_return_warrior",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "return_to_hand",
+          "target": "$target",
+          "reason": "The Warrior Returning Alive"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_graveyard",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "monster_type": "Warrior"
+            }
+          ]
+        }
+      },
+      "source_text": "Select 1 Warrior-Type monster in your Graveyard and return it to your hand."
+    }
+  ]
+}

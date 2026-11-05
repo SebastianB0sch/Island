@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "card_id": 355,
+  "name": "Skull-Mark Ladybug",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent to the Graveyard, increase your Life Points by 1000 points.",
+  "notes": [
+    "Fires when this card reaches the Graveyard from any zone."
+  ],
+  "scripts": [
+    {
+      "id": "355_grave_gain_life",
+      "trigger": "on_sent_to_graveyard",
+      "operations": [
+        {
+          "op": "gain_lp",
+          "amount": 1000,
+          "player": "self",
+          "reason": "Skull-Mark Ladybug"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "source_text": "When this card is sent to the Graveyard, increase your Life Points by 1000 points.",
+      "condition": {
+        "name": "Skull-Mark Ladybug"
+      }
+    }
+  ]
+}

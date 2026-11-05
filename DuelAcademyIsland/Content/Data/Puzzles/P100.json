@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "id": "P100",
+  "level": 5,
+  "title": "Special Summon L5-2",
+  "template": "special_summon",
+  "opponent": "mimicry",
+  "seed": 2100,
+  "turn_limit": 1,
+  "time_limit": 90,
+  "objective": "win_this_turn",
+  "player": {
+    "lp": 3000,
+    "hand": [
+      766
+    ],
+    "field": [
+      {
+        "card_id": 40,
+        "position": "attack",
+        "face_up": true
+      },
+      {
+        "card_id": 234,
+        "position": "attack",
+        "face_up": true
+      }
+    ],
+    "spell_traps": [],
+    "graveyard": [],
+    "deck": [],
+    "extra": []
+  },
+  "opponent_state": {
+    "lp": 7300,
+    "hand": [],
+    "field": [],
+    "spell_traps": [],
+    "graveyard": [
+      1
+    ],
+    "deck": [],
+    "extra": []
+  },
+  "solution": [
+    {
+      "action": "activate_spell",
+      "card_id": 766
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 1,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 40,
+      "target": "direct"
+    },
+    {
+      "action": "attack",
+      "attacker_card_id": 234,
+      "target": "direct"
+    }
+  ],
+  "reward": {
+    "dp": 200,
+    "cards": []
+  },
+  "engine_ready": true,
+  "confidence": "low",
+  "source": "Port-authored setup from Tools/puzzles/generate_puzzles.py template 'special_summon', level 5, variant 2. The line uses engine-supported cards but is not a GBA fixed-board reconstruction.",
+  "notes": "Premature Burial / Autonomous Action Unit revives a monster, then all available attackers deal exact damage.",
+  "canon_reference": {
+    "source": "DuelAcademyIsland/Content/Data/Canon/puzzles.json (A01 extraction)",
+    "source_url": "https://yugipedia.com/wiki/Yu-Gi-Oh!_GX_Duel_Academy_Puzzle:_100",
+    "setup_status": "canon setup unavailable; this file uses a port-authored template",
+    "solution_card_ids": [
+      385,
+      497,
+      547,
+      762,
+      928
+    ],
+    "solution_card_names": [
+      "Call of the Haunted",
+      "Invader of Darkness",
+      "Monster Reborn",
+      "Spell Canceller",
+      "Torrential Tribute"
+    ],
+    "solution_steps": [
+      "Tribute Summon Spell Canceller by tributing Invader of Darkness.",
+      "When summoning, activate Torrential Tribute.",
+      "Now use Monster Reborn to revive Invader of Darkness from your Graveyard.",
+      "Revive Spell Canceller with Call of the Haunted.",
+      "Attack."
+    ],
+    "confidence": {
+      "solution": "high",
+      "setup": "unknown",
+      "limits": "low",
+      "reward": "low"
+    },
+    "note": "Canonical solution metadata only; the generated board/time/reward are not canon."
+  }
+}

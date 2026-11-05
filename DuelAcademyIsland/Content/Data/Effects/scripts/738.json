@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "card_id": 738,
+  "name": "Terraforming",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Add 1 Field Spell Card from your Deck to your hand. Then shuffle your Deck.",
+  "notes": [
+    "Searches a Field Spell into the hand and shuffles."
+  ],
+  "scripts": [
+    {
+      "id": "738_search_field_spell",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Spell"
+            },
+            {
+              "subtype": "Field"
+            }
+          ]
+        }
+      },
+      "source_text": "Add 1 Field Spell Card from your Deck to your hand. Then shuffle your Deck."
+    }
+  ]
+}

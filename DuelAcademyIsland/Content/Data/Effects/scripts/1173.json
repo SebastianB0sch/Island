@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "card_id": 1173,
+  "name": "Indomitable Fighter Lei Lei",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "If this card attacks, it is changed to Defense Position at the end of the Battle Phase. This card's battle position cannot be changed until the end of your next turn, except with a card effect.",
+  "notes": [
+    "Defense change is registered continuously; the next-turn change lock is not separately represented."
+  ],
+  "scripts": [
+    {
+      "id": "1173_battle_end_defense",
+      "trigger": "continuous",
+      "operations": [
+        {
+          "op": "battle_position_lock",
+          "target": "$self",
+          "mode": "defense_at_end"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster"
+      },
+      "source_text": "This card changes to Defense Position at the end of the Battle Phase."
+    }
+  ]
+}

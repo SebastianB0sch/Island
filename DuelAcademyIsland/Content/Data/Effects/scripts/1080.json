@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "card_id": 1080,
+  "name": "Hyena",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "When this card is sent to the Graveyard as a result of battle, you can Special Summon any \"Hyena\"(s) from your Deck to the field. Then shuffle your Deck.",
+  "notes": [
+    "Recruits every 'Hyena' from the Deck."
+  ],
+  "scripts": [
+    {
+      "id": "1080_battle_recruit_all_named",
+      "trigger": "on_battle_destroy",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        },
+        {
+          "op": "shuffle",
+          "player": "self"
+        }
+      ],
+      "duration": "instant",
+      "optional": true,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": "all",
+        "filter": {
+          "name": "Hyena"
+        }
+      },
+      "source_text": "When this card is sent to the Graveyard as a result of battle, you can Special Summon any \"Hyena\"(s) from your Deck to the field. Then shuffle your Deck.",
+      "condition": {
+        "name": "Hyena"
+      }
+    }
+  ]
+}

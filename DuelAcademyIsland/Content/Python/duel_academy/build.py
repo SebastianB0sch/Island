@@ -7,7 +7,6 @@ Duel Academy Island - one-click editor build.
     Command line:    UnrealEditor-Cmd DuelAcademyIsland.uproject -ExecutePythonScript="<project>/Content/Python/build_island_cli.py"
 """
 
-import os
 import time
 
 import unreal
@@ -36,7 +35,7 @@ def _axis_check(layout, meshes):
     return -1.0
 
 
-def build_island(import_assets=True, interactive=True):
+def build_island(import_assets=True, interactive=True, prune_cast=True):
     t0 = time.time()
     try:
         layout = C.load_json("layout.json")
@@ -58,7 +57,9 @@ def build_island(import_assets=True, interactive=True):
     n_inst = len(layout["instances"])
     work = (8 + len(manifest) + n_inst + 12) if import_assets else (n_inst + 12)
     with unreal.ScopedSlowTask(work, "Building Duel Academy Island...") as slow:
-        slow.make_dialog(True)
+        # Headless builds must not create a modal progress dialog; the CLI path
+        # passes interactive=False and should be safe in -unattended runs.
+        slow.make_dialog(bool(interactive))
 
         # ------------------------------------------------------------ assets
         meshes = {}
@@ -70,6 +71,10 @@ def build_island(import_assets=True, interactive=True):
             slow.enter_progress_frame(2, "Building materials")
             mpc, masters, instances = materials.build_all(palette)
             meshes = importer.import_meshes(manifest, slow)
+            if len(meshes) != len(manifest):
+                C.error(f"mesh import incomplete: {len(meshes)}/{len(manifest)} assets; "
+                        "aborting before the level is rebuilt")
+                return False
             slow.enter_progress_frame(1, "Configuring meshes")
             for e in manifest:
                 m = meshes.get(e["name"])
@@ -79,8 +84,9 @@ def build_island(import_assets=True, interactive=True):
             slow.enter_progress_frame(1, "Importing the student character")
             importer.import_character(instances)
             slow.enter_progress_frame(1, "Importing the anime cast")
-            importer.import_cast(masters)
-            unreal.EditorAssetLibrary.save_directory(C.ROOT, only_if_is_dirty=True, recursive=True)
+            importer.import_cast(masters, prune=prune_cast)
+            if not unreal.EditorAssetLibrary.save_directory(C.ROOT, only_if_is_dirty=True, recursive=True):
+                raise RuntimeError("map save failed: save_directory(/Game/DuelAcademy) for the imported assets failed")
         else:
             mpc = C.load(f"{C.MAT_DIR}/MPC_DuelAcademy")
             instances = {}
@@ -112,13 +118,15 @@ def build_island(import_assets=True, interactive=True):
         placer.emitters()
         placer.audio()
         placer.npcs()
+        placer.world_actors()
         placer.specials()
         placer.doors()
         placer.player_start()
         level.set_world_settings()
         slow.enter_progress_frame(2, "Saving")
         level.save()
-        unreal.EditorAssetLibrary.save_directory(C.ROOT, only_if_is_dirty=True, recursive=True)
+        if not unreal.EditorAssetLibrary.save_directory(C.ROOT, only_if_is_dirty=True, recursive=True):
+            raise RuntimeError("map save failed: save_directory(/Game/DuelAcademy) for the level assets failed")
 
     msg = f"Duel Academy Island built in {time.time() - t0:.0f}s: {placer.count} actors."
     C.log(msg)
@@ -127,5 +135,5 @@ def build_island(import_assets=True, interactive=True):
     return True
 
 
-def rebuild_level():
-    return build_island(import_assets=False)
+def rebuild_level(interactive=True):
+    return build_island(import_assets=False, interactive=interactive)

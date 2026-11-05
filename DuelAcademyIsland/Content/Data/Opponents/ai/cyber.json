@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "cyber",
+  "label": "Cyber Dragon",
+  "strategy": "cyber",
+  "difficulty": 3,
+  "deterministic": true,
+  "aggression": 0.8,
+  "weights": {
+    "summon": 1.0,
+    "attack": 0.9,
+    "direct_attack": 0.8,
+    "removal": 0.6,
+    "equip": 0.5,
+    "set_trap": 0.7,
+    "field_spell": 0.7,
+    "fusion": 0.9,
+    "ritual": 0.2,
+    "burn": 0.1,
+    "stall": 0.1,
+    "draw": 0.4,
+    "search": 0.4,
+    "heal": 0.2,
+    "swarm": 0.5,
+    "big_monster": 0.9,
+    "machine": 0.9
+  },
+  "thresholds": {
+    "attack_into_set_atk": 1900,
+    "tribute_min_gain": 200,
+    "save_removal_for_atk": 1600,
+    "hold_trap_lp": 2500,
+    "direct_attack_when_lethal": true,
+    "respect_face_down": true
+  },
+  "preferred_card_names": [
+    "Cyber Dragon",
+    "Cyber Twin Dragon",
+    "Cyber End Dragon",
+    "Power Bond",
+    "Miracle Fusion"
+  ],
+  "avoid_card_names": [],
+  "notes": "",
+  "confidence": "medium",
+  "source": "A07 design derived from game3d engine.js runAiTurn heuristics"
+}

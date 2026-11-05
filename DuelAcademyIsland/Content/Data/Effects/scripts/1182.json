@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "card_id": 1182,
+  "name": "D.D.M. - Different Dimension Master",
+  "card_type": "Effect Monster",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Discard 1 Spell Card from your hand. Special Summon 1 of your monsters that is currently removed from play. You can only activate this effect once per turn, during your Main Phase.",
+  "notes": [
+    "Discarding a Spell is the cost; the banished monster returns in Attack Position."
+  ],
+  "scripts": [
+    {
+      "id": "1182_discard_spell_revive_banished",
+      "trigger": "manual",
+      "operations": [
+        {
+          "op": "special_summon",
+          "target": "$target",
+          "position": "attack"
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": true,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_monster",
+        "custom": "ignition_main_phase"
+      },
+      "cost": [
+        {
+          "op": "discard",
+          "target": {
+            "zone": "self_hand",
+            "count": 1,
+            "filter": {
+              "card_type": "Spell"
+            }
+          }
+        }
+      ],
+      "target": {
+        "zone": "self_banished",
+        "count": 1,
+        "filter": {
+          "card_type": "Monster"
+        }
+      },
+      "source_text": "Discard 1 Spell Card from your hand. Special Summon 1 of your monsters that is currently removed from play. You can only activate this effect once per turn, during your Main Phase."
+    }
+  ]
+}

@@ -12,7 +12,6 @@ Produces (all cached in Tools/.cache and exported to SourceAssets):
 Array convention: field[row, col]; row 0 = north edge (y = +HALF), col 0 = west edge (x = -HALF).
 """
 
-import json
 import math
 import os
 
@@ -20,10 +19,35 @@ import numpy as np
 from scipy import ndimage
 from scipy.interpolate import CubicSpline, RectBivariateSpline
 
+from . import atomic, cache
 from . import config as C
-from . import palette
+from . import jsonio, palette
 
 # --------------------------------------------------------------------------- helpers
+STAMP_NAME = "terrain_cache.json"
+
+
+def cache_stamp():
+    """Current cache-configuration stamp: shapes / scaling the cached arrays rely on."""
+    return {"field_res": int(C.FIELD_RES), "world_size": float(C.WORLD_SIZE)}
+
+
+def write_cache_stamp():
+    """Publish the stamp last, after every array cache, so a stamp proves a complete run."""
+    jsonio.write_json(os.path.join(C.CACHE_DIR, STAMP_NAME), cache_stamp(), indent=1, sort_keys=True)
+
+
+def check_cache(*required, fix="python Tools/build_island.py terrain"):
+    """Refuse (StampedCacheError) unless Tools/.cache matches this build's configuration.
+
+    Consumers of the *.npy terrain caches lived off existence checks alone: after a
+    FIELD_RES / WORLD_SIZE change or an interrupted run, layout silently mixed
+    mismatched resolutions into a finished-looking layout.json.  Runs are stamped
+    on write (see write_cache_stamp); reads refuse anything they cannot verify.
+    """
+    cache.require_stamp(C.CACHE_DIR, STAMP_NAME, cache_stamp(), required,
+                        subject="terrain caches", fix=fix)
+
 
 def smoothstep(e0, e1, x):
     t = np.clip((x - e0) / (e1 - e0), 0.0, 1.0)
@@ -539,9 +563,8 @@ class Terrain:
         tints = dict(palette.TERRAIN_LAYERS)
         info_path = os.path.join(C.CACHE_DIR, "terrain_layers.json")
         if os.path.exists(info_path):
-            with open(info_path) as fp:
-                for k, v in json.load(fp).items():
-                    tints[k] = tuple(v["mean_srgb"])
+            for k, v in jsonio.read_json(info_path).items():
+                tints[k] = tuple(v["mean_srgb"])
         rng_n = fbm(res, 25.0, 3, seed=C.SEED + 40)
         for name, w in layers.items():
             c = np.array(tints[name], np.float32)
@@ -555,34 +578,43 @@ class Terrain:
         os.makedirs(C.OUT_HEIGHTMAP, exist_ok=True)
         os.makedirs(C.CACHE_DIR, exist_ok=True)
         os.makedirs(C.OUT_DATA, exist_ok=True)
+
+        def save_npy(path, array):
+            # numpy.save appends ".npy" unless the filename already ends with it;
+            # the atomic temp path keeps the real suffix for that reason.
+            with atomic.atomic_path(path) as temp_path:
+                np.save(temp_path, array)
+
         h = self.h
         # UE Landscape heightmap (16 bit)
         v = np.clip((h - C.HEIGHT_MIN) / (C.HEIGHT_MAX - C.HEIGHT_MIN), 0, 1) * 65535.0
-        Image.fromarray(v.astype(np.uint16)).save(os.path.join(C.OUT_HEIGHTMAP, "T_IslandHeight16.png"))
+        atomic.save_image(Image.fromarray(v.astype(np.uint16)),
+                          os.path.join(C.OUT_HEIGHTMAP, "T_IslandHeight16.png"))
         # splats
         L = self.splat_layers
         def u8(a):
             return (np.clip(a, 0, 1) * 255.0 + 0.5).astype(np.uint8)
         A = np.stack([u8(L["Sand"]), u8(L["Rock"]), u8(L["Dirt"]), u8(L["Paving"])], axis=-1)
         B = np.stack([u8(L["Ash"]), u8(L["ForestFloor"]), u8(L["WetSand"]), np.full_like(u8(L["Ash"]), 255)], axis=-1)
-        Image.fromarray(A, "RGBA").save(os.path.join(C.OUT_TEXTURES, "T_TerrainSplatA.png"), optimize=True)
-        Image.fromarray(B, "RGBA").save(os.path.join(C.OUT_TEXTURES, "T_TerrainSplatB.png"), optimize=True)
+        atomic.save_image(Image.fromarray(A, "RGBA"), os.path.join(C.OUT_TEXTURES, "T_TerrainSplatA.png"), optimize=True)
+        atomic.save_image(Image.fromarray(B, "RGBA"), os.path.join(C.OUT_TEXTURES, "T_TerrainSplatB.png"), optimize=True)
         col = self.colour_map()
         col_img = Image.fromarray((col * 255).astype(np.uint8), "RGB")
-        col_img.resize((2048, 2048), Image.LANCZOS).save(os.path.join(C.OUT_TEXTURES, "T_TerrainColor.png"), optimize=True)
+        atomic.save_image(col_img.resize((2048, 2048), Image.LANCZOS),
+                          os.path.join(C.OUT_TEXTURES, "T_TerrainColor.png"), optimize=True)
         self.colour = col
-        np.save(os.path.join(C.CACHE_DIR, "height.npy"), h)
-        np.save(os.path.join(C.CACHE_DIR, "forest.npy"), self.forest)
-        np.save(os.path.join(C.CACHE_DIR, "slope.npy"), self.slope)
+        save_npy(os.path.join(C.CACHE_DIR, "height.npy"), h)
+        save_npy(os.path.join(C.CACHE_DIR, "forest.npy"), self.forest)
+        save_npy(os.path.join(C.CACHE_DIR, "slope.npy"), self.slope)
         occ = np.clip(self.path_paved_lr + self.path_dirt_lr, 0, 1)
         occ = ndimage.maximum_filter(occ, size=3)
         for key, (w, inner) in self.pad_masks.items():
             occ = np.maximum(occ, inner)
         occ = np.maximum(occ, (self.lake_q < 1.04).astype(np.float32))
-        np.save(os.path.join(C.CACHE_DIR, "occupied.npy"), occ.astype(np.float32))
-        np.save(os.path.join(C.CACHE_DIR, "d_in.npy"), self.d_in.astype(np.float32))
-        with open(os.path.join(C.CACHE_DIR, "terrain_info.json"), "w") as fp:
-            json.dump(dict(info=self.info, paths=self.paths), fp)
+        save_npy(os.path.join(C.CACHE_DIR, "occupied.npy"), occ.astype(np.float32))
+        save_npy(os.path.join(C.CACHE_DIR, "d_in.npy"), self.d_in.astype(np.float32))
+        jsonio.write_json(os.path.join(C.CACHE_DIR, "terrain_info.json"), dict(info=self.info, paths=self.paths))
+        write_cache_stamp()
         log("  saved heightmap, splats, colour map, caches")
 
     def minimap(self, size=2048):
@@ -625,16 +657,21 @@ def build_terrain(log=print):
 
 
 def load_cached():
-    """Lightweight access for later stages (layout) without regenerating."""
+    """Lightweight access for later stages (layout) without regenerating.
+
+    Raises cache.StampedCacheError when the caches are missing / partial / were
+    written with a different FIELD_RES / WORLD_SIZE (see check_cache).
+    """
+    check_cache("height.npy", "forest.npy", "slope.npy", "terrain_info.json")
     h = np.load(os.path.join(C.CACHE_DIR, "height.npy"))
     forest = np.load(os.path.join(C.CACHE_DIR, "forest.npy"))
     slope = np.load(os.path.join(C.CACHE_DIR, "slope.npy"))
-    with open(os.path.join(C.CACHE_DIR, "terrain_info.json")) as fp:
-        meta = json.load(fp)
+    meta = jsonio.read_json(os.path.join(C.CACHE_DIR, "terrain_info.json"))
     return Field(h), Field(forest), Field(slope), meta
 
 
 def load_extra():
+    check_cache("occupied.npy", "d_in.npy")
     occ = np.load(os.path.join(C.CACHE_DIR, "occupied.npy"))
     d_in = np.load(os.path.join(C.CACHE_DIR, "d_in.npy"))
     return Field(occ), Field(d_in)

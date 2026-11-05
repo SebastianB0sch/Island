@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 653,
+  "name": "Reinforcement of the Army",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Move 1 Level 4 or lower Warrior-Type monster from your Deck to your hand. Your Deck is then shuffled.",
+  "notes": [
+    "Searches a Level 4 or lower Warrior."
+  ],
+  "scripts": [
+    {
+      "id": "653_search_warrior",
+      "trigger": "on_activate",
+      "operations": [
+        {
+          "op": "search",
+          "target": "$target",
+          "destination": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "duration": "instant",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "target": {
+        "zone": "self_deck",
+        "count": 1,
+        "filter": {
+          "all": [
+            {
+              "card_type": "Monster"
+            },
+            {
+              "monster_type": "Warrior"
+            },
+            {
+              "level_max": 4
+            }
+          ]
+        }
+      },
+      "source_text": "Move 1 Level 4 or lower Warrior-Type monster from your Deck to your hand. Your Deck is then shuffled."
+    }
+  ]
+}

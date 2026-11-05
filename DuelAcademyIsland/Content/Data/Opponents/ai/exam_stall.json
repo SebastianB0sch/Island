@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "exam_stall",
+  "label": "Exam Stall",
+  "strategy": "exam_stall",
+  "difficulty": 1,
+  "deterministic": true,
+  "aggression": 0.05,
+  "weights": {
+    "summon": 1.0,
+    "attack": 0.05,
+    "direct_attack": 0.8,
+    "removal": 0.6,
+    "equip": 0.5,
+    "set_trap": 1.0,
+    "field_spell": 0.7,
+    "fusion": 0.3,
+    "ritual": 0.2,
+    "burn": 0.1,
+    "stall": 1.0,
+    "draw": 0.4,
+    "search": 0.4,
+    "heal": 0.2,
+    "swarm": 0.5,
+    "big_monster": 0.6,
+    "defense": 1.0
+  },
+  "thresholds": {
+    "attack_into_set_atk": 1900,
+    "tribute_min_gain": 200,
+    "save_removal_for_atk": 1600,
+    "hold_trap_lp": 2500,
+    "direct_attack_when_lethal": true,
+    "respect_face_down": true
+  },
+  "preferred_card_names": [
+    "Messenger of Peace",
+    "Gravity Bind",
+    "Swords of Revealing Light",
+    "Solemn Wishes",
+    "Fairy Box",
+    "Morphing Jar"
+  ],
+  "avoid_card_names": [],
+  "notes": "Mimicry exam deck: never rushes lethal; stalls to let the player demonstrate objectives.",
+  "confidence": "medium",
+  "source": "A07 design derived from game3d engine.js runAiTurn heuristics"
+}

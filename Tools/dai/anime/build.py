@@ -4,23 +4,29 @@ SK_Anime_<Name> mesh per cast member (+ the duel disk attachment), the face text
 Data/cast.json for the Unreal importer. Also annotates layout.json's NPC markers with who stands
 where (cast.assign_npcs).
 
+Idle / Walk / Run come from the biomechanical gait solver (gait.py, foot-planting IK and a build-
+time contact check); the other takes are retargeted CC0 clips or hand-authored poses. Every member
+of a skeleton group is exported on one union armature (all hair / outfit helper bones merged), so
+Unreal's shared Skeleton imports without a "regenerate skeleton" merge.
+
     python Tools/build_island.py cast             # build + export the cast
     python Tools/preview_anime.py [ids...]          # Cycles lineup render
 """
 
-import json
 import os
 
 import bpy
 
 from .. import config as C
-from .. import palette, thirdparty
+from .. import jsonio, palette, thirdparty
 from ..character import export_skeletal
 from . import body as B
 from . import cast as CAST
 from . import face as FACE
+from . import gait as GAIT
 from . import hair as HAIR
 from . import head as HEAD
+from . import manifest as MANIFEST
 from . import models as M
 from . import retarget as RT
 from . import skeleton as S
@@ -30,33 +36,42 @@ OUT_REL = "Meshes/Characters/Anime"
 TEX_REL = "Characters"
 OUTLINE_COLOR = (0.09, 0.06, 0.07)
 
-# Authored takes (world-space aims, see retarget.pose_action) -------------------------------------
-_ARM_DOWN = {"upperarm_l": {"aim": (0.35, 0.05, -1)}, "upperarm_r": {"aim": (-0.35, 0.05, -1)},
-             "lowerarm_l": {"aim": (0.25, -0.15, -1)}, "lowerarm_r": {"aim": (-0.25, -0.15, -1)}}
+# Authored takes (joint-space directions, see retarget.pose_action) --------------------------------
+def _seg(rig, bone, target, rest_bone=None):
+    """Pose offset that aims a limb segment (works on VRoid bones whose displayed tails point up)."""
+    if rig is None:
+        return {"aim": target}
+    return {"seg": target, "rest": tuple(rig.seg[rest_bone or bone])}
 
 
-def _duel_keys():
+def _duel_keys(rig=None):
     """Duel stance: disk arm across the chest, card hand raised, slight crouch; gentle breathing loop."""
+    if rig is not None and not isinstance(rig, GAIT.Rig):
+        rig = GAIT.Rig(rig)
     keys = []
     for f, br in ((0, 0.0), (30, 1.0), (60, 0.0)):
         keys.append((f, {
             "_pelvis_offset": (0.0, 0.0, -0.012 - 0.004 * br),
             "spine_01": (4 + 2 * br, 0, 6), "spine_03": (2 - 1.5 * br, 0, 8),
             "head": (-2 + 2 * br, 0, -10),
-            "upperarm_l": {"aim": (0.55, -0.75, -0.35), "roll": -10},
-            "lowerarm_l": {"aim": (-0.75, -0.62, 0.08), "roll": -15},
-            "hand_l": {"aim": (-0.8, -0.55, 0.0)},
-            "upperarm_r": {"aim": (-0.45, -0.55, 0.15 + 0.03 * br)},
-            "lowerarm_r": {"aim": (-0.05, -0.45, 0.9)},
-            "hand_r": {"aim": (0.0, -0.3, 1.0)},
-            "thigh_l": {"aim": (0.18, -0.12, -1)}, "thigh_r": {"aim": (-0.18, 0.1, -1)},
-            "calf_l": {"aim": (0.12, 0.05, -1)}, "calf_r": {"aim": (-0.12, 0.08, -1)},
+            "upperarm_l": _seg(rig, "upperarm_l", (0.55, -0.75, -0.35)),
+            "lowerarm_l": _seg(rig, "lowerarm_l", (-0.75, -0.62, 0.08)),
+            "hand_l": _seg(rig, "hand_l", (-0.8, -0.55, 0.0), "lowerarm_l"),
+            "upperarm_r": _seg(rig, "upperarm_r", (-0.45, -0.55, 0.15 + 0.03 * br)),
+            "lowerarm_r": _seg(rig, "lowerarm_r", (-0.05, -0.45, 0.9)),
+            "hand_r": _seg(rig, "hand_r", (0.0, -0.3, 1.0), "lowerarm_r"),
+            "thigh_l": _seg(rig, "thigh_l", (0.18, -0.12, -1)),
+            "thigh_r": _seg(rig, "thigh_r", (-0.18, 0.1, -1)),
+            "calf_l": _seg(rig, "calf_l", (0.12, 0.05, -1)),
+            "calf_r": _seg(rig, "calf_r", (-0.12, 0.08, -1)),
         }))
     return keys
 
 
-def _swim_keys():
+def _swim_keys(rig=None):
     """Front crawl, authored upright (the avatar component pitches the body forward in the water)."""
+    if rig is not None and not isinstance(rig, GAIT.Rig):
+        rig = GAIT.Rig(rig)
     import math
     keys = []
     for k in range(9):
@@ -66,8 +81,10 @@ def _swim_keys():
         aim_r = (-0.28, -math.sin(a + math.pi) * 0.9, math.cos(a + math.pi))
         kick = 14 * math.sin(a * 3)
         keys.append((f, {
-            "upperarm_l": {"aim": aim_l}, "upperarm_r": {"aim": aim_r},
-            "lowerarm_l": {"aim": aim_l}, "lowerarm_r": {"aim": aim_r},
+            "upperarm_l": _seg(rig, "upperarm_l", aim_l),
+            "upperarm_r": _seg(rig, "upperarm_r", aim_r),
+            "lowerarm_l": _seg(rig, "lowerarm_l", aim_l),
+            "lowerarm_r": _seg(rig, "lowerarm_r", aim_r),
             "thigh_l": (kick, 0, 0), "thigh_r": (-kick, 0, 0),
             "head": (0, 0, 12 * math.sin(a)),
         }))
@@ -76,12 +93,18 @@ def _swim_keys():
 
 # state -> (source registry key | None for authored, take, loop)
 TAKES = [
-    ("Idle", "A_Anime_Idle", True), ("Walk", "A_Anime_Walk", True), ("Run", "A_Anime_Run", True),
     ("Jump", "A_Anime_Jump", False), ("Fall", "A_Anime_Fall", True), ("Land", "A_Anime_Land", False),
     ("Wave", "A_Anime_Wave", False), ("Yes", "A_Anime_Yes", False), ("No", "A_Anime_No", False),
     ("Sit", "A_Anime_Sit", True), ("Clap", "A_Anime_Clap", False), ("Interact", "A_Anime_Interact", False),
 ]
-AUTHORED = {"Duel": (_duel_keys, True), "Swim": (_swim_keys, True)}
+# state -> (key generator, loop, authored ground speed in cm/s or None)
+AUTHORED = {
+    "Idle": (GAIT.idle_keys, True, 0.0),
+    "Walk": (GAIT.walk_keys, True, GAIT.WALK.speed * 100.0),
+    "Run": (GAIT.run_keys, True, GAIT.RUN.speed * 100.0),
+    "Duel": (_duel_keys, True, None),
+    "Swim": (_swim_keys, True, None),
+}
 
 
 def key_name(cid):
@@ -161,12 +184,13 @@ def preview_material(name):
     col = nt.nodes.new("ShaderNodeRGB")
     col.outputs[0].default_value = (*lin, 1.0)
     src = col.outputs[0]
+    tex = None
     if spec.get("base"):
         img_path = os.path.join(C.OUT_TEXTURES, spec["base"] + ".png")
         tex = nt.nodes.new("ShaderNodeTexImage")
         tex.image = bpy.data.images.load(img_path, check_existing=True)
         src = tex.outputs["Color"]
-    alpha = tex.outputs["Alpha"] if spec.get("base") and spec.get("masked") else None
+    alpha = tex.outputs["Alpha"] if tex is not None and spec.get("masked") else None
     toon = nt.nodes.new("ShaderNodeBsdfToon")
     toon.component = "DIFFUSE"
     toon.inputs["Size"].default_value = 0.85
@@ -226,7 +250,7 @@ def build_disk(arm, name="SK_Anime_DuelDisk"):
 
 
 def bake_takes(arm, log=print):
-    """All animation takes onto `arm`. Returns {state: (action, loop)}."""
+    """All animation takes onto `arm`. Returns {state: (action, loop, speed)}."""
     reg = thirdparty.registry().get("anime", {})
     sources = {}
     out = {}
@@ -240,11 +264,15 @@ def bake_takes(arm, log=print):
             sources[path] = RT.Source(path)
         rng = tuple(spec["frames"]) if spec.get("frames") else None
         out[state] = (RT.bake(sources[path], spec["take"], arm, reg_key, frames=rng, speed=spec.get("speed", 1.0),
-                              arm_drop=spec.get("arm_drop", 0.0)), loop)
+                              arm_drop=spec.get("arm_drop", 0.0)), loop, None)
     for src in sources.values():
         src.remove()
-    for state, (fn, loop) in AUTHORED.items():
-        out[state] = (RT.pose_action(arm, f"A_Anime_{state}", fn()), loop)
+    for state, (fn, loop, speed) in AUTHORED.items():
+        act = RT.pose_action(arm, f"A_Anime_{state}", fn(arm))
+        if state in ("Walk", "Run"):
+            metrics = GAIT.validate(arm, act, GAIT.WALK if state == "Walk" else GAIT.RUN, log)
+            speed = metrics["speed"] * 100.0
+        out[state] = (act, loop, speed)
     RT._assign(arm, None)
     return out
 
@@ -271,16 +299,17 @@ def _export_takes(arm, group, out_dir, log):
     scene = bpy.context.scene
     takes = bake_takes(arm, log)
     anims = {}
-    for state, (act, loop) in takes.items():
+    for state, (act, loop, speed) in takes.items():
         RT._assign(arm, act)
         f0, f1 = (int(round(v)) for v in act.frame_range)
         scene.frame_start, scene.frame_end = f0, max(f1, f0 + 1)
         name = f"A_Anime_{group}_{state}"
-        export_skeletal([arm], arm, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE"}, anim=act, simplify=1.0)
+        export_skeletal([arm], arm, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE"}, anim=act, simplify=1.0,
+                        deform_only=False)
         entry = dict(name=name, file=f"{OUT_REL}/{name}.fbx", loop=loop,
                      seconds=round((f1 - f0) / scene.render.fps, 3))
         if state in ("Walk", "Run"):
-            entry["speed"] = _ground_speed(arm, act)
+            entry["speed"] = round(speed if speed else _ground_speed(arm, act), 1)
         anims[state] = entry
     RT._assign(arm, None)
     log(f"  anime: {group}: {len(takes)} takes, walk {anims.get('Walk', {}).get('speed')} cm/s, "
@@ -293,15 +322,166 @@ def _disk_bones(arm):
     return tuple(b.head_local), tuple(b.tail_local)
 
 
+def _merge_rig(base, arm, mesh, log=print):
+    """Add the bones `arm` uses that `base` lacks, then rebind `mesh` to `base`.
+
+    Each cast member is built from the same base model but restyling can keep or remove hair /
+    outfit helper bones. Exporting every member with one union armature keeps Unreal's shared
+    Skeleton complete, so importing a member can never trigger a "regenerate the skeleton"
+    merge (which invalidates the meshes and takes already imported).
+    """
+    if base is arm:
+        return
+    order = []
+    def walk(bone):
+        order.append(bone)
+        for child in bone.children:
+            walk(child)
+    for bone in arm.data.bones:
+        if bone.parent is None:
+            walk(bone)
+
+    for o in bpy.context.scene.objects:
+        o.select_set(False)
+    base.select_set(True)
+    bpy.context.view_layer.objects.active = base
+    bpy.ops.object.mode_set(mode="EDIT")
+    eb = base.data.edit_bones
+    for bone in order:
+        if bone.name in eb:
+            current = eb[bone.name]
+            if (current.head - bone.head_local).length > 1e-4 or (current.tail - bone.tail_local).length > 1e-4:
+                log(f"  anime: helper bone {bone.name} differs between cast members; keeping the first rest pose")
+            continue
+        nb = eb.new(bone.name)
+        nb.head = bone.head_local
+        nb.tail = bone.tail_local
+        try:
+            nb.align_roll(bone.z_axis)
+        except Exception:  # noqa: BLE001
+            nb.roll = bone.roll
+        nb.use_deform = bone.use_deform
+        nb.use_connect = False
+        if bone.parent is not None and bone.parent.name in eb:
+            nb.parent = eb[bone.parent.name]
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    for mod in mesh.modifiers:
+        if mod.type == "ARMATURE":
+            mod.object = base
+    world = mesh.matrix_world.copy()
+    mesh.parent = base
+    mesh.matrix_parent_inverse.identity()
+    mesh.matrix_world = world
+
+
+def _cast_output_files(info):
+    """Manifest FBX paths (relative to SourceAssets) for one cast.json document."""
+    files = set()
+
+    def add(rel):
+        if isinstance(rel, str) and rel:
+            files.add(rel.replace("\\", "/"))
+
+    for entry in (info.get("meshes") or {}).values():
+        if isinstance(entry, dict):
+            add(entry.get("file"))
+    for group in (info.get("groups") or {}).values():
+        if not isinstance(group, dict):
+            continue
+        for key in ("base_mesh", "duel_disk"):
+            item = group.get(key) or {}
+            if isinstance(item, dict):
+                add(item.get("file"))
+        for anim in (group.get("anims") or {}).values():
+            if isinstance(anim, dict):
+                add(anim.get("file"))
+    return files
+
+
+def _cast_output_textures(info):
+    """Texture paths (relative to SourceAssets/Textures) referenced by the cast materials."""
+    textures = set()
+    for spec in (info.get("materials") or {}).values():
+        base = spec.get("base") if isinstance(spec, dict) else None
+        if isinstance(base, str) and base.startswith(TEX_REL + "/"):
+            textures.add(base + ".png")
+    return textures
+
+
+def _remove_generated(root, rel, prefix):
+    """Delete one generated file only if it stays under root and its prefix."""
+    rel = rel.replace("\\", "/")
+    if not rel.startswith(prefix):
+        return False
+    path = os.path.realpath(os.path.join(root, *rel.split("/")))
+    root_real = os.path.realpath(root)
+    try:
+        if os.path.commonpath((root_real, path)) != root_real:
+            return False
+    except ValueError:
+        return False
+    if not os.path.isfile(path):
+        return False
+    os.remove(path)
+    return True
+
+
+def _prune_previous_outputs(old_info, new_info, log):
+    """Remove files the previous cast.json owned but the new manifest no longer does.
+
+    This runs only after the new cast.json has been written atomically, so an
+    interrupted export leaves the previous manifests and meshes usable.  It is
+    skipped for a partial (``only=...``) build: build() merges the rebuilt
+    subset into the previous manifest (see merge_partial_manifests), so the
+    published cast.json still lists the untouched members that keep their
+    exported files - pruning here would delete referenced assets.  Members
+    removed from the cast registry are dropped by the next full build.
+    """
+    if not isinstance(old_info, dict):
+        return 0
+    removed = 0
+    for rel in sorted(_cast_output_files(old_info) - _cast_output_files(new_info)):
+        try:
+            removed += _remove_generated(C.OUT_DIR, rel, OUT_REL + "/")
+        except OSError as exc:
+            log(f"  !! anime: could not remove stale {rel}: {exc}")
+    for rel in sorted(_cast_output_textures(old_info) - _cast_output_textures(new_info)):
+        try:
+            removed += _remove_generated(C.OUT_TEXTURES, rel, TEX_REL + "/")
+        except OSError as exc:
+            log(f"  !! anime: could not remove stale {rel}: {exc}")
+    if removed:
+        log(f"  anime: removed {removed} stale generated file(s)")
+    return removed
+
+
 def build(log=print, only=None):
     """Every cast member, grouped by skeleton: all members built on the same base model (or the procedural
-    fallback rig) share one skeleton, one set of A_Anime_<Group>_<State> takes and one duel disk."""
-    import shutil
+    fallback rig) share one skeleton, one set of A_Anime_<Group>_<State> takes and one duel disk.
+
+    With ``only`` (a list of cast ids) only those members (plus the player) are rebuilt, but the
+    published cast.json still describes the whole cast: the rebuilt ``groups`` / ``meshes`` /
+    ``materials`` entries overwrite their previous ones and the untouched members keep theirs
+    (merge_partial_manifests), so the importer's stale-cast cleanup never deletes assets that are
+    still on disk and still in the manifest.  A partial build also skips stale-file pruning for the
+    same reason."""
     from .. import blend
     out_dir = os.path.join(C.OUT_DIR, OUT_REL)
-    for d in (out_dir, os.path.join(C.OUT_TEXTURES, TEX_REL)):      # fully generated: start clean
-        shutil.rmtree(d, ignore_errors=True)
     os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(os.path.join(C.OUT_TEXTURES, TEX_REL), exist_ok=True)
+    # Keep the previous manifest until the new one is complete: the individual
+    # FBX/PNG writers are atomic, and stale files are pruned below only after
+    # cast.json has been replaced.
+    old_info = None
+    old_info_error = None
+    cast_path = os.path.join(C.OUT_DATA, "cast.json")
+    if os.path.exists(cast_path):
+        try:
+            old_info = jsonio.read_json(cast_path)
+        except (OSError, ValueError) as exc:
+            old_info_error = exc
+            log(f"  !! anime: previous cast.json unreadable ({exc}); stale files will not be pruned")
     entries = CAST.all_entries()
     order = [CAST.PLAYER] + [c for c in entries if c != CAST.PLAYER]
     if only:
@@ -318,45 +498,69 @@ def build(log=print, only=None):
         bpy.context.scene.render.fps = 30
         if group == PROCEDURAL:
             arm = S.create("root")
+            built = []
+            for cid in cids:
+                built.append((cid, arm, build_character(cid, entries[cid], arm)))
         else:
-            arm, first = M.build_model(cids[0], entries[cids[0]], key_name, log)
-            bpy.data.objects.remove(first, do_unlink=True)
+            # Build every member once, then merge their helper bones into the first member's
+            # armature and export all meshes on that one union skeleton.
+            built = []
+            for cid in cids:
+                a, obj = M.build_model(cid, entries[cid], key_name, log)
+                built.append((cid, a, obj))
+            arm = built[0][1]
+            for cid, a, obj in built[1:]:
+                _merge_rig(arm, a, obj, log)
+                bpy.data.objects.remove(a, do_unlink=True)
         g = dict(skeleton_mesh=None, anims=_export_takes(arm, group, out_dir, log))
         disk = build_disk(arm, f"SK_Anime_{group}_DuelDisk")
-        export_skeletal([arm, disk], arm, os.path.join(out_dir, disk.name + ".fbx"), {"ARMATURE", "MESH"})
+        export_skeletal([arm, disk], arm, os.path.join(out_dir, disk.name + ".fbx"), {"ARMATURE", "MESH"},
+                        deform_only=False)
         g["duel_disk"] = dict(name=disk.name, file=f"{OUT_REL}/{disk.name}.fbx",
                               materials=[s.material.name for s in disk.material_slots if s.material])
         used.update(g["duel_disk"]["materials"])
         bpy.data.objects.remove(disk, do_unlink=True)
-        for cid in cids:
+        for cid, a, obj in built:
             e = entries[cid]
-            if group == PROCEDURAL:
-                a, obj = arm, build_character(cid, e, arm)
-            else:
-                a, obj = M.build_model(cid, e, key_name, log)
             name = obj.name
             mats = [s.material.name for s in obj.material_slots if s.material]
             used.update(mats)
             entry = dict(name=name, group=group, display=e["name"], dorm=e["dorm"], scale=e.get("scale", 1.0),
                          tint=e.get("tint", []), female=bool(e.get("body", {}).get("female")), materials=mats)
-            # every member is tailored / restyled individually: one FBX each, all on the group's skeleton (the
-            # first member's import creates it in Unreal, the others and the takes reuse it)
-            export_skeletal([a, obj], a, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE", "MESH"})
+            # every member is tailored / restyled individually: one FBX each, all on the group's
+            # union skeleton (the first member's import creates it in Unreal, all others reuse it)
+            export_skeletal([arm, obj], arm, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE", "MESH"},
+                            deform_only=False)
             entry["file"] = f"{OUT_REL}/{name}.fbx"
             info["meshes"][cid] = entry
             g["skeleton_mesh"] = g["skeleton_mesh"] or name
             log(f"  anime: {name:24s} [{group}] {K.tri_count(obj):6d} tris, {len(mats)} materials")
             bpy.data.objects.remove(obj, do_unlink=True)
-            if a is not arm:
-                bpy.data.objects.remove(a, do_unlink=True)
         info["groups"][group] = g
     mats = palette.material_json()
     info["materials"] = {k: mats[k] for k in sorted(used) if k in mats}
+    # A partial build publishes the FULL manifest (rebuilt subset merged into the
+    # previous document); publishing the subset alone would tell the importer
+    # that every untouched member no longer exists and make it delete those
+    # assets on the next import.
+    if only is not None and old_info is None and old_info_error is not None:
+        raise RuntimeError(
+            f"partial cast build could not read the previous cast.json ({old_info_error}); "
+            "the rebuilt subset alone would describe less of the cast than the importer expects - "
+            "run a full build (python Tools/build_island.py cast) to republish the whole manifest")
+    published = info if only is None else MANIFEST.merge_partial_manifests(old_info, info)
+    if only is not None and not isinstance(old_info, dict):
+        log("  !! anime: no previous cast.json to merge the partial build into; "
+            "the published manifest only covers its rebuilt members")
     os.makedirs(C.OUT_DATA, exist_ok=True)
-    with open(os.path.join(C.OUT_DATA, "cast.json"), "w") as fp:
-        json.dump(info, fp, indent=1)
+    jsonio.write_json(cast_path, published, indent=1)
+    if only is None:
+        try:
+            _prune_previous_outputs(old_info, info, log)
+        except Exception as exc:  # noqa: BLE001 - cleanup must not fail a successful export
+            log(f"  !! anime: stale-file cleanup failed ({exc}); files left in place")
     annotate_layout(log)
-    return info
+    return published
 
 
 def annotate_layout(log=print):
@@ -364,12 +568,10 @@ def annotate_layout(log=print):
     path = os.path.join(C.OUT_DATA, "layout.json")
     if not os.path.exists(path):
         return
-    with open(path) as fp:
-        layout = json.load(fp)
+    layout = jsonio.read_json(path)
     CAST.assign_npcs(layout.get("npcs", []))
-    with open(path, "w") as fp:
-        json.dump(layout, fp, separators=(",", ":"))
-    named = [n["cast"] for n in layout.get("npcs", []) if not n.get("tint", True)]
+    jsonio.write_json(path, layout, separators=(",", ":"))
+    named = [n["cast"] for n in layout.get("npcs", []) if n.get("cast") and not n.get("tint", True)]
     log(f"  anime: layout.json npcs cast ({len(named)} named: {', '.join(named)})")
 
 
@@ -388,8 +590,11 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
     src_key = dict((s, k) for s, k, _ in TAKES).get(state)
     src = spec = None
     if src_key:
-        spec = thirdparty.registry()["anime"][src_key]
-        src = RT.Source(thirdparty.tp_path(spec["file"]))
+        spec = thirdparty.registry().get("anime", {}).get(src_key)
+        if spec is not None:
+            src = RT.Source(thirdparty.tp_path(spec["file"]))
+        else:
+            log(f"  !! anime: no source registered for {src_key}; rendering the rest pose")
     shared = None
     spacing = 0.85
     for i, cid in enumerate(ids):
@@ -409,7 +614,7 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
         if src is not None:
             act = RT.bake(src, spec["take"], a, f"{src_key}_{cid}", arm_drop=spec.get("arm_drop", 0.0))
         elif state in AUTHORED:
-            act = RT.pose_action(a, f"pose_{cid}", AUTHORED[state][0]())
+            act = RT.pose_action(a, f"pose_{cid}", AUTHORED[state][0](a))
         RT._assign(a, act)
         sc = e.get("scale", 1.0)
         a.location = ((i - (len(ids) - 1) / 2) * spacing, 0.0, 0.0)

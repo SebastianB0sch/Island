@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "card_id": 429,
+  "name": "Chorus of Sanctuary",
+  "card_type": "Spell",
+  "tier": 2,
+  "status": "scripted",
+  "source_text": "Increases the DEF of all Defense Position monsters by 500 points.",
+  "notes": [
+    "+500 DEF to face-up Defense Position monsters."
+  ],
+  "scripts": [
+    {
+      "id": "429_field_stat",
+      "trigger": "field_continuous",
+      "operations": [
+        {
+          "op": "modify_def",
+          "target": {
+            "zone": "all_monsters",
+            "count": "all",
+            "filter": {
+              "all": [
+                {
+                  "position": "defense"
+                },
+                {
+                  "face_up": true
+                }
+              ]
+            }
+          },
+          "amount": 500,
+          "mode": "flat"
+        }
+      ],
+      "duration": "while_face_up",
+      "optional": false,
+      "spell_speed": 1,
+      "once_per_turn": false,
+      "condition": {
+        "controller": "self",
+        "face_up": true,
+        "zone": "self_field"
+      },
+      "source_text": "+500 DEF to face-up Defense Position monsters."
+    }
+  ]
+}

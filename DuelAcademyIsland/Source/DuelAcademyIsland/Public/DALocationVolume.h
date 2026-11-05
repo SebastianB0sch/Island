@@ -69,7 +69,11 @@ public:
 	bool IsSubLocation() const { return !ParentId.IsEmpty(); }
 
 	bool ContainsPoint(const FVector& WorldPoint) const;
-	double GetZoneVolume() const { return ZoneExtent.X * ZoneExtent.Y * ZoneExtent.Z; }
+	/** Absolute volume; a negative authored extent must not win the smallest-zone test. */
+	double GetZoneVolume() const
+	{
+		return FMath::Abs(static_cast<double>(ZoneExtent.X) * ZoneExtent.Y * ZoneExtent.Z);
+	}
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Duel Academy")
