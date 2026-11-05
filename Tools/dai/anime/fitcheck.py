@@ -44,6 +44,9 @@ POSES = {
     "Talk": (0.25, 0.75),
 }
 
+FOLD_DOT = -0.3      # a triangle whose normal points against its neighbours' (cloth folded through itself)
+TEAR_RATIO = 2.5     # an edge stretched beyond this many times its rest length (cloth torn open)
+
 # budgets: poking vertices allowed per pose (a few at grazing seams are invisible) and depth in mm
 BUDGET_COUNT = 12
 BUDGET_DEPTH = 4.0
@@ -287,15 +290,21 @@ def audit(obj, arm, poses, log=print):
                 # exact projection there, a little slack between neighbouring triangles elsewhere
                 slack = np.array([0.0 if tri_key.get(tuple(t), False) else 0.15 for t in tri_of.tolist()])
                 anchors[(inner, outer)] = (iv[keep], tri_of, bary, slack)
-    result = {}
+    surfaces = {g: _Surface([faces_all[fi] for fi in groups[g]], co) for g in outers}
+    rest_fold = {g: srf.check(co)[0] for g, srf in surfaces.items()}
+    result = {"Rest": dict(poke={}, depth=0.0, fold=sum(rest_fold.values()), tear=0)}
     for pose, act, frames in poses:
         RT._assign(arm, act)
         worst = 0.0
         pairs = {}
+        fold = tear = 0
         for fr in frames:
             scene.frame_set(fr)
             correctives.apply(obj, arm)          # the thigh-driven corrective morphs, as Unreal drives them
             co, _ = _evaluated(obj)
+            for g, srf in surfaces.items():
+                f_, t_ = srf.check(co)
+                fold, tear = max(fold, f_ - rest_fold[g] if f_ > rest_fold[g] else 0), max(tear, t_)
             for (inner, outer), (idx, tri_of, bary, slack) in anchors.items():
                 h = _heights(co, idx, tri_of, bary, slack)
                 bad = h > EPS
@@ -303,12 +312,38 @@ def audit(obj, arm, poses, log=print):
                     k = f"{inner}>{outer}"
                     pairs[k] = max(pairs.get(k, 0), int(bad.sum()))
                     worst = max(worst, float(h[bad].max()) * 1000.0)
-        result[pose] = dict(poke=pairs, depth=round(worst, 1))
+        result[pose] = dict(poke=pairs, depth=round(worst, 1), fold=fold, tear=tear)
     RT._assign(arm, None)
     covered = {}
     for (inner, _), (idx, _, _, _) in anchors.items():
         covered.setdefault(inner, set()).update(int(i) for i in idx)
     return result, _intended_open(obj, groups, covered)
+
+
+class _Surface:
+    """Triangles and edge adjacency of one garment, for the fold / tear checks."""
+
+    def __init__(self, faces, rest):
+        self.tris = _tris(faces)
+        edge_tris = {}
+        for ti, (a, b, c) in enumerate(self.tris):
+            for x, y in ((a, b), (b, c), (c, a)):
+                edge_tris.setdefault((min(x, y), max(x, y)), []).append(ti)
+        self.pairs = np.array([t for t in edge_tris.values() if len(t) == 2], np.int64).reshape(-1, 2)
+        self.edges = np.array(list(edge_tris), np.int64).reshape(-1, 2)
+        self.rest_len = np.linalg.norm(rest[self.edges[:, 0]] - rest[self.edges[:, 1]], axis=1)
+
+    def check(self, co):
+        """(folded triangle pairs, torn edges) in the given vertex positions."""
+        a, b, c = co[self.tris[:, 0]], co[self.tris[:, 1]], co[self.tris[:, 2]]
+        n = np.cross(b - a, c - a)
+        n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-12)
+        fold = 0
+        if len(self.pairs):
+            fold = int((np.einsum("ij,ij->i", n[self.pairs[:, 0]], n[self.pairs[:, 1]]) < FOLD_DOT).sum())
+        ln = np.linalg.norm(co[self.edges[:, 0]] - co[self.edges[:, 1]], axis=1)
+        tear = int((ln > TEAR_RATIO * np.maximum(self.rest_len, 1e-4)).sum())
+        return fold, tear
 
 
 def _relax_anchors(rest, groups, faces_all, verts_of, outers):
@@ -516,7 +551,8 @@ def over_budget(rep):
     bad = []
     for pose, r in rep["poses"].items():
         n = max(r["poke"].values()) if r["poke"] else 0
-        if n > BUDGET_COUNT or r["depth"] > BUDGET_DEPTH:
+        new_folds = r.get("fold", 0) if pose != "Rest" else 0     # rest creases (collar walls, hem bands) are design
+        if n > BUDGET_COUNT or r["depth"] > BUDGET_DEPTH or new_folds or r.get("tear", 0):
             bad.append(pose)
     return bad
 
@@ -525,7 +561,8 @@ def summary_line(cid, rep):
     parts = []
     for pose, r in rep["poses"].items():
         n = sum(r["poke"].values())
-        parts.append(f"{pose} {n}/{r['depth']}mm")
+        extra = "".join(f" {k} {r[k]}" for k in ("fold", "tear") if r.get(k))
+        parts.append(f"{pose} {n}/{r['depth']}mm{extra}" if pose != "Rest" else f"Rest{extra or ' ok'}")
     holes = sum(rep["holes"].values())
     bad = over_budget(rep)
     tag = "OK  " if not bad and not holes else "FAIL"
