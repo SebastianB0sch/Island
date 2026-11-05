@@ -21,9 +21,10 @@ def main():
     ap.add_argument("--poses", default=None, help="comma list of Idle,Walk,Run,Duel,Sit,Talk")
     ap.add_argument("--json", default=None)
     ap.add_argument("-v", action="store_true", help="print the poking layer pairs per pose")
+    ap.add_argument("--dense", action="store_true", help="every other frame of every take instead of key frames")
     a = ap.parse_args()
     from dai.anime import fitcheck as F
-    rep = F.fit_report(a.ids or None, a.poses.split(",") if a.poses else None)
+    rep = F.fit_report(a.ids or None, a.poses.split(",") if a.poses else None, dense=a.dense)
     if a.v:
         for cid, r in rep.items():
             for pose, p in r["poses"].items():

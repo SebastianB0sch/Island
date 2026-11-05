@@ -94,6 +94,31 @@ class Welded:
         return acc / np.maximum(ln, 1e-12)
 
 
+SPIKE = 0.012          # a cloth vertex this far off the average of its neighbours is an artefact, not a fold
+
+
+def _despike(w, mask, limit=SPIKE, passes=6):
+    """Pull isolated outliers (a vertex a few cm in front of its neighbours) back onto their neighbourhood.
+    Fabric cannot hold a fold that sharp; whatever pushed it there (a hull ray, a collision) is undone."""
+    fixed = 0
+    for _ in range(passes):
+        moved = 0
+        new = w.co.copy()
+        for i in np.nonzero(mask)[0]:
+            nb = w.bnbr[i] if w.boundary[i] else w.nbr[i]
+            if len(nb) < 2:
+                continue
+            m = w.co[nb].mean(0)
+            if np.linalg.norm(w.co[i] - m) > limit:
+                new[i] = m
+                moved += 1
+        w.co = new
+        fixed += moved
+        if not moved:
+            break
+    return fixed
+
+
 def _taubin(w, mask, steps=4, lam=0.5, mu=-0.53):
     """Shrink-free smoothing of the welded positions where mask is True. Open-edge vertices are smoothed
     along their edge only (a 1D smoothing of the hem / cuff / front line), so the edge stays a clean curve
@@ -297,13 +322,30 @@ class Drape:
         # torso centre line (front/back middle) per height, from the skin
         sk = self.layer_pts[np.abs(self.layer_pts[:, 0]) < r.shoulder_x]
         zs = np.arange(r.crotch - 0.05, r.neck + 0.05, 0.01)
-        cy = []
+        # the centre line must be smooth: a slice that misses part of the back skin (holes in the base body
+        # under its original clothes) would pull the midpoint forward, and the drape measures every radius
+        # from it - a 3 cm jump of the centre once threw a 5 cm ridge out of the front of a top
+        cy, depth = [], []
         for z in zs:
             ring = sk[np.abs(sk[:, 2] - z) < 0.008]
-            cy.append(0.5 * (ring[:, 1].min() + ring[:, 1].max()) if len(ring) else np.nan)
-        cy = np.array(cy)
-        ok = ~np.isnan(cy)
-        self._zs, self._cy = zs[ok], cy[ok]
+            if len(ring):
+                cy.append(0.5 * (ring[:, 1].min() + ring[:, 1].max()))
+                depth.append(ring[:, 1].max() - ring[:, 1].min())
+            else:
+                cy.append(np.nan)
+                depth.append(0.0)
+        cy, depth = np.array(cy), np.array(depth)
+        full = ~np.isnan(cy)
+        if full.any():
+            full &= depth >= 0.8 * np.median(depth[full])     # slices that span the whole torso depth
+        if full.sum() >= 2:
+            cy = np.interp(zs, zs[full], cy[full])
+            cy = ndimage.median_filter(cy, size=5, mode="nearest")
+            cy = ndimage.gaussian_filter1d(cy, 2.0, mode="nearest")
+            self._zs, self._cy = zs, cy
+        else:
+            ok = ~np.isnan(cy)
+            self._zs, self._cy = zs[ok], cy[ok]
 
     def axis_y(self, z):
         return np.interp(z, self._zs, self._cy)
@@ -370,6 +412,10 @@ class Drape:
             _collide(sub, None, self.layer_pts, self.layer_nrm, clear)
             co[limbs] = sub
         w.co = co
+        _despike(w, movable)
+        # despiking can only move a vertex onto its neighbours' average; keep the torso clear of the layer below
+        _torso(w.co, torso, self.axis_y, top, taper=taper, ease=0.0, under=under, hull=hull, trunk=self._hull_x)
+        w.co[w.boundary, 2] = z_edge
         w.write()
         # this garment is the layer the next one drapes over
         self.layer_pts = np.vstack([self.layer_pts, co])

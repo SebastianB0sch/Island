@@ -147,7 +147,10 @@ def _intended_open(obj, groups, covered=None):
     return holes
 
 
-def pose_frames(arm, take_names=None, log=print):
+DENSE_STEP = 2          # dense audit: every other frame of every take
+
+
+def pose_frames(arm, take_names=None, log=print, dense=False):
     """[(pose, frame)] after baking the audited takes onto arm (actions kept on arm.animation_data)."""
     from . import build as B
     from . import retarget as RT
@@ -168,7 +171,11 @@ def pose_frames(arm, take_names=None, log=print):
             act = RT.bake(src, spec["take"], arm, f"fit_{pose}", arm_drop=spec.get("arm_drop", 0.0))
             src.remove()
         f0, f1 = (int(round(v)) for v in act.frame_range)
-        out.append((pose, act, [int(round(f0 + (f1 - f0) * t)) for t in fracs]))
+        if dense:
+            frames = list(range(f0, f1 + 1, DENSE_STEP))       # the whole take, every DENSE_STEP-th frame
+        else:
+            frames = [int(round(f0 + (f1 - f0) * t)) for t in fracs]
+        out.append((pose, act, frames))
     return out
 
 
@@ -465,7 +472,7 @@ def relax(obj, arm, log=print, iterations=12, margin=0.002, max_push=0.03, max_t
     return left
 
 
-def fit_report(ids=None, takes=None, log=print):
+def fit_report(ids=None, takes=None, log=print, dense=False):
     """Build every cast member and audit it. Returns {cid: {"poses": ..., "holes": ...}}. Building a member
     paints its textures: they go to a temporary directory, so an audit never touches SourceAssets."""
     import os
@@ -477,13 +484,13 @@ def fit_report(ids=None, takes=None, log=print):
     try:
         C.OUT_TEXTURES = tmp
         os.makedirs(os.path.join(tmp, "Characters"), exist_ok=True)
-        return _fit_report(ids, takes, log)
+        return _fit_report(ids, takes, log, dense)
     finally:
         C.OUT_TEXTURES = saved
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def _fit_report(ids=None, takes=None, log=print):
+def _fit_report(ids=None, takes=None, log=print, dense=False):
     from .. import blend
     from . import build as B
     from . import cast as CAST
@@ -498,7 +505,7 @@ def _fit_report(ids=None, takes=None, log=print):
         blend.reset_scene()
         bpy.context.scene.render.fps = 30
         arm, obj = M.build_model(cid, e, B.key_name, log=lambda *a: None)
-        poses = pose_frames(arm, takes, log)
+        poses = pose_frames(arm, takes, log, dense=dense)
         res, holes = audit(obj, arm, poses, log)
         out[cid] = dict(poses=res, holes=holes)
         log(summary_line(cid, out[cid]))

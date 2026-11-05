@@ -778,9 +778,13 @@ def _edge_points(me, mat_idx, step=0.003):
 FOLD_DARK = 0.30
 
 
+PAINT_SS = 2              # garment textures are painted at this supersampling and filtered down (smooth trims)
+
+
 def paint(me, mat_idx, g, rig, path, size=None):
     spec = g["spec"]
-    size = size or (2048 if g["spec"] is not None and "cuff_x" in g else 1024)
+    out_size = size or (2048 if g["spec"] is not None and "cuff_x" in g else 1024)
+    size = out_size * PAINT_SS
     pos, mask = bake_positions(me, mat_idx, size)
     base = np.array(spec.get("color", (1, 1, 1)), np.float32)
     img = np.zeros((size, size, 3), np.float32)
@@ -861,7 +865,10 @@ def paint(me, mat_idx, g, rig, path, size=None):
                 col[(dd < b.get("r", 0.011)) & front] = b["color"]
     img[mask] = col
     img = _dilate(img, mask)
-    atomic.save_image(Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)), path, optimize=True)
+    # anti-aliasing: the trims, the shield panel, buttons and crease lines are hard tests per texel; painting at
+    # PAINT_SS x and filtering down gives them smooth edges instead of texel steps along curved seams
+    hi = Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8))
+    atomic.save_image(hi.resize((out_size, out_size), Image.LANCZOS), path, optimize=True)
 
 
 def _edge_kind(pts, g, rig):
