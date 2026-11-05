@@ -196,6 +196,22 @@ designs, with a cel-style material and ink outline in Unreal:
   * the cones hold while idle, running at 4.2 m/s and running into a turn (short hair peaks at 8.6°);
   * cohesion keeps a kicked long lock with its neighbour: the gap changes by 0.19 cm, against 1.59 cm
     without cohesion.
+* **Hair audit** (`Tools/hair_check.py`, `dai/anime/hairaudit.py`) measures the exported FBXs Unreal
+  imports, with a budget (exit 1 when a character is over it):
+  * hair width over the face width;
+  * see-through holes in the silhouette, front and side;
+  * outline roughness: perimeter over the convex hull's, where 1 is a smooth outline;
+  * scalp visible from behind;
+  * the fitted chains each mesh is skinned to.
+
+  All 13 restyled characters are within budget:
+  * Width: 1.1-1.55x the face (Jasmine's flipped bob 1.46x). The old per-strand spikes were 2.0-2.6x.
+  * Holes: at most 4 small holes, under 1 % of the silhouette, against up to 25 before.
+  * Roughness: 1.1-1.5, against up to 4.4 before.
+  * Scalp: none visible, against up to 21 % before.
+
+  Student F2's twin tails spread from her head by design: her cast entry allows 2.45x
+  (`audit=dict(width=...)`).
 
 The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on

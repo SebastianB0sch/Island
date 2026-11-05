@@ -101,8 +101,9 @@ def measure(path, keep=()):
 
 
 def over_budget(m):
-    """Budget lines a measured character breaks (empty: within budget)."""
-    b, bad = BUDGET, []
+    """Budget lines a measured character breaks (empty: within budget). A cast entry can widen a line for its
+    design (hairdo shape "audit", e.g. twin tails spreading from the head: {"width": 2.45})."""
+    b, bad = dict(BUDGET, **m.get("allow", {})), []
     if m["width"] > b["width"]:
         bad.append(f"width {m['width']:.2f} > {b['width']}")
     for v in ("front", "side"):
@@ -130,6 +131,7 @@ def report(ids=None, log=print):
             log(f"  !! hair: {cid}: {path} missing (run Tools/build_island.py cast)")
             continue
         m = measure(path, keep=e["hairdo"]["shape"].get("keep", ()))
+        m["allow"] = dict(e["hairdo"]["shape"].get("audit", {}))
         rep[cid] = m
         bad = over_budget(m)
         log(f"  hair {'OK  ' if not bad else 'OVER'} {cid:11s} width {m['width']:.2f}  holes {m['front']['holes']}/{m['side']['holes']}"

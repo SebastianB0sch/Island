@@ -360,7 +360,9 @@ STUDENTS = {
                        # the rabbit-ear and star clips (HAIR_03 .. 06) stay as they are
                        hairdo=dict(shape=_shape(volume=dict(top=2.0, back=1.6, side=1.3, loft=0.012),
                                                 envelope=dict(side=1.45, jaw=1.35),
-                                                keep=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"))),
+                                                keep=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"),
+                                                # her twin tails spread from the sides of the head by design
+                                                audit=dict(width=2.45))),
                        face=_face(eyes=dict(_EYES_GIRL), mouth=dict(kind="smile", w=0.08), blush=0.25)),
 }
 
