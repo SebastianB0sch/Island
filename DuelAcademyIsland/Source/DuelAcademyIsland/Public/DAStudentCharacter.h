@@ -11,6 +11,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UDAAvatarComponent;
+class UDAMotorcycleComponent;
 class UInputAction;
 class UInputMappingContext;
 class ADALocationVolume;
@@ -24,6 +25,7 @@ class ADAHUD;
  *   Mouse / right stick    look            Space / A       jump
  *   Mouse wheel            zoom            E / X           interact
  *   M / Tab / Start        island map + fast travel (Up/Down/Enter or click)
+ *   V / Y                  summon / stow the motorcycle (Shift / L3 = boost while riding)
  *   J                      switch dorm jacket   F   raise duel disk
  *   T  pause time   [ ]  time speed   N  skip 3 hours   F1 / H  help
  */
@@ -46,8 +48,20 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy")
 	EDADorm GetDorm() const;
 
+	/** Raising the duel disk (a duel starting) also gets the student off the motorcycle. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
-	void SetDuelPose(bool bOn) { bDuelPose = bOn; }
+	void SetDuelPose(bool bOn);
+
+	/**
+	 * Mount (summoning the bike) or dismount (stowing it). Mounting is refused
+	 * indoors, in deep water and while a modal screen owns the input; refusals
+	 * show a short message unless bQuiet. Returns whether the student now rides.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Motorcycle")
+	bool SetRiding(bool bRide, bool bQuiet = false);
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Motorcycle")
+	bool IsRiding() const { return bRiding; }
 
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
 	void FastTravelTo(ADALocationVolume* Zone);
@@ -88,6 +102,18 @@ public:
 	static bool WorldInputAllowedFor(bool bDuelOpen, bool bMapOpen, bool bDialogueOpen, bool bPDAOpen,
 		bool bTitleOpen, bool bGameplayUIOpen, bool bHelpOpen);
 
+	/** Pure mount gate (headless-tested): the bike needs world input, open air and solid footing. */
+	static bool CanMountFor(bool bWorldInputAllowed, bool bInInterior, bool bSwimming);
+
+	/**
+	 * Pure steering step (headless-tested): turn CurrentYaw towards DesiredYaw by at most
+	 * TurnRate * DeltaSeconds degrees. Returns the new yaw, normalised to (-180, 180].
+	 */
+	static float StepBikeYaw(float CurrentYaw, float DesiredYaw, float TurnRate, float DeltaSeconds);
+
+	/** Turn rate (deg/s) of the bike at a ground speed: nimble when slow, wide arcs at full speed. */
+	static float BikeTurnRateFor(float Speed, float TopSpeed);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Movement")
 	float WalkSpeed = 150.f;
 
@@ -96,6 +122,32 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Movement")
 	float SwimSpeed = 330.f;
+
+	/** Motorcycle cruising speed (cm/s; 1500 = 54 km/h). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Motorcycle")
+	float BikeSpeed = 1500.f;
+
+	/** Motorcycle speed with Shift / L3 held (cm/s; 2200 = 79 km/h). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Motorcycle")
+	float BikeBoostSpeed = 2200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Motorcycle")
+	float BikeAcceleration = 1300.f;
+
+	/** Deceleration when steering hard against the direction of travel (cm/s^2). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Motorcycle")
+	float BikeBrakeDeceleration = 2600.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Motorcycle")
+	float BikeJumpZVelocity = 520.f;
+
+	/** Steepest slope (degrees) the bike climbs; walking stops at 46. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Motorcycle")
+	float BikeWalkableSlope = 56.f;
+
+	/** Kerbs, roots and rocks the bike rolls over (cm). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Motorcycle")
+	float BikeStepHeight = 60.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Camera")
 	float MinZoom = 180.f;
@@ -113,6 +165,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
 	TObjectPtr<UDAAvatarComponent> Avatar;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
+	TObjectPtr<UDAMotorcycleComponent> Bike;
+
 private:
 	void CreateInput();
 	void AddMappingContext();
@@ -120,6 +175,10 @@ private:
 	bool IsMovementBlocked() const;
 	void UpdateFocus();
 	void UpdateSwimming(float DeltaSeconds);
+	void UpdateRiding(float DeltaSeconds);
+	void ApplyMovementProfile(bool bRide);
+	void AttachAvatar(bool bToBike);
+	void PushBikeMessage(const TCHAR* Title, const TCHAR* Body) const;
 
 	// Input handlers
 	void OnMoveForward(const FInputActionValue& V) { MoveInput(1.f, 0.f); }
@@ -138,6 +197,7 @@ private:
 	void OnMap(const FInputActionValue& V);
 	void OnJacket(const FInputActionValue& V);
 	void OnDuelDisk(const FInputActionValue& V);
+	void OnBike(const FInputActionValue& V);
 	void OnHelp(const FInputActionValue& V);
 	void OnTimePause(const FInputActionValue& V);
 	void OnTimeFaster(const FInputActionValue& V);
@@ -166,6 +226,15 @@ private:
 	bool bInInterior = false;
 	bool bDuelPose = false;
 	bool bManualDuelPose = false;
+	bool bRiding = false;
+	/** Camera-relative steering wish gathered from this frame's move input, consumed by UpdateRiding. */
+	FVector RideInput = FVector::ZeroVector;
+	float BikeSteer = 0.f;
+	float BikeLean = 0.f;
+	float BikePitch = 0.f;
+	float BikeYawRate = 0.f;
+	float PreRideZoom = 520.f;
+	float LookIdleTime = 0.f;
 	float TargetZoom = 520.f;
 	float SwimAlpha = 0.f;
 	float FocusTimer = 0.f;

@@ -177,6 +177,7 @@ private:
 	void DrawCompass(UDAIslandSubsystem* Sub);
 	void DrawMinimap(UDAIslandSubsystem* Sub);
 	void DrawClock(ADAIslandManager* M);
+	void DrawSpeedometer();
 	void DrawPrompt();
 	void DrawMessage(UDAIslandSubsystem* Sub);
 	void DrawHelp();

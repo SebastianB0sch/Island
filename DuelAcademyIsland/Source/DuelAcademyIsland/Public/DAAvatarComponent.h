@@ -50,6 +50,14 @@ public:
 	UPROPERTY(Transient, BlueprintReadWrite, Category = "Duel Academy")
 	float DuelPoseAlpha = 0.f;
 
+	/** 0 = on foot, 1 = seated on the motorcycle (the owner attaches the avatar to the bike's rider mount). */
+	UPROPERTY(Transient, BlueprintReadWrite, Category = "Duel Academy")
+	float RideAlpha = 0.f;
+
+	/** While riding: height (cm above the avatar's origin) at which the hips sit on the seat. */
+	UPROPERTY(Transient, BlueprintReadWrite, Category = "Duel Academy")
+	float RideHipHeight = 108.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	EDADorm Dorm = EDADorm::Slifer;
 
@@ -118,6 +126,8 @@ private:
 	void TickNative(float DeltaTime, float GroundSpeed, bool bInAir, float VerticalSpeed);
 	void TickSingleNode(float DeltaTime, float GroundSpeed, bool bInAir);
 	UAnimSequence* FindAnim(FName State) const;
+	/** Pelvis height of the current skeletal pose in component space (cm), or a pose-based guess. */
+	float MeasurePelvisHeight();
 	UStaticMeshComponent* MakePart(const TCHAR* MeshName, USceneComponent* Parent, const FVector& Offset);
 	void ApplyColours();
 
@@ -166,6 +176,9 @@ private:
 	bool bWasInAir = false;
 
 	float Phase = 0.f;
+	float RideLift = 0.f;
+	FName PelvisBone = NAME_None;
+	bool bPelvisSearched = false;
 	float SmoothedSpeed = 0.f;
 	float AirAlpha = 0.f;
 	float Time = 0.f;

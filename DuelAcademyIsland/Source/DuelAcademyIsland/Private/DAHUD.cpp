@@ -1842,6 +1842,7 @@ void ADAHUD::DrawHUD()
 	DrawClock(M);
 	if (!IsPDAOpen() && !IsDialogueOpen())
 	{
+		DrawSpeedometer();
 		DrawPrompt();
 		if (!bTitleWasShown)
 		{
@@ -2041,6 +2042,30 @@ void ADAHUD::DrawClock(ADAIslandManager* M)
 	Text(M->IsNight() ? TEXT("Night") : TEXT("Day"), X - Measure(M->IsNight() ? TEXT("Night") : TEXT("Day"), 0.75f).X, 48.f * S(), HudAlpha(HudGold, 0.85f), 0.75f);
 }
 
+void ADAHUD::DrawSpeedometer()
+{
+	const APlayerController* PC = GetOwningPlayerController();
+	const ADAStudentCharacter* Student = PC ? Cast<ADAStudentCharacter>(PC->GetPawn()) : nullptr;
+	if (!Student || !Student->IsRiding())
+	{
+		return;
+	}
+	const FVector V = Student->GetVelocity();
+	const int32 Kmh = FMath::RoundToInt(static_cast<float>(FVector(V.X, V.Y, 0.0).Size()) * 0.036f);
+	const FString Speed = FString::Printf(TEXT("%d"), Kmh);
+	const FString Hint = Student->IsSprinting() ? TEXT("km/h   BOOST") : TEXT("km/h   [V] get off");
+	// Bottom right, just left of the minimap.
+	const FVector2D SpeedSz = Measure(Speed, 1.6f, BigFont);
+	const FVector2D HintSz = Measure(Hint, 0.75f);
+	const float W = FMath::Max(SpeedSz.X, HintSz.X) + 36.f * S();
+	const float H = SpeedSz.Y + HintSz.Y + 22.f * S();
+	const float X = Canvas->ClipX - 250.f * S() - 28.f * S() - 20.f * S() - W;
+	const float Y = Canvas->ClipY - 64.f * S() - H;
+	Panel(X, Y, W, H, DuelAcademy::DormColor(Student->GetDorm()), 0.6f);
+	Text(Speed, X + 18.f * S(), Y + 8.f * S(), HudPaper, 1.6f, false, BigFont);
+	Text(Hint, X + 18.f * S(), Y + 12.f * S() + SpeedSz.Y, HudAlpha(HudGold, 0.9f), 0.75f);
+}
+
 void ADAHUD::DrawPrompt()
 {
 	const APlayerController* PC = GetOwningPlayerController();
@@ -2098,12 +2123,13 @@ void ADAHUD::DrawHelp()
 		TEXT("WASD / Left stick ........ Move"),
 		TEXT("Mouse / Right stick ...... Look"),
 		TEXT("Mouse wheel .............. Camera zoom"),
-		TEXT("Shift / L3 ............... Sprint"),
+		TEXT("Shift / L3 ............... Sprint (boost on the motorcycle)"),
 		TEXT("Space / A ................ Jump"),
 		TEXT("E / X .................... Interact (signs, card shop, duel fields, students)"),
 		TEXT("M / Tab ................. Island map & fast travel"),
 		TEXT("P ....................... PDA (map, calendar, deck, mail, save, options, records)"),
 		TEXT("B ....................... Card shop (when facing the shop counter)"),
+		TEXT("V / Y (pad) .............. Motorcycle: summon & ride / get off (outdoors)"),
 		TEXT("J ........................ Switch dorm jacket"),
 		TEXT("F ........................ Raise duel disk"),
 		TEXT("T ........................ Pause / resume time"),

@@ -2113,6 +2113,30 @@ namespace
 		Report.Check(!ADAStudentCharacter::WorldInputAllowedFor(false, false, false, false, true, false, false),
 			TEXT("DAPawnUIGateTest: title owns input (U1)"));
 
+		// 2b) Motorcycle: the mount gate and the steering step are pure, so pin them here.
+		for (int32 Combo = 0; Combo < 8; ++Combo)
+		{
+			const bool bWorld = (Combo & 1) != 0;
+			const bool bInterior = (Combo & 2) != 0;
+			const bool bSwim = (Combo & 4) != 0;
+			if (ADAStudentCharacter::CanMountFor(bWorld, bInterior, bSwim) != (bWorld && !bInterior && !bSwim))
+			{
+				Report.Fail(FString::Printf(TEXT("DAPawnUIGateTest: bike mount gate wrong for world=%d interior=%d swimming=%d"),
+					bWorld ? 1 : 0, bInterior ? 1 : 0, bSwim ? 1 : 0));
+			}
+		}
+		Report.Check(ADAStudentCharacter::CanMountFor(true, false, false), TEXT("DAPawnUIGateTest: the bike can be summoned outdoors"));
+		Report.Check(!ADAStudentCharacter::CanMountFor(true, true, false), TEXT("DAPawnUIGateTest: no bike inside interior cells"));
+		Report.Check(!ADAStudentCharacter::CanMountFor(false, false, false), TEXT("DAPawnUIGateTest: no bike under a modal screen"));
+		Report.Check(FMath::IsNearlyEqual(ADAStudentCharacter::StepBikeYaw(0.f, 90.f, 100.f, 0.1f), 10.f, 0.01f),
+			TEXT("DAPawnUIGateTest: bike steering is rate limited"));
+		Report.Check(FMath::IsNearlyEqual(ADAStudentCharacter::StepBikeYaw(0.f, 5.f, 100.f, 0.1f), 5.f, 0.01f),
+			TEXT("DAPawnUIGateTest: bike steering does not overshoot its target"));
+		Report.Check(FMath::IsNearlyEqual(ADAStudentCharacter::StepBikeYaw(175.f, -175.f, 100.f, 0.1f), -175.f, 0.01f),
+			TEXT("DAPawnUIGateTest: bike steering takes the short way across +-180"));
+		Report.Check(ADAStudentCharacter::BikeTurnRateFor(0.f, 1500.f) > ADAStudentCharacter::BikeTurnRateFor(1500.f, 1500.f),
+			TEXT("DAPawnUIGateTest: the bike turns tighter when slow"));
+
 		// 3) Contract #1 pure decision table: a story-owned, actually-open
 		//    session closed without a recorded result is the only true case.
 		Report.Check(FDADuelUI::ComputeStoryDuelClosedWithoutResult(true, false, true),

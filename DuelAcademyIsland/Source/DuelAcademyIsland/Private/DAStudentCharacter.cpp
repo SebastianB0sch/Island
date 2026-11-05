@@ -13,6 +13,7 @@
 #include "DAIslandManager.h"
 #include "DAIslandSubsystem.h"
 #include "DALocationVolume.h"
+#include "DAMotorcycleComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
@@ -22,6 +23,19 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+
+namespace
+{
+	// On-foot movement profile; ApplyMovementProfile swaps these for the bike's and back.
+	const float FootAcceleration = 1000.f;
+	const float FootBrakingDeceleration = 1400.f;
+	const float FootStepHeight = 45.f;
+	const float FootWalkableSlope = 46.f;
+	const float FootJumpZVelocity = 560.f;
+	const float FootAirControl = 0.4f;
+	const float BaseFieldOfView = 75.f;
+	const FVector AvatarOnFoot(0.0, 0.0, -92.0);
+}
 
 ADAStudentCharacter::ADAStudentCharacter()
 {
@@ -38,13 +52,13 @@ ADAStudentCharacter::ADAStudentCharacter()
 	Move->RotationRate = FRotator(0.f, 420.f, 0.f);
 	Move->MaxWalkSpeed = WalkSpeed;
 	Move->MinAnalogWalkSpeed = 40.f;
-	Move->MaxAcceleration = 1000.f;
-	Move->JumpZVelocity = 560.f;
-	Move->AirControl = 0.4f;
-	Move->BrakingDecelerationWalking = 1400.f;
+	Move->MaxAcceleration = FootAcceleration;
+	Move->JumpZVelocity = FootJumpZVelocity;
+	Move->AirControl = FootAirControl;
+	Move->BrakingDecelerationWalking = FootBrakingDeceleration;
 	Move->BrakingDecelerationFalling = 600.f;
-	Move->MaxStepHeight = 45.f;
-	Move->SetWalkableFloorAngle(46.f);
+	Move->MaxStepHeight = FootStepHeight;
+	Move->SetWalkableFloorAngle(FootWalkableSlope);
 	Move->MaxFlySpeed = SwimSpeed;
 	Move->BrakingDecelerationFlying = 1400.f;
 	Move->bMaintainHorizontalGroundVelocity = true;
@@ -61,11 +75,15 @@ ADAStudentCharacter::ADAStudentCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
-	FollowCamera->SetFieldOfView(75.f);
+	FollowCamera->SetFieldOfView(BaseFieldOfView);
 
 	Avatar = CreateDefaultSubobject<UDAAvatarComponent>(TEXT("Avatar"));
 	Avatar->SetupAttachment(GetCapsuleComponent());
-	Avatar->SetRelativeLocation(FVector(0.0, 0.0, -92.0));
+	Avatar->SetRelativeLocation(AvatarOnFoot);
+
+	Bike = CreateDefaultSubobject<UDAMotorcycleComponent>(TEXT("Motorcycle"));
+	Bike->SetupAttachment(GetCapsuleComponent());
+	Bike->SetRelativeLocation(AvatarOnFoot);
 
 	// No skeletal mesh: the avatar component draws the student.
 	GetMesh()->SetVisibility(false);
@@ -77,6 +95,10 @@ void ADAStudentCharacter::BeginPlay()
 	Super::BeginPlay();
 	CreateInput();
 	AddMappingContext();
+	if (Bike)
+	{
+		Bike->SetPaint(DuelAcademy::DormColor(GetDorm()));
+	}
 	SafeLocation = GetActorLocation();
 	// A save loaded inside a generated interior cell must not be "rescued" by
 	// the fall-out-of-world safety on the first tick.
@@ -97,6 +119,8 @@ void ADAStudentCharacter::PawnClientRestart()
 	// restart happens outside that flow.
 	bDuelPose = false;
 	bManualDuelPose = false;
+	// A new possession starts on foot.
+	SetRiding(false, true);
 }
 
 // ------------------------------------------------------------------------ input setup
@@ -163,6 +187,9 @@ void ADAStudentCharacter::CreateInput()
 
 	Map(MakeAction(TEXT("Jacket"), VT::Boolean), EKeys::J);
 	Map(MakeAction(TEXT("DuelDisk"), VT::Boolean), EKeys::F);
+	UInputAction* BikeAction = MakeAction(TEXT("Bike"), VT::Boolean);
+	Map(BikeAction, EKeys::V);
+	Map(BikeAction, EKeys::Gamepad_FaceButton_Top);
 	UInputAction* HelpAction = MakeAction(TEXT("Help"), VT::Boolean);
 	Map(HelpAction, EKeys::F1);
 	Map(HelpAction, EKeys::H);
@@ -223,6 +250,7 @@ void ADAStudentCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	// Enter / clicks in the map's GameAndUI input mode.
 	EIC->BindAction(A(TEXT("Jacket")), ETriggerEvent::Started, this, &ThisClass::OnJacket);
 	EIC->BindAction(A(TEXT("DuelDisk")), ETriggerEvent::Started, this, &ThisClass::OnDuelDisk);
+	EIC->BindAction(A(TEXT("Bike")), ETriggerEvent::Started, this, &ThisClass::OnBike);
 	EIC->BindAction(A(TEXT("Help")), ETriggerEvent::Started, this, &ThisClass::OnHelp);
 	EIC->BindAction(A(TEXT("TimePause")), ETriggerEvent::Started, this, &ThisClass::OnTimePause);
 	EIC->BindAction(A(TEXT("TimeFaster")), ETriggerEvent::Started, this, &ThisClass::OnTimeFaster);
@@ -272,6 +300,13 @@ void ADAStudentCharacter::MoveInput(float Forward, float Right)
 	}
 	const FRotator YawRot(0.f, Controller->GetControlRotation().Yaw, 0.f);
 	const FRotationMatrix M(YawRot);
+	if (bRiding)
+	{
+		// The bike cannot strafe: gather the camera-relative wish and let
+		// UpdateRiding steer the heading towards it.
+		RideInput += M.GetUnitAxis(EAxis::X) * Forward + M.GetUnitAxis(EAxis::Y) * Right;
+		return;
+	}
 	AddMovementInput(M.GetUnitAxis(EAxis::X), Forward);
 	AddMovementInput(M.GetUnitAxis(EAxis::Y), Right);
 }
@@ -289,6 +324,10 @@ void ADAStudentCharacter::OnLook(const FInputActionValue& V)
 		return;
 	}
 	const FVector2D Axis = V.Get<FVector2D>();
+	if (!Axis.IsNearlyZero())
+	{
+		LookIdleTime = 0.f;
+	}
 	AddControllerYawInput(Axis.X);
 	AddControllerPitchInput(-Axis.Y);
 }
@@ -300,6 +339,10 @@ void ADAStudentCharacter::OnLookStick(const FInputActionValue& V)
 		return;
 	}
 	const FVector2D Axis = V.Get<FVector2D>();
+	if (!Axis.IsNearlyZero())
+	{
+		LookIdleTime = 0.f;
+	}
 	const float Dt = GetWorld() ? GetWorld()->GetDeltaSeconds() : 0.016f;
 	AddControllerYawInput(Axis.X * 140.f * Dt);
 	AddControllerPitchInput(-Axis.Y * 100.f * Dt);
@@ -403,11 +446,22 @@ void ADAStudentCharacter::OnJacket(const FInputActionValue& V)
 
 void ADAStudentCharacter::OnDuelDisk(const FInputActionValue& V)
 {
-	if (!IsWorldInputAllowed())
+	// The disk stays down on the bike: both hands are on the bars.
+	if (!IsWorldInputAllowed() || bRiding)
 	{
 		return;
 	}
 	bManualDuelPose = !bManualDuelPose;
+}
+
+void ADAStudentCharacter::OnBike(const FInputActionValue& V)
+{
+	(void)V;
+	if (!IsWorldInputAllowed())
+	{
+		return;
+	}
+	SetRiding(!bRiding);
 }
 
 void ADAStudentCharacter::OnHelp(const FInputActionValue& V)
@@ -505,6 +559,10 @@ void ADAStudentCharacter::SetDorm(EDADorm NewDorm)
 	{
 		Avatar->SetDorm(NewDorm);
 	}
+	if (Bike)
+	{
+		Bike->SetPaint(DuelAcademy::DormColor(NewDorm));
+	}
 }
 
 EDADorm ADAStudentCharacter::GetDorm() const
@@ -538,7 +596,10 @@ void ADAStudentCharacter::FastTravelTo(ADALocationVolume* Zone)
 		PC->SetControlRotation(FRotator(-10.f, Zone->SpawnYaw, 0.f));
 	}
 	// Fast travel always lands on the island, never in a generated interior cell.
+	// A rider arrives still mounted, upright and facing the spawn direction.
 	bInInterior = false;
+	RideInput = FVector::ZeroVector;
+	BikeSteer = BikeLean = BikePitch = BikeYawRate = 0.f;
 	bSprinting = false;
 	FocusedInteractable.Reset();
 	bSwimming = false;
@@ -639,6 +700,8 @@ void ADAStudentCharacter::UpdateSwimming(float DeltaSeconds)
 	// open water or the character would enter flying/swimming mode indoors.
 	if (bInInterior)
 	{
+		// No riding indoors: the bike is stowed at the door.
+		SetRiding(false, true);
 		bSwimming = false;
 		SwimAlpha = FMath::FInterpTo(SwimAlpha, 0.f, DeltaSeconds, 5.f);
 		return;
@@ -689,13 +752,31 @@ void ADAStudentCharacter::Tick(float DeltaSeconds)
 	{
 		bSprinting = false;
 	}
-	Move->MaxWalkSpeed = bSprinting ? SprintSpeed : WalkSpeed;
+	Move->MaxWalkSpeed = bRiding ? (bSprinting ? BikeBoostSpeed : BikeSpeed) : (bSprinting ? SprintSpeed : WalkSpeed);
 
 	UpdateSwimming(DeltaSeconds);
+	if (bRiding && bSwimming)
+	{
+		SetRiding(false, true);
+		PushBikeMessage(TEXT("Too deep"), TEXT("The motorcycle can ford shallow water, not the open sea. You swim on."));
+	}
+	LookIdleTime += DeltaSeconds;
+	if (bRiding)
+	{
+		UpdateRiding(DeltaSeconds);
+	}
+	RideInput = FVector::ZeroVector;
 	if (Avatar)
 	{
 		Avatar->SwimAlpha = SwimAlpha;
-		Avatar->DuelPoseAlpha = FMath::FInterpTo(Avatar->DuelPoseAlpha, (bDuelPose || bManualDuelPose) && !bSwimming ? 1.f : 0.f, DeltaSeconds, 6.f);
+		Avatar->DuelPoseAlpha = FMath::FInterpTo(Avatar->DuelPoseAlpha, (bDuelPose || bManualDuelPose) && !bSwimming && !bRiding ? 1.f : 0.f, DeltaSeconds, 6.f);
+	}
+	if (FollowCamera)
+	{
+		// A touch of extra field of view sells the speed on the bike.
+		const float GroundSpeed = static_cast<float>(FVector(Move->Velocity.X, Move->Velocity.Y, 0.0).Size());
+		const float SpeedFov = bRiding ? 13.f * FMath::Clamp((GroundSpeed - 300.f) / FMath::Max(BikeBoostSpeed - 300.f, 1.f), 0.f, 1.f) : 0.f;
+		FollowCamera->SetFieldOfView(FMath::FInterpTo(FollowCamera->FieldOfView, BaseFieldOfView + SpeedFov, DeltaSeconds, 3.f));
 	}
 
 	FocusTimer -= DeltaSeconds;
@@ -743,6 +824,255 @@ void ADAStudentCharacter::Tick(float DeltaSeconds)
 		}
 		SetActorLocation(SafeLocation + FVector(0.0, 0.0, 200.0), false, nullptr, ETeleportType::TeleportPhysics);
 		Move->Velocity = FVector::ZeroVector;
+	}
+}
+
+// ------------------------------------------------------------------------ motorcycle
+
+bool ADAStudentCharacter::CanMountFor(bool bWorldInputAllowed, bool bInInterior, bool bSwimming)
+{
+	return bWorldInputAllowed && !bInInterior && !bSwimming;
+}
+
+float ADAStudentCharacter::StepBikeYaw(float CurrentYaw, float DesiredYaw, float TurnRate, float DeltaSeconds)
+{
+	const float Delta = FMath::FindDeltaAngleDegrees(CurrentYaw, DesiredYaw);
+	const float MaxStep = FMath::Max(TurnRate, 0.f) * FMath::Max(DeltaSeconds, 0.f);
+	return static_cast<float>(FRotator::NormalizeAxis(CurrentYaw + FMath::Clamp(Delta, -MaxStep, MaxStep)));
+}
+
+float ADAStudentCharacter::BikeTurnRateFor(float Speed, float TopSpeed)
+{
+	return FMath::Lerp(200.f, 95.f, FMath::Clamp(Speed / FMath::Max(TopSpeed, 1.f), 0.f, 1.f));
+}
+
+void ADAStudentCharacter::SetDuelPose(bool bOn)
+{
+	bDuelPose = bOn;
+	if (bOn)
+	{
+		SetRiding(false, true);
+	}
+}
+
+void ADAStudentCharacter::PushBikeMessage(const TCHAR* Title, const TCHAR* Body) const
+{
+	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+	{
+		FDAMessage Msg;
+		Msg.Title = Title;
+		Msg.Body = Body;
+		Msg.Accent = DuelAcademy::DormColor(GetDorm());
+		Msg.Duration = 2.5f;
+		Sub->PushMessage(Msg);
+	}
+}
+
+void ADAStudentCharacter::ApplyMovementProfile(bool bRide)
+{
+	UCharacterMovementComponent* Move = GetCharacterMovement();
+	if (!Move)
+	{
+		return;
+	}
+	// The bike keeps its own heading (UpdateRiding steers it) and coasts instead of stopping dead.
+	Move->bOrientRotationToMovement = !bRide;
+	Move->MaxAcceleration = bRide ? BikeAcceleration : FootAcceleration;
+	Move->BrakingDecelerationWalking = bRide ? 650.f : FootBrakingDeceleration;
+	Move->bUseSeparateBrakingFriction = bRide;
+	Move->BrakingFriction = bRide ? 0.35f : 0.f;
+	Move->MaxStepHeight = bRide ? BikeStepHeight : FootStepHeight;
+	Move->SetWalkableFloorAngle(bRide ? BikeWalkableSlope : FootWalkableSlope);
+	Move->JumpZVelocity = bRide ? BikeJumpZVelocity : FootJumpZVelocity;
+	Move->AirControl = bRide ? 0.1f : FootAirControl;
+}
+
+void ADAStudentCharacter::AttachAvatar(bool bToBike)
+{
+	if (!Avatar)
+	{
+		return;
+	}
+	USceneComponent* Mount = (bToBike && Bike) ? Bike->GetRiderMount() : nullptr;
+	if (Mount)
+	{
+		// The rider rides on the bike's lean/pitch/suspension pivot.
+		Avatar->AttachToComponent(Mount, FAttachmentTransformRules::KeepRelativeTransform);
+		Avatar->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator(0.f, -90.f, 0.f));
+		Avatar->RideHipHeight = Bike->GetRiderHipHeight();
+		Avatar->RideAlpha = 1.f;
+	}
+	else
+	{
+		Avatar->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		Avatar->SetRelativeLocationAndRotation(AvatarOnFoot, FRotator(0.f, -90.f, 0.f));
+		Avatar->RideAlpha = 0.f;
+	}
+}
+
+bool ADAStudentCharacter::SetRiding(bool bRide, bool bQuiet)
+{
+	if (bRide == bRiding)
+	{
+		return bRiding;
+	}
+	UCharacterMovementComponent* Move = GetCharacterMovement();
+	if (bRide)
+	{
+		if (!Bike || !Bike->GetRiderMount() || !Move)
+		{
+			return false;
+		}
+		if (!CanMountFor(IsWorldInputAllowed(), bInInterior, bSwimming))
+		{
+			if (!bQuiet && bInInterior)
+			{
+				PushBikeMessage(TEXT("No riding indoors"), TEXT("The motorcycle stays outside. Head out to ride."));
+			}
+			else if (!bQuiet && bSwimming)
+			{
+				PushBikeMessage(TEXT("Too deep"), TEXT("Get back to shore before you call the motorcycle."));
+			}
+			return false;
+		}
+		bRiding = true;
+		bManualDuelPose = false;
+		RideInput = FVector::ZeroVector;
+		BikeSteer = BikeLean = BikePitch = BikeYawRate = 0.f;
+		LookIdleTime = 0.f;
+		PreRideZoom = TargetZoom;
+		TargetZoom = FMath::Clamp(FMath::Max(TargetZoom, 700.f), MinZoom, MaxZoom);
+		Bike->SetPaint(DuelAcademy::DormColor(GetDorm()));
+		Bike->SetDeployed(true);
+		AttachAvatar(true);
+		ApplyMovementProfile(true);
+	}
+	else
+	{
+		bRiding = false;
+		RideInput = FVector::ZeroVector;
+		AttachAvatar(false);
+		if (Bike)
+		{
+			Bike->SetDeployed(false);
+		}
+		ApplyMovementProfile(false);
+		TargetZoom = FMath::Clamp(PreRideZoom, MinZoom, MaxZoom);
+		if (Move)
+		{
+			// Hop off at a run, not at bike speed.
+			const FVector Horizontal = FVector(Move->Velocity.X, Move->Velocity.Y, 0.0).GetClampedToMaxSize(SprintSpeed);
+			Move->Velocity = FVector(Horizontal.X, Horizontal.Y, Move->Velocity.Z);
+		}
+	}
+	if (!bQuiet)
+	{
+		if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+		{
+			Sub->PlayUISound(bRide ? TEXT("A_DuelStart") : TEXT("A_CardDraw"), bRide ? 0.45f : 0.6f);
+		}
+	}
+	return bRiding;
+}
+
+void ADAStudentCharacter::UpdateRiding(float DeltaSeconds)
+{
+	UCharacterMovementComponent* Move = GetCharacterMovement();
+	if (!Move || !Bike || DeltaSeconds <= 0.f)
+	{
+		return;
+	}
+	FVector Wish(RideInput.X, RideInput.Y, 0.0);
+	if (IsMovementBlocked())
+	{
+		Wish = FVector::ZeroVector;
+	}
+	const float Throttle = FMath::Min(static_cast<float>(Wish.Size()), 1.f);
+	const FVector HVel(Move->Velocity.X, Move->Velocity.Y, 0.0);
+	const float Speed = static_cast<float>(HVel.Size());
+	const bool bGround = Move->IsMovingOnGround();
+	const float OldYaw = static_cast<float>(GetActorRotation().Yaw);
+
+	// Steering: the stick / WASD names a camera-relative direction and the bike
+	// carves towards it at a speed-dependent turn rate. Asking for the opposite
+	// direction at speed brakes first, then turns round.
+	float Yaw = OldYaw;
+	float SteerTarget = 0.f;
+	bool bBraking = false;
+	if (Throttle > 0.1f)
+	{
+		const float DesiredYaw = static_cast<float>(Wish.Rotation().Yaw);
+		const float Delta = FMath::FindDeltaAngleDegrees(OldYaw, DesiredYaw);
+		const float Along = static_cast<float>(FVector::DotProduct(HVel, FRotator(0.f, OldYaw, 0.f).Vector()));
+		bBraking = FMath::Abs(Delta) > 115.f && Along > 450.f;
+		const float Rate = BikeTurnRateFor(Speed, BikeSpeed) * (bGround ? 1.f : 0.3f);
+		Yaw = StepBikeYaw(OldYaw, DesiredYaw, Rate, DeltaSeconds);
+		SteerTarget = FMath::Clamp(Delta / 35.f, -1.f, 1.f);
+		if (!bBraking)
+		{
+			AddMovementInput(FRotator(0.f, Yaw, 0.f).Vector(), Throttle);
+		}
+	}
+	const FVector Heading = FRotator(0.f, Yaw, 0.f).Vector();
+	if (bGround)
+	{
+		FVector NewH = HVel;
+		if (bBraking)
+		{
+			NewH = NewH.GetClampedToMaxSize(FMath::Max(0.f, Speed - BikeBrakeDeceleration * DeltaSeconds));
+		}
+		// Tyre grip: the bike rolls where it points; sideways slip bleeds off quickly.
+		const double Along = FVector::DotProduct(NewH, Heading);
+		NewH = FMath::VInterpTo(NewH, Heading * Along, DeltaSeconds, 9.f);
+		Move->Velocity.X = NewH.X;
+		Move->Velocity.Y = NewH.Y;
+	}
+	SetActorRotation(FRotator(0.f, Yaw, 0.f));
+
+	// Lean into turns from the lateral acceleration (v * yaw rate), upright in the air.
+	BikeYawRate = FMath::FInterpTo(BikeYawRate, FMath::FindDeltaAngleDegrees(OldYaw, Yaw) / DeltaSeconds, DeltaSeconds, 10.f);
+	const float ForwardSpeed = static_cast<float>(FVector::DotProduct(FVector(Move->Velocity.X, Move->Velocity.Y, 0.0), Heading));
+	const float Lateral = ForwardSpeed * FMath::DegreesToRadians(BikeYawRate);
+	const float LeanTarget = bGround ? FMath::Clamp(FMath::RadiansToDegrees(FMath::Atan2(Lateral, 980.f)), -40.f, 40.f) : 0.f;
+	BikeLean = FMath::FInterpTo(BikeLean, LeanTarget, DeltaSeconds, 6.f);
+
+	// Pitch with the ground under the wheels, or with the flight path while airborne.
+	float PitchTarget = 0.f;
+	if (bGround && Move->CurrentFloor.IsWalkableFloor())
+	{
+		const FVector N = Move->CurrentFloor.HitResult.ImpactNormal;
+		PitchTarget = FMath::RadiansToDegrees(FMath::Atan2(static_cast<float>(-FVector::DotProduct(N, Heading)), static_cast<float>(N.Z)));
+	}
+	else if (!bGround)
+	{
+		PitchTarget = 0.5f * FMath::RadiansToDegrees(FMath::Atan2(static_cast<float>(Move->Velocity.Z), FMath::Max(Speed, 300.f)));
+	}
+	BikePitch = FMath::FInterpTo(BikePitch, FMath::Clamp(PitchTarget, -35.f, 35.f), DeltaSeconds, bGround ? 10.f : 3.f);
+	const float SteerScale = FMath::Lerp(1.f, 0.3f, FMath::Clamp(Speed / FMath::Max(BikeSpeed, 1.f), 0.f, 1.f));
+	BikeSteer = FMath::FInterpTo(BikeSteer, SteerTarget * SteerScale, DeltaSeconds, 8.f);
+
+	FDABikePose Pose;
+	Pose.ForwardSpeed = ForwardSpeed;
+	Pose.Steer = BikeSteer;
+	Pose.Lean = BikeLean;
+	Pose.Pitch = BikePitch;
+	Pose.bAirborne = !bGround;
+	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+	{
+		if (const ADAIslandManager* M = Sub->GetManager())
+		{
+			Pose.NightAlpha = M->IsNight() ? 1.f : 0.f;
+		}
+	}
+	Bike->UpdateRide(DeltaSeconds, Pose);
+
+	// Chase camera: after a moment without look input, swing in behind the bike.
+	if (Controller && LookIdleTime > 1.5f && Speed > 400.f && !IsMovementBlocked())
+	{
+		const FRotator Ctrl = Controller->GetControlRotation();
+		const float Follow = FMath::Min(1.f, 1.2f * DeltaSeconds);
+		const float NewYaw = static_cast<float>(Ctrl.Yaw) + FMath::FindDeltaAngleDegrees(static_cast<float>(Ctrl.Yaw), Yaw) * Follow;
+		Controller->SetControlRotation(FRotator(Ctrl.Pitch, NewYaw, Ctrl.Roll));
 	}
 }
 
