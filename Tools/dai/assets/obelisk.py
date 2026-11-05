@@ -4739,6 +4739,133 @@ def _girls_turrets_inside(mb, R):
                         core=GTRIM, rail=GTRIM)
 
 
+def _turret_boiserie(nc, r, a0, a1, wins):
+    """Panelled curved wall of a turret-top room (frame-local, centre at the origin, floor at z=0), over the
+    open sector a0..a1 (deg): white wainscot with raised panels and a gilt dado rail, rose silk panels in
+    gilt beading above, gilt pilasters between the windows, a crown moulding, curtains at the windows."""
+    def P(a, rr, z):
+        a = math.radians(a)
+        return (math.cos(a) * rr, math.sin(a) * rr, z)
+
+    def band(p, q, rr, z0, z1, mat):     # curved strip facing the room centre (clear of the 28-gon wall)
+        n = max(1, int(abs(q - p) / 7.5) + 1)
+        for k in range(n):
+            u, v = p + (q - p) * k / n, p + (q - p) * (k + 1) / n
+            nc.poly([P(v, rr, z0), P(u, rr, z0), P(u, rr, z1), P(v, rr, z1)], mat)
+
+    def tbox(a, rr, z, w, d, h, mat):    # small box tangent to the wall at angle a
+        with nc.at(P(a, rr, 0.0), rot=a + 90.0):
+            nc.box((0.0, 0.0, z), (w, d, h), mat)
+
+    def near_win(a, half):
+        return any(abs(((a - w + 180.0) % 360.0) - 180.0) < half for w in wins)
+    # wall runs between the windows (and the sector ends)
+    a = a0 + 1.0
+    step = 1.0
+    runs, cur = [], None
+    while a <= a1 - 1.0 + 1e-6:
+        ok = not near_win(a, 11.0)
+        if ok and cur is None:
+            cur = a
+        if (not ok or a + step > a1 - 1.0 + 1e-6) and cur is not None:
+            runs.append((cur, a if ok else a - step))
+            cur = None
+        a += step
+    for (p, q) in runs:
+        band(p, q, r - 0.035, 0.0, 0.86, K.TRIM_WHITE)                 # wainscot
+        band(p, q, r - 0.07, 0.0, 0.1, K.TRIM_WHITE)                  # skirting
+        band(p, q, r - 0.09, 0.86, 0.93, K.TRIM_GOLD)                 # dado rail
+        n = max(1, int(abs(q - p) * math.pi / 180.0 * r / 0.75))
+        for k in range(n):                                            # raised wainscot panels
+            m = p + (q - p) * (k + 0.5) / n
+            w = abs(q - p) * math.pi / 180.0 * r / n - 0.16
+            tbox(m, r - 0.05, 0.47, w, 0.03, 0.56, K.TRIM_WHITE)
+            for (dz, hh, ww) in ((0.21, 0.015, w - 0.1), (-0.21, 0.015, w - 0.1)):
+                tbox(m, r - 0.07, 0.47 + dz, ww, 0.012, hh, K.TRIM_GOLD)       # gilt beading
+            for dw in (-1, 1):
+                with nc.at(P(m, r - 0.07, 0.0), rot=m + 90.0):
+                    nc.box((dw * (w / 2 - 0.05), 0.0, 0.47), (0.015, 0.012, 0.435), K.TRIM_GOLD)
+    for (p, q) in [(a0 + 1.0, a1 - 1.0)]:
+        band(p, q, r - 0.035, 1.2, 2.02, "M_IntFabricPink")            # silk, continuous over the window heads
+        band(p, q, r - 0.05, 1.16, 1.2, K.TRIM_GOLD)                  # beading
+        band(p, q, r - 0.05, 2.02, 2.06, K.TRIM_GOLD)
+        band(p, q, r - 0.035, 2.06, 2.2, K.TRIM_WHITE)                 # frieze
+        band(p, q, r - 0.1, 2.2, 2.3, K.TRIM_GOLD)                   # crown moulding
+        band(p, q, r - 0.06, 2.3, 2.35, K.TRIM_WHITE)
+    for (p, q) in runs:                                               # gilt pilasters
+        n = max(1, int(round(abs(q - p) / 26.0)))
+        for k in range(n + 1):
+            m = p + (q - p) * k / n
+            tbox(m, r - 0.07, 1.6, 0.12, 0.06, 0.9, K.TRIM_GOLD)
+            tbox(m, r - 0.09, 2.1, 0.2, 0.08, 0.08, K.TRIM_GOLD)      # capital
+    for w in wins:                                                    # curtains + pelmet
+        for sgn in (-1, 1):
+            tbox(w + sgn * 10.0, r - 0.1, 0.62, 0.26, 0.08, 1.12, ("M_IntFabricPurple", "M_IntFabricPink")[sgn > 0])
+        tbox(w, r - 0.13, 1.25, 1.1, 0.08, 0.1, K.TRIM_GOLD)
+
+
+def _cut_turret_roofs(mb, mat, zmax=15.0, r_cut=None):
+    """The main hip roof's eaves run into the corner turrets: drop the roof (planes, soffit, fascia) inside each
+    turret's top room (its outer sectors, below the turret's own roof). The cut circle lies inside the turret
+    wall, so the stepped 24-gon edge is never seen; the corner quadrant over the attic keeps its roof."""
+    r_cut = r_cut or G_TURRET_R - G_RT / 2
+    n = 24
+
+    def clip(poly, nx, ny, d):        # keep the part with nx*x + ny*y <= d
+        out = []
+        for i, p in enumerate(poly):
+            q = poly[(i + 1) % len(poly)]
+            sp, sq = nx * p[0] + ny * p[1] - d, nx * q[0] + ny * q[1] - d
+            if sp <= 0:
+                out.append(p)
+            if (sp < 0 < sq) or (sq < 0 < sp):
+                t = sp / (sp - sq)
+                out.append(p.lerp(q, t))
+        return out if len(out) >= 3 else []
+
+    def area(poly):
+        return sum(((poly[i] - poly[0]).cross(poly[i + 1] - poly[0])).length for i in range(1, len(poly) - 1)) / 2
+
+    faces, mats, smooth = [], [], []
+    for (tx, ty) in G_TURRETS:
+        qx, qy = (1 if tx < 0 else -1), (1 if ty < 10 else -1)
+        lines = []
+        for k in range(n):            # outward edge lines of a 24-gon circumscribing r_cut
+            a = TAU * (k + 0.5) / n
+            nx, ny = math.cos(a), math.sin(a)
+            lines.append((nx, ny, nx * tx + ny * ty + r_cut / math.cos(math.pi / n)))
+        new_f, new_m, new_s = [], [], []
+        for f_, m_, s_ in zip(mb.faces, mb.face_mats, mb.face_smooth):
+            pts = [mb.verts[i] for i in f_]
+            if (m_ != mat or max(p.z for p in pts) > zmax
+                    or min(p.x for p in pts) > tx + r_cut + 0.1 or max(p.x for p in pts) < tx - r_cut - 0.1
+                    or min(p.y for p in pts) > ty + r_cut + 0.1 or max(p.y for p in pts) < ty - r_cut - 0.1):
+                new_f.append(f_), new_m.append(m_), new_s.append(s_)
+                continue
+            keep, rest = [], pts
+            for (nx, ny, d) in lines:      # peel off the convex pieces outside the polygon
+                if not rest:
+                    break
+                outside = clip(rest, -nx, -ny, -d)
+                if outside:
+                    keep.append(outside)
+                rest = clip(rest, nx, ny, d)
+            if rest:                        # inside: keep only the corner quadrant (attic side)
+                inner = clip(clip(rest, -qx, 0.0, -qx * tx), 0.0, -qy, -qy * ty)
+                if inner:
+                    keep.append(inner)
+            if len(keep) == 1 and len(keep[0]) == len(pts) and not rest:
+                new_f.append(f_), new_m.append(m_), new_s.append(s_)
+                continue
+            for poly in keep:
+                if area(poly) < 1e-5:
+                    continue
+                base = len(mb.verts)
+                mb.verts.extend(poly)
+                new_f.append(tuple(range(base, base + len(poly)))), new_m.append(m_), new_s.append(s_)
+        mb.faces, mb.face_mats, mb.face_smooth = new_f, new_m, new_s
+
+
 def _turret_angles(tx, ty):
     if ty < 10:
         return (-90.0, -45.0, 0.0) if tx > 0 else (-90.0, -135.0, 180.0)
@@ -5160,10 +5287,28 @@ def _girls_attic_furnish(aset, mb, nc, R):
             m3 = math.radians((a0 + a1) / 2 + 95.0)
             _rug(mb, math.cos(m3) * 1.5 - 0.8, math.sin(m3) * 1.5 - 0.8, math.cos(m3) * 1.5 + 0.8, math.sin(m3) * 1.5 + 0.8,
                  0.0, "M_IntCarpetRose", K.TRIM_GOLD)
+            # a lookout room: telescope at the window, a tall plant, sconces and silk lanterns on the curved wall
+            mw = math.radians((a0 + a1) / 2)
+            px_, py_ = math.cos(mw) * 1.7, math.sin(mw) * 1.7
+            for k in range(3):
+                b_ = math.radians(k * 120.0)
+                nc.beam((px_ + math.cos(b_) * 0.3, py_ + math.sin(b_) * 0.3, 0.0), (px_, py_, 1.15), 0.03, 0.03, K.WOOD_DARK)
+            nc.beam((px_ - math.cos(mw) * 0.35, py_ - math.sin(mw) * 0.35, 1.05),
+                    (px_ + math.cos(mw) * 0.4, py_ + math.sin(mw) * 0.4, 1.35), 0.1, 0.1, K.TRIM_GOLD)
+            for dd in (-100.0, 100.0):           # sconces on the curved wall between the windows
+                ad = (a0 + a1) / 2 + dd
+                ms = math.radians(ad)
+                f.prop("SM_Int_WallSconce", math.cos(ms) * 2.92, math.sin(ms) * 2.92, ad - 90.0, z=1.6)
+            for k in range(4):                      # silk lanterns hung from the cone
+                ml = math.radians(k * 90.0 + 45.0)
+                nc.box((math.cos(ml) * 1.2, math.sin(ml) * 1.2, 2.75), (0.01, 0.01, 0.5), K.BLACK)
+                nc.cylinder((math.cos(ml) * 1.2, math.sin(ml) * 1.2, 2.2), 0.16, 0.3, ("M_IntFabricPink", "M_IntFabricPurple")[k % 2],
+                            seg=10)
+            _turret_boiserie(nc, G_TURRET_R - G_RT, a0, a1, _turret_angles(tx, ty))
             _chandelier(f, 0.0, 0.0, 9.4, 1.0)
             f.light(0.0, 0.0, 2.2, 900.0, 4.0)
     tx, ty = G_TURRETS[0]
-    K.camera(aset, "3f_turret", (tx + 0.6, ty - 0.4, G_ZT + 1.5), (tx - 2.0, ty - 2.0, G_ZT + 0.1), 14.0)
+    K.camera(aset, "3f_turret", (tx + 0.6, ty - 0.4, G_ZT + 1.6), (tx - 2.0, ty - 2.0, G_ZT + 1.0), 17.0)   # eye level
     # the first-floor round bay alcove: window seat
     f = Frame(aset, mb, nc, 0.0, 0.0, G_Z1)
     with f:
@@ -5750,6 +5895,7 @@ def build_girls():
     _plan_reset(_girls_faces())
     try:
         _girls_building(main, nc, aset)
+        _cut_turret_roofs(main, GROOF)
         _girls_interior(aset, main, inner, inc)
     finally:
         _plan_end()

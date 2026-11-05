@@ -3930,11 +3930,12 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
             banner(C.nc, C.P(xa + 1.0 + k * (xb - xa - 2.0) / 2, y1 - 0.06, z + 2.6), C.F.yaw(0.0), 1.0, 1.6, col)
         plinth_bust(C, cx, y1 - 1.2, 180.0, z=z)
         C.plate(cx, y0, z + 2.3, 180.0, name, w=2.6, h=0.26, mat=NAVY_T)
-    else:   # store
-        for j in range(min(4, max(2, int((d - 2.0) / 2.0)))):
-            for i in range(min(6, int((xb - xa) / 1.15))):
+    else:   # store: racks through the whole depth (keeping the camera end free), stocked
+        n_rows = max(2, int((d - 3.4) / 2.0) + 1)
+        for j in range(n_rows):
+            for i in range(min(7, int((xb - xa) / 1.15))):
                 shelf_prop(C, "SM_Int_SteelShelves", xa + 0.6 + i * 1.15, y0 + 1.2 + j * 2.0, 0.0 if j % 2 else 180.0,
-                           seed * 7 + j * 5 + i, z=z, fill=0.3, kind="store")
+                           seed * 7 + j * 5 + i, z=z, fill=0.7, kind="store")
                 if (i + j) % 3 == 0:
                     C.prop("SM_Int_Box", xa + 0.6 + i * 1.15, y0 + 1.2 + j * 2.0 + (0.6 if j % 2 else -0.6), z, i * 17.0)
         C.prop("SM_Int_Ladder", xb - 0.6, y1 - 0.4, z, 0.0)
@@ -3956,6 +3957,13 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
             u = (x0 if free[0] == "-y" else y0) + 0.8 + k * 1.6
             px, py = (u, y0 + 0.02) if free[0] == "-y" else (x0 + 0.02, u)
             C.prop("SM_Int_Frame", px, py, z + 1.7, 180.0 if free[0] == "-y" else 90.0)
+    if kind == "store" and "ARCHIVE" in name.upper():   # filing cabinets down the free wall
+        wall = free[0]
+        for k in range(int(((x1 - x0) if wall in ("-y", "+y") else (y1 - y0)) / 1.25) - 1):
+            u = (x0 if wall in ("-y", "+y") else y0) + 1.0 + k * 1.25
+            px, py = ((u, y0 + 0.3) if wall == "-y" else (u, y1 - 0.3) if wall == "+y"
+                      else (x0 + 0.3, u) if wall == "-x" else (x1 - 0.3, u))
+            C.prop("SM_Int_Drawers", px, py, z, {"-y": 180.0, "+y": 0.0, "-x": 90.0, "+x": -90.0}[wall])
     if kind == "store":       # loose stock on the floor between the racks
         for k in range(int(w * d / 12)):
             C.prop(("SM_Int_Box", "SM_Int_Suitcase", "SM_Int_Bucket", "SM_Int_TrashBag")[k % 4],
