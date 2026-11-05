@@ -32,7 +32,19 @@ namespace
 		float Drag = 0.4f;       // 0 = keeps swinging, 1 = no inertia
 		float Gravity = 0.2f;    // m/s^2-ish pull down (VRM gravityPower)
 		bool bHeadCollide = false;
+		bool bLegCollide = false;   // skirts / coat tails: kept out of the thigh and calf capsules
 	};
+
+	// leg capsule radii (cm, mesh scale): thigh at the hip / knee, calf at the knee / ankle
+	constexpr float ThighRadius = 8.5f;
+	constexpr float CalfRadius = 6.0f;
+
+	FVector ClosestOnSegment(const FVector& P, const FVector& A, const FVector& B)
+	{
+		const FVector AB = B - A;
+		const double T = FMath::Clamp(FVector::DotProduct(P - A, AB) / FMath::Max(AB.SizeSquared(), 1e-6), 0.0, 1.0);
+		return A + AB * T;
+	}
 
 	bool SpringParamsFor(const FString& Name, FDASpringParams& Out)
 	{
@@ -43,12 +55,12 @@ namespace
 		}
 		if (Name.StartsWith(TEXT("skirt_")))
 		{
-			Out = { 2.2f, 0.55f, 0.3f, false };
+			Out = { 2.2f, 0.55f, 0.3f, false, true };
 			return true;
 		}
 		if (Name.StartsWith(TEXT("coattail_")) || Name.Contains(TEXT("CoatSkirt")))
 		{
-			Out = { 1.6f, 0.5f, 0.35f, false };
+			Out = { 1.6f, 0.5f, 0.35f, false, true };
 			return true;
 		}
 		if (Name.Contains(TEXT("Bust")) || Name.Contains(TEXT("Hood")))
@@ -122,6 +134,9 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 	bool bChainsBuilt = false;
 	FCompactPoseBoneIndex HeadIndex = FCompactPoseBoneIndex(INDEX_NONE);
 	FCompactPoseBoneIndex NeckIndex = FCompactPoseBoneIndex(INDEX_NONE);
+	FCompactPoseBoneIndex LegIndex[2][3] = {
+		{ FCompactPoseBoneIndex(INDEX_NONE), FCompactPoseBoneIndex(INDEX_NONE), FCompactPoseBoneIndex(INDEX_NONE) },
+		{ FCompactPoseBoneIndex(INDEX_NONE), FCompactPoseBoneIndex(INDEX_NONE), FCompactPoseBoneIndex(INDEX_NONE) } };
 	FVector LastHeadWorld = FVector::ZeroVector;
 	// stats for the game thread (read in NativeUpdateAnimation, after the previous evaluation)
 	int32 StatChains = 0;
@@ -193,6 +208,15 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 		const FReferenceSkeleton& Ref = BC.GetReferenceSkeleton();
 		HeadIndex = Resolve(Ref.FindBoneIndex(TEXT("head")));
 		NeckIndex = Resolve(Ref.FindBoneIndex(TEXT("neck_01")));
+		const TCHAR* LegNames[2][3] = { { TEXT("thigh_l"), TEXT("calf_l"), TEXT("foot_l") },
+		                                { TEXT("thigh_r"), TEXT("calf_r"), TEXT("foot_r") } };
+		for (int32 Side = 0; Side < 2; ++Side)
+		{
+			for (int32 J = 0; J < 3; ++J)
+			{
+				LegIndex[Side][J] = Resolve(Ref.FindBoneIndex(LegNames[Side][J]));
+			}
+		}
 		for (FDASpringChain& Chain : Chains)
 		{
 			Chain.Bones.Reset();
@@ -271,6 +295,43 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 			bTeleported = !LastHeadWorld.IsZero() && FVector::DistSquared(LastHeadWorld, HeadCenterW) > FMath::Square(120.f);
 			LastHeadWorld = HeadCenterW;
 		}
+		// leg capsules (world space): hip -> knee and knee -> ankle per side
+		FVector Leg[2][3];
+		bool bLegs = true;
+		for (int32 Side = 0; Side < 2 && bLegs; ++Side)
+		{
+			for (int32 J = 0; J < 3; ++J)
+			{
+				if (LegIndex[Side][J].GetInt() == INDEX_NONE)
+				{
+					bLegs = false;
+					break;
+				}
+				Leg[Side][J] = SimComponentToWorld.TransformPosition(CS.GetComponentSpaceTransform(LegIndex[Side][J]).GetLocation());
+			}
+		}
+		const float LegScale = static_cast<float>(SimComponentToWorld.GetScale3D().Z);
+		auto PushOutOfLegs = [&](FVector& P)
+		{
+			if (!bLegs)
+			{
+				return;
+			}
+			for (int32 Side = 0; Side < 2; ++Side)
+			{
+				for (int32 Seg = 0; Seg < 2; ++Seg)
+				{
+					const FVector C = ClosestOnSegment(P, Leg[Side][Seg], Leg[Side][Seg + 1]);
+					const float R = (Seg == 0 ? ThighRadius : CalfRadius) * LegScale;
+					const FVector Off = P - C;
+					const double D = Off.Size();
+					if (D < R && D > KINDA_SMALL_NUMBER)
+					{
+						P = C + Off / D * R;
+					}
+				}
+			}
+		};
 		const FVector GravityDir(0.0, 0.0, -1.0);
 		int32 ValidChains = 0;
 		float MaxDeflection = 0.f;
@@ -326,6 +387,12 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 						Next = HeadCenterW + Off / D * Radius;
 						Next = HeadW + (Next - HeadW).GetSafeNormal() * Len;
 					}
+				}
+				if (Chain.Params.bLegCollide)
+				{
+					// a swinging skirt / coat panel never ends up inside a leg
+					PushOutOfLegs(Next);
+					Next = HeadW + (Next - HeadW).GetSafeNormal() * Len;
 				}
 				if (Dt > 0.f)
 				{
