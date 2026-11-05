@@ -313,23 +313,35 @@ class Tailor:
             # whose two halves would cross at the top of the parting - drape.rims)
             g.setdefault("vent_pos", set()).update(
                 tuple(round(c, 5) for c in v.co) for e in split for v in e.verts)
-            bmesh.ops.split_edges(self.bm, edges=split)
-        # panel side / front from the faces: after the cut no face straddles a vent, so the centre of every face
-        # says which panel it is on; a vertex takes the side all its faces agree on (a vertex still shared at the
-        # top of a vent stays undecided and keeps its own weights)
+            # split the vertices along the cut as well, so the panels part completely (a shared hem vertex at
+            # the bottom of a vent would stretch the hem across the vent with every stride)
+            bmesh.ops.split_edges(self.bm, edges=split,
+                                  verts=list(dict.fromkeys(v for e in split for v in e.verts)), use_verts=True)
+        # panels = connected free-hanging faces after the cut (the vents now part completely); a panel's side and
+        # front / back come from the panel as a whole - a face next to a vent can sit on either side of x = 0
         free = [f for f in self.faces_of(name) if max(v.co.z for v in f.verts) < cut + 1e-4]
-        votes = {}
-        for f in free:
-            c = f.calc_center_median()
-            sd = "l" if c.x > 0 else "r"
-            for v in f.verts:
-                votes.setdefault(v, set()).add((sd, c.y < cy))
+        free_set = set(free)
         side_of, front_of = {}, {}
-        for v, vs in votes.items():
-            sides = {x[0] for x in vs}
-            if len(sides) == 1:
-                side_of[v] = sides.pop()
-                front_of[v] = sum(1 for x in vs if x[1]) * 2 >= len(vs)
+        seen = set()
+        for f0 in free:
+            if f0 in seen:
+                continue
+            comp, stack = [], [f0]
+            seen.add(f0)
+            while stack:
+                f = stack.pop()
+                comp.append(f)
+                for e in f.edges:
+                    for h in e.link_faces:
+                        if h in free_set and h not in seen:
+                            seen.add(h)
+                            stack.append(h)
+            vs = [v for f in comp for v in f.verts]
+            mx = sum(v.co.x for v in vs) / len(vs)
+            my = sum(v.co.y for v in vs) / len(vs)
+            for v in vs:
+                side_of[v] = "l" if mx > 0 else "r"
+                front_of[v] = my < cy
         g["panel_side"] = side_of
         # panel weights: front panels -> own thigh, back panels -> pelvis + own thigh (+ cloth bones later)
         tl, tr, pv = self.gi("thigh_l"), self.gi("thigh_r"), self.gi("pelvis")

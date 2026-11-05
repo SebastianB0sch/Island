@@ -440,8 +440,8 @@ class Drape:
             for e in f.edges:
                 a, b = (w.inv[index[x]] for x in e.verts)
                 if (min(a, b), max(a, b)) in open_keys and e.is_boundary:
-                    if vent and all(tuple(round(c, 5) for c in x.co) in vent for x in e.verts):
-                        continue                         # a vent edge: plain fabric edge
+                    if vent and any(tuple(round(c, 5) for c in x.co) in vent for x in e.verts):
+                        continue          # a vent edge, or the hem right at a vent: the band stops there
                     edges.append(e)
         edges = list(dict.fromkeys(edges))
         if not edges:
@@ -449,12 +449,15 @@ class Drape:
         ret = bmesh.ops.extrude_edge_only(t.bm, edges=edges)
         nverts = [x for x in ret["geom"] if isinstance(x, bmesh.types.BMVert)]
         nfaces = [x for x in ret["geom"] if isinstance(x, bmesh.types.BMFace)]
+        panel_side = t.garments[name].get("panel_side")
         for nv in nverts:
             src = next((e.other_vert(nv) for e in nv.link_edges if e.other_vert(nv) in index), None)
             if src is None:
                 continue
             n = nrm[w.inv[index[src]]]
             nv.co = src.co - Vector(n) * depth + Vector((0, 0, lift))
+            if panel_side is not None and src in panel_side:
+                panel_side[nv] = panel_side[src]       # the band belongs to its panel (same leg)
         idx = t.garments[name]["idx"]
         for f in nfaces:
             f.material_index = idx
@@ -554,7 +557,9 @@ def fold_mask(P, name, rig, spec, legs=True):
 # jacket ...), so neighbouring layers deform together and keep their spacing in every pose. A garment that
 # merely kept the weights of the skin vertex it was cut from drifts out of step wherever the drape moved it
 # sideways (shoulders, hips): the layers then slide through each other as soon as an arm or a leg moves.
-INHERIT = ("Pants", "Shirt", "Gloves", "Boots", "Skirt", "Jacket", "Collar", "Capelet")     # inner -> outer
+# inner -> outer. Not the capelet: it is a stiff piece over the shoulders and must not take the arm weights of
+# what lies under its rim (it would stretch when the arms come down); it keeps its own gentle weights.
+INHERIT = ("Pants", "Shirt", "Gloves", "Boots", "Skirt", "Jacket", "Collar")
 INHERIT_REACH = 0.07            # further than this from anything below: keep the garment's own weights
 COAT_REACH = 0.2                 # vented coat panels find the leg under them this far out
 TAIL_CONTACT, TAIL_FREE = 0.03, 0.08    # free-hanging cloth follows a leg fully within 3 cm, not past 11 cm

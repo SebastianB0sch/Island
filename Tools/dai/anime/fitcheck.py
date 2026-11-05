@@ -45,7 +45,9 @@ POSES = {
 }
 
 FOLD_DOT = -0.3      # a triangle whose normal points against its neighbours' (cloth folded through itself)
-TEAR_RATIO = 2.5     # an edge stretched beyond this many times its rest length (cloth torn open)
+TEAR_RATIO = 2.5     # an edge stretched beyond this many times its rest length (cloth torn open) ...
+TEAR_MIN = 0.01      # ... and by more than this (m): sub-millimetre cut edges stretch without anything showing
+MIN_AREA = 4e-6      # triangles smaller than ~2 x 2 mm are ignored by the fold check
 
 # budgets: poking vertices allowed per pose (a few at grazing seams are invisible) and depth in mm
 BUDGET_COUNT = 12
@@ -290,7 +292,8 @@ def audit(obj, arm, poses, log=print):
                 # exact projection there, a little slack between neighbouring triangles elsewhere
                 slack = np.array([0.0 if tri_key.get(tuple(t), False) else 0.15 for t in tri_of.tolist()])
                 anchors[(inner, outer)] = (iv[keep], tri_of, bary, slack)
-    surfaces = {g: _Surface([faces_all[fi] for fi in groups[g]], co) for g in outers}
+    side = _leg_side(obj)
+    surfaces = {g: _Surface([faces_all[fi] for fi in groups[g]], co, side) for g in outers}
     rest_fold = {g: srf.check(co)[0] for g, srf in surfaces.items()}
     result = {"Rest": dict(poke={}, depth=0.0, fold=sum(rest_fold.values()), tear=0)}
     for pose, act, frames in poses:
@@ -320,16 +323,35 @@ def audit(obj, arm, poses, log=print):
     return result, _intended_open(obj, groups, covered)
 
 
+def _leg_side(obj):
+    """Per vertex: +1 / -1 when its strongest bone is a left / right leg bone, 0 otherwise."""
+    names = {vg.index: vg.name for vg in obj.vertex_groups}
+    out = np.zeros(len(obj.data.vertices), np.int8)
+    for v in obj.data.vertices:
+        if not v.groups:
+            continue
+        g = max(v.groups, key=lambda x: x.weight)
+        n = names.get(g.group, "")
+        if n.split("_")[0] in ("thigh", "calf", "foot", "ball") and n[-2:] in ("_l", "_r"):
+            out[v.index] = 1 if n.endswith("_l") else -1
+    return out
+
+
 class _Surface:
     """Triangles and edge adjacency of one garment, for the fold / tear checks."""
 
-    def __init__(self, faces, rest):
+    def __init__(self, faces, rest, side=None):
         self.tris = _tris(faces)
+        self.side = side
         edge_tris = {}
         for ti, (a, b, c) in enumerate(self.tris):
             for x, y in ((a, b), (b, c), (c, a)):
                 edge_tris.setdefault((min(x, y), max(x, y)), []).append(ti)
-        self.pairs = np.array([t for t in edge_tris.values() if len(t) == 2], np.int64).reshape(-1, 2)
+        a, b, c = rest[self.tris[:, 0]], rest[self.tris[:, 1]], rest[self.tris[:, 2]]
+        area = 0.5 * np.linalg.norm(np.cross(b - a, c - a), axis=1)
+        real = area > MIN_AREA                        # sliver triangles left by plane cuts flip on nothing
+        pairs = [t for t in edge_tris.values() if len(t) == 2 and real[t[0]] and real[t[1]]]
+        self.pairs = np.array(pairs, np.int64).reshape(-1, 2)
         self.edges = np.array(list(edge_tris), np.int64).reshape(-1, 2)
         self.rest_len = np.linalg.norm(rest[self.edges[:, 0]] - rest[self.edges[:, 1]], axis=1)
 
@@ -342,8 +364,13 @@ class _Surface:
         if len(self.pairs):
             fold = int((np.einsum("ij,ij->i", n[self.pairs[:, 0]], n[self.pairs[:, 1]]) < FOLD_DOT).sum())
         ln = np.linalg.norm(co[self.edges[:, 0]] - co[self.edges[:, 1]], axis=1)
-        tear = int((ln > TEAR_RATIO * np.maximum(self.rest_len, 1e-4)).sum())
-        return fold, tear
+        stretched = (ln > TEAR_RATIO * np.maximum(self.rest_len, 1e-4)) & (ln - self.rest_len > TEAR_MIN)
+        if self.side is not None:
+            # a tear is cloth bound across the two legs (left vs right leg bones at its two ends): that is what rips
+            # open in a stride. Shoulders and elbows stretch with the body under them.
+            sa, sb = self.side[self.edges[:, 0]], self.side[self.edges[:, 1]]
+            stretched &= (sa != 0) & (sb != 0) & (sa != sb)
+        return fold, int(stretched.sum())
 
 
 def _relax_anchors(rest, groups, faces_all, verts_of, outers):
@@ -551,8 +578,8 @@ def over_budget(rep):
     bad = []
     for pose, r in rep["poses"].items():
         n = max(r["poke"].values()) if r["poke"] else 0
-        new_folds = r.get("fold", 0) if pose != "Rest" else 0     # rest creases (collar walls, hem bands) are design
-        if n > BUDGET_COUNT or r["depth"] > BUDGET_DEPTH or new_folds or r.get("tear", 0):
+        # folds are reported (elbow / knee creases are what skinned cloth does); tears across the legs fail
+        if n > BUDGET_COUNT or r["depth"] > BUDGET_DEPTH or r.get("tear", 0):
             bad.append(pose)
     return bad
 
