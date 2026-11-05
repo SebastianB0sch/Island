@@ -89,29 +89,47 @@ class Gait:
     def frames(self):
         return int(round(self.cycle * FPS))
 
+    @property
+    def cadence(self):
+        """Steps per minute."""
+        return 120.0 / self.cycle if self.cycle > 0 else 0.0
 
-# Authored at human scale (1.7 m cast): a normal walk and a solid distance run.
+
+# Authored at human scale (1.7 m cast, 0.79 m hip-to-ankle leg) from gait-lab norms, so the legs
+# never cycle faster than the body travels:
+#   * walk 1.50 m/s: 120 steps/min (1.00 s cycle), 0.75 m steps, 60 % stance, ~4 cm pelvis bob,
+#     heel rise at 30 % of the cycle, ~60 deg peak knee flexion in swing;
+#   * run 4.20 m/s: ~171 steps/min (0.70 s cycle), 1.47 m steps, ~0.20 s ground contact (28 %
+#     duty) and a real flight phase, ~7 cm vertical oscillation, midfoot strike under the knee.
+# The runtime (DAAvatarAnimInstance) lowers step rate and step length together below the walk
+# speed and raises the cadence smoothly between walk and run, so these are the two anchors of a
+# human cadence curve rather than speeds the clips get time-stretched to.
 WALK = Gait(
-    name="Walk", speed=1.50, cycle=0.80, duty=0.58, contact_y=-0.300,
-    heel_angle=15.0, heel_flat=0.10, heel_off=0.40, push_angle=42.0,
-    swing_lift=0.105, swing_toe=13.0,
-    lean=2.4, pelvis_yaw=4.0, pelvis_roll=3.0, shoulder_yaw=5.0, trunk_roll=1.5,
-    sway=0.018, knee_margin=0.012, toe_out=6.0,
-    profile=((0.00, 0.860), (0.25, 0.930), (0.50, 0.860), (0.75, 0.930), (1.00, 0.860)),
+    name="Walk", speed=1.50, cycle=30.0 / FPS, duty=0.60, contact_y=-0.300,
+    heel_angle=17.0, heel_flat=0.10, heel_off=0.30, push_angle=44.0,
+    swing_lift=0.060, swing_toe=12.0,
+    lean=2.0, pelvis_yaw=4.5, pelvis_roll=3.5, shoulder_yaw=6.0, trunk_roll=1.4,
+    sway=0.020, knee_margin=0.010, toe_out=6.0,
+    profile=(0.902, 0.022),
 )
 
 RUN = Gait(
-    name="Run", speed=4.20, cycle=14.0 / FPS, duty=0.30, contact_y=-0.105,
-    heel_angle=3.0, heel_flat=0.055, heel_off=0.16, push_angle=52.0,
-    swing_lift=0.255, swing_toe=7.0,
-    lean=6.5, pelvis_yaw=8.0, pelvis_roll=4.0, shoulder_yaw=11.0, trunk_roll=2.2,
-    sway=0.011, knee_margin=0.055, toe_out=3.0,
-    profile=((0.00, 0.880), (0.15, 0.842), (0.26, 0.840), (0.31, 0.855),
-             (0.405, 0.940), (0.50, 0.880), (0.65, 0.842), (0.76, 0.840),
-             (0.81, 0.855), (0.905, 0.940), (1.00, 0.880)),
+    name="Run", speed=4.20, cycle=21.0 / FPS, duty=0.28, contact_y=-0.240,
+    heel_angle=6.0, heel_flat=0.045, heel_off=0.13, push_angle=60.0,
+    swing_lift=0.300, swing_toe=8.0,
+    lean=7.0, pelvis_yaw=9.0, pelvis_roll=4.5, shoulder_yaw=12.0, trunk_roll=2.0,
+    sway=0.010, knee_margin=0.050, toe_out=3.0,
+    profile=(0.872, 0.034),
 )
 
-IDLE_PERIOD = 3.0
+# Human gait-lab ranges the validator enforces on every baked locomotion take (steps/min and
+# step length relative to the 0.79 m leg). A cycle outside them reads as shuffling or as legs
+# spinning faster than the body moves, even when the planted foot does not slide.
+CADENCE_RANGE = {"Walk": (105.0, 130.0), "Run": (150.0, 185.0)}
+STEP_RANGE = {"Walk": (0.80, 1.05), "Run": (1.60, 2.10)}
+
+# Relaxed standing breathes ~15 times a minute (two breaths per loop) with one slow weight shift.
+IDLE_PERIOD = 8.0
 
 
 # --------------------------------------------------------------------------- rig helpers
@@ -229,20 +247,6 @@ class Rig:
 
 
 # --------------------------------------------------------------------------- gait model
-def _curve(profile, phase):
-    """Periodic piecewise smoothstep through (phase, value) control points."""
-    p = phase % 1.0
-    pts = list(profile)
-    for i in range(len(pts) - 1):
-        p0, v0 = pts[i]
-        p1, v1 = pts[i + 1]
-        if p0 <= p <= p1:
-            if p1 <= p0:
-                return v1
-            return _lerp(v0, v1, _smooth((p - p0) / (p1 - p0)))
-    return pts[-1][1]
-
-
 def _foot(rig, gait, phase, side):
     """Return (ankle target, foot pitch, ball pitch, in_stance) for one leg.
 
@@ -283,25 +287,40 @@ def _foot(rig, gait, phase, side):
     a0, p0, _ = stance_foot(gait.duty)
     a1, p1, _ = stance_foot(0.0)
     t = (lp - gait.duty) / max(1.0 - gait.duty, 1e-6)
+    # The foot accelerates out of toe-off and decelerates into the next contact.
     e = _smooth(t)
     ankle = _lerp_vec(a0, a1, e)
-    ankle.z += gait.swing_lift * math.sin(math.pi * t) ** 0.85
-    pitch = _lerp(p0, p1, e) - gait.swing_toe * math.sin(math.pi * t)
+    # Peak ankle lift in early swing (~35-40 %), when the knee is most flexed and the foot is
+    # still behind the body; the foot then extends low over the ground into contact.
+    tl = t ** 0.72
+    ankle.z += gait.swing_lift * math.sin(math.pi * tl) ** 1.1
+    pitch = _lerp(p0, p1, e) - gait.swing_toe * math.sin(math.pi * min(1.0, t * 1.15))
     ball = pitch * _smooth(min(1.0, t / 0.16))
     return ankle, pitch, ball, False
 
 
 def _pelvis_base(gait, phase):
+    """Desired pelvis height (canonical skeleton): (mean, amplitude) twice per cycle.
+
+    Walking vaults over a stiff stance leg, so the pelvis is lowest in the middle of double
+    support and highest at mid stance. Running is a spring: lowest at mid stance (compression)
+    and highest in the middle of the flight phase.
+    """
+    if gait.name == "Idle" or not gait.profile:
+        return 0.92
+    mean, amp = gait.profile
     if gait.name == "Run":
-        return _curve(gait.profile, phase)
-    if gait.name == "Walk":
-        return 0.895 - 0.035 * math.cos(4.0 * math.pi * phase)
-    return 0.92
+        low = gait.duty * 0.5
+    else:
+        low = max(0.0, gait.duty - 0.5) * 0.5
+    return mean - amp * math.cos(4.0 * math.pi * (phase - low))
 
 
 def _wrist_target(rig, gait, phase, side, shoulder, idle=False):
     s = 1.0 if side == "l" else -1.0
-    c = math.cos(2.0 * math.pi * phase)
+    # The arms are pendulums driven by the trunk: they swing in opposition to the legs but
+    # reach their extremes slightly after the opposite heel strike.
+    c = math.cos(2.0 * math.pi * (phase - 0.04))
     hs = rig.height_scale
     if idle or gait.name == "Idle":
         y = 0.010 * math.sin(2.0 * math.pi * phase + (0.6 if s > 0 else 1.7))
@@ -313,9 +332,11 @@ def _wrist_target(rig, gait, phase, side, shoulder, idle=False):
         z = shoulder.z - (0.330 - 0.150 * (0.5 + 0.5 * fwd)) * hs
         x = shoulder.x + s * 0.030 * hs
     else:
-        y = s * 0.150 * c
-        z = shoulder.z - 0.450 * hs
-        x = shoulder.x + s * 0.055 * hs
+        # Forward swing is larger than the backward swing and bends the elbow more.
+        fwd = max(0.0, -s * c)
+        y = s * 0.165 * c - 0.030
+        z = shoulder.z - (0.455 - 0.045 * fwd) * hs
+        x = shoulder.x + s * (0.060 - 0.020 * fwd) * hs
     return Vector((x, y, z))
 
 
@@ -358,8 +379,9 @@ def _frame(rig, gait, phase, idle=False):
         sway = 0.0075 * math.sin(a)
         yaw = 1.3 * math.sin(a + 0.4)
         roll = -1.1 * math.sin(a)
-        lean = 1.2 + 0.25 * math.sin(a * 2.0)
-        base = 0.918 + 0.0018 * math.sin(a * 2.0)
+        breath = math.sin(a * 2.0)          # two breaths per 8 s loop (~15 / min)
+        lean = 1.2 + 0.20 * breath
+        base = 0.918 + 0.0015 * breath
         base *= rig.height_scale
         pelvis_rot = (lean * 0.16, roll, yaw)
         feet = {side: (Vector((rig.foot_x[side], rig.joint[f"foot_{side}"].y, rig.ankle_z)), 0.0, 0.0,
@@ -368,10 +390,12 @@ def _frame(rig, gait, phase, idle=False):
         upper = {
             "pelvis": (lean * 0.16, roll, yaw),
             "spine_01": (lean * 0.30, -roll * 0.45, -yaw * 0.20),
-            "spine_02": (lean * 0.55 + 0.35 * math.sin(a * 2.0), -roll * 0.80, -yaw * 0.55),
-            "spine_03": (lean * 0.92 + 0.45 * math.sin(a * 2.0), -roll, -yaw * 0.85),
-            "neck_01": (lean * 0.25, -roll * 0.15, -yaw * 0.4),
-            "head": (-lean * 0.10, roll * 0.15, -yaw * 0.05 + 2.5 * math.sin(a + 0.6)),
+            "spine_02": (lean * 0.55 + 0.35 * breath, -roll * 0.80, -yaw * 0.55),
+            "spine_03": (lean * 0.92 + 0.50 * breath, -roll, -yaw * 0.85),
+            "neck_01": (lean * 0.25 - 0.20 * breath, -roll * 0.15, -yaw * 0.4),
+            # the gaze wanders a little (a slow look to one side and a smaller glance)
+            "head": (-lean * 0.10 + 0.6 * math.sin(a * 3.0 + 1.1), roll * 0.15,
+                     -yaw * 0.05 + 3.5 * math.sin(a + 0.6) + 1.5 * math.sin(a * 3.0 + 2.0)),
         }
         return _assemble(rig, gait, phase, pelvis_x, base, pelvis_rot, feet, upper, idle=True)
 
@@ -391,7 +415,10 @@ def _frame(rig, gait, phase, idle=False):
         hip = rig.hip(tmp, side)
         dz = hip.z - tmp.translation.z
         horiz2 = (hip.x - ankle.x) ** 2 + (hip.y - ankle.y) ** 2
-        reach = rig.leg - max(0.0, gait.knee_margin * (0.4 + 0.6 * math.sin(math.pi * min(1.0, phase / max(gait.duty, 1e-6)))))
+        # Knee flexion under load: smallest at contact, largest at mid stance (each leg's own phase).
+        lp = (phase + (0.0 if side == "l" else 0.5)) % 1.0
+        load = math.sin(math.pi * min(1.0, lp / max(gait.duty, 1e-6)))
+        reach = rig.leg - max(0.0, gait.knee_margin * (0.4 + 0.6 * load))
         if horiz2 >= reach * reach:
             horiz2 = (reach * 0.995) ** 2
         limit = min(limit, ankle.z - dz + math.sqrt(max(0.0, reach * reach - horiz2)))
@@ -403,10 +430,14 @@ def _frame(rig, gait, phase, idle=False):
     return _assemble(rig, gait, phase, sway, base, pelvis_rot, feet, upper)
 
 
-def _assemble(rig, gait, phase, pelvis_x, pelvis_z, pelvis_rot, feet, upper, idle=False):
+def _assemble(rig, gait, phase, pelvis_x, pelvis_z, pelvis_rot, feet, upper, idle=False, arms=None, pelvis_y=0.0):
+    """Solve legs (two-bone IK to the ankle targets) and arms for one frame.
+
+    arms: optional {side: (wrist target, elbow bend direction, wrist flex deg)} overriding the
+    locomotion arm swing (authored stances such as the duel pose use it)."""
     offset = pelvis_z - rig.joint["pelvis"].z
-    pelvis_world = rig.pelvis((pelvis_x, 0.0, offset), pelvis_rot)
-    key = {"_pelvis_offset": (pelvis_x, 0.0, offset)}
+    pelvis_world = rig.pelvis((pelvis_x, pelvis_y, offset), pelvis_rot)
+    key = {"_pelvis_offset": (pelvis_x, pelvis_y, offset)}
     for bname, rot in upper.items():
         key[bname] = rot
     clamped = 0
@@ -423,10 +454,15 @@ def _assemble(rig, gait, phase, pelvis_x, pelvis_z, pelvis_rot, feet, upper, idl
     upper_world = rig.upper_world(pelvis_world, upper)
     for side, s in (("l", 1.0), ("r", -1.0)):
         shoulder = rig.shoulder(upper_world, side)
-        wrist = _wrist_target(rig, gait, phase, side, shoulder, idle)
-        bend_dir = (s * 0.14, 0.42, -1.0) if gait.name != "Idle" else (s * 0.10, 0.22, -1.0)
+        if arms and side in arms:
+            rel, bend_dir, wrist_deg = arms[side]
+            wrist = shoulder + Vector(rel)
+        else:
+            wrist = _wrist_target(rig, gait, phase, side, shoulder, idle)
+            bend_dir = (s * 0.14, 0.42, -1.0) if gait.name != "Idle" else (s * 0.10, 0.22, -1.0)
+            wrist_deg = 14.0 if gait.name == "Run" else 10.0
         up_dir, fore_dir = rig.pose_arm(side, shoulder, wrist, bend_dir)
-        h = _hand_dir(fore_dir, 14.0 if gait.name == "Run" else 10.0)
+        h = _hand_dir(fore_dir, wrist_deg)
         key[f"upperarm_{side}"] = {"seg": tuple(up_dir), "rest": tuple(rig.seg[f"upperarm_{side}"])}
         key[f"lowerarm_{side}"] = {"seg": tuple(fore_dir), "rest": tuple(rig.seg[f"lowerarm_{side}"])}
         key[f"hand_{side}"] = {"seg": tuple(h), "rest": tuple(rig.seg[f"lowerarm_{side}"])}
@@ -536,16 +572,27 @@ def validate(arm, action, gait, log=print, raise_on_error=True):
         loop = max(loop, (a.translation - c.translation).length)
         loop = max(loop, math.degrees(a.to_quaternion().rotation_difference(c.to_quaternion()).angle))
     RT._assign(arm, None)
-    ok = (penetration > -9.0 and contact > (64.0 if gait.name == "Run" else 78.0) and
-          measured > gait.speed * 0.92 and measured < gait.speed * 1.08 and loop < 0.002)
-    log(f"  gait {gait.name:4s}: {gait.frames} frames, authored {gait.speed:.2f} m/s, "
+    # Human-likeness: cadence and step length (relative to this rig's leg) must sit in the
+    # gait-lab range for the gait; the planted foot speed must match the authored speed.
+    cadence = gait.cadence
+    step_rel = gait.step / max(rig.leg, 1e-6)
+    lo_c, hi_c = CADENCE_RANGE.get(gait.name, (0.0, 1e9))
+    lo_s, hi_s = STEP_RANGE.get(gait.name, (0.0, 1e9))
+    human = lo_c <= cadence <= hi_c and lo_s <= step_rel <= hi_s
+    # Frames with a foot on the ground: two stances per cycle, so about 2 x duty (all of them while
+    # walking with double support), less a frame or two of rounding.
+    expected_contact = min(100.0, 200.0 * gait.duty)
+    ok = (penetration > -9.0 and contact > expected_contact - 8.0 and
+          measured > gait.speed * 0.95 and measured < gait.speed * 1.05 and loop < 0.002 and human)
+    log(f"  gait {gait.name:4s}: {gait.frames} frames, {cadence:.0f} steps/min, step {gait.step:.2f} m "
+        f"({step_rel:.2f} leg), authored {gait.speed:.2f} m/s, "
         f"measured {measured:.2f} m/s, contact {contact:.0f}%, lowest {penetration:.1f} mm, "
         f"knee {knee_min:.0f}-{knee_max:.0f} deg, pelvis {(min(pelvis_z)):.3f}-{max(pelvis_z):.3f} m, "
         f"loop {loop:.4f} {'OK' if ok else 'CHECK'}")
     if raise_on_error and not ok:
         raise RuntimeError(f"gait validation failed for {gait.name}")
-    return dict(speed=measured, contact=contact, penetration=penetration, loop=loop,
-                knee=(knee_min, knee_max), pelvis=(min(pelvis_z), max(pelvis_z)), ok=ok)
+    return dict(speed=measured, contact=contact, penetration=penetration, loop=loop, cadence=cadence,
+                step=gait.step, knee=(knee_min, knee_max), pelvis=(min(pelvis_z), max(pelvis_z)), ok=ok)
 
 
 # bpy is imported lazily only in validate so the gait maths can be unit-tested outside Blender.

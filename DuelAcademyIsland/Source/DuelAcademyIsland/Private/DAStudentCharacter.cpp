@@ -46,7 +46,8 @@ ADAStudentCharacter::ADAStudentCharacter()
 	Move->MaxStepHeight = 45.f;
 	Move->SetWalkableFloorAngle(46.f);
 	Move->MaxFlySpeed = SwimSpeed;
-	Move->BrakingDecelerationFlying = 1400.f;
+	// Water drag: a swimmer glides to a stop over about half a second instead of halting.
+	Move->BrakingDecelerationFlying = 350.f;
 	Move->bMaintainHorizontalGroundVelocity = true;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -362,6 +363,11 @@ void ADAStudentCharacter::OnInteract(const FInputActionValue& V)
 		{
 			if (I->CanInteract(this))
 			{
+				// Reach out for doors, counters and machines; talking to people needs no gesture.
+				if (Avatar && !Target->IsA<APawn>())
+				{
+					Avatar->PlayGesture(TEXT("Interact"));
+				}
 				I->Interact(this);
 			}
 		}

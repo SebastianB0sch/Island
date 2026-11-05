@@ -11,8 +11,14 @@
 
 namespace
 {
-	constexpr float IdleBlendSpeed = 16.f;
-	constexpr float ActionBlendSpeed = 14.f;
+	/** Weight interpolation rate of the idle / walk / run blend (1/s). */
+	constexpr float LocomotionBlendSpeed = 14.f;
+	/** Ground-speed filter (1/s): only hides velocity jitter, ~50 ms lag. */
+	constexpr float SpeedFilterRate = 20.f;
+	/** Below this ground speed (cm/s) the character stands; no micro-steps. */
+	constexpr float MinStepSpeed = 6.f;
+	/** Upper limit of the solved cadence, relative to the run clip's own cadence. */
+	constexpr float MaxCadenceScale = 1.35f;
 }
 
 struct FDAAnimInstanceProxy : public FAnimInstanceProxy
@@ -235,6 +241,8 @@ void UDAAvatarAnimInstance::NativeInitializeAnimation()
 	ActionWeightA = ActionWeightB = 0.f;
 	ActionTargetA = 0.f;
 	ActionPlayRateA = ActionPlayRateB = 1.f;
+	ActionBlendRateA = ActionBlendRateB = 1.f / 0.2f;
+	BlendedCadence = 0.f;
 	bActionLoopA = bActionLoopB = false;
 }
 
@@ -264,8 +272,9 @@ void UDAAvatarAnimInstance::SetLocomotion(float InGroundSpeed, float InSwimAlpha
 	DuelAlpha = FMath::Clamp(InDuelAlpha, 0.f, 1.f);
 }
 
-void UDAAvatarAnimInstance::SetAction(UAnimSequence* Sequence, bool bLoop, float InTargetWeight, float InPlayRate)
+void UDAAvatarAnimInstance::SetAction(UAnimSequence* Sequence, bool bLoop, float InTargetWeight, float InPlayRate, float InBlendTime)
 {
+	const float BlendRate = 1.f / FMath::Max(InBlendTime, 0.02f);
 	if (!Sequence)
 	{
 		return;
@@ -276,6 +285,7 @@ void UDAAvatarAnimInstance::SetAction(UAnimSequence* Sequence, bool bLoop, float
 		bActionLoopA = bLoop;
 		ActionTargetA = FMath::Clamp(InTargetWeight, 0.f, 1.f);
 		ActionPlayRateA = FMath::Max(0.f, InPlayRate);
+		ActionBlendRateA = BlendRate;
 		if (bActionWasCleared)
 		{
 			// ClearAction() leaves the old A at its final frame until the weight
@@ -297,18 +307,40 @@ void UDAAvatarAnimInstance::SetAction(UAnimSequence* Sequence, bool bLoop, float
 		ActionPlayRateB = ActionPlayRateA;
 		bActionLoopB = bActionLoopA;
 	}
+	// The outgoing pose fades out over the incoming action's blend time (a symmetric crossfade).
+	ActionBlendRateB = BlendRate;
 
 	ActionSequenceA = Sequence;
 	ActionTimeA = 0.f;
 	ActionWeightA = 0.f;
 	ActionTargetA = FMath::Clamp(InTargetWeight, 0.f, 1.f);
 	ActionPlayRateA = FMath::Max(0.f, InPlayRate);
+	ActionBlendRateA = BlendRate;
 	bActionLoopA = bLoop;
 }
 
-void UDAAvatarAnimInstance::ClearAction()
+void UDAAvatarAnimInstance::ClearAction(float InBlendTime)
 {
 	ActionTargetA = 0.f;
+	if (InBlendTime > 0.f)
+	{
+		ActionBlendRateA = 1.f / FMath::Max(InBlendTime, 0.02f);
+	}
+}
+
+void UDAAvatarAnimInstance::SetActionPlayRate(float InPlayRate)
+{
+	ActionPlayRateA = FMath::IsFinite(InPlayRate) ? FMath::Max(0.f, InPlayRate) : 1.f;
+}
+
+float UDAAvatarAnimInstance::GetActionTimeRemaining() const
+{
+	if (!ActionSequenceA || bActionLoopA || ActionTargetA <= KINDA_SMALL_NUMBER)
+	{
+		return 0.f;
+	}
+	const float Rate = FMath::Max(ActionPlayRateA, KINDA_SMALL_NUMBER);
+	return FMath::Max(0.f, ActionSequenceA->GetPlayLength() - ActionTimeA) / Rate;
 }
 
 void UDAAvatarAnimInstance::SetActionWeight(float InTargetWeight)
@@ -343,35 +375,70 @@ void UDAAvatarAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
 	const float Dt = FMath::Clamp(DeltaSeconds, 1.f / 240.f, 0.1f);
+
+	// ---- speed ------------------------------------------------------------------------------
+	// The feet must travel at the speed the capsule really moves. The character movement
+	// component already limits acceleration, so only a light filter is applied (to hide
+	// per-frame velocity jitter on stairs and slopes); a heavy one makes the legs lag behind
+	// the body on every start, stop and sprint.
 	const float PreviousSpeed = SmoothedSpeed;
-	SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, GroundSpeed, Dt, 10.f);
+	SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, GroundSpeed, Dt, SpeedFilterRate);
 	BlendedGroundSpeed = SmoothedSpeed;
+	const float Speed = SmoothedSpeed >= MinStepSpeed ? SmoothedSpeed : 0.f;
+
+	// ---- clip strides ---------------------------------------------------------------------
+	const float WalkLen = (WalkSequence && WalkSequence->GetPlayLength() > 0.f) ? WalkSequence->GetPlayLength() : 1.f;
+	const float RunLen = (RunSequence && RunSequence->GetPlayLength() > 0.f) ? RunSequence->GetPlayLength() : 0.7333f;
+	const float WalkStride = WalkGroundSpeed * WalkLen;   // cm travelled per cycle (two steps) at rate 1
+	const float RunStride = RunGroundSpeed * RunLen;
+	const float WalkCadence = 1.f / WalkLen;              // cycles per second at rate 1
+	const float RunCadence = 1.f / RunLen;
+
+	// ---- target blend from a human cadence model ---------------------------------------------
+	// People do not slow down by keeping their step rate and shuffling: both the step length
+	// and the step rate drop (step length ~ sqrt(speed) for a slow walk), and between a walk and
+	// a run the cadence rises steadily. The blend weights are derived from the stride that
+	// cadence implies, so the cadence actually played below is the realistic one *and* the
+	// planted foot keeps moving at exactly the ground speed.
+	float TargetIdle = 1.f;
+	float TargetWalk = 0.f;
+	float TargetRun = 0.f;
+	if (Speed > 0.f)
+	{
+		if (Speed <= WalkGroundSpeed || !RunSequence)
+		{
+			// Stride = WalkStride * sqrt(v / Vwalk): the walk clip blended with the feet-together
+			// idle shortens the step in proportion to the walk weight.
+			TargetWalk = FMath::Clamp(FMath::Sqrt(Speed / WalkGroundSpeed), 0.f, 1.f);
+			TargetIdle = 1.f - TargetWalk;
+		}
+		else if (Speed < RunGroundSpeed)
+		{
+			const float T = (Speed - WalkGroundSpeed) / FMath::Max(1.f, RunGroundSpeed - WalkGroundSpeed);
+			const float Cadence = FMath::Lerp(WalkCadence, RunCadence, T);
+			const float Stride = Speed / FMath::Max(Cadence, KINDA_SMALL_NUMBER);
+			TargetRun = FMath::Clamp((Stride - WalkStride) / FMath::Max(1.f, RunStride - WalkStride), 0.f, 1.f);
+			TargetWalk = 1.f - TargetRun;
+			TargetIdle = 0.f;
+		}
+		else
+		{
+			TargetRun = 1.f;
+			TargetWalk = 0.f;
+			TargetIdle = 0.f;
+		}
+	}
+
 	// Start every walk from a contact phase, so the idle -> walk blend reads as a first step
 	// instead of fading into a random point of the cycle.
-	if (PreviousSpeed < 1.f && SmoothedSpeed >= 1.f)
+	if (PreviousSpeed < MinStepSpeed && SmoothedSpeed >= MinStepSpeed && WalkBlendValue + RunBlendValue < 0.05f)
 	{
 		Phase = 0.f;
 	}
 
-	// Blend Idle -> Walk -> Run by speed. Below the walk speed the walk plays at its natural
-	// cadence and fades to idle, which keeps the tiny steps of a slow start in sync too.
-	float TargetIdle = 0.f;
-	float TargetWalk = 0.f;
-	float TargetRun = 0.f;
-	if (SmoothedSpeed <= WalkGroundSpeed)
-	{
-		TargetWalk = WalkGroundSpeed > 0.f ? FMath::Clamp(SmoothedSpeed / WalkGroundSpeed, 0.f, 1.f) : 0.f;
-		TargetIdle = 1.f - TargetWalk;
-	}
-	else
-	{
-		TargetRun = FMath::Clamp((SmoothedSpeed - WalkGroundSpeed) / FMath::Max(1.f, RunGroundSpeed - WalkGroundSpeed), 0.f, 1.f);
-		TargetWalk = 1.f - TargetRun;
-	}
-
-	IdleBlend = FMath::FInterpTo(IdleBlend, TargetIdle, Dt, IdleBlendSpeed);
-	WalkBlendValue = FMath::FInterpTo(WalkBlendValue, TargetWalk, Dt, IdleBlendSpeed);
-	RunBlendValue = FMath::FInterpTo(RunBlendValue, TargetRun, Dt, IdleBlendSpeed);
+	IdleBlend = FMath::FInterpTo(IdleBlend, TargetIdle, Dt, LocomotionBlendSpeed);
+	WalkBlendValue = FMath::FInterpTo(WalkBlendValue, TargetWalk, Dt, LocomotionBlendSpeed);
+	RunBlendValue = FMath::FInterpTo(RunBlendValue, TargetRun, Dt, LocomotionBlendSpeed);
 	const float WeightSum = IdleBlend + WalkBlendValue + RunBlendValue;
 	if (WeightSum > KINDA_SMALL_NUMBER)
 	{
@@ -387,33 +454,28 @@ void UDAAvatarAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	WalkBlend = WalkBlendValue;
 	RunBlend = RunBlendValue;
 
-	// One gait phase drives both clips; the cadence is solved from the blended stride so the
-	// planted contact travels backwards at exactly SmoothedSpeed (no sliding).
-	const float WalkLen = (WalkSequence && WalkSequence->GetPlayLength() > 0.f) ? WalkSequence->GetPlayLength() : 0.8f;
-	const float RunLen = (RunSequence && RunSequence->GetPlayLength() > 0.f) ? RunSequence->GetPlayLength() : 0.4667f;
+	// ---- cadence -----------------------------------------------------------------------------
+	// One gait phase drives both clips. The cadence is solved from the stride of the pose that
+	// is actually shown (the blended weights, idle contributing no stride), so the planted
+	// contact travels backwards at exactly the current speed. While the weights are still
+	// catching up the solved cadence is limited to a human range instead of spinning the legs.
+	const float ShownStride = WalkBlendValue * WalkStride + RunBlendValue * RunStride;
 	float Cadence = 0.f;
-	if (SmoothedSpeed > 1.f)
+	if (Speed > 0.f && ShownStride > 1.f)
 	{
-		if (SmoothedSpeed <= WalkGroundSpeed)
-		{
-			Cadence = 1.f / WalkLen;
-		}
-		else
-		{
-			const float WalkStride = WalkGroundSpeed * WalkLen;
-			const float RunStride = RunGroundSpeed * RunLen;
-			const float Stride = RunBlendValue * RunStride + WalkBlendValue * WalkStride;
-			Cadence = Stride > 1.f ? SmoothedSpeed / Stride : 0.f;
-		}
+		Cadence = FMath::Min(Speed / ShownStride, MaxCadenceScale * RunCadence);
 	}
+	BlendedCadence = Cadence;
 	Phase = FMath::Fmod(Phase + Cadence * Dt, 1.f);
 
-	const float IdleLen = (IdleSequence && IdleSequence->GetPlayLength() > 0.f) ? IdleSequence->GetPlayLength() : 3.f;
+	const float IdleLen = (IdleSequence && IdleSequence->GetPlayLength() > 0.f) ? IdleSequence->GetPlayLength() : 8.f;
 	IdleTime = FMath::Fmod(IdleTime + Dt, IdleLen);
 
 	// Action layer: crossfade in/out and keep a second outgoing action alive during switches.
-	ActionWeightA = FMath::FInterpTo(ActionWeightA, ActionTargetA, Dt, ActionBlendSpeed);
-	ActionWeightB = FMath::FInterpTo(ActionWeightB, 0.f, Dt, ActionBlendSpeed);
+	// Linear (constant-time) fades read as a deliberate crossfade; the rate is per action
+	// (a landing snaps in, a wave eases in).
+	ActionWeightA = FMath::FInterpConstantTo(ActionWeightA, ActionTargetA, Dt, ActionBlendRateA);
+	ActionWeightB = FMath::FInterpConstantTo(ActionWeightB, 0.f, Dt, ActionBlendRateB);
 	// Drop finished slots so their sequences do not linger at zero weight. A is
 	// only released after its fade-out; B always fades out on its own.
 	if (ActionWeightA < 0.002f && ActionTargetA <= KINDA_SMALL_NUMBER)

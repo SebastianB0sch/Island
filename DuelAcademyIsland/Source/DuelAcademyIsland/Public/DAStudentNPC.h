@@ -29,6 +29,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float WanderRadius = 800.f;
 
+	/** Strolling speed (cm/s). 1.4 m/s is an unhurried adult walk; the avatar's cadence and
+	 *  step length follow whatever speed this is, so the feet never skate. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float StrollSpeed = 140.f;
 
@@ -90,6 +92,7 @@ private:
 	float IdleTime = 0.f;
 	float StuckTime = 0.f;
 	float TalkTime = -100.f;
+	float GreetTime = -100.f;
 	int32 LineIndex = 0;
 	bool bHasTalked = false;
 	FRandomStream Rng;

@@ -16,6 +16,7 @@ Unreal's shared Skeleton imports without a "regenerate skeleton" merge.
 import os
 
 import bpy
+from mathutils import Matrix, Vector
 
 from .. import config as C
 from .. import jsonio, palette, thirdparty
@@ -44,66 +45,372 @@ def _seg(rig, bone, target, rest_bone=None):
     return {"seg": target, "rest": tuple(rig.seg[rest_bone or bone])}
 
 
+def _periodic(points, t):
+    """Periodic Catmull-Rom through [(phase, (x, y, z))] (phases ascending in [0, 1))."""
+    from mathutils import Vector
+    t %= 1.0
+    n = len(points)
+    for i in range(n):
+        t0 = points[i][0]
+        t1 = points[(i + 1) % n][0] + (1.0 if i == n - 1 else 0.0)
+        tt = t + (1.0 if t < t0 else 0.0)
+        if t0 <= tt <= t1:
+            u = (tt - t0) / max(t1 - t0, 1e-6)
+            p0 = Vector(points[(i - 1) % n][1])
+            p1 = Vector(points[i][1])
+            p2 = Vector(points[(i + 1) % n][1])
+            p3 = Vector(points[(i + 2) % n][1])
+            u2, u3 = u * u, u * u * u
+            return 0.5 * ((2.0 * p1) + (-p0 + p2) * u + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * u2
+                          + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * u3)
+    return Vector(points[0][1])
+
+
+def _bump(t, centre, width):
+    """Smooth periodic bump: 1 at `centre`, 0 beyond +-width (phases wrap)."""
+    import math
+    d = abs(((t - centre + 0.5) % 1.0) - 0.5)
+    if d >= width:
+        return 0.0
+    return 0.5 + 0.5 * math.cos(math.pi * d / width)
+
+
+def _stance_feet(rig, left=(0.0, 0.0), right=(0.0, 0.0), toe_l=0.0, toe_r=0.0):
+    """Planted ankle targets for a standing pose: (x offset outward, y offset backward) per foot."""
+    from mathutils import Vector
+    feet = {}
+    for side, (dx, dy) in (("l", left), ("r", right)):
+        s = 1.0 if side == "l" else -1.0
+        feet[side] = (Vector((rig.foot_x[side] + s * dx, rig.joint[f"foot_{side}"].y + dy, rig.ankle_z)), 0.0, 0.0, True)
+    return feet
+
+
+DUEL_SECONDS = 4.0
+
+
 def _duel_keys(rig=None):
-    """Duel stance: disk arm across the chest, card hand raised, slight crouch; gentle breathing loop."""
+    """Duel stance: feet planted shoulder-width with the disk side forward, knees soft, the disk arm
+    held across the front with the forearm level, the card hand raised by the chest. One slow
+    breath per 4 s loop with a small weight shift, so a long duel never looks frozen."""
+    import math
     if rig is not None and not isinstance(rig, GAIT.Rig):
         rig = GAIT.Rig(rig)
+    if rig is None:
+        return [(0, {})]
+    hs = rig.height_scale
+    n = int(round(DUEL_SECONDS * GAIT.FPS))
     keys = []
-    for f, br in ((0, 0.0), (30, 1.0), (60, 0.0)):
-        keys.append((f, {
-            "_pelvis_offset": (0.0, 0.0, -0.012 - 0.004 * br),
-            "spine_01": (4 + 2 * br, 0, 6), "spine_03": (2 - 1.5 * br, 0, 8),
-            "head": (-2 + 2 * br, 0, -10),
-            "upperarm_l": _seg(rig, "upperarm_l", (0.55, -0.75, -0.35)),
-            "lowerarm_l": _seg(rig, "lowerarm_l", (-0.75, -0.62, 0.08)),
-            "hand_l": _seg(rig, "hand_l", (-0.8, -0.55, 0.0), "lowerarm_l"),
-            "upperarm_r": _seg(rig, "upperarm_r", (-0.45, -0.55, 0.15 + 0.03 * br)),
-            "lowerarm_r": _seg(rig, "lowerarm_r", (-0.05, -0.45, 0.9)),
-            "hand_r": _seg(rig, "hand_r", (0.0, -0.3, 1.0), "lowerarm_r"),
-            "thigh_l": _seg(rig, "thigh_l", (0.18, -0.12, -1)),
-            "thigh_r": _seg(rig, "thigh_r", (-0.18, 0.1, -1)),
-            "calf_l": _seg(rig, "calf_l", (0.12, 0.05, -1)),
-            "calf_r": _seg(rig, "calf_r", (-0.12, 0.08, -1)),
-        }))
+    for f in range(n + 1):
+        ph = f / n
+        a = 2.0 * math.pi * ph
+        br = 0.5 - 0.5 * math.cos(a)            # 0 exhaled .. 1 inhaled
+        shift = math.sin(a)
+        feet = _stance_feet(rig, left=(0.12 * hs, -0.11 * hs), right=(0.10 * hs, 0.10 * hs))
+        yaw = 9.0 + 1.0 * shift                 # trunk turned a little to the right (card hand back)
+        upper = {
+            "pelvis": (1.5, 1.0 * shift, yaw * 0.6),
+            "spine_01": (4.0, -0.5 * shift, yaw * 0.75),
+            "spine_02": (5.0 + 0.8 * br, -0.8 * shift, yaw * 0.9),
+            "spine_03": (4.0 + 1.2 * br, -1.0 * shift, yaw),
+            "neck_01": (1.0 - 0.6 * br, 0.0, yaw * 0.4),
+            # eyes on the opponent: the head counters the trunk turn
+            "head": (-2.0 + 0.4 * br, 0.3 * shift, -4.0),
+        }
+        pelvis_z = (0.892 - 0.003 * br) * hs
+        # Disk arm (left): elbow out and forward, forearm level across the body. Card hand
+        # (right): elbow down at the side, hand raised in front of the chest.
+        arms = {
+            "l": (Vector((-0.09, -0.38, -0.17 + 0.006 * br)) * hs, (0.9, -0.1, -0.4), 4.0),
+            "r": (Vector((0.06, -0.24, -0.05 + 0.006 * br)) * hs, (-0.35, 0.35, -1.0), 18.0),
+        }
+        key, _ = GAIT._assemble(rig, GAIT.IDLE, ph, 0.004 * shift * hs, pelvis_z, upper["pelvis"], feet, upper,
+                                idle=True, arms=arms)
+        keys.append((f, key))
     return keys
+
+
+SWIM_SECONDS = 1.6     # one full stroke cycle (both arms) at the clip's 1.25 m/s reference speed
 
 
 def _swim_keys(rig=None):
-    """Front crawl, authored upright (the avatar component pitches the body forward in the water)."""
+    """Front crawl, authored upright (the avatar component pitches the body forward in the water).
+
+    Authoring frame: +Z is the swimming direction (overhead), -Y is down into the water (in front
+    of the chest), +Y is up out of the water (behind the back). Per arm: entry in front of the
+    shoulder, a short glide, a high-elbow catch, the pull under the chest, the push past the hip,
+    and a high-elbow recovery out of the water. The body rolls ~40 deg towards the pulling arm,
+    the head turns with the roll to breathe every second stroke, and the legs do a six-beat
+    flutter kick from the hips with soft knees and pointed toes."""
+    import math
     if rig is not None and not isinstance(rig, GAIT.Rig):
         rig = GAIT.Rig(rig)
-    import math
+    if rig is None:
+        return [(0, {})]
+    reach = (rig.upperarm + rig.lowerarm) * 0.97
+    # wrist path relative to the shoulder (left arm, +x outward), in units of the arm's reach
+    path = [
+        (0.00, (0.10, -0.16, 0.95)),     # entry, arm extended overhead
+        (0.14, (0.12, -0.30, 0.86)),     # glide / reach
+        (0.28, (0.12, -0.68, 0.48)),     # catch: forearm vertical under a high elbow
+        (0.42, (-0.06, -0.62, 0.02)),    # pull under the chest
+        (0.56, (0.12, -0.36, -0.62)),    # push past the hip
+        (0.64, (0.24, -0.06, -0.80)),    # exit at the thigh
+        (0.78, (0.42, 0.34, -0.12)),     # recovery: elbow high, hand trailing low
+        (0.90, (0.34, 0.16, 0.55)),      # hand swings forward beside the head
+    ]
+    n = int(round(SWIM_SECONDS * GAIT.FPS))
     keys = []
-    for k in range(9):
-        a = 2 * math.pi * k / 8
-        f = k * 6
-        aim_l = (0.28, -math.sin(a) * 0.9, math.cos(a))
-        aim_r = (-0.28, -math.sin(a + math.pi) * 0.9, math.cos(a + math.pi))
-        kick = 14 * math.sin(a * 3)
-        keys.append((f, {
-            "upperarm_l": _seg(rig, "upperarm_l", aim_l),
-            "upperarm_r": _seg(rig, "upperarm_r", aim_r),
-            "lowerarm_l": _seg(rig, "lowerarm_l", aim_l),
-            "lowerarm_r": _seg(rig, "lowerarm_r", aim_r),
-            "thigh_l": (kick, 0, 0), "thigh_r": (-kick, 0, 0),
-            "head": (0, 0, 12 * math.sin(a)),
-        }))
+    for f in range(n + 1):
+        ph = f / n
+        roll = -40.0 * math.sin(2.0 * math.pi * (ph - 0.18))
+        breath = -38.0 * _bump(ph, 0.36, 0.17)          # every second stroke, to the right
+        arms = {}
+        for side, s, off in (("l", 1.0, 0.0), ("r", -1.0, 0.5)):
+            p = _periodic(path, ph + off)
+            rel = Vector((s * p.x, p.y, p.z)) * reach
+            # rotate the stroke with the body roll (about the long axis, +Z)
+            rr = math.radians(roll)
+            c, sn = math.cos(rr), math.sin(rr)
+            rel = Vector((rel.x * c - rel.y * sn, rel.x * sn + rel.y * c, rel.z))
+            bx, by = s * 0.55, 1.0          # the elbow stays high (towards the surface) and out
+            bend = (bx * c - by * sn, bx * sn + by * c, 0.15)
+            arms[side] = (rel, bend, 8.0)
+        kick = 2.0 * math.pi * 3.0 * ph
+        upper = {
+            "pelvis": (0.0, 0.0, roll * 0.55),
+            "spine_01": (0.0, 0.0, roll * 0.72),
+            "spine_02": (0.0, 0.0, roll * 0.88),
+            "spine_03": (0.0, 0.0, roll),
+            "neck_01": (-6.0, 0.0, roll + breath * 0.4),
+            "head": (-10.0 + 6.0 * _bump(ph, 0.36, 0.17), 0.0, roll + breath),
+        }
+        key, _ = GAIT._assemble(rig, GAIT.IDLE, ph, 0.0, rig.joint["pelvis"].z, upper["pelvis"],
+                                _stance_feet(rig), upper, idle=True, arms=arms)
+        # legs: flutter kick (overrides the planted-stance IK legs)
+        for side, s, off in (("l", 1.0, 0.0), ("r", -1.0, math.pi)):
+            th = 11.0 * math.sin(kick + off)                       # +X: towards +Y (up)
+            flex = 14.0 + 12.0 * max(0.0, math.sin(kick + off - 0.9))
+            yaw = roll * 0.45
+            key[f"thigh_{side}"] = (th, 0.0, yaw)
+            key[f"calf_{side}"] = (th + flex, 0.0, yaw)
+            key[f"foot_{side}"] = (th + flex + 72.0, 0.0, yaw + s * 6.0)   # toes pointed along the shin
+            key[f"ball_{side}"] = (th + flex + 72.0, 0.0, yaw + s * 6.0)
+        keys.append((f, key))
     return keys
+
+
+TREAD_SECONDS = 2.0
+
+
+def _tread_keys(rig=None):
+    """Treading water upright: forearms sculling in and out at chest depth, an alternating
+    breaststroke-style (eggbeater) kick, a gentle rise and sink with each kick."""
+    import math
+    if rig is not None and not isinstance(rig, GAIT.Rig):
+        rig = GAIT.Rig(rig)
+    if rig is None:
+        return [(0, {})]
+    hs = rig.height_scale
+    n = int(round(TREAD_SECONDS * GAIT.FPS))
+    keys = []
+    for f in range(n + 1):
+        ph = f / n
+        a = 2.0 * math.pi * ph
+        scull = math.sin(2.0 * a)                # two sculls per loop
+        arms = {}
+        for side, s in (("l", 1.0), ("r", -1.0)):
+            rel = Vector((s * (0.20 + 0.12 * scull), -0.30 + 0.03 * math.cos(2.0 * a), -0.30)) * hs
+            arms[side] = (rel, (s * 1.0, 0.3, -0.6), 25.0 * scull * s)
+        upper = {
+            "pelvis": (8.0, 0.0, 0.0),
+            "spine_01": (4.0, 0.0, 0.0),
+            "spine_02": (2.0, 0.0, 0.0),
+            "spine_03": (0.0, 0.0, 0.0),
+            "neck_01": (-6.0, 0.0, 0.0),
+            "head": (-10.0, 0.0, 6.0 * math.sin(a)),
+        }
+        key, _ = GAIT._assemble(rig, GAIT.IDLE, ph, 0.0, rig.joint["pelvis"].z, upper["pelvis"],
+                                _stance_feet(rig), upper, idle=True, arms=arms)
+        key["_pelvis_offset"] = (0.0, 0.0, 0.015 * math.sin(2.0 * a - 0.6))
+        for side, s, off in (("l", 1.0, 0.0), ("r", -1.0, math.pi)):
+            k = a + off
+            hip = -35.0 - 15.0 * math.sin(k)                       # thighs forward (seated)
+            knee = 70.0 + 25.0 * math.sin(k + 1.2)
+            # knees and feet wide (abduction about the front-back axis: -Y rotation moves the
+            # left leg out), the feet circling outward behind the knees
+            out = -s * (15.0 + 6.0 * math.cos(k))
+            key[f"thigh_{side}"] = (hip, out, 0.0)
+            key[f"calf_{side}"] = (hip + knee, out * 1.3, 0.0)
+            key[f"foot_{side}"] = (hip + knee - 10.0, out * 1.3, s * 20.0)
+            key[f"ball_{side}"] = (hip + knee - 10.0, out * 1.3, s * 20.0)
+        keys.append((f, key))
+    return keys
+
+
+def _air_feet(rig, hs, left, right):
+    """Ankle targets relative to each hip's rest position (x outward, y backward, z up), metres."""
+    feet = {}
+    for side, (dx, dy, dz) in (("l", left), ("r", right)):
+        s = 1.0 if side == "l" else -1.0
+        feet[side] = (Vector((rig.foot_x[side] + s * dx * hs, rig.joint[f"foot_{side}"].y + dy * hs,
+                              rig.ankle_z + dz * hs)), 0.0, 0.0, False)
+    return feet
+
+
+def _air_pose(rig, ph, pelvis_dz, lean, left, right, foot_pitch, arms_rel, arm_bend=(0.0, 0.3, -1.0), head=0.0):
+    hs = rig.height_scale
+    feet = _air_feet(rig, hs, left, right)
+    for side in ("l", "r"):
+        a, _, _, st = feet[side]
+        feet[side] = (a, foot_pitch[side], foot_pitch[side] * 0.5, st)
+    upper = {
+        "pelvis": (lean * 0.3, 0.0, 0.0),
+        "spine_01": (lean * 0.55, 0.0, 0.0),
+        "spine_02": (lean * 0.8, 0.0, 0.0),
+        "spine_03": (lean, 0.0, 0.0),
+        "neck_01": (lean * 0.3, 0.0, 0.0),
+        "head": (-lean * 0.6 + head, 0.0, 0.0),
+    }
+    arms = {}
+    for side, s in (("l", 1.0), ("r", -1.0)):
+        x, y, z = arms_rel
+        arms[side] = (Vector((s * x, y, z)) * hs, (s * 0.25 + arm_bend[0] * s, arm_bend[1], arm_bend[2]), 12.0)
+    key, _ = GAIT._assemble(rig, GAIT.IDLE, ph, 0.0, rig.joint["pelvis"].z + pelvis_dz * hs, upper["pelvis"],
+                            feet, upper, idle=True, arms=arms)
+    return key
+
+
+def _sample(track, t):
+    """Piecewise smoothstep through [(t, value)] where value is a float or a tuple."""
+    for i in range(len(track) - 1):
+        t0, v0 = track[i]
+        t1, v1 = track[i + 1]
+        if t0 <= t <= t1:
+            u = GAIT._smooth((t - t0) / max(t1 - t0, 1e-6))
+            if isinstance(v0, tuple):
+                return tuple(a + (b - a) * u for a, b in zip(v0, v1))
+            return v0 + (v1 - v0) * u
+    return track[-1][1]
+
+
+JUMP_SECONDS = 0.5
+
+
+def _jump_keys(rig=None):
+    """Airborne half of a standing jump, from the instant the feet leave the ground to the apex:
+    the body is fully extended with the toes still pointed and the arms thrown up from the swing,
+    then the knees and hips flex to tuck the legs up while the arms settle out to the sides for
+    balance. The runtime times the clip to the real rise (v0 / g)."""
+    if rig is not None and not isinstance(rig, GAIT.Rig):
+        rig = GAIT.Rig(rig)
+    if rig is None:
+        return [(0, {})]
+    n = int(round(JUMP_SECONDS * GAIT.FPS))
+    # tracks over normalised time 0..1
+    tuck = [(0.0, 0.0), (0.25, 0.15), (0.75, 1.0), (1.0, 1.0)]
+    keys = []
+    for f in range(n + 1):
+        t = f / n
+        k = _sample(tuck, t)
+        # extended (toes pointed below the hips) -> tucked (ankles up, feet under the knees)
+        left = (0.010, _lerp(0.02, 0.04, k), _lerp(-0.035, 0.20, k))
+        right = (0.010, _lerp(0.05, 0.10, k), _lerp(-0.045, 0.16, k))
+        foot = {"l": _lerp(38.0, 18.0, k), "r": _lerp(42.0, 24.0, k)}
+        arms = _sample([(0.0, (0.10, -0.30, 0.10)), (0.35, (0.16, -0.24, -0.20)), (1.0, (0.22, -0.10, -0.38))], t)
+        lean = _lerp(-2.0, 9.0, k)
+        keys.append((f, _air_pose(rig, t, _lerp(0.035, -0.03, k), lean, left, right, foot, arms, head=-2.0)))
+    return keys
+
+
+FALL_SECONDS = 1.2
+
+
+def _fall_keys(rig=None):
+    """Falling: legs reaching down for the ground with soft knees (one a little ahead of the
+    other), arms out and raised for balance, a slow cycling of the limbs so a long drop does not
+    look frozen."""
+    import math
+    if rig is not None and not isinstance(rig, GAIT.Rig):
+        rig = GAIT.Rig(rig)
+    if rig is None:
+        return [(0, {})]
+    n = int(round(FALL_SECONDS * GAIT.FPS))
+    keys = []
+    for f in range(n + 1):
+        t = f / n
+        c = math.sin(2.0 * math.pi * t)
+        left = (0.03, -0.08 + 0.05 * c, 0.07 + 0.03 * c)
+        right = (0.04, 0.05 - 0.05 * c, 0.10 - 0.03 * c)
+        foot = {"l": 14.0 + 4.0 * c, "r": 20.0 - 4.0 * c}
+        # arms out and a little forward below shoulder height, elbows soft
+        arms = (0.31 + 0.02 * c, -0.10 + 0.04 * c, -0.21 + 0.04 * math.sin(2.0 * math.pi * t + 1.0))
+        keys.append((f, _air_pose(rig, t, -0.02, 3.0, left, right, foot, arms, arm_bend=(0.3, 0.7, -0.4), head=-6.0)))
+    return keys
+
+
+LAND_SECONDS = 0.7
+
+
+def _land_keys(rig=None):
+    """Landing from a jump: the feet plant on contact with the knees still nearly straight, the
+    hips, knees and ankles flex together to absorb the impact (the pelvis drops ~20 cm in 0.15 s),
+    the trunk pitches forward over the feet and the arms swing forward-down for balance, then the
+    body rises back into the relaxed standing pose. The runtime scales the weight (and so the
+    depth) with the impact speed."""
+    if rig is not None and not isinstance(rig, GAIT.Rig):
+        rig = GAIT.Rig(rig)
+    if rig is None:
+        return [(0, {})]
+    hs = rig.height_scale
+    n = int(round(LAND_SECONDS * GAIT.FPS))
+    drop = [(0.0, 0.0), (0.21, -0.20), (0.36, -0.185), (1.0, -0.012)]
+    lean = [(0.0, 2.0), (0.21, 20.0), (0.40, 16.0), (1.0, 1.2)]
+    arms = [(0.0, (0.20, -0.06, -0.36)), (0.22, (0.17, -0.30, -0.36)), (0.45, (0.12, -0.24, -0.42)),
+            (1.0, (0.05, 0.0, -0.455))]
+    keys = []
+    for f in range(n + 1):
+        t = f / n
+        feet = _stance_feet(rig, left=(0.03 * hs, 0.0), right=(0.03 * hs, 0.0))
+        ln = _sample(lean, t)
+        upper = {
+            "pelvis": (ln * 0.45, 0.0, 0.0),
+            "spine_01": (ln * 0.65, 0.0, 0.0),
+            "spine_02": (ln * 0.85, 0.0, 0.0),
+            "spine_03": (ln, 0.0, 0.0),
+            "neck_01": (ln * 0.2, 0.0, 0.0),
+            # eyes stay on the horizon
+            "head": (-ln * 0.75, 0.0, 0.0),
+        }
+        x, y, z = _sample(arms, t)
+        arm = {side: (Vector((s * x, y, z)) * hs, (s * 0.25, 0.4, -1.0), 10.0) for side, s in (("l", 1.0), ("r", -1.0))}
+        # The pelvis also moves back a little so the centre of mass stays over the feet.
+        dz = _sample(drop, t)
+        key, _ = GAIT._assemble(rig, GAIT.IDLE, t, 0.0, 0.918 * hs + dz * hs, upper["pelvis"], feet, upper,
+                                idle=True, arms=arm, pelvis_y=-dz * 0.35 * hs)
+        keys.append((f, key))
+    return keys
+
+
+def _lerp(a, b, t):
+    return a + (b - a) * t
 
 
 # state -> (source registry key | None for authored, take, loop)
 TAKES = [
-    ("Jump", "A_Anime_Jump", False), ("Fall", "A_Anime_Fall", True), ("Land", "A_Anime_Land", False),
     ("Wave", "A_Anime_Wave", False), ("Yes", "A_Anime_Yes", False), ("No", "A_Anime_No", False),
     ("Sit", "A_Anime_Sit", True), ("Clap", "A_Anime_Clap", False), ("Interact", "A_Anime_Interact", False),
 ]
 # state -> (key generator, loop, authored ground speed in cm/s or None)
 AUTHORED = {
     "Idle": (GAIT.idle_keys, True, 0.0),
+    "Jump": (_jump_keys, False, None),
+    "Fall": (_fall_keys, True, None),
+    "Land": (_land_keys, False, None),
     "Walk": (GAIT.walk_keys, True, GAIT.WALK.speed * 100.0),
     "Run": (GAIT.run_keys, True, GAIT.RUN.speed * 100.0),
     "Duel": (_duel_keys, True, None),
     "Swim": (_swim_keys, True, None),
+    "Tread": (_tread_keys, True, None),
 }
 
 
@@ -249,6 +556,69 @@ def build_disk(arm, name="SK_Anime_DuelDisk"):
     return asm.build(arm, material_fn=preview_material)
 
 
+# Retargeted takes performed standing on the spot: their legs are re-solved so both feet stay
+# planted where the idle stands (the source rigs' proportions otherwise let them drift or sink).
+PLANTED = {"Wave", "Yes", "No", "Clap", "Interact"}
+
+
+def _replant(arm, action, log=print):
+    """Re-bake a retargeted in-place take with two-bone leg IK pinning both ankles to the idle
+    stance; the upper body, pelvis rotation and pelvis height are kept, the pelvis's horizontal
+    drift is limited so the weight stays between the feet."""
+    import math
+    rig = GAIT.Rig(arm)
+    RT._assign(arm, action)
+    scene = bpy.context.scene
+    f0, f1 = (int(round(v)) for v in action.frame_range)
+    driven = set(S.NAMES) & set(arm.data.bones.keys())
+    rest_pelvis = rig.rest["pelvis"].translation
+    # The sources stand in their own (often crouched) stance: keep only the pelvis motion relative
+    # to the take's first frame and put it on the cast's relaxed standing height.
+    scene.frame_set(f0)
+    first = arm.pose.bones["pelvis"].matrix.translation.copy()
+    stand = Vector((0.0, 0.0, 0.918 * rig.height_scale - rest_pelvis.z))
+    keys = []
+    lifted = 0.0
+    for f in range(f0, f1 + 1):
+        scene.frame_set(f)
+        k = {}
+        for b in driven:
+            q = arm.pose.bones[b].matrix.to_quaternion() @ rig.rest_q[b].inverted()
+            k[b] = tuple(math.degrees(v) for v in q.to_euler("XYZ"))
+        pm = arm.pose.bones["pelvis"].matrix
+        rel = pm.translation - first
+        off = stand + Vector((max(-0.03, min(0.03, rel.x)), max(-0.04, min(0.04, rel.y)),
+                              max(-0.05, min(0.01, rel.z))))
+        rot = pm.to_quaternion()
+        ankles = {side: Vector((rig.foot_x[side], rig.joint[f"foot_{side}"].y, rig.ankle_z)) for side in ("l", "r")}
+        # lower the pelvis until both straight-ish legs reach their planted ankles
+        for _ in range(3):
+            pw = Matrix.Translation(rest_pelvis + off) @ rot.to_matrix().to_4x4()
+            worst = 0.0
+            for side, ankle in ankles.items():
+                worst = max(worst, (rig.hip(pw, side) - ankle).length - (rig.leg - 0.012))
+            if worst <= 0.0:
+                break
+            off.z -= worst + 0.001
+        lifted = min(lifted, off.z)
+        pw = Matrix.Translation(rest_pelvis + off) @ rot.to_matrix().to_4x4()
+        for side, ankle in ankles.items():
+            thigh, calf, _ = rig.pose_leg(side, rig.hip(pw, side), ankle)
+            k[f"thigh_{side}"] = {"seg": tuple(thigh), "rest": tuple(rig.seg[f"thigh_{side}"])}
+            k[f"calf_{side}"] = {"seg": tuple(calf), "rest": tuple(rig.seg[f"calf_{side}"])}
+            toe = (1 if side == "l" else -1) * GAIT.IDLE.toe_out
+            k[f"foot_{side}"] = (0.0, 0.0, toe)
+            k[f"ball_{side}"] = (0.0, 0.0, toe)
+        k["_pelvis_offset"] = tuple(off)
+        keys.append((f - f0, k))
+    RT._assign(arm, None)
+    name = action.name
+    bpy.data.actions.remove(action)
+    out = RT.pose_action(arm, name, keys)
+    log(f"  anime: {name}: feet planted ({len(keys)} frames, pelvis {lifted * 100:+.1f} cm from the rest pose at its lowest)")
+    return out
+
+
 def bake_takes(arm, log=print):
     """All animation takes onto `arm`. Returns {state: (action, loop, speed)}."""
     reg = thirdparty.registry().get("anime", {})
@@ -263,8 +633,11 @@ def bake_takes(arm, log=print):
         if path not in sources:
             sources[path] = RT.Source(path)
         rng = tuple(spec["frames"]) if spec.get("frames") else None
-        out[state] = (RT.bake(sources[path], spec["take"], arm, reg_key, frames=rng, speed=spec.get("speed", 1.0),
-                              arm_drop=spec.get("arm_drop", 0.0)), loop, None)
+        act = RT.bake(sources[path], spec["take"], arm, reg_key, frames=rng, speed=spec.get("speed", 1.0),
+                      arm_drop=spec.get("arm_drop", 0.0))
+        if state in PLANTED:
+            act = _replant(arm, act, log)
+        out[state] = (act, loop, None)
     for src in sources.values():
         src.remove()
     for state, (fn, loop, speed) in AUTHORED.items():

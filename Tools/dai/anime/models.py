@@ -17,6 +17,10 @@ an Unreal-ready skeletal mesh:
   * the retargeted / authored takes are baked onto the model's own skeleton (its proportions)
 """
 
+import math
+import os
+import re
+
 import bpy
 import numpy as np
 from mathutils import Matrix

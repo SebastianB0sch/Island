@@ -54,9 +54,13 @@ ADAStudentNPC::ADAStudentNPC()
 	bUseControllerRotationYaw = false;
 	UCharacterMovementComponent* Move = GetCharacterMovement();
 	Move->bOrientRotationToMovement = true;
-	Move->RotationRate = FRotator(0.f, 240.f, 0.f);
+	// Human pacing: about a third of a second to reach a stroll from standing (a step or two),
+	// the same to stop, and turns at a walking person's rate instead of snapping round.
+	Move->RotationRate = FRotator(0.f, 200.f, 0.f);
 	Move->MaxWalkSpeed = StrollSpeed;
-	Move->BrakingDecelerationWalking = 800.f;
+	Move->MaxAcceleration = 450.f;
+	Move->BrakingDecelerationWalking = 450.f;
+	Move->GroundFriction = 6.f;
 	Move->SetWalkableFloorAngle(40.f);
 
 	AIControllerClass = AAIController::StaticClass();
@@ -65,7 +69,6 @@ ADAStudentNPC::ADAStudentNPC()
 	Avatar = CreateDefaultSubobject<UDAAvatarComponent>(TEXT("Avatar"));
 	Avatar->SetupAttachment(GetCapsuleComponent());
 	Avatar->SetRelativeLocation(FVector(0.0, 0.0, -92.0));
-	Avatar->StrideSpeed = 300.f;
 
 	GetMesh()->SetVisibility(false);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -218,9 +221,17 @@ void ADAStudentNPC::Interact(ADAStudentCharacter* By)
 	bHasTalked = true;
 	FString Line = Said[LineIndex % Said.Num()];
 	++LineIndex;
+	bool bSnub = false;
 	if (Lines.Num() == 0 && By && By->GetDorm() != Dorm && Dorm == EDADorm::Obelisk && By->GetDorm() == EDADorm::Slifer && Rng.FRand() < 0.5f)
 	{
 		Line = TEXT("A Slifer Slacker talking to an Obelisk? How bold. ...Fine, what do you want?");
+		bSnub = true;
+	}
+	if (Avatar)
+	{
+		// Body language while talking: a dismissive head shake for the snub, a nod otherwise.
+		Avatar->PlayGesture(bSnub ? TEXT("No") : TEXT("Yes"));
+		GreetTime = GetWorld() ? GetWorld()->GetTimeSeconds() : GreetTime;
 	}
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
@@ -287,7 +298,20 @@ void ADAStudentNPC::Tick(float DeltaSeconds)
 	{
 		const FVector To = Player->GetActorLocation() - GetActorLocation();
 		const FRotator Want(0.f, FMath::RadiansToDegrees(FMath::Atan2(To.Y, To.X)), 0.f);
-		SetActorRotation(FMath::RInterpTo(GetActorRotation(), Want, DeltaSeconds, 5.f));
+		// Turn towards the player at a natural rate (eased at the end) rather than spinning on
+		// the spot: at most ~150 deg/s.
+		const FRotator Eased = FMath::RInterpTo(GetActorRotation(), Want, DeltaSeconds, 5.f);
+		SetActorRotation(FMath::RInterpConstantTo(GetActorRotation(), Eased, DeltaSeconds, 150.f));
+		// Greet once the student has (almost) turned to face the player, at most every 45 s.
+		const float Now = World->GetTimeSeconds();
+		const float Facing = FMath::Abs(FMath::FindDeltaAngleDegrees(GetActorRotation().Yaw, Want.Yaw));
+		if (!bTalking && Avatar && Facing < 25.f && Now - GreetTime > 45.f && GetVelocity().Size2D() < 20.f)
+		{
+			if (Avatar->PlayGesture(TEXT("Wave")))
+			{
+				GreetTime = Now;
+			}
+		}
 		return;
 	}
 
