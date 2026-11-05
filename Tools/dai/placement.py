@@ -330,7 +330,9 @@ def asset_checker(aset, log=print):
     bounds = prop_bounds({a for a, *_ in props}, log)
     pv, pp, pt = [], [], []
     box_tris(props, bounds, pv, pp, pt)
-    spaces.append(mesh_space(fixed, name=aset.name, extra=[(pv, pp, pt)]))
+    from . import collision as COL
+    blk = [b for bs in COL.asset_blockers(aset).values() for b in bs]
+    spaces.append(mesh_space(fixed, name=aset.name, extra=[(pv, pp, pt), COL.box_soup(blk)]))
     for n, s in floating.items():
         mb = aset.meshes.get(n)
         if mb is not None and mb.verts:
@@ -386,6 +388,16 @@ def settle_npcs(aset, ck=None, log=print, reach=3.0):
                    for d, r in doors)
 
     moved, failed = [], []
+    from . import collision as COL
+    floating = {s["props"].get("mesh") for s in aset.sockets if s["type"] == "floating"}
+    solid_floor = COL.floor_fn([mb for n, mb in aset.meshes.items()
+                                if mb.verts and not n.endswith("_NoCol") and n not in floating])
+    for s in aset.sockets:          # arrival points stand on the building's floor, not on what lies on it
+        if s["type"] == "travel" and solid_floor is not None:
+            x, y, z = s["pos"]
+            fz = solid_floor(x, y, z + 0.5)
+            if fz is not None and 0.0 <= z - fz <= 2.0:
+                s["pos"] = (x, y, fz)
     taken = [Vector(s["pos"]) for s in aset.sockets if s["type"] in ("npc", "travel")]
     for s in aset.sockets:
         if s["type"] not in ("npc", "travel"):

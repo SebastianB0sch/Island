@@ -151,6 +151,18 @@ class Placer:
                 smc.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
                 if e.get("group") == "water":
                     C.set_props(smc, cast_shadow=False)
+            if e.get("hidden"):
+                # collision-only furniture boxes (Tools/dai/collision.py): never drawn, block people only -
+                # cameras and visibility traces pass through them
+                C.set_props(smc, cast_shadow=False, hidden_in_game=True, visible=False)
+                a.set_actor_hidden_in_game(True)
+                try:
+                    smc.set_collision_response_to_channel(unreal.CollisionChannel.ECC_CAMERA,
+                                                          unreal.CollisionResponseType.ECR_IGNORE)
+                    smc.set_collision_response_to_channel(unreal.CollisionChannel.ECC_VISIBILITY,
+                                                          unreal.CollisionResponseType.ECR_IGNORE)
+                except Exception as ex:  # noqa: BLE001
+                    C.warn(f"{e['mesh']}: collision channels: {ex}")
 
     def floating(self):
         cls = C.native_class("DAFloatingActor")

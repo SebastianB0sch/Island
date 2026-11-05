@@ -134,7 +134,7 @@ class Layout:
             d["spot"] = dict(yaw=ue_yaw(yaw), pitch=-float(props["spot_pitch"]), cone=float(props.get("cone") or 40.0))
         self.lights.append(d)
 
-    def export_mesh(self, mb, name, folder, collision):
+    def export_mesh(self, mb, name, folder, collision, nanite=None):
         from . import blend
         rel = os.path.join("Meshes", folder, f"SM_{name}.fbx")
         path = os.path.join(C.OUT_DIR, rel)
@@ -143,7 +143,8 @@ class Layout:
         blend.export_fbx([obj], path)
         blend.delete([obj])
         self.manifest.append(dict(file=rel.replace(os.sep, "/"), name=f"SM_{name}", folder=folder.replace(os.sep, "/"),
-                                  collision=collision, nanite=self.nanite_ok(mb), category="location"))
+                                  collision=collision, nanite=self.nanite_ok(mb) if nanite is None else nanite,
+                                  category="location"))
 
     def split_translucent(self, meshes, skip=()):
         return split_translucent(meshes, skip)
@@ -207,6 +208,23 @@ class Layout:
                     corners = [(mn[0], mn[1]), (mx[0], mn[1]), (mx[0], mx[1]), (mn[0], mx[1])]
                     if mx[2] - max(mn[2], 0) > 2.5 and (mx[0] - mn[0]) * (mx[1] - mn[1]) > 30:
                         self.footprints.append((key, [xf.point((c[0], c[1], 0))[:2] for c in corners]))
+            # furniture modelled into the no-collision meshes gets invisible collision boxes (dai/collision.py)
+            from . import collision as COL
+            boxes = [b for bs in COL.asset_blockers(aset).values() for b in bs]
+            if boxes:
+                from .geo import MeshBuilder
+                bm = MeshBuilder(f"{self._loc_prefix(aset)}_Blockers")
+                verts, polys, _ = COL.box_soup(boxes)
+                bm.verts.extend(verts)
+                bm.faces.extend(tuple(f) for f in polys)
+                bm.face_mats.extend(["M_Concrete"] * len(polys))
+                bm.face_smooth.extend([False] * len(polys))
+                if export:
+                    self.export_mesh(bm, bm.name, os.path.join("Locations", key), "complex", nanite=False)
+                self.static.append(dict(mesh=f"SM_{bm.name}", folder=f"Locations/{key}", loc=ue_loc((xf.x, xf.y, xf.z)),
+                                        yaw=ue_yaw(xf.yaw), collision="complex", hidden=True, group=key,
+                                        label=f"{key}_{bm.name}"))
+                self.log(f"  {key:14s} {len(boxes)} furniture collision boxes ({bm.name})")
             for sp in ck.spaces:
                 self.spaces.append(placement.placed(sp, xf.x, xf.y, xf.z, xf.yaw))
             self._in_location = True
@@ -215,6 +233,12 @@ class Layout:
             self.log(f"  {key:14s} {n_mesh} meshes, {len(aset.sockets)} sockets")
         if export:
             self.export_door_leaves()
+
+    @staticmethod
+    def _loc_prefix(aset):
+        """Mesh name prefix of a location (Academy, ObeliskGirls, ...) from its first mesh."""
+        names = [n for n in aset.meshes if aset.meshes[n].verts]
+        return names[0].split("_")[0] if names else aset.name.title().replace("_", "")
 
     def export_door_leaves(self):
         from .assets import doors as DR

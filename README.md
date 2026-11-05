@@ -190,6 +190,10 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
   furniture and props (NPCs in the way step to the nearest clear spot in the same room, never in a doorway), and
   each NPC gets precomputed strolls - straight, clear, on one floor - instead of random wandering.
 * Walk into every building and up every floor: automatic doors, the camera pulls in indoors, furnished rooms everywhere.
+  All furniture is solid: catalog props carry box / hull collision (wall art, lamps and table-top clutter stay
+  walk-through), and the furniture modelled into the no-collision decor meshes gets invisible collision boxes
+  (`<Location>_Blockers`, `Tools/dai/collision.py`: one oriented box per table, bed, bench, counter, ...; rugs,
+  wall-hung and hanging things, trims and doorways are left free).
 * **Day/night cycle** (Lumen GI, sky atmosphere, moon): lamps, windows and the lighthouse turn on at
   night, the crater glows. Time controls: **T** pause, **[ ]** speed, **N** skip 3 h.
 * Swimmable ocean and lake (single-layer water), volcano smoke, hot-spring steam, waterfall mist,
@@ -250,6 +254,7 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   fetch_polyhaven.py        downloads / verifies the CC0 Poly Haven models + writes their SOURCE.txt
   dai/assets/detail.py      the lived-in layer: fixtures, desk / table / shelf sets, clutter
   dai/inspect.py            interior audit + lit / scale-reference previews (audit_interiors.py, storey_report.py)
+  dai/collision.py          invisible collision boxes for the furniture in the no-collision meshes
   dai/placement.py          standing-room checks (person capsules), NPC settling + stroll routes, arrival points
   dai/layout.py             places everything, scatters vegetation, writes layout.json
   dai/textures.py           detail/normal maps from the photo sets (procedural fallback), terrain layers

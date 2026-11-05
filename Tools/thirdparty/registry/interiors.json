@@ -458,7 +458,7 @@
   },
   "SM_Int_ProjectorScreen": {
    "file": "polyhaven/models/projector_screen/projector_screen_1k.gltf",
-   "collision": "none",
+   "collision": "box",
    "toon": true,
    "outline": 0.008,
    "scale": 1.0
@@ -863,7 +863,7 @@
   "SM_Int_TrashBag": {
    "file": "polyhaven/models/trashbag/trashbag_1k.gltf",
    "scale": 1.0,
-   "collision": "none",
+   "collision": "box",
    "toon": true,
    "outline": 0.006
   },
@@ -1048,7 +1048,7 @@
   "SM_Int_Toolbox": {
    "file": "polyhaven/models/metal_toolbox/metal_toolbox_1k.gltf",
    "scale": 1.0,
-   "collision": "none",
+   "collision": "box",
    "toon": true,
    "outline": 0.006,
    "max_tris": 5000

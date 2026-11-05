@@ -72,6 +72,14 @@
   "category": "location"
  },
  {
+  "file": "Meshes/Locations/academy/SM_Academy_Blockers.fbx",
+  "name": "SM_Academy_Blockers",
+  "folder": "Locations/academy",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Locations/plaza/SM_Plaza_Main.fbx",
   "name": "SM_Plaza_Main",
   "folder": "Locations/plaza",
@@ -144,6 +152,14 @@
   "category": "location"
  },
  {
+  "file": "Meshes/Locations/slifer/SM_Slifer_Blockers.fbx",
+  "name": "SM_Slifer_Blockers",
+  "folder": "Locations/slifer",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Locations/ra/SM_Ra_Main.fbx",
   "name": "SM_Ra_Main",
   "folder": "Locations/ra",
@@ -204,6 +220,14 @@
   "name": "SM_Ra_Interior_Glass_NoCol",
   "folder": "Locations/ra",
   "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/ra/SM_Ra_Blockers.fbx",
+  "name": "SM_Ra_Blockers",
+  "folder": "Locations/ra",
+  "collision": "complex",
   "nanite": false,
   "category": "location"
  },
@@ -276,6 +300,14 @@
   "name": "SM_ObeliskBoys_Interior_Glass_NoCol",
   "folder": "Locations/obelisk_boys",
   "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Blockers.fbx",
+  "name": "SM_ObeliskBoys_Blockers",
+  "folder": "Locations/obelisk_boys",
+  "collision": "complex",
   "nanite": false,
   "category": "location"
  },
@@ -356,6 +388,14 @@
   "name": "SM_ObeliskGirls_Interior_Glass_NoCol",
   "folder": "Locations/obelisk_girls",
   "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Blockers.fbx",
+  "name": "SM_ObeliskGirls_Blockers",
+  "folder": "Locations/obelisk_girls",
+  "collision": "complex",
   "nanite": false,
   "category": "location"
  },
@@ -456,6 +496,14 @@
   "category": "location"
  },
  {
+  "file": "Meshes/Locations/harbor/SM_Harbor_Blockers.fbx",
+  "name": "SM_Harbor_Blockers",
+  "folder": "Locations/harbor",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Locations/lighthouse/SM_Lighthouse_Tower.fbx",
   "name": "SM_Lighthouse_Tower",
   "folder": "Locations/lighthouse",
@@ -492,6 +540,14 @@
   "name": "SM_Lighthouse_Interior_NoCol",
   "folder": "Locations/lighthouse",
   "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/lighthouse/SM_Lighthouse_Blockers.fbx",
+  "name": "SM_Lighthouse_Blockers",
+  "folder": "Locations/lighthouse",
+  "collision": "complex",
   "nanite": false,
   "category": "location"
  },
@@ -560,6 +616,14 @@
   "category": "location"
  },
  {
+  "file": "Meshes/Locations/abandoned/SM_Abandoned_Blockers.fbx",
+  "name": "SM_Abandoned_Blockers",
+  "folder": "Locations/abandoned",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Locations/gym/SM_Gym_Hall.fbx",
   "name": "SM_Gym_Hall",
   "folder": "Locations/gym",
@@ -616,6 +680,14 @@
   "category": "location"
  },
  {
+  "file": "Meshes/Locations/gym/SM_Gym_Blockers.fbx",
+  "name": "SM_Gym_Blockers",
+  "folder": "Locations/gym",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Locations/hotsprings/SM_Onsen_Terrace.fbx",
   "name": "SM_Onsen_Terrace",
   "folder": "Locations/hotsprings",
@@ -660,6 +732,14 @@
   "name": "SM_Onsen_Interior_NoCol",
   "folder": "Locations/hotsprings",
   "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/hotsprings/SM_Onsen_Blockers.fbx",
+  "name": "SM_Onsen_Blockers",
+  "folder": "Locations/hotsprings",
+  "collision": "complex",
   "nanite": false,
   "category": "location"
  },
@@ -760,6 +840,14 @@
   "category": "location"
  },
  {
+  "file": "Meshes/Locations/beach/SM_Beach_Blockers.fbx",
+  "name": "SM_Beach_Blockers",
+  "folder": "Locations/beach",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Locations/forest/SM_Forest_Shrine.fbx",
   "name": "SM_Forest_Shrine",
   "folder": "Locations/forest",
@@ -772,6 +860,14 @@
   "name": "SM_Forest_Shrine_NoCol",
   "folder": "Locations/forest",
   "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/forest/SM_Forest_Blockers.fbx",
+  "name": "SM_Forest_Blockers",
+  "folder": "Locations/forest",
+  "collision": "complex",
   "nanite": false,
   "category": "location"
  },
