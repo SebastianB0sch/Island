@@ -52,9 +52,21 @@ class Xform:
         return (self.x + lx, self.y + ly, self.z + (p[2] if len(p) > 2 else 0.0))
 
 
+def emitter_ring(pr, yaw):
+    """Extra layout.json fields of a ring emitter (AssetSet.emitter ring / points): ring radius in cm and,
+    for a ring of spots, their count, the first spot's angle and the frame yaw (both UE degrees) - the
+    spots are placed in the emitter actor's local frame. Empty for ordinary emitters."""
+    if float(pr.get("ring", 0.0)) <= 0.0:
+        return {}
+    out = dict(ring=round(float(pr["ring"]) * 100.0, 1))
+    if int(pr.get("points", 0)) > 0:
+        out.update(points=int(pr["points"]), angle0=ue_yaw(pr.get("angle0", 0.0)), yaw=ue_yaw(yaw))
+    return out
+
+
 NANITE_MIN_TRIS = 40000
 # Nanite can't draw these (translucent / special shading)
-NANITE_BLOCKERS = {"glass", "water", "smoke", "beam", "hologram", "waterfall", "lava"}
+NANITE_BLOCKERS = {"glass", "water", "smoke", "beam", "hologram", "waterfall", "flow", "lava"}
 
 
 def split_translucent(meshes, skip=()):
@@ -325,7 +337,7 @@ class Layout:
             elif t == "emitter":
                 self.emitters.append(dict(kind=pr.get("kind", "steam"), loc=loc,
                                           scale=float(pr.get("scale", 1.0)),
-                                          rate=float(pr.get("rate", 1.0))))
+                                          rate=float(pr.get("rate", 1.0)), **emitter_ring(pr, s["yaw"])))
 
     def place_sockets(self, aset, xf, key):
         for s in aset.sockets:
@@ -359,7 +371,8 @@ class Layout:
                                            text=pr.get("text", ""), radius=pr.get("radius", 3.0) * 100.0, group=key))
                 self.clearings.append((p[0], p[1], 3.0))
             elif t == "emitter":
-                self.emitters.append(dict(kind=pr["kind"], loc=ue_loc(p), scale=pr.get("scale", 1.0), rate=pr.get("rate", 1.0)))
+                self.emitters.append(dict(kind=pr["kind"], loc=ue_loc(p), scale=pr.get("scale", 1.0), rate=pr.get("rate", 1.0),
+                                          **emitter_ring(pr, yaw)))
             elif t == "audio":
                 self.audio.append(dict(sound=pr["sound"], loc=ue_loc(p), radius=pr.get("radius", 40.0) * 100.0,
                                        volume=pr.get("volume", 1.0)))

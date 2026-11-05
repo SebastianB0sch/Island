@@ -13,6 +13,9 @@ Masters (in /Game/DuelAcademy/Materials):
   M_DA_Smoke       translucent puffs, opacity from per-instance custom data
   M_DA_Beam        additive light beam
   M_DA_Waterfall   translucent panning water sheet
+  M_DA_WaterFlow   fountain water (sheets, jets, foam): world-aligned, so no UVs - vertical faces stream
+                   along world Z (FlowSpeed, < 0 = rising jets), flat faces churn; glints, soft contact, wobble
+  M_DA_Spray       droplets of ADAEmitter's Spray kind (opacity from per-instance custom data)
   M_DA_Terrain     splat-mapped terrain (8 layers)
   M_DA_Toon        anime cast, interiors and furniture: BaseTex * Tint (* optional detail texture) with a flat
                    "fill" light (cel look), dimmer at night
@@ -305,10 +308,14 @@ def build_water():
     xy = g.one_input(unreal.MaterialExpressionComponentMask, wp, r=True, g=True, b=False, a=False)
     scale = g.scalar("WaveScale", 0.0012)
     uv1 = g.mul(xy, scale)
+    # WaveSpeed scales time: 1 for the sea and the lake, faster for small agitated fountain pools
+    wt = g.mul(g.node(unreal.MaterialExpressionTime), g.scalar("WaveSpeed", 1.0))
     p1 = g.node(unreal.MaterialExpressionPanner, speed_x=0.015, speed_y=0.008)
     g.link(uv1, "", p1, "Coordinate")
+    g.link(wt, "", p1, "Time")
     p2 = g.node(unreal.MaterialExpressionPanner, speed_x=-0.011, speed_y=0.017)
     g.link(g.mul(uv1, g.const(0.37)), "", p2, "Coordinate")
+    g.link(wt, "", p2, "Time")
     n1 = g.tex("Normal1", T("T_WaterNormal"), S_NRM, p1, param=False)
     n2 = g.tex("Normal2", T("T_WaterNormal"), S_NRM, p2, param=False)
     n = g.add(n1, n2, "RGB", "RGB")
@@ -419,6 +426,107 @@ def build_waterfall():
     g.out(g.const(0.1), unreal.MaterialProperty.MP_ROUGHNESS)
     op = g.mul(g.scalar("Opacity", 0.8), g.add(g.const(0.45), g.mul(streaks, g.const(0.7))))
     g.out(g.one_input(unreal.MaterialExpressionSaturate, op), unreal.MaterialProperty.MP_OPACITY)
+    return g.finish()
+
+
+def _mask(g, src, ch):
+    return g.one_input(unreal.MaterialExpressionComponentMask, src, r=ch == "r", g=ch == "g", b=ch == "b", a=False)
+
+
+def _append(g, a, b):
+    n = g.node(unreal.MaterialExpressionAppendVector)
+    g.link(a, "", n, "A")
+    g.link(b, "", n, "B")
+    return n
+
+
+def build_water_flow():
+    """Fountain water: overflow sheets, jets and foam (palette kind "flow", Tools/dai/assets/fountain.py).
+    World-aligned instead of UV-mapped, so any lathe, tube or ring flows the right way:
+      * vertical faces sample T_WaterStreaks (R / B: threads stretched along V) in the two side projections,
+        V = world Z (m) + Time * FlowSpeed - streaks fall at FlowSpeed m/s, rise for a negative speed.
+        Two layers (the second finer and 1.37x faster) so it never reads as one sliding picture;
+      * flat faces churn: the foam channel (G) under two crossing panners (FoamScale, FoamSpeed);
+      * opacity = Opacity * lerp(Base, 1, streaks) (+ a little at grazing angles), depth-faded where the
+        water meets the pool or the stone; white glints (Sparkle); a slight surface wobble (Wobble, cm)."""
+    g = Graph("M_DA_WaterFlow")
+    g.settings(blend_mode=unreal.BlendMode.BLEND_TRANSLUCENT, two_sided=True)
+    try:
+        g.settings(translucency_lighting_mode=unreal.TranslucencyLightingMode.TLM_SURFACE_PER_PIXEL_LIGHTING)
+    except Exception:  # noqa: BLE001
+        pass
+    tex = T("T_WaterStreaks") or T("T_Noise")
+    wp = g.mul(g.node(unreal.MaterialExpressionWorldPosition), g.const(0.01))      # metres
+    x, y, z = _mask(g, wp, "r"), _mask(g, wp, "g"), _mask(g, wp, "b")
+    nrm = g.node(unreal.MaterialExpressionVertexNormalWS)
+    ax = g.one_input(unreal.MaterialExpressionAbs, _mask(g, nrm, "r"))
+    ay = g.one_input(unreal.MaterialExpressionAbs, _mask(g, nrm, "g"))
+    az = g.one_input(unreal.MaterialExpressionAbs, _mask(g, nrm, "b"))
+    t = g.node(unreal.MaterialExpressionTime)
+    # ---- vertical faces: streaks along world Z
+    flow = g.mul(t, g.scalar("FlowSpeed", 2.4))
+    su = g.scalar("StreakScale", 1.6)
+    sv = g.op(unreal.MaterialExpressionDivide, su, g.scalar("StreakStretch", 4.0))
+    v1 = g.mul(g.add(z, flow), sv)
+    v2 = g.mul(g.add(z, g.mul(flow, g.const(1.37))), g.mul(sv, g.const(1.9)))
+
+    def side(u):
+        a = g.tex("", tex, S_LIN, _append(g, g.mul(u, su), v1), param=False)
+        b = g.tex("", tex, S_LIN, _append(g, g.add(g.mul(u, g.mul(su, g.const(1.9))), g.const(0.37)), v2), param=False)
+        return g.mul(g.add(a, b, "R", "B"), g.const(0.5))
+
+    s_yz, s_xz = side(y), side(x)        # faces facing +-X see the YZ plane, faces facing +-Y the XZ plane
+    w_side = g.add(g.add(ax, ay), g.const(1e-4))
+    streak = g.op(unreal.MaterialExpressionDivide, g.add(g.mul(s_yz, ax), g.mul(s_xz, ay)), w_side)
+    # ---- flat faces: churning foam
+    xy = g.mul(_append(g, x, y), g.scalar("FoamScale", 1.0))
+    ft = g.mul(t, g.scalar("FoamSpeed", 1.0))
+    p1 = g.node(unreal.MaterialExpressionPanner, speed_x=0.11, speed_y=0.07)
+    g.link(xy, "", p1, "Coordinate")
+    g.link(ft, "", p1, "Time")
+    p2 = g.node(unreal.MaterialExpressionPanner, speed_x=-0.08, speed_y=0.12)
+    g.link(g.mul(xy, g.const(1.7)), "", p2, "Coordinate")
+    g.link(ft, "", p2, "Time")
+    f1 = g.tex("", tex, S_LIN, p1, param=False)
+    f2 = g.tex("", tex, S_LIN, p2, param=False)
+    foam = g.mul(g.add(f1, f2, "G", "G"), g.const(0.5))
+    w_top = g.one_input(unreal.MaterialExpressionSaturate, g.mul(g.sub(az, g.const(0.55)), g.const(5.0)))
+    s = g.lerp(streak, foam, w_top)
+    s01 = g.one_input(unreal.MaterialExpressionSaturate,
+                      g.add(g.mul(g.sub(s, g.const(0.5)), g.scalar("Contrast", 1.8)), g.const(0.5)))
+    # ---- shading
+    tint = g.vector("Tint", (0.86, 0.95, 1.0))
+    g.out(g.mul(tint, g.lerp(g.const(0.8), g.const(1.1), s01)), unreal.MaterialProperty.MP_BASE_COLOR)
+    s2 = g.mul(s01, s01)
+    g.out(g.mul(tint, g.mul(g.mul(s2, s2), g.scalar("Sparkle", 0.5))), unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    g.out(g.lerp(g.const(0.04), g.const(0.3), s01), unreal.MaterialProperty.MP_ROUGHNESS)
+    op = g.mul(g.scalar("Opacity", 0.55), g.lerp(g.scalar("Base", 0.25), g.const(1.0), s01))
+    op = g.add(op, g.mul(g.node(unreal.MaterialExpressionFresnel, exponent=3.0), g.const(0.2)))
+    df = g.node(unreal.MaterialExpressionDepthFade, fade_distance_default=25.0)
+    g.link(g.one_input(unreal.MaterialExpressionSaturate, op), "", df, "Opacity")
+    g.out(df, unreal.MaterialProperty.MP_OPACITY)
+    # ---- wobble along the normal (a living surface, not a glass shell)
+    phase = g.add(g.mul(t, g.const(1.3)), g.mul(g.add(g.add(x, y), z), g.const(0.8)))
+    wob = g.mul(g.one_input(unreal.MaterialExpressionSine, phase), g.scalar("Wobble", 1.0))
+    g.out(g.mul(nrm, wob), unreal.MaterialProperty.MP_WORLD_POSITION_OFFSET)
+    return g.finish()
+
+
+def build_spray():
+    """Droplets of ADAEmitter's Spray kind: small bright specks, opacity from per-instance custom data 0.
+    (M_DA_Smoke's 3 m depth fade would wipe out droplets a hand's width above the pool.)"""
+    g = Graph("M_DA_Spray")
+    g.settings(blend_mode=unreal.BlendMode.BLEND_TRANSLUCENT)
+    color = g.vector("Color", (0.92, 0.97, 1.0))
+    g.out(color, unreal.MaterialProperty.MP_BASE_COLOR)
+    g.out(g.mul(color, g.const(0.35)), unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    g.out(g.const(0.1), unreal.MaterialProperty.MP_ROUGHNESS)
+    cd = g.node(unreal.MaterialExpressionPerInstanceCustomData, data_index=0)
+    soft = g.one_input(unreal.MaterialExpressionOneMinus, g.node(unreal.MaterialExpressionFresnel, exponent=2.0))
+    op = g.mul(cd, g.add(g.const(0.35), g.mul(soft, g.const(0.65))))
+    df = g.node(unreal.MaterialExpressionDepthFade, fade_distance_default=8.0)
+    g.link(op, "", df, "Opacity")
+    g.out(df, unreal.MaterialProperty.MP_OPACITY)
     return g.finish()
 
 
@@ -677,7 +785,7 @@ def build_terrain():
 KIND_PARENT = {
     "opaque": "M_DA_Master", "foliage": "M_DA_Foliage", "glass": "M_DA_Glass", "emissive": "M_DA_Emissive",
     "water": "M_DA_Water", "lava": "M_DA_Lava", "hologram": "M_DA_Hologram", "smoke": "M_DA_Smoke",
-    "beam": "M_DA_Beam", "waterfall": "M_DA_Waterfall", "terrain": "M_DA_Terrain",
+    "beam": "M_DA_Beam", "waterfall": "M_DA_Waterfall", "flow": "M_DA_WaterFlow", "terrain": "M_DA_Terrain",
     "pbr": "M_DA_PBR", "pbr_foliage": "M_DA_PBRFoliage",
     "toon": "M_DA_Toon", "toon_masked": "M_DA_ToonMasked", "outline": "M_DA_Outline",
     "cel": "M_DA_Cel", "cel_masked": "M_DA_CelMasked",
@@ -686,6 +794,12 @@ KIND_PARENT = {
 CHANNEL = {"R": (1, 0, 0), "G": (0, 1, 0), "B": (0, 0, 1), "A": (0, 0, 0)}
 
 NIGHT_ONLY_EMISSIVE = {"M_LampGlow", "M_LighthouseLamp"}
+
+# palette key -> M_DA_WaterFlow scalar parameter (default = the master's)
+FLOW_PARAMS = (("opacity", "Opacity", 0.55), ("flow", "FlowSpeed", 2.4), ("streak", "StreakScale", 1.6),
+               ("stretch", "StreakStretch", 4.0), ("foam_scale", "FoamScale", 1.0), ("foam_speed", "FoamSpeed", 1.0),
+               ("base", "Base", 0.25), ("contrast", "Contrast", 1.8), ("sparkle", "Sparkle", 0.5),
+               ("wobble", "Wobble", 1.0))
 
 
 def build_instances(palette, masters):
@@ -784,6 +898,10 @@ def build_instances(palette, masters):
                 c = spec["color_linear"]
                 MEL.set_material_instance_vector_parameter_value(mi, "ScatterColor", C.lc((c[0] * 0.35, c[1] * 0.35, c[2] * 0.35)))
                 MEL.set_material_instance_vector_parameter_value(mi, "Absorption", C.lc((0.45 - c[0] * 0.3, 0.08 + (0.4 - c[1]) * 0.1, 0.05 + (0.4 - c[2]) * 0.1)))
+                for key, param in (("wave_scale", "WaveScale"), ("wave_speed", "WaveSpeed"),
+                                   ("wave_strength", "WaveStrength")):
+                    if key in spec:
+                        MEL.set_material_instance_scalar_parameter_value(mi, param, float(spec[key]))
             elif kind in ("lava", "beam"):
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
                 MEL.set_material_instance_scalar_parameter_value(mi, "Strength", float(spec.get("strength", 1.0)))
@@ -795,6 +913,10 @@ def build_instances(palette, masters):
             elif kind == "waterfall":
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
                 MEL.set_material_instance_scalar_parameter_value(mi, "Opacity", float(spec.get("opacity", 0.8)))
+            elif kind == "flow":
+                MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
+                for key, param, default in FLOW_PARAMS:
+                    MEL.set_material_instance_scalar_parameter_value(mi, param, float(spec.get(key, default)))
         except Exception as e:  # noqa: BLE001
             C.warn(f"{mi_name}: parameter setup failed: {e}")
         MEL.update_material_instance(mi)
@@ -811,7 +933,8 @@ def build_all(palette):
     for name, fn in (("M_DA_Master", build_master), ("M_DA_Foliage", build_foliage), ("M_DA_Glass", build_glass),
                      ("M_DA_Emissive", lambda: build_emissive(mpc)), ("M_DA_Water", build_water),
                      ("M_DA_Lava", build_lava), ("M_DA_Hologram", build_hologram), ("M_DA_Smoke", build_smoke),
-                     ("M_DA_Beam", build_beam), ("M_DA_Waterfall", build_waterfall), ("M_DA_Terrain", build_terrain),
+                     ("M_DA_Beam", build_beam), ("M_DA_Waterfall", build_waterfall),
+                     ("M_DA_WaterFlow", build_water_flow), ("M_DA_Spray", build_spray), ("M_DA_Terrain", build_terrain),
                      ("M_DA_PBR", lambda: build_pbr("M_DA_PBR")),
                      ("M_DA_PBRFoliage", lambda: build_pbr("M_DA_PBRFoliage", foliage=True)),
                      ("M_DA_Toon", lambda: build_toon("M_DA_Toon", mpc)),

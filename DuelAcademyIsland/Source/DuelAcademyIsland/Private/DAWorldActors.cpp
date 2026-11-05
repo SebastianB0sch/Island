@@ -109,6 +109,9 @@ void ADAEmitter::BeginPlay()
 	// A negative rate would run particle ages backwards and feed a negative
 	// fraction into the opacity curve (NaN); zero freezes the plume.
 	Rate = FMath::IsFinite(Rate) ? FMath::Max(Rate, 0.f) : 1.f;
+	Ring = FMath::IsFinite(Ring) ? FMath::Max(Ring, 0.f) : 0.f;
+	RingPoints = FMath::Max(RingPoints, 0);
+	RingAngle = FMath::IsFinite(RingAngle) ? RingAngle : 0.f;
 	const float S = EffectScale;
 	int32 Count = 12;
 	FLinearColor Color(0.95f, 0.95f, 0.97f);
@@ -125,12 +128,29 @@ void ADAEmitter::BeginPlay()
 		Count = 20; Lifetime = 1.6f; Rise = 500.f * S; Spread = 120.f * S; BaseSize = 0.08f * S; MaxOpacity = 1.f;
 		Color = FLinearColor(1.f, 0.45f, 0.1f);
 		break;
+	case EDAEmitterKind::Spray:
+		// Rise = hop height, Spread = how far a droplet flies out; Lifetime is only the scale of the
+		// horizontal speed - each droplet lives exactly as long as its hop takes (see Respawn).
+		// About eight droplets per metre of ring radius keep a landing circle busy.
+		Count = Ring > 0.f ? FMath::Clamp(FMath::RoundToInt(Ring * 0.08f), 16, 64) : 18;
+		Lifetime = 0.55f; Rise = 35.f * S; Spread = 60.f * S; BaseSize = 0.045f * S; MaxOpacity = 0.85f;
+		Gravity = 980.f;
+		Color = FLinearColor(0.92f, 0.97f, 1.f);
+		break;
 	case EDAEmitterKind::Steam:
 	default:
 		Count = 12; Lifetime = 3.5f; Rise = 360.f * S; Spread = 55.f * S; BaseSize = 0.45f * S; MaxOpacity = 0.33f;
 		break;
 	}
-	UMaterialInterface* Base = Material ? Material.Get() : LoadObject<UMaterialInterface>(nullptr, DuelAcademy::SmokeMaterial, nullptr, LOAD_NoWarn | LOAD_Quiet);
+	UMaterialInterface* Base = Material.Get();
+	if (!Base && Kind == EDAEmitterKind::Spray)
+	{
+		Base = LoadObject<UMaterialInterface>(nullptr, DuelAcademy::SprayMaterial, nullptr, LOAD_NoWarn | LOAD_Quiet);
+	}
+	if (!Base)
+	{
+		Base = LoadObject<UMaterialInterface>(nullptr, DuelAcademy::SmokeMaterial, nullptr, LOAD_NoWarn | LOAD_Quiet);
+	}
 	if (Base)
 	{
 		UMaterialInstanceDynamic* MID = UMaterialInstanceDynamic::Create(Base, this);
@@ -151,13 +171,41 @@ void ADAEmitter::Respawn(FPuff& P, bool bInitial)
 {
 	P.Life = Lifetime * Rng.FRandRange(0.75f, 1.25f);
 	P.Age = bInitial ? Rng.FRandRange(0.f, P.Life) : 0.f;
-	const float A = Rng.FRandRange(0.f, 2.f * PI);
-	const float R = Rng.FRandRange(0.f, Spread * 0.35f);
-	P.Start = FVector(FMath::Cos(A) * R, FMath::Sin(A) * R, 0.0);
-	const FVector Drift(Rng.FRandRange(-1.f, 1.f), Rng.FRandRange(-1.f, 1.f), 0.0);
-	P.Velocity = FVector(Drift.X * Spread / Lifetime, Drift.Y * Spread / Lifetime, Rise / Lifetime * Rng.FRandRange(0.7f, 1.2f));
+	float A = Rng.FRandRange(0.f, 2.f * PI);
+	float R = Rng.FRandRange(0.f, Spread * 0.35f);
+	if (Ring > 0.f)
+	{
+		if (RingPoints > 0)
+		{
+			A = FMath::DegreesToRadians(RingAngle) + 2.f * PI * static_cast<float>(Rng.RandRange(0, RingPoints - 1)) / RingPoints;
+		}
+		R = Ring + Rng.FRandRange(-0.15f, 0.15f) * Spread;
+	}
+	const FVector Out(FMath::Cos(A), FMath::Sin(A), 0.0);   // away from the axis
+	const FVector Side(-Out.Y, Out.X, 0.0);
+	P.Start = Out * R;
+	if (Ring > 0.f && RingPoints > 0)
+	{
+		P.Start += Side * (Rng.FRandRange(-0.12f, 0.12f) * Spread);   // a jet's splash, not a single point
+	}
+	if (Kind == EDAEmitterKind::Spray)
+	{
+		// Thrown up (and mostly outward) from the water surface; it lands back on it after exactly one hop.
+		const float Up = FMath::Sqrt(2.f * Gravity * Rise) * Rng.FRandRange(0.55f, 1.f);
+		P.Life = 2.f * Up / Gravity;
+		P.Age = bInitial ? Rng.FRandRange(0.f, P.Life) : 0.f;
+		const float H = Spread / Lifetime;
+		const FVector Dir = Ring > 0.f ? Out : FVector(Rng.FRandRange(-1.f, 1.f), Rng.FRandRange(-1.f, 1.f), 0.0).GetSafeNormal();
+		const FVector Across(-Dir.Y, Dir.X, 0.0);
+		P.Velocity = Dir * (H * Rng.FRandRange(-0.3f, 1.f)) + Across * (H * Rng.FRandRange(-0.5f, 0.5f)) + FVector(0.0, 0.0, Up);
+	}
+	else
+	{
+		const FVector Drift(Rng.FRandRange(-1.f, 1.f), Rng.FRandRange(-1.f, 1.f), 0.0);
+		P.Velocity = FVector(Drift.X * Spread / Lifetime, Drift.Y * Spread / Lifetime, Rise / Lifetime * Rng.FRandRange(0.7f, 1.2f));
+	}
 	P.Size0 = BaseSize * Rng.FRandRange(0.7f, 1.1f);
-	P.Size1 = P.Size0 * (Kind == EDAEmitterKind::Sparks ? 0.3f : Rng.FRandRange(2.4f, 3.6f));
+	P.Size1 = P.Size0 * (Kind == EDAEmitterKind::Sparks ? 0.3f : Kind == EDAEmitterKind::Spray ? 0.6f : Rng.FRandRange(2.4f, 3.6f));
 }
 
 void ADAEmitter::Tick(float DeltaSeconds)
@@ -174,7 +222,9 @@ void ADAEmitter::Tick(float DeltaSeconds)
 		{
 			const APlayerController* PC = GetWorld()->GetFirstPlayerController();
 			const APawn* Pawn = PC ? PC->GetPawn() : nullptr;
-			bVisibleToPlayer = !Pawn || FVector::Dist(Pawn->GetActorLocation(), GetActorLocation()) < 25000.f * FMath::Max(EffectScale, 1.f);
+			// droplets are specks: nobody sees them past ~80 m
+			const float Range = Kind == EDAEmitterKind::Spray ? 8000.f : 25000.f;
+			bVisibleToPlayer = !Pawn || FVector::Dist(Pawn->GetActorLocation(), GetActorLocation()) < Range * FMath::Max(EffectScale, 1.f);
 		}
 	}
 	if (!bVisibleToPlayer)
@@ -194,7 +244,8 @@ void ADAEmitter::Tick(float DeltaSeconds)
 			Respawn(P, false);
 		}
 		const float T = P.Age / P.Life;
-		const FVector Pos = P.Start + P.Velocity * P.Age + Wind * (Kind == EDAEmitterKind::Smoke ? T * T * EffectScale : 0.f);
+		const FVector Pos = P.Start + P.Velocity * P.Age + Wind * (Kind == EDAEmitterKind::Smoke ? T * T * EffectScale : 0.f)
+			- FVector(0.0, 0.0, 0.5f * Gravity * P.Age * P.Age);
 		const float Size = FMath::Lerp(P.Size0, P.Size1, FMath::Sqrt(T));
 		const float Opacity = MaxOpacity * FMath::Pow(FMath::Sin(T * PI), 0.8f);
 		Transforms[i] = FTransform(FQuat::Identity, Pos, FVector(Size));

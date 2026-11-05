@@ -81,13 +81,15 @@ enum class EDAEmitterKind : uint8
 	Smoke,
 	Steam,
 	Mist,
-	Sparks
+	Sparks,
+	/** Fountain spray: droplets hopping up where the water lands and falling back under gravity. */
+	Spray
 };
 
 /**
  * Cheap volumetric-looking puffs without Niagara assets: an instanced sphere
  * whose instances rise, grow and fade (per-instance custom data 0 = opacity,
- * read by M_DA_Smoke).
+ * read by M_DA_Smoke; M_DA_Spray for the Spray kind's droplets).
  */
 UCLASS()
 class DUELACADEMYISLAND_API ADAEmitter : public AActor
@@ -109,7 +111,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float Rate = 1.f;
 
-	/** Optional material override (defaults to M_DA_Smoke). */
+	/** Spawn circle radius (cm). > 0: particles start on a circle of this radius round the actor (where a
+	 *  fountain sheet lands) instead of a small disc, and Spray droplets are thrown outward from it. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float Ring = 0.f;
+
+	/** With Ring: only at this many evenly spaced spots on the circle (a ring of fountain jets); 0 = anywhere. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	int32 RingPoints = 0;
+
+	/** Angle of the first spot (degrees, actor-local, from +X towards +Y). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float RingAngle = 0.f;
+
+	/** Optional material override (defaults to M_DA_Smoke, M_DA_Spray for Spray). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	TObjectPtr<UMaterialInterface> Material;
 
@@ -136,6 +151,8 @@ private:
 	float BaseSize = 1.f;
 	float Lifetime = 4.f;
 	float MaxOpacity = 0.6f;
+	/** cm/s^2 pulling particles down (Spray only; the other kinds drift at constant velocity). */
+	float Gravity = 0.f;
 	float CheckTimer = 0.f;
 	bool bVisibleToPlayer = true;
 };
