@@ -193,6 +193,27 @@ free tools (Blender as a Python module, numpy / scipy, Unreal's own C++):
   cloth textures: elbow and armpit folds, waist pull lines, knee and crotch folds, hem stacking and pleat
   lines. Everything is computed by position, so vertices split along UV seams move together and the cloth
   never cracks open.
+* **Fit system** (`Tools/dai/anime/drape.py`, `outfit.py`, `fitcheck.py`): clothes have to fit in motion,
+  not just in the rest pose, so the build checks and fixes that:
+  * *Layered skinning*: each garment takes its bone weights from the layer right under it at that spot
+    (body, then trousers and shirt, then jacket, then collar and capelet). Neighbouring layers then deform
+    together and keep their spacing. The lookup is region-aware (arm, trunk, leg), so a sleeve never picks up
+    torso weights at the armpit, and the trouser crotch weights are smoothed.
+  * *Hidden-surface removal*: inner cloth that an outer garment covers completely (a shirt's shoulders and
+    armpits under a jacket, skin under a capelet) is removed, as character outfit systems do. Only solid
+    regions are removed, never near an open edge or under a free-hanging hem, and never on trimmed garments.
+  * *Leg-side consistency*: no garment vertex on one side is skinned to the other leg.
+  * *Long coats* have a front parting plus side and back vents. Each panel is skinned to the trouser leg
+    under it, and its cloth chains ride that thigh. Shirts are tucked in under long coats. Hems hang from
+    the draped garment, so tails keep a clean cut.
+  * *Fit relaxation*: at build time every member is posed through its takes. Wherever an inner layer would
+    break through, the covering cloth is loosened and the layer under it tucked in along the covering
+    surface's normal, over repeated passes with a growing coverage set, keeping the best pass.
+  * *Audit*: `python Tools/fit_check.py [ids] [-v]` skins every member into Idle / Walk / Run / Duel / Sit /
+    Talk frames. It anchors each covered inner vertex to the exact garment triangle covering it at rest and
+    reports any that break through it (count and depth) and any holes in the cloth. It exits with status 1
+    when a member is over budget.
+  * In Unreal the skirt and coat-tail spring chains also collide with thigh and calf capsules.
 * **Cloth bones**: skirts and long coats get eight two-segment bone chains round the hem (`skirt_*`,
   `coattail_*`). They carry 72 % of the hem, and the thighs carry the rest, so the legs still push the
   fabric. Their rest pose comes from body landmarks only, so the shared skeleton stays identical across the
