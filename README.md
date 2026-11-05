@@ -157,12 +157,16 @@ its hatch ladder (its glass is clear). `Tools/storey_report.py` lists them per f
 | **Hot Springs** | Changing rooms, bandai, washing areas, rest pavilion. |
 | **Lifeguard tower, shrine, viewpoints** | Dressed at real scale (duty gear, offerings, telescopes, boards). |
 
-**Checking it** (no Unreal needed, Blender-as-a-module interpreter):
+**Checking it** (no Unreal needed, Blender-as-a-module interpreter). The interior spec - audit clean, detail
+coverage of every interior view >= 45 % in rooms and >= 35 % in halls / corridors / stairs, no painted windows
+with a floor behind them - passes for every location (`spec_check.py`; the only waivers, with their reasons,
+are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 
 ```bash
 .venv/bin/python Tools/preview_asset.py ra --views inside --camera attic --lit --scale-ref   # lit, with a 1.75 m student
 .venv/bin/python Tools/audit_interiors.py obelisk       # floating / sunk / clipping furniture, doors, detail coverage
 .venv/bin/python Tools/storey_report.py academy          # painted vs real windows per floor -> closed storeys
+.venv/bin/python Tools/spec_check.py                     # the interior spec, pass/fail for every location
 .venv/bin/python Tools/preview_interiors.py              # Docs/renders/interiors.jpg
 ```
 
