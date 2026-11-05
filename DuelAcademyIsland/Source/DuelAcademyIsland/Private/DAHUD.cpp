@@ -5,6 +5,7 @@
 #include "CanvasItem.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "DAAvatarAnimInstance.h"
 #include "DAInteractable.h"
 #include "DAInteractableInterface.h"
 #include "DAInventorySubsystem.h"
@@ -1491,6 +1492,10 @@ void ADAHUD::Tick(float DeltaSeconds)
 					Sample.BallL = Mesh->GetBoneLocation(TEXT("ball_l"), EBoneSpaces::WorldSpace);
 					Sample.BallR = Mesh->GetBoneLocation(TEXT("ball_r"), EBoneSpaces::WorldSpace);
 					Sample.Actor = Char->GetActorLocation();
+					if (const UDAAvatarAnimInstance* Anim = Cast<UDAAvatarAnimInstance>(Mesh->GetAnimInstance()))
+					{
+						Sample.Cadence = Anim->BlendedCadence;
+					}
 					LocomotionSamples.Add(Sample);
 					break;
 				}
@@ -1957,8 +1962,15 @@ void ADAHUD::LogFootPlantStats(const FString& Label)
 	Speeds.Sort();
 	const float Median = Speeds[Speeds.Num() / 2];
 	const float P90 = Speeds[FMath::Min(Speeds.Num() - 1, Speeds.Num() * 9 / 10)];
-	UE_LOG(LogTemp, Log, TEXT("DALocoTest %s: actor %.0f cm/s, planted ball median %.1f cm/s (p90 %.1f), samples %d"),
-		*Label, ActorSpeed, Median, P90, Speeds.Num());
+	double CadenceSum = 0.0;
+	for (const FDALocoSample& Sample : LocomotionSamples)
+	{
+		CadenceSum += Sample.Cadence;
+	}
+	// Two steps per gait cycle. A human walks 1.5 m/s at ~120 steps/min and runs 4.2 m/s at ~170.
+	const float StepsPerMinute = static_cast<float>(CadenceSum / Num) * 120.f;
+	UE_LOG(LogTemp, Log, TEXT("DALocoTest %s: actor %.0f cm/s, planted ball median %.1f cm/s (p90 %.1f), samples %d, cadence %.0f steps/min"),
+		*Label, ActorSpeed, Median, P90, Speeds.Num(), StepsPerMinute);
 }
 
 void ADAHUD::DrawHUD()

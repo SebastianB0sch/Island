@@ -219,25 +219,50 @@ the arena field) and have their own lines; every other student gets a generic lo
 
 The bones are renamed to the **UE5 Mannequin** scheme (`pelvis`, `spine_01`, `upperarm_l` …). Locomotion is
 solved rather than lifted from a stock clip: `Tools/dai/anime/gait.py` generates the **idle, walk and run**
-cycles from a biomechanical gait model. The stance shoe rolls heel → flat → ball → toe, a two-bone leg IK
-plants the ankle on the ground while the pelvis follows the natural bob (lowest at double support, highest at
-midstance), the pelvis sways/yaws under a counter-rotating spine, the head stays level, and the arms swing in
-opposition with bent elbows and relaxed wrists. The run has a real flight phase, stance compression, high heel
-recovery and a forward lean. Every cycle is validated at build time for contact speed, ground penetration,
-contact percentage, knee range and loop closure (the walk measures 1.50 m/s, the run 4.20 m/s).
+cycles from a biomechanical gait model authored to human gait-lab norms. The walk is 1.5 m/s at 120 steps/min
+(0.75 m steps, 60 % stance, ~4 cm pelvis bob); the run is 4.2 m/s at ~171 steps/min (1.47 m steps, ~0.2 s
+ground contact and a real flight phase). The stance shoe rolls heel → flat → ball → toe, a two-bone leg IK
+plants the ankle on the ground while the pelvis follows the natural bob (walk: lowest at double support,
+highest at midstance; run: compressed at midstance, highest mid-flight), the pelvis sways/yaws under a
+counter-rotating spine, the head stays level, and the arms swing in opposition (a fraction of a beat behind
+the legs) with bent elbows and relaxed wrists. The idle breathes ~15 times a minute with a slow weight shift.
+Every cycle is validated at build time for contact speed, ground penetration, contact percentage, knee range,
+loop closure **and human cadence / step length**, so a take that would read as shuffling or as legs spinning
+faster than the body travels fails the build.
 
-At runtime a native animation instance (`DAAvatarAnimInstance`) blends **idle → walk → run** by ground speed,
-drives both locomotion clips from one contact phase and solves the cadence from the blended stride length, so
-the planted foot moves at exactly the character's speed (no foot skating from a stroll to a sprint). Jump,
-Fall, Land, Swim and Duel are crossfaded action layers on top. The player moves at a human-scale 1.5 m/s walk
-and 4.2 m/s sprint; NPCs stroll at 1.4 m/s. The other takes (jump / fall / land, wave, yes / no, sit, clap,
-interact) are still CC0 Quaternius takes retargeted onto each model, plus hand-authored duel-stance and swim
-poses — and Unreal's IK Retargeter auto-maps the skeletons to Manny/Quinn if you want the engine's own
-animations.
+At runtime a native animation instance (`DAAvatarAnimInstance`) blends **idle → walk → run** following a
+human cadence model: below the walk speed the step rate *and* the step length drop together (~√speed, no
+fast little shuffle steps when starting, stopping or strolling slowly), and between walk and run the cadence
+rises steadily. Both locomotion clips are driven from one contact phase whose rate is solved from the stride
+of the pose actually shown and the (lightly filtered) real ground speed, so the planted foot moves backwards at
+exactly the speed the capsule travels — the legs never cycle faster or slower than the body moves. The body
+leans into turns (a fraction of the centripetal angle, capped) and briefly into acceleration and braking.
+
+Jump, Fall, Land, Swim, Tread, Duel and gestures are crossfaded action layers with per-action blend times:
+
+* **Jump / Fall / Land** are authored on the cast skeleton: the airborne jump (extended, toes pointed, then a
+  tuck) is timed to the real rise (v₀ / g); walking off a ledge or a kerb keeps the stride and only shows the
+  fall pose after a real drop; the landing absorbs through hips, knees and ankles with planted feet, and its
+  depth scales with the impact speed (landing in stride keeps the legs running).
+* **Swim** is a front crawl with ~40° body roll, high-elbow catch and pull, breathing every second stroke and a
+  six-beat flutter kick; its stroke rate follows the swim speed (one cycle ≈ 2 m). Below a slow drift the
+  avatar rights itself and **treads water** (sculling hands, eggbeater kick). The player swims 1.5 m/s
+  (2.2 m/s with Shift) — the old 3.3 m/s outpaced any human swimmer and left the stroke behind the body.
+* **Duel** stance has IK-planted feet, soft knees, the disk forearm level across the body and the card hand by
+  the chest, breathing through a 4 s loop.
+* **Gestures** (wave, yes / no, clap, interact) are CC0 Quaternius takes retargeted onto each model with the
+  legs re-solved so both feet stay planted. Students wave when you walk up to them, nod (or shake their head)
+  when they talk, and the player reaches out when using doors and counters; a gesture never plays while
+  moving, so it cannot freeze the legs over the ground.
+
+The player moves at a human-scale 1.5 m/s walk and 4.2 m/s sprint; NPCs stroll at 1.4 m/s and take a step or
+two to get going and to stop. The single-node `SK_Student` and procedural fallback avatars use the same rules
+(play rate = speed ratio; the procedural figure solves its stride and cadence from the ground speed).
+Unreal's IK Retargeter auto-maps the skeletons to Manny/Quinn if you want the engine's own animations.
 
 ![Gait](Docs/renders/gait.jpg)
 
-*Walk and run cycles rendered from the gait solver: heel strike, flat, heel-off and toe-off; a real flight phase and stance compression in the run, with the arms and shoulders counter-swinging.*
+*Walk and run cycles rendered from the gait solver at human cadence (120 and 171 steps/min): heel strike, flat, heel-off and toe-off; a real flight phase and stance compression in the run, with the arms and shoulders counter-swinging.*
 
 ### Anime rendering, cloth and animation
 
@@ -412,9 +437,10 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 * Third-person anime student (the cast's generic boy) — switch your **dorm jacket**
   (Slifer Red / Ra Yellow / Obelisk Blue / Society of Light white) with **J**; NPC students wear theirs. The
   older CC0 low-poly student and a procedural avatar remain as fallbacks when no cast is imported.
-* **Human-scale locomotion**: a 1.5 m/s walk (WASD) and 4.2 m/s sprint (Shift), with phase-matched
-  idle/walk/run blending, foot-planted cycles and smooth jump/fall/land transitions. The old
-  450/950 cm/s arcade speeds were retired because they made any authored stride skate.
+* **Human-scale locomotion**: a 1.5 m/s walk (WASD) and 4.2 m/s sprint (Shift) at human cadence (120 and
+  ~171 steps/min), with phase-matched idle/walk/run blending whose step rate and length follow real ground
+  speed, foot-planted cycles, lean into turns, and jump/fall/land/swim/tread transitions timed to physics.
+  The old 450/950 cm/s arcade speeds were retired because they made any authored stride skate.
 * Location banners + "**New location discovered**" tracking (17 named locations and 19 rooms), compass, minimap.
 * **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker. The selected
   location opens its list of rooms you can travel straight into - the Academy's main hall, Grand Duel Arena,

@@ -4,24 +4,6 @@
   "VroidC": {
    "skeleton_mesh": "SK_Anime_StudentM1",
    "anims": {
-    "Jump": {
-     "name": "A_Anime_VroidC_Jump",
-     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Jump.fbx",
-     "loop": false,
-     "seconds": 0.333
-    },
-    "Fall": {
-     "name": "A_Anime_VroidC_Fall",
-     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Fall.fbx",
-     "loop": true,
-     "seconds": 0.5
-    },
-    "Land": {
-     "name": "A_Anime_VroidC_Land",
-     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Land.fbx",
-     "loop": false,
-     "seconds": 0.333
-    },
     "Wave": {
      "name": "A_Anime_VroidC_Wave",
      "file": "Meshes/Characters/Anime/A_Anime_VroidC_Wave.fbx",
@@ -62,27 +44,45 @@
      "name": "A_Anime_VroidC_Idle",
      "file": "Meshes/Characters/Anime/A_Anime_VroidC_Idle.fbx",
      "loop": true,
-     "seconds": 3.0
+     "seconds": 8.0
+    },
+    "Jump": {
+     "name": "A_Anime_VroidC_Jump",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Jump.fbx",
+     "loop": false,
+     "seconds": 0.5
+    },
+    "Fall": {
+     "name": "A_Anime_VroidC_Fall",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Fall.fbx",
+     "loop": true,
+     "seconds": 1.2
+    },
+    "Land": {
+     "name": "A_Anime_VroidC_Land",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Land.fbx",
+     "loop": false,
+     "seconds": 0.7
     },
     "Walk": {
      "name": "A_Anime_VroidC_Walk",
      "file": "Meshes/Characters/Anime/A_Anime_VroidC_Walk.fbx",
      "loop": true,
-     "seconds": 0.8,
-     "speed": 149.9
+     "seconds": 1.0,
+     "speed": 150.0
     },
     "Run": {
      "name": "A_Anime_VroidC_Run",
      "file": "Meshes/Characters/Anime/A_Anime_VroidC_Run.fbx",
      "loop": true,
-     "seconds": 0.467,
-     "speed": 419.7
+     "seconds": 0.7,
+     "speed": 420.0
     },
     "Duel": {
      "name": "A_Anime_VroidC_Duel",
      "file": "Meshes/Characters/Anime/A_Anime_VroidC_Duel.fbx",
      "loop": true,
-     "seconds": 2.0
+     "seconds": 4.0
     },
     "Talk": {
      "name": "A_Anime_VroidC_Talk",
@@ -95,6 +95,12 @@
      "file": "Meshes/Characters/Anime/A_Anime_VroidC_Swim.fbx",
      "loop": true,
      "seconds": 1.6
+    },
+    "Tread": {
+     "name": "A_Anime_VroidC_Tread",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Tread.fbx",
+     "loop": true,
+     "seconds": 2.0
     }
    },
    "duel_disk": {
@@ -111,24 +117,6 @@
   "VroidA": {
    "skeleton_mesh": "SK_Anime_Alexis",
    "anims": {
-    "Jump": {
-     "name": "A_Anime_VroidA_Jump",
-     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Jump.fbx",
-     "loop": false,
-     "seconds": 0.333
-    },
-    "Fall": {
-     "name": "A_Anime_VroidA_Fall",
-     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Fall.fbx",
-     "loop": true,
-     "seconds": 0.5
-    },
-    "Land": {
-     "name": "A_Anime_VroidA_Land",
-     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Land.fbx",
-     "loop": false,
-     "seconds": 0.333
-    },
     "Wave": {
      "name": "A_Anime_VroidA_Wave",
      "file": "Meshes/Characters/Anime/A_Anime_VroidA_Wave.fbx",
@@ -169,27 +157,45 @@
      "name": "A_Anime_VroidA_Idle",
      "file": "Meshes/Characters/Anime/A_Anime_VroidA_Idle.fbx",
      "loop": true,
-     "seconds": 3.0
+     "seconds": 8.0
+    },
+    "Jump": {
+     "name": "A_Anime_VroidA_Jump",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Jump.fbx",
+     "loop": false,
+     "seconds": 0.5
+    },
+    "Fall": {
+     "name": "A_Anime_VroidA_Fall",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Fall.fbx",
+     "loop": true,
+     "seconds": 1.2
+    },
+    "Land": {
+     "name": "A_Anime_VroidA_Land",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Land.fbx",
+     "loop": false,
+     "seconds": 0.7
     },
     "Walk": {
      "name": "A_Anime_VroidA_Walk",
      "file": "Meshes/Characters/Anime/A_Anime_VroidA_Walk.fbx",
      "loop": true,
-     "seconds": 0.8,
+     "seconds": 1.0,
      "speed": 150.0
     },
     "Run": {
      "name": "A_Anime_VroidA_Run",
      "file": "Meshes/Characters/Anime/A_Anime_VroidA_Run.fbx",
      "loop": true,
-     "seconds": 0.467,
-     "speed": 420.0
+     "seconds": 0.7,
+     "speed": 420.3
     },
     "Duel": {
      "name": "A_Anime_VroidA_Duel",
      "file": "Meshes/Characters/Anime/A_Anime_VroidA_Duel.fbx",
      "loop": true,
-     "seconds": 2.0
+     "seconds": 4.0
     },
     "Talk": {
      "name": "A_Anime_VroidA_Talk",
@@ -202,6 +208,12 @@
      "file": "Meshes/Characters/Anime/A_Anime_VroidA_Swim.fbx",
      "loop": true,
      "seconds": 1.6
+    },
+    "Tread": {
+     "name": "A_Anime_VroidA_Tread",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Tread.fbx",
+     "loop": true,
+     "seconds": 2.0
     }
    },
    "duel_disk": {
@@ -218,24 +230,6 @@
   "VroidB": {
    "skeleton_mesh": "SK_Anime_StudentF2",
    "anims": {
-    "Jump": {
-     "name": "A_Anime_VroidB_Jump",
-     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Jump.fbx",
-     "loop": false,
-     "seconds": 0.333
-    },
-    "Fall": {
-     "name": "A_Anime_VroidB_Fall",
-     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Fall.fbx",
-     "loop": true,
-     "seconds": 0.5
-    },
-    "Land": {
-     "name": "A_Anime_VroidB_Land",
-     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Land.fbx",
-     "loop": false,
-     "seconds": 0.333
-    },
     "Wave": {
      "name": "A_Anime_VroidB_Wave",
      "file": "Meshes/Characters/Anime/A_Anime_VroidB_Wave.fbx",
@@ -276,27 +270,45 @@
      "name": "A_Anime_VroidB_Idle",
      "file": "Meshes/Characters/Anime/A_Anime_VroidB_Idle.fbx",
      "loop": true,
-     "seconds": 3.0
+     "seconds": 8.0
+    },
+    "Jump": {
+     "name": "A_Anime_VroidB_Jump",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Jump.fbx",
+     "loop": false,
+     "seconds": 0.5
+    },
+    "Fall": {
+     "name": "A_Anime_VroidB_Fall",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Fall.fbx",
+     "loop": true,
+     "seconds": 1.2
+    },
+    "Land": {
+     "name": "A_Anime_VroidB_Land",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Land.fbx",
+     "loop": false,
+     "seconds": 0.7
     },
     "Walk": {
      "name": "A_Anime_VroidB_Walk",
      "file": "Meshes/Characters/Anime/A_Anime_VroidB_Walk.fbx",
      "loop": true,
-     "seconds": 0.8,
+     "seconds": 1.0,
      "speed": 150.0
     },
     "Run": {
      "name": "A_Anime_VroidB_Run",
      "file": "Meshes/Characters/Anime/A_Anime_VroidB_Run.fbx",
      "loop": true,
-     "seconds": 0.467,
-     "speed": 419.9
+     "seconds": 0.7,
+     "speed": 420.2
     },
     "Duel": {
      "name": "A_Anime_VroidB_Duel",
      "file": "Meshes/Characters/Anime/A_Anime_VroidB_Duel.fbx",
      "loop": true,
-     "seconds": 2.0
+     "seconds": 4.0
     },
     "Talk": {
      "name": "A_Anime_VroidB_Talk",
@@ -309,6 +321,12 @@
      "file": "Meshes/Characters/Anime/A_Anime_VroidB_Swim.fbx",
      "loop": true,
      "seconds": 1.6
+    },
+    "Tread": {
+     "name": "A_Anime_VroidB_Tread",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Tread.fbx",
+     "loop": true,
+     "seconds": 2.0
     }
    },
    "duel_disk": {

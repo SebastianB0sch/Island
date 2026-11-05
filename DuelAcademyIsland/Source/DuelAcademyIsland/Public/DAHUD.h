@@ -32,6 +32,7 @@ public:
 		FVector BallL = FVector::ZeroVector;
 		FVector BallR = FVector::ZeroVector;
 		FVector Actor = FVector::ZeroVector;
+		float Cadence = 0.f;   // gait cycles per second shown by the anime anim instance
 	};
 
 	ADAHUD();

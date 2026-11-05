@@ -120,8 +120,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Movement")
 	float SprintSpeed = 420.f;
 
+	/** Front-crawl speed (cm/s); Shift swims 1.45x faster. 1.5 m/s is a strong swimmer (the old
+	 *  3.3 m/s was faster than the world record and left the stroke far behind the body). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Movement")
-	float SwimSpeed = 330.f;
+	float SwimSpeed = 150.f;
 
 	/** Motorcycle cruising speed (cm/s; 1500 = 54 km/h). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Motorcycle")

@@ -65,9 +65,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float BodyScale = 1.f;
 
-	/** Speed (cm/s) at which the walk cycle reaches a full stride. */
+	/** Procedural fallback only: speed (cm/s) of its reference walk (1.0 s cycle, 0.75 m steps at
+	 *  BodyScale 1). Its cadence and stride are solved from the ground speed with the same human
+	 *  cadence model as the anime cast, so the feet travel exactly as fast as the body. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
-	float StrideSpeed = 600.f;
+	float StrideSpeed = 150.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	bool bShowDuelDisk = true;
@@ -130,6 +132,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
 	void SetEmotion(FName Emotion, float Weight);
 
+	/** Play a one-shot gesture take (Wave, Yes, No, Clap, Interact...) while standing. It is
+	 *  skipped while walking, airborne, swimming or dueling, and fades out as soon as the
+	 *  character starts moving, so it can never freeze the legs over the ground. Returns false
+	 *  when the take is missing or the character is busy. */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
+	bool PlayGesture(FName State);
+
+	/** Swim speed (cm/s) at which A_Anime_<Group>_Swim plays at rate 1: one stroke cycle
+	 *  (1.6 s) moves the body about 2 m, a relaxed front crawl. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float SwimAnimSpeed = 125.f;
+
 private:
 	/** SetTalking: plays the Talk gesture take while standing. */
 	bool bSpeaking = false;
@@ -184,17 +198,40 @@ private:
 
 	bool bAnimeCast = false;
 
+	void UpdateBodyLean(float DeltaTime, float GroundSpeed);
+
 	FName CurrentAnim = NAME_None;
 	FName CurrentAction = NAME_None;
 	float LandTimer = 0.f;
+	float LandWeight = 0.f;
 	float LastAirVerticalSpeed = 0.f;
+	float AirTime = 0.f;
+	float JumpRate = 1.f;
 	bool bWasInAir = false;
+	bool bJumped = false;
+
+	/** Swimming: 0 = treading water upright, 1 = horizontal crawl (follows the swim speed). */
+	float SwimMoveAlpha = 0.f;
+	bool bSwimStroke = false;
+
+	FName PendingGesture = NAME_None;
+	FName ActiveGesture = NAME_None;
+	float GestureTime = 0.f;
+
+	/** Whole-body lean (deg) into turns and against acceleration, about the feet. */
+	float LeanSide = 0.f;
+	float LeanForward = 0.f;
+	float LastYaw = 0.f;
+	float LastGroundSpeed = 0.f;
+	bool bHasLastYaw = false;
 
 	float Phase = 0.f;
 	float RideLift = 0.f;
 	FName PelvisBone = NAME_None;
 	bool bPelvisSearched = false;
 	float SmoothedSpeed = 0.f;
+	float StepAmplitude = 0.f;
+	float SwimCycle = 0.f;
 	float AirAlpha = 0.f;
 	float Time = 0.f;
 	float BreathPhase = 0.f;

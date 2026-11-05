@@ -224,7 +224,7 @@ Paths are relative to `Tools/thirdparty/`.
 | `polyhaven/textures/rock_boulder_dry` | Dimitrios Savva (photography), Rico Cilliers (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/rock_boulder_dry> | terrain layer Rock, texture Rock |
 | `polyhaven/textures/white_plaster_02` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/white_plaster_02> | texture Grunge |
 | `quaternius/adventurer` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/m/5EGWBMpuXq> | A_Anime_Interact |
-| `quaternius/astronaut` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/m/0D54W8yfrA> | A_Anime_Fall, A_Anime_Idle, A_Anime_Jump, A_Anime_Land, A_Anime_No, A_Anime_Run, A_Anime_Walk, A_Anime_Wave, A_Anime_Yes |
+| `quaternius/astronaut` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/m/0D54W8yfrA> | A_Anime_No, A_Anime_Wave, A_Anime_Yes |
 | `quaternius/worker` | Quaternius (https://quaternius.com) | CC0 1.0 Universal (public domain dedication) | <https://poly.pizza/u/Quaternius> | A_Anime_Clap, A_Anime_Sit, SK_Student |
 | `sketchfab/beach_chair` | stealth86 | CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED | <https://sketchfab.com/3d-models/beach-chair-57e9477018d244378302070a8738b566> | SM_BeachChair |
 | `sketchfab/beach_umbrella` | stealth86 | CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/) - attribution REQUIRED | <https://sketchfab.com/3d-models/beach-umbrella-1014ad7c8a4c4aa8ba5e88fc6151aa4f> | SM_BeachUmbrella |

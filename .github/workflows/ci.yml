@@ -34,9 +34,6 @@ jobs:
           if git grep -nI -E '^(<<<<<<< |>>>>>>> |=======$)' -- . ':!*.md'; then
             echo "::error::merge conflict markers found"; exit 1
           fi
-      # Tools/tests/test_python_pipeline.py and Tools/dai (audio, thirdparty) import numpy and Pillow.
-      - name: Install Python test dependencies
-        run: python -m pip install --disable-pip-version-check numpy pillow
       - name: Python compiles (pipeline + editor scripts)
         run: python -m compileall -q Tools DuelAcademyIsland/Content/Python
       - name: Integration harness unit tests
