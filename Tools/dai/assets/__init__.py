@@ -15,7 +15,7 @@ An AssetSet contains
       light     color, intensity (lumens-ish UE units), radius (m), night_only, spot dir...
       text      text, size (m), color   -> TextRender actor (signs, building names)
       interact  kind = duel_field | card_shop | sign | info, text/title
-      emitter   kind = smoke | steam | mist | sparks, scale
+      emitter   kind = smoke | steam | mist | sparks | spray, scale, rate, optional ring / points
       audio     sound = A_Ocean | A_Wind | A_Forest | A_Volcano | A_Waterfall | A_HotSpring | A_Crowd, radius
       npc       dorm = slifer | ra | obelisk | white, wander radius
       spawn     player start candidates
@@ -64,8 +64,16 @@ class AssetSet:
     def interact(self, kind, pos, yaw=0.0, title="", text="", radius=3.0):
         self.socket("interact", pos, yaw, kind=kind, title=title, text=text, radius=radius)
 
-    def emitter(self, kind, pos, scale=1.0, rate=1.0):
-        self.socket("emitter", pos, 0.0, kind=kind, scale=scale, rate=rate)
+    def emitter(self, kind, pos, scale=1.0, rate=1.0, ring=0.0, points=0, angle0=0.0):
+        """ring > 0: particles start on a circle of that radius (m) round pos instead of a small disc
+        (where a fountain sheet lands); points > 0 with it: only at that many spots on the circle, the
+        first at angle0 (deg, CCW from local +X) - a ring of fountain jets."""
+        extra = {}
+        if ring > 0.0:
+            extra = dict(ring=float(ring))
+            if points > 0:
+                extra.update(points=int(points), angle0=float(angle0))
+        self.socket("emitter", pos, 0.0, kind=kind, scale=scale, rate=rate, **extra)
 
     def audio(self, sound, pos, radius=40.0, volume=1.0):
         self.socket("audio", pos, 0.0, sound=sound, radius=radius, volume=volume)

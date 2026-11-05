@@ -17,6 +17,10 @@ kind:
   terrain   - M_DA_Terrain (splat-mapped)
   beam      - M_DA_Beam (additive cone)
   waterfall - M_DA_Waterfall (panning translucent water sheet)
+  flow      - M_DA_WaterFlow (world-aligned flowing water: fountain sheets, jets, foam; no UVs needed).
+              flow = m/s along world Z (> 0 falls, < 0 rises), streak = streaks per metre across,
+              stretch = how much longer they are than wide, foam_scale / foam_speed = churn on flat faces,
+              base / contrast = opacity floor and streak contrast, sparkle = glints, wobble = surface wobble (cm)
 
 detail: name of a tileable detail texture (T_<detail>_D / _N) or None.
 tiling: UV tiling multiplier (mesh UVs are 1 unit = 1 metre).
@@ -137,6 +141,15 @@ MATERIALS = {
     "M_LakeWater":      dict(kind="water", color=_c(0.10, 0.45, 0.45), rough=0.05, detail=None),
     "M_Lava":           dict(kind="lava", color=_c(1.00, 0.35, 0.05), strength=40.0),
     "M_Waterfall":      dict(kind="waterfall", color=_c(0.85, 0.95, 1.00), opacity=0.8),
+    # fountains (assets/fountain.py): clear pools with small quick ripples, streaming sheets and jets, foam
+    "M_FountainWater":  dict(kind="water", color=_c(0.16, 0.60, 0.68), rough=0.03, detail=None,
+                             wave_scale=0.0045, wave_speed=6.0, wave_strength=0.6),
+    "M_FountainFall":   dict(kind="flow", color=_c(0.86, 0.95, 1.00), opacity=0.55, flow=2.4, streak=1.6,
+                             stretch=4.0, base=0.22, contrast=1.8, sparkle=0.5, wobble=1.0),
+    "M_FountainJet":    dict(kind="flow", color=_c(0.92, 0.97, 1.00), opacity=0.7, flow=-3.0, streak=3.0,
+                             stretch=3.0, base=0.4, contrast=1.4, sparkle=0.7, wobble=0.5),
+    "M_FountainFoam":   dict(kind="flow", color=_c(0.96, 0.98, 1.00), opacity=0.65, flow=0.0, foam_scale=1.2,
+                             foam_speed=1.0, base=0.0, contrast=2.2, sparkle=0.3, wobble=0.0),
     "M_Hologram":       dict(kind="hologram", color=_c(0.30, 0.90, 1.00), strength=6.0),
     "M_CardBack":       dict(kind="emissive", color=_c(0.65, 0.40, 0.18), strength=2.5, texture="T_CardBack"),
     "M_Smoke":          dict(kind="smoke", color=_c(0.55, 0.55, 0.57), opacity=0.5),

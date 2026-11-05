@@ -14,7 +14,7 @@ from . import common as C
 #   _N normal maps      normal map        (Normal sampler)
 #   splat maps          masks             (Masks sampler)
 #   colour textures     default sRGB      (Color sampler)
-LINEAR = {"T_Noise"}
+LINEAR = {"T_Noise", "T_WaterStreaks"}
 MASKS = {"T_TerrainSplatA", "T_TerrainSplatB"}
 UI = {"T_IslandMap"}
 

@@ -22,6 +22,7 @@ from . import AssetSet
 from . import with_travel
 from . import interior as K
 from . import detail as DTL       # (DT is the drum wall thickness here)
+from . import fountain as FT
 from .. import palette
 
 palette.register({
@@ -5051,6 +5052,7 @@ def _interiors(aset, mb, nc):
 # ============================================================================ PLAZA
 FK = 1.3        # fountain scale
 FR = 14.3 * FK  # kerb outer radius
+FOUNTAIN_JETS, FOUNTAIN_JET_A0, FOUNTAIN_JET_LAND = 12, 15.0, 4.7   # jet ring: count, first angle, landing r
 
 
 def _fountain(mb, nocol, aset):
@@ -5082,15 +5084,21 @@ def _fountain(mb, nocol, aset):
         # crest statue on top (two-sided)
         emblem(mb, (0.0, 0.0, 7.65), 1.75, yaw=0.0, depth=0.18)
         emblem(mb, (0.0, 0.0, 7.65), 1.75, yaw=180.0, depth=0.18)
-        # water (no collision)
-        disc(nocol, (0, 0), 8.62, 0.5, "M_LakeWater", seg=seg)
-        disc(nocol, (0, 0), 3.1, 3.12, "M_LakeWater", seg=seg)
-        disc(nocol, (0, 0), 1.6, 4.96, "M_LakeWater", seg=32)
-        nocol.cylinder((0, 0, 0.5), 3.47, 2.75, "M_Waterfall", seg=seg, cap_top=False, cap_bottom=False)
-        nocol.cylinder((0, 0, 3.12), 1.86, 1.9, "M_Waterfall", seg=32, cap_top=False, cap_bottom=False)
-        for k in range(12):
-            p = polar(7.4, 15 + 30 * k)
-            nocol.cone((p[0], p[1], 0.5), 0.12, 1.4, "M_Waterfall", seg=6, cap_bottom=False)
+        # water (no collision, assets/fountain.py): three pools, two sheets spilling over the bowl lips on
+        # ballistic curves, a ring of twelve jets arcing in from gold nozzles, foam wherever water lands
+        disc(nocol, (0, 0), 8.62, 0.5, FT.WATER, seg=seg)
+        disc(nocol, (0, 0), 3.1, 3.12, FT.WATER, seg=seg)
+        disc(nocol, (0, 0), 1.6, 4.96, FT.WATER, seg=32)
+        r_low = FT.overflow_sheet(nocol, (0, 0), 3.42, 3.28, 0.5, seg=seg)
+        r_mid = FT.overflow_sheet(nocol, (0, 0), 1.82, 5.0, 3.12, seg=32, v0=0.45)
+        FT.foam_ring(nocol, (0, 0), r_low - 0.3, r_low + 0.5, 0.515, seg=seg)
+        FT.foam_ring(nocol, (0, 0), r_mid - 0.2, r_mid + 0.35, 3.135, seg=32)
+        for k in range(FOUNTAIN_JETS):
+            a = FOUNTAIN_JET_A0 + 360.0 * k / FOUNTAIN_JETS
+            p0, p1 = polar(7.6, a), polar(FOUNTAIN_JET_LAND, a)
+            mb.sphere((p0[0], p0[1], 0.5), 0.13, "M_Gold", seg=8, rings=4, hemi=True)        # nozzle
+            end = FT.jet_arc(nocol, (p0[0], p0[1], 0.56), (p1[0], p1[1], 0.5), 1.9)
+            FT.foam_patch(nocol, (end[0], end[1], 0.52), 0.4)
         # paving rosette and kerb around the fountain
         for k in range(24):
             a0 = k * 15.0
@@ -5100,6 +5108,11 @@ def _fountain(mb, nocol, aset):
         ring_sector(mb, (0, 0), 13.8, 14.3, 0.0, 360.0, -0.3, 0.14, "M_AcademyStone", faces="tio", n=64)
     aset.emitter("mist", (0.0, 0.0, 3.5 * FK), scale=1.6 * FK)
     aset.emitter("mist", (0.0, 0.0, 0.9 * FK), scale=2.4 * FK)
+    # droplets thrown up where the water lands: both sheets and every jet
+    aset.emitter("spray", (0.0, 0.0, 0.5 * FK), scale=FK, ring=r_low * FK)
+    aset.emitter("spray", (0.0, 0.0, 3.12 * FK), scale=0.7 * FK, ring=r_mid * FK)
+    aset.emitter("spray", (0.0, 0.0, 0.5 * FK), scale=0.8 * FK, ring=FOUNTAIN_JET_LAND * FK,
+                 points=FOUNTAIN_JETS, angle0=FOUNTAIN_JET_A0)
     aset.audio("A_Waterfall", (0.0, 0.0, 1.5), radius=25.0 * FK)
     for k in range(4):
         p = polar(6.0 * FK, 45 + 90 * k)

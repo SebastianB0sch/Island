@@ -20,6 +20,7 @@ from . import AssetSet
 from . import with_travel
 from . import interior as K
 from . import detail as DT
+from . import fountain as FT
 from .. import palette
 
 TAU = math.pi * 2.0
@@ -51,8 +52,6 @@ CLEAR = "M_GlassClear"
 FRAME = "M_WindowFrame"
 PAVE = "M_Paving"
 HEDGE = "M_Hedge"
-WATER = "M_LakeWater"
-FALLS = "M_Waterfall"
 GLOW = "M_LampGlow"
 IRON = "M_DarkMetal"
 PIER = "M_PierWood"
@@ -1382,6 +1381,7 @@ B_BLOCKS = {
 }
 B_GATE_Y = -84.0
 B_FOUNTAIN = (0.0, -50.0)
+B_JETS, B_JET_LAND = 16, 4.6        # rim jets: count, landing radius
 
 
 def _boys_windows(mb, p0, p1, n=None, us=None, rows=("gf", "f1", "f2"), balconettes=False, f1_doors=False):
@@ -1634,30 +1634,29 @@ def _boys_fountain(mb, nc, aset, cx, cy):
     lathe_crisp(mb, [(R + 0.4, -0.3), (R + 0.4, 0.5), (R + 0.6, 0.6), (R + 0.6, 0.8), (R - 0.35, 0.8),
                      (R - 0.35, 0.1)], MARBLE, 48, center=(cx, cy, 0.0))
     disc(mb, cx, cy, 0.12, R - 0.35, TRIM, seg=48)                      # blue tiled floor
-    nc.poly([(x, y, 0.62) for x, y in circle(48, R - 0.34, cx, cy)], WATER)
+    nc.poly([(x, y, 0.62) for x, y in circle(48, R - 0.34, cx, cy)], FT.WATER)
     # tier 1
     lathe_crisp(mb, [(1.7, 0.12), (1.7, 0.7), (1.3, 0.85), (0.8, 1.0), (0.65, 1.7), (0.75, 1.95),
                      (1.4, 2.15), (3.3, 2.55), (3.5, 2.65), (3.5, 2.9), (3.2, 2.9), (3.15, 2.72)], MARBLE, 32,
                 center=(cx, cy, 0.0), cap_top=True)
-    nc.poly([(x, y, 2.82) for x, y in circle(32, 3.17, cx, cy)], WATER)
-    for i in range(16):
-        a = TAU * (i + 0.5) / 16
+    nc.poly([(x, y, 2.82) for x, y in circle(32, 3.17, cx, cy)], FT.WATER)
+    # sixteen jets from the gilded nozzles on the rim, arcing in to land short of the tier-1 sheet
+    for i in range(B_JETS):
+        a = TAU * (i + 0.5) / B_JETS
         ca, sa = math.cos(a), math.sin(a)
         mb.sphere((cx + ca * (R - 0.1), cy + sa * (R - 0.1), 0.86), 0.13, GOLD, seg=6, rings=4)
-        prev = None
-        for k in range(9):
-            t = k / 8
-            r = (R - 0.15) + (4.0 - (R - 0.15)) * t
-            z = 0.9 + 2.3 * 4 * t * (1 - t) - 0.3 * t
-            p = (cx + ca * r, cy + sa * r, z)
-            if prev:
-                nc.beam(prev, p, 0.09, 0.09, FALLS)
-            prev = p
+        end = FT.jet_arc(nc, (cx + ca * (R - 0.15), cy + sa * (R - 0.15), 0.92),
+                         (cx + ca * B_JET_LAND, cy + sa * B_JET_LAND, 0.62), 1.75, r0=0.055, r1=0.035)
+        FT.foam_patch(nc, (end[0], end[1], 0.64), 0.35)
+    # tier 1 spills over its lip into the basin
+    r1 = FT.overflow_sheet(nc, (cx, cy), 3.52, 2.92, 0.62, seg=48, v0=0.5)
+    FT.foam_ring(nc, (cx, cy), r1 - 0.25, r1 + 0.45, 0.635, seg=48)
     # tier 2
     lathe_crisp(mb, [(0.55, 2.72), (0.45, 3.6), (0.55, 3.85), (1.0, 4.0), (1.9, 4.35), (2.05, 4.5),
                      (2.05, 4.68), (1.85, 4.68), (1.8, 4.52)], MARBLE, 24, center=(cx, cy, 0.0), cap_top=True)
-    nc.poly([(x, y, 4.62) for x, y in circle(24, 1.82, cx, cy)], WATER)
-    nc.lathe([(2.1, 2.84), (2.1, 4.64)], FALLS, 24, cap_top=False, cap_bottom=False, center=(cx, cy, 0.0))
+    nc.poly([(x, y, 4.62) for x, y in circle(24, 1.82, cx, cy)], FT.WATER)
+    r2 = FT.overflow_sheet(nc, (cx, cy), 2.07, 4.7, 2.82, seg=32, v0=0.4)
+    FT.foam_ring(nc, (cx, cy), r2 - 0.2, r2 + 0.3, 2.835, seg=32)
     # little white obelisk with a gold pyramidion on top
     frustum(mb, (cx - 0.45, cy - 0.45, cx + 0.45, cy + 0.45), (cx - 0.45, cy - 0.45, cx + 0.45, cy + 0.45),
             4.52, 4.9, MARBLE, bottom=False, cap_mat=MARBLE)
@@ -1670,6 +1669,9 @@ def _boys_fountain(mb, nc, aset, cx, cy):
         mb.sphere((cx + math.cos(a) * 1.7, cy + math.sin(a) * 1.7, 0.95), 0.22, GOLD, seg=8, rings=6)
     aset.emitter("mist", (cx, cy, 3.0), 1.6)
     aset.emitter("mist", (cx, cy, 0.9), 2.2)
+    aset.emitter("spray", (cx, cy, 0.62), 1.0, ring=r1)
+    aset.emitter("spray", (cx, cy, 2.82), 0.6, ring=r2)
+    aset.emitter("spray", (cx, cy, 0.62), 0.7, ring=B_JET_LAND, points=B_JETS, angle0=180.0 / B_JETS)
     aset.audio("A_Waterfall", (cx, cy, 1.5), radius=24.0, volume=0.6)
     aset.light((cx, cy, 1.2), (0.6, 0.8, 1.0), 4000, 14, night_only=True)
 
