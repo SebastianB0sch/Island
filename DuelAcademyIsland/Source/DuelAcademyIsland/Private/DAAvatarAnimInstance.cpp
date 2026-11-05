@@ -76,6 +76,64 @@ namespace
 	}
 
 	const TCHAR* VisemeNames[5] = { TEXT("A"), TEXT("I"), TEXT("U"), TEXT("E"), TEXT("O") };
+
+	// Cloth corrective keys (Tools/dai/anime/correctives.py): chains of key angles along one motion.
+	// Index: 0..2 forward pitch, 3..4 backward pitch, 5 spread, 6..7 knee flexion.
+	struct FDAFitKey { const TCHAR* Name; int32 Chain; float Angle; };
+	const FDAFitKey FitKeys[] = {
+		{ TEXT("HipFwd1"), 0, 25.f }, { TEXT("HipFwd"), 0, 50.f }, { TEXT("HipFwd2"), 0, 90.f },
+		{ TEXT("HipBack1"), 1, 15.f }, { TEXT("HipBack"), 1, 30.f },
+		{ TEXT("HipOut"), 2, 30.f },
+		{ TEXT("KneeBend1"), 3, 60.f }, { TEXT("KneeBend"), 3, 110.f },
+	};
+	constexpr int32 NumFitKeys = UE_ARRAY_COUNT(FitKeys);
+
+	/** Tent weight of key K for the motion amount X (>= 0) along its chain (the last key extrapolates to 1.2). */
+	float FitTent(int32 K, float X)
+	{
+		const int32 Chain = FitKeys[K].Chain;
+		float Prev = 0.f;
+		for (int32 J = K - 1; J >= 0; --J)
+		{
+			if (FitKeys[J].Chain == Chain)
+			{
+				Prev = FitKeys[J].Angle;
+				break;
+			}
+		}
+		const bool bLast = K + 1 >= NumFitKeys || FitKeys[K + 1].Chain != Chain;
+		const float A = FitKeys[K].Angle;
+		if (X <= Prev)
+		{
+			return 0.f;
+		}
+		if (!bLast && X >= FitKeys[K + 1].Angle)
+		{
+			return 0.f;
+		}
+		if (X <= A)
+		{
+			return (X - Prev) / FMath::Max(A - Prev, 1e-3f);
+		}
+		if (bLast)
+		{
+			return FMath::Min(1.2f, X / A);
+		}
+		return (FitKeys[K + 1].Angle - X) / FMath::Max(FitKeys[K + 1].Angle - A, 1e-3f);
+	}
+
+	/** Angle (deg) of K in the plane (A, -Up) - correctives.angles() */
+	float PlaneAngle(const FVector& K, const FVector& A, const FVector& Up)
+	{
+		return FMath::RadiansToDegrees(static_cast<float>(FMath::Atan2(FVector::DotProduct(K, A), -FVector::DotProduct(K, Up))));
+	}
+
+	float BendAngle(const FVector& Hip, const FVector& Knee, const FVector& Ankle)
+	{
+		const FVector U = (Knee - Hip).GetSafeNormal();
+		const FVector V = (Ankle - Knee).GetSafeNormal();
+		return FMath::RadiansToDegrees(static_cast<float>(FMath::Acos(FMath::Clamp(FVector::DotProduct(U, V), -1.0, 1.0))));
+	}
 	const TCHAR* EmotionNames[5] = { TEXT("Joy"), TEXT("Angry"), TEXT("Sorrow"), TEXT("Surprised"), TEXT("Fun") };
 }
 
@@ -640,6 +698,7 @@ void UDAAvatarAnimInstance::NativeInitializeAnimation()
 	BlinkTimer = FaceRng.FRandRange(0.5f, 3.f);
 	BlinkClock = -1.f;
 	bHasFace = false;
+	bFitChecked = false;
 	if (const USkeletalMeshComponent* Comp = GetSkelMeshComponent())
 	{
 		if (const USkeletalMesh* Mesh = Comp->GetSkeletalMeshAsset())
@@ -666,6 +725,81 @@ void UDAAvatarAnimInstance::SetLookAtTarget(const FVector& WorldLocation, bool b
 {
 	LookTargetWorld = WorldLocation;
 	bLookAt = bEnable;
+}
+
+void UDAAvatarAnimInstance::UpdateCorrectives()
+{
+	const USkeletalMeshComponent* Comp = GetSkelMeshComponent();
+	const USkeletalMesh* Mesh = Comp ? Comp->GetSkeletalMeshAsset() : nullptr;
+	if (!Mesh)
+	{
+		return;
+	}
+	if (!bFitChecked)
+	{
+		bFitChecked = true;
+		for (int32 Side = 0; Side < 2; ++Side)
+		{
+			FitMorphs[Side].Reset();
+			for (int32 K = 0; K < NumFitKeys; ++K)
+			{
+				const FName Name(*FString::Printf(TEXT("Fit_%s_%s"), FitKeys[K].Name, Side == 0 ? TEXT("l") : TEXT("r")));
+				if (Mesh->FindMorphTarget(Name))
+				{
+					FitMorphs[Side].Add(TPair<FName, int32>(Name, K));
+				}
+			}
+		}
+	}
+	if (FitMorphs[0].Num() == 0 && FitMorphs[1].Num() == 0)
+	{
+		return;
+	}
+	const TArray<FTransform>& Pose = Comp->GetComponentSpaceTransforms();
+	const FReferenceSkeleton& Ref = Mesh->GetRefSkeleton();
+	const int32 Pelvis = Comp->GetBoneIndex(TEXT("pelvis"));
+	if (Pelvis == INDEX_NONE || !Pose.IsValidIndex(Pelvis))
+	{
+		return;
+	}
+	const FQuat PelvisRest = FAnimationRuntime::GetComponentSpaceTransformRefPose(Ref, Pelvis).GetRotation();
+	const FQuat PelvisPose = Pose[Pelvis].GetRotation();
+	// rest-pose axes of the cast in mesh space: forward +Y, up +Z, the left side +X
+	const FVector Fwd = PelvisRest.UnrotateVector(FVector(0.0, 1.0, 0.0));
+	const FVector Up = PelvisRest.UnrotateVector(FVector(0.0, 0.0, 1.0));
+	const TCHAR* Suffix[2] = { TEXT("l"), TEXT("r") };
+	for (int32 Side = 0; Side < 2; ++Side)
+	{
+		if (FitMorphs[Side].Num() == 0)
+		{
+			continue;
+		}
+		const int32 Thigh = Comp->GetBoneIndex(FName(*FString::Printf(TEXT("thigh_%s"), Suffix[Side])));
+		const int32 Calf = Comp->GetBoneIndex(FName(*FString::Printf(TEXT("calf_%s"), Suffix[Side])));
+		const int32 Foot = Comp->GetBoneIndex(FName(*FString::Printf(TEXT("foot_%s"), Suffix[Side])));
+		if (Thigh == INDEX_NONE || Calf == INDEX_NONE || Foot == INDEX_NONE ||
+			!Pose.IsValidIndex(Thigh) || !Pose.IsValidIndex(Calf) || !Pose.IsValidIndex(Foot))
+		{
+			continue;
+		}
+		const FVector Out = PelvisRest.UnrotateVector(FVector(Side == 0 ? 1.0 : -1.0, 0.0, 0.0));
+		const FVector Hip0 = FAnimationRuntime::GetComponentSpaceTransformRefPose(Ref, Thigh).GetLocation();
+		const FVector Knee0 = FAnimationRuntime::GetComponentSpaceTransformRefPose(Ref, Calf).GetLocation();
+		const FVector Ankle0 = FAnimationRuntime::GetComponentSpaceTransformRefPose(Ref, Foot).GetLocation();
+		const FVector Hip1 = Pose[Thigh].GetLocation();
+		const FVector Knee1 = Pose[Calf].GetLocation();
+		const FVector Ankle1 = Pose[Foot].GetLocation();
+		const FVector K0 = PelvisRest.UnrotateVector(Knee0 - Hip0);
+		const FVector K1 = PelvisPose.UnrotateVector(Knee1 - Hip1);
+		const float Pitch = PlaneAngle(K1, Fwd, Up) - PlaneAngle(K0, Fwd, Up);
+		const float Spread = PlaneAngle(K1, Out, Up) - PlaneAngle(K0, Out, Up);
+		const float Knee = BendAngle(Hip1, Knee1, Ankle1) - BendAngle(Hip0, Knee0, Ankle0);
+		const float Amount[4] = { FMath::Max(0.f, Pitch), FMath::Max(0.f, -Pitch), FMath::Max(0.f, Spread), FMath::Max(0.f, Knee) };
+		for (const TPair<FName, int32>& M : FitMorphs[Side])
+		{
+			SetMorphTarget(M.Key, FitTent(M.Value, Amount[FitKeys[M.Value].Chain]));
+		}
+	}
 }
 
 void UDAAvatarAnimInstance::UpdateFace(float Dt)
@@ -967,6 +1101,7 @@ void UDAAvatarAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 	Proxy.SimDt = Dt;
 	Proxy.bSprings = bSecondaryMotion;
+	UpdateCorrectives();
 	SpringChainCount = Proxy.StatChains;
 	SpringDeflection = Proxy.StatMaxDeflection;
 	UpdateFace(Dt);

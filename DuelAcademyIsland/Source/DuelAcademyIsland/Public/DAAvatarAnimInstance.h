@@ -20,6 +20,9 @@
 //   * look-at: neck + head turn towards a target (the player while talking), clamped and eased
 //   * face: random blinks (sometimes double), lip-sync visemes while talking, eased emotions - all on the
 //     face morph targets exported with the cast (Blink, A/I/U/E/O, Joy/Angry/Sorrow/Surprised/Fun)
+//   * cloth correctives: pose-space morphs (Fit_HipFwd_l ...) faded in by each thigh's pitch / spread and
+//     knee flexion, the same formula the build solved them with - they keep trousers inside long coats in
+//     a stride or a sit, where linear blend skinning alone collapses the seat
 
 #pragma once
 
@@ -100,6 +103,12 @@ protected:
 private:
 	void UpdateActionTimes(float DeltaSeconds);
 	void UpdateFace(float Dt);
+	/** Thigh / knee driven cloth corrective morphs (Fit_*, Tools/dai/anime/correctives.py). */
+	void UpdateCorrectives();
+
+	// corrective morphs present on this mesh: name -> index into the key table, per side
+	TArray<TPair<FName, int32>> FitMorphs[2];
+	bool bFitChecked = false;
 
 	// face
 	bool bTalking = false;
