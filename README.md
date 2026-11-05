@@ -122,6 +122,11 @@ Egyptian-god theming), not a copy of any copyrighted asset. All card names in th
 *A Run frame with the spring solver on (`hairrig.simulate`, the same solver as in game). The locks swing
 together, and Alexis's long hair flows back in one sheet.*
 
+![Hair through a run cycle](Docs/renders/hair_run.gif)
+
+*Chazz and Alexis through a run cycle (4.2 m/s, `hairrig.simulate`): the hair bounces and sways as one mass,
+with no strand separating from its lock.*
+
 Everyone on the island is an **anime character model**: the VRoid sample avatars (VRoid Project / pixiv,
 whose terms allow modification and redistribution) restyled by the pipeline after the characters' official
 designs, with a cel-style material and ink outline in Unreal:
