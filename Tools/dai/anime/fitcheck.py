@@ -523,3 +523,123 @@ def summary_line(cid, rep):
     bad = over_budget(rep)
     tag = "OK  " if not bad and not holes else "FAIL"
     return f"  fit {tag} {cid:11s} " + " | ".join(parts) + f" | holes {holes}" + (f"  over: {','.join(bad)}" if bad else "")
+
+
+def snap_residuals(obj, arm, log=print, shape_fn=None, rounds=6, ring=0.5, tuck=0.003):
+    """Last step of the fit (build time): a covered inner vertex that still breaks through its covering
+    triangle in some posed frame takes that triangle's interpolated bone weights and corrective displacement
+    (it can then only move with the cloth over it), tucked `tuck` under it; its 1-ring blends `ring` of the
+    way so no kink shows. Repeats `rounds` times. Returns the vertices still poking."""
+    from . import retarget as RT
+    from .models import MORPH_ATTR
+    me = obj.data
+    groups = _groups(obj)
+    faces_all = [tuple(p.vertices) for p in me.polygons]
+    verts_of = {g: np.array(sorted({v for fi in f for v in me.polygons[fi].vertices})) for g, f in groups.items()}
+    outers = [g for g in groups if g != "skin"]
+    poses = pose_frames(arm, None, log)
+    nbr = [[] for _ in me.vertices]
+    for e in me.edges:
+        a, b = e.vertices
+        nbr[a].append(b)
+        nbr[b].append(a)
+    attrs = [a.name for a in me.attributes if a.name.startswith(MORPH_ATTR)]
+    # on the final (joined) mesh the correctives are real shape keys: drive them per frame and edit them
+    keys = [kb for kb in (me.shape_keys.key_blocks[1:] if me.shape_keys else []) if kb.name.startswith("Fit_")]
+    from . import correctives
+    left = 0
+    for rnd in range(rounds):
+        RT._assign(arm, None)
+        arm.data.pose_position = "REST"
+        for kb in keys:
+            kb.value = 0.0
+        rest, _ = _evaluated(obj)
+        arm.data.pose_position = "POSE"
+        anchors = _relax_anchors(rest, groups, faces_all, verts_of, outers)
+        worst = [np.full(len(a[0]), -np.inf) for a in anchors]
+        base = np.array([v.co[:] for v in me.vertices])
+        scene = bpy.context.scene
+        for pose, act, frames in poses:
+            RT._assign(arm, act)
+            for fr in frames:
+                scene.frame_set(fr)
+                if keys:
+                    correctives.apply(obj, arm)
+                extra = shape_fn(arm) if shape_fn else None
+                if extra is not None:
+                    me.vertices.foreach_set("co", (base + extra).ravel())
+                    me.update()
+                co, _ = _evaluated(obj)
+                if extra is not None:
+                    me.vertices.foreach_set("co", base.ravel())
+                    me.update()
+                for k, (idx, tri_of, bary, _) in enumerate(anchors):
+                    worst[k] = np.maximum(worst[k], _heights(co, idx, tri_of, bary))
+        RT._assign(arm, None)
+        for kb in keys:
+            kb.value = 0.0
+        targets = {}
+        for (idx, tri_of, bary, _), w in zip(anchors, worst):
+            for vi, tri, b in zip(idx[w > EPS], tri_of[w > EPS], bary[w > EPS]):
+                targets.setdefault(int(vi), (tri, b))
+        left = len(targets)
+        # every copy of a position (UV seams split vertices) is bound and moved together, or the seam opens
+        cur = np.array([v.co[:] for v in me.vertices])
+        keyp = np.round(cur / 1e-5).astype(np.int64)
+        _, winv = np.unique(keyp, axis=0, return_inverse=True)
+        winv = winv.ravel()
+        copies = {}
+        for vi, g in enumerate(winv):
+            copies.setdefault(int(g), []).append(vi)
+        for vi in list(targets):
+            for twin in copies[int(winv[vi])]:
+                targets.setdefault(twin, targets[vi])
+        if not left:
+            break
+        vg = obj.vertex_groups
+        co0 = np.array([v.co[:] for v in me.vertices])
+        disp = {}
+        for n in attrs:
+            d = np.empty(len(me.vertices) * 3, np.float32)
+            me.attributes[n].data.foreach_get("vector", d)
+            disp[n] = d.reshape(-1, 3)
+        for kb in keys:
+            d = np.empty(len(me.vertices) * 3, np.float32)
+            kb.data.foreach_get("co", d)
+            disp[kb.name] = d.reshape(-1, 3) - co0
+        for vi, (tri, b) in targets.items():
+            w = {}
+            for tv, x in zip(tri, b):
+                for g in me.vertices[int(tv)].groups:
+                    w[g.group] = w.get(g.group, 0.0) + g.weight * x
+            a_, b_, c_ = co0[tri]
+            n_ = np.cross(b_ - a_, c_ - a_)
+            n_ /= max(np.linalg.norm(n_), 1e-12)
+            under = co0[vi] - n_ * tuck              # stays where it is (bound), just a little deeper
+            for u, k in [(vi, 1.0)] + [(j, ring) for j in nbr[vi]]:
+                own = {g.group: g.weight for g in me.vertices[u].groups}
+                mix = {g: own.get(g, 0.0) * (1 - k) + w.get(g, 0.0) * k for g in set(own) | set(w)}
+                tot = sum(mix.values()) or 1.0
+                for g in list(own):
+                    if g not in mix or mix[g] <= 1e-5:
+                        vg[g].remove([u])
+                for g, x in mix.items():
+                    if x > 1e-5:
+                        vg[g].add([u], x / tot, "REPLACE")
+                for n in attrs:
+                    t = disp[n][tri[0]] * b[0] + disp[n][tri[1]] * b[1] + disp[n][tri[2]] * b[2]
+                    disp[n][u] = disp[n][u] * (1 - k) + t * k
+            me.vertices[vi].co = under
+            co0[vi] = under
+        for n in attrs:
+            me.attributes[n].data.foreach_set("vector", disp[n].ravel())
+        if keys:
+            basis = me.shape_keys.key_blocks[0]
+            basis.data.foreach_set("co", co0.astype(np.float32).ravel())
+            for kb in keys:
+                kb.data.foreach_set("co", (co0 + disp[kb.name]).astype(np.float32).ravel())
+        me.update()
+        log(f"  anime: {obj.name}: fit snap round {rnd + 1}: {left} covered vertices bound to the cloth over them")
+    for pose, act, _ in poses:
+        bpy.data.actions.remove(act)
+    return left

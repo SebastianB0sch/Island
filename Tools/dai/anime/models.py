@@ -515,6 +515,8 @@ def build_model(cid, entry, key_name, log=print):
         correctives.build(body, arm, log)
         # ...and a second static pass with the correctives active clears what their blending leaves
         fitcheck.relax(body, arm, log, iterations=6, shape_fn=lambda a: correctives.displacement(body, a))
+        # last few covered vertices that still break through follow the cloth over them exactly
+        fitcheck.snap_residuals(body, arm, log, shape_fn=lambda a: correctives.displacement(body, a))
     meshes += extra
     for m in meshes:
         add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses"))
@@ -527,6 +529,10 @@ def build_model(cid, entry, key_name, log=print):
     from . import shading
     shading.face_normals(mesh, arm, log)
     restore_morphs(mesh, log)
+    if entry.get("outfit"):
+        # final check on exactly what is exported: covered vertices still breaking through follow their cloth
+        from . import fitcheck
+        fitcheck.snap_residuals(mesh, arm, log)
     return arm, mesh
 
 
