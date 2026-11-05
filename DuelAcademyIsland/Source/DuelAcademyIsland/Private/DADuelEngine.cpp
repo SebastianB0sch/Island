@@ -121,6 +121,12 @@ void FDuelEngine::ResetTransientRulesState()
 
 	ResultStats.Reset();
 	bScenarioObjectiveComplete = false;
+
+	DeferredContinuations.Reset();
+	bRunningContinuations = false;
+	PlayerPassTurn = -1;
+	AiTurnStage = EAiTurnStage::Idle;
+	AiMainStep = 0;
 }
 
 void FDuelEngine::ResetDuelState()
@@ -347,6 +353,11 @@ void FDuelEngine::StartTurn(EDuelOwner Side)
 	ActiveSide = Side;
 	++TurnNumber;
 	Phase = EDuelPhase::Main1;
+	if (EffectRuntime)
+	{
+		// A deferred Trap response belongs to the event that raised it.
+		EffectRuntime->ClearDeferredResponses();
+	}
 
 	// Puzzle/exam turn limits count player turns only, which is how the GBA
 	// timed duels describe their limit.
@@ -672,57 +683,8 @@ int32 FDuelEngine::GetDiscardCount() const
 	return bAwaitingDiscard ? FMath::Max(0, Player.Hand.Num() - HandLimit) : 0;
 }
 
-void FDuelEngine::RunOpponentTurn()
+void FDuelEngine::DrainOpponentChoices()
 {
-	if (!bAiTurnPending || bWinnerSet || bAiRunning)
-	{
-		return;
-	}
-	bAiTurnPending = false;
-	bAiRunning = true;
-	const bool bTurnAlreadyStarted = ActiveSide == EDuelOwner::Opponent
-		&& Phase == EDuelPhase::Main1 && TurnNumber > 0;
-	if (!bTurnAlreadyStarted)
-	{
-		StartTurn(EDuelOwner::Opponent);
-	}
-	if (!bWinnerSet)
-	{
-		AiPlayMainPhase();
-	}
-	if (!bWinnerSet)
-	{
-		Phase = EDuelPhase::Battle;
-		Log(FString::Printf(TEXT("%s enters the Battle Phase."), *OpponentDisplayName), TEXT("phase"));
-		EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Opponent, nullptr, 0, TEXT("BATTLE PHASE"));
-		if (EffectRuntime)
-		{
-			EffectRuntime->OnBattleStart(EDuelOwner::Opponent);
-		}
-		AiPlayBattlePhase();
-	}
-	if (EffectRuntime && !bWinnerSet)
-	{
-		// The player's EndBattlePhase fires this; the AI's Battle Phase must
-		// end the same way so defense_at_end cards flip at the AI's turn end
-		// instead of one turn late.
-		EffectRuntime->OnBattleEnd();
-	}
-	if (!bWinnerSet)
-	{
-		AiDiscardToLimit();
-		EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Opponent, nullptr, 0, TEXT("END PHASE"));
-		TriggerEndPhaseEffects(EDuelOwner::Opponent);
-		if (EffectRuntime && !bWinnerSet)
-		{
-			EffectRuntime->OnEnd(EDuelOwner::Opponent);
-		}
-		if (!bWinnerSet)
-		{
-			Log(FString::Printf(TEXT("%s ends their turn."), *OpponentDisplayName), TEXT("phase"));
-			StartTurn(EDuelOwner::Player);
-		}
-	}
 	while (!bWinnerSet && HasPendingChoiceFor(EDuelOwner::Opponent))
 	{
 		const FDuelChoiceRequest* HeadChoice = GetPendingChoice();
@@ -736,11 +698,188 @@ void FDuelEngine::RunOpponentTurn()
 			break;
 		}
 	}
-	bAiRunning = false;
-	if (!bWinnerSet)
+}
+
+bool FDuelEngine::RunAiMainStep(int32 Step)
+{
+	// Each step is re-run after a player response window suspended it, so
+	// every step is written as "do whatever is still worth doing".
+	switch (Step)
 	{
-		LastAiMessage = TEXT("Your turn.");
+	case 0: AiActivateSpells(); return true;
+	case 1: AiNormalSummon(); return true;
+	case 2: AiActivateSpells(); return true;
+	case 3: AiSetTraps(); return true;
+	case 4: AiActivateMonsterEffects(); return true;
+	case 5: AiActivateManualTraps(); return true;
+	default: return false;
 	}
+}
+
+void FDuelEngine::RunOpponentTurn()
+{
+	if (!bAiTurnPending || bWinnerSet || bAiRunning)
+	{
+		return;
+	}
+	if (!HasPendingChoiceFor(EDuelOwner::Player))
+	{
+		RunDeferredContinuations();
+	}
+	if (bWinnerSet || HasPendingChoiceFor(EDuelOwner::Player) || DeferredContinuations.Num() > 0)
+	{
+		// The opponent's turn is suspended behind a player question; it
+		// resumes from AiTurnStage once the question is answered.
+		return;
+	}
+	bAiTurnPending = false;
+	bAiRunning = true;
+	if (AiTurnStage == EAiTurnStage::Idle)
+	{
+		const bool bTurnAlreadyStarted = ActiveSide == EDuelOwner::Opponent
+			&& Phase == EDuelPhase::Main1 && TurnNumber > 0;
+		AiTurnStage = bTurnAlreadyStarted ? EAiTurnStage::Main : EAiTurnStage::Begin;
+		AiMainStep = 0;
+		AiStepRepeats = 0;
+	}
+
+	bool bSuspended = false;
+	while (!bWinnerSet && AiTurnStage != EAiTurnStage::Idle)
+	{
+		DrainOpponentChoices();
+		if (bWinnerSet)
+		{
+			break;
+		}
+		if (HasPendingChoiceFor(EDuelOwner::Player) || DeferredContinuations.Num() > 0)
+		{
+			bSuspended = true;
+			break;
+		}
+
+		switch (AiTurnStage)
+		{
+		case EAiTurnStage::Begin:
+			AiTurnStage = EAiTurnStage::Main;
+			AiMainStep = 0;
+			StartTurn(EDuelOwner::Opponent);
+			break;
+
+		case EAiTurnStage::Main:
+			if (!RunAiMainStep(AiMainStep))
+			{
+				AiTurnStage = EAiTurnStage::BattleStart;
+				break;
+			}
+			if (!bWinnerSet && !HasPendingChoiceFor(EDuelOwner::Player) && DeferredContinuations.Num() == 0)
+			{
+				// Deferred event Traps raised by a nested effect are offered
+				// before the opponent moves on.
+				if (!OfferDeferredScriptResponses())
+				{
+					++AiMainStep;
+					AiStepRepeats = 0;
+				}
+			}
+			else if (++AiStepRepeats > 24)
+			{
+				// Safety valve: a step that keeps reopening response windows
+				// must not hold the opponent's turn forever.
+				++AiMainStep;
+				AiStepRepeats = 0;
+			}
+			break;
+
+		case EAiTurnStage::BattleStart:
+			AiTurnStage = EAiTurnStage::Battle;
+			Phase = EDuelPhase::Battle;
+			Log(FString::Printf(TEXT("%s enters the Battle Phase."), *OpponentDisplayName), TEXT("phase"));
+			EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Opponent, nullptr, 0, TEXT("BATTLE PHASE"));
+			if (EffectRuntime)
+			{
+				EffectRuntime->OnBattleStart(EDuelOwner::Opponent);
+			}
+			if (!bWinnerSet && !HasPendingChoiceFor(EDuelOwner::Player))
+			{
+				OpenPhaseResponseWindow(EDuelTimingWindow::Battle,
+					FString::Printf(TEXT("%s enters the Battle Phase."), *OpponentDisplayName));
+			}
+			break;
+
+		case EAiTurnStage::Battle:
+			AiPlayBattlePhase();
+			if (!bWinnerSet && !HasPendingChoiceFor(EDuelOwner::Player) && DeferredContinuations.Num() == 0
+				&& !OfferDeferredScriptResponses())
+			{
+				AiTurnStage = EAiTurnStage::BattleEnd;
+				AiStepRepeats = 0;
+			}
+			else if (++AiStepRepeats > 48)
+			{
+				AiTurnStage = EAiTurnStage::BattleEnd;
+				AiStepRepeats = 0;
+			}
+			break;
+
+		case EAiTurnStage::BattleEnd:
+			AiTurnStage = EAiTurnStage::EndPhase;
+			if (EffectRuntime)
+			{
+				// The player's EndBattlePhase fires this; the AI's Battle Phase
+				// must end the same way so defense_at_end cards flip at the
+				// AI's turn end instead of one turn late.
+				EffectRuntime->OnBattleEnd();
+			}
+			break;
+
+		case EAiTurnStage::EndPhase:
+			AiTurnStage = EAiTurnStage::EndWindow;
+			AiDiscardToLimit();
+			if (bWinnerSet)
+			{
+				break;
+			}
+			EmitVisual(EDuelVisualEventType::PhaseChange, EDuelOwner::Opponent, nullptr, 0, TEXT("END PHASE"));
+			TriggerEndPhaseEffects(EDuelOwner::Opponent);
+			if (EffectRuntime && !bWinnerSet)
+			{
+				EffectRuntime->OnEnd(EDuelOwner::Opponent);
+			}
+			break;
+
+		case EAiTurnStage::EndWindow:
+			AiTurnStage = EAiTurnStage::Handoff;
+			OpenPhaseResponseWindow(EDuelTimingWindow::EndPhase,
+				FString::Printf(TEXT("%s's End Phase."), *OpponentDisplayName));
+			break;
+
+		case EAiTurnStage::Handoff:
+			AiTurnStage = EAiTurnStage::Idle;
+			Log(FString::Printf(TEXT("%s ends their turn."), *OpponentDisplayName), TEXT("phase"));
+			StartTurn(EDuelOwner::Player);
+			break;
+
+		default:
+			AiTurnStage = EAiTurnStage::Idle;
+			break;
+		}
+	}
+	DrainOpponentChoices();
+	bAiRunning = false;
+	if (bWinnerSet)
+	{
+		AiTurnStage = EAiTurnStage::Idle;
+		return;
+	}
+	if (bSuspended)
+	{
+		// Keep the turn queued: the host calls RunOpponentTurn again and it
+		// returns immediately until the player has answered.
+		bAiTurnPending = true;
+		LastAiMessage = TEXT("Waiting for your response.");
+		return;
+	}
+	LastAiMessage = TEXT("Your turn.");
 }
 
 void FDuelEngine::BeginNextTurn()
@@ -798,6 +937,12 @@ void FDuelEngine::FinishDuelBookkeeping()
 {
 	bAwaitingDiscard = false;
 	bAiTurnPending = false;
+	AiTurnStage = EAiTurnStage::Idle;
+	DeferredContinuations.Reset();
+	if (EffectRuntime)
+	{
+		EffectRuntime->ClearDeferredResponses();
+	}
 	ClearPendingChoices();
 	ClearChain();
 }
@@ -1905,7 +2050,28 @@ bool FDuelEngine::IsNormalSummonLocked(const FDuelCard& Card) const
 TArray<FDuelActionInfo> FDuelEngine::GetHandActions(int32 Uid)
 {
 	TArray<FDuelActionInfo> Actions;
-	if (!CanPlayerAct() || !IsMainPhase())
+	if (!CanPlayerAct())
+	{
+		return Actions;
+	}
+	if (Phase == EDuelPhase::Battle)
+	{
+		// Only a Quick-Play Spell can be played from the hand mid-battle.
+		const FDuelCard* QuickCard = Player.Hand.FindByPredicate([Uid](const FDuelCard& C) { return C.Uid == Uid; });
+		if (QuickCard && QuickCard->IsSpell() && QuickCard->Data.Subtype == TEXT("Quick-Play")
+			&& EmptySpellZone(EDuelOwner::Player) != INDEX_NONE
+			&& !(EffectRuntime && EffectRuntime->IsCardActivationLocked(*QuickCard))
+			&& IsActivationLegal(*QuickCard, EDuelTimingWindow::Battle, nullptr)
+			&& HasActivationRequirements(*QuickCard))
+		{
+			FDuelActionInfo Activate;
+			Activate.Action = EDuelAction::ActivateSpell;
+			Activate.Label = TEXT("Activate Quick-Play");
+			Actions.Add(Activate);
+		}
+		return Actions;
+	}
+	if (!IsMainPhase())
 	{
 		return Actions;
 	}
@@ -2047,7 +2213,10 @@ TArray<FDuelActionInfo> FDuelEngine::GetMonsterActions(int32 Uid)
 TArray<FDuelActionInfo> FDuelEngine::GetSpellTrapActions(int32 Uid)
 {
 	TArray<FDuelActionInfo> Actions;
-	if (!CanPlayerAct() || !IsMainPhase())
+	// Set Quick-Play Spells and Traps can be used in the Main Phases and the
+	// Battle Phase of the player's own turn; on the opponent's turn they are
+	// offered through response windows instead.
+	if (!CanPlayerAct() || (!IsMainPhase() && Phase != EDuelPhase::Battle))
 	{
 		return Actions;
 	}
@@ -2056,57 +2225,22 @@ TArray<FDuelActionInfo> FDuelEngine::GetSpellTrapActions(int32 Uid)
 	{
 		return Actions;
 	}
-	if (EffectRuntime && EffectRuntime->IsCardActivationLocked(*Card))
+	if (!CanActivateSetCardInWindow(*Card, GetCurrentTimingWindow()))
 	{
 		return Actions;
 	}
+	FDuelActionInfo Action;
 	if (Card->IsSpell())
 	{
-		if (Card->Data.Subtype == TEXT("Quick-Play"))
-		{
-			FDuelActionInfo Action;
-			Action.Action = EDuelAction::ActivateSpell;
-			Action.Label = TEXT("Activate Quick-Play");
-			Actions.Add(Action);
-		}
-		return Actions;
+		Action.Action = EDuelAction::ActivateSpell;
+		Action.Label = TEXT("Activate Quick-Play");
 	}
-	if (!IsManualTrapCard(*Card))
+	else
 	{
-		return Actions;
-	}
-
-	bool bLegal = true;
-	if (IsName(*Card, TEXT("Call of the Haunted")))
-	{
-		bLegal = EmptyMonsterZone(EDuelOwner::Player) != INDEX_NONE;
-		if (bLegal)
-		{
-			bLegal = Player.Graveyard.ContainsByPredicate([this](const FDuelCard& C)
-			{
-				return C.IsMonster() && CanBeSpecialSummonedByEffect(C);
-			});
-		}
-	}
-	else if (IsName(*Card, TEXT("Spiritual Fire Art - Kurenai")))
-	{
-		bLegal = OwnMonsters(EDuelOwner::Player).ContainsByPredicate([](const FDuelCard* C) { return C->Data.Attribute == TEXT("FIRE"); });
-	}
-	else if (IsName(*Card, TEXT("Spiritual Water Art - Aoi")))
-	{
-		bLegal = OwnMonsters(EDuelOwner::Player).ContainsByPredicate([](const FDuelCard* C) { return C->Data.Attribute == TEXT("WATER"); });
-	}
-	else if (IsName(*Card, TEXT("Spiritual Wind Art - Miyabi")))
-	{
-		bLegal = OwnMonsters(EDuelOwner::Player).ContainsByPredicate([](const FDuelCard* C) { return C->Data.Attribute == TEXT("WIND"); });
-	}
-	if (bLegal)
-	{
-		FDuelActionInfo Action;
 		Action.Action = EDuelAction::ActivateTrap;
 		Action.Label = TEXT("Activate Trap");
-		Actions.Add(Action);
 	}
+	Actions.Add(Action);
 	return Actions;
 }
 
@@ -2891,12 +3025,22 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 		AttackerSide == EDuelOwner::Player ? TEXT("use") : TEXT("uses"),
 		Target ? *FString::Printf(TEXT(" %s"), *CardName(*Target)) : TEXT(" directly")), TEXT("battle"));
 
+	// An attack that stops before the response window takes the Trap
+	// responses it raised (Sakuretsu Armor, ...) with it.
+	auto AbortAttack = [this]()
+	{
+		if (EffectRuntime)
+		{
+			EffectRuntime->ClearDeferredResponses();
+		}
+		return true;
+	};
 	if (EffectRuntime)
 	{
 		EffectRuntime->OnAttackDeclared(*Attacker, Target);
 		if (bWinnerSet || !FindMonster(AttackerUid))
 		{
-			return true;
+			return AbortAttack();
 		}
 		Attacker = FindMonster(AttackerUid);
 		if (TargetUid > 0)
@@ -2904,18 +3048,18 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 			Target = FindMonster(TargetUid);
 			if (!Target)
 			{
-				return true;
+				return AbortAttack();
 			}
 		}
 		EffectRuntime->OnAttackTarget(*Attacker, Target);
 		if (EffectRuntime->ConsumeAttackNegated())
 		{
 			Log(FString::Printf(TEXT("%s's attack is negated."), *AttackerName), TEXT("effect"));
-			return true;
+			return AbortAttack();
 		}
 		if (bWinnerSet || !FindMonster(AttackerUid))
 		{
-			return true;
+			return AbortAttack();
 		}
 		Attacker = FindMonster(AttackerUid);
 		if (TargetUid > 0)
@@ -2923,101 +3067,247 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 			Target = FindMonster(TargetUid);
 			if (!Target)
 			{
-				return true;
+				return AbortAttack();
 			}
 		}
 	}
 
-	// Winged Kuriboh LV10 punishes an attack during the opponent's Battle Phase.
-	FDuelCard* Kuriboh = FindMonsterByName(DefenderSide, TEXT("Winged Kuriboh LV10"));
-	if (Kuriboh && Kuriboh->bFaceUp)
+	if (DefenderSide == EDuelOwner::Player && UsesPlayerResponseWindows()
+		&& OpenAttackResponseWindow(AttackerSide, AttackerUid, TargetUid, bDirectAllowed))
 	{
-		const int32 KuribohUid = Kuriboh->Uid;
-		Log(TEXT("Winged Kuriboh LV10 activates!"), TEXT("effect"));
-		TArray<int32> Attackers;
-		int32 Burn = 0;
-		for (const FDuelCard& Monster : SideRef(AttackerSide).Monsters)
-		{
-			if (Monster.IsValid() && Monster.bFaceUp && Monster.Position == EDuelPosition::Attack)
-			{
-				Attackers.Add(Monster.Uid);
-				Burn += GetAtk(Monster);
-			}
-		}
-		FDuelCard Sacrifice;
-		if (RemoveFromZone(Sacrifice, KuribohUid))
-		{
-			CleanupEquips(Sacrifice);
-			MoveToGrave(Sacrifice, TEXT("tribute"), true);
-		}
-		for (int32 Uid : Attackers)
-		{
-			if (bWinnerSet)
-			{
-				break;
-			}
-			if (FDuelCard* Monster = FindMonster(Uid))
-			{
-				DestroyMonster(*Monster, false, nullptr, false, TEXT("Winged Kuriboh LV10"));
-			}
-		}
-		if (!bWinnerSet)
-		{
-			InflictDamage(AttackerSide, Burn, TEXT("Winged Kuriboh LV10"));
-		}
-		CheckWinner();
+		// The rest of the attack runs once the player has answered.
 		return true;
 	}
+	ContinueAttackAfterResponses(AttackerSide, AttackerUid, TargetUid, bDirectAllowed);
+	return true;
+}
 
-	// Reactive Trap timing: one defensive Trap per attack.
-	if (FDuelCard* Trap = PickAttackTrap(DefenderSide, *Attacker, Target))
+void FDuelEngine::ResolveKuribohLv10(EDuelOwner DefenderSide, EDuelOwner AttackerSide)
+{
+	FDuelCard* Kuriboh = FindMonsterByName(DefenderSide, TEXT("Winged Kuriboh LV10"));
+	if (!Kuriboh || !Kuriboh->bFaceUp)
 	{
-		const int32 TrapUid = Trap->Uid;
-		const FString TrapName = CardName(*Trap);
-		bool bTrapNegated = TryCounterTrap(DefenderSide, AttackerSide);
-		if (bTrapNegated)
+		return;
+	}
+	const int32 KuribohUid = Kuriboh->Uid;
+	Log(TEXT("Winged Kuriboh LV10 activates!"), TEXT("effect"));
+	EmitVisual(EDuelVisualEventType::Effect, DefenderSide, Kuriboh, 0, TEXT("WINGED KURIBOH LV10"));
+	TArray<int32> Attackers;
+	int32 Burn = 0;
+	for (const FDuelCard& Monster : SideRef(AttackerSide).Monsters)
+	{
+		if (Monster.IsValid() && Monster.bFaceUp && Monster.Position == EDuelPosition::Attack)
 		{
-			if (FDuelCard* Negated = FindSpellTrap(TrapUid))
-			{
-				DestroySpellTrap(*Negated, true);
-			}
-			Log(FString::Printf(TEXT("%s is negated."), *TrapName), TEXT("trap"));
-		}
-		if (!bTrapNegated && ResolveAttackTrap(*Trap, DefenderSide, *Attacker, Target, AttackerSide))
-		{
-			// The attack was negated or the Battle Phase ended. Multi-attack
-			// monsters still get their second swing if they survived a negated
-			// attack (for example, Magic Cylinder).
-			if (FDuelCard* Still = FindMonster(AttackerUid))
-			{
-				const bool bMermaidExtra = IsName(*Still, TEXT("Mermaid Knight"))
-					&& HasUmi(Still->Controller) && Still->AttacksUsed < 2;
-				const bool bGrayWingExtra = Still->ExtraAttacks > 0 && Still->AttacksUsed <= 1;
-				if (bMermaidExtra || bGrayWingExtra)
-				{
-					Still->bHasAttacked = false;
-				}
-			}
-			return true;
-		}
-		if (bWinnerSet || !FindMonster(AttackerUid))
-		{
-			return true;
-		}
-		Attacker = FindMonster(AttackerUid);
-		if (TargetUid > 0)
-		{
-			Target = FindMonster(TargetUid);
-			if (!Target && CountMonsters(DefenderSide) > 0)
-			{
-				return true;
-			}
-			if (!Target && !bDirectAllowed)
-			{
-				return true;
-			}
+			Attackers.Add(Monster.Uid);
+			Burn += GetAtk(Monster);
 		}
 	}
+	FDuelCard Sacrifice;
+	if (RemoveFromZone(Sacrifice, KuribohUid))
+	{
+		CleanupEquips(Sacrifice);
+		MoveToGrave(Sacrifice, TEXT("tribute"), true);
+	}
+	for (int32 Uid : Attackers)
+	{
+		if (bWinnerSet)
+		{
+			break;
+		}
+		if (FDuelCard* Monster = FindMonster(Uid))
+		{
+			DestroyMonster(*Monster, false, nullptr, false, TEXT("Winged Kuriboh LV10"));
+		}
+	}
+	if (!bWinnerSet)
+	{
+		InflictDamage(AttackerSide, Burn, TEXT("Winged Kuriboh LV10"));
+	}
+	CheckWinner();
+}
+
+void FDuelEngine::ResetMultiAttackAfterNegation(int32 AttackerUid)
+{
+	// The attack was negated or the Battle Phase ended. Multi-attack monsters
+	// still get their second swing if they survived a negated attack (for
+	// example, Magic Cylinder).
+	if (FDuelCard* Still = FindMonster(AttackerUid))
+	{
+		const bool bMermaidExtra = IsName(*Still, TEXT("Mermaid Knight"))
+			&& HasUmi(Still->Controller) && Still->AttacksUsed < 2;
+		const bool bGrayWingExtra = Still->ExtraAttacks > 0 && Still->AttacksUsed <= 1;
+		if (bMermaidExtra || bGrayWingExtra)
+		{
+			Still->bHasAttacked = false;
+		}
+	}
+}
+
+void FDuelEngine::ContinueAttackAfterResponses(EDuelOwner AttackerSide, int32 AttackerUid, int32 TargetUid,
+	bool bDirectAllowed)
+{
+	if (bWinnerSet || Phase != EDuelPhase::Battle || ActiveSide != AttackerSide)
+	{
+		return;
+	}
+	FDuelCard* Attacker = FindMonster(AttackerUid);
+	if (!Attacker || Attacker->Controller != AttackerSide)
+	{
+		return;
+	}
+	const EDuelOwner DefenderSide = Other(AttackerSide);
+	// The player answers their own defensive cards in the response window;
+	// only an AI defender (or the legacy flow) uses the automatic picks below.
+	const bool bPlayerDefendsManually = DefenderSide == EDuelOwner::Player && UsesPlayerResponseWindows();
+	if (bPlayerDefendsManually)
+	{
+		// The player's response may have changed the battle.
+		if (!Attacker->bFaceUp || Attacker->Position != EDuelPosition::Attack)
+		{
+			Log(FString::Printf(TEXT("%s can no longer attack."), *CardName(*Attacker)), TEXT("battle"));
+			return;
+		}
+		const FDuelCard* CurrentTarget = TargetUid > 0 ? FindMonster(TargetUid) : nullptr;
+		const bool bTargetGone = TargetUid > 0 && (!CurrentTarget || CurrentTarget->Controller != DefenderSide);
+		const bool bDirectStillAllowed = CountMonsters(DefenderSide) == 0
+			|| (IsName(*Attacker, TEXT("Amphibious Bugroth MK-3")) && HasUmi(AttackerSide))
+			|| (EffectRuntime && EffectRuntime->CanAttackDirectly(*Attacker));
+		if (bTargetGone || (TargetUid == 0 && !bDirectStillAllowed))
+		{
+			// Replay: the monster count changed, so the attacker may choose
+			// again (or not attack at all).
+			Attacker->bHasAttacked = false;
+			Attacker->AttacksUsed = FMath::Max(0, Attacker->AttacksUsed - 1);
+			Log(FString::Printf(TEXT("The battle changed; %s's attack is replayed."), *CardName(*Attacker)), TEXT("battle"));
+			return;
+		}
+	}
+	FDuelCard* Target = nullptr;
+	if (TargetUid > 0)
+	{
+		Target = FindMonster(TargetUid);
+		if (!Target)
+		{
+			return;
+		}
+	}
+
+	if (!bPlayerDefendsManually)
+	{
+		// Winged Kuriboh LV10 punishes an attack during the opponent's Battle Phase.
+		FDuelCard* Kuriboh = FindMonsterByName(DefenderSide, TEXT("Winged Kuriboh LV10"));
+		if (Kuriboh && Kuriboh->bFaceUp)
+		{
+			ResolveKuribohLv10(DefenderSide, AttackerSide);
+			return;
+		}
+
+		// Reactive Trap timing: one defensive Trap per attack.
+		if (FDuelCard* Trap = PickAttackTrap(DefenderSide, *Attacker, Target))
+		{
+			const int32 TrapUid = Trap->Uid;
+			OfferResponsesToOpponentTrap(TrapUid,
+				[this, AttackerSide, AttackerUid, TargetUid, bDirectAllowed, TrapUid](bool bNegated, bool bRevealed)
+				{
+					ContinueAttackAfterTrap(AttackerSide, AttackerUid, TargetUid, bDirectAllowed, TrapUid, bNegated, bRevealed);
+				});
+			return;
+		}
+	}
+	FinishAttack(AttackerSide, AttackerUid, TargetUid);
+}
+
+void FDuelEngine::ContinueAttackAfterTrap(EDuelOwner AttackerSide, int32 AttackerUid, int32 TargetUid,
+	bool bDirectAllowed, int32 TrapUid, bool bNegated, bool bRevealed)
+{
+	if (bWinnerSet)
+	{
+		return;
+	}
+	const EDuelOwner DefenderSide = Other(AttackerSide);
+	FDuelCard* Trap = FindSpellTrap(TrapUid);
+	FDuelCard ChainedCopy;
+	if (!Trap && !bNegated)
+	{
+		// Destroyed in the chain: a one-shot Trap still resolves.
+		const FDuelCard* Gone = FindCard(TrapUid);
+		if (Gone && Gone->IsTrap() && !IsPersistentSpellTrap(*Gone))
+		{
+			ChainedCopy = *Gone;
+			Trap = &ChainedCopy;
+		}
+	}
+	if (bNegated)
+	{
+		const FString TrapName = Trap ? CardName(*Trap) : FString(TEXT("The Trap"));
+		if (Trap)
+		{
+			DestroySpellTrap(*Trap, true);
+		}
+		Log(FString::Printf(TEXT("%s is negated."), *TrapName), TEXT("trap"));
+	}
+	else if (Trap)
+	{
+		FDuelCard* Attacker = FindMonster(AttackerUid);
+		if (!Attacker)
+		{
+			if (FDuelCard* StillThere = FindSpellTrap(TrapUid))
+			{
+				if (!IsPersistentSpellTrap(*StillThere)) DestroySpellTrap(*StillThere, true);
+			}
+			return;
+		}
+		FDuelCard* Target = TargetUid > 0 ? FindMonster(TargetUid) : nullptr;
+		if (TargetUid > 0 && !Target)
+		{
+			return;
+		}
+		if (ResolveAttackTrap(*Trap, DefenderSide, *Attacker, Target, AttackerSide, bRevealed))
+		{
+			ResetMultiAttackAfterNegation(AttackerUid);
+			return;
+		}
+		// A Hero Emerges can redirect a direct attack to the monster it
+		// Special Summoned.
+		if (TargetUid == 0 && Target)
+		{
+			TargetUid = Target->Uid;
+		}
+	}
+	if (bWinnerSet || !FindMonster(AttackerUid))
+	{
+		return;
+	}
+	int32 FinalTargetUid = TargetUid;
+	if (TargetUid > 0 && !FindMonster(TargetUid))
+	{
+		if (CountMonsters(DefenderSide) > 0 || !bDirectAllowed)
+		{
+			return;
+		}
+		FinalTargetUid = 0;
+	}
+	FinishAttack(AttackerSide, AttackerUid, FinalTargetUid);
+}
+
+void FDuelEngine::FinishAttack(EDuelOwner AttackerSide, int32 AttackerUid, int32 TargetUid)
+{
+	if (bWinnerSet)
+	{
+		return;
+	}
+	FDuelCard* Attacker = FindMonster(AttackerUid);
+	if (!Attacker)
+	{
+		return;
+	}
+	FDuelCard* Target = TargetUid > 0 ? FindMonster(TargetUid) : nullptr;
+	if (TargetUid > 0 && !Target)
+	{
+		return;
+	}
+	const EDuelOwner DefenderSide = Other(AttackerSide);
+	const FString AttackerName = CardName(*Attacker);
 
 	if (!Target)
 	{
@@ -3044,12 +3334,11 @@ bool FDuelEngine::ExecuteAttack(EDuelOwner AttackerSide, int32 AttackerUid, int3
 			}
 		}
 		CheckWinner();
-		return true;
+		return;
 	}
 
 	ResolveBattle(*Attacker, Target);
 	CheckWinner();
-	return true;
 }
 
 FDuelCard* FDuelEngine::PickAttackTrap(EDuelOwner Defender, FDuelCard& Attacker, FDuelCard* Target)
@@ -3093,14 +3382,16 @@ FDuelCard* FDuelEngine::PickAttackTrap(EDuelOwner Defender, FDuelCard& Attacker,
 	return nullptr;
 }
 
-bool FDuelEngine::ResolveAttackTrap(FDuelCard& Trap, EDuelOwner Defender, FDuelCard& Attacker, FDuelCard*& Target, EDuelOwner AttackerSide)
+bool FDuelEngine::ResolveAttackTrap(FDuelCard& Trap, EDuelOwner Defender, FDuelCard& Attacker, FDuelCard*& Target,
+	EDuelOwner AttackerSide, bool bRevealed)
 {
 	const int32 TrapUid = Trap.Uid;
 	const FString TrapName = CardName(Trap);
+	if (!bRevealed)
+	{
+		RevealActivatedTrap(Trap, Defender);
+	}
 	Trap.bFaceUp = true;
-	Log(FString::Printf(TEXT("%s activates %s!"), *SideRef(Defender).Name, *TrapName), TEXT("trap"));
-	FDuelVisualEvent& TrapEvent = EmitVisual(EDuelVisualEventType::Trap, Defender, &Trap, 0, TrapName);
-	TrapEvent.Zone = FindSpellZone(Defender, TrapUid);
 
 	if (TrapName == TEXT("Mirror Force"))
 	{
@@ -3549,11 +3840,18 @@ void FDuelEngine::TriggerSummonTraps(FDuelCard& Summoned, bool bNormalSummon)
 	{
 		return;
 	}
+	const EDuelOwner DefenderSide = Other(Summoned.Controller);
+	if (DefenderSide == EDuelOwner::Player && UsesPlayerResponseWindows())
+	{
+		// The player decides whether a Set Trap answers the opponent's summon.
+		OpenSummonResponseWindow(Summoned.Uid, bNormalSummon);
+		return;
+	}
 	if (EffectRuntime && EffectRuntime->IsTrapActivationLocked())
 	{
 		return;
 	}
-	FDuelSide& Defender = SideRef(Other(Summoned.Controller));
+	FDuelSide& Defender = SideRef(DefenderSide);
 	FDuelCard* TrapHole = nullptr;
 	FDuelCard* Torrential = nullptr;
 	for (FDuelCard& Spell : Defender.Spells)
@@ -3564,69 +3862,43 @@ void FDuelEngine::TriggerSummonTraps(FDuelCard& Summoned, bool bNormalSummon)
 		else if (IsName(Spell, TEXT("Torrential Tribute"))) Torrential = &Spell;
 	}
 	const int32 SummonedUid = Summoned.Uid;
+	int32 TrapUid = 0;
 	if (TrapHole && bNormalSummon && Summoned.bFaceUp && GetAtk(Summoned) >= 1000)
 	{
-		FDuelCard* Trap = FindSpellTrap(TrapHole->Uid);
-		if (Trap)
-		{
-			const int32 TrapUid = Trap->Uid;
-			if (TryCounterTrap(Other(Summoned.Controller), Summoned.Controller))
-			{
-				if (FDuelCard* Negated = FindSpellTrap(TrapUid))
-				{
-					DestroySpellTrap(*Negated, true);
-				}
-				Log(TEXT("Trap Hole is negated."), TEXT("trap"));
-				return;
-			}
-			if (bWinnerSet) return;
-			Trap->bFaceUp = true;
-			Log(FString::Printf(TEXT("%s activates Trap Hole!"), *Defender.Name), TEXT("trap"));
-			FDuelVisualEvent& TrapEvent = EmitVisual(EDuelVisualEventType::Trap, Other(Summoned.Controller), Trap, 0, TEXT("Trap Hole"));
-			TrapEvent.Zone = FindSpellZone(Other(Summoned.Controller), TrapUid);
-			if (FDuelCard* Target = FindMonster(SummonedUid))
-			{
-				DestroyMonster(*Target, false, nullptr, false, TEXT("Trap Hole"));
-			}
-			if (FDuelCard* StillThere = FindSpellTrap(TrapUid))
-			{
-				DestroySpellTrap(*StillThere, true);
-			}
-			return;
-		}
+		TrapUid = TrapHole->Uid;
 	}
-	if (Torrential)
+	else if (Torrential)
 	{
 		const int32 SummonControllerCount = CountMonsters(Summoned.Controller);
-		const int32 DefenderCount = CountMonsters(Other(Summoned.Controller));
+		const int32 DefenderCount = CountMonsters(DefenderSide);
 		if (SummonControllerCount >= 2 || GetAtk(Summoned) >= 2000 || DefenderCount == 0)
 		{
-			FDuelCard* Trap = FindSpellTrap(Torrential->Uid);
-			if (Trap)
-			{
-				const int32 TrapUid = Trap->Uid;
-				if (TryCounterTrap(Other(Summoned.Controller), Summoned.Controller))
-				{
-					if (FDuelCard* Negated = FindSpellTrap(TrapUid))
-					{
-						DestroySpellTrap(*Negated, true);
-					}
-					Log(TEXT("Torrential Tribute is negated."), TEXT("trap"));
-					return;
-				}
-				if (bWinnerSet) return;
-				Trap->bFaceUp = true;
-				Log(FString::Printf(TEXT("%s activates Torrential Tribute!"), *Defender.Name), TEXT("trap"));
-				FDuelVisualEvent& TrapEvent = EmitVisual(EDuelVisualEventType::Trap, Other(Summoned.Controller), Trap, 0, TEXT("Torrential Tribute"));
-				TrapEvent.Zone = FindSpellZone(Other(Summoned.Controller), TrapUid);
-				DestroyAllMonsters(TEXT("Torrential Tribute"));
-				if (FDuelCard* StillThere = FindSpellTrap(TrapUid))
-				{
-					DestroySpellTrap(*StillThere, true);
-				}
-			}
+			TrapUid = Torrential->Uid;
 		}
 	}
+	if (TrapUid == 0)
+	{
+		return;
+	}
+	OfferResponsesToOpponentTrap(TrapUid, [this, TrapUid, SummonedUid](bool bNegated, bool bRevealed)
+	{
+		if (bWinnerSet)
+		{
+			return;
+		}
+		if (bNegated)
+		{
+			FString TrapName = TEXT("The Trap");
+			if (FDuelCard* Negated = FindSpellTrap(TrapUid))
+			{
+				TrapName = CardName(*Negated);
+				DestroySpellTrap(*Negated, true);
+			}
+			Log(FString::Printf(TEXT("%s is negated."), *TrapName), TEXT("trap"));
+			return;
+		}
+		ResolveLegacySummonTrap(TrapUid, SummonedUid, bRevealed);
+	});
 }
 
 // ---------------------------------------------------------------------------
@@ -3656,11 +3928,24 @@ void FDuelEngine::TriggerFlipEffect(FDuelCard& Card, EDuelOwner Side)
 
 	if (Name == TEXT("Man-Eater Bug"))
 	{
-		if (FDuelCard* Target = ChooseMonster(OpponentSide, [](const FDuelCard&) { return true; }, true))
+		TArray<int32> Uids;
+		for (EDuelOwner FieldSide : { OpponentSide, Side })
 		{
-			Log(TEXT("Man-Eater Bug destroys a monster."), TEXT("effect"));
-			DestroyMonster(*Target, false, nullptr, false, TEXT("Man-Eater Bug"));
+			for (const FDuelCard& Monster : SideRef(FieldSide).Monsters)
+			{
+				if (Monster.IsValid()) Uids.Add(Monster.Uid);
+			}
 		}
+		const FDuelCard* Best = ChooseMonster(OpponentSide, [](const FDuelCard&) { return true; }, true);
+		ChooseCardsFor(Side, Card, TEXT("Choose a monster to destroy with Man-Eater Bug."), Uids, 1,
+			{ Best ? Best->Uid : 0 }, [this](const TArray<int32>& Picked)
+			{
+				if (FDuelCard* Target = Picked.Num() > 0 ? FindMonster(Picked[0]) : nullptr)
+				{
+					Log(TEXT("Man-Eater Bug destroys a monster."), TEXT("effect"));
+					DestroyMonster(*Target, false, nullptr, false, TEXT("Man-Eater Bug"));
+				}
+			});
 	}
 	else if (Name == TEXT("Penguin Soldier"))
 	{
@@ -3688,17 +3973,27 @@ void FDuelEngine::TriggerFlipEffect(FDuelCard& Card, EDuelOwner Side)
 	}
 	else if (Name == TEXT("Hane-Hane") || Name == TEXT("Gale Lizard"))
 	{
-		if (FDuelCard* Target = ChooseMonster(OpponentSide, [](const FDuelCard&) { return true; }, true))
+		TArray<int32> Uids;
+		for (EDuelOwner FieldSide : { OpponentSide, Side })
 		{
-			const int32 TargetUid = Target->Uid;
+			for (const FDuelCard& Monster : SideRef(FieldSide).Monsters)
+			{
+				if (Monster.IsValid()) Uids.Add(Monster.Uid);
+			}
+		}
+		const FDuelCard* Best = ChooseMonster(OpponentSide, [](const FDuelCard&) { return true; }, true);
+		ChooseCardsFor(Side, Card, FString::Printf(TEXT("Choose a monster to return to the hand with %s."), *Name), Uids, 1,
+			{ Best ? Best->Uid : 0 }, [this, Name](const TArray<int32>& Picked)
+		{
+			const int32 TargetUid = Picked.Num() > 0 && FindMonster(Picked[0]) ? Picked[0] : 0;
 			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid))
+			if (TargetUid != 0 && RemoveFromZone(Copy, TargetUid))
 			{
 				CleanupEquips(Copy);
 				Log(FString::Printf(TEXT("%s returns %s to the hand."), *Name, *CardName(Copy)), TEXT("effect"));
 				MoveToHand(Copy);
 			}
-		}
+		});
 	}
 	else if (Name == TEXT("Needle Worm"))
 	{
@@ -4399,8 +4694,23 @@ bool FDuelEngine::IsManualTrapCard(const FDuelCard& Card) const
 		{
 			return true;
 		}
-		return EffectRuntime->HasScriptTrigger(Card.Data.Id, EDEffectTrigger::Manual)
-			|| EffectRuntime->HasScriptTrigger(Card.Data.Id, EDEffectTrigger::Continuous);
+		if (EffectRuntime->HasScriptTrigger(Card.Data.Id, EDEffectTrigger::Manual)
+			|| EffectRuntime->HasScriptTrigger(Card.Data.Id, EDEffectTrigger::Continuous))
+		{
+			return true;
+		}
+		// A Trap whose script runs on activation (Compulsory Evacuation
+		// Device, Raigeki Break, Jar of Greed, ...) is activated by its
+		// controller whenever its timing allows.  Event Traps (Sakuretsu
+		// Armor, Bottomless Trap Hole) and the legacy automatic Traps keep
+		// their own trigger windows.
+		const FString& Name = Card.Data.Name;
+		const bool bLegacyAutomatic = IsLegacyAttackTrapName(Name)
+			|| Name == TEXT("Trap Hole") || Name == TEXT("Torrential Tribute")
+			|| Name == TEXT("Magic Jammer") || Name == TEXT("Seven Tools of the Bandit");
+		return !bLegacyAutomatic
+			&& EffectRuntime->HasScriptTrigger(Card.Data.Id, EDEffectTrigger::OnActivate)
+			&& !EffectRuntime->HasEventTrapTrigger(Card.Data.Id);
 	}
 	return false;
 }
@@ -4568,7 +4878,10 @@ void FDuelEngine::SpecialSummonHarpieSisters(EDuelOwner Side)
 
 bool FDuelEngine::IsLegalEquipTarget(const FDuelCard& Card, EDuelOwner Side, const FString& Name) const
 {
-	if (!Card.IsValid() || !Card.bFaceUp || Card.Controller != Side)
+	// An Equip Spell can equip any face-up monster on the field; Side is the
+	// Equip Spell's controller and only matters for the AI's own preference.
+	(void)Side;
+	if (!Card.IsValid() || !Card.bFaceUp || !Card.IsMonster())
 	{
 		return false;
 	}
@@ -4583,11 +4896,14 @@ bool FDuelEngine::IsLegalEquipTarget(const FDuelCard& Card, EDuelOwner Side, con
 
 bool FDuelEngine::HasEquipTarget(EDuelOwner Side, const FString& Name) const
 {
-	for (const FDuelCard& Card : SideRef(Side).Monsters)
+	for (EDuelOwner FieldSide : { EDuelOwner::Player, EDuelOwner::Opponent })
 	{
-		if (IsLegalEquipTarget(Card, Side, Name))
+		for (const FDuelCard& Card : SideRef(FieldSide).Monsters)
 		{
-			return true;
+			if (IsLegalEquipTarget(Card, Side, Name))
+			{
+				return true;
+			}
 		}
 	}
 	return false;
@@ -4613,11 +4929,15 @@ FDuelCard* FDuelEngine::ChooseEquipTarget(EDuelOwner Side, const FString& Name)
 void FDuelEngine::QueueEquipTargetChoice(FDuelCard& Equip, EDuelOwner Side, const FString& Name)
 {
 	TArray<FDuelCard*> Targets;
-	for (FDuelCard& Card : SideRef(Side).Monsters)
+	// Own monsters first so the default (and the AI's pick) prefers them.
+	for (EDuelOwner FieldSide : { Side, Other(Side) })
 	{
-		if (IsLegalEquipTarget(Card, Side, Name))
+		for (FDuelCard& Card : SideRef(FieldSide).Monsters)
 		{
-			Targets.Add(&Card);
+			if (IsLegalEquipTarget(Card, Side, Name))
+			{
+				Targets.Add(&Card);
+			}
 		}
 	}
 	if (Targets.Num() == 0)
@@ -4645,22 +4965,28 @@ void FDuelEngine::QueueEquipTargetChoice(FDuelCard& Equip, EDuelOwner Side, cons
 	int32 BestAtk = -1;
 	for (FDuelCard* Target : Targets)
 	{
-		const int32 Zone = FindMonsterZone(Side, Target->Uid);
+		const int32 Zone = FindMonsterZone(Target->Controller, Target->Uid);
+		const TCHAR* OwnerText = Target->Controller == Side ? TEXT("Your") : TEXT("Opp.");
 		FDuelChoiceOption Option;
 		Option.Id = Target->Uid;
 		Option.Label = Zone != INDEX_NONE
-			? FString::Printf(TEXT("Z%d  %s (%d/%d)"), Zone + 1, *CardName(*Target), GetAtk(*Target), GetDef(*Target))
-			: FString::Printf(TEXT("%s (%d/%d)"), *CardName(*Target), GetAtk(*Target), GetDef(*Target));
+			? FString::Printf(TEXT("%s Z%d  %s (%d/%d)"), OwnerText, Zone + 1, *CardName(*Target), GetAtk(*Target), GetDef(*Target))
+			: FString::Printf(TEXT("%s %s (%d/%d)"), OwnerText, *CardName(*Target), GetAtk(*Target), GetDef(*Target));
 		Option.CardUid = Target->Uid;
 		Option.CardId = Target->Data.Id;
 		Option.Zone = EDuelZone::Monster;
+		Option.ZoneIndex = Zone;
 		Request.Options.Add(Option);
 		const int32 Atk = GetAtk(*Target);
-		if (Atk > BestAtk)
+		if (Target->Controller == Side && Atk > BestAtk)
 		{
 			BestAtk = Atk;
 			BestUid = Target->Uid;
 		}
+	}
+	if (BestUid == 0 && Targets.Num() > 0)
+	{
+		BestUid = Targets[0]->Uid;
 	}
 	if (BestUid != 0)
 	{
@@ -4885,38 +5211,35 @@ void FDuelEngine::ResolveReviveSpell(FDuelCard& Spell, EDuelOwner Side, EDuelOwn
 	{
 		return;
 	}
-	FDuelCard* Target = nullptr;
-	for (FDuelCard& GraveCard : SideRef(GraveOwner).Graveyard)
+	TArray<int32> Uids;
+	int32 BestUid = 0;
+	int32 BestAtk = TNumericLimits<int32>::Lowest();
+	for (const FDuelCard& GraveCard : SideRef(GraveOwner).Graveyard)
 	{
-		if (GraveCard.IsMonster() && CanBeSpecialSummonedByEffect(GraveCard)
-			&& (!Target || GraveCard.Data.Atk > Target->Data.Atk))
+		if (GraveCard.IsMonster() && CanBeSpecialSummonedByEffect(GraveCard))
 		{
-			Target = &GraveCard;
+			Uids.Add(GraveCard.Uid);
+			if (GraveCard.Data.Atk > BestAtk)
+			{
+				BestAtk = GraveCard.Data.Atk;
+				BestUid = GraveCard.Uid;
+			}
 		}
 	}
-	if (!Target)
+	if (Uids.Num() == 0)
 	{
 		return;
 	}
-	const int32 TargetUid = Target->Uid;
-	FDuelCard Copy;
-	if (!RemoveFromZone(Copy, TargetUid))
-	{
-		return;
-	}
-	if (!PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
-	{
-		MoveToGrave(Copy, TEXT("no monster zone"), false);
-		return;
-	}
-	if (FDuelCard* Placed = FindMonster(TargetUid))
-	{
-		Placed->bSpecialSummoned = true;
-		Spell.EquippedToUid = TargetUid;
-		Spell.TiedToUid = TargetUid;
-		Log(FString::Printf(TEXT("%s revives %s."), Reason, *CardName(*Placed)), TEXT("spell"));
-		OnSummon(*Placed, true);
-	}
+	const int32 SpellUid = Spell.Uid;
+	const FString ReasonText = Reason;
+	ChooseCardsFor(Side, Spell, FString::Printf(TEXT("Choose a monster in the Graveyard to Special Summon with %s."), Reason),
+		Uids, 1, { BestUid }, [this, SpellUid, Side, ReasonText](const TArray<int32>& Picked)
+		{
+			if (Picked.Num() > 0)
+			{
+				ReviveFromGraveyard(SpellUid, Side, Picked[0], ReasonText, true);
+			}
+		});
 }
 
 void FDuelEngine::ResolveSpell(FDuelCard& Card)
@@ -4926,33 +5249,8 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 	FDuelSide& State = SideRef(Side);
 	const FString Name = Card.Data.Name;
 
-	auto DiscardLowest = [this, &State, Side](int32 Count)
-	{
-		for (int32 I = 0; I < Count && State.Hand.Num() > 0; ++I)
-		{
-			int32 BestIndex = 0;
-			int32 BestValue = TNumericLimits<int32>::Max();
-			for (int32 J = 0; J < State.Hand.Num(); ++J)
-			{
-				const int32 Value = AiCardValue(State.Hand[J]);
-				if (Value < BestValue)
-				{
-					BestValue = Value;
-					BestIndex = J;
-				}
-			}
-			FDuelCard Discarded = State.Hand[BestIndex];
-			State.Hand.RemoveAt(BestIndex);
-			EmitVisual(EDuelVisualEventType::Discard, Side, &Discarded, 0, TEXT("DISCARD"));
-			MoveToGrave(Discarded, TEXT("discard"), false);
-			Log(FString::Printf(TEXT("%s discards %s."), *State.Name, *CardName(Discarded)), TEXT("discard"));
-			if (bWinnerSet)
-			{
-				return;
-			}
-		}
-	};
-
+	const FDuelCard Source = Card;
+	const int32 SourceUid = Card.Uid;
 	if (Name == TEXT("Pot of Greed"))
 	{
 		Draw(Side, 2);
@@ -4960,7 +5258,7 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 	else if (Name == TEXT("Graceful Charity"))
 	{
 		Draw(Side, 3);
-		if (!bWinnerSet) DiscardLowest(2);
+		if (!bWinnerSet) DiscardChosen(Side, Source, 2, TEXT("Graceful Charity"), nullptr);
 	}
 	else if (Name == TEXT("Upstart Goblin"))
 	{
@@ -5046,23 +5344,53 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 	}
 	else if (Name == TEXT("Tribute to the Doomed"))
 	{
-		DiscardLowest(1);
-		if (FDuelCard* Target = ChooseMonster(Opp, [](const FDuelCard&) { return true; }, true))
+		DiscardChosen(Side, Source, 1, TEXT("Tribute to the Doomed"), [this, Side, Opp, Source]()
 		{
-			Log(FString::Printf(TEXT("Tribute to the Doomed destroys %s."), *CardName(*Target)), TEXT("spell"));
-			DestroyMonster(*Target, false, nullptr, false, TEXT("Tribute to the Doomed"));
-		}
+			TArray<int32> Uids;
+			for (EDuelOwner FieldSide : { Opp, Side })
+			{
+				for (const FDuelCard& Monster : SideRef(FieldSide).Monsters)
+				{
+					if (Monster.IsValid()) Uids.Add(Monster.Uid);
+				}
+			}
+			const FDuelCard* Best = ChooseMonster(Opp, [](const FDuelCard&) { return true; }, true);
+			ChooseCardsFor(Side, Source, TEXT("Choose a monster to destroy with Tribute to the Doomed."), Uids, 1,
+				{ Best ? Best->Uid : 0 }, [this](const TArray<int32>& Picked)
+				{
+					FDuelCard* Target = Picked.Num() > 0 ? FindMonster(Picked[0]) : nullptr;
+					if (Target)
+					{
+						Log(FString::Printf(TEXT("Tribute to the Doomed destroys %s."), *CardName(*Target)), TEXT("spell"));
+						DestroyMonster(*Target, false, nullptr, false, TEXT("Tribute to the Doomed"));
+					}
+				});
+		});
 	}
 	else if (Name == TEXT("Book of Moon"))
 	{
-		if (FDuelCard* Target = ChooseMonster(Opp, [](const FDuelCard& C) { return C.bFaceUp; }, true))
+		TArray<int32> Uids;
+		for (EDuelOwner FieldSide : { Opp, Side })
 		{
-			Target->bFaceUp = false;
-			Target->Position = EDuelPosition::Defense;
-			Target->SetTurn = TurnNumber;
-			Log(FString::Printf(TEXT("Book of Moon sets %s face-down."), *CardName(*Target)), TEXT("spell"));
-			EmitVisual(EDuelVisualEventType::Position, Opp, Target, 0, TEXT("BOOK OF MOON: SET"));
+			for (const FDuelCard& Monster : SideRef(FieldSide).Monsters)
+			{
+				if (Monster.IsValid() && Monster.bFaceUp) Uids.Add(Monster.Uid);
+			}
 		}
+		const FDuelCard* Best = ChooseMonster(Opp, [](const FDuelCard& C) { return C.bFaceUp; }, true);
+		ChooseCardsFor(Side, Source, TEXT("Choose a face-up monster to flip face-down with Book of Moon."), Uids, 1,
+			{ Best ? Best->Uid : 0 }, [this](const TArray<int32>& Picked)
+			{
+				FDuelCard* Target = Picked.Num() > 0 ? FindMonster(Picked[0]) : nullptr;
+				if (Target && Target->bFaceUp)
+				{
+					Target->bFaceUp = false;
+					Target->Position = EDuelPosition::Defense;
+					Target->SetTurn = TurnNumber;
+					Log(FString::Printf(TEXT("Book of Moon sets %s face-down."), *CardName(*Target)), TEXT("spell"));
+					EmitVisual(EDuelVisualEventType::Position, Target->Controller, Target, 0, TEXT("BOOK OF MOON: SET"));
+				}
+			});
 	}
 	else if (Name == TEXT("Premature Burial"))
 	{
@@ -5070,24 +5398,35 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 	}
 	else if (Name == TEXT("Snatch Steal"))
 	{
-		if (FDuelCard* Target = ChooseMonster(Opp, [](const FDuelCard& C) { return C.bFaceUp; }, true))
+		TArray<int32> Uids;
+		for (const FDuelCard& Monster : SideRef(Opp).Monsters)
 		{
-			const int32 TargetUid = Target->Uid;
-			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid))
+			if (Monster.IsValid() && Monster.bFaceUp) Uids.Add(Monster.Uid);
+		}
+		const FDuelCard* Best = ChooseMonster(Opp, [](const FDuelCard& C) { return C.bFaceUp; }, true);
+		ChooseCardsFor(Side, Source, TEXT("Choose an opponent's face-up monster to take with Snatch Steal."), Uids, 1,
+			{ Best ? Best->Uid : 0 }, [this, Side, SourceUid](const TArray<int32>& Picked)
 			{
+				const int32 TargetUid = Picked.Num() > 0 ? Picked[0] : 0;
+				FDuelCard Copy;
+				if (TargetUid == 0 || !FindMonster(TargetUid) || !RemoveFromZone(Copy, TargetUid))
+				{
+					return;
+				}
 				CleanupEquips(Copy);
 				if (PlaceMonster(Side, Copy, true, Copy.Position))
 				{
-					Card.EquippedToUid = TargetUid;
+					if (FDuelCard* Spell = FindSpellTrap(SourceUid))
+					{
+						Spell->EquippedToUid = TargetUid;
+					}
 					Log(FString::Printf(TEXT("Snatch Steal takes control of %s."), *CardName(Copy)), TEXT("spell"));
 				}
 				else
 				{
 					MoveToGrave(Copy, TEXT("no monster zone"), true);
 				}
-			}
-		}
+			});
 	}
 	else if (Name == TEXT("Autonomous Action Unit"))
 	{
@@ -5095,61 +5434,81 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 	}
 	else if (Name == TEXT("Monster Reincarnation"))
 	{
-		DiscardLowest(1);
-		FDuelCard* Target = nullptr;
-		for (FDuelCard& GraveCard : State.Graveyard)
+		DiscardChosen(Side, Source, 1, TEXT("Monster Reincarnation"), [this, Side, Source]()
 		{
-			if (GraveCard.IsMonster() && (!Target || GraveCard.Data.Atk > Target->Data.Atk)) Target = &GraveCard;
-		}
-		if (Target)
-		{
-			const int32 TargetUid = Target->Uid;
-			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid))
+			TArray<int32> Uids;
+			int32 BestUid = 0;
+			int32 BestAtk = TNumericLimits<int32>::Lowest();
+			for (const FDuelCard& GraveCard : SideRef(Side).Graveyard)
 			{
-				EmitVisual(EDuelVisualEventType::Search, Side, &Copy, 0, TEXT("MONSTER REINCARNATION"));
-				State.Hand.Add(Copy);
-				Log(FString::Printf(TEXT("Monster Reincarnation returns %s to the hand."), *CardName(Copy)), TEXT("spell"));
+				if (!GraveCard.IsMonster()) continue;
+				Uids.Add(GraveCard.Uid);
+				if (GraveCard.Data.Atk > BestAtk)
+				{
+					BestAtk = GraveCard.Data.Atk;
+					BestUid = GraveCard.Uid;
+				}
 			}
-		}
+			ChooseCardsFor(Side, Source, TEXT("Choose a monster in your Graveyard to add to your hand."), Uids, 1,
+				{ BestUid }, [this, Side](const TArray<int32>& Picked)
+				{
+					FDuelCard Copy;
+					if (Picked.Num() > 0 && RemoveFromZone(Copy, Picked[0]))
+					{
+						EmitVisual(EDuelVisualEventType::Search, Side, &Copy, 0, TEXT("MONSTER REINCARNATION"));
+						SideRef(Side).Hand.Add(Copy);
+						Log(FString::Printf(TEXT("Monster Reincarnation returns %s to the hand."), *CardName(Copy)), TEXT("spell"));
+					}
+				});
+		});
 	}
 	else if (Name == TEXT("Salvage"))
 	{
 		TArray<int32> FoundUids;
 		for (const FDuelCard& GraveCard : State.Graveyard)
 		{
-			if (FoundUids.Num() >= 2) break;
 			if (GraveCard.IsMonster() && GraveCard.Data.Attribute == TEXT("WATER") && GraveCard.Data.Atk <= 1500)
 			{
 				FoundUids.Add(GraveCard.Uid);
 			}
 		}
-		for (int32 FoundUid : FoundUids)
+		TArray<int32> Defaults;
+		for (int32 I = 0; I < FoundUids.Num() && I < 2; ++I)
 		{
-			FDuelCard Copy;
-			if (RemoveFromZone(Copy, FoundUid))
-			{
-				EmitVisual(EDuelVisualEventType::Search, Side, &Copy, 0, TEXT("SALVAGE"));
-				State.Hand.Add(Copy);
-				Log(FString::Printf(TEXT("Salvage adds %s to the hand."), *CardName(Copy)), TEXT("spell"));
-			}
+			Defaults.Add(FoundUids[I]);
 		}
+		ChooseCardsFor(Side, Source, TEXT("Choose 2 WATER monsters with 1500 or less ATK to add to your hand."),
+			FoundUids, 2, Defaults, [this, Side](const TArray<int32>& Picked)
+			{
+				for (int32 FoundUid : Picked)
+				{
+					FDuelCard Copy;
+					if (RemoveFromZone(Copy, FoundUid))
+					{
+						EmitVisual(EDuelVisualEventType::Search, Side, &Copy, 0, TEXT("SALVAGE"));
+						SideRef(Side).Hand.Add(Copy);
+						Log(FString::Printf(TEXT("Salvage adds %s to the hand."), *CardName(Copy)), TEXT("spell"));
+					}
+				}
+			});
 	}
 	else if (Name == TEXT("Nobleman of Extermination"))
 	{
-		int32 TargetUid = 0;
-		bool bTargetWasTrap = false;
-		FString TargetName;
+		TArray<int32> SetUids;
 		for (const FDuelCard& Spell : SideRef(Opp).Spells)
 		{
 			if (Spell.IsValid() && !Spell.bFaceUp)
 			{
-				TargetUid = Spell.Uid;
-				bTargetWasTrap = Spell.IsTrap();
-				TargetName = Spell.Data.Name;
-				break;
+				SetUids.Add(Spell.Uid);
 			}
 		}
+		ChooseCardsFor(Side, Source, TEXT("Choose an opponent's Set card to banish with Nobleman of Extermination."),
+			SetUids, 1, SetUids, [this](const TArray<int32>& Picked)
+		{
+		const FDuelCard* Picked0 = Picked.Num() > 0 ? FindSpellTrap(Picked[0]) : nullptr;
+		const int32 TargetUid = Picked0 ? Picked0->Uid : 0;
+		const bool bTargetWasTrap = Picked0 && Picked0->IsTrap();
+		const FString TargetName = Picked0 ? Picked0->Data.Name : FString();
 		if (TargetUid != 0)
 		{
 			FDuelCard Copy;
@@ -5175,10 +5534,12 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 				}
 			}
 		}
+		});
 	}
 	else if (Name == TEXT("Special Hurricane"))
 	{
-		DiscardLowest(1);
+		DiscardChosen(Side, Source, 1, TEXT("Special Hurricane"), [this]()
+		{
 		TArray<int32> Uids;
 		for (EDuelOwner Owner : { EDuelOwner::Player, EDuelOwner::Opponent })
 		{
@@ -5195,31 +5556,52 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 			}
 			if (FDuelCard* Monster = FindMonster(Uid)) DestroyMonster(*Monster, false, nullptr, false, TEXT("Special Hurricane"));
 		}
+		});
 	}
 	else if (Name == TEXT("Transcendent Wings"))
 	{
 		// Send exactly two other cards; Winged Kuriboh LV10 must stay available
 		// to be Special Summoned by this effect.
-		for (int32 DiscardIndex = 0; DiscardIndex < 2; ++DiscardIndex)
+		TArray<int32> CostUids;
+		TArray<const FDuelCard*> CostCards;
+		for (const FDuelCard& HandCard : State.Hand)
 		{
-			int32 BestIndex = INDEX_NONE;
-			int32 BestValue = TNumericLimits<int32>::Max();
-			for (int32 I = 0; I < State.Hand.Num(); ++I)
+			if (!IsName(HandCard, TEXT("Winged Kuriboh LV10")))
 			{
-				if (IsName(State.Hand[I], TEXT("Winged Kuriboh LV10"))) continue;
-				const int32 Value = AiCardValue(State.Hand[I]);
+				CostUids.Add(HandCard.Uid);
+				CostCards.Add(&HandCard);
+			}
+		}
+		TArray<int32> Defaults;
+		for (int32 Pick = 0; Pick < 2 && CostCards.Num() > 0; ++Pick)
+		{
+			int32 BestIndex = 0;
+			int32 BestValue = TNumericLimits<int32>::Max();
+			for (int32 I = 0; I < CostCards.Num(); ++I)
+			{
+				const int32 Value = AiCardValue(*CostCards[I]);
 				if (Value < BestValue)
 				{
 					BestValue = Value;
 					BestIndex = I;
 				}
 			}
-			if (BestIndex == INDEX_NONE) break;
-			FDuelCard CostCard = State.Hand[BestIndex];
-			State.Hand.RemoveAt(BestIndex);
+			Defaults.Add(CostCards[BestIndex]->Uid);
+			CostCards.RemoveAt(BestIndex);
+		}
+		ChooseCardsFor(Side, Source, TEXT("Choose 2 cards to send to the Graveyard for Transcendent Wings."),
+			CostUids, 2, Defaults, [this, Side](const TArray<int32>& Picked)
+		{
+		FDuelSide& WingState = SideRef(Side);
+		for (int32 CostUid : Picked)
+		{
+			const int32 HandIndex = WingState.Hand.IndexOfByPredicate([CostUid](const FDuelCard& C) { return C.Uid == CostUid; });
+			if (HandIndex == INDEX_NONE) continue;
+			FDuelCard CostCard = WingState.Hand[HandIndex];
+			WingState.Hand.RemoveAt(HandIndex);
 			EmitVisual(EDuelVisualEventType::Discard, Side, &CostCard, 0, TEXT("TRANSCENDENT WINGS"));
 			MoveToGrave(CostCard, TEXT("discard"), false);
-			Log(FString::Printf(TEXT("%s discards %s for Transcendent Wings."), *State.Name, *CardName(CostCard)), TEXT("discard"));
+			Log(FString::Printf(TEXT("%s discards %s for Transcendent Wings."), *WingState.Name, *CardName(CostCard)), TEXT("discard"));
 		}
 		FDuelCard* Kuriboh = FindMonsterByName(Side, TEXT("Winged Kuriboh"));
 		if (Kuriboh && Kuriboh->bFaceUp)
@@ -5258,6 +5640,7 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 				}
 			}
 		}
+		});
 	}
 	else if (Name == TEXT("Elegant Egotist"))
 	{
@@ -5291,6 +5674,14 @@ void FDuelEngine::ResolveSpell(FDuelCard& Card)
 
 bool FDuelEngine::ActivateSpell(int32 Uid, FString& OutError)
 {
+	if (CanPlayerAct() && Phase == EDuelPhase::Battle)
+	{
+		const FDuelCard* QuickCard = Player.Hand.FindByPredicate([Uid](const FDuelCard& C) { return C.Uid == Uid; });
+		if (QuickCard && QuickCard->IsSpell() && QuickCard->Data.Subtype == TEXT("Quick-Play"))
+		{
+			return ActivateQuickPlayFromHand(Uid, OutError);
+		}
+	}
 	if (!CanPlayerAct() || !IsMainPhase())
 	{
 		OutError = TEXT("You cannot activate a Spell right now.");
@@ -5402,7 +5793,7 @@ bool FDuelEngine::SetSpellTrap(int32 Uid, FString& OutError)
 
 bool FDuelEngine::ActivateSetTrap(int32 Uid, FString& OutError)
 {
-	if (!CanPlayerAct() || !IsMainPhase())
+	if (!CanPlayerAct() || (!IsMainPhase() && Phase != EDuelPhase::Battle))
 	{
 		OutError = TEXT("You cannot activate a Trap right now.");
 		return false;
@@ -5413,7 +5804,12 @@ bool FDuelEngine::ActivateSetTrap(int32 Uid, FString& OutError)
 		OutError = TEXT("That Trap cannot be activated right now.");
 		return false;
 	}
-	if (bEnforceActivationTiming)
+	if (Trap->IsSpell())
+	{
+		// The board uses one "activate Set card" action for both kinds.
+		return ActivateSetSpell(Uid, OutError);
+	}
+	if (bEnforceActivationTiming || Phase == EDuelPhase::Battle)
 	{
 		FString Reason;
 		if (!IsActivationLegal(*Trap, GetCurrentTimingWindow(), &Reason))
@@ -5424,7 +5820,14 @@ bool FDuelEngine::ActivateSetTrap(int32 Uid, FString& OutError)
 	}
 	if (!IsManualTrapCard(*Trap))
 	{
-		OutError = TEXT("That Trap activates automatically at the correct timing.");
+		OutError = UsesPlayerResponseWindows()
+			? TEXT("That Trap answers a specific event; you will be asked when it can respond.")
+			: TEXT("That Trap activates automatically at the correct timing.");
+		return false;
+	}
+	if (!HasActivationRequirements(*Trap))
+	{
+		OutError = TEXT("That Trap's activation requirements are not met.");
 		return false;
 	}
 	return ActivateTrapInternal(*Trap, EDuelOwner::Player, false);
@@ -5468,6 +5871,12 @@ bool FDuelEngine::ActivateQuickPlayFromHand(int32 Uid, FString& OutError)
 	if (IsMainPhase() && !CanActivateSpellCard(*HandCard))
 	{
 		OutError = TEXT("That Quick-Play Spell cannot be activated right now.");
+		return false;
+	}
+	if (!IsMainPhase() && (!HasActivationRequirements(*HandCard)
+		|| (EffectRuntime && EffectRuntime->IsCardActivationLocked(*HandCard))))
+	{
+		OutError = TEXT("That Quick-Play Spell has no legal target right now.");
 		return false;
 	}
 
@@ -5533,42 +5942,17 @@ bool FDuelEngine::ActivateSetSpell(int32 Uid, FString& OutError)
 		OutError = Reason.IsEmpty() ? TEXT("That Quick-Play Spell cannot be activated in this timing window.") : Reason;
 		return false;
 	}
-
-	const FString Name = Card->Data.Name;
-	Card->bFaceUp = true;
-	if (EffectRuntime)
+	if (EffectRuntime && EffectRuntime->IsCardActivationLocked(*Card))
 	{
-		EffectRuntime->RecomputeContinuous();
+		OutError = TEXT("Spell activation is currently locked.");
+		return false;
 	}
-	if (TryCounterSpell(EDuelOwner::Player, EDuelOwner::Opponent))
+	if (!HasActivationRequirements(*Card))
 	{
-		if (FDuelCard* Negated = FindSpellTrap(Uid))
-		{
-			DestroySpellTrap(*Negated, true);
-		}
-		return true;
+		OutError = TEXT("That Quick-Play Spell has no legal target right now.");
+		return false;
 	}
-	Log(FString::Printf(TEXT("You activate %s."), *Name), TEXT("spell"));
-	if (FDuelCard* Placed = FindSpellTrap(Uid))
-	{
-		FDuelVisualEvent& SpellEvent = EmitVisual(EDuelVisualEventType::Spell, EDuelOwner::Player, Placed, 0, Name);
-		SpellEvent.Zone = FindSpellZone(EDuelOwner::Player, Uid);
-		OnSpellActivated();
-		++ResultStats.SpellsActivated;
-		ResolveSpell(*Placed);
-	}
-	if (EffectRuntime && !bWinnerSet)
-	{
-		if (FDuelCard* Live = FindSpellTrap(Uid))
-		{
-			EffectRuntime->OnActivate(*Live);
-		}
-	}
-	CheckWinner();
-	// Same rationale as ActivateSpell: a one-shot Quick-Play still resolves to
-	// the Graveyard when its effect ends the duel.
-	CleanupResolvedChainCard(Uid);
-	return true;
+	return ActivateSetSpellInternal(Uid, OutError);
 }
 
 bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bAutomatic)
@@ -5584,6 +5968,56 @@ bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bA
 	}
 	const int32 Uid = Trap.Uid;
 	const FString Name = Trap.Data.Name;
+	if (Other(Side) == EDuelOwner::Player && UsesPlayerResponseWindows())
+	{
+		// The player may answer the opponent's Trap (Seven Tools of the
+		// Bandit, or any legal Set card) before it resolves.
+		OfferResponsesToOpponentTrap(Uid, [this, Uid, Side, Name](bool bNegated, bool bRevealed)
+		{
+			if (bWinnerSet)
+			{
+				return;
+			}
+			if (bNegated)
+			{
+				if (FDuelCard* Negated = FindSpellTrap(Uid))
+				{
+					DestroySpellTrap(*Negated, true);
+				}
+				Log(FString::Printf(TEXT("%s is negated."), *Name), TEXT("trap"));
+				return;
+			}
+			FDuelCard* Live = FindSpellTrap(Uid);
+			if (!Live)
+			{
+				const FDuelCard* Gone = FindCard(Uid);
+				if (Gone && !IsPersistentSpellTrap(*Gone))
+				{
+					// Destroyed in the chain: a one-shot Trap still resolves.
+					FDuelCard ChainedCopy = *Gone;
+					ResolveTrap(ChainedCopy);
+					if (EffectRuntime && !bWinnerSet && FindCard(Uid))
+					{
+						EffectRuntime->OnActivate(ChainedCopy);
+					}
+					CheckWinner();
+					return;
+				}
+				Log(FString::Printf(TEXT("%s left the field before it resolved."), *Name), TEXT("trap"));
+				return;
+			}
+			if (!bRevealed)
+			{
+				RevealActivatedTrap(*Live, Side);
+			}
+			if (EffectRuntime)
+			{
+				EffectRuntime->RecomputeContinuous();
+			}
+			ResolveActivatedTrap(Uid, Side);
+		});
+		return true;
+	}
 	if (TryCounterTrap(Side, Other(Side)))
 	{
 		if (FDuelCard* Negated = FindSpellTrap(Uid))
@@ -5613,37 +6047,11 @@ bool FDuelEngine::ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bA
 		++ResultStats.TrapsActivated;
 	}
 
-	FDuelCard* Placed = FindSpellTrap(Uid);
-	if (!Placed)
+	if (!FindSpellTrap(Uid))
 	{
 		return false;
 	}
-	ResolveTrap(*Placed);
-	if (EffectRuntime && !bWinnerSet)
-	{
-		if (FDuelCard* Live = FindSpellTrap(Uid))
-		{
-			EffectRuntime->OnActivate(*Live);
-		}
-	}
-	CheckWinner();
-	if (FDuelCard* Live = FindSpellTrap(Uid))
-	{
-		if (!IsPersistentSpellTrap(*Live))
-		{
-			if (HasPendingChoice())
-			{
-				PendingActivationCleanupUids.Add(Uid);
-			}
-			else
-			{
-				// Runs even when the Trap's resolution ended the duel: a
-				// one-shot Trap still goes to the Graveyard.  Persistent
-				// Traps are skipped above.
-				DestroySpellTrap(*Live, true);
-			}
-		}
-	}
+	ResolveActivatedTrap(Uid, Side);
 	return true;
 }
 
@@ -5652,36 +6060,69 @@ void FDuelEngine::ResolveTrap(FDuelCard& Trap)
 	const EDuelOwner Side = Trap.Controller;
 	const EDuelOwner Opp = Other(Side);
 	const FString Name = Trap.Data.Name;
-	if (Name == TEXT("Call of the Haunted"))
+	const FDuelCard Source = Trap;
+	const int32 TrapUid = Trap.Uid;
+
+	// Spiritual Art cost: Tribute 1 monster of the given Attribute the
+	// controller chooses, then run the effect.
+	auto TributeAttribute = [this, Side, Source](const TCHAR* Attribute, const FString& ArtName,
+		TFunction<void(int32 OriginalAtk)> Then)
 	{
-		FDuelCard* Target = nullptr;
-		for (FDuelCard& GraveCard : SideRef(Side).Graveyard)
+		TArray<int32> Uids;
+		for (const FDuelCard& Monster : SideRef(Side).Monsters)
 		{
-			if (GraveCard.IsMonster() && CanBeSpecialSummonedByEffect(GraveCard)
-				&& (!Target || GraveCard.Data.Atk > Target->Data.Atk)) Target = &GraveCard;
+			if (Monster.IsValid() && Monster.Data.Attribute == Attribute) Uids.Add(Monster.Uid);
 		}
-		if (Target)
-		{
-			const int32 TargetUid = Target->Uid;
-			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid))
+		const FString AttributeText = Attribute;
+		const FDuelCard* Best = ChooseMonster(Side, [AttributeText](const FDuelCard& C) { return C.Data.Attribute == AttributeText; }, true);
+		ChooseCardsFor(Side, Source, FString::Printf(TEXT("Choose a %s monster to Tribute for %s."), Attribute, *ArtName),
+			Uids, 1, { Best ? Best->Uid : 0 }, [this, AttributeText, ArtName, Then](const TArray<int32>& Picked)
 			{
-				if (PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
+				FDuelCard* Target = Picked.Num() > 0 ? FindMonster(Picked[0]) : nullptr;
+				if (!Target)
 				{
-					if (FDuelCard* Placed = FindMonster(TargetUid))
+					return;
+				}
+				const int32 OriginalAtk = Target->Data.Atk;
+				FDuelCard Copy;
+				if (RemoveFromZone(Copy, Target->Uid))
+				{
+					CleanupEquips(Copy);
+					MoveToGrave(Copy, TEXT("tribute"), true);
+					Log(FString::Printf(TEXT("%s tributes a %s monster."), *ArtName, *AttributeText), TEXT("trap"));
+					if (Then && !bWinnerSet)
 					{
-						Placed->bSpecialSummoned = true;
-						Trap.TiedToUid = TargetUid;
-						Log(FString::Printf(TEXT("Call of the Haunted revives %s."), *CardName(*Placed)), TEXT("trap"));
-						OnSummon(*Placed, true);
+						Then(OriginalAtk);
 					}
 				}
-				else
+			});
+	};
+
+	if (Name == TEXT("Call of the Haunted"))
+	{
+		TArray<int32> Uids;
+		int32 BestUid = 0;
+		int32 BestAtk = TNumericLimits<int32>::Lowest();
+		for (const FDuelCard& GraveCard : SideRef(Side).Graveyard)
+		{
+			if (GraveCard.IsMonster() && CanBeSpecialSummonedByEffect(GraveCard))
+			{
+				Uids.Add(GraveCard.Uid);
+				if (GraveCard.Data.Atk > BestAtk)
 				{
-					MoveToGrave(Copy, TEXT("no monster zone"), false);
+					BestAtk = GraveCard.Data.Atk;
+					BestUid = GraveCard.Uid;
 				}
 			}
 		}
+		ChooseCardsFor(Side, Source, TEXT("Choose a monster in your Graveyard to Special Summon with Call of the Haunted."),
+			Uids, 1, { BestUid }, [this, TrapUid, Side](const TArray<int32>& Picked)
+			{
+				if (Picked.Num() > 0)
+				{
+					ReviveFromGraveyard(TrapUid, Side, Picked[0], TEXT("Call of the Haunted"), true);
+				}
+			});
 	}
 	else if (Name == TEXT("Backfire"))
 	{
@@ -5689,114 +6130,117 @@ void FDuelEngine::ResolveTrap(FDuelCard& Trap)
 	}
 	else if (Name == TEXT("Spiritual Fire Art - Kurenai"))
 	{
-		FDuelCard* Target = ChooseMonster(Side, [](const FDuelCard& C) { return C.Data.Attribute == TEXT("FIRE"); }, true);
-		if (Target)
+		TributeAttribute(TEXT("FIRE"), Name, [this, Opp](int32 OriginalAtk)
 		{
-			const int32 OriginalAtk = Target->Data.Atk;
-			const int32 TargetUid = Target->Uid;
-			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid))
-			{
-				CleanupEquips(Copy);
-				MoveToGrave(Copy, TEXT("tribute"), true);
-				Log(TEXT("Spiritual Fire Art - Kurenai tributes a FIRE monster."), TEXT("trap"));
-				InflictDamage(Opp, OriginalAtk, TEXT("Spiritual Fire Art - Kurenai"));
-			}
-		}
+			InflictDamage(Opp, OriginalAtk, TEXT("Spiritual Fire Art - Kurenai"));
+		});
 	}
 	else if (Name == TEXT("Spiritual Water Art - Aoi"))
 	{
-		FDuelCard* Target = ChooseMonster(Side, [](const FDuelCard& C) { return C.Data.Attribute == TEXT("WATER"); }, true);
-		if (Target)
+		TributeAttribute(TEXT("WATER"), Name, [this, Side, Opp, Source](int32)
 		{
-			const int32 TargetUid = Target->Uid;
-			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid))
+			const FDuelSide& OppState = SideRef(Opp);
+			if (OppState.Hand.Num() == 0)
 			{
-				CleanupEquips(Copy);
-				MoveToGrave(Copy, TEXT("tribute"), true);
-				Log(TEXT("Spiritual Water Art - Aoi tributes a WATER monster."), TEXT("trap"));
-				if (SideRef(Opp).Hand.Num() > 0)
+				return;
+			}
+			// The opponent's hand is revealed; the Trap's controller picks the
+			// discard (the AI keeps its highest-value pick).
+			TArray<int32> Uids;
+			int32 BestUid = 0;
+			int32 BestValue = TNumericLimits<int32>::Lowest();
+			for (const FDuelCard& HandCard : OppState.Hand)
+			{
+				Uids.Add(HandCard.Uid);
+				const int32 Value = AiCardValue(HandCard);
+				if (Value > BestValue)
 				{
-					int32 Index = 0;
-					int32 BestValue = TNumericLimits<int32>::Lowest();
-					for (int32 I = 0; I < SideRef(Opp).Hand.Num(); ++I)
-					{
-						const int32 Value = AiCardValue(SideRef(Opp).Hand[I]);
-						if (Value > BestValue)
-						{
-							BestValue = Value;
-							Index = I;
-						}
-					}
-					FDuelCard Discarded = SideRef(Opp).Hand[Index];
-					SideRef(Opp).Hand.RemoveAt(Index);
-					EmitVisual(EDuelVisualEventType::Discard, Opp, &Discarded, 0, TEXT("SPIRITUAL WATER ART"));
-					MoveToGrave(Discarded, TEXT("discard"), false);
-					Log(FString::Printf(TEXT("%s discards %s."), *SideRef(Opp).Name, *CardName(Discarded)), TEXT("trap"));
+					BestValue = Value;
+					BestUid = HandCard.Uid;
 				}
 			}
-		}
+			ChooseCardsFor(Side, Source, TEXT("Choose a card in your opponent's hand to discard."), Uids, 1, { BestUid },
+				[this, Opp](const TArray<int32>& Picked)
+				{
+					FDuelSide& OppHand = SideRef(Opp);
+					const int32 Index = Picked.Num() > 0
+						? OppHand.Hand.IndexOfByPredicate([&Picked](const FDuelCard& C) { return C.Uid == Picked[0]; })
+						: INDEX_NONE;
+					if (Index == INDEX_NONE)
+					{
+						return;
+					}
+					FDuelCard Discarded = OppHand.Hand[Index];
+					OppHand.Hand.RemoveAt(Index);
+					EmitVisual(EDuelVisualEventType::Discard, Opp, &Discarded, 0, TEXT("SPIRITUAL WATER ART"));
+					MoveToGrave(Discarded, TEXT("discard"), false);
+					Log(FString::Printf(TEXT("%s discards %s."), *OppHand.Name, *CardName(Discarded)), TEXT("trap"));
+				});
+		});
 	}
 	else if (Name == TEXT("Spiritual Wind Art - Miyabi"))
 	{
-		FDuelCard* Target = ChooseMonster(Side, [](const FDuelCard& C) { return C.Data.Attribute == TEXT("WIND"); }, true);
-		if (Target)
+		TributeAttribute(TEXT("WIND"), Name, [this, Side, Opp, Source](int32)
 		{
-			const int32 TargetUid = Target->Uid;
-			FDuelCard Copy;
-			if (RemoveFromZone(Copy, TargetUid))
+			TArray<int32> Uids;
+			for (const FDuelCard& Monster : SideRef(Opp).Monsters)
 			{
-				CleanupEquips(Copy);
-				MoveToGrave(Copy, TEXT("tribute"), true);
-				Log(TEXT("Spiritual Wind Art - Miyabi tributes a WIND monster."), TEXT("trap"));
-				int32 EnemyUid = 0;
-				FDuelCard* EnemyMonster = ChooseMonster(Opp, [](const FDuelCard&) { return true; }, true);
-				if (EnemyMonster)
-				{
-					EnemyUid = EnemyMonster->Uid;
-				}
-				else
-				{
-					for (const FDuelCard& EnemySpell : SideRef(Opp).Spells)
-					{
-						if (EnemySpell.IsValid()) { EnemyUid = EnemySpell.Uid; break; }
-					}
-					if (EnemyUid == 0 && SideRef(Opp).Field.IsValid()) EnemyUid = SideRef(Opp).Field.Uid;
-				}
-				if (EnemyUid != 0)
-				{
-					FDuelCard EnemyCopy;
-					if (RemoveFromZone(EnemyCopy, EnemyUid))
-					{
-						Log(FString::Printf(TEXT("Spiritual Wind Art - Miyabi returns %s to the Deck."), *CardName(EnemyCopy)), TEXT("trap"));
-						if (EnemyCopy.IsMonster())
-						{
-							CleanupEquips(EnemyCopy);
-						}
-						else
-						{
-							const FString LinkedName = EnemyCopy.Data.Name;
-							const int32 LinkedUid = EnemyCopy.EquippedToUid != 0
-								? EnemyCopy.EquippedToUid : EnemyCopy.TiedToUid;
-							if (LinkedName == TEXT("Snatch Steal") && LinkedUid != 0)
-							{
-								if (FDuelCard* Linked = FindMonster(LinkedUid)) ReturnControl(*Linked);
-							}
-							else if ((LinkedName == TEXT("Premature Burial") || LinkedName == TEXT("Call of the Haunted")
-								|| LinkedName == TEXT("Autonomous Action Unit")) && LinkedUid != 0)
-							{
-								if (FDuelCard* Linked = FindMonster(LinkedUid))
-								{
-									DestroyMonster(*Linked, false, nullptr, false, LinkedName);
-								}
-							}
-						}
-						MoveToDeckBottom(EnemyCopy);
-					}
-				}
+				if (Monster.IsValid()) Uids.Add(Monster.Uid);
 			}
-		}
+			for (const FDuelCard& EnemySpell : SideRef(Opp).Spells)
+			{
+				if (EnemySpell.IsValid()) Uids.Add(EnemySpell.Uid);
+			}
+			if (SideRef(Opp).Field.IsValid()) Uids.Add(SideRef(Opp).Field.Uid);
+			// Legacy pick: the strongest monster, otherwise the first Spell/Trap.
+			int32 DefaultUid = 0;
+			if (const FDuelCard* EnemyMonster = ChooseMonster(Opp, [](const FDuelCard&) { return true; }, true))
+			{
+				DefaultUid = EnemyMonster->Uid;
+			}
+			else
+			{
+				for (const FDuelCard& EnemySpell : SideRef(Opp).Spells)
+				{
+					if (EnemySpell.IsValid()) { DefaultUid = EnemySpell.Uid; break; }
+				}
+				if (DefaultUid == 0 && SideRef(Opp).Field.IsValid()) DefaultUid = SideRef(Opp).Field.Uid;
+			}
+			ChooseCardsFor(Side, Source, TEXT("Choose a card your opponent controls to return to the Deck."), Uids, 1,
+				{ DefaultUid }, [this](const TArray<int32>& Picked)
+				{
+					const int32 EnemyUid = Picked.Num() > 0 ? Picked[0] : 0;
+					FDuelCard EnemyCopy;
+					if (EnemyUid == 0 || !RemoveFromZone(EnemyCopy, EnemyUid))
+					{
+						return;
+					}
+					Log(FString::Printf(TEXT("Spiritual Wind Art - Miyabi returns %s to the Deck."), *CardName(EnemyCopy)), TEXT("trap"));
+					if (EnemyCopy.IsMonster())
+					{
+						CleanupEquips(EnemyCopy);
+					}
+					else
+					{
+						const FString LinkedName = EnemyCopy.Data.Name;
+						const int32 LinkedUid = EnemyCopy.EquippedToUid != 0
+							? EnemyCopy.EquippedToUid : EnemyCopy.TiedToUid;
+						if (LinkedName == TEXT("Snatch Steal") && LinkedUid != 0)
+						{
+							if (FDuelCard* Linked = FindMonster(LinkedUid)) ReturnControl(*Linked);
+						}
+						else if ((LinkedName == TEXT("Premature Burial") || LinkedName == TEXT("Call of the Haunted")
+							|| LinkedName == TEXT("Autonomous Action Unit")) && LinkedUid != 0)
+						{
+							if (FDuelCard* Linked = FindMonster(LinkedUid))
+							{
+								DestroyMonster(*Linked, false, nullptr, false, LinkedName);
+							}
+						}
+					}
+					MoveToDeckBottom(EnemyCopy);
+				});
+		});
 	}
 }
 
@@ -6725,6 +7169,40 @@ void FDuelEngine::AiActivateSpellCard(FDuelCard& Card)
 	{
 		return;
 	}
+	if (Opp == EDuelOwner::Player && UsesPlayerResponseWindows())
+	{
+		// The Spell is activated on the field first so the player can see it
+		// and answer it (Magic Jammer, Mystical Space Typhoon, ...).
+		Log(FString::Printf(TEXT("%s activates %s."), *SideRef(Side).Name, *Name), TEXT("spell"));
+		if (!PlaceSpellTrap(Side, Copy, true, bFieldSpell))
+		{
+			MoveToHand(Copy);
+			return;
+		}
+		if (FDuelCard* Placed = FindSpellTrap(Uid))
+		{
+			FDuelVisualEvent& SpellEvent = EmitVisual(EDuelVisualEventType::Spell, Side, Placed, 0, Name);
+			SpellEvent.Zone = FindSpellZone(Side, Uid);
+		}
+		OfferResponsesToOpponentSpell(Uid, [this, Uid, Side, bFieldSpell](bool bNegated)
+		{
+			if (bWinnerSet)
+			{
+				return;
+			}
+			if (bNegated)
+			{
+				FDuelCard Countered;
+				if (RemoveFromZone(Countered, Uid))
+				{
+					MoveToGrave(Countered, TEXT("countered"), true);
+				}
+				return;
+			}
+			FinishActivatedSpell(Uid, Side, bFieldSpell);
+		});
+		return;
+	}
 	if (TryCounterSpell(Side, Opp))
 	{
 		MoveToGrave(Copy, TEXT("countered"), false);
@@ -6801,7 +7279,8 @@ void FDuelEngine::AiActivateSpells()
 			}
 			else if (IsEquipName(Name))
 			{
-				bWant = HasEquipTarget(Side, Name);
+				// The AI only equips its own monsters.
+				bWant = ChooseEquipTarget(Side, Name) != nullptr;
 			}
 			else if (IsFieldSpellName(Name))
 			{
@@ -6823,6 +7302,12 @@ void FDuelEngine::AiActivateSpells()
 		if (FDuelCard* HandCard = FindCard(CandidateUid))
 		{
 			AiActivateSpellCard(*HandCard);
+		}
+		if (HasPendingChoiceFor(EDuelOwner::Player) || DeferredContinuations.Num() > 0)
+		{
+			// The player is answering a response window; RunOpponentTurn
+			// re-runs this step once it is resolved.
+			return;
 		}
 	}
 }
@@ -6850,9 +7335,13 @@ void FDuelEngine::AiActivateMonsterEffects()
 					bUsed = true;
 					break;
 				}
+				if (HasPendingChoiceFor(EDuelOwner::Player))
+				{
+					return;
+				}
 			}
 		}
-		if (!bUsed) break;
+		if (!bUsed || HasPendingChoiceFor(EDuelOwner::Player) || DeferredContinuations.Num() > 0) break;
 	}
 }
 
@@ -6912,6 +7401,7 @@ void FDuelEngine::AiActivateManualTraps()
 		{
 			ActivateTrapInternal(*Trap, Side, false);
 			if (bWinnerSet) return;
+			if (HasPendingChoiceFor(EDuelOwner::Player) || DeferredContinuations.Num() > 0) return;
 		}
 	}
 }
@@ -6992,6 +7482,12 @@ void FDuelEngine::AiPlayBattlePhase()
 		if (!ExecuteAttack(Side, AttackerUid, TargetUid, Error))
 		{
 			Attempted.Add(AttackerUid);
+		}
+		if (HasPendingChoiceFor(EDuelOwner::Player) || DeferredContinuations.Num() > 0)
+		{
+			// The attack is waiting for the player's response; the rest of the
+			// Battle Phase resumes from RunOpponentTurn.
+			return;
 		}
 	}
 }
@@ -7318,8 +7814,49 @@ void FDuelEngine::FlushPendingActivationCleanup()
 	}
 }
 
-bool FDuelEngine::AnswerChoice(int32 RequestId, const TArray<int32>& OptionIds, FString& OutError)
+void FDuelEngine::ContinueAfterPlayerChoices(TFunction<void()> Fn)
 {
+	if (!Fn || bWinnerSet)
+	{
+		return;
+	}
+	if (!HasPendingChoiceFor(EDuelOwner::Player) && DeferredContinuations.Num() == 0)
+	{
+		Fn();
+		return;
+	}
+	DeferredContinuations.Add(MoveTemp(Fn));
+}
+
+void FDuelEngine::RunDeferredContinuations()
+{
+	if (bRunningContinuations)
+	{
+		return;
+	}
+	bRunningContinuations = true;
+	while (!bWinnerSet && DeferredContinuations.Num() > 0 && !HasPendingChoiceFor(EDuelOwner::Player))
+	{
+		TFunction<void()> Next = MoveTemp(DeferredContinuations[0]);
+		DeferredContinuations.RemoveAt(0);
+		if (Next)
+		{
+			Next();
+		}
+	}
+	bRunningContinuations = false;
+	if (bWinnerSet)
+	{
+		DeferredContinuations.Reset();
+	}
+}
+
+bool FDuelEngine::AnswerChoice(int32 RequestId, const TArray<int32>& InOptionIds, FString& OutError)
+{
+	// Copy the answer first: a caller may pass an array that lives inside the
+	// queued request (for example its DefaultOptionIds), which is destroyed
+	// when the request leaves the queue below.
+	const TArray<int32> OptionIds = InOptionIds;
 	if (PendingChoices.Num() == 0)
 	{
 		OutError = TEXT("There is no pending choice.");
@@ -7374,6 +7911,11 @@ bool FDuelEngine::AnswerChoice(int32 RequestId, const TArray<int32>& OptionIds, 
 		}
 	}
 	FlushPendingActivationCleanup();
+	// Work suspended behind this answer (for example the rest of an attack
+	// after a response window) continues once no player question is left.
+	RunDeferredContinuations();
+	DrainOpponentChoices();
+	FlushPendingActivationCleanup();
 	// A handoff deferred behind a player prompt continues once the queue is
 	// clear (D2); the resolver above may have queued follow-up questions.
 	ContinueDeferredPlayerHandoff();
@@ -7421,6 +7963,9 @@ bool FDuelEngine::CancelChoice(int32 RequestId, FString& OutError)
 	InvokeChoiceResolver(Request.RequestId, Request, TArray<int32>());
 	Log(FString::Printf(TEXT("Choice cancelled: %s"), *Request.Prompt), TEXT("choice"));
 	FlushPendingActivationCleanup();
+	RunDeferredContinuations();
+	DrainOpponentChoices();
+	FlushPendingActivationCleanup();
 	ContinueDeferredPlayerHandoff();
 	return true;
 }
@@ -7429,6 +7974,7 @@ void FDuelEngine::ClearPendingChoices()
 {
 	PendingChoices.Reset();
 	ChoiceResolvers.Reset();
+	DeferredContinuations.Reset();
 	bPlayerEndHandoffDeferred = false;
 	FlushPendingActivationCleanup();
 }
@@ -7463,6 +8009,1194 @@ int32 FDuelEngine::RequestOptionalTrigger(const FDuelCard& SourceCard, const FSt
 			OnResolved(OptionIds.Num() > 0 && OptionIds[0] == 1);
 		}
 	});
+}
+
+// ---------------------------------------------------------------------------
+// Player response windows
+// ---------------------------------------------------------------------------
+
+bool FDuelEngine::IsLegacyAttackTrapName(const FString& Name) const
+{
+	return Name == TEXT("Mirror Force")
+		|| Name == TEXT("Magic Cylinder")
+		|| Name == TEXT("Negate Attack")
+		|| Name == TEXT("A Hero Emerges");
+}
+
+FString FDuelEngine::DescribeResponseCard(const FDuelCard& Card) const
+{
+	const int32 Zone = FindSpellZone(Card.Controller, Card.Uid);
+	return Zone != INDEX_NONE
+		? FString::Printf(TEXT("Z%d  %s"), Zone + 1, *CardName(Card))
+		: CardName(Card);
+}
+
+void FDuelEngine::RevealActivatedTrap(FDuelCard& Trap, EDuelOwner Side)
+{
+	const int32 TrapUid = Trap.Uid;
+	const FString TrapName = CardName(Trap);
+	Trap.bFaceUp = true;
+	Log(FString::Printf(TEXT("%s %s %s!"), *SideRef(Side).Name,
+		Side == EDuelOwner::Player ? TEXT("activate") : TEXT("activates"), *TrapName), TEXT("trap"));
+	FDuelVisualEvent& TrapEvent = EmitVisual(EDuelVisualEventType::Trap, Side, &Trap, 0, TrapName);
+	TrapEvent.Zone = FindSpellZone(Side, TrapUid);
+	if (Side == EDuelOwner::Player)
+	{
+		++ResultStats.TrapsActivated;
+	}
+}
+
+bool FDuelEngine::HasActivationRequirements(const FDuelCard& Card) const
+{
+	const EDuelOwner Side = Card.Controller;
+	const FDuelSide& State = SideRef(Side);
+	auto ControlsAttribute = [&State](const TCHAR* Attribute)
+	{
+		return State.Monsters.ContainsByPredicate([Attribute](const FDuelCard& C)
+		{
+			return C.IsValid() && C.Data.Attribute == Attribute;
+		});
+	};
+	if (IsName(Card, TEXT("Call of the Haunted")))
+	{
+		return EmptyMonsterZone(Side) != INDEX_NONE
+			&& State.Graveyard.ContainsByPredicate([this](const FDuelCard& C)
+			{
+				return C.IsMonster() && CanBeSpecialSummonedByEffect(C);
+			});
+	}
+	if (IsName(Card, TEXT("Spiritual Fire Art - Kurenai")))
+	{
+		return ControlsAttribute(TEXT("FIRE"));
+	}
+	if (IsName(Card, TEXT("Spiritual Water Art - Aoi")))
+	{
+		return ControlsAttribute(TEXT("WATER"));
+	}
+	if (IsName(Card, TEXT("Spiritual Wind Art - Miyabi")))
+	{
+		return ControlsAttribute(TEXT("WIND"));
+	}
+	if (IsName(Card, TEXT("Book of Moon")))
+	{
+		for (EDuelOwner CheckSide : { EDuelOwner::Player, EDuelOwner::Opponent })
+		{
+			if (SideRef(CheckSide).Monsters.ContainsByPredicate([](const FDuelCard& C) { return C.IsValid() && C.bFaceUp; }))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	if (EffectRuntime && EffectRuntime->HasScript(Card.Data.Id))
+	{
+		return EffectRuntime->CanActivateScriptNow(Card, true);
+	}
+	return true;
+}
+
+bool FDuelEngine::CanActivateSetCardInWindow(const FDuelCard& Card, EDuelTimingWindow Window) const
+{
+	if (bWinnerSet || !Card.IsValid() || Card.bFaceUp || Card.SetTurn >= TurnNumber)
+	{
+		return false;
+	}
+	if (EffectRuntime && EffectRuntime->IsCardActivationLocked(Card))
+	{
+		return false;
+	}
+	if (Card.IsSpell())
+	{
+		if (Card.Data.Subtype != TEXT("Quick-Play"))
+		{
+			return false;
+		}
+	}
+	else if (Card.IsTrap())
+	{
+		if (!IsManualTrapCard(Card))
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+	if (!IsActivationLegal(Card, Window, nullptr))
+	{
+		return false;
+	}
+	return HasActivationRequirements(Card);
+}
+
+void FDuelEngine::CollectSetCardResponses(EDuelTimingWindow Window, TArray<FResponseCandidate>& OutCandidates,
+	int32 ExcludeUid)
+{
+	for (const FDuelCard& Card : Player.Spells)
+	{
+		if (!Card.IsValid() || Card.Uid == ExcludeUid || Card.Controller != EDuelOwner::Player)
+		{
+			continue;
+		}
+		const bool bAlreadyListed = OutCandidates.ContainsByPredicate([&Card](const FResponseCandidate& Existing)
+		{
+			return Existing.CardUid == Card.Uid;
+		});
+		if (bAlreadyListed || !CanActivateSetCardInWindow(Card, Window))
+		{
+			continue;
+		}
+		FResponseCandidate Candidate;
+		Candidate.Kind = EResponseKind::SetCard;
+		Candidate.CardUid = Card.Uid;
+		Candidate.Label = DescribeResponseCard(Card);
+		OutCandidates.Add(Candidate);
+	}
+}
+
+void FDuelEngine::CollectDeferredScriptResponses(TArray<FResponseCandidate>& OutCandidates)
+{
+	if (!EffectRuntime)
+	{
+		return;
+	}
+	for (int32 Index = 0; Index < EffectRuntime->GetDeferredResponseCount(); ++Index)
+	{
+		if (!EffectRuntime->IsDeferredResponseLegal(Index))
+		{
+			continue;
+		}
+		const int32 Uid = EffectRuntime->GetDeferredResponseCardUid(Index);
+		const FDuelCard* Card = FindSpellTrap(Uid);
+		if (!Card)
+		{
+			continue;
+		}
+		const bool bAlreadyListed = OutCandidates.ContainsByPredicate([Uid](const FResponseCandidate& Existing)
+		{
+			return Existing.CardUid == Uid;
+		});
+		if (bAlreadyListed)
+		{
+			continue;
+		}
+		FResponseCandidate Candidate;
+		Candidate.Kind = EResponseKind::DeferredScript;
+		Candidate.CardUid = Uid;
+		Candidate.DeferredIndex = Index;
+		Candidate.Label = DescribeResponseCard(*Card);
+		OutCandidates.Add(Candidate);
+	}
+}
+
+bool FDuelEngine::OpenPlayerResponseWindow(EDuelTimingWindow Window, const FString& Prompt, int32 SourceUid,
+	const TArray<FResponseCandidate>& Candidates, TFunction<void(const FResponseCandidate*)> OnAnswer)
+{
+	if (bWinnerSet || Candidates.Num() == 0)
+	{
+		return false;
+	}
+	FDuelChoiceRequest Request;
+	Request.Type = EDuelChoiceType::ChainResponse;
+	Request.Prompt = Prompt;
+	Request.Side = EDuelOwner::Player;
+	Request.MinSelections = 1;
+	Request.MaxSelections = 1;
+	Request.SourceCardUid = SourceUid;
+	if (const FDuelCard* Source = FindCard(SourceUid))
+	{
+		Request.SourceCardId = Source->Data.Id;
+	}
+	Request.TargetZone = EDuelZone::SpellTrap;
+	// Esc / CANCEL simply passes: the duel continues without a response.
+	Request.bCancellable = true;
+	Request.Context = TEXT("response_window");
+
+	for (int32 Index = 0; Index < Candidates.Num(); ++Index)
+	{
+		const FResponseCandidate& Candidate = Candidates[Index];
+		FDuelChoiceOption Option;
+		Option.Id = Index + 1;
+		Option.Label = Candidate.Label;
+		Option.CardUid = Candidate.CardUid;
+		if (const FDuelCard* Card = FindCard(Candidate.CardUid))
+		{
+			Option.CardId = Card->Data.Id;
+			if (Card->IsMonster())
+			{
+				Option.Zone = EDuelZone::Monster;
+				Option.ZoneIndex = FindMonsterZone(Card->Controller, Card->Uid);
+			}
+			else
+			{
+				Option.Zone = EDuelZone::SpellTrap;
+				Option.ZoneIndex = FindSpellZone(Card->Controller, Card->Uid);
+			}
+		}
+		Request.Options.Add(Option);
+	}
+	FDuelChoiceOption Pass;
+	Pass.Id = ResponsePassOptionId;
+	Pass.Label = TEXT("Don't respond");
+	Request.Options.Add(Pass);
+	if (ActiveSide == EDuelOwner::Opponent)
+	{
+		FDuelChoiceOption PassTurn;
+		PassTurn.Id = ResponsePassTurnOptionId;
+		PassTurn.Label = TEXT("Don't respond this turn");
+		Request.Options.Add(PassTurn);
+	}
+	Request.DefaultOptionIds.Add(ResponsePassOptionId);
+
+	const TArray<FResponseCandidate> Stored = Candidates;
+	const int32 RequestId = RequestChoice(Request,
+		[this, Stored, OnAnswer](const FDuelChoiceRequest&, const TArray<int32>& OptionIds)
+		{
+			const int32 OptionId = OptionIds.Num() > 0 ? OptionIds[0] : ResponsePassOptionId;
+			if (OptionId == ResponsePassTurnOptionId)
+			{
+				PlayerPassTurn = TurnNumber;
+				Log(TEXT("You will not respond for the rest of this turn."), TEXT("choice"));
+			}
+			const FResponseCandidate* Chosen = (OptionId >= 1 && OptionId <= Stored.Num())
+				? &Stored[OptionId - 1] : nullptr;
+			if (EffectRuntime && (!Chosen || Chosen->Kind != EResponseKind::DeferredScript))
+			{
+				// Declined event Traps do not linger into a later window.
+				EffectRuntime->ClearDeferredResponses();
+			}
+			if (OnAnswer)
+			{
+				OnAnswer(Chosen);
+			}
+		});
+	return RequestId != 0 && HasPendingChoiceFor(EDuelOwner::Player);
+}
+
+bool FDuelEngine::ActivateSetSpellInternal(int32 Uid, FString& OutError)
+{
+	FDuelCard* Card = FindSpellTrap(Uid);
+	if (!Card || !Card->IsSpell())
+	{
+		OutError = TEXT("That Set Spell is no longer on the field.");
+		return false;
+	}
+	const FString Name = Card->Data.Name;
+	const EDuelOwner Side = Card->Controller;
+	Card->bFaceUp = true;
+	if (EffectRuntime)
+	{
+		EffectRuntime->RecomputeContinuous();
+	}
+	if (TryCounterSpell(Side, Other(Side)))
+	{
+		if (FDuelCard* Negated = FindSpellTrap(Uid))
+		{
+			DestroySpellTrap(*Negated, true);
+		}
+		return true;
+	}
+	Log(FString::Printf(TEXT("%s %s %s."), *SideRef(Side).Name,
+		Side == EDuelOwner::Player ? TEXT("activate") : TEXT("activates"), *Name), TEXT("spell"));
+	if (FDuelCard* Placed = FindSpellTrap(Uid))
+	{
+		FDuelVisualEvent& SpellEvent = EmitVisual(EDuelVisualEventType::Spell, Side, Placed, 0, Name);
+		SpellEvent.Zone = FindSpellZone(Side, Uid);
+		OnSpellActivated();
+		if (Side == EDuelOwner::Player)
+		{
+			++ResultStats.SpellsActivated;
+		}
+		ResolveSpell(*Placed);
+	}
+	if (EffectRuntime && !bWinnerSet)
+	{
+		if (FDuelCard* Live = FindSpellTrap(Uid))
+		{
+			EffectRuntime->OnActivate(*Live);
+		}
+	}
+	CheckWinner();
+	// A one-shot Quick-Play still resolves to the Graveyard when its effect
+	// ends the duel.
+	CleanupResolvedChainCard(Uid);
+	return true;
+}
+
+bool FDuelEngine::ActivatePlayerSetCard(int32 Uid, FString& OutError)
+{
+	FDuelCard* Card = FindSpellTrap(Uid);
+	if (!Card || Card->Controller != EDuelOwner::Player || Card->bFaceUp || Card->SetTurn >= TurnNumber)
+	{
+		OutError = TEXT("That Set card cannot be activated right now.");
+		return false;
+	}
+	if (EffectRuntime && EffectRuntime->IsCardActivationLocked(*Card))
+	{
+		OutError = TEXT("That card's activation is currently locked.");
+		return false;
+	}
+	if (!HasActivationRequirements(*Card))
+	{
+		OutError = TEXT("That card's activation requirements are not met.");
+		return false;
+	}
+	if (Card->IsSpell())
+	{
+		if (Card->Data.Subtype != TEXT("Quick-Play"))
+		{
+			OutError = TEXT("Only Quick-Play Spells can be activated from a Set position.");
+			return false;
+		}
+		return ActivateSetSpellInternal(Uid, OutError);
+	}
+	if (!IsManualTrapCard(*Card))
+	{
+		OutError = TEXT("That Trap answers a specific event; it is offered when that event happens.");
+		return false;
+	}
+	return ActivateTrapInternal(*Card, EDuelOwner::Player, false);
+}
+
+bool FDuelEngine::ActivateResponseCandidate(const FResponseCandidate& Candidate)
+{
+	if (bWinnerSet)
+	{
+		return false;
+	}
+	if (Candidate.Kind == EResponseKind::SetCard)
+	{
+		FString Error;
+		if (!ActivatePlayerSetCard(Candidate.CardUid, Error))
+		{
+			if (!Error.IsEmpty())
+			{
+				Log(Error, TEXT("choice"));
+			}
+			return false;
+		}
+		return true;
+	}
+	if (Candidate.Kind == EResponseKind::DeferredScript && EffectRuntime)
+	{
+		FDuelCard* Trap = FindSpellTrap(Candidate.CardUid);
+		if (!Trap)
+		{
+			EffectRuntime->ClearDeferredResponses();
+			return false;
+		}
+		const FString TrapName = CardName(*Trap);
+		Log(FString::Printf(TEXT("You activate %s!"), *TrapName), TEXT("trap"));
+		FDuelVisualEvent& TrapEvent = EmitVisual(EDuelVisualEventType::Trap, EDuelOwner::Player, Trap, 0, TrapName);
+		TrapEvent.Zone = FindSpellZone(EDuelOwner::Player, Candidate.CardUid);
+		++ResultStats.TrapsActivated;
+		if (TryCounterTrap(EDuelOwner::Player, EDuelOwner::Opponent))
+		{
+			EffectRuntime->ClearDeferredResponses();
+			if (FDuelCard* Negated = FindSpellTrap(Candidate.CardUid))
+			{
+				DestroySpellTrap(*Negated, true);
+			}
+			Log(FString::Printf(TEXT("%s is negated."), *TrapName), TEXT("trap"));
+			return true;
+		}
+		// The script flips the Trap and sends it to the Graveyard once it has
+		// resolved (ContinueAfterTargets).
+		return EffectRuntime->RunDeferredResponse(Candidate.DeferredIndex);
+	}
+	return false;
+}
+
+bool FDuelEngine::OpenAttackResponseWindow(EDuelOwner AttackerSide, int32 AttackerUid, int32 TargetUid,
+	bool bDirectAllowed)
+{
+	const FDuelCard* Attacker = FindMonster(AttackerUid);
+	if (bWinnerSet || !Attacker)
+	{
+		return false;
+	}
+	if (IsPlayerPassingThisTurn())
+	{
+		if (EffectRuntime)
+		{
+			EffectRuntime->ClearDeferredResponses();
+		}
+		return false;
+	}
+	const FDuelCard* Target = TargetUid > 0 ? FindMonster(TargetUid) : nullptr;
+
+	TArray<FResponseCandidate> Candidates;
+	const bool bTrapsLocked = EffectRuntime && EffectRuntime->IsTrapActivationLocked();
+	if (!bTrapsLocked)
+	{
+		for (const FDuelCard& Card : Player.Spells)
+		{
+			if (!Card.IsValid() || !Card.IsTrap() || Card.bFaceUp || Card.SetTurn >= TurnNumber
+				|| !IsLegacyAttackTrapName(Card.Data.Name))
+			{
+				continue;
+			}
+			if (EffectRuntime && EffectRuntime->IsCardActivationLocked(Card))
+			{
+				continue;
+			}
+			if (IsName(Card, TEXT("A Hero Emerges")) && Player.Hand.Num() == 0)
+			{
+				continue;
+			}
+			FResponseCandidate Candidate;
+			Candidate.Kind = EResponseKind::LegacyAttackTrap;
+			Candidate.CardUid = Card.Uid;
+			Candidate.Label = DescribeResponseCard(Card);
+			Candidates.Add(Candidate);
+		}
+	}
+	CollectDeferredScriptResponses(Candidates);
+	if (const FDuelCard* Kuriboh = FindMonsterByName(EDuelOwner::Player, TEXT("Winged Kuriboh LV10")))
+	{
+		if (Kuriboh->bFaceUp && !(EffectRuntime && EffectRuntime->IsMonsterEffectLocked()))
+		{
+			FResponseCandidate Candidate;
+			Candidate.Kind = EResponseKind::KuribohLv10;
+			Candidate.CardUid = Kuriboh->Uid;
+			Candidate.Label = TEXT("Winged Kuriboh LV10 (tribute)");
+			Candidates.Add(Candidate);
+		}
+	}
+	CollectSetCardResponses(EDuelTimingWindow::ResponseToAttack, Candidates);
+	if (Candidates.Num() == 0)
+	{
+		return false;
+	}
+
+	FString TargetText = TEXT("you directly");
+	if (Target)
+	{
+		TargetText = Target->bFaceUp
+			? FString::Printf(TEXT("your %s"), *CardName(*Target))
+			: FString(TEXT("your face-down monster"));
+	}
+	const FString Prompt = FString::Printf(TEXT("%s's %s (%d ATK) attacks %s. Activate a card?"),
+		*OpponentDisplayName, *CardName(*Attacker), GetAtk(*Attacker), *TargetText);
+	return OpenPlayerResponseWindow(EDuelTimingWindow::ResponseToAttack, Prompt, AttackerUid, Candidates,
+		[this, AttackerSide, AttackerUid, TargetUid, bDirectAllowed](const FResponseCandidate* Chosen)
+		{
+			if (!Chosen)
+			{
+				ContinueAttackAfterResponses(AttackerSide, AttackerUid, TargetUid, bDirectAllowed);
+				return;
+			}
+			const FResponseCandidate Picked = *Chosen;
+			if (Picked.Kind == EResponseKind::LegacyAttackTrap)
+			{
+				FDuelCard* Trap = FindSpellTrap(Picked.CardUid);
+				if (!Trap)
+				{
+					ContinueAttackAfterResponses(AttackerSide, AttackerUid, TargetUid, bDirectAllowed);
+					return;
+				}
+				RevealActivatedTrap(*Trap, EDuelOwner::Player);
+				// The opponent may still answer with Seven Tools of the Bandit.
+				const bool bNegated = TryCounterTrap(EDuelOwner::Player, EDuelOwner::Opponent);
+				ContinueAttackAfterTrap(AttackerSide, AttackerUid, TargetUid, bDirectAllowed, Picked.CardUid, bNegated, true);
+				return;
+			}
+			if (Picked.Kind == EResponseKind::KuribohLv10)
+			{
+				ResolveKuribohLv10(EDuelOwner::Player, AttackerSide);
+				return;
+			}
+			ActivateResponseCandidate(Picked);
+			ContinueAfterPlayerChoices([this, AttackerSide, AttackerUid, TargetUid, bDirectAllowed]()
+			{
+				if (EffectRuntime && EffectRuntime->ConsumeAttackNegated())
+				{
+					Log(TEXT("The attack is negated."), TEXT("effect"));
+					ResetMultiAttackAfterNegation(AttackerUid);
+					return;
+				}
+				ContinueAttackAfterResponses(AttackerSide, AttackerUid, TargetUid, bDirectAllowed);
+			});
+		});
+}
+
+void FDuelEngine::ResolveLegacySummonTrap(int32 TrapUid, int32 SummonedUid, bool bRevealed)
+{
+	FDuelCard* Trap = FindSpellTrap(TrapUid);
+	FDuelCard ChainedCopy;
+	if (!Trap)
+	{
+		// Destroyed in the chain: Trap Hole / Torrential still resolve.
+		const FDuelCard* Gone = FindCard(TrapUid);
+		if (Gone && Gone->IsTrap())
+		{
+			ChainedCopy = *Gone;
+			Trap = &ChainedCopy;
+		}
+	}
+	if (bWinnerSet || !Trap)
+	{
+		return;
+	}
+	const EDuelOwner TrapSide = Trap->Controller;
+	const FString TrapName = CardName(*Trap);
+	if (!bRevealed)
+	{
+		RevealActivatedTrap(*Trap, TrapSide);
+	}
+	if (TrapName == TEXT("Trap Hole"))
+	{
+		if (FDuelCard* Target = FindMonster(SummonedUid))
+		{
+			DestroyMonster(*Target, false, nullptr, false, TEXT("Trap Hole"));
+		}
+	}
+	else if (TrapName == TEXT("Torrential Tribute"))
+	{
+		DestroyAllMonsters(TEXT("Torrential Tribute"));
+	}
+	if (FDuelCard* StillThere = FindSpellTrap(TrapUid))
+	{
+		DestroySpellTrap(*StillThere, true);
+	}
+}
+
+bool FDuelEngine::OpenSummonResponseWindow(int32 SummonedUid, bool bNormalSummon)
+{
+	const FDuelCard* Summoned = FindMonster(SummonedUid);
+	if (bWinnerSet || !Summoned)
+	{
+		return false;
+	}
+	if (IsPlayerPassingThisTurn())
+	{
+		if (EffectRuntime)
+		{
+			EffectRuntime->ClearDeferredResponses();
+		}
+		return false;
+	}
+	TArray<FResponseCandidate> Candidates;
+	const bool bTrapsLocked = EffectRuntime && EffectRuntime->IsTrapActivationLocked();
+	if (!bTrapsLocked)
+	{
+		for (const FDuelCard& Card : Player.Spells)
+		{
+			if (!Card.IsValid() || !Card.IsTrap() || Card.bFaceUp || Card.SetTurn >= TurnNumber)
+			{
+				continue;
+			}
+			if (EffectRuntime && EffectRuntime->IsCardActivationLocked(Card))
+			{
+				continue;
+			}
+			const bool bTrapHole = IsName(Card, TEXT("Trap Hole"))
+				&& bNormalSummon && Summoned->bFaceUp && GetAtk(*Summoned) >= 1000;
+			const bool bTorrential = IsName(Card, TEXT("Torrential Tribute"));
+			if (!bTrapHole && !bTorrential)
+			{
+				continue;
+			}
+			FResponseCandidate Candidate;
+			Candidate.Kind = EResponseKind::LegacySummonTrap;
+			Candidate.CardUid = Card.Uid;
+			Candidate.Label = DescribeResponseCard(Card);
+			Candidates.Add(Candidate);
+		}
+	}
+	CollectDeferredScriptResponses(Candidates);
+	CollectSetCardResponses(EDuelTimingWindow::ResponseToSummon, Candidates);
+	if (Candidates.Num() == 0)
+	{
+		return false;
+	}
+	const FString Prompt = FString::Printf(TEXT("%s summons %s (%d ATK). Activate a card?"),
+		*SideRef(Summoned->Controller).Name, *CardName(*Summoned), GetAtk(*Summoned));
+	return OpenPlayerResponseWindow(EDuelTimingWindow::ResponseToSummon, Prompt, SummonedUid, Candidates,
+		[this, SummonedUid](const FResponseCandidate* Chosen)
+		{
+			if (!Chosen)
+			{
+				return;
+			}
+			const FResponseCandidate Picked = *Chosen;
+			if (Picked.Kind == EResponseKind::LegacySummonTrap)
+			{
+				FDuelCard* Trap = FindSpellTrap(Picked.CardUid);
+				if (!Trap)
+				{
+					return;
+				}
+				const FString TrapName = CardName(*Trap);
+				RevealActivatedTrap(*Trap, EDuelOwner::Player);
+				if (TryCounterTrap(EDuelOwner::Player, EDuelOwner::Opponent))
+				{
+					if (FDuelCard* Negated = FindSpellTrap(Picked.CardUid))
+					{
+						DestroySpellTrap(*Negated, true);
+					}
+					Log(FString::Printf(TEXT("%s is negated."), *TrapName), TEXT("trap"));
+					return;
+				}
+				ResolveLegacySummonTrap(Picked.CardUid, SummonedUid, true);
+				return;
+			}
+			ActivateResponseCandidate(Picked);
+		});
+}
+
+void FDuelEngine::ActivatePlayerSevenTools(int32 TrapUid, TFunction<void(bool)> OnDone)
+{
+	FDuelCard* Tools = FindSpellTrap(TrapUid);
+	if (!Tools || Player.LP <= 1000)
+	{
+		if (OnDone) OnDone(false);
+		return;
+	}
+	PayLp(EDuelOwner::Player, 1000, TEXT("Seven Tools of the Bandit"));
+	if (FDuelCard* Live = FindSpellTrap(TrapUid))
+	{
+		RevealActivatedTrap(*Live, EDuelOwner::Player);
+		if (FDuelCard* Done = FindSpellTrap(TrapUid))
+		{
+			DestroySpellTrap(*Done, true);
+		}
+	}
+	if (OnDone) OnDone(!bWinnerSet);
+}
+
+void FDuelEngine::ActivatePlayerMagicJammer(int32 TrapUid, TFunction<void(bool)> OnDone)
+{
+	FDuelCard* Jammer = FindSpellTrap(TrapUid);
+	if (!Jammer || Player.Hand.Num() == 0)
+	{
+		if (OnDone) OnDone(false);
+		return;
+	}
+	RevealActivatedTrap(*Jammer, EDuelOwner::Player);
+	const FDuelCard Source = *Jammer;
+	DiscardChosen(EDuelOwner::Player, Source, 1, TEXT("Magic Jammer"), [this, TrapUid, OnDone]()
+	{
+		if (FDuelCard* Done = FindSpellTrap(TrapUid))
+		{
+			DestroySpellTrap(*Done, true);
+		}
+		Log(TEXT("The Spell is negated."), TEXT("trap"));
+		if (OnDone) OnDone(!bWinnerSet);
+	});
+}
+
+void FDuelEngine::OfferResponsesToOpponentTrap(int32 TrapUid, TFunction<void(bool, bool)> OnDone)
+{
+	FDuelCard* Trap = FindSpellTrap(TrapUid);
+	if (bWinnerSet || !Trap)
+	{
+		if (OnDone) OnDone(false, false);
+		return;
+	}
+	const EDuelOwner TrapSide = Trap->Controller;
+	const EDuelOwner Responder = Other(TrapSide);
+	if (Responder == EDuelOwner::Player && UsesPlayerResponseWindows())
+	{
+		// The player's own counters never fire automatically in this mode.
+		if (IsPlayerPassingThisTurn())
+		{
+			if (OnDone) OnDone(false, false);
+			return;
+		}
+		TArray<FResponseCandidate> Candidates;
+		if (!(EffectRuntime && EffectRuntime->IsTrapActivationLocked()))
+		{
+			for (const FDuelCard& Card : Player.Spells)
+			{
+				if (Card.IsValid() && Card.IsTrap() && !Card.bFaceUp && Card.SetTurn < TurnNumber
+					&& IsName(Card, TEXT("Seven Tools of the Bandit")) && Player.LP > 1000
+					&& !(EffectRuntime && EffectRuntime->IsCardActivationLocked(Card)))
+				{
+					FResponseCandidate Candidate;
+					Candidate.Kind = EResponseKind::CounterTrap;
+					Candidate.CardUid = Card.Uid;
+					Candidate.Label = DescribeResponseCard(Card);
+					Candidates.Add(Candidate);
+				}
+			}
+		}
+		CollectSetCardResponses(EDuelTimingWindow::ResponseToTrap, Candidates);
+		if (Candidates.Num() > 0)
+		{
+			RevealActivatedTrap(*Trap, TrapSide);
+			const FString Prompt = FString::Printf(TEXT("%s activates %s. Activate a card in response?"),
+				*SideRef(TrapSide).Name, *CardName(*Trap));
+			if (OpenPlayerResponseWindow(EDuelTimingWindow::ResponseToTrap, Prompt, TrapUid, Candidates,
+				[this, OnDone](const FResponseCandidate* Chosen)
+				{
+					if (!Chosen)
+					{
+						if (OnDone) OnDone(false, true);
+						return;
+					}
+					const FResponseCandidate Picked = *Chosen;
+					if (Picked.Kind == EResponseKind::CounterTrap)
+					{
+						ActivatePlayerSevenTools(Picked.CardUid, [OnDone](bool bNegated)
+						{
+							if (OnDone) OnDone(bNegated, true);
+						});
+						return;
+					}
+					ActivateResponseCandidate(Picked);
+					ContinueAfterPlayerChoices([OnDone]()
+					{
+						if (OnDone) OnDone(false, true);
+					});
+				}))
+			{
+				return;
+			}
+			if (OnDone) OnDone(false, true);
+			return;
+		}
+		if (OnDone) OnDone(false, false);
+		return;
+	}
+	const bool bNegated = TryCounterTrap(TrapSide, Responder);
+	if (OnDone) OnDone(bNegated, false);
+}
+
+void FDuelEngine::OfferResponsesToOpponentSpell(int32 SpellUid, TFunction<void(bool)> OnDone)
+{
+	FDuelCard* Spell = FindSpellTrap(SpellUid);
+	if (bWinnerSet || !Spell)
+	{
+		if (OnDone) OnDone(false);
+		return;
+	}
+	const EDuelOwner Caster = Spell->Controller;
+	const EDuelOwner Responder = Other(Caster);
+	if (Responder == EDuelOwner::Player && UsesPlayerResponseWindows())
+	{
+		if (IsPlayerPassingThisTurn())
+		{
+			if (OnDone) OnDone(false);
+			return;
+		}
+		TArray<FResponseCandidate> Candidates;
+		if (!(EffectRuntime && EffectRuntime->IsTrapActivationLocked()) && Player.Hand.Num() > 0)
+		{
+			for (const FDuelCard& Card : Player.Spells)
+			{
+				if (Card.IsValid() && Card.IsTrap() && !Card.bFaceUp && Card.SetTurn < TurnNumber
+					&& IsName(Card, TEXT("Magic Jammer"))
+					&& !(EffectRuntime && EffectRuntime->IsCardActivationLocked(Card)))
+				{
+					FResponseCandidate Candidate;
+					Candidate.Kind = EResponseKind::CounterSpell;
+					Candidate.CardUid = Card.Uid;
+					Candidate.Label = DescribeResponseCard(Card);
+					Candidates.Add(Candidate);
+				}
+			}
+		}
+		CollectSetCardResponses(EDuelTimingWindow::ResponseToActivation, Candidates, SpellUid);
+		if (Candidates.Num() > 0)
+		{
+			const FString Prompt = FString::Printf(TEXT("%s activates %s. Activate a card in response?"),
+				*SideRef(Caster).Name, *CardName(*Spell));
+			if (OpenPlayerResponseWindow(EDuelTimingWindow::ResponseToActivation, Prompt, SpellUid, Candidates,
+				[this, OnDone](const FResponseCandidate* Chosen)
+				{
+					if (!Chosen)
+					{
+						if (OnDone) OnDone(false);
+						return;
+					}
+					const FResponseCandidate Picked = *Chosen;
+					if (Picked.Kind == EResponseKind::CounterSpell)
+					{
+						ActivatePlayerMagicJammer(Picked.CardUid, OnDone);
+						return;
+					}
+					ActivateResponseCandidate(Picked);
+					ContinueAfterPlayerChoices([OnDone]()
+					{
+						if (OnDone) OnDone(false);
+					});
+				}))
+			{
+				return;
+			}
+		}
+		if (OnDone) OnDone(false);
+		return;
+	}
+	if (OnDone) OnDone(TryCounterSpell(Caster, Responder));
+}
+
+bool FDuelEngine::OpenPhaseResponseWindow(EDuelTimingWindow Window, const FString& Prompt)
+{
+	if (bWinnerSet || !UsesPlayerResponseWindows() || IsPlayerPassingThisTurn())
+	{
+		return false;
+	}
+	TArray<FResponseCandidate> Candidates;
+	CollectSetCardResponses(Window, Candidates);
+	if (Candidates.Num() == 0)
+	{
+		return false;
+	}
+	const FString FullPrompt = Prompt + TEXT(" Activate a Set card?");
+	return OpenPlayerResponseWindow(Window, FullPrompt, 0, Candidates,
+		[this, Window, Prompt](const FResponseCandidate* Chosen)
+		{
+			if (!Chosen)
+			{
+				return;
+			}
+			const FResponseCandidate Picked = *Chosen;
+			ActivateResponseCandidate(Picked);
+			// More than one card may be activated in the same phase; offer the
+			// window again once this activation has fully resolved.
+			ContinueAfterPlayerChoices([this, Window, Prompt]()
+			{
+				OpenPhaseResponseWindow(Window, Prompt);
+			});
+		});
+}
+
+bool FDuelEngine::OfferDeferredScriptResponses()
+{
+	if (!EffectRuntime || EffectRuntime->GetDeferredResponseCount() == 0)
+	{
+		return false;
+	}
+	if (bWinnerSet || !UsesPlayerResponseWindows() || IsPlayerPassingThisTurn())
+	{
+		EffectRuntime->ClearDeferredResponses();
+		return false;
+	}
+	TArray<FResponseCandidate> Candidates;
+	CollectDeferredScriptResponses(Candidates);
+	if (Candidates.Num() == 0)
+	{
+		EffectRuntime->ClearDeferredResponses();
+		return false;
+	}
+	return OpenPlayerResponseWindow(EDuelTimingWindow::ResponseToSummon,
+		TEXT("A Set Trap can respond to what just happened. Activate it?"), 0, Candidates,
+		[this](const FResponseCandidate* Chosen)
+		{
+			if (Chosen)
+			{
+				const FResponseCandidate Picked = *Chosen;
+				ActivateResponseCandidate(Picked);
+			}
+		});
+}
+
+void FDuelEngine::FinishActivatedSpell(int32 Uid, EDuelOwner Side, bool bFieldSpell)
+{
+	if (bWinnerSet)
+	{
+		return;
+	}
+	FDuelCard* Placed = FindSpellTrap(Uid);
+	if (!Placed)
+	{
+		// Destroyed in the chain.  A one-shot Spell still resolves; a card that
+		// has to stay on the field to work has nothing left to apply.
+		const FDuelCard* Gone = FindCard(Uid);
+		if (Gone && !bFieldSpell && !IsPersistentSpellTrap(*Gone))
+		{
+			FDuelCard Copy = *Gone;
+			OnSpellActivated();
+			ResolveSpell(Copy);
+			if (EffectRuntime && !bWinnerSet && FindCard(Uid))
+			{
+				EffectRuntime->OnActivate(Copy);
+			}
+			CheckWinner();
+		}
+		else if (Gone)
+		{
+			Log(FString::Printf(TEXT("%s left the field before it resolved."), *CardName(*Gone)), TEXT("spell"));
+		}
+		return;
+	}
+	OnSpellActivated();
+	if (Side == EDuelOwner::Player)
+	{
+		++ResultStats.SpellsActivated;
+	}
+	ResolveSpell(*Placed);
+	if (EffectRuntime && !bWinnerSet)
+	{
+		if (FDuelCard* Live = FindSpellTrap(Uid))
+		{
+			EffectRuntime->OnActivate(*Live);
+		}
+	}
+	CheckWinner();
+	CleanupResolvedChainCard(Uid);
+}
+
+void FDuelEngine::ResolveActivatedTrap(int32 Uid, EDuelOwner Side)
+{
+	if (bWinnerSet)
+	{
+		return;
+	}
+	FDuelCard* Placed = FindSpellTrap(Uid);
+	if (!Placed)
+	{
+		return;
+	}
+	ResolveTrap(*Placed);
+	if (EffectRuntime && !bWinnerSet)
+	{
+		if (FDuelCard* Live = FindSpellTrap(Uid))
+		{
+			EffectRuntime->OnActivate(*Live);
+		}
+	}
+	CheckWinner();
+	if (FDuelCard* Live = FindSpellTrap(Uid))
+	{
+		if (!IsPersistentSpellTrap(*Live))
+		{
+			if (HasPendingChoice())
+			{
+				PendingActivationCleanupUids.Add(Uid);
+			}
+			else
+			{
+				// Runs even when the Trap's resolution ended the duel: a
+				// one-shot Trap still goes to the Graveyard.  Persistent
+				// Traps are skipped above.
+				DestroySpellTrap(*Live, true);
+			}
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Player-directed targeting for the legacy card handlers
+// ---------------------------------------------------------------------------
+
+TArray<int32> FDuelEngine::LowestValueHandUids(EDuelOwner Side, int32 Count, int32 KeepUid) const
+{
+	TArray<const FDuelCard*> Hand;
+	for (const FDuelCard& Card : SideRef(Side).Hand)
+	{
+		if (Card.Uid != KeepUid)
+		{
+			Hand.Add(&Card);
+		}
+	}
+	TArray<int32> Result;
+	for (int32 Pick = 0; Pick < Count && Hand.Num() > 0; ++Pick)
+	{
+		int32 BestIndex = 0;
+		int32 BestValue = TNumericLimits<int32>::Max();
+		for (int32 I = 0; I < Hand.Num(); ++I)
+		{
+			const int32 Value = AiCardValue(*Hand[I]);
+			if (Value < BestValue)
+			{
+				BestValue = Value;
+				BestIndex = I;
+			}
+		}
+		Result.Add(Hand[BestIndex]->Uid);
+		Hand.RemoveAt(BestIndex);
+	}
+	return Result;
+}
+
+void FDuelEngine::ChooseCardsFor(EDuelOwner Chooser, const FDuelCard& Source, const FString& Prompt,
+	const TArray<int32>& Uids, int32 Count, const TArray<int32>& Defaults, TFunction<void(const TArray<int32>&)> OnPicked)
+{
+	if (!OnPicked)
+	{
+		return;
+	}
+	Count = FMath::Min(Count, Uids.Num());
+	if (Count <= 0)
+	{
+		OnPicked(TArray<int32>());
+		return;
+	}
+	TArray<int32> DefaultPick;
+	for (int32 Uid : Defaults)
+	{
+		if (DefaultPick.Num() < Count && Uids.Contains(Uid) && !DefaultPick.Contains(Uid))
+		{
+			DefaultPick.Add(Uid);
+		}
+	}
+	for (int32 Uid : Uids)
+	{
+		if (DefaultPick.Num() >= Count)
+		{
+			break;
+		}
+		if (!DefaultPick.Contains(Uid))
+		{
+			DefaultPick.Add(Uid);
+		}
+	}
+	// The AI keeps its legacy heuristic, and a "choice" with exactly as many
+	// candidates as picks needs no question.
+	if (Chooser != EDuelOwner::Player || Uids.Num() == Count)
+	{
+		OnPicked(Chooser != EDuelOwner::Player ? DefaultPick : Uids);
+		return;
+	}
+
+	FDuelChoiceRequest Request;
+	Request.Type = Count > 1 ? EDuelChoiceType::SelectCards : EDuelChoiceType::SelectCard;
+	Request.Prompt = Prompt;
+	Request.Side = EDuelOwner::Player;
+	Request.MinSelections = Count;
+	Request.MaxSelections = Count;
+	Request.SourceCardUid = Source.Uid;
+	Request.SourceCardId = Source.Data.Id;
+	Request.DefaultOptionIds = DefaultPick;
+	for (int32 Uid : Uids)
+	{
+		const FDuelCard* Card = FindCard(Uid);
+		if (!Card)
+		{
+			continue;
+		}
+		FDuelChoiceOption Option;
+		Option.Id = Uid;
+		Option.CardUid = Uid;
+		Option.CardId = Card->Data.Id;
+		const FString Owner = Card->Controller == EDuelOwner::Player ? TEXT("Your") : TEXT("Opp.");
+		const int32 MonsterZone = FindMonsterZone(Card->Controller, Uid);
+		const int32 SpellZone = FindSpellZone(Card->Controller, Uid);
+		if (MonsterZone != INDEX_NONE)
+		{
+			Option.Zone = EDuelZone::Monster;
+			Option.ZoneIndex = MonsterZone;
+			Option.Label = Card->bFaceUp
+				? FString::Printf(TEXT("%s Z%d  %s (%d/%d)"), *Owner, MonsterZone + 1, *CardName(*Card), GetAtk(*Card), GetDef(*Card))
+				: FString::Printf(TEXT("%s Z%d  Face-down monster"), *Owner, MonsterZone + 1);
+		}
+		else if (SpellZone != INDEX_NONE || SideRef(Card->Controller).Field.Uid == Uid)
+		{
+			Option.Zone = EDuelZone::SpellTrap;
+			Option.ZoneIndex = SpellZone;
+			Option.Label = Card->bFaceUp || Card->Controller == EDuelOwner::Player
+				? FString::Printf(TEXT("%s S/T  %s"), *Owner, *CardName(*Card))
+				: FString::Printf(TEXT("%s S/T Z%d  Set card"), *Owner, SpellZone + 1);
+		}
+		else if (SideRef(Card->Controller).Graveyard.ContainsByPredicate([Uid](const FDuelCard& C) { return C.Uid == Uid; }))
+		{
+			Option.Zone = EDuelZone::Graveyard;
+			Option.Label = Card->IsMonster()
+				? FString::Printf(TEXT("GY  %s (%d ATK)"), *CardName(*Card), Card->Data.Atk)
+				: FString::Printf(TEXT("GY  %s"), *CardName(*Card));
+		}
+		else
+		{
+			Option.Zone = EDuelZone::Hand;
+			Option.Label = FString::Printf(TEXT("Hand  %s"), *CardName(*Card));
+		}
+		Request.Options.Add(Option);
+	}
+	if (Request.Options.Num() < Count)
+	{
+		OnPicked(DefaultPick);
+		return;
+	}
+	if (RequestChoice(Request, [OnPicked](const FDuelChoiceRequest&, const TArray<int32>& OptionIds)
+		{
+			OnPicked(OptionIds);
+		}) == 0)
+	{
+		OnPicked(DefaultPick);
+	}
+}
+
+void FDuelEngine::DiscardChosen(EDuelOwner Side, const FDuelCard& Source, int32 Count, const FString& Reason,
+	TFunction<void()> OnDone, int32 KeepUid)
+{
+	TArray<int32> HandUids;
+	for (const FDuelCard& Card : SideRef(Side).Hand)
+	{
+		if (Card.Uid != KeepUid)
+		{
+			HandUids.Add(Card.Uid);
+		}
+	}
+	const TArray<int32> Defaults = LowestValueHandUids(Side, Count, KeepUid);
+	const FString Prompt = Count == 1
+		? FString::Printf(TEXT("Choose a card to discard for %s."), *CardName(Source))
+		: FString::Printf(TEXT("Choose %d cards to discard for %s."), Count, *CardName(Source));
+	ChooseCardsFor(Side, Source, Prompt, HandUids, Count, Defaults,
+		[this, Side, Reason, OnDone](const TArray<int32>& Picked)
+		{
+			for (int32 Uid : Picked)
+			{
+				if (bWinnerSet)
+				{
+					break;
+				}
+				FDuelSide& State = SideRef(Side);
+				const int32 Index = State.Hand.IndexOfByPredicate([Uid](const FDuelCard& C) { return C.Uid == Uid; });
+				if (Index == INDEX_NONE)
+				{
+					continue;
+				}
+				FDuelCard Discarded = State.Hand[Index];
+				State.Hand.RemoveAt(Index);
+				EmitVisual(EDuelVisualEventType::Discard, Side, &Discarded, 0, Reason.ToUpper());
+				MoveToGrave(Discarded, TEXT("discard"), false);
+				Log(FString::Printf(TEXT("%s %s %s."), *State.Name,
+					Side == EDuelOwner::Player ? TEXT("discard") : TEXT("discards"), *CardName(Discarded)), TEXT("discard"));
+			}
+			if (OnDone && !bWinnerSet)
+			{
+				OnDone();
+			}
+		});
+}
+
+void FDuelEngine::ReviveFromGraveyard(int32 SpellUid, EDuelOwner Side, int32 TargetUid, const FString& Reason, bool bTieSpell)
+{
+	if (bWinnerSet || TargetUid == 0)
+	{
+		return;
+	}
+	FDuelCard Copy;
+	if (!RemoveFromZone(Copy, TargetUid))
+	{
+		return;
+	}
+	if (!PlaceMonster(Side, Copy, true, EDuelPosition::Attack))
+	{
+		MoveToGrave(Copy, TEXT("no monster zone"), false);
+		return;
+	}
+	if (FDuelCard* Placed = FindMonster(TargetUid))
+	{
+		Placed->bSpecialSummoned = true;
+		if (bTieSpell)
+		{
+			if (FDuelCard* Spell = FindSpellTrap(SpellUid))
+			{
+				if (Spell->IsSpell())
+				{
+					Spell->EquippedToUid = TargetUid;
+				}
+				Spell->TiedToUid = TargetUid;
+			}
+		}
+		Log(FString::Printf(TEXT("%s revives %s."), *Reason, *CardName(*Placed)), Reason == TEXT("Call of the Haunted") ? TEXT("trap") : TEXT("spell"));
+		OnSummon(*Placed, true);
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -7774,6 +9508,12 @@ bool FDuelEngine::IsActivationLegal(const FDuelCard& Card, EDuelTimingWindow Win
 	const FDuelActivationRule Rule = ResolveActivationRule(Card);
 	const bool bResponseWindow = IsResponseTimingWindow(Window);
 	const bool bMainWindow = IsMainTimingWindow(Window);
+	// Open game-state windows where Spell Speed 2 cards may be activated
+	// without anything to respond to: the Battle Phase (outside the Damage
+	// Step), and the Standby and End Phases.
+	const bool bOpenSpeed2Window = Window == EDuelTimingWindow::Battle
+		|| Window == EDuelTimingWindow::StandbyPhase
+		|| Window == EDuelTimingWindow::EndPhase;
 	const bool bQuickPlay = Rule.bQuickEffect
 		|| (Card.IsSpell() && Card.Data.Subtype == TEXT("Quick-Play"));
 	const bool bCounterTrap = Rule.bCounterTrap
@@ -7790,7 +9530,7 @@ bool FDuelEngine::IsActivationLegal(const FDuelCard& Card, EDuelTimingWindow Win
 	{
 		if (bQuickPlay)
 		{
-			if (!bMainWindow && Window != EDuelTimingWindow::Battle && !bResponseWindow)
+			if (!bMainWindow && !bOpenSpeed2Window && !bResponseWindow)
 			{
 				return Fail(TEXT("Quick-Play Spells can be activated from the hand during your Main or Battle Phase, or as a chain response."));
 			}
@@ -7809,7 +9549,7 @@ bool FDuelEngine::IsActivationLegal(const FDuelCard& Card, EDuelTimingWindow Win
 				return Fail(TEXT("Counter Traps can only be activated in response to an activation, Summon or attack."));
 			}
 		}
-		else if (!bMainWindow && !bResponseWindow)
+		else if (!bMainWindow && !bOpenSpeed2Window && !bResponseWindow)
 		{
 			return Fail(TEXT("That Trap cannot be activated in this timing window."));
 		}

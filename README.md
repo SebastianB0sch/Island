@@ -36,7 +36,7 @@ Implemented so far:
 - **Progression:** profile, 12-month calendar, DP, titles, dorm promotion/demotion, Dropout Boy recovery, flags, counters and settings.
 - **Save/load:** 3 slots + autosave, atomic writes, checksum trailer, backup recovery, corruption detection and v0→v1 migration.
 - **Duel content:** 26 duelists / 32 decks, 100 timed puzzles, 12 exam cycles, 48 booster packs, the full 1,200-card database, 76 Fusion recipes and 22 Ritual procedures.
-- **Rules:** chain stack, targeting/choice queue, activation timing, Quick-Play/Counter Trap scaffolding, banned/limited list, deck validation, ante, scenarios and result statistics.
+- **Rules:** chain stack, targeting/choice queue, player response windows (you choose when to use Set Traps/Quick-Plays on the opponent's turn), player-chosen targets, activation timing, Quick-Play/Counter Trap scaffolding, banned/limited list, deck validation, ante, scenarios and result statistics.
 - **Economy:** 1,200-card inventory, 3-copy ownership, deterministic pack opening, 48-pack shop, deck construction/validation.
 - **UI:** title/new game/continue, PDA, dialogue, choices, history, credits, options and debug screenshot harnesses.
 - **World data:** 36 mapped GBA locations, 89 scene anchors, 10 planned interior cells and 20 portal pairs.
@@ -46,7 +46,7 @@ Run the runtime suites from the editor/game command line:
 ```text
 -DAProfileSelfTest        # 182/182
 -DAEconomySelfTest        # 446/446
--DADuelRulesSelfTest      # 102/102
+-DADuelRulesSelfTest      # 179/179 (incl. player response windows)
 -DAStorySelfTest          # 14/14
 -DAFullStorySelfTest      # 20/20, 35/35 reachable with progress
 -DAPuzzleSelfTest         # 100/100 authored puzzles replayed in-engine

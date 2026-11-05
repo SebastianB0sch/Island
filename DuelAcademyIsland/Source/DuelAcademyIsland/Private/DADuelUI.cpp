@@ -1057,6 +1057,18 @@ bool FDADuelUI::IsDuelPresentationActive() const
 		|| DuelIncomingEvents.Num() > 0 || DuelFx.Num() > 0;
 }
 
+bool FDADuelUI::IsDuelResponseHoldActive() const
+{
+	if (!DuelEngine)
+	{
+		return false;
+	}
+	const FDuelChoiceRequest* Head = DuelEngine->GetPendingChoice();
+	// Never hold longer than a few seconds, even if a long reel is queued.
+	return Head && Head->Side == EDuelOwner::Player && Head->Type == EDuelChoiceType::ChainResponse
+		&& DuelResponseHoldTime < 3.0f && IsDuelPresentationActive();
+}
+
 void FDADuelUI::UpdateDuel(float DeltaSeconds)
 {
 	if (DuelMode == EDuelUiMode::None)
@@ -1119,6 +1131,18 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 		}
 	}
 	RefreshDuelChoiceState();
+	if (DuelEngine)
+	{
+		const FDuelChoiceRequest* Head = DuelEngine->GetPendingChoice();
+		if (Head && Head->Side == EDuelOwner::Player && Head->Type == EDuelChoiceType::ChainResponse)
+		{
+			DuelResponseHoldTime += FMath::Max(0.0f, DeltaSeconds);
+		}
+		else
+		{
+			DuelResponseHoldTime = 0.0f;
+		}
+	}
 	if (DuelEngine && DuelEngine->HasPendingChoice() && DuelPileType != EDuelPileType::None)
 	{
 		DuelPileType = EDuelPileType::None;
@@ -1282,7 +1306,11 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 	else if (DuelMode == EDuelUiMode::Duel && PlayerOwner)
 	{
 		const FDuelChoiceRequest* PendingChoice = DuelEngine ? DuelEngine->GetPendingChoice() : nullptr;
-		const bool bChoicePending = PendingChoice != nullptr && PendingChoice->Side == EDuelOwner::Player;
+		const bool bResponseHold = IsDuelResponseHoldActive();
+		// While a response window waits for its reel, the question is not on
+		// screen yet; the only input is skipping the presentation.
+		const bool bChoicePending = PendingChoice != nullptr && PendingChoice->Side == EDuelOwner::Player
+			&& !bResponseHold;
 
 		const bool bPresentationActive = IsDuelPresentationActive();
 		if (!bChoicePending && bPresentationActive
@@ -1318,6 +1346,7 @@ void FDADuelUI::UpdateDuel(float DeltaSeconds)
 						FLinearColor(0.95f, 0.78f, 0.40f));
 				}
 			}
+			else if (bResponseHold) SkipDuelPresentation();
 			else if (DuelPileType != EDuelPileType::None) DuelPileType = EDuelPileType::None;
 			else if (bDuelTributeSet) DuelCancelTribute();
 			else DuelSelectedUid = 0;
@@ -1412,7 +1441,9 @@ void FDADuelUI::PumpDuelVisualEvents(float DeltaSeconds)
 	// Hold the presentation reel while the duel is waiting for an answer.  A
 	// card flight or banner playing under the choice panel made the target
 	// frames drift away from the cards and stole focus from the question.
-	if (DuelEngine->HasPendingChoice())
+	// A response window is the exception: the attack/summon/activation it
+	// answers plays first, and the question appears once the reel is idle.
+	if (DuelEngine->HasPendingChoice() && !IsDuelResponseHoldActive())
 	{
 		return;
 	}
@@ -2161,8 +2192,13 @@ void FDADuelUI::RefreshDuelChoiceState()
 		DuelChoiceSelected.Reset();
 		// The choice is the focus now.  Clear presentation beats that would
 		// otherwise draw large labels and lines across the target cards, and
-		// drop stale action errors from before the prompt appeared.
-		SkipDuelPresentation();
+		// drop stale action errors from before the prompt appeared.  A
+		// response window instead lets the beat it answers finish first.
+		DuelResponseHoldTime = 0.0f;
+		if (Request->Type != EDuelChoiceType::ChainResponse)
+		{
+			SkipDuelPresentation();
+		}
 		DuelMessage.Empty();
 		DuelMessageTimer = 0.0f;
 	}
@@ -2456,7 +2492,10 @@ void FDADuelUI::HandleDuelHit(const FString& Action, int32 Value, const FString&
 	// matching option, so equips and searches can be aimed directly.
 	if (DuelEngine->HasPendingChoice())
 	{
-		HandleDuelChoiceHit(Action, Value);
+		if (!IsDuelResponseHoldActive())
+		{
+			HandleDuelChoiceHit(Action, Value);
+		}
 		return;
 	}
 
@@ -2688,7 +2727,8 @@ void FDADuelUI::DrawDuel()
 		// duel, so presentation starts directly on the playable board.
 		RefreshDuelChoiceState();
 		const FDuelChoiceRequest* Pending = DuelEngine ? DuelEngine->GetPendingChoice() : nullptr;
-		const bool bChoicePending = Pending != nullptr && Pending->Side == EDuelOwner::Player;
+		const bool bChoicePending = Pending != nullptr && Pending->Side == EDuelOwner::Player
+			&& !IsDuelResponseHoldActive();
 		if (!bChoicePending)
 		{
 			DrawDuelFx();
@@ -3810,7 +3850,9 @@ void FDADuelUI::DrawDuelActive()
 		FLinearColor BannerColor = bPlayerTurn ? FLinearColor(0.38f, 0.70f, 0.92f) : FLinearColor(0.82f, 0.57f, 0.31f);
 		DrawPanel(DX(BX), DY(BY), DS(480.0f), DS(32.0f), FLinearColor(0.018f, 0.035f, 0.052f, 0.96f), BannerColor);
 		FString BannerText = bAiTurn
-			? (DuelEngine->IsAwaitingAi() ? FString::Printf(TEXT("%s'S TURN  -  THINKING"), *DuelOpponentName.ToUpper()) : FString::Printf(TEXT("%s'S TURN"), *DuelOpponentName.ToUpper()))
+			? (DuelEngine->HasPendingChoiceFor(EDuelOwner::Player)
+				? FString::Printf(TEXT("%s'S TURN  -  YOUR RESPONSE"), *DuelOpponentName.ToUpper())
+				: (DuelEngine->IsAwaitingAi() ? FString::Printf(TEXT("%s'S TURN  -  THINKING"), *DuelOpponentName.ToUpper()) : FString::Printf(TEXT("%s'S TURN"), *DuelOpponentName.ToUpper())))
 			: FString::Printf(TEXT("YOUR TURN  -  %s"), *DuelEngine->GetPhaseLabel());
 		DrawShadowText(BannerText, BannerColor, DX(BX + 240.0f), DY(BY + 8.0f), GetFont(false), 0.7f * DuelScale, true);
 	}
@@ -4090,7 +4132,13 @@ void FDADuelUI::DrawDuelCommandPanel(const FDuelSide& PlayerSide, const FDuelCar
 		}
 
 		const bool bMain = DuelEngine->GetPhase() == EDuelPhase::Main1 || DuelEngine->GetPhase() == EDuelPhase::Main2;
-		if (Selected->Controller == EDuelOwner::Player && bPlayerTurn && !bAiTurn && bMain && !bChoicePending)
+		const bool bBattlePhase = DuelEngine->GetPhase() == EDuelPhase::Battle;
+		// Field monsters show attack targets in the Battle Phase (below); hand
+		// cards and Set cards keep their actions so Quick-Play Spells and Traps
+		// can be used mid-battle.
+		const bool bSelectedFieldMonster = DuelEngine->FindMonster(DuelSelectedUid) != nullptr;
+		if (Selected->Controller == EDuelOwner::Player && bPlayerTurn && !bAiTurn && !bChoicePending
+			&& (bMain || (bBattlePhase && !bSelectedFieldMonster)))
 		{
 			float ActionY = FMath::Min(FMath::Max(RY + 520.0f, DetailTextEndY + 10.0f), RY + 612.0f);
 			auto DrawAction = [this, &ActionY, RX, RY](const FString& Label, const FString& Action, int32 Value)
@@ -4122,6 +4170,10 @@ void FDADuelUI::DrawDuelCommandPanel(const FDuelSide& PlayerSide, const FDuelCar
 					{
 						Reason = TEXT("Set this Trap to use it on a later turn.");
 					}
+					if (bBattlePhase)
+					{
+						Reason = TEXT("Only Quick-Play Spells can be played from the hand during the Battle Phase.");
+					}
 					DrawWrappedText(Reason, DX(RX + 20.0f), DY(ActionY), DS(RW - 40.0f),
 						GetFont(false), 0.56f * DuelScale, FLinearColor(0.72f, 0.72f, 0.62f), 2.0f);
 				}
@@ -4145,11 +4197,21 @@ void FDADuelUI::DrawDuelCommandPanel(const FDuelSide& PlayerSide, const FDuelCar
 					else if (Action.Action == EDuelAction::ActivateEffect) DrawAction(Action.Label, TEXT("effect"), DuelSelectedUid);
 				}
 			}
-			else if (Selected->IsTrap() && Selected->Owner == EDuelOwner::Player)
+			else if ((Selected->IsTrap() || Selected->IsSpell()) && DuelEngine->FindSpellTrap(DuelSelectedUid))
 			{
-				for (const FDuelActionInfo& Action : DuelEngine->GetSpellTrapActions(DuelSelectedUid))
+				// One action covers Set Traps and Set Quick-Play Spells.
+				const TArray<FDuelActionInfo> SetActions = DuelEngine->GetSpellTrapActions(DuelSelectedUid);
+				for (const FDuelActionInfo& Action : SetActions)
 				{
 					DrawAction(Action.Label, TEXT("activatetrap"), DuelSelectedUid);
+				}
+				if (SetActions.Num() == 0 && !Selected->bFaceUp)
+				{
+					const FString SetHint = Selected->SetTurn >= DuelEngine->GetTurnNumber()
+						? FString(TEXT("Set this turn. It can be activated from your opponent's next turn."))
+						: FString(TEXT("Not activatable right now. You will be asked to respond when its timing comes up."));
+					DrawWrappedText(SetHint, DX(RX + 20.0f), DY(ActionY), DS(RW - 40.0f),
+						GetFont(false), 0.56f * DuelScale, FLinearColor(0.72f, 0.72f, 0.62f), 2.0f);
 				}
 			}
 		}
@@ -4326,7 +4388,7 @@ void FDADuelUI::DrawDuelChoice()
 	case EDuelChoiceType::SelectCards: Title = TEXT("SELECT CARDS"); break;
 	case EDuelChoiceType::SelectZone: Title = TEXT("SELECT A ZONE"); break;
 	case EDuelChoiceType::YesNo: Title = TEXT("ACTIVATE EFFECT?"); break;
-	case EDuelChoiceType::ChainResponse: Title = TEXT("CHAIN RESPONSE"); break;
+	case EDuelChoiceType::ChainResponse: Title = TEXT("YOUR RESPONSE"); break;
 	case EDuelChoiceType::ActivationOrder: Title = TEXT("ACTIVATION ORDER"); break;
 	case EDuelChoiceType::Ante: Title = TEXT("CHOOSE ANTE CARD"); break;
 	default: break;
@@ -4416,8 +4478,10 @@ void FDADuelUI::DrawDuelChoice()
 			bCanConfirm, FLinearColor(0.42f, 0.72f, 0.52f));
 		FooterY += 48.0f;
 	}
-	if (Request->bCancellable)
+	const bool bResponseWindow = Request->Type == EDuelChoiceType::ChainResponse;
+	if (Request->bCancellable && !bResponseWindow)
 	{
+		// A response window lists "Don't respond" as an option instead.
 		DrawDuelButton(TEXT("CANCEL"), TEXT("choicecancel"), 0, X + 20.0f, FooterY + 8.0f, 320.0f, 34.0f,
 			true, FLinearColor(0.72f, 0.42f, 0.38f));
 	}
@@ -4429,7 +4493,7 @@ void FDADuelUI::DrawDuelChoice()
 	}
 	if (Request->bCancellable)
 	{
-		KeyHint += TEXT("     ESC  CANCEL");
+		KeyHint += bResponseWindow ? TEXT("     ESC  PASS") : TEXT("     ESC  CANCEL");
 	}
 	DrawShadowText(KeyHint, Muted, DX(X + W * 0.5f), DY(Y + H - 46.0f),
 		GetFont(false), 0.42f * DuelScale, true);

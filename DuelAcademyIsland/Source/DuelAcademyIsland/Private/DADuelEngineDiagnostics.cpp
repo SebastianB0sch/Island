@@ -1010,6 +1010,261 @@ FString FDuelEngine::RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterati
 		bEnginePass ? TEXT("PASS") : TEXT("FAIL"));
 }
 
+// ---------------------------------------------------------------------------
+// Interactive smoke: response windows and player prompts through the public
+// player API, every question answered at random.
+// ---------------------------------------------------------------------------
+
+FString FDuelEngine::RunInteractiveSelfTest(UCardDatabaseSubsystem* Database, int32 Games)
+{
+	if (!Database)
+	{
+		return TEXT("Interactive duel self-test: missing card database, RESULT FAIL");
+	}
+	const int32 RequestedGames = FMath::Clamp(Games, 1, 10000);
+	const TCHAR* Starters[3] = { TEXT("fire"), TEXT("water"), TEXT("wind") };
+	int32 Stalls = 0;
+	int32 InvariantFailures = 0;
+	int32 Windows = 0;
+	int32 Prompts = 0;
+	int32 Finished = 0;
+
+	for (int32 Game = 0; Game < RequestedGames; ++Game)
+	{
+		FDuelEngine Duel(Database, 9000 + Game * 13);
+		FRandomStream Rng(777 + Game);
+		Duel.Start(Starters[Game % 3], TEXT("jaden"));
+		const int32 PlayerCards = SelfTestCountOwnedCards(Duel.Player, Duel.Opponent, EDuelOwner::Player);
+		const int32 OpponentCards = SelfTestCountOwnedCards(Duel.Player, Duel.Opponent, EDuelOwner::Opponent);
+		bool bGameFailed = false;
+
+		auto AnswerAll = [&]()
+		{
+			int32 Guard = 0;
+			while (Duel.HasPendingChoice() && Guard++ < 64)
+			{
+				const FDuelChoiceRequest Request = *Duel.GetPendingChoice();
+				if (Request.Side != EDuelOwner::Player)
+				{
+					Duel.AutoAnswerPendingChoice();
+					continue;
+				}
+				++Prompts;
+				if (Request.Type == EDuelChoiceType::ChainResponse)
+				{
+					++Windows;
+				}
+				FString ChoiceError;
+				if (Request.bCancellable && Rng.FRand() < 0.15f)
+				{
+					Duel.CancelChoice(Request.RequestId, ChoiceError);
+					continue;
+				}
+				TArray<int32> Enabled;
+				for (const FDuelChoiceOption& Option : Request.Options)
+				{
+					if (Option.bEnabled)
+					{
+						Enabled.Add(Option.Id);
+					}
+				}
+				const int32 Extra = Request.MaxSelections > Request.MinSelections
+					? Rng.RandRange(0, Request.MaxSelections - Request.MinSelections) : 0;
+				TArray<int32> Pick;
+				while (Pick.Num() < Request.MinSelections + Extra && Enabled.Num() > 0)
+				{
+					const int32 Index = Rng.RandRange(0, Enabled.Num() - 1);
+					Pick.Add(Enabled[Index]);
+					Enabled.RemoveAt(Index);
+				}
+				if (!Duel.AnswerChoice(Request.RequestId, Pick, ChoiceError))
+				{
+					Duel.AutoAnswerPendingChoice();
+				}
+			}
+		};
+		auto CheckState = [&]()
+		{
+			TArray<FString> Errors;
+			Duel.CheckDuelStateInvariants(PlayerCards, OpponentCards, Errors);
+			if (Errors.Num() > 0 && !bGameFailed)
+			{
+				bGameFailed = true;
+				++InvariantFailures;
+				UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Interactive self-test game %d turn %d: %s"),
+					Game, Duel.GetTurnNumber(), *Errors[0]);
+			}
+		};
+
+		int32 Steps = 0;
+		while (!Duel.IsOver() && Steps++ < 400 && Duel.GetTurnNumber() < 120)
+		{
+			if (!Duel.IsPlayerTurn() || Duel.IsAwaitingAi())
+			{
+				int32 Guard = 0;
+				while (!Duel.IsOver() && (Duel.IsAwaitingAi() || Duel.HasPendingChoice()) && Guard++ < 200)
+				{
+					Duel.RunOpponentTurn();
+					AnswerAll();
+					CheckState();
+				}
+				if (!Duel.IsOver() && !Duel.IsPlayerTurn())
+				{
+					++Stalls;
+					UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Interactive self-test game %d: the opponent's turn did not hand back (turn %d)."),
+						Game, Duel.GetTurnNumber());
+					break;
+				}
+				continue;
+			}
+
+			// Main Phase: a handful of random legal actions.
+			for (int32 ActionIndex = 0; ActionIndex < 12 && !Duel.IsOver(); ++ActionIndex)
+			{
+				AnswerAll();
+				struct FCandidate
+				{
+					EDuelAction Action = EDuelAction::None;
+					int32 Uid = 0;
+					int32 Tributes = 0;
+					bool bSetCard = false;
+				};
+				TArray<FCandidate> Candidates;
+				for (const FDuelCard& Card : Duel.Player.Hand)
+				{
+					for (const FDuelActionInfo& Info : Duel.GetHandActions(Card.Uid))
+					{
+						Candidates.Add({ Info.Action, Card.Uid, Info.TributeCount, false });
+					}
+				}
+				for (const FDuelCard& Card : Duel.Player.Spells)
+				{
+					if (Card.IsValid() && Duel.GetSpellTrapActions(Card.Uid).Num() > 0)
+					{
+						Candidates.Add({ EDuelAction::ActivateTrap, Card.Uid, 0, true });
+					}
+				}
+				for (const FDuelCard& Card : Duel.Player.Monsters)
+				{
+					if (!Card.IsValid())
+					{
+						continue;
+					}
+					for (const FDuelActionInfo& Info : Duel.GetMonsterActions(Card.Uid))
+					{
+						if (Info.Action != EDuelAction::None)
+						{
+							Candidates.Add({ Info.Action, Card.Uid, 0, false });
+						}
+					}
+				}
+				if (Candidates.Num() == 0 || Rng.FRand() < 0.15f)
+				{
+					break;
+				}
+				const FCandidate Chosen = Candidates[Rng.RandRange(0, Candidates.Num() - 1)];
+				TArray<int32> TributeUids;
+				for (const FDuelCard& Card : Duel.Player.Monsters)
+				{
+					if (Card.IsValid() && TributeUids.Num() < Chosen.Tributes)
+					{
+						TributeUids.Add(Card.Uid);
+					}
+				}
+				FString ActionError;
+				switch (Chosen.Action)
+				{
+				case EDuelAction::NormalSummon:
+				case EDuelAction::TributeSummon: Duel.NormalSummon(Chosen.Uid, TributeUids, false, ActionError); break;
+				case EDuelAction::SetMonster: Duel.NormalSummon(Chosen.Uid, TributeUids, true, ActionError); break;
+				case EDuelAction::SpecialSummon: Duel.SpecialSummon(Chosen.Uid, ActionError); break;
+				case EDuelAction::ActivateSpell: Duel.ActivateSpell(Chosen.Uid, ActionError); break;
+				case EDuelAction::SetSpellTrap: Duel.SetSpellTrap(Chosen.Uid, ActionError); break;
+				case EDuelAction::FlipSummon: Duel.FlipSummon(Chosen.Uid, ActionError); break;
+				case EDuelAction::ChangePosition: Duel.ChangePosition(Chosen.Uid, ActionError); break;
+				case EDuelAction::ActivateEffect: Duel.ActivateMonsterEffect(Chosen.Uid, ActionError); break;
+				case EDuelAction::ActivateTrap: Duel.ActivateSetTrap(Chosen.Uid, ActionError); break;
+				default: break;
+				}
+				AnswerAll();
+				CheckState();
+			}
+			if (Duel.IsOver())
+			{
+				break;
+			}
+
+			// Battle Phase: random attacks, with the odd Set card used mid-battle.
+			if (Duel.GetPhase() == EDuelPhase::Main1 && Rng.FRand() < 0.85f)
+			{
+				Duel.EnterBattlePhase();
+				AnswerAll();
+				for (int32 AttackIndex = 0; AttackIndex < 8 && !Duel.IsOver(); ++AttackIndex)
+				{
+					TArray<int32> Attackers;
+					for (const FDuelCard& Card : Duel.Player.Monsters)
+					{
+						if (Card.IsValid() && Duel.GetAttackTargets(Card.Uid).Num() > 0)
+						{
+							Attackers.Add(Card.Uid);
+						}
+					}
+					if (Attackers.Num() == 0)
+					{
+						break;
+					}
+					const int32 AttackerUid = Attackers[Rng.RandRange(0, Attackers.Num() - 1)];
+					const TArray<FDuelAttackTarget> Targets = Duel.GetAttackTargets(AttackerUid);
+					const FDuelAttackTarget Target = Targets[Rng.RandRange(0, Targets.Num() - 1)];
+					FString AttackError;
+					Duel.Attack(AttackerUid, Target.bDirect ? 0 : Target.Uid, AttackError);
+					AnswerAll();
+					CheckState();
+					for (const FDuelCard& Card : Duel.Player.Spells)
+					{
+						if (Card.IsValid() && Duel.GetSpellTrapActions(Card.Uid).Num() > 0 && Rng.FRand() < 0.3f)
+						{
+							const int32 SetUid = Card.Uid;
+							Duel.ActivateSetTrap(SetUid, AttackError);
+							AnswerAll();
+							CheckState();
+							break;
+						}
+					}
+				}
+				if (!Duel.IsOver())
+				{
+					Duel.EndBattlePhase();
+					AnswerAll();
+				}
+			}
+			if (Duel.IsOver())
+			{
+				break;
+			}
+			Duel.EndTurn();
+			AnswerAll();
+			int32 DiscardGuard = 0;
+			while (Duel.IsAwaitingDiscard() && Duel.Player.Hand.Num() > 0 && DiscardGuard++ < 12)
+			{
+				FString DiscardError;
+				Duel.DiscardFromHand(Duel.Player.Hand[0].Uid, DiscardError);
+				AnswerAll();
+			}
+			CheckState();
+		}
+		if (Duel.IsOver())
+		{
+			++Finished;
+		}
+	}
+
+	const bool bPass = Stalls == 0 && InvariantFailures == 0;
+	return FString::Printf(
+		TEXT("Interactive duel self-test: %d games, %d finished, %d stalls, invariant failures %d, %d prompts answered (%d response windows), RESULT %s"),
+		RequestedGames, Finished, Stalls, InvariantFailures, Prompts, Windows, bPass ? TEXT("PASS") : TEXT("FAIL"));
+}
+
 
 namespace
 {

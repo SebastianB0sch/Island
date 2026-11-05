@@ -51,10 +51,17 @@ Request ids are engine-assigned when `RequestId <= 0`. Only the head of the
 queue can be answered. `ClearPendingChoices()` is a debug/reset helper; the
 queue is also cleared when the duel ends.
 
-Most existing automatic effects keep their auto-targeting; A05 can opt into
-prompts card by card. Equip Spells are the first converted family: both legacy
-and data-script equips now ask for their target when more than one legal
-monster exists.
+Player-side targeting is player-chosen. Data-script targets already route
+through `FDuelChoiceRequest`; the legacy name handlers now do too, through
+`ChooseCardsFor` / `DiscardChosen`: Book of Moon, Snatch Steal, Tribute to the
+Doomed (discard and target), Premature Burial, Autonomous Action Unit, Call of
+the Haunted, Monster Reincarnation, Salvage, Nobleman of Extermination,
+Graceful Charity / Special Hurricane / Transcendent Wings discards, Magic
+Jammer's discard, the Spiritual Arts' Tribute (and Aoi's / Miyabi's target),
+Man-Eater Bug and Hane-Hane / Gale Lizard. A choice with exactly as many
+candidates as picks needs no question. The AI answers with the legacy
+heuristic, which is also every request's `DefaultOptionIds`, so auto-answered
+duels (self-tests, puzzle replays) resolve exactly as before.
 
 `RequestOptionalTrigger(Card, Prompt, bDefaultYes, Callback)` is a convenience
 wrapper that queues a Yes/No prompt (`Activate` / `Do not activate`) for the
@@ -77,13 +84,17 @@ Spell & Trap zone number (`Z1`-`Z5`), so duplicate names remain distinguishable.
 Press `Esc` to cancel when the request is cancellable, `Enter` to confirm a
 multi-select, and `1`-`8` to pick the visible options. The presentation reel is
 held while a choice is open, so card flights and banners cannot drift under the
-target frames; queued beats resume after the answer.
+target frames; queued beats resume after the answer. A response window
+(`ChainResponse`, titled "YOUR RESPONSE") is the exception: the attack, summon
+or activation it answers plays first and the panel appears once the reel is
+idle (at most ~3 s; `Space` skips). `Esc` passes a response window.
 
 Legacy Equip Spells (Black Pendant, United We Stand, etc.) now queue an engine
-choice instead of auto-equipping the strongest monster. Data-script Equip
-Spells restrict their `any_monster` target to face-up monsters controlled by
-the caster, and `CanActivateSpellCard` rejects an Equip Spell when no such
-target exists. The equip card shows an `EQ` badge while attached and the
+choice instead of auto-equipping the strongest monster. Both legacy and
+data-script Equip Spells may equip any face-up monster on the field (either
+side); the option labels say `Your` / `Opp.` and the default answer (and the
+AI's pick) is the caster's own strongest monster. `CanActivateSpellCard`
+rejects an Equip Spell when no face-up target exists. The equip card shows an `EQ` badge while attached and the
 card-detail panel names its target. If the chosen monster leaves the field
 before the choice resolves, the Equip Spell is destroyed instead of lingering
 face-up without a target.
@@ -128,7 +139,8 @@ source card from disappearing while its target is still being chosen.
   link; `ResolveChain` resolves the printed effect but does not move a card from
   the hand to the field.
 
-The legacy automatic Trap flow is unchanged and does not create chain links.
+The legacy automatic Trap flow does not create chain links; with player
+response windows on (below) it only runs for the AI's own Traps.
 `SetChainEffectResolver` is cleared when a new duel starts; install it after
 `Start`/`StartScenario`.
 
@@ -157,8 +169,10 @@ Public queries:
 Default timing rules:
 
 - Normal Spell: Main 1 / Main 2 only.
-- Quick-Play Spell: Main 1 / Main 2 / Battle, or as a chain response.
-- Normal/Continuous Trap: Main phases or response windows.
+- Quick-Play Spell: Main 1 / Main 2 / Battle, Standby / End Phase (Set only on
+  the opponent's turn), or as a chain response.
+- Normal/Continuous Trap: Main phases, Battle Phase, Standby / End Phase, or
+  response windows.
 - Counter Trap: response windows only.
 - Monster effect: Main phases; a rule with `bQuickEffect` may also use Battle
   and response windows.
@@ -177,10 +191,63 @@ Quick-Play support added in this pass:
 - `ActivateSetSpell(Uid, Error)` activates a face-down Quick-Play Spell on the
   player's field.
 - `GetSpellTrapActions` returns an activation action for a Set Quick-Play.
+- The board's Set-card button covers both kinds: `ActivateSetTrap` forwards a
+  Set Quick-Play to `ActivateSetSpell`, and `ActivateSpell` forwards a hand
+  Quick-Play during the Battle Phase to `ActivateQuickPlayFromHand`.
+- Set cards and hand Quick-Plays are usable in the player's Battle Phase as well
+  as the Main Phases (`GetSpellTrapActions` / `GetHandActions`).
+- `HasActivationRequirements` re-runs card conditions before a Set card is
+  offered or activated: the legacy names (Call of the Haunted, Spiritual Arts,
+  Book of Moon) and, for scripted cards, `FDAEffectRuntime::CanActivateScriptNow`
+  (condition, target candidates and payable costs of an `on_activate` script).
+- Normal Traps whose script runs `on_activate` (Compulsory Evacuation Device,
+  Raigeki Break, Jar of Greed, ...) are manual Traps (`IsManualTrapCard`), so
+  their controller can activate them; previously nothing activated them.
 
-Card-specific activation conditions for Set Quick-Play cards are not re-run
-yet; use `IsActivationLegal` plus the card's own condition code when A05 wires
-the full effect layer.
+## Player response windows
+
+Interactive duels never resolve the player's Set Traps / Quick-Play Spells on an
+AI heuristic. `SetPlayerResponseWindows(bool)` (default **true**) turns this on;
+`UsesPlayerResponseWindows()` is true while it is on and
+`bAutoAnswerAllChoices` is off, so self-tests and puzzle replays keep the legacy
+automatic flow unchanged.
+
+Whenever the player holds a card that could legally respond, the engine queues
+an `EDuelChoiceType::ChainResponse` request (`Context = "response_window"`):
+
+| Moment | Offered |
+| --- | --- |
+| Opponent declares an attack | Mirror Force, Magic Cylinder, Negate Attack, A Hero Emerges, event Traps (Sakuretsu Armor, Dark Mirror Force, ...), Winged Kuriboh LV10, any legal Set card |
+| Opponent summons | Trap Hole (Normal/Flip, 1000+ ATK), Torrential Tribute, event Traps (Bottomless Trap Hole, ...), any legal Set card |
+| Opponent activates a Spell | Magic Jammer (the player picks the discard), any legal Set card |
+| Opponent activates a Trap (also when it answers the player's attack or summon) | Seven Tools of the Bandit, any legal Set card |
+| Opponent enters the Battle Phase / reaches the End Phase | any legal Set card (the window reopens after each activation) |
+
+Each option carries the card's `CardUid` (so it is framed on the board), plus
+`ResponsePassOptionId` ("Don't respond") and, on the opponent's turn,
+`ResponsePassTurnOptionId` ("Don't respond this turn", which suppresses every
+window until the turn ends). The request is cancellable; cancelling passes. One
+response is taken per attack / summon; chained cards resolve first, and a
+one-shot Spell/Trap destroyed in the chain still resolves while a card that must
+stay on the field fizzles. If a response changes the battle, an attacker that
+is no longer face-up in Attack Position stops, and a vanished target or a new
+defender during a direct attack replays the attack (the AI chooses again).
+
+Event-triggered player Traps from data scripts are deferred instead of fired:
+`FDAEffectRuntime` records the legal activation (`GetDeferredResponseCount`,
+`IsDeferredResponseLegal`, `RunDeferredResponse`, `ClearDeferredResponses`) and
+the engine lists it in the matching window. Leftovers raised by a nested effect
+are offered at the next opponent-turn checkpoint; declined ones are dropped.
+
+The opponent's turn is resumable. `RunOpponentTurn` walks stages (`Begin`,
+`Main` steps, `BattleStart`, `Battle`, `BattleEnd`, `EndPhase`, `EndWindow`,
+`Handoff`) and returns as soon as a player question is pending, keeping
+`IsAwaitingAi()` true; `IsOpponentTurnSuspended()` reports the pause. Calling
+`RunOpponentTurn` again (the HUD does so every 0.9 s) is a no-op until the
+question is answered, then the turn continues where it stopped. Work that
+belongs after an answer (the rest of an attack, the opponent's Spell
+resolution) is queued with `ContinueAfterPlayerChoices` and runs from
+`AnswerChoice` / `CancelChoice` once no player question remains.
 
 ## Deck validation and banned/limited list
 
@@ -347,9 +414,11 @@ destruction replacement, Spirit/Union and inherent Special Summon.
 | `bLegacyAutomaticTraps` | true | Keeps automatic Trap resolution exactly as shipped. Set false together with `bEnforceActivationTiming` to filter auto traps through the timing layer. |
 | `bEnforceChainSpellSpeeds` | true | New chain API enforces 2006 spell-speed ordering. |
 | `bAutoAnswerAiChoices` | true | Opponent choices are answered synchronously. |
-| `bAutoAnswerAllChoices` | false | Test/debug: all choices answer immediately. |
+| `bAutoAnswerAllChoices` | false | Test/debug: all choices answer immediately (and disables player response windows). |
+| `bPlayerResponseWindows` | true | The player answers response windows; off (or auto-answer-all) restores the legacy automatic player Traps. |
 
-No pending choice + timing off + legacy traps on is the old 137-card behaviour.
+Response windows off (or auto-answer-all) + no pending choice + timing off +
+legacy traps on is the old 137-card behaviour.
 
 ## Self-test
 
@@ -365,8 +434,16 @@ No pending choice + timing off + legacy traps on is the old 137-card behaviour.
 Checks cover: choice queue/targeting/disabled options/AI auto-answer, chain link
 ordering and speed rejection, Quick-Play/Counter Trap timing, banned/limited/
 copy/40–60/main-extra validation, banned-list JSON, ante selection/transfer/hook,
-fixed scenario setup/turn limit/timeout, result stats, and a 2-duel smoke run of
-the existing AI-vs-AI harness (must report 0 stalls).
+fixed scenario setup/turn limit/timeout, result stats, the scripted
+response-window duels in `DADuelResponseSelfTest.cpp` (Mirror Force / Trap Hole /
+Sakuretsu / Bottomless / Magic Jammer / Seven Tools windows, pass and
+pass-for-the-turn, the suspended opponent turn, MST in the Battle Phase,
+Compulsory Evacuation Device, player-chosen Book of Moon / Graceful Charity /
+Equip targets, End-Phase Jar of Greed, Book of Moon on an attacker, attack
+replay after a new defender, legacy auto mode), a 12-game
+`FDuelEngine::RunInteractiveSelfTest` (random player actions and random answers
+to every prompt with windows on; must report RESULT PASS), and a 2-duel smoke run
+of the existing AI-vs-AI harness (must report 0 stalls).
 
 ## Release gate (Gate 3 / A04)
 
