@@ -370,7 +370,8 @@ class Drape:
                 near = np.linalg.norm(co[side] - q, axis=1) < ARM_REACH
                 idx = np.nonzero(side)[0]
                 arm[idx[~near]] = False
-        leg = (co[:, 2] < r.crotch - 0.01) & ~arm if legs else np.zeros(len(co), bool)
+        fork = getattr(r, "crotch_true", r.crotch)
+        leg = (co[:, 2] < fork - 0.01) & ~arm if legs else np.zeros(len(co), bool)
         top = torso_top if torso_top is not None else r.neck - 0.035
         torso = ~arm & ~leg & (co[:, 2] < top)
         lp = self.layer_pts
@@ -391,10 +392,10 @@ class Drape:
                 sel = leg & (co[:, 0] * sg > 0)
                 axis = self.leg_axis[s]
                 total = float(np.linalg.norm(np.diff(axis, axis=0), axis=1).sum())
-                start = max(0.0, (axis[0][2] - (r.crotch - 0.02)) / total)
+                start = max(0.0, (axis[0][2] - (fork - 0.02)) / total)
                 _tube(co, axis, sel, lambda s01: 0.004 + 0.004 * s01, roundness,
                       taper_to=(start, hem_width) if hem_width else None, x_sign=sg,
-                      fade=max(0.0, axis[0][2] - (r.crotch - 0.01)) + 0.10)
+                      fade=max(0.0, axis[0][2] - (fork - 0.01)) + 0.10)
         # blend the torso / limb seams and take out the remaining anatomy (boundary rows stay on their cuts)
         movable = co[:, 2] < top + 0.01
         z_edge = co[w.boundary, 2].copy()
@@ -433,11 +434,14 @@ class Drape:
         nrm = w.normals(faces)
         open_keys = {(a, b) for a, b in w.open_edges}
         index = {v: i for i, v in enumerate(w.verts)}
+        vent = t.garments[name].get("vent_pos", set())
         edges = []
         for f in faces:
             for e in f.edges:
                 a, b = (w.inv[index[x]] for x in e.verts)
                 if (min(a, b), max(a, b)) in open_keys and e.is_boundary:
+                    if vent and all(tuple(round(c, 5) for c in x.co) in vent for x in e.verts):
+                        continue                         # a vent edge: plain fabric edge
                     edges.append(e)
         edges = list(dict.fromkeys(edges))
         if not edges:
@@ -565,17 +569,13 @@ def _region(name):
     return "trunk"
 
 
-def _smooth_crotch(t, faces, steps=8, band=0.12):
-    """Laplacian smoothing of the trouser weights round the crotch and hips (position-welded): the skin's
-    pelvis -> thigh hand-over is a few cm wide there, which pinches the trousers and leaves no clean field
-    for the coat / shirt above to inherit."""
-    r = t.rig
+def _smooth_zone(t, faces, zone_fn, steps=8):
+    """Laplacian smoothing of a garment's bone weights inside zone_fn(co) -> bool mask (position-welded)."""
     verts = list(dict.fromkeys(v for f in faces for v in f.verts))
     w = Welded(verts, faces)
-    zone = (np.abs(w.co[:, 2] - r.crotch) < band) & (np.abs(w.co[:, 0]) < 0.17)
+    zone = zone_fn(w.co)
     if not zone.any():
         return
-    # weights per welded position (from the first copy)
     first = {}
     for v, i in zip(w.verts, w.inv):
         first.setdefault(i, v)
@@ -596,6 +596,26 @@ def _smooth_crotch(t, faces, steps=8, band=0.12):
     for v, i in zip(w.verts, w.inv):
         if zone[i]:
             t.set_weights(v, W[i])
+
+
+def _smooth_crotch(t, faces, band=0.12):
+    """Trouser weights round the crotch and hips: the skin's pelvis -> thigh hand-over is a few cm wide there,
+    which pinches the trousers and leaves no clean field for the coat / shirt above to inherit."""
+    r = t.rig
+    fork = getattr(r, "crotch_true", r.crotch)
+    _smooth_zone(t, faces, lambda co: (np.abs(co[:, 2] - fork) < band) & (np.abs(co[:, 0]) < 0.17))
+
+
+def _smooth_armpits(t, faces):
+    """Jacket / shirt weights across the sleeve-to-body junction: the torso -> arm hand-over is narrow on the
+    skin (and narrower still on a wide trunk), so a sleeve tears away from the body when the arm comes down."""
+    r = t.rig
+
+    def zone(co):
+        ax = np.abs(co[:, 0])
+        return (ax > r.shoulder_x - 0.07) & (ax < r.shoulder_x + 0.09) & \
+               (co[:, 2] > r.shoulder_z - 0.22) & (co[:, 2] < r.shoulder_z + 0.06)
+    _smooth_zone(t, faces, zone, steps=10)
 
 
 def inherit_weights(t, log=print):
@@ -690,6 +710,8 @@ def inherit_weights(t, log=print):
             t.set_weights(v, w)
         if name == "Pants":
             _smooth_crotch(t, faces)
+        if name in ("Shirt", "Jacket"):
+            _smooth_armpits(t, faces)
         t.leg_contact = getattr(t, "leg_contact", {})
         t.leg_contact.update(follow)
         changed += len(new_w)

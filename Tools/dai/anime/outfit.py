@@ -65,7 +65,14 @@ class Rig:
         skin = sorted({i for p in me.polygons if p.material_index in skin_mat for i in p.vertices})
         s = co[skin]
         mid = s[(np.abs(s[:, 0]) < 0.012) & (s[:, 2] > self.knee + 0.1) & (s[:, 2] < self.pelvis)]
+        # `crotch` (lowest midline skin) is where the inner thighs meet, and every hem length is defined from it
+        # (design reference, kept). `crotch_true` is the real fork of the legs - the downward-facing skin on
+        # the midline - and is what construction respects: torso garments are cut from the skin only above it
+        # and continue as a hanging tube below (no leg tops / crotch underside copied into a jacket).
         self.crotch = float(mid[:, 2].min()) if len(mid) else self.hip - 0.12
+        down = [p.center.z for p in me.polygons if p.material_index in skin_mat and abs(p.center.x) < 0.02
+                and self.knee + 0.1 < p.center.z < self.pelvis and p.normal.z < -0.6]
+        self.crotch_true = max(self.crotch, float(np.median(down))) if down else self.crotch
         ring = s[(np.abs(s[:, 2] - (self.neck + 0.015)) < 0.012) & (np.abs(s[:, 0]) < 0.09)]
         self.neck_c = Vector((0.0, float((ring[:, 1].min() + ring[:, 1].max()) / 2), 0.0))
         self.neck_r = (float(np.abs(ring[:, 0]).max()), float((ring[:, 1].max() - ring[:, 1].min()) / 2))
@@ -302,6 +309,10 @@ class Tailor:
                     if e is not None:
                         split.append(e)
         if split:
+            # remember the vent edges by position: they stay plain fabric edges (no turned-in thickness band,
+            # whose two halves would cross at the top of the parting - drape.rims)
+            g.setdefault("vent_pos", set()).update(
+                tuple(round(c, 5) for c in v.co) for e in split for v in e.verts)
             bmesh.ops.split_edges(self.bm, edges=split)
         # panel side / front from the faces: after the cut no face straddles a vent, so the centre of every face
         # says which panel it is on; a vertex takes the side all its faces agree on (a vertex still shared at the
@@ -471,6 +482,7 @@ class Tailor:
         r = self.rig
         length = spec.get("length", "hip")
         hem = r.hem_z(length)
+        cutz = max(hem, r.crotch_true + 0.02)       # skin shell only above the real fork of the legs
         sleeves = spec.get("sleeves", "long")
         cuff_x = r.wrist_x - 0.035 if sleeves == "long" else r.shoulder_x + 0.025
         opening = spec.get("open", 0.15)
@@ -490,7 +502,7 @@ class Tailor:
         def inside(co):
             if abs(co.x) < r.neck_r[0] + 0.035 and co.z > neck_cut:
                 return False
-            return abs(co.x) < cuff_x and co.z > hem and co.z < r.shoulder_z + 0.12
+            return abs(co.x) < cuff_x and co.z > cutz and co.z < r.shoulder_z + 0.12
 
         def in_gap(c):
             return c.y < r.neck_c.y and abs(c.x) < gap(c.z)
@@ -500,7 +512,7 @@ class Tailor:
         self.shell(faces, spec.get("loose", 0.016), "Jacket", spec, covers)
         self.cut("Jacket", (cuff_x, 0, 0), (1, 0, 0))
         self.cut("Jacket", (-cuff_x, 0, 0), (-1, 0, 0))
-        self.cut("Jacket", (0, 0, hem), (0, 0, -1))
+        self.cut("Jacket", (0, 0, cutz), (0, 0, -1))
         if opening:
             for sgn in (1, -1):
                 d = Vector((sgn * (x1 - x0), 0, top - z0)).normalized()
@@ -516,12 +528,14 @@ class Tailor:
         self.drape.garment("Jacket", taper=0.2, ease=0.006 + spec.get("loose", 0.0) * 0.25, clear=0.008,
                            sleeve_ease=(0.008, 0.02))
         drop = spec.get("drop", r.hem_drop(length))
-        if drop > 0:
+        free = drop + (cutz - hem)                  # the hanging part reaches the designed hem height
+        if free > 1e-4:
             long = drop > 0.15
-            self.extend("Jacket", self.edges_at("Jacket", hem), drop, spec.get("flare", 0.035 if not long else 0.07),
-                        rings=3 if not long else 6, thigh=0.45 if not long else 0.8, front=spec.get("tails", 1.0))
+            self.extend("Jacket", self.edges_at("Jacket", cutz), free, spec.get("flare", 0.035 if not long else 0.07),
+                        rings=max(3 if not long else 6, int(round(free / 0.03))), thigh=0.45 if not long else 0.8,
+                        front=spec.get("tails", 1.0))
             if long:
-                self.vents("Jacket", hem, drop)
+                self.vents("Jacket", cutz, free)
         self.drape.rims("Jacket", depth=0.007)
         if spec.get("collar", 0.05):
             trim = spec.get("trim", spec.get("color"))
@@ -531,9 +545,9 @@ class Tailor:
             self.collar(cspec, spec.get("collar", 0.05), 70 + 80 * opening, spec.get("collar_flare", 0.016))
         g = self.garments["Jacket"]
         g["cuff_x"], g["hem"], g["gap"] = cuff_x, hem - drop, gap
-        g["cut"] = hem                     # below: the free-hanging hem / tails (they hide nothing)
+        g["cut"] = cutz                    # below: the free-hanging hem / tails (they hide nothing)
         if drop > 0.15:
-            g["cloth"] = dict(prefix="coattail", cut=hem, drop=drop)      # long coat tails swing (cloth_bones)
+            g["cloth"] = dict(prefix="coattail", cut=cutz, drop=free)     # long coat tails swing (cloth_bones)
         if spec.get("capelet"):
             self.capelet(spec["capelet"])
 
@@ -542,24 +556,27 @@ class Tailor:
         sleeves = spec.get("sleeves", "short")
         sx = {"short": r.shoulder_x + 0.10, "long": r.wrist_x - 0.04, "none": r.shoulder_x - 0.01}[sleeves]
         hem = r.hem_z(spec.get("length", "hip"))
+        cutz = max(hem, r.crotch_true + 0.02)
         turtle = spec.get("turtleneck", False)
         neck = r.neck + 0.05 if turtle else r.neck - 0.012
 
         def inside(co):
             if abs(co.x) < r.neck_r[0] + 0.035 and co.z > neck:
                 return False
-            return abs(co.x) < sx and co.z > hem
+            return abs(co.x) < sx and co.z > cutz
 
         self.shell(self.select(inside), 0.010, "Shirt", spec, self.select(inside, every=True))
         self.cut("Shirt", (sx, 0, 0), (1, 0, 0))
         self.cut("Shirt", (-sx, 0, 0), (-1, 0, 0))
-        self.cut("Shirt", (0, 0, hem), (0, 0, -1))
+        self.cut("Shirt", (0, 0, cutz), (0, 0, -1))
         if turtle:
             self.cut("Shirt", (0, 0, neck), (0, 0, 1), region=lambda c: abs(c.x) < r.neck_r[0] + 0.04)
         self.drape.garment("Shirt", taper=0.3, ease=0.003, clear=0.004, sleeve_ease=(0.004, 0.008),
                            torso_top=(neck - 0.02) if turtle else None)
-        if spec.get("length", "hip") == "hip" and not spec.get("tucked"):
-            self.extend("Shirt", self.edges_at("Shirt", hem), 0.03, 0.012, rings=1, thigh=0.3)
+        tail = 0.03 if spec.get("length", "hip") == "hip" and not spec.get("tucked") else 0.0
+        if tail + (cutz - hem) > 1e-4:
+            self.extend("Shirt", self.edges_at("Shirt", cutz), tail + (cutz - hem), 0.012,
+                        rings=max(1, int(round((tail + cutz - hem) / 0.03))), thigh=0.3)
 
     def pants(self, spec):
         r = self.rig
@@ -605,7 +622,8 @@ class Tailor:
     def skirt(self, spec):
         r = self.rig
         top = r.pelvis + 0.04
-        cut = r.crotch + 0.05
+        cut = max(r.crotch + 0.05, r.crotch_true + 0.02)     # skin shell only above the real fork of the legs
+        length = spec.get("length", 0.17) + (cut - (r.crotch + 0.05))   # same hem height as designed
 
         def inside(co):
             return cut < co.z < top
@@ -614,10 +632,10 @@ class Tailor:
         self.cut("Skirt", (0, 0, top), (0, 0, 1))
         self.cut("Skirt", (0, 0, cut), (0, 0, -1))
         self.drape.garment("Skirt", sleeves=False, torso_top=top, taper=0.1, ease=0.002, clear=0.006, smooth=2)
-        self.extend("Skirt", self.edges_at("Skirt", cut), spec.get("length", 0.17), 0.06, rings=4, thigh=0.55,
-                    pleats=spec.get("pleats", 16))
-        self.garments["Skirt"]["hem"] = cut - spec.get("length", 0.17)
-        self.garments["Skirt"]["cloth"] = dict(prefix="skirt", cut=cut, drop=spec.get("length", 0.17))
+        self.extend("Skirt", self.edges_at("Skirt", cut), length, 0.06, rings=max(4, int(round(length / 0.04))),
+                    thigh=0.55, pleats=spec.get("pleats", 16))
+        self.garments["Skirt"]["hem"] = cut - length
+        self.garments["Skirt"]["cloth"] = dict(prefix="skirt", cut=cut, drop=length)
         self.garments["Skirt"]["belt"] = top
 
     def boots(self, spec):
