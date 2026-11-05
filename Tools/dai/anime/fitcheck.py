@@ -340,7 +340,7 @@ def relax(obj, arm, log=print, iterations=12, margin=0.002, max_push=0.03, max_t
     inner vertex under them is tucked in instead. Returns the remaining poking vertex count."""
     from . import retarget as RT
     me = obj.data
-    poses = pose_frames(arm, None, log)
+    poses = pose_frames(arm, None, log, dense=True)     # fit every other frame of every take
     groups = _groups(obj)
     faces_all = [tuple(p.vertices) for p in me.polygons]
     verts_of = {g: np.array(sorted({v for fi in f for v in me.polygons[fi].vertices})) for g, f in groups.items()}
@@ -544,7 +544,7 @@ def snap_residuals(obj, arm, log=print, shape_fn=None, rounds=6, ring=0.5, tuck=
     faces_all = [tuple(p.vertices) for p in me.polygons]
     verts_of = {g: np.array(sorted({v for fi in f for v in me.polygons[fi].vertices})) for g, f in groups.items()}
     outers = [g for g in groups if g != "skin"]
-    poses = pose_frames(arm, None, log)
+    poses = pose_frames(arm, None, log, dense=True)     # fit every other frame of every take
     nbr = [[] for _ in me.vertices]
     for e in me.edges:
         a, b = e.vertices
