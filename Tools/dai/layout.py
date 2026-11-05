@@ -105,6 +105,13 @@ class Layout:
         self.doors = []
         self.door_leaves = {}    # mesh name -> (style, leaf width, height)
         self.clearings = []      # (x, y, r) world metres
+        self.spaces = []         # placement.Space per location (walls, fixtures, furniture, its props) in the world
+        self.road_mbs = []       # road ribbons (world space) for the standing-room checks
+        self.inst_raw = []       # (asset, x, y, z, yaw, scale) of every instance not placed by a location
+        self.travel = []         # fast-travel points inside locations (zones with a parent)
+        self.arrivals = {}       # location key -> (world feet position, yaw) declared by the location itself
+        self._in_location = False
+        self._zones = None
         self.footprints = []     # (key, [(x,y)...]) for the minimap
         self.manifest = []
         self.rng = random.Random(C.SEED)
@@ -114,6 +121,8 @@ class Layout:
         return float(self.hf(x, y))
 
     def add_instance(self, asset, x, y, z, yaw, scale):
+        if not self._in_location:
+            self.inst_raw.append((asset, (x, y, z), yaw, scale))
         g = self.instances.setdefault(asset, [])
         g.append([round(x * 100, 1), round(y * 100 * Y_SIGN, 1), round(z * 100, 1), ue_yaw(yaw), round(scale, 3)])
 
@@ -160,6 +169,15 @@ class Layout:
                 continue
             aset = fn()
             loc = C.LOCATIONS[key]
+            from . import placement
+            ck = placement.asset_checker(aset, log=self.log)
+            moved, failed = placement.settle_npcs(aset, ck, log=self.log)
+            placement.face_open_view(aset, ck, log=self.log)
+            if moved:
+                self.log(f"  {key:14s} {len(moved)} NPCs stepped clear of furniture / walls / doorways "
+                         f"(furthest {max(m[1] for m in moved):.1f} m)")
+            for (sk, why) in failed:
+                self.log(f"   !! {key}: NPC at {tuple(round(c, 2) for c in sk['pos'])} has no room: {why}")
             absolute = getattr(aset, "absolute", False)
             x0, y0 = loc["pos"]
             if absolute:
@@ -189,7 +207,11 @@ class Layout:
                     corners = [(mn[0], mn[1]), (mx[0], mn[1]), (mx[0], mx[1]), (mn[0], mx[1])]
                     if mx[2] - max(mn[2], 0) > 2.5 and (mx[0] - mn[0]) * (mx[1] - mn[1]) > 30:
                         self.footprints.append((key, [xf.point((c[0], c[1], 0))[:2] for c in corners]))
+            for sp in ck.spaces:
+                self.spaces.append(placement.placed(sp, xf.x, xf.y, xf.z, xf.yaw))
+            self._in_location = True
             self.place_sockets(aset, xf, key)
+            self._in_location = False
             self.log(f"  {key:14s} {n_mesh} meshes, {len(aset.sockets)} sockets")
         if export:
             self.export_door_leaves()
@@ -239,7 +261,21 @@ class Layout:
                                        volume=pr.get("volume", 1.0)))
             elif t == "npc":
                 self.npcs.append(dict(loc=ue_loc((p[0], p[1], p[2] + 0.95)), yaw=ue_yaw(yaw), dorm=pr.get("dorm", "slifer"),
-                                      wander=pr.get("wander", 8.0) * 100.0, group=key))
+                                      wander=pr.get("wander", 8.0) * 100.0, group=key, _feet=p))
+            elif t == "arrival":           # the location's own fast-travel arrival point (overrides config spawn)
+                self.arrivals[key] = (p, yaw)
+                self.clearings.append((p[0], p[1], 4.0))
+            elif t == "travel":
+                if pr.get("box"):
+                    x0, y0, z0, x1, y1, z1 = pr["box"]
+                    center = xf.point(((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2))
+                    half = (abs(x1 - x0) / 2, abs(y1 - y0) / 2, abs(z1 - z0) / 2)
+                else:
+                    center = half = None     # measured round the spot (room_box)
+                self.travel.append(dict(id=pr["id"], parent=key, name=pr["name"], subtitle=pr.get("subtitle", ""),
+                                        desc=pr.get("desc", ""), spot=p, yaw=yaw, center=center, half=half,
+                                        box_yaw=xf.yaw))
+                self.clearings.append((p[0], p[1], 3.0))
             elif t == "clearing":
                 self.clearings.append((p[0], p[1], pr.get("radius", 5.0)))
             elif t == "floating":
@@ -331,7 +367,7 @@ class Layout:
                                            radius=300.0, group="paths"))
                 self.clearings.append((px, py, 2.0))
             # paved road ribbons (crisp edges + kerbs on top of the splat paving)
-            if export and p["surface"] == "paved" and p["id"] != "breakwater":
+            if p["surface"] == "paved" and p["id"] != "breakwater":
                 mb = MeshBuilder(f"Road_{p['id']}")
                 pts = samples
                 left, right = [], []
@@ -358,7 +394,9 @@ class Layout:
                             mb.quad(lo1, lo0, e0, e1, "M_Concrete")
                         else:
                             mb.quad(lo0, lo1, e1, e0, "M_Concrete")
-                self.export_mesh(mb, f"Road_{p['id']}", "Roads", "complex")
+                self.road_mbs.append(mb)
+                if export:
+                    self.export_mesh(mb, f"Road_{p['id']}", "Roads", "complex")
                 self.static.append(dict(mesh=f"SM_Road_{p['id']}", folder="Roads", loc=[0, 0, 0], yaw=0.0,
                                         collision="complex", group="roads", label=f"Road_{p['id']}"))
         self.log(f"  path dressing: {lamps} lamps")
@@ -540,6 +578,8 @@ class Layout:
 
     # ------------------------------------------------------------------ terrain + water actors
     def place_world(self):
+        for L in C.LOCATIONS.values():          # keep the arrival points free of trees and rocks
+            self.clearings.append((L["spawn"][0], L["spawn"][1], 4.0))
         for cj in range(C.CHUNKS):
             for ci in range(C.CHUNKS):
                 self.static.append(dict(mesh=f"SM_Terrain_{ci:02d}_{cj:02d}", folder="Terrain", loc=[0, 0, 0], yaw=0.0,
@@ -550,6 +590,10 @@ class Layout:
 
     # ------------------------------------------------------------------ zones
     def zones(self):
+        """Map / fast-travel zones: every location, then the fast-travel points inside locations (parent set).
+        Arrival points stand on the walking surface found by the standing-room checker (check_people)."""
+        if self._zones is not None:
+            return self._zones
         out = []
         for key, L in C.LOCATIONS.items():
             x, y = L["pos"]
@@ -557,17 +601,156 @@ class Layout:
             if z is None:
                 z = self.ground(x, y)
             ex, ey, ez = L["zone"]
-            sx, sy, _ = L["spawn"]
-            sz = self.ground(sx, sy)
-            if key == "harbor":
-                sz = max(sz, 3.0)
-            # face the location; arriving at the harbor you look inland towards the academy
-            tx, ty = (0.0, 0.0) if key == "harbor" else (x, y)
-            face = math.degrees(math.atan2(ty - sy, tx - sx))
+            if key in self.arrivals:
+                (sx, sy, az), face = self.arrivals[key]
+                sz = self.spawn_floor(sx, sy, az)
+            else:
+                sx, sy = L["spawn"][:2]
+                sz = self.spawn_floor(sx, sy)
+            if key in self.arrivals:
+                pass
+            elif "face" in L:
+                face = L["face"]
+            else:   # face the location; arriving at the harbor you look inland towards the academy
+                tx, ty = (0.0, 0.0) if key == "harbor" else (x, y)
+                face = math.degrees(math.atan2(ty - sy, tx - sx))
             out.append(dict(id=key, name=L["name"], subtitle=L["subtitle"], desc=L["desc"], color=list(L["color"]),
-                            center=ue_loc((x, y, z)), extent=[ex * 100.0, ey * 100.0, ez * 100.0],
-                            spawn=dict(loc=ue_loc((sx, sy, sz + 1.2)), yaw=ue_yaw(face))))
+                            center=ue_loc((x, y, z)), extent=[ex * 100.0, ey * 100.0, ez * 100.0], yaw=0.0, parent="",
+                            spawn=dict(loc=ue_loc((sx, sy, sz + 1.0)), yaw=ue_yaw(face)), _feet=(sx, sy, sz),
+                            _r=L.get("spawn_r", 0.38)))
+        order = list(C.LOCATIONS)
+        for t in sorted(self.travel, key=lambda t: order.index(t["parent"])):
+            L = C.LOCATIONS[t["parent"]]
+            sx, sy, sz = t["spot"]
+            sz = self.spawn_floor(sx, sy, sz)
+            if t["center"] is None:
+                t["center"], t["half"] = self.room_box((sx, sy, sz), t["box_yaw"])
+            out.append(dict(id=t["id"], name=t["name"], subtitle=t["subtitle"] or L["name"], desc=t["desc"],
+                            color=list(L["color"]), center=ue_loc(t["center"]),
+                            extent=[t["half"][0] * 100.0, t["half"][1] * 100.0, t["half"][2] * 100.0],
+                            yaw=ue_yaw(t["box_yaw"]), parent=t["parent"],
+                            spawn=dict(loc=ue_loc((sx, sy, sz + 1.0)), yaw=ue_yaw(t["yaw"])), _feet=(sx, sy, sz),
+                            _r=0.38))
+        self._zones = out
         return out
+
+    def spawn_floor(self, x, y, near_z=None):
+        """Height of the walking surface at (x, y): the top of whatever stands there (a platform, a quay, a
+        road), else the terrain; near_z picks the surface closest below near_z + 1 m (e.g. one storey)."""
+        from mathutils import Vector
+        g = self.ground(x, y)
+        if not hasattr(self, "_ck"):
+            return g
+        top = (near_z + 1.0) if near_z is not None else max(g, 0.0) + 2.5
+        f = self._ck.floor(Vector((x, y, top - 0.6)), above=0.6, below=top - min(g, top) + 0.5)
+        return f[0] if f else g
+
+    def room_box(self, feet, yaw, cap=30.0):
+        """The room round a feet position, measured along the building's axes (rays at 1.9 m - over the
+        furniture - three abreast so a pillar does not cut the room short; up to the ceiling). Returns the
+        zone box centre and half extents (world, box axes = building axes)."""
+        from mathutils import Vector
+        if not hasattr(self, "_ck"):
+            return feet, (4.0, 4.0, 2.0)
+        sp = [s for s in self.spaces if s.near(Vector(feet), 5.0)]
+        c, si = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+        ax = [Vector((c, si, 0.0)), Vector((-si, c, 0.0))]
+        base = Vector(feet) + Vector((0, 0, 1.9))
+        ext = []
+        for i, a in enumerate(ax):
+            side = ax[1 - i]
+            for sgn in (1, -1):
+                d = a * sgn
+                hits = []
+                for o in (-2.0, -1.0, 0.0, 1.0, 2.0):   # median of up to five abreast: a doorway or a pillar
+                    if o:                               # is one ray, not the room (only starts in the room)
+                        hs = self._ck._hit(base, side * (1 if o > 0 else -1), abs(o), sp)
+                        if hs:
+                            continue
+                    h = self._ck._hit(base + side * o, d, cap, sp)
+                    hits.append(h[0] if h else cap)
+                e = sorted(hits)[len(hits) // 2]
+                k = 1.0                                  # never past the first spot with no roof over it
+                while k < e:
+                    q = base + d * k
+                    if not self._ck._hit(q, Vector((0, 0, 1)), 40.0, sp):
+                        e = max(1.0, k - 0.5)
+                        break
+                    k += 1.0
+                ext.append(e)
+        hz = self._ck._hit(base, Vector((0, 0, 1)), 30.0, sp)
+        top = base.z + (hz[0] if hz else 4.0)
+        bot = feet[2] - 0.3
+        ux = (ext[0] - ext[1]) / 2
+        uy = (ext[2] - ext[3]) / 2
+        cx = feet[0] + ax[0].x * ux + ax[1].x * uy
+        cy = feet[1] + ax[0].y * ux + ax[1].y * uy
+        return (cx, cy, (top + bot) / 2), ((ext[0] + ext[1]) / 2, (ext[2] + ext[3]) / 2, (top - bot) / 2)
+
+    def water_at(self, x, y):
+        a = math.radians(C.LAKE_ROT)
+        dx, dy = x - C.LAKE_CENTER[0], y - C.LAKE_CENTER[1]
+        q = math.hypot((dx * math.cos(a) + dy * math.sin(a)) / C.LAKE_RADII[0],
+                       (-dx * math.sin(a) + dy * math.cos(a)) / C.LAKE_RADII[1])
+        return C.LAKE_LEVEL if q < 1.15 else 0.0
+
+    def slope_at(self, x, y, d=1.0):
+        gx = (self.ground(x + d, y) - self.ground(x - d, y)) / (2 * d)
+        gy = (self.ground(x, y + d) - self.ground(x, y - d)) / (2 * d)
+        return math.degrees(math.atan(math.hypot(gx, gy)))
+
+    def build_checker(self):
+        from . import placement
+        if hasattr(self, "_ck"):
+            return self._ck
+        world = [it for it in self.inst_raw if it[0] not in placement.SOFT_PROPS]
+        bounds = placement.prop_bounds({it[0] for it in world}, self.log)
+        pv, pp, pt = [], [], []
+        placement.box_tris(world, bounds, pv, pp, pt)
+        sp_props = placement.mesh_space([], name="world props", extra=[(pv, pp, pt)])
+        spaces = list(self.spaces)
+        if sp_props is not None:
+            spaces.append(self._grid(sp_props, pv, pp, pt))
+        for mb in self.road_mbs:
+            spaces.append(placement.mesh_space([mb], name=mb.name))
+        self._ck = placement.Checker(spaces, ground=self.ground, water=self.water_at, slope=self.slope_at)
+        return self._ck
+
+    @staticmethod
+    def _grid(sp, pv, pp, pt):
+        sp.bounds = None          # everywhere (the props are spread over the whole island)
+        return sp
+
+    def check_people(self):
+        """Arrival points must have room for the player; every NPC gets its wander route (clear straight walks
+        from home on the same floor). Returns the list of problems."""
+        import time
+        from mathutils import Vector
+        from . import placement
+        t0 = time.time()
+        ck = self.build_checker()
+        self._zones = None
+        problems = []
+        for z in self.zones():
+            why = ck.capsule(Vector(z["_feet"]), r=z["_r"])
+            if why:
+                problems.append(f"travel {z['id']} at {tuple(round(c, 1) for c in z['_feet'])}: {why}")
+        n_routes = n_still = 0
+        for n in self.npcs:
+            feet = n["_feet"]
+            pts = ck.wander_points(feet, n["wander"] / 100.0) if n["wander"] > 100.0 else []
+            if not pts and n["wander"] > 100.0:
+                n_still += 1
+            n["points"] = [ue_loc((q.x, q.y, q.z + 0.95)) for q in pts]
+            n_routes += bool(pts)
+            why = ck.capsule(Vector(feet))
+            if why:
+                problems.append(f"npc {n['group']} at {tuple(round(c, 1) for c in feet)}: {why}")
+        self.log(f"  people: {len(self.zones())} arrival points, {len(self.npcs)} NPCs ({n_routes} with wander routes, "
+                 f"{n_still} with no room to stroll stay put), {len(problems)} problems ({time.time() - t0:.0f}s)")
+        for line in problems:
+            self.log("   !! " + line)
+        return problems
 
     # ------------------------------------------------------------------ minimap
     def minimap(self, size=2048):
@@ -614,6 +797,7 @@ class Layout:
     def write(self):
         os.makedirs(C.OUT_DATA, exist_ok=True)
         from .anime import cast as anime_cast
+        self.check_people()
         anime_cast.assign_npcs(self.npcs)          # who stands where (named cast + generic looks)
         hx = C.HALF
         cull = {
@@ -644,8 +828,10 @@ class Layout:
             environment=dict(start_hour=16.25, day_minutes=24.0),
             player_start=start,
             static=self.static, floating=self.floating, instances=inst, lights=self.lights, texts=self.texts,
-            interacts=self.interacts, emitters=self.emitters, audio=self.audio, npcs=self.npcs,
-            specials=self.specials, doors=self.doors, zones=self.zones(),
+            interacts=self.interacts, emitters=self.emitters, audio=self.audio,
+            npcs=[{k: v for k, v in n.items() if not k.startswith("_")} for n in self.npcs],
+            specials=self.specials, doors=self.doors,
+            zones=[{k: v for k, v in z.items() if not k.startswith("_")} for z in self.zones()],
         )
         with open(os.path.join(C.OUT_DATA, "layout.json"), "w") as fp:
             json.dump(layout, fp, separators=(",", ":"))

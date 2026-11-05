@@ -112,6 +112,22 @@ void ADAStudentNPC::Interact(ADAStudentCharacter* By)
 
 void ADAStudentNPC::PickNewTarget()
 {
+	IdleTime = 0.f;
+	StuckTime = 0.f;
+	if (bWanderPointsOnly || WanderPoints.Num() > 0)
+	{
+		// precomputed clear routes: out to one spot, then back home before the next
+		const bool bAtHome = FVector::Dist2D(GetActorLocation(), Home) < 80.0;
+		if (!bAtHome || WanderPoints.Num() == 0)
+		{
+			Target = Home;
+		}
+		else
+		{
+			Target = WanderPoints[Rng.RandRange(0, WanderPoints.Num() - 1)];
+		}
+		return;
+	}
 	const float Angle = Rng.FRandRange(0.f, 2.f * PI);
 	const float Dist = Rng.FRandRange(0.25f, 1.f) * WanderRadius;
 	Target = Home + FVector(FMath::Cos(Angle) * Dist, FMath::Sin(Angle) * Dist, 0.0);
@@ -161,7 +177,7 @@ void ADAStudentNPC::Tick(float DeltaSeconds)
 		return;
 	}
 
-	if (WanderRadius <= 1.f)
+	if (WanderRadius <= 1.f || (bWanderPointsOnly && WanderPoints.Num() == 0))
 	{
 		return;
 	}
@@ -198,6 +214,10 @@ void ADAStudentNPC::Tick(float DeltaSeconds)
 		if (StuckTime > 1.5f)
 		{
 			IdleTime = Rng.FRandRange(0.5f, 2.f);
+			if (WanderPoints.Num() > 0)
+			{
+				Target = Home;      // something (the player) blocks the route: head home after the pause
+			}
 		}
 	}
 	else

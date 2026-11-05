@@ -19,6 +19,7 @@ import math
 import random
 
 from . import AssetSet
+from . import with_travel
 from . import interior as K
 from . import detail as DT
 from .. import palette
@@ -1347,4 +1348,7 @@ def build():
     return aset
 
 
-PLACEMENTS = {"gym": build}
+PLACEMENTS = {"gym": with_travel(build, [
+    (None, "gym_court", "Duel Gym Court", "The 60 m sports hall: the court, the bleachers, the galleries and the "
+     "foyer with the lockers and showers.", dict(spot=(0.0, -8.0, FLG), yaw=90.0)),   # court edge by the foyer
+])}

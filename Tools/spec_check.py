@@ -4,6 +4,7 @@ Interior spec check for the whole island - the definition of "up to spec":
   * audit (dai/inspect.py): 0 issues, except known false positives listed in ACCEPTED below
   * detail coverage per interior camera: rooms >= 45 %, halls / corridors / stairs / landings >= 35 %
     (big halls whose size is the point may be listed in WAIVED with a reason)
+  * people: every NPC spot and fast-travel arrival has room for a person (dai/placement.py)
   * no painted (opaque) windows left except the decoration listed in PAINTED_OK (see storey_report.py)
 
     python Tools/spec_check.py                      # everything (slow: builds every location)
@@ -73,7 +74,7 @@ def painted_area(aset):
 def check(key, aset):
     res = inspect.audit(aset)
     fails = []
-    for k in ("grounding", "ceiling", "wall", "clipping", "doors"):
+    for k in ("grounding", "ceiling", "wall", "clipping", "doors", "people"):
         for line in res.get(k, []):
             if not any(re.search(pk, key) and re.search(pl, line) for pk, pl in ACCEPTED):
                 fails.append(f"[{k}] {line}")

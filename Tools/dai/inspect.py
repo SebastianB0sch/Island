@@ -202,7 +202,7 @@ def audit(aset, scene=None, log=print, coverage_rays=(48, 30)):
     scene = scene or build_scene(aset, door_angle=0.0)
     solid = [o for o in scene["objs"] if not o.get("nocol")]
     arch, arch_mats = _bvh(solid)
-    issues = dict(grounding=[], ceiling=[], wall=[], clipping=[], doors=[], rooms=[])
+    issues = dict(grounding=[], ceiling=[], wall=[], clipping=[], doors=[], people=[], rooms=[])
     if arch is None:
         return issues
     boxes = {id(o): _prop_box(o) for _, o in scene["props"]}
@@ -335,12 +335,14 @@ def audit(aset, scene=None, log=print, coverage_rays=(48, 30)):
                     detail += 1
         cov = detail / hits if hits else 0.0
         issues["rooms"].append(dict(label=s["props"]["label"], ceiling=ceil_h, coverage=round(cov, 3)))
+    from . import placement
+    issues["people"] = placement.check_people(aset, log=lambda m: None)
     return issues
 
 
 def report(name, issues, log=print, limit=12):
     total = 0
-    for k in ("grounding", "ceiling", "wall", "clipping", "doors"):
+    for k in ("grounding", "ceiling", "wall", "clipping", "doors", "people"):
         lst = issues.get(k, [])
         total += len(lst)
         if lst:

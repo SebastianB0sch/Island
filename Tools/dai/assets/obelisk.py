@@ -17,6 +17,7 @@ import os
 from contextlib import contextmanager
 
 from . import AssetSet
+from . import with_travel
 from . import interior as K
 from . import detail as DT
 from .. import palette
@@ -5921,4 +5922,10 @@ def _ext_cams(aset, which):
         aset.special("camera", pos, target=tgt, lens=24.0, label=label)
 
 
-PLACEMENTS = {"obelisk_boys": build_boys, "obelisk_girls": build_girls}
+PLACEMENTS = {"obelisk_boys": with_travel(build_boys, [
+    ("foyer", "boys_foyer", "Obelisk Grand Foyer", "Chandeliers, the twin staircase and a lot of blue.", dict(step=0.2)),
+    ("duel_salon", "boys_duel_salon", "Obelisk Duel Salon", "Where the elite practise - duel tables under the portraits of past champions."),
+]), "obelisk_girls": with_travel(build_girls, [
+    ("foyer", "girls_foyer", "Girls' Dorm Foyer", "The lakeside mansion's entrance hall. Boys are not welcome.", dict(step=0.2)),
+    ("conservatory", "girls_conservatory", "Conservatory", "The glass garden room on the west side, full of flowers and lake light."),
+])}

@@ -40,6 +40,8 @@ private:
 	void Diamond(const FVector2D& C, float R, const FLinearColor& Color);
 	void Arrow(const FVector2D& C, float R, float YawDeg, const FLinearColor& Color);
 	FVector2D WorldToMapUV(const FVector& World) const;
+	/** Island map list: every location, and under the selected one its fast-travel points inside. */
+	TArray<ADALocationVolume*> GetMapRows(UDAIslandSubsystem* Sub) const;
 
 	void DrawIntro(float Time);
 	void DrawBanner(UDAIslandSubsystem* Sub, float Time);
@@ -65,7 +67,7 @@ private:
 
 	bool bMapOpen = false;
 	bool bHelpOpen = false;
-	int32 MapSelection = 0;
+	TWeakObjectPtr<ADALocationVolume> MapSelected;
 	float UIScale = 1.f;
 	float StartTime = 0.f;
 	TWeakObjectPtr<ADALocationVolume> HoveredZone;

@@ -23,6 +23,7 @@ import math
 import random
 
 from . import AssetSet
+from . import with_travel
 from . import interior as K
 from . import detail as DT
 from .. import palette
@@ -1196,4 +1197,6 @@ def build():
     return aset
 
 
-PLACEMENTS = {"hotsprings": build}
+PLACEMENTS = {"hotsprings": with_travel(build, [
+    ("bandai", "onsen_entrance", "Bathhouse Entrance", "Pay at the bandai, then men to the left, women to the right."),
+])}

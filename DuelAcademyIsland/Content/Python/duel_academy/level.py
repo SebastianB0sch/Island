@@ -241,10 +241,11 @@ class Placer:
         if cls is None:
             return
         for i, z in enumerate(self.layout["zones"]):
-            a = self.spawn(cls, self.loc(z["center"]), 0.0, f"Zone_{z['id']}", "Gameplay/zones")
+            a = self.spawn(cls, self.loc(z["center"]), self.yaw(z.get("yaw", 0.0)), f"Zone_{z['id']}", "Gameplay/zones")
             C.set_props(a, location_id=z["id"], display_name=z["name"], subtitle=z["subtitle"], description=z["desc"],
                         theme_color=C.lc(z["color"]), zone_extent=C.vec(z["extent"]), sort_order=i,
-                        spawn_location=self.loc(z["spawn"]["loc"]), spawn_yaw=self.yaw(z["spawn"]["yaw"]))
+                        spawn_location=self.loc(z["spawn"]["loc"]), spawn_yaw=self.yaw(z["spawn"]["yaw"]),
+                        parent_id=z.get("parent", ""))
             box = a.get_component_by_class(unreal.BoxComponent)
             if box:
                 box.set_box_extent(C.vec(z["extent"]), False)
@@ -297,6 +298,8 @@ class Placer:
             label = n.get("name", f"Student_{n['dorm']}").replace(" ", "_").replace(".", "")
             a = self.spawn(cls, self.loc(n["loc"]), self.yaw(n["yaw"]), label, "Gameplay/npcs")
             C.set_props(a, dorm=getattr(enum, n["dorm"].upper(), enum.SLIFER), wander_radius=float(n.get("wander", 800.0)))
+            if "points" in n:      # precomputed clear strolls (Tools/dai/placement.py); none = stands still
+                C.set_props(a, wander_points=[self.loc(p) for p in n["points"]], wander_points_only=True)
             if c:
                 # anime cast member (see Tools/dai/anime): mesh, skeleton group, name and dialogue
                 C.set_props(a, cast_mesh=c["name"], anim_group=c["group"], dorm_tint=bool(n.get("tint", True)),

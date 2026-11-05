@@ -167,6 +167,7 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 .venv/bin/python Tools/audit_interiors.py obelisk       # floating / sunk / clipping furniture, doors, detail coverage
 .venv/bin/python Tools/storey_report.py academy          # painted vs real windows per floor -> closed storeys
 .venv/bin/python Tools/spec_check.py                     # the interior spec, pass/fail for every location
+.venv/bin/python Tools/people_check.py                   # room for a person at every fast-travel point + NPC spot
 .venv/bin/python Tools/preview_interiors.py              # Docs/renders/interiors.jpg
 ```
 
@@ -175,11 +176,19 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 * Third-person anime student (the cast's generic boy) — switch your **dorm jacket**
   (Slifer Red / Ra Yellow / Obelisk Blue / Society of Light white) with **J**; NPC students wear theirs. The
   older CC0 low-poly student and a procedural avatar remain as fallbacks when no cast is imported.
-* Location banners + "**New location discovered**" tracking (17 named locations), compass, minimap.
-* **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker.
+* Location banners + "**New location discovered**" tracking (17 named locations and 19 rooms), compass, minimap.
+* **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker. The selected
+  location opens its list of rooms you can travel straight into - the Academy's main hall, Grand Duel Arena,
+  Card Shop, lecture halls, library and faculty annex, every dorm's hall / dining room, the ferry terminal, the
+  lighthouse watch room, the gym foyer, the bathhouse and the abandoned dorm's hall and ritual chamber. Every
+  arrival point is checked for room to stand (`Tools/people_check.py`); the volcano point is the **Crater Rim**
+  lookout, at the top of the switchback trail from the hot springs and the stone summit stair.
 * **Holographic duels** on the Grand Duel Arena field, the gym practice fields and the beach court.
 * **Card Shop**: open booster packs (32 original cards, rarities from Common to Ultra Rare), track your collection.
-* Signs with lore everywhere, students from all three dorms who wander around and chat (E).
+* Signs with lore everywhere, students from all three dorms who wander around and chat (E). Nobody stands in
+  the furniture: at build time every NPC spot is tested as a person-sized capsule against walls, fixtures,
+  furniture and props (NPCs in the way step to the nearest clear spot in the same room, never in a doorway), and
+  each NPC gets precomputed strolls - straight, clear, on one floor - instead of random wandering.
 * Walk into every building and up every floor: automatic doors, the camera pulls in indoors, furnished rooms everywhere.
 * **Day/night cycle** (Lumen GI, sky atmosphere, moon): lamps, windows and the lighthouse turn on at
   night, the crater glows. Time controls: **T** pause, **[ ]** speed, **N** skip 3 h.
@@ -241,6 +250,7 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   fetch_polyhaven.py        downloads / verifies the CC0 Poly Haven models + writes their SOURCE.txt
   dai/assets/detail.py      the lived-in layer: fixtures, desk / table / shelf sets, clutter
   dai/inspect.py            interior audit + lit / scale-reference previews (audit_interiors.py, storey_report.py)
+  dai/placement.py          standing-room checks (person capsules), NPC settling + stroll routes, arrival points
   dai/layout.py             places everything, scatters vegetation, writes layout.json
   dai/textures.py           detail/normal maps from the photo sets (procedural fallback), terrain layers
   dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction

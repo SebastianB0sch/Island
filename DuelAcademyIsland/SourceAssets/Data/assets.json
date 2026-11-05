@@ -680,6 +680,22 @@
   "category": "location"
  },
  {
+  "file": "Meshes/Locations/volcano/SM_Volcano_Summit.fbx",
+  "name": "SM_Volcano_Summit",
+  "folder": "Locations/volcano",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/volcano/SM_Volcano_Summit_NoCol.fbx",
+  "name": "SM_Volcano_Summit_NoCol",
+  "folder": "Locations/volcano",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Locations/waterfall/SM_Waterfall_Water_NoCol.fbx",
   "name": "SM_Waterfall_Water_NoCol",
   "folder": "Locations/waterfall",

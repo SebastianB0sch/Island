@@ -26,6 +26,7 @@ import math
 import random
 
 from . import AssetSet
+from . import with_travel
 from . import interior as K
 from . import detail as DT
 from .. import config as C
@@ -4508,6 +4509,7 @@ def build_lighthouse():
     tw.box_mm((0.75, 3.95, 0.95), (0.92, 4.03, 3.5), TRIM)
     tw.box_mm((-0.75, 3.95, 3.35), (0.75, 4.03, 3.5), TRIM)
     aset.door((0.0, 3.85, 0.95), 180.0, 1.5, 2.4, "lighthouse", double=True)
+    aset.arrival((0.0, 7.5, 0.95), -90.0)           # on the rock apron outside the door, facing it
     tw.box((0.0, 4.02, 3.62), (0.4, 0.12, 0.2), DMETAL)
     nc.box((0.0, 4.09, 3.55), (0.3, 0.04, 0.06), GLOW)
     aset.light((0.0, 4.6, 3.4), (1.0, 0.85, 0.6), 2000.0, 7.0, night_only=True)
@@ -4562,4 +4564,8 @@ def build_lighthouse():
     return aset
 
 
-PLACEMENTS = {"harbor": build_harbor, "lighthouse": build_lighthouse}
+PLACEMENTS = {"harbor": with_travel(build_harbor, [
+    ("terminal_hall", "harbor_terminal", "Ferry Terminal", "Departure hall, ticket office and the harbor master upstairs."),
+]), "lighthouse": with_travel(build_lighthouse, [
+    ("lh_watch", "lighthouse_top", "Lighthouse Watch Room", "The top of the tower, under the lantern - the whole harbor below."),
+])}

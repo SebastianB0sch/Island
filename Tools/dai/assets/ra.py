@@ -30,6 +30,7 @@ import random
 from contextlib import ExitStack, contextmanager
 
 from . import AssetSet
+from . import with_travel
 from . import detail as DT
 from . import interior as K
 from .. import palette
@@ -2628,4 +2629,7 @@ def build():
     return aset
 
 
-PLACEMENTS = {"ra": build}
+PLACEMENTS = {"ra": with_travel(build, [
+    ("hall", "ra_hall", "Ra Yellow Hall", "The dorm's entrance hall, with the lounge and the practice duel tables next door."),
+    ("cafeteria", "ra_cafeteria", "Ra Cafeteria", "Curry day every day. The best canteen on the island, say the Ra students."),
+])}

@@ -24,6 +24,7 @@ import math
 import random
 
 from . import AssetSet
+from . import with_travel
 from . import detail as DT
 from . import interior as K
 from .. import palette
@@ -1029,4 +1030,6 @@ def build():
     return aset
 
 
-PLACEMENTS = {"slifer": build}
+PLACEMENTS = {"slifer": with_travel(build, [
+    ("dining", "slifer_dining", "Slifer Dining Hall", "Rice, sardines and Professor Banner's cat. The heart of Slifer Red."),
+])}

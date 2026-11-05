@@ -21,6 +21,7 @@ import math
 import random
 
 from . import AssetSet
+from . import with_travel
 from . import interior as K
 from . import detail as DT
 from .. import palette
@@ -3350,4 +3351,7 @@ def build():
     return aset
 
 
-PLACEMENTS = {"abandoned": build}
+PLACEMENTS = {"abandoned": with_travel(build, [
+    ("hall", "abandoned_hall", "Abandoned Dorm Hall", "Dust, cobwebs and portraits that seem to follow you."),
+    ("ritual", "abandoned_ritual", "Ritual Chamber", "The forbidden room below the dorm. The circle on the floor is still warm."),
+])}

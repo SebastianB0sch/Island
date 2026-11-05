@@ -19,6 +19,7 @@ import random
 from contextlib import contextmanager
 
 from . import AssetSet
+from . import with_travel
 from . import interior as K
 from . import detail as DTL       # (DT is the drum wall thickness here)
 from .. import palette
@@ -1719,7 +1720,10 @@ def _lobby_interior(mb, nocol, aset):
     for y in (-51.0, -40.0):
         mb.box_mm((-24.5, y, FLOOR), (x0 + 1.0, y + 1.0, FLOOR + 1.1), "M_Wood",
                   mats={"+x": "M_AcademyBlue", "-y": "M_AcademyBlue", "+y": "M_AcademyBlue"})
-    mb.box_mm((-24.6, -51.1, FLOOR + 1.1), (x0 + 1.15, -38.9, FLOOR + 1.2), "M_Marble")
+    # U-shaped marble top over the front and the two returns (the clerk stands inside the U)
+    mb.box_mm((x0 - 0.1, -51.1, FLOOR + 1.1), (x0 + 1.15, -38.9, FLOOR + 1.2), "M_Marble")
+    for y in (-51.1, -40.0):
+        mb.box_mm((-24.6, y, FLOOR + 1.1), (x0 - 0.1, y + 1.1, FLOOR + 1.2), "M_Marble")
     mb.box_mm((x0 + 1.0, -50.0, FLOOR + 0.9), (x0 + 1.04, -40.0, FLOOR + 0.98), "M_Gold")
     mb.box_mm((x0 + 0.2, -42.0, FLOOR + 1.2), (x0 + 0.6, -41.4, FLOOR + 1.6), "M_DarkMetal")
     mb.box_mm((x0 + 0.15, -46.0, FLOOR + 1.2), (x0 + 0.45, -45.2, FLOOR + 1.27), "M_ShojiPaper")
@@ -1828,7 +1832,9 @@ def _card_shop(mb, aset):
     mb.box_mm((cx0, -50.0, FLOOR), (cx1, -40.0, FLOOR + 1.0), "M_ShopShelf", mats={"-x": "M_AcademyBlue"})
     mb.box_mm((cx0, -52.0, FLOOR), (cx1 + 2.5, -50.0, FLOOR + 1.0), "M_ShopShelf",
               mats={"-x": "M_AcademyBlue", "-y": "M_AcademyBlue"})
-    mb.box_mm((cx0 - 0.1, -52.1, FLOOR + 1.0), (cx1 + 2.6, -39.9, FLOOR + 1.07), "M_Marble")
+    # L-shaped marble top over the two counter runs only (the clerk stands in the open corner behind them)
+    mb.box_mm((cx0 - 0.1, -52.1, FLOOR + 1.0), (cx1 + 0.1, -39.9, FLOOR + 1.07), "M_Marble")
+    mb.box_mm((cx1 + 0.1, -52.1, FLOOR + 1.0), (cx1 + 2.6, -49.9, FLOOR + 1.07), "M_Marble")
     mb.box_mm((cx0 - 0.04, -52.0, FLOOR + 0.84), (cx0, -40.0, FLOOR + 0.92), "M_Gold")
     mb.box_mm((cx0 + 0.15, -49.0, FLOOR + 1.07), (cx1 - 0.15, -46.0, FLOOR + 1.45), "M_GlassClear")
     mb.box_mm((cx0 + 0.3, -41.4, FLOOR + 1.07), (cx0 + 0.75, -40.6, FLOOR + 1.35), "M_DarkMetal")
@@ -2207,8 +2213,10 @@ def _academy_dressing(mb, aset):
         aset.prop("SM_FlowerBush_White", (s * 36.0, -40.0, 0.0), 0.0)
         aset.prop("SM_VendingMachine", (s * 86.6, -30.0, 0.0), -90.0 * s)
         aset.prop("SM_VendingMachine", (s * 86.6, -32.0, 0.0), -90.0 * s)
+    # fast travel to the academy: on the forecourt at the foot of the main steps, facing the doors
+    aset.arrival((0.0, -92.0, 0.0), 90.0)
     # students outside
-    for p, yaw, d in (((-6.0, -88.0), 0.0, "slifer"), ((8.0, -79.0), 180.0, "ra"), ((-60.0, -38.5), 0.0, "obelisk"),
+    for p, yaw, d in (((-6.0, -88.0), 0.0, "slifer"), ((7.0, -87.5), 180.0, "ra"), ((-60.0, -38.5), 0.0, "obelisk"),
                       ((62.0, -7.0), 180.0, "ra"), ((0.0, 84.0), 0.0, "obelisk"), ((-90.0, -60.0), 45.0, "slifer"),
                       ((40.0, -24.0), -90.0, "obelisk"), ((-82.0, -22.0), 90.0, "ra")):
         aset.npc((p[0], p[1], 0.0 if abs(p[1]) > 77 or abs(p[0]) > 32 else FLOOR), yaw, dorm=d, wander=6.0)
@@ -5279,4 +5287,12 @@ def build_plaza():
     return aset
 
 
-PLACEMENTS = {"academy": build_academy, "plaza": build_plaza}
+PLACEMENTS = {"academy": with_travel(build_academy, [
+    ("lobby_floor", "academy_hall", "Academy Main Hall", "The marble entrance hall: reception, the Duel Disk service desk and the way into the arena."),
+    ("arena_portal", "academy_arena", "Grand Duel Arena", "Floor-level entrance to the arena where every big duel of the year is fought."),
+    (None, "academy_shop", "Card Shop", "Booster packs fresh from the mainland, the trading table and Miss Dorothy's counter.",
+     dict(spot=(19.9, -45.0, FLOOR), yaw=0.0, face_open=False)),     # inside the glass front, facing the counter
+    ("wingW_corridor", "academy_lectures", "Lecture Halls", "The west wing: tiered lecture halls, the duelist room and the exam hall upstairs."),
+    ("wingW_3f_library", "academy_library", "Academy Library", "Third floor of the west wing - rule books, card archives and quiet study tables."),
+    ("annex_faculty_hall", "academy_faculty", "Faculty Annex", "Behind the arena: the chancellor's office, the teachers' rooms and the staff lounge."),
+]), "plaza": build_plaza}

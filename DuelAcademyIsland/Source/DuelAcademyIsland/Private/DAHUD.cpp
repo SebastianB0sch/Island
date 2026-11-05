@@ -157,14 +157,17 @@ void ADAHUD::ToggleMap()
 			FInputModeGameAndUI Mode;
 			Mode.SetHideCursorDuringCapture(false);
 			PC->SetInputMode(Mode);
-			// Pre-select the zone we are standing in.
+			// Pre-select the zone we are standing in (a room inside a location opens that location's list).
 			if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 			{
-				const TArray<ADALocationVolume*> Zones = Sub->GetZones();
-				const int32 Current = Zones.IndexOfByKey(Sub->GetCurrentZone());
-				if (Current != INDEX_NONE)
+				if (ADALocationVolume* Current = Sub->GetCurrentZone())
 				{
-					MapSelection = Current;
+					MapSelected = Current;
+				}
+				if (!MapSelected.IsValid())
+				{
+					const TArray<ADALocationVolume*> Rows = GetMapRows(Sub);
+					MapSelected = Rows.Num() > 0 ? Rows[0] : nullptr;
 				}
 				Sub->PlayUISound(TEXT("A_UIClick"), 0.5f);
 			}
@@ -184,10 +187,12 @@ void ADAHUD::MoveMapSelection(int32 Delta)
 	}
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
-		const int32 Num = Sub->GetZones().Num();
+		const TArray<ADALocationVolume*> Rows = GetMapRows(Sub);
+		const int32 Num = Rows.Num();
 		if (Num > 0)
 		{
-			MapSelection = (MapSelection + Delta + Num) % Num;
+			const int32 Cur = FMath::Max(0, Rows.IndexOfByKey(MapSelected.Get()));
+			MapSelected = Rows[(Cur + Delta + Num) % Num];
 			Sub->PlayUISound(TEXT("A_UIClick"), 0.35f);
 		}
 	}
@@ -195,15 +200,46 @@ void ADAHUD::MoveMapSelection(int32 Delta)
 
 ADALocationVolume* ADAHUD::GetSelectedZone() const
 {
-	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+	return MapSelected.Get();
+}
+
+TArray<ADALocationVolume*> ADAHUD::GetMapRows(UDAIslandSubsystem* Sub) const
+{
+	TArray<ADALocationVolume*> Rows;
+	if (!Sub)
 	{
-		const TArray<ADALocationVolume*> Zones = Sub->GetZones();
-		if (Zones.IsValidIndex(MapSelection))
+		return Rows;
+	}
+	const TArray<ADALocationVolume*> Zones = Sub->GetZones();
+	const ADALocationVolume* Sel = MapSelected.Get();
+	const FString Open = Sel ? (Sel->IsSubLocation() ? Sel->ParentId : Sel->LocationId) : FString();
+	TSet<FString> Parents;
+	for (const ADALocationVolume* Z : Zones)
+	{
+		if (!Z->IsSubLocation())
 		{
-			return Zones[MapSelection];
+			Parents.Add(Z->LocationId);
 		}
 	}
-	return nullptr;
+	for (ADALocationVolume* Z : Zones)
+	{
+		if (Z->IsSubLocation() && Parents.Contains(Z->ParentId))
+		{
+			continue;
+		}
+		Rows.Add(Z);
+		if (Z->LocationId == Open)
+		{
+			for (ADALocationVolume* Child : Zones)
+			{
+				if (Child->ParentId == Z->LocationId)
+				{
+					Rows.Add(Child);
+				}
+			}
+		}
+	}
+	return Rows;
 }
 
 // ------------------------------------------------------------------------ main draw
@@ -331,7 +367,7 @@ void ADAHUD::DrawCompass(UDAIslandSubsystem* Sub)
 		{
 			const FVector To = Z->GetActorLocation() - P;
 			const double Dist = FVector(To.X, To.Y, 0.0).Size();
-			if (Dist < 2000.0 || Dist > 100000.0 || Z == Sub->GetCurrentZone())
+			if (Z->IsSubLocation() || Dist < 2000.0 || Dist > 100000.0 || Z == Sub->GetCurrentZone())
 			{
 				continue;
 			}
@@ -378,7 +414,7 @@ void ADAHUD::DrawMinimap(UDAIslandSubsystem* Sub)
 	// zone markers
 	for (ADALocationVolume* Z : Sub->GetZones())
 	{
-		if (!Z->bShowOnMap)
+		if (!Z->bShowOnMap || Z->IsSubLocation())
 		{
 			continue;
 		}
@@ -545,27 +581,38 @@ void ADAHUD::DrawMap(UDAIslandSubsystem* Sub)
 		PC->GetMousePosition(MouseX, MouseY);
 	}
 
-	const TArray<ADALocationVolume*> Zones = Sub->GetZones();
+	const TArray<ADALocationVolume*> Rows = GetMapRows(Sub);
+	const ADALocationVolume* Selected = MapSelected.Get();
 	HoveredZone.Reset();
 	float BestHover = 22.f * S();
-	for (int32 i = 0; i < Zones.Num(); ++i)
+	for (ADALocationVolume* Z : Rows)
 	{
-		const FVector2D UV = WorldToMapUV(Zones[i]->GetActorLocation());
+		const FVector2D UV = WorldToMapUV(Z->GetActorLocation());
 		const FVector2D Pt(MX + UV.X * Side, MY + UV.Y * Side);
-		const float D = FVector2D::Distance(Pt, FVector2D(MouseX, MouseY));
+		// rooms sit inside their building: they are picked from the list, the marker picks the location
+		const float D = FVector2D::Distance(Pt, FVector2D(MouseX, MouseY)) + (Z->IsSubLocation() ? 8.f * S() : 0.f);
 		if (D < BestHover)
 		{
 			BestHover = D;
-			HoveredZone = Zones[i];
+			HoveredZone = Z;
 		}
 	}
-	for (int32 i = 0; i < Zones.Num(); ++i)
+	for (ADALocationVolume* Z : Rows)
 	{
-		ADALocationVolume* Z = Zones[i];
 		const FVector2D UV = WorldToMapUV(Z->GetActorLocation());
 		const FVector2D Pt(MX + UV.X * Side, MY + UV.Y * Side);
-		const bool bSel = i == MapSelection || Z == HoveredZone.Get();
+		const bool bSel = Z == Selected || Z == HoveredZone.Get();
 		const bool bKnown = Sub->IsDiscovered(Z);
+		if (Z->IsSubLocation())
+		{
+			if (bSel)
+			{
+				Diamond(Pt, 7.f * S(), FLinearColor(0.f, 0.f, 0.f, 0.8f));
+				Diamond(Pt, 5.f * S(), Gold);
+				Text(Z->DisplayName, Pt.X, Pt.Y - 26.f * S(), Gold, 0.75f, true);
+			}
+			continue;
+		}
 		Diamond(Pt, (bSel ? 13.f : 9.f) * S(), FLinearColor(0.f, 0.f, 0.f, 0.8f));
 		Diamond(Pt, (bSel ? 10.f : 7.f) * S(), WithAlpha(Z->ThemeColor, bKnown ? 1.f : 0.55f));
 		Text(Z->DisplayName, Pt.X, Pt.Y + 12.f * S(), bSel ? Gold : WithAlpha(Paper, bKnown ? 0.95f : 0.6f), bSel ? 0.9f : 0.72f, true);
@@ -585,21 +632,22 @@ void ADAHUD::DrawMap(UDAIslandSubsystem* Sub)
 	Text(TEXT("ISLAND MAP"), LX, MY, Gold, 2.0f, false, BigFont);
 	Text(TEXT("Up / Down select    Enter travel    Click a marker    M close"), LX, MY + 62.f * S(), WithAlpha(Paper, 0.7f), 0.8f);
 	float LY = MY + 100.f * S();
-	const float RowH = 30.f * S();
-	for (int32 i = 0; i < Zones.Num(); ++i)
+	const float RowH = 28.f * S();
+	for (ADALocationVolume* Z : Rows)
 	{
-		ADALocationVolume* Z = Zones[i];
-		const bool bSel = i == MapSelection;
+		const bool bSel = Z == Selected;
+		const float Indent = Z->IsSubLocation() ? 26.f * S() : 0.f;
 		if (bSel)
 		{
-			DrawRect(WithAlpha(Z->ThemeColor, 0.35f), LX - 8.f * S(), LY - 3.f * S(), LW, RowH);
+			DrawRect(WithAlpha(Z->ThemeColor, 0.35f), LX - 8.f * S() + Indent, LY - 3.f * S(), LW - Indent, RowH);
 		}
-		DrawRect(WithAlpha(Z->ThemeColor, 1.f), LX - 8.f * S(), LY - 3.f * S(), 4.f * S(), RowH);
-		const FString Label = Sub->IsDiscovered(Z) ? Z->DisplayName : Z->DisplayName + TEXT("  (unexplored)");
-		Text(Label, LX + 6.f * S(), LY, bSel ? Paper : WithAlpha(Paper, 0.75f), 0.95f);
+		DrawRect(WithAlpha(Z->ThemeColor, Z->IsSubLocation() ? 0.6f : 1.f), LX - 8.f * S() + Indent, LY - 3.f * S(), 4.f * S(), RowH);
+		const FString Name = Z->IsSubLocation() ? FString(TEXT("> ")) + Z->DisplayName : Z->DisplayName;
+		const FString Label = Sub->IsDiscovered(Z) ? Name : Name + TEXT("  (unexplored)");
+		Text(Label, LX + 6.f * S() + Indent, LY, bSel ? Paper : WithAlpha(Paper, 0.75f), Z->IsSubLocation() ? 0.85f : 0.95f);
 		LY += RowH;
 	}
-	if (ADALocationVolume* Sel = Zones.IsValidIndex(MapSelection) ? Zones[MapSelection] : nullptr)
+	if (ADALocationVolume* Sel = MapSelected.Get())
 	{
 		LY += 16.f * S();
 		Text(Sel->DisplayName, LX, LY, Sel->ThemeColor, 1.3f, false, BigFont);
