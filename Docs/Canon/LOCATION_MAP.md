@@ -53,10 +53,10 @@
 | `obelisk_player_room` | Obelisk Blue boys - your room | Obelisk Room (Player) | `obelisk_boys` | needs_interior | (-57649, -54335.1, 3150) | `obelisk_player_room_bed` | `obelisk_player_room` |
 | `obelisk_girls_front` | Obelisk Blue girls - front | Obelisk Blue Girls' Dorm | `obelisk_girls` | existing | (-12000, -84000, 2945.3) | `obelisk_girls_gate` | — |
 | `harbor` | Harbor | Duel Academy Harbor | `harbor` | existing | (4000, 104000, 420) | `harbor_dock` | — |
-| `ocean_shore` | Ocean / next to ocean | Shoreline / Lake Overlook | `beach` | merged | (82000, 56000, 911) | `beach_shore` | → `beach` |
-| `beach` | Ocean / next to ocean (beach) | South-East Beach | `beach` | existing | (82000, 56000, 911) | `beach_shore` | — |
+| `ocean_shore` | Ocean / next to ocean | Shoreline / Lake Overlook | `beach` | merged | (82000, 56000, 791.1) | `beach_shore` | → `beach` |
+| `beach` | Ocean / next to ocean (beach) | South-East Beach | `beach` | existing | (82000, 56000, 791.1) | `beach_shore` | — |
 | `lake` | Ocean / next to ocean (lake) | Academy Lake | `lake` | existing | (-4000, -76000, 2824.5) | `lake_shore` | — |
-| `volcano_crater` | Volcano - near crater | Volcano Crater Rim | `volcano` | existing | (90500, -64000, 12719.2) | `volcano_crater` | — |
+| `volcano_crater` | Volcano - near crater | Volcano Crater Rim | `volcano` | existing | (82419.2, -69198.5, 30428) | `volcano_crater` | — |
 | `abandoned_dorm` | Abandoned dorm | Abandoned Dorm | `abandoned` | existing | (91930, 6000, 1960) | `abandoned_dorm_hall` | — |
 | `hot_springs` | Hot springs | Volcanic Hot Springs | `hotsprings` | existing | (103500, -30000, 5971.7) | `hot_springs` | — |
 | `forest` | Forest | Duel Academy Forest | `forest` | existing | (71392.8, -35029.8, 12865.1) | `forest_shrine` | — |

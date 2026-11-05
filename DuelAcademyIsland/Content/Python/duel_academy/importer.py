@@ -104,6 +104,8 @@ def import_audio():
     names = [os.path.splitext(os.path.basename(f))[0] for f in files]
     _import_tasks(files, C.AUDIO_DIR, names=names)
     loops = {"A_Ocean", "A_Wind", "A_Forest", "A_Volcano", "A_Waterfall", "A_HotSpring", "A_Crowd"}
+    # Zone/title music beds are continuous too (M_<Track>).
+    loops.update(n for n in names if n.startswith("M_"))
     for n in names:
         snd = C.load(f"{C.AUDIO_DIR}/{n}")
         if snd is None:

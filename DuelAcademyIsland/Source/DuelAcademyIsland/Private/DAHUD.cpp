@@ -17,6 +17,7 @@
 #include "DASaveGame.h"
 #include "DASettings.h"
 #include "DAShopSubsystem.h"
+#include "DAMovementAudioComponent.h"
 #include "DAStudentCharacter.h"
 #include "DAAvatarAnimInstance.h"
 #include "DAAvatarComponent.h"
@@ -400,7 +401,7 @@ void ADAHUD::BeginPlay()
 			int32 Slots = Mesh ? Mesh->GetNumMaterials() : 0;
 			for (int32 i = 0; i < Slots; ++i)
 			{
-				const UMaterialInterface* Mat = Mesh->GetMaterial(i);
+				UMaterialInterface* Mat = Mesh->GetMaterial(i);
 				const UMaterial* Base = Mat ? Mat->GetBaseMaterial() : nullptr;
 				Cel += (Base && Base->GetName().StartsWith(TEXT("M_DA_Cel"))) ? 1 : 0;
 			}
@@ -1971,6 +1972,17 @@ void ADAHUD::LogFootPlantStats(const FString& Label)
 	const float StepsPerMinute = static_cast<float>(CadenceSum / Num) * 120.f;
 	UE_LOG(LogTemp, Log, TEXT("DALocoTest %s: actor %.0f cm/s, planted ball median %.1f cm/s (p90 %.1f), samples %d, cadence %.0f steps/min"),
 		*Label, ActorSpeed, Median, P90, Speeds.Num(), StepsPerMinute);
+
+	// Cross-check that the procedural movement audio is actually receiving
+	// foot contacts from this same gait (diagnostic only; no audio in -nosound).
+	if (const ADAStudentCharacter* Char = LocomotionTestChar.Get())
+	{
+		if (const UDAMovementAudioComponent* Audio = Char->FindComponentByClass<UDAMovementAudioComponent>())
+		{
+			UE_LOG(LogTemp, Log, TEXT("DALocoTest %s: movement audio footsteps=%d lastSurface=%d"),
+				*Label, Audio->GetFootstepCount(), static_cast<int32>(Audio->GetLastSurface()));
+		}
+	}
 }
 
 void ADAHUD::DrawHUD()

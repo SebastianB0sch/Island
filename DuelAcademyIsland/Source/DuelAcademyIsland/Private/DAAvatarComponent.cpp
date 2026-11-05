@@ -129,7 +129,15 @@ bool UDAAvatarComponent::SetupCast()
 	}
 	if (UDAAvatarAnimInstance* Inst = Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()))
 	{
-		Inst->Configure(Anims, WalkAnimSpeed * BodyScale, RunAnimSpeed * BodyScale);
+		// The optional Fab retarget takes are longer than the procedural gait clips
+		// (1.17 s / 0.63 s versus 0.80 s / 0.47 s) and are authored at a slower
+		// reference speed. Detect them from the installed clip length so the same
+		// component also works when the pack is absent and the gait takes are used.
+		const UAnimSequence* WalkTake = Anims.FindRef(TEXT("Walk"));
+		const bool bFabLocomotion = WalkTake && WalkTake->GetPlayLength() > 1.0f;
+		const float WalkRef = bFabLocomotion ? 130.f : WalkAnimSpeed;
+		const float RunRef = bFabLocomotion ? 265.f : RunAnimSpeed;
+		Inst->Configure(Anims, WalkRef * BodyScale, RunRef * BodyScale);
 	}
 	else
 	{
@@ -210,6 +218,55 @@ void UDAAvatarComponent::SetEmotion(FName Emotion, float Weight)
 	{
 		Inst->SetEmotion(Emotion, Weight);
 	}
+}
+
+float UDAAvatarComponent::GetLocomotionPhase() const
+{
+	// The anime cast has one native phase driving both walk and run, so the
+	// footsteps line up with the authored foot plants rather than a timer.
+	if (SkelComp)
+	{
+		if (const UDAAvatarAnimInstance* Anim = Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()))
+		{
+			return Anim->GetLocomotionPhase();
+		}
+		// Single-node SK_Student fallback: the clip position is the contact phase.
+		static const FName NameWalk(TEXT("Walk"));
+		static const FName NameRun(TEXT("Run"));
+		if ((CurrentAnim == NameWalk || CurrentAnim == NameRun) && FindAnim(CurrentAnim))
+		{
+			const float Length = FindAnim(CurrentAnim)->GetPlayLength();
+			if (Length > 0.f)
+			{
+				return FMath::Fmod(SkelComp->GetPosition() / Length, 1.f);
+			}
+		}
+		return 0.f;
+	}
+	return Phase;
+}
+
+float UDAAvatarComponent::GetLocomotionCadence() const
+{
+	if (SkelComp)
+	{
+		if (const UDAAvatarAnimInstance* Anim = Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()))
+		{
+			return Anim->BlendedCadence;
+		}
+		static const FName NameWalk(TEXT("Walk"));
+		static const FName NameRun(TEXT("Run"));
+		if ((CurrentAnim == NameWalk || CurrentAnim == NameRun) && FindAnim(CurrentAnim))
+		{
+			const float Length = FindAnim(CurrentAnim)->GetPlayLength();
+			if (Length > 0.f)
+			{
+				return SkelComp->GetPlayRate() / Length;
+			}
+		}
+		return 0.f;
+	}
+	return GaitCadence;
 }
 
 UAnimSequence* UDAAvatarComponent::FindAnim(FName State) const
@@ -840,6 +897,7 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			Duty = FMath::Lerp(0.6f, 0.3f, Run01);
 		}
 	}
+	GaitCadence = Cadence;
 	Phase = FMath::Fmod(Phase + Cadence * DeltaTime, 1.f);
 	const float Stride = Cadence > 0.f ? V / Cadence : 0.f;
 	// The planted foot travels Stride * Duty backwards during stance: exactly V.

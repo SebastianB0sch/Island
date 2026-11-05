@@ -44,7 +44,7 @@ import generate_puzzles  # noqa: E402
 from dai import atomic, cache  # noqa: E402
 from dai import config as pipeline_config  # noqa: E402
 from dai import jsonio  # noqa: E402
-from dai.anime import manifest, vrm  # noqa: E402
+from dai.anime import manifest, roster, vrm  # noqa: E402
 from dai.anime.vrm import alpha_modes, read_vrm, target_names  # noqa: E402
 from dai import audio  # noqa: E402
 import numpy as np  # noqa: E402
@@ -426,6 +426,65 @@ class CastCleanupTests(unittest.TestCase):
             self.assertNotIn(b"\r\n", data)
             self.assertEqual(json.loads(data)["assets"], ["SK_Anime_A"])
             self.assertEqual(sorted(p.name for p in path.parent.iterdir()), ["cast_assets.json"])
+
+
+class NpcRosterTests(unittest.TestCase):
+    def markers(self) -> list[dict]:
+        return [
+            dict(loc=[0.0, 0.0, 0.0], group="academy", dorm="slifer", cast="student_m1", tint=True),
+            dict(loc=[100.0, 0.0, 0.0], group="academy", dorm="ra", cast="student_m1", tint=True),
+            dict(loc=[200.0, 0.0, 0.0], group="academy", dorm="white", cast="student_m1", tint=True),
+            dict(loc=[300.0, 0.0, 0.0], group="academy", dorm="white", cast="student_m1", tint=True),
+            dict(loc=[400.0, 0.0, 0.0], group="obelisk_girls", dorm="obelisk", cast="student_f1", tint=True),
+            dict(loc=[500.0, 0.0, 0.0], group="obelisk_girls", dorm="obelisk", cast="student_f2", tint=True),
+            dict(loc=[600.0, 0.0, 0.0], group="harbor", dorm="ra", cast="student_m1", tint=True),
+            dict(loc=[700.0, 0.0, 0.0], group="harbor", dorm="ra", cast="student_m1", tint=True),
+        ]
+
+    def test_every_generic_marker_gets_a_unique_identity(self) -> None:
+        markers = self.markers()
+        roster.assign_uniques(markers)
+        names = [m["name"] for m in markers]
+        self.assertEqual(len(names), len(set(names)))
+        for marker in markers:
+            self.assertEqual(len(marker["lines"]), 3)
+            self.assertEqual(len(marker["hair"]), 3)
+            self.assertTrue(marker["roster_id"])
+            first = marker["name"].split()[0]
+            self.assertTrue(any(marker["name"] in line or first in line for line in marker["lines"]))
+
+    def test_assignment_is_deterministic_and_preserves_named_cast(self) -> None:
+        first = self.markers()
+        second = self.markers()
+        roster.assign_uniques(first)
+        roster.assign_uniques(second)
+        self.assertEqual([(m["name"], m["lines"], m["hair"]) for m in first],
+                         [(m["name"], m["lines"], m["hair"]) for m in second])
+
+        jaden = dict(loc=[0.0, 0.0, 0.0], group="slifer", dorm="slifer", cast="jaden",
+                     tint=False, name="Jaden Yuki", lines=["Test line."], scale=0.964)
+        roster.assign_uniques([jaden])
+        self.assertEqual(jaden["name"], "Jaden Yuki")
+        self.assertEqual(jaden["lines"], ["Test line."])
+
+    def test_staff_identities_match_their_base_mesh(self) -> None:
+        markers = self.markers()
+        roster.assign_uniques(markers)
+        for marker in markers:
+            if marker["dorm"] == "white":
+                self.assertIn(marker["cast"], ("student_m1", "student_f1", "student_f2"))
+                self.assertNotEqual(marker["name"], "Student")
+
+    def test_fab_looks_are_gendered_and_sparse(self) -> None:
+        markers = self.markers()
+        roster.assign_uniques(markers)
+        fab = [m for m in markers if m.get("fab_look")]
+        self.assertTrue(fab)
+        self.assertLess(len(fab), len(markers))
+        for marker in fab:
+            expected = roster.FAB_FEMALE_LOOKS if roster._is_female(marker) else roster.FAB_MALE_LOOKS
+            self.assertIn(marker["fab_look"], expected)
+            self.assertNotEqual(marker["dorm"], "white")
 
 
 # ---------------------------------------------------------------------------

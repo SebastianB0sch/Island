@@ -95,9 +95,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	bool bDormTint = true;
 
-	/** Ground speed (cm/s) at which the walk / run takes play at rate 1 (no foot sliding). The defaults fit the
-	 *  anime cast's authored takes (1.50 m/s walk, 4.20 m/s run); the SK_Student fallback switches to the
-	 *  speeds its import normalises its clips to (RateScale, measured per rig by Tools/dai/character.py). */
+	/** Ground speed (cm/s) at which the walk / run takes play at rate 1 (no foot sliding). The defaults fit
+	 *  the procedural gait takes (1.50 m/s walk, 4.20 m/s run). When the local Fab locomotion retarget is
+	 *  installed, SetupCast detects the longer 1.17 s / 0.63 s clips and uses their 1.30 / 2.65 m/s
+	 *  reference speeds instead. The SK_Student fallback switches to the speeds its import normalises its
+	 *  clips to (RateScale, measured per rig by Tools/dai/character.py). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float WalkAnimSpeed = 150.f;
 
@@ -131,6 +133,14 @@ public:
 	/** Anime cast only: Joy / Angry / Sorrow / Surprised / Fun, 0..1 (NAME_None clears). */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
 	void SetEmotion(FName Emotion, float Weight);
+
+	/** Current locomotion contact phase, 0..1 (0 and 0.5 are the two foot plants). */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Animation")
+	float GetLocomotionPhase() const;
+
+	/** Locomotion cycles per second currently shown (two foot contacts per cycle). */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Animation")
+	float GetLocomotionCadence() const;
 
 	/** Play a one-shot gesture take (Wave, Yes, No, Clap, Interact...) while standing. It is
 	 *  skipped while walking, airborne, swimming or dueling, and fades out as soon as the
@@ -226,6 +236,8 @@ private:
 	bool bHasLastYaw = false;
 
 	float Phase = 0.f;
+	/** Cadence solved by the procedural gait (cycles per second). */
+	float GaitCadence = 0.f;
 	float RideLift = 0.f;
 	FName PelvisBone = NAME_None;
 	bool bPelvisSearched = false;

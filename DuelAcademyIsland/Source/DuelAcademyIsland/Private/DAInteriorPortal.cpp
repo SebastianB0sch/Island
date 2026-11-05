@@ -5,6 +5,7 @@
 #include "Camera/PlayerCameraManager.h"
 #include "Components/BoxComponent.h"
 #include "DAIslandSubsystem.h"
+#include "DAMusicSubsystem.h"
 #include "DATypes.h"
 #include "DAStudentCharacter.h"
 #include "DuelAcademyIsland.h"
@@ -419,6 +420,24 @@ void ADAInteriorPortal::ApplyArrival(AActor* User)
 		// player picked up at the departure door, otherwise the HUD prompt keeps
 		// pointing at an interactable left behind in another cell.
 		Character->NotifyTeleportArrived();
+	}
+
+	// The portal cells sit far below the island, outside every location volume.
+	// Their entrances/exits tell the music director which room is on the other
+	// side of the fade; the return portal hands control back to the zone map.
+	if (UDAMusicSubsystem* Music = UDAMusicSubsystem::Get(this))
+	{
+		if (!InteriorId.IsEmpty())
+		{
+			if (bReturnPortal)
+			{
+				Music->ClearInteriorContext();
+			}
+			else
+			{
+				Music->SetInteriorContext(InteriorId);
+			}
+		}
 	}
 
 	if (APawn* Pawn = Cast<APawn>(User))

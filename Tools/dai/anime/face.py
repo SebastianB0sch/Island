@@ -258,6 +258,13 @@ def _extras(canvas, spec):
             lay = lay.filter(ImageFilter.GaussianBlur(canvas.n * 0.01))
         elif ex == "nose":
             _thick_curve(d, canvas, [(0.0, -0.46), (0.025, -0.54)], 0.014, 0.006, _rgb((0.84, 0.60, 0.52)))
+        elif ex == "mustache":
+            # A soft, two-lobed moustache for the older staff (Banner, Sheppard, Sartyr).
+            color = spec.get("facial_hair", (0.28, 0.20, 0.14))
+            for side in (-1, 1):
+                pts = [(side * 0.015, -0.60), (side * 0.055, -0.615), (side * 0.10, -0.60),
+                       (side * 0.135, -0.565)]
+                _thick_curve(d, canvas, pts, 0.022, 0.008, _rgb(color))
         canvas.over(lay)
 
 

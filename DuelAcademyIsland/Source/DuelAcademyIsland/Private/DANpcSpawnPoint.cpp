@@ -200,6 +200,29 @@ AActor* ADANpcSpawnPoint::SpawnNpc(ADANpcDirector* Director)
 		{
 			Student->DisplayName = DisplayName;
 		}
+		Student->bDormTint = bDormTint;
+		if (!FabLook.IsEmpty())
+		{
+			Student->FabLook = FabLook;
+		}
+		if (!CastMesh.IsEmpty())
+		{
+			Student->CastMesh = CastMesh;
+			Student->AnimGroup = AnimGroup;
+		}
+		if (BodyScale > 0.f)
+		{
+			Student->BodyScale = BodyScale;
+		}
+		if (bOverrideHairColor)
+		{
+			Student->bOverrideHairColor = true;
+			Student->HairColor = HairColor;
+		}
+		if (Lines.Num() > 0)
+		{
+			Student->Lines = Lines;
+		}
 	}
 
 	Npc->FinishSpawning(SpawnTransform);

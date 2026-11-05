@@ -11,7 +11,7 @@ Runtime data for portals, interiors, scene anchors and NPC schedules. All files 
 | `interiors.json` | Portal-cell definitions: origin, bounds, floor/ceiling, entrance/exit portals, props, lighting/nav notes. |
 | `portals.json` | 10 paired entrance/exit portals with target transforms, fade, cooldown and lock flags. |
 | `anchors.json` | Named camera/player/NPC/stage/prop marks used by story scenes. |
-| `spawns.json` | Schedule spawn points with role, dorm, wander radius, Z offset and event override. |
+| `spawns.json` | Schedule spawn points with role, dorm, wander radius, Z offset, event override and optional `cast` / `tint` / `hair` / `scale` / `fab_look` / `lines` appearance and dialogue. |
 
 ## Coordinate convention
 
@@ -28,12 +28,27 @@ All values are **UE centimetres**:
 |---|---|
 | `portals[]` | `ADAInteriorPortal` (`DAInteriorPortal.h`) |
 | `anchors[]` | `ADASceneAnchor` (`DASceneAnchor.h`) — data `tags` maps to `AnchorTags` |
-| `spawns[]` | `ADANpcSpawnPoint` (`DANpcSpawnPoint.h`) — data `role` maps to `SpawnRole` |
+| `spawns[]` | `ADANpcSpawnPoint` (`DANpcSpawnPoint.h`) — data `role` maps to `SpawnRole`; `cast`/`tint`/`hair`/`scale`/`fab_look`/`lines` map to the NPC look and dialogue. |
 | schedule application | `ADANpcDirector` (`DANpcDirector.h`) |
 
 `ADAInteriorPortal` implements `IDAInteractableInterface`, so the existing “E / interact” focus loop can
 open a door prompt without any new UI. `bAutoTrigger` also lets the player walk through.
 `GetSaveState()` / `ApplySaveState()` expose the portal lock/visited bits (A02 owns the save schema).
+
+## NPC standing room
+
+Spawn anchors are geometry-checked, not just zone-checked. Run inside Blender:
+
+```powershell
+blender --background --factory-startup --python Tools/world/check_npc_clearance.py
+```
+
+It verifies every interior mark against its cell shell/furniture and every exterior
+mark against the generated island collision. `python Tools/world/validate_layout.py
+--strict` also rejects shared anchors, capsule overlaps (under 72 cm), NPCs on player
+marks and interior anchors outside their cell. Anchor Z is the floor for exterior
+marks (`spawn_z_offset_cm: 90`) and the capsule centre (floor + 100 cm) for interior
+marks (`spawn_z_offset_cm: 0`).
 
 ## Lock flags
 
@@ -61,7 +76,7 @@ the registration map, releases NPCs for removed points, destroys unreachable orp
 current schedule/event (or the `spawn_on_begin_play` set before any schedule). The director is an actor,
 does not tick, and only does work when a schedule/event changes or a refresh is requested.
 
-Runtime coverage: `-DANpcScheduleTest` validates all 28 rows against this file, applies Monday-Sunday
+Runtime coverage: `-DANpcScheduleTest` validates all 38 rows against this file, applies Monday-Sunday
 AM/PM, exercises `E01`/`E24`/`tutorial_duel` and runs refresh/spawn leak cycles. See
 `Docs/World/NPC_SCHEDULES.md`.
 

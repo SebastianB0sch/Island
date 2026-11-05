@@ -1,0 +1,138 @@
+{
+  "generated_at": "2026-11-05T20:14:41.855Z",
+  "sample_rate": 22050,
+  "tracks": {
+    "M_AcademyHall": {
+      "file": "M_AcademyHall.wav",
+      "bpm": 84,
+      "loop_seconds": 22.857143,
+      "render_seconds": 2.096
+    },
+    "M_AcademyGrounds": {
+      "file": "M_AcademyGrounds.wav",
+      "bpm": 112,
+      "loop_seconds": 34.285714,
+      "render_seconds": 3.352
+    },
+    "M_AcademyFaculty": {
+      "file": "M_AcademyFaculty.wav",
+      "bpm": 88,
+      "loop_seconds": 21.818182,
+      "render_seconds": 1.885
+    },
+    "M_Title": {
+      "file": "M_Title.wav",
+      "bpm": 96,
+      "loop_seconds": 40,
+      "render_seconds": 5.158
+    },
+    "M_AcademyStudy": {
+      "file": "M_AcademyStudy.wav",
+      "bpm": 72,
+      "loop_seconds": 26.666667,
+      "render_seconds": 3.14
+    },
+    "M_Classroom": {
+      "file": "M_Classroom.wav",
+      "bpm": 100,
+      "loop_seconds": 19.2,
+      "render_seconds": 1.758
+    },
+    "M_SliferDorm": {
+      "file": "M_SliferDorm.wav",
+      "bpm": 92,
+      "loop_seconds": 41.73913,
+      "render_seconds": 4.258
+    },
+    "M_CardShop": {
+      "file": "M_CardShop.wav",
+      "bpm": 116,
+      "loop_seconds": 16.551724,
+      "render_seconds": 1.546
+    },
+    "M_DuelArena": {
+      "file": "M_DuelArena.wav",
+      "bpm": 132,
+      "loop_seconds": 29.090909,
+      "render_seconds": 3.284
+    },
+    "M_ObeliskGirls": {
+      "file": "M_ObeliskGirls.wav",
+      "bpm": 84,
+      "loop_seconds": 22.857143,
+      "render_seconds": 4.153
+    },
+    "M_RaDorm": {
+      "file": "M_RaDorm.wav",
+      "bpm": 108,
+      "loop_seconds": 35.555556,
+      "render_seconds": 4.042
+    },
+    "M_ObeliskDorm": {
+      "file": "M_ObeliskDorm.wav",
+      "bpm": 88,
+      "loop_seconds": 43.636364,
+      "render_seconds": 4.771
+    },
+    "M_DormRoom": {
+      "file": "M_DormRoom.wav",
+      "bpm": 76,
+      "loop_seconds": 25.263158,
+      "render_seconds": 2.159
+    },
+    "M_Harbor": {
+      "file": "M_Harbor.wav",
+      "bpm": 104,
+      "loop_seconds": 36.923077,
+      "render_seconds": 2.93
+    },
+    "M_Beach": {
+      "file": "M_Beach.wav",
+      "bpm": 112,
+      "loop_seconds": 17.142857,
+      "render_seconds": 1.745
+    },
+    "M_Water": {
+      "file": "M_Water.wav",
+      "bpm": 76,
+      "loop_seconds": 25.263158,
+      "render_seconds": 3.879
+    },
+    "M_Forest": {
+      "file": "M_Forest.wav",
+      "bpm": 84,
+      "loop_seconds": 22.857143,
+      "render_seconds": 4.533
+    },
+    "M_HotSprings": {
+      "file": "M_HotSprings.wav",
+      "bpm": 68,
+      "loop_seconds": 28.235294,
+      "render_seconds": 3.831
+    },
+    "M_Gym": {
+      "file": "M_Gym.wav",
+      "bpm": 128,
+      "loop_seconds": 30,
+      "render_seconds": 3.314
+    },
+    "M_Abandoned": {
+      "file": "M_Abandoned.wav",
+      "bpm": 66,
+      "loop_seconds": 29.090909,
+      "render_seconds": 3.636
+    },
+    "M_Cliffs": {
+      "file": "M_Cliffs.wav",
+      "bpm": 72,
+      "loop_seconds": 26.666667,
+      "render_seconds": 3.307
+    },
+    "M_Volcano": {
+      "file": "M_Volcano.wav",
+      "bpm": 100,
+      "loop_seconds": 38.4,
+      "render_seconds": 4.679
+    }
+  }
+}

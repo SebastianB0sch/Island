@@ -50,3 +50,11 @@ Thumbs.db
 
 # third-party asset staging (curated assets are copied into SourceAssets / Tools/thirdparty/<pack>)
 Tools/thirdparty/_staging/
+
+# Licensed Fab content is installed locally by Tools/import_fab_anime.py and
+# must never be committed (see Docs/FAB_ANIME.md).
+DuelAcademyIsland/Content/AnimeCharacters/
+
+# FBX exports / retargeted locomotion takes derived from the licensed Fab pack
+# (Tools/export_fab_locomotion.py, Tools/retarget_fab_anime.py).
+Tools/thirdparty/fab_anime/

@@ -1042,21 +1042,25 @@ def annotate_layout(log=print):
     layout = jsonio.read_json(path)
     CAST.assign_npcs(layout.get("npcs", []))
     jsonio.write_json(path, layout, separators=(",", ":"))
-    named = [n["cast"] for n in layout.get("npcs", []) if n.get("cast") and not n.get("tint", True)]
-    log(f"  anime: layout.json npcs cast ({len(named)} named: {', '.join(named)})")
+    cast = [n["cast"] for n in layout.get("npcs", []) if n.get("cast") and not n.get("tint", True)]
+    ambient = [n["name"] for n in layout.get("npcs", []) if n.get("name") and n.get("tint", True)]
+    log(f"  anime: layout.json npcs ({len(cast)} named cast, {len(ambient)} ambient identities: "
+        f"{', '.join(cast)})")
 
 
 # --------------------------------------------------------------------------- preview render
 def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), samples=32, view=0.0, log=print,
-                  portrait=False):
+                  portrait=False, transparent=False, distance=None, target_z=None, entries=None):
     """Cycles toon render of the cast standing in a row (for Docs/renders and quick iteration). portrait: a
-    head-and-shoulders close-up of the first character instead (to compare with official portraits)."""
+    head-and-shoulders close-up of the first character instead (to compare with official portraits).
+    transparent: alpha background (no ground), for UI portraits; distance / target_z override the framing;
+    entries: optional {id: entry} table (portrait-only cast, expression overrides)."""
     import math
     from .. import blend
     blend.reset_scene()
     scene = bpy.context.scene
     scene.render.fps = 30
-    entries = CAST.all_entries()
+    entries = entries or CAST.all_entries()
     ids = ids or list(CAST.CAST)
     src_key = dict((s, k) for s, k, _ in TAKES).get(state)
     src = spec = None
@@ -1099,7 +1103,9 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
             o.visible_shadow = True
     blend.setup_render(res, samples, scene)
     scene.view_settings.view_transform = "Standard"     # flat anime colours, no filmic desaturation
-    scene.render.film_transparent = False
+    scene.render.film_transparent = transparent
+    if transparent:
+        scene.render.image_settings.color_mode = "RGBA"
     world = bpy.data.worlds.new("cast")
     world.use_nodes = True
     bg = world.node_tree.nodes["Background"]
@@ -1111,15 +1117,16 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
     sun.data.angle = math.radians(3)
     sun.rotation_euler = (math.radians(48), 0, math.radians(-22))
     scene.collection.objects.link(sun)
-    ground = bpy.data.meshes.new("ground")
-    ground.from_pydata([(-20, -20, 0), (20, -20, 0), (20, 20, 0), (-20, 20, 0)], [], [(0, 1, 2, 3)])
-    g = bpy.data.objects.new("ground", ground)
-    gm = bpy.data.materials.new("groundmat")
-    gm.diffuse_color = (0.55, 0.62, 0.45, 1)
-    gm.use_nodes = True
-    gm.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.36, 0.50, 0.26, 1)
-    ground.materials.append(gm)
-    scene.collection.objects.link(g)
+    if not transparent:
+        ground = bpy.data.meshes.new("ground")
+        ground.from_pydata([(-20, -20, 0), (20, -20, 0), (20, 20, 0), (-20, 20, 0)], [], [(0, 1, 2, 3)])
+        g = bpy.data.objects.new("ground", ground)
+        gm = bpy.data.materials.new("groundmat")
+        gm.diffuse_color = (0.55, 0.62, 0.45, 1)
+        gm.use_nodes = True
+        gm.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.36, 0.50, 0.26, 1)
+        ground.materials.append(gm)
+        scene.collection.objects.link(g)
     width = len(ids) * spacing
     dist = max(3.6, width * 1.45)
     a = math.radians(view)
@@ -1128,8 +1135,9 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
         bpy.context.view_layer.update()
         head = first.matrix_world @ first.pose.bones["head"].head          # posed (the take moves the hips)
         bust = portrait == "bust"                    # head and chest (uniform details) instead of the face
-        tgt = (head.x, head.y, head.z + (-0.12 if bust else 0.08) * first.scale.z)   # the head bone sits at the jaw
-        d = 1.45 if bust else 0.9
+        offset = target_z if target_z is not None else (-0.12 if bust else 0.08)
+        tgt = (head.x, head.y, head.z + offset * first.scale.z)   # the head bone sits at the jaw
+        d = distance if distance is not None else (1.45 if bust else 0.9)
         cam = blend.camera("cam", (tgt[0] + math.sin(a) * d, -math.cos(a) * d, tgt[2]), tgt, lens=50.0)
     else:
         cam = blend.camera("cam", (math.sin(a) * dist, -math.cos(a) * dist, 1.25), (0.0, 0.0, 0.92), lens=50.0)

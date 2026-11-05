@@ -105,7 +105,7 @@ These are the only intentional deviations from a 1:1 GBA port. Everything else s
 - Collection is a `TSet` on the player pawn; no inventory/save.
 - No calendar, DP, titles, dorm promotion, exams, story flags, emails, schedules or save/load.
 - No interiors for story locations.
-- NPCs are the named cast (Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy, Crowler) plus generic students with fixed lines; no data-driven roster/schedules.
+- NPCs are the named cast (Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy, Crowler) plus a data-driven roster: 154 named ambient students with unique voices, hair colours and sizes (`Tools/dai/anime/roster.py`) and 38 schedule spawn points with per-contact looks and dialogue (`Content/Data/World/spawns.json`). On a machine with the licensed Fab Anime Character Pack installed, 22 ambient NPCs and a dozen schedule crowd marks use its modular anime looks through a cosmetic puppet, and the pack's idle / walk / run takes can be retargeted onto the native cast (`Tools/retarget_fab_anime.py`); the pack and the derived takes are local-only and not redistributed (`Docs/FAB_ANIME.md`).
 - `ADAIslandManager` tracks a simple `Day` and clock, not the GBA school calendar.
 
 **Important:** the target working tree currently contains substantial uncommitted work (duel engine, data, cast, HUD changes). **Do not let subagents start from a dirty tree.** See §10.

@@ -420,7 +420,10 @@ def main(argv: list[str]) -> int:
 
         if interior_id in cells:
             cell_box = bounds(cells[interior_id].get("bounds_ue"))
-            if cell_box and not inside_bounds(point, cell_box, 200.0):
+            # A mark outside its own cell is not just misplaced: NPCs spawned
+            # there stand in the void / behind the shell, where no collision
+            # query can step them back in.  Keep this strict.
+            if cell_box and not inside_bounds(point, cell_box, 0.0):
                 report.error(f"anchor '{anchor_id}': {point} is outside interior '{interior_id}'")
             if location_id in locations:
                 anchor_location_interior = as_str(locations[location_id].get("interior_id"))
@@ -484,6 +487,50 @@ def main(argv: list[str]) -> int:
             report.error(f"spawn '{spawn_id}': spawn_on_begin_play must be a bool")
         if not isinstance(spawn.get("event_override", ""), str):
             report.error(f"spawn '{spawn_id}': event_override must be a string")
+
+    # ------------------------------------------------------------------ NPC standing room (data)
+    # The geometry check lives in Tools/world/check_npc_clearance.py (Blender).
+    # These cheap checks catch the data mistakes that put two NPCs on the same
+    # mark or on top of a story/player mark before anyone starts the engine.
+    anchor_users: dict[str, list[str]] = {}
+    marked_spawns: dict[str, tuple[tuple[float, float, float], str, str]] = {}
+    for spawn_id, spawn in spawns.items():
+        anchor_id = as_str(spawn.get("anchor_id"))
+        anchor = anchors.get(anchor_id)
+        if not anchor:
+            continue
+        anchor_users.setdefault(anchor_id, []).append(spawn_id)
+        point = vec3(anchor.get("position_ue"))
+        if not point:
+            continue
+        marked_spawns[spawn_id] = (point, as_str(anchor.get("kind")), as_str(anchor.get("interior_id")))
+
+    for anchor_id, users in anchor_users.items():
+        if len(users) > 1:
+            report.error(f"spawn anchor '{anchor_id}' is shared by {', '.join(sorted(users))}; "
+                         "their NPCs would overlap")
+
+    for spawn_id, (point, kind, anchor_interior) in marked_spawns.items():
+        spawn = spawns[spawn_id]
+        if kind == "player":
+            report.warn(f"spawn '{spawn_id}' uses player anchor '{spawn.get('anchor_id')}'; "
+                        "give the NPC its own mark")
+        interior_id = as_str(spawn.get("interior_id")) or anchor_interior
+        offset = spawn.get("spawn_z_offset_cm")
+        if isinstance(offset, (int, float)):
+            expected = 0.0 if interior_id else 90.0
+            if abs(float(offset) - expected) > 0.1:
+                report.warn(f"spawn '{spawn_id}': spawn_z_offset_cm is {offset}, expected {expected:.0f} "
+                            f"for an {'interior' if interior_id else 'exterior'} mark")
+
+    spawn_ids = sorted(marked_spawns)
+    for i, left_id in enumerate(spawn_ids):
+        for right_id in spawn_ids[i + 1:]:
+            left, right = marked_spawns[left_id][0], marked_spawns[right_id][0]
+            horizontal = math.hypot(left[0] - right[0], left[1] - right[1])
+            if horizontal < 72.0 and abs(left[2] - right[2]) < 200.0:
+                report.warn(f"spawns '{left_id}' and '{right_id}' are only {horizontal:.0f} cm apart; "
+                            "their capsules can overlap")
 
     # ------------------------------------------------------------------ opening requirements
     required_anchors = as_list(anchors_doc.get("opening_anchor_requirements")) or OPENING_ANCHORS

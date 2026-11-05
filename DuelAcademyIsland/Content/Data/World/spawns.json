@@ -24,7 +24,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Receptionist",
       "notes": "Always staffed during academy hours.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_f1",
+      "tint": true,
+      "lines": [
+        "Welcome to Duel Academy. Do you have an appointment?",
+        "The Chancellor's office is on the top floor, up the west stairs."
+      ],
+      "hair": [
+        0.3,
+        0.16,
+        0.07
+      ],
+      "scale": 1.053
     },
     {
       "id": "academy_card_shop_dorothy",
@@ -47,7 +59,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Dorothy",
       "notes": "Shop counter; A06/A09 own the shop UI.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_f1",
+      "tint": true,
+      "lines": [
+        "Welcome to the card shop! Fresh packs just came in.",
+        "A rare card? You'll have to beat the odds like everyone else."
+      ],
+      "hair": [
+        0.48,
+        0.28,
+        0.17
+      ],
+      "scale": 1.065
     },
     {
       "id": "academy_classroom_teacher",
@@ -68,15 +92,27 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Teacher",
-      "notes": "Classroom teacher; generic by default, cast override later.",
-      "spawn_z_offset_cm": 0.0
+      "notes": "Classroom teacher; generic student look with his own dialogue until a dedicated mesh exists.",
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Today's topic is Fusion Summoning. Open your rulebooks.",
+        "No, you cannot fuse your lunch. I've been asked before."
+      ],
+      "hair": [
+        0.18,
+        0.085,
+        0.035
+      ],
+      "scale": 1.004
     },
     {
       "id": "academy_classroom_student_01",
       "location_id": "academy_classroom",
       "zone_id": "academy",
       "interior_id": "academy_classroom",
-      "anchor_id": "academy_classroom_student",
+      "anchor_id": "academy_classroom_student_01",
       "schedule_id": "class_student_01",
       "schedule_tags": [
         "class_student_01",
@@ -89,9 +125,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Jonas Foster",
       "notes": "Student desk 1.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.1,
+        0.35,
+        0.4
+      ],
+      "scale": 0.956,
+      "fab_look": "fab_male_a"
     },
     {
       "id": "academy_classroom_student_02",
@@ -111,9 +156,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Riku Foster",
       "notes": "Student desk 2.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.85,
+        0.65,
+        0.25
+      ],
+      "scale": 0.994,
+      "fab_look": "fab_male_b"
     },
     {
       "id": "academy_test_room_proctor",
@@ -134,7 +188,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Proctor",
       "notes": "Exam proctor; exam UI is A07.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "The written exam begins in five minutes. Decks away.",
+        "Eyes on your own paper. I will know."
+      ],
+      "hair": [
+        0.25,
+        0.25,
+        0.28
+      ],
+      "scale": 0.994
     },
     {
       "id": "gym_assembly_instructor",
@@ -155,15 +221,27 @@
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
       "display_name": "Instructor",
-      "notes": "Sheppard speech stand-in; cast override to sheppard when available.",
-      "spawn_z_offset_cm": 90.0
+      "notes": "Sheppard speech stand-in; generic student look with his own dialogue until a dedicated mesh exists.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Find your dorm's assembly mark and stay there.",
+        "The Chancellor will address the whole academy. Try to look awake."
+      ],
+      "hair": [
+        0.09,
+        0.045,
+        0.02
+      ],
+      "scale": 1.004
     },
     {
       "id": "gym_assembly_student_01",
       "location_id": "academy_gym",
       "zone_id": "gym",
       "interior_id": null,
-      "anchor_id": "gym_assembly_crowd",
+      "anchor_id": "gym_assembly_student_01",
       "schedule_id": "assembly_student_01",
       "schedule_tags": [
         "assembly_student_01",
@@ -176,9 +254,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Masaru Hirano",
       "notes": "Crowd mark 1.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.015,
+        0.012,
+        0.01
+      ],
+      "scale": 1.014,
+      "fab_look": "fab_male_c"
     },
     {
       "id": "gym_assembly_student_02",
@@ -198,9 +285,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Jun Adams",
       "notes": "Crowd mark 2.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.1,
+        0.3,
+        0.12
+      ],
+      "scale": 0.985,
+      "fab_look": "fab_male_d"
     },
     {
       "id": "gym_assembly_student_03",
@@ -220,9 +316,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Eiji Matsumoto",
       "notes": "Crowd mark 3.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.3,
+        0.16,
+        0.07
+      ],
+      "scale": 0.975,
+      "fab_look": "fab_male_a"
     },
     {
       "id": "crowler_office_crowler",
@@ -245,7 +350,16 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Dr. Crowler",
       "notes": "Crowler at his desk.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "crowler",
+      "tint": false,
+      "lines": [
+        "Slifer Red? Hmph. Try not to drag the academy's reputation down, dropout boy.",
+        "As Duel Academy's top professor, I demand punctuality, precision and elegance!",
+        "My Ancient Gear Golem has humbled far greater duelists than you.",
+        "The practical exam is on the arena field. Do try to pass it."
+      ],
+      "scale": 1.067
     },
     {
       "id": "chancellor_office_sheppard",
@@ -267,7 +381,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Chancellor Sheppard",
       "notes": "Ending scenes; lock/unlock handled by story.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Ah, a familiar face. Duel Academy is in your hands now.",
+        "Crowler means well. Mostly."
+      ],
+      "hair": [
+        0.4,
+        0.31,
+        0.25
+      ],
+      "scale": 1.079
     },
     {
       "id": "slifer_cafeteria_attendant",
@@ -290,7 +416,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Cook",
       "notes": "Serving counter.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Curry's hot. Take a tray and keep the line moving.",
+        "Seconds are for students who finish their vegetables."
+      ],
+      "hair": [
+        0.035,
+        0.02,
+        0.012
+      ],
+      "scale": 0.946
     },
     {
       "id": "slifer_cafeteria_student_01",
@@ -311,9 +449,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Hugo Foster",
       "notes": "Cafeteria seat 1.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.05,
+        0.08,
+        0.22
+      ],
+      "scale": 0.994,
+      "fab_look": "fab_male_b"
     },
     {
       "id": "slifer_cafeteria_student_02",
@@ -334,9 +481,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Arata Hattori",
       "notes": "Cafeteria seat 2.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.035,
+        0.02,
+        0.012
+      ],
+      "scale": 0.975,
+      "fab_look": "fab_male_c"
     },
     {
       "id": "slifer_banner_room_banner",
@@ -359,7 +515,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Banner",
       "notes": "Banner/Pharaoh scenes.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Ah, come in. Pharaoh and I were just discussing alchemy.",
+        "A duel is a chemical reaction. You supply the catalyst."
+      ],
+      "hair": [
+        0.24,
+        0.38,
+        0.2
+      ],
+      "scale": 1.056
     },
     {
       "id": "slifer_jaden_room_jaden",
@@ -380,7 +548,16 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Jaden Yuki",
       "notes": "Jaden's bunk room.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "jaden",
+      "tint": false,
+      "lines": [
+        "Hey! You look like you'd be fun to duel. Get your deck ready!",
+        "Classes are fine and all, but the real lessons happen on the duel field.",
+        "Professor Banner's curry is the best thing about the Slifer dorm. Don't tell the Obelisks.",
+        "Win or lose, as long as the duel was fun, it was a good one!"
+      ],
+      "scale": 0.964
     },
     {
       "id": "slifer_jaden_room_syrus",
@@ -401,7 +578,16 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Syrus Truesdale",
       "notes": "Syrus's bunk room.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "syrus",
+      "tint": false,
+      "lines": [
+        "J-Jaden says I should believe in my deck more... I'm trying!",
+        "My big brother is the Kaiser. No pressure or anything.",
+        "Vehicroids are the best. Want to see my favourite card?",
+        "Is it true there's a ghost in the abandoned dorm? I'm not going there alone!"
+      ],
+      "scale": 0.878
     },
     {
       "id": "slifer_jaden_room_chumley",
@@ -422,7 +608,16 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Chumley Huffington",
       "notes": "Chumley room event.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "chumley",
+      "tint": false,
+      "lines": [
+        "Ugh... is it lunchtime yet? I could go for a grilled cheese sandwich.",
+        "Koalas are the most underrated monsters, you know.",
+        "Repeating a year isn't so bad. You get to know all the good nap spots.",
+        "My dad makes hot sauce. I'm going to make it big with my cards instead!"
+      ],
+      "scale": 0.981
     },
     {
       "id": "ra_cafeteria_student_01",
@@ -442,9 +637,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Osamu Abe",
       "notes": "Ra cafeteria seat 1.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.5,
+        0.26,
+        0.09
+      ],
+      "scale": 0.975,
+      "fab_look": "fab_male_d"
     },
     {
       "id": "ra_cafeteria_student_02",
@@ -464,9 +668,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Miles Goto",
       "notes": "Ra cafeteria seat 2.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.35,
+        0.15,
+        0.5
+      ],
+      "scale": 0.946,
+      "fab_look": "fab_male_a"
     },
     {
       "id": "obelisk_dining_student_01",
@@ -486,9 +699,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Ichiro Jensen",
       "notes": "Obelisk dining seat 1.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.05,
+        0.08,
+        0.22
+      ],
+      "scale": 0.956,
+      "fab_look": "fab_male_b"
     },
     {
       "id": "obelisk_dining_student_02",
@@ -508,9 +730,18 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Michi Ishii",
       "notes": "Obelisk dining seat 2.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.035,
+        0.02,
+        0.012
+      ],
+      "scale": 0.936,
+      "fab_look": "fab_male_c"
     },
     {
       "id": "academy_arena_jaden",
@@ -531,7 +762,16 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Jaden Yuki",
       "notes": "Event-only arena opponent; spawns when the director's active event is tutorial_duel.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "jaden",
+      "tint": false,
+      "lines": [
+        "Hey! You look like you'd be fun to duel. Get your deck ready!",
+        "Classes are fine and all, but the real lessons happen on the duel field.",
+        "Professor Banner's curry is the best thing about the Slifer dorm. Don't tell the Obelisks.",
+        "Win or lose, as long as the duel was fun, it was a good one!"
+      ],
+      "scale": 0.964
     },
     {
       "id": "harbor_dockhand",
@@ -553,14 +793,26 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Dockhand",
       "notes": "Harbor background NPC.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Ferry's due in an hour. Mind the ropes.",
+        "The warehouse is off limits unless you've got papers."
+      ],
+      "hair": [
+        0.18,
+        0.085,
+        0.035
+      ],
+      "scale": 0.936
     },
     {
       "id": "beach_student",
       "location_id": "beach",
       "zone_id": "beach",
       "interior_id": null,
-      "anchor_id": "beach_shore",
+      "anchor_id": "beach_student",
       "schedule_id": "beach_student",
       "schedule_tags": [
         "beach_student",
@@ -573,16 +825,29 @@
       "event_override": "",
       "spawn_on_begin_play": false,
       "npc_class": "ADAStudentNPC",
-      "display_name": "Student",
+      "display_name": "Yuma Nakamura",
       "notes": "Beach background NPC.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "The water's perfect today. You should take a break.",
+        "I saw a duel on the beach last week. Sand everywhere."
+      ],
+      "hair": [
+        0.85,
+        0.65,
+        0.25
+      ],
+      "scale": 0.975,
+      "fab_look": "fab_male_d"
     },
     {
       "id": "abandoned_dorm_titan",
       "location_id": "abandoned_dorm",
       "zone_id": "abandoned",
       "interior_id": null,
-      "anchor_id": "abandoned_dorm_hall",
+      "anchor_id": "abandoned_dorm_titan",
       "schedule_id": "titan",
       "schedule_tags": [
         "titan",
@@ -596,14 +861,26 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Titan",
       "notes": "Shadow Game event opponent.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "This dorm was sealed for a reason. You should leave.",
+        "The shadows here remember every duel."
+      ],
+      "hair": [
+        0.08,
+        0.07,
+        0.1
+      ],
+      "scale": 1.09
     },
     {
       "id": "volcano_shadow_duelist",
       "location_id": "volcano_crater",
       "zone_id": "volcano",
       "interior_id": null,
-      "anchor_id": "volcano_crater",
+      "anchor_id": "volcano_shadow_duelist",
       "schedule_id": "shadow_duelist",
       "schedule_tags": [
         "default",
@@ -618,7 +895,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Shadow Duelist",
       "notes": "Visible Shadow Game contact for E20; also an E24 staging point.",
-      "spawn_z_offset_cm": 0.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "The volcano is a fitting arena for a Shadow Game.",
+        "Your deck cannot protect you from the dark."
+      ],
+      "hair": [
+        0.08,
+        0.07,
+        0.1
+      ],
+      "scale": 1.021
     },
     {
       "id": "academy_classroom_brier",
@@ -640,14 +929,26 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Brier",
       "notes": "E16 talk contact (quiz duel).",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Pop quiz! What's the activation timing on Mirror Force?",
+        "You call that a combo? Let me show you a real one."
+      ],
+      "hair": [
+        0.18,
+        0.22,
+        0.15
+      ],
+      "scale": 0.987
     },
     {
       "id": "ra_cafeteria_sartyr",
       "location_id": "ra_cafeteria",
       "zone_id": "ra",
       "interior_id": null,
-      "anchor_id": "ra_cafeteria_seat_02",
+      "anchor_id": "ra_cafeteria_seat_06",
       "schedule_id": "sartyr",
       "schedule_tags": [
         "default",
@@ -662,7 +963,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Sartyr",
       "notes": "E18 talk contact (Ra Yellow only).",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Curry is the only subject worth studying.",
+        "A duelist who cannot cook cannot improvise."
+      ],
+      "hair": [
+        0.3,
+        0.24,
+        0.16
+      ],
+      "scale": 1.01
     },
     {
       "id": "academy_classroom_fontaine",
@@ -684,14 +997,26 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Nurse Fontaine",
       "notes": "E29 talk contact after a failed exam.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_f1",
+      "tint": true,
+      "lines": [
+        "You look exhausted. Sit down and let me check you over.",
+        "A failed exam isn't the end of the world. Trust me."
+      ],
+      "hair": [
+        0.9,
+        0.55,
+        0.66
+      ],
+      "scale": 1.077
     },
     {
       "id": "ra_cafeteria_beauregard",
       "location_id": "ra_cafeteria",
       "zone_id": "ra",
       "interior_id": null,
-      "anchor_id": "ra_cafeteria_seat_01",
+      "anchor_id": "ra_cafeteria_seat_05",
       "schedule_id": "beauregard",
       "schedule_tags": [
         "default",
@@ -706,7 +1031,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Beauregard",
       "notes": "E16 talk/duel contact.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "My Rock deck is immovable. Want to test it?",
+        "A solid defense wins more duels than a flashy combo."
+      ],
+      "hair": [
+        0.28,
+        0.2,
+        0.14
+      ],
+      "scale": 1.021
     },
     {
       "id": "academy_classroom_dimitri",
@@ -728,7 +1065,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Dimitri",
       "notes": "Copycat duelist and E33 opponent.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 0.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "I can copy any deck I see. Any deck.",
+        "One day I'll be the greatest duelist on this island. Just watch."
+      ],
+      "hair": [
+        0.1,
+        0.1,
+        0.12
+      ],
+      "scale": 1.01
     },
     {
       "id": "slifer_cafeteria_blair",
@@ -750,7 +1099,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Blair Flannigan",
       "notes": "Blair contact (E24/E28).",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_f2",
+      "tint": true,
+      "lines": [
+        "Don't underestimate me just because I'm small!",
+        "My Toon deck is cuter than it is dangerous. Mostly."
+      ],
+      "hair": [
+        0.92,
+        0.76,
+        0.42
+      ],
+      "scale": 1.019
     },
     {
       "id": "ra_cafeteria_topher",
@@ -772,7 +1133,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Topher",
       "notes": "Goblin King contact (E17, E33 opponent).",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Goblin King? That's me. What's it to you?",
+        "My goblins are loyal. Unlike some people."
+      ],
+      "hair": [
+        0.78,
+        0.62,
+        0.34
+      ],
+      "scale": 0.975
     },
     {
       "id": "ra_cafeteria_gerard",
@@ -794,7 +1167,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Gerard",
       "notes": "Quiz duelist and E33 opponent.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Every card has a question. I have the answer.",
+        "Quiz me. I dare you."
+      ],
+      "hair": [
+        0.36,
+        0.26,
+        0.17
+      ],
+      "scale": 0.993
     },
     {
       "id": "gym_assembly_conklin",
@@ -816,7 +1201,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Conklin",
       "notes": "Dinosaur duelist and E33 opponent.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Dinosaurs are the strongest monsters. It's science.",
+        "My deck has teeth. Literally."
+      ],
+      "hair": [
+        0.32,
+        0.2,
+        0.13
+      ],
+      "scale": 0.981
     },
     {
       "id": "gym_assembly_damon",
@@ -838,7 +1235,19 @@
       "npc_class": "ADAStudentNPC",
       "display_name": "Damon",
       "notes": "Wanderer duelist and E33 opponent.",
-      "spawn_z_offset_cm": 90.0
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "The island has a secret. I intend to find it.",
+        "A true duelist wanders. The cards find them."
+      ],
+      "hair": [
+        0.16,
+        0.16,
+        0.2
+      ],
+      "scale": 1.038
     }
   ],
   "opening_spawn_requirements": [

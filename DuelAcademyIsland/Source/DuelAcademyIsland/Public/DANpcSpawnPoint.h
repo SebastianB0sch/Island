@@ -83,6 +83,36 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
 	FString DisplayName;
 
+	/** Optional anime-cast look from Data/cast.json (empty: the avatar's default student). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
+	FString CastMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
+	FString AnimGroup;
+
+	/** Generic students wear the dorm jacket colour; named characters keep their own look. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
+	bool bDormTint = true;
+
+	/** Optional Fab Anime Character Pack look id (fab_male_a, fab_female_b, ...). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
+	FString FabLook;
+
+	/** Uniform size; 0 = the avatar's random student size. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
+	float BodyScale = 0.f;
+
+	/** Stable hair colour for generic schedule NPCs. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
+	FLinearColor HairColor = FLinearColor(0.12f, 0.035f, 0.01f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
+	bool bOverrideHairColor = false;
+
+	/** Dialogue for this contact; empty = the dorm's generic lines. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
+	TArray<FString> Lines;
+
 	UPROPERTY(BlueprintAssignable, Category = "Duel Academy|Spawn")
 	FDANpcSpawnedSignature OnNpcSpawned;
 

@@ -4,6 +4,7 @@
 
 #include "DAHUD.h"
 #include "DAIslandSubsystem.h"
+#include "DAMusicSubsystem.h"
 #include "DAStudentCharacter.h"
 #include "DAProfileSubsystem.h"
 #include "DAOpponentSubsystem.h"
@@ -572,6 +573,10 @@ void FDADuelUI::StartDuelWithDeck(const FString& DeckId)
 	ShowToast(TEXT("Duel start. Select a card in your hand or press B for the Battle Phase."),
 		FLinearColor(0.55f, 0.82f, 0.95f));
 	PlaySfx(TEXT("A_DuelStart"), 0.8f);
+	if (UDAMusicSubsystem* Music = UDAMusicSubsystem::Get(OwnerHUD.Get()))
+	{
+		Music->PlayCue(TEXT("BGM_Duel"), 0.8f);
+	}
 }
 
 bool FDADuelUI::StartScenarioDuel(const FDuelScenario& Scenario, const FString& Mode, bool bInAwardDP, FString& OutError)
@@ -673,6 +678,10 @@ bool FDADuelUI::StartScenarioDuel(const FDuelScenario& Scenario, const FString& 
 	ShowToast(TEXT("Solve the puzzle before the turn or time limit expires."),
 		FLinearColor(0.55f, 0.82f, 0.95f));
 	PlaySfx(TEXT("A_DuelStart"), 0.8f);
+	if (UDAMusicSubsystem* Music = UDAMusicSubsystem::Get(OwnerHUD.Get()))
+	{
+		Music->PlayCue(TEXT("BGM_Duel"), 0.8f);
+	}
 	return true;
 }
 
@@ -708,6 +717,7 @@ void FDADuelUI::AbortScenarioDuel()
 
 void FDADuelUI::CloseDuel()
 {
+	const bool bWasOpen = DuelMode != EDuelUiMode::None;
 	// Pinned contract #1: fold the session's outcome into the public flag
 	// before the mode is torn down. A second, already-closed call must not
 	// clobber a flag the story has not consumed yet.
@@ -756,6 +766,13 @@ void FDADuelUI::CloseDuel()
 		DuelResultMessage.Empty();
 	}
 	DuelMode = EDuelUiMode::None;
+	if (bWasOpen)
+	{
+		if (UDAMusicSubsystem* Music = UDAMusicSubsystem::Get(OwnerHUD.Get()))
+		{
+			Music->SetAutoMode(1.25f);
+		}
+	}
 	DuelEngine.Reset();
 	DuelHitTargets.Reset();
 	DuelPileType = EDuelPileType::None;

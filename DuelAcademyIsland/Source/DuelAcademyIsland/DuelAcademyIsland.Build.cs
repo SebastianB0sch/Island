@@ -11,6 +11,7 @@ public class DuelAcademyIsland : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
+			"AudioMixer",
 			"InputCore",
 			"EnhancedInput",
 			"AIModule",

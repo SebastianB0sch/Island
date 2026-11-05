@@ -123,8 +123,9 @@
       {
         "speakerId": "unknown_student",
         "speakerName": "Unknown Student",
+        "portrait": "unknown_student",
         "expression": "",
-        "text": "This speaker has no portrait asset, so the colored monogram/silhouette fallback is shown. (Placeholder.)",
+        "text": "A generic student portrait is shown for a speaker with no dedicated art. (Placeholder.)",
         "textKey": "PLACEHOLDER.UI.fallback_01",
         "nodeId": "UI.fallback_01"
       }

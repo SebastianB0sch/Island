@@ -1,0 +1,205 @@
+{
+  "version": 1,
+  "default_track": "M_AcademyGrounds",
+  "title_track": "M_Title",
+  "duel_track": "M_DuelArena",
+  "fade_seconds": 1.75,
+  "tracks": {
+    "M_Title": {
+      "volume": 1,
+      "bpm": 96,
+      "bars": 16,
+      "loop_seconds": 40
+    },
+    "M_AcademyGrounds": {
+      "volume": 1,
+      "bpm": 112,
+      "bars": 16,
+      "loop_seconds": 34.285714
+    },
+    "M_AcademyHall": {
+      "volume": 1,
+      "bpm": 84,
+      "bars": 8,
+      "loop_seconds": 22.857143
+    },
+    "M_Classroom": {
+      "volume": 1,
+      "bpm": 100,
+      "bars": 8,
+      "loop_seconds": 19.2
+    },
+    "M_AcademyStudy": {
+      "volume": 1,
+      "bpm": 72,
+      "bars": 8,
+      "loop_seconds": 26.666667
+    },
+    "M_AcademyFaculty": {
+      "volume": 1,
+      "bpm": 88,
+      "bars": 8,
+      "loop_seconds": 21.818182
+    },
+    "M_CardShop": {
+      "volume": 1,
+      "bpm": 116,
+      "bars": 8,
+      "loop_seconds": 16.551724
+    },
+    "M_DuelArena": {
+      "volume": 1,
+      "bpm": 132,
+      "bars": 16,
+      "loop_seconds": 29.090909
+    },
+    "M_SliferDorm": {
+      "volume": 1,
+      "bpm": 92,
+      "bars": 16,
+      "loop_seconds": 41.73913
+    },
+    "M_RaDorm": {
+      "volume": 1,
+      "bpm": 108,
+      "bars": 16,
+      "loop_seconds": 35.555556
+    },
+    "M_ObeliskDorm": {
+      "volume": 1,
+      "bpm": 88,
+      "bars": 16,
+      "loop_seconds": 43.636364
+    },
+    "M_ObeliskGirls": {
+      "volume": 1,
+      "bpm": 84,
+      "bars": 8,
+      "loop_seconds": 22.857143
+    },
+    "M_DormRoom": {
+      "volume": 1,
+      "bpm": 76,
+      "bars": 8,
+      "loop_seconds": 25.263158
+    },
+    "M_Water": {
+      "volume": 1,
+      "bpm": 76,
+      "bars": 8,
+      "loop_seconds": 25.263158
+    },
+    "M_Harbor": {
+      "volume": 1,
+      "bpm": 104,
+      "bars": 16,
+      "loop_seconds": 36.923077
+    },
+    "M_Beach": {
+      "volume": 1,
+      "bpm": 112,
+      "bars": 8,
+      "loop_seconds": 17.142857
+    },
+    "M_Gym": {
+      "volume": 1,
+      "bpm": 128,
+      "bars": 16,
+      "loop_seconds": 30
+    },
+    "M_Forest": {
+      "volume": 1,
+      "bpm": 84,
+      "bars": 8,
+      "loop_seconds": 22.857143
+    },
+    "M_HotSprings": {
+      "volume": 1,
+      "bpm": 68,
+      "bars": 8,
+      "loop_seconds": 28.235294
+    },
+    "M_Volcano": {
+      "volume": 1,
+      "bpm": 100,
+      "bars": 16,
+      "loop_seconds": 38.4
+    },
+    "M_Abandoned": {
+      "volume": 1,
+      "bpm": 66,
+      "bars": 8,
+      "loop_seconds": 29.090909
+    },
+    "M_Cliffs": {
+      "volume": 1,
+      "bpm": 72,
+      "bars": 8,
+      "loop_seconds": 26.666667
+    }
+  },
+  "zones": {
+    "academy": "M_AcademyGrounds",
+    "plaza": "M_AcademyGrounds",
+    "harbor": "M_Harbor",
+    "lighthouse": "M_Harbor",
+    "slifer": "M_SliferDorm",
+    "ra": "M_RaDorm",
+    "obelisk_boys": "M_ObeliskDorm",
+    "obelisk_girls": "M_ObeliskGirls",
+    "lake": "M_Water",
+    "waterfall": "M_Water",
+    "volcano": "M_Volcano",
+    "abandoned": "M_Abandoned",
+    "gym": "M_Gym",
+    "beach": "M_Beach",
+    "hotsprings": "M_HotSprings",
+    "forest": "M_Forest",
+    "cliffs": "M_Cliffs"
+  },
+  "sublocations": {
+    "academy_hall": "M_AcademyHall",
+    "academy_arena": "M_DuelArena",
+    "academy_shop": "M_CardShop",
+    "academy_lectures": "M_AcademyStudy",
+    "academy_library": "M_AcademyStudy",
+    "academy_faculty": "M_AcademyFaculty",
+    "slifer_dining": "M_SliferDorm",
+    "ra_hall": "M_RaDorm",
+    "ra_cafeteria": "M_RaDorm",
+    "boys_foyer": "M_ObeliskDorm",
+    "boys_duel_salon": "M_ObeliskDorm",
+    "girls_foyer": "M_ObeliskGirls",
+    "girls_conservatory": "M_ObeliskGirls",
+    "gym_court": "M_Gym",
+    "harbor_terminal": "M_Harbor",
+    "lighthouse_top": "M_Harbor",
+    "onsen_entrance": "M_HotSprings",
+    "abandoned_hall": "M_Abandoned",
+    "abandoned_ritual": "M_Abandoned"
+  },
+  "interiors": {
+    "academy_classroom": "M_Classroom",
+    "academy_test_room": "M_Classroom",
+    "academy_crowler_office": "M_AcademyFaculty",
+    "academy_chancellor_office": "M_AcademyFaculty",
+    "slifer_player_room": "M_DormRoom",
+    "slifer_banner_room": "M_DormRoom",
+    "slifer_jaden_room": "M_DormRoom",
+    "ra_player_room": "M_DormRoom",
+    "obelisk_dining": "M_ObeliskDorm",
+    "obelisk_player_room": "M_DormRoom"
+  },
+  "cues": {
+    "BGM_Title": "M_Title",
+    "BGM_Academy_Arrival": "M_AcademyGrounds",
+    "BGM_Assembly": "M_Title",
+    "BGM_Registration": "M_AcademyHall",
+    "BGM_Slifer_Dorm": "M_SliferDorm",
+    "BGM_Tutorial": "M_Classroom",
+    "BGM_Duel_Tutorial": "M_DuelArena",
+    "BGM_Duel_Jaden": "M_DuelArena",
+    "BGM_Duel": "M_DuelArena",
+    "BGM_Free_Roam": "@auto"
+  }
+}

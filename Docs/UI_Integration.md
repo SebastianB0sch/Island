@@ -155,8 +155,10 @@ in the first new-game autosave.
 > map is used as a persisted bridge (`"AutoAdvance"` key) so the choice survives
 > save/load. Replace it with a typed property when A02 adds one.
 >
-> **Audio blocker:** BGM/SFX values are stored correctly but no audio mixer
-> consumes them yet. That is an A10/audio integration hook, not a UI failure.
+> **Audio status:** `UDAMusicSubsystem` now applies the BGM value live to all
+> music decks (including title, duel and story cues). SFX one-shots still play
+> at their authored levels; wiring the SFX value into `PlayUISound` remains an
+> A10/audio integration hook.
 
 ### CREDITS
 
@@ -259,6 +261,21 @@ Portraits are loaded through `UCharacterPortraitSubsystem`:
 2. `GetPortrait(Portrait` or `SpeakerId`, face crop)`.
 3. `GetPortrait(id, full bust)`.
 4. Colored monogram + bust silhouette fallback with a `NO PORTRAIT` label.
+
+Every current story speaker and named duel opponent has art in
+`Content/Data/Portraits`. The regulars use the ported Duel Links art where it
+exists; the rest (and the generic students) are rendered from the project's own
+cast models by `Tools/render_portraits.py`. Narration and the PDA use the UI
+icons `narrator.png` and `ui_pda.png`; the event-only Pharaoh, Goblin King and
+Jinzo use small icons from `Tools/make_ui_portraits.py`. None of them show an
+empty frame. Every expression declared by the story data has its own
+`<id>_<expression>.png`; the five Duel Links regulars use official cut-ins and
+the generated cast uses `Tools/dai/anime/expressions.py`. If a frame is absent,
+`GetExpression` walks a closest-expression chain (for example
+`laugh -> happy -> smug -> neutral`, `determined -> angry -> stern -> neutral`,
+`confused -> shocked -> neutral`) and only then falls back to the base bust.
+`python Tools/portrait_check.py --strict` fails if a declared expression frame
+is absent.
 
 No story text is compiled into C++. Sample text is loaded from
 `Content/Data/UI/ui.json` and is explicitly marked `(Placeholder.)`.

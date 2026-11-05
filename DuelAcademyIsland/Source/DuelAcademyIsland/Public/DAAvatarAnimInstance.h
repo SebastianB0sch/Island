@@ -11,8 +11,8 @@
 //     smooth crossfades (two action players, so switching Jump -> Fall or Land crossfades
 //     instead of popping).
 //
-// The anime takes are authored at 1.50 m/s walk (1.0 s cycle, 120 steps/min) and 4.20 m/s run
-// (0.733 s cycle, ~164 steps/min) (A_Anime_<Group>_Walk/Run).
+// The anime takes are authored at the speed configured by UDAAvatarComponent::WalkAnimSpeed /
+// RunAnimSpeed (the default Fab takes are about 1.30 m/s walk and 2.65 m/s run).
 // UDAAvatarComponent feeds ground speed / air / swim / duel state every tick.
 //
 // On top of the blended takes the proxy runs the procedural "life" layer anime game characters have:

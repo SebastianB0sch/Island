@@ -5,6 +5,7 @@
 #include "AIController.h"
 #include "Components/CapsuleComponent.h"
 #include "DAAvatarComponent.h"
+#include "DAFabAnimePuppet.h"
 #include "DACardDatabase.h"
 #include "DAHUD.h"
 #include "DAIslandSubsystem.h"
@@ -70,6 +71,8 @@ ADAStudentNPC::ADAStudentNPC()
 	Avatar->SetupAttachment(GetCapsuleComponent());
 	Avatar->SetRelativeLocation(FVector(0.0, 0.0, -92.0));
 
+	FabAvatar = CreateDefaultSubobject<UDAFabAnimeComponent>(TEXT("FabAvatar"));
+
 	GetMesh()->SetVisibility(false);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
@@ -95,10 +98,19 @@ void ADAStudentNPC::BeginPlay()
 		static const FLinearColor Hair[] = {
 			FLinearColor(0.05f, 0.025f, 0.01f), FLinearColor(0.20f, 0.07f, 0.02f), FLinearColor(0.01f, 0.01f, 0.012f),
 			FLinearColor(0.55f, 0.35f, 0.08f), FLinearColor(0.02f, 0.05f, 0.25f), FLinearColor(0.45f, 0.05f, 0.03f) };
-		Avatar->HairColor = Hair[Rng.RandRange(0, static_cast<int32>(UE_ARRAY_COUNT(Hair)) - 1)];
+		Avatar->HairColor = bOverrideHairColor
+			? HairColor
+			: Hair[Rng.RandRange(0, static_cast<int32>(UE_ARRAY_COUNT(Hair)) - 1)];
 		Avatar->bShowDuelDisk = Rng.FRand() < 0.6f;
 	}
 	Super::BeginPlay();
+
+	// Optional licensed Fab Anime Character Pack puppet.  If the pack is not
+	// installed Activate() fails closed and the native avatar stays visible.
+	if (FabAvatar && !FabLook.IsEmpty())
+	{
+		FabAvatar->ActivateLook(FabLook);
+	}
 
 	if (!DisplayName.IsEmpty())
 	{
@@ -153,6 +165,10 @@ void ADAStudentNPC::BeginPlay()
 
 void ADAStudentNPC::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (FabAvatar)
+	{
+		FabAvatar->DeactivateLook();
+	}
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
 		Sub->UnregisterInteractable(this);
@@ -227,7 +243,9 @@ void ADAStudentNPC::Interact(ADAStudentCharacter* By)
 	FString Line = Said[LineIndex % Said.Num()];
 	++LineIndex;
 	bool bSnub = false;
-	if (Lines.Num() == 0 && By && By->GetDorm() != Dorm && Dorm == EDADorm::Obelisk && By->GetDorm() == EDADorm::Slifer && Rng.FRand() < 0.5f)
+	// Generic students (roster identities included) still react to the player's
+	// dorm; named characters keep their own lines.
+	if (bDormTint && By && By->GetDorm() != Dorm && Dorm == EDADorm::Obelisk && By->GetDorm() == EDADorm::Slifer && Rng.FRand() < 0.5f)
 	{
 		Line = TEXT("A Slifer Slacker talking to an Obelisk? How bold. ...Fine, what do you want?");
 		bSnub = true;

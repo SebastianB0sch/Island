@@ -12,5 +12,12 @@ import sys
 def pin_hash_seed():
     if os.environ.get("PYTHONHASHSEED") == "0":
         return
+    if "bpy" in sys.modules:
+        # Blender runs this file inside its own Python: re-exec'ing sys.executable
+        # would restart the Blender binary with the script's arguments and crash.
+        # The caller should launch Blender with PYTHONHASHSEED=0; setting it here
+        # only keeps child processes consistent.
+        os.environ["PYTHONHASHSEED"] = "0"
+        return
     env = dict(os.environ, PYTHONHASHSEED="0")
     os.execve(sys.executable, [sys.executable] + sys.argv, env)

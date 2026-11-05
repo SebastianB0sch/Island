@@ -55,6 +55,7 @@ Run the runtime suites from the editor/game command line:
 -DAUITest                 # 8 PDA + 2 dialogue screenshots
 -DATitleTest / -DANewGameTest
 -DACastLifeTest           # anime cast: cel materials + stencil + PP, face morphs, lip-sync, springs, look-at
+-DAMovementAudioTest      # procedural footsteps, surfaces, wading/swimming; writes Saved/MovementAudioTest.wav
 ```
 
 Data validators:
@@ -64,9 +65,10 @@ python Tools/validate/validate_all.py      # PASS, known gaps listed
 python Tools/puzzles/validate.py           # 145 checks, 0 failures
 python Tools/opponents/import_canon_decks.py --check  # 32/32 runtime decks, 37/37 constructed
 python Tools/effects/audit.py              # PASS; 362 scripted + 345 vanilla, 493 pending
+python Tools/portrait_check.py --strict    # every named speaker/opponent has a bust and all declared expressions
 ```
 
-Still open before calling the port complete: the 493 pending card effects, exact GBA dialogue (the full text is local-only), renderer/interaction QA for the shop/deck/exam screens, interior generation/entry polish, and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md). The full E02–E33 campaign playthrough is covered by `-DAStoryPlaythroughTest`.
+Still open before calling the port complete: the 493 pending card effects, exact GBA dialogue (the full text is local-only), renderer/interaction QA for the shop/deck/exam screens, interior generation/entry polish, dedicated 3D meshes for the named contacts who still use a generic student look, and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md). The full E02–E33 campaign playthrough is covered by `-DAStoryPlaythroughTest`.
 
 ## What's on the island
 
@@ -220,7 +222,33 @@ designs, with a cel-style material and ink outline in Unreal:
 
 The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on
-the arena field) and have their own lines; every other student gets a generic look tinted by dorm.
+the arena field) and have their own lines. Every other student is a named character too: all 164 placed NPCs
+now have a unique name; the 154 ambient markers get a dorm/location-appropriate voice with three lines, a
+stable hair colour and a size variation (`Tools/dai/anime/roster.py`; curated names for the notable spots,
+deterministic generated identities for the rest). The schedule-spawned story contacts (Dorothy, Brier,
+Sartyr, Fontaine, Blair, Beauregard, Dimitri, Topher, Gerard, Conklin, Damon and the rest) carry their own
+looks and dialogue in `Content/Data/World/spawns.json`.
+
+On a machine with the licensed **Fab Anime Character Pack** installed, 22 ambient NPCs (plus a dozen schedule
+crowd marks) additionally use the pack's modular male/female bodies, heads, hair and casual outfits through a
+cosmetic `bp_AnimeCharacter` puppet. The pack is installed locally with `python Tools/import_fab_anime.py`, is
+excluded from git, and is **not redistributable**; without it those NPCs fall back to the native GX cast. See
+[Docs/FAB_ANIME.md](Docs/FAB_ANIME.md).
+
+On that machine the pack's idle/walk/run takes can also be retargeted onto the **native GX cast**, replacing
+the procedural gait for the regulars and named students. `Tools/retarget_fab_anime.py` uses segment-direction
+retargeting (the Fab anime rig is A-pose, the GX cast is T-pose) and `Tools/apply_fab_locomotion.py` installs
+the resulting `A_Anime_<Group>_Idle/Walk/Run` takes. The intermediate FBXs are local-only; without them the
+gait clips remain. The full recipe is in [Docs/FAB_ANIME.md](Docs/FAB_ANIME.md#native-cast-locomotion).
+
+Every named story speaker and duel opponent now has a portrait and every expression the story data asks
+for: the regulars use the ported Duel Links art where it exists (official expression cut-ins for Alexis,
+Bastion, Chazz, Syrus and Zane; Jaden and the player already had them), and the rest are rendered from the
+project's own cel-shaded cast models (`Tools/render_portraits.py`, expression recipes in
+`Tools/dai/anime/expressions.py`) onto the same `#263541` panel. Dialogue and duel frames no longer show
+`NO PORTRAIT`, and a missing expression never falls back to an empty frame. `python Tools/portrait_check.py
+--strict` verifies both the base busts and every declared expression frame; `Tools/dai/anime/portrait_cast.py`
+holds the looks for speakers who are not in the overworld cast.
 
 The bones are renamed to the **UE5 Mannequin** scheme (`pelvis`, `spine_01`, `upperarm_l` …). Locomotion is
 solved rather than lifted from a stock clip: `Tools/dai/anime/gait.py` generates the **idle, walk and run**
@@ -459,10 +487,12 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
   Duel fields pick a resident opponent; named students (Jaden, Syrus, Bastion, Chazz, Alexis, Zane and
   Crowler) can also be challenged after talking to them once. Card scans are shown on the board.
 * **Card Shop**: open booster packs (32 original cards, rarities from Common to Ultra Rare), track your collection.
-* Signs with lore everywhere, students from all three dorms who wander around and chat (E). Nobody stands in
-  the furniture: at build time every NPC spot is tested as a person-sized capsule against walls, fixtures,
-  furniture and props (NPCs in the way step to the nearest clear spot in the same room, never in a doorway), and
-  each NPC gets precomputed strolls - straight, clear, on one floor - instead of random wandering.
+* Signs with lore everywhere, named students from all three dorms who wander around and chat (E); every
+  ambient NPC has a unique name, hair colour and three-line voice, and the story contacts have their own
+  dialogue. Nobody stands in the furniture: at build time every NPC spot is tested as a person-sized capsule
+  against walls, fixtures, furniture and props (NPCs in the way step to the nearest clear spot in the same
+  room, never in a doorway), and each NPC gets precomputed strolls - straight, clear, on one floor - instead
+  of random wandering.
 * Walk into every building and up every floor: automatic doors, the camera pulls in indoors, furnished rooms everywhere.
   All furniture is solid: catalog props carry box / hull collision (wall art, lamps and table-top clutter stay
   walk-through), and the furniture modelled into the no-collision decor meshes gets invisible collision boxes
@@ -472,6 +502,13 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
   night, the crater glows. Time controls: **T** pause, **[ ]** speed, **N** skip 3 h.
 * Swimmable ocean and lake (single-layer water), volcano smoke, hot-spring steam, waterfall mist,
   bobbing ferry and boats, synthesized ambience (surf, wind, birds, volcano rumble, waterfall, crowd).
+* **Original area music**: 22 seamless loops rendered with the project's Juicebox Studio synth engine -
+  academy suite, all four dorms, every outdoor zone, every enterable room, plus title, story and duel
+  themes. The music director crossfades on zone/room changes, follows story `music` cues, and honours
+  the options BGM volume. See [Docs/Audio](Docs/Audio/README.md).
+* Procedural on-foot sound: footsteps follow the actual gait contacts and change with the ground
+  (grass, dirt, gravel, sand, stone, wood, metal, carpet), with wading splashes, swim strokes,
+  jump/landing impacts, clothing rustle, breathing and wind. No sample assets are used.
 * ~90 000 instanced trees, palms, bushes, ferns, flowers and rocks (Nanite).
 
 ### Controls
@@ -503,6 +540,18 @@ to boost (54 km/h cruising, 79 km/h boosted), and **Space** hops. It climbs stee
 foot, rolls over kerbs and rocks and fords shallow water. It is stowed automatically at interior doors, in
 deep water and when a duel starts. The chase camera swings in behind the bike when you stop moving the mouse.
 
+The bike is a spoked, knobby enduro with a long-travel fork, chain and sprocket, finned single-cylinder
+engine, radiator, exhaust and working head/tail/brake lights. Its sound is synthesised live from the
+drivetrain: an electric start and settling idle, a five-speed box that shifts on rpm, throttle-dependent
+exhaust bark, intake and valve noise, gearbox/chain whine, tyre and wind roar, and exhaust crackle when you
+chop the throttle or downshift.
+
+On foot, a second runtime synth tracks the locomotion phase and the material under the player: heel/toe
+contacts on grass, dirt, gravel, sand, stone, wood, metal and carpet, splashy steps in shallow water,
+alternating crawl strokes with bubbles while swimming, a body thump and surface scuff on landing, plus a
+quiet cloth/breath layer and speed-driven wind. The ambient surf, waterfall, hot-spring and wind beds were
+rebuilt with layered swells, flow surges, foam/spray and bubbles.
+
 ## Getting started
 
 **Requirements:** Unreal Engine **5.8** and a C++ toolchain for your platform (Visual Studio 2022 with the
@@ -529,6 +578,10 @@ UnrealEditor-Cmd DuelAcademyIsland/DuelAcademyIsland.uproject -ExecutePythonScri
 ```
 Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy" module)
   build_island.py           runs every stage -> DuelAcademyIsland/SourceAssets
+  render_portraits.py       renders the dialogue / duel busts and expression frames for every speaker and NPC
+  fetch_expression_portraits.py  fetches the official Duel Links expression cut-ins for the regulars
+  make_ui_portraits.py      draws the narration, PDA and event-opponent UI icons
+  portrait_check.py         portrait coverage report (`--strict` fails on a missing bust or expression)
   preview_asset.py          render previews of a single location module
   dai/config.py             island layout: locations, heights, paths, volcano, lake ...
   dai/terrain.py            heightfield, splat maps, colour map, Landscape heightmap
@@ -552,10 +605,14 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
                             uniforms (outfit.py), restyled hair (hairdo.py), ink outlines; biomechanical
                             idle/walk/run gait solver (gait.py, foot-planting IK + validation); CC0 takes
                             retargeted onto every skeleton, cast.json
-                            (cast.py = who is who; a procedural fallback builds anyone without a model)
+                            (cast.py = who is who; roster.py = named ambient NPC identities; expressions.py =
+                            VRoid blendshape recipes for the portrait frames; portrait_cast.py = portrait-only
+                            looks for story speakers; a procedural fallback builds anyone without a model)
   dai/credits.py            CREDITS.md from the SOURCE.txt files
   thirdparty/               curated CC0 / CC-BY source assets + registry/*.json
   dai/audio.py              synthesized seamless ambience loops and UI sounds
+  (the 22 area themes are rendered by the Juicebox Studio engine in C:\dev\Music;
+   see Docs/Audio/README.md)
   dai/render.py             Cycles preview renders (Docs/renders)
 DuelAcademyIsland/          the Unreal Engine 5.8 project
   Source/DuelAcademyIsland  C++ gameplay module (character, NPCs, HUD, zones, day/night, duels, ...)
@@ -593,6 +650,11 @@ npm install -g @gltf-transform/cli                 # optional: decodes meshopt-c
 .venv/bin/python Tools/preview_asset.py academy   # iterate on one location
 .venv/bin/python Tools/build_island.py cast       # rebuild the anime cast only
 .venv/bin/python Tools/preview_anime.py jaden alexis --state Walk --frame 10   # cast preview render
+python Tools/apply_npc_roster.py                  # re-apply the unique ambient NPC identities to layout.json
+python Tools/import_fab_anime.py                  # optional licensed Fab anime pack (local-only, gitignored)
+python Tools/retarget_fab_anime.py                 # optional Fab idle/walk/run -> native GX cast (local-only)
+UnrealEditor-Cmd ... -run=pythonscript -script=Tools/apply_world_npc_data.py   # refresh NPCs in the saved level
+UnrealEditor-Cmd ... -run=pythonscript -script=Tools/apply_fab_locomotion.py   # install the retargeted takes
 ```
 
 The gait solver validates every generated cycle before export (contact speed, penetration, contact
@@ -637,6 +699,7 @@ In Landscape mode → *Import from file*: **Location** X = -153600, Y = -153600,
 | Benches, signposts, fences, crates, containers, rowboats, beach umbrellas and chairs, stone lanterns | Sketchfab authors (CC BY 4.0) |
 | Fishing trawlers | Poly by Google (CC BY 3.0) |
 | Duel Academy buildings, dorms, arena, harbor, lighthouse, ferry, volcano/waterfall features, flagpoles, bollards, duel dummies, vending machines, interiors, door leaves, sounds | original, built by the pipeline in `Tools/` |
+| Rendered character portraits for story speakers and NPCs | original, rendered from the project's VRoid-derived cast by `Tools/render_portraits.py` |
 | Duel card names, card text, card scans, fusion recipes and starter deck lists | Yu-Gi-Oh! TCG, Konami/Shueisha - non-commercial fan reference; scans via YGOPRODeck, data ported from the reference UE5 duel engine |
 | Duel character busts / expression frames (`Content/Data/Portraits`) | Konami *Duel Links* character renders (fan-project reference set); not redistributable. The in-world island cast remains the project's own VRoid-derived models |
 

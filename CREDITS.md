@@ -14,8 +14,19 @@ fan-made project and must not be redistributed as a commercial product. The scan
 YGOPRODeck-sourced images used by the reference project.
 
 `Content/Data/Portraits/` contains the reference project's character busts and expression frames
-(Konami *Duel Links* renders). They are fan-project reference assets and are **not** redistributable.
-The in-world cast does not use them: it is the project's own VRoid-derived model set, described below.
+(Konami *Duel Links* renders, including the official expression cut-ins for the regulars), plus
+portraits and expression frames rendered locally from the project's own VRoid-derived cast
+(`Tools/render_portraits.py`) and a few UI icons. The Duel Links renders are fan-project reference
+assets and are **not** redistributable. The generated portraits and expressions come from the
+project's own cel-shaded models, described below.
+
+## Local-only licensed content
+
+The optional **Fab Anime Character Pack (Legacy)** used by some ambient NPCs is licensed marketplace
+content owned by the project operator. It is installed locally with `Tools/import_fab_anime.py`, excluded
+from git, and **not redistributed** with this repository. The locomotion FBXs retargeted from the pack
+(`Tools/retarget_fab_anime.py`) and the resulting `A_Anime_*` takes are local-only derivatives and are
+covered by the same restriction. See [Docs/FAB_ANIME.md](Docs/FAB_ANIME.md).
 
 ## Third-party assets
 

@@ -7,6 +7,7 @@
 #include "DADialogueUI.h"
 #include "DAHUD.h"
 #include "DAIslandSubsystem.h"
+#include "DAMusicSubsystem.h"
 #include "DASaveGame.h"
 #include "DASettings.h"
 #include "DAUIScreen.h"
@@ -136,6 +137,10 @@ void FDATitleScreen::Open()
 	Panel = EDATitlePanel::Main;
 	Selection = HasUsableSave() ? 1 : 0;
 	PlaySfx(TEXT("A_UIClick"), 0.45f);
+	if (UDAMusicSubsystem* Music = UDAMusicSubsystem::Get(OwnerHUD.Get()))
+	{
+		Music->PlayCue(TEXT("BGM_Title"), 1.25f);
+	}
 }
 
 void FDATitleScreen::Close()
@@ -148,6 +153,10 @@ void FDATitleScreen::Close()
 	HitTargets.Reset();
 	HoveredIndex = INDEX_NONE;
 	ContinueScroll = 0;
+	if (UDAMusicSubsystem* Music = UDAMusicSubsystem::Get(OwnerHUD.Get()))
+	{
+		Music->SetAutoMode(1.f);
+	}
 	OnClosed.Broadcast();
 }
 

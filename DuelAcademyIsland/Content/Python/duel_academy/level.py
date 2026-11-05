@@ -338,8 +338,14 @@ class Placer:
                 # anime cast member (see Tools/dai/anime): mesh, skeleton group, name and dialogue
                 C.set_props(a, cast_mesh=c["name"], anim_group=c["group"], dorm_tint=bool(n.get("tint", True)),
                             body_scale=float(n.get("scale", c.get("scale", 1.0))))
-                if n.get("name"):
-                    C.set_props(a, display_name=n["name"], lines=list(n.get("lines", [])))
+            if n.get("name"):
+                C.set_props(a, display_name=n["name"], lines=list(n.get("lines", [])))
+            if n.get("fab_look"):
+                # optional licensed Fab Anime Character Pack puppet (local-only)
+                C.set_props(a, fab_look=n["fab_look"])
+            if n.get("hair"):
+                # stable per-NPC hair colour from the ambient roster
+                C.set_props(a, hair_color=C.lc(n["hair"]), override_hair_color=True)
 
     def world_actors(self):
         """Spawn the A08 world data: portals, anchors, interior nav, NPC spawn points and director."""
@@ -514,6 +520,11 @@ class Placer:
         except Exception as e:  # noqa: BLE001
             C.warn(f"spawns.json unavailable: {e}")
             return
+        try:
+            cast = C.load_json("cast.json").get("meshes", {})
+        except Exception as e:  # noqa: BLE001
+            C.warn(f"cast.json unavailable for NPC looks: {e}")
+            cast = {}
         dorm_enum = getattr(unreal, "DADorm", None)
         for s in data.get("spawns", []):
             anchor = anchors.get(s.get("anchor_id"))
@@ -539,6 +550,19 @@ class Placer:
                          display_name=s.get("display_name", ""))
             if dorm is not None:
                 props["dorm"] = dorm
+            cast_id = s.get("cast", "")
+            look = cast.get(cast_id, {})
+            if look:
+                props.update(cast_mesh=look["name"], anim_group=look["group"],
+                             dorm_tint=bool(s.get("tint", True)),
+                             body_scale=float(s.get("scale", look.get("scale", 1.0))))
+            if s.get("lines"):
+                props["lines"] = list(s["lines"])
+            if s.get("fab_look"):
+                props["fab_look"] = s["fab_look"]
+            if s.get("hair"):
+                props["hair_color"] = C.lc(s["hair"])
+                props["override_hair_color"] = True
             C.set_props(a, **props)
 
     def npc_director(self):

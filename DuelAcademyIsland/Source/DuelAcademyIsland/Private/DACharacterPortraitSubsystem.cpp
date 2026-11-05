@@ -31,6 +31,32 @@ namespace
 	{
 		return Value.TrimStartAndEnd().ToLower();
 	}
+
+	/**
+	 * When a character has no bespoke frame for an expression, try the nearest
+	 * authored emotion before falling back to the neutral bust.  This keeps the
+	 * duel cut-ins (laugh / determined / etc.) expressive for every opponent
+	 * without duplicating the same image under every expression name.
+	 */
+	TArray<FString> ExpressionFallbacks(const FString& Expression)
+	{
+		if (Expression == TEXT("happy")) return { TEXT("smug"), TEXT("neutral") };
+		if (Expression == TEXT("smug")) return { TEXT("happy"), TEXT("neutral") };
+		if (Expression == TEXT("laugh")) return { TEXT("happy"), TEXT("smug"), TEXT("neutral") };
+		if (Expression == TEXT("angry")) return { TEXT("stern"), TEXT("determined"), TEXT("smug"), TEXT("neutral") };
+		if (Expression == TEXT("stern")) return { TEXT("angry"), TEXT("determined"), TEXT("neutral") };
+		if (Expression == TEXT("determined")) return { TEXT("angry"), TEXT("stern"), TEXT("smug"), TEXT("neutral") };
+		if (Expression == TEXT("nervous")) return { TEXT("sad"), TEXT("apologetic"), TEXT("neutral") };
+		if (Expression == TEXT("sad")) return { TEXT("apologetic"), TEXT("nervous"), TEXT("neutral") };
+		if (Expression == TEXT("apologetic")) return { TEXT("sad"), TEXT("nervous"), TEXT("neutral") };
+		if (Expression == TEXT("confused")) return { TEXT("shocked"), TEXT("neutral") };
+		if (Expression == TEXT("shocked")) return { TEXT("confused"), TEXT("neutral") };
+		if (Expression == TEXT("proud")) return { TEXT("smug"), TEXT("happy"), TEXT("neutral") };
+		if (Expression == TEXT("thoughtful")) return { TEXT("neutral") };
+		if (Expression == TEXT("hungry")) return { TEXT("happy"), TEXT("smug"), TEXT("neutral") };
+		if (Expression == TEXT("sleepy")) return { TEXT("neutral") };
+		return {};
+	}
 }
 
 void UCharacterPortraitSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -125,8 +151,19 @@ UTexture2D* UCharacterPortraitSubsystem::GetExpression(const FString& CharacterI
 	}
 
 	UTexture2D* Texture = LoadTexture(ExpressionPath(Id, ExpressionId));
-	// Fall back to the base render when a particular expression was not
-	// supplied; the cut-in still works, it simply reuses the neutral art.
+	if (!Texture)
+	{
+		for (const FString& Candidate : ExpressionFallbacks(ExpressionId))
+		{
+			Texture = LoadTexture(ExpressionPath(Id, Candidate));
+			if (Texture)
+			{
+				break;
+			}
+		}
+	}
+	// Last resort: the base render.  The cut-in still works, it simply reuses
+	// the neutral art when neither the requested nor a related frame exists.
 	if (!Texture)
 	{
 		Texture = GetPortrait(Id, false);

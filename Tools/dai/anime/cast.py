@@ -431,10 +431,21 @@ def generic_for(female):
     return [k for k, s in STUDENTS.items() if bool(s.get("female")) == female]
 
 
+def _generic_scale(n):
+    """Runtime scale of a generic marker: its look's height with a stable ±5 % size variation."""
+    import zlib
+    h = zlib.crc32(("%.0f,%.0f" % (n["loc"][0], n["loc"][1])).encode())
+    return round(scale_of(student_entry(n["cast"])) * (0.95 + (h % 11) * 0.01), 3)
+
+
 def assign_npcs(npcs):
     """Annotate layout.json npc entries with a cast id (named cast take their markers over, everybody else
-    gets a deterministic generic look). Female students are Obelisk Blue (as in the show)."""
+    gets a deterministic generic look). Female students are Obelisk Blue (as in the show).
+
+    Generic markers also receive a unique identity from ``roster.py`` (name, dialogue, hair colour), so
+    the island's ambient students are characters rather than three repeated "Student" placeholders."""
     import zlib
+    from . import roster
     used = set()
     for cid, c in CAST.items():
         sp = c.get("spawn")
@@ -468,6 +479,13 @@ def assign_npcs(npcs):
         n["cast"] = looks[(h // 100) % len(looks)]
         n.pop("name", None)
         n.pop("lines", None)
-        n["scale"] = round(scale_of(student_entry(n["cast"])) * (0.95 + (h % 11) * 0.01), 3)
+        n["scale"] = _generic_scale(n)
         n["tint"] = True
+    # Give every generic marker a unique identity (name, lines, hair colour).
+    roster.assign_uniques(npcs)
+    # The roster may switch a staff marker's base mesh to a female look; keep the
+    # runtime scale consistent with the final cast id.
+    for n in npcs:
+        if n.get("tint", True):
+            n["scale"] = _generic_scale(n)
     return npcs

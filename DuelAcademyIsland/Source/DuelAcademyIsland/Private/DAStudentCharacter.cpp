@@ -14,6 +14,7 @@
 #include "DAIslandSubsystem.h"
 #include "DALocationVolume.h"
 #include "DAMotorcycleComponent.h"
+#include "DAMovementAudioComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
@@ -85,6 +86,10 @@ ADAStudentCharacter::ADAStudentCharacter()
 	Bike = CreateDefaultSubobject<UDAMotorcycleComponent>(TEXT("Motorcycle"));
 	Bike->SetupAttachment(GetCapsuleComponent());
 	Bike->SetRelativeLocation(AvatarOnFoot);
+
+	MovementAudio = CreateDefaultSubobject<UDAMovementAudioComponent>(TEXT("MovementAudio"));
+	MovementAudio->SetupAttachment(GetCapsuleComponent());
+	MovementAudio->SetRelativeLocation(AvatarOnFoot);
 
 	// No skeletal mesh: the avatar component draws the student.
 	GetMesh()->SetVisibility(false);
@@ -1078,6 +1083,8 @@ void ADAStudentCharacter::UpdateRiding(float DeltaSeconds)
 	Pose.Steer = BikeSteer;
 	Pose.Lean = BikeLean;
 	Pose.Pitch = BikePitch;
+	Pose.Throttle = Throttle;
+	Pose.bBraking = bBraking;
 	Pose.bAirborne = !bGround;
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{

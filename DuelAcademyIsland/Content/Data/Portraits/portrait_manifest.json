@@ -1,5 +1,5 @@
 {
-  "note": "Local fan-project portraits. Full-body characters use Konami Duel Links renders; Jaden's and the player's expression frames use Duel Links duel portraits from the Yugipedia mirror. The player uses the generic Slifer Red student 'Evan'. Do not redistribute.",
+  "note": "Local fan-project portraits. The regulars use Konami Duel Links renders; Jaden's and the player's expression frames use Duel Links duel portraits from the Yugipedia mirror. The player uses the generic Slifer Red student 'Evan'. The remaining speakers, NPCs and event opponents are generated locally from the project's own cast (see generated). Do not redistribute the Duel Links renders.",
   "characters": {
     "player": {
       "npc": "player",
@@ -47,12 +47,79 @@
       "shocked": "https://ms.yugipedia.com/8/89/Evan-DULI-DuelPortrait-4.png",
       "sad": "https://ms.yugipedia.com/a/ac/Evan-DULI-DuelPortrait-5.png",
       "laugh": "https://ms.yugipedia.com/3/35/Evan-DULI-DuelPortrait-6.png"
+    },
+    "alexis": {
+      "neutral": "https://img.yugipedia.com/4/46/AlexisRhodes-DULI-DuelPortrait-1.png",
+      "happy": "https://img.yugipedia.com/2/2b/AlexisRhodes-DULI-DuelPortrait-2.png",
+      "angry": "https://img.yugipedia.com/2/27/AlexisRhodes-DULI-DuelPortrait-3.png"
+    },
+    "bastion": {
+      "neutral": "https://img.yugipedia.com/0/0f/BastionMisawa-DULI-DuelPortrait-1.png",
+      "happy": "https://img.yugipedia.com/2/20/BastionMisawa-DULI-DuelPortrait-2.png",
+      "thoughtful": "https://img.yugipedia.com/1/1d/BastionMisawa-DULI-DuelPortrait-7.png"
+    },
+    "chazz": {
+      "neutral": "https://img.yugipedia.com/d/da/ChazzPrinceton-DULI-DuelPortrait-1.png",
+      "smug": "https://img.yugipedia.com/e/ef/ChazzPrinceton-DULI-DuelPortrait-2.png",
+      "angry": "https://img.yugipedia.com/4/4e/ChazzPrinceton-DULI-DuelPortrait-3.png"
+    },
+    "syrus": {
+      "neutral": "https://img.yugipedia.com/2/2e/SyrusTruesdale-DULI-DuelPortrait-1.png",
+      "happy": "https://img.yugipedia.com/5/5f/SyrusTruesdale-DULI-DuelPortrait-2.png",
+      "determined": "https://img.yugipedia.com/c/cc/SyrusTruesdale-DULI-DuelPortrait-3.png",
+      "shocked": "https://img.yugipedia.com/f/f1/SyrusTruesdale-DULI-DuelPortrait-4.png",
+      "nervous": "https://img.yugipedia.com/d/de/SyrusTruesdale-DULI-DuelPortrait-7.png"
+    },
+    "zane": {
+      "neutral": "https://img.yugipedia.com/c/c2/ZaneTruesdale-DULI-DuelPortrait-1.png",
+      "happy": "https://img.yugipedia.com/a/ac/ZaneTruesdale-DULI-DuelPortrait-2.png",
+      "stern": "https://img.yugipedia.com/c/cd/ZaneTruesdale-DULI-DuelPortrait-3.png"
     }
   },
   "derived": {
     "player.png": "player_neutral.png",
     "player_face.png": "tight crop of the player neutral frame",
     "jaden_determined.png": "jaden_angry.png",
-    "player_determined.png": "player_angry.png"
+    "player_determined.png": "player_angry.png",
+    "pda_neutral.png": "copy of ui_pda.png for the PDA speaker's declared neutral expression"
+  },
+  "generated": {
+    "note": "Rendered locally from the project's VRoid-derived cel-shaded cast with Tools/render_portraits.py (Blender 5.2, Cycles). Not Konami renders; generated art for characters and story speakers that had no portrait.",
+    "pipeline": "Tools/render_portraits.py --missing; Tools/render_portraits.py --expressions",
+    "expression_pipeline": "VRoid Fcl_ALL_* blendshape recipes in Tools/dai/anime/expressions.py, baked into the face by the cast pipeline.",
+    "duel_expressions": "Jasmine, Mindy, Conklin and Damon also have the six generic duel cut-in emotions (happy, angry, determined, shocked, sad, laugh).",
+    "characters": [
+      "chumley",
+      "crowler",
+      "jasmine",
+      "mindy",
+      "banner",
+      "sheppard",
+      "mimicry",
+      "dorothy",
+      "fontaine",
+      "sartyr",
+      "beauregard",
+      "brier",
+      "dimitri",
+      "gerard",
+      "blair",
+      "topher",
+      "torrey",
+      "conklin",
+      "damon",
+      "shadow_duelist",
+      "student_m1",
+      "student_f1",
+      "student_f2",
+      "unknown_student"
+    ],
+    "ui_icons": [
+      "narrator",
+      "ui_pda",
+      "pharaoh",
+      "goblin_king",
+      "jinzo"
+    ]
   }
 }

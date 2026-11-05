@@ -12,6 +12,7 @@
 #include "DAInventorySubsystem.h"
 #include "DAShopSubsystem.h"
 #include "DAIslandSubsystem.h"
+#include "DAMusicSubsystem.h"
 #include "DASceneAnchor.h"
 #include "DAStudentNPC.h"
 #include "DuelAcademyIsland.h"
@@ -1781,6 +1782,23 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: music %s."), *Command.Track);
 		if (!Command.Track.IsEmpty())
 		{
+			float Fade = 1.5f;
+			if (Command.Raw.IsValid())
+			{
+				double AuthoredFade = 0.0;
+				if (Command.Raw->TryGetNumberField(TEXT("fade"), AuthoredFade) && FMath::IsFinite(AuthoredFade))
+				{
+					Fade = FMath::Clamp(static_cast<float>(AuthoredFade), 0.f, 8.f);
+				}
+			}
+			if (UDAMusicSubsystem* Music = UDAMusicSubsystem::Get(this))
+			{
+				if (Music->PlayCue(Command.Track, Fade))
+				{
+					return true;
+				}
+			}
+			// Legacy fallback for story data that names a one-shot instead of a cue.
 			if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 			{
 				Sub->PlayUISound(FName(*Command.Track), 0.55f);

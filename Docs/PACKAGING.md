@@ -24,7 +24,7 @@ The archive is a bootstrap `DuelAcademyIsland.exe` at the archive root plus
 
 | Package | Result |
 | --- | --- |
-| Shipping | Cooked 1,590 packages, 0 cook errors; `Builds/Win64ShippingFinal2` launches to the title screen (`NEW GAME`, `CONTINUE`, `NO SAVE DATA`) |
+| Shipping | Rebuilt from `main` at `6891ac4` with a Win64 material-accessor compile fix; UE 5.8 BuildCookRun (build/cook/stage/pak/archive) succeeded; packaged launcher passed a 20-second unattended/null-RHI startup smoke test at `Builds/Win64Shipping` |
 | Development | `Builds/Win64Dev`; `-DADuelSelfTest=1000`: 457/543 wins, 0 stalls, 0 invariant failures, deck audit 36/36, puzzle audit 100/100, exit 0 |
 | Development | `-DAPuzzleExamSelfTest`: Puzzle 102/102, Exam 104/104, `BOTH SUITES PASS`, exit 0 |
 | Development | `-DAStoryPlaythroughTest`: 35/35 events, 39/39 duels |

@@ -23,12 +23,12 @@
 | `-DAFullStorySelfTest` | **20/20 PASS** (35 events, 44 full scenes, 176 lines, 6 emails, 84 duel refs, 35/35 reachable) |
 | `-DAStoryPlaythroughTest` | **35/35 events completed, 40/40 story duels (39/39 full campaign), 28/28 checks, 0 failures** |
 | `-DAPuzzleExamSelfTest` | **Puzzle 102/102 PASS, Exam 104/104 PASS, both suites PASS** |
-| `-DANpcScheduleTest` | **514 passed, 0 failed** (week schedules, events, spawn/despawn, refresh) |
+| `-DANpcScheduleTest` | **568 passed, 0 failed** (week schedules, events, spawn/despawn, refresh, calendar bridge) |
 | `-DADuelSelfTest=1000` | **1,000 duels, 457 player wins, 543 opponent wins, 0 stalls, 0 invariant failures, deck audit 37/37, puzzle audit 100/100, 19.1s** |
 | `-DAUITest` / `-DAGameplayUITest` | 8 PDA + 2 dialogue + shop/deck/exam/PDA gameplay screenshots at 1920x1080 |
 | `-DATitleTest` / `-DANewGameTest` | title + new-game opening screenshots at 1920x1080 |
 | `-DAPortalTest` | **188 passed, 0 failed** (all 20 portals paired; ten interior entries and classroom return teleport; screenshot captured) |
-| World actors | 20 portals / 97 anchors / 38 spawn points / 1 director / 88 ambient NPCs / 47 interactables / 10 nav volumes; 1,164 level actors |
+| World actors | 20 portals / 97 anchors / 38 spawn points / 1 director / 164 ambient NPCs / 47 interactables / 10 nav volumes; ~1,240 level actors |
 | Runtime data | 1,200 cards / 100 puzzles / 12 exam cycles / 26 duelists / 37 runtime decks / 48 packs / 37 events / 65 scenes / 176 dialogue lines / 6 emails |
 
 The earlier profile self-test crash (backup-save assertion) is resolved; keep
@@ -82,7 +82,8 @@ the lane directories. Canon is reference; runtime is what the game loads.
 | Profile, DP, titles, counters | A02 | **works** | 182/182 profile/save checks; 10,000-state fuzz clean. |
 | Calendar | A02 | **works** | 12-month simulation 10,947 checks / 0 failures; exam-Friday week rule still unproven. |
 | Save/load/migration | A02 | **works** | Round-trip, backup, corruption, migration; 10,000-state fuzz + 1,000 corruption cases clean. |
-| Settings | A02 | **works** | Animation speed, activation confirmation, volumes. |
+| Settings | A02 | **works** | Animation speed, activation confirmation, volumes; BGM volume is applied live by the music director. |
+| Music / ambience | A10 | **works** | 22 original looping area/room/title/duel themes rendered with the Juicebox Studio engine; zone and portal crossfades; story BGM cues; synthesized ambience. See `Docs/Audio/README.md`. |
 | Inventory / card trunk | A06 | **works** | 1,200-card inventory, 3-copy ownership; economy 213/213. |
 | Shop / packs | A06 | **works** | 48 packs cover 1,200 cards; Dorothy's Gift full pool; bulk purchase/preview tests pass. |
 | Deck construction | A06 | **works** | 36 decks legal (40-60 main, <=15 Extra, <=3 copies, Year-1 banlist). |
@@ -90,7 +91,7 @@ the lane directories. Canon is reference; runtime is what the game loads.
 | Exams | A07 | **works** | 12 cycles / 30 questions / 7 objectives; 104/104 engine lifecycle checks. |
 | Puzzles | A07 | **works** | 100 definitions; 102/102 engine replay checks; authored fallbacks where canon setup is unknown. |
 | Story / events / dialogue | A03 | **works / partial** | 35/35 events play through in-engine; 40/40 duels resolve (39/39 full campaign); name entry, talk hooks, real duel-result progression, E20/E29/E33 branches and five canon choices are wired. Exact dialogue and the E04/E09/E17/E28 special rules remain. |
-| Interiors / portals / anchors | A08 | **works** | 10 cells, 20 portals, 97 anchors, 38 spawns, 1 director, 10 nav volumes; portal 188/188, NPC schedule 514/514. |
+| Interiors / portals / anchors | A08 | **works** | 10 cells, 20 portals, 97 anchors, 38 spawns, 1 director, 10 nav volumes; portal 188/188, NPC schedule 568/568. |
 | HUD / dialogue / PDA / title / shop / deck / exam UI | A09 | **works / partial** | Title/New Game/Continue, PDA, dialogue, shop, deck editor and exam screens verified by screenshots; deeper interaction QA remains. |
 | Integration/QA | A10 | **works** | Contracts, validator, puzzle validator, smoke runner, golden saves, final status. |
 

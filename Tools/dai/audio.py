@@ -55,25 +55,42 @@ def periodic_lfo(n, cycles, phase=0.0):
     return np.sin(2 * math.pi * cycles * t + phase)
 
 
-def ocean(dur=24.0):
+def ocean(dur=32.0):
+    """A long, seamless surf bed: deep swell, breaking foam and a wash of gravel."""
     n = int(SR * dur)
-    surf = band_noise(n, 60, 2500, 1, tilt=0.6)
-    hiss = band_noise(n, 1500, 7000, 2, tilt=0.3) * 0.25
     t = np.arange(n) / n
-    env = np.zeros(n)
-    for k, (cyc, ph) in enumerate([(3, 0.0), (4, 1.3), (5, 2.1)]):
-        w = np.clip(np.sin(2 * math.pi * cyc * t + ph), 0, 1) ** 3
-        env += w * (0.7 + 0.1 * k)
-    env = 0.35 + env
-    return surf * env + hiss * (0.3 + env * 0.5)
+    deep = band_noise(n, 24, 105, 1, tilt=0.9)
+    surf = band_noise(n, 65, 2600, 2, tilt=0.55)
+    foam = band_noise(n, 1500, 7800, 3, tilt=0.25)
+
+    # Three non-commensurate wave trains (integer cycles, so the loop closes).
+    swell = np.full(n, 0.20)
+    for cyc, ph, weight in ((4, 0.2, 0.58), (6, 1.6, 0.30), (9, 2.9, 0.16)):
+        swell += weight * np.clip(np.sin(2 * math.pi * cyc * t + ph), 0, 1) ** 2.6
+
+    # Short, bright crests on the larger waves: the "crash" that follows the swell.
+    crash_env = (np.clip(np.sin(2 * math.pi * 4 * t + 0.6), 0, 1) ** 16
+                 + 0.55 * np.clip(np.sin(2 * math.pi * 6 * t + 2.2), 0, 1) ** 20)
+    crash = band_noise(n, 500, 7000, 4, tilt=0.2) * crash_env
+
+    # A slow undertow that rises under the biggest sets.
+    under = band_noise(n, 18, 55, 5, tilt=1.2) * (0.45 + 0.55 * np.clip(swell, 0, 1))
+    return deep * (0.55 + 0.35 * swell) + under * 0.9 + surf * (0.28 + 0.72 * swell) \
+        + foam * (0.10 + 0.34 * swell) + crash * 0.42
 
 
-def wind(dur=20.0):
+def wind(dur=24.0):
+    """Airy wind with low gusts, a moving mid-band and a faint edge whistle."""
     n = int(SR * dur)
-    x = band_noise(n, 150, 1400, 3, tilt=0.8)
-    env = 0.6 + 0.25 * periodic_lfo(n, 2, 0.4) + 0.15 * periodic_lfo(n, 5, 1.1)
-    whistle = band_noise(n, 600, 900, 4) * (0.2 + 0.2 * periodic_lfo(n, 3, 2.0))
-    return x * env + whistle * 0.3
+    t = np.arange(n) / n
+    low = band_noise(n, 55, 520, 3, tilt=0.9)
+    air = band_noise(n, 180, 1900, 4, tilt=0.7)
+    hiss = band_noise(n, 1600, 7200, 5, tilt=0.3)
+    gust = (0.58 + 0.22 * periodic_lfo(n, 2, 0.4) + 0.13 * periodic_lfo(n, 5, 1.1)
+            + 0.07 * periodic_lfo(n, 9, 2.3))
+    whistle = band_noise(n, 780, 1320, 6) * (0.18 + 0.22 * periodic_lfo(n, 3, 2.0)
+                                             + 0.10 * periodic_lfo(n, 7, 0.7))
+    return low * gust * 0.75 + air * gust + hiss * (0.10 + 0.18 * gust) + whistle * 0.22
 
 
 def birds(dur=20.0, seed=5):
@@ -112,26 +129,48 @@ def volcano(dur=24.0):
     return rumble * env + booms + hiss
 
 
-def waterfall(dur=16.0):
+def waterfall(dur=24.0):
+    """Low roar, a wide mid body and a high spray, with slow surges in the flow."""
     n = int(SR * dur)
-    x = band_noise(n, 80, 5000, 9, tilt=0.35)
-    return x * (0.9 + 0.1 * periodic_lfo(n, 7))
+    t = np.arange(n) / n
+    rumble = band_noise(n, 28, 180, 9, tilt=1.0)
+    body = band_noise(n, 120, 1500, 10, tilt=0.55)
+    spray = band_noise(n, 1800, 9500, 11, tilt=0.25)
+    surge = (0.78 + 0.13 * np.sin(2 * math.pi * 3 * t + 0.4)
+             + 0.09 * np.sin(2 * math.pi * 5 * t + 1.7)
+             + 0.05 * np.sin(2 * math.pi * 8 * t + 2.8))
+    return rumble * 1.15 + body * surge + spray * (0.18 + 0.13 * surge)
 
 
-def hot_spring(dur=16.0):
+def hot_spring(dur=20.0):
+    """Steam hiss, gently lapping water, low gurgles and small rising bubbles."""
     n = int(SR * dur)
-    base = band_noise(n, 200, 3000, 10, tilt=0.6) * 0.15
-    r = np.random.default_rng(11)
-    out = base.copy()
-    for _ in range(int(dur * 9)):
-        s = int(r.uniform(0, n - SR * 0.2))
-        L = int(SR * r.uniform(0.03, 0.09))
-        f0 = r.uniform(300, 900)
+    t = np.arange(n) / n
+    lapping = band_noise(n, 90, 1700, 10, tilt=0.75) * (0.10 + 0.04 * periodic_lfo(n, 3, 0.8))
+    steam = band_noise(n, 2500, 9500, 11, tilt=0.2) * (0.06 + 0.02 * periodic_lfo(n, 5, 1.9))
+    gurgle = band_noise(n, 35, 130, 12, tilt=1.1) * (0.09 + 0.05 * periodic_lfo(n, 2, 2.4))
+
+    r = np.random.default_rng(13)
+    out = lapping + steam + gurgle
+    # Small bubbles: a rising chirp with a quick, soft envelope.
+    for _ in range(int(dur * 13)):
+        s = int(r.uniform(0, n - SR * 0.25))
+        L = int(SR * r.uniform(0.025, 0.085))
+        f0 = r.uniform(280, 1050)
         tt = np.arange(L) / SR
-        freq = f0 * (1 + 2.5 * tt / tt[-1])
+        freq = f0 * (1 + r.uniform(1.5, 3.0) * tt / tt[-1])
         ph = 2 * math.pi * np.cumsum(freq) / SR
-        env = np.exp(-tt * 40) * np.clip(tt * 600, 0, 1)
-        out[s:s + L] += np.sin(ph) * env * r.uniform(0.2, 0.6)
+        env = np.exp(-tt * (35 + 25 * r.random())) * np.clip(tt * 700, 0, 1)
+        out[s:s + L] += np.sin(ph) * env * r.uniform(0.12, 0.42)
+    # A few larger "bloops" from the spring source.
+    for _ in range(int(dur * 1.4)):
+        s = int(r.uniform(0, n - SR * 0.5))
+        L = int(SR * r.uniform(0.12, 0.28))
+        f0 = r.uniform(70, 150)
+        tt = np.arange(L) / SR
+        ph = 2 * math.pi * (f0 * tt + 12.0 * tt * tt)
+        env = np.exp(-tt * 14) * np.clip(tt * 45, 0, 1)
+        out[s:s + L] += np.sin(ph) * env * r.uniform(0.10, 0.22)
     return out
 
 

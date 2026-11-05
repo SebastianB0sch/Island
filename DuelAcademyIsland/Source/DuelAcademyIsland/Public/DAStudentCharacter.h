@@ -12,6 +12,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UDAAvatarComponent;
 class UDAMotorcycleComponent;
+class UDAMovementAudioComponent;
 class UInputAction;
 class UInputMappingContext;
 class ADALocationVolume;
@@ -181,6 +182,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
 	TObjectPtr<UDAMotorcycleComponent> Bike;
+
+	/** Procedural footsteps, body/cloth, wind and water (silent while riding). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy|Audio")
+	TObjectPtr<UDAMovementAudioComponent> MovementAudio;
 
 private:
 	void CreateInput();
