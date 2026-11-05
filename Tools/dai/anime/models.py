@@ -507,6 +507,10 @@ def build_model(cid, entry, key_name, log=print):
         alpha.update(more)
         tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
     materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig, source=path)
+    if body is not None and entry.get("outfit"):
+        # cloth fit relaxation: loosen the clothes wherever a take would push an inner layer through them
+        from . import fitcheck
+        fitcheck.relax(body, arm, log)
     meshes += extra
     for m in meshes:
         add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses"))

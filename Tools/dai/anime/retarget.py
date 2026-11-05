@@ -81,9 +81,14 @@ class Source:
         return self.arm.pose.bones[self.top].matrix @ self.arm.data.bones[self.top].matrix_local.inverted()
 
     def action(self, take):
-        """Action whose name ends with |take (or equals take)."""
+        """Action whose name ends with |take (or equals take). A source imported while another copy of the
+        same file is loaded gets Blender's ".001" suffixes on its action names: those match too."""
+        import re
         for a in self.actions:
             if a.name.split("|")[-1] == take:
+                return a
+        for a in self.actions:
+            if re.sub(r"\.\d{3}$", "", a.name.split("|")[-1]) == take:
                 return a
         raise KeyError(f"take {take!r} not found (have {[a.name.split('|')[-1] for a in self.actions]})")
 

@@ -497,3 +497,303 @@ def fold_mask(P, name, rig, spec, legs=True):
         below = np.clip((rig.pelvis - P[:, 2]) / 0.04, 0, 1)
         m = np.maximum(m, _lines((frac - 0.5) * 0.05, W) * below)
     return m
+
+
+# --------------------------------------------------------------------------- layered skinning
+# Each garment is skinned like the layer directly under it at that very spot (body -> trousers / shirt ->
+# jacket ...), so neighbouring layers deform together and keep their spacing in every pose. A garment that
+# merely kept the weights of the skin vertex it was cut from drifts out of step wherever the drape moved it
+# sideways (shoulders, hips): the layers then slide through each other as soon as an arm or a leg moves.
+INHERIT = ("Pants", "Shirt", "Gloves", "Boots", "Skirt", "Jacket", "Collar", "Capelet")     # inner -> outer
+INHERIT_REACH = 0.07            # further than this from anything below: keep the garment's own weights
+COAT_REACH = 0.2                 # vented coat panels find the leg under them this far out
+TAIL_CONTACT, TAIL_FREE = 0.03, 0.08    # free-hanging cloth follows a leg fully within 3 cm, not past 11 cm
+
+
+def _region(name):
+    n = name.lower()
+    if any(k in n for k in ("upperarm", "lowerarm", "hand", "thumb", "index", "middle", "ring", "pinky")):
+        return "arm_" + n[-1]
+    if any(k in n for k in ("thigh", "calf", "foot", "ball")):
+        return "leg_" + n[-1]
+    return "trunk"
+
+
+def _smooth_crotch(t, faces, steps=8, band=0.12):
+    """Laplacian smoothing of the trouser weights round the crotch and hips (position-welded): the skin's
+    pelvis -> thigh hand-over is a few cm wide there, which pinches the trousers and leaves no clean field
+    for the coat / shirt above to inherit."""
+    r = t.rig
+    verts = list({v for f in faces for v in f.verts})
+    w = Welded(verts, faces)
+    zone = (np.abs(w.co[:, 2] - r.crotch) < band) & (np.abs(w.co[:, 0]) < 0.17)
+    if not zone.any():
+        return
+    # weights per welded position (from the first copy)
+    first = {}
+    for v, i in zip(w.verts, w.inv):
+        first.setdefault(i, v)
+    W = [dict(first[i][t.dl]) for i in range(len(w.co))]
+    for _ in range(steps):
+        nxt = list(W)
+        for i in np.nonzero(zone)[0]:
+            nb = w.nbr[i]
+            if not nb:
+                continue
+            acc = {}
+            for j in [i] + nb:
+                for g, x in W[j].items():
+                    acc[g] = acc.get(g, 0.0) + x
+            tot = sum(acc.values()) or 1.0
+            nxt[i] = {g: x / tot for g, x in acc.items()}
+        W = nxt
+    for v, i in zip(w.verts, w.inv):
+        if zone[i]:
+            t.set_weights(v, W[i])
+
+
+def inherit_weights(t, log=print):
+    """outfit.Tailor t (before finish): re-skin INHERIT garments from the layers under them (rest pose)."""
+    from mathutils.bvhtree import BVHTree
+    from mathutils.interpolate import poly_3d_calc
+    names = {vg.index: vg.name for vg in t.obj.vertex_groups}
+
+    def dominant(v):
+        w = v[t.dl]
+        if not w:
+            return "trunk"
+        g = max(w.items(), key=lambda kv: kv[1])[0]
+        return _region(names.get(g, ""))
+
+    # the layers built so far, per body region: list of BMFaces
+    def add_layer(faces, store):
+        for f in faces:
+            if not f.is_valid or len(f.verts) < 3:
+                continue
+            reg = {}
+            for v in f.verts:
+                r = dominant(v)
+                reg[r] = reg.get(r, 0) + 1
+            store.setdefault(max(reg, key=reg.get), []).append(f)
+
+    under = {}
+    add_layer(t.skin, under)
+    keep_below = {}
+    for name, g in t.garments.items():
+        if g.get("cloth"):
+            keep_below[name] = g["cloth"]["cut"] - 1e-4        # skirt / coat tail swing weights stay
+    changed = 0
+    for name in INHERIT:
+        if name not in t.garments:
+            continue
+        faces = t.faces_of(name)
+        trees = {}
+        for reg, fs in under.items():
+            vs = list({v for f in fs for v in f.verts})
+            index = {v: i for i, v in enumerate(vs)}
+            tree = BVHTree.FromPolygons([v.co[:] for v in vs], [[index[v] for v in f.verts] for f in fs])
+            trees[reg] = (tree, fs, index, vs)
+        cut = keep_below.get(name)
+        new_w = {}
+        follow = {}
+        for v in {v for f in faces for v in f.verts}:
+            reg = dominant(v)
+            panel = name == "Jacket" and cut is not None and v.co.z < cut
+            if panel:
+                # a coat panel follows the leg on its own side (or the seat) right under it
+                ps = t.garments[name].get("panel_side", {}).get(v)
+                cand = [r for r in (f"leg_{ps}", "trunk") if r in trees] if ps else list(trees)
+            else:
+                cand = [reg] if reg in trees else []
+                if reg != "trunk" and "trunk" in trees:
+                    cand.append("trunk")             # e.g. a sleeve root right at the shoulder
+            best = None
+            reach = COAT_REACH if (name == "Jacket" and cut is not None and v.co.z < cut) else INHERIT_REACH
+            for r in cand:
+                tree, fs, index, vs = trees[r]
+                loc, nrm, fi, dist = tree.find_nearest(v.co, reach)
+                if loc is None:
+                    continue
+                if best is None or dist < best[0] - (0.0 if panel else 0.004):   # prefer the own region
+                    best = (dist, fs[fi], loc)
+                if r == reg and not panel:
+                    break
+            if best is None:
+                continue
+            f = best[1]
+            bary = poly_3d_calc([u.co for u in f.verts], best[2])
+            w = {}
+            for u, b in zip(f.verts, bary):
+                for gi, x in u[t.dl].items():
+                    w[gi] = w.get(gi, 0.0) + x * b
+            if cut is not None and v.co.z < cut:
+                # free-hanging cloth. Skirts: where they lie against a leg they follow it, where they hang clear
+                # they keep their own swing weights. Vented long coat panels: always skinned like the trouser leg
+                # under them (one panel per leg, so it can follow it) - the cloth bones add the swing on top
+                if name == "Jacket":
+                    k = 1.0
+                else:
+                    k = 1.0 - min(1.0, max(0.0, (best[0] - TAIL_CONTACT) / TAIL_FREE))
+                if k <= 0.0:
+                    continue
+                own = dict(v[t.dl])
+                w = {gi: own.get(gi, 0.0) * (1 - k) + w.get(gi, 0.0) * k for gi in set(own) | set(w)}
+                follow[v] = k
+            new_w[v] = w
+        for v, w in new_w.items():
+            t.set_weights(v, w)
+        if name == "Pants":
+            _smooth_crotch(t, faces)
+        t.leg_contact = getattr(t, "leg_contact", {})
+        t.leg_contact.update(follow)
+        changed += len(new_w)
+        add_layer(faces, under)                      # the next garment inherits from this one
+    log(f"  anime: {t.key}: layered skinning, {changed} garment vertices re-skinned from the layer below")
+    return changed
+
+
+# --------------------------------------------------------------------------- hidden surface removal
+# inner -> the garments that may hide it (opaque, fixed to the body above their cut line)
+# (never a garment with painted trims as the inner layer: the trim painter would outline the new edges)
+HIDERS = {"Shirt": ("Jacket", "Collar", "Capelet"), "Pants": ("Jacket", "Shirt"), "skin": ("Capelet", "Collar")}
+HIDE_MARGIN = 0.035     # keep inner cloth this close to an outer garment's open edge (it shows when it moves)
+HIDE_REACH = 0.035
+
+
+def _components(faces, inside):
+    """Edge-connected components of `faces` restricted to those with inside(face) True."""
+    seen, out = set(), []
+    for f in faces:
+        if f in seen or not inside(f):
+            continue
+        comp, stack = [], [f]
+        seen.add(f)
+        while stack:
+            g = stack.pop()
+            comp.append(g)
+            for e in g.edges:
+                for h in e.link_faces:
+                    if h not in seen and inside(h):
+                        seen.add(h)
+                        stack.append(h)
+        out.append(comp)
+    return out
+
+
+def _clean_regions(faces, kill, min_faces=24):
+    """Removal only in solid regions: tiny removed patches stay (no pinholes in the cloth) and tiny kept
+    islands inside a removed region go too (no floating slivers)."""
+    fs = set(faces)
+    kill = set(kill)
+    for comp in _components(faces, lambda f: f in kill):
+        if len(comp) < min_faces:
+            kill.difference_update(comp)
+    for comp in _components(faces, lambda f: f in fs and f not in kill):
+        if len(comp) < min_faces:
+            kill.update(comp)
+    return kill
+
+
+def hide_covered(t, log=print):
+    """Delete inner-layer faces that an outer garment covers completely (rest pose), except within
+    HIDE_MARGIN of the outer garment's open edges and under its free-hanging part. What cannot be seen cannot
+    poke through: the shirt's shoulders and armpits under a jacket fold the hardest of all."""
+    from mathutils.bvhtree import BVHTree
+    from scipy.spatial import cKDTree
+    removed = 0
+    for inner, hiders in HIDERS.items():
+        if inner != "skin" and inner not in t.garments:
+            continue
+        kill = set()
+        inner_faces = ([f for f in t.skin if f.is_valid and f not in t.covered] if inner == "skin"
+                       else t.faces_of(inner))
+        for outer in hiders:
+            if outer not in t.garments:
+                continue
+            g = t.garments[outer]
+            cut = g.get("cut")
+            faces = [f for f in t.faces_of(outer)
+                     if cut is None or min(v.co.z for v in f.verts) >= cut - 1e-4]
+            if not faces:
+                continue
+            vs = list({v for f in faces for v in f.verts})
+            index = {v: i for i, v in enumerate(vs)}
+            tree = BVHTree.FromPolygons([v.co[:] for v in vs], [[index[v] for v in f.verts] for f in faces])
+            w = Welded(list({v for f in t.faces_of(outer) for v in f.verts}), t.faces_of(outer))
+            edge_pts = []
+            for a, b in w.open_edges:
+                pa, pb = w.co[a], w.co[b]
+                k = max(1, int(np.linalg.norm(pb - pa) / 0.005))
+                edge_pts += [pa + (pb - pa) * (i / k) for i in range(k + 1)]
+            edges = cKDTree(np.array(edge_pts)) if edge_pts else None
+            # the free-hanging part's top edge (cut line) is not an open edge, but it moves: treat it as one
+            for f in inner_faces:
+                if f in kill:
+                    continue
+                ok = True
+                for v in f.verts:
+                    loc, nrm, fi, dist = tree.find_nearest(v.co, HIDE_REACH)
+                    if loc is None or (v.co - loc).dot(nrm) > 0.0005:
+                        ok = False
+                        break
+                    if edges is not None and edges.query(v.co[:])[0] < HIDE_MARGIN:
+                        ok = False
+                        break
+                    if cut is not None and v.co.z < cut + HIDE_MARGIN:
+                        ok = False
+                        break
+                if ok:
+                    kill.add(f)
+        if kill:
+            kill = _clean_regions(inner_faces, kill)
+        if kill:
+            if inner == "skin":
+                t.covered.update(kill)          # finish() drops covered skin with the rest
+            else:
+                bmesh.ops.delete(t.bm, geom=list(kill), context="FACES")
+            removed += len(kill)
+    bmesh.ops.delete(t.bm, geom=[v for v in t.bm.verts if not v.link_faces], context="VERTS")
+    log(f"  anime: {t.key}: hidden-surface removal, {removed} covered inner cloth faces dropped")
+    return removed
+
+
+# --------------------------------------------------------------------------- side consistency
+LEG_BONES = ("thigh", "calf", "foot", "ball")
+MIDLINE = 0.02
+
+
+def fix_leg_sides(t, log=print):
+    """A garment vertex clearly on the left (+x) is never skinned to the right leg and vice versa: weight on
+    the opposite leg's bones moves to the same bone of its own side (within MIDLINE of the centre both
+    sides are fine). One such vertex drags its triangles through the trousers in every stride."""
+    names = {vg.index: vg.name for vg in t.obj.vertex_groups}
+    other = {}
+    for gi, n in names.items():
+        for b in LEG_BONES:
+            if n in (f"{b}_l", f"{b}_r"):
+                twin = f"{b}_{'r' if n.endswith('_l') else 'l'}"
+                other[gi] = (n[-1], t.gi(twin))
+    fixed = 0
+    garment_idx = {g["idx"] for g in t.garments.values()}
+    panel_side = {}
+    for g in t.garments.values():
+        panel_side.update(g.get("panel_side", {}))
+    for v in {v for f in t.bm.faces if f.material_index in garment_idx for v in f.verts}:
+        side = panel_side.get(v)
+        if side is None:
+            if abs(v.co.x) < MIDLINE:
+                continue
+            side = "l" if v.co.x > 0 else "r"
+        w = dict(v[t.dl])
+        moved = False
+        for gi, x in list(w.items()):
+            if gi in other and other[gi][0] != side and x > 0:
+                twin = other[gi][1]
+                w[twin] = w.get(twin, 0.0) + x
+                w[gi] = 0.0
+                moved = True
+        if moved:
+            t.set_weights(v, w)
+            fixed += 1
+    log(f"  anime: {t.key}: leg-side check, {fixed} garment vertices moved to their own side's leg")
+    return fixed
