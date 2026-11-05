@@ -17,6 +17,10 @@ an Unreal-ready skeletal mesh:
   * the retargeted / authored takes are baked onto the model's own skeleton (its proportions)
 """
 
+import math
+import os
+import re
+
 import bpy
 import numpy as np
 from mathutils import Matrix
@@ -204,13 +208,73 @@ def load(path, log=print, expression=None):
     for m in meshes:
         if m.data.shape_keys:
             co = None
-            if expression and m.name.split(".")[0] in names:
-                co = _bake_expression(m, names[m.name.split(".")[0]], expression)
+            src = names.get(m.name.split(".")[0])
+            if expression and src:
+                co = _bake_expression(m, src, expression)
+            deltas = _morph_deltas(m, src) if src else {}
             m.shape_key_clear()
             if co is not None:
                 m.data.vertices.foreach_set("co", co)
                 m.data.update()
+            # the facial rig survives the restyle as point attributes (carried through joins / edits) and
+            # becomes morph targets again in build_model (restore_morphs)
+            for morph, d in deltas.items():
+                attr = m.data.attributes.new(MORPH_ATTR + morph, "FLOAT_VECTOR", "POINT")
+                attr.data.foreach_set("vector", d.astype(np.float32))
     return arm, meshes
+
+
+# --------------------------------------------------------------------------- facial rig
+# morph target (Unreal) -> VRoid blendshape (after "Fcl_"): blinking, the five visemes and the emotions.
+# Exported relative to the character's own resting expression, so a blink on Chazz's scowl stays a scowl.
+FACE_MORPHS = {
+    "Blink": "EYE_Close", "Blink_L": "EYE_Close_L", "Blink_R": "EYE_Close_R",
+    "A": "MTH_A", "I": "MTH_I", "U": "MTH_U", "E": "MTH_E", "O": "MTH_O",
+    "Joy": "ALL_Joy", "Angry": "ALL_Angry", "Sorrow": "ALL_Sorrow", "Surprised": "ALL_Surprised",
+    "Fun": "ALL_Fun", "EyeJoy": "EYE_Joy", "BrowAngry": "BRW_Angry", "BrowSorrow": "BRW_Sorrow",
+}
+MORPH_ATTR = "da_morph_"
+
+
+def _morph_deltas(obj, names):
+    """{morph: (n*3,) offset from the base model's basis} for the FACE_MORPHS this mesh has."""
+    kb = obj.data.shape_keys.key_blocks
+    n = len(obj.data.vertices)
+    base = np.empty(n * 3)
+    kb[0].data.foreach_get("co", base)
+    out = {}
+    for morph, key in FACE_MORPHS.items():
+        i = next((i for i, nm in enumerate(names) if nm.lower().endswith("fcl_" + key.lower())), None)
+        if i is None or i + 1 >= len(kb):
+            continue
+        tgt = np.empty(n * 3)
+        kb[i + 1].data.foreach_get("co", tgt)
+        d = tgt - base
+        if np.abs(d).max() > 1e-6:
+            out[morph] = d
+    return out
+
+
+def restore_morphs(obj, log=print):
+    """Turn the da_morph_* point attributes back into shape keys (Unreal morph targets) on the final mesh."""
+    me = obj.data
+    attrs = [a.name for a in me.attributes if a.name.startswith(MORPH_ATTR)]
+    if not attrs:
+        return 0
+    n = len(me.vertices)
+    base = np.empty(n * 3, np.float32)
+    me.vertices.foreach_get("co", base)
+    obj.shape_key_add(name="Basis", from_mix=False)
+    for name in attrs:
+        d = np.empty(n * 3, np.float32)
+        me.attributes[name].data.foreach_get("vector", d)
+        key = obj.shape_key_add(name=name[len(MORPH_ATTR):], from_mix=False)
+        key.data.foreach_set("co", base + d)
+        key.value = 0.0                 # rest face; Unreal drives the weights at runtime
+    for name in attrs:
+        me.attributes.remove(me.attributes[name])
+    log(f"  anime: {obj.name}: {len(attrs)} face morph targets")
+    return len(attrs)
 
 
 # --------------------------------------------------------------------------- textures
@@ -443,14 +507,33 @@ def build_model(cid, entry, key_name, log=print):
         alpha.update(more)
         tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
     materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig, source=path)
+    if body is not None and entry.get("outfit"):
+        # cloth fit relaxation: loosen the clothes wherever a take would push an inner layer through them
+        from . import correctives, fitcheck
+        fitcheck.relax(body, arm, log)
+        # pose-space correctives for what a static fit cannot hold (big hip swings), driven by the thighs
+        correctives.build(body, arm, log)
+        # ...and a second static pass with the correctives active clears what their blending leaves
+        fitcheck.relax(body, arm, log, iterations=6, shape_fn=lambda a: correctives.displacement(body, a))
+        # last few covered vertices that still break through follow the cloth over them exactly
+        fitcheck.snap_residuals(body, arm, log, shape_fn=lambda a: correctives.displacement(body, a))
     meshes += extra
     for m in meshes:
-        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses"))
-    _select(meshes, meshes[0])
+        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses", "haircap"))
+    face = next((m for m in meshes if m.name.startswith("Face")), meshes[0])
+    _select(meshes, face)
     if len(meshes) > 1:
         bpy.ops.object.join()
-    mesh = meshes[0]
+    mesh = face
     mesh.name = mesh.data.name = f"SK_Anime_{key}"
+    from . import shading
+    shading.face_normals(mesh, arm, log)
+    shading.hair_normals(mesh, arm, log)
+    restore_morphs(mesh, log)
+    if entry.get("outfit"):
+        # final check on exactly what is exported: covered vertices still breaking through follow their cloth
+        from . import fitcheck
+        fitcheck.snap_residuals(mesh, arm, log)
     return arm, mesh
 
 

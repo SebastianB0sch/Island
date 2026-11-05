@@ -355,9 +355,11 @@ def _frame(rig, gait, phase, idle=False):
         # Relaxed standing: feet planted, slow weight shift and breathing.
         a = 2.0 * math.pi * phase
         gait = IDLE
-        sway = 0.0075 * math.sin(a)
-        yaw = 1.3 * math.sin(a + 0.4)
-        roll = -1.1 * math.sin(a)
+        # contrapposto: the weight rests on the left leg (hip shifted over it, pelvis tilted so the free
+        # right knee relaxes), the shoulders counter-tilt; breathing and a slow shift on top
+        sway = 0.014 + 0.005 * math.sin(a)
+        yaw = 1.3 * math.sin(a + 0.4) - 2.0
+        roll = -2.4 - 0.8 * math.sin(a)
         lean = 1.2 + 0.25 * math.sin(a * 2.0)
         base = 0.918 + 0.0018 * math.sin(a * 2.0)
         base *= rig.height_scale
@@ -466,6 +468,34 @@ def run_keys(rig=None):
 
 def idle_keys(rig=None):
     return _keys(rig, IDLE, idle=True)
+
+
+TALK_PERIOD = 2.4
+
+
+def talk_keys(rig=None):
+    """Conversation: the idle stance with the right hand raised palm-up, explaining in small beats, and the head
+    nodding along (played over the idle at partial weight while a character speaks)."""
+    if not isinstance(rig, Rig):
+        rig = Rig(rig)
+    n = int(round(TALK_PERIOD * FPS))
+    out = []
+    for i in range(n + 1):
+        phase = (i / n) % 1.0
+        key, _ = _frame(rig, IDLE, (phase * IDLE_PERIOD / TALK_PERIOD) % 1.0, idle=True)
+        a = 2.0 * math.pi * phase
+        beat = 0.5 + 0.5 * math.sin(a * 2.0)           # two beats per loop
+        lift = 0.75 + 0.25 * math.sin(a)
+        up = Vector((-0.22, -0.30 - 0.12 * lift, -0.92)).normalized()
+        fore = Vector((-0.10, -0.92, 0.10 + 0.22 * beat)).normalized()
+        hand = Vector((-0.05, -0.85, 0.25 + 0.2 * beat)).normalized()
+        key["upperarm_r"] = {"seg": tuple(up), "rest": tuple(rig.seg["upperarm_r"])}
+        key["lowerarm_r"] = {"seg": tuple(fore), "rest": tuple(rig.seg["lowerarm_r"])}
+        key["hand_r"] = {"seg": tuple(hand), "rest": tuple(rig.seg["lowerarm_r"]), "roll": 70.0}
+        hx, hy, hz = key.get("head", (0.0, 0.0, 0.0))
+        key["head"] = (hx + 4.0 * math.sin(a * 2.0 + 0.5), hy + 2.0 * math.sin(a), hz - 3.0)
+        out.append((i, key))
+    return out
 
 
 # --------------------------------------------------------------------------- validation

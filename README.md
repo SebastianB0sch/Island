@@ -54,6 +54,7 @@ Run the runtime suites from the editor/game command line:
 -DAPuzzleExamSelfTest     # both A07 suites in one process
 -DAUITest                 # 8 PDA + 2 dialogue screenshots
 -DATitleTest / -DANewGameTest
+-DACastLifeTest           # anime cast: cel materials + stencil + PP, face morphs, lip-sync, springs, look-at
 ```
 
 Data validators:
@@ -97,7 +98,29 @@ Egyptian-god theming), not a copy of any copyrighted asset. All card names in th
 
 ![Anime cast](Docs/renders/cast.jpg)
 
-*Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy and Dr. Crowler (Cycles preview).*
+*Jaden, Syrus, Chumley, Bastion, Chazz, Zane, Alexis, Jasmine, Mindy and Dr. Crowler (Cycles preview: real heights, cel shading, draped uniforms).*
+
+![Cast portraits](Docs/renders/cast_portraits.jpg)
+
+*Cel-shaded close-ups: smoothed anime face normals, coloured shadows, rim light, hair highlight arcs.*
+
+![Talk take](Docs/renders/cast_talk.jpg)
+
+*The Talk take over the contrapposto idle.*
+
+![Cast hair](Docs/renders/cast_hair.jpg)
+
+*Every cast member's hair from the front and back: soft, coherent masses with a rounded outline. See
+"Anime hair volume" below.*
+
+![Hair before and after](Docs/renders/hair_before_after.jpg)
+
+*Chazz before (each strand turned on its own: gaps, needles, a wide ragged outline) and after.*
+
+![Hair in motion](Docs/renders/hair_motion.jpg)
+
+*A Run frame with the spring solver on (`hairrig.simulate`, the same solver as in game). The locks swing
+together, and Alexis's long hair flows back in one sheet.*
 
 Everyone on the island is an **anime character model**: the VRoid sample avatars (VRoid Project / pixiv,
 whose terms allow modification and redistribution) restyled by the pipeline after the characters' official
@@ -125,12 +148,70 @@ designs, with a cel-style material and ink outline in Unreal:
   the face is reshaped towards it (longer faces and pointed chins for Zane, Chazz, Bastion and Jaden,
   Crowler's long narrow face, Chumley's round one).
 * **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's spiky orange-over-brown mop,
-  Syrus's cyan spikes, Zane's long slate-teal hair, Chazz's black spikes, Bastion's swept-up grey hair,
+  Syrus's cyan mop, Zane's long slate-teal hair, Chazz's swept-back black spikes, Bastion's neat grey hair,
   Chumley's black koala puffs, long olive-blond hair for Alexis, Jasmine's auburn flared cut, Mindy's grey
   bob with flipped wings, Crowler's blond bob and ponytail with a black band, plus Syrus's round glasses and
-  Chumley's round nose; eye colours per character. The spiky manes
-  (Jaden, Chazz, Syrus) are thickened with turned copies of the strands, which brings those meshes to about
-  80k triangles.
+  Chumley's round nose; eye colours per character.
+* **Anime hair volume** (`Tools/dai/anime/hairshape.py`). VRoid hair is a stack of thin strands lying on the
+  scalp, and turning each strand on its own fans them apart into gaps, needles and a wide, ragged outline.
+  Every step here moves neighbouring hair together instead:
+  * **flow**: strands *bend* towards the style direction, with the bend averaged over the strands rooted
+    nearby. `sweep` turns the side locks back rather than out.
+  * **coherence**: the displacement is smoothed in space, whatever strand a point belongs to, so layers
+    keep their order and nothing splits.
+  * **clump**: strand tips gather into a few big locks that end in soft points.
+  * **widen**: each lock gets wider across, within the hair surface.
+  * **volume**: the hair layer stands off the skull, more on top and at the back than at the sides. A
+    strand carries its lift down to its tip, so no shelf forms and the crown rises into a dome.
+  * **envelope**: the width is softly capped at the temples and narrows towards the jaw, the bulb outline
+    of anime hair.
+  * **under-layer**: a hair-coloured shell on the scalp, taking only opaque root texels, so skin never
+    shows where locks part.
+
+  Two-tone hair (Jaden) is coloured per lock (the outer locks orange, the under layer and nape dark) instead
+  of with a horizontal cut. In the cel shading the hair gets **volume normals**
+  (`shading.hair_normals`): the strand normals are blended into the smoothed shape of the whole mass. The
+  shadow then falls as one clean line and there is one angel-ring highlight instead of a streak on every
+  strand.
+* **Hair physics** (`Tools/dai/anime/hairrig.py`). Every restyled head of hair gets its own spring chains,
+  fitted to the hair as it now is:
+  * Ten short chains go round the head. Hair hanging below the shoulders gets eight longer, heavier
+    ones, which also lie on the back.
+  * Each vertex is shared between its two nearest chains and blended along each chain, so locks can't
+    part.
+  * The roots stay on the head, and the pivots sit part-way down the locks.
+  * Bones are named per character (`HairJoint_<Key>_Short03_1`), so the union skeleton keeps every
+    member's own pivots. Unreal skips chains a mesh doesn't skin.
+
+  In Unreal the solver runs level by level and pulls each joint towards the motion of its neighbouring
+  chains (cohesion), so the hair moves as one mass. A cone limit keeps styled hair in shape. The tails also
+  ride along with most of the character's own motion (`Inertia`): a 4 m/s run gives a lively bounce, not
+  a wind tunnel. `hairrig.simulate` is the same solver in Python. With it, a Blender preview shows the
+  hair as the game does. Styled short hair settles at about 1° in Idle and swings 3-4° on average in a
+  walk and about 7° in a run, with footfall peaks capped at 18°. Long hair (Alexis) flows about 19° on
+  average in a run, up to 50°, and stays on her back. The Unreal solver itself is compiled and run outside
+  the engine by `Tools/tests/test_hair_springs.py`. It copies `ApplySprings` / `BuildChains` verbatim from
+  `DAAvatarAnimInstance.cpp`, builds them against stand-in UE types and checks a synthetic head of hair:
+  * the results stay finite;
+  * the cones hold while idle, running at 4.2 m/s and running into a turn (short hair peaks at 8.6°);
+  * cohesion keeps a kicked long lock with its neighbour: the gap changes by 0.19 cm, against 1.59 cm
+    without cohesion.
+* **Hair audit** (`Tools/hair_check.py`, `dai/anime/hairaudit.py`) measures the exported FBXs Unreal
+  imports, with a budget (exit 1 when a character is over it):
+  * hair width over the face width;
+  * see-through holes in the silhouette, front and side;
+  * outline roughness: perimeter over the convex hull's, where 1 is a smooth outline;
+  * scalp visible from behind;
+  * the fitted chains each mesh is skinned to.
+
+  All 13 restyled characters are within budget:
+  * Width: 1.1-1.55x the face (Jasmine's flipped bob 1.46x). The old per-strand spikes were 2.0-2.6x.
+  * Holes: at most 4 small holes, under 1 % of the silhouette, against up to 25 before.
+  * Roughness: 1.1-1.5, against up to 4.4 before.
+  * Scalp: none visible, against up to 21 % before.
+
+  Student F2's twin tails spread from her head by design: her cast entry allows 2.45x
+  (`audit=dict(width=...)`).
 
 The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on
@@ -157,6 +238,92 @@ animations.
 ![Gait](Docs/renders/gait.jpg)
 
 *Walk and run cycles rendered from the gait solver: heel strike, flat, heel-off and toe-off; a real flight phase and stance compression in the run, with the arms and shoulders counter-swinging.*
+
+### Anime rendering, cloth and animation
+
+The cast is rendered, dressed and animated with the techniques current anime games use, all built from
+free tools (Blender as a Python module, numpy / scipy, Unreal's own C++):
+
+* **Cel shading** (`Tools/dai/anime/cel.py`): every cast material is classed as skin, face, hair, cloth or flat
+  (eyes, brows, lashes, mouth). Each class has a hard half-Lambert light/shadow step with a coloured shadow
+  (warm for skin, cool for cloth and hair), a rim light on the side the key light comes from, and an
+  "angel ring" highlight arc on hair. In Unreal the characters stay lit by the real scene (Lumen GI, cast
+  shadows, interior lamps, the night): `M_DA_Cel` turns specular off (no plastic sheen) and adds the rim
+  and hair highlight from the key-light direction that `ADAIslandManager` publishes (`MPC_DuelAcademy`
+  `SunDirection`, sun by day and moon by night). The stencil-masked post-process `PP_DA_Cel` then bands the
+  lighting on the cast (custom stencil 1) into a lit tone and a shadow tone with a saturated, cooler
+  shadow colour. The Cycles previews evaluate the same ramp.
+* **Anime face normals** (`Tools/dai/anime/shading.py`): the face's corner normals are blended towards an
+  ellipsoid fitted round the skull, so the face shades as one clean shape instead of throwing blotchy
+  nose and lip shadows. They are exported as custom normals and imported as such.
+* **Cloth drape** (`Tools/dai/anime/drape.py`): tailored garments no longer shrink-wrap the body. Every
+  horizontal slice of a jacket, shirt or skirt is pushed out to the convex hull of itself and the layers
+  under it, then hangs from its widest point above (chest, shoulder blades, seat). Sleeves become round
+  tubes that widen towards the cuff, trousers get straight legs that run from the thigh to the hem, and
+  shrink-free Taubin smoothing removes the remaining anatomy. The open edges (hems, cuffs, the jacket
+  front) get a turned-in band, so the fabric has visible thickness, and crease lines are painted into the
+  cloth textures: elbow and armpit folds, waist pull lines, knee and crotch folds, hem stacking and pleat
+  lines. Everything is computed by position, so vertices split along UV seams move together and the cloth
+  never cracks open.
+* **Fit system** (`Tools/dai/anime/drape.py`, `outfit.py`, `fitcheck.py`): clothes have to fit in motion,
+  not just in the rest pose, so the build checks and fixes that:
+  * *Layered skinning*: each garment takes its bone weights from the layer right under it at that spot
+    (body, then trousers and shirt, then jacket, then collar and capelet). Neighbouring layers then deform
+    together and keep their spacing. The lookup is region-aware (arm, trunk, leg), so a sleeve never picks up
+    torso weights at the armpit, and the trouser crotch weights are smoothed.
+  * *Hidden-surface removal*: inner cloth that an outer garment covers completely (a shirt's shoulders and
+    armpits under a jacket, skin under a capelet) is removed, as character outfit systems do. Only solid
+    regions are removed, never near an open edge or under a free-hanging hem, and never on trimmed garments.
+  * *Leg-side consistency*: no garment vertex on one side is skinned to the other leg.
+  * *Long coats* have a front parting plus side and back vents. Each panel is skinned to the trouser leg
+    under it, and its cloth chains ride that thigh. Shirts are tucked in under long coats. Hems hang from
+    the draped garment, so tails keep a clean cut.
+  * *Fit relaxation*: at build time every member is posed through its takes. Wherever an inner layer would
+    break through, the covering cloth is loosened and the layer under it tucked in along the covering
+    surface's normal, over repeated passes with a growing coverage set, keeping the best pass.
+  * *Pose-space correctives* (`correctives.py`): linear blend skinning collapses the seat and the front of
+    the hip when a thigh swings far, and that is beyond any static fit. Per side, the build solves
+    corrective morph targets for key poses: thigh forward 25° / 50° / 90°, back 15° / 30°, out 30°, and the
+    knee bent 60° / 110°. It measures what breaks through in each pose and moves the cloth out (and the layer
+    under it in) along the covering normal. Only the keys that fix something are kept. They are driven by
+    the thigh's pitch and spread in the pelvis frame and by the knee flexion, with blended weights along each
+    chain. The audit and Unreal (`UDAAvatarAnimInstance::UpdateCorrectives`) use the same formula. A second
+    relaxation pass then runs with the correctives active.
+  * *Residual binding*: a covered vertex that still breaks through in any frame takes the exact interpolated
+    weights and corrective displacement of the cloth triangle over it, together with its seam twins (its
+    neighbours go half way). This runs last on the exported mesh itself.
+  * *Reproducible*: the cloth code iterates in mesh order and the build entry points pin `PYTHONHASHSEED`,
+    so the same inputs give the same cast and the audit measures exactly what was exported.
+  * Result: all 13 cast members (named characters and generic students) audit at **zero breakthroughs in
+    every pose and zero holes**, including the vented long coats.
+  * *Audit*: `python Tools/fit_check.py [ids] [-v]` skins every member into Idle / Walk / Run / Duel / Sit /
+    Talk frames. It anchors each covered inner vertex to the exact garment triangle covering it at rest and
+    reports any that break through it (count and depth) and any holes in the cloth. It exits with status 1
+    when a member is over budget.
+  * In Unreal the skirt and coat-tail spring chains also collide with thigh and calf capsules.
+* **Cloth bones**: skirts and long coats get eight two-segment bone chains round the hem (`skirt_*`,
+  `coattail_*`). They carry 72 % of the hem, and the thighs carry the rest, so the legs still push the
+  fabric. Their rest pose comes from body landmarks only, so the shared skeleton stays identical across the
+  members of a group.
+* **Secondary motion** (`UDAAvatarAnimInstance`): a VRM-style verlet spring solver in the native
+  animation proxy swings the hair (the fitted `HairJoint_*` chains, see "Hair physics"), the skirt and
+  coat-tail bones and the `J_Sec_*` coat helpers in world space. They lag, overshoot and settle when a character starts, stops or
+  turns, and a head sphere keeps hair out of the face. It runs after the blended takes, so it works on every
+  clip.
+* **Facial animation**: the VRoid blendshapes are kept as 16 **morph targets** relative to each
+  character's baked resting expression (`Blink`, `Blink_L/R`, the visemes `A I U E O`, `Joy`, `Angry`,
+  `Sorrow`, `Surprised`, `Fun`, `EyeJoy`, `BrowAngry`, `BrowSorrow`). At runtime the characters blink every
+  2-6 s (one in five is a double blink) and lip-sync while speaking, and emotions ease in and out
+  (`UDAAvatarComponent::SetTalking / SetEmotion`). NPCs smile a little while you chat with them.
+* **Look-at**: neck and head turn towards the player while talking or standing close (clamped to 65° yaw and
+  28° pitch, split 40 / 60 between neck and head, released when you walk behind them).
+* **Takes**: the idle stands in contrapposto (the weight on one leg, hip shifted over it, the free knee
+  relaxed and the shoulders counter-tilted) with breathing on top. A new **Talk** take raises a hand
+  palm-up in two explanatory beats with head nods, and plays over the idle while a character speaks.
+* **Real heights**: each character has a standing height in cm (`cast.py` `height`: students 153-183 cm,
+  Crowler 186 cm, generic boys 170 cm and girls 160 cm ±5 %). The runtime scale is derived from the base
+  model's measured height, so a door, a stair step and a 1.5 m/s walk read at the same human scale as
+  the people using them.
 
 **Using your own models.** The likenesses are limited by what is freely redistributable: faces are the
 VRoid samples' own and hairstyles are restyled from their cuts. Any rigged humanoid **VRM / glTF / FBX** (VRoid Hub, Sketchfab,
@@ -395,6 +562,12 @@ percentage, knee range, loop closure). To check the runtime blend and planted fe
 ```text
 UnrealEditor-Cmd DuelAcademyIsland.uproject /Game/DuelAcademy/Maps/DuelAcademyIsland -game -windowed -DALocomotionTest
 ```
+
+`-DACastLifeTest` checks the cast's runtime layer the same way: the player's mesh must carry the face
+morph targets and use `M_DA_Cel*` on its slots with custom-depth stencil 1, `PP_DA_Cel` must load, the
+visemes must move while it talks, the spring chains must deflect while it sprints and stops, and the head
+must turn to a look-at target. It logs `DACastLifeTest: PASS|FAIL <check>`, saves `DACastLife*.png` and
+exits with status 0 only if every check passed.
 
 It teleports to the plaza, walks, sprints and stops from a side camera, saves `DAWalk*/DARun*/DAStop`
 screenshots and logs the planted ball-joint speed (about 7 cm/s at the 1.5 m/s walk and 13 cm/s at

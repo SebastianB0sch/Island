@@ -304,7 +304,24 @@ void ADAStudentNPC::Tick(float DeltaSeconds)
 	const APlayerController* PC = World->GetFirstPlayerController();
 	const APawn* Player = PC ? PC->GetPawn() : nullptr;
 	const bool bTalking = World->GetTimeSeconds() - TalkTime < 6.f;
-	if (Player && (bTalking || FVector::Dist(Player->GetActorLocation(), GetActorLocation()) < 260.f))
+	const bool bNear = Player && FVector::Dist(Player->GetActorLocation(), GetActorLocation()) < 260.f;
+	if (Avatar)
+	{
+		// anime cast: speak for the first seconds of a conversation, look the player in the eye while
+		// talking or standing close, smile while chatting
+		const bool bSpeaking = bHasTalked && World->GetTimeSeconds() - TalkTime < 3.2f;
+		Avatar->SetTalking(bSpeaking);
+		Avatar->SetEmotion(TEXT("Joy"), bTalking ? 0.25f : 0.f);
+		if (Player)
+		{
+			Avatar->SetLookAt(Player->GetPawnViewLocation(), bTalking || bNear);
+		}
+		else
+		{
+			Avatar->SetLookAt(FVector::ZeroVector, false);
+		}
+	}
+	if (Player && (bTalking || bNear))
 	{
 		const FVector To = Player->GetActorLocation() - GetActorLocation();
 		const FRotator Want(0.f, FMath::RadiansToDegrees(FMath::Atan2(To.Y, To.X)), 0.f);

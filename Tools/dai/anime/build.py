@@ -22,6 +22,7 @@ from .. import jsonio, palette, thirdparty
 from ..character import export_skeletal
 from . import body as B
 from . import cast as CAST
+from . import cel as CEL
 from . import face as FACE
 from . import gait as GAIT
 from . import hair as HAIR
@@ -103,6 +104,7 @@ AUTHORED = {
     "Walk": (GAIT.walk_keys, True, GAIT.WALK.speed * 100.0),
     "Run": (GAIT.run_keys, True, GAIT.RUN.speed * 100.0),
     "Duel": (_duel_keys, True, None),
+    "Talk": (GAIT.talk_keys, True, None),
     "Swim": (_swim_keys, True, None),
 }
 
@@ -154,6 +156,98 @@ def _register_glow():
 
 
 # --------------------------------------------------------------------------- preview materials (Cycles)
+def _cel_nodes(nt, color, p):
+    """Cel ramp (cel.py) as Cycles nodes: half-Lambert step against the key light, tinted shadow side, rim on
+    the lit side, angel-ring highlight for hair. Returns the shaded colour socket (rendered as emission)."""
+    def math_node(op, a=None, b=None, va=None, vb=None):
+        n = nt.nodes.new("ShaderNodeMath")
+        n.operation = op
+        for i, (sock, val) in enumerate(((a, va), (b, vb))):
+            if sock is not None:
+                nt.links.new(sock, n.inputs[i])
+            elif val is not None:
+                n.inputs[i].default_value = val
+        return n.outputs[0]
+
+    def mix_rgb(fac, a, b, blend="MIX"):
+        n = nt.nodes.new("ShaderNodeMix")
+        n.data_type = "RGBA"
+        n.blend_type = blend
+        if isinstance(fac, float):
+            n.inputs["Factor"].default_value = fac
+        else:
+            nt.links.new(fac, n.inputs["Factor"])
+        for sock, val in ((n.inputs[6], a), (n.inputs[7], b)):
+            if isinstance(val, tuple):
+                sock.default_value = (*val, 1.0)
+            else:
+                nt.links.new(val, sock)
+        return n.outputs[2]
+
+    if p["cel"] == "flat":
+        return color
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    light = nt.nodes.new("ShaderNodeCombineXYZ")
+    for i, v in enumerate(CEL.LIGHT_DIR):
+        light.inputs[i].default_value = v
+    norm_l = nt.nodes.new("ShaderNodeVectorMath")
+    norm_l.operation = "NORMALIZE"
+    nt.links.new(light.outputs[0], norm_l.inputs[0])
+    dot = nt.nodes.new("ShaderNodeVectorMath")
+    dot.operation = "DOT_PRODUCT"
+    nt.links.new(geo.outputs["Normal"], dot.inputs[0])
+    nt.links.new(norm_l.outputs[0], dot.inputs[1])
+    half = math_node("MULTIPLY_ADD", dot.outputs["Value"], None, None, 0.5)
+    half.node.inputs[2].default_value = 0.5
+    ramp = nt.nodes.new("ShaderNodeMapRange")
+    ramp.interpolation_type = "SMOOTHSTEP"
+    nt.links.new(half, ramp.inputs["Value"])
+    ramp.inputs["From Min"].default_value = p["threshold"] - p["soft"]
+    ramp.inputs["From Max"].default_value = p["threshold"] + p["soft"]
+    lit = ramp.outputs["Result"]
+    shadow = mix_rgb(1.0, color, tuple(p["shadow"]), "MULTIPLY")
+    out = mix_rgb(lit, shadow, color)
+    if p["rim"] > 0:
+        lw = nt.nodes.new("ShaderNodeLayerWeight")
+        lw.inputs["Blend"].default_value = 0.35
+        rim_ramp = nt.nodes.new("ShaderNodeMapRange")
+        rim_ramp.interpolation_type = "SMOOTHSTEP"
+        nt.links.new(lw.outputs["Facing"], rim_ramp.inputs["Value"])
+        rim_ramp.inputs["From Min"].default_value = 0.72
+        rim_ramp.inputs["From Max"].default_value = 0.80
+        rim = math_node("MULTIPLY", rim_ramp.outputs["Result"], lit)
+        rim = math_node("MULTIPLY", rim, None, None, p["rim"])
+        out = mix_rgb(rim, out, (1.0, 0.98, 0.95), "SCREEN")
+    if p["spec"] > 0:
+        # angel ring: an annulus of N.H (half vector between the light and the eye) - on a head of hair that is
+        # the glossy arc round the crown; the spiky strands break it into strand-wise streaks
+        view = nt.nodes.new("ShaderNodeVectorMath")
+        view.operation = "ADD"
+        nt.links.new(geo.outputs["Incoming"], view.inputs[0])
+        nt.links.new(norm_l.outputs[0], view.inputs[1])
+        hv = nt.nodes.new("ShaderNodeVectorMath")
+        hv.operation = "NORMALIZE"
+        nt.links.new(view.outputs[0], hv.inputs[0])
+        nh = nt.nodes.new("ShaderNodeVectorMath")
+        nh.operation = "DOT_PRODUCT"
+        nt.links.new(geo.outputs["Normal"], nh.inputs[0])
+        nt.links.new(hv.outputs[0], nh.inputs[1])
+        r0, r1 = CEL.RING_NH
+        up = nt.nodes.new("ShaderNodeMapRange")
+        up.interpolation_type = "SMOOTHSTEP"
+        nt.links.new(nh.outputs["Value"], up.inputs["Value"])
+        up.inputs["From Min"].default_value, up.inputs["From Max"].default_value = r0 - 0.015, r0
+        down = nt.nodes.new("ShaderNodeMapRange")
+        down.interpolation_type = "SMOOTHSTEP"
+        nt.links.new(nh.outputs["Value"], down.inputs["Value"])
+        down.inputs["From Min"].default_value, down.inputs["From Max"].default_value = r1 + 0.015, r1
+        band = math_node("MULTIPLY", up.outputs["Result"], down.outputs["Result"])
+        band = math_node("MULTIPLY", band, lit)
+        sp = math_node("MULTIPLY", band, None, None, p["spec"])
+        out = mix_rgb(sp, out, (1.0, 0.97, 0.92), "SCREEN")
+    return out
+
+
 def preview_material(name):
     """Toon look for Blender previews: banded diffuse + flat fill light, inverted-hull ink lines."""
     mat = bpy.data.materials.get(name)
@@ -191,17 +285,11 @@ def preview_material(name):
         tex.image = bpy.data.images.load(img_path, check_existing=True)
         src = tex.outputs["Color"]
     alpha = tex.outputs["Alpha"] if tex is not None and spec.get("masked") else None
-    toon = nt.nodes.new("ShaderNodeBsdfToon")
-    toon.component = "DIFFUSE"
-    toon.inputs["Size"].default_value = 0.85
-    toon.inputs["Smooth"].default_value = 0.12
-    nt.links.new(src, toon.inputs["Color"])
+    shaded = _cel_nodes(nt, src, CEL.params(name, spec))
     em = nt.nodes.new("ShaderNodeEmission")
-    em.inputs["Strength"].default_value = spec.get("fill", 0.3)
-    nt.links.new(src, em.inputs["Color"])
-    add = nt.nodes.new("ShaderNodeAddShader")
-    nt.links.new(toon.outputs[0], add.inputs[0])
-    nt.links.new(em.outputs[0], add.inputs[1])
+    nt.links.new(shaded, em.inputs["Color"])
+    em.inputs["Strength"].default_value = 1.0
+    add = em
     if alpha is not None:
         cut = nt.nodes.new("ShaderNodeMath")
         cut.operation = "GREATER_THAN"
@@ -538,7 +626,7 @@ def build(log=print, only=None):
             bpy.data.objects.remove(obj, do_unlink=True)
         info["groups"][group] = g
     mats = palette.material_json()
-    info["materials"] = {k: mats[k] for k in sorted(used) if k in mats}
+    info["materials"] = {k: _cel_spec(k, mats[k]) for k in sorted(used) if k in mats}
     # A partial build publishes the FULL manifest (rebuilt subset merged into the
     # previous document); publishing the subset alone would tell the importer
     # that every untouched member no longer exists and make it delete those
@@ -561,6 +649,16 @@ def build(log=print, only=None):
             log(f"  !! anime: stale-file cleanup failed ({exc}); files left in place")
     annotate_layout(log)
     return published
+
+
+def _cel_spec(name, spec):
+    """Cast toon materials become the cel master in Unreal (M_DA_Cel): shading class + its ramp parameters."""
+    if spec.get("kind") != "toon":
+        return spec
+    out = dict(spec)
+    out["kind"] = "cel"
+    out.update(CEL.params(name, spec))
+    return out
 
 
 def annotate_layout(log=print):

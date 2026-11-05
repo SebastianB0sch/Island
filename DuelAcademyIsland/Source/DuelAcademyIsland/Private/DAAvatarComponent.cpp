@@ -74,6 +74,10 @@ void UDAAvatarComponent::FinishSkeletal(USkeletalMesh* Mesh)
 	SkelComp->SetGenerateOverlapEvents(false);
 	SkelComp->SetCanEverAffectNavigation(false);
 	SkelComp->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+	// Stencil 1 marks the anime cast for the cel post-process (PP_DA_Cel bands their lighting into two
+	// tones); r.CustomDepth=3 (DefaultEngine.ini) enables the stencil buffer.
+	SkelComp->SetRenderCustomDepth(true);
+	SkelComp->SetCustomDepthStencilValue(DuelAcademy::CastStencil);
 	SkelComp->RegisterComponent();
 	// the duel disk is skinned into the mesh (slots MT_Student_Duel*); hide it for students without one
 	if (!bShowDuelDisk)
@@ -102,7 +106,7 @@ bool UDAAvatarComponent::SetupCast()
 		return false;
 	}
 	for (const TCHAR* State : { TEXT("Idle"), TEXT("Walk"), TEXT("Run"), TEXT("Jump"), TEXT("Fall"), TEXT("Land"), TEXT("Swim"),
-		TEXT("Wave"), TEXT("Duel"), TEXT("Sit"), TEXT("Yes"), TEXT("No"), TEXT("Clap"), TEXT("Interact") })
+		TEXT("Wave"), TEXT("Duel"), TEXT("Sit"), TEXT("Yes"), TEXT("No"), TEXT("Clap"), TEXT("Interact"), TEXT("Talk") })
 	{
 		if (UAnimSequence* Seq = LoadCharacterAsset<UAnimSequence>(FString::Printf(TEXT("A_Anime_%s_%s"), *AnimGroup, State)))
 		{
@@ -141,6 +145,8 @@ bool UDAAvatarComponent::SetupCast()
 			DiskComp->SetSkeletalMeshAsset(DiskMesh);
 			DiskComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			DiskComp->SetCanEverAffectNavigation(false);
+			DiskComp->SetRenderCustomDepth(true);
+			DiskComp->SetCustomDepthStencilValue(DuelAcademy::CastStencil);
 			DiskComp->RegisterComponent();
 			DiskComp->SetLeaderPoseComponent(SkelComp);
 		}
@@ -179,6 +185,31 @@ bool UDAAvatarComponent::SetupSkeletal()
 		RunThreshold = 300.f;   // the player walks at 150, sprints at 420
 	}
 	return true;
+}
+
+void UDAAvatarComponent::SetTalking(bool bTalking)
+{
+	bSpeaking = bTalking;
+	if (UDAAvatarAnimInstance* Inst = SkelComp ? Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()) : nullptr)
+	{
+		Inst->SetTalking(bTalking);
+	}
+}
+
+void UDAAvatarComponent::SetLookAt(const FVector& WorldLocation, bool bEnable)
+{
+	if (UDAAvatarAnimInstance* Inst = SkelComp ? Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()) : nullptr)
+	{
+		Inst->SetLookAtTarget(WorldLocation, bEnable);
+	}
+}
+
+void UDAAvatarComponent::SetEmotion(FName Emotion, float Weight)
+{
+	if (UDAAvatarAnimInstance* Inst = SkelComp ? Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()) : nullptr)
+	{
+		Inst->SetEmotion(Emotion, Weight);
+	}
 }
 
 UAnimSequence* UDAAvatarComponent::FindAnim(FName State) const
@@ -274,6 +305,13 @@ void UDAAvatarComponent::TickNative(float DeltaTime, float GroundSpeed, bool bIn
 		Want = TEXT("Duel");
 		bLoop = true;
 		TargetWeight = FMath::Clamp(DuelPoseAlpha, 0.f, 1.f);
+	}
+	else if (bSpeaking && GroundSpeed < 30.f && FindAnim(TEXT("Talk")))
+	{
+		// conversational gesture over the idle (partial weight keeps it natural)
+		Want = TEXT("Talk");
+		bLoop = true;
+		TargetWeight = 0.7f;
 	}
 
 	if (Want != CurrentAction)

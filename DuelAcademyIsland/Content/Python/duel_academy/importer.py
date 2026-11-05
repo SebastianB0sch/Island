@@ -359,7 +359,8 @@ def _skeletal_options(skeleton=None):
     else:
         try:
             sd = ui.get_editor_property("skeletal_mesh_import_data")
-            C.set_props(sd, import_morph_targets=False, update_skeleton_reference_pose=False,
+            # morph targets: the cast faces carry blink / viseme / emotion morphs (Tools/dai/anime/models.py)
+            C.set_props(sd, import_morph_targets=True, update_skeleton_reference_pose=False,
                         convert_scene_unit=True)
             sd.set_editor_property("normal_import_method", unreal.FBXNormalImportMethod.FBXNIM_IMPORT_NORMALS)
         except Exception:  # noqa: BLE001

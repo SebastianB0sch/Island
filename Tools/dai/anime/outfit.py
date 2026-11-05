@@ -65,7 +65,14 @@ class Rig:
         skin = sorted({i for p in me.polygons if p.material_index in skin_mat for i in p.vertices})
         s = co[skin]
         mid = s[(np.abs(s[:, 0]) < 0.012) & (s[:, 2] > self.knee + 0.1) & (s[:, 2] < self.pelvis)]
+        # `crotch` (lowest midline skin) is where the inner thighs meet, and every hem length is defined from it
+        # (design reference, kept). `crotch_true` is the real fork of the legs - the downward-facing skin on
+        # the midline - and is what construction respects: torso garments are cut from the skin only above it
+        # and continue as a hanging tube below (no leg tops / crotch underside copied into a jacket).
         self.crotch = float(mid[:, 2].min()) if len(mid) else self.hip - 0.12
+        down = [p.center.z for p in me.polygons if p.material_index in skin_mat and abs(p.center.x) < 0.02
+                and self.knee + 0.1 < p.center.z < self.pelvis and p.normal.z < -0.6]
+        self.crotch_true = max(self.crotch, float(np.median(down))) if down else self.crotch
         ring = s[(np.abs(s[:, 2] - (self.neck + 0.015)) < 0.012) & (np.abs(s[:, 0]) < 0.09)]
         self.neck_c = Vector((0.0, float((ring[:, 1].min() + ring[:, 1].max()) / 2), 0.0))
         self.neck_r = (float(np.abs(ring[:, 0]).max()), float((ring[:, 1].max() - ring[:, 1].min()) / 2))
@@ -103,12 +110,14 @@ class Tailor:
         self.garments = {}      # name -> dict(faces, mat, spec, bounds)
         self.covered = set()    # skin faces hidden under an opaque garment
         self._normals()
+        from .drape import Drape
+        self.drape = Drape(self)   # cloth pass: each garment hangs over the layers draped before it
 
     # ------------------------------------------------------------------ helpers
     def _normals(self):
         """Area-weighted skin normals averaged over coincident positions (UV seams split the vertices)."""
         self.bm.normal_update()
-        verts = list({v for f in self.skin for v in f.verts})
+        verts = list(dict.fromkeys(v for f in self.skin for v in f.verts))
         co = np.array([v.co[:] for v in verts])
         n = np.array([v.normal[:] for v in verts])
         _, inv = np.unique(np.round(co / 1e-4).astype(np.int64), axis=0, return_inverse=True)
@@ -147,7 +156,7 @@ class Tailor:
         r = self.rig
         zc = (r.pelvis + r.chest) * 0.5
         span = (r.chest - r.pelvis) * 0.75
-        for v in {v for f in self.skin for v in f.verts}:
+        for v in dict.fromkeys(v for f in self.skin for v in f.verts):
             if abs(v.co.x) > r.shoulder_x + 0.05:
                 continue
             g = math.exp(-((v.co.z - zc) / span) ** 2) * amount
@@ -198,7 +207,7 @@ class Tailor:
         faces = [f for f in self.faces_of(name) if region is None or region(f.calc_center_median())]
         if not faces:
             return
-        verts = list({v for f in faces for v in f.verts})
+        verts = list(dict.fromkeys(v for f in faces for v in f.verts))
         edges = list({e for f in faces for e in f.edges})
         bmesh.ops.bisect_plane(self.bm, geom=verts + edges + faces, dist=1e-6, plane_co=co, plane_no=no)
         kill = [f for f in self.faces_of(name)
@@ -263,7 +272,101 @@ class Tailor:
             new_faces += nfaces
             cur = [e for e in nedges if e.verts[0] in nset and e.verts[1] in nset]
             prev = nset
+        g.setdefault("tube", {}).update(root)       # free vertex -> its hem root (vents, panel weights)
         return new_faces
+
+    # vents of long coat tails: (angle round the body, degrees: 0 front, 90 left side, 180 back) and how far up
+    # the tail they are cut (fraction of the drop)
+    VENTS = ((0.0, 1.0), (90.0, 1.0), (-90.0, 1.0), (180.0, 1.0))
+
+    def vents(self, name, cut, drop):
+        """Split a long coat's free-hanging tube into panels (the front parting below the closure, side vents and
+        a centre back vent, as on real frock coats / long coats / tailcoats) and skin each panel to the leg it covers: the front panels follow their own
+        thigh, the back panels the pelvis and their side's thigh. Without vents one tube of fabric spans both
+        legs and every stride tears a knee through it."""
+        g = self.garments[name]
+        tube = g.get("tube", {})
+        if not tube:
+            return 0
+        cy = self.rig.neck_c.y
+        roots = list(dict.fromkeys(tube.values()))
+
+        def ang(co):
+            return math.degrees(math.atan2(co.x, -(co.y - cy)))
+
+        def adiff(a, b):
+            return abs((a - b + 180.0) % 360.0 - 180.0)
+        # the hem root nearest each vent angle, then the vertical edge chain hanging from it
+        split = []
+        for va, frac in self.VENTS:
+            r0 = min(roots, key=lambda r: adiff(ang(r.co), va))
+            col = sorted([v for v, r in tube.items() if r is r0 and v is not r0], key=lambda v: -v.co.z)
+            col = [v for v in col if (cut - v.co.z) >= drop * (1.0 - frac) - 1e-4]
+            chain = [r0] + [v for v in sorted(tube, key=lambda v: -v.co.z) if tube[v] is r0 and v is not r0]
+            for a, b in zip(chain, chain[1:]):
+                if b in col:
+                    e = self.bm.edges.get((a, b))
+                    if e is not None:
+                        split.append(e)
+        if split:
+            # remember the vent edges by position: they stay plain fabric edges (no turned-in thickness band,
+            # whose two halves would cross at the top of the parting - drape.rims)
+            g.setdefault("vent_pos", set()).update(
+                tuple(round(c, 5) for c in v.co) for e in split for v in e.verts)
+            # split the vertices along the cut as well, so the panels part completely (a shared hem vertex at
+            # the bottom of a vent would stretch the hem across the vent with every stride)
+            bmesh.ops.split_edges(self.bm, edges=split,
+                                  verts=list(dict.fromkeys(v for e in split for v in e.verts)), use_verts=True)
+        # panels = connected free-hanging faces after the cut (the vents now part completely); a panel's side and
+        # front / back come from the panel as a whole - a face next to a vent can sit on either side of x = 0
+        free = [f for f in self.faces_of(name) if max(v.co.z for v in f.verts) < cut + 1e-4]
+        free_set = set(free)
+        side_of, front_of = {}, {}
+        seen = set()
+        for f0 in free:
+            if f0 in seen:
+                continue
+            comp, stack = [], [f0]
+            seen.add(f0)
+            while stack:
+                f = stack.pop()
+                comp.append(f)
+                for e in f.edges:
+                    for h in e.link_faces:
+                        if h in free_set and h not in seen:
+                            seen.add(h)
+                            stack.append(h)
+            vs = [v for f in comp for v in f.verts]
+            mx = sum(v.co.x for v in vs) / len(vs)
+            my = sum(v.co.y for v in vs) / len(vs)
+            for v in vs:
+                side_of[v] = "l" if mx > 0 else "r"
+                front_of[v] = my < cy
+        g["panel_side"] = side_of
+        # panel weights: front panels -> own thigh, back panels -> pelvis + own thigh (+ cloth bones later)
+        tl, tr, pv = self.gi("thigh_l"), self.gi("thigh_r"), self.gi("pelvis")
+        n = 0
+        for f in self.faces_of(name):
+            for v in f.verts:
+                if v.co.z >= cut - 1e-4 or v not in side_of:
+                    continue
+                t = min(1.0, (cut - v.co.z) / max(drop, 1e-3))
+                left = side_of[v] == "l"
+                front = front_of[v]
+                ks = _smooth(t * 1.4)
+                own = self.weights(v)
+                leg = tl if left else tr
+                if front:
+                    target = {leg: 1.0}
+                else:
+                    target = {pv: 0.35, leg: 0.65}
+                w = {gk: x * (1 - ks) for gk, x in own.items()}
+                for gk, x in target.items():
+                    w[gk] = w.get(gk, 0.0) + x * ks
+                self.set_weights(v, w)
+                n += 1
+        self.log(f"  anime: {self.key}: {name}: {len(self.VENTS)} vents, {n} panel vertices re-skinned")
+        return n
 
     def capelet(self, spec):
         """Wide collar lying over the shoulders (the Obelisk girls' navy capelet in their Tag Force portraits):
@@ -391,6 +494,7 @@ class Tailor:
         r = self.rig
         length = spec.get("length", "hip")
         hem = r.hem_z(length)
+        cutz = max(hem, r.crotch_true + 0.02)       # skin shell only above the real fork of the legs
         sleeves = spec.get("sleeves", "long")
         cuff_x = r.wrist_x - 0.035 if sleeves == "long" else r.shoulder_x + 0.025
         opening = spec.get("open", 0.15)
@@ -410,7 +514,7 @@ class Tailor:
         def inside(co):
             if abs(co.x) < r.neck_r[0] + 0.035 and co.z > neck_cut:
                 return False
-            return abs(co.x) < cuff_x and co.z > hem and co.z < r.shoulder_z + 0.12
+            return abs(co.x) < cuff_x and co.z > cutz and co.z < r.shoulder_z + 0.12
 
         def in_gap(c):
             return c.y < r.neck_c.y and abs(c.x) < gap(c.z)
@@ -420,7 +524,7 @@ class Tailor:
         self.shell(faces, spec.get("loose", 0.016), "Jacket", spec, covers)
         self.cut("Jacket", (cuff_x, 0, 0), (1, 0, 0))
         self.cut("Jacket", (-cuff_x, 0, 0), (-1, 0, 0))
-        self.cut("Jacket", (0, 0, hem), (0, 0, -1))
+        self.cut("Jacket", (0, 0, cutz), (0, 0, -1))
         if opening:
             for sgn in (1, -1):
                 d = Vector((sgn * (x1 - x0), 0, top - z0)).normalized()
@@ -429,11 +533,22 @@ class Tailor:
                     no = -no
                 self.cut("Jacket", (sgn * x0, 0, z0), no,
                          region=lambda c, sgn=sgn: c.y < r.neck_c.y and c.x * sgn > -0.002 and c.z > z0 - 0.02)
+        # cloth: the jacket hangs from the chest / shoulder blades over the shirt and trousers, with round sleeves
+        # that widen a little towards the cuff. The free-hanging part (blazer hem, coat tails) is hung from the
+        # draped hem afterwards, so it keeps its clean cut instead of being re-draped round the legs; then a
+        # turned-in band of fabric thickness runs along every open edge
+        self.drape.garment("Jacket", taper=0.2, ease=0.006 + spec.get("loose", 0.0) * 0.25, clear=0.008,
+                           sleeve_ease=(0.008, 0.02))
         drop = spec.get("drop", r.hem_drop(length))
-        if drop > 0:
+        free = drop + (cutz - hem)                  # the hanging part reaches the designed hem height
+        if free > 1e-4:
             long = drop > 0.15
-            self.extend("Jacket", self.edges_at("Jacket", hem), drop, spec.get("flare", 0.035 if not long else 0.07),
-                        rings=3 if not long else 6, thigh=0.45 if not long else 0.8, front=spec.get("tails", 1.0))
+            self.extend("Jacket", self.edges_at("Jacket", cutz), free, spec.get("flare", 0.035 if not long else 0.07),
+                        rings=max(3 if not long else 6, int(round(free / 0.03))), thigh=0.45 if not long else 0.8,
+                        front=spec.get("tails", 1.0))
+            if long:
+                self.vents("Jacket", cutz, free)
+        self.drape.rims("Jacket", depth=0.007)
         if spec.get("collar", 0.05):
             trim = spec.get("trim", spec.get("color"))
             cspec = dict(color=spec.get("collar_color", spec.get("color")), trim=spec.get("collar_trim", trim),
@@ -442,6 +557,9 @@ class Tailor:
             self.collar(cspec, spec.get("collar", 0.05), 70 + 80 * opening, spec.get("collar_flare", 0.016))
         g = self.garments["Jacket"]
         g["cuff_x"], g["hem"], g["gap"] = cuff_x, hem - drop, gap
+        g["cut"] = cutz                    # below: the free-hanging hem / tails (they hide nothing)
+        if drop > 0.15:
+            g["cloth"] = dict(prefix="coattail", cut=cutz, drop=free)     # long coat tails swing (cloth_bones)
         if spec.get("capelet"):
             self.capelet(spec["capelet"])
 
@@ -450,22 +568,27 @@ class Tailor:
         sleeves = spec.get("sleeves", "short")
         sx = {"short": r.shoulder_x + 0.10, "long": r.wrist_x - 0.04, "none": r.shoulder_x - 0.01}[sleeves]
         hem = r.hem_z(spec.get("length", "hip"))
+        cutz = max(hem, r.crotch_true + 0.02)
         turtle = spec.get("turtleneck", False)
         neck = r.neck + 0.05 if turtle else r.neck - 0.012
 
         def inside(co):
             if abs(co.x) < r.neck_r[0] + 0.035 and co.z > neck:
                 return False
-            return abs(co.x) < sx and co.z > hem
+            return abs(co.x) < sx and co.z > cutz
 
         self.shell(self.select(inside), 0.010, "Shirt", spec, self.select(inside, every=True))
         self.cut("Shirt", (sx, 0, 0), (1, 0, 0))
         self.cut("Shirt", (-sx, 0, 0), (-1, 0, 0))
-        self.cut("Shirt", (0, 0, hem), (0, 0, -1))
+        self.cut("Shirt", (0, 0, cutz), (0, 0, -1))
         if turtle:
             self.cut("Shirt", (0, 0, neck), (0, 0, 1), region=lambda c: abs(c.x) < r.neck_r[0] + 0.04)
-        if spec.get("length", "hip") == "hip":
-            self.extend("Shirt", self.edges_at("Shirt", hem), 0.03, 0.012, rings=1, thigh=0.3)
+        self.drape.garment("Shirt", taper=0.3, ease=0.003, clear=0.004, sleeve_ease=(0.004, 0.008),
+                           torso_top=(neck - 0.02) if turtle else None)
+        tail = 0.03 if spec.get("length", "hip") == "hip" and not spec.get("tucked") else 0.0
+        if tail + (cutz - hem) > 1e-4:
+            self.extend("Shirt", self.edges_at("Shirt", cutz), tail + (cutz - hem), 0.012,
+                        rings=max(1, int(round((tail + cutz - hem) / 0.03))), thigh=0.3)
 
     def pants(self, spec):
         r = self.rig
@@ -503,11 +626,16 @@ class Tailor:
         self.shell(self.select(inside), offset, "Pants", spec, self.select(inside, every=True))
         self.cut("Pants", (0, 0, top), (0, 0, 1))
         self.cut("Pants", (0, 0, bottom), (0, 0, -1))
+        # straight trouser legs hanging from the seat and thighs (no crotch / knee anatomy)
+        self.drape.garment("Pants", sleeves=False, legs=True, torso_top=top, taper=0.45, ease=0.003,
+                           clear=0.005, hem_width=width, roundness=0.8, hull=False)
+        self.drape.rims("Pants", depth=0.005)
 
     def skirt(self, spec):
         r = self.rig
         top = r.pelvis + 0.04
-        cut = r.crotch + 0.05
+        cut = max(r.crotch + 0.05, r.crotch_true + 0.02)     # skin shell only above the real fork of the legs
+        length = spec.get("length", 0.17) + (cut - (r.crotch + 0.05))   # same hem height as designed
 
         def inside(co):
             return cut < co.z < top
@@ -515,9 +643,11 @@ class Tailor:
         self.shell(self.select(inside), 0.010, "Skirt", spec, self.select(inside, every=True))
         self.cut("Skirt", (0, 0, top), (0, 0, 1))
         self.cut("Skirt", (0, 0, cut), (0, 0, -1))
-        self.extend("Skirt", self.edges_at("Skirt", cut), spec.get("length", 0.17), 0.06, rings=4, thigh=0.55,
-                    pleats=spec.get("pleats", 16))
-        self.garments["Skirt"]["hem"] = cut - spec.get("length", 0.17)
+        self.drape.garment("Skirt", sleeves=False, torso_top=top, taper=0.1, ease=0.002, clear=0.006, smooth=2)
+        self.extend("Skirt", self.edges_at("Skirt", cut), length, 0.06, rings=max(4, int(round(length / 0.04))),
+                    thigh=0.55, pleats=spec.get("pleats", 16))
+        self.garments["Skirt"]["hem"] = cut - length
+        self.garments["Skirt"]["cloth"] = dict(prefix="skirt", cut=cut, drop=length)
         self.garments["Skirt"]["belt"] = top
 
     def boots(self, spec):
@@ -554,8 +684,17 @@ class Tailor:
         return float(np.percentile(zs, 97)) if zs else self.rig.ankle + 0.06
 
     # ------------------------------------------------------------------ finish
-    def finish(self):
-        """Drop covered skin, write the mesh, unwrap + paint every garment."""
+    def finish(self, leg_contact=None):
+        """Layered skinning, drop covered skin, write the mesh, unwrap + paint every garment. leg_contact (dict)
+        receives {rest position: how much a free-hanging hem vertex follows the leg under it}."""
+        from .drape import fix_leg_sides, hide_covered, inherit_weights
+        hide_covered(self, self.log)
+        inherit_weights(self, self.log)
+        fix_leg_sides(self, self.log)
+        if leg_contact is not None:
+            for v, k in getattr(self, "leg_contact", {}).items():
+                if v.is_valid:
+                    leg_contact[tuple(round(c, 5) for c in v.co)] = k
         bmesh.ops.delete(self.bm, geom=[f for f in self.covered if f.is_valid], context="FACES")
         loose = [v for v in self.bm.verts if not v.link_faces]
         bmesh.ops.delete(self.bm, geom=loose, context="VERTS")
@@ -564,6 +703,7 @@ class Tailor:
         self.bm.free()
         self.me.update()
         for name, g in self.garments.items():
+            g["name"] = name
             _unwrap(self.obj, idx_of[name])
             rel = f"{TEX_REL}/{self.key}/T_{self.key}_{name}"
             paint(self.me, idx_of[name], g, self.rig, os.path.join(C.OUT_TEXTURES, rel + ".png"))
@@ -664,17 +804,28 @@ def _edge_points(me, mat_idx, step=0.003):
     return np.array(pts, np.float32) if pts else np.zeros((0, 3), np.float32)
 
 
+# crease lines: a darker, slightly cooler shade of the cloth (anime fold lines, not photographic AO)
+FOLD_DARK = 0.30
+
+
+PAINT_SS = 2              # garment textures are painted at this supersampling and filtered down (smooth trims)
+
+
 def paint(me, mat_idx, g, rig, path, size=None):
     spec = g["spec"]
-    size = size or (1024 if g["spec"] is not None and "cuff_x" in g else 512)
+    out_size = size or (2048 if g["spec"] is not None and "cuff_x" in g else 1024)
+    size = out_size * PAINT_SS
     pos, mask = bake_positions(me, mat_idx, size)
     base = np.array(spec.get("color", (1, 1, 1)), np.float32)
     img = np.zeros((size, size, 3), np.float32)
     img[...] = base
     P = pos[mask]
     col = np.repeat(base[None], len(P), 0)
-    # soft fold shading: a little darker towards the inside of the elbows / back of the knees is overkill -
-    # anime uniforms are flat; only the trims and buttons are painted
+    if len(P) and g.get("name"):
+        from .drape import fold_mask
+        fm = fold_mask(P, g["name"], rig, spec)[:, None]
+        shade = base * np.array((0.86, 0.88, 1.0), np.float32) * (1 - FOLD_DARK)
+        col = col * (1 - fm) + shade[None] * fm
     trims = spec.get("trims", ())
     tc = np.array(spec.get("trim", base), np.float32)
     tw = spec.get("trim_w", 0.016)
@@ -744,7 +895,10 @@ def paint(me, mat_idx, g, rig, path, size=None):
                 col[(dd < b.get("r", 0.011)) & front] = b["color"]
     img[mask] = col
     img = _dilate(img, mask)
-    atomic.save_image(Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)), path, optimize=True)
+    # anti-aliasing: the trims, the shield panel, buttons and crease lines are hard tests per texel; painting at
+    # PAINT_SS x and filtering down gives them smooth edges instead of texel steps along curved seams
+    hi = Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8))
+    atomic.save_image(hi.resize((out_size, out_size), Image.LANCZOS), path, optimize=True)
 
 
 def _edge_kind(pts, g, rig):
@@ -770,6 +924,107 @@ def _edge_kind(pts, g, rig):
     return kind
 
 
+# --------------------------------------------------------------------------- cloth bones (secondary motion)
+CLOTH_CHAINS = 8          # bone chains round a skirt / coat hem
+CLOTH_SEG = 0.11          # length of each of the two chain segments (m)
+CLOTH_SHARE = 0.72        # how much of the hem the cloth bones carry (the rest keeps following the thighs)
+COAT_SWING = 0.28         # vented coat panels: share of their cloth bones (they are skinned to the legs)
+
+
+def cloth_bones(arm, body, rig, garments, log=print, leg_contact=None):
+    """Bone chains round the free-hanging part of skirts and long coats, skinned into the hem, so Unreal's
+    spring layer (UDAAvatarAnimInstance, bones skirt_* / coattail_*) can swing the cloth. The rest pose comes
+    from body landmarks only (not the garment), so every member built on the same base model gets identical
+    bones and the shared union skeleton stays consistent (build._merge_rig)."""
+    specs = [g["cloth"] for g in garments.values() if g.get("cloth")]
+    if not specs:
+        return 0
+    rx, ry = abs(rig.h["thigh_l"].x) + 0.075, 0.115
+    z0 = rig.crotch + 0.05
+    cy = rig.neck_c.y
+    for o in bpy.context.scene.objects:
+        o.select_set(False)
+    arm.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode="EDIT")
+    eb = arm.data.edit_bones
+    pelvis = eb["pelvis"]
+    rings = {}
+    for cs in specs:
+        pre = cs["prefix"]
+        for k in range(CLOTH_CHAINS):
+            a = 2 * math.pi * k / CLOTH_CHAINS
+            d = Vector((math.sin(a), -math.cos(a), 0.0))
+            head = Vector((d.x * rx, cy + d.y * ry, z0))
+            # chains over a leg ride on that thigh (the panel follows the leg, the springs swing it on top);
+            # the front and back centre chains hang from the pelvis
+            if abs(math.sin(a)) > 0.38:
+                parent = eb["thigh_l" if d.x > 0 else "thigh_r"]
+            else:
+                parent = pelvis
+            pts = [head]
+            for j in range(1, 4):
+                seg = CLOTH_SEG if j < 3 else 0.03
+                pts.append(pts[-1] + Vector((0, 0, -seg)) + d * (0.025 if j < 3 else 0.005))
+            for j in range(3):
+                name = f"{pre}_{k:02d}_{j + 1}"
+                b = eb.get(name) or eb.new(name)
+                b.head, b.tail = pts[j], pts[j + 1]
+                b.parent = parent
+                b.use_connect = j > 0
+                b.use_deform = j < 2
+                parent = b
+        rings[pre] = cs
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    me = body.data
+    vgs = {vg.name: vg for vg in body.vertex_groups}
+    # hem vertices lying against a leg follow it (drape.inherit_weights); the cloth bones only get the rest.
+    # Keyed by rest position (the bmesh vertices are gone by now).
+    contact = leg_contact or {}
+
+    def group(name):
+        if name not in vgs:
+            vgs[name] = body.vertex_groups.new(name=name)
+        return vgs[name]
+
+    mats = {g["idx"]: g.get("cloth") for g in garments.values() if g.get("cloth")}
+    on = {}
+    for p in me.polygons:
+        cs = mats.get(p.material_index)
+        if cs is not None:
+            for v in p.vertices:
+                on[v] = cs
+    count = 0
+    for vi, cs in on.items():
+        v = me.vertices[vi]
+        t = (cs["cut"] - v.co.z) / max(cs["drop"], 1e-3)
+        if t <= 0.02:
+            continue
+        t = min(1.0, t)
+        share = CLOTH_SHARE * _smooth(t * 1.15)
+        # leg-following hems keep a little swing (COAT_SWING of the chains, which ride the thighs themselves)
+        share *= max(COAT_SWING if cs["prefix"] == "coattail" else 0.0,
+                     1.0 - contact.get(tuple(round(c, 5) for c in v.co), 0.0))
+        a = math.atan2(v.co.x, -(v.co.y - cy)) % (2 * math.pi)
+        f = a / (2 * math.pi) * CLOTH_CHAINS
+        k0 = int(math.floor(f)) % CLOTH_CHAINS
+        k1 = (k0 + 1) % CLOTH_CHAINS
+        wa = 1.0 - (f - math.floor(f))
+        seg2 = _smooth((t - 0.25) / 0.5)
+        for gi, gw in [(g.group, g.weight) for g in v.groups]:    # existing weights make room
+            if gw > 0:
+                body.vertex_groups[gi].add([vi], gw * (1 - share), "REPLACE")
+        for kk, wk in ((k0, wa), (k1, 1 - wa)):
+            for j, ws in ((1, 1 - seg2), (2, seg2)):
+                w = share * wk * ws
+                if w > 1e-4:
+                    group(f"{cs['prefix']}_{kk:02d}_{j}").add([vi], w, "ADD")
+        count += 1
+    log(f"  anime: {body.name}: cloth bones {', '.join(sorted(rings))} ({CLOTH_CHAINS} chains), {count} hem vertices")
+    return count
+
+
 def tailor(arm, body, entry, key, log=print):
     """Dress body (the base model's Body mesh) in entry["outfit"]. No-op without an outfit."""
     spec = entry.get("outfit")
@@ -785,14 +1040,22 @@ def tailor(arm, body, entry, key, log=print):
     if "skirt" in spec:
         t.skirt(spec["skirt"])
     if "shirt" in spec:
-        t.shirt(spec["shirt"])
+        shirt = dict(spec["shirt"])
+        if spec.get("jacket", {}).get("length") in ("thigh", "knee", "calf"):
+            # under a long coat the shirt is tucked in: it ends inside the trousers' waistband (its tail would
+            # ride the legs, and its hem would sit right where the trousers meet the coat panels)
+            shirt["tucked"] = True
+            shirt["length"] = "waist"
+        t.shirt(shirt)
     if "jacket" in spec:
         t.jacket(spec["jacket"])
     if "boots" in spec:
         t.boots(spec["boots"])
     if "gloves" in spec:
         t.gloves(spec["gloves"])
-    t.finish()
+    contact = {}
+    t.finish(contact)
+    cloth_bones(arm, body, t.rig, t.garments, log, leg_contact=contact)
     return t
 
 

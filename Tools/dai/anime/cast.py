@@ -8,7 +8,8 @@ procedural fallback (head.py / hair.py / body.py / face.py) builds the character
 
   name       display name (HUD dialogue title)
   dorm       slifer | ra | obelisk | white | teacher   (HUD accent, NPC behaviour)
-  scale      uniform runtime scale (the skeleton is shared; Syrus is small, Zane tall)
+  height     standing height in cm without hair (the runtime uniform scale is derived from it and the base
+             model's measured height, see scale_of; the skeleton is shared, so heights differ by scale only)
   body       {"female", "belly", "coat" (None | "long" | "tails"), "skirt", "boots", "open" (jacket V depth 0..1)}
   colors     sRGB colours of the outfit parts (jacket, trim, inner, pants, shoes, skirt, socks, coat ...)
   hair       {"style": hair.STYLES key, "color", "color2" (second tone), ...style params}
@@ -21,7 +22,7 @@ procedural fallback (head.py / hair.py / body.py / face.py) builds the character
   face_shape {chin, jaw, cheeks}: longer / narrower / rounder face than the VRoid base (hairdo.reshape_face)
   tint       generic students: which materials Unreal recolours at runtime ("jacket" by dorm, "hair")
   lines      what they say when you talk to them (original lines)
-  spawn      which layout.json NPC marker they take over: {"group", "dorm", "nth", "max_wander"}
+  spawn      which layout.json NPC marker they take over: {"group", "dorm", "nth", "near", "max_wander"}
 
 All colours are sRGB 0..1.
 """
@@ -105,16 +106,31 @@ def _girl(jacket=None, trim=None, skirt=None, boots=None, **kw):
     return out
 
 
+# ---------------------------------------------------------------------- anime hair (hairshape.py)
+def _shape(flow=None, volume=None, envelope=None, clump=None, widen=1.5, **kw):
+    """Coherent anime volume for a base model's own cut: big soft masses, a rounded outline, no gaps."""
+    out = dict(coherence=0.018, widen=widen if isinstance(widen, dict) else dict(k=widen, tip=0.5),
+               clump=dict(dict(size=5, pull=0.65, power=1.6), **(clump or {})),
+               volume=dict(dict(top=2.4, back=2.0, side=1.4, front=1.15, loft=0.018), **(volume or {})),
+               envelope=dict(dict(side=1.5, jaw=1.3), **(envelope or {})))
+    if flow:
+        out["flow"] = flow
+    out.update(kw)
+    return out
+
+
 CAST = {
     # ------------------------------------------------------------------ Slifer Red
     "jaden": dict(
-        name="Jaden Yuki", dorm="slifer", scale=1.0, model="vroid_c",
+        name="Jaden Yuki", dorm="slifer", height=168, model="vroid_c",
         body=dict(open=1.0),
         outfit=dict(_academy(SLIFER_RED, SLIFER_DARK, (0.20, 0.20, 0.23), UNIFORM_PANTS, open_=1.0,
                              coat=dict(shield=dict(color=WHITE, border=SLIFER_DARK, w=0.15, side=0.09, point=0.07)))),
         # Tag Force cover art: orange-brown top layer over dark brown, big outward spikes
-        hairdo=dict(spike=dict(lift=0.35, up=0.0, length=1.45, front_lift=0.12, front_length=1.2, crown_lift=0.15, volume=1.1),
-                    thicken=dict(copies=2, angle=8.0, scale=1.04), top_layer=-0.005),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.45, up=0.3, sweep=0.35, length=1.15, front_lift=0.1, front_length=1.1,
+                                           crown_lift=0.25, side_lift=0.3),
+                                 volume=dict(top=2.8, back=2.3, side=1.6, loft=0.022), envelope=dict(side=1.55)),
+                    top_layer=0.025),
         face_shape=dict(chin=0.008, jaw=-0.04),
         expression=dict(MTH_Fun=0.35, BRW_Angry=0.25),
         colors=dict(jacket=SLIFER_RED, trim=(0.10, 0.10, 0.12), inner=(0.08, 0.08, 0.09),
@@ -129,11 +145,12 @@ CAST = {
         spawn=dict(group="slifer", dorm="slifer", nth=0, near=(-107800.0, 25550.0)),
     ),
     "syrus": dict(
-        name="Syrus Truesdale", dorm="slifer", scale=0.84, model="vroid_c",
+        name="Syrus Truesdale", dorm="slifer", height=153, model="vroid_c",
         body=dict(open=0.75),
         outfit=dict(_academy(SLIFER_RED, SLIFER_DARK, (0.98, 0.84, 0.22), UNIFORM_PANTS, open_=0.0)),
-        hairdo=dict(spike=dict(lift=0.45, up=0.1, length=1.45, front_lift=0.25, front_length=1.2, crown_lift=0.3, volume=1.08),
-                    thicken=dict(copies=2, angle=8.0, scale=1.04),
+        # rounded mop flaring out into soft points all round
+        hairdo=dict(shape=_shape(flow=dict(lift=0.5, up=0.35, length=1.08, front_lift=0.2, front_length=1.08, crown_lift=0.25),
+                                 volume=dict(top=2.6, back=2.3, side=1.8, loft=0.024), envelope=dict(side=1.6, jaw=1.4)),
                     glasses=(0.30, 0.30, 0.32)),
         expression=dict(BRW_Sorrow=0.45, EYE_Surprised=0.3),
         colors=dict(jacket=SLIFER_RED, trim=WHITE, inner=(0.30, 0.55, 0.85),
@@ -149,14 +166,15 @@ CAST = {
         spawn=dict(group="slifer", dorm="slifer", nth=1, near=(-105550.0, 25800.0)),
     ),
     "chumley": dict(
-        name="Chumley Huffington", dorm="slifer", scale=1.02, model="vroid_c",
+        name="Chumley Huffington", dorm="slifer", height=171, model="vroid_c",
         body=dict(open=0.9, belly=1.0),
         outfit=dict(_academy(WHITE, SLIFER_RED, (0.94, 0.93, 0.88), (0.30, 0.30, 0.34), open_=0.0,
                               coat=dict(collar_color=SLIFER_RED),
                               trim=SLIFER_RED, belly=1.0)),
         # Tag Force portrait: dark brown hair puffed out over the ears (koala), round pink nose
-        hairdo=dict(spike=dict(lift=0.0, up=0.2, length=1.1, front_lift=0.0, front_length=1.0, crown_lift=0.0,
-                               side_lift=0.55, volume=1.1),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.0, up=0.2, length=1.1, front_lift=0.0, front_length=1.0, crown_lift=0.0,
+                                           side_lift=0.5),
+                                 volume=dict(top=2.0, back=1.8, side=2.0, loft=0.015), envelope=dict(side=1.65, jaw=1.5)),
                     nose=(1.0, 0.66, 0.52)),
         face_shape=dict(cheeks=0.12, jaw=0.06),
         expression=dict(BRW_Angry=0.5, EYE_Joy=0.2),
@@ -173,14 +191,14 @@ CAST = {
     ),
     # ------------------------------------------------------------------ Ra Yellow
     "bastion": dict(
-        name="Bastion Misawa", dorm="ra", scale=1.04, model="vroid_c",
+        name="Bastion Misawa", dorm="ra", height=176, model="vroid_c",
         body=dict(open=0.35),
         # Duel Links portrait: green turtleneck under a gold-collared Ra Yellow jacket
         outfit=dict(_academy(RA_YELLOW, RA_DARK, (0.36, 0.58, 0.30), (0.22, 0.24, 0.30), open_=0.0,
                               coat=dict(lining=RA_YELLOW, collar_flare=0.04, buttons=dict(color=WHITE, n=1))),
                     shirt=dict(color=(0.36, 0.58, 0.30), sleeves="short", length="waist", turtleneck=True)),
-        hairdo=dict(spike=dict(lift=0.3, up=1.2, length=1.2, front_lift=0.85, front_length=1.05, crown_lift=0.2,
-                               volume=1.06)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.25, up=1.2, length=1.15, front_lift=0.7, front_length=1.05, crown_lift=0.15),
+                                 volume=dict(top=2.0, back=1.8, side=1.3, loft=0.012), envelope=dict(side=1.35, jaw=1.15))),
         face_shape=dict(chin=0.012, jaw=-0.07),
         expression=dict(BRW_Angry=0.3, EYE_Angry=0.3, MTH_Fun=0.4),
         colors=dict(jacket=RA_YELLOW, trim=WHITE, inner=(0.95, 0.95, 0.95),
@@ -196,13 +214,15 @@ CAST = {
     ),
     # ------------------------------------------------------------------ Obelisk Blue
     "chazz": dict(
-        name="Chazz Princeton", dorm="obelisk", scale=1.03, model="vroid_c",
+        name="Chazz Princeton", dorm="obelisk", height=174, model="vroid_c",
         body=dict(open=0.6, coat="long"),
         outfit=dict(_coat((0.07, 0.07, 0.09), (0.40, 0.40, 0.44), (0.45, 0.32, 0.42), (0.10, 0.12, 0.26),
                            open_=0.7, collar=0.09)),
         # Tag Force cover art: big black spikes standing up and back
-        hairdo=dict(spike=dict(lift=0.25, up=0.3, length=1.45, front_lift=0.0, front_length=1.15, crown_lift=0.25, volume=1.12),
-                    thicken=dict(copies=2, angle=8.0, scale=1.04)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.45, up=0.9, sweep=0.8, length=1.25, front_lift=0.1, front_length=1.05,
+                                           crown_lift=0.3, side_lift=0.25),
+                                 clump=dict(pull=0.7), widen=1.55,
+                                 volume=dict(top=2.6, back=2.2, side=1.5, loft=0.02), envelope=dict(side=1.5, jaw=1.25))),
         face_shape=dict(chin=0.012, jaw=-0.08),
         expression=dict(BRW_Angry=0.9, EYE_Angry=0.5, MTH_Angry=0.25),
         colors=dict(jacket=(0.07, 0.07, 0.09), trim=(0.30, 0.30, 0.34), inner=(0.10, 0.10, 0.12),
@@ -217,7 +237,7 @@ CAST = {
         spawn=dict(group="obelisk_boys", dorm="obelisk", nth=7, near=(-58351.7, -51008.5)),
     ),
     "zane": dict(
-        name="Zane Truesdale", dorm="obelisk", scale=1.1, model="vroid_c",
+        name="Zane Truesdale", dorm="obelisk", height=183, model="vroid_c",
         body=dict(open=0.3, coat="long"),
         outfit=dict(_coat(WHITE, (0.22, 0.30, 0.72), (0.07, 0.07, 0.08), (0.12, 0.13, 0.20), open_=0.0, collar=0.08,
                           coat=dict(tails=0.25, loose=0.012, collar_color=WHITE, collar_trim=OBELISK_TRIM,
@@ -226,7 +246,8 @@ CAST = {
                                                  trim_w=0.008, trims=("front", "hem", "collar"), drop=0.06,
                                                  open=30, wide=0.11, deep=0.09))),
                     shirt=dict(color=(0.07, 0.07, 0.08), sleeves="short", turtleneck=True)),
-        hairdo=dict(spike=dict(lift=0.0, up=0.0, length=1.6, front_lift=0.0, front_length=1.15, crown_lift=0.0)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.0, up=0.0, length=1.5, front_lift=0.0, front_length=1.12, crown_lift=0.0),
+                                 volume=dict(top=2.3, back=2.0, side=1.4, loft=0.015), envelope=dict(side=1.4, jaw=1.2))),
         face_shape=dict(chin=0.014, jaw=-0.08),
         expression=dict(BRW_Angry=0.5, EYE_Angry=0.45),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=(0.16, 0.18, 0.24),
@@ -241,10 +262,11 @@ CAST = {
         spawn=dict(group="lighthouse", dorm="obelisk", nth=0, near=(30150.0, 124650.0)),
     ),
     "alexis": dict(
-        name="Alexis Rhodes", dorm="obelisk", scale=1.0, model="vroid_a",
+        name="Alexis Rhodes", dorm="obelisk", height=162, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(gloves=dict(color=(0.22, 0.30, 0.72), trim=OBELISK_TRIM, trims=("front",), trim_w=0.006)),
-        hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
+        hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"),
+                    shape=_shape(volume=dict(top=2.0, back=1.6, side=1.3, loft=0.012), envelope=dict(side=1.45, jaw=1.35))),
         face_shape=dict(chin=0.006, jaw=-0.04),
         expression=dict(MTH_Fun=0.3),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
@@ -260,12 +282,12 @@ CAST = {
         spawn=dict(group="obelisk_girls", dorm="obelisk", nth=0, near=(-23982.5, -88844.0)),
     ),
     "jasmine": dict(
-        name="Jasmine", dorm="obelisk", scale=0.98, model="vroid_a",
+        name="Jasmine", dorm="obelisk", height=160, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         # Tag Force Special portrait: auburn shoulder-length hair flaring out in points, a tuft on top
-        hairdo=dict(spike=dict(lift=0.3, up=-0.55, length=1.35, front_lift=0.05, front_length=1.05, crown_lift=0.3,
-                               volume=1.06)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.15, up=-0.55, length=1.2, front_lift=0.05, front_length=1.05, crown_lift=0.15),
+                                 volume=dict(top=2.2, back=2.0, side=1.35, loft=0.015), envelope=dict(side=1.45, jaw=1.35))),
         expression=dict(MTH_Fun=0.3),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
@@ -277,12 +299,13 @@ CAST = {
         spawn=dict(group="obelisk_girls", dorm="obelisk", nth=6, near=(-21245.9, -89388.5)),
     ),
     "mindy": dict(
-        name="Mindy", dorm="obelisk", scale=0.97, model="vroid_a",
+        name="Mindy", dorm="obelisk", height=158, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         # Tag Force Special portrait / anime: charcoal bob flipping out in wings at the shoulders
-        hairdo=dict(spike=dict(lift=0.12, up=0.0, length=1.25, front_lift=0.0, front_length=1.0, crown_lift=0.0,
-                               side_lift=0.32, volume=1.05)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.12, up=0.0, length=1.2, front_lift=0.0, front_length=1.0, crown_lift=0.0,
+                                           side_lift=0.32),
+                                 volume=dict(top=2.2, back=2.0, side=1.4, loft=0.015), envelope=dict(side=1.55, jaw=1.5))),
         expression=dict(MTH_Fun=0.35, EYE_Surprised=0.2),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
@@ -295,7 +318,7 @@ CAST = {
     ),
     # ------------------------------------------------------------------ staff
     "crowler": dict(
-        name="Dr. Vellian Crowler", dorm="teacher", scale=1.12, model="vroid_c",
+        name="Dr. Vellian Crowler", dorm="teacher", height=186, model="vroid_c",
         body=dict(open=0.2, coat="long"),
         outfit=dict(_coat((0.16, 0.30, 0.66), (0.92, 0.78, 0.30), WHITE, (0.16, 0.30, 0.66), open_=0.0, collar=0.0,
                              cuff=(0.96, 0.62, 0.78), width=0.05,
@@ -303,6 +326,7 @@ CAST = {
                                        shield=dict(color=WHITE, border=(0.92, 0.78, 0.30), w=0.12),
                                        shoulder=dict(color=(0.96, 0.62, 0.78), w=0.04)))),
         hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"),
+                    shape=_shape(volume=dict(top=2.0, back=1.7, side=1.3, loft=0.012), envelope=dict(side=1.45, jaw=1.3)),
                     ponytail=dict(k=0.3, band=(0.06, 0.06, 0.07)), ruff=(0.96, 0.62, 0.78),
                     earrings=((0.82, 0.84, 0.88), (0.20, 0.74, 0.70))),
         face_shape=dict(chin=0.024, jaw=-0.10),
@@ -326,10 +350,19 @@ CAST = {
 # ---------------------------------------------------------------------- generic students
 # One mesh per look; Unreal tints the jacket by dorm and the hair per NPC ("tint").
 STUDENTS = {
-    "student_m1": dict(model="vroid_c", hair=dict(style="spiky"), face=_face(mouth=dict(kind="smile"))),
+    "student_m1": dict(model="vroid_c", hair=dict(style="spiky"), face=_face(mouth=dict(kind="smile")),
+                       hairdo=dict(shape=_shape(flow=dict(lift=0.3, up=0.6, sweep=0.4, length=1.22, front_lift=0.05,
+                                                          front_length=1.05, crown_lift=0.15)))),
     "student_f1": dict(model="vroid_a", female=True, hair=dict(style="bob"),
+                       hairdo=dict(shape=_shape(volume=dict(top=2.2, back=2.0, side=1.5), envelope=dict(side=1.55, jaw=1.45))),
                        face=_face(eyes=dict(_EYES_GIRL), mouth=dict(kind="open", w=0.07), blush=0.25)),
     "student_f2": dict(model="vroid_b", female=True, hair=dict(style="long_straight"),
+                       # the rabbit-ear and star clips (HAIR_03 .. 06) stay as they are
+                       hairdo=dict(shape=_shape(volume=dict(top=2.0, back=1.6, side=1.3, loft=0.012),
+                                                envelope=dict(side=1.45, jaw=1.35),
+                                                keep=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"),
+                                                # her twin tails spread from the sides of the head by design
+                                                audit=dict(width=2.45))),
                        face=_face(eyes=dict(_EYES_GIRL), mouth=dict(kind="smile", w=0.08), blush=0.25)),
 }
 
@@ -360,20 +393,37 @@ def student_entry(key):
         outfit = _academy(WHITE, (0.72, 0.72, 0.72), (0.62, 0.65, 0.69), (0.22, 0.24, 0.30), open_=0.0,
                           trim=(0.55, 0.55, 0.55), coat=dict(tint=True))
         outfit["shirt"]["turtleneck"] = True
-    return dict(name="Student", dorm="any", scale=1.0, body=body, colors=colors, model=s.get("model"), outfit=outfit,
-                hair=dict(s["hair"], color=TINT_BASE), face=face, extras=s.get("extras", []),
+    return dict(name="Student", dorm="any", height=GENERIC_HEIGHT[female], body=body, colors=colors, model=s.get("model"), outfit=outfit,
+                hair=dict(s["hair"], color=TINT_BASE), face=face, extras=s.get("extras", []), hairdo=s.get("hairdo"),
                 tint=["hair"] if female else ["jacket", "hair"], lines=[])
 
 
 # The playable student: a generic look with a dorm-tinted jacket (J switches dorms in game)
 PLAYER = "student_m1"
 
+# Standing height (crown, without hair) of each base model in its rest pose, metres - measured from the VRoid
+# samples (Tools/dai/anime/models.load: highest skin / face vertex). Used to turn the cast's heights into the
+# runtime scale, so 168 cm means 168 cm on the island (doors, stairs and the 1.5 m/s walk are human scale).
+BASE_HEIGHT = {"vroid_a": 1.550, "vroid_b": 1.511, "vroid_c": 1.743}
+FALLBACK_HEIGHT = 1.70           # the procedural fallback body
+GENERIC_HEIGHT = {False: 170, True: 160}   # generic students (NPCs vary +-5 % round this)
+
+
+def scale_of(entry):
+    """Runtime uniform scale of a cast entry: its height over the base model's own height."""
+    if "height" not in entry:
+        return float(entry.get("scale", 1.0))
+    base = BASE_HEIGHT.get(entry.get("model"), FALLBACK_HEIGHT)
+    return round(entry["height"] / 100.0 / base, 3)
+
 
 def all_entries():
-    """{cast id: full entry} for everything the pipeline builds."""
-    out = dict(CAST)
+    """{cast id: full entry} for everything the pipeline builds (with the derived "scale")."""
+    out = {k: dict(v) for k, v in CAST.items()}
     for k in STUDENTS:
         out[k] = student_entry(k)
+    for e in out.values():
+        e["scale"] = scale_of(e)
     return out
 
 
@@ -405,7 +455,7 @@ def assign_npcs(npcs):
         pick["cast"] = cid
         pick["name"] = c["name"]
         pick["lines"] = list(c["lines"])
-        pick["scale"] = c["scale"]
+        pick["scale"] = scale_of(c)
         pick["tint"] = False
         used.add(id(pick))
     for n in npcs:
@@ -418,6 +468,6 @@ def assign_npcs(npcs):
         n["cast"] = looks[(h // 100) % len(looks)]
         n.pop("name", None)
         n.pop("lines", None)
-        n["scale"] = round(0.95 + (h % 11) * 0.01, 2)
+        n["scale"] = round(scale_of(student_entry(n["cast"])) * (0.95 + (h % 11) * 0.01), 3)
         n["tint"] = True
     return npcs

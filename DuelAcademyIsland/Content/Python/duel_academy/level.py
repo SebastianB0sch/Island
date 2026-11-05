@@ -116,6 +116,17 @@ class Placer:
                     s.set_editor_property(k, v)
                 except Exception:  # noqa: BLE001
                     pass
+            # anime cast cel banding (materials.build_cel_post; stencil 1 = cast, set by UDAAvatarComponent)
+            pp = C.load(f"{C.MAT_DIR}/PP_DA_Cel")
+            if pp is not None:
+                try:
+                    wb = unreal.WeightedBlendables()
+                    wb.set_editor_property("array", [unreal.WeightedBlendable(weight=1.0, object=pp)])
+                    s.set_editor_property("weighted_blendables", wb)
+                except Exception as e:  # noqa: BLE001
+                    C.warn(f"post process: cel blendable: {e}")
+            else:
+                C.warn("post process: PP_DA_Cel missing (build the materials first); cast renders without cel banding")
             ppv.set_editor_property("settings", s)
         except Exception as e:  # noqa: BLE001
             C.warn(f"post process settings: {e}")

@@ -110,7 +110,22 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy")
 	bool IsAnimeCast() const { return bAnimeCast; }
 
+	/** Anime cast only: mouth visemes while talking (UDAAvatarAnimInstance face layer). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
+	void SetTalking(bool bTalking);
+
+	/** Anime cast only: turn the head towards a world location (false eases back). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
+	void SetLookAt(const FVector& WorldLocation, bool bEnable);
+
+	/** Anime cast only: Joy / Angry / Sorrow / Surprised / Fun, 0..1 (NAME_None clears). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
+	void SetEmotion(FName Emotion, float Weight);
+
 private:
+	/** SetTalking: plays the Talk gesture take while standing. */
+	bool bSpeaking = false;
+
 	bool SetupSkeletal();
 	bool SetupCast();
 	void FinishSkeletal(class USkeletalMesh* Mesh);
