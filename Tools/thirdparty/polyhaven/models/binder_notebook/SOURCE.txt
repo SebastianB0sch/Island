@@ -1,0 +1,23 @@
+asset_id: polyhaven_binder_notebook
+title: Binder Notebook (Poly Haven)
+category: interiors
+main_file: binder_notebook_1k.gltf
+catalog_use: SM_Int_Binder
+author: DaDrood
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/binder_notebook
+description: Free 8K leather binder notebook with worn patina, brass rings, stitched pockets, snap strap and pen, embossed logo, realistic paper stack and metal details.
+polycount: 18077
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/binder_notebook, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/binder_notebook/binder_notebook_1k.gltf
+    -> binder_notebook_1k.gltf  md5 8d05e6a6436c12169debc073692b7f5e  sha256 714596552fad383ae3ca76d42038b03a20b6864d6ef5bc6d12620ac21fef1b1e
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/binder_notebook/binder_notebook_diff_1k.jpg
+    -> textures/binder_notebook_diff_1k.jpg  md5 0c6bbb11b58934e7ed6b6a0729e20e8b  sha256 8591cce815138bd737c252dc12a4d9bf41bceb499ace7dbfef0725e64dadda2d
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/binder_notebook/binder_notebook.bin
+    -> binder_notebook.bin  md5 bade6e7ed1349d598b27018c61cf674d  sha256 68e28e6fac708a6e172230c42debd990e48819566fa07f222415467b1034b9c0
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/binder_notebook
+not_redistributed: textures/binder_notebook_nor_gl_1k.jpg, textures/binder_notebook_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py binder_notebook` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,23 @@
+asset_id: polyhaven_chinese_armchair
+title: Chinese Armchair (Poly Haven)
+category: interiors
+main_file: chinese_armchair_1k.gltf
+catalog_use: SM_Int_ChineseArmchair
+author: Kirill Sannikov
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/chinese_armchair
+description: Free 8K model: varnished antique Chinese wooden armchair with ornate carved back, elegant curved crest rail and traditional Ming-style silhouette.
+polycount: 2675
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/chinese_armchair, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/chinese_armchair/chinese_armchair_1k.gltf
+    -> chinese_armchair_1k.gltf  md5 ecad26c95dbf2c7e631f848711700678  sha256 e0649ac9e63135627b824035e9a45a7c06411062589b971e633e5ab5f9e17f04
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/chinese_armchair/chinese_armchair.bin
+    -> chinese_armchair.bin  md5 7575b1f0e7de094e7c1cbebf610e5da0  sha256 7e72b5360513057bdc453d6c03d5a837d32a8c9a2e6185f1b016c1bc62dc5b27
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chinese_armchair/chinese_armchair_diff_1k.jpg
+    -> textures/chinese_armchair_diff_1k.jpg  md5 5ae99f09fe8a767d4ecd49c86539d46d  sha256 41332d6df2c5abad15ba227382bda160e55e9c75f2b4ecc079f8171aecd8d689
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/chinese_armchair
+not_redistributed: textures/chinese_armchair_arm_1k.jpg, textures/chinese_armchair_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py chinese_armchair` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

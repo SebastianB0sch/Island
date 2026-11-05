@@ -20,6 +20,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ArmChair_01/Armchair_01_arm_1k.jpg
     -> textures/Armchair_01_arm_1k.jpg  md5 2ea528244dd6fc0deb2af1a555c0a312  sha256 d272c68e8180f2a381314ac0cef5a9165d15d951a0558cb40a17af71cf6a51c6
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/ArmChair_01
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py ArmChair_01` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

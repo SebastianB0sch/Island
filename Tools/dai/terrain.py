@@ -196,6 +196,10 @@ def pad_specs():
         "gym": dict(center=L["gym"]["pos"], r=(78.0, 66.0), yaw=L["gym"]["yaw"], h=None, falloff=50.0, shape="ellipse", paving=0.5),
         "hotsprings": dict(center=L["hotsprings"]["pos"], r=(46.0, 40.0), yaw=L["hotsprings"]["yaw"], h=None, falloff=30.0, shape="ellipse", dirt=0.5),
         "waterfall": dict(center=L["waterfall"]["pos"], r=(26.0, 22.0), yaw=0.0, h=None, falloff=12.0, shape="ellipse"),
+        # the volcano trail's end: a terrace cut into the 45 deg upper slope for the viewpoint deck and the foot
+        # of the summit stair (the deck used to be half buried in the hillside)
+        "volcano_view": dict(center=C.VOLCANO_VIEW, r=(7.0, 9.0), yaw=C.VOLCANO_VIEW_YAW, h=None, falloff=5.0,
+                             shape="rect", dirt=0.6),
     }
 
 
@@ -372,10 +376,10 @@ class Terrain:
                 prof[:] = p["fixed_z"]
             else:
                 raw = prof.copy()
-                for _ in range(4):
+                for _ in range(p.get("smooth", 4)):     # mountain trails follow the ground more closely
                     prof = ndimage.uniform_filter1d(prof, size=21, mode="nearest")
-                # grade limit 13 %
-                g = 0.13 * 2.0
+                # grade limit 13 % (roads; mountain trails may set their own)
+                g = p.get("grade", 0.13) * 2.0
                 for _ in range(3):
                     for i in range(1, len(prof)):
                         prof[i] = np.clip(prof[i], prof[i - 1] - g, prof[i - 1] + g)

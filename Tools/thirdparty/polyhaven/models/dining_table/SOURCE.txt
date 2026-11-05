@@ -1,0 +1,23 @@
+asset_id: polyhaven_dining_table
+title: Dining Table (Poly Haven)
+category: interiors
+main_file: dining_table_1k.gltf
+catalog_use: SM_Int_DiningTable
+author: Aron Łyczek
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/dining_table
+description: Free 8K rustic wooden dining table with worn grain and tapered legs, draped in a blue-beige gingham cloth with realistic folds and subtle frays.
+polycount: 1048
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/dining_table, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/dining_table/dining_table_1k.gltf
+    -> dining_table_1k.gltf  md5 556aed1f86536dba7cc5917c36ee7ab7  sha256 6af2b850b0524d364b4c89869c6c70112b8d340317a256cf35fbe739040654c7
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dining_table/dining_table_diff_1k.jpg
+    -> textures/dining_table_diff_1k.jpg  md5 a309bb6839c628305059775d7480c8b7  sha256 af239dc33b8444c5d9ca653d502ee1a1f0bac1845a7a522a00eae6c3a0d62b97
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/dining_table/dining_table.bin
+    -> dining_table.bin  md5 13227e80b4c213bd7fee570e0b23fe8c  sha256 63a493a0bf2eeea4ecc94e5e4cb90c7780fd6cb79e82feed1d3db89ed2b63305
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/dining_table
+not_redistributed: textures/dining_table_nor_gl_1k.jpg, textures/dining_table_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py dining_table` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

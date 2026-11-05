@@ -1,0 +1,23 @@
+asset_id: polyhaven_security_camera_01
+title: Security Camera 01 (Poly Haven)
+category: interiors
+main_file: security_camera_01_1k.gltf
+catalog_use: SM_Int_SecurityCam
+author: Alexander Otterbeck, Yann Kervran
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/security_camera_01
+description: Free 8K model: rigged wall-mounted CCTV camera with weathered metal housing, pivoting mount and realistic lens - industrial security asset for surveillance.
+polycount: 13571
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/security_camera_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/security_camera_01/security_camera_01_1k.gltf
+    -> security_camera_01_1k.gltf  md5 e155ea9e3cd650c89904abd79b07a54c  sha256 d2468fe353cd9f992a5549709cf9efcfae67e9fd17f80bf7ff3866e2881dd2ae
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/security_camera_01/security_camera_01.bin
+    -> security_camera_01.bin  md5 e48ddbe564323963c0c37e29b4d0ca4b  sha256 c43dd3576213c169d1b3a9968788c0da2d14073e59c7d2503bc230c05042bb21
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/security_camera_01/security_camera_01_diff_1k.jpg
+    -> textures/security_camera_01_diff_1k.jpg  md5 a88344425885875615f1b276fc6f312e  sha256 572968d8c693682aa5c87d59428e1db234b0d81ec620af8a019c72e3f011d53f
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/security_camera_01
+not_redistributed: textures/security_camera_01_arm_1k.jpg, textures/security_camera_01_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py security_camera_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,23 @@
+asset_id: polyhaven_stationery_supplies
+title: Stationery Supplies (Poly Haven)
+category: interiors
+main_file: stationery_supplies_1k.gltf
+catalog_use: SM_Int_Stationery
+author: Mateusz Sadek
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/stationery_supplies
+description: Free 4k model of assorted stationery: scuffed pens, colored and graphite pencils with worn paint, pink eraser and engraved metal cup, realistic and finely detailed props.
+polycount: 4412
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/stationery_supplies, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/stationery_supplies/stationery_supplies_1k.gltf
+    -> stationery_supplies_1k.gltf  md5 f52db97749d2a35edc088e5885d0d8b9  sha256 9f5ef7799af1193e5d794cc02eb6add2d2eb7e80bc1974930fae76b3cd7ce9a9
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/stationery_supplies/stationery_supplies_diff_1k.jpg
+    -> textures/stationery_supplies_diff_1k.jpg  md5 6137e4177fe5b002254d57eb5c7003eb  sha256 a70e92052b2da3457a6059aec0fa83bc01bf0d376be814661cee0b49e4abb9ad
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/stationery_supplies/stationery_supplies.bin
+    -> stationery_supplies.bin  md5 79c27c50437311205051da6de178053c  sha256 475d839c3569551710607cfc71416aa50a3715cd02d56da8c86271982feacb6e
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/stationery_supplies
+not_redistributed: textures/stationery_supplies_nor_gl_1k.jpg, textures/stationery_supplies_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py stationery_supplies` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,23 @@
+asset_id: polyhaven_binoculars
+title: Binoculars (Poly Haven)
+category: interiors
+main_file: binoculars_1k.gltf
+catalog_use: SM_Int_Binoculars
+author: Derek Wight
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/binoculars
+description: Free 8K binoculars model: classic black metal, textured leatherette grips, knurled focus wheel, clean glass lenses, and a brown strap with light wear.
+polycount: 19248
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/binoculars, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/binoculars/binoculars_1k.gltf
+    -> binoculars_1k.gltf  md5 40ff2a9e0e1c46939427ccb128837de2  sha256 57ef2cf82052bd919f932cfa36fc51b10e81ae0f02b3f65ee5bc9706ef2fb3bd
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/binoculars/binoculars_diff_1k.jpg
+    -> textures/binoculars_diff_1k.jpg  md5 4d61b8ef8ab8fe2af6dfe2bb9caa5a30  sha256 a17d09d2a70d05efb9a7b5367e8d6e0672bf35fe0698617a59dfbf54f782da92
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/binoculars/binoculars.bin
+    -> binoculars.bin  md5 d8da6dfea42fe137622f8b8b03e05058  sha256 79e17906e47ef698c39448769113ecce3a6fc825c44364e0e5eb9f3a6dd0c19c
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/binoculars
+not_redistributed: textures/binoculars_nor_gl_1k.jpg, textures/binoculars_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py binoculars` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

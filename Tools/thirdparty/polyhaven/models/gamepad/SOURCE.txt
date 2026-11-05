@@ -1,0 +1,23 @@
+asset_id: polyhaven_gamepad
+title: Gamepad (Poly Haven)
+category: interiors
+main_file: gamepad_1k.gltf
+catalog_use: SM_Int_Gamepad
+author: Josh Dean
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/gamepad
+description: Free 4K model: retro wired gray gamepad with D-pad, four colored face buttons, start/select switches, worn plastic and long cable.
+polycount: 9546
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/gamepad, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/gamepad/gamepad_1k.gltf
+    -> gamepad_1k.gltf  md5 86e6f546e948429591f8de7c3c9cc981  sha256 30eabe08b4c76013efb27322ef8834ba915dd0ff46950ebf69390e7fbeef3dea
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/gamepad/gamepad_diff_1k.jpg
+    -> textures/gamepad_diff_1k.jpg  md5 481e2ef26e548cec00140a32dce30ddd  sha256 d66b82f9790c304efaae5b0dc45a1dffd57ff64ec57d57d7e5a2fe1b1b067b5c
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/gamepad/gamepad.bin
+    -> gamepad.bin  md5 06f345d9e959c3d265ff6f599b1640db  sha256 f1bf4c355880932ae321d0ee7221767d0f9b9a0f3d00522424847ce21462b701
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/gamepad
+not_redistributed: textures/gamepad_nor_gl_1k.jpg, textures/gamepad_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py gamepad` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

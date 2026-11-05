@@ -1,0 +1,23 @@
+asset_id: polyhaven_office_notepads
+title: Office Notepads (Poly Haven)
+category: interiors
+main_file: office_notepads_1k.gltf
+catalog_use: SM_Int_Notepads
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/office_notepads
+description: Free 4K model of assorted office notepads: blank sheets, lined legal pads with red glue, index cards, and sticky notes. Realistic paper grain and crisp edges.
+polycount: 666
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/office_notepads, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/office_notepads/office_notepads_1k.gltf
+    -> office_notepads_1k.gltf  md5 74b027b592ecc50b485f07d75728e95c  sha256 dec1bd1f656e21bbda8957bcd19a715b1d1fbc5f9f153ada7ccdaf8407d97411
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/office_notepads/office_notepads_diff_1k.jpg
+    -> textures/office_notepads_diff_1k.jpg  md5 8e0b41ecab0c337761582b50499b465c  sha256 6cce5f76748a73954a9158904b6d26319f028f796166c140b3cbf0bbb7c62727
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/office_notepads/office_notepads.bin
+    -> office_notepads.bin  md5 d749a23361b8d854fad7a03a80b4cc6d  sha256 4095356347a19a2e64ee2f5cee46d50d9bdf7c52f617573bca94cfe6e494842c
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/office_notepads
+not_redistributed: textures/office_notepads_nor_gl_1k.jpg, textures/office_notepads_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py office_notepads` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

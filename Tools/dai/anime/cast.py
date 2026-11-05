@@ -126,7 +126,7 @@ CAST = {
                "Classes are fine and all, but the real lessons happen on the duel field.",
                "Professor Banner's curry is the best thing about the Slifer dorm. Don't tell the Obelisks.",
                "Win or lose, as long as the duel was fun, it was a good one!"],
-        spawn=dict(group="slifer", dorm="slifer", nth=0),
+        spawn=dict(group="slifer", dorm="slifer", nth=0, near=(-107800.0, 25550.0)),
     ),
     "syrus": dict(
         name="Syrus Truesdale", dorm="slifer", scale=0.84, model="vroid_c",
@@ -146,7 +146,7 @@ CAST = {
                "My big brother is the Kaiser. No pressure or anything.",
                "Vehicroids are the best. Want to see my favourite card?",
                "Is it true there's a ghost in the abandoned dorm? I'm not going there alone!"],
-        spawn=dict(group="slifer", dorm="slifer", nth=1),
+        spawn=dict(group="slifer", dorm="slifer", nth=1, near=(-105550.0, 25800.0)),
     ),
     "chumley": dict(
         name="Chumley Huffington", dorm="slifer", scale=1.02, model="vroid_c",
@@ -169,7 +169,7 @@ CAST = {
                "Koalas are the most underrated monsters, you know.",
                "Repeating a year isn't so bad. You get to know all the good nap spots.",
                "My dad makes hot sauce. I'm going to make it big with my cards instead!"],
-        spawn=dict(group="slifer", dorm="slifer", nth=0),
+        spawn=dict(group="slifer", dorm="slifer", nth=0, near=(-107400.0, 27650.0)),
     ),
     # ------------------------------------------------------------------ Ra Yellow
     "bastion": dict(
@@ -192,7 +192,7 @@ CAST = {
                "My dorm room walls are covered in equations. The cleaning staff have given up.",
                "Ra Yellow is the perfect middle ground: the cafeteria is excellent and nobody expects too much.",
                "Every duel is just a problem waiting for the right formula."],
-        spawn=dict(group="ra", dorm="ra", nth=5),
+        spawn=dict(group="ra", dorm="ra", nth=5, near=(-67331.4, 64789.3)),
     ),
     # ------------------------------------------------------------------ Obelisk Blue
     "chazz": dict(
@@ -214,7 +214,7 @@ CAST = {
                "You want an autograph? Get in line. Behind my brothers' business cards.",
                "Ojama Yellow, get back in the deck before somebody sees you!",
                "I didn't lose. I'm just letting everybody else catch up."],
-        spawn=dict(group="obelisk_boys", dorm="obelisk", nth=7),
+        spawn=dict(group="obelisk_boys", dorm="obelisk", nth=7, near=(-58351.7, -51008.5)),
     ),
     "zane": dict(
         name="Zane Truesdale", dorm="obelisk", scale=1.1, model="vroid_c",
@@ -238,7 +238,7 @@ CAST = {
                "The sea is calm tonight. A good place to think about the next duel.",
                "My brother has more potential than he knows. Don't tell him I said that.",
                "A victory without respect means nothing."],
-        spawn=dict(group="lighthouse", dorm="obelisk", nth=0),
+        spawn=dict(group="lighthouse", dorm="obelisk", nth=0, near=(30150.0, 124650.0)),
     ),
     "alexis": dict(
         name="Alexis Rhodes", dorm="obelisk", scale=1.0, model="vroid_a",
@@ -257,7 +257,7 @@ CAST = {
                "Cyber Blader and I could use a real challenge. Are you up for it?",
                "My brother disappeared from the abandoned dorm... I won't give up looking.",
                "Don't let anyone tell you which dorm defines you. Your duels do that."],
-        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=0),
+        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=0, near=(-23982.5, -88844.0)),
     ),
     "jasmine": dict(
         name="Jasmine", dorm="obelisk", scale=0.98, model="vroid_a",
@@ -274,7 +274,7 @@ CAST = {
                    mouth=dict(kind="smile", w=0.08), blush=0.3),
         lines=["Alexis is the Queen of Obelisk Blue. Everybody knows that.",
                "Did you see that Slifer slacker sneak past the girls' dorm again?"],
-        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=6),
+        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=6, near=(-21245.9, -89388.5)),
     ),
     "mindy": dict(
         name="Mindy", dorm="obelisk", scale=0.97, model="vroid_a",
@@ -291,7 +291,7 @@ CAST = {
                    mouth=dict(kind="open", w=0.08), blush=0.3),
         lines=["Ooh, are you new? Which dorm are you in? Wait, let me guess...",
                "The lake by our dorm is so pretty at sunset!"],
-        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=7),
+        spawn=dict(group="obelisk_girls", dorm="obelisk", nth=7, near=(-18402.8, -86849.0)),
     ),
     # ------------------------------------------------------------------ staff
     "crowler": dict(
@@ -319,7 +319,7 @@ CAST = {
                "As Duel Academy's top professor, I demand punctuality, precision and elegance!",
                "My Ancient Gear Golem has humbled far greater duelists than you.",
                "The practical exam is on the arena field. Do try to pass it."],
-        spawn=dict(group="academy", dorm="obelisk", nth=0, max_wander=60.0),
+        spawn=dict(group="academy", dorm="obelisk", nth=0, max_wander=60.0, near=(-1060.0, -16500.0)),
     ),
 }
 
@@ -390,23 +390,24 @@ def assign_npcs(npcs):
         sp = c.get("spawn")
         if not sp:
             continue
-        nth = 0
-        for n in npcs:
-            if n.get("group") != sp["group"] or n.get("dorm") != sp["dorm"]:
-                continue
-            if sp.get("max_wander") is not None and n.get("wander", 0.0) > sp["max_wander"]:
-                continue
-            if id(n) in used:
-                continue
-            if nth == sp["nth"]:
-                n["cast"] = cid
-                n["name"] = c["name"]
-                n["lines"] = list(c["lines"])
-                n["scale"] = c["scale"]
-                n["tint"] = False
-                used.add(id(n))
-                break
-            nth += 1
+        cands = [n for n in npcs if n.get("group") == sp["group"] and n.get("dorm") == sp["dorm"] and id(n) not in used
+                 and (sp.get("max_wander") is None or n.get("wander", 0.0) <= sp["max_wander"])]
+        if not cands:
+            continue
+        if sp.get("near"):
+            # anchored: the student marker closest to the character's spot (stable when rooms gain students)
+            ax, ay = sp["near"]
+            pick = min(cands, key=lambda n: (n["loc"][0] - ax) ** 2 + (n["loc"][1] - ay) ** 2)
+        elif sp["nth"] < len(cands):
+            pick = cands[sp["nth"]]
+        else:
+            continue
+        pick["cast"] = cid
+        pick["name"] = c["name"]
+        pick["lines"] = list(c["lines"])
+        pick["scale"] = c["scale"]
+        pick["tint"] = False
+        used.add(id(pick))
     for n in npcs:
         if id(n) in used:
             continue

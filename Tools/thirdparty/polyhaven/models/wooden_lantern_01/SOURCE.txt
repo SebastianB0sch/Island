@@ -1,0 +1,25 @@
+asset_id: polyhaven_wooden_lantern_01
+title: Wooden Lantern 01 (Poly Haven)
+category: interiors
+main_file: wooden_lantern_01_1k.gltf
+catalog_use: SM_Int_Lantern
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/wooden_lantern_01
+description: Free 8K wooden lantern model - worn colonial/maritime farmhouse style with glass panels, metal top and handle; candle prop. Vintage farmhouse/colonial maritime prop from the Smugglers Cove collection.
+polycount: 8321
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/wooden_lantern_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/wooden_lantern_01/wooden_lantern_01_1k.gltf
+    -> wooden_lantern_01_1k.gltf  md5 e31edca6461023e076183cb74721b0b9  sha256 2380275a5c90bf3442c426f3363e826e6b1ceff12a7e65f83b03cc8fac70a099
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_lantern_01/wooden_lantern_01_diff_1k.jpg
+    -> textures/wooden_lantern_01_diff_1k.jpg  md5 8f9f537ab312b1ec85acb1f5aaf7ad17  sha256 5a346e7e3335e9502eb4e25178d16ba29ae49786b75853d7bd36b386edf7a30d
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_lantern_01/wooden_lantern_01_glass_diff_1k.jpg
+    -> textures/wooden_lantern_01_glass_diff_1k.jpg  md5 c1e45d48f344f86726d02c81679af6a4  sha256 1bfced8c9470ea01e73085439e8cee0c44c8ee8199b806a22cc4f2434ae2f151
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/wooden_lantern_01/wooden_lantern_01.bin
+    -> wooden_lantern_01.bin  md5 3784667126369ce5c21db3c7436409cb  sha256 65c6b1a776c66d4170dab3657f0809b1a8a88219507589d6c9aad70ffbe687a3
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/wooden_lantern_01
+not_redistributed: textures/wooden_lantern_01_nor_gl_1k.jpg, textures/wooden_lantern_01_glass_nor_gl_1k.jpg, textures/wooden_lantern_01_glass_arm_1k.jpg, textures/wooden_lantern_01_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py wooden_lantern_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,25 @@
+asset_id: polyhaven_potted_plant_01
+title: Potted Plant 01 (Poly Haven)
+category: interiors
+main_file: potted_plant_01_1k.gltf
+catalog_use: SM_Int_PottedPlantC
+author: Rico Cilliers
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/potted_plant_01
+description: Free 8K model of a medium potted plant with lush scalloped green leaves in a weathered terracotta pedestal pot, detailed trunk and gravel-filled soil.
+polycount: 96030
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/potted_plant_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/potted_plant_01/potted_plant_01_1k.gltf
+    -> potted_plant_01_1k.gltf  md5 199e9e3d68f5447142db4066d60ae3f0  sha256 23b30294407684b02f14800d6685bd8938da5d2111e17753ac8dd3c37d8c88a0
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_01/potted_plant_01_pot_diff_1k.jpg
+    -> textures/potted_plant_01_pot_diff_1k.jpg  md5 67114dcd68232a6da88c627e144e65c4  sha256 51c9d80e8abe585bd3dbcebe7cba1d3ed1a22b137c7cb66baf0e462c08dca312
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/potted_plant_01/potted_plant_01.bin
+    -> potted_plant_01.bin  md5 18377bd8d99b20a8d5fc5cf03cbf94b2  sha256 a8dd1f7ce75f50dc25bbedc20809da02ee4193815c155b883a329925fa5548f7
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/potted_plant_01/potted_plant_01_leaves_diff_1k.jpg
+    -> textures/potted_plant_01_leaves_diff_1k.jpg  md5 8cbaaa24c18c61be4201c473773dbffc  sha256 b73891a0a606e139d0fcdd9e6fe503cd1210be3fc9c55fbd033941288231ccaa
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/potted_plant_01
+not_redistributed: textures/potted_plant_01_pot_rough_1k.jpg, textures/potted_plant_01_leaves_nor_gl_1k.jpg, textures/potted_plant_01_leaves_rough_1k.jpg, textures/potted_plant_01_pot_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py potted_plant_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

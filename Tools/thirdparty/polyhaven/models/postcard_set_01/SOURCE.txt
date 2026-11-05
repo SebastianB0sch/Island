@@ -1,0 +1,23 @@
+asset_id: polyhaven_postcard_set_01
+title: Postcard Set 01 (Poly Haven)
+category: interiors
+main_file: postcard_set_01_1k.gltf
+catalog_use: SM_Int_Postcards
+author: James Ray Cock, Jurita Burger
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/postcard_set_01
+description: Free 8K model: scatter-ready travel postcard set with weathered paper edges, varied destination images and realistic card props for scenes.
+polycount: 2720
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/postcard_set_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/postcard_set_01/postcard_set_01_1k.gltf
+    -> postcard_set_01_1k.gltf  md5 f17d9d7df87cfd9851cb523add17d4fb  sha256 7a12ad19ed66de5362bbb37e8369030cf88e8ab78364e4be7bed840232469056
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/postcard_set_01/postcard_set_01_diff_1k.jpg
+    -> textures/postcard_set_01_diff_1k.jpg  md5 82e0e8ab1f624da23b279942f8958e4d  sha256 912cbccd36d7c0677d4e645ce12208b09500cf511a119a2eb7cfa640488adecd
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/postcard_set_01/postcard_set_01.bin
+    -> postcard_set_01.bin  md5 07fdeedc2eebb6fa9d65b7ba10b3857e  sha256 896bd95eb00e5251f34332617b29667e75a2f684efa9e3394dd6511d3e13f7b9
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/postcard_set_01
+not_redistributed: textures/postcard_set_01_rough_1k.jpg, textures/postcard_set_01_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py postcard_set_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

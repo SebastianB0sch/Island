@@ -1,0 +1,23 @@
+asset_id: polyhaven_planter_box_01
+title: Planter Box 01 (Poly Haven)
+category: interiors
+main_file: planter_box_01_1k.gltf
+catalog_use: SM_Int_PlanterBox
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/planter_box_01
+description: Free 8K model of an old farmhouse wooden planter box - weathered planks, interior liner, rustic shed/garden charm for landscaping, greenhouses, and decor.
+polycount: 8094
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/planter_box_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/planter_box_01/planter_box_01_1k.gltf
+    -> planter_box_01_1k.gltf  md5 731d186af61b042dc4b4a2cd4744c35a  sha256 15c7ff7396d872e5cad6743c796ff0f42e1f3f831fd334a26aa1fdbd11834a1f
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/planter_box_01/planter_box_01.bin
+    -> planter_box_01.bin  md5 644c9dedd7c8b090a10fa2be597d36bb  sha256 cc97bc9ee05a90c78e27ca575a83eba86955e863dea8a12826f6ff02c2c11db3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/planter_box_01/planter_box_01_diff_1k.jpg
+    -> textures/planter_box_01_diff_1k.jpg  md5 f30b51ecd4af4d14cfa94794d6b47787  sha256 5ad77068bf07ca371e18322c04641754a7758f4479e2835b93f671b4a5143bee
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/planter_box_01
+not_redistributed: textures/planter_box_01_nor_gl_1k.jpg, textures/planter_box_01_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py planter_box_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

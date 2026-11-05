@@ -714,10 +714,26 @@ void ADAStudentCharacter::Tick(float DeltaSeconds)
 		}
 	}
 
-	// Camera zoom easing
+	// Indoors? Probe straight up a few times a second: a ceiling over the head (and over a second point a
+	// little behind, so a porch roof or doorway lintel alone doesn't count) means we walked into a building.
+	IndoorTimer -= DeltaSeconds;
+	if (IndoorTimer <= 0.f && GetWorld())
+	{
+		IndoorTimer = 0.2f;
+		FCollisionQueryParams Q(SCENE_QUERY_STAT(DAIndoorProbe), false, this);
+		const FVector Head = GetActorLocation() + FVector(0.0, 0.0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+		const FVector Back = Head - GetControlRotation().Vector().GetSafeNormal2D() * 150.0;
+		FHitResult H;
+		const bool bA = GetWorld()->LineTraceSingleByChannel(H, Head, Head + FVector(0.0, 0.0, IndoorCeilingCheck), ECC_Camera, Q);
+		const bool bB = bA && GetWorld()->LineTraceSingleByChannel(H, Back, Back + FVector(0.0, 0.0, IndoorCeilingCheck), ECC_Camera, Q);
+		bIndoors = bA && bB;
+	}
+
+	// Camera zoom easing (pulled in indoors, the player's own zoom outside)
 	if (CameraBoom)
 	{
-		CameraBoom->TargetArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, TargetZoom, DeltaSeconds, 6.f);
+		const float Want = bIndoors ? FMath::Min(TargetZoom, IndoorZoom) : TargetZoom;
+		CameraBoom->TargetArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, Want, DeltaSeconds, bIndoors ? 5.f : 3.f);
 	}
 
 	// Safety net: remember solid ground, rescue the player if they fall out of the world.

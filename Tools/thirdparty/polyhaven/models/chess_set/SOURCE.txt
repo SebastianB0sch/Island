@@ -1,0 +1,27 @@
+asset_id: polyhaven_chess_set
+title: Chess Set (Poly Haven)
+category: interiors
+main_file: chess_set_1k.gltf
+catalog_use: SM_Int_Chess
+author: Riley Queen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/chess_set
+description: Free 8K model: elegant vintage marble chess set with polished black and white pieces on a beveled, high-gloss checkered board.
+polycount: 76920
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/chess_set, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/chess_set/chess_set_1k.gltf
+    -> chess_set_1k.gltf  md5 ceac1016348f797f3db112e3e70a96a4  sha256 3e21ecd0c2ffb703dfdb3f3ea7a379c1dbd4ec513ba2cb8e6cb1e5f276d7eb91
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_board_diff_1k.jpg
+    -> textures/chess_set_board_diff_1k.jpg  md5 6387bd6ddb53994016f0463e83e2c50a  sha256 cca44d214f48ebe2205362a3996265d1fed727e094835bec2c873e91c653eaa5
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/chess_set/chess_set.bin
+    -> chess_set.bin  md5 815ae6d5becbcdd836b29b0d644bba95  sha256 c73476fd032a2cb4a9c256f70573eed260708132fdc42fec161c6216711560b3
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_pieces_black_diff_1k.jpg
+    -> textures/chess_set_pieces_black_diff_1k.jpg  md5 cc4bbdc39ed8877c74dfad206284a106  sha256 74471018f96f197c963cc89e7dae19960b03bc2e4bf448e4b0beb51bfee5b85d
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_pieces_white_diff_1k.jpg
+    -> textures/chess_set_pieces_white_diff_1k.jpg  md5 d71daf8e6465bf04c63992eaa185e1d1  sha256 d9e06002509d73c3f343e1643f0c89ef84e24602f1f6858b5628e8f3e55ae77d
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/chess_set
+not_redistributed: textures/chess_set_pieces_white_nor_gl_1k.jpg, textures/chess_set_pieces_black_nor_gl_1k.jpg, textures/chess_set_pieces_black_arm_1k.jpg, textures/chess_set_board_nor_gl_1k.jpg, textures/chess_set_board_arm_1k.jpg, textures/chess_set_pieces_white_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py chess_set` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

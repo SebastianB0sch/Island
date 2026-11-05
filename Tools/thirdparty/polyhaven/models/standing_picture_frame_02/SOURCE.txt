@@ -1,0 +1,25 @@
+asset_id: polyhaven_standing_picture_frame_02
+title: Standing Picture Frame 02 (Poly Haven)
+category: interiors
+main_file: standing_picture_frame_02_1k.gltf
+catalog_use: SM_Int_PhotoFrameB
+author: James Ray Cock
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/standing_picture_frame_02
+description: Free 8K standing wooden picture frame model with whitewashed, gently worn moulding and classic bevel - ideal for vintage photos or paintings in decorative scenes.
+polycount: 2986
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/standing_picture_frame_02, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/standing_picture_frame_02/standing_picture_frame_02_1k.gltf
+    -> standing_picture_frame_02_1k.gltf  md5 faae5ca8a47ec4432af8581241f7b4ea  sha256 72f70a0845a494ac88a85184e749a078ea0ad8155f6ccffb15c6c69477231c96
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/standing_picture_frame_02/standing_picture_frame_02_artwork_diff_1k.jpg
+    -> textures/standing_picture_frame_02_artwork_diff_1k.jpg  md5 f35d1a26bbde3f2f70c7173315627e55  sha256 1dcc9b70ad0a9d5dd25263652b169591b758b4248cadd76f10f4ec12235df3d7
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/standing_picture_frame_02/standing_picture_frame_02.bin
+    -> standing_picture_frame_02.bin  md5 3222529982ef444cc83a04c56e18d5af  sha256 08ba1f8b70640b24f28dec006ed1a9f5fe3bf83d92fcad53b6836cb4478b4d08
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/standing_picture_frame_02/standing_picture_frame_02_diff_1k.jpg
+    -> textures/standing_picture_frame_02_diff_1k.jpg  md5 187b7d496129d6779f859c6b7a2e6967  sha256 9090300e8397c6ff14262276e4b162d9adfd128b785aeca255006fe06a1b2945
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/standing_picture_frame_02
+not_redistributed: textures/standing_picture_frame_02_nor_gl_1k.jpg, textures/standing_picture_frame_02_artwork_rough_1k.jpg, textures/standing_picture_frame_02_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py standing_picture_frame_02` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

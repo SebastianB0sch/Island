@@ -1,0 +1,25 @@
+asset_id: polyhaven_industrial_wall_sconce
+title: Industrial Wall Sconce (Poly Haven)
+category: interiors
+main_file: industrial_wall_sconce_1k.gltf
+catalog_use: SM_Int_WallSconce
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/industrial_wall_sconce
+description: Free 4K model: vintage industrial wall sconce with aged brass/copper backplate, curved arm and black conical shade showing worn, rustic patina.
+polycount: 9826
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/industrial_wall_sconce, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/industrial_wall_sconce/industrial_wall_sconce_1k.gltf
+    -> industrial_wall_sconce_1k.gltf  md5 39c1dd9ad11422e3a55673989c150270  sha256 d36361a9163c9543546f17de223de27db53423ea6aa905b75609142f45af2893
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/industrial_wall_sconce/industrial_wall_sconce_diff_1k.jpg
+    -> textures/industrial_wall_sconce_diff_1k.jpg  md5 00a9741f896c002be1fb4307a16c834d  sha256 756fbb7af2d61a092f923804f0f5cf9ef111a38fa5c85a732cc54388c7dcfc77
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/industrial_wall_sconce/industrial_wall_sconce_bulb_diff_1k.jpg
+    -> textures/industrial_wall_sconce_bulb_diff_1k.jpg  md5 0ffbe4a8ccece6a89f820ed128827e66  sha256 638dfdf1eaa394c7e300c46b9297769669604b98229882130c33b2d7d610ff9c
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/industrial_wall_sconce/industrial_wall_sconce.bin
+    -> industrial_wall_sconce.bin  md5 0a3eac103bc90f9eb2d9151e487c1e79  sha256 4e015509aa8c1ecfdac50b6cf24336c996dedb2a254f360c20a397cc2b39dc57
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/industrial_wall_sconce
+not_redistributed: textures/industrial_wall_sconce_nor_gl_1k.jpg, textures/industrial_wall_sconce_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py industrial_wall_sconce` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

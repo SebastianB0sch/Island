@@ -1,0 +1,23 @@
+asset_id: polyhaven_lambis_shell
+title: Lambis Shell (Poly Haven)
+category: interiors
+main_file: lambis_shell_1k.gltf
+catalog_use: SM_Int_Shell
+author: Kuutti Siitonen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/lambis_shell
+description: Free 8K Lambis shell model with glossy ridged brown-and-cream surface, pronounced curved spines and subtle weathering for a natural decorative look.
+polycount: 12498
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/lambis_shell, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/lambis_shell/lambis_shell_1k.gltf
+    -> lambis_shell_1k.gltf  md5 ba61498d80a33845f25f1a16604e1f65  sha256 3fbfbe990b12f33af079671bc9ea9b1dd46b50f823692b72aa0d89fe850328e3
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/lambis_shell/lambis_shell.bin
+    -> lambis_shell.bin  md5 b895fc766f2ef8adfeaa356833ec90c1  sha256 3129e3a175dbeba8375b21b8f5dec3b559a173f116dc4c402d79afd8751df7aa
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/lambis_shell/lambis_shell_diff_1k.jpg
+    -> textures/lambis_shell_diff_1k.jpg  md5 9d73630d4436fc8afd1d314e1555a88f  sha256 0b9296a51b8a157fff2245fced2a7723db9db4c7ea3e976802e1f9d3f93b7cc8
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/lambis_shell
+not_redistributed: textures/lambis_shell_arm_1k.jpg, textures/lambis_shell_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py lambis_shell` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

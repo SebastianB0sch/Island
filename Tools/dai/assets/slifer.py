@@ -24,6 +24,8 @@ import math
 import random
 
 from . import AssetSet
+from . import with_travel
+from . import detail as DT
 from . import interior as K
 from .. import palette
 
@@ -227,10 +229,8 @@ def _rooms(aset, mb, nc):
             if banner:
                 aset.prop("SM_Int_Armchair", (x0 + 2.2, 0.3, zr + 0.03), 200.0)
                 aset.prop("SM_Int_SideTable", (x0 + 1.5, 0.7, zr + 0.03), 0.0)
-                aset.prop("SM_Int_TeaSet", (x0 + 1.5, 0.7, zr + 0.65), 30.0)
+                aset.prop("SM_Int_TeaSet", (x0 + 1.5, 0.7, zr + 0.59), 30.0)
                 aset.prop("SM_Int_Basket", (x0 + 2.6, 1.6, zr + 0.03), 15.0)        # Pharaoh's basket
-                aset.prop("SM_Int_DeskLamp", (x0 + 3.35, ry0 + 0.35, zr + 0.78), 200.0)
-                aset.prop("SM_Int_Books", (x0 + 2.6, ry0 + 0.3, zr + 0.78), 180.0)
                 K.nameplate(mb, aset, x0 + 1.05 + 0.75, YF - 0.005, zf + 1.6, 0.0, "Prof. Banner", w=0.55, h=0.11)
             else:
                 # TV on a low cabinet against the left wall, facing the kotatsu
@@ -254,16 +254,167 @@ def _rooms(aset, mb, nc):
             # curtains inside the front window
             K.curtains(nc, (X0, YF), (X1, YF), x0 + 2.95 - X0, 1.4, zf + 0.95, zf + 1.95,
                        ("M_IntFabricRed", "M_SliferLaundryWhite", "M_IntFabricBlue")[(i + floor) % 3], wall_thick=WT)
+            # ---- the lived-in layer: fixtures, desk things, jackets, clutter (real sizes)
+            DT.dress_room(aset, mb, nc, rx0, ry0, rx1, ry1, zr, ceil, style="japanese", seed=i + 10 * floor,
+                          ac=floor == 2 and i % 2 == 0,
+                          keep_clear=[(rx0, 2.9, x0 + 1.75, ry1), (rx0, 1.6, rx0 + 0.7, 2.9),
+                                      (rx1 - 1.1, 0.7, rx1, 2.8), (rx0, 0.3, rx0 + 0.5, 1.4)])
+            DT.desk_set(nc, aset, x0 + 2.95, ry0 + 0.32, zr + 0.76, 180.0,
+                        kind="student", seed=i + 7 * floor, w=1.1, d=0.55)
+            DT.coat_hooks(nc, rx0 + 0.001, ry0 + 0.45, zf + 1.7, 90.0, n=3, dorm="white" if banner else "slifer",
+                          jackets=1 if banner else 2 + (i % 2), seed=i)
+            if not banner:
+                DT.floor_clutter(nc, aset, rx0, gy1 + 0.1, rx1, 2.9, zr + 0.03, "dorm", n=4, seed=i * 3 + floor,
+                                 clear=[(x0 + 1.0, -0.2, x0 + 2.9, 1.9), (rx1 - 1.1, 0.7, rx1, 2.8),
+                                        (rx0, 0.3, rx0 + 0.5, 1.4), (rx0, 1.6, rx0 + 0.7, 2.9),
+                                        (x0 + 2.2, gy1, x0 + 3.7, gy1 + 0.9)])
+                # wall shelf over the TV: manga, deck boxes, a duel disk
+                mb.box_mm((rx0, 0.45, zr + 1.35), (rx0 + 0.25, 1.25, zr + 1.38), K.WOOD)
+                # (book_row runs along the frame's x: origin on the shelf, turned 90 deg to follow the wall)
+                DT.book_row(nc, rx0 + 0.12, rx0 + 0.12 + 0.75, 0.48, zr + 1.38, 0.16, yaw=90.0, max_h=0.19, seed=i)
+                DT.duel_disk(nc, x0 + 1.9, 1.6, zr + 0.03, 25.0 + i * 40)
+                if jaden:
+                    DT.deck_box(nc, x0 + 2.15, 0.95, zr + 0.415, 20.0, "M_IntFabricRed")
+            else:
+                DT.shelf_fill(nc, aset, rx0 + 0.18, 0.9, [zr + 0.45, zr + 0.85], 90.0, 0.85, 0.28, "decor", seed=55)
+                aset.prop("SM_Int_CatStatue", (x0 + 2.6, 1.6, zr + 0.06), 160.0)     # Pharaoh dozing in the basket
             # light: flush ceiling lamp (+ a ceiling fan upstairs, where the ceiling is higher)
             K.panel_light(aset, nc, x0 + 2.4, 0.4, ceil, w=0.55, d=0.55, intensity=2600.0, radius=6.5,
                           color=(1.0, 0.88, 0.7))
             if floor == 2 and not banner:
                 aset.prop("SM_Int_CeilingFan", (x0 + 2.4, 1.6, ceil), i * 23.0)
+            _room_more(aset, mb, nc, i, floor, x0, rx0, rx1, zf, zr, ceil, rng)
     # preview cameras (Tools/preview_asset.py slifer --views inside)
     K.camera(aset, "room101", (X0 + 0.8, YF + 0.5, ZG + 1.55), (X0 + 3.4, 2.6, ZG + 0.9), 15.0)
     K.camera(aset, "room204", (_x0(3) + 0.8, YF + 0.5, Z2 + 1.6), (_x0(3) + 3.4, 2.6, Z2 + 0.9), 15.0)
     K.camera(aset, "room206_banner", (_x0(5) + 0.8, YF + 0.5, Z2 + 1.6), (_x0(5) + 3.0, 2.6, Z2 + 0.9), 15.0)
     K.camera(aset, "walkway", (X1 - 0.5, YWK + 0.4, Z2 + 1.6), (X0 + 4.0, YF, Z2 + 1.2), 20.0)
+
+def _manga(nc, x, y, z, yaw, n, seed):
+    """A pile of manga volumes (small paperbacks), slightly askew."""
+    r = random.Random(seed)
+    h = z
+    for k in range(n):
+        with nc.at((x + r.uniform(-0.01, 0.01), y + r.uniform(-0.01, 0.01), h + 0.009), rot=yaw + r.uniform(-14, 14)):
+            nc.box((0, 0, 0), (0.115, 0.175, 0.018), r.choice(("M_IntFabricRed", "M_IntFabricBlue", "M_IntFabricYellow",
+                                                               "M_IntFabricWhite", "M_IntFabricGreen", "M_IntFabricOrange")))
+        h += 0.018
+
+
+def _hanging_laundry(nc, x0, x1, y, z, seed, jacket=True):
+    """A cord strung across the room with clothes pegged on it (indoor drying, it rains a lot)."""
+    r = random.Random(seed)
+    nc.beam((x0, y, z), (x1, y, z), 0.008, 0.008, "M_IntWoodDark")
+    x = x0 + 0.15
+    first = jacket
+    while x < x1 - 0.3:
+        if first:
+            w, h, m = 0.45, 0.62, "M_DetJacketRed"
+            first = False
+        else:
+            w, h = r.uniform(0.25, 0.45), r.uniform(0.2, 0.55)
+            m = r.choice(("M_SliferLaundryWhite", "M_SliferLaundryBlue", "M_IntFabricRed", "M_IntFabricWhite"))
+        nc.box((x + w / 2, y, z - h / 2 - 0.01), (w, 0.02, h), m)
+        x += w + r.uniform(0.06, 0.18)
+
+
+def _room_more(aset, mb, nc, i, floor, x0, rx0, rx1, zf, zr, ceil, rng):
+    """Second lived-in layer for a dorm room: zabuton, manga piles, colour-box shelf under the back window,
+    laundry on a cord, ramen cups, more posters, a mirror, a bin (real sizes)."""
+    num = f"{floor}0{i + 1}"
+    banner = num == "206"
+    r = random.Random(i * 7 + floor)
+    ry0, ry1 = YF + WT, YB - WT
+    # colour-box shelf (2 x 3 cubbies) under the back window, between the WC and the bunk
+    sx0, sx1 = x0 + 1.85, x0 + 3.05
+    mb.box_mm((sx0, ry1 - 0.3, zr), (sx1, ry1, zr + 0.7), K.TRIM_WHITE if not banner else K.WOOD)
+    for k in range(3):
+        cx = sx0 + (sx1 - sx0) * (k + 0.5) / 3
+        for lv in (0.04, 0.37):
+            nc.box((cx, ry1 - 0.301, zr + lv + 0.15), (0.36, 0.004, 0.29), K.BLACK)
+            if r.random() < 0.7:
+                DT.book_row(nc, cx - 0.17, cx + 0.15, ry1 - 0.16, zr + lv + 0.02, 0.18, max_h=0.19, seed=i * 10 + k,
+                            gaps=0.05)
+    for k in range(2):
+        _manga(nc, sx0 + 0.2 + k * 0.8, ry1 - 0.5, zr + 0.03, 0.0, r.randint(4, 9), i + k + floor)
+    # washitsu carpentry: nageshi rail round the room at door-head height, corner posts, ceiling battens
+    zn = zr + 2.0
+    for (a0, b0, a1, b1) in ((rx0, ry0, rx1, ry0 + 0.04), (rx0, ry0, rx0 + 0.04, 2.95), (rx1 - 0.04, ry0, rx1, ry1)):
+        mb.box_mm((a0, b0, zn), (a1, b1, zn + 0.1), K.WOOD)
+    for (px, py) in ((rx0, ry0), (rx1 - 0.1, ry0), (rx1 - 0.1, ry1 - 0.1)):
+        mb.box_mm((px, py, zf), (px + 0.1, py + 0.1, ceil), K.WOOD)
+    for k in range(int((ry1 - ry0) / 0.45)):
+        y = ry0 + 0.3 + k * 0.45
+        nc.box(((rx0 + rx1) / 2, y, ceil - 0.012), (rx1 - rx0, 0.035, 0.024), K.WOOD)
+    # zabuton round the kotatsu (not in Banner's study)
+    if not banner:
+        for dx, dy in ((0.0, -0.85), (-0.85, 0.0), (0.0, 0.85)):
+            nc.box((x0 + 1.95 + dx, 0.85 + dy, zr + 0.06), (0.55, 0.55, 0.06),
+                   ("M_IntFabricOrange", "M_IntFabricBlue", "M_IntFabricRed")[(i + int(dx * 3)) % 3])
+        for k in range(2):                                                         # cup ramen on the kotatsu
+            nc.cylinder((x0 + 1.75 + k * 0.4, 1.05, zr + 0.397), 0.045, 0.09, "M_IntTrimWhite", seg=10, radius_top=0.055)
+            nc.cylinder((x0 + 1.75 + k * 0.4, 1.05, zr + 0.487), 0.056, 0.004, "M_IntFabricRed", seg=10)
+        for k in range(3):
+            _manga(nc, x0 + 1.0 + k * 0.55, -1.25 + (k % 2) * 0.3, zr + 0.03, r.uniform(0, 90), r.randint(3, 8),
+                   i * 5 + k + floor)
+        _hanging_laundry(nc, x0 + 0.8, rx1 - 1.1, 2.75, zr + 2.05, i + floor * 3)
+        # party wall in front of the bunk: colour-box tower (manga, deck boxes, figures) + mini fridge
+        tx = rx1 - 0.16
+        mb.box_mm((rx1 - 0.32, -0.75, zr), (rx1, 0.45, zr + 1.15), K.TRIM_WHITE)
+        for lv in (0.03, 0.4, 0.77):
+            for k, yy in enumerate((-0.45, 0.15)):
+                nc.box((rx1 - 0.321, yy, zr + lv + 0.17), (0.004, 0.56, 0.33), K.BLACK)
+                if r.random() < 0.75:
+                    DT.book_row(nc, tx, tx + 0.5, yy - 0.26, zr + lv + 0.02, 0.2, yaw=90.0, max_h=0.19,
+                                seed=i * 13 + k + int(lv * 10), gaps=0.08)
+        DT.deck_box(nc, tx, -0.3, zr + 1.15, 15.0 * i, "M_IntFabricRed")
+        DT.deck_box(nc, tx + 0.02, -0.15, zr + 1.15, 40.0, "M_IntFabricBlue")
+        nc.box((tx, 0.2, zr + 1.25), (0.08, 0.06, 0.2), "M_IntFabricYellow")             # figure
+        mb.box_mm((rx1 - 0.48, -1.65, zr), (rx1 - 0.02, -1.15, zr + 0.82), K.TRIM_WHITE)   # mini fridge
+        nc.box((rx1 - 0.485, -1.4, zr + 0.6), (0.01, 0.03, 0.2), K.METAL)
+        nc.cylinder((rx1 - 0.25, -1.35, zr + 0.82), 0.033, 0.12, "M_IntFabricOrange", seg=8)   # soda can
+        # a guest futon spread out on the tatami (somebody always sleeps over)
+        K.futon(nc, x0 + 3.3, -0.45, 90.0, mat=("M_IntFabricRed", "M_SliferLaundryBlue")[i % 2])
+        K.poster(nc, aset, x0 + 4.0, ry0, zr + 1.65, 180.0, 0.38, 0.52, K.POSTERS[(i + 3) % 4],
+                 text=("DRAW", "WIN", "GX", "ACE")[i % 4], text_size=0.05)
+        aset.prop("SM_Int_Mirror", (rx0, -1.25, zr + 1.0), 90.0)
+        # tansu chest against the left wall with a few things on top
+        mb.box_mm((rx0, -0.7, zr), (rx0 + 0.45, 0.25, zr + 0.75), K.WOOD_DARK)
+        for k in range(3):
+            nc.box((rx0 + 0.452, -0.225, zr + 0.13 + k * 0.24), (0.004, 0.88, 0.2), K.WOOD)
+            nc.box((rx0 + 0.47, -0.225, zr + 0.13 + k * 0.24), (0.02, 0.12, 0.025), K.METAL)
+        aset.prop("SM_Int_AlarmClock", (rx0 + 0.22, -0.45, zr + 0.75), 90.0)
+        _manga(nc, rx0 + 0.22, 0.0, zr + 0.75, 0.0, 6, i + 40)
+        # big Slifer tapestry on the party wall above the futon
+        with nc.at((rx1 - 0.01, -0.6, zr + 1.55), rot=-90.0):
+            nc.box((0, -0.006, 0), (1.6, 0.012, 0.69), "M_IntFabricRed")
+            nc.box((0, -0.004, 0), (1.66, 0.008, 0.75), "M_IntFabricYellow")
+            nc.box((0, -0.009, 0.36), (1.7, 0.02, 0.03), K.WOOD)
+        aset.text("SLIFER RED", K.wall_point(rx1 - 0.01, -0.6, -90.0, 0.02, zr + 1.47), -90.0, size=0.16,
+                  color=(1.0, 0.85, 0.2))
+        K.poster(nc, aset, rx1 - 0.01, -1.85, zr + 1.55, -90.0, 0.42, 0.6, K.POSTERS[(i + 2) % 4],
+                 text=("HERO!", "DRAW!", "FUSION", "LV 4")[(i + floor) % 4], text_size=0.06)
+        K.poster(nc, aset, x0 + 1.7, 3.9, zr + 1.5, 90.0, 0.5, 0.65, K.POSTERS[(i + 1) % 4],
+                 text=("SLIFER", "GO!", "DUEL!", "GX")[(i + 2 * floor) % 4], text_size=0.07)
+        nc.cylinder((rx1 - 1.15, 3.4, zr + 0.03), 0.13, 0.3, "M_IntSteelBlue", seg=10, cap_top=False)        # bin
+        for k in range(2):
+            nc.sphere((rx1 - 1.15 + k * 0.1, 3.4, zr + 0.3), 0.05, "M_IntPaper", seg=6, rings=4)
+    else:
+        for k in range(3):
+            _manga(nc, x0 + 2.2 + k * 0.35, -1.3, zr + 0.03, 20.0 * k, 6 + k, 60 + k)
+        aset.prop("SM_Int_Frame", (rx1, -1.25, zr + 1.45), -90.0)
+        aset.prop("SM_Int_Frame", (rx1, 1.0, zr + 1.55), -90.0)
+        for k in range(4):                                                         # alchemy flasks
+            nc.cylinder((rx0 + 0.18, 0.55 + k * 0.2, zr + 2.0 + 0.0), 0.045, 0.12, "M_IntGlassClear", seg=8)
+        with mb.at((0, 0, zr)), nc.at((0, 0, zr)):
+            K.bookcase(mb, nc, rx0 + 0.17, -0.75, 90.0, w=1.1, d=0.3, h=1.8, shelves=5, rng_seed=207)
+        aset.prop("SM_Int_PottedPlantC", (rx1 - 0.42, -1.45, zr + 0.03), 0.0)
+        K.poster(nc, aset, rx1 - 0.01, 0.05, zr + 1.72, -90.0, 1.3, 0.55, "M_IntPaper", text="ELEMENTS OF ALCHEMY",
+                 text_color=(0.3, 0.2, 0.1), text_size=0.06)
+        nc.box((x0 + 2.2, 0.3, zr + 0.06), (1.6, 1.1, 0.012), "M_IntFabricGreen")         # rug under the armchair
+        K.poster(nc, aset, x0 + 1.7, 3.9, zr + 1.5, 90.0, 0.6, 0.8, "M_IntPaper", text="ALCHEMY",
+                 text_color=(0.2, 0.4, 0.2), text_size=0.08)
+
 
 # ------------------------------------------------------------------ main block
 def _main_block(aset, mb, nc):
@@ -381,8 +532,8 @@ def _main_block(aset, mb, nc):
 
     # ---------------- exterior staircase (west end, climbs from the back towards the sea)
     SX0, SX1 = LX + 0.06, X0 - 0.04            # stair width ~1.6 m
-    n_tread, rise, run = 11, Z2 / 12.0, 0.3     # 12 risers of 0.25 m
-    y_start = 0.6 + n_tread * run               # bottom edge (y = 3.9)
+    n_tread, rise, run = 15, Z2 / 16.0, 0.28    # 16 risers of 0.1875 m, 0.28 m going
+    y_start = 0.6 + n_tread * run               # bottom edge (y = 4.8)
     for i in range(n_tread):
         zt = rise * (i + 1)
         ya, yb2 = y_start - run * (i + 1), y_start - run * i
@@ -466,6 +617,19 @@ def _main_block(aset, mb, nc):
     for px in (-15.6, -6.2, 6.8):
         mb.cylinder((px, YF - 0.45, 0.1), 0.22, 0.4, "M_RustMetal", seg=10, radius_top=0.26)
         nc.sphere((px, YF - 0.45, 0.72), 0.32, "M_LeavesBush", seg=8, rings=6)
+    # walkway life: sandals outside some doors, a broom + bucket by the stair, a crate of drinks, a plant
+    r = random.Random(3)
+    for i in (0, 1, 3, 4):
+        ud = X0 + i * RW + 1.05
+        for k in range(2 if i % 2 else 1):
+            for s in (-1, 1):
+                nc.box((ud + 0.55 + k * 0.3 + s * 0.06, YF - 0.35, Z2 + 0.02), (0.1, 0.25, 0.03),
+                       r.choice(("M_IntFabricRed", "M_SliferLaundryBlue", "M_IntBlack")))
+    aset.prop("SM_Int_Broom", (X0 - 0.4, -3.6, Z2), 90.0)
+    aset.prop("SM_Int_Bucket", (X0 - 0.7, -4.2, Z2), 0.0)
+    aset.prop("SM_Crate", (X1 - 0.45, YF - 0.5, Z2), 10.0, 0.6)
+    nc.cylinder((-3.4, YF - 0.35, Z2), 0.16, 0.3, "M_RustMetal", seg=10, radius_top=0.19)
+    nc.sphere((-3.4, YF - 0.35, Z2 + 0.5), 0.24, "M_LeavesBush", seg=8, rings=6)
     # stair landing lamp
     nc.box((LX + 0.12, -1.0, Z2 + 2.1), (0.14, 0.14, 0.18), "M_LampGlow")
     mb.box((LX + 0.12, -1.0, Z2 + 2.25), (0.2, 0.2, 0.08), "M_DarkMetal")
@@ -487,7 +651,7 @@ def _dining(aset, mb, nc):
         3: [dict(u=4.5, w=1.6, z0=1.0, z1=2.3, glass="M_GlassClear", frame=TRIM)],
     }
     mb.room([(DX0, DY0), (DX1, DY0), (DX1, DY1), (DX0, DY1)], DZ, DWH, 0.2, WALL, openings=ops,
-            floor_mat="M_Wood", inner_mat="M_CreamWall")
+            floor_mat=K.WOODFLOOR, inner_mat="M_CreamWall")
     zt = DZ + DWH
     mb.poly([(DX0, DY0, zt - 0.22), (DX0, DY1, zt - 0.22), (DX1, DY1, zt - 0.22), (DX1, DY0, zt - 0.22)],
             "M_CreamWall")
@@ -589,8 +753,8 @@ def _dining(aset, mb, nc):
     mb.box_mm((11.3, 4.3, DZ), (12.2, 4.8, DZ + 1.9), "M_WindowFrame")          # fridge
     mb.box_mm((12.5, 4.25, DZ), (15.8, 4.8, DZ + 0.9), "M_ShopShelf")           # worktop
     mb.box_mm((13.2, 4.3, DZ + 0.9), (14.0, 4.75, DZ + 0.92), "M_Metal")         # sink
-    mb.box_mm((12.5, 4.55, DZ + 1.5), (15.8, 4.8, DZ + 1.55), "M_ShopShelf")    # shelf
-    for k, x in enumerate((12.8, 13.3, 13.9, 14.6, 15.2)):
+    mb.box_mm((12.5, 4.55, DZ + 1.5), (14.9, 4.8, DZ + 1.55), "M_ShopShelf")    # shelf (clear of the window)
+    for k, x in enumerate((12.8, 13.3, 13.9, 14.6)):
         mb.cylinder((x, 4.67, DZ + 1.55), 0.1, 0.2 + 0.05 * (k % 2), "M_WindowFrame" if k % 2 else "M_Metal", seg=8)
     aset.emitter("steam", (17.3, 4.4, DZ + 6.1), scale=0.6, rate=0.6)
     # hanging lamps (no collision)
@@ -600,7 +764,133 @@ def _dining(aset, mb, nc):
         nc.sphere((17.2, ly, DZ + DWH - 0.95), 0.13, "M_LampGlow", seg=8, rings=6)
     aset.light((16.0, -0.4, DZ + 2.6), (1.0, 0.8, 0.55), 5000.0, 11.0, night_only=False)
     aset.light((17.3, 4.0, DZ + 2.4), (1.0, 0.85, 0.65), 2000.0, 5.0, night_only=False)
-    aset.special("camera", (12.6, -2.4, DZ + 1.7), target=(17.5, 2.5, DZ + 1.0), lens=18.0)
+    _dining_detail(aset, mb, nc)
+
+
+def _dining_detail(aset, mb, nc):
+    """Detail + scale pass of the dining hall: a third table by the west window, settings on every table,
+    tea station, TV corner, shoe rack + jackets at the door, posters, curtains; the galley kitchen behind
+    the serving hatch gets pots, rice sacks, utensils, shelving and its own light. Real sizes."""
+    DF = DZ + 0.02                        # finished floor (mb.room lays the floor 2 cm up)
+    CE = DZ + DWH - 0.22                  # ceiling
+    xi0, xi1, yi0, yi1 = DX0 + 0.2, DX1 - 0.2, DY0 + 0.2, DY1 - 0.2
+    PY = 3.0
+    r = random.Random(5)
+    # ---- settings on the two long tables: cups, spoons, chopsticks, napkin box, sauce, water jug
+    for ty in (-1.7, 1.0):
+        for bx in (15.8, 16.9, 18.0):
+            for s in (-1, 1):
+                DT.mug(nc, bx + 0.22, ty + s * 0.3, DZ + 0.78, seed=int(bx * 10) + s)
+                nc.box((bx - 0.2, ty + s * 0.27, DZ + 0.785), (0.02, 0.17, 0.008), "M_DetSilver")
+                nc.box((bx - 0.25, ty + s * 0.27, DZ + 0.785), (0.012, 0.22, 0.008), K.WOOD)
+        nc.box((17.45, ty, DZ + 0.83), (0.12, 0.08, 0.1), K.TRIM_WHITE)
+        nc.cylinder((17.3, ty + 0.05, DZ + 0.78), 0.025, 0.12, "M_SliferCurry", seg=8)
+        nc.cylinder((17.62, ty - 0.04, DZ + 0.78), 0.025, 0.12, K.BLACK, seg=8)
+        aset.prop("SM_Int_Jug", (15.3, ty, DZ + 0.78), 30.0)
+    # ---- third table (4 seats) by the west window
+    with mb.at((12.7, 0.6, DF)):
+        mb.box((0, 0, 0.74), (1.5, 0.8, 0.04), "M_Wood")
+        for sx in (-1, 1):
+            for sy in (-1, 1):
+                mb.box((sx * 0.68, sy * 0.33, 0.36), (0.05, 0.05, 0.72), "M_DarkWood")
+    for dx in (-0.38, 0.38):
+        for s in (-1, 1):
+            aset.prop("SM_Int_WoodChair", (12.7 + dx, 0.6 + s * 0.62, DF), 0.0 if s > 0 else 180.0)
+    DT.table_set(nc, aset, 12.7, 0.6, DF + 0.76, 0.0, "dining", seats=4, seed=3, length=1.2)
+    aset.prop("SM_Int_CeilingLamp", (12.7, 0.6, CE), 0.0)
+    # ---- tea / water station (west wall, south of the window)
+    mb.box_mm((xi0, -2.2, DF), (xi0 + 0.5, -0.9, DF + 0.85), K.WOOD)
+    aset.prop("SM_Int_Kettle", (xi0 + 0.25, -1.85, DF + 0.85), 90.0)
+    for k in range(6):
+        nc.cylinder((xi0 + 0.15 + (k % 2) * 0.14, -1.45 + (k // 2) * 0.13, DF + 0.85), 0.035, 0.08,
+                    DT.MUGS[k % 4], seg=8)
+    nc.box((xi0 + 0.25, -1.0, DF + 0.9), (0.3, 0.12, 0.1), K.WOOD_DARK)         # chopstick box
+    # ---- TV corner: low cabinet + TV against the partition, west of the hatch
+    mb.box_mm((11.5, PY - 0.45, DF), (13.1, PY, DF + 0.55), K.WOOD_DARK)
+    aset.prop("SM_Int_TV", (12.3, PY - 0.24, DF + 0.55), 0.0)
+    _manga(nc, 11.75, PY - 0.22, DF + 0.55, 10.0, 7, 4)
+    # ---- entrance: shoe rack, slippers, jackets on hooks, umbrella
+    mb.box_mm((11.3, yi0, DF), (12.5, yi0 + 0.32, DF + 0.45), K.WOOD)
+    mb.box_mm((11.3, yi0, DF + 0.22), (12.5, yi0 + 0.32, DF + 0.24), K.WOOD_DARK)
+    for k in range(4):
+        for lv in (0.0, 0.24):
+            nc.box((11.45 + k * 0.28, yi0 + 0.17, DF + 0.03 + lv), (0.2, 0.26, 0.06),
+                   r.choice(("M_IntFabricRed", "M_IntFabricWhite", K.BLACK, "M_SliferLaundryBlue")))
+    DT.coat_hooks(nc, 11.9, yi0, DF + 1.75, 180.0, n=3, dorm="slifer", jackets=2, seed=8)
+    nc.cylinder((14.6, yi0 + 0.2, DF), 0.12, 0.45, K.METAL, seg=10, cap_top=False)
+    nc.beam((14.6, yi0 + 0.2, DF + 0.05), (14.66, yi0 + 0.26, DF + 0.8), 0.03, 0.03, "M_IntFabricRed")
+    # ---- serving hatch: tray stack, rice cooker, bell, menu cards
+    for k in range(7):
+        nc.box((14.05, PY - 0.12, DZ + 0.98 + k * 0.02), (0.4, 0.3, 0.018), "M_IntFabricRed")
+    nc.cylinder((16.2, PY + 0.1, DZ + 0.97), 0.17, 0.28, K.TRIM_WHITE, seg=12)
+    nc.cylinder((16.2, PY + 0.1, DZ + 1.25), 0.14, 0.03, "M_IntSteelBlue", seg=12)
+    nc.sphere((15.2, PY - 0.2, DZ + 0.975), 0.04, K.TRIM_GOLD, seg=8, rings=5, hemi=True)
+    for k, t in enumerate(("CURRY 300", "RICE FREE", "MISO 100")):
+        nc.box((14.9 + k * 0.5, PY - 0.17, DZ + 2.03), (0.42, 0.01, 0.12), "M_IntPaper")
+    # ---- walls: posters, clock, calendar, curtains, wainscot
+    K.poster(nc, aset, 14.9, yi0, DF + 1.6, 180.0, 0.55, 0.75, "M_IntPoster1", text="CURRY NIGHT", text_size=0.06)
+    K.poster(nc, aset, xi1, 0.4, DF + 1.6, -90.0, 0.5, 0.7, "M_IntPoster2", text="SLIFER RED", text_size=0.06)
+    K.poster(nc, aset, 17.4, PY, DF + 1.7, 0.0, 0.6, 0.45, "M_IntPoster4", text="DUEL AFTER DINNER", text_size=0.04)
+    aset.prop("SM_Int_WallClock", (xi0, -0.6, DF + 2.3), 90.0)
+    aset.prop("SM_Int_Frame", (xi0, 2.2, DF + 1.7), 90.0)
+    K.wainscot(mb, (xi0, yi0), (xi1, yi0), DF, 0.85, "M_Wood", cap=K.TRIM_WOOD, gaps=[(13.5 - xi0 - 0.9, 13.5 - xi0 + 0.9)])
+    K.wainscot(mb, (xi1, yi0), (xi1, PY), DF, 0.85, "M_Wood", cap=K.TRIM_WOOD)
+    K.wainscot(mb, (xi0, PY), (xi0, yi0), DF, 0.85, "M_Wood", cap=K.TRIM_WOOD)
+    K.wainscot(mb, (xi1, PY), (xi0, PY), DF, 0.85, "M_Wood", cap=K.TRIM_WOOD,
+               gaps=[(xi1 - 18.6 - 0.55, xi1 - 18.6 + 0.55), (xi1 - 16.7, xi1 - 13.7)])
+    for (p0, p1, c, w, z0, z1) in (((DX0, DY0), (DX1, DY0), 6.6, 2.8, 0.95, 2.35),
+                                   ((DX1, DY0), (DX1, DY1), 2.0, 1.6, 1.0, 2.3),
+                                   ((DX1, DY0), (DX1, DY1), 4.9, 1.6, 1.0, 2.3),
+                                   ((DX0, DY1), (DX0, DY0), 4.5, 1.6, 1.0, 2.3)):
+        K.curtains(nc, p0, p1, c, w, DZ + z0, DZ + z1, ("M_IntFabricRed", "M_SliferLaundryWhite")[int(c) % 2],
+                   wall_thick=0.2)
+    DT.dress_room(aset, mb, nc, xi0, yi0, xi1, PY, DF, CE, style="japanese", seed=40, ac=False,
+                  keep_clear=[(xi0 - 0.1, -2.3, xi0 + 0.1, 2.5), (11.4, PY - 0.1, 17.9, PY + 0.1),
+                              (xi1 - 0.1, -2.0, xi1 + 0.1, 2.8), (15.7, yi0 - 0.1, 19.6, yi0 + 0.1)])
+    DT.floor_clutter(nc, aset, xi0, yi0, xi1, PY, DF, "dorm", n=2, seed=41,
+                     clear=[(11.2, -2.6, 15.0, -1.6), (14.9, -2.8, 19.8, 2.0), (11.2, -0.3, 14.2, 1.6),
+                            (11.2, 2.4, 17.0, 3.0), (11.2, -2.3, 11.8, -0.8)])
+    # ---- galley kitchen behind the hatch
+    ky0, ky1 = PY + 0.15, yi1
+    for k, (x, a) in enumerate(((12.7, "SM_Int_Pot"), (13.6, "SM_Int_CuttingBoard"), (14.25, "SM_Int_EnamelPot"),
+                                (15.45, "SM_Int_Bowl"))):
+        aset.prop(a, (x, 4.52, DZ + 0.9), 15.0 * k)
+    for k in range(5):                                                       # ladles on a rail over the stove
+        nc.box((16.6 + k * 0.3, 4.77, DZ + 1.75), (0.03, 0.02, 0.3), K.METAL)
+        nc.cylinder((16.6 + k * 0.3, 4.74, DZ + 1.55), 0.05, 0.03, K.METAL, seg=8)
+    nc.box((17.2, 4.78, DZ + 1.92), (1.5, 0.02, 0.02), K.METAL)
+    aset.prop("SM_Int_SteelShelves", (19.25, 4.5, DZ), 180.0)
+    for k in range(3):                                                       # rice sacks
+        with nc.at((18.6 + (k % 2) * 0.1, 3.75 + k * 0.05, DZ + 0.12 + k * 0.2), rot=10.0 * k):
+            nc.box((0, 0, 0), (0.55, 0.38, 0.2), "M_SliferLaundryWhite")
+    nc.box((18.6, 3.55, DZ + 0.62), (0.3, 0.004, 0.12), "M_IntFabricRed")
+    mb.box_mm((12.5, 4.45, DZ + 1.8), (14.9, 4.8, DZ + 2.45), K.TRIM_WHITE)          # upper cupboards
+    for k in range(4):
+        nc.box((12.8 + k * 0.6, 4.448, DZ + 2.12), (0.56, 0.004, 0.6), "M_IntTrimWhite")
+        nc.box((13.0 + k * 0.6, 4.44, DZ + 1.9), (0.1, 0.02, 0.025), K.METAL)
+    nc.box((15.3, 4.45, DZ + 0.006 + 0.02), (6.0, 0.55, 0.012), K.BLACK)               # rubber mat
+    # partition (kitchen face): plate rack, pegboard with pans + utensils, a calendar
+    mb.box_mm((11.4, ky0, DZ + 1.2), (13.5, ky0 + 0.3, DZ + 1.23), K.WOOD)
+    mb.box_mm((11.4, ky0, DZ + 1.65), (13.5, ky0 + 0.3, DZ + 1.68), K.WOOD)
+    for k in range(9):
+        nc.cylinder((11.6 + k * 0.22, ky0 + 0.15, DZ + 1.23), 0.1, 0.012 * (2 + k % 3), K.TRIM_WHITE, seg=12)
+        nc.cylinder((11.6 + k * 0.22, ky0 + 0.15, DZ + 1.68), 0.05, 0.1, DT.MUGS[k % 4], seg=8)
+    nc.box((17.4, ky0 + 0.01, DZ + 1.65), (1.2, 0.02, 0.8), "M_IntCork")
+    for k in range(4):
+        nc.cylinder((16.95 + k * 0.3, ky0 + 0.06, DZ + 1.5), 0.13 - 0.015 * k, 0.03, K.METAL, seg=12) \
+            if k % 2 else nc.box((16.95 + k * 0.3, ky0 + 0.04, DZ + 1.7), (0.05, 0.02, 0.35), K.WOOD_DARK)
+    aset.prop("SM_Int_Bucket", (12.6, 3.5, DZ), 0.0)
+    aset.prop("SM_Int_Broom", (11.4, 3.4, DZ), 90.0)
+    K.panel_light(aset, nc, 15.5, (ky0 + ky1) / 2, CE, w=1.2, d=0.3, intensity=2400.0, radius=6.0)
+    DT.dress_room(aset, mb, nc, xi0, ky0, xi1, ky1, DF, CE, style="service", seed=42,
+                  keep_clear=[(11.2, 4.2, 19.8, 4.8)])
+    K.poster(nc, aset, 11.2, 3.95, DF + 1.6, 90.0, 0.4, 0.55, "M_IntPaper", text="WASH HANDS!",
+             text_color=(0.6, 0.1, 0.05), text_size=0.04)
+    for x in (11.9, 13.5, 15.1, 16.4, 18.0, 19.3):                        # exposed ceiling joists
+        mb.box_mm((x - 0.06, yi0, CE - 0.2), (x + 0.06, yi1, CE), "M_DarkWood")
+    K.bulletin(nc, aset, 12.3, PY, DF + 1.3, 0.0, w=1.1, h=0.75, title="DORM NEWS", rng_seed=9)
+    K.camera(aset, "dining", (11.6, -2.35, DF + 1.6), (18.0, 2.2, DF + 0.9), 16.0)
+    K.camera(aset, "dining_kitchen", (17.9, 3.4, DF + 1.6), (11.8, 4.35, DF + 1.0), 16.0)
 
 
 # ------------------------------------------------------------------ yard / site dressing
@@ -740,4 +1030,6 @@ def build():
     return aset
 
 
-PLACEMENTS = {"slifer": build}
+PLACEMENTS = {"slifer": with_travel(build, [
+    ("dining", "slifer_dining", "Slifer Dining Hall", "Rice, sardines and Professor Banner's cat. The heart of Slifer Red."),
+])}

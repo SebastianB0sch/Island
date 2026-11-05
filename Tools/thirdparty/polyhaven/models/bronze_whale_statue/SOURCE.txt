@@ -1,0 +1,23 @@
+asset_id: polyhaven_bronze_whale_statue
+title: Bronze Whale Statue (Poly Haven)
+category: interiors
+main_file: bronze_whale_statue_1k.gltf
+catalog_use: SM_Int_WhaleStatue
+author: Tina
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/bronze_whale_statue
+description: Free 4K bronze whale statue model with rich patina, polished highlights, and intricate skin folds. Elegant flowing base and fine ornamental detailing.
+polycount: 3816
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/bronze_whale_statue, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/bronze_whale_statue/bronze_whale_statue_1k.gltf
+    -> bronze_whale_statue_1k.gltf  md5 4a994af2d8f3323c23a25077c28b5c53  sha256 97ff882e047f3415601437d6db43a7326a3fa1ac5bddb86ae119b74717888d18
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/bronze_whale_statue/bronze_whale_statue_diff_1k.jpg
+    -> textures/bronze_whale_statue_diff_1k.jpg  md5 ef35aceb26f077240f71cb4b96b7c746  sha256 b7cc4ec674f2c49d09eb66bca291104a10c79a9b384faacb031b49df74c82655
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/bronze_whale_statue/bronze_whale_statue.bin
+    -> bronze_whale_statue.bin  md5 4e6f9f30384039bb60dc244b5eeeb9d6  sha256 675ec5711b4d7653a1bdfd4c25a7ca33652eb173eae1869de8e4759090a1fa21
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/bronze_whale_statue
+not_redistributed: textures/bronze_whale_statue_nor_gl_1k.jpg, textures/bronze_whale_statue_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py bronze_whale_statue` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

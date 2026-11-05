@@ -1,0 +1,23 @@
+asset_id: polyhaven_small_wooden_table_01
+title: Small Wooden Table 01 (Poly Haven)
+category: interiors
+main_file: small_wooden_table_01_1k.gltf
+catalog_use: SM_Int_SmallTable
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/small_wooden_table_01
+description: Free 4K model of a small vintage wooden table with rounded legs, double stretchers and a worn warm-brown finish, showing subtle scratches and aged varnish.
+polycount: 3410
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/small_wooden_table_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/small_wooden_table_01/small_wooden_table_01_1k.gltf
+    -> small_wooden_table_01_1k.gltf  md5 716b66952dc473d09a3ac5f48ef50a68  sha256 2a33fb09785a9553c3cd4d0c5f8b874bb0fb9f26c8ef2613b65607524411f352
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/small_wooden_table_01/small_wooden_table_01.bin
+    -> small_wooden_table_01.bin  md5 d4384b662a532853084edd70adb16ed5  sha256 f0ca88dac6cf094e1ba260ee1bc21756a84a27b5456bcf45bda2227819458d84
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/small_wooden_table_01/small_wooden_table_01_diff_1k.jpg
+    -> textures/small_wooden_table_01_diff_1k.jpg  md5 cc2a3aad1992a1cb09dd407def42d102  sha256 ef587bffaf9f65ec81e0777fa6f25d835ed354cef055669c8a783086fd45b9dd
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/small_wooden_table_01
+not_redistributed: textures/small_wooden_table_01_arm_1k.jpg, textures/small_wooden_table_01_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py small_wooden_table_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

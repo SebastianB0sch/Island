@@ -20,6 +20,8 @@ downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/fi
   https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chinese_tea_table/chinese_tea_table_diff_1k.jpg
     -> textures/chinese_tea_table_diff_1k.jpg  md5 eec9f6e3d2c3f7335abd4760e3a30ba2  sha256 beaff8984d8fd498b7cfecc2e5decd4db3ba6c87583acc41d18767326cb3ae3c
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/chinese_tea_table
+not_redistributed: -
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py chinese_tea_table` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
-date_retrieved: 2026-11-03
+date_retrieved: 2026-11-04

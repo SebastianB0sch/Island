@@ -81,6 +81,30 @@ class AssetSet:
         self.socket("door", pos, yaw, width=float(width), height=float(height), style=style, double=bool(double),
                     mode=mode or default_mode(style), swing=swing)
 
+    def arrival(self, spot, yaw):
+        """Where fast travel to this location puts the player (feet position, facing yaw; local frame)."""
+        self.socket("arrival", spot, yaw)
+
+    def travel(self, id, name, spot, yaw, box=None, subtitle="", desc="", face_open=True):
+        """Fast-travel point inside (or at) this location: arrival feet position `spot` facing `yaw` (local
+        frame), listed on the island map under the location. box = (x0, y0, z0, x1, y1, z1) local zone box
+        (the banner names the room while the player is in it); None = the room measured round the spot."""
+        self.socket("travel", spot, yaw, id=id, name=name, subtitle=subtitle, desc=desc,
+                    box=list(box) if box else None, face_open=face_open)
+
+    def travel_at(self, camera, id, name, desc="", step=1.5, subtitle="", face_open=True):
+        """Fast-travel point in the room of the interior camera `camera` (its label): a step into the room
+        along the view, on the floor below the camera, facing the way the camera looks."""
+        import math
+        cams = [s for s in self.sockets if s["type"] == "camera" and s["props"].get("label") == camera]
+        assert cams, f"{self.name}: no camera '{camera}' for fast travel point {id}"
+        c = cams[0]
+        (x, y, z), (tx, ty, _) = c["pos"], c["props"]["target"]
+        yaw = math.degrees(math.atan2(ty - y, tx - x))
+        d = math.hypot(tx - x, ty - y) or 1.0
+        self.travel(id, name, (x + (tx - x) / d * step, y + (ty - y) / d * step, z - 1.6), yaw,
+                    subtitle=subtitle, desc=desc, face_open=face_open)
+
     def special(self, kind, pos, yaw=0.0, **props):
         self.socket(kind, pos, yaw, **props)
 
@@ -125,3 +149,21 @@ def load_placements(log=print):
         for key, fn in getattr(mod, "PLACEMENTS", {}).items():
             placements[key] = fn
     return placements
+
+
+def with_travel(build, points):
+    """A location builder that also adds its interior fast-travel points:
+    points = [(camera label, id, name, description[, dict(step=, face_open=)])] (see AssetSet.travel_at),
+    or (None, id, name, description, dict(spot=(x, y, z), yaw=, face_open=)) for a hand-placed point."""
+    def wrapped():
+        aset = build()
+        for pt in points:
+            cam, id_, name, desc = pt[:4]
+            opts = dict(pt[4]) if len(pt) > 4 else {}
+            if "spot" in opts:              # placed by hand (cam is then None)
+                aset.travel(id_, name, opts["spot"], opts["yaw"], desc=desc, face_open=opts.get("face_open", True))
+            else:
+                aset.travel_at(cam, id_, name, desc, **opts)
+        return aset
+    wrapped.__name__ = getattr(build, "__name__", "build")
+    return wrapped

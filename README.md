@@ -169,45 +169,76 @@ model's license allows redistribution before committing it.
 
 ![Interiors](Docs/renders/interiors.jpg)
 
-Behind every door there is a room built in the style of its building and kept in the show's anime look:
+*(Slifer room 101, Bastion's attic observatory at Ra Yellow, the Obelisk cupola lookout, a 3F physics lab at Duel
+Academy, the girls' tea room, a lighthouse window gallery, the hot-spring washing area, the abandoned dorm's
+clockwork room and a ferry cabin - Cycles previews lit by the rooms' own light sockets.)*
 
-* **Cel-shaded interiors**: walls, floors and fittings use the same cel material as the cast (`M_DA_Toon`: flat
-  colour with a soft fill light, a faint plank / tile / tatami detail), and the furniture gets the anime
-  treatment too (see below).
-* **Open-source furniture**: 67 CC0 models from [Poly Haven](https://polyhaven.com) (sofas, armchairs, school
-  desks and chairs, beds, wardrobes, bookshelves, chandeliers and lamps, plants, paintings, clocks, a CRT TV, a
-  cash register, lifebuoys, a rubber duck ...), fetched md5-verified by `Tools/fetch_polyhaven.py` and
-  registered in `Tools/thirdparty/registry/interiors.json`. On import (`"toon": true`) their photo textures are
-  re-painted into flat cel colours, the normal / ORM maps are dropped and an inverted-hull **ink outline** is
-  added, so they sit in the anime scenes instead of looking photographic. Every model has a procedural
-  stand-in (`Tools/dai/assets/furniture.py`), so the build never depends on the downloads.
-* **GX pieces modelled by the pipeline** (`Tools/dai/assets/interior.py`): the Slifer triple bunk beds, kotatsu
-  tables with mikan, tatami rooms, curved lecture-hall tiers, chalkboards with duel theory, lockers, bulletin
-  boards, posters, kitchens, fireplaces, a grand piano, spiral stairs.
-* **Automatic doors** (`ADADoor`, C++): one actor per doorway with a leaf mesh in the building's door style
-  (`Tools/dai/assets/doors.py`); it opens when the player or a student comes close and closes behind them.
-  The leaves never block anyone, so nobody gets stuck on a door.
+**The interiors are part of the overworld.** There is no loading screen and no separate interior map: every
+building is hollow and furnished inside the one open-world level, and every door is an automatic door that
+opens as you walk up (`ADADoor`). Under a roof the player camera pulls in to a 2.4 m boom and eases back out
+outdoors, so rooms stay readable (`ADAStudentCharacter::IndoorZoom`). Interiors are lit day and night by their
+own light sockets and take daylight through real window openings (Lumen).
+
+**Every floor of every building is walk-in.** Each storey a building shows from outside - window rows, dormers,
+turrets, towers, the ferry's portholes - is a real floor behind clear glass, reached by inner stairs with
+landings, styled after its building and furnished: 587 automatic doors and 350 interior preview cameras across the rooms, corridors and stair
+halls. Windows that stay painted are those with nothing walkable behind them: the arena pyramid's roof slits, the
+arena drum's windows that face the arena volume or sit behind the raked stands (also behind the lecture halls'
+seating), the Academy's hip-roof dormers over the top storeys' ceilings and the ferry's outboard lifeboats;
+the abandoned dorm's holed attic stays closed behind boarded windows, and the lighthouse lantern is reached by
+its hatch ladder (its glass is clear). `Tools/storey_report.py` lists them per floor.
+
+* **Cel-shaded interiors**: walls, floors and fittings use the cast's cel material (`M_DA_Toon`: flat colour
+  with a soft fill light, a faint plank / tile / tatami detail).
+* **Open-source furniture at real size**: 152 CC0 models from [Poly Haven](https://polyhaven.com) - sofas,
+  school desks, beds, wardrobes, chandeliers, wall lamps, lanterns, plants, paintings, clocks, a CRT TV, a
+  cash register, laptops, binders, chess, a dartboard, kitchenware and food, vases and statues, AC units ...
+  fetched md5-verified by `Tools/fetch_polyhaven.py` (only the base-colour maps are kept for the newer set)
+  and registered in `Tools/thirdparty/registry/interiors.json`. They are imported at their **real-world
+  size** (Poly Haven models are true scale), their photo textures re-painted into flat cel colours and given
+  an inverted-hull **ink outline**. Every model has a procedural stand-in (`Tools/dai/assets/furniture.py`).
+* **GX pieces modelled by the pipeline** (`Tools/dai/assets/interior.py`): Slifer triple bunk beds, kotatsu with
+  mikan, tatami, curved lecture-hall tiers, chalkboards with duel theory, lockers, fireplaces, a grand piano,
+  spiral stairs, coffered and beamed ceilings.
+* **The lived-in layer** (`Tools/dai/assets/detail.py`): light switches beside every door, outlets, smoke
+  detectors, AC units, sprinklers, vents and exit signs by building type; desk, table and shelf sets, floor
+  clutter, coat hooks with dorm jackets, blinds, radiators, trophies, deck boxes, card spreads and duel disks.
+* **Real-world scale**: ordinary doors 0.9-1.0 x 2.05-2.2 m, ceilings 2.4-3.3 m (tall palace rooms get dados,
+  picture rails and low-hung chandeliers), stairs 0.16-0.19 m rise / 0.27-0.30 m run, desks 0.76 m, counters
+  0.9 m, switches at 1.1 m, outlets at 0.3 m.
+* **Automatic doors** (`ADADoor`, C++): one actor per doorway with a leaf in the building's door style
+  (`Tools/dai/assets/doors.py`); opens away from whoever approaches, shoji and glass doors slide. The leaves
+  never block anyone.
+* **Performance**: dense furnished meshes go on **Nanite** automatically (their glass is split into small
+  classic meshes), furniture is instanced, and the Academy keeps one in four of its indoor students.
 
 | Building | Inside |
 |---|---|
-| **Slifer Red Dorm** | 12 dorm rooms (101-106, 201-206 off the walkway): genkan, tatami, triple bunk bed, kotatsu, desk under the window, CRT TV, WC. Room 101 is Jaden, Syrus and Chumley's; 206 is Professor Banner's study (with Pharaoh's basket). Dining hall with kitchen door. |
-| **Ra Yellow Dorm** | Entrance hall with sun-emblem floor, reception and oak staircase; lounge with fireplace and piano, duel practice room, study, supervisor's office, laundry, kitchen; 22 twin dorm rooms behind the 30 balcony French doors, washrooms, landing lounge, top-floor library and Bastion's room 309 with chalk equations on every wall; rebuilt cafeteria serving line. 68 doors. |
-| **Obelisk Blue Dorm** | Double-height marble foyer with imperial staircase, banners and busts; library, lounge with billiards, music room, banquet hall with a 28-seat table, kitchen, duel salon, trophy hall; rooms 201-208 and four suites (bedroom + study with fireplaces) off the balconies. 41 doors. |
-| **Obelisk Blue Girls' Dorm** | Pink chequered foyer with twin staircases, parlour, garden hall to the conservatory, library, tea room, dining room, salon and music gallery; four suites with canopy beds, vanities and tea nooks in the turrets. 24 doors. |
-| **Duel Academy** | Four tiered GX lecture halls (curved desk rows, 9 m blackboards, crest screens), corridors with lockers, duelist waiting rooms behind the arena gates; pavilion classrooms, infirmary, staff room, alchemy lab, library, music room, student council, cafeteria, Hall of Legends, computer room, duel club; tower stair halls; Chancellor Sheppard's and Dr. Crowler's offices, faculty rooms; admissions and duel disk service in the lobby; glazed card shop front. 60 doors. |
-| **Harbor** | Warehouse 01 hall with racks, lamps and site office; warehouse 02 card-carton hall with a rare card vault; ferry terminal waiting hall, ticket office and a spiral stair to the harbour master's room; ferry saloon, sky lounge and bridge. |
-| **Lighthouse** | Store room and a 75-step spiral stair up the tower to the keeper's watch room; furnished keeper's hut. |
-| **Abandoned Dorm** | Dusty library with toppled shelves, portrait salon under dust sheets, shadow-duel ritual room with a glowing chalk field, a ruined upstairs dorm room; the back door opens again. |
-| **Duel Gym** | Coach's office, equipment store, locker room and showers behind the hall. |
-| **Hot Springs** | Men's and women's changing rooms with baskets and vanities, bandai reception, washing areas with tap stations (and rubber ducks), shoji and glass sliding doors. |
-| **Lifeguard tower, spirit shrine** | Open structures: dressed with a lookout chair, radio and lifebuoy / an offering box and candles. |
+| **Slifer Red Dorm** | 12 dorm rooms on both floors (genkan, tatami, triple bunk, kotatsu, desk, CRT TV, WC, manga piles, laundry line); Jaden, Syrus and Chumley's room 101; Professor Banner's study with Pharaoh; dressed dining hall and galley kitchen. |
+| **Ra Yellow Dorm** | Hall, lounge, duel practice room, study, office, laundry, kitchen; 22 twin rooms behind the 30 balcony French doors; top-floor library and Bastion's equation room 309; a walk-in attic through the dormers with storage, a study nook and Bastion's telescope observatory; the cafeteria. |
+| **Obelisk Blue Dorm** | Marble foyer with imperial staircase, library, lounge, music room, banquet hall, kitchen, duel salon, trophy hall, games room; rooms 201-208 and 301-308 with en-suites, eight suites; the attic storey (suites 401-408, artist's studio, servants' rooms) and a cupola lookout in the dome. |
+| **Obelisk Blue Girls' Dorm** | Pink foyer, parlour, garden hall, library, tea room, dining room, salon, music gallery; suites with canopy beds and en-suites on two floors, a ladies' salon, walk-in bays; an attic studio and maids' rooms, four turret-top lookouts. |
+| **Duel Academy** | Lobby, glazed card shop, arena concourse; four tiered lecture halls, duelist waiting rooms, wing galleries, exam hall, library hall and club hall; pavilions with five floors of classrooms, labs, clubs, studios, a trophy floor and an attic club floor; tower stair halls and balcony observation decks; Chancellor Sheppard's and Dr. Crowler's office suites, faculty rooms, archives, observatory and broadcast room. |
+| **Harbor** | Warehouses with offices, crew room and a rare card vault; terminal hall, ticket office and harbour master's room; heliport hut with check-in and pilot lounge; crane cab and machinery house on stair towers; the ferry's saloon, sky lounge, bridge and a cabin deck behind its portholes. |
+| **Lighthouse** | Store room, spiral stair with four window galleries (lookout, archive, weather room, lamp store), the keeper's watch room; keeper's hut. |
+| **Abandoned Dorm** | Hall, library, portrait salon, ritual room; eight ruined ground-floor rooms (kitchen, scullery, warden's office, boiler room ...); two upper dorm floors with 28 ruined rooms through the nailed-up stairwells; the clock tower up to the clockwork room. |
+| **Duel Gym** | Foyer and front gallery behind the glass front, court, galleries, office, store, lockers, showers, first-aid corner. |
+| **Hot Springs** | Changing rooms, bandai, washing areas, rest pavilion. |
+| **Lifeguard tower, shrine, viewpoints** | Dressed at real scale (duty gear, offerings, telescopes, boards). |
 
-Every room has its own light sockets and an interior preview camera (about 140 in total). Not walk-in: the
-attics and the upper storeys that have no outside door (Duel Academy wings and pavilions, the Obelisk dorms'
-second floors).
+**Checking it** (no Unreal needed, Blender-as-a-module interpreter). The interior spec - audit clean, detail
+coverage of every interior view >= 45 % in rooms and >= 35 % in halls / corridors / stairs, no painted windows
+with a floor behind them - passes for every location (`spec_check.py`; the only waivers, with their reasons,
+are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 
-Preview any room without Unreal: `.venv/bin/python Tools/preview_asset.py slifer --views inside` renders every
-interior camera of a location (`--camera room101` for one) to `Docs/previews/`.
+```bash
+.venv/bin/python Tools/preview_asset.py ra --views inside --camera attic --lit --scale-ref   # lit, with a 1.75 m student
+.venv/bin/python Tools/audit_interiors.py obelisk       # floating / sunk / clipping furniture, doors, detail coverage
+.venv/bin/python Tools/storey_report.py academy          # painted vs real windows per floor -> closed storeys
+.venv/bin/python Tools/spec_check.py                     # the interior spec, pass/fail for every location
+.venv/bin/python Tools/people_check.py                   # room for a person at every fast-travel point + NPC spot
+.venv/bin/python Tools/preview_interiors.py              # Docs/renders/interiors.jpg
+```
 
 ## Gameplay features
 
@@ -217,16 +248,28 @@ interior camera of a location (`--camera room101` for one) to `Docs/previews/`.
 * **Human-scale locomotion**: a 1.5 m/s walk (WASD) and 4.2 m/s sprint (Shift), with phase-matched
   idle/walk/run blending, foot-planted cycles and smooth jump/fall/land transitions. The old
   450/950 cm/s arcade speeds were retired because they made any authored stride skate.
-* Location banners + "**New location discovered**" tracking (17 named locations), compass, minimap.
-* **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker.
+* Location banners + "**New location discovered**" tracking (17 named locations and 19 rooms), compass, minimap.
+* **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker. The selected
+  location opens its list of rooms you can travel straight into - the Academy's main hall, Grand Duel Arena,
+  Card Shop, lecture halls, library and faculty annex, every dorm's hall / dining room, the ferry terminal, the
+  lighthouse watch room, the gym court, the bathhouse and the abandoned dorm's hall and ritual chamber. Every
+  arrival point is checked for room to stand (`Tools/people_check.py`); the volcano point is the **Crater Rim**
+  lookout, at the top of the switchback trail from the hot springs and the stone summit stair.
 * **A full duel system**: a deterministic 1,200-card rules engine (summons, tributes, Fusion and Ritual
   summons, chains, traps, hand-limit discards and a duelist AI), a Canvas board with hand, field,
   deck/extra/graveyard/banish piles, card detail, duel log, animations and a result/rematch screen.
   Duel fields pick a resident opponent; named students (Jaden, Syrus, Bastion, Chazz, Alexis, Zane and
   Crowler) can also be challenged after talking to them once. Card scans are shown on the board.
 * **Card Shop**: open booster packs (32 original cards, rarities from Common to Ultra Rare), track your collection.
-* Signs with lore everywhere, students from all three dorms who wander around and chat (E).
-* Walk into every building: automatic doors, furnished rooms on every floor that has a door.
+* Signs with lore everywhere, students from all three dorms who wander around and chat (E). Nobody stands in
+  the furniture: at build time every NPC spot is tested as a person-sized capsule against walls, fixtures,
+  furniture and props (NPCs in the way step to the nearest clear spot in the same room, never in a doorway), and
+  each NPC gets precomputed strolls - straight, clear, on one floor - instead of random wandering.
+* Walk into every building and up every floor: automatic doors, the camera pulls in indoors, furnished rooms everywhere.
+  All furniture is solid: catalog props carry box / hull collision (wall art, lamps and table-top clutter stay
+  walk-through), and the furniture modelled into the no-collision decor meshes gets invisible collision boxes
+  (`<Location>_Blockers`, `Tools/dai/collision.py`: one oriented box per table, bed, bench, counter, ...; rugs,
+  wall-hung and hanging things, trims and doorways are left free).
 * **Day/night cycle** (Lumen GI, sky atmosphere, moon): lamps, windows and the lighthouse turn on at
   night, the crater glows. Time controls: **T** pause, **[ ]** speed, **N** skip 3 h.
 * Swimmable ocean and lake (single-layer water), volcano smoke, hot-spring steam, waterfall mist,
@@ -291,6 +334,10 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/assets/doors.py       door styles -> SM_Door_* leaf meshes for the automatic doors
   dai/assets/furniture.py   SM_Int_* furniture catalog (Poly Haven CC0) + procedural stand-ins
   fetch_polyhaven.py        downloads / verifies the CC0 Poly Haven models + writes their SOURCE.txt
+  dai/assets/detail.py      the lived-in layer: fixtures, desk / table / shelf sets, clutter
+  dai/inspect.py            interior audit + lit / scale-reference previews (audit_interiors.py, storey_report.py)
+  dai/collision.py          invisible collision boxes for the furniture in the no-collision meshes
+  dai/placement.py          standing-room checks (person capsules), NPC settling + stroll routes, arrival points
   dai/layout.py             places everything, scatters vegetation, writes layout.json
   dai/textures.py           detail/normal maps from the photo sets (procedural fallback), terrain layers
   dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction
@@ -374,7 +421,7 @@ In Landscape mode → *Import from file*: **Location** X = -153600, Y = -153600,
 | Fern, grass clumps, tropical undergrowth | Poly Haven photoscans (CC0) |
 | Boulders, rock faces, cliffs, coastal rocks, driftwood, stumps, pebbles | Poly Haven photoscans (CC0); basalt by yonimantz (CC BY 4.0) |
 | Street lamps, bins, drums, buoys, picnic tables | Poly Haven (CC0), Khronos glTF samples (CC0) |
-| Interior furniture and decor (67 models: seating, tables, beds, storage, lighting, decor, appliances) | Poly Haven (CC0), cel-painted + ink outline by the pipeline |
+| Interior furniture and decor (152 models: seating, tables, beds, storage, lighting, decor, appliances, kitchenware, food, school and office items) | Poly Haven (CC0), real size, cel-painted + ink outline by the pipeline |
 | Benches, signposts, fences, crates, containers, rowboats, beach umbrellas and chairs, stone lanterns | Sketchfab authors (CC BY 4.0) |
 | Fishing trawlers | Poly by Google (CC BY 3.0) |
 | Duel Academy buildings, dorms, arena, harbor, lighthouse, ferry, volcano/waterfall features, flagpoles, bollards, duel dummies, vending machines, interiors, door leaves, sounds | original, built by the pipeline in `Tools/` |

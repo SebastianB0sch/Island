@@ -1,0 +1,23 @@
+asset_id: polyhaven_horse_statue_01
+title: Horse Statue 01 (Poly Haven)
+category: interiors
+main_file: horse_statue_01_1k.gltf
+catalog_use: SM_Int_HorseStatue
+author: Rico Cilliers
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/horse_statue_01
+description: Free 8K model - glossy white porcelain horse figurine rearing on a round wooden base, with detailed mane, musculature and an elegant sculptural finish.
+polycount: 22388
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/horse_statue_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/horse_statue_01/horse_statue_01_1k.gltf
+    -> horse_statue_01_1k.gltf  md5 3cca65f1d964c30947ca3c473ddbadff  sha256 64e33e68ef427d0e7e401808d605b7d24208ae72b63f97ddf6716bc423b374ba
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/horse_statue_01/horse_statue_01_diff_1k.jpg
+    -> textures/horse_statue_01_diff_1k.jpg  md5 a0aa4ddcc70e6223279cbbb4e031c1a6  sha256 539eedfb40d73eaad8e719f928bf0af82622271bd58afd9f417e75fad4ebab82
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/horse_statue_01/horse_statue_01.bin
+    -> horse_statue_01.bin  md5 f240dd187e04807481bc422b5a9596c3  sha256 5099dc5709aa5935031c1e9121e590ba3b0c09f58eef64bcbe390bb46c1aa8f4
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/horse_statue_01
+not_redistributed: textures/horse_statue_01_nor_gl_1k.jpg, textures/horse_statue_01_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py horse_statue_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

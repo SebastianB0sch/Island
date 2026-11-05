@@ -1,0 +1,23 @@
+asset_id: polyhaven_concrete_cat_statue
+title: Concrete Cat Statue (Poly Haven)
+category: interiors
+main_file: concrete_cat_statue_1k.gltf
+catalog_use: SM_Int_CatStatue
+author: Rico Cilliers, Riley Queen
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/concrete_cat_statue
+description: Free 8K concrete cat statue with a weathered, moss-speckled surface, serene expression and soft, rounded forms in a classic seated sculptural pose.
+polycount: 11950
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/concrete_cat_statue, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/concrete_cat_statue/concrete_cat_statue_1k.gltf
+    -> concrete_cat_statue_1k.gltf  md5 18b2270606be6fdca04c2f876274e673  sha256 898110387c632808e6c6ffe818f48eaf32fcf1c8817de939bef428abb659e813
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/concrete_cat_statue/concrete_cat_statue.bin
+    -> concrete_cat_statue.bin  md5 100da2074e7461c81898146f0da2a821  sha256 489d9c3b5d8c3b8a606865f7fef002ac8535f883393696b448c1bd78a5a6a612
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/concrete_cat_statue/concrete_cat_statue_diff_1k.jpg
+    -> textures/concrete_cat_statue_diff_1k.jpg  md5 dbff9567dc512d338c2857fb03709d01  sha256 9577cdf54627a9ff0a430a1c998791afc863fefcdaf742650097c3e69f68ea3b
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/concrete_cat_statue
+not_redistributed: textures/concrete_cat_statue_arm_1k.jpg, textures/concrete_cat_statue_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py concrete_cat_statue` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

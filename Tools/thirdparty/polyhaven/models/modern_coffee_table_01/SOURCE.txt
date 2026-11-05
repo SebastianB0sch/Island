@@ -1,0 +1,23 @@
+asset_id: polyhaven_modern_coffee_table_01
+title: Modern Coffee Table 01 (Poly Haven)
+category: interiors
+main_file: modern_coffee_table_01_1k.gltf
+catalog_use: SM_Int_CoffeeTableB
+author: Amin
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/modern_coffee_table_01
+description: Free 8K model of a contemporary rectangular coffee table with textured stone top, warm wooden frame and angular wood inlays.
+polycount: 4504
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/modern_coffee_table_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/modern_coffee_table_01/modern_coffee_table_01_1k.gltf
+    -> modern_coffee_table_01_1k.gltf  md5 f1c079ab5bc307630258cf3b40910511  sha256 a35d811da4c174d0c888f23353dda21501763dbf5505c66f57fef4b3f613e50c
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/modern_coffee_table_01/modern_coffee_table_01.bin
+    -> modern_coffee_table_01.bin  md5 6e8f65bff935af308eab9eff062f6daa  sha256 b8fe0d49041b879a5d5962685a39e3daf009679f7b6a88ced1347e6dc6c0851e
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_coffee_table_01/modern_coffee_table_01_diff_1k.jpg
+    -> textures/modern_coffee_table_01_diff_1k.jpg  md5 356014e027b59c21b3c99ac112e645f9  sha256 069b89dd3ef03ddcbb7b2e6a124b1903aa7848394509121aa19f87bd0ef0218c
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/modern_coffee_table_01
+not_redistributed: textures/modern_coffee_table_01_rough_1k.jpg, textures/modern_coffee_table_01_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py modern_coffee_table_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

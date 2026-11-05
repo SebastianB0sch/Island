@@ -1,0 +1,25 @@
+asset_id: polyhaven_caged_hanging_light
+title: Caged Hanging Light (Poly Haven)
+category: interiors
+main_file: caged_hanging_light_1k.gltf
+catalog_use: SM_Int_CageLight
+author: Ulan Cabanilla
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/caged_hanging_light
+description: Free 4K model of a chain-hung industrial fluorescent light with a rugged caged guard, olive metal body, weathered paint, bolts and wiring detail.
+polycount: 22893
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/caged_hanging_light, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/caged_hanging_light/caged_hanging_light_1k.gltf
+    -> caged_hanging_light_1k.gltf  md5 7d2c05208f5106e55d4110bb703ef54f  sha256 4d809194606f0862a08147df6408f2124ed7a5dbc90e4090c82a332efb3aa50d
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/caged_hanging_light/caged_hanging_light_emissive_1k.jpg
+    -> textures/caged_hanging_light_emissive_1k.jpg  md5 b2dcea07375dc5ace5819e9077e029e4  sha256 c5a92e064faaf0af837fc1ff30ccda06f801e763954b06c55c54c2fb609dea86
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/caged_hanging_light/caged_hanging_light_diff_1k.jpg
+    -> textures/caged_hanging_light_diff_1k.jpg  md5 22233dfbdc8339a55c04b230b6cf2668  sha256 45fb98ca86eab8bac7cd8a53a29b87c8e2893ed30e95f267ca5ec574cf74c6cb
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/caged_hanging_light/caged_hanging_light.bin
+    -> caged_hanging_light.bin  md5 73e9a79c4971df680e554bc5aeac30da  sha256 061a05a47a794fdcb43d032e512291369b5b9cd4db3c4d4975c23431b0c6a0c6
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/caged_hanging_light
+not_redistributed: textures/caged_hanging_light_nor_gl_1k.jpg, textures/caged_hanging_light_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py caged_hanging_light` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

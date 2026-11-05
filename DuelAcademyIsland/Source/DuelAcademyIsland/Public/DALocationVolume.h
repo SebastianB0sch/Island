@@ -61,6 +61,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	int32 SortOrder = 0;
 
+	/** Fast-travel point inside a location (a room: the arena, a dorm's dining hall, the lighthouse top):
+	 *  the LocationId of that location. The island map lists it under its location. Empty = a location. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	FString ParentId;
+
+	bool IsSubLocation() const { return !ParentId.IsEmpty(); }
+
 	bool ContainsPoint(const FVector& WorldPoint) const;
 	/** Absolute volume; a negative authored extent must not win the smallest-zone test. */
 	double GetZoneVolume() const

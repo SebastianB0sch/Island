@@ -14,6 +14,7 @@ import datetime
 import hashlib
 import json
 import os
+import re
 import sys
 import urllib.request
 
@@ -29,13 +30,23 @@ def get(url):
         return r.read()
 
 
-def fetch(asset, res="1k", catalog_use=""):
+UNUSED_MAPS = re.compile(r"^textures/.+_(nor_gl|nor_dx|arm|rough|metal|ao|spec|disp|bump)_\d+k\.(jpg|png|exr)$", re.I)
+
+
+def fetch(asset, res="1k", catalog_use="", base_only=False):
     info = json.loads(get(f"{API}/info/{asset}"))
     files = json.loads(get(f"{API}/files/{asset}"))
     g = (files["gltf"].get(res) or files["gltf"][sorted(files["gltf"])[0]])["gltf"]
     folder = os.path.join(DEST, asset)
     os.makedirs(folder, exist_ok=True)
     entries = [(os.path.basename(g["url"]), g)] + list(g.get("include", {}).items())
+    skipped = []
+    if base_only:   # the cel ("toon") import only reads the base colour map
+        skipped = [rel for rel, _ in entries if UNUSED_MAPS.match(rel)]
+        entries = [(rel, m) for rel, m in entries if rel not in skipped]
+        for rel in skipped:
+            if os.path.exists(os.path.join(folder, rel)):
+                os.remove(os.path.join(folder, rel))
     lines = []
     for rel, meta in entries:
         path = os.path.join(folder, rel)
@@ -62,6 +73,8 @@ polycount: {info.get('polycount')}
 downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/{asset}, md5-verified):
 {chr(10).join(lines)}
 license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/{asset}
+not_redistributed: {", ".join(skipped) if skipped else "-"}
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py {asset}` restores them, md5-checked)
 modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
   texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
 date_retrieved: {datetime.date.today().isoformat()}
@@ -75,6 +88,8 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("assets", nargs="*")
     ap.add_argument("--interiors", action="store_true")
+    ap.add_argument("--base-only", nargs="*", default=None,
+                    help="assets (or none = every asset fetched now) to keep without their normal / ORM maps")
     args = ap.parse_args(argv)
     todo = {a: "" for a in args.assets}
     if args.interiors:
@@ -86,7 +101,8 @@ def main(argv):
                 todo[parts[2]] = (todo[parts[2]] + ", " if todo[parts[2]] else "") + name
     for a, use in todo.items():
         try:
-            rel = fetch(a, catalog_use=use)
+            base_only = args.base_only is not None and (not args.base_only or a in args.base_only)
+            rel = fetch(a, catalog_use=use, base_only=base_only)
             print("ok ", a, rel)
         except Exception as e:  # noqa: BLE001
             print("ERR", a, e)

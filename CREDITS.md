@@ -39,7 +39,9 @@ Paths are relative to `Tools/thirdparty/`.
 | `polyhaven/hdri/qwantani_sunset_puresky` | Greg Zaal (photography), Jarod Guest (processing) / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/qwantani_sunset_puresky> | sky (sunset) |
 | `polyhaven/models/ArmChair_01` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/ArmChair_01> | SM_Int_Armchair |
 | `polyhaven/models/Barrel_01` | Jorge Camacho | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/Barrel_01> | SM_Barrel |
+| `polyhaven/models/Camera_01` | Rajil Jose Macatangay | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/Camera_01> | SM_Int_Camera |
 | `polyhaven/models/CashRegister_01` | Joe Seabuhr | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/CashRegister_01> | SM_Int_Register |
+| `polyhaven/models/Chandelier_01` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/Chandelier_01> | SM_Int_ChandelierB |
 | `polyhaven/models/Chandelier_02` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/Chandelier_02> | SM_Int_Chandelier |
 | `polyhaven/models/ClassicConsole_01` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/ClassicConsole_01> | SM_Int_Console |
 | `polyhaven/models/ClassicNightstand_01` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/ClassicNightstand_01> | SM_Int_Nightstand |
@@ -52,40 +54,91 @@ Paths are relative to `Tools/thirdparty/`.
 | `polyhaven/models/SchoolDesk_01` | Ethan Place | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/SchoolDesk_01> | SM_Int_SchoolDesk |
 | `polyhaven/models/Sofa_01` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/Sofa_01> | SM_Int_Sofa |
 | `polyhaven/models/Television_01` | Gabriel Radić | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/Television_01> | SM_Int_TV |
+| `polyhaven/models/Ukulele_01` | Joseph Burgan | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/Ukulele_01> | SM_Int_Ukulele |
 | `polyhaven/models/WetFloorSign_01` | Fran Calvente | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/WetFloorSign_01> | SM_Int_WetFloor |
 | `polyhaven/models/WoodenTable_01` | Ethan Place | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/WoodenTable_01> | SM_Int_Table |
+| `polyhaven/models/alarm_clock_01` | Yann Kervran, James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/alarm_clock_01> | SM_Int_AlarmClock |
 | `polyhaven/models/anthurium_botany_01` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). | <https://polyhaven.com/a/anthurium_botany_01> | SM_Bush_A |
+| `polyhaven/models/antique_ceramic_vase_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/antique_ceramic_vase_01> | SM_Int_VaseA |
+| `polyhaven/models/bananas` | Alexander Shulha | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/bananas> | SM_Int_Bananas |
 | `polyhaven/models/bar_chair_round_01` | Dairon Sanchez | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/bar_chair_round_01> | SM_Int_BarStool |
+| `polyhaven/models/baseball_bat` | Enrique Martín | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/baseball_bat> | SM_Int_BaseballBat |
+| `polyhaven/models/binder_notebook` | DaDrood | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/binder_notebook> | SM_Int_Binder |
+| `polyhaven/models/binoculars` | Derek Wight | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/binoculars> | SM_Int_Binoculars |
 | `polyhaven/models/book_encyclopedia_set_01` | John Malcolm | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/book_encyclopedia_set_01> | SM_Int_Books |
 | `polyhaven/models/boulder_01` | Rico Cilliers: All (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "boulder_01" - https://polyhaven.com/a/boulder_01  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_Rock_A |
 | `polyhaven/models/brass_candleholders` | Tina | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/brass_candleholders> | SM_Int_Candelabra |
+| `polyhaven/models/brass_goblets` | Tina | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/brass_goblets> | SM_Int_Goblets |
+| `polyhaven/models/brass_pot_01` | Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/brass_pot_01> | SM_Int_Pot |
+| `polyhaven/models/brass_vase_01` | Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/brass_vase_01> | SM_Int_VaseC |
+| `polyhaven/models/bronze_whale_statue` | Tina | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/bronze_whale_statue> | SM_Int_WhaleStatue |
+| `polyhaven/models/caged_hanging_light` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/caged_hanging_light> | SM_Int_CageLight |
 | `polyhaven/models/calathea_orbifolia_01` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). | <https://polyhaven.com/a/calathea_orbifolia_01> | - |
 | `polyhaven/models/cardboard_box_01` | Rahul Chaudhary | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/cardboard_box_01> | SM_Int_Box |
 | `polyhaven/models/ceiling_fan` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/ceiling_fan> | SM_Int_CeilingFan |
+| `polyhaven/models/ceramic_vase_02` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/ceramic_vase_02> | SM_Int_VaseB |
+| `polyhaven/models/chess_set` | Riley Queen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/chess_set> | SM_Int_Chess |
+| `polyhaven/models/chinese_armchair` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/chinese_armchair> | SM_Int_ChineseArmchair |
+| `polyhaven/models/chinese_cabinet` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/chinese_cabinet> | SM_Int_ChineseCabinet |
+| `polyhaven/models/chinese_chandelier` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/chinese_chandelier> | SM_Int_LanternLamp |
 | `polyhaven/models/chinese_screen_panels` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/chinese_screen_panels> | SM_Int_FoldingScreen |
 | `polyhaven/models/chinese_stool` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/chinese_stool> | SM_Int_Stool |
 | `polyhaven/models/chinese_tea_table` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/chinese_tea_table> | SM_Int_LowTable |
+| `polyhaven/models/classic_laptop` | Arrangemonk | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/classic_laptop> | SM_Int_Laptop |
+| `polyhaven/models/clipboard` | ProgrammerOnCoffee | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/clipboard> | SM_Int_Clipboard |
 | `polyhaven/models/coast_rocks_05` | Rob Tuytel (Poly Haven); game LODs derived by ishtiaq-ahmed-dev/rocket-mission-lab with meshoptimizer (UVs + Poly Haven 1k textures retained) | CC0 1.0 Universal (public domain). No attribution required. | Poly Haven "coast_rocks_05" - https://polyhaven.com/a/coast_rocks_05 (scan has ~0.77M tris at full res) | SM_Rock_D |
 | `polyhaven/models/coffee_table_round_01` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/coffee_table_round_01> | SM_Int_CoffeeTable |
+| `polyhaven/models/concrete_cat_statue` | Rico Cilliers, Riley Queen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/concrete_cat_statue> | SM_Int_CatStatue |
+| `polyhaven/models/croissant` | Greg Zaal, Dario Barresi | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/croissant> | SM_Int_Croissant |
+| `polyhaven/models/dartboard` | Satyaki Mandal | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/dartboard> | SM_Int_Dartboard |
 | `polyhaven/models/dead_tree_trunk_02` | Jenelle van Heerden (Photography); Rico Cilliers (processing) (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "dead_tree_trunk_02" - https://polyhaven.com/a/dead_tree_trunk_02  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_Driftwood_A |
 | `polyhaven/models/desk_lamp_arm_01` | Yann Kervran, Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/desk_lamp_arm_01> | SM_Int_DeskLamp |
 | `polyhaven/models/dining_chair_02` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/dining_chair_02> | SM_Int_DiningChair |
+| `polyhaven/models/dining_table` | Aron Łyczek | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/dining_table> | SM_Int_DiningTable |
+| `polyhaven/models/drawer_cabinet` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/drawer_cabinet> | SM_Int_Drawers |
+| `polyhaven/models/dustpan` | Balen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/dustpan> | SM_Int_Dustpan |
 | `polyhaven/models/electric_stove` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/electric_stove> | SM_Int_Stove |
+| `polyhaven/models/exterior_aircon_unit` | Monsta3D | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/exterior_aircon_unit> | SM_Int_Aircon |
 | `polyhaven/models/fancy_picture_frame_01` | Rob Tuytel, Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/fancy_picture_frame_01> | SM_Int_Painting |
+| `polyhaven/models/fancy_picture_frame_02` | Rob Tuytel, Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/fancy_picture_frame_02> | SM_Int_PaintingB |
 | `polyhaven/models/fern_02` | Rob Tuytel (scanning), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). | <https://polyhaven.com/a/fern_02> | SM_Fern_A |
+| `polyhaven/models/fire_alarm` | Slinc | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/fire_alarm> | SM_Int_FireAlarm |
+| `polyhaven/models/fishermans_hat` | PierreB3D | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/fishermans_hat> | SM_Int_Hat |
+| `polyhaven/models/folding_wooden_stool` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/folding_wooden_stool> | SM_Int_FoldingStool |
+| `polyhaven/models/food_apple_01` | Oliver Harries | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/food_apple_01> | SM_Int_Apple |
+| `polyhaven/models/football` | Amal Kumar | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/football> | SM_Int_Ball |
+| `polyhaven/models/gallinera_chair` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/gallinera_chair> | SM_Int_CafeChair |
+| `polyhaven/models/gallinera_table` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/gallinera_table> | SM_Int_CafeTable |
+| `polyhaven/models/gamepad` | Josh Dean | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/gamepad> | SM_Int_Gamepad |
 | `polyhaven/models/grass_medium_01` | Rob Tuytel (photography), Rico Cilliers (modeling) (Poly Haven) | CC0 1.0 Universal (public domain). Attribution not required (credit appreciated). | <https://polyhaven.com/a/grass_medium_01> | SM_GrassClump_A |
 | `polyhaven/models/hand_truck` | Mutanzom3D | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/hand_truck> | SM_Int_HandTruck |
 | `polyhaven/models/hanging_industrial_lamp` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/hanging_industrial_lamp> | SM_Int_IndustrialLamp |
 | `polyhaven/models/hanging_picture_frame_02` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/hanging_picture_frame_02> | SM_Int_Frame |
+| `polyhaven/models/hanging_picture_frame_03` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/hanging_picture_frame_03> | SM_Int_FrameC |
+| `polyhaven/models/horse_statue_01` | Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/horse_statue_01> | SM_Int_HorseStatue |
+| `polyhaven/models/industrial_wall_lamp` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/industrial_wall_lamp> | SM_Int_WallLamp |
+| `polyhaven/models/industrial_wall_sconce` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/industrial_wall_sconce> | SM_Int_WallSconce |
+| `polyhaven/models/jug_01` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/jug_01> | SM_Int_Jug |
 | `polyhaven/models/korean_fire_extinguisher_01` | UM JOORIN | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/korean_fire_extinguisher_01> | SM_Int_Extinguisher |
+| `polyhaven/models/lambis_shell` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/lambis_shell> | SM_Int_Shell |
+| `polyhaven/models/lemon` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/lemon> | SM_Int_Lemon |
+| `polyhaven/models/life_jacket` | PierreB3D | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/life_jacket> | SM_Int_LifeJacket |
 | `polyhaven/models/lifebuoy` | Hank Kaamura | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/lifebuoy> | SM_Int_Lifebuoy |
+| `polyhaven/models/magnifying_glass_01` | Nazar Borodavka | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/magnifying_glass_01> | SM_Int_Magnifier |
+| `polyhaven/models/mantel_clock_01` | Yann Kervran, Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/mantel_clock_01> | SM_Int_MantelClock |
 | `polyhaven/models/marble_bust_01` | Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/marble_bust_01> | SM_Int_Bust |
 | `polyhaven/models/metal_office_desk` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/metal_office_desk> | SM_Int_OfficeDesk |
+| `polyhaven/models/metal_stool_01` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/metal_stool_01> | SM_Int_MetalStool |
+| `polyhaven/models/metal_toolbox` | Mateusz Sadek | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/metal_toolbox> | SM_Int_Toolbox |
 | `polyhaven/models/metal_trash_can` | GurJas Studios | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/metal_trash_can> | SM_TrashBin |
+| `polyhaven/models/mid_century_lounge_chair` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/mid_century_lounge_chair> | SM_Int_LoungeChair |
 | `polyhaven/models/modern_arm_chair_01` | Vibrant Nordic | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/modern_arm_chair_01> | SM_Int_OfficeChair |
 | `polyhaven/models/modern_ceiling_lamp_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/modern_ceiling_lamp_01> | SM_Int_CeilingLamp |
+| `polyhaven/models/modern_coffee_table_01` | Amin | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/modern_coffee_table_01> | SM_Int_CoffeeTableB |
+| `polyhaven/models/modern_wooden_cabinet` | Patrik Pangerl | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/modern_wooden_cabinet> | SM_Int_MediaCabinet |
 | `polyhaven/models/mountainside` | Dario Barresi: Photography; Rico Cilliers: processing (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "mountainside" - https://polyhaven.com/a/mountainside  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_CliffRock_A |
 | `polyhaven/models/ocean_buoy` | Mateusz Sadek | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/ocean_buoy> | SM_Buoy |
+| `polyhaven/models/office_notepads` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/office_notepads> | SM_Int_Notepads |
 | `polyhaven/models/old_bed_frame` | Luca B | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/old_bed_frame> | SM_Int_OldBed |
 | `polyhaven/models/ornate_mirror_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/ornate_mirror_01> | SM_Int_Mirror |
 | `polyhaven/models/painted_wooden_bench` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/painted_wooden_bench> | SM_Int_Bench |
@@ -93,34 +146,66 @@ Paths are relative to `Tools/thirdparty/`.
 | `polyhaven/models/painted_wooden_chair_01` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/painted_wooden_chair_01> | SM_Int_WoodChair |
 | `polyhaven/models/painted_wooden_nightstand` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/painted_wooden_nightstand> | SM_Int_NightstandB |
 | `polyhaven/models/painted_wooden_shelves` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/painted_wooden_shelves> | SM_Int_Shelves |
+| `polyhaven/models/painted_wooden_sofa` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/painted_wooden_sofa> | SM_Int_WoodSofa |
+| `polyhaven/models/planter_box_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/planter_box_01> | SM_Int_PlanterBox |
+| `polyhaven/models/plastic_broom` | L | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/plastic_broom> | SM_Int_Broom |
+| `polyhaven/models/plastic_monobloc_chair_01` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/plastic_monobloc_chair_01> | SM_Int_PlasticChair |
+| `polyhaven/models/postcard_set_01` | James Ray Cock, Jurita Burger | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/postcard_set_01> | SM_Int_Postcards |
+| `polyhaven/models/pot_enamel_01` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/pot_enamel_01> | SM_Int_EnamelPot |
+| `polyhaven/models/potted_plant_01` | Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/potted_plant_01> | SM_Int_PottedPlantC |
 | `polyhaven/models/potted_plant_02` | Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/potted_plant_02> | SM_Int_PottedPlantB |
 | `polyhaven/models/potted_plant_04` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/potted_plant_04> | SM_Int_PottedPlant |
 | `polyhaven/models/projector_screen` | PeterM | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/projector_screen> | SM_Int_ProjectorScreen |
 | `polyhaven/models/rock_09` | Jenelle van Heerden: All (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "rock_09" - https://polyhaven.com/a/rock_09  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_Rock_B |
 | `polyhaven/models/rock_face_02` | Dario Barresi: All; Rico Cilliers: processing (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "rock_face_02" - https://polyhaven.com/a/rock_face_02  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_Rock_C |
 | `polyhaven/models/round_wooden_table_01` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/round_wooden_table_01> | SM_Int_RoundTable |
+| `polyhaven/models/round_wooden_table_02` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/round_wooden_table_02> | SM_Int_RoundTableB |
+| `polyhaven/models/rubber_boots` | L | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/rubber_boots> | SM_Int_Boots |
 | `polyhaven/models/rubber_duck_toy` | Plat251 | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/rubber_duck_toy> | SM_Int_RubberDuck |
+| `polyhaven/models/seadogs_compass` | Benny Weimer | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/seadogs_compass> | SM_Int_Compass |
+| `polyhaven/models/security_camera_01` | Alexander Otterbeck, Yann Kervran | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/security_camera_01> | SM_Int_SecurityCam |
+| `polyhaven/models/security_light` | Maximilian Schuster | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/security_light> | SM_Int_SecurityLight |
 | `polyhaven/models/side_table_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/side_table_01> | SM_Int_SideTable |
+| `polyhaven/models/side_table_tall_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/side_table_tall_01> | SM_Int_TallSideTable |
+| `polyhaven/models/small_wooden_table_01` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/small_wooden_table_01> | SM_Int_SmallTable |
 | `polyhaven/models/sofa_02` | Kirill Sannikov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/sofa_02> | SM_Int_SofaB |
 | `polyhaven/models/standing_chalkboard_01` | ParzivalCG | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/standing_chalkboard_01> | SM_Int_Chalkboard |
+| `polyhaven/models/standing_picture_frame_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/standing_picture_frame_01> | SM_Int_PhotoFrame |
+| `polyhaven/models/standing_picture_frame_02` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/standing_picture_frame_02> | SM_Int_PhotoFrameB |
+| `polyhaven/models/stationery_supplies` | Mateusz Sadek | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/stationery_supplies> | SM_Int_Stationery |
 | `polyhaven/models/steel_frame_shelves_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/steel_frame_shelves_01> | SM_Int_SteelShelves |
 | `polyhaven/models/stone_01` | Dario Barresi: Photography; Rico Cilliers: photography, processing (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "stone_01" - https://polyhaven.com/a/stone_01  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_Pebbles_A |
+| `polyhaven/models/strawberry_chocolate_cake` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/strawberry_chocolate_cake> | SM_Int_Cake |
 | `polyhaven/models/street_lamp_01` | Josh Dean | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/street_lamp_01> | SM_LampPost |
 | `polyhaven/models/tea_set_01` | James Ray Cock, Rico Cilliers, Jurita Burger | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/tea_set_01> | SM_Int_TeaSet |
+| `polyhaven/models/television_02` | Benny Weimer | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/television_02> | SM_Int_TVB |
 | `polyhaven/models/throw_pillows_01` | Serhii Khromov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/throw_pillows_01> | SM_Int_Pillows |
+| `polyhaven/models/tool_cart` | Savva Zakharov | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/tool_cart> | SM_Int_ToolCart |
+| `polyhaven/models/trashbag` | Benny Weimer | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/trashbag> | SM_Int_TrashBag |
 | `polyhaven/models/tree_stump_01` | Rob Tuytel (All) (Poly Haven) | CC0 1.0 Universal (public domain dedication). No attribution required; credit kept voluntarily. | Poly Haven "tree_stump_01" - https://polyhaven.com/a/tree_stump_01  (polyhaven.com / dl.polyhaven.org are blocked from this container) | SM_Stump_A |
+| `polyhaven/models/utility_box_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/utility_box_01> | SM_Int_UtilityBox |
+| `polyhaven/models/vintage_cabinet_01` | Rico Cilliers | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_cabinet_01> | SM_Int_Vitrine |
+| `polyhaven/models/vintage_day_bed` | Aron Łyczek | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_day_bed> | SM_Int_DayBed |
 | `polyhaven/models/vintage_electric_kettle` | SV Garip | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_electric_kettle> | SM_Int_Kettle |
 | `polyhaven/models/vintage_grandfather_clock_01` | Yann Kervran, James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_grandfather_clock_01> | SM_Int_GrandfatherClock |
 | `polyhaven/models/vintage_microwave` | Adam Nekola | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_microwave> | SM_Int_Microwave |
 | `polyhaven/models/vintage_oil_lamp` | Monsta3D | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_oil_lamp> | SM_Int_OilLamp |
 | `polyhaven/models/vintage_radio_transceiver` | Mateusz Sadek | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_radio_transceiver> | SM_Int_Radio |
+| `polyhaven/models/vintage_stapler` | Mateusz Sadek | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_stapler> | SM_Int_Stapler |
 | `polyhaven/models/vintage_suitcase` | Maximilian Schuster | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_suitcase> | SM_Int_Suitcase |
+| `polyhaven/models/vintage_wooden_drawer_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/vintage_wooden_drawer_01> | SM_Int_Dresser |
 | `polyhaven/models/wall_clock` | PierreB3D | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wall_clock> | SM_Int_WallClock |
 | `polyhaven/models/wicker_basket_01` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wicker_basket_01> | SM_Int_Basket |
 | `polyhaven/models/wooden_bookshelf_worn` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_bookshelf_worn> | SM_Int_Bookshelf |
+| `polyhaven/models/wooden_bowl_01` | Oliver Harries | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_bowl_01> | SM_Int_Bowl |
 | `polyhaven/models/wooden_bucket_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_bucket_01> | SM_Int_Bucket |
+| `polyhaven/models/wooden_candlestick` | Josh Dean | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_candlestick> | SM_Int_Candlestick |
+| `polyhaven/models/wooden_cutting_board` | Kuutti Siitonen | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_cutting_board> | SM_Int_CuttingBoard |
 | `polyhaven/models/wooden_display_shelves_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_display_shelves_01> | SM_Int_DisplayShelves |
+| `polyhaven/models/wooden_ladder` | Miroslav Turura | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_ladder> | SM_Int_Ladder |
+| `polyhaven/models/wooden_lantern_01` | James Ray Cock | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_lantern_01> | SM_Int_Lantern |
 | `polyhaven/models/wooden_picnic_table` | Ulan Cabanilla | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/wooden_picnic_table> | SM_PicnicTable |
+| `polyhaven/models/worn_metal_rack` | Luca B | CC0-1.0 (public domain dedication; no attribution required) | <https://polyhaven.com/a/worn_metal_rack> | SM_Int_MetalRack |
 | `polyhaven/textures/brown_planks_09` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/brown_planks_09> | texture Planks |
 | `polyhaven/textures/clay_roof_tiles_02` | Amal Kumar / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/clay_roof_tiles_02> | texture RoofTiles |
 | `polyhaven/textures/cobblestone_floor_08` | Rob Tuytel / Poly Haven | CC0 1.0 Universal | <https://polyhaven.com/a/cobblestone_floor_08> | terrain layer Paving |

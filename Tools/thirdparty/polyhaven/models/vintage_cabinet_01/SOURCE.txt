@@ -1,0 +1,25 @@
+asset_id: polyhaven_vintage_cabinet_01
+title: Vintage Cabinet 01 (Poly Haven)
+category: interiors
+main_file: vintage_cabinet_01_1k.gltf
+catalog_use: SM_Int_Vitrine
+author: Rico Cilliers
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/vintage_cabinet_01
+description: Free 8K model: varnished dark-wood vintage cabinet with carved detailing, glass-front upper doors, paneled lower cupboards and brass knobs.
+polycount: 61096
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/vintage_cabinet_01, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/vintage_cabinet_01/vintage_cabinet_01_1k.gltf
+    -> vintage_cabinet_01_1k.gltf  md5 754cfb6f79559dbd0eb3c1ccbf364e3b  sha256 ce66c642cb13ba11bf7cde72bb58ad465dce1909dbef8a22dd55b28d857c1848
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/vintage_cabinet_01/vintage_cabinet_01.bin
+    -> vintage_cabinet_01.bin  md5 9048b5c9e35ab9d2e2732cf738b7fcb8  sha256 407c58be2c5efb1d41d549fcff6a57d18d025033803dcb241e57349dd65bcf60
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_cabinet_01/vintage_cabinet_01_a_diff_1k.jpg
+    -> textures/vintage_cabinet_01_a_diff_1k.jpg  md5 fdb450df01c024a7f86f0719c23b63de  sha256 06453bb3e2811147a7558914437c20042f3f5c21b9c4f1d3488bdfe94f25f03f
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/vintage_cabinet_01/vintage_cabinet_01_b_diff_1k.jpg
+    -> textures/vintage_cabinet_01_b_diff_1k.jpg  md5 7bd4316d7c8997626de05fe9e149e4d5  sha256 81967dbb387b205b2aa6f253165c8c44f60cdf5e57d9ceebf230fef21569b33a
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/vintage_cabinet_01
+not_redistributed: textures/vintage_cabinet_01_a_rough_1k.jpg, textures/vintage_cabinet_01_a_arm_1k.jpg, textures/vintage_cabinet_01_a_nor_gl_1k.jpg, textures/vintage_cabinet_01_b_rough_1k.jpg, textures/vintage_cabinet_01_b_nor_gl_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py vintage_cabinet_01` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

@@ -1,0 +1,23 @@
+asset_id: polyhaven_worn_metal_rack
+title: Worn Metal Rack (Poly Haven)
+category: interiors
+main_file: worn_metal_rack_1k.gltf
+catalog_use: 
+author: Luca B
+license: CC0-1.0 (public domain dedication; no attribution required)
+original_source_page: https://polyhaven.com/a/worn_metal_rack
+description: Free 8K model: aged metal rack with green painted frame and four dusty shelves. Realistic rust, chips and dents, with faint labels for a gritty look.
+polycount: 6372
+downloaded_from (exact files via the Poly Haven API https://api.polyhaven.com/files/worn_metal_rack, md5-verified):
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/worn_metal_rack/worn_metal_rack_1k.gltf
+    -> worn_metal_rack_1k.gltf  md5 1e6ab13765080f11751b2843e2e4c321  sha256 e757448bd448460ecb6c7218e7857c8d071f271e3cdc2bd013ca63d824c0c308
+  https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/worn_metal_rack/worn_metal_rack_diff_1k.jpg
+    -> textures/worn_metal_rack_diff_1k.jpg  md5 3f69d57964eb7e67899611de63ba6588  sha256 295c2d48ad55289fed76b7438513520cadd94516639ab8ffd8790ffe7c903dbb
+  https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/worn_metal_rack/worn_metal_rack.bin
+    -> worn_metal_rack.bin  md5 d7e62674d4846c5899323efd9c549f55  sha256 b8cfa4138b7c0e0e69738c6f24dec7fecdc2f336f524312db48167816776fd13
+license_evidence: Poly Haven license: "every asset is CC0. Use it for anything, commercial included, with no attribution required." -- https://polyhaven.com/license (CC0 deed); author list from https://api.polyhaven.com/info/worn_metal_rack
+not_redistributed: textures/worn_metal_rack_nor_gl_1k.jpg, textures/worn_metal_rack_arm_1k.jpg
+  (maps the cel import never reads; `python Tools/fetch_polyhaven.py worn_metal_rack` restores them, md5-checked)
+modifications: none to the files. The pipeline (Tools/dai/thirdparty.py, "toon": true) re-paints the base colour
+  texture into flat cel colours, drops the normal/ORM maps and adds an inverted-hull ink outline at build time.
+date_retrieved: 2026-11-04

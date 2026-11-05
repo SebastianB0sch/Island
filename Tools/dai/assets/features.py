@@ -13,10 +13,21 @@ import random
 from mathutils import Vector
 
 from . import AssetSet
+from . import interior  # noqa: F401  (registers the M_Int* palette used by the dressing)
 from .. import config as C
+from .. import palette
 from .. import terrain
 from ..geo import MeshBuilder, TAU
 from .props import blob, tube
+
+palette.register({   # same entries as hotsprings.py (register() never overwrites, either module may load first)
+    "M_NorenBlue": dict(kind="foliage", color=(0.10, 0.20, 0.52), rough=0.95, detail=None),
+    "M_Bamboo":    dict(kind="opaque", color=(0.66, 0.62, 0.34), rough=0.55, detail=None),
+    "M_RedFelt":   dict(kind="opaque", color=(0.72, 0.10, 0.10), rough=1.0, detail="Fabric", tiling=1.0),
+})
+palette.register({
+    "M_Rope":      dict(kind="opaque", color=(0.62, 0.50, 0.32), rough=0.95, detail="Fabric", tiling=1.0),
+})
 
 _cache = {}
 
@@ -101,7 +112,7 @@ def build_volcano():
         a.emitter("steam", p, scale=1.6, rate=0.7)
         a.prop("SM_VolcanicRock_A", ground(a, wx + 3, wy + 2), ang, 1.2)
     # viewpoint at the end of the volcano trail
-    vpx, vpy = 850.0, 690.0
+    vpx, vpy = C.VOLCANO_VIEW
     base = H(vpx, vpy)
     vp = a.mesh("Volcano_Viewpoint")
     lx, ly = L(a, vpx, vpy)
@@ -109,15 +120,192 @@ def build_volcano():
     yaw = math.degrees(math.atan2(dir_in.y, dir_in.x))
     with vp.at((lx, ly, base), rot=yaw):
         vp.box((0, 0, -1.5), (8, 10, 3.2), "M_VolcanicRock")
-        vp.railing([(4, -5, 1.7), (4, 5, 1.7)], 1.0, "M_RustMetal", post_spacing=1.25)
+        vp.railing([(4, -5, 0.1), (4, 5, 0.1)], 1.05, "M_RustMetal", post_spacing=1.25)
+        vp.railing([(4, -5, 0.1), (-4, -5, 0.1)], 1.05, "M_RustMetal", post_spacing=1.25)
         vp.sign_board((-2.0, -4.0, 1.4), 2.6, 1.2, "M_LighthouseRed", "M_DarkMetal")
+        # coin telescope at the railing, an emergency phone post, rope barrier posts
+        vp.cylinder((3.2, 1.5, 0.1), 0.07, 1.05, "M_Metal", seg=8)
+        with vp.at((3.2, 1.5, 1.25), rot_y=-12):
+            vp.box((0, 0, 0), (0.55, 0.16, 0.16), "M_ShipStripe")
+            vp.box((0.3, 0, 0), (0.08, 0.2, 0.2), "M_Black")
+        vp.box((3.2, 1.5, 1.12), (0.2, 0.2, 0.12), "M_DarkMetal")
+        vp.box((-3.4, 3.8, 1.0), (0.25, 0.25, 1.9), "M_LighthouseRed")
+        vp.box((-3.4, 3.65, 1.4), (0.2, 0.06, 0.3), "M_AcademyYellow")
+        vp.box((-3.4, 3.62, 1.35), (0.08, 0.04, 0.16), "M_Black")
+        for k in range(4):
+            vp.cylinder((3.0, -3.5 + 1.0 * k, 0.1), 0.05, 0.7, "M_AcademyYellow", seg=6)
     ox, oy = rot2(-2.0, -4.09, yaw)
     a.text("DANGER - ACTIVE VOLCANO", (lx + ox, ly + oy, base + 1.4), yaw, size=0.26, color=(1, 1, 1))
+    ox, oy = rot2(-3.4, 3.6, yaw)
+    a.text("SOS", (lx + ox, ly + oy, base + 1.62), yaw, size=0.1, color=(0.1, 0.1, 0.1))
+    for (bx, by, byaw, asset) in ((-3.2, -1.2, 90.0, "SM_Bench"), (-3.4, -3.1, 0.0, "SM_TrashBin")):   # back edge
+        ox, oy = rot2(bx, by, yaw)
+        a.prop(asset, (lx + ox, ly + oy, base + 0.1), yaw + byaw + 180.0)
+    ox, oy = rot2(-1.5, 0.0, yaw)
+    a.special("camera", (lx + ox, ly + oy, base + 1.75), target=(lx + rot2(4.0, -1.0, yaw)[0],
+              ly + rot2(4.0, -1.0, yaw)[1], base + 1.0), lens=20.0, label="volcano_view")
     a.interact("sign", (lx, ly, base + 1.7), yaw, title="Duel Academy Volcano",
                text="Still active! The crater glows at night and the hot springs below are heated by its magma. "
                     "Stay behind the railing.")
     a.special("clearing", (lx, ly, base), radius=10.0)
+    _crater_summit(a, vpx, vpy, base, yaw)
     return a
+
+
+def _crater_summit(a, vpx, vpy, base, yaw):
+    """The last 30 m up to the crater rim are steeper than anyone can walk: a switchback stair of rough lava
+    stone (risers <= 0.2 m, 1.6 m wide, rope rail on posts) climbs from the viewpoint deck to a lookout deck on
+    the rim, where the volcano's fast-travel point is."""
+    vx, vy = C.VOLCANO_CENTER
+    st = a.mesh("Volcano_Summit")
+    sn = a.mesh("Volcano_Summit_NoCol")
+    cu, su = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+
+    def W(u, v):                     # frame (u towards the crater, v sideways) -> world xy
+        return (vpx + u * cu - v * su, vpy + u * su + v * cu)
+
+    def hmax(u, v, ru=0.5, rv=0.9):
+        return max(H(*W(u + du, v + dv)) for du in (-ru, 0.0, ru) for dv in (-rv, 0.0, rv))
+
+    def hmin(u, v, ru=0.5, rv=0.9):
+        return min(H(*W(u + du, v + dv)) for du in (-ru, 0.0, ru) for dv in (-rv, 0.0, rv))
+
+    r_vp = math.hypot(vpx - vx, vpy - vy)
+    u_end = r_vp - (C.CRATER_RADIUS + 9.0)          # lookout deck centre 9 m outside the crater edge
+    # zigzag legs climbing at ~33 deg off the contour (terrain gradient along a leg ~0.6, the stair's 0.67),
+    # starting from the deck's side where the ground is level with it
+    tread, width = 0.3, 1.8
+    path = [(-2.6, 2.6), (0.0, 6.2)]          # from the middle of the deck, out over its side
+    sgn = 1
+    while path[-1][0] < u_end - 7.0:
+        u0, v0 = path[-1]
+        L_ = min(9.0, (u_end - 4.0 - u0) / 0.55)
+        path.append((u0 + 0.55 * L_, v0 + sgn * 0.835 * L_))
+        sgn = -sgn
+    path.append((u_end - 3.2, 0.0))
+    # treads along the polyline (landings at the corners). A tread is set into the slope: its height follows
+    # the ground under its centre line (the uphill edge is cut into the hillside), never a riser over 0.2 m
+    # (earlier treads are raised on stone instead)
+    steps = []
+    for i in range(len(path) - 1):
+        (u0, v0), (u1, v1) = path[i], path[i + 1]
+        n = max(1, int(math.hypot(u1 - u0, v1 - v0) / tread))
+        for k in range(n):
+            t = (k + 0.5) / n
+            steps.append((u0 + (u1 - u0) * t, v0 + (v1 - v0) * t, math.atan2(v1 - v0, u1 - u0), i, k == 0))
+
+    def h_centre(u, v, ang):
+        ca, sa = math.cos(ang), math.sin(ang)
+        return max(H(*W(u + ca * a_ - sa * b_, v + sa * a_ + ca * b_)) for a_ in (-0.15, 0.15) for b_ in (-0.25, 0.25))
+    z = [h_centre(u, v, ang) + 0.12 for (u, v, ang, *_ ) in steps]
+    z[0] = max(z[0], base + 0.1)
+    for i in range(1, len(z)):
+        z[i] = max(z[i], z[i - 1])
+    z_top = max(hmax(u_end, 0.0, 3.0, 4.0) + 0.15, z[-1])
+    z.append(z_top)
+    for i in range(len(z) - 2, -1, -1):
+        z[i] = max(z[i], z[i + 1] - 0.2)
+    z = z[:-1]
+    # level landings at the switchbacks: every tread within 1.3 m of a corner at one height (the highest of
+    # them), then the risers re-limited round them
+    corners = [path[i] for i in range(2, len(path) - 1)]
+    land = [None] * len(steps)
+    for ci, (cu_, cv_) in enumerate(corners):
+        near = [j for j, s_ in enumerate(steps) if math.hypot(s_[0] - cu_, s_[1] - cv_) < 1.3]
+        if near:
+            top = max(z[j] for j in near)
+            for j in near:
+                z[j], land[j] = top, ci
+    for _ in range(400):                      # only ever raises: iterate to the fixed point
+        z_old = list(z)
+        for i in range(1, len(z)):
+            z[i] = max(z[i], z[i - 1])
+        for i in range(len(z) - 2, -1, -1):
+            z[i] = max(z[i], z[i + 1] - 0.2)
+        for ci in range(len(corners)):
+            near = [j for j in range(len(steps)) if land[j] == ci]
+            if near:
+                top = max(z[j] for j in near)
+                for j in near:
+                    z[j] = top
+        if z == z_old:
+            break
+    for i in range(1, len(z)):
+        if 0.0 < z[i] - z[i - 1] < 0.06:      # no sliver risers
+            z[i] = z[i - 1]
+    if z[0] - (base + 0.1) > 0.2:
+        print(f"  !! volcano summit stair starts {z[0] - base - 0.1:.2f} m above the viewpoint deck")
+    stone, cap = "M_VolcanicRock", "M_OnsenRock"
+    for (u, v, ang, leg, corner), zz in zip(steps, z):
+        x, y = W(u, v)
+        lx, ly = L(a, x, y)
+        lo = hmin(u, v) - 0.6
+        with st.at((lx, ly, 0.0), rot=yaw + math.degrees(ang)):
+            st.box((0.0, 0.0, (zz - 0.08 + lo) / 2), (tread + 0.02, width, zz - 0.08 - lo), stone, skip=("-z",))
+            st.box((0.0, 0.0, zz - 0.04), (tread + 0.03, width + 0.06, 0.08), cap, skip=("-z",))
+    for ci, (cu_, cv_) in enumerate(corners):    # landing slabs at the turns
+        js = [j for j in range(len(steps)) if land[j] == ci]
+        if not js:
+            continue
+        zz = z[js[0]]
+        x, y = W(cu_, cv_)
+        lx, ly = L(a, x, y)
+        lo = hmin(cu_, cv_, 1.2, 1.2) - 0.6
+        with st.at((lx, ly, 0.0), rot=yaw):
+            st.box((0.0, 0.0, (zz - 0.08 + lo) / 2), (2.4, 2.4, zz - 0.08 - lo), stone, skip=("-z",))
+            st.box((0.0, 0.0, zz - 0.04), (2.4, 2.4, 0.08), cap, skip=("-z",))
+    self_steps = [(W(u, v), zz) for (u, v, *_), zz in zip(steps, z)]
+    a.summit_steps = self_steps                # for the walkability check (Tools/people_check.py)
+    # rope rail on iron posts along the downhill side of each leg (the uphill side is the cut slope)
+    for i in range(len(path) - 1):
+        (u0, v0), (u1, v1) = path[i], path[i + 1]
+        ang = math.atan2(v1 - v0, u1 - u0)
+        nu, nv = -math.sin(ang) * (width / 2 + 0.05), math.cos(ang) * (width / 2 + 0.05)
+        idx = [j for j, s_ in enumerate(steps) if s_[3] == i]
+        mu, mv = steps[idx[len(idx) // 2]][:2]
+        side = 1 if H(*W(mu + nu, mv + nv)) < H(*W(mu - nu, mv - nv)) else -1
+        pts = []
+        for j in idx[2::4] + [idx[-1]]:
+            u, v = steps[j][0] + side * nu, steps[j][1] + side * nv
+            if any(math.hypot(u - cu_, v - cv_) < 1.9 for (cu_, cv_) in corners) or \
+                    (i == 0 and abs(u) < 4.2 and abs(v) < 5.2):        # not on the landings / the deck
+                continue
+            x, y = W(u, v)
+            lx, ly = L(a, x, y)
+            pts.append((lx, ly, z[j]))
+            st.box((lx, ly, z[j] + 0.5), (0.07, 0.07, 1.0), "M_RustMetal")
+        for p0, p1 in zip(pts, pts[1:]):
+            sn.beam((p0[0], p0[1], p0[2] + 0.95), (p1[0], p1[1], p1[2] + 0.95), 0.04, 0.04, "M_Rope")
+    # the lookout deck on the rim
+    ux, uy = W(u_end, 0.0)
+    lx, ly = L(a, ux, uy)
+    lo = min(hmin(u_end, 0.0, 3.0, 4.0), z_top) - 1.0
+    with st.at((lx, ly, 0.0), rot=yaw):
+        st.box((0.0, 0.0, (z_top - 0.1 + lo) / 2), (6.4, 8.4, z_top - 0.1 - lo), stone, skip=("-z",))
+        st.box((0.0, 0.0, z_top - 0.05), (6.0, 8.0, 0.1), "M_PierWood", skip=("-z",))
+        st.railing([(3.0, -4.0, z_top), (3.0, 4.0, z_top)], 1.05, "M_RustMetal", post_spacing=1.0)
+        st.railing([(-3.0, 4.0, z_top), (3.0, 4.0, z_top)], 1.05, "M_RustMetal", post_spacing=1.0)
+        st.railing([(-3.0, -4.0, z_top), (3.0, -4.0, z_top)], 1.05, "M_RustMetal", post_spacing=1.0)
+        st.railing([(-3.0, -4.0, z_top), (-3.0, -1.0, z_top)], 1.05, "M_RustMetal", post_spacing=1.0)
+        st.railing([(-3.0, 1.0, z_top), (-3.0, 4.0, z_top)], 1.05, "M_RustMetal", post_spacing=1.0)
+        st.sign_board((-1.6, 3.6, z_top + 1.3), 2.4, 1.0, "M_LighthouseRed", "M_DarkMetal")
+        st.cylinder((2.6, -2.2, z_top), 0.07, 1.05, "M_Metal", seg=8)        # coin telescope over the crater
+        with st.at((2.6, -2.2, z_top + 1.2), rot_y=-25):
+            st.box((0, 0, 0), (0.55, 0.16, 0.16), "M_ShipStripe")
+            st.box((0.3, 0, 0), (0.08, 0.2, 0.2), "M_Black")
+    ox, oy = rot2(-1.6, 3.49, yaw)
+    a.text("CRATER RIM", (lx + ox, ly + oy, z_top + 1.45), yaw + 180.0, size=0.3, color=(1, 1, 1))
+    a.text(f"{z_top:.0f} m - DO NOT CLIMB THE RAILING", (lx + ox, ly + oy, z_top + 1.1), yaw + 180.0, size=0.12,
+           color=(1.0, 0.85, 0.3))
+    ox, oy = rot2(-2.2, -3.4, yaw)
+    a.prop("SM_Bench", (lx + ox, ly + oy, z_top), yaw)
+    a.light((lx, ly, z_top + 3.0), color=(1.0, 0.6, 0.3), intensity=1500.0, radius=14.0, night_only=True)
+    a.interact("sign", (lx + ox, ly + oy + 0.0, z_top + 1.0), yaw + 180.0, title="Crater Rim",
+               text="The top of Duel Academy Volcano. The lava lake below never quite cools - on a still night you "
+                    "can hear it bubble.")
+    ox, oy = rot2(-0.5, 0.0, yaw)
+    a.special("arrival", (lx + ox, ly + oy, z_top), yaw)
+    a.special("clearing", (lx, ly, z_top), radius=8.0)
 
 
 # --------------------------------------------------------------------------- waterfall
@@ -199,6 +387,8 @@ def build_waterfall():
     a.light((plx, ply, C.LAKE_LEVEL + 3.0), color=(0.6, 0.85, 1.0), intensity=3000.0, radius=30.0, night_only=True)
     a.special("waterfall", (plx, ply, C.LAKE_LEVEL), yaw=math.degrees(math.atan2(d.y, d.x)),
               lip=[*L(a, lipp.x, lipp.y), pad_h], height=drop)
+    ap = Vector((wx0, wy0, 0)) + d * max(2.0, s_lip - 6.0) - side * 4.5
+    a.special("arrival", (*L(a, ap.x, ap.y), pad_h), math.degrees(math.atan2(d.y, d.x)))
     a.interact("sign", (blx + side.x * 6, bly + side.y * 6, pad_h + 1.2), 0.0, title="Volcano Falls",
                text="Spring water warmed by the volcano tumbles into Academy Lake. Legend says duel spirits gather here.")
     return a
@@ -273,9 +463,29 @@ def build_cliffs():
             dpl.box((0, 0, 0), (0.42, 0.3, 0.22), "M_ShipStripe")
             for sx in (-0.1, 0.1):
                 dpl.cylinder((sx, -0.15, 0), 0.07, 0.25, "M_Black", seg=8)
+        # info board about the view, flower planters at the deck corners, a lifebuoy post
+        dpl.sign_board((-3.2, -6.4, 0.95), 1.2, 0.7, "M_PierWood", "M_DarkWood", posts=False)
+        dpl.box((-3.8, -6.4, 0.52), (0.08, 0.08, 0.84), "M_DarkWood")
+        dpl.box((-2.6, -6.4, 0.52), (0.08, 0.08, 0.84), "M_DarkWood")
+        for (x, y) in ((-4.3, 0.0), (4.3, 0.0)):
+            dpl.box((x, y, 0.35), (0.7, 0.7, 0.5), "M_DarkWood")
+            dpl.box((x, y, 0.61), (0.6, 0.6, 0.04), "M_Soil")
+            for k in range(5):
+                dpl.sphere((x - 0.2 + 0.1 * k, y + (0.1 if k % 2 else -0.1), 0.7), 0.09,
+                           ("M_LighthouseRed", "M_AcademyYellow")[k % 2], seg=6, rings=4)
     for bx in (-2.0, 2.0):
         ox, oy = rot2(bx, -3.0, yaw)
         a.prop("SM_Bench", (lx + ox, ly + oy, base + 0.1), yaw)
+    for (px_, py_, asset, pyaw) in ((0.0, 0.2, "SM_TrashBin", 0.0), (4.2, -2.0, "SM_LampPost", 0.0)):
+        ox, oy = rot2(px_, py_, yaw)
+        a.prop(asset, (lx + ox, ly + oy, base + 0.1), yaw + pyaw)
+    ox, oy = rot2(-3.2, -6.47, yaw)
+    a.text("SUNSET POINT", (lx + ox, ly + oy, base + 1.1), yaw, size=0.12, color=(0.95, 0.9, 0.7))
+    a.text("Domino City  ->  W 40 km", (lx + ox, ly + oy, base + 0.9), yaw, size=0.07, color=(0.95, 0.9, 0.7))
+    ox, oy = rot2(0.0, 0.0, yaw)
+    tx, ty = rot2(0.0, -7.0, yaw)
+    a.special("camera", (lx + ox, ly + oy, base + 1.75), target=(lx + tx, ly + ty, base + 0.8), lens=20.0,
+              label="sunset_point")
     ox, oy = rot2(-3.5, 1.5, yaw)
     a.interact("sign", (lx + ox, ly + oy, base + 1.4), yaw + 180.0, title="Sunset Point",
                text="The best sunset on the island. On a clear day you can almost see Domino City.")
@@ -283,6 +493,8 @@ def build_cliffs():
     a.audio("A_Ocean", (lx - 30, ly, base - 10), radius=150.0)
     a.audio("A_Wind", (lx, ly, base + 5), radius=80.0, volume=0.5)
     a.special("clearing", (lx, ly, base), radius=12.0)
+    ox, oy = rot2(0.0, -1.0, yaw)
+    a.special("arrival", (lx + ox, ly + oy, base + 0.1), yaw - 90.0)
     return a
 
 
@@ -309,7 +521,15 @@ def build_beach():
                 py += dirv.y
             if 1.0 < H(px, py) < 6.0:
                 spots.append((px, py, math.degrees(math.atan2(-dirv.y, -dirv.x))))
+    # keep the umbrella spots clear of the lifeguard tower, the volleyball net and the duel court
+    busy = []
+    if spots:
+        m_ = spots[len(spots) // 2]
+        busy = [(m_[0] + 12, m_[1] + 6, 7.0), spots[min(len(spots) - 1, len(spots) // 2 + 2)][:2] + (10.0,),
+                spots[max(0, len(spots) // 2 - 2)][:2] + (13.0,)]
     for i, (px, py, yaw_sea) in enumerate(spots):
+        if any(math.hypot(px - bx_, py - by_) < r_ for (bx_, by_, r_) in busy):
+            continue
         lx, ly = L(a, px, py)
         z = H(px, py)
         a.prop("SM_BeachUmbrella", (lx, ly, z), rnd.uniform(0, 360))
@@ -330,12 +550,30 @@ def build_beach():
                 for y in (-1.2, 1.2):
                     lg.beam((x, y, -0.5), (x * 0.8, y * 0.8, 3.0), 0.15, 0.15, "M_WindowFrame")
             lg.box((0, 0, 3.05), (2.6, 2.6, 0.15), "M_Wood")
-            lg.railing([(-1.3, -1.3, 3.1), (1.3, -1.3, 3.1), (1.3, 1.3, 3.1), (-1.3, 1.3, 3.1)], 0.9, "M_WindowFrame")
-            lg.box((0, 0, 4.4), (2.4, 2.4, 0.08), "M_LighthouseRed")
+            # railing open at the top of the stair (land side, +y)
+            lg.railing([(-0.5, 1.3, 3.1), (-1.3, 1.3, 3.1), (-1.3, -1.3, 3.1), (1.3, -1.3, 3.1), (1.3, 1.3, 3.1),
+                        (0.5, 1.3, 3.1)], 1.0, "M_WindowFrame")
+            # sun roof 2.15 m over the deck (it used to be 1.3 m - nobody could stand up there)
+            lg.box((0, 0, 5.3), (2.6, 2.6, 0.08), "M_LighthouseRed")
+            lg.box((0, 0, 5.36), (2.2, 2.2, 0.06), "M_AcademyYellow")
             for x in (-1.1, 1.1):
                 for y in (-1.1, 1.1):
-                    lg.box((x, y, 3.75), (0.08, 0.08, 1.3), "M_WindowFrame")
-            lg.stairs((0, 2.4, 0), -90, 0.9, 12, 0.25, 0.2, "M_Wood", solid=False)
+                    lg.box((x, y, 4.2), (0.08, 0.08, 2.2), "M_WindowFrame")
+            # stair: 17 risers of 0.184 m on 0.27 m treads, open stringers + handrails, up to the deck edge
+            n_, rise_, run_ = 17, 3.125 / 17, 0.27
+            y0_ = 1.3 + n_ * run_
+            for i in range(n_):
+                zt = rise_ * (i + 1)
+                lg.box((0, y0_ - run_ * (i + 0.5), zt - 0.025), (0.9, run_ + 0.02, 0.05), "M_Wood")
+            for sx_ in (-1, 1):
+                lg.beam((sx_ * 0.48, y0_ + 0.05, -0.1), (sx_ * 0.48, 1.3, 3.05), 0.06, 0.22, "M_WindowFrame")
+                lg.beam((sx_ * 0.5, y0_, 0.95), (sx_ * 0.5, 1.3, 3.125 + 0.95), 0.05, 0.05, "M_WindowFrame")
+                for k in range(0, n_ + 1, 4):
+                    lg.box((sx_ * 0.5, y0_ - run_ * k, rise_ * k + 0.47), (0.04, 0.04, 0.95), "M_WindowFrame")
+            # rescue board leaning on the legs, a sand-anchored flag on each side
+            with lg.at((1.45, 0.3, 0.0), rot_y=-12):
+                lg.box((0, 0, 1.2), (0.08, 0.6, 2.4), "M_LighthouseRed")
+                lg.box((0.045, 0, 1.2), (0.01, 0.25, 2.2), "M_RaTrim")
         # the lookout itself is an open platform (no hut, 1.3 m under the sun roof) - dressed for duty:
         # lifeguard chair facing the sea, radio on a side table, lifebuoy on the railing, binoculars
         tyaw = yaw_sea + 90
@@ -346,7 +584,7 @@ def build_beach():
         deck = 3.125
         a.prop("SM_Int_WoodChair", P(-0.2, 0.2, deck), tyaw)
         a.prop("SM_Int_SideTable", P(0.75, 0.55, deck), tyaw)
-        a.prop("SM_Int_Radio", P(0.75, 0.55, deck + 0.6), tyaw + 15)
+        a.prop("SM_Int_Radio", P(0.75, 0.55, deck + 0.55), tyaw + 15)
         a.prop("SM_Int_Lifebuoy", P(-1.4, -0.3, deck + 0.25), tyaw - 90)
         a.prop("SM_Int_Bucket", P(0.9, -0.9, deck), tyaw)
         lgd = a.mesh("Beach_Lifeguard_NoCol")
@@ -363,7 +601,25 @@ def build_beach():
         tx, ty2, tz = P(0, -1.345, deck + 0.53)
         a.text("LIFEGUARD", (tx, ty2, tz), tyaw, size=0.16, color=(1, 1, 1))
         a.light(P(0, 0, 4.1), color=(1.0, 0.9, 0.7), intensity=800.0, radius=6.0, night_only=True)
-        a.special("camera", P(-2.6, 2.2, deck + 1.6), target=P(0.2, -0.4, deck + 0.5), lens=20.0, label="lookout")
+        with lgd.at((lx, ly, z), rot=tyaw):
+            # on duty: megaphone, first-aid case, rescue tube, towel over the rail, water bottle, the board
+            with lgd.at((-1.0, -0.9, deck), rot=30):
+                lgd.cylinder((0, 0, 0.0), 0.11, 0.28, "M_RaTrim", seg=10, radius_top=0.05)
+                lgd.box((0, 0.08, 0.1), (0.04, 0.1, 0.12), "M_Black")
+            lgd.box((0.95, 0.95, deck + 0.12), (0.4, 0.25, 0.24), "M_RaTrim")
+            lgd.box((0.95, 0.825, deck + 0.14), (0.12, 0.005, 0.04), "M_LighthouseRed")
+            lgd.box((0.95, 0.825, deck + 0.14), (0.04, 0.005, 0.12), "M_LighthouseRed")
+            lgd.box((-0.6, 1.0, deck + 0.06), (0.95, 0.15, 0.12), "M_LighthouseRed")
+            lgd.box((1.32, 0.2, deck + 0.8), (0.04, 0.6, 0.4), "M_IntFabricBlue")
+            lgd.cylinder((0.6, 0.65, deck + 0.55), 0.035, 0.22, "M_IntGlassClear", seg=8)
+            lgd.box((-1.32, 0.6, deck + 0.75), (0.03, 0.7, 0.5), "M_Black")
+            lgd.box((-1.33, 0.6, deck + 0.75), (0.02, 0.62, 0.42), "M_IntChalkboard")
+            for (fx, m) in ((1.2, "M_LighthouseRed"), (-1.2, "M_AcademyYellow")):
+                lgd.box((fx, -1.3, deck + 1.25), (0.02, 0.35, 0.25), m)
+        a.text("WATER 26 C", P(-1.36, 0.6, deck + 0.85), tyaw - 90, size=0.06, color=(1, 1, 1))
+        a.text("WAVES LOW", P(-1.36, 0.6, deck + 0.72), tyaw - 90, size=0.06, color=(1, 1, 1))
+        a.light(P(0, 0, deck + 2.0), color=(1.0, 0.92, 0.8), intensity=600.0, radius=5.0)
+        a.special("camera", P(-0.9, 0.95, deck + 1.65), target=P(0.6, -1.2, deck + 0.6), lens=16.0, label="lookout")
         a.special("clearing", (lx, ly, z), radius=6.0)
         net = a.mesh("Beach_Volleyball")
         nx, ny = L(a, mx2, my2)
@@ -399,7 +655,7 @@ def build_forest():
     sh = a.mesh("Forest_Shrine")
     with sh.at((lx, ly, base), rot=-40):
         sh.box((0, 0, -0.8), (9, 9, 1.6), "M_OnsenRock")
-        sh.stairs((0, -6.2, -0.8), 90, 3.0, 4, 0.2, 0.4, "M_OnsenRock")
+        sh.stairs((0, -6.0, -0.8), 90, 3.0, 5, 0.16, 0.3, "M_OnsenRock")      # 5 x 0.16 m risers, 0.3 m treads
         # small wooden shrine
         sh.box((0, 1.5, 0.6), (3.0, 2.4, 1.2), "M_DarkWood")
         sh.box((0, 1.5, 1.5), (2.6, 2.0, 0.6), "M_Wood")
@@ -421,6 +677,50 @@ def build_forest():
             sh.cylinder((x, -3.6, 0.0), 0.16, 3.4, "M_LighthouseRed", seg=10)
         sh.box((0, -3.6, 3.25), (4.8, 0.3, 0.3), "M_LighthouseRed")
         sh.box((0, -3.6, 2.7), (4.0, 0.2, 0.2), "M_LighthouseRed")
+    # sacred rope with paper streamers on the shrine front, a bell rope, fox guardians, a water basin,
+    # an ema rack where students hang cards instead of wooden plaques, a broom, leaves (no collision)
+    shn = a.mesh("Forest_Shrine_NoCol")
+    with shn.at((lx, ly, base), rot=-40):
+        for (x0_, x1_) in ((-1.45, 0.0), (0.0, 1.45)):
+            shn.beam((x0_, 0.24, 1.75 if x0_ < 0 else 1.62), (x1_, 0.24, 1.62 if x0_ < 0 else 1.75), 0.08, 0.08, "M_Bamboo")
+        for k, x in enumerate((-0.9, -0.3, 0.3, 0.9)):
+            for j in range(3):
+                shn.box((x + (0.03 if j % 2 else -0.03), 0.22, 1.5 - 0.09 * j), (0.07, 0.006, 0.09), "M_ShojiPaper")
+        shn.cylinder((0.0, 0.18, 1.32), 0.02, 0.32, "M_RedFelt", seg=6)
+        shn.sphere((0.0, 0.18, 1.62), 0.09, "M_Gold", seg=10, rings=6)
+        for k in range(3):
+            shn.cylinder((0.0, 0.16 - 0.005 * k, 0.55 + 0.25 * k), 0.025, 0.25, ("M_RedFelt", "M_ShojiPaper", "M_NorenBlue")[k],
+                         seg=6)
+        for sx in (-1, 1):                                       # kitsune on plinths
+            with shn.at((sx * 1.6, -1.6, 0.0), rot=180 + sx * 15):
+                shn.box((0, 0, 0.3), (0.45, 0.45, 0.6), "M_OnsenRock")
+                shn.box((0, 0.02, 0.8), (0.22, 0.34, 0.4), "M_RaTrim")
+                shn.box((0, -0.12, 1.05), (0.16, 0.18, 0.16), "M_RaTrim")
+                for e in (-1, 1):
+                    shn.cone((e * 0.05, -0.1, 1.13), 0.03, 0.09, "M_RaTrim", seg=4)
+                shn.beam((0, 0.18, 0.62), (0.05, 0.3, 0.95), 0.06, 0.06, "M_RaTrim")
+                shn.box((0, -0.14, 0.82), (0.24, 0.02, 0.14), "M_RedFelt")    # bib
+        with shn.at((-2.6, -2.6, 0.0)):                         # chozubachi
+            shn.box((0, 0, 0.35), (0.9, 0.55, 0.7), "M_OnsenRock")
+            for k in range(2):
+                with shn.at((-0.2 + 0.3 * k, 0.0, 0.72), rot=15):
+                    shn.cylinder((0, 0, 0), 0.045, 0.06, "M_Bamboo", seg=8)
+                    shn.box((0.18, 0, 0.04), (0.32, 0.02, 0.02), "M_Bamboo")
+        with shn.at((2.6, -2.2, 0.0), rot=-10):                 # ema rack
+            for sx in (-1, 1):
+                shn.box((sx * 0.6, 0, 0.75), (0.08, 0.08, 1.5), "M_DarkWood")
+            shn.box((0, 0, 1.45), (1.4, 0.1, 0.08), "M_DarkWood")
+            shn.box((0, 0, 1.12), (1.2, 0.04, 0.03), "M_DarkWood")
+            for k in range(7):
+                with shn.at((-0.48 + 0.16 * k, -0.04, 1.32 - 0.31 * (k % 2)), rot_y=(k % 3 - 1) * 6):
+                    shn.box((0, 0, -0.06), (0.11, 0.01, 0.15), "M_CardBack" if k % 2 else "M_Wood")
+        with shn.at((1.7, 0.4, 0.0), rot=70):                   # bamboo broom against the shrine
+            shn.beam((0, 0, 0.0), (0, 0.25, 1.3), 0.03, 0.03, "M_Bamboo")
+            shn.box((0, -0.05, 0.12), (0.3, 0.08, 0.25), "M_Bamboo")
+        rnd_ = random.Random(40)
+        for k in range(30):                                     # fallen leaves on the stone platform
+            shn.box((rnd_.uniform(-4.0, 4.0), rnd_.uniform(-4.0, 4.0), 0.004), (0.08, 0.05, 0.004),
+                    rnd_.choice(("M_AcademyYellow", "M_RedFelt", "M_Wood")))
     c = math.cos(math.radians(-40))
     s = math.sin(math.radians(-40))
     for x in (-2.5, 2.5):
@@ -436,6 +736,8 @@ def build_forest():
                text="A tiny shrine hidden in the woods. Students leave their favourite cards here for luck - "
                     "some swear the cards whisper back.")
     a.special("clearing", (lx, ly, base), radius=10.0)
+    ox, oy = rot2(0.0, -8.6, -40.0)                  # at the foot of the shrine steps, facing the hokora
+    a.special("arrival", ground(a, wx + ox, wy + oy), 50.0)
     a.audio("A_Forest", (lx, ly, base + 4), radius=200.0)
     return a
 

@@ -90,7 +90,7 @@ LOCATIONS = {
         name="Academy Lake", subtitle="Girls' Dorm Lakeshore",
         desc="Calm water fed by the volcano falls. Rowing boats wait at the jetty.",
         pos=(130.0, 780.0), yaw=0.0, height=30.0, pad=(185.0, 150.0), color=(0.35, 0.65, 0.85),
-        zone=(200.0, 165.0, 50.0), spawn=(-40.0, 760.0, 0.0)),
+        zone=(200.0, 165.0, 50.0), spawn=(-143.0, 704.0, 0.0)),   # the lake walk by the sign
     "waterfall": dict(
         name="Volcano Falls", subtitle="Lake Waterfall",
         desc="Snowmelt? No - spring water, warmed by the volcano, tumbling into the lake.",
@@ -145,6 +145,8 @@ VOLCANO_CENTER = (720.0, 700.0)
 VOLCANO_PEAK = 360.0          # height the cone adds on top of the plateau
 VOLCANO_RADIUS = 650.0
 CRATER_RADIUS = 95.0
+VOLCANO_VIEW = (850.0, 690.0)  # viewpoint at the end of the volcano trail (foot of the summit stair)
+VOLCANO_VIEW_YAW = math.degrees(math.atan2(700.0 - 690.0, 720.0 - 850.0))   # facing the crater
 CRATER_DEPTH = 40.0           # floor is this far below the rim (rim is measured)
 HARBOR_RECT = (60.0, -1066.0, 235.0, 60.0)   # cx, cy, half-x, half-y of the flat quay
 HARBOR_BASIN = (-250.0, 420.0, -1420.0, -1136.0)  # x0, x1, y0, y1 dredged to -12 m
@@ -187,10 +189,10 @@ PATHS = [
     dict(id="to_springs", width=5.0, surface="dirt", lamps=False, pts=[
         (720.0, -650.0), (820.0, -520.0), (930.0, -380.0), (1010.0, -200.0), (1040.0, 0.0),
         (1050.0, 160.0), (1050.0, 290.0)]),
-    # Hot springs -> volcano trail -> crater rim
-    dict(id="volcano_trail", width=4.0, surface="dirt", lamps=False, pts=[
-        (1040.0, 380.0), (990.0, 470.0), (1010.0, 560.0), (940.0, 600.0), (900.0, 650.0),
-        (870.0, 680.0), (850.0, 690.0)]),
+    # Hot springs -> volcano trail -> viewpoint under the crater rim (the summit stair climbs the last 30 m).
+    # Switchbacks across the east flank: ~940 m of trail for the 200 m climb (a straight line would be 50 %
+    # steep and the 13 % road grade limit carved it into a 120 m deep slot); grade limit 32 %.
+    dict(id="volcano_trail", width=4.0, surface="dirt", lamps=False, grade=0.32, smooth=1, pts=[(1082.0, 360.0), (1095.9, 563.2), (932.1, 447.2), (972.0, 618.1), (865.0, 555.0), (879.4, 657.3), (838.8, 616.8), (850.0, 690.0)]),
     # Abandoned dorm -> forest -> lake east shore
     dict(id="forest_trail", width=4.0, surface="dirt", lamps=False, pts=[
         (930.0, 0.0), (850.0, 160.0), (700.0, 330.0), (560.0, 480.0), (420.0, 600.0), (300.0, 680.0)]),

@@ -29,6 +29,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float WanderRadius = 800.f;
 
+	/** Spots (world, capsule centre) the student may stroll to, precomputed by the build so every walk is a
+	 *  clear straight line on one floor (no furniture or walls in the way). The student only walks
+	 *  home -> spot -> home. Empty with bWanderPointsOnly: stands still. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	TArray<FVector> WanderPoints;
+
+	/** Wander only along WanderPoints (set by the build). Off: random strolls within WanderRadius. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	bool bWanderPointsOnly = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float StrollSpeed = 140.f;
 
