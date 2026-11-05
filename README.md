@@ -449,10 +449,11 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 |---|---|
 | WASD / left stick | Move (Z/Q also work on AZERTY) |
 | Mouse / right stick | Look, mouse wheel = zoom |
-| Shift | Sprint |
+| Shift | Sprint (boost while riding) |
 | Space | Jump |
 | E | Interact (signs, card shop, duel fields, students) / close message |
 | M or Tab | Island map & fast travel |
+| V / gamepad Y | Motorcycle: summon it and ride, press again to get off (outdoors only; see below) |
 | J | Switch dorm jacket |
 | F | Raise duel disk |
 | T, [ ], N | Pause time, slower / faster, skip 3 hours |
@@ -463,6 +464,13 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
 | N / End | End the turn |
 | Esc | Deselect / close a pile / leave the duel |
 | 1, 2, 3 | Pick a starter deck in the deck picker |
+
+**Motorcycle.** Press **V** (gamepad **Y**) anywhere outdoors to summon an all-terrain dirt bike in your
+dorm's colour and ride it; press it again to stow it. Steer with WASD / the left stick (camera-relative:
+the bike carves towards the direction you push, and pushing back brakes and turns round), hold **Shift / L3**
+to boost (54 km/h cruising, 79 km/h boosted), and **Space** hops. It climbs steeper slopes than you can on
+foot, rolls over kerbs and rocks and fords shallow water. It is stowed automatically at interior doors, in
+deep water and when a duel starts. The chase camera swings in behind the bike when you stop moving the mouse.
 
 ## Getting started
 

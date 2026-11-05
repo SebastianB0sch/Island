@@ -233,8 +233,43 @@ void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool b
 	// +Z towards +Y (FRotationMatrix), i.e. forwards; then lift the hips to just under the water surface.
 	static const FVector Hip(0.0, 0.0, 95.0);
 	const FRotator Lean(0.f, 0.f, 80.f * SwimAlpha);
+	// Riding: lift the whole pose so the hips of whatever take is playing (Sit, or Idle as a standing
+	// "on the pegs" fallback) land on the seat. Measured in component space, so the lift never feeds back.
+	float LiftTarget = 0.f;
+	if (RideAlpha > 0.01f)
+	{
+		LiftTarget = (RideHipHeight / FMath::Max(BodyScale, 0.05f) - MeasurePelvisHeight()) * FMath::Clamp(RideAlpha, 0.f, 1.f);
+	}
+	RideLift = RideAlpha > 0.01f ? FMath::FInterpTo(RideLift, LiftTarget, DeltaTime, 14.f) : 0.f;
 	SkelComp->SetRelativeRotation(Lean);
-	SkelComp->SetRelativeLocation(Hip - Lean.RotateVector(Hip) + FVector(0.0, 0.0, 30.0 * SwimAlpha));
+	SkelComp->SetRelativeLocation(Hip - Lean.RotateVector(Hip) + FVector(0.0, 0.0, 30.0 * SwimAlpha + RideLift));
+}
+
+float UDAAvatarComponent::MeasurePelvisHeight()
+{
+	if (!SkelComp)
+	{
+		return static_cast<float>(HipHeight.Z);
+	}
+	if (!bPelvisSearched)
+	{
+		bPelvisSearched = true;
+		for (const TCHAR* Name : { TEXT("pelvis"), TEXT("Pelvis"), TEXT("hips"), TEXT("Hips"), TEXT("J_Bip_C_Hips"), TEXT("mixamorig:Hips") })
+		{
+			if (SkelComp->GetBoneIndex(FName(Name)) != INDEX_NONE)
+			{
+				PelvisBone = FName(Name);
+				break;
+			}
+		}
+	}
+	const int32 Index = PelvisBone.IsNone() ? INDEX_NONE : SkelComp->GetBoneIndex(PelvisBone);
+	if (Index != INDEX_NONE)
+	{
+		return static_cast<float>(SkelComp->GetBoneTransform(Index, FTransform::Identity).GetLocation().Z);
+	}
+	// No recognisable hip bone: a seated take puts the hips at chair height, a standing one at ~93 cm.
+	return (CurrentAction == TEXT("Sit") || CurrentAnim == TEXT("Sit")) ? 48.f : 93.f;
 }
 
 void UDAAvatarComponent::TickNative(float DeltaTime, float GroundSpeed, bool bInAir, float VerticalSpeed)
@@ -276,7 +311,16 @@ void UDAAvatarComponent::TickNative(float DeltaTime, float GroundSpeed, bool bIn
 	FName Want = NAME_None;
 	bool bLoop = false;
 	float TargetWeight = 1.f;
-	if (SwimAlpha > 0.5f && FindAnim(TEXT("Swim")))
+	if (RideAlpha > 0.5f)
+	{
+		// Seated on the bike; without a Sit take the idle stance reads as standing on the pegs.
+		if (FindAnim(TEXT("Sit")))
+		{
+			Want = TEXT("Sit");
+			bLoop = true;
+		}
+	}
+	else if (SwimAlpha > 0.5f && FindAnim(TEXT("Swim")))
 	{
 		Want = TEXT("Swim");
 		bLoop = true;
@@ -353,7 +397,11 @@ void UDAAvatarComponent::TickSingleNode(float DeltaTime, float GroundSpeed, bool
 	FName Want = NameIdle;
 	float Rate = 1.f;
 	bool bLoop = true;
-	if (SwimAlpha > 0.5f)
+	if (RideAlpha > 0.5f)
+	{
+		Want = FindAnim(TEXT("Sit")) ? FName(TEXT("Sit")) : NameIdle;
+	}
+	else if (SwimAlpha > 0.5f)
 	{
 		Want = FindAnim(NameSwim) ? NameSwim : NameWalk;
 		Rate = FindAnim(NameSwim) ? 1.f : 0.7f;
@@ -531,6 +579,12 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			bInAir = Move->IsFalling();
 		}
 	}
+	// On the bike the owner's velocity is the bike's: no walk cycle, no jump/fall/land takes.
+	if (RideAlpha > 0.5f)
+	{
+		Velocity = FVector::ZeroVector;
+		bInAir = false;
+	}
 	const float GroundSpeed = FVector(Velocity.X, Velocity.Y, 0.0).Size();
 	if (SkelComp)
 	{
@@ -592,14 +646,28 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		ArmSpread = FMath::Lerp(ArmSpread, 12.f, SwimAlpha);
 	}
 
-	LegL->SetRelativeRotation(FRotator(0.f, 0.f, -LegLAngle));
-	LegR->SetRelativeRotation(FRotator(0.f, 0.f, -LegRAngle));
+	// Riding: thighs forward and apart around the tank, arms out to the bars, torso tucked.
+	float LegSpread = 0.f;
+	if (RideAlpha > 0.01f)
+	{
+		LegLAngle = FMath::Lerp(LegLAngle, 58.f, RideAlpha);
+		LegRAngle = FMath::Lerp(LegRAngle, 58.f, RideAlpha);
+		ArmLAngle = FMath::Lerp(ArmLAngle, 68.f, RideAlpha);
+		ArmRAngle = FMath::Lerp(ArmRAngle, 68.f, RideAlpha);
+		ArmSpread = FMath::Lerp(ArmSpread, 16.f, RideAlpha);
+		TorsoLean = FMath::Lerp(TorsoLean, 16.f, RideAlpha);
+		LegSpread = 14.f * RideAlpha;
+	}
+
+	LegL->SetRelativeRotation(FRotator(-LegSpread, 0.f, -LegLAngle));
+	LegR->SetRelativeRotation(FRotator(LegSpread, 0.f, -LegRAngle));
 	ArmL->SetRelativeRotation(FRotator(-ArmSpread, 0.f, -ArmLAngle));
 	ArmR->SetRelativeRotation(FRotator(ArmSpread, 0.f, -ArmRAngle));
 
 	// ---- body
 	const float SwimPitch = 80.f * SwimAlpha;
-	Pelvis->SetRelativeLocation(HipHeight + FVector(0.0, 0.0, Bob - 2.0 * Breath * (1.f - Move01) * 0.5f + 32.0 * SwimAlpha));
+	const float RideHipLift = (RideHipHeight / FMath::Max(BodyScale, 0.05f) - static_cast<float>(HipHeight.Z)) * FMath::Clamp(RideAlpha, 0.f, 1.f);
+	Pelvis->SetRelativeLocation(HipHeight + FVector(0.0, 0.0, Bob - 2.0 * Breath * (1.f - Move01) * 0.5f + 32.0 * SwimAlpha + RideHipLift));
 	Pelvis->SetRelativeRotation(FRotator(0.f, 0.f, TorsoLean * 0.4f + SwimPitch));
 	Torso->SetRelativeRotation(FRotator(0.f, 0.f, TorsoLean + FMath::Sin(Phase * 2.f) * 1.5f * Move01));
 	Torso->SetRelativeScale3D(FVector(1.0, 1.0 + 0.012 * Breath, 1.0 + 0.008 * Breath));
