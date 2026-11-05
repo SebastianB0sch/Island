@@ -108,6 +108,20 @@ Egyptian-god theming), not a copy of any copyrighted asset. All card names in th
 
 *The Talk take over the contrapposto idle.*
 
+![Cast hair](Docs/renders/cast_hair.jpg)
+
+*Every cast member's hair from the front and back: soft, coherent masses with a rounded outline. See
+"Anime hair volume" below.*
+
+![Hair before and after](Docs/renders/hair_before_after.jpg)
+
+*Chazz before (each strand turned on its own: gaps, needles, a wide ragged outline) and after.*
+
+![Hair in motion](Docs/renders/hair_motion.jpg)
+
+*A Run frame with the spring solver on (`hairrig.simulate`, the same solver as in game). The locks swing
+together, and Alexis's long hair flows back in one sheet.*
+
 Everyone on the island is an **anime character model**: the VRoid sample avatars (VRoid Project / pixiv,
 whose terms allow modification and redistribution) restyled by the pipeline after the characters' official
 designs, with a cel-style material and ink outline in Unreal:
