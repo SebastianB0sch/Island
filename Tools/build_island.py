@@ -186,4 +186,6 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    from dai.determinism import pin_hash_seed
+    pin_hash_seed()   # reproducible cloth fit (see dai/determinism.py)
     raise SystemExit(main(sys.argv[1:]))

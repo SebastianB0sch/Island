@@ -194,6 +194,29 @@ def _anchor(tree, tris, co, pts, reach=REACH):
     return np.array(keep, np.int64), np.array(tri_of, np.int64).reshape(-1, 3), np.array(bary).reshape(-1, 3)
 
 
+def _edge_tris(obj, faces, tris):
+    """Per triangle: True when one of its edges is an open edge (hem, cuff, vent) of the garment (welded)."""
+    me = obj.data
+    co = np.array([v.co[:] for v in me.vertices])
+    inv = np.unique(np.round(co / 1e-5).astype(np.int64), axis=0, return_inverse=True)[1].ravel()
+    count = {}
+    for f in faces:
+        vs = [inv[v] for v in f]
+        for a, b in zip(vs, vs[1:] + vs[:1]):
+            if a != b:
+                e = (min(a, b), max(a, b))
+                count[e] = count.get(e, 0) + 1
+    open_e = {e for e, c in count.items() if c == 1}
+    out = np.zeros(len(tris), bool)
+    for i, (a, b, c) in enumerate(tris):
+        for x, y in ((a, b), (b, c), (c, a)):
+            e = (min(inv[x], inv[y]), max(inv[x], inv[y]))
+            if e in open_e:
+                out[i] = True
+                break
+    return out
+
+
 def _heights(co, pts_idx, tri_of, bary, slack=0.15):
     """Height of each anchored point above its (posed) covering triangle. A point that no longer projects onto
     that triangle (a vent or a hem swung away and uncovered it) is not poking through anything: -inf."""
@@ -215,6 +238,7 @@ def _heights(co, pts_idx, tri_of, bary, slack=0.15):
     wv = (d11 * d20 - d01 * d21) / den
     ww = (d00 * d21 - d01 * d20) / den
     wu = 1 - wv - ww
+    slack = np.broadcast_to(np.asarray(slack, float), wu.shape)
     inside = (wu > -slack) & (wv > -slack) & (ww > -slack)
     return np.where(inside, h, -np.inf)
 
@@ -226,6 +250,7 @@ def audit(obj, arm, poses, log=print):
     covering triangle (barycentric point). In each posed frame its height above that same triangle is
     measured: positive means it broke through the garment covering it. (Measuring against whatever outer
     surface happens to be nearest would count an arm resting on the torso as the shirt poking out.)"""
+    from . import correctives
     from . import retarget as RT
     me = obj.data
     groups = _groups(obj)
@@ -235,17 +260,26 @@ def audit(obj, arm, poses, log=print):
     outers = [g for g in groups if g != "skin"]
     RT._assign(arm, None)
     arm.data.pose_position = "REST"
+    if me.shape_keys:
+        for kb in me.shape_keys.key_blocks[1:]:
+            kb.value = 0.0
     co, _ = _evaluated(obj)
     arm.data.pose_position = "POSE"
     anchors = {}
     for outer in outers:
-        tree, tris = _bvh(co, [faces_all[fi] for fi in groups[outer]])
+        ofaces = [faces_all[fi] for fi in groups[outer]]
+        tree, tris = _bvh(co, ofaces)
+        edge = _edge_tris(obj, ofaces, tris)
+        tri_key = {tuple(t): e for t, e in zip(tris.tolist(), edge)}
         for inner, iv in verts_of.items():
             if LAYER[outer] <= LAYER[inner] or not len(iv):
                 continue
             keep, tri_of, bary = _anchor(tree, tris, co, co[iv])
             if len(keep):
-                anchors[(inner, outer)] = (iv[keep], tri_of, bary)
+                # at an open edge (vent, hem) a point that leaves the triangle is uncovered, not poking:
+                # exact projection there, a little slack between neighbouring triangles elsewhere
+                slack = np.array([0.0 if tri_key.get(tuple(t), False) else 0.15 for t in tri_of.tolist()])
+                anchors[(inner, outer)] = (iv[keep], tri_of, bary, slack)
     result = {}
     for pose, act, frames in poses:
         RT._assign(arm, act)
@@ -253,9 +287,10 @@ def audit(obj, arm, poses, log=print):
         pairs = {}
         for fr in frames:
             scene.frame_set(fr)
+            correctives.apply(obj, arm)          # the thigh-driven corrective morphs, as Unreal drives them
             co, _ = _evaluated(obj)
-            for (inner, outer), (idx, tri_of, bary) in anchors.items():
-                h = _heights(co, idx, tri_of, bary)
+            for (inner, outer), (idx, tri_of, bary, slack) in anchors.items():
+                h = _heights(co, idx, tri_of, bary, slack)
                 bad = h > EPS
                 if bad.any():
                     k = f"{inner}>{outer}"
@@ -264,7 +299,7 @@ def audit(obj, arm, poses, log=print):
         result[pose] = dict(poke=pairs, depth=round(worst, 1))
     RT._assign(arm, None)
     covered = {}
-    for (inner, _), (idx, _, _) in anchors.items():
+    for (inner, _), (idx, _, _, _) in anchors.items():
         covered.setdefault(inner, set()).update(int(i) for i in idx)
     return result, _intended_open(obj, groups, covered)
 
@@ -290,7 +325,7 @@ def _relax_anchors(rest, groups, faces_all, verts_of, outers):
     return anchors
 
 
-def relax(obj, arm, log=print, iterations=12, margin=0.002, max_push=0.03, max_tuck=0.015):
+def relax(obj, arm, log=print, iterations=12, margin=0.002, max_push=0.03, max_tuck=0.015, shape_fn=None):
     """Fit relaxation (build time, before the outline hull): pose the mesh through the audited takes, find every
     covered inner vertex that breaks through its covering triangle, and push that triangle's vertices out at
     rest (along their normals, smoothed over their neighbours) by the worst overshoot plus margin. Repeats until
@@ -338,11 +373,19 @@ def relax(obj, arm, log=print, iterations=12, margin=0.002, max_push=0.03, max_t
             anchors = merged if merged else anchors + fresh
         worst = [np.full(len(a[0]), -1.0) for a in anchors]
         scene = bpy.context.scene
+        base = np.array([v.co[:] for v in me.vertices]) if shape_fn else None
         for pose, act, frames in poses:
             RT._assign(arm, act)
             for fr in frames:
                 scene.frame_set(fr)
+                extra = shape_fn(arm) if shape_fn else None
+                if extra is not None:
+                    me.vertices.foreach_set("co", (base + extra).ravel())
+                    me.update()
                 co, _ = _evaluated(obj)
+                if extra is not None:
+                    me.vertices.foreach_set("co", base.ravel())
+                    me.update()
                 for k, (idx, tri_of, bary, _) in enumerate(anchors):
                     worst[k] = np.maximum(worst[k], _heights(co, idx, tri_of, bary))
         RT._assign(arm, None)

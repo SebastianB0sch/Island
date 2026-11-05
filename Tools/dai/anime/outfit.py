@@ -110,7 +110,7 @@ class Tailor:
     def _normals(self):
         """Area-weighted skin normals averaged over coincident positions (UV seams split the vertices)."""
         self.bm.normal_update()
-        verts = list({v for f in self.skin for v in f.verts})
+        verts = list(dict.fromkeys(v for f in self.skin for v in f.verts))
         co = np.array([v.co[:] for v in verts])
         n = np.array([v.normal[:] for v in verts])
         _, inv = np.unique(np.round(co / 1e-4).astype(np.int64), axis=0, return_inverse=True)
@@ -149,7 +149,7 @@ class Tailor:
         r = self.rig
         zc = (r.pelvis + r.chest) * 0.5
         span = (r.chest - r.pelvis) * 0.75
-        for v in {v for f in self.skin for v in f.verts}:
+        for v in dict.fromkeys(v for f in self.skin for v in f.verts):
             if abs(v.co.x) > r.shoulder_x + 0.05:
                 continue
             g = math.exp(-((v.co.z - zc) / span) ** 2) * amount
@@ -200,7 +200,7 @@ class Tailor:
         faces = [f for f in self.faces_of(name) if region is None or region(f.calc_center_median())]
         if not faces:
             return
-        verts = list({v for f in faces for v in f.verts})
+        verts = list(dict.fromkeys(v for f in faces for v in f.verts))
         edges = list({e for f in faces for e in f.edges})
         bmesh.ops.bisect_plane(self.bm, geom=verts + edges + faces, dist=1e-6, plane_co=co, plane_no=no)
         kill = [f for f in self.faces_of(name)
@@ -282,7 +282,7 @@ class Tailor:
         if not tube:
             return 0
         cy = self.rig.neck_c.y
-        roots = {r for r in tube.values()}
+        roots = list(dict.fromkeys(tube.values()))
 
         def ang(co):
             return math.degrees(math.atan2(co.x, -(co.y - cy)))
@@ -1005,7 +1005,10 @@ def tailor(arm, body, entry, key, log=print):
     if "shirt" in spec:
         shirt = dict(spec["shirt"])
         if spec.get("jacket", {}).get("length") in ("thigh", "knee", "calf"):
-            shirt["tucked"] = True          # under a long coat the shirt is tucked in (its tail would ride the legs)
+            # under a long coat the shirt is tucked in: it ends inside the trousers' waistband (its tail would
+            # ride the legs, and its hem would sit right where the trousers meet the coat panels)
+            shirt["tucked"] = True
+            shirt["length"] = "waist"
         t.shirt(shirt)
     if "jacket" in spec:
         t.jacket(spec["jacket"])

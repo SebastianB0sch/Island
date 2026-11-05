@@ -287,7 +287,7 @@ class Drape:
     def __init__(self, tailor):
         self.t = tailor
         r = tailor.rig
-        skin_v = list({v for f in tailor.skin if f.is_valid for v in f.verts})
+        skin_v = list(dict.fromkeys(v for f in tailor.skin if f.is_valid for v in f.verts))
         self.layer_pts = np.array([v.co[:] for v in skin_v], np.float64)
         self.layer_nrm = np.array([tailor.N.get(v, v.normal)[:] for v in skin_v], np.float64)
         h = r.h
@@ -314,7 +314,7 @@ class Drape:
         faces = [f for f in t.faces_of(name)]
         if not faces:
             return
-        verts = list({v for f in faces for v in f.verts})
+        verts = list(dict.fromkeys(v for f in faces for v in f.verts))
         w = Welded(verts, faces)
         co = w.co
         ax = np.abs(co[:, 0])
@@ -382,7 +382,7 @@ class Drape:
         faces = t.faces_of(name)
         if not faces:
             return 0
-        verts = list({v for f in faces for v in f.verts})
+        verts = list(dict.fromkeys(v for f in faces for v in f.verts))
         w = Welded(verts, faces)
         nrm = w.normals(faces)
         open_keys = {(a, b) for a, b in w.open_edges}
@@ -524,7 +524,7 @@ def _smooth_crotch(t, faces, steps=8, band=0.12):
     pelvis -> thigh hand-over is a few cm wide there, which pinches the trousers and leaves no clean field
     for the coat / shirt above to inherit."""
     r = t.rig
-    verts = list({v for f in faces for v in f.verts})
+    verts = list(dict.fromkeys(v for f in faces for v in f.verts))
     w = Welded(verts, faces)
     zone = (np.abs(w.co[:, 2] - r.crotch) < band) & (np.abs(w.co[:, 0]) < 0.17)
     if not zone.any():
@@ -589,14 +589,14 @@ def inherit_weights(t, log=print):
         faces = t.faces_of(name)
         trees = {}
         for reg, fs in under.items():
-            vs = list({v for f in fs for v in f.verts})
+            vs = list(dict.fromkeys(v for f in fs for v in f.verts))
             index = {v: i for i, v in enumerate(vs)}
             tree = BVHTree.FromPolygons([v.co[:] for v in vs], [[index[v] for v in f.verts] for f in fs])
             trees[reg] = (tree, fs, index, vs)
         cut = keep_below.get(name)
         new_w = {}
         follow = {}
-        for v in {v for f in faces for v in f.verts}:
+        for v in dict.fromkeys(v for f in faces for v in f.verts):
             reg = dominant(v)
             panel = name == "Jacket" and cut is not None and v.co.z < cut
             if panel:
@@ -716,10 +716,10 @@ def hide_covered(t, log=print):
                      if cut is None or min(v.co.z for v in f.verts) >= cut - 1e-4]
             if not faces:
                 continue
-            vs = list({v for f in faces for v in f.verts})
+            vs = list(dict.fromkeys(v for f in faces for v in f.verts))
             index = {v: i for i, v in enumerate(vs)}
             tree = BVHTree.FromPolygons([v.co[:] for v in vs], [[index[v] for v in f.verts] for f in faces])
-            w = Welded(list({v for f in t.faces_of(outer) for v in f.verts}), t.faces_of(outer))
+            w = Welded(list(dict.fromkeys(v for f in t.faces_of(outer) for v in f.verts)), t.faces_of(outer))
             edge_pts = []
             for a, b in w.open_edges:
                 pa, pb = w.co[a], w.co[b]
@@ -778,7 +778,7 @@ def fix_leg_sides(t, log=print):
     panel_side = {}
     for g in t.garments.values():
         panel_side.update(g.get("panel_side", {}))
-    for v in {v for f in t.bm.faces if f.material_index in garment_idx for v in f.verts}:
+    for v in dict.fromkeys(v for f in t.bm.faces if f.material_index in garment_idx for v in f.verts):
         side = panel_side.get(v)
         if side is None:
             if abs(v.co.x) < MIDLINE:
