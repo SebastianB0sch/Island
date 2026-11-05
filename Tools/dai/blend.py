@@ -51,7 +51,7 @@ def material(name):
     if kind in ("emissive", "lava", "hologram", "beam"):
         _set_input(bsdf, ("Emission Color", "Emission"), (*lin, 1.0))
         _set_input(bsdf, ("Emission Strength",), min(spec.get("strength", 1.0), 30.0))
-    if kind in ("glass", "water", "waterfall", "smoke", "beam", "hologram"):
+    if kind in ("glass", "water", "waterfall", "flow", "smoke", "beam", "hologram"):
         alpha = spec.get("opacity", 0.4 if kind != "water" else 0.85)
         bsdf.inputs["Alpha"].default_value = alpha
         try:

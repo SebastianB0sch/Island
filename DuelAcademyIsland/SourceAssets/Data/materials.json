@@ -1728,6 +1728,106 @@
   "tiling": 1.0,
   "strength": 1.0
  },
+ "M_FountainWater": {
+  "kind": "water",
+  "color": [
+   0.16,
+   0.6,
+   0.68
+  ],
+  "rough": 0.03,
+  "detail": null,
+  "wave_scale": 0.0045,
+  "wave_speed": 6.0,
+  "wave_strength": 0.6,
+  "color_linear": [
+   0.021980947079887205,
+   0.31854677812509186,
+   0.4200332886842154
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_FountainFall": {
+  "kind": "flow",
+  "color": [
+   0.86,
+   0.95,
+   1.0
+  ],
+  "opacity": 0.55,
+  "flow": 2.4,
+  "streak": 1.6,
+  "stretch": 4.0,
+  "base": 0.22,
+  "contrast": 1.8,
+  "sparkle": 0.5,
+  "wobble": 1.0,
+  "color_linear": [
+   0.7105664902244221,
+   0.8900054069935289,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "strength": 1.0
+ },
+ "M_FountainJet": {
+  "kind": "flow",
+  "color": [
+   0.92,
+   0.97,
+   1.0
+  ],
+  "opacity": 0.7,
+  "flow": -3.0,
+  "streak": 3.0,
+  "stretch": 3.0,
+  "base": 0.4,
+  "contrast": 1.4,
+  "sparkle": 0.7,
+  "wobble": 0.5,
+  "color_linear": [
+   0.8275708303626798,
+   0.9331068418238677,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "strength": 1.0
+ },
+ "M_FountainFoam": {
+  "kind": "flow",
+  "color": [
+   0.96,
+   0.98,
+   1.0
+  ],
+  "opacity": 0.65,
+  "flow": 0.0,
+  "foam_scale": 1.2,
+  "foam_speed": 1.0,
+  "base": 0.0,
+  "contrast": 2.2,
+  "sparkle": 0.3,
+  "wobble": 0.0,
+  "color_linear": [
+   0.9114075004063535,
+   0.9551045992337789,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "strength": 1.0
+ },
  "M_Hologram": {
   "kind": "hologram",
   "color": [

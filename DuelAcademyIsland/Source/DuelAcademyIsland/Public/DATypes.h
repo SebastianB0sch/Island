@@ -81,6 +81,7 @@ namespace DuelAcademy
 	inline constexpr const TCHAR* HologramMaterial = TEXT("/Game/DuelAcademy/Materials/M_DA_Hologram.M_DA_Hologram");
 	inline constexpr const TCHAR* CardBackMaterial = TEXT("/Game/DuelAcademy/Materials/MI_M_CardBack.MI_M_CardBack");
 	inline constexpr const TCHAR* SmokeMaterial = TEXT("/Game/DuelAcademy/Materials/M_DA_Smoke.M_DA_Smoke");
+	inline constexpr const TCHAR* SprayMaterial = TEXT("/Game/DuelAcademy/Materials/M_DA_Spray.M_DA_Spray");
 	inline constexpr const TCHAR* BeamMaterial = TEXT("/Game/DuelAcademy/Materials/MI_M_Beam.MI_M_Beam");
 	inline constexpr const TCHAR* SoundFolder = TEXT("/Game/DuelAcademy/Audio/");
 }

@@ -303,9 +303,12 @@ class Placer:
         if cls is None or enum is None:
             return
         for e in self.layout["emitters"]:
-            a = self.spawn(cls, self.loc(e["loc"]), 0.0, f"Emitter_{e['kind']}", "Gameplay/fx")
+            a = self.spawn(cls, self.loc(e["loc"]), self.yaw(e.get("yaw", 0.0)), f"Emitter_{e['kind']}", "Gameplay/fx")
             C.set_props(a, kind=getattr(enum, e["kind"].upper(), enum.STEAM), effect_scale=float(e["scale"]),
                         rate=float(e.get("rate", 1.0)))
+            if e.get("ring"):       # fountain spray: start on a circle (or at points on it) instead of a disc
+                C.set_props(a, ring=float(e["ring"]), ring_points=int(e.get("points", 0)),
+                            ring_angle=float(e.get("angle0", 0.0)))
 
     def audio(self):
         cls = C.native_class("DAAmbientSound")

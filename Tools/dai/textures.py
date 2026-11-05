@@ -4,7 +4,7 @@ Procedural, tileable textures (numpy + Pillow).
   T_<Name>_D.png   grayscale detail (mean ~0.5; the UE master material multiplies
                    the palette tint by 2*D, so 0.5 = unchanged colour)
   T_<Name>_N.png   tangent-space normal map, DirectX (green-down) convention
-  T_WaterNormal, T_Noise, T_Lava, T_CardBack     special purpose textures
+  T_WaterNormal, T_Noise, T_WaterStreaks, T_Lava, T_CardBack     special purpose textures
 
 Everything is periodic so it tiles seamlessly.
 """
@@ -274,6 +274,29 @@ def noise_tex(n=512):
     return norm01(spectral(n, 1.8, 45) * 0.6 + band(n, 8, 40, 46) * 0.4)
 
 
+def water_streaks(n=512):
+    """Flowing-water data texture for M_DA_WaterFlow (tileable, linear):
+    R / B two independent sets of threads stretched along V (falling sheets and jets stream along them),
+    G foam: bubbly cells with a lacy rim (churned water on flat faces)."""
+    def threads(seed):
+        def smeared(lo, hi, k, sd):        # band-limited noise smeared k times along V, scaled to [-1, 1]
+            b = np.real(np.fft.ifft2(np.fft.fft2(band(n, lo, hi, sd)) * _vstretch(n, k)))
+            return b / (np.abs(b).max() + 1e-9)
+        t = smeared(5, 22, 20.0, seed) * 0.65 + smeared(20, 60, 12.0, seed + 1) * 0.35
+        return np.clip((norm01(t) - 0.5) * 1.5 + 0.5, 0, 1)
+    cells = band(n, 10, 40, 63)
+    lace = np.clip(1.0 - np.abs(cells) * 4.0, 0, 1)            # bright rims between the bubbles
+    blot = norm01(spectral(n, 2.2, 64))
+    foam = np.clip(lace * 0.7 + np.clip(blot * 1.6 - 0.5, 0, 1) * 0.6, 0, 1)
+    return np.stack([threads(61), foam, threads(65)], -1).astype(np.float32)
+
+
+def _vstretch(n, k):
+    """Frequency-space low-pass along V only (an (n, n) filter): smears features k times along V."""
+    fy = np.fft.fftfreq(n)[:, None]
+    return np.broadcast_to(np.exp(-(fy * k * 6.0) ** 2), (n, n))
+
+
 def card_back(w=512, h=744):
     """Original card-back design (deliberately not the official one)."""
     img = Image.new("RGB", (w, h), (70, 38, 18))
@@ -328,12 +351,13 @@ def build_textures(log=print):
     save_rgb(water_normal(), os.path.join(C.OUT_TEXTURES, "T_WaterNormal.png"))
     save_rgb(lava(), os.path.join(C.OUT_TEXTURES, "T_Lava.png"))
     save_gray(noise_tex(), os.path.join(C.OUT_TEXTURES, "T_Noise.png"))
+    save_rgb(water_streaks(), os.path.join(C.OUT_TEXTURES, "T_WaterStreaks.png"))
     save_rgb(card_back(), os.path.join(C.OUT_TEXTURES, "T_CardBack.png"))
     # neutral defaults for the PBR masters (one per sampler type)
     save_rgb(np.ones((8, 8, 3), np.float32), os.path.join(C.OUT_TEXTURES, "T_White.png"))
     save_rgb(np.tile(np.array([0.5, 0.5, 1.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_FlatNormal.png"))
     save_rgb(np.tile(np.array([1.0, 1.0, 0.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_DefaultMask.png"))
-    log(f"  textures: {len(sets_lo) * 2 + 7} written")
+    log(f"  textures: {len(sets_lo) * 2 + 8} written")
     os.makedirs(C.OUT_DATA, exist_ok=True)
     build_photo_textures(log)
     return sorted(sets_lo)
