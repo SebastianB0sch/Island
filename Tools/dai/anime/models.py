@@ -519,7 +519,7 @@ def build_model(cid, entry, key_name, log=print):
         fitcheck.snap_residuals(body, arm, log, shape_fn=lambda a: correctives.displacement(body, a))
     meshes += extra
     for m in meshes:
-        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses"))
+        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses", "haircap"))
     face = next((m for m in meshes if m.name.startswith("Face")), meshes[0])
     _select(meshes, face)
     if len(meshes) > 1:
@@ -528,6 +528,7 @@ def build_model(cid, entry, key_name, log=print):
     mesh.name = mesh.data.name = f"SK_Anime_{key}"
     from . import shading
     shading.face_normals(mesh, arm, log)
+    shading.hair_normals(mesh, arm, log)
     restore_morphs(mesh, log)
     if entry.get("outfit"):
         # final check on exactly what is exported: covered vertices still breaking through follow their cloth

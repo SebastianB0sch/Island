@@ -13,7 +13,9 @@
 // UDAAvatarComponent feeds ground speed / air / swim / duel state every tick.
 //
 // On top of the blended takes the proxy runs the procedural "life" layer anime game characters have:
-//   * secondary motion: VRM-style verlet spring chains on the hair (VRoid HairJoint-* bones), the skirt and
+//   * secondary motion: VRM-style verlet spring chains on the hair (HairJoint_* chains fitted to each restyled
+//     head of hair, Tools/dai/anime/hairrig.py; solved level by level with a cohesion pull between neighbouring
+//     chains and a cone limit, so the hair moves as one mass and keeps its style), the skirt and
 //     coat-tail cloth bones (skirt_* / coattail_*, Tools/dai/anime/outfit.py) and the J_Sec_* helpers, in
 //     world space so they swing when the character starts, stops and turns; a head sphere keeps hair out of
 //     the face

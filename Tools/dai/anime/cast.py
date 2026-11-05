@@ -106,6 +106,19 @@ def _girl(jacket=None, trim=None, skirt=None, boots=None, **kw):
     return out
 
 
+# ---------------------------------------------------------------------- anime hair (hairshape.py)
+def _shape(flow=None, volume=None, envelope=None, clump=None, widen=1.5, **kw):
+    """Coherent anime volume for a base model's own cut: big soft masses, a rounded outline, no gaps."""
+    out = dict(coherence=0.018, widen=widen if isinstance(widen, dict) else dict(k=widen, tip=0.5),
+               clump=dict(dict(size=5, pull=0.65, power=1.6), **(clump or {})),
+               volume=dict(dict(top=2.4, back=2.0, side=1.4, front=1.15, loft=0.018), **(volume or {})),
+               envelope=dict(dict(side=1.5, jaw=1.3), **(envelope or {})))
+    if flow:
+        out["flow"] = flow
+    out.update(kw)
+    return out
+
+
 CAST = {
     # ------------------------------------------------------------------ Slifer Red
     "jaden": dict(
@@ -114,8 +127,10 @@ CAST = {
         outfit=dict(_academy(SLIFER_RED, SLIFER_DARK, (0.20, 0.20, 0.23), UNIFORM_PANTS, open_=1.0,
                              coat=dict(shield=dict(color=WHITE, border=SLIFER_DARK, w=0.15, side=0.09, point=0.07)))),
         # Tag Force cover art: orange-brown top layer over dark brown, big outward spikes
-        hairdo=dict(spike=dict(lift=0.35, up=0.0, length=1.45, front_lift=0.12, front_length=1.2, crown_lift=0.15, volume=1.1),
-                    thicken=dict(copies=2, angle=8.0, scale=1.04), top_layer=-0.005),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.45, up=0.3, sweep=0.35, length=1.15, front_lift=0.1, front_length=1.1,
+                                           crown_lift=0.25, side_lift=0.3),
+                                 volume=dict(top=2.8, back=2.3, side=1.6, loft=0.022), envelope=dict(side=1.55)),
+                    top_layer=0.025),
         face_shape=dict(chin=0.008, jaw=-0.04),
         expression=dict(MTH_Fun=0.35, BRW_Angry=0.25),
         colors=dict(jacket=SLIFER_RED, trim=(0.10, 0.10, 0.12), inner=(0.08, 0.08, 0.09),
@@ -133,8 +148,9 @@ CAST = {
         name="Syrus Truesdale", dorm="slifer", height=153, model="vroid_c",
         body=dict(open=0.75),
         outfit=dict(_academy(SLIFER_RED, SLIFER_DARK, (0.98, 0.84, 0.22), UNIFORM_PANTS, open_=0.0)),
-        hairdo=dict(spike=dict(lift=0.45, up=0.1, length=1.45, front_lift=0.25, front_length=1.2, crown_lift=0.3, volume=1.08),
-                    thicken=dict(copies=2, angle=8.0, scale=1.04),
+        # rounded mop flaring out into soft points all round
+        hairdo=dict(shape=_shape(flow=dict(lift=0.5, up=0.35, length=1.08, front_lift=0.2, front_length=1.08, crown_lift=0.25),
+                                 volume=dict(top=2.6, back=2.3, side=1.8, loft=0.024), envelope=dict(side=1.6, jaw=1.4)),
                     glasses=(0.30, 0.30, 0.32)),
         expression=dict(BRW_Sorrow=0.45, EYE_Surprised=0.3),
         colors=dict(jacket=SLIFER_RED, trim=WHITE, inner=(0.30, 0.55, 0.85),
@@ -156,8 +172,9 @@ CAST = {
                               coat=dict(collar_color=SLIFER_RED),
                               trim=SLIFER_RED, belly=1.0)),
         # Tag Force portrait: dark brown hair puffed out over the ears (koala), round pink nose
-        hairdo=dict(spike=dict(lift=0.0, up=0.2, length=1.1, front_lift=0.0, front_length=1.0, crown_lift=0.0,
-                               side_lift=0.55, volume=1.1),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.0, up=0.2, length=1.1, front_lift=0.0, front_length=1.0, crown_lift=0.0,
+                                           side_lift=0.5),
+                                 volume=dict(top=2.0, back=1.8, side=2.0, loft=0.015), envelope=dict(side=1.65, jaw=1.5)),
                     nose=(1.0, 0.66, 0.52)),
         face_shape=dict(cheeks=0.12, jaw=0.06),
         expression=dict(BRW_Angry=0.5, EYE_Joy=0.2),
@@ -180,8 +197,8 @@ CAST = {
         outfit=dict(_academy(RA_YELLOW, RA_DARK, (0.36, 0.58, 0.30), (0.22, 0.24, 0.30), open_=0.0,
                               coat=dict(lining=RA_YELLOW, collar_flare=0.04, buttons=dict(color=WHITE, n=1))),
                     shirt=dict(color=(0.36, 0.58, 0.30), sleeves="short", length="waist", turtleneck=True)),
-        hairdo=dict(spike=dict(lift=0.3, up=1.2, length=1.2, front_lift=0.85, front_length=1.05, crown_lift=0.2,
-                               volume=1.06)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.25, up=1.2, length=1.15, front_lift=0.7, front_length=1.05, crown_lift=0.15),
+                                 volume=dict(top=2.0, back=1.8, side=1.3, loft=0.012), envelope=dict(side=1.35, jaw=1.15))),
         face_shape=dict(chin=0.012, jaw=-0.07),
         expression=dict(BRW_Angry=0.3, EYE_Angry=0.3, MTH_Fun=0.4),
         colors=dict(jacket=RA_YELLOW, trim=WHITE, inner=(0.95, 0.95, 0.95),
@@ -202,8 +219,10 @@ CAST = {
         outfit=dict(_coat((0.07, 0.07, 0.09), (0.40, 0.40, 0.44), (0.45, 0.32, 0.42), (0.10, 0.12, 0.26),
                            open_=0.7, collar=0.09)),
         # Tag Force cover art: big black spikes standing up and back
-        hairdo=dict(spike=dict(lift=0.25, up=0.3, length=1.45, front_lift=0.0, front_length=1.15, crown_lift=0.25, volume=1.12),
-                    thicken=dict(copies=2, angle=8.0, scale=1.04)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.45, up=0.9, sweep=0.8, length=1.25, front_lift=0.1, front_length=1.05,
+                                           crown_lift=0.3, side_lift=0.25),
+                                 clump=dict(pull=0.7), widen=1.55,
+                                 volume=dict(top=2.6, back=2.2, side=1.5, loft=0.02), envelope=dict(side=1.5, jaw=1.25))),
         face_shape=dict(chin=0.012, jaw=-0.08),
         expression=dict(BRW_Angry=0.9, EYE_Angry=0.5, MTH_Angry=0.25),
         colors=dict(jacket=(0.07, 0.07, 0.09), trim=(0.30, 0.30, 0.34), inner=(0.10, 0.10, 0.12),
@@ -227,7 +246,8 @@ CAST = {
                                                  trim_w=0.008, trims=("front", "hem", "collar"), drop=0.06,
                                                  open=30, wide=0.11, deep=0.09))),
                     shirt=dict(color=(0.07, 0.07, 0.08), sleeves="short", turtleneck=True)),
-        hairdo=dict(spike=dict(lift=0.0, up=0.0, length=1.6, front_lift=0.0, front_length=1.15, crown_lift=0.0)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.0, up=0.0, length=1.5, front_lift=0.0, front_length=1.12, crown_lift=0.0),
+                                 volume=dict(top=2.3, back=2.0, side=1.4, loft=0.015), envelope=dict(side=1.4, jaw=1.2))),
         face_shape=dict(chin=0.014, jaw=-0.08),
         expression=dict(BRW_Angry=0.5, EYE_Angry=0.45),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=(0.16, 0.18, 0.24),
@@ -245,7 +265,8 @@ CAST = {
         name="Alexis Rhodes", dorm="obelisk", height=162, model="vroid_a",
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(gloves=dict(color=(0.22, 0.30, 0.72), trim=OBELISK_TRIM, trims=("front",), trim_w=0.006)),
-        hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")),
+        hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"),
+                    shape=_shape(volume=dict(top=2.0, back=1.6, side=1.3, loft=0.012), envelope=dict(side=1.45, jaw=1.35))),
         face_shape=dict(chin=0.006, jaw=-0.04),
         expression=dict(MTH_Fun=0.3),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
@@ -265,8 +286,8 @@ CAST = {
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         # Tag Force Special portrait: auburn shoulder-length hair flaring out in points, a tuft on top
-        hairdo=dict(spike=dict(lift=0.3, up=-0.55, length=1.35, front_lift=0.05, front_length=1.05, crown_lift=0.3,
-                               volume=1.06)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.3, up=-0.55, length=1.3, front_lift=0.05, front_length=1.05, crown_lift=0.3),
+                                 volume=dict(top=2.2, back=2.0, side=1.5, loft=0.015), envelope=dict(side=1.6, jaw=1.55))),
         expression=dict(MTH_Fun=0.3),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
@@ -282,8 +303,9 @@ CAST = {
         body=dict(female=True, open=0.0, skirt=True, boots=True),
         outfit=_girl(),
         # Tag Force Special portrait / anime: charcoal bob flipping out in wings at the shoulders
-        hairdo=dict(spike=dict(lift=0.12, up=0.0, length=1.25, front_lift=0.0, front_length=1.0, crown_lift=0.0,
-                               side_lift=0.32, volume=1.05)),
+        hairdo=dict(shape=_shape(flow=dict(lift=0.12, up=0.0, length=1.2, front_lift=0.0, front_length=1.0, crown_lift=0.0,
+                                           side_lift=0.32),
+                                 volume=dict(top=2.2, back=2.0, side=1.4, loft=0.015), envelope=dict(side=1.55, jaw=1.5))),
         expression=dict(MTH_Fun=0.35, EYE_Surprised=0.2),
         colors=dict(jacket=WHITE, trim=OBELISK_BLUE, inner=OBELISK_BLUE, skirt=OBELISK_BLUE,
                     pants=SKIN, shoes=(0.10, 0.22, 0.62), boots=(0.10, 0.22, 0.62), sole=(0.08, 0.1, 0.25)),
@@ -304,6 +326,7 @@ CAST = {
                                        shield=dict(color=WHITE, border=(0.92, 0.78, 0.30), w=0.12),
                                        shoulder=dict(color=(0.96, 0.62, 0.78), w=0.04)))),
         hairdo=dict(source="vroid_b", long_only=True, drop=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"),
+                    shape=_shape(volume=dict(top=2.0, back=1.7, side=1.3, loft=0.012), envelope=dict(side=1.45, jaw=1.3)),
                     ponytail=dict(k=0.3, band=(0.06, 0.06, 0.07)), ruff=(0.96, 0.62, 0.78),
                     earrings=((0.82, 0.84, 0.88), (0.20, 0.74, 0.70))),
         face_shape=dict(chin=0.024, jaw=-0.10),
@@ -327,10 +350,17 @@ CAST = {
 # ---------------------------------------------------------------------- generic students
 # One mesh per look; Unreal tints the jacket by dorm and the hair per NPC ("tint").
 STUDENTS = {
-    "student_m1": dict(model="vroid_c", hair=dict(style="spiky"), face=_face(mouth=dict(kind="smile"))),
+    "student_m1": dict(model="vroid_c", hair=dict(style="spiky"), face=_face(mouth=dict(kind="smile")),
+                       hairdo=dict(shape=_shape(flow=dict(lift=0.3, up=0.6, sweep=0.4, length=1.22, front_lift=0.05,
+                                                          front_length=1.05, crown_lift=0.15)))),
     "student_f1": dict(model="vroid_a", female=True, hair=dict(style="bob"),
+                       hairdo=dict(shape=_shape(volume=dict(top=2.2, back=2.0, side=1.5), envelope=dict(side=1.55, jaw=1.45))),
                        face=_face(eyes=dict(_EYES_GIRL), mouth=dict(kind="open", w=0.07), blush=0.25)),
     "student_f2": dict(model="vroid_b", female=True, hair=dict(style="long_straight"),
+                       # the rabbit-ear and star clips (HAIR_03 .. 06) stay as they are
+                       hairdo=dict(shape=_shape(volume=dict(top=2.0, back=1.6, side=1.3, loft=0.012),
+                                                envelope=dict(side=1.45, jaw=1.35),
+                                                keep=("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06"))),
                        face=_face(eyes=dict(_EYES_GIRL), mouth=dict(kind="smile", w=0.08), blush=0.25)),
 }
 
@@ -362,7 +392,7 @@ def student_entry(key):
                           trim=(0.55, 0.55, 0.55), coat=dict(tint=True))
         outfit["shirt"]["turtleneck"] = True
     return dict(name="Student", dorm="any", height=GENERIC_HEIGHT[female], body=body, colors=colors, model=s.get("model"), outfit=outfit,
-                hair=dict(s["hair"], color=TINT_BASE), face=face, extras=s.get("extras", []),
+                hair=dict(s["hair"], color=TINT_BASE), face=face, extras=s.get("extras", []), hairdo=s.get("hairdo"),
                 tint=["hair"] if female else ["jacket", "hair"], lines=[])
 
 

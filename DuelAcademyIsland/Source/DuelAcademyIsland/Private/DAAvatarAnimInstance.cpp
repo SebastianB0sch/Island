@@ -33,6 +33,10 @@ namespace
 		float Gravity = 0.2f;    // m/s^2-ish pull down (VRM gravityPower)
 		bool bHeadCollide = false;
 		bool bLegCollide = false;   // skirts / coat tails: kept out of the thigh and calf capsules
+		float Cohesion = 0.f;       // 0 .. 1: pull towards the neighbouring chains' motion (hair moves as a mass)
+		float Inertia = 1.f;        // share of the character's own motion the tails lag behind (1 = pure world space)
+		float MaxAngle = 0.f;       // degrees from the animated direction (0 = free)
+		bool bBodyCollide = false;  // long hair: kept on the back / shoulders (upper body capsule)
 	};
 
 	// leg capsule radii (cm, mesh scale): thigh at the hip / knee, calf at the knee / ankle
@@ -50,7 +54,30 @@ namespace
 	{
 		if (Name.StartsWith(TEXT("HairJoint")) || Name.Contains(TEXT("Hair")))
 		{
-			Out = { 1.1f, 0.42f, 0.18f, true };
+			// Tools/dai/anime/hairrig.py: HairJoint_<Key>_Short<nn>_<j> (styled hair over the head: stiff, nearly
+			// weightless, it bounces and settles back into shape) and HairJoint_<Key>_Long<nn>_<j> (long hair
+			// below the neck: heavier, swings further, lies on the back)
+			Out = FDASpringParams();
+			Out.bHeadCollide = true;
+			if (Name.Contains(TEXT("_Long")))
+			{
+				Out.Stiffness = 1.6f;
+				Out.Drag = 0.5f;
+				Out.Gravity = 0.06f;      // VRoid hair is modelled hanging: gravity is only a hint of weight
+				Out.Cohesion = 0.5f;
+				Out.MaxAngle = 50.f;
+				Out.Inertia = 0.15f;
+				Out.bBodyCollide = true;
+			}
+			else
+			{
+				Out.Stiffness = 3.0f;
+				Out.Drag = 0.6f;
+				Out.Gravity = 0.05f;
+				Out.Cohesion = 0.6f;
+				Out.MaxAngle = 18.f;
+				Out.Inertia = 0.05f;
+			}
 			return true;
 		}
 		if (Name.StartsWith(TEXT("skirt_")))
@@ -145,6 +172,7 @@ struct FDASpringChain
 	TArray<FVector> CurTail;                       // world space, per joint (Bones.Num() - 1)
 	TArray<FVector> PrevTail;
 	FDASpringParams Params;
+	TArray<int32> Neighbours;                      // chains of the same hair (index into Chains) next to this one
 	bool bValid = false;
 	bool bInitialised = false;
 };
@@ -192,10 +220,13 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 	bool bChainsBuilt = false;
 	FCompactPoseBoneIndex HeadIndex = FCompactPoseBoneIndex(INDEX_NONE);
 	FCompactPoseBoneIndex NeckIndex = FCompactPoseBoneIndex(INDEX_NONE);
+	FCompactPoseBoneIndex SpineIndex = FCompactPoseBoneIndex(INDEX_NONE);
 	FCompactPoseBoneIndex LegIndex[2][3] = {
 		{ FCompactPoseBoneIndex(INDEX_NONE), FCompactPoseBoneIndex(INDEX_NONE), FCompactPoseBoneIndex(INDEX_NONE) },
 		{ FCompactPoseBoneIndex(INDEX_NONE), FCompactPoseBoneIndex(INDEX_NONE), FCompactPoseBoneIndex(INDEX_NONE) } };
 	FVector LastHeadWorld = FVector::ZeroVector;
+	FTransform LastSimComponentToWorld = FTransform::Identity;
+	bool bHaveLastC2W = false;
 	// stats for the game thread (read in NativeUpdateAnimation, after the previous evaluation)
 	int32 StatChains = 0;
 	float StatMaxDeflection = 0.f;
@@ -241,6 +272,59 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 				Chains.Add(MoveTemp(Chain));
 			}
 		}
+		// neighbouring chains of one head of hair (HairJoint_<Key>_Short03_0 -> group "HairJoint_<Key>_Short"):
+		// the two whose tips are nearest in the reference pose, for the cohesion pull
+		TArray<FTransform> RefCS;
+		RefCS.SetNum(Num);
+		const TArray<FTransform>& RefLocal = Ref.GetRefBonePose();
+		for (int32 i = 0; i < Num; ++i)
+		{
+			const int32 P = Ref.GetParentIndex(i);
+			RefCS[i] = P == INDEX_NONE ? RefLocal[i] : RefLocal[i] * RefCS[P];
+		}
+		TArray<FString> Groups;
+		for (const FDASpringChain& Ch : Chains)
+		{
+			FString G = Ref.GetBoneName(Ch.SkeletonBones[0]).ToString();
+			int32 Us = INDEX_NONE;
+			if (G.FindLastChar(TEXT('_'), Us))
+			{
+				G.LeftInline(Us);                                    // drop "_<joint>"
+			}
+			while (G.Len() > 0 && FChar::IsDigit(G[G.Len() - 1]))
+			{
+				G.LeftChopInline(1);                                 // drop the chain number
+			}
+			Groups.Add(G);
+		}
+		for (int32 c = 0; c < Chains.Num(); ++c)
+		{
+			FDASpringChain& Ch = Chains[c];
+			Ch.Neighbours.Reset();
+			if (Ch.Params.Cohesion <= 0.f)
+			{
+				continue;
+			}
+			const FVector Tip = RefCS[Ch.SkeletonBones.Last()].GetLocation();
+			TArray<TPair<double, int32>> Near;
+			for (int32 o = 0; o < Chains.Num(); ++o)
+			{
+				if (o == c || Groups[o] != Groups[c])
+				{
+					continue;
+				}
+				const double D = FVector::Dist(Tip, RefCS[Chains[o].SkeletonBones.Last()].GetLocation());
+				if (D < 25.0)
+				{
+					Near.Add(TPair<double, int32>(D, o));
+				}
+			}
+			Near.Sort([](const TPair<double, int32>& A, const TPair<double, int32>& B) { return A.Key < B.Key; });
+			for (int32 k = 0; k < FMath::Min(2, Near.Num()); ++k)
+			{
+				Ch.Neighbours.Add(Near[k].Value);
+			}
+		}
 		bChainsBuilt = true;
 	}
 
@@ -266,6 +350,7 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 		const FReferenceSkeleton& Ref = BC.GetReferenceSkeleton();
 		HeadIndex = Resolve(Ref.FindBoneIndex(TEXT("head")));
 		NeckIndex = Resolve(Ref.FindBoneIndex(TEXT("neck_01")));
+		SpineIndex = Resolve(Ref.FindBoneIndex(TEXT("spine_02")));
 		const TCHAR* LegNames[2][3] = { { TEXT("thigh_l"), TEXT("calf_l"), TEXT("foot_l") },
 		                                { TEXT("thigh_r"), TEXT("calf_r"), TEXT("foot_r") } };
 		for (int32 Side = 0; Side < 2; ++Side)
@@ -331,7 +416,11 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 		CS.SetComponentSpaceTransform(HeadIndex, NewHead);
 	}
 
-	/** VRM spring bones: each joint's tail is a verlet particle pulled back to its animated direction. */
+	/** VRM spring bones: each joint's tail is a verlet particle pulled back to its animated direction.
+	 *  The chains are solved level by level (every chain's first joint, then every chain's second, ...) so a
+	 *  joint can be pulled towards the motion of its neighbouring chains at the same depth (Cohesion): a head
+	 *  of hair swings as one soft mass instead of separate strands drifting apart. MaxAngle keeps a joint
+	 *  within a cone round its animated direction (styled anime hair holds its shape). */
 	void ApplySprings(FCSPose<FCompactPose>& CS)
 	{
 		if (!bSprings || Chains.Num() == 0)
@@ -340,6 +429,7 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 		}
 		const float Dt = FMath::Clamp(SimDt, 0.f, 1.f / 20.f);
 		const FCompactPose& Local = CS.GetPose();
+		const float Scale = static_cast<float>(SimComponentToWorld.GetScale3D().Z);
 		// head sphere (hair must not swing into the face / skull)
 		FVector HeadCenterW = FVector::ZeroVector;
 		float HeadRadius = 0.f;
@@ -347,12 +437,20 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 		if (HeadIndex.GetInt() != INDEX_NONE)
 		{
 			const FTransform HeadCS = CS.GetComponentSpaceTransform(HeadIndex);
-			const float Scale = static_cast<float>(SimComponentToWorld.GetScale3D().Z);
 			HeadCenterW = SimComponentToWorld.TransformPosition(HeadCS.GetLocation() + FVector(0.0, -1.0, 9.0));
 			HeadRadius = 9.5f * Scale;
 			bTeleported = !LastHeadWorld.IsZero() && FVector::DistSquared(LastHeadWorld, HeadCenterW) > FMath::Square(120.f);
 			LastHeadWorld = HeadCenterW;
 		}
+		// upper body capsule (long hair lies on the back and shoulders): spine_02 -> neck_01
+		FVector BodyA = FVector::ZeroVector, BodyB = FVector::ZeroVector;
+		const bool bBody = SpineIndex.GetInt() != INDEX_NONE && NeckIndex.GetInt() != INDEX_NONE;
+		if (bBody)
+		{
+			BodyA = SimComponentToWorld.TransformPosition(CS.GetComponentSpaceTransform(SpineIndex).GetLocation());
+			BodyB = SimComponentToWorld.TransformPosition(CS.GetComponentSpaceTransform(NeckIndex).GetLocation());
+		}
+		const float BodyRadius = 11.f * Scale;
 		// leg capsules (world space): hip -> knee and knee -> ankle per side
 		FVector Leg[2][3];
 		bool bLegs = true;
@@ -368,7 +466,6 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 				Leg[Side][J] = SimComponentToWorld.TransformPosition(CS.GetComponentSpaceTransform(LegIndex[Side][J]).GetLocation());
 			}
 		}
-		const float LegScale = static_cast<float>(SimComponentToWorld.GetScale3D().Z);
 		auto PushOutOfLegs = [&](FVector& P)
 		{
 			if (!bLegs)
@@ -380,7 +477,7 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 				for (int32 Seg = 0; Seg < 2; ++Seg)
 				{
 					const FVector C = ClosestOnSegment(P, Leg[Side][Seg], Leg[Side][Seg + 1]);
-					const float R = (Seg == 0 ? ThighRadius : CalfRadius) * LegScale;
+					const float R = (Seg == 0 ? ThighRadius : CalfRadius) * Scale;
 					const FVector Off = P - C;
 					const double D = Off.Size();
 					if (D < R && D > KINDA_SMALL_NUMBER)
@@ -390,9 +487,17 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 				}
 			}
 		};
+		// the tails ride along with (1 - Inertia) of the character's own move since the last step, so walking and
+		// running give a lively sway instead of a wind tunnel (all of the lag at 4 m/s would blow the hair back)
+		const bool bCarry = Dt > 0.f && bHaveLastC2W && !bTeleported;
+		const FTransform LastC2W = LastSimComponentToWorld;
+		if (Dt > 0.f)
+		{
+			LastSimComponentToWorld = SimComponentToWorld;
+			bHaveLastC2W = true;
+		}
 		const FVector GravityDir(0.0, 0.0, -1.0);
-		int32 ValidChains = 0;
-		float MaxDeflection = 0.f;
+		int32 MaxJoints = 0;
 		for (FDASpringChain& Chain : Chains)
 		{
 			if (!Chain.bValid)
@@ -406,71 +511,179 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 				Chain.PrevTail.SetNum(Joints);
 				Chain.bInitialised = false;
 			}
-			for (int32 j = 0; j < Joints; ++j)
+			if (bCarry && Chain.bInitialised && Chain.Params.Inertia < 1.f)
 			{
+				const float K = 1.f - Chain.Params.Inertia;
+				for (int32 j = 0; j < Joints; ++j)
+				{
+					const FVector C = SimComponentToWorld.TransformPosition(LastC2W.InverseTransformPosition(Chain.CurTail[j]));
+					const FVector P = SimComponentToWorld.TransformPosition(LastC2W.InverseTransformPosition(Chain.PrevTail[j]));
+					Chain.CurTail[j] = FMath::Lerp(Chain.CurTail[j], C, K);
+					Chain.PrevTail[j] = FMath::Lerp(Chain.PrevTail[j], P, K);
+				}
+			}
+			MaxJoints = FMath::Max(MaxJoints, Joints);
+		}
+		struct FLevel
+		{
+			FVector HeadW, AnimTailW, Next;
+			FTransform BoneCS;
+			FVector AnimTailCS;
+			float Len = 0.f;
+			bool bActive = false;
+		};
+		TArray<FLevel, TInlineAllocator<64>> Lv;
+		TArray<FVector, TInlineAllocator<64>> Cohered;
+		Lv.SetNum(Chains.Num());
+		Cohered.SetNum(Chains.Num());
+		float MaxDeflection = 0.f;
+		for (int32 j = 0; j < MaxJoints; ++j)
+		{
+			// 1. integrate every chain's joint j
+			for (int32 c = 0; c < Chains.Num(); ++c)
+			{
+				FDASpringChain& Chain = Chains[c];
+				FLevel& L = Lv[c];
+				L.bActive = false;
+				if (!Chain.bValid || j >= Chain.Bones.Num() - 1)
+				{
+					continue;
+				}
 				const FCompactPoseBoneIndex B = Chain.Bones[j];
 				const FCompactPoseBoneIndex Child = Chain.Bones[j + 1];
-				const FTransform BoneCS = CS.GetComponentSpaceTransform(B);
-				const FVector AnimTailCS = (Local[Child] * BoneCS).GetLocation();
-				const FVector HeadW = SimComponentToWorld.TransformPosition(BoneCS.GetLocation());
-				const FVector AnimTailW = SimComponentToWorld.TransformPosition(AnimTailCS);
-				const FVector RestW = AnimTailW - HeadW;
-				const float Len = static_cast<float>(RestW.Size());
-				if (Len < KINDA_SMALL_NUMBER)
+				L.BoneCS = CS.GetComponentSpaceTransform(B);
+				L.AnimTailCS = (Local[Child] * L.BoneCS).GetLocation();
+				L.HeadW = SimComponentToWorld.TransformPosition(L.BoneCS.GetLocation());
+				L.AnimTailW = SimComponentToWorld.TransformPosition(L.AnimTailCS);
+				const FVector RestW = L.AnimTailW - L.HeadW;
+				L.Len = static_cast<float>(RestW.Size());
+				if (L.Len < KINDA_SMALL_NUMBER)
 				{
 					continue;
 				}
 				if (!Chain.bInitialised || bTeleported)
 				{
-					Chain.CurTail[j] = Chain.PrevTail[j] = AnimTailW;
+					Chain.CurTail[j] = Chain.PrevTail[j] = L.AnimTailW;
 				}
 				FVector Next = Chain.CurTail[j];
 				if (Dt > 0.f)
 				{
 					const FVector Inertia = (Chain.CurTail[j] - Chain.PrevTail[j]) * (1.f - Chain.Params.Drag);
 					// stiffness scaled by the bone length so short and long bones behave alike (VRM is in metres)
-					const FVector Stiff = (RestW / Len) * (Chain.Params.Stiffness * Dt * Len * 20.f);
+					const FVector Stiff = (RestW / L.Len) * (Chain.Params.Stiffness * Dt * L.Len * 20.f);
 					const FVector Grav = GravityDir * (Chain.Params.Gravity * Dt * 100.f);
 					Next = Chain.CurTail[j] + Inertia + Stiff + Grav;
 				}
-				Next = HeadW + (Next - HeadW).GetSafeNormal() * Len;
+				L.Next = L.HeadW + (Next - L.HeadW).GetSafeNormal() * L.Len;
+				L.bActive = true;
+			}
+			// 2. cohesion: each joint's deviation from its animated tail blends towards its neighbours' mean
+			for (int32 c = 0; c < Chains.Num(); ++c)
+			{
+				const FLevel& L = Lv[c];
+				Cohered[c] = L.Next;
+				const FDASpringChain& Chain = Chains[c];
+				if (!L.bActive || Chain.Params.Cohesion <= 0.f || Chain.Neighbours.Num() == 0)
+				{
+					continue;
+				}
+				FVector Sum = FVector::ZeroVector;
+				int32 N = 0;
+				for (int32 Nb : Chain.Neighbours)
+				{
+					if (Lv.IsValidIndex(Nb) && Lv[Nb].bActive)
+					{
+						Sum += Lv[Nb].Next - Lv[Nb].AnimTailW;
+						++N;
+					}
+				}
+				if (N > 0)
+				{
+					const FVector Own = L.Next - L.AnimTailW;
+					const FVector Dev = FMath::Lerp(Own, Sum / N, Chain.Params.Cohesion);
+					Cohered[c] = L.HeadW + (L.AnimTailW + Dev - L.HeadW).GetSafeNormal() * L.Len;
+				}
+			}
+			// 3. constraints, state, bone rotation
+			for (int32 c = 0; c < Chains.Num(); ++c)
+			{
+				FDASpringChain& Chain = Chains[c];
+				const FLevel& L = Lv[c];
+				if (!L.bActive)
+				{
+					continue;
+				}
+				FVector Next = Cohered[c];
+				const FVector RestDir = (L.AnimTailW - L.HeadW) / L.Len;
+				if (Chain.Params.MaxAngle > 0.f)
+				{
+					const FVector Dir = (Next - L.HeadW).GetSafeNormal();
+					const float Ang = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(static_cast<float>(FVector::DotProduct(Dir, RestDir)), -1.f, 1.f)));
+					if (Ang > Chain.Params.MaxAngle)
+					{
+						const FQuat Q = FQuat::FindBetweenNormals(RestDir, Dir);
+						const FQuat Lim = FQuat::Slerp(FQuat::Identity, Q, Chain.Params.MaxAngle / Ang);
+						Next = L.HeadW + Lim.RotateVector(RestDir) * L.Len;
+					}
+				}
 				if (Chain.Params.bHeadCollide && HeadRadius > 0.f)
 				{
 					// never push a strand further out than its own animated rest (bangs lie close to the face)
-					const float Radius = FMath::Min(HeadRadius, 0.95f * static_cast<float>(FVector::Dist(AnimTailW, HeadCenterW)));
+					const float Radius = FMath::Min(HeadRadius, 0.95f * static_cast<float>(FVector::Dist(L.AnimTailW, HeadCenterW)));
 					const FVector Off = Next - HeadCenterW;
 					const float D = static_cast<float>(Off.Size());
 					if (D < Radius && D > KINDA_SMALL_NUMBER)
 					{
 						Next = HeadCenterW + Off / D * Radius;
-						Next = HeadW + (Next - HeadW).GetSafeNormal() * Len;
+						Next = L.HeadW + (Next - L.HeadW).GetSafeNormal() * L.Len;
+					}
+				}
+				if (Chain.Params.bBodyCollide && bBody)
+				{
+					// long hair stays on the back / shoulders: no closer to the spine than its animated rest
+					const FVector AxisRest = ClosestOnSegment(L.AnimTailW, BodyA, BodyB);
+					const float Radius = FMath::Min(BodyRadius, 0.95f * static_cast<float>(FVector::Dist(L.AnimTailW, AxisRest)));
+					const FVector C = ClosestOnSegment(Next, BodyA, BodyB);
+					const FVector Off = Next - C;
+					const float D = static_cast<float>(Off.Size());
+					if (D < Radius && D > KINDA_SMALL_NUMBER)
+					{
+						Next = C + Off / D * Radius;
+						Next = L.HeadW + (Next - L.HeadW).GetSafeNormal() * L.Len;
 					}
 				}
 				if (Chain.Params.bLegCollide)
 				{
 					// a swinging skirt / coat panel never ends up inside a leg
 					PushOutOfLegs(Next);
-					Next = HeadW + (Next - HeadW).GetSafeNormal() * Len;
+					Next = L.HeadW + (Next - L.HeadW).GetSafeNormal() * L.Len;
 				}
 				if (Dt > 0.f)
 				{
 					Chain.PrevTail[j] = Chain.CurTail[j];
 					Chain.CurTail[j] = Next;
 				}
-				const FVector SimCS = SimComponentToWorld.InverseTransformVectorNoScale(Next - HeadW).GetSafeNormal();
-				const FVector AnimCS = (AnimTailCS - BoneCS.GetLocation()).GetSafeNormal();
+				const FVector SimCS = SimComponentToWorld.InverseTransformVectorNoScale(Next - L.HeadW).GetSafeNormal();
+				const FVector AnimCS = (L.AnimTailCS - L.BoneCS.GetLocation()).GetSafeNormal();
 				if (SimCS.IsNearlyZero() || AnimCS.IsNearlyZero())
 				{
 					continue;
 				}
 				const FQuat Delta = FQuat::FindBetweenNormals(AnimCS, SimCS);
 				MaxDeflection = FMath::Max(MaxDeflection, FMath::RadiansToDegrees(static_cast<float>(Delta.GetAngle())));
-				FTransform NewCS = BoneCS;
-				NewCS.SetRotation((Delta * BoneCS.GetRotation()).GetNormalized());
-				CS.SetComponentSpaceTransform(B, NewCS);
+				FTransform NewCS = L.BoneCS;
+				NewCS.SetRotation((Delta * L.BoneCS.GetRotation()).GetNormalized());
+				CS.SetComponentSpaceTransform(Chain.Bones[j], NewCS);
 			}
-			Chain.bInitialised = true;
-			++ValidChains;
+		}
+		int32 ValidChains = 0;
+		for (FDASpringChain& Chain : Chains)
+		{
+			if (Chain.bValid)
+			{
+				Chain.bInitialised = true;
+				++ValidChains;
+			}
 		}
 		StatChains = ValidChains;
 		StatMaxDeflection = MaxDeflection;

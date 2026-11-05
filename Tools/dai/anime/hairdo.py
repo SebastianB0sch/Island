@@ -16,6 +16,8 @@ VRoid hair is built from separate strands (one mesh island each), so a style is 
              (applied in models.materials)
   top_layer  dz: two-layer hair, everything above the head centre + dz in hair "color2" (Jaden)
   thicken    {copies, angle, scale}: turned, slightly bigger copies of the strands for a denser mane
+  shape      coherent anime volume (hairshape.py: flow, clump, widen, volume, envelope, under-layer)
+  rig        spring chains fitted to the restyled hair (hairrig.py; default on with shape / source)
 
 plus accessories built in place from the face landmarks: round glasses (Syrus), a round nose (Chumley), a
 frilled ruff, crescent earrings and a ponytail band (Crowler).
@@ -182,13 +184,21 @@ TOP = "_Top"
 
 
 def top_layer(obj, hc, dz=0.0):
-    """Two-layer hair (Jaden: an orange-brown top layer over dark brown, as on the Tag Force cover art): faces
-    above hc.z + dz get a "<material>_Top" copy of their material, recoloured with hair "color2"."""
+    """Two-layer hair (Jaden: an orange-brown top layer over dark brown, as on the Tag Force cover art): every
+    strand whose middle lies above hc.z + dz gets a "<material>_Top" copy of its material (recoloured with hair "color2")
+    along its whole length, so the two tones meet along lock edges - the outer locks light, the under layer and
+    nape dark - instead of a horizontal cut through every strand."""
     me = obj.data
-    co = np.array([v.co[:] for v in me.vertices])
+    co, lab = islands(me)
+    hw = _head_weight(obj)
+    top_strand = set()
+    for i in range(lab.max() + 1):
+        idx = np.where(lab == i)[0]
+        if co[idx, 2].mean() >= hc.z + dz:
+            top_strand.add(i)
     top = {}
     for poly in me.polygons:
-        if co[list(poly.vertices), 2].mean() < hc.z + dz:
+        if int(lab[poly.vertices[0]]) not in top_strand:
             continue
         m = me.materials[poly.material_index]
         if m is None or m.name.endswith(TOP):
@@ -453,6 +463,21 @@ def register_accessory_material(name, color):
     return name
 
 
+def _head_skin(meshes, hc):
+    """Skin vertices of the head (face and body meshes, rigid on the head bone, above the jaw line)."""
+    pts = []
+    for m in meshes:
+        if m.name.startswith("Hair"):
+            continue
+        w = _head_weight(m)
+        co = np.array([v.co[:] for v in m.data.vertices])
+        if not len(co):
+            continue
+        sel = (w > 0.5) & (co[:, 2] > hc.z - 0.06)
+        pts.append(co[sel])
+    return np.concatenate(pts) if pts else None
+
+
 def restyle(arm, meshes, entry, key, rig, log=print):
     """Apply entry["hairdo"] to the base model's hair; returns ({extra alpha modes}, [accessory objects])."""
     spec = entry.get("hairdo") or {}
@@ -472,10 +497,20 @@ def restyle(arm, meshes, entry, key, rig, log=print):
     hc = head_center(face)
     if spec.get("spike"):
         spike(hair, hc, **spec["spike"])
+    if spec.get("shape"):
+        from . import hairshape
+        _, _, cap = hairshape.shape(hair, face, spec["shape"], log, skin=_head_skin(meshes, hc))
+        if cap is not None:
+            meshes.append(cap)          # joined with the rest; recoloured with the hair (same material)
     if spec.get("thicken"):
         thicken(hair, hc, **spec["thicken"])
     if spec.get("top_layer") is not None:
         top_layer(hair, hc, spec["top_layer"])
+    if spec.get("rig", bool(spec.get("shape") or spec.get("source"))):
+        # springs fitted to the hair as it is now (hairrig.py); the base model's own HairJoint bones go
+        from . import hairrig
+        hairrig.rig(arm, meshes, face, key, log)
+        hairrig.drop_unused(arm, meshes)
     extra = []
     if spec.get("glasses"):
         mat = register_accessory_material(f"M_Anime_{key}_Glasses", spec["glasses"])

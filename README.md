@@ -134,12 +134,48 @@ designs, with a cel-style material and ink outline in Unreal:
   the face is reshaped towards it (longer faces and pointed chins for Zane, Chazz, Bastion and Jaden,
   Crowler's long narrow face, Chumley's round one).
 * **Hair is restyled per character** (`Tools/dai/anime/hairdo.py`): Jaden's spiky orange-over-brown mop,
-  Syrus's cyan spikes, Zane's long slate-teal hair, Chazz's black spikes, Bastion's swept-up grey hair,
+  Syrus's cyan mop, Zane's long slate-teal hair, Chazz's swept-back black spikes, Bastion's neat grey hair,
   Chumley's black koala puffs, long olive-blond hair for Alexis, Jasmine's auburn flared cut, Mindy's grey
   bob with flipped wings, Crowler's blond bob and ponytail with a black band, plus Syrus's round glasses and
-  Chumley's round nose; eye colours per character. The spiky manes
-  (Jaden, Chazz, Syrus) are thickened with turned copies of the strands, which brings those meshes to about
-  80k triangles.
+  Chumley's round nose; eye colours per character.
+* **Anime hair volume** (`Tools/dai/anime/hairshape.py`). VRoid hair is a stack of thin strands lying on the
+  scalp, and turning each strand on its own fans them apart into gaps, needles and a wide, ragged outline.
+  Every step here moves neighbouring hair together instead:
+  * **flow**: strands *bend* towards the style direction, with the bend averaged over the strands rooted
+    nearby. `sweep` turns the side locks back rather than out.
+  * **coherence**: the displacement is smoothed in space, whatever strand a point belongs to, so layers
+    keep their order and nothing splits.
+  * **clump**: strand tips gather into a few big locks that end in soft points.
+  * **widen**: each lock gets wider across, within the hair surface.
+  * **volume**: the hair layer stands off the skull, more on top and at the back than at the sides. A
+    strand carries its lift down to its tip, so no shelf forms and the crown rises into a dome.
+  * **envelope**: the width is softly capped at the temples and narrows towards the jaw, the bulb outline
+    of anime hair.
+  * **under-layer**: a hair-coloured shell on the scalp, taking only opaque root texels, so skin never
+    shows where locks part.
+
+  Two-tone hair (Jaden) is coloured per lock (the outer locks orange, the under layer and nape dark) instead
+  of with a horizontal cut. In the cel shading the hair gets **volume normals**
+  (`shading.hair_normals`): the strand normals are blended into the smoothed shape of the whole mass. The
+  shadow then falls as one clean line and there is one angel-ring highlight instead of a streak on every
+  strand.
+* **Hair physics** (`Tools/dai/anime/hairrig.py`). Every restyled head of hair gets its own spring chains,
+  fitted to the hair as it now is:
+  * Ten short chains go round the head. Hair hanging below the shoulders gets eight longer, heavier
+    ones, which also lie on the back.
+  * Each vertex is shared between its two nearest chains and blended along each chain, so locks can't
+    part.
+  * The roots stay on the head, and the pivots sit part-way down the locks.
+  * Bones are named per character (`HairJoint_<Key>_Short03_1`), so the union skeleton keeps every
+    member's own pivots. Unreal skips chains a mesh doesn't skin.
+
+  In Unreal the solver runs level by level and pulls each joint towards the motion of its neighbouring
+  chains (cohesion), so the hair moves as one mass. A cone limit keeps styled hair in shape. The tails also
+  ride along with most of the character's own motion (`Inertia`): a 4 m/s run gives a lively bounce, not
+  a wind tunnel. `hairrig.simulate` is the same solver in Python. With it, a Blender preview shows the
+  hair as the game does. Styled short hair settles at about 1° in Idle and swings 3-4° on average in a
+  walk and about 7° in a run, with footfall peaks capped at 18°. Long hair (Alexis) flows about 19° on
+  average in a run, up to 50°, and stays on her back.
 
 The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on
@@ -234,8 +270,8 @@ free tools (Blender as a Python module, numpy / scipy, Unreal's own C++):
   fabric. Their rest pose comes from body landmarks only, so the shared skeleton stays identical across the
   members of a group.
 * **Secondary motion** (`UDAAvatarAnimInstance`): a VRM-style verlet spring solver in the native
-  animation proxy swings the hair (the VRoid `HairJoint-*` chains), the skirt and coat-tail bones and the
-  `J_Sec_*` coat helpers in world space. They lag, overshoot and settle when a character starts, stops or
+  animation proxy swings the hair (the fitted `HairJoint_*` chains, see "Hair physics"), the skirt and
+  coat-tail bones and the `J_Sec_*` coat helpers in world space. They lag, overshoot and settle when a character starts, stops or
   turns, and a head sphere keeps hair out of the face. It runs after the blended takes, so it works on every
   clip.
 * **Facial animation**: the VRoid blendshapes are kept as 16 **morph targets** relative to each
