@@ -1791,7 +1791,7 @@ def _lobby_interior(mb, nocol, aset):
             C.mb.box((0, 0, 0.9), (0.06, 0.06, 1.8), K.TRIM_GOLD)
             C.mb.box((0, 0, 0.02), (0.5, 0.4, 0.04), K.TRIM_GOLD)
             C.nc.box((0, -0.04, 1.55), (1.2, 0.03, 0.8), K.POSTERS[k + 2])
-    K.camera(aset, "lobby_floor", (-5.5, -61.0, FLOOR + 1.7), (-14.0, -40.0, FLOOR + 1.2), 18)
+    K.camera(aset, "lobby_floor", (0.0, -62.0, FLOOR + 1.6), (0.0, -30.0, FLOOR + 1.6), 18)
 
 
 # ---------------------------------------------------------------------------- interior: card shop
@@ -1908,7 +1908,7 @@ def _card_shop(mb, aset):
         C.poster(19.6 + k * 1.0, Y0 + 0.5, FLOOR + 2.2, 180.0, 0.7, 1.0, K.POSTERS[k], ("SALE", "NEW", "TOP 10", "RARE")[k],
                  size=0.08)
     zone_dress(C, X0 + 0.5, Y0 + 0.5, X1, Y1 - 0.5, FLOOR, zc, 161, rug=False, plants=1, frames=0, banners=3)
-    K.camera(aset, "card_shop", (11.0, -38.0, 4.2), (26.0, -47.0, 3.4), 18)
+    K.camera(aset, "card_shop", (16.6, -42.0, FLOOR + 1.6), (28.5, -47.0, FLOOR + 1.3), 18)
 
 
 # ---------------------------------------------------------------------------- interior: arena
@@ -2341,7 +2341,7 @@ def _wing_interior(C, s):
             _plate_door(C, x, cy1, 0.0, "LECTURE HALL " + ("A" if x0 == HALL_A[0] else "B"))
     for x, yy, d in ((52.0, 4.2, "slifer"), (70.5, 5.6, "ra"), (79.0, 3.6, "obelisk")):
         C.npc(x, yy, 90.0, d, 3.0)
-    C.cam(f"wing{side[0]}_corridor", (38.6, 2.9, FLOOR + 1.75), (70.0, 6.0, FLOOR + 1.0), 18)
+    C.cam(f"wing{side[0]}_corridor", (39.0, 4.7, FLOOR + 1.6), (80.0, 4.7, FLOOR + 1.3), 18)
     _duelist_room(C, side)
     _lecture_hall(C, HALL_A, f"LECTURE HALL {side[0]}-A", hall_doors[HALL_A], side, 0)
     _lecture_hall(C, HALL_B, f"LECTURE HALL {side[0]}-B", hall_doors[HALL_B], side, 1)
@@ -3169,7 +3169,7 @@ def room_staff(C):
     C.dt("calendar", 96.5, y0, z + 1.55, 180.0, 4)
     C.dt("coat_hooks", x1, 13.6, z + 1.75, -90.0, 5, "white", 3, 2)
     C.clutter(x0 + 0.7, y0, x1, y1, "office", 4, 12, clear=[(x0, y1 - 0.7, x1, y1), (97.4, 16.6, x1, 18.0)])
-    zone_dress(C, x0, y0, x1, y1, z, CZ, 13, rug=True, plants=0, frames=0, banners=0)
+    zone_dress(C, x0, y0, x1, y1, z, CZ, 13, rug=True, plants=0, frames=0, banners=2)
     for y in (12.4, 21.0):          # department signs hung over the desk islands
         C.box(93.0, y - 0.9, CZ - 0.5, 94.4, y + 0.9, CZ - 0.25, BLUE_T, nc=True)
         C.box(93.7, y - 0.01, CZ - 0.25, 93.72, y + 0.01, CZ, K.METAL, nc=True)
@@ -3178,6 +3178,12 @@ def room_staff(C):
     for y in (19.2, 21.0, 22.8):
         C.prop("SM_Int_Frame", x1 - 0.02, y, z + 1.75, -90.0)
     wall_unit(C, "+x", x1, 18.3, 23.9, "cabinet", seed=14)
+    for y in (15.4, 18.0):
+        K.pendant(C.a, *C.F.p(93.7, y), CZ, "lamp")
+    for x in (90.4, 92.0):
+        C.prop("SM_Int_Frame", x, y0 + 0.02, z + 2.0, 180.0)
+    for y in (17.4, 19.8, 22.2, 24.6):
+        C.prop("SM_Int_Frame", x0 + 0.02, y, z + 1.9, 90.0)
     C.cam("pavE_staff_room", (98.1, 26.4, z + 1.7), (90.5, 9.0, z + 0.9), 17)
 
 
@@ -3444,7 +3450,7 @@ def room_council(C):
     y0 = yp + 0.15
     room_base(C, x0, y0, x1, y1, 81, "office", win="-x", wl=wins(EB_WIN_W, y0, y1), lights=(2, 2),
               drape="curtain", drape_mat="M_IntFabricRed", clear=[(x0, y0, x1, y0 + 0.3)])
-    C.rug(90.4, -8.6, 96.4, -0.4, "M_IntCarpetRed", K.TRIM_GOLD)
+    C.rug(90.4, -8.4, 96.4, -0.4, "M_IntFabricRed", K.TRIM_GOLD)
     conf_table(C, 92.8, -7.2, 94.0, -1.6)
     for y in (-6.6, -5.3, -4.0, -2.7):
         C.prop("SM_Int_DiningChair", 92.3, y + 0.5, z, 90.0)
@@ -3482,7 +3488,8 @@ def room_council(C):
         K.pendant(C.a, *C.F.p(93.4, py), CZ, "chandelier")
     C.npc(93.4, -1.2, 180.0, "obelisk", 0.5)
     C.npc(92.6, -5.4, 90.0, "ra", 0.3)
-    zone_dress(C, x0, y0, x1, y1, z, CZ, 89, rug=False, plants=0, frames=2, banners=2)
+    zone_dress(C, x0, y0, x1, y1, z, CZ, 89, rug=False, plants=0, frames=2, banners=4)
+    wall_unit(C, "+x", x1, -8.2, -6.0, "cabinet", seed=93)
     C.cam("pavW_council", (98.2, -8.0, z + 1.7), (91.0, 1.5, z + 0.9), 17)
 
 
@@ -3526,8 +3533,13 @@ def room_cafeteria(C):
     C.npc(89.4, 16.0, 90.0, "white", 0.5)
     for (x, y, d) in ((92.4, 14.6, "slifer"), (97.4, 18.8, "ra"), (96.0, 10.4, "obelisk")):
         C.npc(x, y, 90.0, d, 0.5)
-    zone_dress(C, 91.0, y0, x1, y1, z, CZ, 14, rug=False, plants=1, frames=0, banners=3)
+    zone_dress(C, 91.0, y0, x1, y1, z, CZ, 14, rug=False, plants=1, frames=0, banners=5)
+    C.rug(91.0, 9.0, 91.8, 22.0, "M_IntFabricNavy", None, z=z + 0.006)
+    C.rug(94.2, 9.0, 95.5, 24.4, "M_IntFabricGreen", None, z=z + 0.006)
     wall_unit(C, "+x", x1, 11.8, 23.9, "cabinet", seed=90, h=0.9)
+    for x in (93.1, 96.6):
+        for y in (10.4, 14.6, 18.8, 23.0):
+            K.pendant(C.a, *C.F.p(x, y), CZ, "lamp")
     C.cam("pavW_cafeteria", (98.1, 27.3, z + 1.8), (89.5, 11.0, z + 1.0), 17)
 
 
@@ -3661,7 +3673,16 @@ def room_computers(C):
     C.box(x0, yp + 0.2, CZ - 0.35, x1, yp + 0.5, CZ - 0.3, K.METAL, nc=True)                   # cable tray
     wall_unit(C, "-x", x0, 8.95, 10.9, "shelf", seed=92)
     wall_unit(C, "-y", yp + 0.15, 106.3, 108.7, "cabinet", seed=91)
-    C.cam("pavW_server_room", (112.8, yp + 0.6, z + 1.6), (104.0, y1 - 0.4, z + 1.0), 16)
+    wall_unit(C, "+y", y1, 109.6, 111.6, "cubby", seed=94)
+    for k in range(3):          # a second row of racks (island)
+        C.prop("SM_Int_SteelShelves", 104.2 + k * 1.15, 10.0, z, 180.0)
+        C.nc.box(C.P(104.2 + k * 1.15, 10.0, z + 1.0), (0.9, 0.4, 1.6), K.BLACK)
+        for j in range(5):
+            C.nc.box(C.P(104.2 + k * 1.15, 9.79, z + 0.45 + j * 0.28), (0.7, 0.01, 0.03),
+                     "M_DuelFieldGlow" if (j + k) % 2 else "M_IntScreen")
+    C.poster(105.0, yp + 0.15, z + 1.9, 0.0, 1.2, 0.5, "M_IntPoster1", "AUTHORIZED STAFF ONLY", size=0.06)
+    C.box(x0, y1 - 0.3, CZ - 0.35, x1, y1 - 0.05, CZ - 0.3, K.METAL, nc=True)
+    C.cam("pavW_server_room", (111.0, 10.7, z + 1.6), (103.6, 10.7, z + 1.3), 18)
     y1 = yp
     room_base(C, x0, y0, x1, y1, 85, "office", win="+x", wl=wins(EB_WIN_E, y0, y1), lights=(2, 3),
               clear=[(x0, y1 - 0.7, x1, y1)])
@@ -4288,6 +4309,12 @@ def room_teachers(C, side):
     C.npc(93.0, -19.8, 90.0, "white", 0.5, z=z)
     C.npc(91.6, -24.6, 0.0, "white", 0.3, z=z)
     zone_dress(C, x0, y0, x1, y1, z, UCZ, 92, rug=False, plants=0, frames=1, banners=0, front="+y")
+    C.rug(92.6, -18.3, 95.4, -14.9, "M_IntFabricGreen", "M_IntFabricBeige", z=z + 0.006)
+    shelf_prop(C, "SM_Int_Bookshelf", 93.6, y0 + 0.31, 180.0, 94, z=z)
+    C.rug(88.6, -20.6, 90.6, -17.4, "M_IntFabricRed", "M_IntFabricBeige", z=z + 0.006)
+    C.rug(96.4, -20.2, 98.6, -17.8, "M_IntFabricNavy", None, z=z + 0.006)
+    for y in (-17.2, -16.0):
+        K.pendant(C.a, *C.F.p(94.0, y), UCZ, "lamp")
     C.cam(f"pav{side[0]}_2f_teachers_lounge", (98.2, y0 + 0.6, z + 1.75), (89.0, y1 - 1.0, z + 0.9), 17)
 
 
@@ -4519,9 +4546,11 @@ def _annex_suite(C, who):
         C.wtext("CLOCKWORK GOLEM - MODEL", -10.3, 64.0, z + 0.55, 180.0, 0.07, (0.15, 0.1, 0.05))
         shelf_prop(C, "SM_Int_MetalRack", x0 + 0.32, 64.6, 90.0, 170, kind="store")
         C.prop("SM_Int_Stool", -16.0, ya + 1.2, z, 0.0, 0.75)
-    zone_dress(C, x0, ya, WX - 0.15, WY - 0.15, z, CZ, 147 + ch, rug=ch, plants=1, frames=1, banners=0)
+    zone_dress(C, x0, ya, WX - 0.15, WY - 0.15, z, CZ, 147 + ch, rug=True, plants=1, frames=1, banners=0)
     if ch:
         C.prop("SM_Int_Console", x0 + 0.31, 64.6, z, 90.0)
+    if not ch:      # blueprints of the golem pinned up over the bench
+        art_wall(C, "+y", WY - 0.15, x0 + 1.0, -12.9, z, 149, rows=(1.4, 1.95))
     C.cam(f"annex_{who}_{'meeting' if ch else 'workshop'}", (WX - 0.6, WY - 0.5, z + 1.6), (x0 + 0.5, ya + 0.5, z + 0.9), 17)
 
 
@@ -4644,6 +4673,9 @@ def _annex_interior(C):
     C.dt("mug", 8.6, ya + 0.35, z + 0.9, 3)
     dining(C, 7.4, 60.6, 0.0, chairs=4, length=1.2, side=0.7, setting="cafe", seed=108)
     zone_dress(C, 4.25, ya, 9.85, yb, z, CZ, 106, rug=False, plants=1, frames=1, banners=0)
+    C.rug(5.6, ya + 0.75, 9.6, ya + 1.45, "M_IntFabricBlue", None, z=z + 0.006)
+    C.rug(6.0, 59.4, 8.8, 61.8, "M_IntFabricOrange", "M_IntFabricBeige", z=z + 0.006)
+    C.bulletin(9.85, 55.5, z + 1.2, -90.0, 1.6, 1.0, "KITCHEN RULES", seed=106)
     C.cam("annex_staff_kitchen", (4.9, 62.1, z + 1.7), (9.3, 53.6, z + 0.9), 17)
     x0 = 10.15
     room_base(C, x0, ya, x1, yb, 107, "office", win="+x", wl=wins(ANX_WIN_S, ya, yb), coffer=K.WOOD_DARK, lights=(2, 2),
@@ -4783,7 +4815,8 @@ def _annex_upper(C):
     C.prop("SM_Int_Box", 18.7, yb - 1.0, z, -15.0)
     C.prop("SM_Int_PottedPlantB", x1 - 0.45, ya + 1.0, z, 0.0)
     C.npc(10.4, 58.4, 180.0, "white", 0.5, z=z)
-    zone_dress(C, x0, ya, x1, yb, z, ANX_TOP, 125, rug=False, plants=0, frames=2, banners=0)
+    zone_dress(C, x0, ya, x1, yb, z, ANX_TOP, 125, rug=True, plants=0, frames=2, banners=0)
+    C.bulletin(x0, 55.4, z + 1.2, 90.0, 1.6, 1.0, "JOBS", seed=126)
     C.cam("annex_staff_workroom", (x0 + 0.6, yb - 0.6, z + 1.7), (17.5, ya + 1.0, z + 0.9), 17)
     # ---------------- broadcast room (east, north): mixing desk, microphones, record shelves, ON AIR
     x0, x1, ya, yb = 4.25, 19.5, 62.85, y1
