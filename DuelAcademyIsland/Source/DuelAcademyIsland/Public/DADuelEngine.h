@@ -275,6 +275,13 @@ public:
 
 	/** Debug/self-test helper: simulate a complete AI-vs-AI duel. */
 	static FString RunSelfTest(UCardDatabaseSubsystem* Database, int32 Iterations);
+	/**
+	 * Self-test helper: Games interactive duels with response windows on.
+	 * The player side plays random legal actions through the public API and
+	 * answers every question at random; the summary ends in RESULT PASS when
+	 * no opponent turn stalls and every state invariant holds.
+	 */
+	static FString RunInteractiveSelfTest(UCardDatabaseSubsystem* Database, int32 Games);
 
 	// -----------------------------------------------------------------------
 	// Choices / targeting (additive; no pending choice means legacy auto-play)
@@ -354,6 +361,29 @@ public:
 	bool ActivateCounterTrapResponse(int32 TrapUid, int32 TargetChainLinkNumber, FString& OutError);
 
 	// -----------------------------------------------------------------------
+	// Player response windows
+	//
+	// When enabled (the default for interactive duels) the player's Set Traps
+	// and Quick-Play Spells never fire on an AI heuristic.  Whenever the
+	// opponent declares an attack, summons, activates a Spell/Trap, enters the
+	// Battle Phase or reaches the End Phase and the player holds a card that
+	// could legally respond, the engine queues an EDuelChoiceType::ChainResponse
+	// question and suspends the opponent's turn until it is answered.  The
+	// legacy automatic behaviour remains in force when the windows are turned
+	// off or when every choice is auto-answered (self-tests, puzzle replays).
+	// -----------------------------------------------------------------------
+
+	void SetPlayerResponseWindows(bool bEnable) { bPlayerResponseWindows = bEnable; }
+	bool ArePlayerResponseWindowsEnabled() const { return bPlayerResponseWindows; }
+	/** True when the player is asked instead of the legacy automatic Trap logic. */
+	bool UsesPlayerResponseWindows() const { return bPlayerResponseWindows && !bAutoAnswerAllChoices; }
+	/** True while the opponent's turn is paused behind a player question. */
+	bool IsOpponentTurnSuspended() const { return bAiTurnPending && AiTurnStage != EAiTurnStage::Idle; }
+	/** Choice option ids used by response windows. */
+	static constexpr int32 ResponsePassOptionId = 1000;
+	static constexpr int32 ResponsePassTurnOptionId = 1001;
+
+	// -----------------------------------------------------------------------
 	// Deck validation / banned list
 	// -----------------------------------------------------------------------
 
@@ -419,6 +449,84 @@ private:
 	bool SetupScenarioSide(EDuelOwner Side, const FDuelScenario& Scenario, FString& OutError);
 	void CheckScenarioCompletion();
 	bool IsCardInSideDeck(EDuelOwner Side, int32 CardId) const;
+
+	// ---- player response windows / resumable opponent turn ----
+	enum class EResponseKind : uint8
+	{
+		LegacyAttackTrap,
+		LegacySummonTrap,
+		CounterSpell,
+		CounterTrap,
+		DeferredScript,
+		KuribohLv10,
+		SetCard
+	};
+	struct FResponseCandidate
+	{
+		EResponseKind Kind = EResponseKind::SetCard;
+		int32 CardUid = 0;
+		/** Index into the effect runtime's deferred-response list (DeferredScript only). */
+		int32 DeferredIndex = INDEX_NONE;
+		FString Label;
+	};
+	/**
+	 * Queues a ChainResponse question for the player.  Returns false (and
+	 * queues nothing) when Candidates is empty.  OnAnswer receives the chosen
+	 * candidate, or nullptr when the player passed.
+	 */
+	bool OpenPlayerResponseWindow(EDuelTimingWindow Window, const FString& Prompt, int32 SourceUid,
+		const TArray<FResponseCandidate>& Candidates, TFunction<void(const FResponseCandidate*)> OnAnswer);
+	/** Adds every Set card the player could activate generically in Window. */
+	void CollectSetCardResponses(EDuelTimingWindow Window, TArray<FResponseCandidate>& OutCandidates, int32 ExcludeUid = 0);
+	/** Adds the effect runtime's deferred event-triggered player Traps. */
+	void CollectDeferredScriptResponses(TArray<FResponseCandidate>& OutCandidates);
+	FString DescribeResponseCard(const FDuelCard& Card) const;
+	bool IsPlayerPassingThisTurn() const { return PlayerPassTurn == TurnNumber; }
+	/** Runs Fn now, or once no player question is pending any more. */
+	void ContinueAfterPlayerChoices(TFunction<void()> Fn);
+	void RunDeferredContinuations();
+	/** Card-specific requirements for activating a Set card (or a hand Quick-Play). */
+	bool HasActivationRequirements(const FDuelCard& Card) const;
+	bool CanActivateSetCardInWindow(const FDuelCard& Card, EDuelTimingWindow Window) const;
+	/** Activates a player's Set card outside the Main Phase action flow. */
+	bool ActivatePlayerSetCard(int32 Uid, FString& OutError);
+	bool ActivateSetSpellInternal(int32 Uid, FString& OutError);
+	/** Activates one chosen response candidate; returns true when it actually activated. */
+	bool ActivateResponseCandidate(const FResponseCandidate& Candidate);
+	void RevealActivatedTrap(FDuelCard& Trap, EDuelOwner Side);
+
+	bool OpenAttackResponseWindow(EDuelOwner AttackerSide, int32 AttackerUid, int32 TargetUid, bool bDirectAllowed);
+	void ContinueAttackAfterResponses(EDuelOwner AttackerSide, int32 AttackerUid, int32 TargetUid, bool bDirectAllowed);
+	void ContinueAttackAfterTrap(EDuelOwner AttackerSide, int32 AttackerUid, int32 TargetUid, bool bDirectAllowed,
+		int32 TrapUid, bool bNegated, bool bRevealed);
+	void FinishAttack(EDuelOwner AttackerSide, int32 AttackerUid, int32 TargetUid);
+	void ResolveKuribohLv10(EDuelOwner DefenderSide, EDuelOwner AttackerSide);
+	void ResetMultiAttackAfterNegation(int32 AttackerUid);
+	bool OpenSummonResponseWindow(int32 SummonedUid, bool bNormalSummon);
+	void ResolveLegacySummonTrap(int32 TrapUid, int32 SummonedUid, bool bRevealed);
+	/** OnDone(bNegated, bRevealed); the player's Seven Tools / chain responses are offered first. */
+	void OfferResponsesToOpponentTrap(int32 TrapUid, TFunction<void(bool, bool)> OnDone);
+	/** OnDone(bNegated); the player's Magic Jammer / chain responses are offered first. */
+	void OfferResponsesToOpponentSpell(int32 SpellUid, TFunction<void(bool)> OnDone);
+	void ActivatePlayerSevenTools(int32 TrapUid, TFunction<void(bool)> OnDone);
+	void ActivatePlayerMagicJammer(int32 TrapUid, TFunction<void(bool)> OnDone);
+	bool OpenPhaseResponseWindow(EDuelTimingWindow Window, const FString& Prompt);
+	/** Offers leftover deferred event Traps (for example from a nested summon). */
+	bool OfferDeferredScriptResponses();
+	void FinishActivatedSpell(int32 Uid, EDuelOwner Side, bool bFieldSpell);
+	void ResolveActivatedTrap(int32 Uid, EDuelOwner Side);
+	void DrainOpponentChoices();
+	bool RunAiMainStep(int32 Step);
+
+	// ---- player-directed legacy targeting ----
+	/** Asks the player (or answers for the AI) to pick from Uids; OnPicked gets the chosen uids. */
+	void ChooseCardsFor(EDuelOwner Chooser, const FDuelCard& Source, const FString& Prompt, const TArray<int32>& Uids,
+		int32 Count, const TArray<int32>& Defaults, TFunction<void(const TArray<int32>&)> OnPicked);
+	/** Discards Count cards chosen by Side (the AI keeps its lowest-value heuristic). */
+	void DiscardChosen(EDuelOwner Side, const FDuelCard& Source, int32 Count, const FString& Reason,
+		TFunction<void()> OnDone, int32 KeepUid = 0);
+	TArray<int32> LowestValueHandUids(EDuelOwner Side, int32 Count, int32 KeepUid = 0) const;
+	void ReviveFromGraveyard(int32 SpellUid, EDuelOwner Side, int32 TargetUid, const FString& Reason, bool bTieSpell);
 
 	// ---- setup and turn flow ----
 	void SetupSide(EDuelOwner Side, const FString& DeckId);
@@ -518,7 +626,8 @@ private:
 	void ApplyBattleDamage(EDuelOwner Receiver, int32 Amount, int32 SourceUid, int32 ReceiverCardUid);
 	void AfterAttack(FDuelCard& Attacker);
 	FDuelCard* PickAttackTrap(EDuelOwner Defender, FDuelCard& Attacker, FDuelCard* Target);
-	bool ResolveAttackTrap(FDuelCard& Trap, EDuelOwner Defender, FDuelCard& Attacker, FDuelCard*& Target, EDuelOwner AttackerSide);
+	bool ResolveAttackTrap(FDuelCard& Trap, EDuelOwner Defender, FDuelCard& Attacker, FDuelCard*& Target, EDuelOwner AttackerSide,
+		bool bRevealed = false);
 	void TriggerFlipEffect(FDuelCard& Card, EDuelOwner Side);
 	/** Returns true when the card was actually moved to the Graveyard/Banished pile. */
 	bool DestroyMonster(FDuelCard& Card, bool bByBattle, FDuelCard* Attacker, bool bWasFaceDown, const FString& Reason);
@@ -542,6 +651,7 @@ private:
 	void QueueEquipTargetChoice(FDuelCard& Equip, EDuelOwner Side, const FString& Name);
 	void ResolveSpell(FDuelCard& Card);
 	void ResolveReviveSpell(FDuelCard& Spell, EDuelOwner Side, EDuelOwner GraveOwner, int32 LpCost, const TCHAR* Reason);
+	bool IsLegacyAttackTrapName(const FString& Name) const;
 	bool ActivateTrapInternal(FDuelCard& Trap, EDuelOwner Side, bool bAutomatic);
 	void ResolveTrap(FDuelCard& Trap);
 	bool TryCounterSpell(EDuelOwner Caster, EDuelOwner Defender);
@@ -631,6 +741,31 @@ private:
 	TMap<int32, FDuelActivationRule> ActivationRules;
 	bool bEnforceActivationTiming = false;
 	bool bLegacyAutomaticTraps = true;
+
+	/** Player response windows (see SetPlayerResponseWindows). */
+	bool bPlayerResponseWindows = true;
+	/** Turn number on which the player chose "pass for the rest of this turn". */
+	int32 PlayerPassTurn = -1;
+	/** Work that waits for the player's current questions (and their follow-ups). */
+	TArray<TFunction<void()>> DeferredContinuations;
+	bool bRunningContinuations = false;
+
+	enum class EAiTurnStage : uint8
+	{
+		Idle,
+		Begin,
+		Main,
+		BattleStart,
+		Battle,
+		BattleEnd,
+		EndPhase,
+		EndWindow,
+		Handoff
+	};
+	/** Where a suspended opponent turn resumes. */
+	EAiTurnStage AiTurnStage = EAiTurnStage::Idle;
+	int32 AiMainStep = 0;
+	int32 AiStepRepeats = 0;
 
 	FDuelBannedListRuleset BannedList;
 

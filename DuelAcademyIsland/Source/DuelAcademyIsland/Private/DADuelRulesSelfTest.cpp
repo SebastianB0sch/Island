@@ -1,6 +1,7 @@
 #include "DADuelRulesSelfTest.h"
 
 #include "DADuelEngine.h"
+#include "DADuelResponseSelfTest.h"
 #include "DADuelistAI.h"
 #include "DACardRecords.h"
 #include "DuelAcademyIsland.h"
@@ -866,6 +867,18 @@ FDuelRulesSelfTestReport FDuelRulesSelfTest::Run(UCardDatabaseSubsystem* Databas
 			&& FirstDecision.CardId == SecondDecision.CardId
 			&& FirstDecision.Score == SecondDecision.Score,
 			TEXT("AI decisions are deterministic for the same snapshot"));
+	}
+
+	// ---- player response windows / player-chosen targets ------------------
+	{
+		DADuelResponseSelfTest::Run(Database, [&Report](bool bPassed, const FString& Name)
+		{
+			Report.Check(bPassed, Name);
+		});
+		const FString Interactive = FDuelEngine::RunInteractiveSelfTest(Database, 12);
+		UE_LOG(LogDuelAcademyIsland, Log, TEXT("%s"), *Interactive);
+		Report.Check(Interactive.Contains(TEXT("RESULT PASS")),
+			TEXT("interactive duels with response windows finish without stalls or invariant failures"));
 	}
 
 	// ---- existing 137-card regression smoke ------------------------------

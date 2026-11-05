@@ -1467,8 +1467,18 @@ FDEffectRuntimeSelfTestReport FDAEffectRuntimeSelfTest::Run(UCardDatabaseSubsyst
 			Report.Check(Duel.ActivateSpell(SpellUid, ActivateError),
 				TEXT("Equip Spell with several legal targets activates"));
 			const FDuelChoiceRequest* Choice = Duel.GetPendingChoice();
-			Report.Check(Choice && Choice->Options.Num() == 2,
-				TEXT("equip target choice offers both own monsters and excludes the opponent"));
+			const int32 OpponentUid = Duel.GetSide(EDuelOwner::Opponent).Monsters.IsValidIndex(0)
+				? Duel.GetSide(EDuelOwner::Opponent).Monsters[0].Uid : 0;
+			// An Equip Spell may equip any face-up monster on the field; the
+			// player picks, and the default answer prefers their own monster.
+			Report.Check(Choice && Choice->Options.Num() == 3
+				&& Choice->Options.ContainsByPredicate([OpponentUid](const FDuelChoiceOption& Option)
+				{
+					return OpponentUid != 0 && Option.CardUid == OpponentUid;
+				}),
+				TEXT("equip target choice offers every face-up monster, including the opponent's"));
+			Report.Check(Choice && Choice->DefaultOptionIds.Num() == 1 && Choice->DefaultOptionIds[0] != OpponentUid,
+				TEXT("the default equip answer prefers a monster the caster controls"));
 			const bool bOffersSecond = Choice && Choice->Options.ContainsByPredicate(
 				[SecondUid](const FDuelChoiceOption& Option) { return Option.CardUid == SecondUid; });
 			Report.Check(bOffersSecond, TEXT("the exact second monster is a selectable equip target"));

@@ -205,6 +205,28 @@ public:
 	bool HasFieldStatScript(int32 CardId) const;
 	/** True when a data-script Equip Spell has a legal face-up target right now. */
 	bool HasLegalEquipTarget(const FDuelCard& Card) const;
+	/**
+	 * True when one of the card's on_activate scripts could start right now:
+	 * its condition holds, its target selector has enough candidates and its
+	 * costs can be paid.  Cards without on_activate scripts return bNoScript.
+	 */
+	bool CanActivateScriptNow(const FDuelCard& Card, bool bNoScript = true) const;
+	/** True for Traps whose scripts only fire on an event (summon, attack, ...). */
+	bool HasEventTrapTrigger(int32 CardId) const;
+
+	/**
+	 * Player response windows: while FDuelEngine::UsesPlayerResponseWindows()
+	 * is true, an event-triggered Set Trap the player controls is not started
+	 * automatically.  Its legal activation is recorded here instead and the
+	 * engine offers it in the matching response window.
+	 */
+	int32 GetDeferredResponseCount() const { return DeferredResponses.Num(); }
+	int32 GetDeferredResponseCardUid(int32 Index) const;
+	/** Re-checks the recorded source, event card, condition and targets. */
+	bool IsDeferredResponseLegal(int32 Index) const;
+	/** Starts the recorded script (re-checking its source and condition). */
+	bool RunDeferredResponse(int32 Index);
+	void ClearDeferredResponses() { DeferredResponses.Reset(); }
 	bool HasScriptTrigger(int32 CardId, EDEffectTrigger Trigger) const;
 
 	/** Summon and activation locks. */
@@ -237,6 +259,13 @@ private:
 		EDuelOwner Chooser = EDuelOwner::Player;
 		TArray<int32> TargetUids;
 		TArray<int32> CostUids;
+	};
+
+	struct FDeferredResponse
+	{
+		FDEffectScript Script;
+		FDuelCard SourceCard;
+		FDEffectEvent Event;
 	};
 
 	struct FDEffectModifier
@@ -307,6 +336,9 @@ private:
 	bool bDispatchingEvents = false;
 	bool bEventBudgetWarned = false;
 	TArray<FPendingEffectEvent> PendingEvents;
+	TArray<FDeferredResponse> DeferredResponses;
+	/** Set while RunDeferredResponse starts a script the player chose. */
+	bool bForceDeferredStart = false;
 	int32 PromptCount = 0;
 	int32 ExecutedScripts = 0;
 	int32 FailedScripts = 0;
@@ -354,6 +386,8 @@ private:
 		TArray<int32>& OutUids) const;
 
 	bool TryStartScript(const FDEffectScript& Script, const FDuelCard& SourceCard, const FDEffectEvent& Event);
+	/** True when this player Trap should wait for a response window instead of firing. */
+	bool ShouldDeferPlayerTrap(const FDEffectScript& Script, const FDuelCard& SourceCard) const;
 	void ContinueAfterOptional(FDEffectContext Context, bool bActivate);
 	void ContinueToTargets(FDEffectContext Context);
 	void ContinueAfterTargets(FDEffectContext Context, const TArray<int32>& TargetUids);

@@ -224,6 +224,12 @@ private:
 	void SubmitDuelChoice();
 	void HandleDuelChoiceOption(int32 OptionId);
 	void SkipDuelPresentation();
+	/**
+	 * True while a response-window question is waiting for the presentation
+	 * reel (the attack, summon or activation it answers) to finish playing.
+	 * The question panel and its input appear once the reel is idle.
+	 */
+	bool IsDuelResponseHoldActive() const;
 	bool IsDuelChoiceTarget(int32 Uid) const { return DuelChoiceCardUids.Contains(Uid); }
 	bool IsDuelChoiceSelected(int32 Uid) const { return DuelChoiceSelected.Contains(Uid); }
 	void DrawDuelCard(const FDuelCard& Card, float X, float Y, float W, float H,
@@ -279,6 +285,8 @@ private:
 	// Pending rules-choice presentation (targets, searches, optional triggers).
 	int32 DuelChoiceRequestId = 0;
 	int32 DuelChoicePage = 0;
+	/** Seconds the current response-window question has waited for the reel. */
+	float DuelResponseHoldTime = 0.0f;
 	TSet<int32> DuelChoiceSelected;
 	TSet<int32> DuelChoiceCardUids;
 

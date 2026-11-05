@@ -753,6 +753,8 @@ bool FDAEffectRuntime::LoadScriptJsonText(const FString& JsonText, FString& OutE
 
 void FDAEffectRuntime::ResetForNewDuel()
 {
+	DeferredResponses.Reset();
+	bForceDeferredStart = false;
 	UsedThisTurn.Reset();
 	UsedThisDuel.Reset();
 	Counters.Reset();
@@ -2257,6 +2259,25 @@ bool FDAEffectRuntime::TryStartScript(const FDEffectScript& Script, const FDuelC
 	{
 		return false;
 	}
+	if (ShouldDeferPlayerTrap(Script, SourceCard))
+	{
+		// The player decides when (and whether) this Trap answers the event;
+		// the engine offers it in the matching response window.
+		const bool bAlreadyQueued = DeferredResponses.ContainsByPredicate(
+			[&Script, &SourceCard](const FDeferredResponse& Existing)
+			{
+				return Existing.SourceCard.Uid == SourceCard.Uid && Existing.Script.Id == Script.Id;
+			});
+		if (!bAlreadyQueued)
+		{
+			FDeferredResponse Response;
+			Response.Script = Script;
+			Response.SourceCard = SourceCard;
+			Response.Event = Event;
+			DeferredResponses.Add(Response);
+		}
+		return false;
+	}
 
 	FDEffectContext Context;
 	Context.Script = Script;
@@ -2264,7 +2285,7 @@ bool FDAEffectRuntime::TryStartScript(const FDEffectScript& Script, const FDuelC
 	Context.Event = Event;
 	Context.Chooser = SourceCard.Controller;
 
-	if (Script.bOptional)
+	if (Script.bOptional && !bForceDeferredStart)
 	{
 		const FString Prompt = FString::Printf(TEXT("Activate %s?"), *CardName(SourceCard));
 		if (SourceCard.Controller == EDuelOwner::Player)
@@ -2371,7 +2392,7 @@ void FDAEffectRuntime::ContinueToTargets(FDEffectContext Context)
 		Option.CardId = Card->Data.Id;
 		Option.Zone = EDuelZone::None;
 		Request.Options.Add(Option);
-		if (bEquipScript && Card->IsMonster())
+		if (bEquipScript && Card->IsMonster() && Card->Controller == Context.SourceCard.Controller)
 		{
 			const int32 Atk = Engine->GetAtk(*Card);
 			if (Atk > BestEquipAtk)
@@ -2457,8 +2478,9 @@ bool FDAEffectRuntime::ResolveScriptTarget(const FDEffectScript& Script, const F
 		&& !Zone.StartsWith(TEXT("opponent"));
 	for (const FDuelCard& Candidate : CollectCandidates(Zone, SourceCard, Event))
 	{
-		if (bEquipScript
-			&& (Candidate.Controller != SourceCard.Controller || !Candidate.bFaceUp))
+		// Equip Spells go on any face-up monster (either side); the AI's
+		// default answer still prefers its own strongest monster.
+		if (bEquipScript && (!Candidate.bFaceUp || !Candidate.IsMonster()))
 		{
 			continue;
 		}
@@ -2545,7 +2567,7 @@ bool FDAEffectRuntime::ResolveScriptTarget(const FDEffectScript& Script, const F
 	bOutNeedsPrompt = true;
 	if (bEquipScript)
 	{
-		OutPrompt = FString::Printf(TEXT("Choose a face-up monster you control to equip with %s."),
+		OutPrompt = FString::Printf(TEXT("Choose a face-up monster to equip with %s."),
 			*CardName(SourceCard));
 	}
 	else
@@ -3512,7 +3534,7 @@ bool FDAEffectRuntime::ExecuteEquip(const TSharedPtr<FJsonObject>& Operation, co
 	}
 
 	FDuelCard* Target = Engine->FindMonster(Targets[0]);
-	if (Target && Target->bFaceUp && Target->Controller == Equip->Controller)
+	if (Target && Target->bFaceUp)
 	{
 		Engine->AttachEquip(*Equip, *Target);
 		Engine->Log(FString::Printf(TEXT("%s equips to %s."), *CardName(*Equip), *CardName(*Target)), TEXT("effect"));
@@ -5090,6 +5112,203 @@ bool FDAEffectRuntime::HasLegalEquipTarget(const FDuelCard& Card) const
 		}
 	}
 	return false;
+}
+
+namespace
+{
+	/** Event triggers a Set Trap can answer through a player response window. */
+	bool IsDeferrableTrapTrigger(EDEffectTrigger Trigger)
+	{
+		return Trigger == EDEffectTrigger::OnSummon
+			|| Trigger == EDEffectTrigger::OnNormalSummon
+			|| Trigger == EDEffectTrigger::OnSpecialSummon
+			|| Trigger == EDEffectTrigger::OnFlipSummon
+			|| Trigger == EDEffectTrigger::OnAttackDeclared
+			|| Trigger == EDEffectTrigger::OnAttackTarget;
+	}
+}
+
+bool FDAEffectRuntime::CanActivateScriptNow(const FDuelCard& Card, bool bNoScript) const
+{
+	if (!Engine)
+	{
+		return false;
+	}
+	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(Card.Data.Id);
+	if (!Scripts)
+	{
+		return bNoScript;
+	}
+
+	FDEffectEvent Event;
+	Event.Trigger = EDEffectTrigger::OnActivate;
+	Event.SourceCard = Card;
+	Event.EventCard = Card;
+	Event.SourceController = Card.Controller;
+	Event.EventController = Card.Controller;
+
+	bool bHasActivateScript = false;
+	for (const FDEffectScript& Script : *Scripts)
+	{
+		if (Script.Trigger != EDEffectTrigger::OnActivate)
+		{
+			continue;
+		}
+		bHasActivateScript = true;
+		if (IsOncePerTurnBlocked(Script, Card))
+		{
+			continue;
+		}
+		if (!EvaluateCondition(Script.Condition, Card, Card, Event))
+		{
+			continue;
+		}
+		if (Script.Target.IsValid())
+		{
+			TArray<int32> Resolved;
+			TArray<int32> Candidates;
+			bool bNeedsPrompt = false;
+			EDuelOwner Chooser = Card.Controller;
+			int32 Min = 0;
+			int32 Max = 0;
+			FString Prompt;
+			if (!ResolveScriptTarget(Script, Card, Event, Resolved, Candidates, bNeedsPrompt, Chooser, Min, Max, Prompt))
+			{
+				continue;
+			}
+			if (Min > 0 && Resolved.Num() == 0 && Candidates.Num() == 0)
+			{
+				continue;
+			}
+		}
+		FDEffectContext Context;
+		Context.Script = Script;
+		Context.SourceCard = Card;
+		Context.Event = Event;
+		Context.Chooser = Card.Controller;
+		bool bCostsOk = true;
+		for (const TSharedPtr<FJsonObject>& Cost : Script.Costs)
+		{
+			FString CostError;
+			if (!CanPayCost(Cost, Context, CostError))
+			{
+				bCostsOk = false;
+				break;
+			}
+		}
+		if (bCostsOk)
+		{
+			return true;
+		}
+	}
+	return bHasActivateScript ? false : bNoScript;
+}
+
+bool FDAEffectRuntime::HasEventTrapTrigger(int32 CardId) const
+{
+	const TArray<FDEffectScript>* Scripts = ScriptsByCard.Find(CardId);
+	if (!Scripts)
+	{
+		return false;
+	}
+	for (const FDEffectScript& Script : *Scripts)
+	{
+		if (IsDeferrableTrapTrigger(Script.Trigger))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool FDAEffectRuntime::ShouldDeferPlayerTrap(const FDEffectScript& Script, const FDuelCard& SourceCard) const
+{
+	if (bForceDeferredStart || !Engine || !Engine->UsesPlayerResponseWindows())
+	{
+		return false;
+	}
+	if (!IsDeferrableTrapTrigger(Script.Trigger))
+	{
+		return false;
+	}
+	const FDuelCard* Live = Engine->FindSpellTrap(SourceCard.Uid);
+	return Live && Live->IsTrap() && !Live->bFaceUp && Live->Controller == EDuelOwner::Player;
+}
+
+int32 FDAEffectRuntime::GetDeferredResponseCardUid(int32 Index) const
+{
+	return DeferredResponses.IsValidIndex(Index) ? DeferredResponses[Index].SourceCard.Uid : 0;
+}
+
+bool FDAEffectRuntime::IsDeferredResponseLegal(int32 Index) const
+{
+	if (!Engine || Engine->bWinnerSet || !DeferredResponses.IsValidIndex(Index))
+	{
+		return false;
+	}
+	const FDeferredResponse& Response = DeferredResponses[Index];
+	const FDuelCard* Live = Engine->FindSpellTrap(Response.SourceCard.Uid);
+	if (!Live || Live->bFaceUp || IsCardActivationLocked(*Live) || IsOncePerTurnBlocked(Response.Script, *Live))
+	{
+		return false;
+	}
+	if (!IsSourceAvailable(Response.Script, *Live, Response.Event))
+	{
+		return false;
+	}
+	// The summoned / attacking monster the Trap answers must still be there.
+	if (Response.Event.EventCard.Uid > 0 && !Engine->FindMonster(Response.Event.EventCard.Uid))
+	{
+		return false;
+	}
+	const FDuelCard ConditionSubject = Response.Event.EventCard.Uid > 0 ? Response.Event.EventCard : *Live;
+	if (!EvaluateCondition(Response.Script.Condition, ConditionSubject, *Live, Response.Event))
+	{
+		return false;
+	}
+	if (Response.Script.Target.IsValid())
+	{
+		TArray<int32> Resolved;
+		TArray<int32> Candidates;
+		bool bNeedsPrompt = false;
+		EDuelOwner Chooser = Live->Controller;
+		int32 Min = 0;
+		int32 Max = 0;
+		FString Prompt;
+		if (!ResolveScriptTarget(Response.Script, *Live, Response.Event, Resolved, Candidates, bNeedsPrompt,
+			Chooser, Min, Max, Prompt))
+		{
+			return false;
+		}
+		if (Min > 0 && Resolved.Num() == 0 && Candidates.Num() == 0)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool FDAEffectRuntime::RunDeferredResponse(int32 Index)
+{
+	if (!Engine || !DeferredResponses.IsValidIndex(Index))
+	{
+		return false;
+	}
+	const FDeferredResponse Response = DeferredResponses[Index];
+	// Every deferred response belongs to the window that is being answered;
+	// the others were declined by choosing this one.
+	DeferredResponses.Reset();
+	const FDuelCard* Live = Engine->FindSpellTrap(Response.SourceCard.Uid);
+	if (!Live || Live->bFaceUp)
+	{
+		return false;
+	}
+	const FDuelCard Source = *Live;
+	const bool bPreviousForce = bForceDeferredStart;
+	bForceDeferredStart = true;
+	const bool bStarted = TryStartScript(Response.Script, Source, Response.Event);
+	bForceDeferredStart = bPreviousForce;
+	return bStarted;
 }
 
 bool FDAEffectRuntime::HasScriptTrigger(int32 CardId, EDEffectTrigger Trigger) const
