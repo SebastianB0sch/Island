@@ -29,6 +29,7 @@ LAYER = {"skin": 0, "Pants": 1, "Gloves": 1, "Shirt": 2, "Skirt": 2, "Boots": 2,
          "Capelet": 4}
 GARMENTS = ("Pants", "Gloves", "Shirt", "Skirt", "Boots", "Jacket", "Collar", "Capelet")
 STIFF = ("Capelet", "Collar")   # stiff pieces: fit relaxation tucks what is under them instead of pushing them
+STIFF_GIVE = 0.004               # ...and moves a stiff piece itself at most this far
 REACH = 0.03         # an outer surface further away than this does not cover the vertex
 EPS = 0.0015         # tolerance above the outer surface (shading / outline thickness)
 COS_ABOVE = 0.55     # the offset must point along the outer surface's normal (not past its edge)
@@ -366,7 +367,8 @@ def relax(obj, arm, log=print, iterations=12, margin=0.002, max_push=0.03, max_t
             n_ /= np.maximum(np.linalg.norm(n_, axis=1, keepdims=True), 1e-12)
             need = w[bad] + margin
             if mode == "tuck":
-                out_amt, in_amt = np.zeros_like(need), np.minimum(need, max_tuck)
+                # under a stiff piece: tuck the hidden layer in, and let the stiff piece give a few mm at most
+                out_amt, in_amt = np.minimum(need * 0.3, STIFF_GIVE), np.minimum(need, max_tuck)
             elif mode == "both":
                 # trousers / shirt under a coat (covered nearly always): they may tuck in as far as the coat
                 # loosens
@@ -421,7 +423,24 @@ def relax(obj, arm, log=print, iterations=12, margin=0.002, max_push=0.03, max_t
 
 
 def fit_report(ids=None, takes=None, log=print):
-    """Build every cast member and audit it. Returns {cid: {"poses": ..., "holes": ...}}."""
+    """Build every cast member and audit it. Returns {cid: {"poses": ..., "holes": ...}}. Building a member
+    paints its textures: they go to a temporary directory, so an audit never touches SourceAssets."""
+    import os
+    import shutil
+    import tempfile
+    from .. import config as C
+    saved = C.OUT_TEXTURES
+    tmp = tempfile.mkdtemp(prefix="da_fit_")
+    try:
+        C.OUT_TEXTURES = tmp
+        os.makedirs(os.path.join(tmp, "Characters"), exist_ok=True)
+        return _fit_report(ids, takes, log)
+    finally:
+        C.OUT_TEXTURES = saved
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _fit_report(ids=None, takes=None, log=print):
     from .. import blend
     from . import build as B
     from . import cast as CAST
