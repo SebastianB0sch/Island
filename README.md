@@ -189,7 +189,13 @@ designs, with a cel-style material and ink outline in Unreal:
   a wind tunnel. `hairrig.simulate` is the same solver in Python. With it, a Blender preview shows the
   hair as the game does. Styled short hair settles at about 1° in Idle and swings 3-4° on average in a
   walk and about 7° in a run, with footfall peaks capped at 18°. Long hair (Alexis) flows about 19° on
-  average in a run, up to 50°, and stays on her back.
+  average in a run, up to 50°, and stays on her back. The Unreal solver itself is compiled and run outside
+  the engine by `Tools/tests/test_hair_springs.py`. It copies `ApplySprings` / `BuildChains` verbatim from
+  `DAAvatarAnimInstance.cpp`, builds them against stand-in UE types and checks a synthetic head of hair:
+  * the results stay finite;
+  * the cones hold while idle, running at 4.2 m/s and running into a turn (short hair peaks at 8.6°);
+  * cohesion keeps a kicked long lock with its neighbour: the gap changes by 0.19 cm, against 1.59 cm
+    without cohesion.
 
 The GX regulars stand where you'd expect them (Jaden, Syrus and Chumley at the Slifer dorm, Bastion at Ra
 Yellow, Chazz at Obelisk Blue, Alexis, Jasmine and Mindy at the girls' dorm, Zane at the lighthouse, Crowler on
