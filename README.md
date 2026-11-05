@@ -209,6 +209,21 @@ free tools (Blender as a Python module, numpy / scipy, Unreal's own C++):
   * *Fit relaxation*: at build time every member is posed through its takes. Wherever an inner layer would
     break through, the covering cloth is loosened and the layer under it tucked in along the covering
     surface's normal, over repeated passes with a growing coverage set, keeping the best pass.
+  * *Pose-space correctives* (`correctives.py`): linear blend skinning collapses the seat and the front of
+    the hip when a thigh swings far, and that is beyond any static fit. Per side, the build solves
+    corrective morph targets for key poses: thigh forward 25° / 50° / 90°, back 15° / 30°, out 30°, and the
+    knee bent 60° / 110°. It measures what breaks through in each pose and moves the cloth out (and the layer
+    under it in) along the covering normal. Only the keys that fix something are kept. They are driven by
+    the thigh's pitch and spread in the pelvis frame and by the knee flexion, with blended weights along each
+    chain. The audit and Unreal (`UDAAvatarAnimInstance::UpdateCorrectives`) use the same formula. A second
+    relaxation pass then runs with the correctives active.
+  * *Residual binding*: a covered vertex that still breaks through in any frame takes the exact interpolated
+    weights and corrective displacement of the cloth triangle over it, together with its seam twins (its
+    neighbours go half way). This runs last on the exported mesh itself.
+  * *Reproducible*: the cloth code iterates in mesh order and the build entry points pin `PYTHONHASHSEED`,
+    so the same inputs give the same cast and the audit measures exactly what was exported.
+  * Result: all 13 cast members (named characters and generic students) audit at **zero breakthroughs in
+    every pose and zero holes**, including the vented long coats.
   * *Audit*: `python Tools/fit_check.py [ids] [-v]` skins every member into Idle / Walk / Run / Duel / Sit /
     Talk frames. It anchors each covered inner vertex to the exact garment triangle covering it at rest and
     reports any that break through it (count and depth) and any holes in the cloth. It exits with status 1
