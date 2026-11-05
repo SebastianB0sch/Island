@@ -893,6 +893,11 @@ def _bath_more(aset, mb, nc):
                         ("M_IntFabricPink", "M_IntFabricGreen", "M_IntTrimWhite", "M_IntFabricBlue", "M_IntFabricOrange")[k % 5],
                         seg=8)
     K.poster(nc, aset, PART_X, gy1, BFL + 2.25, 180.0, 0.9, 0.3, "M_IntPaper", "SHAMPOO 80 DP", (0.2, 0.1, 0.05), 0.05)
+    for dx, mat, txt in ((-1.75, "M_IntPoster2", "BATH RULES"), (1.75, "M_IntPoster3", "ADULTS 450 DP")):
+        K.poster(nc, aset, PART_X + dx, gy1, BFL + 1.75, 180.0, 0.7, 0.95, mat, txt, (0.15, 0.08, 0.04), 0.06)
+    with nc.at((PART_X, gy1 - 0.02, BFL + 2.6)):                    # noren-style banner over the booth
+        nc.box((0, 0, 0), (2.4, 0.02, 0.45), "M_NorenBlue")
+        nc.box((0, -0.012, 0.0), (0.5, 0.004, 0.3), "M_IntTrimWhite")
 
     # ---------------- washing areas
     for side in (-1, 1):

@@ -574,6 +574,21 @@ def _annexes(aset, mb, nc):
     aset.prop("SM_Int_WetFloor", (24.6, -12.5, FLG), 30.0)
     _blinds(nc, 26.5)
     K.panel_light(aset, nc, 26.5, -11.8, zc)
+    # slatted bench and a towel rail with towels where you come in
+    for k in range(5):
+        mb.box_mm((x0 + 0.15, y0 + 0.2 + k * 0.09, FLG + 0.42), (x0 + 1.75, y0 + 0.27 + k * 0.09, FLG + 0.45), K.WOOD)
+    for xx in (x0 + 0.3, x0 + 1.6):
+        mb.box_mm((xx - 0.03, y0 + 0.2, FLG), (xx + 0.03, y0 + 0.62, FLG + 0.42), K.WOOD)
+    nc.box((x0 + 0.02, (y0 + y1) / 2, FLG + 1.45), (0.04, 1.4, 0.03), "M_DetSilver")
+    for k, c in enumerate(("M_IntFabricWhite", "M_IntFabricBlue", "M_IntFabricWhite", "M_IntFabricYellow")):
+        nc.box((x0 + 0.05, (y0 + y1) / 2 - 0.5 + k * 0.33, FLG + 1.15), (0.04, 0.26, 0.6), c)
+    for (ax, ay, bx, by) in ((24.5, y1 - 1.3, 28.7, y1 - 0.35), (x1 - 1.2, -13.5, x1 - 0.35, -10.5)):   # duckboards
+        n = int((bx - ax) / 0.12) if bx - ax > by - ay else int((by - ay) / 0.12)
+        for k in range(n):
+            if bx - ax > by - ay:
+                nc.box_mm((ax + k * 0.12, ay, FLG + 0.01), (ax + k * 0.12 + 0.09, by, FLG + 0.04), K.WOOD)
+            else:
+                nc.box_mm((ax, ay + k * 0.12, FLG + 0.01), (bx, ay + k * 0.12 + 0.09, FLG + 0.04), K.WOOD)
     K.camera(aset, "showers", (28.9, -11.6, FLG + 1.7), (24.0, -13.4, FLG + 1.0), 18.0)
 
 
@@ -712,6 +727,19 @@ def _sockets(aset, rng):
     # ambience + interior camera
     aset.audio("A_Crowd", (0.0, 20.0, 3.0), radius=30.0, volume=0.5)
     aset.audio("A_Ocean", (0.0, 60.0, 2.0), radius=45.0)
+    # the court's divider net, drawn up under the roof, and the stores along the north-west wall
+    hall = aset.mesh("Gym_Interior_NoCol") if "Gym_Interior_NoCol" in aset.meshes else aset.mesh("Gym_NoCol")
+    hall.box((0.0, (GY0 + GY1) / 2 - 4.0, 8.6), (0.5, GY1 - GY0 - 12.0, 0.6), "M_IntFabricGreen")
+    for y in range(int(GY0 + 3), int(GY1 - 9), 3):
+        hall.box((0.0, float(y), 9.6), (0.02, 0.02, 1.4), "M_DetSilver")
+    for k in range(4):                                   # rolled gym mats
+        aset_x = -26.5 + k * 1.3
+        hall.box((aset_x, GY1 - 9.0, FLG + 0.35), (1.0, 0.7, 0.7), ("M_IntFabricBlue", "M_IntFabricRed")[k % 2])
+    for k in range(2):                                   # carts of folding chairs for assemblies
+        cx = -20.5 + k * 1.8
+        hall.box((cx, GY1 - 9.0, FLG + 0.2), (1.5, 0.6, 0.06), "M_DetSilver")
+        for j in range(10):
+            hall.box((cx - 0.6 + j * 0.13, GY1 - 9.0, FLG + 0.65), (0.04, 0.48, 0.85), "M_IntSteelBlue")
     K.camera(aset, "court", (-24.0, -8.0, 5.5), (6.0, 12.0, 1.0), 18.0)
     # doors: sliding glass at the entrance, metal double door at the back
     aset.door((0.0, GY0 + WT / 2, FLG), 0.0, ENT_W, ENT_H, "glass", double=True)

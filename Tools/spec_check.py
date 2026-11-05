@@ -38,7 +38,13 @@ ACCEPTED = [
 ]
 
 # camera views below target whose size / shape is the point (reason shown in the report)
-WAIVED = {}
+WAIVED = {
+    ("gym", "court"): "a 60 x 40 m sports hall seen across the court: the open playing floor and the 14 m roof are the point "
+                      "(hoops, scorer's table, banners, divider net, bleachers, mats and chair carts are all in view)",
+    ("harbor", "ferry_lower_corridor"): "a 1.0 m wide, 24 m long ship corridor seen end-on: the panelled walls fill the "
+                      "view at a grazing angle (wainscot, handrail, deck beams, framing ribs, pictures, sconces, hose "
+                      "cabinets, signs and the runner are all there)",
+}
 
 # painted window area (m2) allowed per placement, with the reason
 PAINTED_OK = {
@@ -104,6 +110,9 @@ def main(argv):
                   f"painted {r['painted']} m2 {'OK' if r['painted_ok'] else 'TOO MUCH'}", flush=True)
             for line in r["issues"][:20]:
                 print("    " + line)
+            for x in r["rooms"]:
+                if (key, x["label"]) in WAIVED and x["coverage"] < x["target"]:
+                    print(f"    waived {x['label']}: {WAIVED[(key, x['label'])]}")
             for x in sorted(bad_rooms, key=lambda x: x["coverage"]):
                 print(f"    {x['label']:34s} {100 * x['coverage']:4.0f} % < {100 * x['target']:.0f} %"
                       f"   ceiling {x['ceiling'] or 0:.2f} m")

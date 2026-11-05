@@ -1651,6 +1651,17 @@ def _ferry_lower_deck(mb, aset, W, lights):
                     with mb.at((xa, sgn * (2.4 + dy), h - 0.08 - k * 0.02), rot_y=90):
                         mb.cylinder((0, 0, 0), rr, xb - xa, m, seg=6, cap_top=False, cap_bottom=False)
                 mb.box_mm((xa + 0.2, sgn * 2.75 - 0.4, 0.003), (xb - 0.2, sgn * 2.75 + 0.4, 0.009), "M_IntCarpetBlue")
+                for edge in (-0.42, 0.42):                       # anti-slip edge strips along the runner
+                    mb.box_mm((xa + 0.2, sgn * 2.9 + edge - 0.04, 0.003), (xb - 0.2, sgn * 2.9 + edge + 0.04, 0.012),
+                              "M_AcademyYellow")
+                xx = xa + 0.6
+                while xx < xb - 0.3:                             # deck beams overhead + framing ribs on the walls
+                    mb.box((xx, sgn * 2.9, h - 0.11), (0.12, 1.0, 0.16), "M_IntWoodDark")
+                    for wy in (2.42, 3.38):
+                        if wy > 3 and any(abs(xx - cx) < 0.6 for cx in cab_x):
+                            continue                             # never inside a cabin doorway
+                        mb.box((xx, sgn * wy, (1.0 + h - 0.18) / 2), (0.08, 0.05, h - 1.18), "M_IntWood")
+                    xx += 1.2
                 for k, cx in enumerate(cab_x):
                     if k % 2 == 0:                                                              # hanging signs
                         mb.box((cx + 1.2, sgn * 2.9, h - 0.3), (0.05, 0.7, 0.18), K.TRIM_WHITE)
@@ -4157,7 +4168,27 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
         nc.box((x, y, z2g + 2.17), (0.03, 0.03, 0.12), "M_IntMetal")
         nc.cylinder((x, y, z2g + 1.85), 0.07, 0.24, "M_IntBlack", seg=8)
         nc.cylinder((x, y, z2g + 1.89), 0.055, 0.14, K.GLOW, seg=8)
-    K.camera(aset, "lh_g2_lampstore", _polar(1.35, 225.0, z2g + 1.6), _polar(1.8, 145.0, z2g + 0.7), 14.0)
+    for adeg, sd in ((118.0, 41), (98.0, 43)):                       # charts of the lamp's flash pattern
+        _wall_map(nc, aset, *_polar(_lh_ri(z2g + 1.5) - 0.02, adeg)[:2], z2g + 1.15, adeg - 90.0, 0.5, 0.6, None, seed=sd)
+    _ring_shelf(mb, nc, z2g + 0.85, 100.0, 138.0, seed=37)
+    for k, adeg in enumerate((132.0, 142.0, 152.0, 162.0)):           # spare storm lanterns on hooks
+        x, y, _ = _polar(_lh_ri(z2g + 2.0) - 0.12, adeg)
+        nc.box((x, y, z2g + 2.17), (0.03, 0.03, 0.12), "M_IntMetal")
+        nc.cylinder((x, y, z2g + 1.85), 0.07, 0.24, ("M_IntBlack", "M_AcademyRed")[k % 2], seg=8)
+        nc.cylinder((x, y, z2g + 1.89), 0.055, 0.14, "M_IntGlassClear", seg=8)
+    x, y, _ = _polar(_lh_ri(z2g + 1.9) - 0.02, 172.0)
+    K.poster(nc, aset, x, y, z2g + 1.95, 172.0 - 90.0, 0.55, 0.32, "M_IntChalkboard", text="FL(2) W 10s",
+             text_size=0.05)                                         # the light's character, chalked up
+    _ring_shelf(mb, nc, z2g + 2.05, 100.0, 128.0, seed=39)            # top shelf for the light stock
+    _ring_shelf(mb, nc, z2g + 1.45, 140.0, 172.0, seed=33)            # more stock along the far wall
+    _ring_shelf(mb, nc, z2g + 0.85, 140.0, 168.0, seed=35)
+    for k, adeg in enumerate((146.0, 156.0)):                         # spare lamp glasses in crates
+        with nc.at((*_polar(1.85, adeg)[:2], z2g), rot=adeg):
+            nc.box((0, 0, 0.15), (0.34, 0.26, 0.3), "M_IntWood")
+            for j in range(3):
+                nc.cylinder((-0.1 + j * 0.1, 0, 0.3), 0.04, 0.12, "M_IntGlassClear" if j % 2 else K.GLOW, seg=8)
+    # standing on the gallery (the old spot hung over the open stair well and looked 13 m down the shaft)
+    K.camera(aset, "lh_g2_lampstore", _polar(2.0, 232.0, z2g + 1.6), _polar(1.9, 150.0, z2g + 1.1), 17.0)
     # gallery 3: lookout nook under the 150-degree window (window seat, spyglass, tide tables)
     p = gpos(z3g, 150.0, 0.4, 1.0)
     with mb.at((p[0], p[1], z3g), rot=150.0 - 90.0):
@@ -4289,6 +4320,9 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     # cameras
     K.camera(aset, "lh_ground", _polar(2.2, 75.0, 2.55), _polar(2.2, 220.0, 1.6), 14.0)
     K.camera(aset, "lh_stair", _polar(2.3, 250.0, 2.0), _polar(1.2, 40.0, 9.0), 14.0)
+    _wall_map(nc, aset, *_polar(_lh_ri(zr + 1.5) - 0.02, 252.0)[:2], zr + 1.2, 252.0 - 90.0, 0.55, 0.45, None, seed=7)
+    aset.prop("SM_Int_Compass", _polar(1.62, 204.0, zr + 0.76), 30.0)
+    DT.paper_stack(nc, *_polar(1.6, 186.0)[:2], zr + 0.76, 186.0, 4, seed=8)        # the keeper's logbook
     K.camera(aset, "lh_watch", _polar(1.5, 112.0, zr + 1.65), _polar(1.65, 215.0, zr + 0.8), 14.0)
 
 

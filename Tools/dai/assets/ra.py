@@ -1572,6 +1572,20 @@ def ground_floor(aset, mb, nc, rnd):
     K.panel_light(aset, nc, 7.8, 3.9, ceil, w=1.0, d=0.35, intensity=2200.0)
     for x in (6.5, 9.2):
         curtain(nc, x, IY1, zf + 0.85, zf + 2.75, 0.0, 1.2, "M_IntFabricWhite")
+    # detergent shelf over the machines, folded laundry, baskets waiting on the floor
+    mb.box_mm((xa, 1.9, zf + 1.45), (xa + 0.3, 5.7, zf + 1.48), K.WOOD)
+    for k in range(9):
+        nc.cylinder((xa + 0.15, 2.05 + k * 0.4, zf + 1.48), 0.055, 0.2 + 0.05 * (k % 3),
+                    ("M_IntFabricBlue", "M_IntTrimWhite", "M_IntFabricOrange", "M_IntFabricGreen")[k % 4], seg=8)
+    for k, (x, y) in enumerate(((7.9, 3.55), (8.45, 4.25), (7.95, 4.35))):
+        for j in range(3 + k % 2):
+            nc.box((x, y, zf + 0.92 + j * 0.05), (0.32, 0.26, 0.045),
+                   ("M_IntFabricWhite", "M_IntFabricBlue", "M_IntFabricYellow")[(j + k) % 3])
+    for k, (x, y) in enumerate(((9.4, 5.3), (9.0, 2.3))):
+        P(aset, "SM_Int_Basket", x, y, zf, 20.0 + k * 70.0)
+        nc.sphere((x, y, zf + 0.12), 0.16, ("M_IntFabricWhite", "M_IntFabricBlue")[k], seg=8, rings=5)
+    aset.text("LAUNDRY  -  6:00 - 22:00", K.wall_point(7.8, IY1, 0.0, 0.03, zf + 2.55), 0.0, size=0.1,
+              color=(0.35, 0.22, 0.05))
     K.camera(aset, "laundry", (10.0, 1.5, zf + 1.65), (5.6, 5.6, zf + 0.7), 16.0)
     # dorm kitchen
     xa, xb = PART[1] + TP / 2, IX1
@@ -2255,6 +2269,15 @@ def attic(aset, mb, nc):
     P(aset, "SM_Int_Suitcase", 16.6, 3.6, z, 160.0)
     P(aset, "SM_Int_RockingChair", 14.2, -1.6, z, -60.0)
     DT.floor_clutter(nc, aset, 12.5, -4.8, 21.0, 4.8, z, "store", n=6, seed=9, clear=[(12.0, 0.5, 13.2, 2.0)])
+    # the middle of the attic: a rag rug, old trunks and a lantern on the collar tie
+    nc.box_mm((0.6, 0.9, z + 0.001), (3.4, 2.9, z + 0.012), "M_IntFabricRed")
+    nc.box_mm((0.75, 1.05, z + 0.012), (3.25, 2.75, z + 0.016), "M_IntFabricYellow")
+    for k, (x, y, yaw) in enumerate(((0.2, 0.6, 10.0), (3.9, 3.1, -15.0), (4.3, 0.5, 30.0))):
+        P(aset, "SM_Int_Suitcase", x, y, z, yaw)
+    P(aset, "SM_Int_RockingChair", 2.0, 1.5, z, 150.0)
+    P(aset, "SM_Int_Lantern", 2.6, 2.6, z, 0.0)
+    nc.box((2.0, 1.9, z + 2.9), (0.02, 0.02, 0.6), K.BLACK)
+    nc.cylinder((2.0, 1.9, z + 2.35), 0.12, 0.25, "M_IntWarmGlow", seg=8)
     K.camera(aset, "attic", (-4.3, 0.2, z + 1.65), (6.0, 2.6, z + 1.2), 16.0)
     K.camera(aset, "attic_obs", (12.0, -1.6, z + 1.6), (8.8, 3.6, z + 1.6), 16.0)
     K.camera(aset, "attic_west", (-5.6, -1.6, z + 1.65), (-17.0, 0.5, z + 0.9), 16.0)
@@ -2429,6 +2452,15 @@ def _cafeteria_interior(aset, mb, inc, zt):
     inc.cylinder((24.3, 1.35, CZ + 0.95), 0.08, 0.16, K.METAL, seg=10)
     P(aset, "SM_Int_Register", 24.25, 1.1, CZ + 0.95, 90.0)
     aset.text("RA YELLOW CAFETERIA", (24.62, -1.4, CZ + 0.55), 90.0, size=0.14, color=(0.5, 0.25, 0.04))
+    # hanging menu boards over the line + plate stacks and a condiment caddy on the counter
+    for k, (y, txt) in enumerate(((-3.2, "CURRY  300"), (-1.4, "TODAY: OMURICE"), (0.4, "UDON  250"))):
+        inc.box((24.4, y, CZ + 2.55), (0.04, 1.3, 0.55), ("M_AcademyYellow", "M_IntChalkboard", "M_AcademyYellow")[k])
+        for dy in (-0.55, 0.55):
+            inc.box((24.4, y + dy, CZ + 3.1), (0.01, 0.01, 0.55), K.BLACK)
+        aset.text(txt, (24.36, y, CZ + 2.48), 90.0, size=0.1, color=(0.35, 0.18, 0.02) if k != 1 else (1, 1, 1))
+    for k, y in enumerate((-2.4, -0.4)):
+        for j in range(6):
+            inc.cylinder((24.35, y, CZ + 0.95 + j * 0.02), 0.12, 0.018, FRAME, seg=12)
     # dining tables (yellow chairs) - shifted east of the serving line
     for tx in (27.0, 30.2, 33.4):
         for ty in (-2.8, 0.4, 3.4):

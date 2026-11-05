@@ -2634,7 +2634,7 @@ def _bedroom(aset, mb, nc, r, door_side, door_v, bed_side, rng, curtain="M_IntFa
         # reading corner by the window
         sx_, sy_ = b * min(1.0, hw - 2.8), -hd + 1.6
         if W > 7.0:
-            _rug(mb, sx_ - 1.5, sy_ - 1.0, sx_ + 1.5, sy_ + 1.0, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
+            _rug(mb, sx_ - 1.5, sy_ - 1.0, sx_ + 1.5, sy_ + 1.0, 0.0, "M_ObIntRugBlue", K.TRIM_GOLD)   # woven area rug
             f.prop("SM_Int_CoffeeTableB", sx_, sy_, 0.0)
             f.prop("SM_Int_Armchair", sx_ - 1.05, sy_ + 0.1, 90.0)
             f.prop("SM_Int_Armchair", sx_ + 1.05, sy_ + 0.1, -90.0)
@@ -2646,6 +2646,15 @@ def _bedroom(aset, mb, nc, r, door_side, door_v, bed_side, rng, curtain="M_IntFa
             f.prop("SM_Int_Armchair", b * (hw - 0.75), -hd + 0.95, 180.0 + 35.0 * b)
             f.prop("SM_Int_SideTable", b * (hw - 0.35), -hd + 1.9, 0.0)
             DT.book_stack(nc, b * (hw - 0.35), -hd + 1.9, 0.55, 10.0, 3, seed)
+        if W > 7.0 and hd > 3.0:   # big rooms: a games / study table in the open middle of the floor
+            tx_, ty_ = -b * max(hw - 3.6, 0.6), by + 0.9
+            _rug(mb, tx_ - 1.3, ty_ - 1.2, tx_ + 1.3, ty_ + 1.2, 0.0, "M_ObIntRugIvory", K.TRIM_GOLD)
+            f.prop("SM_Int_RoundTableB", tx_, ty_, 0.0)
+            f.prop("SM_Int_DiningChair", tx_ - 0.75, ty_, -90.0)
+            f.prop("SM_Int_DiningChair", tx_ + 0.75, ty_, 90.0)
+            mb.cylinder((tx_, ty_, 0.75), 0.36, 0.006, "M_IntFabricWhite", seg=16)     # cloth (things rest on it)
+            f.prop("SM_Int_Chess", tx_, ty_, 15.0, z=0.756)
+            clear.append((tx_ - 1.4, ty_ - 1.3, tx_ + 1.4, ty_ + 1.3))
         _plant(f, b * (hw - 0.45), -hd + 0.45 if W > 7.0 else -hd + 2.75)
         if abs(b * (hw - 2.3) - dx) > 1.4 and hw > 3.5:
             f.prop("SM_Int_Mirror", b * (hw - 2.3), hd, 0.0, z=1.0, scale=1.3)
