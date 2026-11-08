@@ -54,7 +54,9 @@ def build_island(import_assets=True, interactive=True, prune_cast=True):
         C.warn("C++ module DuelAcademyIsland not loaded - gameplay actors will be skipped. "
                "Compile the project (open the .uproject and accept the rebuild prompt) and rebuild.")
 
-    n_inst = len(layout["instances"])
+    # Fab swaps expand the native groups (vegetation 15 -> 25, props 14 -> 16),
+    # so reserve progress frames for the extra scatter actors.
+    n_inst = len(layout["instances"]) + 32
     work = (8 + len(manifest) + n_inst + 12) if import_assets else (n_inst + 12)
     with unreal.ScopedSlowTask(work, "Building Duel Academy Island...") as slow:
         # Headless builds must not create a modal progress dialog; the CLI path

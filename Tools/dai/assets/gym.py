@@ -1048,6 +1048,7 @@ def _gallery(aset, mb, nc, rng, sx):
         mb.box((xx, -8.95, (FLG + z) / 2), (0.08, 0.08, z - FLG), "M_DarkMetal")
     xe = sx * (AX + 0.8)
     mb.railing([(xe, -9.9, z), (xe, -8.9, z)], 1.0, "M_Metal", post_spacing=1.0)
+    mb.railing([(la, -8.9, z), (lb, -8.9, z)], 1.0, "M_Metal", post_spacing=0.6)
     # railing along the gallery edge and the end, leaving the landing open
     xa = sx * (AX + 0.85)
     mb.railing([(xa, y1 - 0.04, z), (sx * (GX1 - WT - 0.05), y1 - 0.04, z)], 1.05, "M_Metal", post_spacing=1.6)
@@ -1151,7 +1152,7 @@ def _court_more(aset, mb, nc, rng):
     # basketball hoops on the gable walls
     for sx in (-1, 1):
         x = sx * (GX1 - WT)
-        with mb.at((x, 2.5, z), rot=90.0 * sx), nc.at((x, 2.5, z), rot=90.0 * sx):
+        with mb.at((x, 2.5, z), rot=-90.0 * sx), nc.at((x, 2.5, z), rot=-90.0 * sx):
             for s in (-1, 1):
                 mb.beam((s * 0.5, -0.02, 3.6), (s * 0.3, -1.1, 3.5), 0.08, 0.08, "M_Metal")
             mb.box((0, -1.15, 3.45), (1.8, 0.05, 1.05), K.TRIM_WHITE)

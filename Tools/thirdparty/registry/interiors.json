@@ -278,14 +278,16 @@
    "collision": "none",
    "toon": true,
    "outline": 0.008,
-   "scale": 1.0
+   "scale": 1.0,
+   "origin": "wall"
   },
   "SM_Int_Frame": {
    "file": "polyhaven/models/hanging_picture_frame_02/hanging_picture_frame_02_1k.gltf",
    "collision": "none",
    "toon": true,
    "outline": 0.008,
-   "scale": 1.0
+   "scale": 1.0,
+   "origin": "wall"
   },
   "SM_Int_Mirror": {
    "file": "polyhaven/models/ornate_mirror_01/ornate_mirror_01_1k.gltf",
@@ -293,14 +295,16 @@
    "toon": true,
    "outline": 0.008,
    "max_tris": 6000,
-   "scale": 1.0
+   "scale": 1.0,
+   "origin": "wall"
   },
   "SM_Int_WallClock": {
    "file": "polyhaven/models/wall_clock/wall_clock_1k.gltf",
    "collision": "none",
    "toon": true,
    "outline": 0.008,
-   "scale": 1.0
+   "scale": 1.0,
+   "origin": "wall"
   },
   "SM_Int_GrandfatherClock": {
    "file": "polyhaven/models/vintage_grandfather_clock_01/vintage_grandfather_clock_01_1k.gltf",
@@ -362,7 +366,8 @@
    "toon": true,
    "outline": 0.008,
    "max_tris": 5000,
-   "scale": 1.0
+   "scale": 1.0,
+   "origin": "wall"
   },
   "SM_Int_Radio": {
    "file": "polyhaven/models/vintage_radio_transceiver/vintage_radio_transceiver_1k.gltf",
@@ -652,7 +657,8 @@
    "scale": 1.0,
    "collision": "none",
    "toon": true,
-   "outline": 0.006
+   "outline": 0.006,
+   "origin": "wall"
   },
   "SM_Int_SecurityCam": {
    "file": "polyhaven/models/security_camera_01/security_camera_01_1k.gltf",
@@ -660,7 +666,8 @@
    "collision": "none",
    "toon": true,
    "outline": 0.006,
-   "max_tris": 5000
+   "max_tris": 5000,
+   "origin": "wall"
   },
   "SM_Int_MantelClock": {
    "file": "polyhaven/models/mantel_clock_01/mantel_clock_01_1k.gltf",
@@ -698,7 +705,8 @@
    "scale": 1.0,
    "collision": "none",
    "toon": true,
-   "outline": 0.006
+   "outline": 0.006,
+   "origin": "wall"
   },
   "SM_Int_Chess": {
    "file": "polyhaven/models/chess_set/chess_set_1k.gltf",
@@ -714,7 +722,8 @@
    "collision": "none",
    "toon": true,
    "outline": 0.006,
-   "max_tris": 5000
+   "max_tris": 5000,
+   "origin": "wall"
   },
   "SM_Int_Ukulele": {
    "file": "polyhaven/models/Ukulele_01/Ukulele_01_1k.gltf",
@@ -743,14 +752,16 @@
    "scale": 1.0,
    "collision": "none",
    "toon": true,
-   "outline": 0.006
+   "outline": 0.006,
+   "rotate": 90
   },
   "SM_Int_PhotoFrameB": {
    "file": "polyhaven/models/standing_picture_frame_02/standing_picture_frame_02_1k.gltf",
    "scale": 1.0,
    "collision": "none",
    "toon": true,
-   "outline": 0.006
+   "outline": 0.006,
+   "rotate": 90
   },
   "SM_Int_PaintingB": {
    "file": "polyhaven/models/fancy_picture_frame_02/fancy_picture_frame_02_1k.gltf",
@@ -758,7 +769,8 @@
    "collision": "none",
    "toon": true,
    "outline": 0.006,
-   "max_tris": 5000
+   "max_tris": 5000,
+   "origin": "wall"
   },
   "SM_Int_FrameC": {
    "file": "polyhaven/models/hanging_picture_frame_03/hanging_picture_frame_03_1k.gltf",
@@ -766,7 +778,8 @@
    "collision": "none",
    "toon": true,
    "outline": 0.006,
-   "max_tris": 5000
+   "max_tris": 5000,
+   "origin": "wall"
   },
   "SM_Int_Binoculars": {
    "file": "polyhaven/models/binoculars/binoculars_1k.gltf",
@@ -991,7 +1004,8 @@
    "scale": 1.0,
    "collision": "box",
    "toon": true,
-   "outline": 0.008
+   "outline": 0.008,
+   "rotate": 90
   },
   "SM_Int_TallSideTable": {
    "file": "polyhaven/models/side_table_tall_01/side_table_tall_01_1k.gltf",
@@ -1066,14 +1080,16 @@
    "collision": "none",
    "toon": true,
    "outline": 0.006,
-   "max_tris": 5000
+   "max_tris": 5000,
+   "origin": "wall"
   },
   "SM_Int_WallLamp": {
    "file": "polyhaven/models/industrial_wall_lamp/industrial_wall_lamp_1k.gltf",
    "scale": 1.0,
    "collision": "none",
    "toon": true,
-   "outline": 0.006
+   "outline": 0.006,
+   "origin": "wall"
   },
   "SM_Int_ChandelierB": {
    "file": "polyhaven/models/Chandelier_01/Chandelier_01_1k.gltf",
@@ -1137,14 +1153,16 @@
    "scale": 1.0,
    "collision": "none",
    "toon": true,
-   "outline": 0.008
+   "outline": 0.008,
+   "origin": "wall"
   },
   "SM_Int_SecurityLight": {
    "file": "polyhaven/models/security_light/security_light_1k.gltf",
    "scale": 1.0,
    "collision": "none",
    "toon": true,
-   "outline": 0.006
+   "outline": 0.006,
+   "origin": "wall"
   }
  }
 }

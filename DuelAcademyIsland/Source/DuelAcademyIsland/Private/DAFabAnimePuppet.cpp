@@ -5,6 +5,7 @@
 #include "DAAvatarComponent.h"
 #include "DAStudentNPC.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
@@ -119,6 +120,58 @@ namespace
 		return nullptr;
 	}
 
+	/** The pack creates one inverted-hull outline component under each visible body part.
+	 *  Its object names are generated (SkeletalMeshComponent_0..3), so pair it by parent
+	 *  instead of relying on a pack-version-specific index. */
+	USkeletalMeshComponent* FindOutline(AActor* Actor, USkeletalMeshComponent* Main)
+	{
+		if (!Actor || !Main)
+		{
+			return nullptr;
+		}
+		TArray<USkeletalMeshComponent*> Components;
+		Actor->GetComponents<USkeletalMeshComponent>(Components);
+		// The pack's shading component may already have established the follower link.
+		// Only generated outline components count: a visible part (Hair/Top/Bottom) can
+		// itself be leader-posed to the body, and must not be mistaken for an outline.
+		for (USkeletalMeshComponent* Component : Components)
+		{
+			const FString Name = Component ? Component->GetFName().ToString() : FString();
+			if (Component && Component != Main && Component->LeaderPoseComponent.Get() == Main
+				&& Name.StartsWith(TEXT("SkeletalMeshComponent_")))
+			{
+				return Component;
+			}
+		}
+		for (USkeletalMeshComponent* Component : Components)
+		{
+			if (!Component || Component == Main || Component->GetAttachParent() != Main)
+			{
+				continue;
+			}
+			if (Component->GetFName().ToString().StartsWith(TEXT("SkeletalMeshComponent_")))
+			{
+				return Component;
+			}
+		}
+		// Older pack builds may not use the generated prefix.  Require an explicit
+		// outline name or a non-visible child; never pair a known body part.
+		for (USkeletalMeshComponent* Component : Components)
+		{
+			if (!Component || Component == Main || Component->GetAttachParent() != Main)
+			{
+				continue;
+			}
+			const FString Name = Component->GetFName().ToString();
+			if (!Name.Contains(TEXT("Hair")) && !Name.Contains(TEXT("Top"))
+				&& !Name.Contains(TEXT("Bottom")) && Name.Contains(TEXT("Outline")))
+			{
+				return Component;
+			}
+		}
+		return nullptr;
+	}
+
 	USkeletalMesh* LoadMesh(const TCHAR* Path)
 	{
 		return Path ? LoadObject<USkeletalMesh>(nullptr, Path, nullptr, LOAD_NoWarn | LOAD_Quiet) : nullptr;
@@ -181,7 +234,7 @@ UDAFabAnimeComponent::UDAFabAnimeComponent()
 void UDAFabAnimeComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	SetComponentTickEnabled(false);
+	SetComponentTickEnabled(Puppet.IsValid());
 }
 
 void UDAFabAnimeComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -201,14 +254,14 @@ bool UDAFabAnimeComponent::ActivateLook(const FString& LookId)
 		return true;
 	}
 
-	DeactivateLook();
-
 	const FDAFabAnimeLook* Look = FindLook(LookId);
 	if (!Look)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("DAFabAnime: unknown look '%s'"), *LookId);
 		return false;
 	}
+
+	DeactivateLook();
 
 	AActor* Owner = GetOwner();
 	UWorld* World = GetWorld();
@@ -227,6 +280,7 @@ bool UDAFabAnimeComponent::ActivateLook(const FString& LookId)
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	Params.Owner = Owner;
+	Params.OverrideLevel = Owner->GetLevel();
 	AActor* NewPuppet = World->SpawnActor<AActor>(PuppetClass, Owner->GetActorLocation(),
 		Owner->GetActorRotation(), Params);
 	if (!NewPuppet)
@@ -243,16 +297,21 @@ bool UDAFabAnimeComponent::ActivateLook(const FString& LookId)
 			Controller->UnPossess();
 		}
 	}
+
+	NewPuppet->AttachToActor(Owner, FAttachmentTransformRules::KeepWorldTransform);
+
 	if (ACharacter* PuppetCharacter = Cast<ACharacter>(NewPuppet))
 	{
 		if (UCharacterMovementComponent* Movement = PuppetCharacter->GetCharacterMovement())
 		{
-			Movement->DisableMovement();
+			// The pack's ABP derives "In Air" from IsFalling (false in MOVE_None as
+			// well as MOVE_Walking); MOVE_Walking additionally keeps IsMovingOnGround
+			// true for ABP variants that read it.  The component is not ticked, so it
+			// never integrates our synthetic velocity or moves the attached puppet.
+			Movement->SetMovementMode(MOVE_Walking);
 			Movement->SetComponentTickEnabled(false);
 		}
 	}
-
-	NewPuppet->AttachToActor(Owner, FAttachmentTransformRules::KeepWorldTransform);
 
 	if (!ApplyLook(NewPuppet, *Look))
 	{
@@ -264,6 +323,7 @@ bool UDAFabAnimeComponent::ActivateLook(const FString& LookId)
 	ActiveLook = LookId;
 	HideNativeAvatar(true);
 	SetComponentTickEnabled(true);
+	bRefreshLookOnTick = true;
 	UE_LOG(LogTemp, Log, TEXT("DAFabAnime: %s -> %s"), *Owner->GetName(), *LookId);
 
 	// The pack's shading component creates its outline MIDs during BeginPlay;
@@ -284,8 +344,29 @@ void UDAFabAnimeComponent::DeactivateLook()
 	}
 	Puppet.Reset();
 	ActiveLook.Empty();
+	bRefreshLookOnTick = false;
 	HideNativeAvatar(false);
 	SetComponentTickEnabled(false);
+}
+
+void UDAFabAnimeComponent::RefreshPuppetLook()
+{
+	RefreshLook();
+}
+
+bool UDAFabAnimeComponent::IsPuppetMovementTickEnabled() const
+{
+	if (const AActor* ActivePuppet = Puppet.Get())
+	{
+		if (const ACharacter* Character = Cast<ACharacter>(ActivePuppet))
+		{
+			if (const UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+			{
+				return Movement->IsComponentTickEnabled();
+			}
+		}
+	}
+	return false;
 }
 
 void UDAFabAnimeComponent::RefreshLook()
@@ -328,36 +409,135 @@ bool UDAFabAnimeComponent::ApplyLook(AActor* InPuppet, const FDAFabAnimeLook& Lo
 	Top->SetSkeletalMeshAsset(TopMesh);
 	Bottom->SetSkeletalMeshAsset(BottomMesh);
 
-	// Keep the pack's outline components in sync with the swapped meshes.  The
-	// mesh swap resets material overrides, so re-apply the outline material too.
-	UMaterialInterface* OutlineBase = LoadMaterial(OutlineMaterial);
-	auto ApplyOutline = [OutlineBase](USkeletalMeshComponent* Component, USkeletalMesh* Mesh)
+	// Match the owner's native avatar height.  The pack's UE4-Mannequin bodies are
+	// authored at about 200 cm (male) / 187 cm (female), while the GX cast is built
+	// at real heights (153-186 cm plus the NPCs' deterministic +/-5 % variation).
+	// Scale the body-part components rather than the actor: their relative Z stays at
+	// the host's floor (-avatar offset) and Hair / outline children inherit the same
+	// scale, so the puppet never floats or sinks.
+	const AActor* Owner = GetOwner();
+	const UDAAvatarComponent* Avatar = Owner
+		? Owner->FindComponentByClass<UDAAvatarComponent>() : nullptr;
+	const float TargetHeight = Avatar ? Avatar->GetStandingHeight() : 170.f;
+	float MeshZ = Avatar ? Avatar->GetRelativeLocation().Z : -90.f;
+	if (FMath::IsNearlyZero(MeshZ))
 	{
-		if (!Component || !Mesh)
+		if (const UCapsuleComponent* HostCapsule = Owner
+			? Owner->FindComponentByClass<UCapsuleComponent>() : nullptr)
+		{
+			MeshZ = -HostCapsule->GetScaledCapsuleHalfHeight();
+		}
+	}
+
+	// Measure the assembled bind-pose height from every visible part, including the
+	// hair (the female styles can rise well above the skull).  Reset the parts to
+	// scale 1 first so the measurement is idempotent when RefreshLook() runs again.
+	const bool bHairChild = Hair->IsAttachedTo(Head);
+	const FVector UnitScale(1.f);
+	Head->SetRelativeScale3D(UnitScale);
+	Top->SetRelativeScale3D(UnitScale);
+	Bottom->SetRelativeScale3D(UnitScale);
+	if (!bHairChild)
+	{
+		Hair->SetRelativeScale3D(UnitScale);
+	}
+	TArray<USkeletalMeshComponent*> PositionedParts = { Head, Top, Bottom };
+	if (!bHairChild)
+	{
+		PositionedParts.Add(Hair);
+	}
+	for (USkeletalMeshComponent* Part : PositionedParts)
+	{
+		FVector Location = Part->GetRelativeLocation();
+		if (!FMath::IsNearlyEqual(Location.Z, MeshZ, 0.1f))
+		{
+			Location.Z = MeshZ;
+			Part->SetRelativeLocation(Location);
+		}
+	}
+
+	const FTransform ActorTransform = InPuppet->GetActorTransform();
+	float BaseHeight = 0.f;
+	for (USkeletalMeshComponent* Part : { Head, Hair, Top, Bottom })
+	{
+		const USkeletalMesh* Mesh = Part ? Part->GetSkeletalMeshAsset() : nullptr;
+		if (!Mesh)
+		{
+			continue;
+		}
+		const FBoxSphereBounds WorldBounds =
+			Mesh->GetImportedBounds().TransformBy(Part->GetComponentTransform());
+		const float WorldTop = WorldBounds.Origin.Z + WorldBounds.BoxExtent.Z;
+		const float ActorTop = ActorTransform.InverseTransformPosition(FVector(0.f, 0.f, WorldTop)).Z;
+		BaseHeight = FMath::Max(BaseHeight, ActorTop - MeshZ);
+	}
+	const float HeightScale = (BaseHeight > 1.f && TargetHeight > 1.f)
+		? FMath::Clamp(TargetHeight / BaseHeight, 0.5f, 1.5f)
+		: 1.f;
+	const FVector PartScale(HeightScale);
+	Head->SetRelativeScale3D(PartScale);
+	Top->SetRelativeScale3D(PartScale);
+	Bottom->SetRelativeScale3D(PartScale);
+	if (!bHairChild)
+	{
+		Hair->SetRelativeScale3D(PartScale);
+	}
+
+	// Keep the pack's outline components in sync with the swapped meshes.  They are
+	// generated children of each visible part (SkeletalMeshComponent_0..3) and must
+	// follow that part's animated pose, so pair by parent and use it as leader pose.
+	UMaterialInterface* OutlineBase = LoadMaterial(OutlineMaterial);
+	TSet<USkeletalMeshComponent*> PairedOutlines;
+	auto ApplyOutline = [OutlineBase, InPuppet, &PairedOutlines](USkeletalMeshComponent* Main, USkeletalMesh* Mesh)
+	{
+		USkeletalMeshComponent* Outline = FindOutline(InPuppet, Main);
+		if (!Outline || !Mesh)
 		{
 			return;
 		}
-		Component->SetSkeletalMeshAsset(Mesh);
+		PairedOutlines.Add(Outline);
+		Outline->SetSkeletalMeshAsset(Mesh);
+		Outline->SetLeaderPoseComponent(Main, true);
 		if (OutlineBase)
 		{
-			if (UMaterialInstanceDynamic* MID = UMaterialInstanceDynamic::Create(OutlineBase, Component))
+			if (UMaterialInstanceDynamic* MID = UMaterialInstanceDynamic::Create(OutlineBase, Outline))
 			{
 				MID->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.02f, 0.02f, 0.025f, 1.0f));
 				MID->SetScalarParameterValue(TEXT("Thickness"), 0.075f);
 				MID->SetScalarParameterValue(TEXT("Min"), 1.0f);
 				MID->SetScalarParameterValue(TEXT("Max"), 2.5f);
-				for (int32 Index = 0; Index < Component->GetNumMaterials(); ++Index)
+				for (int32 Index = 0; Index < Outline->GetNumMaterials(); ++Index)
 				{
-					Component->SetMaterial(Index, MID);
+					Outline->SetMaterial(Index, MID);
 				}
 			}
 		}
-		Component->SetVisibility(true, true);
+		Outline->SetVisibility(true, true);
 	};
-	ApplyOutline(FindSkeletal(InPuppet, TEXT("SkeletalMeshComponent_4")), HeadMesh);
-	ApplyOutline(FindSkeletal(InPuppet, TEXT("SkeletalMeshComponent_5")), TopMesh);
-	ApplyOutline(FindSkeletal(InPuppet, TEXT("SkeletalMeshComponent_6")), BottomMesh);
-	ApplyOutline(FindSkeletal(InPuppet, TEXT("SkeletalMeshComponent_7")), HairMesh);
+	ApplyOutline(Head, HeadMesh);
+	ApplyOutline(Top, TopMesh);
+	ApplyOutline(Bottom, BottomMesh);
+	ApplyOutline(Hair, HairMesh);
+
+	// Top and Bottom are separate garment meshes driven by the pack's abp_Subsegment
+	// (a copy-pose graph that reads CharacterMesh0 through the pack's animation
+	// interface).  Leave their own AnimBlueprint in charge; forcing a leader pose here
+	// makes this pack clear their skeletal mesh assets.
+
+	// A failed pairing must never leave the pack's default male outline shells visible.
+	TArray<USkeletalMeshComponent*> AllComponents;
+	InPuppet->GetComponents<USkeletalMeshComponent>(AllComponents);
+	for (USkeletalMeshComponent* Component : AllComponents)
+	{
+		if (Component && !PairedOutlines.Contains(Component)
+			&& Component->GetFName().ToString().StartsWith(TEXT("SkeletalMeshComponent_")))
+		{
+			Component->SetVisibility(false, true);
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("DAFabAnime: %s scale %.3f (target %.1f cm / base %.1f cm)"),
+		Look.Id, HeightScale, TargetHeight, BaseHeight);
 
 	// Face material (two built-in faces per gender).
 	if (UMaterialInterface* HeadMaterial = LoadMaterial(Look.HeadMaterial))
@@ -416,17 +596,50 @@ void UDAFabAnimeComponent::HideNativeAvatar(bool bHide)
 	{
 		return;
 	}
-	if (UDAAvatarComponent* Avatar = Owner->FindComponentByClass<UDAAvatarComponent>())
+	UDAAvatarComponent* Avatar = Owner->FindComponentByClass<UDAAvatarComponent>();
+	ACharacter* Host = Cast<ACharacter>(Owner);
+	USkeletalMeshComponent* HostMesh = Host ? Host->GetMesh() : nullptr;
+
+	if (bHide)
 	{
-		Avatar->SetVisibility(!bHide, true);
-		Avatar->SetComponentTickEnabled(!bHide);
-	}
-	if (ACharacter* Host = Cast<ACharacter>(Owner))
-	{
-		if (USkeletalMeshComponent* Mesh = Host->GetMesh())
+		if (bNativeHidden)
 		{
-			Mesh->SetVisibility(!bHide, true);
+			return;
 		}
+		bWasAvatarVisible = Avatar ? Avatar->IsVisible() : true;
+		bWasAvatarTickEnabled = Avatar ? Avatar->IsComponentTickEnabled() : true;
+		bWasHostMeshVisible = HostMesh ? HostMesh->IsVisible() : false;
+		if (Avatar)
+		{
+			Avatar->SetVisibility(false, true);
+			Avatar->SetComponentTickEnabled(false);
+			Avatar->SetSkeletalTickEnabled(false);
+		}
+		if (HostMesh)
+		{
+			HostMesh->SetVisibility(false, true);
+		}
+		bNativeHidden = true;
+	}
+	else
+	{
+		if (!bNativeHidden)
+		{
+			return;
+		}
+		if (Avatar)
+		{
+			Avatar->SetVisibility(bWasAvatarVisible, true);
+			Avatar->SetComponentTickEnabled(bWasAvatarTickEnabled);
+			Avatar->SetSkeletalTickEnabled(true);
+		}
+		if (HostMesh)
+		{
+			// ADAStudentNPC hides its inherited ACharacter mesh in the constructor; do
+			// not re-show it on deactivation just because we once hid it.
+			HostMesh->SetVisibility(bWasHostMeshVisible, true);
+		}
+		bNativeHidden = false;
 	}
 }
 
@@ -442,13 +655,26 @@ void UDAFabAnimeComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		return;
 	}
 
+	// The pack creates/refreshes some of its components during BeginPlay; re-apply once
+	// on the first tick so the swapped meshes are present before the first visible frame.
+	if (bRefreshLookOnTick)
+	{
+		bRefreshLookOnTick = false;
+		RefreshLook();
+	}
+
 	// The puppet is attached and does not move itself; feed it the host velocity so
 	// the pack's locomotion blueprint blends idle / walk / run with the real stride.
 	if (ACharacter* PuppetCharacter = Cast<ACharacter>(ActivePuppet))
 	{
 		if (UCharacterMovementComponent* Movement = PuppetCharacter->GetCharacterMovement())
 		{
-			Movement->Velocity = Owner->GetVelocity();
+			FVector HostVelocity = Owner->GetVelocity();
+			// The puppet is in a grounded locomotion state; a jumping/falling host's Z
+			// velocity must not turn into a "walking in air" speed spike in the ABP.
+			HostVelocity.Z = 0.f;
+			Movement->Velocity = HostVelocity;
+			Movement->UpdateComponentVelocity();
 		}
 	}
 }

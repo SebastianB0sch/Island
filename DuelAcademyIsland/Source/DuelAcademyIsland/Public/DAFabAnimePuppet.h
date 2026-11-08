@@ -33,7 +33,7 @@ struct FDAFabAnimeLook
 /**
  * Spawns and drives a cosmetic `bp_AnimeCharacter` puppet for its owner.
  *
- * The component is dormant until Activate(LookId) is called.  It hides the owner's
+ * The component is dormant until `ActivateLook(LookId)` is called.  It hides the owner's
  * native UDAAvatarComponent on success and restores it on Deactivate/EndPlay.  If
  * the Fab pack is not installed the component fails closed: the NPC keeps its
  * native GX cast avatar.
@@ -58,6 +58,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Fab Anime")
 	void DeactivateLook();
 
+	/** Re-apply the active look immediately (debug / tests; the component also does this on its
+	 *  first tick and once after 0.3 s so the pack's runtime-created outline/puppet parts are
+	 *  refreshed after BeginPlay). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Fab Anime")
+	void RefreshPuppetLook();
+
+	/** Debug/test: is the puppet's CharacterMovement component ticking? It must stay false. */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Fab Anime")
+	bool IsPuppetMovementTickEnabled() const;
+
 	UFUNCTION(BlueprintPure, Category = "Duel Academy|Fab Anime")
 	bool IsLookActive() const { return Puppet.IsValid(); }
 
@@ -72,4 +82,9 @@ private:
 	TWeakObjectPtr<AActor> Puppet;
 	FString ActiveLook;
 	FTimerHandle RefreshTimer;
+	bool bRefreshLookOnTick = false;
+	bool bNativeHidden = false;
+	bool bWasAvatarVisible = true;
+	bool bWasAvatarTickEnabled = true;
+	bool bWasHostMeshVisible = false;
 };

@@ -2581,7 +2581,8 @@ def _ensuite(f, mb, nc, xa, xb, ya, yb, door_wall, door_c, zc, room_wall, tile="
                 nc.cylinder((0.18, 0.12, 0.88), 0.03, 0.14, "M_IntFabricBlue", seg=8)
                 nc.box((-0.42, 0.25, 1.05), (0.32, 0.04, 0.5), "M_IntFabricWhite")       # towel on a rail
                 nc.box((-0.42, 0.24, 1.29), (0.4, 0.03, 0.03), K.TRIM_GOLD)
-            f.prop("SM_Int_Mirror", px, yb, yawb, z=1.15)
+            f.prop("SM_Int_Mirror", px - math.sin(math.radians(yawb)) * 0.07,
+                   yb - math.cos(math.radians(yawb)) * 0.07, yawb, z=1.15)
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     nc.box((cx, cy, zc - 0.03), (0.5, 0.5, 0.04), K.TRIM_WHITE)
     nc.box((cx, cy, zc - 0.055), (0.42, 0.42, 0.012), K.PANEL_LIGHT)
@@ -2929,8 +2930,8 @@ def _boys_lounge(aset, mb, nc, r):
         DT.card_spread(nc, -23.7, 4.8, 0.49, 90.0, 5, 3)
         f.prop("SM_Int_Armchair", -15.2, 3.3, 120.0)
         # cabinet, plants, clock, piano corner
-        f.prop("SM_Int_DisplayShelves", -26.8, 13.65, 180.0)
-        f.prop("SM_Int_DisplayShelves", -15.4, 13.65, 180.0)
+        f.prop("SM_Int_DisplayShelves", -26.8, 13.65, 0.0)
+        f.prop("SM_Int_DisplayShelves", -15.4, 13.65, 0.0)
         f.prop("SM_Int_PottedPlantB", -28.1, 0.9, 0.0)
         f.prop("SM_Int_PottedPlantB", -13.9, 0.9, 0.0)
         f.prop("SM_Int_GrandfatherClock", -13.65, 2.6, -90.0)
@@ -3755,12 +3756,12 @@ def _boys_attic_furnish(aset, mb, nc, R):
         f.prop("SM_Int_Kettle", 12.25, 4.3, -90.0, z=0.86)
         for (y, a) in ((2.8, -120.0), (6.0, -60.0)):
             f.prop("SM_Int_Armchair", 10.6, y, a)
-        f.prop("SM_Int_WallClock", 0.0, 9.8, 180.0, z=2.0)
-        DT.coat_hooks(nc, -6.5, 9.8, 1.75, 180.0, n=5, dorm="white", jackets=3, seed=4)
-        DT.coat_hooks(nc, 6.5, 9.8, 1.75, 180.0, n=5, dorm="obelisk", jackets=2, seed=5)
+        f.prop("SM_Int_WallClock", 0.0, 9.8, 0.0, z=2.0)
+        DT.coat_hooks(nc, -6.5, 9.8, 1.75, 0.0, n=5, dorm="white", jackets=3, seed=4)
+        DT.coat_hooks(nc, 6.5, 9.8, 1.75, 0.0, n=5, dorm="obelisk", jackets=2, seed=5)
         K.counter(mb, -12.55, 6.6, -11.95, 9.2, 0.9, body=K.TRIM_WHITE, top=MARBLE)
         for x in (-2.6, 2.6):
-            f.prop("SM_Int_Cabinet", x, 9.48, 180.0)
+            f.prop("SM_Int_Cabinet", x, 9.48, 0.0)
             zt = _doily(f, x, 9.48, 1.18, 1.0, 0.4, 0.0, "M_IntFabricWhite")
             for k in range(4):
                 nc.cylinder((x - 0.36 + k * 0.24, 9.5, zt), 0.09, 0.012 + 0.03 * k, "M_IntTrimWhite", seg=10)
@@ -3791,7 +3792,7 @@ def _boys_attic_furnish(aset, mb, nc, R):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        for x in (-10.0, -6.0, 6.0, 10.0):
+        for x in (-10.0, -7.8, 7.8, 10.0):     # the inner pair leaves both hall3 -> back3 doors clear
             with mb.at((x, 18.42, 0.0), rot=180.0), nc.at((x, 18.42, 0.0), rot=180.0):
                 _store_shelf(mb, nc, rng, w=2.2, h=2.2, shelves=5)
         for y in (21.0, 23.2):
@@ -5281,7 +5282,7 @@ def _girls_attic_furnish(aset, mb, nc, R):
             f.prop("SM_Int_OilLamp", math.cos(m2) * 1.9, math.sin(m2) * 1.9, 0.0)
             f.prop("SM_Int_Books", math.cos(m2) * 1.5, math.sin(m2) * 1.5, 30.0)
             qx, qy = (1 if tx < 0 else -1), (1 if ty < 10 else -1)
-            for (dx, dy, yaw) in ((-qx * 0.0 + qx * 1.4, -qy * 0.19, 0.0 if qy < 0 else 180.0),
+            for (dx, dy, yaw) in ((-qx * 0.0 + qx * 1.4, -qy * 0.19, 180.0 if qy < 0 else 0.0),
                                   (-qx * 0.19, qy * 1.4, 90.0 if qx < 0 else -90.0)):
                 f.prop("SM_Int_Shelves", dx, dy, yaw)
                 DT.shelf_fill(nc, f.a, dx, dy, [0.3, 0.62], yaw, 0.42, 0.3, "books", seed=int(dx * 10))
@@ -5305,10 +5306,10 @@ def _girls_attic_furnish(aset, mb, nc, R):
             for k in range(4):                      # silk lanterns hung from the cone
                 ml = math.radians(k * 90.0 + 45.0)
                 nc.box((math.cos(ml) * 1.2, math.sin(ml) * 1.2, 2.75), (0.01, 0.01, 0.5), K.BLACK)
-                nc.cylinder((math.cos(ml) * 1.2, math.sin(ml) * 1.2, 2.2), 0.16, 0.3, ("M_IntFabricPink", "M_IntFabricPurple")[k % 2],
-                            seg=10)
+                nc.cylinder((math.cos(ml) * 1.2, math.sin(ml) * 1.2, 2.55), 0.16, 0.3,
+                            ("M_IntFabricPink", "M_IntFabricPurple")[k % 2], seg=10)
             _turret_boiserie(nc, G_TURRET_R - G_RT, a0, a1, _turret_angles(tx, ty))
-            _chandelier(f, 0.0, 0.0, 9.4, 1.0)
+            _chandelier(f, 0.0, 0.0, 9.66, 1.0)
             f.light(0.0, 0.0, 2.2, 900.0, 4.0)
     tx, ty = G_TURRETS[0]
     K.camera(aset, "3f_turret", (tx + 0.6, ty - 0.4, G_ZT + 1.6), (tx - 2.0, ty - 2.0, G_ZT + 1.0), 17.0)   # eye level
@@ -5502,7 +5503,7 @@ def _girls_tearoom(aset, mb, nc, r):
         f.prop("SM_Int_FoldingScreen", 20.6, 12.5, -30.0)
         _plant(f, 7.9, 4.9)
         _plant(f, 21.1, 12.9)
-        f.prop("SM_Int_Cabinet", 16.0, 13.08, 180.0)
+        f.prop("SM_Int_Cabinet", 16.0, 13.08, 0.0)
         f.prop("SM_Int_Vitrine", 9.3, 13.05, 0.0)
         _doily(f, 16.0, 13.08, 1.18, 1.0, 0.4, 0.0, "M_IntFabricPink")
         for k in range(4):
@@ -5736,7 +5737,7 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
 
 def _girls_conservatory_door(aset, mb):
     """Glass conservatory: the doorway in the glass front gets a double door, a marble step outside."""
-    aset.door((-27.5, 8.75, 0.15), 0.0, 2.0, 2.55, "girls", True)
+    aset.door((-27.5, 8.75, 0.15), 0.0, 2.2, 2.65, "girls", True)
     mb.box_mm((-28.8, 7.7, -0.3), (-26.2, 8.6, 0.15), MARBLE, skip=("-z",))       # landing + step outside
     mb.box_mm((-28.8, 7.35, -0.3), (-26.2, 7.7, 0.075), MARBLE, skip=("-z",))
     K.camera(aset, "conservatory", (-24.4, 18.2, 1.85), (-27.5, 8.75, 1.3), 16.0)

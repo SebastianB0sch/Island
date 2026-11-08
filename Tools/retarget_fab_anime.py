@@ -11,7 +11,8 @@ Then run this launcher:
     python Tools/retarget_fab_anime.py --blender "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe"
 
 Outputs go to ``Tools/thirdparty/fab_anime/retargeted`` (gitignored).  Install them into
-Unreal with ``Tools/apply_fab_locomotion.py``.
+Unreal with ``Tools/apply_fab_locomotion.py``; a full cast rebuild also picks them up
+automatically when the folder exists.
 """
 
 from __future__ import annotations

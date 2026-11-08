@@ -97,9 +97,10 @@ public:
 
 	/** Ground speed (cm/s) at which the walk / run takes play at rate 1 (no foot sliding). The defaults fit
 	 *  the procedural gait takes (1.50 m/s walk, 4.20 m/s run). When the local Fab locomotion retarget is
-	 *  installed, SetupCast detects the longer 1.17 s / 0.63 s clips and uses their 1.30 / 2.65 m/s
-	 *  reference speeds instead. The SK_Student fallback switches to the speeds its import normalises its
-	 *  clips to (RateScale, measured per rig by Tools/dai/character.py). */
+	 *  installed, SetupCast detects the longer 1.17 s / 0.63 s clips and uses their measured planted-foot
+	 *  reference speeds (about 1.33-1.58 m/s walk and 5.55-6.59 m/s sprint, per skeleton group). The
+	 *  SK_Student fallback switches to the speeds its import normalises its clips to (RateScale, measured
+	 *  per rig by Tools/dai/character.py). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float WalkAnimSpeed = 150.f;
 
@@ -121,6 +122,16 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Duel Academy")
 	bool IsAnimeCast() const { return bAnimeCast; }
+
+	/** Visible standing height of the active avatar in cm (imported bind-pose bounds including hair,
+	 *  multiplied by the avatar's actual scale).  Returns a nominal 170 cm * BodyScale for the
+	 *  procedural fallback, so optional puppets can always match the owner's size. */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy")
+	float GetStandingHeight() const;
+
+	/** Enable/disable the skeletal mesh's animation tick (the Fab puppet hides it while active). */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
+	void SetSkeletalTickEnabled(bool bEnabled);
 
 	/** Anime cast only: mouth visemes while talking (UDAAvatarAnimInstance face layer). */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")

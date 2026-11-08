@@ -2602,7 +2602,7 @@ def _crane_cab(aset, mb, nc, x, ty, top, by1):
     h = cz - fz
     for p0, p1, ops in (((X0, Y0), (X1, Y0), [K.Window(1.05, 1.8, 0.35, 2.1, frame=TRIM, mullions=1)]),
                         ((X1, Y0), (X1, Y1), [K.Window(1.0, 1.2, 0.9, 2.0, frame=TRIM)]),
-                        ((X1, Y1), (X0, Y1), [K.Door(1.05, 0.9, 2.05, "metal")]),
+                        ((X1, Y1), (X0, Y1), [K.Door(1.05, 0.9, 2.05, "metal", swing="out")]),
                         ((X0, Y1), (X0, Y0), [K.Window(1.4, 1.2, 0.9, 2.0, frame=TRIM)])):
         K.wall(aset, mb, p0, p1, fz, h, 0.1, WHITE, inner=K.PLASTER_WHITE, openings=ops, **kw)
     mb.box_mm((X0 - 0.05, Y0 - 0.05, cz), (X1 + 0.05, Y1 + 0.05, top - 0.5), WHITE, mats={"-z": K.CEIL})
@@ -3679,7 +3679,7 @@ def build_harbor():
     _markings(quay)
     _pier(aset, aset.mesh("Harbor_Pier"), nc)
     _ferry(aset.mesh("Harbor_Ferry"), aset)
-    aset.special("floating", FERRY_POS, 0.0, mesh="Harbor_Ferry", amplitude=0.15, period=6.0)
+    aset.special("floating", FERRY_POS, 0.0, mesh="Harbor_Ferry", amplitude=0.15, period=6.0, clear=45.0)
     im = aset.mesh("Harbor_Interior")
     inc = aset.mesh("Harbor_Interior_NoCol")
     _warehouses(aset, aset.mesh("Harbor_Warehouse"), nc, im, inc)
@@ -3939,7 +3939,7 @@ def _lighthouse_tower_inside(aset, tw, mb, nc):
     for adeg, r in ((292.0, 2.35), (306.0, 2.3)):
         x, y, _ = _polar(r, adeg)
         aset.prop("SM_Barrel", (x, y, 0.95), adeg * 3.0)
-    x, y, _ = _polar(1.95, 12.0)
+    x, y, _ = _polar(1.72, 12.0)
     aset.prop("SM_Crate", (x, y, 0.95), 12.0 + 45.0)
     # workbench against the wall at 335 deg
     r = math.sqrt(_lh_ri(1.9) ** 2 - 0.65 ** 2) - 0.02 - 0.28

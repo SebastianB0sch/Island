@@ -660,9 +660,9 @@ REGISTRY = _registry()
 
 # Props that carry an automatic light in UE (offset from origin, colour, intensity, radius)
 PROP_LIGHTS = {
-    "SM_LampPost": dict(offset=(0, 0, 4.2), color=(1.0, 0.82, 0.55), intensity=4000.0, radius=18.0, night_only=True),
+    "SM_LampPost": dict(offset=(0, 0, 3.80), color=(1.0, 0.82, 0.55), intensity=4000.0, radius=18.0, night_only=True),
     "SM_StoneLantern": dict(offset=(0, 0, 1.08), color=(1.0, 0.7, 0.4), intensity=600.0, radius=6.0, night_only=True),
-    "SM_Buoy": dict(offset=(0, 0, 1.2), color=(1.0, 0.3, 0.2), intensity=300.0, radius=8.0, night_only=True),
+    "SM_Buoy": dict(offset=(0, 0, 0.93), color=(1.0, 0.3, 0.2), intensity=300.0, radius=8.0, night_only=True),
 }
 
 from .furniture import LIGHTS as _INTERIOR_LIGHTS  # noqa: E402

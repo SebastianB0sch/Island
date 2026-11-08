@@ -12,7 +12,8 @@
 //     instead of popping).
 //
 // The anime takes are authored at the speed configured by UDAAvatarComponent::WalkAnimSpeed /
-// RunAnimSpeed (the default Fab takes are about 1.30 m/s walk and 2.65 m/s run).
+// RunAnimSpeed (the procedural gait is 150 / 420 cm/s; the optional Fab retarget uses its measured
+// 1.33-1.58 m/s walk and 5.55-6.59 m/s sprint planted-foot speeds).
 // UDAAvatarComponent feeds ground speed / air / swim / duel state every tick.
 //
 // On top of the blended takes the proxy runs the procedural "life" layer anime game characters have:

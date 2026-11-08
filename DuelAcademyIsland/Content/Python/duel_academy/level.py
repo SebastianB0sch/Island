@@ -2,12 +2,36 @@
 
 import json
 import os
+import sys
 
 import unreal
 
 from . import common as C
 
 EAS = None
+
+
+def _fab_module(name):
+    """Optional Fab swapper module from Tools/dai (None if the pipeline is absent)."""
+    tools = os.path.join(os.path.dirname(C.project_dir()), "Tools")
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    try:
+        import importlib
+        return importlib.import_module(f"dai.{name}")
+    except Exception as exc:  # noqa: BLE001 - the level still builds with native assets
+        C.warn(f"Fab {name} module unavailable: {exc}")
+        return None
+
+
+def fab_nature():
+    """Optional Fab nature swapper (None if the pipeline is absent)."""
+    return _fab_module("fab_nature")
+
+
+def fab_props():
+    """Optional Fab prop/rock swapper (None if the pipeline is absent)."""
+    return _fab_module("fab_props")
 
 
 def world_json(name):
@@ -65,6 +89,13 @@ class Placer:
         return actor
 
     def mesh(self, name):
+        # Fab content (installed locally by Tools/import_fab_nature.py) is
+        # referenced by its full Unreal object path, not by a generated SM_ name.
+        if name.startswith("/Game/"):
+            m = C.load(name)
+            if m is None and "." in name.rsplit("/", 1)[-1]:
+                m = C.load(name.rsplit(".", 1)[0])
+            return m
         m = self.meshes.get(name)
         if m is None:
             for folder in ("Props", "Doors", "Terrain", "Water", "Roads", "Characters"):
@@ -72,6 +103,10 @@ class Placer:
                 if m:
                     break
         return m
+
+    @staticmethod
+    def mesh_label(name):
+        return name.rsplit("/", 1)[-1].split(".", 1)[0].replace("SM_", "")
 
     # ------------------------------------------------------------------ environment
     def environment(self, mpc):
@@ -201,21 +236,63 @@ class Placer:
     # ------------------------------------------------------------------ instances
     def instances(self, slow=None):
         cls = C.native_class("DAInstancedScatter")
-        for name, g in self.layout["instances"].items():
-            mesh = self.mesh(name)
+        groups = dict(self.layout["instances"])
+        fab_n = fab_nature()
+        fab_p = fab_props()
+        root = os.path.dirname(C.project_dir())
+        use_nature = fab_n is not None and fab_n.available(root)
+        use_props = fab_p is not None and fab_p.available(root)
+        if use_nature or use_props:
+            # Drop any Fab groups left by an older translated layout, so a
+            # rebuild cannot place the same asset twice.
+            fab_prefixes = ("/Game/StyleHex_Studio", "/Game/Stylized_PBR_Nature", "/Game/TropicalGardenLounge",
+                            "/Game/CollegeRaimon")
+            for stale in [k for k, v in groups.items() if str(v.get("mesh", "")).startswith(fab_prefixes)]:
+                groups.pop(stale, None)
+        if use_nature:
+            native = {k: v["items"] for k, v in groups.items() if fab_n.is_replaced(k)}
+            fab_groups, fab_stats = fab_n.translate(native)
+            for name in native:
+                groups.pop(name, None)
+            groups.update(fab_groups)
+            if fab_stats:
+                C.log(f"Fab nature: {sum(s['count'] for s in fab_stats.values())} native instances -> "
+                      f"{len(fab_groups)} Fab meshes")
+        elif fab_n is not None:
+            C.log("Fab nature packs not installed; using the native procedural vegetation")
+        if use_props:
+            native = {k: v for k, v in groups.items() if fab_p.is_replaced(k)}
+            fab_groups, fab_stats = fab_p.translate(native)
+            for name in native:
+                groups.pop(name, None)
+            groups.update(fab_groups)
+            if fab_stats:
+                C.log(f"Fab props/rocks: {sum(s['count'] for s in fab_stats.values())} native instances -> "
+                      f"{len(fab_groups)} Fab meshes")
+        elif fab_p is not None:
+            C.log("Fab prop/rock packs not installed; using the native/third-party props")
+        for name, g in groups.items():
+            mesh_name = g.get("mesh", name)
+            mesh = self.mesh(mesh_name)
             if mesh is None:
-                C.warn(f"missing instanced mesh {name}")
+                C.warn(f"missing instanced mesh {mesh_name}")
                 continue
             items = g["items"]
+            label = g.get("label") or f"Scatter_{self.mesh_label(mesh_name)}"
             if slow:
-                slow.enter_progress_frame(1, f"Scattering {name} ({len(items)})")
+                slow.enter_progress_frame(1, f"Scattering {label} ({len(items)})")
+            rot = g.get("rot") or (0.0, 0.0, 0.0)
             xforms = []
             for x, y, z, yaw, s in items:
-                xforms.append(unreal.Transform(unreal.Vector(x, y * self.ysign, z), C.rot(yaw=yaw * self.ysign),
+                xforms.append(unreal.Transform(unreal.Vector(x, y * self.ysign, z),
+                                               C.rot(yaw=yaw * self.ysign + float(rot[1]),
+                                                     pitch=float(rot[0]), roll=float(rot[2])),
                                                unreal.Vector(s, s, s)))
-            folder = "Island/vegetation" if any(k in name for k in ("Tree", "Palm", "Bush", "Fern", "Grass", "Flower", "Rock")) else "Island/props"
+            folder = g.get("folder")
+            if not folder:
+                folder = "Island/vegetation" if any(k in mesh_name for k in ("Tree", "Palm", "Bush", "Fern", "Grass", "Flower", "Rock")) else "Island/props"
             if cls is not None:
-                a = self.spawn(cls, unreal.Vector(0, 0, 0), 0.0, f"Scatter_{name.replace('SM_', '')}", folder)
+                a = self.spawn(cls, unreal.Vector(0, 0, 0), 0.0, label, folder)
                 a.set_instances(mesh, xforms, int(g["cull"][0]), int(g["cull"][1]), bool(g["collision"]), bool(g["shadow"]))
             else:
                 # fallback without the C++ module: individual actors (slow, props only)

@@ -144,8 +144,21 @@ def retarget_take(src_path, base_path, group, state, log=print):
             bone = dst.data.bones[name]
             parent = bone.parent.name if bone.parent else None
             if name in mapped:
-                q = (_segment_dir(dst_rest, name).rotation_difference(_segment_dir(src_pose, name))
-                     @ _rot(dst_rest[name])).normalized()
+                if (name not in SEG_CHILD and parent is not None
+                        and parent in src_pose and parent in src_rest):
+                    # Leaf bones (head, hands, finger tips, toes) have no limb child to
+                    # define a segment.  Transfer their rotation delta in the parent's
+                    # frame instead of comparing local Y axes: the Fab and GX leaf bones
+                    # are authored with very different local axes, and the old fallback
+                    # turned the head/face backwards and twisted the hands.
+                    src_local_rest = _rot(src_rest[parent].inverted() @ src_rest[name])
+                    src_local_pose = _rot(src_pose[parent].inverted() @ src_pose[name])
+                    delta = (src_local_pose @ src_local_rest.inverted()).normalized()
+                    dst_local_rest = _rot(dst_rest[parent].inverted() @ dst_rest[name])
+                    q = (_rot(world[parent]) @ delta @ dst_local_rest).normalized()
+                else:
+                    q = (_segment_dir(dst_rest, name).rotation_difference(
+                        _segment_dir(src_pose, name)) @ _rot(dst_rest[name])).normalized()
             elif parent is not None:
                 q = (_rot(world[parent]) @ _rot(dst_rest[parent]).inverted()
                      @ _rot(dst_rest[name])).normalized()
@@ -186,9 +199,10 @@ def retarget_take(src_path, base_path, group, state, log=print):
         filepath=out,
         use_selection=True,
         object_types={"ARMATURE"},
-        # FBX_SCALE_NONE keeps the armature in metres; Unreal's importer applies the scene
-        # unit.  The apply script then normalises the baked pelvis track (divide by 100,
-        # scale 1) because the imported root keeps the cast's 100x unit scale.
+        # FBX_SCALE_NONE bakes the 100x FBX unit conversion into the object transforms
+        # (the file is cm while the Blender action is metres).  apply_fab_locomotion.py
+        # divides the baked pelvis track by 100 to return to the cast skeleton's metre
+        # convention.
         apply_scale_options="FBX_SCALE_NONE",
         axis_forward="-Z",
         axis_up="Y",

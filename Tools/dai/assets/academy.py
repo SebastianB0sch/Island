@@ -1705,7 +1705,7 @@ def _lobby_interior(mb, nocol, aset):
         for k in range(3):
             px, py = polar(2.4, 90 + 120 * k, (0.0, y))
             mb.beam((px, py, 11.0), (0.0, y, LCEIL - 0.1), 0.05, 0.05, "M_Gold")
-        aset.light((0.0, y, 9.5), (1.0, 0.88, 0.7), 9000, 24)
+        aset.light((0.0, y, 10.1), (1.0, 0.88, 0.7), 9000, 24)
     for s in (-1, 1):
         for y in (-55.0, -33.0):
             aset.light((s * 20.0, y, 11.0), (1.0, 0.9, 0.75), 5000, 16)
@@ -2122,8 +2122,8 @@ def _arena(mb, nocol, aset):
         mb.beam((p[0], p[1], 24.0), (p[0], p[1], ROOF_Z), 0.06, 0.06, "M_DarkMetal")
     # ---- lights / audio / npcs / cameras
     for k in range(8):
-        p = polar(25.0, 22.5 + 45 * k, C)
-        aset.light((p[0], p[1], 25.0), (1.0, 0.95, 0.88), 14000, 38)
+        p = polar(15.5, 22.5 + 45 * k, C)
+        aset.light((p[0], p[1], 23.8), (1.0, 0.95, 0.88), 14000, 38)
     for sx in (-1, 1):
         for sy in (-1, 1):
             aset.light((C[0] + sx * 7.0, C[1] + sy * 4.0, 16.0), (0.85, 0.92, 1.0), 16000, 26)
@@ -2157,7 +2157,7 @@ def _concourse(Cx, z):
                 min((a - 11.25) % 22.5, 22.5 - (a - 11.25) % 22.5) < 5.0:
             continue
         r = wall_r(a)
-        px, py = polar(r - 0.5, a, DC)
+        px, py = polar(r - 0.8, a, DC)      # clear of the 16-gon drum faces at the corners
         if i % 3 == 0:
             Cx.prop("SM_Int_Bench", px, py, z, a - 90.0)
         elif i % 3 == 1:
@@ -2176,7 +2176,7 @@ def _concourse(Cx, z):
 def _academy_dressing(mb, aset):
     # entrance lighting (night)
     for x in (-9.0, 9.0, -17.0, 17.0):
-        aset.light((x, LY0 - 1.0, 9.0), (1.0, 0.82, 0.55), 6000, 16, night_only=True)
+        aset.light((x, LY0 - 0.15, 9.0), (1.0, 0.82, 0.55), 6000, 16, night_only=True)
     aset.light((0.0, -71.0, 14.0), (1.0, 0.85, 0.6), 9000, 22, night_only=True)
     aset.light((0.0, -80.0, 12.0), (1.0, 0.85, 0.55), 14000, 30, night_only=True)
     for s in (-1, 1):
@@ -3743,6 +3743,7 @@ def stair_core(C, zl, zh):
     stair_rail(C, xb, -5.6, zm, xa, -5.6, zh)
     stair_rail(C, xb, -5.53, zm, 109.8, -5.53, zm)
     stair_rail(C, 109.77, -5.53, zm, 109.77, y0, zm)
+    stair_rail(C, xa, -8.4, zh, 109.8, -8.4, zh)      # north edge of the widened stairwell hole
     C.mb.beam(C.P(xa, y0 + 0.06, zl + 0.9), C.P(xb, y0 + 0.06, zm + 0.9), 0.05, 0.05, K.TRIM_WOOD)
 
 
@@ -3858,7 +3859,7 @@ def room_lite(C, x0, y0, x1, y1, kind, name, cam, seed, z, win=None, wl=(), extr
                 C.dt("deck_box", tx + 0.5, ty, z + 0.744, 20.0, ("M_IntFabricRed", "M_IntFabricBlue")[(k + i) % 2])
         for k in range(max(1, int((xb - xa) / 8.0))):
             sx_ = xa + (xb - xa) * (k + 0.5) / max(1, int((xb - xa) / 8.0))
-            C.prop("SM_Int_SofaB", sx_, y1 - 0.5, z, 180.0)
+            C.prop("SM_Int_SofaB", sx_, y1 - 0.5, z, 0.0)
             C.prop("SM_Int_CoffeeTableB", sx_, y1 - 1.5, z, 0.0)
             C.prop("SM_Int_Armchair", sx_ + 1.6, y1 - 1.6, z, 120.0)
         if w > 14:
@@ -4008,8 +4009,8 @@ def _pav_storeys(C, s):
         h, sill = top - z, wz - z
         last = lvl == 5
         # slab (the stair well stays open below every storey) and the ceiling of the attic storey
-        for (a, b, c, d) in ((88.0, -40.0, 114.0, -7.0), (88.0, -5.55, 114.0, 50.0), (88.0, -7.0, 104.8, -5.55),
-                             (109.8, -7.0, 114.0, -5.55)):
+        for (a, b, c, d) in ((88.0, -40.0, 114.0, -8.4), (88.0, -5.55, 114.0, 50.0), (88.0, -8.4, 104.8, -5.55),
+                             (109.8, -8.4, 114.0, -5.55)):
             C.box(a, b, z - 0.2, c, d, z, "M_AcademyWall", mats={"+z": K.MARBLEFLOOR, "-z": K.CEIL})
         if last:
             C.box(88.0, -40.0, top, 114.0, 50.0, PAV_ROOF, "M_AcademyWall", mats={"-z": K.CEIL})
@@ -4161,11 +4162,14 @@ def _wing_floors(C, s):
             xm = (xa + xb) / 2
             C.wall((xa, ym), (xb, ym), z, h, 0.2, IN_WALL, inner=IN_WALL,
                    ops=[K.Door(2.6, 1.8, 2.4, "academy_wood", double=True)], **kw)
+            back_label = f"wing{side[0]}_{lvl}f_{bn.split(' ')[0].lower()}"
+            if bn == "LIBRARY STACKS":
+                back_label += "_stacks"      # keep it distinct from the LIBRARY ANNEX camera
             room_lite(C.sub(0.0, 0.0, 0.0), xa, cy1 + 0.25, xb, ym, kind, name,
                       f"wing{side[0]}_{lvl}f_{name.split(' ')[0].lower().replace('-', '_')}", 300 + lvl * 10 + int(xa),
                       z, door_side="-y")
             room_lite(C.sub(0.0, 0.0, 0.0), xa, ym + 0.2, xb, 27.6, bk, bn,
-                      f"wing{side[0]}_{lvl}f_{bn.split(' ')[0].lower()}", 330 + lvl * 10 + int(xa),
+                      back_label, 330 + lvl * 10 + int(xa),
                       z, win="+y", wl=[x for x in nwl if xa + 0.6 < x < xb - 0.6], door_side="-y", win_top=wz + 2.5)
             C.plate(xa + 2.6, ym, z + 2.6, 0.0, bn, w=2.4, h=0.22)
 
@@ -4219,9 +4223,9 @@ def _end_block_upper(C, s):
                gaps=[(49.5 - y - 0.62, 49.5 - y + 0.62) for y, _ in EBU_DOORS_W] + [(44.8 - 1.9, 44.8 + 1.9)])
     C.wainscot((cx1, -39.5), (cx1, 49.5), z, 0.9, BLUE_T,
                gaps=[(y + 39.5 - 1.02, y + 39.5 + 1.02) for y, _ in EBU_DOORS_E])
-    C.lockers(cx0 + 0.24, -33.0 + 0.2, 90.0, 9)
-    C.lockers(cx1 - 0.24, 20.2, -90.0, 12)
-    C.lockers(cx0 + 0.24, 20.0, 90.0, 14)
+    C.lockers(cx0 + 0.24, -33.0 + 0.2, 90.0, 9, z=z)
+    C.lockers(cx1 - 0.24, 20.2, -90.0, 12, z=z)
+    C.lockers(cx0 + 0.24, 20.0, 90.0, 14, z=z)
     for y, d in ((-20.0, "ra"), (24.0, "slifer")):
         C.npc(101.0, y, 0.0, d, 6.0, z=z)
     C.cam(f"pav{side[0]}_corridor_2f", (101.0, 48.8, z + 1.75), (101.0, -10.0, z + 1.2), 18)
@@ -4264,11 +4268,11 @@ def _end_block_upper(C, s):
     C.floor(x0, y0, 104.8, y1, K.TILE, z=z)
     C.floor(104.8, -5.55, x1, y1, K.TILE, z=z)
     C.floor(109.8, y0, x1, -5.55, K.TILE, z=z)
-    C.floor(104.8, y0, 109.8, -7.0, K.TILE, z=z)
     room_base(C, x0, y0, x1, y1, 24, "school", z=z, win="+x", wl=wins(EB_WIN_E, y0, y1, 0.3), lights=(0, 0),
               grid=None, recess=(), zc=U_TOP, ceil=False, clear=[(x0, y0, 109.8, y1)], wains=None)
     stair_rail(C, 104.8, -5.55, z, 109.8, -5.55, z)
     stair_rail(C, 109.8, -5.55, z, 109.8, -7.0, z)
+    stair_rail(C, 104.8, -8.4, z, 109.8, -8.4, z)      # guard the widened hole's north edge
     K.pendant(C.a, *C.F.p(111.8, -4.2), U_TOP, "lamp")
     C.prop("SM_Int_Bench", 112.9, -6.4, z, -90.0)
     C.prop("SM_Int_PottedPlantB", 113.0, y1 - 0.45, z, 0.0)
@@ -4321,8 +4325,8 @@ def room_teachers(C, side):
     C.prop("SM_Int_PottedPlantB", x1 - 0.45, y1 - 1.2, z, 0.0)
     C.prop("SM_Int_PottedPlantC", x0 + 0.45, y0 + 0.5, z, 0.0)
     C.prop("SM_Int_Painting", 91.4, y0 + 0.03, z + 1.5, 180.0)
-    C.clutter(x0, y0, x1, y1, "office", 3, 93, clear=[(x0, y0, 93.8, -21.5), (88.5, y1 - 0.8, 98.75, y1),
-                                                      (95.0, y0, x1, y0 + 0.6), (x0, -20.4, 89.6, -18.0)])
+    C.clutter(x0, y0, x1, y1, "office", 3, 93, z=z, clear=[(x0, y0, 93.8, -21.5), (88.5, y1 - 0.8, 98.75, y1),
+                                                            (95.0, y0, x1, y0 + 0.6), (x0, -20.4, 89.6, -18.0)])
     C.npc(93.0, -19.8, 90.0, "white", 0.5, z=z)
     C.npc(91.6, -24.6, 0.0, "white", 0.3, z=z)
     zone_dress(C, x0, y0, x1, y1, z, UCZ, 92, rug=False, plants=0, frames=1, banners=0, front="+y")
@@ -4523,17 +4527,17 @@ def _annex_suite(C, who):
         for k, x in enumerate((-7.8, -6.4, -5.0)):
             shelf_prop(C, "SM_Int_Bookshelf", x, ya + 0.31, 180.0, 160 + k)
         C.prop("SM_Int_Armchair", -5.0, 65.4, z, -150.0)
-        C.prop("SM_Int_SideTable", -5.9, 65.6, z, 0.0)
-        C.prop("SM_Int_OilLamp", -5.9, 65.6, z + 0.551, 0.0)
+        C.prop("SM_Int_SideTable", -5.9, 64.7, z, 0.0)
+        C.prop("SM_Int_OilLamp", -5.9, 64.7, z + 0.551, 0.0)
         C.prop("SM_Int_Drawers", WX + 0.27, 64.6, z, -90.0 if C.F.mirrored else 90.0)
     else:
         for k, x in enumerate((-7.7, -5.5)):
             C.prop("SM_Int_Wardrobe", x, ya + 0.58, z, 180.0)
-        for k in range(4):          # frock coats on a garment rail
-            C.nc.box(C.P(-6.6 + k * 0.32, 65.55, z + 1.0), (0.06, 0.42, 0.95), ("M_IntFabricBlue", "M_IntFabricPurple",
+        for k in range(4):          # frock coats on a garment rail, west of the door swing
+            C.nc.box(C.P(-8.0 + k * 0.32, 65.55, z + 1.0), (0.06, 0.42, 0.95), ("M_IntFabricBlue", "M_IntFabricPurple",
                                                                                K.TRIM_WHITE, "M_IntFabricNavy")[k])
-        C.box(-6.9, 65.53, z + 1.5, -5.5, 65.57, z + 1.54, K.TRIM_GOLD, nc=True)
-        for x in (-6.9, -5.5):
+        C.box(-8.4, 65.53, z + 1.5, -7.0, 65.57, z + 1.54, K.TRIM_GOLD, nc=True)
+        for x in (-8.4, -7.0):
             C.box(x - 0.02, 65.53, z, x + 0.02, 65.57, z + 1.54, K.TRIM_GOLD, nc=True)
         C.prop("SM_Int_Mirror", WX + 0.03, 64.6, z + 0.9, -90.0)
         C.prop("SM_Int_Stool", -5.0, 64.8, z, 0.0, 0.75)
@@ -4865,7 +4869,7 @@ def _annex_upper(C):
         shelf_prop(C, "SM_Int_Bookshelf", 5.6 + k * 1.4, ya + 0.31, 180.0, 130 + k, z=z)
     C.box(x0, 64.0, z + 2.0, x0 + 0.4, 64.6, z + 2.5, K.BLACK)
     C.box(x0, 66.2, z + 2.0, x0 + 0.4, 66.8, z + 2.5, K.BLACK)
-    C.prop("SM_Int_SofaB", 7.6, yb - 0.6, z, 180.0)
+    C.prop("SM_Int_SofaB", 7.6, yb - 0.6, z, 0.0)
     C.prop("SM_Int_CoffeeTableB", 7.6, yb - 1.8, z, 0.0)
     C.poster(x0, 70.0, z + 1.6, 90.0, 0.7, 1.0, "M_IntPoster1", "ACADEMY RADIO", size=0.07)
     C.npc(13.0, 65.7, 0.0, "ra", 0.3, z=z)
@@ -5116,7 +5120,7 @@ def _fountain(mb, nocol, aset):
     aset.audio("A_Waterfall", (0.0, 0.0, 1.5), radius=25.0 * FK)
     for k in range(4):
         p = polar(6.0 * FK, 45 + 90 * k)
-        aset.light((p[0], p[1], 0.7 * FK), (0.6, 0.85, 1.0), 2500, 9, night_only=True)
+        aset.light((p[0], p[1], 0.45 * FK), (0.6, 0.85, 1.0), 2500, 9, night_only=True)
     aset.light((0.0, 0.0, 10.0 * FK), (1.0, 0.85, 0.55), 5000, 12, night_only=True)
 
 
@@ -5201,8 +5205,8 @@ def build_plaza():
         mb.pyramid((px, gy, 11.2), 3.2, 3.2, 2.6, "M_Gold")
         for yy, yw in ((gy - 1.4, 0.0), (gy + 1.4, 180.0)):
             roundel(mb, (px, yy, 4.4), yw, 0.8, "M_AcademyRed" if s < 0 else "M_AcademyYellow")
-        aset.light((px, gy - 2.4, 6.0), (1.0, 0.82, 0.55), 6000, 16, night_only=True)
-        aset.light((px, gy + 2.4, 6.0), (1.0, 0.82, 0.55), 4000, 14, night_only=True)
+        aset.light((px, gy - 1.5, 6.0), (1.0, 0.82, 0.55), 6000, 16, night_only=True)
+        aset.light((px, gy + 1.5, 6.0), (1.0, 0.82, 0.55), 4000, 14, night_only=True)
         # low planter walls along the south edge
         xa, xb = sorted((s * 10.6, s * 44.0))
         mb.box_mm((xa, gy - 0.5, -0.3), (xb, gy + 0.5, 0.85), "M_AcademyStone")
@@ -5262,7 +5266,7 @@ def build_plaza():
                        "E: Forest, Abandoned Dorm (off limits!)  |  NW: Obelisk Blue Dorm  |  "
                        "W: Slifer Red Dorm, West Cliffs  |  SW: Ra Yellow Dorm  |  "
                        "S: Harbor, Lighthouse, Heliport  |  SE: Beach & Duel Gym")
-    aset.light(local_to_world(bo, byaw, (0.0, -2.5, 5.5)), (1.0, 0.9, 0.75), 3000, 9, night_only=True)
+    aset.light(local_to_world(bo, byaw, (0.0, -0.6, 5.5)), (1.0, 0.9, 0.75), 3000, 9, night_only=True)
     # ---- street furniture
     for s in (-1, 1):
         for y in (-44.0, -26.0, 24.0, 40.0):

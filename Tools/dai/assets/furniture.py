@@ -99,8 +99,8 @@ CATALOG = {
 
 # lights that come with a fixture (offset from the origin, metres) - interiors are lit day and night
 LIGHTS = {
-    "SM_Int_Chandelier": dict(offset=(0, 0, -0.75), color=(1.0, 0.86, 0.62), intensity=6000.0, radius=12.0, night_only=False),
-    "SM_Int_CeilingLamp": dict(offset=(0, 0, -0.55), color=(1.0, 0.88, 0.70), intensity=3500.0, radius=8.0, night_only=False),
+    "SM_Int_Chandelier": dict(offset=(0, 0, -0.59), color=(1.0, 0.86, 0.62), intensity=6000.0, radius=12.0, night_only=False),
+    "SM_Int_CeilingLamp": dict(offset=(0, 0, -0.75), color=(1.0, 0.88, 0.70), intensity=3500.0, radius=8.0, night_only=False),
     "SM_Int_IndustrialLamp": dict(offset=(0, 0, -0.85), color=(1.0, 0.84, 0.60), intensity=5000.0, radius=12.0, night_only=False),
 }
 
@@ -175,6 +175,15 @@ def hanging(r, h, shade=GLD, glow=True):
     return mb
 
 
+def desk_lamp():
+    """Base-origin arm desk lamp (the curated asset is base-origin too)."""
+    mb = MeshBuilder("dl")
+    mb.cylinder((0, 0, 0), 0.09, 0.02, MET, seg=12)
+    mb.cylinder((0, 0, 0.02), 0.018, 0.55, MET, seg=8)
+    mb.cone((0.08, 0, 0.62), 0.12, 0.18, GLD, seg=12)
+    return mb
+
+
 def wall_piece(w, h, m=GLD, inner=FAB, depth=0.04):
     mb = MeshBuilder("w")
     _box(mb, -w / 2, -depth, 0, w / 2, 0, h, m)
@@ -242,7 +251,7 @@ BUILDERS = {
     "SM_Int_CeilingLamp": lambda: hanging(0.25, 0.6, WHT),
     "SM_Int_IndustrialLamp": lambda: hanging(0.3, 0.9, MET),
     "SM_Int_CeilingFan": lambda: hanging(0.65, 0.4, W, glow=False),
-    "SM_Int_DeskLamp": lambda: hanging(0.1, 0.5, MET),
+    "SM_Int_DeskLamp": desk_lamp,
     "SM_Int_OilLamp": lambda: cyl(0.08, 0.45, GLD),
     "SM_Int_PottedPlant": lambda: plant(0.6),
     "SM_Int_PottedPlantB": lambda: plant(1.4),
@@ -375,7 +384,8 @@ _DETAIL_MAT = {"Pot": MET, "Jug": WHT, "Bowl": W, "Cake": RED, "Apple": RED, "Ba
 
 def _detail_builder(name, dims):
     mat = next((m for k, m in _DETAIL_MAT.items() if k in name), W)
-    top = name in LIGHTS
+    # wall sconces/lamps are base-origin (their light offset is positive z); ceiling fixtures hang from the top
+    top = name in LIGHTS and name not in ("SM_Int_WallSconce", "SM_Int_WallLamp")
     def build():
         mb = MeshBuilder("d")
         z0 = -dims[2] if top else 0.0
@@ -385,11 +395,11 @@ def _detail_builder(name, dims):
 
 
 LIGHTS.update({
-    "SM_Int_ChandelierB": dict(offset=(0, 0, -0.6), color=(1.0, 0.86, 0.62), intensity=6000.0, radius=12.0, night_only=False),
+    "SM_Int_ChandelierB": dict(offset=(0, 0, -0.45), color=(1.0, 0.86, 0.62), intensity=6000.0, radius=12.0, night_only=False),
     "SM_Int_LanternLamp": dict(offset=(0, 0, -0.5), color=(1.0, 0.78, 0.5), intensity=3500.0, radius=8.0, night_only=False),
     "SM_Int_CageLight": dict(offset=(0, 0, -0.55), color=(1.0, 0.84, 0.6), intensity=3500.0, radius=9.0, night_only=False),
-    "SM_Int_WallSconce": dict(offset=(0, -0.15, 0.25), color=(1.0, 0.84, 0.6), intensity=1500.0, radius=5.0, night_only=False),
-    "SM_Int_WallLamp": dict(offset=(0, -0.12, 0.3), color=(1.0, 0.84, 0.6), intensity=1500.0, radius=5.0, night_only=False),
+    "SM_Int_WallSconce": dict(offset=(0, -0.10, 0.13), color=(1.0, 0.84, 0.6), intensity=1500.0, radius=5.0, night_only=False),
+    "SM_Int_WallLamp": dict(offset=(0, -0.05, 0.22), color=(1.0, 0.84, 0.6), intensity=1500.0, radius=5.0, night_only=False),
 })
 for _n, (_desc, _dims) in DETAIL.items():
     CATALOG[_n] = f"{_desc} ({_dims[0]:.2f} x {_dims[1]:.2f} x {_dims[2]:.2f} m, real size)"

@@ -231,14 +231,18 @@ looks and dialogue in `Content/Data/World/spawns.json`.
 
 On a machine with the licensed **Fab Anime Character Pack** installed, 22 ambient NPCs (plus a dozen schedule
 crowd marks) additionally use the pack's modular male/female bodies, heads, hair and casual outfits through a
-cosmetic `bp_AnimeCharacter` puppet. The pack is installed locally with `python Tools/import_fab_anime.py`, is
+cosmetic `bp_AnimeCharacter` puppet. Each puppet is scaled to its host NPC's native cast height and ±5 % size
+variation, keeps the pack's locomotion ABP in its grounded walk/run state, and gets matching outline shells.
+The pack is installed locally with `python Tools/import_fab_anime.py`, is
 excluded from git, and is **not redistributable**; without it those NPCs fall back to the native GX cast. See
 [Docs/FAB_ANIME.md](Docs/FAB_ANIME.md).
 
 On that machine the pack's idle/walk/run takes can also be retargeted onto the **native GX cast**, replacing
 the procedural gait for the regulars and named students. `Tools/retarget_fab_anime.py` uses segment-direction
 retargeting (the Fab anime rig is A-pose, the GX cast is T-pose) and `Tools/apply_fab_locomotion.py` installs
-the resulting `A_Anime_<Group>_Idle/Walk/Run` takes. The intermediate FBXs are local-only; without them the
+the resulting `A_Anime_<Group>_Idle/Walk/Run` takes; a full cast rebuild re-applies them
+automatically when the local-only retargeted FBXs exist (all-or-nothing per skeleton
+group). The intermediate FBXs are local-only; without them the
 gait clips remain. The full recipe is in [Docs/FAB_ANIME.md](Docs/FAB_ANIME.md#native-cast-locomotion).
 
 Every named story speaker and duel opponent now has a portrait and every expression the story data asks
@@ -254,14 +258,17 @@ The bones are renamed to the **UE5 Mannequin** scheme (`pelvis`, `spine_01`, `up
 solved rather than lifted from a stock clip: `Tools/dai/anime/gait.py` generates the **idle, walk and run**
 cycles from a biomechanical gait model authored to human gait-lab norms. The walk is 1.5 m/s at 120 steps/min
 (0.75 m steps, 60 % stance, ~4 cm pelvis bob); the run is 4.2 m/s at ~171 steps/min (1.47 m steps, ~0.2 s
-ground contact and a real flight phase). The stance shoe rolls heel → flat → ball → toe, a two-bone leg IK
-plants the ankle on the ground while the pelvis follows the natural bob (walk: lowest at double support,
-highest at midstance; run: compressed at midstance, highest mid-flight), the pelvis sways/yaws under a
-counter-rotating spine, the head stays level, and the arms swing in opposition (a fraction of a beat behind
-the legs) with bent elbows and relaxed wrists. The idle breathes ~15 times a minute with a slow weight shift.
-Every cycle is validated at build time for contact speed, ground penetration, contact percentage, knee range,
-loop closure **and human cadence / step length**, so a take that would read as shuffling or as legs spinning
-faster than the body travels fails the build.
+ground contact and a real flight phase). The walking shoe rolls heel → flat → ball → toe, while the run lands
+on a level midfoot and quickly recovers the heel after toe-off. Two-bone leg IK plants the ankle on the ground
+while the pelvis follows the natural bob (walk: lowest at double support, highest at midstance; run: compressed
+at midstance, highest mid-flight). Reach-aware release and landing anticipation keep the pelvis continuous at
+the flight boundaries; the pelvis sways/yaws under a counter-rotating spine, the head stays level, and the arms
+swing in opposition (a fraction of a beat behind the legs) with 80-105° elbow flexion and relaxed wrists. The
+idle breathes ~15 times a minute with a slow weight shift.
+Every cycle is validated at build time for contact speed, ground penetration, contact percentage, knee and
+elbow ranges, loop closure **and human cadence / step length**, with dense sub-frame reach checks on the run,
+so a take that would read as shuffling, as legs spinning faster than the body travels, or with an IK-clamped
+running leg fails the build.
 
 At runtime a native animation instance (`DAAvatarAnimInstance`) blends **idle → walk → run** following a
 human cadence model: below the walk speed the step rate *and* the step length drop together (~√speed, no
@@ -295,7 +302,7 @@ Unreal's IK Retargeter auto-maps the skeletons to Manny/Quinn if you want the en
 
 ![Gait](Docs/renders/gait.jpg)
 
-*Walk and run cycles rendered from the gait solver at human cadence (120 and 171 steps/min): heel strike, flat, heel-off and toe-off; a real flight phase and stance compression in the run, with the arms and shoulders counter-swinging.*
+*Walk and run cycles rendered from the gait solver at human cadence (120 and 171 steps/min): walking heel strike, flat, heel-off and toe-off; running midfoot contact, a real flight phase and stance compression, with the arms and shoulders counter-swinging.*
 
 ### Anime rendering, cloth and animation
 
@@ -652,10 +659,21 @@ npm install -g @gltf-transform/cli                 # optional: decodes meshopt-c
 .venv/bin/python Tools/preview_anime.py jaden alexis --state Walk --frame 10   # cast preview render
 python Tools/apply_npc_roster.py                  # re-apply the unique ambient NPC identities to layout.json
 python Tools/import_fab_anime.py                  # optional licensed Fab anime pack (local-only, gitignored)
+python Tools/import_fab_nature.py                 # optional licensed Fab nature/prop packs (local-only, gitignored)
 python Tools/retarget_fab_anime.py                 # optional Fab idle/walk/run -> native GX cast (local-only)
 UnrealEditor-Cmd ... -run=pythonscript -script=Tools/apply_world_npc_data.py   # refresh NPCs in the saved level
 UnrealEditor-Cmd ... -run=pythonscript -script=Tools/apply_fab_locomotion.py   # install the retargeted takes
+UnrealEditor-Cmd ... -run=pythonscript -script=Tools/test_fab_locomotion.py    # verify the installed retargeted takes
 ```
+
+The optional Fab nature / prop packs replace the native procedural trees, palms,
+bushes, ferns, flowers and grass clumps, the remaining procedural street
+furniture (bollard, planter, vending machine) and the simple rocks/outdoor props
+with the same stylized assets as the reference UE5 project. The swap is applied
+when the Unreal level is built; see [Docs/FAB_NATURE.md](Docs/FAB_NATURE.md) for
+the install and mapping and [Docs/FAB_ASSET_AUDIT.md](Docs/FAB_ASSET_AUDIT.md)
+for what is still procedural. Without the packs the native vegetation, curated
+CC0 props and procedural street furniture stay in place.
 
 The gait solver validates every generated cycle before export (contact speed, penetration, contact
 percentage, knee range, loop closure). To check the runtime blend and planted feet in the engine:

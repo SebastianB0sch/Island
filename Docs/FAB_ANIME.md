@@ -10,7 +10,21 @@ The game uses it as an optional extra layer for ambient NPCs:
   spawns the pack's `bp_AnimeCharacter` as a cosmetic puppet, swaps the
   head/hair/top/bottom meshes, tints the hair and casual clothes, and feeds the
   host's velocity to the pack's locomotion blueprint.
-- If the pack is absent, `Activate()` fails closed and the NPC keeps its native
+- The puppet is scaled to the host's **visible standing height**
+  (`UDAAvatarComponent::GetStandingHeight()`, including hair), so the pack's
+  ~200 cm male / ~187 cm female bodies match the GX cast's real 153-186 cm
+  heights and keep the ambient NPCs' deterministic ±5 % size variation. The
+  scale is measured from the assembled head/hair/top/bottom silhouette and is
+  applied to the body-part components, not the actor, so the feet stay on the
+  host's floor and the outline children inherit it.
+- The puppet's movement component stays in `MOVE_Walking` (but is not ticked) so
+  the pack's locomotion ABP selects Idle/Walk/Run instead of its "In Air" state.
+  Each frame the host's velocity is copied to it.
+- The pack's outline shells (`SkeletalMeshComponent_0..3`) are paired with their
+  animated body part by parent / existing leader pose, use it as their leader pose
+  and get the matching swapped mesh. They no longer keep the default male meshes on
+  female looks.
+- If the pack is absent, `ActivateLook()` fails closed and the NPC keeps its native
   GX cast avatar. A fresh checkout therefore still runs.
 
 The pack's idle / walk / run takes can also be retargeted onto the **native GX
@@ -44,13 +58,29 @@ UnrealEditor-Cmd DuelAcademyIsland.uproject -run=pythonscript -script=Tools/appl
 ## Verify
 
 The headless editor check loads the Blueprint, spawns a temporary NPC, and
-activates every look:
+activates every look.  It verifies the requested head/hair/top/bottom meshes, that
+the puppet is scaled to the host avatar's standing height and stands on the host
+floor, that every outline shell uses its body part's mesh and leader pose, the
+grounded movement state, look switching and native-avatar restore.
 
 ```powershell
 UnrealEditor-Cmd DuelAcademyIsland.uproject -run=pythonscript -script=Tools/test_fab_anime.py -unattended -nosplash -nullrhi
 ```
 
 A healthy run logs `FabAnimeTest: PASS ALL` for all eight looks.
+
+The native-cast retarget has its own headless check. It skips on a fresh
+checkout (no local retargeted FBXs) and otherwise verifies every group's
+`A_Anime_<Group>_Idle/Walk/Run` clip: the cast skeleton, the expected durations,
+the long Walk (> 1.05 s) / short Run (< 0.68 s) pair that `SetupCast` uses to
+detect Fab locomotion, and the normalised pelvis track.
+
+```powershell
+UnrealEditor-Cmd DuelAcademyIsland.uproject -run=pythonscript -script=Tools/test_fab_locomotion.py -unattended -nosplash -nullrhi
+```
+
+A healthy run logs `FabLocomotionTest: PASS ALL` (or `SKIP` when the local
+retargeted takes are not installed).
 
 ## Looks
 
@@ -104,12 +134,17 @@ baked pelvis track (the cast skeleton keeps its 100x root unit). Without the
 retargeted files the procedural gait takes stay in place and nothing changes.
 
 A full cast rebuild (`Duel Academy → Build Island`, `python Tools/build_island.py cast`)
-regenerates the gait takes, so re-run step 3 afterwards. The retargeted clips are
-about 1.24–1.38 m/s walk and 2.59–2.86 m/s run. `UDAAvatarComponent::SetupCast`
-detects their longer clip lengths and uses 130 / 265 cm/s as the reference speed;
-the gait fallback keeps its original 150 / 420 cm/s reference, so a machine without
-the pack behaves exactly as before. The Fab puppets keep using the pack's own
-`abp_Human` and are unaffected.
+regenerates the gait takes, so `importer.py` now re-applies these local Fab takes
+automatically when `Tools/thirdparty/fab_anime/retargeted` exists (step 3 remains
+useful for refreshing an existing level without a full rebuild). The retarget
+transfers leaf-bone rotation (head, hands, toes) in the parent frame, so the
+cast's head faces forward and the hands keep their natural twist. The measured
+planted-foot speeds are about 1.33-1.58 m/s walk and 5.55-6.59 m/s for the sprint
+take (per skeleton group); `UDAAvatarComponent::SetupCast` detects the long-walk /
+short-run pair and uses those per-group reference speeds, so the feet no longer skate
+at the old 1.30 / 2.65 m/s guess. The gait fallback keeps its original 150 / 420 cm/s
+reference, so a machine without the pack behaves exactly as before. The Fab
+puppets keep using the pack's own `abp_Human` and are unaffected by the retarget.
 
 ## Licence
 

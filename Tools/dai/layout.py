@@ -123,6 +123,8 @@ class Layout:
         self.inst_raw = []       # (asset, x, y, z, yaw, scale) of every instance not placed by a location
         self.travel = []         # fast-travel points inside locations (zones with a parent)
         self.arrivals = {}       # location key -> (world feet position, yaw) declared by the location itself
+        self.assets = {}         # location key -> AssetSet as placed (for world-space audits)
+        self.location_xforms = {}  # location key -> Xform used to place it
         self._in_location = False
         self._zones = None
         self.footprints = []     # (key, [(x,y)...]) for the minimap
@@ -183,6 +185,7 @@ class Layout:
             if key not in C.LOCATIONS:
                 continue
             aset = fn()
+            self.assets[key] = aset
             loc = C.LOCATIONS[key]
             from . import placement
             ck = placement.asset_checker(aset, log=self.log)
@@ -202,6 +205,7 @@ class Layout:
                 if z0 is None:
                     z0 = 4.0 if key == "lighthouse" else self.ground(x0, y0)
                 xf = Xform(x0, y0, z0, loc["yaw"])
+            self.location_xforms[key] = xf
             floating_meshes = {s["props"].get("mesh") for s in aset.sockets if s["type"] == "floating"}
             n_mesh = 0
             floating_meshes = {s["props"].get("mesh") for s in aset.sockets if s["type"] == "floating"}
@@ -357,8 +361,8 @@ class Layout:
                     self.add_instance(asset, p[0], p[1], p[2], yaw, pr.get("scale", 1.0))
                 if asset in P.PROP_LIGHTS:
                     L = P.PROP_LIGHTS[asset]
-                    ox, oy = rot2(L["offset"][0], L["offset"][1], yaw)
                     sc = pr.get("scale", 1.0)
+                    ox, oy = rot2(L["offset"][0] * sc, L["offset"][1] * sc, yaw)
                     self.add_light((p[0] + ox, p[1] + oy, p[2] + L["offset"][2] * sc), L)
                 self.clearings.append((p[0], p[1], 2.5))
             elif t == "light":
@@ -399,6 +403,8 @@ class Layout:
                 self.floating.append(dict(mesh=f"SM_{pr['mesh']}", folder=f"Locations/{key}", loc=ue_loc(p), yaw=ue_yaw(yaw),
                                           scale=1.0, amplitude=pr.get("amplitude", 0.15) * 100.0, period=pr.get("period", 6.0),
                                           sway=pr.get("sway", 0.4)))
+                # keep scatter (trees, rocks) out of the hull: the ferry is not part of the occupied pad mask
+                self.clearings.append((p[0], p[1], float(pr.get("clear", 12.0))))
             elif t == "camera":
                 continue
             elif t == "door":
@@ -464,7 +470,8 @@ class Layout:
                         z = self.ground(px, py)
                         yaw = math.degrees(math.atan2(-ny * side, -nx * side)) + 90.0
                         self.add_instance("SM_LampPost", px, py, z - 0.05, yaw, 1.0)
-                        self.add_light((px, py, z + 4.2), P.PROP_LIGHTS["SM_LampPost"])
+                        self.add_light((px, py, z + P.PROP_LIGHTS["SM_LampPost"]["offset"][2]),
+                                       P.PROP_LIGHTS["SM_LampPost"])
                         self.clearings.append((px, py, 2.0))
                         lamps += 1
                     side = -side

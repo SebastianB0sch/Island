@@ -69,8 +69,8 @@ CEILS = (3.95, 7.45, 11.0)       # ceiling height of each storey
 CY = 0.975                       # corridor wall centre lines (clear corridor 1.8 m)
 RYF, RYB = -(CY + TP / 2), CY + TP / 2     # room faces of the corridor walls
 PART = (5.0, 10.55, 15.95)       # partition lines of each wing (|x|)
-HOLE_A = (-5.0 + TP / 2 - 0.0, 2.4, -3.65, 5.87)    # stairwell 1F -> 2F (in the 2F floor)
-HOLE_B = (3.65, 2.4, 5.0 - TP / 2, 5.87)            # stairwell 2F -> 3F (in the 3F floor)
+HOLE_A = (-5.0 + TP / 2 - 0.0, 2.4, -3.65, 5.90)    # stairwell 1F -> 2F (in the 2F floor)
+HOLE_B = (3.65, 2.4, 5.0 - TP / 2, 5.90)            # stairwell 2F -> 3F (in the 3F floor)
 HOLE_C = (-5.0 + TP / 2, 1.1, -3.7, 4.65)           # stairwell 3F -> attic (in the 3F ceiling / top cap)
 IN_CREAM, IN_YELLOW, IN_WHITE = K.PLASTER_CREAM, K.PLASTER_YELLOW, K.PLASTER_WHITE
 
@@ -343,7 +343,7 @@ def _main(aset, mb, nc):
         for fi, zf in enumerate(FLOORS[1:]):
             for x in (-3.0, 3.0):
                 window(mb, x, zf + 0.85, 1.2, 1.9 if fi == 0 else 1.6, "ped" if fi == 0 else "key", cut="window")
-        window(mb, 0.0, FLOORS[1] + 0.05, 1.4, 2.6, "ped", door=True, cut="door")   # French door -> portico
+        window(mb, 0.0, FLOORS[1], 1.4, 2.6, "ped", door=True, cut="door")   # French door -> portico
         window(mb, 0.0, FLOORS[2] + 0.85, 1.2, 1.6, "key", cut="window")
         for u, d in ((BAYX, -1), (-BAYX, 1)):
             quoins(mb, u, d, ZG + 0.1, ZC - 0.65, phase=1)
@@ -439,7 +439,7 @@ def _main(aset, mb, nc):
                             continue
                         window(mb, -x, zf + 0.85, 1.2, 1.9, "flat", cut="window")
                     else:
-                        window(mb, -x, zf + 0.06, 1.2, 2.45, "key", door=True, cut="door")
+                        window(mb, -x, zf, 1.2, 2.45, "key", door=True, cut="door")
         for u, d in ((W2, -1), (-W2, 1)):
             quoins(mb, u, d, ZG + 0.1, ZC - 0.65)
         # back door surround (the double leaf is a door socket)
@@ -1780,7 +1780,7 @@ def _dress_ground(aset, mb, nc):
                               (14.8, RYB - 0.1, 17.3, RYB + 0.1)])
     for px in (13.25, 15.95, 18.65):                       # open shelves in the piers between the windows
         for zz in (1.5, 1.95):
-            wall_shelf(mb, nc, aset, px, IY1, zf + zz, 180.0, w=1.2, d=0.24, kind="kitchen", seed=int(px * 10 + zz))
+            wall_shelf(mb, nc, aset, px, IY1, zf + zz, 0.0, w=1.2, d=0.24, kind="kitchen", seed=int(px * 10 + zz))
     DT.table_set(nc, aset, 15.8, 3.85, zf + 0.9, 0.0, "kitchen", seed=2)
     with mb.at((0, 0, 0)):
         study_table(mb, 19.6, 1.55, zf, 0.0, L=1.2, W=0.7)
@@ -1944,7 +1944,7 @@ def _dress_more(aset, mb, nc):
     aset.text("WASH 200 / DRY 100", K.wall_point(xa, 3.7, 90.0, 0.02, zf + 1.42), 90.0, size=0.07,
               color=(0.45, 0.28, 0.05))
     with lift(zf, mb, nc):
-        K.wardrobe(mb, 7.85, IY1 - 0.3, 180.0, w=1.0, d=0.55, h=2.1, mat=K.TRIM_WHITE)
+        K.wardrobe(mb, 7.85, IY1 - 0.3, 0.0, w=1.0, d=0.55, h=2.1, mat=K.TRIM_WHITE)
         K.counter(mb, xb - 0.6, 5.45, xb, 6.35, 0.88, body=K.TRIM_WHITE, top="M_IntSteelBlue")
     nc.box((xb - 0.3, 5.9, zf + 0.89), (0.45, 0.6, 0.01), K.METAL)
     nc.cylinder((xb - 0.08, 5.9, zf + 0.88), 0.02, 0.32, K.METAL, seg=8)
@@ -2351,8 +2351,7 @@ def _cafeteria(aset, mb, nc, inc):
             cx, cy = p0[0] + ux * u, p0[1] + uy * u
             mb.box((cx + nx * 0.02, cy + ny * 0.02, CZ + 2.75), (w if abs(nx) < 0.5 else 0.08,
                    0.08 if abs(nx) < 0.5 else w, 0.06), FRAME)
-            mb.box((cx + nx * 0.1, cy + ny * 0.1, CZ + 0.68), (w + 0.4 if abs(nx) < 0.5 else 0.22,
-                   0.22 if abs(nx) < 0.5 else w + 0.4, 0.1), TRIM)
+            # the wall opening already carries its own sill (geo.wall); no second sill here
     mull((CX0, CY0), (CX1, CY0), [(1.8, 2.0), (7.7, 2.3), (10.5, 2.3), (13.3, 2.3)])
     mull((CX1, CY0), (CX1, CY1), [(2.2, 2.6), (6.0, 2.6), (9.8, 2.6)])
     mull((CX1, CY1), (CX0, CY1), [(2.6, 2.4), (5.9, 2.4), (9.2, 2.4)])

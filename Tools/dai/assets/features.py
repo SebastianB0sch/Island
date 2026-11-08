@@ -489,7 +489,7 @@ def build_cliffs():
     ox, oy = rot2(-3.5, 1.5, yaw)
     a.interact("sign", (lx + ox, ly + oy, base + 1.4), yaw + 180.0, title="Sunset Point",
                text="The best sunset on the island. On a clear day you can almost see Domino City.")
-    a.prop("SM_Signpost", (lx + ox, ly + oy, base), yaw + 180.0)
+    a.prop("SM_Signpost", (lx + ox, ly + oy, H(ex + ox, ey + oy)), yaw + 180.0)
     a.audio("A_Ocean", (lx - 30, ly, base - 10), radius=150.0)
     a.audio("A_Wind", (lx, ly, base + 5), radius=80.0, volume=0.5)
     a.special("clearing", (lx, ly, base), radius=12.0)

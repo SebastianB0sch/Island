@@ -28,6 +28,13 @@ from git, and **not redistributed** with this repository. The locomotion FBXs re
 (`Tools/retarget_fab_anime.py`) and the resulting `A_Anime_*` takes are local-only derivatives and are
 covered by the same restriction. See [Docs/FAB_ANIME.md](Docs/FAB_ANIME.md).
 
+The optional **Fab nature / prop packs** (StyleHex FREE Stylized Forest Sample, Stylized PBR Nature
+foliage and rocks, the Tropical Garden Lounge vegetation, and the College Raimon environment kit) are also
+licensed marketplace content. They are installed locally with `Tools/import_fab_nature.py`, excluded from
+git, and **not redistributed**. Without them the game uses the native procedural vegetation, the curated
+CC0 rocks/props and the remaining procedural street furniture. See
+[Docs/FAB_NATURE.md](Docs/FAB_NATURE.md) and [Docs/FAB_ASSET_AUDIT.md](Docs/FAB_ASSET_AUDIT.md).
+
 ## Third-party assets
 
 All third-party art below is **CC0 / public domain**, **CC-BY** (attribution given here) or, for the

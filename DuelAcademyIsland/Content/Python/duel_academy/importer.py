@@ -3,6 +3,7 @@
 import glob
 import json
 import os
+import sys
 
 import unreal
 
@@ -741,6 +742,36 @@ def _prune_stale_cast(info, prune=True):
     return removed
 
 
+def _apply_fab_locomotion():
+    """Install the optional local Fab locomotion retarget after a cast rebuild.
+
+    The cast rebuild regenerates the procedural gait A_Anime_<Group>_Idle/Walk/Run
+    takes, which would otherwise silently replace the retargeted Fab takes.  When
+    the local-only retargeted FBXs exist (Tools/retarget_fab_anime.py), re-import
+    them over the fresh gait clips.  A fresh checkout has no such folder and keeps
+    the gait clips exactly as before.
+    """
+    repo = os.path.dirname(C.project_dir())
+    retarget_dir = os.path.join(repo, "Tools", "thirdparty", "fab_anime", "retargeted")
+    if not os.path.isdir(retarget_dir):
+        return
+    tools = os.path.join(repo, "Tools")
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    try:
+        import apply_fab_locomotion as fab_locomotion
+    except Exception as exc:  # noqa: BLE001 - the gait clips are a valid fallback
+        C.warn(f"cast: Fab locomotion installer unavailable: {exc}")
+        return
+    C.log("cast: re-applying local Fab locomotion retarget takes")
+    try:
+        result = fab_locomotion.main()
+        if result:
+            C.warn("cast: Fab locomotion install reported failures; a group may have kept its gait takes")
+    except Exception as exc:  # noqa: BLE001
+        C.warn(f"cast: Fab locomotion takes not re-applied: {exc}")
+
+
 def import_cast(masters, prune=True):
     """SourceAssets/Data/cast.json -> /Game/DuelAcademy/Characters: the anime cast.
 
@@ -848,4 +879,5 @@ def import_cast(masters, prune=True):
         if obj is not None and obj.get_class().get_name() in ("Material", "MaterialInstanceConstant", "Texture2D"):
             unreal.EditorAssetLibrary.delete_asset(path)
     C.log(f"cast: {len(meshes)} characters in {len(info.get('groups', {}))} skeleton groups")
+    _apply_fab_locomotion()
     return meshes

@@ -388,6 +388,12 @@ void ADAHUD::BeginPlay()
 			};
 			const USkeletalMesh* Asset = Mesh ? Mesh->GetSkeletalMeshAsset() : nullptr;
 			Check(TEXT("cast mesh"), Asset != nullptr && Anim != nullptr, Asset ? Asset->GetName() : TEXT("no anime cast mesh / native anim instance"));
+			if (Avatar)
+			{
+				const float Height = Avatar->GetStandingHeight();
+				Check(TEXT("cast height"), Height > 120.f && Height < 220.f,
+					FString::Printf(TEXT("%.1f cm"), Height));
+			}
 			int32 Morphs = 0;
 			for (const TCHAR* M : { TEXT("Blink"), TEXT("A"), TEXT("I"), TEXT("U"), TEXT("E"), TEXT("O"), TEXT("Joy"), TEXT("Angry") })
 			{

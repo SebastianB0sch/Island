@@ -2399,7 +2399,7 @@ def _tower_rooms(aset, mb, nc, rng):
                TFL[0])
     # ---- store room (old furniture taken up into the tower)
     z = TFL[0]
-    K.floor_planks(mb, x0, y0, x1, y1, z, mat="M_IntWoodFloorDark", seam=VOID, along="y")
+    K.slab(mb, x0, y0, x1, y1, z, 0.03, "M_IntWoodFloorDark", bottom=ROT, side=ROT, holes=[SPIRAL_HOLE])
     DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, TCEIL[0], style="ruin", seed=60)
     _flight(mb, nc, FLIGHT_A[0], FLIGHT_A[1], TFL[0], TFL[1], 90.0, 1.0, skip=(6, 14), rail_gap=())
     for xw in (-2.2, 2.2):
@@ -2443,13 +2443,14 @@ def _tower_rooms(aset, mb, nc, rng):
     _bell(mb, nc, 0.6, -6.6, z + 0.3, 1.0, 20.0, lying=True)
     _papers(nc, 0.0, -6.0, z, 1.6, 8, rng)
     DT.floor_clutter(nc, aset, x0 + 0.2, y0 + 0.2, x1 - 1.4, y1, z, kind="ruin", n=4, seed=61,
-                     clear=[(x0, -8.4, -1.6, y0), (x0, -8.0, -2.9, -5.6), (-0.2, y0, 2.0, -9.2)])
+                     clear=[(x0, y0, -1.6, -8.4), (x0, -8.0, -2.9, -5.6), (-0.2, y0, 2.0, -9.2)])
     _store_extras(aset, mb, nc, rng, z)
     K.camera(aset, "tower_store", (2.2, -3.1, z + 1.65), (-2.4, -8.6, z + 0.5), 16.0)
 
     # ---- the clock keeper's room
     z = TFL[1]
-    K.floor_planks(mb, x0, y0, x1, y1, z, mat="M_IntWoodFloorDark", seam=VOID, along="x")
+    K.slab(mb, x0, y0, x1, y1, z, 0.03, "M_IntWoodFloorDark", bottom=ROT, side=ROT,
+           holes=[(2.85, -8.0, x1, -4.02)])
     DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, TCEIL[1], style="ruin", seed=61)
     _rail_line(mb, [(2.8, -4.05), (2.8, -8.05), (x1 - 0.05, -8.05)], z)
     _flight(mb, nc, FLIGHT_B[0], FLIGHT_B[1], TFL[1], TFL[2], -90.0, 1.0, skip=(9, 10, 16), rail_gap=(15, 18))
@@ -2491,7 +2492,8 @@ def _tower_rooms(aset, mb, nc, rng):
 
     # ---- the clockwork room: stopped at the hour the students vanished
     z = TFL[2]
-    K.floor_planks(mb, x0, y0, x1, y1, z, mat="M_IntWoodFloorDark", seam=VOID, along="y")
+    K.slab(mb, x0, y0, x1, y1, z, 0.03, "M_IntWoodFloorDark", bottom=ROT, side=ROT,
+           holes=[(x0, -8.98, -2.85, -5.3)])
     DT.dress_room(aset, mb, nc, x0, y0, x1, y1, z, TCEIL[2], style="ruin", seed=62)
     _rail_line(mb, [(x0 + 0.05, -5.25), (-2.8, -5.25), (-2.8, -8.9)], z)
     for (wx, wy, yaw) in ((x1, -7.5, -90.0), (x1, -5.5, -90.0), (x0, -7.5, 90.0), (x0, -5.5, 90.0),
@@ -3031,7 +3033,7 @@ def _ground_rooms(aset, mb, nc, rng):
             aset.prop("SM_Int_OldBed", (-18.9, 1.3, FZ), 0.0)
             nc.box((-18.9, 1.3, FZ + 0.52), (0.8, 1.8, 0.1), "M_OldPaper")
             nc.box((-18.9, 1.0, FZ + 0.6), (0.85, 1.0, 0.06), "M_IntFabricNavy")
-            aset.prop("SM_Int_Stove", (-13.0, 3.15, FZ), 180.0)
+            aset.prop("SM_Int_Stove", (-13.0, 3.15, FZ), 0.0)
             aset.prop("SM_Int_Kettle", (-13.0, 3.15, FZ + 0.86), 30.0)
             aset.prop("SM_Int_SmallTable", (-16.0, 3.25, FZ), 180.0)
             aset.prop("SM_Int_Lantern", (-15.7, 3.25, FZ + 0.53), 0.0)

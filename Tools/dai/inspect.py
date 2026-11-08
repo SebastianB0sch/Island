@@ -111,10 +111,11 @@ def add_socket_lights(aset, scale=0.02):
             L = s["props"]
         elif s["type"] == "prop" and s["props"]["asset"] in P.PROP_LIGHTS:
             L = P.PROP_LIGHTS[s["props"]["asset"]]
-            off = Vector(L["offset"])
+            sc = s["props"].get("scale", 1.0)
+            off = Vector(L["offset"]) * sc
             a = math.radians(s["yaw"])
             pos = pos + Vector((off.x * math.cos(a) - off.y * math.sin(a), off.x * math.sin(a) + off.y * math.cos(a),
-                                off.z * s["props"].get("scale", 1.0)))
+                                off.z))
         if not L:
             continue
         spot = L.get("spot_pitch") is not None
@@ -221,7 +222,9 @@ def audit(aset, scene=None, log=print, coverage_rays=(48, 30)):
         return z
 
     def indoors(p):
-        h = arch.ray_cast(Vector((p.x, p.y, p.z + 0.3)), Vector((0, 0, 1)), 12.0)
+        # 60 m: tall halls (the Grand Duel Arena is ~28 m) must still count as indoors, or their
+        # floor-standing props are skipped as "outdoor" and never grounding-checked.
+        h = arch.ray_cast(Vector((p.x, p.y, p.z + 0.3)), Vector((0, 0, 1)), 60.0)
         return h[0] is not None
 
     for s, o in scene["props"]:

@@ -685,17 +685,17 @@ def _bath_interior(aset, mb, nc):
         nc.box((mx(-14.2, side), -9.1, BFL + 0.47), (0.3, 0.45, 0.04), "M_IntFabricWhite" if side < 0 else "M_IntFabricPink")
         # vanity counter with mirrors and stools on the partition
         xv = pxw if side < 0 else pxe
-        a, b = sorted((xv, xv - side * 0.45))
+        a, b = sorted((xv, xv + side * 0.45))
         mb.box_mm((a, -9.9, BFL), (b, -8.35, BFL + 0.72), WOOD)
         mb.box_mm((a - 0.02, -9.92, BFL + 0.72), (b + 0.02, -8.33, BFL + 0.76), K.TRIM_WHITE)
         for y in (-9.5, -8.75):
             aset.prop("SM_Int_Mirror", (xv, y, BFL + 0.95), -90.0 if side < 0 else 90.0)
-            aset.prop("SM_Int_Stool", (xv - side * 0.85, y, BFL), 0.0)
-        nc.box((xv - side * 0.2, -9.15, BFL + 0.78), (0.18, 0.12, 0.05), "M_IntPaper")       # tissue box
+            aset.prop("SM_Int_Stool", (xv + side * 0.85, y, BFL), 0.0)
+        nc.box((xv + side * 0.2, -9.15, BFL + 0.78), (0.18, 0.12, 0.05), "M_IntPaper")       # tissue box
         if side < 0:   # hair dryer
-            nc.cylinder((xv - side * 0.25, -8.55, BFL + 0.76), 0.045, 0.1, "M_IntFabricWhite", seg=8)
+            nc.cylinder((xv + side * 0.25, -8.55, BFL + 0.76), 0.045, 0.1, "M_IntFabricWhite", seg=8)
         else:
-            aset.prop("SM_Int_PottedPlant", (xv - side * 0.22, -8.55, BFL + 0.76), 0.0)
+            aset.prop("SM_Int_PottedPlant", (xv + side * 0.22, -8.55, BFL + 0.76), 0.0)
         # bathroom scales
         sxs = mx(-11.0, side)
         mb.box((sxs, -8.6, BFL + 0.05), (0.38, 0.32, 0.1), K.TRIM_WHITE)

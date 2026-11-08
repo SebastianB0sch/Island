@@ -212,6 +212,8 @@ def _normalise(obj, spec):
         s = spec["scale"]
     if spec.get("origin", "base") == "base":
         off = Vector((-(mn[0] + mx[0]) / 2, -(mn[1] + mx[1]) / 2, -mn[2] + spec.get("z_offset", 0.0)))
+    elif spec["origin"] == "wall":  # wall-hung props: back face on the pivot plane (+Y = wall)
+        off = Vector((-(mn[0] + mx[0]) / 2, -mx[1], -mn[2] + spec.get("z_offset", 0.0)))
     elif spec["origin"] == "top":   # ceiling fixtures: origin at the top centre, hanging down -Z
         off = Vector((-(mn[0] + mx[0]) / 2, -(mn[1] + mx[1]) / 2, -mx[2] + spec.get("z_offset", 0.0)))
     else:

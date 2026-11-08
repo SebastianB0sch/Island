@@ -23,8 +23,9 @@ import numpy as np
 
 from . import palette
 
-SOFT_KINDS = {"water", "smoke", "beam", "hologram", "waterfall", "flow", "lava", "foliage"}
+SOFT_KINDS = {"water", "smoke", "beam", "hologram", "waterfall", "flow", "lava", "foliage", "glass"}
 MIN_H, MAX_LEN, MAX_LIFT, MIN_FILL, MIN_SIZE = 0.15, 6.0, 1.0, 0.02, 0.25
+MIN_THICK = 0.03      # window linings / thin trim boards are not furniture
 GAP = 0.03            # pieces closer than this belong to one item
 
 
@@ -127,7 +128,9 @@ def blockers(mb, floor=None, doors=(), log=None):
         d = mx - mn
         if max(d[0], d[1]) > MAX_LEN or max(d) < 0.02:
             continue
-        if d[2] < 0.06 and max(d[0], d[1]) > 0.3:      # a rug, a mat, a decal
+        if d[2] < 0.06 and max(d[0], d[1]) > 0.3 and mn[2] < 0.15:   # a rug / mat on the floor
+            continue
+        if min(d) < MIN_THICK:                         # window linings / thin trim boards
             continue
         keep.append((mn, mx, pts))
     n = len(keep)
@@ -237,7 +240,7 @@ def floor_fn(meshes):
 
     def floor(x, y, z):
         loc, *_ = bvh.ray_cast(Vector((x, y, z)), Vector((0, 0, -1)), 30.0)
-        return loc.z if loc is not None else 0.0
+        return loc.z if loc is not None else None
     return floor
 
 
@@ -251,7 +254,7 @@ def asset_blockers(aset, log=None):
     doors = [(s["pos"], s["yaw"], s["props"]["width"], s["props"]["height"]) for s in aset.sockets if s["type"] == "door"]
     out = {}
     for n, mb in aset.meshes.items():
-        if n.endswith("_NoCol") and mb.verts and n not in floating:
+        if n.endswith("_NoCol") and "_Glass" not in n and mb.verts and n not in floating:
             out[n] = blockers(mb, floor, doors, log)
     aset._blockers = out
     return out

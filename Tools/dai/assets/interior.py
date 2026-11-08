@@ -178,7 +178,7 @@ def wall(aset, mb, p0, p1, z0, h, thick, mat, inner=None, openings=(), trim=None
                 for k in range(1, o.transoms + 1):
                     mb.box((o.c, thick / 2, o.z0 + (o.z1 - o.z0) * k / (o.transoms + 1)), (o.w, 0.07, 0.045), fr)
                 sm = o.sill or trim_in or fr
-                mb.box((o.c, thick - 0.02 + 0.06, o.z0 - 0.03), (o.w + 0.16, 0.16, 0.05), sm)   # inside sill
+                mb.box((o.c, thick - 0.02 + 0.06, o.z0 - 0.025), (o.w + 0.16, 0.16, 0.05), sm)   # inside sill, top flush with the opening
     if base:
         _skirting(mb, p0, p1, z0, thick, base, base_h, [o for o in openings if isinstance(o, Door)])
     return yaw
@@ -329,8 +329,8 @@ def stairs(mb, x, y, z0, z1, yaw, width, mat=WOOD, riser=None, stringer=None, ra
             for s in rail_sides:
                 y = s * (width / 2 - 0.04)
                 for k in range(0, n + 1, 2):
-                    mb.box((run * k + 0.1, y, rise * k + 0.45), (0.04, 0.04, 0.9), rail)
-                mb.beam((0.05, y, 0.95), (L, y, z1 - z0 + 0.95), 0.06, 0.05, rail)
+                    mb.box((run * k + 0.1, y, rise * (k + 1) + 0.45), (0.04, 0.04, 0.9), rail)
+                mb.beam((0.05, y, rise + 0.95), (L, y, z1 - z0 + 0.95), 0.06, 0.05, rail)
     return run * n
 
 

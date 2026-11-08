@@ -55,6 +55,14 @@ Tools/thirdparty/_staging/
 # must never be committed (see Docs/FAB_ANIME.md).
 DuelAcademyIsland/Content/AnimeCharacters/
 
+# Licensed Fab nature / prop packs are installed locally by
+# Tools/import_fab_nature.py and must never be committed (see
+# Docs/FAB_NATURE.md).
+DuelAcademyIsland/Content/StyleHex_Studio/
+DuelAcademyIsland/Content/Stylized_PBR_Nature/
+DuelAcademyIsland/Content/TropicalGardenLounge/
+DuelAcademyIsland/Content/CollegeRaimon/
+
 # FBX exports / retargeted locomotion takes derived from the licensed Fab pack
 # (Tools/export_fab_locomotion.py, Tools/retarget_fab_anime.py).
 Tools/thirdparty/fab_anime/

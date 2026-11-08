@@ -130,13 +130,44 @@ bool UDAAvatarComponent::SetupCast()
 	if (UDAAvatarAnimInstance* Inst = Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()))
 	{
 		// The optional Fab retarget takes are longer than the procedural gait clips
-		// (1.17 s / 0.63 s versus 0.80 s / 0.47 s) and are authored at a slower
-		// reference speed. Detect them from the installed clip length so the same
+		// (1.167 s / 0.633 s versus 1.0 s / 0.7 s) and are authored at the pack's own
+		// stance speeds. Detect the pair from the installed clip lengths so the same
 		// component also works when the pack is absent and the gait takes are used.
+		// The values below are the measured planted-foot speeds of the retargeted
+		// takes (cm/s, before BodyScale); the old 130/265 guess made the sprint clip
+		// slide at more than double speed.
 		const UAnimSequence* WalkTake = Anims.FindRef(TEXT("Walk"));
-		const bool bFabLocomotion = WalkTake && WalkTake->GetPlayLength() > 1.0f;
-		const float WalkRef = bFabLocomotion ? 130.f : WalkAnimSpeed;
-		const float RunRef = bFabLocomotion ? 265.f : RunAnimSpeed;
+		const UAnimSequence* RunTake = Anims.FindRef(TEXT("Run"));
+		const bool bFabLocomotion = WalkTake && RunTake
+			&& WalkTake->GetPlayLength() > 1.05f
+			&& RunTake->GetPlayLength() < 0.68f;
+		float WalkRef = WalkAnimSpeed;
+		float RunRef = RunAnimSpeed;
+		if (bFabLocomotion)
+		{
+			struct FFabLocomotionSpeed
+			{
+				const TCHAR* Group;
+				float Walk;
+				float Run;
+			};
+			static const FFabLocomotionSpeed Speeds[] = {
+				{ TEXT("VroidA"), 138.f, 555.f },
+				{ TEXT("VroidB"), 133.f, 558.f },
+				{ TEXT("VroidC"), 158.f, 659.f },
+			};
+			WalkRef = 150.f;   // unknown group: keep a human walk / sprint reference
+			RunRef = 420.f;
+			for (const FFabLocomotionSpeed& Speed : Speeds)
+			{
+				if (AnimGroup.Equals(Speed.Group, ESearchCase::IgnoreCase))
+				{
+					WalkRef = Speed.Walk;
+					RunRef = Speed.Run;
+					break;
+				}
+			}
+		}
 		Inst->Configure(Anims, WalkRef * BodyScale, RunRef * BodyScale);
 	}
 	else
@@ -193,6 +224,42 @@ bool UDAAvatarComponent::SetupSkeletal()
 		RunThreshold = 300.f;   // the player walks at 150, sprints at 420
 	}
 	return true;
+}
+
+float UDAAvatarComponent::GetStandingHeight() const
+{
+	// The imported bind-pose bounds are the dimensions the mesh actually has.  For the
+	// anime cast they include the restyled hair (a couple of cm above the cast.py crown
+	// height), which is exactly what an optional cosmetic puppet has to match.
+	const float FieldScale = FMath::IsFinite(BodyScale) && BodyScale > 0.f
+		? FMath::Clamp(BodyScale, 0.05f, 10.f)
+		: 1.f;
+	if (SkelComp)
+	{
+		if (const USkeletalMesh* Mesh = SkelComp->GetSkeletalMeshAsset())
+		{
+			const float ComponentScale = SkelComp->GetComponentScale().Z;
+			const float Scale = FMath::IsFinite(ComponentScale) && ComponentScale > 0.f
+				? ComponentScale
+				: FieldScale;
+			const FBoxSphereBounds MeshBounds = Mesh->GetImportedBounds();
+			const float Height = (MeshBounds.Origin.Z + MeshBounds.BoxExtent.Z) * Scale;
+			if (FMath::IsFinite(Height) && Height > 1.f)
+			{
+				return Height;
+			}
+		}
+	}
+	// Procedural fallback: the same nominal height as the generic cast with its size variation.
+	return 170.f * FieldScale;
+}
+
+void UDAAvatarComponent::SetSkeletalTickEnabled(bool bEnabled)
+{
+	if (SkelComp)
+	{
+		SkelComp->SetComponentTickEnabled(bEnabled);
+	}
 }
 
 void UDAAvatarComponent::SetTalking(bool bTalking)

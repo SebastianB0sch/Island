@@ -144,7 +144,7 @@ def build_leaf(style, w, h):
         pw = (w - 2 * g) / n
         for i in range(n):
             x0 = g + i * pw
-            dz = 0.0 if style != "abandoned" else (0.04 * ((i * 7) % 3) - 0.04)
+            dz = 0.0 if style != "abandoned" else (0.04 * ((i * 7) % 3) - 0.08)   # ragged, never above h
             mat = leaf if i % 3 else panel
             slab(x0 + 0.004, x0 + pw - 0.004, 0.005, h - g + dz, mat)
         for z in (0.3, h - 0.35):

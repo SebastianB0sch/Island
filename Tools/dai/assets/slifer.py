@@ -217,10 +217,10 @@ def _rooms(aset, mb, nc):
                                                                                 "M_IntFabricBlue")))
                 K.desk(mb, nc, x0 + 2.95, ry0 + 0.32, 180.0, w=1.1, d=0.55, hutch=False, rng_seed=i + floor * 10)
                 K.wardrobe(mb, rx0 + 0.31, 2.25, 90.0, w=1.2, d=0.6, h=min(2.0, ceil - zr - 0.15))
-                # shoe shelf in the genkan
-                mb.box_mm((rx0, ry0 + 0.05, 0.0), (rx0 + 0.32, ry0 + 0.85, 0.85), K.WOOD)
+                # shoe shelf in the genkan (rests on the concrete, 7 cm below the raised floor)
+                mb.box_mm((rx0, ry0 + 0.05, -STEP + 0.01), (rx0 + 0.32, ry0 + 0.85, 0.85 - STEP + 0.01), K.WOOD)
                 for k in range(3):
-                    nc.box((rx0 + 0.2, ry0 + 0.25 + k * 0.22, 0.87), (0.24, 0.1, 0.07), rng.choice(K.FABRICS))
+                    nc.box((rx0 + 0.2, ry0 + 0.25 + k * 0.22, 0.815), (0.24, 0.1, 0.07), rng.choice(K.FABRICS))
             # genkan shoes on the concrete (below the step)
             for k in range(2):
                 nc.box((x0 + 0.85 + k * 0.35, ry0 + 0.55, zf + 0.05), (0.12, 0.28, 0.08), rng.choice(("M_IntFabricRed", "M_IntBlack")))
@@ -465,7 +465,7 @@ def _main_block(aset, mb, nc):
     # ---------------- back: small windows, patched boards, mailboxes, sign
     with mb.at((0, YB, 0), rot=180):
         # local u runs -x in world: u = -x
-        for z in (ZG + 1.15, Z2 + 1.0):
+        for z in (ZG + 0.9, Z2 + 1.0):
             for i in range(NROOMS):
                 x = X0 + i * RW + 2.4
                 window(mb, -x, z, 1.0, 0.75, glass=None)
@@ -491,7 +491,8 @@ def _main_block(aset, mb, nc):
     for x in (-8.2, -1.8):
         mb.box((x, YB + 0.25, 5.15), (0.08, 0.5, 0.06), "M_DarkMetal")
         nc.box((x, YB + 0.5, 5.07), (0.18, 0.12, 0.1), "M_LampGlow")
-    aset.light((-5.0, YB + 1.2, 5.0), (1.0, 0.8, 0.55), 3000.0, 8.0, night_only=True)
+    for x in (-8.2, -1.8):
+        aset.light((x, YB + 0.55, 5.05), (1.0, 0.8, 0.55), 2000.0, 7.0, night_only=True)
 
     # end walls: windows (east end faces the dining hall passage)
     with mb.at((X1, 0, 0), rot=90):
@@ -633,7 +634,7 @@ def _main_block(aset, mb, nc):
     # stair landing lamp
     nc.box((LX + 0.12, -1.0, Z2 + 2.1), (0.14, 0.14, 0.18), "M_LampGlow")
     mb.box((LX + 0.12, -1.0, Z2 + 2.25), (0.2, 0.2, 0.08), "M_DarkMetal")
-    aset.light((LX + 0.5, -1.0, Z2 + 1.9), (1.0, 0.78, 0.48), 3000.0, 7.0, night_only=True)
+    aset.light((LX + 0.12, -1.0, Z2 + 2.1), (1.0, 0.78, 0.48), 3000.0, 7.0, night_only=True)
 
 
 # ------------------------------------------------------------------ dining hall annex
@@ -715,7 +716,7 @@ def _dining(aset, mb, nc):
     # porch lamp + bench-like crate
     mb.box((DX0 + 1.2, DY0 - 0.06, DZ + 2.35), (0.14, 0.12, 0.08), "M_DarkMetal")
     nc.box((DX0 + 1.2, DY0 - 0.16, DZ + 2.2), (0.12, 0.12, 0.16), "M_LampGlow")
-    aset.light((DX0 + 1.2, DY0 - 0.6, DZ + 2.1), (1.0, 0.78, 0.48), 3000.0, 7.0, night_only=True)
+    aset.light((DX0 + 1.2, DY0 - 0.16, DZ + 2.2), (1.0, 0.78, 0.48), 3000.0, 7.0, night_only=True)
 
     # ---------------- interior: tables, counter window, kitchen
     for ty in (-1.7, 1.0):
@@ -762,7 +763,8 @@ def _dining(aset, mb, nc):
         nc.box((17.2, ly, DZ + DWH - 0.35), (0.02, 0.02, 0.7), "M_Black")
         nc.cone((17.2, ly, DZ + DWH - 0.95), 0.35, 0.3, TRIM, seg=12)
         nc.sphere((17.2, ly, DZ + DWH - 0.95), 0.13, "M_LampGlow", seg=8, rings=6)
-    aset.light((16.0, -0.4, DZ + 2.6), (1.0, 0.8, 0.55), 5000.0, 11.0, night_only=False)
+    for ly in (-1.7, 1.0):
+        aset.light((17.2, ly, DZ + DWH - 0.95), (1.0, 0.8, 0.55), 2500.0, 8.0, night_only=False)
     aset.light((17.3, 4.0, DZ + 2.4), (1.0, 0.85, 0.65), 2000.0, 5.0, night_only=False)
     _dining_detail(aset, mb, nc)
 
@@ -860,8 +862,8 @@ def _dining_detail(aset, mb, nc):
         nc.cylinder((16.6 + k * 0.3, 4.74, DZ + 1.55), 0.05, 0.03, K.METAL, seg=8)
     nc.box((17.2, 4.78, DZ + 1.92), (1.5, 0.02, 0.02), K.METAL)
     aset.prop("SM_Int_SteelShelves", (19.25, 4.5, DZ), 180.0)
-    for k in range(3):                                                       # rice sacks
-        with nc.at((18.6 + (k % 2) * 0.1, 3.75 + k * 0.05, DZ + 0.12 + k * 0.2), rot=10.0 * k):
+    for k in range(3):                                                       # rice sacks (clear of the inner door swing)
+        with nc.at((12.0 + (k % 2) * 0.1, 3.60 + k * 0.05, DZ + 0.12 + k * 0.2), rot=10.0 * k):
             nc.box((0, 0, 0), (0.55, 0.38, 0.2), "M_SliferLaundryWhite")
     nc.box((18.6, 3.55, DZ + 0.62), (0.3, 0.004, 0.12), "M_IntFabricRed")
     mb.box_mm((12.5, 4.45, DZ + 1.8), (14.9, 4.8, DZ + 2.45), K.TRIM_WHITE)          # upper cupboards
