@@ -68,13 +68,17 @@ def _face_crop(image):
     if not box:
         return _flatten(image)
     left, top, right, bottom = box
-    width = right - left
     height = bottom - top
-    # Head width is roughly two thirds of the shoulder span; include a little
-    # collar so the crop still reads as a face rather than a floating mask.
-    side = max(8, int(round(width * 0.76)))
-    cx = (left + right) // 2
-    cy = top + int(round(height * 0.20))
+    # Measure the head itself (hair included): the widest opaque row in the upper part of the silhouette.
+    # Shoulder width is no guide - a slim figure with a large head would be cropped at the chin.
+    import numpy as np
+    opaque = np.asarray(alpha) > 32
+    rows = opaque[top:top + max(1, int(height * 0.34))]
+    cols = np.nonzero(rows.any(axis=0))[0]
+    head_w = int(cols[-1] - cols[0] + 1) if len(cols) else right - left
+    side = max(8, int(round(head_w * 1.22)))
+    cx = int(cols[0] + cols[-1]) // 2 if len(cols) else (left + right) // 2
+    cy = top + int(round(side * 0.47))
     half = side // 2
     crop = (cx - half, cy - half, cx - half + side, cy - half + side)
     out = Image.new("RGBA", (side, side), (0, 0, 0, 0))

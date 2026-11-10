@@ -121,7 +121,7 @@
    "group": "Cast",
    "display": "Student",
    "dorm": "any",
-   "scale": 0.99,
+   "scale": 0.932,
    "tint": [
     "jacket",
     "hair"
@@ -142,7 +142,7 @@
    "group": "Cast",
    "display": "Jaden Yuki",
    "dorm": "slifer",
-   "scale": 0.978,
+   "scale": 0.921,
    "tint": [],
    "female": false,
    "materials": [
@@ -159,7 +159,7 @@
    "group": "Cast",
    "display": "Syrus Truesdale",
    "dorm": "slifer",
-   "scale": 0.891,
+   "scale": 0.839,
    "tint": [],
    "female": false,
    "materials": [
@@ -176,7 +176,7 @@
    "group": "Cast",
    "display": "Chumley Huffington",
    "dorm": "slifer",
-   "scale": 0.995,
+   "scale": 0.938,
    "tint": [],
    "female": false,
    "materials": [
@@ -193,7 +193,7 @@
    "group": "Cast",
    "display": "Bastion Misawa",
    "dorm": "ra",
-   "scale": 1.024,
+   "scale": 0.965,
    "tint": [],
    "female": false,
    "materials": [
@@ -210,7 +210,7 @@
    "group": "Cast",
    "display": "Chazz Princeton",
    "dorm": "obelisk",
-   "scale": 1.013,
+   "scale": 0.954,
    "tint": [],
    "female": false,
    "materials": [
@@ -227,7 +227,7 @@
    "group": "Cast",
    "display": "Zane Truesdale",
    "dorm": "obelisk",
-   "scale": 1.065,
+   "scale": 1.003,
    "tint": [],
    "female": false,
    "materials": [
@@ -244,7 +244,7 @@
    "group": "Cast",
    "display": "Alexis Rhodes",
    "dorm": "obelisk",
-   "scale": 0.943,
+   "scale": 0.879,
    "tint": [],
    "female": true,
    "materials": [
@@ -261,7 +261,7 @@
    "group": "Cast",
    "display": "Jasmine",
    "dorm": "obelisk",
-   "scale": 0.931,
+   "scale": 0.868,
    "tint": [],
    "female": true,
    "materials": [
@@ -278,7 +278,7 @@
    "group": "Cast",
    "display": "Mindy",
    "dorm": "obelisk",
-   "scale": 0.92,
+   "scale": 0.857,
    "tint": [],
    "female": true,
    "materials": [
@@ -295,7 +295,7 @@
    "group": "Cast",
    "display": "Dr. Vellian Crowler",
    "dorm": "teacher",
-   "scale": 1.083,
+   "scale": 1.02,
    "tint": [],
    "female": false,
    "materials": [
@@ -312,7 +312,7 @@
    "group": "Cast",
    "display": "Student",
    "dorm": "any",
-   "scale": 0.931,
+   "scale": 0.868,
    "tint": [
     "hair"
    ],
@@ -331,7 +331,7 @@
    "group": "Cast",
    "display": "Student",
    "dorm": "any",
-   "scale": 0.931,
+   "scale": 0.868,
    "tint": [
     "hair"
    ],
