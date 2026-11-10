@@ -443,6 +443,8 @@ void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool b
 	SwimMoveAlpha = FMath::FInterpTo(SwimMoveAlpha, (!bCanTread || bSwimStroke) ? 1.f : 0.f, DeltaTime, 2.5f);
 
 	UpdateBodyLean(DeltaTime, GroundSpeed);
+	// The anime cast rides with the IK (never the Sit take, even on a frame without targets).
+	bRiderIK = RideAlpha > 0.5f && bAnimeCast && HasRiderRig();
 	if (Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()))
 	{
 		TickNative(DeltaTime, GroundSpeed, bInAir, VerticalSpeed);
@@ -456,19 +458,162 @@ void UDAAvatarComponent::TickSkeletal(float DeltaTime, float GroundSpeed, bool b
 	// +Y (forwards, FRotationMatrix) and a positive pitch tips +Z towards -X (the character's right).
 	// On land the body leans about the feet; in the water it pitches prone about the hips and
 	// is lifted to just under the surface (upright while treading water).
-	const float Land01 = 1.f - FMath::Clamp(SwimAlpha, 0.f, 1.f);
+	// On the bike the body leans with the bike's own lean (the rider mount); the walking lean would tip the
+	// rider off the seat and away from the bars.
+	const float Land01 = (1.f - FMath::Clamp(SwimAlpha, 0.f, 1.f)) * (1.f - FMath::Clamp(RideAlpha, 0.f, 1.f));
 	const float SwimPitch = 80.f * SwimAlpha * SwimMoveAlpha;
 	const FRotator Body(LeanSide * Land01, 0.f, SwimPitch + LeanForward * Land01);
 	const FVector Pivot = SwimHip * SwimAlpha;
 	float LiftTarget = 0.f;
-	if (RideAlpha > 0.01f)
+	if (RideAlpha > 0.01f && !bRiderIK)
 	{
 		LiftTarget = (RideHipHeight / FMath::Max(BodyScale, 0.05f) - MeasurePelvisHeight()) * FMath::Clamp(RideAlpha, 0.f, 1.f);
 	}
-	RideLift = RideAlpha > 0.01f ? FMath::FInterpTo(RideLift, LiftTarget, DeltaTime, 14.f) : 0.f;
+	// (The rider IK puts the pelvis on the seat itself.)
+	RideLift = (RideAlpha > 0.01f && !bRiderIK) ? FMath::FInterpTo(RideLift, LiftTarget, DeltaTime, 14.f) : 0.f;
 	SkelComp->SetRelativeRotation(Body);
 	SkelComp->SetRelativeLocation(Pivot - Body.RotateVector(Pivot) +
 		FVector(0.0, 0.0, 30.0 * SwimAlpha * SwimMoveAlpha + RideLift));
+
+	if (UDAAvatarAnimInstance* Anim = Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()))
+	{
+		FDARiderIKTargets IK;
+		const bool bHaveIK = bRiderIK && MakeRiderIK(IK);
+		Anim->SetRider(IK, bHaveIK ? RideBlend : 0.f);
+	}
+}
+
+bool UDAAvatarComponent::HasRiderRig()
+{
+	if (!SkelComp)
+	{
+		return false;
+	}
+	if (RiderRigState < 0)
+	{
+		static const TCHAR* const Needed[] = {
+			TEXT("pelvis"), TEXT("spine_01"), TEXT("spine_02"), TEXT("spine_03"), TEXT("neck_01"), TEXT("head"),
+			TEXT("clavicle_l"), TEXT("upperarm_l"), TEXT("lowerarm_l"), TEXT("hand_l"),
+			TEXT("clavicle_r"), TEXT("upperarm_r"), TEXT("lowerarm_r"), TEXT("hand_r"),
+			TEXT("thigh_l"), TEXT("calf_l"), TEXT("foot_l"), TEXT("thigh_r"), TEXT("calf_r"), TEXT("foot_r") };
+		RiderRigState = 1;
+		for (const TCHAR* Name : Needed)
+		{
+			if (SkelComp->GetBoneIndex(FName(Name)) == INDEX_NONE)
+			{
+				RiderRigState = 0;
+				break;
+			}
+		}
+	}
+	return RiderRigState == 1;
+}
+
+namespace
+{
+	// Cast skeleton (Tools/dai/anime/skeleton.py, mesh cm): seated, the pelvis bone sits this far above the seat
+	// (sit bones ~9 cm under the hip joints, which are 5.5 cm under the pelvis bone); standing on the pegs it is
+	// this far above the balls of the feet (ankles 8.5 cm up, knees a little bent: 0.88 of the 79 cm leg).
+	constexpr float PelvisAboveSeat = 13.5f;
+	constexpr float PelvisAbovePegs = 83.f;
+	/** Standing hips go back over the pegs (cm). */
+	constexpr float StandHipsBack = 6.f;
+	/** Foot put down at a stop: leg reach from the hip joint to the ankle (cm, a hair under the straight 79 cm leg),
+	 *  where the left hip joint sits relative to the pelvis bone, and the ankle above / behind the ball of a
+	 *  tiptoeing foot. A shorter rider slides further off the seat towards the ground, up to MaxFootDownSlide. */
+	constexpr float LegReach = 78.f;
+	const FVector LeftHipFromPelvis(8.8, 0.0, -5.5);
+	const FVector TiptoeAnkleFromBall(0.0, -4.5, 12.5);
+	constexpr float MaxFootDownSlide = 14.f;
+}
+
+bool UDAAvatarComponent::MakeRiderIK(FDARiderIKTargets& Out) const
+{
+	const USceneComponent* Mount = GetAttachParent();
+	if (!SkelComp || !Mount || !RideTargets.bValid)
+	{
+		return false;
+	}
+	const FDARiderTargets& T = RideTargets;
+	const FTransform MountToWorld = Mount->GetComponentTransform();
+	const FTransform MeshToWorld = SkelComp->GetComponentTransform();
+	auto ToMesh = [&](const FVector& P) { return MeshToWorld.InverseTransformPosition(MountToWorld.TransformPosition(P)); };
+	// The bike's up and backward axes in mesh space; Up1 is 1 cm of the bike in mesh units (BodyScale).
+	const FVector Up1 = MeshToWorld.InverseTransformVector(MountToWorld.TransformVector(FVector::UpVector));
+	const FVector Up = Up1.GetSafeNormal();
+	const FVector Back = MeshToWorld.InverseTransformVector(MountToWorld.TransformVector(-FVector::ForwardVector)).GetSafeNormal();
+
+	const float Stand = FMath::Clamp(T.Stand, 0.f, 1.f);
+	const float Tuck = FMath::Clamp(T.Tuck, 0.f, 1.f);
+	const float FootDown = FMath::Clamp(T.FootDown, 0.f, 1.f);
+	const float Accel = FMath::Clamp(T.Drive, 0.f, 1.f);
+	const float Brake = FMath::Clamp(-T.Drive, 0.f, 1.f);
+
+	const FVector PegL = ToMesh(T.PegLeft);
+	const FVector PegR = ToMesh(T.PegRight);
+	const FVector Seated = ToMesh(T.Seat) + Up * PelvisAboveSeat;
+	const FVector Standing = (PegL + PegR) * 0.5 + Up * PelvisAbovePegs + Back * StandHipsBack;
+	// Braking pushes the hips back against the bars; a tuck slides them a little forward; a landing sinks them.
+	Out.Pelvis = FMath::Lerp(Seated, Standing, static_cast<double>(Stand)) + Back * (3.0 * Brake - 2.0 * Tuck) - Up1 * T.Sink;
+	Out.Grip[0] = ToMesh(T.GripLeft);
+	Out.Grip[1] = ToMesh(T.GripRight);
+	// The left foot swings out and down to the ground at a stop (an arc outside the peg, not through the bike).
+	const FVector Ground = ToMesh(T.GroundLeft);
+	const FVector Arc = (Ground - PegL) * static_cast<double>(FootDown) + Up * (6.0 * FMath::Sin(PI * FootDown));
+	Out.Ball[0] = PegL + Arc;
+	Out.Ball[1] = PegR;
+	if (FootDown > 0.01f)
+	{
+		// Too short to reach the ground from the seat: slide the hips off the seat towards the foot until it can.
+		const FVector Ankle = Ground + TiptoeAnkleFromBall;
+		const FVector Hip = Out.Pelvis + LeftHipFromPelvis;
+		const double Short = (Ankle - Hip).Size() - LegReach;
+		if (Short > 0.0)
+		{
+			Out.Pelvis += (Ankle - Hip).GetSafeNormal() * (FMath::Min(Short, static_cast<double>(MaxFootDownSlide)) * FootDown);
+		}
+	}
+	// Upright-ish cruising, chest down when tucked, "attack position" standing; weight forward on the gas,
+	// back on the brakes. The IK leans further if the bars are out of reach.
+	Out.Lean = 16.f + 26.f * Tuck + 22.f * Stand + 6.f * Accel - 6.f * Brake;
+	// FDARiderTargets rolls towards the bike's right; the mesh's +X is the rider's left.
+	Out.Roll = -T.BodyRoll;
+	Out.HeadRoll = -T.HeadRoll;
+	Out.ToeDown[0] = FMath::Lerp(6.f + 8.f * Stand, 32.f, FootDown);
+	Out.ToeDown[1] = 6.f + 8.f * Stand;
+	return true;
+}
+
+void UDAAvatarComponent::AimRiderLimbs()
+{
+	const USceneComponent* Mount = GetAttachParent();
+	if (!Mount || !RideTargets.bValid)
+	{
+		return;
+	}
+	const FTransform MountToWorld = Mount->GetComponentTransform();
+	// The rigid part limbs hang along -Z from their joints; the one on the avatar's +X side is the rider's left.
+	auto Aim = [&MountToWorld](UStaticMeshComponent* Limb, const FVector& LeftTarget, const FVector& RightTarget)
+	{
+		if (!Limb || !Limb->GetAttachParent())
+		{
+			return;
+		}
+		const FVector Joint = Limb->GetRelativeLocation();
+		const FVector Target = Limb->GetAttachParent()->GetComponentTransform().InverseTransformPosition(
+			MountToWorld.TransformPosition(Joint.X >= 0.0 ? LeftTarget : RightTarget));
+		const FVector Dir = (Target - Joint).GetSafeNormal();
+		if (!Dir.IsNearlyZero())
+		{
+			Limb->SetRelativeRotation(FQuat::FindBetweenNormals(FVector(0.0, 0.0, -1.0), Dir));
+		}
+	};
+	const FDARiderTargets& T = RideTargets;
+	const FVector FootL = FMath::Lerp(T.PegLeft, T.GroundLeft, static_cast<double>(FMath::Clamp(T.FootDown, 0.f, 1.f)));
+	Aim(LegL, FootL, T.PegRight);
+	Aim(LegR, FootL, T.PegRight);
+	Aim(ArmL, T.GripLeft, T.GripRight);
+	Aim(ArmR, T.GripLeft, T.GripRight);
 }
 
 float UDAAvatarComponent::MeasurePelvisHeight()
@@ -598,8 +743,9 @@ void UDAAvatarComponent::TickNative(float DeltaTime, float GroundSpeed, bool bIn
 	float BlendTime = 0.2f;
 	if (RideAlpha > 0.5f)
 	{
-		// Seated on the bike; without a Sit take the idle stance reads as standing on the pegs.
-		if (FindAnim(TEXT("Sit")))
+		// The rider IK poses the idle take onto the seat, bars and pegs; without it (another skeleton) the
+		// Sit take is the closest seated pose.
+		if (!bRiderIK && FindAnim(TEXT("Sit")))
 		{
 			Want = TEXT("Sit");
 			bLoop = true;
@@ -695,7 +841,7 @@ void UDAAvatarComponent::TickNative(float DeltaTime, float GroundSpeed, bool bIn
 
 	// While the full-body swim action is showing, keep the base locomotion at a standstill so it
 	// cannot leak through the blend.
-	const float LocomotionSpeed = (SwimAlpha > 0.5f) ? 0.f : GroundSpeed;
+	const float LocomotionSpeed = (SwimAlpha > 0.5f || RideAlpha > 0.5f) ? 0.f : GroundSpeed;
 	Anim->SetLocomotion(LocomotionSpeed, SwimAlpha, DuelPoseAlpha);
 }
 
@@ -917,6 +1063,13 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	{
 		Velocity = FVector::ZeroVector;
 		bInAir = false;
+		// Getting on: the rider IK eases in over ~0.3 s while the bike pops in under them.
+		RideBlend = FMath::FInterpConstantTo(RideBlend, 1.f, DeltaTime, 1.f / 0.3f);
+	}
+	else
+	{
+		RideBlend = 0.f;
+		RideTargets.bValid = false;
 	}
 	const float GroundSpeed = FVector(Velocity.X, Velocity.Y, 0.0).Size();
 	if (SkelComp)
@@ -1065,17 +1218,18 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		ArmSpread = FMath::Lerp(ArmSpread, 12.f, SwimAlpha);
 	}
 
-	// Riding: thighs forward and apart around the tank, arms out to the bars, torso tucked.
+	// Riding: legs down and apart to the pegs, arms forward and down to the bars, torso leaning in. (With the
+	// bike's targets AimRiderLimbs below points each limb straight at its grip / peg instead.)
 	float LegSpread = 0.f;
 	if (RideAlpha > 0.01f)
 	{
-		LegLAngle = FMath::Lerp(LegLAngle, 58.f, RideAlpha);
-		LegRAngle = FMath::Lerp(LegRAngle, 58.f, RideAlpha);
-		ArmLAngle = FMath::Lerp(ArmLAngle, 68.f, RideAlpha);
-		ArmRAngle = FMath::Lerp(ArmRAngle, 68.f, RideAlpha);
-		ArmSpread = FMath::Lerp(ArmSpread, 16.f, RideAlpha);
+		LegLAngle = FMath::Lerp(LegLAngle, 24.f, RideAlpha);
+		LegRAngle = FMath::Lerp(LegRAngle, 24.f, RideAlpha);
+		ArmLAngle = FMath::Lerp(ArmLAngle, 34.f, RideAlpha);
+		ArmRAngle = FMath::Lerp(ArmRAngle, 34.f, RideAlpha);
+		ArmSpread = FMath::Lerp(ArmSpread, 11.f, RideAlpha);
 		TorsoLean = FMath::Lerp(TorsoLean, 16.f, RideAlpha);
-		LegSpread = 14.f * RideAlpha;
+		LegSpread = 9.f * RideAlpha;
 	}
 
 	LegL->SetRelativeRotation(FRotator(-LegSpread, 0.f, -LegLAngle));
@@ -1095,4 +1249,9 @@ void UDAAvatarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// Head: eyes level (counter the lean and the stride rotation), a slow look around when idle.
 	Head->SetRelativeRotation(FRotator(0.f, FMath::Sin(Time * 0.37f + BreathPhase) * 8.f * (1.f - Move01 * 0.8f)
 		+ S * FMath::Lerp(3.f, 7.f, Run01) * Move01, -TorsoLean * 0.8f - SwimPitch * 0.6f));
+
+	if (RideAlpha > 0.5f)
+	{
+		AimRiderLimbs();
+	}
 }
