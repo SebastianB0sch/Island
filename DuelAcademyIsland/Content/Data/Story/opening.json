@@ -224,24 +224,24 @@
       "scene_ids": [
         "opening.b01_new_game"
       ],
-      "summary": "New-game setup selects one of the three starter decks; a short plaza arrival follows, then the walk to the gym.",
+      "summary": "New-game setup selects one of the three starter decks; a short plaza arrival follows, then the walk up the academy steps to the central hall.",
       "source": "port-original",
       "confidence": "high",
       "canon_note": "The GBA opens with Sheppard's speech; the plaza arrival is a 3D-port framing beat so the island reads before the cutscene.",
-      "player_goal": "Choose a starter deck and attend the opening assembly in the Duel Gym."
+      "player_goal": "Choose a starter deck and attend the opening ceremony in the Academy's central hall."
     },
     {
       "id": "B02",
       "order": 2,
-      "title": "Sheppard's Speech",
+      "title": "Opening Ceremony in the Central Hall",
       "event_id": "E01",
       "scene_ids": [
         "opening.b02_sheppard_speech"
       ],
-      "summary": "Chancellor Sheppard welcomes the freshmen, explains the three dorms and monthly exams, and points them to registration.",
+      "summary": "The whole school assembles in the Academy's central hall: faculty on the stage, Obelisk Blue, Ra Yellow and Slifer Red in their blocks, the freshmen in front. Chancellor Sheppard welcomes everyone and shows the new students the ropes - the three dorms, monthly exams with promotion and demotion, the three parts of a school day (a duel takes one), DP and the card shop, and waking in your dorm every morning - then sends the freshmen to registration in the main hall.",
       "source": "guide",
       "confidence": "high",
-      "canon_note": "Yugipedia Event 1: the game starts with Sheppard's speech in the gym.",
+      "canon_note": "Yugipedia Event 1: the game starts with Sheppard's speech (the GBA stages it in the gym). The port stages it as a whole-school assembly in the main building's central hall; the speech content is a paraphrase.",
       "player_goal": "Listen to the speech, then register."
     },
     {
@@ -1003,7 +1003,7 @@
   "objectives": [
     {
       "id": "attend_assembly",
-      "text": "Attend the opening assembly in the Duel Gym.",
+      "text": "Attend the opening ceremony in the Academy's central hall.",
       "set_at": "opening.b01_new_game",
       "clear_at": "opening.b02_sheppard_speech"
     },
@@ -1254,64 +1254,6 @@
       ]
     },
     {
-      "id": "gym_assembly_camera",
-      "locations": [
-        "gym"
-      ],
-      "used_by": [
-        "opening.b02_sheppard_speech"
-      ]
-    },
-    {
-      "id": "gym_assembly_crowd",
-      "locations": [
-        "gym"
-      ],
-      "used_by": [
-        "chumley.oct1.assembly",
-        "opening.b02_sheppard_speech"
-      ]
-    },
-    {
-      "id": "gym_assembly_staff",
-      "locations": [
-        "gym"
-      ],
-      "used_by": [
-        "banner.oct1.assembly"
-      ]
-    },
-    {
-      "id": "gym_assembly_stage",
-      "locations": [
-        "gym"
-      ],
-      "used_by": [
-        "opening.b02_sheppard_speech",
-        "sheppard.oct1.assembly"
-      ]
-    },
-    {
-      "id": "gym_assembly_student_02",
-      "locations": [
-        "gym"
-      ],
-      "used_by": [
-        "jaden.oct1.assembly",
-        "opening.b02_sheppard_speech"
-      ]
-    },
-    {
-      "id": "gym_assembly_student_03",
-      "locations": [
-        "gym"
-      ],
-      "used_by": [
-        "opening.b02_sheppard_speech",
-        "syrus.oct1.assembly"
-      ]
-    },
-    {
       "id": "gym_practice_field_a",
       "locations": [
         "gym"
@@ -1320,6 +1262,182 @@
         "mimicry.oct7.pm",
         "mimicry.weekday.pm",
         "mimicry.weekend.pm"
+      ]
+    },
+    {
+      "id": "hall_assembly_alexis",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_bastion",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_camera",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_chazz",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_chumley",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "chumley.oct1.assembly",
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_crowd_camera",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_faculty_01",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_faculty_02",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "banner.oct1.assembly",
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_faculty_03",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_faculty_04",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_jaden",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "jaden.oct1.assembly",
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_obelisk_camera",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_player",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_podium",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech",
+        "sheppard.oct1.assembly"
+      ]
+    },
+    {
+      "id": "hall_assembly_ra_camera",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_stage_camera",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_stands_camera",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
+      ]
+    },
+    {
+      "id": "hall_assembly_syrus",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech",
+        "syrus.oct1.assembly"
+      ]
+    },
+    {
+      "id": "hall_assembly_zane",
+      "locations": [
+        "academy"
+      ],
+      "used_by": [
+        "opening.b02_sheppard_speech"
       ]
     },
     {

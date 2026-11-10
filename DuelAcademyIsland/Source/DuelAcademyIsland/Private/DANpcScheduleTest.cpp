@@ -22,7 +22,7 @@
 namespace
 {
 	constexpr float NpcScheduleTestTimeout = 180.f;
-	constexpr int32 NpcScheduleExpectedPoints = 38;
+	constexpr int32 NpcScheduleExpectedPoints = 46;
 
 	// Calendar-bridge case (W2): how long to wait for the island tick to apply
 	// a driven weekday/period change, and how long the no-change quiet window
@@ -551,8 +551,8 @@ void UDANpcScheduleTestSubsystem::RunEventCases()
 	D->ApplySchedule(TEXT("E01"), TEXT("Monday"), TEXT("AM"));
 	D->SetActiveEvent(TEXT("E01"));
 	VerifyActiveSet(TEXT("event E01 assembly"), TEXT("E01"), TEXT("Monday"), TEXT("AM"), TEXT("E01"));
-	ADANpcSpawnPoint* Instructor = FindPoint(TEXT("gym_assembly_instructor"));
-	Check(Instructor && Instructor->IsOccupied(), TEXT("E01 activates gym_assembly_instructor"));
+	ADANpcSpawnPoint* Instructor = FindPoint(TEXT("hall_assembly_proctor"));
+	Check(Instructor && Instructor->IsOccupied(), TEXT("E01 activates hall_assembly_proctor"));
 
 	D->SetActiveEvent(FString());
 	D->ApplySchedule(TEXT("default"), TEXT("Monday"), TEXT("AM"));

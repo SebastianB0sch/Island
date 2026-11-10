@@ -449,11 +449,11 @@ class Placer:
             return
         hooks = [
             ("slifer_player_room_bed", "ROOM_BED", "Your Bed",
-             "Spend the weekend in your room. Three weekends make your friends worry.", 220.0),
+             "Sleep until morning - every new day starts here. Three weekends in your room make your friends worry.", 220.0),
             ("ra_player_room_bed", "ROOM_BED", "Your Bed",
-             "Spend the weekend in your room. Three weekends make your friends worry.", 220.0),
+             "Sleep until morning - every new day starts here. Three weekends in your room make your friends worry.", 220.0),
             ("obelisk_player_room_bed", "ROOM_BED", "Your Bed",
-             "Spend the weekend in your room. Three weekends make your friends worry.", 220.0),
+             "Sleep until morning - every new day starts here. Three weekends in your room make your friends worry.", 220.0),
             ("harbor_dock", "WALK_HOME", "Walk Home",
              "Walk back to the dorm with a friend. Three walks with the same friend will matter.", 300.0),
         ]

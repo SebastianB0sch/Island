@@ -47,6 +47,19 @@
           ]
         },
         {
+          "type": "move_npc",
+          "npc": "player",
+          "anchor": "academy_front_steps",
+          "walk": false,
+          "duration": 0.0,
+          "command_id": "opening.b01_new_game.cmd012",
+          "skippable": true,
+          "args": [
+            "player",
+            "academy_front_steps"
+          ]
+        },
+        {
           "type": "camera",
           "anchor": "academy_front_camera",
           "transition": "cut",
@@ -119,7 +132,7 @@
         {
           "type": "banner",
           "title": "OBJECTIVE",
-          "subtitle": "Attend the opening assembly in the Duel Gym",
+          "subtitle": "Attend the opening ceremony in the Academy's central hall",
           "style": "objective",
           "duration": 3.0,
           "command_id": "opening.b01_new_game.cmd009",
@@ -151,7 +164,7 @@
       "save_points": [],
       "source": "port-original",
       "confidence": "high",
-      "notes": "Port-original arrival framing. The GBA opens directly with Sheppard's gym speech.",
+      "notes": "Port-original arrival framing. The GBA opens directly with Sheppard's speech; the plaza beat lets the island read first and places the player on the academy steps.",
       "version": 1,
       "event": "E01"
     },
@@ -159,24 +172,46 @@
       "id": "opening.b02_sheppard_speech",
       "event_id": "E01",
       "beat": "B02",
-      "title": "Sheppard's Opening Speech",
-      "location": "gym",
+      "title": "Opening Ceremony in the Central Hall",
+      "location": "academy",
       "interior": true,
-      "anchor": "gym_assembly_stage",
-      "camera_anchor": "gym_assembly_camera",
+      "anchor": "hall_assembly_podium",
+      "camera_anchor": "hall_assembly_camera",
       "cast": [
         "sheppard",
+        "crowler",
+        "banner",
+        "fontaine",
+        "mimicry",
+        "zane",
+        "alexis",
+        "chazz",
+        "bastion",
         "jaden",
         "syrus",
         "chumley",
         "player"
       ],
       "required_anchors": [
-        "gym_assembly_camera",
-        "gym_assembly_crowd",
-        "gym_assembly_stage",
-        "gym_assembly_student_02",
-        "gym_assembly_student_03"
+        "hall_assembly_alexis",
+        "hall_assembly_bastion",
+        "hall_assembly_camera",
+        "hall_assembly_chazz",
+        "hall_assembly_chumley",
+        "hall_assembly_crowd_camera",
+        "hall_assembly_faculty_01",
+        "hall_assembly_faculty_02",
+        "hall_assembly_faculty_03",
+        "hall_assembly_faculty_04",
+        "hall_assembly_jaden",
+        "hall_assembly_obelisk_camera",
+        "hall_assembly_player",
+        "hall_assembly_podium",
+        "hall_assembly_ra_camera",
+        "hall_assembly_stage_camera",
+        "hall_assembly_stands_camera",
+        "hall_assembly_syrus",
+        "hall_assembly_zane"
       ],
       "entry_conditions": [],
       "commands": [
@@ -185,277 +220,674 @@
           "mode": "out",
           "color": "#000000",
           "duration": 0.5,
-          "command_id": "opening.b02_sheppard_speech.cmd000",
-          "skippable": true,
           "args": [
             "out"
-          ]
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd000"
         },
         {
           "type": "music",
           "track": "BGM_Assembly",
           "mode": "play",
           "fade": 1.5,
-          "command_id": "opening.b02_sheppard_speech.cmd001",
-          "skippable": true,
           "args": [
             "BGM_Assembly"
-          ]
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd001"
+        },
+        {
+          "type": "move_npc",
+          "npc": "player",
+          "anchor": "hall_assembly_player",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "player",
+            "hall_assembly_player"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd002"
+        },
+        {
+          "type": "move_npc",
+          "npc": "sheppard",
+          "anchor": "hall_assembly_podium",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "sheppard",
+            "hall_assembly_podium"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd003"
+        },
+        {
+          "type": "move_npc",
+          "npc": "crowler",
+          "anchor": "hall_assembly_faculty_01",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "crowler",
+            "hall_assembly_faculty_01"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd004"
+        },
+        {
+          "type": "move_npc",
+          "npc": "banner",
+          "anchor": "hall_assembly_faculty_02",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "banner",
+            "hall_assembly_faculty_02"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd005"
+        },
+        {
+          "type": "move_npc",
+          "npc": "fontaine",
+          "anchor": "hall_assembly_faculty_03",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "fontaine",
+            "hall_assembly_faculty_03"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd006"
+        },
+        {
+          "type": "move_npc",
+          "npc": "mimicry",
+          "anchor": "hall_assembly_faculty_04",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "mimicry",
+            "hall_assembly_faculty_04"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd007"
+        },
+        {
+          "type": "move_npc",
+          "npc": "jaden",
+          "anchor": "hall_assembly_jaden",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "jaden",
+            "hall_assembly_jaden"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd008"
+        },
+        {
+          "type": "move_npc",
+          "npc": "syrus",
+          "anchor": "hall_assembly_syrus",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "syrus",
+            "hall_assembly_syrus"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd009"
+        },
+        {
+          "type": "move_npc",
+          "npc": "zane",
+          "anchor": "hall_assembly_zane",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "zane",
+            "hall_assembly_zane"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd010"
+        },
+        {
+          "type": "move_npc",
+          "npc": "alexis",
+          "anchor": "hall_assembly_alexis",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "alexis",
+            "hall_assembly_alexis"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd011"
+        },
+        {
+          "type": "move_npc",
+          "npc": "chazz",
+          "anchor": "hall_assembly_chazz",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "chazz",
+            "hall_assembly_chazz"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd012"
+        },
+        {
+          "type": "move_npc",
+          "npc": "bastion",
+          "anchor": "hall_assembly_bastion",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "bastion",
+            "hall_assembly_bastion"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd013"
+        },
+        {
+          "type": "move_npc",
+          "npc": "chumley",
+          "anchor": "hall_assembly_chumley",
+          "walk": false,
+          "duration": 0.0,
+          "args": [
+            "chumley",
+            "hall_assembly_chumley"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd014"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_stands_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "args": [
+            "hall_assembly_stands_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd015"
         },
         {
           "type": "fade",
           "mode": "in",
           "color": "#000000",
-          "duration": 0.5,
-          "command_id": "opening.b02_sheppard_speech.cmd002",
-          "skippable": true,
+          "duration": 0.8,
           "args": [
             "in"
-          ]
-        },
-        {
-          "type": "camera",
-          "anchor": "gym_assembly_camera",
-          "transition": "cut",
-          "duration": 0.0,
-          "command_id": "opening.b02_sheppard_speech.cmd003",
+          ],
           "skippable": true,
-          "args": [
-            "gym_assembly_camera"
-          ]
+          "command_id": "opening.b02_sheppard_speech.cmd016"
         },
         {
           "type": "banner",
-          "title": "DUEL GYM",
-          "subtitle": "OPENING CEREMONY",
+          "title": "DUEL ACADEMY - CENTRAL HALL",
+          "subtitle": "OPENING CEREMONY - THE WHOLE SCHOOL ASSEMBLES",
           "style": "location",
-          "duration": 3.0,
-          "command_id": "opening.b02_sheppard_speech.cmd004",
-          "skippable": true,
+          "duration": 3.5,
           "args": [
-            "DUEL GYM"
-          ]
+            "DUEL ACADEMY - CENTRAL HALL"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd017"
         },
         {
-          "type": "move_npc",
-          "npc": "sheppard",
-          "anchor": "gym_assembly_stage",
-          "walk": true,
-          "duration": 2.0,
-          "command_id": "opening.b02_sheppard_speech.cmd005",
-          "skippable": true,
+          "type": "play_sfx",
+          "sfx": "A_Crowd",
+          "volume": 0.7,
           "args": [
-            "sheppard",
-            "gym_assembly_stage"
-          ]
+            "A_Crowd"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd018"
         },
         {
-          "type": "move_npc",
-          "npc": "jaden",
-          "anchor": "gym_assembly_student_02",
-          "walk": true,
-          "duration": 2.0,
-          "command_id": "opening.b02_sheppard_speech.cmd006",
+          "type": "dialogue",
+          "key": "E01.b02_hall_01",
+          "text_key": "E01.b02_hall_01",
+          "speaker": "narrator",
+          "portrait": "none",
+          "args": [],
           "skippable": true,
-          "args": [
-            "jaden",
-            "gym_assembly_student_02"
-          ]
+          "command_id": "opening.b02_sheppard_speech.cmd019"
         },
         {
-          "type": "move_npc",
-          "npc": "syrus",
-          "anchor": "gym_assembly_student_03",
-          "walk": true,
-          "duration": 2.0,
-          "command_id": "opening.b02_sheppard_speech.cmd007",
-          "skippable": true,
+          "type": "camera",
+          "anchor": "hall_assembly_camera",
+          "transition": "blend",
+          "duration": 0.6,
           "args": [
-            "syrus",
-            "gym_assembly_student_03"
-          ]
+            "hall_assembly_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd020"
         },
         {
-          "type": "move_npc",
-          "npc": "chumley",
-          "anchor": "gym_assembly_crowd",
-          "walk": true,
-          "duration": 2.0,
-          "command_id": "opening.b02_sheppard_speech.cmd008",
+          "type": "dialogue",
+          "key": "E01.b02_crowler_01",
+          "text_key": "E01.b02_crowler_01",
+          "speaker": "crowler",
+          "portrait": "crowler_smug",
+          "args": [],
           "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd021"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_stage_camera",
+          "transition": "cut",
+          "duration": 0.0,
           "args": [
-            "chumley",
-            "gym_assembly_crowd"
-          ]
+            "hall_assembly_stage_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd022"
+        },
+        {
+          "type": "play_sfx",
+          "sfx": "A_Bell_School",
+          "volume": 0.5,
+          "args": [
+            "A_Bell_School"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd023"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_sheppard_01",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd009",
           "text_key": "E01.b02_sheppard_01",
           "speaker": "sheppard",
           "portrait": "sheppard_proud",
-          "args": []
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd024"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_08",
+          "text_key": "E01.b02_sheppard_08",
+          "speaker": "sheppard",
+          "portrait": "sheppard_neutral",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd025"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_sheppard_02",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd010",
           "text_key": "E01.b02_sheppard_02",
           "speaker": "sheppard",
           "portrait": "sheppard_neutral",
-          "args": []
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd026"
         },
         {
           "type": "camera",
-          "anchor": "gym_assembly_crowd",
+          "anchor": "hall_assembly_crowd_camera",
           "transition": "cut",
           "duration": 0.0,
-          "command_id": "opening.b02_sheppard_speech.cmd011",
-          "skippable": true,
           "args": [
-            "gym_assembly_crowd"
-          ]
+            "hall_assembly_crowd_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd027"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_jaden_01",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd012",
           "text_key": "E01.b02_jaden_01",
           "speaker": "jaden",
           "portrait": "jaden_happy",
-          "args": []
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd028"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_syrus_01",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd013",
           "text_key": "E01.b02_syrus_01",
           "speaker": "syrus",
           "portrait": "syrus_nervous",
-          "args": []
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd029"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_chumley_01",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd014",
           "text_key": "E01.b02_chumley_01",
           "speaker": "chumley",
           "portrait": "chumley_sleepy",
-          "args": []
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd030"
         },
         {
           "type": "camera",
-          "anchor": "gym_assembly_stage",
+          "anchor": "hall_assembly_obelisk_camera",
           "transition": "cut",
           "duration": 0.0,
-          "command_id": "opening.b02_sheppard_speech.cmd015",
-          "skippable": true,
           "args": [
-            "gym_assembly_stage"
-          ]
+            "hall_assembly_obelisk_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd031"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_chazz_01",
+          "text_key": "E01.b02_chazz_01",
+          "speaker": "chazz",
+          "portrait": "chazz_smug",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd032"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_alexis_01",
+          "text_key": "E01.b02_alexis_01",
+          "speaker": "alexis",
+          "portrait": "alexis_neutral",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd033"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_stage_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "args": [
+            "hall_assembly_stage_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd034"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_sheppard_03",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd016",
           "text_key": "E01.b02_sheppard_03",
           "speaker": "sheppard",
           "portrait": "sheppard_neutral",
-          "args": []
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd035"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_09",
+          "text_key": "E01.b02_sheppard_09",
+          "speaker": "sheppard",
+          "portrait": "sheppard_neutral",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd036"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_10",
+          "text_key": "E01.b02_sheppard_10",
+          "speaker": "sheppard",
+          "portrait": "sheppard_stern",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd037"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_ra_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "args": [
+            "hall_assembly_ra_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd038"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_bastion_01",
+          "text_key": "E01.b02_bastion_01",
+          "speaker": "bastion",
+          "portrait": "bastion_thoughtful",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd039"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_stage_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "args": [
+            "hall_assembly_stage_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd040"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_11",
+          "text_key": "E01.b02_sheppard_11",
+          "speaker": "sheppard",
+          "portrait": "sheppard_neutral",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd041"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_12",
+          "text_key": "E01.b02_sheppard_12",
+          "speaker": "sheppard",
+          "portrait": "sheppard_happy",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd042"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_13",
+          "text_key": "E01.b02_sheppard_13",
+          "speaker": "sheppard",
+          "portrait": "sheppard_proud",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd043"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_crowd_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "args": [
+            "hall_assembly_crowd_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd044"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_syrus_02",
+          "text_key": "E01.b02_syrus_02",
+          "speaker": "syrus",
+          "portrait": "syrus_nervous",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd045"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_jaden_02",
+          "text_key": "E01.b02_jaden_02",
+          "speaker": "jaden",
+          "portrait": "jaden_determined",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd046"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_stage_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "args": [
+            "hall_assembly_stage_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd047"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_sheppard_04",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd017",
           "text_key": "E01.b02_sheppard_04",
           "speaker": "sheppard",
           "portrait": "sheppard_stern",
-          "args": []
-        },
-        {
-          "type": "dialogue",
-          "key": "E01.b02_sheppard_05",
+          "args": [],
           "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd018",
-          "text_key": "E01.b02_sheppard_05",
-          "speaker": "sheppard",
-          "portrait": "sheppard_neutral",
-          "args": []
+          "command_id": "opening.b02_sheppard_speech.cmd048"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_sheppard_06",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd019",
           "text_key": "E01.b02_sheppard_06",
           "speaker": "sheppard",
           "portrait": "sheppard_proud",
-          "args": []
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd049"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_sheppard_05",
+          "text_key": "E01.b02_sheppard_05",
+          "speaker": "sheppard",
+          "portrait": "sheppard_neutral",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd050"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_camera",
+          "transition": "blend",
+          "duration": 0.6,
+          "args": [
+            "hall_assembly_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd051"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_banner_01",
+          "text_key": "E01.b02_banner_01",
+          "speaker": "banner",
+          "portrait": "banner_happy",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd052"
+        },
+        {
+          "type": "dialogue",
+          "key": "E01.b02_crowler_02",
+          "text_key": "E01.b02_crowler_02",
+          "speaker": "crowler",
+          "portrait": "crowler_smug",
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd053"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_crowd_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "args": [
+            "hall_assembly_crowd_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd054"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_player_01",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd020",
           "text_key": "E01.b02_player_01",
           "speaker": "player",
           "portrait": "player_determined",
-          "args": []
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd055"
+        },
+        {
+          "type": "camera",
+          "anchor": "hall_assembly_stage_camera",
+          "transition": "cut",
+          "duration": 0.0,
+          "args": [
+            "hall_assembly_stage_camera"
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd056"
         },
         {
           "type": "dialogue",
           "key": "E01.b02_sheppard_07",
-          "skippable": true,
-          "command_id": "opening.b02_sheppard_speech.cmd021",
           "text_key": "E01.b02_sheppard_07",
           "speaker": "sheppard",
           "portrait": "sheppard_happy",
-          "args": []
+          "args": [],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd057"
         },
         {
           "type": "play_sfx",
           "sfx": "A_Applause",
           "volume": 0.9,
-          "command_id": "opening.b02_sheppard_speech.cmd022",
-          "skippable": true,
           "args": [
             "A_Applause"
-          ]
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd058"
         },
         {
           "type": "banner",
           "title": "REGISTRATION",
-          "subtitle": "Academy Lobby - Professor Mimicry",
+          "subtitle": "Academy Main Hall - Professor Mimicry",
           "style": "objective",
           "duration": 3.0,
-          "command_id": "opening.b02_sheppard_speech.cmd023",
-          "skippable": true,
           "args": [
             "REGISTRATION"
-          ]
+          ],
+          "skippable": true,
+          "command_id": "opening.b02_sheppard_speech.cmd059"
         },
         {
           "type": "end",
           "next_scene": "opening.b03_registration",
           "enter_free_roam": false,
           "complete_event": true,
-          "command_id": "opening.b02_sheppard_speech.cmd024",
+          "args": [],
           "skippable": true,
-          "args": []
+          "command_id": "opening.b02_sheppard_speech.cmd060"
         }
       ],
       "save_points": [],
       "source": "port-original",
       "confidence": "high",
-      "notes": "Canon beat: Sheppard's speech in the gym. Prose is port-original.",
+      "notes": "Canon beat: Chancellor Sheppard's opening address. Staged as a whole-school assembly in the Academy's central hall (the Grand Duel Arena drum): faculty on the stage edge, Obelisk Blue / Ra Yellow / Slifer Red blocks and the freshmen in front. The speech shows the ropes: dorms, monthly exams, three parts to a day, DP and the card shop, waking in your dorm. Prose is port-original.",
       "version": 1,
       "event": "E01"
     },

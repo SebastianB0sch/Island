@@ -14,14 +14,18 @@
 #include "DAIslandSubsystem.h"
 #include "DAMusicSubsystem.h"
 #include "DASceneAnchor.h"
+#include "DAStudentCharacter.h"
 #include "DAStudentNPC.h"
 #include "DuelAcademyIsland.h"
 
 #include "Camera/PlayerCameraManager.h"
+#include "Components/CapsuleComponent.h"
 #include "Dom/JsonValue.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "HAL/IConsoleManager.h"
 #include "HAL/PlatformTime.h"
@@ -242,6 +246,7 @@ void UDAStorySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	LoadOpeningData();
 	LoadFullCampaignData();
+	LoadDayFlowData();
 	TryRegisterSaveProvider();
 }
 
@@ -849,6 +854,9 @@ void UDAStorySubsystem::ResetRuntimeState()
 	PendingDuel = FDAStoryPendingDuel();
 	bResumePendingDuel = false;
 	DuelOpenRetryTimer = 0.f;
+	LastWakeAbsoluteDay = INDEX_NONE;
+	bPendingDayRollover = false;
+	EventStartAbsoluteDay = INDEX_NONE;
 }
 
 void UDAStorySubsystem::StartOpening()
@@ -922,10 +930,13 @@ void UDAStorySubsystem::StartOpening()
 	if (IsEventCompleteRuntime(TEXT("E01")))
 	{
 		Calendar->SetDate(1, 0, 7, EDADayPeriod::AM);
+		LastWakeAbsoluteDay = Calendar->GetAbsoluteDay();
 		StartEvent(TEXT("E01b"));
 		return;
 	}
 
+	// The prologue day is scripted; the first dorm morning is October 7.
+	LastWakeAbsoluteDay = Calendar->GetAbsoluteDay();
 	StartEvent(TEXT("E01"));
 }
 
@@ -979,6 +990,9 @@ void UDAStorySubsystem::StartOpeningFresh()
 	bHeadless = ResolveHUD() == nullptr;
 	Profile->InitializeNewGame(DefaultPlayerName);
 	Calendar->SetDate(1, 0, 1, EDADayPeriod::AM);
+	// October 1 is the scripted prologue (ceremony -> registration -> dorm);
+	// the first morning in the player's room is the next date change.
+	LastWakeAbsoluteDay = Calendar->GetAbsoluteDay();
 	Profile->SetFlag(TEXT("new_game_started"), true);
 	bOpeningStarted = true;
 	StartEvent(TEXT("E01"));
@@ -1005,6 +1019,10 @@ void UDAStorySubsystem::StartEvent(const FString& EventId)
 	CommandIndex = 0;
 	bRunning = true;
 	bFreeRoam = false;
+	if (const UDACalendarSubsystem* Calendar = ResolveCalendar())
+	{
+		EventStartAbsoluteDay = Calendar->GetAbsoluteDay();
+	}
 
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: starting event %s (%s), scene %s."), *EventId, *Event->Title, *Event->Scene);
 	StartScene(Event->Scene, 0);
@@ -1154,6 +1172,464 @@ void UDAStorySubsystem::NotifyRoomStay()
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Day flow: duels spend a third of the day; every day starts in the dorm room
+// ---------------------------------------------------------------------------
+
+void UDAStorySubsystem::LoadDayFlowData()
+{
+	bDayFlowLoaded = true;
+
+	// Defaults mirror Content/Data/Story/day_flow.json so a missing file keeps
+	// the same rhythm.
+	DuelPeriodsPerDuel = 1;
+	WakeFadeSeconds = 1.6f;
+	WakeBannerTitle = TEXT("GOOD MORNING");
+	WakeBannerBody = TEXT("{date}\n{room}");
+	UntimedDuelModes = { TEXT("tutorial"), TEXT("timed_puzzle"), TEXT("puzzle"), TEXT("exam"), TEXT("exam_practical") };
+	DayFlowMessages.Reset();
+	auto AddMessage = [this](const FString& Key, const FString& Title, const FString& Body)
+	{
+		DayFlowMessages.Add(Key, TPair<FString, FString>(Title, Body));
+	};
+	AddMessage(TEXT("PM"), TEXT("AFTERNOON"), TEXT("The duel took the morning. It is now {date}."));
+	AddMessage(TEXT("Night"), TEXT("EVENING"), TEXT("The sun sets on the island. It is now {date}."));
+	AddMessage(TEXT("next_day"), TEXT("LIGHTS OUT"), TEXT("That was the last duel of the day. Time to head back to the dorm."));
+	AddMessage(TEXT("deferred"), TEXT("LATE NIGHT"), TEXT("It is getting late. The day ends once this is over."));
+
+	auto AddRoom = [this](const FString& Key, const FString& Anchor, const FString& Interior, const FString& Label, const FVector& Fallback)
+	{
+		FDADormWakeRoom Room;
+		Room.AnchorId = Anchor;
+		Room.InteriorId = Interior;
+		Room.Label = Label;
+		Room.FallbackLocation = Fallback;
+		Room.FallbackYaw = 90.f;
+		Room.bHasFallback = true;
+		DormWakeRooms.Add(Key, Room);
+	};
+	DormWakeRooms.Reset();
+	AddRoom(TEXT("slifer"), TEXT("slifer_player_room_wake"), TEXT("slifer_player_room"), TEXT("Slifer Red Dorm - your room"), FVector(330000.f, 300000.f, -29900.f));
+	AddRoom(TEXT("ra"), TEXT("ra_player_room_wake"), TEXT("ra_player_room"), TEXT("Ra Yellow Dorm - your room"), FVector(360000.f, 299975.f, -29900.f));
+	AddRoom(TEXT("obelisk"), TEXT("obelisk_player_room_wake"), TEXT("obelisk_player_room"), TEXT("Obelisk Blue Dorm - your room"), FVector(390000.f, 319950.f, -29900.f));
+
+	TSharedPtr<FJsonObject> Root;
+	FString Error;
+	if (!LoadJsonObject(TEXT("day_flow.json"), Root, Error))
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: %s; using the built-in day flow."), *Error);
+		return;
+	}
+
+	const TSharedPtr<FJsonObject>* DuelTime = nullptr;
+	if (Root->TryGetObjectField(TEXT("duel_time"), DuelTime) && DuelTime)
+	{
+		DuelPeriodsPerDuel = FMath::Clamp(StoryReadInt(*DuelTime, TEXT("periods_per_duel"), 1), 0, 3);
+		const TArray<FString> Modes = ReadStringArray(*DuelTime, TEXT("untimed_modes"));
+		if (Modes.Num() > 0)
+		{
+			UntimedDuelModes.Reset();
+			for (const FString& Mode : Modes)
+			{
+				UntimedDuelModes.Add(Mode.ToLower());
+			}
+		}
+		const TSharedPtr<FJsonObject>* Messages = nullptr;
+		if ((*DuelTime)->TryGetObjectField(TEXT("messages"), Messages) && Messages)
+		{
+			for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : (*Messages)->Values)
+			{
+				const TSharedPtr<FJsonObject> Message = Pair.Value.IsValid() ? Pair.Value->AsObject() : TSharedPtr<FJsonObject>();
+				if (Message.IsValid())
+				{
+					AddMessage(FString(*Pair.Key), StoryReadString(Message, TEXT("title")), StoryReadString(Message, TEXT("body")));
+				}
+			}
+		}
+	}
+
+	const TSharedPtr<FJsonObject>* Morning = nullptr;
+	if (Root->TryGetObjectField(TEXT("morning"), Morning) && Morning)
+	{
+		WakeFadeSeconds = FMath::Clamp(StoryReadFloat(*Morning, TEXT("fade_in_seconds"), WakeFadeSeconds), 0.f, 6.f);
+		WakeBannerTitle = StoryReadString(*Morning, TEXT("banner_title"), WakeBannerTitle);
+		WakeBannerBody = StoryReadString(*Morning, TEXT("banner_body"), WakeBannerBody);
+		const TSharedPtr<FJsonObject>* Rooms = nullptr;
+		if ((*Morning)->TryGetObjectField(TEXT("rooms"), Rooms) && Rooms)
+		{
+			for (const TPair<FJsonObject::FStringType, TSharedPtr<FJsonValue>>& Pair : (*Rooms)->Values)
+			{
+				const TSharedPtr<FJsonObject> RoomJson = Pair.Value.IsValid() ? Pair.Value->AsObject() : TSharedPtr<FJsonObject>();
+				if (!RoomJson.IsValid())
+				{
+					continue;
+				}
+				FDADormWakeRoom& Room = DormWakeRooms.FindOrAdd(FString(*Pair.Key).ToLower());
+				Room.AnchorId = StoryReadString(RoomJson, TEXT("anchor"), Room.AnchorId);
+				Room.InteriorId = StoryReadString(RoomJson, TEXT("interior_id"), Room.InteriorId);
+				Room.Label = StoryReadString(RoomJson, TEXT("label"), Room.Label);
+				Room.FallbackYaw = StoryReadFloat(RoomJson, TEXT("fallback_yaw"), Room.FallbackYaw);
+				const TArray<TSharedPtr<FJsonValue>>* Position = nullptr;
+				if (RoomJson->TryGetArrayField(TEXT("fallback_position_ue"), Position) && Position && Position->Num() == 3)
+				{
+					Room.FallbackLocation = FVector((*Position)[0]->AsNumber(), (*Position)[1]->AsNumber(), (*Position)[2]->AsNumber());
+					Room.bHasFallback = true;
+				}
+			}
+		}
+	}
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: day flow loaded (%d period(s) per duel, %d untimed modes, %d dorm rooms)."),
+		DuelPeriodsPerDuel, UntimedDuelModes.Num(), DormWakeRooms.Num());
+}
+
+EDADuelTimeStep UDAStorySubsystem::DecideDuelTimeStep(EDADayPeriod Period, bool bStoryEventRunning, bool bRolloverAlreadyPending)
+{
+	if (Period != EDADayPeriod::Night)
+	{
+		return EDADuelTimeStep::AdvancePeriod;
+	}
+	if (bStoryEventRunning)
+	{
+		// The date never changes in the middle of a scene; one rollover is enough.
+		return bRolloverAlreadyPending ? EDADuelTimeStep::None : EDADuelTimeStep::DeferDayRollover;
+	}
+	return EDADuelTimeStep::AdvanceDay;
+}
+
+bool UDAStorySubsystem::IsDuelModeTimed(const FString& DuelMode) const
+{
+	const FString Mode = DuelMode.TrimStartAndEnd().ToLower();
+	return Mode.IsEmpty() || !UntimedDuelModes.Contains(Mode);
+}
+
+bool UDAStorySubsystem::ShouldStartDayInDorm(int32 LastWakeAbsoluteDay, int32 TodayAbsoluteDay)
+{
+	return LastWakeAbsoluteDay != INDEX_NONE && TodayAbsoluteDay > LastWakeAbsoluteDay;
+}
+
+void UDAStorySubsystem::NotifyDuelTimeSpent(const FString& DuelMode)
+{
+	if (!bDayFlowLoaded)
+	{
+		LoadDayFlowData();
+	}
+	if (!IsDuelModeTimed(DuelMode))
+	{
+		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: %s duel keeps its own clock; no time passes."), *DuelMode);
+		return;
+	}
+	UDACalendarSubsystem* Calendar = ResolveCalendar();
+	if (!Calendar)
+	{
+		return;
+	}
+
+	FString MessageKey;
+	for (int32 Step = 0; Step < DuelPeriodsPerDuel; ++Step)
+	{
+		const EDADuelTimeStep Decision = DecideDuelTimeStep(Calendar->GetPeriod(), bRunning, bPendingDayRollover);
+		if (Decision == EDADuelTimeStep::None)
+		{
+			break;
+		}
+		if (Decision == EDADuelTimeStep::AdvancePeriod)
+		{
+			Calendar->AdvancePeriod();
+			MessageKey = Calendar->GetPeriod() == EDADayPeriod::PM ? TEXT("PM") : TEXT("Night");
+		}
+		else if (Decision == EDADuelTimeStep::AdvanceDay)
+		{
+			// The Tick then starts the new morning in the player's dorm room.
+			Calendar->AdvanceDay();
+			MessageKey = TEXT("next_day");
+			break;
+		}
+		else
+		{
+			bPendingDayRollover = true;
+			MessageKey = TEXT("deferred");
+			break;
+		}
+	}
+
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: a %s duel spent time; now %s%s."),
+		DuelMode.IsEmpty() ? TEXT("free") : *DuelMode, *Calendar->GetFullDateText(),
+		bPendingDayRollover ? TEXT(" (day ends after this event)") : TEXT(""));
+	if (!MessageKey.IsEmpty())
+	{
+		PushDayFlowMessage(MessageKey);
+	}
+}
+
+bool UDAStorySubsystem::ApplyPendingDayRollover(bool bCheckSameNightEvents)
+{
+	if (!bPendingDayRollover)
+	{
+		return false;
+	}
+	UDACalendarSubsystem* Calendar = ResolveCalendar();
+	if (!Calendar)
+	{
+		bPendingDayRollover = false;
+		return false;
+	}
+	// Outcomes (or a debug jump) already moved the clock: the rollover is spent.
+	if ((EventStartAbsoluteDay != INDEX_NONE && Calendar->GetAbsoluteDay() != EventStartAbsoluteDay)
+		|| Calendar->GetPeriod() != EDADayPeriod::Night)
+	{
+		bPendingDayRollover = false;
+		return false;
+	}
+	if (bCheckSameNightEvents)
+	{
+		// A Night event that became available after this one (E04b-style)
+		// still belongs to tonight; the rollover waits for it to finish.
+		TryStartNextAvailableEvent();
+		if (bRunning)
+		{
+			return false;
+		}
+	}
+	bPendingDayRollover = false;
+	Calendar->AdvanceDay();
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: the night is over; %s."), *Calendar->GetFullDateText());
+	return true;
+}
+
+FString UDAStorySubsystem::GetDormRoomKey() const
+{
+	if (const UDAProfileSubsystem* Profile = ResolveProfile())
+	{
+		switch (Profile->GetDorm())
+		{
+		case EDADorm::Ra:      return TEXT("ra");
+		case EDADorm::Obelisk: return TEXT("obelisk");
+		case EDADorm::White:   return TEXT("obelisk");   // the Society of Light took over the Obelisk Blue dorm
+		case EDADorm::Slifer:
+		default:               break;
+		}
+	}
+	return TEXT("slifer");
+}
+
+FString UDAStorySubsystem::GetDormWakeAnchorId() const
+{
+	const FDADormWakeRoom* Room = DormWakeRooms.Find(GetDormRoomKey());
+	return Room ? Room->AnchorId : FString();
+}
+
+bool UDAStorySubsystem::TryStartDayInDorm()
+{
+	UDACalendarSubsystem* Calendar = ResolveCalendar();
+	if (!Calendar)
+	{
+		return false;
+	}
+	const int32 Today = Calendar->GetAbsoluteDay();
+	if (LastWakeAbsoluteDay == INDEX_NONE || Today < LastWakeAbsoluteDay)
+	{
+		// Unknown (old save) or a backwards debug jump: adopt the date, no wake.
+		LastWakeAbsoluteDay = Today;
+		return false;
+	}
+	if (!ShouldStartDayInDorm(LastWakeAbsoluteDay, Today) || bRunning || bWaitingForDuel)
+	{
+		return false;
+	}
+	if (!bDayFlowLoaded)
+	{
+		LoadDayFlowData();
+	}
+
+	ADAHUD* HUD = (bHeadless || bManualAudience) ? nullptr : ResolveHUD();
+	if (HUD && HUD->IsModalOpen())
+	{
+		// A duel result, the PDA or a dialogue is still up; the Tick retries.
+		return false;
+	}
+
+	LastWakeAbsoluteDay = Today;
+	++DormMorningCount;
+	const FString RoomKey = GetDormRoomKey();
+	const FDADormWakeRoom* Room = DormWakeRooms.Find(RoomKey);
+	if (!HUD)
+	{
+		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: headless morning in the %s room (%s)."), *RoomKey, *Calendar->GetFullDateText());
+		return true;
+	}
+
+	bool bPlaced = false;
+	if (Room)
+	{
+		bPlaced = PlacePlayerAtAnchor(Room->AnchorId, Room->InteriorId, true, WakeFadeSeconds);
+		if (!bPlaced && Room->bHasFallback)
+		{
+			AnchorFallbacks.FindOrAdd(Room->AnchorId) = TPair<FVector, float>(Room->FallbackLocation, Room->FallbackYaw);
+			bPlaced = PlacePlayerAtAnchor(Room->AnchorId, Room->InteriorId, true, WakeFadeSeconds);
+		}
+	}
+	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+	{
+		FDAMessage Msg;
+		Msg.Title = WakeBannerTitle;
+		Msg.Body = FormatDayFlowText(WakeBannerBody, Room ? Room->Label : FString());
+		Msg.Accent = FLinearColor(1.f, 0.78f, 0.25f);
+		Msg.Duration = 5.f;
+		Sub->PushMessage(Msg);
+		Sub->PlayUISound(TEXT("A_Bell_School"), 0.45f);
+	}
+	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: new day %s starts in the %s dorm room (%s)."),
+		*Calendar->GetFullDateText(), *RoomKey, bPlaced ? TEXT("placed") : TEXT("room anchor missing"));
+	return true;
+}
+
+void UDAStorySubsystem::LoadAnchorFallbacks()
+{
+	bAnchorFallbacksLoaded = true;
+	TSharedPtr<FJsonObject> Root;
+	FString Error;
+	if (!LoadContentJsonObject(TEXT("Data/World/anchors.json"), Root, Error))
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: %s; anchor fallbacks unavailable."), *Error);
+		return;
+	}
+	for (const TSharedPtr<FJsonObject>& Anchor : ReadObjectArray(Root, TEXT("anchors")))
+	{
+		const FString Id = StoryReadString(Anchor, TEXT("id"));
+		const TArray<TSharedPtr<FJsonValue>>* Position = nullptr;
+		if (Id.IsEmpty() || !Anchor->TryGetArrayField(TEXT("position_ue"), Position) || !Position || Position->Num() != 3)
+		{
+			continue;
+		}
+		const FVector Location((*Position)[0]->AsNumber(), (*Position)[1]->AsNumber(), (*Position)[2]->AsNumber());
+		AnchorFallbacks.FindOrAdd(Id) = TPair<FVector, float>(Location, StoryReadFloat(Anchor, TEXT("yaw"), 0.f));
+	}
+}
+
+bool UDAStorySubsystem::ResolveAnchorTransform(const FString& AnchorId, FVector& OutLocation, float& OutYaw)
+{
+	if (AnchorId.IsEmpty())
+	{
+		return false;
+	}
+	UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+	if (World)
+	{
+		for (TActorIterator<ADASceneAnchor> It(World); It; ++It)
+		{
+			if (It->AnchorId.Equals(AnchorId, ESearchCase::IgnoreCase))
+			{
+				OutLocation = It->GetActorLocation();
+				OutYaw = static_cast<float>(It->GetActorRotation().Yaw);
+				return true;
+			}
+		}
+	}
+	// The level is generated from anchors.json; until it is rebuilt, new
+	// anchors still resolve from the data file.
+	if (!bAnchorFallbacksLoaded)
+	{
+		LoadAnchorFallbacks();
+	}
+	if (const TPair<FVector, float>* Fallback = AnchorFallbacks.Find(AnchorId))
+	{
+		OutLocation = Fallback->Key;
+		OutYaw = Fallback->Value;
+		return true;
+	}
+	return false;
+}
+
+bool UDAStorySubsystem::PlacePlayerAtAnchor(const FString& AnchorId, const FString& InteriorId, bool bFadeIn, float FadeSeconds)
+{
+	UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+	APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+	APawn* Pawn = PC ? PC->GetPawn() : nullptr;
+	FVector Location;
+	float Yaw = 0.f;
+	if (!Pawn || !ResolveAnchorTransform(AnchorId, Location, Yaw))
+	{
+		UE_LOG(LogDuelAcademyIsland, Warning, TEXT("Story: cannot place the player at %s."), *AnchorId);
+		return false;
+	}
+
+	// Anchors sit on the floor; stand the capsule on it like a portal arrival.
+	float HalfHeight = 90.f;
+	if (const ACharacter* Character = Cast<ACharacter>(Pawn))
+	{
+		if (const UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+		{
+			HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+		}
+	}
+	if (UPawnMovementComponent* Movement = Pawn->GetMovementComponent())
+	{
+		Movement->StopMovementImmediately();
+	}
+	Pawn->SetActorLocationAndRotation(Location + FVector(0.f, 0.f, HalfHeight + 2.f), FRotator(0.f, Yaw, 0.f),
+		false, nullptr, ETeleportType::TeleportPhysics);
+
+	// Interior cells are generated far below the island (same rule as ADAInteriorPortal).
+	const bool bInterior = Location.Z < -20000.f;
+	if (ADAStudentCharacter* Student = Cast<ADAStudentCharacter>(Pawn))
+	{
+		Student->SetInInterior(bInterior);
+		Student->NotifyTeleportArrived();
+	}
+	if (UDAMusicSubsystem* Music = UDAMusicSubsystem::Get(this))
+	{
+		if (bInterior && !InteriorId.IsEmpty())
+		{
+			Music->SetInteriorContext(InteriorId);
+		}
+		else if (!bInterior)
+		{
+			Music->ClearInteriorContext();
+		}
+	}
+	const FRotator Control = PC->GetControlRotation();
+	PC->SetControlRotation(FRotator(Control.Pitch, static_cast<double>(Yaw), 0.0));
+	if (bFadeIn)
+	{
+		PC->SetViewTargetWithBlend(Pawn, 0.f);
+		if (PC->PlayerCameraManager && FadeSeconds > 0.f)
+		{
+			PC->PlayerCameraManager->StartCameraFade(1.f, 0.f, FadeSeconds, FLinearColor::Black, false, false);
+		}
+	}
+	return true;
+}
+
+FString UDAStorySubsystem::FormatDayFlowText(const FString& Text, const FString& RoomLabel) const
+{
+	FString Out = Text;
+	if (const UDACalendarSubsystem* Calendar = ResolveCalendar())
+	{
+		Out.ReplaceInline(TEXT("{date}"), *Calendar->GetFullDateText());
+	}
+	Out.ReplaceInline(TEXT("{room}"), *RoomLabel);
+	Out.ReplaceInline(TEXT("{player_name}"), *GetPlayerNameForDisplay());
+	return Out.TrimStartAndEnd();
+}
+
+void UDAStorySubsystem::PushDayFlowMessage(const FString& MessageKey)
+{
+	const TPair<FString, FString>* Message = DayFlowMessages.Find(MessageKey);
+	if (!Message || bHeadless)
+	{
+		return;
+	}
+	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+	{
+		FDAMessage Msg;
+		Msg.Title = Message->Key;
+		Msg.Body = FormatDayFlowText(Message->Value, FString());
+		Msg.Accent = FLinearColor(0.62f, 0.78f, 1.f);
+		Msg.Duration = 5.f;
+		Sub->PushMessage(Msg);
+	}
+}
+
 void UDAStorySubsystem::TryStartNextAvailableEvent()
 {
 	if (bSuppressAutoStart)
@@ -1279,9 +1755,22 @@ void UDAStorySubsystem::FinishEvent(bool bComplete, bool bEnterFreeRoam)
 	UE_LOG(LogDuelAcademyIsland, Log, TEXT("Story: event %s finished (complete=%s, freeRoam=%s)."),
 		*EventId, bComplete ? TEXT("true") : TEXT("false"), bFreeRoam ? TEXT("true") : TEXT("false"));
 
-	if (bComplete && !EventId.IsEmpty())
+	// Day flow (day_flow.json): a Night duel inside this event deferred the
+	// date change. Same-night follow-ups run first; then the date rolls over,
+	// the new day starts in the player's dorm room, and that morning's events
+	// get their chance.
+	bool bDayMoved = false;
+	if (bPendingDayRollover)
 	{
-		TryStartNextAvailableEvent();
+		bDayMoved = ApplyPendingDayRollover(bComplete && !EventId.IsEmpty());
+	}
+	if (!bRunning)
+	{
+		TryStartDayInDorm();
+		if ((bComplete && !EventId.IsEmpty()) || bDayMoved)
+		{
+			TryStartNextAvailableEvent();
+		}
 	}
 }
 
@@ -1451,7 +1940,18 @@ bool UDAStorySubsystem::Tick(float DeltaSeconds)
 			ADAHUD* HUD = ResolveHUD();
 			if (!HUD || !HUD->IsModalOpen())
 			{
-				TryStartNextAvailableEvent();
+				// A free-roam Night duel (or a restored save) can leave a
+				// rollover pending; every new day then begins in the dorm room
+				// before that morning's events are considered.
+				if (bPendingDayRollover)
+				{
+					ApplyPendingDayRollover(false);
+				}
+				TryStartDayInDorm();
+				if (!bRunning)
+				{
+					TryStartNextAvailableEvent();
+				}
 			}
 		}
 	}
@@ -1692,6 +2192,16 @@ bool UDAStorySubsystem::ExecuteCommand(const FDAStoryCommand& Command, bool& bOu
 	case EDAStoryCommandType::MoveNpc:
 	{
 		UE_LOG(LogDuelAcademyIsland, Verbose, TEXT("Story: move %s to %s (%.2fs)."), *Command.Npc, *Command.Anchor, Command.Duration);
+		// "npc": "player" stages the player pawn itself (e.g. the freshman row
+		// at the opening ceremony) without adding a command type to the contract.
+		if (Command.Npc.Equals(TEXT("player"), ESearchCase::IgnoreCase))
+		{
+			if (!bHeadless)
+			{
+				PlacePlayerAtAnchor(Command.Anchor, StoryReadString(Command.Raw, TEXT("interior_id")), false, 0.f);
+			}
+			return true;
+		}
 		if (!bHeadless)
 		{
 			UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
@@ -3416,6 +3926,8 @@ FString UDAStorySubsystem::SaveState() const
 	Root->SetBoolField(TEXT("free_roam"), bFreeRoam);
 	Root->SetBoolField(TEXT("opening_started"), bOpeningStarted);
 	Root->SetStringField(TEXT("starter_deck"), SelectedStarterDeck);
+	Root->SetNumberField(TEXT("last_wake_day"), LastWakeAbsoluteDay);
+	Root->SetBoolField(TEXT("pending_day_rollover"), bPendingDayRollover);
 
 	// TSet iteration order is not stable across runs. Sort the serialized
 	// arrays so saving the same story state twice stays byte-identical.
@@ -3520,8 +4032,20 @@ bool UDAStorySubsystem::LoadState(const FString& Json, FString& OutError)
 	bOpeningStarted = false;
 	SelectedStarterDeck.Reset();
 	PreviousTitle.Reset();
+	// Older saves have no wake day: adopt the loaded date without moving the player.
+	LastWakeAbsoluteDay = INDEX_NONE;
+	bPendingDayRollover = false;
+	EventStartAbsoluteDay = INDEX_NONE;
 
 	Root->TryGetStringField(TEXT("event"), CurrentEventId);
+	{
+		int32 SavedWakeDay = INDEX_NONE;
+		if (Root->TryGetNumberField(TEXT("last_wake_day"), SavedWakeDay) && SavedWakeDay >= 0)
+		{
+			LastWakeAbsoluteDay = SavedWakeDay;
+		}
+		Root->TryGetBoolField(TEXT("pending_day_rollover"), bPendingDayRollover);
+	}
 	Root->TryGetStringField(TEXT("scene"), CurrentSceneId);
 	Root->TryGetNumberField(TEXT("command"), CommandIndex);
 	CommandIndex = FMath::Max(0, CommandIndex);
@@ -3879,6 +4403,38 @@ bool UDAStorySubsystem::RunSelfTest()
 	AddCheck(TEXT("weekday is Saturday"), Calendar && Calendar->GetWeekday() == EDADayOfWeek::Saturday,
 		Calendar ? Calendar->GetWeekdayName(Calendar->GetWeekday()) : FString(TEXT("no calendar")));
 	AddCheck(TEXT("command guard"), Steps < 4096, FString::FromInt(Steps));
+
+	// Day flow (day_flow.json): mornings start in the dorm room; each duel is a third of the day.
+	AddCheck(TEXT("first dorm morning is Oct 7"), Calendar && LastWakeAbsoluteDay == Calendar->GetAbsoluteDay(),
+		FString::FromInt(LastWakeAbsoluteDay));
+	AddCheck(TEXT("Slifer student wakes in the Slifer room"), GetDormWakeAnchorId() == TEXT("slifer_player_room_wake"),
+		GetDormWakeAnchorId());
+	AddSimpleCheck(TEXT("duel time policy"),
+		DecideDuelTimeStep(EDADayPeriod::AM, false, false) == EDADuelTimeStep::AdvancePeriod
+		&& DecideDuelTimeStep(EDADayPeriod::PM, true, false) == EDADuelTimeStep::AdvancePeriod
+		&& DecideDuelTimeStep(EDADayPeriod::Night, false, false) == EDADuelTimeStep::AdvanceDay
+		&& DecideDuelTimeStep(EDADayPeriod::Night, true, false) == EDADuelTimeStep::DeferDayRollover
+		&& DecideDuelTimeStep(EDADayPeriod::Night, true, true) == EDADuelTimeStep::None);
+	AddSimpleCheck(TEXT("tutorial/puzzle duels keep their clock"),
+		!IsDuelModeTimed(TEXT("tutorial")) && !IsDuelModeTimed(TEXT("timed_puzzle"))
+		&& IsDuelModeTimed(TEXT("story")) && IsDuelModeTimed(TEXT("free")) && IsDuelModeTimed(TEXT("ante")));
+	if (Calendar && !bRunning)
+	{
+		const int32 DayBefore = Calendar->GetAbsoluteDay();
+		NotifyDuelTimeSpent(TEXT("free"));
+		const bool bPm = Calendar->GetPeriod() == EDADayPeriod::PM;
+		NotifyDuelTimeSpent(TEXT("free"));
+		const bool bNight = Calendar->GetPeriod() == EDADayPeriod::Night;
+		NotifyDuelTimeSpent(TEXT("free"));
+		const bool bNextMorning = Calendar->GetAbsoluteDay() == DayBefore + 1 && Calendar->GetPeriod() == EDADayPeriod::AM;
+		const bool bWoke = TryStartDayInDorm() && LastWakeAbsoluteDay == DayBefore + 1;
+		AddCheck(TEXT("three duels end the day and the next starts in the dorm"), bPm && bNight && bNextMorning && bWoke,
+			Calendar->GetFullDateText());
+		// Leave the slice exactly where the opening ended.
+		Calendar->SetDate(1, 0, 7, EDADayPeriod::AM);
+		LastWakeAbsoluteDay = Calendar->GetAbsoluteDay();
+		bPendingDayRollover = false;
+	}
 
 	const double Elapsed = FPlatformTime::Seconds() - StartTime;
 	bool bAllPass = true;

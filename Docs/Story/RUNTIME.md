@@ -154,10 +154,19 @@ The full campaign is **additive**: `Initialize()` calls `LoadOpeningData()` and 
 - `random_chance` is a stable per-day roll, so an optional event cannot flicker on/off within one day. E32 uses its canon 2/5 chance.
 - Remaining approximations are content-level: exact E04 one-turn setup, E09 bracket, E17 timed puzzle, and E28 bracket order.
 
-### Live time and free-roam availability
+### Day flow: duels spend the day, every day starts in the dorm
 
-- The `N` time-skip key advances A02 by one period (`AM -> PM -> Night -> next day`) and syncs the island lighting. It no longer only moves the visual clock.
-- Resting in any player-room bed advances one day and calls `NotifyRoomStay`; a weekend counts once, not once per Saturday and Sunday.
+Data: `Content/Data/Story/day_flow.json` (built-in defaults mirror it).
+
+- **A duel is a third of the day.** When a duel that recorded a result closes, `FDADuelUI::CloseDuel` calls `UDAStorySubsystem::NotifyDuelTimeSpent(mode)` *before* the story hears the result: `AM -> PM`, `PM -> Night`, and a Night duel ends the day (`AdvanceDay`). Three duels fill a school day. `tutorial`, `timed_puzzle`/`puzzle` and exam modes, and every scenario (puzzle/exam) duel, keep their own clock. A duel closed without a result spends nothing.
+- **No date change mid-scene.** A Night duel inside a running story event sets `bPendingDayRollover` instead (shown as "LATE NIGHT"). When the event finishes, a same-night follow-up event (E04b-style) still gets to run first; then the date rolls over. If the event's outcomes already moved the calendar the rollover is dropped. Brackets (E12, E19, E28) therefore spend at most the rest of that day. The policy is the pure `DecideDuelTimeStep(period, eventRunning, rolloverPending)`.
+- **Every day starts in the player's room in their current dorm.** Whenever the absolute day has moved past `LastWakeAbsoluteDay` (duel, bed, the `N` key, a story outcome), the next free moment — end of an event, or the free-roam poll once no modal UI is open — places the player at `<dorm>_player_room_wake` (Slifer Red, Ra Yellow, or Obelisk Blue; the Society of Light uses the Obelisk room), fades in from black and shows "GOOD MORNING / date / room". Promotion and demotion therefore change where the player wakes up. That morning's events are considered after the wake.
+- The October 1 prologue is scripted; the first dorm morning is the jump to Saturday, October 7 at the end of `E01`, just before `E01b`.
+- `LastWakeAbsoluteDay` and `bPendingDayRollover` are saved in the story section (`last_wake_day`, `pending_day_rollover`). Older saves adopt the loaded date without moving the player.
+- Anchors resolve from the level's `ADASceneAnchor` actors, falling back to `anchors.json` (and to the room's `fallback_position_ue`), so new marks work before the level is regenerated.
+- `move_npc` with `"npc": "player"` places the player pawn at an anchor (B01 academy steps, B02 freshman row, B03 registration desk) without extending the frozen command enum.
+- The `N` time-skip key advances A02 by one period (`AM -> PM -> Night -> next day`) and syncs the island lighting; a day change from it also starts the next morning in the dorm room.
+- Resting in any player-room bed sleeps until the next morning and calls `NotifyRoomStay`; a weekend counts once, not once per Saturday and Sunday.
 - While in free roam with no modal UI open, `UDAStorySubsystem::Tick` polls `TryStartNextAvailableEvent()` once per second. Date/flag/event events therefore start without requiring another scene transition; talk events still require the player to reach the NPC.
 
 ### Duel ids

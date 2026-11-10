@@ -2269,10 +2269,855 @@
         "duelist"
       ],
       "notes": "Story duelist seat 6."
+    },
+    {
+      "id": "hall_assembly_podium",
+      "name": "Central Hall Podium",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "stage",
+      "position_ue": [
+        0.0,
+        -17060.0,
+        3650.0
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "chancellor"
+      ],
+      "notes": "Chancellor Sheppard's place at the north edge of the duel field, facing the whole school."
+    },
+    {
+      "id": "hall_assembly_faculty_01",
+      "name": "Central Hall Faculty 01",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -300.0,
+        -17130.0,
+        3650.0
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "faculty"
+      ],
+      "notes": "Dr. Crowler, Obelisk Blue headmaster, beside the chancellor."
+    },
+    {
+      "id": "hall_assembly_faculty_02",
+      "name": "Central Hall Faculty 02",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        300.0,
+        -17130.0,
+        3650.0
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "faculty"
+      ],
+      "notes": "Professor Banner, Slifer Red headmaster."
+    },
+    {
+      "id": "hall_assembly_faculty_03",
+      "name": "Central Hall Faculty 03",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -500.0,
+        -17130.0,
+        3650.0
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "faculty"
+      ],
+      "notes": "Ms. Fontaine, Obelisk Blue girls' dorm."
+    },
+    {
+      "id": "hall_assembly_faculty_04",
+      "name": "Central Hall Faculty 04",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        500.0,
+        -17130.0,
+        3650.0
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "faculty"
+      ],
+      "notes": "Professor Mimicry, practical dueling and registration."
+    },
+    {
+      "id": "hall_assembly_player",
+      "name": "Central Hall Freshman (player)",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "player",
+      "position_ue": [
+        0.0,
+        -16620.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "freshman"
+      ],
+      "notes": "Front row of the unassigned freshmen, centre of the field."
+    },
+    {
+      "id": "hall_assembly_jaden",
+      "name": "Central Hall Freshman Jaden",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -120.0,
+        -16620.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "freshman"
+      ],
+      "notes": "Jaden next to the player."
+    },
+    {
+      "id": "hall_assembly_syrus",
+      "name": "Central Hall Freshman Syrus",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        120.0,
+        -16620.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "freshman"
+      ],
+      "notes": "Syrus next to the player."
+    },
+    {
+      "id": "hall_assembly_zane",
+      "name": "Central Hall Obelisk Front",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -650.0,
+        -16660.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "obelisk"
+      ],
+      "notes": "Zane at the head of the Obelisk Blue block."
+    },
+    {
+      "id": "hall_assembly_alexis",
+      "name": "Central Hall Obelisk Alexis",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -530.0,
+        -16530.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "obelisk"
+      ],
+      "notes": "Alexis in the Obelisk Blue block."
+    },
+    {
+      "id": "hall_assembly_chazz",
+      "name": "Central Hall Obelisk Chazz",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -770.0,
+        -16530.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "obelisk"
+      ],
+      "notes": "Chazz in the Obelisk Blue block."
+    },
+    {
+      "id": "hall_assembly_obelisk_01",
+      "name": "Central Hall Obelisk 01",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -530.0,
+        -16400.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "obelisk",
+        "crowd"
+      ],
+      "notes": "Obelisk Blue crowd."
+    },
+    {
+      "id": "hall_assembly_obelisk_02",
+      "name": "Central Hall Obelisk 02",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -650.0,
+        -16400.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "obelisk",
+        "crowd"
+      ],
+      "notes": "Obelisk Blue crowd."
+    },
+    {
+      "id": "hall_assembly_obelisk_03",
+      "name": "Central Hall Obelisk 03",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -770.0,
+        -16400.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "obelisk",
+        "crowd"
+      ],
+      "notes": "Obelisk Blue crowd."
+    },
+    {
+      "id": "hall_assembly_obelisk_04",
+      "name": "Central Hall Obelisk 04",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -650.0,
+        -16270.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "obelisk",
+        "crowd"
+      ],
+      "notes": "Obelisk Blue crowd."
+    },
+    {
+      "id": "hall_assembly_bastion",
+      "name": "Central Hall Ra Front",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        650.0,
+        -16660.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "ra"
+      ],
+      "notes": "Bastion at the head of the Ra Yellow block."
+    },
+    {
+      "id": "hall_assembly_ra_01",
+      "name": "Central Hall Ra 01",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        530.0,
+        -16530.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "ra",
+        "crowd"
+      ],
+      "notes": "Ra Yellow crowd."
+    },
+    {
+      "id": "hall_assembly_ra_02",
+      "name": "Central Hall Ra 02",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        770.0,
+        -16530.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "ra",
+        "crowd"
+      ],
+      "notes": "Ra Yellow crowd."
+    },
+    {
+      "id": "hall_assembly_ra_03",
+      "name": "Central Hall Ra 03",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        530.0,
+        -16400.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "ra",
+        "crowd"
+      ],
+      "notes": "Ra Yellow crowd."
+    },
+    {
+      "id": "hall_assembly_ra_04",
+      "name": "Central Hall Ra 04",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        770.0,
+        -16400.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "ra",
+        "crowd"
+      ],
+      "notes": "Ra Yellow crowd."
+    },
+    {
+      "id": "hall_assembly_chumley",
+      "name": "Central Hall Slifer Front",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        0.0,
+        -16340.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "slifer"
+      ],
+      "notes": "Chumley at the head of the (small) Slifer Red block, behind the freshmen."
+    },
+    {
+      "id": "hall_assembly_slifer_01",
+      "name": "Central Hall Slifer 01",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -120.0,
+        -16340.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "slifer",
+        "crowd"
+      ],
+      "notes": "Slifer Red crowd."
+    },
+    {
+      "id": "hall_assembly_slifer_02",
+      "name": "Central Hall Slifer 02",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        120.0,
+        -16340.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "slifer",
+        "crowd"
+      ],
+      "notes": "Slifer Red crowd."
+    },
+    {
+      "id": "hall_assembly_slifer_03",
+      "name": "Central Hall Slifer 03",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        0.0,
+        -16210.0,
+        3650.0
+      ],
+      "yaw": -90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "slifer",
+        "crowd"
+      ],
+      "notes": "Slifer Red crowd."
+    },
+    {
+      "id": "hall_assembly_camera",
+      "name": "Central Hall Wide",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        0.0,
+        -15400.0,
+        4150.0
+      ],
+      "yaw": 0.0,
+      "fov": 55.0,
+      "look_at_ue": [
+        0.0,
+        -17060.0,
+        3820.0
+      ],
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "cutscene"
+      ],
+      "notes": "Wide shot over the three dorm blocks toward the podium."
+    },
+    {
+      "id": "hall_assembly_stage_camera",
+      "name": "Central Hall Podium Medium",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        150.0,
+        -16750.0,
+        3830.0
+      ],
+      "yaw": 0.0,
+      "fov": 40.0,
+      "look_at_ue": [
+        0.0,
+        -17060.0,
+        3810.0
+      ],
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "cutscene"
+      ],
+      "notes": "Medium shot on the chancellor from the freshmen's row."
+    },
+    {
+      "id": "hall_assembly_crowd_camera",
+      "name": "Central Hall Reverse",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        80.0,
+        -17260.0,
+        3860.0
+      ],
+      "yaw": 0.0,
+      "fov": 45.0,
+      "look_at_ue": [
+        0.0,
+        -16550.0,
+        3740.0
+      ],
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "cutscene"
+      ],
+      "notes": "Reverse shot over the chancellor's shoulder onto the freshmen."
+    },
+    {
+      "id": "hall_assembly_stands_camera",
+      "name": "Central Hall Stands",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        1600.0,
+        -15400.0,
+        4400.0
+      ],
+      "yaw": 0.0,
+      "fov": 60.0,
+      "look_at_ue": [
+        0.0,
+        -16600.0,
+        3700.0
+      ],
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "cutscene"
+      ],
+      "notes": "High shot from the stands: the whole student body on the arena floor."
+    },
+    {
+      "id": "hall_assembly_obelisk_camera",
+      "name": "Central Hall Obelisk Block",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        -250.0,
+        -16850.0,
+        3800.0
+      ],
+      "yaw": 0.0,
+      "fov": 40.0,
+      "look_at_ue": [
+        -650.0,
+        -16500.0,
+        3760.0
+      ],
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "cutscene"
+      ],
+      "notes": "Side shot on the Obelisk Blue block."
+    },
+    {
+      "id": "hall_assembly_ra_camera",
+      "name": "Central Hall Ra Block",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "camera",
+      "position_ue": [
+        250.0,
+        -16850.0,
+        3800.0
+      ],
+      "yaw": 0.0,
+      "fov": 40.0,
+      "look_at_ue": [
+        650.0,
+        -16500.0,
+        3760.0
+      ],
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "cutscene"
+      ],
+      "notes": "Side shot on the Ra Yellow block."
+    },
+    {
+      "id": "slifer_player_room_wake",
+      "name": "Slifer Red Room Morning Mark",
+      "location_id": "slifer_player_room",
+      "zone_id": "slifer",
+      "interior_id": "slifer_player_room",
+      "kind": "player",
+      "position_ue": [
+        330000,
+        300000,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "day_flow",
+        "morning",
+        "sleep"
+      ],
+      "notes": "Where the player starts every new day while living in this dorm (Content/Data/Story/day_flow.json). Same point as the room's entrance-portal arrival, 150 cm clear of the exit door."
+    },
+    {
+      "id": "ra_player_room_wake",
+      "name": "Ra Yellow Room Morning Mark",
+      "location_id": "ra_player_room",
+      "zone_id": "ra",
+      "interior_id": "ra_player_room",
+      "kind": "player",
+      "position_ue": [
+        360000,
+        299975,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "day_flow",
+        "morning",
+        "sleep"
+      ],
+      "notes": "Where the player starts every new day while living in this dorm (Content/Data/Story/day_flow.json). Same point as the room's entrance-portal arrival, 150 cm clear of the exit door."
+    },
+    {
+      "id": "obelisk_player_room_wake",
+      "name": "Obelisk Blue Room Morning Mark",
+      "location_id": "obelisk_player_room",
+      "zone_id": "obelisk_boys",
+      "interior_id": "obelisk_player_room",
+      "kind": "player",
+      "position_ue": [
+        390000,
+        319950,
+        -29900
+      ],
+      "yaw": 90.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "day_flow",
+        "morning",
+        "sleep"
+      ],
+      "notes": "Where the player starts every new day while living in this dorm (Content/Data/Story/day_flow.json). Same point as the room's entrance-portal arrival, 150 cm clear of the exit door."
+    },
+    {
+      "id": "hall_assembly_proctor",
+      "name": "Central Hall Proctor",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "kind": "npc",
+      "position_ue": [
+        -950.0,
+        -16700.0,
+        3650.0
+      ],
+      "yaw": 0.0,
+      "fov": 50.0,
+      "look_at_ue": null,
+      "tags": [
+        "opening",
+        "E01",
+        "assembly",
+        "central_hall",
+        "faculty"
+      ],
+      "notes": "Assembly proctor at the west edge of the field (local (-9.5, 17)), keeping the dorm blocks in line."
     }
   ],
   "opening_anchor_requirements": [
-    "gym_assembly_stage",
+    "hall_assembly_podium",
     "academy_registration_player",
     "slifer_cafeteria_player",
     "slifer_player_room_save",

@@ -177,9 +177,9 @@
           "periods": [
             "AM"
           ],
-          "location": "gym",
-          "anchor": "gym_assembly_staff",
-          "activity": "Opening assembly staff row",
+          "location": "academy",
+          "anchor": "hall_assembly_faculty_02",
+          "activity": "Opening ceremony in the Academy central hall",
           "conditions": {
             "all": []
           },
@@ -394,9 +394,9 @@
           "periods": [
             "AM"
           ],
-          "location": "gym",
-          "anchor": "gym_assembly_student_02",
-          "activity": "Opening assembly, Slifer row",
+          "location": "academy",
+          "anchor": "hall_assembly_jaden",
+          "activity": "Opening ceremony in the Academy central hall",
           "conditions": {
             "all": []
           },
@@ -617,9 +617,9 @@
           "periods": [
             "AM"
           ],
-          "location": "gym",
-          "anchor": "gym_assembly_student_03",
-          "activity": "Opening assembly, Slifer row",
+          "location": "academy",
+          "anchor": "hall_assembly_syrus",
+          "activity": "Opening ceremony in the Academy central hall",
           "conditions": {
             "all": []
           },
@@ -811,9 +811,9 @@
           "periods": [
             "AM"
           ],
-          "location": "gym",
-          "anchor": "gym_assembly_crowd",
-          "activity": "Opening assembly, Slifer row",
+          "location": "academy",
+          "anchor": "hall_assembly_chumley",
+          "activity": "Opening ceremony in the Academy central hall",
           "conditions": {
             "all": []
           },
@@ -1005,9 +1005,9 @@
           "periods": [
             "AM"
           ],
-          "location": "gym",
-          "anchor": "gym_assembly_stage",
-          "activity": "Opening ceremony speech",
+          "location": "academy",
+          "anchor": "hall_assembly_podium",
+          "activity": "Opening ceremony in the Academy central hall",
           "conditions": {
             "all": []
           },

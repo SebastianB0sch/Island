@@ -10,6 +10,7 @@
 #include "Containers/Ticker.h"
 #include "Dom/JsonObject.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "DACalendarSubsystem.h"
 #include "DAEventGraph.h"
 #include "DASaveGame.h"
 #include "DAStorySubsystem.generated.h"
@@ -154,6 +155,30 @@ enum class EDAStoryDuelTickDecision : uint8
 	ResolveLoss
 };
 
+/** What one finished duel does to the school day (Content/Data/Story/day_flow.json). */
+enum class EDADuelTimeStep : uint8
+{
+	/** The duel does not spend time (tutorial/puzzle/exam), or the day already ends after this event. */
+	None,
+	/** AM -> PM or PM -> Night. */
+	AdvancePeriod,
+	/** A Night duel in free roam: the next morning starts now. */
+	AdvanceDay,
+	/** A Night duel inside a story event: the date rolls over when the event ends, never mid-scene. */
+	DeferDayRollover
+};
+
+/** One dorm's player room, where every new day starts while the player lives there. */
+struct FDADormWakeRoom
+{
+	FString AnchorId;
+	FString InteriorId;
+	FString Label;
+	FVector FallbackLocation = FVector::ZeroVector;
+	float FallbackYaw = 90.f;
+	bool bHasFallback = false;
+};
+
 /**
  * Story runtime for the opening slice.
  *
@@ -277,6 +302,38 @@ public:
 	/** Count a weekend spent in the player's room; three weekends sets the E30 flag. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
 	void NotifyRoomStay();
+
+	// ---------------------------------------------------------------- day flow
+	/**
+	 * A duel with a recorded result just closed. Spends one third of the day
+	 * (AM -> PM -> Night -> next morning) unless the mode keeps its own clock.
+	 * Called by FDADuelUI before the story is told the result.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
+	void NotifyDuelTimeSpent(const FString& DuelMode);
+
+	/** Pure policy behind NotifyDuelTimeSpent, exposed for tests. */
+	static EDADuelTimeStep DecideDuelTimeStep(EDADayPeriod Period, bool bStoryEventRunning, bool bRolloverAlreadyPending);
+
+	/** True when the mode spends time (story/free/ante). Tutorial, puzzle and exam modes do not. */
+	bool IsDuelModeTimed(const FString& DuelMode) const;
+
+	/** True when a new day has begun since the player last woke up (and a wake day is known). */
+	static bool ShouldStartDayInDorm(int32 LastWakeAbsoluteDay, int32 TodayAbsoluteDay);
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	bool IsDayRolloverPending() const { return bPendingDayRollover; }
+
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	int32 GetLastWakeAbsoluteDay() const { return LastWakeAbsoluteDay; }
+
+	/** day_flow.json room key for the player's dorm: slifer, ra or obelisk. */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	FString GetDormRoomKey() const;
+
+	/** Anchor id where the player starts the day in their current dorm. */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy|Story")
+	FString GetDormWakeAnchorId() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy|Story")
 	void SetPlayerName(const FString& NewName);
@@ -429,6 +486,19 @@ private:
 	void RestorePreviousTitle();
 	void UnlockDuel(const FString& DuelId);
 
+	// Day flow (day_flow.json).
+	void LoadDayFlowData();
+	/** Applies a deferred Night rollover once no same-night event wants to run. Returns true when the date moved. */
+	bool ApplyPendingDayRollover(bool bCheckSameNightEvents);
+	/** Starts the new day in the player's dorm room when the date moved forward. Returns true when it ran. */
+	bool TryStartDayInDorm();
+	/** Moves the player pawn to an anchor (scene anchor actor, else anchors.json). */
+	bool PlacePlayerAtAnchor(const FString& AnchorId, const FString& InteriorId, bool bFadeIn, float FadeSeconds);
+	bool ResolveAnchorTransform(const FString& AnchorId, FVector& OutLocation, float& OutYaw);
+	void LoadAnchorFallbacks();
+	void PushDayFlowMessage(const FString& MessageKey);
+	FString FormatDayFlowText(const FString& Text, const FString& RoomLabel) const;
+
 	void ResetRuntimeState();
 	void LogState(const FString& Prefix) const;
 	void TryRegisterSaveProvider();
@@ -524,6 +594,25 @@ private:
 	float DuelOpenRetryTimer = 0.f;
 	/** Throttles the free-roam availability poll so date/flag events start without a scene transition. */
 	float FreeRoamPollTimer = 0.f;
+
+	// Day flow state. LastWakeAbsoluteDay is saved; INDEX_NONE adopts the current day without a wake.
+	int32 LastWakeAbsoluteDay = INDEX_NONE;
+	/** A Night duel inside an event: roll the date over when the event ends. Saved. */
+	bool bPendingDayRollover = false;
+	/** Absolute day the running event started on; a rollover is skipped if outcomes already moved the date. */
+	int32 EventStartAbsoluteDay = INDEX_NONE;
+	/** Diagnostics: how many mornings started in a dorm room this session. */
+	int32 DormMorningCount = 0;
+	bool bDayFlowLoaded = false;
+	bool bAnchorFallbacksLoaded = false;
+	int32 DuelPeriodsPerDuel = 1;
+	float WakeFadeSeconds = 1.6f;
+	FString WakeBannerTitle;
+	FString WakeBannerBody;
+	TSet<FString> UntimedDuelModes;
+	TMap<FString, FDADormWakeRoom> DormWakeRooms;
+	TMap<FString, TPair<FString, FString>> DayFlowMessages;
+	TMap<FString, TPair<FVector, float>> AnchorFallbacks;
 	TWeakObjectPtr<ADAHUD> BoundHUD;
 	FTSTicker::FDelegateHandle TickerHandle;
 };

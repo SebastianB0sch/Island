@@ -203,133 +203,6 @@
       "scale": 0.994
     },
     {
-      "id": "gym_assembly_instructor",
-      "location_id": "academy_gym",
-      "zone_id": "gym",
-      "interior_id": null,
-      "anchor_id": "gym_assembly_stage",
-      "schedule_id": "assembly_instructor",
-      "schedule_tags": [
-        "assembly_instructor",
-        "assembly",
-        "E01"
-      ],
-      "role": "staff",
-      "dorm": "white",
-      "wander_radius_cm": 50,
-      "event_override": "",
-      "spawn_on_begin_play": false,
-      "npc_class": "ADAStudentNPC",
-      "display_name": "Instructor",
-      "notes": "Sheppard speech stand-in; generic student look with his own dialogue until a dedicated mesh exists.",
-      "spawn_z_offset_cm": 90.0,
-      "cast": "student_m1",
-      "tint": true,
-      "lines": [
-        "Find your dorm's assembly mark and stay there.",
-        "The Chancellor will address the whole academy. Try to look awake."
-      ],
-      "hair": [
-        0.09,
-        0.045,
-        0.02
-      ],
-      "scale": 1.004
-    },
-    {
-      "id": "gym_assembly_student_01",
-      "location_id": "academy_gym",
-      "zone_id": "gym",
-      "interior_id": null,
-      "anchor_id": "gym_assembly_student_01",
-      "schedule_id": "assembly_student_01",
-      "schedule_tags": [
-        "assembly_student_01",
-        "assembly",
-        "E01"
-      ],
-      "role": "student",
-      "dorm": "slifer",
-      "wander_radius_cm": 40,
-      "event_override": "",
-      "spawn_on_begin_play": false,
-      "npc_class": "ADAStudentNPC",
-      "display_name": "Masaru Hirano",
-      "notes": "Crowd mark 1.",
-      "spawn_z_offset_cm": 90.0,
-      "cast": "student_m1",
-      "tint": true,
-      "hair": [
-        0.015,
-        0.012,
-        0.01
-      ],
-      "scale": 1.014,
-      "fab_look": "fab_male_c"
-    },
-    {
-      "id": "gym_assembly_student_02",
-      "location_id": "academy_gym",
-      "zone_id": "gym",
-      "interior_id": null,
-      "anchor_id": "gym_assembly_student_02",
-      "schedule_id": "assembly_student_02",
-      "schedule_tags": [
-        "assembly_student_02",
-        "assembly",
-        "E01"
-      ],
-      "role": "student",
-      "dorm": "ra",
-      "wander_radius_cm": 40,
-      "event_override": "",
-      "spawn_on_begin_play": false,
-      "npc_class": "ADAStudentNPC",
-      "display_name": "Jun Adams",
-      "notes": "Crowd mark 2.",
-      "spawn_z_offset_cm": 90.0,
-      "cast": "student_m1",
-      "tint": true,
-      "hair": [
-        0.1,
-        0.3,
-        0.12
-      ],
-      "scale": 0.985,
-      "fab_look": "fab_male_d"
-    },
-    {
-      "id": "gym_assembly_student_03",
-      "location_id": "academy_gym",
-      "zone_id": "gym",
-      "interior_id": null,
-      "anchor_id": "gym_assembly_student_03",
-      "schedule_id": "assembly_student_03",
-      "schedule_tags": [
-        "assembly_student_03",
-        "assembly",
-        "E01"
-      ],
-      "role": "student",
-      "dorm": "obelisk",
-      "wander_radius_cm": 40,
-      "event_override": "",
-      "spawn_on_begin_play": false,
-      "npc_class": "ADAStudentNPC",
-      "display_name": "Eiji Matsumoto",
-      "notes": "Crowd mark 3.",
-      "spawn_z_offset_cm": 90.0,
-      "cast": "student_m1",
-      "tint": true,
-      "hair": [
-        0.3,
-        0.16,
-        0.07
-      ],
-      "scale": 0.975,
-      "fab_look": "fab_male_a"
-    },
-    {
       "id": "crowler_office_crowler",
       "location_id": "academy_crowler_office",
       "zone_id": "academy",
@@ -1248,11 +1121,381 @@
         0.2
       ],
       "scale": 1.038
+    },
+    {
+      "id": "hall_assembly_proctor",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_proctor",
+      "schedule_id": "hall_assembly_proctor",
+      "schedule_tags": [
+        "hall_assembly_proctor",
+        "assembly",
+        "E01"
+      ],
+      "role": "staff",
+      "dorm": "white",
+      "wander_radius_cm": 50,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Assembly Proctor",
+      "notes": "Keeps the dorm blocks in line during the opening ceremony; Chancellor Sheppard himself speaks from the podium.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "lines": [
+        "Obelisk Blue on the left, Ra Yellow on the right, Slifer Red at the back. Freshmen, up front.",
+        "The Chancellor addresses the whole school this morning. Try to look awake."
+      ],
+      "hair": [
+        0.09,
+        0.045,
+        0.02
+      ],
+      "scale": 1.004
+    },
+    {
+      "id": "hall_assembly_student_01",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_obelisk_01",
+      "schedule_id": "hall_assembly_student_01",
+      "schedule_tags": [
+        "hall_assembly_student_01",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "obelisk",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Reiji Kanda",
+      "notes": "Opening ceremony crowd: obelisk block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.283,
+        0.033,
+        0.116
+      ],
+      "scale": 1.022,
+      "fab_look": "fab_male_a"
+    },
+    {
+      "id": "hall_assembly_student_02",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_obelisk_02",
+      "schedule_id": "hall_assembly_student_02",
+      "schedule_tags": [
+        "hall_assembly_student_02",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "obelisk",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Mariko Sato",
+      "notes": "Opening ceremony crowd: obelisk block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_f1",
+      "tint": true,
+      "hair": [
+        0.05,
+        0.228,
+        0.12
+      ],
+      "scale": 0.994
+    },
+    {
+      "id": "hall_assembly_student_03",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_obelisk_03",
+      "schedule_id": "hall_assembly_student_03",
+      "schedule_tags": [
+        "hall_assembly_student_03",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "obelisk",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Eiji Matsumoto",
+      "notes": "Opening ceremony crowd: obelisk block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.144,
+        0.169,
+        0.066
+      ],
+      "scale": 1.004,
+      "fab_look": "fab_male_b"
+    },
+    {
+      "id": "hall_assembly_student_04",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_obelisk_04",
+      "schedule_id": "hall_assembly_student_04",
+      "schedule_tags": [
+        "hall_assembly_student_04",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "obelisk",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Haruka Ono",
+      "notes": "Opening ceremony crowd: obelisk block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_f2",
+      "tint": true,
+      "hair": [
+        0.221,
+        0.032,
+        0.113
+      ],
+      "scale": 1.013
+    },
+    {
+      "id": "hall_assembly_student_05",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_ra_01",
+      "schedule_id": "hall_assembly_student_05",
+      "schedule_tags": [
+        "hall_assembly_student_05",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "ra",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Jun Adams",
+      "notes": "Opening ceremony crowd: ra block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.324,
+        0.184,
+        0.102
+      ],
+      "scale": 1.014,
+      "fab_look": "fab_male_d"
+    },
+    {
+      "id": "hall_assembly_student_06",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_ra_02",
+      "schedule_id": "hall_assembly_student_06",
+      "schedule_tags": [
+        "hall_assembly_student_06",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "ra",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Nao Ishida",
+      "notes": "Opening ceremony crowd: ra block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_f1",
+      "tint": true,
+      "hair": [
+        0.082,
+        0.135,
+        0.135
+      ],
+      "scale": 1.026
+    },
+    {
+      "id": "hall_assembly_student_07",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_ra_03",
+      "schedule_id": "hall_assembly_student_07",
+      "schedule_tags": [
+        "hall_assembly_student_07",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "ra",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Kenta Mori",
+      "notes": "Opening ceremony crowd: ra block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.026,
+        0.222,
+        0.099
+      ],
+      "scale": 0.994,
+      "fab_look": "fab_male_c"
+    },
+    {
+      "id": "hall_assembly_student_08",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_ra_04",
+      "schedule_id": "hall_assembly_student_08",
+      "schedule_tags": [
+        "hall_assembly_student_08",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "ra",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Lena Fischer",
+      "notes": "Opening ceremony crowd: ra block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_f2",
+      "tint": true,
+      "hair": [
+        0.063,
+        0.218,
+        0.046
+      ],
+      "scale": 1.006
+    },
+    {
+      "id": "hall_assembly_student_09",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_slifer_01",
+      "schedule_id": "hall_assembly_student_09",
+      "schedule_tags": [
+        "hall_assembly_student_09",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "slifer",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Masaru Hirano",
+      "notes": "Opening ceremony crowd: slifer block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.045,
+        0.148,
+        0.065
+      ],
+      "scale": 0.988,
+      "fab_look": "fab_male_c"
+    },
+    {
+      "id": "hall_assembly_student_10",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_slifer_02",
+      "schedule_id": "hall_assembly_student_10",
+      "schedule_tags": [
+        "hall_assembly_student_10",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "slifer",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Tomo Aoki",
+      "notes": "Opening ceremony crowd: slifer block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_m1",
+      "tint": true,
+      "hair": [
+        0.075,
+        0.028,
+        0.132
+      ],
+      "scale": 1.006,
+      "fab_look": "fab_male_a"
+    },
+    {
+      "id": "hall_assembly_student_11",
+      "location_id": "academy_arena",
+      "zone_id": "academy",
+      "interior_id": null,
+      "anchor_id": "hall_assembly_slifer_03",
+      "schedule_id": "hall_assembly_student_11",
+      "schedule_tags": [
+        "hall_assembly_student_11",
+        "assembly",
+        "E01"
+      ],
+      "role": "student",
+      "dorm": "slifer",
+      "wander_radius_cm": 40,
+      "event_override": "",
+      "spawn_on_begin_play": false,
+      "npc_class": "ADAStudentNPC",
+      "display_name": "Yui Nakamura",
+      "notes": "Opening ceremony crowd: slifer block.",
+      "spawn_z_offset_cm": 90.0,
+      "cast": "student_f1",
+      "tint": true,
+      "hair": [
+        0.022,
+        0.153,
+        0.117
+      ],
+      "scale": 0.982
     }
   ],
   "opening_spawn_requirements": [
     "academy_receptionist",
-    "gym_assembly_instructor",
+    "hall_assembly_proctor",
     "slifer_cafeteria_student_01",
     "slifer_banner_room_banner",
     "slifer_jaden_room_jaden",

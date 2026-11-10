@@ -78,16 +78,23 @@
 - **New-game setup (before E01):** the player chooses one of the three starter decks — **Fire**, **Water** or **Wind**. The choice grants the matching existing deck (`fire`/`water`/`wind`), sets it active, and sets `starter_deck_chosen` + the matching `starter_deck_*` flag. This is a port presentation of the GBA's three-deck start; it is **not** part of Mimicry's registration dialogue.
 - **Location:** `plaza`; anchors `academy_front_steps`, `academy_front_camera`.
 - **Cast:** player.
-- **Flow:** title/new-game → deck select → fade in on the ferry plaza → chapter card `DUEL ACADEMY — FRESHMAN ORIENTATION — SUNDAY, OCTOBER 1` → four lines establishing the island and the bell → objective card "Attend the opening assembly in the Duel Gym" → walk to the gym.
-- **Commands used:** `music`, `fade`, `camera`, `banner`, `wait`, `dialogue`, `play_sfx`, `end`.
+- **Flow:** title/new-game → deck select → fade in on the ferry plaza → chapter card `DUEL ACADEMY — FRESHMAN ORIENTATION — SUNDAY, OCTOBER 1` → the player is placed on the academy steps (`move_npc` with `npc: "player"`) → four lines establishing the island and the bell, with students of all three dorms streaming into the academy → objective card "Attend the opening ceremony in the Academy's central hall" → into the central hall.
+- **Commands used:** `music`, `fade`, `move_npc` (player), `camera`, `banner`, `wait`, `dialogue`, `play_sfx`, `end`.
 - **Canon note:** the GBA opens with Sheppard's speech; the plaza arrival is a 3D-port framing beat so the island reads before the cutscene.
 
-### B02 — Sheppard's Speech (`E01`, scene `opening.b02_sheppard_speech`)
+### B02 — Opening Ceremony in the Central Hall (`E01`, scene `opening.b02_sheppard_speech`)
 
-- **Location:** `gym`; anchors `gym_assembly_stage`, `gym_assembly_camera`, `gym_assembly_crowd`, `gym_assembly_student_02`, `gym_assembly_student_03`, `gym_assembly_staff` (requested).
-- **Cast:** Sheppard, Jaden, Syrus, Chumley, player.
-- **Flow:** fade to the gym → `DUEL GYM — OPENING CEREMONY` → Sheppard takes the podium → welcomes the students and describes a broad dueling education (rules, card lore, strategy, history) → "a duel, like life, is not over until the very end" → Jaden cheers for Slifer Red, Syrus shushes him, Chumley asks to be woken when the dueling starts → registration at the academy reception desk with Mimicry → player answers → applause → objective card "REGISTRATION — Academy Lobby" → join the registration queue.
-- **Canon note:** A01's index has Sheppard's opening address around `0x13Fxxx` (entries 1118–1121: welcome, broad study, "a duel is not over until the very end," deck variety). The speech text is a port paraphrase.
+- **Location:** `academy` — the **central hall** of the main building (the Grand Duel Arena drum, `academy_arena`), right behind the main hall where registration follows. Anchors `hall_assembly_*` (31 marks in `Content/Data/World/anchors.json`): podium, four faculty marks, the freshman row, Obelisk Blue / Ra Yellow / Slifer Red blocks, a proctor and six cameras.
+- **Staging:** a whole-school event. Chancellor Sheppard at the podium on the north edge of the duel field with Crowler, Banner, Fontaine and Mimicry beside him; Obelisk Blue on the left (Zane, Alexis, Chazz + crowd), Ra Yellow on the right (Bastion + crowd), the small Slifer Red block at the back (Chumley + crowd) and the freshmen — the player, Jaden and Syrus — in front of the stage. The arena's ambient spectators fill the floor ring and concourse. The player is placed at `hall_assembly_player`; named NPCs are moved with `move_npc`; E01 activates the `hall_assembly_proctor` + eleven `hall_assembly_student_*` spawn points.
+- **Cast:** Sheppard, Crowler, Banner, Fontaine, Mimicry, Zane, Alexis, Chazz, Bastion, Jaden, Syrus, Chumley, player.
+- **Flow (26 lines):** fade → `DUEL ACADEMY - CENTRAL HALL / OPENING CEREMONY - THE WHOLE SCHOOL ASSEMBLES` over the stands camera → narrator sets out the dorm blocks → Crowler calls for silence → Sheppard welcomes returning students and freshmen → Jaden / Syrus / Chumley react, Chazz sneers at the Slifers and Alexis shuts him down → **showing the ropes:**
+  1. three dorms; the entrance exam decides where you begin, not where you finish;
+  2. a monthly exam (written + practical duel) moves you up a dorm — or down;
+  3. every school day has three parts (morning, afternoon, evening) and a serious duel takes one of them (Bastion approves of the measurable path);
+  4. wins earn DP, spent on booster packs at the card shop;
+  5. every morning you wake in your dorm — how far you climb, and which dorm you wake up in, is up to you;
+  → Syrus points out his brother Zane, Jaden vows to beat him → "a duel, like life, is not over until the very end" / "a duel is a conversation" → freshmen sent to registration in the main hall → Banner and Crowler address their dorms → player sums it up → applause → objective "REGISTRATION — Academy Main Hall".
+- **Canon note:** A01's index has Sheppard's opening address around `0x13Fxxx` (entries 1118–1121: welcome, broad study, "a duel is not over until the very end," deck variety). The GBA stages it in the gym; the port makes it a whole-school assembly in the central hall. The speech text, including the "ropes" section that introduces the day/dorm loop, is a port paraphrase.
 
 ### B03 — Registration and Name Entry (`E01`, scenes `opening.b03_registration`, `opening.b03_name_entry`, `opening.b03_name_accepted`)
 
@@ -199,17 +206,28 @@ Locations use the existing island zone ids. The data now uses A08's **current an
 | `academy_front_steps` | A08 | B01 player arrival mark |
 | `academy_front_camera` | A08 | B01 establishing camera; Sheppard weekend walk |
 
+### Central hall (Grand Duel Arena)
+
+| Anchor | Status | Purpose |
+| --- | --- | --- |
+| `hall_assembly_podium` | data (level rebuild) | B02 Sheppard's podium; Sheppard Oct 1 override |
+| `hall_assembly_faculty_01`…`_04` | data | Crowler, Banner (Oct 1 override), Fontaine, Mimicry |
+| `hall_assembly_player` / `_jaden` / `_syrus` | data | Freshman row (Jaden/Syrus Oct 1 overrides) |
+| `hall_assembly_zane` / `_alexis` / `_chazz` / `_obelisk_01`…`_04` | data | Obelisk Blue block |
+| `hall_assembly_bastion` / `_ra_01`…`_04` | data | Ra Yellow block |
+| `hall_assembly_chumley` / `_slifer_01`…`_03` | data | Slifer Red block (Chumley Oct 1 override) |
+| `hall_assembly_proctor` | data | E01 proctor spawn |
+| `hall_assembly_camera`, `_stage_camera`, `_crowd_camera`, `_stands_camera`, `_obelisk_camera`, `_ra_camera` | data | B02 cameras |
+
+Positions are derived from `Tools/dai/assets/academy.py` (drum centre local (0, 15) m, field top z = 2.5 m, `SM_Academy_Arena` at (0, -15000, 3400) cm). Until the level is regenerated the story resolves these anchors from `anchors.json` directly; the camera shots and NPC spawn points need the rebuild.
+
 ### Gym
 
 | Anchor | Status | Purpose |
 | --- | --- | --- |
-| `gym_assembly_stage` | A08 | B02 Sheppard podium; Sheppard Oct 1 override |
-| `gym_assembly_camera` | A08 | B02 establishing camera |
-| `gym_assembly_crowd` | A08 | B02 crowd camera/Chumley mark |
-| `gym_assembly_student_02` | A08 | B02 Jaden mark; Oct 1 schedule |
-| `gym_assembly_student_03` | A08 | B02 Syrus mark; Oct 1 schedule |
-| `gym_assembly_staff` | **REQUEST** | Banner's Oct 1 staff mark at the assembly |
 | `gym_practice_field_a` | A08 | Mimicry weekday/weekend PM practical |
+
+The former `gym_assembly_*` marks stay in `anchors.json` for the full-campaign gym scenes but are no longer part of the opening.
 
 ### Academy (interior)
 
@@ -245,7 +263,7 @@ Locations use the existing island zone ids. The data now uses A08's **current an
 
 **A08 requests (6):**
 
-1. `gym_assembly_staff` — Banner's staff mark at the opening assembly.
+1. ~~`gym_assembly_staff`~~ — superseded: Banner stands at `hall_assembly_faculty_02` in the central hall.
 2. `slifer_cafeteria_seat_03` — Chumley's cafeteria seat.
 3. `slifer_dorm_front_jaden` — Jaden mark outside the dorm, used by B04 and FJ01.
 4. `slifer_dorm_front_syrus` — Syrus mark outside the dorm.
@@ -254,7 +272,7 @@ Locations use the existing island zone ids. The data now uses A08's **current an
 
 **Interior/portal work implied for A08**
 
-- Gym: walk-in interior exists; add the registration/podium/crowd/staff marks and the practical-court mark.
+- Gym: walk-in interior exists; only the practical-court mark is used by the opening (the ceremony moved to the central hall).
 - Slifer Red: the dining hall geometry exists; add a formal cafeteria interior cell/portal if needed, plus the player room (exists), the Jaden/Syrus/Chumley room (exists), Banner's room (exists), and the six requested marks.
 - Academy: lobby, registration desk, card shop, test room and chancellor's office exist; the registration desk is in the **academy lobby** (A08's implementation), so B03 plays there rather than in the gym. This is the only intentional spatial adaptation from the guide's "gym lobby" wording.
 - Plaza: existing zone; the arrival uses the academy front steps/camera.
@@ -263,12 +281,12 @@ Locations use the existing island zone ids. The data now uses A08's **current an
 
 | NPC | Marks |
 | --- | --- |
-| Sheppard | `gym_assembly_stage`, `chancellor_office_desk`, `academy_front_steps` |
+| Sheppard | `hall_assembly_podium`, `chancellor_office_desk`, `academy_front_steps` |
 | Mimicry | `academy_registration_desk`, `academy_test_room_proctor`, `gym_practice_field_a`, `academy_registration_desk` (night) |
-| Banner | `gym_assembly_staff` (request), `slifer_cafeteria_counter`, `slifer_banner_room_desk` |
-| Jaden | `gym_assembly_student_02`, `slifer_dorm_front_jaden` (request), `slifer_cafeteria_seat_01`, `slifer_jaden_room_jaden`, `slifer_yard_practice` (request) |
-| Syrus | `gym_assembly_student_03`, `slifer_dorm_front_syrus` (request), `slifer_cafeteria_seat_02`, `slifer_jaden_room_syrus`, `slifer_yard_practice` (request) |
-| Chumley | `gym_assembly_crowd`, `slifer_dorm_front_chumley` (request), `slifer_cafeteria_seat_03` (request), `slifer_jaden_room_chumley` |
+| Banner | `hall_assembly_faculty_02`, `slifer_cafeteria_counter`, `slifer_banner_room_desk` |
+| Jaden | `hall_assembly_jaden`, `slifer_dorm_front_jaden` (request), `slifer_cafeteria_seat_01`, `slifer_jaden_room_jaden`, `slifer_yard_practice` (request) |
+| Syrus | `hall_assembly_syrus`, `slifer_dorm_front_syrus` (request), `slifer_cafeteria_seat_02`, `slifer_jaden_room_syrus`, `slifer_yard_practice` (request) |
+| Chumley | `hall_assembly_chumley`, `slifer_dorm_front_chumley` (request), `slifer_cafeteria_seat_03` (request), `slifer_jaden_room_chumley` |
 | Dorothy | `academy_card_shop_keeper` |
 
 ---
@@ -345,8 +363,8 @@ All default to `false` except none; `jaden_first_duel_available` is set true by 
 ### Manual playthrough
 
 1. **New game:** start a fresh profile. Confirm the new-game setup offers Fire, Water and Wind; choose one. Confirm the matching deck is granted and active, and the other two are not.
-2. **Arrival:** confirm B01 enters, the chapter card reads Sunday, October 1, and the objective points to the gym.
-3. **Speech:** complete B02. Confirm Sheppard, Jaden, Syrus and Chumley appear at their gym marks and the registration objective appears.
+2. **Arrival:** confirm B01 enters on the academy steps, the chapter card reads Sunday, October 1, and the objective points to the Academy's central hall.
+3. **Speech:** complete B02. Confirm the player stands in the freshman row of the central hall, the faculty line the podium, the three dorm blocks are filled, every camera frames its subject, Sheppard explains dorms / monthly exams / three-part days / DP / waking in your dorm, and the registration objective appears.
 4. **Name entry:** enter a 1-character name and an 8-character name in separate runs. Confirm `END` accepts, `DELETE` erases, empty input is rejected, and the confirm prompt reads back the spelled name.
 5. **Name rejection loop:** choose "No — let me spell it again," enter a different name, and confirm it. Verify no duplicate registration effects.
 6. **Registration:** confirm Mimicry sends the player to **Slifer Red**, mentions the card shop opening next Saturday, and the `autosave_registered` point fires.

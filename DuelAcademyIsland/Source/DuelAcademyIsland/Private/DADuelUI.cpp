@@ -732,6 +732,11 @@ void FDADuelUI::CloseDuel()
 	const bool bStoryWon = bStoryResultWon;
 	const bool bStoryDraw = bStoryResultDraw;
 	bStoryResultPending = false;
+	// Day flow: a duel that recorded a result spends a third of the school
+	// day. Puzzle/exam scenarios keep their own clock (captured before the
+	// scenario state is torn down below).
+	const bool bSpendDuelTime = bNotifyStory && !bDuelScenarioActive;
+	const FString TimedDuelMode = DuelModeString;
 
 	// A scenario closed before its result screen still produces one terminal
 	// result; the exam path turns it into a failed timed section.
@@ -803,6 +808,17 @@ void FDADuelUI::CloseDuel()
 	{
 		PlayerOwner->SetInputMode(FInputModeGameOnly());
 		PlayerOwner->bShowMouseCursor = false;
+	}
+
+	// Spend the duel's time first so a resumed story scene (and any event it
+	// chains into) sees the new period. Inside a story event the date never
+	// rolls over mid-scene; the story defers that to the event's end.
+	if (bSpendDuelTime)
+	{
+		if (UDAStorySubsystem* Story = UDAStorySubsystem::Get(OwnerHUD.Get()))
+		{
+			Story->NotifyDuelTimeSpent(TimedDuelMode);
+		}
 	}
 
 	// Advance a pending story duel only after the result screen is dismissed,
