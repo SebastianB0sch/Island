@@ -45,8 +45,8 @@ def shade(c, v=1.0, s=1.0, h=0.0):
 
 
 # --------------------------------------------------------------------------- eye shape (shared with head.py)
-EYE = dict(cx=0.0360, cz=-0.012, hw=0.0205, h=0.0300, upper=0.62, tilt=0.0, inner_drop=0.0, skew=0.12,
-           pu=2.3, qu=0.72, pl=2.0, ql=0.85, lash=0.0036, wing=0.28, wing_up=0.55,
+EYE = dict(cx=0.0385, cz=-0.012, hw=0.0240, h=0.0345, upper=0.62, tilt=0.0, inner_drop=0.0, skew=0.12,
+           pu=2.3, qu=0.72, pl=2.0, ql=0.85, lash=0.0040, wing=0.26, wing_up=0.55,
            iris_w=0.60, iris_h=0.98, look=0.0)
 
 
@@ -82,7 +82,7 @@ def lash_top(e, t):
 # --------------------------------------------------------------------------- face
 def face(path, skin, eyes=None, iris=(0.30, 0.55, 0.85), iris2=None, lash=(0.12, 0.09, 0.10),
          brow=(0.25, 0.18, 0.16), blush=0.28, lips=None, bang_shadow=0.0, mole=None, size=2048,
-         mouth_z=-0.0665, female=True):
+         mouth_z=-0.0635, female=True):
     """Paint the face texture and save it to `path`. Colours are sRGB 0..1. Returns the eye spec used."""
     from PIL import Image
     e = eye_spec(eyes)
@@ -98,7 +98,7 @@ def face(path, skin, eyes=None, iris=(0.30, 0.55, 0.85), iris2=None, lash=(0.12,
         _over(img, skin_sh, _smooth((Z - edge) / 0.004) * bang_shadow)
     # blush, eyelid warmth
     for sx in (-1.0, 1.0):
-        d = ((X - sx * 0.050) / 0.020) ** 2 + ((Z + 0.040) / 0.010) ** 2
+        d = ((X - sx * 0.054) / 0.020) ** 2 + ((Z + 0.042) / 0.010) ** 2
         _over(img, (1.0, 0.52, 0.50), np.exp(-d * 1.6) * blush)
         d = ((X - sx * e["cx"]) / 0.022) ** 2 + ((Z - e["cz"] - e["h"] * 0.55) / 0.008) ** 2
         _over(img, skin_sh, np.exp(-d * 1.5) * 0.30)

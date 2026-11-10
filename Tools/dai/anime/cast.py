@@ -147,10 +147,10 @@ def student_entry(key):
 # The playable student: a generic look with a dorm-tinted jacket (J switches dorms in game)
 PLAYER = "student_m1"
 
-# Crown height (m, without hair) of the atelier body in its rest pose: turns the cast's heights into the
+# Crown height (m, without hair) of the atelier bodies in their rest pose: turns the cast's heights into the
 # runtime scale, so 168 cm means 168 cm on the island (doors, stairs and the 1.5 m/s walk are human scale).
-# Must match atelier.build.HEIGHT (checked by Tools/tests).
-BODY_HEIGHT = 1.718
+# Must match atelier.build.height_of (boys / girls: the girls' head is a little larger).
+BODY_HEIGHT = {False: 1.824, True: 1.844}
 GENERIC_HEIGHT = {False: 170, True: 160}   # generic students (NPCs vary +-5 % round this)
 
 
@@ -163,7 +163,7 @@ def scale_of(entry):
     replaces the design reports its own measured height ("base_height", metres)."""
     if "height" not in entry:
         return float(entry.get("scale", 1.0))
-    return round(entry["height"] / 100.0 / float(entry.get("base_height", BODY_HEIGHT)), 3)
+    return round(entry["height"] / 100.0 / float(entry.get("base_height", BODY_HEIGHT[is_female(entry)])), 3)
 
 
 def all_entries():

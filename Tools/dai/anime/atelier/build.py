@@ -24,9 +24,35 @@ from . import paint as P
 TEX_REL = "Characters"
 OUTLINE_COLOR = (0.16, 0.09, 0.10)
 HEAD_KINDS = {"hairband", "glasses", "hairbow"}
-HEAD_SCALE = 1.08                 # anime proportions: the head a little larger than the skeleton's
+# Proportions fitted to anime reference figures (measured, not copied): the parts are modelled in the
+# skeleton's design space and then warped - legs lengthened, shoulders brought in, head enlarged.
+HEAD_SCALE = {False: 1.15, True: 1.24}      # head size over the design head (boys ~7.5, girls ~7 heads tall)
 HEAD_PIVOT = (0.0, 0.0, S.HEAD)
-HEIGHT = S.HEAD + (S.HEAD_CENTER[2] + 0.113 - S.HEAD) * HEAD_SCALE     # crown height (m) of every atelier body
+LEG_STRETCH = 0.09                           # metres added between ankle and hip
+SHOULDER_IN = 0.05                           # metres each shoulder joint moves towards the spine
+_CROWN = S.HEAD_CENTER[2] + 0.113 - S.HEAD
+
+
+def height_of(female):
+    """Crown height (m, without hair) of an atelier body."""
+    return S.HEAD + _CROWN * HEAD_SCALE[bool(female)] + LEG_STRETCH
+
+
+HEIGHT = height_of(False)
+
+
+def warp(p):
+    """Design space -> final proportions for points (K, 3)."""
+    p = np.array(p, np.float64).reshape(-1, 3)
+    z = p[:, 2].copy()
+    k = (S.HIP - S.ANKLE + LEG_STRETCH) / (S.HIP - S.ANKLE)
+    p[:, 2] = np.where(z < S.ANKLE, z, np.where(z < S.HIP, S.ANKLE + (z - S.ANKLE) * k, z + LEG_STRETCH))
+    ax = np.abs(p[:, 0])
+    r = (S.SHOULDER_X - SHOULDER_IN - 0.05) / (S.SHOULDER_X - 0.05)
+    new = np.where(ax < 0.05, ax, np.where(ax < S.SHOULDER_X, 0.05 + (ax - 0.05) * r, ax - SHOULDER_IN))
+    w = M.smooth((z - 1.08) / 0.14) * (1.0 - M.smooth((z - 1.445) / 0.03))
+    p[:, 0] = np.sign(p[:, 0]) * (ax + (new - ax) * w)
+    return p
 
 
 def ensure_bones(arm, specs):
@@ -133,7 +159,7 @@ def build_character(key, design, arm, material_fn, log=print, outline=0.0028):
     hr = HR.Hair(head, body, seed=hair.get("seed", 1))
     HR.style(hr, hair["style"])
     hair_parts, bones = hr.build(mats["hair"], key, cap_line=hair.get("cap", (0.27, 0.50, 0.74)))
-    k = design.get("head_scale", HEAD_SCALE)
+    k = design.get("head_scale", HEAD_SCALE[bool(design.get("female", True))])
     pivot = np.array(HEAD_PIVOT)
     for p in head_parts + kit.parts[n_body:] + hair_parts:
         p.v = pivot + (p.v - pivot) * k
@@ -143,11 +169,26 @@ def build_character(key, design, arm, material_fn, log=print, outline=0.0028):
              for n, par, a, b in bones]
     for prefix in sorted(kit.cloth_prefixes):
         bones += OF.cloth_bone_specs(prefix)
+    bones = [(b[0], b[1], tuple(warp(b[2])[0]), tuple(warp(b[3])[0])) + tuple(b[4:]) for b in bones]
     ensure_bones(arm, bones)
+    everything = parts + kit.parts + hair_parts
+    for p in everything:
+        p.round_c = warp(p.round_c)[0]
+        p.v = warp(p.v)
 
-    obj = M.assemble(f"SK_Anime_{key}", parts + kit.parts + hair_parts, arm, material_fn, outline=outline, log=log)
+    obj = M.assemble(f"SK_Anime_{key}", everything, arm, material_fn, outline=outline, log=log)
     return obj
 
 
 def create_skeleton(name="root"):
-    return S.create(name)
+    """The cast skeleton in its final proportions (skeleton.py's rest pose, warped)."""
+    import bpy
+    arm = S.create(name)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode="EDIT")
+    for b in arm.data.edit_bones:
+        roll = b.roll
+        b.head, b.tail = warp(np.array(b.head))[0], warp(np.array(b.tail))[0]
+        b.roll = roll
+    bpy.ops.object.mode_set(mode="OBJECT")
+    return arm

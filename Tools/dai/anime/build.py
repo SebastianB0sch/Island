@@ -950,7 +950,8 @@ def build(log=print, only=None):
         blend.reset_scene()
         bpy.context.scene.render.fps = 30
         if group == PROCEDURAL:
-            arm = S.create("root")
+            from .atelier import build as ATELIER
+            arm = ATELIER.create_skeleton("root")
             built, done = [], {}
             for cid in cids:                      # slots sharing a design share its mesh
                 k = entries[cid]["design"]
@@ -1083,7 +1084,8 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
             act = None
         else:
             if shared is None:
-                shared = S.create("root")
+                from .atelier import build as ATELIER
+                shared = ATELIER.create_skeleton("root")
                 a = shared
             else:
                 a = shared.copy()

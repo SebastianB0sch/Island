@@ -54,8 +54,13 @@ M_SHARP = dict(h=0.0200, hw=0.0202, lash=0.0028, wing=0.16, wing_up=0.6, iris_w=
                skew=0.2)
 M_ROUND = dict(h=0.0265, hw=0.0200, lash=0.0028, wing=0.10, wing_up=0.3, iris_w=0.60)
 M_NARROW = dict(h=0.0172, hw=0.0205, lash=0.0026, wing=0.10, wing_up=0.4, iris_w=0.50, upper=0.52, tilt=0.05)
-M_HEAD = dict(jaw=1.07, chin=0.004, face_w=1.02)
+M_HEAD = dict(jaw=1.05, chin=0.003, face_w=0.97)
 BROW_M = dict(thick=0.0036, len=0.036, arch=0.0018)
+for _p, _k in ((F_GENTLE, 1.15), (F_SHARP, 1.15), (F_SLEEPY, 1.15), (F_BRIGHT, 1.13), (M_SOFT, 1.15), (M_SHARP, 1.17),
+               (M_ROUND, 1.15), (M_NARROW, 1.18)):      # sizes relative to the reference eye (paint.EYE)
+    for _n in ("h", "hw"):
+        if _n in _p:
+            _p[_n] = round(_p[_n] * _k, 5)
 
 # --------------------------------------------------------------------------- hair
 HAIR = {

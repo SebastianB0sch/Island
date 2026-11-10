@@ -40,6 +40,26 @@ What a build produces per character: `SK_Anime_<Design>.fbx` on the shared `Cast
 a hair sheet and a cloth atlas under `SourceAssets/Textures/Characters/<Design>/`, and its entry in
 `SourceAssets/Data/cast.json`. A character is about 65-80k triangles and 5 materials.
 
+## Proportions
+
+The body and face proportions are fitted to measurements of reference anime figures (the VRoid sample
+avatars), taken with `Tools/measure_character.py`. Only numbers are used: no reference geometry or texture
+is in the cast, and the reference files are not in the repository.
+
+| Proportion | Reference | Atelier |
+|---|---|---|
+| Hip height / body height | 0.56 | 0.53 (was 0.51) |
+| Shoulder joint half-width at 1.70 m | 0.09-0.13 m | 0.125 m (was 0.175 m) |
+| Heads tall, girls / boys | 6.9 / 7.6 | 7.0 / 7.5 |
+| Female waist half-width | 0.08 m | 0.088 m (was 0.108 m) |
+| Cheek half-width / head height | 0.42 | 0.41 (was 0.38), with a sharper chin |
+| Eye size | iris height 0.15 of the head | eyes enlarged about 15 % |
+
+Parts are modelled in the skeleton's design space and warped to these proportions when a character is
+assembled (`atelier/build.py`: `warp`, `HEAD_SCALE`, `LEG_STRETCH`, `SHOULDER_IN`); the limb and torso
+tables are in `atelier/body.py`, the face rings in `atelier/head.py`. To fit against another reference,
+export it to VRM / glTF / FBX, run the measuring script and adjust those values.
+
 ## Replacing a slot with an artist-made model
 
 1. Put the model in `Tools/thirdparty/<pack>/<asset>/` with a `SOURCE.txt` (author, licence, source URL).

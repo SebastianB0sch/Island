@@ -438,7 +438,7 @@ def gloves(kit, color, cuff=0.60, style=None, fingerless=False):
     b = kit.body
     for side in ("l", "r"):
         if not fingerless:
-            h = b.hand(None, side, scale=(0.93 if b.female else 1.04) * 1.06)
+            h = b.hand(None, side, scale=(0.88 if b.female else 1.0) * 1.06)
             h.uv[:] = 0.5
             kit.add(h, color, "cloth")
         p = M.solidify(_sleeve(kit, f"glove_{side}", side, cuff, S.WRIST_X + (0.045 if fingerless else 0.004), 0.006,
