@@ -1,111 +1,337 @@
 {
  "player": "student_m1",
  "groups": {
-  "Cast": {
+  "VroidC": {
    "skeleton_mesh": "SK_Anime_StudentM1",
    "anims": {
     "Wave": {
-     "name": "A_Anime_Cast_Wave",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Wave.fbx",
+     "name": "A_Anime_VroidC_Wave",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Wave.fbx",
      "loop": false,
      "seconds": 1.667
     },
     "Yes": {
-     "name": "A_Anime_Cast_Yes",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Yes.fbx",
+     "name": "A_Anime_VroidC_Yes",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Yes.fbx",
      "loop": false,
      "seconds": 1.667
     },
     "No": {
-     "name": "A_Anime_Cast_No",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_No.fbx",
+     "name": "A_Anime_VroidC_No",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_No.fbx",
      "loop": false,
      "seconds": 1.667
     },
     "Sit": {
-     "name": "A_Anime_Cast_Sit",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Sit.fbx",
+     "name": "A_Anime_VroidC_Sit",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Sit.fbx",
      "loop": true,
      "seconds": 8.333
     },
     "Clap": {
-     "name": "A_Anime_Cast_Clap",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Clap.fbx",
+     "name": "A_Anime_VroidC_Clap",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Clap.fbx",
      "loop": false,
      "seconds": 1.667
     },
     "Interact": {
-     "name": "A_Anime_Cast_Interact",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Interact.fbx",
+     "name": "A_Anime_VroidC_Interact",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Interact.fbx",
      "loop": false,
      "seconds": 1.267
     },
     "Idle": {
-     "name": "A_Anime_Cast_Idle",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Idle.fbx",
+     "name": "A_Anime_VroidC_Idle",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Idle.fbx",
      "loop": true,
      "seconds": 8.0
     },
     "Jump": {
-     "name": "A_Anime_Cast_Jump",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Jump.fbx",
+     "name": "A_Anime_VroidC_Jump",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Jump.fbx",
      "loop": false,
      "seconds": 0.5
     },
     "Fall": {
-     "name": "A_Anime_Cast_Fall",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Fall.fbx",
+     "name": "A_Anime_VroidC_Fall",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Fall.fbx",
      "loop": true,
      "seconds": 1.2
     },
     "Land": {
-     "name": "A_Anime_Cast_Land",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Land.fbx",
+     "name": "A_Anime_VroidC_Land",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Land.fbx",
      "loop": false,
      "seconds": 0.7
     },
     "Walk": {
-     "name": "A_Anime_Cast_Walk",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Walk.fbx",
+     "name": "A_Anime_VroidC_Walk",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Walk.fbx",
      "loop": true,
      "seconds": 1.0,
      "speed": 150.0
     },
     "Run": {
-     "name": "A_Anime_Cast_Run",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Run.fbx",
+     "name": "A_Anime_VroidC_Run",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Run.fbx",
      "loop": true,
      "seconds": 0.7,
-     "speed": 419.9
+     "speed": 420.0
     },
     "Duel": {
-     "name": "A_Anime_Cast_Duel",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Duel.fbx",
+     "name": "A_Anime_VroidC_Duel",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Duel.fbx",
      "loop": true,
      "seconds": 4.0
     },
     "Talk": {
-     "name": "A_Anime_Cast_Talk",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Talk.fbx",
+     "name": "A_Anime_VroidC_Talk",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Talk.fbx",
      "loop": true,
      "seconds": 2.4
     },
     "Swim": {
-     "name": "A_Anime_Cast_Swim",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Swim.fbx",
+     "name": "A_Anime_VroidC_Swim",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Swim.fbx",
      "loop": true,
      "seconds": 1.6
     },
     "Tread": {
-     "name": "A_Anime_Cast_Tread",
-     "file": "Meshes/Characters/Anime/A_Anime_Cast_Tread.fbx",
+     "name": "A_Anime_VroidC_Tread",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidC_Tread.fbx",
      "loop": true,
      "seconds": 2.0
     }
    },
    "duel_disk": {
-    "name": "SK_Anime_Cast_DuelDisk",
-    "file": "Meshes/Characters/Anime/SK_Anime_Cast_DuelDisk.fbx",
+    "name": "SK_Anime_VroidC_DuelDisk",
+    "file": "Meshes/Characters/Anime/SK_Anime_VroidC_DuelDisk.fbx",
+    "materials": [
+     "M_Anime_DuelDisk",
+     "M_Anime_DiskGold",
+     "M_Anime_DiskGlow",
+     "M_Anime_Outline"
+    ]
+   }
+  },
+  "VroidA": {
+   "skeleton_mesh": "SK_Anime_Alexis",
+   "anims": {
+    "Wave": {
+     "name": "A_Anime_VroidA_Wave",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Wave.fbx",
+     "loop": false,
+     "seconds": 1.667
+    },
+    "Yes": {
+     "name": "A_Anime_VroidA_Yes",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Yes.fbx",
+     "loop": false,
+     "seconds": 1.667
+    },
+    "No": {
+     "name": "A_Anime_VroidA_No",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_No.fbx",
+     "loop": false,
+     "seconds": 1.667
+    },
+    "Sit": {
+     "name": "A_Anime_VroidA_Sit",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Sit.fbx",
+     "loop": true,
+     "seconds": 8.333
+    },
+    "Clap": {
+     "name": "A_Anime_VroidA_Clap",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Clap.fbx",
+     "loop": false,
+     "seconds": 1.667
+    },
+    "Interact": {
+     "name": "A_Anime_VroidA_Interact",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Interact.fbx",
+     "loop": false,
+     "seconds": 1.267
+    },
+    "Idle": {
+     "name": "A_Anime_VroidA_Idle",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Idle.fbx",
+     "loop": true,
+     "seconds": 8.0
+    },
+    "Jump": {
+     "name": "A_Anime_VroidA_Jump",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Jump.fbx",
+     "loop": false,
+     "seconds": 0.5
+    },
+    "Fall": {
+     "name": "A_Anime_VroidA_Fall",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Fall.fbx",
+     "loop": true,
+     "seconds": 1.2
+    },
+    "Land": {
+     "name": "A_Anime_VroidA_Land",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Land.fbx",
+     "loop": false,
+     "seconds": 0.7
+    },
+    "Walk": {
+     "name": "A_Anime_VroidA_Walk",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Walk.fbx",
+     "loop": true,
+     "seconds": 1.0,
+     "speed": 150.0
+    },
+    "Run": {
+     "name": "A_Anime_VroidA_Run",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Run.fbx",
+     "loop": true,
+     "seconds": 0.7,
+     "speed": 420.3
+    },
+    "Duel": {
+     "name": "A_Anime_VroidA_Duel",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Duel.fbx",
+     "loop": true,
+     "seconds": 4.0
+    },
+    "Talk": {
+     "name": "A_Anime_VroidA_Talk",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Talk.fbx",
+     "loop": true,
+     "seconds": 2.4
+    },
+    "Swim": {
+     "name": "A_Anime_VroidA_Swim",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Swim.fbx",
+     "loop": true,
+     "seconds": 1.6
+    },
+    "Tread": {
+     "name": "A_Anime_VroidA_Tread",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidA_Tread.fbx",
+     "loop": true,
+     "seconds": 2.0
+    }
+   },
+   "duel_disk": {
+    "name": "SK_Anime_VroidA_DuelDisk",
+    "file": "Meshes/Characters/Anime/SK_Anime_VroidA_DuelDisk.fbx",
+    "materials": [
+     "M_Anime_DuelDisk",
+     "M_Anime_DiskGold",
+     "M_Anime_DiskGlow",
+     "M_Anime_Outline"
+    ]
+   }
+  },
+  "VroidB": {
+   "skeleton_mesh": "SK_Anime_Mindy",
+   "anims": {
+    "Wave": {
+     "name": "A_Anime_VroidB_Wave",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Wave.fbx",
+     "loop": false,
+     "seconds": 1.667
+    },
+    "Yes": {
+     "name": "A_Anime_VroidB_Yes",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Yes.fbx",
+     "loop": false,
+     "seconds": 1.667
+    },
+    "No": {
+     "name": "A_Anime_VroidB_No",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_No.fbx",
+     "loop": false,
+     "seconds": 1.667
+    },
+    "Sit": {
+     "name": "A_Anime_VroidB_Sit",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Sit.fbx",
+     "loop": true,
+     "seconds": 8.333
+    },
+    "Clap": {
+     "name": "A_Anime_VroidB_Clap",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Clap.fbx",
+     "loop": false,
+     "seconds": 1.667
+    },
+    "Interact": {
+     "name": "A_Anime_VroidB_Interact",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Interact.fbx",
+     "loop": false,
+     "seconds": 1.267
+    },
+    "Idle": {
+     "name": "A_Anime_VroidB_Idle",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Idle.fbx",
+     "loop": true,
+     "seconds": 8.0
+    },
+    "Jump": {
+     "name": "A_Anime_VroidB_Jump",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Jump.fbx",
+     "loop": false,
+     "seconds": 0.5
+    },
+    "Fall": {
+     "name": "A_Anime_VroidB_Fall",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Fall.fbx",
+     "loop": true,
+     "seconds": 1.2
+    },
+    "Land": {
+     "name": "A_Anime_VroidB_Land",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Land.fbx",
+     "loop": false,
+     "seconds": 0.7
+    },
+    "Walk": {
+     "name": "A_Anime_VroidB_Walk",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Walk.fbx",
+     "loop": true,
+     "seconds": 1.0,
+     "speed": 150.0
+    },
+    "Run": {
+     "name": "A_Anime_VroidB_Run",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Run.fbx",
+     "loop": true,
+     "seconds": 0.7,
+     "speed": 420.2
+    },
+    "Duel": {
+     "name": "A_Anime_VroidB_Duel",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Duel.fbx",
+     "loop": true,
+     "seconds": 4.0
+    },
+    "Talk": {
+     "name": "A_Anime_VroidB_Talk",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Talk.fbx",
+     "loop": true,
+     "seconds": 2.4
+    },
+    "Swim": {
+     "name": "A_Anime_VroidB_Swim",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Swim.fbx",
+     "loop": true,
+     "seconds": 1.6
+    },
+    "Tread": {
+     "name": "A_Anime_VroidB_Tread",
+     "file": "Meshes/Characters/Anime/A_Anime_VroidB_Tread.fbx",
+     "loop": true,
+     "seconds": 2.0
+    }
+   },
+   "duel_disk": {
+    "name": "SK_Anime_VroidB_DuelDisk",
+    "file": "Meshes/Characters/Anime/SK_Anime_VroidB_DuelDisk.fbx",
     "materials": [
      "M_Anime_DuelDisk",
      "M_Anime_DiskGold",
@@ -118,236 +344,407 @@
  "meshes": {
   "student_m1": {
    "name": "SK_Anime_StudentM1",
-   "group": "Cast",
+   "group": "VroidC",
    "display": "Student",
    "dorm": "any",
-   "scale": 0.932,
+   "scale": 0.975,
    "tint": [
     "jacket",
     "hair"
    ],
    "female": false,
    "materials": [
-    "M_Anime_StudentM1_Face",
-    "M_Anime_StudentM1_Skin",
-    "M_Anime_StudentM1_Cloth",
-    "M_Anime_StudentM1_JacketTint",
-    "M_Anime_StudentM1_HairTint",
-    "M_Anime_Outline"
+    "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
+    "M_Anime_StudentM1_M00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidC_M00_000_00_Face_00_SKIN",
+    "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidC_M00_000_00_Body_00_SKIN",
+    "M_Anime_StudentM1_M00_008_03_Tops_01_CLOTH_JacketTint",
+    "M_Anime_StudentM1_M00_008_01_Bottoms_01_CLOTH",
+    "M_Anime_StudentM1_M00_007_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_StudentM1_F00_000_Hair_00_HAIR_HairTint"
    ],
    "file": "Meshes/Characters/Anime/SK_Anime_StudentM1.fbx"
   },
   "jaden": {
-   "name": "SK_Anime_Kaien",
-   "group": "Cast",
+   "name": "SK_Anime_Jaden",
+   "group": "VroidC",
    "display": "Jaden Yuki",
    "dorm": "slifer",
-   "scale": 0.921,
+   "scale": 0.964,
    "tint": [],
    "female": false,
    "materials": [
-    "M_Anime_Kaien_Face",
-    "M_Anime_Kaien_Skin",
-    "M_Anime_Kaien_Cloth",
-    "M_Anime_Kaien_Hair",
-    "M_Anime_Outline"
+    "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
+    "M_Anime_Jaden_M00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidC_M00_000_00_Face_00_SKIN",
+    "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidC_M00_000_00_Body_00_SKIN",
+    "M_Anime_Jaden_M00_008_03_Tops_01_CLOTH",
+    "M_Anime_Jaden_M00_008_01_Bottoms_01_CLOTH",
+    "M_Anime_Jaden_M00_007_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_Jaden_F00_000_Hair_00_HAIR"
    ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Kaien.fbx"
+   "file": "Meshes/Characters/Anime/SK_Anime_Jaden.fbx"
   },
   "syrus": {
-   "name": "SK_Anime_Pim",
-   "group": "Cast",
+   "name": "SK_Anime_Syrus",
+   "group": "VroidC",
    "display": "Syrus Truesdale",
    "dorm": "slifer",
-   "scale": 0.839,
+   "scale": 0.878,
    "tint": [],
    "female": false,
    "materials": [
-    "M_Anime_Pim_Face",
-    "M_Anime_Pim_Skin",
-    "M_Anime_Pim_Cloth",
-    "M_Anime_Pim_Hair",
-    "M_Anime_Outline"
+    "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
+    "M_Anime_Syrus_M00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidC_M00_000_00_Face_00_SKIN",
+    "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidC_M00_000_00_Body_00_SKIN",
+    "M_Anime_Syrus_M00_008_03_Tops_01_CLOTH",
+    "M_Anime_Syrus_M00_008_01_Bottoms_01_CLOTH",
+    "M_Anime_Syrus_M00_007_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_Syrus_F00_000_Hair_00_HAIR",
+    "M_Anime_Syrus_Glasses"
    ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Pim.fbx"
+   "file": "Meshes/Characters/Anime/SK_Anime_Syrus.fbx"
   },
   "chumley": {
-   "name": "SK_Anime_Bram",
-   "group": "Cast",
+   "name": "SK_Anime_Chumley",
+   "group": "VroidC",
    "display": "Chumley Huffington",
    "dorm": "slifer",
-   "scale": 0.938,
+   "scale": 0.981,
    "tint": [],
    "female": false,
    "materials": [
-    "M_Anime_Bram_Face",
-    "M_Anime_Bram_Skin",
-    "M_Anime_Bram_Cloth",
-    "M_Anime_Bram_Hair",
-    "M_Anime_Outline"
+    "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
+    "M_Anime_Chumley_M00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidC_M00_000_00_Face_00_SKIN",
+    "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidC_M00_000_00_Body_00_SKIN",
+    "M_Anime_Chumley_M00_008_03_Tops_01_CLOTH",
+    "M_Anime_Chumley_M00_008_01_Bottoms_01_CLOTH",
+    "M_Anime_Chumley_M00_007_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_Chumley_F00_000_Hair_00_HAIR"
    ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Bram.fbx"
+   "file": "Meshes/Characters/Anime/SK_Anime_Chumley.fbx"
   },
   "bastion": {
-   "name": "SK_Anime_Leoric",
-   "group": "Cast",
+   "name": "SK_Anime_Bastion",
+   "group": "VroidC",
    "display": "Bastion Misawa",
    "dorm": "ra",
-   "scale": 0.965,
+   "scale": 1.01,
    "tint": [],
    "female": false,
    "materials": [
-    "M_Anime_Leoric_Face",
-    "M_Anime_Leoric_Skin",
-    "M_Anime_Leoric_Cloth",
-    "M_Anime_Leoric_Hair",
-    "M_Anime_Outline"
+    "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
+    "M_Anime_Bastion_M00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidC_M00_000_00_Face_00_SKIN",
+    "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidC_M00_000_00_Body_00_SKIN",
+    "M_Anime_Bastion_M00_008_03_Tops_01_CLOTH",
+    "M_Anime_Bastion_M00_008_01_Bottoms_01_CLOTH",
+    "M_Anime_Bastion_M00_007_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_Bastion_F00_000_Hair_00_HAIR"
    ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Leoric.fbx"
+   "file": "Meshes/Characters/Anime/SK_Anime_Bastion.fbx"
   },
   "chazz": {
-   "name": "SK_Anime_Rook",
-   "group": "Cast",
+   "name": "SK_Anime_Chazz",
+   "group": "VroidC",
    "display": "Chazz Princeton",
    "dorm": "obelisk",
-   "scale": 0.954,
+   "scale": 0.998,
    "tint": [],
    "female": false,
    "materials": [
-    "M_Anime_Rook_Face",
-    "M_Anime_Rook_Skin",
-    "M_Anime_Rook_Cloth",
-    "M_Anime_Rook_Hair",
-    "M_Anime_Outline"
+    "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
+    "M_Anime_Chazz_M00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidC_M00_000_00_Face_00_SKIN",
+    "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidC_M00_000_00_Body_00_SKIN",
+    "M_Anime_Chazz_M00_007_01_Shoes_01_CLOTH",
+    "M_Anime_Chazz_Pants",
+    "M_Anime_Chazz_Shirt",
+    "M_Anime_Chazz_Jacket",
+    "M_Anime_Chazz_Collar",
+    "M_Anime_Outline",
+    "M_Anime_Chazz_F00_000_Hair_00_HAIR"
    ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Rook.fbx"
+   "file": "Meshes/Characters/Anime/SK_Anime_Chazz.fbx"
   },
   "zane": {
-   "name": "SK_Anime_Aurel",
-   "group": "Cast",
+   "name": "SK_Anime_Zane",
+   "group": "VroidC",
    "display": "Zane Truesdale",
    "dorm": "obelisk",
-   "scale": 1.003,
+   "scale": 1.05,
    "tint": [],
    "female": false,
    "materials": [
-    "M_Anime_Aurel_Face",
-    "M_Anime_Aurel_Skin",
-    "M_Anime_Aurel_Cloth",
-    "M_Anime_Aurel_Hair",
-    "M_Anime_Outline"
+    "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
+    "M_Anime_Zane_M00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidC_M00_000_00_Face_00_SKIN",
+    "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidC_M00_000_00_Body_00_SKIN",
+    "M_Anime_Zane_M00_008_03_Tops_01_CLOTH",
+    "M_Anime_Zane_M00_008_01_Bottoms_01_CLOTH",
+    "M_Anime_Zane_M00_007_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_Zane_F00_000_Hair_00_HAIR",
+    "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_01",
+    "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_02",
+    "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_03",
+    "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_04",
+    "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_05",
+    "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_06"
    ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Aurel.fbx"
-  },
-  "alexis": {
-   "name": "SK_Anime_Selene",
-   "group": "Cast",
-   "display": "Alexis Rhodes",
-   "dorm": "obelisk",
-   "scale": 0.879,
-   "tint": [],
-   "female": true,
-   "materials": [
-    "M_Anime_Selene_Face",
-    "M_Anime_Selene_Skin",
-    "M_Anime_Selene_Cloth",
-    "M_Anime_Selene_Hair",
-    "M_Anime_Outline"
-   ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Selene.fbx"
-  },
-  "jasmine": {
-   "name": "SK_Anime_Wren",
-   "group": "Cast",
-   "display": "Jasmine",
-   "dorm": "obelisk",
-   "scale": 0.868,
-   "tint": [],
-   "female": true,
-   "materials": [
-    "M_Anime_Wren_Face",
-    "M_Anime_Wren_Skin",
-    "M_Anime_Wren_Cloth",
-    "M_Anime_Wren_Hair",
-    "M_Anime_Outline"
-   ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Wren.fbx"
-  },
-  "mindy": {
-   "name": "SK_Anime_Odile",
-   "group": "Cast",
-   "display": "Mindy",
-   "dorm": "obelisk",
-   "scale": 0.857,
-   "tint": [],
-   "female": true,
-   "materials": [
-    "M_Anime_Odile_Face",
-    "M_Anime_Odile_Skin",
-    "M_Anime_Odile_Cloth",
-    "M_Anime_Odile_Hair",
-    "M_Anime_Outline"
-   ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Odile.fbx"
+   "file": "Meshes/Characters/Anime/SK_Anime_Zane.fbx"
   },
   "crowler": {
-   "name": "SK_Anime_Valmont",
-   "group": "Cast",
+   "name": "SK_Anime_Crowler",
+   "group": "VroidC",
    "display": "Dr. Vellian Crowler",
    "dorm": "teacher",
-   "scale": 1.02,
+   "scale": 1.067,
    "tint": [],
    "female": false,
    "materials": [
-    "M_Anime_Valmont_Face",
-    "M_Anime_Valmont_Skin",
-    "M_Anime_Valmont_Cloth",
-    "M_Anime_Valmont_Hair",
-    "M_Anime_Outline"
+    "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE",
+    "M_Anime_Crowler_M00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidC_M00_000_00_Face_00_SKIN",
+    "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidC_M00_000_00_Body_00_SKIN",
+    "M_Anime_Crowler_M00_007_01_Shoes_01_CLOTH",
+    "M_Anime_Crowler_Pants",
+    "M_Anime_Crowler_Shirt",
+    "M_Anime_Crowler_Jacket",
+    "M_Anime_Crowler_Collar",
+    "M_Anime_Outline",
+    "M_Anime_Crowler_F00_000_Hair_00_HAIR",
+    "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_01",
+    "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_02",
+    "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_03",
+    "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_04",
+    "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_05",
+    "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_06"
    ],
-   "file": "Meshes/Characters/Anime/SK_Anime_Valmont.fbx"
+   "file": "Meshes/Characters/Anime/SK_Anime_Crowler.fbx"
+  },
+  "alexis": {
+   "name": "SK_Anime_Alexis",
+   "group": "VroidA",
+   "display": "Alexis Rhodes",
+   "dorm": "obelisk",
+   "scale": 1.045,
+   "tint": [],
+   "female": true,
+   "materials": [
+    "M_Anime_VroidA_F00_000_00_FaceMouth_00_FACE",
+    "M_Anime_VroidA_F00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidA_F00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidA_F00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidA_F00_000_00_FaceBrow_00_FACE",
+    "M_Anime_Alexis_F00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidA_F00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidA_F00_000_00_Face_00_SKIN",
+    "M_Anime_VroidA_F00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidA_F00_000_00_Body_00_SKIN",
+    "M_Anime_Alexis_F00_006_01_Tops_01_CLOTH",
+    "M_Anime_Alexis_F00_008_01_Bottoms_01_CLOTH",
+    "M_Anime_Alexis_F00_001_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_Alexis_F00_000_Hair_00_HAIR_01",
+    "M_Anime_Alexis_F00_000_Hair_00_HAIR_02",
+    "M_Anime_Alexis_F00_000_Hair_00_HAIR_03",
+    "M_Anime_Alexis_F00_000_Hair_00_HAIR_04",
+    "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_01",
+    "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_02",
+    "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_03",
+    "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_04",
+    "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_05",
+    "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_06"
+   ],
+   "file": "Meshes/Characters/Anime/SK_Anime_Alexis.fbx"
+  },
+  "jasmine": {
+   "name": "SK_Anime_Jasmine",
+   "group": "VroidA",
+   "display": "Jasmine",
+   "dorm": "obelisk",
+   "scale": 1.032,
+   "tint": [],
+   "female": true,
+   "materials": [
+    "M_Anime_VroidA_F00_000_00_FaceMouth_00_FACE",
+    "M_Anime_VroidA_F00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidA_F00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidA_F00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidA_F00_000_00_FaceBrow_00_FACE",
+    "M_Anime_Jasmine_F00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidA_F00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidA_F00_000_00_Face_00_SKIN",
+    "M_Anime_VroidA_F00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidA_F00_000_00_Body_00_SKIN",
+    "M_Anime_Jasmine_F00_006_01_Tops_01_CLOTH",
+    "M_Anime_Jasmine_F00_008_01_Bottoms_01_CLOTH",
+    "M_Anime_Jasmine_F00_001_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_Jasmine_F00_000_Hair_00_HAIR_01",
+    "M_Anime_Jasmine_F00_000_Hair_00_HAIR_02",
+    "M_Anime_Jasmine_F00_000_Hair_00_HAIR_03",
+    "M_Anime_Jasmine_F00_000_Hair_00_HAIR_04"
+   ],
+   "file": "Meshes/Characters/Anime/SK_Anime_Jasmine.fbx"
   },
   "student_f1": {
    "name": "SK_Anime_StudentF1",
-   "group": "Cast",
+   "group": "VroidA",
    "display": "Student",
    "dorm": "any",
-   "scale": 0.868,
+   "scale": 1.032,
    "tint": [
     "hair"
    ],
    "female": true,
    "materials": [
-    "M_Anime_StudentF1_Face",
-    "M_Anime_StudentF1_Skin",
-    "M_Anime_StudentF1_Cloth",
-    "M_Anime_StudentF1_HairTint",
-    "M_Anime_Outline"
+    "M_Anime_VroidA_F00_000_00_FaceMouth_00_FACE",
+    "M_Anime_VroidA_F00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidA_F00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidA_F00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidA_F00_000_00_FaceBrow_00_FACE",
+    "M_Anime_StudentF1_F00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidA_F00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidA_F00_000_00_Face_00_SKIN",
+    "M_Anime_VroidA_F00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidA_F00_000_00_Body_00_SKIN",
+    "M_Anime_StudentF1_F00_006_01_Tops_01_CLOTH",
+    "M_Anime_StudentF1_F00_008_01_Bottoms_01_CLOTH",
+    "M_Anime_StudentF1_F00_001_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_StudentF1_F00_000_Hair_00_HAIR_01_HairTint",
+    "M_Anime_StudentF1_F00_000_Hair_00_HAIR_02_HairTint",
+    "M_Anime_StudentF1_F00_000_Hair_00_HAIR_03_HairTint",
+    "M_Anime_StudentF1_F00_000_Hair_00_HAIR_04_HairTint"
    ],
    "file": "Meshes/Characters/Anime/SK_Anime_StudentF1.fbx"
   },
+  "mindy": {
+   "name": "SK_Anime_Mindy",
+   "group": "VroidB",
+   "display": "Mindy",
+   "dorm": "obelisk",
+   "scale": 1.046,
+   "tint": [],
+   "female": true,
+   "materials": [
+    "M_Anime_VroidB_F00_000_00_FaceMouth_00_FACE",
+    "M_Anime_VroidB_F00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidB_F00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidB_F00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidB_F00_000_00_FaceBrow_00_FACE",
+    "M_Anime_Mindy_F00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidB_F00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidB_F00_000_00_Face_00_SKIN",
+    "M_Anime_VroidB_F00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidB_F00_000_00_Body_00_SKIN",
+    "M_Anime_Mindy_F00_008_01_Tops_01_CLOTH",
+    "M_Anime_Mindy_F00_001_01_Bottoms_01_CLOTH",
+    "M_Anime_Mindy_F00_006_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_Mindy_F00_000_Hair_00_HAIR_01",
+    "M_Anime_Mindy_F00_000_Hair_00_HAIR_02",
+    "M_Anime_Mindy_F00_000_Hair_00_HAIR_03",
+    "M_Anime_Mindy_F00_000_Hair_00_HAIR_04",
+    "M_Anime_Mindy_F00_000_Hair_00_HAIR_05",
+    "M_Anime_Mindy_F00_000_Hair_00_HAIR_06"
+   ],
+   "file": "Meshes/Characters/Anime/SK_Anime_Mindy.fbx"
+  },
   "student_f2": {
    "name": "SK_Anime_StudentF2",
-   "group": "Cast",
+   "group": "VroidB",
    "display": "Student",
    "dorm": "any",
-   "scale": 0.868,
+   "scale": 1.059,
    "tint": [
     "hair"
    ],
    "female": true,
    "materials": [
-    "M_Anime_StudentF2_Face",
-    "M_Anime_StudentF2_Skin",
-    "M_Anime_StudentF2_Cloth",
-    "M_Anime_StudentF2_HairTint",
-    "M_Anime_Outline"
+    "M_Anime_VroidB_F00_000_00_FaceMouth_00_FACE",
+    "M_Anime_VroidB_F00_000_00_EyeWhite_00_EYE",
+    "M_Anime_VroidB_F00_000_00_FaceEyeline_00_FACE",
+    "M_Anime_VroidB_F00_000_00_FaceEyelash_00_FACE",
+    "M_Anime_VroidB_F00_000_00_FaceBrow_00_FACE",
+    "M_Anime_StudentF2_F00_000_00_EyeIris_00_EYE",
+    "M_Anime_VroidB_F00_000_00_EyeHighlight_00_EYE",
+    "M_Anime_VroidB_F00_000_00_Face_00_SKIN",
+    "M_Anime_VroidB_F00_000_00_EyeExtra_01_EYE",
+    "M_Anime_VroidB_F00_000_00_Body_00_SKIN",
+    "M_Anime_StudentF2_F00_008_01_Tops_01_CLOTH",
+    "M_Anime_StudentF2_F00_001_01_Bottoms_01_CLOTH",
+    "M_Anime_StudentF2_F00_006_01_Shoes_01_CLOTH",
+    "M_Anime_Outline",
+    "M_Anime_StudentF2_F00_000_Hair_00_HAIR_01_HairTint",
+    "M_Anime_StudentF2_F00_000_Hair_00_HAIR_02_HairTint",
+    "M_Anime_StudentF2_F00_000_Hair_00_HAIR_03_HairTint",
+    "M_Anime_StudentF2_F00_000_Hair_00_HAIR_04_HairTint",
+    "M_Anime_StudentF2_F00_000_Hair_00_HAIR_05_HairTint",
+    "M_Anime_StudentF2_F00_000_Hair_00_HAIR_06_HairTint"
    ],
    "file": "Meshes/Characters/Anime/SK_Anime_StudentF2.fbx"
   }
  },
  "materials": {
-  "M_Anime_Aurel_Cloth": {
+  "M_Anime_Alexis_F00_000_00_EyeIris_00_EYE": {
    "kind": "cel",
    "color": [
     1.0,
@@ -355,8 +752,175 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Aurel/T_Anime_Aurel_Cloth",
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Alexis/T_Alexis_F00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Alexis_F00_000_Hair_00_HAIR_01": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_01",
+   "base": "Characters/Alexis/T_Alexis_F00_000_Hair_00_HAIR_01",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Alexis_F00_000_Hair_00_HAIR_02": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_02",
+   "base": "Characters/Alexis/T_Alexis_F00_000_Hair_00_HAIR_02",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Alexis_F00_000_Hair_00_HAIR_03": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_03",
+   "base": "Characters/Alexis/T_Alexis_F00_000_Hair_00_HAIR_03",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Alexis_F00_000_Hair_00_HAIR_04": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_04",
+   "base": "Characters/Alexis/T_Alexis_F00_000_Hair_00_HAIR_04",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Alexis_F00_001_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_001_01_Shoes_01_CLOTH",
+   "base": "Characters/Alexis/T_Alexis_F00_001_01_Shoes_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -378,38 +942,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_Aurel_Face": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Aurel/T_Anime_Aurel_Face",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
-   "shadow": [
-    0.96,
-    0.76,
-    0.72
-   ],
-   "rim": 0.12,
-   "spec": 0.0,
-   "cel": "face"
-  },
-  "M_Anime_Aurel_Hair": {
+  "M_Anime_Alexis_F00_006_01_Tops_01_CLOTH": {
    "kind": "cel",
    "color": [
     1.0,
@@ -418,69 +951,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Aurel/T_Anime_Aurel_Hair",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.48,
-   "soft": 0.03,
-   "shadow": [
-    0.58,
-    0.58,
-    0.74
-   ],
-   "rim": 0.3,
-   "spec": 0.0,
-   "cel": "hair"
-  },
-  "M_Anime_Aurel_Skin": {
-   "kind": "cel",
-   "color": [
-    0.99,
-    0.85,
-    0.74
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    0.9774019338064516,
-    0.692071056865372,
-    0.5070785101492276
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.035,
-   "shadow": [
-    0.94,
-    0.7,
-    0.66
-   ],
-   "rim": 0.22,
-   "spec": 0.0,
-   "cel": "skin"
-  },
-  "M_Anime_Bram_Cloth": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Bram/T_Anime_Bram_Cloth",
+   "source_material": "F00_006_01_Tops_01_CLOTH",
+   "base": "Characters/Alexis/T_Alexis_F00_006_01_Tops_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -502,7 +975,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_Bram_Face": {
+  "M_Anime_Alexis_F00_008_01_Bottoms_01_CLOTH": {
    "kind": "cel",
    "color": [
     1.0,
@@ -510,8 +983,10 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Bram/T_Anime_Bram_Face",
+   "fill": 0.45,
+   "source_material": "F00_008_01_Bottoms_01_CLOTH",
+   "base": "Characters/Alexis/T_Alexis_F00_008_01_Bottoms_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -522,18 +997,18 @@
    "tiling": 1.0,
    "strength": 1.0,
    "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
+   "threshold": 0.5,
+   "soft": 0.03,
    "shadow": [
-    0.96,
-    0.76,
-    0.72
+    0.62,
+    0.64,
+    0.82
    ],
-   "rim": 0.12,
+   "rim": 0.18,
    "spec": 0.0,
-   "cel": "face"
+   "cel": "cloth"
   },
-  "M_Anime_Bram_Hair": {
+  "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_01": {
    "kind": "cel",
    "color": [
     1.0,
@@ -542,8 +1017,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Bram/T_Anime_Bram_Hair",
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_01",
+   "base": "Characters/Alexis/T_Alexis_vroid_b_F00_000_Hair_00_HAIR_01",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -562,22 +1038,256 @@
     0.74
    ],
    "rim": 0.3,
-   "spec": 0.0,
+   "spec": 0.45,
    "cel": "hair"
   },
-  "M_Anime_Bram_Skin": {
+  "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_02": {
    "kind": "cel",
    "color": [
-    0.99,
-    0.85,
-    0.74
+    1.0,
+    1.0,
+    1.0
    ],
    "rough": 0.85,
-   "fill": 0.5,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_02",
+   "base": "Characters/Alexis/T_Alexis_vroid_b_F00_000_Hair_00_HAIR_02",
+   "masked": true,
    "color_linear": [
-    0.9774019338064516,
-    0.692071056865372,
-    0.5070785101492276
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_03": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_03",
+   "base": "Characters/Alexis/T_Alexis_vroid_b_F00_000_Hair_00_HAIR_03",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_04": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_04",
+   "base": "Characters/Alexis/T_Alexis_vroid_b_F00_000_Hair_00_HAIR_04",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_05": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_05",
+   "base": "Characters/Alexis/T_Alexis_vroid_b_F00_000_Hair_00_HAIR_05",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Alexis_vroid_b_F00_000_Hair_00_HAIR_06": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_06",
+   "base": "Characters/Alexis/T_Alexis_vroid_b_F00_000_Hair_00_HAIR_06",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Bastion_F00_000_Hair_00_HAIR": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR",
+   "base": "Characters/Bastion/T_Bastion_F00_000_Hair_00_HAIR",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Bastion_M00_000_00_EyeIris_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Bastion/T_Bastion_M00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Bastion_M00_007_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_007_01_Shoes_01_CLOTH",
+   "base": "Characters/Bastion/T_Bastion_M00_007_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
    ],
    "metallic": 0.0,
    "detail": null,
@@ -585,15 +1295,892 @@
    "strength": 1.0,
    "opacity": 1.0,
    "threshold": 0.5,
-   "soft": 0.035,
+   "soft": 0.03,
    "shadow": [
-    0.94,
-    0.7,
-    0.66
+    0.62,
+    0.64,
+    0.82
    ],
-   "rim": 0.22,
+   "rim": 0.18,
    "spec": 0.0,
-   "cel": "skin"
+   "cel": "cloth"
+  },
+  "M_Anime_Bastion_M00_008_01_Bottoms_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_008_01_Bottoms_01_CLOTH",
+   "base": "Characters/Bastion/T_Bastion_M00_008_01_Bottoms_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Bastion_M00_008_03_Tops_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_008_03_Tops_01_CLOTH",
+   "base": "Characters/Bastion/T_Bastion_M00_008_03_Tops_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Chazz_Collar": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Chazz/T_Chazz_Collar",
+   "masked": false,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Chazz_F00_000_Hair_00_HAIR": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR",
+   "base": "Characters/Chazz/T_Chazz_F00_000_Hair_00_HAIR",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Chazz_Jacket": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Chazz/T_Chazz_Jacket",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Chazz_M00_000_00_EyeIris_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Chazz/T_Chazz_M00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Chazz_M00_007_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_007_01_Shoes_01_CLOTH",
+   "base": "Characters/Chazz/T_Chazz_M00_007_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Chazz_Pants": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Chazz/T_Chazz_Pants",
+   "masked": false,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Chazz_Shirt": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Chazz/T_Chazz_Shirt",
+   "masked": false,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Chumley_F00_000_Hair_00_HAIR": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR",
+   "base": "Characters/Chumley/T_Chumley_F00_000_Hair_00_HAIR",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Chumley_M00_000_00_EyeIris_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Chumley/T_Chumley_M00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Chumley_M00_007_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_007_01_Shoes_01_CLOTH",
+   "base": "Characters/Chumley/T_Chumley_M00_007_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Chumley_M00_008_01_Bottoms_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_008_01_Bottoms_01_CLOTH",
+   "base": "Characters/Chumley/T_Chumley_M00_008_01_Bottoms_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Chumley_M00_008_03_Tops_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_008_03_Tops_01_CLOTH",
+   "base": "Characters/Chumley/T_Chumley_M00_008_03_Tops_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Crowler_Collar": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Crowler/T_Crowler_Collar",
+   "masked": false,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Crowler_F00_000_Hair_00_HAIR": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR",
+   "base": "Characters/Crowler/T_Crowler_F00_000_Hair_00_HAIR",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Crowler_Jacket": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Crowler/T_Crowler_Jacket",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Crowler_M00_000_00_EyeIris_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Crowler/T_Crowler_M00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Crowler_M00_007_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_007_01_Shoes_01_CLOTH",
+   "base": "Characters/Crowler/T_Crowler_M00_007_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Crowler_Pants": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Crowler/T_Crowler_Pants",
+   "masked": false,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Crowler_Shirt": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "base": "Characters/Crowler/T_Crowler_Shirt",
+   "masked": false,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_01": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_01",
+   "base": "Characters/Crowler/T_Crowler_vroid_b_F00_000_Hair_00_HAIR_01",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_02": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_02",
+   "base": "Characters/Crowler/T_Crowler_vroid_b_F00_000_Hair_00_HAIR_02",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_03": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_03",
+   "base": "Characters/Crowler/T_Crowler_vroid_b_F00_000_Hair_00_HAIR_03",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_04": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_04",
+   "base": "Characters/Crowler/T_Crowler_vroid_b_F00_000_Hair_00_HAIR_04",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_05": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_05",
+   "base": "Characters/Crowler/T_Crowler_vroid_b_F00_000_Hair_00_HAIR_05",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Crowler_vroid_b_F00_000_Hair_00_HAIR_06": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_06",
+   "base": "Characters/Crowler/T_Crowler_vroid_b_F00_000_Hair_00_HAIR_06",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
   },
   "M_Anime_DiskGlow": {
    "kind": "emissive",
@@ -674,7 +2261,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_Kaien_Cloth": {
+  "M_Anime_Jaden_F00_000_Hair_00_HAIR": {
    "kind": "cel",
    "color": [
     1.0,
@@ -682,8 +2269,76 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Kaien/T_Anime_Kaien_Cloth",
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR",
+   "base": "Characters/Jaden/T_Jaden_F00_000_Hair_00_HAIR",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Jaden_M00_000_00_EyeIris_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Jaden/T_Jaden_M00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Jaden_M00_007_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_007_01_Shoes_01_CLOTH",
+   "base": "Characters/Jaden/T_Jaden_M00_007_01_Shoes_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -705,38 +2360,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_Kaien_Face": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Kaien/T_Anime_Kaien_Face",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
-   "shadow": [
-    0.96,
-    0.76,
-    0.72
-   ],
-   "rim": 0.12,
-   "spec": 0.0,
-   "cel": "face"
-  },
-  "M_Anime_Kaien_Hair": {
+  "M_Anime_Jaden_M00_008_01_Bottoms_01_CLOTH": {
    "kind": "cel",
    "color": [
     1.0,
@@ -745,69 +2369,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Kaien/T_Anime_Kaien_Hair",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.48,
-   "soft": 0.03,
-   "shadow": [
-    0.58,
-    0.58,
-    0.74
-   ],
-   "rim": 0.3,
-   "spec": 0.0,
-   "cel": "hair"
-  },
-  "M_Anime_Kaien_Skin": {
-   "kind": "cel",
-   "color": [
-    0.99,
-    0.85,
-    0.74
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    0.9774019338064516,
-    0.692071056865372,
-    0.5070785101492276
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.035,
-   "shadow": [
-    0.94,
-    0.7,
-    0.66
-   ],
-   "rim": 0.22,
-   "spec": 0.0,
-   "cel": "skin"
-  },
-  "M_Anime_Leoric_Cloth": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Leoric/T_Anime_Leoric_Cloth",
+   "source_material": "M00_008_01_Bottoms_01_CLOTH",
+   "base": "Characters/Jaden/T_Jaden_M00_008_01_Bottoms_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -829,38 +2393,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_Leoric_Face": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Leoric/T_Anime_Leoric_Face",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
-   "shadow": [
-    0.96,
-    0.76,
-    0.72
-   ],
-   "rim": 0.12,
-   "spec": 0.0,
-   "cel": "face"
-  },
-  "M_Anime_Leoric_Hair": {
+  "M_Anime_Jaden_M00_008_03_Tops_01_CLOTH": {
    "kind": "cel",
    "color": [
     1.0,
@@ -869,69 +2402,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Leoric/T_Anime_Leoric_Hair",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.48,
-   "soft": 0.03,
-   "shadow": [
-    0.58,
-    0.58,
-    0.74
-   ],
-   "rim": 0.3,
-   "spec": 0.0,
-   "cel": "hair"
-  },
-  "M_Anime_Leoric_Skin": {
-   "kind": "cel",
-   "color": [
-    0.99,
-    0.85,
-    0.74
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    0.9774019338064516,
-    0.692071056865372,
-    0.5070785101492276
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.035,
-   "shadow": [
-    0.94,
-    0.7,
-    0.66
-   ],
-   "rim": 0.22,
-   "spec": 0.0,
-   "cel": "skin"
-  },
-  "M_Anime_Odile_Cloth": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Odile/T_Anime_Odile_Cloth",
+   "source_material": "M00_008_03_Tops_01_CLOTH",
+   "base": "Characters/Jaden/T_Jaden_M00_008_03_Tops_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -953,7 +2426,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_Odile_Face": {
+  "M_Anime_Jasmine_F00_000_00_EyeIris_00_EYE": {
    "kind": "cel",
    "color": [
     1.0,
@@ -961,8 +2434,10 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Odile/T_Anime_Odile_Face",
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Jasmine/T_Jasmine_F00_000_00_EyeIris_00_EYE",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -973,18 +2448,18 @@
    "tiling": 1.0,
    "strength": 1.0,
    "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
+   "threshold": -1.0,
+   "soft": 0.0,
    "shadow": [
-    0.96,
-    0.76,
-    0.72
+    1.0,
+    1.0,
+    1.0
    ],
-   "rim": 0.12,
+   "rim": 0.0,
    "spec": 0.0,
-   "cel": "face"
+   "cel": "flat"
   },
-  "M_Anime_Odile_Hair": {
+  "M_Anime_Jasmine_F00_000_Hair_00_HAIR_01": {
    "kind": "cel",
    "color": [
     1.0,
@@ -993,8 +2468,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Odile/T_Anime_Odile_Hair",
+   "source_material": "F00_000_Hair_00_HAIR_01",
+   "base": "Characters/Jasmine/T_Jasmine_F00_000_Hair_00_HAIR_01",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1013,22 +2489,124 @@
     0.74
    ],
    "rim": 0.3,
-   "spec": 0.0,
+   "spec": 0.45,
    "cel": "hair"
   },
-  "M_Anime_Odile_Skin": {
+  "M_Anime_Jasmine_F00_000_Hair_00_HAIR_02": {
    "kind": "cel",
    "color": [
     1.0,
-    0.9,
-    0.82
+    1.0,
+    1.0
    ],
    "rough": 0.85,
-   "fill": 0.5,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_02",
+   "base": "Characters/Jasmine/T_Jasmine_F00_000_Hair_00_HAIR_02",
+   "masked": true,
    "color_linear": [
     1.0,
-    0.7874122893956174,
-    0.6382832153523972
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Jasmine_F00_000_Hair_00_HAIR_03": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_03",
+   "base": "Characters/Jasmine/T_Jasmine_F00_000_Hair_00_HAIR_03",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Jasmine_F00_000_Hair_00_HAIR_04": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_04",
+   "base": "Characters/Jasmine/T_Jasmine_F00_000_Hair_00_HAIR_04",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Jasmine_F00_001_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_001_01_Shoes_01_CLOTH",
+   "base": "Characters/Jasmine/T_Jasmine_F00_001_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
    ],
    "metallic": 0.0,
    "detail": null,
@@ -1036,27 +2614,423 @@
    "strength": 1.0,
    "opacity": 1.0,
    "threshold": 0.5,
-   "soft": 0.035,
+   "soft": 0.03,
    "shadow": [
-    0.94,
-    0.7,
-    0.66
+    0.62,
+    0.64,
+    0.82
    ],
-   "rim": 0.22,
+   "rim": 0.18,
    "spec": 0.0,
-   "cel": "skin"
+   "cel": "cloth"
+  },
+  "M_Anime_Jasmine_F00_006_01_Tops_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_006_01_Tops_01_CLOTH",
+   "base": "Characters/Jasmine/T_Jasmine_F00_006_01_Tops_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Jasmine_F00_008_01_Bottoms_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_008_01_Bottoms_01_CLOTH",
+   "base": "Characters/Jasmine/T_Jasmine_F00_008_01_Bottoms_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Mindy_F00_000_00_EyeIris_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Mindy/T_Mindy_F00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Mindy_F00_000_Hair_00_HAIR_01": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_01",
+   "base": "Characters/Mindy/T_Mindy_F00_000_Hair_00_HAIR_01",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Mindy_F00_000_Hair_00_HAIR_02": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_02",
+   "base": "Characters/Mindy/T_Mindy_F00_000_Hair_00_HAIR_02",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Mindy_F00_000_Hair_00_HAIR_03": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_03",
+   "base": "Characters/Mindy/T_Mindy_F00_000_Hair_00_HAIR_03",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Mindy_F00_000_Hair_00_HAIR_04": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_04",
+   "base": "Characters/Mindy/T_Mindy_F00_000_Hair_00_HAIR_04",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Mindy_F00_000_Hair_00_HAIR_05": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_05",
+   "base": "Characters/Mindy/T_Mindy_F00_000_Hair_00_HAIR_05",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Mindy_F00_000_Hair_00_HAIR_06": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_06",
+   "base": "Characters/Mindy/T_Mindy_F00_000_Hair_00_HAIR_06",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Mindy_F00_001_01_Bottoms_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_001_01_Bottoms_01_CLOTH",
+   "base": "Characters/Mindy/T_Mindy_F00_001_01_Bottoms_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Mindy_F00_006_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_006_01_Shoes_01_CLOTH",
+   "base": "Characters/Mindy/T_Mindy_F00_006_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Mindy_F00_008_01_Tops_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_008_01_Tops_01_CLOTH",
+   "base": "Characters/Mindy/T_Mindy_F00_008_01_Tops_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
   },
   "M_Anime_Outline": {
    "kind": "outline",
    "color": [
-    0.16,
     0.09,
-    0.1
+    0.06,
+    0.07
    ],
    "color_linear": [
-    0.021980947079887205,
     0.008540382112116999,
-    0.010022825574869039
+    0.004896310081623859,
+    0.00598105957261676
    ],
    "rough": 0.8,
    "metallic": 0.0,
@@ -1065,7 +3039,7 @@
    "strength": 1.0,
    "opacity": 1.0
   },
-  "M_Anime_Pim_Cloth": {
+  "M_Anime_StudentF1_F00_000_00_EyeIris_00_EYE": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1073,8 +3047,175 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Pim/T_Anime_Pim_Cloth",
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeIris_00_EYE",
+   "base": "Characters/StudentF1/T_StudentF1_F00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_StudentF1_F00_000_Hair_00_HAIR_01_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_01",
+   "base": "Characters/StudentF1/T_StudentF1_F00_000_Hair_00_HAIR_01",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF1_F00_000_Hair_00_HAIR_02_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_02",
+   "base": "Characters/StudentF1/T_StudentF1_F00_000_Hair_00_HAIR_02",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF1_F00_000_Hair_00_HAIR_03_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_03",
+   "base": "Characters/StudentF1/T_StudentF1_F00_000_Hair_00_HAIR_03",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF1_F00_000_Hair_00_HAIR_04_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_04",
+   "base": "Characters/StudentF1/T_StudentF1_F00_000_Hair_00_HAIR_04",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF1_F00_001_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_001_01_Shoes_01_CLOTH",
+   "base": "Characters/StudentF1/T_StudentF1_F00_001_01_Shoes_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1096,7 +3237,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_Pim_Face": {
+  "M_Anime_StudentF1_F00_006_01_Tops_01_CLOTH": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1104,8 +3245,1027 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Pim/T_Anime_Pim_Face",
+   "fill": 0.45,
+   "source_material": "F00_006_01_Tops_01_CLOTH",
+   "base": "Characters/StudentF1/T_StudentF1_F00_006_01_Tops_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_StudentF1_F00_008_01_Bottoms_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_008_01_Bottoms_01_CLOTH",
+   "base": "Characters/StudentF1/T_StudentF1_F00_008_01_Bottoms_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_StudentF2_F00_000_00_EyeIris_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeIris_00_EYE",
+   "base": "Characters/StudentF2/T_StudentF2_F00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_StudentF2_F00_000_Hair_00_HAIR_01_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_01",
+   "base": "Characters/StudentF2/T_StudentF2_F00_000_Hair_00_HAIR_01",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF2_F00_000_Hair_00_HAIR_02_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_02",
+   "base": "Characters/StudentF2/T_StudentF2_F00_000_Hair_00_HAIR_02",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF2_F00_000_Hair_00_HAIR_03_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_03",
+   "base": "Characters/StudentF2/T_StudentF2_F00_000_Hair_00_HAIR_03",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF2_F00_000_Hair_00_HAIR_04_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_04",
+   "base": "Characters/StudentF2/T_StudentF2_F00_000_Hair_00_HAIR_04",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF2_F00_000_Hair_00_HAIR_05_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_05",
+   "base": "Characters/StudentF2/T_StudentF2_F00_000_Hair_00_HAIR_05",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF2_F00_000_Hair_00_HAIR_06_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR_06",
+   "base": "Characters/StudentF2/T_StudentF2_F00_000_Hair_00_HAIR_06",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentF2_F00_001_01_Bottoms_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_001_01_Bottoms_01_CLOTH",
+   "base": "Characters/StudentF2/T_StudentF2_F00_001_01_Bottoms_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_StudentF2_F00_006_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_006_01_Shoes_01_CLOTH",
+   "base": "Characters/StudentF2/T_StudentF2_F00_006_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_StudentF2_F00_008_01_Tops_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_008_01_Tops_01_CLOTH",
+   "base": "Characters/StudentF2/T_StudentF2_F00_008_01_Tops_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_StudentM1_F00_000_Hair_00_HAIR_HairTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR",
+   "base": "Characters/StudentM1/T_StudentM1_F00_000_Hair_00_HAIR",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_StudentM1_M00_000_00_EyeIris_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeIris_00_EYE",
+   "base": "Characters/StudentM1/T_StudentM1_M00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_StudentM1_M00_007_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_007_01_Shoes_01_CLOTH",
+   "base": "Characters/StudentM1/T_StudentM1_M00_007_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_StudentM1_M00_008_01_Bottoms_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_008_01_Bottoms_01_CLOTH",
+   "base": "Characters/StudentM1/T_StudentM1_M00_008_01_Bottoms_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_StudentM1_M00_008_03_Tops_01_CLOTH_JacketTint": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_008_03_Tops_01_CLOTH",
+   "base": "Characters/StudentM1/T_StudentM1_M00_008_03_Tops_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Syrus_F00_000_Hair_00_HAIR": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_Hair_00_HAIR",
+   "base": "Characters/Syrus/T_Syrus_F00_000_Hair_00_HAIR",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Syrus_Glasses": {
+   "kind": "cel",
+   "color": [
+    0.3,
+    0.3,
+    0.32
+   ],
+   "rough": 0.6,
+   "fill": 0.45,
+   "color_linear": [
+    0.07323895587840543,
+    0.07323895587840543,
+    0.0835351274258047
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Syrus_M00_000_00_EyeIris_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Syrus/T_Syrus_M00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Syrus_M00_007_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_007_01_Shoes_01_CLOTH",
+   "base": "Characters/Syrus/T_Syrus_M00_007_01_Shoes_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Syrus_M00_008_01_Bottoms_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_008_01_Bottoms_01_CLOTH",
+   "base": "Characters/Syrus/T_Syrus_M00_008_01_Bottoms_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_Syrus_M00_008_03_Tops_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_008_03_Tops_01_CLOTH",
+   "base": "Characters/Syrus/T_Syrus_M00_008_03_Tops_01_CLOTH",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.03,
+   "shadow": [
+    0.62,
+    0.64,
+    0.82
+   ],
+   "rim": 0.18,
+   "spec": 0.0,
+   "cel": "cloth"
+  },
+  "M_Anime_VroidA_F00_000_00_Body_00_SKIN": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_Body_00_SKIN",
+   "base": "Characters/VroidA/T_VroidA_F00_000_00_Body_00_SKIN",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.5,
+   "soft": 0.035,
+   "shadow": [
+    0.94,
+    0.7,
+    0.66
+   ],
+   "rim": 0.22,
+   "spec": 0.0,
+   "cel": "skin"
+  },
+  "M_Anime_VroidA_F00_000_00_EyeExtra_01_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeExtra_01_EYE",
+   "base": "Characters/VroidA/T_VroidA_F00_000_00_EyeExtra_01_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidA_F00_000_00_EyeHighlight_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeHighlight_00_EYE",
+   "base": "Characters/VroidA/T_VroidA_F00_000_00_EyeHighlight_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidA_F00_000_00_EyeWhite_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeWhite_00_EYE",
+   "base": "Characters/VroidA/T_VroidA_F00_000_00_EyeWhite_00_EYE",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidA_F00_000_00_FaceBrow_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_FaceBrow_00_FACE",
+   "base": "Characters/VroidA/T_VroidA_F00_000_00_FaceBrow_00_FACE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidA_F00_000_00_FaceEyelash_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_FaceEyelash_00_FACE",
+   "base": "Characters/VroidA/T_VroidA_F00_000_00_FaceEyelash_00_FACE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidA_F00_000_00_FaceEyeline_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_FaceEyeline_00_FACE",
+   "base": "Characters/VroidA/T_VroidA_F00_000_00_FaceEyeline_00_FACE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidA_F00_000_00_FaceMouth_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_FaceMouth_00_FACE",
+   "base": "Characters/VroidA/T_VroidA_F00_000_00_FaceMouth_00_FACE",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidA_F00_000_00_Face_00_SKIN": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_Face_00_SKIN",
+   "base": "Characters/VroidA/T_VroidA_F00_000_00_Face_00_SKIN",
    "color_linear": [
     1.0,
     1.0,
@@ -1127,7 +4287,7 @@
    "spec": 0.0,
    "cel": "face"
   },
-  "M_Anime_Pim_Hair": {
+  "M_Anime_VroidB_F00_000_00_Body_00_SKIN": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1136,42 +4296,13 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Pim/T_Anime_Pim_Hair",
+   "source_material": "F00_000_00_Body_00_SKIN",
+   "base": "Characters/VroidB/T_VroidB_F00_000_00_Body_00_SKIN",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
     1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.48,
-   "soft": 0.03,
-   "shadow": [
-    0.58,
-    0.58,
-    0.74
-   ],
-   "rim": 0.3,
-   "spec": 0.0,
-   "cel": "hair"
-  },
-  "M_Anime_Pim_Skin": {
-   "kind": "cel",
-   "color": [
-    0.99,
-    0.85,
-    0.74
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    0.9774019338064516,
-    0.692071056865372,
-    0.5070785101492276
    ],
    "metallic": 0.0,
    "detail": null,
@@ -1189,7 +4320,7 @@
    "spec": 0.0,
    "cel": "skin"
   },
-  "M_Anime_Rook_Cloth": {
+  "M_Anime_VroidB_F00_000_00_EyeExtra_01_EYE": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1197,8 +4328,10 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Rook/T_Anime_Rook_Cloth",
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeExtra_01_EYE",
+   "base": "Characters/VroidB/T_VroidB_F00_000_00_EyeExtra_01_EYE",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1209,18 +4342,18 @@
    "tiling": 1.0,
    "strength": 1.0,
    "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.03,
+   "threshold": -1.0,
+   "soft": 0.0,
    "shadow": [
-    0.62,
-    0.64,
-    0.82
+    1.0,
+    1.0,
+    1.0
    ],
-   "rim": 0.18,
+   "rim": 0.0,
    "spec": 0.0,
-   "cel": "cloth"
+   "cel": "flat"
   },
-  "M_Anime_Rook_Face": {
+  "M_Anime_VroidB_F00_000_00_EyeHighlight_00_EYE": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1228,8 +4361,205 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Rook/T_Anime_Rook_Face",
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeHighlight_00_EYE",
+   "base": "Characters/VroidB/T_VroidB_F00_000_00_EyeHighlight_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidB_F00_000_00_EyeWhite_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_EyeWhite_00_EYE",
+   "base": "Characters/VroidB/T_VroidB_F00_000_00_EyeWhite_00_EYE",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidB_F00_000_00_FaceBrow_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_FaceBrow_00_FACE",
+   "base": "Characters/VroidB/T_VroidB_F00_000_00_FaceBrow_00_FACE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidB_F00_000_00_FaceEyelash_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_FaceEyelash_00_FACE",
+   "base": "Characters/VroidB/T_VroidB_F00_000_00_FaceEyelash_00_FACE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidB_F00_000_00_FaceEyeline_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_FaceEyeline_00_FACE",
+   "base": "Characters/VroidB/T_VroidB_F00_000_00_FaceEyeline_00_FACE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidB_F00_000_00_FaceMouth_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_FaceMouth_00_FACE",
+   "base": "Characters/VroidB/T_VroidB_F00_000_00_FaceMouth_00_FACE",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidB_F00_000_00_Face_00_SKIN": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "F00_000_00_Face_00_SKIN",
+   "base": "Characters/VroidB/T_VroidB_F00_000_00_Face_00_SKIN",
    "color_linear": [
     1.0,
     1.0,
@@ -1251,7 +4581,7 @@
    "spec": 0.0,
    "cel": "face"
   },
-  "M_Anime_Rook_Hair": {
+  "M_Anime_VroidC_M00_000_00_Body_00_SKIN": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1260,42 +4590,13 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Rook/T_Anime_Rook_Hair",
+   "source_material": "M00_000_00_Body_00_SKIN",
+   "base": "Characters/VroidC/T_VroidC_M00_000_00_Body_00_SKIN",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
     1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.48,
-   "soft": 0.03,
-   "shadow": [
-    0.58,
-    0.58,
-    0.74
-   ],
-   "rim": 0.3,
-   "spec": 0.0,
-   "cel": "hair"
-  },
-  "M_Anime_Rook_Skin": {
-   "kind": "cel",
-   "color": [
-    0.99,
-    0.85,
-    0.74
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    0.9774019338064516,
-    0.692071056865372,
-    0.5070785101492276
    ],
    "metallic": 0.0,
    "detail": null,
@@ -1313,7 +4614,7 @@
    "spec": 0.0,
    "cel": "skin"
   },
-  "M_Anime_Selene_Cloth": {
+  "M_Anime_VroidC_M00_000_00_EyeExtra_01_EYE": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1321,8 +4622,10 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Selene/T_Anime_Selene_Cloth",
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeExtra_01_EYE",
+   "base": "Characters/VroidC/T_VroidC_M00_000_00_EyeExtra_01_EYE",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1333,18 +4636,18 @@
    "tiling": 1.0,
    "strength": 1.0,
    "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.03,
+   "threshold": -1.0,
+   "soft": 0.0,
    "shadow": [
-    0.62,
-    0.64,
-    0.82
+    1.0,
+    1.0,
+    1.0
    ],
-   "rim": 0.18,
+   "rim": 0.0,
    "spec": 0.0,
-   "cel": "cloth"
+   "cel": "flat"
   },
-  "M_Anime_Selene_Face": {
+  "M_Anime_VroidC_M00_000_00_EyeHighlight_00_EYE": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1352,8 +4655,205 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Selene/T_Anime_Selene_Face",
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeHighlight_00_EYE",
+   "base": "Characters/VroidC/T_VroidC_M00_000_00_EyeHighlight_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidC_M00_000_00_EyeWhite_00_EYE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeWhite_00_EYE",
+   "base": "Characters/VroidC/T_VroidC_M00_000_00_EyeWhite_00_EYE",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidC_M00_000_00_FaceBrow_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_FaceBrow_00_FACE",
+   "base": "Characters/VroidC/T_VroidC_M00_000_00_FaceBrow_00_FACE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidC_M00_000_00_FaceEyelash_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_FaceEyelash_00_FACE",
+   "base": "Characters/VroidC/T_VroidC_M00_000_00_FaceEyelash_00_FACE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidC_M00_000_00_FaceEyeline_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_FaceEyeline_00_FACE",
+   "base": "Characters/VroidC/T_VroidC_M00_000_00_FaceEyeline_00_FACE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidC_M00_000_00_FaceMouth_00_FACE": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_FaceMouth_00_FACE",
+   "base": "Characters/VroidC/T_VroidC_M00_000_00_FaceMouth_00_FACE",
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_VroidC_M00_000_00_Face_00_SKIN": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_000_00_Face_00_SKIN",
+   "base": "Characters/VroidC/T_VroidC_M00_000_00_Face_00_SKIN",
    "color_linear": [
     1.0,
     1.0,
@@ -1375,7 +4875,7 @@
    "spec": 0.0,
    "cel": "face"
   },
-  "M_Anime_Selene_Hair": {
+  "M_Anime_Zane_F00_000_Hair_00_HAIR": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1384,8 +4884,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Selene/T_Anime_Selene_Hair",
+   "source_material": "F00_000_Hair_00_HAIR",
+   "base": "Characters/Zane/T_Zane_F00_000_Hair_00_HAIR",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1404,40 +4905,10 @@
     0.74
    ],
    "rim": 0.3,
-   "spec": 0.0,
+   "spec": 0.45,
    "cel": "hair"
   },
-  "M_Anime_Selene_Skin": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    0.9,
-    0.82
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    1.0,
-    0.7874122893956174,
-    0.6382832153523972
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.035,
-   "shadow": [
-    0.94,
-    0.7,
-    0.66
-   ],
-   "rim": 0.22,
-   "spec": 0.0,
-   "cel": "skin"
-  },
-  "M_Anime_StudentF1_Cloth": {
+  "M_Anime_Zane_M00_000_00_EyeIris_00_EYE": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1445,8 +4916,43 @@
     1.0
    ],
    "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/StudentF1/T_Anime_StudentF1_Cloth",
+   "fill": 0.45,
+   "source_material": "M00_000_00_EyeIris_00_EYE",
+   "base": "Characters/Zane/T_Zane_M00_000_00_EyeIris_00_EYE",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": -1.0,
+   "soft": 0.0,
+   "shadow": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rim": 0.0,
+   "spec": 0.0,
+   "cel": "flat"
+  },
+  "M_Anime_Zane_M00_007_01_Shoes_01_CLOTH": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "M00_007_01_Shoes_01_CLOTH",
+   "base": "Characters/Zane/T_Zane_M00_007_01_Shoes_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1468,38 +4974,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_StudentF1_Face": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/StudentF1/T_Anime_StudentF1_Face",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
-   "shadow": [
-    0.96,
-    0.76,
-    0.72
-   ],
-   "rim": 0.12,
-   "spec": 0.0,
-   "cel": "face"
-  },
-  "M_Anime_StudentF1_HairTint": {
+  "M_Anime_Zane_M00_008_01_Bottoms_01_CLOTH": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1508,69 +4983,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/StudentF1/T_Anime_StudentF1_HairTint",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.48,
-   "soft": 0.03,
-   "shadow": [
-    0.58,
-    0.58,
-    0.74
-   ],
-   "rim": 0.3,
-   "spec": 0.0,
-   "cel": "hair"
-  },
-  "M_Anime_StudentF1_Skin": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    0.9,
-    0.82
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    1.0,
-    0.7874122893956174,
-    0.6382832153523972
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.035,
-   "shadow": [
-    0.94,
-    0.7,
-    0.66
-   ],
-   "rim": 0.22,
-   "spec": 0.0,
-   "cel": "skin"
-  },
-  "M_Anime_StudentF2_Cloth": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/StudentF2/T_Anime_StudentF2_Cloth",
+   "source_material": "M00_008_01_Bottoms_01_CLOTH",
+   "base": "Characters/Zane/T_Zane_M00_008_01_Bottoms_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1592,38 +5007,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_StudentF2_Face": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/StudentF2/T_Anime_StudentF2_Face",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
-   "shadow": [
-    0.96,
-    0.76,
-    0.72
-   ],
-   "rim": 0.12,
-   "spec": 0.0,
-   "cel": "face"
-  },
-  "M_Anime_StudentF2_HairTint": {
+  "M_Anime_Zane_M00_008_03_Tops_01_CLOTH": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1632,69 +5016,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/StudentF2/T_Anime_StudentF2_HairTint",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.48,
-   "soft": 0.03,
-   "shadow": [
-    0.58,
-    0.58,
-    0.74
-   ],
-   "rim": 0.3,
-   "spec": 0.0,
-   "cel": "hair"
-  },
-  "M_Anime_StudentF2_Skin": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    0.9,
-    0.82
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    1.0,
-    0.7874122893956174,
-    0.6382832153523972
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.035,
-   "shadow": [
-    0.94,
-    0.7,
-    0.66
-   ],
-   "rim": 0.22,
-   "spec": 0.0,
-   "cel": "skin"
-  },
-  "M_Anime_StudentM1_Cloth": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/StudentM1/T_Anime_StudentM1_Cloth",
+   "source_material": "M00_008_03_Tops_01_CLOTH",
+   "base": "Characters/Zane/T_Zane_M00_008_03_Tops_01_CLOTH",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1716,38 +5040,7 @@
    "spec": 0.0,
    "cel": "cloth"
   },
-  "M_Anime_StudentM1_Face": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/StudentM1/T_Anime_StudentM1_Face",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
-   "shadow": [
-    0.96,
-    0.76,
-    0.72
-   ],
-   "rim": 0.12,
-   "spec": 0.0,
-   "cel": "face"
-  },
-  "M_Anime_StudentM1_HairTint": {
+  "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_01": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1756,8 +5049,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/StudentM1/T_Anime_StudentM1_HairTint",
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_01",
+   "base": "Characters/Zane/T_Zane_vroid_b_F00_000_Hair_00_HAIR_01",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1776,133 +5070,10 @@
     0.74
    ],
    "rim": 0.3,
-   "spec": 0.0,
+   "spec": 0.45,
    "cel": "hair"
   },
-  "M_Anime_StudentM1_JacketTint": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/StudentM1/T_Anime_StudentM1_JacketTint",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.03,
-   "shadow": [
-    0.62,
-    0.64,
-    0.82
-   ],
-   "rim": 0.18,
-   "spec": 0.0,
-   "cel": "cloth"
-  },
-  "M_Anime_StudentM1_Skin": {
-   "kind": "cel",
-   "color": [
-    0.99,
-    0.85,
-    0.74
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    0.9774019338064516,
-    0.692071056865372,
-    0.5070785101492276
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.035,
-   "shadow": [
-    0.94,
-    0.7,
-    0.66
-   ],
-   "rim": 0.22,
-   "spec": 0.0,
-   "cel": "skin"
-  },
-  "M_Anime_Valmont_Cloth": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Valmont/T_Anime_Valmont_Cloth",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.03,
-   "shadow": [
-    0.62,
-    0.64,
-    0.82
-   ],
-   "rim": 0.18,
-   "spec": 0.0,
-   "cel": "cloth"
-  },
-  "M_Anime_Valmont_Face": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Valmont/T_Anime_Valmont_Face",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
-   "shadow": [
-    0.96,
-    0.76,
-    0.72
-   ],
-   "rim": 0.12,
-   "spec": 0.0,
-   "cel": "face"
-  },
-  "M_Anime_Valmont_Hair": {
+  "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_02": {
    "kind": "cel",
    "color": [
     1.0,
@@ -1911,8 +5082,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Valmont/T_Anime_Valmont_Hair",
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_02",
+   "base": "Characters/Zane/T_Zane_vroid_b_F00_000_Hair_00_HAIR_02",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -1931,102 +5103,10 @@
     0.74
    ],
    "rim": 0.3,
-   "spec": 0.0,
+   "spec": 0.45,
    "cel": "hair"
   },
-  "M_Anime_Valmont_Skin": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    0.9,
-    0.82
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "color_linear": [
-    1.0,
-    0.7874122893956174,
-    0.6382832153523972
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.035,
-   "shadow": [
-    0.94,
-    0.7,
-    0.66
-   ],
-   "rim": 0.22,
-   "spec": 0.0,
-   "cel": "skin"
-  },
-  "M_Anime_Wren_Cloth": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.5,
-   "base": "Characters/Wren/T_Anime_Wren_Cloth",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.03,
-   "shadow": [
-    0.62,
-    0.64,
-    0.82
-   ],
-   "rim": 0.18,
-   "spec": 0.0,
-   "cel": "cloth"
-  },
-  "M_Anime_Wren_Face": {
-   "kind": "cel",
-   "color": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "rough": 0.85,
-   "fill": 0.6,
-   "base": "Characters/Wren/T_Anime_Wren_Face",
-   "color_linear": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "metallic": 0.0,
-   "detail": null,
-   "tiling": 1.0,
-   "strength": 1.0,
-   "opacity": 1.0,
-   "threshold": 0.3,
-   "soft": 0.1,
-   "shadow": [
-    0.96,
-    0.76,
-    0.72
-   ],
-   "rim": 0.12,
-   "spec": 0.0,
-   "cel": "face"
-  },
-  "M_Anime_Wren_Hair": {
+  "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_03": {
    "kind": "cel",
    "color": [
     1.0,
@@ -2035,8 +5115,9 @@
    ],
    "rough": 0.85,
    "fill": 0.45,
-   "ring": 0.0,
-   "base": "Characters/Wren/T_Anime_Wren_Hair",
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_03",
+   "base": "Characters/Zane/T_Zane_vroid_b_F00_000_Hair_00_HAIR_03",
+   "masked": true,
    "color_linear": [
     1.0,
     1.0,
@@ -2055,38 +5136,107 @@
     0.74
    ],
    "rim": 0.3,
-   "spec": 0.0,
+   "spec": 0.45,
    "cel": "hair"
   },
-  "M_Anime_Wren_Skin": {
+  "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_04": {
    "kind": "cel",
    "color": [
     1.0,
-    0.9,
-    0.82
+    1.0,
+    1.0
    ],
    "rough": 0.85,
-   "fill": 0.5,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_04",
+   "base": "Characters/Zane/T_Zane_vroid_b_F00_000_Hair_00_HAIR_04",
+   "masked": true,
    "color_linear": [
     1.0,
-    0.7874122893956174,
-    0.6382832153523972
+    1.0,
+    1.0
    ],
    "metallic": 0.0,
    "detail": null,
    "tiling": 1.0,
    "strength": 1.0,
    "opacity": 1.0,
-   "threshold": 0.5,
-   "soft": 0.035,
+   "threshold": 0.48,
+   "soft": 0.03,
    "shadow": [
-    0.94,
-    0.7,
-    0.66
+    0.58,
+    0.58,
+    0.74
    ],
-   "rim": 0.22,
-   "spec": 0.0,
-   "cel": "skin"
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_05": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_05",
+   "base": "Characters/Zane/T_Zane_vroid_b_F00_000_Hair_00_HAIR_05",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
+  },
+  "M_Anime_Zane_vroid_b_F00_000_Hair_00_HAIR_06": {
+   "kind": "cel",
+   "color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "rough": 0.85,
+   "fill": 0.45,
+   "source_material": "vroid_b_F00_000_Hair_00_HAIR_06",
+   "base": "Characters/Zane/T_Zane_vroid_b_F00_000_Hair_00_HAIR_06",
+   "masked": true,
+   "color_linear": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "metallic": 0.0,
+   "detail": null,
+   "tiling": 1.0,
+   "strength": 1.0,
+   "opacity": 1.0,
+   "threshold": 0.48,
+   "soft": 0.03,
+   "shadow": [
+    0.58,
+    0.58,
+    0.74
+   ],
+   "rim": 0.3,
+   "spec": 0.45,
+   "cel": "hair"
   }
  }
 }
