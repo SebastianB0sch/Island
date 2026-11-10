@@ -64,9 +64,11 @@ def missing_stage_inputs(stages):
     from dai import config as C
     required_files = {
         "meshes": [("terrain", "cache", "height.npy"),
+                   ("terrain", "cache", "water.npy"),
+                   ("terrain", "cache", "terrain_info.json"),
                    ("terrain", "cache", "terrain_cache.json")],
         "layout": [("terrain", "cache", name) for name in
-                   ("height.npy", "forest.npy", "slope.npy", "occupied.npy", "d_in.npy",
+                   ("height.npy", "forest.npy", "slope.npy", "occupied.npy", "d_in.npy", "water.npy",
                     "terrain_info.json", "terrain_cache.json")],
         "render": [("layout", "data", "layout.json"),
                    ("textures", "data", "terrain_layers.json"),
@@ -153,7 +155,9 @@ def main(argv):
                 lay.place_world()
                 lay.place_locations()
                 lay.place_interiors()
+                lay.place_bridges()
                 lay.place_path_dressing()
+                lay.place_life()
                 lay.scatter()
                 layout.export_props(lay.manifest, log)
                 layout.export_avatar(lay.manifest, log)

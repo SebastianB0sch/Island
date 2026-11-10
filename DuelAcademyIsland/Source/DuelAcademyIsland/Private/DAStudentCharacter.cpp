@@ -719,7 +719,18 @@ void ADAStudentCharacter::UpdateSwimming(float DeltaSeconds)
 	}
 	const FVector Loc = GetActorLocation();
 	const float Half = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-	const float WaterZ = Sub->GetWaterSurfaceZ(Loc);
+	// The surface under the swimmer right now: the sea and the lake carry real waves (water.json), rivers and
+	// ponds are flat and shallow.
+	float WaterZ = Sub->GetWaterSurfaceZ(Loc);
+	bool bWaves = false;
+	bool bShallowBody = false;
+	if (const ADAIslandManager* Manager = Sub->GetManager())
+	{
+		const FDAWaterInfo Water = Manager->QueryWater(Loc, true);
+		WaterZ = Water.SurfaceZ;
+		bWaves = Water.bWaves;
+		bShallowBody = Water.Body == EDAWaterBody::River;
+	}
 	const float Depth = WaterZ - (Loc.Z - Half);
 
 	FHitResult Hit;
@@ -727,13 +738,14 @@ void ADAStudentCharacter::UpdateSwimming(float DeltaSeconds)
 	const bool bGround = GetWorld()->LineTraceSingleByChannel(Hit, Loc, Loc - FVector(0.0, 0.0, Half + 80.0), ECC_Visibility, Params);
 	const float GroundDist = bGround ? static_cast<float>(Loc.Z - Hit.ImpactPoint.Z) : 1.0e6f;
 
-	if (!bSwimming && Depth > 140.f && GroundDist > Half + 30.f)
+	// Rivers are wading water: never deep enough to swim, whatever a carved pool or a cascade step measures.
+	if (!bSwimming && !bShallowBody && Depth > 140.f && GroundDist > Half + 30.f)
 	{
 		bSwimming = true;
 		Move->SetMovementMode(MOVE_Flying);
 		Move->Velocity *= 0.35f;
 	}
-	else if (bSwimming && (GroundDist < Half + 15.f || Depth < 60.f))
+	else if (bSwimming && (bShallowBody || GroundDist < Half + 15.f || Depth < 60.f))
 	{
 		bSwimming = false;
 		Move->SetMovementMode(bGround ? MOVE_Walking : MOVE_Falling);
@@ -741,7 +753,10 @@ void ADAStudentCharacter::UpdateSwimming(float DeltaSeconds)
 
 	if (bSwimming)
 	{
-		const float TargetZ = WaterZ - 48.f + 6.f * FMath::Sin(GetWorld()->GetTimeSeconds() * 2.f);
+		// Ride the swell: WaterZ already rises and falls with the waves, so only a small breathing bob is
+		// added on top of it (the full 6 cm on still water, where nothing else moves the swimmer).
+		const float Bob = (bWaves ? 2.f : 6.f) * FMath::Sin(GetWorld()->GetTimeSeconds() * 2.f);
+		const float TargetZ = WaterZ - 48.f + Bob;
 		Move->Velocity.Z = FMath::Clamp((TargetZ - Loc.Z) * 3.5f, -250.f, 250.f);
 		Move->MaxFlySpeed = SwimSpeed * (bSprinting ? 1.45f : 1.f);
 	}

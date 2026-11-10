@@ -1672,6 +1672,11 @@ def _boys_fountain(mb, nc, aset, cx, cy):
     aset.emitter("spray", (cx, cy, 0.62), 1.0, ring=r1)
     aset.emitter("spray", (cx, cy, 2.82), 0.6, ring=r2)
     aset.emitter("spray", (cx, cy, 0.62), 0.7, ring=B_JET_LAND, points=B_JETS, angle0=180.0 / B_JETS)
+    for i in range(B_JETS):              # every jet frays into droplets on its way down
+        a = TAU * (i + 0.5) / B_JETS
+        ca, sa = math.cos(a), math.sin(a)
+        FT.jet_droplets(aset, (cx + ca * (R - 0.15), cy + sa * (R - 0.15), 0.92),
+                        (cx + ca * B_JET_LAND, cy + sa * B_JET_LAND, 0.62), 1.75, scale=0.9)
     aset.audio("A_Waterfall", (cx, cy, 1.5), radius=24.0, volume=0.6)
     aset.light((cx, cy, 1.2), (0.6, 0.8, 1.0), 4000, 14, night_only=True)
 

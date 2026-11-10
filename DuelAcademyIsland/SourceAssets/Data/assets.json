@@ -776,6 +776,14 @@
   "category": "location"
  },
  {
+  "file": "Meshes/Locations/volcano/SM_Volcano_Blockers.fbx",
+  "name": "SM_Volcano_Blockers",
+  "folder": "Locations/volcano",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Locations/waterfall/SM_Waterfall_Water_NoCol.fbx",
   "name": "SM_Waterfall_Water_NoCol",
   "folder": "Locations/waterfall",
@@ -867,6 +875,278 @@
   "file": "Meshes/Locations/forest/SM_Forest_Blockers.fbx",
   "name": "SM_Forest_Blockers",
   "folder": "Locations/forest",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Detail_NoCol.fbx",
+  "name": "SM_Millbrook_Detail_NoCol",
+  "folder": "Locations/millbrook",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Green.fbx",
+  "name": "SM_Millbrook_Green",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Mill.fbx",
+  "name": "SM_Millbrook_Mill",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_MillWheel_NoCol.fbx",
+  "name": "SM_Millbrook_MillWheel_NoCol",
+  "folder": "Locations/millbrook",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House1.fbx",
+  "name": "SM_Millbrook_House1",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House2.fbx",
+  "name": "SM_Millbrook_House2",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House3.fbx",
+  "name": "SM_Millbrook_House3",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House4.fbx",
+  "name": "SM_Millbrook_House4",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House5.fbx",
+  "name": "SM_Millbrook_House5",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House6.fbx",
+  "name": "SM_Millbrook_House6",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Blockers.fbx",
+  "name": "SM_Millbrook_Blockers",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Detail_NoCol.fbx",
+  "name": "SM_WillowPond_Detail_NoCol",
+  "folder": "Locations/willow_pond",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Square.fbx",
+  "name": "SM_WillowPond_Square",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House1.fbx",
+  "name": "SM_WillowPond_House1",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House2.fbx",
+  "name": "SM_WillowPond_House2",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House3.fbx",
+  "name": "SM_WillowPond_House3",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House4.fbx",
+  "name": "SM_WillowPond_House4",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House5.fbx",
+  "name": "SM_WillowPond_House5",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House6.fbx",
+  "name": "SM_WillowPond_House6",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House7.fbx",
+  "name": "SM_WillowPond_House7",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Jetty.fbx",
+  "name": "SM_WillowPond_Jetty",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Blockers.fbx",
+  "name": "SM_WillowPond_Blockers",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Detail_NoCol.fbx",
+  "name": "SM_FishersCove_Detail_NoCol",
+  "folder": "Locations/fishers_cove",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Yard.fbx",
+  "name": "SM_FishersCove_Yard",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House1.fbx",
+  "name": "SM_FishersCove_House1",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House2.fbx",
+  "name": "SM_FishersCove_House2",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House3.fbx",
+  "name": "SM_FishersCove_House3",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House4.fbx",
+  "name": "SM_FishersCove_House4",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House5.fbx",
+  "name": "SM_FishersCove_House5",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House6.fbx",
+  "name": "SM_FishersCove_House6",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Hut7.fbx",
+  "name": "SM_FishersCove_Hut7",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Hut8.fbx",
+  "name": "SM_FishersCove_Hut8",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Pier.fbx",
+  "name": "SM_FishersCove_Pier",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Blockers.fbx",
+  "name": "SM_FishersCove_Blockers",
+  "folder": "Locations/fishers_cove",
   "collision": "complex",
   "nanite": false,
   "category": "location"
@@ -1040,16 +1320,16 @@
   "category": "location"
  },
  {
-  "file": "Meshes/Doors/SM_Door_girls_100x255.fbx",
-  "name": "SM_Door_girls_100x255",
+  "file": "Meshes/Doors/SM_Door_girls_100x280.fbx",
+  "name": "SM_Door_girls_100x280",
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
   "category": "location"
  },
  {
-  "file": "Meshes/Doors/SM_Door_girls_100x280.fbx",
-  "name": "SM_Door_girls_100x280",
+  "file": "Meshes/Doors/SM_Door_girls_110x265.fbx",
+  "name": "SM_Door_girls_110x265",
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
@@ -1560,6 +1840,342 @@
   "category": "location"
  },
  {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_Shell.fbx",
+  "name": "SM_Interior_academy_classroom_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_Props.fbx",
+  "name": "SM_Interior_academy_classroom_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_NoCol.fbx",
+  "name": "SM_Interior_academy_classroom_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_Shell.fbx",
+  "name": "SM_Interior_academy_test_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_Props.fbx",
+  "name": "SM_Interior_academy_test_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_NoCol.fbx",
+  "name": "SM_Interior_academy_test_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_Shell.fbx",
+  "name": "SM_Interior_academy_crowler_office_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_Props.fbx",
+  "name": "SM_Interior_academy_crowler_office_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_NoCol.fbx",
+  "name": "SM_Interior_academy_crowler_office_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_Shell.fbx",
+  "name": "SM_Interior_academy_chancellor_office_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_Props.fbx",
+  "name": "SM_Interior_academy_chancellor_office_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_NoCol.fbx",
+  "name": "SM_Interior_academy_chancellor_office_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_Shell.fbx",
+  "name": "SM_Interior_slifer_player_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_Props.fbx",
+  "name": "SM_Interior_slifer_player_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_NoCol.fbx",
+  "name": "SM_Interior_slifer_player_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_Shell.fbx",
+  "name": "SM_Interior_slifer_banner_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_Props.fbx",
+  "name": "SM_Interior_slifer_banner_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_NoCol.fbx",
+  "name": "SM_Interior_slifer_banner_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_Shell.fbx",
+  "name": "SM_Interior_slifer_jaden_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_Props.fbx",
+  "name": "SM_Interior_slifer_jaden_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_NoCol.fbx",
+  "name": "SM_Interior_slifer_jaden_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_Shell.fbx",
+  "name": "SM_Interior_ra_player_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_Props.fbx",
+  "name": "SM_Interior_ra_player_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_NoCol.fbx",
+  "name": "SM_Interior_ra_player_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_Shell.fbx",
+  "name": "SM_Interior_obelisk_dining_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_Props.fbx",
+  "name": "SM_Interior_obelisk_dining_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_NoCol.fbx",
+  "name": "SM_Interior_obelisk_dining_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_Shell.fbx",
+  "name": "SM_Interior_obelisk_player_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_Props.fbx",
+  "name": "SM_Interior_obelisk_player_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_NoCol.fbx",
+  "name": "SM_Interior_obelisk_player_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_LakeWalk.fbx",
+  "name": "SM_Bridge_LakeWalk",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_LakeWalk_NoCol.fbx",
+  "name": "SM_Bridge_LakeWalk_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToAbandoned.fbx",
+  "name": "SM_Bridge_ToAbandoned",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToAbandoned_NoCol.fbx",
+  "name": "SM_Bridge_ToAbandoned_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToGym.fbx",
+  "name": "SM_Bridge_ToGym",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToGym_NoCol.fbx",
+  "name": "SM_Bridge_ToGym_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToSprings.fbx",
+  "name": "SM_Bridge_ToSprings",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToSprings_NoCol.fbx",
+  "name": "SM_Bridge_ToSprings_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ForestTrail.fbx",
+  "name": "SM_Bridge_ForestTrail",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ForestTrail_NoCol.fbx",
+  "name": "SM_Bridge_ForestTrail_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ForestTrail2.fbx",
+  "name": "SM_Bridge_ForestTrail2",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ForestTrail2_NoCol.fbx",
+  "name": "SM_Bridge_ForestTrail2_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location"
+ },
+ {
   "file": "Meshes/Roads/SM_Road_main_road.fbx",
   "name": "SM_Road_main_road",
   "folder": "Roads",
@@ -1604,6 +2220,22 @@
   "name": "SM_Road_to_heliport",
   "folder": "Roads",
   "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Roads/SM_Road_pond_lane.fbx",
+  "name": "SM_Road_pond_lane",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location"
+ },
+ {
+  "file": "Meshes/Water/SM_Waterside_Lilies_NoCol.fbx",
+  "name": "SM_Waterside_Lilies_NoCol",
+  "folder": "Water",
+  "collision": "none",
   "nanite": false,
   "category": "location"
  },
@@ -3816,243 +4448,19 @@
   "category": "water"
  },
  {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_Shell.fbx",
-  "name": "SM_Interior_academy_classroom_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_Props.fbx",
-  "name": "SM_Interior_academy_classroom_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_NoCol.fbx",
-  "name": "SM_Interior_academy_classroom_NoCol",
-  "folder": "Locations/interiors",
+  "file": "Meshes/Water/SM_River_AcademyRiver.fbx",
+  "name": "SM_River_AcademyRiver",
+  "folder": "Water",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "water"
  },
  {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_Shell.fbx",
-  "name": "SM_Interior_academy_test_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_Props.fbx",
-  "name": "SM_Interior_academy_test_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_NoCol.fbx",
-  "name": "SM_Interior_academy_test_room_NoCol",
-  "folder": "Locations/interiors",
+  "file": "Meshes/Water/SM_River_ForestCreek.fbx",
+  "name": "SM_River_ForestCreek",
+  "folder": "Water",
   "collision": "none",
   "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_Shell.fbx",
-  "name": "SM_Interior_academy_crowler_office_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_Props.fbx",
-  "name": "SM_Interior_academy_crowler_office_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_NoCol.fbx",
-  "name": "SM_Interior_academy_crowler_office_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_Shell.fbx",
-  "name": "SM_Interior_academy_chancellor_office_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_Props.fbx",
-  "name": "SM_Interior_academy_chancellor_office_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_NoCol.fbx",
-  "name": "SM_Interior_academy_chancellor_office_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_Shell.fbx",
-  "name": "SM_Interior_slifer_player_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_Props.fbx",
-  "name": "SM_Interior_slifer_player_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_NoCol.fbx",
-  "name": "SM_Interior_slifer_player_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_Shell.fbx",
-  "name": "SM_Interior_slifer_banner_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_Props.fbx",
-  "name": "SM_Interior_slifer_banner_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_NoCol.fbx",
-  "name": "SM_Interior_slifer_banner_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_Shell.fbx",
-  "name": "SM_Interior_slifer_jaden_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_Props.fbx",
-  "name": "SM_Interior_slifer_jaden_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_NoCol.fbx",
-  "name": "SM_Interior_slifer_jaden_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_Shell.fbx",
-  "name": "SM_Interior_ra_player_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_Props.fbx",
-  "name": "SM_Interior_ra_player_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_NoCol.fbx",
-  "name": "SM_Interior_ra_player_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_Shell.fbx",
-  "name": "SM_Interior_obelisk_dining_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_Props.fbx",
-  "name": "SM_Interior_obelisk_dining_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_NoCol.fbx",
-  "name": "SM_Interior_obelisk_dining_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_Shell.fbx",
-  "name": "SM_Interior_obelisk_player_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_Props.fbx",
-  "name": "SM_Interior_obelisk_player_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_NoCol.fbx",
-  "name": "SM_Interior_obelisk_player_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
+  "category": "water"
  }
 ]

@@ -156,7 +156,7 @@ def build_scene(log=print, scatter=True, detail_props=True):
     t = terrain_mesh.build_preview_terrain(h, quads=1008)
     _terrain_material(blend.material("M_Terrain"))
     terrain_mesh.build_water(h, export=False, log=lambda *_: None)
-    for wname in ("M_Ocean", "M_LakeWater"):
+    for wname in ("M_Ocean", "M_LakeWater", "M_River"):
         m = blend.material(wname)
         b = m.node_tree.nodes["Principled BSDF"]
         b.inputs["Alpha"].default_value = 1.0
@@ -169,6 +169,9 @@ def build_scene(log=print, scatter=True, detail_props=True):
     floating_by_mesh = {}
     for f in lay["floating"]:
         floating_by_mesh.setdefault(f["mesh"], []).append(f)
+    for sp in lay.get("specials", []):          # turning meshes (water wheels) stand still in a preview
+        if sp["kind"] == "spinner":
+            floating_by_mesh.setdefault(sp["props"]["mesh"], []).append(sp)
     n = 0
     for key, fn in placements.items():
         if key not in C.LOCATIONS:
@@ -176,7 +179,7 @@ def build_scene(log=print, scatter=True, detail_props=True):
         aset = fn()
         placed = None
         from .layout import split_translucent
-        floating = {s["props"].get("mesh") for s in aset.sockets if s["type"] == "floating"}
+        floating = {s["props"].get("mesh") for s in aset.sockets if s["type"] in ("floating", "spinner")}
         for name, mb in split_translucent(aset.meshes, skip=floating).items():
             if not mb.verts:
                 continue
@@ -200,10 +203,10 @@ def build_scene(log=print, scatter=True, detail_props=True):
                 o.location = _from_ue(placed["loc"])
                 o.rotation_euler = (0, 0, math.radians(-placed["yaw"]))
     log(f"  preview: {n} location meshes")
-    # roads (world-space FBX)
+    # roads, bridges and waterside dressing (world-space FBX)
     for e in lay["static"]:
-        if e["folder"] == "Roads":
-            path = os.path.join(C.OUT_MESHES, "Roads", e["mesh"] + ".fbx")
+        if e["folder"] == "Roads" or e.get("group") == "waterside":
+            path = os.path.join(C.OUT_MESHES, e["folder"], e["mesh"] + ".fbx")
             if os.path.exists(path):
                 bpy.ops.import_scene.fbx(filepath=path)
     # instances

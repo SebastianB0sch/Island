@@ -155,7 +155,10 @@
     "beach": "M_Beach",
     "hotsprings": "M_HotSprings",
     "forest": "M_Forest",
-    "cliffs": "M_Cliffs"
+    "cliffs": "M_Cliffs",
+    "millbrook": "M_Forest",
+    "willow_pond": "M_Water",
+    "fishers_cove": "M_Beach"
   },
   "sublocations": {
     "academy_hall": "M_AcademyHall",

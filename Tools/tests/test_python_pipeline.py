@@ -901,7 +901,7 @@ class StageDependencyTests(unittest.TestCase):
                     mock.patch.object(pipeline_config, "OUT_DATA", str(Path(tmp) / "data")):
                 problems = module.missing_stage_inputs(["meshes"])
             self.assertEqual([(stage, producer) for stage, producer, _p in problems],
-                             [("meshes", "terrain"), ("meshes", "terrain")])
+                             [("meshes", "terrain")] * 4)    # height, water raster, terrain info, stamp
 
     def test_standalone_stages_have_no_input_requirements(self) -> None:
         module = _load_build_island_module()

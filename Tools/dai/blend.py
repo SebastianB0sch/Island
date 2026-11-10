@@ -51,8 +51,8 @@ def material(name):
     if kind in ("emissive", "lava", "hologram", "beam"):
         _set_input(bsdf, ("Emission Color", "Emission"), (*lin, 1.0))
         _set_input(bsdf, ("Emission Strength",), min(spec.get("strength", 1.0), 30.0))
-    if kind in ("glass", "water", "waterfall", "flow", "smoke", "beam", "hologram"):
-        alpha = spec.get("opacity", 0.4 if kind != "water" else 0.85)
+    if kind in ("glass", "water", "pool", "river", "waterfall", "flow", "smoke", "beam", "hologram"):
+        alpha = spec.get("opacity", 0.4 if kind not in ("water", "pool", "river") else 0.85)
         bsdf.inputs["Alpha"].default_value = alpha
         try:
             mat.surface_render_method = "BLENDED"
@@ -83,7 +83,7 @@ def material(name):
         nt.links.new(tr.outputs[0], mix.inputs[2])
         nt.links.new(mix.outputs[0], out.inputs[0])
         mat.use_backface_culling = True
-    if kind == "water":
+    if kind in ("water", "pool", "river"):
         bsdf.inputs["Roughness"].default_value = 0.03
         _set_input(bsdf, ("Transmission Weight", "Transmission"), 0.0)
     mat.diffuse_color = (*lin, 1.0)
@@ -163,8 +163,24 @@ def apply_transform(obj):
 
 
 # --------------------------------------------------------------------------- export
+def export_wanted(path):
+    """DAI_EXPORT_ONLY (comma-separated fnmatch patterns over the path below SourceAssets, e.g.
+    "Meshes/Water/*,Meshes/Roads/*") limits a run to the meshes that actually changed: every other FBX that
+    already exists is left untouched. Blender's FBX writer is not byte-stable across versions, so re-exporting
+    an unchanged mesh would rewrite hundreds of megabytes of binaries for nothing."""
+    import fnmatch
+    only = os.environ.get("DAI_EXPORT_ONLY", "").strip()
+    if not only or not os.path.exists(path):
+        return True
+    from . import config as C
+    rel = os.path.relpath(path, C.OUT_DIR).replace(os.sep, "/")
+    return any(fnmatch.fnmatch(rel, pat.strip()) for pat in only.split(",") if pat.strip())
+
+
 def export_fbx(objs, path):
     """Export the given objects (at their current transforms) to a binary FBX for UE."""
+    if not export_wanted(path):
+        return
     for o in bpy.context.scene.objects:
         o.select_set(False)
     for o in objs:

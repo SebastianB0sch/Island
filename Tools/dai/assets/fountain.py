@@ -10,6 +10,7 @@ M_DA_WaterFlow). That master is world-aligned, so no UVs are needed: vertical fa
                   the falling half the falling one, so the streaks run the way the water does
   foam_ring       churning white water where a sheet lands (flat annulus just above the pool surface)
   foam_patch      the same for one jet landing point
+  jet_droplets    the droplet emitter of one jet (same projectile path as jet_arc)
 """
 
 import math
@@ -102,3 +103,17 @@ def foam_ring(mb, center, r_in, r_out, z, mat=FOAM, seg=48):
 
 def foam_patch(mb, p, r, mat=FOAM, seg=12):
     mb.poly([(p[0] + math.cos(TAU * i / seg) * r, p[1] + math.sin(TAU * i / seg) * r, p[2]) for i in range(seg)], mat)
+
+
+def jet_velocity(p0, p1, apex):
+    """Initial velocity (m/s) of the projectile that leaves p0, peaks `apex` m above it and lands at p1 -
+    the same path jet_arc models, for the droplet emitter that rides along it."""
+    vz = math.sqrt(2.0 * G * apex)
+    t = vz / G + math.sqrt(2.0 * max(p0[2] + apex - p1[2], 0.0) / G)
+    return ((p1[0] - p0[0]) / t, (p1[1] - p0[1]) / t, vz)
+
+
+def jet_droplets(aset, p0, p1, apex, scale=1.0, rate=1.0):
+    """Droplets breaking away from one jet (ADAEmitter Jet): the solid arc is the coherent core of the stream,
+    these are what it frays into on the way down."""
+    aset.jet(p0, jet_velocity(p0, p1, apex), floor=p1[2], spread=2.5, scale=scale, rate=rate)

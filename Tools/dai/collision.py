@@ -23,7 +23,7 @@ import numpy as np
 
 from . import palette
 
-SOFT_KINDS = {"water", "smoke", "beam", "hologram", "waterfall", "flow", "lava", "foliage", "glass"}
+SOFT_KINDS = {"water", "pool", "river", "smoke", "beam", "hologram", "waterfall", "flow", "lava", "foliage", "glass"}
 MIN_H, MAX_LEN, MAX_LIFT, MIN_FILL, MIN_SIZE = 0.15, 6.0, 1.0, 0.02, 0.25
 MIN_THICK = 0.03      # window linings / thin trim boards are not furniture
 GAP = 0.03            # pieces closer than this belong to one item

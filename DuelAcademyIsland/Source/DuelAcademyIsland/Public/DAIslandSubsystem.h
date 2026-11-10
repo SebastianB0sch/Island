@@ -109,7 +109,8 @@ public:
 	// ---------------------------------------------------------------- environment
 	ADAIslandManager* GetManager() const;
 
-	/** Water surface height at a location (lake inside the lake ellipse, sea level elsewhere). */
+	/** Water surface height at a location right now: a river / pond within its banks, the lake inside the
+	 *  lake ellipse, the sea elsewhere - waves included (ADAIslandManager::QueryWater has the details). */
 	float GetWaterSurfaceZ(const FVector& WorldLocation) const;
 
 	/** Plays one of the generated UI / ambience sounds (e.g. "A_Discover") as 2D. */

@@ -1,5 +1,6 @@
 """Assemble /Game/DuelAcademy/Maps/DuelAcademyIsland from Data/layout.json."""
 
+import base64
 import json
 import os
 import sys
@@ -66,6 +67,7 @@ class Placer:
         self.materials = materials    # palette name -> MaterialInstance
         self.ysign = ysign            # +1 if the exported convention matched the import, -1 to mirror Y
         self.count = 0
+        self._bounds_done = set()     # water meshes whose bounds were already extended
 
     # ------------------------------------------------------------------ helpers
     def loc(self, v):
@@ -189,7 +191,81 @@ class Placer:
             # the map texture's north edge is now at +Y
             C.set_props(m, map_min=unreal.Vector2D(w["map"]["min"][0], w["map"]["max"][1]),
                         map_max=unreal.Vector2D(w["map"]["max"][0], w["map"]["min"][1]), strict=True)
+        self.water(m)
         return m
+
+    # ------------------------------------------------------------------ waves / rivers (Data/water.json)
+    @staticmethod
+    def pack_waves(waves, ysign=1.0):
+        """water.json wave list -> the flat float list ADAIslandManager.SetWaveSet takes (7 per wave:
+        dir x, dir y, wavelength, amplitude, steepness, speed, phase); at most 6 waves, bad entries skipped."""
+        out = []
+        for w in list(waves or [])[:6]:
+            try:
+                out += [float(w["dir"][0]), float(w["dir"][1]) * ysign, float(w["wavelength"]), float(w["amplitude"]),
+                        float(w.get("steepness", 0.0)), float(w.get("speed", 0.0)), float(w.get("phase", 0.0))]
+            except (KeyError, IndexError, TypeError, ValueError):
+                continue
+        return out
+
+    @staticmethod
+    def mirror_mask(data, size):
+        """Base64 wave mask with its rows reversed (row 0 = north becomes row 0 = south): the mask of a level
+        built with a mirrored Y axis. Returns None when the data does not hold size * size bytes."""
+        raw = base64.b64decode(data)
+        if size <= 0 or len(raw) != size * size:
+            return None
+        rows = [raw[i * size:(i + 1) * size] for i in range(size)]
+        return base64.b64encode(b"".join(reversed(rows))).decode("ascii")
+
+    def water(self, manager):
+        """Wave sets, the sea's amplitude mask and the rivers -> ADAIslandManager, so gameplay (buoyancy,
+        swimming, wading) sees the same surface M_DA_Water draws. Optional: without Data/water.json the
+        manager keeps its flat sea and lake."""
+        try:
+            data = C.load_json("water.json")
+        except Exception:  # noqa: BLE001 - SourceAssets from before the water upgrade
+            C.log("water.json not found: flat water (no waves, no rivers)")
+            return False
+        if manager is None or not hasattr(manager, "set_wave_set"):
+            C.warn("water.json present but ADAIslandManager has no wave API - rebuild the C++ module")
+            return False
+        try:
+            manager.clear_water_data()
+            ocean, lake = data.get("ocean") or {}, data.get("lake") or {}
+            manager.set_wave_set(False, self.pack_waves(ocean.get("waves"), self.ysign))
+            manager.set_wave_set(True, self.pack_waves(lake.get("waves"), self.ysign))
+            fade = ocean.get("fade")
+            if isinstance(fade, (list, tuple)) and len(fade) == 2:
+                C.set_props(manager, wave_fade_start=float(fade[0]), wave_fade_end=float(fade[1]))
+            mask = data.get("wave_mask") or {}
+            if mask.get("data"):
+                size = int(mask.get("size", 0))
+                lo, hi = mask.get("min", [-153600.0, -153600.0]), mask.get("max", [153600.0, 153600.0])
+                encoded = mask["data"]
+                y0, y1 = float(lo[1]), float(hi[1])
+                if self.ysign < 0:
+                    # mirrored level: world y -> -y, so the rows run the other way and the bounds swap
+                    encoded = self.mirror_mask(encoded, size)
+                    y0, y1 = -float(hi[1]), -float(lo[1])
+                if not encoded or not manager.set_wave_mask_base64(encoded, size, unreal.Vector2D(float(lo[0]), y0),
+                                                                   unreal.Vector2D(float(hi[0]), y1)):
+                    C.warn("water.json: wave mask rejected (size / data mismatch) - the sea keeps full waves")
+            rivers = 0
+            for river in data.get("rivers") or []:
+                packed = []
+                for p in river.get("points") or []:
+                    if len(p) >= 4:
+                        packed += [float(p[0]), float(p[1]) * self.ysign, float(p[2]), float(p[3])]
+                if packed:
+                    manager.add_river(str(river.get("id", f"river_{rivers}")), packed)
+                    rivers += 1
+            C.log(f"water: {len(ocean.get('waves') or [])} sea waves, {len(lake.get('waves') or [])} lake waves, "
+                  f"{rivers} rivers")
+            return True
+        except Exception as e:  # noqa: BLE001 - never lose the level over the water data
+            C.warn(f"water.json could not be applied ({e}); the level keeps flat water")
+            return False
 
     # ------------------------------------------------------------------ static meshes
     def statics(self):
@@ -207,6 +283,7 @@ class Placer:
                 smc.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
                 if e.get("group") == "water":
                     C.set_props(smc, cast_shadow=False)
+                    self.extend_water_bounds(mesh, e["mesh"])
             if e.get("hidden"):
                 # collision-only furniture boxes (Tools/dai/collision.py): never drawn, block people only -
                 # cameras and visibility traces pass through them
@@ -219,6 +296,19 @@ class Placer:
                                                           unreal.CollisionResponseType.ECR_IGNORE)
                 except Exception as ex:  # noqa: BLE001
                     C.warn(f"{e['mesh']}: collision channels: {ex}")
+
+    def extend_water_bounds(self, mesh, name):
+        """The sea and the lake are displaced by their material (Gerstner waves, up to ~1 m): grow the mesh
+        bounds by 2 m so a flat sheet seen edge-on is not culled while its crests are still in view."""
+        if name in self._bounds_done or not any(k in name for k in ("Ocean", "Lake")):
+            return
+        self._bounds_done.add(name)
+        try:
+            grow = unreal.Vector(200.0, 200.0, 200.0)
+            mesh.set_editor_property("positive_bounds_extension", grow)
+            mesh.set_editor_property("negative_bounds_extension", grow)
+        except Exception as ex:  # noqa: BLE001 - cosmetic: worst case a wave crest pops at the screen edge
+            C.warn(f"{name}: bounds extension not set: {ex}")
 
     def floating(self):
         cls = C.native_class("DAFloatingActor")
@@ -386,6 +476,10 @@ class Placer:
             if e.get("ring"):       # fountain spray: start on a circle (or at points on it) instead of a disc
                 C.set_props(a, ring=float(e["ring"]), ring_points=int(e.get("points", 0)),
                             ring_angle=float(e.get("angle0", 0.0)))
+            if e["kind"] == "jet":  # fountain jet: ballistic droplets from the nozzle down to the pool
+                vel = e.get("vel") or [0.0, 0.0, 600.0]
+                C.set_props(a, jet_velocity=unreal.Vector(float(vel[0]), float(vel[1]) * self.ysign, float(vel[2])),
+                            floor_z=float(e.get("floor", e["loc"][2])), jet_spread=float(e.get("spread", 2.5)))
 
     def audio(self):
         cls = C.native_class("DAAmbientSound")
@@ -661,11 +755,42 @@ class Placer:
 
     def specials(self):
         beam_cls = C.native_class("DALighthouseBeam")
+        spinner_cls = C.native_class("DASpinner")
+        flock_cls = C.native_class("DABirdFlock")
+        bird_enum = getattr(unreal, "DABirdKind", None)
+        axes = {"x": (1.0, 0.0, 0.0), "y": (0.0, 1.0, 0.0), "z": (0.0, 0.0, 1.0)}
         for s in self.layout["specials"]:
+            props = s.get("props") or {}
             if s["kind"] == "lighthouse_beam" and beam_cls is not None:
                 a = self.spawn(beam_cls, self.loc(s["loc"]), self.yaw(s["yaw"]), "LighthouseBeam", "Gameplay/fx")
-                if "beam_length" in s["props"]:
-                    C.set_props(a, beam_length=float(s["props"]["beam_length"]))
+                if "beam_length" in props:
+                    C.set_props(a, beam_length=float(props["beam_length"]))
+            elif s["kind"] == "spinner" and spinner_cls is not None:
+                # a mesh turning about one of its own axes (water wheel, windmill sails)
+                name = str(props.get("mesh", ""))
+                mesh = self.mesh(name)
+                if mesh is None and props.get("folder"):
+                    mesh = C.load(f"{C.MESH_DIR}/{props['folder']}/{name}")
+                if mesh is None:
+                    C.warn(f"spinner: missing mesh {name}")
+                    continue
+                a = self.spawn(spinner_cls, self.loc(s["loc"]), self.yaw(s.get("yaw", 0.0)),
+                               f"Spinner_{self.mesh_label(name)}", f"Island/{s.get('group', 'misc')}")
+                if a is None:
+                    continue
+                a.get_component_by_class(unreal.StaticMeshComponent).set_static_mesh(mesh)
+                ax = axes.get(str(props.get("axis", "y")).lower(), axes["y"])
+                # a mirrored level turns the other way round
+                C.set_props(a, axis=unreal.Vector(*ax), rpm=float(props.get("rpm", 6.0)) * self.ysign)
+            elif s["kind"] == "birds" and flock_cls is not None:
+                # procedural flock circling inside a cylinder (no assets)
+                a = self.spawn(flock_cls, self.loc(s["loc"]), 0.0, f"Birds_{props.get('kind', 'gull')}", "Gameplay/fx")
+                if a is None:
+                    continue
+                C.set_props(a, count=int(props.get("count", 10)), radius=float(props.get("radius", 6000.0)),
+                            height=float(props.get("height", 2500.0)))
+                if bird_enum is not None:
+                    C.set_props(a, kind=getattr(bird_enum, str(props.get("kind", "gull")).upper(), bird_enum.GULL))
 
     def doors(self):
         """One ADADoor per doorway (automatic swing / slide doors, see DAWorldActors.h)."""

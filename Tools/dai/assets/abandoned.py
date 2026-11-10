@@ -60,7 +60,7 @@ palette.register({
     "M_RuinCeiling":      dict(kind="opaque", color=(0.55, 0.52, 0.47), rough=0.95, detail="Grunge", tiling=0.5),
     "M_PeelPlaster":      K._t((0.74, 0.69, 0.60), "Plaster", 0.5, 0.35),
     "M_WaterStain":       K._t((0.36, 0.29, 0.21)),
-    "M_MurkyWater":       dict(kind="water", color=(0.20, 0.24, 0.16), rough=0.1),
+    "M_MurkyWater":       dict(kind="pool", color=(0.20, 0.24, 0.16), rough=0.1, ripple=0.15, wave_strength=0.2),
     "M_BirdMess":         K._t((0.90, 0.89, 0.84)),
     "M_OldBrass":         dict(kind="opaque", color=(0.55, 0.42, 0.20), rough=0.4, metallic=0.85, detail="Grunge", tiling=1.0),
 })

@@ -18,6 +18,7 @@
 #include "EngineUtils.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Materials/MaterialParameterCollection.h"
+#include "Misc/Base64.h"
 
 namespace
 {
@@ -25,6 +26,43 @@ namespace
 	{
 		const float T = FMath::Clamp((X - E0) / (E1 - E0), 0.f, 1.f);
 		return T * T * (3.f - 2.f * T);
+	}
+
+	/** Editor / JSON wave -> the plain struct DAWaterWaves.h works on (unit direction, finite numbers). */
+	bool ConvertWave(const FDAGerstnerWave& In, FDAWave& Out)
+	{
+		if (!FMath::IsFinite(In.Wavelength) || !FMath::IsFinite(In.Amplitude) || !FMath::IsFinite(In.Steepness)
+			|| !FMath::IsFinite(In.Speed) || !FMath::IsFinite(In.Phase) || In.Direction.ContainsNaN()
+			|| In.Wavelength <= 1.f || In.Amplitude == 0.f)
+		{
+			return false;
+		}
+		const FVector2D Dir = In.Direction.GetSafeNormal();
+		if (Dir.IsNearlyZero())
+		{
+			return false;
+		}
+		Out.DirX = Dir.X;
+		Out.DirY = Dir.Y;
+		Out.Wavelength = In.Wavelength;
+		Out.Amplitude = In.Amplitude;
+		Out.Steepness = FMath::Clamp(In.Steepness, 0.f, 1.f);
+		Out.Speed = In.Speed > 0.f ? static_cast<double>(In.Speed) : DAWater::DeepWaterSpeed(In.Wavelength);
+		Out.Phase = In.Phase;
+		return true;
+	}
+
+	void ConvertWaveSet(const TArray<FDAGerstnerWave>& In, TArray<FDAWave>& Out)
+	{
+		Out.Reset();
+		for (const FDAGerstnerWave& W : In)
+		{
+			FDAWave Plain;
+			if (Out.Num() < DAWater::MaxWaves && ConvertWave(W, Plain))
+			{
+				Out.Add(Plain);
+			}
+		}
 	}
 }
 
@@ -42,6 +80,7 @@ void ADAIslandManager::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 	SanitizeTimeSettings();
+	RefreshWaterCaches();
 	// Preview the chosen hour in the editor viewport.
 	ApplyTimeOfDay();
 }
@@ -51,6 +90,7 @@ void ADAIslandManager::BeginPlay()
 	Super::BeginPlay();
 	GatherNightLights();
 	SanitizeTimeSettings();
+	RefreshWaterCaches();
 
 	// The calendar owns the campaign date. Follow its visual-hour notifications
 	// (load, story date jumps, sleeps) instead of guessing midnight crossings
@@ -363,7 +403,215 @@ bool ADAIslandManager::IsInLake(const FVector& P, float Margin) const
 
 float ADAIslandManager::GetWaterSurfaceZ(const FVector& WorldLocation) const
 {
-	return IsInLake(WorldLocation, 1.1f) ? LakeLevel : SeaLevel;
+	return QueryWater(WorldLocation, true).SurfaceZ;
+}
+
+// ======================================================================== waves / rivers
+
+void ADAIslandManager::RefreshWaterCaches()
+{
+	ConvertWaveSet(OceanWaves, OceanWaveCache);
+	ConvertWaveSet(LakeWaves, LakeWaveCache);
+	if (WaveMaskSize <= 0 || WaveMask.Num() != WaveMaskSize * WaveMaskSize)
+	{
+		// A mask that does not match its size would be read out of bounds: treat it as absent.
+		WaveMask.Reset();
+		WaveMaskSize = 0;
+	}
+	if (!FMath::IsFinite(WaveFadeStart) || !FMath::IsFinite(WaveFadeEnd))
+	{
+		WaveFadeStart = static_cast<float>(DAWater::DefaultFadeStart);
+		WaveFadeEnd = static_cast<float>(DAWater::DefaultFadeEnd);
+	}
+	for (FDARiver& River : Rivers)
+	{
+		double MinX = 0.0, MinY = 0.0, MaxX = 0.0, MaxY = 0.0;
+		if (DAWater::RiverBounds(River.Points.GetData(), River.Points.Num(), MinX, MinY, MaxX, MaxY))
+		{
+			River.BoundsMin = FVector2D(MinX, MinY);
+			River.BoundsMax = FVector2D(MaxX, MaxY);
+		}
+		else
+		{
+			River.BoundsMin = River.BoundsMax = FVector2D::ZeroVector;
+		}
+	}
+	bWaterCachesValid = true;
+}
+
+void ADAIslandManager::ClearWaterData()
+{
+	OceanWaves.Reset();
+	LakeWaves.Reset();
+	WaveMask.Reset();
+	WaveMaskSize = 0;
+	Rivers.Reset();
+	RefreshWaterCaches();
+	Modify();
+}
+
+void ADAIslandManager::SetWaveSet(bool bLake, const TArray<float>& Packed)
+{
+	constexpr int32 Stride = 7;
+	TArray<FDAGerstnerWave>& Set = bLake ? LakeWaves : OceanWaves;
+	Set.Reset();
+	for (int32 i = 0; i + Stride <= Packed.Num() && Set.Num() < DAWater::MaxWaves; i += Stride)
+	{
+		FDAGerstnerWave W;
+		W.Direction = FVector2D(Packed[i], Packed[i + 1]);
+		W.Wavelength = Packed[i + 2];
+		W.Amplitude = Packed[i + 3];
+		W.Steepness = Packed[i + 4];
+		W.Speed = Packed[i + 5];
+		W.Phase = Packed[i + 6];
+		Set.Add(W);
+	}
+	RefreshWaterCaches();
+	Modify();
+}
+
+bool ADAIslandManager::SetWaveMaskBase64(const FString& Data, int32 Size, FVector2D Min, FVector2D Max)
+{
+	TArray<uint8> Bytes;
+	if (Size <= 0 || Size > 4096 || !FBase64::Decode(Data, Bytes) || Bytes.Num() != Size * Size
+		|| Min.ContainsNaN() || Max.ContainsNaN() || Max.X <= Min.X || Max.Y <= Min.Y)
+	{
+		return false;
+	}
+	WaveMask = MoveTemp(Bytes);
+	WaveMaskSize = Size;
+	WaveMaskMin = Min;
+	WaveMaskMax = Max;
+	RefreshWaterCaches();
+	Modify();
+	return true;
+}
+
+void ADAIslandManager::AddRiver(FName Id, const TArray<float>& PackedPoints)
+{
+	FDARiver River;
+	River.Id = Id;
+	for (int32 i = 0; i + 4 <= PackedPoints.Num(); i += 4)
+	{
+		const FVector4 P(PackedPoints[i], PackedPoints[i + 1], PackedPoints[i + 2], FMath::Max(PackedPoints[i + 3], 0.f));
+		if (FMath::IsFinite(P.X) && FMath::IsFinite(P.Y) && FMath::IsFinite(P.Z) && FMath::IsFinite(P.W))
+		{
+			River.Points.Add(P);
+		}
+	}
+	if (River.Points.Num() > 0)
+	{
+		Rivers.Add(MoveTemp(River));
+		RefreshWaterCaches();
+		Modify();
+	}
+}
+
+bool ADAIslandManager::HasWaveData() const
+{
+	return bWavesEnabled && (OceanWaves.Num() > 0 || LakeWaves.Num() > 0);
+}
+
+DAWater::FWaveField ADAIslandManager::MakeWaveField(bool bLake) const
+{
+	DAWater::FWaveField Field;
+	if (!bWavesEnabled || !bWaterCachesValid)
+	{
+		return Field;
+	}
+	const TArray<FDAWave>& Set = bLake ? LakeWaveCache : OceanWaveCache;
+	Field.Waves = Set.GetData();
+	Field.NumWaves = Set.Num();
+	if (!bLake)
+	{
+		// Only the sea is masked (shallows, harbour basin) and flattened towards the far rings of SM_Ocean.
+		if (WaveMaskSize > 0 && WaveMask.Num() == WaveMaskSize * WaveMaskSize)
+		{
+			Field.Mask = WaveMask.GetData();
+			Field.MaskSize = WaveMaskSize;
+			Field.MaskMinX = WaveMaskMin.X;
+			Field.MaskMinY = WaveMaskMin.Y;
+			Field.MaskMaxX = WaveMaskMax.X;
+			Field.MaskMaxY = WaveMaskMax.Y;
+		}
+		Field.FadeStart = WaveFadeStart;
+		Field.FadeEnd = WaveFadeEnd;
+	}
+	return Field;
+}
+
+const FDARiver* ADAIslandManager::FindRiverAt(const FVector& P, DAWater::FRiverHit& OutHit) const
+{
+	const FDARiver* Found = nullptr;
+	for (const FDARiver& River : Rivers)
+	{
+		// Bounds are refreshed whenever the points change (AddRiver / RefreshWaterCaches); an unrefreshed
+		// river has empty bounds and is skipped rather than walked on every query.
+		if (River.Points.Num() == 0 || P.X < River.BoundsMin.X || P.X > River.BoundsMax.X
+			|| P.Y < River.BoundsMin.Y || P.Y > River.BoundsMax.Y)
+		{
+			continue;
+		}
+		const DAWater::FRiverHit Hit = DAWater::QueryRiver(River.Points.GetData(), River.Points.Num(), P.X, P.Y);
+		if (Hit.bInside && P.Z < Hit.SurfaceZ + DAWater::RiverHeadroom && (!Found || Hit.EdgeDistance < OutHit.EdgeDistance))
+		{
+			OutHit = Hit;
+			Found = &River;
+		}
+	}
+	return Found;
+}
+
+bool ADAIslandManager::IsInRiver(const FVector& WorldLocation) const
+{
+	DAWater::FRiverHit Hit;
+	return FindRiverAt(WorldLocation, Hit) != nullptr;
+}
+
+FDAWaterInfo ADAIslandManager::QueryWater(const FVector& WorldLocation, bool bWithWaves) const
+{
+	FDAWaterInfo Info;
+	DAWater::FRiverHit Hit;
+	if (FindRiverAt(WorldLocation, Hit))
+	{
+		// Rivers, streams and ponds: a flat, shallow sheet at the centre line's height.
+		Info.Body = EDAWaterBody::River;
+		Info.StillZ = Info.SurfaceZ = static_cast<float>(Hit.SurfaceZ);
+		return Info;
+	}
+	const bool bLake = IsInLake(WorldLocation, 1.1f);
+	Info.Body = bLake ? EDAWaterBody::Lake : EDAWaterBody::Sea;
+	Info.StillZ = Info.SurfaceZ = bLake ? LakeLevel : SeaLevel;
+	if (!bWithWaves)
+	{
+		return Info;
+	}
+	const DAWater::FWaveField Field = MakeWaveField(bLake);
+	const UWorld* World = GetWorld();
+	if (!Field.HasWaves() || !World)
+	{
+		return Info;
+	}
+	const FDAWaveSample S = Field.SurfaceAt(WorldLocation.X, WorldLocation.Y, World->GetTimeSeconds());
+	if (FMath::IsFinite(S.OffsetZ))
+	{
+		Info.bWaves = true;
+		Info.SurfaceZ = Info.StillZ + static_cast<float>(S.OffsetZ);
+		const FVector N(S.NormalX, S.NormalY, FMath::Max(S.NormalZ, 0.05));
+		Info.Normal = N.GetSafeNormal(UE_SMALL_NUMBER, FVector::UpVector);
+	}
+	return Info;
+}
+
+float ADAIslandManager::GetWaveOffset(const FVector& WorldLocation) const
+{
+	const FDAWaterInfo Info = QueryWater(WorldLocation, true);
+	return Info.SurfaceZ - Info.StillZ;
+}
+
+FVector ADAIslandManager::GetWaterNormal(const FVector& WorldLocation) const
+{
+	return QueryWater(WorldLocation, true).Normal;
 }
 
 FString ADAIslandManager::GetClockText() const

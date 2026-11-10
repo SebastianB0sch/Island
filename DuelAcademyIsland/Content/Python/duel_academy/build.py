@@ -102,6 +102,9 @@ def build_island(import_assets=True, interactive=True, prune_cast=True):
 
         # ------------------------------------------------------------ level
         ysign = _axis_check(layout, meshes)
+        if ysign < 0:
+            # the waves and the island-wide water maps must be mirrored with the level
+            materials.mirror_water_instances(palette, instances)
         slow.enter_progress_frame(1, "Creating level")
         level.open_or_create_map()
         placer = level.Placer(layout, meshes, instances, ysign)

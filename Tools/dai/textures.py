@@ -5,6 +5,7 @@ Procedural, tileable textures (numpy + Pillow).
                    the palette tint by 2*D, so 0.5 = unchanged colour)
   T_<Name>_N.png   tangent-space normal map, DirectX (green-down) convention
   T_WaterNormal, T_Noise, T_WaterStreaks, T_Lava, T_CardBack     special purpose textures
+  T_WaterDetailN, T_WaterFoam, T_Caustics, T_Ripples             water set (dai/water.py)
 
 Everything is periodic so it tiles seamlessly.
 """
@@ -358,6 +359,8 @@ def build_textures(log=print):
     save_rgb(np.tile(np.array([0.5, 0.5, 1.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_FlatNormal.png"))
     save_rgb(np.tile(np.array([1.0, 1.0, 0.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_DefaultMask.png"))
     log(f"  textures: {len(sets_lo) * 2 + 8} written")
+    from . import water
+    water.build_textures(C.OUT_TEXTURES, log)      # T_WaterDetailN, T_WaterFoam, T_Caustics, T_Ripples
     os.makedirs(C.OUT_DATA, exist_ok=True)
     build_photo_textures(log)
     return sorted(sets_lo)

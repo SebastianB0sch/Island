@@ -18,6 +18,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Math/RotationMatrix.h"
 #include "Sound/SoundBase.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -69,18 +70,120 @@ void ADAFloatingActor::BeginPlay()
 	Amplitude = FMath::IsFinite(Amplitude) ? Amplitude : 0.f;
 	Period = FMath::IsFinite(Period) ? FMath::Max(Period, 0.5f) : 5.f;
 	Sway = FMath::IsFinite(Sway) ? Sway : 0.f;
+	HeaveLimit = FMath::IsFinite(HeaveLimit) ? FMath::Max(HeaveLimit, 0.f) : 8.f;
+	TiltLimit = FMath::IsFinite(TiltLimit) ? FMath::Max(TiltLimit, 0.f) : 5.f;
+	Damping = FMath::IsFinite(Damping) ? FMath::Clamp(Damping, 0.1f, 2.f) : 0.7f;
+
+	// Hull footprint from the mesh bounds (actor space): where the wave surface is sampled.
+	if (const UStaticMesh* HullMesh = Mesh ? Mesh->GetStaticMesh() : nullptr)
+	{
+		const FBoxSphereBounds Bounds = HullMesh->GetBounds();
+		const FVector Scale = GetActorScale3D().GetAbs();
+		HullCenter = FVector(Bounds.Origin.X * Scale.X, Bounds.Origin.Y * Scale.Y, 0.0);
+		HullHalfLength = FMath::Max(static_cast<float>(Bounds.BoxExtent.X * Scale.X), 10.f);
+		HullHalfWidth = FMath::Max(static_cast<float>(Bounds.BoxExtent.Y * Scale.Y), 10.f);
+	}
+	if (!FMath::IsFinite(ResponseTime) || ResponseTime <= 0.f)
+	{
+		// A 1 m buoy answers in about half a second, the 60 m ferry takes a few seconds.
+		ResponseTime = FMath::Clamp(0.5f + 2.f * FMath::Max(HullHalfLength, HullHalfWidth) / 1500.f, 0.5f, 5.f);
+	}
 }
 
 void ADAFloatingActor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	Time += DeltaSeconds;
+	if (!TickBuoyancy(DeltaSeconds))
+	{
+		TickSineBob();
+	}
+}
+
+void ADAFloatingActor::TickSineBob()
+{
 	const float W = 2.f * PI / FMath::Max(Period, 0.5f);
 	const float Z = Amplitude * FMath::Sin(Time * W + Phase);
 	const float Roll = Sway * FMath::Sin(Time * W * 0.7f + Phase * 1.3f);
 	const float Pitch = Sway * 0.6f * FMath::Sin(Time * W * 0.53f + Phase * 0.7f);
 	SetActorLocationAndRotation(BaseLocation + FVector(0.0, 0.0, Z),
 		FRotator(BaseRotation.Pitch + Pitch, BaseRotation.Yaw, BaseRotation.Roll + Roll), false, nullptr, ETeleportType::None);
+}
+
+bool ADAFloatingActor::TickBuoyancy(float DeltaSeconds)
+{
+	if (!bUseWaves)
+	{
+		return false;
+	}
+	const ADAIslandManager* Manager = CachedManager.Get();
+	if (!Manager)
+	{
+		const UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this);
+		CachedManager = Sub ? Sub->GetManager() : nullptr;
+		Manager = CachedManager.Get();
+	}
+	if (!Manager || !Manager->HasWaveData())
+	{
+		return false;
+	}
+
+	// Sample the surface at the middle, bow, stern, port and starboard of the hull's rest position.
+	const FRotator Heading(0.f, BaseRotation.Yaw, 0.f);
+	const FVector Forward = Heading.RotateVector(FVector::ForwardVector);
+	const FVector Right = Heading.RotateVector(FVector::RightVector);
+	const FVector Center = BaseLocation + Heading.RotateVector(HullCenter);
+	const FDAWaterInfo Mid = Manager->QueryWater(Center, true);
+	if (!Mid.bWaves)
+	{
+		return false;   // flat water here (river, pond, or this body has no wave set): keep the sine bob
+	}
+	const float Along = HullHalfLength * 0.8f;
+	const float Across = HullHalfWidth * 0.8f;
+	auto WaveAt = [Manager](const FVector& P)
+	{
+		const FDAWaterInfo Info = Manager->QueryWater(P, true);
+		return Info.SurfaceZ - Info.StillZ;
+	};
+	const float HMid = Mid.SurfaceZ - Mid.StillZ;
+	const float HBow = WaveAt(Center + Forward * Along);
+	const float HStern = WaveAt(Center - Forward * Along);
+	const float HStar = WaveAt(Center + Right * Across);
+	const float HPort = WaveAt(Center - Right * Across);
+
+	// A little of the old idle bob stays in, so a hull on a nearly flat lake is not frozen.
+	const float W = 2.f * PI / FMath::Max(Period, 0.5f);
+	const float MaxHeave = FMath::Abs(Amplitude) * HeaveLimit;
+	const float MaxTilt = FMath::Abs(Sway) * TiltLimit;
+	const float TargetHeave = FMath::Clamp((HBow + HStern + HStar + HPort + 2.f * HMid) / 6.f
+		+ 0.15f * Amplitude * FMath::Sin(Time * W + Phase), -MaxHeave, MaxHeave);
+	// FRotator: positive pitch lifts the bow (+X), positive roll dips the starboard side (+Y).
+	const float TargetPitch = FMath::Clamp(FMath::RadiansToDegrees(FMath::Atan2(HBow - HStern, 2.f * Along))
+		+ 0.1f * Sway * FMath::Sin(Time * W * 0.53f + Phase * 0.7f), -MaxTilt, MaxTilt);
+	const float TargetRoll = FMath::Clamp(-FMath::RadiansToDegrees(FMath::Atan2(HStar - HPort, 2.f * Across))
+		+ 0.15f * Sway * FMath::Sin(Time * W * 0.7f + Phase * 1.3f), -MaxTilt, MaxTilt);
+
+	// Damped springs, integrated in small steps so a long frame cannot blow them up.
+	const float Omega = 2.f * PI / FMath::Max(ResponseTime, 0.1f);
+	float Remaining = FMath::Clamp(DeltaSeconds, 0.f, 0.25f);
+	while (Remaining > 1.e-5f)
+	{
+		const float Dt = FMath::Min(Remaining, 1.f / 60.f);
+		Remaining -= Dt;
+		HeaveVel += (Omega * Omega * (TargetHeave - Heave) - 2.f * Damping * Omega * HeaveVel) * Dt;
+		Heave += HeaveVel * Dt;
+		PitchVel += (Omega * Omega * (TargetPitch - PitchDeg) - 2.f * Damping * Omega * PitchVel) * Dt;
+		PitchDeg += PitchVel * Dt;
+		RollVel += (Omega * Omega * (TargetRoll - RollDeg) - 2.f * Damping * Omega * RollVel) * Dt;
+		RollDeg += RollVel * Dt;
+	}
+	if (!FMath::IsFinite(Heave) || !FMath::IsFinite(PitchDeg) || !FMath::IsFinite(RollDeg))
+	{
+		Heave = HeaveVel = PitchDeg = PitchVel = RollDeg = RollVel = 0.f;
+	}
+	SetActorLocationAndRotation(BaseLocation + FVector(0.0, 0.0, Heave),
+		FRotator(BaseRotation.Pitch + PitchDeg, BaseRotation.Yaw, BaseRotation.Roll + RollDeg), false, nullptr, ETeleportType::None);
+	return true;
 }
 
 // ======================================================================== ADAEmitter
@@ -112,8 +215,15 @@ void ADAEmitter::BeginPlay()
 	Ring = FMath::IsFinite(Ring) ? FMath::Max(Ring, 0.f) : 0.f;
 	RingPoints = FMath::Max(RingPoints, 0);
 	RingAngle = FMath::IsFinite(RingAngle) ? RingAngle : 0.f;
+	JetSpread = FMath::IsFinite(JetSpread) ? FMath::Clamp(JetSpread, 0.f, 45.f) : 2.5f;
+	FloorZ = FMath::IsFinite(FloorZ) ? FloorZ : static_cast<float>(GetActorLocation().Z);
+	if (JetVelocity.ContainsNaN())
+	{
+		JetVelocity = FVector(0.0, 0.0, 600.0);
+	}
 	const float S = EffectScale;
 	int32 Count = 12;
+	float Glow = -1.f;   // >= 0: emissive strength of M_DA_Spray's "Glow" parameter
 	FLinearColor Color(0.95f, 0.95f, 0.97f);
 	switch (Kind)
 	{
@@ -137,13 +247,39 @@ void ADAEmitter::BeginPlay()
 		Gravity = 980.f;
 		Color = FLinearColor(0.92f, 0.97f, 1.f);
 		break;
+	case EDAEmitterKind::Jet:
+	{
+		// A stream of droplets on a projectile path. Lifetime = the flight time from the nozzle down to the
+		// water at FloorZ; Rise / Spread describe the splash droplets thrown up where the stream lands.
+		Gravity = 980.f;
+		JetLocalVelocity = GetActorTransform().InverseTransformVectorNoScale(JetVelocity);
+		const float Drop = FloorZ - static_cast<float>(GetActorLocation().Z);   // <= 0: the water is below the nozzle
+		const float Vz = static_cast<float>(JetLocalVelocity.Z);
+		const float Disc = Vz * Vz - 2.f * Gravity * Drop;
+		JetFlightTime = FMath::Clamp(Disc > 0.f ? (Vz + FMath::Sqrt(Disc)) / Gravity : 0.3f, 0.15f, 6.f);
+		Lifetime = JetFlightTime;
+		// About 70 droplets per second of flight keep the stream closed; a third as many splash droplets.
+		const int32 Stream = FMath::Clamp(FMath::RoundToInt(70.f * FMath::Clamp(Rate, 0.25f, 3.f) * JetFlightTime), 14, 140);
+		const int32 Splash = FMath::Clamp(Stream / 3, 6, 36);
+		FirstSplash = NextSplash = Stream;
+		Count = Stream + Splash;
+		Rise = 22.f * S; Spread = 30.f * S; BaseSize = 0.05f * S; MaxOpacity = 0.9f;
+		Color = FLinearColor(0.92f, 0.97f, 1.f);
+		break;
+	}
+	case EDAEmitterKind::Fireflies:
+		// Spread = radius of the swarm, Rise = height of the band the motes drift in.
+		Count = 16; Lifetime = 6.f; Rise = 160.f * S; Spread = 300.f * S; BaseSize = 0.035f; MaxOpacity = 1.f;
+		Color = FLinearColor(0.75f, 1.f, 0.3f);
+		Glow = 60.f;
+		break;
 	case EDAEmitterKind::Steam:
 	default:
 		Count = 12; Lifetime = 3.5f; Rise = 360.f * S; Spread = 55.f * S; BaseSize = 0.45f * S; MaxOpacity = 0.33f;
 		break;
 	}
 	UMaterialInterface* Base = Material.Get();
-	if (!Base && Kind == EDAEmitterKind::Spray)
+	if (!Base && (Kind == EDAEmitterKind::Spray || Kind == EDAEmitterKind::Jet || Kind == EDAEmitterKind::Fireflies))
 	{
 		Base = LoadObject<UMaterialInterface>(nullptr, DuelAcademy::SprayMaterial, nullptr, LOAD_NoWarn | LOAD_Quiet);
 	}
@@ -155,20 +291,142 @@ void ADAEmitter::BeginPlay()
 	{
 		UMaterialInstanceDynamic* MID = UMaterialInstanceDynamic::Create(Base, this);
 		MID->SetVectorParameterValue(TEXT("Color"), Color);
+		if (Glow >= 0.f)
+		{
+			MID->SetScalarParameterValue(TEXT("Glow"), Glow);
+		}
 		Puffs->SetMaterial(0, MID);
 	}
 	Puffs->ClearInstances();
 	Particles.SetNum(Count);
 	for (int32 i = 0; i < Count; ++i)
 	{
+		Particles[i].bSplash = Kind == EDAEmitterKind::Jet && i >= FirstSplash;
 		Respawn(Particles[i], true);
 		Puffs->AddInstance(FTransform(FQuat::Identity, Particles[i].Start, FVector(0.01)), false);
 		Puffs->SetCustomDataValue(i, 0, 0.f, false);
 	}
 }
 
+FTransform ADAEmitter::DropletTransform(const FVector& Pos, const FVector& Vel, float Size, float StretchPerSpeed)
+{
+	// A falling drop reads as a short streak: stretch the sphere along its velocity (up to 4x at speed).
+	const float Speed = static_cast<float>(Vel.Size());
+	if (Speed < 1.f || StretchPerSpeed <= 0.f)
+	{
+		return FTransform(FQuat::Identity, Pos, FVector(Size));
+	}
+	const float Stretch = 1.f + FMath::Min(Speed * StretchPerSpeed, 3.f);
+	return FTransform(FRotationMatrix::MakeFromX(Vel).ToQuat(), Pos, FVector(Size * Stretch, Size, Size));
+}
+
+void ADAEmitter::RespawnJet(FPuff& P, bool bInitial)
+{
+	if (P.bSplash)
+	{
+		// Splash droplets sleep until a stream droplet lands (TriggerSplash).
+		P.bIdle = true;
+		P.Age = 0.f;
+		P.Life = 1.f;
+		return;
+	}
+	// Leave the nozzle inside a narrow cone with a few percent of speed jitter: the stream frays as it flies.
+	const FVector Axis = JetLocalVelocity.GetSafeNormal(UE_SMALL_NUMBER, FVector::UpVector);
+	FVector U = FVector::CrossProduct(Axis, FMath::Abs(Axis.Z) < 0.9 ? FVector::UpVector : FVector::ForwardVector).GetSafeNormal();
+	const FVector V = FVector::CrossProduct(Axis, U);
+	const float Cone = FMath::DegreesToRadians(JetSpread) * FMath::Sqrt(Rng.FRand());
+	const float Around = Rng.FRandRange(0.f, 2.f * PI);
+	const FVector Dir = Axis * FMath::Cos(Cone) + (U * FMath::Cos(Around) + V * FMath::Sin(Around)) * FMath::Sin(Cone);
+	P.Velocity = Dir * (JetLocalVelocity.Size() * Rng.FRandRange(0.96f, 1.04f));
+	P.Start = (U * Rng.FRandRange(-1.f, 1.f) + V * Rng.FRandRange(-1.f, 1.f)) * (BaseSize * 20.0);
+	// Its own flight time down to the water (the jitter changes it a little).
+	const float Drop = FloorZ - static_cast<float>(GetActorLocation().Z);
+	const float Vz = static_cast<float>(P.Velocity.Z);
+	const float Disc = Vz * Vz - 2.f * Gravity * Drop;
+	P.Life = FMath::Clamp(Disc > 0.f ? (Vz + FMath::Sqrt(Disc)) / Gravity : JetFlightTime, 0.1f, 8.f);
+	P.Age = bInitial ? Rng.FRandRange(0.f, P.Life) : 0.f;
+	P.bIdle = false;
+	P.Size0 = BaseSize * Rng.FRandRange(0.65f, 1.1f);
+	P.Size1 = P.Size0 * 0.7f;
+}
+
+void ADAEmitter::TriggerSplash(const FVector& Where)
+{
+	if (FirstSplash >= Particles.Num())
+	{
+		return;
+	}
+	FPuff& P = Particles[NextSplash];
+	NextSplash = NextSplash + 1 < Particles.Num() ? NextSplash + 1 : FirstSplash;
+	// Thrown up and outward from the landing point; back on the water after exactly one hop.
+	const float Up = FMath::Sqrt(2.f * Gravity * FMath::Max(Rise, 1.f)) * Rng.FRandRange(0.45f, 1.f);
+	const float Out = Spread / 0.4f * Rng.FRandRange(0.2f, 1.f);
+	const float A = Rng.FRandRange(0.f, 2.f * PI);
+	P.bIdle = false;
+	P.Start = Where;
+	P.Velocity = FVector(FMath::Cos(A) * Out, FMath::Sin(A) * Out, Up);
+	P.Age = 0.f;
+	P.Life = FMath::Max(2.f * Up / Gravity, 0.05f);
+	P.Size0 = BaseSize * Rng.FRandRange(0.45f, 0.8f);
+	P.Size1 = P.Size0 * 0.6f;
+}
+
+void ADAEmitter::TickFireflies(float DeltaSeconds)
+{
+	// Night only: fade in at dusk, hide the component by day.
+	float Night = 1.f;
+	if (const UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
+	{
+		if (const ADAIslandManager* M = Sub->GetManager())
+		{
+			Night = M->GetNightFactor();
+		}
+	}
+	Night = FMath::IsFinite(Night) ? FMath::Clamp(Night, 0.f, 1.f) : 1.f;
+	NightGlow = FMath::FInterpTo(NightGlow, Night, DeltaSeconds, 0.5f);
+	const bool bShow = NightGlow > 0.02f;
+	if (Puffs->IsVisible() != bShow)
+	{
+		Puffs->SetVisibility(bShow);
+	}
+	if (!bShow)
+	{
+		return;
+	}
+	const float T = static_cast<float>(GetWorld()->GetTimeSeconds());
+	Transforms.SetNum(Particles.Num(), EAllowShrinking::No);
+	for (int32 i = 0; i < Particles.Num(); ++i)
+	{
+		const FPuff& P = Particles[i];
+		// Each mote wanders round its own home on three slow, unrelated sines and blinks at its own pace.
+		const float K = P.Seed;
+		const FVector Drift(FMath::Sin(T * 0.31f + K) * 70.0, FMath::Cos(T * 0.23f + K * 1.7f) * 70.0, FMath::Sin(T * 0.41f + K * 0.6f) * 28.0);
+		const float Blink = FMath::Max(0.f, FMath::Sin(T * (0.8f + 0.9f * FMath::Frac(K * 0.137f)) + K * 2.3f));
+		const float Light = Blink * Blink * Blink;
+		Transforms[i] = FTransform(FQuat::Identity, P.Start + Drift, FVector(BaseSize * (0.6f + 0.4f * Light)));
+		Puffs->SetCustomDataValue(i, 0, MaxOpacity * NightGlow * Light, false);
+	}
+	Puffs->BatchUpdateInstancesTransforms(0, Transforms, false, true, true);
+}
+
 void ADAEmitter::Respawn(FPuff& P, bool bInitial)
 {
+	if (Kind == EDAEmitterKind::Jet)
+	{
+		RespawnJet(P, bInitial);
+		return;
+	}
+	if (Kind == EDAEmitterKind::Fireflies)
+	{
+		// Motes never respawn: a home inside the swarm's cylinder and a random number for drift and blink.
+		const float A = Rng.FRandRange(0.f, 2.f * PI);
+		const float R = Spread * FMath::Sqrt(Rng.FRand());
+		P.Start = FVector(FMath::Cos(A) * R, FMath::Sin(A) * R, Rng.FRandRange(30.f, FMath::Max(Rise, 40.f)));
+		P.Seed = Rng.FRandRange(0.f, 1000.f);
+		P.Life = Lifetime;
+		P.Age = 0.f;
+		return;
+	}
 	P.Life = Lifetime * Rng.FRandRange(0.75f, 1.25f);
 	P.Age = bInitial ? Rng.FRandRange(0.f, P.Life) : 0.f;
 	float A = Rng.FRandRange(0.f, 2.f * PI);
@@ -222,8 +480,9 @@ void ADAEmitter::Tick(float DeltaSeconds)
 		{
 			const APlayerController* PC = GetWorld()->GetFirstPlayerController();
 			const APawn* Pawn = PC ? PC->GetPawn() : nullptr;
-			// droplets are specks: nobody sees them past ~80 m
-			const float Range = Kind == EDAEmitterKind::Spray ? 8000.f : 25000.f;
+			// droplets and fireflies are specks: nobody sees them past ~80 m (a jet's stream a little further)
+			const float Range = Kind == EDAEmitterKind::Spray || Kind == EDAEmitterKind::Fireflies ? 8000.f
+				: Kind == EDAEmitterKind::Jet ? 12000.f : 25000.f;
 			bVisibleToPlayer = !Pawn || FVector::Dist(Pawn->GetActorLocation(), GetActorLocation()) < Range * FMath::Max(EffectScale, 1.f);
 		}
 	}
@@ -231,10 +490,60 @@ void ADAEmitter::Tick(float DeltaSeconds)
 	{
 		return;
 	}
+	if (Kind == EDAEmitterKind::Fireflies)
+	{
+		TickFireflies(DeltaSeconds);
+		return;
+	}
+
+	Transforms.SetNum(Particles.Num(), EAllowShrinking::No);
+	if (Kind == EDAEmitterKind::Jet)
+	{
+		// Real time, real gravity: Rate only sets how dense the stream is (BeginPlay).
+		const float Dt = FMath::Min(DeltaSeconds, 0.1f);
+		const FVector Down(0.0, 0.0, Gravity);
+		const float FloorLocal = FloorZ - static_cast<float>(GetActorLocation().Z);
+		for (int32 i = 0; i < Particles.Num(); ++i)
+		{
+			FPuff& P = Particles[i];
+			if (P.bSplash && P.bIdle)
+			{
+				Transforms[i] = FTransform(FQuat::Identity, FVector(0.0, 0.0, FloorLocal), FVector(0.001));
+				Puffs->SetCustomDataValue(i, 0, 0.f, false);
+				continue;
+			}
+			P.Age += Dt;
+			if (P.Age >= P.Life)
+			{
+				if (P.bSplash)
+				{
+					P.bIdle = true;
+					Transforms[i] = FTransform(FQuat::Identity, FVector(0.0, 0.0, FloorLocal), FVector(0.001));
+					Puffs->SetCustomDataValue(i, 0, 0.f, false);
+					continue;
+				}
+				// The droplet reached the water: a splash hops up where it landed, the droplet starts over.
+				FVector Landed = P.Start + P.Velocity * P.Life - Down * (0.5f * P.Life * P.Life);
+				Landed.Z = FloorLocal + 1.0;
+				TriggerSplash(Landed);
+				RespawnJet(P, false);
+			}
+			const float T = P.Age / P.Life;
+			const FVector Pos = P.Start + P.Velocity * P.Age - Down * (0.5f * P.Age * P.Age);
+			const FVector Vel = P.Velocity - Down * P.Age;
+			const float Size = FMath::Lerp(P.Size0, P.Size1, T);
+			// Stream: solid from the nozzle on, thinning out just before it lands. Splash: fades as it hops.
+			const float Opacity = P.bSplash ? MaxOpacity * 0.8f * (1.f - T)
+				: MaxOpacity * FMath::Min(1.f, T * 20.f) * FMath::Min(1.f, (1.f - T) * 8.f + 0.35f);
+			Transforms[i] = DropletTransform(Pos, Vel, Size, P.bSplash ? 0.002f : 0.004f);
+			Puffs->SetCustomDataValue(i, 0, Opacity, false);
+		}
+		Puffs->BatchUpdateInstancesTransforms(0, Transforms, false, true, true);
+		return;
+	}
 
 	// Wind: a slow lean so smoke plumes drift.
 	const FVector Wind(160.0, 60.0, 0.0);
-	Transforms.SetNum(Particles.Num(), EAllowShrinking::No);
 	for (int32 i = 0; i < Particles.Num(); ++i)
 	{
 		FPuff& P = Particles[i];
@@ -248,7 +557,15 @@ void ADAEmitter::Tick(float DeltaSeconds)
 			- FVector(0.0, 0.0, 0.5f * Gravity * P.Age * P.Age);
 		const float Size = FMath::Lerp(P.Size0, P.Size1, FMath::Sqrt(T));
 		const float Opacity = MaxOpacity * FMath::Pow(FMath::Sin(T * PI), 0.8f);
-		Transforms[i] = FTransform(FQuat::Identity, Pos, FVector(Size));
+		if (Kind == EDAEmitterKind::Spray)
+		{
+			// droplets streak a little along their hop
+			Transforms[i] = DropletTransform(Pos, P.Velocity - FVector(0.0, 0.0, Gravity * P.Age), Size, 0.002f);
+		}
+		else
+		{
+			Transforms[i] = FTransform(FQuat::Identity, Pos, FVector(Size));
+		}
 		Puffs->SetCustomDataValue(i, 0, Opacity, false);
 	}
 	// one batched update per frame (marks the render state dirty once)

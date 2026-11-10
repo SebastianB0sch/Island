@@ -15,13 +15,16 @@ from . import common as C
 #   _N normal maps      normal map        (Normal sampler)
 #   splat maps          masks             (Masks sampler)
 #   colour textures     default sRGB      (Color sampler)
-LINEAR = {"T_Noise", "T_WaterStreaks"}
-MASKS = {"T_TerrainSplatA", "T_TerrainSplatB"}
+# water data textures (Tools/dai/water.py): foam / caustics / rain rings are plain linear data ...
+LINEAR = {"T_Noise", "T_WaterStreaks", "T_WaterFoam", "T_Caustics", "T_Ripples"}
+# ... the island-wide maps are channel masks, clamped like the splat maps (they must not wrap at the edge)
+MASKS = {"T_TerrainSplatA", "T_TerrainSplatB", "T_WaveMask", "T_WaterShore"}
+NORMALS = {"T_WaterNormal", "T_WaterDetailN", "T_FlatNormal"}
 UI = {"T_IslandMap"}
 
 
 def texture_kind(name):
-    if name.endswith("_N") or name in ("T_WaterNormal", "T_FlatNormal"):
+    if name.endswith("_N") or name in NORMALS:
         return "normal"
     if name in MASKS or name.endswith("_ORM") or name.endswith("_R") or name == "T_DefaultMask":
         return "masks"
@@ -94,6 +97,9 @@ def import_textures(slow=None):
                         mip_gen_settings=unreal.TextureMipGenSettings.TMGS_NO_MIPMAPS)
         if n in MASKS or n == "T_TerrainColor":
             C.set_props(tex, address_x=unreal.TextureAddress.TA_CLAMP, address_y=unreal.TextureAddress.TA_CLAMP)
+        if n == "T_WaveMask":
+            # 256 x 256, sampled in the vertex shader at mip 0 and bilinearly by ADAIslandManager: keep it exact
+            C.set_props(tex, mip_gen_settings=unreal.TextureMipGenSettings.TMGS_NO_MIPMAPS)
     C.log(f"textures: {len(names)}")
     return names
 
