@@ -135,8 +135,7 @@
         0.35,
         0.4
       ],
-      "scale": 0.956,
-      "fab_look": "fab_male_a"
+      "scale": 0.956
     },
     {
       "id": "academy_classroom_student_02",
@@ -166,8 +165,7 @@
         0.65,
         0.25
       ],
-      "scale": 0.994,
-      "fab_look": "fab_male_b"
+      "scale": 0.994
     },
     {
       "id": "academy_test_room_proctor",
@@ -264,8 +262,7 @@
         0.012,
         0.01
       ],
-      "scale": 1.014,
-      "fab_look": "fab_male_c"
+      "scale": 1.014
     },
     {
       "id": "gym_assembly_student_02",
@@ -295,8 +292,7 @@
         0.3,
         0.12
       ],
-      "scale": 0.985,
-      "fab_look": "fab_male_d"
+      "scale": 0.985
     },
     {
       "id": "gym_assembly_student_03",
@@ -326,8 +322,7 @@
         0.16,
         0.07
       ],
-      "scale": 0.975,
-      "fab_look": "fab_male_a"
+      "scale": 0.975
     },
     {
       "id": "crowler_office_crowler",
@@ -459,8 +454,7 @@
         0.08,
         0.22
       ],
-      "scale": 0.994,
-      "fab_look": "fab_male_b"
+      "scale": 0.994
     },
     {
       "id": "slifer_cafeteria_student_02",
@@ -491,8 +485,7 @@
         0.02,
         0.012
       ],
-      "scale": 0.975,
-      "fab_look": "fab_male_c"
+      "scale": 0.975
     },
     {
       "id": "slifer_banner_room_banner",
@@ -647,8 +640,7 @@
         0.26,
         0.09
       ],
-      "scale": 0.975,
-      "fab_look": "fab_male_d"
+      "scale": 0.975
     },
     {
       "id": "ra_cafeteria_student_02",
@@ -678,8 +670,7 @@
         0.15,
         0.5
       ],
-      "scale": 0.946,
-      "fab_look": "fab_male_a"
+      "scale": 0.946
     },
     {
       "id": "obelisk_dining_student_01",
@@ -709,8 +700,7 @@
         0.08,
         0.22
       ],
-      "scale": 0.956,
-      "fab_look": "fab_male_b"
+      "scale": 0.956
     },
     {
       "id": "obelisk_dining_student_02",
@@ -740,8 +730,7 @@
         0.02,
         0.012
       ],
-      "scale": 0.936,
-      "fab_look": "fab_male_c"
+      "scale": 0.936
     },
     {
       "id": "academy_arena_jaden",
@@ -839,8 +828,7 @@
         0.65,
         0.25
       ],
-      "scale": 0.975,
-      "fab_look": "fab_male_d"
+      "scale": 0.975
     },
     {
       "id": "abandoned_dorm_titan",

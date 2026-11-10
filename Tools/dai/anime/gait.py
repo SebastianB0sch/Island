@@ -149,7 +149,7 @@ class Rig:
         self.length = {b.name: float(b.length) for b in arm.data.bones}
         self.joint = {n: m.translation.copy() for n, m in self.rest.items()}
         # Limb segments are measured between joint heads, not along the (arbitrary) bone tails:
-        # the VRoid cast skeletons keep display tails pointing up even though the limb hangs down.
+        # imported cast skeletons may keep display tails pointing up even though the limb hangs down.
         self.seg = {}
         for parent, child in (
             ("thigh_l", "calf_l"), ("thigh_r", "calf_r"),
@@ -283,7 +283,7 @@ def _foot(rig, gait, phase, side):
 
     The contact point travels backwards at the authored speed during stance; the ankle is
     placed above it so the heel, sole or ball is exactly on the ground. The shoe dimensions
-    come from the target rig, so the same gait plants on the VRoid cast and on the fallback
+    come from the target rig, so the same gait plants on imported models and on the cast
     skeleton.
     """
     lp = (phase + (0.0 if side == "l" else 0.5)) % 1.0

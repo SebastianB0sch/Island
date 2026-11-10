@@ -207,7 +207,7 @@ def pose_action(dst_arm, name, keys):
     "roll": degrees} which points the bone's local Y axis along a world direction, or
     {"seg": direction, "rest": reference} which applies the world rotation that takes a rest-space segment
     direction to a target direction (works on rigs whose bone tails do not follow the limb joints, such as
-    the VRoid cast skeletons). The optional "_pelvis_offset" entry moves the pelvis (metres)."""
+    imported cast skeletons). The optional "_pelvis_offset" entry moves the pelvis (metres)."""
     out = bpy.data.actions.new(name)
     _assign(dst_arm, out)
     rest = {b.name: b.matrix_local.copy() for b in dst_arm.data.bones}

@@ -51,8 +51,8 @@ Thumbs.db
 # third-party asset staging (curated assets are copied into SourceAssets / Tools/thirdparty/<pack>)
 Tools/thirdparty/_staging/
 
-# Licensed Fab content is installed locally by Tools/import_fab_anime.py and
-# must never be committed (see Docs/FAB_ANIME.md).
+# The licensed Fab Anime Character Pack is no longer used by the project. A copy
+# left over from an older checkout must still never be committed.
 DuelAcademyIsland/Content/AnimeCharacters/
 
 # Licensed Fab nature / prop packs are installed locally by
@@ -63,6 +63,5 @@ DuelAcademyIsland/Content/Stylized_PBR_Nature/
 DuelAcademyIsland/Content/TropicalGardenLounge/
 DuelAcademyIsland/Content/CollegeRaimon/
 
-# FBX exports / retargeted locomotion takes derived from the licensed Fab pack
-# (Tools/export_fab_locomotion.py, Tools/retarget_fab_anime.py).
+# Leftover FBX exports / retargeted takes derived from that pack (older checkouts).
 Tools/thirdparty/fab_anime/

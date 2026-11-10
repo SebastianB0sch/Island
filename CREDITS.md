@@ -3,7 +3,8 @@
 Duel Academy Island is an unofficial, non-commercial fan project inspired by *Yu-Gi-Oh! GX*.
 Yu-Gi-Oh! and all related names are trademarks of their respective owners. The island's buildings,
 terrain and vegetation are original interpretations modelled by the procedural pipeline in `Tools/`.
-The anime cast is built from the VRoid sample avatars listed below and restyled by the same pipeline.
+The anime cast is the project's own work too: every character is modelled from scratch by the generator in
+`Tools/dai/anime/atelier` (original faces, hair and outfits); no third-party character model is used.
 
 ## Duel data and portraits
 
@@ -15,21 +16,15 @@ YGOPRODeck-sourced images used by the reference project.
 
 `Content/Data/Portraits/` contains the reference project's character busts and expression frames
 (Konami *Duel Links* renders, including the official expression cut-ins for the regulars), plus
-portraits and expression frames rendered locally from the project's own VRoid-derived cast
+portraits and expression frames rendered locally from the project's own cast
 (`Tools/render_portraits.py`) and a few UI icons. The Duel Links renders are fan-project reference
 assets and are **not** redistributable. The generated portraits and expressions come from the
 project's own cel-shaded models, described below.
 
 ## Local-only licensed content
 
-The optional **Fab Anime Character Pack (Legacy)** used by some ambient NPCs is licensed marketplace
-content owned by the project operator. It is installed locally with `Tools/import_fab_anime.py`, excluded
-from git, and **not redistributed** with this repository. The locomotion FBXs retargeted from the pack
-(`Tools/retarget_fab_anime.py`) and the resulting `A_Anime_*` takes are local-only derivatives and are
-covered by the same restriction. See [Docs/FAB_ANIME.md](Docs/FAB_ANIME.md).
-
 The optional **Fab nature / prop packs** (StyleHex FREE Stylized Forest Sample, Stylized PBR Nature
-foliage and rocks, the Tropical Garden Lounge vegetation, and the College Raimon environment kit) are also
+foliage and rocks, the Tropical Garden Lounge vegetation, and the College Raimon environment kit) are
 licensed marketplace content. They are installed locally with `Tools/import_fab_nature.py`, excluded from
 git, and **not redistributed**. Without them the game uses the native procedural vegetation, the curated
 CC0 rocks/props and the remaining procedural street furniture. See
@@ -37,9 +32,7 @@ CC0 rocks/props and the remaining procedural street furniture. See
 
 ## Third-party assets
 
-All third-party art below is **CC0 / public domain**, **CC-BY** (attribution given here) or, for the
-VRoid sample avatars the anime cast is built from, the **VRoid Hub conditions of use** embedded in each
-model (modification and redistribution allowed, credit not required).
+All third-party art below is **CC0 / public domain**, **CC-BY** (attribution given here).
 Every folder keeps a `SOURCE.txt` with the download URLs, license evidence and file hashes.
 Paths are relative to `Tools/thirdparty/`.
 
@@ -260,9 +253,6 @@ Paths are relative to `Tools/thirdparty/`.
 | `sweethome3d/hedge` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | texture Leaves |
 | `sweethome3d/hydrangea` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_FlowerBush_Blue, SM_FlowerBush_White |
 | `sweethome3d/roses_bush` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_FlowerBush_Red, SM_FlowerBush_Yellow |
-| `vroid/avatar_sample_a` | VRoid Project (pixiv Inc.) | VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required | <https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604> | anime cast base model vroid_a |
-| `vroid/avatar_sample_b` | VRoid Project (pixiv Inc.) | VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required | <https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604> | anime cast base model vroid_b |
-| `vroid/avatar_sample_c` | VRoid Project (pixiv Inc.) | VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required | <https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604> | anime cast base model vroid_c |
 
 ### CC-BY attributions
 

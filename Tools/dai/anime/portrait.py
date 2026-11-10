@@ -2,7 +2,7 @@
 
 The dialogue / duel UI loads 512 x 512 PNGs from Content/Data/Portraits.  The
 existing local-only renders came from Duel Links; the missing speakers are
-rendered here from the VRoid-derived cast models, so every named character and
+rendered here from the project's own cast models, so every named character and
 NPC has art in the same style as the people who actually stand on the island.
 
 The background is flattened onto the exact panel colour used by the UI
@@ -30,7 +30,7 @@ def _ensure_scale(entry):
     return entry
 
 
-def render_rgba(path, cid, entry, res=SIZE, samples=16, view=0.0, distance=0.95, target_z=-0.10, log=print):
+def render_rgba(path, cid, entry, res=SIZE, samples=16, view=0.0, distance=1.0, target_z=0.02, log=print):
     """Render one transparent bust (RGBA) to `path`."""
     entry = _ensure_scale(entry)
     BUILD.render_lineup(
@@ -82,8 +82,8 @@ def _face_crop(image):
     return _flatten(out).resize((SIZE, SIZE), Image.LANCZOS)
 
 
-def render_expression(out_dir, cid, entry, expression, weights, samples=16, view=0.0, distance=0.72,
-                      target_z=0.02, log=print):
+def render_expression(out_dir, cid, entry, expression, weights, samples=16, view=0.0, distance=0.74,
+                      target_z=0.10, log=print):
     """Render one expression frame (head-and-shoulders) for a generated character."""
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, cid + "_" + expression + ".png")
@@ -101,7 +101,7 @@ def render_expression(out_dir, cid, entry, expression, weights, samples=16, view
     return path
 
 
-def render_pair(out_dir, cid, entry, samples=16, view=0.0, distance=0.95, target_z=-0.10, log=print):
+def render_pair(out_dir, cid, entry, samples=16, view=0.0, distance=1.0, target_z=0.02, log=print):
     """Write <out_dir>/<cid>.png (bust) and <cid>_face.png (head crop)."""
     os.makedirs(out_dir, exist_ok=True)
     bust = os.path.join(out_dir, cid + ".png")

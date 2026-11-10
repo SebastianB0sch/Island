@@ -208,7 +208,7 @@ def load(path, log=print, expression=None):
     for m in meshes:
         if m.data.shape_keys:
             co = None
-            src = names.get(m.name.split(".")[0])
+            src = names.get(m.name.split(".")[0]) or [k.name for k in m.data.shape_keys.key_blocks[1:]]
             if expression and src:
                 co = _bake_expression(m, src, expression)
             deltas = _morph_deltas(m, src) if src else {}
@@ -236,6 +236,40 @@ FACE_MORPHS = {
 MORPH_ATTR = "da_morph_"
 
 
+# The same morphs under the names other pipelines export (VRM 1.0 expressions, ARKit, common MMD / Unity
+# names), so an artist-made model keeps its facial rig. Matched case-insensitively against the end of the
+# blendshape name; the VRoid "Fcl_" name above is tried first.
+MORPH_ALIASES = {
+    "Blink": ("blink", "eyeblink", "eyesclosed", "eye_close", "mabataki"),
+    "Blink_L": ("blinkleft", "blink_l", "eyeblinkleft", "eyeblink_l", "wink_l", "winkleft"),
+    "Blink_R": ("blinkright", "blink_r", "eyeblinkright", "eyeblink_r", "wink_r", "winkright"),
+    "A": ("aa", "vrc.v_aa", "mouth_a", "v_aa", "_a"), "I": ("ih", "vrc.v_ih", "mouth_i", "v_ih", "_i"),
+    "U": ("ou", "vrc.v_ou", "mouth_u", "v_ou", "_u"), "E": ("ee", "vrc.v_e", "mouth_e", "v_e", "_e"),
+    "O": ("oh", "vrc.v_oh", "mouth_o", "v_oh", "_o"),
+    "Joy": ("happy", "joy", "smile"), "Angry": ("angry", "anger"), "Sorrow": ("sad", "sorrow"),
+    "Surprised": ("surprised", "surprise"), "Fun": ("relaxed", "fun"),
+    "EyeJoy": ("eye_joy", "eyesmile", "eye_smile", "eyejoy"),
+    "BrowAngry": ("brow_angry", "browangry", "browdown"), "BrowSorrow": ("brow_sorrow", "browsorrow", "browinnerup"),
+}
+
+
+def _morph_index(names, morph):
+    """Index into `names` of the blendshape that plays `morph` (None if the model has none)."""
+    low = [n.lower() for n in names]
+    key = "fcl_" + FACE_MORPHS[morph].lower()
+    for i, n in enumerate(low):
+        if n.endswith(key):
+            return i
+    for alias in MORPH_ALIASES.get(morph, ()):
+        for i, n in enumerate(low):
+            if n == alias or n.endswith("." + alias) or n.endswith("_" + alias.lstrip("_")) and len(alias) > 2:
+                return i
+    for i, n in enumerate(low):                      # a shape key simply named after the morph
+        if n == morph.lower():
+            return i
+    return None
+
+
 def _morph_deltas(obj, names):
     """{morph: (n*3,) offset from the base model's basis} for the FACE_MORPHS this mesh has."""
     kb = obj.data.shape_keys.key_blocks
@@ -243,8 +277,8 @@ def _morph_deltas(obj, names):
     base = np.empty(n * 3)
     kb[0].data.foreach_get("co", base)
     out = {}
-    for morph, key in FACE_MORPHS.items():
-        i = next((i for i, nm in enumerate(names) if nm.lower().endswith("fcl_" + key.lower())), None)
+    for morph in FACE_MORPHS:
+        i = _morph_index(names, morph)
         if i is None or i + 1 >= len(kb):
             continue
         tgt = np.empty(n * 3)

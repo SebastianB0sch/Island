@@ -129,46 +129,8 @@ bool UDAAvatarComponent::SetupCast()
 	}
 	if (UDAAvatarAnimInstance* Inst = Cast<UDAAvatarAnimInstance>(SkelComp->GetAnimInstance()))
 	{
-		// The optional Fab retarget takes are longer than the procedural gait clips
-		// (1.167 s / 0.633 s versus 1.0 s / 0.7 s) and are authored at the pack's own
-		// stance speeds. Detect the pair from the installed clip lengths so the same
-		// component also works when the pack is absent and the gait takes are used.
-		// The values below are the measured planted-foot speeds of the retargeted
-		// takes (cm/s, before BodyScale); the old 130/265 guess made the sprint clip
-		// slide at more than double speed.
-		const UAnimSequence* WalkTake = Anims.FindRef(TEXT("Walk"));
-		const UAnimSequence* RunTake = Anims.FindRef(TEXT("Run"));
-		const bool bFabLocomotion = WalkTake && RunTake
-			&& WalkTake->GetPlayLength() > 1.05f
-			&& RunTake->GetPlayLength() < 0.68f;
-		float WalkRef = WalkAnimSpeed;
-		float RunRef = RunAnimSpeed;
-		if (bFabLocomotion)
-		{
-			struct FFabLocomotionSpeed
-			{
-				const TCHAR* Group;
-				float Walk;
-				float Run;
-			};
-			static const FFabLocomotionSpeed Speeds[] = {
-				{ TEXT("VroidA"), 138.f, 555.f },
-				{ TEXT("VroidB"), 133.f, 558.f },
-				{ TEXT("VroidC"), 158.f, 659.f },
-			};
-			WalkRef = 150.f;   // unknown group: keep a human walk / sprint reference
-			RunRef = 420.f;
-			for (const FFabLocomotionSpeed& Speed : Speeds)
-			{
-				if (AnimGroup.Equals(Speed.Group, ESearchCase::IgnoreCase))
-				{
-					WalkRef = Speed.Walk;
-					RunRef = Speed.Run;
-					break;
-				}
-			}
-		}
-		Inst->Configure(Anims, WalkRef * BodyScale, RunRef * BodyScale);
+		// Reference ground speeds of the gait takes (cm/s, before BodyScale).
+		Inst->Configure(Anims, WalkAnimSpeed * BodyScale, RunAnimSpeed * BodyScale);
 	}
 	else
 	{

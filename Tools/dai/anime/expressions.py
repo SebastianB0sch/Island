@@ -1,34 +1,27 @@
-"""Facial expression recipes for the VRoid-derived cast.
+"""Facial expression recipes for the cast's portrait frames.
 
-The base models expose VRoid's ``Fcl_ALL_*`` / ``Fcl_BRW_*`` / ``Fcl_EYE_*`` /
-``Fcl_MTH_*`` blendshapes.  The cast pipeline bakes a resting expression into
-the face, so an expression frame must be rendered by rebuilding the model with
-the target mix (see models._bake_expression and portrait.render_expression).
-
-The story data uses a small vocabulary: neutral, happy, laugh, angry,
-determined, shocked, sad, nervous, smug, thoughtful, proud, stern, sleepy,
-hungry, confused and apologetic.  Each recipe below is deliberately broad
-enough to read at the 164 px dialogue size, and keeps a little of the
-character's resting expression so the face stays recognisable.
+Every cast model carries the same facial morph targets (atelier/head.py: Joy, Fun, Angry, Sorrow,
+Surprised, the brow and blink morphs, the visemes). A story expression is a small mix of them, layered over
+a quarter of the character's resting expression so the face stays recognisable.
 """
 
-# expression -> blendshape weights (names after "Fcl_")
+# expression -> facial morph weights (the cast's morph targets, see atelier/head.py)
 WEIGHTS = {
-    "happy": {"ALL_Joy": 1.0},
-    "laugh": {"ALL_Fun": 1.0},
-    "angry": {"ALL_Angry": 1.0},
-    "determined": {"ALL_Angry": 0.55, "MTH_Angry": 0.30, "BRW_Angry": 0.25},
-    "shocked": {"ALL_Surprised": 1.0, "MTH_O": 0.25},
-    "sad": {"ALL_Sorrow": 1.0},
-    "nervous": {"ALL_Sorrow": 0.45, "ALL_Surprised": 0.50, "MTH_Sorrow": 0.15},
-    "smug": {"MTH_Fun": 0.85, "MTH_Joy": 0.20, "BRW_Angry": 0.25, "EYE_Close": 0.25, "EYE_Joy": 0.15},
-    "thoughtful": {"ALL_Sorrow": 0.45, "ALL_Neutral": 0.45, "BRW_Sorrow": 0.15},
-    "proud": {"ALL_Joy": 0.70, "ALL_Angry": 0.15, "BRW_Angry": 0.10},
-    "stern": {"ALL_Angry": 0.85, "BRW_Angry": 0.20},
-    "sleepy": {"EYE_Close": 0.85, "ALL_Sorrow": 0.10},
-    "hungry": {"ALL_Joy": 0.55, "ALL_Surprised": 0.35, "MTH_O": 0.35},
-    "confused": {"ALL_Sorrow": 0.45, "ALL_Surprised": 0.45, "BRW_Sorrow": 0.10},
-    "apologetic": {"ALL_Sorrow": 0.90, "MTH_Sorrow": 0.15},
+    "happy": {"Joy": 1.0},
+    "laugh": {"Fun": 0.6, "Joy": 0.6, "A": 0.35},
+    "angry": {"Angry": 1.0},
+    "determined": {"Angry": 0.60, "BrowAngry": 0.30},
+    "shocked": {"Surprised": 1.0, "O": 0.25},
+    "sad": {"Sorrow": 1.0},
+    "nervous": {"Sorrow": 0.50, "Surprised": 0.50},
+    "smug": {"Fun": 0.90, "BrowAngry": 0.25, "Blink": 0.20},
+    "thoughtful": {"Sorrow": 0.40, "BrowSorrow": 0.20},
+    "proud": {"Joy": 0.70, "BrowAngry": 0.20},
+    "stern": {"Angry": 0.85, "BrowAngry": 0.20},
+    "sleepy": {"Blink": 0.85, "BrowSorrow": 0.15},
+    "hungry": {"Joy": 0.55, "Surprised": 0.35, "O": 0.35},
+    "confused": {"Sorrow": 0.45, "Surprised": 0.45, "BrowSorrow": 0.10},
+    "apologetic": {"Sorrow": 0.90, "BrowSorrow": 0.15},
 }
 
 # The duel HUD's generic cut-in emotions (DADuelUI::SpawnDuelFxReaction).
@@ -45,6 +38,16 @@ GENERATED = {
     "student_m1", "student_f1", "student_f2", "unknown_student",
 }
 OFFICIAL = {"alexis", "bastion", "chazz", "syrus", "zane"}
+
+
+def resting(entry):
+    """Resting expression of a cast entry: its own override, else its design's."""
+    if entry.get("expression") is not None:
+        return dict(entry["expression"])
+    if entry.get("design"):
+        from .atelier import designs
+        return dict(designs.all_designs()[entry["design"]].get("expression") or {})
+    return {}
 
 
 def blend(resting, expression):

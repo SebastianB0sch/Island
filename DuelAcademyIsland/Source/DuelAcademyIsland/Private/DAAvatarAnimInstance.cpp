@@ -63,7 +63,7 @@ namespace
 			{
 				Out.Stiffness = 1.6f;
 				Out.Drag = 0.5f;
-				Out.Gravity = 0.06f;      // VRoid hair is modelled hanging: gravity is only a hint of weight
+				Out.Gravity = 0.06f;      // the hair is modelled hanging: gravity is only a hint of weight
 				Out.Cohesion = 0.5f;
 				Out.MaxAngle = 50.f;
 				Out.Inertia = 0.15f;
@@ -92,7 +92,7 @@ namespace
 		}
 		if (Name.Contains(TEXT("Bust")) || Name.Contains(TEXT("Hood")))
 		{
-			return false;       // body helpers / the removed VRoid hoodie: no secondary motion
+			return false;       // body helpers: no secondary motion
 		}
 		if (Name.StartsWith(TEXT("J_Sec_")))
 		{
