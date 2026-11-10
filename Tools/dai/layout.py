@@ -21,7 +21,7 @@ import numpy as np
 
 from . import atomic
 from . import config as C
-from . import jsonio, palette, terrain
+from . import jsonio, palette, terrain, water
 from .assets import load_placements
 from .assets import props as P
 from .assets import avatar as AV
@@ -66,7 +66,7 @@ def emitter_ring(pr, yaw):
 
 NANITE_MIN_TRIS = 40000
 # Nanite can't draw these (translucent / special shading)
-NANITE_BLOCKERS = {"glass", "water", "smoke", "beam", "hologram", "waterfall", "flow", "lava"}
+NANITE_BLOCKERS = {"glass", "water", "smoke", "beam", "hologram", "flow", "lava"}
 
 
 def split_translucent(meshes, skip=()):
@@ -701,8 +701,11 @@ class Layout:
                 self.static.append(dict(mesh=f"SM_Terrain_{ci:02d}_{cj:02d}", folder="Terrain", loc=[0, 0, 0], yaw=0.0,
                                         collision="complex", group="terrain", label=f"Terrain_{ci:02d}_{cj:02d}"))
         for n in ("SM_Ocean", "SM_SeaFloor", "SM_LakeSurface"):
-            self.static.append(dict(mesh=n, folder="Water", loc=[0, 0, 0], yaw=0.0, collision="none", group="water",
-                                    label=n.replace("SM_", "")))
+            e = dict(mesh=n, folder="Water", loc=[0, 0, 0], yaw=0.0, collision="none", group="water",
+                     label=n.replace("SM_", ""))
+            if n == "SM_Ocean":     # the clipmap rides under the camera (ADAOcean), snapped to keep its world grid
+                e["follow_camera"] = water.OCEAN_SNAP * 100.0
+            self.static.append(e)
 
     # ------------------------------------------------------------------ zones
     def zones(self):

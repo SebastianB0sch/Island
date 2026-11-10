@@ -122,9 +122,12 @@ def flat_square(name, half, z, cells, mat):
 
 
 def build_water(h, export=True, log=print):
-    """Ocean plane, sea floor plane and lake surface."""
+    """Ocean clipmap (follows the camera in game, see dai/water.py), sea floor plane and lake surface."""
+    from . import water
     objs = {}
-    ocean = flat_square("SM_Ocean", 20000.0, 0.0, 40, "M_Ocean")
+    ov, ot = water.clipmap()
+    ocean = _mesh_from_arrays("SM_Ocean", ov, ot, ov[:, :2] / 100.0, np.tile([0.0, 0.0, 1.0], (len(ov), 1)),
+                              "M_Ocean")
     seafloor = flat_square("SM_SeaFloor", 20000.0, C.SEA_FLOOR - 0.4, 8, "M_Sand")
     objs["SM_Ocean"] = ocean
     objs["SM_SeaFloor"] = seafloor
@@ -168,5 +171,8 @@ def build_water(h, export=True, log=print):
     if export:
         for name, o in objs.items():
             blend.export_fbx([o], os.path.join(C.OUT_MESHES, "Water", name + ".fbx"))
-    log(f"  water: ocean, sea floor, lake ({len(faces)} quads)")
+        # depth / shore distance / exposure / lake mask for the water material (16 bit: depth needs it)
+        field = water.water_field(h, C.WORLD_SIZE, C.LAKE_LEVEL, C.LAKE_CENTER, C.LAKE_RADII, C.LAKE_ROT)
+        water.save_png16(os.path.join(C.OUT_TEXTURES, "T_WaterField.png"), field)
+    log(f"  water: ocean clipmap ({len(ot)} tris), sea floor, lake ({len(faces)} quads)")
     return objs

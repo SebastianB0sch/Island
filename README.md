@@ -470,8 +470,13 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
   wall-hung and hanging things, trims and doorways are left free).
 * **Day/night cycle** (Lumen GI, sky atmosphere, moon): lamps, windows and the lighthouse turn on at
   night, the crater glows. Time controls: **T** pause, **[ ]** speed, **N** skip 3 h.
-* Swimmable ocean and lake (single-layer water), volcano smoke, hot-spring steam, waterfall mist,
-  bobbing ferry and boats, synthesized ambience (surf, wind, birds, volcano rumble, waterfall, crowd).
+* **Realistic water** (single-layer water): a Gerstner sea that follows the camera as a clipmap, keeps its
+  swell into the shallows and dies out at the breaking limit, surf rolling onto every beach, lapping foam at
+  the waterline, whitecaps, a calmer harbour, turquoise shallows over deep blue, caustics on the sea and lake
+  beds, an underwater view; the lake has its own chop, the spring stream flows, the falls and fountains
+  stream (`Tools/dai/water.py`, `duel_academy/water_hlsl.py`). Swimmable ocean and lake, volcano smoke,
+  hot-spring steam, waterfall mist, bobbing ferry and boats, synthesized ambience (surf, wind, birds,
+  volcano rumble, waterfall, crowd).
 * ~90 000 instanced trees, palms, bushes, ferns, flowers and rocks (Nanite).
 
 ### Controls
@@ -533,6 +538,7 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/config.py             island layout: locations, heights, paths, volcano, lake ...
   dai/terrain.py            heightfield, splat maps, colour map, Landscape heightmap
   dai/terrain_mesh.py       64 terrain chunks + ocean / sea floor / lake surfaces
+  dai/water.py              ocean clipmap, T_WaterField (depth / shore distance / exposure), T_Caustics
   dai/geo.py                MeshBuilder modelling kit (walls with openings, roofs, lathes, stairs ...)
   dai/palette.py            material palette (slot names -> UE material instances)
   dai/assets/*.py           one module per location (academy, dorms, harbor, ...) + props + avatar
@@ -579,7 +585,7 @@ DuelAcademyIsland/          the Unreal Engine 5.8 project
   and re-exports it with PBR material instances (`M_DA_PBR`, `M_DA_PBRFoliage`). Anything not
   registered falls back to the procedural version, so the build never breaks on a missing asset.
 * **Unreal side**: no binary assets are committed. `init_unreal.py` registers the menu; the build script
-  creates master materials node-by-node (terrain splat blend, single-layer water, hologram, smoke, lava,
+  creates master materials node-by-node (terrain splat blend, Gerstner single-layer water, hologram, smoke, lava,
   foliage wind …), imports meshes/textures/sounds and spawns ~1 500 actors + ~90 000 instances.
   Input actions, HUD and effects are created in C++ at runtime, so nothing depends on hand-made assets.
 

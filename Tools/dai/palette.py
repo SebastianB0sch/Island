@@ -10,14 +10,21 @@ kind:
   glass     - M_DA_Glass  (translucent, used for real openings you can see through)
   emissive  - M_DA_Emissive (unlit glow; lamps, screens, duel field lines)
   foliage   - M_DA_Foliage (two-sided, gentle wind sway via WPO)
-  water     - M_DA_Water (single layer water)
+  water     - M_DA_Water (realistic single layer water). Optional keys (defaults = the open sea):
+              absorb / scatter = per-metre light absorption / scattering (r, g, b); wave_height / wave_length /
+              choppy / wind_angle = Gerstner sea scale, size, sharpness and heading; mesh_spacing (m) and
+              clipmap (cell size per metre of distance, ocean only) = what the mesh can displace; use_field =
+              read depth / shore distance from T_WaterField; foam / surf (+ surf_spacing, surf_period,
+              surf_width, caps_at) = shore surf and whitecaps; detail_scale / detail_speed / detail_strength /
+              macro_strength = ripple normals; flow = (x, y) m/s Unreal world current for rivers.
+              STILL_WATER: the keys of a small calm body (pond, pool, tub, glass) - no waves, no shore data.
   lava      - M_DA_Lava (panning emissive)
   hologram  - M_DA_Hologram (additive, pulsing)
   smoke     - M_DA_Smoke (translucent, per-instance fade)
   terrain   - M_DA_Terrain (splat-mapped)
   beam      - M_DA_Beam (additive cone)
-  waterfall - M_DA_Waterfall (panning translucent water sheet)
-  flow      - M_DA_WaterFlow (world-aligned flowing water: fountain sheets, jets, foam; no UVs needed).
+  flow      - M_DA_WaterFlow (world-aligned falling / flowing water: falls, fountain sheets, jets, spouts,
+              white water; no UVs needed).
               flow = m/s along world Z (> 0 falls, < 0 rises), streak = streaks per metre across,
               stretch = how much longer they are than wide, foam_scale / foam_speed = churn on flat faces,
               base / contrast = opacity floor and streak contrast, sparkle = glints, wobble = surface wobble (cm)
@@ -28,6 +35,10 @@ tiling: UV tiling multiplier (mesh UVs are 1 unit = 1 metre).
 
 def _c(r, g, b):
     return (r, g, b)
+
+
+# M_DA_Water keys of a small calm body of water (pond, pool, tub, glass): no waves, no shore data, no surf
+STILL_WATER = dict(wave_height=0.0, use_field=0.0, clipmap=0.0, foam=0.0, surf=0.0, macro_strength=0.0)
 
 
 MATERIALS = {
@@ -112,7 +123,10 @@ MATERIALS = {
     "M_GymRoof":        dict(kind="opaque", color=_c(0.25, 0.55, 0.50), rough=0.4, metallic=0.5, detail=None),
     "M_CourtFloor":     dict(kind="opaque", color=_c(0.70, 0.48, 0.28), rough=0.35, detail="Planks", tiling=0.5),
     "M_CourtLine":      dict(kind="opaque", color=_c(0.95, 0.95, 0.95), rough=0.5, detail=None),
-    "M_HotWater":       dict(kind="water", color=_c(0.45, 0.75, 0.72), rough=0.05, detail=None),
+    # mineral hot spring: milky turquoise (strong scattering), simmering ripples
+    "M_HotWater":       dict(kind="water", color=_c(0.45, 0.75, 0.72), rough=0.04, detail=None,
+                             absorb=(0.55, 0.14, 0.12), scatter=(0.06, 0.11, 0.105), **STILL_WATER,
+                             detail_scale=0.7, detail_speed=2.5, detail_strength=0.45),
     "M_OnsenRock":      dict(kind="opaque", color=_c(0.40, 0.38, 0.36), rough=0.8, detail="Rock", tiling=0.5),
     "M_ShojiPaper":     dict(kind="opaque", color=_c(0.95, 0.92, 0.82), rough=0.9, detail=None),
 
@@ -137,13 +151,31 @@ MATERIALS = {
     "M_Soil":           dict(kind="opaque", color=_c(0.35, 0.26, 0.18), rough=1.0, detail="Dirt", tiling=0.5),
 
     # ------------------------------------------------------------ special effects / water
-    "M_Ocean":          dict(kind="water", color=_c(0.05, 0.35, 0.50), rough=0.05, detail=None),
-    "M_LakeWater":      dict(kind="water", color=_c(0.10, 0.45, 0.45), rough=0.05, detail=None),
+    # clear island sea: little absorbed blue, a touch of green scattering -> turquoise shallows, deep blue
+    # further out; a moderate swell from the south-west with wind sea on top
+    "M_Ocean":          dict(kind="water", color=_c(0.05, 0.35, 0.50), rough=0.02, detail=None,
+                             absorb=(0.38, 0.055, 0.03), scatter=(0.004, 0.022, 0.03)),
+    # the crater-fed lake: greener and less clear, short wind chop, gentle lapping on its shore
+    "M_LakeWater":      dict(kind="water", color=_c(0.10, 0.45, 0.45), rough=0.03, detail=None,
+                             absorb=(0.46, 0.11, 0.10), scatter=(0.008, 0.026, 0.02),
+                             wave_height=0.2, wave_length=0.22, choppy=0.8, wind_angle=65.0, mesh_spacing=3.0,
+                             clipmap=0.0, foam=0.5, surf=0.3, surf_spacing=2.5, surf_period=3.2, surf_width=6.0,
+                             caps_at=0.5, detail_scale=0.3, detail_strength=0.25),
     "M_Lava":           dict(kind="lava", color=_c(1.00, 0.35, 0.05), strength=40.0),
-    "M_Waterfall":      dict(kind="waterfall", color=_c(0.85, 0.95, 1.00), opacity=0.8),
+    # Volcano Falls: a heavy sheet, fast broad streaks (world-aligned flow, so the parabolic sheet needs no UVs)
+    "M_Waterfall":      dict(kind="flow", color=_c(0.85, 0.95, 1.00), opacity=0.75, flow=5.5, streak=0.9,
+                             stretch=6.0, base=0.35, contrast=1.6, sparkle=0.5, wobble=4.0, foam_scale=0.5,
+                             foam_speed=1.4),
+    # plunge pools: churned white water where a fall hits
+    "M_WhiteWater":     dict(kind="flow", color=_c(0.95, 0.97, 1.00), opacity=0.7, flow=0.0, foam_scale=0.35,
+                             foam_speed=2.0, base=0.05, contrast=2.4, sparkle=0.3, wobble=2.0),
+    # a thin trickle from a spout (bamboo pipe): fine fast threads
+    "M_SpoutWater":     dict(kind="flow", color=_c(0.90, 0.96, 1.00), opacity=0.6, flow=1.6, streak=7.0,
+                             stretch=3.0, base=0.3, contrast=1.5, sparkle=0.6, wobble=0.3),
     # fountains (assets/fountain.py): clear pools with small quick ripples, streaming sheets and jets, foam
-    "M_FountainWater":  dict(kind="water", color=_c(0.16, 0.60, 0.68), rough=0.03, detail=None,
-                             wave_scale=0.0045, wave_speed=6.0, wave_strength=0.6),
+    "M_FountainWater":  dict(kind="water", color=_c(0.16, 0.60, 0.68), rough=0.02, detail=None,
+                             absorb=(0.40, 0.06, 0.04), scatter=(0.01, 0.04, 0.045), **STILL_WATER,
+                             detail_scale=0.45, detail_speed=6.0, detail_strength=0.6),
     "M_FountainFall":   dict(kind="flow", color=_c(0.86, 0.95, 1.00), opacity=0.55, flow=2.4, streak=1.6,
                              stretch=4.0, base=0.22, contrast=1.8, sparkle=0.5, wobble=1.0),
     "M_FountainJet":    dict(kind="flow", color=_c(0.92, 0.97, 1.00), opacity=0.7, flow=-3.0, streak=3.0,

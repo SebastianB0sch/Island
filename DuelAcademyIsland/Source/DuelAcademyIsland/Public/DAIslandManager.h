@@ -51,7 +51,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Sky")
 	TObjectPtr<AExponentialHeightFog> HeightFog;
 
-	/** Scalar parameters "NightFactor" (0 day .. 1 night) and "TimeOfDay" (hours) are written here. */
+	/** Scalar parameters "NightFactor" (0 day .. 1 night), "TimeOfDay" (hours), "Underwater" (0..1) and
+	 *  "WaterSurfaceZ" (cm, the surface over the camera) are written here. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Sky")
 	TObjectPtr<UMaterialParameterCollection> ParameterCollection;
 
@@ -119,6 +120,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy")
 	bool IsNight() const { return bNightLightsOn; }
 
+	/** 0 above water .. 1 with the camera under the sea or the lake (drives PP_DA_Underwater via the MPC). */
+	UFUNCTION(BlueprintPure, Category = "Duel Academy")
+	float GetUnderwater() const { return Underwater; }
+
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
 	void SetHour(float NewHour);
 
@@ -142,6 +147,7 @@ private:
 	void GatherNightLights();
 	void SetNightLights(bool bOn);
 	void SanitizeTimeSettings();
+	void UpdateUnderwater(float DeltaSeconds);
 
 	UFUNCTION()
 	void HandleCalendarVisualHour(int32 NewHour);
@@ -156,6 +162,7 @@ private:
 	TArray<FNightLight> NightLights;
 
 	float NightFactor = 0.f;
+	float Underwater = 0.f;
 	bool bNightLightsOn = false;
 	bool bNightLightsInitialised = false;
 	int32 Day = 1;

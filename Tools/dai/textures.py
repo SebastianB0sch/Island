@@ -4,7 +4,8 @@ Procedural, tileable textures (numpy + Pillow).
   T_<Name>_D.png   grayscale detail (mean ~0.5; the UE master material multiplies
                    the palette tint by 2*D, so 0.5 = unchanged colour)
   T_<Name>_N.png   tangent-space normal map, DirectX (green-down) convention
-  T_WaterNormal, T_Noise, T_WaterStreaks, T_Lava, T_CardBack     special purpose textures
+  T_WaterNormal, T_Noise, T_WaterStreaks, T_Caustics, T_Lava, T_CardBack     special purpose textures
+  (T_WaterField - depth / shore distance under the water - is baked with the water meshes, dai/water.py)
 
 Everything is periodic so it tiles seamlessly.
 """
@@ -352,12 +353,14 @@ def build_textures(log=print):
     save_rgb(lava(), os.path.join(C.OUT_TEXTURES, "T_Lava.png"))
     save_gray(noise_tex(), os.path.join(C.OUT_TEXTURES, "T_Noise.png"))
     save_rgb(water_streaks(), os.path.join(C.OUT_TEXTURES, "T_WaterStreaks.png"))
+    from .water import caustics
+    save_gray(caustics(), os.path.join(C.OUT_TEXTURES, "T_Caustics.png"))
     save_rgb(card_back(), os.path.join(C.OUT_TEXTURES, "T_CardBack.png"))
     # neutral defaults for the PBR masters (one per sampler type)
     save_rgb(np.ones((8, 8, 3), np.float32), os.path.join(C.OUT_TEXTURES, "T_White.png"))
     save_rgb(np.tile(np.array([0.5, 0.5, 1.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_FlatNormal.png"))
     save_rgb(np.tile(np.array([1.0, 1.0, 0.0], np.float32), (8, 8, 1)), os.path.join(C.OUT_TEXTURES, "T_DefaultMask.png"))
-    log(f"  textures: {len(sets_lo) * 2 + 8} written")
+    log(f"  textures: {len(sets_lo) * 2 + 9} written")
     os.makedirs(C.OUT_DATA, exist_ok=True)
     build_photo_textures(log)
     return sorted(sets_lo)

@@ -2,6 +2,7 @@
 
 #include "DAWorldActors.h"
 
+#include "Camera/PlayerCameraManager.h"
 #include "Components/AudioComponent.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
@@ -514,5 +515,40 @@ void ADADoor::ApplyPose()
 		const float Angle = E * OpenAngle * Side;
 		PivotA->SetRelativeLocationAndRotation(FVector(-Width * 0.5f, 0.0, 0.0), FRotator(0.f, Angle, 0.f));
 		PivotB->SetRelativeLocationAndRotation(FVector(Width * 0.5f, 0.0, 0.0), FRotator(0.f, 180.f - Angle, 0.f));
+	}
+}
+
+// ======================================================================== ADAOcean
+
+ADAOcean::ADAOcean()
+{
+	PrimaryActorTick.bCanEverTick = true;
+	// after the camera has moved this frame, so the fine centre is never a frame behind
+	PrimaryActorTick.TickGroup = TG_PostUpdateWork;
+	Surface = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surface"));
+	RootComponent = Surface;
+	Surface->SetMobility(EComponentMobility::Movable);
+	Surface->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Surface->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+	Surface->SetCastShadow(false);
+	Surface->SetCanEverAffectNavigation(false);
+	Surface->bReceivesDecals = false;
+}
+
+void ADAOcean::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	const APlayerCameraManager* Cam = UGameplayStatics::GetPlayerCameraManager(this, 0);
+	if (!Cam)
+	{
+		return;
+	}
+	const FVector View = Cam->GetCameraLocation();
+	const double Step = FMath::Max(static_cast<double>(SnapSize), 1.0);
+	const FVector Here = GetActorLocation();
+	const FVector Snapped(FMath::RoundToDouble(View.X / Step) * Step, FMath::RoundToDouble(View.Y / Step) * Step, Here.Z);
+	if (!Snapped.Equals(Here, 1.0))
+	{
+		SetActorLocation(Snapped, false, nullptr, ETeleportType::TeleportPhysics);
 	}
 }

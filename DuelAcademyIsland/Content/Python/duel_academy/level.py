@@ -116,17 +116,23 @@ class Placer:
                     s.set_editor_property(k, v)
                 except Exception:  # noqa: BLE001
                     pass
-            # anime cast cel banding (materials.build_cel_post; stencil 1 = cast, set by UDAAvatarComponent)
-            pp = C.load(f"{C.MAT_DIR}/PP_DA_Cel")
-            if pp is not None:
+            # anime cast cel banding (materials.build_cel_post; stencil 1 = cast, set by UDAAvatarComponent) and the
+            # view under the sea / lake (materials.build_underwater_post; ADAIslandManager drives MPC Underwater)
+            blendables = []
+            for name, missing in (("PP_DA_Cel", "cast renders without cel banding"),
+                                  ("PP_DA_Underwater", "no underwater view")):
+                pp = C.load(f"{C.MAT_DIR}/{name}")
+                if pp is not None:
+                    blendables.append(unreal.WeightedBlendable(weight=1.0, object=pp))
+                else:
+                    C.warn(f"post process: {name} missing (build the materials first); {missing}")
+            if blendables:
                 try:
                     wb = unreal.WeightedBlendables()
-                    wb.set_editor_property("array", [unreal.WeightedBlendable(weight=1.0, object=pp)])
+                    wb.set_editor_property("array", blendables)
                     s.set_editor_property("weighted_blendables", wb)
                 except Exception as e:  # noqa: BLE001
-                    C.warn(f"post process: cel blendable: {e}")
-            else:
-                C.warn("post process: PP_DA_Cel missing (build the materials first); cast renders without cel banding")
+                    C.warn(f"post process: blendables: {e}")
             ppv.set_editor_property("settings", s)
         except Exception as e:  # noqa: BLE001
             C.warn(f"post process settings: {e}")
@@ -158,11 +164,20 @@ class Placer:
 
     # ------------------------------------------------------------------ static meshes
     def statics(self):
+        ocean_cls = C.native_class("DAOcean")
         for e in self.layout["static"]:
             mesh = self.mesh(e["mesh"])
             if mesh is None:
                 C.warn(f"missing mesh {e['mesh']}")
                 continue
+            if e.get("follow_camera") and ocean_cls is not None:
+                # the ocean clipmap: ADAOcean keeps it under the camera (falls back to a static actor below)
+                a = self.spawn(ocean_cls, self.loc(e["loc"]), self.yaw(e["yaw"]), e.get("label"),
+                               f"Island/{e.get('group', 'misc')}")
+                if a is not None:
+                    a.get_editor_property("surface").set_static_mesh(mesh)
+                    C.set_props(a, snap_size=float(e["follow_camera"]))
+                    continue
             a = self.spawn(unreal.StaticMeshActor, self.loc(e["loc"]), self.yaw(e["yaw"]), e.get("label"),
                            f"Island/{e.get('group', 'misc')}")
             smc = a.static_mesh_component

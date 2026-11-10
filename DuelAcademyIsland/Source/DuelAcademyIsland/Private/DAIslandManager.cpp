@@ -16,6 +16,11 @@
 #include "Engine/SkeletalMesh.h"
 #include "Animation/Skeleton.h"
 #include "EngineUtils.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Engine/World.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Materials/MaterialParameterCollection.h"
 
@@ -170,6 +175,41 @@ void ADAIslandManager::Tick(float DeltaSeconds)
 		}
 	}
 	ApplyTimeOfDay();
+	UpdateUnderwater(DeltaSeconds);
+}
+
+void ADAIslandManager::UpdateUnderwater(float DeltaSeconds)
+{
+	UWorld* World = GetWorld();
+	if (!ParameterCollection || !World || !World->IsGameWorld())
+	{
+		return;
+	}
+	float Target = 0.f;
+	float SurfaceZ = SeaLevel;
+	if (const APlayerCameraManager* Cam = UGameplayStatics::GetPlayerCameraManager(this, 0))
+	{
+		const FVector View = Cam->GetCameraLocation();
+		SurfaceZ = GetWaterSurfaceZ(View);
+		// Under the surface - and open water above: a ceiling or a floor between the camera and the
+		// surface means a room below sea level, not the sea.
+		if (View.Z < SurfaceZ - 8.f)
+		{
+			FCollisionQueryParams Params(SCENE_QUERY_STAT(DAUnderwater), false);
+			const APlayerController* PC = Cam->GetOwningPlayerController();
+			if (const APawn* Pawn = PC ? PC->GetPawn() : nullptr)
+			{
+				Params.AddIgnoredActor(Pawn);
+			}
+			const FVector Up(View.X, View.Y, SurfaceZ + 50.f);
+			Target = World->LineTraceTestByChannel(View, Up, ECC_Visibility, Params) ? 0.f : 1.f;
+		}
+	}
+	// a quick blend: dipping through the surface reads as a cut, without a one-frame pop
+	const float Step = FMath::IsFinite(DeltaSeconds) ? FMath::Max(DeltaSeconds, 0.f) : 0.f;
+	Underwater = FMath::FInterpConstantTo(Underwater, Target, Step, 8.f);
+	UKismetMaterialLibrary::SetScalarParameterValue(this, ParameterCollection, TEXT("Underwater"), Underwater);
+	UKismetMaterialLibrary::SetScalarParameterValue(this, ParameterCollection, TEXT("WaterSurfaceZ"), SurfaceZ);
 }
 
 void ADAIslandManager::SetHour(float NewHour)

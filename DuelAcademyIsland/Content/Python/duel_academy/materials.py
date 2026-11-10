@@ -7,13 +7,13 @@ Masters (in /Game/DuelAcademy/Materials):
   M_DA_Foliage     two-sided, wind sway (world position offset)
   M_DA_Glass       translucent glass
   M_DA_Emissive    glowing surfaces; brighter at night (MPC NightFactor)
-  M_DA_Water       single layer water (ocean, lake, hot springs)
+  M_DA_Water       realistic single layer water (ocean, lake, ponds, pools): Gerstner waves, shore surf,
+                   whitecaps, detail ripples, depth / shore data from T_WaterField (Tools/dai/water.py)
   M_DA_Lava        panning emissive lava
   M_DA_Hologram    additive hologram (duel monsters, markers)
   M_DA_Smoke       translucent puffs, opacity from per-instance custom data
   M_DA_Beam        additive light beam
-  M_DA_Waterfall   translucent panning water sheet
-  M_DA_WaterFlow   fountain water (sheets, jets, foam): world-aligned, so no UVs - vertical faces stream
+  M_DA_WaterFlow   falling / flowing water (falls, fountain sheets and jets, spouts, white water): world-aligned, so no UVs - vertical faces stream
                    along world Z (FlowSpeed, < 0 = rising jets), flat faces churn; glints, soft contact, wobble
   M_DA_Spray       droplets of ADAEmitter's Spray kind (opacity from per-instance custom data)
   M_DA_Terrain     splat-mapped terrain (8 layers)
@@ -27,7 +27,9 @@ Masters (in /Game/DuelAcademy/Materials):
   PP_DA_Cel        post-process (stencil 1 = the cast, set by UDAAvatarComponent): bands the real scene lighting
                    (Lumen GI, shadows, lamps, night) on the cast into a lit and a shadow tone with a saturated,
                    cooler shadow colour - the cel look without giving up the engine's lighting
-  MPC_DuelAcademy  NightFactor / TimeOfDay / SunDirection (driven by ADAIslandManager)
+  PP_DA_Underwater post-process under the sea / lake: light absorbed along the view ray, blue-green
+                   in-scatter fog, a slight wobble (MPC Underwater)
+  MPC_DuelAcademy  NightFactor / TimeOfDay / SunDirection / Underwater / WaterSurfaceZ (ADAIslandManager)
 """
 
 import unreal
@@ -181,7 +183,8 @@ def build_mpc():
         mpc = C.asset_tools().create_asset("MPC_DuelAcademy", C.MAT_DIR, unreal.MaterialParameterCollection,
                                           unreal.MaterialParameterCollectionFactoryNew())
     params = []
-    for n, v in (("NightFactor", 0.0), ("TimeOfDay", 16.0)):
+    # Underwater (0..1) / WaterSurfaceZ (cm): set by ADAIslandManager when the camera dips below the sea or lake
+    for n, v in (("NightFactor", 0.0), ("TimeOfDay", 16.0), ("Underwater", 0.0), ("WaterSurfaceZ", 0.0)):
         p = unreal.CollectionScalarParameter()
         p.set_editor_property("parameter_name", n)
         p.set_editor_property("default_value", v)
@@ -297,44 +300,160 @@ def build_emissive(mpc):
     return g.finish()
 
 
+# Custom (HLSL) nodes: the wave / foam maths lives in water_hlsl.py so it can be unit-tested without Unreal
+_CMOT = {1: "CMOT_FLOAT1", 2: "CMOT_FLOAT2", 3: "CMOT_FLOAT3", 4: "CMOT_FLOAT4"}
+
+
+def custom(g, desc, code, inputs, size=3, extra=()):
+    """Custom expression: `inputs` = {name: (node, output)}; extra = ((name, size), ...) additional outputs."""
+    n = g.node(unreal.MaterialExpressionCustom, code=code, description=desc,
+               output_type=getattr(unreal.CustomMaterialOutputType, _CMOT[size]))
+    try:
+        n.set_editor_property("inputs", [unreal.CustomInput(input_name=k) for k in inputs])
+        if extra:
+            n.set_editor_property("additional_outputs", [
+                unreal.CustomOutput(output_name=k, output_type=getattr(unreal.CustomMaterialOutputType, _CMOT[sz]))
+                for k, sz in extra])
+    except Exception as e:  # noqa: BLE001
+        C.warn(f"{g.name}: custom node {desc}: {e}")
+    for k, (src, out) in inputs.items():
+        g.link(src, out, n, k)
+    return n
+
+
+def _world_pos(g):
+    """World position before any material offset (the waves move vertices; their maths needs the rest
+    position in both the vertex and the pixel shader)."""
+    wp = g.node(unreal.MaterialExpressionWorldPosition)
+    try:
+        wp.set_editor_property("world_position_shader_offset",
+                               unreal.WorldPositionIncludedOffsets.WPT_EXCLUDE_ALL_SHADER_OFFSETS)
+    except Exception as e:  # noqa: BLE001
+        C.warn(f"{g.name}: world position without offsets: {e}")
+    return wp
+
+
+def _field_sample(g, wp, use_field):
+    """T_WaterField at this world XY (mip 0: it is also read in the vertex shader), or 'open deep sea'
+    (depth max, far from shore, exposed, not lake) when the instance does not use it."""
+    try:
+        world_cm = float(C.load_json("layout.json")["world"]["size"])
+    except Exception:  # noqa: BLE001 - layout.json is optional for a material-only rebuild
+        world_cm = C.WORLD_SIZE_M * 100.0
+    xy = g.one_input(unreal.MaterialExpressionComponentMask, wp, r=True, g=True, b=False, a=False)
+    uv = g.mul(g.add(xy, g.const(world_cm / 2.0)), g.const(1.0 / world_cm))
+    f = g.tex("", T("T_WaterField") or T("T_White"), S_LIN, uv, param=False)
+    try:
+        f.set_editor_property("mip_value_mode", unreal.TextureMipValueMode.TMVM_MIP_LEVEL)
+        f.set_editor_property("const_mip_value", 0)
+        # the texture's own clamp, not the shared wrapping sampler: beyond the island square the edge texels
+        # (open deep sea) must continue - wrapping would repeat the island's shallows every 3 km out at sea
+        f.set_editor_property("sampler_source", unreal.SamplerSourceMode.SSM_FROM_TEXTURE_ASSET)
+    except Exception as e:  # noqa: BLE001
+        C.warn(f"{g.name}: water field sampler: {e}")
+    open_sea = g.node(unreal.MaterialExpressionConstant4Vector, constant=unreal.LinearColor(1.0, 1.0, 1.0, 0.0))
+    return g.lerp(open_sea, f, use_field, "", "RGBA")
+
+
+# scalar parameters of M_DA_Water: palette key, parameter, default (= the ocean)
+WATER_PARAMS = (
+    ("wave_height", "WaveHeight", 1.0), ("wave_length", "WaveLength", 1.0), ("choppy", "Choppy", 1.0),
+    ("wind_angle", "WindAngle", 0.0), ("mesh_spacing", "MeshSpacing", 1.5), ("clipmap", "ClipmapRatio", 1.0 / 32.0),
+    ("use_field", "UseField", 1.0), ("foam", "FoamAmount", 1.0), ("surf", "SurfAmount", 1.0),
+    ("surf_spacing", "SurfSpacing", 9.0), ("surf_period", "SurfPeriod", 7.0), ("surf_width", "SurfWidth", 35.0),
+    ("caps_at", "CapsAt", 0.75), ("detail_scale", "DetailScale", 0.12), ("detail_speed", "DetailSpeed", 1.0),
+    ("detail_strength", "DetailStrength", 0.3), ("macro_strength", "MacroStrength", 0.12),
+    ("detail_fade", "DetailFade", 250.0), ("rough", "Roughness", 0.02),
+)
+
+
 def build_water():
+    """Realistic water (ocean, lake, ponds, pools, a glass of water) - single layer water shading:
+      * waves: Gerstner sum displacing the surface (WPO) with matching per-pixel normals (water_hlsl.py),
+        calmed over shallows and in sheltered water by T_WaterField, faded by mesh / pixel resolution;
+      * detail: three world-aligned T_WaterNormal layers (two crossing wind ripples, one macro layer that
+        breaks the tiling far out), dragged downstream by FlowVelocity in rivers;
+      * foam: surf bands rolling onto the beaches, a lapping rim at the waterline and whitecaps on the
+        sharpest crests, broken up by churned foam - drawn as the water's top layer (opacity);
+      * light: absorption / scattering per body of water (clear tropical sea, green lake, milky hot spring),
+        F0 0.02, refraction, rougher far away where the ripples are too small to resolve."""
+    from . import water_hlsl as W
     g = Graph("M_DA_Water")
     ok = True
     try:
         g.settings(shading_model=unreal.MaterialShadingModel.MSM_SINGLE_LAYER_WATER)
     except Exception:  # noqa: BLE001
         ok = False
-    wp = g.node(unreal.MaterialExpressionWorldPosition)
-    xy = g.one_input(unreal.MaterialExpressionComponentMask, wp, r=True, g=True, b=False, a=False)
-    scale = g.scalar("WaveScale", 0.0012)
-    uv1 = g.mul(xy, scale)
-    # WaveSpeed scales time: 1 for the sea and the lake, faster for small agitated fountain pools
-    wt = g.mul(g.node(unreal.MaterialExpressionTime), g.scalar("WaveSpeed", 1.0))
-    p1 = g.node(unreal.MaterialExpressionPanner, speed_x=0.015, speed_y=0.008)
-    g.link(uv1, "", p1, "Coordinate")
-    g.link(wt, "", p1, "Time")
-    p2 = g.node(unreal.MaterialExpressionPanner, speed_x=-0.011, speed_y=0.017)
-    g.link(g.mul(uv1, g.const(0.37)), "", p2, "Coordinate")
-    g.link(wt, "", p2, "Time")
-    n1 = g.tex("Normal1", T("T_WaterNormal"), S_NRM, p1, param=False)
-    n2 = g.tex("Normal2", T("T_WaterNormal"), S_NRM, p2, param=False)
-    n = g.add(n1, n2, "RGB", "RGB")
-    nn = g.lerp(g.const3((0, 0, 1)), n, g.scalar("WaveStrength", 0.45))
-    g.out(nn, unreal.MaterialProperty.MP_NORMAL)
-    g.out(g.const(0.03), unreal.MaterialProperty.MP_ROUGHNESS)
+    g.settings(tangent_space_normal=False)        # the wave normals are world space
+    P = {k: g.scalar(name, v) for k, name, v in WATER_PARAMS}
+    wp = _world_pos(g)
+    t = g.node(unreal.MaterialExpressionTime)
+    cam = g.node(unreal.MaterialExpressionCameraPositionWS)
+    field = _field_sample(g, wp, P["use_field"])
+    common = {"P": (wp, ""), "T": (t, ""), "Field": (field, ""), "Cam": (cam, ""), "Height": (P["wave_height"], ""),
+              "Len": (P["wave_length"], ""), "Choppy": (P["choppy"], ""), "Wind": (P["wind_angle"], ""),
+              "Spacing": (P["mesh_spacing"], ""), "Clip": (P["clipmap"], "")}
+    # ---- waves
+    wpo = custom(g, "Gerstner offset", W.wpo_code(), common)
+    g.out(wpo, unreal.MaterialProperty.MP_WORLD_POSITION_OFFSET)
+    wn = custom(g, "Gerstner normal", W.normal_code(), common, extra=(("Crest", 1),))
+    # ---- detail ripples
+    flow = g.vector("FlowVelocity", (0.0, 0.0, 0.0))
+    duv = custom(g, "Detail UVs", W.detail_uv_code(),
+                 {"P": (wp, ""), "T": (t, ""), "Scale": (P["detail_scale"], ""), "Speed": (P["detail_speed"], ""),
+                  "Flow": (flow, "")}, size=2, extra=(("UV2", 2), ("UV3", 2)))
+    layers = []
+    for out in ("", "UV2", "UV3"):
+        n = g.tex("", T("T_WaterNormal"), S_NRM, None, param=False)
+        g.link(duv, out, n, "UVs")
+        layers.append(n)
+    normal = custom(g, "Combine normals", (
+        "float dist = length(P - Cam) * 0.01;\n"
+        "float fade = lerp(1.0, 0.3, saturate(dist / Fade));\n"
+        "float2 d = (D1.xy + D2.xy) * S * fade + D3.xy * M;\n"
+        "return normalize(Ng + float3(d, 0));\n"),
+        {"Ng": (wn, ""), "D1": (layers[0], "RGB"), "D2": (layers[1], "RGB"), "D3": (layers[2], "RGB"),
+         "S": (P["detail_strength"], ""), "M": (P["macro_strength"], ""), "Fade": (P["detail_fade"], ""),
+         "P": (wp, ""), "Cam": (cam, "")})
+    g.out(normal, unreal.MaterialProperty.MP_NORMAL)
+    # ---- foam
+    xy = g.mul(g.one_input(unreal.MaterialExpressionComponentMask, wp, r=True, g=True, b=False, a=False),
+               g.const(0.01))
+    churn1 = g.node(unreal.MaterialExpressionPanner, speed_x=0.05, speed_y=0.03)
+    g.link(g.mul(xy, g.const(0.45)), "", churn1, "Coordinate")
+    churn2 = g.node(unreal.MaterialExpressionPanner, speed_x=-0.04, speed_y=0.05)
+    g.link(g.mul(xy, g.const(0.8)), "", churn2, "Coordinate")
+    streaks = T("T_WaterStreaks") or T("T_Noise")
+    churn = g.mul(g.add(g.tex("", streaks, S_LIN, churn1, param=False), g.tex("", streaks, S_LIN, churn2, param=False),
+                        "G", "G"), g.const(0.5))
+    breakup = g.tex("", T("T_Noise"), S_LIN, g.mul(xy, g.const(1.0 / 60.0)), param=False)
+    foam = custom(g, "Foam", W.foam_code(),
+                  {"Field": (field, ""), "T": (t, ""), "Crest": (wn, "Crest"), "Churn": (churn, ""),
+                   "Breakup": (breakup, "R"), "Foam": (P["foam"], ""), "Surf": (P["surf"], ""),
+                   "SurfSpacing": (P["surf_spacing"], ""), "SurfPeriod": (P["surf_period"], ""),
+                   "SurfWidth": (P["surf_width"], ""), "CapsAt": (P["caps_at"], "")}, size=1)
+    rough = custom(g, "Roughness", (
+        "float dist = length(P - Cam) * 0.01;\n"
+        "return lerp(R + 0.08 * saturate(dist / 1500.0), 0.6, Foam);\n"),
+        {"R": (P["rough"], ""), "Foam": (foam, ""), "P": (wp, ""), "Cam": (cam, "")}, size=1)
+    g.out(rough, unreal.MaterialProperty.MP_ROUGHNESS)
     g.out(g.const(0.0), unreal.MaterialProperty.MP_METALLIC)
-    scatter = g.vector("ScatterColor", (0.02, 0.18, 0.22))
-    absorb = g.vector("Absorption", (0.45, 0.06, 0.04))
+    g.out(g.const(0.255), unreal.MaterialProperty.MP_SPECULAR)          # F0 = 0.02 (water)
+    scatter = g.vector("ScatterColor", (0.004, 0.022, 0.03))
+    absorb = g.vector("Absorption", (0.38, 0.055, 0.03))
+    foam_col = g.mul(g.vector("FoamColor", (0.88, 0.91, 0.92)), foam)
     if ok:
-        g.out(g.const3((0.0, 0.0, 0.0)), unreal.MaterialProperty.MP_BASE_COLOR)
+        g.out(foam_col, unreal.MaterialProperty.MP_BASE_COLOR)
+        g.out(foam, unreal.MaterialProperty.MP_OPACITY)                   # SLW: coverage of the foam top layer
+        g.out(g.const(1.33), unreal.MaterialProperty.MP_REFRACTION)
         slw = g.node(unreal.MaterialExpressionSingleLayerWaterMaterialOutput)
         g.link(scatter, "", slw, "ScatteringCoefficients")
         g.link(absorb, "", slw, "AbsorptionCoefficients")
         g.link(g.const(0.2), "", slw, "PhaseG")
     else:
         g.settings(blend_mode=unreal.BlendMode.BLEND_TRANSLUCENT)
-        g.out(g.mul(scatter, g.const(3.0)), unreal.MaterialProperty.MP_BASE_COLOR)
-        g.out(g.const(0.85), unreal.MaterialProperty.MP_OPACITY)
+        g.out(g.add(g.mul(scatter, g.const(12.0)), foam_col), unreal.MaterialProperty.MP_BASE_COLOR)
+        g.out(g.add(g.const(0.8), g.mul(foam, g.const(0.2))), unreal.MaterialProperty.MP_OPACITY)
     return g.finish()
 
 
@@ -407,28 +526,6 @@ def build_beam():
     return g.finish()
 
 
-def build_waterfall():
-    g = Graph("M_DA_Waterfall")
-    g.settings(blend_mode=unreal.BlendMode.BLEND_TRANSLUCENT, two_sided=True)
-    try:
-        g.settings(translucency_lighting_mode=unreal.TranslucencyLightingMode.TLM_SURFACE_PER_PIXEL_LIGHTING)
-    except Exception:  # noqa: BLE001
-        pass
-    uv = g.node(unreal.MaterialExpressionTextureCoordinate)
-    uvs = g.mul(uv, g.const(0.25))
-    p = g.node(unreal.MaterialExpressionPanner, speed_x=0.02, speed_y=-0.9)
-    g.link(uvs, "", p, "Coordinate")
-    n = g.tex("FlowTex", T("T_Noise"), S_LIN, p)
-    streaks = g.one_input(unreal.MaterialExpressionComponentMask, n, r=True, g=False, b=False, a=False)
-    col = g.vector("Tint", (0.85, 0.95, 1.0))
-    g.out(col, unreal.MaterialProperty.MP_BASE_COLOR)
-    g.out(g.mul(col, g.mul(streaks, g.const(0.4))), unreal.MaterialProperty.MP_EMISSIVE_COLOR)
-    g.out(g.const(0.1), unreal.MaterialProperty.MP_ROUGHNESS)
-    op = g.mul(g.scalar("Opacity", 0.8), g.add(g.const(0.45), g.mul(streaks, g.const(0.7))))
-    g.out(g.one_input(unreal.MaterialExpressionSaturate, op), unreal.MaterialProperty.MP_OPACITY)
-    return g.finish()
-
-
 def _mask(g, src, ch):
     return g.one_input(unreal.MaterialExpressionComponentMask, src, r=ch == "r", g=ch == "g", b=ch == "b", a=False)
 
@@ -446,7 +543,8 @@ def build_water_flow():
       * vertical faces sample T_WaterStreaks (R / B: threads stretched along V) in the two side projections,
         V = world Z (m) + Time * FlowSpeed - streaks fall at FlowSpeed m/s, rise for a negative speed.
         Two layers (the second finer and 1.37x faster) so it never reads as one sliding picture;
-      * flat faces churn: the foam channel (G) under two crossing panners (FoamScale, FoamSpeed);
+      * flat faces churn: the foam channel (G) under two crossing panners (FoamScale, FoamSpeed), and on a
+        sloped sheet the churn also slides downhill at FlowSpeed (a waterfall's lip, a chute);
       * opacity = Opacity * lerp(Base, 1, streaks) (+ a little at grazing angles), depth-faded where the
         water meets the pool or the stone; white glints (Sparkle); a slight surface wobble (Wobble, cm)."""
     g = Graph("M_DA_WaterFlow")
@@ -478,8 +576,11 @@ def build_water_flow():
     s_yz, s_xz = side(y), side(x)        # faces facing +-X see the YZ plane, faces facing +-Y the XZ plane
     w_side = g.add(g.add(ax, ay), g.const(1e-4))
     streak = g.op(unreal.MaterialExpressionDivide, g.add(g.mul(s_yz, ax), g.mul(s_xz, ay)), w_side)
-    # ---- flat faces: churning foam
-    xy = g.mul(_append(g, x, y), g.scalar("FoamScale", 1.0))
+    # ---- flat faces: churning foam, carried downhill on sloped sheets (the normal leans towards the descent;
+    # its horizontal part times the sign of its height works for both sides of a two-sided sheet)
+    lean = g.mul(_append(g, _mask(g, nrm, "r"), _mask(g, nrm, "g")),
+                 g.one_input(unreal.MaterialExpressionSign, _mask(g, nrm, "b")))
+    xy = g.mul(g.sub(_append(g, x, y), g.mul(lean, flow)), g.scalar("FoamScale", 1.0))
     ft = g.mul(t, g.scalar("FoamSpeed", 1.0))
     p1 = g.node(unreal.MaterialExpressionPanner, speed_x=0.11, speed_y=0.07)
     g.link(xy, "", p1, "Coordinate")
@@ -733,9 +834,12 @@ TERRAIN_LAYERS = [
 ]
 
 
-def build_terrain():
+def build_terrain(mpc=None):
     """8-layer splat terrain with full-colour (photo or procedural) layer textures:
-    T_Terrain_<Layer>_BC / _N / _R, per-layer tiling from Data/terrain_layers.json."""
+    T_Terrain_<Layer>_BC / _N / _R, per-layer tiling from Data/terrain_layers.json.
+    Under the sea and the lake (T_WaterField depth) sunlight focused by the waves dances over the bed:
+    two drifting T_Caustics layers, combined with min() so the network shifts and breaks like the real thing,
+    strongest in the shallows and gone by ~15 m and at night."""
     try:
         info = C.load_json("terrain_layers.json")
     except Exception:  # noqa: BLE001
@@ -770,6 +874,24 @@ def build_terrain():
         rough = g.lerp(rough, r, tex_node, r_out, "R", splat[1])
         n_out, r_out = "", ""
     color = g.mul(color, brightness)
+    # caustics on the sea / lake bed
+    if T("T_Caustics") is not None and T("T_WaterField") is not None:
+        wxy = g.mul(g.one_input(unreal.MaterialExpressionComponentMask, g.node(unreal.MaterialExpressionWorldPosition),
+                                r=True, g=True, b=False, a=False), g.const(0.01))
+        c1 = g.node(unreal.MaterialExpressionPanner, speed_x=0.035, speed_y=0.02)
+        g.link(g.mul(wxy, g.const(1.0 / 3.2)), "", c1, "Coordinate")
+        c2 = g.node(unreal.MaterialExpressionPanner, speed_x=-0.028, speed_y=0.037)
+        g.link(g.mul(wxy, g.const(1.0 / 2.3)), "", c2, "Coordinate")
+        day = g.const(1.0) if mpc is None else g.one_input(unreal.MaterialExpressionOneMinus, night_factor(g, mpc))
+        caus = custom(g, "Caustics", (
+            "float d = Depth * 40.0;\n"
+            "float fade = smoothstep(0.05, 0.5, d) * exp(-d / 7.0);\n"
+            "return 1.0 + min(C1, C2) * 2.2 * fade * Day * S;\n"),
+            {"C1": (g.tex("", T("T_Caustics"), S_LIN, c1, param=False), "R"),
+             "C2": (g.tex("", T("T_Caustics"), S_LIN, c2, param=False), "R"),
+             "Depth": (g.tex("", T("T_WaterField"), S_LIN, uv, param=False), "R"),
+             "Day": (day, ""), "S": (g.scalar("CausticStrength", 1.6), "")}, size=1)
+        color = g.mul(color, caus)
     # far distance: blend to the baked colour map so the island reads well from afar
     macro = g.tex("ColorMap", T("T_TerrainColor"), S_COL, uv)
     depth = g.node(unreal.MaterialExpressionPixelDepth)
@@ -781,11 +903,46 @@ def build_terrain():
     return g.finish()
 
 
+def build_underwater_post(mpc, name="PP_DA_Underwater"):
+    """What the camera sees below the sea or the lake (MPC Underwater, set by ADAIslandManager): the scene
+    loses red, then green, along the view ray (Absorption, per metre), blue-green light scattered in the
+    water fills in with distance (Density), darker at night; the image wobbles a little."""
+    g = Graph(name)
+    g.settings(material_domain=unreal.MaterialDomain.MD_POST_PROCESS)
+    try:
+        g.settings(blendable_location=unreal.BlendableLocation.BL_SCENE_COLOR_BEFORE_DOF)
+    except Exception:  # noqa: BLE001 - older enum spelling
+        g.settings(blendable_location=unreal.BlendableLocation.BL_BEFORE_TONEMAPPING)
+    under = g.node(unreal.MaterialExpressionCollectionParameter, collection=mpc, parameter_name="Underwater")
+    t = g.node(unreal.MaterialExpressionTime)
+    uv = custom(g, "Wobble", (
+        "return UV + float2(sin(T * 1.7 + UV.y * 31.0), cos(T * 1.3 + UV.x * 23.0)) * 0.0025 * U;\n"),
+        {"UV": (g.node(unreal.MaterialExpressionScreenPosition), "ViewportUV"), "T": (t, ""), "U": (under, "")}, size=2)
+    sc = g.node(unreal.MaterialExpressionSceneTexture, scene_texture_id=unreal.SceneTextureId.PPI_POST_PROCESS_INPUT0)
+    g.link(uv, "", sc, "UVs")
+    depth = g.node(unreal.MaterialExpressionSceneTexture, scene_texture_id=unreal.SceneTextureId.PPI_SCENE_DEPTH)
+    g.link(uv, "", depth, "UVs")
+    out = custom(g, "Underwater", (
+        "float d = Depth * 0.01;\n"
+        "float3 trans = exp(-d * Absorb);\n"
+        "float fogk = 1.0 - exp(-d * Density);\n"
+        "float3 fog = FogColor * lerp(1.0, 0.05, Night);\n"
+        "float3 water = Scene * trans * (1.0 - fogk) + fog * fogk;\n"
+        "return lerp(Scene, water, U);\n"),
+        {"Scene": (g.one_input(unreal.MaterialExpressionComponentMask, sc, "Color", r=True, g=True, b=True, a=False), ""),
+         "Depth": (g.one_input(unreal.MaterialExpressionComponentMask, depth, "Color", r=True, g=False, b=False, a=False), ""),
+         "U": (under, ""), "Night": (night_factor(g, mpc), ""),
+         "Absorb": (g.vector("Absorption", (0.38, 0.055, 0.03)), ""), "Density": (g.scalar("Density", 0.06), ""),
+         "FogColor": (g.vector("FogColor", (0.02, 0.13, 0.16)), "")})
+    g.out(out, unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    return g.finish()
+
+
 # --------------------------------------------------------------------------- instances
 KIND_PARENT = {
     "opaque": "M_DA_Master", "foliage": "M_DA_Foliage", "glass": "M_DA_Glass", "emissive": "M_DA_Emissive",
     "water": "M_DA_Water", "lava": "M_DA_Lava", "hologram": "M_DA_Hologram", "smoke": "M_DA_Smoke",
-    "beam": "M_DA_Beam", "waterfall": "M_DA_Waterfall", "flow": "M_DA_WaterFlow", "terrain": "M_DA_Terrain",
+    "beam": "M_DA_Beam", "flow": "M_DA_WaterFlow", "terrain": "M_DA_Terrain",
     "pbr": "M_DA_PBR", "pbr_foliage": "M_DA_PBRFoliage",
     "toon": "M_DA_Toon", "toon_masked": "M_DA_ToonMasked", "outline": "M_DA_Outline",
     "cel": "M_DA_Cel", "cel_masked": "M_DA_CelMasked",
@@ -896,12 +1053,15 @@ def build_instances(palette, masters):
                     MEL.set_material_instance_scalar_parameter_value(mi, "UseTexture", 1.0)
             elif kind == "water":
                 c = spec["color_linear"]
-                MEL.set_material_instance_vector_parameter_value(mi, "ScatterColor", C.lc((c[0] * 0.35, c[1] * 0.35, c[2] * 0.35)))
-                MEL.set_material_instance_vector_parameter_value(mi, "Absorption", C.lc((0.45 - c[0] * 0.3, 0.08 + (0.4 - c[1]) * 0.1, 0.05 + (0.4 - c[2]) * 0.1)))
-                for key, param in (("wave_scale", "WaveScale"), ("wave_speed", "WaveSpeed"),
-                                   ("wave_strength", "WaveStrength")):
-                    if key in spec:
-                        MEL.set_material_instance_scalar_parameter_value(mi, param, float(spec[key]))
+                # per-metre coefficients: explicit in the palette, else derived from the colour
+                scatter = spec.get("scatter") or (c[0] * 0.35, c[1] * 0.35, c[2] * 0.35)
+                absorb = spec.get("absorb") or (0.45 - c[0] * 0.3, 0.08 + (0.4 - c[1]) * 0.1, 0.05 + (0.4 - c[2]) * 0.1)
+                MEL.set_material_instance_vector_parameter_value(mi, "ScatterColor", C.lc(tuple(scatter)))
+                MEL.set_material_instance_vector_parameter_value(mi, "Absorption", C.lc(tuple(absorb)))
+                fx, fy = spec.get("flow", (0.0, 0.0))
+                MEL.set_material_instance_vector_parameter_value(mi, "FlowVelocity", C.lc((float(fx), float(fy), 0.0)))
+                for key, param, default in WATER_PARAMS:
+                    MEL.set_material_instance_scalar_parameter_value(mi, param, float(spec.get(key, default)))
             elif kind in ("lava", "beam"):
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
                 MEL.set_material_instance_scalar_parameter_value(mi, "Strength", float(spec.get("strength", 1.0)))
@@ -910,9 +1070,6 @@ def build_instances(palette, masters):
                 MEL.set_material_instance_scalar_parameter_value(mi, "Intensity", float(spec.get("strength", 4.0)))
             elif kind == "smoke":
                 MEL.set_material_instance_vector_parameter_value(mi, "Color", col)
-            elif kind == "waterfall":
-                MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
-                MEL.set_material_instance_scalar_parameter_value(mi, "Opacity", float(spec.get("opacity", 0.8)))
             elif kind == "flow":
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
                 for key, param, default in FLOW_PARAMS:
@@ -933,8 +1090,8 @@ def build_all(palette):
     for name, fn in (("M_DA_Master", build_master), ("M_DA_Foliage", build_foliage), ("M_DA_Glass", build_glass),
                      ("M_DA_Emissive", lambda: build_emissive(mpc)), ("M_DA_Water", build_water),
                      ("M_DA_Lava", build_lava), ("M_DA_Hologram", build_hologram), ("M_DA_Smoke", build_smoke),
-                     ("M_DA_Beam", build_beam), ("M_DA_Waterfall", build_waterfall),
-                     ("M_DA_WaterFlow", build_water_flow), ("M_DA_Spray", build_spray), ("M_DA_Terrain", build_terrain),
+                     ("M_DA_Beam", build_beam),
+                     ("M_DA_WaterFlow", build_water_flow), ("M_DA_Spray", build_spray), ("M_DA_Terrain", lambda: build_terrain(mpc)),
                      ("M_DA_PBR", lambda: build_pbr("M_DA_PBR")),
                      ("M_DA_PBRFoliage", lambda: build_pbr("M_DA_PBRFoliage", foliage=True)),
                      ("M_DA_Toon", lambda: build_toon("M_DA_Toon", mpc)),
@@ -942,7 +1099,7 @@ def build_all(palette):
                      ("M_DA_Outline", lambda: build_outline(mpc)),
                      ("M_DA_Cel", lambda: build_cel("M_DA_Cel", mpc)),
                      ("M_DA_CelMasked", lambda: build_cel("M_DA_CelMasked", mpc, masked=True)),
-                     ("PP_DA_Cel", build_cel_post)):
+                     ("PP_DA_Cel", build_cel_post), ("PP_DA_Underwater", lambda: build_underwater_post(mpc))):
         try:
             masters[name] = fn()
         except Exception as e:  # noqa: BLE001

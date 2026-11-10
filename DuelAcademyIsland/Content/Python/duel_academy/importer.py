@@ -14,12 +14,16 @@ from . import common as C
 #   _N normal maps      normal map        (Normal sampler)
 #   splat maps          masks             (Masks sampler)
 #   colour textures     default sRGB      (Color sampler)
-LINEAR = {"T_Noise", "T_WaterStreaks"}
+LINEAR = {"T_Noise", "T_WaterStreaks", "T_Caustics"}
+# 16-bit data read by the water material by world position (Tools/dai/water.py): keep the precision, clamp
+DATA16 = {"T_WaterField"}
 MASKS = {"T_TerrainSplatA", "T_TerrainSplatB"}
 UI = {"T_IslandMap"}
 
 
 def texture_kind(name):
+    if name in DATA16:
+        return "data16"
     if name.endswith("_N") or name in ("T_WaterNormal", "T_FlatNormal"):
         return "normal"
     if name in MASKS or name.endswith("_ORM") or name.endswith("_R") or name == "T_DefaultMask":
@@ -79,7 +83,10 @@ def import_textures(slow=None):
             C.warn(f"texture {rel} failed to import")
             continue
         kind = texture_kind(n)
-        if kind == "normal":
+        if kind == "data16":
+            C.set_props(tex, compression_settings=unreal.TextureCompressionSettings.TC_HDR, srgb=False,
+                        address_x=unreal.TextureAddress.TA_CLAMP, address_y=unreal.TextureAddress.TA_CLAMP)
+        elif kind == "normal":
             C.set_props(tex, compression_settings=unreal.TextureCompressionSettings.TC_NORMALMAP, srgb=False)
         elif kind == "masks":
             C.set_props(tex, compression_settings=unreal.TextureCompressionSettings.TC_MASKS, srgb=False)

@@ -309,6 +309,22 @@ def _crater_summit(a, vpx, vpy, base, yaw):
 
 
 # --------------------------------------------------------------------------- waterfall
+def _stream_flow(speed=1.1):
+    """Unreal-world current (m/s) of the spring stream: from the falls pad towards the lake (Blender +Y = UE -Y)."""
+    wx0, wy0 = C.LOCATIONS["waterfall"]["pos"]
+    dx, dy = C.LAKE_CENTER[0] - wx0, C.LAKE_CENTER[1] - wy0
+    n = math.hypot(dx, dy) or 1.0
+    return (round(speed * dx / n, 4), round(-speed * dy / n, 4))
+
+
+# the spring that feeds Volcano Falls: clear, flowing water whose ripples run towards the lip
+palette.register({
+    "M_StreamWater": dict(kind="water", color=(0.12, 0.48, 0.46), rough=0.03, absorb=(0.42, 0.07, 0.05),
+                          scatter=(0.006, 0.02, 0.018), **palette.STILL_WATER, detail_scale=0.5, detail_speed=1.0,
+                          detail_strength=0.5, flow=_stream_flow()),
+})
+
+
 def build_waterfall():
     a = new_set("waterfall")
     t = _terrain()
@@ -368,11 +384,11 @@ def build_waterfall():
         r = p - side * w
         srow_l.append((*L(a, l.x, l.y), pad_h + 0.18))
         srow_r.append((*L(a, r.x, r.y), pad_h + 0.18))
-    fall.grid_faces([[srow_l[k], srow_r[k]] for k in range(9)], "M_LakeWater", smooth=False)
-    # foam ring at the plunge pool
+    fall.grid_faces([[srow_l[k], srow_r[k]] for k in range(9)], "M_StreamWater", smooth=False)
+    # white water churning in the plunge pool
     pp = Vector((wx0, wy0, 0)) + d * (s_lip + reach * 0.85)
     plx, ply = L(a, pp.x, pp.y)
-    disk(fall, (plx, ply, C.LAKE_LEVEL + 0.08), 9.0, "M_Waterfall", seg=20)
+    disk(fall, (plx, ply, C.LAKE_LEVEL + 0.08), 9.0, "M_WhiteWater", seg=32)
     # rocks: spring source + lip boulders
     blx, bly = L(a, back.x, back.y)
     rocks = a.mesh("Waterfall_Rocks")

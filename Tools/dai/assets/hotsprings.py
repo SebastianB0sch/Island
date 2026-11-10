@@ -397,8 +397,8 @@ def _waterfall(mb, nc, rng):
         ox, oy = -dy * 0.07, dx * 0.07
         cur = ((x - ox, y - oy, z), (x + ox, y + oy, z))
         if prev:
-            nc.quad(prev[0], prev[1], cur[1], cur[0], "M_Waterfall")
-            nc.quad(prev[1], prev[0], cur[0], cur[1], "M_Waterfall")
+            nc.quad(prev[0], prev[1], cur[1], cur[0], "M_SpoutWater")
+            nc.quad(prev[1], prev[0], cur[0], cur[1], "M_SpoutWater")
         prev = cur
     return tip
 

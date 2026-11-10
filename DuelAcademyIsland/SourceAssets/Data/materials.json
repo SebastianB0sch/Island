@@ -1260,8 +1260,27 @@
    0.75,
    0.72
   ],
-  "rough": 0.05,
+  "rough": 0.04,
   "detail": null,
+  "absorb": [
+   0.55,
+   0.14,
+   0.12
+  ],
+  "scatter": [
+   0.06,
+   0.11,
+   0.105
+  ],
+  "wave_height": 0.0,
+  "use_field": 0.0,
+  "clipmap": 0.0,
+  "foam": 0.0,
+  "surf": 0.0,
+  "macro_strength": 0.0,
+  "detail_scale": 0.7,
+  "detail_speed": 2.5,
+  "detail_strength": 0.45,
   "color_linear": [
    0.17064493581555268,
    0.5225215539683921,
@@ -1659,8 +1678,18 @@
    0.35,
    0.5
   ],
-  "rough": 0.05,
+  "rough": 0.02,
   "detail": null,
+  "absorb": [
+   0.38,
+   0.055,
+   0.03
+  ],
+  "scatter": [
+   0.004,
+   0.022,
+   0.03
+  ],
   "color_linear": [
    0.003935939504088967,
    0.10048150993772331,
@@ -1678,8 +1707,32 @@
    0.45,
    0.45
   ],
-  "rough": 0.05,
+  "rough": 0.03,
   "detail": null,
+  "absorb": [
+   0.46,
+   0.11,
+   0.1
+  ],
+  "scatter": [
+   0.008,
+   0.026,
+   0.02
+  ],
+  "wave_height": 0.2,
+  "wave_length": 0.22,
+  "choppy": 0.8,
+  "wind_angle": 65.0,
+  "mesh_spacing": 3.0,
+  "clipmap": 0.0,
+  "foam": 0.5,
+  "surf": 0.3,
+  "surf_spacing": 2.5,
+  "surf_period": 3.2,
+  "surf_width": 6.0,
+  "caps_at": 0.5,
+  "detail_scale": 0.3,
+  "detail_strength": 0.25,
   "color_linear": [
    0.010022825574869039,
    0.17064493581555268,
@@ -1710,16 +1763,77 @@
   "opacity": 1.0
  },
  "M_Waterfall": {
-  "kind": "waterfall",
+  "kind": "flow",
   "color": [
    0.85,
    0.95,
    1.0
   ],
-  "opacity": 0.8,
+  "opacity": 0.75,
+  "flow": 5.5,
+  "streak": 0.9,
+  "stretch": 6.0,
+  "base": 0.35,
+  "contrast": 1.6,
+  "sparkle": 0.5,
+  "wobble": 4.0,
+  "foam_scale": 0.5,
+  "foam_speed": 1.4,
   "color_linear": [
    0.692071056865372,
    0.8900054069935289,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "strength": 1.0
+ },
+ "M_WhiteWater": {
+  "kind": "flow",
+  "color": [
+   0.95,
+   0.97,
+   1.0
+  ],
+  "opacity": 0.7,
+  "flow": 0.0,
+  "foam_scale": 0.35,
+  "foam_speed": 2.0,
+  "base": 0.05,
+  "contrast": 2.4,
+  "sparkle": 0.3,
+  "wobble": 2.0,
+  "color_linear": [
+   0.8900054069935289,
+   0.9331068418238677,
+   1.0
+  ],
+  "rough": 0.8,
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
+  "strength": 1.0
+ },
+ "M_SpoutWater": {
+  "kind": "flow",
+  "color": [
+   0.9,
+   0.96,
+   1.0
+  ],
+  "opacity": 0.6,
+  "flow": 1.6,
+  "streak": 7.0,
+  "stretch": 3.0,
+  "base": 0.3,
+  "contrast": 1.5,
+  "sparkle": 0.6,
+  "wobble": 0.3,
+  "color_linear": [
+   0.7874122893956174,
+   0.9114075004063535,
    1.0
   ],
   "rough": 0.8,
@@ -1735,11 +1849,27 @@
    0.6,
    0.68
   ],
-  "rough": 0.03,
+  "rough": 0.02,
   "detail": null,
-  "wave_scale": 0.0045,
-  "wave_speed": 6.0,
-  "wave_strength": 0.6,
+  "absorb": [
+   0.4,
+   0.06,
+   0.04
+  ],
+  "scatter": [
+   0.01,
+   0.04,
+   0.045
+  ],
+  "wave_height": 0.0,
+  "use_field": 0.0,
+  "clipmap": 0.0,
+  "foam": 0.0,
+  "surf": 0.0,
+  "macro_strength": 0.0,
+  "detail_scale": 0.45,
+  "detail_speed": 6.0,
+  "detail_strength": 0.6,
   "color_linear": [
    0.021980947079887205,
    0.31854677812509186,
@@ -3585,7 +3715,26 @@
    0.78,
    0.8
   ],
-  "rough": 0.05,
+  "rough": 0.03,
+  "absorb": [
+   0.45,
+   0.06,
+   0.04
+  ],
+  "scatter": [
+   0.002,
+   0.004,
+   0.005
+  ],
+  "wave_height": 0.0,
+  "use_field": 0.0,
+  "clipmap": 0.0,
+  "foam": 0.0,
+  "surf": 0.0,
+  "macro_strength": 0.0,
+  "detail_scale": 2.0,
+  "detail_speed": 0.3,
+  "detail_strength": 0.12,
   "color_linear": [
    0.17064493581555268,
    0.5704815954749093,
@@ -5369,7 +5518,26 @@
    0.24,
    0.16
   ],
-  "rough": 0.1,
+  "rough": 0.08,
+  "absorb": [
+   1.4,
+   1.0,
+   1.6
+  ],
+  "scatter": [
+   0.05,
+   0.06,
+   0.03
+  ],
+  "wave_height": 0.0,
+  "use_field": 0.0,
+  "clipmap": 0.0,
+  "foam": 0.0,
+  "surf": 0.0,
+  "macro_strength": 0.0,
+  "detail_scale": 1.5,
+  "detail_speed": 0.15,
+  "detail_strength": 0.08,
   "color_linear": [
    0.033104766570885055,
    0.04696420068912289,
@@ -5684,6 +5852,48 @@
    0.0835351274258047
   ],
   "metallic": 0.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
+ "M_StreamWater": {
+  "kind": "water",
+  "color": [
+   0.12,
+   0.48,
+   0.46
+  ],
+  "rough": 0.03,
+  "absorb": [
+   0.42,
+   0.07,
+   0.05
+  ],
+  "scatter": [
+   0.006,
+   0.02,
+   0.018
+  ],
+  "wave_height": 0.0,
+  "use_field": 0.0,
+  "clipmap": 0.0,
+  "foam": 0.0,
+  "surf": 0.0,
+  "macro_strength": 0.0,
+  "detail_scale": 0.5,
+  "detail_speed": 1.0,
+  "detail_strength": 0.5,
+  "flow": [
+   -0.951,
+   0.5529
+  ],
+  "color_linear": [
+   0.01341174889765847,
+   0.19599417930148813,
+   0.1788675039555289
+  ],
+  "metallic": 0.0,
+  "detail": null,
+  "tiling": 1.0,
   "strength": 1.0,
   "opacity": 1.0
  },

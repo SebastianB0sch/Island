@@ -1,6 +1,6 @@
 // Duel Academy Island - small data-driven world actors spawned by the editor build script:
 // instanced scatter, floating (bobbing) meshes, smoke/steam/mist emitters, lighthouse beam,
-// ambient sound emitters, automatic doors.
+// ambient sound emitters, automatic doors, the camera-following ocean surface.
 
 #pragma once
 
@@ -313,4 +313,29 @@ private:
 	float Target = 0.f;
 	float Side = 1.f;
 	float CheckTimer = 0.f;
+};
+
+/**
+ * The ocean surface kept under the camera. SM_Ocean is a geometry clipmap (Tools/dai/water.py): fine round
+ * its centre, doubling its spacing ring by ring out to ~25 km. M_DA_Water displaces it with world-space
+ * Gerstner waves, so re-centring it is invisible as long as the vertices stay on the same world grid - the
+ * actor snaps to SnapSize (the spacing of the ring where the waves have faded out). Static fallback: without
+ * this class the build script places the same mesh at the origin.
+ */
+UCLASS()
+class DUELACADEMYISLAND_API ADAOcean : public AActor
+{
+	GENERATED_BODY()
+
+public:
+	ADAOcean();
+
+	virtual void Tick(float DeltaSeconds) override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
+	TObjectPtr<UStaticMeshComponent> Surface;
+
+	/** Grid step (cm) the surface moves in. Must be a multiple of the clipmap's core spacing. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	float SnapSize = 2400.f;
 };
