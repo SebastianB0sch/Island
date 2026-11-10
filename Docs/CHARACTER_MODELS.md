@@ -1,17 +1,22 @@
 # Character models
 
-The cast is built two ways:
+The cast is built in layers:
 
-1. **The atelier** (`Tools/dai/anime/atelier`): the project's own generator. Every character in the
-   default cast is modelled from scratch by it. No third-party base model is used, so the cast is
-   redistributable with the project.
-2. **Artist-made models**: any cast slot can be replaced by a model you made, commissioned or licensed.
+1. **VRoid bases with per-slot looks** (default): the official VRoid sample avatars supply the face, body,
+   facial rig and outfit; `Tools/dai/anime/looks.py` gives each cast slot its own hair restyle, colours, face
+   shape, expression and height. The samples' embedded terms allow modification, redistribution and commercial
+   use without credit (`Tools/thirdparty/vroid/*/SOURCE.txt` records the evidence).
+2. **The atelier** (`Tools/dai/anime/atelier`): the project's own generator, used for any slot whose base model
+   is not installed. Fully owned, but simpler surfaces than the sculpted bases.
+3. **Artist-made models**: any slot can be replaced by a model you made, commissioned or licensed
+   (`cast_models` in the registry, below).
 
-The first gives a consistent, fully owned cast. It does not reach the hand-sculpted quality of a commercial
-anime game's characters; the second is the route to that level, one character at a time.
+A look (`looks.look`) names its base (`vroid_a` / `vroid_b` for girls, `vroid_c` for boys), the hair restyle
+preset (`SPIKY`, `NEAT`, `MOP`, `TALL`, `MESSY`, `PUFF`, `LONG`, `BOB`, `TWIN`), hair and iris colours, outfit
+colours, an optional tailored coat, `face_shape` and `expression`. The base outfits, recoloured, look better
+than garments tailored onto the bases, so tailoring is used sparingly.
 
-Models from other games are not an option: they are those studios' property, and neither importing them nor
-rebuilding their characters is something this pipeline is meant for.
+Models from other games are not an option: they are those studios' property.
 
 ## Atelier designs
 

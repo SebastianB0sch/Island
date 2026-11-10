@@ -52,7 +52,7 @@ file is the full render for dialogue and result panels.
 
 ## Regenerating the project-cast portraits
 
-The missing speakers are rendered from the project's own,
+The missing speakers are rendered from the project's VRoid-based,
 cel-shaded cast models, so they match the people who stand on the island. The
 renders flatten onto the same `#263541` panel colour as the existing portraits.
 
@@ -89,6 +89,6 @@ portrait-only looks for story speakers live in
 The Duel Links portraits were ported from the reference UE5 project together
 with the duel engine. They are fan-project reference assets: the character
 renders are Konami/Shueisha property and must not be redistributed with a
-public build. The island's in-world characters use this project's own
+public build. The island's in-world characters use this project's VRoid-based
 models instead, including all the generated portraits above. See
 [`../../../../CREDITS.md`](../../../../CREDITS.md).

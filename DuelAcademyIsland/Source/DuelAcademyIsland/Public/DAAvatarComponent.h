@@ -88,7 +88,7 @@ public:
 
 	/** Skeleton group of CastMesh: its takes are A_Anime_<AnimGroup>_<State>, its disk SK_Anime_<AnimGroup>_DuelDisk. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
-	FString AnimGroup = TEXT("Cast");
+	FString AnimGroup = TEXT("VroidC");
 
 	/** Recolour the cast mesh's "JacketTint" slots by dorm and "HairTint" slots with HairColor (generic
 	 *  students); named characters keep their own colours. */

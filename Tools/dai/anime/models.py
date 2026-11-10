@@ -105,6 +105,7 @@ def _bake_expression(obj, names, expression):
     kb[0].data.foreach_get("co", base)
     co = base.copy()
     for key, w in expression.items():
+        key = FACE_MORPHS.get(key, key)                  # the runtime morph names work as well ("Joy", "Fun")
         i = next((i for i, nm in enumerate(names) if nm.lower().endswith("fcl_" + key.lower())), None)
         if i is None or i + 1 >= len(kb):
             continue

@@ -100,16 +100,23 @@ Egyptian-god theming), not a copy of any copyrighted asset. All card names in th
 
 ![Anime cast](Docs/renders/cast.jpg)
 
-*The island's cast in the idle take (Cycles preview: real heights, cel shading, ink outlines).*
+*The island's cast in the idle take (Cycles preview: VRoid bases with per-slot looks, real heights, cel shading).*
 
 ![Cast portraits](Docs/renders/cast_portraits.jpg)
 
-*Close-ups: painted eyes, clump hair with a highlight band, rounded face and hair normals.*
+*Close-ups of the cast.*
 
-Everyone on the island is one of the project's **own character models**. They are modelled from scratch by
-the generator in `Tools/dai/anime/atelier`: no third-party base model, marketplace pack or borrowed likeness is
-involved, so the whole cast is redistributable with the project. Each look is an original design
-(`atelier/designs.py`): a face, a hairstyle and a layered outfit in the academy's house colours.
+Everyone on the island is built on the official **VRoid sample avatars** (AvatarSample_A / B / C by the VRoid
+Project; their embedded terms allow modification, redistribution and commercial use, credit not required).
+The base supplies the face, body, facial rig and outfit; each cast slot then gets its own look
+(`Tools/dai/anime/looks.py`): a hair restyle (`hairdo.py`, `hairshape.py`) with spring chains (`hairrig.py`),
+hair and eye colours, a face shape (`chin`, `jaw`, `cheeks`), a resting expression, the outfit in the slot's
+colours and a real height. A few characters wear a tailored long coat instead of the base outfit.
+The Fab Anime Character Pack is no longer used.
+
+The project also has its **own generator** (`Tools/dai/anime/atelier`), which models a character from scratch
+and is used when the VRoid samples are not installed. Its proportions are fitted to measurements of the
+samples (`Tools/measure_character.py`), but its surfaces are simpler than the sculpted VRoid meshes:
 
 * **Head and face** (`atelier/head.py`, `paint.py`): the skull is a loft of tilted rings, so the front
   silhouette (cheek to chin) and the profile are shaped independently per design (`jaw`, `chin`, `cheek`,
@@ -144,16 +151,11 @@ involved, so the whole cast is redistributable with the project. Each look is an
 * **Budgets**: a character is about 65-80k triangles with 5 materials (face, skin, hair, cloth atlas, ink
   outline) and 20-70 helper bones on one shared skeleton.
 
-**What this is and is not.** The generator gives the project a consistent, fully owned cast with working
-faces, hair and cloth physics. It does not reach the hand-sculpted quality of a commercial anime game's
-character models; no code-generated model does. For that level a slot can be replaced by an artist-made
-model without touching the code: see [Docs/CHARACTER_MODELS.md](Docs/CHARACTER_MODELS.md).
-
 Named slots stand where the story needs them (`Tools/dai/anime/cast.py` keeps each slot's name, dorm, height,
-dialogue and spawn marker, and names the design that plays it). Every other student is a named character
+dialogue and spawn marker; `looks.py` holds its look). Every other student is a named character
 too: all 164 placed NPCs have a unique name; the 154 ambient markers get a dorm/location-appropriate voice
 with three lines, a stable hair colour and a size variation (`Tools/dai/anime/roster.py`), on three generic
-designs whose jacket and hair Unreal tints at runtime. The schedule-spawned story contacts carry their own
+looks whose jacket and hair Unreal tints at runtime. The schedule-spawned story contacts carry their own
 looks and dialogue in `Content/Data/World/spawns.json`.
 
 Story portraits for speakers without ported art are rendered from the cast models
@@ -598,5 +600,5 @@ them with the required CC BY attribution text (also shown in-game on the F1 cont
 * Non-commercial fan project. *Yu-Gi-Oh! GX* and its characters, names and settings belong to their
   respective owners. The duel card database uses card names and scans for identification and commentary;
   the character busts in `Content/Data/Portraits` are Konami *Duel Links* fan-reference renders and must
-  be kept out of any public build. The island's in-world cast is the project's own character models, built
-  from scratch by `Tools/dai/anime/atelier` (see [CREDITS.md](CREDITS.md)).
+  be kept out of any public build. The island's in-world cast is built on the VRoid sample avatars under
+  their embedded terms (see [CREDITS.md](CREDITS.md)).

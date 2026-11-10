@@ -598,7 +598,7 @@ def artist_model(cid, entry):
     Tools/thirdparty/registry/anime.json), if its file is installed. See Docs/CHARACTER_MODELS.md."""
     reg = thirdparty.registry()
     over = reg.get("cast_models") or {}
-    key = over.get(cid) or over.get(entry.get("design", ""))
+    key = over.get(cid) or over.get(entry.get("design", "")) or entry.get("model")
     spec = (reg.get("anime_models") or {}).get(key) if key else None
     if spec and os.path.exists(thirdparty.tp_path(spec["file"])):
         return key
@@ -609,7 +609,7 @@ def use_artist_model(entry, model):
     """Point a cast entry at an artist model: its own measured height drives the runtime scale."""
     spec = thirdparty.registry()["anime_models"][model]
     entry["model"] = model
-    entry.setdefault("body", {})["female"] = bool(spec.get("female", entry.get("female")))
+    entry.setdefault("body", {}).setdefault("female", bool(spec.get("female", entry.get("female"))))
     if spec.get("height"):
         entry["base_height"] = float(spec["height"])
     entry["scale"] = CAST.scale_of(entry)

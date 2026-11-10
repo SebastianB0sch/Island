@@ -490,18 +490,30 @@ class AtelierCastTests(unittest.TestCase):
     GARMENTS = {"top", "skirt", "pants", "legwear", "shoes", "collar", "bow", "tie", "belt", "band", "gloves",
                 "cape", "scarf", "emblem", "buttons", "hairband", "glasses", "hairbow"}
 
-    def test_every_cast_slot_resolves_to_a_design(self) -> None:
-        from dai.anime import cast
+    def test_every_cast_slot_resolves_to_a_look(self) -> None:
+        from dai.anime import cast, looks, portrait_cast
         from dai.anime.atelier import designs
         table = designs.all_designs()
-        entries = cast.all_entries()
+        entries = dict(portrait_cast.all_entries(), **cast.all_entries())
         self.assertIn(cast.PLAYER, entries)
         for cid, entry in entries.items():
-            self.assertIn(entry["design"], table, cid)
-            self.assertNotIn("model", entry, cid)
-            self.assertEqual(bool(entry.get("female")), bool(table[entry["design"]].get("female")), cid)
+            self.assertIn(entry["design"], table, cid)             # generated fallback
+            self.assertIn(cid, looks.LOOKS, cid)                   # VRoid-based look
+            self.assertEqual(entry.get("model"), looks.LOOKS[cid]["model"], cid)
             self.assertGreater(entry["scale"], 0.8, cid)
             self.assertLess(entry["scale"], 1.15, cid)
+
+    def test_looks_use_registered_bases_and_known_morphs(self) -> None:
+        import json
+        from dai.anime import looks
+        with open(os.path.join(TOOLS, "thirdparty", "registry", "anime.json"), encoding="utf-8") as fp:
+            reg = json.load(fp)
+        morphs = {"Blink", "Joy", "Angry", "Sorrow", "Surprised", "Fun", "EyeJoy", "BrowAngry", "BrowSorrow"}
+        for cid, spec in looks.LOOKS.items():
+            self.assertIn(spec["model"], reg["anime_models"], cid)
+            self.assertEqual(spec["base_height"], reg["anime_models"][spec["model"]]["height"], cid)
+            self.assertLessEqual(set(spec.get("expression", {})), morphs, cid)
+            self.assertLessEqual(set(spec.get("tint", ())), {"jacket", "hair"}, cid)
 
     def test_designs_are_complete(self) -> None:
         from dai.anime.atelier import designs
@@ -518,17 +530,12 @@ class AtelierCastTests(unittest.TestCase):
 
     def test_generic_students_keep_their_runtime_tints(self) -> None:
         from dai.anime import cast
-        self.assertEqual(cast.student_entry("student_m1")["tint"], ["jacket", "hair"])
-        self.assertEqual(cast.student_entry("student_f1")["tint"], ["hair"])
+        entries = cast.all_entries()
+        self.assertEqual(entries["student_m1"]["tint"], ["jacket", "hair"])
+        self.assertEqual(entries["student_f1"]["tint"], ["hair"])
         self.assertEqual(cast.generic_for(True), ["student_f1", "student_f2"])
         self.assertEqual(cast.generic_for(False), ["student_m1"])
 
-    def test_no_third_party_base_model_is_registered(self) -> None:
-        import json
-        with open(os.path.join(TOOLS, "thirdparty", "registry", "anime.json"), encoding="utf-8") as fp:
-            reg = json.load(fp)
-        self.assertEqual(reg.get("anime_models"), {})
-        self.assertEqual(reg.get("cast_models"), {})
 
 
 # ---------------------------------------------------------------------------

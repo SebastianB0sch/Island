@@ -41,9 +41,14 @@ def _entry(name, dorm, height, design):
 
 def all_entries():
     """{id: entry} of portrait-only cast members (plus the generic student busts)."""
+    from . import looks
     entries = {cid: _entry(*spec) for cid, spec in SLOTS.items()}
     for key in C.STUDENTS:
-        entry = C.student_entry(key)
-        entry["scale"] = C.scale_of(entry)
-        entries[key] = entry
+        entries[key] = C.student_entry(key)
+    entries = {cid: looks.apply(cid, e) for cid, e in entries.items()}
+    for cid, e in entries.items():
+        if cid in C.STUDENTS and e.get("model"):         # a readable hair colour for the generic busts
+            e["tint"] = []
+            e["hair"] = dict(e["hair"], color=(0.30, 0.20, 0.14))
+        e["scale"] = C.scale_of(e)
     return entries

@@ -28,6 +28,22 @@
       "take": "Interact"
     }
   },
-  "anime_models": {},
+  "anime_models": {
+    "vroid_a": {
+      "file": "vroid/avatar_sample_a/AvatarSample_A.vrm",
+      "female": true,
+      "height": 1.55
+    },
+    "vroid_b": {
+      "file": "vroid/avatar_sample_b/AvatarSample_B.vrm",
+      "female": true,
+      "height": 1.511
+    },
+    "vroid_c": {
+      "file": "vroid/avatar_sample_c/AvatarSample_C.vrm",
+      "female": false,
+      "height": 1.743
+    }
+  },
   "cast_models": {}
 }

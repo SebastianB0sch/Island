@@ -3,8 +3,10 @@
 Duel Academy Island is an unofficial, non-commercial fan project inspired by *Yu-Gi-Oh! GX*.
 Yu-Gi-Oh! and all related names are trademarks of their respective owners. The island's buildings,
 terrain and vegetation are original interpretations modelled by the procedural pipeline in `Tools/`.
-The anime cast is the project's own work too: every character is modelled from scratch by the generator in
-`Tools/dai/anime/atelier` (original faces, hair and outfits); no third-party character model is used.
+The anime cast is built on the official VRoid sample avatars (AvatarSample_A / B / C, listed below): their
+faces, bodies, facial rigs and outfits, with each character's own hair restyle, colours, face shape and height
+(`Tools/dai/anime/looks.py`). The project's own generator (`Tools/dai/anime/atelier`) remains as the fallback
+when the samples are not installed.
 
 ## Duel data and portraits
 
@@ -32,7 +34,9 @@ CC0 rocks/props and the remaining procedural street furniture. See
 
 ## Third-party assets
 
-All third-party art below is **CC0 / public domain**, **CC-BY** (attribution given here).
+All third-party art below is **CC0 / public domain**, **CC-BY** (attribution given here) or, for the
+VRoid sample avatars the anime cast is built on, the **VRoid Hub conditions of use** embedded in each
+model (modification and redistribution allowed, credit not required).
 Every folder keeps a `SOURCE.txt` with the download URLs, license evidence and file hashes.
 Paths are relative to `Tools/thirdparty/`.
 
@@ -253,6 +257,9 @@ Paths are relative to `Tools/thirdparty/`.
 | `sweethome3d/hedge` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | texture Leaves |
 | `sweethome3d/hydrangea` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_FlowerBush_Blue, SM_FlowerBush_White |
 | `sweethome3d/roses_bush` | Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) | CC-BY 3.0 Unported (https://creativecommons.org/licenses/by/3.0/) - ATTRIBUTION REQUIRED. | <https://www.sweethome3d.com/> | SM_FlowerBush_Red, SM_FlowerBush_Yellow |
+| `vroid/avatar_sample_a` | VRoid Project (pixiv Inc.) | VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required | <https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604> | anime cast base model vroid_a |
+| `vroid/avatar_sample_b` | VRoid Project (pixiv Inc.) | VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required | <https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604> | anime cast base model vroid_b |
+| `vroid/avatar_sample_c` | VRoid Project (pixiv Inc.) | VRoid Hub conditions of use - modification allowed, redistribution allowed, commercial use allowed, credit not required | <https://hub.vroid.com/characters/2843975675147313744/models/5644550979324015604> | anime cast base model vroid_c |
 
 ### CC-BY attributions
 

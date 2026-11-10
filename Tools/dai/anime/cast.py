@@ -168,9 +168,11 @@ def scale_of(entry):
 
 def all_entries():
     """{cast id: full entry} for everything the pipeline builds (with the derived "scale")."""
+    from . import looks
     out = {k: dict(v) for k, v in CAST.items()}
     for k in STUDENTS:
         out[k] = student_entry(k)
+    out = {k: looks.apply(k, e) for k, e in out.items()}      # VRoid-based look when the base is installed
     for e in out.values():
         e["scale"] = scale_of(e)
     return out
@@ -184,7 +186,8 @@ def _generic_scale(n):
     """Runtime scale of a generic marker: its look's height with a stable ±5 % size variation."""
     import zlib
     h = zlib.crc32(("%.0f,%.0f" % (n["loc"][0], n["loc"][1])).encode())
-    return round(scale_of(student_entry(n["cast"])) * (0.95 + (h % 11) * 0.01), 3)
+    from . import looks
+    return round(scale_of(looks.apply(n["cast"], student_entry(n["cast"]))) * (0.95 + (h % 11) * 0.01), 3)
 
 
 def assign_npcs(npcs):
@@ -196,7 +199,9 @@ def assign_npcs(npcs):
     import zlib
     from . import roster
     used = set()
+    entries = all_entries()
     for cid, c in CAST.items():
+        c = entries[cid]
         sp = c.get("spawn")
         if not sp:
             continue
