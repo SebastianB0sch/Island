@@ -15,12 +15,15 @@ An AssetSet contains
       light     color, intensity (lumens-ish UE units), radius (m), night_only, spot dir...
       text      text, size (m), color   -> TextRender actor (signs, building names)
       interact  kind = duel_field | card_shop | sign | info, text/title
-      emitter   kind = smoke | steam | mist | sparks | spray, scale, rate, optional ring / points
+      emitter   kind = smoke | steam | mist | sparks | spray | jet | fireflies, scale, rate, optional ring /
+                points (spray), vel / floor / spread (jet)
       audio     sound = A_Ocean | A_Wind | A_Forest | A_Volcano | A_Waterfall | A_HotSpring | A_Crowd, radius
       npc       dorm = slifer | ra | obelisk | white, wander radius
       spawn     player start candidates
       door      automatic door in a doorway (style, width, height, double, mode, swing) -> ADADoor
       lighthouse_beam / floating (boats bob) / waterfall etc. special kinds
+      spinner   a mesh of this set turning about a local axis (mesh, axis, rpm) -> ADASpinner (water wheels)
+      birds     a flock circling in a cylinder (radius, height, count, kind = gull | songbird) -> ADABirdFlock
 """
 
 import importlib
@@ -75,6 +78,12 @@ class AssetSet:
                 extra.update(points=int(points), angle0=float(angle0))
         self.socket("emitter", pos, 0.0, kind=kind, scale=scale, rate=rate, **extra)
 
+    def jet(self, pos, vel, floor, spread=2.5, scale=1.0, rate=1.0):
+        """Fountain jet as ballistic droplets (ADAEmitter Jet): leaves the nozzle at pos with velocity vel
+        (m/s, local frame) and ends on the water surface at local height floor."""
+        self.socket("emitter", pos, 0.0, kind="jet", scale=scale, rate=rate, vel=[float(v) for v in vel],
+                    floor=float(floor), spread=float(spread))
+
     def audio(self, sound, pos, radius=40.0, volume=1.0):
         self.socket("audio", pos, 0.0, sound=sound, radius=radius, volume=volume)
 
@@ -113,8 +122,9 @@ class AssetSet:
         self.travel(id, name, (x + (tx - x) / d * step, y + (ty - y) / d * step, z - 1.6), yaw,
                     subtitle=subtitle, desc=desc, face_open=face_open)
 
-    def special(self, kind, pos, yaw=0.0, **props):
-        self.socket(kind, pos, yaw, **props)
+    def special(self, type, pos, yaw=0.0, **props):
+        """Any other socket type (camera, clearing, floating, spinner, birds, ...); props may carry a `kind`."""
+        self.socket(type, pos, yaw, **props)
 
     # ------------------------------------------------------------------ stats
     def stats(self):
@@ -137,7 +147,7 @@ class AssetSet:
 
 # Location modules (each provides PLACEMENTS)
 LOCATION_MODULES = [
-    "academy", "slifer", "ra", "obelisk", "harbor", "abandoned", "gym", "hotsprings", "features",
+    "academy", "slifer", "ra", "obelisk", "harbor", "abandoned", "gym", "hotsprings", "features", "village",
 ]
 
 

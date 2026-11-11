@@ -21,7 +21,7 @@ import numpy as np
 
 from . import atomic
 from . import config as C
-from . import jsonio, palette, terrain
+from . import jsonio, palette, strips, terrain, waterways
 from .assets import load_placements
 from .assets import props as P
 from .assets import avatar as AV
@@ -64,9 +64,19 @@ def emitter_ring(pr, yaw):
     return out
 
 
+def emitter_jet(pr, yaw, z0):
+    """Extra layout.json fields of a jet emitter (AssetSet.jet): initial velocity in cm/s (UE axes, the set's
+    yaw applied), the world height of the water it falls into and the spread of the stream. Empty otherwise."""
+    if "vel" not in pr:
+        return {}
+    vx, vy = rot2(float(pr["vel"][0]), float(pr["vel"][1]), yaw)
+    return dict(vel=[round(vx * 100.0, 1), round(vy * 100.0 * Y_SIGN, 1), round(float(pr["vel"][2]) * 100.0, 1)],
+                floor=round((z0 + float(pr.get("floor", 0.0))) * 100.0, 1), spread=float(pr.get("spread", 2.5)))
+
+
 NANITE_MIN_TRIS = 40000
 # Nanite can't draw these (translucent / special shading)
-NANITE_BLOCKERS = {"glass", "water", "smoke", "beam", "hologram", "waterfall", "flow", "lava"}
+NANITE_BLOCKERS = {"glass", "water", "pool", "river", "smoke", "beam", "hologram", "waterfall", "flow", "lava"}
 
 
 def split_translucent(meshes, skip=()):
@@ -130,12 +140,26 @@ class Layout:
         self.footprints = []     # (key, [(x,y)...]) for the minimap
         self.manifest = []
         self.rng = random.Random(C.SEED)
+        self.inst_all = []       # (asset, (x, y, z), yaw, scale, location key or None) of every instance
+        self.ribbons = {}        # path id -> ribbon_sections (alignment audit)
+        self._ribbon_lines = {}
+        self.bridge_info = []    # one record per placed bridge (alignment audit)
+        # geometry signatures of the meshes as they were last exported (Data/assets.json "sig")
+        self._prev_sig = {}
+        try:
+            for e in jsonio.read_json(os.path.join(C.OUT_DATA, "assets.json")):
+                if e.get("sig"):
+                    self._prev_sig[e["name"]] = e["sig"]
+        except (OSError, ValueError):
+            pass
+        self.exported = []       # mesh names this run wrote
 
     # ------------------------------------------------------------------ helpers
     def ground(self, x, y):
         return float(self.hf(x, y))
 
     def add_instance(self, asset, x, y, z, yaw, scale):
+        self.inst_all.append((asset, (x, y, z), yaw, scale, self._in_location or None))
         if not self._in_location:
             self.inst_raw.append((asset, (x, y, z), yaw, scale))
         g = self.instances.setdefault(asset, [])
@@ -149,18 +173,42 @@ class Layout:
             d["spot"] = dict(yaw=ue_yaw(yaw), pitch=-float(props["spot_pitch"]), cone=float(props.get("cone") or 40.0))
         self.lights.append(d)
 
+    @staticmethod
+    def mesh_signature(mb):
+        """Fingerprint of a mesh's geometry (vertices to the millimetre, faces, materials)."""
+        import hashlib
+        h = hashlib.sha1()
+        h.update(np.round(np.asarray([tuple(v) for v in mb.verts], np.float64).reshape(-1, 3) * 1000.0)
+                 .astype(np.int64).tobytes())
+        h.update(repr([tuple(f) for f in mb.faces]).encode())
+        h.update("|".join(mb.face_mats).encode())
+        if mb.colors:
+            h.update(repr(sorted((i, tuple(round(c, 3) for c in col)) for i, col in mb.colors.items())).encode())
+        return h.hexdigest()[:16]
+
     def export_mesh(self, mb, name, folder, collision, nanite=None):
+        """Write SM_<name>.fbx and list it in the manifest with its geometry signature.
+
+        With DAI_EXPORT_ONLY set, a mesh the filter does not name is still written when its geometry differs
+        from the signature recorded at its last export - a location that samples the terrain (a stair up a
+        slope, a house on its plinth) must never be left behind as a stale FBX on moved ground. A file with
+        no recorded signature is taken as current the first time."""
         from . import blend
         rel = os.path.join("Meshes", folder, f"SM_{name}.fbx")
         path = os.path.join(C.OUT_DIR, rel)
-        obj = mb.build("SM_" + name)
-        try:
-            blend.export_fbx([obj], path)
-        finally:
-            blend.delete([obj])
+        sig = self.mesh_signature(mb)
+        prev = self._prev_sig.get(f"SM_{name}")
+        changed = prev is not None and prev != sig
+        if blend.export_wanted(path) or changed:
+            obj = mb.build("SM_" + name)
+            try:
+                blend.export_fbx([obj], path, force=True)
+            finally:
+                blend.delete([obj])
+            self.exported.append(f"SM_{name}")
         self.manifest.append(dict(file=rel.replace(os.sep, "/"), name=f"SM_{name}", folder=folder.replace(os.sep, "/"),
                                   collision=collision, nanite=self.nanite_ok(mb) if nanite is None else nanite,
-                                  category="location"))
+                                  category="location", sig=sig))
 
     def split_translucent(self, meshes, skip=()):
         return split_translucent(meshes, skip)
@@ -206,9 +254,9 @@ class Layout:
                     z0 = 4.0 if key == "lighthouse" else self.ground(x0, y0)
                 xf = Xform(x0, y0, z0, loc["yaw"])
             self.location_xforms[key] = xf
-            floating_meshes = {s["props"].get("mesh") for s in aset.sockets if s["type"] == "floating"}
             n_mesh = 0
-            floating_meshes = {s["props"].get("mesh") for s in aset.sockets if s["type"] == "floating"}
+            # meshes an actor of their own moves (boats bob, water wheels turn): exported, not placed as statics
+            floating_meshes = {s["props"].get("mesh") for s in aset.sockets if s["type"] in ("floating", "spinner")}
             for name, mb in self.split_translucent(aset.meshes, skip=floating_meshes).items():
                 if not mb.verts:
                     continue
@@ -245,7 +293,7 @@ class Layout:
                 self.log(f"  {key:14s} {len(boxes)} furniture collision boxes ({bm.name})")
             for sp in ck.spaces:
                 self.spaces.append(placement.placed(sp, xf.x, xf.y, xf.z, xf.yaw))
-            self._in_location = True
+            self._in_location = key
             self.place_sockets(aset, xf, key)
             self._in_location = False
             self.log(f"  {key:14s} {n_mesh} meshes, {len(aset.sockets)} sockets")
@@ -376,10 +424,15 @@ class Layout:
                 self.clearings.append((p[0], p[1], 3.0))
             elif t == "emitter":
                 self.emitters.append(dict(kind=pr["kind"], loc=ue_loc(p), scale=pr.get("scale", 1.0), rate=pr.get("rate", 1.0),
-                                          **emitter_ring(pr, yaw)))
+                                          **emitter_ring(pr, yaw), **emitter_jet(pr, xf.yaw, xf.z)))
             elif t == "audio":
                 self.audio.append(dict(sound=pr["sound"], loc=ue_loc(p), radius=pr.get("radius", 40.0) * 100.0,
                                        volume=pr.get("volume", 1.0)))
+            elif t == "spinner":           # a mesh of this location turning at constant speed (ADASpinner)
+                self.specials.append(dict(kind="spinner", loc=ue_loc(p), yaw=ue_yaw(yaw), group=key,
+                                          props=dict(mesh=f"SM_{pr['mesh']}", folder=f"Locations/{key}",
+                                                     axis=pr.get("axis", "y"), rpm=float(pr.get("rpm", 6.0)))))
+                self.clearings.append((p[0], p[1], float(pr.get("clear", 4.0))))
             elif t == "npc":
                 self.npcs.append(dict(loc=ue_loc((p[0], p[1], p[2] + 0.95)), yaw=ue_yaw(yaw), dorm=pr.get("dorm", "slifer"),
                                       wander=pr.get("wander", 8.0) * 100.0, group=key, _feet=p))
@@ -466,7 +519,8 @@ class Layout:
                     d = math.hypot(bx - ax, by - ay) or 1.0
                     nx, ny = -(by - ay) / d, (bx - ax) / d
                     px, py = bx + nx * (hw + 1.2) * side, by + ny * (hw + 1.2) * side
-                    if self.in_any_pad(px, py, 4.0) is None and self.ground(px, py) > 1.0:
+                    if self.in_any_pad(px, py, 4.0) is None and self.ground(px, py) > 1.0 \
+                            and waterways.clearance(px, py) > 2.5 and not self.on_bridge(p["id"], s, 2.0):
                         z = self.ground(px, py)
                         yaw = math.degrees(math.atan2(-ny * side, -nx * side)) + 90.0
                         self.add_instance("SM_LampPost", px, py, z - 0.05, yaw, 1.0)
@@ -490,40 +544,562 @@ class Layout:
                                            title="Signpost", text="This way: " + self.DEST.get(p["id"], p["id"]),
                                            radius=300.0, group="paths"))
                 self.clearings.append((px, py, 2.0))
-            # paved road ribbons (crisp edges + kerbs on top of the splat paving)
-            if p["surface"] == "paved" and p["id"] != "breakwater":
-                mb = MeshBuilder(f"Road_{p['id']}")
-                pts = samples
-                left, right = [], []
-                for i in range(len(pts)):
-                    a = pts[max(i - 1, 0)]
-                    b = pts[min(i + 1, len(pts) - 1)]
-                    d = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
-                    nx, ny = -(b[1] - a[1]) / d, (b[0] - a[0]) / d
-                    x, y, z = pts[i]
-                    zl = max(z, self.ground(x + nx * hw, y + ny * hw)) + 0.10
-                    zr = max(z, self.ground(x - nx * hw, y - ny * hw)) + 0.10
-                    zc = max(z, self.ground(x, y)) + 0.10
-                    zz = max(zl, zr, zc)
-                    left.append((x + nx * hw, y + ny * hw, zz))
-                    right.append((x - nx * hw, y - ny * hw, zz))
-                for i in range(len(pts) - 1):
-                    l0, l1, r0, r1 = left[i], left[i + 1], right[i], right[i + 1]
-                    mb.quad(r0, r1, l1, l0, "M_Paving")
-                    # side skirts down into the ground + kerb tops
-                    for (e0, e1, sgn) in ((l0, l1, 1), (r0, r1, -1)):
-                        lo0 = (e0[0], e0[1], e0[2] - 0.8)
-                        lo1 = (e1[0], e1[1], e1[2] - 0.8)
-                        if sgn > 0:
-                            mb.quad(lo1, lo0, e0, e1, "M_Concrete")
-                        else:
-                            mb.quad(lo0, lo1, e1, e0, "M_Concrete")
+            # paved road ribbons: they lay the stone (the splat paints only the road's bed and verge)
+            if terrain.road_has_ribbon(p):
+                mb = self.road_ribbon(p)
                 self.road_mbs.append(mb)
                 if export:
                     self.export_mesh(mb, f"Road_{p['id']}", "Roads", "complex")
                 self.static.append(dict(mesh=f"SM_Road_{p['id']}", folder="Roads", loc=[0, 0, 0], yaw=0.0,
                                         collision="complex", group="roads", label=f"Road_{p['id']}"))
         self.log(f"  path dressing: {lamps} lamps")
+
+    # ------------------------------------------------------------------ road ribbons
+    RIBBON_LIFT = 0.06       # m the paving lies above the terrain triangles under it
+    RIBBON_SKIRT = 0.8       # m the kerb faces reach down into the ground
+
+    RIBBON_RIM_LIFT = -0.015  # m at the outer edge: just under the ground, so the ribbon has no edge to see
+    RIBBON_RIM = 0.45        # m: width of that edge strip
+
+    def earlier_roads(self, p):
+        """The paved roads laid before `p` (their ribbons are the surface where `p` meets them)."""
+        order = [q["id"] for q in self.meta["paths"]]
+        return [q for q in self.meta["paths"] if terrain.road_has_ribbon(q) and order.index(q["id"]) < order.index(p["id"])]
+
+    def road_reach(self, q):
+        """fn(x, y) -> metres outside (+) / inside (-) the fully paved part of road `q`: a branch runs on over
+        `q`'s rim (which blends into the verge there) and ends just inside where its full paving begins."""
+        line = np.asarray(q["samples"], np.float64)[:, :2]
+        seg_a, seg_d = line[:-1], line[1:] - line[:-1]
+        seg_l2 = np.maximum((seg_d * seg_d).sum(1), 1e-12)
+        hwq = q["width"] / 2.0 - self.RIBBON_RIM - 0.1
+
+        def reach(x, y):
+            t = np.clip(((x - seg_a[:, 0]) * seg_d[:, 0] + (y - seg_a[:, 1]) * seg_d[:, 1]) / seg_l2, 0.0, 1.0)
+            return float(np.hypot(seg_a[:, 0] + t * seg_d[:, 0] - x, seg_a[:, 1] + t * seg_d[:, 1] - y).min()) - hwq
+        return reach
+
+    def ribbon_line(self, p):
+        """Centre line of a road's ribbon: (xs, ys, arc). It is the path's own line - arc length 0 at its
+        first sample, as in the bridge records - except that an end which stops at the kerb of an earlier
+        road, short of its paving, runs straight on until it is inside it (negative arc lengths at the
+        start), so the two pavings join instead of facing each other across a strip of verge."""
+        if p["id"] in self._ribbon_lines:
+            return self._ribbon_lines[p["id"]]
+        pts = [(float(t[0]), float(t[1])) for t in p["samples"]]
+        ext0 = 0.0
+        given = p.get("extend") or {}
+        # the last stretch to a door (config.PATH_EXTENSIONS): the ribbon simply runs on
+        if given.get("start"):
+            lead = [tuple(q) for q in given["start"]] + [pts[0]]
+            ext0 = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(lead, lead[1:]))
+            pts = strips.resample(lead, 2.0)[:-1] + pts
+        if given.get("end"):
+            pts = pts + strips.resample([pts[-1]] + [tuple(q) for q in given["end"]], 2.0)[1:]
+        for q in self.earlier_roads(p):
+            reach = self.road_reach(q)
+            for at_start in (True, False):
+                if given.get("start" if at_start else "end"):
+                    continue
+                (x, y), (bx, by) = (pts[0], pts[min(2, len(pts) - 1)]) if at_start else (pts[-1], pts[max(len(pts) - 3, 0)])
+                d = math.hypot(x - bx, y - by) or 1.0
+                ux, uy = (x - bx) / d, (y - by) / d                  # outward
+                hw = p["width"] / 2.0
+
+                def joined(ext):
+                    """Centre and both edges of the end, `ext` further on, are inside q's paving."""
+                    cx, cy = x + ux * ext, y + uy * ext
+                    return (reach(cx, cy) < -0.3 and reach(cx - uy * hw, cy + ux * hw) < -0.05
+                            and reach(cx + uy * hw, cy - ux * hw) < -0.05)
+
+                if reach(x, y) >= 3.0 or joined(0.0):
+                    continue
+                # (at a sharp angle the far edge enters long after the near one: up to 30 m)
+                for ext in np.arange(0.5, 30.01, 0.5):
+                    if joined(ext):
+                        if at_start:
+                            pts.insert(0, (x + ux * ext, y + uy * ext))
+                            ext0 = float(ext)
+                        else:
+                            pts.append((x + ux * ext, y + uy * ext))
+                        break
+        xs, ys = [t[0] for t in pts], [t[1] for t in pts]
+        arc = np.concatenate([[0.0], np.cumsum([math.hypot(xs[i] - xs[i - 1], ys[i] - ys[i - 1])
+                                                for i in range(1, len(pts))])]) - ext0
+        self._ribbon_lines[p["id"]] = (xs, ys, arc)
+        return self._ribbon_lines[p["id"]]
+
+    def road_runs(self, p):
+        """The stretches of a paved road that get a ribbon:
+        (arc, [(s_start, s_end, start_edges, end_edges, start_kind, end_kind)]).
+        A ribbon stops exactly at a bridge's abutments (the deck carries the road there: kind "bridge") and
+        just inside the edge of the carriageway of a road laid before it ("road": the main road's ribbon is
+        the surface there); a path carried on to a building's own walk ends against that slab ("slab",
+        config.PATH_EXTENSIONS); everywhere else it ends on the ground ("ground").
+        *_edges = (s_left, s_right) when that end is cut along the other road's edge - each side of the ribbon
+        then ends where it meets that edge, so an oblique junction closes without a wedge - else None."""
+        hw = p["width"] / 2.0
+        xs, ys, arc = self.ribbon_line(p)
+        first, total = float(arc[0]), float(arc[-1])
+        last = len(xs) - 1
+
+        def point(s_, side):
+            x, y = float(np.interp(s_, arc, xs)), float(np.interp(s_, arc, ys))
+            i = int(min(max(np.searchsorted(arc, s_), 1), last))
+            j0, j1 = max(i - 2, 0), min(i + 1, last)
+            tx, ty = xs[j1] - xs[j0], ys[j1] - ys[j0]
+            d = math.hypot(tx, ty) or 1.0
+            return x - ty / d * hw * side, y + tx / d * hw * side
+
+        cuts = [(b["s0"], b["s1"], None, None, "bridge") for b in self.meta.get("bridges", []) if b["path"] == p["id"]]
+        for q in self.earlier_roads(p):
+            reach = self.road_reach(q)
+
+            def inside(s_, side):
+                return reach(*point(s_, side)) < 0.0
+
+            for end, step in ((first, 1.0), (total, -1.0)):
+                if not inside(end, 0.0):
+                    continue
+                exits = []
+                for side in (1.0, -1.0):         # left edge, right edge
+                    s_out = end
+                    while inside(s_out, side) and abs(s_out - end) < min(80.0, total - first):
+                        s_out += step * 0.5
+                    lo, hi = s_out - step * 0.5, s_out
+                    for _ in range(28):
+                        mid = 0.5 * (lo + hi)
+                        lo, hi = (mid, hi) if inside(mid, side) else (lo, mid)
+                    exits.append(min(max(hi, first), total))
+                if step > 0:
+                    cuts.append((first, max(exits), None, tuple(exits), "road"))      # the next run starts on these
+                else:
+                    cuts.append((min(exits), total, tuple(exits), None, "road"))      # the previous run ends on these
+        given = p.get("extend") or {}
+        runs, s, start_edges, start_kind = [], first, None, "slab" if given.get("start_edge") else "ground"
+        for c0, c1, end_edges, next_edges, kind in sorted(cuts, key=lambda c: (c[0], c[1])):
+            if c0 - s > 0.5:
+                runs.append((s, c0, start_edges, end_edges, start_kind, kind))
+            if c1 >= s:
+                s, start_edges, start_kind = c1, next_edges, kind
+        if total - s > 0.5:
+            runs.append((s, total, start_edges, None, start_kind, "slab" if given.get("end_edge") else "ground"))
+        return arc, runs
+
+    def ribbon_sections(self, p):
+        """Cross-sections of a road's ribbon, per run: [[(s, [(x, y, z, paving) across, left -> right]), ...]].
+
+        The paving is draped: every vertex stands above the highest terrain within 30 cm of it, so the ribbon
+        follows the cross-fall of a junction or a pad's apron instead of bridging it. Seven vertices across:
+        the two outer ones are the rim - paving coverage 0, and a hair under the ground - so over the outer
+        RIBBON_RIM the stone thins out into the verge the terrain paints there and the surface dips into the
+        ground while it is still drawn as that ground: the ribbon has no visible edge. The rest is fully
+        paved, RIBBON_LIFT up. An end on the ground closes with the same rim; an
+        end at a bridge deck or on another road stays paved and level with it. Sections every 2 m plus one
+        exactly at each end of a run; a skewed end has each edge where it meets the other road's edge."""
+        hw = p["width"] / 2.0
+        arc, runs = self.road_runs(p)
+        xs, ys, _arc = self.ribbon_line(p)
+        last = len(xs) - 1
+        inner = max(hw - self.RIBBON_RIM, hw * 0.6) / hw
+        across = (-1.0, -inner, -0.5 * inner, 0.0, 0.5 * inner, inner, 1.0)     # left edge (f = -1) -> right edge
+
+        def frame(s_):
+            x, y = float(np.interp(s_, arc, xs)), float(np.interp(s_, arc, ys))
+            i = int(min(max(np.searchsorted(arc, s_), 1), last))
+            j0, j1 = max(i - 2, 0), min(i + 1, last)                  # tangent over a few samples (smooth edges)
+            tx, ty = xs[j1] - xs[j0], ys[j1] - ys[j0]
+            d = math.hypot(tx, ty) or 1.0
+            return x, y, -ty / d, tx / d
+
+        def top(x, y):
+            return max(self.ground(x + dx, y + dy) for dx, dy in
+                       ((0.0, 0.0), (0.3, 0.0), (-0.3, 0.0), (0.0, 0.3), (0.0, -0.3)))
+
+        def section(s_, edges=None, end="run", line=None):
+            if line is not None:
+                # across a built edge: the paving meets the slab square, whatever angle the road arrives at
+                x, y, nx, ny = frame(s_)
+                (ax, ay), (bx, by) = line
+                mx, my = (ax + bx) / 2.0, (ay + by) / 2.0
+                d = math.hypot(bx - ax, by - ay) or 1.0
+                ex, ey = (bx - ax) / d, (by - ay) / d
+                if ex * nx + ey * ny < 0:
+                    ex, ey = -ex, -ey                                 # towards the road's left
+                left, right = (mx + ex * hw, my + ey * hw), (mx - ex * hw, my - ey * hw)
+            elif edges is None:
+                x, y, nx, ny = frame(s_)
+                left, right = (x + nx * hw, y + ny * hw), (x - nx * hw, y - ny * hw)
+            else:
+                xl, yl, nxl, nyl = frame(edges[0])
+                xr, yr, nxr, nyr = frame(edges[1])
+                left, right = (xl + nxl * hw, yl + nyl * hw), (xr - nxr * hw, yr - nyr * hw)
+            row = []
+            for c, f in enumerate(across):
+                t = (f + 1.0) / 2.0
+                x, y = left[0] + (right[0] - left[0]) * t, left[1] + (right[1] - left[1]) * t
+                # on the ground an end is all rim; at a bridge or a slab the paving meets it over its full width
+                rim = end == "ground" or (c in (0, len(across) - 1) and end not in ("bridge", "slab"))
+                z = self.ground(x, y) + self.RIBBON_RIM_LIFT if rim else top(x, y) + self.RIBBON_LIFT
+                row.append((x, y, z, 0.0 if rim else 1.0))
+            return row
+
+        def edge_error(ra, rb):
+            """How far the two outer edges between sections ra and rb leave the ground they should lie in."""
+            worst = 0.0
+            for c in (0, len(across) - 1):
+                if ra[c][3] >= 1.0 or rb[c][3] >= 1.0:
+                    continue
+                for t in (0.25, 0.5, 0.75):
+                    x, y, z = (ra[c][k] + (rb[c][k] - ra[c][k]) * t for k in range(3))
+                    worst = max(worst, abs(z - self.ground(x, y) - self.RIBBON_RIM_LIFT))
+            return worst
+
+        out = []
+        for s0, s1, e0, e1, k0, k1 in runs:
+            n = max(1, int(math.ceil((s1 - s0) / 2.0)))
+            stations = [s0 + (s1 - s0) * k / n for k in range(n + 1)]
+            # an end on the ground: the rim closes round it (one more section just inside)
+            if k0 == "ground" and s1 - s0 > 2.0 * self.RIBBON_RIM + 1.0:
+                stations.insert(1, s0 + self.RIBBON_RIM + 0.15)
+            if k1 == "ground" and s1 - s0 > 2.0 * self.RIBBON_RIM + 1.0:
+                stations.insert(len(stations) - 1, s1 - self.RIBBON_RIM - 0.15)
+            run = [(s_, section(s_)) for s_ in stations]
+            given = p.get("extend") or {}
+            run[0] = (s0, section(s0, e0, end=k0, line=given.get("start_edge") if k0 == "slab" else None))
+            run[-1] = (s1, section(s1, e1, end=k1, line=given.get("end_edge") if k1 == "slab" else None))
+            # the edge has to follow the ground between two sections as well (it lies 1.5 cm under it): where
+            # the ground bends away from the straight edge - a crease of the terrain mesh, the foot of a pad's
+            # apron - more sections go in
+            for _ in range(3):
+                fine, changed = [run[0]], False
+                for (sa, ra), (sb, rb) in zip(run, run[1:]):
+                    if sb - sa > 0.6 and edge_error(ra, rb) > 0.007:
+                        fine.append((0.5 * (sa + sb), section(0.5 * (sa + sb))))
+                        changed = True
+                    fine.append((sb, rb))
+                run = fine
+                if not changed:
+                    break
+            out.append(run)
+        return out
+
+    def road_ribbon(self, p):
+        """Paving of one road: the draped strip of ribbon_sections in the road material (palette kind "road":
+        the terrain's surface + its Paving layer by vertex colour), with skirts down into the ground along
+        both edges and across every end (drawn as ground: coverage 0)."""
+        from .geo import MeshBuilder
+        mb = MeshBuilder(f"Road_{p['id']}")
+        sk = self.RIBBON_SKIRT
+        mat = "M_RoadPaving"
+
+        def down(q):
+            return (q[0], q[1], q[2] - sk)
+
+        sections = self.ribbon_sections(p)
+        self.ribbons[p["id"]] = sections
+        for run in sections:
+            rows = [row for _s, row in run]
+            for r0, r1 in zip(rows, rows[1:]):
+                for c in range(len(r0) - 1):
+                    # left -> right across, so (right0, right1, left1, left0) faces up
+                    quad = (r0[c + 1], r1[c + 1], r1[c], r0[c])
+                    mb.cquad([q[:3] for q in quad], [q[3] for q in quad], mat, smooth=True)
+                mb.cquad((down(r1[0]), down(r0[0]), r0[0][:3], r1[0][:3]), (0.0,) * 4, mat)            # left skirt
+                mb.cquad((down(r0[-1]), down(r1[-1]), r1[-1][:3], r0[-1][:3]), (0.0,) * 4, mat)        # right skirt
+            for row, flip in ((rows[0], False), (rows[-1], True)):                                     # end faces
+                for c in range(len(row) - 1):
+                    a_, b_ = row[c], row[c + 1]
+                    cols = (0.0, 0.0, b_[3], a_[3])
+                    if flip:
+                        mb.cquad((down(b_), down(a_), a_[:3], b_[:3]), (0.0, 0.0, a_[3], b_[3]), mat)
+                    else:
+                        mb.cquad((down(a_), down(b_), b_[:3], a_[:3]), cols, mat)
+        return mb
+
+    # ------------------------------------------------------------------ bridges
+    def place_bridges(self, export=True):
+        """One bridge per path / river crossing found by the terrain stage (terrain_info.json "bridges"):
+        stone arches under the paved roads (and the forest path at Millbrook), timber trestles on the trails.
+        World-space meshes in Meshes/Roads; the deck runs straight from bank to bank on the road's grade."""
+        try:
+            from .assets import bridges as BR
+        except ModuleNotFoundError:
+            self.log("  (assets/bridges.py not present: no bridges)")
+            return
+        from .geo import MeshBuilder
+        names = {}
+        for b in self.meta.get("bridges", []):
+            (ax, ay, az), (bx, by, bz) = b["a"], b["b"]
+            run = math.hypot(bx - ax, by - ay)
+            length = math.hypot(run, bz - az)
+            yaw = math.degrees(math.atan2(by - ay, bx - ax))
+            pitch = -math.degrees(math.atan2(bz - az, run))        # MeshBuilder.at: +rot_y tips +X down
+            stone = b["kind"] == "stone"
+            # flush with the road ribbon (which lies RIBBON_LIFT above the ground) / with the trodden path
+            lift = self.RIBBON_LIFT if b["surface"] == "paved" else 0.03
+            mid = ((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2 + lift)
+            drop = mid[2] - b["bed"]
+            width = b["width"] if stone else max(2.6, b["width"] - 1.2)
+            base = "Bridge_" + "".join(part.capitalize() for part in b["path"].split("_"))
+            names[base] = names.get(base, 0) + 1
+            name = base if names[base] == 1 else f"{base}{names[base]}"
+            mb, nc = MeshBuilder(name), MeshBuilder(name + "_NoCol")
+            with mb.at(mid, rot=yaw, rot_y=pitch), nc.at(mid, rot=yaw, rot_y=pitch):
+                info = (BR.stone_arch if stone else BR.wood_trestle)(mb, length, width, drop, b["half_water"],
+                                                                     nocol=nc)
+            for m, collision in ((mb, "complex"), (nc, "none")):
+                if not m.verts:
+                    continue
+                if export:
+                    self.export_mesh(m, m.name, "Roads", collision, nanite=False)
+                self.static.append(dict(mesh=f"SM_{m.name}", folder="Roads", loc=[0, 0, 0], yaw=0.0,
+                                        collision=collision, group="bridges", label=m.name))
+            self.road_mbs.append(mb)
+            self.bridge_info.append(dict(name=name, rec=b, mb=mb, nc=nc, mid=mid, yaw=yaw, pitch=pitch,
+                                         length=length, width=width, lift=lift, drop=drop))
+            cy_, sy_ = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+            cp, sp_ = math.cos(math.radians(pitch)), math.sin(math.radians(pitch))
+
+            def world(q):
+                x, y, z = q
+                x, z = x * cp + z * sp_, -x * sp_ + z * cp          # pitch about Y, then yaw about Z
+                return (mid[0] + x * cy_ - y * sy_, mid[1] + x * sy_ + y * cy_, mid[2] + z)
+
+            for q in (info or {}).get("lamps", []):
+                self.add_light(world(q), dict(color=[1.0, 0.72, 0.42], intensity=900.0, radius=9.0, night_only=True))
+            k = max(2, int(length / 4.0))
+            for i in range(k + 1):
+                q = world((-length / 2 + length * i / k, 0.0, 0.0))
+                self.clearings.append((q[0], q[1], width / 2 + 2.5))
+            self.log(f"  bridge {name:26s} {b['kind']:5s} {length:5.1f} m long, {width:.1f} m wide, deck "
+                     f"{mid[2] - b['water']:.1f} m over the water")
+
+    # ------------------------------------------------------------------ life: waterside, roadside, sea, sky
+    def place_life(self, export=True):
+        """The dressing that makes the island lived-in rather than built: reeds, boulders and mist along the
+        rivers, lily pads on the pond, benches, planters and lanterns along the roads, guard fences on the
+        embankments, picnic spots on the banks, buoys and fishing boats at sea, birds in the air, fireflies."""
+        rng = random.Random(C.SEED + 7)
+        counts = {}
+
+        def put(asset, x, y, z, yaw, scale):
+            self.add_instance(asset, x, y, z, yaw, scale)
+            counts[asset] = counts.get(asset, 0) + 1
+
+        def floater(asset, x, y, z=0.0, yaw=0.0, scale=1.0, amplitude=8.0):
+            self.floating.append(dict(mesh=asset, folder="Props", loc=ue_loc((x, y, z)), yaw=ue_yaw(yaw), scale=scale,
+                                      amplitude=amplitude, period=4.0 + rng.random() * 2, sway=2.0))
+            counts[asset] = counts.get(asset, 0) + 1
+            if asset in P.PROP_LIGHTS:
+                L = P.PROP_LIGHTS[asset]
+                self.add_light((x, y, z + L["offset"][2] * scale), L)
+
+        def birds(x, y, z, radius, height, count, kind):
+            self.specials.append(dict(kind="birds", loc=ue_loc((x, y, z)), yaw=0.0, group="life",
+                                      props=dict(radius=radius * 100.0, height=height * 100.0, count=count, kind=kind)))
+
+        def open_ground(x, y, r=1.5, slope=14.0, verge=False):
+            """Free, fairly level, dry ground outside the pads; verge = beside a road (the road's own
+            occupancy mask reaches a metre or two past its edge, so it is not consulted there)."""
+            return ((verge or self.occ(x, y) < 0.15) and self.slope_at(x, y, 1.5) < slope
+                    and waterways.clearance(x, y) > r and self.ground(x, y) > 1.5
+                    and self.in_any_pad(x, y, 3.0) is None)
+
+        # ---------------- rivers: reeds on the banks, boulders in the rapids, mist + sound at the drops
+        lilies = None
+        from .geo import MeshBuilder
+        for rv in waterways.RIVERS.values():
+            n = len(rv.arc)
+            slope = np.clip(-np.gradient(rv.level, rv.arc), 0.0, None)
+            last_sound = last_fire = -1e9
+            drop_base = -1e9
+            for i in range(2, n - 2):
+                (x, y), (tx, ty), z, half = rv.at(rv.arc[i])
+                nx, ny = -ty, tx
+                pond = half >= C.POND_MIN_HALF_WIDTH
+                on_bridge = any(math.hypot(x - b["center"][0], y - b["center"][1]) < 9.0 for b in self.meta["bridges"])
+                if not on_bridge:
+                    for side in (-1, 1):                       # reeds / tall grass where the bank is low
+                        if rng.random() < (0.5 if not pond else 0.8):
+                            d = half + rng.uniform(-0.5, 1.3)
+                            px, py = x + nx * d * side + tx * rng.uniform(-1, 1), y + ny * d * side + ty * rng.uniform(-1, 1)
+                            g = self.ground(px, py)
+                            if z - 0.5 < g < z + 0.9:
+                                put("SM_GrassClump_A", px, py, g - 0.05, rng.uniform(0, 360), rng.uniform(1.3, 2.3))
+                        if rng.random() < 0.06:
+                            d = half + rng.uniform(1.5, 4.0)
+                            px, py = x + nx * d * side, y + ny * d * side
+                            g = self.ground(px, py)
+                            if g < z + 2.0 and open_ground(px, py, 0.8, 30.0):
+                                put(rng.choice(["SM_FlowerBush_Yellow", "SM_FlowerBush_White", "SM_FlowerBush_Blue"]),
+                                    px, py, g - 0.1, rng.uniform(0, 360), rng.uniform(0.7, 1.2))
+                    if slope[i] > 0.05 and rng.random() < 0.55:       # boulders breaking the water in the rapids
+                        d = rng.uniform(-0.75, 0.75) * half
+                        px, py = x + nx * d, y + ny * d
+                        put(rng.choice(["SM_Rock_B", "SM_Rock_D"]), px, py, self.ground(px, py) - 0.25,
+                            rng.uniform(0, 360), rng.uniform(0.45, 0.95))
+                    elif not pond and rng.random() < 0.03:            # the odd stone in the stream
+                        d = rng.uniform(-0.7, 0.7) * half
+                        px, py = x + nx * d, y + ny * d
+                        put("SM_Rock_B", px, py, self.ground(px, py) - 0.3, rng.uniform(0, 360), rng.uniform(0.4, 0.8))
+                # the foot of a drop: mist and the sound of falling water
+                if slope[i] < 0.04 <= slope[i - 1] and rv.arc[i] - drop_base > 25.0:
+                    j0 = max(0, i - 15)
+                    fall = float(rv.level[j0] - rv.level[i])
+                    if fall > 1.2:
+                        drop_base = rv.arc[i]
+                        self.emitters.append(dict(kind="mist", loc=ue_loc((x, y, z + 0.6)),
+                                                  scale=round(min(0.9 + fall * 0.22, 2.6), 2), rate=1.1))
+                        self.audio.append(dict(sound="A_Waterfall", loc=ue_loc((x, y, z + 1.0)),
+                                               radius=round(min(40.0 + fall * 9.0, 110.0), 1) * 100.0,
+                                               volume=round(min(0.35 + fall * 0.06, 0.8), 2)))
+                        last_sound = rv.arc[i]
+                if rv.arc[i] - last_sound > 150.0 and slope[i] > 0.004:     # the stream itself, quietly
+                    self.audio.append(dict(sound="A_Waterfall", loc=ue_loc((x, y, z + 0.5)), radius=3200.0, volume=0.22))
+                    last_sound = rv.arc[i]
+                if rv.arc[i] - last_fire > 110.0 and not on_bridge:
+                    side = rng.choice((-1, 1))
+                    self.emitters.append(dict(kind="fireflies", scale=1.6, rate=1.0,
+                                              loc=ue_loc((x + nx * (half + 2.5) * side, y + ny * (half + 2.5) * side, z + 1.2))))
+                    last_fire = rv.arc[i]
+                if pond and rng.random() < 0.9:                    # lily pads on still water
+                    lilies = lilies or MeshBuilder("Waterside_Lilies_NoCol")
+                    for _ in range(3):
+                        a, rr = rng.uniform(0, 2 * math.pi), half * math.sqrt(rng.uniform(0.25, 0.9))
+                        px, py = x + math.cos(a) * rr, y + math.sin(a) * rr
+                        lvl = waterways.water_level(px, py)
+                        if lvl is None or abs(lvl - z) > 0.05 or waterways.clearance(px, py) > -1.5:
+                            continue
+                        r = rng.uniform(0.35, 0.8)
+                        a0 = rng.uniform(0, 2 * math.pi)       # a pad is a disc with a notch
+                        lilies.poly([(px, py, z + 0.03)] + [(px + math.cos(a0 + 5.6 * t / 8) * r,
+                                                             py + math.sin(a0 + 5.6 * t / 8) * r, z + 0.03)
+                                                            for t in range(9)], "M_LeavesBush")
+                        if rng.random() < 0.22:
+                            lilies.sphere((px, py, z + 0.1), 0.11, rng.choice(["M_FlowerWhite", "M_FlowerRed"]),
+                                          seg=6, rings=4)
+            # picnic spots on a level bank
+            for frac in (0.22, 0.47, 0.63, 0.9):
+                (x, y), (tx, ty), z, half = rv.at(rv.length * frac)
+                for side in (1, -1):
+                    done = False
+                    for d in (half + 7.0, half + 10.0, half + 14.0):
+                        px, py = x - ty * d * side, y + tx * d * side
+                        if open_ground(px, py, 3.0, 8.0) and self.ground(px, py) < z + 3.5:
+                            yaw = math.degrees(math.atan2(ty, tx))
+                            g = self.ground(px, py)
+                            put("SM_PicnicTable", px, py, g, yaw, 1.0)
+                            bx, by = px + tx * 3.2, py + ty * 3.2
+                            put("SM_TrashBin", bx, by, self.ground(bx, by), yaw, 1.0)
+                            self.clearings.append((px, py, 4.5))
+                            done = True
+                            break
+                    if done:
+                        break
+        if lilies is not None and lilies.verts:
+            if export:
+                self.export_mesh(lilies, lilies.name, "Water", "none", nanite=False)
+            self.static.append(dict(mesh=f"SM_{lilies.name}", folder="Water", loc=[0, 0, 0], yaw=0.0,
+                                    collision="none", group="waterside", label=lilies.name))
+
+        # ---------------- roads: benches and planters, lanterns on the trails, guard fences on embankments
+        for p in self.meta["paths"]:
+            if p["id"] in ("breakwater", "volcano_trail"):
+                continue
+            samples = p["samples"]
+            hw = p["width"] / 2.0
+            arc = np.concatenate([[0.0], np.cumsum([math.hypot(samples[i][0] - samples[i - 1][0],
+                                                               samples[i][1] - samples[i - 1][1])
+                                                    for i in range(1, len(samples))])])
+            paved = p["surface"] == "paved"
+
+            def frame(s):
+                i = int(min(max(np.searchsorted(arc, s), 1), len(samples) - 1))
+                (ax, ay, az), (bx, by, bz) = samples[i - 1], samples[i]
+                d = math.hypot(bx - ax, by - ay) or 1.0
+                return (bx, by, bz), ((bx - ax) / d, (by - ay) / d)
+
+            spacing = 130.0 if paved else 95.0
+            s, side = spacing * 0.6, 1
+            while s < arc[-1] - 20.0:
+                (x, y, z), (tx, ty) = frame(s)
+                off = hw + (2.3 if paved else 1.5)
+                px, py = x - ty * off * side, y + tx * off * side
+                g = self.ground(px, py)
+                if open_ground(px, py, 3.0, 10.0, verge=True) and abs(g - z) < 0.8 \
+                        and not self.on_bridge(p["id"], s, 8.0):
+                    face = math.degrees(math.atan2(-tx * side, ty * side)) + 90.0    # back to the verge
+                    if paved:
+                        put("SM_Bench", px, py, g, face, 1.0)
+                        qx, qy = px + tx * 2.4, py + ty * 2.4
+                        if open_ground(qx, qy, 3.0, 12.0, verge=True):
+                            put("SM_Planter", qx, qy, self.ground(qx, qy), face, 1.0)
+                        if rng.random() < 0.35:
+                            qx, qy = px - tx * 2.2, py - ty * 2.2
+                            if open_ground(qx, qy, 3.0, 12.0, verge=True):
+                                put("SM_TrashBin", qx, qy, self.ground(qx, qy), face, 1.0)
+                    else:
+                        put("SM_StoneLantern", px, py, g - 0.03, face, 1.0)
+                        L = P.PROP_LIGHTS["SM_StoneLantern"]
+                        self.add_light((px, py, g + L["offset"][2]), L)
+                    self.clearings.append((px, py, 2.5))
+                side = -side
+                s += spacing
+            # guard fence where the verge falls away (embankments, the approach ramps of the bridges)
+            for side in (1, -1):
+                s = 4.0
+                while s < arc[-1] - 4.0:
+                    (x, y, z), (tx, ty) = frame(s)
+                    ex, ey = x - ty * (hw + 0.8) * side, y + tx * (hw + 0.8) * side
+                    fx, fy = x - ty * (hw + 4.5) * side, y + tx * (hw + 4.5) * side
+                    if (z - self.ground(fx, fy) > 1.6 and self.in_any_pad(ex, ey, 2.0) is None
+                            and not self.on_bridge(p["id"], s, 0.5) and self.ground(ex, ey) > 1.0
+                            and waterways.clearance(ex, ey) > 0.5):
+                        put("SM_Fence_Wood", ex, ey, self.ground(ex, ey), math.degrees(math.atan2(ty, tx)), 1.0)
+                    s += 4.0
+
+        # ---------------- the sea: swim-zone buoys off the beach, channel markers, fishing boats
+        for (bx, by) in C.BEACH_SEGMENT:
+            ln = math.hypot(bx, by) or 1.0
+            ux, uy = bx / ln, by / ln
+            for k in range(1, 60):
+                x, y = bx + ux * k * 4.0, by + uy * k * 4.0
+                if self.ground(x, y) < -2.6:
+                    floater("SM_Buoy", x, y, 0.0, rng.uniform(0, 360))
+                    break
+        hx0, hx1, hy0, hy1 = C.HARBOR_BASIN
+        for x, y in ((-40.0, hy0 - 30.0), (150.0, hy0 - 30.0), (-40.0, hy0 - 110.0), (150.0, hy0 - 110.0)):
+            if self.ground(x, y) < -3.0:
+                floater("SM_Buoy", x, y, 0.0, rng.uniform(0, 360))
+        for x, y, yaw in ((1290.0, -700.0, 40.0), (-1400.0, -420.0, 200.0), (120.0, 1400.0, 80.0), (760.0, -1090.0, -20.0)):
+            if self.ground(x, y) < -6.0:
+                floater("SM_FishingBoat", x, y, 0.0, yaw, amplitude=10.0)
+
+        # ---------------- the air: gulls over the coast, songbirds inland
+        hy = C.LOCATIONS["harbor"]["pos"]
+        birds(hy[0], hy[1] - 60.0, 14.0, 190.0, 34.0, 14, "gull")
+        lx, ly = C.LOCATIONS["lighthouse"]["pos"]
+        birds(lx, ly, 22.0, 70.0, 22.0, 8, "gull")
+        bx, by = C.LOCATIONS["beach"]["pos"]
+        birds(bx + 40.0, by, 10.0, 170.0, 28.0, 10, "gull")
+        sx, sy = C.SEA_STACKS[0][:2]
+        birds(sx, sy, 30.0, 150.0, 40.0, 12, "gull")
+        birds(C.LAKE_CENTER[0], C.LAKE_CENTER[1], C.LAKE_LEVEL + 10.0, 160.0, 26.0, 9, "songbird")
+        fx, fy = C.LOCATIONS["forest"]["pos"]
+        birds(fx, fy, self.ground(fx, fy) + 22.0, 210.0, 24.0, 12, "songbird")
+        px, py = C.LOCATIONS["plaza"]["pos"]
+        birds(px, py, self.info["pads"]["plaza"] + 14.0, 90.0, 18.0, 7, "songbird")
+        # fireflies on the lake shore
+        a0 = math.radians(C.LAKE_ROT)
+        for k in range(8):
+            th = 2 * math.pi * k / 8 + 0.3
+            lx_, ly_ = math.cos(th) * C.LAKE_RADII[0] * 1.06, math.sin(th) * C.LAKE_RADII[1] * 1.06
+            x = C.LAKE_CENTER[0] + lx_ * math.cos(a0) - ly_ * math.sin(a0)
+            y = C.LAKE_CENTER[1] + lx_ * math.sin(a0) + ly_ * math.cos(a0)
+            if self.ground(x, y) > C.LAKE_LEVEL - 0.2:
+                self.emitters.append(dict(kind="fireflies", loc=ue_loc((x, y, self.ground(x, y) + 1.2)), scale=1.8, rate=1.0))
+        self.log("  life: " + ", ".join(f"{k.replace('SM_', '')}={v}" for k, v in sorted(counts.items())))
 
     # ------------------------------------------------------------------ vegetation scatter
     def scatter(self):
@@ -698,6 +1274,34 @@ class Layout:
 
         total = sum(counts.values())
         self.log(f"  scatter: {total} instances " + ", ".join(f"{k.replace('SM_', '')}={v}" for k, v in sorted(counts.items())))
+        self.drop_indoor_scatter()
+
+    def drop_indoor_scatter(self):
+        """Remove scattered plants and stones that came up under a roof (a pier shed, a veranda, a pavilion
+        over a lawn): the occupancy mask keeps scatter off the pads, not out of every building volume."""
+        from mathutils import Vector
+        doomed = set()
+        for n, (asset, p, _yaw, _scale) in enumerate(self.inst_raw):
+            if asset in P.FLOATING_PROPS:
+                continue
+            q = Vector(p)
+            for sp in self.spaces:
+                if sp.near(q, 0.8) and sp.ray(q + Vector((0, 0, 0.6)), Vector((0, 0, 1)), 2.0):
+                    doomed.add(n)
+                    break
+        if not doomed:
+            return
+        gone = {}
+        for n in doomed:
+            asset, p, yaw, scale = self.inst_raw[n]
+            gone.setdefault(asset, []).append([round(p[0] * 100, 1), round(p[1] * 100 * Y_SIGN, 1), round(p[2] * 100, 1)])
+        for asset, locs in gone.items():
+            keep = [it for it in self.instances[asset] if it[:3] not in locs]
+            self.instances[asset] = keep
+        dead = {(self.inst_raw[n][0], self.inst_raw[n][1]) for n in doomed}
+        self.inst_raw = [it for n, it in enumerate(self.inst_raw) if n not in doomed]
+        self.inst_all = [it for it in self.inst_all if it[4] is not None or (it[0], it[1]) not in dead]
+        self.log(f"  scatter: {len(doomed)} instances under a roof removed")
 
     # ------------------------------------------------------------------ terrain + water actors
     def place_world(self):
@@ -707,9 +1311,17 @@ class Layout:
             for ci in range(C.CHUNKS):
                 self.static.append(dict(mesh=f"SM_Terrain_{ci:02d}_{cj:02d}", folder="Terrain", loc=[0, 0, 0], yaw=0.0,
                                         collision="complex", group="terrain", label=f"Terrain_{ci:02d}_{cj:02d}"))
-        for n in ("SM_Ocean", "SM_SeaFloor", "SM_LakeSurface"):
+        for n in ["SM_Ocean", "SM_SeaFloor", "SM_LakeSurface"] + self.river_meshes():
             self.static.append(dict(mesh=n, folder="Water", loc=[0, 0, 0], yaw=0.0, collision="none", group="water",
                                     label=n.replace("SM_", "")))
+
+    def river_meshes(self):
+        return [waterways.mesh_name(r["id"]) for r in self.meta.get("rivers", [])]
+
+    def on_bridge(self, path_id, s, margin=0.0):
+        """Is arc length s of that path on (or within `margin` m of) one of its bridges?"""
+        return any(b["path"] == path_id and b["s0"] - margin <= s <= b["s1"] + margin
+                   for b in self.meta.get("bridges", []))
 
     # ------------------------------------------------------------------ zones
     def zones(self):
@@ -811,6 +1423,9 @@ class Layout:
         return (cx, cy, (top + bot) / 2), ((ext[0] + ext[1]) / 2, (ext[2] + ext[3]) / 2, (top - bot) / 2)
 
     def water_at(self, x, y):
+        level = waterways.water_level(x, y)          # rivers and ponds count: nobody is posted in a stream
+        if level is not None and level > 0.05:
+            return level
         a = math.radians(C.LAKE_ROT)
         dx, dy = x - C.LAKE_CENTER[0], y - C.LAKE_CENTER[1]
         q = math.hypot((dx * math.cos(a) + dy * math.sin(a)) / C.LAKE_RADII[0],
@@ -904,6 +1519,10 @@ class Layout:
                     ((-dx * math.sin(a) + dy * math.cos(a)) / C.LAKE_RADII[1]) ** 2)
         lake = (hz < C.LAKE_LEVEL) & (q < 1.1)
         img = np.where(lake[..., None], np.array([0.25, 0.6, 0.72]), img)
+        level = terrain.load_water()
+        fresh = ndimage.zoom((np.isfinite(level) & (level > 0.05)).astype(np.float32), size / level.shape[0],
+                             order=1)[:size, :size] > 0.35
+        img = np.where(fresh[..., None], np.array([0.25, 0.6, 0.72]), img)
         coast = ndimage.binary_dilation(sea, iterations=2) & ~sea
         img = np.where(coast[..., None], img * 0.6 + 0.4, img)
         pil = Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8), "RGB")
@@ -912,6 +1531,9 @@ class Layout:
         def px(p):
             return ((p[0] + C.HALF) / C.WORLD_SIZE * size, (C.HALF - p[1]) / C.WORLD_SIZE * size)
 
+        for b in self.meta.get("bridges", []):
+            d.line([px(b["a"]), px(b["b"])], fill=(232, 222, 200), width=max(3, int(b["width"] / sp) + 2))
+            d.line([px(b["a"]), px(b["b"])], fill=(120, 96, 70), width=1)
         for key, poly in self.footprints:
             colr = tuple(int(c * 255) for c in C.LOCATIONS.get(key, {}).get("color", (0.8, 0.8, 0.8)))
             fill = tuple(int(0.55 * c + 0.45 * 235) for c in colr)
@@ -1000,6 +1622,8 @@ def terrain_manifest(manifest):
             n = f"SM_Terrain_{ci:02d}_{cj:02d}"
             manifest.append(dict(file=f"Meshes/Terrain/{n}.fbx", name=n, folder="Terrain", collision="complex",
                                  nanite=False, category="terrain"))
-    for n, col in (("SM_Ocean", "none"), ("SM_SeaFloor", "none"), ("SM_LakeSurface", "none")):
-        manifest.append(dict(file=f"Meshes/Water/{n}.fbx", name=n, folder="Water", collision=col, nanite=False,
+    rivers = [waterways.mesh_name(r["id"]) for r in
+              jsonio.read_json(os.path.join(C.CACHE_DIR, "terrain_info.json")).get("rivers", [])]
+    for n in ["SM_Ocean", "SM_SeaFloor", "SM_LakeSurface"] + rivers:
+        manifest.append(dict(file=f"Meshes/Water/{n}.fbx", name=n, folder="Water", collision="none", nanite=False,
                              category="water"))

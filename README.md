@@ -15,6 +15,33 @@ the Unreal Editor's own Python + C++.
 *(Cycles previews of the generated island. In Unreal it is lit by Lumen, a dynamic sky atmosphere,
 volumetric clouds and a full day/night cycle.)*
 
+![Waterways](Docs/renders/waterways.jpg)
+
+*The Academy River runs from the lake past the academy and Millbrook into Willow Pond and out to sea below the
+gym; the Forest Creek (right) reaches the east coast.*
+
+| | |
+|---|---|
+| ![Millbrook](Docs/renders/village_mill.jpg) | ![Willow Pond](Docs/renders/village_pond.jpg) |
+| **Millbrook**: the mill wheel in the river, the stone bridge of the forest path | **Willow Pond**: cottages and a market square on a lane off the main road |
+| ![Pond jetty](Docs/renders/pond_jetty.jpg) | ![River bridge](Docs/renders/river_bridge.jpg) |
+| The pond: lily pads, reeds, a jetty with a rowing boat | The gym road on its stone bridge, with benches, planters and lamps |
+| ![Creek bridge](Docs/renders/creek_bridge.jpg) | ![Volcano trail](Docs/renders/volcano_trail.jpg) |
+| A timber trestle over the Forest Creek | The volcano trail: switchbacks at a steady 19 % instead of 40-70 % pitches |
+
+*(Preview renders show geometry and placement; the water itself - waves, foam, caustics - is drawn by the Unreal
+materials, see [Docs/WATER.md](Docs/WATER.md).)*
+
+| | |
+|---|---|
+| ![Road edge](Docs/renders/road_edge.jpg) | ![Road end](Docs/renders/road_end.jpg) |
+| A road's paving breaks up into its earth verge, and the verge into the grass | Where a road ends, the stones thin out into the ground |
+
+*Ground materials never meet along a line: the terrain's layers are blended by their own relief, and roads and
+bridge decks are drawn with the terrain's material - see [Docs/GROUND_MATERIALS.md](Docs/GROUND_MATERIALS.md).
+Every door on the island has a way to a road: the roads run on to each building's entrance paving, and every
+village house has a footpath to its lane ([Docs/World/ALIGNMENT_AUDIT.md](Docs/World/ALIGNMENT_AUDIT.md)).*
+
 ![Duel board](Docs/renders/duel.png)
 
 *The ported duel board: hand, field, card detail, piles, duel log and AI opponent. The deck picker and
@@ -67,6 +94,8 @@ python Tools/puzzles/validate.py           # 145 checks, 0 failures
 python Tools/opponents/import_canon_decks.py --check  # 32/32 runtime decks, 37/37 constructed
 python Tools/effects/audit.py              # PASS; 362 scripted + 345 vanilla, 493 pending
 python Tools/portrait_check.py --strict    # every named speaker/opponent has a bust and all declared expressions
+python -m unittest Tools.tests.test_water_pipeline Tools.tests.test_water_engine   # waves, rivers, road grades, materials
+.venv/bin/python Tools/alignment_check.py  # roads, bridges, footings, props, doors against the drawn terrain: 0 failures
 ```
 
 Still open before calling the port complete: the 493 pending card effects, exact GBA dialogue (the full text is local-only), renderer/interaction QA for the shop/deck/exam screens, interior generation/entry polish, dedicated 3D meshes for the named contacts who still use a generic student look, and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md). The full E02–E33 campaign playthrough is covered by `-DAStoryPlaythroughTest`.
@@ -88,8 +117,12 @@ Still open before calling the port complete: the 493 pending card effects, exact
 | **Duel Gym & South-East Beach** | Beachside sports hall with practice duel fields, beach umbrellas, lifeguard tower and a beach duel court. |
 | **Hot Springs** | Volcanic onsen with steaming rock pools. |
 | **Forest, West Cliffs (Sunset Point), sea stacks** | Dense jungle with a hidden spirit shrine, cliff-top viewpoint deck, roaming students. |
+| **Academy River & Forest Creek** | The lake's outflow: through a gorge, past the academy, down rapids into a lily pond and out to sea below the gym (1.9 km), and a spring-fed creek through the forest to the east coast. Six bridges - stone arches under the roads, timber trestles on the trails - reeds, boulders in the rapids, mist at every drop, picnic spots on the banks. |
+| **Millbrook** | Mill hamlet where the forest path crosses the river: a water mill with a turning wheel, a stone bridge, cottages round a green, vegetable plots. |
+| **Willow Pond** | Thatched cottages and a market square on a lane off the main road, with a jetty and rowing boats on the pond. |
+| **Fisher's Cove** | Net sheds and huts above the beach at the river mouth: drying racks, boats pulled up, a pier, gulls. |
 
-**Every building can be entered.** Each door on the island is a real doorway with an automatic door (it swings
+**Every academy building can be entered** (the village cottages are private homes and stay shut). Each door on the island is a real doorway with an automatic door (it swings
 open away from you as you walk up, shoji and glass doors slide) and leads into a furnished interior designed
 after its building - see [Interiors](#interiors) below.
 
@@ -358,7 +391,7 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
   ~171 steps/min), with phase-matched idle/walk/run blending whose step rate and length follow real ground
   speed, foot-planted cycles, lean into turns, and jump/fall/land/swim/tread transitions timed to physics.
   The old 450/950 cm/s arcade speeds were retired because they made any authored stride skate.
-* Location banners + "**New location discovered**" tracking (17 named locations and 19 rooms), compass, minimap.
+* Location banners + "**New location discovered**" tracking (20 named locations and 19 rooms), compass, minimap.
 * **Island map with fast travel** (M): pick a location with Up/Down + Enter or click a marker. The selected
   location opens its list of rooms you can travel straight into - the Academy's main hall, Grand Duel Arena,
   Card Shop, lecture halls, library and faculty annex, every dorm's hall / dining room, the ferry terminal, the
@@ -384,8 +417,15 @@ are the gym's 60 x 40 m court and the ferry's 1 m wide corridor seen end-on):
   wall-hung and hanging things, trims and doorways are left free).
 * **Day/night cycle** (Lumen GI, sky atmosphere, moon): lamps, windows and the lighthouse turn on at
   night, the crater glows. Time controls: **T** pause, **[ ]** speed, **N** skip 3 h.
-* Swimmable ocean and lake (single-layer water), volcano smoke, hot-spring steam, waterfall mist,
-  bobbing ferry and boats, synthesized ambience (surf, wind, birds, volcano rumble, waterfall, crowd).
+* **Living water** ([Docs/WATER.md](Docs/WATER.md)): a sea of Gerstner waves that calms in the shallows and
+  inside the breakwater, with shoreline foam, whitecaps, depth colour and caustics on the sea bed; a rippling
+  lake; rivers that flow, foam in their rapids and can be waded; fountains whose jets break into droplets and
+  ring the basins. The ferry, the boats and the buoys ride the real wave under them, and so does a swimmer.
+* Volcano smoke, hot-spring steam, waterfall mist, gulls over the coast and songbirds inland, fireflies along
+  the banks at night, synthesized ambience (surf, wind, birds, volcano rumble, waterfall, crowd).
+* **Roads you can actually walk**: every road and trail is graded between its fixed ends (paved 9 %, trails
+  12 %, the volcano switchbacks 21 %) on embankments and cuttings - no more walls where a road met its pad -
+  with benches, planters, stone lanterns and guard fences along the way.
 * **Original area music**: 22 seamless loops rendered with the project's Juicebox Studio synth engine -
   academy suite, all four dorms, every outdoor zone, every enterable room, plus title, story and duel
   themes. The music director crossfades on zone/room changes, follows story `music` cues, and honours
@@ -483,13 +523,18 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   make_ui_portraits.py      draws the narration, PDA and event-opponent UI icons
   portrait_check.py         portrait coverage report (`--strict` fails on a missing bust or expression)
   preview_asset.py          render previews of a single location module
-  dai/config.py             island layout: locations, heights, paths, volcano, lake ...
-  dai/terrain.py            heightfield, splat maps, colour map, Landscape heightmap
-  dai/terrain_mesh.py       64 terrain chunks + ocean / sea floor / lake surfaces
+  dai/config.py             island layout: locations, heights, paths, rivers, volcano, lake ...
+  dai/terrain.py            heightfield (graded roads, carved rivers), splat maps, colour map, Landscape heightmap
+  dai/terrain_mesh.py       64 terrain chunks (explicit triangles; terrain.MeshField samples exactly that
+                            surface) + ocean (graded grid) / sea floor / lake / river surfaces
+  dai/water.py              the water model: Gerstner wave sets, wave mask + shore map, water textures, water.json
+  dai/waterways.py          where the rivers are, for the layout stage and the location modules
   dai/geo.py                MeshBuilder modelling kit (walls with openings, roofs, lathes, stairs ...)
   dai/palette.py            material palette (slot names -> UE material instances)
   dai/assets/*.py           one module per location (academy, dorms, harbor, ...) + props + avatar
   dai/assets/interior.py    interior kit: cel palette, walls with doors/windows, stairs, lights, GX furniture
+  dai/assets/village.py     cottage kit + the three villages (Millbrook, Willow Pond, Fisher's Cove)
+  dai/assets/bridges.py     parametric stone arch and timber trestle bridges
   dai/assets/doors.py       door styles -> SM_Door_* leaf meshes for the automatic doors
   dai/assets/furniture.py   SM_Int_* furniture catalog (Poly Haven CC0) + procedural stand-ins
   fetch_polyhaven.py        downloads / verifies the CC0 Poly Haven models + writes their SOURCE.txt
@@ -497,7 +542,8 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   dai/inspect.py            interior audit + lit / scale-reference previews (audit_interiors.py, storey_report.py)
   dai/collision.py          invisible collision boxes for the furniture in the no-collision meshes
   dai/placement.py          standing-room checks (person capsules), NPC settling + stroll routes, arrival points
-  dai/layout.py             places everything, scatters vegetation, writes layout.json
+  dai/layout.py             places everything (bridges, roadside and waterside dressing, boats, birds),
+                            scatters vegetation, writes layout.json
   dai/textures.py           detail/normal maps from the photo sets (procedural fallback), terrain layers
   dai/thirdparty.py         third-party ingestion: registry, glTF/FBX/OBJ import, PBR texture extraction
   dai/character.py          rigged third-party student -> SK_Student + A_Student_<State> FBX
@@ -524,7 +570,9 @@ DuelAcademyIsland/          the Unreal Engine 5.8 project
 
 * **Terrain**: a 3 km × 3 km heightfield (west cliffs, south-east beach, harbor cove, lake, 300 m
   volcano with crater) → 64 mesh chunks with complex collision and a splat-mapped 8-layer material
-  (grass, forest floor, sand, wet sand, rock, volcanic ash, dirt paths, paving).
+  (grass, forest floor, sand, wet sand, rock, volcanic ash, dirt paths, paving). Roads are solved as
+  grade-limited profiles between fixed ends; rivers are cut last, their water level following the ground
+  (pools on flats, rapids on slopes), and every path / river crossing becomes a bridge.
 * **Buildings**: modelled procedurally in Python with a small modelling kit; every face carries a
   palette material name that becomes a Material Instance in Unreal; walkable interiors use per-poly
   collision.
@@ -550,6 +598,10 @@ npm install -g @gltf-transform/cli                 # optional: decodes meshopt-c
 .venv/bin/python Tools/build_island.py render     # preview renders -> Docs/renders
 .venv/bin/python Tools/preview_asset.py academy   # iterate on one location
 .venv/bin/python Tools/build_island.py cast       # rebuild the anime cast only
+DAI_EXPORT_ONLY="Meshes/Water/*,Meshes/Roads/*" .venv/bin/python Tools/build_island.py meshes layout
+                                                  # re-export only these (FBX output is not byte-stable across
+                                                  # Blender versions) plus every location mesh whose geometry
+                                                  # changed since its last export (signatures in assets.json)
 .venv/bin/python Tools/preview_anime.py jaden alexis --state Walk --frame 10   # cast preview render (slot ids)
 python Tools/apply_npc_roster.py                  # re-apply the unique ambient NPC identities to layout.json
 python Tools/import_fab_nature.py                 # optional licensed Fab nature/prop packs (local-only, gitignored)
@@ -621,6 +673,9 @@ them with the required CC BY attribution text (also shown in-game on the F1 cont
 * The C++ module and editor scripts target the UE 5.8 API. They were written and smoke-tested outside
   the engine (the editor scripts against a mocked `unreal` module), so if your engine build reports an
   API difference, the error will point at a single, isolated call — please open an issue.
+* The water upgrade's Unreal half (the `M_DA_Water` / `M_DA_PoolWater` / `M_DA_River` material graphs, wave
+  buoyancy, fountain jets, the water wheel and the bird flocks) has not been compiled or run in the engine
+  yet; [Docs/WATER.md](Docs/WATER.md) lists what to check first.
 * Performance: the island uses Nanite foliage, MegaLights for ~300 small lights and Lumen; on low-end
   GPUs lower *Settings → Engine Scalability*.
 * Non-commercial fan project. *Yu-Gi-Oh! GX* and its characters, names and settings belong to their

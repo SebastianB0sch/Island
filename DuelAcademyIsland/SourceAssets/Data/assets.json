@@ -5,7 +5,8 @@
   "folder": "Locations/academy",
   "collision": "complex",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "69bfd9f24fd2ff56"
  },
  {
   "file": "Meshes/Locations/academy/SM_Academy_Main_Glass.fbx",
@@ -13,7 +14,8 @@
   "folder": "Locations/academy",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "14f383b26fe4d7e9"
  },
  {
   "file": "Meshes/Locations/academy/SM_Academy_Interior.fbx",
@@ -21,7 +23,8 @@
   "folder": "Locations/academy",
   "collision": "complex",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "806a9f12c5ac45ec"
  },
  {
   "file": "Meshes/Locations/academy/SM_Academy_Interior_Glass.fbx",
@@ -29,7 +32,8 @@
   "folder": "Locations/academy",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "0da5b251acc5b08d"
  },
  {
   "file": "Meshes/Locations/academy/SM_Academy_Arena.fbx",
@@ -37,7 +41,8 @@
   "folder": "Locations/academy",
   "collision": "complex",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "68240c6114ea09ab"
  },
  {
   "file": "Meshes/Locations/academy/SM_Academy_Towers.fbx",
@@ -45,7 +50,8 @@
   "folder": "Locations/academy",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "8bde8c90cff6d9ec"
  },
  {
   "file": "Meshes/Locations/academy/SM_Academy_NoCol.fbx",
@@ -53,7 +59,8 @@
   "folder": "Locations/academy",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "306624182b2771b6"
  },
  {
   "file": "Meshes/Locations/academy/SM_Academy_Interior_NoCol.fbx",
@@ -61,7 +68,8 @@
   "folder": "Locations/academy",
   "collision": "none",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "898c453fde2b04fd"
  },
  {
   "file": "Meshes/Locations/academy/SM_Academy_Glass_NoCol.fbx",
@@ -69,7 +77,8 @@
   "folder": "Locations/academy",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "a805ad1575da7d8e"
  },
  {
   "file": "Meshes/Locations/academy/SM_Academy_Blockers.fbx",
@@ -77,7 +86,8 @@
   "folder": "Locations/academy",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "e6614f0784bb0cb4"
  },
  {
   "file": "Meshes/Locations/plaza/SM_Plaza_Main.fbx",
@@ -85,7 +95,8 @@
   "folder": "Locations/plaza",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "a171b5cda2db4a17"
  },
  {
   "file": "Meshes/Locations/plaza/SM_Plaza_NoCol.fbx",
@@ -93,7 +104,8 @@
   "folder": "Locations/plaza",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "e344a62fea897494"
  },
  {
   "file": "Meshes/Locations/slifer/SM_Slifer_Main.fbx",
@@ -101,7 +113,8 @@
   "folder": "Locations/slifer",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9557b7e907227a63"
  },
  {
   "file": "Meshes/Locations/slifer/SM_Slifer_Dining.fbx",
@@ -109,7 +122,8 @@
   "folder": "Locations/slifer",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "47bcacd2f1d0d26c"
  },
  {
   "file": "Meshes/Locations/slifer/SM_Slifer_Yard.fbx",
@@ -117,7 +131,8 @@
   "folder": "Locations/slifer",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "d7d5c2cfb0f479a2"
  },
  {
   "file": "Meshes/Locations/slifer/SM_Slifer_NoCol.fbx",
@@ -125,7 +140,8 @@
   "folder": "Locations/slifer",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "2d388b3be254dbae"
  },
  {
   "file": "Meshes/Locations/slifer/SM_Slifer_Interior.fbx",
@@ -133,7 +149,8 @@
   "folder": "Locations/slifer",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "375dd3ab66299d4a"
  },
  {
   "file": "Meshes/Locations/slifer/SM_Slifer_Interior_NoCol.fbx",
@@ -141,7 +158,8 @@
   "folder": "Locations/slifer",
   "collision": "none",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "08ff87e34abca1c0"
  },
  {
   "file": "Meshes/Locations/slifer/SM_Slifer_Interior_Glass_NoCol.fbx",
@@ -149,7 +167,8 @@
   "folder": "Locations/slifer",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "495cf6974de152ec"
  },
  {
   "file": "Meshes/Locations/slifer/SM_Slifer_Blockers.fbx",
@@ -157,7 +176,8 @@
   "folder": "Locations/slifer",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "d786b5fa8b8a1cb0"
  },
  {
   "file": "Meshes/Locations/ra/SM_Ra_Main.fbx",
@@ -165,7 +185,8 @@
   "folder": "Locations/ra",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "2ea7a9ce87da46eb"
  },
  {
   "file": "Meshes/Locations/ra/SM_Ra_Main_Glass.fbx",
@@ -173,7 +194,8 @@
   "folder": "Locations/ra",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "1e8dfc38f63e4c79"
  },
  {
   "file": "Meshes/Locations/ra/SM_Ra_Cafeteria.fbx",
@@ -181,7 +203,8 @@
   "folder": "Locations/ra",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "dad1127cfe2497f5"
  },
  {
   "file": "Meshes/Locations/ra/SM_Ra_Grounds.fbx",
@@ -189,7 +212,8 @@
   "folder": "Locations/ra",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "a9779d9297907f8a"
  },
  {
   "file": "Meshes/Locations/ra/SM_Ra_NoCol.fbx",
@@ -197,7 +221,8 @@
   "folder": "Locations/ra",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "c3bfb24bda5e3396"
  },
  {
   "file": "Meshes/Locations/ra/SM_Ra_Interior.fbx",
@@ -205,7 +230,8 @@
   "folder": "Locations/ra",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "5313bc9cc64a1935"
  },
  {
   "file": "Meshes/Locations/ra/SM_Ra_Interior_NoCol.fbx",
@@ -213,7 +239,8 @@
   "folder": "Locations/ra",
   "collision": "none",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "fd57f7ecb5d5781c"
  },
  {
   "file": "Meshes/Locations/ra/SM_Ra_Interior_Glass_NoCol.fbx",
@@ -221,7 +248,8 @@
   "folder": "Locations/ra",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "ad34c2336ba9e90f"
  },
  {
   "file": "Meshes/Locations/ra/SM_Ra_Blockers.fbx",
@@ -229,7 +257,8 @@
   "folder": "Locations/ra",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "3ead6ee364bb611b"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Main.fbx",
@@ -237,7 +266,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "complex",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "6f04aa2097e33911"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Main_Glass.fbx",
@@ -245,7 +275,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "357dc29b537de9e2"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Courtyard.fbx",
@@ -253,7 +284,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "45ecc37383ebe147"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Gate.fbx",
@@ -261,7 +293,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "d9450b84e58fd1c4"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_NoCol.fbx",
@@ -269,7 +302,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "811c909e247488f3"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Interior.fbx",
@@ -277,7 +311,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "complex",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "a7d58511500f3064"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Interior_Glass.fbx",
@@ -285,7 +320,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "000c5b51ba58e86f"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Interior_NoCol.fbx",
@@ -293,7 +329,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "none",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "b8cdff09c433e8c8"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Interior_Glass_NoCol.fbx",
@@ -301,7 +338,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "bcc2f2c96dd51afa"
  },
  {
   "file": "Meshes/Locations/obelisk_boys/SM_ObeliskBoys_Blockers.fbx",
@@ -309,7 +347,8 @@
   "folder": "Locations/obelisk_boys",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "caaf392e8ea3e7ca"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Main.fbx",
@@ -317,7 +356,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "complex",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "caa09eeb64d37fea"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Main_Glass.fbx",
@@ -325,7 +365,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "00c36381ad5a587f"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Garden.fbx",
@@ -333,7 +374,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "0a3d8198556d4198"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Gazebo.fbx",
@@ -341,7 +383,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "4ac297406bd29ca4"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Jetty.fbx",
@@ -349,7 +392,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "29694635ef1d7a28"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_NoCol.fbx",
@@ -357,7 +401,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "94bb47d45a6b68b7"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Interior.fbx",
@@ -365,7 +410,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "complex",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "1ddc52456d625caa"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Interior_Glass.fbx",
@@ -373,7 +419,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "7aa6f5746ff16904"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Interior_NoCol.fbx",
@@ -381,7 +428,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "none",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "af43990c6f49f8f2"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Interior_Glass_NoCol.fbx",
@@ -389,7 +437,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "d2aa9dc5f11d7ccf"
  },
  {
   "file": "Meshes/Locations/obelisk_girls/SM_ObeliskGirls_Blockers.fbx",
@@ -397,7 +446,8 @@
   "folder": "Locations/obelisk_girls",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "57ef4d9062be3e11"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Quay.fbx",
@@ -405,7 +455,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "a1354f4c589b01b9"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_NoCol.fbx",
@@ -413,7 +464,8 @@
   "folder": "Locations/harbor",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "f6b2c0945f97f0e1"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Pier.fbx",
@@ -421,7 +473,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "f15783f9073738e9"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Ferry.fbx",
@@ -429,7 +482,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "4d705d5d976e6729"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Interior.fbx",
@@ -437,7 +491,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "4a43f379a8418d81"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Interior_NoCol.fbx",
@@ -445,7 +500,8 @@
   "folder": "Locations/harbor",
   "collision": "none",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "c2757e3665da007a"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Interior_Glass_NoCol.fbx",
@@ -453,7 +509,8 @@
   "folder": "Locations/harbor",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "24fd68ef22c2cf24"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Warehouse.fbx",
@@ -461,7 +518,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9dcbfe0b0f417185"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Crane.fbx",
@@ -469,7 +527,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "8caba7cbe51d40a5"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Terminal.fbx",
@@ -477,7 +536,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "d80791d07461c8a9"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Heliport.fbx",
@@ -485,7 +545,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "99f419ffac2803b1"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Breakwater.fbx",
@@ -493,7 +554,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "fde573d458c499e1"
  },
  {
   "file": "Meshes/Locations/harbor/SM_Harbor_Blockers.fbx",
@@ -501,7 +563,8 @@
   "folder": "Locations/harbor",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9f3be0bc3baa9af8"
  },
  {
   "file": "Meshes/Locations/lighthouse/SM_Lighthouse_Tower.fbx",
@@ -509,7 +572,8 @@
   "folder": "Locations/lighthouse",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "50b048b5a00e0f82"
  },
  {
   "file": "Meshes/Locations/lighthouse/SM_Lighthouse_Platform.fbx",
@@ -517,7 +581,8 @@
   "folder": "Locations/lighthouse",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "aa9e3cce9efb7196"
  },
  {
   "file": "Meshes/Locations/lighthouse/SM_Lighthouse_NoCol.fbx",
@@ -525,7 +590,8 @@
   "folder": "Locations/lighthouse",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "93d741c96880254a"
  },
  {
   "file": "Meshes/Locations/lighthouse/SM_Lighthouse_Interior.fbx",
@@ -533,7 +599,8 @@
   "folder": "Locations/lighthouse",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "4b963a3ef950b7d5"
  },
  {
   "file": "Meshes/Locations/lighthouse/SM_Lighthouse_Interior_NoCol.fbx",
@@ -541,7 +608,8 @@
   "folder": "Locations/lighthouse",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "81b7ffad2789a28f"
  },
  {
   "file": "Meshes/Locations/lighthouse/SM_Lighthouse_Blockers.fbx",
@@ -549,7 +617,8 @@
   "folder": "Locations/lighthouse",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9572cf9b0f42a26d"
  },
  {
   "file": "Meshes/Locations/abandoned/SM_Abandoned_Dorm.fbx",
@@ -557,7 +626,8 @@
   "folder": "Locations/abandoned",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "c0bc5849d6fa97bd"
  },
  {
   "file": "Meshes/Locations/abandoned/SM_Abandoned_Roof.fbx",
@@ -565,7 +635,8 @@
   "folder": "Locations/abandoned",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "16507deede22ef9a"
  },
  {
   "file": "Meshes/Locations/abandoned/SM_Abandoned_Hall.fbx",
@@ -573,7 +644,8 @@
   "folder": "Locations/abandoned",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "190b05574ef7bc5f"
  },
  {
   "file": "Meshes/Locations/abandoned/SM_Abandoned_Grounds.fbx",
@@ -581,7 +653,8 @@
   "folder": "Locations/abandoned",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "7de313ae39ee3219"
  },
  {
   "file": "Meshes/Locations/abandoned/SM_Abandoned_NoCol.fbx",
@@ -589,7 +662,8 @@
   "folder": "Locations/abandoned",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "06a42cab399ea38c"
  },
  {
   "file": "Meshes/Locations/abandoned/SM_Abandoned_Interior.fbx",
@@ -597,7 +671,8 @@
   "folder": "Locations/abandoned",
   "collision": "complex",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "440595170d07c2c9"
  },
  {
   "file": "Meshes/Locations/abandoned/SM_Abandoned_Interior_NoCol.fbx",
@@ -605,7 +680,8 @@
   "folder": "Locations/abandoned",
   "collision": "none",
   "nanite": true,
-  "category": "location"
+  "category": "location",
+  "sig": "1bc2f8d4227e3e19"
  },
  {
   "file": "Meshes/Locations/abandoned/SM_Abandoned_Interior_Glass_NoCol.fbx",
@@ -613,7 +689,8 @@
   "folder": "Locations/abandoned",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "c4073a82b8064a6f"
  },
  {
   "file": "Meshes/Locations/abandoned/SM_Abandoned_Blockers.fbx",
@@ -621,7 +698,8 @@
   "folder": "Locations/abandoned",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "88e4107ae70e16c0"
  },
  {
   "file": "Meshes/Locations/gym/SM_Gym_Hall.fbx",
@@ -629,7 +707,8 @@
   "folder": "Locations/gym",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "f5497aeed388bff2"
  },
  {
   "file": "Meshes/Locations/gym/SM_Gym_Roof.fbx",
@@ -637,7 +716,8 @@
   "folder": "Locations/gym",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "96f56e49027e53fb"
  },
  {
   "file": "Meshes/Locations/gym/SM_Gym_Interior.fbx",
@@ -645,7 +725,8 @@
   "folder": "Locations/gym",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "cd1d633ad5371ed0"
  },
  {
   "file": "Meshes/Locations/gym/SM_Gym_Grounds.fbx",
@@ -653,7 +734,8 @@
   "folder": "Locations/gym",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "6c4bbf3ec28832cd"
  },
  {
   "file": "Meshes/Locations/gym/SM_Gym_NoCol.fbx",
@@ -661,7 +743,8 @@
   "folder": "Locations/gym",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "33bee77252c7058b"
  },
  {
   "file": "Meshes/Locations/gym/SM_Gym_Annex.fbx",
@@ -669,7 +752,8 @@
   "folder": "Locations/gym",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "dd168f1ecc581b85"
  },
  {
   "file": "Meshes/Locations/gym/SM_Gym_Annex_NoCol.fbx",
@@ -677,7 +761,8 @@
   "folder": "Locations/gym",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "506e86c512baca24"
  },
  {
   "file": "Meshes/Locations/gym/SM_Gym_Blockers.fbx",
@@ -685,7 +770,8 @@
   "folder": "Locations/gym",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9d2ae6db6fb74a26"
  },
  {
   "file": "Meshes/Locations/hotsprings/SM_Onsen_Terrace.fbx",
@@ -693,7 +779,8 @@
   "folder": "Locations/hotsprings",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "936312096279d437"
  },
  {
   "file": "Meshes/Locations/hotsprings/SM_Onsen_Bathhouse.fbx",
@@ -701,7 +788,8 @@
   "folder": "Locations/hotsprings",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "8a60ed4de142a988"
  },
  {
   "file": "Meshes/Locations/hotsprings/SM_Onsen_Garden.fbx",
@@ -709,7 +797,8 @@
   "folder": "Locations/hotsprings",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "4dbbc1fea8a483a0"
  },
  {
   "file": "Meshes/Locations/hotsprings/SM_Onsen_NoCol.fbx",
@@ -717,7 +806,8 @@
   "folder": "Locations/hotsprings",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "51d0d3dfe90c16a2"
  },
  {
   "file": "Meshes/Locations/hotsprings/SM_Onsen_Interior.fbx",
@@ -725,7 +815,8 @@
   "folder": "Locations/hotsprings",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "8a4093a0e9a0bb96"
  },
  {
   "file": "Meshes/Locations/hotsprings/SM_Onsen_Interior_NoCol.fbx",
@@ -733,7 +824,8 @@
   "folder": "Locations/hotsprings",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "81ecb27a66590deb"
  },
  {
   "file": "Meshes/Locations/hotsprings/SM_Onsen_Blockers.fbx",
@@ -741,7 +833,8 @@
   "folder": "Locations/hotsprings",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "81a9718343f851d3"
  },
  {
   "file": "Meshes/Locations/volcano/SM_Volcano_Lava_NoCol.fbx",
@@ -749,7 +842,8 @@
   "folder": "Locations/volcano",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "f106cabc21283ad5"
  },
  {
   "file": "Meshes/Locations/volcano/SM_Volcano_Viewpoint.fbx",
@@ -757,7 +851,8 @@
   "folder": "Locations/volcano",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "7237dc829d9e9567"
  },
  {
   "file": "Meshes/Locations/volcano/SM_Volcano_Summit.fbx",
@@ -765,7 +860,8 @@
   "folder": "Locations/volcano",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "f436cb41d45c9cdd"
  },
  {
   "file": "Meshes/Locations/volcano/SM_Volcano_Summit_NoCol.fbx",
@@ -773,7 +869,17 @@
   "folder": "Locations/volcano",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "080e438a857ee649"
+ },
+ {
+  "file": "Meshes/Locations/volcano/SM_Volcano_Blockers.fbx",
+  "name": "SM_Volcano_Blockers",
+  "folder": "Locations/volcano",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "5d9b51e006a080f8"
  },
  {
   "file": "Meshes/Locations/waterfall/SM_Waterfall_Water_NoCol.fbx",
@@ -781,7 +887,8 @@
   "folder": "Locations/waterfall",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9d4fd023333c28b9"
  },
  {
   "file": "Meshes/Locations/waterfall/SM_Waterfall_Rocks.fbx",
@@ -789,7 +896,8 @@
   "folder": "Locations/waterfall",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "54e3eac54113c34d"
  },
  {
   "file": "Meshes/Locations/lake/SM_Lake_LilyPads_NoCol.fbx",
@@ -797,7 +905,8 @@
   "folder": "Locations/lake",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "60c5e017d7b38460"
  },
  {
   "file": "Meshes/Locations/cliffs/SM_Cliffs_Viewpoint.fbx",
@@ -805,7 +914,8 @@
   "folder": "Locations/cliffs",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "dda2c9020df666d0"
  },
  {
   "file": "Meshes/Locations/beach/SM_Beach_Lifeguard.fbx",
@@ -813,7 +923,8 @@
   "folder": "Locations/beach",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "002428a8ed39133b"
  },
  {
   "file": "Meshes/Locations/beach/SM_Beach_Lifeguard_NoCol.fbx",
@@ -821,7 +932,8 @@
   "folder": "Locations/beach",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "da0a2f8234aaa178"
  },
  {
   "file": "Meshes/Locations/beach/SM_Beach_Volleyball.fbx",
@@ -829,7 +941,8 @@
   "folder": "Locations/beach",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "4e7ec94aa06805a1"
  },
  {
   "file": "Meshes/Locations/beach/SM_Beach_DuelCourt_NoCol.fbx",
@@ -837,7 +950,8 @@
   "folder": "Locations/beach",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "115fe76646ae2189"
  },
  {
   "file": "Meshes/Locations/beach/SM_Beach_Blockers.fbx",
@@ -845,7 +959,8 @@
   "folder": "Locations/beach",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "6f8136473c040643"
  },
  {
   "file": "Meshes/Locations/forest/SM_Forest_Shrine.fbx",
@@ -853,7 +968,8 @@
   "folder": "Locations/forest",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "3ccaab75ebdcdffe"
  },
  {
   "file": "Meshes/Locations/forest/SM_Forest_Shrine_NoCol.fbx",
@@ -861,7 +977,8 @@
   "folder": "Locations/forest",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "ccfb27025e2e9dc2"
  },
  {
   "file": "Meshes/Locations/forest/SM_Forest_Blockers.fbx",
@@ -869,7 +986,341 @@
   "folder": "Locations/forest",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "7e2a2ed78f2337dd"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Detail_NoCol.fbx",
+  "name": "SM_Millbrook_Detail_NoCol",
+  "folder": "Locations/millbrook",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "4b60a28390ecb406"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Green.fbx",
+  "name": "SM_Millbrook_Green",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "44f7cff7c5a99aa4"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Mill.fbx",
+  "name": "SM_Millbrook_Mill",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "c08b31d3febc4935"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_MillWheel_NoCol.fbx",
+  "name": "SM_Millbrook_MillWheel_NoCol",
+  "folder": "Locations/millbrook",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "9fb7085a131bf3db"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House1.fbx",
+  "name": "SM_Millbrook_House1",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "6b03cb08d952f121"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House2.fbx",
+  "name": "SM_Millbrook_House2",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "6417b17b30d892a6"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House3.fbx",
+  "name": "SM_Millbrook_House3",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "3dd40ce4b741bac3"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House4.fbx",
+  "name": "SM_Millbrook_House4",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "e64dcaeb15413937"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House5.fbx",
+  "name": "SM_Millbrook_House5",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "3391a742ae97c885"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_House6.fbx",
+  "name": "SM_Millbrook_House6",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "c0c1017269ce2371"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Paths_NoCol.fbx",
+  "name": "SM_Millbrook_Paths_NoCol",
+  "folder": "Locations/millbrook",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "4a05349d2308f431"
+ },
+ {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Blockers.fbx",
+  "name": "SM_Millbrook_Blockers",
+  "folder": "Locations/millbrook",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "e51a6be4c5f5e806"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Detail_NoCol.fbx",
+  "name": "SM_WillowPond_Detail_NoCol",
+  "folder": "Locations/willow_pond",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "29829c30a1a4546a"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Square.fbx",
+  "name": "SM_WillowPond_Square",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "cb8c42fecad73b1f"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House1.fbx",
+  "name": "SM_WillowPond_House1",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "65fc2cd7c1adc0a8"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House2.fbx",
+  "name": "SM_WillowPond_House2",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "6c7d8c966c3e6478"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House3.fbx",
+  "name": "SM_WillowPond_House3",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "17560f978d8baf76"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House4.fbx",
+  "name": "SM_WillowPond_House4",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "82277c99e9e8a1f2"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House5.fbx",
+  "name": "SM_WillowPond_House5",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "2bebf6c61e4148ea"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House6.fbx",
+  "name": "SM_WillowPond_House6",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "3cbd44e4a967bfe4"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_House7.fbx",
+  "name": "SM_WillowPond_House7",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "950aeeaa9ef0ec9c"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Jetty.fbx",
+  "name": "SM_WillowPond_Jetty",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "079491357cf752d4"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Paths_NoCol.fbx",
+  "name": "SM_WillowPond_Paths_NoCol",
+  "folder": "Locations/willow_pond",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "8301af878ad06dbf"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Blockers.fbx",
+  "name": "SM_WillowPond_Blockers",
+  "folder": "Locations/willow_pond",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "ea6010bbfbd4077d"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Detail_NoCol.fbx",
+  "name": "SM_FishersCove_Detail_NoCol",
+  "folder": "Locations/fishers_cove",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "7fb35c3557fd6ed4"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Yard.fbx",
+  "name": "SM_FishersCove_Yard",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "eed80e659785f280"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House1.fbx",
+  "name": "SM_FishersCove_House1",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "6bd5e153ea9d34a4"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House2.fbx",
+  "name": "SM_FishersCove_House2",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "0f2bcc19f87e14f6"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House3.fbx",
+  "name": "SM_FishersCove_House3",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "b4858c0ea24b9e55"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House4.fbx",
+  "name": "SM_FishersCove_House4",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "76b295c16e596009"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House5.fbx",
+  "name": "SM_FishersCove_House5",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "a25621bf77801b6a"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_House6.fbx",
+  "name": "SM_FishersCove_House6",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "b963ad732ba318b0"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Hut7.fbx",
+  "name": "SM_FishersCove_Hut7",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "f3e11635efe4a3f7"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Hut8.fbx",
+  "name": "SM_FishersCove_Hut8",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "a017b14609042a5f"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Pier.fbx",
+  "name": "SM_FishersCove_Pier",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "254e9e0181775834"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Paths_NoCol.fbx",
+  "name": "SM_FishersCove_Paths_NoCol",
+  "folder": "Locations/fishers_cove",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "7956059e7ebccb6c"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Blockers.fbx",
+  "name": "SM_FishersCove_Blockers",
+  "folder": "Locations/fishers_cove",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "e743ea628edb29d7"
  },
  {
   "file": "Meshes/Doors/SM_Door_abandoned_100x215.fbx",
@@ -877,7 +1328,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "386732f8a140c6b6"
  },
  {
   "file": "Meshes/Doors/SM_Door_abandoned_110x300.fbx",
@@ -885,7 +1337,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "82dc4a61511cf581"
  },
  {
   "file": "Meshes/Doors/SM_Door_abandoned_120x240.fbx",
@@ -893,7 +1346,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "e341421921f87b79"
  },
  {
   "file": "Meshes/Doors/SM_Door_abandoned_120x320.fbx",
@@ -901,7 +1355,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "b6dc0184c75ee317"
  },
  {
   "file": "Meshes/Doors/SM_Door_abandoned_130x250.fbx",
@@ -909,7 +1364,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "17f5e315bf3ef6fa"
  },
  {
   "file": "Meshes/Doors/SM_Door_abandoned_80x230.fbx",
@@ -917,7 +1373,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "8e7f9380da019fd7"
  },
  {
   "file": "Meshes/Doors/SM_Door_abandoned_80x280.fbx",
@@ -925,7 +1382,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "e150dd05069e47c5"
  },
  {
   "file": "Meshes/Doors/SM_Door_abandoned_95x215.fbx",
@@ -933,7 +1391,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "3b36d2433b504fbb"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_110x270.fbx",
@@ -941,7 +1400,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "8c96f62a160d9f87"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_140x340.fbx",
@@ -949,7 +1409,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "988180443bdacbfb"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_150x380.fbx",
@@ -957,7 +1418,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "75f176cf03355fd3"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_200x440.fbx",
@@ -965,7 +1427,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "66252f618bd528be"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_220x440.fbx",
@@ -973,7 +1436,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9ab9e98ea9553990"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_250x460.fbx",
@@ -981,7 +1445,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "bbd3536e0d0dca0c"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_wood_100x210.fbx",
@@ -989,7 +1454,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "90fc65bd30fe1e53"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_wood_100x280.fbx",
@@ -997,7 +1463,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "92a87aca290af51a"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_wood_90x240.fbx",
@@ -1005,7 +1472,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "00068a9c3c7df8b3"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_wood_90x260.fbx",
@@ -1013,7 +1481,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "3632de6c2e8da4a5"
  },
  {
   "file": "Meshes/Doors/SM_Door_academy_wood_90x280.fbx",
@@ -1021,7 +1490,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "251a90161a96e6f2"
  },
  {
   "file": "Meshes/Doors/SM_Door_classroom_100x215.fbx",
@@ -1029,7 +1499,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "acc5a61d0042abef"
  },
  {
   "file": "Meshes/Doors/SM_Door_classroom_100x220.fbx",
@@ -1037,15 +1508,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Doors/SM_Door_girls_100x255.fbx",
-  "name": "SM_Door_girls_100x255",
-  "folder": "Doors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "22a03ef368bd8614"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_100x280.fbx",
@@ -1053,7 +1517,17 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "c550106c2c1ab356"
+ },
+ {
+  "file": "Meshes/Doors/SM_Door_girls_110x265.fbx",
+  "name": "SM_Door_girls_110x265",
+  "folder": "Doors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "7d1b6ba855659ad9"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_110x290.fbx",
@@ -1061,7 +1535,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "87f6953da523f971"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_75x292.fbx",
@@ -1069,7 +1544,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "ec22ab1c0c9c94d5"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_90x270.fbx",
@@ -1077,7 +1553,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "ace83195ac9ba624"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_inner_100x210.fbx",
@@ -1085,7 +1562,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "2d33ddcf79a53edc"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_inner_100x220.fbx",
@@ -1093,7 +1571,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "acf147efb895d7b0"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_inner_100x240.fbx",
@@ -1101,7 +1580,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "825cc1dd27217e31"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_inner_120x250.fbx",
@@ -1109,7 +1589,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "6f46346a628d3a54"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_inner_80x240.fbx",
@@ -1117,7 +1598,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "bfc529c9c518ec01"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_inner_80x260.fbx",
@@ -1125,7 +1607,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "56647419d25436ed"
  },
  {
   "file": "Meshes/Doors/SM_Door_girls_inner_80x270.fbx",
@@ -1133,7 +1616,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "1bf209c2f9515129"
  },
  {
   "file": "Meshes/Doors/SM_Door_glass_100x215.fbx",
@@ -1141,7 +1625,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "386004f162b7c17c"
  },
  {
   "file": "Meshes/Doors/SM_Door_glass_112x255.fbx",
@@ -1149,7 +1634,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "0efedbccbaaa0519"
  },
  {
   "file": "Meshes/Doors/SM_Door_glass_120x210.fbx",
@@ -1157,7 +1643,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "dd413cf43aa71820"
  },
  {
   "file": "Meshes/Doors/SM_Door_glass_120x260.fbx",
@@ -1165,7 +1652,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "fb96b010497cd4de"
  },
  {
   "file": "Meshes/Doors/SM_Door_glass_150x280.fbx",
@@ -1173,7 +1661,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "8bcc546616b0e9fa"
  },
  {
   "file": "Meshes/Doors/SM_Door_glass_285x360.fbx",
@@ -1181,7 +1670,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "751bf9bd57020fcb"
  },
  {
   "file": "Meshes/Doors/SM_Door_glass_90x240.fbx",
@@ -1189,7 +1679,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "effbd95d85ceb0cb"
  },
  {
   "file": "Meshes/Doors/SM_Door_lighthouse_75x240.fbx",
@@ -1197,7 +1688,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "3b89206407d90134"
  },
  {
   "file": "Meshes/Doors/SM_Door_metal_100x215.fbx",
@@ -1205,7 +1697,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "54c605715e1952ed"
  },
  {
   "file": "Meshes/Doors/SM_Door_metal_110x225.fbx",
@@ -1213,7 +1706,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "a680ede547b44159"
  },
  {
   "file": "Meshes/Doors/SM_Door_metal_160x300.fbx",
@@ -1221,7 +1715,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9e65d94ed0d0dee4"
  },
  {
   "file": "Meshes/Doors/SM_Door_metal_200x400.fbx",
@@ -1229,7 +1724,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "c7b0567fc5b6e3b1"
  },
  {
   "file": "Meshes/Doors/SM_Door_metal_320x640.fbx",
@@ -1237,7 +1733,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "65788d9a3e0df579"
  },
  {
   "file": "Meshes/Doors/SM_Door_metal_90x205.fbx",
@@ -1245,7 +1742,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "6107438f54310b5c"
  },
  {
   "file": "Meshes/Doors/SM_Door_metal_90x230.fbx",
@@ -1253,7 +1751,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9cb4040a4b0095b9"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_130x340.fbx",
@@ -1261,7 +1760,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "da2ee7876e0503b3"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_140x340.fbx",
@@ -1269,7 +1769,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "f013da2731ac8fd2"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_75x315.fbx",
@@ -1277,7 +1778,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "0cc926ceca855bf9"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_100x210.fbx",
@@ -1285,7 +1787,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "f26232c7170e4c02"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_100x220.fbx",
@@ -1293,7 +1796,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "2c219f9f4f181b87"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_100x240.fbx",
@@ -1301,7 +1805,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "edf253a3f15fd737"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_100x320.fbx",
@@ -1309,7 +1814,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "efcbf004d1afbaca"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_120x210.fbx",
@@ -1317,7 +1823,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "8c377dfd3c49fb79"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_120x220.fbx",
@@ -1325,7 +1832,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "12a4f6b1651c7802"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_120x230.fbx",
@@ -1333,7 +1841,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "e9d3d9b4a15aa668"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_120x250.fbx",
@@ -1341,7 +1850,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "cc09dc5d5d634f3d"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_120x300.fbx",
@@ -1349,7 +1859,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "679fb7814b032026"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_70x230.fbx",
@@ -1357,7 +1868,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "1b035ddbaf18a23e"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_70x250.fbx",
@@ -1365,7 +1877,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "e4075b6560343097"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_80x260.fbx",
@@ -1373,7 +1886,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "7fd2bb9435171387"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_80x280.fbx",
@@ -1381,7 +1895,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "e8ca8635c51b3c26"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_90x210.fbx",
@@ -1389,7 +1904,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "4a5d6f4b9cf506c9"
  },
  {
   "file": "Meshes/Doors/SM_Door_obelisk_inner_90x300.fbx",
@@ -1397,7 +1913,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "4e789297ac578d0d"
  },
  {
   "file": "Meshes/Doors/SM_Door_office_100x210.fbx",
@@ -1405,7 +1922,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "961e9673241fcf56"
  },
  {
   "file": "Meshes/Doors/SM_Door_office_100x215.fbx",
@@ -1413,7 +1931,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "28113d80ff0fe952"
  },
  {
   "file": "Meshes/Doors/SM_Door_office_90x210.fbx",
@@ -1421,7 +1940,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "70411b3a96c46fb6"
  },
  {
   "file": "Meshes/Doors/SM_Door_office_95x210.fbx",
@@ -1429,7 +1949,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "9bb2647dd02dd85a"
  },
  {
   "file": "Meshes/Doors/SM_Door_ra_100x270.fbx",
@@ -1437,7 +1958,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "133865f95fdd9fe9"
  },
  {
   "file": "Meshes/Doors/SM_Door_ra_100x285.fbx",
@@ -1445,7 +1967,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "5c6bbc6605ea48b2"
  },
  {
   "file": "Meshes/Doors/SM_Door_ra_60x251.fbx",
@@ -1453,7 +1976,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "f1299bf63905285b"
  },
  {
   "file": "Meshes/Doors/SM_Door_ra_70x265.fbx",
@@ -1461,7 +1985,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "3b763bb0cb41529d"
  },
  {
   "file": "Meshes/Doors/SM_Door_ra_80x260.fbx",
@@ -1469,7 +1994,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "5f4486306efb4ab6"
  },
  {
   "file": "Meshes/Doors/SM_Door_ra_inner_100x215.fbx",
@@ -1477,7 +2003,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "becd9052d09ca91a"
  },
  {
   "file": "Meshes/Doors/SM_Door_ra_inner_70x230.fbx",
@@ -1485,7 +2012,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "d644725216987e3b"
  },
  {
   "file": "Meshes/Doors/SM_Door_ra_inner_80x240.fbx",
@@ -1493,7 +2021,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "38c6cb80fbca792e"
  },
  {
   "file": "Meshes/Doors/SM_Door_ra_inner_95x215.fbx",
@@ -1501,7 +2030,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "3005d2f0890d0856"
  },
  {
   "file": "Meshes/Doors/SM_Door_shoji_140x220.fbx",
@@ -1509,7 +2039,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "817680337bae9ef6"
  },
  {
   "file": "Meshes/Doors/SM_Door_shoji_160x220.fbx",
@@ -1517,7 +2048,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "f40d90515e520781"
  },
  {
   "file": "Meshes/Doors/SM_Door_slifer_80x255.fbx",
@@ -1525,7 +2057,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "fc09c497eb8d2f0a"
  },
  {
   "file": "Meshes/Doors/SM_Door_slifer_90x205.fbx",
@@ -1533,7 +2066,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "15de509e38ad5e7e"
  },
  {
   "file": "Meshes/Doors/SM_Door_slifer_inner_75x200.fbx",
@@ -1541,7 +2075,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "71e22b072ee6a9f2"
  },
  {
   "file": "Meshes/Doors/SM_Door_slifer_inner_90x210.fbx",
@@ -1549,7 +2084,8 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "fcf5a6ab9ee72705"
  },
  {
   "file": "Meshes/Doors/SM_Door_wood_90x205.fbx",
@@ -1557,7 +2093,386 @@
   "folder": "Doors",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "4e8d95da30f19f63"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_Shell.fbx",
+  "name": "SM_Interior_academy_classroom_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "2a03c471ae87c544"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_Props.fbx",
+  "name": "SM_Interior_academy_classroom_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "cd682cf7a57a13bc"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_NoCol.fbx",
+  "name": "SM_Interior_academy_classroom_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "7fdaa2bfd4417632"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_Shell.fbx",
+  "name": "SM_Interior_academy_test_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "4457e6fe51129f9b"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_Props.fbx",
+  "name": "SM_Interior_academy_test_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "19266b7b58d0d41e"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_NoCol.fbx",
+  "name": "SM_Interior_academy_test_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "10fb37b1b80f8178"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_Shell.fbx",
+  "name": "SM_Interior_academy_crowler_office_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "2d2ccf90888dfed0"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_Props.fbx",
+  "name": "SM_Interior_academy_crowler_office_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "88c9d6c16c9f3fe3"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_NoCol.fbx",
+  "name": "SM_Interior_academy_crowler_office_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "df940ae3bf63da72"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_Shell.fbx",
+  "name": "SM_Interior_academy_chancellor_office_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "dab4fb207a84ff04"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_Props.fbx",
+  "name": "SM_Interior_academy_chancellor_office_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "591d57b3ebe74cb7"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_NoCol.fbx",
+  "name": "SM_Interior_academy_chancellor_office_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "c1d140ff91ad8990"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_Shell.fbx",
+  "name": "SM_Interior_slifer_player_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "66c15a13007f1c8c"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_Props.fbx",
+  "name": "SM_Interior_slifer_player_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "ad6a378c61caad1c"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_NoCol.fbx",
+  "name": "SM_Interior_slifer_player_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "6b2518835bcccc69"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_Shell.fbx",
+  "name": "SM_Interior_slifer_banner_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "74e7054d1b8df0d5"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_Props.fbx",
+  "name": "SM_Interior_slifer_banner_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "6369739b5d257071"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_NoCol.fbx",
+  "name": "SM_Interior_slifer_banner_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "8767a91cfd4c3f27"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_Shell.fbx",
+  "name": "SM_Interior_slifer_jaden_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "788ed44742a62036"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_Props.fbx",
+  "name": "SM_Interior_slifer_jaden_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "f870a8fee7c6fde9"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_NoCol.fbx",
+  "name": "SM_Interior_slifer_jaden_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "7844288f7c29bc23"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_Shell.fbx",
+  "name": "SM_Interior_ra_player_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "3c6e17c044a36762"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_Props.fbx",
+  "name": "SM_Interior_ra_player_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "af0b3b77fe785c43"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_NoCol.fbx",
+  "name": "SM_Interior_ra_player_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "1798e7fb53820444"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_Shell.fbx",
+  "name": "SM_Interior_obelisk_dining_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "1a21da84dd205019"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_Props.fbx",
+  "name": "SM_Interior_obelisk_dining_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "167aba7cfc33a8f1"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_NoCol.fbx",
+  "name": "SM_Interior_obelisk_dining_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "92ef6f8ddf0eeb6e"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_Shell.fbx",
+  "name": "SM_Interior_obelisk_player_room_Shell",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "f7d62bb95f8bbdfc"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_Props.fbx",
+  "name": "SM_Interior_obelisk_player_room_Props",
+  "folder": "Locations/interiors",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "26c8de1d2d988680"
+ },
+ {
+  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_NoCol.fbx",
+  "name": "SM_Interior_obelisk_player_room_NoCol",
+  "folder": "Locations/interiors",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "ed9f1405a1f2b99e"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_LakeWalk.fbx",
+  "name": "SM_Bridge_LakeWalk",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "11f096d2668cb264"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_LakeWalk_NoCol.fbx",
+  "name": "SM_Bridge_LakeWalk_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "e005db95b81a1b8c"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToAbandoned.fbx",
+  "name": "SM_Bridge_ToAbandoned",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "f126cccc105c216f"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToAbandoned_NoCol.fbx",
+  "name": "SM_Bridge_ToAbandoned_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "ab4e20a75979e510"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToGym.fbx",
+  "name": "SM_Bridge_ToGym",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "795bf7e25155bbf2"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToGym_NoCol.fbx",
+  "name": "SM_Bridge_ToGym_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "bfcce1f4a1fd6b9d"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToSprings.fbx",
+  "name": "SM_Bridge_ToSprings",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "9525f83ed651d3d3"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ToSprings_NoCol.fbx",
+  "name": "SM_Bridge_ToSprings_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "dcd86d382802e780"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ForestTrail.fbx",
+  "name": "SM_Bridge_ForestTrail",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "180ea278f51abc8c"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ForestTrail_NoCol.fbx",
+  "name": "SM_Bridge_ForestTrail_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "63f972f37daf7830"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ForestTrail2.fbx",
+  "name": "SM_Bridge_ForestTrail2",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "2f157b9f8be73d97"
+ },
+ {
+  "file": "Meshes/Roads/SM_Bridge_ForestTrail2_NoCol.fbx",
+  "name": "SM_Bridge_ForestTrail2_NoCol",
+  "folder": "Roads",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "1514d9db86b07536"
  },
  {
   "file": "Meshes/Roads/SM_Road_main_road.fbx",
@@ -1565,7 +2480,8 @@
   "folder": "Roads",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "5247c0a96bc62f31"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_ra.fbx",
@@ -1573,7 +2489,8 @@
   "folder": "Roads",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "7a89f5ddf1e999c7"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_obelisk.fbx",
@@ -1581,7 +2498,8 @@
   "folder": "Roads",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "546d5f2d7c3c1ea8"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_girls.fbx",
@@ -1589,7 +2507,8 @@
   "folder": "Roads",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "479619f01e50c5f7"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_gym.fbx",
@@ -1597,7 +2516,8 @@
   "folder": "Roads",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "d962afd33f69dcdf"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_heliport.fbx",
@@ -1605,7 +2525,26 @@
   "folder": "Roads",
   "collision": "complex",
   "nanite": false,
-  "category": "location"
+  "category": "location",
+  "sig": "7b35b6eb7d84a2f6"
+ },
+ {
+  "file": "Meshes/Roads/SM_Road_pond_lane.fbx",
+  "name": "SM_Road_pond_lane",
+  "folder": "Roads",
+  "collision": "complex",
+  "nanite": false,
+  "category": "location",
+  "sig": "3b06bd5106539c47"
+ },
+ {
+  "file": "Meshes/Water/SM_Waterside_Lilies_NoCol.fbx",
+  "name": "SM_Waterside_Lilies_NoCol",
+  "folder": "Water",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "5a53fff97a7d0ace"
  },
  {
   "file": "Meshes/Props/SM_PalmTree_A.fbx",
@@ -3816,243 +4755,19 @@
   "category": "water"
  },
  {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_Shell.fbx",
-  "name": "SM_Interior_academy_classroom_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_Props.fbx",
-  "name": "SM_Interior_academy_classroom_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_classroom_NoCol.fbx",
-  "name": "SM_Interior_academy_classroom_NoCol",
-  "folder": "Locations/interiors",
+  "file": "Meshes/Water/SM_River_AcademyRiver.fbx",
+  "name": "SM_River_AcademyRiver",
+  "folder": "Water",
   "collision": "none",
   "nanite": false,
-  "category": "location"
+  "category": "water"
  },
  {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_Shell.fbx",
-  "name": "SM_Interior_academy_test_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_Props.fbx",
-  "name": "SM_Interior_academy_test_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_test_room_NoCol.fbx",
-  "name": "SM_Interior_academy_test_room_NoCol",
-  "folder": "Locations/interiors",
+  "file": "Meshes/Water/SM_River_ForestCreek.fbx",
+  "name": "SM_River_ForestCreek",
+  "folder": "Water",
   "collision": "none",
   "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_Shell.fbx",
-  "name": "SM_Interior_academy_crowler_office_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_Props.fbx",
-  "name": "SM_Interior_academy_crowler_office_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_crowler_office_NoCol.fbx",
-  "name": "SM_Interior_academy_crowler_office_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_Shell.fbx",
-  "name": "SM_Interior_academy_chancellor_office_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_Props.fbx",
-  "name": "SM_Interior_academy_chancellor_office_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_academy_chancellor_office_NoCol.fbx",
-  "name": "SM_Interior_academy_chancellor_office_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_Shell.fbx",
-  "name": "SM_Interior_slifer_player_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_Props.fbx",
-  "name": "SM_Interior_slifer_player_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_player_room_NoCol.fbx",
-  "name": "SM_Interior_slifer_player_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_Shell.fbx",
-  "name": "SM_Interior_slifer_banner_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_Props.fbx",
-  "name": "SM_Interior_slifer_banner_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_banner_room_NoCol.fbx",
-  "name": "SM_Interior_slifer_banner_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_Shell.fbx",
-  "name": "SM_Interior_slifer_jaden_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_Props.fbx",
-  "name": "SM_Interior_slifer_jaden_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_slifer_jaden_room_NoCol.fbx",
-  "name": "SM_Interior_slifer_jaden_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_Shell.fbx",
-  "name": "SM_Interior_ra_player_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_Props.fbx",
-  "name": "SM_Interior_ra_player_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_ra_player_room_NoCol.fbx",
-  "name": "SM_Interior_ra_player_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_Shell.fbx",
-  "name": "SM_Interior_obelisk_dining_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_Props.fbx",
-  "name": "SM_Interior_obelisk_dining_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_dining_NoCol.fbx",
-  "name": "SM_Interior_obelisk_dining_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_Shell.fbx",
-  "name": "SM_Interior_obelisk_player_room_Shell",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_Props.fbx",
-  "name": "SM_Interior_obelisk_player_room_Props",
-  "folder": "Locations/interiors",
-  "collision": "complex",
-  "nanite": false,
-  "category": "location"
- },
- {
-  "file": "Meshes/Locations/interiors/SM_Interior_obelisk_player_room_NoCol.fbx",
-  "name": "SM_Interior_obelisk_player_room_NoCol",
-  "folder": "Locations/interiors",
-  "collision": "none",
-  "nanite": false,
-  "category": "location"
+  "category": "water"
  }
 ]

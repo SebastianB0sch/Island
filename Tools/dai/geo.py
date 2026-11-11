@@ -34,6 +34,7 @@ class MeshBuilder:
         self.faces = []        # list[tuple[int]]
         self.face_mats = []    # list[str]
         self.face_smooth = []  # list[bool]
+        self.colors = {}       # vertex index -> (r, g, b, a); vertices not listed are white
         self._stack = [Matrix.Identity(4)]
 
     # ------------------------------------------------------------------ transforms
@@ -73,6 +74,14 @@ class MeshBuilder:
 
     def quad(self, a, b, c, d, mat, smooth=False):
         self.poly([a, b, c, d], mat, smooth)
+
+    def cquad(self, pts, colors, mat, smooth=False):
+        """Quad with a vertex colour per corner ((r, g, b, a) or a grey value): data for a material, e.g.
+        the paving coverage of a road ribbon (M_DA_Road reads R)."""
+        base = len(self.verts)
+        self.poly(list(pts), mat, smooth)
+        for i, c in enumerate(colors):
+            self.colors[base + i] = (c, c, c, 1.0) if isinstance(c, (int, float)) else tuple(c)
 
     def grid_faces(self, rows, mat, smooth=True, closed_u=False, flip=False):
         """rows: list of rows of points (v-major). Builds quads between consecutive rows."""
@@ -530,6 +539,17 @@ class MeshBuilder:
             mesh.materials.append(blend.material(m))
         mesh.polygons.foreach_set("material_index", [index[m] for m in self.face_mats])
         mesh.polygons.foreach_set("use_smooth", self.face_smooth)
+        if self.colors:
+            # per-corner byte colours: the FBX exporter writes the active colour attribute
+            layer = mesh.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
+            white = (1.0, 1.0, 1.0, 1.0)
+            for loop in mesh.loops:
+                layer.data[loop.index].color = self.colors.get(loop.vertex_index, white)
+            mesh.color_attributes.active_color = layer
+            try:
+                mesh.color_attributes.render_color_index = 0
+            except Exception:  # noqa: BLE001
+                pass
         blend.box_uv(mesh, uv_scale)
         mesh.update()
         obj = bpy.data.objects.new(name, mesh)

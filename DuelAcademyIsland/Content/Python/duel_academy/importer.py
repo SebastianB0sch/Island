@@ -15,15 +15,19 @@ from . import common as C
 #   _N normal maps      normal map        (Normal sampler)
 #   splat maps          masks             (Masks sampler)
 #   colour textures     default sRGB      (Color sampler)
-LINEAR = {"T_Noise", "T_WaterStreaks"}
-MASKS = {"T_TerrainSplatA", "T_TerrainSplatB"}
+# water data textures (Tools/dai/water.py): foam / caustics / rain rings are plain linear data ...
+LINEAR = {"T_Noise", "T_WaterStreaks", "T_WaterFoam", "T_Caustics", "T_Ripples"}
+# ... the island-wide maps are channel masks, clamped like the splat maps (they must not wrap at the edge)
+MASKS = {"T_TerrainSplatA", "T_TerrainSplatB", "T_WaveMask", "T_WaterShore"}
+NORMALS = {"T_WaterNormal", "T_WaterDetailN", "T_FlatNormal"}
 UI = {"T_IslandMap"}
 
 
 def texture_kind(name):
-    if name.endswith("_N") or name in ("T_WaterNormal", "T_FlatNormal"):
+    if name.endswith("_N") or name in NORMALS:
         return "normal"
-    if name in MASKS or name.endswith("_ORM") or name.endswith("_R") or name == "T_DefaultMask":
+    if name in MASKS or name.endswith("_ORM") or name.endswith("_R") or name == "T_DefaultMask" \
+            or (name.startswith("T_Terrain_") and name.endswith("_H")):      # layer relief (height blend)
         return "masks"
     if name.endswith("_D") or name in LINEAR:
         return "linear"
@@ -94,6 +98,9 @@ def import_textures(slow=None):
                         mip_gen_settings=unreal.TextureMipGenSettings.TMGS_NO_MIPMAPS)
         if n in MASKS or n == "T_TerrainColor":
             C.set_props(tex, address_x=unreal.TextureAddress.TA_CLAMP, address_y=unreal.TextureAddress.TA_CLAMP)
+        if n == "T_WaveMask":
+            # 256 x 256, sampled in the vertex shader at mip 0 and bilinearly by ADAIslandManager: keep it exact
+            C.set_props(tex, mip_gen_settings=unreal.TextureMipGenSettings.TMGS_NO_MIPMAPS)
     C.log(f"textures: {len(names)}")
     return names
 
@@ -139,6 +146,12 @@ def _fbx_options(nanite):
         sm.set_editor_property("build_nanite", bool(nanite))
     except Exception:  # noqa: BLE001
         pass
+    try:
+        # road ribbons carry their paving coverage as vertex colour (M_DA_Road); every other mesh has none
+        # and keeps the default white
+        sm.set_editor_property("vertex_color_import_option", unreal.VertexColorImportOption.REPLACE)
+    except Exception as e:  # noqa: BLE001 - without it the roads are simply paved to their very edge
+        C.warn(f"vertex colour import not enabled: {e}")
     return ui
 
 

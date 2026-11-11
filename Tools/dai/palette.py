@@ -10,11 +10,15 @@ kind:
   glass     - M_DA_Glass  (translucent, used for real openings you can see through)
   emissive  - M_DA_Emissive (unlit glow; lamps, screens, duel field lines)
   foliage   - M_DA_Foliage (two-sided, gentle wind sway via WPO)
-  water     - M_DA_Water (single layer water)
+  water     - M_DA_Water (single layer water with Gerstner waves: the sea, the lake)
+  pool      - M_DA_PoolWater (still single layer water with rain rings: fountain basins, hot springs)
+  river     - M_DA_River (single layer water flowing along UV0.v; UV1 = foam / bank)
   lava      - M_DA_Lava (panning emissive)
   hologram  - M_DA_Hologram (additive, pulsing)
   smoke     - M_DA_Smoke (translucent, per-instance fade)
-  terrain   - M_DA_Terrain (splat-mapped)
+  terrain   - M_DA_Terrain (splat-mapped, height-blended layers)
+  road      - M_DA_Road (the terrain's surface by world position + its Paving layer by vertex colour R and
+              its Dirt layer by G - R; keys `paving`, `earth` scale the two)
   beam      - M_DA_Beam (additive cone)
   waterfall - M_DA_Waterfall (panning translucent water sheet)
   flow      - M_DA_WaterFlow (world-aligned flowing water: fountain sheets, jets, foam; no UVs needed).
@@ -40,6 +44,12 @@ MATERIALS = {
     "M_DarkConcrete":   dict(kind="opaque", color=_c(0.38, 0.38, 0.38), rough=0.95, detail="Concrete", tiling=0.25),
     "M_Paving":         dict(kind="opaque", color=_c(0.78, 0.74, 0.68), rough=0.9, detail="Paving", tiling=0.5),
     "M_Asphalt":        dict(kind="opaque", color=_c(0.22, 0.22, 0.23), rough=0.9, detail="Concrete", tiling=0.25),
+    # road ribbons and paved bridge decks: the terrain's own surface with its Paving layer laid on by vertex
+    # colour (M_DA_Road), so paving, verge and ground are one continuous material
+    "M_RoadPaving":     dict(kind="road", color=_c(0.62, 0.60, 0.56), rough=0.85, detail=None, paving=1.0),
+    # footpaths (village doors -> the lane): the same material, the terrain's Dirt layer laid on by vertex
+    # colour green
+    "M_FootPath":       dict(kind="road", color=_c(0.50, 0.38, 0.25), rough=0.9, detail=None, paving=1.0, earth=1.0),
     "M_Glass":          dict(kind="opaque", color=_c(0.10, 0.17, 0.27), rough=0.05, metallic=0.6, detail=None),
     "M_GlassClear":     dict(kind="glass", color=_c(0.60, 0.75, 0.85), rough=0.02, opacity=0.25, detail=None),
     "M_WindowFrame":    dict(kind="opaque", color=_c(0.95, 0.95, 0.95), rough=0.6, detail=None),
@@ -112,7 +122,9 @@ MATERIALS = {
     "M_GymRoof":        dict(kind="opaque", color=_c(0.25, 0.55, 0.50), rough=0.4, metallic=0.5, detail=None),
     "M_CourtFloor":     dict(kind="opaque", color=_c(0.70, 0.48, 0.28), rough=0.35, detail="Planks", tiling=0.5),
     "M_CourtLine":      dict(kind="opaque", color=_c(0.95, 0.95, 0.95), rough=0.5, detail=None),
-    "M_HotWater":       dict(kind="water", color=_c(0.45, 0.75, 0.72), rough=0.05, detail=None),
+    "M_HotWater":       dict(kind="pool", color=_c(0.45, 0.75, 0.72), rough=0.05, detail=None,
+                             wave_scale=0.003, wave_speed=2.0, wave_strength=0.35, ripple=0.35, ripple_scale=0.6,
+                             ripple_speed=0.7),
     "M_OnsenRock":      dict(kind="opaque", color=_c(0.40, 0.38, 0.36), rough=0.8, detail="Rock", tiling=0.5),
     "M_ShojiPaper":     dict(kind="opaque", color=_c(0.95, 0.92, 0.82), rough=0.9, detail=None),
 
@@ -137,13 +149,22 @@ MATERIALS = {
     "M_Soil":           dict(kind="opaque", color=_c(0.35, 0.26, 0.18), rough=1.0, detail="Dirt", tiling=0.5),
 
     # ------------------------------------------------------------ special effects / water
-    "M_Ocean":          dict(kind="water", color=_c(0.05, 0.35, 0.50), rough=0.05, detail=None),
-    "M_LakeWater":      dict(kind="water", color=_c(0.10, 0.45, 0.45), rough=0.05, detail=None),
+    # sea and lake (dai/water.py: Gerstner wave sets, T_WaveMask, T_WaterShore): `waves` = the wave set that
+    # displaces the surface, `mask` = calm it by the wave mask, `shore` = shoreline foam + depth tint,
+    # `foam` / `crest` = how much of each
+    "M_Ocean":          dict(kind="water", color=_c(0.05, 0.35, 0.50), rough=0.05, detail=None, waves="ocean",
+                             mask=True, shore=True, foam=0.9, crest=0.7, wave_strength=0.5),
+    "M_LakeWater":      dict(kind="water", color=_c(0.10, 0.45, 0.45), rough=0.05, detail=None, waves="lake",
+                             mask=False, shore=True, foam=0.25, crest=0.0, wave_scale=0.0022, wave_strength=0.3),
+    # rivers, the creek and the ponds: flows along +V of UV0 (terrain_mesh.river_surface)
+    "M_River":          dict(kind="river", color=_c(0.12, 0.42, 0.40), rough=0.05, detail=None, flow=0.9,
+                             foam=0.8, wave_strength=0.45),
     "M_Lava":           dict(kind="lava", color=_c(1.00, 0.35, 0.05), strength=40.0),
     "M_Waterfall":      dict(kind="waterfall", color=_c(0.85, 0.95, 1.00), opacity=0.8),
     # fountains (assets/fountain.py): clear pools with small quick ripples, streaming sheets and jets, foam
-    "M_FountainWater":  dict(kind="water", color=_c(0.16, 0.60, 0.68), rough=0.03, detail=None,
-                             wave_scale=0.0045, wave_speed=6.0, wave_strength=0.6),
+    "M_FountainWater":  dict(kind="pool", color=_c(0.16, 0.60, 0.68), rough=0.03, detail=None,
+                             wave_scale=0.0045, wave_speed=6.0, wave_strength=0.5, ripple=0.8, ripple_scale=1.1,
+                             ripple_speed=1.2),
     "M_FountainFall":   dict(kind="flow", color=_c(0.86, 0.95, 1.00), opacity=0.55, flow=2.4, streak=1.6,
                              stretch=4.0, base=0.22, contrast=1.8, sparkle=0.5, wobble=1.0),
     "M_FountainJet":    dict(kind="flow", color=_c(0.92, 0.97, 1.00), opacity=0.7, flow=-3.0, streak=3.0,

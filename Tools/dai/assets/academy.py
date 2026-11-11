@@ -5117,6 +5117,10 @@ def _fountain(mb, nocol, aset):
     aset.emitter("spray", (0.0, 0.0, 3.12 * FK), scale=0.7 * FK, ring=r_mid * FK)
     aset.emitter("spray", (0.0, 0.0, 0.5 * FK), scale=0.8 * FK, ring=FOUNTAIN_JET_LAND * FK,
                  points=FOUNTAIN_JETS, angle0=FOUNTAIN_JET_A0)
+    for k in range(FOUNTAIN_JETS):       # every jet frays into droplets on its way down
+        a = FOUNTAIN_JET_A0 + 360.0 * k / FOUNTAIN_JETS
+        p0, p1 = polar(7.6 * FK, a), polar(FOUNTAIN_JET_LAND * FK, a)
+        FT.jet_droplets(aset, (p0[0], p0[1], 0.56 * FK), (p1[0], p1[1], 0.5 * FK), 1.9 * FK, scale=FK)
     aset.audio("A_Waterfall", (0.0, 0.0, 1.5), radius=25.0 * FK)
     for k in range(4):
         p = polar(6.0 * FK, 45 + 90 * k)

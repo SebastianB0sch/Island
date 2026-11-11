@@ -90,7 +90,7 @@ palette.register({
     "M_IntFabricPurple":  _t((0.56, 0.38, 0.78), "Fabric", 2.0, 0.35),
     "M_IntFabricBeige":   _t((0.90, 0.82, 0.66), "Fabric", 2.0, 0.35),
     "M_IntGlassClear":    dict(kind="glass", color=(0.70, 0.85, 0.95), rough=0.02, opacity=0.18),
-    "M_IntWater":         dict(kind="water", color=(0.45, 0.78, 0.80), rough=0.05),
+    "M_IntWater":         dict(kind="pool", color=(0.45, 0.78, 0.80), rough=0.05, ripple=0.3, wave_strength=0.3),
 })
 
 PLASTER_CREAM, PLASTER_WHITE, PLASTER_PEACH, PLASTER_SKY = ("M_IntPlasterCream", "M_IntPlasterWhite",

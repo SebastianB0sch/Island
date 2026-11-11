@@ -1,8 +1,14 @@
 """World-space alignment check for the Duel Academy Island layout.
 
-Builds the layout in memory (no export) and checks
-  * location base/wall vertices against the terrain or flat pad under them,
-  * every non-location prop / vegetation instance against the terrain,
+Builds the layout in memory (no export) and checks, against the terrain *as it is drawn* (the triangles of
+the exported mesh, terrain.MeshField - not the finer heightfield behind it):
+  * road ribbons: clearance over the ground under every cross-section, level across the road;
+  * ribbon ends: flush with the bridge deck, the main road or the ground they end on;
+  * bridges: deck ends level with the road on both sides, abutments on the ground, the road straight under
+    the deck, clearance over the water, piers down to the bed;
+  * location base/wall vertices against the terrain or flat pad under them, and - for the locations that
+    are built onto the terrain (villages, landmarks) - no gap under any footing;
+  * every prop / vegetation instance outside buildings against the terrain,
   * every automatic-door threshold against the world floor,
   * vegetation that lands inside a building volume or within 1.6 m of a door.
 
@@ -26,9 +32,12 @@ if os.path.isdir(BLENDER_SITE):
     sys.path.insert(0, BLENDER_SITE)
 
 import bpy  # noqa: E402,F401
+import numpy as np  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
 from dai import blend, layout, placement  # noqa: E402
+from dai import config as C, strips  # noqa: E402
+from dai import terrain as T  # noqa: E402
 from dai.assets import props as P  # noqa: E402
 
 TOL_FLOAT = 0.20
@@ -56,18 +65,497 @@ def world_bounds(aset, xf):
     return mn, mx
 
 
+# road ribbons: the paving lies Layout.RIBBON_LIFT above the ground; these are the limits of "lies on it"
+RIBBON_MIN = 0.015       # less: the terrain shows through the paving
+RIBBON_MAX = 0.20        # more: the paving visibly floats (the kerb skirt hides it, a step at the end does not)
+RIM_MIN = -0.04          # the rim strip is drawn as the ground itself (paving coverage 0 at its edge) and its
+RIM_EDGE = 0.0           # edge lies just under the ground (Layout.RIBBON_RIM_LIFT): it must not sink deeper than
+                         # RIM_MIN, and its edge must nowhere stand more than RIM_EDGE out of the ground
+JOINT_STEP = 0.03        # height step allowed where a ribbon meets a deck / another ribbon / the ground
+BRIDGE_SIDE = 0.05       # sideways distance allowed between the road's centre line and the deck's
+
+
+def check_roads(lay):
+    """Ribbons vs the terrain triangles under them, and what each ribbon end meets."""
+    failures = 0
+    print("=== ROAD RIBBONS vs TERRAIN")
+    decks = {}
+    for bi in lay.bridge_info:
+        b = bi["rec"]
+        decks[(b["path"], round(b["s0"], 3))] = b["a"][2] + bi["lift"]
+        decks[(b["path"], round(b["s1"], 3))] = b["b"][2] + bi["lift"]
+    paths = {p["id"]: p for p in lay.meta["paths"]}
+    tops = {p["id"]: lay.ribbon_sections(p) for p in lay.meta["paths"] if T.road_has_ribbon(p)}
+
+    def ribbon_height(pid, x, y):
+        """(distance to the nearest fully paved ribbon vertex of `pid`, its height)."""
+        best = None
+        for run in tops.get(pid, []):
+            for _s, row in run:
+                for q in row:
+                    d = math.hypot(q[0] - x, q[1] - y)
+                    if q[3] >= 1.0 and (best is None or d < best[0]):
+                        best = (d, q[2])
+        return best
+
+    for pid, runs in tops.items():
+        lo, hi, n = 1e9, -1e9, 0
+        rim_lo, edge_hi = 1e9, -1e9
+        worst_lo = worst_hi = worst_rim = worst_edge = None
+        for run in runs:
+            for (s0, r0), (s1, r1) in zip(run, run[1:]):
+                for c in (0, len(r0) - 1):
+                    # along both outer edges (rim on the ground: not where the paving meets a bridge deck)
+                    if r0[c][3] >= 1.0 or r1[c][3] >= 1.0:
+                        continue
+                    for t in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0):
+                        q = [r0[c][k] * (1 - t) + r1[c][k] * t for k in range(3)]
+                        cl = q[2] - lay.ground(q[0], q[1])
+                        if cl > edge_hi:
+                            edge_hi, worst_edge = cl, (s0, q[0], q[1])
+                for c in range(len(r0) - 1):
+                    # a quad with a corner of coverage 0 belongs to the rim, where the paving thins out
+                    rim = min(r0[c][3], r0[c + 1][3], r1[c][3], r1[c + 1][3]) < 1.0
+                    # bilinear over the ribbon quad, 4 x 4 samples
+                    for t in (0.0, 0.25, 0.5, 0.75):
+                        for f in (0.0, 0.25, 0.5, 0.75):
+                            q = [(r0[c][k] * (1 - f) + r0[c + 1][k] * f) * (1 - t)
+                                 + (r1[c][k] * (1 - f) + r1[c + 1][k] * f) * t for k in range(3)]
+                            cl = q[2] - lay.ground(q[0], q[1])
+                            n += 1
+                            if rim and cl < rim_lo:
+                                rim_lo, worst_rim = cl, (s0, q[0], q[1])
+                            if not rim and cl < lo:
+                                lo, worst_lo = cl, (s0, q[0], q[1])
+                            if cl > hi:
+                                hi, worst_hi = cl, (s0, q[0], q[1])
+        bad = []
+        if lo < RIBBON_MIN:
+            bad.append(f"ground within {lo * 100:+.1f} cm of the paving at s={worst_lo[0]:.0f} ({worst_lo[1]:.1f}, {worst_lo[2]:.1f})")
+        if rim_lo < RIM_MIN:
+            bad.append(f"rim {-rim_lo * 100:.1f} cm in the ground at s={worst_rim[0]:.0f} ({worst_rim[1]:.1f}, {worst_rim[2]:.1f})")
+        if edge_hi > RIM_EDGE:
+            bad.append(f"edge {edge_hi * 100:.1f} cm out of the ground at s={worst_edge[0]:.0f} ({worst_edge[1]:.1f}, {worst_edge[2]:.1f})")
+        if hi > RIBBON_MAX:
+            bad.append(f"paving {hi * 100:.0f} cm over the ground at s={worst_hi[0]:.0f} ({worst_hi[1]:.1f}, {worst_hi[2]:.1f})")
+        print(f"  {pid:14s} {len(runs)} run(s), {n:6d} samples: clearance {lo * 100:5.1f} .. {hi * 100:5.1f} cm, "
+              f"rim from {rim_lo * 100:4.1f} cm, edge {edge_hi * 100:+4.1f} cm  {'OK' if not bad else 'CHECK'}")
+        for line in bad:
+            print(f"       - {line}")
+            failures += 1
+
+    print("\n=== RIBBON ENDS (what the paving meets)")
+    order = [q["id"] for q in lay.meta["paths"]]
+    ck = lay.build_checker()
+    for pid, runs in tops.items():
+        kinds = lay.road_runs(paths[pid])[1]
+        for run, (_s0, _s1, _e0, _e1, k0, k1) in zip(runs, kinds):
+            for (s_, row), where, kind, (_s2, inner) in ((run[0], "start", k0, run[1]), (run[-1], "end", k1, run[-2])):
+                mid = row[len(row) // 2]
+                key = (pid, round(s_, 3))
+                meets = None
+                if key in decks:
+                    meets, step = "bridge deck", max(abs(q[2] - decks[key]) for q in row)
+                elif kind == "slab":
+                    # a building's own walk (config.PATH_EXTENSIONS): the floor just beyond the end of the paving
+                    im = inner[len(inner) // 2]
+                    d = math.hypot(mid[0] - im[0], mid[1] - im[1]) or 1.0
+                    q = Vector((mid[0] + (mid[0] - im[0]) / d * 0.4, mid[1] + (mid[1] - im[1]) / d * 0.4, mid[2]))
+                    fl = ck.floor(q, [sp for sp in lay.spaces if sp.near(q, 2.0)])
+                    built = fl is not None and fl[1] != "terrain"
+                    meets = "walk of the building" if built else "NO SLAB THERE"
+                    step = abs(mid[2] - fl[0]) if built else 9.99
+                else:
+                    for qid in tops:
+                        if order.index(qid) >= order.index(pid):
+                            continue
+                        hit = ribbon_height(qid, mid[0], mid[1])
+                        if hit and hit[0] < 2.5:
+                            # every paved vertex of the end against the main road's paving beside it
+                            step = max(abs(q[2] - ribbon_height(qid, q[0], q[1])[1]) for q in row if q[3] >= 1.0)
+                            meets = f"road {qid}"
+                            break
+                if meets is None:
+                    # a pad, a quay or open ground: the paving thins out into whatever lies there, and the
+                    # whole end is rim - drawn as that ground and down on it
+                    meets = "ground"
+                    step = max(abs(q[2] - lay.ground(q[0], q[1]) - lay.RIBBON_RIM_LIFT) for q in row)
+                    step = max(step, max(q[3] for q in row))       # (any paving left at the end counts as a step)
+                ok = step <= JOINT_STEP + (0.03 if meets.startswith("road") else 0.0)
+                print(f"  {pid:14s} {where:5s} s={s_:7.1f} meets {meets:22s} step {step * 100:4.1f} cm  "
+                      f"{'OK' if ok else 'CHECK'}")
+                failures += 0 if ok else 1
+    return failures
+
+
+def check_entrances(lay, ck):
+    """Every door has a way to a road that never leaves made ground: floors, slabs and decks of the buildings,
+    painted paving and earth (pads, paths, verges), road ribbons, bridges and the footpaths of the villages.
+
+    From each entrance - the door sockets of the locations near the ground, the doors of the village houses -
+    a walk is searched over half-metre cells; a step between neighbours may be 0.36 m (stairs pass, ledges
+    do not). It has to arrive on one of the island's paths (config.PATHS, carried on by PATH_EXTENSIONS).
+    Walls do not stop the walk - only floors are probed - so what is checked is that the made ground a door
+    opens onto reaches a road, not that each room has a door."""
+    import heapq
+    from PIL import Image
+    print("\n=== ENTRANCES (a way on made ground from every door to a road)")
+    failures = 0
+    with Image.open(os.path.join(C.OUT_TEXTURES, "T_TerrainSplatA.png")) as img:
+        splat = np.asarray(img.convert("RGBA"))
+    res = splat.shape[0]
+    cell = 0.5
+    rise = 0.36                                  # per cell: a flight of stairs passes, a ledge does not
+    pts, hws = [], []                            # the paths, extensions included
+    for p in lay.meta["paths"]:
+        if T.road_has_ribbon(p):
+            xs, ys, _arc = lay.ribbon_line(p)
+            line = list(zip(xs, ys))
+        else:
+            ext = p.get("extend") or {}
+            line = strips.resample([tuple(q) for q in ext.get("start", [])] + [tuple(t[:2]) for t in p["samples"]]
+                                   + [tuple(q) for q in ext.get("end", [])], 2.0)
+        pts += line
+        hws += [p["width"] / 2.0] * len(line)
+    pts, hws = np.asarray(pts, np.float64), np.asarray(hws, np.float64)
+    foot = []
+    for aset in lay.assets.values():
+        for f in getattr(aset, "footpaths", []):
+            line = np.asarray(strips.resample(f["pts"], 0.4), np.float64)
+            foot.append(np.column_stack([line, np.full(len(line), f.get("width", 1.3) / 2.0)]))
+    foot = np.concatenate(foot) if foot else np.zeros((0, 3))
+    down = Vector((0, 0, -1))
+    made = {}
+
+    def surfaces(ix, iy):
+        """(heights of the made ground in cell (ix, iy), metres to the edge of the nearest road):
+        every floor, slab, deck and step within 2.7 m above the terrain, and the terrain itself where it is
+        painted paving or earth, a path or a trodden footpath."""
+        if (ix, iy) not in made:
+            x, y = ix * cell, iy * cell
+            g = lay.ground(x, y)
+            gap = float(np.min(np.hypot(pts[:, 0] - x, pts[:, 1] - y) - hws))
+            zs = []
+            near = [sp for sp in lay.spaces if sp.near(Vector((x, y, g)), 1.0)]
+            start, left = Vector((x, y, g + 2.7)), 3.0
+            for _ in range(8):
+                hit = None
+                for sp in near:
+                    h = sp.ray(start, down, left)
+                    if h and (hit is None or h[0] < hit[0]):
+                        hit = h
+                if hit is None:
+                    break
+                z = start.z - hit[0]
+                if hit[1].z > 0.5 and not placement.soft(hit[2]) and not hit[2].startswith("SM_") \
+                        and not (zs and zs[-1] - z < 1.7):          # (no headroom under the floor above)
+                    zs.append(z)
+                start, left = Vector((x, y, z - 0.03)), left - hit[0] - 0.03
+                if left <= 0:
+                    break
+            r = min(max(int((C.HALF - y) / C.WORLD_SIZE * res), 0), res - 1)
+            c = min(max(int((x + C.HALF) / C.WORLD_SIZE * res), 0), res - 1)
+            painted = (int(splat[r, c, 2]) + int(splat[r, c, 3])) / 255.0 > 0.3
+            trodden = len(foot) and float(np.min(np.hypot(foot[:, 0] - x, foot[:, 1] - y) - foot[:, 2])) < 0.1
+            if (gap <= 0.3 or painted or trodden) and not any(abs(z - g) < 0.3 for z in zs):
+                zs.append(g)
+            made[(ix, iy)] = (zs, gap)
+        return made[(ix, iy)]
+
+    def walk(x, y, z):
+        """Metres walked from (x, y, z) to a road over made ground, or None."""
+        best = None
+        for dx in (-2, -1, 0, 1, 2):                          # the cells round the door: whichever is its floor
+            for dy in (-2, -1, 0, 1, 2):
+                c0 = (int(round(x / cell)) + dx, int(round(y / cell)) + dy)
+                for k, zc in enumerate(surfaces(*c0)[0]):
+                    if abs(zc - z) < 0.5 and (best is None or abs(zc - z) < best[0]):
+                        best = (abs(zc - z), c0 + (k,))
+        if best is None:
+            return None
+        start = best[1]
+        dist = {start: 0.0}
+        heap = [(0.0, 0.0, start)]
+        while heap:
+            _f, d0, cur = heapq.heappop(heap)
+            if d0 > dist.get(cur, 1e18):
+                continue
+            zs, gap = surfaces(cur[0], cur[1])
+            zc = zs[cur[2]]
+            if gap <= -0.5 and abs(zc - lay.ground(cur[0] * cell, cur[1] * cell)) < 0.5:
+                return d0
+            if d0 > 500.0:
+                return None
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+                zn, gn = surfaces(cur[0] + dx, cur[1] + dy)
+                for k, z2 in enumerate(zn):
+                    if abs(z2 - zc) > rise * math.hypot(dx, dy):
+                        continue
+                    nb = (cur[0] + dx, cur[1] + dy, k)
+                    nd = d0 + cell * math.hypot(dx, dy)
+                    if nd < dist.get(nb, 1e18):
+                        dist[nb] = nd
+                        heapq.heappush(heap, (nd + max(gn, 0.0), nd, nb))
+        return None
+
+    for key, aset in lay.assets.items():
+        xf = lay.location_xforms[key]
+        doors = [(e["name"], e["pos"][0], e["pos"][1], lay.ground(*e["pos"])) for e in getattr(aset, "entrances", [])]
+        for s in aset.sockets:
+            if s["type"] == "door":
+                w = xf.point(s["pos"])
+                if abs(w[2] - lay.ground(w[0], w[1])) < 2.6:           # (upper floors hang off the same stairs)
+                    doors.append((f"door {s['props'].get('style')}", w[0], w[1], w[2]))
+        if not doors:
+            continue
+        lost, far = [], 0.0
+        for name, x, y, z in doors:
+            d = walk(x, y, z)
+            if d is None:
+                lost.append((name, x, y))
+            else:
+                far = max(far, d)
+        print(f"  {key:14s} {len(doors):3d} doors, {len(doors) - len(lost):3d} with a way to a road "
+              f"(longest {far:5.0f} m)  {'OK' if not lost else 'CHECK'}")
+        for name, x, y in lost:
+            print(f"       - {name} at ({x:.1f}, {y:.1f}): no way on made ground to a road")
+            failures += 1
+            if os.environ.get("DAI_AUDIT_MAP"):
+                # the made ground round the door (north up): digits = dm above the terrain, + painted / path,
+                # R on a road, . bare, D the door
+                cx, cy = int(round(x / cell)), int(round(y / cell))
+                for iy in range(cy + 14, cy - 15, -1):
+                    row = ""
+                    for ix in range(cx - 30, cx + 31):
+                        zs, gap = surfaces(ix, iy)
+                        if (ix, iy) == (cx, cy):
+                            row += "D"
+                        elif not zs:
+                            row += "."
+                        elif gap <= -0.5:
+                            row += "R"
+                        else:
+                            dz = min(zs) - lay.ground(ix * cell, iy * cell)
+                            row += "+" if dz < 0.02 else str(min(int(dz * 10), 9))
+                    print("         " + row)
+    return failures
+
+
+def check_bridges(lay):
+    failures = 0
+    print("\n=== BRIDGES")
+    paths = {p["id"]: p for p in lay.meta["paths"]}
+    for bi in lay.bridge_info:
+        b, name = bi["rec"], bi["name"]
+        (ax, ay, az), (bx, by, bz) = b["a"], b["b"]
+        run = math.hypot(bx - ax, by - ay)
+        ux, uy = (bx - ax) / run, (by - ay) / run
+        nx, ny = -uy, ux
+        issues = []
+        # 1. the road is straight under the deck
+        p = paths[b["path"]]
+        smp = p["samples"]
+        arc = [0.0]
+        for i in range(1, len(smp)):
+            arc.append(arc[-1] + math.hypot(smp[i][0] - smp[i - 1][0], smp[i][1] - smp[i - 1][1]))
+        side = 0.0
+        for (x, y, z), s_ in zip(smp, arc):
+            if b["s0"] <= s_ <= b["s1"]:
+                side = max(side, abs((x - ax) * nx + (y - ay) * ny))
+        if side > BRIDGE_SIDE:
+            issues.append(f"road centre line up to {side:.2f} m off the deck's")
+        # 2. deck ends: level with the road, and on the ground (the abutment is buried, never hanging)
+        half_w = bi["width"] / 2.0
+        for label, (ex, ey, ez), sgn in (("start", b["a"], -1.0), ("end", b["b"], 1.0)):
+            # the deck's own line carried half a metre on (road and deck are on a grade) against the road there
+            slope = (bz - az) / max(run, 1e-6)
+            deck = ez + slope * sgn * 0.5 + bi["lift"]
+            for off in (-half_w * 0.8, 0.0, half_w * 0.8):
+                road = lay.ground(ex + ux * sgn * 0.5 + nx * off, ey + uy * sgn * 0.5 + ny * off) \
+                    + (bi["lift"] if b["surface"] == "paved" else 0.0)
+                if abs(deck - road) > JOINT_STEP + 0.02:
+                    issues.append(f"{label}: deck {100 * (deck - road):+.0f} cm against the road beyond it "
+                                  f"({off:+.1f} m off centre)")
+            for off in (-half_w, 0.0, half_w):
+                for back in (0.3, 2.0, 3.5):
+                    x, y = ex - ux * sgn * back + nx * off, ey - uy * sgn * back + ny * off
+                    z_deck = ez + (az - bz if sgn > 0 else bz - az) * (back / max(run, 1e-6)) + bi["lift"]
+                    gap = z_deck - lay.ground(x, y)
+                    if gap > 0.45 and back <= 2.0:
+                        issues.append(f"{label}: {gap:.2f} m of air under the deck {back:.1f} m in, {off:+.1f} m off centre")
+                    if gap < -0.02:
+                        issues.append(f"{label}: ground {-gap:.2f} m above the deck {back:.1f} m in, {off:+.1f} m off centre")
+        # 3. over the water, and standing on something
+        mid = bi["mid"]
+        clear = mid[2] - b["water"]
+        need = 1.75 if b["surface"] != "paved" else 2.25
+        if clear < need:
+            issues.append(f"only {clear:.2f} m over the water (wants {need:.2f})")
+        (mn, mx) = bi["mb"].bounds()
+        if mn[2] > b["bed"] - 0.3:
+            issues.append(f"lowest masonry at {mn[2]:.2f} m does not reach the bed at {b['bed']:.2f} m")
+        deck_top = max(az, bz) + bi["lift"]
+        if mx[2] - deck_top < 0.95:
+            issues.append(f"parapet / rail only {mx[2] - deck_top:.2f} m above the deck")
+        print(f"  {name:22s} {b['kind']:5s} {bi['length']:5.1f} m  deck {clear:4.1f} m over the water, road off centre "
+              f"{side * 100:4.1f} cm  {'OK' if not issues else 'CHECK'}")
+        for line in dict.fromkeys(issues):
+            print(f"       - {line}")
+            failures += 1
+    return failures
+
+
+def check_footings(lay):
+    """Locations built onto the terrain (absolute sets: villages, landmarks): no piece may hang in the air.
+    Every separate piece of a collision mesh (a plinth, a post, a step, a boulder) must reach the ground with
+    its lowest point, stand in water, or rest on another piece of its location."""
+    import numpy as np
+    from scipy.spatial import cKDTree
+    failures = 0
+    print("\n=== FOOTINGS OF TERRAIN-BUILT LOCATIONS")
+    for key, aset in lay.assets.items():
+        if not getattr(aset, "absolute", False):
+            continue
+        xf = lay.location_xforms[key]
+        pieces = []                                   # (mesh name, world vertices of one connected piece)
+        for name, mb in aset.meshes.items():
+            if not mb.verts or name.endswith("_NoCol"):
+                continue
+            parent = list(range(len(mb.verts)))
+
+            def find(i):
+                while parent[i] != i:
+                    parent[i] = parent[parent[i]]
+                    i = parent[i]
+                return i
+
+            for f in mb.faces:
+                r0 = find(f[0])
+                for i in f[1:]:
+                    parent[find(i)] = r0
+            groups = {}
+            for i, v in enumerate(mb.verts):
+                groups.setdefault(find(i), []).append(xf.point((v.x, v.y, v.z)))
+            pieces += [(name, np.asarray(g)) for g in groups.values()]
+        if not pieces:
+            print(f"  {key:14s}     0 pieces  OK")
+            continue
+        allv = np.vstack([g for _n, g in pieces])
+        owner = np.concatenate([np.full(len(g), i) for i, (_n, g) in enumerate(pieces)])
+        tree = cKDTree(allv[:, :2])
+        bad = []
+        for i, (name, g) in enumerate(pieces):
+            gaps = g[:, 2] - np.array([lay.ground(x, y) for x, y, _z in g])
+            j = int(np.argmin(gaps))
+            if gaps[j] <= 0.05:
+                continue                              # in the ground
+            low = g[int(np.argmin(g[:, 2]))]
+            if lay.water_at(low[0], low[1]) > lay.ground(low[0], low[1]):
+                continue                              # a pile standing in water
+            # resting on another piece: something of this location right under its lowest point
+            near = [k for k in tree.query_ball_point(low[:2], 0.9) if owner[k] != i]
+            if any(low[2] - 0.6 <= allv[k][2] <= low[2] + 0.08 for k in near):
+                continue
+            # or its bottom lies within the footprint of a bigger piece below it (a slab on a deck)
+            if any(owner[k] != i and allv[k][2] < low[2] + 0.08 for k in tree.query_ball_point(low[:2], 3.0)):
+                continue
+            bad.append((float(gaps[j]), name, g[j]))
+        if bad:
+            bad.sort(key=lambda t: -t[0])
+            print(f"  {key:14s} {len(pieces):5d} pieces  CHECK ({len(bad)} off the ground)")
+            for gap, name, w in bad[:4]:
+                print(f"       - {name}: a piece {gap * 100:.0f} cm above the ground at ({w[0]:.1f}, {w[1]:.1f}, {w[2]:.2f})")
+            failures += len(bad)
+        else:
+            print(f"  {key:14s} {len(pieces):5d} pieces  OK")
+    return failures
+
+
+def check_world_points(lay):
+    """Story anchors on open ground (Content/Data/World/anchors.json, kind "player" outside every pad): a
+    player anchor is authored on or up to ~1.2 m above the surface it stands on. Regrading the ground under
+    one must not leave the player buried in it or dropped onto it from a height."""
+    import json
+    failures = 0
+    print("\n=== STORY ANCHORS ON OPEN GROUND")
+    path = os.path.join(layout.C.UE_PROJECT_DIR, "Content", "Data", "World", "anchors.json")
+    try:
+        with open(path, "r", encoding="utf-8") as fp:
+            anchors = json.load(fp).get("anchors", [])
+    except OSError:
+        print("  anchors.json not found: skipped")
+        return 0
+    import numpy as np
+    from scipy.spatial import cKDTree
+    trees = {}
+
+    def on_structure(x, y, z):
+        """Is there a walking surface of a nearby location 0.4 - 2 m under the anchor (a deck, a quay)?"""
+        for key, aset in lay.assets.items():
+            lx, ly = layout.C.LOCATIONS[key]["pos"]
+            if math.hypot(lx - x, ly - y) > 450.0:
+                continue
+            if key not in trees:
+                xf = lay.location_xforms[key]
+                pts = np.asarray([xf.point((v.x, v.y, v.z)) for name, mb in aset.meshes.items()
+                                  if not name.endswith("_NoCol") for v in mb.verts])
+                trees[key] = (cKDTree(pts[:, :2]), pts) if len(pts) else None
+            if trees[key] is None:
+                continue
+            tree, pts = trees[key]
+            if any(z - 2.0 <= pts[i][2] <= z - 0.4 for i in tree.query_ball_point([x, y], 2.5)):
+                return True
+        return False
+
+    n = 0
+    for a in anchors:
+        p = a.get("position_ue")
+        if a.get("kind") != "player" or a.get("interior_id") or not p or p[2] < -2000:
+            continue
+        x, y, z = p[0] / 100.0, -p[1] / 100.0, p[2] / 100.0
+        if lay.in_any_pad(x, y, 6.0) is not None:
+            continue                               # on a building's own floors (audit_interiors.py)
+        n += 1
+        above = z - lay.ground(x, y)
+        if 0.95 <= above <= 1.45:
+            continue
+        if above < -0.05:
+            print(f"    {a.get('id')}: buried {-above:.2f} m in the ground at ({x:.0f}, {y:.0f})  CHECK")
+            failures += 1
+        elif above > 1.45 and not on_structure(x, y, z):
+            print(f"    {a.get('id')}: {above:.2f} m of air under it at ({x:.0f}, {y:.0f})  CHECK")
+            failures += 1
+        else:
+            print(f"    {a.get('id')}: {above:+.2f} m above the terrain at ({x:.0f}, {y:.0f}) "
+                  f"({'on a structure' if above > 1.45 else 'authored that way'})")
+    print(f"  checked {n} anchors")
+    return failures
+
+
 def main():
     blend.reset_scene()
     lay = layout.Layout(lambda *a, **k: None)
     lay.place_world()
     lay.place_locations(export=False)
+    lay.place_bridges(export=False)
     lay.place_path_dressing(export=False)
+    lay.place_life(export=False)
     lay.scatter()
     ck = lay.build_checker()
     # invisible furniture collision boxes are not walking surfaces at a threshold
     placement.SOFT = tuple(placement.SOFT) + ("Blocker",)
 
     failures = 0
+    if os.environ.get("DAI_AUDIT_ONLY") == "entrances":
+        failures = check_entrances(lay, ck)
+        print(f"\nALIGNMENT FAILURES: {failures}")
+        return 1 if failures else 0
+    failures += check_roads(lay)
+    failures += check_bridges(lay)
+    failures += check_footings(lay)
+    failures += check_world_points(lay)
+    failures += check_entrances(lay, ck)
+    print()
 
     print("=== LOCATION BASE vs TERRAIN / PAD")
     for key, aset in lay.assets.items():
@@ -108,13 +596,36 @@ def main():
             failures += 1
 
     print("\n=== WORLD PROPS / VEGETATION vs TERRAIN")
-    names = {it[0] for it in lay.inst_raw}
+    # world props, plus the props of the locations that are built onto the terrain (their own floors are
+    # the ground); props of the pad locations stand on building floors and are audited by audit_interiors.py
+    absolute = {key for key, aset in lay.assets.items() if getattr(aset, "absolute", False)}
+    outdoor = [(a, p, yaw, sc, key) for a, p, yaw, sc, key in lay.inst_all
+               if (key is None or key in absolute) and not a.startswith("SM_Int_")]
+    names = {it[0] for it in outdoor}
     bounds = placement.prop_bounds(names, log=lambda m: None)
+    # a prop of a terrain-built location may stand on that location's own decks, steps and plinths
+    from scipy.spatial import cKDTree
+    import numpy as np
+    structure = {}
+    for key in absolute:
+        xf = lay.location_xforms[key]
+        pts = [xf.point((v.x, v.y, v.z)) for name, mb in lay.assets[key].meshes.items()
+               if not name.endswith("_NoCol") for v in mb.verts]
+        structure[key] = (cKDTree(np.asarray(pts)[:, :2]), np.asarray(pts)) if pts else None
     groups = {}
     checked = 0
-    for asset, p, yaw, scale in lay.inst_raw:
+    vx, vy = layout.C.VOLCANO_CENTER
+    for asset, p, yaw, scale, key in outdoor:
         if asset in P.FLOATING_PROPS:
             continue
+        if key == "volcano" and math.hypot(p[0] - vx, p[1] - vy) < 70.0:
+            continue                               # crust islands drifting on the lava lake
+        if key is not None and structure.get(key):
+            tree, pts = structure[key]
+            near = tree.query_ball_point([p[0], p[1]], 1.8)
+            base = p[2] + (bounds.get(asset) or ((0, 0, 0),))[0][2] * scale
+            if any(base - 0.4 <= pts[i][2] <= base + 0.15 for i in near):
+                continue                       # on a deck / a step / a plinth of its location
         b = bounds.get(asset)
         if not b:
             continue
