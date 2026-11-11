@@ -210,17 +210,19 @@ PATHS = [
     # Constant-grade switchbacks across the east flank: ~1.3 km of trail for the 220 m climb at 19 %, each leg
     # following the slope at a fixed angle off the contour (a straight line would be 57 % steep; the old seven
     # straight legs needed 32 % and still left 40-68 % pitches where a leg cut across a gully).
-    dict(id="volcano_trail", width=4.0, surface="dirt", lamps=False, grade=0.21, smooth=2, pts=[
+    dict(id="volcano_trail", width=4.0, surface="dirt", lamps=False, grade=0.21, smooth=2, flat=3.0, pts=[
         (1082.0, 360.0), (1092.0, 440.0), (1106.0, 533.5), (1113.8, 562.4), (1112.8, 625.3), (1117.1, 654.8),
         (1099.9, 693.0), (1078.6, 725.6), (1086.6, 699.9), (1086.6, 682.0), (1062.6, 637.2), (1055.8, 605.0),
         (1047.1, 589.4), (1000.1, 557.5), (967.9, 526.4), (950.3, 525.3), (903.9, 504.2), (874.7, 498.1),
         (915.6, 528.4), (929.8, 551.1), (933.1, 568.7), (926.3, 591.5), (925.9, 612.5), (936.7, 661.9),
         (927.4, 687.2), (904.3, 714.3), (909.7, 682.3), (888.8, 649.7), (880.0, 627.5), (833.8, 594.5),
         (817.9, 572.8), (826.0, 604.7), (852.5, 654.9), (854.2, 675.7), (850.0, 690.0)]),
-    # Abandoned dorm -> over the creek -> round the foot of the volcano -> lake east shore. (The old straight
+    # Abandoned dorm -> over the creek and back, square to it both times and clear of its bends -> round the
+    # foot of the volcano -> lake east shore. (The old straight
     # line climbed 130 m up the volcano's flank and the grade limit carved it into a 60 m deep trench.)
     dict(id="forest_trail", width=4.0, surface="dirt", lamps=False, grade=0.16, pts=[
-        (930.0, 0.0), (930.0, 44.0), (902.0, 96.0), (826.0, 110.0), (700.0, 104.0), (596.0, 104.0), (508.0, 126.0),
+        (930.0, 0.0), (930.0, 44.0), (902.0, 96.0), (826.0, 110.0), (772.0, 108.0), (743.0, 100.0), (725.0, 38.0),
+        (690.0, 48.0), (640.0, 80.0), (596.0, 100.0), (556.0, 110.0), (508.0, 126.0),
         (404.0, 208.0), (380.0, 252.0), (348.0, 288.0), (286.0, 412.0), (280.0, 440.0), (214.0, 564.0),
         (228.0, 604.0), (240.0, 654.0)]),
     # Harbor quay -> breakwater -> lighthouse  (boardwalk is part of the harbor mesh, we just pave)
@@ -234,8 +236,8 @@ PATHS = [
         (-650.0, 450.0), (-800.0, 360.0), (-940.0, 250.0), (-1060.0, 150.0)]),
     # Main road -> Willow Pond village square -> the jetty
     dict(id="pond_lane", width=5.0, surface="paved", lamps=True, pts=[
-        (44.0, -536.0), (62.0, -505.0), (95.0, -488.0), (124.0, -492.0), (138.0, -512.0), (142.0, -540.0),
-        (158.0, -548.0), (172.0, -544.0)]),
+        (44.0, -536.0), (70.0, -532.0), (88.0, -508.0), (96.0, -482.0), (122.0, -472.0), (140.0, -490.0),
+        (140.0, -516.0), (142.0, -540.0), (158.0, -548.0), (172.0, -544.0)]),
     # Gym road -> Fisher's Cove
     dict(id="cove_lane", width=4.0, surface="dirt", lamps=True, pts=[
         (458.0, -856.0), (500.0, -884.0), (540.0, -902.0), (566.0, -910.0)]),

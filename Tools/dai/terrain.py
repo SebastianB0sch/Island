@@ -247,6 +247,11 @@ def segment_crossings(a_pts, b_pts):
 BANK_SLOPE = 0.6
 BED_EXTRA = 0.5
 BRIDGE_CLEARANCE = {"paved": 2.3, "dirt": 1.8, "boardwalk": 1.8}
+# A paved road gets a ribbon mesh laid on the terrain, so its bed is level across the ribbon plus one full
+# terrain mesh cell (diagonal) and the reach of the final blur: every triangle under the ribbon then lies in
+# the road's plane. Trails are only painted on the ground and keep a narrow bench.
+ROAD_FLAT_EXTRA = {"paved": 5.0, "dirt": 1.5, "boardwalk": 1.5}
+BRIDGE_ABUTMENT = 4.6      # m a deck runs on beyond the top of the bank (> one mesh cell diagonal)
 
 
 class Field:
@@ -278,6 +283,53 @@ class Field:
         return n / np.linalg.norm(n, axis=-1, keepdims=True)
 
 
+def mesh_step():
+    """Heightfield samples per terrain mesh quad (the mesh is coarser than the field)."""
+    return (C.FIELD_RES - 1) // C.MESH_QUADS
+
+
+def mesh_diagonals(hs):
+    """Which way every terrain quad is split: True = north-west -> south-east, False = north-east ->
+    south-west. hs[row, col] are the mesh vertex heights (row 0 = north). The diagonal joins the two corners
+    closer in height, so a crease (a road edge, a river bank, a pad rim) runs along the triangles instead of
+    being sawn into teeth across them. terrain_mesh.build_chunks exports exactly these triangles and
+    MeshField samples them, so "the ground" means the same surface everywhere."""
+    nw, ne, sw, se = hs[:-1, :-1], hs[:-1, 1:], hs[1:, :-1], hs[1:, 1:]
+    return np.abs(nw - se) <= np.abs(ne - sw)
+
+
+class MeshField:
+    """The terrain as it is drawn and walked on: the triangles of the exported mesh, not the finer
+    heightfield behind it. Everything that must sit *on the ground* (roads, bridges, props, plinths, people)
+    samples this; between mesh vertices the heightfield and the mesh differ by decimetres at any crisp edge.
+    `a` is the full-resolution heightfield (maps, statistics)."""
+
+    def __init__(self, h):
+        self.a = h
+        st = mesh_step()
+        self.hs = np.ascontiguousarray(h[::st, ::st]).astype(np.float64)
+        self.n = self.hs.shape[0] - 1
+        self.sp = C.WORLD_SIZE / self.n
+        self.diag = mesh_diagonals(self.hs)
+
+    def __call__(self, x, y):
+        x = np.asarray(x, np.float64)
+        y = np.asarray(y, np.float64)
+        fc = np.clip((x + C.HALF) / self.sp, 0.0, self.n - 1e-9)
+        fr = np.clip((C.HALF - y) / self.sp, 0.0, self.n - 1e-9)
+        c = np.floor(fc).astype(int)
+        r = np.floor(fr).astype(int)
+        u, v = fc - c, fr - r                     # u: west -> east, v: north -> south
+        hs = self.hs
+        nw, ne, sw, se = hs[r, c], hs[r, c + 1], hs[r + 1, c], hs[r + 1, c + 1]
+        # diagonal NW-SE: triangles (NW, SW, SE) below it and (NW, SE, NE) above it
+        a = np.where(v >= u, nw + (sw - nw) * v + (se - sw) * u, nw + (ne - nw) * u + (se - ne) * v)
+        # diagonal NE-SW: triangles (NW, SW, NE) and (SW, SE, NE)
+        b = np.where(u + v <= 1.0, nw + (ne - nw) * u + (sw - nw) * v,
+                     se + (sw - se) * (1.0 - u) + (ne - se) * (1.0 - v))
+        return np.where(self.diag[r, c], a, b)
+
+
 # --------------------------------------------------------------------------- pads
 
 def pad_specs():
@@ -300,9 +352,10 @@ def pad_specs():
         "volcano_view": dict(center=C.VOLCANO_VIEW, r=(7.0, 9.0), yaw=C.VOLCANO_VIEW_YAW, h=None, falloff=5.0,
                              shape="rect", dirt=0.6),
         # the villages: a levelled green with trodden ground between the cottages
-        "millbrook": dict(center=L["millbrook"]["pos"], r=L["millbrook"]["pad"], yaw=0.0, h=None, falloff=30.0,
-                          shape="ellipse", dirt=0.35),
-        "willow_pond": dict(center=L["willow_pond"]["pos"], r=L["willow_pond"]["pad"], yaw=0.0, h=None, h_add=4.0,
+        # Millbrook's green is level with the forest path that runs through it and with the bridge beside it
+        "millbrook": dict(center=L["millbrook"]["pos"], r=L["millbrook"]["pad"], yaw=0.0, h=None, h_add=4.5,
+                          falloff=34.0, shape="ellipse", dirt=0.35),
+        "willow_pond": dict(center=L["willow_pond"]["pos"], r=L["willow_pond"]["pad"], yaw=0.0, h=None, h_add=5.0,
                             falloff=44.0, shape="ellipse", dirt=0.3),
         "fishers_cove": dict(center=L["fishers_cove"]["pos"], r=L["fishers_cove"]["pad"], yaw=0.0, h=None,
                              falloff=22.0, shape="ellipse", dirt=0.25),
@@ -477,15 +530,30 @@ class Terrain:
         path_dirt = np.zeros_like(h)
         path_bed = np.zeros_like(h)          # 1 on a road bed and its verge: the pads must not re-level it
         ds = 2.0
+        road_lock = np.zeros_like(h)         # 1 on the carriageway of every road laid so far
         for p in C.PATHS:
             pts = p["pts"]
             hw = p["width"] / 2.0
+            flat = hw + p.get("flat", ROAD_FLAT_EXTRA[p["surface"]])
             samples = resample_polyline(pts, ds)
             arr = np.array(samples)
-            hf = Field(h)
-            raw = hf(arr[:, 0], arr[:, 1]).astype(np.float64)
             arc = np.concatenate([[0.0], np.cumsum(np.hypot(np.diff(arr[:, 0]), np.diff(arr[:, 1])))])
             crossings = self.path_crossings(p, arr, arc)
+            if crossings:
+                # a bridge is straight: straighten the road over each crossing (the span and its abutments)
+                for cr in crossings:
+                    reach = cr["half_span"] + 2.0 * BRIDGE_ABUTMENT + 14.0
+                    i0 = int(np.searchsorted(arc, cr["s"] - reach))
+                    i1 = int(np.searchsorted(arc, cr["s"] + reach))
+                    i0, i1 = max(i0, 0), min(i1, len(arr) - 1)
+                    if i1 - i0 >= 2:
+                        t = ((arc[i0:i1 + 1] - arc[i0]) / max(arc[i1] - arc[i0], 1e-9))[:, None]
+                        arr[i0:i1 + 1] = arr[i0] * (1.0 - t) + arr[i1] * t
+                samples = [(float(x), float(y)) for x, y in arr]
+                arc = np.concatenate([[0.0], np.cumsum(np.hypot(np.diff(arr[:, 0]), np.diff(arr[:, 1])))])
+                crossings = self.path_crossings(p, arr, arc)
+            hf = Field(h)
+            raw = hf(arr[:, 0], arr[:, 1]).astype(np.float64)
             if p.get("fixed_z") is not None:
                 prof = np.full(len(raw), float(p["fixed_z"]))
                 used = 0.0
@@ -494,18 +562,24 @@ class Terrain:
                 if crossings:
                     lower = np.full(len(raw), -1e9)
                     for cr in crossings:
-                        near = np.abs(arc - cr["s"]) <= cr["half_span"] + 1.0
+                        # over the deck, its abutments and the straight run-out beyond them (see below)
+                        near = np.abs(arc - cr["s"]) <= cr["half_span"] + 2.0 * BRIDGE_ABUTMENT + 6.0
                         lower[near] = cr["water"] + cr["clearance"]
                 grade = p.get("grade", C.ROAD_GRADE[p["surface"]])
-                # Fixed points: both ends (a pad, a quay or the road this one branches off - already in h) and
-                # every stretch on a pad proper, which stays level whatever the road would like. The profile
-                # is solved separately for each free stretch between two of them.
-                on_pad = np.zeros(len(raw), bool)
-                for key, spec in specs.items():
-                    pw, _inner = pad_weight(arr[:, 0].astype(np.float32), arr[:, 1].astype(np.float32), spec)
-                    if spec.get("land_mask", True):
-                        pw = pw * smoothstep(0.0, 25.0, Field(d_in)(arr[:, 0], arr[:, 1]))
-                    on_pad |= pw >= 0.995
+                # Fixed points: both ends (a pad, a quay or the road this one branches off - already in h),
+                # every stretch on a pad proper, which stays level whatever the road would like, and every
+                # stretch on the carriageway of a road laid earlier (a junction is on the main road's plane).
+                # The profile is solved separately for each free stretch between two of them.
+                on_pad = Field(road_lock)(arr[:, 0], arr[:, 1]) > 0.5
+                tang = np.gradient(arr, axis=0)
+                tang /= np.maximum(np.hypot(tang[:, 0], tang[:, 1]), 1e-9)[:, None]
+                for off in (0.0, hw + 1.0, -(hw + 1.0)):      # a pad under either edge of the road counts
+                    ox, oy = arr[:, 0] - tang[:, 1] * off, arr[:, 1] + tang[:, 0] * off
+                    for key, spec in specs.items():
+                        pw, _inner = pad_weight(ox.astype(np.float32), oy.astype(np.float32), spec)
+                        if spec.get("land_mask", True):
+                            pw = pw * smoothstep(0.0, 25.0, Field(d_in)(ox, oy))
+                        on_pad |= pw >= 0.995
                 on_pad[0] = on_pad[-1] = True
                 prof = raw.copy()
                 used = grade
@@ -520,12 +594,31 @@ class Terrain:
                     used = max(used, g_seg)
                 if used > grade + 1e-6:
                     log(f"    {p['id']}: its fixed points need {used * 100:.1f} % (limit {grade * 100:.0f} %)")
+                # a deck is a straight line from bank to bank: so is the profile under it (abutments included)
+                # ... and for one terrain mesh cell beyond each end, so the change of grade between road and
+                # deck is not at the joint (the 3 m mesh rounds a kink off by several centimetres)
+                for cr in crossings:
+                    s0, s1 = self.bridge_span(cr, arc, prof)
+                    c0, c1 = max(s0 - BRIDGE_ABUTMENT, 0.0), min(s1 + BRIDGE_ABUTMENT, float(arc[-1]))
+                    inside = (arc >= c0) & (arc <= c1)
+                    z0, z1 = float(np.interp(c0, arc, prof)), float(np.interp(c1, arc, prof))
+                    prof[inside] = z0 + (z1 - z0) * (arc[inside] - c0) / max(c1 - c0, 1e-9)
+                    cr["s0"], cr["s1"] = s0, s1
+                    deck = float(np.interp(cr["s"], arc, prof))
+                    if deck < cr["water"] + cr["clearance"] - 0.05:
+                        log(f"    !! {p['id']}: bridge deck only {deck - cr['water']:.2f} m over the water")
+            # level bed per sample: a trail's narrow bench widens to a road's at the abutments of its bridges,
+            # so the deck ends on ground that is exactly the path's height across its whole width
+            flat_s = np.full(len(prof), flat)
+            for cr in crossings:
+                near = 1.0 - smoothstep(6.0, 22.0, np.maximum(np.maximum(cr["s0"] - arc, arc - cr["s1"]), 0.0))
+                flat_s = np.maximum(flat_s, flat + (hw + ROAD_FLAT_EXTRA["paved"] - flat) * near)
             dev = np.abs(prof - raw)
             dike = bool(p.get("dike"))
             # cut / fill slopes: the shoulder widens with the height of the embankment or the depth of the cutting
             # (a 6 m fill on a 9 m shoulder was a 34 degree wall beside the road)
             shoulder = np.full(len(prof), 30.0) if dike else np.clip(6.0 + 2.6 * ndimage.maximum_filter1d(dev, 9), 9.0, 46.0)
-            reach = hw + float(shoulder.max()) + 2.0
+            reach = float(flat_s.max()) + float(shoulder.max()) + 2.0
             dist, sarc = polyline_distance(X, Y, samples, reach)
             sel = np.isfinite(dist)
             ph = np.interp(sarc[sel], arc, prof).astype(np.float32)
@@ -535,12 +628,20 @@ class Terrain:
                 h[sel] = np.where(dist[sel] <= hw + 0.5, top, np.maximum(h[sel], slope_h))
             else:
                 sh = np.interp(sarc[sel], arc, shoulder).astype(np.float32)
-                w = 1.0 - smoothstep(hw + 0.5, hw + 0.5 + sh, dist[sel])
+                fl = np.interp(sarc[sel], arc, flat_s).astype(np.float32)
+                w = 1.0 - smoothstep(fl, fl + sh, dist[sel])
+                # never reshape the carriageway of a road that is already there (a branch's wide shoulder
+                # used to drag the main road's bed towards its own profile for tens of metres)
+                w = w * (1.0 - road_lock[sel])
                 h[sel] = lerp(h[sel], ph, w)
             core = 1.0 - smoothstep(hw - 0.5, hw + 1.5, dist)
             core = np.where(np.isfinite(core), core, 0.0)
-            bed = 1.0 - smoothstep(hw + 1.5, hw + 7.0, dist)
+            fl_all = np.interp(np.where(np.isfinite(dist), sarc, 0.0), arc, flat_s)
+            bed = 1.0 - smoothstep(fl_all + 1.0, fl_all + 6.0, dist)
             path_bed = np.maximum(path_bed, np.where(np.isfinite(bed), bed, 0.0))
+            # the whole level bed is the road's from now on: a later road may join it, not reshape it
+            lock = 1.0 - smoothstep(fl_all, fl_all + 3.0, dist)
+            road_lock = np.maximum(road_lock, np.where(np.isfinite(lock), lock, 0.0))
             if p["surface"] == "paved":
                 path_paved = np.maximum(path_paved, core)
             else:
@@ -661,14 +762,28 @@ class Terrain:
                 half_span = (bed_half + (clearance + rv["depth"][j]) / BANK_SLOPE) / sin_a
                 out.append(dict(s=float(arc[i] + t * (arc[i + 1] - arc[i])), river=rv["id"], j=int(j), x=x, y=y,
                                 water=float(rv["level"][j]), hw=float(rv["hw"][j]), depth=float(rv["depth"][j]),
-                                clearance=clearance, half_span=float(half_span), sin=float(sin_a)))
+                                clearance=clearance, half_span=float(half_span), sin=float(sin_a),
+                                half_width=p["width"] / 2.0 + 1.0))
         return out
 
-    def add_bridge(self, p, cr, arr, arc, prof):
-        """Bridge record for the layout stage: a straight deck between the two bank points of the crossing."""
+    @staticmethod
+    def bridge_span(cr, arc, prof):
+        """Arc range (s0, s1) of the deck over a crossing: from where the bank reaches the level of the road
+        on one side to the same on the other, plus an abutment that carries it one terrain mesh cell on."""
         deck = float(np.interp(cr["s"], arc, prof))
-        half = (cr["hw"] + BED_EXTRA + (deck - cr["water"] + cr["depth"]) / BANK_SLOPE) / cr["sin"] + 1.2
-        s0, s1 = max(cr["s"] - half, 0.0), min(cr["s"] + half, float(arc[-1]))
+        # a skew crossing: the bank's top edge runs across the deck at an angle, so one side of the deck
+        # reaches it later than the centre line does - by half the deck's width times cot(angle)
+        skew = cr["half_width"] * math.sqrt(max(1.0 - cr["sin"] ** 2, 0.0)) / cr["sin"]
+        half = ((cr["hw"] + BED_EXTRA + (deck - cr["water"] + cr["depth"]) / BANK_SLOPE) / cr["sin"]
+                + skew + BRIDGE_ABUTMENT)
+        return max(cr["s"] - half, 0.0), min(cr["s"] + half, float(arc[-1]))
+
+    def add_bridge(self, p, cr, arr, arc, prof):
+        """Bridge record for the layout stage: a straight deck between the two abutments of the crossing."""
+        s0, s1 = cr.get("s0"), cr.get("s1")
+        if s0 is None:
+            s0, s1 = self.bridge_span(cr, arc, prof)
+        deck = float(np.interp(cr["s"], arc, prof))
         a = [float(np.interp(s0, arc, arr[:, 0])), float(np.interp(s0, arc, arr[:, 1])), float(np.interp(s0, arc, prof))]
         b = [float(np.interp(s1, arc, arr[:, 0])), float(np.interp(s1, arc, arr[:, 1])), float(np.interp(s1, arc, prof))]
         stone = p["surface"] == "paved" or p["id"] in ("to_abandoned",)
@@ -700,7 +815,14 @@ class Terrain:
             w = np.interp(s, rv["arc"], rv["level"]).astype(np.float32)
             hw = np.interp(s, rv["arc"], rv["hw"]).astype(np.float32)
             dep = np.interp(s, rv["arc"], rv["depth"]).astype(np.float32)
-            k = BANK_SLOPE * (1.0 + 0.3 * rough[sel])
+            # banks are a little rougher away from the bridges; at a crossing they are exactly BANK_SLOPE, the
+            # slope the bridge spans were measured with
+            calm = np.ones(d.shape, np.float32)
+            for b in self.bridges:
+                if b["river"] == rv["id"]:
+                    calm = np.minimum(calm, smoothstep(18.0, 40.0, np.hypot(X[sel] - b["center"][0],
+                                                                             Y[sel] - b["center"][1])))
+            k = BANK_SLOPE * (1.0 + 0.3 * rough[sel] * calm)
             bed_half = hw + BED_EXTRA
             edge = bed_half + dep / k                       # where the bank comes out of the water
             target = (w - dep) + np.maximum(d - bed_half, 0.0) * k
@@ -799,7 +921,8 @@ class Terrain:
         dirt = np.zeros_like(H)
         for p in self.paths:
             hw = p["width"] / 2.0
-            dist, _ = polyline_distance(X, Y, p["pts"], hw + 4.0)
+            line = [tuple(q[:2]) for q in p["samples"][::2]] + [tuple(p["samples"][-1][:2])]
+            dist, _ = polyline_distance(X, Y, line, hw + 4.0)
             dist = np.where(np.isfinite(dist), dist, 1e9)
             edge_noise = n2 * 0.7
             core = 1.0 - smoothstep(hw - 0.4 + edge_noise, hw + 0.9 + edge_noise, dist)
@@ -989,7 +1112,9 @@ def load_cached():
     forest = np.load(os.path.join(C.CACHE_DIR, "forest.npy"))
     slope = np.load(os.path.join(C.CACHE_DIR, "slope.npy"))
     meta = jsonio.read_json(os.path.join(C.CACHE_DIR, "terrain_info.json"))
-    return Field(h), Field(forest), Field(slope), meta
+    # the height sampler is the drawn mesh (MeshField): whatever the later stages put "on the ground" stands
+    # on the triangles the player sees
+    return MeshField(h), Field(forest), Field(slope), meta
 
 
 def load_water():

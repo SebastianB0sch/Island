@@ -69,7 +69,27 @@ def terrain_uv(verts):
     return np.stack([u, v], axis=1)
 
 
+def tri_grid_mesh(name, xs, ys, zs, normals, diag, uv_fn, mat="M_Terrain"):
+    """Terrain chunk as explicit triangles: diag[r, c] True splits quad (r, c) north-west -> south-east,
+    False north-east -> south-west (terrain.mesh_diagonals). Exporting quads would leave the split to the
+    importer - and then nothing could be placed exactly on the surface."""
+    nr, nc = zs.shape
+    X, Y = np.meshgrid(xs, ys)
+    verts = np.stack([X.ravel(), Y.ravel(), zs.ravel()], axis=1)
+    r, c = np.meshgrid(np.arange(nr - 1), np.arange(nc - 1), indexing="ij")
+    nw = (r * nc + c).ravel()
+    ne, sw = nw + 1, nw + nc
+    se = sw + 1
+    d = np.asarray(diag, bool).ravel()
+    # CCW seen from above
+    t1 = np.where(d[:, None], np.stack([nw, sw, se], 1), np.stack([nw, sw, ne], 1))
+    t2 = np.where(d[:, None], np.stack([nw, se, ne], 1), np.stack([sw, se, ne], 1))
+    faces = np.stack([t1, t2], 1).reshape(-1, 3)
+    return _mesh_from_arrays(name, verts, faces, uv_fn(verts), normals.reshape(-1, 3), mat)
+
+
 def build_chunks(h, export=True, log=print, keep=False):
+    from .terrain import mesh_diagonals
     n = C.MESH_QUADS
     step = (C.FIELD_RES - 1) // n
     hs = h[::step, ::step].astype(np.float64)
@@ -77,6 +97,7 @@ def build_chunks(h, export=True, log=print, keep=False):
     gy, gx = np.gradient(hs, sp)            # gy = dh/drow = -dh/dy
     nrm = np.stack([-gx, gy, np.ones_like(gx)], axis=-1)
     nrm /= np.linalg.norm(nrm, axis=-1, keepdims=True)
+    diag = mesh_diagonals(hs)
     q = n // C.CHUNKS
     xs_all = -C.HALF + np.arange(n + 1) * sp
     ys_all = C.HALF - np.arange(n + 1) * sp
@@ -86,8 +107,8 @@ def build_chunks(h, export=True, log=print, keep=False):
             r0, c0 = cj * q, ci * q
             zs = hs[r0:r0 + q + 1, c0:c0 + q + 1]
             name = f"SM_Terrain_{ci:02d}_{cj:02d}"
-            o = grid_mesh(name, xs_all[c0:c0 + q + 1], ys_all[r0:r0 + q + 1], zs,
-                          nrm[r0:r0 + q + 1, c0:c0 + q + 1], terrain_uv)
+            o = tri_grid_mesh(name, xs_all[c0:c0 + q + 1], ys_all[r0:r0 + q + 1], zs,
+                              nrm[r0:r0 + q + 1, c0:c0 + q + 1], diag[r0:r0 + q, c0:c0 + q], terrain_uv)
             if export:
                 blend.export_fbx([o], os.path.join(C.OUT_MESHES, "Terrain", name + ".fbx"))
             if keep:

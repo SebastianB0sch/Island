@@ -177,9 +177,10 @@ def export_wanted(path):
     return any(fnmatch.fnmatch(rel, pat.strip()) for pat in only.split(",") if pat.strip())
 
 
-def export_fbx(objs, path):
-    """Export the given objects (at their current transforms) to a binary FBX for UE."""
-    if not export_wanted(path):
+def export_fbx(objs, path, force=False):
+    """Export the given objects (at their current transforms) to a binary FBX for UE.
+    force: write it even when DAI_EXPORT_ONLY does not name it (the caller knows the mesh changed)."""
+    if not force and not export_wanted(path):
         return
     for o in bpy.context.scene.objects:
         o.select_set(False)

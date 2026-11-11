@@ -1,3 +1,66 @@
+# World alignment - roads, bridges and the ground (2026-11-11)
+
+The waterways / road-grading work was followed by a second alignment pass with one rule: **"the ground" is the
+terrain mesh as it is drawn**, and everything that lies on it is checked against that surface.
+
+## What was wrong
+
+* Placement sampled the 1.5 m heightfield, but the terrain is drawn from every second sample (3 m quads). At
+  any crisp edge - a road shoulder, a river bank, a pad rim - the two differed by decimetres (99th percentile
+  19 cm, up to 1.4 m), and the split of each quad into triangles was left to the FBX importer.
+* Road ribbons were level across and lifted to the highest ground under them: up to 52 cm of air under the
+  paving at junctions and beside pad aprons.
+* A branch road's wide shoulder reshaped the bed of the road it joined; a road whose edge touched a pad was
+  half on the pad and half 40 cm below it.
+* Bridge decks ended where the bank met the road *on the centre line*: on a skew crossing one side of the
+  abutment hung over the bank (up to 1.9 m of air), and the change of grade at the joint left 5-12 cm steps.
+* Landmark meshes that are built onto the terrain (summit stair, viewpoints, shrine ...) had not been
+  re-exported after the terrain under them changed.
+
+## What changed
+
+| Area | Now |
+|---|---|
+| Terrain mesh | exported as explicit triangles; each quad is split along the diagonal joining the two corners closer in height (`terrain.mesh_diagonals`), so creases follow road edges and banks |
+| Ground lookups | `terrain.MeshField` reproduces those triangles exactly; the layout stage and every location module sample it (`terrain.load_cached`) |
+| Road beds | level across the ribbon plus one mesh cell (`ROAD_FLAT_EXTRA`); a road is fixed to pad height while any part of its bed is on a pad; the carriageway of an earlier road is locked, later roads join it at its edge |
+| Ribbons | draped: 5 vertices across, each 6 cm above the terrain under it; cut exactly at bridge abutments and along the edge of the road they join (skewed ends, no wedge); closed ends |
+| Bridges | the road is straightened over each crossing; the deck runs one mesh cell past the top of the bank on both sides, further on the long side of a skew crossing; the profile is a straight line under the deck and its run-outs, so the change of grade is not at the joint; banks have no noise near a crossing |
+| Exports | every location mesh carries a geometry signature in `assets.json`; with `DAI_EXPORT_ONLY` set, a mesh whose geometry changed is still written |
+| Scatter | plants and stones that come up under a roof are removed |
+
+## The audit
+
+`Tools/alignment_check.py` (needs Blender's `bpy`) builds the layout in memory and reports:
+
+| Check | Limit | Result |
+|---|---|---|
+| paving above the terrain under every ribbon | 1.5 - 20 cm | 3.9 - 12.9 cm on all 7 paved roads |
+| ribbon ends against the deck / road / ground they meet | 3 cm | <= 2.2 cm at all 16 ends |
+| bridge: road centre line vs deck | 5 cm | 0.0 cm (6 bridges) |
+| bridge: deck end vs road, abutments on the ground, clearance, piers to the bed, parapets | - | all pass |
+| footings of the villages and landmarks (every separate piece reaches the ground) | 5 cm | 7,920 pieces, none off the ground |
+| building bases vs pads | 35 cm | all pass |
+| props and vegetation vs terrain | +20 cm | 87,275 checked, none floating (the 1,234 below -60 cm are the deliberate rock sinks) |
+| door thresholds | 21 cm | 587 doors, only the 5 accepted exceptions |
+| vegetation inside buildings / at doors | 0 | 0 |
+| story anchors on open ground | not buried, no air under them | 10 checked, pass |
+
+| | |
+|---|---|
+| ![Junction](../renders/road_junction.jpg) | ![Bridge joint](../renders/bridge_joint.jpg) |
+| The pond lane leaves the main road along its edge | The gym road runs onto its bridge deck without a step |
+
+Three story anchors moved with the ground: the Ra and Obelisk front gates (their roads were regraded) and
+`lighthouse_view`, which had always hung 6.7 m over the water 12 m off the breakwater and now stands on it.
+
+`Tools/tests/test_alignment.py` covers the parts that need no Blender (the mesh sampler, the signatures).
+
+Known and left as is: the volcano trail's hairpins are tighter than the 3 m mesh can hold, so the ground there
+deviates from the solved profile by up to half a metre over a few metres (a dirt trail: nothing is laid on it).
+
+---
+
 # World alignment audit — 2026-11-08
 
 Systematic check of floor, wall, door, furniture and scenery alignment across the Duel Academy Island

@@ -84,6 +84,7 @@ python Tools/opponents/import_canon_decks.py --check  # 32/32 runtime decks, 37/
 python Tools/effects/audit.py              # PASS; 362 scripted + 345 vanilla, 493 pending
 python Tools/portrait_check.py --strict    # every named speaker/opponent has a bust and all declared expressions
 python -m unittest Tools.tests.test_water_pipeline Tools.tests.test_water_engine   # waves, rivers, road grades, materials
+.venv/bin/python Tools/alignment_check.py  # roads, bridges, footings, props, doors against the drawn terrain: 0 failures
 ```
 
 Still open before calling the port complete: the 493 pending card effects, exact GBA dialogue (the full text is local-only), renderer/interaction QA for the shop/deck/exam screens, interior generation/entry polish, dedicated 3D meshes for the named contacts who still use a generic student look, and the remaining canon gaps recorded in [Docs/PORT_STATUS.md](Docs/PORT_STATUS.md). The full E02–E33 campaign playthrough is covered by `-DAStoryPlaythroughTest`.
@@ -621,7 +622,8 @@ Tools/                      procedural asset pipeline (Python + Blender 5.2 "bpy
   preview_asset.py          render previews of a single location module
   dai/config.py             island layout: locations, heights, paths, rivers, volcano, lake ...
   dai/terrain.py            heightfield (graded roads, carved rivers), splat maps, colour map, Landscape heightmap
-  dai/terrain_mesh.py       64 terrain chunks + ocean (graded grid) / sea floor / lake / river surfaces
+  dai/terrain_mesh.py       64 terrain chunks (explicit triangles; terrain.MeshField samples exactly that
+                            surface) + ocean (graded grid) / sea floor / lake / river surfaces
   dai/water.py              the water model: Gerstner wave sets, wave mask + shore map, water textures, water.json
   dai/waterways.py          where the rivers are, for the layout stage and the location modules
   dai/geo.py                MeshBuilder modelling kit (walls with openings, roofs, lathes, stairs ...)
@@ -693,8 +695,9 @@ npm install -g @gltf-transform/cli                 # optional: decodes meshopt-c
 .venv/bin/python Tools/preview_asset.py academy   # iterate on one location
 .venv/bin/python Tools/build_island.py cast       # rebuild the anime cast only
 DAI_EXPORT_ONLY="Meshes/Water/*,Meshes/Roads/*" .venv/bin/python Tools/build_island.py meshes layout
-                                                  # re-export only the meshes that changed (FBX output is not
-                                                  # byte-stable across Blender versions; see dai/blend.py)
+                                                  # re-export only these (FBX output is not byte-stable across
+                                                  # Blender versions) plus every location mesh whose geometry
+                                                  # changed since its last export (signatures in assets.json)
 .venv/bin/python Tools/preview_anime.py jaden alexis --state Walk --frame 10   # cast preview render
 python Tools/apply_npc_roster.py                  # re-apply the unique ambient NPC identities to layout.json
 python Tools/import_fab_anime.py                  # optional licensed Fab anime pack (local-only, gitignored)
