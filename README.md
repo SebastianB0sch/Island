@@ -108,13 +108,22 @@ Egyptian-god theming), not a copy of any copyrighted asset. All card names in th
 
 Everyone on the island is built on the official **VRoid sample avatars** (AvatarSample_A / B / C by the VRoid
 Project; their embedded terms allow modification, redistribution and commercial use, credit not required).
-The base supplies the face, body, facial rig and outfit; each cast slot then gets its own look
-(`Tools/dai/anime/looks.py`): a hair restyle (`hairdo.py`, `hairshape.py`) with spring chains (`hairrig.py`),
-hair and eye colours, a face shape (`chin`, `jaw`, `cheeks`), a resting expression, the outfit in the slot's
-colours and a real height. A few characters wear a tailored long coat instead of the base outfit.
-The Fab Anime Character Pack is no longer used.
+The base supplies the face, body and facial rig; each cast slot then gets its own look
+(`Tools/dai/anime/looks.py`):
 
-The project also has its **own generator** (`Tools/dai/anime/atelier`), which models a character from scratch
+* **Hair** (`clumphair.py`, `atelier/hair.py`, recipes in `atelier/styles.py`): generated clump hair fitted to
+  the base head, from 33 style recipes (long, hime, bob, ponytail, braids, buns, spikes, crest, undercut,
+  curly ...) with per-look fringe, parting, ties, accent locks and ombre, on spring-bone chains.
+* **Outfit** (`wardrobe.py`, `atelier/outfit.py`): garments cut from the base body's own cross-sections
+  (bomber, sweater, vest, blazer, tunic, long coat, suit, sailor blouse, cropped blazer, cardigan, pinafore,
+  dress) in the slot's dorm colour; skirts and coats hang from spring chains.
+* **Face and size**: hair and eye colours, a face shape (`chin`, `jaw`, `cheeks`), a resting expression,
+  glasses, and a real height.
+
+Standing characters play a 12 s idle loop (weight shift, breathing, a look to one side) and blink through the
+face morphs. The Fab Anime Character Pack is no longer used.
+
+The project's **own generator** (`Tools/dai/anime/atelier`) can also model a whole character from scratch
 and is used when the VRoid samples are not installed. Its proportions are fitted to measurements of the
 samples (`Tools/measure_character.py`), but its surfaces are simpler than the sculpted VRoid meshes:
 
