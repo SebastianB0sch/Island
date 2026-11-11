@@ -4808,6 +4808,7 @@ def _annex_suite(C, who):
         wall_unit(C, "-y", ya, x0 + 1.3, -16.9, "cabinet", seed=148, h=0.85)    # the blank south wall
         C.prop("SM_Int_Painting", -15.0, ya + 0.02, z + 1.5, 180.0)
         C.prop("SM_Int_Frame", -17.6, ya + 0.02, z + 1.6, 180.0)
+        C.bulletin(-11.8, ya, z + 1.1, 180.0, 2.4, 1.1, "FACULTY MEETINGS", seed=150)
     if not ch:      # blueprints of the golem pinned up over the bench
         art_wall(C, "+y", WY - 0.15, x0 + 1.0, -12.9, z, 149, rows=(1.4, 1.95))
     C.cam(f"annex_{who}_{'meeting' if ch else 'workshop'}", (WX - 0.6, WY - 0.5, z + 1.6), (x0 + 0.5, ya + 0.5, z + 0.9), 17)

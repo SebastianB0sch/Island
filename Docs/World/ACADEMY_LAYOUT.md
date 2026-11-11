@@ -82,6 +82,30 @@ Run with the Blender-as-a-module interpreter, like the other audits. What it che
   round, guest chairs, two book cases, globe, crest. Office side windows are in the door half of the room, so
   the book cases and cabinets stand on clear walls.
 
-## Results
+## Results (final run, 2026-11-11)
 
-See the end of this file (filled in by the final run).
+| Check | First run | Final |
+|---|---|---|
+| doors (size / plane / frame / swing / head) | 98 findings | **0** |
+| NPC spots inside furniture | 27 | **0** |
+| doors with a side nobody can reach | whole pavilions 3F-5F and wing 2F-4F cut off | **0** (the rear annex door's outside is terrain, not modelled) |
+| room leaks (rays leaving a room through a gap) | - | **0** (262 reported rays all start in the open portico or on facade ledges) |
+| `audit_interiors.py academy` | 4 accepted | 4 accepted (tower thresholds stand on terrain) |
+| other locations (`audit_interiors.py`) | 2 accepted | 2 accepted (harbor) - the `geo` / `_doors_on` changes regress nothing |
+| `spec_check.py academy` (audit + detail coverage + people + painted windows) | - | **PASS** (0 failures) |
+| `validate_layout.py --strict`, `test_interiors.py` | PASS | PASS |
+
+Known leftovers (reported by the check, not defects of the building):
+
+- *paths:* NPC spots in the 0.8 m classroom aisles show as "not reachable" because the 0.2 m grid with a 0.34 m
+  radius cannot resolve a 0.8 m aisle; the exact capsule test passes them. The two arrival points in the hall
+  and the arena are put on the floor by the layout stage. The three plaza NPCs stand on terrain.
+- *unreachable floor:* the remaining areas are roofs, the inside of the pyramid, the space under the arena
+  stands, closed tier blocks in the lecture halls, table tops, and a few 5-6 m2 corners behind racks in
+  4F/5F store and club rooms.
+- *walls:* the z-fighting list (2,376 visible coplanar overlaps) is mostly trim against trim; the back-face list
+  is rays starting inside prop bounding boxes. Neither is a gap.
+- The C++ change (`ADAStudentNPC::IsClearWalk`) could not be compiled in this environment; build the editor
+  target once and run `-DANpcScheduleTest`.
+- The FBXs / level are not regenerated here: run `python Tools/build_island.py layout` and the editor
+  build (see `INTERIORS.md` / `ALIGNMENT_AUDIT.md`).
