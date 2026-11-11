@@ -372,7 +372,8 @@ def build_textures(log=print):
 #       replaces T_<DetailName>_D (luminance detail of the photo) and T_<DetailName>_N
 #   "terrain":  {"<Layer>": {"albedo": ..., "normal": ..., "normal_gl": ..., "rough": ..., "tile_m": 4.0,
 #                            "tint": [1, 1, 1]}}
-#       -> T_Terrain_<Layer>_BC / _N / _R  (full colour layers for M_DA_Terrain)
+#       -> T_Terrain_<Layer>_BC / _N / _R  (full colour layers for M_DA_Terrain) and _H (relief, for the
+#          height-blended transitions between layers; derived from the normal map)
 TERRAIN_LAYER_NAMES = ["Grass", "ForestFloor", "Sand", "WetSand", "Ash", "Rock", "Dirt", "Paving"]
 TERRAIN_FALLBACK_DETAIL = {"Grass": "Grass", "ForestFloor": "Leaves", "Sand": "Sand", "WetSand": "Sand",
                            "Ash": "Rock", "Rock": "Rock", "Dirt": "Dirt", "Paving": "Paving"}
@@ -423,6 +424,43 @@ def photo_detail(spec, size=1024, contrast=0.35):
     d = detail_from(lum, 0.5, contrast)
     nrm = _dx_normal(_load_img(spec["normal"], size), spec.get("normal_gl", True)) if spec.get("normal") else None
     return d, nrm
+
+
+def height_from_normal(nrm, size=512):
+    """Relative height 0..1 of a tileable surface from its (DirectX) normal map: the slopes the normals
+    encode, integrated in the frequency domain (Frankot-Chellappa; exact for a periodic texture). The layer
+    blend of M_DA_Terrain uses it so one ground material gives way to the next along its own relief - sand
+    lies in the joints between cobbles before it covers them, grass tufts stand out of the dirt - instead of
+    cross-fading."""
+    n = nrm.astype(np.float64) * 2.0 - 1.0
+    nz = np.clip(n[..., 2], 0.2, None)
+    gx, gy = -n[..., 0] / nz, -n[..., 1] / nz              # dh/dcol, dh/drow
+    rows, cols = gx.shape
+    ky = np.fft.fftfreq(rows)[:, None] * 2.0 * math.pi
+    kx = np.fft.fftfreq(cols)[None, :] * 2.0 * math.pi
+    k2 = kx * kx + ky * ky
+    k2[0, 0] = 1.0
+    spec = (-1j * kx * np.fft.fft2(gx) - 1j * ky * np.fft.fft2(gy)) / k2
+    # integration favours the longest waves (1 / k): damp undulations longer than about a fifth of the tile,
+    # so the blend follows blades, grains and joints rather than metre-wide blotches
+    k0 = 2.0 * math.pi * 5.0 / max(rows, cols)
+    spec *= 1.0 - 0.7 * np.exp(-k2 / (k0 * k0))
+    hgt = np.real(np.fft.ifft2(spec))
+    lo, hi = np.percentile(hgt, 1.5), np.percentile(hgt, 98.5)
+    hgt = np.clip((hgt - lo) / max(hi - lo, 1e-9), 0.0, 1.0)
+    img = Image.fromarray((hgt * 255.0 + 0.5).astype(np.uint8), "L")
+    if img.size != (size, size):
+        img = img.resize((size, size), Image.LANCZOS)
+    return np.asarray(img).astype(np.float32) / 255.0
+
+
+def build_layer_heights(log=print):
+    """T_Terrain_<Layer>_H.png for every terrain layer, from the layer's own normal map in SourceAssets."""
+    for layer in TERRAIN_LAYER_NAMES:
+        with Image.open(os.path.join(C.OUT_TEXTURES, f"T_Terrain_{layer}_N.png")) as n_img:
+            nrm = np.asarray(n_img.convert("RGB")).astype(np.float32) / 255.0
+        save_gray(height_from_normal(nrm), os.path.join(C.OUT_TEXTURES, f"T_Terrain_{layer}_H.png"))
+    log(f"  terrain layer heights: {len(TERRAIN_LAYER_NAMES)} written")
 
 
 def build_photo_textures(log=print):
@@ -481,5 +519,6 @@ def build_photo_textures(log=print):
     os.makedirs(C.CACHE_DIR, exist_ok=True)
     jsonio.write_json(os.path.join(C.CACHE_DIR, "terrain_layers.json"), layer_info, indent=1)
     jsonio.write_json(os.path.join(C.OUT_DATA, "terrain_layers.json"), layer_info, indent=1)
+    build_layer_heights(log)
     n_photo = sum(1 for v in layer_info.values() if v["source"] == "photo")
     log(f"  photo textures: {n_detail} detail sets, terrain layers {n_photo}/{len(layer_info)} from photo sets")

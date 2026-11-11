@@ -141,7 +141,8 @@ class Layout:
         self.manifest = []
         self.rng = random.Random(C.SEED)
         self.inst_all = []       # (asset, (x, y, z), yaw, scale, location key or None) of every instance
-        self.ribbons = {}        # path id -> [(s, left xyz, right xyz)] per run (alignment audit)
+        self.ribbons = {}        # path id -> ribbon_sections (alignment audit)
+        self._ribbon_lines = {}
         self.bridge_info = []    # one record per placed bridge (alignment audit)
         # geometry signatures of the meshes as they were last exported (Data/assets.json "sig")
         self._prev_sig = {}
@@ -181,6 +182,8 @@ class Layout:
                  .astype(np.int64).tobytes())
         h.update(repr([tuple(f) for f in mb.faces]).encode())
         h.update("|".join(mb.face_mats).encode())
+        if mb.colors:
+            h.update(repr(sorted((i, tuple(round(c, 3) for c in col)) for i, col in mb.colors.items())).encode())
         return h.hexdigest()[:16]
 
     def export_mesh(self, mb, name, folder, collision, nanite=None):
@@ -541,8 +544,8 @@ class Layout:
                                            title="Signpost", text="This way: " + self.DEST.get(p["id"], p["id"]),
                                            radius=300.0, group="paths"))
                 self.clearings.append((px, py, 2.0))
-            # paved road ribbons (crisp edges + kerbs on top of the splat paving)
-            if p["surface"] == "paved" and p["id"] != "breakwater":
+            # paved road ribbons: they lay the stone (the splat paints only the road's bed and verge)
+            if terrain.road_has_ribbon(p):
                 mb = self.road_ribbon(p)
                 self.road_mbs.append(mb)
                 if export:
@@ -555,98 +558,153 @@ class Layout:
     RIBBON_LIFT = 0.06       # m the paving lies above the terrain triangles under it
     RIBBON_SKIRT = 0.8       # m the kerb faces reach down into the ground
 
+    RIBBON_RIM_LIFT = -0.015  # m at the outer edge: just under the ground, so the ribbon has no edge to see
+    RIBBON_RIM = 0.45        # m: width of that edge strip
+
+    def earlier_roads(self, p):
+        """The paved roads laid before `p` (their ribbons are the surface where `p` meets them)."""
+        order = [q["id"] for q in self.meta["paths"]]
+        return [q for q in self.meta["paths"] if terrain.road_has_ribbon(q) and order.index(q["id"]) < order.index(p["id"])]
+
+    def road_reach(self, q):
+        """fn(x, y) -> metres outside (+) / inside (-) the fully paved part of road `q`: a branch runs on over
+        `q`'s rim (which blends into the verge there) and ends just inside where its full paving begins."""
+        line = np.asarray(q["samples"], np.float64)[:, :2]
+        seg_a, seg_d = line[:-1], line[1:] - line[:-1]
+        seg_l2 = np.maximum((seg_d * seg_d).sum(1), 1e-12)
+        hwq = q["width"] / 2.0 - self.RIBBON_RIM - 0.1
+
+        def reach(x, y):
+            t = np.clip(((x - seg_a[:, 0]) * seg_d[:, 0] + (y - seg_a[:, 1]) * seg_d[:, 1]) / seg_l2, 0.0, 1.0)
+            return float(np.hypot(seg_a[:, 0] + t * seg_d[:, 0] - x, seg_a[:, 1] + t * seg_d[:, 1] - y).min()) - hwq
+        return reach
+
+    def ribbon_line(self, p):
+        """Centre line of a road's ribbon: (xs, ys, arc). It is the path's own line - arc length 0 at its
+        first sample, as in the bridge records - except that an end which stops at the kerb of an earlier
+        road, short of its paving, runs straight on until it is inside it (negative arc lengths at the
+        start), so the two pavings join instead of facing each other across a strip of verge."""
+        if p["id"] in self._ribbon_lines:
+            return self._ribbon_lines[p["id"]]
+        pts = [(float(t[0]), float(t[1])) for t in p["samples"]]
+        ext0 = 0.0
+        for q in self.earlier_roads(p):
+            reach = self.road_reach(q)
+            for at_start in (True, False):
+                (x, y), (bx, by) = (pts[0], pts[min(2, len(pts) - 1)]) if at_start else (pts[-1], pts[max(len(pts) - 3, 0)])
+                d = math.hypot(x - bx, y - by) or 1.0
+                ux, uy = (x - bx) / d, (y - by) / d                  # outward
+                hw = p["width"] / 2.0
+
+                def joined(ext):
+                    """Centre and both edges of the end, `ext` further on, are inside q's paving."""
+                    cx, cy = x + ux * ext, y + uy * ext
+                    return (reach(cx, cy) < -0.3 and reach(cx - uy * hw, cy + ux * hw) < -0.05
+                            and reach(cx + uy * hw, cy - ux * hw) < -0.05)
+
+                if reach(x, y) >= 3.0 or joined(0.0):
+                    continue
+                # (at a sharp angle the far edge enters long after the near one: up to 30 m)
+                for ext in np.arange(0.5, 30.01, 0.5):
+                    if joined(ext):
+                        if at_start:
+                            pts.insert(0, (x + ux * ext, y + uy * ext))
+                            ext0 = float(ext)
+                        else:
+                            pts.append((x + ux * ext, y + uy * ext))
+                        break
+        xs, ys = [t[0] for t in pts], [t[1] for t in pts]
+        arc = np.concatenate([[0.0], np.cumsum([math.hypot(xs[i] - xs[i - 1], ys[i] - ys[i - 1])
+                                                for i in range(1, len(pts))])]) - ext0
+        self._ribbon_lines[p["id"]] = (xs, ys, arc)
+        return self._ribbon_lines[p["id"]]
+
     def road_runs(self, p):
-        """The stretches of a paved road that get a ribbon: (arc, [(s_start, s_end, start_edges, end_edges)]).
-        A ribbon stops exactly at a bridge's abutments (the deck carries the road there) and at the edge of
-        the carriageway of a road laid before it (a junction: the main road's ribbon is the surface there).
+        """The stretches of a paved road that get a ribbon:
+        (arc, [(s_start, s_end, start_edges, end_edges, start_kind, end_kind)]).
+        A ribbon stops exactly at a bridge's abutments (the deck carries the road there: kind "bridge") and
+        just inside the edge of the carriageway of a road laid before it ("road": the main road's ribbon is
+        the surface there); everywhere else it ends on the ground ("ground").
         *_edges = (s_left, s_right) when that end is cut along the other road's edge - each side of the ribbon
         then ends where it meets that edge, so an oblique junction closes without a wedge - else None."""
-        samples = p["samples"]
         hw = p["width"] / 2.0
-        xs, ys = [t[0] for t in samples], [t[1] for t in samples]
-        arc = np.concatenate([[0.0], np.cumsum([math.hypot(samples[i][0] - samples[i - 1][0],
-                                                           samples[i][1] - samples[i - 1][1])
-                                                for i in range(1, len(samples))])])
-        total = float(arc[-1])
+        xs, ys, arc = self.ribbon_line(p)
+        first, total = float(arc[0]), float(arc[-1])
+        last = len(xs) - 1
 
         def point(s_, side):
             x, y = float(np.interp(s_, arc, xs)), float(np.interp(s_, arc, ys))
-            i = int(min(max(np.searchsorted(arc, s_), 1), len(samples) - 1))
-            j0, j1 = max(i - 2, 0), min(i + 1, len(samples) - 1)
+            i = int(min(max(np.searchsorted(arc, s_), 1), last))
+            j0, j1 = max(i - 2, 0), min(i + 1, last)
             tx, ty = xs[j1] - xs[j0], ys[j1] - ys[j0]
             d = math.hypot(tx, ty) or 1.0
             return x - ty / d * hw * side, y + tx / d * hw * side
 
-        cuts = [(b["s0"], b["s1"], None, None) for b in self.meta.get("bridges", []) if b["path"] == p["id"]]
-        order = [q["id"] for q in self.meta["paths"]]
-        for q in self.meta["paths"]:
-            if q["surface"] != "paved" or q["id"] == "breakwater" or order.index(q["id"]) >= order.index(p["id"]):
-                continue
-            line = np.asarray(q["samples"], np.float64)[:, :2]
-            seg_a, seg_d = line[:-1], line[1:] - line[:-1]
-            seg_l2 = np.maximum((seg_d * seg_d).sum(1), 1e-12)
-            hwq = q["width"] / 2.0
+        cuts = [(b["s0"], b["s1"], None, None, "bridge") for b in self.meta.get("bridges", []) if b["path"] == p["id"]]
+        for q in self.earlier_roads(p):
+            reach = self.road_reach(q)
 
             def inside(s_, side):
-                x, y = point(s_, side)
-                t = np.clip(((x - seg_a[:, 0]) * seg_d[:, 0] + (y - seg_a[:, 1]) * seg_d[:, 1]) / seg_l2, 0.0, 1.0)
-                return float(np.hypot(seg_a[:, 0] + t * seg_d[:, 0] - x, seg_a[:, 1] + t * seg_d[:, 1] - y).min()) < hwq
+                return reach(*point(s_, side)) < 0.0
 
-            for end, step in ((0.0, 1.0), (total, -1.0)):
+            for end, step in ((first, 1.0), (total, -1.0)):
                 if not inside(end, 0.0):
                     continue
                 exits = []
                 for side in (1.0, -1.0):         # left edge, right edge
                     s_out = end
-                    while inside(s_out, side) and abs(s_out - end) < min(80.0, total):
+                    while inside(s_out, side) and abs(s_out - end) < min(80.0, total - first):
                         s_out += step * 0.5
                     lo, hi = s_out - step * 0.5, s_out
                     for _ in range(28):
                         mid = 0.5 * (lo + hi)
                         lo, hi = (mid, hi) if inside(mid, side) else (lo, mid)
-                    exits.append(min(max(hi, 0.0), total))
+                    exits.append(min(max(hi, first), total))
                 if step > 0:
-                    cuts.append((0.0, max(exits), None, tuple(exits)))        # the next run starts on these
+                    cuts.append((first, max(exits), None, tuple(exits), "road"))      # the next run starts on these
                 else:
-                    cuts.append((min(exits), total, tuple(exits), None))      # the previous run ends on these
-        runs, s, start_edges = [], 0.0, None
-        for c0, c1, end_edges, next_edges in sorted(cuts, key=lambda c: (c[0], c[1])):
+                    cuts.append((min(exits), total, tuple(exits), None, "road"))      # the previous run ends on these
+        runs, s, start_edges, start_kind = [], first, None, "ground"
+        for c0, c1, end_edges, next_edges, kind in sorted(cuts, key=lambda c: (c[0], c[1])):
             if c0 - s > 0.5:
-                runs.append((s, c0, start_edges, end_edges))
+                runs.append((s, c0, start_edges, end_edges, start_kind, kind))
             if c1 >= s:
-                s, start_edges = c1, next_edges
+                s, start_edges, start_kind = c1, next_edges, kind
         if total - s > 0.5:
-            runs.append((s, total, start_edges, None))
+            runs.append((s, total, start_edges, None, start_kind, "ground"))
         return arc, runs
 
-    RIBBON_COLUMNS = 5       # vertices across a ribbon: it is draped on the ground, not laid flat over it
-
     def ribbon_sections(self, p):
-        """Cross-sections of a road's ribbon, per run: [[(s, [xyz across, left -> right]), ...], ...].
+        """Cross-sections of a road's ribbon, per run: [[(s, [(x, y, z, paving) across, left -> right]), ...]].
 
-        The paving is draped: every vertex stands RIBBON_LIFT above the highest terrain within 30 cm
-        of it, so the ribbon follows the cross-fall of a junction or a pad's apron instead of bridging it
-        (a level cross-section floated up to half a metre there). Sections every 2 m plus one exactly at
-        each end of a run; a skewed end has each edge where it meets the other road's edge."""
-        samples = p["samples"]
+        The paving is draped: every vertex stands above the highest terrain within 30 cm of it, so the ribbon
+        follows the cross-fall of a junction or a pad's apron instead of bridging it. Seven vertices across:
+        the two outer ones are the rim - paving coverage 0, and a hair under the ground - so over the outer
+        RIBBON_RIM the stone thins out into the verge the terrain paints there and the surface dips into the
+        ground while it is still drawn as that ground: the ribbon has no visible edge. The rest is fully
+        paved, RIBBON_LIFT up. An end on the ground closes with the same rim; an
+        end at a bridge deck or on another road stays paved and level with it. Sections every 2 m plus one
+        exactly at each end of a run; a skewed end has each edge where it meets the other road's edge."""
         hw = p["width"] / 2.0
         arc, runs = self.road_runs(p)
-        xs, ys = [t[0] for t in samples], [t[1] for t in samples]
-        cols = self.RIBBON_COLUMNS
+        xs, ys, _arc = self.ribbon_line(p)
+        last = len(xs) - 1
+        inner = max(hw - self.RIBBON_RIM, hw * 0.6) / hw
+        across = (-1.0, -inner, -0.5 * inner, 0.0, 0.5 * inner, inner, 1.0)     # left edge (f = -1) -> right edge
 
         def frame(s_):
             x, y = float(np.interp(s_, arc, xs)), float(np.interp(s_, arc, ys))
-            i = int(min(max(np.searchsorted(arc, s_), 1), len(samples) - 1))
-            j0, j1 = max(i - 2, 0), min(i + 1, len(samples) - 1)      # tangent over a few samples (smooth edges)
+            i = int(min(max(np.searchsorted(arc, s_), 1), last))
+            j0, j1 = max(i - 2, 0), min(i + 1, last)                  # tangent over a few samples (smooth edges)
             tx, ty = xs[j1] - xs[j0], ys[j1] - ys[j0]
             d = math.hypot(tx, ty) or 1.0
             return x, y, -ty / d, tx / d
 
         def top(x, y):
             return max(self.ground(x + dx, y + dy) for dx, dy in
-                       ((0.0, 0.0), (0.3, 0.0), (-0.3, 0.0), (0.0, 0.3), (0.0, -0.3))) + self.RIBBON_LIFT
+                       ((0.0, 0.0), (0.3, 0.0), (-0.3, 0.0), (0.0, 0.3), (0.0, -0.3)))
 
-        def section(s_, edges=None):
+        def section(s_, edges=None, end="run"):
             if edges is None:
                 x, y, nx, ny = frame(s_)
                 left, right = (x + nx * hw, y + ny * hw), (x - nx * hw, y - ny * hw)
@@ -655,29 +713,62 @@ class Layout:
                 xr, yr, nxr, nyr = frame(edges[1])
                 left, right = (xl + nxl * hw, yl + nyl * hw), (xr - nxr * hw, yr - nyr * hw)
             row = []
-            for c in range(cols):
-                f = c / (cols - 1)
-                x, y = left[0] + (right[0] - left[0]) * f, left[1] + (right[1] - left[1]) * f
-                row.append((x, y, top(x, y)))
+            for c, f in enumerate(across):
+                t = (f + 1.0) / 2.0
+                x, y = left[0] + (right[0] - left[0]) * t, left[1] + (right[1] - left[1]) * t
+                # on the ground an end is all rim; at a bridge the paving meets the deck over its full width
+                rim = end == "ground" or (c in (0, len(across) - 1) and end != "bridge")
+                z = self.ground(x, y) + self.RIBBON_RIM_LIFT if rim else top(x, y) + self.RIBBON_LIFT
+                row.append((x, y, z, 0.0 if rim else 1.0))
             return row
 
+        def edge_error(ra, rb):
+            """How far the two outer edges between sections ra and rb leave the ground they should lie in."""
+            worst = 0.0
+            for c in (0, len(across) - 1):
+                if ra[c][3] >= 1.0 or rb[c][3] >= 1.0:
+                    continue
+                for t in (0.25, 0.5, 0.75):
+                    x, y, z = (ra[c][k] + (rb[c][k] - ra[c][k]) * t for k in range(3))
+                    worst = max(worst, abs(z - self.ground(x, y) - self.RIBBON_RIM_LIFT))
+            return worst
+
         out = []
-        for s0, s1, e0, e1 in runs:
+        for s0, s1, e0, e1, k0, k1 in runs:
             n = max(1, int(math.ceil((s1 - s0) / 2.0)))
-            run = [(s0 + (s1 - s0) * k / n, section(s0 + (s1 - s0) * k / n)) for k in range(n + 1)]
-            if e0 is not None:
-                run[0] = (s0, section(s0, e0))
-            if e1 is not None:
-                run[-1] = (s1, section(s1, e1))
+            stations = [s0 + (s1 - s0) * k / n for k in range(n + 1)]
+            # an end on the ground: the rim closes round it (one more section just inside)
+            if k0 == "ground" and s1 - s0 > 2.0 * self.RIBBON_RIM + 1.0:
+                stations.insert(1, s0 + self.RIBBON_RIM + 0.15)
+            if k1 == "ground" and s1 - s0 > 2.0 * self.RIBBON_RIM + 1.0:
+                stations.insert(len(stations) - 1, s1 - self.RIBBON_RIM - 0.15)
+            run = [(s_, section(s_)) for s_ in stations]
+            run[0] = (s0, section(s0, e0, end=k0))
+            run[-1] = (s1, section(s1, e1, end=k1))
+            # the edge has to follow the ground between two sections as well (it lies 1.5 cm under it): where
+            # the ground bends away from the straight edge - a crease of the terrain mesh, the foot of a pad's
+            # apron - more sections go in
+            for _ in range(3):
+                fine, changed = [run[0]], False
+                for (sa, ra), (sb, rb) in zip(run, run[1:]):
+                    if sb - sa > 0.6 and edge_error(ra, rb) > 0.007:
+                        fine.append((0.5 * (sa + sb), section(0.5 * (sa + sb))))
+                        changed = True
+                    fine.append((sb, rb))
+                run = fine
+                if not changed:
+                    break
             out.append(run)
         return out
 
     def road_ribbon(self, p):
-        """Paving of one road: the draped strip of ribbon_sections with kerb faces down into the ground along
-        both edges and across every end."""
+        """Paving of one road: the draped strip of ribbon_sections in the road material (palette kind "road":
+        the terrain's surface + its Paving layer by vertex colour), with skirts down into the ground along
+        both edges and across every end (drawn as ground: coverage 0)."""
         from .geo import MeshBuilder
         mb = MeshBuilder(f"Road_{p['id']}")
         sk = self.RIBBON_SKIRT
+        mat = "M_RoadPaving"
 
         def down(q):
             return (q[0], q[1], q[2] - sk)
@@ -689,16 +780,18 @@ class Layout:
             for r0, r1 in zip(rows, rows[1:]):
                 for c in range(len(r0) - 1):
                     # left -> right across, so (right0, right1, left1, left0) faces up
-                    mb.quad(r0[c + 1], r1[c + 1], r1[c], r0[c], "M_Paving", smooth=True)
-                mb.quad(down(r1[0]), down(r0[0]), r0[0], r1[0], "M_Concrete")              # left kerb
-                mb.quad(down(r0[-1]), down(r1[-1]), r1[-1], r0[-1], "M_Concrete")          # right kerb
-            for row, flip in ((rows[0], False), (rows[-1], True)):                         # end faces
+                    quad = (r0[c + 1], r1[c + 1], r1[c], r0[c])
+                    mb.cquad([q[:3] for q in quad], [q[3] for q in quad], mat, smooth=True)
+                mb.cquad((down(r1[0]), down(r0[0]), r0[0][:3], r1[0][:3]), (0.0,) * 4, mat)            # left skirt
+                mb.cquad((down(r0[-1]), down(r1[-1]), r1[-1][:3], r0[-1][:3]), (0.0,) * 4, mat)        # right skirt
+            for row, flip in ((rows[0], False), (rows[-1], True)):                                     # end faces
                 for c in range(len(row) - 1):
                     a_, b_ = row[c], row[c + 1]
+                    cols = (0.0, 0.0, b_[3], a_[3])
                     if flip:
-                        mb.quad(down(b_), down(a_), a_, b_, "M_Concrete")
+                        mb.cquad((down(b_), down(a_), a_[:3], b_[:3]), (0.0, 0.0, a_[3], b_[3]), mat)
                     else:
-                        mb.quad(down(a_), down(b_), b_, a_, "M_Concrete")
+                        mb.cquad((down(a_), down(b_), b_[:3], a_[:3]), cols, mat)
         return mb
 
     # ------------------------------------------------------------------ bridges

@@ -99,6 +99,12 @@ def periodic_spline(points):
     return f
 
 
+def road_has_ribbon(p):
+    """Paved roads get a ribbon mesh (layout.road_ribbon) that lays their stone; the breakwater is a structure
+    of its own."""
+    return p["surface"] == "paved" and p["id"] != "breakwater"
+
+
 def polyline_distance(X, Y, pts, max_dist):
     """Distance from grid points to a polyline + arc-length parameter (metres). Returns (dist, s)."""
     dist = np.full(X.shape, np.inf, np.float32)
@@ -899,6 +905,7 @@ class Terrain:
         lake_q = ndimage.zoom(self.lake_q, z, order=1)[:res, :res]
         n1 = fbm(res, 60.0, 4, seed=C.SEED + 30)
         n2 = fbm(res, 15.0, 3, seed=C.SEED + 31)
+        n3 = fbm(res, 4.0, 3, seed=C.SEED + 32)
 
         beach_w = lerp(70.0, 6.0, cf)
         sand = (1.0 - smoothstep(beach_w * 0.6, beach_w * 1.2 + n1 * 10, d_in)) * (1.0 - smoothstep(4.0, 9.0, H))
@@ -919,6 +926,8 @@ class Terrain:
         # paths at full resolution
         paved = np.zeros_like(H)
         dirt = np.zeros_like(H)
+        road = np.zeros_like(H)                  # stone a road ribbon lays (colour map only, see below)
+        cores = {}
         for p in self.paths:
             hw = p["width"] / 2.0
             line = [tuple(q[:2]) for q in p["samples"][::2]] + [tuple(p["samples"][-1][:2])]
@@ -927,13 +936,31 @@ class Terrain:
             edge_noise = n2 * 0.7
             core = 1.0 - smoothstep(hw - 0.4 + edge_noise, hw + 0.9 + edge_noise, dist)
             wear = (1.0 - smoothstep(hw, hw + 3.5, dist)) * 0.5
-            if p["surface"] == "paved":
+            cores[p["id"]] = core
+            if road_has_ribbon(p):
+                # The stone of these roads is laid by their ribbon mesh (layout.road_ribbon: the terrain's own
+                # Paving layer by vertex colour, with an edge no splat texel could hold). The ground carries
+                # the road's bed instead - bare earth under the ribbon and a verge beside it - which is what
+                # the ribbon's rim breaks up into and what the grass then grows over: stone -> earth -> grass
+                # without a line anywhere.
+                ragged = edge_noise + n3 * 0.45          # here the verge is wide, there grass reaches the stones
+                bed = 1.0 - smoothstep(hw - 0.1 + ragged, hw + 1.5 + ragged, dist)
+                dirt = np.maximum(dirt, np.maximum(bed * 0.92, wear * 0.5))
+                road = np.maximum(road, 1.0 - smoothstep(hw - 0.75, hw + 0.75, dist))
+            elif p["surface"] == "paved":
                 paved = np.maximum(paved, core)
                 dirt = np.maximum(dirt, wear * 0.5)
             else:
                 dirt = np.maximum(dirt, np.maximum(core, wear))
+        # a stone bridge on an earth path: its paving runs out onto the approaches and breaks up there
+        for b in getattr(self, "bridges", []):
+            if b.get("kind") != "stone" or b.get("surface") == "paved" or b["path"] not in cores:
+                continue
+            for ex, ey in (b["a"][:2], b["b"][:2]):
+                paved = np.maximum(paved, cores[b["path"]] * (1.0 - smoothstep(1.5, 7.0, np.hypot(X - ex, Y - ey))))
         dirt = np.maximum(dirt, river_dirt)
         paved = paved * (1.0 - r_wet)            # a road ends at the water; the bridge carries it over
+        self.road_cover = np.clip(road * (1.0 - r_wet), 0, 1)
         # pads
         specs = pad_specs()
         for key, spec in specs.items():
@@ -983,6 +1010,11 @@ class Terrain:
         for name, w in layers.items():
             c = np.array(tints[name], np.float32)
             col += w[..., None] * c
+        # the roads whose stone is a ribbon mesh: on the map (and in the far-distance tint, which the ribbons
+        # share with the ground) they are paved like any other
+        cover = getattr(self, "road_cover", None)
+        if cover is not None:
+            col += (cover * (1.0 - layers["Paving"]))[..., None] * (np.array(tints["Paving"], np.float32) - col)
         col *= (1.0 + rng_n[..., None] * 0.06)
         return np.clip(col, 0, 1)
 

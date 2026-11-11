@@ -26,7 +26,8 @@ UI = {"T_IslandMap"}
 def texture_kind(name):
     if name.endswith("_N") or name in NORMALS:
         return "normal"
-    if name in MASKS or name.endswith("_ORM") or name.endswith("_R") or name == "T_DefaultMask":
+    if name in MASKS or name.endswith("_ORM") or name.endswith("_R") or name == "T_DefaultMask" \
+            or (name.startswith("T_Terrain_") and name.endswith("_H")):      # layer relief (height blend)
         return "masks"
     if name.endswith("_D") or name in LINEAR:
         return "linear"
@@ -145,6 +146,12 @@ def _fbx_options(nanite):
         sm.set_editor_property("build_nanite", bool(nanite))
     except Exception:  # noqa: BLE001
         pass
+    try:
+        # road ribbons carry their paving coverage as vertex colour (M_DA_Road); every other mesh has none
+        # and keeps the default white
+        sm.set_editor_property("vertex_color_import_option", unreal.VertexColorImportOption.REPLACE)
+    except Exception as e:  # noqa: BLE001 - without it the roads are simply paved to their very edge
+        C.warn(f"vertex colour import not enabled: {e}")
     return ui
 
 

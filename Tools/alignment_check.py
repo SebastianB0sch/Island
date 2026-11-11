@@ -35,6 +35,7 @@ import bpy  # noqa: E402,F401
 from mathutils import Vector  # noqa: E402
 
 from dai import blend, layout, placement  # noqa: E402
+from dai import terrain as T  # noqa: E402
 from dai.assets import props as P  # noqa: E402
 
 TOL_FLOAT = 0.20
@@ -65,6 +66,9 @@ def world_bounds(aset, xf):
 # road ribbons: the paving lies Layout.RIBBON_LIFT above the ground; these are the limits of "lies on it"
 RIBBON_MIN = 0.015       # less: the terrain shows through the paving
 RIBBON_MAX = 0.20        # more: the paving visibly floats (the kerb skirt hides it, a step at the end does not)
+RIM_MIN = -0.04          # the rim strip is drawn as the ground itself (paving coverage 0 at its edge) and its
+RIM_EDGE = 0.0           # edge lies just under the ground (Layout.RIBBON_RIM_LIFT): it must not sink deeper than
+                         # RIM_MIN, and its edge must nowhere stand more than RIM_EDGE out of the ground
 JOINT_STEP = 0.03        # height step allowed where a ribbon meets a deck / another ribbon / the ground
 BRIDGE_SIDE = 0.05       # sideways distance allowed between the road's centre line and the deck's
 
@@ -79,26 +83,37 @@ def check_roads(lay):
         decks[(b["path"], round(b["s0"], 3))] = b["a"][2] + bi["lift"]
         decks[(b["path"], round(b["s1"], 3))] = b["b"][2] + bi["lift"]
     paths = {p["id"]: p for p in lay.meta["paths"]}
-    tops = {p["id"]: lay.ribbon_sections(p) for p in lay.meta["paths"]
-            if p["surface"] == "paved" and p["id"] != "breakwater"}
+    tops = {p["id"]: lay.ribbon_sections(p) for p in lay.meta["paths"] if T.road_has_ribbon(p)}
 
     def ribbon_height(pid, x, y):
-        """(distance to the nearest ribbon vertex of `pid`, its height)."""
+        """(distance to the nearest fully paved ribbon vertex of `pid`, its height)."""
         best = None
         for run in tops.get(pid, []):
             for _s, row in run:
                 for q in row:
                     d = math.hypot(q[0] - x, q[1] - y)
-                    if best is None or d < best[0]:
+                    if q[3] >= 1.0 and (best is None or d < best[0]):
                         best = (d, q[2])
         return best
 
     for pid, runs in tops.items():
         lo, hi, n = 1e9, -1e9, 0
-        worst_lo = worst_hi = None
+        rim_lo, edge_hi = 1e9, -1e9
+        worst_lo = worst_hi = worst_rim = worst_edge = None
         for run in runs:
             for (s0, r0), (s1, r1) in zip(run, run[1:]):
+                for c in (0, len(r0) - 1):
+                    # along both outer edges (rim on the ground: not where the paving meets a bridge deck)
+                    if r0[c][3] >= 1.0 or r1[c][3] >= 1.0:
+                        continue
+                    for t in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0):
+                        q = [r0[c][k] * (1 - t) + r1[c][k] * t for k in range(3)]
+                        cl = q[2] - lay.ground(q[0], q[1])
+                        if cl > edge_hi:
+                            edge_hi, worst_edge = cl, (s0, q[0], q[1])
                 for c in range(len(r0) - 1):
+                    # a quad with a corner of coverage 0 belongs to the rim, where the paving thins out
+                    rim = min(r0[c][3], r0[c + 1][3], r1[c][3], r1[c + 1][3]) < 1.0
                     # bilinear over the ribbon quad, 4 x 4 samples
                     for t in (0.0, 0.25, 0.5, 0.75):
                         for f in (0.0, 0.25, 0.5, 0.75):
@@ -106,17 +121,23 @@ def check_roads(lay):
                                  + (r1[c][k] * (1 - f) + r1[c + 1][k] * f) * t for k in range(3)]
                             cl = q[2] - lay.ground(q[0], q[1])
                             n += 1
-                            if cl < lo:
+                            if rim and cl < rim_lo:
+                                rim_lo, worst_rim = cl, (s0, q[0], q[1])
+                            if not rim and cl < lo:
                                 lo, worst_lo = cl, (s0, q[0], q[1])
                             if cl > hi:
                                 hi, worst_hi = cl, (s0, q[0], q[1])
         bad = []
         if lo < RIBBON_MIN:
             bad.append(f"ground within {lo * 100:+.1f} cm of the paving at s={worst_lo[0]:.0f} ({worst_lo[1]:.1f}, {worst_lo[2]:.1f})")
+        if rim_lo < RIM_MIN:
+            bad.append(f"rim {-rim_lo * 100:.1f} cm in the ground at s={worst_rim[0]:.0f} ({worst_rim[1]:.1f}, {worst_rim[2]:.1f})")
+        if edge_hi > RIM_EDGE:
+            bad.append(f"edge {edge_hi * 100:.1f} cm out of the ground at s={worst_edge[0]:.0f} ({worst_edge[1]:.1f}, {worst_edge[2]:.1f})")
         if hi > RIBBON_MAX:
             bad.append(f"paving {hi * 100:.0f} cm over the ground at s={worst_hi[0]:.0f} ({worst_hi[1]:.1f}, {worst_hi[2]:.1f})")
-        print(f"  {pid:14s} {len(runs)} run(s), {n:6d} samples: clearance {lo * 100:5.1f} .. {hi * 100:5.1f} cm  "
-              f"{'OK' if not bad else 'CHECK'}")
+        print(f"  {pid:14s} {len(runs)} run(s), {n:6d} samples: clearance {lo * 100:5.1f} .. {hi * 100:5.1f} cm, "
+              f"rim from {rim_lo * 100:4.1f} cm, edge {edge_hi * 100:+4.1f} cm  {'OK' if not bad else 'CHECK'}")
         for line in bad:
             print(f"       - {line}")
             failures += 1
@@ -137,14 +158,16 @@ def check_roads(lay):
                             continue
                         hit = ribbon_height(qid, mid[0], mid[1])
                         if hit and hit[0] < 2.5:
-                            # every vertex of the end against the main road's paving beside it
-                            step = max(abs(q[2] - ribbon_height(qid, q[0], q[1])[1]) for q in row)
+                            # every paved vertex of the end against the main road's paving beside it
+                            step = max(abs(q[2] - ribbon_height(qid, q[0], q[1])[1]) for q in row if q[3] >= 1.0)
                             meets = f"road {qid}"
                             break
                 if meets is None:
-                    # a pad, a quay or open ground: the paving ends a lift above whatever lies there
+                    # a pad, a quay or open ground: the paving thins out into whatever lies there, and the
+                    # whole end is rim - drawn as that ground and down on it
                     meets = "ground"
-                    step = max(abs(q[2] - lay.ground(q[0], q[1]) - lay.RIBBON_LIFT) for q in row)
+                    step = max(abs(q[2] - lay.ground(q[0], q[1]) - lay.RIBBON_RIM_LIFT) for q in row)
+                    step = max(step, max(q[3] for q in row))       # (any paving left at the end counts as a step)
                 ok = step <= JOINT_STEP + (0.03 if meets.startswith("road") else 0.0)
                 print(f"  {pid:14s} {where:5s} s={s_:7.1f} meets {meets:22s} step {step * 100:4.1f} cm  "
                       f"{'OK' if ok else 'CHECK'}")

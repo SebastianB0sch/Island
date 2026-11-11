@@ -121,6 +121,7 @@ _TEX_PROPS = ("texture", "sampler_type", "sampler_source", "mip_value_mode", "co
 EXPRESSIONS = {
     "MaterialExpressionWorldPosition": ((), ("XYZ",), ("world_position_shader_offset",)),
     "MaterialExpressionVertexNormalWS": ((), ("",), ()),
+    "MaterialExpressionVertexColor": ((), ("", "R", "G", "B", "A"), ()),
     "MaterialExpressionTime": ((), ("",), ("ignore_pause", "override_period", "period")),
     "MaterialExpressionPixelDepth": ((), ("",), ()),
     "MaterialExpressionTextureCoordinate": ((), ("",), ("coordinate_index", "u_tiling", "v_tiling")),
@@ -143,6 +144,7 @@ EXPRESSIONS = {
     "MaterialExpressionMax": (("A", "B"), ("",), ("const_a", "const_b")),
     "MaterialExpressionMin": (("A", "B"), ("",), ("const_a", "const_b")),
     "MaterialExpressionDotProduct": (("A", "B"), ("",), ()),
+    "MaterialExpressionCrossProduct": (("A", "B"), ("",), ()),
     "MaterialExpressionLinearInterpolate": (("A", "B", "Alpha"), ("",), ("const_a", "const_b", "const_alpha")),
     "MaterialExpressionSine": (("Input",), ("",), ("period",)),
     "MaterialExpressionCosine": (("Input",), ("",), ("period",)),
@@ -161,7 +163,8 @@ EXPRESSIONS = {
 ALL_INPUTS_REQUIRED = {
     "MaterialExpressionComponentMask", "MaterialExpressionAppendVector", "MaterialExpressionMultiply",
     "MaterialExpressionAdd", "MaterialExpressionSubtract", "MaterialExpressionDivide", "MaterialExpressionMax",
-    "MaterialExpressionMin", "MaterialExpressionDotProduct", "MaterialExpressionLinearInterpolate",
+    "MaterialExpressionMin", "MaterialExpressionDotProduct", "MaterialExpressionCrossProduct",
+    "MaterialExpressionLinearInterpolate",
     "MaterialExpressionSine", "MaterialExpressionCosine", "MaterialExpressionSaturate", "MaterialExpressionOneMinus",
     "MaterialExpressionAbs", "MaterialExpressionFrac", "MaterialExpressionNormalize",
 }
@@ -417,7 +420,8 @@ def _zip(fn, a, b):
     return tuple(fn(x, y) for x, y in zip(a, b))
 
 
-def evaluate(asset, prop, world_position=(0.0, 0.0, 0.0), time=0.0, textures=None, uvs=None, pixel_depth=1000.0):
+def evaluate(asset, prop, world_position=(0.0, 0.0, 0.0), time=0.0, textures=None, uvs=None, pixel_depth=1000.0,
+             vertex_color=(1.0, 1.0, 1.0, 1.0), vertex_normal=(0.0, 0.0, 1.0)):
     """Value (tuple of floats) the graph feeds into material property `prop`.
 
     asset: a Material, or a MaterialInstanceConstant (its parameter overrides are applied).
@@ -452,6 +456,13 @@ def evaluate(asset, prop, world_position=(0.0, 0.0, 0.0), time=0.0, textures=Non
         cls = type(node).__name__[len("MaterialExpression"):]
         if cls == "WorldPosition":
             return tuple(float(c) for c in world_position)
+        if cls == "VertexColor":
+            return channel(tuple(float(c) for c in vertex_color), out)
+        if cls == "VertexNormalWS":
+            return tuple(float(c) for c in vertex_normal)
+        if cls == "CrossProduct":
+            a, b = pin(node, "A"), pin(node, "B")
+            return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
         if cls == "Time":
             return (float(time),)
         if cls == "PixelDepth":

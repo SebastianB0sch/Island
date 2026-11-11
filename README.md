@@ -32,6 +32,14 @@ gym; the Forest Creek (right) reaches the east coast.*
 *(Preview renders show geometry and placement; the water itself - waves, foam, caustics - is drawn by the Unreal
 materials, see [Docs/WATER.md](Docs/WATER.md).)*
 
+| | |
+|---|---|
+| ![Road edge](Docs/renders/road_edge.jpg) | ![Road end](Docs/renders/road_end.jpg) |
+| A road's paving breaks up into its earth verge, and the verge into the grass | Where a road ends, the stones thin out into the ground |
+
+*Ground materials never meet along a line: the terrain's layers are blended by their own relief, and roads and
+bridge decks are drawn with the terrain's material - see [Docs/GROUND_MATERIALS.md](Docs/GROUND_MATERIALS.md).*
+
 ![Duel board](Docs/renders/duel.png)
 
 *The ported duel board: hand, field, card detail, piles, duel log and AI opponent. The deck picker and

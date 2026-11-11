@@ -151,6 +151,26 @@
   "strength": 1.0,
   "opacity": 1.0
  },
+ "M_RoadPaving": {
+  "kind": "road",
+  "color": [
+   0.62,
+   0.6,
+   0.56
+  ],
+  "rough": 0.85,
+  "detail": null,
+  "paving": 1.0,
+  "color_linear": [
+   0.34239163959260344,
+   0.31854677812509186,
+   0.27383841647314605
+  ],
+  "metallic": 0.0,
+  "tiling": 1.0,
+  "strength": 1.0,
+  "opacity": 1.0
+ },
  "M_Glass": {
   "kind": "opaque",
   "color": [

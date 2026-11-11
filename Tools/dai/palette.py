@@ -16,7 +16,8 @@ kind:
   lava      - M_DA_Lava (panning emissive)
   hologram  - M_DA_Hologram (additive, pulsing)
   smoke     - M_DA_Smoke (translucent, per-instance fade)
-  terrain   - M_DA_Terrain (splat-mapped)
+  terrain   - M_DA_Terrain (splat-mapped, height-blended layers)
+  road      - M_DA_Road (the terrain's surface by world position + its Paving layer by vertex colour R)
   beam      - M_DA_Beam (additive cone)
   waterfall - M_DA_Waterfall (panning translucent water sheet)
   flow      - M_DA_WaterFlow (world-aligned flowing water: fountain sheets, jets, foam; no UVs needed).
@@ -42,6 +43,9 @@ MATERIALS = {
     "M_DarkConcrete":   dict(kind="opaque", color=_c(0.38, 0.38, 0.38), rough=0.95, detail="Concrete", tiling=0.25),
     "M_Paving":         dict(kind="opaque", color=_c(0.78, 0.74, 0.68), rough=0.9, detail="Paving", tiling=0.5),
     "M_Asphalt":        dict(kind="opaque", color=_c(0.22, 0.22, 0.23), rough=0.9, detail="Concrete", tiling=0.25),
+    # road ribbons and paved bridge decks: the terrain's own surface with its Paving layer laid on by vertex
+    # colour (M_DA_Road), so paving, verge and ground are one continuous material
+    "M_RoadPaving":     dict(kind="road", color=_c(0.62, 0.60, 0.56), rough=0.85, detail=None, paving=1.0),
     "M_Glass":          dict(kind="opaque", color=_c(0.10, 0.17, 0.27), rough=0.05, metallic=0.6, detail=None),
     "M_GlassClear":     dict(kind="glass", color=_c(0.60, 0.75, 0.85), rough=0.02, opacity=0.25, detail=None),
     "M_WindowFrame":    dict(kind="opaque", color=_c(0.95, 0.95, 0.95), rough=0.6, detail=None),

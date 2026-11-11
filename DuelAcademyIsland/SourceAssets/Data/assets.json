@@ -2364,7 +2364,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "c4080b8db7ac6ac1"
+  "sig": "f126cccc105c216f"
  },
  {
   "file": "Meshes/Roads/SM_Bridge_ToAbandoned_NoCol.fbx",
@@ -2373,7 +2373,7 @@
   "collision": "none",
   "nanite": false,
   "category": "location",
-  "sig": "36c5931085a2b769"
+  "sig": "ab4e20a75979e510"
  },
  {
   "file": "Meshes/Roads/SM_Bridge_ToGym.fbx",
@@ -2382,7 +2382,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "64105ab8b8b614c6"
+  "sig": "795bf7e25155bbf2"
  },
  {
   "file": "Meshes/Roads/SM_Bridge_ToGym_NoCol.fbx",
@@ -2391,7 +2391,7 @@
   "collision": "none",
   "nanite": false,
   "category": "location",
-  "sig": "4198a47e662f7e2c"
+  "sig": "bfcce1f4a1fd6b9d"
  },
  {
   "file": "Meshes/Roads/SM_Bridge_ToSprings.fbx",
@@ -2454,7 +2454,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "fcaf97cb304b9a2c"
+  "sig": "5247c0a96bc62f31"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_ra.fbx",
@@ -2463,7 +2463,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "e4dc4b24e41cb2b9"
+  "sig": "5280d235c295d5e9"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_obelisk.fbx",
@@ -2472,7 +2472,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "45230d52d4d34a4e"
+  "sig": "3b1682ab4955d23d"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_girls.fbx",
@@ -2481,7 +2481,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "a0daae25d9514d2f"
+  "sig": "0ecb561b2f363377"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_gym.fbx",
@@ -2490,7 +2490,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "63034d9d675291a4"
+  "sig": "d962afd33f69dcdf"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_heliport.fbx",
@@ -2499,7 +2499,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "099bac232b812729"
+  "sig": "7b35b6eb7d84a2f6"
  },
  {
   "file": "Meshes/Roads/SM_Road_pond_lane.fbx",
@@ -2508,7 +2508,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "9620119a33409211"
+  "sig": "3b06bd5106539c47"
  },
  {
   "file": "Meshes/Water/SM_Waterside_Lilies_NoCol.fbx",

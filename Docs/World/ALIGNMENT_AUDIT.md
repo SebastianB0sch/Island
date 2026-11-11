@@ -24,7 +24,7 @@ terrain mesh as it is drawn**, and everything that lies on it is checked against
 | Terrain mesh | exported as explicit triangles; each quad is split along the diagonal joining the two corners closer in height (`terrain.mesh_diagonals`), so creases follow road edges and banks |
 | Ground lookups | `terrain.MeshField` reproduces those triangles exactly; the layout stage and every location module sample it (`terrain.load_cached`) |
 | Road beds | level across the ribbon plus one mesh cell (`ROAD_FLAT_EXTRA`); a road is fixed to pad height while any part of its bed is on a pad; the carriageway of an earlier road is locked, later roads join it at its edge |
-| Ribbons | draped: 5 vertices across, each 6 cm above the terrain under it; cut exactly at bridge abutments and along the edge of the road they join (skewed ends, no wedge); closed ends |
+| Ribbons | draped: 7 vertices across, the paved ones 6 cm above the terrain under them, the rim (outer 45 cm, where the paving thins out into the verge - see [GROUND_MATERIALS.md](../GROUND_MATERIALS.md)) dipping 1.5 cm under the ground at its edge, with extra sections wherever the ground bends between two of them; cut exactly at bridge abutments and just inside the paving of the road they join (skewed ends, no wedge); closed ends |
 | Bridges | the road is straightened over each crossing; the deck runs one mesh cell past the top of the bank on both sides, further on the long side of a skew crossing; the profile is a straight line under the deck and its run-outs, so the change of grade is not at the joint; banks have no noise near a crossing |
 | Exports | every location mesh carries a geometry signature in `assets.json`; with `DAI_EXPORT_ONLY` set, a mesh whose geometry changed is still written |
 | Scatter | plants and stones that come up under a roof are removed |
@@ -35,7 +35,8 @@ terrain mesh as it is drawn**, and everything that lies on it is checked against
 
 | Check | Limit | Result |
 |---|---|---|
-| paving above the terrain under every ribbon | 1.5 - 20 cm | 3.9 - 12.9 cm on all 7 paved roads |
+| paving above the terrain under every ribbon | 1.5 - 20 cm | 5.1 - 12.3 cm on all 7 paved roads |
+| the rim strip of every ribbon (drawn as the ground itself) | at most 4 cm into the ground, its edge nowhere out of it | at most 2.2 cm in; the edge 0.3 - 2.2 cm under the ground everywhere |
 | ribbon ends against the deck / road / ground they meet | 3 cm | <= 2.2 cm at all 16 ends |
 | bridge: road centre line vs deck | 5 cm | 0.0 cm (6 bridges) |
 | bridge: deck end vs road, abutments on the ground, clearance, piers to the bed, parapets | - | all pass |
@@ -49,7 +50,7 @@ terrain mesh as it is drawn**, and everything that lies on it is checked against
 | | |
 |---|---|
 | ![Junction](../renders/road_junction.jpg) | ![Bridge joint](../renders/bridge_joint.jpg) |
-| The pond lane leaves the main road along its edge | The gym road runs onto its bridge deck without a step |
+| The pond lane runs into the main road's paving; the earth verge fills the corners | The gym road runs onto its bridge deck without a step or a joint |
 
 Three story anchors moved with the ground: the Ra and Obelisk front gates (their roads were regraded) and
 `lighthouse_view`, which had always hung 6.7 m over the water 12 m off the breakwater and now stands on it.

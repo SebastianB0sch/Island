@@ -68,14 +68,30 @@ TERRAIN_SPLAT = [("Grass", None), ("ForestFloor", ("B", 1)), ("Sand", ("A", 0)),
                  ("Ash", ("B", 0)), ("Rock", ("A", 1)), ("Dirt", ("A", 2)), ("Paving", ("A", 3))]
 
 
-def _terrain_material(mat):
-    """Preview version of M_DA_Terrain: photo layers blended by the splat maps, fading to the baked
-    colour map with camera distance (avoids tiling / moire in the aerial shots)."""
+# (height influence, softness) per layer: materials.LAYER_BLEND / BLEND_NOISE of the Unreal terrain material
+LAYER_BLEND = {"ForestFloor": (0.6, 0.7), "Sand": (0.5, 0.9), "WetSand": (0.4, 1.0), "Ash": (0.5, 0.8),
+               "Rock": (0.7, 0.5), "Dirt": (0.6, 0.6), "Paving": (0.3, 0.35)}
+BLEND_NOISE = 0.5
+
+
+def _terrain_material(mat, road=False):
+    """Preview version of M_DA_Terrain: photo layers chosen by the splat maps and blended by height, fading
+    to the baked colour map with camera distance (avoids tiling / moire in the aerial shots).
+    road=True: M_DA_Road - the same surface looked up by world position, with the Paving layer laid over it
+    by the mesh's vertex colour (road ribbons, paved bridge decks)."""
     nt = mat.node_tree
     bsdf = nt.nodes["Principled BSDF"]
     tex = os.path.join(C.OUT_TEXTURES, "{}")
     info = jsonio.read_json(os.path.join(C.OUT_DATA, "terrain_layers.json"))
-    uv = nt.nodes.new("ShaderNodeUVMap")
+    if road:
+        geo = nt.nodes.new("ShaderNodeNewGeometry")
+        mp = nt.nodes.new("ShaderNodeMapping")
+        mp.inputs["Location"].default_value = (0.5, 0.5, 0.0)
+        mp.inputs["Scale"].default_value = (1.0 / C.WORLD_SIZE, 1.0 / C.WORLD_SIZE, 0.0)
+        nt.links.new(geo.outputs["Position"], mp.inputs["Vector"])
+        uv_out = mp.outputs["Vector"]
+    else:
+        uv_out = nt.nodes.new("ShaderNodeUVMap").outputs["UV"]
 
     def image(name, vector, colour=True, alpha=False):
         n = nt.nodes.new("ShaderNodeTexImage")
@@ -90,7 +106,7 @@ def _terrain_material(mat):
     def scaled(tiles):
         m = nt.nodes.new("ShaderNodeVectorMath")
         m.operation = "SCALE"
-        nt.links.new(uv.outputs["UV"], m.inputs[0])
+        nt.links.new(uv_out, m.inputs[0])
         m.inputs["Scale"].default_value = tiles
         return m.outputs[0]
 
@@ -102,22 +118,63 @@ def _terrain_material(mat):
         nt.links.new(b, m.inputs[7 if kind == "RGBA" else 1])
         return m.outputs[2 if kind == "RGBA" else 0]
 
+    def calc(op, a, b=None, clamp=False):
+        m = nt.nodes.new("ShaderNodeMath")
+        m.operation = op
+        m.use_clamp = clamp
+        for i, v in enumerate((a, b)):
+            if v is None:
+                continue
+            if isinstance(v, (int, float)):
+                m.inputs[i].default_value = v
+            else:
+                nt.links.new(v, m.inputs[i])
+        return m.outputs[0]
+
+    def red(colour):
+        sep = nt.nodes.new("ShaderNodeSeparateColor")
+        nt.links.new(colour, sep.inputs[0])
+        return sep.outputs[0]
+
+    fray = calc("ADD", calc("MULTIPLY", red(image("T_Noise.png", scaled(C.WORLD_SIZE / 7.0), colour=False).outputs["Color"]), 0.6),
+                calc("MULTIPLY", red(image("T_Noise.png", scaled(C.WORLD_SIZE / 2.6), colour=False).outputs["Color"]), 0.4))
+
+    def height_blend(weight, h, below, layer):
+        """materials._height_blend: saturate((2 w - 1 + (h - below) k) / s + 0.5), w frayed by noise."""
+        k, soft = LAYER_BLEND[layer]
+        soft = min(soft, 2.0 * (1.0 - k))
+        bell = calc("MULTIPLY", calc("MULTIPLY", weight, calc("SUBTRACT", 1.0, weight)), 4.0 * BLEND_NOISE)
+        w = calc("ADD", weight, calc("MULTIPLY", calc("SUBTRACT", fray, 0.5), bell), clamp=True)
+        x = calc("ADD", calc("SUBTRACT", calc("MULTIPLY", w, 2.0), 1.0), calc("MULTIPLY", calc("SUBTRACT", h, below), k))
+        return calc("ADD", calc("DIVIDE", x, soft), 0.5, clamp=True)
+
     splat = {}
     for key, fname in (("A", "T_TerrainSplatA.png"), ("B", "T_TerrainSplatB.png")):
-        img = image(fname, uv.outputs["UV"], colour=False, alpha=True)
+        img = image(fname, uv_out, colour=False, alpha=True)
         sep = nt.nodes.new("ShaderNodeSeparateColor")
         nt.links.new(img.outputs["Color"], sep.inputs[0])
         splat[key] = [sep.outputs[0], sep.outputs[1], sep.outputs[2], img.outputs["Alpha"]]
-    color = normal = rough = None
+    color = normal = rough = height = None
+    paving = None
     for layer, ch in TERRAIN_SPLAT:
         vec = scaled(C.WORLD_SIZE / info.get(layer, {}).get("tile_m", 4.0))
         c = image(f"T_Terrain_{layer}_BC.jpg", vec).outputs["Color"]
         n = image(f"T_Terrain_{layer}_N.png", vec, colour=False).outputs["Color"]
         r = image(f"T_Terrain_{layer}_R.png", vec, colour=False).outputs["Color"]
+        h = red(image(f"T_Terrain_{layer}_H.png", vec, colour=False).outputs["Color"])
+        if layer == "Paving":
+            paving = (c, n, r, h)
         if ch is None:
-            color, normal, rough = c, n, r
+            color, normal, rough, height = c, n, r, h
             continue
-        fac = splat[ch[0]][ch[1]]
+        fac = height_blend(splat[ch[0]][ch[1]], h, height, layer)
+        color, normal, rough = mix(color, c, fac), mix(normal, n, fac), mix(rough, r, fac)
+        height = mix(height, h, fac, "FLOAT")
+    if road:
+        c, n, r, h = paving
+        vc = nt.nodes.new("ShaderNodeVertexColor")
+        vc.layer_name = "Col"
+        fac = height_blend(red(vc.outputs["Color"]), h, height, "Paving")
         color, normal, rough = mix(color, c, fac), mix(normal, n, fac), mix(rough, r, fac)
     # far blend to the colour map
     cam = nt.nodes.new("ShaderNodeCameraData")
@@ -126,7 +183,7 @@ def _terrain_material(mat):
     far.inputs["From Max"].default_value = 900.0
     far.inputs["To Max"].default_value = 0.85
     nt.links.new(cam.outputs["View Distance"], far.inputs["Value"])
-    macro = image("T_TerrainColor.png", uv.outputs["UV"]).outputs["Color"]
+    macro = image("T_TerrainColor.png", uv_out).outputs["Color"]
     nt.links.new(mix(color, macro, far.outputs[0]), bsdf.inputs["Base Color"])
     rm = nt.nodes.new("ShaderNodeSeparateColor")
     nt.links.new(rough, rm.inputs[0])
@@ -155,6 +212,7 @@ def build_scene(log=print, scatter=True, detail_props=True):
     # terrain with baked colour map
     t = terrain_mesh.build_preview_terrain(h, quads=1008)
     _terrain_material(blend.material("M_Terrain"))
+    _terrain_material(blend.material("M_RoadPaving"), road=True)
     terrain_mesh.build_water(h, export=False, log=lambda *_: None)
     for wname in ("M_Ocean", "M_LakeWater", "M_River"):
         m = blend.material(wname)
@@ -209,6 +267,19 @@ def build_scene(log=print, scatter=True, detail_props=True):
             path = os.path.join(C.OUT_MESHES, e["folder"], e["mesh"] + ".fbx")
             if os.path.exists(path):
                 bpy.ops.import_scene.fbx(filepath=path)
+    # the road material on everything that carries it (an imported FBX brings its own copy of each material);
+    # a mesh without vertex colours is paved all over, as in Unreal
+    road_mat = bpy.data.materials["M_RoadPaving"]
+    for ob in bpy.data.objects:
+        if ob.type != "MESH":
+            continue
+        for slot in ob.material_slots:
+            if slot.material is not None and slot.material.name.split(".")[0] == "M_RoadPaving":
+                slot.material = road_mat
+                if "Col" not in ob.data.color_attributes:
+                    layer = ob.data.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
+                    for d in layer.data:
+                        d.color = (1.0, 1.0, 1.0, 1.0)
     # instances
     protos = {}
     hidden = bpy.data.collections.new("Protos")

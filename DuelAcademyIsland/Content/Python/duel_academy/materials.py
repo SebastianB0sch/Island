@@ -1072,49 +1072,88 @@ TERRAIN_LAYERS = [
 ]
 
 
-def build_terrain(mpc=None):
-    """8-layer splat terrain with full-colour (photo or procedural) layer textures:
-    T_Terrain_<Layer>_BC / _N / _R, per-layer tiling from Data/terrain_layers.json.
-    With T_WaterShore (same layout as the splat maps: R depth, G shore distance, B submerged, A wet band on
-    land): the ground is darker and smoother where the water has just been (WetStrength), darker under water
-    (SubmergedDarken), and under water by day a moving caustic network (T_Caustics, world aligned, two layers
-    combined with min) brightens it - strongest in the shallows."""
-    try:
-        info = C.load_json("terrain_layers.json")
-    except Exception:  # noqa: BLE001
-        info = {}
-    g = Graph("M_DA_Terrain")
-    uv = g.node(unreal.MaterialExpressionTextureCoordinate)
+# How each layer takes over from what lies under it (M_DA_Terrain, M_DA_Road): (height influence k, softness s).
+# With a = saturate((2 w - 1 + (h - h_below) k) / s + 0.5) and s <= 2 (1 - k), a layer is exactly absent at
+# weight 0 and exactly complete at weight 1; in between its own relief decides where it shows first - tufts,
+# stones and ridges break through, joints and hollows fill last - so no two grounds ever cross-fade.
+LAYER_BLEND = {
+    "ForestFloor": (0.6, 0.7), "Sand": (0.5, 0.9), "WetSand": (0.4, 1.0), "Ash": (0.5, 0.8),
+    "Rock": (0.7, 0.5), "Dirt": (0.6, 0.6), "Paving": (0.3, 0.35),
+}
+BLEND_NOISE = 0.5      # how far the break-up noise shifts a transition (never where a weight is 0 or 1)
+
+
+def _height_blend(g, weight, height, below, name, noise=None, weight_out=""):
+    """Blend factor of a layer over the surface below it (see LAYER_BLEND)."""
+    k, soft = LAYER_BLEND[name]
+    w = g.sat(weight, weight_out)
+    if noise is not None:
+        # w + (n - 0.5) B 4 w (1 - w): shifts the edge, leaves pure areas pure
+        bell = g.mul(g.mul(w, g.one_minus(w)), g.const(4.0 * BLEND_NOISE))
+        w = g.sat(g.add(w, g.mul(g.sub(noise, g.const(0.5)), bell)))
+    rel = g.mul(g.sub(height, below), g.scalar(f"{name}BlendHeight", k))
+    x = g.add(g.sub(g.mul(w, g.const(2.0)), g.const(1.0)), rel)
+    return g.sat(g.add(g.div(x, g.scalar(f"{name}BlendSoft", min(soft, 2.0 * (1.0 - k)))), g.const(0.5)))
+
+
+def _terrain_surface(g, uv, info, world_m, road=None):
+    """The ground at `uv` (island-normalised, the splat maps' layout): colour, normal, roughness.
+
+    Eight layers (T_Terrain_<Layer>_BC / _N / _R / _H) chosen by the splat maps and blended by height
+    (_height_blend). road: an extra 0..1 paving coverage laid over the result with the very same blend - 0
+    gives the terrain exactly, 1 the terrain's own Paving layer - which is what M_DA_Road draws on the road
+    ribbons and bridge decks, so paving, verge and ground are one continuous surface."""
     splat_a = g.tex("SplatA", T("T_TerrainSplatA"), S_MSK, uv)
     splat_b = g.tex("SplatB", T("T_TerrainSplatB"), S_MSK, uv)
-    try:
-        world_m = float(C.load_json("layout.json")["world"]["size"]) / 100.0
-    except Exception:  # noqa: BLE001 - layout.json is optional for a material-only rebuild
-        world_m = C.WORLD_SIZE_M   # Tools/dai/config.py WORLD_SIZE (see common.py)
     # large-scale brightness variation breaks up visible tiling
     var = g.tex("VariationNoise", T("T_Noise"), S_LIN, g.mul(uv, g.const(6.0)))
     var2 = g.tex("VariationNoise2", T("T_Noise"), S_LIN, g.mul(uv, g.const(41.0)), param=False)
     vmix = g.add(g.mul(var, g.const(0.6), "R"), g.mul(var2, g.const(0.4), "R"))
     brightness = g.lerp(g.const(0.82), g.const(1.15), vmix)
-    color = normal = rough = None
+    # fine noise (about 7 m and 2.5 m) that frays the edge of every transition
+    fray1 = g.tex("", T("T_Noise"), S_LIN, g.mul(uv, g.const(world_m / 7.0)), param=False)
+    fray2 = g.tex("", T("T_Noise"), S_LIN, g.mul(uv, g.const(world_m / 2.6)), param=False)
+    fray = g.add(g.mul(fray1, g.const(0.6), "R"), g.mul(fray2, g.const(0.4), "R"))
+    color = normal = rough = height = None
     n_out, r_out = "RGB", "R"
+    paving = None
     for name, splat in TERRAIN_LAYERS:
         tile_m = float(info.get(name, {}).get("tile_m", 4.0))
         luv = g.mul(uv, g.scalar(f"{name}Tiles", world_m / tile_m))
         c = g.mul(g.tex(f"{name}Albedo", T(f"T_Terrain_{name}_BC"), S_COL, luv), g.vector(f"{name}Tint", (1, 1, 1)), "RGB", "")
         n = g.tex(f"{name}Normal", T(f"T_Terrain_{name}_N"), S_NRM, luv)
         r = g.tex(f"{name}Rough", T(f"T_Terrain_{name}_R"), S_MSK, luv)
+        h_tex = T(f"T_Terrain_{name}_H")      # relief; a flat 0.5 without it (plain cross-fade edges)
+        h = g.mask(g.tex(f"{name}Height", h_tex, S_MSK, luv), "r") if h_tex is not None else g.const(0.5)
+        if name == "Paving":
+            paving = (c, n, r, h)
         if splat is None:
-            color, normal, rough = c, n, r
+            color, normal, rough, height = c, n, r, h
             continue
         tex_node = splat_a if splat[0] == "A" else splat_b
-        color = g.lerp(color, c, tex_node, "", "", splat[1])
-        normal = g.lerp(normal, n, tex_node, n_out, "RGB", splat[1])
-        rough = g.lerp(rough, r, tex_node, r_out, "R", splat[1])
+        a = _height_blend(g, tex_node, h, height, name, noise=fray, weight_out=splat[1])
+        color = g.lerp(color, c, a)
+        normal = g.lerp(normal, n, a, n_out, "RGB")
+        rough = g.lerp(rough, r, a, r_out, "R")
+        height = g.lerp(height, h, a)
         n_out, r_out = "", ""
+    if road is not None and paving is not None:
+        c, n, r, h = paving
+        a = _height_blend(g, road, h, height, "Paving", noise=fray)
+        color = g.lerp(color, c, a)
+        normal = g.lerp(normal, n, a, "", "RGB")
+        rough = g.lerp(rough, r, a, "", "R")
     color = g.mul(color, brightness)
+    return color, normal, rough
+
+
+def _terrain_finish(g, uv, color, normal, rough, mpc, frame=None):
+    """Far-distance macro colour, wet shoreline, water darkening and caustics, then the outputs - shared by
+    the terrain and the road material so the two cannot drift apart.
+    frame: None = the normal is in the mesh's own tangent space (the terrain: its UVs are the island's);
+    else a +1 / -1 node (the sign of dv/dy) and the normal goes out in world space."""
     # far distance: blend to the baked colour map so the island reads well from afar
-    macro = g.tex("ColorMap", T("T_TerrainColor"), S_COL, uv)
+    macro = g.tex("ColorMap", T("T_TerrainColor"), S_COL, uv, clamp=True)
     depth = g.node(unreal.MaterialExpressionPixelDepth)
     far = g.one_input(unreal.MaterialExpressionSaturate, g.mul(g.sub(depth, g.const(12000.0)), g.const(1.0 / 50000.0)))
     final = g.lerp(color, macro, g.mul(far, g.scalar("MacroBlend", 0.75)), "", "RGB")
@@ -1149,8 +1188,71 @@ def build_terrain(mpc=None):
                 amount = g.mul(amount, g.one_minus(night_factor(g, mpc)))
             final = g.mul(final, g.add(g.mul(net, amount), g.const(1.0)))
     g.out(final, unreal.MaterialProperty.MP_BASE_COLOR)
-    g.out(g.lerp(g.const3((0, 0, 1)), normal, g.scalar("NormalStrength", 1.0)), unreal.MaterialProperty.MP_NORMAL)
+    normal = g.lerp(g.const3((0, 0, 1)), normal, g.scalar("NormalStrength", 1.0))
+    if frame is not None:
+        # the terrain's tangent frame rebuilt on another mesh (M_DA_Road): tangent = world +X, bitangent =
+        # the direction v grows in, both laid into the surface - the layer normals light a ribbon or a bridge
+        # deck exactly as they light the ground, whatever UVs and rotation that mesh has
+        vn = g.node(unreal.MaterialExpressionVertexNormalWS)
+        x_axis = g.const3((1, 0, 0))
+        tangent = g.one_input(unreal.MaterialExpressionNormalize, g.sub(x_axis, g.mul(vn, g.dot(vn, x_axis))))
+        bitangent = g.mul(g.op(unreal.MaterialExpressionCrossProduct, vn, tangent), frame)
+        ws = g.add(g.add(g.mul(tangent, g.mask(normal, "r")), g.mul(bitangent, g.mask(normal, "g"))),
+                   g.mul(vn, g.mask(normal, "b")))
+        normal = g.one_input(unreal.MaterialExpressionNormalize, ws)
+    g.out(normal, unreal.MaterialProperty.MP_NORMAL)
     g.out(roughness, unreal.MaterialProperty.MP_ROUGHNESS)
+
+
+def _terrain_inputs():
+    try:
+        info = C.load_json("terrain_layers.json")
+    except Exception:  # noqa: BLE001
+        info = {}
+    try:
+        world_m = float(C.load_json("layout.json")["world"]["size"]) / 100.0
+    except Exception:  # noqa: BLE001 - layout.json is optional for a material-only rebuild
+        world_m = C.WORLD_SIZE_M   # Tools/dai/config.py WORLD_SIZE (see common.py)
+    return info, world_m
+
+
+def build_terrain(mpc=None):
+    """8-layer splat terrain with full-colour (photo or procedural) layer textures:
+    T_Terrain_<Layer>_BC / _N / _R / _H, per-layer tiling from Data/terrain_layers.json. The layers are
+    blended by height (LAYER_BLEND), never cross-faded.
+    With T_WaterShore (same layout as the splat maps: R depth, G shore distance, B submerged, A wet band on
+    land): the ground is darker and smoother where the water has just been (WetStrength), darker under water
+    (SubmergedDarken), and under water by day a moving caustic network (T_Caustics, world aligned, two layers
+    combined with min) brightens it - strongest in the shallows."""
+    info, world_m = _terrain_inputs()
+    g = Graph("M_DA_Terrain")
+    uv = g.node(unreal.MaterialExpressionTextureCoordinate)
+    color, normal, rough = _terrain_surface(g, uv, info, world_m)
+    _terrain_finish(g, uv, color, normal, rough, mpc)
+    return g.finish()
+
+
+def build_road(mpc=None):
+    """M_DA_Road - road ribbons and paved bridge decks: the terrain material looked up by world position
+    instead of mesh UVs, with the terrain's own Paving layer laid over it by the mesh's vertex colour
+    (R = paving coverage; a mesh without vertex colours is paved all over).
+
+    Because it *is* the terrain's surface function, a ribbon whose rim is painted 0 shows there exactly what
+    the ground under it shows (the dirt verge the splat map paints along every road, the paving of a plaza it
+    ends on), and its paved middle is the same stone, at the same scale and brightness, as any paved ground:
+    road, verge, pad and bridge deck meet without a seam. The layer normals are applied in the terrain's
+    tangent frame (world space output), not the mesh's. MirrorY = 1 for a level built with a mirrored Y axis."""
+    info, world_m = _terrain_inputs()
+    g = Graph("M_DA_Road")
+    xy = g.mask(g.node(unreal.MaterialExpressionWorldPosition), "rg")
+    iuv = g.add(g.mul(xy, g.const(1.0 / ISLAND_SIZE_CM)), g.const(-ISLAND_MIN_CM / ISLAND_SIZE_CM))
+    iu, iv = g.mask(iuv, "r"), g.mask(iuv, "g")
+    mirror = g.scalar("MirrorY", 0.0)
+    uv = g.append(iu, g.lerp(iv, g.one_minus(iv), mirror))
+    cover = g.mul(g.node(unreal.MaterialExpressionVertexColor), g.scalar("Paving", 1.0), "R", "")
+    color, normal, rough = _terrain_surface(g, uv, info, world_m, road=cover)
+    g.settings(tangent_space_normal=False)
+    _terrain_finish(g, uv, color, normal, rough, mpc, frame=g.lerp(g.const(1.0), g.const(-1.0), mirror))
     return g.finish()
 
 
@@ -1160,6 +1262,7 @@ KIND_PARENT = {
     "water": "M_DA_Water", "pool": "M_DA_PoolWater", "river": "M_DA_River",
     "lava": "M_DA_Lava", "hologram": "M_DA_Hologram", "smoke": "M_DA_Smoke",
     "beam": "M_DA_Beam", "waterfall": "M_DA_Waterfall", "flow": "M_DA_WaterFlow", "terrain": "M_DA_Terrain",
+    "road": "M_DA_Road",
     "pbr": "M_DA_PBR", "pbr_foliage": "M_DA_PBRFoliage",
     "toon": "M_DA_Toon", "toon_masked": "M_DA_ToonMasked", "outline": "M_DA_Outline",
     "cel": "M_DA_Cel", "cel_masked": "M_DA_CelMasked",
@@ -1266,6 +1369,16 @@ def mirror_water_instances(palette, instances):
     n = 0
     for name, spec in palette.items():
         mi = instances.get(name) or C.load(f"{C.MAT_DIR}/MI_{name}")
+        if spec.get("kind") == "road" and mi is not None:
+            # M_DA_Road looks the terrain's maps up by world position: mirror that lookup with the level
+            try:
+                MEL.set_material_instance_scalar_parameter_value(mi, "MirrorY", 1.0)
+                MEL.update_material_instance(mi)
+                unreal.EditorAssetLibrary.save_loaded_asset(mi)
+                n += 1
+            except Exception as e:  # noqa: BLE001
+                C.warn(f"MI_{name}: mirroring the road lookup failed: {e}")
+            continue
         if spec.get("kind") != "water" or not is_open_water(spec) or mi is None:
             continue
         try:
@@ -1389,6 +1502,10 @@ def build_instances(palette, masters):
                 if still and "ripple" not in spec:
                     # plain still water from the "water" kind: no fountain droplets fall into it
                     MEL.set_material_instance_scalar_parameter_value(mi, "Ripple", 0.0)
+            elif kind == "road":
+                # the terrain's surface with its Paving layer laid on by vertex colour: nothing to tint
+                MEL.set_material_instance_scalar_parameter_value(mi, "Paving", float(spec.get("paving", 1.0)))
+                MEL.set_material_instance_scalar_parameter_value(mi, "MirrorY", 0.0)
             elif kind in ("lava", "beam"):
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)
                 MEL.set_material_instance_scalar_parameter_value(mi, "Strength", float(spec.get("strength", 1.0)))
@@ -1424,6 +1541,7 @@ def build_all(palette):
                      ("M_DA_Beam", build_beam), ("M_DA_Waterfall", build_waterfall),
                      ("M_DA_WaterFlow", build_water_flow), ("M_DA_Spray", build_spray),
                      ("M_DA_Terrain", lambda: build_terrain(mpc)),
+                     ("M_DA_Road", lambda: build_road(mpc)),
                      ("M_DA_PBR", lambda: build_pbr("M_DA_PBR")),
                      ("M_DA_PBRFoliage", lambda: build_pbr("M_DA_PBRFoliage", foliage=True)),
                      ("M_DA_Toon", lambda: build_toon("M_DA_Toon", mpc)),

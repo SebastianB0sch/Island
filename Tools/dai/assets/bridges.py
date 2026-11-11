@@ -38,7 +38,7 @@ palette.register({
 })
 
 STONE, STONE_L, STONE_D, COPING = "M_BridgeStone", "M_BridgeStoneLight", "M_BridgeStoneDark", "M_BridgeCoping"
-PAVING = "M_Paving"
+PAVING = "M_RoadPaving"      # the deck is the road: same material as the ribbons that run onto it
 TIMBER, TIMBER_D, PLANK = "M_BridgeTimber", "M_BridgeTimberDark", "M_PierWood"
 IRON, GLOW = "M_DarkMetal", "M_LampGlow"
 
@@ -199,9 +199,7 @@ def stone_arch(mb, length, width, drop, water_half, nocol=None):
     for px in sorted(set(lamp_x + posts)):
         for s in (-1, 1):
             lamps.append(_lantern(mb, nc, px, s * (yp + 0.03), PARAPET_H + 0.38))
-    # worn stone setts across the deck at the ends (flush - a visual threshold, nothing to trip on)
-    for sx in (-1, 1):
-        nc.box((sx * (half - 0.3), 0, 0.004), (0.6, width, 0.008), COPING, skip=("-z",))
+    # (no threshold across the ends: the deck's paving is the road's, and runs on without a joint)
     return dict(lamps=lamps, spans=spans, piers=piers, overall_width=wt + 0.3)
 
 
