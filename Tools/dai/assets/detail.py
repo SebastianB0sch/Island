@@ -232,6 +232,10 @@ def dress_room(aset, mb, nc, x0, y0, x1, y1, z, z_ceil, style="dorm", seed=0, sk
                 if not blocked(px, py, 0.4):
                     outlet(nc, px, py, z + 0.3, yaw)
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    for kc in keep_clear:      # (a keep-clear area under the centre - a stairwell: the ceiling fixtures go beside it)
+        xa, xb, ya, yb = min(kc[0], kc[2]), max(kc[0], kc[2]), min(kc[1], kc[3]), max(kc[1], kc[3])
+        if xa - 0.8 <= cx <= xb + 0.8 and ya - 0.6 <= cy <= yb + 0.6:
+            cx = xb + 1.0 if xb + 1.0 < x1 - 0.5 else xa - 1.0
     if st.get("smoke"):
         ceiling_fixture(nc, cx + 0.6, cy + 0.4, z_ceil, "smoke")
     if st.get("rose"):

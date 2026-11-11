@@ -6,7 +6,7 @@ audited as a walkable building.
     python Tools/academy_check.py                       # everything (academy)
     python Tools/academy_check.py --location slifer     # the Slifer Red dorm
     python Tools/academy_check.py --location ra         # the Ra Yellow dorm
-    python Tools/academy_check.py --location obelisk_boys   # the Obelisk Blue boys' dorm
+    python Tools/academy_check.py --location obelisk_boys  # the Obelisk Blue boys' dorm
     python Tools/academy_check.py --only doors,npcs     # a subset
     python Tools/academy_check.py --json out.json --limit 40
 
@@ -80,6 +80,7 @@ LOC = LOCATIONS["academy"]
 
 # --------------------------------------------------------------------------- recorded wall openings
 OPENINGS = []          # every K.Door cut through a K.wall (also the open doorways without a leaf)
+SPIRALS = []           # every K.spiral_stairs: (cx, cy, z0, z1, r_in, r_out, a0, step_deg)
 
 
 def _record_openings():
@@ -98,6 +99,13 @@ def _record_openings():
         return orig(aset, mb, p0, p1, z0, h, thick, mat, inner, openings, trim, trim_in, base, base_h)
 
     K.wall = wall
+    orig_sp = K.spiral_stairs
+
+    def spiral_stairs(mb, cx, cy, z0, z1, r_in, r_out, a0=0.0, step_deg=20.0, **kw):
+        SPIRALS.append((cx, cy, z0, z1, r_in, r_out, a0, step_deg))
+        return orig_sp(mb, cx, cy, z0, z1, r_in, r_out, a0, step_deg, **kw)
+
+    K.spiral_stairs = spiral_stairs
 
 
 # --------------------------------------------------------------------------- geometry
@@ -337,6 +345,22 @@ def _clear_at(G, c):
     return True
 
 
+def _spiral_clear(G, cx, cy, z0, z1, r, a0, sweep):
+    """A person (RADIUS, HEADROOM) walking a spiral stair along radius r from its foot (a0, z0) to the top."""
+    z = z0
+    for k in range(0, int(sweep) + 3, 3):
+        a = math.radians(a0 + k)
+        c = Vector((cx + math.cos(a) * r, cy + math.sin(a) * r, z + 0.45))
+        h = G.all.ray_cast(c, Vector((0, 0, -1)), 1.0)
+        if h[0] is None:
+            return False
+        z = h[0].z
+        if not _clear_at(G, Vector((c.x, c.y, z))) or \
+                G.all.ray_cast(Vector((c.x, c.y, z + 0.05)), Vector((0, 0, 1)), HEADROOM - 0.05)[0] is not None:
+            return False
+    return z >= z1 - 0.05
+
+
 class Grid:
     def __init__(self, G, bounds, log):
         t = time.time()
@@ -474,6 +498,20 @@ def check_paths(aset, G, log, region=None):
             if all(_clear_at(G, p + n_in * t + Vector((0, 0, max(p.z, z_far) - p.z)))
                    for t in [k * 0.1 - 0.7 for k in range(15)]):
                 more += far
+        # spiral stairs tighter than the grid resolves (a 0.32 m walking band between the post and the rail):
+        # an exact walk along the middle of the treads; when it passes, flood on from the top
+        for (cx, cy, z0, z1, r_in, r_out, a0, step) in SPIRALS:
+            rm = (r_in + r_out) / 2.0
+            n = max(4, int(round((z1 - z0) / 0.19)))
+            ends = []
+            for (ang, zz) in ((a0 - 25.0, z0), (a0 + step * n + 25.0, z1)):
+                q = Vector((cx + math.cos(math.radians(ang)) * (r_out + 0.3),
+                            cy + math.sin(math.radians(ang)) * (r_out + 0.3), zz))
+                ends.append(grid.near(q, 0.6))
+            got = [any(seen[m] for m in ids) for ids in ends]
+            if not all(ends) or got[0] == got[1] or not _spiral_clear(G, cx, cy, z0, z1, rm, a0, step * n):
+                continue
+            more += ends[1] if got[0] else ends[0]
         if not more:
             break
         seen |= grid.flood(more + list(np.flatnonzero(seen)))

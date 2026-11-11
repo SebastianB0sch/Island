@@ -221,9 +221,11 @@ the Slifer triple bunk on 2026-11-11 - `Docs/World/SLIFER_LAYOUT.md`.)
 - **Lighthouse lantern hatch is not an opening:** the watch-room ceiling is a solid polygon at
   18.3 and the hatch panels sit above it; the ladder passes through the ceiling and the gallery
   deck. Cut a real 0.75 m hole or shorten the ladder.
-- **Obelisk cupola:** the guard-rail gap is one segment off (the top tread is partly covered by
+- ~~**Obelisk cupola:** the guard-rail gap is one segment off (the top tread is partly covered by
   the k=8 rail), and the floor annulus starts at r=1.25 while the spiral outer radius is 1.15,
-  leaving a 10 cm annular gap. Shift the gap to k=8,9 and add a landing sector.
+  leaving a 10 cm annular gap. Shift the gap to k=8,9 and add a landing sector.~~ Fixed 2026-11-11
+  (`OBELISK_LAYOUT.md`): rail gap at k=8,9, a landing sector from the top tread to the floor ring, and the
+  attic hall's coffers and ceiling rose no longer hang in the stairwell.
 - **Harbor terminal control-room spiral:** the top tread's 180-182 degree sliver is under the
   solid SW slab corner; extend the hole by ~2 degrees or trim the tread.
 - **Academy pavilion 3F-5F:** the structural slab top is exposed over the old north strip

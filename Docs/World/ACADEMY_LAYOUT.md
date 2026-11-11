@@ -14,10 +14,11 @@ python Tools/academy_check.py --only paths --region 80,0,104,10,101,3,6.6   # on
 ```
 
 Run with the Blender-as-a-module interpreter, like the other audits. `--location slifer` checks the Slifer Red
-dorm, `--location ra` the Ra Yellow dorm and `--location cell:<interior id>` a portal room with its
-`anchors.json` marks. `SLIFER_LAYOUT.md` and `RA_LAYOUT.md` list the refinements made to the check on 2026-11-11:
+dorm, `--location ra` the Ra Yellow dorm, `--location obelisk_boys` the Obelisk Blue boys' palace and
+`--location cell:<interior id>` a portal room with its `anchors.json` marks. `SLIFER_LAYOUT.md`, `RA_LAYOUT.md`
+and `OBELISK_LAYOUT.md` list the refinements made to the check on 2026-11-11:
 - the furniture collision boxes are part of the walk grid;
-- narrow doorways get an exact test;
+- narrow doorways and spiral stairs get an exact test;
 - outdoor spots are not leak-tested, and trees and bushes don't count as walls;
 - back faces are confirmed by neighbouring rays.
 
@@ -116,6 +117,9 @@ y -67).
 - z-fighting 1,168 → 882: panelling boards are now 18 mm, behind the 24 mm skirting.
 - The pavilion corridors got one more hanging dorm banner near the camera, keeping their views at the 35 %
   detail target.
+
+**Re-check after the Obelisk pass** (`OBELISK_LAYOUT.md`: shared panelling caps, ceiling fixtures beside
+keep-clear areas): NPC spots 0, doors 0, paths 153, z-fighting 865, back faces 25.
 
 Known leftovers (reported by the check, not defects of the building):
 
