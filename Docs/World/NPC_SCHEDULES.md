@@ -1,7 +1,7 @@
 # NPC Schedules and Gate 3 Runtime
 
 > **Owner:** A08. **Test switch:** `-DANpcScheduleTest` (GameInstanceSubsystem, headless, exits after the summary).
-> **Data:** `Content/Data/World/spawns.json` (38 spawn points). **Code:** `DANpcSpawnPoint`, `DANpcDirector`, `DANpcScheduleTest`.
+> **Data:** `Content/Data/World/spawns.json` (46 spawn points). **Code:** `DANpcSpawnPoint`, `DANpcDirector`, `DANpcScheduleTest`.
 > **Build placement:** `Content/Python/duel_academy/level.py::Placer.interior_nav()` for the ten interior nav volumes.
 
 ## Run
@@ -27,7 +27,7 @@ Every individual line is `PASS: ...` on `LogDuelAcademyIsland`; failures are `FA
 
 ## NPC standing room
 
-All 38 schedule marks are authored against the generated geometry, not just the zone
+All 46 schedule marks are authored against the generated geometry, not just the zone
 bounds. `Tools/world/check_npc_clearance.py` runs inside Blender and checks:
 
 - every interior mark sits inside its portal cell, on the cell floor and with a clear
@@ -55,7 +55,7 @@ props.
 ## What the test verifies
 
 1. **Registration and data parity**
-   - one director, 38 spawn actors and 38 registered ids (auto-registration from `BeginPlay`);
+   - one director, 46 spawn actors and 46 registered ids (auto-registration from `BeginPlay`);
    - data ids unique, runtime ids unique, every runtime id exists in JSON and vice versa;
    - all 8 `opening_spawn_requirements` are registered;
    - per row: `ScheduleId`, `ScheduleTags`, `EventOverride`, `bEnabled`, `bEventOnly` and `bSpawnOnBeginPlay` match `spawns.json`.
@@ -66,9 +66,9 @@ props.
    - Monday–Friday derive `weekday`, `weekday_am`/`weekday_pm`; Saturday/Sunday derive `weekend`;
    - tags or `ScheduleId` match any query value, case-insensitively.
    With the current data the sets are Monday–Friday AM = 12, Monday–Friday PM = 10, Saturday/Sunday AM/PM = 7.
-3. **Events** — `tutorial_duel` activates `academy_arena_jaden`; `E24` activates `abandoned_dorm_titan` and `volcano_shadow_duelist`; `E01` activates the four gym assembly points; restoring the empty event returns the default Monday AM set.
+3. **Events** — `tutorial_duel` activates `academy_arena_jaden`; `E24` activates `abandoned_dorm_titan` and `volcano_shadow_duelist`; `E01` activates the twelve central-hall assembly points (`hall_assembly_proctor` plus eleven dorm-block students); restoring the empty event returns the default Monday AM set.
 4. **Deterministic spawn/despawn** — `DespawnAtPoint`/`SpawnAtPoint` are idempotent, an unknown id returns null, a temporary `bEnabled = false` and a temporary `bEventOnly = true` behave correctly, and the NPC count returns to the baseline after each cycle.
-5. **Refresh cycles** — three `RefreshSpawnPoints()` calls must keep 38 registrations, preserve existing NPCs without churn, re-apply the active schedule, apply PM from AM, restore AM, and leave zero orphan NPCs.
+5. **Refresh cycles** — three `RefreshSpawnPoints()` calls must keep 46 registrations, preserve existing NPCs without churn, re-apply the active schedule, apply PM from AM, restore AM, and leave zero orphan NPCs.
 
 ## Unique identities
 

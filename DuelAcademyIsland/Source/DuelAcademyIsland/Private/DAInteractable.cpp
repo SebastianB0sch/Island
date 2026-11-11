@@ -132,7 +132,7 @@ FString ADAInteractable::GetInteractPrompt() const
 	{
 		case EDAInteractKind::CardShop:  return TEXT("Buy a booster pack");
 		case EDAInteractKind::DuelField: return IsAnyDuelOpen(this) ? TEXT("Duel in progress") : TEXT("Duel");
-		case EDAInteractKind::RoomBed:   return TEXT("Rest for the weekend");
+		case EDAInteractKind::RoomBed:   return TEXT("Sleep until morning");
 		case EDAInteractKind::WalkHome:  return TEXT("Walk home");
 		case EDAInteractKind::Info:      return TEXT("Look");
 	case EDAInteractKind::Sign:
@@ -171,10 +171,14 @@ void ADAInteractable::Interact(ADAStudentCharacter* By)
 				Calendar = GameInstance->GetSubsystem<UDACalendarSubsystem>();
 			}
 		}
+		// Weekend stays count toward E30 (NotifyRoomStay reads the new day).
+		bool bWeekendRest = false;
 		if (Calendar)
 		{
 			// Resting advances one campaign day, mirroring the GBA bed/wait flow.
+			// The story's day flow then starts the new morning in this dorm room.
 			Calendar->Sleep();
+			bWeekendRest = Calendar->IsWeekend();
 			// Keep the visual day/night cycle in step with the calendar date.
 			if (Sub)
 			{
@@ -190,11 +194,14 @@ void ADAInteractable::Interact(ADAStudentCharacter* By)
 		}
 		if (Sub)
 		{
+			const FString WeekendNote = bWeekendRest
+				? FString(TEXT(" Three weekends in your room will make your friends worry."))
+				: FString();
 			FDAMessage Msg;
 			Msg.Title = TEXT("Your Room");
 			Msg.Body = Calendar
-				? FString::Printf(TEXT("You rest until %s. Three weekends in your room will make your friends worry."), *Calendar->GetFullDateText())
-				: TEXT("You rest for a while. Three weekends in your room will make your friends worry.");
+				? FString::Printf(TEXT("You sleep until %s.%s"), *Calendar->GetFullDateText(), *WeekendNote)
+				: FString::Printf(TEXT("You rest for a while.%s"), *WeekendNote);
 			Msg.Duration = 6.f;
 			Sub->PushMessage(Msg);
 			Sub->PlayUISound(TEXT("A_UIClick"), 0.5f);

@@ -193,11 +193,11 @@ Each interior is a pair: an **entrance** trigger at the exterior door and an **e
 6. Anchor the opening beats: `slifer_cafeteria_player` (Banner's 3,000 DP), `slifer_player_room_save` (sleep/save), `slifer_jaden_room_jaden` (E03), `slifer_banner_room_desk` (Pharaoh).
 7. Test: walk in from the path → cafeteria → player room → sleep/save → return outside. No fall-through, no portal loop, nav reachable.
 
-### Academy gym assembly
-1. Use the **existing Duel Gym hall** (60 × 40 m, two practice courts, bleachers). No new cell.
-2. Stage the assembly on the front court: `gym_assembly_stage` at `(68263.6, 72312.6, 620)`, crowd mark at `(69552.3, 71765.6, 620)`, camera at `(70400, 71250, 2200)` looking at the stage.
-3. Put the instructor/Sheppard stand-in on the stage spawn point; add 6–10 generic students at crowd marks.
-4. Test: enter the gym from the beach path, play the speech camera, walk to the stage, exit. The gym is already walk-in; only anchors/spawns are new.
+### Opening ceremony in the central hall (replaces the gym assembly)
+1. Use the **existing Grand Duel Arena drum** - the central hall of the main building, right behind the main hall/lobby. No new cell.
+2. Stage the whole school on the duel field (local metres from `Tools/dai/assets/academy.py`, drum centre (0, 15), field top z = 2.5): `hall_assembly_podium` at `(0, -17060, 3650)` facing +Y, faculty marks either side, the freshman row at local y = 16.2, Obelisk Blue block on -X, Ra Yellow on +X, Slifer Red at the back; six cameras (`hall_assembly_*camera`).
+3. E01 activates `hall_assembly_proctor` and eleven `hall_assembly_student_*` crowd spawns; named cast is moved by the scene's `move_npc` commands; the arena's ambient spectators fill the floor ring and concourse.
+4. Test: regenerate the level, run the opening, confirm every camera frames its subject and nobody stands inside the field glow strips or the west duelist ring. The gym's `gym_assembly_*` marks remain for the full-campaign gym scenes.
 
 ### Academy classroom (first class)
 1. Add the **academy classroom** cell (14 × 10 × 4 m): 30 desks, blackboard, teacher desk, banners.

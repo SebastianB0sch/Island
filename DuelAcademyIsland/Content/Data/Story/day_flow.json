@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "owner": "A03",
+  "notes": "Daily rhythm of the campaign. Every finished duel spends one third of the school day (AM -> PM -> Night -> next morning). A new day always starts in the player's room in their current dorm, so promotion/demotion changes where the player wakes up. Story-event duels never change the date in the middle of a scene: a duel fought at Night inside an event rolls the calendar over when that event (and any same-night follow-up) ends.",
+  "duel_time": {
+    "periods_per_duel": 1,
+    "untimed_modes": [
+      "tutorial",
+      "timed_puzzle",
+      "puzzle",
+      "exam",
+      "exam_practical"
+    ],
+    "untimed_note": "Syrus's orientation practice duel, puzzle-scenario duels and exam sections keep their own clock.",
+    "messages": {
+      "PM": {
+        "title": "AFTERNOON",
+        "body": "The duel took the morning. It is now {date}."
+      },
+      "Night": {
+        "title": "EVENING",
+        "body": "The sun sets on the island while you pack up your deck. It is now {date}."
+      },
+      "next_day": {
+        "title": "LIGHTS OUT",
+        "body": "That was the last duel of the day. Time to head back to the dorm."
+      },
+      "deferred": {
+        "title": "LATE NIGHT",
+        "body": "It is getting late. The day ends once this is over."
+      }
+    }
+  },
+  "morning": {
+    "fade_in_seconds": 1.6,
+    "banner_title": "GOOD MORNING",
+    "banner_body": "{date}\n{room}",
+    "rooms": {
+      "slifer": {
+        "anchor": "slifer_player_room_wake",
+        "interior_id": "slifer_player_room",
+        "label": "Slifer Red Dorm - your room",
+        "fallback_position_ue": [
+          330000,
+          300000,
+          -29900
+        ],
+        "fallback_yaw": 90.0
+      },
+      "ra": {
+        "anchor": "ra_player_room_wake",
+        "interior_id": "ra_player_room",
+        "label": "Ra Yellow Dorm - your room",
+        "fallback_position_ue": [
+          360000,
+          299975,
+          -29900
+        ],
+        "fallback_yaw": 90.0
+      },
+      "obelisk": {
+        "anchor": "obelisk_player_room_wake",
+        "interior_id": "obelisk_player_room",
+        "label": "Obelisk Blue Dorm - your room",
+        "fallback_position_ue": [
+          390000,
+          319950,
+          -29900
+        ],
+        "fallback_yaw": 90.0
+      }
+    },
+    "dorm_note": "The room follows profile.dorm: Slifer Red -> slifer, Ra Yellow -> ra, Obelisk Blue and the Society of Light (white Obelisk dorm) -> obelisk."
+  }
+}

@@ -139,6 +139,78 @@
       "fallback": "ui_pda",
       "color": "#7ad4b0",
       "source": "ui"
+    },
+    "crowler": {
+      "display_name": "Dr. Vellian Crowler",
+      "portrait_base": "crowler",
+      "expressions": [
+        "neutral",
+        "smug",
+        "shocked"
+      ],
+      "fallback": "portrait_fallback_teacher",
+      "color": "#d9c27a",
+      "source": "fallback"
+    },
+    "alexis": {
+      "display_name": "Alexis Rhodes",
+      "portrait_base": "alexis",
+      "expressions": [
+        "neutral",
+        "happy",
+        "angry"
+      ],
+      "fallback": "alexis",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "chazz": {
+      "display_name": "Chazz Princeton",
+      "portrait_base": "chazz",
+      "expressions": [
+        "neutral",
+        "smug",
+        "angry"
+      ],
+      "fallback": "chazz",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "bastion": {
+      "display_name": "Bastion Misawa",
+      "portrait_base": "bastion",
+      "expressions": [
+        "neutral",
+        "happy",
+        "thoughtful"
+      ],
+      "fallback": "bastion",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "zane": {
+      "display_name": "Zane Truesdale",
+      "portrait_base": "zane",
+      "expressions": [
+        "neutral",
+        "stern",
+        "happy"
+      ],
+      "fallback": "zane",
+      "color": "#d9c27a",
+      "source": "existing"
+    },
+    "fontaine": {
+      "display_name": "Fonda Fontaine",
+      "portrait_base": "fontaine",
+      "expressions": [
+        "neutral",
+        "happy",
+        "stern"
+      ],
+      "fallback": "portrait_fallback_teacher",
+      "color": "#d9c27a",
+      "source": "fallback"
     }
   },
   "version": 1,
@@ -190,8 +262,8 @@
       "speaker": "narrator",
       "portrait": "none",
       "expression": "neutral",
-      "text": "A bell rings across the plaza. Upperclassmen wave the new students toward the gym.",
-      "next": "E01.b01_arrival_04",
+      "text": "A bell rings out over the plaza. Students in red, yellow and blue blazers stream up the academy steps toward the central hall.",
+      "next": null,
       "choices": [],
       "input": null,
       "source": "original",
@@ -200,7 +272,7 @@
       "tags": [
         "opening",
         "b01",
-        "assembly"
+        "arrival"
       ],
       "text_key": "E01.b01_arrival_03",
       "source_detail": "port-original",
@@ -211,7 +283,7 @@
       "speaker": "player",
       "portrait": "player_determined",
       "expression": "determined",
-      "text": "The opening assembly. Right. Let's go.",
+      "text": "The opening ceremony. The whole school's going to be in there. Okay - let's go.",
       "next": null,
       "choices": [],
       "input": null,
@@ -221,11 +293,55 @@
       "tags": [
         "opening",
         "b01",
-        "player"
+        "arrival"
       ],
       "text_key": "E01.b01_arrival_04",
       "source_detail": "port-original",
       "emotion": "determined"
+    },
+    "E01.b02_hall_01": {
+      "key": "E01.b02_hall_01",
+      "speaker": "narrator",
+      "portrait": "none",
+      "expression": "neutral",
+      "text": "Every student on the island fills the central hall. Obelisk Blue stands in neat rows on the left, Ra Yellow on the right, and a small knot of Slifer Reds at the back. The freshmen wait in the middle, right in front of the stage.",
+      "next": "E01.b02_crowler_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_hall_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b02_crowler_01": {
+      "key": "E01.b02_crowler_01",
+      "speaker": "crowler",
+      "portrait": "crowler_smug",
+      "expression": "smug",
+      "text": "Silence, please! Students of Duel Academy, your Chancellor.",
+      "next": "E01.b02_sheppard_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_crowler_01",
+      "source_detail": "port-original",
+      "emotion": "smug"
     },
     "E01.b02_sheppard_01": {
       "key": "E01.b02_sheppard_01",
@@ -233,7 +349,7 @@
       "portrait": "sheppard_proud",
       "expression": "proud",
       "text": "Welcome, everyone. I am Chancellor Sheppard, and this is Duel Academy.",
-      "next": "E01.b02_sheppard_02",
+      "next": "E01.b02_sheppard_08",
       "choices": [],
       "input": null,
       "source": "original",
@@ -242,11 +358,34 @@
       "tags": [
         "opening",
         "b02",
-        "speech"
+        "speech",
+        "central_hall"
       ],
       "text_key": "E01.b02_sheppard_01",
       "source_detail": "port-original",
       "emotion": "proud"
+    },
+    "E01.b02_sheppard_08": {
+      "key": "E01.b02_sheppard_08",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "To our returning students: welcome back. To the freshmen in the middle of the hall: look around you. Every student here once stood exactly where you are standing now.",
+      "next": "E01.b02_sheppard_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_sheppard_08",
+      "source_detail": "port-original",
+      "emotion": "neutral"
     },
     "E01.b02_sheppard_02": {
       "key": "E01.b02_sheppard_02",
@@ -263,7 +402,8 @@
       "tags": [
         "opening",
         "b02",
-        "speech"
+        "speech",
+        "central_hall"
       ],
       "text_key": "E01.b02_sheppard_02",
       "source_detail": "port-original",
@@ -284,7 +424,8 @@
       "tags": [
         "opening",
         "b02",
-        "jaden"
+        "speech",
+        "central_hall"
       ],
       "text_key": "E01.b02_jaden_01",
       "source_detail": "port-original",
@@ -295,7 +436,7 @@
       "speaker": "syrus",
       "portrait": "syrus_nervous",
       "expression": "nervous",
-      "text": "J-Jaden, not so loud. Everyone's looking...",
+      "text": "J-Jaden, not so loud. The whole school is looking at us...",
       "next": "E01.b02_chumley_01",
       "choices": [],
       "input": null,
@@ -305,7 +446,8 @@
       "tags": [
         "opening",
         "b02",
-        "syrus"
+        "speech",
+        "central_hall"
       ],
       "text_key": "E01.b02_syrus_01",
       "source_detail": "port-original",
@@ -317,7 +459,7 @@
       "portrait": "chumley_sleepy",
       "expression": "sleepy",
       "text": "Wake me up when the dueling starts.",
-      "next": "E01.b02_sheppard_03",
+      "next": "E01.b02_chazz_01",
       "choices": [],
       "input": null,
       "source": "original",
@@ -326,11 +468,56 @@
       "tags": [
         "opening",
         "b02",
-        "chumley"
+        "speech",
+        "central_hall"
       ],
       "text_key": "E01.b02_chumley_01",
       "source_detail": "port-original",
       "emotion": "sleepy"
+    },
+    "E01.b02_chazz_01": {
+      "key": "E01.b02_chazz_01",
+      "speaker": "chazz",
+      "portrait": "chazz_smug",
+      "expression": "smug",
+      "text": "Slifer Red. Figures. The academy's dropouts-in-waiting, standing right in front of us.",
+      "next": "E01.b02_alexis_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_chazz_01",
+      "source_detail": "port-original",
+      "emotion": "smug"
+    },
+    "E01.b02_alexis_01": {
+      "key": "E01.b02_alexis_01",
+      "speaker": "alexis",
+      "portrait": "alexis_neutral",
+      "expression": "neutral",
+      "text": "Give it a rest, Chazz. Half of them haven't even registered yet. Let the Chancellor speak.",
+      "next": "E01.b02_sheppard_03",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_alexis_01",
+      "source_detail": "port-original",
+      "emotion": "neutral"
     },
     "E01.b02_sheppard_03": {
       "key": "E01.b02_sheppard_03",
@@ -338,7 +525,7 @@
       "portrait": "sheppard_neutral",
       "expression": "neutral",
       "text": "Duel Academy is not only about winning. You will study rules, card lore, strategy, and the history of the game.",
-      "next": "E01.b02_sheppard_04",
+      "next": "E01.b02_sheppard_09",
       "choices": [],
       "input": null,
       "source": "original",
@@ -347,11 +534,188 @@
       "tags": [
         "opening",
         "b02",
-        "speech"
+        "speech",
+        "central_hall"
       ],
       "text_key": "E01.b02_sheppard_03",
       "source_detail": "port-original",
       "emotion": "neutral"
+    },
+    "E01.b02_sheppard_09": {
+      "key": "E01.b02_sheppard_09",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "Now, for our new students, let me show you how life on this island works. There are three dorms: Obelisk Blue, Ra Yellow and Slifer Red. Your entrance exam decides where you begin - not where you finish.",
+      "next": "E01.b02_sheppard_10",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_sheppard_09",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b02_sheppard_10": {
+      "key": "E01.b02_sheppard_10",
+      "speaker": "sheppard",
+      "portrait": "sheppard_stern",
+      "expression": "stern",
+      "text": "At the end of every month there is an exam: a written test and a practical duel. Do well and you will move up a dorm. Fall behind, and you may find yourself moving down.",
+      "next": "E01.b02_bastion_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_sheppard_10",
+      "source_detail": "port-original",
+      "emotion": "stern"
+    },
+    "E01.b02_bastion_01": {
+      "key": "E01.b02_bastion_01",
+      "speaker": "bastion",
+      "portrait": "bastion_thoughtful",
+      "expression": "thoughtful",
+      "text": "A monthly exam. How civilized - a perfectly measurable route to Obelisk Blue.",
+      "next": "E01.b02_sheppard_11",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_bastion_01",
+      "source_detail": "port-original",
+      "emotion": "thoughtful"
+    },
+    "E01.b02_sheppard_11": {
+      "key": "E01.b02_sheppard_11",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "Each school day has three parts: morning, afternoon and evening. A serious duel takes up the better part of one of them, so choose your opponents wisely.",
+      "next": "E01.b02_sheppard_12",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_sheppard_11",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b02_sheppard_12": {
+      "key": "E01.b02_sheppard_12",
+      "speaker": "sheppard",
+      "portrait": "sheppard_happy",
+      "expression": "happy",
+      "text": "Every duel you win earns you Duel Points. Spend them on booster packs at the card shop and build a deck that is truly your own.",
+      "next": "E01.b02_sheppard_13",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_sheppard_12",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b02_sheppard_13": {
+      "key": "E01.b02_sheppard_13",
+      "speaker": "sheppard",
+      "portrait": "sheppard_proud",
+      "expression": "proud",
+      "text": "And every morning you will wake in your dorm with a new day ahead of you. How far you climb - and which dorm you wake up in - is up to you.",
+      "next": "E01.b02_syrus_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_sheppard_13",
+      "source_detail": "port-original",
+      "emotion": "proud"
+    },
+    "E01.b02_syrus_02": {
+      "key": "E01.b02_syrus_02",
+      "speaker": "syrus",
+      "portrait": "syrus_nervous",
+      "expression": "nervous",
+      "text": "S-see the guy at the front of Obelisk Blue? That's my big brother, Zane. Everybody says he's the best duelist in the school.",
+      "next": "E01.b02_jaden_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_syrus_02",
+      "source_detail": "port-original",
+      "emotion": "nervous"
+    },
+    "E01.b02_jaden_02": {
+      "key": "E01.b02_jaden_02",
+      "speaker": "jaden",
+      "portrait": "jaden_determined",
+      "expression": "determined",
+      "text": "The best, huh? Then he's the one to beat!",
+      "next": "E01.b02_sheppard_04",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_jaden_02",
+      "source_detail": "port-original",
+      "emotion": "determined"
     },
     "E01.b02_sheppard_04": {
       "key": "E01.b02_sheppard_04",
@@ -359,27 +723,6 @@
       "portrait": "sheppard_stern",
       "expression": "stern",
       "text": "A duel, like life, is not over until the very end. There is always a combo that opens new possibilities. Remember that.",
-      "next": "E01.b02_sheppard_05",
-      "choices": [],
-      "input": null,
-      "source": "original",
-      "canon_source": "guide",
-      "confidence": "high",
-      "tags": [
-        "opening",
-        "b02",
-        "speech"
-      ],
-      "text_key": "E01.b02_sheppard_04",
-      "source_detail": "port-original",
-      "emotion": "stern"
-    },
-    "E01.b02_sheppard_05": {
-      "key": "E01.b02_sheppard_05",
-      "speaker": "sheppard",
-      "portrait": "sheppard_neutral",
-      "expression": "neutral",
-      "text": "Registration is at the reception desk in the academy lobby. Professor Mimicry is waiting. After that, report to your dorm headmaster.",
       "next": "E01.b02_sheppard_06",
       "choices": [],
       "input": null,
@@ -389,11 +732,12 @@
       "tags": [
         "opening",
         "b02",
-        "speech"
+        "speech",
+        "central_hall"
       ],
-      "text_key": "E01.b02_sheppard_05",
+      "text_key": "E01.b02_sheppard_04",
       "source_detail": "port-original",
-      "emotion": "neutral"
+      "emotion": "stern"
     },
     "E01.b02_sheppard_06": {
       "key": "E01.b02_sheppard_06",
@@ -401,7 +745,7 @@
       "portrait": "sheppard_proud",
       "expression": "proud",
       "text": "One more thing. A duel is a conversation. Listen to your opponent. Respect your deck. And never forget why you play.",
-      "next": "E01.b02_player_01",
+      "next": "E01.b02_sheppard_05",
       "choices": [],
       "input": null,
       "source": "original",
@@ -410,18 +754,85 @@
       "tags": [
         "opening",
         "b02",
-        "speech"
+        "speech",
+        "central_hall"
       ],
       "text_key": "E01.b02_sheppard_06",
       "source_detail": "port-original",
       "emotion": "proud"
+    },
+    "E01.b02_sheppard_05": {
+      "key": "E01.b02_sheppard_05",
+      "speaker": "sheppard",
+      "portrait": "sheppard_neutral",
+      "expression": "neutral",
+      "text": "Freshmen: registration is at the reception desk in the main hall, just through those doors. Professor Mimicry is waiting. After that, report to your dorm headmaster.",
+      "next": "E01.b02_banner_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "guide",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_sheppard_05",
+      "source_detail": "port-original",
+      "emotion": "neutral"
+    },
+    "E01.b02_banner_01": {
+      "key": "E01.b02_banner_01",
+      "speaker": "banner",
+      "portrait": "banner_happy",
+      "expression": "happy",
+      "text": "Slifer Reds, old and new - Pharaoh and I will have dinner waiting at the dorm.",
+      "next": "E01.b02_crowler_02",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_banner_01",
+      "source_detail": "port-original",
+      "emotion": "happy"
+    },
+    "E01.b02_crowler_02": {
+      "key": "E01.b02_crowler_02",
+      "speaker": "crowler",
+      "portrait": "crowler_smug",
+      "expression": "smug",
+      "text": "And Obelisk Blue will, as always, set the standard for everyone else.",
+      "next": "E01.b02_player_01",
+      "choices": [],
+      "input": null,
+      "source": "original",
+      "canon_source": "port",
+      "confidence": "high",
+      "tags": [
+        "opening",
+        "b02",
+        "speech",
+        "central_hall"
+      ],
+      "text_key": "E01.b02_crowler_02",
+      "source_detail": "port-original",
+      "emotion": "smug"
     },
     "E01.b02_player_01": {
       "key": "E01.b02_player_01",
       "speaker": "player",
       "portrait": "player_determined",
       "expression": "determined",
-      "text": "Right. Let's do this.",
+      "text": "Three dorms, a monthly exam, three duels a day... Right. Let's do this.",
       "next": "E01.b02_sheppard_07",
       "choices": [],
       "input": null,
@@ -431,7 +842,8 @@
       "tags": [
         "opening",
         "b02",
-        "player"
+        "speech",
+        "central_hall"
       ],
       "text_key": "E01.b02_player_01",
       "source_detail": "port-original",
@@ -452,7 +864,8 @@
       "tags": [
         "opening",
         "b02",
-        "speech"
+        "speech",
+        "central_hall"
       ],
       "text_key": "E01.b02_sheppard_07",
       "source_detail": "port-original",

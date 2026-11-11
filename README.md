@@ -33,6 +33,7 @@ This branch (`port/baseline`) ports the single-player campaign of the GBA game i
 Implemented so far:
 
 - **Campaign backbone:** 37 event definitions (35 canon + the opening checkpoint/free duel), 56 scenes, 161 dialogue lines, 6 email contacts, schedules, flags and rewards. The opening (`E01`/`E01b`) is fully runnable; the 35-event campaign scaffold validates and is reachable with progress.
+- **Opening ceremony and daily rhythm:** the campaign opens with a whole-school assembly in the Academy's central hall (the Grand Duel Arena drum), where Chancellor Sheppard shows the freshmen the ropes in front of all three dorms. Every finished duel spends a third of the school day (morning -> afternoon -> evening -> next day), and every new day starts in the player's room in their current dorm (`Content/Data/Story/day_flow.json`, [Docs/Story/RUNTIME.md](Docs/Story/RUNTIME.md)).
 - **Progression:** profile, 12-month calendar, DP, titles, dorm promotion/demotion, Dropout Boy recovery, flags, counters and settings.
 - **Save/load:** 3 slots + autosave, atomic writes, checksum trailer, backup recovery, corruption detection and v0→v1 migration.
 - **Duel content:** 26 duelists / 32 decks, 100 timed puzzles, 12 exam cycles, 48 booster packs, the full 1,200-card database, 76 Fusion recipes and 22 Ritual procedures.
@@ -47,7 +48,7 @@ Run the runtime suites from the editor/game command line:
 -DAProfileSelfTest        # 182/182
 -DAEconomySelfTest        # 446/446
 -DADuelRulesSelfTest      # 179/179 (incl. player response windows)
--DAStorySelfTest          # 14/14
+-DAStorySelfTest          # 14/14 opening checks + 5 day-flow checks
 -DAFullStorySelfTest      # 20/20, 35/35 reachable with progress
 -DAPuzzleSelfTest         # 100/100 authored puzzles replayed in-engine
 -DAExamSelfTest           # 12/12 monthly exam cycles
