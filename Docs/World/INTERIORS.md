@@ -107,28 +107,32 @@ python Tools/world/test_interiors.py
 
 - Purpose: E03 and Chumley room beats. Three NPC marks: Jaden, Syrus, Chumley.
 - Capacity: ~4 people.
-- Props: bunk bed, second bunk, desk, duel disk stand, card posters, messy clothes.
+- Props: the Slifer triple bunk (one bunk each for Jaden, Syrus and Chumley), kotatsu on tatami, desk, wardrobe, duel disk stand, card posters, messy clothes.
 - Reuse: Slifer wood/cream palette, SM_BunkBed, SM_Desk, SM_Chair, card posters.
 
 **`ra_player_room` — Ra Room (Player)**
 
 - Purpose: Promotion room. Shares the Slifer room kit with a Ra material swap.
 - Capacity: ~2 people.
-- Props: bed, desk, wardrobe, card trunk, save/sleep mark.
+- Props: bed, desk, wardrobe, card trunk, save/sleep mark, Ra poster + yellow jacket by the door (`_ra_player`,
+  see `RA_LAYOUT.md`).
 - Reuse: Ra ochre/cream palette, SM_Bed, SM_Desk, SM_Wardrobe.
 
 **`obelisk_dining` — Obelisk Dining Room**
 
 - Purpose: Obelisk social/dining scenes. Also serves as the dorm common room.
 - Capacity: ~12 people.
-- Props: long dining table, 12 chairs, chandelier, serving sideboard, portrait, crest.
+- Props: long dining table, 12 chairs, chandelier, serving sideboard, portrait, crest (two gilded portraits
+  either side of the crest: `_obelisk_dining`, see `OBELISK_LAYOUT.md`).
 - Reuse: Obelisk marble/gold palette, SM_LongTable, SM_Chair, chandelier kit.
 
 **`obelisk_player_room` — Obelisk Room (Player)**
 
 - Purpose: Promotion room. Material swap on the Ra/Slifer room kit plus marble trim.
 - Capacity: ~2 people.
-- Props: large bed, desk, wardrobe, card trunk, save/sleep mark, balcony door.
+- Props: large bed, desk, wardrobe, card trunk, save/sleep mark, balcony door (`_obelisk_player`: a double bed
+  with nightstands on the bed mark, a glazed balcony door with navy drapes on the back wall, an Obelisk poster
+  and a blue jacket by the door; see `OBELISK_LAYOUT.md`).
 - Reuse: Obelisk marble/gold palette, SM_Bed, SM_Desk, SM_Wardrobe.
 
 ## 3. Portal plan
@@ -188,7 +192,7 @@ Each interior is a pair: an **entrance** trigger at the exterior door and an **e
 1. Use the existing Slifer dining hall as the common room/cafeteria (no new cell). It already has tables, counter, kitchen, covered deck and lights.
 2. Add the **Slifer player room** cell (6 × 5 × 3.2 m): bed, desk, chair, wardrobe, card trunk, window, save/sleep mark.
 3. Add the **Banner room** cell (6.5 × 5.5 × 3.2 m): desk, bookshelf, Pharaoh tank, guest chair.
-4. Add the **Jaden/Syrus/Chumley bunk room** cell (7 × 5.5 × 3.2 m): two bunks, desk, duel-disk stand, posters.
+4. Add the **Jaden/Syrus/Chumley bunk room** cell (7 × 5.5 × 3.2 m): the Slifer triple bunk, kotatsu, desk, duel-disk stand, posters.
 5. Place three exterior portals on the existing Slifer facade doors: room 101 (ground west), Banner (ground east), Jaden (upper west).
 6. Anchor the opening beats: `slifer_cafeteria_player` (Banner's 3,000 DP), `slifer_player_room_save` (sleep/save), `slifer_jaden_room_jaden` (E03), `slifer_banner_room_desk` (Pharaoh).
 7. Test: walk in from the path → cafeteria → player room → sleep/save → return outside. No fall-through, no portal loop, nav reachable.
@@ -211,7 +215,7 @@ Each interior is a pair: an **entrance** trigger at the exterior door and an **e
 2. **Export and place** — `Layout.place_interiors()` reads `Content/Data/World/interiors.json`, exports the FBXs to `SourceAssets/Meshes/Locations/interiors`, appends `static` entries at `origin_ue`, and converts local `light`, `text`, `interact`, `audio` and `emitter` sockets into the layout arrays. Existing island placements are not touched.
 3. **Pipeline hook** — `Tools/build_island.py` calls `lay.place_interiors()` after `lay.place_locations()`.
 4. **Actor spawning** — `level.py::Placer.world_actors()` reads `portals.json`, `anchors.json` and `spawns.json`, spawns `ADAInteriorPortal`, `ADASceneAnchor`, `ADANpcSpawnPoint` and one `ADANpcDirector`, and sets their properties. `build.py` calls it after the existing NPC placement.
-5. **Door leaves/steps** — every cell shell has a door leaf, frame, handle and exterior step on its +Y wall. The paired portal is at the interior side of that door; return portals are always unlocked.
+5. **Door leaves/steps** — every cell shell has a door on its +Y wall: a framed opening (architrave on the room face, reveal linings) with the leaf - the same mesh as the automatic doors (`assets/doors.py`), a 1.0 x 2.15 m single leaf or a 1.8 x 2.25 m pair for the classroom, exam room and dining room - closed on the wall's middle plane, plus an exterior step. The paired portal is at the interior side of that door; return portals are always unlocked.
 6. **Lock behavior** — entrance portals carry `required_flag`; `bFailClosedWhenFlagQueryMissing` stays false until A02 binds `ADAInteriorPortal::FlagQuery`. Story can also call `SetLocked()` at runtime.
 7. **Regenerate** — run the two commands in §0. The island exterior must be unchanged apart from the new `static`, `lights`, `texts`, `interacts` and world actors.
 8. **Validate** — `python Tools/world/validate_layout.py --strict`; run `-DAPortalTest` in PIE (all 20 portals, ten entrances, classroom return, screenshot).

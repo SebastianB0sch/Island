@@ -245,19 +245,25 @@ overworld, its interiors, the portal-cell interiors and the optional Fab nature 
 - Slifer genkan shoe shelf floats ~7 cm; ground-floor rear window frames are 25 cm above their
   openings; posters overlap tapestries; Banner's flasks float; most room furniture sits 3 cm
   inside the tatami; flush panel lights intersect ceiling battens.
-- Ra kitchen back-wall shelves are embedded in the wall (yaw 180 should be 0); laundry wardrobe
-  faces the wall (yaw 180 should be 0); hall banners/exit sign penetrate the 2F slab; the attic
-  stair intersects the 3F slab; the servery sign penetrates the cafeteria ceiling.
+- Ra kitchen back-wall shelves and laundry wardrobe face the room (yaw 0). ~~Hall banners/exit sign
+  penetrate the 2F slab; the attic stair intersects the 3F slab; the servery sign penetrates the
+  cafeteria ceiling~~ fixed 2026-11-11 (see RA_LAYOUT.md).
 - These are small geometry edits but need a re-audit after the fixes.
 
 ### Windows / doors (residual)
 - Gym entrance curtain wall: the bottom glass row is skipped for every bay between -3 and +3 m,
   leaving two ~0.78 x 3.7 m unglazed holes beside the 5.7 m door plus a 0.3 m slot above it.
-- Academy ground-storey painted panes overlap the wing/end-pavilion doorways (8 panes), and
-  24 painted `M_Glass` panes on the wing north face sit in front of walkable lecture halls
-  (not covered by the `PAINTED_OK` reason).
-- RA dorm curtains intersect the inside sills; RA upper-floor doors have a ~3.5 cm gap under
-  the leaf; Slifer/RA cafeteria leaves are ~15 mm below the finished floor.
+- ~~Academy ground-storey painted panes overlap the wing/end-pavilion doorways (8 panes)~~ fixed
+  2026-11-10: the panes beside the portals are left out (`fwin(omit=...)`); see ACADEMY_LAYOUT.md.
+  Still open: 24 painted `M_Glass` panes on the wing north face sit in front of walkable lecture
+  halls (not covered by the `PAINTED_OK` reason).
+- ~~RA dorm curtains intersect the inside sills~~ fixed 2026-11-11 (RA_LAYOUT.md).
+- ~~RA upper-floor doors have a ~3.5 cm gap under the leaf~~: re-measured 2026-11-11, the floor under every
+  RA room, washroom and balcony leaf is flush with the leaf bottom (probe: rays down at and either side of
+  each leaf).
+  ~~Slifer/RA cafeteria leaves are ~15 mm below the finished floor~~ fixed 2026-11-11: `mb.room` lays its
+  floor 2 cm above the slab; the cafeteria / dining-hall doorways now start at that floor (a threshold flush
+  with it) and the leaves stand on it (Ra front + terrace, Slifer entrance + kitchen door).
 - Academy main/side portal leaves are not on the wall middle plane; entry-step tops overlap
   leaves by 5 mm.
 - No automated check compares a door socket's width/height with the actual wall cut, or a
@@ -292,29 +298,17 @@ overworld, its interiors, the portal-cell interiors and the optional Fab nature 
   `TVB`); verify after a fallback import.
 
 ### Portal-cell interiors (10 cells)
-The portal-cell builder (`Tools/dai/assets/interiors.py`) has systematic alignment defects that
-the existing `test_interiors.py` does not check (it only checks the `_Props` AABB against the
-outer bounds):
-
-- side windows, baseboards, crown moulding, room signs, posters, crests and the blackboard are
-  placed inside the 0.18 m wall instead of on its interior face;
-- the door leaf is 14 cm narrower and 10 cm shorter than the opening (7 cm side gaps, 5 cm
-  top/bottom); decorative panels and the handle float in front of the leaf;
-- floor-standing furniture sits 2 cm below the visual floor; dorm beds float 3 cm and are
-  backwards (headboard away from the wall); trunks sink 1 cm; wardrobes clip the +X wall by
-  5.5 cm; bookshelves clip the -X wall by 7 cm; sideboards clip the +X wall by 8-13 cm; books
-  float 2-7 cm above shelves; teacher/proctor chairs are on the student side; the chancellor
-  ending mark is not clear; dining has 8 chairs instead of 12; Jaden's room has a single bed
-  instead of bunks; the Obelisk player room lacks its balcony door;
-- ceiling lamps float 31-34 cm below the ceiling and their lights are 18 cm below the fixture;
-  the dining chandelier floats 60 cm; several fill lights have no fixture;
-- NPC anchors clip desks/walls by 1-8 cm; anchors are 6 cm above the floor; several
-  "behind the desk" notes are contradicted;
-- `interiors.json` `kind` values `"office"` and `"dorm_room"` do not select the intended
-  `_chancellor` / `_bunk` builders (those functions are dead code).
-- Minimal fixes: offset wall decor by the wall thickness, lift furniture to the visual floor,
-  enlarge the door leaf, add lamp stems/fixtures, correct bed/chair placement, and fix the
-  `kind` dispatch. Re-run `test_interiors.py` and `validate_layout.py` afterwards.
+**Fixed 2026-11-10** (`Tools/dai/assets/interiors.py`, see `Docs/World/ACADEMY_LAYOUT.md`): wall decor,
+windows, skirting, crown moulding, room signs, blackboards, clocks, banners, posters and crests sit on the
+wall faces; the door is a real leaf (or pair) on the wall's middle plane filling a framed opening
+(1.0 x 2.15 m single, 1.8 x 2.25 m pair for the classroom / exam room / dining room); furniture stands on
+the finished floor; beds face the right way; wardrobes, book cases and sideboards stand against walls
+without clipping; books stand on shelves; the teacher's / proctor's chair is behind the desk; the
+Chancellor's ending mark has 1 m clear all round; the dining room has 12 chairs; lamps hang from the
+ceiling on stems; the chandelier hangs on chains; `kind: office` now selects Crowler's and the
+Chancellor's own dressing by cell id. The NPC marks that clipped furniture were moved (Chancellor,
+classroom student 02, Chumley). Still open: the Obelisk player room has no balcony door. (Jaden's room got
+the Slifer triple bunk on 2026-11-11 - `Docs/World/SLIFER_LAYOUT.md`.)
 
 ### Stairs / floor holes (critical walkability)
 - **Abandoned clock tower:** the floor planks over the spiral/flight holes are now replaced by
@@ -323,9 +317,11 @@ outer bounds):
 - **Lighthouse lantern hatch is not an opening:** the watch-room ceiling is a solid polygon at
   18.3 and the hatch panels sit above it; the ladder passes through the ceiling and the gallery
   deck. Cut a real 0.75 m hole or shorten the ladder.
-- **Obelisk cupola:** the guard-rail gap is one segment off (the top tread is partly covered by
+- ~~**Obelisk cupola:** the guard-rail gap is one segment off (the top tread is partly covered by
   the k=8 rail), and the floor annulus starts at r=1.25 while the spiral outer radius is 1.15,
-  leaving a 10 cm annular gap. Shift the gap to k=8,9 and add a landing sector.
+  leaving a 10 cm annular gap. Shift the gap to k=8,9 and add a landing sector.~~ Fixed 2026-11-11
+  (`OBELISK_LAYOUT.md`): rail gap at k=8,9, a landing sector from the top tread to the floor ring, and the
+  attic hall's coffers and ceiling rose no longer hang in the stairwell.
 - **Harbor terminal control-room spiral:** the top tread's 180-182 degree sliver is under the
   solid SW slab corner; extend the hole by ~2 degrees or trim the tread.
 - **Academy pavilion 3F-5F:** the structural slab top is exposed over the old north strip

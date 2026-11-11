@@ -174,8 +174,8 @@
       "interior_id": "academy_classroom",
       "kind": "npc",
       "position_ue": [
-        300239.3,
-        299805.9,
+        300218.0,
+        299806.0,
         -29900
       ],
       "yaw": 90.0,
@@ -527,7 +527,7 @@
       "kind": "npc",
       "position_ue": [
         300050.0,
-        365180.0,
+        365330.0,
         -29900.0
       ],
       "yaw": -90.0,
@@ -967,8 +967,8 @@
       "interior_id": "slifer_player_room",
       "kind": "player",
       "position_ue": [
-        330050,
-        300050,
+        329895.0,
+        300060.0,
         -29900
       ],
       "yaw": 180.0,
@@ -1014,8 +1014,8 @@
       "interior_id": "slifer_banner_room",
       "kind": "npc",
       "position_ue": [
-        330068.5,
-        315069.5,
+        330045.0,
+        315208.0,
         -29900
       ],
       "yaw": -90.0,
@@ -1161,8 +1161,8 @@
       "interior_id": "slifer_jaden_room",
       "kind": "npc",
       "position_ue": [
-        330293.3,
-        330125.0,
+        330220.0,
+        330035.0,
         -29900
       ],
       "yaw": 180.0,

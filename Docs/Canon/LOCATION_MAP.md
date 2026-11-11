@@ -171,8 +171,8 @@ These ids are the minimum A03/A09 contract for the opening hour. They all exist 
 | `academy_registration_player` | Registration Player | `academy_lobby` | player | (-1500, -10500, 3600) | 180 |
 | `academy_registration_camera` | Registration Camera | `academy_lobby` | camera | (-700, -7600, 5000) | 0 |
 | `slifer_cafeteria_player` | Slifer Cafeteria Player | `slifer_cafeteria` | player | (-106500, 27800, 2945) | 0 |
-| `slifer_player_room_save` | Player Room Save Point | `slifer_player_room` | player | (330050, 300050, -29900) | 180 |
-| `slifer_banner_room_desk` | Banner Desk | `slifer_banner_room` | npc | (330000, 315100, -29900) | -90 |
+| `slifer_player_room_save` | Player Room Save Point | `slifer_player_room` | player | (329895, 300060, -29900) | 180 |
+| `slifer_banner_room_desk` | Banner Desk | `slifer_banner_room` | npc | (330045, 315208, -29900) | -90 |
 | `slifer_jaden_room_jaden` | Jaden Room Jaden | `slifer_jaden_room` | npc | (329900, 329950, -29900) | 0 |
 | `academy_classroom_teacher` | Classroom Teacher | `academy_classroom` | npc | (300000, 300300, -29900) | -90 |
 | `academy_card_shop_player` | Card Shop Player | `academy_card_shop` | player | (1500, -10500, 3600) | 0 |

@@ -410,8 +410,8 @@
         "card posters"
       ],
       "props": [
-        "bunk bed",
-        "second bunk",
+        "Slifer triple bunk",
+        "kotatsu on tatami",
         "desk",
         "duel disk stand",
         "card posters",
@@ -475,7 +475,8 @@
         "desk",
         "wardrobe",
         "card trunk",
-        "save/sleep mark"
+        "save/sleep mark",
+        "Ra poster + yellow jacket by the door"
       ],
       "notes": "Promotion room. Shares the Slifer room kit with a Ra material swap.",
       "interior_exit_ue": [
@@ -597,7 +598,8 @@
         "wardrobe",
         "card trunk",
         "save/sleep mark",
-        "balcony door"
+        "balcony door",
+        "Obelisk poster + blue jacket by the door"
       ],
       "notes": "Promotion room. Material swap on the Ra/Slifer room kit plus marble trim.",
       "interior_exit_ue": [

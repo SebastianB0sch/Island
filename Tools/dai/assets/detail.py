@@ -70,14 +70,14 @@ def _P(x, y, yaw, dx, dy):
 def switch(nc, x, y, z, yaw, gang=2):
     """Light switch plate on a wall at (x, y) (wall face), local -Y into the room, centre height z."""
     with nc.at((x, y, z), rot=yaw):
-        nc.box((0, -0.005, 0), (0.08 + 0.02 * gang, 0.01, 0.12), "M_DetSwitch")
+        nc.box((0, -0.005, 0), (0.08 + 0.02 * gang, 0.01, 0.12), "M_DetSwitch", skip=("+y",))   # (no face in the wall)
         for k in range(gang):
             nc.box((-0.012 * (gang - 1) + 0.024 * k, -0.012, 0), (0.018, 0.006, 0.05), "M_DetSocket")
 
 
 def outlet(nc, x, y, z, yaw):
     with nc.at((x, y, z), rot=yaw):
-        nc.box((0, -0.005, 0), (0.08, 0.01, 0.12), "M_DetSocket")
+        nc.box((0, -0.005, 0), (0.08, 0.01, 0.12), "M_DetSocket", skip=("+y",))
         for dz in (-0.025, 0.025):
             nc.box((-0.012, -0.011, dz), (0.006, 0.003, 0.016), "M_DetSlot")
             nc.box((0.012, -0.011, dz), (0.006, 0.003, 0.016), "M_DetSlot")
@@ -161,10 +161,10 @@ def blinds(nc, x, y, z0, z1, yaw, w, slats_open=0.55):
 def _doors_on(aset, x0, y0, x1, y1, z, tol=0.45):
     """Door sockets whose plane lies on one of the room's walls (inner face within `tol`)."""
     out = []
-    for s in aset.sockets:
-        if s["type"] != "door":
-            continue
-        px, py, pz = s["pos"]
+    doors = [(s["pos"], s["props"]["width"]) for s in aset.sockets if s["type"] == "door"]
+    doors += [(pos, w) for pos, yaw, w, h in getattr(aset, "openings", ())]      # open doorways too
+    for pos, width in doors:
+        px, py, pz = pos
         if abs(pz - z) > 0.35:
             continue
         on = None
@@ -177,7 +177,7 @@ def _doors_on(aset, x0, y0, x1, y1, z, tol=0.45):
         elif abs(px - x1) < tol and y0 - 0.1 < py < y1 + 0.1:
             on = "e"
         if on:
-            out.append((on, px, py, s["props"]["width"]))
+            out.append((on, px, py, width))
     return out
 
 
@@ -232,6 +232,10 @@ def dress_room(aset, mb, nc, x0, y0, x1, y1, z, z_ceil, style="dorm", seed=0, sk
                 if not blocked(px, py, 0.4):
                     outlet(nc, px, py, z + 0.3, yaw)
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    for kc in keep_clear:      # (a keep-clear area under the centre - a stairwell: the ceiling fixtures go beside it)
+        xa, xb, ya, yb = min(kc[0], kc[2]), max(kc[0], kc[2]), min(kc[1], kc[3]), max(kc[1], kc[3])
+        if xa - 0.8 <= cx <= xb + 0.8 and ya - 0.6 <= cy <= yb + 0.6:
+            cx = xb + 1.0 if xb + 1.0 < x1 - 0.5 else xa - 1.0
     if st.get("smoke"):
         ceiling_fixture(nc, cx + 0.6, cy + 0.4, z_ceil, "smoke")
     if st.get("rose"):
@@ -263,7 +267,10 @@ def dress_room(aset, mb, nc, x0, y0, x1, y1, z, z_ceil, style="dorm", seed=0, sk
         a, b, yaw = walls[on]
         ex = dx if on in "sn" else (x0 if on == "w" else x1)
         ey = dy if on in "ew" else (y0 if on == "s" else y1)
-        exit_sign(nc, aset, ex, ey, min(z_ceil - 0.15, z + 2.45), yaw)
+        # over the door head (a tall French door's leaf would sweep through a sign at the usual 2.45 m)
+        head = max([s["props"]["height"] for s in aset.sockets if s["type"] == "door"
+                    and math.hypot(s["pos"][0] - dx, s["pos"][1] - dy) < 0.05 and abs(s["pos"][2] - z) < 0.35] or [2.15])
+        exit_sign(nc, aset, ex, ey, min(z_ceil - 0.15, max(z + 2.45, z + head + 0.14)), yaw)
     if st.get("calendar") and any(n not in skip_walls for n in walls):
         names = [n for n in walls if n not in skip_walls]
         n = rnd.choice(names)
@@ -533,10 +540,11 @@ def coat_hooks(nc, x, y, z, yaw, n=4, dorm="slifer", jackets=None, seed=0):
             nc.box((u, -0.05, 0.0), (0.02, 0.07, 0.02), "M_DetSilver")
             if k < jackets:
                 m = JACKETS.get(dorm, "M_DetJacketRed")
-                nc.box((u, -0.07, -0.33), (0.38, 0.07, 0.62), m)
-                nc.box((u, -0.075, -0.06), (0.16, 0.06, 0.1), "M_DetJacketWhite")
+                dy = 0.012 * (k % 2)              # (neighbouring jackets overlap: every other one hangs in front)
+                nc.box((u, -0.07 - dy, -0.33), (0.38, 0.07, 0.62), m)
+                nc.box((u, -0.078 - dy, -0.06), (0.16, 0.066, 0.1), "M_DetJacketWhite")
                 for s in (-1, 1):
-                    nc.box((u + s * 0.22, -0.07, -0.32), (0.08, 0.06, 0.56), m)
+                    nc.box((u + s * 0.22, -0.07 - dy, -0.32), (0.08, 0.06, 0.56), m)
 
 
 def trophy(nc, x, y, z, s=1.0, mat="M_DetTrophy"):

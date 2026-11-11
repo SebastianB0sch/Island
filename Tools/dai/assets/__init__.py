@@ -38,6 +38,9 @@ class AssetSet:
         self.name = name
         self.meshes = {}
         self.sockets = []
+        # open doorways (interior.wall openings without a door leaf): no socket, but wainscots, skirting and
+        # wall fixtures must keep clear of them just like of a door - (pos, yaw, width, height)
+        self.openings = []
 
     # ------------------------------------------------------------------ meshes
     def mesh(self, name):
