@@ -60,4 +60,6 @@ def params(name, spec=None):
     cls = classify(name, spec)
     out = dict(CLASSES[cls])
     out["cel"] = cls
+    if spec and spec.get("ring") is not None:      # painted highlights (atelier hair): tune the shader ring
+        out["spec"] = float(spec["ring"])
     return out

@@ -1,5 +1,5 @@
 {
-  "_comment": "Animation takes for the anime cast (Tools/dai/anime). Idle, Walk, Run, Jump, Fall, Land, Duel, Swim and Tread are solved on the cast skeleton by Tools/dai/anime/gait.py / build.py (biomechanical foot planting and leg IK); the gestures below are CC0 Quaternius takes retargeted onto the shared anime skeleton, with their legs re-solved so the feet stay planted. 'take' = source action name (after the last '|'); optional 'frames' [first, last], 'speed' (playback multiplier) and 'arm_drop' (degrees: the astronaut's bulky suit holds the arms away from the body). 'anime_models': existing anime base models (VRM / glTF / FBX humanoids) the cast is built from (Tools/dai/anime/models.py); drop your own in Tools/thirdparty/<pack>/<asset>/ with a SOURCE.txt and register them here.",
+  "_comment": "Animation takes for the anime cast (Tools/dai/anime). Idle, Walk, Run, Jump, Fall, Land, Duel, Swim and Tread are solved on the cast skeleton by Tools/dai/anime/gait.py / build.py (biomechanical foot planting and leg IK); the gestures below are CC0 Quaternius takes retargeted onto the shared anime skeleton, with their legs re-solved so the feet stay planted. 'take' = source action name (after the last '|'); optional 'frames' [first, last], 'speed' (playback multiplier) and 'arm_drop' (degrees: the astronaut's bulky suit holds the arms away from the body). The cast itself is modelled by the project's own generator (Tools/dai/anime/atelier) - no base model is registered by default. 'anime_models': artist-made character models (VRM / glTF / FBX humanoids) dropped in Tools/thirdparty/<pack>/<asset>/ with a SOURCE.txt: {key: {file, female, height (crown height in metres)}}. 'cast_models': {cast slot id or design key: anime_models key} - which slot each artist model replaces. See Docs/CHARACTER_MODELS.md.",
   "anime": {
     "A_Anime_Wave": {
       "file": "quaternius/astronaut/astronaut.glb",
@@ -31,15 +31,19 @@
   "anime_models": {
     "vroid_a": {
       "file": "vroid/avatar_sample_a/AvatarSample_A.vrm",
-      "female": true
+      "female": true,
+      "height": 1.55
     },
     "vroid_b": {
       "file": "vroid/avatar_sample_b/AvatarSample_B.vrm",
-      "female": true
+      "female": true,
+      "height": 1.511
     },
     "vroid_c": {
       "file": "vroid/avatar_sample_c/AvatarSample_C.vrm",
-      "female": false
+      "female": false,
+      "height": 1.743
     }
-  }
+  },
+  "cast_models": {}
 }

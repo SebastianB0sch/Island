@@ -111,7 +111,7 @@ def write(path=None, log=print):
         "## Third-party assets",
         "",
         "All third-party art below is **CC0 / public domain**, **CC-BY** (attribution given here) or, for the",
-        "VRoid sample avatars the anime cast is built from, the **VRoid Hub conditions of use** embedded in each",
+        "VRoid sample avatars the anime cast is built on, the **VRoid Hub conditions of use** embedded in each",
         "model (modification and redistribution allowed, credit not required).",
         "Every folder keeps a `SOURCE.txt` with the download URLs, license evidence and file hashes.",
         "Paths are relative to `Tools/thirdparty/`.",

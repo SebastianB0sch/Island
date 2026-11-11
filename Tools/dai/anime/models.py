@@ -9,8 +9,10 @@ an Unreal-ready skeletal mesh:
   * the humanoid bones (VRM humanoid map, or common Mixamo / VRoid names) are renamed to the UE5
     Mannequin scheme (pelvis, spine_01.., upperarm_l, ..), so the same CC0 takes drive every model
     and Unreal's IK Retargeter auto-maps it; hair / skirt / finger helper bones keep their names
-  * the base outfit is replaced by a tailored Duel Academy uniform (outfit.py) and the hair restyled
-    (hairdo.py) after each character's official design; hair, eye and shoe textures are recoloured;
+  * the base outfit is replaced by generated garments cut from the body's own cross-sections (wardrobe.py,
+    look key "wear") - or, for a look without them, by a uniform tailored from the skin (outfit.py) or just
+    recoloured; the hair is either replaced
+    by generated clump hair (clumphair.py, look key "hair_style") or the base cut is restyled (hairdo.py); hair, eye and shoe textures are recoloured;
     generic students get a neutral jacket / hair that Unreal tints at runtime ("JacketTint" /
     "HairTint" slots)
   * an inverted-hull ink outline is added to the body and hair
@@ -105,6 +107,7 @@ def _bake_expression(obj, names, expression):
     kb[0].data.foreach_get("co", base)
     co = base.copy()
     for key, w in expression.items():
+        key = FACE_MORPHS.get(key, key)                  # the runtime morph names work as well ("Joy", "Fun")
         i = next((i for i, nm in enumerate(names) if nm.lower().endswith("fcl_" + key.lower())), None)
         if i is None or i + 1 >= len(kb):
             continue
@@ -208,7 +211,7 @@ def load(path, log=print, expression=None):
     for m in meshes:
         if m.data.shape_keys:
             co = None
-            src = names.get(m.name.split(".")[0])
+            src = names.get(m.name.split(".")[0]) or [k.name for k in m.data.shape_keys.key_blocks[1:]]
             if expression and src:
                 co = _bake_expression(m, src, expression)
             deltas = _morph_deltas(m, src) if src else {}
@@ -236,6 +239,40 @@ FACE_MORPHS = {
 MORPH_ATTR = "da_morph_"
 
 
+# The same morphs under the names other pipelines export (VRM 1.0 expressions, ARKit, common MMD / Unity
+# names), so an artist-made model keeps its facial rig. Matched case-insensitively against the end of the
+# blendshape name; the VRoid "Fcl_" name above is tried first.
+MORPH_ALIASES = {
+    "Blink": ("blink", "eyeblink", "eyesclosed", "eye_close", "mabataki"),
+    "Blink_L": ("blinkleft", "blink_l", "eyeblinkleft", "eyeblink_l", "wink_l", "winkleft"),
+    "Blink_R": ("blinkright", "blink_r", "eyeblinkright", "eyeblink_r", "wink_r", "winkright"),
+    "A": ("aa", "vrc.v_aa", "mouth_a", "v_aa", "_a"), "I": ("ih", "vrc.v_ih", "mouth_i", "v_ih", "_i"),
+    "U": ("ou", "vrc.v_ou", "mouth_u", "v_ou", "_u"), "E": ("ee", "vrc.v_e", "mouth_e", "v_e", "_e"),
+    "O": ("oh", "vrc.v_oh", "mouth_o", "v_oh", "_o"),
+    "Joy": ("happy", "joy", "smile"), "Angry": ("angry", "anger"), "Sorrow": ("sad", "sorrow"),
+    "Surprised": ("surprised", "surprise"), "Fun": ("relaxed", "fun"),
+    "EyeJoy": ("eye_joy", "eyesmile", "eye_smile", "eyejoy"),
+    "BrowAngry": ("brow_angry", "browangry", "browdown"), "BrowSorrow": ("brow_sorrow", "browsorrow", "browinnerup"),
+}
+
+
+def _morph_index(names, morph):
+    """Index into `names` of the blendshape that plays `morph` (None if the model has none)."""
+    low = [n.lower() for n in names]
+    key = "fcl_" + FACE_MORPHS[morph].lower()
+    for i, n in enumerate(low):
+        if n.endswith(key):
+            return i
+    for alias in MORPH_ALIASES.get(morph, ()):
+        for i, n in enumerate(low):
+            if n == alias or n.endswith("." + alias) or n.endswith("_" + alias.lstrip("_")) and len(alias) > 2:
+                return i
+    for i, n in enumerate(low):                      # a shape key simply named after the morph
+        if n == morph.lower():
+            return i
+    return None
+
+
 def _morph_deltas(obj, names):
     """{morph: (n*3,) offset from the base model's basis} for the FACE_MORPHS this mesh has."""
     kb = obj.data.shape_keys.key_blocks
@@ -243,8 +280,8 @@ def _morph_deltas(obj, names):
     base = np.empty(n * 3)
     kb[0].data.foreach_get("co", base)
     out = {}
-    for morph, key in FACE_MORPHS.items():
-        i = next((i for i, nm in enumerate(names) if nm.lower().endswith("fcl_" + key.lower())), None)
+    for morph in FACE_MORPHS:
+        i = _morph_index(names, morph)
         if i is None or i + 1 >= len(kb):
             continue
         tgt = np.empty(n * 3)
@@ -363,8 +400,9 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
                                                   2048, mode="RGBA", fresh_against=source)
             if base_png and rig is not None and role == "skin" and "body" in mat.name.lower():
                 from .outfit import fix_skin
-                base_png = fix_skin(obj, slot_idx, base_png, base_png[:-4] + "_bare.png", rig,
-                                    legs=bool(entry.get("body", {}).get("female")))
+                worn = bool(entry.get("wear"))
+                base_png = fix_skin(obj, slot_idx, base_png, base_png[:-4] + ("_plain.png" if worn else "_bare.png"),
+                                    rig, legs=bool(entry.get("body", {}).get("female")), plain_neck=worn)
             target = recolor.get(role)
             if neutral.get(role):
                 target = (0.94, 0.94, 0.94)
@@ -490,24 +528,45 @@ def build_model(cid, entry, key_name, log=print):
     preview_material(K.OUTLINE_MAT)
     from . import hairdo, outfit
     tailored = set()
+    hidden_skin = None
     body = next((m for m in meshes if any(role_of(s.material.name) == "skin" and "body" in s.material.name.lower()
                                           for s in m.material_slots if s.material)), None)
     rig = None
     if body is not None:
         skin = {i for i, s in enumerate(body.material_slots) if s.material and role_of(s.material.name) == "skin"}
         rig = outfit.Rig(arm, body, skin)
-        if entry.get("outfit"):
+        if entry.get("wear"):
+            # generated garments cut from this body's cross-sections (wardrobe.py) replace the base outfit
+            from . import wardrobe
+            _, cloth_mats, hidden_skin = wardrobe.build(arm, meshes, body, rig, entry, key, log)
+            tailored |= cloth_mats
+            _drop_unused_slots(body)
+        elif entry.get("outfit"):
             t = outfit.tailor(arm, body, entry, key, log)
             tailored = {g["mat"] for g in t.garments.values()}
             _drop_unused_slots(body)
     alpha = alpha_modes(path)
     extra = []
-    if rig is not None and (entry.get("hairdo") or entry.get("face_shape")):
+    if entry.get("hair_style"):
+        # clump hair (clumphair.py): the base model's hair mesh is replaced by generated locks
+        from . import clumphair
+        face = next(m for m in meshes if m.name.startswith("Face"))
+        if entry.get("face_shape"):
+            hairdo.reshape_face(face, **entry["face_shape"])
+        _, hair_mats = clumphair.build(arm, meshes, entry, key, log)
+        tailored |= hair_mats
+        if rig is not None and entry.get("accessories"):
+            extra = hairdo.accessories(arm, face, entry["accessories"], key, rig)
+            tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
+    elif rig is not None and (entry.get("hairdo") or entry.get("face_shape")):
         more, extra = hairdo.restyle(arm, meshes, entry, key, rig, log)
         alpha.update(more)
         tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
     materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig, source=path)
-    if body is not None and entry.get("outfit"):
+    if hidden_skin is not None:
+        wardrobe.strip_skin(body, hidden_skin)       # the skin under the clothes (nothing left to poke through)
+    tailor_fit = bool(entry.get("outfit")) and not entry.get("wear")
+    if body is not None and tailor_fit:
         # cloth fit relaxation: loosen the clothes wherever a take would push an inner layer through them
         from . import correctives, fitcheck
         fitcheck.relax(body, arm, log)
@@ -519,7 +578,7 @@ def build_model(cid, entry, key_name, log=print):
         fitcheck.snap_residuals(body, arm, log, shape_fn=lambda a: correctives.displacement(body, a))
     meshes += extra
     for m in meshes:
-        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses", "haircap"))
+        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses", "haircap", "clumphair", "wardrobe"))
     face = next((m for m in meshes if m.name.startswith("Face")), meshes[0])
     _select(meshes, face)
     if len(meshes) > 1:
@@ -530,7 +589,7 @@ def build_model(cid, entry, key_name, log=print):
     shading.face_normals(mesh, arm, log)
     shading.hair_normals(mesh, arm, log)
     restore_morphs(mesh, log)
-    if entry.get("outfit"):
+    if tailor_fit:
         # final check on exactly what is exported: covered vertices still breaking through follow their cloth
         from . import fitcheck
         fitcheck.snap_residuals(mesh, arm, log)

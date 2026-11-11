@@ -94,10 +94,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
 	bool bDormTint = true;
 
-	/** Optional Fab Anime Character Pack look id (fab_male_a, fab_female_b, ...). */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
-	FString FabLook;
-
 	/** Uniform size; 0 = the avatar's random student size. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Spawn")
 	float BodyScale = 0.f;

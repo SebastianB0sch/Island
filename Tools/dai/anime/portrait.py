@@ -2,7 +2,7 @@
 
 The dialogue / duel UI loads 512 x 512 PNGs from Content/Data/Portraits.  The
 existing local-only renders came from Duel Links; the missing speakers are
-rendered here from the VRoid-derived cast models, so every named character and
+rendered here from the cast models, so every named character and
 NPC has art in the same style as the people who actually stand on the island.
 
 The background is flattened onto the exact panel colour used by the UI

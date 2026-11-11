@@ -5,7 +5,6 @@
 #include "AIController.h"
 #include "Components/CapsuleComponent.h"
 #include "DAAvatarComponent.h"
-#include "DAFabAnimePuppet.h"
 #include "DACardDatabase.h"
 #include "DAHUD.h"
 #include "DAIslandSubsystem.h"
@@ -71,8 +70,6 @@ ADAStudentNPC::ADAStudentNPC()
 	Avatar->SetupAttachment(GetCapsuleComponent());
 	Avatar->SetRelativeLocation(FVector(0.0, 0.0, -92.0));
 
-	FabAvatar = CreateDefaultSubobject<UDAFabAnimeComponent>(TEXT("FabAvatar"));
-
 	GetMesh()->SetVisibility(false);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
@@ -104,13 +101,6 @@ void ADAStudentNPC::BeginPlay()
 		Avatar->bShowDuelDisk = Rng.FRand() < 0.6f;
 	}
 	Super::BeginPlay();
-
-	// Optional licensed Fab Anime Character Pack puppet.  If the pack is not
-	// installed Activate() fails closed and the native avatar stays visible.
-	if (FabAvatar && !FabLook.IsEmpty())
-	{
-		FabAvatar->ActivateLook(FabLook);
-	}
 
 	if (!DisplayName.IsEmpty())
 	{
@@ -165,10 +155,6 @@ void ADAStudentNPC::BeginPlay()
 
 void ADAStudentNPC::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (FabAvatar)
-	{
-		FabAvatar->DeactivateLook();
-	}
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
 		Sub->UnregisterInteractable(this);

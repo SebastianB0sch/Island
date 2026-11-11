@@ -61,7 +61,6 @@ def apply_npc(actor, entry, cast):
         set_if(actor, "override_hair_color", True)
     else:
         set_if(actor, "override_hair_color", False)
-    set_if(actor, "fab_look", entry.get("fab_look", ""))
     points = entry.get("points") or []
     set_if(actor, "wander_points", [unreal.Vector(*p) for p in points])
     set_if(actor, "wander_points_only", bool(points))
@@ -78,7 +77,6 @@ def apply_spawn_point(actor, spawn, cast):
         set_if(actor, "body_scale", float(spawn.get("scale", look.get("scale", 1.0))))
     if spawn.get("lines"):
         set_if(actor, "lines", list(spawn["lines"]))
-    set_if(actor, "fab_look", spawn.get("fab_look", ""))
     if spawn.get("hair"):
         set_if(actor, "hair_color", unreal.LinearColor(*spawn["hair"], 1.0))
         set_if(actor, "override_hair_color", True)

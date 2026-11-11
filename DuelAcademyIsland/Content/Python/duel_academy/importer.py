@@ -608,10 +608,53 @@ def _cleanup_abandoned_backups():
 
 def _lods(mesh, count=3):
     """Auto LODs - the cast models are 45-50k triangles and dozens of students walk around."""
+    subsystem = unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem)
     try:
-        unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem).regenerate_lod(mesh, count)
+        # A generated LOD drops every morph target unless its reduction settings ask for a remap, and the
+        # engine default is off: the face would stop blinking / lip-syncing as soon as LOD 1 is shown (a
+        # standing character filling about half the screen height). New LODs copy the settings of the LOD
+        # before them, so set it on what exists first; anything still without it is regenerated once more.
+        _remap_lod_morphs(mesh)
+        subsystem.regenerate_lod(mesh, count)
+        if _remap_lod_morphs(mesh, first=1):
+            subsystem.regenerate_lod(mesh, count)
     except Exception as e:  # noqa: BLE001
         C.warn(f"{mesh.get_name()}: LOD generation skipped ({e})")
+    _check_face_morphs(mesh)
+
+
+def _remap_lod_morphs(mesh, first=0):
+    """Turn on "remap morph targets" in the reduction settings of LOD `first` and up. Returns the number
+    of LODs changed (0 when all had it, or when this engine version does not expose the settings)."""
+    try:
+        infos = list(mesh.get_editor_property("lod_info"))
+        changed = 0
+        for i, info in enumerate(infos):
+            if i < first:
+                continue
+            settings = info.get_editor_property("reduction_settings")
+            if not settings.get_editor_property("remap_morph_targets"):
+                settings.set_editor_property("remap_morph_targets", True)
+                info.set_editor_property("reduction_settings", settings)
+                changed += 1
+        if changed:
+            mesh.set_editor_property("lod_info", infos)
+        return changed
+    except Exception as e:  # noqa: BLE001
+        C.warn(f"{mesh.get_name()}: could not keep morph targets on the generated LODs ({e}); "
+               f"faces will only blink at LOD 0")
+        return 0
+
+
+def _check_face_morphs(mesh):
+    """Warn when a cast mesh arrived without its facial rig (UDAAvatarAnimInstance blinks through "Blink")."""
+    try:
+        names = {m.get_name() for m in mesh.get_editor_property("morph_targets") if m is not None}
+    except Exception:  # noqa: BLE001 - not readable from Python on this engine version: nothing to check
+        return
+    if "Blink" not in names:
+        C.warn(f"{mesh.get_name()}: no 'Blink' morph target after import ({len(names)} morphs); "
+               f"the character will not blink or lip-sync")
 
 
 CAST_STATE_REL = os.path.join("Saved", "DuelAcademy", "cast_assets.json")
@@ -742,36 +785,6 @@ def _prune_stale_cast(info, prune=True):
     return removed
 
 
-def _apply_fab_locomotion():
-    """Install the optional local Fab locomotion retarget after a cast rebuild.
-
-    The cast rebuild regenerates the procedural gait A_Anime_<Group>_Idle/Walk/Run
-    takes, which would otherwise silently replace the retargeted Fab takes.  When
-    the local-only retargeted FBXs exist (Tools/retarget_fab_anime.py), re-import
-    them over the fresh gait clips.  A fresh checkout has no such folder and keeps
-    the gait clips exactly as before.
-    """
-    repo = os.path.dirname(C.project_dir())
-    retarget_dir = os.path.join(repo, "Tools", "thirdparty", "fab_anime", "retargeted")
-    if not os.path.isdir(retarget_dir):
-        return
-    tools = os.path.join(repo, "Tools")
-    if tools not in sys.path:
-        sys.path.insert(0, tools)
-    try:
-        import apply_fab_locomotion as fab_locomotion
-    except Exception as exc:  # noqa: BLE001 - the gait clips are a valid fallback
-        C.warn(f"cast: Fab locomotion installer unavailable: {exc}")
-        return
-    C.log("cast: re-applying local Fab locomotion retarget takes")
-    try:
-        result = fab_locomotion.main()
-        if result:
-            C.warn("cast: Fab locomotion install reported failures; a group may have kept its gait takes")
-    except Exception as exc:  # noqa: BLE001
-        C.warn(f"cast: Fab locomotion takes not re-applied: {exc}")
-
-
 def import_cast(masters, prune=True):
     """SourceAssets/Data/cast.json -> /Game/DuelAcademy/Characters: the anime cast.
 
@@ -879,5 +892,4 @@ def import_cast(masters, prune=True):
         if obj is not None and obj.get_class().get_name() in ("Material", "MaterialInstanceConstant", "Texture2D"):
             unreal.EditorAssetLibrary.delete_asset(path)
     C.log(f"cast: {len(meshes)} characters in {len(info.get('groups', {}))} skeleton groups")
-    _apply_fab_locomotion()
     return meshes

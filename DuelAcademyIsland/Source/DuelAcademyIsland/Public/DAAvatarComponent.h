@@ -103,9 +103,7 @@ public:
 	bool bDormTint = true;
 
 	/** Ground speed (cm/s) at which the walk / run takes play at rate 1 (no foot sliding). The defaults fit
-	 *  the procedural gait takes (1.50 m/s walk, 4.20 m/s run). When the local Fab locomotion retarget is
-	 *  installed, SetupCast detects the longer 1.17 s / 0.63 s clips and uses their measured planted-foot
-	 *  reference speeds (about 1.33-1.58 m/s walk and 5.55-6.59 m/s sprint, per skeleton group). The
+	 *  the procedural gait takes (1.50 m/s walk, 4.20 m/s run). The
 	 *  SK_Student fallback switches to the speeds its import normalises its clips to (RateScale, measured
 	 *  per rig by Tools/dai/character.py). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
@@ -136,7 +134,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Duel Academy")
 	float GetStandingHeight() const;
 
-	/** Enable/disable the skeletal mesh's animation tick (the Fab puppet hides it while active). */
+	/** Enable/disable the skeletal mesh's animation tick. */
 	UFUNCTION(BlueprintCallable, Category = "Duel Academy")
 	void SetSkeletalTickEnabled(bool bEnabled);
 

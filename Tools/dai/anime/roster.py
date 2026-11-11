@@ -47,11 +47,6 @@ HAIR_PALETTE = (
 )
 NATURAL_HAIR_COUNT = 10
 
-# Optional looks from the licensed Fab Anime Character Pack.  These ids are read
-# by UDAFabAnimeComponent; the pack itself is installed locally and gitignored.
-FAB_MALE_LOOKS = ("fab_male_a", "fab_male_b", "fab_male_c", "fab_male_d")
-FAB_FEMALE_LOOKS = ("fab_female_a", "fab_female_b", "fab_female_c", "fab_female_d")
-
 # --------------------------------------------------------------------------- voices
 # Each voice is a small, original set of lines for a dorm / role / location.  A
 # roster entry picks two of them; the third line is always its own profile line,
@@ -575,22 +570,6 @@ def assign_uniques(npcs):
         if id(marker) not in assigned:
             assigned[id(marker)] = _entry_for_marker(marker, counters, used)
 
-    # About one in seven male and one in four female non-staff students gets a
-    # licensed Fab anime look (when the pack is installed).
-    fab_looks = {}
-    male_index = female_index = 0
-    for marker in markers:
-        if assigned[id(marker)].get("staff"):
-            continue
-        if _is_female(marker):
-            if female_index % 4 == 0:
-                fab_looks[id(marker)] = FAB_FEMALE_LOOKS[(female_index // 4) % len(FAB_FEMALE_LOOKS)]
-            female_index += 1
-        else:
-            if male_index % 7 == 0:
-                fab_looks[id(marker)] = FAB_MALE_LOOKS[(male_index // 7) % len(FAB_MALE_LOOKS)]
-            male_index += 1
-
     for marker in markers:
         entry = assigned[id(marker)]
         seed = _seed(marker)
@@ -603,10 +582,6 @@ def assign_uniques(npcs):
                 marker["cast"] = "student_m1"
         marker["name"] = entry["name"]
         marker["roster_id"] = entry["id"]
-        if id(marker) in fab_looks:
-            # Licensed Fab look when the pack is installed; the native GX
-            # avatar remains the fallback on a fresh checkout.
-            marker["fab_look"] = fab_looks[id(marker)]
         groups = entry.get("groups") or ()
         if groups and marker.get("group") not in groups:
             # A curated name that had to spill to another location keeps its

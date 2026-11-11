@@ -91,7 +91,7 @@ def _expression_pass(a, entries, wanted):
             path = os.path.join(a.out, cid + "_" + expression + ".png")
             if os.path.exists(path) and not a.force:
                 continue
-            weights = EXPR.blend(entries[cid].get("expression"), expression)
+            weights = EXPR.blend(EXPR.resting(entries[cid]), expression)
             if not weights:
                 print("%-18s no recipe for %s" % (cid, expression))
                 continue

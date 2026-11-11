@@ -359,25 +359,25 @@ class ManifestPathTests(unittest.TestCase):
 
     def test_asset_name_strips_package_object_suffix(self) -> None:
         self.assertEqual(asset_paths.asset_name("/Game/Dir/SK_Foo.SK_Foo"), "SK_Foo")
-        self.assertEqual(asset_paths.asset_name("A_Anime_Proc_Idle"), "A_Anime_Proc_Idle")
+        self.assertEqual(asset_paths.asset_name("A_Anime_Cast_Idle"), "A_Anime_Cast_Idle")
 
 
 class CastCleanupTests(unittest.TestCase):
     def manifest(self) -> dict:
         return {
             "meshes": {
-                "student_m1": {"name": "SK_Anime_StudentM1", "group": "Proc"},
-                "jaden": {"name": "SK_Anime_Jaden", "group": "VroidC"},
+                "student_m1": {"name": "SK_Anime_StudentM1", "group": "Cast"},
+                "jaden": {"name": "SK_Anime_Jaden", "group": "ArtistA"},
             },
             "groups": {
-                "Proc": {
+                "Cast": {
                     "base_mesh": {"name": "SK_Anime_StudentM1", "file": "Meshes/Characters/Anime/SK_Anime_StudentM1.fbx"},
-                    "anims": {"Idle": {"name": "A_Anime_Proc_Idle"},
-                              "Walk": {"name": "A_Anime_Proc_Walk"}},
-                    "duel_disk": {"name": "SK_Anime_Proc_DuelDisk"},
+                    "anims": {"Idle": {"name": "A_Anime_Cast_Idle"},
+                              "Walk": {"name": "A_Anime_Cast_Walk"}},
+                    "duel_disk": {"name": "SK_Anime_Cast_DuelDisk"},
                 },
-                "VroidC": {
-                    "anims": {"Idle": {"name": "A_Anime_VroidC_Idle"}},
+                "ArtistA": {
+                    "anims": {"Idle": {"name": "A_Anime_ArtistA_Idle"}},
                 },
             },
         }
@@ -385,8 +385,8 @@ class CastCleanupTests(unittest.TestCase):
     def test_expected_assets_include_meshes_takes_and_disks(self) -> None:
         expected = asset_paths.expected_cast_assets(self.manifest())
         self.assertEqual(expected, {
-            "SK_Anime_StudentM1", "SK_Anime_Jaden", "A_Anime_Proc_Idle", "A_Anime_Proc_Walk",
-            "SK_Anime_Proc_DuelDisk", "A_Anime_VroidC_Idle",
+            "SK_Anime_StudentM1", "SK_Anime_Jaden", "A_Anime_Cast_Idle", "A_Anime_Cast_Walk",
+            "SK_Anime_Cast_DuelDisk", "A_Anime_ArtistA_Idle",
         })
 
     def test_only_previously_owned_cast_assets_are_stale(self) -> None:
@@ -405,8 +405,8 @@ class CastCleanupTests(unittest.TestCase):
     def test_case_only_rename_is_not_stale(self) -> None:
         # Unreal asset paths are case-insensitive; a case-only change must not
         # delete the asset the current import just created.
-        owned = {"sk_anime_studentm1", "a_anime_proc_idle"}
-        expected = {"SK_Anime_StudentM1", "A_Anime_Proc_Idle"}
+        owned = {"sk_anime_studentm1", "a_anime_cast_idle"}
+        expected = {"SK_Anime_StudentM1", "A_Anime_Cast_Idle"}
         self.assertEqual(asset_paths.stale_owned_assets(owned, expected), [])
 
     def test_ownership_state_round_trip_and_validation(self) -> None:
@@ -475,16 +475,114 @@ class NpcRosterTests(unittest.TestCase):
                 self.assertIn(marker["cast"], ("student_m1", "student_f1", "student_f2"))
                 self.assertNotEqual(marker["name"], "Student")
 
-    def test_fab_looks_are_gendered_and_sparse(self) -> None:
+    def test_no_marker_carries_a_marketplace_look(self) -> None:
+        # The licensed marketplace character pack was removed: every NPC is one of the
+        # project's own atelier designs, and a stale key from an older layout is dropped.
         markers = self.markers()
+        markers[0]["fab_look"] = "fab_male_a"
         roster.assign_uniques(markers)
-        fab = [m for m in markers if m.get("fab_look")]
-        self.assertTrue(fab)
-        self.assertLess(len(fab), len(markers))
-        for marker in fab:
-            expected = roster.FAB_FEMALE_LOOKS if roster._is_female(marker) else roster.FAB_MALE_LOOKS
-            self.assertIn(marker["fab_look"], expected)
-            self.assertNotEqual(marker["dorm"], "white")
+        self.assertFalse([m for m in markers if "fab_look" in m])
+
+
+class AtelierCastTests(unittest.TestCase):
+    """The cast is built from the project's own designs (no third-party base model)."""
+
+    GARMENTS = {"top", "skirt", "pants", "legwear", "shoes", "collar", "bow", "tie", "belt", "band", "gloves",
+                "cape", "scarf", "emblem", "buttons", "hairband", "glasses", "hairbow"}
+
+    def test_every_cast_slot_resolves_to_a_look(self) -> None:
+        from dai.anime import cast, looks, portrait_cast
+        from dai.anime.atelier import designs
+        table = designs.all_designs()
+        entries = dict(portrait_cast.all_entries(), **cast.all_entries())
+        self.assertIn(cast.PLAYER, entries)
+        for cid, entry in entries.items():
+            self.assertIn(entry["design"], table, cid)             # generated fallback
+            self.assertIn(cid, looks.LOOKS, cid)                   # VRoid-based look
+            self.assertEqual(entry.get("model"), looks.LOOKS[cid]["model"], cid)
+            self.assertGreater(entry["scale"], 0.8, cid)
+            self.assertLess(entry["scale"], 1.15, cid)
+
+    def test_looks_use_registered_bases_and_known_morphs(self) -> None:
+        import json
+        from dai.anime import looks
+        with open(os.path.join(TOOLS, "thirdparty", "registry", "anime.json"), encoding="utf-8") as fp:
+            reg = json.load(fp)
+        morphs = {"Blink", "Joy", "Angry", "Sorrow", "Surprised", "Fun", "EyeJoy", "BrowAngry", "BrowSorrow"}
+        for cid, spec in looks.LOOKS.items():
+            self.assertIn(spec["model"], reg["anime_models"], cid)
+            self.assertEqual(spec["base_height"], reg["anime_models"][spec["model"]]["height"], cid)
+            self.assertLessEqual(set(spec.get("expression", {})), morphs, cid)
+            self.assertLessEqual(set(spec.get("tint", ())), {"jacket", "hair"}, cid)
+
+    def test_looks_wear_clump_hair_recipes(self) -> None:
+        from dai.anime import looks
+        from dai.anime.atelier import styles
+        sections = {"fringe", "sides", "back", "spikes", "tails", "braids", "buns", "ahoge"}
+        options = set(looks._OPTIONS) | {"style"}
+        for name, recipe in styles.HAIR.items():
+            self.assertLessEqual(set(recipe), sections, name)
+        self.assertEqual(styles.styled("long", ahoge=0.06, sides=None, fringe=dict(kind="swept"))["fringe"]["kind"],
+                         "swept")
+        self.assertNotIn("fringe", styles.HAIR["bald_ring"])
+        self.assertNotIn("kind", styles.HAIR["mop"].get("back", {}))       # styled() must not edit the recipes
+        for cid, spec in looks.LOOKS.items():
+            hs = spec.get("hair_style")
+            self.assertIsInstance(hs, dict, cid)
+            self.assertLessEqual(set(hs), options, cid)
+            self.assertTrue(hs["style"], cid)
+            self.assertLessEqual(set(hs["style"]), sections, cid)
+            self.assertNotIn("hairdo", spec, cid)
+            self.assertLessEqual(set(spec.get("accessories", {})), {"glasses", "earrings", "nose", "ruff"}, cid)
+            if "hair" in spec.get("tint", ()):
+                self.assertNotIn("accent", hs, cid)                        # tinted hair is one neutral sheet
+        world = ["jaden", "syrus", "chumley", "bastion", "chazz", "zane", "alexis", "jasmine", "mindy", "crowler",
+                 "student_m1", "student_f1", "student_f2"]
+        self.assertEqual(len({repr(looks.LOOKS[c]["hair_style"]["style"]) for c in world}), len(world))
+
+    def test_looks_wear_generated_outfits(self) -> None:
+        from dai.anime import looks
+        from dai.anime.atelier import outfit
+        for cid, spec in looks.LOOKS.items():
+            wear = spec.get("wear")
+            self.assertTrue(wear, cid)                                     # garments cut for the base body
+            self.assertNotIn("outfit", spec, cid)                          # (not the older tailored sets)
+            for kind, params in wear:
+                self.assertIn(kind, outfit.GARMENTS, f"{cid}: {kind}")
+                self.assertIsInstance(params, dict)
+            tinted = [p for kind, p in wear if p.get("slot") == "tint"]
+            self.assertEqual(bool(tinted), "jacket" in spec.get("tint", ()), cid)   # the "JacketTint" slot
+            if any(kind == "skirt" for kind, _ in wear):
+                self.assertTrue(spec["female"], cid)
+
+        def cut(cid):
+            return repr([(kind, sorted(p)) for kind, p in looks.LOOKS[cid]["wear"]])
+        boys = ["jaden", "syrus", "chumley", "bastion", "chazz", "zane", "crowler", "student_m1"]
+        girls = ["alexis", "jasmine", "mindy", "student_f1", "student_f2"]
+        self.assertGreaterEqual(len({cut(c) for c in boys}), 4)
+        self.assertGreaterEqual(len({cut(c) for c in girls}), 3)
+
+    def test_designs_are_complete(self) -> None:
+        from dai.anime.atelier import designs
+        for key, design in designs.all_designs().items():
+            self.assertTrue(key[:1].isupper() and key.isalnum(), key)
+            self.assertIn("style", design["hair"], key)
+            self.assertEqual(len(design["hair"]["color"]), 3, key)
+            self.assertTrue(design["outfit"], key)
+            for kind, params in design["outfit"]:
+                self.assertIn(kind, self.GARMENTS, f"{key}: {kind}")
+                self.assertIsInstance(params, dict)
+            for part in design.get("tint", ()):
+                self.assertIn(part, ("jacket", "hair"), key)
+
+    def test_generic_students_keep_their_runtime_tints(self) -> None:
+        from dai.anime import cast
+        entries = cast.all_entries()
+        self.assertEqual(entries["student_m1"]["tint"], ["jacket", "hair"])
+        self.assertEqual(entries["student_f1"]["tint"], ["hair"])
+        self.assertEqual(cast.generic_for(True), ["student_f1", "student_f2"])
+        self.assertEqual(cast.generic_for(False), ["student_m1"])
+
 
 
 # ---------------------------------------------------------------------------
@@ -542,19 +640,19 @@ class MergePartialManifestTests(unittest.TestCase):
         return {
             "player": "jaden",
             "groups": {
-                "Proc": {
+                "Cast": {
                     "base_mesh": {"name": "SK_Anime_StudentM1", "file": "Meshes/Characters/Anime/SK_Anime_StudentM1.fbx"},
-                    "anims": {"Idle": {"name": "A_Anime_Proc_Idle"}},
+                    "anims": {"Idle": {"name": "A_Anime_Cast_Idle"}},
                 },
-                "VroidC": {
-                    "anims": {"Idle": {"name": "A_Anime_VroidC_Idle"}},
-                    "duel_disk": {"name": "SK_Anime_VroidC_DuelDisk", "file": "Meshes/Characters/Anime/SK_Anime_VroidC_DuelDisk.fbx"},
+                "ArtistA": {
+                    "anims": {"Idle": {"name": "A_Anime_ArtistA_Idle"}},
+                    "duel_disk": {"name": "SK_Anime_ArtistA_DuelDisk", "file": "Meshes/Characters/Anime/SK_Anime_ArtistA_DuelDisk.fbx"},
                 },
             },
             "meshes": {
-                "student_m1": {"name": "SK_Anime_StudentM1", "group": "Proc"},
-                "jaden": {"name": "SK_Anime_Jaden", "group": "VroidC", "file": "Meshes/Characters/Anime/SK_Anime_Jaden.fbx"},
-                "alexis": {"name": "SK_Anime_Alexis", "group": "VroidC", "file": "Meshes/Characters/Anime/SK_Anime_Alexis.fbx"},
+                "student_m1": {"name": "SK_Anime_StudentM1", "group": "Cast"},
+                "jaden": {"name": "SK_Anime_Jaden", "group": "ArtistA", "file": "Meshes/Characters/Anime/SK_Anime_Jaden.fbx"},
+                "alexis": {"name": "SK_Anime_Alexis", "group": "ArtistA", "file": "Meshes/Characters/Anime/SK_Anime_Alexis.fbx"},
             },
             "materials": {"M_Anime_StudentM1_Hair": {"kind": "toon"}, "M_Anime_Jaden_Top": {"kind": "toon"}},
         }
@@ -563,9 +661,9 @@ class MergePartialManifestTests(unittest.TestCase):
         previous = self.full_cast()
         rebuilt = {
             "player": "jaden",
-            "groups": {"VroidC": {"anims": {"Idle": {"name": "A_Anime_VroidC_Idle_R" }},
-                                  "duel_disk": {"name": "SK_Anime_VroidC_DuelDisk", "file": "Meshes/Characters/Anime/SK_Anime_VroidC_DuelDisk.fbx"}}},
-            "meshes": {"jaden": {"name": "SK_Anime_Jaden", "group": "VroidC",
+            "groups": {"ArtistA": {"anims": {"Idle": {"name": "A_Anime_ArtistA_Idle_R" }},
+                                  "duel_disk": {"name": "SK_Anime_ArtistA_DuelDisk", "file": "Meshes/Characters/Anime/SK_Anime_ArtistA_DuelDisk.fbx"}}},
+            "meshes": {"jaden": {"name": "SK_Anime_Jaden", "group": "ArtistA",
                                  "file": "Meshes/Characters/Anime/SK_Anime_Jaden_2.fbx"}},
             "materials": {"M_Anime_Jaden_Top": {"kind": "toon", "fill": 0.5}},
         }
@@ -573,14 +671,14 @@ class MergePartialManifestTests(unittest.TestCase):
 
         # no member dropped: the importer's stale-cast cleanup sees the whole cast
         self.assertEqual(set(merged["meshes"]), {"student_m1", "jaden", "alexis"})
-        self.assertEqual(set(merged["groups"]), {"Proc", "VroidC"})
+        self.assertEqual(set(merged["groups"]), {"Cast", "ArtistA"})
         # rebuilt entries win
         self.assertEqual(merged["meshes"]["jaden"]["file"], "Meshes/Characters/Anime/SK_Anime_Jaden_2.fbx")
-        self.assertEqual(merged["groups"]["VroidC"]["anims"]["Idle"]["name"], "A_Anime_VroidC_Idle_R")
+        self.assertEqual(merged["groups"]["ArtistA"]["anims"]["Idle"]["name"], "A_Anime_ArtistA_Idle_R")
         # untouched members + their materials survive untouched
         self.assertEqual(merged["meshes"]["student_m1"], previous["meshes"]["student_m1"])
         self.assertEqual(merged["meshes"]["alexis"], previous["meshes"]["alexis"])
-        self.assertEqual(merged["groups"]["Proc"], previous["groups"]["Proc"])
+        self.assertEqual(merged["groups"]["Cast"], previous["groups"]["Cast"])
         self.assertEqual(merged["materials"],
                          {**previous["materials"], **rebuilt["materials"]})
         # extra top-level keys / player come from the newer document
@@ -588,7 +686,7 @@ class MergePartialManifestTests(unittest.TestCase):
 
     def test_unreadable_previous_document_falls_back_to_the_rebuild(self) -> None:
         previous = "corrupt"
-        subset = {"meshes": {"k": {"name": "SK_Anime_K", "group": "Proc"}}}
+        subset = {"meshes": {"k": {"name": "SK_Anime_K", "group": "Cast"}}}
         merged = manifest.merge_partial_manifests(previous, subset)
         self.assertEqual(merged, subset)
 
@@ -598,7 +696,7 @@ class MergePartialManifestTests(unittest.TestCase):
 
     def test_inputs_are_neither_mutated(self) -> None:
         previous = self.full_cast()
-        rebuilt = {"meshes": {"jaden": {"name": "SK_Anime_Jaden2", "group": "VroidC"}}}
+        rebuilt = {"meshes": {"jaden": {"name": "SK_Anime_Jaden2", "group": "ArtistA"}}}
         manifest.merge_partial_manifests(previous, rebuilt)
         self.assertEqual(len(previous["meshes"]), 3)
         self.assertEqual(len(rebuilt["meshes"]), 1)

@@ -9,7 +9,6 @@
 #include "DAStudentNPC.generated.h"
 
 class UDAAvatarComponent;
-class UDAFabAnimeComponent;
 
 UCLASS(Blueprintable)
 class DUELACADEMYISLAND_API ADAStudentNPC : public ACharacter, public IDAInteractableInterface
@@ -57,10 +56,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	bool bDormTint = true;
 
-	/** Optional Fab Anime Character Pack look id (fab_male_a, fab_female_b, ...). Empty = the native GX avatar. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy|Appearance")
-	FString FabLook;
-
 	/** Uniform size of the figure; 0 = a random student size. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	float BodyScale = 0.f;
@@ -105,10 +100,6 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy")
 	TObjectPtr<UDAAvatarComponent> Avatar;
-
-	/** Optional licensed Fab Anime Character Pack puppet (see Tools/import_fab_anime.py). */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Duel Academy|Appearance")
-	TObjectPtr<UDAFabAnimeComponent> FabAvatar;
 
 private:
 	void PickNewTarget();

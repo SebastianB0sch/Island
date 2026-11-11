@@ -80,7 +80,6 @@ The schedule rows now carry an optional appearance and voice:
 | `tint` | `false` for named cast (keep their own uniform/hair); `true` for generic students. |
 | `hair` | Optional linear RGB hair colour for generic students. |
 | `scale` | Optional uniform scale. |
-| `fab_look` | Optional licensed Fab Anime Character Pack look (`fab_male_a`, `fab_female_b`, ...). Empty = native GX avatar. |
 | `lines` | Contact dialogue; empty = the dorm's generic lines. |
 
 `level.py::npc_spawn_points` forwards these to `ADANpcSpawnPoint`, which copies them onto the spawned

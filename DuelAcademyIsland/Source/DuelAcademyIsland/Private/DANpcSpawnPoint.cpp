@@ -201,10 +201,6 @@ AActor* ADANpcSpawnPoint::SpawnNpc(ADANpcDirector* Director)
 			Student->DisplayName = DisplayName;
 		}
 		Student->bDormTint = bDormTint;
-		if (!FabLook.IsEmpty())
-		{
-			Student->FabLook = FabLook;
-		}
 		if (!CastMesh.IsEmpty())
 		{
 			Student->CastMesh = CastMesh;

@@ -11,7 +11,7 @@ Runtime data for portals, interiors, scene anchors and NPC schedules. All files 
 | `interiors.json` | Portal-cell definitions: origin, bounds, floor/ceiling, entrance/exit portals, props, lighting/nav notes. |
 | `portals.json` | 10 paired entrance/exit portals with target transforms, fade, cooldown and lock flags. |
 | `anchors.json` | Named camera/player/NPC/stage/prop marks used by story scenes. |
-| `spawns.json` | Schedule spawn points with role, dorm, wander radius, Z offset, event override and optional `cast` / `tint` / `hair` / `scale` / `fab_look` / `lines` appearance and dialogue. |
+| `spawns.json` | Schedule spawn points with role, dorm, wander radius, Z offset, event override and optional `cast` / `tint` / `hair` / `scale` / `lines` appearance and dialogue. |
 
 ## Coordinate convention
 
@@ -28,7 +28,7 @@ All values are **UE centimetres**:
 |---|---|
 | `portals[]` | `ADAInteriorPortal` (`DAInteriorPortal.h`) |
 | `anchors[]` | `ADASceneAnchor` (`DASceneAnchor.h`) — data `tags` maps to `AnchorTags` |
-| `spawns[]` | `ADANpcSpawnPoint` (`DANpcSpawnPoint.h`) — data `role` maps to `SpawnRole`; `cast`/`tint`/`hair`/`scale`/`fab_look`/`lines` map to the NPC look and dialogue. |
+| `spawns[]` | `ADANpcSpawnPoint` (`DANpcSpawnPoint.h`) — data `role` maps to `SpawnRole`; `cast`/`tint`/`hair`/`scale`/`lines` map to the NPC look and dialogue. |
 | schedule application | `ADANpcDirector` (`DANpcDirector.h`) |
 
 `ADAInteriorPortal` implements `IDAInteractableInterface`, so the existing “E / interact” focus loop can

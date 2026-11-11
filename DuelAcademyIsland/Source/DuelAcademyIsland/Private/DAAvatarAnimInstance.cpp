@@ -63,7 +63,7 @@ namespace
 			{
 				Out.Stiffness = 1.6f;
 				Out.Drag = 0.5f;
-				Out.Gravity = 0.06f;      // VRoid hair is modelled hanging: gravity is only a hint of weight
+				Out.Gravity = 0.06f;      // the hair is modelled hanging: gravity is only a hint of weight
 				Out.Cohesion = 0.5f;
 				Out.MaxAngle = 50.f;
 				Out.Inertia = 0.15f;
@@ -92,7 +92,7 @@ namespace
 		}
 		if (Name.Contains(TEXT("Bust")) || Name.Contains(TEXT("Hood")))
 		{
-			return false;       // body helpers / the removed VRoid hoodie: no secondary motion
+			return false;       // body helpers: no secondary motion
 		}
 		if (Name.StartsWith(TEXT("J_Sec_")))
 		{
@@ -1484,6 +1484,12 @@ void UDAAvatarAnimInstance::Configure(const TMap<FName, TObjectPtr<UAnimSequence
 	BlendedGroundSpeed = 0.f;
 	Phase = 0.f;
 	IdleTime = 0.f;
+	if (IdleSequence && IdleSequence->GetPlayLength() > 0.f)
+	{
+		// Every character starts elsewhere in the idle loop: a group must not breathe,
+		// shift its weight and glance aside in unison.
+		IdleTime = FaceRng.FRandRange(0.f, IdleSequence->GetPlayLength());
+	}
 	UE_LOG(LogTemp, Log, TEXT("DAAvatarAnim: configured %s idle=%s walk=%s run=%s walkSpeed=%.0f runSpeed=%.0f"),
 		*GetName(), IdleSequence ? *IdleSequence->GetName() : TEXT("none"),
 		WalkSequence ? *WalkSequence->GetName() : TEXT("none"), RunSequence ? *RunSequence->GetName() : TEXT("none"),

@@ -512,13 +512,20 @@ def restyle(arm, meshes, entry, key, rig, log=print):
         hairrig.rig(arm, meshes, face, key, log)
         hairrig.drop_unused(arm, meshes)
     extra = []
-    if spec.get("glasses"):
-        mat = register_accessory_material(f"M_Anime_{key}_Glasses", spec["glasses"])
-        extra.append(glasses(arm, face, mat))
     if spec.get("ponytail") and spec["ponytail"].get("band"):
         mat = register_accessory_material(f"M_Anime_{key}_HairBand", spec["ponytail"]["band"])
         p = spec["ponytail"]
         extra.append(hair_band(arm, Vector((0.0, hc.y + p.get("back", 0.10), rig.neck + p.get("tie", 0.06))), mat))
+    return alpha, extra + accessories(arm, face, spec, key, rig)
+
+
+def accessories(arm, face, spec, key, rig):
+    """Head accessories of a look ({glasses: colour, earrings: (metal, stone), nose: colour, ruff: colour}):
+    separate rigid objects, joined with the model by build_model."""
+    extra = []
+    if spec.get("glasses"):
+        mat = register_accessory_material(f"M_Anime_{key}_Glasses", spec["glasses"])
+        extra.append(glasses(arm, face, mat))
     if spec.get("earrings"):
         metal, stone = spec["earrings"]
         extra.append(earrings(arm, face, register_accessory_material(f"M_Anime_{key}_EarringMetal", metal),
@@ -529,4 +536,4 @@ def restyle(arm, meshes, entry, key, rig, log=print):
     if spec.get("ruff"):
         mat = register_accessory_material(f"M_Anime_{key}_Ruff", spec["ruff"])
         extra.append(ruff(arm, rig, mat))
-    return alpha, extra
+    return extra

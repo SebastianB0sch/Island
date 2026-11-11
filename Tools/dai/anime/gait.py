@@ -136,8 +136,12 @@ RUN = Gait(
 CADENCE_RANGE = {"Walk": (105.0, 130.0), "Run": (150.0, 185.0)}
 STEP_RANGE = {"Walk": (0.80, 1.05), "Run": (1.60, 2.10)}
 
-# Relaxed standing breathes ~15 times a minute (two breaths per loop) with one slow weight shift.
-IDLE_PERIOD = 8.0
+# Relaxed standing: a 12 s loop with three breaths (~15 a minute, the last one deeper), one unhurried
+# shift of the weight to the other leg and back, a slow look to one side and a shorter glance to the other.
+# The loop is long so that standing never reads as a 1-2 s cycle; the runtime takes the length from the
+# imported sequence (DAAvatarAnimInstance wraps IdleTime at GetPlayLength()).
+IDLE_PERIOD = 12.0
+IDLE_BREATHS = 3
 
 
 # --------------------------------------------------------------------------- rig helpers
@@ -149,7 +153,7 @@ class Rig:
         self.length = {b.name: float(b.length) for b in arm.data.bones}
         self.joint = {n: m.translation.copy() for n, m in self.rest.items()}
         # Limb segments are measured between joint heads, not along the (arbitrary) bone tails:
-        # the VRoid cast skeletons keep display tails pointing up even though the limb hangs down.
+        # imported cast skeletons may keep display tails pointing up even though the limb hangs down.
         self.seg = {}
         for parent, child in (
             ("thigh_l", "calf_l"), ("thigh_r", "calf_r"),
@@ -201,6 +205,9 @@ class Rig:
             p = self.arm.data.bones[clav].parent.name
             pos = (world[p] @ self.rest[p].inverted() @ self.rest[clav]).translation
             q = (world[p].to_quaternion() @ self.rest_q[p].inverted() @ self.rest_q[clav])
+            if clav in upper:
+                # optional shrug / breathing offset on top of the chest's rotation (same Euler convention)
+                q = Euler(tuple(math.radians(v) for v in upper[clav]), "XYZ").to_quaternion() @ q
             world[clav] = Matrix.Translation(pos) @ q.to_matrix().to_4x4()
         return world
 
@@ -283,7 +290,7 @@ def _foot(rig, gait, phase, side):
 
     The contact point travels backwards at the authored speed during stance; the ankle is
     placed above it so the heel, sole or ball is exactly on the ground. The shoe dimensions
-    come from the target rig, so the same gait plants on the VRoid cast and on the fallback
+    come from the target rig, so the same gait plants on imported models and on the cast
     skeleton.
     """
     lp = (phase + (0.0 if side == "l" else 0.5)) % 1.0
@@ -425,36 +432,125 @@ def _upper_body(gait, phase):
     return out
 
 
+def _ease(t):
+    """Quintic ease (zero velocity and acceleration at both ends): a body part settling, not a robot arm."""
+    t = min(1.0, max(0.0, t))
+    return t * t * t * (t * (6.0 * t - 15.0) + 10.0)
+
+
+def _cycle(points, phase):
+    """Periodic eased track through [(phase, value)] (phases ascending in [0, 1)): holds are flat, moves
+    ease in and out, and the track wraps from the last key back to the first."""
+    phase %= 1.0
+    n = len(points)
+    for i in range(n):
+        t0, v0 = points[i]
+        t1, v1 = points[(i + 1) % n]
+        if i == n - 1:
+            t1 += 1.0
+        t = phase + (1.0 if phase < points[0][0] else 0.0)
+        if t0 <= t <= t1:
+            return v0 + (v1 - v0) * _ease((t - t0) / max(t1 - t0, 1e-6))
+    return points[0][1]
+
+
+# Idle performance tracks over the loop (phase 0..1 of IDLE_PERIOD).
+#   weight: +1 rests on the left leg, -1 on the right (hip over the standing leg, free knee relaxed)
+#   look:   head turn, +1 = the slow look to the character's left, negative = the short glance right
+#   sigh:   the third breath is deeper and lifts the shoulders, just before the weight comes back
+_IDLE_WEIGHT = ((0.00, 1.0), (0.52, 1.0), (0.645, -0.85), (0.84, -0.85), (0.965, 1.0))
+_IDLE_LOOK = ((0.00, 0.0), (0.085, 0.0), (0.175, 1.0), (0.335, 0.92), (0.44, 0.0), (0.665, 0.0), (0.725, -0.55),
+              (0.80, -0.5), (0.875, 0.0))
+_IDLE_SIGH = ((0.00, 0.0), (0.66, 0.0), (0.77, 1.0), (0.80, 1.0), (0.93, 0.0))
+_IDLE_NOD = ((0.00, 0.0), (0.40, 0.0), (0.455, 1.0), (0.53, 0.0))
+
+
+def _breath(x):
+    """One breath per 2 pi: -1 emptied .. +1 full, the inhale a little quicker than the exhale."""
+    return math.sin(x - 0.45 * math.sin(x) - 0.9)
+
+
+def _idle_frame(rig, phase, performance=1.0, breaths=IDLE_BREATHS):
+    """Relaxed standing at loop phase 0..1: both feet planted, the body alive above them.
+
+    A contrapposto stance (hip over the standing leg, pelvis dropped on the free side, shoulders tilted
+    the other way) that slowly changes legs once, breathing in the chest and shoulders with the arms
+    riding on it, and the head looking around. performance=0 keeps only the stance and the breathing
+    (the Talk take plays its gesture on that, see talk_keys). Every track is periodic in `phase`."""
+    a = 2.0 * math.pi * phase
+    hs = rig.height_scale
+    perf = performance
+    w = 1.0 + (_cycle(_IDLE_WEIGHT, phase) - 1.0) * perf
+    look = _cycle(_IDLE_LOOK, phase) * perf
+    sigh = _cycle(_IDLE_SIGH, phase) * perf
+    nod = _cycle(_IDLE_NOD, phase) * perf
+    breath = _breath(a * breaths) * (1.0 + 0.7 * sigh)
+    inhale = 0.5 + 0.5 * breath                       # 0 emptied .. 1 full (.. 1.7 on the deep breath)
+    # mid-transfer the weight is on both legs: the hips level out and sink a few millimetres
+    transfer = 1.0 - w * w
+    drift = math.sin(a + 0.4) * perf                  # slow wander so the held stance is never frozen
+
+    sway = (0.014 * w + 0.003 * drift * w) * hs
+    roll = -2.4 * w - 0.5 * math.sin(a) * w * perf
+    yaw = -2.0 * w + 0.9 * drift
+    lean = 1.2 - 0.30 * breath
+    pelvis_rot = (lean * 0.16, roll, yaw)
+    feet = {side: (Vector((rig.foot_x[side], rig.joint[f"foot_{side}"].y, rig.ankle_z)), 0.0, 0.0, True)
+            for side in ("l", "r")}
+    # Pelvis height from the legs, not a fixed number: the standing leg is all but straight (a soft, not a
+    # locked knee) and the pelvis tilt alone relaxes the free knee - a fixed height left both knees
+    # visibly bent on the taller bases. The soft minimum keeps the height smooth while the weight changes
+    # legs (when both hips are level and both knees give a little).
+    tmp = rig.pelvis((sway, 0.0, 0.0), pelvis_rot)
+    reach = rig.leg - 0.0030 * hs
+    limit = []
+    for side in ("l", "r"):
+        hip = rig.hip(tmp, side)
+        ankle = feet[side][0]
+        horiz2 = (hip.x - ankle.x) ** 2 + (hip.y - ankle.y) ** 2
+        limit.append(ankle.z - (hip.z - tmp.translation.z) + math.sqrt(max(0.0, reach * reach - horiz2)))
+    half = 0.5 * (limit[0] - limit[1])
+    base = 0.5 * (limit[0] + limit[1]) - math.sqrt(half * half + (0.0015 * hs) ** 2)
+    base += (0.0010 * breath - 0.0030 * transfer) * hs
+
+    # chest: lifts and opens on the inhale; shoulders counter the hips and follow the look a little
+    chest = -0.85 * breath - 0.9 * sigh
+    head_yaw = 8.0 * look - 0.25 * yaw + 0.7 * math.sin(a * 2.0 + 2.0) * perf
+    head_pitch = -0.10 * lean + 1.6 * nod - 1.2 * sigh + 0.9 * abs(look) + 0.35 * math.sin(a * 2.0 + 1.1) * perf
+    head_roll = 0.15 * roll + 1.8 * look
+    shrug = 1.3 * inhale + 1.6 * sigh                 # clavicle lift (deg)
+    upper = {
+        "pelvis": pelvis_rot,
+        "spine_01": (lean * 0.30, -roll * 0.45, -yaw * 0.20),
+        "spine_02": (lean * 0.55 + 0.55 * chest, -roll * 0.80, -yaw * 0.55 + 0.6 * look),
+        "spine_03": (lean * 0.92 + chest, -roll, -yaw * 0.85 + 1.6 * look),
+        "neck_01": (lean * 0.25 + 0.35 * chest + 0.45 * head_pitch, -roll * 0.15 + 0.5 * head_roll,
+                    -yaw * 0.4 + 0.45 * head_yaw),
+        "head": (head_pitch, head_roll, head_yaw),
+        # about the forward axis: the left shoulder rises with a negative roll, the right with a positive
+        "clavicle_l": (0.0, -shrug, 0.0),
+        "clavicle_r": (0.0, shrug, 0.0),
+    }
+    arms = {}
+    upper_world = rig.upper_world(rig.pelvis((sway, 0.0, base - rig.joint["pelvis"].z), pelvis_rot), upper)
+    for side, s in (("l", 1.0), ("r", -1.0)):
+        shoulder = rig.shoulder(upper_world, side)
+        on = max(0.0, w * s)                          # this side carries the weight: its hip juts out
+        # hanging arms: carried by the shoulders (so they rise and fall with the breath), a loose
+        # pendulum fore and aft that lags the weight shift, and clear of the standing hip
+        swing = (0.010 * math.sin(a + (0.6 if s > 0 else 1.7))
+                 + 0.006 * math.sin(a * 2.0 + (2.1 if s > 0 else 0.3))) * perf
+        rel = Vector((s * (0.050 + 0.010 * on + 0.004 * inhale) * hs,
+                      (swing - 0.012 * s * transfer * perf) * hs - shoulder.y,
+                      -(0.455 - 0.004 * sigh) * hs))
+        arms[side] = (tuple(rel), (s * 0.10, 0.22, -1.0), 10.0 + 2.0 * math.sin(a * 2.0 + s) * perf)
+    return _assemble(rig, IDLE, phase, sway, base, pelvis_rot, feet, upper, idle=True, arms=arms)
+
+
 def _frame(rig, gait, phase, idle=False):
     """Solve all bone targets for one phase. Returns (key dict, metrics)."""
     if idle:
-        # Relaxed standing: feet planted, slow weight shift and breathing.
-        a = 2.0 * math.pi * phase
-        gait = IDLE
-        # contrapposto: the weight rests on the left leg (hip shifted over it, pelvis tilted so the free
-        # right knee relaxes), the shoulders counter-tilt; breathing and a slow shift on top
-        sway = 0.014 + 0.005 * math.sin(a)
-        yaw = 1.3 * math.sin(a + 0.4) - 2.0
-        roll = -2.4 - 0.8 * math.sin(a)
-        breath = math.sin(a * 2.0)          # two breaths per 8 s loop (~15 / min)
-        lean = 1.2 + 0.25 * breath
-        base = 0.918 + 0.0018 * breath
-        base *= rig.height_scale
-        pelvis_rot = (lean * 0.16, roll, yaw)
-        feet = {side: (Vector((rig.foot_x[side], rig.joint[f"foot_{side}"].y, rig.ankle_z)), 0.0, 0.0,
-                       True) for side in ("l", "r")}
-        pelvis_x = sway * rig.height_scale
-        upper = {
-            "pelvis": (lean * 0.16, roll, yaw),
-            "spine_01": (lean * 0.30, -roll * 0.45, -yaw * 0.20),
-            "spine_02": (lean * 0.55 + 0.35 * breath, -roll * 0.80, -yaw * 0.55),
-            "spine_03": (lean * 0.92 + 0.50 * breath, -roll, -yaw * 0.85),
-            "neck_01": (lean * 0.25 - 0.20 * breath, -roll * 0.15, -yaw * 0.4),
-            # the gaze wanders a little (a slow look to one side and a smaller glance)
-            "head": (-lean * 0.10 + 0.6 * math.sin(a * 3.0 + 1.1), roll * 0.15,
-                     -yaw * 0.05 + 3.5 * math.sin(a + 0.6) + 1.5 * math.sin(a * 3.0 + 2.0)),
-        }
-        return _assemble(rig, gait, phase, pelvis_x, base, pelvis_rot, feet, upper, idle=True)
+        return _idle_frame(rig, phase)
 
     base = _pelvis_base(gait, phase) * rig.height_scale
     sway = gait.sway * math.sin(2.0 * math.pi * phase) * rig.height_scale
@@ -508,7 +604,8 @@ def _assemble(rig, gait, phase, pelvis_x, pelvis_z, pelvis_rot, feet, upper, idl
     pelvis_world = rig.pelvis((pelvis_x, pelvis_y, offset), pelvis_rot)
     key = {"_pelvis_offset": (pelvis_x, pelvis_y, offset)}
     for bname, rot in upper.items():
-        key[bname] = rot
+        if not bname.startswith("clavicle_"):
+            key[bname] = rot
     clamped = 0
     for side in ("l", "r"):
         ankle, pitch, ball, stance = feet[side]
@@ -522,6 +619,11 @@ def _assemble(rig, gait, phase, pelvis_x, pelvis_z, pelvis_rot, feet, upper, idl
 
     upper_world = rig.upper_world(pelvis_world, upper)
     for side, s in (("l", 1.0), ("r", -1.0)):
+        clav = f"clavicle_{side}"
+        if clav in upper:
+            # pose_action offsets are absolute (world, on top of the rest pose): chest rotation x shrug
+            q = upper_world[clav].to_quaternion() @ rig.rest_q[clav].inverted()
+            key[clav] = tuple(math.degrees(v) for v in q.to_euler("XYZ"))
         shoulder = rig.shoulder(upper_world, side)
         if arms and side in arms:
             rel, bend_dir, wrist_deg = arms[side]
@@ -589,7 +691,9 @@ def talk_keys(rig=None):
     out = []
     for i in range(n + 1):
         phase = (i / n) % 1.0
-        key, _ = _frame(rig, IDLE, (phase * IDLE_PERIOD / TALK_PERIOD) % 1.0, idle=True)
+        # the stance and one breath per loop, without the idle's weight shift and glances: the take is
+        # blended over the idle, and its own loop has to close (frame 0 == frame n)
+        key, _ = _idle_frame(rig, phase, performance=0.0, breaths=1)
         a = 2.0 * math.pi * phase
         beat = 0.5 + 0.5 * math.sin(a * 2.0)           # two beats per loop
         lift = 0.75 + 0.25 * math.sin(a)
@@ -711,6 +815,67 @@ def validate(arm, action, gait, log=print, raise_on_error=True):
     return dict(speed=measured, contact=contact, penetration=penetration, loop=loop, cadence=cadence,
                 step=gait.step, knee=(knee_min, knee_max), elbow=(elbow_min, elbow_max),
                 pelvis=(min(pelvis_z), max(pelvis_z)), clamped=clamped, ok=ok)
+
+
+def _angle_deg(q0, q1):
+    """Angle between two orientations (q and -q are the same orientation)."""
+    a = q0.rotation_difference(q1).angle
+    return math.degrees(min(a, 2.0 * math.pi - a))
+
+
+def validate_standing(arm, action, name="Idle", log=print, raise_on_error=True, loop=True):
+    """Check a standing take (Idle / Talk): both shoes stay where they are planted, nothing sinks into
+    the ground, the legs are never over-stretched and the loop closes on every bone."""
+    from . import retarget as RT
+    scene = bpy.context.scene
+    rig = Rig(arm)
+    RT._assign(arm, action)
+    f0, f1 = (int(round(v)) for v in action.frame_range)
+    rest = {b.name: b.matrix_local.copy() for b in arm.data.bones}
+    start, drift, lowest = None, 0.0, 0.0
+    knee_min, knee_max = 180.0, 0.0
+    pelvis = []
+    step = 0.0
+    prev = None
+    for f in range(f0, f1 + 1):
+        scene.frame_set(f)
+        pts = [p.copy() for side in ("l", "r") for p in _contact_points(arm, rig, side, rest)]
+        if start is None:
+            start = pts
+        drift = max(drift, max((p - q).length for p, q in zip(pts, start)))
+        lowest = min(lowest, min(p.z for p in pts))
+        for side in ("l", "r"):
+            th = arm.pose.bones[f"calf_{side}"].head - arm.pose.bones[f"thigh_{side}"].head
+            cf = arm.pose.bones[f"foot_{side}"].head - arm.pose.bones[f"calf_{side}"].head
+            knee_min = min(knee_min, math.degrees(th.angle(cf)))
+            knee_max = max(knee_max, math.degrees(th.angle(cf)))
+        pelvis.append((arm.matrix_world @ arm.pose.bones["pelvis"].head).copy())
+        head = arm.pose.bones["head"].matrix.to_quaternion()
+        if prev is not None:
+            step = max(step, _angle_deg(prev, head))
+        prev = head
+    scene.frame_set(f0)
+    first = {b.name: arm.pose.bones[b.name].matrix.copy() for b in arm.data.bones}
+    scene.frame_set(f1)
+    seam = 0.0
+    for b in arm.data.bones:
+        a = first[b.name]
+        c = arm.pose.bones[b.name].matrix
+        seam = max(seam, (a.translation - c.translation).length)
+        seam = max(seam, _angle_deg(a.to_quaternion(), c.to_quaternion()))
+    RT._assign(arm, None)
+    xs = [p.x for p in pelvis]
+    zs = [p.z for p in pelvis]
+    # head speed limit: a look around, never a snap (deg per frame at 30 fps)
+    ok = drift < 0.002 and lowest > -0.002 and knee_min > 1.0 and step < 1.5 and (seam < 0.002 or not loop)
+    log(f"  stand {name:4s}: {f1 - f0} frames, planted shoes move {drift * 1000.0:.2f} mm, lowest "
+        f"{lowest * 1000.0:.2f} mm, knee {knee_min:.0f}-{knee_max:.0f} deg, pelvis sway "
+        f"{(max(xs) - min(xs)) * 100.0:.1f} cm / bob {(max(zs) - min(zs)) * 1000.0:.1f} mm, head "
+        f"{step * scene.render.fps:.0f} deg/s max, loop {seam:.4f} {'OK' if ok else 'CHECK'}")
+    if raise_on_error and not ok:
+        raise RuntimeError(f"standing take validation failed for {name}")
+    return dict(drift=drift, lowest=lowest, knee=(knee_min, knee_max), loop=seam, head_step=step,
+                sway=max(xs) - min(xs), bob=max(zs) - min(zs), ok=ok)
 
 
 # bpy is imported lazily only in validate so the gait maths can be unit-tested outside Blender.

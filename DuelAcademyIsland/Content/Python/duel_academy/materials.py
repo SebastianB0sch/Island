@@ -605,14 +605,17 @@ def build_toon(name, mpc, masked=False):
             g.settings(opacity_mask_clip_value=0.5)
         except Exception:  # noqa: BLE001
             pass
-    g.settings(used_with_skeletal_mesh=True)
+    # morph targets: the cast faces blink / lip-sync through morphs; without the usage flag a cooked build
+    # has no morph permutation of the material (the editor only patches it in for the running session)
+    g.settings(used_with_skeletal_mesh=True, used_with_morph_targets=True)
     return g.finish()
 
 
 def build_outline(mpc):
     """Ink line: unlit, one-sided (the inverted hull only shows around the silhouette)."""
     g = Graph("M_DA_Outline")
-    g.settings(shading_model=unreal.MaterialShadingModel.MSM_UNLIT, used_with_skeletal_mesh=True)
+    g.settings(shading_model=unreal.MaterialShadingModel.MSM_UNLIT, used_with_skeletal_mesh=True,
+               used_with_morph_targets=True)
     day = g.sub(g.const(1.0), g.mul(night_factor(g, mpc), g.const(0.5)))
     g.out(g.mul(g.vector("Tint", (0.09, 0.06, 0.07)), day), unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     return g.finish()
@@ -666,7 +669,9 @@ def build_cel(name, mpc, masked=False):
             g.settings(opacity_mask_clip_value=0.5)
         except Exception:  # noqa: BLE001
             pass
-    g.settings(used_with_skeletal_mesh=True)
+    # morph targets: the cast faces blink / lip-sync through morphs; without the usage flag a cooked build
+    # has no morph permutation of the material (the editor only patches it in for the running session)
+    g.settings(used_with_skeletal_mesh=True, used_with_morph_targets=True)
     return g.finish()
 
 

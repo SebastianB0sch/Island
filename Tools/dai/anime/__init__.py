@@ -1,13 +1,15 @@
 """
-Anime cast: Yu-Gi-Oh! GX style students and teachers (fan-made, original geometry) on CC0 animation.
+Anime cast: the island's students and teachers on one shared skeleton with CC0 gesture takes.
 
+  atelier/     the project's own character generator (head, painted face, clump hair, body, outfits,
+               the original cast designs) - every default cast member is built by it
   skeleton.py  shared UE5-Mannequin-named skeleton, anime-teen proportions (1.70 m, ~7 heads)
   retarget.py  CC0 Quaternius animation takes -> cast skeleton (+ hand-authored duel / swim takes)
-  head.py      oval anime head carrying the painted face (face.py)
-  hair.py      scalp cap + tapered anime locks, one style per character
-  body.py      Duel Academy uniforms (blazer, coat, skirt, boots), accessories, duel disk
-  skin.py      skin weights, inverted-hull ink outline, assembly into one skinned mesh
-  cast.py      who is who: looks, dorms, dialogue, which NPC marker they take over
+  gait.py      biomechanical idle / walk / run solver
+  cel.py       the cel shading classes shared by the previews and Unreal
+  cast.py      who is who: slot names, dorms, dialogue, spawn markers, and the design that plays each
   roster.py    named ambient NPC identities: unique names, voices, hair colours
-  build.py     the "cast" pipeline stage: FBX meshes + takes, face textures, Data/cast.json
+  models.py    import path for artist-made models that replace a slot (Docs/CHARACTER_MODELS.md)
+  body.py      the duel disk attachment
+  build.py     the "cast" pipeline stage: FBX meshes + takes, textures, Data/cast.json
 """

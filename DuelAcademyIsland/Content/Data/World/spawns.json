@@ -135,8 +135,7 @@
         0.35,
         0.4
       ],
-      "scale": 0.956,
-      "fab_look": "fab_male_a"
+      "scale": 0.956
     },
     {
       "id": "academy_classroom_student_02",
@@ -166,8 +165,7 @@
         0.65,
         0.25
       ],
-      "scale": 0.994,
-      "fab_look": "fab_male_b"
+      "scale": 0.994
     },
     {
       "id": "academy_test_room_proctor",
@@ -332,8 +330,7 @@
         0.08,
         0.22
       ],
-      "scale": 0.994,
-      "fab_look": "fab_male_b"
+      "scale": 0.994
     },
     {
       "id": "slifer_cafeteria_student_02",
@@ -364,8 +361,7 @@
         0.02,
         0.012
       ],
-      "scale": 0.975,
-      "fab_look": "fab_male_c"
+      "scale": 0.975
     },
     {
       "id": "slifer_banner_room_banner",
@@ -520,8 +516,7 @@
         0.26,
         0.09
       ],
-      "scale": 0.975,
-      "fab_look": "fab_male_d"
+      "scale": 0.975
     },
     {
       "id": "ra_cafeteria_student_02",
@@ -551,8 +546,7 @@
         0.15,
         0.5
       ],
-      "scale": 0.946,
-      "fab_look": "fab_male_a"
+      "scale": 0.946
     },
     {
       "id": "obelisk_dining_student_01",
@@ -582,8 +576,7 @@
         0.08,
         0.22
       ],
-      "scale": 0.956,
-      "fab_look": "fab_male_b"
+      "scale": 0.956
     },
     {
       "id": "obelisk_dining_student_02",
@@ -613,8 +606,7 @@
         0.02,
         0.012
       ],
-      "scale": 0.936,
-      "fab_look": "fab_male_c"
+      "scale": 0.936
     },
     {
       "id": "academy_arena_jaden",
@@ -712,8 +704,7 @@
         0.65,
         0.25
       ],
-      "scale": 0.975,
-      "fab_look": "fab_male_d"
+      "scale": 0.975
     },
     {
       "id": "abandoned_dorm_titan",
@@ -1184,8 +1175,7 @@
         0.033,
         0.116
       ],
-      "scale": 1.022,
-      "fab_look": "fab_male_a"
+      "scale": 1.022
     },
     {
       "id": "hall_assembly_student_02",
@@ -1245,8 +1235,7 @@
         0.169,
         0.066
       ],
-      "scale": 1.004,
-      "fab_look": "fab_male_b"
+      "scale": 1.004
     },
     {
       "id": "hall_assembly_student_04",
@@ -1306,8 +1295,7 @@
         0.184,
         0.102
       ],
-      "scale": 1.014,
-      "fab_look": "fab_male_d"
+      "scale": 1.014
     },
     {
       "id": "hall_assembly_student_06",
@@ -1367,8 +1355,7 @@
         0.222,
         0.099
       ],
-      "scale": 0.994,
-      "fab_look": "fab_male_c"
+      "scale": 0.994
     },
     {
       "id": "hall_assembly_student_08",
@@ -1428,8 +1415,7 @@
         0.148,
         0.065
       ],
-      "scale": 0.988,
-      "fab_look": "fab_male_c"
+      "scale": 0.988
     },
     {
       "id": "hall_assembly_student_10",
@@ -1459,8 +1445,7 @@
         0.028,
         0.132
       ],
-      "scale": 1.006,
-      "fab_look": "fab_male_a"
+      "scale": 1.006
     },
     {
       "id": "hall_assembly_student_11",

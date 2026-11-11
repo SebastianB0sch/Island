@@ -24,10 +24,7 @@ from ..character import export_skeletal
 from . import body as B
 from . import cast as CAST
 from . import cel as CEL
-from . import face as FACE
 from . import gait as GAIT
-from . import hair as HAIR
-from . import head as HEAD
 from . import manifest as MANIFEST
 from . import models as M
 from . import retarget as RT
@@ -40,7 +37,7 @@ OUTLINE_COLOR = (0.09, 0.06, 0.07)
 
 # Authored takes (joint-space directions, see retarget.pose_action) --------------------------------
 def _seg(rig, bone, target, rest_bone=None):
-    """Pose offset that aims a limb segment (works on VRoid bones whose displayed tails point up)."""
+    """Pose offset that aims a limb segment (also works on imported bones whose displayed tails point up)."""
     if rig is None:
         return {"aim": target}
     return {"seg": target, "rest": tuple(rig.seg[rest_bone or bone])}
@@ -426,32 +423,6 @@ def _toon(name, color, **kw):
     return name
 
 
-def materials(cid, entry, log=print):
-    """Role -> palette material name for one cast member (registers palette entries, paints the face)."""
-    key = key_name(cid)
-    col = entry["colors"]
-    tint = set(entry.get("tint", []))
-    m = {}
-    for role in ("jacket", "trim", "inner", "pants", "shoes", "sole", "skirt", "socks", "boots"):
-        if role in col:
-            suffix = "JacketTint" if (role == "jacket" and "jacket" in tint) else role.capitalize()
-            m[role] = _toon(f"M_Anime_{key}_{suffix}", col[role])
-    m["skin"] = _toon("M_Anime_Skin", CAST.SKIN)
-    hc = entry["hair"]
-    if "hair" in tint:
-        m["hair"] = m["hair2"] = _toon(f"M_Anime_{key}_HairTint", hc["color"], fill=0.45)
-    else:
-        m["hair"] = _toon(f"M_Anime_{key}_Hair", hc["color"], fill=0.45)
-        m["hair2"] = _toon(f"M_Anime_{key}_Hair2", hc.get("color2", hc["color"]), fill=0.45)
-    tex = os.path.join(C.OUT_TEXTURES, TEX_REL, f"T_AnimeFace_{key}.png")
-    FACE.paint(dict(entry["face"], skin=CAST.SKIN), tex)
-    m["face"] = _toon(f"M_Anime_{key}_Face", (1.0, 1.0, 1.0), base=f"{TEX_REL}/T_AnimeFace_{key}", fill=0.6)
-    m["glasses"] = _toon("M_Anime_Glasses", (0.20, 0.22, 0.28))
-    m["ruff"] = _toon("M_Anime_Ruff", (0.97, 0.97, 0.96))
-    palette.register({K.OUTLINE_MAT: dict(kind="outline", color=OUTLINE_COLOR)})
-    return m
-
-
 def disk_materials():
     return dict(disk=_toon("M_Anime_DuelDisk", (0.78, 0.80, 0.84)), gold=_toon("M_Anime_DiskGold", (0.95, 0.72, 0.22)),
                 glow=_register_glow())
@@ -615,25 +586,43 @@ def preview_material(name):
 
 
 # --------------------------------------------------------------------------- characters
-def build_character(cid, entry, arm):
-    m = materials(cid, entry)
-    bd = entry.get("body", {})
-    shape = entry.get("head", {})
-    asm = K.Assembly(f"SK_Anime_{key_name(cid)}")
-    asm.add(HEAD.head(m["face"], m["skin"], shape), K.rigid("head"), 1.0)
-    asm.add(HEAD.neck(m["skin"]), lambda p: K.spine(p) if p.z < S.NECK else
-            {"neck_01": 1.0 - K._smooth((p.z - S.NECK) / 0.08), "head": K._smooth((p.z - S.NECK) / 0.08)}, 0.0)
-    hc = entry["hair"]
-    short, long = HAIR.build(hc["style"], m["hair"], m["hair2"], shape)
-    asm.add(short, K.rigid("head"), 1.25)
-    asm.add(long, K.head_and_body(), 1.25)
-    for parts in (B.jacket(m, bd), B.arms(m), B.legs(m, bd)):
-        for mb, fn, ol in parts:
-            asm.add(mb, fn, ol)
-    for ex in entry.get("extras", []):
-        for mb, fn, ol in (B.glasses(m["glasses"], shape) if ex == "glasses" else B.ruff(m["ruff"]) if ex == "ruff" else []):
-            asm.add(mb, fn, ol)
-    return asm.build(arm, face_mats=[m["face"]], material_fn=preview_material)
+def design_of(entry):
+    """(design key, design) of a cast entry (atelier.designs)."""
+    from .atelier import designs
+    key = entry["design"]
+    return key, designs.all_designs()[key]
+
+
+def artist_model(cid, entry):
+    """Registry key of an artist-made model that replaces this slot / design ("cast_models" in
+    Tools/thirdparty/registry/anime.json), if its file is installed. See Docs/CHARACTER_MODELS.md."""
+    reg = thirdparty.registry()
+    over = reg.get("cast_models") or {}
+    key = over.get(cid) or over.get(entry.get("design", "")) or entry.get("model")
+    spec = (reg.get("anime_models") or {}).get(key) if key else None
+    if spec and os.path.exists(thirdparty.tp_path(spec["file"])):
+        return key
+    return None
+
+
+def use_artist_model(entry, model):
+    """Point a cast entry at an artist model: its own measured height drives the runtime scale."""
+    spec = thirdparty.registry()["anime_models"][model]
+    entry["model"] = model
+    entry.setdefault("body", {}).setdefault("female", bool(spec.get("female", entry.get("female"))))
+    if spec.get("height"):
+        entry["base_height"] = float(spec["height"])
+    entry["scale"] = CAST.scale_of(entry)
+    return entry
+
+
+def build_character(cid, entry, arm, log=print):
+    """Build a cast entry's atelier design on the shared cast skeleton."""
+    from .atelier import build as ATELIER
+    key, design = design_of(entry)
+    if entry.get("expression") is not None:          # portrait frames: another resting expression
+        design = dict(design, expression=entry["expression"])
+    return ATELIER.build_character(key, design, arm, preview_material, log=log)
 
 
 def build_disk(arm, name="SK_Anime_DuelDisk"):
@@ -733,6 +722,8 @@ def bake_takes(arm, log=print):
         if state in ("Walk", "Run"):
             metrics = GAIT.validate(arm, act, GAIT.WALK if state == "Walk" else GAIT.RUN, log)
             speed = metrics["speed"] * 100.0
+        elif state in ("Idle", "Talk"):
+            GAIT.validate_standing(arm, act, state, log)
         out[state] = (act, loop, speed)
     RT._assign(arm, None)
     return out
@@ -753,7 +744,7 @@ def _ground_speed(arm, action):
 
 
 # --------------------------------------------------------------------------- stage
-PROCEDURAL = "Proc"      # skeleton group of the procedural fallback characters
+PROCEDURAL = "Cast"      # skeleton group of the atelier characters (the whole default cast)
 
 
 def _export_takes(arm, group, out_dir, log):
@@ -950,7 +941,10 @@ def build(log=print, only=None):
     groups = {}
     for cid in order:
         e = entries[cid]
-        g = key_name(e["model"]) if M.model_available(e) else PROCEDURAL
+        model = artist_model(cid, e)
+        if model:
+            use_artist_model(e, model)
+        g = key_name(model) if model else PROCEDURAL
         groups.setdefault(g, []).append(cid)
     info = dict(player=CAST.PLAYER, groups={}, meshes={}, materials={})
     used = set()
@@ -958,10 +952,14 @@ def build(log=print, only=None):
         blend.reset_scene()
         bpy.context.scene.render.fps = 30
         if group == PROCEDURAL:
-            arm = S.create("root")
-            built = []
-            for cid in cids:
-                built.append((cid, arm, build_character(cid, entries[cid], arm)))
+            from .atelier import build as ATELIER
+            arm = ATELIER.create_skeleton("root")
+            built, done = [], {}
+            for cid in cids:                      # slots sharing a design share its mesh
+                k = entries[cid]["design"]
+                if k not in done:
+                    done[k] = build_character(cid, entries[cid], arm, log)
+                built.append((cid, arm, done[k]))
         else:
             # Build every member once, then merge their helper bones into the first member's
             # armature and export all meshes on that one union skeleton.
@@ -981,21 +979,29 @@ def build(log=print, only=None):
                               materials=[s.material.name for s in disk.material_slots if s.material])
         used.update(g["duel_disk"]["materials"])
         bpy.data.objects.remove(disk, do_unlink=True)
+        exported = {}
         for cid, a, obj in built:
             e = entries[cid]
+            if id(obj) in exported:               # second slot on the same design: same asset
+                info["meshes"][cid] = dict(exported[id(obj)], display=e["name"], dorm=e["dorm"],
+                                           scale=e.get("scale", 1.0))
+                continue
             name = obj.name
             mats = [s.material.name for s in obj.material_slots if s.material]
             used.update(mats)
             entry = dict(name=name, group=group, display=e["name"], dorm=e["dorm"], scale=e.get("scale", 1.0),
-                         tint=e.get("tint", []), female=bool(e.get("body", {}).get("female")), materials=mats)
+                         tint=e.get("tint", []), female=CAST.is_female(e) or bool(e.get("body", {}).get("female")),
+                         materials=mats)
             # every member is tailored / restyled individually: one FBX each, all on the group's
             # union skeleton (the first member's import creates it in Unreal, all others reuse it)
             export_skeletal([arm, obj], arm, os.path.join(out_dir, f"{name}.fbx"), {"ARMATURE", "MESH"},
                             deform_only=False)
             entry["file"] = f"{OUT_REL}/{name}.fbx"
             info["meshes"][cid] = entry
+            exported[id(obj)] = entry
             g["skeleton_mesh"] = g["skeleton_mesh"] or name
             log(f"  anime: {name:24s} [{group}] {K.tri_count(obj):6d} tris, {len(mats)} materials")
+        for obj in {id(o): o for _, _, o in built}.values():
             bpy.data.objects.remove(obj, do_unlink=True)
         info["groups"][group] = g
     mats = palette.material_json()
@@ -1073,13 +1079,15 @@ def render_lineup(path, ids=None, state="Idle", frame=12, res=(1800, 720), sampl
     shared = None
     spacing = 0.85
     for i, cid in enumerate(ids):
-        e = entries[cid]
-        if M.model_available(e):
-            a, obj = M.build_model(cid, e, key_name)
+        e = dict(entries[cid])
+        model = artist_model(cid, e)
+        if model:
+            a, obj = M.build_model(cid, use_artist_model(e, model), key_name)
             act = None
         else:
             if shared is None:
-                shared = S.create("root")
+                from .atelier import build as ATELIER
+                shared = ATELIER.create_skeleton("root")
                 a = shared
             else:
                 a = shared.copy()

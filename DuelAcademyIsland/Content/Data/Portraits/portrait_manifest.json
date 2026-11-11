@@ -84,9 +84,9 @@
     "pda_neutral.png": "copy of ui_pda.png for the PDA speaker's declared neutral expression"
   },
   "generated": {
-    "note": "Rendered locally from the project's VRoid-derived cel-shaded cast with Tools/render_portraits.py (Blender 5.2, Cycles). Not Konami renders; generated art for characters and story speakers that had no portrait.",
+    "note": "Rendered locally from the project's VRoid-based cel-shaded cast models with Tools/render_portraits.py (Blender 5.2, Cycles). Not Konami renders; generated art for characters and story speakers that had no portrait.",
     "pipeline": "Tools/render_portraits.py --missing; Tools/render_portraits.py --expressions",
-    "expression_pipeline": "VRoid Fcl_ALL_* blendshape recipes in Tools/dai/anime/expressions.py, baked into the face by the cast pipeline.",
+    "expression_pipeline": "facial morph recipes in Tools/dai/anime/expressions.py, baked into the face by the cast pipeline.",
     "duel_expressions": "Jasmine, Mindy, Conklin and Damon also have the six generic duel cut-in emotions (happy, angry, determined, shocked, sad, laugh).",
     "characters": [
       "chumley",
