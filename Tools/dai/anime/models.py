@@ -9,8 +9,8 @@ an Unreal-ready skeletal mesh:
   * the humanoid bones (VRM humanoid map, or common Mixamo / VRoid names) are renamed to the UE5
     Mannequin scheme (pelvis, spine_01.., upperarm_l, ..), so the same CC0 takes drive every model
     and Unreal's IK Retargeter auto-maps it; hair / skirt / finger helper bones keep their names
-  * the base outfit is replaced by a tailored Duel Academy uniform (outfit.py) and the hair restyled
-    (hairdo.py) after each character's official design; hair, eye and shoe textures are recoloured;
+  * the base outfit is replaced by a tailored Duel Academy uniform (outfit.py); the hair is either replaced
+    by generated clump hair (clumphair.py, look key "hair_style") or the base cut is restyled (hairdo.py); hair, eye and shoe textures are recoloured;
     generic students get a neutral jacket / hair that Unreal tints at runtime ("JacketTint" /
     "HairTint" slots)
   * an inverted-hull ink outline is added to the body and hair
@@ -537,7 +537,18 @@ def build_model(cid, entry, key_name, log=print):
             _drop_unused_slots(body)
     alpha = alpha_modes(path)
     extra = []
-    if rig is not None and (entry.get("hairdo") or entry.get("face_shape")):
+    if entry.get("hair_style"):
+        # clump hair (clumphair.py): the base model's hair mesh is replaced by generated locks
+        from . import clumphair
+        face = next(m for m in meshes if m.name.startswith("Face"))
+        if entry.get("face_shape"):
+            hairdo.reshape_face(face, **entry["face_shape"])
+        _, hair_mats = clumphair.build(arm, meshes, entry, key, log)
+        tailored |= hair_mats
+        if rig is not None and entry.get("accessories"):
+            extra = hairdo.accessories(arm, face, entry["accessories"], key, rig)
+            tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
+    elif rig is not None and (entry.get("hairdo") or entry.get("face_shape")):
         more, extra = hairdo.restyle(arm, meshes, entry, key, rig, log)
         alpha.update(more)
         tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
@@ -554,7 +565,7 @@ def build_model(cid, entry, key_name, log=print):
         fitcheck.snap_residuals(body, arm, log, shape_fn=lambda a: correctives.displacement(body, a))
     meshes += extra
     for m in meshes:
-        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses", "haircap"))
+        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses", "haircap", "clumphair"))
     face = next((m for m in meshes if m.name.startswith("Face")), meshes[0])
     _select(meshes, face)
     if len(meshes) > 1:

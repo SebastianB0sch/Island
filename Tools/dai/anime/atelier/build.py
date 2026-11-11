@@ -157,7 +157,7 @@ def build_character(key, design, arm, material_fn, log=print, outline=0.0028):
 
     # ---- hair
     hr = HR.Hair(head, body, seed=hair.get("seed", 1))
-    HR.style(hr, hair["style"])
+    HR.style(hr, hair["style"], mats["hair"])
     hair_parts, bones = hr.build(mats["hair"], key, cap_line=hair.get("cap", (0.27, 0.50, 0.74)))
     k = design.get("head_scale", HEAD_SCALE[bool(design.get("female", True))])
     pivot = np.array(HEAD_PIVOT)

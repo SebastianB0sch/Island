@@ -192,12 +192,24 @@ def _eye(img, X, Z, px, e, sx, iris, iris2, lash, skin, skin_sh):
 
 # --------------------------------------------------------------------------- hair
 def hair(path, color, color2=None, highlight=None, band=(0.100, 0.150), ombre=(0.45, 0.30), size=(512, 1024),
-         length=1.0, seed=3):
+         length=1.0, seed=3, accent=None, accent2=None, contrast=1.0):
     """Hair sheet: u across a lock, v = distance from the crown / `length` metres (hair.py UVs).
-    color2: second tone the hair fades into below ombre[0] (metres) over ombre[1]."""
+    color2: second tone the hair fades into below ombre[0] (metres) over ombre[1].
+    accent: colour of a second sheet painted to the right of the first (hair.Hair.split: streaks, inner
+    layers; accent2: its ombre tone). contrast scales the painted shading (runtime-tinted hair is painted
+    near white and wants a little more of it)."""
     from PIL import Image
-    w, h = size
     rng = np.random.default_rng(seed)
+    img = _hair_sheet(color, color2, highlight, band, ombre, size, length, rng, contrast)
+    if accent is not None:
+        img = np.concatenate([img, _hair_sheet(accent, accent2, None, band, ombre, size, length, rng, contrast)],
+                             axis=1)
+    out = (np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)
+    _save(Image.fromarray(out, "RGB"), path)
+
+
+def _hair_sheet(color, color2, highlight, band, ombre, size, length, rng, contrast=1.0):
+    w, h = size
     u = (np.arange(w, dtype=np.float32) + 0.5) / w
     d = (np.arange(h, dtype=np.float32) + 0.5) / h * length          # row 0 = crown
     U, D = np.meshgrid(u, d)
@@ -211,9 +223,9 @@ def hair(path, color, color2=None, highlight=None, band=(0.100, 0.150), ombre=(0
         tone += amp * np.sin(u * k * 2 * np.pi + rng.uniform(0, 6.28))
     lines = (rng.random(w) > 0.985).astype(np.float32)
     lines = np.convolve(lines, [0.25, 0.5, 0.25], "same")
-    img *= (1.0 + tone - 0.06 * lines)[None, :, None]
+    img *= (1.0 + (tone - 0.06 * lines) * contrast)[None, :, None]
     # edge darkening across a lock (reads as a soft crease between neighbouring locks)
-    _mul(img, shade(color, v=0.72, s=1.15), (np.abs(U - 0.5) * 2.0) ** 5 * 0.45)
+    _mul(img, shade(color, v=0.72, s=1.15), (np.abs(U - 0.5) * 2.0) ** 5 * 0.45 * contrast)
     # root shadow
     _mul(img, shade(color, v=0.70, s=1.2), 1.0 - _smooth(D / 0.035))
     # highlight band with a zig-zag lower edge
@@ -223,8 +235,7 @@ def hair(path, color, color2=None, highlight=None, band=(0.100, 0.150), ombre=(0
     edge = hi - (hi - lo) * 0.55 * zig
     a = _smooth((D - lo) / 0.014) * (1.0 - _smooth((D - edge) / 0.0025))
     _over(img, hl, a * 0.46)
-    out = (np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)
-    _save(Image.fromarray(out, "RGB"), path)
+    return img
 
 
 # --------------------------------------------------------------------------- cloth atlas
