@@ -160,6 +160,20 @@ faces. Between two runs on the same geometry a few of them come and go with the 
 **Academy re-check** (shared helpers changed): NPC spots 0, doors 0, paths 153 (the known leftovers; 154
 before), z-fighting 865 (882 before), back faces 25 (as before).
 
+## Regenerated assets
+
+`python Tools/build_island.py layout` was run after both passes (with the terrain caches rebuilt and
+`GLTF_TRANSFORM` pointing at a local `@gltf-transform/cli` for the student character). Committed: every location's
+meshes (`Meshes/Locations/*`, the Academy, Slifer, Ra and Obelisk passes and the shared-helper changes),
+the door meshes (new sizes; the 7 sizes no longer used are removed), `Data/layout.json`, `Data/assets.json`
+and the minimap. Not committed: the shared props (`Meshes/Props`) and the character files, which this pass did
+not change (the container lacked some third-party textures they are built from; their bytes differed only in
+export noise), and files whose only difference was the FBX time stamp.
+
+The people check of the layout stage moved the hot springs' reception attendant onto the booth's rail: the
+hanging RECEPTION sign ran through the attendant's head. The sign hangs over the booth's front edge now
+(`hotsprings.py`).
+
 Not done here:
 - The editor build (Unreal: Duel Academy > Build Island) to bring the regenerated FBXs into the level.
 
