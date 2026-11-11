@@ -246,7 +246,8 @@ def skirt(kit, color, waist=1.035, length=0.36, flare=0.55, pleats=14, style=Non
             base = b.torso_ring(zb, ease + 0.004 * layer + 0.010 * M.smooth((waist - z) / 0.06), theta=th)
             k = 1.0 + flare * max(0.0, t) ** 0.85 * (1.0 + 0.10 * layer)
             amp = 0.13 * max(0.0, t) ** 1.1
-            r = base[:, :2] * (k * (1.0 + amp * (saw * fold - 0.5)))[:, None]
+            cen = np.array([0.0, b.centre_y(zb)])
+            r = cen + (base[:, :2] - cen) * (k * (1.0 + amp * (saw * fold - 0.5)))[:, None]
             rings.append(np.column_stack([r, np.full(n, z)]))
         p = M.loft("skirt", None, np.array(rings), closed=True, vs=np.linspace(1.0, 0.0, len(zs)))
         p.weights(M.w_hips(0.95, 0.72, 0.55))
@@ -346,7 +347,7 @@ def collar(kit, color, kind="shirt", style=None, size=1.0, slot="cloth", z=1.398
             point = 1.0 + (0.55 * np.exp(-((np.minimum(th, 2 * np.pi - th) - g) / 0.30) ** 2) if kind == "shirt"
                            and dr > 0.02 else 0.0)
             rr = r0 + dr * point
-            y = -c * rr * 1.08 + 0.004 - (z + dz - 1.375) * 0.07
+            y = -c * rr * 1.08 + b.neck_c(z + dz)
             rows.append(np.column_stack([s * rr, y, np.full(len(th), z + dz - (0.012 * (point - 1.0)))]))
         p = M.loft("collar", None, np.array(rows), closed=False)
         p = M.solidify(p.weights(M.w_spine), 0.003)
@@ -377,7 +378,7 @@ def bow(kit, color, z=1.335, size=1.0, tails=0.06, y=None, x=0.0, bone=None, sty
     """Ribbon bow (chest by default; give `bone` + position for hair bows)."""
     b = kit.body
     if y is None:
-        y = -float(b.torso_dims(np.array(z))[1]) - 0.022
+        y = b.front_y(z) - 0.022
     c = np.array([x, y, z])
     parts = []
     for sx in (1.0, -1.0):
@@ -398,7 +399,7 @@ def tie(kit, color, z=1.375, length=0.20, style=None):
     b = kit.body
     t = np.linspace(0.0, 1.0, 9)
     zz = z - length * t
-    y = np.array([-float(b.torso_dims(np.array(q))[1]) for q in zz]) - 0.020
+    y = np.array([b.front_y(q) for q in zz]) - 0.020
     w = 0.014 + 0.016 * np.sin(np.clip(t * 1.15, 0, 1) * np.pi * 0.5) - 0.020 * M.smooth((t - 0.86) / 0.14)
     p = M.tube("tie", None, np.column_stack([np.zeros(9), y, zz]), w, n=8, up=(0, 1, 0), flat=0.22)
     kit.add(p.weights(M.w_spine), color, "cloth", **(style or {}))
@@ -416,14 +417,14 @@ def belt(kit, color, z=1.02, width=0.026, buckle=(0.86, 0.70, 0.30), pouch=None,
         rings.append(r)
     p = M.solidify(M.loft("belt", None, np.array(rings), closed=True), 0.004)
     kit.add(p.weights(M.w_spine), color, "cloth")
-    f = float(b.torso_dims(np.array(z))[1])
-    bk = _box("buckle", (0, -f - ease - 0.004, z), (0.034, 0.010, width * 1.25))
+    bk = _box("buckle", (0, b.front_y(z) - ease - 0.004, z), (0.034, 0.010, width * 1.25))
     kit.add(bk.weights(M.w_spine), buckle, "cloth")
     if pouch is not None:
-        a = float(b.torso_dims(np.array(z - 0.04))[0])
-        bx = _box("deckbox", (a + ease + 0.016, -0.012, z - 0.045), (0.030, 0.062, 0.080))
+        a = b.side_x(z - 0.04)
+        cy = b.centre_y(z - 0.04)
+        bx = _box("deckbox", (a + ease + 0.016, cy - 0.012, z - 0.045), (0.030, 0.062, 0.080))
         kit.add(bx.weights(M.w_spine), pouch, "cloth", hem=[(0.0, pouch)], top=[(0.30, P.shade(pouch, v=0.7))])
-        clasp = _box("clasp", (a + ease + 0.033, -0.012, z - 0.030), (0.006, 0.016, 0.016))
+        clasp = _box("clasp", (a + ease + 0.033, cy - 0.012, z - 0.030), (0.006, 0.016, 0.016))
         kit.add(clasp.weights(M.w_spine), buckle, "cloth")
 
 
@@ -466,19 +467,20 @@ def cape(kit, color, length=0.55, spread=110.0, style=None, top=1.385, flare=0.1
     hang(p, "coattail", top - 0.16, length - 0.16, share=0.85)
     kit.cloth_prefixes.add("coattail")
     kit.add(M.solidify(p, 0.004), color, "cloth", cells=(2, 2), **(style or {}))
-    clasp = _box("capeclasp", (0, -float(b.torso_dims(np.array(1.36))[1]) - 0.02, 1.365), (0.03, 0.012, 0.02))
+    clasp = _box("capeclasp", (0, b.front_y(1.36) - 0.02, 1.365), (0.03, 0.012, 0.02))
     kit.add(clasp.weights(M.w_spine), (lining or (0.86, 0.70, 0.30)), "cloth")
 
 
 def scarf(kit, color, style=None, tail=0.22):
     b = kit.body
     th = np.linspace(0.0, 2 * np.pi, 22)
-    path = np.column_stack([np.sin(th) * (b.neck_r + 0.020), -np.cos(th) * (b.neck_r + 0.024) + 0.002,
+    nc = b.neck_c(1.404)
+    path = np.column_stack([np.sin(th) * (b.neck_r + 0.020), -np.cos(th) * (b.neck_r + 0.024) + nc,
                             1.420 + 0.006 * np.cos(th)])
     p = M.tube("scarf", None, path, 0.022, n=10, flat=0.85, cap0=False, cap1=False)
     kit.add(p.weights(M.w_spine), color, "cloth", **(style or {}))
     t = np.linspace(0.0, 1.0, 8)
-    tp = np.column_stack([0.030 + 0.02 * t, -b.neck_r - 0.045 - 0.03 * np.sin(t * 2.0), 1.415 - tail * t])
+    tp = np.column_stack([0.030 + 0.02 * t, nc - 0.002 - b.neck_r - 0.045 - 0.03 * np.sin(t * 2.0), 1.415 - tail * t])
     tl = M.tube("scarftail", None, tp, 0.024 + 0.006 * t, n=8, up=(0, 1, 0), flat=0.25)
     kit.add(tl.weights(M.w_spine), color, "cloth", **(style or {}))
     kit.skin["torso"] = max(kit.skin["torso"], 1.39)
@@ -490,13 +492,10 @@ def emblem(kit, color, z=1.27, x=0.062, size=0.016, kind="star", lift=0.024):
     n = {"star": 10, "diamond": 4, "disc": 16}[kind]
     a = np.linspace(0, 2 * np.pi, n, endpoint=False) + (math.pi / 2)
     r = np.where(np.arange(n) % 2 == 0, 1.0, 0.45) * size if kind == "star" else np.full(n, size)
-    e = 2.0 / 2.35
     ring0 = []
     for ai, ri in zip(a, r):
         px, pz = x + math.cos(ai) * ri, z + math.sin(ai) * ri
-        aa, ff, _ = b.torso_dims(np.array(pz))
-        py = -float(ff) * max(0.0, 1.0 - abs(px / float(aa)) ** 2.35) ** (1 / 2.35) - lift
-        ring0.append((px, py, pz))
+        ring0.append((px, b.front_y(pz, px) - lift, pz))
     ring0 = np.array(ring0)
     p = M.loft("emblem", None, np.array([ring0, ring0 + (0, -0.003, 0)]), closed=True, cap1=True, outline=0.6)
     kit.add(p.weights(M.w_torso), color, "cloth")
@@ -506,8 +505,7 @@ def buttons(kit, color, z0=1.08, z1=1.30, n=3, x=0.022, r=0.008, double=False):
     b = kit.body
     for z in np.linspace(z0, z1, n):
         for sx in ((1.0, -1.0) if double else (1.0,)):
-            f = float(b.torso_dims(np.array(z))[1])
-            c = np.array([sx * x, -f - 0.017, z])
+            c = np.array([sx * x, b.front_y(z) - 0.017, z])
             rings = [M.ring(c + (0, -d, 0), (1, 0, 0), (0, 0, 1), r * k, r * k, 10) for d, k in ((0, 1.0), (0.004, 0.8))]
             p = M.loft("button", None, np.array(rings), closed=True, cap1=True, outline=0.5)
             kit.add(p.weights(M.w_spine), color, "cloth")

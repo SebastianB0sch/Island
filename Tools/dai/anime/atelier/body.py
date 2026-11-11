@@ -63,6 +63,22 @@ class Body:
         y = np.where(c > 0, -(f + ease + front), (b + ease + back)) * np.abs(c) ** e
         return np.stack([x, y, np.broadcast_to(z, x.shape)], axis=-1)
 
+    # positions garments and accessories ask for (another body - wardrobe.VBody - answers from its own shape)
+    def front_y(self, z, x=0.0):
+        """y of the chest / belly surface at height z, x off the centre line."""
+        a, f, _ = self.torso_dims(np.array(z, np.float64))
+        return -float(f) * max(0.0, 1.0 - abs(x / float(a)) ** TORSO_POWER) ** (1.0 / TORSO_POWER)
+
+    def side_x(self, z):
+        return float(self.torso_dims(np.array(z, np.float64))[0])
+
+    def centre_y(self, z):
+        return 0.0
+
+    def neck_c(self, z):
+        """y of the neck's centre line at height z (the neck leans forward)."""
+        return 0.004 - (z - 1.375) * 0.07
+
     def arm_radius(self, x):
         return M.spline(ARM, np.abs(x)) * self.arm_k
 

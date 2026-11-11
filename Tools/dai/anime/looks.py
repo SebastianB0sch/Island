@@ -9,8 +9,12 @@ shape, resting expression, outfit and height. The looks are the project's own de
 look() builds a cast entry in the vocabulary of models.build_model:
 
   model      vroid_a / vroid_b (girls), vroid_c (boys)
-  outfit     None: the base model's own outfit, recoloured ("colors"); or a tailored set (outfit.py):
-             short() jacket, blazer(), coat(), girl()
+  wear       generated garments cut from the base body's own cross-sections (wardrobe.py): a list of
+             (garment kind, params) in wearing order, in the atelier's vocabulary (atelier/outfit.GARMENTS) -
+             the presets below (bomber, sweater, vest, blazer, tunic, coat, suit; sailor, blazer_f, cardigan,
+             pinafore, dress). What every look uses; the base model's shoes stay (colors["shoes"])
+  outfit     the older alternatives when a look has no "wear": None - the base model's own outfit,
+             recoloured ("colors") - or a set tailored from the skin (outfit.py): short(), blazer(), coat(), girl()
   hair_style generated clump hair replacing the base hair: {style: recipe sections, ombre, accent, tie, ...}
              (clumphair.py; recipes in atelier/styles.py) - what every look below uses
   hairdo     the older alternative: restyle of the base model's own hair (shape(), top_layer, ...)
@@ -18,6 +22,8 @@ look() builds a cast entry in the vocabulary of models.build_model:
   face_shape {chin, jaw, cheeks}; expression: resting mix of the facial morphs
 """
 
+from .atelier import designs as D
+from .atelier.paint import shade
 from .atelier.styles import styled
 
 WHITE = (0.96, 0.96, 0.95)
@@ -88,6 +94,120 @@ def girl(color, trim, skirt, boots=None, shirt=BLACK, **kw):
                 skirt=dict(color=skirt, length=0.15, pleats=18, belt=trim), boots=dict(color=boots or skirt, top=0.86))
 
 
+# --------------------------------------------------------------------------- wardrobe (wardrobe.py)
+# Original outfits in the atelier's garment vocabulary; `accent` is the wearer's dorm colour. The cuts come
+# from atelier/designs.py where one fits; _fit() adapts a preset to the VRoid bodies.
+TINT = D.TINT
+
+
+def _fit(wear):
+    """Layer a garment list for the VRoid bodies: straight trousers instead of leg-hugging ones, the belt
+    under the jacket, every outer top clear of the layer below it."""
+    out, tops = [], 0
+    for kind, p in wear:
+        p = dict(p)
+        if kind == "pants":
+            if p.get("hem", 0.10) < 0.5:
+                p["ease"] = max(p.get("ease", 0.012), 0.018)
+                p.setdefault("flare", 0.016)
+        elif kind == "belt":
+            if tops < 2:                             # worn under the jacket
+                p["ease"] = min(p.get("ease", 0.016), 0.013)
+        elif kind == "top":
+            tops += 1
+            if tops == 2 and p.get("ease", 0.010) >= 0.011:
+                p["ease"] = max(p["ease"], 0.024 if p.get("tail") else 0.019)
+            elif tops > 2:
+                p["ease"] = max(p.get("ease", 0.010), 0.026)
+        out.append((kind, p))
+    return out
+
+
+def bomber(accent, **kw):
+    """Short zipped jacket with contrast sleeves and a stand collar."""
+    return _fit(D.bomber_m(accent, **kw))
+
+
+def blazer_m(accent, **kw):
+    """Shirt and tie under an open piped blazer, deck box on the belt."""
+    return _fit(D.blazer_m(accent, **kw))
+
+
+def vest(accent, **kw):
+    """Rolled shirt sleeves, tie and a fitted vest."""
+    return _fit(D.vest_m(accent, **kw))
+
+
+def long_coat(accent, **kw):
+    """Long open coat with a lined edge over a high-collar shirt."""
+    return _fit(D.coat_m(accent, **kw))
+
+
+def suit(accent, **kw):
+    """Staff suit; coat=<colour>: an open long coat over it."""
+    return _fit(D.suit_m(accent, **kw))
+
+
+def sweater(accent, knit=NAVY, pants=CHARCOAL, shirt=WHITE, mark="diamond"):
+    """V-neck pullover with striped ribbing over a shirt and tie."""
+    rib = shade(knit, v=0.78)
+    return _fit([("top", dict(color=shirt, hem=0.97, ease=0.006, sleeve_to=0.66, cells=(1, 1))),
+                 ("collar", dict(color=shirt, kind="shirt")),
+                 ("tie", dict(color=accent, length=0.12)),
+                 ("pants", dict(color=pants, ease=0.016)),
+                 ("top", dict(color=knit, hem=0.93, ease=0.019, v=0.10, cuff=-0.003, flare=-0.004, sleeve_to=0.645,
+                              style=dict(hem=[(0.035, rib), (0.02, accent), (0.03, rib)]),
+                              sleeve_style=dict(hem=[(0.05, rib), (0.025, accent), (0.03, rib)])))] + D._pin(accent, kind=mark))
+
+
+def tunic(accent, cloth=WHITE, pants=NAVY, slot="cloth", mark="diamond", piping=None):
+    """Closed hip-length tunic with a stand collar, piped front and a row of buttons."""
+    piping = piping or accent
+    return _fit([("top", dict(color=BLACK, hem=0.97, ease=0.005, sleeves="short", cells=(1, 1))),
+                 ("pants", dict(color=pants, ease=0.016)),
+                 ("top", dict(color=cloth, hem=0.87, ease=0.019, slot=slot, cuff=0.003, flare=0.004,
+                              style=dict(hem=[(0.03, piping)], edge=[(0.012, piping)]),
+                              sleeve_style=dict(hem=[(0.06, piping), (0.015, cloth), (0.012, piping)]))),
+                 ("collar", dict(color=piping, kind="stand", slot=slot)),
+                 ("belt", dict(color=shade(pants, v=0.7), z=1.0, ease=0.025, pouch=shade(accent, v=0.85))),
+                 ("buttons", dict(color=GOLD, z0=1.08, z1=1.32, n=4, x=0.0, r=0.007))] + D._pin(GOLD, kind=mark))
+
+
+def sailor(accent, **kw):
+    """Sailor blouse with a striped collar and a pleated skirt."""
+    return _fit(D.sailor_f(accent, **kw))
+
+
+def blazer_f(accent, **kw):
+    """Shirt and ribbon under a cropped piped blazer, pleated skirt, socks."""
+    return _fit(D.blazer_f(accent, **kw))
+
+
+def cardigan(accent, **kw):
+    """Loose knit over a shirt, long ribbon, tights."""
+    return _fit(D.cardigan_f(accent, **kw))
+
+
+def dress(accent, **kw):
+    """Long-sleeved dress with a flared hem; apron=<colour> adds one."""
+    return _fit(D.dress_f(accent, **kw))
+
+
+def pinafore(accent, cloth=None, blouse=WHITE, legs=WHITE, thigh=0.36, length=0.33):
+    """Puff-sleeved blouse under a sleeveless V-neck bodice and a pleated skirt in one colour."""
+    cloth = cloth or shade(accent, v=0.8)
+    return _fit([("top", dict(color=blouse, hem=0.985, ease=0.006, sleeves="short", puff=0.012, cells=(1, 1),
+                              sleeve_style=dict(hem=[(0.14, accent)]))),
+                 ("collar", dict(color=blouse, kind="shirt")),
+                 ("bow", dict(color=accent, size=0.8, z=1.345, knot=GOLD)),
+                 ("skirt", dict(color=cloth, length=length, pleats=16, style=dict(hem=[(0.03, WHITE), (0.03, cloth),
+                                                                                    (0.02, WHITE)]))),
+                 ("top", dict(color=cloth, hem=1.0, ease=0.019, sleeves="none", v=0.15,
+                              style=dict(edge=[(0.014, WHITE)]))),
+                 ("buttons", dict(color=GOLD, z0=1.06, z1=1.14, n=2, x=0.028, r=0.007, double=True)),
+                 ("legwear", dict(color=legs, top=thigh, style=dict(top=[(0.05, accent)])))])
+
+
 def look(model, hair, iris, outfit=None, colors=None, hairdo=None, female=None, tint=(), **kw):
     """One cast look (the fields models.build_model reads). hair: (colour, second colour or None);
     hair_style: clump hair (see _hair below); accessories: {glasses: colour, ...} (hairdo.accessories)."""
@@ -145,7 +265,7 @@ LOOKS = {
     "bastion": look("vroid_c", ((0.16, 0.18, 0.24), None), (0.30, 0.42, 0.50), hair_style=_hair("neat"),
                     colors=_dorm(YELLOW, (0.22, 0.24, 0.30), BROWN), face_shape=dict(chin=0.006, jaw=-0.03)),
     "chazz": look("vroid_c", ((0.10, 0.10, 0.13), None), (0.42, 0.42, 0.50), hair_style=_hair("crest"),
-                  outfit=coat(BLACK, (0.35, 0.25, 0.40)), colors=_dorm(BLACK, BLACK, BLACK),
+                  colors=_dorm(BLACK, BLACK, BLACK),
                   expression=dict(BrowAngry=0.5), face_shape=dict(chin=0.010, jaw=-0.05)),
     "zane": look("vroid_c", ((0.20, 0.33, 0.42), (0.12, 0.20, 0.30)), (0.32, 0.50, 0.58),
                  hair_style=_hair("shag", ombre=(0.16, 0.12)),
@@ -159,7 +279,7 @@ LOOKS = {
                   colors=_dorm(WHITE, BLUE, BLACK, BLUE)),
     "crowler": look("vroid_c", ((0.92, 0.85, 0.52), None), (0.48, 0.36, 0.60), hair_style=_hair("lowtail", tie=PLUM),
                     female=False,
-                    outfit=coat(BLUE, GOLD, shirt=(0.95, 0.62, 0.74), pants=BLUE), colors=_dorm(BLUE, BLUE, BLACK, None),
+                    colors=_dorm(BLUE, BLUE, BLACK, None),
                     expression=dict(Fun=0.35, BrowAngry=0.3), face_shape=dict(chin=0.018, jaw=-0.09)),
     "student_m1": look("vroid_c", (TINT_BASE, None), (0.35, 0.25, 0.18), hair_style=_hair("messy"),
                        tint=("jacket", "hair"), colors=_dorm(WHITE, CHARCOAL, BROWN), expression=dict(Fun=0.3)),
@@ -208,11 +328,51 @@ LOOKS = {
     "shadow_duelist": look("vroid_c", ((0.10, 0.09, 0.13), (0.30, 0.12, 0.34)), (0.70, 0.22, 0.30),
                            hair_style=_hair("long_m", fringe=dict(accent=[1, 4]), sides=dict(accent=[1]),
                                             accent=(0.52, 0.20, 0.56), ombre=(0.30, 0.20)),
-                           outfit=coat((0.07, 0.07, 0.10), PLUM), colors=_dorm(BLACK, BLACK, BLACK),
+                           colors=_dorm(BLACK, BLACK, BLACK),
                            expression=dict(BrowAngry=0.6), face_shape=dict(chin=0.018, jaw=-0.09), outline=0.0030),
     "unknown_student": look("vroid_c", ((0.20, 0.20, 0.24), None), (0.35, 0.25, 0.18),
                             hair_style=_hair("mop", fringe=dict(to=0.44)), colors=_dorm(RED)),
 }
+
+# --------------------------------------------------------------------------- who wears what
+# Dorm accents: slifer red, ra yellow, obelisk blue. (colors["shoes"] above recolours the base model's shoes.)
+_PINK = (0.95, 0.62, 0.74)
+_LILAC = (0.86, 0.84, 0.94)
+WEAR = {
+    "jaden": bomber(RED, sleeves=WHITE, pants=CHARCOAL),
+    "syrus": sweater(RED, knit=(0.62, 0.17, 0.19), pants=CREAM),
+    "chumley": vest(RED, vest=CREAM, pants=shade(BROWN, v=0.8)),
+    "bastion": blazer_m(YELLOW, jacket=shade(YELLOW, v=0.97), trim=WHITE, pants=(0.22, 0.24, 0.30), mark="disc"),
+    "chazz": long_coat(shade(PLUM, v=0.9, s=0.7), coat=BLACK, pants=shade(NAVY, v=0.8), mark="star"),
+    "zane": tunic(BLUE, cloth=WHITE, pants=NAVY, mark="star"),
+    "alexis": blazer_f(BLUE, jacket=WHITE, skirt=BLUE, thigh=0.34),
+    "jasmine": sailor(BLUE, top=CREAM, legs=WHITE, thigh=0.36),
+    "mindy": cardigan(BLUE, knit=_LILAC, legs=BLACK),
+    "crowler": long_coat(GOLD, coat=BLUE, pants=BLUE, shirt=_PINK, mark="star", hem=0.50),
+    "student_m1": tunic(TINT, cloth=TINT, piping=shade(TINT, v=0.80), pants=CHARCOAL, slot="tint"),
+    "student_f1": pinafore(BLUE),
+    "student_f2": sailor(BLUE, skirt=NAVY, legs=BLACK, thigh=0.57, bow=YELLOW),
+    # portrait-only speakers
+    "banner": suit(RED, suit=(0.30, 0.30, 0.34), coat=WHITE),
+    "sheppard": suit(GOLD, suit=(0.52, 0.16, 0.20)),
+    "mimicry": blazer_m(YELLOW, jacket=CHARCOAL, mark="disc"),
+    "dorothy": dress(RED, dress=(0.80, 0.42, 0.40), apron=CREAM),
+    "fontaine": dress(BLUE, dress=WHITE, legs=(0.22, 0.20, 0.24)),
+    "sartyr": suit(YELLOW, suit=shade(YELLOW, v=0.55, s=0.8)),
+    "beauregard": vest(YELLOW, vest=shade(YELLOW, v=0.95), mark="disc"),
+    "brier": bomber(YELLOW, mark="disc"),
+    "dimitri": sweater(YELLOW, knit=(0.24, 0.24, 0.28), mark="disc"),
+    "gerard": blazer_m(RED, jacket=shade(RED, v=0.9), trim=WHITE, tie=False),
+    "topher": tunic(BLUE, cloth=shade(BLUE, v=0.9), piping=WHITE, pants=WHITE, mark="star"),
+    "torrey": long_coat(BLUE, coat=NAVY, pants=CHARCOAL, mark="star", hem=0.62),
+    "conklin": blazer_m(BLUE, jacket=NAVY, mark="star"),
+    "damon": vest(BLUE, vest=NAVY, pants=CHARCOAL, mark="star"),
+    "blair": blazer_f(RED, jacket=shade(RED, v=0.9), skirt=CHARCOAL, legs=BLACK, thigh=0.57, mark="diamond"),
+    "shadow_duelist": long_coat(PLUM, coat=(0.07, 0.07, 0.10), pants=BLACK, mark="diamond"),
+    "unknown_student": bomber(RED, body=CHARCOAL, sleeves=RED),
+}
+for _cid, _wear in WEAR.items():
+    LOOKS[_cid]["wear"] = _wear
 
 
 def apply(cid, entry):

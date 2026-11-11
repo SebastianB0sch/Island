@@ -531,7 +531,13 @@ def build_model(cid, entry, key_name, log=print):
     if body is not None:
         skin = {i for i, s in enumerate(body.material_slots) if s.material and role_of(s.material.name) == "skin"}
         rig = outfit.Rig(arm, body, skin)
-        if entry.get("outfit"):
+        if entry.get("wear"):
+            # generated garments cut from this body's cross-sections (wardrobe.py) replace the base outfit
+            from . import wardrobe
+            _, cloth_mats = wardrobe.build(arm, meshes, body, rig, entry, key, log)
+            tailored |= cloth_mats
+            _drop_unused_slots(body)
+        elif entry.get("outfit"):
             t = outfit.tailor(arm, body, entry, key, log)
             tailored = {g["mat"] for g in t.garments.values()}
             _drop_unused_slots(body)
@@ -553,7 +559,8 @@ def build_model(cid, entry, key_name, log=print):
         alpha.update(more)
         tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
     materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig, source=path)
-    if body is not None and entry.get("outfit"):
+    tailor_fit = bool(entry.get("outfit")) and not entry.get("wear")
+    if body is not None and tailor_fit:
         # cloth fit relaxation: loosen the clothes wherever a take would push an inner layer through them
         from . import correctives, fitcheck
         fitcheck.relax(body, arm, log)
@@ -565,7 +572,7 @@ def build_model(cid, entry, key_name, log=print):
         fitcheck.snap_residuals(body, arm, log, shape_fn=lambda a: correctives.displacement(body, a))
     meshes += extra
     for m in meshes:
-        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses", "haircap", "clumphair"))
+        add_outline(m, entry.get("outline", 0.0022), skip=("face", "glasses", "haircap", "clumphair", "wardrobe"))
     face = next((m for m in meshes if m.name.startswith("Face")), meshes[0])
     _select(meshes, face)
     if len(meshes) > 1:
@@ -576,7 +583,7 @@ def build_model(cid, entry, key_name, log=print):
     shading.face_normals(mesh, arm, log)
     shading.hair_normals(mesh, arm, log)
     restore_morphs(mesh, log)
-    if entry.get("outfit"):
+    if tailor_fit:
         # final check on exactly what is exported: covered vertices still breaking through follow their cloth
         from . import fitcheck
         fitcheck.snap_residuals(mesh, arm, log)
