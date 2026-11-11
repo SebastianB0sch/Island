@@ -38,7 +38,9 @@ materials, see [Docs/WATER.md](Docs/WATER.md).)*
 | A road's paving breaks up into its earth verge, and the verge into the grass | Where a road ends, the stones thin out into the ground |
 
 *Ground materials never meet along a line: the terrain's layers are blended by their own relief, and roads and
-bridge decks are drawn with the terrain's material - see [Docs/GROUND_MATERIALS.md](Docs/GROUND_MATERIALS.md).*
+bridge decks are drawn with the terrain's material - see [Docs/GROUND_MATERIALS.md](Docs/GROUND_MATERIALS.md).
+Every door on the island has a way to a road: the roads run on to each building's entrance paving, and every
+village house has a footpath to its lane ([Docs/World/ALIGNMENT_AUDIT.md](Docs/World/ALIGNMENT_AUDIT.md)).*
 
 ![Duel board](Docs/renders/duel.png)
 

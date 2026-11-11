@@ -73,6 +73,11 @@ ribbon ended in a hard line. Now:
   terrain's paving runs out a few metres onto the approaches and breaks up there.
 * `T_TerrainColor` (the far-distance tint and the minimap) still shows the roads as paved; ground and ribbon
   share that lookup, so they fade to the same colour with distance.
+* **Footpaths** use the same material with a second channel: vertex colour green lays the terrain's *Dirt*
+  layer (trodden earth) the way red lays its paving (`earth = G - R`, so white meshes and the grey road
+  ribbons carry none). `Tools/dai/strips.py` drapes such a strip on the ground - middle 3 cm up, both edges
+  1.5 cm under it at coverage 0 - and the village module lays one from every door to the lane
+  (see [World/ALIGNMENT_AUDIT.md](World/ALIGNMENT_AUDIT.md#every-door-is-joined-to-a-road)).
 
 ## Where things are
 
@@ -82,6 +87,7 @@ ribbon ended in a hard line. Now:
 | Road bed / verge, bridge approaches, colour map | `Tools/dai/terrain.py` `splat`, `colour_map` |
 | Ribbon rim, junction and bridge ends | `Tools/dai/layout.py` `ribbon_line`, `road_runs`, `ribbon_sections`, `road_ribbon` |
 | Vertex colours on meshes | `Tools/dai/geo.py` `MeshBuilder.cquad` / `colors` |
+| Footpath strips | `Tools/dai/strips.py`, `Tools/dai/assets/village.py` `Village.footpaths` |
 | Masters | `materials.py` `_height_blend`, `_terrain_surface`, `_terrain_finish`, `build_terrain`, `build_road` |
 | Blender preview of both | `Tools/dai/render.py` `_terrain_material` |
 | Checks | `Tools/tests/test_material_transitions.py`, `Tools/alignment_check.py` (ribbon rim, ends) |

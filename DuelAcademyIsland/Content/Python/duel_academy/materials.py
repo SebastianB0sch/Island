@@ -1100,9 +1100,10 @@ def _terrain_surface(g, uv, info, world_m, road=None):
     """The ground at `uv` (island-normalised, the splat maps' layout): colour, normal, roughness.
 
     Eight layers (T_Terrain_<Layer>_BC / _N / _R / _H) chosen by the splat maps and blended by height
-    (_height_blend). road: an extra 0..1 paving coverage laid over the result with the very same blend - 0
-    gives the terrain exactly, 1 the terrain's own Paving layer - which is what M_DA_Road draws on the road
-    ribbons and bridge decks, so paving, verge and ground are one continuous surface."""
+    (_height_blend). road = (paving, earth): extra 0..1 coverages laid over the result with the very same
+    blend, first the terrain's own Dirt layer (trodden earth: footpaths), then its Paving layer - 0 gives
+    the terrain exactly, 1 that layer - which is what M_DA_Road draws on road ribbons, footpaths and bridge
+    decks, so paving, path, verge and ground are one continuous surface."""
     splat_a = g.tex("SplatA", T("T_TerrainSplatA"), S_MSK, uv)
     splat_b = g.tex("SplatB", T("T_TerrainSplatB"), S_MSK, uv)
     # large-scale brightness variation breaks up visible tiling
@@ -1116,7 +1117,7 @@ def _terrain_surface(g, uv, info, world_m, road=None):
     fray = g.add(g.mul(fray1, g.const(0.6), "R"), g.mul(fray2, g.const(0.4), "R"))
     color = normal = rough = height = None
     n_out, r_out = "RGB", "R"
-    paving = None
+    paving = dirt = None
     for name, splat in TERRAIN_LAYERS:
         tile_m = float(info.get(name, {}).get("tile_m", 4.0))
         luv = g.mul(uv, g.scalar(f"{name}Tiles", world_m / tile_m))
@@ -1127,6 +1128,8 @@ def _terrain_surface(g, uv, info, world_m, road=None):
         h = g.mask(g.tex(f"{name}Height", h_tex, S_MSK, luv), "r") if h_tex is not None else g.const(0.5)
         if name == "Paving":
             paving = (c, n, r, h)
+        if name == "Dirt":
+            dirt = (c, n, r, h)
         if splat is None:
             color, normal, rough, height = c, n, r, h
             continue
@@ -1137,12 +1140,17 @@ def _terrain_surface(g, uv, info, world_m, road=None):
         rough = g.lerp(rough, r, a, r_out, "R")
         height = g.lerp(height, h, a)
         n_out, r_out = "", ""
-    if road is not None and paving is not None:
-        c, n, r, h = paving
-        a = _height_blend(g, road, h, height, "Paving", noise=fray)
-        color = g.lerp(color, c, a)
-        normal = g.lerp(normal, n, a, "", "RGB")
-        rough = g.lerp(rough, r, a, "", "R")
+    if road is not None:
+        cover, earth = road
+        for layer, name, amount in ((dirt, "Dirt", earth), (paving, "Paving", cover)):
+            if layer is None or amount is None:
+                continue
+            c, n, r, h = layer
+            a = _height_blend(g, amount, h, height, name, noise=fray)
+            color = g.lerp(color, c, a)
+            normal = g.lerp(normal, n, a, "", "RGB")
+            rough = g.lerp(rough, r, a, "", "R")
+            height = g.lerp(height, h, a)
     color = g.mul(color, brightness)
     return color, normal, rough
 
@@ -1233,9 +1241,10 @@ def build_terrain(mpc=None):
 
 
 def build_road(mpc=None):
-    """M_DA_Road - road ribbons and paved bridge decks: the terrain material looked up by world position
-    instead of mesh UVs, with the terrain's own Paving layer laid over it by the mesh's vertex colour
-    (R = paving coverage; a mesh without vertex colours is paved all over).
+    """M_DA_Road - road ribbons, footpaths and paved bridge decks: the terrain material looked up by world
+    position instead of mesh UVs, with the terrain's own layers laid over it by the mesh's vertex colour:
+    R = paving coverage (a mesh without vertex colours is paved all over), G - R = trodden earth (the
+    footpaths from a road to the doors of the houses beside it).
 
     Because it *is* the terrain's surface function, a ribbon whose rim is painted 0 shows there exactly what
     the ground under it shows (the dirt verge the splat map paints along every road, the paving of a plaza it
@@ -1249,8 +1258,12 @@ def build_road(mpc=None):
     iu, iv = g.mask(iuv, "r"), g.mask(iuv, "g")
     mirror = g.scalar("MirrorY", 0.0)
     uv = g.append(iu, g.lerp(iv, g.one_minus(iv), mirror))
-    cover = g.mul(g.node(unreal.MaterialExpressionVertexColor), g.scalar("Paving", 1.0), "R", "")
-    color, normal, rough = _terrain_surface(g, uv, info, world_m, road=cover)
+    vc = g.node(unreal.MaterialExpressionVertexColor)
+    cover = g.mul(vc, g.scalar("Paving", 1.0), "R", "")
+    # earth = G - R: green alone is a footpath; white (a mesh without colours) and the greys of the road
+    # ribbons carry none
+    earth = g.mul(g.sat(g.sub(vc, vc, "G", "R")), g.scalar("Earth", 1.0))
+    color, normal, rough = _terrain_surface(g, uv, info, world_m, road=(cover, earth))
     g.settings(tangent_space_normal=False)
     _terrain_finish(g, uv, color, normal, rough, mpc, frame=g.lerp(g.const(1.0), g.const(-1.0), mirror))
     return g.finish()
@@ -1505,6 +1518,7 @@ def build_instances(palette, masters):
             elif kind == "road":
                 # the terrain's surface with its Paving layer laid on by vertex colour: nothing to tint
                 MEL.set_material_instance_scalar_parameter_value(mi, "Paving", float(spec.get("paving", 1.0)))
+                MEL.set_material_instance_scalar_parameter_value(mi, "Earth", float(spec.get("earth", 1.0)))
                 MEL.set_material_instance_scalar_parameter_value(mi, "MirrorY", 0.0)
             elif kind in ("lava", "beam"):
                 MEL.set_material_instance_vector_parameter_value(mi, "Tint", col)

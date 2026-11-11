@@ -656,6 +656,7 @@ class Terrain:
                 self.add_bridge(p, cr, arr, arc, prof)
             g = np.abs(np.diff(prof)) / ds
             self.paths.append(dict(id=p["id"], width=p["width"], surface=p["surface"], lamps=p.get("lamps", False),
+                                   extend=C.path_extension(p["id"]),
                                    grade=float(g.max()) if len(g) else 0.0,
                                    pts=[[float(a), float(b)] for a, b in pts],
                                    samples=[[float(a), float(b), float(c)] for (a, b), c in zip(samples, prof)]))
@@ -931,6 +932,9 @@ class Terrain:
         for p in self.paths:
             hw = p["width"] / 2.0
             line = [tuple(q[:2]) for q in p["samples"][::2]] + [tuple(p["samples"][-1][:2])]
+            ext = p.get("extend") or {}
+            # the last stretch to a door (config.PATH_EXTENSIONS) is painted like the path itself
+            line = [tuple(q) for q in ext.get("start", [])] + line + [tuple(q) for q in ext.get("end", [])]
             dist, _ = polyline_distance(X, Y, line, hw + 4.0)
             dist = np.where(np.isfinite(dist), dist, 1e9)
             edge_noise = n2 * 0.7

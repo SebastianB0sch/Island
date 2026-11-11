@@ -43,6 +43,7 @@ terrain mesh as it is drawn**, and everything that lies on it is checked against
 | footings of the villages and landmarks (every separate piece reaches the ground) | 5 cm | 7,920 pieces, none off the ground |
 | building bases vs pads | 35 cm | all pass |
 | props and vegetation vs terrain | +20 cm | 87,275 checked, none floating (the 1,234 below -60 cm are the deliberate rock sinks) |
+| a way on made ground from every door to a road | must exist | all 224 doors near the ground, in 13 locations |
 | door thresholds | 21 cm | 587 doors, only the 5 accepted exceptions |
 | vegetation inside buildings / at doors | 0 | 0 |
 | story anchors on open ground | not buried, no air under them | 10 checked, pass |
@@ -51,6 +52,37 @@ terrain mesh as it is drawn**, and everything that lies on it is checked against
 |---|---|
 | ![Junction](../renders/road_junction.jpg) | ![Bridge joint](../renders/bridge_joint.jpg) |
 | The pond lane runs into the main road's paving; the earth verge fills the corners | The gym road runs onto its bridge deck without a step or a joint |
+
+## Every door is joined to a road
+
+The paths were graded between the edges of the grounds they lead to, and several simply stopped there: three
+roads ended in the lawn round the Academy 40-55 m from its forecourt, the Ra road 18 m from the dorm's
+entrance walk, the Obelisk road 12 m outside the garden gate, the hot-springs path 20 m below the gate, the
+cliff trail 40 m out in the Obelisk lawn. The cottages of the three villages stood in the grass with no path
+at all, and the market square of Willow Pond lay beside its lane without touching it.
+
+| | |
+|---|---|
+| ![Village footpaths](../renders/village_paths.jpg) | ![Entrance walk](../renders/entrance_walk.jpg) |
+| Willow Pond: a path from every door to the lane or the square, the square paved through to the lane | The Ra road runs on to the dorm's entrance walk and meets it square |
+
+* **`config.PATH_EXTENSIONS`** carries a path on across the grounds to the entrance paving - waypoints in the
+  building's own frame, so the road keeps meeting the walk if the building moves. No earthworks (a pad is
+  level): a paved road's ribbon runs further and the splat paints its bed, a dirt path is trodden further. An
+  end at a built slab is paved across and square to its edge (`end_edge`), 1 cm above it; an end on painted
+  paving thins out into it.
+* **Village footpaths** (`assets/village.py` `Village.footpaths`): from every door - 20 cottages and sheds,
+  the mill, the gangways of the two stilt huts - the shortest way over ground that is neither steep nor wet,
+  round the houses and whatever stands in the village, to the lane, the road, the square or a path already
+  laid (so they join up into a small network). Drawn as a strip of trodden earth with the road material
+  ([GROUND_MATERIALS.md](../GROUND_MATERIALS.md)); plants are cleared off it. A paved link joins the square
+  to the lane.
+* **The check** (`alignment_check.py`, ENTRANCES): from every door socket near the ground and every village
+  door, a walk over half-metre cells that may only use made ground - floors, slabs, decks and steps of the
+  buildings, painted paving and earth, paths, footpaths - with steps of at most 0.36 m per cell (stairs
+  pass, ledges do not), has to arrive on one of the island's paths. Only floors are probed, not walls: what
+  is verified is that the made ground a door opens onto reaches a road. `DAI_AUDIT_ONLY=entrances` runs
+  this section alone, `DAI_AUDIT_MAP=1` prints the ground round a door that fails.
 
 Three story anchors moved with the ground: the Ra and Obelisk front gates (their roads were regraded) and
 `lighthouse_view`, which had always hung 6.7 m over the water 12 m off the breakwater and now stands on it.

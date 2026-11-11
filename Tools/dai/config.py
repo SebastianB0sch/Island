@@ -249,6 +249,32 @@ PATHS = [
 # Grade limits (rise / run) of the path profiles: roads are ironed to these between their fixed ends.
 ROAD_GRADE = {"paved": 0.09, "dirt": 0.12, "boardwalk": 0.09}
 
+# The last stretch to the door. The paths above are graded between the edges of the grounds they join (a
+# pad is level, there is nothing to grade on it) - which left several of them ending in a lawn, short of the
+# building's own paving. These carry them on across the grounds: no earthworks, the same surface as the path
+# (a paved road's ribbon simply runs further, a dirt path is trodden further into the splat).
+#   start / end : waypoints before the path's first / after its last point, in walking order. A waypoint is a
+#                 world (x, y), or (location key, local x, local y) in that location's own frame - so the
+#                 road keeps meeting the walkway if the building is moved or turned.
+#   start_edge / end_edge : the two corners of a built slab the paving butts against (paved across, level
+#                 with it); without one the path ends on the ground and thins out into whatever is there.
+PATH_EXTENSIONS = {
+    # the Academy's forecourt apron (painted paving, 128 x 92 m either side of (0, 140)): three roads stopped
+    # at the edge of the lawn round it
+    "to_obelisk": dict(start=[(-124.0, 60.0)],
+                       # ... and at the Obelisk dorm 12 m outside the garden gate: on to the gate walk
+                       end=[("obelisk_boys", 0.0, -88.0), ("obelisk_boys", 0.0, -83.7)],
+                       end_edge=(("obelisk_boys", -5.0, -83.7), ("obelisk_boys", 5.0, -83.7))),
+    "to_girls": dict(start=[(-60.0, 228.0)]),
+    "to_abandoned": dict(start=[(124.0, 60.0)]),
+    # Ra Yellow: the dorm's entrance walk ends 18 m from where the road did
+    "to_ra": dict(end=[("ra", 0.0, -46.0)], end_edge=(("ra", -2.0, -46.0), ("ra", 2.0, -46.0))),
+    # the cliff trail starts at the side walk of the Obelisk dorm, not 40 m out in its lawn
+    "to_cliffs": dict(start=[("obelisk_boys", -44.0, -10.0)]),
+    # the hot springs: up to the gate and its stepping stones
+    "to_springs": dict(end=[("hotsprings", 0.0, -28.6)]),
+}
+
 # --------------------------------------------------------------------------- waterways
 # Centre lines run downstream. width = water half-width (m) at that point (linear in between), depth = water
 # depth mid-stream. The water level follows the ground it is cut into: never above the terrain, never rising
@@ -280,3 +306,22 @@ def deg(a):
 
 def loc(key):
     return LOCATIONS[key]
+
+
+def world_point(pt):
+    """World (x, y) of a waypoint: (x, y) as it is, or (location key, local x, local y)."""
+    if len(pt) == 2:
+        return float(pt[0]), float(pt[1])
+    key, lx, ly = pt
+    (ox, oy), a = LOCATIONS[key]["pos"], math.radians(LOCATIONS[key].get("yaw", 0.0))
+    return ox + lx * math.cos(a) - ly * math.sin(a), oy + lx * math.sin(a) + ly * math.cos(a)
+
+
+def path_extension(path_id):
+    """PATH_EXTENSIONS[path_id] in world coordinates: dict(start=[(x, y)], end=[(x, y)], start_edge, end_edge)."""
+    ext = PATH_EXTENSIONS.get(path_id, {})
+    out = dict(start=[world_point(q) for q in ext.get("start", [])], end=[world_point(q) for q in ext.get("end", [])])
+    for k in ("start_edge", "end_edge"):
+        if ext.get(k):
+            out[k] = [world_point(q) for q in ext[k]]
+    return out

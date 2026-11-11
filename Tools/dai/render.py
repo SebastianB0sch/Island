@@ -15,7 +15,7 @@ from mathutils import Vector
 
 from . import blend
 from . import config as C
-from . import jsonio, terrain_mesh
+from . import jsonio, palette, terrain_mesh
 from .assets import load_placements
 from .assets import props as P
 
@@ -155,7 +155,7 @@ def _terrain_material(mat, road=False):
         nt.links.new(img.outputs["Color"], sep.inputs[0])
         splat[key] = [sep.outputs[0], sep.outputs[1], sep.outputs[2], img.outputs["Alpha"]]
     color = normal = rough = height = None
-    paving = None
+    paving = dirt = None
     for layer, ch in TERRAIN_SPLAT:
         vec = scaled(C.WORLD_SIZE / info.get(layer, {}).get("tile_m", 4.0))
         c = image(f"T_Terrain_{layer}_BC.jpg", vec).outputs["Color"]
@@ -164,6 +164,8 @@ def _terrain_material(mat, road=False):
         h = red(image(f"T_Terrain_{layer}_H.png", vec, colour=False).outputs["Color"])
         if layer == "Paving":
             paving = (c, n, r, h)
+        if layer == "Dirt":
+            dirt = (c, n, r, h)
         if ch is None:
             color, normal, rough, height = c, n, r, h
             continue
@@ -171,11 +173,16 @@ def _terrain_material(mat, road=False):
         color, normal, rough = mix(color, c, fac), mix(normal, n, fac), mix(rough, r, fac)
         height = mix(height, h, fac, "FLOAT")
     if road:
-        c, n, r, h = paving
         vc = nt.nodes.new("ShaderNodeVertexColor")
         vc.layer_name = "Col"
-        fac = height_blend(red(vc.outputs["Color"]), h, height, "Paving")
-        color, normal, rough = mix(color, c, fac), mix(normal, n, fac), mix(rough, r, fac)
+        sep = nt.nodes.new("ShaderNodeSeparateColor")
+        nt.links.new(vc.outputs["Color"], sep.inputs[0])
+        cover = sep.outputs[0]
+        earth = calc("SUBTRACT", sep.outputs[1], sep.outputs[0], clamp=True)     # green alone: a footpath
+        for (c, n, r, h), name, amount in ((dirt, "Dirt", earth), (paving, "Paving", cover)):
+            fac = height_blend(amount, h, height, name)
+            color, normal, rough = mix(color, c, fac), mix(normal, n, fac), mix(rough, r, fac)
+            height = mix(height, h, fac, "FLOAT")
     # far blend to the colour map
     cam = nt.nodes.new("ShaderNodeCameraData")
     far = nt.nodes.new("ShaderNodeMapRange")
@@ -212,7 +219,9 @@ def build_scene(log=print, scatter=True, detail_props=True):
     # terrain with baked colour map
     t = terrain_mesh.build_preview_terrain(h, quads=1008)
     _terrain_material(blend.material("M_Terrain"))
-    _terrain_material(blend.material("M_RoadPaving"), road=True)
+    road_mats = [name for name, spec in palette.MATERIALS.items() if spec.get("kind") == "road"]
+    for name in road_mats:
+        _terrain_material(blend.material(name), road=True)
     terrain_mesh.build_water(h, export=False, log=lambda *_: None)
     for wname in ("M_Ocean", "M_LakeWater", "M_River"):
         m = blend.material(wname)
@@ -269,13 +278,12 @@ def build_scene(log=print, scatter=True, detail_props=True):
                 bpy.ops.import_scene.fbx(filepath=path)
     # the road material on everything that carries it (an imported FBX brings its own copy of each material);
     # a mesh without vertex colours is paved all over, as in Unreal
-    road_mat = bpy.data.materials["M_RoadPaving"]
     for ob in bpy.data.objects:
         if ob.type != "MESH":
             continue
         for slot in ob.material_slots:
-            if slot.material is not None and slot.material.name.split(".")[0] == "M_RoadPaving":
-                slot.material = road_mat
+            if slot.material is not None and slot.material.name.split(".")[0] in road_mats:
+                slot.material = bpy.data.materials[slot.material.name.split(".")[0]]
                 if "Col" not in ob.data.color_attributes:
                     layer = ob.data.color_attributes.new("Col", "BYTE_COLOR", "CORNER")
                     for d in layer.data:

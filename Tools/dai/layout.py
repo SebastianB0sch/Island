@@ -21,7 +21,7 @@ import numpy as np
 
 from . import atomic
 from . import config as C
-from . import jsonio, palette, terrain, waterways
+from . import jsonio, palette, strips, terrain, waterways
 from .assets import load_placements
 from .assets import props as P
 from .assets import avatar as AV
@@ -588,9 +588,19 @@ class Layout:
             return self._ribbon_lines[p["id"]]
         pts = [(float(t[0]), float(t[1])) for t in p["samples"]]
         ext0 = 0.0
+        given = p.get("extend") or {}
+        # the last stretch to a door (config.PATH_EXTENSIONS): the ribbon simply runs on
+        if given.get("start"):
+            lead = [tuple(q) for q in given["start"]] + [pts[0]]
+            ext0 = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(lead, lead[1:]))
+            pts = strips.resample(lead, 2.0)[:-1] + pts
+        if given.get("end"):
+            pts = pts + strips.resample([pts[-1]] + [tuple(q) for q in given["end"]], 2.0)[1:]
         for q in self.earlier_roads(p):
             reach = self.road_reach(q)
             for at_start in (True, False):
+                if given.get("start" if at_start else "end"):
+                    continue
                 (x, y), (bx, by) = (pts[0], pts[min(2, len(pts) - 1)]) if at_start else (pts[-1], pts[max(len(pts) - 3, 0)])
                 d = math.hypot(x - bx, y - by) or 1.0
                 ux, uy = (x - bx) / d, (y - by) / d                  # outward
@@ -624,7 +634,8 @@ class Layout:
         (arc, [(s_start, s_end, start_edges, end_edges, start_kind, end_kind)]).
         A ribbon stops exactly at a bridge's abutments (the deck carries the road there: kind "bridge") and
         just inside the edge of the carriageway of a road laid before it ("road": the main road's ribbon is
-        the surface there); everywhere else it ends on the ground ("ground").
+        the surface there); a path carried on to a building's own walk ends against that slab ("slab",
+        config.PATH_EXTENSIONS); everywhere else it ends on the ground ("ground").
         *_edges = (s_left, s_right) when that end is cut along the other road's edge - each side of the ribbon
         then ends where it meets that edge, so an oblique junction closes without a wedge - else None."""
         hw = p["width"] / 2.0
@@ -664,14 +675,15 @@ class Layout:
                     cuts.append((first, max(exits), None, tuple(exits), "road"))      # the next run starts on these
                 else:
                     cuts.append((min(exits), total, tuple(exits), None, "road"))      # the previous run ends on these
-        runs, s, start_edges, start_kind = [], first, None, "ground"
+        given = p.get("extend") or {}
+        runs, s, start_edges, start_kind = [], first, None, "slab" if given.get("start_edge") else "ground"
         for c0, c1, end_edges, next_edges, kind in sorted(cuts, key=lambda c: (c[0], c[1])):
             if c0 - s > 0.5:
                 runs.append((s, c0, start_edges, end_edges, start_kind, kind))
             if c1 >= s:
                 s, start_edges, start_kind = c1, next_edges, kind
         if total - s > 0.5:
-            runs.append((s, total, start_edges, None, start_kind, "ground"))
+            runs.append((s, total, start_edges, None, start_kind, "slab" if given.get("end_edge") else "ground"))
         return arc, runs
 
     def ribbon_sections(self, p):
@@ -704,8 +716,18 @@ class Layout:
             return max(self.ground(x + dx, y + dy) for dx, dy in
                        ((0.0, 0.0), (0.3, 0.0), (-0.3, 0.0), (0.0, 0.3), (0.0, -0.3)))
 
-        def section(s_, edges=None, end="run"):
-            if edges is None:
+        def section(s_, edges=None, end="run", line=None):
+            if line is not None:
+                # across a built edge: the paving meets the slab square, whatever angle the road arrives at
+                x, y, nx, ny = frame(s_)
+                (ax, ay), (bx, by) = line
+                mx, my = (ax + bx) / 2.0, (ay + by) / 2.0
+                d = math.hypot(bx - ax, by - ay) or 1.0
+                ex, ey = (bx - ax) / d, (by - ay) / d
+                if ex * nx + ey * ny < 0:
+                    ex, ey = -ex, -ey                                 # towards the road's left
+                left, right = (mx + ex * hw, my + ey * hw), (mx - ex * hw, my - ey * hw)
+            elif edges is None:
                 x, y, nx, ny = frame(s_)
                 left, right = (x + nx * hw, y + ny * hw), (x - nx * hw, y - ny * hw)
             else:
@@ -716,8 +738,8 @@ class Layout:
             for c, f in enumerate(across):
                 t = (f + 1.0) / 2.0
                 x, y = left[0] + (right[0] - left[0]) * t, left[1] + (right[1] - left[1]) * t
-                # on the ground an end is all rim; at a bridge the paving meets the deck over its full width
-                rim = end == "ground" or (c in (0, len(across) - 1) and end != "bridge")
+                # on the ground an end is all rim; at a bridge or a slab the paving meets it over its full width
+                rim = end == "ground" or (c in (0, len(across) - 1) and end not in ("bridge", "slab"))
                 z = self.ground(x, y) + self.RIBBON_RIM_LIFT if rim else top(x, y) + self.RIBBON_LIFT
                 row.append((x, y, z, 0.0 if rim else 1.0))
             return row
@@ -743,8 +765,9 @@ class Layout:
             if k1 == "ground" and s1 - s0 > 2.0 * self.RIBBON_RIM + 1.0:
                 stations.insert(len(stations) - 1, s1 - self.RIBBON_RIM - 0.15)
             run = [(s_, section(s_)) for s_ in stations]
-            run[0] = (s0, section(s0, e0, end=k0))
-            run[-1] = (s1, section(s1, e1, end=k1))
+            given = p.get("extend") or {}
+            run[0] = (s0, section(s0, e0, end=k0, line=given.get("start_edge") if k0 == "slab" else None))
+            run[-1] = (s1, section(s1, e1, end=k1, line=given.get("end_edge") if k1 == "slab" else None))
             # the edge has to follow the ground between two sections as well (it lies 1.5 cm under it): where
             # the ground bends away from the straight edge - a crease of the terrain mesh, the foot of a pad's
             # apron - more sections go in

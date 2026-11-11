@@ -1080,6 +1080,15 @@
   "sig": "c0c1017269ce2371"
  },
  {
+  "file": "Meshes/Locations/millbrook/SM_Millbrook_Paths_NoCol.fbx",
+  "name": "SM_Millbrook_Paths_NoCol",
+  "folder": "Locations/millbrook",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "4a05349d2308f431"
+ },
+ {
   "file": "Meshes/Locations/millbrook/SM_Millbrook_Blockers.fbx",
   "name": "SM_Millbrook_Blockers",
   "folder": "Locations/millbrook",
@@ -1177,6 +1186,15 @@
   "nanite": false,
   "category": "location",
   "sig": "079491357cf752d4"
+ },
+ {
+  "file": "Meshes/Locations/willow_pond/SM_WillowPond_Paths_NoCol.fbx",
+  "name": "SM_WillowPond_Paths_NoCol",
+  "folder": "Locations/willow_pond",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "8301af878ad06dbf"
  },
  {
   "file": "Meshes/Locations/willow_pond/SM_WillowPond_Blockers.fbx",
@@ -1285,6 +1303,15 @@
   "nanite": false,
   "category": "location",
   "sig": "254e9e0181775834"
+ },
+ {
+  "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Paths_NoCol.fbx",
+  "name": "SM_FishersCove_Paths_NoCol",
+  "folder": "Locations/fishers_cove",
+  "collision": "none",
+  "nanite": false,
+  "category": "location",
+  "sig": "7956059e7ebccb6c"
  },
  {
   "file": "Meshes/Locations/fishers_cove/SM_FishersCove_Blockers.fbx",
@@ -2463,7 +2490,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "5280d235c295d5e9"
+  "sig": "7a89f5ddf1e999c7"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_obelisk.fbx",
@@ -2472,7 +2499,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "3b1682ab4955d23d"
+  "sig": "546d5f2d7c3c1ea8"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_girls.fbx",
@@ -2481,7 +2508,7 @@
   "collision": "complex",
   "nanite": false,
   "category": "location",
-  "sig": "0ecb561b2f363377"
+  "sig": "479619f01e50c5f7"
  },
  {
   "file": "Meshes/Roads/SM_Road_to_gym.fbx",

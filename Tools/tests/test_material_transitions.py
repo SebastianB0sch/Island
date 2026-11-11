@@ -267,6 +267,34 @@ class RoadIsTheTerrainTests(MaterialCase):
                          self.unit((ts[0], -ts[1], ts[2])))
         self.assertEqual(self.unreal.LOG["warning"] + self.unreal.LOG["error"] + self.unreal.PROBLEMS, [])
 
+    def test_green_lays_trodden_earth(self):
+        # a footpath: vertex colour green = the terrain's Dirt layer, through the same blend
+        base = splat_textures(ForestFloor=0.4, Sand=0.2)              # no paving, no earth in the ground itself
+        earth = splat_textures(ForestFloor=0.4, Sand=0.2, Dirt=1.0)
+        for p in self.SPOTS:
+            uv = self.island_uv(p)
+            for prop in ("MP_BASE_COLOR", "MP_ROUGHNESS"):
+                want = self.value(self.terrain, prop, earth, uvs={0: uv}, world_position=p)
+                path = self.value(self.road, prop, base, world_position=p, vertex_color=(0.0, 1.0, 0.0, 1.0))
+                self.assertClose(path, want, msg=f"{prop} at {p}")
+                rim = self.value(self.road, prop, base, world_position=p, vertex_color=(0.0, 0.0, 0.0, 1.0))
+                self.assertClose(rim, self.value(self.terrain, prop, base, uvs={0: uv}, world_position=p))
+            self.assertNotEqual(self.value(self.road, "MP_BASE_COLOR", base, world_position=p, vertex_color=(0, 1, 0, 1)),
+                                self.value(self.road, "MP_BASE_COLOR", base, world_position=p, vertex_color=(0, 0, 0, 1)))
+
+    def test_white_and_grey_carry_no_earth(self):
+        # the road ribbons write grey (r = g = b = coverage), a mesh without colours is white: earth is G - R
+        base = splat_textures(ForestFloor=0.5)
+        p = self.SPOTS[0]
+        for c in (0.0, 0.3, 0.6, 1.0):
+            grey = self.value(self.road, "MP_BASE_COLOR", base, world_position=p, vertex_color=(c, c, c, 1.0))
+            red = self.value(self.road, "MP_BASE_COLOR", base, world_position=p, vertex_color=(c, 0.0, 0.0, 1.0))
+            self.assertClose(grey, red, msg=f"coverage {c}")
+        palette = {"M_FootPath": {"kind": "road", "color_linear": [0.2, 0.1, 0.05], "paving": 1.0, "earth": 1.0}}
+        mi = self.materials.build_instances(palette, {"M_DA_Road": self.road})["M_FootPath"]
+        self.assertIs(mi.parent, self.road)
+        self.assertEqual((mi.scalars["Paving"], mi.scalars["Earth"]), (1.0, 1.0))
+
     def test_the_far_tint_and_the_wet_band_are_shared(self):
         # beyond the macro-blend distance and on a wet bank the two still agree (one finishing function)
         p = self.SPOTS[3]
@@ -351,14 +379,14 @@ class RibbonRimTests(unittest.TestCase):
                     cover = [q[3] for q in row]
                     if kind == "ground":
                         self.assertEqual(cover, [0.0] * 7, f"{p['id']}: an end on the ground is all rim")
-                    elif kind == "bridge":
-                        self.assertEqual(cover, [1.0] * 7, f"{p['id']}: paved across where it meets the deck")
+                    elif kind in ("bridge", "slab"):
+                        self.assertEqual(cover, [1.0] * 7, f"{p['id']}: paved across where it meets a deck or a walk")
                     else:
                         self.assertEqual(cover, [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0])
                     for q in row:
                         lift = lay.RIBBON_LIFT if q[3] else lay.RIBBON_RIM_LIFT
                         self.assertGreaterEqual(q[2] - lay.ground(q[0], q[1]), lift - 1e-6)
-        self.assertEqual(kinds, {"ground", "bridge", "road"})
+        self.assertEqual(kinds, {"ground", "bridge", "road", "slab"})
 
     def test_the_mesh_carries_the_coverage_as_vertex_colour(self):
         lay = self.lay

@@ -29,7 +29,7 @@ import numpy as np
 
 from . import AssetSet
 from .. import config as C
-from .. import jsonio, palette, terrain
+from .. import jsonio, palette, strips, terrain
 from .. import waterways as WW
 from ..geo import MeshBuilder, TAU
 from .props import blob
@@ -145,6 +145,12 @@ class Village:
         self.a.origin = (self.ox, self.oy)
         self.nc = self.a.mesh(f"{prefix}_Detail_NoCol")
         self.taken = []          # (lx, ly, r)
+        self.rects = []          # building footprints (lx, ly, w, d, yaw): what a footpath walks round
+        self.loose = set()       # indices into taken that a footpath may cross (a building's own disc, people)
+        self.doors = []          # entrances that get a footpath: dict(name, wall, out)
+        self.walks = []          # (lx, ly, r): paved ground of the village itself (a square) - a path may end there
+        self.a.footpaths = []    # what was laid: dict(name, pts (world xy), meets) - for the audits
+        self.a.entrances = []    # every door: dict(name, pos (world xy just outside it))
         self.n_house = 0
         self.rnd = random.Random(sum(ord(c) for c in key))
         self.log = []
@@ -218,6 +224,7 @@ class Village:
             self.log.append(f"no room for an NPC near ({lx:.0f}, {ly:.0f})")
             return
         self.claim(spot[0], spot[1], 0.6, clearing=False)
+        self.loose.add(len(self.taken) - 1)
         self.a.npc(self.p(*spot), yaw, dorm, wander)
 
     def fence(self, pts, asset="SM_Fence_Wood", seg_len=4.0):
@@ -261,6 +268,8 @@ class Village:
                 out[k] = [self._world(lx, ly, floor, yaw, q) for q in v]
             else:
                 out[k] = self._world(lx, ly, floor, yaw, v)
+        self.building(lx, ly, w + (3.0 if spec.get("lean_to") else 0.0), d, yaw)
+        self.entrance(mb.name, lx, ly, yaw, anchors["door"][0], d)
         # life: a lantern by the door, a lit window, smoke from the chimney
         self.a.light(out["lamp"], color=WARM, intensity=900.0, radius=7.0, night_only=True)
         for q in out["windows"][:2]:
@@ -274,7 +283,166 @@ class Village:
         x, y = rot2(q[0], q[1], yaw)
         return (lx + x, ly + y, z + q[2])
 
+    # ---- footpaths: every door is joined to the lane, the road or the square
+    FOOT_W = 1.3             # m
+    FOOT_STEM = 2.4          # m straight out of the door before the path may turn
+    FOOT_CELL = 0.5          # m: grid the way is searched on
+
+    def building(self, lx, ly, w, d, yaw):
+        """Footprint of the building just claimed: footpaths go round the box, not round the claim's disc."""
+        self.rects.append((lx, ly, w, d, yaw))
+        self.loose.add(len(self.taken) - 1)
+
+    def entrance(self, name, lx, ly, yaw, door_x, d):
+        """The door of a building at (lx, ly) turned by yaw: in its front wall (-Y), door_x from the middle."""
+        wx, wy = rot2(door_x, -d / 2 - 0.3, yaw)
+        self.doors.append(dict(name=name, wall=(lx + wx, ly + wy), out=rot2(0.0, -1.0, yaw)))
+
+    def link(self, name, lx, ly, r, width=3.0):
+        """Join a paved place of the village (a disc of radius r round (lx, ly), listed in self.walks) to the
+        nearest path with a paved strip - laid first, so the footpaths that end on that place lead somewhere."""
+        px, py = nearest_path_point(self.ox + lx, self.oy + ly)
+        dx, dy = px - self.ox - lx, py - self.oy - ly
+        d = math.hypot(dx, dy) or 1.0
+        ux, uy = dx / d, dy / d
+        self.doors.insert(0, dict(name=name, wall=(lx + ux * (r - 0.6), ly + uy * (r - 0.6)), out=(ux, uy),
+                                  width=width, paved=True, stem=1.2))
+
+    def footpaths(self):
+        """Lay a trodden path from every door to the nearest path, square or path already laid: the shortest
+        way over ground that is neither steep nor wet, round the buildings and whatever stands in the
+        village. Drawn with the road material (strips.drape: the terrain's earth laid on by vertex colour),
+        so it runs into a dirt lane, a road's verge or the grass without an edge."""
+        if not self.doors:
+            return
+        import heapq
+        cell = self.FOOT_CELL
+        reach = max(max(abs(c) for d in self.doors for c in d["wall"]) + 45.0, 60.0)
+        n = int(2 * reach / cell) + 1
+        ax = -reach + np.arange(n) * cell
+        X, Y = np.meshgrid(ax, ax)                                   # village-local; row = y, column = x
+        WX, WY = X + self.ox, Y + self.oy
+        ground = np.asarray(_terrain()[0](WX, WY), np.float64)
+        gy, gx = np.gradient(ground, cell)
+        slope = np.hypot(gx, gy)
+        wet = np.asarray(WW._edge_field()(WX, WY), np.float64)
+        gap = np.full(X.shape, 1e9)
+        for smp, hw in _paths():
+            near = smp[(np.abs(smp[:, 0] - self.ox) < reach + 8.0) & (np.abs(smp[:, 1] - self.oy) < reach + 8.0)]
+            for sx, sy in near:
+                np.minimum(gap, np.hypot(WX - sx, WY - sy) - hw, out=gap)
+        blocked = (wet < 1.2) | (ground < 0.7) | (slope > 0.5)
+        for i, (tx, ty, tr) in enumerate(self.taken):
+            if i not in self.loose:
+                blocked |= np.hypot(X - tx, Y - ty) < tr + 0.35
+        for (bx, by, w, d, yaw) in self.rects:
+            a_ = math.radians(yaw)
+            u = (X - bx) * math.cos(a_) + (Y - by) * math.sin(a_)
+            v_ = -(X - bx) * math.sin(a_) + (Y - by) * math.cos(a_)
+            blocked |= (np.abs(u) < w / 2 + 0.75) & (np.abs(v_) < d / 2 + 0.75)
+        stems = []
+        for dr in self.doors:                                        # the way out of each door is always free
+            (wx, wy), (ux, uy) = dr["wall"], dr["out"]
+            stem_len = dr.get("stem", self.FOOT_STEM)
+            ex, ey = wx + ux * stem_len, wy + uy * stem_len
+            if not dr.get("paved"):
+                self.a.entrances.append(dict(name=dr["name"], pos=(self.ox + wx + ux * 1.6, self.oy + wy + uy * 1.6)))
+            t = np.clip(((X - wx) * ux + (Y - wy) * uy), 0.0, stem_len)
+            stem = np.hypot(X - (wx + ux * t), Y - (wy + uy * t)) < 0.8
+            stems.append(stem)
+            blocked &= ~stem
+            dr["end"] = (ex, ey)
+        # a path runs half a metre in over the edge of the lane or road it joins and comes down there: into
+        # the lane's own earth, or in under the stones of a paved road's rim
+        on_road = gap <= -0.5
+        goal = on_road.copy()
+        for (cx, cy, r) in self.walks:
+            goal |= np.hypot(X - cx, Y - cy) < r - 0.1
+        # keep a little off walls and trees where there is room
+        from scipy import ndimage
+        crowd = ndimage.binary_dilation(blocked, iterations=2) & ~blocked
+        step_cost = 1.0 + 9.0 * slope + 0.8 * crowd
+
+        def idx(x, y):
+            return int(round((y + reach) / cell)), int(round((x + reach) / cell))
+
+        def clear(p, q):
+            d = math.hypot(q[0] - p[0], q[1] - p[1])
+            for k in range(1, int(d / 0.2) + 1):
+                t = k * 0.2 / d
+                r, c = idx(p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t)
+                if blocked[r, c] or slope[r, c] > 0.4:
+                    return False
+            return True
+
+        nbrs = [(dr_, dc_, math.hypot(dr_, dc_) * cell) for dr_ in (-1, 0, 1) for dc_ in (-1, 0, 1) if (dr_, dc_) != (0, 0)]
+        mesh = self.a.mesh(f"{self.prefix}_Paths_NoCol")
+        order = sorted(self.doors, key=lambda d_: (not d_.get("paved"), float(gap[idx(*d_["end"])])))
+        for dr in order:
+            paved = bool(dr.get("paved"))
+            width = dr.get("width", self.FOOT_W)
+            target = on_road if paved else goal
+            start = idx(*dr["end"])
+            dist = {start: 0.0}
+            prev = {}
+            heap = [(0.0, start)]
+            found = None
+            while heap:
+                c0, cur = heapq.heappop(heap)
+                if c0 > dist.get(cur, 1e18):
+                    continue
+                if target[cur]:
+                    found = cur
+                    break
+                if c0 > 160.0:
+                    break
+                for dr_, dc_, ln in nbrs:
+                    r, c = cur[0] + dr_, cur[1] + dc_
+                    if not (2 <= r < n - 2 and 2 <= c < n - 2) or blocked[r, c]:
+                        continue
+                    if dr_ and dc_ and (blocked[cur[0] + dr_, cur[1]] or blocked[cur[0], cur[1] + dc_]):
+                        continue                                     # no squeezing through between two corners
+                    nc_ = c0 + ln * 0.5 * (step_cost[cur] + step_cost[r, c])
+                    if nc_ < dist.get((r, c), 1e18):
+                        dist[(r, c)] = nc_
+                        prev[(r, c)] = cur
+                        heapq.heappush(heap, (nc_, (r, c)))
+            if found is None:
+                self.log.append(f"no way from the door of {dr['name']} to a path")
+                continue
+            cells = [found]
+            while cells[-1] in prev:
+                cells.append(prev[cells[-1]])
+            way = [(float(ax[c]), float(ax[r])) for r, c in reversed(cells)]
+            # pull the way straight where nothing is in between, then round its corners
+            pulled, i = [way[0]], 0
+            while i < len(way) - 1:
+                j = len(way) - 1
+                while j > i + 1 and not clear(way[i], way[j]):
+                    j -= 1
+                pulled.append(way[j])
+                i = j
+            pts = strips.smooth([dr["wall"], dr["end"]] + pulled[1:], 2)
+            last = idx(*pts[-1])
+            meets = ("path" if gap[last] <= -0.1 else
+                     "square" if any(math.hypot(pts[-1][0] - cx, pts[-1][1] - cy) < r for cx, cy, r in self.walks)
+                     else "footpath")
+            rows = strips.drape(self.h, pts, width)
+            if paved:                                                # the terrain's paving: grey = R alone counts
+                strips.build(mesh, rows, "M_RoadPaving", lambda cover: (cover, cover, cover, 1.0))
+            else:                                                    # trodden earth: green
+                strips.build(mesh, rows, "M_FootPath", lambda cover: (0.0, cover, 0.0, 1.0))
+            for (x, y) in strips.resample(pts, 1.4):
+                self.a.special("clearing", self.p(x, y), radius=width / 2 + 0.6)
+            for (x, y) in strips.resample(pts, 0.25):                # later paths may join this one
+                goal[idx(x, y)] = True
+            length = sum(math.hypot(b[0] - a_[0], b[1] - a_[1]) for a_, b in zip(pts, pts[1:]))
+            self.a.footpaths.append(dict(name=dr["name"], meets=meets, length=round(length, 1), paved=paved,
+                                         width=width,
+                                         pts=[(round(self.ox + x, 3), round(self.oy + y, 3)) for x, y in pts]))
+
     def finish(self, audio=()):
+        self.footpaths()
         for line in self.log:
             print(f"   !! {self.key}: {line}")
         return self.a
@@ -887,6 +1055,7 @@ def _mill(v):
         # bearing block where the axle enters the back wall
         mb.box((0.0, bd / 2 + 0.2, axle_z - floor - 0.25), (1.0, 0.45, 0.5), STONE_L)
     v.claim(lx, ly, math.hypot(bw, bd) / 2 + 0.3)
+    v.building(lx, ly, bw, bd, yaw_b)
     for k in ("lamp",):
         q = v._world(lx, ly, floor, yaw_b, an[k])
         a.light(q, color=WARM, intensity=1100.0, radius=8.0, night_only=True)
@@ -937,6 +1106,7 @@ def _mill(v):
     a.interact("sign", (lx + dx, ly + dy, floor - step + 1.3), yaw_b, title="Millbrook Mill",
                text="The wheel has turned since before the Academy was built. The miller grinds the island's "
                     "rice flour here - and swears the stones run smoother on duel days.")
+    v.entrance(mb.name, lx, ly, yaw_b, -1.6, bd)
     return dict(door=(lx + dx, ly + dy), pos=(lx, ly), yaw=yaw_b, wheel=(wlx, wly, axle_z), yaw_w=yaw_w)
 
 
@@ -1037,6 +1207,8 @@ def build_willow_pond():
         v.claim(cx + sx, cy + sy, 1.9, clearing=False)
         a.light((cx + sx, cy + sy, z + 1.8), color=WARM, intensity=500.0, radius=5.0, night_only=True)
     square = (cx, cy, 9.6)      # houses keep off the square (people still stand on it: see persons below)
+    v.walks.append((cx, cy, 8.5))
+    v.link("WillowPond_Square", cx, cy, 8.5)                 # the lane ends beside the square: pave the gap
     # ---- cottages round it
     slots = [(-25.0, 18.0, "thatch", 11), (-8.0, 21.0, "timber", 12), (10.0, 21.5, "thatch", 13),
              (27.0, 17.0, "stone", 14), (-27.0, -8.0, "long", 15), (-14.0, -29.0, "stone", 16),
@@ -1178,6 +1350,9 @@ def stilt_hut(v, lx, ly, yaw, deck_z, seed, land=None, gang=-1):
         g = v.h(*mid)
         mb.box((mid[0], mid[1], ((p0[2] + p1[2]) / 2 - 0.12 + g - 1.0) / 2), (0.2, 0.2, (p0[2] + p1[2]) / 2 - 0.12 - (g - 1.0)), TIMBER)
     v.claim(lx, ly, 4.6)
+    v.building(lx, ly, pw, pd, yaw)
+    if land is not None:                                    # the path starts where the gangway comes down
+        v.doors.append(dict(name=mb.name, wall=(p1[0] + ux * 0.4, p1[1] + uy * 0.4), out=(-ux, -uy)))
     return dict(pos=(lx, ly), yaw=yaw, deck=deck_z)
 
 
