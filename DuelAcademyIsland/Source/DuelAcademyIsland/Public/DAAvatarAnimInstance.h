@@ -26,6 +26,9 @@
 //   * look-at: neck + head turn towards a target (the player while talking), clamped and eased
 //   * face: random blinks (sometimes double), lip-sync visemes while talking, eased emotions - all on the
 //     face morph targets exported with the cast (Blink, A/I/U/E/O, Joy/Angry/Sorrow/Surprised/Fun)
+//   * motorcycle rider: the pelvis on the seat, the back leaning until the hands reach the grips, two-bone IK
+//     arms and legs onto the bars and pegs (a foot on the ground at a stop), driven by UDAAvatarComponent from
+//     the bike's FDARiderTargets (DARiderIK in the .cpp)
 //   * cloth correctives: pose-space morphs (Fit_HipFwd_l ...) faded in by each thigh's pitch / spread and
 //     knee flexion, the same formula the build solved them with - they keep trousers inside long coats in
 //     a stride or a sit, where linear blend skinning alone collapses the seat
@@ -37,6 +40,32 @@
 #include "DAAvatarAnimInstance.generated.h"
 
 class UAnimSequence;
+
+// ---- rider IK targets begin (extracted by Tools/tests/rider/extract.py)
+/**
+ * A motorcycle rider's pose targets in the mesh's component space (cm; the cast faces +Y, its left is +X,
+ * +Z up). UDAAvatarComponent converts the bike's FDARiderTargets into these every tick; the proxy solves
+ * the pelvis onto the seat, leans the spine until both hands reach the grips and two-bone IKs the arms
+ * and legs (see DARiderIK in DAAvatarAnimInstance.cpp).
+ */
+struct FDARiderIKTargets
+{
+	/** Where the pelvis bone goes (seated on the seat, or raised when standing on the pegs). */
+	FVector Pelvis = FVector::ZeroVector;
+	/** Handlebar grip centres; [0] the rider's left (+X), [1] the right. */
+	FVector Grip[2] = { FVector::ZeroVector, FVector::ZeroVector };
+	/** Contact under the ball of each foot: the peg top, or the ground for a foot put down. */
+	FVector Ball[2] = { FVector::ZeroVector, FVector::ZeroVector };
+	/** Forward lean of the upper body (degrees). The solver leans further when a grip is out of reach. */
+	float Lean = 16.f;
+	/** Upper-body roll towards the rider's left (degrees, about +Y). */
+	float Roll = 0.f;
+	/** Extra neck / head roll towards the left (degrees). */
+	float HeadRoll = 0.f;
+	/** Toe-down pitch of each foot (degrees): a little on the pegs, tiptoe on the ground. */
+	float ToeDown[2] = { 6.f, 6.f };
+};
+// ---- rider IK targets end
 
 UCLASS(Transient, NotBlueprintable)
 class DUELACADEMYISLAND_API UDAAvatarAnimInstance : public UAnimInstance
@@ -77,6 +106,9 @@ public:
 
 	/** Update the weight of the current action while it is active (Duel pose / Swim alpha). */
 	void SetActionWeight(float InTargetWeight);
+
+	/** Motorcycle rider IK (component space targets) blended in by Alpha (0 = off, the takes play untouched). */
+	void SetRider(const FDARiderIKTargets& InTargets, float InAlpha);
 
 	/** Lip-sync: cycle the mouth visemes while true. */
 	void SetTalking(bool bInTalking) { bTalking = bInTalking; }
@@ -148,6 +180,10 @@ private:
 	// spring stats copied back from the proxy (previous frame)
 	int32 SpringChainCount = 0;
 	float SpringDeflection = 0.f;
+
+	// motorcycle rider IK
+	FDARiderIKTargets RiderTargets;
+	float RiderAlpha = 0.f;
 
 	// look-at
 	FVector LookTargetWorld = FVector::ZeroVector;

@@ -1,4 +1,4 @@
-// Minimal stand-ins for the UE types the spring solver uses (UE semantics: Z up, cm, Q1*Q2 applies Q2 first,
+// Minimal stand-ins for the UE types the spring solver and the rider IK use (UE semantics: Z up, cm, Q1*Q2 applies Q2 first,
 // FTransform A*B applies A then B).
 #pragma once
 #include <cmath>
@@ -27,6 +27,7 @@ struct FMath {
   static float Sin(float x) { return std::sin(x); }
   static float Cos(float x) { return std::cos(x); }
   static float Abs(float x) { return std::fabs(x); }
+  static double Sqrt(double x) { return std::sqrt(x); }
   static float SmoothStep(float a, float b, float x) { float t = Clamp((x - a) / (b - a), 0.f, 1.f); return t * t * (3 - 2 * t); }
 };
 struct FVector {

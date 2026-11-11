@@ -186,6 +186,364 @@ struct FDASpringChain
 	bool bInitialised = false;
 };
 
+// ---- rider IK begin (extracted by Tools/tests/rider/extract.py and compiled against Tools/tests/springs/ue_mock.h)
+/**
+ * Motorcycle rider IK on the cast skeleton (UE5 Mannequin names, Tools/dai/anime/skeleton.py), run on top of
+ * the idle take so the breathing and the head still live:
+ *   1. the pelvis goes onto the seat (or above the pegs when standing) and the back leans forward; the lean
+ *      grows until both wrists are within a comfortable reach of the grips, then the shoulder blades protract
+ *      for whatever is left, so the hands always close on the bars;
+ *   2. the neck and head counter the lean (eyes on the track) and part of the bike's roll;
+ *   3. arms and legs are two-bone IK chains: elbows out and back, knees forward and out round the tank, the
+ *      ball of each foot on its peg (or the left foot down on the ground at a stop).
+ * Bone rotations are rebuilt from the reference (T) pose: each bone's rest direction and hinge axis are carried
+ * onto the solved direction and hinge, so the knees and elbows bend about their real axes and the palms stay
+ * down on the grips. Everything is in the mesh's component space: +X the rider's left, +Y forward, +Z up.
+ */
+namespace DARiderIK
+{
+	const FVector Left(1.0, 0.0, 0.0);
+	const FVector Forward(0.0, 1.0, 0.0);
+	const FVector Up(0.0, 0.0, 1.0);
+
+	/** Share of the forward lean taken by the pelvis and spine_01..03 (the rest curves the back), and of the roll. */
+	constexpr float LeanShare[4] = { 0.40f, 0.26f, 0.20f, 0.14f };
+	constexpr float RollShare[4] = { 0.f, 0.30f, 0.35f, 0.35f };
+	/** Neck / head counter-lean (share of the lean) and their split of the head roll. */
+	constexpr float NeckCounter = 0.28f;
+	constexpr float HeadCounter = 0.40f;
+	constexpr float NeckRollShare = 0.4f;
+	constexpr float MaxLean = 58.f;
+	constexpr float LeanStep = 2.f;
+	/** Comfortable reach (share of the straight arm) and how far the shoulder blades may protract (cm). */
+	constexpr float ReachShare = 0.93f;
+	constexpr float MaxProtract = 7.f;
+	/** The wrist sits this far behind the grip centre (the palm wraps the grip) and above it (cm). */
+	constexpr float WristBehindGrip = 6.5f;
+	constexpr float WristAboveGrip = 2.f;
+	/** Knee and elbow pole directions (left side; X is mirrored for the right). */
+	const FVector KneePole(0.45, 1.0, 0.2);
+	const FVector ElbowPole(0.35, -0.6, 0.05);
+	/** Toes turned out (degrees). */
+	constexpr float ToeOut = 9.f;
+
+	struct FLimb
+	{
+		int32 Bone[3] = { INDEX_NONE, INDEX_NONE, INDEX_NONE };   // compact pose indices: upper, lower, end
+		FQuat RestRot[3];
+		FVector RestDir[2];
+		FVector RestHinge = FVector::ZeroVector;
+		float Length[2] = { 0.f, 0.f };
+	};
+
+	struct FRig
+	{
+		bool bValid = false;
+		int32 Pelvis = INDEX_NONE;
+		int32 Spine[3] = { INDEX_NONE, INDEX_NONE, INDEX_NONE };
+		int32 Neck = INDEX_NONE;
+		int32 Head = INDEX_NONE;
+		int32 Clavicle[2] = { INDEX_NONE, INDEX_NONE };
+		FLimb Arm[2];
+		FLimb Leg[2];
+		/** Rest offset from the floor under the ball of the foot to the ankle joint. */
+		FVector AnkleFromBall[2];
+	};
+
+	inline FQuat Bend(float LeanDeg, float LeftRollDeg)
+	{
+		// Forward lean tips +Z towards +Y (a negative turn about +X); a left roll tips +Z towards +X (+Y axis).
+		return FQuat(Forward, FMath::DegreesToRadians(LeftRollDeg)) * FQuat(Left, -FMath::DegreesToRadians(LeanDeg));
+	}
+
+	/** Rotation that carries direction A (hinge HA, perpendicular to A) onto direction B with hinge HB. */
+	inline FQuat AlignFrame(const FVector& A, const FVector& HA, const FVector& B, const FVector& HB)
+	{
+		const FQuat Swing = FQuat::FindBetweenNormals(A, B);
+		const FVector H1 = Swing.RotateVector(HA);
+		const FVector P1 = (H1 - B * FVector::DotProduct(H1, B)).GetSafeNormal();
+		const FVector P2 = (HB - B * FVector::DotProduct(HB, B)).GetSafeNormal();
+		if (P1.IsNearlyZero() || P2.IsNearlyZero())
+		{
+			return Swing;
+		}
+		const double Twist = FMath::Atan2(FVector::DotProduct(FVector::CrossProduct(P1, P2), B), FVector::DotProduct(P1, P2));
+		return (FQuat(B, Twist) * Swing).GetNormalized();
+	}
+
+	/** Two-bone IK: the mid and end joints of a limb rooted at Root reaching for Target, bending towards Pole.
+	 *  Out of reach the limb points straight at the target; OutHinge is the axis the middle joint bends about. */
+	inline void SolveTwoBone(const FVector& Root, const FVector& Target, const FVector& Pole, float L1, float L2,
+		FVector& OutMid, FVector& OutEnd, FVector& OutHinge)
+	{
+		const FVector ToTarget = Target - Root;
+		double D = ToTarget.Size();
+		const FVector Dir = D > 1e-3 ? ToTarget / D : -Up;
+		D = FMath::Clamp(D, static_cast<double>(FMath::Abs(L1 - L2)) + 0.1, (static_cast<double>(L1) + L2) * 0.9995);
+		FVector BendDir = (Pole - Dir * FVector::DotProduct(Pole, Dir)).GetSafeNormal();
+		if (BendDir.IsNearlyZero())
+		{
+			BendDir = (Forward - Dir * FVector::DotProduct(Forward, Dir)).GetSafeNormal();
+		}
+		const double CosA = FMath::Clamp((static_cast<double>(L1) * L1 + D * D - static_cast<double>(L2) * L2) / (2.0 * L1 * D), -1.0, 1.0);
+		const double SinA = FMath::Sqrt(FMath::Max(0.0, 1.0 - CosA * CosA));
+		OutMid = Root + Dir * (L1 * CosA) + BendDir * (L1 * SinA);
+		OutEnd = Root + Dir * D;
+		// cross(upper, lower) of the bent limb points along cross(BendDir, Dir)
+		OutHinge = FVector::CrossProduct(BendDir, Dir).GetSafeNormal();
+	}
+
+	template <class FResolve>
+	void Build(FRig& Rig, const FReferenceSkeleton& Ref, FResolve&& Resolve)
+	{
+		Rig = FRig();
+		const int32 Num = Ref.GetNum();
+		TArray<FTransform> RestCS;
+		RestCS.SetNum(Num);
+		const TArray<FTransform>& RefLocal = Ref.GetRefBonePose();
+		for (int32 i = 0; i < Num; ++i)
+		{
+			const int32 P = Ref.GetParentIndex(i);
+			RestCS[i] = P == INDEX_NONE ? RefLocal[i] : RefLocal[i] * RestCS[P];
+		}
+		bool bOk = true;
+		// A bone of the expected chain: present, child of Parent (a reference index), and kept by this LOD.
+		auto Find = [&](const TCHAR* Name, int32 Parent, int32& OutRef) -> int32
+		{
+			OutRef = Ref.FindBoneIndex(Name);
+			if (OutRef == INDEX_NONE || (Parent != INDEX_NONE && Ref.GetParentIndex(OutRef) != Parent))
+			{
+				bOk = false;
+				return INDEX_NONE;
+			}
+			const int32 Compact = Resolve(OutRef).GetInt();
+			bOk &= Compact != INDEX_NONE;
+			return Compact;
+		};
+		int32 PelvisRef = INDEX_NONE, Spine1Ref = INDEX_NONE, Spine2Ref = INDEX_NONE, Spine3Ref = INDEX_NONE, NeckRef = INDEX_NONE, HeadRef = INDEX_NONE;
+		Rig.Pelvis = Find(TEXT("pelvis"), INDEX_NONE, PelvisRef);
+		if (!bOk)
+		{
+			return;
+		}
+		Rig.Spine[0] = Find(TEXT("spine_01"), PelvisRef, Spine1Ref);
+		Rig.Spine[1] = Find(TEXT("spine_02"), Spine1Ref, Spine2Ref);
+		Rig.Spine[2] = Find(TEXT("spine_03"), Spine2Ref, Spine3Ref);
+		Rig.Neck = Find(TEXT("neck_01"), Spine3Ref, NeckRef);
+		Rig.Head = Find(TEXT("head"), NeckRef, HeadRef);
+		if (!bOk)
+		{
+			return;
+		}
+		const TCHAR* ArmNames[2][4] = { { TEXT("clavicle_l"), TEXT("upperarm_l"), TEXT("lowerarm_l"), TEXT("hand_l") },
+		                                { TEXT("clavicle_r"), TEXT("upperarm_r"), TEXT("lowerarm_r"), TEXT("hand_r") } };
+		const TCHAR* LegNames[2][4] = { { TEXT("thigh_l"), TEXT("calf_l"), TEXT("foot_l"), TEXT("ball_l") },
+		                                { TEXT("thigh_r"), TEXT("calf_r"), TEXT("foot_r"), TEXT("ball_r") } };
+		auto SetupLimb = [&](FLimb& Limb, const int32 (&RefIdx)[3], const FVector& FlexDir)
+		{
+			for (int32 k = 0; k < 3; ++k)
+			{
+				Limb.RestRot[k] = RestCS[RefIdx[k]].GetRotation().GetNormalized();
+			}
+			const FVector P0 = RestCS[RefIdx[0]].GetLocation();
+			const FVector P1 = RestCS[RefIdx[1]].GetLocation();
+			const FVector P2 = RestCS[RefIdx[2]].GetLocation();
+			Limb.Length[0] = static_cast<float>((P1 - P0).Size());
+			Limb.Length[1] = static_cast<float>((P2 - P1).Size());
+			Limb.RestDir[0] = (P1 - P0).GetSafeNormal();
+			Limb.RestDir[1] = (P2 - P1).GetSafeNormal();
+			// The limb flexes towards FlexDir from the T-pose (elbows bring the forearm forward, knees the calf back).
+			Limb.RestHinge = FVector::CrossProduct(Limb.RestDir[0], FlexDir).GetSafeNormal();
+			bOk &= Limb.Length[0] > 1.f && Limb.Length[1] > 1.f && !Limb.RestHinge.IsNearlyZero();
+		};
+		for (int32 Side = 0; Side < 2 && bOk; ++Side)
+		{
+			int32 ClavRef = INDEX_NONE;
+			int32 ArmRef[3] = { INDEX_NONE, INDEX_NONE, INDEX_NONE };
+			Rig.Clavicle[Side] = Find(ArmNames[Side][0], Spine3Ref, ClavRef);
+			Rig.Arm[Side].Bone[0] = Find(ArmNames[Side][1], ClavRef, ArmRef[0]);
+			Rig.Arm[Side].Bone[1] = Find(ArmNames[Side][2], ArmRef[0], ArmRef[1]);
+			Rig.Arm[Side].Bone[2] = Find(ArmNames[Side][3], ArmRef[1], ArmRef[2]);
+			int32 LegRef[3] = { INDEX_NONE, INDEX_NONE, INDEX_NONE };
+			Rig.Leg[Side].Bone[0] = Find(LegNames[Side][0], PelvisRef, LegRef[0]);
+			Rig.Leg[Side].Bone[1] = Find(LegNames[Side][1], LegRef[0], LegRef[1]);
+			Rig.Leg[Side].Bone[2] = Find(LegNames[Side][2], LegRef[1], LegRef[2]);
+			if (!bOk)
+			{
+				break;
+			}
+			SetupLimb(Rig.Arm[Side], ArmRef, Forward);
+			SetupLimb(Rig.Leg[Side], LegRef, -Forward);
+			const FVector Ankle = RestCS[LegRef[2]].GetLocation();
+			const int32 BallRef = Ref.FindBoneIndex(LegNames[Side][3]);
+			const FVector Ball = BallRef != INDEX_NONE ? RestCS[BallRef].GetLocation() : Ankle + Forward * 10.5;
+			// the rest pose stands on the floor at Z = 0
+			Rig.AnkleFromBall[Side] = Ankle - FVector(Ball.X, Ball.Y, 0.0);
+		}
+		Rig.bValid = bOk;
+	}
+
+	struct FTorso
+	{
+		FTransform Bone[4];        // pelvis, spine_01..03
+		FTransform Clavicle[2];
+		FVector Shoulder[2];       // upperarm joints
+	};
+
+	inline void PoseTorso(const FRig& Rig, const FCompactPose& Local, const FTransform& Pelvis0, const FVector& PelvisAt,
+		float Lean, float Roll, FTorso& Out)
+	{
+		Out.Bone[0] = Pelvis0;
+		Out.Bone[0].SetLocation(PelvisAt);
+		Out.Bone[0].SetRotation((Bend(Lean * LeanShare[0], Roll * RollShare[0]) * Pelvis0.GetRotation()).GetNormalized());
+		for (int32 i = 0; i < 3; ++i)
+		{
+			FTransform C = Local[FCompactPoseBoneIndex(Rig.Spine[i])] * Out.Bone[i];
+			C.SetRotation((Bend(Lean * LeanShare[i + 1], Roll * RollShare[i + 1]) * C.GetRotation()).GetNormalized());
+			Out.Bone[i + 1] = C;
+		}
+		for (int32 Side = 0; Side < 2; ++Side)
+		{
+			Out.Clavicle[Side] = Local[FCompactPoseBoneIndex(Rig.Clavicle[Side])] * Out.Bone[3];
+			Out.Shoulder[Side] = (Local[FCompactPoseBoneIndex(Rig.Arm[Side].Bone[0])] * Out.Clavicle[Side]).GetLocation();
+		}
+	}
+
+	inline FVector WristTarget(const FVector& Grip, const FVector& Shoulder)
+	{
+		return Grip + (Shoulder - Grip).GetSafeNormal() * WristBehindGrip + Up * WristAboveGrip;
+	}
+
+	inline FTransform Slerped(const FTransform& Follow, const FQuat& Solved, float Alpha)
+	{
+		FTransform Out = Follow;
+		Out.SetRotation(FQuat::Slerp(Follow.GetRotation(), Solved, Alpha).GetNormalized());
+		return Out;
+	}
+
+	/** Poses a solved limb by forward kinematics from its parent, each bone's rotation blended from the take
+	 *  towards the solution by Alpha, so the bones never stretch during the blend. */
+	inline void WriteLimb(FCSPose<FCompactPose>& CS, const FCompactPose& Local, const FLimb& Limb, const FTransform& ParentCS,
+		const FQuat (&Solved)[3], float Alpha)
+	{
+		FTransform Parent = ParentCS;
+		for (int32 k = 0; k < 3; ++k)
+		{
+			const FCompactPoseBoneIndex B(Limb.Bone[k]);
+			const FTransform T = Slerped(Local[B] * Parent, Solved[k], Alpha);
+			CS.SetComponentSpaceTransform(B, T);
+			Parent = T;
+		}
+	}
+
+	inline void Apply(const FRig& Rig, FCSPose<FCompactPose>& CS, const FDARiderIKTargets& T, float InAlpha)
+	{
+		if (!Rig.bValid || InAlpha <= 0.001f)
+		{
+			return;
+		}
+		const float Alpha = FMath::Clamp(InAlpha, 0.f, 1.f);
+		const FCompactPose& Local = CS.GetPose();
+		const FTransform Pelvis0 = CS.GetComponentSpaceTransform(FCompactPoseBoneIndex(Rig.Pelvis));
+
+		// ---- torso: lean until both wrists are within a comfortable reach (solved for the full pose; a
+		// partial Alpha, while getting on, then scales the pelvis move, the lean and the roll)
+		float Lean = FMath::Clamp(T.Lean, 0.f, MaxLean);
+		FTorso Torso;
+		for (;;)
+		{
+			PoseTorso(Rig, Local, Pelvis0, T.Pelvis, Lean, T.Roll, Torso);
+			float Need = 0.f;
+			for (int32 Side = 0; Side < 2; ++Side)
+			{
+				const FLimb& Arm = Rig.Arm[Side];
+				const double Dist = (WristTarget(T.Grip[Side], Torso.Shoulder[Side]) - Torso.Shoulder[Side]).Size();
+				Need = FMath::Max(Need, static_cast<float>(Dist / (Arm.Length[0] + Arm.Length[1])));
+			}
+			if (Need <= ReachShare || Lean >= MaxLean)
+			{
+				break;
+			}
+			Lean = FMath::Min(Lean + LeanStep, MaxLean);
+		}
+		if (Alpha < 1.f)
+		{
+			const FVector PelvisAt = FMath::Lerp(Pelvis0.GetLocation(), T.Pelvis, static_cast<double>(Alpha));
+			PoseTorso(Rig, Local, Pelvis0, PelvisAt, Lean * Alpha, T.Roll * Alpha, Torso);
+		}
+		CS.SetComponentSpaceTransform(FCompactPoseBoneIndex(Rig.Pelvis), Torso.Bone[0]);
+		for (int32 i = 0; i < 3; ++i)
+		{
+			CS.SetComponentSpaceTransform(FCompactPoseBoneIndex(Rig.Spine[i]), Torso.Bone[i + 1]);
+		}
+
+		// ---- neck and head: eyes on the track
+		{
+			const float A = Alpha;
+			FTransform Neck = Local[FCompactPoseBoneIndex(Rig.Neck)] * Torso.Bone[3];
+			Neck.SetRotation((Bend(-Lean * NeckCounter * A, T.HeadRoll * NeckRollShare * A) * Neck.GetRotation()).GetNormalized());
+			FTransform Head = Local[FCompactPoseBoneIndex(Rig.Head)] * Neck;
+			Head.SetRotation((Bend(-Lean * HeadCounter * A, T.HeadRoll * (1.f - NeckRollShare) * A) * Head.GetRotation()).GetNormalized());
+			CS.SetComponentSpaceTransform(FCompactPoseBoneIndex(Rig.Neck), Neck);
+			CS.SetComponentSpaceTransform(FCompactPoseBoneIndex(Rig.Head), Head);
+		}
+
+		// ---- arms: shoulder blades protract for what the lean could not reach, then two-bone IK to the grips
+		for (int32 Side = 0; Side < 2; ++Side)
+		{
+			const FLimb& Arm = Rig.Arm[Side];
+			const double Mirror = Side == 0 ? 1.0 : -1.0;
+			FTransform Clav = Torso.Clavicle[Side];
+			FVector Shoulder = Torso.Shoulder[Side];
+			const FVector Grip = T.Grip[Side];
+			FVector Wrist = WristTarget(Grip, Shoulder);
+			const double Reach = ReachShare * (Arm.Length[0] + Arm.Length[1]);
+			const double Short = (Wrist - Shoulder).Size() - Reach;
+			if (Short > 0.0 && Alpha > 0.5f)
+			{
+				const FVector C = Clav.GetLocation();
+				const double ClavLen = (Shoulder - C).Size();
+				const FVector Wanted = Shoulder + (Wrist - Shoulder).GetSafeNormal() * FMath::Min(Short, static_cast<double>(MaxProtract));
+				const FVector NewShoulder = C + (Wanted - C).GetSafeNormal() * ClavLen;
+				const FQuat Protract = FQuat::FindBetweenNormals((Shoulder - C).GetSafeNormal(), (NewShoulder - C).GetSafeNormal());
+				Clav.SetRotation((Protract * Clav.GetRotation()).GetNormalized());
+				Shoulder = NewShoulder;
+				Wrist = WristTarget(Grip, Shoulder);
+			}
+			CS.SetComponentSpaceTransform(FCompactPoseBoneIndex(Rig.Clavicle[Side]), Clav);
+
+			const FVector Pole(ElbowPole.X * Mirror, ElbowPole.Y, ElbowPole.Z);
+			FVector Elbow, Hand, Hinge;
+			SolveTwoBone(Shoulder, Wrist, Pole.GetSafeNormal(), Arm.Length[0], Arm.Length[1], Elbow, Hand, Hinge);
+			const FQuat Upper = AlignFrame(Arm.RestDir[0], Arm.RestHinge, (Elbow - Shoulder).GetSafeNormal(), Hinge) * Arm.RestRot[0];
+			const FQuat ForearmDelta = AlignFrame(Arm.RestDir[1], Arm.RestHinge, (Hand - Elbow).GetSafeNormal(), Hinge);
+			const FQuat Solved[3] = { Upper.GetNormalized(), (ForearmDelta * Arm.RestRot[1]).GetNormalized(),
+			                          (ForearmDelta * Arm.RestRot[2]).GetNormalized() };   // straight wrist, palm on the grip
+			WriteLimb(CS, Local, Arm, Clav, Solved, Alpha);
+		}
+
+		// ---- legs: ball of the foot on the peg (or the ground), knees forward and out round the tank
+		for (int32 Side = 0; Side < 2; ++Side)
+		{
+			const FLimb& Leg = Rig.Leg[Side];
+			const double Mirror = Side == 0 ? 1.0 : -1.0;
+			const FVector Hip = (Local[FCompactPoseBoneIndex(Leg.Bone[0])] * Torso.Bone[0]).GetLocation();
+			const FQuat FootDelta = (FQuat(Up, -Mirror * FMath::DegreesToRadians(ToeOut)) *
+				FQuat(Left, -FMath::DegreesToRadians(FMath::Clamp(T.ToeDown[Side], -20.f, 60.f)))).GetNormalized();
+			const FVector Ankle = T.Ball[Side] + FootDelta.RotateVector(Rig.AnkleFromBall[Side]);
+			const FVector Pole(KneePole.X * Mirror, KneePole.Y, KneePole.Z);
+			FVector Knee, Foot, Hinge;
+			SolveTwoBone(Hip, Ankle, Pole.GetSafeNormal(), Leg.Length[0], Leg.Length[1], Knee, Foot, Hinge);
+			const FQuat Solved[3] = {
+				(AlignFrame(Leg.RestDir[0], Leg.RestHinge, (Knee - Hip).GetSafeNormal(), Hinge) * Leg.RestRot[0]).GetNormalized(),
+				(AlignFrame(Leg.RestDir[1], Leg.RestHinge, (Foot - Knee).GetSafeNormal(), Hinge) * Leg.RestRot[1]).GetNormalized(),
+				(FootDelta * Leg.RestRot[2]).GetNormalized() };
+			WriteLimb(CS, Local, Leg, Torso.Bone[0], Solved, Alpha);
+		}
+	}
+}
+// ---- rider IK end
+
 struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 {
 	FDAAnimInstanceProxy(UAnimInstance* InInstance)
@@ -223,8 +581,11 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 	bool bSprings = true;
 	float LookAlpha = 0.f;
 	FVector LookTargetCS = FVector::ZeroVector;
+	float RiderAlpha = 0.f;
+	FDARiderIKTargets Rider;
 
 	// worker-thread state
+	DARiderIK::FRig RiderRig;
 	TArray<FDASpringChain> Chains;
 	bool bChainsBuilt = false;
 	FCompactPoseBoneIndex HeadIndex = FCompactPoseBoneIndex(INDEX_NONE);
@@ -369,6 +730,7 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 				LegIndex[Side][J] = Resolve(Ref.FindBoneIndex(LegNames[Side][J]));
 			}
 		}
+		DARiderIK::Build(RiderRig, Ref, Resolve);
 		for (FDASpringChain& Chain : Chains)
 		{
 			Chain.Bones.Reset();
@@ -701,7 +1063,8 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 
 	void ApplyProcedural(FPoseContext& Output)
 	{
-		const bool bAny = (bSprings && Chains.Num() > 0) || LookAlpha > 0.001f;
+		const bool bRider = RiderRig.bValid && RiderAlpha > 0.001f;
+		const bool bAny = (bSprings && Chains.Num() > 0) || LookAlpha > 0.001f || bRider;
 		if (!bAny)
 		{
 			SimDt = 0.f;
@@ -709,6 +1072,11 @@ struct FDAAnimInstanceProxy : public FAnimInstanceProxy
 		}
 		FCSPose<FCompactPose> CS;
 		CS.InitPose(Output.Pose);
+		// The rider pose first: the head turn and the hair / cloth springs then work from the seated body.
+		if (bRider)
+		{
+			DARiderIK::Apply(RiderRig, CS, Rider, RiderAlpha);
+		}
 		ApplyLookAt(CS);
 		ApplySprings(CS);
 		FCSPose<FCompactPose>::ConvertComponentPosesToLocalPoses(MoveTemp(CS), Output.Pose);
@@ -897,6 +1265,7 @@ void UDAAvatarAnimInstance::NativeInitializeAnimation()
 	// A reinitialised instance must not inherit a previous mesh's action slot or
 	// blend state; Configure() only replaces the locomotion takes.
 	GroundSpeed = SwimAlpha = DuelAlpha = 0.f;
+	RiderAlpha = 0.f;
 	SmoothedSpeed = 0.f;
 	BlendedGroundSpeed = 0.f;
 	Phase = 0.f;
@@ -1187,6 +1556,12 @@ void UDAAvatarAnimInstance::ClearAction(float InBlendTime)
 	}
 }
 
+void UDAAvatarAnimInstance::SetRider(const FDARiderIKTargets& InTargets, float InAlpha)
+{
+	RiderTargets = InTargets;
+	RiderAlpha = FMath::Clamp(InAlpha, 0.f, 1.f);
+}
+
 void UDAAvatarAnimInstance::SetActionPlayRate(float InPlayRate)
 {
 	ActionPlayRateA = FMath::IsFinite(InPlayRate) ? FMath::Max(0.f, InPlayRate) : 1.f;
@@ -1374,9 +1749,11 @@ void UDAAvatarAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		Proxy.SimComponentToWorld = Comp->GetComponentTransform();
 		LookAlpha = FMath::FInterpTo(LookAlpha, bLookAt ? 1.f : 0.f, Dt, 4.f);
-		Proxy.LookAlpha = LookAlpha * (1.f - FMath::Clamp(ActionWeightA + ActionWeightB, 0.f, 1.f) * 0.7f);
+		Proxy.LookAlpha = LookAlpha * (1.f - FMath::Clamp(ActionWeightA + ActionWeightB, 0.f, 1.f) * 0.7f) * (1.f - RiderAlpha);
 		Proxy.LookTargetCS = Proxy.SimComponentToWorld.InverseTransformPosition(LookTargetWorld);
 	}
+	Proxy.Rider = RiderTargets;
+	Proxy.RiderAlpha = RiderAlpha;
 	Proxy.SimDt = Dt;
 	Proxy.bSprings = bSecondaryMotion;
 	UpdateCorrectives();

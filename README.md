@@ -548,8 +548,24 @@ to boost (54 km/h cruising, 79 km/h boosted), and **Space** hops. It climbs stee
 foot, rolls over kerbs and rocks and fords shallow water. It is stowed automatically at interior doors, in
 deep water and when a duel starts. The chase camera swings in behind the bike when you stop moving the mouse.
 
-The bike is a spoked, knobby enduro with a long-travel fork, chain and sprocket, finned single-cylinder
-engine, radiator, exhaust and working head/tail/brake lights. Its sound is synthesised live from the
+The bike is a spoked enduro on round-section knobby tyres with drilled discs, a telescopic fork that steers
+about its raked steering axis, a swingarm with a linked shock, a moving chain, finned single-cylinder engine,
+radiator and louvred shrouds, a curled exhaust header, bent handlebars with hand guards and working
+head/tail/brake lights. The suspension is real kinematics: the chassis and rider heave and pitch on the two
+springs (the fork dives on the brakes, the rear squats under power, both bottom out on a landing) while the
+wheels stay on the ground - the swingarm swings, the fork sliders telescope over the stanchions and the
+shock spring compresses, and every bump reaches the front wheel a wheelbase before the rear.
+
+The rider is posed onto the bike every frame (`DARiderIK` in `DAAvatarAnimInstance.cpp`, on top of the idle
+take): hips on the seat, back leaning until the hands close on the grips (they follow the steering), knees
+forward and out round the tank, the balls of the feet on the pegs. The riding style follows the bike -
+seated and a little forward when cruising, chest down behind the plate when boosting, up on the pegs over
+jumps and through the landing (the legs soak it up), weight back on the brakes, upper body more upright than
+the bike in a turn - and at a stop the bike leans onto the rider's left foot on the ground (shorter riders
+slide further off the seat to reach it). Getting on blends the rider in as the bike pops in.
+`Tools/tests/test_rider_ik.py` compiles the solver outside the engine and checks it on the cast skeleton.
+
+Its sound is synthesised live from the
 drivetrain: an electric start and settling idle, a five-speed box that shifts on rpm, throttle-dependent
 exhaust bark, intake and valve noise, gearbox/chain whine, tyre and wind roar, and exhaust crackle when you
 chop the throttle or downshift.

@@ -928,6 +928,9 @@ void ADAStudentCharacter::AttachAvatar(bool bToBike)
 		Avatar->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator(0.f, -90.f, 0.f));
 		Avatar->RideHipHeight = Bike->GetRiderHipHeight();
 		Avatar->RideAlpha = 1.f;
+		FDARiderTargets RiderTargets;
+		Bike->GetRiderTargets(RiderTargets);
+		Avatar->SetRideTargets(RiderTargets);
 	}
 	else
 	{
@@ -1085,6 +1088,7 @@ void ADAStudentCharacter::UpdateRiding(float DeltaSeconds)
 	Pose.Pitch = BikePitch;
 	Pose.Throttle = Throttle;
 	Pose.bBraking = bBraking;
+	Pose.bBoosting = bSprinting && Throttle > 0.1f;
 	Pose.bAirborne = !bGround;
 	if (UDAIslandSubsystem* Sub = UDAIslandSubsystem::Get(this))
 	{
@@ -1094,6 +1098,13 @@ void ADAStudentCharacter::UpdateRiding(float DeltaSeconds)
 		}
 	}
 	Bike->UpdateRide(DeltaSeconds, Pose);
+	if (Avatar)
+	{
+		// Where the seat, grips and pegs are this frame and how to sit: the avatar IKs the rider onto them.
+		FDARiderTargets RiderTargets;
+		Bike->GetRiderTargets(RiderTargets);
+		Avatar->SetRideTargets(RiderTargets);
+	}
 
 	// Chase camera: after a moment without look input, swing in behind the bike.
 	if (Controller && LookIdleTime > 1.5f && Speed > 400.f && !IsMovementBlocked())

@@ -38,6 +38,40 @@ struct FDAMessage
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	FString Body;
+};
+
+/**
+ * Where a motorcycle rider's body goes this frame (UDAMotorcycleComponent -> UDAAvatarComponent).
+ * Points are in the rider mount's space, the avatar's attach parent while riding (cm; +X forward,
+ * +Y the bike's right, +Z up). They follow the steering, both suspensions and the lean.
+ */
+struct FDARiderTargets
+{
+	bool bValid = false;
+	/** Seat surface under the rider's hips (already slid sideways for a foot-down stop). */
+	FVector Seat = FVector::ZeroVector;
+	/** Handlebar grip centres. */
+	FVector GripLeft = FVector::ZeroVector;
+	FVector GripRight = FVector::ZeroVector;
+	/** Foot-peg tops, where the ball of each foot rests. */
+	FVector PegLeft = FVector::ZeroVector;
+	FVector PegRight = FVector::ZeroVector;
+	/** The ground beside the left peg, where the left foot goes down at a stop. */
+	FVector GroundLeft = FVector::ZeroVector;
+	/** 0..1: the left foot is off its peg and on the ground (stopped). */
+	float FootDown = 0.f;
+	/** 0..1: standing on the pegs, knees and elbows bent (airborne, landings). */
+	float Stand = 0.f;
+	/** 0..1: chest down over the tank (boosting at speed). */
+	float Tuck = 0.f;
+	/** -1..1: weight back, braced on the bars (hard braking) .. forward over the tank (hard acceleration). */
+	float Drive = 0.f;
+	/** Upper-body roll relative to the bike (degrees, positive towards the bike's right). */
+	float BodyRoll = 0.f;
+	/** Extra neck/head roll (degrees, positive towards the bike's right) that keeps the eyes nearer level. */
+	float HeadRoll = 0.f;
+	/** cm the hips sink below their seated / standing height (legs soaking up a landing). */
+	float Sink = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	FLinearColor Accent = FLinearColor(1.f, 0.75f, 0.2f);

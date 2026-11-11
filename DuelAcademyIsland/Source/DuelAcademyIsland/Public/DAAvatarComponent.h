@@ -12,6 +12,7 @@ class UStaticMesh;
 class UMaterialInstanceDynamic;
 class USkeletalMeshComponent;
 class UAnimSequence;
+struct FDARiderIKTargets;
 
 /**
  * Student avatar, best available first:
@@ -54,9 +55,15 @@ public:
 	UPROPERTY(Transient, BlueprintReadWrite, Category = "Duel Academy")
 	float RideAlpha = 0.f;
 
-	/** While riding: height (cm above the avatar's origin) at which the hips sit on the seat. */
+	/** While riding: height (cm above the avatar's origin) at which the hips sit on the seat. Used by the
+	 *  avatars without the rider IK (SK_Student's Sit take, the procedural parts). */
 	UPROPERTY(Transient, BlueprintReadWrite, Category = "Duel Academy")
 	float RideHipHeight = 108.f;
+
+	/** While riding: this frame's seat, grips, pegs and riding style from the motorcycle (UDAMotorcycleComponent::
+	 *  GetRiderTargets), in the attach parent's (rider mount's) space. The anime cast IKs onto them
+	 *  (UDAAvatarAnimInstance::SetRider); the procedural parts aim their limbs at the grips and pegs. */
+	void SetRideTargets(const FDARiderTargets& InTargets) { RideTargets = InTargets; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	EDADorm Dorm = EDADorm::Slifer;
@@ -220,6 +227,20 @@ private:
 	bool bAnimeCast = false;
 
 	void UpdateBodyLean(float DeltaTime, float GroundSpeed);
+
+	/** Whether the skeletal mesh has the bones the rider IK needs (checked once per mesh). */
+	bool HasRiderRig();
+	/** The bike's targets converted to the mesh's component space for the rider IK. */
+	bool MakeRiderIK(FDARiderIKTargets& Out) const;
+	/** Procedural parts: point the arms at the grips and the legs at the pegs. */
+	void AimRiderLimbs();
+
+	FDARiderTargets RideTargets;
+	/** 0..1 blend onto the bike (a quick hop on after mounting). */
+	float RideBlend = 0.f;
+	/** The rider IK drives the anime cast this frame (no Sit take, no lift). */
+	bool bRiderIK = false;
+	int8 RiderRigState = -1;   // -1 unknown, 0 no, 1 yes
 
 	FName CurrentAnim = NAME_None;
 	FName CurrentAction = NAME_None;
