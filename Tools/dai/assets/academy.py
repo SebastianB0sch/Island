@@ -2875,7 +2875,7 @@ def _corridor(C, s, z, doors_w, doors_e, names, up=False, reserve_w=(), reserve_
                    lw=(1.2, 0.35), light_every=3, ac=False, wains=None, hung=lvl < 3,
                    zc=min(z + 3.3, top - 0.05) if top else None)
     C.rug(100.0, -38.2, 102.0, 48.2, BLUE_T, K.TRIM_GOLD, z=z + 0.005)
-    for k, y in enumerate(range(-30, 48, 9)):      # dorm banners hung across the corridor
+    for k, y in enumerate([-35] + list(range(-30, 48, 9))):      # dorm banners hung across the corridor
         C.box(cx0, y - 0.02, zc - 0.18, cx1, y + 0.02, zc - 0.14, K.METAL, nc=True)
         C.box(100.2, y - 0.01, zc - 0.85, 101.8, y + 0.01, zc - 0.18,
               ("M_AcademyRed", "M_AcademyYellow", "M_AcademyBlue")[k % 3], nc=True)

@@ -14,6 +14,7 @@ room 101, Banner's room, and Jaden / Syrus / Chumley's room).
 python Tools/academy_check.py --location slifer                   # the dorm (~3 min)
 python Tools/academy_check.py --location cell:slifer_jaden_room   # a portal room, with its anchors.json marks
 python Tools/academy_check.py                                     # the academy, as before
+python Tools/academy_check.py --location ra                       # the Ra Yellow dorm (RA_LAYOUT.md)
 ```
 
 What changed in the check (it applies to the Academy too):

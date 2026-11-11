@@ -1,9 +1,10 @@
 """
-Building layout check: the main academy building (dai/assets/academy.py) or the Slifer Red dorm
-(dai/assets/slifer.py) audited as a walkable building.
+Building layout check: the main academy building (dai/assets/academy.py), the Slifer Red dorm
+(dai/assets/slifer.py) or the Ra Yellow dorm (dai/assets/ra.py) audited as a walkable building.
 
     python Tools/academy_check.py                       # everything (academy)
     python Tools/academy_check.py --location slifer     # the Slifer Red dorm
+    python Tools/academy_check.py --location ra         # the Ra Yellow dorm
     python Tools/academy_check.py --only doors,npcs     # a subset
     python Tools/academy_check.py --json out.json --limit 40
 
@@ -68,6 +69,8 @@ LOCATIONS = {
                     clamp=((-125.0, -95.0), (125.0, 90.0))),
     "slifer": dict(module="slifer", seeds=[(0.0, -12.0, 0.0), (-4.0, 12.0, 0.0)], seed_r=2.0, leak_z=0.2,
                    clamp=((-30.0, -24.0), (30.0, 26.0))),
+    "ra": dict(module="ra", seeds=[(0.0, -13.5, 0.05), (-14.0, 10.0, 0.0)], seed_r=2.0, leak_z=0.6,
+               clamp=((-28.0, -24.0), (42.0, 15.0))),
 }
 LOC = LOCATIONS["academy"]
 
@@ -639,7 +642,7 @@ def check_walls(aset, G, grid, seen, log):
         # compass line (over a railing, down an open stair) at standing height: it is outdoors, not in a room
         # with a gap (a gap in a room wall is a narrow fan of escaping rays)
         o = c + Vector((0, 0, 1.2))
-        free = [G.all.ray_cast(o, d, 120.0)[0] is None and not _in_opening(o, d, 120.0, ops) for d in dirs]
+        free = [_open_air(G, o, d) and not _in_opening(o, d, 120.0, ops) for d in dirs]
         if sum(free) > nd // 4 or (sum(free[k] for k in range(0, nd, nd // 8)) and sum(free) >= 3):
             continue
         for zz in (1.2, 2.3):
@@ -661,7 +664,8 @@ def check_walls(aset, G, grid, seen, log):
                     continue
                 if h[1].dot(d) > 0.3 and h[3] < 40.0 and "Glass" not in G.all_mats[h[2]] \
                         and not G.all_mats[h[2]].startswith("PROP:") \
-                        and "Trim" not in G.all_mats[h[2]] and "Frame" not in G.all_mats[h[2]]:
+                        and "Trim" not in G.all_mats[h[2]] and "Frame" not in G.all_mats[h[2]] \
+                        and _back_confirmed(G, o, d, h):
                     # (window linings / frames: open-ended boxes whose ends are coplanar with the wall cut)
                     m = G.all_mats[h[2]]
                     key = (round(h[0].x * 2) / 2, round(h[0].y * 2) / 2, round(h[0].z), m)
@@ -674,6 +678,31 @@ def check_walls(aset, G, grid, seen, log):
                    f"({c.x:.1f}, {c.y:.1f}, {c.z:.2f})")
     out += _coplanar(aset, G)
     return out
+
+
+OUTDOOR_PROPS = ("Tree", "Palm", "Bush", "Hedge", "Flower", "LampPost", "Flagpole", "Umbrella")
+
+
+def _back_confirmed(G, o, d, h):
+    """A back-face hit that rays 1 cm beside it repeat (a missing face). A ray that grazes the exact edge
+    where two faces meet (a cheek's bottom edge, a case's front corner) can report either face; the rays beside
+    it then hit the front face."""
+    side = Vector((-d.y, d.x, 0.0)) * 0.01
+    n = 0
+    for off in (Vector((0, 0, 0.01)), Vector((0, 0, -0.01)), side, -side):
+        g = G.all.ray_cast(o + off, d, 120.0)
+        n += g[0] is not None and g[1].dot(d) > 0.3 and abs(g[3] - h[3]) < 0.1
+    return n >= 3
+
+
+def _open_air(G, o, d):
+    """A horizontal ray that meets nothing, or only a tree / bush (whose prop box is not a wall) in front of
+    no architecture."""
+    h = G.all.ray_cast(o, d, 120.0)
+    if h[0] is None:
+        return True
+    m = G.all_mats[h[2]]
+    return m.startswith("PROP:") and any(k in m for k in OUTDOOR_PROPS) and G.arch.ray_cast(o, d, 120.0)[0] is None
 
 
 def _faces(aset):

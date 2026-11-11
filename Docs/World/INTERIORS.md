@@ -114,7 +114,8 @@ python Tools/world/test_interiors.py
 
 - Purpose: Promotion room. Shares the Slifer room kit with a Ra material swap.
 - Capacity: ~2 people.
-- Props: bed, desk, wardrobe, card trunk, save/sleep mark.
+- Props: bed, desk, wardrobe, card trunk, save/sleep mark, Ra poster + yellow jacket by the door (`_ra_player`,
+  see `RA_LAYOUT.md`).
 - Reuse: Ra ochre/cream palette, SM_Bed, SM_Desk, SM_Wardrobe.
 
 **`obelisk_dining` — Obelisk Dining Room**

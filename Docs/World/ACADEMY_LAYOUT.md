@@ -14,9 +14,14 @@ python Tools/academy_check.py --only paths --region 80,0,104,10,101,3,6.6   # on
 ```
 
 Run with the Blender-as-a-module interpreter, like the other audits. `--location slifer` checks the Slifer Red
-dorm and `--location cell:<interior id>` a portal room with its `anchors.json` marks (see `SLIFER_LAYOUT.md`,
-which also lists the refinements made to the check on 2026-11-11: the furniture collision boxes are part of the
-walk grid, an exact test for narrow doorways, outdoor spots are not leak-tested). What it checks:
+dorm, `--location ra` the Ra Yellow dorm and `--location cell:<interior id>` a portal room with its
+`anchors.json` marks. `SLIFER_LAYOUT.md` and `RA_LAYOUT.md` list the refinements made to the check on 2026-11-11:
+- the furniture collision boxes are part of the walk grid;
+- narrow doorways get an exact test;
+- outdoor spots are not leak-tested, and trees and bushes don't count as walls;
+- back faces are confirmed by neighbouring rays.
+
+What it checks:
 
 | Check | How |
 |---|---|
@@ -104,6 +109,13 @@ Counting the furniture collision boxes added no unreachable door, NPC spot or ar
 pockets inside the lecture halls' hollow tier blocks, which are now listed. The shared sill and frame fixes cut
 the z-fighting list from 2,376 to 1,168. The 72 leak rays all start in the open entrance portico (x ±14,
 y -67).
+
+**Re-check after the Ra pass** (`RA_LAYOUT.md`): NPC spots 0, doors 0, and the same 154 path entries.
+- Leak rays 72 → 0: the portico counts as outdoors once tree and bush prop boxes no longer act as walls.
+- Back faces 71 → 25: a back face must now repeat on rays 1 cm beside it.
+- z-fighting 1,168 → 882: panelling boards are now 18 mm, behind the 24 mm skirting.
+- The pavilion corridors got one more hanging dorm banner near the camera, keeping their views at the 35 %
+  detail target.
 
 Known leftovers (reported by the check, not defects of the building):
 

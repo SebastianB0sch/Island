@@ -561,15 +561,15 @@ def _dining(props, nocol, aset, cell, theme):
     aset.light((0.0, fy0 + 1.0, h - 0.60), (1.0, 0.82, 0.55), 2400.0, max(w, d) * 0.35)
 
 
-def _slifer_dressing(props, nocol, aset, cell, theme, jackets=1, posters=(("SLIFER RED", 0.0),)):
-    """Slifer touches on the room faces: dorm posters on the back wall, a coat-hook rail with red jackets on the
-    door wall beside the door (clear of its architrave)."""
+def _slifer_dressing(props, nocol, aset, cell, theme, jackets=1, posters=(("SLIFER RED", 0.0),), dorm="slifer"):
+    """Dorm touches on the room faces: dorm posters on the back wall, a coat-hook rail with the dorm's jackets on
+    the door wall beside the door (clear of its architrave)."""
     from . import interior as K, detail as DT
     w, d, h = _dims(cell)
     fx0, fy0, fx1, fy1 = _faces(cell)
     for k, (text, x) in enumerate(posters):
         K.poster(nocol, aset, x, fy0 + 0.002, 1.75, 180.0, 0.5, 0.7, K.POSTERS[k % 4], text=text, text_size=0.06)
-    DT.coat_hooks(nocol, -0.5 - 0.09 - 0.25 - 0.375, fy1 - 0.002, 1.75, 0.0, n=3, dorm="slifer", jackets=jackets,
+    DT.coat_hooks(nocol, -0.5 - 0.09 - 0.25 - 0.375, fy1 - 0.002, 1.75, 0.0, n=3, dorm=dorm, jackets=jackets,
                   seed=len(str(cell.get("id"))))
 
 
@@ -580,6 +580,13 @@ def _slifer_player(props, nocol, aset, cell, theme):
     w, d, h = _dims(cell)
     fx0, fy0, fx1, fy1 = _faces(cell)
     _slifer_dressing(props, nocol, aset, cell, theme, jackets=1, posters=(("SLIFER RED", 1.6),))
+
+
+def _ra_player(props, nocol, aset, cell, theme):
+    """The player's Ra Yellow room after the promotion: the same room kit as Slifer 101 (bed for the sleep / save
+    beat, desk, wardrobe, card trunk) with Ra dressing: a Ra poster and a yellow jacket by the door."""
+    _dorm_room(props, nocol, aset, cell, theme)
+    _slifer_dressing(props, nocol, aset, cell, theme, jackets=1, posters=(("RA YELLOW", 1.6),), dorm="ra")
 
 
 def _slifer_bunk_room(props, nocol, aset, cell, theme):
@@ -638,6 +645,7 @@ _BY_ID = {
     "academy_crowler_office": _crowler,
     "academy_chancellor_office": _chancellor,
     "slifer_player_room": _slifer_player,
+    "ra_player_room": _ra_player,
     "slifer_jaden_room": _slifer_bunk_room,
 }
 

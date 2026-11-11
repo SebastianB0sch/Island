@@ -71,7 +71,9 @@ RYF, RYB = -(CY + TP / 2), CY + TP / 2     # room faces of the corridor walls
 PART = (5.0, 10.55, 15.95)       # partition lines of each wing (|x|)
 HOLE_A = (-5.0 + TP / 2 - 0.0, 2.4, -3.65, 5.90)    # stairwell 1F -> 2F (in the 2F floor)
 HOLE_B = (3.65, 2.4, 5.0 - TP / 2, 5.90)            # stairwell 2F -> 3F (in the 3F floor)
-HOLE_C = (-5.0 + TP / 2, 1.1, -3.7, 4.65)           # stairwell 3F -> attic (in the 3F ceiling / top cap)
+HOLE_C = (-5.0 + TP / 2, -0.07, -3.7, 4.1)          # stairwell 3F -> attic (in the 3F ceiling / top cap)
+ATTIC_Y = 5.62                   # foot of the 3F -> attic flight (1.1 m clear of the back wall), climbing -y to
+                                 # the attic boards at HOLE_C[1] (21 x 0.27 m)
 IN_CREAM, IN_YELLOW, IN_WHITE = K.PLASTER_CREAM, K.PLASTER_YELLOW, K.PLASTER_WHITE
 
 # cafeteria wing
@@ -80,6 +82,7 @@ CZ = 0.45
 CWH = 4.2
 FOUND = -4.0
 KDOOR_Y = 2.6                    # dorm kitchen <-> cafeteria servery door
+BALC_W = 1.4                     # balcony French doors (2 x 0.7 m leaves)
 
 
 def roof_z(y):
@@ -202,16 +205,18 @@ def _strip(mb, x0, y0, x1, y1, z0, z1, mat, along, cuts=()):
         u = max(u, b)
 
 
-def pwall(aset, mb, p0, p1, z0, h, mat_r, mat_l, doors=(), t=TP, trim=K.TRIM_WHITE, base=K.TRIM_WOOD):
+def pwall(aset, mb, p0, p1, z0, h, mat_r, mat_l, doors=(), t=TP, trim=K.TRIM_WHITE, base=K.TRIM_WOOD,
+          trim_l="same"):
     """Partition centred on the line p0 -> p1. mat_l faces the room on the LEFT of p0 -> p1, mat_r the right.
-    Skirting boards on both faces (cut at the doorways)."""
+    Skirting boards on both faces (cut at the doorways). trim_l: the left face's architraves (default: trim)."""
     dx, dy = p1[0] - p0[0], p1[1] - p0[1]
     L = math.hypot(dx, dy)
     ux, uy = dx / L, dy / L
     nx, ny = -uy, ux
     q0 = (p0[0] - nx * t / 2, p0[1] - ny * t / 2)
     q1 = (p1[0] - nx * t / 2, p1[1] - ny * t / 2)
-    K.wall(aset, mb, q0, q1, z0, h, t, mat_r, inner=mat_l, openings=doors, trim=trim, trim_in=trim)
+    K.wall(aset, mb, q0, q1, z0, h, t, mat_r, inner=mat_l, openings=doors, trim=trim,
+           trim_in=trim if trim_l == "same" else trim_l)
     if base:
         yaw = math.degrees(math.atan2(dy, dx))
         cuts = sorted((d.c - d.w / 2 - 0.1, d.c + d.w / 2 + 0.1) for d in doors)
@@ -247,19 +252,21 @@ def _rot(dx, dy, yaw):
     return dx * math.cos(a) - dy * math.sin(a), dx * math.sin(a) + dy * math.cos(a)
 
 
-def curtain(nc, x, y, z0, z1, yaw, w, mat, frac=0.22):
+def curtain(nc, x, y, z0, z1, yaw, w, mat, frac=0.22, door=False):
     """Pair of drawn-back curtains + rod in front of a window / glazed door. (x, y) = opening centre on the
-    inner wall face, yaw: local -Y into the room."""
+    inner wall face, yaw: local -Y into the room. door=True: the curtains are drawn right back beside the
+    opening, clear of the door leaves swinging into the room."""
     cw = (w + 0.4) * frac
+    zb = z0 if door else z0 - 0.03        # (a window's curtains stop above its sill / the desk under it)
     with nc.at((x, y, 0.0), rot=yaw):
-        nc.box((0, -0.1, z1 + 0.14), (w + 0.55, 0.03, 0.03), K.TRIM_WOOD)
+        nc.box((0, -0.18, z1 + 0.14), (w + 2 * cw + 0.2 if door else w + 0.55, 0.03, 0.03), K.TRIM_WOOD)
         for s in (-1, 1):
-            cx = s * (w / 2 + 0.2 - cw / 2)
-            for k in range(3):
+            cx = s * (w / 2 + 0.05 + cw / 2) if door else s * (w / 2 + 0.2 - cw / 2)
+            for k in range(3):             # 15 cm off the wall: in front of the 12 cm inside sill
                 fx = cx - cw / 2 + cw * (k + 0.5) / 3
-                nc.box((fx, -0.08 + (0.02 if k % 2 else -0.02), (z0 - 0.12 + z1 + 0.12) / 2),
-                       (cw / 3 + 0.01, 0.025, z1 - z0 + 0.24), mat)
-            nc.box((s * (w / 2 + 0.2 - cw * 0.6), -0.09, z0 + (z1 - z0) * 0.45), (cw * 0.5, 0.05, 0.05), K.TRIM_GOLD)
+                nc.box((fx, -0.16 + (0.02 if k % 2 else -0.02), (zb + z1 + 0.12) / 2),
+                       (cw / 3 + 0.01, 0.025, z1 + 0.12 - zb), mat)
+            nc.box((cx - s * cw * 0.1, -0.17, z0 + (z1 - z0) * 0.45), (cw * 0.5, 0.05, 0.05), K.TRIM_GOLD)
 
 
 def chairs_around(aset, x, y, z, yaw, length, side, n_per=2, chair="SM_Int_WoodChair", ends=False):
@@ -439,7 +446,7 @@ def _main(aset, mb, nc):
                             continue
                         window(mb, -x, zf + 0.85, 1.2, 1.9, "flat", cut="window")
                     else:
-                        window(mb, -x, zf, 1.2, 2.45, "key", door=True, cut="door")
+                        window(mb, -x, zf, BALC_W, 2.45, "key", door=True, cut="door")
         for u, d in ((W2, -1), (-W2, 1)):
             quoins(mb, u, d, ZG + 0.1, ZC - 0.65)
         # back door surround (the double leaf is a door socket)
@@ -455,10 +462,11 @@ def _main(aset, mb, nc):
     aset.light((-1.4, D2 + 0.9, ZG + 2.2), (1.0, 0.82, 0.55), 3000.0, 8.0, night_only=True)
     for fi, zf in enumerate(FLOORS[1:]):
         for g in GROUPS:
-            xa, xb = min(g) - 1.0, max(g) + 1.0
+            xa, xb = min(g) - 1.1, max(g) + 1.1
             y1 = D2 + 1.45
-            mb.box_mm((xa, D2, zf - 0.2), (xb, y1, zf), "M_DarkWood", mats={"+z": "M_Wood"})
-            for x in (xa + 0.25, xb - 0.25):
+            # (0.22 thick: its soffit clears the string course below; brackets clear of the door surrounds)
+            mb.box_mm((xa, D2, zf - 0.22), (xb, y1, zf), "M_DarkWood", mats={"+z": "M_Wood"})
+            for x in (xa + 0.1, xb - 0.1):
                 mb.beam((x, D2, zf - 1.2), (x, y1 - 0.2, zf - 0.2), 0.12, 0.12, "M_DarkWood")
                 mb.box((x, D2 + 0.08, zf - 0.75), (0.14, 0.16, 1.1), "M_DarkWood")
             wood_railing(mb, (xa + 0.05, y1 - 0.05, zf), (xb - 0.05, y1 - 0.05, zf), 1.0)
@@ -532,8 +540,15 @@ _HOLE_LIN = (_y_at(DRM_ZT - 0.12 + RTH), DRM_YF)
 
 
 def _poly2(mb, pts, mat, mat_back=None):
+    """Two-sided polygon: the back copy sits 2 mm behind the front one (two coincident faces with opposite
+    normals render either one, from both sides)."""
+    nx = sum((pts[i][1] - pts[i - 1][1]) * (pts[i][2] + pts[i - 1][2]) for i in range(len(pts)))
+    ny = sum((pts[i][2] - pts[i - 1][2]) * (pts[i][0] + pts[i - 1][0]) for i in range(len(pts)))
+    nz = sum((pts[i][0] - pts[i - 1][0]) * (pts[i][1] + pts[i - 1][1]) for i in range(len(pts)))
+    L = math.sqrt(nx * nx + ny * ny + nz * nz) or 1.0
+    e = 0.002 / L
     mb.poly(pts, mat)
-    mb.poly(list(reversed(pts)), mat_back or mat)
+    mb.poly([(x + nx * e, y + ny * e, z + nz * e) for x, y, z in reversed(pts)], mat_back or mat)
 
 
 def _roof_band(mb, ya, yb, cuts, dz, mat, down):
@@ -655,7 +670,7 @@ def _shell(aset, mb):
             ops = [_win(W2 - x, 0) for x in BACK_X if x != 0.0]
             ops.append(K.Door(W2, 1.6, 2.6, "ra", double=True, trim=None, trim_in=K.TRIM_WHITE))
         else:
-            ops = [K.Door(W2 - x, 1.2, 2.51, "ra", double=True, trim=None, trim_in=K.TRIM_WHITE) for x in BACK_X]
+            ops = [K.Door(W2 - x, BALC_W, 2.51, "ra", double=True, trim=None, trim_in=K.TRIM_WHITE) for x in BACK_X]
         K.wall(aset, mb, (W2, D2), (-W2, D2), zf, h, TE, WALL, openings=ops, **kw)
         # west end
         K.wall(aset, mb, (-W2, D2), (-W2, -D2), zf, h, TE, WALL, openings=[_win(D2 - y, fi) for y in END_Y], **kw)
@@ -667,6 +682,9 @@ def _shell(aset, mb):
         else:
             ops = []
         K.wall(aset, mb, (W2, -D2), (W2, D2), zf, h, TE, WALL, openings=ops, **kw)
+        if fi == 0:     # the doorway runs on through the cafeteria wall: the leaf hangs in the middle of both
+            sk = [s for s in aset.sockets if s["type"] == "door"][-1]
+            sk["pos"] = [(W2 - TE + CX0 + 0.25) / 2, sk["pos"][1], sk["pos"][2]]
         # central bay front: entrance (+ transom), French door, windows
         zt_b = FLOORS[fi + 1] if fi < 2 else ZRB
         if fi == 0:
@@ -719,7 +737,7 @@ def pigeonholes(mb, nc, x, y, z, yaw, w=1.6, h=1.5, d=0.32, cols=6, rows=5, rng_
     """Mail pigeonholes (wall unit, back at local +Y) with a few letters + parcels."""
     rnd = random.Random(rng_seed)
     with mb.at((x, y, z), rot=yaw):
-        mb.box((0, 0, z0 / 2), (w, d, z0), K.WOOD_DARK)                       # cabinet base
+        mb.box((0, 0, (z0 - 0.0125) / 2), (w, d, z0 - 0.0125), K.WOOD_DARK)   # cabinet base (under the bottom board)
         mb.box((0, d / 2 - 0.01, z0 + h / 2), (w, 0.02, h), K.WOOD)
         for i in range(cols + 1):
             mb.box((-w / 2 + w * i / cols, 0, z0 + h / 2), (0.025, d, h), K.WOOD)
@@ -799,11 +817,15 @@ def chalk_panel(mb, x, y, z0, z1, yaw, w):
 
 
 # ------------------------------------------------------------------ detail helpers (lived-in layer)
-def crown(mb, x0, y0, x1, y1, ceil, mat=K.TRIM_WHITE, d=0.12):
-    """Crown moulding round a room's ceiling (inner wall faces x0..x1, y0..y1)."""
+def crown(mb, x0, y0, x1, y1, ceil, mat=K.TRIM_WHITE, d=0.12, skip=()):
+    """Crown moulding round a room's ceiling (inner wall faces x0..x1, y0..y1), stopping at the stairwells in
+    `skip` [(xa, ya, xb, yb)] (it must not hang in the opening over a flight)."""
     for a, b, c, e in ((x0, y0, x1, y0 + d), (x0, y1 - d, x1, y1), (x0, y0 + d, x0 + d, y1 - d),
                        (x1 - d, y0 + d, x1, y1 - d)):
-        mb.box_mm((a, b, ceil - d), (c, e, ceil), mat)
+        along = "x" if e - b < c - a else "y"
+        cuts = [((xa, xb) if along == "x" else (ya, yb)) for xa, ya, xb, yb in skip
+                if xa < c and xb > a and ya < e and yb > b]
+        _strip(mb, a, b, c, e, ceil - d, ceil, mat, along, cuts)
 
 
 def coffers(mb, x0, y0, x1, y1, ceil, step=2.0, w=0.22, h=0.2, mat=K.TRIM_WHITE, skip=(), nx=None, ny=None):
@@ -828,7 +850,7 @@ def coffers(mb, x0, y0, x1, y1, ceil, step=2.0, w=0.22, h=0.2, mat=K.TRIM_WHITE,
         y = y0 + (y1 - y0) * j / ny
         for a, b in cut(x0, x1, "x", y):
             mb.box_mm((a, y - w / 2, ceil - h * 0.8), (b, y + w / 2, ceil), mat)
-    crown(mb, x0, y0, x1, y1, ceil, mat, d=0.14)
+    crown(mb, x0, y0, x1, y1, ceil, mat, d=0.14, skip=skip)
 
 
 def fill_books(nc, aset, x, y, z_levels, yaw, w, d, seed=0):
@@ -982,7 +1004,8 @@ def dorm_room(aset, mb, nc, x0, x1, fi, side, num, rnd, misawa=False):
         else:       # back room: desk + wardrobe on the side walls, clear of the balcony doors
             dy, wy = (yc + 2.95, yc + 4.35) if outer else (yc + 4.4, yc + 2.85)
             P(aset, "SM_Int_Wardrobe", bx + sgn * 0.43, wy, zf, side_yaw, 0.8)
-            P(aset, "SM_Int_Suitcase", bx + sgn * 0.43, wy, zf + 1.89, side_yaw + 90.0)
+            # a storage box on the wardrobe (the 1.6 m suitcase crosswise went through the partition)
+            P(aset, "SM_Int_Box", bx + sgn * 0.43, wy, zf + 1.89, side_yaw)
             with lift(zf, mb, nc):
                 K.desk(mb, nc, bx + sgn * 0.3, dy, side_yaw, w=1.0, hutch=False, clutter=False,
                        rng_seed=num * 3 + sgn)
@@ -1006,7 +1029,7 @@ def dorm_room(aset, mb, nc, x0, x1, fi, side, num, rnd, misawa=False):
             DT.desk_set(nc, aset, wx, ye + 0.38, zf + 0.76, 180.0, "student", seed=num * 5 + k, w=1.1, d=0.42)
     else:
         for wx in [x for x in BACK_X if xa < x < xb]:
-            curtain(nc, wx, ye, zf, zf + 2.51, into, 1.2, "M_IntFabricYellow", frac=0.16)
+            curtain(nc, wx, ye, zf, zf + 2.51, into, BALC_W, "M_IntFabricYellow", frac=0.16, door=True)
     if end_win:
         curtain(nc, xa if outer_a else xb, -4.0 if s < 0 else 4.0, zf + 0.85, zf + 0.85 + WIN_H[fi],
                 90.0 if outer_a else -90.0, 1.2, "M_IntFabricWhite")
@@ -1023,6 +1046,7 @@ def dorm_room(aset, mb, nc, x0, x1, fi, side, num, rnd, misawa=False):
             (yc + 4.35 if (end_win and (bx == xa) == outer_a) else yc + 2.85)
         keep.append((bx, wy - 0.75, bx + sgn * 0.1, wy + 0.75))
     keep += [(wx - 0.8, ye - 0.1, wx + 0.8, ye + 0.1) for wx in FRONT_X if s < 0 and xa < wx < xb]
+    keep += [(wx - 1.1, ye - 0.1, wx + 1.1, ye + 0.1) for wx in BACK_X if s > 0 and xa < wx < xb]
     if end_win:
         ew = xa if outer_a else xb
         keep.append((ew - 0.1, s * 4.0 - 0.8, ew + 0.1, s * 4.0 + 0.8))
@@ -1041,7 +1065,7 @@ def dorm_room(aset, mb, nc, x0, x1, fi, side, num, rnd, misawa=False):
         if s < 0:
             clear.append((xa, ye, xb, ye + 0.7))
         else:
-            clear += [(x - 0.8, ye - 0.9, x + 0.8, ye) for x in BACK_X if xa < x < xb]
+            clear += [(x - 0.9, ye - 1.0, x + 0.9, ye) for x in BACK_X if xa < x < xb]
         DT.floor_clutter(nc, aset, xa, y0, xb, y1, zf, "dorm", n=4, seed=num, clear=clear)
 
 
@@ -1122,9 +1146,9 @@ def upper_floor(aset, mb, nc, fi, rnd):
     fl = fi + 1
     # ---- x = +-5 walls (wings | central stair hall), open arch at the corridor
     pwall(aset, mb, (-BAYX, IY0), (-BAYX, IY1), zf, h, IN_CREAM, IN_YELLOW,
-          doors=[K.Door(-IY0, 1.8, 2.6, None)])
+          doors=[K.Door(-IY0, 1.8, 2.6, None)], trim_l=None)
     pwall(aset, mb, (BAYX, IY1), (BAYX, IY0), zf, h, IN_CREAM, IN_YELLOW,
-          doors=[K.Door(IY1, 1.8, 2.6, None)])
+          doors=[K.Door(IY1, 1.8, 2.6, None)], trim_l=None)
     num_i = 1
     misawa_done = False
     for wing in (-1, 1):
@@ -1264,10 +1288,10 @@ def center_upper(aset, mb, nc, fi):
         aset.text(txt, K.wall_point(x, 0.0, yaw, 0.03, zf + 2.75), yaw, size=0.13, color=(0.5, 0.32, 0.06))
     # balcony doors + bay windows / French door: curtains
     for x in (-2.8, 0.0, 2.8):
-        curtain(nc, x, IY1, zf, zf + 2.51, 0.0, 1.2, "M_IntFabricYellow", frac=0.16)
+        curtain(nc, x, IY1, zf, zf + 2.51, 0.0, BALC_W, "M_IntFabricYellow", frac=0.16, door=True)
     by = YBAY + TE
     if fi == 1:
-        curtain(nc, 0.0, by, zf, zf + 2.65, 180.0, 1.4, "M_IntFabricYellow", frac=0.15)
+        curtain(nc, 0.0, by, zf, zf + 2.65, 180.0, 1.4, "M_IntFabricYellow", frac=0.15, door=True)
         for x in (-3.0, 3.0):
             curtain(nc, x, by, zf + 0.85, zf + 2.75, 180.0, 1.2, "M_IntFabricWhite")
     else:
@@ -1410,7 +1434,7 @@ def ground_floor(aset, mb, nc, rnd):
     K.bulletin(nc, aset, -BAYX + TP / 2, -5.6, zf + 1.05, 90.0, w=1.5, h=1.0, title="RA YELLOW NOTICE BOARD",
                rng_seed=11)
     P(aset, "SM_Int_Bench", -4.55, -1.3, zf, 90.0)
-    P(aset, "SM_Int_GrandfatherClock", -4.66, 0.2, zf, 90.0)
+    P(aset, "SM_Int_GrandfatherClock", 4.66, 2.0, zf, -90.0)       # (east wall: the stair foot stays free)
     for x in (-1.45, 1.45):
         P(aset, "SM_Int_PottedPlantB", x, -6.92, zf, 0.0)
     for x in (-1.45, 1.45):
@@ -1424,8 +1448,8 @@ def ground_floor(aset, mb, nc, rnd):
     # ================= common lounge (west)
     xa, xb = -PART[2] + TP / 2, -BAYX - TP / 2
     K.floor_planks(mb, -PART[2], IY0, -BAYX, IY1, zf, mat=K.WOODFLOOR, along="x", pitch=0.24)
-    mb.box_mm((xb - 0.9, -0.85, zf), (xb, 0.85, ceil), IN_CREAM)                  # chimney breast
-    mb.box_mm((xb - 0.95, -0.9, zf), (xb, 0.9, zf + 0.12), K.TRIM_WOOD)
+    mb.box_mm((xb - 0.9, -0.9, zf), (xb, 0.9, ceil), IN_CREAM)                    # chimney breast
+    mb.box_mm((xb - 0.95, -0.95, zf), (xb, 0.95, zf + 0.12), K.TRIM_WOOD)
     with lift(zf, mb, nc):
         K.fireplace(mb, nc, aset, xb - 0.9, 0.0, -90.0, w=1.4, h=1.25)
     aset.sockets[-1]["pos"][2] += zf
@@ -1471,15 +1495,15 @@ def ground_floor(aset, mb, nc, rnd):
     for x in (-6.5, -9.2, -11.9, -14.6):
         curtain(nc, x, IY0, zf + 0.85, zf + 2.75, 180.0, 1.2, "M_IntFabricYellow")
         curtain(nc, x, IY1, zf + 0.85, zf + 2.75, 0.0, 1.2, "M_IntFabricYellow")
-    aset.npc((-9.0, -1.2, zf), 90.0, dorm="ra", wander=1.5)
+    aset.npc((-9.0, -2.5, zf), 90.0, dorm="ra", wander=1.5)        # (between the sofa and the card tables)
     K.camera(aset, "lounge", (-14.9, -6.0, zf + 1.7), (-6.5, 1.5, zf + 0.9), 15.0)
 
     # ================= duel practice room (west end)
     xa, xb = IX0, -PART[2] - TP / 2
     K.floor_planks(mb, IX0, IY0, -PART[2], IY1, zf, mat=K.WOODFLOOR, along="y", pitch=0.24)
-    for y in (-3.4, 3.4):
-        K.rug(nc, -20.6, y - 1.0, -17.1, y + 1.0, zf + 0.001, "M_IntCarpetBlue", border="M_IntCarpetYellow")
-        duel_table(mb, nc, aset, -18.85, y, zf, 0.0)
+    for y in (-3.4, 3.4):           # long side along y: 2.4 m walkways either side
+        K.rug(nc, -19.85, y - 1.75, -17.85, y + 1.75, zf + 0.001, "M_IntCarpetBlue", border="M_IntCarpetYellow")
+        duel_table(mb, nc, aset, -18.85, y, zf, 90.0)
         P(aset, "SM_Int_IndustrialLamp", -18.85, y, ceil, 0.0)
     K.blackboard(mb, nc, aset, xb, -3.6, zf + 0.95, -90.0, w=2.6, h=1.2,
                  lines=["TODAY'S DRILL:", "CHAIN RESOLUTION", "SPELL SPEED 1 < 2 < 3", "READ THE FIELD !"])
@@ -1527,7 +1551,7 @@ def ground_floor(aset, mb, nc, rnd):
     P(aset, "SM_Int_PottedPlantB", xb - 0.45, IY0 + 0.45, zf, 0.0)
     for x in (6.5, 9.2, 11.9, 14.6):
         curtain(nc, x, IY0, zf + 0.85, zf + 2.75, 180.0, 1.2, "M_IntFabricWhite")
-    aset.npc((10.4, -3.2, zf), 180.0, dorm="ra", wander=1.0)
+    aset.npc((9.0, -2.3, zf), 180.0, dorm="ra", wander=1.0)        # (between the tables, not on a chair)
     K.camera(aset, "study", (5.7, -1.6, zf + 1.7), (14.0, -6.0, zf + 0.8), 15.0)
     # dorm supervisor's office
     xa, xb = PART[2] + TP / 2, IX1
@@ -1582,7 +1606,7 @@ def ground_floor(aset, mb, nc, rnd):
         for j in range(3 + k % 2):
             nc.box((x, y, zf + 0.92 + j * 0.05), (0.32, 0.26, 0.045),
                    ("M_IntFabricWhite", "M_IntFabricBlue", "M_IntFabricYellow")[(j + k) % 3])
-    for k, (x, y) in enumerate(((9.4, 5.3), (9.0, 2.3))):
+    for k, (x, y) in enumerate(((9.4, 5.3), (10.0, 1.55))):
         P(aset, "SM_Int_Basket", x, y, zf, 20.0 + k * 70.0)
         nc.sphere((x, y, zf + 0.12), 0.16, ("M_IntFabricWhite", "M_IntFabricBlue")[k], seg=8, rings=5)
     aset.text("LAUNDRY  -  6:00 - 22:00", K.wall_point(7.8, IY1, 0.0, 0.03, zf + 2.55), 0.0, size=0.1,
@@ -1649,14 +1673,15 @@ def _dress_ground(aset, mb, nc):
     frames(aset, [("SM_Int_Painting", hx0, -1.3, zf + 1.45, 90.0), ("SM_Int_Frame", hx1, -0.0, zf + 2.5, -90.0),
                   ("SM_Int_Painting", -1.55, IY1, zf + 1.45, 0.0), ("SM_Int_Painting", 1.55, IY1, zf + 1.45, 0.0),
                   ("SM_Int_Frame", hx1, 5.6, zf + 1.4, -90.0)])
-    banner(nc, aset, hx0, -5.6, zf + 3.55, 90.0, 1.0, 1.25, "RA")
-    banner(nc, aset, hx1, -1.25, zf + 3.5, -90.0, 0.7, 1.1)
-    banner(nc, aset, hx1, 1.25, zf + 3.5, -90.0, 0.7, 1.1)
+    banner(nc, aset, hx0, -5.6, zf + 3.0, 90.0, 0.9, 0.85, "RA")        # (rods under the crown moulding)
+    banner(nc, aset, hx1, -1.25, zf + 3.0, -90.0, 0.7, 1.1)
+    banner(nc, aset, hx1, 1.25, zf + 3.0, -90.0, 0.7, 1.1)
     DT.dress_room(aset, mb, nc, hx0, IY0, hx1, IY1, zf, ceil, style="palace", seed=1,
                   keep_clear=[(hx0 - 0.1, 0.6, hx0 + 0.1, IY1), (hx0 - 0.1, -6.4, hx0 + 0.1, -4.8),
-                              (hx1 - 0.1, -5.4, hx1 + 0.1, -2.6), (hx1 - 0.1, 2.3, hx1 + 0.1, 4.9)])
+                              (hx1 - 0.1, -5.4, hx1 + 0.1, -2.6), (hx1 - 0.1, 2.3, hx1 + 0.1, 4.9),
+                              (hx1 - 0.1, 1.65, hx1 + 0.1, 2.35)])
     DT.switch(nc, -1.35, YBAY + TE, zf + 1.1, 180.0)
-    DT.exit_sign(nc, aset, 0.0, YBAY + TE, zf + 3.5, 180.0)
+    DT.exit_sign(nc, aset, 1.4, YBAY + TE, zf + 2.6, 180.0)              # (beside the door: the transom fills the head)
     DT.desk_set(nc, aset, 2.88, -4.0, zf + 1.05, 90.0, "office", seed=4, w=1.6, d=0.5)
     DT.calendar(nc, hx1, -1.0, zf + 1.5, -90.0, seed=2)
     # the stair: runner, gallery of photos going up, sloped panelling
@@ -1665,8 +1690,8 @@ def _dress_ground(aset, mb, nc):
     for k, (y, a) in enumerate(((1.3, "SM_Int_Frame"), (2.25, "SM_Int_Frame"), (3.1, "SM_Int_Painting"),
                                 (4.0, "SM_Int_Frame"), (4.9, "SM_Int_Frame"))):
         aset.prop(a, (hx0, y, rz(y) + 1.45), 90.0)
-    _poly2(mb, [(hx0 + 0.012, 0.75, zf), (hx0 + 0.012, 5.88, FLOORS[1]), (hx0 + 0.012, 5.88, FLOORS[1] + 0.9),
-                (hx0 + 0.012, 0.75, zf + 0.9)], K.WOOD)
+    mb.poly([(hx0 + 0.012, 0.75, zf), (hx0 + 0.012, 5.88, FLOORS[1]), (hx0 + 0.012, 5.88, FLOORS[1] + 0.9),
+             (hx0 + 0.012, 0.75, zf + 0.9)], K.WOOD)
     mb.beam((hx0 + 0.03, 0.75, zf + 0.92), (hx0 + 0.03, 5.88, FLOORS[1] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
 
     # ================= common lounge
@@ -1676,7 +1701,7 @@ def _dress_ground(aset, mb, nc):
     K.wainscot(mb, (xb, IY1), (xa, IY1), zf, 0.8, K.WOOD, cap=K.TRIM_WOOD)
     K.wainscot(mb, (xb, IY0), (xb, IY1), zf, 0.8, K.WOOD, cap=K.TRIM_WOOD,
                gaps=[(2.2, 4.2), (IY1 - 0.95 - 0.05, IY1 + 0.95 + 0.05)])
-    K.wainscot(mb, (xa, -1.8), (xa, IY1), zf, 0.8, K.WOOD, cap=K.TRIM_WOOD, gaps=[(0.9, 2.7)])
+    K.wainscot(mb, (xa, IY1), (xa, -1.8), zf, 0.8, K.WOOD, cap=K.TRIM_WOOD, gaps=[(IY1 - 0.9, IY1 + 0.9)])
     frames(aset, [("SM_Int_Frame", -7.85, IY1, zf + 1.85, 0.0), ("SM_Int_Frame", -10.55, IY1, zf + 1.55, 0.0),
                   ("SM_Int_Painting", -13.25, IY1, zf + 1.5, 0.0), ("SM_Int_Frame", -7.85, IY0, zf + 1.6, 180.0),
                   ("SM_Int_Frame", -13.25, IY0, zf + 1.6, 180.0), ("SM_Int_WallClock", -10.55, IY0, zf + 2.4, 180.0)])
@@ -1707,8 +1732,8 @@ def _dress_ground(aset, mb, nc):
     for y in (-2.0, 2.0):
         DT.coat_hooks(nc, xa, y, zf + 1.78, 90.0, n=3, dorm="ra", jackets=2, seed=int(y + 5))
     for y in (-3.4, 3.4):
-        DT.duel_disk(nc, -18.85, y + 0.62, zf + 0.765, 10.0)
-        DT.card_spread(nc, -19.5, y - 0.2, zf + 0.77, 0.0, n=4, seed=int(y + 9))
+        DT.duel_disk(nc, -18.6, y + 0.05, zf + 0.765, 100.0)
+        DT.card_spread(nc, -19.05, y - 0.65, zf + 0.77, 90.0, n=4, seed=int(y + 9))
     P(aset, "SM_Int_Ball", -17.4, -6.2, zf, 0.0)
     K.poster(nc, aset, xa, -5.6, zf + 1.75, 90.0, 0.6, 0.85, "M_IntPoster2", text="SPELL SPEED", text_size=0.06)
 
@@ -1757,10 +1782,10 @@ def _dress_ground(aset, mb, nc):
             nc.cylinder((xa + 0.2 + j * 0.13, y + 0.15, zf + 0.92), 0.05, 0.22,
                         rnd.choice(("M_IntFabricBlue", "M_IntFabricOrange", "M_IntTrimWhite")), seg=8)
         nc.box((xa + 0.65, y, zf + 0.75), (0.004, 0.18, 0.05), "M_IntPaper")
-    for k, (x, y) in enumerate(((7.4, 1.6), (9.4, 5.6), (6.6, 6.2))):
+    for k, (x, y) in enumerate(((9.95, 2.45), (6.6, 6.2))):            # (clear of the door and its swing)
         P(aset, "SM_Int_Basket", x, y, zf, k * 40.0)
         nc.sphere((x, y, zf + 0.1), 0.15, ("M_IntFabricWhite", "M_IntFabricYellow")[k % 2], seg=8, rings=5)
-    laundry_line(nc, 6.0, 9.7, 1.45, zf + 2.1, ("M_DetJacketYellow", "M_IntFabricWhite", "M_IntFabricBlue",
+    laundry_line(nc, 6.2, 9.6, 1.9, zf + 2.95, ("M_DetJacketYellow", "M_IntFabricWhite", "M_IntFabricBlue",
                                                  "M_IntFabricYellow"), seed=3)
     # ironing board + iron
     with nc.at((9.0, 2.4, zf), rot=0.0):
@@ -1771,6 +1796,7 @@ def _dress_ground(aset, mb, nc):
     K.poster(nc, aset, xb, 5.6, zf + 1.6, -90.0, 0.6, 0.8, "M_IntPaper", text="LAUNDRY RULES",
              text_color=(0.45, 0.28, 0.05), text_size=0.05)
     nc.box((8.2, 3.9, zf + 0.91), (0.5, 0.35, 0.03), "M_IntFabricWhite")                    # folded clothes
+    nc.box((8.2, 3.9, zf + 0.006), (1.6, 2.0, 0.012), K.BLACK)                         # rubber mat at the table
     nc.box((8.25, 3.95, zf + 0.94), (0.45, 0.3, 0.03), "M_DetJacketYellow")
 
     # ================= dorm kitchen
@@ -1833,8 +1859,8 @@ def _dress_upper(aset, mb, nc, fi):
     if fi == 1:     # the 2F -> 3F flight climbs along the east wall
         stair_runner(nc, 4.25, 0.75, FLOORS[1], FLOORS[2], 90.0, width=0.75)
         rz = lambda y: zf + (y - 0.75) / 0.27 * (FLOORS[2] - zf) / 19
-        _poly2(mb, [(hx1 - 0.012, 0.75, zf), (hx1 - 0.012, 0.75, zf + 0.9), (hx1 - 0.012, 5.88, FLOORS[2] + 0.9),
-                    (hx1 - 0.012, 5.88, FLOORS[2])], K.WOOD)
+        mb.poly([(hx1 - 0.012, 0.75, zf), (hx1 - 0.012, 0.75, zf + 0.9), (hx1 - 0.012, 5.88, FLOORS[2] + 0.9),
+                 (hx1 - 0.012, 5.88, FLOORS[2])], K.WOOD)
         mb.beam((hx1 - 0.03, 0.75, zf + 0.92), (hx1 - 0.03, 5.88, FLOORS[2] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
         for y in (1.4, 2.5, 3.6, 4.7):
             aset.prop("SM_Int_Frame" if y < 3 else "SM_Int_Painting", (hx1, y, rz(y) + 1.45), -90.0)
@@ -1857,9 +1883,9 @@ def _dress_upper(aset, mb, nc, fi):
                       keep_clear=[(hx0 - 0.1, -6.4, hx0 + 0.1, -1.0), (hx1 - 0.1, 0.6, hx1 + 0.1, IY1),
                                   (hx0 - 0.1, 0.9, hx0 + 0.1, 6.7)])
     else:           # 3F: library + the attic stair on the west wall
-        stair_runner(nc, (HOLE_C[0] + HOLE_C[2]) / 2 - 0.02, 6.5, FLOORS[2], ZA, -90.0, width=0.75)
-        _poly2(mb, [(hx0 + 0.012, 6.5, zf), (hx0 + 0.012, 0.83, ZA), (hx0 + 0.012, 0.83, ZA + 0.9),
-                    (hx0 + 0.012, 6.5, zf + 0.9)], K.WOOD)
+        stair_runner(nc, (HOLE_C[0] + HOLE_C[2]) / 2 - 0.02, ATTIC_Y, FLOORS[2], ZA, -90.0, width=0.75)
+        mb.poly(list(reversed([(hx0 + 0.012, ATTIC_Y, zf), (hx0 + 0.012, HOLE_C[1], ZA),
+                               (hx0 + 0.012, HOLE_C[1], ZA + 0.9), (hx0 + 0.012, ATTIC_Y, zf + 0.9)])), K.WOOD)
         # window seats in the bay + low bookcases between them
         for x in (-3.0, 0.0, 3.0):
             mb.box_mm((x - 0.72, by, zf), (x + 0.72, by + 0.45, zf + 0.42), K.WOOD)
@@ -1914,10 +1940,10 @@ def _dress_upper(aset, mb, nc, fi):
     yc, ye = RYF, IY0
     DT.dress_room(aset, mb, nc, xa, ye, xb, yc, zf, ceil, style="service", seed=40 + fi,
                   keep_clear=[(xa - 0.1, ye, xa + 0.1, yc - 1.4), (17.9, yc - 0.1, xb, yc + 0.1)])
-    for k in range(4):                                    # towels on a rail along the east wall
-        with nc.at((xb - 0.04, -5.05 + k * 0.42, zf + 1.35), rot=-90.0):
+    for k in range(4):                                    # towels on a rail along the east wall (over the cart)
+        with nc.at((xb - 0.04, -4.35 + k * 0.42, zf + 1.45), rot=-90.0):
             nc.box((0, 0, 0), (0.34, 0.03, 0.55), ("M_IntFabricWhite", "M_IntFabricYellow", "M_IntFabricBlue")[k % 3])
-    nc.box((xb - 0.05, -4.4, zf + 1.63), (0.03, 1.7, 0.03), K.METAL)
+    nc.box((xb - 0.05, -3.7, zf + 1.73), (0.03, 1.7, 0.03), K.METAL)
     rack(mb, nc, aset, xb - 0.22, -6.0, zf, -90.0, w=1.0, d=0.4, levels=(0.1, 0.55, 1.0, 1.45), kind="store",
          seed=fi + 3)
     for k in range(3):                                    # soap dispensers + hand dryer
@@ -1955,7 +1981,7 @@ def _dress_more(aset, mb, nc):
     P(aset, "SM_Int_Radio", -PART[2] + TP / 2 + 0.3, 2.45, zf + 1.18, 90.0)
     with lift(zf, mb, nc):                                  # alcove shelves either side of the chimney breast
         for y in (-1.8, 1.75):
-            K.bookcase(mb, nc, -BAYX - TP / 2 - 0.16, y, -90.0, w=1.3, d=0.3, h=2.2, shelves=5, rng_seed=int(y * 10) + 160)
+            K.bookcase(mb, nc, -BAYX - TP / 2 - 0.19, y, -90.0, w=1.3, d=0.3, h=2.2, shelves=5, rng_seed=int(y * 10) + 160)
     # ---- library: second reading corner, book cart, piles by the chairs
     z3 = FLOORS[2]
     P(aset, "SM_Int_Armchair", 3.6, -5.75, z3, 200.0)
@@ -1978,11 +2004,11 @@ def _dress_more(aset, mb, nc):
             for k in range(14):
                 nc.box((-0.35 + k * 0.05, 0, zz + 0.12), (0.04, 0.28, 0.24), K.FABRICS[(k * 3) % 7])
     # ---- washroom: cleaning cart parked mid-room
-    for fi in (1, 2):
-        P(aset, "SM_Int_ToolCart", 19.4, -4.4, FLOORS[fi], 0.0)
+    for fi in (1, 2):               # (against the east wall: the shower stall and the floor stay free)
+        P(aset, "SM_Int_ToolCart", IX1 - 0.35, -3.75, FLOORS[fi], 90.0)
         with lift(FLOORS[fi], mb, nc):
-            K.wardrobe(mb, IX1 - 0.28, -3.0, -90.0, w=0.8, d=0.55, h=2.0, mat=K.TRIM_WHITE)
-        nc.cylinder((20.6, -4.4, FLOORS[fi]), 0.18, 0.5, "M_IntSteelBlue", seg=12, cap_top=False)
+            K.wardrobe(mb, IX1 - 0.28, -5.0, -90.0, w=0.8, d=0.55, h=2.0, mat=K.TRIM_WHITE)
+        nc.cylinder((20.75, -6.05, FLOORS[fi]), 0.18, 0.5, "M_IntSteelBlue", seg=12, cap_top=False)
     # ---- corridor ends: tall plants
     for fi in (1, 2):
         for wing in (-1, 1):
@@ -2022,7 +2048,8 @@ def _dress_more(aset, mb, nc):
         if k < 5:
             nc.beam((25.35, y, CZ + 0.86), (25.35, y + 1.0, CZ + 0.86), 0.03, 0.03, "M_IntFabricRed")
     nc.box((25.0, -1.4, CZ + 3.4), (0.05, 2.4, 0.45), "M_AcademyYellow")      # hanging sign
-    nc.box((25.0, -1.4, CZ + 3.8), (0.01, 2.0, 0.4), K.BLACK)
+    for dy in (-1.0, 1.0):                                                   # hangers to the ceiling
+        nc.box((25.0, -1.4 + dy, (CZ + 3.625 + CZ + CWH - 0.3) / 2), (0.02, 0.02, CWH - 0.3 - 3.625), K.BLACK)
     aset.text("SERVING LINE", (24.97, -1.4, CZ + 3.3), -90.0, size=0.2, color=(0.45, 0.25, 0.05))
     aset.text("SERVING LINE", (25.03, -1.4, CZ + 3.3), 90.0, size=0.2, color=(0.45, 0.25, 0.05))
     for k in range(6):
@@ -2037,6 +2064,10 @@ def _dress_more(aset, mb, nc):
         xa2, xb2 = PART[2] + TP / 2, IX1
         nc.box((xa2 + 0.9, -4.6, z + 0.006), (0.55, 2.6, 0.012), "M_IntFabricBlue")
         nc.box((19.85, -2.75, z + 0.006), (3.3, 0.45, 0.012), "M_IntFabricBlue")
+        for k in range(9):                                     # wooden duckboards (by the bench, mid-floor)
+            nc.box((18.75 + k * 0.165, -5.45, z + 0.02), (0.12, 1.0, 0.04), K.WOOD)
+        for k in range(11):
+            nc.box((18.35 + k * 0.165, -3.95, z + 0.02), (0.12, 1.2, 0.04), K.WOOD)
         wall_shelf(mb, nc, aset, xa2, -4.55, z + 2.1, 90.0, w=2.6, d=0.22, kind="store", seed=fi + 30)
         for wx in (17.3, 20.0):
             rack(mb, nc, aset, wx, IY0 + 0.21, z, 180.0, w=1.1, d=0.38, levels=(0.08, 0.4, 0.72), kind="store",
@@ -2056,7 +2087,7 @@ def _dress_more(aset, mb, nc):
                     bx = wing * dx - 0.85
                     with nc.at((bx, y, z + 1.5), rot=yaw):
                         nc.box((0, -0.01, 0), (0.42, 0.02, 0.32), "M_IntCork")
-                        nc.box((0, -0.012, 0), (0.46, 0.016, 0.36), K.TRIM_WOOD)
+                        nc.box((0, -0.008, 0), (0.46, 0.016, 0.36), K.TRIM_WOOD)
                         for k in range(3):
                             nc.box((-0.12 + k * 0.12, -0.022, rnd.uniform(-0.06, 0.06)), (0.09, 0.004, 0.12),
                                    rnd.choice(("M_IntPaper", "M_IntPoster1", "M_IntPoster2", "M_IntPoster4")))
@@ -2131,20 +2162,23 @@ def attic(aset, mb, nc):
     z = ZA
     hx0, hy0, hx1, hy1 = HOLE_C
     # floor boards (around the stairwell), stair from 3F (climbs towards the ridge, -y)
-    for (a, b, c, d) in ((IX0, IY0, hx0, IY1), (hx1, IY0, IX1, IY1), (hx0, IY0, hx1, 0.83), (hx0, hy1, hx1, IY1)):
+    for (a, b, c, d) in ((IX0, IY0, hx0, IY1), (hx1, IY0, IX1, IY1), (hx0, IY0, hx1, hy0), (hx0, hy1, hx1, IY1)):
         K.floor_planks(mb, a, b, c, d, z, mat=K.WOODFLOOR, along="x", pitch=0.3)
     sx = (hx0 + hx1) / 2 - 0.02
-    K.stairs(mb, sx, 6.5, FLOORS[2], z, -90.0, 1.1, mat=K.WOOD, riser=K.TRIM_WHITE, rail=K.TRIM_WOOD, run=0.27,
+    K.stairs(mb, sx, ATTIC_Y, FLOORS[2], z, -90.0, 1.1, mat=K.WOOD, riser=K.TRIM_WHITE, rail=K.TRIM_WOOD, run=0.27,
              rail_sides=(1,))
     for xs in (sx - 0.58, sx + 0.58):          # stringers
-        mb.beam((xs, 6.5, FLOORS[2] + 0.08), (xs, 0.83, z - 0.1), 0.06, 0.36, K.TRIM_WOOD)
+        mb.beam((xs, ATTIC_Y, FLOORS[2] + 0.08), (xs, hy0, z - 0.1), 0.06, 0.36, K.TRIM_WOOD)
     # closed side under the stair (3F) + guard rails round the stairwell in the attic
-    _poly2(mb, [(sx + 0.6, 6.5, FLOORS[2]), (sx + 0.6, 3.45, FLOORS[2]), (sx + 0.6, 3.45, FLOORS[2] + 2.0)],
-           K.WOOD)
-    K.railing(mb, [(hx1, 0.95), (hx1, hy1), (hx0, hy1)], z, h=1.0, mat=K.TRIM_WOOD, spacing=0.13)
+    tri = [(ATTIC_Y, FLOORS[2]), (ATTIC_Y - 3.05, FLOORS[2]), (ATTIC_Y - 3.05, FLOORS[2] + 2.0)]
+    mb.poly([(sx + 0.6, y, zz) for y, zz in reversed(tri)], K.WOOD)                 # (faces the 3F room)
+    mb.poly([(sx + 0.588, y, zz) for y, zz in tri], K.WOOD)                         # (faces under the stair)
+    K.railing(mb, [(hx1, hy0 + 0.12), (hx1, hy1), (hx0, hy1)], z, h=1.0, mat=K.TRIM_WOOD, spacing=0.13)
     # walls closing off the void under the front cross gable (pediment)
     yk = -2.2
     mb.box_mm((-5.55, yk - 0.1, z), (5.55, yk, _lin(yk) + 0.05), IN_WHITE)
+    # (the void is closed: a board at the pediment's base seals the hollow cross gable above it)
+    mb.box_mm((-5.45, IY0, ZRB - 0.02), (5.45, yk - 0.1, ZRB), IN_WHITE)
     for x in (-5.5, 5.5):
         _poly2(mb, [(x, yk, z), (x, -_y_at(z + RTH), z), (x, yk, _lin(yk))], IN_WHITE)
     # roof structure: ridge beam, rafters, hip rafters, collar ties; chimney stacks; light
@@ -2233,7 +2267,7 @@ def attic(aset, mb, nc):
     zp = z + 1.32
     mb.box_mm((xd - 0.9, 2.5, z), (xd + 0.9, 4.45, zp), K.WOOD_DARK, mats={"+z": K.WOODFLOOR})
     with lift(z, mb, nc):
-        K.stairs(mb, xd, 0.54, 0.0, zp - z, 90.0, 1.2, mat=K.WOOD, riser=K.TRIM_WHITE, run=0.28)
+        K.stairs(mb, xd, 0.52, 0.0, zp - z, 90.0, 1.2, mat=K.WOOD, riser=K.TRIM_WHITE, run=0.28)
     for x in (xd - 0.9, xd + 0.9):
         K.railing(mb, [(x, 2.55), (x, 3.6)], zp, h=0.9, mat=K.TRIM_WOOD, spacing=0.13)
     # telescope on a tripod, aimed out of the window at the sea sky
@@ -2337,6 +2371,12 @@ def _cafeteria(aset, mb, nc, inc):
     # automatic doors in the existing doorways (front entrance + sea terrace)
     aset.door((CX0 + 4.5, CY0 + 0.125, CZ), 0.0, 2.0, 2.85, "ra", double=True)
     aset.door((CX1 - 12.5, CY1 - 0.125, CZ), 180.0, 1.6, 2.6, "ra", double=True)
+    for dx, yi, w, h in ((CX0 + 4.5, CY0 + 0.25, 2.0, 2.85), (CX1 - 12.5, CY1 - 0.25, 1.6, 2.6)):
+        s = 1 if yi > 0 else -1                # architrave on the inner face (s: into the wall)
+        for sx in (-1, 1):
+            mb.box((dx + sx * (w / 2 + 0.045), yi - s * 0.015, CZ + h / 2 + 0.045), (0.09, 0.03, h + 0.09),
+                   K.TRIM_WHITE)
+        mb.box((dx, yi - s * 0.015, CZ + h + 0.045), (w, 0.03, 0.09), K.TRIM_WHITE)
     # window mullions (outside), pilasters, base, cornice
     def mull(p0, p1, specs):
         dx, dy = p1[0] - p0[0], p1[1] - p0[1]
@@ -2363,9 +2403,9 @@ def _cafeteria(aset, mb, nc, inc):
         mb.box((x, CY1 + 0.05, (CZ + zt) / 2), (0.3, 0.14, CWH), TRIM)
     for z0, z1, out in ((CZ - 0.1, CZ + 0.18, 0.12), (zt - 0.45, zt - 0.15, 0.3), (zt - 0.6, zt - 0.45, 0.12)):
         base = z0 < CZ
-        _strip(mb, CX0, CY0 - out, CX1 + out, CY0 + 0.1, z0, z1, TRIM, "x",
+        _strip(mb, CX0 - 0.05, CY0 - out, CX1 + out, CY0 + 0.1, z0, z1, TRIM, "x",
                [(CX0 + 3.5, CX0 + 5.5)] if base else ())
-        _strip(mb, CX0, CY1 - 0.1, CX1 + out, CY1 + out, z0, z1, TRIM, "x",
+        _strip(mb, CX0 - 0.05, CY1 - 0.1, CX1 + out, CY1 + out, z0, z1, TRIM, "x",
                [(CX1 - 13.3, CX1 - 11.7)] if base else ())
         mb.box_mm((CX1 - 0.1, CY0 + 0.1, z0), (CX1 + out, CY1 - 0.1, z1), TRIM)
     # gable roof, ridge along x, gable faces the sea-side terrace end (+x)
@@ -2381,7 +2421,8 @@ def _cafeteria(aset, mb, nc, inc):
                 mb.box((0, 0, 0), (0.1, 0.05, 0.3 if k % 2 == 0 else 0.18), "M_Gold")
     # entrance: landing, steps, canopy, sign
     ex = CX0 + 4.5
-    mb.box_mm((ex - 1.8, CY0 - 1.6, FOUND), (ex + 1.8, CY0, CZ), STONE, mats={"+z": "M_Paving"})
+    mb.box_mm((ex - 1.8, CY0 - 1.6, FOUND), (ex + 1.8, CY0 - 0.1, CZ), STONE, mats={"+z": "M_Paving"},
+              skip=("+y",))                                   # (abuts the foundation)
     mb.box_mm((ex - 1.8, CY0 - 1.95, FOUND), (ex + 1.8, CY0 - 1.6, 0.25), STONE, mats={"+z": "M_Paving"})
     mb.box_mm((ex - 1.9, CY0 - 1.9, 3.45), (ex + 1.9, CY0, 3.62), TRIM)
     mb.box_mm((ex - 1.95, CY0 - 2.0, 3.35), (ex + 1.95, CY0 - 1.9, 3.85), "M_AcademyYellow")
@@ -2417,7 +2458,7 @@ def _cafeteria_interior(aset, mb, inc, zt):
     yellow pendant lamps, menu board, plants and a sun banner."""
     xi = CX0 + 0.25                              # inner face of the west wall
     # kitchen pass door: architrave + a step down from the raised threshold
-    mb.box_mm((xi, KDOOR_Y - 0.6, CZ), (xi + 0.32, KDOOR_Y + 0.6, ZG - 0.15), "M_Marble")
+    mb.box_mm((xi, KDOOR_Y - 0.6, CZ), (xi + 0.5, KDOOR_Y + 0.6, ZG - 0.15), "M_Marble")
     for s in (-1, 1):
         mb.box((xi + 0.015, KDOOR_Y + s * 0.545, ZG + 1.1), (0.03, 0.09, 2.2), TRIM)
     mb.box((xi + 0.015, KDOOR_Y, ZG + 2.195), (0.03, 1.18, 0.09), TRIM)
@@ -2517,12 +2558,12 @@ def _grounds(aset, mb, nc):
     mb.box_mm((-24.0, -15.5, -0.4), (39.0, -11.0, 0.05), "M_Paving")
     mb.box_mm((-24.0, -11.0, -0.4), (-4.3, -9.0, 0.05), "M_Paving")
     mb.box_mm((4.3, -11.0, -0.4), (39.0, -9.0, 0.05), "M_Paving")
-    mb.box_mm((CX0, -9.0, -0.4), (CX1 + 2.0, CY0, 0.05), "M_Paving")
+    mb.box_mm((CX0, -9.0, -0.4), (CX1 + 2.0, CY0 - 0.1, 0.05), "M_Paving")
     mb.box_mm((-2.0, -46.0, -0.4), (2.0, -15.5, 0.05), "M_Paving")
     for s in (-1, 1):
-        mb.box_mm((s * 2.0 - 0.1, -46.0, -0.2), (s * 2.0 + 0.1, -15.5, 0.1), TRIM)
-    mb.box_mm((-24.0, -15.6, -0.2), (-2.0, -15.4, 0.1), TRIM)
-    mb.box_mm((2.0, -15.6, -0.2), (39.0, -15.4, 0.1), TRIM)
+        mb.box_mm((s * 2.0 - 0.1, -46.1, -0.2), (s * 2.0 + 0.1, -15.5, 0.1), TRIM)
+    mb.box_mm((-24.1, -15.6, -0.2), (-2.0, -15.4, 0.1), TRIM)
+    mb.box_mm((2.0, -15.6, -0.2), (39.1, -15.4, 0.1), TRIM)
     # cross path to the benches
     mb.box_mm((-9.0, -31.0, -0.4), (9.0, -28.6, 0.04), "M_Paving")
     # flower beds along the facade
@@ -2603,11 +2644,11 @@ def _sockets(aset):
                  ("SM_Bush_B", (-12.0, 9.5)), ("SM_Bush_A", (8.0, 9.0)), ("SM_FlowerBush_Blue", (-5.0, 9.0)),
                  ("SM_FlowerBush_Blue", (5.0, 9.0)), ("SM_Bush_B", (40.0, 0.0)), ("SM_Bush_A", (-40.0, -6.0))):
         aset.prop(a, (p[0], p[1], 0.0), (p[0] * 29) % 360)
-    aset.npc((-5.0, -20.0, 0.0), 30.0, dorm="ra", wander=8.0)
+    aset.npc((-1.0, -21.0, 0.05), 30.0, dorm="ra", wander=8.0)     # (on the walkway)
     aset.npc((9.0, -13.0, 0.05), 200.0, dorm="ra", wander=6.0)
     aset.npc((29.0, -8.5, 0.05), 0.0, dorm="ra", wander=5.0)
     aset.npc((32.0, 10.5, CZ), 90.0, dorm="ra", wander=3.0)
-    aset.npc((28.0, 0.4, CZ), 90.0, dorm="ra", wander=2.0)
+    aset.npc((28.6, -1.2, CZ), 90.0, dorm="ra", wander=2.0)        # (in the aisle, not on a chair)
     aset.audio("A_Crowd", (29.5, 0.0, 1.5), radius=14.0, volume=0.35)
     aset.audio("A_Wind", (0.0, 0.0, 14.0), radius=40.0, volume=0.4)
 

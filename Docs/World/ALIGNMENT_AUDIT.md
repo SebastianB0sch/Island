@@ -149,9 +149,9 @@ overworld, its interiors, the portal-cell interiors and the optional Fab nature 
 - Slifer genkan shoe shelf floats ~7 cm; ground-floor rear window frames are 25 cm above their
   openings; posters overlap tapestries; Banner's flasks float; most room furniture sits 3 cm
   inside the tatami; flush panel lights intersect ceiling battens.
-- Ra kitchen back-wall shelves are embedded in the wall (yaw 180 should be 0); laundry wardrobe
-  faces the wall (yaw 180 should be 0); hall banners/exit sign penetrate the 2F slab; the attic
-  stair intersects the 3F slab; the servery sign penetrates the cafeteria ceiling.
+- Ra kitchen back-wall shelves and laundry wardrobe face the room (yaw 0). ~~Hall banners/exit sign
+  penetrate the 2F slab; the attic stair intersects the 3F slab; the servery sign penetrates the
+  cafeteria ceiling~~ fixed 2026-11-11 (see RA_LAYOUT.md).
 - These are small geometry edits but need a re-audit after the fixes.
 
 ### Windows / doors (residual)
@@ -161,8 +161,9 @@ overworld, its interiors, the portal-cell interiors and the optional Fab nature 
   2026-11-10: the panes beside the portals are left out (`fwin(omit=...)`); see ACADEMY_LAYOUT.md.
   Still open: 24 painted `M_Glass` panes on the wing north face sit in front of walkable lecture
   halls (not covered by the `PAINTED_OK` reason).
-- RA dorm curtains intersect the inside sills; RA upper-floor doors have a ~3.5 cm gap under
-  the leaf; Slifer/RA cafeteria leaves are ~15 mm below the finished floor.
+- ~~RA dorm curtains intersect the inside sills~~ fixed 2026-11-11 (RA_LAYOUT.md). Still open: RA
+  upper-floor doors have a ~3.5 cm gap under the leaf; Slifer/RA cafeteria leaves are ~15 mm below the
+  finished floor.
 - Academy main/side portal leaves are not on the wall middle plane; entry-step tops overlap
   leaves by 5 mm.
 - No automated check compares a door socket's width/height with the actual wall cut, or a

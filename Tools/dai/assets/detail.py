@@ -70,14 +70,14 @@ def _P(x, y, yaw, dx, dy):
 def switch(nc, x, y, z, yaw, gang=2):
     """Light switch plate on a wall at (x, y) (wall face), local -Y into the room, centre height z."""
     with nc.at((x, y, z), rot=yaw):
-        nc.box((0, -0.005, 0), (0.08 + 0.02 * gang, 0.01, 0.12), "M_DetSwitch")
+        nc.box((0, -0.005, 0), (0.08 + 0.02 * gang, 0.01, 0.12), "M_DetSwitch", skip=("+y",))   # (no face in the wall)
         for k in range(gang):
             nc.box((-0.012 * (gang - 1) + 0.024 * k, -0.012, 0), (0.018, 0.006, 0.05), "M_DetSocket")
 
 
 def outlet(nc, x, y, z, yaw):
     with nc.at((x, y, z), rot=yaw):
-        nc.box((0, -0.005, 0), (0.08, 0.01, 0.12), "M_DetSocket")
+        nc.box((0, -0.005, 0), (0.08, 0.01, 0.12), "M_DetSocket", skip=("+y",))
         for dz in (-0.025, 0.025):
             nc.box((-0.012, -0.011, dz), (0.006, 0.003, 0.016), "M_DetSlot")
             nc.box((0.012, -0.011, dz), (0.006, 0.003, 0.016), "M_DetSlot")
@@ -263,7 +263,10 @@ def dress_room(aset, mb, nc, x0, y0, x1, y1, z, z_ceil, style="dorm", seed=0, sk
         a, b, yaw = walls[on]
         ex = dx if on in "sn" else (x0 if on == "w" else x1)
         ey = dy if on in "ew" else (y0 if on == "s" else y1)
-        exit_sign(nc, aset, ex, ey, min(z_ceil - 0.15, z + 2.45), yaw)
+        # over the door head (a tall French door's leaf would sweep through a sign at the usual 2.45 m)
+        head = max([s["props"]["height"] for s in aset.sockets if s["type"] == "door"
+                    and math.hypot(s["pos"][0] - dx, s["pos"][1] - dy) < 0.05 and abs(s["pos"][2] - z) < 0.35] or [2.15])
+        exit_sign(nc, aset, ex, ey, min(z_ceil - 0.15, max(z + 2.45, z + head + 0.14)), yaw)
     if st.get("calendar") and any(n not in skip_walls for n in walls):
         names = [n for n in walls if n not in skip_walls]
         n = rnd.choice(names)

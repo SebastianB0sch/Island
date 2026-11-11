@@ -303,9 +303,10 @@ def wainscot(mb, p0, p1, z0, h, mat, cap=None, gaps=()):
     with mb.at((p0[0], p0[1], z0), rot=yaw):
         for a, b in cuts + [(L, L)]:
             if a - u > 0.05:
-                mb.box(((u + a) / 2, 0.012, h / 2), (a - u, 0.024, h), mat)
+                # 18 mm boards: the 24 mm skirting stands proud of them; no faces against the wall / floor
+                mb.box(((u + a) / 2, 0.009, h / 2), (a - u, 0.018, h), mat, skip=("-y", "-z"))
                 if cap:
-                    mb.box(((u + a) / 2, 0.025, h), (a - u, 0.05, 0.04), cap)
+                    mb.box(((u + a) / 2, 0.025, h), (a - u, 0.05, 0.04), cap, skip=("-y",))
             u = max(u, b)
 
 
@@ -620,9 +621,9 @@ def bookcase(mb, nc, x, y, yaw, w=1.0, d=0.32, h=2.0, shelves=5, mat=WOOD, rng_s
         mb.box((0, d / 2 - 0.01, h / 2), (w, 0.02, h), mat)
         for s in (-1, 1):
             mb.box((s * (w / 2 - 0.015), 0, h / 2), (0.03, d, h), mat)
-        for k in range(shelves + 1):
+        for k in range(shelves + 1):       # boards between the sides, 1 cm behind their front edge
             z = 0.06 + (h - 0.08) * k / shelves
-            mb.box((0, 0, z), (w - 0.03, d, 0.03), mat)
+            mb.box((0, -0.005, z), (w - 0.06, d - 0.03, 0.03), mat)
     with _at(nc, x, y, 0.0, yaw):
         for k in range(shelves):
             z = 0.075 + (h - 0.08) * k / shelves
