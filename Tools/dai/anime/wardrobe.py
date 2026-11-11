@@ -187,15 +187,16 @@ class VBody:
         # rows below the crotch: the pattern block closes between the legs (like the atelier's)
         low = np.arange(crotch - 0.05, zs[0] - 1e-6, 0.006)
         k = 1.0 - 0.55 * _smooth((zs[0] - low) / 0.045)
-        hips = R[:8].max(0)                                               # round both thighs (coats, long tops)
+        hips = R[:14].max(0)                                              # round both thighs (coats, long tops)
         z_th = crotch - 0.03
         o = np.array([0.0, cy[0], z_th])
         thighs = np.array([0.4 - cast(bvh_torso, o + dirs[j] * 0.4, -dirs[j], 0.4) for j in range(nth)])
         thighs = np.where(np.isnan(thighs), 0.0, thighs)
         hips = np.maximum(hips, _blur(np.maximum(thighs, _blur(thighs, 2.0, wrap=(0,))), 1.0, wrap=(0,)))
-        t_open = _smooth((zs[:12] - zs[0]) / (zs[11] - zs[0]))[:, None]
-        R_open = np.concatenate([np.repeat(hips[None], len(low), 0), hips[None] * (1 - t_open) + R[:12] * t_open,
-                                 R[12:]])
+        # ...up to where the trouser legs end inside the hips (leg shells reach ~9 cm above the crotch)
+        t_open = _smooth((zs[:26] - zs[12]) / (zs[25] - zs[12]))[:, None]
+        R_open = np.concatenate([np.repeat(hips[None], len(low), 0), hips[None] * (1 - t_open) + R[:26] * t_open,
+                                 R[26:]])
         R_open = np.maximum(R_open, np.concatenate([R[:1] * k[:, None], R]))
         R = np.concatenate([R[:1] * k[:, None], R])
         cy = np.concatenate([np.full(len(low), cy[0]), cy])
@@ -476,6 +477,7 @@ def _skin_part(body, part):
         legs = [i for i, g in enumerate(names) if g.startswith(LEG_BONES)]
         pel = names.index("pelvis")
         coat = any(b.startswith("coattail_") for b in chains) and part.name == "top"
+        long_top = part.name == "top"            # coats and dresses lie on the thighs; skirts stand off them
         if coat:
             # an open coat's panels ride the thigh under them (their side chains do too); the front centre
             # chain hangs from the pelvis and would hold the panel back while the leg swings through it
@@ -484,7 +486,7 @@ def _skin_part(body, part):
                 if c0 is not None:
                     for name, m in ((f"coattail_01_{j}", part.v[:, 0] > 0), (f"coattail_07_{j}", part.v[:, 0] <= 0)):
                         chains[name] = chains.get(name, 0.0) + c0 * m
-        follow = 1.0 if coat else THIGH_FOLLOW
+        follow = 1.0 if long_top else THIGH_FOLLOW
         k = _smooth(share / 0.05) * (1.0 - follow * _smooth(np.abs(part.v[:, 0]) / 0.07))
         moved = Wp[:, legs].sum(1) * k
         Wp[:, legs] *= (1.0 - k)[:, None]
@@ -559,14 +561,26 @@ def hide_layers(body, parts, shares, log=print):
         log(f"  wardrobe: {gone} hidden faces of inner layers removed")
 
 
-def strip_body(body_obj, body, parts, shares, log=print):
-    """Delete the base model's own tops / bottoms and the skin the garments cover."""
+def _delete_faces(me, pick):
+    """Delete the faces pick(bmesh face) accepts (and the vertices only they used)."""
     import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if pick(f)], context="FACES")
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+
+
+def covered_skin(body_obj, body, parts, shares, log=print):
+    """Delete the base model's own tops / bottoms now; returns the rest-pose centres of the skin faces the
+    garments cover, for strip_skin() - which runs after the materials are made: the body texture is shared
+    by every look on the base model and is repainted from the whole skin (outfit.fix_skin)."""
     from .models import role_of
     me = body_obj.data
     roles = [role_of(s.material.name if s.material else "") for s in body_obj.material_slots]
     tree = _bvh_of(list(zip(parts, shares)), True)
-    co = body.co
     polys = me.polygons
     cen = np.array([polys[f].center[:] for f in body.skin_faces])
     nrm = np.array([polys[f].normal[:] for f in body.skin_faces])
@@ -575,18 +589,19 @@ def strip_body(body_obj, body, parts, shares, log=print):
     hid &= (np.abs(cen[:, 0]) < float(body.h["hand_l"][0]) - 0.02) & (cen[:, 2] < body.z_nb + 0.01)
     hid &= cen[:, 2] > float(body.h["foot_l"][2]) + 0.02
     hid = _keep_near_visible(cen, hid)
-    kill = {f for f, k in zip(body.skin_faces, hid) if k}
-    kill |= {p.index for p in polys if roles[p.material_index] in ("tops", "bottoms")}
-    bm = bmesh.new()
-    bm.from_mesh(me)
-    bm.faces.ensure_lookup_table()
-    bmesh.ops.delete(bm, geom=[bm.faces[i] for i in kill], context="FACES")
-    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
-    bm.to_mesh(me)
-    bm.free()
-    me.update()
+    gone = {i for i, r in enumerate(roles) if r in ("tops", "bottoms")}
+    _delete_faces(me, lambda f: f.material_index in gone)
     log(f"  wardrobe: base outfit removed, {int(hid.sum())} of {len(hid)} skin faces are under the clothes")
-    del co
+    return cen[hid]
+
+
+def strip_skin(body_obj, centres):
+    """Delete the skin faces covered_skin() found (matched by their rest-pose centres)."""
+    if not len(centres):
+        return
+    from scipy.spatial import cKDTree
+    tree = cKDTree(np.asarray(centres))
+    _delete_faces(body_obj.data, lambda f: tree.query(np.array(f.calc_center_median()))[0] < 2e-5)
 
 
 # --------------------------------------------------------------------------- build
@@ -597,7 +612,7 @@ def material_names(key, entry):
 
 def build(arm, meshes, body_obj, rig, entry, key, log=print):
     """Dress a loaded base model in entry["wear"]. Returns (garment object - also appended to `meshes` -,
-    {names of the materials it registered})."""
+    {names of the materials it registered}, centres of the covered skin faces for strip_skin())."""
     from .atelier import build as AB
     from .atelier import mesh as AM
     from .atelier import outfit as OF
@@ -640,7 +655,7 @@ def build(arm, meshes, body_obj, rig, entry, key, log=print):
         p.v = body.to_model(p.v, arm=p.arm_space)
         p.round_c = body.to_model(p.round_c, arm=p.arm_space)[0]
     shares = [_skin_part(body, p) for p in parts]
-    strip_body(body_obj, body, parts, shares, log)
+    hidden = covered_skin(body_obj, body, parts, shares, log)
     hide_layers(body, parts, shares, log)
     parts = [p for p in parts if p.f]
     line = entry.get("outline", 0.0022) * 1.15
@@ -648,4 +663,4 @@ def build(arm, meshes, body_obj, rig, entry, key, log=print):
     meshes.append(obj)
     log(f"  wardrobe: {key}: {len(parts)} parts, {sum(p.tris() for p in parts)} tris, "
         f"hem chains {sorted(kit.cloth_prefixes) or '-'}")
-    return obj, set(specs) | {AM.OUTLINE_MAT}
+    return obj, set(specs) | {AM.OUTLINE_MAT}, hidden

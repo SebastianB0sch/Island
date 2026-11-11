@@ -540,6 +540,28 @@ class AtelierCastTests(unittest.TestCase):
                  "student_m1", "student_f1", "student_f2"]
         self.assertEqual(len({repr(looks.LOOKS[c]["hair_style"]["style"]) for c in world}), len(world))
 
+    def test_looks_wear_generated_outfits(self) -> None:
+        from dai.anime import looks
+        from dai.anime.atelier import outfit
+        for cid, spec in looks.LOOKS.items():
+            wear = spec.get("wear")
+            self.assertTrue(wear, cid)                                     # garments cut for the base body
+            self.assertNotIn("outfit", spec, cid)                          # (not the older tailored sets)
+            for kind, params in wear:
+                self.assertIn(kind, outfit.GARMENTS, f"{cid}: {kind}")
+                self.assertIsInstance(params, dict)
+            tinted = [p for kind, p in wear if p.get("slot") == "tint"]
+            self.assertEqual(bool(tinted), "jacket" in spec.get("tint", ()), cid)   # the "JacketTint" slot
+            if any(kind == "skirt" for kind, _ in wear):
+                self.assertTrue(spec["female"], cid)
+
+        def cut(cid):
+            return repr([(kind, sorted(p)) for kind, p in looks.LOOKS[cid]["wear"]])
+        boys = ["jaden", "syrus", "chumley", "bastion", "chazz", "zane", "crowler", "student_m1"]
+        girls = ["alexis", "jasmine", "mindy", "student_f1", "student_f2"]
+        self.assertGreaterEqual(len({cut(c) for c in boys}), 4)
+        self.assertGreaterEqual(len({cut(c) for c in girls}), 3)
+
     def test_designs_are_complete(self) -> None:
         from dai.anime.atelier import designs
         for key, design in designs.all_designs().items():

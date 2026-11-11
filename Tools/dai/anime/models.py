@@ -9,7 +9,9 @@ an Unreal-ready skeletal mesh:
   * the humanoid bones (VRM humanoid map, or common Mixamo / VRoid names) are renamed to the UE5
     Mannequin scheme (pelvis, spine_01.., upperarm_l, ..), so the same CC0 takes drive every model
     and Unreal's IK Retargeter auto-maps it; hair / skirt / finger helper bones keep their names
-  * the base outfit is replaced by a tailored Duel Academy uniform (outfit.py); the hair is either replaced
+  * the base outfit is replaced by generated garments cut from the body's own cross-sections (wardrobe.py,
+    look key "wear") - or, for a look without them, by a uniform tailored from the skin (outfit.py) or just
+    recoloured; the hair is either replaced
     by generated clump hair (clumphair.py, look key "hair_style") or the base cut is restyled (hairdo.py); hair, eye and shoe textures are recoloured;
     generic students get a neutral jacket / hair that Unreal tints at runtime ("JacketTint" /
     "HairTint" slots)
@@ -398,8 +400,9 @@ def materials(key, base, entry, meshes, alpha=None, log=print, skip=(), rig=None
                                                   2048, mode="RGBA", fresh_against=source)
             if base_png and rig is not None and role == "skin" and "body" in mat.name.lower():
                 from .outfit import fix_skin
-                base_png = fix_skin(obj, slot_idx, base_png, base_png[:-4] + "_bare.png", rig,
-                                    legs=bool(entry.get("body", {}).get("female")))
+                worn = bool(entry.get("wear"))
+                base_png = fix_skin(obj, slot_idx, base_png, base_png[:-4] + ("_plain.png" if worn else "_bare.png"),
+                                    rig, legs=bool(entry.get("body", {}).get("female")), plain_neck=worn)
             target = recolor.get(role)
             if neutral.get(role):
                 target = (0.94, 0.94, 0.94)
@@ -525,6 +528,7 @@ def build_model(cid, entry, key_name, log=print):
     preview_material(K.OUTLINE_MAT)
     from . import hairdo, outfit
     tailored = set()
+    hidden_skin = None
     body = next((m for m in meshes if any(role_of(s.material.name) == "skin" and "body" in s.material.name.lower()
                                           for s in m.material_slots if s.material)), None)
     rig = None
@@ -534,7 +538,7 @@ def build_model(cid, entry, key_name, log=print):
         if entry.get("wear"):
             # generated garments cut from this body's cross-sections (wardrobe.py) replace the base outfit
             from . import wardrobe
-            _, cloth_mats = wardrobe.build(arm, meshes, body, rig, entry, key, log)
+            _, cloth_mats, hidden_skin = wardrobe.build(arm, meshes, body, rig, entry, key, log)
             tailored |= cloth_mats
             _drop_unused_slots(body)
         elif entry.get("outfit"):
@@ -559,6 +563,8 @@ def build_model(cid, entry, key_name, log=print):
         alpha.update(more)
         tailored |= {s.material.name for o in extra for s in o.material_slots if s.material}
     materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig, source=path)
+    if hidden_skin is not None:
+        wardrobe.strip_skin(body, hidden_skin)       # the skin under the clothes (nothing left to poke through)
     tailor_fit = bool(entry.get("outfit")) and not entry.get("wear")
     if body is not None and tailor_fit:
         # cloth fit relaxation: loosen the clothes wherever a take would push an inner layer through them

@@ -1059,7 +1059,7 @@ def tailor(arm, body, entry, key, log=print):
     return t
 
 
-def fix_skin(obj, mat_idx, src_png, dst_png, rig, legs=False):
+def fix_skin(obj, mat_idx, src_png, dst_png, rig, legs=False, plain_neck=False):
     """Paint the base model's body texture back to bare skin where its painted-on clothing would show with
     the uniform: gloves on the hands (and tights on the legs for skirts). The skin tone is sampled from the
     neck."""
@@ -1077,6 +1077,8 @@ def fix_skin(obj, mat_idx, src_png, dst_png, rig, legs=False):
     region = mask & (np.abs(pos[..., 0]) > rig.wrist_x - 0.06)
     if legs:
         region |= mask & (pos[..., 2] < rig.crotch + 0.03) & (np.abs(pos[..., 0]) < rig.shoulder_x + 0.2)
+    if plain_neck:  # painted-on neckwear (a base model's choker) does not go with a generated collar
+        region |= mask & (pos[..., 2] > rig.neck - 0.015) & (pos[..., 2] < rig.neck + 0.07) & (np.abs(pos[..., 0]) < 0.07)
     # Grow the recoloured area a little to cover the seam, but never paint texels
     # that do not belong to the body island (other atlas regions share this texture).
     region = ndimage.binary_dilation(region, iterations=3) & mask

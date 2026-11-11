@@ -104,6 +104,7 @@ def _fit(wear):
     """Layer a garment list for the VRoid bodies: straight trousers instead of leg-hugging ones, the belt
     under the jacket, every outer top clear of the layer below it."""
     out, tops = [], 0
+    skirted = any(kind == "skirt" for kind, _ in wear)
     for kind, p in wear:
         p = dict(p)
         if kind == "pants":
@@ -119,6 +120,8 @@ def _fit(wear):
                 p["ease"] = max(p["ease"], 0.024 if p.get("tail") else 0.019)
             elif tops > 2:
                 p["ease"] = max(p.get("ease", 0.010), 0.026)
+            if skirted and tops > 1 and not p.get("tail"):
+                p["hem"] = max(p.get("hem", 0.98), 1.02)       # cropped at the waistband: clear of the pleats
         out.append((kind, p))
     return out
 
@@ -356,7 +359,7 @@ WEAR = {
     "banner": suit(RED, suit=(0.30, 0.30, 0.34), coat=WHITE),
     "sheppard": suit(GOLD, suit=(0.52, 0.16, 0.20)),
     "mimicry": blazer_m(YELLOW, jacket=CHARCOAL, mark="disc"),
-    "dorothy": dress(RED, dress=(0.80, 0.42, 0.40), apron=CREAM),
+    "dorothy": dress(RED, dress=(0.80, 0.42, 0.40)),
     "fontaine": dress(BLUE, dress=WHITE, legs=(0.22, 0.20, 0.24)),
     "sartyr": suit(YELLOW, suit=shade(YELLOW, v=0.55, s=0.8)),
     "beauregard": vest(YELLOW, vest=shade(YELLOW, v=0.95), mark="disc"),
