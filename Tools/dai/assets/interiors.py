@@ -589,6 +589,86 @@ def _ra_player(props, nocol, aset, cell, theme):
     _slifer_dressing(props, nocol, aset, cell, theme, jackets=1, posters=(("RA YELLOW", 1.6),), dorm="ra")
 
 
+def _balcony_door(props, nocol, x, face_y, w, h, theme, curtain="M_IntFabricNavy"):
+    """Glazed French door pair on the -Y wall face (facing +Y), like the side windows a lit panel in front of the
+    wall: kick panels, stiles, glazing bars, gilt handles, a threshold and navy curtains drawn back beside it on
+    a rod (clear of the leaves)."""
+    trim, gold = theme["trim"], theme.get("gold", "M_Gold")
+    hw = w / 2.0
+    nocol.box((x, face_y + 0.02, h / 2.0), (w, 0.035, h), theme["glass"])
+    for sx in (-1, 1):                                           # outer frame (jambs) + head
+        props.box((x + sx * (hw + 0.045), face_y + 0.045, (h + 0.09) / 2.0), (0.09, 0.09, h + 0.09), trim,
+                  skip=("-z",))
+    props.box((x, face_y + 0.045, h + 0.045), (w, 0.09, 0.09), trim)
+    props.box((x, face_y + 0.06, 0.004), (w + 0.18, 0.12, 0.008), "M_Marble", skip=("-z",))      # threshold
+    for sx in (-1, 1):                                           # the two leaves
+        cx = x + sx * hw / 2.0
+        props.box((cx, face_y + 0.055, 0.008 + 0.21), (hw - 0.02, 0.05, 0.42), trim, skip=("-z",))   # kick panel
+        for ex in (-1, 1):
+            props.box((cx + ex * (hw / 2.0 - 0.05), face_y + 0.055, h / 2.0 + 0.2), (0.08, 0.05, h - 0.4), trim)
+        props.box((cx, face_y + 0.055, h - 0.04), (hw - 0.02, 0.05, 0.08), trim)
+        for k in (1, 2, 3):                                      # glazing bars
+            props.box((cx, face_y + 0.05, 0.43 + (h - 0.51) * k / 4.0), (hw - 0.12, 0.03, 0.025), trim)
+        props.box((x + sx * 0.06, face_y + 0.1, 1.05), (0.025, 0.04, 0.16), gold)                # handles
+    # curtains: rod over the head, panels stacked beside the frame
+    cw = 0.32
+    props.box((x, face_y + 0.16, h + 0.2), (w + 2 * cw + 0.4, 0.03, 0.03), gold)
+    for sx in (-1, 1):
+        cx = x + sx * (hw + 0.12 + cw / 2.0)
+        for k in range(3):
+            fx = cx - cw / 2.0 + cw * (k + 0.5) / 3.0
+            nocol.box((fx, face_y + 0.16 + (0.02 if k % 2 else -0.02), (0.06 + h + 0.15) / 2.0),
+                      (cw / 3.0 + 0.01, 0.025, h + 0.09), curtain)
+
+
+def _gilt_portrait(props, nocol, x, face_y, z, w, h, theme, canvas=("M_IntFabricNavy", "M_IntWoodDark")):
+    """Gilded portrait on the -Y wall face (facing +Y), bottom edge at z."""
+    gold = theme.get("gold", "M_Gold")
+    props.box((x, face_y + 0.025, z + h / 2.0), (w, 0.05, h), gold)
+    nocol.box((x, face_y + 0.054, z + h / 2.0 + h * 0.08), (w - 0.16, 0.008, h * 0.62), canvas[0])
+    nocol.box((x, face_y + 0.054, z + 0.08 + h * 0.06), (w - 0.16, 0.008, h * 0.12), canvas[1])
+    nocol.box((x, face_y + 0.058, z + h * 0.52), (w * 0.22, 0.006, h * 0.3), "M_IntFabricWhite")   # the sitter
+
+
+def _obelisk_player(props, nocol, aset, cell, theme):
+    """The player's Obelisk Blue room after the promotion: the dorm-room kit at Obelisk scale - a large bed
+    with nightstands on the bed mark (anchors.json), a glazed balcony door with navy drapes on the back wall,
+    desk + chair on the side wall, wardrobe, card trunk, an Obelisk poster and a blue jacket by the door."""
+    w, d, h = _dims(cell)
+    fx0, fy0, fx1, fy1 = _faces(cell)
+    bx, by = fx0 + 1.32, fy0 + 1.105                  # (the bed mark: x -2.0)
+    _bed(props, bx, by, 180.0, theme, single=False)
+    ns = 1.57 / 2.0 + 0.25                            # nightstands either side of the headboard + a lamp
+    for s in (-1, 1):
+        nx_ = bx + s * ns
+        props.box((nx_, fy0 + 0.25, 0.27), (0.46, 0.42, 0.54), theme["dark"])
+        props.box((nx_, fy0 + 0.25, 0.555), (0.5, 0.46, 0.03), theme.get("gold", "M_Gold"))
+    props.cylinder((bx - ns, fy0 + 0.25, 0.57), 0.07, 0.3, theme.get("gold", "M_Gold"), seg=10)
+    nocol.cylinder((bx - ns, fy0 + 0.25, 0.87), 0.16, 0.2, theme.get("glow", "M_LampGlow"), seg=12,
+                   radius_top=0.1)
+    aset.light((bx - ns, fy0 + 0.35, 1.05 + FZ), (1.0, 0.8, 0.55), 900.0, 3.5)
+    _balcony_door(props, nocol, 0.45, fy0, 1.3, 2.2, theme)
+    _desk(props, fx1 - 0.31, fy0 + 1.35, 90.0, 1.25, 0.60, 0.74, theme)
+    _chair(props, fx1 - 0.92, fy0 + 1.35, 90.0, theme)
+    _wardrobe(props, fx1 - 0.6, fy1 - 0.31, 180.0, theme)
+    _trunk(props, fx0 + 0.5, fy1 - 0.85, theme)
+    _rug(props, 0.0, 0.2, min(3.0, w - 2.0), min(2.2, d - 2.0), theme)
+    _slifer_dressing(props, nocol, aset, cell, theme, jackets=1, posters=(("OBELISK BLUE", 2.15),), dorm="obelisk")
+    _ceiling_lamp(props, nocol, aset, 0.0, 0.0, h, theme, max(w, d) * 0.58, 4800.0, True, drop=0.3)
+    aset.light((0.45, fy0 + 1.0, 1.6), (0.75, 0.85, 1.0), 1600.0, max(w, d) * 0.4)    # cool fill from the glass
+
+
+def _obelisk_dining(props, nocol, aset, cell, theme):
+    """Obelisk dining room: the dining kit (long table, 12 chairs, sideboard, crest, chandelier) with gilded
+    portraits either side of the crest."""
+    _dining(props, nocol, aset, cell, theme)
+    w, d, h = _dims(cell)
+    fx0, fy0, fx1, fy1 = _faces(cell)
+    for sx in (-1, 1):
+        _gilt_portrait(props, nocol, sx * 3.6, fy0, 1.5, 1.1, 1.45, theme,
+                       canvas=("M_IntFabricNavy", "M_IntWoodDark") if sx < 0 else ("M_IntFabricBlue", "M_IntWoodDark"))
+
+
 def _slifer_bunk_room(props, nocol, aset, cell, theme):
     """Jaden, Syrus and Chumley's room: the Slifer triple bunk in the back-left corner (ladder on the room side),
     a kotatsu on tatami in the middle with the three marks standing round it, Jaden's desk under the window,
@@ -646,6 +726,8 @@ _BY_ID = {
     "academy_chancellor_office": _chancellor,
     "slifer_player_room": _slifer_player,
     "ra_player_room": _ra_player,
+    "obelisk_player_room": _obelisk_player,
+    "obelisk_dining": _obelisk_dining,
     "slifer_jaden_room": _slifer_bunk_room,
 }
 

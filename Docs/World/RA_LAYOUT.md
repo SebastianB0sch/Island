@@ -61,7 +61,12 @@ What changed in the check (it applies to every location):
 - **Kitchen pass door.** The doorway runs through the main wall and the cafeteria wall (0.55 m). The leaf
   hung in the main wall's middle, 13 cm off the doorway's middle; it now hangs in the middle. The step on the
   cafeteria side is 0.5 m deep.
-- **Cafeteria doors** (entrance and terrace) got architraves inside.
+- **Cafeteria doors** (entrance and terrace) got architraves inside. Their leaves stood 2 cm below the
+  cafeteria floor (`mb.room` lays its floor 2 cm above the slab). The doorways now start at that floor, over a
+  5 mm marble threshold, and the leaves stand on it. Slifer's dining-hall entrance and kitchen door had the same
+  fault and got the same fix.
+- **Upper-floor doors.** `ALIGNMENT_AUDIT.md` listed a ~3.5 cm gap under the 2F / 3F leaves. A probe (rays
+  straight down at and either side of every leaf) finds the floor flush under all of them now.
 - **Upper-floor arches** at the wing entrances had architraves on the wing side that sat inside the corridor
   walls. Those are left out (`pwall(trim_l=None)`); the hall side keeps them.
 
@@ -130,5 +135,3 @@ had been exactly at their 35 % detail target. One extra dorm banner near the cam
 
 Not done here:
 - Regenerate the FBXs and the level (`python Tools/build_island.py layout`, then the editor build).
-- Still open from `ALIGNMENT_AUDIT.md`: the Ra upper-floor door leaves leave a ~3.5 cm gap, and the Slifer / Ra
-  cafeteria leaves are ~15 mm below the floor. Those come from the door actor in Unreal, not the geometry.

@@ -2349,7 +2349,7 @@ def _cafeteria(aset, mb, nc, inc):
     mb.box_mm((CX0, CY0 - 0.1, FOUND), (CX1 + 0.1, CY1 + 0.1, CZ), STONE)
     ops = {
         0: [dict(u=1.8, w=2.0, z0=0.75, z1=3.35, glass="M_GlassClear", frame=FRAME),
-            dict(u=4.5, w=2.0, z0=0.0, z1=2.85, frame=FRAME),
+            dict(u=4.5, w=2.0, z0=0.02, z1=2.85, frame=FRAME),     # (z0: the threshold is the floor's level)
             dict(u=7.7, w=2.3, z0=0.75, z1=3.35, glass="M_GlassClear", frame=FRAME),
             dict(u=10.5, w=2.3, z0=0.75, z1=3.35, glass="M_GlassClear", frame=FRAME),
             dict(u=13.3, w=2.3, z0=0.75, z1=3.35, glass="M_GlassClear", frame=FRAME)],
@@ -2359,7 +2359,7 @@ def _cafeteria(aset, mb, nc, inc):
         2: [dict(u=2.6, w=2.4, z0=0.75, z1=3.35, glass="M_GlassClear", frame=FRAME),
             dict(u=5.9, w=2.4, z0=0.75, z1=3.35, glass="M_GlassClear", frame=FRAME),
             dict(u=9.2, w=2.4, z0=0.75, z1=3.35, glass="M_GlassClear", frame=FRAME),
-            dict(u=12.5, w=1.6, z0=0.0, z1=2.6, frame=FRAME)],
+            dict(u=12.5, w=1.6, z0=0.02, z1=2.6, frame=FRAME)],
         # pass door from the dorm kitchen (its floor is 0.3 m higher: raised threshold + step inside)
         3: [dict(u=CY1 - KDOOR_Y, w=1.0, z0=ZG - CZ, z1=ZG - CZ + 2.15)],
     }
@@ -2368,11 +2368,16 @@ def _cafeteria(aset, mb, nc, inc):
     zt = CZ + CWH
     mb.poly([(CX0, CY0, zt - 0.3), (CX0, CY1, zt - 0.3), (CX1, CY1, zt - 0.3), (CX1, CY0, zt - 0.3)],
             "M_WhiteWall")
-    # automatic doors in the existing doorways (front entrance + sea terrace)
-    aset.door((CX0 + 4.5, CY0 + 0.125, CZ), 0.0, 2.0, 2.85, "ra", double=True)
-    aset.door((CX1 - 12.5, CY1 - 0.125, CZ), 180.0, 1.6, 2.6, "ra", double=True)
+    # automatic doors in the existing doorways (front entrance + sea terrace). mb.room lays its floor 2 cm above
+    # the slab: the leaves stand on that floor, over a threshold flush with it (2 cm up from the landings)
+    aset.door((CX0 + 4.5, CY0 + 0.125, CZ + 0.02), 0.0, 2.0, 2.83, "ra", double=True)
+    aset.door((CX1 - 12.5, CY1 - 0.125, CZ + 0.02), 180.0, 1.6, 2.58, "ra", double=True)
     for dx, yi, w, h in ((CX0 + 4.5, CY0 + 0.25, 2.0, 2.85), (CX1 - 12.5, CY1 - 0.25, 1.6, 2.6)):
         s = 1 if yi > 0 else -1                # architrave on the inner face (s: into the wall)
+        # 5 mm marble threshold plate over the 2 cm sill (the room's floor polygon runs on under the wall); the
+        # leaves start 5 mm above their sockets, on the plate
+        ya, yb = sorted((yi, yi + s * 0.25))
+        mb.box_mm((dx - w / 2, ya, CZ + 0.02), (dx + w / 2, yb, CZ + 0.025), "M_Marble", skip=("-z",))
         for sx in (-1, 1):
             mb.box((dx + sx * (w / 2 + 0.045), yi - s * 0.015, CZ + h / 2 + 0.045), (0.09, 0.03, h + 0.09),
                    K.TRIM_WHITE)

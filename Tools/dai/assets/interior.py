@@ -304,7 +304,9 @@ def wainscot(mb, p0, p1, z0, h, mat, cap=None, gaps=()):
         for a, b in cuts + [(L, L)]:
             if a - u > 0.05:
                 # 18 mm boards: the 24 mm skirting stands proud of them; no faces against the wall / floor
-                mb.box(((u + a) / 2, 0.009, h / 2), (a - u, 0.018, h), mat, skip=("-y", "-z"))
+                # (under a cap the boards stop at its underside: their ends do not share the cap's end faces)
+                hb = h - 0.02 if cap else h
+                mb.box(((u + a) / 2, 0.009, hb / 2), (a - u, 0.018, hb), mat, skip=("-y", "-z"))
                 if cap:
                     mb.box(((u + a) / 2, 0.025, h), (a - u, 0.05, 0.04), cap, skip=("-y",))
             u = max(u, b)

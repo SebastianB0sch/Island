@@ -161,9 +161,13 @@ overworld, its interiors, the portal-cell interiors and the optional Fab nature 
   2026-11-10: the panes beside the portals are left out (`fwin(omit=...)`); see ACADEMY_LAYOUT.md.
   Still open: 24 painted `M_Glass` panes on the wing north face sit in front of walkable lecture
   halls (not covered by the `PAINTED_OK` reason).
-- ~~RA dorm curtains intersect the inside sills~~ fixed 2026-11-11 (RA_LAYOUT.md). Still open: RA
-  upper-floor doors have a ~3.5 cm gap under the leaf; Slifer/RA cafeteria leaves are ~15 mm below the
-  finished floor.
+- ~~RA dorm curtains intersect the inside sills~~ fixed 2026-11-11 (RA_LAYOUT.md).
+- ~~RA upper-floor doors have a ~3.5 cm gap under the leaf~~: re-measured 2026-11-11, the floor under every
+  RA room, washroom and balcony leaf is flush with the leaf bottom (probe: rays down at and either side of
+  each leaf).
+  ~~Slifer/RA cafeteria leaves are ~15 mm below the finished floor~~ fixed 2026-11-11: `mb.room` lays its
+  floor 2 cm above the slab; the cafeteria / dining-hall doorways now start at that floor (a threshold flush
+  with it) and the leaves stand on it (Ra front + terrace, Slifer entrance + kitchen door).
 - Academy main/side portal leaves are not on the wall middle plane; entry-step tops overlap
   leaves by 5 mm.
 - No automated check compares a door socket's width/height with the actual wall cut, or a

@@ -122,14 +122,17 @@ python Tools/world/test_interiors.py
 
 - Purpose: Obelisk social/dining scenes. Also serves as the dorm common room.
 - Capacity: ~12 people.
-- Props: long dining table, 12 chairs, chandelier, serving sideboard, portrait, crest.
+- Props: long dining table, 12 chairs, chandelier, serving sideboard, portrait, crest (two gilded portraits
+  either side of the crest: `_obelisk_dining`, see `OBELISK_LAYOUT.md`).
 - Reuse: Obelisk marble/gold palette, SM_LongTable, SM_Chair, chandelier kit.
 
 **`obelisk_player_room` — Obelisk Room (Player)**
 
 - Purpose: Promotion room. Material swap on the Ra/Slifer room kit plus marble trim.
 - Capacity: ~2 people.
-- Props: large bed, desk, wardrobe, card trunk, save/sleep mark, balcony door.
+- Props: large bed, desk, wardrobe, card trunk, save/sleep mark, balcony door (`_obelisk_player`: a double bed
+  with nightstands on the bed mark, a glazed balcony door with navy drapes on the back wall, an Obelisk poster
+  and a blue jacket by the door; see `OBELISK_LAYOUT.md`).
 - Reuse: Obelisk marble/gold palette, SM_Bed, SM_Desk, SM_Wardrobe.
 
 ## 3. Portal plan

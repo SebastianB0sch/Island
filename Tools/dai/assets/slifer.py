@@ -669,7 +669,7 @@ def _dining(aset, mb, nc):
     cy = (DY0 + DY1) / 2
     mb.box_mm((DX0 - 0.1, DY0 - 0.1, FOUND), (DX1 + 0.1, DY1 + 0.1, DZ), CONC)
     ops = {
-        0: [dict(u=2.5, w=1.6, z0=0.0, z1=2.55, frame=TRIM),
+        0: [dict(u=2.5, w=1.6, z0=0.02, z1=2.55, frame=TRIM),      # (z0: the threshold is the floor's level)
             dict(u=6.6, w=2.8, z0=0.95, z1=2.35, glass="M_GlassClear", frame=TRIM)],
         1: [dict(u=2.0, w=1.6, z0=1.0, z1=2.3, glass="M_GlassClear", frame=TRIM),
             dict(u=4.9, w=1.6, z0=1.0, z1=2.3, glass="M_GlassClear", frame=TRIM),
@@ -759,10 +759,12 @@ def _dining(aset, mb, nc):
                 p = (bx, ty + s * 0.25, DZ + 0.78)
                 mb.cylinder(p, 0.12, 0.07, "M_WindowFrame", seg=10, radius_top=0.15)
                 mb.cylinder((p[0], p[1], p[2] + 0.055), 0.12, 0.01, "M_SliferCurry", seg=10)
-    aset.door((DX0 + 2.5, DY0 + 0.1, DZ), 0.0, 1.6, 2.55, "slifer", double=True)
+    # (mb.room lays its floor 2 cm above the slab: the leaves stand on it, over a threshold flush with it)
+    aset.door((DX0 + 2.5, DY0 + 0.1, DZ + 0.02), 0.0, 1.6, 2.53, "slifer", double=True)
+    mb.box_mm((DX0 + 2.5 - 0.8, DY0, DZ + 0.02), (DX0 + 2.5 + 0.8, DY0 + 0.2, DZ + 0.025), "M_Wood", skip=("-z",))
     # partition with the serving counter window
     PY = 3.0
-    aset.door((DX0 + 0.2 + 7.4, PY + 0.075, DZ), 0.0, 0.9, 2.1, "slifer_inner")
+    aset.door((DX0 + 0.2 + 7.4, PY + 0.075, DZ + 0.02), 0.0, 0.9, 2.08, "slifer_inner")
     # architraves round the entrance (inside face) and round the kitchen door (both faces)
     for (cx_, w_, h_, ys) in ((DX0 + 2.5, 1.6, 2.55, (DY0 + 0.2 + 0.015,)),
                               (DX0 + 0.2 + 7.4, 0.9, 2.1, (PY - 0.015, PY + 0.15 + 0.015))):
@@ -772,7 +774,9 @@ def _dining(aset, mb, nc):
                        (0.09, 0.03, h_ + 0.09 - 0.02), K.TRIM_WOOD)
             mb.box((cx_, yy, DZ + h_ + 0.045), (w_ + 0.18, 0.03, 0.09), K.TRIM_WOOD)
     mb.wall((DX0 + 0.2, PY), (DX1 - 0.2, PY), DZ, DWH, 0.15, "M_CreamWall",
-            openings=[dict(u=4.0, w=3.0, z0=0.95, z1=2.1), dict(u=7.4, w=0.9, z0=0.0, z1=2.1)])
+            openings=[dict(u=4.0, w=3.0, z0=0.95, z1=2.1), dict(u=7.4, w=0.9, z0=0.02, z1=2.1)])
+    mb.box_mm((DX0 + 0.2 + 7.4 - 0.45, PY, DZ + 0.02), (DX0 + 0.2 + 7.4 + 0.45, PY + 0.15, DZ + 0.025), "M_Wood",
+              skip=("-z",))
     mb.box_mm((DX0 + 0.2 + 2.5, PY - 0.3, DZ + 0.9), (DX0 + 0.2 + 5.5, PY + 0.45, DZ + 0.97), "M_Wood")
     mb.box_mm((DX0 + 0.2 + 2.4, PY - 0.08, DZ + 2.1), (DX0 + 0.2 + 5.6, PY, DZ + 2.4), DOOR)  # menu header
     aset.text("CURRY  -  RICE  -  MISO", (DX0 + 0.2 + 4.0, PY - 0.11, DZ + 2.25), 0.0, size=0.14,

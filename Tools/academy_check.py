@@ -1,10 +1,12 @@
 """
 Building layout check: the main academy building (dai/assets/academy.py), the Slifer Red dorm
-(dai/assets/slifer.py) or the Ra Yellow dorm (dai/assets/ra.py) audited as a walkable building.
+(dai/assets/slifer.py), the Ra Yellow dorm (dai/assets/ra.py) or the Obelisk Blue boys' dorm (dai/assets/obelisk.py)
+audited as a walkable building.
 
     python Tools/academy_check.py                       # everything (academy)
     python Tools/academy_check.py --location slifer     # the Slifer Red dorm
     python Tools/academy_check.py --location ra         # the Ra Yellow dorm
+    python Tools/academy_check.py --location obelisk_boys   # the Obelisk Blue boys' dorm
     python Tools/academy_check.py --only doors,npcs     # a subset
     python Tools/academy_check.py --json out.json --limit 40
 
@@ -71,6 +73,8 @@ LOCATIONS = {
                    clamp=((-30.0, -24.0), (30.0, 26.0))),
     "ra": dict(module="ra", seeds=[(0.0, -13.5, 0.05), (-14.0, 10.0, 0.0)], seed_r=2.0, leak_z=0.6,
                clamp=((-28.0, -24.0), (42.0, 15.0))),
+    "obelisk_boys": dict(module="obelisk", seeds=[(0.0, -20.0, 0.05), (0.0, -70.0, 0.05)], seed_r=2.5, leak_z=1.9,
+                         clamp=((-50.0, -90.0), (50.0, 70.0))),
 }
 LOC = LOCATIONS["academy"]
 
