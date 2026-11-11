@@ -33,6 +33,7 @@ from . import mesh as M
 
 UV_LENGTH = 1.0                       # metres of hair the texture's v axis covers
 LONG = 0.20                           # free length (m) from which a lock gets a "Long" chain
+BAND_END = 0.156                      # distance from the crown where paint.hair's highlight band ends
 
 
 def _unit(v):
@@ -216,7 +217,7 @@ class Hair:
                 lk.accent = self._is_accent(accent, layer)
 
     def spikes(self, n=16, lift=0.55, free=0.07, rings=(0.20, 0.34, 0.50), start=48.0, flare=0.9, gravity=0.10,
-               width=0.040, droop=0.0, curl=0.0, wave=0.0, up=0.0, accent=False):
+               width=0.040, droop=0.0, curl=0.0, wave=0.0, up=0.0, lift_decay=0.35, accent=False):
         """Spiky cut: locks leave the scalp early, row by row, and point outwards."""
         a0 = np.radians(start)
         for row, s1 in enumerate(rings):
@@ -225,8 +226,8 @@ class Hair:
             for a in az:
                 lk = self.lock(a, 0.03, s1 * self._jit(0.06), free=free * self._jit(0.20) * (1.0 + 0.25 * row),
                                loft=(0.012, 0.018 + 0.003 * row), width=width, thick=0.30,
-                               gravity=gravity + droop * row, flare=flare, lift=lift * (1.0 - 0.35 * row),
-                               curl=curl, wave=wave, up=up * (1.0 - 0.3 * row), kind="short", sector=a)
+                               gravity=gravity + droop * row, flare=flare, lift=lift * (1.0 - lift_decay * row),
+                               curl=curl, wave=wave, up=up * (1.0 - 0.12 * row), kind="short", sector=a)
                 lk.accent = self._is_accent(accent, row)
 
     def tail(self, at=(180.0, 0.36), n=6, free=0.45, direction=(0.0, 0.7, 0.35), spread=0.020, wave=0.0,
@@ -403,7 +404,12 @@ class Hair:
         rings = lk.p[:, None] + side[:, None] * (us[None, :, None] * w[:, None, None] * 0.5) + \
             nrm[:, None] * (bulge[None, :, None] * th[:, None, None])
         cu = np.array([0.0, 0.225, 0.5, 0.775, 1.0, 0.75, 0.5, 0.25, 0.0])
-        v = 1.0 - np.clip((lk.d0 + lk.arc / S) / UV_LENGTH, 0.0, 0.999)
+        dist = lk.d0 + lk.arc / S
+        if lk.kind == "short" and 0 < lk.free_from < K and dist[lk.free_from - 1] < BAND_END:
+            # a spike leaving the scalp above the painted highlight band: the band belongs to the head's
+            # silhouette, not to the middle of a free spike - its free part starts below the band
+            dist[lk.free_from:] += BAND_END - dist[lk.free_from - 1]
+        v = 1.0 - np.clip(dist / UV_LENGTH, 0.0, 0.999)
         p = M.loft("lock", mat, rings, closed=True, cap1=True, us=cu, vs=np.zeros(K))
         C = rings.shape[1] + 1
         p.uv[: K * C, 1] = np.repeat(v, C)

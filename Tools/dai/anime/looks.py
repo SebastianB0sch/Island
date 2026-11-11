@@ -3,7 +3,7 @@ Original looks on the VRoid sample base models.
 
 The cast's faces, bodies and facial rigs are the official VRoid sample avatars (AvatarSample_A / B / C; their
 embedded terms allow modification and redistribution, see Tools/thirdparty/vroid/*/SOURCE.txt). Each cast
-slot gets its own look on top of a base: hair restyle (hairdo.py / hairshape.py), hair and eye colours, face
+slot gets its own look on top of a base: generated clump hair (clumphair.py), hair and eye colours, face
 shape, resting expression, outfit and height. The looks are the project's own designs.
 
 look() builds a cast entry in the vocabulary of models.build_model:
@@ -11,9 +11,14 @@ look() builds a cast entry in the vocabulary of models.build_model:
   model      vroid_a / vroid_b (girls), vroid_c (boys)
   outfit     None: the base model's own outfit, recoloured ("colors"); or a tailored set (outfit.py):
              short() jacket, blazer(), coat(), girl()
-  hairdo     restyle of the base hair (shape(), top_layer, glasses, ...)
+  hair_style generated clump hair replacing the base hair: {style: recipe sections, ombre, accent, tie, ...}
+             (clumphair.py; recipes in atelier/styles.py) - what every look below uses
+  hairdo     the older alternative: restyle of the base model's own hair (shape(), top_layer, ...)
+  accessories {glasses: colour, earrings: (metal, stone), nose: colour, ruff: colour}
   face_shape {chin, jaw, cheeks}; expression: resting mix of the facial morphs
 """
+
+from .atelier.styles import styled
 
 WHITE = (0.96, 0.96, 0.95)
 BLACK = (0.09, 0.09, 0.11)
@@ -84,7 +89,8 @@ def girl(color, trim, skirt, boots=None, shirt=BLACK, **kw):
 
 
 def look(model, hair, iris, outfit=None, colors=None, hairdo=None, female=None, tint=(), **kw):
-    """One cast look (the fields models.build_model reads). hair: (colour, second colour or None)."""
+    """One cast look (the fields models.build_model reads). hair: (colour, second colour or None);
+    hair_style: clump hair (see _hair below); accessories: {glasses: colour, ...} (hairdo.accessories)."""
     female = model != "vroid_c" if female is None else female
     col = dict(jacket=NAVY, trim=WHITE, inner=WHITE, pants=CHARCOAL, skirt=NAVY, shoes=BROWN, sole=WHITE)
     col.update(colors or {})
@@ -101,105 +107,111 @@ def look(model, hair, iris, outfit=None, colors=None, hairdo=None, female=None, 
     return out
 
 
-# --------------------------------------------------------------------------- hair restyles
-_CLIPS = ("HAIR_03", "HAIR_04", "HAIR_05", "HAIR_06")        # vroid_b's hair ornaments
-SPIKY = dict(shape=_shape(flow=dict(lift=0.45, up=0.3, sweep=0.35, length=1.15, front_lift=0.1, front_length=1.1,
-                                    crown_lift=0.25, side_lift=0.3), volume=dict(top=2.8, back=2.3, side=1.6, loft=0.022)),
-             top_layer=0.025)
-NEAT = dict(shape=_shape(flow=dict(lift=0.1, up=0.2, length=1.0, front_lift=0.0, front_length=0.95, crown_lift=0.0)))
-MOP = dict(shape=_shape(flow=dict(lift=0.5, up=0.35, length=1.08, front_lift=0.2, front_length=1.08, crown_lift=0.25),
-                        volume=dict(top=2.6, back=2.3, side=1.8, loft=0.024), envelope=dict(side=1.6, jaw=1.4)))
-TALL = dict(shape=_shape(flow=dict(lift=0.25, up=1.2, length=1.15, front_lift=0.7, front_length=1.05, crown_lift=0.15)))
-MESSY = dict(shape=_shape(flow=dict(lift=0.3, up=0.6, sweep=0.4, length=1.22, front_lift=0.05, front_length=1.05,
-                                    crown_lift=0.15)))
-PUFF = dict(shape=_shape(flow=dict(lift=0.0, up=0.2, length=1.1, front_lift=0.0, front_length=1.0, crown_lift=0.0,
-                                   side_lift=0.5), volume=dict(top=2.0, back=1.8, side=2.0, loft=0.015),
-                         envelope=dict(side=1.65, jaw=1.5)))
-LONG = dict(source="vroid_b", long_only=True, drop=_CLIPS,
-            shape=_shape(flow=dict(lift=0.0, up=0.1, length=1.4, front_lift=0.0, front_length=1.05, crown_lift=0.0),
-                         volume=dict(top=2.1, back=1.9, side=1.3, loft=0.014), envelope=dict(side=1.4, jaw=1.2)))
-BOB = dict(shape=_shape(volume=dict(top=2.2, back=2.0, side=1.5), envelope=dict(side=1.55, jaw=1.45)))
-TWIN = dict(shape=_shape(volume=dict(top=2.0, back=1.6, side=1.3, loft=0.012), envelope=dict(side=1.45, jaw=1.35),
-                         keep=_CLIPS, audit=dict(width=2.45)))
+# --------------------------------------------------------------------------- hair
+# Every slot wears generated clump hair (clumphair.py) in one of the atelier recipes (atelier/styles.HAIR),
+# varied per look: _hair(recipe, <section edits>, <options>). Options (not hair.py sections): ombre
+# (start, length in metres from the crown of the fade into the second hair colour), accent / accent2 (colour
+# of the locks a section marks accent=...), tie (hair-tie colour), highlight, seed, cap, outline.
+_OPTIONS = ("ombre", "accent", "accent2", "tie", "highlight", "seed", "cap", "outline")
 
 
-def _glasses(hairdo, color=(0.30, 0.30, 0.32)):
-    return dict(hairdo, glasses=color)
+def _hair(recipe, **kw):
+    opt = {k: kw.pop(k) for k in _OPTIONS if k in kw}
+    return dict(style=styled(recipe, **kw), **opt)
 
 
+def _glasses(color=(0.30, 0.30, 0.32)):
+    return dict(glasses=color)
+
+
+# The older way - restyling the base model's own cut (hairdo.py / hairshape.py, look key "hairdo") - still
+# works for a look without "hair_style"; _shape() above builds its parameters.
 def _dorm(jacket, pants=CHARCOAL, shoes=BROWN, skirt=None):
     return dict(jacket=jacket, pants=pants, skirt=skirt or pants, shoes=shoes)
 
 
 # --------------------------------------------------------------------------- the looks, by cast slot
 LOOKS = {
-    "jaden": look("vroid_c", ((0.74, 0.30, 0.16), (0.96, 0.62, 0.22)), (0.80, 0.50, 0.16), hairdo=SPIKY,
+    "jaden": look("vroid_c", ((0.74, 0.30, 0.16), (0.96, 0.62, 0.22)), (0.80, 0.50, 0.16),
+                  hair_style=_hair("spiky_up", ombre=(0.115, 0.07), ahoge=0.055),
                   colors=_dorm(RED, CHARCOAL, WHITE), expression=dict(Fun=0.5)),
-    "syrus": look("vroid_c", ((0.45, 0.72, 0.78), (0.30, 0.50, 0.66)), (0.35, 0.60, 0.62), hairdo=_glasses(MOP),
+    "syrus": look("vroid_c", ((0.45, 0.72, 0.78), (0.30, 0.50, 0.66)), (0.35, 0.60, 0.62),
+                  hair_style=_hair("mop", ombre=(0.13, 0.10)), accessories=_glasses(),
                   colors=_dorm(RED, CREAM, (0.20, 0.30, 0.55)), expression=dict(BrowSorrow=0.45),
                   face_shape=dict(cheeks=0.06)),
-    "chumley": look("vroid_c", ((0.24, 0.17, 0.14), None), (0.40, 0.28, 0.16), hairdo=PUFF,
+    "chumley": look("vroid_c", ((0.24, 0.17, 0.14), None), (0.40, 0.28, 0.16), hair_style=_hair("curly"),
                     colors=_dorm(CREAM, (0.30, 0.30, 0.34), BROWN), expression=dict(Fun=0.3),
                     face_shape=dict(cheeks=0.12, jaw=0.06)),
-    "bastion": look("vroid_c", ((0.16, 0.18, 0.24), None), (0.30, 0.42, 0.50), hairdo=NEAT,
+    "bastion": look("vroid_c", ((0.16, 0.18, 0.24), None), (0.30, 0.42, 0.50), hair_style=_hair("neat"),
                     colors=_dorm(YELLOW, (0.22, 0.24, 0.30), BROWN), face_shape=dict(chin=0.006, jaw=-0.03)),
-    "chazz": look("vroid_c", ((0.10, 0.10, 0.13), None), (0.42, 0.42, 0.50), hairdo=TALL,
+    "chazz": look("vroid_c", ((0.10, 0.10, 0.13), None), (0.42, 0.42, 0.50), hair_style=_hair("crest"),
                   outfit=coat(BLACK, (0.35, 0.25, 0.40)), colors=_dorm(BLACK, BLACK, BLACK),
                   expression=dict(BrowAngry=0.5), face_shape=dict(chin=0.010, jaw=-0.05)),
-    "zane": look("vroid_c", ((0.20, 0.33, 0.42), (0.12, 0.20, 0.30)), (0.32, 0.50, 0.58), hairdo=LONG,
+    "zane": look("vroid_c", ((0.20, 0.33, 0.42), (0.12, 0.20, 0.30)), (0.32, 0.50, 0.58),
+                 hair_style=_hair("shag", ombre=(0.16, 0.12)),
                  colors=_dorm(WHITE, NAVY, NAVY), face_shape=dict(chin=0.014, jaw=-0.07)),
-    "alexis": look("vroid_a", ((0.92, 0.80, 0.50), (0.98, 0.90, 0.68)), (0.62, 0.48, 0.26), hairdo=LONG,
+    "alexis": look("vroid_a", ((0.92, 0.80, 0.50), (0.98, 0.90, 0.68)), (0.62, 0.48, 0.26),
+                   hair_style=_hair("long", ahoge=0.06, ombre=(0.40, 0.30)),
                    colors=_dorm(WHITE, BLUE, BROWN, BLUE), expression=dict(Fun=0.2), face_shape=dict(chin=0.006)),
-    "jasmine": look("vroid_a", ((0.60, 0.26, 0.16), None), (0.45, 0.30, 0.20), hairdo=BOB,
+    "jasmine": look("vroid_a", ((0.60, 0.26, 0.16), None), (0.45, 0.30, 0.20), hair_style=_hair("ponytail", tie=BLUE),
                     colors=_dorm(CREAM, BLUE, BROWN, BLUE), expression=dict(Fun=0.45)),
-    "mindy": look("vroid_b", ((0.11, 0.10, 0.14), None), (0.36, 0.30, 0.52), hairdo=TWIN,
+    "mindy": look("vroid_b", ((0.11, 0.10, 0.14), None), (0.36, 0.30, 0.52), hair_style=_hair("hime"),
                   colors=_dorm(WHITE, BLUE, BLACK, BLUE)),
-    "crowler": look("vroid_c", ((0.92, 0.85, 0.52), None), (0.48, 0.36, 0.60), hairdo=LONG, female=False,
+    "crowler": look("vroid_c", ((0.92, 0.85, 0.52), None), (0.48, 0.36, 0.60), hair_style=_hair("lowtail", tie=PLUM),
+                    female=False,
                     outfit=coat(BLUE, GOLD, shirt=(0.95, 0.62, 0.74), pants=BLUE), colors=_dorm(BLUE, BLUE, BLACK, None),
                     expression=dict(Fun=0.35, BrowAngry=0.3), face_shape=dict(chin=0.018, jaw=-0.09)),
-    "student_m1": look("vroid_c", (TINT_BASE, None), (0.35, 0.25, 0.18), hairdo=MESSY, tint=("jacket", "hair"),
-                       colors=_dorm(WHITE, CHARCOAL, BROWN), expression=dict(Fun=0.3)),
-    "student_f1": look("vroid_a", (TINT_BASE, None), (0.35, 0.25, 0.18), hairdo=BOB, tint=("hair",),
+    "student_m1": look("vroid_c", (TINT_BASE, None), (0.35, 0.25, 0.18), hair_style=_hair("messy"),
+                       tint=("jacket", "hair"), colors=_dorm(WHITE, CHARCOAL, BROWN), expression=dict(Fun=0.3)),
+    "student_f1": look("vroid_a", (TINT_BASE, None), (0.35, 0.25, 0.18), hair_style=_hair("bob"), tint=("hair",),
                        colors=_dorm(WHITE, BLUE, BROWN, BLUE)),
-    "student_f2": look("vroid_b", (TINT_BASE, None), (0.30, 0.34, 0.22), hairdo=TWIN, tint=("hair",),
+    "student_f2": look("vroid_b", (TINT_BASE, None), (0.30, 0.34, 0.22),
+                       hair_style=_hair("twinbraids", tie=(0.75, 0.20, 0.25)), tint=("hair",),
                        colors=_dorm(WHITE, BLUE, BROWN, BLUE), expression=dict(Fun=0.3)),
     # portrait-only speakers
-    "banner": look("vroid_c", ((0.16, 0.14, 0.15), None), (0.40, 0.34, 0.24), hairdo=_glasses(LONG, (0.80, 0.82, 0.86)),
+    "banner": look("vroid_c", ((0.16, 0.14, 0.15), None), (0.40, 0.34, 0.24), hair_style=_hair("tied", tie=WHITE),
+                   accessories=_glasses((0.80, 0.82, 0.86)),
                    colors=_dorm(WHITE, (0.30, 0.30, 0.34)), expression=dict(Fun=0.4, EyeJoy=0.5)),
-    "sheppard": look("vroid_c", ((0.55, 0.52, 0.50), None), (0.36, 0.28, 0.20), hairdo=NEAT,
+    "sheppard": look("vroid_c", ((0.55, 0.52, 0.50), None), (0.36, 0.28, 0.20), hair_style=_hair("crop"),
                      colors=_dorm((0.52, 0.16, 0.20), (0.30, 0.20, 0.20)), expression=dict(Fun=0.4),
                      face_shape=dict(cheeks=0.12, jaw=0.08)),
-    "mimicry": look("vroid_c", ((0.90, 0.88, 0.84), None), (0.30, 0.60, 0.56), hairdo=MOP,
+    "mimicry": look("vroid_c", ((0.90, 0.88, 0.84), None), (0.30, 0.60, 0.56), hair_style=_hair("swept"),
                     colors=_dorm(YELLOW, CHARCOAL, BROWN)),
-    "dorothy": look("vroid_a", ((0.50, 0.34, 0.24), None), (0.34, 0.26, 0.18), hairdo=BOB,
+    "dorothy": look("vroid_a", ((0.50, 0.34, 0.24), None), (0.34, 0.26, 0.18), hair_style=_hair("bun", tie=CREAM),
                     colors=_dorm((0.80, 0.42, 0.40), CREAM, BROWN, CREAM), expression=dict(Fun=0.5),
                     face_shape=dict(cheeks=0.10)),
-    "fontaine": look("vroid_a", ((0.55, 0.20, 0.24), None), (0.40, 0.28, 0.24), hairdo=LONG,
+    "fontaine": look("vroid_a", ((0.55, 0.20, 0.24), None), (0.40, 0.28, 0.24), hair_style=_hair("sidelong"),
                      colors=_dorm(WHITE, (0.22, 0.20, 0.24), BLACK), face_shape=dict(chin=0.008)),
-    "sartyr": look("vroid_c", ((0.14, 0.12, 0.12), None), (0.42, 0.30, 0.18), hairdo=TALL,
+    "sartyr": look("vroid_c", ((0.14, 0.12, 0.12), None), (0.42, 0.30, 0.18), hair_style=_hair("undercut"),
                    colors=_dorm((0.50, 0.42, 0.18), CHARCOAL)),
-    "beauregard": look("vroid_c", ((0.30, 0.22, 0.16), None), (0.34, 0.24, 0.14), hairdo=PUFF,
+    "beauregard": look("vroid_c", ((0.30, 0.22, 0.16), None), (0.34, 0.24, 0.14),
+                       hair_style=_hair("mop", fringe=dict(kind="m", to=0.37)),
                        colors=_dorm(YELLOW), expression=dict(Fun=0.4), face_shape=dict(cheeks=0.12, jaw=0.06)),
-    "brier": look("vroid_c", ((0.20, 0.26, 0.18), None), (0.36, 0.46, 0.26), hairdo=SPIKY, colors=_dorm(YELLOW),
-                  expression=dict(BrowAngry=0.3, Fun=0.2)),
-    "dimitri": look("vroid_c", ((0.11, 0.11, 0.13), None), (0.30, 0.24, 0.18), hairdo=NEAT, colors=_dorm(YELLOW),
+    "brier": look("vroid_c", ((0.20, 0.26, 0.18), None), (0.36, 0.46, 0.26), hair_style=_hair("spiky", spikes=dict(start=64.0)),
+                  colors=_dorm(YELLOW), expression=dict(BrowAngry=0.3, Fun=0.2)),
+    "dimitri": look("vroid_c", ((0.11, 0.11, 0.13), None), (0.30, 0.24, 0.18),
+                    hair_style=_hair("neat", fringe=dict(kind="curtain", sweep=0.45)), colors=_dorm(YELLOW),
                     expression=dict(BrowAngry=0.2)),
-    "gerard": look("vroid_c", ((0.40, 0.28, 0.18), None), (0.38, 0.28, 0.18), hairdo=MESSY, colors=_dorm(RED),
-                   expression=dict(Fun=0.3)),
-    "topher": look("vroid_c", ((0.82, 0.66, 0.36), None), (0.42, 0.34, 0.22), hairdo=NEAT, colors=_dorm(BLUE),
-                   expression=dict(BrowAngry=0.2, Fun=0.25)),
-    "torrey": look("vroid_c", ((0.15, 0.13, 0.18), None), (0.34, 0.28, 0.44), hairdo=LONG, colors=_dorm(BLUE),
-                   expression=dict(BrowAngry=0.25)),
-    "conklin": look("vroid_c", ((0.36, 0.22, 0.14), None), (0.36, 0.26, 0.18), hairdo=SPIKY, colors=_dorm(BLUE),
+    "gerard": look("vroid_c", ((0.40, 0.28, 0.18), None), (0.38, 0.28, 0.18), hair_style=_hair("messy", ahoge=0.05),
+                   colors=_dorm(RED), expression=dict(Fun=0.3)),
+    "topher": look("vroid_c", ((0.82, 0.66, 0.36), None), (0.42, 0.34, 0.22), hair_style=_hair("pushed"),
+                   colors=_dorm(BLUE), expression=dict(BrowAngry=0.2, Fun=0.25)),
+    "torrey": look("vroid_c", ((0.15, 0.13, 0.18), None), (0.34, 0.28, 0.44), hair_style=_hair("long_m"),
+                   colors=_dorm(BLUE), expression=dict(BrowAngry=0.25)),
+    "conklin": look("vroid_c", ((0.36, 0.22, 0.14), None), (0.36, 0.26, 0.18),
+                    hair_style=_hair("crop", fringe=dict(kind="swept", sweep=0.3)), colors=_dorm(BLUE),
                     expression=dict(BrowAngry=0.2)),
-    "damon": look("vroid_c", ((0.18, 0.18, 0.22), None), (0.30, 0.28, 0.26), hairdo=TALL, colors=_dorm(BLUE),
-                  expression=dict(BrowAngry=0.35)),
-    "blair": look("vroid_b", ((0.20, 0.22, 0.42), None), (0.55, 0.40, 0.22), hairdo=TWIN,
+    "damon": look("vroid_c", ((0.18, 0.18, 0.22), None), (0.30, 0.28, 0.26), hair_style=_hair("undercut", fringe=dict(part=20.0, sweep=-0.6)),
+                  colors=_dorm(BLUE), expression=dict(BrowAngry=0.35)),
+    "blair": look("vroid_b", ((0.20, 0.22, 0.42), None), (0.55, 0.40, 0.22), hair_style=_hair("odango", tie=YELLOW),
                   colors=_dorm(RED, CHARCOAL, BLACK, CHARCOAL), expression=dict(Fun=0.5)),
-    "shadow_duelist": look("vroid_c", ((0.10, 0.09, 0.13), (0.30, 0.12, 0.34)), (0.70, 0.22, 0.30), hairdo=LONG,
+    "shadow_duelist": look("vroid_c", ((0.10, 0.09, 0.13), (0.30, 0.12, 0.34)), (0.70, 0.22, 0.30),
+                           hair_style=_hair("long_m", fringe=dict(accent=[1, 4]), sides=dict(accent=[1]),
+                                            accent=(0.52, 0.20, 0.56), ombre=(0.30, 0.20)),
                            outfit=coat((0.07, 0.07, 0.10), PLUM), colors=_dorm(BLACK, BLACK, BLACK),
                            expression=dict(BrowAngry=0.6), face_shape=dict(chin=0.018, jaw=-0.09), outline=0.0030),
-    "unknown_student": look("vroid_c", ((0.20, 0.20, 0.24), None), (0.35, 0.25, 0.18), hairdo=MOP, colors=_dorm(RED)),
+    "unknown_student": look("vroid_c", ((0.20, 0.20, 0.24), None), (0.35, 0.25, 0.18),
+                            hair_style=_hair("mop", fringe=dict(to=0.44)), colors=_dorm(RED)),
 }
 
 

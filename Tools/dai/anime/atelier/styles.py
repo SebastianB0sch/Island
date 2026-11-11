@@ -46,13 +46,15 @@ HAIR = {
     "spiky": dict(fringe=dict(kind="m", to=0.40, n=7, tip=0.022, spread=1.7),
                   spikes=dict(n=16, lift=0.60, free=0.075, flare=1.0)),
     # the same idea with the spikes standing out instead of hanging (reads spikier on a tall head)
-    "spiky_up": dict(fringe=dict(kind="m", to=0.385, n=7, tip=0.020, spread=1.7),
-                     spikes=dict(n=15, lift=0.75, free=0.068, flare=1.3, up=0.9, gravity=0.16, rings=(0.18, 0.32, 0.47)),
+    "spiky_up": dict(fringe=dict(kind="m", to=0.36, n=7, tip=0.018, spread=1.7),
+                     spikes=dict(n=15, lift=0.9, free=0.066, flare=1.2, up=1.1, gravity=0.18, rings=(0.30, 0.40, 0.50),
+                                 lift_decay=0.2, start=64.0),
                      back=dict(to=0.64, free=0.03, n=10, layers=1, flare=0.25, curl=0.8)),
     # swept-up crest: every spike keeps rising
     "crest": dict(fringe=dict(kind="m", to=0.37, n=5, tip=0.016, spread=1.8),
-                  spikes=dict(n=13, lift=1.0, free=0.085, flare=0.45, up=2.0, gravity=0.22, rings=(0.14, 0.28, 0.44)),
-                  sides=dict(to=0.56, free=0.02, n=2, width=0.034), back=dict(to=0.66, free=0.03, n=10, layers=1)),
+                  spikes=dict(n=12, lift=1.5, free=0.080, flare=0.22, up=2.3, gravity=0.30, rings=(0.10, 0.20, 0.30),
+                              lift_decay=0.0),
+                  sides=dict(to=0.56, free=0.02, n=2, width=0.034), back=dict(to=0.66, free=0.03, n=11, layers=2)),
     "neat": dict(fringe=dict(kind="swept", to=0.385, n=6, sweep=0.35, tip=0.010),
                  sides=dict(to=0.58, free=0.022, n=2, width=0.034),
                  back=dict(to=0.66, free=0.025, n=11, layers=2)),
@@ -79,17 +81,17 @@ HAIR = {
     "crop": dict(fringe=dict(kind="m", to=0.345, n=7, tip=0.008, spread=1.8, sweep=0.15),
                  sides=dict(to=0.52, free=0.010, n=2, width=0.036), back=dict(to=0.64, free=0.012, n=12, layers=2)),
     # long top combed over to one side, short sides and back
-    "undercut": dict(fringe=dict(kind="swept", to=0.43, n=7, sweep=0.60, part=-22.0, width=62.0, tip=0.026,
+    "undercut": dict(fringe=dict(kind="swept", to=0.355, n=7, sweep=0.60, part=-22.0, width=62.0, tip=0.018,
                                  loft=(0.018, 0.027), spread=2.1),
                      sides=dict(to=0.50, free=0.008, n=2, width=0.034, loft=(0.010, 0.012)),
                      back=dict(to=0.62, free=0.010, n=12, layers=1, loft=(0.012, 0.014))),
     # short curls all over
-    "curly": dict(fringe=dict(kind="m", to=0.385, n=7, tip=0.026, spread=1.8, curl=2.2),
+    "curly": dict(fringe=dict(kind="m", to=0.345, n=7, tip=0.022, spread=1.8, curl=2.2),
                   spikes=dict(n=17, lift=0.20, free=0.062, flare=0.85, rings=(0.24, 0.40, 0.56), curl=2.6, wave=0.5,
                               gravity=0.16, width=0.044),
                   back=dict(to=0.66, free=0.045, n=11, curl=2.2, flare=0.10, layers=1)),
     # layered shoulder-length cut with flicked ends
-    "shag": dict(fringe=dict(kind="curtain", to=0.45, n=7, sweep=0.30, tip=0.022),
+    "shag": dict(fringe=dict(kind="curtain", to=0.385, n=7, sweep=0.30, tip=0.018),
                  sides=dict(to=0.64, free=0.115, n=2, curl=0.9, flare=0.10),
                  spikes=dict(n=12, lift=0.22, free=0.050, flare=0.9, rings=(0.30, 0.46), droop=0.12),
                  back=dict(to=0.70, free=0.165, n=11, curl=1.1, flare=0.10, layers=3, taper=0.25)),
@@ -112,7 +114,7 @@ HAIR = {
                    back=dict(to=0.64, free=0.03, n=10, layers=1, curl=-0.8),
                    buns=[dict(at=(118.0, 0.21), r=0.034), dict(at=(242.0, 0.21), r=0.034)]),
     # long hair parted far to one side, the fringe sweeping across the forehead
-    "sidelong": dict(fringe=dict(kind="swept", n=7, sweep=0.50, part=24.0, to=0.445, width=62.0, tip=0.024),
+    "sidelong": dict(fringe=dict(kind="swept", n=7, sweep=0.50, part=24.0, to=0.385, width=62.0, tip=0.018),
                      sides=dict(to=0.66, free=0.24, n=2, asym=0.55, curl=0.4),
                      back=dict(to=0.72, free=0.50, n=11, taper=0.16, curl=0.35, layers=2)),
     # high spiky ponytail

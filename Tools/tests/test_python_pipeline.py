@@ -515,6 +515,31 @@ class AtelierCastTests(unittest.TestCase):
             self.assertLessEqual(set(spec.get("expression", {})), morphs, cid)
             self.assertLessEqual(set(spec.get("tint", ())), {"jacket", "hair"}, cid)
 
+    def test_looks_wear_clump_hair_recipes(self) -> None:
+        from dai.anime import looks
+        from dai.anime.atelier import styles
+        sections = {"fringe", "sides", "back", "spikes", "tails", "braids", "buns", "ahoge"}
+        options = set(looks._OPTIONS) | {"style"}
+        for name, recipe in styles.HAIR.items():
+            self.assertLessEqual(set(recipe), sections, name)
+        self.assertEqual(styles.styled("long", ahoge=0.06, sides=None, fringe=dict(kind="swept"))["fringe"]["kind"],
+                         "swept")
+        self.assertNotIn("fringe", styles.HAIR["bald_ring"])
+        self.assertNotIn("kind", styles.HAIR["mop"].get("back", {}))       # styled() must not edit the recipes
+        for cid, spec in looks.LOOKS.items():
+            hs = spec.get("hair_style")
+            self.assertIsInstance(hs, dict, cid)
+            self.assertLessEqual(set(hs), options, cid)
+            self.assertTrue(hs["style"], cid)
+            self.assertLessEqual(set(hs["style"]), sections, cid)
+            self.assertNotIn("hairdo", spec, cid)
+            self.assertLessEqual(set(spec.get("accessories", {})), {"glasses", "earrings", "nose", "ruff"}, cid)
+            if "hair" in spec.get("tint", ()):
+                self.assertNotIn("accent", hs, cid)                        # tinted hair is one neutral sheet
+        world = ["jaden", "syrus", "chumley", "bastion", "chazz", "zane", "alexis", "jasmine", "mindy", "crowler",
+                 "student_m1", "student_f1", "student_f2"]
+        self.assertEqual(len({repr(looks.LOOKS[c]["hair_style"]["style"]) for c in world}), len(world))
+
     def test_designs_are_complete(self) -> None:
         from dai.anime.atelier import designs
         for key, design in designs.all_designs().items():

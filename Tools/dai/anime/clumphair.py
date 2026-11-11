@@ -298,7 +298,7 @@ def build(arm, meshes, entry, key, log=print):
     P.hair(os.path.join(C.OUT_TEXTURES, rel + ".png"), TINT_PAINT if tinted else hair["color"],
            None if tinted else hair.get("color2"), highlight=opt.get("highlight"),
            ombre=opt.get("ombre", (0.45, 0.30)), seed=opt.get("seed", 3), accent=accent,
-           accent2=opt.get("accent2"), contrast=1.6 if tinted else 1.0)
+           accent2=opt.get("accent2"), contrast=1.3 if tinted else 1.0)
     specs = {mat: dict(kind="toon", color=(1.0, 1.0, 1.0), rough=0.85, fill=0.45, ring=0.0, base=rel)}
     tie_mat = None
     if opt.get("tie") is not None:
