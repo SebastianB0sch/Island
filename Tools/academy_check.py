@@ -1,12 +1,14 @@
 """
 Building layout check: the main academy building (dai/assets/academy.py), the Slifer Red dorm
-(dai/assets/slifer.py), the Ra Yellow dorm (dai/assets/ra.py) or the Obelisk Blue boys' dorm (dai/assets/obelisk.py)
+(dai/assets/slifer.py), the Ra Yellow dorm (dai/assets/ra.py) or the Obelisk Blue boys' / girls' dorms
+(dai/assets/obelisk.py)
 audited as a walkable building.
 
     python Tools/academy_check.py                       # everything (academy)
     python Tools/academy_check.py --location slifer     # the Slifer Red dorm
     python Tools/academy_check.py --location ra         # the Ra Yellow dorm
     python Tools/academy_check.py --location obelisk_boys  # the Obelisk Blue boys' dorm
+    python Tools/academy_check.py --location obelisk_girls # the Obelisk Blue girls' dorm
     python Tools/academy_check.py --only doors,npcs     # a subset
     python Tools/academy_check.py --json out.json --limit 40
 
@@ -75,6 +77,9 @@ LOCATIONS = {
                clamp=((-28.0, -24.0), (42.0, 15.0))),
     "obelisk_boys": dict(module="obelisk", seeds=[(0.0, -20.0, 0.05), (0.0, -70.0, 0.05)], seed_r=2.5, leak_z=1.9,
                          clamp=((-50.0, -90.0), (50.0, 70.0))),
+    # (the jetty is reached over the lakeside slope, which is terrain, not part of the asset: seeded on its landing)
+    "obelisk_girls": dict(module="obelisk", seeds=[(0.0, -20.0, 0.05), (0.0, -60.0, 0.05), (10.0, -92.5, -1.2)],
+                          seed_r=2.0, leak_z=1.3, clamp=((-50.0, -128.0), (50.0, 55.0))),
 }
 LOC = LOCATIONS["academy"]
 
@@ -124,7 +129,15 @@ class Geo:
         for s, o in sc["props"]:
             if s["props"]["asset"] in placement.SOFT_PROPS:
                 continue
-            boxes.append(inspect._prop_box(o))
+            mn, mx = inspect._prop_box(o)
+            if any(k in s["props"]["asset"] for k in TRUNK_PROPS):
+                # a tree collides with its trunk in the game (dai.thirdparty "trunk" collision: the registry's
+                # trunk radius over 55 % of its height), not with its whole canopy box, which closed the walks
+                rt = _trunk_radius(s["props"]["asset"]) * s["props"].get("scale", 1.0)
+                px, py = s["pos"][0], s["pos"][1]
+                mn = Vector((px - rt, py - rt, mn.z))
+                mx = Vector((px + rt, py + rt, mn.z + (mx.z - mn.z) * 0.55))
+            boxes.append((mn, mx))
             self.prop_names.append(s["props"]["asset"])
         solid = [o for o in sc["objs"] if not o.get("nocol")]
         self.arch, self.arch_mats = self._tree(solid)
@@ -723,6 +736,15 @@ def check_walls(aset, G, grid, seen, log):
 
 
 OUTDOOR_PROPS = ("Tree", "Palm", "Bush", "Hedge", "Flower", "LampPost", "Flagpole", "Umbrella")
+TRUNK_PROPS = ("Tree", "Palm")          # props whose collision is a trunk (Geo)
+
+
+def _trunk_radius(asset):
+    try:
+        from dai import thirdparty
+        return float(thirdparty.registry()["props"].get(asset, {}).get("trunk_radius", 0.3))
+    except Exception:  # noqa: BLE001 - the registry is optional (no third-party assets checked out)
+        return 0.3
 
 
 def _back_confirmed(G, o, d, h):

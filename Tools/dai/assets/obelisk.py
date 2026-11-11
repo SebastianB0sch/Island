@@ -284,7 +284,7 @@ def balustrade(mb, pts, z, mat=MARBLE, rail_mat=None, h=1.0, spacing=0.3, posts=
             post_pts.append((x1, y1))
     if posts:
         for (x, y) in post_pts:
-            mb.box((x, y, z + (h + 0.08) / 2), (0.38, 0.38, h + 0.08), post_mat)
+            mb.box((x, y, z + (h + 0.08) / 2), (0.38, 0.38, h + 0.08), post_mat, skip=("-z",))   # (stands on the floor)
             mb.box((x, y, z + h + 0.1), (0.46, 0.46, 0.08), rail_mat)
 
 
@@ -389,12 +389,15 @@ def window(mb, u, z, w, h, frame=FRAME, glass=GLASS, arch=False, head=None, head
 
 
 def door(mb, u, z, w, h, leaf=TRIM, surround=MARBLE, handle=GOLD, fan_glass=GLASS, fan=True,
-         panel_mat=None, depth=0.3, style="obelisk"):
+         panel_mat=None, depth=0.3, style="obelisk", proud=None):
     """Double door with a moulded surround and an optional arched fanlight (facade frame). On a cut face
-    the painted leaf is replaced by a real doorway with an automatic door of `style`."""
+    the painted leaf is replaced by a real doorway with an automatic door of `style`. proud: how far the
+    surround deepens the reveal the leaf hangs in the middle of (default: the surround's depth, a stone
+    surround; 0 for a trim architrave, the leaf then hangs in the wall)."""
     pm = panel_mat or handle
     if _cut_here(z):
-        _record("door", u, z, z + h, w, w / 2.0 if fan else 0.0, style=style, double=True, proud=depth)
+        _record("door", u, z, z + h, w, w / 2.0 if fan else 0.0, style=style, double=True,
+                proud=depth if proud is None else proud)
         fan_glass = CLEAR          # the fanlight is a real glazed opening over the doorway
     else:
         _door_leaf(mb, u, z, w, h, leaf, handle, pm)
@@ -419,11 +422,13 @@ def _door_leaf(mb, u, z, w, h, leaf, handle, pm):
 
 def _door_surround(mb, u, z, w, h, surround, fan_glass, fan, depth):
     sw = 0.4
+    # without a fanlight the surround's head stands 3.5 cm over the opening's head: the leaf swings out under it
+    hs = h if fan else h + 0.035
     for s in (-1, 1):
-        mb.box((u + s * (w / 2 + sw / 2), -depth / 2, z + h / 2), (sw, depth, h), surround, skip=("+y",))
+        mb.box((u + s * (w / 2 + sw / 2), -depth / 2, z + hs / 2), (sw, depth, hs), surround, skip=("+y",))
         # gilded bead round the doorway on the surround's face (the architrave)
-        mb.box((u + s * (w / 2 + 0.045), -depth - 0.015, z + h / 2), (0.09, 0.03, h), GOLD, skip=("+y",))
-    mb.box((u, -depth - 0.015, z + h + 0.045), (w + 0.18, 0.03, 0.09), GOLD, skip=("+y",))
+        mb.box((u + s * (w / 2 + 0.045), -depth - 0.015, z + hs / 2), (0.09, 0.03, hs), GOLD, skip=("+y",))
+    mb.box((u, -depth - 0.015, z + hs + 0.045), (w + 0.18, 0.03, 0.09), GOLD, skip=("+y",))
     if fan:
         r = w / 2 + 0.02
         pts = [(u + math.cos(math.pi * i / 10) * r, -0.03, z + h + math.sin(math.pi * i / 10) * r)
@@ -436,8 +441,8 @@ def _door_surround(mb, u, z, w, h, surround, fan_glass, fan, depth):
         arc_band(mb, u, z + h, r, r + sw, 0.0, math.pi, 10, -depth, 0.0, surround)
         mb.box((u, -depth / 2 - 0.05, z + h + r + sw / 2), (0.42, depth + 0.1, 0.6), GOLD)
         return z + h + r + sw
-    mb.box((u, -depth / 2, z + h + sw / 2), (w + 2 * sw, depth, sw), surround, skip=("+y",))
-    return z + h + sw
+    mb.box((u, -depth / 2, z + hs + sw / 2), (w + 2 * sw, depth, sw), surround, skip=("+y",))
+    return z + hs + sw
 
 
 def dormer(mb, w, h, depth, z0, wall, roof, frame, glass=GLASS, arch=False, finial_mat=None,
@@ -451,19 +456,14 @@ def dormer(mb, w, h, depth, z0, wall, roof, frame, glass=GLASS, arch=False, fini
         ww = w - 0.75
         top = 0.3 + (h - 0.75 if arch else h - 0.65)
         mb.wall((-w / 2, 0.0), (w / 2, 0.0), z0, h, 0.12, wall, [dict(u=w / 2, w=ww, z0=0.3, z1=top)], inner_mat=inner)
-        if arch:          # spandrels between the arched head and the rectangular cut
-            zs, r = z0 + top - ww / 2, ww / 2
-            for s_ in (-1, 1):
-                arc = [(s_ * r * math.cos(math.pi / 2 * k / 4), zs + r * math.sin(math.pi / 2 * k / 4)) for k in range(5)]
-                for k in range(4):
-                    A, B = arc[k], arc[k + 1]
-                    for (yy, m_, wnt) in ((0.0, wall, (0, -1, 0)), (0.12, inner, (0, 1, 0))):
-                        _face(mb, [(s_ * r, yy, zs + r), (A[0], yy, A[1]), (B[0], yy, B[1])], m_, wnt)
+        if arch:          # spandrels between the arched head and the rectangular cut (with the arch's reveal)
+            _spandrels(mb, 0.0, z0 + top - ww / 2, ww / 2, 0.12, wall, inner)
         for s_ in (-1, 1):
             mb.box_mm((min(s_ * w / 2, s_ * (w / 2 - 0.1)), 0.0, z0), (max(s_ * w / 2, s_ * (w / 2 - 0.1)), din, z0 + h),
                       wall, mats={"-x" if s_ > 0 else "+x": inner})
         mb.box_mm((-w / 2 + 0.1, 0.12, zin), (w / 2 - 0.1, din, zin + 0.1), inner, mats={"-z": K.CEIL})
-        mb.box_mm((-w / 2 + 0.1, 0.12, z0 - 0.06), (w / 2 - 0.1, sd, z0), K.TRIM_WHITE)
+        # window-seat board: 5 mm proud of the wall top it lies on
+        mb.box_mm((-w / 2 + 0.1, 0.12, z0 - 0.055), (w / 2 - 0.1, sd, z0 + 0.005), K.TRIM_WHITE)
         # (its underside 1 cm above the attic's flat ceiling, which lies at z0 + h - 0.1)
         mb.box_mm((-w / 2, depth - 0.02, z0 + h - 0.09), (w / 2, depth, z0 + h), wall)
     else:
@@ -544,9 +544,47 @@ def _clip(poly, axis, val, keep_ge):
     return out
 
 
-def _face_holes(mb, poly, mat, want, axis, holes, axis2=2):
-    """Planar polygon minus rectangular holes [(a0, a1, zlo, zhi)]: a along world axis `axis`, z along axis2."""
+def _clip_line(poly, p, q, keep_left):
+    """Clip of a 3D polygon by the vertical plane through the plan line p -> q: the part left of it (keep_left)
+    or right of it."""
+    dx, dy = q[0] - p[0], q[1] - p[1]
+
+    def side(v):
+        s_ = dx * (v[1] - p[1]) - dy * (v[0] - p[0])
+        return s_ if keep_left else -s_
+    out = []
+    n = len(poly)
+    for i in range(n):
+        a, b = poly[i], poly[(i + 1) % n]
+        sa, sb = side(a), side(b)
+        if sa >= -1e-9:
+            out.append(a)
+        if (sa >= -1e-9) != (sb >= -1e-9) and abs(sa - sb) > 1e-12:
+            t = sa / (sa - sb)
+            out.append(tuple(a[k] + (b[k] - a[k]) * t for k in range(3)))
+    return out
+
+
+def _minus_convex(poly, cut):
+    """Pieces of a 3D polygon outside the convex plan polygon `cut` (CCW, [(x, y)])."""
+    out, rest = [], list(poly)
+    for i in range(len(cut)):
+        p, q = cut[i], cut[(i + 1) % len(cut)]
+        o = _clip_line(rest, p, q, False)
+        if len(o) >= 3:
+            out.append(o)
+        rest = _clip_line(rest, p, q, True)
+        if len(rest) < 3:
+            break
+    return out
+
+
+def _face_holes(mb, poly, mat, want, axis, holes, axis2=2, cuts=()):
+    """Planar polygon minus rectangular holes [(a0, a1, zlo, zhi)]: a along world axis `axis`, z along axis2;
+    and minus the convex plan polygons `cuts`."""
     pieces = [list(poly)]
+    for c in cuts:
+        pieces = [q for pc in pieces for q in _minus_convex(pc, c)]
     for (a0, a1, zlo, zhi) in holes:
         nxt = []
         for pc in pieces:
@@ -950,19 +988,35 @@ def _wall_panels(mb, r, mat, bar=0.05):
 
 
 def _plank_seams(mb, r, mat, pitch=0.22):
+    """Dark seams between the floor boards; they stop at the floor's holes (stairwells: they ran over the well)."""
     x0, y0, x1, y1, z = r["x0"], r["y0"], r["x1"], r["y1"], r["z"]
+    holes = r["holes"]
+
+    def spans(lo, hi, v, along_x):
+        out, u = [], lo
+        cuts = sorted((h[0], h[2]) if along_x else (h[1], h[3]) for h in holes
+                      if (h[1] - 0.01 <= v <= h[3] + 0.01 if along_x else h[0] - 0.01 <= v <= h[2] + 0.01))
+        for (a, b) in cuts:
+            if a > u:
+                out.append((u, min(a, hi)))
+            u = max(u, b)
+        if hi > u:
+            out.append((u, hi))
+        return [(a, b) for (a, b) in out if b - a > 0.02]
     if x1 - x0 >= y1 - y0:
         n = int((y1 - y0) / pitch)
         for k in range(1, n):
             y = y0 + (y1 - y0) * k / n
-            mb.poly([(x0, y - 0.006, z + 0.002), (x1, y - 0.006, z + 0.002), (x1, y + 0.006, z + 0.002),
-                     (x0, y + 0.006, z + 0.002)], mat)
+            for (xa, xb) in spans(x0, x1, y, True):
+                mb.poly([(xa, y - 0.006, z + 0.002), (xb, y - 0.006, z + 0.002), (xb, y + 0.006, z + 0.002),
+                         (xa, y + 0.006, z + 0.002)], mat)
     else:
         n = int((x1 - x0) / pitch)
         for k in range(1, n):
             x = x0 + (x1 - x0) * k / n
-            mb.poly([(x - 0.006, y0, z + 0.002), (x + 0.006, y0, z + 0.002), (x + 0.006, y1, z + 0.002),
-                     (x - 0.006, y1, z + 0.002)], mat)
+            for (ya, yb) in spans(y0, y1, x, False):
+                mb.poly([(x - 0.006, ya, z + 0.002), (x + 0.006, ya, z + 0.002), (x + 0.006, yb, z + 0.002),
+                         (x - 0.006, yb, z + 0.002)], mat)
 
 
 def _cells(x0, y0, x1, y1, holes):
@@ -1224,17 +1278,18 @@ def _base_ring(mb, x0, y0, x1, y1, z0, z1, d, mat, gaps=(), skip=("-z",)):
              "w": (x0 - d, y0, x0, y1), "e": (x1, y0, x1 + d, y1)}
     for k, (a, b, c, e) in sides.items():
         cuts = sorted((g[1], g[2]) for g in gaps if g[0] == k)
+        sk = tuple(skip) + ({"s": "+y", "n": "-y", "w": "+x", "e": "-x"}[k],)    # (its back lies on the wall)
         if k in ("s", "n"):
             u = a
             for (ga, gb) in cuts + [(c, c)]:
                 if ga - u > 1e-3:
-                    mb.box_mm((u, b, z0), (ga, e, z1), mat, skip=skip)
+                    mb.box_mm((u, b, z0), (ga, e, z1), mat, skip=sk)
                 u = max(u, gb)
         else:
             u = b
             for (ga, gb) in cuts + [(e, e)]:
                 if ga - u > 1e-3:
-                    mb.box_mm((a, u, z0), (c, ga, z1), mat, skip=skip)
+                    mb.box_mm((a, u, z0), (c, ga, z1), mat, skip=sk)
                 u = max(u, gb)
 
 
@@ -4077,29 +4132,37 @@ def _g_window(mb, u, row, nc=None, w=None, flowers=None):
         window(mb, u, 10.0, w or 1.2, 1.75, GTRIM, arch=True, keystone=GTRIM, sill_mat=MARBLE)
 
 
-def _hip_roof_walk(mb, cx, cy, cz, w, d, h, mat, ov, thick, holes):
+def _hip_roof_walk(mb, cx, cy, cz, w, d, h, mat, ov, thick, holes, cuts=None, eave_gaps=None):
     """MeshBuilder.hip_roof (ridge along x) without the flat underside, which would close the attic: roof
-    planes with dormer holes {"s"|"n": [(x0, x1, zlo, zhi)]}, fascia and a soffit ring under the overhang only."""
+    planes with dormer holes {"s"|"n": [(x0, x1, zlo, zhi)]}, fascia and a soffit ring under the overhang only.
+    cuts {"s"|"n": [convex plan polygon]}: left out of the roof planes (where a cross gable's roof takes over);
+    eave_gaps {"s"|"n": [(x0, x1)]}: no fascia / soffit there."""
+    cuts, eave_gaps = cuts or {}, eave_gaps or {}
     hw, hd = w / 2 + ov, d / 2 + ov
     ridge = max(0.0, (w - d) / 2)
     ze = cz - h * ov / (d / 2)
     top = cz + h
     a, b, c, e = (cx - hw, cy - hd, ze), (cx + hw, cy - hd, ze), (cx + hw, cy + hd, ze), (cx - hw, cy + hd, ze)
     r0, r1 = (cx - ridge, cy, top), (cx + ridge, cy, top)
-    _face_holes(mb, [a, b, r1, r0], mat, (0, -1, 1), 0, holes.get("s", ()))
-    _face_holes(mb, [c, e, r0, r1], mat, (0, 1, 1), 0, holes.get("n", ()))
+    _face_holes(mb, [a, b, r1, r0], mat, (0, -1, 1), 0, holes.get("s", ()), cuts=cuts.get("s", ()))
+    _face_holes(mb, [c, e, r0, r1], mat, (0, 1, 1), 0, holes.get("n", ()), cuts=cuts.get("n", ()))
     mb.poly([b, c, r1], mat)
     mb.poly([e, a, r0], mat)
 
     def lo(p):
         return (p[0], p[1], p[2] - thick)
-    for p, q in ((a, b), (b, c), (c, e), (e, a)):
-        mb.quad(lo(p), lo(q), q, p, mat)
+    for (p, q), sd in zip(((a, b), (b, c), (c, e), (e, a)), ("s", "e", "n", "w")):
+        gx = [(g0, g1, -99.0, 99.0) for (g0, g1) in eave_gaps.get(sd, ())]
+        nn = {"s": (0, -1, 0), "e": (1, 0, 0), "n": (0, 1, 0), "w": (-1, 0, 0)}[sd]
+        _face_holes(mb, [lo(p), lo(q), q, p], mat, nn, 0, gx)
     x0, y0, x1, y1 = cx - w / 2, cy - d / 2, cx + w / 2, cy + d / 2
     z = ze - thick
-    for (pa, pb, pc, pd) in (((a[0], a[1]), (b[0], b[1]), (x1, y0), (x0, y0)), ((b[0], b[1]), (c[0], c[1]), (x1, y1), (x1, y0)),
-                             ((c[0], c[1]), (e[0], e[1]), (x0, y1), (x1, y1)), ((e[0], e[1]), (a[0], a[1]), (x0, y0), (x0, y1))):
-        _face(mb, [(pa[0], pa[1], z), (pb[0], pb[1], z), (pc[0], pc[1], z), (pd[0], pd[1], z)], mat, (0, 0, -1))
+    for (pa, pb, pc, pd), sd in zip((((a[0], a[1]), (b[0], b[1]), (x1, y0), (x0, y0)), ((b[0], b[1]), (c[0], c[1]), (x1, y1), (x1, y0)),
+                                     ((c[0], c[1]), (e[0], e[1]), (x0, y1), (x1, y1)), ((e[0], e[1]), (a[0], a[1]), (x0, y0), (x0, y1))),
+                                    ("s", "e", "n", "w")):
+        gx = [(g0, g1, -99.0, 99.0) for (g0, g1) in eave_gaps.get(sd, ())]
+        _face_holes(mb, [(pa[0], pa[1], z), (pb[0], pb[1], z), (pc[0], pc[1], z), (pd[0], pd[1], z)], mat, (0, 0, -1),
+                    0, gx, axis2=1)
 
 
 def _gable_roof_walk(mb, cx, y0, y1, w, cz, h, mat, ov, thick):
@@ -4117,7 +4180,7 @@ def _gable_roof_walk(mb, cx, y0, y1, w, cz, h, mat, ov, thick):
         _face_holes(mb, [e0, e1, r1, r0], mat, (s, 0, 1), 1, door)
         lo = [(p[0], p[1], p[2] - thick) for p in (e0, e1, r1, r0)]
         _face_holes(mb, lo, mat, (-s, 0, -1), 1, door)
-        _face(mb, [lo[0], lo[1], e1, e0], mat, (s, 0, 0))
+        _face_holes(mb, [lo[0], lo[1], e1, e0], mat, (s, 0, 0), 1, door)     # (the attic doors pass under it)
         # boarding under the rafters (the attic's sloping ceiling) from the wall top up to the ridge
         xw = cx + s * (w / 2 - 0.4)
         zw = ze - thick - 0.03 + (hw - (w / 2 - 0.4)) * h / hw
@@ -4128,9 +4191,21 @@ def _gable_roof_walk(mb, cx, y0, y1, w, cz, h, mat, ov, thick):
             if abs(y - 15.0) < 1.6:
                 continue
             mb.beam((xw, y, zw - 0.05), (cx, y, top - thick - 0.1), 0.1, 0.14, K.WOOD_DARK)
+    # the openings for the attic doors: a flat-roofed recess closes each (they were open from the eave up to
+    # z cz + 1.05 - the landing looked up into the roof space): flat roof, boarded soffit, two cheeks
+    zd = cz + 1.05
+    # distance in from the eave where the roof's underside reaches zd (+ 5 cm past the boarding's cut)
+    xd = (zd - (ze - thick)) / (h / (w / 2)) + 0.05
+    for s in (-1, 1):
+        xa, xb = sorted((cx + s * hw, cx + s * (hw - xd)))
+        mb.box_mm((xa, 13.5, zd - 0.05), (xb, 16.5, zd + 0.1), mat, mats={"-z": K.WOOD})
+        for yc, sy in ((13.5, -1), (16.5, 1)):
+            tri = [(cx + s * hw, yc, ze - thick), (cx + s * (hw - xd), yc, zd), (cx + s * hw, yc, zd)]
+            _face(mb, [(p[0], yc + sy * 0.02, p[2]) for p in tri], mat, (0, sy, 0))     # (2 cm apart)
+            _face(mb, tri, K.WOOD, (0, -sy, 0))
     for k in range(2, 16, 3):
         y = y0 + (y1 - y0) * k / 16
-        mb.box_mm((cx - 2.6, y - 0.07, cz + 2.95), (cx + 2.6, y + 0.07, cz + 3.13), K.WOOD_DARK)
+        mb.box_mm((cx - 2.6, y - 0.07, cz + 2.95), (cx + 2.6, y + 0.07, cz + 3.13), K.WOOD_DARK, skip=("-z",))
     for (yv, s) in ((ya, -1), (yb, 1)):          # verges
         pts = [(cx - hw, yv, ze), (cx, yv, top), (cx + hw, yv, ze)]
         low = [(p[0], p[1], p[2] - thick) for p in pts]
@@ -4230,19 +4305,31 @@ def _girls_building(mb, nc, aset):
     x0, y0, x1, y1 = G_MAIN
     rr = G_TURRET_R - G_RT
     hollow_shell(mb, x0, y0, x1, y1, G_TOP, FL, G_BANDS, band_mat=GTRIM, cornice=(MARBLE, GTRIM),
-                 pilasters=False, base_gaps=_girls_base_gaps(),
-                 cornice_gaps=[(sd, a, b) for sd in ("s", "n") for (a, b) in ((-22.6, -22.0 + rr), (22.0 - rr, 22.6))] +
+                 pilasters=False, base_gaps=_girls_base_gaps(), band_gaps=[(sd, -7.0, 7.0, zb) for sd in ("s", "n") for zb in G_BANDS],
+                 cornice_gaps=[(sd, a, b) for sd in ("s", "n") for (a, b) in ((-22.6, -22.0 + rr), (-7.0, 7.0),
+                                                                              (22.0 - rr, 22.6))] +
                  [(sd, a, b) for sd in ("w", "e") for (a, b) in ((3.4, 4.0 + rr), (26.0 - rr, 26.6))])
     px0, py0, px1, py1, ptop = G_PAV
     hollow_shell(mb, px0, py0, px1, py1, ptop, FL, G_BANDS, band_mat=GTRIM, cornice=(MARBLE, GTRIM),
-                 joins=[("w", 4.0, 26.0), ("e", 4.0, 26.0)])
+                 joins=[("w", 4.0, 26.0), ("e", 4.0, 26.0)], base_gaps=[("s", -1.5, 1.5), ("n", -1.4, 1.4)])
     # ------------------------------------------------------------ roofs
     rh = 6.8
     dh = [(xd - 0.9, xd + 0.9, G_TOP - 0.01, G_TOP + 2.5) for xd in (-12.8, 12.8)]
-    _hip_roof_walk(mb, 0.0, (y0 + y1) / 2, G_TOP, x1 - x0, y1 - y0, rh, GROOF, 0.8, 0.3, {"s": dh, "n": dh})
+    # the pavilion's gable roof crosses the hip roof: the hip's planes stop at the valleys where the two meet
+    # (inside the pavilion they ran through the attic studio and landing at head height), its eaves at the
+    # pavilion's walls
+    hw_, hd_, ze_ = (x1 - x0) / 2 + 0.8, (y1 - y0) / 2 + 0.8, G_TOP - rh * 0.8 / ((y1 - y0) / 2)
+    km, kg = (G_TOP + rh - ze_) / hd_, 6.0 / 7.0          # hip slope (per m in y), gable slope (per m in x)
+    yv = (ze_ - (y0 - 0.8) * km)                          # z of the hip plane = yv + y * km on the south side
+    y7 = ((G_TOP + rh - 7.0 * kg) - yv) / km              # the valley meets the pavilion wall (x = +-7) there
+    ym = (y0 + y1) / 2
+    cut_s = [(-7.0, y0 - 1.0), (7.0, y0 - 1.0), (7.0, y7), (0.0, ym), (-7.0, y7)]
+    cut_n = [(-7.0, 2 * ym - y7), (0.0, ym), (7.0, 2 * ym - y7), (7.0, y1 + 1.0), (-7.0, y1 + 1.0)]
+    _hip_roof_walk(mb, 0.0, (y0 + y1) / 2, G_TOP, x1 - x0, y1 - y0, rh, GROOF, 0.8, 0.3, {"s": dh, "n": dh},
+                   cuts={"s": [cut_s], "n": [cut_n]}, eave_gaps={"s": [(-7.0, 7.0)], "n": [(-7.0, 7.0)]})
     mb.box_mm((-11.0, 14.93, G_TOP + rh - 0.02), (11.0, 15.07, G_TOP + rh + 0.18), GOLD)
     gh = 6.0
-    _gable_roof_walk(mb, 0.0, py0, py1, px1 - px0, ptop, gh, GROOF, 0.6, 0.3)
+    _gable_roof_walk(mb, 0.0, py0, py1, px1 - px0, ptop, gh, GROOF, 0.38, 0.3)   # (eaves inside the wing attics' walls)
     for (yw, rot) in ((py0, 0.0), (py1, 180.0)):
         with mb.at((0.0, yw, 0.0), rot=rot):
             for sx in (-1, 1):
@@ -4286,7 +4373,8 @@ def _girls_building(mb, nc, aset):
         for x in (-4.6, 4.6):
             for row in ("gf", "f1", "f2"):
                 _g_window(mb, x - px0, row, nc, flowers=fl2)
-        door(mb, 7.0, FL, 2.2, 2.9, leaf=WALL, surround=GTRIM, handle=GOLD, panel_mat=GTRIM, fan=False, style="girls")
+        door(mb, 7.0, FL, 2.2, 2.9, leaf=WALL, surround=GTRIM, handle=GOLD, panel_mat=GTRIM, fan=False, style="girls",
+             proud=0.0)
         window(mb, 7.0, G_Z1, 1.5, 8.52 - G_Z1, GTRIM, head="pediment", head_mat=GTRIM, sill_mat=MARBLE,
                as_door="girls")         # French door onto the porch balcony
         window(mb, 7.0, 10.0, 1.4, 1.9, GTRIM, arch=True, keystone=GOLD, sill_mat=MARBLE)
@@ -4298,13 +4386,14 @@ def _girls_building(mb, nc, aset):
         for x in (-4.4, 0.0, 4.4):
             for row in (("f1", "f2") if x == 0.0 else ("gf", "f1", "f2")):
                 _g_window(mb, px1 - x, row, nc, flowers=fl2)
-        door(mb, px1, FL, 2.0, 2.8, leaf=WALL, surround=GTRIM, handle=GOLD, panel_mat=GTRIM, fan=False, style="girls")
+        door(mb, px1, FL, 2.0, 2.8, leaf=WALL, surround=GTRIM, handle=GOLD, panel_mat=GTRIM, fan=False, style="girls",
+             proud=0.0)
     with facade(mb, (x0, y1), (x0, y0)):  # west (conservatory side: ground floor hidden)
         for y in (9.6, 13.1, 16.6, 20.1):
             _g_window(mb, y1 - y, "f1", nc, flowers=fl2)
             _g_window(mb, y1 - y, "f2")
         door(mb, y1 - 15.0, 0.15, 1.8, 2.7, leaf=WALL, surround=GTRIM, handle=GOLD, panel_mat=GTRIM, fan=False,
-             style="girls")     # conservatory -> garden hall (steps up inside)
+             style="girls", proud=0.0)     # conservatory -> garden hall (steps up inside)
     with facade(mb, (x1, y0), (x1, y1)):  # east
         for y in (9.2, 20.8):
             for row in ("gf", "f1", "f2"):
@@ -4346,19 +4435,19 @@ def _girls_building(mb, nc, aset):
 
     # ------------------------------------------------------------ front terrace + steps
     tx0, ty0, tx1, ty1 = -16.4, -10.0, 16.4, y0
-    mb.box_mm((tx0, ty0, -4.0), (tx1, ty1, FL), WALL, skip=("-z",), mats={"+z": FLOOR})
+    mb.box_mm((tx0, ty0, -4.0), (tx1, ty1, FL), WALL, skip=("-z", "+y"), mats={"+z": FLOOR})
     sw = 4.35                                              # half width of the front steps
     for (a, b) in (((tx0 - 0.12, ty0 - 0.12), (-sw, ty0)), ((sw, ty0 - 0.12), (tx1 + 0.12, ty0)),
                    ((tx0 - 0.12, ty0), (tx0, ty1)), ((tx1, ty0), (tx1 + 0.12, ty1))):  # pink coping strips
         mb.box_mm((a[0], a[1], FL - 0.22), (b[0], b[1], FL), GTRIM)
-    mb.box_mm((tx0 - 0.15, ty0 - 0.15, -4.0), (tx1 + 0.15, ty1, 0.3), MARBLE, skip=("-z",))
+    mb.box_mm((tx0 - 0.15, ty0 - 0.15, -4.0), (tx1 + 0.15, ty1, 0.3), MARBLE, skip=("-z", "+y"))
     flight(mb, (0.0, ty0 - 5 * 0.5, 0.0), 90, 2 * sw, 5, 0.24, 0.5, MARBLE)
     balustrade(mb, [(-4.75, ty0 + 0.2), (tx0 + 0.2, ty0 + 0.2), (tx0 + 0.2, ty1 - 0.4)], FL, MARBLE, GTRIM,
                post_every=3.0, post_mat=MARBLE)
     balustrade(mb, [(tx1 - 0.2, ty1 - 0.4), (tx1 - 0.2, ty0 + 0.2), (4.75, ty0 + 0.2)], FL, MARBLE, GTRIM,
                post_every=3.0, post_mat=MARBLE)
     for sx in (-1, 1):
-        mb.box((sx * 4.75, ty0 + 0.2, FL + 0.7), (0.55, 0.55, 1.4), MARBLE)
+        mb.box((sx * 4.75, ty0 + 0.2, FL + 0.7), (0.55, 0.55, 1.4), MARBLE, skip=("-z",))
         mb.box((sx * 4.75, ty0 + 0.2, FL + 1.45), (0.65, 0.65, 0.1), GTRIM)
         mb.cylinder((sx * 4.75, ty0 + 0.2, FL + 1.5), 0.08, 0.5, IRON, seg=8)
         nc.sphere((sx * 4.75, ty0 + 0.2, FL + 2.25), 0.3, GLOW, seg=12, rings=8)
@@ -4430,7 +4519,7 @@ def _girls_conservatory(mb, aset):
     aset.prop("SM_Bench", (-27.5, 17.4, zf), 180.0)
     aset.prop("SM_BroadTree_C", (-27.5, 14.2, zf), 0.0, 0.7)
     aset.light((-27.5, 15.0, 3.6), WARM, 3500, 10, night_only=True)
-    aset.npc((-25.5, 15.5, zf), 90.0, dorm="obelisk", wander=3.0)
+    aset.npc((-24.4, 11.8, zf), 120.0, dorm="obelisk", wander=2.0)
 
 
 def _gazebo(mb, nc, aset, cx, cy):
@@ -4660,7 +4749,7 @@ G_Z2 = 9.5
 G_C2 = 12.85
 G_Z3, G_C3 = 13.15, 16.0         # attic storey under the hip roof (wings) and the pavilion's gable roof
 G_ZT, G_CT2 = 12.85, 12.55       # turret top rooms (floor) / second-floor turret ceiling under them
-G_HOLE3 = (-6.6, 18.9, -5.35, 22.45)    # stairwell second floor hall -> attic
+G_HOLE3 = (-6.6, 18.9, -4.55, 22.4)     # stairwell second floor hall -> attic (ends at the top step)
 G_BANDS_INT = [(-0.3, 5.35, 0), (5.35, 9.2, 1), (9.2, 13.0, 2), (13.0, 99.0, 3)]
 G_HOLE = (-0.85, 20.1, 0.85, 24.16)     # stairwell music gallery -> second floor hall
 G_RT = 0.4           # turret wall thickness
@@ -4859,7 +4948,7 @@ def _girls_turrets_inside(mb, R):
                    [(a, 0.8, 13.05, 13.9) for a in angs])
         _ring_wall(mb, tx, ty, G_TURRET_R, G_RT, a1, a0 + 360.0, 13.0, 15.2, WALL, WALL_LILAC, [])
         sc = _turret_spiral_xy(tx, ty)
-        hole = (sc[0] - 0.95, sc[1] - 0.95, sc[0] + 0.95, sc[1] + 0.95)
+        hole = (sc[0] - 1.1, sc[1] - 1.1, sc[0] + 1.1, sc[1] + 1.1)
         _turret_disc(mb, tx, ty, r_in, a0, a1, G_CT2, G_ZT, R[g2]["floor"], hole)
         for (p0, p1) in (((tx, ty), (tx + qx * r_in, ty)), ((tx, ty), (tx, ty + qy * r_in))):
             n_ = (0.0, -qy) if p1[1] == ty else (-qx, 0.0)
@@ -4867,7 +4956,10 @@ def _girls_turrets_inside(mb, R):
             _attic_upright(mb, p0, p1, (-n_[0], -n_[1]), G_CT2, G_C2, K.CEIL)
         mb.lathe([(G_TURRET_R - G_RT, 15.15), (G_TURRET_R * 0.55, 15.2 + 8.6 * 0.42), (0.15, 15.2 + 8.6 * 0.85)][::-1],
                  K.PLASTER_SKY, 28, cap_top=False, cap_bottom=False, center=(tx, ty, 0.0))
-        K.spiral_stairs(mb, sc[0], sc[1], G_Z2, G_ZT, 0.08, 0.85, a0=0.0, step_deg=26.0, mat=K.TRIM_WHITE,
+        # (1.0 m: 0.8 m clear between the post and the handrail's chords)
+        # turned so that its top step points along the curved wall (the arrival: (a0 + 468 + 25) = mw - 90 deg)
+        K.spiral_stairs(mb, sc[0], sc[1], G_Z2, G_ZT, 0.08, 1.0, a0=(a0 + a1) / 2 - 223.0, step_deg=26.0,
+                        mat=K.TRIM_WHITE,
                         core=GTRIM, rail=GTRIM)
 
 
@@ -5051,7 +5143,7 @@ def _girls_rooms():
     room("lsalon", 2, (-6.6, 1.4, 6.6, 13.4), WALL_ROSE, K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.3,
          panels=K.TRIM_WHITE, seams=K.WOOD_DARK, coffer=(2.6, K.TRIM_WHITE, K.TRIM_GOLD))
     room("hall2", 2, (-6.6, 13.6, 6.6, 26.6), WALL_LILAC, MARBLE_ROSE, holes=[G_HOLE], dado=(K.TRIM_WHITE, GTRIM),
-         dado_h=0.9, panels=K.TRIM_WHITE, cornice=GTRIM, coffer=(2.2, K.TRIM_WHITE, GTRIM))
+         dado_h=0.9, panels=K.TRIM_WHITE, cornice=GTRIM, coffer=(2.2, K.TRIM_WHITE, GTRIM), cut_ceiling=[G_HOLE3])
     themes = {"wfs": WALL_ROSE, "wfb": "M_IntWallpaperBlue", "wbs": WALL_LILAC, "wbb": WALL_ROSE,
               "efs": K.PLASTER_MINT, "efb": WALL_LILAC, "ebs": "M_IntWallpaperBlue", "ebb": WALL_ROSE}
     alt = {WALL_ROSE: WALL_LILAC, "M_IntWallpaperBlue": WALL_ROSE, WALL_LILAC: K.PLASTER_MINT,
@@ -5078,16 +5170,23 @@ def _girls_rooms():
     # attic storey: artist's studio + landing under the pavilion's gable roof (rose windows), four rooms under the
     # hip roof of the wings (dormers)
     att = dict(cornice=None, dado=(K.WOOD, K.TRIM_WOOD), dado_h=0.75, skirting=K.TRIM_WOOD, seams=K.WOOD_DARK)
+    # (the studio | landing partition is built with the attic, its door's gap in the skirting and dado is given here)
     R["att_studio"] = _room("att_studio", 3, (-6.6, 1.4, 6.6, 13.4), G_Z3, 17.35, WALL_LILAC, K.WOODFLOOR, ceil=None,
-                            **att)
+                            gaps={"n": [(-0.62, 0.62)]}, **att)
     R["att_landing"] = _room("att_landing", 3, (-6.6, 13.6, 6.6, 26.6), G_Z3, 17.35, WALL_LILAC, K.WOODFLOOR,
-                             ceil=None, holes=[G_HOLE3], **att)
+                             ceil=None, holes=[G_HOLE3], gaps={"s": [(-0.62, 0.62)]}, **att)
+    # the flat (coffered) ceilings of the wing attics stop where the sloping ceilings under the hip roof begin
+    # (_girls_attic): over the slopes they stood above the roof, beams and all, seen from outside
+    ins = (G_C3 - 13.61) / (6.8 / 11.8)
     for sx in (-1, 1):
         s = "w" if sx < 0 else "e"
+        side = _mx((21.6 - ins, 4.3, 21.7, 25.7), sx)
         R["att_f" + s] = _room("att_f" + s, 3, _mx((7.4, 4.4, 21.6, 14.9), sx), G_Z3, G_C3,
-                               WALL_ROSE if sx < 0 else K.PLASTER_MINT, K.WOODFLOOR, coffer=(1.8, K.WOOD_DARK, None), **att)
+                               WALL_ROSE if sx < 0 else K.PLASTER_MINT, K.WOODFLOOR, coffer=(1.8, K.WOOD_DARK, None),
+                               cut_ceiling=[_mx((7.3, 4.3, 21.7, 4.4 + ins), sx), side], **att)
         R["att_b" + s] = _room("att_b" + s, 3, _mx((7.4, 15.1, 21.6, 25.6), sx), G_Z3, G_C3,
-                               K.PLASTER_CREAM if sx < 0 else WALL_LILAC, K.WOODFLOOR, coffer=(1.8, K.WOOD_DARK, None), **att)
+                               K.PLASTER_CREAM if sx < 0 else WALL_LILAC, K.WOODFLOOR, coffer=(1.8, K.WOOD_DARK, None),
+                               cut_ceiling=[_mx((7.3, 25.6 - ins, 21.7, 25.7), sx), side], **att)
     return R
 
 
@@ -5104,6 +5203,12 @@ def _girls_bay_plan():
                             double=False))
 
 
+def _slab_caps(mb, poly, z0, z1, mat, top_mat):
+    """A floor slab whose edges all lie in walls: the walking face and the underside, no side faces."""
+    mb.poly([(p[0], p[1], z1) for p in poly], top_mat)
+    mb.poly([(p[0], p[1], z0) for p in reversed(poly)], mat)
+
+
 def _girls_bays(aset, main, R):
     """Canted bays: facet walls with real windows, floors and ceilings; the round east bay's ground floor."""
     segs = []
@@ -5115,9 +5220,9 @@ def _girls_bays(aset, main, R):
         poly = [(xc - wf / 2, yf), (xc + wf / 2, yf), (xc + wb / 2, yw), (xc + wb / 2, 4.3), (xc - wb / 2, 4.3),
                 (xc - wb / 2, yw)]
         r0, r1 = (R["parlour"], R["wfs"]) if sx < 0 else (R["tea"], R["efs"])
-        main.prism(poly, G_FL - 0.3, G_FL, K.CEIL, top_mat=r0["floor"])
+        _slab_caps(main, poly, G_FL - 0.3, G_FL, K.CEIL, r0["floor"])
         main.poly([(p[0], p[1], G_C0) for p in reversed(poly)], K.CEIL)
-        main.prism(poly, G_Z1 - 0.3, G_Z1, K.CEIL, top_mat=r1["floor"])
+        _slab_caps(main, poly, G_Z1 - 0.3, G_Z1, K.CEIL, r1["floor"])
         main.poly([(p[0], p[1], G_C1) for p in reversed(poly)], K.CEIL)
     # round east bay: ring wall with real windows, half-disc floor and ceiling
     bx, by, br = 22.0, 15.0, 2.6
@@ -5125,12 +5230,12 @@ def _girls_bays(aset, main, R):
                [(a, 1.0, 1.85, 4.65) for a in (-55.0, 0.0, 55.0)], seg=24)
     pts = [_ring_point(bx, by, br, 24, -90.0 + 180.0 * k / 12) for k in range(13)]
     pts = [(bx - 0.4, by - br)] + pts + [(bx - 0.4, by + br)]
-    main.prism(pts, G_FL - 0.3, G_FL, K.CEIL, top_mat="M_IntTileBlue")
+    _slab_caps(main, pts, G_FL - 0.3, G_FL, K.CEIL, "M_IntTileBlue")
     main.poly([(p[0], p[1], G_C0) for p in reversed(pts)], K.CEIL)
     # first floor: the round bay is an alcove of the front east bedroom (window seat behind the bed)
     _ring_wall(main, bx, by, br, 0.25, -90.0, 90.0, 5.35, 9.2, WALL, R["efb"]["wall"],
                [(a, 1.0, 6.0, 8.5) for a in (-55.0, 0.0, 55.0)], seg=24)
-    main.prism(pts, G_Z1 - 0.3, G_Z1, K.CEIL, top_mat=R["efb"]["floor"])
+    _slab_caps(main, pts, G_Z1 - 0.3, G_Z1, K.CEIL, R["efb"]["floor"])
     main.poly([(p[0], p[1], G_C1) for p in reversed(pts)], K.CEIL)
 
 
@@ -5143,6 +5248,18 @@ def _girls_partitions(aset, mb, R):
         g_front, g_corr, g_back = (R["parlour"], R["gcorr"], R["library"]) if sx < 0 else (R["tea"], R["ecorr"], R["dining"])
 
         def J(y0, y1, z0, z1, wing, cside, doors):
+            # junction wall on x = +-7 (0.8 m). Up to the main block's wall tops (13.6) it stops at the inner faces
+            # of the front / back walls (y 4.4 / 25.6): its end face lay in the facade plane over their ends. The
+            # half of the corner they leave open (|x| 6.6-7.0) is a 0.4 m piece; above them the whole corner is.
+            zm = 13.6
+            for (ya, yb) in ((y0, min(y1, 4.4)), (max(y0, 25.6), y1)):
+                if yb - ya < 1e-3:
+                    continue
+                for (xx, tt, za_, zb_) in ((6.8, 0.4, z0, min(z1, zm)), (7.0, 0.8, max(z0, zm), z1)):
+                    if zb_ - za_ > 1e-3:
+                        a, b = ((xx, ya), (xx, yb)) if sx > 0 else ((-xx, yb), (-xx, ya))
+                        _pw(aset, mb, a, b, za_, zb_, tt, wing, cside, trim=GTRIM, trim_in=GTRIM)
+            y0, y1 = max(y0, 4.4), min(y1, 25.6)
             a, b = ((7.0, y0), (7.0, y1)) if sx > 0 else ((-7.0, y1), (-7.0, y0))
             _pw(aset, mb, a, b, z0, z1, 0.8, wing, cside, doors, trim=GTRIM, trim_in=GTRIM)
 
@@ -5281,16 +5398,19 @@ def _girls_attic(aset, mb, R):
     _face(mb, [(-0.5, 13.4, G_Z3 + 2.1), (0.5, 13.4, G_Z3 + 2.1), (0.5, 13.6, G_Z3 + 2.1), (-0.5, 13.6, G_Z3 + 2.1)],
           K.TRIM_WHITE, (0, 0, -1))
     aset.door((0.0, 13.5, G_Z3), 0.0, 1.0, 2.1, D, False)
-    mb.box_mm((-0.5, 13.4, G_Z3 - 0.3), (0.5, 13.6, G_Z3), K.WOODFLOOR)
+    mb.box_mm((-0.5, 13.4, G_Z3 - 0.3), (0.5, 13.6, G_Z3), K.WOODFLOOR, skip=("-z", "-y", "+y"))
     # collar ceiling over the middle of the studio and the landing (the rose windows stay clear)
     for (ya, yb) in ((3.0, 13.4), (13.6, 25.0)):
         mb.poly([(-2.6, ya, 17.35), (-2.6, yb, 17.35), (2.6, yb, 17.35), (2.6, ya, 17.35)], K.WOOD)
     # stair: second floor hall -> attic landing, along the hall's west wall
-    _flight(mb, -6.0, 16.8, G_Z2, G_Z3, 90.0, 1.1, run=0.28, carpet="M_IntCarpetRose", cw=0.7, base=G_Z2,
+    # (2 m wide: under the gable roof's low side the wall half of the top steps has no headroom, the runner
+    # follows the middle)
+    _flight(mb, -5.59, 16.8, G_Z2, G_Z3, 90.0, 1.99, run=0.28, carpet="M_IntCarpetRose", cw=1.0, base=G_Z2,
             nose=K.TRIM_GOLD)
-    _rail(mb, (-5.42, 16.85, G_Z2), (-5.42, 22.35, G_Z3), post=K.TRIM_WHITE, rail=GTRIM, newel=MARBLE)
-    _rail(mb, (-5.3, G_HOLE3[1] - 0.04, G_Z3), (-5.3, G_HOLE3[3] - 0.3, G_Z3), post=K.TRIM_WHITE, rail=GTRIM)
-    _rail(mb, (-6.55, G_HOLE3[1] - 0.04, G_Z3), (-5.3, G_HOLE3[1] - 0.04, G_Z3), post=K.TRIM_WHITE, rail=GTRIM)
+    xr = G_HOLE3[2] + 0.05
+    _rail(mb, (-4.63, 16.85, G_Z2), (-4.63, 22.35, G_Z3), post=K.TRIM_WHITE, rail=GTRIM, newel=MARBLE)
+    _rail(mb, (xr, G_HOLE3[1] - 0.04, G_Z3), (xr, G_HOLE3[3] - 0.3, G_Z3), post=K.TRIM_WHITE, rail=GTRIM)
+    _rail(mb, (-6.55, G_HOLE3[1] - 0.04, G_Z3), (xr, G_HOLE3[1] - 0.04, G_Z3), post=K.TRIM_WHITE, rail=GTRIM)
 
 
 def _girls_attic_furnish(aset, mb, nc, R):
@@ -5331,8 +5451,8 @@ def _girls_attic_furnish(aset, mb, nc, R):
         _rug(mb, -2.0, 14.2, 2.0, 24.0, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
         for (x, y, w, d, h) in ((4.6, 21.5, 1.6, 0.9, 1.0), (3.8, 25.2, 1.8, 0.8, 0.8), (-3.6, 25.4, 1.2, 0.8, 1.3)):
             _sheeted(nc, x, y, w, d, h, rng.uniform(-10, 10))
-        for k in range(4):
-            f.prop("SM_Int_Suitcase", 5.9, 15.0 + k * 0.75, 90.0)
+        for k in range(4):            # (north of the doors into the east wing attic)
+            f.prop("SM_Int_Suitcase", 5.9, 18.6 + k * 0.75, 90.0)
         for (x, y) in ((-1.6, 24.8), (1.0, 25.2)):
             nc.cylinder((x, y, 0.0), 0.12, 0.03, K.WOOD_DARK, seg=10)
             nc.cylinder((x, y, 0.03), 0.02, 1.0, K.WOOD_DARK, seg=6)
@@ -5370,7 +5490,8 @@ def _girls_attic_furnish(aset, mb, nc, R):
                 else:                                                 # box room: trunks, dust sheets, a dress rail
                     for (x, dy, w, d, h) in ((10.0, -1.6, 1.6, 0.9, 0.9), (13.2, 1.8, 1.2, 1.0, 1.3), (16.6, -1.2, 2.0, 0.9, 0.8),
                                              (18.6, 2.0, 1.0, 0.8, 1.1)):
-                        _sheeted(nc, sx * x, cy + dy, w, d, h, rng.uniform(-12, 12))
+                        # (mirrored in the back rooms: one stood in the back dormer niche's mouth)
+                        _sheeted(nc, sx * x, cy + (dy if front else -dy), w, d, h, rng.uniform(-12, 12))
                     for k in range(5):
                         f.prop("SM_Int_Suitcase", sx * (8.0 + 0.0 * k), cy - 2.4 + k * 0.7, 90.0)
                     for k in range(6):
@@ -5385,8 +5506,9 @@ def _girls_attic_furnish(aset, mb, nc, R):
                     f.prop("SM_Int_Wardrobe", sx * 11.0, yw - (0.58 if front else -0.58), 0.0 if front else 180.0)
                     f.prop("SM_Int_Vitrine", sx * 18.0, yw - (0.36 if front else -0.36), 0.0 if front else 180.0)
                     _portrait(f, sx * 14.4, yw, 1.4, "n" if front else "s", 1.6)
-                _rug(mb, min(sx * 9.4, sx * 19.4), cy - 1.1, max(sx * 9.4, sx * 19.4), cy + 1.1, 0.0,
-                     "M_IntCarpetRose" if front else "M_IntCarpetYellow")
+                if not (front and sx < 0 or not front and sx > 0):      # (the maids' beds have their rag rugs)
+                    _rug(mb, min(sx * 9.4, sx * 19.4), cy - 1.1, max(sx * 9.4, sx * 19.4), cy + 1.1, 0.0,
+                         "M_IntCarpetRose" if front else "M_IntCarpetYellow")
                 for x in (10.4, 16.4):
                     f.prop("SM_Int_CeilingLamp", sx * x, cy, 0.0, z=zc)
             _dress(aset, mb, nc, r, 122 + int(front) + 2 * (sx > 0))
@@ -5397,7 +5519,7 @@ def _girls_attic_furnish(aset, mb, nc, R):
         a0, a1 = G_TURRET_OPEN[(tx, ty)]
         f = Frame(aset, mb, nc, tx, ty, G_ZT)
         with f:
-            for k in range(5):
+            for k in (0, 3, 4):        # floor cushions round the wall (not by the stair head and its arrival)
                 a = math.radians(a0 + (a1 - a0) * (k + 0.5) / 5)
                 with nc.at((math.cos(a) * 2.6, math.sin(a) * 2.6, 0.0), rot=math.degrees(a) + 90.0):
                     nc.box((0, 0, 0.1), (0.9, 0.55, 0.2), ("M_IntFabricPink", "M_IntFabricPurple")[k % 2])
@@ -5406,8 +5528,9 @@ def _girls_attic_furnish(aset, mb, nc, R):
             m = math.radians((a0 + a1) / 2 + 60.0)
             f.prop("SM_Int_LowTable", math.cos(m) * 1.4, math.sin(m) * 1.4, 0.0)
             f.prop("SM_Int_TeaSet", math.cos(m) * 1.4, math.sin(m) * 1.4, 20.0, z=0.5)
-            m2 = math.radians((a0 + a1) / 2 - 60.0)
+            m2 = math.radians((a0 + a1) / 2 + 120.0)
             f.prop("SM_Int_OilLamp", math.cos(m2) * 1.9, math.sin(m2) * 1.9, 0.0)
+            m2 = math.radians((a0 + a1) / 2 + 100.0)
             f.prop("SM_Int_Books", math.cos(m2) * 1.5, math.sin(m2) * 1.5, 30.0)
             qx, qy = (1 if tx < 0 else -1), (1 if ty < 10 else -1)
             for (dx, dy, yaw) in ((-qx * 0.0 + qx * 1.4, -qy * 0.19, 180.0 if qy < 0 else 0.0),
@@ -5420,8 +5543,10 @@ def _girls_attic_furnish(aset, mb, nc, R):
             _rug(mb, math.cos(m3) * 1.5 - 0.8, math.sin(m3) * 1.5 - 0.8, math.cos(m3) * 1.5 + 0.8, math.sin(m3) * 1.5 + 0.8,
                  0.0, "M_IntCarpetRose", K.TRIM_GOLD)
             # a lookout room: telescope at the window, a tall plant, sconces and silk lanterns on the curved wall
-            mw = math.radians((a0 + a1) / 2)
-            px_, py_ = math.cos(mw) * 1.7, math.sin(mw) * 1.7
+            # (the stair rises 1.75 m out from the centre on the open sector's middle: the telescope stands
+            # beside it, at the wall)
+            mw = math.radians((a0 + a1) / 2 - 90.0)
+            px_, py_ = math.cos(mw) * 2.4, math.sin(mw) * 2.4
             for k in range(3):
                 b_ = math.radians(k * 120.0)
                 nc.beam((px_ + math.cos(b_) * 0.3, py_ + math.sin(b_) * 0.3, 0.0), (px_, py_, 1.15), 0.03, 0.03, K.WOOD_DARK)
@@ -5530,7 +5655,7 @@ def _girls_parlour(aset, mb, nc, r):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.fireplace(mb, nc, f.a, -16.3, 13.4, 0.0, w=1.8, h=1.3, mat="M_IntTrimWhite", trim=GTRIM)
+        _fireplace(mb, nc, f.a, -16.3, 13.4, 0.0, w=1.8, h=1.3, mat="M_IntTrimWhite", trim=GTRIM)
         f.prop("SM_Int_Mirror", -16.3, 13.4, 0.0, z=1.55, scale=1.3)
         f.prop("SM_Int_MantelClock", -16.3, 13.28, 180.0, z=1.4)
         _seating(f, -16.3, 9.2, 180.0, sofa="SM_Int_Sofa", chair="SM_Int_GreenChair", rug="M_IntCarpetRose", seed=11,
@@ -5566,9 +5691,9 @@ def _girls_halls(aset, mb, nc, R):
             _cushions(nc, sx * 9.2, 13.8, 0.45, 180.0, 2, ("M_IntFabricPink", "M_IntFabricWhite"), w=0.8)
             if sx > 0:
                 _plant(f, 20.6, 13.95, big=False)
-                for x in (11.2, 17.6):       # pedestals with flowers, hall chairs
+                for (x, xc) in ((13.9, 10.2), (17.6, 16.6)):   # pedestals (clear of the tea room door), hall chairs
                     _plinth_bust(f, mb, x, 13.95, 0.0)
-                    f.prop("SM_Int_DiningChair", x - 1.0, 16.05, 180.0)
+                    f.prop("SM_Int_DiningChair", xc, 16.05, 180.0)
             else:
                 # garden hall: coat stand with blue dorm jackets, umbrella stand, boots by the garden door
                 DT.coat_hooks(nc, -17.5, 13.6, 1.75, 180.0, n=4, dorm="obelisk", jackets=3, seed=2)
@@ -5643,7 +5768,7 @@ def _girls_tearoom(aset, mb, nc, r):
     _gallery(f, r, ("n",), z=1.6, scale=1.6, skip=[("n", 15.0, 17.0)])
     _dress(aset, mb, nc, r, 36)
     aset.npc((15.3, 6.2, r["z"]), 0.0, dorm="obelisk", wander=0.6)
-    aset.npc((12.0, 10.3, r["z"]), 150.0, dorm="obelisk", wander=0.6)
+    aset.npc((13.4, 9.5, r["z"]), 150.0, dorm="obelisk", wander=0.6)
     K.camera(aset, "tea_room", (8.0, 12.9, r["z"] + 1.7), (19.5, 5.0, r["z"] + 0.7), 15.0)
 
 
@@ -5692,7 +5817,7 @@ def _girls_salon(aset, mb, nc, r, rc, rg):
     f = Frame(aset, mb, nc, 0.0, 0.0, r["z"])
     zc = r["zc"] - r["z"]
     with f:
-        K.fireplace(mb, nc, f.a, -3.6, 13.4, 0.0, w=1.6, h=1.2, mat="M_IntTrimWhite", trim=GTRIM)
+        _fireplace(mb, nc, f.a, -3.6, 13.4, 0.0, w=1.6, h=1.2, mat="M_IntTrimWhite", trim=GTRIM)
         f.prop("SM_Int_Mirror", -3.6, 13.4, 0.0, z=1.5, scale=1.2)
         f.prop("SM_Int_Vitrine", 3.6, 13.05, 0.0)
         for sx in (-1, 1):
@@ -5746,7 +5871,7 @@ def _girls_salon(aset, mb, nc, r, rc, rg):
             _chandelier(f, sx * 3.1, 21.8, zc, 0.9)
     _curtains(nc, rg, "M_IntFabricPink", rod=K.TRIM_GOLD)
     _gallery(f, rg, ("n",), z=1.2, scale=1.5, skip=[("n", -6.6, -5.0), ("n", 5.0, 6.6)])
-    _dress(aset, mb, nc, rg, 43, clear=[(-6.6, 16.4, -4.8, 23.7), (4.8, 16.4, 6.6, 23.7)])
+    _dress(aset, mb, nc, rg, 43, clear=[(-6.6, 16.4, -4.8, 23.7), (4.8, 16.4, 6.6, 23.7), G_HOLE])
     K.camera(aset, "gallery", (0.0, 13.9, rg["z"] + 1.7), (0.0, 25.0, rg["z"] + 0.6), 15.0)
 
 
@@ -5771,7 +5896,8 @@ def _girls_sitting(aset, mb, nc, r, sx, front, num=0):
         DT.desk_set(nc, f.a, xo - sx * 0.31, dyy, 0.76, 90.0 if sx < 0 else -90.0, "student", seed=num, w=1.2, d=0.6)
         f.prop("SM_Int_WoodChair", xo - sx * 1.05, dyy, 90.0 if sx > 0 else -90.0)
         _wall_shelf(f, xo, dyy, "w" if sx < 0 else "e", 1.2, 1.5, num, "decks")
-        K.bookcase(mb, nc, xo - sx * 0.22, dyy + sy * 1.7, 90.0 if sx < 0 else -90.0, w=1.3, d=0.4, h=2.1, shelves=5,
+        # (window side of the desk: the bedroom door is on the other side)
+        K.bookcase(mb, nc, xo - sx * 0.22, dyy - sy * 1.7, 90.0 if sx < 0 else -90.0, w=1.3, d=0.4, h=2.1, shelves=5,
                    mat=K.TRIM_WHITE, rng_seed=num)
         _plant(f, xj + sx * 0.6, win_y + sy * 0.6)
         _chandelier(f, cx, cy, zc, 0.9)
@@ -5790,18 +5916,28 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
     door_x = r["x1"] if sx < 0 else r["x0"]
     cx = (r["x0"] + r["x1"]) / 2
     by = inner_y - qy * 1.06
-    bx = sx * 19.1                                   # bed (towards the outer wall; the bathroom takes the door corner)
+    # bed (towards the outer wall; the bathroom takes the door corner). Beside the en-suite's partition, 2.1 m
+    # from the outer wall: the passage past the writing desk to the bed's window side (nightstand, the round east
+    # bay) stays open
+    bx = sx * 18.65
     side_d = "e" if sx < 0 else "w"
     with f:
         # en-suite bathroom in the corner between the suite partition and the inner wall
         _ensuite(f, mb, nc, door_x, door_x + sx * 2.6, inner_y - qy * 2.7, inner_y, "y", door_x + sx * 1.6, zc,
                  r["wall"], tile="M_IntTileWhite", wall_in="M_ObIntWallRose")
-        _rug(mb, bx - 2.0, min(by - qy * 3.6, by + qy * 1.0), bx + 2.0, max(by - qy * 3.6, by + qy * 1.0), 0.0,
+        # (the rug stops at the en-suite's wall)
+        rxa, rxb = bx - 2.0, bx + 2.0
+        if sx > 0:
+            rxa = max(rxa, door_x + 2.65)
+        else:
+            rxb = min(rxb, door_x - 2.65)
+        _rug(mb, rxa, min(by - qy * 3.6, by + qy * 1.0), rxb, max(by - qy * 3.6, by + qy * 1.0), 0.0,
               "M_IntCarpetRose", K.TRIM_GOLD)
         f.prop("SM_Int_GrandBed", bx, by, 0.0 if front else 180.0)
-        for s in (-1, 1):
-            f.prop("SM_Int_NightstandB", bx + s * 1.05, inner_y - qy * 0.27, 0.0 if front else 180.0)
-            f.prop("SM_Int_OilLamp" if s < 0 else "SM_Int_PottedPlant", bx + s * 1.05, inner_y - qy * 0.27, 0.0, z=0.62)
+        # one nightstand, on the window side (the bed's other side stands against the en-suite's wall)
+        f.prop("SM_Int_NightstandB", bx + sx * 1.05, inner_y - qy * 0.27, 0.0 if front else 180.0)
+        f.prop("SM_Int_OilLamp", bx + sx * 1.05, inner_y - qy * 0.27, 0.0, z=0.62)
+        f.prop("SM_Int_PottedPlant", bx + sx * 1.05 + 0.18, inner_y - qy * 0.27, 0.0, z=0.62)
         for sxx in (-1, 1):
             for syy in (-1, 1):
                 mb.box((bx + sxx * 0.82, by + syy * 1.07, 1.3), (0.07, 0.07, 2.6), K.TRIM_WHITE)
@@ -5838,11 +5974,11 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
         DT.card_spread(nc, cx - 0.2, sy0 + qy * 1.0, zt, 0.0, 4, num)
         # writing desk + painting between the side windows of the outer wall
         x_out = r["x0"] if sx < 0 else r["x1"]
-        dy = 11.35 if front else 18.35
+        dy = 10.85 if front else 18.85        # (clear of the day-bed: the passage to the bed's window side)
         K.desk(mb, nc, x_out - sx * 0.31, dy, 90.0 if sx < 0 else -90.0, w=1.1, d=0.6, top=K.TRIM_WHITE,
                legs=K.TRIM_WHITE, hutch=False, clutter=False)
         DT.desk_set(nc, f.a, x_out - sx * 0.31, dy, 0.76, 90.0 if sx < 0 else -90.0, "vanity", seed=num, w=1.1, d=0.6)
-        f.prop("SM_Int_WoodChair", x_out - sx * 1.0, dy, -90.0 if sx < 0 else 90.0)
+        f.prop("SM_Int_WoodChair", x_out - sx * 0.85, dy, -90.0 if sx < 0 else 90.0)   # (tucked in: passage to the bed)
         _portrait(f, x_out, dy, 1.45, "w" if sx < 0 else "e", 1.6)
         # shelves between the vanity and the door, paintings, plants
         f.prop("SM_Int_Shelves", door_x + sx * 0.2, 8.0 if front else 22.0, 90.0 if sx > 0 else -90.0)
@@ -5865,7 +6001,7 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
 
 def _girls_conservatory_door(aset, mb):
     """Glass conservatory: the doorway in the glass front gets a double door, a marble step outside."""
-    aset.door((-27.5, 8.75, 0.15), 0.0, 2.2, 2.65, "girls", True)
+    aset.door((-27.5, 8.75, 0.15), 0.0, 2.08, 2.6, "girls", True)
     mb.box_mm((-28.8, 7.7, -0.3), (-26.2, 8.6, 0.15), MARBLE, skip=("-z",))       # landing + step outside
     mb.box_mm((-28.8, 7.35, -0.3), (-26.2, 7.7, 0.075), MARBLE, skip=("-z",))
     K.camera(aset, "conservatory", (-24.4, 18.2, 1.85), (-27.5, 8.75, 1.3), 16.0)
@@ -5935,7 +6071,7 @@ def _girls_lsalon(aset, mb, nc, r):
     _curtains(nc, r, "M_IntFabricPink", rod=K.TRIM_GOLD)
     _gallery(f, r, ("e", "w"), z=1.3, scale=1.7, skip=[("e", 8.0, 10.0), ("w", 8.0, 10.0)])
     _dress(aset, mb, nc, r, 54)
-    aset.npc((2.0, 4.6, r["z"]), 200.0, dorm="obelisk", wander=0.8)
+    aset.npc((0.9, 5.6, r["z"]), 200.0, dorm="obelisk", wander=0.8)
     K.camera(aset, "ladies_salon", (5.8, 12.6, r["z"] + 1.6), (-3.0, 2.5, r["z"] + 0.8), 15.0)
 
 
@@ -5946,19 +6082,19 @@ def _girls_hall2(aset, mb, nc, r):
     with f:
         _rug(mb, -1.0, 13.8, 1.0, 20.0, 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
         # sewing corner: work table with a sewing machine, dress form, bolts of cloth on shelves
-        mb.box_mm((-5.2, 22.0, 0.72), (-2.8, 22.9, 0.76), K.TRIM_WHITE)
-        for (x, y) in ((-5.1, 22.1), (-2.9, 22.1), (-5.1, 22.8), (-2.9, 22.8)):
+        mb.box_mm((-4.4, 22.0, 0.72), (-2.0, 22.9, 0.76), K.TRIM_WHITE)
+        for (x, y) in ((-4.3, 22.1), (-2.1, 22.1), (-4.3, 22.8), (-2.1, 22.8)):
             mb.box((x, y, 0.36), (0.06, 0.06, 0.72), K.TRIM_WHITE)
-        nc.box((-4.6, 22.5, 0.86), (0.42, 0.2, 0.2), K.BLACK)
-        nc.box((-4.75, 22.5, 1.0), (0.12, 0.2, 0.12), K.BLACK)
-        nc.box((-4.0, 22.45, 0.765), (0.5, 0.35, 0.01), "M_IntFabricPink")
-        DT.paper_stack(nc, -3.5, 22.6, 0.76, 20.0, 3, 1)
-        f.prop("SM_Int_WoodChair", -4.5, 21.4, 0.0)
-        nc.cylinder((-2.6, 24.2, 0.0), 0.18, 0.03, K.WOOD_DARK, seg=10)
-        nc.cylinder((-2.6, 24.2, 0.03), 0.02, 1.0, K.WOOD_DARK, seg=6)
+        nc.box((-3.8, 22.5, 0.86), (0.42, 0.2, 0.2), K.BLACK)
+        nc.box((-3.95, 22.5, 1.0), (0.12, 0.2, 0.12), K.BLACK)
+        nc.box((-3.2, 22.45, 0.765), (0.5, 0.35, 0.01), "M_IntFabricPink")
+        DT.paper_stack(nc, -2.7, 22.6, 0.76, 20.0, 3, 1)
+        f.prop("SM_Int_WoodChair", -3.7, 21.4, 0.0)
+        nc.cylinder((-1.8, 24.2, 0.0), 0.18, 0.03, K.WOOD_DARK, seg=10)
+        nc.cylinder((-1.8, 24.2, 0.03), 0.02, 1.0, K.WOOD_DARK, seg=6)
         nc.lathe([(0.12, 0.0), (0.17, 0.1), (0.14, 0.3), (0.18, 0.45), (0.12, 0.6), (0.05, 0.66)], "M_IntFabricWhite",
-                 12, center=(-2.6, 24.2, 1.03), cap_top=True)
-        nc.lathe([(0.19, 0.0), (0.3, -0.55)], "M_IntFabricPink", 12, center=(-2.6, 24.2, 1.33), cap_top=False)
+                 12, center=(-1.8, 24.2, 1.03), cap_top=True)
+        nc.lathe([(0.19, 0.0), (0.3, -0.55)], "M_IntFabricPink", 12, center=(-1.8, 24.2, 1.33), cap_top=False)
         for k, x in enumerate((-5.8, -4.6)):
             K.bookcase(mb, nc, x, 26.39, 0.0, w=1.15, d=0.4, h=2.2, shelves=4, mat=K.TRIM_WHITE, rng_seed=60 + k,
                        fill=0.4)

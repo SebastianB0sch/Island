@@ -14,12 +14,14 @@ python Tools/academy_check.py --only paths --region 80,0,104,10,101,3,6.6   # on
 ```
 
 Run with the Blender-as-a-module interpreter, like the other audits. `--location slifer` checks the Slifer Red
-dorm, `--location ra` the Ra Yellow dorm, `--location obelisk_boys` the Obelisk Blue boys' palace and
+dorm, `--location ra` the Ra Yellow dorm, `--location obelisk_boys` / `obelisk_girls` the Obelisk Blue
+boys' palace / girls' mansion and
 `--location cell:<interior id>` a portal room with its `anchors.json` marks. `SLIFER_LAYOUT.md`, `RA_LAYOUT.md`
 and `OBELISK_LAYOUT.md` list the refinements made to the check on 2026-11-11:
 - the furniture collision boxes are part of the walk grid;
 - narrow doorways and spiral stairs get an exact test;
 - outdoor spots are not leak-tested, and trees and bushes don't count as walls;
+- trees and palms block the walk grid with their trunks (as their collision in the game), not their canopy box;
 - back faces are confirmed by neighbouring rays.
 
 What it checks:
@@ -120,6 +122,8 @@ y -67).
 
 **Re-check after the Obelisk pass** (`OBELISK_LAYOUT.md`: shared panelling caps, ceiling fixtures beside
 keep-clear areas): NPC spots 0, doors 0, paths 153, z-fighting 865, back faces 25.
+After the girls' mansion pass (trees as trunks in the check): NPC spots 0, doors 0, paths 157 (the same areas,
+grouped differently), z-fighting 896, back faces 25.
 
 Known leftovers (reported by the check, not defects of the building):
 

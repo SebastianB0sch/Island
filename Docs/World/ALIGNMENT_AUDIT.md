@@ -92,7 +92,7 @@ overworld, its interiors, the portal-cell interiors and the optional Fab nature 
 | 34 | Slifer ground-floor rear window frames/sills were 25 cm above their wall openings. | Frame row lowered to `ZG+0.9` (`slifer.py`). |
 | 35 | RA cafeteria windows had a duplicate sill 2 cm below the opening; RA French-door surrounds started 5-6 cm high. | Duplicate sill removed; surrounds lowered to the real floor (`ra.py`). |
 | 36 | The shared window inside-sill top was 5 mm below the opening. | Sill raised so its top is flush (`interior.py`). |
-| 37 | Obelisk girls' conservatory door was 2.0 x 2.55 m in a 2.2 x 2.65 m opening. | Door resized to 2.2 x 2.65 m (`obelisk.py`). |
+| 37 | Obelisk girls' conservatory door was 2.0 x 2.55 m in a 2.2 x 2.65 m opening. | Door resized to 2.2 x 2.65 m (`obelisk.py`). 2026-11-11: that was the bay pitch; the clear opening between the glazing bars and under the transom is 2.08 x 2.6 m, the door's size now (`OBELISK_LAYOUT.md`). |
 | 38 | Abandoned plank door leaves could exceed their nominal height by 3.4 cm and clip the head. | Plank offsets made ragged downward only (`doors.py`). |
 | 39 | Academy office door swung through the frock-coat rail, side table and oil lamp in Crowler's dressing room. | Coats/rail moved west of the swing; table/lamp moved south (`academy.py`). |
 | 40 | Abandoned clock-tower floor planks covered the spiral and both flight holes, blocking all three stairs near the top. | Replaced the plank floors with holed `K.slab` surfaces (`abandoned.py`). |
