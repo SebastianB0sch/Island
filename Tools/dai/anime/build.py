@@ -722,6 +722,8 @@ def bake_takes(arm, log=print):
         if state in ("Walk", "Run"):
             metrics = GAIT.validate(arm, act, GAIT.WALK if state == "Walk" else GAIT.RUN, log)
             speed = metrics["speed"] * 100.0
+        elif state in ("Idle", "Talk"):
+            GAIT.validate_standing(arm, act, state, log)
         out[state] = (act, loop, speed)
     RT._assign(arm, None)
     return out

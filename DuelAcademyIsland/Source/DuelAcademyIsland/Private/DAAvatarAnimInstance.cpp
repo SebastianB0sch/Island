@@ -1115,6 +1115,12 @@ void UDAAvatarAnimInstance::Configure(const TMap<FName, TObjectPtr<UAnimSequence
 	BlendedGroundSpeed = 0.f;
 	Phase = 0.f;
 	IdleTime = 0.f;
+	if (IdleSequence && IdleSequence->GetPlayLength() > 0.f)
+	{
+		// Every character starts elsewhere in the idle loop: a group must not breathe,
+		// shift its weight and glance aside in unison.
+		IdleTime = FaceRng.FRandRange(0.f, IdleSequence->GetPlayLength());
+	}
 	UE_LOG(LogTemp, Log, TEXT("DAAvatarAnim: configured %s idle=%s walk=%s run=%s walkSpeed=%.0f runSpeed=%.0f"),
 		*GetName(), IdleSequence ? *IdleSequence->GetName() : TEXT("none"),
 		WalkSequence ? *WalkSequence->GetName() : TEXT("none"), RunSequence ? *RunSequence->GetName() : TEXT("none"),

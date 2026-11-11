@@ -608,10 +608,53 @@ def _cleanup_abandoned_backups():
 
 def _lods(mesh, count=3):
     """Auto LODs - the cast models are 45-50k triangles and dozens of students walk around."""
+    subsystem = unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem)
     try:
-        unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem).regenerate_lod(mesh, count)
+        # A generated LOD drops every morph target unless its reduction settings ask for a remap, and the
+        # engine default is off: the face would stop blinking / lip-syncing as soon as LOD 1 is shown (a
+        # standing character filling about half the screen height). New LODs copy the settings of the LOD
+        # before them, so set it on what exists first; anything still without it is regenerated once more.
+        _remap_lod_morphs(mesh)
+        subsystem.regenerate_lod(mesh, count)
+        if _remap_lod_morphs(mesh, first=1):
+            subsystem.regenerate_lod(mesh, count)
     except Exception as e:  # noqa: BLE001
         C.warn(f"{mesh.get_name()}: LOD generation skipped ({e})")
+    _check_face_morphs(mesh)
+
+
+def _remap_lod_morphs(mesh, first=0):
+    """Turn on "remap morph targets" in the reduction settings of LOD `first` and up. Returns the number
+    of LODs changed (0 when all had it, or when this engine version does not expose the settings)."""
+    try:
+        infos = list(mesh.get_editor_property("lod_info"))
+        changed = 0
+        for i, info in enumerate(infos):
+            if i < first:
+                continue
+            settings = info.get_editor_property("reduction_settings")
+            if not settings.get_editor_property("remap_morph_targets"):
+                settings.set_editor_property("remap_morph_targets", True)
+                info.set_editor_property("reduction_settings", settings)
+                changed += 1
+        if changed:
+            mesh.set_editor_property("lod_info", infos)
+        return changed
+    except Exception as e:  # noqa: BLE001
+        C.warn(f"{mesh.get_name()}: could not keep morph targets on the generated LODs ({e}); "
+               f"faces will only blink at LOD 0")
+        return 0
+
+
+def _check_face_morphs(mesh):
+    """Warn when a cast mesh arrived without its facial rig (UDAAvatarAnimInstance blinks through "Blink")."""
+    try:
+        names = {m.get_name() for m in mesh.get_editor_property("morph_targets") if m is not None}
+    except Exception:  # noqa: BLE001 - not readable from Python on this engine version: nothing to check
+        return
+    if "Blink" not in names:
+        C.warn(f"{mesh.get_name()}: no 'Blink' morph target after import ({len(names)} morphs); "
+               f"the character will not blink or lip-sync")
 
 
 CAST_STATE_REL = os.path.join("Saved", "DuelAcademy", "cast_assets.json")
