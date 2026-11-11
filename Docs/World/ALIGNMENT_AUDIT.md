@@ -206,8 +206,8 @@ without clipping; books stand on shelves; the teacher's / proctor's chair is beh
 Chancellor's ending mark has 1 m clear all round; the dining room has 12 chairs; lamps hang from the
 ceiling on stems; the chandelier hangs on chains; `kind: office` now selects Crowler's and the
 Chancellor's own dressing by cell id. The NPC marks that clipped furniture were moved (Chancellor,
-classroom student 02, Chumley). Still open: Jaden's room has single beds instead of bunks, the Obelisk
-player room has no balcony door.
+classroom student 02, Chumley). Still open: the Obelisk player room has no balcony door. (Jaden's room got
+the Slifer triple bunk on 2026-11-11 - `Docs/World/SLIFER_LAYOUT.md`.)
 
 ### Stairs / floor holes (critical walkability)
 - **Abandoned clock tower:** the floor planks over the spiral/flight holes are now replaced by

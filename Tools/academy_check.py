@@ -1,7 +1,9 @@
 """
-Academy layout check: the main academy building (dai/assets/academy.py) audited as a walkable building.
+Building layout check: the main academy building (dai/assets/academy.py) or the Slifer Red dorm
+(dai/assets/slifer.py) audited as a walkable building.
 
-    python Tools/academy_check.py                       # everything
+    python Tools/academy_check.py                       # everything (academy)
+    python Tools/academy_check.py --location slifer     # the Slifer Red dorm
     python Tools/academy_check.py --only doors,npcs     # a subset
     python Tools/academy_check.py --json out.json --limit 40
 
@@ -24,7 +26,8 @@ Checks (all in the academy's local metres):
           not in a doorway, not inside furniture, and its wander radius reaches clear floor.
   walls   * leaks: horizontal rays from inside the building that escape to the sky without passing a doorway
             or window (a gap between walls / a missing wall),
-          * back faces: rays from walkable floor that hit the inside of a solid (a missing face / open box),
+          * back faces: rays from walkable floor that hit the inside of a solid (a missing face / open box;
+            catalog props are bounding boxes, so their back faces are not counted),
           * coplanar faces with different materials (z-fighting) of 0.02 m2 or more,
           * wall-face steps: two large wall faces on (almost) the same plane that meet edge to edge
             0.3 - 4 cm apart (misaligned wall segments).
@@ -57,6 +60,16 @@ STEP = 0.45
 PROBE_Z = (0.5, 1.0, 1.7)
 SOFT_KINDS = {"water", "smoke", "beam", "hologram", "waterfall", "flow", "lava", "foliage"}
 TOL = 0.02
+
+# per location: module, seed points for the walk flood (outdoor ground in front of the entrances), the lowest
+# building floor whose rays are tested for leaks, and the walk-grid clamp
+LOCATIONS = {
+    "academy": dict(module="academy", seeds=[(0.0, -76.0, 0.0)], seed_r=3.0, leak_z=1.9,
+                    clamp=((-125.0, -95.0), (125.0, 90.0))),
+    "slifer": dict(module="slifer", seeds=[(0.0, -12.0, 0.0), (-4.0, 12.0, 0.0)], seed_r=2.0, leak_z=0.2,
+                   clamp=((-30.0, -24.0), (30.0, 26.0))),
+}
+LOC = LOCATIONS["academy"]
 
 # --------------------------------------------------------------------------- recorded wall openings
 OPENINGS = []          # every K.Door cut through a K.wall (also the open doorways without a leaf)
@@ -101,11 +114,15 @@ class Geo:
         solid = [o for o in sc["objs"] if not o.get("nocol")]
         self.arch, self.arch_mats = self._tree(solid)
         allo = list(sc["objs"])
-        self.all, self.all_mats = self._tree(allo, boxes)
+        # the invisible collision boxes the layout gives furniture modelled into no-collision meshes
+        from dai import collision as COL
+        self.blockers = [b for bs in COL.asset_blockers(aset).values() for b in bs]
+        self.all, self.all_mats = self._tree(allo, boxes, self.blockers)
         self.boxes = boxes
-        print(f"  scene: {len(sc['objs'])} meshes, {len(boxes)} prop boxes ({time.time() - t:.1f} s)")
+        print(f"  scene: {len(sc['objs'])} meshes, {len(boxes)} prop boxes, {len(self.blockers)} furniture collision boxes "
+              f"({time.time() - t:.1f} s)")
 
-    def _tree(self, objs, boxes=()):
+    def _tree(self, objs, boxes=(), obbs=()):
         verts, polys, mats = [], [], []
         for o in objs:
             if o.type != "MESH":
@@ -129,6 +146,16 @@ class Geo:
             for f in ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
                 polys.append([base + i for i in f])
                 mats.append("PROP:" + self.prop_names[k])
+        for (c, h, yaw) in obbs:
+            base = len(verts)
+            ca, sa = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+            for sz in (-1, 1):
+                for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+                    lx, ly = sx * h[0], sy * h[1]
+                    verts.append(Vector((c[0] + lx * ca - ly * sa, c[1] + lx * sa + ly * ca, c[2] + sz * h[2])))
+            for f in ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
+                polys.append([base + i for i in f])
+                mats.append("BLOCKER (collision box of no-collision furniture)")
         return BVHTree.FromPolygons(verts, polys, all_triangles=False), mats
 
     def ray(self, tree, o, d, dist):
@@ -292,6 +319,17 @@ def check_doors(aset, G, log):
 
 
 # --------------------------------------------------------------------------- walk grid
+def _clear_at(G, c):
+    """The walk-grid node test at an arbitrary floor point c: nothing within RADIUS at the probe heights."""
+    for zz in PROBE_Z:
+        q = c + Vector((0, 0, zz))
+        for k in range(8):
+            d = Vector((math.cos(k * math.pi / 4), math.sin(k * math.pi / 4), 0))
+            if G.all.ray_cast(q, d, RADIUS)[0] is not None:
+                return False
+    return True
+
+
 class Grid:
     def __init__(self, G, bounds, log):
         t = time.time()
@@ -396,7 +434,8 @@ class Grid:
 def check_paths(aset, G, log, region=None):
     xs = [v.x for mb in aset.meshes.values() for v in mb.verts]
     ys = [v.y for mb in aset.meshes.values() for v in mb.verts]
-    bounds = ((max(min(xs), -125.0), max(min(ys), -95.0)), (min(max(xs), 125.0), min(max(ys), 90.0)))
+    (cx0, cy0), (cx1, cy1) = LOC["clamp"]
+    bounds = ((max(min(xs), cx0), max(min(ys), cy0)), (min(max(xs), cx1), min(max(ys), cy1)))
     if region:
         bounds = ((region[0], region[1]), (region[2], region[3]))
     grid = Grid(G, bounds, log)
@@ -404,10 +443,33 @@ def check_paths(aset, G, log, region=None):
     for s in aset.sockets:                   # the fast-travel arrivals (lobby, arena, shop, wings, annex)
         if s["type"] == "travel":
             seeds += grid.near(Vector(s["pos"]), r=1.0)
-    seeds += grid.near(Vector((0.0, -76.0, 0.0)), r=3.0, dz=2.5)
+    for sp in LOC["seeds"]:
+        seeds += grid.near(Vector(sp), r=LOC["seed_r"], dz=2.5)
     if region:                                     # a focused run: flood from wherever the region starts
         seeds += grid.near(Vector((region[4], region[5], region[6])), r=1.0)
     seen = grid.flood(seeds)
+    # doorways narrower than the grid can resolve (a 0.8 m WC door leaves the 0.34 m person 6 cm a side): an
+    # exact test along the door's normal through its centre; when it passes, flood on from the far side
+    for _ in range(4):
+        more = []
+        for s in aset.sockets:
+            if s["type"] != "door":
+                continue
+            p = Vector(s["pos"])
+            a = math.radians(s["yaw"])
+            n_in = Vector((-math.sin(a), math.cos(a), 0.0))
+            sides = [grid.near(p + n_in * sg * 0.75, 0.45) for sg in (1, -1)]
+            got = [any(seen[m] for m in ids) for ids in sides]
+            if got[0] == got[1] or not all(sides):
+                continue
+            far = sides[1] if got[0] else sides[0]
+            z_far = grid.pos(far[0]).z
+            if all(_clear_at(G, p + n_in * t + Vector((0, 0, max(p.z, z_far) - p.z)))
+                   for t in [k * 0.1 - 0.7 for k in range(15)]):
+                more += far
+        if not more:
+            break
+        seen |= grid.flood(more + list(np.flatnonzero(seen)))
     log(f"  reachable from the entrances: {int(seen.sum())} of {int(grid.clear.sum())} clear nodes "
         f"({len(seeds)} seed nodes)")
     out = []
@@ -495,10 +557,17 @@ def check_paths(aset, G, log, region=None):
             continue                     # a roof / terrace top under the open sky: not a room nobody can reach
         cx, cy = sum(p.x for p in ps) / len(ps), sum(p.y for p in ps) / len(ps)
         zmed = sorted(zs)[len(zs) // 2]
-        # furniture tops (desks, counters, beds) are floor-like surfaces of their own: skip what is
-        # clearly above the room floor around it
-        under = G.arch.ray_cast(Vector((cx, cy, zmed - 0.02)), Vector((0, 0, -1)), 3.0)
-        if under[0] is not None and zmed - under[0].z > STEP and area < 12.0:
+        # furniture tops (desks, counters, beds, a kotatsu over its table) are floor-like surfaces of their own:
+        # skip what is clearly above the room floor - the lowest upward face within 1.5 m below
+        o, low = Vector((cx, cy, zmed - 0.02)), None
+        for _ in range(12):
+            h = G.arch.ray_cast(o, Vector((0, 0, -1)), 1.5 - (zmed - 0.02 - o.z))
+            if h[0] is None:
+                break
+            if h[1].z > 0.6:
+                low = h[0].z
+            o = Vector((cx, cy, h[0].z - 0.002))
+        if low is not None and zmed - low > STEP and area < 12.0:
             continue
         out.append(f"unreachable floor {area:.1f} m2 round ({cx:.1f}, {cy:.1f}, {zmed:.2f})")
     return out, grid, seen
@@ -557,7 +626,7 @@ def check_walls(aset, G, grid, seen, log):
     nd = 96
     dirs = [Vector((math.cos(2 * math.pi * k / nd), math.sin(2 * math.pi * k / nd), 0)) for k in range(nd)]
     sample = [nid for nid in np.flatnonzero(seen) if grid.nodes[nid][0] % 5 == 0 and grid.nodes[nid][1] % 5 == 0
-              and grid.nodes[nid][2] > 1.9]                  # the building's floors (not the ground round it)
+              and grid.nodes[nid][2] > LOC["leak_z"]]        # the building's floors (not the ground round it)
     holes = [(Vector(o["pos"]), o["w"] / 2 + 0.6) for o in ops]
     for nid in sample:
         c = grid.pos(nid)
@@ -566,6 +635,13 @@ def check_walls(aset, G, grid, seen, log):
             continue                       # outdoors
         if any((c.xy - q.xy).length < r and abs(c.z - q.z) < 1.0 for q, r in holes):
             continue                       # standing in / at a doorway: its rays leave through it
+        # a spot under a canopy / eave / walkway roof sees the open air over a wide fan, or straight along a
+        # compass line (over a railing, down an open stair) at standing height: it is outdoors, not in a room
+        # with a gap (a gap in a room wall is a narrow fan of escaping rays)
+        o = c + Vector((0, 0, 1.2))
+        free = [G.all.ray_cast(o, d, 120.0)[0] is None and not _in_opening(o, d, 120.0, ops) for d in dirs]
+        if sum(free) > nd // 4 or (sum(free[k] for k in range(0, nd, nd // 8)) and sum(free) >= 3):
+            continue
         for zz in (1.2, 2.3):
             if zz > hu[3] + 0.3 - 0.1:
                 continue                   # (not above the room's ceiling)
@@ -584,6 +660,7 @@ def check_walls(aset, G, grid, seen, log):
                             break
                     continue
                 if h[1].dot(d) > 0.3 and h[3] < 40.0 and "Glass" not in G.all_mats[h[2]] \
+                        and not G.all_mats[h[2]].startswith("PROP:") \
                         and "Trim" not in G.all_mats[h[2]] and "Frame" not in G.all_mats[h[2]]:
                     # (window linings / frames: open-ended boxes whose ends are coplanar with the wall cut)
                     m = G.all_mats[h[2]]
@@ -618,6 +695,8 @@ def _faces(aset):
             o = [k for k in range(3) if k != ax]
             if len(f) != 4:
                 continue           # rectangles only (boxes): the area test below assumes them
+            if not all(min(abs(P[k][i] - mn[i]), abs(P[k][i] - mx[i])) < 1e-4 for k in range(4) for i in o):
+                continue           # (a parallelogram - the side of a sloped beam - is not its bounding rectangle)
             nrm = np.cross(P[1] - P[0], P[2] - P[0])
             sg = 1 if nrm[ax] > 0 else -1
             area = ext[o[0]] * ext[o[1]]
@@ -710,9 +789,33 @@ def _coplanar(aset, G=None, min_area=0.02):
     return out
 
 
+def _cell(cid):
+    """A portal room (dai/assets/interiors.py) with its story marks (anchors.json) as NPC spots, flooded from
+    the arrival point inside its door."""
+    from dai.assets import interiors
+    root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "DuelAcademyIsland", "Content", "Data", "World")
+    cells = {c["id"]: c for c in json.load(open(os.path.join(root, "interiors.json")))["cells"]}
+    cell = cells[cid]
+    aset = interiors.build_cell(cell)
+    o = cell["origin_ue"]
+    for a in json.load(open(os.path.join(root, "anchors.json")))["anchors"]:
+        if a.get("interior_id") == cid and a.get("kind") in ("npc", "player"):
+            p = a.get("position_ue")
+            aset.npc(((p[0] - o[0]) / 100.0, -(p[1] - o[1]) / 100.0, interiors.FZ), 0.0,
+                     dorm=a["id"], wander=0.0)
+    w, d, h = interiors._dims(cell)
+    arr = cell.get("arrival_ue") or o
+    seed = ((arr[0] - o[0]) / 100.0, -(arr[1] - o[1]) / 100.0, interiors.FZ)
+    return aset, dict(seeds=[seed, (0.0, d / 2.0 - 0.8, interiors.FZ)], seed_r=0.6, leak_z=-1.0,
+                      clamp=((-w / 2 - 1.0, -d / 2 - 1.0), (w / 2 + 1.0, d / 2 + 1.0)))
+
+
 # --------------------------------------------------------------------------- main
 def main(argv):
     ap = argparse.ArgumentParser()
+    ap.add_argument("--location", default="academy",
+                    help=f"{', '.join(sorted(LOCATIONS))} or cell:<interior id> (a portal room of interiors.json)")
     ap.add_argument("--only", default="doors,paths,npcs,walls")
     ap.add_argument("--json", default=None)
     ap.add_argument("--limit", type=int, default=30)
@@ -720,12 +823,18 @@ def main(argv):
                     "flooded from (sx, sy, sz) as well (for looking into one spot)")
     args = ap.parse_args(argv)
     only = set(args.only.split(","))
+    global LOC
     _record_openings()
-    from dai.assets import academy as A
     blend.reset_scene()
     t = time.time()
-    aset = A.PLACEMENTS["academy"]()
-    print(f"  academy built ({time.time() - t:.1f} s): {sum(len(m.faces) for m in aset.meshes.values())} faces, "
+    if args.location.startswith("cell:"):
+        aset, LOC = _cell(args.location[5:])
+    else:
+        import importlib
+        LOC = LOCATIONS[args.location]
+        A = importlib.import_module("dai.assets." + LOC["module"])
+        aset = A.PLACEMENTS[args.location]()
+    print(f"  {args.location} built ({time.time() - t:.1f} s): {sum(len(m.faces) for m in aset.meshes.values())} faces, "
           f"{sum(1 for s in aset.sockets if s['type'] == 'door')} doors, {len(OPENINGS)} wall openings")
     res = {}
     if "npcs" in only:
@@ -752,7 +861,7 @@ def main(argv):
     if args.json:
         with open(args.json, "w") as fp:
             json.dump(res, fp, indent=1)
-    print(f"ACADEMY ISSUES: {total}")
+    print(f"{args.location.upper().replace('CELL:', '')} ISSUES: {total}")
     return 1 if total else 0
 
 

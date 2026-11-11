@@ -13,7 +13,10 @@ python Tools/academy_check.py --only doors,npcs     # a subset
 python Tools/academy_check.py --only paths --region 80,0,104,10,101,3,6.6   # one spot, flooded from (101,3,6.6)
 ```
 
-Run with the Blender-as-a-module interpreter, like the other audits. What it checks:
+Run with the Blender-as-a-module interpreter, like the other audits. `--location slifer` checks the Slifer Red
+dorm and `--location cell:<interior id>` a portal room with its `anchors.json` marks (see `SLIFER_LAYOUT.md`,
+which also lists the refinements made to the check on 2026-11-11: the furniture collision boxes are part of the
+walk grid, an exact test for narrow doorways, outdoor spots are not leak-tested). What it checks:
 
 | Check | How |
 |---|---|
@@ -94,6 +97,13 @@ Run with the Blender-as-a-module interpreter, like the other audits. What it che
 | other locations (`audit_interiors.py`) | 2 accepted | 2 accepted (harbor) - the `geo` / `_doors_on` changes regress nothing |
 | `spec_check.py academy` (audit + detail coverage + people + painted windows) | - | **PASS** (0 failures) |
 | `validate_layout.py --strict`, `test_interiors.py` | PASS | PASS |
+
+**Re-check 2026-11-11** (with the refined check of `SLIFER_LAYOUT.md`): doors 0 and NPC spots 0 as before.
+Counting the furniture collision boxes added no unreachable door, NPC spot or arrival. Path entries went from
+354 to 154: the old furniture-top rule had listed table tops and collision-box tops, and had hidden floor-level
+pockets inside the lecture halls' hollow tier blocks, which are now listed. The shared sill and frame fixes cut
+the z-fighting list from 2,376 to 1,168. The 72 leak rays all start in the open entrance portico (x ±14,
+y -67).
 
 Known leftovers (reported by the check, not defects of the building):
 

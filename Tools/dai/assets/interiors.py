@@ -84,10 +84,16 @@ def _faces(cell):
 FURNISHED_WALLS = {"office", "headmaster_room"}     # book cases / cabinets stand on the back half of the side walls
 
 
+# rooms whose furniture needs particular wall spans (Jaden's triple bunk fills the back-left corner)
+WINDOW_SLOTS = {"slifer_jaden_room": [0.9]}
+
+
 def _window_slots(cell):
     """Y centres of the side-wall window panels. Offices keep the back half of their side walls for the book
     cases and cabinets, so their windows are only in the door half."""
     w, d, h = _dims(cell)
+    if cell.get("id") in WINDOW_SLOTS:
+        return WINDOW_SLOTS[cell["id"]]
     if str(cell.get("kind", "")) in FURNISHED_WALLS:
         n = max(1, int(d / 2.0 / 3.2))
         return [(i + 0.5) * (d / 2.0 / n) for i in range(n)]
@@ -509,11 +515,18 @@ def _dorm_room(props, nocol, aset, cell, theme):
 
 
 def _headmaster(props, nocol, aset, cell, theme):
+    """Professor Banner's room: his desk 1.35 m off the back wall, so his mark (anchors.json) stands behind it
+    beside his chair with room to spare; the guest chair is set aside, so the player's mark faces him across the
+    desk with nothing in between; card binders on the desk."""
     w, d, h = _dims(cell)
     fx0, fy0, fx1, fy1 = _faces(cell)
-    _desk(props, 0.0, fy0 + 1.05, 180.0, 2.0, 0.80, 0.76, theme)     # Banner's mark stands in front of it
-    _chair(props, -0.3, fy0 + 0.42, 180.0, theme)
-    _chair(props, 0.0, fy0 + 2.27, 0.0, theme)
+    yd = fy0 + 1.35
+    _desk(props, 0.0, yd, 180.0, 2.0, 0.80, 0.76, theme)
+    _chair(props, -0.35, fy0 + 0.6, 180.0, theme)
+    _chair(props, -0.8, yd + 0.85, 0.0, theme)
+    for k, m in enumerate(("M_AcademyRed", "M_AcademyYellow", "M_AcademyBlue")):        # card binders
+        props.box((0.45 + k * 0.07, yd - 0.1, 0.76 + 0.13), (0.05, 0.3, 0.26), m)
+    props.box((-0.55, yd + 0.05, 0.765), (0.3, 0.22, 0.01), "M_ShojiPaper")             # notes
     _bookshelf(props, fx0 + 0.17, -d / 4.0, 90.0, theme)
     _tank(props, nocol, aset, fx1 - 0.82, fy0 + 0.92, theme)
     _rug(props, 0.0, 0.0, min(3.0, w - 2.0), min(2.2, d - 2.0), theme)
@@ -548,6 +561,70 @@ def _dining(props, nocol, aset, cell, theme):
     aset.light((0.0, fy0 + 1.0, h - 0.60), (1.0, 0.82, 0.55), 2400.0, max(w, d) * 0.35)
 
 
+def _slifer_dressing(props, nocol, aset, cell, theme, jackets=1, posters=(("SLIFER RED", 0.0),)):
+    """Slifer touches on the room faces: dorm posters on the back wall, a coat-hook rail with red jackets on the
+    door wall beside the door (clear of its architrave)."""
+    from . import interior as K, detail as DT
+    w, d, h = _dims(cell)
+    fx0, fy0, fx1, fy1 = _faces(cell)
+    for k, (text, x) in enumerate(posters):
+        K.poster(nocol, aset, x, fy0 + 0.002, 1.75, 180.0, 0.5, 0.7, K.POSTERS[k % 4], text=text, text_size=0.06)
+    DT.coat_hooks(nocol, -0.5 - 0.09 - 0.25 - 0.375, fy1 - 0.002, 1.75, 0.0, n=3, dorm="slifer", jackets=jackets,
+                  seed=len(str(cell.get("id"))))
+
+
+def _slifer_player(props, nocol, aset, cell, theme):
+    """Slifer Room 101 (the player's): the standard dorm room with the bed for the sleep / save beat (its mark
+    stands beside the bed) and the Slifer dressing."""
+    _dorm_room(props, nocol, aset, cell, theme)
+    w, d, h = _dims(cell)
+    fx0, fy0, fx1, fy1 = _faces(cell)
+    _slifer_dressing(props, nocol, aset, cell, theme, jackets=1, posters=(("SLIFER RED", 1.6),))
+
+
+def _slifer_bunk_room(props, nocol, aset, cell, theme):
+    """Jaden, Syrus and Chumley's room: the Slifer triple bunk in the back-left corner (ladder on the room side),
+    a kotatsu on tatami in the middle with the three marks standing round it, Jaden's desk under the window,
+    wardrobe, duel disk stand, card posters and clothes on the floor. Door zone and marks stay clear."""
+    from . import interior as K, detail as DT
+    w, d, h = _dims(cell)
+    fx0, fy0, fx1, fy1 = _faces(cell)
+    K.bunk_bed(props, nocol, fx0 + 1.03, fy0 + 0.49, 180.0, levels=3, gap=0.75, length=2.0, width=0.92,
+               blankets=("M_IntFabricRed", "M_IntFabricBlue", "M_IntFabricYellow"))
+    # tatami under the kotatsu (3 cm), the kotatsu on it
+    tx0, ty0, tx1, ty1 = -1.25, -1.95, 1.95, 0.75
+    K.tatami(props, tx0, ty0, tx1, ty1, 0.03)
+    with props.at((0.0, 0.0, 0.03)), nocol.at((0.0, 0.0, 0.03)):
+        K.kotatsu(props, nocol, 0.4, -0.6, 0.0, quilt="M_IntFabricOrange")
+        for k in range(5):                                                  # a deck spread out on the table
+            nocol.box((0.15 + k * 0.09, -0.75, 0.4), (0.06, 0.085, 0.004), "M_CardBack")
+    # Jaden's desk under the -X window, chair facing it
+    K.desk(props, nocol, fx0 + 0.3, 0.9, 90.0, w=1.1, d=0.6, hutch=False, rng_seed=3)
+    _chair(props, fx0 + 0.85, 0.9, -90.0, theme)
+    DT.duel_disk(nocol, fx0 + 0.3, 1.2, 0.76, 30.0)
+    # wardrobe in the back-right corner, a colour-box shelf under the +X window
+    K.wardrobe(props, fx1 - 0.6, fy0 + 0.31, 180.0, w=1.15, d=0.6, h=2.0)            # (doors to the room)
+    props.box_mm((fx1 - 0.3, 0.3, 0.0), (fx1, 1.5, 0.7), "M_IntTrimWhite")
+    for k in range(3):
+        nocol.box((fx1 - 0.301, 0.5 + k * 0.4, 0.35), (0.004, 0.36, 0.6), "M_IntBlack")
+        DT.deck_box(nocol, fx1 - 0.15, 0.5 + k * 0.4, 0.7, 10.0 * k, ("M_IntFabricRed", "M_IntFabricBlue",
+                                                                     "M_IntFabricYellow")[k])
+    # duel disk stand against the back wall between the bunk and the wardrobe
+    props.box((-0.75, fy0 + 0.17, 0.5), (0.3, 0.3, 1.0), "M_IntWoodDark")
+    DT.duel_disk(nocol, -0.75, fy0 + 0.17, 1.0, 0.0)
+    # clothes on the floor (flat, out of the walkways)
+    for (cx, cy, a, m) in ((2.45, -1.55, 20.0, "M_DetJacketRed"), (-0.1, -2.25, 10.0, "M_IntFabricWhite"),
+                           (2.9, -0.9, 50.0, "M_IntFabricBlue")):
+        with nocol.at((cx, cy, 0.0), rot=a):
+            nocol.box((0.0, 0.0, 0.015), (0.5, 0.4, 0.03), m)
+    _slifer_dressing(props, nocol, aset, cell, theme, jackets=3,
+                     posters=(("GET YOUR GAME ON!", 0.25), ("DUEL!", 1.2)))
+    K.poster(nocol, aset, fx1 - 0.002, -1.2, 1.6, -90.0, 0.55, 0.4, "M_IntPoster3", text="ELEMENTAL HEROES",
+             text_size=0.045)
+    _ceiling_lamp(props, nocol, aset, 0.0, 0.0, h, theme, max(w, d) * 0.58, 5000.0, True, drop=0.3)
+    aset.light((0.0, fy0 + 1.3, h - 0.60), (1.0, 0.78, 0.55), 2200.0, max(w, d) * 0.38)
+
+
 _CONTENT = {
     "classroom": _classroom,
     "exam": _exam,
@@ -560,6 +637,8 @@ _CONTENT = {
 _BY_ID = {
     "academy_crowler_office": _crowler,
     "academy_chancellor_office": _chancellor,
+    "slifer_player_room": _slifer_player,
+    "slifer_jaden_room": _slifer_bunk_room,
 }
 
 

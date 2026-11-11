@@ -385,11 +385,13 @@ class MeshBuilder:
                 if fr:
                     fw = 0.08
                     z0o, z1o = o.get("z0", 0.0), o["z1"]
-                    self.box((ou0 - fw / 2, -0.03, (z0o + z1o) / 2), (fw, 0.12, z1o - z0o + fw), fr)
-                    self.box((ou1 + fw / 2, -0.03, (z0o + z1o) / 2), (fw, 0.12, z1o - z0o + fw), fr)
-                    self.box(((ou0 + ou1) / 2, -0.03, z1o + fw / 2), (ou1 - ou0 + 2 * fw, 0.12, fw), fr)
+                    # (the frame stands on the outer face: reaching 3-4 cm into the opening, its inner faces
+                    # z-fought with the opening's cut faces)
+                    self.box((ou0 - fw / 2, -0.045, (z0o + z1o) / 2), (fw, 0.09, z1o - z0o + fw), fr)
+                    self.box((ou1 + fw / 2, -0.045, (z0o + z1o) / 2), (fw, 0.09, z1o - z0o + fw), fr)
+                    self.box(((ou0 + ou1) / 2, -0.045, z1o + fw / 2), (ou1 - ou0 + 2 * fw, 0.09, fw), fr)
                     if z0o > 0.01:
-                        self.box(((ou0 + ou1) / 2, -0.06, z0o - fw / 2), (ou1 - ou0 + 2 * fw, 0.2, fw), fr)
+                        self.box(((ou0 + ou1) / 2, -0.08, z0o - fw / 2), (ou1 - ou0 + 2 * fw, 0.16, fw), fr)
                 gl = o.get("glass")
                 if gl:
                     self.box(((ou0 + ou1) / 2, t / 2, (o.get("z0", 0.0) + o["z1"]) / 2),

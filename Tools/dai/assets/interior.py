@@ -180,7 +180,9 @@ def wall(aset, mb, p0, p1, z0, h, thick, mat, inner=None, openings=(), trim=None
                 for k in range(1, o.transoms + 1):
                     mb.box((o.c, thick / 2, o.z0 + (o.z1 - o.z0) * k / (o.transoms + 1)), (o.w, 0.07, 0.045), fr)
                 sm = o.sill or trim_in or fr
-                mb.box((o.c, thick - 0.02 + 0.06, o.z0 - 0.025), (o.w + 0.16, 0.16, 0.05), sm)   # inside sill, top flush with the opening
+                # inside sill, top flush with the opening; it starts at the wall face (not 4 cm into the opening,
+                # where its top z-fought with the opening's bottom face)
+                mb.box((o.c, thick + 0.06, o.z0 - 0.025), (o.w + 0.16, 0.12, 0.05), sm)
     if base:
         _skirting(mb, p0, p1, z0, thick, base, base_h, [o for o in openings if isinstance(o, Door)])
     return yaw
@@ -479,8 +481,9 @@ def bulletin(nc, aset, x, y, z, yaw, w=1.4, h=0.9, title=None, rng_seed=1):
             pw, ph = rnd.uniform(0.18, 0.32), rnd.uniform(0.2, 0.3)
             px = rnd.uniform(-w / 2 + pw / 2 + 0.05, w / 2 - pw / 2 - 0.05)
             pz = rnd.uniform(ph / 2 + 0.05, h - ph / 2 - 0.12)
-            nc.box((px, -0.036, pz), (pw, 0.004, ph), rnd.choice(("M_IntPaper",) * 3 + POSTERS))
-            nc.box((px, -0.04, pz + ph / 2 - 0.03), (0.02, 0.006, 0.02), "M_IntFabricRed")
+            # (each sheet 1.5 mm in front of the one before: overlapping sheets on one plane z-fought)
+            nc.box((px, -0.036 - 0.0015 * k, pz), (pw, 0.004, ph), rnd.choice(("M_IntPaper",) * 3 + POSTERS))
+            nc.box((px, -0.042 - 0.0015 * k, pz + ph / 2 - 0.03), (0.02, 0.006, 0.02), "M_IntFabricRed")
     if title:
         aset.text(title, wall_point(x, y, yaw, 0.05, z + h - 0.08), yaw, size=0.07, color=(0.2, 0.12, 0.06))
 
@@ -563,7 +566,9 @@ def kotatsu(mb, nc, x, y, yaw=0.0, quilt="M_IntFabricOrange", w=0.9, d=0.9):
             nc.box((sx * (w / 2 + 0.25), 0, 0.18), (0.04, d + 0.5, 0.36), quilt)
         for sy in (-1, 1):
             nc.box((0, sy * (d / 2 + 0.25), 0.18), (w + 0.5, 0.04, 0.36), quilt)
-        for (cx, cy) in ((0, -(d / 2 + 0.55)), (0, d / 2 + 0.55), (-(w / 2 + 0.55), 0)):
+        # (5 cm clear of the quilt's skirt: touching it, the cushions merged with the quilt into one rotated
+        # collision box reaching 1.5 m out - dai/collision.py; on their own they are flat and walkable)
+        for (cx, cy) in ((0, -(d / 2 + 0.6)), (0, d / 2 + 0.6), (-(w / 2 + 0.6), 0)):
             nc.box((cx, cy, 0.04), (0.55, 0.55, 0.08), "M_IntFabricRed")
         nc.cylinder((0.15, 0.1, 0.395), 0.12, 0.012, "M_IntPaper", seg=10)
         nc.sphere((0.15, 0.1, 0.44), 0.05, "M_IntFabricOrange", seg=8, rings=6)   # mikan

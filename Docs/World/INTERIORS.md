@@ -107,7 +107,7 @@ python Tools/world/test_interiors.py
 
 - Purpose: E03 and Chumley room beats. Three NPC marks: Jaden, Syrus, Chumley.
 - Capacity: ~4 people.
-- Props: bunk bed, second bunk, desk, duel disk stand, card posters, messy clothes.
+- Props: the Slifer triple bunk (one bunk each for Jaden, Syrus and Chumley), kotatsu on tatami, desk, wardrobe, duel disk stand, card posters, messy clothes.
 - Reuse: Slifer wood/cream palette, SM_BunkBed, SM_Desk, SM_Chair, card posters.
 
 **`ra_player_room` — Ra Room (Player)**
@@ -188,7 +188,7 @@ Each interior is a pair: an **entrance** trigger at the exterior door and an **e
 1. Use the existing Slifer dining hall as the common room/cafeteria (no new cell). It already has tables, counter, kitchen, covered deck and lights.
 2. Add the **Slifer player room** cell (6 × 5 × 3.2 m): bed, desk, chair, wardrobe, card trunk, window, save/sleep mark.
 3. Add the **Banner room** cell (6.5 × 5.5 × 3.2 m): desk, bookshelf, Pharaoh tank, guest chair.
-4. Add the **Jaden/Syrus/Chumley bunk room** cell (7 × 5.5 × 3.2 m): two bunks, desk, duel-disk stand, posters.
+4. Add the **Jaden/Syrus/Chumley bunk room** cell (7 × 5.5 × 3.2 m): the Slifer triple bunk, kotatsu, desk, duel-disk stand, posters.
 5. Place three exterior portals on the existing Slifer facade doors: room 101 (ground west), Banner (ground east), Jaden (upper west).
 6. Anchor the opening beats: `slifer_cafeteria_player` (Banner's 3,000 DP), `slifer_player_room_save` (sleep/save), `slifer_jaden_room_jaden` (E03), `slifer_banner_room_desk` (Pharaoh).
 7. Test: walk in from the path → cafeteria → player room → sleep/save → return outside. No fall-through, no portal loop, nav reachable.

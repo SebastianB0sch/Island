@@ -533,10 +533,11 @@ def coat_hooks(nc, x, y, z, yaw, n=4, dorm="slifer", jackets=None, seed=0):
             nc.box((u, -0.05, 0.0), (0.02, 0.07, 0.02), "M_DetSilver")
             if k < jackets:
                 m = JACKETS.get(dorm, "M_DetJacketRed")
-                nc.box((u, -0.07, -0.33), (0.38, 0.07, 0.62), m)
-                nc.box((u, -0.075, -0.06), (0.16, 0.06, 0.1), "M_DetJacketWhite")
+                dy = 0.012 * (k % 2)              # (neighbouring jackets overlap: every other one hangs in front)
+                nc.box((u, -0.07 - dy, -0.33), (0.38, 0.07, 0.62), m)
+                nc.box((u, -0.078 - dy, -0.06), (0.16, 0.066, 0.1), "M_DetJacketWhite")
                 for s in (-1, 1):
-                    nc.box((u + s * 0.22, -0.07, -0.32), (0.08, 0.06, 0.56), m)
+                    nc.box((u + s * 0.22, -0.07 - dy, -0.32), (0.08, 0.06, 0.56), m)
 
 
 def trophy(nc, x, y, z, s=1.0, mat="M_DetTrophy"):

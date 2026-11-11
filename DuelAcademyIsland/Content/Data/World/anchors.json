@@ -967,8 +967,8 @@
       "interior_id": "slifer_player_room",
       "kind": "player",
       "position_ue": [
-        330050,
-        300050,
+        329895.0,
+        300060.0,
         -29900
       ],
       "yaw": 180.0,
@@ -1014,8 +1014,8 @@
       "interior_id": "slifer_banner_room",
       "kind": "npc",
       "position_ue": [
-        330068.5,
-        315069.5,
+        330045.0,
+        315208.0,
         -29900
       ],
       "yaw": -90.0,
