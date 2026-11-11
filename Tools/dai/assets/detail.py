@@ -161,10 +161,10 @@ def blinds(nc, x, y, z0, z1, yaw, w, slats_open=0.55):
 def _doors_on(aset, x0, y0, x1, y1, z, tol=0.45):
     """Door sockets whose plane lies on one of the room's walls (inner face within `tol`)."""
     out = []
-    for s in aset.sockets:
-        if s["type"] != "door":
-            continue
-        px, py, pz = s["pos"]
+    doors = [(s["pos"], s["props"]["width"]) for s in aset.sockets if s["type"] == "door"]
+    doors += [(pos, w) for pos, yaw, w, h in getattr(aset, "openings", ())]      # open doorways too
+    for pos, width in doors:
+        px, py, pz = pos
         if abs(pz - z) > 0.35:
             continue
         on = None
@@ -177,7 +177,7 @@ def _doors_on(aset, x0, y0, x1, y1, z, tol=0.45):
         elif abs(px - x1) < tol and y0 - 0.1 < py < y1 + 0.1:
             on = "e"
         if on:
-            out.append((on, px, py, s["props"]["width"]))
+            out.append((on, px, py, width))
     return out
 
 

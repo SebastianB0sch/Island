@@ -154,6 +154,8 @@ def wall(aset, mb, p0, p1, z0, h, thick, mat, inner=None, openings=(), trim=None
         if isinstance(o, Door):
             if o.style:
                 aset.door((cx, cy, z0 + o.z0), yaw, o.w, o.h, o.style, o.double, o.mode, o.swing)
+            elif hasattr(aset, "openings"):
+                aset.openings.append(((cx, cy, z0 + o.z0), yaw, o.w, o.h))
             with mb.at((p0[0], p0[1], z0), rot=yaw):
                 _architrave(mb, o.c, o.z0, o.w, o.h, -0.0, -1, o.trim or trim)
                 _architrave(mb, o.c, o.z0, o.w, o.h, thick, 1, o.trim_in or trim_in)

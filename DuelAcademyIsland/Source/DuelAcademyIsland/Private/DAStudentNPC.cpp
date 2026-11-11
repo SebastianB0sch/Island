@@ -287,11 +287,46 @@ void ADAStudentNPC::PickNewTarget()
 		}
 		return;
 	}
-	const float Angle = Rng.FRandRange(0.f, 2.f * PI);
-	const float Dist = Rng.FRandRange(0.25f, 1.f) * WanderRadius;
-	Target = Home + FVector(FMath::Cos(Angle) * Dist, FMath::Sin(Angle) * Dist, 0.0);
-	IdleTime = 0.f;
-	StuckTime = 0.f;
+	// random strolls round home (spawn points without a precomputed route): try a few spots and take the
+	// first one the capsule can reach in a straight line; with none clear, stand a while and try again
+	for (int32 Try = 0; Try < 8; ++Try)
+	{
+		const float Angle = Rng.FRandRange(0.f, 2.f * PI);
+		const float Dist = Rng.FRandRange(0.25f, 1.f) * WanderRadius;
+		const FVector Candidate = Home + FVector(FMath::Cos(Angle) * Dist, FMath::Sin(Angle) * Dist, 0.0);
+		if (IsClearWalk(Candidate))
+		{
+			Target = Candidate;
+			return;
+		}
+	}
+	Target = GetActorLocation();
+	IdleTime = Rng.FRandRange(2.f, 5.f);
+}
+
+bool ADAStudentNPC::IsClearWalk(const FVector& To) const
+{
+	const UWorld* World = GetWorld();
+	const UCapsuleComponent* Capsule = GetCapsuleComponent();
+	if (!World || !Capsule)
+	{
+		return false;
+	}
+	// The swept capsule starts a hand above the feet (Lift twice over: the centre goes up and the half
+	// height shrinks), so the floor and low thresholds the NPC steps over do not count as obstacles.
+	const float Lift = 15.f;
+	const float Radius = Capsule->GetScaledCapsuleRadius();
+	const float HalfHeight = FMath::Max(Capsule->GetScaledCapsuleHalfHeight() - Lift, Radius + 1.f);
+	FVector Start = GetActorLocation();
+	FVector End(To.X, To.Y, Start.Z);
+	Start.Z += Lift;
+	End.Z += Lift;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(DANpcWanderSweep), false, this);
+	FCollisionObjectQueryParams Objects;
+	Objects.AddObjectTypesToQuery(ECC_WorldStatic);
+	Objects.AddObjectTypesToQuery(ECC_WorldDynamic);
+	return !World->SweepTestByObjectType(Start, End, FQuat::Identity, Objects,
+		FCollisionShape::MakeCapsule(Radius, HalfHeight), Params);
 }
 
 bool ADAStudentNPC::IsSafeAhead(const FVector& Dir) const

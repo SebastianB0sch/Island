@@ -157,9 +157,10 @@ overworld, its interiors, the portal-cell interiors and the optional Fab nature 
 ### Windows / doors (residual)
 - Gym entrance curtain wall: the bottom glass row is skipped for every bay between -3 and +3 m,
   leaving two ~0.78 x 3.7 m unglazed holes beside the 5.7 m door plus a 0.3 m slot above it.
-- Academy ground-storey painted panes overlap the wing/end-pavilion doorways (8 panes), and
-  24 painted `M_Glass` panes on the wing north face sit in front of walkable lecture halls
-  (not covered by the `PAINTED_OK` reason).
+- ~~Academy ground-storey painted panes overlap the wing/end-pavilion doorways (8 panes)~~ fixed
+  2026-11-10: the panes beside the portals are left out (`fwin(omit=...)`); see ACADEMY_LAYOUT.md.
+  Still open: 24 painted `M_Glass` panes on the wing north face sit in front of walkable lecture
+  halls (not covered by the `PAINTED_OK` reason).
 - RA dorm curtains intersect the inside sills; RA upper-floor doors have a ~3.5 cm gap under
   the leaf; Slifer/RA cafeteria leaves are ~15 mm below the finished floor.
 - Academy main/side portal leaves are not on the wall middle plane; entry-step tops overlap
@@ -196,29 +197,17 @@ overworld, its interiors, the portal-cell interiors and the optional Fab nature 
   `TVB`); verify after a fallback import.
 
 ### Portal-cell interiors (10 cells)
-The portal-cell builder (`Tools/dai/assets/interiors.py`) has systematic alignment defects that
-the existing `test_interiors.py` does not check (it only checks the `_Props` AABB against the
-outer bounds):
-
-- side windows, baseboards, crown moulding, room signs, posters, crests and the blackboard are
-  placed inside the 0.18 m wall instead of on its interior face;
-- the door leaf is 14 cm narrower and 10 cm shorter than the opening (7 cm side gaps, 5 cm
-  top/bottom); decorative panels and the handle float in front of the leaf;
-- floor-standing furniture sits 2 cm below the visual floor; dorm beds float 3 cm and are
-  backwards (headboard away from the wall); trunks sink 1 cm; wardrobes clip the +X wall by
-  5.5 cm; bookshelves clip the -X wall by 7 cm; sideboards clip the +X wall by 8-13 cm; books
-  float 2-7 cm above shelves; teacher/proctor chairs are on the student side; the chancellor
-  ending mark is not clear; dining has 8 chairs instead of 12; Jaden's room has a single bed
-  instead of bunks; the Obelisk player room lacks its balcony door;
-- ceiling lamps float 31-34 cm below the ceiling and their lights are 18 cm below the fixture;
-  the dining chandelier floats 60 cm; several fill lights have no fixture;
-- NPC anchors clip desks/walls by 1-8 cm; anchors are 6 cm above the floor; several
-  "behind the desk" notes are contradicted;
-- `interiors.json` `kind` values `"office"` and `"dorm_room"` do not select the intended
-  `_chancellor` / `_bunk` builders (those functions are dead code).
-- Minimal fixes: offset wall decor by the wall thickness, lift furniture to the visual floor,
-  enlarge the door leaf, add lamp stems/fixtures, correct bed/chair placement, and fix the
-  `kind` dispatch. Re-run `test_interiors.py` and `validate_layout.py` afterwards.
+**Fixed 2026-11-10** (`Tools/dai/assets/interiors.py`, see `Docs/World/ACADEMY_LAYOUT.md`): wall decor,
+windows, skirting, crown moulding, room signs, blackboards, clocks, banners, posters and crests sit on the
+wall faces; the door is a real leaf (or pair) on the wall's middle plane filling a framed opening
+(1.0 x 2.15 m single, 1.8 x 2.25 m pair for the classroom / exam room / dining room); furniture stands on
+the finished floor; beds face the right way; wardrobes, book cases and sideboards stand against walls
+without clipping; books stand on shelves; the teacher's / proctor's chair is behind the desk; the
+Chancellor's ending mark has 1 m clear all round; the dining room has 12 chairs; lamps hang from the
+ceiling on stems; the chandelier hangs on chains; `kind: office` now selects Crowler's and the
+Chancellor's own dressing by cell id. The NPC marks that clipped furniture were moved (Chancellor,
+classroom student 02, Chumley). Still open: Jaden's room has single beds instead of bunks, the Obelisk
+player room has no balcony door.
 
 ### Stairs / floor holes (critical walkability)
 - **Abandoned clock tower:** the floor planks over the spiral/flight holes are now replaced by

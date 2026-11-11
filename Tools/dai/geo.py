@@ -345,13 +345,42 @@ class MeshBuilder:
                     return
                 self.box(((u0 + u1) / 2, t / 2, (v0 + v1) / 2), (u1 - u0, t, v1 - v0), mat,
                          mats={"+y": inner_mat} if inner_mat else None)
+            spans = [(max(o["u"] - o["w"] / 2, 0.0), min(o["u"] + o["w"] / 2, length), o.get("z0", 0.0), o["z1"])
+                     for o in ops]
+            ss = sorted(spans)
+            overlap = any(ss[k + 1][0] < max(sp[1] for sp in ss[:k + 1]) - 1e-4 for k in range(len(ss) - 1))
+            if overlap:
+                # openings share a stretch of wall (a door under a window, doors on two storeys): cut the wall
+                # into columns at every opening edge and keep, per column, what no opening covers. (The
+                # sequential pass below would refill one opening with the solid above / below the other.)
+                cuts = sorted({0.0, length, *[c for a_, b_, _, _ in spans for c in (a_, b_)]})
+                cols = []
+                for ua, ub in zip(cuts, cuts[1:]):
+                    if ub - ua < 1e-4:
+                        continue
+                    holes = sorted((z0_, z1_) for a_, b_, z0_, z1_ in spans if a_ <= ua + 1e-6 and b_ >= ub - 1e-6)
+                    solid, v = [], 0.0
+                    for z0_, z1_ in holes:
+                        if z0_ > v + 1e-4:
+                            solid.append((v, z0_))
+                        v = max(v, z1_)
+                    if height > v + 1e-4:
+                        solid.append((v, height))
+                    if cols and cols[-1][2] == solid and abs(cols[-1][1] - ua) < 1e-6:
+                        cols[-1][1] = ub                   # same profile as the column before: one piece
+                    else:
+                        cols.append([ua, ub, solid])
+                for ua, ub, solid in cols:
+                    for v0, v1 in solid:
+                        piece(ua, ub, v0, v1)
             u = 0.0
             for o in ops:
                 ou0, ou1 = o["u"] - o["w"] / 2, o["u"] + o["w"] / 2
                 ou0, ou1 = max(ou0, 0.0), min(ou1, length)
-                piece(u, ou0, 0.0, height)                 # solid part before opening
-                piece(ou0, ou1, 0.0, o.get("z0", 0.0))      # below opening
-                piece(ou0, ou1, o["z1"], height)            # above opening
+                if not overlap:
+                    piece(u, ou0, 0.0, height)                 # solid part before opening
+                    piece(ou0, ou1, 0.0, o.get("z0", 0.0))      # below opening
+                    piece(ou0, ou1, o["z1"], height)            # above opening
                 fr = o.get("frame")
                 if fr:
                     fw = 0.08
@@ -366,7 +395,8 @@ class MeshBuilder:
                     self.box(((ou0 + ou1) / 2, t / 2, (o.get("z0", 0.0) + o["z1"]) / 2),
                              (ou1 - ou0, 0.04, o["z1"] - o.get("z0", 0.0)), gl)
                 u = ou1
-            piece(u, length, 0.0, height)
+            if not overlap:
+                piece(u, length, 0.0, height)
             if cap_mat:
                 self.box((length / 2, t / 2, height + 0.05), (length + 0.1, t + 0.1, 0.1), cap_mat)
 

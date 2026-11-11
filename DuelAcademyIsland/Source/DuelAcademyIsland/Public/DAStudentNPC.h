@@ -113,6 +113,10 @@ protected:
 private:
 	void PickNewTarget();
 	bool IsSafeAhead(const FVector& Dir) const;
+	/** A random stroll target is only taken when the NPC's capsule can walk there in a straight line
+	 *  without touching level geometry (desks, counters, walls): otherwise it would push into the
+	 *  furniture until the stuck timer fires. */
+	bool IsClearWalk(const FVector& To) const;
 
 	FVector Home = FVector::ZeroVector;
 	FVector Target = FVector::ZeroVector;
