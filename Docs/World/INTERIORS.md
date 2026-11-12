@@ -146,7 +146,7 @@ Each interior is a pair: an **entrance** trigger at the exterior door and an **e
 | `portal_slifer_jaden_room_entrance` | `slifer_jaden_room` | (-106800, 24505, 3300) | 180 | (330000, 329975, -29900) | met_jaden | Jaden's room is empty. |
 | `portal_ra_player_room_entrance` | `ra_player_room` | (-68013.6, 65835.6, 2425) | -130 | (360000, 299975, -29900) | dorm_ra | Ra Yellow students only. |
 | `portal_obelisk_dining_entrance` | `obelisk_dining` | (-59846.8, -51871.4, 3150) | 140 | (390000, 299800, -29900) | dorm_obelisk | Obelisk Blue students only. |
-| `portal_obelisk_player_room_entrance` | `obelisk_player_room` | (-57649, -54335.1, 3150) | 140 | (390000, 319950, -29900) | dorm_obelisk | Obelisk Blue students only. |
+| `portal_obelisk_player_room_entrance` | `obelisk_player_room` | (-62283.0, -53916.0, 3150) | 140 | (390000, 319950, -29900) | dorm_obelisk | Obelisk Blue students only. |
 
 **Fade/lock contract:** 0.35 s out, 0.35 s in, 1.5 s cooldown, `StartCameraFade` (no UMG/loading screen). The destination is put on cooldown and suppresses the arriving pawn until it leaves the trigger, preventing portal loops. `ADAInteriorPortal::FlagQuery` is the single hook A02 binds; until then development portals fail open.
 
