@@ -69,11 +69,22 @@ CEILS = (3.95, 7.45, 11.0)       # ceiling height of each storey
 CY = 0.975                       # corridor wall centre lines (clear corridor 1.8 m)
 RYF, RYB = -(CY + TP / 2), CY + TP / 2     # room faces of the corridor walls
 PART = (5.0, 10.55, 15.95)       # partition lines of each wing (|x|)
-HOLE_A = (-5.0 + TP / 2 - 0.0, 2.4, -3.65, 5.90)    # stairwell 1F -> 2F (in the 2F floor)
-HOLE_B = (3.65, 2.4, 5.0 - TP / 2, 5.90)            # stairwell 2F -> 3F (in the 3F floor)
-HOLE_C = (-5.0 + TP / 2, -0.07, -3.7, 4.1)          # stairwell 3F -> attic (in the 3F ceiling / top cap)
-ATTIC_Y = 5.62                   # foot of the 3F -> attic flight (1.1 m clear of the back wall), climbing -y to
-                                 # the attic boards at HOLE_C[1] (21 x 0.27 m)
+# Stairwells.  Each opening starts where the flight below still has 2.2 m under the slab: the 1.84 m character
+# capsule is lifted onto the next tread while its back is still 0.6 m behind that riser, so an opening that
+# starts where the headroom is "just" 1.9 m (y 2.4 / 4.65 before) stops it under the slab edge
+# (Tools/world/check_reachability.py).
+# The flights start at STAIR_Y0 and arrive 5.13 m further on, which leaves 1.1 m of floor between the top of each
+# flight and the back wall (y 6.7): from y 0.75 it was 0.8 m, and the way off the top past the handrail's end was
+# narrower than the capsule (the 2F and 3F of the hall could not be reached).
+STAIR_Y0 = 0.45
+HOLE_A = (-5.0 + TP / 2 - 0.0, STAIR_Y0 + 1.15, -3.65, STAIR_Y0 + 5.15)    # stairwell 1F -> 2F (in the 2F floor)
+HOLE_B = (3.65, STAIR_Y0 + 1.15, 5.0 - TP / 2, STAIR_Y0 + 5.15)            # stairwell 2F -> 3F (in the 3F floor)
+# Attic stair (3F stair hall, along the west wall, climbing towards the ridge): foot / top y.  The foot used
+# to be at y = 6.5, 20 cm from the back wall (y = 6.7), with the wall on one side and the rail on the other -
+# nobody could step onto it.  It now leaves 1.2 m in front of the first riser.
+ATTIC_Y0 = 5.5
+ATTIC_Y1 = ATTIC_Y0 - 21 * 0.27                     # 21 risers of 17.8 cm, 27 cm treads
+HOLE_C = (-5.0 + TP / 2, ATTIC_Y1 + 0.27, -3.7, ATTIC_Y0 - 1.1)   # stairwell 3F -> attic (3F ceiling / top cap)
 IN_CREAM, IN_YELLOW, IN_WHITE = K.PLASTER_CREAM, K.PLASTER_YELLOW, K.PLASTER_WHITE
 
 # cafeteria wing
@@ -1280,7 +1291,7 @@ def center_upper(aset, mb, nc, fi):
     K.railing(mb, [(hole[0] if fi == 1 else hole[2], hole[1]), (hx, hole[1]), (hx, 5.6)], zf, h=1.0,
               mat=K.TRIM_WOOD, spacing=0.13)
     if fi == 1:
-        _stair(mb, 4.25, 0.75, FLOORS[1], FLOORS[2], 1)
+        _stair(mb, 4.25, STAIR_Y0, FLOORS[1], FLOORS[2], 1)
     K.rug(nc, -1.0, -0.7, 1.0, 0.7, zf + 0.001, "M_IntCarpetYellow", border=K.TRIM_GOLD)
     ra_emblem(nc, 0.0, 0.0, zf + 0.014, 0.6)
     for x, txt in ((-BAYX + TP / 2, "WEST WING"), (BAYX - TP / 2, "EAST WING")):
@@ -1411,7 +1422,7 @@ def ground_floor(aset, mb, nc, rnd):
     ra_emblem(nc, 0.0, -3.4, zf + 0.001, 1.5)
     K.rug(nc, -0.85, -7.25, 0.85, -4.95, zf + 0.001, "M_IntCarpetRed", border=K.TRIM_GOLD)
     K.rug(nc, -0.85, -1.85, 0.85, 5.6, zf + 0.001, "M_IntCarpetRed", border=K.TRIM_GOLD)
-    _stair(mb, -4.25, 0.75, FLOORS[0], FLOORS[1], -1)
+    _stair(mb, -4.25, STAIR_Y0, FLOORS[0], FLOORS[1], -1)
     K.pendant(aset, 0.0, -3.4, ceil, "chandelier")
     K.pendant(aset, 0.0, 2.6, ceil, "chandelier")
     # reception / mail desk (east, front) with pigeonholes behind
@@ -1434,7 +1445,9 @@ def ground_floor(aset, mb, nc, rnd):
     K.bulletin(nc, aset, -BAYX + TP / 2, -5.6, zf + 1.05, 90.0, w=1.5, h=1.0, title="RA YELLOW NOTICE BOARD",
                rng_seed=11)
     P(aset, "SM_Int_Bench", -4.55, -1.3, zf, 90.0)
-    P(aset, "SM_Int_GrandfatherClock", 4.66, 2.0, zf, -90.0)       # (east wall: the stair foot stays free)
+    # east wall, between the cafeteria door and the mailboxes: at the west wall beside the bench it stood in
+    # front of the stair foot and left 75 cm between its case and the handrail (the capsule needs 76)
+    P(aset, "SM_Int_GrandfatherClock", BAYX - TP / 2 - 0.26, 1.62, zf, -90.0)
     for x in (-1.45, 1.45):
         P(aset, "SM_Int_PottedPlantB", x, -6.92, zf, 0.0)
     for x in (-1.45, 1.45):
@@ -1514,7 +1527,9 @@ def ground_floor(aset, mb, nc, rnd):
         trophy(nc, xb - 0.24, 5.2 + k * 0.4, zf + 1.9, 1.2 + 0.3 * (k == 1))
     for y, t in ((-1.6, "DUEL!"), (1.6, "THEORY + HEART")):
         K.poster(nc, aset, xb, y, zf + 1.7, -90.0, 0.6, 0.85, rnd.choice(K.POSTERS), text=t, text_size=0.06)
-    for y in (-2.0, 2.0):
+    # y = +-1.5: at +-2.0 a bench end and the duel table's stool left 66 cm between them, and with the display
+    # shelves on the other side the far half of the room behind each table could not be reached
+    for y in (-1.5, 1.5):
         P(aset, "SM_Int_Bench", xa + 0.37, y, zf, 90.0)
     for x in (-17.3, -20.0):
         curtain(nc, x, IY0, zf + 0.85, zf + 2.75, 180.0, 1.2, "M_IntFabricWhite")
@@ -1685,14 +1700,15 @@ def _dress_ground(aset, mb, nc):
     DT.desk_set(nc, aset, 2.88, -4.0, zf + 1.05, 90.0, "office", seed=4, w=1.6, d=0.5)
     DT.calendar(nc, hx1, -1.0, zf + 1.5, -90.0, seed=2)
     # the stair: runner, gallery of photos going up, sloped panelling
-    stair_runner(nc, -4.25, 0.75, FLOORS[0], FLOORS[1], 90.0, width=0.75)
-    rz = lambda y: zf + (y - 0.75) / 0.27 * (FLOORS[1] - zf) / 19
+    stair_runner(nc, -4.25, STAIR_Y0, FLOORS[0], FLOORS[1], 90.0, width=0.75)
+    rz = lambda y: zf + (y - STAIR_Y0) / 0.27 * (FLOORS[1] - zf) / 19
     for k, (y, a) in enumerate(((1.3, "SM_Int_Frame"), (2.25, "SM_Int_Frame"), (3.1, "SM_Int_Painting"),
                                 (4.0, "SM_Int_Frame"), (4.9, "SM_Int_Frame"))):
+        y += STAIR_Y0 - 0.75
         aset.prop(a, (hx0, y, rz(y) + 1.45), 90.0)
-    mb.poly([(hx0 + 0.012, 0.75, zf), (hx0 + 0.012, 5.88, FLOORS[1]), (hx0 + 0.012, 5.88, FLOORS[1] + 0.9),
-             (hx0 + 0.012, 0.75, zf + 0.9)], K.WOOD)
-    mb.beam((hx0 + 0.03, 0.75, zf + 0.92), (hx0 + 0.03, 5.88, FLOORS[1] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
+    _poly2(mb, [(hx0 + 0.012, STAIR_Y0, zf), (hx0 + 0.012, STAIR_Y0 + 5.13, FLOORS[1]), (hx0 + 0.012, STAIR_Y0 + 5.13, FLOORS[1] + 0.9),
+                (hx0 + 0.012, STAIR_Y0, zf + 0.9)], K.WOOD)
+    mb.beam((hx0 + 0.03, STAIR_Y0, zf + 0.92), (hx0 + 0.03, STAIR_Y0 + 5.13, FLOORS[1] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
 
     # ================= common lounge
     xa, xb = -PART[2] + TP / 2, -BAYX - TP / 2
@@ -1857,13 +1873,14 @@ def _dress_upper(aset, mb, nc, fi):
     K.wainscot(mb, (hx1, IY1), (hx0, IY1), zf, 0.8, K.WOOD, cap=K.TRIM_WOOD,
                gaps=[(hx1 - x - 0.75, hx1 - x + 0.75) for x in (-2.8, 0.0, 2.8)])
     if fi == 1:     # the 2F -> 3F flight climbs along the east wall
-        stair_runner(nc, 4.25, 0.75, FLOORS[1], FLOORS[2], 90.0, width=0.75)
-        rz = lambda y: zf + (y - 0.75) / 0.27 * (FLOORS[2] - zf) / 19
-        mb.poly([(hx1 - 0.012, 0.75, zf), (hx1 - 0.012, 0.75, zf + 0.9), (hx1 - 0.012, 5.88, FLOORS[2] + 0.9),
-                 (hx1 - 0.012, 5.88, FLOORS[2])], K.WOOD)
-        mb.beam((hx1 - 0.03, 0.75, zf + 0.92), (hx1 - 0.03, 5.88, FLOORS[2] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
+        stair_runner(nc, 4.25, STAIR_Y0, FLOORS[1], FLOORS[2], 90.0, width=0.75)
+        rz = lambda y: zf + (y - STAIR_Y0) / 0.27 * (FLOORS[2] - zf) / 19
+        _poly2(mb, [(hx1 - 0.012, STAIR_Y0, zf), (hx1 - 0.012, STAIR_Y0, zf + 0.9), (hx1 - 0.012, STAIR_Y0 + 5.13, FLOORS[2] + 0.9),
+                    (hx1 - 0.012, STAIR_Y0 + 5.13, FLOORS[2])], K.WOOD)
+        mb.beam((hx1 - 0.03, STAIR_Y0, zf + 0.92), (hx1 - 0.03, STAIR_Y0 + 5.13, FLOORS[2] + 0.92), 0.05, 0.06, K.TRIM_WOOD)
         for y in (1.4, 2.5, 3.6, 4.7):
-            aset.prop("SM_Int_Frame" if y < 3 else "SM_Int_Painting", (hx1, y, rz(y) + 1.45), -90.0)
+            y += STAIR_Y0 - 0.75
+            aset.prop("SM_Int_Frame" if y < 3 + STAIR_Y0 - 0.75 else "SM_Int_Painting", (hx1, y, rz(y) + 1.45), -90.0)
         # landing lounge dressing
         banner(nc, aset, hx0, -3.0, zf + 2.95, 90.0, 1.0, 1.45, "RA YELLOW")
         with lift(zf, mb, nc):
@@ -1883,9 +1900,9 @@ def _dress_upper(aset, mb, nc, fi):
                       keep_clear=[(hx0 - 0.1, -6.4, hx0 + 0.1, -1.0), (hx1 - 0.1, 0.6, hx1 + 0.1, IY1),
                                   (hx0 - 0.1, 0.9, hx0 + 0.1, 6.7)])
     else:           # 3F: library + the attic stair on the west wall
-        stair_runner(nc, (HOLE_C[0] + HOLE_C[2]) / 2 - 0.02, ATTIC_Y, FLOORS[2], ZA, -90.0, width=0.75)
-        mb.poly(list(reversed([(hx0 + 0.012, ATTIC_Y, zf), (hx0 + 0.012, HOLE_C[1], ZA),
-                               (hx0 + 0.012, HOLE_C[1], ZA + 0.9), (hx0 + 0.012, ATTIC_Y, zf + 0.9)])), K.WOOD)
+        stair_runner(nc, (HOLE_C[0] + HOLE_C[2]) / 2 - 0.02, ATTIC_Y0, FLOORS[2], ZA, -90.0, width=0.75)
+        _poly2(mb, [(hx0 + 0.012, ATTIC_Y0, zf), (hx0 + 0.012, ATTIC_Y1, ZA), (hx0 + 0.012, ATTIC_Y1, ZA + 0.9),
+                    (hx0 + 0.012, ATTIC_Y0, zf + 0.9)], K.WOOD)
         # window seats in the bay + low bookcases between them
         for x in (-3.0, 0.0, 3.0):
             mb.box_mm((x - 0.72, by, zf), (x + 0.72, by + 0.45, zf + 0.42), K.WOOD)
@@ -2162,18 +2179,17 @@ def attic(aset, mb, nc):
     z = ZA
     hx0, hy0, hx1, hy1 = HOLE_C
     # floor boards (around the stairwell), stair from 3F (climbs towards the ridge, -y)
-    for (a, b, c, d) in ((IX0, IY0, hx0, IY1), (hx1, IY0, IX1, IY1), (hx0, IY0, hx1, hy0), (hx0, hy1, hx1, IY1)):
+    for (a, b, c, d) in ((IX0, IY0, hx0, IY1), (hx1, IY0, IX1, IY1), (hx0, IY0, hx1, ATTIC_Y1), (hx0, hy1, hx1, IY1)):
         K.floor_planks(mb, a, b, c, d, z, mat=K.WOODFLOOR, along="x", pitch=0.3)
     sx = (hx0 + hx1) / 2 - 0.02
-    K.stairs(mb, sx, ATTIC_Y, FLOORS[2], z, -90.0, 1.1, mat=K.WOOD, riser=K.TRIM_WHITE, rail=K.TRIM_WOOD, run=0.27,
+    K.stairs(mb, sx, ATTIC_Y0, FLOORS[2], z, -90.0, 1.1, mat=K.WOOD, riser=K.TRIM_WHITE, rail=K.TRIM_WOOD, run=0.27,
              rail_sides=(1,))
     for xs in (sx - 0.58, sx + 0.58):          # stringers
-        mb.beam((xs, ATTIC_Y, FLOORS[2] + 0.08), (xs, hy0, z - 0.1), 0.06, 0.36, K.TRIM_WOOD)
+        mb.beam((xs, ATTIC_Y0, FLOORS[2] + 0.08), (xs, ATTIC_Y1, z - 0.1), 0.06, 0.36, K.TRIM_WOOD)
     # closed side under the stair (3F) + guard rails round the stairwell in the attic
-    tri = [(ATTIC_Y, FLOORS[2]), (ATTIC_Y - 3.05, FLOORS[2]), (ATTIC_Y - 3.05, FLOORS[2] + 2.0)]
-    mb.poly([(sx + 0.6, y, zz) for y, zz in reversed(tri)], K.WOOD)                 # (faces the 3F room)
-    mb.poly([(sx + 0.588, y, zz) for y, zz in tri], K.WOOD)                         # (faces under the stair)
-    K.railing(mb, [(hx1, hy0 + 0.12), (hx1, hy1), (hx0, hy1)], z, h=1.0, mat=K.TRIM_WOOD, spacing=0.13)
+    _poly2(mb, [(sx + 0.6, ATTIC_Y0, FLOORS[2]), (sx + 0.6, ATTIC_Y0 - 3.05, FLOORS[2]),
+                (sx + 0.6, ATTIC_Y0 - 3.05, FLOORS[2] + 2.0)], K.WOOD)
+    K.railing(mb, [(hx1, ATTIC_Y1 + 0.12), (hx1, hy1), (hx0, hy1)], z, h=1.0, mat=K.TRIM_WOOD, spacing=0.13)
     # walls closing off the void under the front cross gable (pediment)
     yk = -2.2
     mb.box_mm((-5.55, yk - 0.1, z), (5.55, yk, _lin(yk) + 0.05), IN_WHITE)

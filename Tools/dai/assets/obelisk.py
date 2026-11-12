@@ -30,8 +30,10 @@ TAU = math.pi * 2.0
 # roughly the shore line).  The deck runs from there towards -Y (rotated by JETTY_YAW, CCW
 # degrees) for JETTY_LENGTH metres; the ramp climbs from the deck (z=-2.4) back towards +Y
 # up to JETTY_LAND_Z over 6 m and ends in a 3 m landing.  Stone sides reach down to -6, so
-# whatever the bank height is, the causeway reads as a little stone pier.
-JETTY_OFFSET = (10.0, -100.0)
+# whatever the bank height is, the causeway reads as a little stone pier.  The root sits where the landing's
+# end meets the bank at JETTY_LAND_Z on the generated terrain (the bank drops from -1.06 at y -84 to -3.7 at
+# y -91): at y -100 the landing ended 2.5 m above the ground and the jetty could not be walked onto.
+JETTY_OFFSET = (10.0, -93.5)
 JETTY_YAW = 0.0
 JETTY_LAND_Z = -1.2
 JETTY_LENGTH = 25.0
@@ -913,8 +915,28 @@ def _frieze(mb, r):
         _strip(mb, p0, p1, r["z"] + zr - 0.06, 0.06, 0.05, K.TRIM_GOLD, r, gaps=gaps)
 
 
+def _runs(a, b, c, half, holes, along):
+    """Pieces of the strip a .. b (along x when along == "x", else y) of half width `half` round the cross
+    coordinate c that stay clear of the holes (x0, y0, x1, y1): seams and coffer beams must not bridge a
+    stairwell (they are collision too)."""
+    cuts = []
+    for (hx0, hy0, hx1, hy1) in holes:
+        (u0, u1, v0, v1) = (hx0, hx1, hy0, hy1) if along == "x" else (hy0, hy1, hx0, hx1)
+        if v0 < c + half and c - half < v1:
+            cuts.append((u0, u1))
+    out, u = [], a
+    for (u0, u1) in sorted(cuts):
+        if u0 > u:
+            out.append((u, min(u0, b)))
+        u = max(u, u1)
+    if b > u:
+        out.append((u, b))
+    return [(p, q) for (p, q) in out if q - p > 0.02]
+
+
 def _coffers(mb, r, step, mat, edge=None):
-    """Coffered ceiling: a grid of beams under the ceiling (cells about `step` wide)."""
+    """Coffered ceiling: a grid of beams under the ceiling (cells about `step` wide), not across the
+    openings cut into the ceiling."""
     x0, y0, x1, y1, zc = r["x0"], r["y0"], r["x1"], r["y1"], r["zc"]
     nx, ny = max(1, round((x1 - x0) / step)), max(1, round((y1 - y0) / step))
     d, w = 0.2, 0.24
@@ -2056,14 +2078,14 @@ B_C2 = 14.75         # second floor ceilings (3.25 m)
 # (the outer walls start 2 cm below the ground floor slabs' underside at 1.7: no shared bottom face)
 B_BANDS_INT = [(1.68, 6.8, 0), (6.8, 11.2, 1), (11.2, 14.9, 2), (14.9, 99.0, 3)]
 B_HOLE = (-0.62, 16.1, 3.62, 18.1)    # stairwell games room -> second floor hall
-B_HOLE_W3 = (20.55, 14.4, 24.6, 15.62)    # stairwell second floor corridor -> wing attic (east wing; mirrored west):
-#                                           it ends where the flight arrives (x 19.0 + 20 x 0.28 m), no gap at the top
+B_HOLE_W = (20.55, 14.4, 24.65, 15.62)  # stairwell second floor corridor -> wing attic (east wing; mirrored west)
 # attic storey under the roofs (floor / flat ceiling / top of the upright knee wall), per block
 B_Z3W, B_C3W, B_K3W = 15.05, 18.2, 17.0       # wings (mansard)
 B_Z3P, B_C3P, B_K3P = 16.05, 19.3, 18.3       # end pavilions
 B_Z3C, B_C3C, B_K3C = 16.85, 19.9, 18.9       # centre block (the cupola stair starts here)
 B_CUP = 22.3                                  # cupola floor (top of the dome's drum base)
 B_CUP_C = 21.8 + 3.95                         # cupola ceiling (painted sky under the dome)
+B_CUP_STEP, B_CUP_OPEN = 22.0, 2              # cupola spiral: degrees per tread; top treads stepped off sideways
 B_DOOR = "obelisk_inner"
 NAVY_TXT = (0.12, 0.2, 0.5)
 
@@ -2136,11 +2158,13 @@ def _boys_rooms():
                                   K.MARBLEFLOOR, ceil=None, cornice=None, skirting=None, levels=())
         for (lv, ZL, ZC) in ((1, Z1, B_C1), (2, B_Z2, B_C2)):
             t = "_" if lv == 1 else "2_"
-            # (second floor: the ceiling is open over the attic stair, which climbs through the attic floor hole)
+            # the second-floor corridor ceiling is open over the attic stair: closed (it only had a hole in the
+            # attic floor above it) it left 1.82 m over the flight, under the 1.84 m character capsule, and
+            # sealed the whole attic storey (Tools/world/check_reachability.py)
             R["corr" + t + s] = _room("corr" + t + s, lv, _mx((13.4, 12.2, 28.6, 15.6), sx), ZL, ZC, WALL_IVORY,
                                       K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.9, seams=K.WOOD_DARK,
                                       coffer=(3.4, K.TRIM_WHITE, None) if lv == 1 else None,
-                                      cut_ceiling=[_mx(B_HOLE_W3, sx)] if lv == 2 else ())
+                                      cut_ceiling=[_mx(B_HOLE_W, sx)] if lv == 2 else ())
             R["pcorr" + t + s] = _room("pcorr" + t + s, lv, _mx((29.4, 12.2, 40.6, 15.6), sx), ZL, ZC, WALL_IVORY,
                                        K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.9, seams=K.WOOD_DARK,
                                        coffer=(3.4, K.TRIM_WHITE, None))
@@ -2162,7 +2186,7 @@ def _boys_rooms():
     for sx in (-1, 1):
         s = "w" if sx < 0 else "e"
         R["corr3_" + s] = _room("corr3_" + s, 3, _mx((13.4, 12.2, 28.6, 15.6), sx), B_Z3W, B_C3W, WALL_IVORY,
-                                K.WOODFLOOR, seams=K.WOOD_DARK, holes=[_mx(B_HOLE_W3, sx)], **att)
+                                K.WOODFLOOR, seams=K.WOOD_DARK, holes=[_mx(B_HOLE_W, sx)], **att)
         for i, (k, rect) in enumerate((("A", (13.4, 0.4, 22.5, 12.0)), ("B", (22.7, 0.4, 28.6, 12.0)),
                                        ("C", (13.4, 15.8, 22.5, 27.6)), ("D", (22.7, 15.8, 28.6, 27.6)))):
             R[k + "3_" + s] = _room(k + "3_" + s, 3, _mx(rect, sx), B_Z3W, B_C3W,
@@ -2439,8 +2463,10 @@ def _boys_attic(aset, mb, R):
     _attic_side(mb, (-12.6, -1.6), (12.6, -1.6), (0, 1), 17.4, B_K3C, B_C3C, 1.0, R["front3"]["wall"], fd)
     _attic_side(mb, (12.6, 29.6), (-12.6, 29.6), (0, -1), 17.4, B_K3C, B_C3C, 1.0, R["back3"]["wall"], bd)
     # cupola stair: spiral through the attic ceiling and the flat roof into the dome's drum
-    K.spiral_stairs(mb, 0.0, 14.0, B_Z3C, B_CUP, 0.1, 1.15, a0=0.0, step_deg=22.0, mat=MARBLE, core=K.TRIM_GOLD,
-                    rail=K.TRIM_GOLD)
+    # the cupola floor is stepped onto sideways off the top treads: with the outer rail running right up to
+    # the top the stair ended in a closed cage under the cupola floor (see _boys_cupola for the rail up there)
+    K.spiral_stairs(mb, 0.0, 14.0, B_Z3C, B_CUP, 0.1, 1.15, a0=0.0, step_deg=B_CUP_STEP, mat=MARBLE,
+                    core=K.TRIM_GOLD, rail=K.TRIM_GOLD, open_top=B_CUP_OPEN)
     n = 16
     for i in range(n):
         a0_, a1_ = TAU * i / n, TAU * (i + 1) / n
@@ -3775,11 +3801,12 @@ def _sheeted(nc, x, y, w, d, h, yaw=0.0):
 
 
 def _iron_bed_cubicle(f, mb, nc, x, y, yaw, seed=0, side=1):
-    """Servant's bed corner: iron bed, nightstand + candle, trunk at the foot, a rag rug (nightstand and rug on
-    the bed's local +x side, or -x with side=-1)."""
+    """Servant's bed corner: iron bed, nightstand + candle, trunk at the foot, a rag rug.  side: which side of
+    the bed (local +x / -x) the nightstand and rug go - mirrored with the wing."""
     a = math.radians(yaw)
 
     def P(dx, dy):
+        dx *= side
         return (x + dx * math.cos(a) - dy * math.sin(a), y + dx * math.sin(a) + dy * math.cos(a))
     f.prop("SM_Int_OldBed", x, y, yaw)
     nc.box((*P(0.0, -0.1), 0.52), (0.84, 1.6, 0.08), ("M_IntFabricWhite", "M_IntFabricBlue")[seed % 2])
@@ -4033,13 +4060,18 @@ def _boys_cupola(aset, mb, nc):
         land = [(math.cos(a) * 0.1, math.sin(a) * 0.1) for a in arc] + \
                [(math.cos(a) * 1.25, math.sin(a) * 1.25) for a in reversed(arc)]
         mb.prism(land if K._ccw(land) else list(reversed(land)), -0.06, 0.0, MARBLE)
-        for k in range(12):          # rail round the stair opening (open over the top tread and the landing)
-            if k in (8, 9):
-                continue
-            a0_, a1_ = TAU * k / 12, TAU * (k + 1) / 12
-            mb.beam((math.cos(a0_) * 1.35, math.sin(a0_) * 1.35, 0.95), (math.cos(a1_) * 1.35, math.sin(a1_) * 1.35, 0.95),
-                    0.05, 0.05, K.TRIM_GOLD)
+        # rail round the stair opening, left open where the spiral arrives: beside its top treads (it was open
+        # at 270 - 330 deg, past the end of the flight over the open stairwell, and closed across the top treads)
+        n_st = max(4, int(round((B_CUP - B_Z3C) / 0.19)))          # as K.spiral_stairs counts its treads
+        ga, gb = B_CUP_STEP * (n_st - B_CUP_OPEN), B_CUP_STEP * n_st + 2.0
+        n_seg = 10
+        for k in range(n_seg + 1):
+            a0_ = math.radians(gb + (ga + 360.0 - gb) * k / n_seg)
             mb.box((math.cos(a0_) * 1.35, math.sin(a0_) * 1.35, 0.47), (0.04, 0.04, 0.95), K.TRIM_GOLD)
+            if k < n_seg:
+                a1_ = math.radians(gb + (ga + 360.0 - gb) * (k + 1) / n_seg)
+                mb.beam((math.cos(a0_) * 1.35, math.sin(a0_) * 1.35, 0.95),
+                        (math.cos(a1_) * 1.35, math.sin(a1_) * 1.35, 0.95), 0.05, 0.05, K.TRIM_GOLD)
         # telescope on its tripod, aimed out of a window
         with mb.at((3.0, 1.6, 0.0), rot=30.0), nc.at((3.0, 1.6, 0.0), rot=30.0):
             for k in range(3):
@@ -4185,7 +4217,9 @@ def _gable_roof_walk(mb, cx, y0, y1, w, cz, h, mat, ov, thick):
         _face_holes(mb, [e0, e1, r1, r0], mat, (s, 0, 1), 1, door)
         lo = [(p[0], p[1], p[2] - thick) for p in (e0, e1, r1, r0)]
         _face_holes(mb, lo, mat, (-s, 0, -1), 1, door)
-        _face_holes(mb, [lo[0], lo[1], e1, e0], mat, (s, 0, 0), 1, door)     # (the attic doors pass under it)
+        # fascia, with the same opening: drawn whole it crossed the wing attics' doorways 0.44 m above the
+        # floor (the eaves overhang the wing attics) and shut them
+        _face_holes(mb, [lo[0], lo[1], e1, e0], mat, (s, 0, 0), 1, door)
         # boarding under the rafters (the attic's sloping ceiling) from the wall top up to the ridge
         xw = cx + s * (w / 2 - 0.4)
         zw = ze - thick - 0.03 + (hw - (w / 2 - 0.4)) * h / hw
@@ -4309,6 +4343,9 @@ def _girls_building(mb, nc, aset):
     FL = G_FL
     x0, y0, x1, y1 = G_MAIN
     rr = G_TURRET_R - G_RT
+    # the main block's cornice and hip roof stop at the pavilion (x -7 .. 7), whose walls and gable roof enclose
+    # that stretch: carried through, the cornice crossed the pavilion's attic floor as a 0.48 m ridge and the
+    # hip roof planes sloped through the attic studio and landing 0.5 - 1.8 m over the floor
     hollow_shell(mb, x0, y0, x1, y1, G_TOP, FL, G_BANDS, band_mat=GTRIM, cornice=(MARBLE, GTRIM),
                  pilasters=False, base_gaps=_girls_base_gaps(), band_gaps=[(sd, -7.0, 7.0, zb) for sd in ("s", "n") for zb in G_BANDS],
                  cornice_gaps=[(sd, a, b) for sd in ("s", "n") for (a, b) in ((-22.6, -22.0 + rr), (-7.0, 7.0),
@@ -4754,7 +4791,12 @@ G_Z2 = 9.5
 G_C2 = 12.85
 G_Z3, G_C3 = 13.15, 16.0         # attic storey under the hip roof (wings) and the pavilion's gable roof
 G_ZT, G_CT2 = 12.85, 12.55       # turret top rooms (floor) / second-floor turret ceiling under them
-G_HOLE3 = (-6.6, 18.9, -4.55, 22.4)     # stairwell second floor hall -> attic (ends at the top step)
+# Attic stair (second floor hall -> attic landing, climbing +y beside the hall's west wall) and its stairwell.
+# Centred 1.3 m off the wall: against the wall (x = -6.0) its top treads ran under the eaves of the pavilion's
+# gable roof, 1.72 m over the attic floor - too low for the 1.84 m character capsule.  The opening starts where
+# the flight still has 2.2 m under the attic floor slab (it started 0.45 m later and capped the headroom at 1.7 m).
+G_ATT_X = -5.3
+G_HOLE3 = (G_ATT_X - 0.6, 18.45, G_ATT_X + 0.6, 22.45)    # stairwell second floor hall -> attic
 G_BANDS_INT = [(-0.3, 5.35, 0), (5.35, 9.2, 1), (9.2, 13.0, 2), (13.0, 99.0, 3)]
 G_HOLE = (-0.85, 20.1, 0.85, 24.16)     # stairwell music gallery -> second floor hall
 G_RT = 0.4           # turret wall thickness
@@ -4902,27 +4944,80 @@ def _turret_floor(mb, cx, cy, r_in, a0, a1, z, top, bottom=K.CEIL, ceiling=None,
             mb.box_mm((x0_, y0_, z - 0.3), (x1_, y1_, z), bottom, mats={"+z": top})
 
 
+# Spiral from the upper bedrooms' turret alcoves to the lookout rooms: tread radius and centre distance from the
+# turret axis.  At 0.85 m (rail at 0.8 m, core 0.08 m) the way up was 0.72 m wide, narrower than the 0.76 m
+# character capsule; 1.0 m gives 0.87 m.  The centre moves 0.15 m in so its stairwell (+-1.0 m) stays inside
+# the turret's 3.0 m ring wall.
+G_SPIRAL_R, G_SPIRAL_D = 1.0, 1.6
+G_SPIRAL_STEP = 26.0
+G_WELL_KEEP = 0.9     # the lookout floor keeps the stairwell's inner corner up to this far out (turret frame)
+
+
 def _turret_spiral_xy(tx, ty):
     a0, a1 = G_TURRET_OPEN[(tx, ty)]
     m = math.radians((a0 + a1) / 2)
-    return (tx + math.cos(m) * 1.75, ty + math.sin(m) * 1.75)
+    return (tx + math.cos(m) * G_SPIRAL_D, ty + math.sin(m) * G_SPIRAL_D)
 
 
-def _turret_disc(mb, tx, ty, r_in, a0, a1, zb, zt, top, hole):
+def _turret_frame(tx, ty):
+    """Turret frame (u, v) -> world offset: u, v point away from the block corner the turret sits on, so the
+    walled corner quadrant is u < 0, v > 0 and the spiral's centre lies on the diagonal (c, -c) for all four."""
+    qx, qy = (1 if tx < 0 else -1), (1 if ty < 10 else -1)
+    return lambda u, v: (-qx * u, qy * v)
+
+
+def _turret_well(tx, ty):
+    """Stairwell of the spiral to the lookout (world polygon): the square round the spiral minus its inner corner
+    (towards the turret axis).  That corner keeps its floor - over the spiral's first treads, more than 2 m
+    below - so the lookout is one room: with the full square the well left 0.2 m between its corner and the
+    corner walls on the axis and cut the lookout in two."""
+    m = _turret_frame(tx, ty)
+    c = G_SPIRAL_D / math.sqrt(2.0)
+    h, k = G_SPIRAL_R, G_WELL_KEEP
+    pts = [(c - h, -c - h), (c + h, -c - h), (c + h, -c + h), (k, -c + h), (k, -k), (c - h, -k)]
+    return [(tx + m(u, v)[0], ty + m(u, v)[1]) for (u, v) in pts]
+
+
+def _turret_spiral_a0(tx, ty):
+    """Start angle of the lookout spiral: its foot and its top (stepped off sideways over the last two treads)
+    both face the turret axis, where the well keeps its floor; the treads under that floor are the first
+    five, the top ones are flush with it."""
+    a0, a1 = G_TURRET_OPEN[(tx, ty)]
+    toward_axis = (a0 + a1) / 2 + 180.0
+    return toward_axis - 93.0
+
+
+def _turret_disc(mb, tx, ty, r_in, a0, a1, zb, zt, top, well):
     """Floor of a turret's top room over its outer sectors (a0..a1): top face at zt, ceiling face at zb below,
-    a square stair hole."""
+    a stair well (rectilinear world polygon, see _turret_well)."""
     rr = r_in + E_IN
     a = a0
-    hl = [(hole[0], hole[2], hole[1], hole[3])]
+    xs, ys = [p[0] for p in well], [p[1] for p in well]
+    # the well as rectangles (x0, x1, y0, y1): split along the vertical edges, keep the strips' inside parts
+    hl = []
+    cuts = sorted(set(xs))
+    for xa, xb in zip(cuts[:-1], cuts[1:]):
+        xm = (xa + xb) / 2
+        yy = []
+        for i in range(len(well)):
+            (px, py), (qx_, qy_) = well[i], well[(i + 1) % len(well)]
+            if abs(py - qy_) < 1e-9 and min(px, qx_) < xm < max(px, qx_):
+                yy.append(py)
+        yy.sort()
+        for j in range(0, len(yy) - 1, 2):
+            hl.append((xa, xb, yy[j], yy[j + 1]))
     while a < a1 - 1e-6:
         b = min(a + 90.0, a1)
         pts = [(tx, ty)] + [_ring_point(tx, ty, rr, 28, a + (b - a) * k / 7) for k in range(8)]
         _face_holes(mb, [(p[0], p[1], zt) for p in pts], top, (0, 0, 1), 0, hl, axis2=1)
         _face_holes(mb, [(p[0], p[1], zb) for p in pts], K.CEIL, (0, 0, -1), 0, hl, axis2=1)
         a = b
-    x0, y0, x1, y1 = hole
-    for (p0, p1, n_) in (((x0, y0), (x1, y0), (0, 1)), ((x1, y0), (x1, y1), (-1, 0)), ((x1, y1), (x0, y1), (0, -1)),
-                         ((x0, y1), (x0, y0), (1, 0))):
+    ccw = sum(well[i][0] * well[(i + 1) % len(well)][1] - well[(i + 1) % len(well)][0] * well[i][1]
+              for i in range(len(well))) > 0
+    for i in range(len(well)):
+        p0, p1 = well[i], well[(i + 1) % len(well)]
+        dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+        n_ = (-dy, dx) if ccw else (dy, -dx)                     # facing into the well
         _face(mb, [(p0[0], p0[1], zb), (p1[0], p1[1], zb), (p1[0], p1[1], zt), (p0[0], p0[1], zt)], K.TRIM_WHITE,
               (n_[0], n_[1], 0))
 
@@ -4953,25 +5048,27 @@ def _girls_turrets_inside(mb, R):
                    [(a, 0.8, 13.05, 13.9) for a in angs])
         _ring_wall(mb, tx, ty, G_TURRET_R, G_RT, a1, a0 + 360.0, 13.0, 15.2, WALL, WALL_LILAC, [])
         sc = _turret_spiral_xy(tx, ty)
-        hole = (sc[0] - 1.1, sc[1] - 1.1, sc[0] + 1.1, sc[1] + 1.1)
-        _turret_disc(mb, tx, ty, r_in, a0, a1, G_CT2, G_ZT, R[g2]["floor"], hole)
+        _turret_disc(mb, tx, ty, r_in, a0, a1, G_CT2, G_ZT, R[g2]["floor"], _turret_well(tx, ty))
         for (p0, p1) in (((tx, ty), (tx + qx * r_in, ty)), ((tx, ty), (tx, ty + qy * r_in))):
             n_ = (0.0, -qy) if p1[1] == ty else (-qx, 0.0)
             _attic_upright(mb, p0, p1, n_, G_ZT, 15.2, WALL_LILAC)
             _attic_upright(mb, p0, p1, (-n_[0], -n_[1]), G_CT2, G_C2, K.CEIL)
         mb.lathe([(G_TURRET_R - G_RT, 15.15), (G_TURRET_R * 0.55, 15.2 + 8.6 * 0.42), (0.15, 15.2 + 8.6 * 0.85)][::-1],
                  K.PLASTER_SKY, 28, cap_top=False, cap_bottom=False, center=(tx, ty, 0.0))
-        # (1.0 m: 0.8 m clear between the post and the handrail's chords)
-        # turned so that its top step points along the curved wall (the arrival: (a0 + 468 + 25) = mw - 90 deg)
-        K.spiral_stairs(mb, sc[0], sc[1], G_Z2, G_ZT, 0.08, 1.0, a0=(a0 + a1) / 2 - 223.0, step_deg=26.0,
-                        mat=K.TRIM_WHITE,
-                        core=GTRIM, rail=GTRIM)
+        # the lookout floor is stepped onto sideways off the top two treads (rail left off there), towards the
+        # turret axis; started at 0 deg in all four turrets, two of them ended facing the ring wall 0.7 m away
+        K.spiral_stairs(mb, sc[0], sc[1], G_Z2, G_ZT, 0.08, G_SPIRAL_R, a0=_turret_spiral_a0(tx, ty),
+                        step_deg=G_SPIRAL_STEP, mat=K.TRIM_WHITE, core=GTRIM, rail=GTRIM, open_top=2)
 
 
-def _turret_boiserie(nc, r, a0, a1, wins):
+def _turret_boiserie(nc, r, a0, a1, wins, mb=None):
     """Panelled curved wall of a turret-top room (frame-local, centre at the origin, floor at z=0), over the
     open sector a0..a1 (deg): white wainscot with raised panels and a gilt dado rail, rose silk panels in
-    gilt beading above, gilt pilasters between the windows, a crown moulding, curtains at the windows."""
+    gilt beading above, gilt pilasters between the windows, a crown moulding, curtains at the windows.
+    The continuous bands go into `mb` (the wall finish, with the walls' collision) when given: in the
+    no-collision mesh the furniture collision grouped the ring of bands into one item and gave it a box the
+    size of the room (dai/collision.py boxes items by their bounds)."""
+    wall_mb = mb if mb is not None else nc
     def P(a, rr, z):
         a = math.radians(a)
         return (math.cos(a) * rr, math.sin(a) * rr, z)
@@ -4980,7 +5077,7 @@ def _turret_boiserie(nc, r, a0, a1, wins):
         n = max(1, int(abs(q - p) / 7.5) + 1)
         for k in range(n):
             u, v = p + (q - p) * k / n, p + (q - p) * (k + 1) / n
-            nc.poly([P(v, rr, z0), P(u, rr, z0), P(u, rr, z1), P(v, rr, z1)], mat)
+            wall_mb.poly([P(v, rr, z0), P(u, rr, z0), P(u, rr, z1), P(v, rr, z1)], mat)
 
     def tbox(a, rr, z, w, d, h, mat):    # small box tangent to the wall at angle a
         with nc.at(P(a, rr, 0.0), rot=a + 90.0):
@@ -5066,7 +5163,10 @@ def _cut_turret_roofs(mb, mat, zmax=15.0, r_cut=None):
         new_f, new_m, new_s = [], [], []
         for f_, m_, s_ in zip(mb.faces, mb.face_mats, mb.face_smooth):
             pts = [mb.verts[i] for i in f_]
-            if (m_ != mat or max(p.z for p in pts) > zmax
+            # (faces that only start above zmax - the turrets' own roofs - are left alone; a hip roof plane that
+            # rises past zmax towards the ridge is still cut: skipping those left the eave corner of the main
+            # roof inside three of the four turrets, 1.7 m over the spiral stair to the lookout room)
+            if (m_ != mat or min(p.z for p in pts) > zmax
                     or min(p.x for p in pts) > tx + r_cut + 0.1 or max(p.x for p in pts) < tx - r_cut - 0.1
                     or min(p.y for p in pts) > ty + r_cut + 0.1 or max(p.y for p in pts) < ty - r_cut - 0.1):
                 new_f.append(f_), new_m.append(m_), new_s.append(s_)
@@ -5147,6 +5247,8 @@ def _girls_rooms():
     # second floor: ladies' salon over the porch, the upper hall (stair arrival) behind it
     room("lsalon", 2, (-6.6, 1.4, 6.6, 13.4), WALL_ROSE, K.WOODFLOOR, dado=(K.TRIM_WHITE, K.TRIM_GOLD), dado_h=0.3,
          panels=K.TRIM_WHITE, seams=K.WOOD_DARK, coffer=(2.6, K.TRIM_WHITE, K.TRIM_GOLD))
+    # the upper hall's ceiling is open over the attic stair (G_HOLE3): closed it left 1.0 - 1.8 m over the
+    # flight and sealed the attic storey off (Tools/world/check_reachability.py)
     room("hall2", 2, (-6.6, 13.6, 6.6, 26.6), WALL_LILAC, MARBLE_ROSE, holes=[G_HOLE], dado=(K.TRIM_WHITE, GTRIM),
          dado_h=0.9, panels=K.TRIM_WHITE, cornice=GTRIM, coffer=(2.2, K.TRIM_WHITE, GTRIM), cut_ceiling=[G_HOLE3])
     themes = {"wfs": WALL_ROSE, "wfb": "M_IntWallpaperBlue", "wbs": WALL_LILAC, "wbb": WALL_ROSE,
@@ -5175,7 +5277,8 @@ def _girls_rooms():
     # attic storey: artist's studio + landing under the pavilion's gable roof (rose windows), four rooms under the
     # hip roof of the wings (dormers)
     att = dict(cornice=None, dado=(K.WOOD, K.TRIM_WOOD), dado_h=0.75, skirting=K.TRIM_WOOD, seams=K.WOOD_DARK)
-    # (the studio | landing partition is built with the attic, its door's gap in the skirting and dado is given here)
+    # (gaps: the studio door in the partition is cut later, in _girls_attic - without them the dado and skirting
+    # ran across it on both faces and shut it)
     R["att_studio"] = _room("att_studio", 3, (-6.6, 1.4, 6.6, 13.4), G_Z3, 17.35, WALL_LILAC, K.WOODFLOOR, ceil=None,
                             gaps={"n": [(-0.62, 0.62)]}, **att)
     R["att_landing"] = _room("att_landing", 3, (-6.6, 13.6, 6.6, 26.6), G_Z3, 17.35, WALL_LILAC, K.WOODFLOOR,
@@ -5408,14 +5511,15 @@ def _girls_attic(aset, mb, R):
     for (ya, yb) in ((3.0, 13.4), (13.6, 25.0)):
         mb.poly([(-2.6, ya, 17.35), (-2.6, yb, 17.35), (2.6, yb, 17.35), (2.6, ya, 17.35)], K.WOOD)
     # stair: second floor hall -> attic landing, along the hall's west wall
-    # (2 m wide: under the gable roof's low side the wall half of the top steps has no headroom, the runner
-    # follows the middle)
-    _flight(mb, -5.59, 16.8, G_Z2, G_Z3, 90.0, 1.99, run=0.28, carpet="M_IntCarpetRose", cw=1.0, base=G_Z2,
+    _flight(mb, G_ATT_X, 16.8, G_Z2, G_Z3, 90.0, 1.1, run=0.28, carpet="M_IntCarpetRose", cw=0.7, base=G_Z2,
             nose=K.TRIM_GOLD)
-    xr = G_HOLE3[2] + 0.05
-    _rail(mb, (-4.63, 16.85, G_Z2), (-4.63, 22.35, G_Z3), post=K.TRIM_WHITE, rail=GTRIM, newel=MARBLE)
-    _rail(mb, (xr, G_HOLE3[1] - 0.04, G_Z3), (xr, G_HOLE3[3] - 0.3, G_Z3), post=K.TRIM_WHITE, rail=GTRIM)
-    _rail(mb, (-6.55, G_HOLE3[1] - 0.04, G_Z3), (xr, G_HOLE3[1] - 0.04, G_Z3), post=K.TRIM_WHITE, rail=GTRIM)
+    for s_ in (-1, 1):          # balustrades up both sides (the flight stands clear of the wall) + round the well
+        _rail(mb, (G_ATT_X + s_ * 0.52, 16.85, G_Z2), (G_ATT_X + s_ * 0.52, 22.35, G_Z3), post=K.TRIM_WHITE,
+              rail=GTRIM, newel=MARBLE)
+        xr = G_HOLE3[2] + 0.04 if s_ > 0 else G_HOLE3[0] - 0.04
+        _rail(mb, (xr, G_HOLE3[1] - 0.04, G_Z3), (xr, G_HOLE3[3] - 0.3, G_Z3), post=K.TRIM_WHITE, rail=GTRIM)
+    _rail(mb, (G_HOLE3[0] - 0.04, G_HOLE3[1] - 0.04, G_Z3), (G_HOLE3[2] + 0.04, G_HOLE3[1] - 0.04, G_Z3),
+          post=K.TRIM_WHITE, rail=GTRIM)
 
 
 def _girls_attic_furnish(aset, mb, nc, R):
@@ -5456,8 +5560,8 @@ def _girls_attic_furnish(aset, mb, nc, R):
         _rug(mb, -2.0, 14.2, 2.0, 24.0, 0.0, "M_IntCarpetBlue", K.TRIM_GOLD)
         for (x, y, w, d, h) in ((4.6, 21.5, 1.6, 0.9, 1.0), (3.8, 25.2, 1.8, 0.8, 0.8), (-3.6, 25.4, 1.2, 0.8, 1.3)):
             _sheeted(nc, x, y, w, d, h, rng.uniform(-10, 10))
-        for k in range(4):            # (north of the doors into the east wing attic)
-            f.prop("SM_Int_Suitcase", 5.9, 18.6 + k * 0.75, 90.0)
+        for k in range(4):        # trunks along the east wall, north of the wing attic doors (y 14.2 / 15.8)
+            f.prop("SM_Int_Suitcase", 5.9, 22.8 + k * 0.75, 90.0)
         for (x, y) in ((-1.6, 24.8), (1.0, 25.2)):
             nc.cylinder((x, y, 0.0), 0.12, 0.03, K.WOOD_DARK, seg=10)
             nc.cylinder((x, y, 0.03), 0.02, 1.0, K.WOOD_DARK, seg=6)
@@ -5523,20 +5627,26 @@ def _girls_attic_furnish(aset, mb, nc, R):
     for (tx, ty) in G_TURRETS:
         a0, a1 = G_TURRET_OPEN[(tx, ty)]
         f = Frame(aset, mb, nc, tx, ty, G_ZT)
+        tf = _turret_frame(tx, ty)
         with f:
-            for k in (0, 3, 4):        # floor cushions round the wall (not by the stair head and its arrival)
+            for k in range(5):
+                if k == 2:          # the middle one would sit over the stairwell (it hung over the spiral)
+                    continue
                 a = math.radians(a0 + (a1 - a0) * (k + 0.5) / 5)
                 with nc.at((math.cos(a) * 2.6, math.sin(a) * 2.6, 0.0), rot=math.degrees(a) + 90.0):
                     nc.box((0, 0, 0.1), (0.9, 0.55, 0.2), ("M_IntFabricPink", "M_IntFabricPurple")[k % 2])
                     with nc.at((0, 0.2, 0.35), rot_x=-70):
                         nc.box((0, 0, 0), (0.4, 0.12, 0.34), "M_IntFabricWhite")
-            m = math.radians((a0 + a1) / 2 + 60.0)
-            f.prop("SM_Int_LowTable", math.cos(m) * 1.4, math.sin(m) * 1.4, 0.0)
-            f.prop("SM_Int_TeaSet", math.cos(m) * 1.4, math.sin(m) * 1.4, 20.0, z=0.5)
-            m2 = math.radians((a0 + a1) / 2 + 120.0)
-            f.prop("SM_Int_OilLamp", math.cos(m2) * 1.9, math.sin(m2) * 1.9, 0.0)
-            m2 = math.radians((a0 + a1) / 2 + 100.0)
-            f.prop("SM_Int_Books", math.cos(m2) * 1.5, math.sin(m2) * 1.5, 30.0)
+            # table and lamp in the two lobes either side of the stairwell, clear of the spiral's top and of the
+            # way round the well (placed by angle from the room's middle they stood in front of the spiral's top
+            # in two of the four turrets)
+            tx_, ty_ = tf(1.09, 1.56)
+            f.prop("SM_Int_LowTable", tx_, ty_, 0.0)
+            f.prop("SM_Int_TeaSet", tx_, ty_, 20.0, z=0.5)
+            lx_, ly_ = tf(-1.72, -1.2)
+            f.prop("SM_Int_OilLamp", lx_, ly_, 0.0)
+            bx_, by_ = tf(-1.39, -0.98)
+            f.prop("SM_Int_Books", bx_, by_, 30.0)
             qx, qy = (1 if tx < 0 else -1), (1 if ty < 10 else -1)
             for (dx, dy, yaw) in ((-qx * 0.0 + qx * 1.4, -qy * 0.19, 180.0 if qy < 0 else 0.0),
                                   (-qx * 0.19, qy * 1.4, 90.0 if qx < 0 else -90.0)):
@@ -5548,10 +5658,11 @@ def _girls_attic_furnish(aset, mb, nc, R):
             _rug(mb, math.cos(m3) * 1.5 - 0.8, math.sin(m3) * 1.5 - 0.8, math.cos(m3) * 1.5 + 0.8, math.sin(m3) * 1.5 + 0.8,
                  0.0, "M_IntCarpetRose", K.TRIM_GOLD)
             # a lookout room: telescope at the window, a tall plant, sconces and silk lanterns on the curved wall
-            # (the stair rises 1.75 m out from the centre on the open sector's middle: the telescope stands
-            # beside it, at the wall)
-            mw = math.radians((a0 + a1) / 2 - 90.0)
-            px_, py_ = math.cos(mw) * 2.4, math.sin(mw) * 2.4
+            # (the telescope stands beside the stairwell, aimed at the window past it - at 1.7 m on the middle
+            # bearing it stood in the well, on top of the spiral)
+            px_, py_ = tf(1.5, 0.55)       # (clear of the wall cushions: touching them it joined the wall dressing
+            #                                 into one room-sized furniture collision box)
+            mw = math.atan2(*reversed(tf(1.0, 0.0)))
             for k in range(3):
                 b_ = math.radians(k * 120.0)
                 nc.beam((px_ + math.cos(b_) * 0.3, py_ + math.sin(b_) * 0.3, 0.0), (px_, py_, 1.15), 0.03, 0.03, K.WOOD_DARK)
@@ -5566,7 +5677,7 @@ def _girls_attic_furnish(aset, mb, nc, R):
                 nc.box((math.cos(ml) * 1.2, math.sin(ml) * 1.2, 2.75), (0.01, 0.01, 0.5), K.BLACK)
                 nc.cylinder((math.cos(ml) * 1.2, math.sin(ml) * 1.2, 2.55), 0.16, 0.3,
                             ("M_IntFabricPink", "M_IntFabricPurple")[k % 2], seg=10)
-            _turret_boiserie(nc, G_TURRET_R - G_RT, a0, a1, _turret_angles(tx, ty))
+            _turret_boiserie(nc, G_TURRET_R - G_RT, a0, a1, _turret_angles(tx, ty), mb=mb)
             _chandelier(f, 0.0, 0.0, 9.66, 1.0)
             f.light(0.0, 0.0, 2.2, 900.0, 4.0)
     tx, ty = G_TURRETS[0]
@@ -5901,7 +6012,8 @@ def _girls_sitting(aset, mb, nc, r, sx, front, num=0):
         DT.desk_set(nc, f.a, xo - sx * 0.31, dyy, 0.76, 90.0 if sx < 0 else -90.0, "student", seed=num, w=1.2, d=0.6)
         f.prop("SM_Int_WoodChair", xo - sx * 1.05, dyy, 90.0 if sx > 0 else -90.0)
         _wall_shelf(f, xo, dyy, "w" if sx < 0 else "e", 1.2, 1.5, num, "decks")
-        # (window side of the desk: the bedroom door is on the other side)
+        # bookcase on the window side of the desk: on the other side (dyy + sy * 1.7) it stood right across the
+        # door into the bedroom (y 10 / 20 on the same wall) and shut the bedroom off
         K.bookcase(mb, nc, xo - sx * 0.22, dyy - sy * 1.7, 90.0 if sx < 0 else -90.0, w=1.3, d=0.4, h=2.1, shelves=5,
                    mat=K.TRIM_WHITE, rng_seed=num)
         _plant(f, xj + sx * 0.6, win_y + sy * 0.6)
@@ -5921,10 +6033,11 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
     door_x = r["x1"] if sx < 0 else r["x0"]
     cx = (r["x0"] + r["x1"]) / 2
     by = inner_y - qy * 1.06
-    # bed (towards the outer wall; the bathroom takes the door corner). Beside the en-suite's partition, 2.1 m
-    # from the outer wall: the passage past the writing desk to the bed's window side (nightstand, the round east
-    # bay) stays open
-    bx = sx * 18.65
+    # bed (towards the outer wall; the bathroom takes the door corner).  0.4 m in from where it was, and the desk
+    # chair by the outer wall tucked in 0.2 m: between the day bed at the foot of the bed and that chair there
+    # were 25 cm, which closed off the way along the bed to the side windows (and, in the east wing, to the
+    # round bay alcove)
+    bx = sx * 18.7
     side_d = "e" if sx < 0 else "w"
     with f:
         # en-suite bathroom in the corner between the suite partition and the inner wall
@@ -5979,11 +6092,15 @@ def _girls_bedroom(aset, mb, nc, r, sx, front, num):
         DT.card_spread(nc, cx - 0.2, sy0 + qy * 1.0, zt, 0.0, 4, num)
         # writing desk + painting between the side windows of the outer wall
         x_out = r["x0"] if sx < 0 else r["x1"]
-        dy = 10.85 if front else 18.85        # (clear of the day-bed: the passage to the bed's window side)
+        dy = 11.35 if front else 18.35
+        if sx > 0:
+            # east wing: 0.75 / 1.05 m nearer the side windows, so the way along the bed to the round bay alcove
+            # (first floor) stays open - between the desk chair and the day bed there were 25 cm
+            dy = 10.6 if front else 19.4
         K.desk(mb, nc, x_out - sx * 0.31, dy, 90.0 if sx < 0 else -90.0, w=1.1, d=0.6, top=K.TRIM_WHITE,
                legs=K.TRIM_WHITE, hutch=False, clutter=False)
         DT.desk_set(nc, f.a, x_out - sx * 0.31, dy, 0.76, 90.0 if sx < 0 else -90.0, "vanity", seed=num, w=1.1, d=0.6)
-        f.prop("SM_Int_WoodChair", x_out - sx * 0.85, dy, -90.0 if sx < 0 else 90.0)   # (tucked in: passage to the bed)
+        f.prop("SM_Int_WoodChair", x_out - sx * 0.8, dy, -90.0 if sx < 0 else 90.0)
         _portrait(f, x_out, dy, 1.45, "w" if sx < 0 else "e", 1.6)
         # shelves between the vanity and the door, paintings, plants
         f.prop("SM_Int_Shelves", door_x + sx * 0.2, 8.0 if front else 22.0, 90.0 if sx > 0 else -90.0)
@@ -6087,16 +6204,17 @@ def _girls_hall2(aset, mb, nc, r):
     with f:
         _rug(mb, -1.0, 13.8, 1.0, 20.0, 0.0, "M_IntCarpetRose", K.TRIM_GOLD)
         # sewing corner: work table with a sewing machine, dress form, bolts of cloth on shelves
-        mb.box_mm((-4.4, 22.0, 0.72), (-2.0, 22.9, 0.76), K.TRIM_WHITE)
-        for (x, y) in ((-4.3, 22.1), (-2.1, 22.1), (-4.3, 22.8), (-2.1, 22.8)):
+        # (0.6 m further east than first drawn: the attic stair now stands 1.3 m off the west wall)
+        mb.box_mm((-4.6, 22.0, 0.72), (-2.2, 22.9, 0.76), K.TRIM_WHITE)
+        for (x, y) in ((-4.5, 22.1), (-2.3, 22.1), (-4.5, 22.8), (-2.3, 22.8)):
             mb.box((x, y, 0.36), (0.06, 0.06, 0.72), K.TRIM_WHITE)
-        nc.box((-3.8, 22.5, 0.86), (0.42, 0.2, 0.2), K.BLACK)
-        nc.box((-3.95, 22.5, 1.0), (0.12, 0.2, 0.12), K.BLACK)
-        nc.box((-3.2, 22.45, 0.765), (0.5, 0.35, 0.01), "M_IntFabricPink")
-        DT.paper_stack(nc, -2.7, 22.6, 0.76, 20.0, 3, 1)
-        f.prop("SM_Int_WoodChair", -3.7, 21.4, 0.0)
-        nc.cylinder((-1.8, 24.2, 0.0), 0.18, 0.03, K.WOOD_DARK, seg=10)
-        nc.cylinder((-1.8, 24.2, 0.03), 0.02, 1.0, K.WOOD_DARK, seg=6)
+        nc.box((-4.0, 22.5, 0.86), (0.42, 0.2, 0.2), K.BLACK)
+        nc.box((-4.15, 22.5, 1.0), (0.12, 0.2, 0.12), K.BLACK)
+        nc.box((-3.4, 22.45, 0.765), (0.5, 0.35, 0.01), "M_IntFabricPink")
+        DT.paper_stack(nc, -2.9, 22.6, 0.76, 20.0, 3, 1)
+        f.prop("SM_Int_WoodChair", -3.9, 21.4, 0.0)
+        nc.cylinder((-2.6, 24.2, 0.0), 0.18, 0.03, K.WOOD_DARK, seg=10)
+        nc.cylinder((-2.6, 24.2, 0.03), 0.02, 1.0, K.WOOD_DARK, seg=6)
         nc.lathe([(0.12, 0.0), (0.17, 0.1), (0.14, 0.3), (0.18, 0.45), (0.12, 0.6), (0.05, 0.66)], "M_IntFabricWhite",
                  12, center=(-1.8, 24.2, 1.03), cap_top=True)
         nc.lathe([(0.19, 0.0), (0.3, -0.55)], "M_IntFabricPink", 12, center=(-1.8, 24.2, 1.33), cap_top=False)
