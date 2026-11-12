@@ -364,24 +364,39 @@ def _hip_tailoring(kit, z0, waist, ease, pockets=True):
 
 # --------------------------------------------------------------------------- shells
 def _torso_shell(kit, name, z0, z1, ease, n=44, gap=None, flare=0.0, rows=None, front=0.0, back=0.0,
-                 waist=0.0, top_in=0.0, cap0=False):
+                 waist=0.0, top_in=0.0, cap0=False, hem_front=None):
     """Shell round the torso from z0 (hem) to z1. ease: m, or fn(z). gap: front opening half angle (rad) or
     fn(z); flare: extra ease at the hem fading over 0.2 m; waist: cinch at the waist; top_in: pull the top
-    ring towards the neck (shoulder seam)."""
+    ring towards the neck (shoulder seam); hem_front: a cut-away hem - the front ends at this height and the
+    hem sweeps down to z0 round the sides to the back (tails)."""
     b = kit.body
     rows = rows or max(5, int((z1 - z0) / 0.020))
-    zs = np.linspace(z0, z1, rows)
-    rings = []
     opened = gap is not None
-    for z in zs:
+
+    def ring(z, z_hem, th):
         e = ease(z) if callable(ease) else ease
-        e = e + flare * (1.0 - M.smooth((z - z0) / 0.20))
+        e = e + flare * (1.0 - M.smooth((z - z_hem) / 0.20))
         e = e - waist * math.exp(-((z - 1.04) / 0.07) ** 2)
         if z > 1.375:                                   # above the shoulder line: keep the collar opening wide
             e = e + (z - 1.375) * 0.9 - top_in
+        return b.torso_ring(min(z, 1.405), e, theta=th, front=front, back=back) * (1, 1, 0) + (0, 0, z)
+
+    rings = []
+    for k, t in enumerate(np.linspace(0.0, 1.0, rows)):
+        z = z0 + (z1 - z0) * t
         g = (gap(z) if callable(gap) else gap) if opened else 0.0
         th = np.linspace(g, 2 * np.pi - g, n) if opened else np.linspace(0.0, 2 * np.pi, n, endpoint=False)
-        rings.append(b.torso_ring(min(z, 1.405), e, theta=th, front=front, back=back) * (1, 1, 0) + (0, 0, z))
+        if hem_front is None:
+            rings.append(ring(z, z0, th))
+            continue
+        # every column runs from its own hem height to the top: high at the front, z0 at the back
+        off = np.abs(((th + np.pi) % (2 * np.pi)) - np.pi)          # 0 front .. pi back
+        zh = hem_front + (z0 - hem_front) * M.smooth((off - 0.95) / 1.25)
+        zc = zh + (z1 - zh) * t
+        row = np.empty((n, 3))
+        for c in range(n):
+            row[c] = ring(zc[c], zh[c], th[c:c + 1])[0]
+        rings.append(row)
     p = M.loft(name, None, np.array(rings), closed=not opened, outline=1.0, cap0=cap0 and not opened)
     return p.weights(M.w_torso)
 
@@ -427,10 +442,11 @@ def _box(name, centre, size, rot_z=0.0):
 # --------------------------------------------------------------------------- garments
 def top(kit, color, hem=0.98, neck=1.392, ease=0.010, sleeves="long", open=0.0, v=0.0, flare=0.0, waist=0.0,
         slot="cloth", cuff=0.0, puff=0.0, bell=0.0, sleeve_to=None, sleeve_color=None, style=None,
-        sleeve_style=None, thick=0.004, tail=None, front=0.0, cells=(2, 2), detail=None):
+        sleeve_style=None, thick=0.004, tail=None, front=0.0, cells=(2, 2), detail=None, hem_front=None):
     """Shirt / blouse / jacket / coat body with optional sleeves.
     open: front opening half angle in degrees (0 = closed); v: depth (m) of a V neckline below `neck`;
-    tail: hem chains to hang the part below the hips from ("skirt" | "coattail");
+    tail: hem chains to hang the part below the hips from ("skirt" | "coattail"); hem_front: cut-away front
+    (the hem rises to this height at the front and falls to `hem` at the back);
     detail: painted tailoring on top of the automatic seams / fold hints / ambient shade (_top_tailoring):
     dict(placket=dict(w, buttons, color, button), zip=True, buttons=dict(n, z0, z1, x, color),
     pockets=("chest" | "chest_r" | "hip" | "flap" | "welt", ...), yoke=True, panels=True, back_seam=True,
@@ -442,7 +458,7 @@ def top(kit, color, hem=0.98, neck=1.392, ease=0.010, sleeves="long", open=0.0, 
         return g0 + float(vv) + 1e-4
 
     p = _torso_shell(kit, "top", hem, neck, ease, gap=gap if (open > 0 or v > 0) else None, flare=flare,
-                     waist=waist, front=front)
+                     waist=waist, front=front, hem_front=hem_front)
     if tail and hem < 0.90:
         p.weights(M.w_hips(0.93, 0.70, 0.55))
         hang(p, tail, 0.90, 0.90 - hem, share=0.55)

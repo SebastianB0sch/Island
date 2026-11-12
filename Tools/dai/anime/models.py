@@ -450,12 +450,14 @@ FACE_PARTS_SIZE = (2048, 1024)
 FACE_PARTS_PAD = 6
 
 
-def merge_face_parts(key, obj, log=print):
+def merge_face_parts(key, obj, log=print, repaint=None):
     """One material instead of eight for the flat face parts (brows, lashes, eye lines, iris, eye white,
     highlights, mouth): their textures - only the part each one's faces really use - are packed into one
     cut-out atlas (T_<Key>_FaceParts) and the UVs are moved there. Opaque parts become alpha 1 in the atlas,
     cut-out parts keep their alpha; faces that only ever show transparent texels are deleted. The mesh's
-    vertices are untouched, so the face morphs are too. Returns the new material's name (None: nothing merged)."""
+    vertices are untouched, so the face morphs are too. repaint(source material, RGBA sheet, {source: sheet})
+    returns a part's own replacement sheet (the protagonist's eyes, hero.repaint). Returns the new material's
+    name (None: nothing merged)."""
     import bmesh
     from .build import preview_material
     from .cel import classify
@@ -468,6 +470,13 @@ def merge_face_parts(key, obj, log=print):
     uvl.data.foreach_get("uv", uv)
     uv = uv.reshape(-1, 2)
     jobs = []
+    sheets = {}
+    if repaint is not None:
+        for slot in obj.material_slots:
+            spec = palette.MATERIALS.get(slot.material.name) if slot.material else None
+            if spec and spec.get("base") and os.path.exists(os.path.join(C.OUT_TEXTURES, spec["base"] + ".png")):
+                with Image.open(os.path.join(C.OUT_TEXTURES, spec["base"] + ".png")) as im:
+                    sheets[spec.get("source_material", slot.material.name)] = np.asarray(im.convert("RGBA")).copy()
     for i, slot in enumerate(obj.material_slots):
         mat = slot.material
         spec = palette.MATERIALS.get(mat.name) if mat else None
@@ -484,6 +493,8 @@ def merge_face_parts(key, obj, log=print):
             continue
         with Image.open(path) as im:
             tex = np.asarray(im.convert("RGBA")).copy()
+        if repaint is not None:
+            tex = repaint(spec.get("source_material", mat.name), tex, sheets)
         h, w = tex.shape[:2]
         x0, x1 = int(np.floor(q[:, 0].min() * w)), int(np.ceil(q[:, 0].max() * w))
         y0, y1 = int(np.floor((1.0 - q[:, 1].max()) * h)), int(np.ceil((1.0 - q[:, 1].min()) * h))
@@ -763,7 +774,11 @@ def build_model(cid, entry, key_name, log=print):
     materials(key, key_name(base), entry, meshes, alpha, log, skip=tailored, rig=rig, source=path)
     face_obj = next((m for m in meshes if m.name.startswith("Face")), None)
     if face_obj is not None:
-        merge_face_parts(key, face_obj, log)
+        repaint = None
+        if entry.get("bespoke"):
+            from . import hero              # the protagonist's own eyes and brows
+            repaint = hero.repaint
+        merge_face_parts(key, face_obj, log, repaint=repaint)
         add_face_outline(face_obj, entry.get("outline", 0.0022) * 0.8, log)
     if hidden_skin is not None:
         wardrobe.strip_skin(body, hidden_skin)       # the skin under the clothes (nothing left to poke through)

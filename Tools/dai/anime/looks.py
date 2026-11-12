@@ -240,7 +240,8 @@ def look(model, hair, iris, outfit=None, colors=None, hairdo=None, female=None, 
 # varied per look: _hair(recipe, <section edits>, <options>). Options (not hair.py sections): ombre
 # (start, length in metres from the crown of the fade into the second hair colour), accent / accent2 (colour
 # of the locks a section marks accent=...), tie (hair-tie colour), highlight, seed, cap, outline.
-_OPTIONS = ("ombre", "accent", "accent2", "tie", "highlight", "seed", "cap", "outline")
+_OPTIONS = ("ombre", "accent", "accent2", "tie", "highlight", "seed", "cap", "outline", "sheen", "res", "min_chain",
+            "author")
 
 
 def _hair(recipe, **kw):
@@ -381,6 +382,11 @@ WEAR = {
 }
 for _cid, _wear in WEAR.items():
     LOOKS[_cid]["wear"] = _wear
+
+
+# the protagonist: authored piece by piece in hero.py rather than from the presets above
+from . import hero as _hero  # noqa: E402
+LOOKS["hero"] = _hero.look()
 
 
 def apply(cid, entry):

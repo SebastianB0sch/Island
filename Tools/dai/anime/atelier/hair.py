@@ -76,6 +76,7 @@ class Hair:
         self.extra = []                     # parts that are not locks (buns)
         self.ties = []                      # (position, direction, radius) of tail / braid / bun ties
         self.split = False                  # two-colour texture: u < 0.5 hair colour, u > 0.5 accent
+        self.res = 1                        # geometric resolution (2: twice the path samples and columns - hero.py)
 
     @staticmethod
     def _is_accent(accent, i):
@@ -94,6 +95,7 @@ class Hair:
         K = self.k
         long_ = free >= LONG
         free, width, loft = free * K, width * K, (loft[0] * K, loft[1] * K)
+        n_scalp = (n_scalp - 1) * self.res + 1
         t = np.linspace(0.0, 1.0, n_scalp)
         s = s0 + (s1 - s0) * t
         th = az + sweep * t ** 1.6
@@ -102,7 +104,7 @@ class Hair:
         path, nrm = [q for q in p], [q for q in n]
         free_from = len(path)
         if free > 1e-4:
-            steps = max(3, int(free / (0.022 * K)))
+            steps = max(3 * self.res, int(free / (0.022 * K / self.res)))
             ds = free / steps
             d = _unit(path[-1] - path[-2]) if direction is None else _unit(np.asarray(direction, np.float64))
             d = _unit(d + np.array([0.0, 0.0, lift]))
@@ -409,10 +411,16 @@ class Hair:
         # its own (darker) strip of the sheet without the texture sweeping across a face
         us = np.array([-1.0, -0.55, 0.0, 0.55, 1.0, 1.0, 0.5, 0.0, -0.5, -1.0])
         bulge = np.array([0.0, 0.70, 1.0, 0.70, 0.0, 0.0, -0.28, -0.40, -0.28, 0.0])
-        rings = lk.p[:, None] + side[:, None] * (us[None, :, None] * w[:, None, None] * 0.5) + \
-            nrm[:, None] * (bulge[None, :, None] * th[:, None, None])
         cu = np.array([0.0, 0.225, 0.5, 0.775, 1.0]) * TOP_U
         cu = np.concatenate([cu, [0.99, 0.95, 0.91, 0.87, 0.83, 0.83]])
+        if self.res > 1:
+            # finer lens: nine columns over the lit face, nine under it (smooth curvature in close-ups)
+            x = np.linspace(-1.0, 1.0, 9)
+            us = np.concatenate([x, x[::-1]])
+            bulge = np.concatenate([(1.0 - x * x) ** 0.9, -0.40 * (1.0 - x * x) ** 0.9])
+            cu = np.concatenate([(x + 1.0) * 0.5 * TOP_U, np.linspace(0.99, 0.83, 9), [0.83]])
+        rings = lk.p[:, None] + side[:, None] * (us[None, :, None] * w[:, None, None] * 0.5) + \
+            nrm[:, None] * (bulge[None, :, None] * th[:, None, None])
         dist = lk.d0 + lk.arc / S
         if lk.kind == "short" and 0 < lk.free_from < K and dist[lk.free_from - 1] < BAND_END:
             # a spike leaving the scalp above the painted highlight band: the band belongs to the head's

@@ -101,6 +101,10 @@ bool UDAAvatarComponent::SetupCast()
 		return false;
 	}
 	USkeletalMesh* Mesh = LoadCharacterAsset<USkeletalMesh>(CastMesh);
+	if (!Mesh && !FallbackCastMesh.IsEmpty() && FallbackCastMesh != CastMesh)
+	{
+		Mesh = LoadCharacterAsset<USkeletalMesh>(FallbackCastMesh);   // e.g. the hero not imported yet
+	}
 	if (!Mesh)
 	{
 		return false;

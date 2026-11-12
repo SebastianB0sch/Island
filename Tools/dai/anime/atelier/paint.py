@@ -192,15 +192,15 @@ def _eye(img, X, Z, px, e, sx, iris, iris2, lash, skin, skin_sh):
 
 # --------------------------------------------------------------------------- hair
 def hair(path, color, color2=None, highlight=None, band=(0.100, 0.150), ombre=(0.45, 0.30), size=(512, 1024),
-         length=1.0, seed=3, accent=None, accent2=None, contrast=1.0):
+         length=1.0, seed=3, accent=None, accent2=None, contrast=1.0, sheen=0.44):
     """Hair sheet: u across a lock, v = distance from the crown / `length` metres (hair.py UVs).
     color2: second tone the hair fades into below ombre[0] (metres) over ombre[1].
     accent: colour of a second sheet painted to the right of the first (hair.Hair.split: streaks, inner
     layers; accent2: its ombre tone). contrast scales the painted shading (runtime-tinted hair is painted
-    near white and wants a little more of it)."""
+    near white and wants a little more of it); sheen: opacity of the highlight band."""
     from PIL import Image
     rng = np.random.default_rng(seed)
-    img = _hair_sheet(color, color2, highlight, band, ombre, size, length, rng, contrast)
+    img = _hair_sheet(color, color2, highlight, band, ombre, size, length, rng, contrast, sheen)
     if accent is not None:
         img = np.concatenate([img, _hair_sheet(accent, accent2, None, band, ombre, size, length, rng, contrast)],
                              axis=1)
@@ -211,7 +211,7 @@ def hair(path, color, color2=None, highlight=None, band=(0.100, 0.150), ombre=(0
 HAIR_TOP_U = 0.80        # hair.TOP_U: u below it is a lock's lit face, above it the underside strip
 
 
-def _hair_sheet(color, color2, highlight, band, ombre, size, length, rng, contrast=1.0):
+def _hair_sheet(color, color2, highlight, band, ombre, size, length, rng, contrast=1.0, sheen=0.44):
     """One hair sheet. u: across a lock - the lit face in u < HAIR_TOP_U, the lock's underside (the darker
     inner tone that gives the mass its depth) beyond it; v: metres from the crown."""
     w, h = size
@@ -248,7 +248,7 @@ def _hair_sheet(color, color2, highlight, band, ombre, size, length, rng, contra
     upper = lo + (hi - lo) * (0.10 + 0.30 * (1.0 - jit)) * (1.0 - tooth ** 0.9)
     a = _smooth((D - upper) / 0.006) * (1.0 - _smooth((D - lower) / 0.003))
     a *= (1.0 - (np.abs(T - 0.5) * 2.0) ** 4) * (0.70 + 0.30 * tooth)
-    _over(img, hl, a * 0.44 * (1.0 - under))
+    _over(img, hl, a * sheen * (1.0 - under))
     # the underside strip: the hair's shadow tone, flat
     und = base * np.array([0.70, 0.68, 0.78], np.float32)
     img += (und - img) * under[..., None]

@@ -144,8 +144,14 @@ def student_entry(key):
                 tint=list(designs.DESIGNS[s["design"]].get("tint", ())), lines=[])
 
 
-# The playable student: a generic look with a dorm-tinted jacket (J switches dorms in game)
-PLAYER = "student_m1"
+# The playable student: the protagonist's own bespoke model (hero.py: hand-placed hair, painted eyes, cut-away
+# academy jacket) with a dorm-tinted jacket (J switches dorms in game). Without the VRoid base installed it
+# falls back to the generic student design. The generic male students keep student_m1.
+PLAYER = "hero"
+HERO = {
+    "hero": dict(name="Student", dorm="slifer", height=172, design="StudentM1", female=False, tint=["jacket"],
+                 lines=[]),
+}
 
 # Crown height (m, without hair) of the atelier bodies in their rest pose: turns the cast's heights into the
 # runtime scale, so 168 cm means 168 cm on the island (doors, stairs and the 1.5 m/s walk are human scale).
@@ -172,6 +178,8 @@ def all_entries():
     out = {k: dict(v) for k, v in CAST.items()}
     for k in STUDENTS:
         out[k] = student_entry(k)
+    for k, v in HERO.items():
+        out[k] = dict(v)
     out = {k: looks.apply(k, e) for k, e in out.items()}      # VRoid-based look when the base is installed
     for e in out.values():
         e["scale"] = scale_of(e)

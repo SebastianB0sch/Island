@@ -86,6 +86,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	FString CastMesh = TEXT("SK_Anime_StudentM1");
 
+	/** Cast mesh used when CastMesh is not imported (same skeleton group). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
+	FString FallbackCastMesh = TEXT("SK_Anime_StudentM1");
+
 	/** Skeleton group of CastMesh: its takes are A_Anime_<AnimGroup>_<State>, its disk SK_Anime_<AnimGroup>_DuelDisk. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duel Academy")
 	FString AnimGroup = TEXT("VroidC");

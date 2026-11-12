@@ -530,7 +530,7 @@ class AtelierCastTests(unittest.TestCase):
             hs = spec.get("hair_style")
             self.assertIsInstance(hs, dict, cid)
             self.assertLessEqual(set(hs), options, cid)
-            self.assertTrue(hs["style"], cid)
+            self.assertTrue(hs["style"] or hs.get("author"), cid)         # the hero's cut is placed by hero.comb
             self.assertLessEqual(set(hs["style"]), sections, cid)
             self.assertNotIn("hairdo", spec, cid)
             self.assertLessEqual(set(spec.get("accessories", {})), {"glasses", "earrings", "nose", "ruff"}, cid)
@@ -574,6 +574,20 @@ class AtelierCastTests(unittest.TestCase):
                 self.assertIsInstance(params, dict)
             for part in design.get("tint", ()):
                 self.assertIn(part, ("jacket", "hair"), key)
+
+    def test_player_is_the_bespoke_hero(self) -> None:
+        from dai.anime import cast, hero, looks
+        self.assertEqual(cast.PLAYER, "hero")
+        spec = looks.LOOKS["hero"]
+        self.assertEqual(spec["bespoke"], hero.KEY)
+        self.assertEqual(spec["tint"], ["jacket"])                     # dorm-tinted jacket, the hair is its own
+        self.assertEqual(spec["hair_style"]["author"], "hero")
+        tinted = [p for kind, p in spec["wear"] if p.get("slot") == "tint"]
+        self.assertTrue(tinted)
+        self.assertTrue(any(p.get("hem_front") for kind, p in spec["wear"] if kind == "top"))
+        entry = cast.all_entries()["hero"]
+        self.assertAlmostEqual(entry["scale"], cast.scale_of(entry))
+        self.assertNotIn("hero", cast.generic_for(False))             # the NPCs never wear the hero's look
 
     def test_generic_students_keep_their_runtime_tints(self) -> None:
         from dai.anime import cast
