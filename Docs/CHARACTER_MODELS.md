@@ -30,6 +30,8 @@ keep `student_m1`, so the island's background students never wear the hero's loo
 | Eyes and brows | `hero.repaint()` replaces the base face's sheets while they are packed into the face-parts atlas: a layered amber iris (lid shadow, gradient body, radial fibres, collarette, inner reflection, limbal ring), two catch-lights, brows in the hair colour |
 | Outfit | a dorm-tinted academy jacket with a cut-away hem (`top(hem_front=...)`: short at the front, long tails at the back on the coat-tail chains), sleeves pushed to the forearm, ink piping and gold trim, over a charcoal high-collar shirt; fingerless gloves, arm band, leather belt with a deck holster, tapered trousers, boots |
 
+![The protagonist in the Slifer, Ra and Obelisk jacket colours](renders/hero.jpg)
+
 The jacket keeps the `JacketTint` slot, so the dorm switch still recolours it; the hair has no tint slot. In
 Unreal the player's avatar asks for `SK_Anime_Hero` and falls back to `SK_Anime_StudentM1`
 (`UDAAvatarComponent::FallbackCastMesh`) until the new mesh is imported.
