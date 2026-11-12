@@ -375,11 +375,18 @@ class Placer:
                 slow.enter_progress_frame(1, f"Scattering {label} ({len(items)})")
             rot = g.get("rot") or (0.0, 0.0, 0.0)
             xforms = []
-            for x, y, z, yaw, s in items:
-                xforms.append(unreal.Transform(unreal.Vector(x, y * self.ysign, z),
-                                               C.rot(yaw=yaw * self.ysign + float(rot[1]),
-                                                     pitch=float(rot[0]), roll=float(rot[2])),
-                                               unreal.Vector(s, s, s)))
+            for it in items:
+                x, y, z, yaw, s = it[:5]
+                if len(it) >= 7 and (it[5] or it[6]):
+                    # bedded into a slope: the instance's own pitch / roll (a mirrored import flips roll),
+                    # after the group's mesh fix-up rotation
+                    r = C.rot(yaw=yaw * self.ysign, pitch=float(it[5]), roll=float(it[6]) * self.ysign)
+                    if any(rot):
+                        r = unreal.MathLibrary.compose_rotators(C.rot(yaw=float(rot[1]), pitch=float(rot[0]),
+                                                                      roll=float(rot[2])), r)
+                else:
+                    r = C.rot(yaw=yaw * self.ysign + float(rot[1]), pitch=float(rot[0]), roll=float(rot[2]))
+                xforms.append(unreal.Transform(unreal.Vector(x, y * self.ysign, z), r, unreal.Vector(s, s, s)))
             folder = g.get("folder")
             if not folder:
                 folder = "Island/vegetation" if any(k in mesh_name for k in ("Tree", "Palm", "Bush", "Fern", "Grass", "Flower", "Rock")) else "Island/props"

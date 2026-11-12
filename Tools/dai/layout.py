@@ -21,7 +21,7 @@ import numpy as np
 
 from . import atomic
 from . import config as C
-from . import jsonio, palette, strips, terrain, waterways
+from . import groundfit, jsonio, palette, strips, terrain, waterways
 from .assets import load_placements
 from .assets import props as P
 from .assets import avatar as AV
@@ -158,12 +158,19 @@ class Layout:
     def ground(self, x, y):
         return float(self.hf(x, y))
 
-    def add_instance(self, asset, x, y, z, yaw, scale):
+    def add_instance(self, asset, x, y, z, yaw, scale, rot=None):
+        """rot: optional 3x3 rotation (Blender frame) of an instance bedded into a slope; the item then carries
+        Unreal's pitch and roll after its scale: [x, y, z, yaw, scale, pitch, roll]."""
         self.inst_all.append((asset, (x, y, z), yaw, scale, self._in_location or None))
         if not self._in_location:
             self.inst_raw.append((asset, (x, y, z), yaw, scale))
         g = self.instances.setdefault(asset, [])
-        g.append([round(x * 100, 1), round(y * 100 * Y_SIGN, 1), round(z * 100, 1), ue_yaw(yaw), round(scale, 3)])
+        if rot is None:
+            g.append([round(x * 100, 1), round(y * 100 * Y_SIGN, 1), round(z * 100, 1), ue_yaw(yaw), round(scale, 3)])
+        else:
+            uy, up, ur = groundfit.ue_rotator(np.asarray(rot, np.float64).reshape(1, 3, 3))
+            g.append([round(x * 100, 1), round(y * 100 * Y_SIGN, 1), round(z * 100, 1), round(float(uy[0]), 2),
+                      round(scale, 3), round(float(up[0]), 2), round(float(ur[0]), 2)])
 
     def add_light(self, p, props, yaw=0.0):
         d = dict(loc=ue_loc(p), color=props.get("color", [1, 0.85, 0.6]), intensity=props.get("intensity", 5000.0),
@@ -523,7 +530,7 @@ class Layout:
                             and waterways.clearance(px, py) > 2.5 and not self.on_bridge(p["id"], s, 2.0):
                         z = self.ground(px, py)
                         yaw = math.degrees(math.atan2(-ny * side, -nx * side)) + 90.0
-                        self.add_instance("SM_LampPost", px, py, z - 0.05, yaw, 1.0)
+                        self.add_instance("SM_LampPost", px, py, self.settle("SM_LampPost", px, py, z - 0.05, yaw), yaw, 1.0)
                         self.add_light((px, py, z + P.PROP_LIGHTS["SM_LampPost"]["offset"][2]),
                                        P.PROP_LIGHTS["SM_LampPost"])
                         self.clearings.append((px, py, 2.0))
@@ -539,7 +546,7 @@ class Layout:
             if self.in_any_pad(px, py, 0.0) is None and p["id"] not in ("breakwater",):
                 z = self.ground(px, py)
                 yaw = math.degrees(math.atan2(by - sy, bx - sx)) - 90.0
-                self.add_instance("SM_Signpost", px, py, z, yaw, 1.0)
+                self.add_instance("SM_Signpost", px, py, self.settle("SM_Signpost", px, py, z, yaw), yaw, 1.0)
                 self.interacts.append(dict(kind="sign", loc=ue_loc((px, py, z + 1.6)), yaw=ue_yaw(yaw),
                                            title="Signpost", text="This way: " + self.DEST.get(p["id"], p["id"]),
                                            radius=300.0, group="paths"))
@@ -889,6 +896,8 @@ class Layout:
         counts = {}
 
         def put(asset, x, y, z, yaw, scale):
+            if asset != "SM_GrassClump_A":          # reeds may stand in the shallows
+                z = self.settle(asset, x, y, z, yaw, scale)
             self.add_instance(asset, x, y, z, yaw, scale)
             counts[asset] = counts.get(asset, 0) + 1
 
@@ -1107,178 +1116,424 @@ class Layout:
         self.log("  life: " + ", ".join(f"{k.replace('SM_', '')}={v}" for k, v in sorted(counts.items())))
 
     # ------------------------------------------------------------------ vegetation scatter
+    # tree -> how far its crown may reach into another one (0 = crowns just touch, 1 = a trunk may stand at the
+    # edge of the other's crown); every tree's trunk and crown are also kept out of the buildings
+    TREES = {"SM_BroadTree_A": 0.5, "SM_BroadTree_B": 0.5, "SM_BroadTree_C": 0.45, "SM_PineTree_A": 0.6,
+             "SM_PalmTree_A": 0.55, "SM_PalmTree_B": 0.55, "SM_DeadTree_A": 0.4}
+    # (fraction of the slope an instance leans by, at most degrees): rocks and logs are bedded into the slope,
+    # small plants lean a little with it, trees and stumps grow upright
+    LEAN = {"SM_Rock_A": (0.75, 32.0), "SM_Rock_B": (0.9, 30.0), "SM_Rock_C": (0.6, 25.0), "SM_Rock_D": (0.8, 30.0),
+            "SM_CliffRock_A": (0.5, 20.0), "SM_VolcanicRock_A": (0.6, 25.0), "SM_Driftwood_A": (0.9, 25.0),
+            "SM_Pebbles_A": (1.0, 30.0), "SM_GrassClump_A": (0.35, 12.0), "SM_Fern_A": (0.35, 12.0),
+            "SM_Bush_A": (0.25, 10.0), "SM_Bush_B": (0.25, 10.0), "SM_FlowerBush_Red": (0.3, 10.0),
+            "SM_FlowerBush_Yellow": (0.3, 10.0), "SM_FlowerBush_Blue": (0.3, 10.0), "SM_FlowerBush_White": (0.3, 10.0)}
+    BOULDERS = ("SM_Rock_A", "SM_Rock_B", "SM_Rock_C", "SM_Rock_D", "SM_CliffRock_A", "SM_VolcanicRock_A",
+                "SM_Stump_A", "SM_Driftwood_A")
+
+    def footprint(self, name):
+        fps = self.__dict__.setdefault("_footprints", {})
+        if name not in fps:
+            # how much of the mesh, from the bottom, must rest on the ground: rocks and logs their lowest fifth
+            # (a bulge may overhang a slope, the base may not); trees, plants and furniture only what touches
+            # the ground (a crown, an arching frond or a bench seat stands over the dip below it)
+            if name in self.BOULDERS:
+                reach = 0.2
+            elif name in self.TREES:
+                reach = 0.04          # the trunk and its root flare, not the low boughs of a pine
+            else:
+                reach = 0.08          # plants: where the stems leave the ground; furniture: its feet
+            fps[name] = groundfit.measure(name, P, reach=reach)
+        return fps[name]
+
+    def settle(self, asset, x, y, z, yaw, scale=1.0):
+        """z, or lower if needed so no foot of the prop stands above the terrain under it (a bench on a
+        sloping verge, a fence along an embankment, a boulder on a river bed)."""
+        zs, _b, _s, _m, _o = groundfit.seat(self.hf, [x], [y], [yaw], [scale], self.footprint(asset), gap=0.02)
+        return min(float(z), float(zs[0]))
+
+    def crown_clear(self, x, y, z, s, fp):
+        """True when a tree's trunk and crown keep clear of every location's walls, roofs and fixtures."""
+        from mathutils import Vector
+        h = fp.h * s
+        probes = ((Vector((x, y, z + 1.2)), fp.trunk * s + 0.25), (Vector((x, y, z + 2.6)), fp.trunk * s + 0.25),
+                  (Vector((x, y, z + 0.68 * h)), 0.7 * fp.crown * s))
+        for sp in self.spaces:
+            for q, r in probes:
+                if not sp.near(q, r):
+                    continue
+                loc, _n, _i, _d = sp.bvh.find_nearest(sp.to_local(q), r)
+                if loc is not None:
+                    return False
+        return True
+
     def scatter(self):
+        """Forest, groves, meadow trees, palms, undergrowth, grass, flowers, rocks and logs.
+
+        Every candidate is seated on the terrain triangles under its whole footprint (groundfit.seat: the
+        downhill edge touches, nothing hovers), skipped where it would vanish into a bank or straddle a step,
+        and kept clear of the trunks, crowns and boulders already standing (groundfit.Spacing) - those the
+        locations, the roadside and the waterside planted included - and of the buildings' walls and roofs.
+        Density follows smooth noise fields, so grass grows in swathes, flowers in drifts of one colour, the
+        forest in stands of one species with younger trees and saplings along its edge."""
         rng = np.random.default_rng(C.SEED + 100)
         clear = np.array(self.clearings, dtype=np.float64) if self.clearings else np.zeros((0, 3))
+        space = groundfit.Spacing()
+        counts, skipped = {}, {}
+        feet = []                 # (x, y, trunk radius) of every scattered tree, for the undergrowth round them
 
         def jitter_grid(cell, extent=1450.0):
             n = int(2 * extent / cell)
             gx, gy = np.meshgrid(np.arange(n), np.arange(n))
             x = -extent + (gx.ravel() + rng.random(gx.size)) * cell
             y = -extent + (gy.ravel() + rng.random(gy.size)) * cell
-            return x, y
+            o = rng.permutation(x.size)          # no row-by-row bias in who claims the ground first
+            return x[o], y[o]
 
         def free(x, y, radius):
             ok = np.ones(x.shape, bool)
-            if len(clear):
-                for (cx, cy, r) in clear:
-                    m = (np.abs(x - cx) < r + radius) & (np.abs(y - cy) < r + radius)
-                    if m.any():
-                        d = np.hypot(x[m] - cx, y[m] - cy)
-                        sub = ok[m]
-                        sub &= d > (r + radius)
-                        ok[m] = sub
+            for (cx, cy, r) in clear:
+                m = (np.abs(x - cx) < r + radius) & (np.abs(y - cy) < r + radius)
+                if m.any():
+                    ok[m] &= np.hypot(x[m] - cx, y[m] - cy) > (r + radius)
             return ok
 
-        counts = {}
+        def dry(x, y, r):
+            """Off the rivers, ponds and the lake (with their banks) and above the sea."""
+            return (waterways.clearances(x, y) > r) & (self.hf(x, y) > 0.6)
 
-        def emit(asset, x, y, z, scale_lo, scale_hi, sink=0.15):
-            for i in range(len(x)):
-                self.add_instance(asset, x[i], y[i], z[i] - sink, rng.uniform(0, 360), rng.uniform(scale_lo, scale_hi))
-            counts[asset] = counts.get(asset, 0) + len(x)
+        # what already stands outside the scatter: the locations' trees, the waterside rocks, benches, lamps
+        for (asset, p, _yaw, sc, _loc) in self.inst_all:
+            if asset in self.TREES:
+                fp = self.footprint(asset)
+                space.add(p[0], p[1], fp.trunk * sc + 0.3, fp.crown * sc)
+            elif asset in self.BOULDERS:
+                space.add(p[0], p[1], self.footprint(asset).base * sc * 0.8)
+            elif asset not in P.FLOATING_PROPS and _loc is None:
+                space.add(p[0], p[1], 0.6 * sc)
+
+        def plant(asset, x, y, s, gap=0.03, sink=0.0, max_buried=None, max_step=0.9, interlock=None,
+                  spaced=True, register=True, refit=False):
+            """Seat and place candidates; returns the mask of the ones placed.
+
+            max_buried: for a boulder, 1 - the share of its height that must stand out of the ground; for a tree,
+            the share of it that may lie below the highest ground under it (plants: any - their uphill leaves
+            may touch the slope, what matters is their foot). max_step: the step its foot may span, m per unit
+            scale. spaced: keep its trunk / crown / base clear of everything placed so far (else only of the
+            trunks and boulders); register: enter it so later candidates keep clear of it. refit: try a boulder
+            too big for its slope smaller. The lean comes from LEAN."""
+            tilt, max_tilt = self.LEAN.get(asset, (0.0, 0.0))
+            if max_buried is None:
+                max_buried = 1.0 if asset in self.LEAN and asset not in self.BOULDERS else 0.35
+            x, y, s = np.asarray(x, float), np.asarray(y, float), np.broadcast_to(np.asarray(s, float), np.shape(x)).copy()
+            fp = self.footprint(asset)
+            yaw = rng.uniform(0, 360, x.shape)
+            z, buried, step, M, out = groundfit.seat(self.hf, x, y, yaw, s, fp, gap, sink, tilt, max_tilt)
+            if asset in self.BOULDERS:
+                # a boulder may be bedded deep into a bank or a cliff face as long as it still stands out of it
+                buried = np.where(out >= 1.0 - max_buried, 0.0, 1.0 + buried)
+            if refit:                     # a boulder too big for its slope: try it smaller before giving up
+                bad = buried > max_buried
+                if bad.any():
+                    s[bad] *= 0.6
+                    z2, b2, st2, M2, o2 = groundfit.seat(self.hf, x[bad], y[bad], yaw[bad], s[bad], fp, gap, sink,
+                                                         tilt, max_tilt)
+                    if asset in self.BOULDERS:
+                        b2 = np.where(o2 >= 1.0 - max_buried, 0.0, 1.0 + b2)
+                    z[bad], buried[bad], step[bad], M[bad] = z2, b2, st2, M2
+            ok = (buried <= max_buried) & (step <= max_step * np.maximum(s, 0.5))
+            tree = asset in self.TREES
+            hard = fp.trunk * s + 0.3 if tree else fp.base * s * 0.8
+            crown = fp.crown * s if tree else np.zeros(x.shape)
+            lock = self.TREES.get(asset, 0.5) if interlock is None else interlock
+            if not spaced:
+                ok &= space.hard_clear(x, y, np.maximum(fp.base * s * 0.6, 0.15))
+            placed = np.zeros(x.shape, bool)
+            for i in np.flatnonzero(ok):
+                if spaced and not space.ok(x[i], y[i], hard[i], crown[i], lock):
+                    continue
+                if tree and not self.crown_clear(x[i], y[i], z[i], s[i], fp):
+                    continue
+                if register:
+                    space.add(x[i], y[i], hard[i], crown[i])
+                self.add_instance(asset, x[i], y[i], z[i], yaw[i], s[i], M[i] if tilt > 0 else None)
+                placed[i] = True
+                if tree:
+                    feet.append((x[i], y[i], fp.trunk * s[i]))
+            counts[asset] = counts.get(asset, 0) + int(placed.sum())
+            skipped[asset] = skipped.get(asset, 0) + int(len(x) - placed.sum())
+            return placed
 
         vx, vy = C.VOLCANO_CENTER
-        # ---------------- forest trees
-        x, y = jitter_grid(8.5)
+        stands = groundfit.value_noise(rng, 18.0, ((1.0, 1.0), (0.4, 0.5)))        # species stands ~100 m
+        swathe = groundfit.value_noise(rng, 6.0, ((1.0, 1.0), (0.35, 0.6)))        # grass swathes ~30 m
+        drifts = groundfit.value_noise(rng, 4.0, ((1.0, 1.0),))                     # flower drifts ~20 m
+        moist = waterways.clearances
+
+        # ---------------- forest: stands of one species, big trees inside, younger ones along the edge
+        x, y = jitter_grid(7.5)
         dens = self.ff(x, y)
         keep = rng.random(x.size) < dens * 0.95
         x, y = x[keep], y[keep]
         h = self.hf(x, y)
-        occ = self.occ(x, y)
-        din = self.din(x, y)
-        ok = (occ < 0.2) & (h > 2.0) & free(x, y, 4.0)
-        x, y, h, din = x[ok], y[ok], h[ok], din[ok]
+        ok = (self.occ(x, y) < 0.2) & (h > 2.0) & (self.sf(x, y) < 40) & free(x, y, 4.0)
+        x, y, h = x[ok], y[ok], h[ok]
+        ok = dry(x, y, 2.0)
+        x, y, h = x[ok], y[ok], h[ok]
+        din, dens, st = self.din(x, y), self.ff(x, y), stands(x, y)
         rv = np.hypot(x - vx, y - vy)
         r = rng.random(x.size)
+        age = np.clip(0.7 + 0.55 * dens ** 0.6 + rng.normal(0, 0.1, x.size), 0.65, 1.35)  # edge trees smaller
         coastal = (din < 90) & (h < 18)
         high = (h > 95) | (rv < 380)
-        sel_palm = coastal & (r < 0.75)
-        sel_pine = ~sel_palm & (high | (r < 0.08))
-        sel_b = ~sel_palm & ~sel_pine & (r < 0.38)
-        sel_a = ~sel_palm & ~sel_pine & ~sel_b
-        emit("SM_PalmTree_A", x[sel_palm & (r < 0.4)], y[sel_palm & (r < 0.4)], h[sel_palm & (r < 0.4)], 0.85, 1.2)
-        emit("SM_PalmTree_B", x[sel_palm & (r >= 0.4)], y[sel_palm & (r >= 0.4)], h[sel_palm & (r >= 0.4)], 0.85, 1.25)
-        emit("SM_PineTree_A", x[sel_pine], y[sel_pine], h[sel_pine], 0.75, 1.25)
-        emit("SM_BroadTree_B", x[sel_b], y[sel_b], h[sel_b], 0.8, 1.2)
-        emit("SM_BroadTree_A", x[sel_a], y[sel_a], h[sel_a], 0.8, 1.3)
+        palm = coastal & (r < 0.75)
+        pine = ~palm & (high | ((st < 0.22) & (r < 0.7)) | (r < 0.04))
+        ash_b = ~palm & ~pine & (st > 0.55 + 0.15 * r)         # dark-leaved stands where the noise runs high
+        birch = ~palm & ~pine & ~ash_b & (dens < 0.45) & (r < 0.18)
+        ash_a = ~palm & ~pine & ~ash_b & ~birch
+        # the big ones first, so the younger trees fill the gaps between them rather than the other way round
+        for sel, asset, s_lo, s_hi in ((ash_b, "SM_BroadTree_B", 0.85, 1.2), (ash_a, "SM_BroadTree_A", 0.85, 1.25),
+                                       (pine, "SM_PineTree_A", 0.8, 1.25)):
+            o = np.flatnonzero(sel)[np.argsort(-age[sel])]
+            plant(asset, x[o], y[o], age[o] * rng.uniform(s_lo, s_hi, o.size), max_step=0.9 if asset != "SM_PineTree_A" else 1.2)
+        o = np.flatnonzero(palm)
+        half = r[o] < 0.4 * 0.75
+        plant("SM_PalmTree_A", x[o[half]], y[o[half]], rng.uniform(0.85, 1.2, half.sum()))
+        plant("SM_PalmTree_B", x[o[~half]], y[o[~half]], rng.uniform(0.85, 1.25, (~half).sum()))
+        o = np.flatnonzero(birch)
+        plant("SM_BroadTree_C", x[o], y[o], rng.uniform(0.9, 1.4, o.size))
 
-        # ---------------- coastal palms on beaches / harbor edges
+        # ---------------- coastal palms on beaches / harbor edges, often leaning together in twos and threes
         x, y = jitter_grid(16.0)
         h = self.hf(x, y)
         din = self.din(x, y)
-        sl = self.sf(x, y)
-        ok = (din > 8) & (din < 75) & (h > 1.3) & (h < 12) & (sl < 18) & (self.occ(x, y) < 0.2)
+        ok = (din > 8) & (din < 75) & (h > 1.3) & (h < 12) & (self.sf(x, y) < 18) & (self.occ(x, y) < 0.2)
         ok &= rng.random(x.size) < 0.45
         ok &= free(x, y, 4.0)
-        emit("SM_PalmTree_A", x[ok], y[ok], self.hf(x[ok], y[ok]), 0.8, 1.25)
+        x, y = x[ok], y[ok]
+        n2 = rng.random(x.size) < 0.35                      # a companion palm 3-6 m off
+        a = rng.uniform(0, 2 * math.pi, n2.sum())
+        d = rng.uniform(3.0, 6.0, n2.sum())
+        cx, cy = x[n2] + np.cos(a) * d, y[n2] + np.sin(a) * d
+        ok = dry(cx, cy, 2.0) & (self.occ(cx, cy) < 0.2) & free(cx, cy, 4.0)
+        plant("SM_PalmTree_A", x, y, rng.uniform(0.8, 1.25, x.size))
+        plant("SM_PalmTree_B", cx[ok], cy[ok], rng.uniform(0.8, 1.15, ok.sum()), interlock=0.75)
 
-        # ---------------- meadow trees + bushes
+        # ---------------- meadow trees: solitary trees and small groves, a few bushes round their feet
         x, y = jitter_grid(28.0)
         h = self.hf(x, y)
         ok = (self.ff(x, y) < 0.25) & (h > 6) & (h < 120) & (self.sf(x, y) < 22) & (self.occ(x, y) < 0.1)
-        ok &= (rng.random(x.size) < 0.18) & free(x, y, 5.0)
-        emit("SM_BroadTree_C", x[ok], y[ok], h[ok], 0.9, 1.5)
+        ok &= (rng.random(x.size) < 0.2) & free(x, y, 5.0)
+        x, y = x[ok], y[ok]
+        ok = dry(x, y, 3.0)
+        x, y = x[ok], y[ok]
+        big = rng.random(x.size) < 0.18                     # now and then a wide old ash on its own
+        plant("SM_BroadTree_A", x[big], y[big], rng.uniform(0.9, 1.25, big.sum()), interlock=0.15)
+        placed = plant("SM_BroadTree_C", x[~big], y[~big], rng.uniform(0.95, 1.5, (~big).sum()), interlock=0.2)
+        gx, gy = x[~big][placed], y[~big][placed]
+        grove = rng.random(gx.size) < 0.45
+        for k in range(3):                                  # grove members round the first tree
+            a = rng.uniform(0, 2 * math.pi, grove.sum())
+            d = rng.uniform(5.5, 9.0, grove.sum())
+            px, py = gx[grove] + np.cos(a) * d, gy[grove] + np.sin(a) * d
+            ok = (self.occ(px, py) < 0.1) & free(px, py, 4.0) & (self.sf(px, py) < 24) & dry(px, py, 3.0)
+            ok &= rng.random(ok.size) < 0.7 - 0.15 * k
+            plant("SM_BroadTree_C", px[ok], py[ok], rng.uniform(0.75, 1.3, ok.sum()), interlock=0.35)
+        a = rng.uniform(0, 2 * math.pi, gx.size)
+        d = rng.uniform(1.6, 2.8, gx.size)
+        px, py = gx + np.cos(a) * d, gy + np.sin(a) * d
+        ok = (rng.random(gx.size) < 0.6) & (self.occ(px, py) < 0.1) & free(px, py, 1.5)
+        plant("SM_Bush_A", px[ok], py[ok], rng.uniform(0.7, 1.1, ok.sum()), sink=0.05, spaced=False,
+              register=False)
 
-        x, y = jitter_grid(6.5)
-        h = self.hf(x, y)
+        # ---------------- saplings in the light along the forest edge
+        x, y = jitter_grid(14.0)
         f = self.ff(x, y)
-        ok = (h > 2.5) & (h < 150) & (self.sf(x, y) < 28) & (self.occ(x, y) < 0.1)
-        ok &= rng.random(x.size) < (0.04 + 0.4 * f * (1 - f) * 4 * 0.5)
-        ok &= free(x, y, 1.5)
-        r = rng.random(ok.sum())
-        xs, ys, hs = x[ok], y[ok], h[ok]
-        emit("SM_Bush_A", xs[r < 0.5], ys[r < 0.5], hs[r < 0.5], 0.7, 1.4, sink=0.2)
-        emit("SM_Bush_B", xs[r >= 0.5], ys[r >= 0.5], hs[r >= 0.5], 0.8, 1.5, sink=0.2)
-
-        # ferns under forest
-        x, y = jitter_grid(4.5)
-        f = self.ff(x, y)
-        ok = (rng.random(x.size) < f * 0.45) & (self.occ(x, y) < 0.1) & (self.hf(x, y) > 2.5)
-        ok &= free(x, y, 1.0)
-        emit("SM_Fern_A", x[ok], y[ok], self.hf(x[ok], y[ok]), 0.8, 1.6, sink=0.05)
-
-        # flowers near paths/meadows
-        x, y = jitter_grid(18.0)
         h = self.hf(x, y)
-        ok = (self.ff(x, y) < 0.3) & (h > 4) & (h < 90) & (self.sf(x, y) < 18) & (self.occ(x, y) < 0.1)
-        ok &= (rng.random(x.size) < 0.22) & free(x, y, 1.5)
-        cols = ["SM_FlowerBush_Red", "SM_FlowerBush_Yellow", "SM_FlowerBush_Blue", "SM_FlowerBush_White"]
-        pick = rng.integers(0, 4, ok.sum())
-        xs, ys, hs = x[ok], y[ok], h[ok]
-        for k, nm in enumerate(cols):
-            m = pick == k
-            emit(nm, xs[m], ys[m], hs[m], 0.7, 1.2, sink=0.1)
+        ok = (f > 0.12) & (f < 0.4) & (rng.random(x.size) < 0.22) & (self.occ(x, y) < 0.1) & (h > 3.0)
+        ok &= (self.sf(x, y) < 28) & free(x, y, 3.0) & (h < 110)
+        x, y = x[ok], y[ok]
+        ok = dry(x, y, 2.0)
+        plant("SM_BroadTree_C", x[ok], y[ok], rng.uniform(0.5, 0.75, ok.sum()), interlock=0.6)
 
-        # grass clumps on open grass
-        x, y = jitter_grid(5.0)
-        h = self.hf(x, y)
-        ok = (h > 3.0) & (h < 140) & (self.sf(x, y) < 25) & (self.occ(x, y) < 0.05) & (self.din(x, y) > 25)
-        ok &= rng.random(x.size) < 0.33
-        ok &= free(x, y, 0.8)
-        emit("SM_GrassClump_A", x[ok], y[ok], h[ok], 0.8, 1.6, sink=0.02)
+        # ---------------- dead trees around the abandoned dorm
+        ax, ay = C.LOCATIONS["abandoned"]["pos"]
+        n = 30
+        ang = rng.uniform(0, 2 * math.pi, n)
+        rad = rng.uniform(42, 95, n)
+        x, y = ax + np.cos(ang) * rad, ay + np.sin(ang) * rad
+        ok = free(x, y, 3.0) & (self.occ(x, y) < 0.2) & dry(x, y, 2.0)
+        plant("SM_DeadTree_A", x[ok], y[ok], rng.uniform(0.8, 1.4, ok.sum()))
 
-        # ---------------- rocks
+        # ---------------- rocks: outcrops on the steep ground, boulders at the waterline, volcanic blocks, beach
+        # stones. A boulder rests on its base and may be bedded into the slope, but never hovers over it and
+        # never sinks out of sight; one too big for its slope is tried smaller.
         x, y = jitter_grid(11.0)
         h = self.hf(x, y)
         sl = self.sf(x, y)
         ok = (sl > 30) & (h > -2) & (self.occ(x, y) < 0.2) & (rng.random(x.size) < 0.55)
         ok &= free(x, y, 3.0)
         r = rng.random(ok.sum())
-        xs, ys, hs = x[ok], y[ok], h[ok]
-        emit("SM_Rock_A", xs[r < 0.35], ys[r < 0.35], hs[r < 0.35], 0.8, 2.0, sink=0.6)
-        emit("SM_Rock_C", xs[(r >= 0.35) & (r < 0.65)], ys[(r >= 0.35) & (r < 0.65)], hs[(r >= 0.35) & (r < 0.65)], 0.8, 1.8, sink=0.8)
-        emit("SM_Rock_D", xs[r >= 0.65], ys[r >= 0.65], hs[r >= 0.65], 0.7, 1.6, sink=0.6)
+        xs, ys = x[ok], y[ok]
+        for sel, asset, lo, hi in ((r < 0.35, "SM_Rock_A", 0.8, 2.0), ((r >= 0.35) & (r < 0.65), "SM_Rock_C", 0.8, 1.8),
+                                   (r >= 0.65, "SM_Rock_D", 0.7, 1.6)):
+            placed = plant(asset, xs[sel], ys[sel], rng.uniform(lo, hi, sel.sum()), sink=0.12, max_buried=0.65,
+                           max_step=99.0, refit=True)
+            # scree: a few smaller stones round the foot of the outcrops that stayed
+            bx, by = xs[sel][placed], ys[sel][placed]
+            m = rng.random(bx.size) < 0.35
+            a = rng.uniform(0, 2 * math.pi, m.sum())
+            d = rng.uniform(2.5, 5.0, m.sum())
+            px, py = bx[m] + np.cos(a) * d, by[m] + np.sin(a) * d
+            ok2 = (self.occ(px, py) < 0.2) & free(px, py, 1.5)
+            plant("SM_Rock_B", px[ok2], py[ok2], rng.uniform(0.35, 0.7, ok2.sum()), sink=0.05, max_buried=0.8,
+                  max_step=99.0)
         # cliff boulders at the waterline
         x, y = jitter_grid(24.0)
         h = self.hf(x, y)
-        din = self.din(x, y)
         ok = (h > -4) & (h < 6) & (self.sf(x, y) > 22) & (rng.random(x.size) < 0.6) & (self.near(x, y) < 0.1)
         for key in ("harbor", "lighthouse"):
             px, py = C.LOCATIONS[key]["pos"]
             ok &= np.hypot(x - px, y - py) > (420.0 if key == "harbor" else 120.0)
-        emit("SM_CliffRock_A", x[ok], y[ok], h[ok], 0.6, 1.4, sink=2.0)
+        plant("SM_CliffRock_A", x[ok], y[ok], rng.uniform(0.6, 1.4, ok.sum()), sink=0.5, max_buried=0.85, max_step=99.0,
+              refit=True)
         # volcanic rocks
         x, y = jitter_grid(14.0)
         h = self.hf(x, y)
         rv = np.hypot(x - vx, y - vy)
         ok = (rv < 520) & (rv > 105) & (h > 70) & (rng.random(x.size) < 0.3) & (self.occ(x, y) < 0.2)
         ok &= free(x, y, 3.0)
-        emit("SM_VolcanicRock_A", x[ok], y[ok], h[ok], 0.6, 2.2, sink=0.5)
+        plant("SM_VolcanicRock_A", x[ok], y[ok], rng.uniform(0.6, 2.2, ok.sum()), sink=0.1, max_buried=0.7,
+              max_step=99.0, refit=True)
         # beach rocks
         x, y = jitter_grid(30.0)
         h = self.hf(x, y)
         ok = (h > -1.5) & (h < 2.5) & (rng.random(x.size) < 0.12) & free(x, y, 6.0)
-        emit("SM_Rock_B", x[ok], y[ok], h[ok], 0.6, 1.5, sink=0.3)
+        plant("SM_Rock_B", x[ok], y[ok], rng.uniform(0.6, 1.5, ok.sum()), sink=0.05, max_buried=0.8, max_step=99.0)
 
         # driftwood + pebbles on the beaches, stumps and fallen trunks in the forest
         x, y = jitter_grid(26.0)
         h = self.hf(x, y)
         ok = (h > 0.4) & (h < 3.0) & (self.sf(x, y) < 12) & (self.occ(x, y) < 0.05) & (rng.random(x.size) < 0.18)
         ok &= free(x, y, 4.0)
-        emit("SM_Driftwood_A", x[ok], y[ok], h[ok], 0.7, 1.2, sink=0.1)
+        plant("SM_Driftwood_A", x[ok], y[ok], rng.uniform(0.7, 1.2, ok.sum()), sink=0.04, max_buried=0.6, max_step=99.0)
         x, y = jitter_grid(17.0)
         h = self.hf(x, y)
         ok = (h > -0.5) & (h < 4.0) & (self.occ(x, y) < 0.05) & (rng.random(x.size) < 0.2) & free(x, y, 2.0)
-        emit("SM_Pebbles_A", x[ok], y[ok], h[ok], 0.7, 1.5, sink=0.03)
+        plant("SM_Pebbles_A", x[ok], y[ok], rng.uniform(0.7, 1.5, ok.sum()), sink=0.03, max_step=99.0,
+              spaced=False, register=False)
         x, y = jitter_grid(15.0)
         f = self.ff(x, y)
         ok = (rng.random(x.size) < f * 0.12) & (self.occ(x, y) < 0.1) & (self.hf(x, y) > 3.0) & free(x, y, 2.5)
+        ok &= self.sf(x, y) < 30
         r = rng.random(ok.sum())
         xs, ys = x[ok], y[ok]
-        emit("SM_Stump_A", xs[r < 0.6], ys[r < 0.6], self.hf(xs[r < 0.6], ys[r < 0.6]), 0.7, 1.3, sink=0.1)
-        emit("SM_Driftwood_A", xs[r >= 0.6], ys[r >= 0.6], self.hf(xs[r >= 0.6], ys[r >= 0.6]), 0.8, 1.3, sink=0.15)
+        plant("SM_Stump_A", xs[r < 0.6], ys[r < 0.6], rng.uniform(0.7, 1.3, (r < 0.6).sum()), sink=0.05, max_buried=0.6,
+              max_step=99.0)
+        plant("SM_Driftwood_A", xs[r >= 0.6], ys[r >= 0.6], rng.uniform(0.8, 1.3, (r >= 0.6).sum()), sink=0.06,
+              max_buried=0.6, max_step=99.0)
 
-        # ---------------- dead trees around the abandoned dorm
-        ax, ay = C.LOCATIONS["abandoned"]["pos"]
-        n = 26
-        ang = rng.uniform(0, 2 * math.pi, n)
-        rad = rng.uniform(42, 95, n)
-        x, y = ax + np.cos(ang) * rad, ay + np.sin(ang) * rad
-        ok = free(x, y, 3.0) & (self.occ(x, y) < 0.2)
-        emit("SM_DeadTree_A", x[ok], y[ok], self.hf(x[ok], y[ok]), 0.8, 1.4)
+        # ---------------- bushes: thickest along the forest edge, scattered in the open, some under the canopy
+        x, y = jitter_grid(6.5)
+        h = self.hf(x, y)
+        f = self.ff(x, y)
+        ok = (h > 2.5) & (h < 150) & (self.sf(x, y) < 28) & (self.occ(x, y) < 0.1)
+        ok &= rng.random(x.size) < (0.03 + 0.85 * f * (1 - f)) * (0.6 + 0.8 * swathe(x, y))
+        ok &= free(x, y, 1.5)
+        x, y = x[ok], y[ok]
+        ok = dry(x, y, 0.5)
+        x, y = x[ok], y[ok]
+        r = rng.random(x.size)
+        plant("SM_Bush_A", x[r < 0.5], y[r < 0.5], rng.uniform(0.7, 1.4, (r < 0.5).sum()), sink=0.05,
+              spaced=False, register=False)
+        plant("SM_Bush_B", x[r >= 0.5], y[r >= 0.5], rng.uniform(0.8, 1.5, (r >= 0.5).sum()), sink=0.05,
+              spaced=False, register=False)
+
+        # ferns under the forest, thickest in the shade by the water and round the trunks
+        x, y = jitter_grid(4.5)
+        f = self.ff(x, y)
+        ok = (self.occ(x, y) < 0.1) & (self.hf(x, y) > 2.5) & (self.sf(x, y) < 38)
+        ok &= free(x, y, 1.0)
+        x, y, f = x[ok], y[ok], f[ok]
+        wet = moist(x, y)
+        p = f * 0.42 + np.where((wet > 0.5) & (wet < 12.0), 0.25 * f + 0.08, 0.0)
+        ok = (rng.random(x.size) < p) & (wet > 0.5)
+        plant("SM_Fern_A", x[ok], y[ok], rng.uniform(0.8, 1.6, ok.sum()), gap=0.02, sink=0.03,
+              spaced=False, register=False)
+        # ... and a few round the feet of the forest trees, where the roots hold the leaf litter
+        tf = np.array(feet).reshape(-1, 3)
+        tf = tf[(self.ff(tf[:, 0], tf[:, 1]) > 0.3) & (rng.random(len(tf)) < 0.45)]
+        px, py = [], []
+        for k in range(3):
+            m = rng.random(len(tf)) < (0.9, 0.55, 0.3)[k]
+            a = rng.uniform(0, 2 * math.pi, m.sum())
+            d = tf[m, 2] + rng.uniform(0.9, 2.6, m.sum())
+            px.append(tf[m, 0] + np.cos(a) * d)
+            py.append(tf[m, 1] + np.sin(a) * d)
+        px, py = np.concatenate(px), np.concatenate(py)
+        ok = (self.occ(px, py) < 0.1) & (self.sf(px, py) < 38) & free(px, py, 1.0) & dry(px, py, 0.5)
+        plant("SM_Fern_A", px[ok], py[ok], rng.uniform(0.7, 1.3, ok.sum()), gap=0.02, sink=0.03, spaced=False,
+              register=False)
+
+        # flowers in drifts of one colour along the paths, on the meadows and at the forest edge
+        cols = ["SM_FlowerBush_Red", "SM_FlowerBush_Yellow", "SM_FlowerBush_Blue", "SM_FlowerBush_White"]
+        x, y = jitter_grid(22.0)
+        h = self.hf(x, y)
+        ok = (self.ff(x, y) < 0.35) & (h > 4) & (h < 90) & (self.sf(x, y) < 18) & (self.occ(x, y) < 0.1)
+        ok &= (rng.random(x.size) < 0.1 + 0.35 * drifts(x, y)) & free(x, y, 1.5)
+        x, y = x[ok], y[ok]
+        pick = rng.integers(0, 4, x.size)
+        size = rng.integers(1, 7, x.size)                   # 1 = a lone plant, up to 6 round a centre
+        fx, fy, fc = [x], [y], [pick]
+        for k in range(1, 6):
+            m = size > k
+            a = rng.uniform(0, 2 * math.pi, m.sum())
+            d = np.sqrt(rng.random(m.sum())) * 3.2 + 0.9
+            fx.append(x[m] + np.cos(a) * d)
+            fy.append(y[m] + np.sin(a) * d)
+            fc.append(pick[m])
+        fx, fy, fc = np.concatenate(fx), np.concatenate(fy), np.concatenate(fc)
+        ok = (self.occ(fx, fy) < 0.1) & free(fx, fy, 1.0) & (self.sf(fx, fy) < 22) & dry(fx, fy, 0.5)
+        for k, nm in enumerate(cols):
+            m = ok & (fc == k)
+            plant(nm, fx[m], fy[m], rng.uniform(0.6, 1.15, m.sum()), sink=0.04, spaced=False,
+                  register=False)
+
+        # grass: swathes of tall clumps on the open ground and the forest edge, thinner in the deep shade,
+        # thicker where the ground is damp
+        x, y = jitter_grid(4.6)
+        h = self.hf(x, y)
+        ok = (h > 3.0) & (h < 140) & (self.sf(x, y) < 25) & (self.occ(x, y) < 0.05) & (self.din(x, y) > 25)
+        ok &= free(x, y, 0.8)
+        x, y = x[ok], y[ok]
+        sw = swathe(x, y)
+        f = self.ff(x, y)
+        p = (0.08 + 0.5 * sw ** 1.5) * (1.0 - 0.65 * f) + 0.22 * f * (1 - f)
+        p *= 1.0 + 0.9 * np.clip(self.near(x, y) * 1.5, 0.0, 1.0)   # thickest where people walk: by the roads,
+        ok = rng.random(x.size) < p                                # the buildings and the lake
+        x, y, sw = x[ok], y[ok], sw[ok]
+        wet = moist(x, y)
+        ok = wet > 0.3
+        x, y, sw, wet = x[ok], y[ok], sw[ok], wet[ok]
+        # where the swathe runs thick a clump is a tussock of several: up to four more within a stride
+        tx, ty, tsw, twet = [x], [y], [sw], [wet]
+        for k in range(4):
+            m = rng.random(x.size) < np.clip((sw - 0.5 - 0.08 * k) * 1.8, 0.0, 0.9) + (0.25 if k == 0 else 0.0)
+            a = rng.uniform(0, 2 * math.pi, m.sum())
+            d = rng.uniform(0.55, 1.5, m.sum())
+            tx.append(x[m] + np.cos(a) * d)
+            ty.append(y[m] + np.sin(a) * d)
+            tsw.append(sw[m])
+            twet.append(wet[m])
+        x, y, sw, wet = map(np.concatenate, (tx, ty, tsw, twet))
+        ok = (self.occ(x, y) < 0.05) & free(x, y, 0.8) & (self.sf(x, y) < 28)
+        x, y, sw, wet = x[ok], y[ok], sw[ok], wet[ok]
+        s = (0.75 + 0.85 * sw + np.where(wet < 10.0, 0.25, 0.0)) * rng.uniform(0.8, 1.15, x.size)
+        plant("SM_GrassClump_A", x, y, s, gap=0.02, sink=0.03, spaced=False, register=False)
 
         total = sum(counts.values())
         self.log(f"  scatter: {total} instances " + ", ".join(f"{k.replace('SM_', '')}={v}" for k, v in sorted(counts.items())))
+        self.log("  scatter: skipped (no room, a step, buried or against a building) "
+                 + ", ".join(f"{k.replace('SM_', '')}={v}" for k, v in sorted(skipped.items()) if v))
         self.drop_indoor_scatter()
 
     def drop_indoor_scatter(self):
@@ -1557,6 +1812,8 @@ class Layout:
         for k, v in sorted(self.instances.items()):
             if k.startswith("SM_Int_"):      # furniture is only ever seen from inside or through a window
                 cull.setdefault(k, [6000, 9000])
+            if any(len(it) > 5 for it in v):    # one shape per group: all bare-yaw items get a level pitch / roll
+                v = [it if len(it) > 5 else it + [0.0, 0.0] for it in v]
             inst[k] = dict(folder="Props", collision=k not in nocol, cull=cull.get(k, [0, 0]),
                            shadow=k not in ("SM_GrassClump_A", "SM_Fern_A"), items=v)
         start = [z for z in self.zones() if z["id"] == "harbor"][0]["spawn"]

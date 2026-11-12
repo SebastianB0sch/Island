@@ -24,10 +24,20 @@ def _from_ue(loc):
     return (loc[0] / 100.0, -loc[1] / 100.0, loc[2] / 100.0)
 
 
+def _euler(it):
+    """Blender XYZ euler of a layout.json instance item ([x, y, z, yaw, scale] or, bedded into a slope,
+    [x, y, z, yaw, scale, pitch, roll] with Unreal's rotator)."""
+    if len(it) < 7 or (not it[5] and not it[6]):
+        return [0.0, 0.0, math.radians(-it[3])]
+    from mathutils import Matrix
+    from .groundfit import blender_matrix
+    return list(Matrix(blender_matrix(it[3], it[5], it[6]).tolist()).to_euler("XYZ"))
+
+
 def _instance_object(name, proto, items):
     """Mesh of points (one per instance) + GN 'instance on points' using `proto`."""
     pts = np.array([[it[0] / 100.0, -it[1] / 100.0, it[2] / 100.0] for it in items], np.float32)
-    rot = np.array([[0.0, 0.0, math.radians(-it[3])] for it in items], np.float32)
+    rot = np.array([_euler(it) for it in items], np.float32)
     scl = np.array([[it[4]] * 3 for it in items], np.float32)
     me = bpy.data.meshes.new(name + "_pts")
     me.vertices.add(len(pts))

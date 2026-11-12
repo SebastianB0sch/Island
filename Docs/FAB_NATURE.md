@@ -115,7 +115,9 @@ height, and its pivot is moved so the mesh's lowest point sits on the same
 ground line as the native mesh. Variants are assigned round-robin per native
 group, deterministically. The prop swapper preserves the native group's
 collision/cull/shadow flags and supports a per-asset pitch/yaw/roll offset (the
-street-light mesh is authored lying along -Y and is rolled upright).
+street-light mesh is authored lying along -Y and is rolled upright). Instances
+the scatter bedded into a slope (boulders, logs, plants leaning a little with
+the ground) carry their pitch and roll in `layout.json`; both swappers keep it.
 
 The four instance groups that still have no suitable Fab mesh are the three
 `SM_Flagpole_*` groups and `SM_DuelDummy`; they stay procedural. See

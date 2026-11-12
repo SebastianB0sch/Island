@@ -147,7 +147,7 @@ def translate(instances: dict) -> tuple[dict, dict]:
     """Translate native instance groups into Fab instance groups.
 
     ``instances`` is the layout writer's native map:
-        native name -> [[x_cm, y_cm, z_cm, yaw_ue, scale], ...]
+        native name -> [[x_cm, y_cm, z_cm, yaw_ue, scale(, pitch, roll)], ...]
     (already in Unreal coordinates, Y mirrored).  Returns
         (fab name -> group dict, native name -> stats dict)
     where each group carries the Fab object path plus the same collision /
@@ -176,7 +176,7 @@ def translate(instances: dict) -> tuple[dict, dict]:
                              cull=[int(meta["cull"][0]), int(meta["cull"][1])],
                              shadow=bool(meta["shadow"]), items=[])
                 groups[fab_name] = group
-            group["items"].append([item[0], item[1], round(z_cm, 1), item[3], round(scale, 3)])
+            group["items"].append([item[0], item[1], round(z_cm, 1), item[3], round(scale, 3)] + list(item[5:7]))
             count += 1
         stats[native_name] = dict(target=target, variants=list(variants), count=count)
     return groups, stats
