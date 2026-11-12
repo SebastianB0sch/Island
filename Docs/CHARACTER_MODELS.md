@@ -32,7 +32,8 @@ generic students keep `student_m1` / `f1` / `f2`, so the background students nev
 |---|---|
 | Hair | every lock placed by hand (`bespoke.comb()`): the hero's side-parted fringe with one long lock between the eyes, a lifted piecey crown, flicked sides and a nape tail; the heroine's long layered cut parted the other way, half up with a tail at the crown and long face-framing locks. Blue-black with a copper under-layer, double geometric resolution (`res=2`), a cool highlight ring, spring chains on the short locks |
 | Face | `bespoke.repaint_for()` replaces the base face's sheets while they are packed into the face-parts atlas: a layered amber iris (copper-ringed with an extra sparkle on the heroine), catch-lights, an inked lash line, brows in the hair colour; jaw / chin, resting expression, gold hoop earrings |
-| Outfit | a dorm-tinted academy coat with one sleeve (mirrored between the two), a cut-away hem with long tails, a gold card-suit border, a copper lining edge and a crest on the back, over a fitted black high-collar top; a leather strap over the shoulder with a buckle and a card pouch, a belt stack, a thigh strap, fingerless gloves and an armoured duel-disk bracer on the bare forearm. The hero wears tapered trousers, the heroine a pleated skirt and thigh-highs |
+| Outfit | a dorm-tinted academy coat with one sleeve (mirrored between the two), a cut-away hem with long tails, a gold card-suit border, a copper lining edge, an ink-rimmed crest and a tailcoat vent at the back - draped
+plumb from the shoulder blades and fitted over everything worn under it (`drape`, `clear`) - over a fitted black high-collar top; a leather strap over the shoulder with a buckle and a card pouch, a belt stack, a thigh strap, fingerless gloves and an armoured duel-disk bracer on the bare forearm. The hero wears tapered trousers, the heroine a pleated skirt and thigh-highs |
 
 ![The protagonists](renders/protagonists.jpg)
 

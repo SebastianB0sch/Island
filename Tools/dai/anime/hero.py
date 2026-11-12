@@ -47,7 +47,7 @@ HAIR_COMMON = dict(color=HAIR, tip=HAIR_TIP, accent=COPPER, accent_tip=COPPER_TI
 
 def _fringe(az, s1, sweep, free, width, bump=0.0, **kw):
     return dict(az=az, s0=0.04, s1=s1, free=free, sweep=sweep, loft=(0.015, 0.022 + bump), width=width, thick=0.25,
-                gravity=0.55, forward=0.25, kind="fringe", **kw)
+                gravity=0.55, **dict(dict(forward=0.25, kind="fringe"), **kw))
 
 
 def _strand(az, s1, sweep, free, **kw):
@@ -72,22 +72,26 @@ HERO_FRINGE = [
     _fringe(26.0, 0.375, 0.10, 0.014, 0.060),
     _fringe(14.0, 0.400, -0.12, 0.020, 0.066, 0.002),
     _fringe(3.0, 0.425, -0.18, 0.026, 0.066),
-    _fringe(-1.0, 0.470, -0.04, 0.036, 0.050, 0.003),          # the long lock between the eyes
-    _fringe(-14.0, 0.395, -0.10, 0.018, 0.060, 0.001),
-    _fringe(-28.0, 0.395, -0.05, 0.018, 0.060, 0.003),
-    _fringe(-44.0, 0.470, -0.04, 0.030, 0.056, 0.002, over_eye=True),   # frames the outer corner
+    # the long lock between the eyes: rooted left of centre, since the fringe's weight carries a lock rooted on
+    # the centre line over the inner corner of the right eye
+    _fringe(6.0, 0.465, 0.03, 0.030, 0.048, 0.003, forward=0.08),
+    # over the right eye the fringe parts into two short points with the eye between them (seen from the
+    # side as well: everything there ends above the lid or outside the outer corner)
+    _fringe(-10.0, 0.385, -0.06, 0.010, 0.060, 0.001),
+    _fringe(-36.0, 0.390, -0.04, 0.012, 0.060, 0.003),
+    _fringe(-46.0, 0.440, -0.03, 0.014, 0.056, 0.002, over_eye=True),   # frames the outer corner
     _fringe(38.0, 0.420, 0.16, 0.020, 0.060, 0.003),
     _fringe(50.0, 0.490, 0.10, 0.032, 0.054, 0.001, over_eye=True),
     _strand(10.0, 0.430, -0.10, 0.024),
     _strand(-6.0, 0.440, -0.05, 0.026),
-    _strand(-38.0, 0.490, -0.08, 0.030, over_eye=True),
+    _strand(-41.0, 0.450, -0.06, 0.016),
     _strand(44.0, 0.460, 0.14, 0.028),
 ]
 
 HERO = dict(
     key="Hero", base="vroid_c", female=False, height=172, tint=("jacket",),
     hair=dict(HAIR_COMMON, seed=11, sections=dict(
-        spikes=dict(n=13, lift=0.50, free=0.064, rings=(0.20, 0.34, 0.47), start=56.0, flare=0.80, gravity=0.22,
+        spikes=dict(n=13, lift=0.50, free=0.064, rings=(0.20, 0.34, 0.47), start=56.0, flare=0.80, gravity=0.22, symmetric=True,
                     droop=0.07, up=0.30, width=0.058, curl=0.35, side_tame=0.60, lift_decay=0.30),
         back=dict(to=0.67, free=0.070, n=10, start=108.0, curl=1.15, flare=0.13, layers=2, width=1.55, accent=[0]),
         tails=[dict(at=(180.0, 0.63), n=5, free=0.24, direction=(0.0, 0.40, -0.92), spread=0.014, width=0.040,
@@ -95,10 +99,12 @@ HERO = dict(
         ahoge=dict(free=0.065, az=-0.22)),
         locks=HERO_FRINGE + [
             # face-framing locks in front of the ears, the right one longer, both turning in at the tip
-            dict(az=-60.0, s0=0.08, s1=0.60, free=0.085, loft=(0.015, 0.020), width=0.056, thick=0.26,
-                 gravity=0.48, forward=0.16, curl=-0.7, flare=0.02),
-            dict(az=60.0, s0=0.08, s1=0.58, free=0.060, loft=(0.015, 0.020), width=0.056, thick=0.26,
-                 gravity=0.48, forward=0.16, curl=-0.6, flare=0.02),
+            # (they hang beside the cheeks, not in front of them: with more forward push the right one closes
+            # the face off like a curtain seen from that side)
+            dict(az=-74.0, s0=0.08, s1=0.60, free=0.080, loft=(0.015, 0.020), width=0.056, thick=0.26,
+                 gravity=0.48, forward=0.03, curl=-0.7, flare=0.06),
+            dict(az=74.0, s0=0.08, s1=0.58, free=0.058, loft=(0.015, 0.020), width=0.056, thick=0.26,
+                 gravity=0.48, forward=0.03, curl=-0.6, flare=0.06),
             # sides over the ears: flicked out; the inner one copper and tucked under
             dict(az=84.0, s0=0.06, s1=0.62, free=0.050, loft=(0.012, 0.020), width=0.064, thick=0.26, gravity=0.45,
                  flare=0.08, curl=1.0, forward=0.04, mirror=True, asym=1.08),
@@ -111,12 +117,13 @@ HERO = dict(
 )
 
 SUIT = dict(kind="diamond", n=30, v=0.040, size=0.32, h=0.014, color=GOLD)     # card-suit diamonds along a hem
-CREST = dict(u=0.5, v=0.74, size=0.075, color=GOLD, alpha=0.9)                # on the back of the coat
+CREST = dict(u=0.5, v=0.74, size=0.075, color=GOLD, outline=INK, rim=0.05, alpha=0.95)   # on the back of the coat
 
 
-def _coat(sleeve, hem, hem_front, waist, flare, open_=18.0, ease=0.020):
+def _coat(sleeve, hem, hem_front, waist, flare, open_=18.0, ease=0.020, vent=(0.86, 0.10), clear=0.006):
     return ("top", dict(color=TINT, hem=hem, hem_front=hem_front, ease=ease, open=open_, v=0.14, cuff=0.012,
                         flare=flare, waist=waist, tail="coattail", slot="tint", sleeve_sides=(sleeve,), cells=(2, 4),
+                        drape=0.02, vent=vent, clear=clear,
                         style=dict(edge=[(0.014, INK), (0.006, GOLD), (0.010, COPPER)],
                                    hem=[(0.020, INK), (0.006, GOLD)], motif=SUIT, crest=CREST),
                         sleeve_style=dict(hem=[(0.08, INK), (0.012, GOLD), (0.012, INK)],
@@ -140,8 +147,8 @@ HERO["wear"] = [
     ("belt", dict(color=LEATHER, z=1.010, width=0.030, buckle=SILVER, tilt=0.0)),
     ("belt", dict(color=shade(LEATHER, v=0.72), z=0.965, width=0.024, buckle=GOLD, ease=0.030, tilt=0.07,
                   pouch=shade(LEATHER, v=0.95))),
-    ("legstrap", dict(color=shade(LEATHER, v=0.72), side="r", z=0.74, buckle=SILVER, pouch=shade(LEATHER, v=0.9))),
-    _coat("l", hem=0.50, hem_front=0.95, waist=0.012, flare=0.040),
+    ("legstrap", dict(color=shade(LEATHER, v=0.72), side="r", z=0.74, buckle=SILVER, pouch=shade(LEATHER, v=0.9), pouch_at=-40.0)),
+    _coat("l", hem=0.50, hem_front=0.95, waist=0.022, flare=0.040),
     _strap("l", shade(LEATHER, v=0.85)),
     ("gloves", dict(color=INK, cuff=0.555, style=dict(hem=[(0.10, shade(INK, v=1.5))]))),
     ("bracer", dict(color=GUARD, side="r", x0=0.445, x1=0.585, trim=GOLD, disk=INK, glow=COPPER)),
@@ -162,7 +169,7 @@ HEROINE_FRINGE = [dict(lk, s1=lk["s1"] - 0.015, free=lk["free"] * 0.8) for lk in
 HEROINE = dict(
     key="Heroine", base="vroid_a", female=True, height=163, tint=("jacket",),
     hair=dict(HAIR_COMMON, seed=23, sections=dict(
-        spikes=dict(n=11, lift=0.28, free=0.050, rings=(0.22, 0.38), start=58.0, flare=0.70, gravity=0.30,
+        spikes=dict(n=11, lift=0.28, free=0.050, rings=(0.22, 0.38), start=58.0, flare=0.70, gravity=0.30, symmetric=True,
                     droop=0.10, width=0.060, curl=0.4, side_tame=0.70),
         back=dict(to=0.72, free=0.34, n=12, start=100.0, taper=0.14, layers=2, flare=0.05, curl=0.6, wave=0.20,
                   width=1.60),
@@ -181,7 +188,8 @@ HEROINE = dict(
             # long sides, the inner one copper
             dict(az=84.0, s0=0.06, s1=0.66, free=0.16, loft=(0.012, 0.020), width=0.066, thick=0.26, gravity=0.42,
                  flare=0.05, curl=0.6, forward=0.06, mirror=True, asym=1.05, wave=0.2),
-            dict(az=94.0, s0=0.06, s1=0.66, free=0.20, loft=(0.012, 0.013), width=0.066, thick=0.26, gravity=0.42,
+            # (short: a long copper lock shows through the back hair as torn patches at the shoulders)
+            dict(az=94.0, s0=0.06, s1=0.64, free=0.09, loft=(0.012, 0.013), width=0.066, thick=0.26, gravity=0.42,
                  flare=0.03, curl=0.4, forward=0.04, mirror=True, asym=1.05, accent=True),
         ]),
     face=dict(iris=(0.92, 0.62, 0.20), iris_ring=(0.82, 0.32, 0.16), sparkle=True, lash=1.2,
@@ -197,8 +205,8 @@ HEROINE["wear"] = [
     ("belt", dict(color=LEATHER, z=1.035, width=0.026, buckle=SILVER)),
     ("belt", dict(color=shade(LEATHER, v=0.72), z=0.985, width=0.022, buckle=GOLD, ease=0.034, tilt=-0.07,
                   pouch=shade(LEATHER, v=0.95))),
-    ("legstrap", dict(color=shade(LEATHER, v=0.72), side="l", z=0.665, buckle=SILVER, pouch=shade(LEATHER, v=0.9))),
-    _coat("r", hem=0.58, hem_front=1.00, waist=0.0, flare=0.050, open_=16.0, ease=0.036),
+    ("legstrap", dict(color=shade(LEATHER, v=0.72), side="l", z=0.665, buckle=SILVER, pouch=shade(LEATHER, v=0.9), pouch_at=-80.0)),
+    _coat("r", hem=0.58, hem_front=1.00, waist=0.020, flare=0.020, open_=16.0, ease=0.024, vent=(0.90, 0.16)),
     _strap("r", shade(LEATHER, v=0.85)),
     ("gloves", dict(color=INK, cuff=0.560, style=dict(hem=[(0.10, shade(INK, v=1.5))]))),
     ("bracer", dict(color=GUARD, side="l", x0=0.445, x1=0.580, trim=GOLD, disk=INK, glow=COPPER)),

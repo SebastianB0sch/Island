@@ -600,6 +600,85 @@ class AtelierCastTests(unittest.TestCase):
         bad = dict(hero.HERO, hair=dict(hero.HERO["hair"], locks=[dict(az=20.0, s1=0.50, width=0.02, kind="fringe")]))
         self.assertEqual(len(bespoke.check(bad)), 2)
 
+    def test_bespoke_rules_catch_hair_over_the_eyes(self) -> None:
+        from dai.anime import bespoke, hero
+        hair = hero.HERO["hair"]
+        # a fringe lock rooted above the brows whose free length still hangs over an eye
+        tip = dict(az=-20.0, s0=0.04, s1=0.40, free=0.020, width=0.06, kind="fringe")
+        self.assertEqual(len(bespoke.check(dict(hero.HERO, hair=dict(hair, locks=[tip])))), 1)
+        self.assertEqual(bespoke.check(dict(hero.HERO, hair=dict(hair, locks=[dict(tip, free=0.005)]))), [])
+        # recipe spikes whose rows turn round to one side
+        spikes = dict(hair["sections"]["spikes"], symmetric=False)
+        bad = dict(hero.HERO, hair=dict(hair, sections=dict(hair["sections"], spikes=spikes)))
+        self.assertEqual(len(bespoke.check(bad)), 1)
+        # eye clearance thresholds: front for both eyes, +-20 deg for the near one
+        good = {-20: (90.0, 30.0), 0: (60.0, 60.0), 20: (30.0, 90.0)}
+        self.assertEqual(bespoke.eye_problems(good), [])
+        self.assertEqual(len(bespoke.eye_problems({**good, 0: (1.0, 70.0), -20: (2.0, 40.0)})), 2)
+
+    def test_symmetric_spikes_stay_inside_their_fan(self) -> None:
+        import numpy as np
+        from dai.anime.atelier import hair as AH
+
+        class Rec(AH.Hair):
+            def __init__(self):
+                self.az = []
+
+            def lock(self, a, *args, **kw):
+                self.az.append(a)
+                return type("L", (), {})()
+
+            def _jit(self, x):
+                return 1.0
+
+            def _is_accent(self, accent, row):
+                return False
+        for sym in (False, True):
+            r = Rec()
+            r.spikes(rings=(0.2, 0.34, 0.47), start=56.0, symmetric=sym)
+            front = [abs(((a + np.pi) % (2 * np.pi)) - np.pi) for a in r.az]       # 0 front .. pi back
+            self.assertEqual(min(front) >= np.radians(56.0) - 1e-9, sym)             # the old fan reaches -32 deg
+            if sym:
+                left = sorted(round(a, 6) for a in r.az if a < np.pi - 1e-6)          # (one may sit on the
+                right = sorted(round(2 * np.pi - a, 6) for a in r.az if a > np.pi + 1e-6)   # back centre line)
+                self.assertEqual(left, right)
+
+    def test_coat_shell_drapes_vents_and_clears_inner_layers(self) -> None:
+        import numpy as np
+        from dai.anime.atelier import body as BD, outfit as OF
+
+        def coat(**kw):
+            kit = OF.Kit(BD.Body(False), "T", dict(cloth="c", tint=None, skin="s"))
+            OF.belt(kit, (0.3, 0.2, 0.1), z=0.97, ease=0.030, pouch=(0.4, 0.3, 0.2))
+            OF.top(kit, (0.8, 0.2, 0.2), hem=0.50, open=18.0, ease=0.020, tail="coattail", sleeves="none", **kw)
+            return kit, kit.parts[-1]
+        kit, plain = coat()
+        _, shell = coat(drape=0.02, vent=(0.86, 0.10), clear=0.006)
+        outer = shell.v[: len(shell.v) // 2]                                  # (solidify: outer layer first)
+        # drape: down the centre back the cloth falls plumb from the shoulder blades - it never tucks in
+        back = outer[(np.abs(outer[:, 0]) < 0.03) & (outer[:, 1] > 0) & (outer[:, 2] < 1.28) & (outer[:, 2] > 0.88)]
+        zs = np.round(back[:, 2], 3)
+        prof = np.array([back[zs == z, 1].max() for z in np.unique(zs)])     # rising z
+        self.assertTrue(np.all(np.diff(prof) <= 0.02 * 0.03 + 1e-6), prof)
+        # vent: an open slit up the centre back below 0.86, and the tails hang from their own chains
+        hem = outer[(outer[:, 2] < 0.60) & (outer[:, 1] > 0)]
+        self.assertGreater(np.min(np.abs(hem[:, 0])), 0.004)
+        self.assertNotIn("coattail_04_1", shell.w)
+        self.assertIn("coattail_03_1", shell.w)
+        self.assertIn("coattail_05_1", shell.w)
+        # clear: the deck box on the belt stays inside the coat (without it, it pokes through)
+        box = np.concatenate([p.v for p in kit.parts if p.name == "deckbox"])
+
+        def inside(sh):
+            r_sh, t_sh = np.hypot(sh[:, 0], sh[:, 1]), np.arctan2(sh[:, 0], -sh[:, 1])
+            for q in box:
+                near = (np.abs(sh[:, 2] - q[2]) < 0.02) & (np.abs(t_sh - np.arctan2(q[0], -q[1])) < 0.12)
+                if not near.any() or r_sh[near].max() < np.hypot(q[0], q[1]):
+                    return False
+            return True
+        self.assertFalse(inside(plain.v[: len(plain.v) // 2]))
+        self.assertTrue(inside(outer))
+
     def test_player_is_the_bespoke_hero(self) -> None:
         from dai.anime import cast, looks
         self.assertEqual(cast.PLAYER, "hero")

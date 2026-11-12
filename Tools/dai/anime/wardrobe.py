@@ -34,6 +34,9 @@ TEX_REL = "Characters"
 OBJECT_NAME = "Wardrobe"            # models.add_outline skips it: the parts bring their own ink hull
 ARM_PARTS = ("sleeve", "band", "glove")
 RIGID_PARTS = ("buckle", "deckbox", "clasp", "button", "emblem", "knot", "tieknot", "capeclasp")
+# narrow bands hide too little skin to cut away: a base-model skin face is about as tall as one of them is
+# wide, so deleting the faces under it opens holes beside it (the thigh strap showed the background)
+THIN_PARTS = ("legstrap", "belt", "band", "strap") + RIGID_PARTS
 CHAIN_PREFIXES = ("skirt_", "coattail_")
 ARM_BONES = ("upperarm", "lowerarm", "hand", "thumb", "index", "middle", "ring", "pinky")
 LEG_BONES = ("thigh", "calf", "foot", "ball")
@@ -629,7 +632,7 @@ def covered_skin(body_obj, body, parts, shares, log=print, sleeved=False):
     from .models import role_of
     me = body_obj.data
     roles = [role_of(s.material.name if s.material else "") for s in body_obj.material_slots]
-    tree = _bvh_of(list(zip(parts, shares)), True)
+    tree = _bvh_of([(p, sh) for p, sh in zip(parts, shares) if not p.name.startswith(THIN_PARTS)], True)
     polys = me.polygons
     cen = np.array([polys[f].center[:] for f in body.skin_faces])
     nrm = np.array([polys[f].normal[:] for f in body.skin_faces])

@@ -46,7 +46,8 @@ def cloth_bone_specs(prefix):
 
 
 def hang(part, prefix, cut, drop, share=0.72):
-    """Hand the part's vertices below `cut` over to the hem chains (fully by cut - drop)."""
+    """Hand the part's vertices below `cut` over to the hem chains (fully by cut - drop). A vented part
+    (part.vent) hangs each tail from its own side: the centre back chain's share goes to the chain beside it."""
     v = part.v
     t = np.clip((cut - v[:, 2]) / max(drop, 1e-3), 0.0, 1.0)
     k = share * M.smooth(t * 1.15) * (t > 0.02)
@@ -62,6 +63,15 @@ def hang(part, prefix, cut, drop, share=0.72):
             w = k * wk * ws
             if w.max() > 1e-4:
                 part.w[f"{prefix}_{c:02d}_{j}"] = w
+    if getattr(part, "vent", False):
+        back = CLOTH_CHAINS // 2
+        for j in (1, 2):
+            w = part.w.pop(f"{prefix}_{back:02d}_{j}", None)
+            if w is None:
+                continue
+            for c, m in ((back - 1, v[:, 0] > 0), (back + 1, v[:, 0] <= 0)):
+                key = f"{prefix}_{c:02d}_{j}"
+                part.w[key] = part.w.get(key, 0.0) + w * m
     return part
 
 
@@ -226,7 +236,8 @@ def _top_tailoring(kit, hem, neck, ease, opened, g0, detail):
         zw = 1.075
         for u, sgn in ((uu(np.pi / 2 - 0.42), 1.0), (uu(3 * np.pi / 2 + 0.42), -1.0)):
             folds.append(dict(u=u, v=vz(zw), len=0.070, n=2, gap=0.019, tilt=0.30 * sgn, s=0.5, thick=0.0026))
-        for u, sgn in ((uu(np.pi - 0.5), -1.0), (uu(np.pi + 0.5), 1.0)):
+        for u, sgn in ((uu(np.pi - 0.5), -1.0), (uu(np.pi + 0.5), 1.0)) if hem >= 0.80 else ():
+            # (a coat hangs straight down the back from the shoulder blades: no creases at its waist)
             folds.append(dict(u=u, v=vz(zw + 0.01), len=0.055, n=2, gap=0.022, tilt=0.22 * sgn, s=0.4, thick=0.0024))
     stitch.append(("v", 0.011 / H, None, None))
     if opened:
@@ -364,12 +375,18 @@ def _hip_tailoring(kit, z0, waist, ease, pockets=True):
 
 # --------------------------------------------------------------------------- shells
 def _torso_shell(kit, name, z0, z1, ease, n=44, gap=None, flare=0.0, rows=None, front=0.0, back=0.0,
-                 waist=0.0, top_in=0.0, cap0=False, hem_front=None):
+                 waist=0.0, top_in=0.0, cap0=False, hem_front=None, drape=0.0, vent=None, clear=0.0):
     """Shell round the torso from z0 (hem) to z1. ease: m, or fn(z). gap: front opening half angle (rad) or
     fn(z); flare: extra ease at the hem fading over 0.2 m; waist: cinch at the waist; top_in: pull the top
     ring towards the neck (shoulder seam); hem_front: a cut-away hem - the front ends at this height and the
-    hem sweeps down to z0 round the sides to the back (tails)."""
+    hem sweeps down to z0 round the sides to the back (tails); drape: the shell hangs like cloth instead of
+    following every hollow of the body - see _drape() (the value is how far it may still taper inwards
+    per metre of fall); vent: (z, spread) - a centre back vent from the hem up to z, the two tails parting
+    by `spread` radians each at the hem (open shells only); clear: the shell stands at least this far
+    outside everything already worn on the torso (_clear_inner) - it tents over belts, pouches and skirts."""
     b = kit.body
+    if vent and gap is not None and n % 2 == 0:
+        n += 1                                          # a column on the centre back line to split at
     rows = rows or max(5, int((z1 - z0) / 0.020))
     opened = gap is not None
 
@@ -397,8 +414,131 @@ def _torso_shell(kit, name, z0, z1, ease, n=44, gap=None, flare=0.0, rows=None, 
         for c in range(n):
             row[c] = ring(zc[c], zh[c], th[c:c + 1])[0]
         rings.append(row)
-    p = M.loft(name, None, np.array(rings), closed=not opened, outline=1.0, cap0=cap0 and not opened)
+    rings = np.array(rings)
+    if clear:
+        rings = _clear_inner(kit, rings, clear)
+    if drape:
+        th0 = np.linspace(gap(z0) if callable(gap) else gap, 2 * np.pi - (gap(z0) if callable(gap) else gap), n) \
+            if opened else np.linspace(0.0, 2 * np.pi, n, endpoint=False)
+        rings = _drape(b, rings, th0, drape, closed=not opened)
+    if vent and opened:
+        return _vented(b, name, rings, z0, *vent).weights(M.w_torso)
+    p = M.loft(name, None, rings, closed=not opened, outline=1.0, cap0=cap0 and not opened)
     return p.weights(M.w_torso)
+
+
+def _drape(b, rings, th, taper, closed, z_back=1.30, z_side=0.97):
+    """Cloth hangs from where it rests instead of following the body into every hollow.
+
+    rings: (rows, cols, 3), rows from the hem up. Per column, below its resting height (the shoulder blades
+    at the back, z_back; the hips round the sides and front, z_side) the distance from the centre line may
+    only shrink by `taper` per metre of fall - the coat drops straight from the shoulder blades over the
+    small of the back onto the seat, and from the hips down rather than tucking back in under them. Across
+    each ring the back bridges the spine's groove (a coat lies over it). A shell that follows the body into
+    those hollows shades them as dark blotches under cel lighting."""
+    R = rings.copy()
+    # distances from one vertical axis (the hips' centre): cloth falls plumb, it does not follow the lean of
+    # the body's centre line (measured from that, a "straight" back still tucks in under the shoulder blades)
+    cy = np.full(R.shape[:2], b.centre_y(0.95))
+    dx, dy = R[..., 0], R[..., 1] - cy
+    r = np.hypot(dx, dy)
+    ux, uy = dx / np.maximum(r, 1e-9), dy / np.maximum(r, 1e-9)
+    back = M.smooth((-np.cos(th) - 0.15) / 0.55)                  # 0 at the sides and front .. 1 at the back
+    # across: bridge hollows in each ring (only outwards, mostly at the back)
+    k = np.array([0.25, 0.5, 0.25])
+    for _ in range(3):
+        rp = np.concatenate([r[:, -1:], r, r[:, :1]], axis=1) if closed else np.pad(r, ((0, 0), (1, 1)), mode="edge")
+        blur = k[0] * rp[:, :-2] + k[1] * rp[:, 1:-1] + k[2] * rp[:, 2:]
+        r = np.maximum(r, r + (blur - r) * back[None])
+    # down: from the resting height to the hem, the radius never falls faster than `taper`
+    z_rest = z_side + (z_back - z_side) * back
+    for c in range(R.shape[1]):
+        top = None
+        for i in range(R.shape[0] - 1, -1, -1):
+            z = R[i, c, 2]
+            if z > z_rest[c]:
+                continue
+            if top is not None:
+                r[i, c] = max(r[i, c], r[top, c] - taper * (R[top, c, 2] - z))
+            top = i
+    R[..., 0] = ux * r
+    R[..., 1] = cy + uy * r
+    return R
+
+
+ARM_PARTS = ("sleeve", "band", "glove", "cuff")
+
+
+def _clear_inner(kit, rings, clear, dz=0.010, nth=96):
+    """Push a shell out over the parts already in the kit (inner layers: shirts, belts, deck boxes, straps,
+    skirts): per height and azimuth the shell's distance from the centre line becomes at least the
+    outermost inner vertex there + `clear`. The push is spread to the neighbouring bins and softened, so the
+    cloth tents over a pouch instead of wrapping round it; with drape the tent then falls to the hem."""
+    from scipy.ndimage import gaussian_filter, maximum_filter
+    b = kit.body
+    inner = [p.v for p in kit.parts
+             if len(p.v) and not getattr(p, "arm_space", p.name.startswith(ARM_PARTS))]
+    if not inner:
+        return rings
+    V = np.concatenate(inner)
+    z_lo, z_hi = float(rings[..., 2].min()) - 0.02, min(float(rings[..., 2].max()), 1.36)
+    V = V[(V[:, 2] > z_lo) & (V[:, 2] < z_hi)]
+    if not len(V):
+        return rings
+    nz = int((z_hi - z_lo) / dz) + 1
+
+    def polar(P):
+        cy = np.interp(P[..., 2], zz, cyz)
+        dx, dy = P[..., 0], P[..., 1] - cy
+        return np.hypot(dx, dy), np.arctan2(dx, -dy) % (2 * np.pi)
+
+    zz = np.linspace(z_lo, z_hi, nz)
+    cyz = np.array([b.centre_y(float(q)) for q in zz])
+    r_in, t_in = polar(V)
+    iz = np.clip(((V[:, 2] - z_lo) / dz).astype(int), 0, nz - 1)
+    it = (t_in / (2 * np.pi) * nth).astype(int) % nth
+    need = np.zeros((nz, nth))
+    np.maximum.at(need, (iz, it), r_in + clear)
+    need = maximum_filter(need, size=(3, 3), mode=("nearest", "wrap"))
+    R = rings.copy()
+    r, th = polar(R)
+    jz = np.clip(((R[..., 2] - z_lo) / dz).astype(int), 0, nz - 1)
+    jt = (th / (2 * np.pi) * nth).astype(int) % nth
+    push = np.maximum(need[jz, jt] - r, 0.0)
+    if not push.any():
+        return rings
+    # soften round the bump (rows x columns of the shell), never below the push itself
+    soft = gaussian_filter(push, sigma=(1.2, 1.2), mode=("nearest", "nearest"))
+    push = np.maximum(push, soft)
+    k = (r + push) / np.maximum(r, 1e-9)
+    cy = np.interp(R[..., 2], zz, cyz)
+    R[..., 0] *= k
+    R[..., 1] = cy + (R[..., 1] - cy) * k
+    return R
+
+
+def _vented(b, name, rings, z_hem, z_vent, spread):
+    """An open shell split down the centre back below z_vent into two tails (a tailcoat's vent): one part of
+    two lofts whose UVs stay continuous (u 0..0.5 | 0.5..1), the tails turned apart round the body's centre
+    line by up to `spread` rad at the hem - fading over the 5 columns next to the split, so the cut stays
+    a clean line."""
+    R = rings.copy()
+    rows, n = R.shape[:2]
+    mid = n // 2
+    z = R[..., 2]
+    cy = np.array([[b.centre_y(float(q)) for q in row] for row in z])
+    dx, dy = R[..., 0], R[..., 1] - cy
+    r, th = np.hypot(dx, dy), np.arctan2(dx, -dy)
+    open_ = spread * M.smooth((z_vent - z) / max(z_vent - z_hem, 1e-3))      # 0 above the vent .. spread
+    near = np.clip(1.0 - np.abs(np.arange(n) - mid) / 5.0, 0.0, 1.0) ** 1.5      # 1 at the split
+    halves = []
+    for cols, sgn, uv in ((slice(0, mid + 1), -1.0, (0.0, 0.5)), (slice(mid, n), 1.0, (0.5, 1.0))):
+        t = th[:, cols] + sgn * open_[:, cols] * near[None, cols]
+        H = np.stack([r[:, cols] * np.sin(t), cy[:, cols] - r[:, cols] * np.cos(t), z[:, cols]], axis=-1)
+        halves.append(M.loft(name, None, H, closed=False, outline=1.0, uv=(uv[0], uv[1], 0.0, 1.0)))
+    p = M.merge(name, halves)
+    p.vent = True
+    return p
 
 
 def _sleeve(kit, name, side, x0, x1, ease, n=14, cuff=0.0, puff=0.0, bell=0.0):
@@ -443,12 +583,15 @@ def _box(name, centre, size, rot_z=0.0):
 def top(kit, color, hem=0.98, neck=1.392, ease=0.010, sleeves="long", open=0.0, v=0.0, flare=0.0, waist=0.0,
         slot="cloth", cuff=0.0, puff=0.0, bell=0.0, sleeve_to=None, sleeve_color=None, style=None,
         sleeve_style=None, thick=0.004, tail=None, front=0.0, cells=(2, 2), detail=None, hem_front=None,
-        sleeve_sides=("l", "r")):
+        sleeve_sides=("l", "r"), drape=0.0, vent=None, clear=0.0):
     """Shirt / blouse / jacket / coat body with optional sleeves.
     open: front opening half angle in degrees (0 = closed); v: depth (m) of a V neckline below `neck`;
     tail: hem chains to hang the part below the hips from ("skirt" | "coattail"); hem_front: cut-away front
     (the hem rises to this height at the front and falls to `hem` at the back); sleeve_sides: ("l",) for a
-    one-sleeved coat (the other side is cut like a vest armhole);
+    one-sleeved coat (the other side is cut like a vest armhole); drape: hang like cloth from the shoulder
+    blades and hips (taper per metre, ~0.02 for a coat) rather than follow the body's hollows; vent: (z, spread)
+    a centre back vent up to z whose tails part by `spread` rad each at the hem (open coats); clear: stand at
+    least this far (m) outside every garment already worn on the torso (an outer layer: ~0.006);
     detail: painted tailoring on top of the automatic seams / fold hints / ambient shade (_top_tailoring):
     dict(placket=dict(w, buttons, color, button), zip=True, buttons=dict(n, z0, z1, x, color),
     pockets=("chest" | "chest_r" | "hip" | "flap" | "welt", ...), yoke=True, panels=True, back_seam=True,
@@ -460,7 +603,7 @@ def top(kit, color, hem=0.98, neck=1.392, ease=0.010, sleeves="long", open=0.0, 
         return g0 + float(vv) + 1e-4
 
     p = _torso_shell(kit, "top", hem, neck, ease, gap=gap if (open > 0 or v > 0) else None, flare=flare,
-                     waist=waist, front=front, hem_front=hem_front)
+                     waist=waist, front=front, hem_front=hem_front, drape=drape, vent=vent, clear=clear)
     if tail and hem < 0.90:
         p.weights(M.w_hips(0.93, 0.70, 0.55))
         hang(p, tail, 0.90, 0.90 - hem, share=0.55)
@@ -904,8 +1047,11 @@ def strap(kit, color, path, width=0.024, ease=0.012, thick=0.0035, buckles=(), b
                 name="clasp")
 
 
-def legstrap(kit, color, side="r", z=0.72, width=0.026, ease=0.006, buckle=(0.80, 0.82, 0.86), pouch=None):
-    """Strap round the thigh with a buckle on the outer front; pouch: colour of a slim pouch on the outside."""
+def legstrap(kit, color, side="r", z=0.72, width=0.026, ease=0.006, buckle=(0.80, 0.82, 0.86), pouch=None,
+             pouch_at=0.0, buckle_at=35.5):
+    """Strap round the thigh with a buckle on the outer front; pouch: colour of a slim pouch on the outside.
+    pouch_at / buckle_at: degrees round the thigh from its outer side towards the front (negative: towards
+    the back - a pouch at about -40 sits behind the hanging hand instead of under it)."""
     b = kit.body
     s = 1.0 if side == "l" else -1.0
     p = M.solidify(_leg_shell(kit, f"legstrap_{side}", side, z - width / 2, z + width / 2, ease), 0.003)
@@ -913,8 +1059,11 @@ def legstrap(kit, color, side="r", z=0.72, width=0.026, ease=0.006, buckle=(0.80
     ring = b.leg_ring(z, ease + 0.003, n=24, side=s)
     cx = float(ring[:, 0].mean())
     cyy = float(ring[:, 1].mean())
-    for ang, what in ((0.62, "buckle"), (0.0, "pouch")):
-        q = ring[int(round(ang / (2 * math.pi) * 24)) % 24]
+    for ang, what in ((buckle_at, "buckle"), (pouch_at, "pouch")):
+        # the ring point in that direction from the thigh's axis (outer side = +x on the left leg, -x on the right)
+        a = math.radians(ang)
+        want = np.array([s * math.cos(a), -math.sin(a)])
+        q = ring[int(np.argmax((ring[:, :2] - (cx, cyy)) @ want))]
         n = np.array([q[0] - cx, q[1] - cyy, 0.0])
         n /= max(np.linalg.norm(n), 1e-9)
         if what == "buckle":

@@ -58,6 +58,7 @@ LOCK_KEYS = ("s0", "s1", "free", "sweep", "loft", "width", "thick", "gravity", "
 MIN_WIDTH = 0.045                    # below this a lock is a "strand" (kind / strand=True) or it looks stringy
 EYE_BAND = (12.0, 34.0)              # degrees off centre where a fringe end covers an eye
 EYE_RING = 0.44                      # ring below which a fringe end reaches the eyes
+FREE_RING = 3.0                      # rings per metre of free (hanging) length: where the lock's tip really ends
 
 
 def _rad(d):
@@ -237,11 +238,16 @@ def check(design):
         w = lk.get("width", 0.030)
         if w < MIN_WIDTH and not lk.get("strand"):
             out.append(f"lock {i}: width {w} < {MIN_WIDTH} (stringy) - widen it or mark strand=True")
-        if lk.get("kind") == "fringe" and lk.get("s1", 0.0) > EYE_RING and not lk.get("over_eye"):
+        # the tip hangs `free` metres past s1: a lock rooted above the brows still covers an eye with it
+        tip = lk.get("s1", 0.0) + FREE_RING * lk.get("free", 0.0)
+        if lk.get("kind") == "fringe" and tip > EYE_RING and not lk.get("over_eye"):
             end = abs(lk["az"] + np.degrees(lk.get("sweep", 0.0)))
             if EYE_BAND[0] <= end <= EYE_BAND[1]:
-                out.append(f"lock {i}: fringe ends over an eye (az {end:.0f} deg, ring {lk['s1']}) - "
+                out.append(f"lock {i}: fringe ends over an eye (az {end:.0f} deg, tip at ring {tip:.3f}) - "
                            f"shorten / move it or mark over_eye=True")
+    sp = h.get("sections", {}).get("spikes")
+    if sp and not sp.get("symmetric"):
+        out.append("spikes without symmetric=True: each row's fan turns, the lowest row hangs over one eye")
     if h.get("res", 2) < 2:
         out.append("hair res < 2: faceted in close-ups")
     if h.get("color") and sum(h["color"]) < 0.6 and not h.get("sheen_color"):
@@ -254,4 +260,69 @@ def check(design):
                     out.append(f"{kind}: motif without h smears into stripes")
     if "iris" not in design.get("face", {}):
         out.append("face: no iris colour")
+    return out
+
+
+# --------------------------------------------------------------------------- built-model checks (Blender)
+EYE_VIEWS = (-60, -40, -20, 0, 20, 40, 60)     # camera azimuths (deg) round the face; + = the character's left
+EYE_MIN = {0: 50.0, 20: 40.0}                   # % of an eye that must be seen: both eyes from the front,
+                                                # the near eye from +-20 deg
+
+
+def eye_clearance(meshes, views=EYE_VIEWS, distance=1.2):
+    """How much of each eye a camera sees from each azimuth: {view: (right %, left %)}.
+
+    The eye areas are the vertices the Blink_L / Blink_R morphs move (the lids, i.e. the whole eye opening);
+    a ray from the camera at eye height to each one counts as seen when nothing (hair, the nose, a hat)
+    is in the way. meshes: the built character's mesh objects (evaluated as they stand)."""
+    import math
+    import bpy
+    from mathutils import Vector
+    from mathutils.bvhtree import BVHTree
+    dg = bpy.context.evaluated_depsgraph_get()
+    face = max(meshes, key=lambda o: len(o.data.shape_keys.key_blocks) if o.data.shape_keys else 0)
+    keys = {k.name: k for k in face.data.shape_keys.key_blocks}
+    base = np.array([v.co for v in face.data.shape_keys.reference_key.data])
+    eyes = {}
+    for side in ("R", "L"):
+        name = next(n for n in keys if n.endswith(f"Blink_{side}"))
+        d = np.linalg.norm(np.array([v.co for v in keys[name].data]) - base, axis=1)
+        eyes[side] = [face.matrix_world @ Vector(q) for q in base[d > 0.5 * d.max()]]
+    verts, polys = [], []
+    for o in meshes:
+        ev = o.evaluated_get(dg)
+        me = ev.to_mesh()
+        off = len(verts)
+        verts += [tuple(o.matrix_world @ v.co) for v in me.vertices]
+        polys += [tuple(i + off for i in p.vertices) for p in me.polygons]
+        ev.to_mesh_clear()
+    bvh = BVHTree.FromPolygons(verts, polys)
+    mid = sum(eyes["R"] + eyes["L"], Vector()) / (len(eyes["R"]) + len(eyes["L"]))
+    out = {}
+    for deg in views:
+        t = math.radians(deg)
+        cam = mid + Vector((math.sin(t), -math.cos(t), 0.0)) * distance
+        seen = []
+        for side in ("R", "L"):
+            ok = 0
+            for q in eyes[side]:
+                ray = q - cam
+                ok += bvh.ray_cast(cam, ray.normalized(), ray.length - 0.003)[0] is None
+            seen.append(100.0 * ok / len(eyes[side]))
+        out[deg] = tuple(seen)
+    return out
+
+
+def eye_problems(clearance):
+    """The views where eye_clearance() falls short of EYE_MIN: [problem, ...]."""
+    out = []
+    for deg, need in EYE_MIN.items():
+        for view in {deg, -deg}:
+            if view not in clearance:
+                continue
+            r, l = clearance[view]
+            pairs = (("right", r), ("left", l)) if view == 0 else ((("right", r),) if view < 0 else (("left", l),))
+            for side, got in pairs:
+                if got < need:
+                    out.append(f"{side} eye {got:.0f}% visible from {view:+d} deg (needs {need:.0f}%)")
     return out
