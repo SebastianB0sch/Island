@@ -11,6 +11,7 @@ subprocess handling, and the build_island stage dependency guard. Run with:
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import math
 import os
@@ -487,6 +488,12 @@ class NpcRosterTests(unittest.TestCase):
 class AtelierCastTests(unittest.TestCase):
     """The cast is built from the project's own designs (no third-party base model)."""
 
+    @classmethod
+    def setUpClass(cls) -> None:
+        # dai.anime.looks imports dai.thirdparty (which imports bpy at module level) to check for the VRoid
+        # bases; without Blender the stubs below stand in, as for the other dai.thirdparty tests
+        _install_blender_stubs()
+
     GARMENTS = {"top", "skirt", "pants", "legwear", "shoes", "collar", "bow", "tie", "belt", "band", "gloves",
                 "cape", "scarf", "emblem", "buttons", "hairband", "glasses", "hairbow"}
 
@@ -643,6 +650,7 @@ class AtelierCastTests(unittest.TestCase):
                 right = sorted(round(2 * np.pi - a, 6) for a in r.az if a > np.pi + 1e-6)   # back centre line)
                 self.assertEqual(left, right)
 
+    @unittest.skipUnless(importlib.util.find_spec("scipy") is not None, "the coat shell's inner-layer clearance needs scipy")
     def test_coat_shell_drapes_vents_and_clears_inner_layers(self) -> None:
         import numpy as np
         from dai.anime.atelier import body as BD, outfit as OF
