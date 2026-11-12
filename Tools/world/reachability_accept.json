@@ -55,5 +55,17 @@
      "reason": "attic over the second-floor ceilings, under the holed roof: no stair or hatch leads up (the hole in the stairwell ceiling is painted damage)"},
     {"box": [-5.0, -11.0, 21.4, 5.0, -2.0, 26.0],
      "reason": "inside the clock tower's spire, above the clockwork room's ceiling (the ladder there ends at a painted hatch)"}
+  ],
+  "millbrook": [
+    {"box": [-150.0, -150.0, -30.0, 150.0, 150.0, 60.0],
+     "reason": "the village house kit is closed by design (Tools/dai/assets/village.py: solid houses, mill and huts with their door leaves modelled shut - there are no interiors), so every walled-in space in the village is the inside of a closed building; the houses are re-settled whenever the river or lanes are re-cut, hence the whole village rather than per-house boxes"}
+  ],
+  "willow_pond": [
+    {"box": [-150.0, -150.0, -30.0, 150.0, 150.0, 60.0],
+     "reason": "the village house kit is closed by design (Tools/dai/assets/village.py: solid houses, market stalls and the jetty, door leaves modelled shut - there are no interiors), so every walled-in space in the village is the inside of a closed building; the houses are re-settled whenever the river or lanes are re-cut, hence the whole village rather than per-house boxes"}
+  ],
+  "fishers_cove": [
+    {"box": [-150.0, -150.0, -30.0, 150.0, 150.0, 60.0],
+     "reason": "the village house kit is closed by design (Tools/dai/assets/village.py: solid houses, net sheds and stilt huts, door leaves modelled shut - there are no interiors), so every walled-in space in the village is the inside of a closed building; the houses are re-settled whenever the river or lanes are re-cut, hence the whole village rather than per-house boxes"}
   ]
 }
