@@ -148,9 +148,12 @@ def student_entry(key):
 # academy jacket) with a dorm-tinted jacket (J switches dorms in game). Without the VRoid base installed it
 # falls back to the generic student design. The generic male students keep student_m1.
 PLAYER = "hero"
+PLAYER_FEMALE = "heroine"            # the player's model when the profile's gender is female (DAStudentCharacter)
 HERO = {
     "hero": dict(name="Student", dorm="slifer", height=172, design="StudentM1", female=False, tint=["jacket"],
                  lines=[]),
+    "heroine": dict(name="Student", dorm="slifer", height=163, design="StudentF1", female=True, tint=["jacket"],
+                    lines=[]),
 }
 
 # Crown height (m, without hair) of the atelier bodies in their rest pose: turns the cast's heights into the
