@@ -220,13 +220,20 @@ class Hair:
                 lk.accent = self._is_accent(accent, layer)
 
     def spikes(self, n=16, lift=0.55, free=0.07, rings=(0.20, 0.34, 0.50), start=48.0, flare=0.9, gravity=0.10,
-               width=0.040, droop=0.0, curl=0.0, wave=0.0, up=0.0, lift_decay=0.35, accent=False, side_tame=0.0):
+               width=0.040, droop=0.0, curl=0.0, wave=0.0, up=0.0, lift_decay=0.35, accent=False, side_tame=0.0,
+               symmetric=False):
         """Spiky cut: locks leave the scalp early, row by row, and point outwards. side_tame: how much the
-        spikes over the ears lose of their lift / flare (they stick out sideways like horns otherwise)."""
+        spikes over the ears lose of their lift / flare (they stick out sideways like horns otherwise).
+        symmetric: stagger the rows by half a spacing inside the fan instead of turning each row's fan by
+        0.21 rad - turned, the lowest row reaches round to -32 deg on one side only and hangs over that eye."""
         a0 = np.radians(start)
         for row, s1 in enumerate(rings):
             m = max(5, int(n * (0.55 + 0.25 * row)))
-            az = np.linspace(a0, 2 * np.pi - a0, m, endpoint=True) + row * 0.21
+            if symmetric:
+                half = 0.5 * (2 * np.pi - 2 * a0) / (m - 1) * (row % 2)
+                az = np.linspace(a0 + half, 2 * np.pi - a0 - half, m - (row % 2), endpoint=True)
+            else:
+                az = np.linspace(a0, 2 * np.pi - a0, m, endpoint=True) + row * 0.21
             for a in az:
                 rel = abs(((a + np.pi) % (2 * np.pi)) - np.pi)            # 0 front .. pi back
                 sd = side_tame * float(np.exp(-((rel - 0.5 * np.pi) / 0.62) ** 2))

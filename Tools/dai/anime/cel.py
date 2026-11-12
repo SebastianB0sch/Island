@@ -23,7 +23,9 @@ specular reflections off (no plastic sheen). The Cycles previews evaluate the sa
 # half-Lambert threshold, edge width, shadow multiplier (linear RGB), rim strength, hair highlight strength.
 # Optional second step: below `threshold2` the shadow deepens to `shadow2` (the core shadow under arms, chins
 # and folds); `terminator` (colour, strength) is a thin saturated band just inside the shadow edge - the warm
-# line anime skin has where light turns to shade. Unreal's M_DA_Cel reads rim / spec; the other fields are
+# line anime skin has where light turns to shade. Cloth keeps its core step below 0.155 - the value of a surface
+# facing straight away from the key light horizontally - or the broad back of a coat, which sits right at
+# that value, breaks into blotches wherever the cloth bulges a little; it is for undersides and folds. Unreal's M_DA_Cel reads rim / spec; the other fields are
 # exported for it too (optional: a master material that does not know them ignores them).
 CLASSES = {
     "skin": dict(threshold=0.50, soft=0.035, shadow=(0.95, 0.72, 0.67), rim=0.20, spec=0.0,
@@ -33,7 +35,7 @@ CLASSES = {
     "hair": dict(threshold=0.48, soft=0.03, shadow=(0.62, 0.60, 0.76), rim=0.16, spec=0.45,
                  threshold2=0.18, shadow2=(0.44, 0.43, 0.62)),
     "cloth": dict(threshold=0.50, soft=0.03, shadow=(0.66, 0.67, 0.84), rim=0.15, spec=0.0,
-                  threshold2=0.20, shadow2=(0.48, 0.50, 0.71)),
+                  threshold2=0.10, shadow2=(0.48, 0.50, 0.71)),
     "flat": dict(threshold=-1.0, soft=0.0, shadow=(1.0, 1.0, 1.0), rim=0.0, spec=0.0),
 }
 
